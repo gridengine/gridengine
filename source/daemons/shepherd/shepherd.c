@@ -806,8 +806,10 @@ int main(int argc, char **argv)
 
    if (!SGE_STAT("exit_status", &buf) && buf.st_size) {
       /* retrieve first exit status from exit status file */
-      if (!(fp = fopen("exit_status", "r")) || (fscanf(fp, "%d\n", &return_code)!=1))
+      if (!(fp = fopen("exit_status", "r")) || (fscanf(fp, "%d\n", &return_code)!=1)) {
+         shepherd_trace("could not read exit_status file\n");
          return_code = ESSTATE_NO_EXITSTATUS;
+      }
       fclose(fp);
    } else {
       /* ensure an exit status file exists */

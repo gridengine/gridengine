@@ -1,3 +1,6 @@
+AH-2004-11-10-0: Enhancm.:  Improved shepherd diagnosis
+                 Review:    HP
+
 JG-2004-11-10-0: Bugfix:    Fixed memory leaks in qmaster.
                  Review:    EB
                  Testsuite: Minor fixes.

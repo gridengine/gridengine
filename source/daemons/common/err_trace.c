@@ -87,6 +87,7 @@ static int   sh_str2file(const char *header_str, const char *str, FILE *fp);
 static FILE* shepherd_trace_init_intern(char *trace_file_name);
 static void  shepherd_trace_chown_intern(const char* job_owner, FILE* fp);
 static bool  nfs_mounted(const char *path);
+static void  shepherd_panic(const char *s);
 
 
 /******************************************************************************
@@ -354,7 +355,9 @@ void shepherd_write_exit_status( const char *exit_status )
 		}
 		if( shepherd_exit_status_fp ) {
    		sh_str2file(exit_status, NULL, shepherd_exit_status_fp);
-		}
+		} else {
+         shepherd_trace("could not write exit_status file\n");
+      }
 		if( old_euid!=0 ) {
 			seteuid( old_euid );
 		}
@@ -503,7 +506,7 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
    int         fd = -1;
    FILE        *fp = NULL;
    dstring     ds;
-   char        buffer[128];
+   char        buffer[SGE_PATH_MAX+128];
    SGE_STRUCT_STAT statbuf;
    int         do_chown=0;
    int         old_euid=-1;
@@ -521,6 +524,12 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
 	/* If the file does not exist, create it. Otherwise just open it. */
 	if( SGE_STAT( tmppath, &statbuf )) {
 	   fd = open( tmppath, O_RDWR | O_CREAT | O_APPEND, 0644 );
+      if (fd<0) {
+         sge_dstring_init(&ds, buffer, sizeof(buffer));
+         sge_dstring_sprintf(&ds, "creat(%s) failed: %s", tmppath, strerror(errno));
+         shepherd_panic(buffer);
+      }
+
 		if( getuid()==0 ) {
          /* We must give the file to the job owner later */
 			do_chown = 1;
@@ -555,6 +564,11 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
       }
 
       fd = open( tmppath, O_RDWR | O_APPEND );
+      if (fd<0) {
+         sge_dstring_init(&ds, buffer, sizeof(buffer));
+         sge_dstring_sprintf(&ds, "open(%s) failed: %s", tmppath, strerror(errno));
+         shepherd_panic(buffer);
+      }
 
       if( old_euid>0 ) {
          seteuid( old_euid );
@@ -574,24 +588,17 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
 
 	/* Set FD_CLOEXEC flag to automatically close the file in an exec() */
 	if( !set_cloexec( fd )) {
+      shepherd_panic("set_cloexec() failed");
 		return NULL;
 	}
 
 	/* Now open a FILE* from the file descriptor, so we can use fprintf() */
 	fp = fdopen( fd, "a" );
    if( !fp ) {
-      FILE *panic_fp;
-      char panic_file[255];
-      sprintf(panic_file, "/tmp/shepherd."pid_t_fmt, getpid());
-      panic_fp = fopen(panic_file, "a");
-      if (panic_fp) {
-   		sge_dstring_init(&ds, buffer, sizeof(buffer));
-         fprintf(panic_fp, "%s ["uid_t_fmt":"pid_t_fmt"]: "
-              "PANIC: can't open %s file \"%s\": %s\n",
-              sge_ctime(0, &ds), geteuid(), getpid(),
+      sge_dstring_init(&ds, buffer, sizeof(buffer));
+      sge_dstring_sprintf(&ds, "can't open %s file \"%s\": %s\n",
 				  trace_file_name, tmppath, strerror(errno));
-         fclose(panic_fp);
-      }
+      shepherd_panic(buffer);
       return NULL;
    }
 	if( do_chown && strlen( g_job_owner )>0 ) {
@@ -600,11 +607,29 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
 	return fp;
 }
 
+static void shepherd_panic(const char *s)
+{
+   FILE *panic_fp;
+   char panic_file[255];
+
+   sprintf(panic_file, "/tmp/shepherd."pid_t_fmt, getpid());
+   panic_fp = fopen(panic_file, "a");
+   if (panic_fp) {
+      dstring ds;
+      char buffer[128];
+      sge_dstring_init(&ds, buffer, sizeof(buffer));
+      fprintf(panic_fp, "%s ["uid_t_fmt":"uid_t_fmt" "pid_t_fmt"]: PANIC: %s\n",
+           sge_ctime(0, &ds), getuid(), geteuid(), getpid(), s);
+      fclose(panic_fp);
+   }
+}
+
 static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp )
 {
 	int   fd;
 	uid_t jobuser_id;
 	int   old_euid;
+   char buffer[1024];
 
 	if( fp && strlen( job_owner )>0 ) {
 		fd = fileno( fp );
@@ -628,6 +653,9 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp )
 	    	 	 	 */
 					seteuid( old_euid );
 	   			if( fchmod( fd, 0666 )==-1) {
+                  sprintf(buffer, "can't fchmod(fd, 0666): %s\n", strerror(errno));
+                  shepherd_panic(buffer);
+                  return;
 					}
    			} else {
                /* chown worked. But when we can chown but are on a NFS
@@ -646,7 +674,11 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp )
 				seteuid( old_euid );
 			} else {
 				/* Can't get jobuser_id -> grant access for everyone */
-				fchmod( fd, 0666 );
+				if (fchmod( fd, 0666 )==-1) {
+               sprintf(buffer, "could not fchmod(): %s", strerror(errno));
+               shepherd_panic(buffer);
+            }
+
 			}
 		}
 	}	

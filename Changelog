@@ -1,3 +1,9 @@
+EB-2002-08-21-0  Bugfix:    qmaster error message during startup: global 
+                            configuration doesn't exist - creating
+                 Bugtraq:   #4665780
+                 Issues:    #226
+                 Changed:   sge_qmaster, qconf
+
 AS-2002-08-19-0  Bugfix:    gethostbyaddr binary not working on solaris64
                  Bugtraq:   #4732545
                  Issue:     #359

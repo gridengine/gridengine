@@ -70,7 +70,7 @@
 #define MSG_CONFIG_CONF_VERSIONNOTFOUNDONREADINGSPOOLFILE    _MESSAGE(23024, _("conf_version not found on reading spool file\n"))
 #define MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S       _MESSAGE(23025, _("no value given for configuration attribute "SFQ"\n"))
 #define MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS       _MESSAGE(23026, _("incorrect value "SFQ" given for configuration attribute "SFQ"\n"))
-#define MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I  _MESSAGE(23027, _("gid range with minimum less than %d not allowed\n"))
+#define MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I  _MESSAGE(23027, _("gid range with minimum less than %d not allowed in configuration\n"))
 #define MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S       _MESSAGE(23028, _("only a single value is allowed for configuration attribute "SFQ"\n"))
 #define MSG_CONFIG_CONF_ERRORSTORINGCONFIGVALUE_S       _MESSAGE(23029, _("error storing configuration attribute "SFQ"\n"))
 

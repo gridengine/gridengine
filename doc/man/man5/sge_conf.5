@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/07/11 15:21:10 $     Revision: $Revision: 1.11.2.4 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/08/21 09:59:52 $     Revision: $Revision: 1.11.2.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/07/11 15:21:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/08/21 09:59:52 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -815,7 +815,7 @@ may be overwritten by the execution host local configuration.
 .SH "\fBgid_range\fP"
 The \fBgid_range\fP
 is a comma separated list of range expressions of the form n-m (n as
-well as m being positive non-zero integer numbers), where m is an
+well as m being integer numbers greater than 99), where m is an
 abbreviation for m-m. These numbers are used in
 .M xxqs_name_sxx_execd 8
 to identify processes belonging to the same job.

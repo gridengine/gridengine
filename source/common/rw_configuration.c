@@ -244,14 +244,14 @@ u_long32 flags
             } else if (!(rlp = parse_ranges(value, 0, 0, &alp, NULL,
                 INF_NOT_ALLOWED))) {
                WARNING((SGE_EVENT, MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS, 
-                        name, value));
+                        value, name));
                lFreeList(alp);
                lFreeList(lp);
                fclose(fp);
                DEXIT;
                return (NULL);
             } else {
-               /* gids < 1000 are not allowed */
+               /* gids < 100 are not allowed */
                lListElem *rep;
 
                for_each (rep, rlp) {

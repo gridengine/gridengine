@@ -690,7 +690,6 @@
 #define MSG_SGETEXT_CANT_DEL_CONFIG_S           _MESSAGE(33538, _("can't delete configuration "SFQ" from list\n"))
 #define MSG_CONF_DELLOCCONFFORXWITHEXECDSPOOLDENIED_S  _MESSAGE(33539, _("Deleting local configuration for "SFQ" with a local execd_spool_dir setting only supported in a shut-down cluster.\n"))
 #define MSG_SGETEXT_CANT_DEL_CONFIG_DISK_SS     _MESSAGE(33540, _("can't delete configuration "SFQ" from disk: %s\n"))
-#define MSG_CREATINGGLOBALCONF                    _MESSAGE(33541, _("creating new global configuration with default values\n"))
 #define MSG_CONF_CANTSELECTCONFIGURATIONFORHOST_SI _MESSAGE(33542, _("can't select configuration for host "SFQ": %d"))
 #define MSG_CONF_CANTMERGECONFIGURATIONFORHOST_SI _MESSAGE(33543, _("can't merge configuration for host "SFQ": %d"))
 #define MSG_CONF_CHANGEPARAMETERXONLYSUPONSHUTDOWN_S _MESSAGE(33544, _("Changing parameter "SFQ" only supported in a shut-down cluster.\n"))

@@ -41,6 +41,7 @@
  */
 #define ROOT_DIR                  "/usr/SGE"
 #define COMMON_DIR                "common"
+#define BOOTSTRAP_FILE            "bootstrap"
 #define CONF_FILE                 "configuration"
 #define SCHED_CONF_FILE           "sched_configuration"
 #define ACCT_FILE                 "accounting"
@@ -62,6 +63,7 @@ void path_init_mt(void);
 
 const char *path_state_get_sge_root(void);
 const char *path_state_get_cell_root(void);
+const char *path_state_get_bootstrap_file(void);
 const char *path_state_get_conf_file(void);
 const char *path_state_get_sched_conf_file(void);
 const char *path_state_get_act_qmaster_file(void);

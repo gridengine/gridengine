@@ -386,7 +386,7 @@ int sge_read_submithost_list_from_disk()
    return 0;
 }
 
-int sge_read_pe_list_from_disk()
+int sge_read_pe_list_from_disk(const char *directory)
 {
    lList *direntries;
    lList *alp = NULL;
@@ -399,7 +399,7 @@ int sge_read_pe_list_from_disk()
    if (!Master_Pe_List)
       Master_Pe_List = lCreateList("Master_Pe_List", PE_Type);
 
-   direntries = sge_get_dirents(PE_DIR);
+   direntries = sge_get_dirents(directory);
    if(direntries) {
       if (!sge_silent_get()) {
          printf(MSG_CONFIG_READINGINGPARALLELENV);
@@ -414,7 +414,7 @@ int sge_read_pe_list_from_disk()
                DEXIT;
                return -1;
             }       
-            ep = cull_read_in_pe(PE_DIR, pe, 1, 0, NULL, NULL);
+            ep = cull_read_in_pe(directory, pe, 1, 0, NULL, NULL);
             if (!ep) {
                ret = -1;
                break;
@@ -426,7 +426,7 @@ int sge_read_pe_list_from_disk()
             }
             lAppendElem(Master_Pe_List, ep);
          } else {
-            sge_unlink(PE_DIR, pe);
+            sge_unlink(directory, pe);
          }
       }
       direntries = lFreeList(direntries);
@@ -940,7 +940,7 @@ int sge_read_user_list_from_disk()
    return 0;
 }
 
-int sge_read_userset_list_from_disk()
+int sge_read_userset_list_from_disk(const char *directory)
 {
    lList *alp = NULL, *direntries;
    lListElem *ep, *direntry;
@@ -948,7 +948,7 @@ int sge_read_userset_list_from_disk()
    DENTER(TOP_LAYER, "sge_read_userset_list_from_disk");
 
    Master_Userset_List = lCreateList("user set list", US_Type);
-   direntries = sge_get_dirents(USERSET_DIR);
+   direntries = sge_get_dirents(directory);
    if (direntries) {
       if (!sge_silent_get()) 
          printf(MSG_CONFIG_READINGINUSERSETS);
@@ -965,9 +965,9 @@ int sge_read_userset_list_from_disk()
                return -1;
             }  
 
-            ep = cull_read_in_userset(USERSET_DIR, userset, 1, 0, NULL); 
+            ep = cull_read_in_userset(directory, userset, 1, 0, NULL); 
             if (!ep) {
-               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, USERSET_DIR, 
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, directory, 
                         userset));
                DEXIT;
                return -1;
@@ -979,7 +979,7 @@ int sge_read_userset_list_from_disk()
                lFreeElem(ep);
             }
          } else {
-            sge_unlink(USERSET_DIR, userset);
+            sge_unlink(directory, userset);
          }
       }
       direntries = lFreeList(direntries);
@@ -1050,7 +1050,7 @@ char *object_dir
    return 0;
 }
 
-int read_all_centries(void)
+int read_all_centries(const char *directory)
 {
    DIR *dir;
    SGE_STRUCT_DIRENT *dent;
@@ -1066,9 +1066,9 @@ int read_all_centries(void)
       Master_CEntry_List = lCreateList("", CE_Type);
    }
 
-   dir = opendir(CENTRY_DIR);
+   dir = opendir(directory);
    if (!dir) {
-      ERROR((SGE_EVENT, MSG_FILE_NOOPENDIR_S, CENTRY_DIR));
+      ERROR((SGE_EVENT, MSG_FILE_NOOPENDIR_S, directory));
       DEXIT;
       return -1;
    }
@@ -1083,18 +1083,18 @@ int read_all_centries(void)
          printf(MSG_SETUP_COMPLEX_ATTR_S, dent->d_name);
       }  
       if ((dent->d_name[0] == '.')) {
-         sge_unlink(CENTRY_DIR, dent->d_name);
+         sge_unlink(directory, dent->d_name);
          continue;
       }
 
-      sprintf(fstr, "%s/%s", CENTRY_DIR, dent->d_name);
+      sprintf(fstr, "%s/%s", directory, dent->d_name);
       
       if ((fd=open(fstr, O_RDONLY)) < 0) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fstr, strerror(errno)));
          continue;
       }
       close(fd);
-      el = cull_read_in_centry(CENTRY_DIR, dent->d_name , 1,0, Master_CEntry_List);
+      el = cull_read_in_centry(directory, dent->d_name , 1,0, Master_CEntry_List);
       if (answer) {
          ERROR((SGE_EVENT, lGetString(lFirst(answer), AN_text)));
          answer = lFreeList(answer);

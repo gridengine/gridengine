@@ -53,6 +53,11 @@ static const char* userset_types[] = {
    ""
 };
 
+lList **userset_list_get_master_list(void)
+{
+   return &Master_Userset_List;
+}
+
 /****** sgeobj/userset/userset_is_deadline_user() ******************************
 *  NAME
 *     userset_is_deadline_user() -- may user sumbit deadline jobs. 

@@ -36,6 +36,9 @@
 
 extern lList *Master_Userset_List;
 
+lList **
+userset_list_get_master_list(void);
+
 bool userset_is_deadline_user(lList *lp, const char *username);
 
 lListElem *userset_list_locate(lList *lp, const char *name);

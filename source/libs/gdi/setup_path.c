@@ -57,6 +57,7 @@
 struct path_state_t {
     char       *sge_root;      
     char       *cell_root;
+    char       *bootstrap_file;
     char       *conf_file;
     char       *sched_conf_file;
     char       *act_qmaster_file;
@@ -71,7 +72,7 @@ struct path_state_t {
 static pthread_key_t   path_state_key;
 #else
 static struct path_state_t path_state_opaque = {
-  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 struct path_state_t *path_state = &path_state_opaque;
 #endif
 
@@ -83,6 +84,7 @@ static void path_state_init(struct path_state_t* state) {
 static void path_state_destroy(void* state) {
    FREE(((struct path_state_t*)state)->sge_root);
    FREE(((struct path_state_t*)state)->cell_root);
+   FREE(((struct path_state_t*)state)->bootstrap_file);
    FREE(((struct path_state_t*)state)->conf_file);
    FREE(((struct path_state_t*)state)->sched_conf_file);
    FREE(((struct path_state_t*)state)->act_qmaster_file);
@@ -108,6 +110,11 @@ const char *path_state_get_cell_root(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_cell_root");
    return path_state->cell_root;
+}
+const char *path_state_get_bootstrap_file(void)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_bootstrap_file");
+   return path_state->bootstrap_file;
 }
 const char *path_state_get_conf_file(void)
 {
@@ -162,6 +169,11 @@ void path_state_set_cell_root(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_cell_root");
    path_state->cell_root = sge_strdup(path_state->cell_root, path);
+}
+void path_state_set_bootstrap_file(const char *path)
+{
+   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_conf_file");
+   path_state->bootstrap_file = sge_strdup(path_state->conf_file, path);
 }
 void path_state_set_conf_file(const char *path)
 {
@@ -323,6 +335,9 @@ lList **alpp
    path_state_set_sge_root(sge_root);
    path_state_set_cell_root(cell_root);
   
+   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, BOOTSTRAP_FILE);
+   path_state_set_bootstrap_file(sge_dstring_get_string(&bw));
+
    sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, CONF_FILE);
    path_state_set_conf_file(sge_dstring_get_string(&bw));
 
@@ -348,9 +363,10 @@ lList **alpp
    path_state_set_product_mode_file(sge_dstring_get_string(&bw));
    FREE(cell_root);
 
-   DPRINTF(("sge_root         >%s<\n", path_state_get_sge_root()));
+   DPRINTF(("sge_root            >%s<\n", path_state_get_sge_root()));
    DPRINTF(("cell_root           >%s<\n", path_state_get_cell_root()));
-   DPRINTF(("conf_file           >%s<\n", path_state_get_conf_file()));
+   DPRINTF(("conf_file           >%s<\n", path_state_get_bootstrap_file()));
+   DPRINTF(("bootstrap_file      >%s<\n", path_state_get_conf_file()));
    DPRINTF(("act_qmaster_file    >%s<\n", path_state_get_act_qmaster_file()));
    DPRINTF(("acct_file           >%s<\n", path_state_get_acct_file()));
    DPRINTF(("stat_file           >%s<\n", path_state_get_stat_file()));
@@ -368,6 +384,7 @@ void sge_delete_paths()
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_sge_root");
 	FREE(path_state->sge_root);
 	FREE(path_state->cell_root);
+	FREE(path_state->bootstrap_file);
 	FREE(path_state->conf_file);
 	FREE(path_state->sched_conf_file);
 	FREE(path_state->act_qmaster_file);

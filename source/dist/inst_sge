@@ -165,6 +165,12 @@ SelectHostNameResolving()
    fi
    $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
    $CLEAR
+
+   if [ $fast = false -a "$IGNORE_FQDN_DEFAULT" = false ]; then
+      GetDefaultDomain
+   else
+      CFG_DEFAULT_DOMAIN=none
+   fi
 }
 
 #-------------------------------------------------------------------------
@@ -406,19 +412,22 @@ MakeDirsMaster()
    $INFOTEXT -u "\nMaking directories"
    Makedir $QSYST_CELL_VAL
    Makedir $COMMONDIR
-   Makedir $HISTDIR
-   Makedir $LCONFDIR
    Makedir $QMDIR
-   Makedir $QMDIR/admin_hosts
-   Makedir $QMDIR/ckpt
-   Makedir $QMDIR/centry
-   Makedir $QMDIR/exec_hosts
-   Makedir $QMDIR/job_scripts
-   Makedir $QMDIR/jobs
-   Makedir $QMDIR/pe
-   Makedir $QMDIR/queues
-   Makedir $QMDIR/submit_hosts
-   Makedir $QMDIR/usersets
+
+   $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+   $CLEAR
+}
+
+#-------------------------------------------------------------------------
+# Initialize the spooling database (or directory structure)
+#
+InitSpoolingDatabase()
+{
+   $INFOTEXT -u "\nDumping bootstrapping information"
+   PrintBootstrap > $COMMONDIR/bootstrap
+
+   $INFOTEXT -u "\nInitializing spooling database"
+   ExecuteAsAdmin $SPOOLINIT $SPOOLING_LIB "$SPOOLING_ARGS" init
 
    $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
    $CLEAR
@@ -429,6 +438,7 @@ MakeDirsMaster()
 #
 PrintLocalConf()
 {
+
    arg=$1
    if [ $arg = 1 ]; then
       $ECHO "# Version: pre6.0"
@@ -441,6 +451,25 @@ PrintLocalConf()
    $ECHO "xterm                  $XTERM"
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
+}
+
+#-------------------------------------------------------------------------
+# PrintBootstrap: print SGE/SGEEE default configuration
+#
+PrintBootstrap()
+{
+   $ECHO "# Version: pre6.0"
+   $ECHO "#"
+   if [ $ADMINUSER != default ]; then
+      $ECHO "admin_user             $ADMINUSER"
+   else
+      $ECHO "admin_user             none"
+   fi
+   $ECHO "default_domain         $CFG_DEFAULT_DOMAIN"
+   $ECHO "ignore_fqdn            $IGNORE_FQDN_DEFAULT"
+   $ECHO "spooling_method        $SPOOLING_METHOD"
+   $ECHO "spooling_lib           $SPOOLING_LIB"
+   $ECHO "spooling_params        $SPOOLING_ARGS"
 }
 
 #-------------------------------------------------------------------------
@@ -592,12 +621,6 @@ GetConfiguration()
 
    GetGidRange
 
-   if [ $fast = false -a "$IGNORE_FQDN_DEFAULT" = false ]; then
-      GetDefaultDomain
-   else
-      CFG_DEFAULT_DOMAIN=none
-   fi
-
    if [ $fast = true ]; then
       CFG_EXE_SPOOL=$QSYST_ROOT_VAL/$QSYST_CELL_VAL/spool
       CFG_MAIL_ADDR=none
@@ -657,46 +680,62 @@ GetConfiguration()
 AddConfiguration()
 {
    useold=false
-
-   if [ -f $COMMONDIR/configuration ]; then
-      $INFOTEXT -u "\nCreating global cluster configuration"
-      $INFOTEXT "\nA global cluster configuration file already exists.\n"
-      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to display the configuration >> "
-
-      cat $COMMONDIR/configuration |grep -v conf_version |more
-
-      QMDIR_IN_CFG=`grep qmaster_spool_dir $COMMONDIR/configuration | awk '{print $2}'`
-      if [ "$QMDIR_IN_CFG" != $QMDIR ]; then
-         $CLEAR
-         $INFOTEXT -u "\nERROR - new qmaster spool directory"
-         $INFOTEXT "\nThe qmaster spool directory in your existing configuration is set to\n\n" \
-                   "   %s\n\n" \
-                   "and differs from your previous selection during this installation where you\n" \
-                   "set the qmaster spool directory to\n\n" \
-                   "   %s\n\n" \
-                   "Please either copy your old qmaster spool directory to the new directory and\n" \
-                   "edit the existing cluster configuration file to reflect this change and\n" \
-                   "restart the installation or delete the current cluster configuration file.\n" \
-                   "$QMDIR_IN_CFG" "$QMDIR"
-         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to cancel the installation >> "
-         exit 1
-      else
-         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
-                   "Do you want to create a new configuration (y/n) [y] >> "
-         if [ $? = 1 ]; then
-            $INFOTEXT -wait -auto $autoinst -n "Using existing configuration. Hit <RETURN> to continue >> "
-            useold=true
-         fi
-      fi
-   fi
+#
+# JG: TODO: a maintenance command could dump the configuration to file
+#           we display it and decide whether to overwrite it.
+#           To Change: spoolinit has to check whether the database already
+#           exists and not overwrite it.
+#
+#   if [ -f $COMMONDIR/configuration ]; then
+#      $INFOTEXT -u "\nCreating global cluster configuration"
+#      $INFOTEXT "\nA global cluster configuration file already exists.\n"
+#      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to display the configuration >> "
+#
+#      cat $COMMONDIR/configuration |grep -v conf_version |more
+#
+#      QMDIR_IN_CFG=`grep qmaster_spool_dir $COMMONDIR/configuration | awk '{print $2}'`
+#      if [ "$QMDIR_IN_CFG" != $QMDIR ]; then
+#         $CLEAR
+#         $INFOTEXT -u "\nERROR - new qmaster spool directory"
+#         $INFOTEXT "\nThe qmaster spool directory in your existing configuration is set to\n\n" \
+#                   "   %s\n\n" \
+#                   "and differs from your previous selection during this installation where you\n" \
+#                   "set the qmaster spool directory to\n\n" \
+#                   "   %s\n\n" \
+#                   "Please either copy your old qmaster spool directory to the new directory and\n" \
+#                   "edit the existing cluster configuration file to reflect this change and\n" \
+#                   "restart the installation or delete the current cluster configuration file.\n" \
+#                   "$QMDIR_IN_CFG" "$QMDIR"
+#         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to cancel the installation >> "
+#         exit 1
+#      else
+#         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+#                   "Do you want to create a new configuration (y/n) [y] >> "
+#         if [ $? = 1 ]; then
+#            $INFOTEXT -wait -auto $autoinst -n "Using existing configuration. Hit <RETURN> to continue >> "
+#            useold=true
+#         fi
+#      fi
+#   fi
 
    if [ $useold = false ]; then
       GetConfiguration
-      TruncCreateAndMakeWriteable $COMMONDIR/configuration
-      PrintConf >> $COMMONDIR/configuration
-      SetPerm $COMMONDIR/configuration
+      #TruncCreateAndMakeWriteable $COMMONDIR/configuration
+      #PrintConf >> $COMMONDIR/configuration
+      #SetPerm $COMMONDIR/configuration
+      TMPC=/tmp/configuration
+      rm -f $TMPC
+      PrintConf > $TMPC
+      ExecuteAsAdmin $SPOOLDEFAULTS configuration $TMPC
+      rm -f $TMPC
    fi
+}
 
+#-------------------------------------------------------------------------
+# WriteProductMode
+#
+WriteProductMode()
+{
    TruncCreateAndMakeWriteable $COMMONDIR/product_mode
    if [ $inst = sge ]; then
       PRODUCT_PREFIX=sge
@@ -765,28 +804,34 @@ AddLocalConfiguration()
 
    $CLEAR
    $INFOTEXT -u "\nCreating local configuration"
-   if [ -f $LCONFDIR/$HOST ]; then
-      $INFOTEXT "\nA local configuration for this host already exists.\n"
-
-      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to display configuration >> "
-
-      cat $LCONFDIR/$HOST |grep -v conf_version |more
-
-      $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
-                "\nDo you want to create a new configuration (y/n) [n] >> "
-      if [ $? = 1 ]; then
-         $INFOTEXT -wait -auto $autoinst -n "Keeping existing configuration. Hit <RETURN> to continue >> "
-         useold=true
-      else
-         $INFOTEXT -wait -auto $autoinst -n "Creating new local configuration. Hit <RETURN> to continue >> "
-      fi
-      $CLEAR
-   fi
+   # JG: TODO: see comment regarding existing global configuration
+#   if [ -f $LCONFDIR/$HOST ]; then
+#      $INFOTEXT "\nA local configuration for this host already exists.\n"
+#
+#      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to display configuration >> "
+#
+#      cat $LCONFDIR/$HOST |grep -v conf_version |more
+#
+#      $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
+#                "\nDo you want to create a new configuration (y/n) [n] >> "
+#      if [ $? = 1 ]; then
+#         $INFOTEXT -wait -auto $autoinst -n "Keeping existing configuration. Hit <RETURN> to continue >> "
+#         useold=true
+#      else
+#         $INFOTEXT -wait -auto $autoinst -n "Creating new local configuration. Hit <RETURN> to continue >> "
+#      fi
+#      $CLEAR
+#   fi
 
    if [ $useold = false ]; then
-      TruncCreateAndMakeWriteable $LCONFDIR/$HOST
-      PrintLocalConf 1 >> $LCONFDIR/$HOST
-      SetPerm $LCONFDIR/$HOST
+#      TruncCreateAndMakeWriteable $LCONFDIR/$HOST
+#      PrintLocalConf 1 >> $LCONFDIR/$HOST
+#      SetPerm $LCONFDIR/$HOST
+      TMPH=/tmp/$HOST
+      rm -f $TMPH
+      PrintLocalConf 1 > $TMPH
+      ExecuteAsAdmin $SPOOLDEFAULTS local_conf $TMPH $HOST
+      rm -f $TMPH
    fi
 }
 
@@ -808,19 +853,21 @@ AddActQmaster()
 AddDefaultComplexes()
 {
    $INFOTEXT "Adding default complex attributes"
-   for c in arch h_rt mem_free num_proc  s_rt swap_total calendar h_stack mem_total qname s_stack swap_used cpu h_vmem mem_used rerun s_vmem tmpdir h_core hostname min_cpu_interval s_core seq_no virtual_free h_cpu load_avg np_load_avg s_cpu slots virtual_total h_data load_long np_load_long s_data swap_free virtual_used h_fsize load_medium np_load_medium s_fsize swap_rate h_rss load_short np_load_short s_rss swap_rsvd; do
-      if [ -f $QMDIR/centry/$c -a -s $QMDIR/centry/$c ]; then
-         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
-                   "Complex attribute >%s< already exists - should Complex attribute be preserved (y/n) [y] >> " $c
-         if [ $? = 1 ]; then
-            $INFOTEXT "Overwriting existing complex attribute>%s<" $c
-            ExecuteAsAdmin cp util/resources/centry/$c $QMDIR/centry
-         fi
-      else
-         ExecuteAsAdmin cp util/resources/centry/$c $QMDIR/centry
-      fi
-   done
-   ExecuteAsAdmin chmod $FILEPERM $QMDIR/centry/*
+#   for c in arch h_rt mem_free num_proc  s_rt swap_total calendar h_stack mem_total qname s_stack swap_used cpu h_vmem mem_used rerun s_vmem tmpdir h_core hostname min_cpu_interval s_core seq_no virtual_free h_cpu load_avg np_load_avg s_cpu slots virtual_total h_data load_long np_load_long s_data swap_free virtual_used h_fsize load_medium np_load_medium s_fsize swap_rate h_rss load_short np_load_short s_rss swap_rsvd; do
+#      if [ -f $QMDIR/centry/$c -a -s $QMDIR/centry/$c ]; then
+#         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+#                   "Complex attribute >%s< already exists - should Complex attribute be preserved (y/n) [y] >> " $c
+#         if [ $? = 1 ]; then
+#            $INFOTEXT "Overwriting existing complex attribute>%s<" $c
+#            ExecuteAsAdmin cp util/resources/centry/$c $QMDIR/centry
+#         fi
+#      else
+#         ExecuteAsAdmin cp util/resources/centry/$c $QMDIR/centry
+#      fi
+#   done
+#   ExecuteAsAdmin chmod $FILEPERM $QMDIR/centry/*
+   ExecuteAsAdmin $SPOOLDEFAULTS complexes $QSYST_ROOT_VAL/util/resources/centry
+
 }
 
 #-------------------------------------------------------------------------
@@ -829,14 +876,16 @@ AddDefaultComplexes()
 AddDefaultDepartement()
 {
    if [ $inst = sgeee ]; then
-      $INFOTEXT "Adding SGEEE >defaultdepartment< userset"
-      ExecuteAsAdmin $CP util/resources/usersets/defaultdepartment $QMDIR/usersets
-      ExecuteAsAdmin $CHMOD $FILEPERM $QMDIR/usersets/defaultdepartment
+      #$INFOTEXT "Adding SGEEE >defaultdepartment< userset"
+      #ExecuteAsAdmin $CP util/resources/usersets/defaultdepartment $QMDIR/usersets
+      #ExecuteAsAdmin $CHMOD $FILEPERM $QMDIR/usersets/defaultdepartment
 
-      $INFOTEXT "Adding SGEEE >deadlineusers< userset"
-      ExecuteAsAdmin $CP util/resources/usersets/deadlineusers $QMDIR/usersets
-      ExecuteAsAdmin $CHMOD 644 $QMDIR/usersets/deadlineusers
+      #$INFOTEXT "Adding SGEEE >deadlineusers< userset"
+      #ExecuteAsAdmin $CP util/resources/usersets/deadlineusers $QMDIR/usersets
+      #ExecuteAsAdmin $CHMOD 644 $QMDIR/usersets/deadlineusers
 
+      $INFOTEXT "Adding SGEEE default usersets"
+      ExecuteAsAdmin $SPOOLDEFAULTS usersets $QSYST_ROOT_VAL/util/resources/usersets
    fi
 }
 
@@ -867,8 +916,7 @@ AddCommonFiles()
 #
 AddPEFiles()
 {
-
-   $INFOTEXT "Adding default parallel environment (PE) for >qmake<"
+   $INFOTEXT "Adding default parallel environments (PE)"
 #   for c in make; do
 #      if [ -f $QMDIR/pe/$c -a -s $QMDIR/pe/$c ]; then
 #         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
@@ -882,16 +930,24 @@ AddPEFiles()
 #      fi
 #   done
 #   ExecuteAsAdmin chmod $FILEPERM $QMDIR/pe/*
-   ExecuteAsAdmin $SPOOLDEFAULTS pes
+   ExecuteAsAdmin $SPOOLDEFAULTS pes $QSYST_ROOT_VAL/util/resources/pe
 }
 #-------------------------------------------------------------------------
 # AddDefaultManager
 #
 AddDefaultManager()
 {
-  TruncCreateAndMakeWriteable $QMDIR/managers
-  $ECHO $1 >> $QMDIR/managers
-  SetPerm $QMDIR/managers
+   ExecuteAsAdmin $SPOOLDEFAULTS managers $*
+#  TruncCreateAndMakeWriteable $QMDIR/managers
+#  $ECHO $1 >> $QMDIR/managers
+#  SetPerm $QMDIR/managers
+}
+
+# AddDefaultOperator
+#
+AddDefaultOperator()
+{
+   ExecuteAsAdmin $SPOOLDEFAULTS operators $*
 }
 
 
@@ -1431,13 +1487,13 @@ AddQsystStartUpScript()
 
       rm -f $TMP_V5_STARTUP_FILE ${TMP_V5_STARTUP_FILE}.0 ${TMP_V5_STARTUP_FILE}.1
 
-      ExecuteAsAdmin $SPOOLDEFAULTS managers
-      ExecuteAsAdmin $SPOOLDEFAULTS operators
-#      if [ $euid = 0 -a $ADMINUSER != default -a $WHICH = "qmaster" ]; then
-#         AddDefaultManager $ADMINUSER
-#      elif [ $euid != 0 ]; then
-#         AddDefaultManager $USER
-#      fi
+      if [ $euid = 0 -a $ADMINUSER != default -a $WHICH = "qmaster" ]; then
+         AddDefaultManager root $ADMINUSER
+         AddDefaultOperator $ADMINUSER
+      elif [ $euid != 0 ]; then
+         AddDefaultManager $USER
+         AddDefaultOperator $USER
+      fi
 
       $INFOTEXT "Your Grid Engine cluster wide startup script is installed as:\n\n" \
                 "   %s<\n\n" $V5_STARTUP_FILE
@@ -1708,7 +1764,6 @@ SetCellDependentVariables()
    COMMONDIR=$QSYST_CELL_VAL/common
    LCONFDIR=$QSYST_CELL_VAL/common/local_conf
    CASHAREDDIR=$COMMONDIR/sgeCA
-   HISTDIR=$COMMONDIR/history
 }
 
 #--------------------------------------------------------------------------
@@ -1998,6 +2053,16 @@ CheckCSP()
 
 
 #--------------------------------------------------------------------------
+# SetSpoolingOptions sets / queries options for the spooling framework
+#
+SetSpoolingOptions()
+{
+   SPOOLING_LIB=none
+   SPOOLING_METHOD=classic
+   SPOOLING_ARGS="$QSYST_ROOT_VAL/$COMMONDIR;$QMDIR"
+}
+
+#--------------------------------------------------------------------------
 # THE MAIN PROCEDURE
 #--------------------------------------------------------------------------
 
@@ -2124,7 +2189,7 @@ fi
 #---------------------------------------
 
 #---------------------------------------
-# setup SPOOLDEFAULTS start
+# setup SPOOLDEFAULTS and SPOOLINIT start
 #---------------------------------------
 # set spooldefaults binary path
 SPOOLDEFAULTS=$V5UTILBIN/spooldefaults
@@ -2134,8 +2199,15 @@ if [ ! -f $SPOOLDEFAULTS ]; then
    exit 1
 fi
 
+SPOOLINIT=$V5UTILBIN/spoolinit
+if [ ! -f $SPOOLINIT ]; then
+   $ECHO "can't find \"$SPOOLINIT\""
+   $ECHO "Installation failed."
+   exit 1
+fi
+
 #---------------------------------------
-# setup SPOOLDEFAULTS end
+# setup SPOOLDEFAULTS and SPOOLINIT end
 #---------------------------------------
 
 HOST=`$V5UTILBIN/gethostname -name`
@@ -2235,8 +2307,11 @@ qmaster)
    fi
 
    SetPermissions
+   SetSpoolingOptions
    MakeDirsMaster
    SelectHostNameResolving
+   WriteProductMode
+   InitSpoolingDatabase
    AddConfiguration
    AddLocalConfiguration
    AddActQmaster

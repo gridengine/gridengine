@@ -119,7 +119,6 @@ FPRINTF_ERROR:
    return -1;
 }
 
-
 const char *read_adminuser_from_configuration(
 const lListElem *el,
 const char *fname, 

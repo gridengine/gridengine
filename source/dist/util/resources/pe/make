@@ -3,7 +3,6 @@
 # DO NOT MODIFY THIS FILE MANUALLY!
 #
 pe_name           make
-queue_list        all
 slots             999
 user_lists        NONE
 xuser_lists       NONE

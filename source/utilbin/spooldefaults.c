@@ -42,14 +42,22 @@
 #include "sge_uidgid.h"
 #include "setup_path.h"
 #include "sge_prog.h"
+#include "sge_feature.h"
 
 #include "sge_answer.h"
 
 #include "sge_all_listsL.h"
 #include "sge_manop.h"
+#include "sge_pe.h"
+#include "sge_centry.h"
+#include "sge_userset.h"
+#include "sge_conf.h"
 
 #include "spool/sge_spooling.h"
 #include "spool/dynamic/sge_spooling_loader.h"
+
+#include "spool/classic/read_list.h"
+#include "spool/classic/rw_configuration.h"
 
 #include "msg_utilbin.h"
 
@@ -60,31 +68,29 @@ static void usage(const char *argv0)
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_COMMANDINTRO2);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_TEST);
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_MANAGERS);
-/*    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CONFIG); */
    fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_OPERATORS);
-   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_MAKEPE);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_CONFIGURATION);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_LOCAL_CONF);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_PES);
+   fprintf(stderr, "%s", MSG_SPOOLDEFAULTS_USERSETS);
 }
 
 static bool 
 init_spooling_params(const char **shlib, const char **args)
 {
-   static dstring args_out = DSTRING_INIT;
-   const char *name[1] = { "qmaster_spool_dir" };
-   char value[1][1025];
+   const char *name[2] = { "spooling_lib", "spooling_params" };
+   char value[2][1025];
 
    DENTER(TOP_LAYER, "init_spooling_params");
 
-   if (sge_get_confval_array(path_state_get_conf_file(), 1, name, value)) {
+   if (sge_get_confval_array(path_state_get_bootstrap_file(), 2, name, value)) {
       ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTREADSPOOLPARAMS));
       DEXIT;
       return false;
    }
-
-   sge_dstring_sprintf(&args_out, "%s/%s;%s", 
-                       path_state_get_cell_root(), COMMON_DIR, value[0]);
    
-   *shlib = "none";
-   *args  = sge_dstring_get_string(&args_out);
+   *shlib = value[0];
+   *args  = value[1];
 
    DEXIT;
    return true;
@@ -160,33 +166,17 @@ static int spool_manop(const char *name, sge_object_type type)
    return ret;
 }
 
-static int spool_manops(sge_object_type type)
+static int spool_manops(sge_object_type type, int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
+   int i;
 
    DENTER(TOP_LAYER, "spool_managers");
 
-   if (type == SGE_TYPE_MANAGER) {
-      /* add root as manager */
-      ret = spool_manop("root", type);
-   }
-
-   if (ret == EXIT_SUCCESS) {
-      /* add admin user as manager and operator */
-      const char *name[1] = { "admin_user" };
-      char value[1][1025];
-
-      /* read admin username from config */
-      if (sge_get_confval_array(path_state_get_conf_file(), 1, name, value)) {
-         ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTREADADMINUSER));
-         ret = EXIT_FAILURE;
-      } else {
-         if (value[0] != NULL && strcasecmp(value[0], "none") != 0) {
-            ret = spool_manop(value[0], type);
-         } else {
-            ret = spool_manop(uti_state_get_user_name(), type);
-         }
-
+   for (i = 2; i < argc; i++) {
+      ret = spool_manop(argv[i], type);
+      if (ret != EXIT_SUCCESS) {
+         break;
       }
    }
 
@@ -194,38 +184,135 @@ static int spool_manops(sge_object_type type)
    return ret;
 }
 
-static int spool_pe(const char *name)
+static int spool_configuration(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
-   lListElem *ep;
+   lListElem *conf;
    lList *answer_list = NULL;
 
-   DENTER(TOP_LAYER, "spool_pe");
+   DENTER(TOP_LAYER, "spool_configuration");
 
-   ep = lCreateElem(PE_Type);
-   lSetString(ep, PE_name, name);
-   lSetUlong(ep, PE_slots, 999);
-   lSetString(ep, PE_allocation_rule, "$pe_slots");
-   lSetBool(ep, PE_control_slaves, true);
-   lSetBool(ep, PE_job_is_first_task, false);
-
-   if (!spool_write_object(&answer_list, spool_get_default_context(), ep, name, SGE_TYPE_PE)) {
-      /* error output has been done in spooling function */
+   conf = read_configuration(argv[2], SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
+   if (conf == NULL) {
+      ERROR((SGE_EVENT, "couldn't read local config file "SFN"\n", argv[2]));
       ret = EXIT_FAILURE;
+   } else {
+      if (!spool_write_object(&answer_list, spool_get_default_context(), conf, SGE_GLOBAL_NAME, SGE_TYPE_CONFIG)) {
+         /* error output has been done in spooling function */
+         ret = EXIT_FAILURE;
+      }
+      answer_list_output(&answer_list);
    }
-   answer_list_output(&answer_list);
 
    DEXIT;
    return ret;
 }
 
-static int spool_pes(void)
+static int spool_local_conf(int argc, char *argv[])
 {
-   int ret;
+   int ret = EXIT_SUCCESS;
+   lListElem *conf;
+   lList *answer_list = NULL;
+
+   DENTER(TOP_LAYER, "spool_configuration");
+
+   /* we get an additional argument: the config name */
+   if (argc < 4) {
+      usage(argv[0]);
+      ret = EXIT_FAILURE;
+   } else {
+
+      conf = read_configuration(argv[2], argv[3], FLG_CONF_SPOOL);
+
+      if (conf == NULL) {
+         ERROR((SGE_EVENT, "couldn't read local config file "SFN"\n", argv[2]));
+         ret = EXIT_FAILURE;
+      } else {
+         if (!spool_write_object(&answer_list, spool_get_default_context(), 
+                                 conf, argv[3], SGE_TYPE_CONFIG)) {
+            /* error output has been done in spooling function */
+            ret = EXIT_FAILURE;
+         }
+         answer_list_output(&answer_list);
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static int spool_complexes(int argc, char *argv[])
+{
+   int ret = EXIT_SUCCESS;
+   lList **centry_list;
+   lListElem *centry;
+   lList *answer_list = NULL;
+
+   DENTER(TOP_LAYER, "spool_complexes");
+
+   read_all_centries(argv[2]);
+
+   centry_list = centry_list_get_master_list();
+
+   for_each(centry, *centry_list) {
+      if (!spool_write_object(&answer_list, spool_get_default_context(), centry,
+                              lGetString(centry, CE_name), SGE_TYPE_CENTRY)) {
+         /* error output has been done in spooling function */
+         ret = EXIT_FAILURE;
+         answer_list_output(&answer_list);
+         break;
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static int spool_pes(int argc, char *argv[])
+{
+   int ret = EXIT_SUCCESS;
+   lList *answer_list = NULL;
+   lList **pe_list;
+   lListElem *pe;
 
    DENTER(TOP_LAYER, "spool_pes");
 
-   ret = spool_pe("make");
+   sge_read_pe_list_from_disk(argv[2]);
+
+   pe_list = pe_list_get_master_list();
+   for_each(pe, *pe_list) {
+      if (!spool_write_object(&answer_list, spool_get_default_context(), pe, lGetString(pe, PE_name), SGE_TYPE_PE)) {
+         /* error output has been done in spooling function */
+         ret = EXIT_FAILURE;
+         answer_list_output(&answer_list);
+         break;
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+static int spool_usersets(int argc, char *argv[])
+{
+   int ret = EXIT_SUCCESS;
+   lList *answer_list = NULL;
+   lList **userset_list;
+   lListElem *userset;
+
+   DENTER(TOP_LAYER, "spool_usersets");
+
+   sge_read_userset_list_from_disk(argv[2]);
+
+   userset_list = userset_list_get_master_list();
+   for_each(userset, *userset_list) {
+      if (!spool_write_object(&answer_list, spool_get_default_context(), userset, lGetString(userset, US_name), SGE_TYPE_USERSET)) {
+         /* error output has been done in spooling function */
+         ret = EXIT_FAILURE;
+         answer_list_output(&answer_list);
+         break;
+      }
+   }
 
    DEXIT;
    return ret;
@@ -252,18 +339,27 @@ int main(int argc, char *argv[])
          ret = init_framework();
 
          if (ret == EXIT_SUCCESS) {
-            int i;
-
-            for (i = 1; i < argc; i++) {
-               if (strcmp(argv[i], "test") == 0) {
-                  /* nothing to do - init_framework succeeded */
-               } else if (strcmp(argv[i], "config") == 0) {
-               } else if (strcmp(argv[i], "managers") == 0) {
-                  ret = spool_manops(SGE_TYPE_MANAGER);
-               } else if (strcmp(argv[i], "operators") == 0) {
-                  ret = spool_manops(SGE_TYPE_OPERATOR);
-               } else if (strcmp(argv[i], "pes") == 0) {
-                  ret = spool_pes();
+            if (strcmp(argv[1], "test") == 0) {
+               /* nothing to do - init_framework succeeded */
+            } else {
+               /* all other commands have at least one parameter */
+               if (argc < 3) {
+                  usage(argv[0]);
+                  ret = EXIT_FAILURE;
+               } else if (strcmp(argv[1], "managers") == 0) {
+                  ret = spool_manops(SGE_TYPE_MANAGER, argc, argv);
+               } else if (strcmp(argv[1], "operators") == 0) {
+                  ret = spool_manops(SGE_TYPE_OPERATOR, argc, argv);
+               } else if (strcmp(argv[1], "pes") == 0) {
+                  ret = spool_pes(argc, argv);
+               } else if (strcmp(argv[1], "complexes") == 0) {
+                  ret = spool_complexes(argc, argv);
+               } else if (strcmp(argv[1], "configuration") == 0) {
+                  ret = spool_configuration(argc, argv);
+               } else if (strcmp(argv[1], "local_conf") == 0) {
+                  ret = spool_local_conf(argc, argv);
+               } else if (strcmp(argv[1], "usersets") == 0) {
+                  ret = spool_usersets(argc, argv);
                } else {
                   usage(argv[0]);
                   ret = EXIT_FAILURE;

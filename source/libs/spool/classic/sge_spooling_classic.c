@@ -42,6 +42,7 @@
 #include "sge_string.h"
 #include "sge_dstring.h"
 #include "sge_hostname.h"
+#include "sge_profiling.h"
 
 #include "sge.h"
 #include "sge_gdi.h"
@@ -195,7 +196,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
                                           spool_dir,
                                           spool_classic_default_startup_func,
                                           NULL,
-                                          NULL,
+                                          spool_classic_default_maintenance_func,
                                           spool_classic_default_list_func,
                                           spool_classic_default_read_func,
                                           spool_classic_default_write_func,
@@ -210,7 +211,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
                                           common_dir,
                                           spool_classic_common_startup_func,
                                           NULL,
-                                          NULL,
+                                          spool_classic_common_maintenance_func,
                                           spool_classic_default_list_func,
                                           spool_classic_default_read_func,
                                           spool_classic_default_write_func,
@@ -299,26 +300,10 @@ spool_classic_default_startup_func(lList **answer_list,
       }
 
       if (ret) {
+         /* JG: TODO: if check, we could check for the existence of the
+          *           subdirectories.
+          */
          /* create spool sub directories */
-         sge_mkdir(JOB_DIR, 0755, true, false);
-         sge_mkdir(ZOMBIE_DIR, 0755, true, false);
-         sge_mkdir(QUEUE_DIR, 0755, true, false);
-         sge_mkdir(CQUEUE_DIR, 0755, true, false);
-         sge_mkdir(QINSTANCES_DIR, 0755, true, false);
-         sge_mkdir(EXECHOST_DIR, 0755, true, false);
-         sge_mkdir(SUBMITHOST_DIR, 0755, true, false);
-         sge_mkdir(ADMINHOST_DIR, 0755, true, false);
-         sge_mkdir(COMPLEX_DIR, 0755, true, false);
-         sge_mkdir(CENTRY_DIR, 0755, true, false);
-         sge_mkdir(EXEC_DIR, 0755, true, false);
-         sge_mkdir(PE_DIR, 0755, true, false);
-         sge_mkdir(CKPTOBJ_DIR, 0755, true, false);
-         sge_mkdir(USERSET_DIR, 0755, true, false);
-         sge_mkdir(CAL_DIR, 0755, true, false);
-         sge_mkdir(HGROUP_DIR, 0755, true, false);
-         sge_mkdir(UME_DIR, 0755, true, false);
-         sge_mkdir(USER_DIR, 0755, true, false);
-         sge_mkdir(PROJECT_DIR, 0755, true, false);
       }
    }
 
@@ -372,15 +357,168 @@ spool_classic_common_startup_func(lList **answer_list,
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_SPOOL_COMMONDIRDOESNOTEXIST_S, url);
-   } else {
-      char local_dir_buf[SGE_PATH_MAX];
-      dstring local_dir;
+   } /* JG: TODO: if check, we could check for subdirectories as well */
 
-      sge_dstring_init(&local_dir, local_dir_buf, SGE_PATH_MAX);
+   DEXIT;
+   return ret;
+}
 
-      /* create directory for local configurations */
-      sge_dstring_sprintf(&local_dir, "%s/%s", url, LOCAL_CONF_DIR);
-      sge_mkdir(sge_dstring_get_string(&local_dir), 0755, true, false);
+/****** spool/classic/spool_classic_default_maintenance_func() ************
+*  NAME
+*     spool_classic_default_maintenance_func() -- maintain database
+*
+*  SYNOPSIS
+*     bool 
+*     spool_classic_default_maintenance_func(lList **answer_list, 
+*                                    lListElem *rule
+*                                    const spooling_maintenance_command cmd,
+*                                    const char *args);
+*
+*  FUNCTION
+*     Maintains the database:
+*        - initialization: create subdirectories of spool directory
+*        - ...
+*
+*  INPUTS
+*     lList **answer_list   - to return error messages
+*     const lListElem *rule - the rule containing data necessary for
+*                             the maintenance (e.g. path to the spool 
+*                             directory)
+*     const spooling_maintenance_command cmd - the command to execute
+*     const char *args      - arguments to the maintenance command
+*
+*  RESULT
+*     bool - true, if the maintenance succeeded, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/classic/--Spooling-BerkeleyDB
+*     spool/spool_maintain_context()
+*******************************************************************************/
+bool
+spool_classic_default_maintenance_func(lList **answer_list, 
+                                    const lListElem *rule, 
+                                    const spooling_maintenance_command cmd,
+                                    const char *args)
+{
+   bool ret = true;
+   const char *spool_dir;
+
+   DENTER(TOP_LAYER, "spool_classic_default_maintenance_func");
+
+   spool_dir = lGetString(rule, SPR_url);
+
+   switch (cmd) {
+      case SPM_init:
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         /* create spool sub directories */
+         sge_mkdir(JOB_DIR, 0755, true, false);
+         sge_mkdir(ZOMBIE_DIR, 0755, true, false);
+         sge_mkdir(QUEUE_DIR, 0755, true, false);
+         sge_mkdir(CQUEUE_DIR, 0755, true, false);
+         sge_mkdir(QINSTANCES_DIR, 0755, true, false);
+         sge_mkdir(EXECHOST_DIR, 0755, true, false);
+         sge_mkdir(SUBMITHOST_DIR, 0755, true, false);
+         sge_mkdir(ADMINHOST_DIR, 0755, true, false);
+         sge_mkdir(COMPLEX_DIR, 0755, true, false);
+         sge_mkdir(CENTRY_DIR, 0755, true, false);
+         sge_mkdir(EXEC_DIR, 0755, true, false);
+         sge_mkdir(PE_DIR, 0755, true, false);
+         sge_mkdir(CKPTOBJ_DIR, 0755, true, false);
+         sge_mkdir(USERSET_DIR, 0755, true, false);
+         sge_mkdir(CAL_DIR, 0755, true, false);
+         sge_mkdir(HGROUP_DIR, 0755, true, false);
+         sge_mkdir(UME_DIR, 0755, true, false);
+         sge_mkdir(USER_DIR, 0755, true, false);
+         sge_mkdir(PROJECT_DIR, 0755, true, false);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         break;
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 "unknown maintenance command %d\n", cmd);
+         ret = false;
+         break;
+         
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** spool/classic/spool_classic_common_maintenance_func() ************
+*  NAME
+*     spool_classic_common_maintenance_func() -- maintain database
+*
+*  SYNOPSIS
+*     bool 
+*     spool_classic_common_maintenance_func(lList **answer_list, 
+*                                    lListElem *rule
+*                                    const spooling_maintenance_command cmd,
+*                                    const char *args);
+*
+*  FUNCTION
+*     Maintains the database:
+*        - initialization: create subdirectories of common directory
+*        - ...
+*
+*  INPUTS
+*     lList **answer_list   - to return error messages
+*     const lListElem *rule - the rule containing data necessary for
+*                             the maintenance (e.g. path to the spool 
+*                             directory)
+*     const spooling_maintenance_command cmd - the command to execute
+*     const char *args      - arguments to the maintenance command
+*
+*  RESULT
+*     bool - true, if the maintenance succeeded, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/classic/--Spooling-BerkeleyDB
+*     spool/spool_maintain_context()
+*******************************************************************************/
+bool
+spool_classic_common_maintenance_func(lList **answer_list, 
+                                    const lListElem *rule, 
+                                    const spooling_maintenance_command cmd,
+                                    const char *args)
+{
+   bool ret = true;
+   const char *common_dir;
+
+   DENTER(TOP_LAYER, "spool_classic_common_maintenance_func");
+
+   common_dir = lGetString(rule, SPR_url);
+
+   switch (cmd) {
+      case SPM_init:
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         {
+            char local_dir_buf[SGE_PATH_MAX];
+            dstring local_dir;
+
+            sge_dstring_init(&local_dir, local_dir_buf, SGE_PATH_MAX);
+
+            /* create directory for local configurations */
+            sge_dstring_sprintf(&local_dir, "%s/%s", common_dir, LOCAL_CONF_DIR);
+            sge_mkdir(sge_dstring_get_string(&local_dir), 0755, true, false);
+         }
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         break;
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 "unknown maintenance command %d\n", cmd);
+         ret = false;
+         break;
+         
    }
 
    DEXIT;
@@ -458,7 +596,7 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_CENTRY:
-         if (read_all_centries() != 0) {
+         if (read_all_centries(CENTRY_DIR) != 0) {
             ret = false;
          }
          break;
@@ -523,7 +661,7 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_PE:
-         if (sge_read_pe_list_from_disk() != 0) {
+         if (sge_read_pe_list_from_disk(PE_DIR) != 0) {
             ret = false;
          }
          break;
@@ -565,7 +703,7 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_USERSET:
-         if (sge_read_userset_list_from_disk() != 0) {
+         if (sge_read_userset_list_from_disk(USERSET_DIR) != 0) {
             ret = false;
          }
          break;

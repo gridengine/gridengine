@@ -37,14 +37,14 @@
 #include "spool/sge_spooling.h"
 #include "spool/sge_spooling_utilities.h"
 
-/****** spool/flatfile/--Spooling-Template ************************************
+/****** spool/berkeleydb/--Spooling-Berkeley-DB ********************************
 *
 *  NAME
-*     xxx spooling - spooling of data in xxx
+*     berkeleydb spooling - spooling of data in BerkeleyDB database
 *
 *  FUNCTION
 *     The module provides functions and a spooling framework instantiation
-*     for data input/output xxxx
+*     for data input/output into a BerkeleyDB database.
 *
 *  SEE ALSO
 ****************************************************************************

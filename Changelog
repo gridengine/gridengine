@@ -1,3 +1,14 @@
+JG-2003-10-02-0: Enhancem.: Bootstrapping: All configuration data created by 
+                            inst_sge is written through spooldefaults, a binary
+                            based on the spooling framework.
+                            The bootstrapping data (spooling information, 
+                            ignore_fqdn and default_domain) is written to 
+                            $SGE_ROOT/default/common/bootstrap.
+                            Bootstrapping data is still duplicated in the global
+                            configuration. Clients still rely on the existence 
+                            of the global configuration file, works only with 
+                            classic spooling.
+
 EB-2003-09-30-0: Enhancem.: Bugfixes of enhancements: EB-2003-09-28-0,
                             EB-2003-09-24-1, EB-2003-09-24-0
 

@@ -38,14 +38,14 @@ int sge_read_host_list_from_disk(void);
 int sge_read_exechost_list_from_disk(void);
 int sge_read_adminhost_list_from_disk(void);
 int sge_read_submithost_list_from_disk(void);
-int sge_read_pe_list_from_disk(void);
+int sge_read_pe_list_from_disk(const char *directory);
 int sge_read_project_list_from_disk(void);
 int sge_read_queue_list_from_disk(void);
 int sge_read_user_list_from_disk(void);
-int sge_read_userset_list_from_disk(void);
+int sge_read_userset_list_from_disk(const char *directory);
 int sge_read_host_group_entries_from_disk(void);
 int sge_read_cqueue_list_from_disk(void);
-int read_all_centries(void);
+int read_all_centries(const char *directory);
 
 int read_all_configurations(lList **lpp,  
                             const char *global_config_file, 

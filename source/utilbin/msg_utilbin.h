@@ -133,12 +133,16 @@
  * utilbin/spooldefaults.c
  */
 
-#define MSG_SPOOLDEFAULTS_COMMANDINTRO1   _MESSAGE(57040, _("create default entries during installation process\n"))
-#define MSG_SPOOLDEFAULTS_COMMANDINTRO2   _MESSAGE(57041, _("following are the valid commands:\n"))
-#define MSG_SPOOLDEFAULTS_TEST            _MESSAGE(57042, _("[test]      test the spooling framework\n"))
-#define MSG_SPOOLDEFAULTS_MANAGERS        _MESSAGE(57043, _("[managers]  create default managers (root and admin user)\n"))
-#define MSG_SPOOLDEFAULTS_OPERATORS       _MESSAGE(57044, _("[operators] create default operators (root)\n"))
-#define MSG_SPOOLDEFAULTS_MAKEPE          _MESSAGE(57045, _("[pes]       create the default parallel environments (make)\n"))
+#define MSG_SPOOLDEFAULTS_COMMANDINTRO1   _MESSAGE(57040,         _("create default entries during installation process\n"))
+#define MSG_SPOOLDEFAULTS_COMMANDINTRO2   _MESSAGE(57041,         _("following are the valid commands:\n"))
+#define MSG_SPOOLDEFAULTS_TEST            _MESSAGE(57042,         _("test                          test the spooling framework\n"))
+#define MSG_SPOOLDEFAULTS_MANAGERS        _MESSAGE(57043,         _("managers <mgr1> [<mgr2> ...]  create managers\n"))
+#define MSG_SPOOLDEFAULTS_OPERATORS       _MESSAGE(57044,         _("operators <op1> [<op2> ...]   create operators\n"))
+#define MSG_SPOOLDEFAULTS_PES             _MESSAGE(57045,         _("pes <template_dir>            create parallel environments\n"))
+#define MSG_SPOOLDEFAULTS_COMPLEXES          _MESSAGE(57046,      _("complexes <template_dir>      create the global configuration\n"))
+#define MSG_SPOOLDEFAULTS_CONFIGURATION          _MESSAGE(57046,  _("configuration <template>      create the global configuration\n"))
+#define MSG_SPOOLDEFAULTS_LOCAL_CONF          _MESSAGE(57046,     _("local_conf <template> <name>  create a local configuration\n"))
+#define MSG_SPOOLDEFAULTS_USERSETS            _MESSAGE(57046,     _("usersets <template_dir>       create usersets\n"))
 #define MSG_SPOOLDEFAULTS_CANNOTREADSPOOLPARAMS _MESSAGE(57050, _("cannot read spooling parameters\n"))
 #define MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT   _MESSAGE(57051, _("cannot create spooling context\n"))
 #define MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT  _MESSAGE(57052, _("cannot startup spooling context\n"))

@@ -1792,22 +1792,13 @@ DTRACE;
       if (!strcmp("--", *sp)) {
          DPRINTF(("\"%s\"\n", *sp));
 
-         if (is_qalter) {
-            sprintf(str,MSG_PARSE_NOJOBIDGIVENBEFORESEPARATOR);
-            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-         else if ((flags & FLG_USE_PSEUDOS)) {
+         if ((flags & FLG_USE_PSEUDOS)) {
             sp++;
             if (!*sp) {
                sprintf(str,MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS);
                answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                DEXIT;
                return answer;
-            }
-            if  (!*sp) {
-               continue;
             }
             for (; *sp; sp++) {
                ep_opt = sge_add_arg(pcmdline, 0, lStringT, STR_PSEUDO_JOBARG, NULL);

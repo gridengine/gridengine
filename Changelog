@@ -1,13 +1,19 @@
+AA-2004-04-02-0: Bugfix:    qalter -- option
+                 Issue:     844
+                 Changed:   qsub, qalter, qhold, qrls, qsh
+                 Review:    SG
+
 JG-2004-04-01-0: Bugfix:    Changes to reporting_params, sharelog, only took 
                             effect after a qmaster restart.
                  Changed:   sge_qmaster
                  Issue:     940
                  Review:    CR
 
-SG-2004-04-01-0: Enhancem.: The profiling it turned of, when the schedd params
+SG-2004-04-01-0: Bugfix:    The profiling it turned of, when the schedd params
                             are set to none.
                  Changed:   scheduler
                  Issue:     936
+                 Review:    AA
 
 JG-2004-03-31-0: Enhancem.: Optimized non unique hash algorithm.
                             Reenabled non unique hash on JB_owner in scheduler.

@@ -1,3 +1,6 @@
+MD-2004-10-11-1: Bugfix:    fixed qmod (sge_prof_setup) 
+                 Changed:   sge_profiling
+
 CR-2004-10-11-0: Bugfix:    removed unnecessary logging output
                  Review:    HP
                  Changed:   commlib

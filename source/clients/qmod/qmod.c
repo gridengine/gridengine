@@ -57,6 +57,7 @@
 #include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj//sge_range.h"
 #include "sge_options.h"
+#include "sge_profiling.h"
 
 static lList *sge_parse_cmdline_qmod(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce);
@@ -77,6 +78,8 @@ char **argv
    lListElem *aep;
    
    DENTER_MAIN(TOP_LAYER, "qmod");
+
+   sge_prof_setup();
 
    log_state_set_log_gui(1);
 
@@ -140,6 +143,9 @@ char **argv
    lFreeList(alp);
    lFreeList(ref_list);
    lFreeList(pcmdline); 
+
+   sge_prof_cleanup();
+
    SGE_EXIT(0);
    DEXIT;
    return 0;

@@ -1,3 +1,6 @@
+AD-2003-10-13-0: Enhancem.: Added target 'lcklib'. 
+                 Changed:   ./libs/Makefile
+
 SG-2003-10-13-1: Enhancem.: Updated thre resource_attributes.txt document.
 
 SG-2003-10-13-0: Bugfix:    Fixed the build

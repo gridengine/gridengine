@@ -102,6 +102,7 @@
 #include "sge_persistence_qmaster.h"
 #include "sge_spool.h"
 #include "setup.h"
+#include "sge_event_master.h"
 #include "msg_common.h"
 #include "spool/sge_spooling.h"
 
@@ -500,22 +501,25 @@ static void communication_setup(void)
 
       /* save old debug log level and set log level to INFO */
       u_long32 old_ll = log_state_get_log_level();
-      log_state_set_log_level(LOG_INFO);
 
+      /* enable max connection close mode */
+      cl_com_set_max_connection_close_mode(com_handle, CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS);
 #if 0
       /* Enable this to check max. connection count behaviour of qmaster */
       cl_com_set_max_connections(com_handle, 3); 
 #endif
-
-      /* enable max connection close mode */
-      cl_com_set_max_connection_close_mode(com_handle, CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS);
-
-      /* log startup info into qmaster messages file */
       cl_com_get_max_connections(com_handle, &max_connections);
-      INFO((SGE_EVENT, MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U, u32c(max_connections) ));
 
       /* add local host to allowed host list */
       cl_com_add_allowed_host(com_handle,com_handle->local->comp_host);
+
+      /* check dynamic event client count */
+      max_dynamic_event_clients = sge_set_max_dynamic_event_clients(max_dynamic_event_clients); 
+
+      /* log startup info into qmaster messages file */
+      log_state_set_log_level(LOG_INFO);
+      INFO((SGE_EVENT, MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U, u32c(max_connections)));
+      INFO((SGE_EVENT, MSG_QMASTER_MAX_EVC_LIMIT_U, u32c( max_dynamic_event_clients)));
       log_state_set_log_level(old_ll);
    }
 

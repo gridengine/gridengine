@@ -58,7 +58,7 @@ set check_highest_level   499
 
 set check_126_num_hosts [llength $ts_config(execd_hosts)]
 for {set i 0} {$i < $check_126_num_hosts} {incr i} {
-   set check_description($i) "check iz 126 on exec host $i, 1 test loop"
+   set check_description($i) "check iz 126 on exec host $i, 10 test loop"
    set check_description([expr 100 + $i]) "check iz 126 on exec host $i, 100 test loops"
    set check_description([expr 200 + $i]) "check iz 126 on exec host $i, 200 test loops"
    set check_description([expr 300 + $i]) "check iz 126 on exec host $i, 300 test loops"
@@ -249,7 +249,7 @@ proc issue_126_check {} {
    }
 
    if {$runs_failed > 0} {
-      add_proc_error "issue_126_check" "-1" "Bug #126 is present - processes wern't suspended in $runs_failed of $check_126_loops test runs"
+      add_proc_error "issue_126_check" "-1" "Bug #126 is present - processes weren't suspended in $runs_failed of $check_126_loops test runs"
    }
 
    #

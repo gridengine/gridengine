@@ -43,6 +43,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <math.h>
+#include <sys/times.h>
 
 #include "sge.h"
 #include "sge_all_listsL.h"
@@ -50,6 +51,7 @@
 #include "sge_copy_append.h"
 #include "commlib.h"
 #include "sge_time.h"
+#include "sge_log.h"
 #include "sge_complex.h"
 #include "sge_prognames.h"
 #include "sgermon.h"
@@ -2584,7 +2586,15 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
    double weight[k_last];
 
+   clock_t start;
+   clock_t init, pass_0, pass_1, pass_2, calc;
+   struct tms tms_buffer;
+
    u_long32 free_qslots = 0;
+
+   if (profile_schedd) {
+      start = times(&tms_buffer);
+   }
 
    DENTER(TOP_LAYER, "sge_calc_tickets");
 
@@ -2834,6 +2844,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          do_usage, (finished_jobs!=NULL)));
       DPRINTF(("\n"));
    }      
+      if (profile_schedd) {
+         init = (times(&tms_buffer) - start);
+         start = times(&tms_buffer);
+      }
 
    /*-----------------------------------------------------------------
     * PASS 0
@@ -2866,6 +2880,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       sge_calc_sharetree_targets(root, lists, decay_list,
                                  curr_time, sge_scheduling_run);
 
+   if (profile_schedd) {
+         pass_0 = (times(&tms_buffer) - start);
+         start = times(&tms_buffer);
+      }
    /*-----------------------------------------------------------------
     * PASS 1
     *-----------------------------------------------------------------*/
@@ -2912,6 +2930,11 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                                     sum_of_job_functional_shares,
                                     weight);
 
+   if (profile_schedd) {
+      pass_1 = (times(&tms_buffer) - start);
+      start = times(&tms_buffer);
+   }
+   
 
    /*-----------------------------------------------------------------
     * PASS 2
@@ -2968,6 +2991,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 		sum_of_active_override_tickets);
    }
 
+   if (profile_schedd) {
+      pass_2 = (times(&tms_buffer) - start);
+      start = times(&tms_buffer);
+   }
    /*-----------------------------------------------------------------
     * NEW PENDING JOB TICKET CALCULATIONS
     *-----------------------------------------------------------------*/
@@ -3431,6 +3458,17 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    if (decay_list)
       lFreeList(decay_list);
 
+      if (profile_schedd) {
+         calc = (times(&tms_buffer) - start);/* * 1.0 / CLK_TCK ;*/
+         extern u_long32 logginglevel;
+         u_long32 saved_logginglevel = logginglevel;
+
+         logginglevel = LOG_INFO;
+         INFO((SGE_EVENT, "PROF: SGEEE job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s\n",
+               (init * 1.0 / CLK_TCK), (pass_0 * 1.0 / CLK_TCK), (pass_1 * 1.0 / CLK_TCK), (pass_2 * 1.0 / CLK_TCK), ((calc ) * 1.0 / CLK_TCK)));
+         logginglevel = saved_logginglevel;
+      }
+
    DEXIT;
    return sge_scheduling_run;
 }
@@ -3873,6 +3911,14 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
    int norders; 
    static int last_seqno = 0;
 
+   clock_t start;
+   clock_t job_orders, update_orders;
+   struct tms tms_buffer;
+
+   if (profile_schedd) {
+      start = times(&tms_buffer);
+   }
+
    DENTER(TOP_LAYER, "sge_build_sge_orders");
 
    if (!order_list)
@@ -3950,6 +3996,11 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
     *-----------------------------------------------------------------*/
    if (finished_jobs) {
       order_list  = create_delete_job_orders(finished_jobs, order_list);
+   }
+
+   if (profile_schedd) {
+         job_orders = (times(&tms_buffer) - start);
+         start = times(&tms_buffer);
    }
 
    if (update_usage_and_configuration) {
@@ -4066,6 +4117,17 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
 
    }
 
+   if (profile_schedd) {
+         update_orders = (times(&tms_buffer) - start);
+         extern u_long32 logginglevel;
+         u_long32 saved_logginglevel = logginglevel;
+
+         logginglevel = LOG_INFO;
+         INFO((SGE_EVENT, "PROF: SGEEE update orders: job orders: %.3f s, update orders: %.3f s\n",
+               (job_orders * 1.0 / CLK_TCK), (update_orders * 1.0 / CLK_TCK) ));
+         logginglevel = saved_logginglevel;
+      }
+
    return order_list;
 }
 
@@ -4132,7 +4194,7 @@ sge_scheduler( sge_Sdescr_t *lists,
          /* Only update qmaster with tickets of pending jobs - everything
             else will be updated on the SGEEE scheduling interval. */
          *orderlist = sge_build_sge_orders(lists, NULL, pending_jobs, NULL,
-                                           *orderlist, 0, seqno);
+                                           *orderlist, 0, seqno);  
       }
 
    } else {
@@ -4140,9 +4202,11 @@ sge_scheduler( sge_Sdescr_t *lists,
       DPRINTF(("=-=-=-=-=-=-=-=-=-=-=  SGEEE ORDER   =-=-=-=-=-=-=-=-=-=-=\n"));
       if (classic_sgeee_scheduling) {
          seqno = sge_calc_tickets(lists, running_jobs, finished_jobs, NULL, 1);
+
          *orderlist = sge_build_sge_orders(lists, running_jobs, NULL, 
                                            finished_jobs,
                                            *orderlist, 1, seqno);
+
       } else {
 
          /* calculate tickets for pending jobs */

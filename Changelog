@@ -1,3 +1,9 @@
+SG-2003-07-09.0: enhancem.  additional profiling information about a scheduler run
+                            Some profiling code was added to get a better picture
+                            of the bottle necks within a scheduler run. 
+                 Review:    AS
+                 Changed:   sge_schedd
+
 JG-2003-07-03-0: Bugfix:    *_RESERVED_USAGE gives wrong values for PE jobs
                  Issue:     580
                  Review:    AS

@@ -43,9 +43,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/times.h>
 
 #include "def.h"
 #include "sge.h"
+#include "sge_conf.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_event.h"
 #include "sge_ckptL.h"
@@ -145,7 +147,13 @@ int event_handler_my_scheduler(lList *event_list)
 int event_handler_default_scheduler(lList *event_list) 
 {
    int ret;
-   sge_Sdescr_t copy;
+   sge_Sdescr_t copy;   
+   
+   struct tms tms_buffer;
+   clock_t start;
+   clock_t copy_time;
+
+   start = times(&tms_buffer);
 
    DENTER(TOP_LAYER, "event_handler_default_scheduler");
 
@@ -245,6 +253,10 @@ int event_handler_default_scheduler(lList *event_list)
    else
       SCHED_MON((log_string, "-------------START-SCHEDULER-RUN-------------"));
 
+   if(profile_schedd){
+      copy_time = times(&tms_buffer) - start;
+   }
+
 /* this is useful when tracing communication of schedd with qmaster */
 #define _DONT_TRACE_SCHEDULING
 #ifdef DONT_TRACE_SCHEDULING
@@ -282,6 +294,16 @@ int event_handler_default_scheduler(lList *event_list)
    copy.config_list = lFreeList(copy.config_list);
    copy.ckpt_list = lFreeList(copy.ckpt_list);
    
+   if (profile_schedd) { 
+         extern u_long32 logginglevel;
+         u_long32 saved_logginglevel = logginglevel;
+
+         logginglevel = LOG_INFO;
+         INFO((SGE_EVENT, "PROF: schedd run took: %.3f s (copying the lists took: %.3f s)\n",
+               (times(&tms_buffer) - start) * 1.0 / CLK_TCK, (copy_time * 1.0 / CLK_TCK) ));
+         logginglevel = saved_logginglevel;
+      }
+
    DEXIT;
    return 0;
 }

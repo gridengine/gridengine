@@ -106,6 +106,9 @@ lList *granted
    lList *ql = NULL;
    lListElem *gel, *ep, *ep2;
    u_long32 qslots;
+
+/* stephan */
+   static lDescr *index=NULL; 
   
    DENTER(TOP_LAYER, "sge_create_orders");
    
@@ -164,7 +167,11 @@ lList *granted
                   JAT_fticket, 
                   JAT_sticket, 
                   JAT_share);
+/*            if (!index) {
+               index = lIndex(tlist, what);
+            }*/
             lList *tmp_list;
+/*            if ((tmp_list = lSelect_with_Index("", tlist, NULL, what, index))) {*/
             if ((tmp_list = lSelect("", tlist, NULL, what))) {
                lFreeList(tlist);
                tlist = tmp_list;

@@ -1,4 +1,6 @@
-EB-2003-13-12-0: Enhancem.: Cluster Queue (merged from CQ_BRANCH)
+EB-2003-12-15-0: Bugfix:    removed unused messages   
+
+EB-2003-12-13-0: Enhancem.: Cluster Queue (merged from CQ_BRANCH)
                  Changed:   all
 
                  All changes applied to the CQ_BRANCH have been merged to

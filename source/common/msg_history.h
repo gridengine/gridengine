@@ -46,7 +46,6 @@
 #define MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST   _MESSAGE(25075, _("not enough memory to create list\n"))
 #define MSG_HISTORY_IGNORINGINVALIDENTRYINLINEX_U  _MESSAGE(25076, _("ignoring invalid entry in line " U32CFormat "\n"))
 #define MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS   _MESSAGE(25082, _("ignoring job %d for accounting: jobs master queue "SFN" does not longer exist\n"))
-#define MSG_HISTORY_COMPLEXTEMPLATESCANTBEFILLEDCORRECTLYFORJOBX_D   _MESSAGE(25083, _("complex templates can't be filled correctly for job " U32CFormat"\n"))
 #define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_DDDD   _MESSAGE(25084, _("Job-array tasks "U32CFormat"."U32CFormat"-"U32CFormat":"U32CFormat" not found\n" ))
 #define MSG_HISTORY_JOBIDXNOTFOUND_D          _MESSAGE(25085, _("job id " U32CFormat  " not found\n"  ))
 #define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_SDDD    _MESSAGE(25086, _("Job-array tasks "SFQ"."U32CFormat"-"U32CFormat":"U32CFormat" not found\n"))

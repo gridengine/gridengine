@@ -62,10 +62,7 @@
 #define MSG_ATTRIB_XINATTRIBLISTMISSING_SU            _MESSAGE(47013, _("missing "SFQ" in attribute list (layer = "U32CFormat")\n"))
 #define MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S    _MESSAGE(47014, _("missing actual element to attrib "SFN"\n"))
 #define MSG_POINTER_ASSTRISNULLFORATTRIBX_S           _MESSAGE(47015, _("\"as_str\" is NULL for attrib "SFQ"\n"))
-#define MSG_ATTRIB_ATTRIBUTEXALLREADYINLIST_S         _MESSAGE(47016, _("expected attribute "SFQ" being already in attributes list\n"))
 #define MSG_MEMORY_UNABLETOALLOCSPACEFORCOMPLEXBUILD  _MESSAGE(47017, _("unable to alloc space for building complexes\n"))
-#define MSG_LIST_NOCOMPLEXXATTACHEDTOHOSTY_SS         _MESSAGE(47018, _("no such complex "SFQ" attached to host "SFQ"\n"))
-#define MSG_LIST_NOCOMPLEXXATTACHEDTOQUEUEY_SS        _MESSAGE(47019, _("no such complex "SFQ" attached to queue "SFQ"\n"))
 #define MSG_SCHEDD_LOADADJUSTMENTSVALUEXNOTNUMERIC_S  _MESSAGE(47020, _("load adjustments value "SFQ" must be of numeric type\n"))
 
 /* 
@@ -238,8 +235,6 @@
 #define MSG_USER                                      _MESSAGE(47169, _("user"))
 #define MSG_PROJECT                                   _MESSAGE(47170, _("project"))
 /* #define MSG_QUEUE_CANTFINDQUEUEXTOYONSUBORDINATE_SS   _message(47171, _("can't find queue  "SFQ" to "SFN" on subordinate")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_QUEUE_SUSPEND                             _MESSAGE(47172, _("suspend"))
-#define MSG_QUEUE_UNSUSPEND                           _MESSAGE(47173, _("unsuspend"))
 /* #define MSG_EVENT_XEVENTADDJOBGOTNONEWJOB_IUU         _message(47174, _("%d. EVENT ADD JOB " U32CFormat "." U32CFormat " - got no new JOB")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_EVENT_XEVENTMODJOBGOTNONEWJOB_UU          _message(47175, _(U32CFormat". EVENT MOD JOB " U32CFormat " - got no new JOB")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_EVENT_XEVENTMODJATASKGOTNONEWJATASK_UUU   _message(47176, _(U32CFormat". EVENT MOD JATASK "U32CFormat"."U32CFormat" - got no new JATASK")) __TS Removed automatically from testsuite!! TS__*/
@@ -269,7 +264,6 @@
 #define MSG_SCHEDD_CANTGOFURTHER                            _MESSAGE(47197, _("can't go on further"))
 #define MSG_SCHEDD_USERXMUSTBEMANAGERFORSCHEDDULING_S       _MESSAGE(47198, _("user "SFQ" must be manager for scheduling\n"))
 #define MSG_SCHEDD_HOSTXMUSTBEADMINHOSTFORSCHEDDULING_S     _MESSAGE(47199, _("host "SFQ" must be an admin host for scheduling"))
-#define MSG_SCHEDD_GOTEMPTYCONFIGFROMMASTERUSINGDEFAULT     _MESSAGE(47200, _("got empty scheduler configuration from qmaster using default"))
 #define MSG_SCHEDD_ALRADY_RUNNING                           _MESSAGE(47201, _("scheduler already running"))
 
 #define MSG_SCHEDD_CANTINSTALLALGORITHMXUSINGDEFAULT_S      _MESSAGE(47202, _("can't install scheduling algorithm "SFQ" - using \"default\" algorithm"))
@@ -294,7 +288,6 @@
 #define MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED             _MESSAGE(47214, _("queues dropped because they are full: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED        _MESSAGE(47215, _("queues dropped because they are suspended: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED         _MESSAGE(47216, _("queues dropped because they are disabled: "))
-#define MSG_SCHEDD_RETRLAYERDOMINFMASKXOFATTRYFAILED_US     _MESSAGE(47217, _("failed retrieving layer dominance information from mask "U32CFormat" of attribute "SFN"\n" ))
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN"\n"))
 #define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47288, _("Jobs "U32CFormat" & "U32CFormat" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 

@@ -50,7 +50,6 @@
 #define MSG_CONFIG_READINGINQUEUES              _MESSAGE(61011, _("Reading in queues:\n"))
 #define MSG_SETUP_QUEUE_S                       _MESSAGE(61012, _("\tQueue "SFQ".\n"))
 #define MSG_CONFIG_READINGFILE_SS               _MESSAGE(61013, _("reading file "SFN"/"SFN"\n"))
-#define MSG_CONFIG_QUEUEXUPDATED_S              _MESSAGE(61014, _("Queue "SFN" updated\n"))
 #define MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED _MESSAGE(61015, _("obsolete queue template file deleted\n"))
 #define MSG_CONFIG_FOUNDQUEUETEMPLATEBUTNOTINFILETEMPLATEIGNORINGIT    _MESSAGE(61016, _("found queue 'template', but not in file 'template'; ignoring it!\n"))
 #define MSG_CONFIG_CANTRECREATEQEUEUE_SS        _MESSAGE(61017, _("cannot recreate queue "SFN" from disk because of unknown host "SFN"\n"))
@@ -64,8 +63,6 @@
 #define MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SS      _MESSAGE(61026, _("cannot resolve "SFN" name "SFQ))
 #define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(61027, _("qmaster is unable to spool "SFN" "SFQ"\n"))
 #define MSG_FILE_NOOPENDIR_S                    _MESSAGE(61028, _("can't open directory "SFQ))
-#define MSG_CONFIG_READINGINCOMPLEXES           _MESSAGE(61029, _("Reading in complexes:\n"))
-#define MSG_SETUP_COMPLEX_S                     _MESSAGE(61030, _("\tComplex "SFQ".\n"))
 
 /*
  * libs/spool/read_write_manop.c

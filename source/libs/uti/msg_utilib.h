@@ -236,12 +236,6 @@
 #define MSG_PROF_RESETWHILEMEASUREMENT_S        _MESSAGE(49095, _(SFN": cannot reset profiling while a measurement is active\n"))
 
 /*
- *
- */
-#define MSG_UTI_INVALIDUSERNAME_S                  _MESSAGE(49096, _("invalid user name "SFQ"\n"))
-#define MSG_UTI_NOHOMEDIR_S                        _MESSAGE(49097, _("missing home directory for user "SFQ"\n"))
-
-/*
  * libs/uti/sge_bootstrap
  */
 #define MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE     _MESSAGE(49100, _("cannot resolve name of bootstrap file\n"))

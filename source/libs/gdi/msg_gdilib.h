@@ -108,7 +108,6 @@
 /* 
 ** gdilib/setup.c
 */
-#define MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S             _MESSAGE(43108, _("can't read "SFQ" - host compare policy not set."))
 #define MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S             _MESSAGE(43109, _(""SFN" is not a valid SGE_COMPRESSION_LEVEL\n"))
 #define MSG_GDI_SETCOMPRESSIONLEVEL_D                    _MESSAGE(43110, _("Setting compression level to "U32CFormat"\n"))
 #define MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S         _MESSAGE(43111, _(""SFN" is not a valid SGE_COMPRESSION_THRESHOLD\n"))
@@ -146,12 +145,6 @@
  * common/usage.c
  */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
-
-#if 0 /* EB: TODO: remove */
-#define MSG_GDI_INVALIDACTION          _MESSAGE(43298, _("invalid action" ))
-#define MSG_GDI_INVALIDOPTIONFLAG      _MESSAGE(43299, _("invalid option flag"))
-#endif
-
 
 #endif /* __MSG_GDILIB_H */
 

@@ -76,11 +76,6 @@
 #define MSG_COMMD_DUMPTOFILE                          _MESSAGE(39033, _("dump to file /tmp/commd/commd.dump"))
 #define MSG_FILE_TOMANYFDSSTART                       _MESSAGE(39034, _("start of \"too may open fds open\" {"))
 #define MSG_FILE_TOMANYFDSEND                         _MESSAGE(39035, _("end of \"too may open fds open\" }"))
-#define MSG_MEMORY_MALLOCFAILEDFORPATHTOACTQMASTERFILE _MESSAGE(39036, _("can't malloc() for path to act_qmaster file"))
-#define MSG_MEMORY_MALLOCFAILEDFORPATHTOPRODMODFILE    _MESSAGE(39037, _("can't malloc() for path to product mode file"))
-
-
-
 
 /* 
 ** commd/commdcntl.c

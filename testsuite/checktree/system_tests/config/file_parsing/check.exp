@@ -118,7 +118,7 @@ proc create_job_script { option } {
    close $fp
 } 
 
-proc prepare_file_and_start_job { request_file_name option_parameter job_script } {
+proc prepare_file_and_start_job { request_file_name option_parameter job_script { start_directory "" }} {
 
    global file_parsing_cluster_request_file
    global file_parsing_home_request_file
@@ -134,7 +134,9 @@ proc prepare_file_and_start_job { request_file_name option_parameter job_script 
    close $fp
 
    puts $CHECK_OUTPUT "submitting job $job_script"
-   return [ submit_job $job_script 0 ]
+   set return_value [ submit_job $job_script 0 30 "" "" $start_directory ]
+   puts $CHECK_OUTPUT "return value of submit_job: $return_value"
+   return $return_value
 }
 
 proc file_parsing_N_option {} {
@@ -179,16 +181,12 @@ proc file_parsing_N_option {} {
 
     puts $CHECK_OUTPUT "local directory .sge_request file"
     set option_parameter "-N LOCAL"
-    cd [ file dirname $file_parsing_local_request_file ]
-    set back [ prepare_file_and_start_job $file_parsing_local_request_file $option_parameter $file_parsing_job_script]
+    set back [ prepare_file_and_start_job $file_parsing_local_request_file $option_parameter $file_parsing_job_script [file dirname $file_parsing_local_request_file ]]
     if { $back < 0 } {
         add_proc_error file_parsing_N_option "-1" "Could not start job with $option_parameter parameter"      
     }       
     wait_for_jobstart $back "LOCAL" 30 1 1
-
     lappend accouting_jobs $back
-
-    cd $CHECK_TESTSUITE_ROOT
 
     puts $CHECK_OUTPUT "script options"
     set option_parameter "-N SCRIPT"
@@ -218,7 +216,9 @@ proc file_parsing_N_option {} {
    file delete $file_parsing_home_request_file
    file delete $file_parsing_local_request_file
 
+   
    wait_for_end_of_all_jobs 60
+ 
 
     foreach elem $accouting_jobs {
       set timeout_time [timestamp]
@@ -266,7 +266,6 @@ proc file_parsing_long_option {} {
    global file_parsing_local_request_file
    global file_parsing_job_script
 
-
    set accouting_jobs ""
 
     puts $CHECK_OUTPUT "Testing overwrite options ..."
@@ -299,13 +298,10 @@ proc file_parsing_long_option {} {
     }       
 
     puts $CHECK_OUTPUT "local directory .sge_request file"
-    cd [ file dirname $file_parsing_local_request_file ]
-    set back [ prepare_file_and_start_job $file_parsing_local_request_file $option_parameter $file_parsing_job_script]
+    set back [ prepare_file_and_start_job $file_parsing_local_request_file $option_parameter $file_parsing_job_script [file dirname $file_parsing_local_request_file]]
     if { $back > 0 } {
         add_proc_error "file_parsing_long_option" -1 "The job should not run (local directory .sge_request file)" 
     }       
-
-    cd $CHECK_TESTSUITE_ROOT
     puts $CHECK_OUTPUT "script options"
     create_job_script "$option_parameter"
     set back [ submit_job $file_parsing_job_script 0]
@@ -359,8 +355,7 @@ proc file_parsing_long_option {} {
 
     puts $CHECK_OUTPUT "local directory .sge_request file"
     set opt_parameter "-N LOCAL_${option_parameter}"
-    cd [ file dirname $file_parsing_local_request_file ]
-    set back [ prepare_file_and_start_job $file_parsing_local_request_file $opt_parameter $file_parsing_job_script]
+    set back [ prepare_file_and_start_job $file_parsing_local_request_file $opt_parameter $file_parsing_job_script [file dirname $file_parsing_local_request_file]]
     if { $back < 0 } {
         add_proc_error "file_parsing_long_option" "-1" "Could not start job with \"$opt_parameter\" parameter"      
     }       
@@ -368,7 +363,6 @@ proc file_parsing_long_option {} {
 
     lappend accouting_jobs $back
 
-    cd $CHECK_TESTSUITE_ROOT
 
 
     puts $CHECK_OUTPUT "script options"

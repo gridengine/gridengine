@@ -1199,7 +1199,7 @@ proc save_defaults {} {
 #*******************************
 proc source_procedures {} {
   global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_TCL_SCRIPTFILE_DIR be_quiet
-
+  puts $CHECK_OUTPUT "------ SOURCEING TCL SCRIPT FILES --------------"
   source $CHECK_TESTSUITE_ROOT/$CHECK_TCL_SCRIPTFILE_DIR/file_procedures.tcl
   set tcl_files [ get_file_names "$CHECK_TESTSUITE_ROOT/$CHECK_TCL_SCRIPTFILE_DIR" "*.tcl" ]
   foreach elem $tcl_files {
@@ -1208,6 +1208,7 @@ proc source_procedures {} {
      }
      source $CHECK_TESTSUITE_ROOT/$CHECK_TCL_SCRIPTFILE_DIR/$elem
   }   
+  puts $CHECK_OUTPUT "------ SOURCEING TCL SCRIPT FILES DONE ---------"
 }
 
 #                                                             max. column:     |
@@ -3967,6 +3968,7 @@ proc run_test {path runcompleted {run_single_test "all"}} {
   set check_highest_level 0
   set check_init_level_procedure "--"
   set check_root_access_needs   "" 
+  source_procedures 
   source $path/$CHECK_INFORMATION_FILE
   if { [string compare $run_single_test "all"] != 0 } {
      set do_only_one_test 1
@@ -4019,6 +4021,7 @@ proc run_test {path runcompleted {run_single_test "all"}} {
   set my_current_runlevel 0
   set do_send_mail 0
   set no_level_calls 0 
+
 
   for {set level 0} { $level <= $check_highest_level} {incr level 1} {
 

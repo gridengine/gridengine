@@ -3741,6 +3741,7 @@ proc delete_job { jobid } {
 #       -10   resource not requestable - error
 #       -11   not allowed to submit jobs - error
 #       -12   no access to project - error
+#       -13   unkown option - error
 #      -100   on error 
 #     
 #
@@ -3867,6 +3868,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
        -i $sp_id -- "no access to project" {
           set return_value -12
        }
+       -i $sp_id -- "Unknown option" {
+          set return_value -13
+       }
      }
  
      # close spawned process 
@@ -3891,6 +3895,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
           "-10" { add_proc_error "submit_job" $return_value "resource not requestable - error" }
           "-11" { add_proc_error "submit_job" $return_value "not allowed to submit jobs - error" }
           "-12" { add_proc_error "submit_job" $return_value "no acces to project - error" }
+          "-13" { add_proc_error "submit_job" $return_value "Unkown option - error" }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }

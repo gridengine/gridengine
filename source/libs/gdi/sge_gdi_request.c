@@ -174,7 +174,7 @@ lEnumeration *enp
 ) {
    lList *alp = NULL;
    lList *mal = NULL;
-   u_long32 id;
+   int id;
    int operation;
 
    DENTER(GDI_LAYER, "sge_gdi");

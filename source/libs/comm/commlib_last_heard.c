@@ -106,9 +106,11 @@ char *host
       if (secure_strlen(commproc, MAXCOMPONENTLEN) >= MAXCOMPONENTLEN)
          return CL_RANGE;
 
-   if (id)
-      if ((*id < MINID || *id > MAXID) && *id != 0)
+   if (id) {
+      int casted = *id; /* gcc-3.3 */
+      if ((casted < MINID || casted > MAXID) && casted != 0)
          return CL_RANGE;
+   }
 
    if (host)
       if (secure_strlen(host, MAXHOSTLEN) >= MAXHOSTLEN)
@@ -190,9 +192,12 @@ static int set_last_heard_from_(const char *commproc, u_short id, const char *ho
    if (secure_strlen(commproc, MAXCOMPONENTLEN) >= MAXCOMPONENTLEN)
       return CL_RANGE;
 
-   if ((id < MINID || id > MAXID) && id != 0)
-      return CL_RANGE;
-
+   { 
+      int casted = id; /* gcc-3.3 */
+      if ((casted < MINID || casted > MAXID) && casted != 0)
+         return CL_RANGE;
+   }
+   
    if (secure_strlen(host, MAXHOSTLEN) >= MAXHOSTLEN)
       return CL_RANGE;
 

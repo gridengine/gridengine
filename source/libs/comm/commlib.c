@@ -815,11 +815,13 @@ u_short *compressed
          return CL_RANGE;
       }
 
-   if (fromid)
-      if ((*fromid < MINID || *fromid > MAXID) && *fromid != 0) {
+   if (fromid) {
+      int casted = *fromid; /* gcc-3.3 */
+      if ((casted < MINID || casted > MAXID) && casted != 0) {
          DEXIT;
          return CL_RANGE;
       }
+   }
 
    if (fromhost)
       if (secure_strlen(fromhost, MAXHOSTLEN) >= MAXHOSTLEN) {

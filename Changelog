@@ -1,3 +1,8 @@
+JG-2003-05-21-0  Bugfix:    SGE didn't compile on systems with glibc-2.3 and
+                            didn't compile with gcc-3.3
+                 Review:    EB
+                 Changed:   all
+
 JG-2003-05-20-0  Bugfix:    SGE_O_* variables for a task within a tightly 
                             integrated job were set from the jobs environment, 
                             but have to come from the tasks environment.

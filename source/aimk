@@ -1307,7 +1307,7 @@ case HP1164:
 
 case LINUX5:
 case LINUX6:
-   strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.2 >& /dev/null
+   strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.[23] >& /dev/null
    if ( $status == 0 ) then
       set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
    endif
@@ -1645,6 +1645,11 @@ set MAKEOPT = "$MAKEOPT $PARALLEL"
 if ( "$GCC_NOERR_CFLAGS" == "" ) then
    set GCC_NOERR_CFLAGS = "$CFLAGS"
    set GCC_NOERR_CXXFLAGS = "$CXXFLAGS"
+endif
+
+# gcc-3.3
+if ( $CC == gcc ) then
+   set CFLAGS = "$CFLAGS -Wno-sign-compare -Wno-strict-aliasing"
 endif
 
 if ( $COMPILE_DC == 1 ) then

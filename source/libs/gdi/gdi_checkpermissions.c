@@ -113,7 +113,7 @@ int buflen
    }
   
    if (mapName != NULL) {
-      if ((strlen(mapName) + 1) <= buflen) {
+      if ((strlen(mapName) + 1) <= (size_t)buflen) {
          strcpy(buf,mapName);
          DPRINTF(("Mapping name is: '%s'\n", buf));
    

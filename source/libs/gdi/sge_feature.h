@@ -89,7 +89,7 @@ typedef enum {
 } feature_id_t;
  
 typedef struct {
-   int id;
+   feature_id_t id;
    char *name;
 } feature_names_t;            
 

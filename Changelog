@@ -1,3 +1,6 @@
+JG-2003-03-18-2  Enhancem.: Improved multilevel profiling in scheduler.
+                 Review:    EB
+
 JG-2003-03-18-1  Bugfix:    fixed memory access error in sge logging.
                  Review:    CR
 

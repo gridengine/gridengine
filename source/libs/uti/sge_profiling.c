@@ -38,6 +38,9 @@
 #include "basis_types.h"
 
 #include "sge_dstring.h"
+#include "sge_log.h"
+
+#include "sgermon.h"
 
 #include "msg_utilib.h"
 
@@ -958,7 +961,9 @@ double prof_get_total_stime(prof_level level, bool with_sub, dstring *error)
 static const char *
 _prof_get_info_string(prof_level level, dstring *info_string, bool with_sub, dstring *error)
 {  
-   static dstring level_string = DSTRING_INIT;
+   dstring level_string = DSTRING_INIT;
+   const char *ret = NULL;
+
    double busy        = prof_get_total_busy(level, with_sub, error);
    double utime       = prof_get_total_utime(level, with_sub, error);
    double stime       = prof_get_total_stime(level, with_sub, error);
@@ -967,7 +972,10 @@ _prof_get_info_string(prof_level level, dstring *info_string, bool with_sub, dst
    sge_dstring_sprintf(&level_string, PROF_GET_INFO_FORMAT,
      prof_base[level].name, busy, utime, stime, utilization);
 
-   return sge_dstring_append_dstring(info_string, &level_string);
+   ret = sge_dstring_append_dstring(info_string, &level_string);
+   sge_dstring_free(&level_string);
+
+   return ret;
 }
 
 
@@ -1005,6 +1013,7 @@ prof_get_info_string(prof_level level, bool with_sub, dstring *error)
          "total", busy, utime, stime, utilization);
 
       ret = sge_dstring_append_dstring(&info_string, &total_string);
+      sge_dstring_free(&total_string);
    } else {
       if (prof_base[level].name != NULL) {
          ret = _prof_get_info_string(level, &info_string, with_sub, error);
@@ -1033,3 +1042,25 @@ static const char *prof_add_error_sprintf(dstring *buffer, const char *fmt, ...)
 
    return ret;
 }
+
+bool prof_output_info(prof_level level, bool with_sub, const char *info)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "prof_output_info");
+
+   if (prof_is_active()) {
+      const char *info_message;
+      u_long32 saved_logginglevel = log_state_get_log_level();
+
+      log_state_set_log_level(LOG_INFO);
+      info_message = prof_get_info_string(level, with_sub, NULL);
+      INFO((SGE_EVENT, "%s%s", info, info_message));
+      log_state_set_log_level(saved_logginglevel);
+      ret = true;
+   }
+  
+   DEXIT;
+   return ret;
+}
+

@@ -243,12 +243,7 @@ char *argv[]
          time_t now = sge_get_gmt();
 
          if (now > next_prof_output || shut_me_down) {
-            u_long32 saved_logginglevel = log_state_get_log_level();
-
-            log_state_set_log_level(LOG_INFO);
-            INFO((SGE_EVENT, "\n%s", prof_get_info_string(SGE_PROF_ALL, false, NULL)));
-            log_state_set_log_level(saved_logginglevel);
-
+            prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
             next_prof_output = now + 60;
          }
       }

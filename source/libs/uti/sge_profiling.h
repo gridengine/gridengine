@@ -91,4 +91,6 @@ double prof_get_total_stime(prof_level level, bool with_sub, dstring *error);
 
 const char *prof_get_info_string(prof_level level, bool with_sub, dstring *error);
 
+bool prof_output_info(prof_level level, bool with_sub, const char *info);
+
 #endif /* __SGE_PROFILING_H */

@@ -1476,15 +1476,22 @@ case SOLARIS86:
    endif
 
    set LOADAVGLIBS = "-lkvm -lkstat"
-#  set PARALLEL = "-j 1"
-#  set MAKE=gmake
    if ( $CC == gcc ) then
       set OFLAG = "-O3"
    else
       if ( $BUILDARCH == SOLARIS86 ) then
          # Do not compile Grid Engine with -xO4 on SOLARIS86 platform
-         # with Sun workshop compiler 5 or 6
-         set OFLAG = "-xO3"
+         # unless WS8 compiler with patch 112756-01 or higher is installed
+
+         set compversion = `cc -V |& head -1 | cut -f4 -d" "`
+         set patchcnt = `/bin/sh -c 'ls -d /var/sadm/patch/112756-* 2> /dev/null' | wc -l`
+         set haspatch = `expr $patchcnt ">=" 1`
+         if ( $compversion == 5.5 && $haspatch == 1 ) then
+            set OFLAG = "-xO4"
+         else
+            echo using \"-xO3\" optimization due to compiler bug
+            set OFLAG = "-xO3"
+         endif
       else
          set OFLAG = "-xO4"
       endif

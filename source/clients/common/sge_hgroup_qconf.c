@@ -63,7 +63,7 @@ static const spool_flatfile_instr hgqconf_sub_name_value_space_sfi =
    false,
    '\0',
    '=',
-   ',',
+   ' ',
    '\0',
    '\0',
    &hgqconf_sub_name_value_space_sfi,

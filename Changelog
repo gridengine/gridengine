@@ -57,7 +57,27 @@ JG-2003-09-29-0: Bugfix:    statistics file hostload twice instead of load and
 
 AA-2003-09-29-0: Bugfix:    change in openssl 0.9.7b uniqueIdentifier now
                             userId
+                            
+                            The consequence is that the old certificates are
+                            no longer usable and must be regenerated with 
+                            the new sge_ca script. This affects also the daemon
+                            certificates that are automatically generated 
+                            during installation. So the best solution is to 
+                            rebuild the whole certificate infrastructure from
+                            scratch.
+                            
                             additional switches for sge_ca
+                              -verify <cert>
+                              -print <cert>
+                              -extend <cert>
+                              -sha1
+                              -encryptkey
+                              -outdir <dir>
+                              -cadir <dir>
+                              -pkcs12 <file>
+                            See sge_ca -help formor info.
+                 Bugtraq:   4923403
+                 Issue:     628
                  Review:    Omar Hassaine
                  Changed:   sge_ca, sge_ssl.cnf, sge_ssl_template.cnf
 

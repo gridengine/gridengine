@@ -45,7 +45,7 @@ enum {
    /* prototypes: tcsh source code like */
 
    typedef void (*print_func_t) __P((char *fmt, ...));
-   int sge_execv __P((const char *path, char *const argv[], const char *expath));
+   int sge_execv __P((const char *path, char *const argv[], const char *expath, int close_stdin));
    void sge_init __P((print_func_t ostream));
    void set_sgemode __P((int addr, int value)); 
    int get_sgemode __P((int addr)); 
@@ -53,7 +53,7 @@ enum {
    /* prototypes: sge source code like */
 
    typedef void (*print_func_t)(char *fmt, ...);
-   int sge_execv(char *path, char *argv[], char *expath);
+   int sge_execv(char *path, char *argv[], char *expath, int close_stdin);
    void sge_init(print_func_t ostream);
    void set_sgemode(int addr, int value);
    int get_sgemode(int addr);

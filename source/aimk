@@ -327,8 +327,8 @@ usage:
    echo "-purify           -> instrument code with purify (implies -debug)"
    echo "-qmake            -> use qmake instead of make"
    echo "-shared-libs      -> create libraries as shared libs"
+   echo "-spool-berkeleydb -> use berkeleydb spooling"
    echo "-spool-classic    -> use classic flatfile spooling"
-   echo "-spool-dynamic    -> allow loading of spooling method from shared lib"
    echo "-sunman           -> create man pages for Sun branded man pages (with -man[kv])"
    echo "-umap             -> compile with usermapping and hostgroup feature"
   exit
@@ -457,10 +457,12 @@ set KLIBS             = ""
 set PERLGUI           = ""
 set PERLGUI_CLEAN     = ""
 
-# SPOOLING - default method
-set SPOOLING_METHOD   = "berkeleydb"
-set SPOOLING_LIBS     = "-lspoolloader -lspoolb -lspool -ldb"
-set SPOOLING_DEPS     = "spoolloaderlib spoolblib spoollib"
+# SPOOLING - default method is dynamic spooling, 
+# spooling methods berkeleydb and classic
+set SPOOLING_METHOD = "dynamic"
+set SPOOLING_LIBS   = "-lspoolloader -lspoold -lspool"
+set SPOOLING_DEPS   = "spoolloaderlib spooldlib spoollib spoolclib spoolblib"
+# we generate a berkeley db shared lib, so we need bdb include and lib path
 set CFLAGS            = "-I$BERKELEYDB_HOME/include $CFLAGS"
 set LFLAGS            = "-L$BERKELEYDB_HOME/lib $LFLAGS"
 set SHARED_LFLAGS    = "$SHARED_LFLAGS -L$BERKELEYDB_HOME/lib"
@@ -799,16 +801,15 @@ while ($#argv >= 1 && $?found)
    case "-shared-libs":
       set SHAREDLIBS = 1
       breaksw
+   case "-spool-berkeleydb":
+      set SPOOLING_METHOD   = "berkeleydb"
+      set SPOOLING_LIBS     = "-lspoolloader -lspoolb -lspool -ldb"
+      set SPOOLING_DEPS     = "spoolloaderlib spoolblib spoollib"
+      breaksw
    case "-spool-classic":
       set SPOOLING_METHOD = "classic"
       set SPOOLING_LIBS   = "-lspoolloader -lspoolc -lspool"
       set SPOOLING_DEPS   = "spoolloaderlib spoolclib spoollib"
-      breaksw
-   case "-spool-dynamic":
-      set SPOOLING_METHOD = "dynamic"
-      set SPOOLING_LIBS   = "-lspoolloader -lspoold -lspool"
-      set SPOOLING_DEPS   = "libspoolloader libspoold libspool libspoolc libspoolb"
-      set SPOOLING_DEPS   = "spoolloaderlib spooldlib spoollib spoolclib spoolblib"
       breaksw
    case "-sunman":
       set SGE_PRODUCT_MODE=sge
@@ -943,6 +944,7 @@ case DARWIN:
 
    if ( $DEBUGGED == 1) then
       set DEBUG_FLAG = "-g"
+      set OFLAG = ""
    endif
    if ( $GPROFFED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
@@ -1828,7 +1830,7 @@ if ( "$QTCSH" == 1) then
       setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}
    endif
 
-   set SGE_LIBS = "-lsge -lcomm -lcommlists -lpthread"
+   set SGE_LIBS = "-lsge -lpthread"
 
    if ( "$COMPILE_ARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"

@@ -1,3 +1,12 @@
+JG-2004-04-20-0: Enhancem.: Make dynamic spooling the default build rule,
+                            statically linked spooling methods can be choosen
+                            in aimk with the switches -spool-berkeleydb and
+                            -spool-classic.
+                 Bugfix:    Fixed dynamic loading for darwin platform, partially
+                            fixed build with shared sge libraries. See also 
+                            issue 976.
+                 Review:    
+
 AH-2004-04-19-0: Enhancem.: Retry when rresvport() fails with EAGAIN as
                             recommended by Goeran Uddeborg.
                  Review:    GU, JG

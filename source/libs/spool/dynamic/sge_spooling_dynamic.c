@@ -86,7 +86,11 @@ spool_dynamic_create_context(lList **answer_list, const char *shlib_name,
 #endif
                                        );
    /* open the shared lib */
-   shlib_handle = dlopen(shlib_fullname, RTLD_NOW);
+   shlib_handle = dlopen(shlib_fullname, RTLD_NOW 
+#ifdef DARWIN
+                         | RTLD_GLOBAL
+#endif
+                        );
    if (shlib_handle == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 

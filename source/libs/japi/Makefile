@@ -51,11 +51,15 @@ JAPI_ALL      = japilib drmaalib test_drmaa example
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c
 
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
-JAPI_ADD_LIBS = -L. -lspool -lsched -lgdi -lsgeobj -lsgeobjd \
-								$(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck \
-                $(DLLIB) -levc -levm
+JAPI_ADD_LIBS = -lsched -levc -lgdi -lsgeobj -lsgeobjd \
+				    $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists \
+                -luti -lrmon -llck $(DLLIB)
                 
 JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
+
+JAPI_DEPEND_LIBS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
+                   $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
+                   $(UTILIB) $(RMONLIB) $(LCKLIB)
 
 japi_all: $(JAPI_ALL)
 
@@ -84,8 +88,8 @@ libjapi.a:  $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS)
 	$(AR) $(ARFLAGS) libjapi.a $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS)
 	$(RANLIB) libjapi.a 
 
-libjapi$(SHAREDEXT): $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libjapi$(SHAREDEXT) $(JAPI_OBJS) $(JAPI_DEPEND_OBJS) $(JAPI_ADD_LIBS)
+libjapi$(SHAREDEXT): $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(JAPI_DEPEND_LIBS)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libjapi$(SHAREDEXT) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(JAPI_ADD_LIBS)
 
 libdrmaa$(SHAREDEXT): $(DRMAALIB_OBJS)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT) $(DRMAALIB_OBJS) $(SLIBS) $(LIBS) -lc

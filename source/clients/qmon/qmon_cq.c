@@ -2140,6 +2140,16 @@ static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad)
    if (nr_selected_rows > 0) {
       dstring ds = DSTRING_INIT;
       qmonBrowserOpen(w, NULL, NULL);
+
+      qmonMirrorMultiAnswer(CQUEUE_T | HGROUP_T,  &alp);
+      if (alp) {
+         qmonMessageBox(cluster_queue_settings, alp, 0);
+         alp = lFreeList(alp);
+         DEXIT;
+         return;
+      }
+
+      hgl = qmonMirrorList(SGE_HGROUP_LIST);
       for (i=0; i<rows; i++) {
          /* is this row selected */ 
          if (XbaeMatrixIsRowSelected(matrix, i)) {

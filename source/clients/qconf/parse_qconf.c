@@ -4952,7 +4952,7 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
-      if (strcmp("-sick", *spp) == 0) {
+      if (strcmp("-sds", *spp) == 0) {
          lList *answer_list = NULL;
 
          cqueue_list_sick(&answer_list);

@@ -1,3 +1,10 @@
+EB-2004-02-26-1: Bugfix:    qmon shows invalid messages if 
+                            "show detached settings" button is pressed
+                            renamed "qconf -sick" to "qconf -sds"
+                 Changed:   qmon
+                 Issue:     707
+                 Review:    AA
+
 CR-2004-02-26-1: Bugfix:    using cl_com_ignore_timeouts() in default signal
                             handler to induce communication functions to return
                             without timeout in order to terminate sge client

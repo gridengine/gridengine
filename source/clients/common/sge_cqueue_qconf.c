@@ -776,7 +776,8 @@ cqueue_list_sick(lList **answer_list)
 }
 
 bool
-cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list, dstring *ds)
+cqueue_sick(lListElem *cqueue, lList **answer_list, 
+            lList *master_hgroup_list, dstring *ds)
 {
    bool ret = true;
 
@@ -843,9 +844,8 @@ cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list, d
                                     used_hosts, &add_hosts, NULL,
                                     &equity_hosts, NULL);
 
-
-
                   if (lGetNumberOfElem(add_hosts)) {
+                     DTRACE;
                      sge_dstring_sprintf_append(ds, 
                              MSG_CQUEUE_DEFOVERWRITTEN_SSSSS,
                              cqueue_attribute_array[index].name,
@@ -856,6 +856,8 @@ cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list, d
                   equity_hosts = lFreeList(equity_hosts); 
                   used_hgroup_hosts = lFreeList(used_hgroup_hosts);
                   used_hgroup_groups = lFreeList(used_hgroup_groups);
+               } else {
+                  DTRACE;
                }
             } else {
                /*
@@ -863,10 +865,13 @@ cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list, d
                 *    make sure the host is contained in resolved list 
                 */ 
                if (!href_list_has_member(used_hosts, name)) {
+                  DTRACE;
                   sge_dstring_sprintf_append(ds, 
                              MSG_CQUEUE_UNUSEDATTRSETTING_SS,
                              cqueue_attribute_array[index].name,
                              name, cqueue_name);
+               } else {
+                  DTRACE;
                }
             }
          }

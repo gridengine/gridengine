@@ -1092,8 +1092,8 @@
 #define MSG_GDI_USAGE_shgrp_resolved_OPT   "[-shgrp_resolved group]"
 #define MSG_GDI_UTEXT_shgrp_resolved_OPT   _MESSAGE(60611, _("show host group with resolved hostlist"))  
 
-#define MSG_GDI_USAGE_sick_OPT             "[-sick]"
-#define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60612, _("show deficient configurations"))
+#define MSG_GDI_USAGE_sick_OPT             "[-sds]"
+#define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60612, _("show detached settings"))
 
 /*
  * Objects and components

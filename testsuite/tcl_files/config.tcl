@@ -3566,6 +3566,149 @@ proc config_add_compile_archs { only_check name config_array } {
    return $value
 }
 
+#****** config/config_shadowd_hosts() *********************************************
+#  NAME
+#     config_shadowd_hosts() -- shadowd daemon host setup
+#
+#  SYNOPSIS
+#     config_shadowd_hosts { only_check name config_array } 
+#
+#  FUNCTION
+#     Testsuite configuration setup - called from verify_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#*******************************************************************************
+proc config_shadowd_hosts { only_check name config_array } {
+   global CHECK_OUTPUT do_nomain
+   global CHECK_HOST
+   global CHECK_CORE_SHADOWD
+   global CHECK_SOURCE_COMPILE_HOSTS
+   global ts_host_config
+
+   set CHECK_CORE_SHADOWD ""
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+      set value $default_value
+      if { $default_value == "" } {
+         set value $CHECK_HOST
+      }
+   }
+
+   if { $only_check == 0 } {
+#      # do setup  
+       puts $CHECK_OUTPUT "" 
+       set selected $value
+       while { 1 } {
+          clear_screen
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+          puts $CHECK_OUTPUT $description
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+           
+          set selected [lsort $selected]
+          puts $CHECK_OUTPUT "\nSelected shadow hosts:"
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+          foreach elem $selected { puts $CHECK_OUTPUT $elem }
+          puts $CHECK_OUTPUT "----------------------------------------------------------"
+          host_config_hostlist_show_hosts ts_host_config
+          puts $CHECK_OUTPUT "\n"
+          puts $CHECK_OUTPUT "Type \"all\" to select all hosts in list"
+          puts -nonewline $CHECK_OUTPUT "Please enter hostname/number or return to exit: "
+         
+          set host [wait_for_enter 1]
+          if { [ string length $host ] == 0 } {
+             break
+          }
+          if { [ string compare $host "all" ] == 0 } {
+             set selected ""
+             foreach host $ts_host_config(hostlist) {
+                if { [ lsearch -exact $selected $host ] < 0 } {
+                   append selected " $host"
+                }
+             }
+             break
+          }
+          if { [string is integer $host] } {
+             incr host -1
+             set host [ lindex $ts_host_config(hostlist) $host ]
+          }
+          if { [ lsearch $ts_host_config(hostlist) $host ] < 0 } {
+             puts $CHECK_OUTPUT "host \"$host\" not found in list"
+             wait_for_enter
+             continue
+          }
+          if { [ lsearch -exact $selected $host ] < 0 } {
+             append selected " $host"
+          } else {
+             set index [lsearch $selected $host]
+             set selected [ lreplace $selected $index $index ]
+          }
+       }
+       
+       set value [string trim $selected]
+
+       set index [lsearch $value $CHECK_HOST]
+       if { $index >= 0 } {
+          set selected [ lreplace $value $index $index ]
+       }
+       set value $CHECK_HOST
+       append value " $selected"
+       set value [string trim $value]
+       foreach host $value {
+          if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
+             puts $CHECK_OUTPUT "host \"$host\" is not in host configuration file"
+             puts $CHECK_OUTPUT "Press enter to add host \"$host\" to global host configuration ..."
+             wait_for_enter
+             set errors 0
+             incr errors [host_config_hostlist_add_host ts_host_config  $host]
+             incr errors [host_config_hostlist_edit_host ts_host_config $host]
+             incr errors [save_host_configuration $config(host_config_file)]
+             if { $errors != 0 } {
+                setup_host_config $config(host_config_file) 1
+             }
+          }
+       }
+       if { [config_execd_hosts_set_compile_hosts $value] != 0 } {
+          puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
+          wait_for_enter
+          setup_host_config $config(host_config_file) 1
+       }
+   } 
+
+   if { [ string compare [lindex $value 0] $CHECK_HOST] != 0  && $do_nomain == 0} {
+      puts $CHECK_OUTPUT "First shadowd host must be local host"
+      return -1
+   }
+
+
+   foreach host $value {
+      if { [ lsearch $ts_host_config(hostlist) $host ] < 0  } {
+         puts $CHECK_OUTPUT "Host \"$host\" is not in host configuration file"
+         return -1
+      }
+   }
+   set CHECK_CORE_SHADOWD $value
+
+   if { [config_execd_hosts_set_compile_hosts $value] != 0 } {
+      return -1
+   }
+
+   return $value
+}
+
 
 proc config_build_ts_config {} {
    global ts_config
@@ -3672,6 +3815,16 @@ proc config_build_ts_config {} {
    set ts_config($parameter,onchange)   "install"
    set ts_config($parameter,pos)        $ts_pos
    incr ts_pos 1
+
+   set parameter "shadowd_hosts"
+   set ts_config($parameter)            ""
+   set ts_config($parameter,desc)       "Grid Engine shadow daemon hosts"
+   set ts_config($parameter,default)    ""
+   set ts_config($parameter,setup_func) "config_$parameter"
+   set ts_config($parameter,onchange)   "install"
+   set ts_config($parameter,pos)        $ts_pos
+   incr ts_pos 1
+
 
    set parameter "execd_hosts"
    set ts_config($parameter)            ""
@@ -4019,7 +4172,7 @@ proc config_build_ts_config_1_6 {} {
 proc config_build_ts_config_1_7 {} {
    global ts_config
 
-   # insert new parameter after product_feature parameter
+   # insert new parameter after commd_port parameter
    set insert_pos $ts_config(commd_port,pos)
    incr insert_pos 1
 
@@ -4044,11 +4197,36 @@ proc config_build_ts_config_1_7 {} {
    set ts_config(version) "1.7"
 }
   
+proc config_build_ts_config_1_8 {} {
+   global ts_config
 
+   # insert new parameter after master_host parameter
+   set insert_pos $ts_config(master_host,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+      }
+   }
+
+   set parameter "shadowd_hosts"
+   set ts_config($parameter)            ""
+   set ts_config($parameter,desc)       "Grid Engine shadow daemon hosts"
+   set ts_config($parameter,default)    ""
+   set ts_config($parameter,setup_func) "config_$parameter"
+   set ts_config($parameter,onchange)   "install"
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.8
+   set ts_config(version) "1.8"
+}
 
 # MAIN
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.7"
+set actual_ts_config_version "1.8"
 
 # first source of config.tcl: create ts_config
 if {![info exists ts_config]} {
@@ -4060,5 +4238,6 @@ if {![info exists ts_config]} {
    config_build_ts_config_1_5
    config_build_ts_config_1_6
    config_build_ts_config_1_7
+   config_build_ts_config_1_8
 }
 

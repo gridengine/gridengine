@@ -145,6 +145,8 @@ proc install_qmaster {} {
  set DELETE_DB_SPOOL_DIR          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DELETE_DB_SPOOL_DIR] ]
  set CELL_NAME_EXISTS             [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_EXISTS] ]
  set CELL_NAME_OVERWRITE          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_OVERWRITE] ]
+ set ADD_SHADOWHOST_ASK           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ADD_SHADOWHOST_ASK] ]
+ set ADD_SHADOWHOST_FROM_FILE_ASK [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ADD_SHADOWHOST_FROM_FILE_ASK] ]
 
 # dynamic spooling
  set CHOOSE_SPOOLING_METHOD [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CHOOSE_SPOOLING_METHOD]]
@@ -863,6 +865,45 @@ proc install_qmaster {} {
           return;  
       }
 
+      #
+      # adding a shdowhost to the list of admin hosts,
+      # during qmaster install. currently no shadowhost will be added
+      #
+      -i $sp_id $ADD_SHADOWHOST_ASK {
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+
+         send -i $sp_id "\n"
+         continue;
+      }
+
+
+      -i $sp_id $ADD_SHADOWHOST_FROM_FILE_ASK {
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+
+         send -i $sp_id "\n"
+         continue;
+      }
+
+
+      -i $sp_id $ENTER_HOSTS {
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+            send -i $sp_id "\n"
+         continue;
+      }
+      
       #
       # end SGE 6.0 Berkeley DB Spooling
       #

@@ -6112,6 +6112,10 @@ global CHECK_OUTPUT
 global CHECK_USER
 global CHECK_ADMIN_USER_SYSTEM do_compile
 
+
+   foreach sh_host $ts_config(shadowd_hosts) {
+      shutdown_all_shadowd $sh_host
+   }
    puts $CHECK_OUTPUT "killing scheduler and all execds in the cluster ..."
 
    set result ""

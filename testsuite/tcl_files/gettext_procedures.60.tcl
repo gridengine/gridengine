@@ -120,6 +120,16 @@ proc sge_macro { macro_name } {
       "DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER" { set value "Please enter the local spool directory now! >> " }
       "DISTINST_ENTER_SCHEDLUER_SETUP" { set value "Enter the number of your prefered configuration and hit <RETURN>! \nDefault configuration is \[1\] >> " }
       "DISTINST_DELETE_DB_SPOOL_DIR" { set value "The spooling directory already exists! Do you want to delete it? \[n\] >> " }
+      "DISTINST_ADD_SHADOWHOST_HEADLINE" { set value "\nAdding Grid Engine shadow hosts" }
+      "DISTINST_ADD_SHADOWHOST_INFO" { set value "\nIf you want to use a shadow host, it is recommended to add this host\n to the list of administrative hosts.\n\nIf you are not sure, it is also possible to add or remove hosts after the\ninstallation with <qconf -ah hostname> for adding and <qconf -dh hostname>\nfor removing this host\n\nAttention: This is not the shadow host installation procedure.\n You still have to install the shadow host separately\n\n" }
+      "DISTINST_ADD_SHADOWHOST_INFO2" { set value "\nPlease now add the list of hosts, where you will later install your shadow\ndaemon.\n\nPlease enter a blank separated list of your execution hosts. You may\npress <RETURN> if the line is getting too long. Once you are finished\nsimply press <RETURN> without entering a name.\n\nYou also may prepare a file with the hostnames of the machines where you plan\nto install Grid Engine. This may be convenient if you are installing Grid\nEngine on many hosts.\n\n" }
+      "DISTINST_ADD_SHADOWHOST_ASK" { set value "Do you want to add your shadow host(s) now? (y/n) \[y\] >> " }
+      "DISTINST_ADD_SHADOWHOST_FROM_FILE_ASK" { set value "Do you want to use a file which contains the list of hosts (y/n) \[n\] >> " }
+      "DISTINST_SHADOW_HEADLINE" { set value "\nShadow Master Host Setup" }
+      "DISTINST_SHADOW_INFO" { set value "\nMake sure, that the host, you wish to configure as a shadow host,\n has read/write permissions to the qmaster spool and SGE_ROOT/<cell>/common \ndirectory! For using a shadow master it is recommended to set up a \nBerkeley DB Spooling Server\n\n Hit <RETURN> to continue >> " }
+      "DISTINST_SHADOW_CELL" { set value "Please enter your SGE_CELL directory or use the default \[default\] >> " }
+      "DISTINST_SHADOWD_INSTALL_COMPLETE" { set value "Shadowhost installation completed!" }     
+       
 
 
    }

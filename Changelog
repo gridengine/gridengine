@@ -1,3 +1,9 @@
+MD-2004-07-13-0: Bugfix:    inst_sge -sm doesn't create a local_conf
+                 Issue:     1135
+                 Bugtraq:   5071999
+                 Review:    CR
+                 Changed:   testsuite, inst_sge
+
 AA-2004-07-13-0: Bugfix:    removed stat_log_time from qmon
                  Issue:     1083
                  Review:    CR

@@ -592,7 +592,10 @@ sge_pack_buffer *apb,
 int *synchron
 ) {
    u_long32 jobid, jataskid;
-   lListElem *jep, *pe, *jatep, *petep;
+   lListElem *jep   = NULL;
+   lListElem *pe    = NULL;
+   lListElem *jatep = NULL;
+   lListElem *petep = NULL;
    const char *requested_queue;
    char source[1024], new_task_id[1024];
    lList *gdil = NULL;

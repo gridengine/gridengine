@@ -576,7 +576,7 @@ bool ck_event_number(lList *lp, u_long32 *waiting_for,
                      u_long32 *wrong_number);
 
 static bool 
-get_event_list(int sync, lList **lp);
+get_event_list(int sync, lList **lp, int* commlib_error);
 
 static void ec_add_subscriptionElement(lListElem *event_el, ev_event event, bool flush, int interval); 
 
@@ -2389,6 +2389,8 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
     */
    if (ret) {
       static time_t last_fetch_time = 0;
+      static time_t last_fetch_ok_time = 0;
+      int commlib_error = CL_RETVAL_UNKNOWN;
       time_t now;
 
       bool done = false;
@@ -2397,6 +2399,11 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
       int sync = 1;
 
       now = sge_get_gmt();
+
+      /* initialize last_fetch_ok_time */
+      if (last_fetch_ok_time == 0) {
+         last_fetch_ok_time = ec_get_edtime();
+      }
 
       /* initialize the maximum number of fetches */
       if (last_fetch_time == 0) {
@@ -2415,7 +2422,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
          DPRINTF(("doing %s fetch for messages, %d still to do\n", 
                   sync ? "sync" : "async", max_fetch));
 
-         if ((fetch_ok = get_event_list(sync, &report_list))) {
+         if ((fetch_ok = get_event_list(sync, &report_list,&commlib_error))) {
             lList *new_events = NULL;
             lXchgList(lFirst(report_list), REP_list, &new_events);
             report_list = lFreeList(report_list);
@@ -2458,15 +2465,41 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
 
       /* if first synchronous get_event_list failed, return error */
       if (sync && !fetch_ok) {
+         u_long32 timeout = ec_get_edtime() * 10;
+
          DPRINTF(("first syncronous get_event_list failed\n"));
-         ret = false;
+
+         /* we return false when we have reached a timeout or 
+            on communication error, otherwise we return true */
+         ret = true;
+
+         /* check timeout */
+         if ( last_fetch_ok_time + timeout < now ) {
+            /* we have a  SGE_EM_TIMEOUT */
+            DPRINTF(("SGE_EM_TIMEOUT reached\n"));
+            ret = false;
+         } else {
+            DPRINTF(("SGE_EM_TIMEOUT in "U32CFormat" seconds\n", u32c(last_fetch_ok_time + timeout - now) ));
+         }
+
+         /* check for communicaton error */
+         if (commlib_error != CL_RETVAL_OK) { 
+            switch (commlib_error) {
+               case CL_RETVAL_NO_MESSAGE:
+               case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
+                  break;
+               default:
+                  DPRINTF(("COMMUNICATION ERROR: %s\n", cl_get_error_text(commlib_error)));
+                  ret = false;
+                  break;
+            }
+         }
       } else {
+         /* set last_fetch_ok_time, because we had success */
+         last_fetch_ok_time = sge_get_gmt();
+
          /* send an ack to the qmaster for all received events */
-#ifdef ENABLE_NGC
          if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1, lGetUlong(ec, EV_id)) != CL_RETVAL_OK) {
-#else
-         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1, lGetUlong(ec, EV_id))) {
-#endif
             WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
          } else {
             DPRINTF(("Sent ack for all events lower or equal %d\n", 
@@ -2634,7 +2667,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 *
 *  SYNOPSIS
 *     static bool 
-*     get_event_list(int sync, lList **report_list) 
+*     get_event_list(int sync, lList **report_list, int *commlib_error) 
 *
 *  FUNCTION
 *     Tries to retrieve the event list.
@@ -2644,6 +2677,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 *  INPUTS
 *     int sync            - synchronous transfer
 *     lList **report_list - pointer to returned list
+*     int *commlib_error  - pointer to integer to return communication error
 *
 *  RESULT
 *     static bool - true on success, else false
@@ -2652,7 +2686,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 *     Eventclient/Client/ec_get()
 ******************************************************************************/
 static bool 
-get_event_list(int sync, lList **report_list)
+get_event_list(int sync, lList **report_list, int *commlib_error )
 {
    int tag;
    bool ret = true;
@@ -2664,35 +2698,26 @@ get_event_list(int sync, lList **report_list)
 
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
-   id = 0;
    tag = TAG_REPORT_REQUEST;
-   /* FIX_CONST */
-   
-#ifdef ENABLE_NGC
    id = 1;
+
    DPRINTF(("try to get request from %s, id %d\n",(char*)prognames[QMASTER], id ));
    if ( (help=sge_get_any_request((char*)sge_get_master(0), (char*)prognames[QMASTER], &id, &pb, &tag, sync,0,NULL)) != CL_RETVAL_OK) {
-      if (help == CL_RETVAL_NO_MESSAGE) {
+      if (help == CL_RETVAL_NO_MESSAGE || help == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
          DEBUG((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help)));
       } else {
          WARNING((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help))); 
       }
       ret = false;
-   }
-#else
-   if (sge_get_any_request((char*)sge_get_master(0), 
-                           (char*)prognames[QMASTER], &id, &pb, &tag, sync) 
-                           != CL_OK) {
-      DPRINTF(("commlib returns %s (%d)\n", cl_errstr(ret), ret));
-      ret = false;
-   }
-#endif
-   else {
+   } else {
       if (cull_unpack_list(&pb, report_list)) {
          ERROR((SGE_EVENT, MSG_LIST_FAILEDINCULLUNPACKREPORT ));
          ret = false;
       }
       clear_packbuffer(&pb);
+   }
+   if ( commlib_error != NULL) {
+      *commlib_error = help;
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);

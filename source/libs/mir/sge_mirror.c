@@ -926,11 +926,9 @@ sge_mirror_error sge_mirror_process_events(void)
          lFreeList(event_list);
       }
    } else {
-      if(last_heared != 0 && (now > last_heared + ec_get_edtime() * 10)) {
-         WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
-         ec_mark4registration();
-         ret = SGE_EM_TIMEOUT;
-      }
+      WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
+      ec_mark4registration();
+      ret = SGE_EM_TIMEOUT;
    }
 
    if(prof_is_active()) {

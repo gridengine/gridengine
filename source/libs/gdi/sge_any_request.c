@@ -54,6 +54,11 @@ static void sge_log_commd_state_transition(int cl_err);
 static int commd_monitor(int cl_err);
 #endif
 
+
+/* setup a communication error callback */
+static void general_communication_error(int cl_err);
+static int gdi_general_communication_error = CL_RETVAL_OK;
+
 static int gdi_log_flush_func(cl_raw_list_t* list_p) {
    int ret_val;
    cl_log_list_elem_t* elem = NULL;
@@ -123,6 +128,65 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
    return CL_RETVAL_OK;
 }
 
+/****** sge_any_request/general_communication_error() **************************
+*  NAME
+*     general_communication_error() -- callback for communication errors
+*
+*  SYNOPSIS
+*     static void general_communication_error(int cl_error) 
+*
+*  FUNCTION
+*     This function is used by cl_com_set_error_func() to set the default
+*     application error function for communication errors. On important 
+*     communication errors the communication lib will call this function
+*     with a corresponding error number.
+*     This function should never block. Treat it as a kind of signal handler.
+*
+*  INPUTS
+*     int cl_error - commlib error number
+*
+*  NOTES
+*     MT-NOTE: general_communication_error() is not MT safe 
+*     (static variable "gdi_general_communication_error" is used)
+*
+*  SEE ALSO
+*     sge_any_request/sge_get_communication_error()
+*******************************************************************************/
+static void general_communication_error(int cl_error) {
+   DENTER(COMMD_LAYER, "general_communication_error");
+   WARNING((SGE_EVENT, MSG_GDI_GENERAL_COM_ERROR_S, cl_get_error_text(cl_error)));
+   gdi_general_communication_error = cl_error;
+   DEXIT;
+}
+
+/****** sge_any_request/sge_get_communication_error() **************************
+*  NAME
+*     sge_get_communication_error() -- get last communication error
+*
+*  SYNOPSIS
+*     int sge_get_communication_error(void) 
+*
+*  FUNCTION
+*     This function returns the last communication error. This procedure returns
+*     the last set communication error by communication lib callback.
+*
+*  RESULT
+*     int - last communication error
+*
+*  NOTES
+*     MT-NOTE: sge_get_communication_error() is not MT safe ( returns just 
+*     an static defined integer) but can be called by more threads without 
+*     problem.
+*
+*  SEE ALSO
+*     sge_any_request/general_communication_error()
+*******************************************************************************/
+int sge_get_communication_error(void) {
+   DENTER(COMMD_LAYER, "sge_get_communication_error");
+   DEXIT;
+   return gdi_general_communication_error;
+}
+
 /*-----------------------------------------------------------------------
  * prepare_enroll
  * just store values for later enroll() of commlib
@@ -160,6 +224,7 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
       ERROR((SGE_EVENT, "cl_com_setup_commlib(): %s\n",cl_get_error_text(ret_val)));
    }
    cl_com_set_alias_file(sge_get_alias_path());
+   cl_com_set_error_func(general_communication_error);
 
    /*
    set_commlib_param(CL_P_COMMDSERVICE, 0, SGE_COMMD_SERVICE, NULL);
@@ -769,7 +834,6 @@ int check_isalive(const char *masterhost)
    if (ret != CL_RETVAL_OK) {
       DPRINTF(("cl_commlib_get_endpoint_status() returned "SFQ"\n", cl_get_error_text(ret)));
       alive = CL_RETVAL_UNKNOWN;
-      WARNING((SGE_EVENT, "qmaster not responding - No master found\n"));   
    } else {
       DEBUG((SGE_EVENT,"qmaster is still running\n"));   
       alive = CL_RETVAL_OK;

@@ -595,7 +595,11 @@ int main(int argc, char *argv[])
       }
 
       while(!shut_me_down) {
-         sge_mirror_process_events();
+         sge_mirror_error error = sge_mirror_process_events();
+         if (error == SGE_EM_TIMEOUT) {
+            sleep(10);
+            continue;
+         }
       }
 
       sge_mirror_shutdown();

@@ -146,5 +146,6 @@
  */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
 
+#define MSG_GDI_GENERAL_COM_ERROR_S   _MESSAGE(43294, _("general communication error: "SFN"\n"))
 #endif /* __MSG_GDILIB_H */
 

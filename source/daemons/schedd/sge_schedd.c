@@ -84,7 +84,6 @@
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
 int new_global_config = 0;
-int start_on_master_host = 0;
 
 static void schedd_serf_record_func(u_long32 job_id, u_long32 ja_taskid, 
    const char *state, u_long32 start_time, u_long32 end_time, char level_char,
@@ -119,9 +118,10 @@ int argc,
 char *argv[] 
 ) {
    bool check_qmaster;
-   const char *master_host;
+   const char *master_host = NULL;
    int ret;
-   char initial_qmaster_host[1024];
+   char* initial_qmaster_host = NULL;
+   char* local_host = NULL;
    time_t next_prof_output = 0;
    bool done = false;
 
@@ -184,29 +184,32 @@ char *argv[]
    sge_schedd_mirror_register();
 
    master_host = sge_get_master(0);
-   if (sge_hostcmp(master_host, uti_state_get_qualified_hostname()) && start_on_master_host) {
-      CRITICAL((SGE_EVENT, MSG_SCHEDD_STARTSCHEDONMASTERHOST_S , master_host));
+   if ( (ret=cl_com_cached_gethostbyname((char*)master_host, &initial_qmaster_host, NULL,NULL)) != CL_RETVAL_OK) {
+      CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
       SGE_EXIT(1);
    }
-   strncpy(initial_qmaster_host, master_host, sizeof(initial_qmaster_host)-1);
+   if ( (ret=cl_com_gethostname(&local_host, NULL,NULL)) != CL_RETVAL_OK) {
+      free(initial_qmaster_host); 
+      CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
+      SGE_EXIT(1);
+   }
+
+   if (cl_com_compare_hosts((char*)master_host,local_host) != CL_RETVAL_OK) {
+      CRITICAL((SGE_EVENT, MSG_SCHEDD_STARTSCHEDONMASTERHOST_S , master_host));
+      free(initial_qmaster_host); 
+      SGE_EXIT(1);
+   }
+   free(local_host);
+   local_host = NULL;
 
    if (!getenv("SGE_ND")) {
       fd_set fds;
-#ifdef ENABLE_NGC
       FD_ZERO(&fds);
       if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), &fds) == CL_RETVAL_OK) {
-         INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
          sge_daemonize(&fds);
       } else {
          sge_daemonize(NULL);
       }
-#else
-      FD_ZERO(&fds);
-      if ((fd=commlib_state_get_sfd())>=0) {
-         FD_SET(fd, &fds);
-      }
-      sge_daemonize(commlib_state_get_closefd()?NULL:&fds);
-#endif
    }
 
    starting_up();
@@ -218,18 +221,11 @@ char *argv[]
 
    in_main_loop = 1;
 
-   /* this is necessary if the master has to send LOTS of data
-    * to the schedd. would timout otherwise.
-   */
-#ifdef ENABLE_NGC
-#else
-   set_commlib_param(CL_P_TIMEOUT_SRCV, 4*60, NULL, NULL);
-   set_commlib_param(CL_P_TIMEOUT_SSND, 4*60, NULL, NULL);
-#endif
-
    while (!done) {
       if (shut_me_down) {
          sge_mirror_shutdown();
+         free(initial_qmaster_host);
+         initial_qmaster_host = NULL;
          sge_shutdown();
       }   
 
@@ -240,6 +236,8 @@ char *argv[]
       
       if (check_qmaster) {
          if ((ret = sge_ck_qmaster(initial_qmaster_host)) < 0) {
+            free(initial_qmaster_host);
+            initial_qmaster_host = NULL;
             CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
             SGE_EXIT(1);
          } else if (ret > 0) {
@@ -275,6 +273,8 @@ char *argv[]
          }
       }
    }
+   free(initial_qmaster_host);
+   initial_qmaster_host = NULL;
    DEXIT;
    return EXIT_SUCCESS;
 }
@@ -558,20 +558,12 @@ int daemonize_schedd()
    DENTER(TOP_LAYER, "daemonize_schedd");
 
    FD_ZERO(&keep_open);
-#ifdef ENABLE_NGC
+
    if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), &keep_open) == CL_RETVAL_OK) {
-      INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
-      sge_daemonize(&keep_open);
+      ret = sge_daemonize(&keep_open);
    } else {
-      sge_daemonize(NULL);
+      ret = sge_daemonize(NULL);
    }
-#else
-   if ((fd = commlib_state_get_sfd()) >= 0) {
-      FD_SET(fd, &keep_open);
-   }
-   sge_daemonize(commlib_state_get_closefd()?NULL:&keep_open);
-   ret = sge_daemonize(&keep_open);
-#endif
 
    DEXIT;
    return ret;

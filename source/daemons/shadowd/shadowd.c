@@ -325,19 +325,11 @@ char **argv
    log_state_set_log_file(shadow_err_file);
 
    FD_ZERO(&fds);
-#ifdef ENABLE_NGC
    if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), &fds) == CL_RETVAL_OK) {
-      INFO((SGE_EVENT, "there are open file descriptors for communication\n"));
       sge_daemonize(&fds);
    } else {
       sge_daemonize(NULL);
    }
-#else
-   if ((fd=commlib_state_get_sfd())>=0) {
-      FD_SET(fd, &fds);
-   }
-   sge_daemonize(commlib_state_get_closefd()?NULL:&fds);
-#endif
    sge_write_pid(shadowd_pidfile);
 
    starting_up();

@@ -1,3 +1,9 @@
+MD-2004-04-26-0: Bugfix:    qping fails if, SGE_QMASTER_PORT was not set.
+                            (In case of using sge_qmaster service)
+                 Changed:   sgemaster_template
+                 Review:    AH
+                 Issue:     #989
+
 JG-2004-04-23-0: Bugfix:    Fixed core dump in event master module.
                  Changed:   qmaster
                  Review:    AD

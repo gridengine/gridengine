@@ -291,26 +291,6 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
          DEXIT;
          return -1;
       }
-
-      /* --------- SC_flush_submit_sec*/
-      if (!set_conf_ulong(alpp, clpp, fields, "flush_submit_sec", ep, 
-               SC_flush_submit_sec)) {
-         DEXIT;
-         return -1;
-      }    
-     
-      if (!set_conf_string(alpp, clpp, fields, "params", ep,
-               SC_params)) {
-         DEXIT;
-         return -1;
-      }
-     
-      /* --------- SC_flush_finish_sec*/
-      if (!set_conf_ulong(alpp, clpp, fields, "flush_finish_sec", ep, 
-               SC_flush_finish_sec)) {
-         DEXIT;
-         return -1;
-      }   
       
       /* --------- SC_weight_user */
       if (!set_conf_double(alpp, clpp, fields, "weight_user", ep, 
@@ -451,6 +431,27 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       DEXIT;
       return -1;
    }
+
+
+   /* --------- SC_flush_submit_sec*/
+   if (!set_conf_ulong(alpp, clpp, fields, "flush_submit_sec", ep, 
+            SC_flush_submit_sec)) {
+      DEXIT;
+      return -1;
+   }    
+  
+   if (!set_conf_string(alpp, clpp, fields, "params", ep,
+            SC_params)) {
+      DEXIT;
+      return -1;
+   }
+  
+   /* --------- SC_flush_finish_sec*/
+   if (!set_conf_ulong(alpp, clpp, fields, "flush_finish_sec", ep, 
+            SC_flush_finish_sec)) {
+      DEXIT;
+      return -1;
+   }   
 
    /* --------- SC_queue_sort_method */
    str = get_conf_value(&alp, *clpp, CF_name, CF_value, "queue_sort_method");

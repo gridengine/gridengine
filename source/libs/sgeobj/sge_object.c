@@ -1053,14 +1053,11 @@ bool object_type_free_master_list(const sge_object_type type)
       ret = false;
    } else if (object_base[type].list){
        *object_base[type].list = lFreeList(*object_base[type].list);
+       ret = true;
    } else if (object_base[type].getMasterList){
       lList ** list = object_base[type].getMasterList();
       *list = lFreeList(*list);
       ret = object_base[type].commitMasterList(NULL);
-   }
-   else {
-      ERROR((SGE_EVENT, MSG_OBJECT_NO_LIST_TO_MOD_TYPE_SI, SGE_FUNC, type));
-      ret = false;
    }
    DEXIT;
    return ret;

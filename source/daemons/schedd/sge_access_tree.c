@@ -441,7 +441,7 @@ lListElem *at_get_actual_job_array(lList *job_list)
    }
 
    do { /* iterate through all priority groups */
-      if (user_sort) {
+      if (!user_sort) {
          /* FCFS - simply return the current job array 
                    if it is dispatchable and still in
                    our directory of runnable jobs 

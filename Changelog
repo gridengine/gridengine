@@ -1,3 +1,11 @@
+SG-2003-10-29-0: Bugfix.:   - SGE: sched config read in error on qmaster 
+                                   startup
+                            - SGE: no jobs were scheduled, fixed
+                            - SGE(EE): removed error message: 
+                            "object_type_free_master_list: has no master list 
+                            to modify"
+                 Changed:   schedd, qmaster
+
 JG-2003-10-29-0: Bugfix:    bootstrap file was owned by root - it has to be 
                             owned by the admin_user in admin_user systems.
 

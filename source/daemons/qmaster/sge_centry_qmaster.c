@@ -287,7 +287,11 @@ centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object)
 *     debitations for ALL resources be re-done with all hosts and queues 
 *     based on per job resource requests. There should be a chance to notably 
 *     lower resource consumption doing this only for those complexes where 
-*     changes actually occurred (AH).
+*     changes actually occurred.
+* 
+*     There is no need sort centry list each time a change occurs.
+* 
+*     Reporting needs to be updated only for the changed complex entry.
 *
 *  SEE ALSO
 *     ???/???

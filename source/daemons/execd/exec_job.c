@@ -946,12 +946,11 @@ char *err_str
    fprintf(fp, "min_uid=" u32 "\n", conf.min_uid);
    
    /* do path substitutions also for cwd */
-                
    if ((cp = expand_path(cwd, job_id, job_is_array(jep) ? ja_task_id : 0,
          lGetString(jep, JB_job_name),
          lGetString(jep, JB_owner), 
          uti_state_get_qualified_hostname()))) 
-      cwd = cp;
+      cwd = sge_dstring_sprintf(&cwd_out, "%s", cp);
    fprintf(fp, "cwd=%s\n", cwd);
 #if defined(IRIX)
    {

@@ -57,9 +57,10 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
 {
    lListElem *ep;
    const char *path = NULL, *host;
+
    DENTER(TOP_LAYER, "sge_get_path");
 
-   strcpy(pathstr, "");
+   *pathstr = '\0';
 
    /*
     * check if there's a path for this host
@@ -98,7 +99,7 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
       /* no -e/-o directive (but not for shells) */
       strcpy(pathstr, cwd);
    }
- 
+
    DEXIT;
    return 0;
 }

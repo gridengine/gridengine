@@ -104,7 +104,7 @@ int truncate_stderr_out
    char *shell_path = NULL;
    char *cwd;
    struct passwd *pw=NULL;
-   char err_str[256];
+   char err_str[MAX_STRING_SIZE];
    int merge_stderr;
    int fs_stdin, fs_stdout, fs_stderr;
    pid_t pid, ppid, pgrp, newpgrp;
@@ -583,29 +583,34 @@ int truncate_stderr_out
    }
    /* open stdout - not for interactive jobs */
    if (!is_interactive && !is_qlogin) {
-      if (truncate_stderr_out)
+      if (truncate_stderr_out) {
          out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
-      else
+      } else {
          out = open(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+      }
+      
       if (out==-1) {
          sprintf(err_str, "error: can't open output file \"%s\": %s", 
                  stdout_path, strerror(errno));
          shepherd_state = SSTATE_OPEN_OUTPUT;
          shepherd_error(err_str);
       }
-      if (out!=1)
+      
+      if (out!=1) {
          shepherd_error("error: fd out is not 1");
+      }   
 
       /* open stderr */
       if (merge_stderr) {
          shepherd_trace("using stdout as stderr");
          dup2(1, 2);
-      }
-      else {
-         if (truncate_stderr_out) 
+      } else {
+         if (truncate_stderr_out) {
             err = open(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
-         else
+         } else {
             err = open(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+         }
+
          if (err == -1) {
             sprintf(err_str, "error: can't open output file \"%s\": %s", 
                     stderr_path, strerror(errno));

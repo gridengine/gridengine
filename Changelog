@@ -1,3 +1,9 @@
+JG-2004-03-09-2: Bugfix:    path of output file for pe start proc was incorrect.
+                 Issue:     808
+                 Bugfix:    fixed buffer overflow in shepherd.
+                 Bugfix:    fixed uninitialized variable in commlib.
+                 Review:    CR
+
 AH-2004-03-09-0: Bugfix:    Reverted problematic do_ntix optimization done in
                             AH-2004-03-08-0.
                             Fix broken -masterq submit option.

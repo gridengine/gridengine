@@ -284,7 +284,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
                }
                select_back = select(sockfd + 1, NULL, &writefds, NULL, &stimeout);
                if (select_back > 0) {
-                  int socket_error;
+                  int socket_error = 0;
                   int socklen = sizeof(socket_error);
 
 #if defined(SOLARIS) && !defined(SOLARIS64) 

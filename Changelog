@@ -1,3 +1,6 @@
+AH-2004-04-07-0: Bugfix:    Use a default 'weight_waiting_time' to 0 (#959)
+                 Review:    SG
+
 JG-2004-04-07-0: Enhancem.: Berkeley DB spooling: Write two databases: 
                             A configuration database and a job database.
                  Changed:   sge_qmaster, spoolinit, spooldefaults, dbstat

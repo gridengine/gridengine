@@ -1,3 +1,7 @@
+RC-2004-04-11-0: Bugfix:    Fixed a minor typo in manpage
+                 Changed:   sge_conf.5
+
+
 AS-2004-04-06-0: CVS        Created V53p6_TAG
 ---------------------------------------------
 

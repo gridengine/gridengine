@@ -1,3 +1,8 @@
+SG-2004-03-12-0: Bugfix:    fixed problem with fix for issue 831
+                 Issue:     831
+                 Changed:   qmaster
+                 Review:    EB
+
 EB-2004-03-11-0: Bugfix:    removing a suspend threshold doesn't unsuspend jobs
                  Issue:     831
                  Changed:   sge_qmaster

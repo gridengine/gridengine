@@ -1,3 +1,9 @@
+EB-2003-04-04-0  Bugfix:    jobs suspended due to calendar were handled as 
+                            running jobs within scheduler 
+                            (see EB-2003-03-27-0)
+                 Review:    AH
+                 Changed:   sge_schedd 
+
 CR-2003-04-03-0  Bugfix:    commd ignored first message for commlib client
                             in case of priority tags messages (used for
                             qmaster <-> execd communication). The first 

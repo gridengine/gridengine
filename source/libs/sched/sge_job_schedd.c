@@ -598,7 +598,8 @@ void split_jobs(lList **job_list, lList **answer_list,
                   queue_state = lGetUlong(queue, QU_state);
                   
                   if ((queue_state & QSUSPENDED) ||
-                      (queue_state & QSUSPENDED_ON_SUBORDINATE)) {
+                      (queue_state & QSUSPENDED_ON_SUBORDINATE) ||
+                      (queue_state & QCAL_SUSPENDED)) {
 #ifdef JOB_SPLIT_DEBUG
                      DPRINTF(("Task "u32" is in suspended state\n",ja_task_id));
 #endif

@@ -557,7 +557,7 @@ static void *do_submit(drmaa_job_template_t *jt, int n, int as_bulk_job)
 static int wait_all_jobs(void *vp)
 {
    char jobid[100];
-   int n, drmaa_errno;
+   int n, drmaa_errno = DRMAA_ERRNO_SUCCESS;
    int stat;
 
    if (vp) 

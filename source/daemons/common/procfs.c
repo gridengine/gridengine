@@ -590,14 +590,15 @@ int time_stamp
       {
          char procnam[256];
          char buf[1024];
-         FILE* fd = (FILE*) NULL;
+         FILE* f = (FILE*) NULL;
    
          sprintf(procnam,  "%s/%s/status", PROC_DIR, dent->d_name);
-         if (!(fd = fopen(procnam, "r"))) {
+         if (!(f = fopen(procnam, "r"))) {
+            close(fd);
             continue;
          }
          groups = 0;
-         while (fgets(buf, sizeof(buf), fd)) {
+         while (fgets(buf, sizeof(buf), f)) {
             if (strcmp("Groups:", strtok(buf, "\t"))==0) {
                char *token;
                   
@@ -608,7 +609,7 @@ int time_stamp
                break;
             }
          }
-         fclose(fd);
+         fclose(f);
       } 
 #  elif defined(SOLARIS) || defined(ALPHA)
       

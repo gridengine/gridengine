@@ -1,3 +1,8 @@
+SD-2004-02-25-0: Bugfix:    Fixed file descriptor leak which caused
+                            execd to run out of file descriptors
+                 Changed:   execd
+                 Issue:     713
+
 SG-2004-02-25-1: Bugfix:    fixed the time bases for YY specification. It referes to
                             to the range of 1970 till 2069.
                  Chaged:    qacct, qsub, qalter,...

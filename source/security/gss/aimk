@@ -47,7 +47,8 @@ endif
 
 if (! $?KRB_HOME) then
    #set KRB_HOME = /krb5/
-   set KRB_HOME = /usr/local/
+   #set KRB_HOME = /usr/local/
+   set KRB_HOME = /usr/kerberos/
 endif
 
 # common compiler and linker settings 

@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = .
 
-ACLOCAL = ../missing aclocal
-AUTOCONF = ../missing autoconf
-AUTOMAKE = ../missing automake
-AUTOHEADER = ../missing autoheader
+#ACLOCAL = ../missing aclocal
+#AUTOCONF = ../missing autoconf
+#AUTOMAKE = ../missing automake
+#AUTOHEADER = ../missing autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = gcc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO = ../missing makeinfo
+MAKEINFO = missing makeinfo
 PACKAGE = make
 PERL = perl
 RANLIB = ranlib
@@ -166,51 +166,51 @@ OBJECTS = $(make_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .dvi .info .o .ps .s .texi .texinfo .txi
-$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
-
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
-	cd $(top_builddir) \
-	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
-
-$(ACLOCAL_M4):  configure.in  acinclude.m4
-	cd $(srcdir) && $(ACLOCAL)
-
-config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
-	$(SHELL) ./config.status --recheck
-$(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
-	cd $(srcdir) && $(AUTOCONF)
-
-config.h: stamp-h
-	@if test ! -f $@; then \
-		rm -f stamp-h; \
-		$(MAKE) stamp-h; \
-	else :; fi
-stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
-	cd $(top_builddir) \
-	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
-	     $(SHELL) ./config.status
-	@echo timestamp > stamp-h 2> /dev/null
-$(srcdir)/config.h.in: $(srcdir)/stamp-h.in
-	@if test ! -f $@; then \
-		rm -f $(srcdir)/stamp-h.in; \
-		$(MAKE) $(srcdir)/stamp-h.in; \
-	else :; fi
-$(srcdir)/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) acconfig.h
-	cd $(top_srcdir) && $(AUTOHEADER)
-	touch $(srcdir)/stamp-h.in
-	#@echo timestamp > $(srcdir)/stamp-h.in 2> /dev/null
-
-mostlyclean-hdr:
-
-clean-hdr:
-
-distclean-hdr:
-	-rm -f config.h
-
-maintainer-clean-hdr:
-build.sh: $(top_builddir)/config.status build.sh.in
-	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
+#$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+#	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
+#
+#Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+#	cd $(top_builddir) \
+#	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
+#
+#$(ACLOCAL_M4):  configure.in  acinclude.m4
+#	cd $(srcdir) && $(ACLOCAL)
+#
+#config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+#	$(SHELL) ./config.status --recheck
+#$(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+#	cd $(srcdir) && $(AUTOCONF)
+#
+#config.h: stamp-h
+#	@if test ! -f $@; then \
+#		rm -f stamp-h; \
+#		$(MAKE) stamp-h; \
+#	else :; fi
+#stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
+#	cd $(top_builddir) \
+#	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
+#	     $(SHELL) ./config.status
+#	@echo timestamp > stamp-h 2> /dev/null
+#$(srcdir)/config.h.in: $(srcdir)/stamp-h.in
+#	@if test ! -f $@; then \
+#		rm -f $(srcdir)/stamp-h.in; \
+#		$(MAKE) $(srcdir)/stamp-h.in; \
+#	else :; fi
+#$(srcdir)/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) acconfig.h
+#	cd $(top_srcdir) && $(AUTOHEADER)
+#	touch $(srcdir)/stamp-h.in
+#	#@echo timestamp > $(srcdir)/stamp-h.in 2> /dev/null
+#
+#mostlyclean-hdr:
+#
+#clean-hdr:
+#
+#distclean-hdr:
+#	-rm -f config.h
+#
+#maintainer-clean-hdr:
+#build.sh: $(top_builddir)/config.status build.sh.in
+#	cd $(top_builddir) && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 mostlyclean-binPROGRAMS:
 

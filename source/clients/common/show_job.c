@@ -85,6 +85,11 @@ void cull_show_job(lListElem *job, int flags)
          printf("submission_time:            %s", ctime((time_t *) &ultime));
       }
 
+   if (lGetPosViaElem(job, JB_deadline)>=0)
+      if ((ultime = lGetUlong(job, JB_deadline))) {
+         printf("deadline:                   %s", ctime((time_t *) &ultime));
+      }
+
    if (lGetPosViaElem(job, JB_owner)>=0) {
       if (lGetString(job, JB_owner))
          printf("owner:                      %s\n", lGetString(job, JB_owner));

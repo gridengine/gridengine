@@ -734,6 +734,7 @@
  * sge_qmaster_main.c
  */
 #define MSG_QMASTER_UNEXPECTED_SIGNAL_I    _MESSAGE(33810, _("received unexpected signal %d\n"))
+#define MSG_JOB_DEADLINETIME               _MESSAGE(33811, _("deadline time"))
 
 #endif
 

@@ -1,3 +1,8 @@
+MD-2004-01-28-2: Bugfix:    qalter lacks option -dl              
+                 Issue:     #599
+                 Changed:   sge_qmaster, qstat, qalter
+                 Review:    EB
+
 AD-2004-01-28-1: Bugfix:    - all files are now created under the admin user
                               UID/GID
                             - the temporary message file in '/tmp' is no

@@ -794,6 +794,7 @@ int *all_users
          };
          static int ulong_nm[] = {
             JB_execution_time,
+            JB_deadline,
             JB_mail_options,
             JB_priority,
             JB_override_tickets,

@@ -2325,23 +2325,21 @@ int *trigger
 
    }
 
-   /* 
-      If it is a deadline job the user has to be a deadline user  MD:22.01.04
-   */
-   if (lGetUlong(jep, JB_deadline)) {
+#if 1 /* MD: #599: If it is a deadline job the user has to be a deadline user */
+   if ((pos=lGetPosViaElem(jep, JB_deadline))>=0) {
       if (!userset_is_deadline_user(Master_Userset_List, ruser)) {
          ERROR((SGE_EVENT, MSG_JOB_NODEADLINEUSER_S, ruser));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
+      } else {
+         lSetUlong(new_job, JB_deadline, lGetUlong(jep, JB_deadline));
+         *trigger |= MOD_EVENT;
+         sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_DEADLINETIME, u32c(jobid)); 
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
-   else {
-     lSetUlong(new_job, JB_deadline, lGetUlong(jep, JB_deadline));
-     *trigger |= MOD_EVENT;
-     sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STARTTIME, u32c(jobid)); /*Using the wrong MSG, create a new?*/
-     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-        }
    }
+#endif
 
 
    /* ---- JB_execution_time */

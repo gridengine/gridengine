@@ -1,3 +1,10 @@
+JG-2004-01-17-0: Bugfix:    Script submission was broken in qrsh.
+                            -C option was ignored for script submission in qrsh.
+                            Manpage submit.1: -C option is allowed for qrsh.
+                 Issue:     463
+                 Changed:   qsh, submit.1
+                 Review:    pending
+
 SG-2004-01-17-1: Bugfix:    scheduler died, when it got events and wanted
                             to print warnings
                  Changed:   scheduler

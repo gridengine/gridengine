@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/01/12 13:00:06 $     Revision: $Revision: 1.32 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/01/17 11:01:57 $     Revision: $Revision: 1.33 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/01/12 13:00:06 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/01/17 11:01:57 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -482,7 +482,7 @@ parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
 .IP "\fB\-C prefix_string\fP"
-Available for \fIqsub\fP only.
+Available for \fIqsub\fP, and qrsh with script submission (-b n).
 .sp 1
 .I Prefix_string
 defines the prefix that declares a directive to

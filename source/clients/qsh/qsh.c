@@ -1288,44 +1288,6 @@ int main(int argc, char **argv)
       }
    }
 
-   /*
-    * We will read commandline options from scripfile if the script
-    * itself should be handled as script not as binary
-    */
-   if (is_qsh || is_qlogin || (is_rsh && 
-       ((!opt_list_has_X(opts_cmdline, "-b") && 
-         !opt_list_has_X(opts_defaults, "-b")) ||
-        opt_list_is_X_true(opts_cmdline, "-b") || 
-        opt_list_is_X_true(opts_defaults, "-b")))) {
-      DPRINTF(("Ignoring script parameter\n"));
-   } else {
-      lListElem *inherit_ep = lGetElemStr(opts_cmdline, SPA_switch, "-inherit");
-
-      if (inherit_ep != NULL) {
-         ERROR((SGE_EVENT, MSG_QSH_INHERIT_BN_NOT_ALLOWED_S, "qrsh"));
-         SGE_EXIT(1);
-      } else {
-         opt_list_append_opts_from_script(&opts_scriptfile, &alp, 
-                                          opts_cmdline, environ);
-         do_exit = parse_result_list(alp, &alp_error);
-         lFreeList(alp);
-
-         if (alp_error) {
-            SGE_EXIT(1);
-         }
-
-         if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTLEN))) {
-            lSetUlong(job, JB_script_size, lGetUlong(ep, SPA_argval_lUlongT));
-            lRemoveElem(opts_scriptfile, ep);
-         }
-
-         if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTPTR))) {
-            lSetString(job, JB_script_ptr, lGetString(ep, SPA_argval_lStringT));
-            lRemoveElem(opts_scriptfile, ep);
-         }
-      }
-   }
-
    if (opt_list_has_X(opts_cmdline, "-help")) {
       sge_usage(stdout);
       SGE_EXIT(0);
@@ -1347,28 +1309,6 @@ int main(int argc, char **argv)
    ** if qrsh, parse command to call
    */
    if(is_rsh) {
-
-      {
-         int set_bin_bit = 1; /* default for qrsh is 'yes' */
-
-         while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-b"))) {
-            if (lGetInt(ep, SPA_argval_lIntT) == 1) {
-               set_bin_bit = 1;
-            } else {
-               set_bin_bit = 0;
-            }
-            lRemoveElem(opts_cmdline, ep);
-         }
-
-         if (set_bin_bit) {
-            u_long32 jb_type = lGetUlong(job, JB_type);
-
-            JOB_TYPE_SET_BINARY(jb_type);
-            lSetUlong(job, JB_type, jb_type);
-         }
-      }
-
-
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-nostdin"))) {
          lRemoveElem(opts_cmdline, ep);
          nostdin = 1;
@@ -1434,6 +1374,70 @@ int main(int argc, char **argv)
          } else {
             is_rsh = 0;
             is_rlogin = 1;
+         }
+      }   
+   }
+
+   /* handle binary vs. script submission */
+   if (is_rsh && !inherit_job) {
+      bool binary = true;
+
+      /* do we have -b in commandline? */
+      if (opt_list_has_X(opts_cmdline, "-b")) {
+         /* then commandline will determine over binary vs. script submiss. */
+         binary = opt_list_is_X_true(opts_cmdline, "-b");
+      } else if (opt_list_has_X(opts_cmdline, "-b")) {
+         /* we have -b in defaults files, this one will decide */
+         binary = opt_list_is_X_true(opts_defaults, "-b");
+      }
+
+      /* remove the binary option from commandline before proceeding */
+      while ((ep = lGetElemStr(opts_defaults, SPA_switch, "-b"))) {
+         lRemoveElem(opts_cmdline, ep);
+      }
+      while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-b"))) {
+         lRemoveElem(opts_cmdline, ep);
+      }
+
+      /* set binary bit or handle script submission */
+      if (binary) {
+         u_long32 jb_type = lGetUlong(job, JB_type);
+
+         JOB_TYPE_SET_BINARY(jb_type);
+         lSetUlong(job, JB_type, jb_type);
+      } else {
+         DPRINTF(("handling script submission\n"));
+     
+         /* move -C directives into opts_qrsh - we need them for parsing 
+          * the script 
+          */
+         while ((ep = lGetElemStr(opts_defaults, SPA_switch, "-C"))) {
+            lDechainElem(opts_defaults, ep);
+            lAppendElem(opts_qrsh, ep);
+         }
+         while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-C"))) {
+            lDechainElem(opts_cmdline, ep);
+            lAppendElem(opts_qrsh, ep);
+         }
+    
+         /* read scriptfile and parse script options */
+         opt_list_append_opts_from_script(&opts_scriptfile, &alp, 
+                                          opts_qrsh, environ);
+         do_exit = parse_result_list(alp, &alp_error);
+         lFreeList(alp);
+
+         if (alp_error) {
+            SGE_EXIT(1);
+         }
+
+         /* set length and script contents in job */
+         if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTLEN))) {
+            lSetUlong(job, JB_script_size, lGetUlong(ep, SPA_argval_lUlongT));
+            lRemoveElem(opts_scriptfile, ep);
+         }
+         if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTPTR))) {
+            lSetString(job, JB_script_ptr, lGetString(ep, SPA_argval_lStringT));
+            lRemoveElem(opts_scriptfile, ep);
          }
       }   
    }

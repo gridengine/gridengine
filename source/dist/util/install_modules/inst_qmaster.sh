@@ -96,8 +96,8 @@ GetCell()
                :
                is_done="false"
             else
-               $INFOTEXT -n "You can overwrite or delete this directory. If you choose overwrite,\nonly critical files" \
-                            "will be deleted (eg. bootstrap file).\nDelete - will delete the hole directory!\n"
+               $INFOTEXT -n "You can overwrite or delete this directory. If you choose overwrite,\nonly critical files " \
+                            "will be deleted (eg. bootstrap file).\nDelete - will delete the whole directory!\n"
                $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to overwrite the directory? (y/n) [y] >> "
                if [ $? = 0 ]; then
                   $INFOTEXT "Deleting bootstrap file!"

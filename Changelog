@@ -1,3 +1,7 @@
+MD-2004-03-10-0: Bugfix:    really bad typo
+                 Issue:     #793
+                 Changed:   inst_sge
+
 JG-2004-03-10-2: Testsuite: Some fixes for the testsuite queue handling and
                             tests bugs/issuezilla/193 and functional/migration.
 

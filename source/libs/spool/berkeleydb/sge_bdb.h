@@ -112,4 +112,12 @@ spool_berkeleydb_delete_job(lList **answer_list, struct bdb_info *info,
 bool
 spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
                                const char *key);
+
+bool
+spool_berkeleydb_read_keys(lList **answer_list, struct bdb_info *info,
+                           lList **list, const char *key);
+
+lListElem *
+spool_berkeleydb_read_object(lList **answer_list, struct bdb_info *info,
+                             const char *key);
 #endif /* __SGE_BDB_H */    

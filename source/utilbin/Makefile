@@ -207,10 +207,18 @@ work:	work.o
 
 work.o:	$(UTILBIN_DIR)/work.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/work.c
+
 #---------------------------------------------------------------------
 tst_pthread_signals: tst_pthread_signals.o
 		$(CC) -o $@ tst_pthread_signals.o $(LFLAGS) $(SLIBS) $(LIBS)
 
 tst_pthread_signals.o: $(UTILBIN_DIR)/tst_pthread_signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/tst_pthread_signals.c
+
+#---------------------------------------------------------------------
+dbstat: dbstat.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+		$(CC) -o $@ dbstat.o version.o sge_mt_init.o $(LFLAGS) $(SPOOLING_LIBS) -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lngc -lngclists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
+
+dbstat.o: $(UTILBIN_DIR)/dbstat.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/dbstat.c
 

@@ -1,3 +1,8 @@
+JG-2004-02-04-0: Enhancem.: Added a utility to dump the list of objects in the
+                            Berkeley DB database, dump objects and delete 
+                            objects.
+                 Review:    pending
+
 SG-2004-02-03-1: Bugfix:    qacct only worked on queues and queue instances,
                             which are currently in the system. Removed ones
                             were not accessable. This is changed.

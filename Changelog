@@ -1,3 +1,7 @@
+EB-2002-04-13-0: Bugfix:    qconf -se shows "reschedule_unknown_list" param. 
+                 Issues:    #248 
+                 Changed:   sge_qmaster, qacct 
+
 CR-2002-05-06-0: Testsuite: fixed check dependencies
 
 AH-2002-05-06-0: Bugfix:    Fix typo in simple.sh job example

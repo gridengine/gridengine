@@ -444,14 +444,17 @@ char *file
          */
          FPRINTF((fp, "processors                 %d\n", 
             (int) lGetUlong(ep, EH_processors)));
+      }
+
+      if (spool) {
+         int printed = 0;
 
          /* reschedule unknown list */
-         printed = 0;
          FPRINTF((fp, "reschedule_unknown_list    "));
          for_each(sep, lGetList(ep, EH_reschedule_unknown_list)) {
             if (printed) {
                FPRINTF((fp, ","));
-            } 
+            }
             FPRINTF((fp, u32" "u32"="u32, lGetUlong(sep, RU_job_number),
                lGetUlong(sep, RU_task_number), lGetUlong(sep, RU_state)));
             printed=1;
@@ -460,7 +463,7 @@ char *file
             FPRINTF((fp, "NONE"));
          }
          FPRINTF((fp, "\n"));
-      }
+      } 
 
       ret = fprint_cull_list(fp,  "user_lists                 ", 
          lGetList(ep, EH_acl), US_name);

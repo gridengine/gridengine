@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2003/11/06 14:52:00 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2003/11/13 16:57:14 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2003/11/06 14:52:00 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2003/11/13 16:57:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -349,6 +349,7 @@ the considered queues. If the result of the comparison is false, the
 job cannot run in this queue. Possible relation operators are "==", "<",
 ">", "<=" and ">=". The only valid operator for string type attributes
 is "==".
+.\"
 .SS "\fBrequestable\fP"
 The entry can be used in a
 .M qsub 1
@@ -357,6 +358,7 @@ If set to 'n' or 'no' this entry cannot be used by a
 user in order to request a queue or a class of queues.
 If the entry is set to 'forced' or 'f' the 
 attribute has to be requested by a job or it is rejected.
+.\"
 .SS "\fBconsumable\fP"
 The
 .B consumable
@@ -424,6 +426,7 @@ See the
 .I xxQS_NAMExx Installation and Administration Guide
 for examples 
 on the usage of the consumable resources facility.
+.\"
 .SS "\fBdefault\fP"
 Meaningful only for consumable complex attributes (see
 .B consumable
@@ -434,6 +437,21 @@ host or queue managing the consumable attribute. Jobs explicitly requesting
 the attribute via the \fI\-l\fP option to
 .M qsub 1
 override this default value.
+.\"
+.SS "\fBurgency\fP"
+This parameter has a meaning only in a xxQS_NAME_EExx system. 
+.sp 1
+The urgency value allows influencing
+job priorities on a per resource base. The urgency value effects
+the addend for each resource when determining the resource request 
+related urgency contribution. For numeric type resource requests the 
+addend is the product of the urgency value, the jobs assumed slot 
+allocation and the per slot request as specified via \fI\-l\fP option to 
+.M qsub 1 .
+For string type requests the resources urgency value is directly 
+used as addend. Urgency values are of type real. See under 
+.M sge_priority 5 
+for an overview on job priorities.
 .\"
 .\"
 .SH "SEE ALSO"

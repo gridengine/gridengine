@@ -92,12 +92,10 @@
       * configure these three complex attributes in the global host
         qconf -rattr exechost complex_values low=true,medium=true,high=true global
       * use 'weight_urgency' of '1' and 'weight_ticket' of '0'
-         weight_ticket                    0.0001
+         weight_ticket                    0
          weight_urgency                   1.0
-
-      -->  -l high jobs always must be dispatched before -l medium and -l low jobs
-      -->  -l medium jobs always must be dispatched before -l low jobs
-
+      -->  -l high jobs always get dispatched before -l medium and -l low jobs
+      -->  -l medium jobs always get dispatched before -l low jobs
 
    b) Resource-based priority classes and use of functional policy to implement 50:50 
       project-sort
@@ -107,8 +105,8 @@
       * use 'weight_tickets_functional' of '10000' and 'weight_project' of '1' (others 0)
       * use two project 'p1' and 'p2' with 50 functional shares each
 
-      -->  -l high jobs always must be dispatched before -l medium and -l low jobs
-      -->  -l medium jobs always must be dispatched before -l low jobs
+      -->  -l high jobs always get dispatched before -l medium and -l low jobs
+      -->  -l medium jobs always get dispatched before -l low jobs
       -->  functional policy must cause 'p1' and 'p2' jobs be dispatched with a relation 
            50:50 at any time
 
@@ -351,10 +349,10 @@ qstat(1)
 >     For each job the following additional urgency policy related 
 >     items are displayed:
 >
->     nurgency
+>     nurg
 >          The normalized urgency value.
 >
->     urgency
+>     urg
 >          The urgency value that is a sum of resource request contribution 
 >          (rrcontr), waiting time contribution (wtcntr) and deadline 
 >          contribution (dlcontr).
@@ -425,7 +423,7 @@ sched_conf(5)
 >     this parameter.
 >
 >     The weight applied on normalized urgency (nurg) when
->     determining absolute priority (prio).
+>     determining priority (prio) finally used.
 >
 > weight_ticket
 >     This parameter is only  available  in  a  Sun  Grid  Engine,
@@ -433,7 +431,7 @@ sched_conf(5)
 >     this parameter.
 >
 >     The weight applied on normalized ticket amount (ntix) when
->     determining normalized priority (nprio) finally used.
+>     determining priority (prio) finally used.
 >
 
 sge_conf(5)

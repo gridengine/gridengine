@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2003/07/30 12:21:49 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2003/11/13 16:57:13 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2003/07/30 12:21:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2003/11/13 16:57:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -43,7 +43,7 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 .B -f
 ] [ \fB\-F\fP [\fBresource_name,...\fP]
 ] [
-.B -g d
+.B -g {d|t}[+]
 ] [
 .B -help
 ] [
@@ -59,13 +59,15 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 ] [
 .B -r
 ] [
-.B -s {r|p|s|z|hu|ho|hs|hj|ha|h}[+]]
+.B -s {r|p|s|z|hu|ho|hs|hj|ha|h}[+]
 ] [
 .B -t
 ] [
 .B -U user,...
 ] [
 .B -u user,...
+] [
+.B -urg
 ]
 .\"
 .SH DESCRIPTION
@@ -87,8 +89,8 @@ refer to the description of the \fBFull Format\fP in section \fBOUTPUT FORMATS\f
 This option is only supported in case of a xxQS_NAME_EExx system. It is not available
 for xxQS_NAME_Cxx systems.
 .br
-Displays additional xxQS_NAME_EExx relevant information for each job (see OUTPUT
-FORMATS below).
+Displays additional information for each job related to the xxQS_NAME_EExx job ticket policy scheme 
+(see OUTPUT FORMATS below).
 .\"
 .IP "\fB\-f\fP"
 Specifies a "full" format display of information.
@@ -107,16 +109,22 @@ resource_name list. Please refer to the description of the
 \fBFull Format\fP in 
 section \fBOUTPUT FORMATS\fP below for further detail.
 .\"
-.IP "\fB\-g d\fP"
-Displays array jobs verbosely in a one line per job task fashion. By
-default, array jobs are grouped and all tasks with the same status (for
-pending tasks only) are displayed in a single line. The array job task
-id range field in the output (see section
-\fBOUTPUT FORMATS\fP) specifies the
-corresponding set of tasks.
+.IP "\fB\-g {d|t}[+]\fP"
+The \fB\-g\fP option allows for controlling grouping of displayed
+objects.
+.sp
+With \fB\-g d\fP array jobs are displayed verbosely in a one 
+line per job task fashion. By default, array jobs are grouped and all 
+tasks with the same status (for pending tasks only) are displayed in a 
+single line. The array job task id range field in the output (see section
+\fBOUTPUT FORMATS\fP) specifies the corresponding set of tasks.
+.sp
+With \fB\-g t\fP parallel jobs are displayed verbosely in a one line 
+per parallel job task fashion. By  default, parallel job tasks are
+displayed in a single line. Also with \fB\-g t\fP option the function of each 
+parallel task is displayed rather than the jobs slot amount (see section
+\fBOUTPUT FORMATS\fP).
 .sp 1
-The \fB\-g\fP switch currently has only the single option argument
-\fBd\fP. Other option arguments are reserved for future extensions.
 .\"
 .IP "\fB\-help\fP"
 Prints a listing of all options.
@@ -174,11 +182,10 @@ has entries in the job dependency list. (see \fB\-a\fP
 and \fB\-hold_jid\fP option to
 .M qsub 1 ).
 .\"
-
 .IP "\fB\-t\fP"
 Prints extended information about the controlled sub-tasks
 of the displayed parallel jobs. Please refer to the \fBOUTPUT FORMATS\fP
-sub-section \fBExpanded Format\fP below for detailed information. Sub-tasks
+sub-section \fBReduced Format\fP below for detailed information. Sub-tasks
 of parallel jobs should not be confused with array job tasks (see \fB\-g\fP
 option above and \fB\-t\fP option to
 .M qsub 1 ).
@@ -196,13 +203,21 @@ Queue status information is displayed if the \fB\-f\fP or \fB\-F\fP
 options are specified additionally and if the user runs
 jobs in those queues.
 .\"
+.IP "\fB\-urg\fP"
+This option is only supported in case of a xxQS_NAME_EExx system. It is not available
+for xxQS_NAME_Cxx systems.
+.br
+Displays additional information for each job related to the xxQS_NAME_EExx job urgency 
+policy scheme
+(see OUTPUT FORMATS below).
+.\"
 .\"
 .SH "OUTPUT FORMATS"
 Depending on the presence or absence of the \fB-alarm\fP, \fB\-f\fP or \fB\-F\fP and
 \fB\-r\fP and \fB\-t\fP option three output formats need to be differentiated.
-PP
-In case of a xxQS_NAME_EExx system, the \fB\-ext\fP option may be used to display
-additional information for each job.
+.PP
+In case of a xxQS_NAME_EExx system, the \fB\-ext\fP and \fB\-urg\fP options may be used 
+to display additional information for each job.
 .\"
 .SS "\fBReduced Format (without \-f and \-F)\fP"
 Following the header line a line is printed for each job
@@ -210,12 +225,13 @@ consisting of
 .IP "\(bu" 3n
 the job ID.
 .IP "\(bu" 3n
-the priority of the jobs as assigned to them via the \fB\-p\fP
-option to
-.M qsub 1
-or
-.M qalter 1
-determining the order of the pending jobs list.
+the priority of the job determining its position in the pending jobs list.
+In case of a xxQS_NAME_Cxx system the priority is assigned via the \fB\-p\fP
+.M submit 1
+option. In case of a xxQS_NAME_EExx system the priority value is determined 
+dynamically based on ticket and urgency policy set-up (see also
+.M sge_priority 5 
+).
 .IP "\(bu" 3n
 the name of the job.
 .IP "\(bu" 3n
@@ -263,8 +279,14 @@ the submission or start time and date of the job.
 the queue the job is assigned to (for running or suspended
 jobs only).
 .IP "\(bu" 3n
-the function of the running jobs (MASTER or SLAVE \- the latter
-for parallel jobs only).
+the number of job slots or the function of parallel job tasks 
+if \fB\-g t\fP is specified.
+.sp 
+Without \fB\-g t\fP option the total number of slots occupied resp. requested by the job 
+is diplayed. For pending parallel jobs with a PE slot range request 
+the assumed future slot allocation is displayed.
+With \fB\-g t\fP option the function of the running jobs (MASTER or SLAVE \- the 
+latter for parallel jobs only) is displayed.
 .IP "\(bu" 3n
 the array job task id. Will be empty for non-array jobs. See the
 \fB\-t\fP option to
@@ -272,7 +294,9 @@ the array job task id. Will be empty for non-array jobs. See the
 and the \fB\-g\fP above for additional information.
 .\"
 .PP
-If the \fB\-t\fP option is supplied, each job status line also contains
+If the \fB\-t\fP option is supplied, each status line always contains
+parallel job task information as if \fB\-g t\fP were specified and
+each line contains the following parallel job subtask information:
 .IP "\(bu" 3n
 the parallel task ID (do not confuse parallel tasks with array job tasks),
 .IP "\(bu" 3n
@@ -420,6 +444,14 @@ line contains
 .IP "\(bu" 3n
 the job ID,
 .IP "\(bu" 3n
+the priority of the job determining its position in the pending jobs list.
+In case of a xxQS_NAME_Cxx system the priority is assigned via the \fB\-p\fP
+.M submit 1
+option. In case of a xxQS_NAME_EExx system the priority value is determined 
+dynamically based on ticket and urgency policy set-up (see also
+.M sge_priority 5 
+).
+.IP "\(bu" 3n
 the job name,
 .IP "\(bu" 3n
 the job owner name,
@@ -428,10 +460,16 @@ the status of the job \- one of t(ransfering),
 r(unning), R(estarted), s(uspended), S(uspended) or T(hreshold) (see the
 \fBReduced Format\fP section for detailed information),
 .IP "\(bu" 3n
-the start date and time and the function of the job (MASTER
-or SLAVE - only meaningful in case of a parallel job) and
+the submission or start time and date of the job.
 .IP "\(bu" 3n
-the priority of the jobs.
+the number of job slots or the function of parallel job tasks 
+if \fB\-g t\fP is specified.
+.sp 
+Without \fB\-g t\fP option the number of slots occupied per queue resp. requested by the job 
+is diplayed. For pending parallel jobs with a PE slot range request 
+the assumed future slot allocation is displayed.
+With \fB\-g t\fP option the function of the running jobs (MASTER or SLAVE \- the 
+latter for parallel jobs only) is displayed.
 .PP
 If the \fB\-t\fP option is supplied, each job status line also contains
 .IP "\(bu" 3n
@@ -483,7 +521,10 @@ The job and master queue name.
 The hard and soft resource requirements of the job as specified
 with the
 .M qsub 1
-\fB\-l\fP option.
+\fB\-l\fP option. In a xxQS_NAME_EExx system also the per resource 
+addend used when determining the jobs urgency contribution value is 
+printed (see also 
+.M sge_priority 5 ).
 .IP "\(bu" 3n
 The requested parallel environment including the
 desired queue slot range (see \fB\-pe\fP option of
@@ -499,6 +540,9 @@ parallel environment with the granted number of queue slots.
 .SS "\fBEnhanced xxQS_NAME_EExx Output (with \-ext)\fP"
 For each job the following additional items are displayed:
 .\"
+.IP "\fBntckts\fP"
+The total number of tickets in normalized fashion.
+.\"
 .IP "\fBproject\fP"
 The project to which the job is assigned as specified in the
 .M qsub 1
@@ -509,11 +553,6 @@ The department, to which the user belongs (use the \fB\-sul\fP and
 \fB\-su\fP options of
 .M qconf 1
 to display the current department definitions).
-.\"
-.IP "\fBdeadline\fP"
-The deadline initiation time of the job as specified with the
-.M qsub 1
-\fB\-dl\fP option.
 .\"
 .IP "\fBcpu\fP"
 The current accumulated CPU usage of the job.
@@ -535,10 +574,6 @@ The override tickets as assigned by the \fB\-ot\fP option of
 The override portion of the total number of tickets assigned to the
 job currently
 .\"
-.IP "\fBdtckt\fP"
-The deadline portion of the total number of tickets assigned to the
-job currently
-.\"
 .IP "\fBftckt\fP"
 The functional portion of the total number of tickets assigned to the
 job currently
@@ -550,6 +585,33 @@ job currently
 .IP "\fBshare\fP"
 The share of the total system to which the job is entitled currently.
 .\"
+.SS "\fBEnhanced xxQS_NAME_EExx Output (with \-urg)\fP"
+For each job the following additional urgency policy related items are 
+displayed (see also
+.M sge_priority 5 ):
+.\"
+.IP "\fBnurg\fP"
+The jobs total urgency value in normalized fashion.
+.\"
+.IP "\fBurg\fP"
+The jobs total urgency value.
+.\"
+.IP "\fBrrcontr\fP"
+The urgency value contribution that reflects the urgency
+that is related to the jobs overall resource requirement.
+.\"
+.IP "\fBwtcontr\fP"
+The urgency value contribution that reflects the urgency related to
+the jobs waiting time.
+.\"
+.IP "\fBdlcontr\fP"
+The urgency value contribution that reflects the urgency related to
+the jobs deadline initiation time.
+.\"
+.IP "\fBdeadline\fP"
+The deadline initiation time of the job as specified with the
+.M qsub 1
+\fB\-dl\fP option.
 .\"
 .\"
 .SH "ENVIRONMENTAL VARIABLES"

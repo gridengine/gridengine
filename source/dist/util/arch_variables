@@ -155,7 +155,7 @@ case $ARCH in
  fbsd-*)
    AWK=/usr/bin/awk
    ECHO="/bin/echo"
-   RC_FILE=fbsd
+   RC_FILE=freebsd
    RC_PREFIX=/usr/local/etc/rc.d
    RC_SUFFIX=.sh
    XTERM=/usr/X11R6/bin/xterm

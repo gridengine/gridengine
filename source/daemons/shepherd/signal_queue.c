@@ -42,16 +42,16 @@
 #include "sge_signal.h"
 
 
-#define MAXSIG 100
+#define SGE_MAXSIG 100
 
 /* ring buffer to queue signals */
-static int sig_queue[MAXSIG];
+static int sig_queue[SGE_MAXSIG];
 static int n_sigs = 0;
 static int next_sig = 0;
 static int free_sig = 0; 
 
 
-#define NEXT_INDEX(i) (((i+1)>MAXSIG-1)?0:(i+1))
+#define NEXT_INDEX(i) (((i+1)>SGE_MAXSIG-1)?0:(i+1))
 
 #ifdef DEBUG
 void report_signal_queue()
@@ -105,7 +105,7 @@ int add_signal(int signal)
 {
    int ret = -1;
 
-   if (n_sigs != MAXSIG) {
+   if (n_sigs != SGE_MAXSIG) {
       char err_str[256];
       ret = 0;
 

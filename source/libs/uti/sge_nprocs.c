@@ -56,7 +56,7 @@
 #   include <machine/hal_sysinfo.h>
 #endif
 
-#if defined(SOLARIS) || defined(AIX)
+#if defined(SOLARIS) || defined(AIX) || defined(LINUX)
 #   include <unistd.h>
 #endif
 
@@ -69,20 +69,6 @@
 
 #if defined(CRAY)
 #   include <unistd.h>
-#endif
-
-#if defined(LINUX) 
-#   include <stdio.h>
-#   include <errno.h>
-#   include <string.h>
-#   define LINUX_PROCFILE "/proc/cpuinfo"
-#   define LINUX_KEYWORD "processor"
-#endif
-
-#if defined(ALINUX)
-#  include <stdlib.h>
-#  define ALINUX_PROCFILE "/proc/cpuinfo"
-#  define ALINUX_KEYWORD "cpus detected"   
 #endif
 
 #if defined(FREEBSD)
@@ -140,8 +126,7 @@ int sge_nprocs_rsg(rsg_id) {
 *     int - number of procs
 * 
 *  NOTES
-*     MT-NOTE: sge_nprocs() is MT safe (SOLARIS, NEC, IRIX, ALPHA, HPUX)
-*     MT-NOTE: sge_nprocs() is not MT safe (LINUX), use strtok_r() instead 
+*     MT-NOTE: sge_nprocs() is MT safe (SOLARIS, NEC, IRIX, ALPHA, HPUX, LINUX)
 ******************************************************************************/
 int sge_nprocs()
 {
@@ -251,7 +236,7 @@ int sge_nprocs()
    getsysinfo(GSI_CPUS_IN_BOX,(char*)&nprocs,sizeof(nprocs),&start);
 #endif
 
-#if defined(SOLARIS) || defined(AIX)
+#if defined(SOLARIS) || defined(AIX) || defined(LINUX)
    nprocs = sysconf(_SC_NPROCESSORS_ONLN);
 #endif
 
@@ -273,53 +258,6 @@ int sge_nprocs()
 
 #ifdef CRAY
    nprocs = sysconf(_SC_CRAY_NCPU);
-#endif
-
-
-#if defined(LINUX) 
-   int success = 0;
-   char buffer[1024];
-   int keylen;
-   FILE *fp;
-
-#  if defined(ALINUX)
-   /* cat /proc/cpuinfo | grep "cpus detected" | cut -f 2 -d ":" */  
-   char *token;
- 
-   if ((fp = fopen(ALINUX_PROCFILE, "r"))) {
-      keylen = strlen(ALINUX_KEYWORD);
-      while (fgets(buffer, sizeof(buffer)-1, fp)) {
-         token = strtok(buffer, ":");
-         if (!strncmp(buffer, ALINUX_KEYWORD, keylen)) {
-            token = strtok(NULL, " \t\n");
-            nprocs = atoi(token);
-            success = 1;
-            break;
-         }
-      }
-      fclose(fp);
-   }                         
-#  endif
-
-   if (!success) {
-      /* cat /proc/cpuinfo|grep processor|wc -l */
-
-      if ((fp = fopen(LINUX_PROCFILE, "r"))) {
-         nprocs = 0;
-         keylen = strlen(LINUX_KEYWORD);
-         while (fgets(buffer, sizeof(buffer)-1, fp)) {
-            if (!strncmp(buffer, LINUX_KEYWORD, keylen)) {
-               nprocs++;
-               success = 1;
-            }
-         }
-         fclose(fp);
-      }
-   }
-
-   if (!success) {
-      nprocs = 1; 
-   }
 #endif
 
 #if defined(FREEBSD)

@@ -1,3 +1,6 @@
+RC-2004-01-20-0: Enhancem.: use sysconf(_SC_NPROCESSORS_ONLN) to get nprocs on Linux.
+                 Changed:   libs/uti/sge_nprocs.c
+
 CR-2004-01-20-1: Enhancem.: communication lib: status information response
                             message reports application status. 
                  Changed:   ngc lib

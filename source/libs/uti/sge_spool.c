@@ -465,10 +465,11 @@ char *sge_get_confval(const char *conf_val, const char *fname)
    const char *namev[1];
 
    namev[0] = conf_val;
-   if (get_confval_array(fname, 1, namev, valuev))
+   if (get_confval_array(fname, 1, namev, valuev)) {
       return NULL;
-   else
+   } else {
       return valuev[0];
+   }
 }
 
 
@@ -477,8 +478,8 @@ char *sge_get_confval(const char *conf_val, const char *fname)
 *     get_confval_array()
 *
 *  SYNOPSIS
-*     int get_confval_array(const char *fname, int n, const char *name[], char
-*     value[][1025])
+*     int get_confval_array(const char *fname, int n, const char *name[], char 
+*     value[][1025]) 
 *
 *  FUNCTION
 *     Reads in an array of configuration file entries
@@ -498,11 +499,17 @@ char value[][1025]
    FILE *fp;
    char buf[1024], *cp;
    int i, nmissing = n;
-
+   
    DENTER(TOP_LAYER, "get_confval");
 
+#if 0
+   /*  this may cause problems if a previous call has set a char* pointer
+       to this buffer and uses the pointer after a second call, this
+       would cause a "" string for that array where the pointer is set to!
+   */
    for (i=0; i<n; i++)
       value[i][0] = '\0';
+#endif
 
    if (!(fp = fopen(fname, "r"))) {
       ERROR((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno)));
@@ -520,7 +527,8 @@ char value[][1025]
       /* allow commentaries */
       if (cp[0] == '#')
           continue;
-      /* search for all requested configuration values */
+   
+      /* search for all requested configuration values */ 
       for (i=0; i<n; i++)
          if (!strcasecmp(name[i], cp) && (cp = strtok(NULL, " \t\n"))) {
              strncpy(value[i], cp, 512);

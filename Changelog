@@ -1,3 +1,6 @@
+CR-2002-03-27-1  Bugfix:    Fixed broken shadow daemon qmaster startup functionality 
+                            merge from V53_beta2_BRANCH
+
 SD-2002-03-26-2  Bugfix:    Fixed "missing node XXXXX in dst trees" problem where
                             a temporary share tree node was being sent to qmaster
 

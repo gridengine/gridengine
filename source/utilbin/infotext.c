@@ -99,14 +99,25 @@ static char* sge_infotext_make_line_break(dstring* buffer, char* text) {
    strcpy(hbuf,"a");
 
    sge_dstring_copy_string(buffer,"");
+
    sge_dstring_append(buffer,"\"");
 
    line = 0;
    for (h=0; h < strlen(text) ; h++) {
-      if (line > 75 && text[h] == ' ' ) {
+      
+      if (h>=2) {
+         if ( text [h-2] == '\\' && text[h-1] == 'n'  ) {
+             line = 0;
+             sge_dstring_append(buffer,"\"\n\"");
+         }
+      }
+
+      if ((line > 80 && text[h] == ' ') ) {
          line = 0;
          sge_dstring_append(buffer,"\"\n\"");
       }
+
+
       hbuf[0] = text[h];
       sge_dstring_append(buffer, hbuf);
       line++;
@@ -481,7 +492,10 @@ char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
     char* h1 = NULL;
     char buf[10];
 
+
+
     sge_dstring_copy_string(string_buffer,"");
+    strcpy(buf,"a");
     h1 = string;
     while (*h1 != 0) {
 /*       if (*h1 == '\\') {
@@ -504,6 +518,7 @@ char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
        sge_dstring_append(string_buffer, buf);
        h1++; 
     }
+
     return (char*)sge_dstring_get_string(string_buffer);
 }
 
@@ -834,7 +849,9 @@ char **argv
    for(i=arg_start; sge_infotext_get_nr_of_substrings((char*)sge_dstring_get_string(&buffer),"%s") < string_arguments ; i++) {
       char* arg = argv[i];
       if (i > arg_start) {
-         sge_dstring_append(&buffer," ");
+         if (arg[0] != ' ') {
+            sge_dstring_append(&buffer," ");
+         }
       }
       sge_dstring_append(&buffer, sge_infotext_string_input_parsing(&tmp_buf,arg));
    }
@@ -871,6 +888,7 @@ char **argv
    if (do_message == 1) {
       dstring help_buf = DSTRING_INIT;
       dstring help_buf2 = DSTRING_INIT;
+
       if (strlen(options.D) > 0) {
          printf("#\n# This is a (dash) sign, used for enumerations\n");
          printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.D));

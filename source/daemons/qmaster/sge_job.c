@@ -673,10 +673,11 @@ sge_gdi_request *request
       lListElem *se;
 
       for_each(se,sp) {
-         if (strlen(str) + strlen(lGetString(se,STR))> sizeof(str)-1)
+         char *s = lGetString(se,STR);
+         if (strlen(str) + (s ? strlen(s) : 2) > sizeof(str)-1)
             break;
          strcat(str, " ");
-         strcat(str, lGetString(se,STR));
+         strcat(str, s ? s : "\"\"");
       }
    }
 

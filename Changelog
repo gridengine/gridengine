@@ -1,3 +1,7 @@
+CR-2003-02-04-0: Testsuite: - Throughput performance test:
+                              Event client works only for maintrunc ->
+                                 added version check
+
 CR-2003-02-03-0: Testsuite: - Fixed Tcl error for unitialized array in 
                               run_tests() procedure (for warnings)
                             - Fixed bug in issuezilla/141/check.exp

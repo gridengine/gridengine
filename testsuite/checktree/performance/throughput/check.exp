@@ -60,7 +60,7 @@ global enable_queues_job_count
 global end_job_count
 global event_client_bin
 global global_job_run_time
-global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC SCHEDULE_INTERVAL
+global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
 global throughput_subdir
 global throughput_sharetree
 
@@ -78,12 +78,13 @@ proc init_level {} {
     global global_job_run_time                  ;# job sleep parameter
     global FLUSH_SUBMIT_SEC                    ;# -1 or 0,1,2,3 ...
     global FLUSH_FINISH_SEC                    ;# -1 or 0,1,2,3 ...
-    global SCHEDULE_INTERVAL             ;# 00:00:30 ...
+    global run_throughput_test_SCHEDULE_INTERVAL             ;# 00:00:30 ...
     global throughput_subdir             ;# subdirectory in protocols/throughput/
     global throughput_sharetree
 
+
     # paramters for all tests
-    set SCHEDULE_INTERVAL        00:00:15
+    set run_throughput_test_SCHEDULE_INTERVAL        00:00:15
     set global_job_run_time      5            ;# job sleep parameter
     set nr_queues                10            ;# nr of queues on each host
     set nr_slots                 5           ;# nr of slots on each queue
@@ -250,14 +251,19 @@ proc setup_queues {} {
    global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_OUTPUT
    global CHECK_HOST event_client_bin CHECK_SOURCE_DIR
    global nr_queues queue_list host_list  nr_slots
-   global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC SCHEDULE_INTERVAL
+   global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
    global throughput_sharetree
+
 
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
       set_error -3 "need more than one host for this test"
       return -3
    }
-   
+
+   if { [resolve_version] < 3 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
+   }
 
    # start event client (if compiled)
    set up_arch [resolve_upper_arch $CHECK_HOST]
@@ -293,7 +299,7 @@ proc setup_queues {} {
 
    set_config myconfig
  
-   set my_schedd_config(schedule_interval)    "$SCHEDULE_INTERVAL"
+   set my_schedd_config(schedule_interval)    "$run_throughput_test_SCHEDULE_INTERVAL"
    set my_schedd_config(job_load_adjustments) "none"
    set my_schedd_config(schedd_job_info)      "false"
    set_schedd_config my_schedd_config
@@ -347,12 +353,16 @@ proc cleanup_queues {} {
       set_error -3 "need more than one host for this test"
       return -3
    }
+
+   if { [resolve_version] < 3 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
+   }
   
    if { [file isfile $event_client_bin] != 1 } {
       set_error -3 "could not open event client binary: $event_client_bin"
       return -3
    }
-
 
    if { $throughput_sharetree == 1 } {
       throughput_cleanup_sharetree
@@ -391,6 +401,12 @@ proc run_throughput_test {} {
       set_error -3 "need more than one host for this test"
       return -3
    }
+
+   if { [resolve_version] < 3 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
+   }
+
 
    if { [file isfile $event_client_bin] != 1 } {
       set_error -3 "could not open event client binary: $event_client_bin"
@@ -898,7 +914,7 @@ proc compare_dump_directory { dir } {
    set first_data 0
    set test_info "FLUSH_FINISH_SEC"
    lappend test_info "FLUSH_SUBMIT_SEC"
-   lappend test_info "SCHEDULE_INTERVAL"
+   lappend test_info "run_throughput_test_SCHEDULE_INTERVAL"
    lappend test_info "enable_queues_job_count"
    lappend test_info "end_job_count"
    lappend test_info "global_job_run_time"
@@ -1064,11 +1080,11 @@ proc compare_dump_data_file { file1 file2 } {
    }
 
   
-   set SCHEDULE_INTERVAL1 $test_config1(SCHEDULE_INTERVAL)
-   set SCHEDULE_INTERVAL2 $test_config2(SCHEDULE_INTERVAL)
-   if { $SCHEDULE_INTERVAL1 != $SCHEDULE_INTERVAL2 } {
+   set run_throughput_test_SCHEDULE_INTERVAL1 $test_config1(run_throughput_test_SCHEDULE_INTERVAL)
+   set run_throughput_test_SCHEDULE_INTERVAL2 $test_config2(run_throughput_test_SCHEDULE_INTERVAL)
+   if { $run_throughput_test_SCHEDULE_INTERVAL1 != $run_throughput_test_SCHEDULE_INTERVAL2 } {
       incr error 1
-      append content [create_html_text "The test runs have different SCHEDULE_INTERVAL values"]
+      append content [create_html_text "The test runs have different run_throughput_test_SCHEDULE_INTERVAL values"]
    }
   
    read_array_from_file $file1 "execd list" host_list1
@@ -1201,7 +1217,7 @@ proc compare_dump_data_file { file1 file2 } {
 
    append content [ create_html_text "" ]
    set text ""
-   append text "The schedule interval parameters were set to $test_config1(SCHEDULE_INTERVAL)"
+   append text "The schedule interval parameters were set to $test_config1(run_throughput_test_SCHEDULE_INTERVAL)"
    append content [ create_html_text $text ]
    
    read_file $file1 file_data1
@@ -1997,7 +2013,7 @@ proc analyse_dump_data_file { file { force 0 } } {
    set info_data(nr_slots_per_queue) $test_config(nr_slots_per_queue)
    set info_data(FLUSH_SUBMIT_SEC) $test_config(FLUSH_SUBMIT_SEC)
    set info_data(FLUSH_FINISH_SEC) $test_config(FLUSH_FINISH_SEC)
-   set info_data(SCHEDULE_INTERVAL) $test_config(SCHEDULE_INTERVAL)
+   set info_data(run_throughput_test_SCHEDULE_INTERVAL) $test_config(run_throughput_test_SCHEDULE_INTERVAL)
    set info_data(hostlist) $host_list(host_list)
    set info_data(nr_of_local_spool_directories) $nr_of_local_spool_directories   
    spool_array_to_file $output_dir/test_results_array.dat "test settings" info_data
@@ -2562,7 +2578,7 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    global global_job_run_time            ;# job sleep parameter
    global FLUSH_SUBMIT_SEC              ;# -1 or 0,1,2,3 ...
    global FLUSH_FINISH_SEC             ;# -1 or 0,1,2,3 ...
-   global SCHEDULE_INTERVAL        ;# 00:00:30 ...
+   global run_throughput_test_SCHEDULE_INTERVAL        ;# 00:00:30 ...
 
    upvar $job_array_name jobs
    upvar $results_array results
@@ -2628,7 +2644,7 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    set test_config(global_job_run_time)     $global_job_run_time      ;# job sleep parameter
    set test_config(FLUSH_SUBMIT_SEC)        $FLUSH_SUBMIT_SEC         ;# -1 or 0,1,2,3 ...
    set test_config(FLUSH_FINISH_SEC)        $FLUSH_FINISH_SEC         ;# -1 or 0,1,2,3 ...
-   set test_config(SCHEDULE_INTERVAL)       $SCHEDULE_INTERVAL        ;# 00:00:30 ...
+   set test_config(run_throughput_test_SCHEDULE_INTERVAL)       $run_throughput_test_SCHEDULE_INTERVAL        ;# 00:00:30 ...
    set test_config(gridengine_version)      [get_version_info]
    set test_config(test_date)               [exec date]
    
@@ -2674,7 +2690,7 @@ proc create_reports { results_array job_array_name schedd_array_name} {
 
 proc calculate_average_cluster_times { results_array cluster_results_array { dump_file "" } } {
    global CHECK_OUTPUT enable_queues_job_count
-   global FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC SCHEDULE_INTERVAL
+   global FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
    upvar $results_array cluster
    upvar $cluster_results_array result
 
@@ -2688,7 +2704,7 @@ proc calculate_average_cluster_times { results_array cluster_results_array { dum
    set result(queue_enable_value) $enable_queues_job_count    ;#
    set result(flush_submit_sec) $FLUSH_SUBMIT_SEC
    set result(flush_finish_sec) $FLUSH_FINISH_SEC
-   set result(schedule_interval) $SCHEDULE_INTERVAL
+   set result(schedule_interval) $run_throughput_test_SCHEDULE_INTERVAL
 
    
 

@@ -1,3 +1,6 @@
+CR-2002-07-18-0: Bugfix:    i18n aimk compilation for SOLARIS86 did not translate
+                            i18n code
+
 AA-2002-07-15-0: Bugfix:    l10n wrong widget name in qmon_cluster.ad file
                             dist/locale/en/qmon_messages.ad added as l10n
                             translation template

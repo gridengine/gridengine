@@ -1086,15 +1086,19 @@ CheckRunningDaemon()
    case $daemon_name in
 
       sge_qmaster )
-       daemon_pid=`cat $QMDIR/qmaster.pid`
-       $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
-       return $?      
+       if [ -f $QMDIR/qmaster.pid ]; then
+          daemon_pid=`cat $QMDIR/qmaster.pid`
+          $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
+          return $?      
+       fi
       ;;
 
       sge_schedd )
-       daemon_pid=`cat $QMDIR/schedd/schedd.pid`
-       $SGE_UTILBIN/checkprog $daemon_pid $daemon_name
-       return $?
+       if [ -f $QMDIR/schedd/schedd.pid ]; then
+          daemon_pid=`cat $QMDIR/schedd/schedd.pid`
+          $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
+          return $?
+       fi
       ;;
 
       sge_execd )
@@ -1119,7 +1123,7 @@ BackupConfig()
 {
    DATE=`date '+%Y-%m-%d_%H:%M:%S'`
    BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd" 
-   BUP_SPOOL_FILE_LIST=" "
+   BUP_SPOOL_FILE_LIST="jobseqnum"
 
    $INFOTEXT -u "SGE Configuration Backup"
    $INFOTEXT -n "\nThis feature does a backup of all configuration you made\n" \
@@ -1131,6 +1135,7 @@ BackupConfig()
                 SGE_CELL=`Enter default`
 
    db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
+   master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
 
    $INFOTEXT -n "\nWhere do you want to save the backupfiles? \nDefault: [%s]" $SGE_ROOT/$SGE_CELL/spool/backup
                 backup_dir=`Enter $SGE_ROOT/$SGE_CELL/spool/backup`
@@ -1150,11 +1155,17 @@ BackupConfig()
       fi
    done
 
+   for f in $BUP_SPOOL_FILE_LIST; do
+      if [ -f $master_spool/$f ]; then
+         cp -f $master_spool/$f $backup_dir
+      fi
+   done
+
    if [ $TAR = "true" ]; then
       $INFOTEXT "\nPlease enter a filename for your backupfile. Default: [backup.tar]"
       bup_file=`Enter backup.tar`
       cd $backup_dir
-      tar -cvf $bup_file $DATE.dump $BUP_COMMON_FILE_LIST 
+      tar -cvf $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
       gzip -9 $bup_file 
 
       cd $SGE_ROOT
@@ -1162,7 +1173,7 @@ BackupConfig()
       $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".gz"
 
       cd $backup_dir      
-      rm -f $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST
+      rm -f $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
 
       exit 0
    fi
@@ -1181,24 +1192,26 @@ BackupConfig()
 RestoreConfig()
 {
    BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd"
+   BUP_SPOOL_FILE_LIST="jobseqnum"
 
-   CheckRunningDaemon sge_qmaster
-
-   if [ $? != 0 ]; then
-      $INFOTEXT "The sge_qmaster is running, please shutdown sge_qmaster\n" \
-                "first and restart the restore procedure!"
-      exit 1
-   fi
+   MKDIR="mkdir -p"
+   CP="cp -f"
 
    $INFOTEXT -u "SGE Configuration Restore"
    $INFOTEXT -n "\nThis feature restores the configuration from a backup you made\n" \
-                "previously."
+                "previously.\n\n"
+
+   $INFOTEXT -wait "Make sure that your sge_qmaster is not running during restore!"
+   $CLEAR
                 SGE_ROOT=`pwd`
    $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. Default: [%s]" $SGE_ROOT
                 SGE_ROOT=`Enter $SGE_ROOT`
    $INFOTEXT -n "\nPlease enter your SGE_CELL name. Default: [default]"
                 SGE_CELL=`Enter default`
+
+
    $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "\nIs your backupfile in tar/gz format? (y/n) [y] "
+
 
    if [ $? = 0 ]; then
       $INFOTEXT -n "\nPlease enter the full path and name of your backup file."
@@ -1211,35 +1224,89 @@ RestoreConfig()
       gzip -d /tmp/bup_tmp/*.gz 
       tar -xvf /tmp/bup_tmp/*.tar
       cd $SGE_ROOT 
-      db_home=`cat /tmp/bup_tmp/bootstrap | grep "spooling_params" | awk '{ print $2 }'`   
+      db_home=`cat /tmp/bup_tmp/bootstrap | grep "spooling_params" | awk '{ print $2 }'`  
+      ADMINUSER=`cat /tmp/bup_tmp/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
+
       $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
       $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >>"
       db_home=`Enter $db_home`
       
       $SGE_UTILBIN/db_load -f /tmp/bup_tmp/*.dump -h $db_home sge
 
+         if [ -d $SGE_ROOT/$SGE_CELL ]; then
+            if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
+               :
+            else
+               ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
+            fi
+         else
+            ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL
+            ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
+         fi
+
       for f in $BUP_COMMON_FILE_LIST; do
-         cp -f /tmp/bup_tmp/$f $SGE_ROOT/$SGE_CELL/common/
+         if [ -f /tmp/bup_tmp/$f ]; then
+            ExecuteAsAdmin $CP /tmp/bup_tmp/$f $SGE_ROOT/$SGE_CELL/common/
+         fi
       done
+
+      if [ -d $master_spool ]; then
+         :
+      else
+         ExecuteAsAdmin $MKDIR $master_spool
+      fi
+
+      for f in $BUP_SPOOL_FILE_LIST; do
+         if [ -f /tmp/bup_tmp/$f ]; then
+            ExecuteAsAdmin $CP /tmp/bup_tmp/$f $master_spool
+         fi
+      done     
 
       $INFOTEXT -n "\nYour configuration has been restored\n"
       rm -fR /tmp/bup_tmp
    else
       $INFOTEXT -n "\nPlease enter the full path to your backup files."
       bup_file=`Enter $SGE_ROOT/$SGE_CELL/default/spool/backup`
-      db_home=`cat bup_file/bootstrap | grep "spooling_params" | awk '{ print $2 }'`   
+      db_home=`cat bup_file/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
+      ADMINUSER=`cat /tmp/bup_tmp/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
+   
       $INFOTEXT -n "\nThe path to your spooling db is [%s]" $db_home
       $INFOTEXT -n "\nIf this is correct hit <ENTER> to continue, else enter the path. >> "
       db_home=`Enter $db_home`
       
       $SGE_UTILBIN/db_load -f $bup_file/*.dump -h $db_home sge
 
+         if [ -d $SGE_ROOT/$SGE_CELL ]; then
+            if [ -d $SGE_ROOT/$SGE_CELL/common ]; then
+               :
+            else
+               ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
+            fi
+         else
+            ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL
+            ExecuteAsAdmin $MKDIR $SGE_ROOT/$SGE_CELL/common
+         fi
+
       for f in $BUP_COMMON_FILE_LIST; do
-         cp -f /tmp/bup_tmp/$f $SGE_ROOT/$SGE_CELL/common/
+         if [ -f $bup_file/$f ]; then
+            ExecuteAsAdmin $CP $bup_file/$f $SGE_ROOT/$SGE_CELL/common/
+         fi
       done
+
+      if [ -d $master_spool ]; then
+         :
+      else
+         ExecuteAsAdmin $MKDIR $master_spool
+      fi
+
+      for f in $BUP_SPOOL_FILE_LIST; do
+         if [ -f $bup_file/$f ]; then
+            ExecuteAsAdmin $CP $bup_file/$f $master_spool
+         fi
+      done      
 
       $INFOTEXT -n "\nYour configuration has been restored\n"
    fi
 }
-
-

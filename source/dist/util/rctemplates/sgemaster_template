@@ -104,6 +104,7 @@ else
 fi
 export $shlib_path_name
 
+
 #---------------------------------------------------------------------------
 # Shutdown
 # Send SIGTERM to process name $1 with pid in file $2
@@ -114,39 +115,23 @@ Shutdown()
    pidfile=$2
    if [ -f $pidfile ]; then
       pid=`cat $pidfile`
-      $utilbin_dir/checkprog $pid $name > /dev/null
-      if [ "$?" = 0 ]; then
-         kill -TERM $pid
-      fi
-
-      $utilbin_dir/checkprog $pid $name > /dev/null
-      if [ "$?" = 0 ]; then
-         sleep 30
+      maxretries=6
+      i=0
+      while [ $i -lt $maxretries ]; do
          $utilbin_dir/checkprog $pid $name > /dev/null
          if [ "$?" = 0 ]; then
-            kill  $pid
+            kill $pid
          else
             return
          fi
+         sleep `expr 2 + $i`
+         i=`expr $i + 1`
 
-         $utilbin_dir/checkprog $pid $name > /dev/null
-         if [ "$?" = 0 ]; then
-            sleep 30
-            $utilbin_dir/checkprog $pid $name > /dev/null
-            if [ "$?" = 0 ]; then
-               kill -9 $pid
-            else
-               return
-            fi
-         else
-            return
-         fi
-      else
-         return
-      fi
-
+      done
+      kill -9 $pid
    fi
 }
+
 
 #---------------------------------------------------------------------------
 # QmasterSpoolDir

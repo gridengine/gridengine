@@ -1,3 +1,8 @@
+MD-2004-05-27-1: Bugfix:    - backup/restore directory check
+                            - berkeley info text
+                            - rc template qmaster shutdown
+                 Review:    AS, JG
+
 JG-2004-05-27-2: Bugfix:    Fixed memory leaks in execd.
                  Review:    SG
 

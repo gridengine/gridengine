@@ -129,10 +129,15 @@ while [ $ARGC != 0 ]; do
    -x)
      EXECD="install"
      . ./util/install_modules/inst_execd.sh
+     if [ $2 = "-upd" ]; then
+         UPDATE=true
+         shift
+         ARGC=`expr $ARGC - 1`
+     fi
      ;;
    -ux)
      EXECD="uninstall"
-     if [ $2 = "all" ]; then
+     if [ "$2" = "all" ]; then
         ALL_EXECDS=true
         shift
         ARGC=`expr $ARGC - 1`
@@ -175,7 +180,7 @@ while [ $ARGC != 0 ]; do
      UPDATE=true
      OLD_SGE_ROOT=$2
      OLD_SGE_CELL=$3
-     if [ "$OLD_SGE_ROOT" = "" -o "$OLD_SGE_CELL" = "" ]; then
+     if [ "$OLD_SGE_ROOT" = "" -o "$OLD_SGE_CELL" = "" -a "$EXECD" != "install" ]; then
         ErrUsage
         exit 1    
      fi
@@ -258,7 +263,21 @@ if [ $UPDATE = "true" -a "$OLD_SGE_ROOT" != "" -a "$OLD_SGE_CELL" != "" ]; then
    UpdateHints
 fi
 
-
+if [ $UPDATE = "true" -a $EXECD = "install" ]; then
+      WelcomeTheUserExecHost
+      CheckForLocalHostResolving
+      ProcessSGERoot
+      CheckQmasterInstallation
+      CheckCellDirectory
+      . $SGE_ROOT/$SGE_CELL/common/settings.sh
+      CheckCSP
+      CheckHostNameResolving
+      GetLocalExecdSpoolDir
+      AddSGEStartUpScript $euid execd
+      StartExecd
+      AddQueue
+      GiveHints
+fi
  
 if [ $QMASTER = "install" -a $UPDATE != "true" ]; then
 
@@ -310,7 +329,7 @@ if [ $QMASTER = "install" -a $UPDATE != "true" ]; then
 fi
 
 
-if [ $EXECD = "install" ]; then
+if [ $EXECD = "install" -a $UPDATE != "true" ]; then
  if [ $AUTO = true ]; then
     GetConfigFromFile
     CheckPath
@@ -335,9 +354,9 @@ if [ $EXECD = "install" ]; then
          CheckRunningDaemon sge_execd
          
          if [ $? = 0 ]; then
-            $INFOTEXT -n "Execd on host %s is running!\n" $h
+            $INFOTEXT -log "Execd on host %s is running!\n" $h
          else
-            $INFOTEXT -n "Execd on host %s is not started!\n" $h
+            $INFOTEXT -log "Execd on host %s is not started!\n" $h
          fi
 
          if [ $AUTO = "true" ]; then
@@ -435,6 +454,7 @@ if [ $BERKELEY = "install" ]; then
    Makedir $COMMONDIR 
    SetSpoolingOptions
    InstallServerScript $euid
+   GiveBerkelyHints
 
 fi
 
@@ -464,8 +484,8 @@ if [ $EXECD = "uninstall" ]; then
       MoveLog
    fi
    
-   $INFOTEXT "If you have local execution host spool directories,\n" \
-             "please remove them by hand!\n\n"
+   $INFOTEXT "If you have local execution host spool directories\n" \
+             "or installed rc startup scripts, please remove them by hand!\n\n"
 
    if [ $QMASTER != "uninstall" ]; then 
       exit 0

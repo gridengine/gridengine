@@ -503,6 +503,7 @@ AddDefaultQueue()
       Execute $SGE_BIN/qconf -Aq $TMPL2
       rm -f $TMPL $TMPL2        
    fi
+
    $INFOTEXT -wait -n "\nHit, <RETURN> to continue!"
    $CLEAR
 }

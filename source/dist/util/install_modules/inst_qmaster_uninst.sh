@@ -93,7 +93,7 @@ ShutdownMaster()
    ret=0
    while [ $ret -eq 0 ]; do 
       sleep 5
-      $SGE_UTILBIN/checkprog $master_pid sge_qmaster
+      $SGE_UTILBIN/checkprog $master_pid sge_qmaster > /dev/null
       ret=$?
       $INFOTEXT "sge_qmaster is going down ...., please wait!"
    done

@@ -4691,7 +4691,7 @@ proc compile_source {} {
    while { $done != 1 } {
       expect {
          full_buffer {
-            add_proc_error "compile_source" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            puts $CHECK_OUTPUT "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
          }
          "Base directory:" {
              send "y\n"

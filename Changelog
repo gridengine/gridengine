@@ -1,3 +1,10 @@
+CR-2001-08-23-1: Testsuite:
+                 - removed add_proc_error call in compile_source procedure
+                   (output buffer overflow error). Now the error is only
+                   reported in the normal testsuite output. In case of
+                   parallel compiling more architectures this error message
+                   sometimes appears.
+
 CR-2001-08-23-0: Testsuite:
                  - using cvs tag information for compile logfile name
 

@@ -1,3 +1,6 @@
+AD-2003-11-10-1: Bugfix:    Fixed the build
+                 Changed:   rmon
+
 SG-2003-11-10-0: Bugfix:    scheduler died. The resource matching caching did
                             not handle error messages correct.
                  Changed:   schedd, qmaster                            

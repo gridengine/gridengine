@@ -54,7 +54,7 @@ monitoring_level DEBUG_ON = { {0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L} };
 static const char* empty = "    ";
 
 static u_long mtype = RMON_NONE;
-static FILE* rmon_fp = stderr;
+static FILE* rmon_fp;
 
 static void mwrite(char *message);
 static int set_debug_level_from_env(void);
@@ -186,6 +186,7 @@ void rmon_mopen(int *argc, char *argv[], char *programname)
    int ret = -1;
 
    rmon_mlclr(&DEBUG_ON);
+   rmon_fp = stderr;
 
    ret = set_debug_level_from_env();
    ret = set_debug_target_from_env();

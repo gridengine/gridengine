@@ -80,20 +80,6 @@ static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
 
-/* ---- sec_initialized ------------------------------------- */
-
-static int sec_initialized = 0;
-
-#ifdef SGE_MT
-/* guards access to sec_initialized global variable */
-static pthread_mutex_t sec_initialized_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-#define SEC_LOCK_INITIALIZED()      sge_mutex_lock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
-#define SEC_UNLOCK_INITIALIZED()    sge_mutex_unlock("sec_initialized_mutex", SGE_FUNC, __LINE__, &sec_initialized_mutex)
-#else
-#define SEC_LOCK_INITIALIZED()      
-#define SEC_UNLOCK_INITIALIZED()   
-#endif
 
 /****** gdi/security/sge_security_initialize() ********************************
 *  NAME
@@ -121,29 +107,21 @@ int sge_security_initialize(const char *name)
 
    DENTER(TOP_LAYER, "sge_security_initialize");
 
-   SEC_LOCK_INITIALIZED();
-
-   if (!sec_initialized) {
 #ifdef SECURE
-      if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
-         if (sec_init(name)) {
-            SEC_UNLOCK_INITIALIZED();
-            DEXIT;
-            return -1;
-         }
-      }     
-#endif
-
-#ifdef KERBEROS
-      if (krb_init(name)) {
-         SEC_UNLOCK_INITIALIZED();
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      if (sec_init(name)) {
          DEXIT;
          return -1;
       }
-#endif   
-      sec_initialized = 1; 
+   }     
+#endif
+
+#ifdef KERBEROS
+   if (krb_init(name)) {
+      DEXIT;
+      return -1;
    }
-   SEC_UNLOCK_INITIALIZED();
+#endif   
 
    DEXIT;
    return 0;

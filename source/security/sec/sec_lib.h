@@ -37,6 +37,7 @@ void sec_init_mt(void);
 #endif
 
 int sec_init(const char *progname);
+int sec_exit(void);
 
 int sec_verify_user(const char *user, const char *commproc);
 

@@ -1161,48 +1161,173 @@ lListElem *qep
 
    lListElem *ep;
    const char *str, *str2;
+   int i;
 
    DENTER(GUI_LAYER, "qmonQinstanceShowBrowserInfo");
 
-   sge_dstring_sprintf(info, "%-30.30s%s\n", "Queue:", lGetString(qep, QU_full_name));
+/*    sge_dstring_sprintf(info, "%-30.30s%s\n", "Queue:", lGetString(qep, QU_full_name)); */
+   /* qname */
+   sge_dstring_sprintf(info, "%-30.30s%s\n", "qname:", lGetString(qep, QU_qname));
 
-   {
-      dstring type_buffer = DSTRING_INIT;
-
-      qinstance_print_qtype_to_dstring(qep, &type_buffer, false);
-      sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Type:", 
-              sge_dstring_get_string(&type_buffer));
-      sge_dstring_free(&type_buffer);
-   }
-   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "Sequence Nr:", 
+   /* hostname */
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "hostname:", 
+                           lGetHost(qep, QU_qhostname));
+   /* seq_no */
+   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "seq_no:", 
                            (int)lGetUlong(qep, QU_seq_no));
-
-   str = lGetString(qep, QU_tmpdir);
-   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "tmpdir:", str ? str : ""); 
-   str = lGetString(qep, QU_shell);
-   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Shell:", str ? str : ""); 
-   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "Job Slots:", 
-                     (int)lGetUlong(qep, QU_job_slots));
-   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "Job Slots Used:", qinstance_slots_used(qep));
-   str = lGetString(qep, QU_priority);
-   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Priority:", str?str:"");
+   /* Load Thresholds */
    sge_dstring_sprintf_append(info, "%-30.30s", "Load Thresholds:");
    for_each(ep, lGetList(qep, QU_load_thresholds)) {
       str = lGetString(ep, CE_name);
       str2 = lGetString(ep, CE_stringval);
-      sge_dstring_sprintf_append(info, "%s = %s ", str?str:"", str2?str2:"");
+      sge_dstring_sprintf_append(info, "%s=%s ", str?str:"", str2?str2:"");
    }
    sge_dstring_sprintf_append(info, "\n"); 
+   /* Suspend Thresholds */
+   sge_dstring_sprintf_append(info, "%-30.30s", "Suspend Thresholds:");
+   for_each(ep, lGetList(qep, QU_suspend_thresholds)) {
+      str = lGetString(ep, CE_name);
+      str2 = lGetString(ep, CE_stringval);
+      sge_dstring_sprintf_append(info, "%s=%s ", str?str:"", str2?str2:"");
+   }
+   sge_dstring_sprintf_append(info, "\n"); 
+   /* nsuspend */
+   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "nsuspend:", 
+                           (int)lGetUlong(qep, QU_nsuspend));
+   /* suspend_interval */
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "suspend_interval:", 
+                           lGetString(qep, QU_suspend_interval));
+   /* priority */
+   str = lGetString(qep, QU_priority);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "priority:", str?str:"");
 
-   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Rerun Job:", 
+   /* min_cpu_interval */
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "min_cpu_interval:", 
+                           lGetString(qep, QU_min_cpu_interval));
+
+   /* processors */
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "processors:", 
+                           lGetString(qep, QU_processors));
+
+   /* qtype */
+   {
+      dstring type_buffer = DSTRING_INIT;
+
+      qinstance_print_qtype_to_dstring(qep, &type_buffer, false);
+      sge_dstring_sprintf_append(info, "%-30.30s%s\n", "qype:", 
+              sge_dstring_get_string(&type_buffer));
+      sge_dstring_free(&type_buffer);
+   }
+   /* ckpt_list */
+   sge_dstring_sprintf_append(info, "%-30.30s", "ckpt_list:");
+   for_each(ep, lGetList(qep, QU_ckpt_list)) {
+      str = lGetString(ep, ST_name);
+      sge_dstring_sprintf_append(info, "%s ", str);
+   }
+   sge_dstring_sprintf_append(info, "\n"); 
+   /* pe_list */
+   sge_dstring_sprintf_append(info, "%-30.30s", "pe_list:");
+   for_each(ep, lGetList(qep, QU_pe_list)) {
+      str = lGetString(ep, ST_name);
+      sge_dstring_sprintf_append(info, "%s ", str);
+   }
+   sge_dstring_sprintf_append(info, "\n"); 
+   /* rerun */
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "rerun:", 
                      lGetBool(qep, QU_rerun) ? "True" : "False");
-
+   /* slots */
+   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "slots:", 
+                     (int)lGetUlong(qep, QU_job_slots));
+   /* slots used */
+   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "slots used:", 
+                                 qinstance_slots_used(qep));
+   /* shell */
+   str = lGetString(qep, QU_shell);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "shell:", str ? str : ""); 
+   
+   /* prolog */
+   str = lGetString(qep, QU_prolog);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "prolog:", str ? str : ""); 
+   /* epilog */
+   str = lGetString(qep, QU_epilog);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "epilog:", str ? str : ""); 
+   /* shell_start_mode */
+   str = lGetString(qep, QU_shell_start_mode);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "shell_start_mode:", str ? str : ""); 
+   
+   /* starter_method */
+   str = lGetString(qep, QU_starter_method);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "starter_method:", str ? str : ""); 
+   
+   /* suspend_method */
+   str = lGetString(qep, QU_suspend_method);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "suspend_method:", str ? str : ""); 
+   
+   /* resume_method */
+   str = lGetString(qep, QU_resume_method);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "resume_method:", str ? str : ""); 
+   
+   /* terminate_method */
+   str = lGetString(qep, QU_terminate_method);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "terminate_method:", str ? str : ""); 
+   
+   /* notify */
    str = lGetString(qep, QU_notify);
    sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Notify Job Interval:",  str ? str : ""); 
 
-   str = lGetString(qep, QU_processors);
-   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Processors:", str ? str : ""); 
+   /* tmpdir */
+   str = lGetString(qep, QU_tmpdir);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "tmpdir:", str ? str : ""); 
+   /* user_lists */
+   sge_dstring_sprintf_append(info, "%-30.30s", "Access List:");
+   for_each(ep, lGetList(qep, QU_acl)) {
+      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, US_name));
+   }
+   sge_dstring_sprintf_append(info, "\n"); 
+   /* xuser_lists */
+   sge_dstring_sprintf_append(info, "%-30.30s", "No Access List:");
+   for_each(ep, lGetList(qep, QU_xacl)) {
+      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, US_name));
+   }
+   sge_dstring_sprintf_append(info, "\n"); 
+   /* subordinate_list */
+   sge_dstring_sprintf_append(info, "%-30.30s", "Subordinates:");
+   for_each(ep, lGetList(qep, QU_subordinate_list)) {
+      str = lGetString(ep, SO_name);
+      i = (int) lGetUlong(ep, SO_threshold);
+      sge_dstring_sprintf_append(info, "%s=%d ", str?str:"", i);
+   }
+   sge_dstring_sprintf_append(info, "\n"); 
+   /* Complex Values */
+   sge_dstring_sprintf_append(info, "%-30.30s", "Complex Values:");
+   for_each(ep, lGetList(qep, QU_consumable_config_list)) {
+      str = lGetString(ep, CE_name);
+      str2 = lGetString(ep, CE_stringval);
+      sge_dstring_sprintf_append(info, "%s=%s ", str?str:"", str2?str2:"");
+   }
+   sge_dstring_sprintf_append(info, "\n"); 
 
+   /* projects */
+   sge_dstring_sprintf_append(info, "%-30.30s", "Project List:");
+   for_each(ep, lGetList(qep, QU_projects)) {
+      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, UP_name));
+   }
+   sge_dstring_sprintf_append(info, "\n"); 
+   /* xprojects */
+   sge_dstring_sprintf_append(info, "%-30.30s", "XProject List:");
+   for_each(ep, lGetList(qep, QU_xprojects)) {
+      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, UP_name));
+   }
+   sge_dstring_sprintf_append(info, "\n"); 
+
+   /* calendar */
+   str = lGetString(qep, QU_calendar);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "calendar:", str ? str : ""); 
+   
+   /* initial state */
+   str = lGetString(qep, QU_initial_state);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "initial state:", str ? str : ""); 
+   /* limits*/
    str = lGetString(qep, QU_s_rt);
    sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft Real Time:", str ? str : ""); 
    str = lGetString(qep, QU_h_rt);
@@ -1231,20 +1356,10 @@ lListElem *qep
    sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft Resident Set Size:", str ? str : "");
    str = lGetString(qep, QU_h_rss);
    sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard Resident Set Size:", str ? str : "");
-
-   str = lGetString(qep, QU_min_cpu_interval);
-   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Min Cpu Interval:", str ? str : "");
-
-   sge_dstring_sprintf_append(info, "%-30.30s", "Access List:");
-   for_each(ep, lGetList(qep, QU_acl)) {
-      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, US_name));
-   }
-   sge_dstring_sprintf_append(info, "\n"); 
-   sge_dstring_sprintf_append(info, "%-30.30s", "No Access List:");
-   for_each(ep, lGetList(qep, QU_xacl)) {
-      sge_dstring_sprintf_append(info, "%s ", lGetString(ep, US_name));
-   }
-   sge_dstring_sprintf_append(info, "\n"); 
+   str = lGetString(qep, QU_s_vmem);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Soft Virtual Memory: Size", str ? str : "");
+   str = lGetString(qep, QU_h_vmem);
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard Virtual Memory Size:", str ? str : "");
 
    DEXIT;
 }
@@ -1924,74 +2039,75 @@ static void qmonCQUpdateQIMatrix(void)
          load_avg_str = LOAD_ATTR_LOAD_AVG;
 
       for_each(qp, lGetList(cq, CQ_qinstances)) {
-         num_rows = XbaeMatrixNumRows(qinstance_settings);
-         if (row >= num_rows) {
-            XbaeMatrixAddRows(qinstance_settings, num_rows, 
-                                 NULL, NULL, NULL, 1);
-         }   
+         if ((lGetUlong(qp, QU_tag) & TAG_SHOW_IT)!=0) {
+            num_rows = XbaeMatrixNumRows(qinstance_settings);
+            if (row >= num_rows) {
+               XbaeMatrixAddRows(qinstance_settings, num_rows, 
+                                    NULL, NULL, NULL, 1);
+            }   
 
-        /* compute the load and check for alarm states */
-         is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, qp, ehl, cl, 
-                                                &has_value_from_object);
-         if (sge_load_alarm(NULL, qp, lGetList(qp, QU_load_thresholds), ehl, cl, NULL)) {
-            qinstance_state_set_alarm(qp, true);
-            sge_load_alarm_reason(qp, lGetList(qp, QU_load_thresholds), ehl, 
-                            cl, load_alarm_reason, MAX_STRING_SIZE - 1, "load");
-         }
-         if (sge_load_alarm(NULL, qp, lGetList(qp, QU_suspend_thresholds), ehl, cl, NULL)) {
-            qinstance_state_set_suspend_alarm(qp, true);
-            sge_load_alarm_reason(qp, lGetList(qp, QU_suspend_thresholds), 
-                            ehl, cl, suspend_alarm_reason, 
-                            MAX_STRING_SIZE - 1, "suspend");
-         }
-
-         /* full qname */
-         XbaeMatrixSetCell(qinstance_settings, row, 0, 
-                           (char*)lGetString(qp, QU_full_name));
-         /* qtype */
-         {
-            dstring type_string = DSTRING_INIT;
-
-            qinstance_print_qtype_to_dstring(qp, &type_string, true);
-            XbaeMatrixSetCell(qinstance_settings, row, 1, 
-                              (char*) sge_dstring_get_string(&type_string));
-            sge_dstring_free(&type_string);
-         }
-         /* number of used/free slots */
-         sprintf(to_print, "%d/%d ", qinstance_slots_used(qp),
-                  (int)lGetUlong(qp, QU_job_slots));
-         sprintf(buf, "%-9.9s ", to_print);   
-         XbaeMatrixSetCell(qinstance_settings, row, 2, buf);
-
-         /* load avg */
-         if (!is_load_value) {
-            if (has_value_from_object) {
-               sprintf(to_print, "%2.2f ", load_avg);
-            } else {
-               sprintf(to_print, "---  ");
+            /* compute the load and check for alarm states */
+            is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, qp, ehl, cl, 
+                                                   &has_value_from_object);
+            if (sge_load_alarm(NULL, qp, lGetList(qp, QU_load_thresholds), ehl, cl, NULL)) {
+               qinstance_state_set_alarm(qp, true);
+               sge_load_alarm_reason(qp, lGetList(qp, QU_load_thresholds), ehl, 
+                               cl, load_alarm_reason, MAX_STRING_SIZE - 1, "load");
             }
-         } else {
-            sprintf(to_print, "-NA- ");
-         }
-         XbaeMatrixSetCell(qinstance_settings, row, 3, to_print);
-   
-         /* arch */
-         if (!sge_get_string_qattr(arch_string, sizeof(arch_string)-1, 
-                                   LOAD_ATTR_ARCH, qp, ehl, cl)) {
-            XbaeMatrixSetCell(qinstance_settings, row, 4, arch_string);
-         } else {
-            XbaeMatrixSetCell(qinstance_settings, row, 4, "-NA-");
-         }
-         {
-            dstring state_string = DSTRING_INIT;
+            if (sge_load_alarm(NULL, qp, lGetList(qp, QU_suspend_thresholds), ehl, cl, NULL)) {
+               qinstance_state_set_suspend_alarm(qp, true);
+               sge_load_alarm_reason(qp, lGetList(qp, QU_suspend_thresholds), 
+                               ehl, cl, suspend_alarm_reason, 
+                               MAX_STRING_SIZE - 1, "suspend");
+            }
 
-            qinstance_state_append_to_dstring(qp, &state_string);
-            XbaeMatrixSetCell(qinstance_settings, row, 5,
-                              (char *)sge_dstring_get_string(&state_string));
-            sge_dstring_free(&state_string);
-         }
-         row++;
+            /* full qname */
+            XbaeMatrixSetCell(qinstance_settings, row, 0, 
+                              (char*)lGetString(qp, QU_full_name));
+            /* qtype */
+            {
+               dstring type_string = DSTRING_INIT;
 
+               qinstance_print_qtype_to_dstring(qp, &type_string, true);
+               XbaeMatrixSetCell(qinstance_settings, row, 1, 
+                                 (char*) sge_dstring_get_string(&type_string));
+               sge_dstring_free(&type_string);
+            }
+            /* number of used/free slots */
+            sprintf(to_print, "%d/%d ", qinstance_slots_used(qp),
+                     (int)lGetUlong(qp, QU_job_slots));
+            sprintf(buf, "%-9.9s ", to_print);   
+            XbaeMatrixSetCell(qinstance_settings, row, 2, buf);
+
+            /* load avg */
+            if (!is_load_value) {
+               if (has_value_from_object) {
+                  sprintf(to_print, "%2.2f ", load_avg);
+               } else {
+                  sprintf(to_print, "---  ");
+               }
+            } else {
+               sprintf(to_print, "-NA- ");
+            }
+            XbaeMatrixSetCell(qinstance_settings, row, 3, to_print);
+      
+            /* arch */
+            if (!sge_get_string_qattr(arch_string, sizeof(arch_string)-1, 
+                                      LOAD_ATTR_ARCH, qp, ehl, cl)) {
+               XbaeMatrixSetCell(qinstance_settings, row, 4, arch_string);
+            } else {
+               XbaeMatrixSetCell(qinstance_settings, row, 4, "-NA-");
+            }
+            {
+               dstring state_string = DSTRING_INIT;
+
+               qinstance_state_append_to_dstring(qp, &state_string);
+               XbaeMatrixSetCell(qinstance_settings, row, 5,
+                                 (char *)sge_dstring_get_string(&state_string));
+               sge_dstring_free(&state_string);
+            }
+            row++;
+         }
       }   
    }   
 

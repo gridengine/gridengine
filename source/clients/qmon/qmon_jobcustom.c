@@ -80,6 +80,8 @@
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
+#include "qstat_printing.h"
+#include "sge_cqueue_qstat.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -2039,75 +2041,50 @@ int qmonJobFilterArraysCompressed(void)
 int match_queue(
 lList **queue_list,
 lList *request_list,
-lList *complex_list,
-lList *exec_host_list 
+lList *centry_list,
+lList *exechost_list 
 ) {
    lListElem *qep;
    lListElem *dep;
+   lList *filtered_queue_list = NULL;
+   static lCondition *tagged_queues = NULL;
+   static lEnumeration *all_fields = NULL;
+   u_long32 empty_qs = 0; 
 
    DENTER(GUI_LAYER, "match_queue");
 
-   if (!exec_host_list) {
-      DPRINTF(("empty exec_host_list\n"));
+   if (!exechost_list) {
+      DPRINTF(("empty exechost_list\n"));
       DEXIT;
       return False;
    } 
 
-/* lWriteListTo(request_list, stderr); */
+   if (!tagged_queues) {
+      tagged_queues = lWhere("%T(%I == %u)", CQ_Type, CQ_tag, TAG_SHOW_IT);
+      all_fields = lWhat("%T(ALL)", CQ_Type);
+   }
+   centry_list_init_double(centry_list);
 
    /*
    ** remove the queues not fulfilling the request_list
    */
-   qep = lFirst(*queue_list);
-   sconf_set_qs_state(QS_STATE_EMPTY);
-   while (qep) {
 
-      DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
-      if (!sge_select_queue(request_list, qep, NULL, exec_host_list, complex_list, 1, 1)) {
-         dep = qep;
-         qep = lNext(qep);
-         lRemoveElem(*queue_list, dep);
-      }
-      else
-         qep = lNext(qep);
-   }
-   sconf_set_qs_state(QS_STATE_FULL);
+   /* all queues are selected */
+   cqueue_list_set_tag(*queue_list, TAG_SHOW_IT, true);
 
-   /*
-   ** remove the template queue if present
-   */
-   lDelElemStr(queue_list, QU_qname, SGE_TEMPLATE_NAME);
-
-   /*
-   ** fill in requests
-   */
-   if (centry_list_fill_request(request_list, complex_list, false, true, false)) {
-      DPRINTF(("failure in sge_fill_requests()\n"));
+   if (select_by_resource_list(request_list, exechost_list, *queue_list, centry_list, empty_qs)<0) {
       DEXIT;
       return False;
    }
-
-/* lWriteListTo(request_list, stderr); */
-
-   /*
-   ** remove the queues not fulfilling the request_list
-   */
-   qep = lFirst(*queue_list);
-   sconf_set_qs_state(QS_STATE_EMPTY);
-   while (qep) {
-      
-      if (!sge_select_queue(request_list,qep, NULL, exec_host_list, complex_list, 1, 1)) {
-         dep = qep;
-         qep = lNext(qep);
-         lRemoveElem(*queue_list, dep);
-      }
-      else
-         qep = lNext(qep);
-   }
-   sconf_set_qs_state(QS_STATE_FULL);
-
-   if (lGetNumberOfElem(*queue_list) == 0)
+   if (!is_cqueue_selected(*queue_list)) {
       *queue_list = lFreeList(*queue_list);
+      DEXIT;
+      return True;
+   }
+
+   filtered_queue_list = lSelect("FQL", *queue_list, tagged_queues, all_fields);  
+   *queue_list = lFreeList(*queue_list);
+   *queue_list = filtered_queue_list;
 
    DEXIT;
    return True;
@@ -2190,11 +2167,14 @@ lList *owner_list
 static int is_job_runnable_on_queues(
 lListElem *jep,
 lList *queue_list,
-lList *exec_host_list,
-lList *complex_list 
+lList *exechost_list,
+lList *centry_list 
 ) {
    lListElem *qep;   
    lList *hard_resource_list=NULL;   
+   u_long32 empty_qs = 0; 
+
+   DENTER(GUI_LAYER, "is_job_runnable_on_queues");
 
    hard_resource_list = lGetList(jep, JB_hard_resource_list);
    
@@ -2208,11 +2188,19 @@ lList *complex_list
    /*
    ** see if queues fulfill the request_list of the job
    */
-   for_each(qep, queue_list) {
-      if (sge_select_queue(hard_resource_list,qep, NULL, exec_host_list, complex_list, 1, 1)) {
-         return True;
-      } 
-   } 
+   /* all queues are selected */
+   cqueue_list_set_tag(queue_list, TAG_SHOW_IT, true);
+
+   if (select_by_resource_list(hard_resource_list, exechost_list, queue_list, centry_list, empty_qs)<0) {
+      DEXIT;
+      return False;
+   }
+
+   if (!is_cqueue_selected(queue_list)) {
+      DEXIT;
+      return False;
+   }
    
-   return False; 
+   DEXIT;
+   return True; 
 }

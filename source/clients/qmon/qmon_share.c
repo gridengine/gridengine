@@ -62,6 +62,7 @@
 #include "sge_gdi.h"
 #include "sge_support.h"
 #include "sge_answer.h"
+#include "sge_string.h"
 
 enum _modes {
    ADD_MODE,
@@ -107,6 +108,7 @@ typedef struct _tSTREntry {
    int mem_weight;
    int io_weight;
    Cardinal halftime;
+   char *halflife_decay_list;
    double   compensation_factor;
 } tSTREntry;
 
@@ -121,6 +123,7 @@ static Widget st_copy = 0;
 static Widget st_cut = 0;
 static Widget st_paste = 0;
 static Widget st_halflife_unit = 0;
+static Widget st_halflife_decay_list = 0;
 static Widget st_message = 0;
 
 /* static int sharetree_mode = STT_USER;  User Sharetree */
@@ -188,6 +191,11 @@ static XtResource ratio_resources[] = {
       sizeof(Cardinal),
       XtOffsetOf(tSTREntry, halftime),
       XtRImmediate, NULL },
+
+   { "halflife_decay_list", "halflife_decay_list", XtRString,
+      sizeof(String),
+      XtOffsetOf(tSTREntry, halflife_decay_list),
+      XtRImmediate, (XtPointer) 0 },
 
    { "compensation_factor", "compensation_factor", XmtRDouble,
       sizeof(double),
@@ -1660,6 +1668,9 @@ const lListElem *sep
       XmtChooserSetState(st_halflife_unit, 1, False);
    }
 
+   data->halflife_decay_list = sge_strdup(data->halflife_decay_list,
+                                    lGetString(sep, SC_halflife_decay_list));
+
    DEXIT;
 }
 
@@ -1703,6 +1714,12 @@ tSTREntry *data
       state = 1;
 
    lSetUlong(sep, SC_halftime, data->halftime * state);
+
+   if (data->halflife_decay_list && data->halflife_decay_list[0] !='\0')
+      lSetString(sep, SC_halflife_decay_list, data->halflife_decay_list);
+   else   
+      lSetString(sep, SC_halflife_decay_list, "none");
+
 
    DEXIT;
 }

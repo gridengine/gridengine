@@ -570,7 +570,7 @@ bool is_cqueue_selected(lList *queue_list)
    bool a_qinstance_is_selected = false;
    bool a_cqueue_is_selected = false;
 
-   DENTER(TOP_LAYER, "is_qinstance_selected");
+   DENTER(TOP_LAYER, "is_cqueue_selected");
    
    for_each(cqueue, queue_list) {
       lListElem *qep;

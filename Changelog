@@ -1,3 +1,13 @@
+AA-2004-03-03-0  Bugfix:    - qi display
+                            - uppercase shortcuts
+                            - q customize
+                            - job dialogue segv for jobcustomize
+                            - ticket dialogue
+                            - qmon man page
+                 Issues:    734, 723, 680, 681, 725, 736, 747, 726            
+                 Changed:   qmon
+                 Review:    pending
+
 CR-2004-03-03-0  Bugfix:    - additional parameter for cl_com_gethostname(), 
                               cl_com_cached_gethostbyname(), 
                               cl_com_cached_gethostbyaddr(),sge_gethostbyname()

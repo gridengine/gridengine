@@ -401,6 +401,8 @@ Widget parent
                      False, qmonJobHandleEnterLeave,
                      NULL); 
 
+   current_matrix = job_pending_jobs;
+
    DEXIT;
 }
 
@@ -643,12 +645,13 @@ void updateJobList(void)
    if (rl) {
       match_queue(&ql, rl, cl, ehl);
    }   
+
 #if 0      
    {
       lListElem* ep;
       printf("Queues\n");
       for_each(ep, ql) {
-         printf("Q: %s\n", lGetString(ep, QU_qname));
+         printf("Q: %s\n", lGetString(ep, CQ_name));
       }
    }
    {

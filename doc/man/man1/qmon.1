@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmon.1,v $     Last Update: $Date: 2004/02/21 19:46:14 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: qmon.1,v $     Last Update: $Date: 2004/03/03 12:53:31 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMON 1 "$Date: 2004/02/21 19:46:14 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMON 1 "$Date: 2004/03/03 12:53:31 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmon \- X-Windows OSF/Motif graphical user's interface for xxQS_NAMExx
 .\"
@@ -129,9 +129,9 @@ in the system and allows the administrator to add new queues or to modify
 or delete already existing ones. The \fBQueue Control\fP dialogue shows a
 tabbed view of Cluster Queues or their corresponding Queue Instances in a tabular way.
 .sp 1
-By pushing the \fBAdd\fP or \fBModify\fP button, a sub-dialogue for 
-configuring xxQS_NAMExx queues is opened. 
-A queue needs to be selected to use the modify operation. The 
+By pushing the \fBAdd\fP, \fBClone\fP or \fBModify\fP button, a sub-dialogue 
+for configuring xxQS_NAMExx queues is opened. 
+A queue needs to be selected to use the clone and modify operation. The 
 configuration sub-dialogue allows for definition of the queue and its attributes.
 The configuration sub-dialogue contains in the upper section the queue name and a list of hosts or hostgroups for which this queue contains the configuration.
 The lower section contains a list of hosts or hostgroups at the left, where the default attributes are shown when the "@/" entry is highlighted.
@@ -220,7 +220,7 @@ dialogue:
 .RS
 Administration Hosts
 Submit Hosts
-Hosti Groups
+Host Groups
 Execution Hosts
 .RE
 .fi

@@ -50,7 +50,6 @@ Qmon*tov_layout.xmtChildren: \
                      weight_priority=weight_priority, \
                      weight_ticket=weight_ticket, \
                      weight_waiting_time=weight_waiting_time, \
-                     halflife_decay_list=halflife_decay_list, \
                      policy_hierarchy = policy_hierarchy; \
    Label             share_tree_tickets_label = label_share_tree_tickets, \
                      functional_tickets_label = label_functional_tickets, \
@@ -121,8 +120,6 @@ Qmon*tov_layout.layout: \
                Row { max_functional_jobs <> } \
             Caption tl "@{Maximum Pending Tasks Per Job}" \
                Row { max_pending_tasks_per_job <> }\
-            Caption tl "@{Halflife Decay List}" \
-               halflife_decay_list \
             Caption tl "@{Ticket Policy Hierarchy}" \
                policy_hierarchy \
          } \

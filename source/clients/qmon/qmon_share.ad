@@ -184,6 +184,7 @@ Qmon*qmon_sharetree.sharetree.st_ratio.xmtChildren: \
                   st_io = io_weight; \
    XmToggleButton st_cpu_t, st_mem_t, st_io_t; \
    InputField     st_halflife = halftime, \
+                  st_halflife_decay_list=halflife_decay_list, \
                   st_compensation_factor = compensation_factor; \
    XmtChooser     st_halflife_unit;
 
@@ -209,6 +210,8 @@ Qmon*qmon_sharetree.sharetree.st_ratio.layout: \
          Centered st_halflife \
          Fixed st_halflife_unit \
       } \
+      Caption tl "@{Halflife Decay List}" \
+         st_halflife_decay_list \
       Caption tl "@{Compensation Factor}" st_compensation_factor \
       <> \
    }

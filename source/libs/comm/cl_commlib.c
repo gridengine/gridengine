@@ -53,6 +53,8 @@
 #include "cl_ssl_framework.h"
 #include "cl_util.h"
 
+#include "msg_commlib.h"
+
 #define CL_DO_COMMLIB_DEBUG 0
 
 static int cl_commlib_check_callback_functions(void);
@@ -2116,6 +2118,7 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
    struct timeval now;
    int retval = CL_RETVAL_OK;
    cl_com_connection_t* the_handler = NULL;
+   char tmp_string[1024];
 
 
    if (handle == NULL) {
@@ -2237,7 +2240,11 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
                  return_value != CL_RETVAL_SELECT_ERROR ) {
                elem->connection->connection_state = CL_CLOSING;
                CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
-               cl_commlib_push_application_error(return_value, "closing connection");
+               snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                        elem->connection->remote->comp_host,
+                        elem->connection->remote->comp_name,
+                        u32c(elem->connection->remote->comp_id));
+               cl_commlib_push_application_error(return_value,tmp_string);
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
@@ -2264,7 +2271,11 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
                 return_value != CL_RETVAL_SELECT_ERROR ) {
                elem->connection->connection_state = CL_CLOSING;
                CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
-               cl_commlib_push_application_error(return_value, "closing connection");
+               snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                        elem->connection->remote->comp_host,
+                        elem->connection->remote->comp_name,
+                        u32c(elem->connection->remote->comp_id));
+               cl_commlib_push_application_error(return_value, tmp_string);
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
@@ -5659,6 +5670,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
    int trigger_write_thread = 0;
    cl_connection_list_elem_t* elem = NULL;
    cl_com_connection_t* the_handler = NULL;
+   char tmp_string[1024];
 
 
    cl_handle_list_elem_t* handle_elem = NULL;
@@ -5827,7 +5839,11 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                        return_value != CL_RETVAL_SELECT_ERROR ) {
                      elem->connection->connection_state = CL_CLOSING;
                      CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
-                     cl_commlib_push_application_error(return_value, "closing connection");
+                     snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                              elem->connection->remote->comp_host,
+                              elem->connection->remote->comp_name,
+                              u32c(elem->connection->remote->comp_id));
+                     cl_commlib_push_application_error(return_value, tmp_string );
                   }
                   if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                      elem->connection->connection_state = CL_CLOSING;
@@ -5956,6 +5972,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
    cl_handle_list_elem_t* handle_elem = NULL;
    cl_com_handle_t* handle = NULL;
    int trigger_read_thread = 0;
+   char tmp_string[1024];
 
    /* get pointer to cl_thread_settings_t struct */
    cl_thread_settings_t *thread_config = (cl_thread_settings_t*)t_conf; 
@@ -6069,7 +6086,11 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                             return_value != CL_RETVAL_SELECT_ERROR ) {
                            elem->connection->connection_state = CL_CLOSING;
                            CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
-                           cl_commlib_push_application_error(return_value, "closing connection");
+                           snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                                    elem->connection->remote->comp_host,
+                                    elem->connection->remote->comp_name,
+                                    u32c(elem->connection->remote->comp_id));
+                           cl_commlib_push_application_error(return_value, tmp_string);
                         }
                         if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                            elem->connection->connection_state = CL_CLOSING;

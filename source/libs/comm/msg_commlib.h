@@ -79,6 +79,7 @@
 #define MSG_CL_TCP_FW_LOCAL_HOST_CONNECT_ERROR                                _MESSAGE(85039, _("debug client is not running on local host"))
 #define MSG_CL_TCP_FW_STANDARD_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU          _MESSAGE(85040, _("client \""SFN"/"SFN"/"U32CFormat"\" did not use a reserved port below 1024"))
 
+#define MSG_CL_COMMLIB_CLOSING_SSU                                            _MESSAGE(85040, _("closing \""SFN"/"SFN"/"U32CFormat"\""))
 
 
 

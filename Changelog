@@ -1,3 +1,10 @@
+CR-2005-01-12-0: Enhancem.: commlib read/write errors closing connection
+                            messages in the daemon log files will now also
+                            contain the name of the connection where the
+                            read/write error appeared.
+                 Changed:   commlib
+                 Review:    AA
+
 CR-2005-01-11-2: Testsuite: added testsuite code for parsing qping -dump
                             output into tcl_files/remote_procedures.tcl
 

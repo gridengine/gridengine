@@ -37,6 +37,11 @@
 extern lList *Master_Sharetree_List;
 
 
+typedef struct {
+   int depth;
+   lListElem **nodes;
+} ancestors_t;
+
 /************************************************************************
    id_sharetree - set the sharetree node id
 ************************************************************************/
@@ -44,5 +49,13 @@ int id_sharetree(lListElem *ep, int id);
 int show_sharetree_path(lListElem *root, const char *path);
 int show_sharetree(lListElem *ep, char *indent);
 lListElem *getSNTemplate(void);
+lListElem *search_named_node ( lListElem *ep, const char *name );
+lListElem *search_named_node_path ( lListElem *ep, const char *path, ancestors_t *ancestors );
+void free_ancestors( ancestors_t *ancestors);
+#ifdef notdef
+lListElem *search_ancestor_list ( lListElem *ep, char *name, ancestors_t *ancestors );
+#endif
+lListElem *search_ancestors(lListElem *ep, char *name,
+                                   ancestors_t *ancestors, int depth);
 
 #endif /* __SGE_SHARETREE_H */

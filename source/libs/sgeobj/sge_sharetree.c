@@ -186,3 +186,191 @@ lListElem *getSNTemplate(void)
    DEXIT;
    return ep;
 }
+
+/********************************************************
+ Search for a share tree node with a given name in a
+ share tree
+ ********************************************************/
+lListElem *search_named_node( lListElem *ep,  /* root of the tree */
+                              const char *name )
+{
+   lListElem *cep, *fep;
+   static int sn_children_pos = -1;
+   static int sn_name_pos = -1;
+
+   DENTER(TOP_LAYER, "search_named_node");
+
+   if (!ep || !name) {
+      DEXIT;
+      return NULL;
+   }
+
+   if (sn_name_pos == -1) {
+      sn_children_pos = lGetPosViaElem(ep, STN_children);
+      sn_name_pos = lGetPosViaElem(ep, STN_name);
+   }
+
+   if (strcmp(lGetPosString(ep, sn_name_pos), name) == 0) {
+      DEXIT;
+      return ep;
+   }
+
+   for_each(cep, lGetPosList(ep, sn_children_pos)) {
+      if ((fep = search_named_node(cep, name))) {
+         DEXIT;
+         return fep;
+      }
+   }
+      
+   DEXIT;
+   return NULL;
+}
+
+
+/********************************************************
+ Free internals of ancestors structure
+ ********************************************************/
+void free_ancestors( ancestors_t *ancestors )
+{
+   if (ancestors && ancestors->nodes) {
+      free(ancestors->nodes);
+      ancestors->nodes = NULL;
+   }
+}
+
+
+/********************************************************
+ Search for a share tree node with a given path in a
+ share tree
+ ********************************************************/
+
+static lListElem *
+search_by_path( lListElem *ep,  /* root of the [sub]tree */
+                const char *name,
+                const char *path,
+                int delim,
+                ancestors_t *ancestors,
+                int depth )
+{
+   lList *children;
+   lListElem *ret = NULL, *child;
+   char *buf=NULL, *bufp;
+
+   if (name == NULL)
+      delim = '.';
+
+   if (name == NULL || !strcmp(name, "*") ||
+       !strcmp(name, lGetString(ep, STN_name))) {
+      if (*path == 0) {
+         if (name) {
+            ret = ep;
+            if (ancestors && depth > 0) {
+               ancestors->depth = depth;
+               ancestors->nodes =
+                     (lListElem **)malloc(depth * sizeof(lListElem *));
+               ancestors->nodes[depth-1] = ep;
+            }
+         }
+         return ret;
+      }
+
+      /* get next component from path */
+
+      bufp = buf = (char *)malloc(strlen(path)+1);
+      if (*path == '.' || *path == '/')
+         delim = *path++;
+      while (*path && *path != '.' && *path != '/')
+         *bufp++ = *path++;
+      *bufp = 0;
+      name = buf;
+   } else if (delim == '/')
+      return NULL;
+
+   if ((children = lGetList(ep, STN_children)))
+      for(child=lFirst(children); child && !ret; child = child->next)
+         ret = search_by_path(child, name, path, delim, ancestors, depth+1);
+
+   if (ret && ancestors && ancestors->nodes && depth > 0)
+      ancestors->nodes[depth-1] = ep;
+   if (buf) free(buf);
+   return ret;
+}
+
+
+/********************************************************
+ Search for a share tree node with a given path in a
+ share tree
+ ********************************************************/
+lListElem *
+search_named_node_path( lListElem *ep,  /* root of the tree */
+                        const char *path,
+                        ancestors_t *ancestors )
+{
+   return search_by_path(ep, NULL, path, 0, ancestors, 0);
+}
+
+
+/********************************************************
+ Search for a share tree node with a given name in a
+ share tree returning an array of ancestor nodes. The
+ array is contained in the ancestors_t structure which
+ consist of the depth and a dynamically allocated array
+ of lListElem pointers for each node.  The nodes are
+ ordered from the root node to the found node. The 
+ caller is reponsible for freeing the nodes array.
+ ********************************************************/
+
+#ifdef notdef
+
+lListElem *search_ancestor_list( lListElem *ep,  /* root of the tree */
+                                 char *name,
+                                 ancestors_t *ancestors )
+{
+   if (ancestors)
+      return search_ancestors(ep, name, ancestors, 1);
+   else
+      return search_named_node(ep, name);
+}
+
+#endif
+
+lListElem *
+search_ancestors( lListElem *ep,
+                  char *name,
+                  ancestors_t *ancestors,
+                  int depth )
+{
+   lListElem *cep, *fep;
+   static int sn_children_pos = -1;
+   static int sn_name_pos = -1;
+
+   DENTER(TOP_LAYER, "search_named_node");
+
+   if (!ep || !name) {
+      DEXIT;
+      return NULL;
+   }
+
+   if (sn_name_pos == -1) {
+      sn_children_pos = lGetPosViaElem(ep, STN_children);
+      sn_name_pos = lGetPosViaElem(ep, STN_name);
+   }
+   if (strcmp(lGetPosString(ep, sn_name_pos), name) == 0) {
+      ancestors->depth = depth;
+      ancestors->nodes = (lListElem **)malloc(depth * sizeof(lListElem *));
+      ancestors->nodes[depth-1] = ep;
+      DEXIT;
+      return ep;
+   }
+
+   for_each(cep, lGetPosList(ep, sn_children_pos)) {
+      if ((fep = search_ancestors(cep, name, ancestors, depth+1))) {
+         ancestors->nodes[depth-1] = ep;
+         DEXIT;
+         return fep;
+      }
+   }
+      
+   DEXIT;
+   return NULL;
+}

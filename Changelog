@@ -1,3 +1,8 @@
+DT-2004-02-18-3: Bugfix:    Moved basic sharetree functionality out of libsched
+                            into libsgeobj to try to eliminate odd dependencies.
+                            Still a work in progress.
+                 Changed:   sge_support, sge_sharetree
+
 DT-2004-02-18-2: Bugfix:    Fixed JGrid Howto mistakes.
                  Changed:   JGrid Howto
 

@@ -303,6 +303,10 @@ CheckRunningQmaster()
    running=false
    loop=0
 
+   if [ "$SGE_QMASTER_PORT" = "" ]; then
+      SGE_QMASTER_PORT=`$utilbin_dir/getservbyname -number sge_qmaster`
+   fi
+
    while [ $running = "false" -a $loop -ne 10 ]; do 
       $bin_dir/qping -info $masterhost $SGE_QMASTER_PORT qmaster 1 > /dev/null
 

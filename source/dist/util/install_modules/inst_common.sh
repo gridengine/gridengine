@@ -53,9 +53,9 @@ BasicSettings()
   shlib_path_name=`util/arch -lib`
   old_value=`eval echo '$'$shlib_path_name`
   if [ x$old_value = x ]; then
-     eval $shlib_path_name=lib/$ARCH
+     eval $shlib_path_name=lib/$SGE_ARCH
   else
-     eval $shlib_path_name=$old_value:lib/$ARCH
+     eval $shlib_path_name=$old_value:lib/$SGE_ARCH
   fi
   export $shlib_path_name
 

@@ -1,3 +1,9 @@
+JG-2004-07-21-0: Bugfix:    Fixed a bug in aimk -shared-libs.
+                            Fixed default busy handling in event client.
+                 Doc.:      Described use of bdb_checkpoint.sh in Berkeley DB
+                            README file.
+                 Review:    CR
+
 DT-2004-07-21-0: Enhancem.: o Completed DRMAA Java language binding howto
                             o Update DRMAA Java language binding README
                             o Started enhancing DRMAA Java language binding

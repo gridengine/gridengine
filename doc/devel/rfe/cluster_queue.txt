@@ -54,7 +54,7 @@
    and that each of these queue instances in essence is identical with 
    a 5.3 queue object. For example a job always runs in a particular 
    queue instance, not in a cluster queue. Another example is that each 
-   single queue instance will continue to have a counters for consumable 
+   single queue instance will continue to have counters for consumable 
    resources, if configured for the queue instance. So in many respects 
    the queue instance should be seen as the successor of the former queue 
    object, while the cluster queue is an additional umbrella for similar 
@@ -462,7 +462,10 @@ FILES
 !
 !    A [host_identifier=]<current_attribute_syntax> tuple without
 !    'host_identifier=' prefix specifies the default setting used for
-!    all queue instances where no divergences are specified. 
+!    all queue instances where no divergences are specified. Tuples
+!    with a host group host_identifier override the default setting.
+!    Tuples with a host name host_identifier override both the default 
+!    and the host group setting and the default setting.
 !
 !    The following integrity verifications will be applied on the 
 !    configuration and can lead to a rejection 
@@ -473,13 +476,17 @@ FILES
 !
 !     I.2 the cluster queue contains a non-ambigous specification for each 
 !         configuration attribute of each queue instance specified under 
-!         hostname in queue_conf(5) (see sample #3 in queue_conf(5))
+!         hostname in queue_conf(5). Only configurations complying the 
+!         override rules described above are accepted. Ambigous 
+!         configurations with more then one attribute for a particular 
+!         host are rejected. Ambigous configurations with more then one 
+!         attribute resulting from overlapping host groups are rejected. 
 !
 !     I.3 the cluster queue configuration attributes do not specify 
 !         settings for hosts for others than specified under hostname 
 !         in queue_conf(5)
 !
-!    The following example is to illustrate this. Assumed 'linux'
+!    The following examples are to illustrate this. Assumed 'linux'
 !    and 'solaris' are host groups covering the hosts 'linux1' 
 !    and 'linux2' resp. 'solaris1' and 'solaris2' then the following 
 !    configuration snippet fulfills the enhanced queue configuration 
@@ -496,13 +503,22 @@ FILES
 !        :
 !     load_thresholds [solaris=np_load_avg=1.75],[linux=np_load_avg=2.0]
 !        :
-!
-!    whereas this configuration will be rejected due to its ambiguity 
-!    for host 'linux1' which is also in group 'linux'
+! 
+!    and the configuration 
 !
 !     hostname        linux solaris
 !        :
 !     user_lists [NONE][linux=mathlab_users],[linux1=mathlab_users mpi_users]
+!        :
+!
+!    whereas this configuration will be rejected assumed host group 
+!    'solarislinux' covers the hosts of both groups 'solaris' and 'linux' 
+!    This is because the setting from the host groups overlaps resulting in 
+!    an ambiguity for the hosts 'linux1' and 'linux2' 
+!
+!     hostname        linux solaris
+!        :
+!     user_lists [NONE][linux=mathlab_users],[solarislinux=mathlab_users mpi_users]
 !        :
 !
 
@@ -579,12 +595,19 @@ FILES
    
    a) A new dialogue is to be added to qmon for managing hierarchical 
       host groups. Currently host groups can only be managed via qconf 
-      interface.
+      interface. A hierarchical view is considered, might not be possible
+      however because hierarchical host groups allow to define the shape 
+      of a directed cyclic graph, thus a simple tree is not sufficient.
+      The new dialog must also cover a means to clone from existing host 
+      groups when creating new host group.
 
    b) The family of the "Queue configuration" dialogues "Add" and "Modifiy" 
       must allow for creating and changing cluster queues and provide means
       to differentiate cluster queue attributes on a per host and per host 
-      group basis.
+      group basis. A hierarchical view dialogue is asipred. Cloning of 
+      cluster queues will be supported as with the current queue configuration 
+      dialogue. The queue configuration dialogue must provide a view to show
+      the resulting settings for each host of a cluster queue
   
    c) Beneth the existing queue instance related "Queue control" dialogue,
       qmon should offer second view reflecting the state of a cluster queue
@@ -603,7 +626,7 @@ FILES
       possiblities for specifying the queue list of a PE as described under 
       sge_pe(5).
 
-   e) The "Change Checkpoint Object" dialogue must be enhanced to reflect 
+   g) The "Change Checkpoint Object" dialogue must be enhanced to reflect 
       the new possiblities for specifying the queue list of a checkpoint 
       interface object as described under checkpoint(5).
 
@@ -1230,11 +1253,3 @@ Open Questions:
        kernel are sufficient for this purpose. Making the 'all' host group a Grid 
        Engine kernel feature would raise data integrity problems to be solved and 
        add constraints to be considered with future enhancements.
-   -------------------------------------------------------------------------------
-   Q4: Do we have more detailed ideas about dialogue changes and new dialogues 
-       required for qmon enhancements?
-
-   A4: Not yet. There ideas collected so far are contained in the section 
-       "Changes with the graphical user interface". More detailed ideas are 
-       desirable however especially for the dialogues mentioned under 4a) and 
-       4b).

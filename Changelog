@@ -1,3 +1,5 @@
+AS-2004-02-17-0: Cleanup:   aimk cleanup, #define cleanup, IRIX 6.5 compile
+
 SD-2004-02-17-0: Cleanup:   - Removed all jobclass references from qmon,
                               scheduler, and scheduler configuration
                             - Added display of users which map to the

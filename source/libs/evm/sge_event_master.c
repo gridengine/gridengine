@@ -2183,14 +2183,14 @@ static void* send_thread(void *anArg)
           * represent nanoseconds in a u_long32 that contains seconds.  At worst
           * this shortcut will occasionally cause this block to finish early
           * due to a well timed spurrious wakeup. */
-         do {
+         do { 
             ts.tv_sec = current_time + EVENT_DELIVERY_INTERVAL_S;
             ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
             pthread_cond_timedwait(&Master_Control.cond_var,
                                    &Master_Control.cond_mutex, &ts);
-         } while (!Master_Control.delivery_signaled && !should_exit() &&
-                  (sge_get_gmt () - current_time >= EVENT_DELIVERY_INTERVAL_S));
-         
+        } while (!Master_Control.delivery_signaled && !should_exit() &&
+                  ((sge_get_gmt() - current_time) < EVENT_DELIVERY_INTERVAL_S));
+
          Master_Control.delivery_signaled = false;
       }
       /* 

@@ -541,7 +541,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                 }
              }
    
-             set mytries 60
+             set mytries 10
              debug_puts "waiting for shell response ..."
              set timeout 1
              set ok 0
@@ -557,7 +557,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                       
                       flush $CHECK_OUTPUT
                       send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
-                      set timeout 3
+                      set timeout 10
                       incr mytries -1 ; 
                       if  { $mytries < 0 } { 
                           set ok 1

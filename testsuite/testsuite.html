@@ -27,8 +27,8 @@ Testsuite</a></font>
 <br><font size=+2>&nbsp;&nbsp;&nbsp;&nbsp; </font><font size=+1><a href="#local-spool.conf">local-spool.conf</a></font>
 <br><font size=+2>&nbsp;&nbsp;&nbsp;&nbsp; </font><font size=+1><a href="#Setup Configuration">Setup
 Configuration</a></font>
-<p><font size=+2><a href="#Internal test suite illustration">Internal test
-suite illustration</a></font>
+<p><font size=+2><a href="#Internal test suite illustration">Internal testsuite
+illustration</a></font>
 <br><font size=+2>&nbsp;&nbsp;&nbsp;&nbsp; </font><font size=+1><a href="#Internal - structure">Structure</a></font>
 <br><font size=+2>&nbsp;&nbsp;&nbsp;&nbsp; </font><font size=+1><a href="#Path/File variables">Path/File
 variables</a></font>
@@ -92,42 +92,42 @@ variables</a>&nbsp;</font> <a href="#Menu">Menu</a>
 <hr WIDTH="100%"><a NAME="read this document"></a>
 <h1>
 <sup><font color="#000000">Who should read this document</font></sup></h1>
-<sup><font color="#000000"><font size=+1>This document is for Grid Engine
-developers and for engineers being concerned with quality assurance for
-the Grid Engine software.&nbsp; You should read it if you want to test
+<sup><font color="#000000"><font size=+1>This document should be read by
+Grid Engine developers and by engineers being attached to quality assurance
+for the Grid Engine software.&nbsp; You should read it if you want to test
 the functionality of a Grid Engine version, especially after enhancements
 have been made. If you are going to make enhancements, you also should
 look for ways to include tests for the capabilities you have added or modified.
 Finally, if you are fixing bugs, we ask you to consider adding a test which
 would have found each bug you are fixing, thereby ensuring that bugs do
 not reoccur.</font></font></sup>
-<p><sup><font color="#000000"><font size=+1>The test suite is written in
-TCL and Expect, so this document also contains a brief introduction into
-both scripting languages allowing you to enhance the test suite even if
-you are not familiar with TCL or Expect.</font></font></sup>
+<p><sup><font color="#000000"><font size=+1>The testsuite is written in
+TCL and Expect, so this document also contains a brief introduction of
+the&nbsp; scripting language and the expect extensions allowing you to
+enhance the testsuite even if you are not familiar with TCL or Expect.</font></font></sup>
 <br>&nbsp;
 <br>&nbsp;
 <p>
 <hr WIDTH="100%"><a NAME="Objectives of the testsuite"></a>
 <h1>
-Objectives of the test suite</h1>
+Objectives of the testsuite</h1>
 
 <p><br><sup><font color="#000000"><font size=+1>Testing a complex client
 server software with many options and features like Grid Engine can be
 a very time consuming and error prone task. It certainly can be considered
 impossible to guarantee that a system like Grid Engine can be tested to
 be absolutely bug free via any kind of tests, be they automatic or manual.
-However, the test suite presented here is a big step towards providing
-a considerable level of confidence in the quality of the software in such
+However, the testsuite presented here is a big step towards providing a
+considerable level of confidence in the quality of the software in such
 a short time and with so much convenience that tests can be run overnight
 - every night, if desired.</font></font></sup>
-<p><font size=+1>On the more practical level, the test suite aims at fulfilling
+<p><font size=+1>On the more practical level, the testsuite aims at fulfilling
 the following objectives:</font>
-<p><font size=+1>1) Old release features should also run and work correctly
-in new software releases.</font>
+<p><font size=+1>1) Previous release features should also run and work
+correctly in new software releases.</font>
 <br><font size=+1>2) Well known bugs should not re-emerge in newer software
 releases.</font>
-<br><font size=+1>3) Automatized tests help to save time &amp; money.</font>
+<br><font size=+1>3) Automated tests help to save time &amp; money.</font>
 <br><font size=+1>4) Daily builds on different hardware and operating systems
 help to detect platform problems earlier.</font>
 <br>&nbsp;
@@ -141,12 +141,12 @@ help to detect platform problems earlier.</font>
 <font color="#330000"><font size=+1>User mode</font></font></h2>
 
 <blockquote><font color="#330000"><font size=+1>The testsuite will install
-the Grid Engine / Grid Engine Enterprise Edition as admin user system.
-This means no root access is used. The testsuite will run with the permissions
-of the user who start the testsuite. This mode can be reached, when the
-user who starts the testsuite don't enter the root password and just press
-return, when he is asked for it at startup. Not all tests will run in this
-mode.</font></font></blockquote>
+the Grid Engine / Grid Engine Enterprise Edition using a nonpriviledged
+user account. This means no root access is used. The testsuite will run
+with the permissions of the user who starts the testsuite. This mode can
+be reached, when the user who starts the testsuite doesn't enter the root
+password and just presses return, when he is asked for it at startup. Not
+all tests will run in this mode.</font></font></blockquote>
 
 <h2>
 <font color="#330000"><font size=+1>Root User mode</font></font></h2>
@@ -164,33 +164,33 @@ Use this mode only for a isolated cluster behind a firewall.</font></font></bloc
 <h2>
 <font color="#330000"><font size=+1>SSH mode (secure shell mode)</font></font></h2>
 
-<blockquote><font color="#330000"><font size=+1>The testsuite will do assh
--l root &lt;hostname>. The ssh-keys must allow the testsuite user to become
-root without typing the root password. This means the testsuite user can
-become root when the system admin adds the testsuite user public key to
-his "authorized_keys" file (be careful when you configure the ssh accounts!
-This is a security problem!). Please consult the SSH manual for more secure
-shell setup information. In this mode all tests are available and no interactive
-question must be answered.</font></font></blockquote>
+<blockquote><font color="#330000"><font size=+1>The testsuite will execute
+ssh -l root &lt;hostname> to have root access on a certain host. The ssh-keys
+must allow the testsuite user to become root without typing the root password.
+This means the testsuite user can become root when the system admin adds
+the testsuite user public key to his "authorized_keys" file - be careful
+when you configure the ssh accounts! This is a security problem! Please
+consult the SSH manual for more secure shell setup information. In this
+mode all tests are available and no interactive question must be answered.</font></font></blockquote>
 <font color="#330000"><font size=+1>For best security and full test access
-the SSH Mode is suggested.</font></font>
+the SSH mode is suggested.</font></font>
 <br>&nbsp;
 <br>&nbsp;
 <h1>
 
 <hr WIDTH="100%"><a NAME="Usage outline"></a>Usage outline</h1>
-<font size=+1>There is a test suite framework script which allows you to
+<font size=+1>There is a testsuite framework script which allows you to
 setup, configure and operate your test environment interactively. You have
-to have Tcl/Tpk 8.3.2 (or higher) and Expect 5.32.2 (or higher) installed
-properly at your site before you can start the framwork script.</font>
-<p><font size=+1>The framework script, "check.exp", can be found in the
-test suite root directory, which will be located in gridengine/testsuite
-after checking out the Grid Engine source code. It also contains all other
-test suite source code. You have to make sure that this directory can be
-reached by each host in the test cluster you intend to use. Such a directory
-normally will have to reside on a filesystem shared via NFS.</font>
+to have Tcl/Tk 8.3.2 (or higher) and Expect 5.32.2 (or higher) installed
+properly at your site before you can start the framework script.</font>
+<p><font size=+1>The framework script"check.exp" can be found in the testsuite
+root directory, which is located in gridengine/testsuite after checking
+out the Grid Engine source code. It also contains all other testsuite source
+code. You have to make sure that this directory can be reached by any host
+in the test cluster you intend to use. Such a directory normally will have
+to reside on a filesystem shared via NFS.</font>
 <p><font size=+1>To invoke the framework script help output, change to
-the test suite root directory and type the following command:</font>
+the testsuite root directory and type the following command:</font>
 <br>&nbsp;
 <br>&nbsp;
 <center><table BORDER COLS=1 WIDTH="80%" BGCOLOR="#330000" NOSAVE >
@@ -230,25 +230,25 @@ no output on setup</font></tt>
 </tr>
 </table></center>
 
-<p><font size=+1>Before starting the framework test script a setup of the
-configuration files ( <a href="#binary-path.conf">binary-path.conf</a>
+<p><font size=+1>Before starting the framework test script, a setup of
+the configuration files ( <a href="#binary-path.conf">binary-path.conf</a>
 ,&nbsp; <a href="#gid-range.conf">gid-range.conf</a> ,&nbsp; <a href="#loadsensor.conf">loadsensor.conf</a>&nbsp;
 and&nbsp; <a href="#local-spool.conf">local-spool.conf</a>&nbsp; ) is neccessary.
 The framework test script needs also a cluster configuration settings file,
 called defaults file. When the framework test script ist started the first
-time and&nbsp; no defaults file was found ( or defined with the "file"
-option parameter), the testsuite will run the "setup" option parameter.
-The user has to setup the <a href="#Cluster configuration settings parameter">cluster
+time and no defaults file was found (or defined with the "file" option
+parameter), the testsuite will run the "setup" option parameter. The user
+has to setup the <a href="#Cluster configuration settings parameter">cluster
 configuration settings</a>, after that the answers are stored in a file
 called "defaults.sav" (defaults file).</font>
 <p><font size=+1>The information stored in the defaults file is specific
 to a particular test environment and may change whenever you decide to
 test another version of Grid Engine or when you change the test cluster,
 for example. More than one defaults file containing the above information
-can be maintained. The test suite framework script option "file" can be
+can be maintained. The testsuite framework script option "file" can be
 used to select the defaults configuration.</font>
 <p><font size=+1>In order to let the testsuite run via an cronjob table
-entry ( this means update the code, build the binaries, pre-install the
+entry (this means update the code, build the binaries, pre-install the
 binaries, install the cluster software, run some/all tests) it is necessary
 to install the ssh (secure shell) functionality on each execution/master
 host. The ssh option serves as a bypass for interactive login sequences
@@ -260,11 +260,11 @@ tries to resolve the given hostnames by using programs being part of the
 Grid Engine binary set. On the first startup, this resolving will fail
 because the necessary utility binaries will not have been compiled by then.
 If this is the case you should confirm the correctness of the setup with
-"y" nevertheless. After that, the test suite should be re-started again
+"y" nevertheless. After that, the testsuite should be re-started again
 using the "compile" option. After completion of the compile step, the setup
 procedure will be invoked again utilizing the previously defined parameters,
 resolving the missing hostnames and storing the completed configuration.</font>
-<p><font size=+1>Now the user can start tests.</font><b><font size=+1></font></b>
+<p><font size=+1>Now the user can start tests.</font>
 <p><b><font size=+1>A detailed step by step course for a testsuite setup
 can be found at&nbsp; <a href="#Setup Configuration">Setup Configuration</a>
 .</font></b>
@@ -274,17 +274,17 @@ can be found at&nbsp; <a href="#Setup Configuration">Setup Configuration</a>
 <h1>
 Configuration</h1>
 <font size=+1>Before starting any test runs it is necessary to setup the
-test suite configuration. The testsuite root directory contains a subdirectory
+testsuite configuration. The testsuite root directory contains a subdirectory
 called "demo_config_dir". These files contain a default configuration.
-Edit the configuration files like described below.</font>
+Edit the configuration files as described below.</font>
 <br>&nbsp;
 <p><a NAME="binary-path.conf"></a>
 <pre>binary-path.conf</pre>
 <font size=+1>The testsuite is using full binary path names to start programms.
 Here the user can set the correct binary pathes for every cluster host.
 The testsuite needs two binaries at this time: expect and vim. The expect
-version should be 5.31.5 or greater. The vim binary can also show to a
-vi binary.</font>
+version should be 5.31.5 or greater. The vim binary path can also point
+to a vi binary.</font>
 <p><font size=+1>The first column of each line is the hostname on which
 the binary exists. The entry "all" can be used to setup a binary for every
 host in the cluster.</font>
@@ -294,7 +294,7 @@ to resolve the correct path.</font>
 instead of the name in the second column. The full path is expected. The
 testsuite is using its own architecture variable. You can use "$ARCH" to
 insert the architecture name on the host (given at the first column) in
-the path. (The $ARCH values of your hosts is shown after compiling your
+the path. (The $ARCH values of your hosts are shown after compiling your
 cluster software)</font>
 <p><font size=+1>examples:</font>
 <br>&nbsp;
@@ -310,23 +310,25 @@ cluster software)</font>
 <hr WIDTH="100%">
 <br><a NAME="gid-range.conf"></a>
 <pre>gid-range.conf</pre>
-<font size=+1>This configuration file is used for the Grid Engine Enterprise
-Edition installation test. Each user must have it's own gid range for his
-jobs. Please look at the cluster software documentation for more explanation
-about that.</font>
-<br><font size=+1>The testsuite will append automatically any new user
-who starts the testsuite to this file and generate an default gid-range.
+<font size=+1>Each Grid Engine Cluster must have it's own gid range for
+it's jobs. The gid&nbsp; range is used to attach a certain gid to the processes
+of a job to control this job. Please look at the cluster software documentation
+for more explanation about gid ranges.</font>
+<br><font size=+1>The testsuite will append automatically any new system
+that is started by the testsuite to this file and generate an default gid-range.
 So no manual edit of this file is necessary.</font>
-<br>
+<br><font size=+1>A cluster is identified by the login of the user starting
+the testsuite and the COMMD_PORT number defined for the cluster.</font><font size=+1></font>
+<p>
 <hr WIDTH="100%">
 <br><a NAME="loadsensor.conf"></a>
 <pre>loadsensor.conf</pre>
 
 <p><br><font size=+1>This configuration file is used to set the path to
 eventually used loadsensor files. The execution daemon on some architectures
-need a loadsensor file to get the actual load values on his host. The testsuite
-will install the loadsensor automatically when the loadsensor.conf file
-has an entry for this architecture.</font>
+need an external loadsensor binary to get the actual load values of its
+host. The testsuite will install the loadsensor automatically when the
+loadsensor.conf file has an entry for this architecture.</font>
 <p><font size=+1>The first column of each line is the architecture string
 for which a loadsensor should be installed.</font>
 <p><font size=+1>The second column is the full path to the loadsensor.</font>
@@ -347,21 +349,18 @@ your cluster software documentation.</font>
 <pre>local-spool.conf</pre>
 <font size=+1>The "local-spool.conf" file must be generated manually. This
 file defines the local spool directory of each host entry (if no file is
-found by the test suite, no local spool directory will be used). The first
-column in the file is a host name (where a execution or master daemon should
-be installed) and the second column is the path to a local directory on
-this host. In this directory the test suite will generate subdirectories
-for each COMMD_PORT number of the new cluster system, tested by the test
-suite. In the subdirectory of each number lies the local spool directory
-of the execution and/or master daemon.</font>
+found by the testsuite, no local spool directories will be used). The first
+column in the file is a host name (where an execution or master daemon
+should be installed) and the second column is the path to a local directory
+on this host. In this directory the testsuite will generate a subdirectory
+for the COMMD_PORT number of the new cluster system, tested by the testsuite.
+In the subdirectory of each number resides the local spool directory of
+the execution and/or master daemon.</font>
 <p><font size=+1>The location of the spool directories is per default in
 the cell definition directory where the cluster software is installed (e.g.
-/GE/default/spool/$hostname or /GE/default/spool/master). This is a global
+/GE/default/spool/$hostname or /GE/default/spool/qmaster). This is a global
 shared directory (NFS). If the network traffic should be reduced it is
 usefull to set a local spool directory for each execution host.</font>
-<p><font size=+1>The first column of the file is the host where a local
-spool directory should be used.</font>
-<p><font size=+1>The second column is the full path to the spool directory.</font>
 <p><font size=+1>examples:</font>
 <br>&nbsp;
 <br>&nbsp;
@@ -447,13 +446,13 @@ in the cluster.</tt></div>
 
 <td WIDTH="475">
 <div STYLE="font-style: normal; text-decoration: none"><tt>Path to a directory
-where the results of each test are stored. Every defaults.sav file should
+where the results of each test are stored. Each defaults.sav file should
 have its own results_root_directory. The lockfile of a testsuite run is
 also stored into this directory. So if you want to run more than one testsuite
 at the same time for different clusters it is absolutely necessary to create
 a results_root_directory for every cluster. This directory must be available
 from all hosts in the cluster. (The performance tests will save their results
-in the subdirectory protocolls).</tt></div>
+in the subdirectory protocols).</tt></div>
 </td>
 </tr>
 
@@ -475,9 +474,9 @@ testsuite is started on).&nbsp;</tt></div>
 </td>
 
 <td WIDTH="475">
-<div STYLE="font-style: normal; text-decoration: none"><tt>A "blank" seperated
+<div STYLE="font-style: normal; text-decoration: none"><tt>A blank seperated
 list of execution host names. The first entry is the name of the qmaster
-host, because on the qmaster host also a execution daemon is installed.</tt></div>
+host, because on the qmaster host also an execution daemon is installed.</tt></div>
 </td>
 </tr>
 
@@ -487,8 +486,8 @@ host, because on the qmaster host also a execution daemon is installed.</tt></di
 </td>
 
 <td WIDTH="475">
-<div STYLE="font-style: normal; text-decoration: none"><tt>A "blank" seperated
-list of numbers. Each number matches the sum of processors on each execution
+<div STYLE="font-style: normal; text-decoration: none"><tt>A blank seperated
+list of numbers. Each number matches the number of processors on each execution
 host, named in the list_of_execution_hosts parameter.</tt></div>
 </td>
 </tr>
@@ -500,7 +499,7 @@ host, named in the list_of_execution_hosts parameter.</tt></div>
 
 <td WIDTH="475">
 <div STYLE="font-style: normal; text-decoration: none"><tt>The port number
-used for TCP/IP connection of the communication deamons. (COMMD_PORT environment
+used for TCP/IP connection of the communication daemons. (COMMD_PORT environment
 variable)</tt></div>
 </td>
 </tr>
@@ -537,7 +536,7 @@ directory)</tt></div>
 
 <td WIDTH="475">
 <div STYLE="font-style: normal; text-decoration: none"><tt>Path to the
-directory with the source code of the cluster software (used for compile
+directory with the source code of the cluster software (used for the compile
 option). The compile option will CVS update the source code in the "gridengine/source"
 directory (use "compile no_update" to skip the CVS update).</tt></div>
 </td>
@@ -572,7 +571,7 @@ out more about available tags.</tt></div>
 </td>
 
 <td WIDTH="475">
-<div STYLE="font-style: normal; text-decoration: none"><tt>A "blank" separated
+<div STYLE="font-style: normal; text-decoration: none"><tt>A blank separated
 list of host names where the cluster software should be compiled on (rsh
 access required).&nbsp;</tt></div>
 </td>
@@ -649,9 +648,9 @@ for more information about that). Default is "none" (recommended).</tt></div>
 
 <td WIDTH="475">
 <div STYLE="font-style: normal; text-decoration: none"><tt>The testsuite
-can send error, warning and report mails to someone. It will use the mailx
-binary to do this. mailx_hostname is the host name on which the mailx binary
-should be used (rsh required).</tt></div>
+can send error, warning and report mails. It will use the mailx binary
+to do this. mailx_hostname is the host name on which the mailx binary should
+be used (rsh required).</tt></div>
 </td>
 </tr>
 
@@ -663,7 +662,7 @@ should be used (rsh required).</tt></div>
 <td WIDTH="475">
 <div STYLE="font-style: normal; text-decoration: none"><tt>E-Mail address
 of the recipent of error-, warning- and report mails. (Default is "none",
-this means mail sending is off)</tt></div>
+this means mail sending is disabled)</tt></div>
 </td>
 </tr>
 
@@ -824,9 +823,9 @@ will run at the same time.</font>
 <br><font size=+1>Shows all test descriptions (from all tests in the subdirectories)</font>
 <p><font size=+1>(4) - exit</font>
 <br><font size=+1>Shutdown the tested cluster system and exit. If no "install_core_system"
-test was run, some error output may appear (If the cluster system should
-not get a shutdown, the test suite framework can be stoped with "CTRL +
-C" in the main menu).</font>
+test was run before, some error output may appear (If the cluster system
+should not get a shutdown, the testsuite framework can be stopped with
+"CTRL + C" in the main menu).</font>
 <br><font size=+1>Each test will try to write a new file called "testsuite_lockfile"
 in the check result directory. This should prevent running more than one
 test at the same time. While a testsuite_lockfile is existent no test will
@@ -840,13 +839,13 @@ run.)</font>
 to uncompleted</font>
 <p><font size=+1>(8) - create check report</font>
 <br><font size=+1>Creates a good and a bad result report for the host running
-the test suite in the test result path. The testsuite will report the exact
+the testsuite in the test result path. The testsuite will report the exact
 position of the report files.</font>
 <p><font size=+1>(9) - run continuously</font>
 <br><font size=+1>Like (2), but creates a report at the end of all tests
 and starts up again</font>
 <p><font size=+1>(10) - use logfile for output (HOST.checklog)</font>
-<br><font size=+1>This will put all the output from the test suite framework
+<br><font size=+1>This will put all the output from the testsuite framework
 into a file called HOSTNAME.checklog. The file is stored in the test result
 path.</font>
 <p><font size=+1>If the testsuite is showing "system not installed - run
@@ -855,7 +854,7 @@ compile option first" at the system version line the user can press "CTRL
 <br>&nbsp;
 <center><table BORDER COLS=1 WIDTH="80%" BGCOLOR="#330000" NOSAVE >
 <tr NOSAVE>
-<td NOSAVE><tt><font color="#FFFFFF">[74] expect check.exp compile no_update</font></tt></td>
+<td NOSAVE><tt><font color="#FFFFFF">[74] expect check.exp compile</font></tt></td>
 </tr>
 </table></center>
 
@@ -905,10 +904,10 @@ for output</font></tt></td>
 </table></center>
 
 <p><font size=+1>Nearly all tests need a running cluster software system.
-The test called "install_core_system" will install it. So mostly all test
-has the dependency "install_core_system" which means that the test won't
+The test called "install_core_system" will install it. So mostly all tests
+have the dependency "install_core_system" which means that the test won't
 run until the test "install_core_system" was successfully performed. Initially,
-we haven't installed the core system, so we can only run tests who don't
+we haven't installed the core system, so we can only run tests that don't
 need it. Change to the directory "../checktree/system_tests/utilbin/loadcheck".
 The following lines will appear:</font>
 <br>&nbsp;
@@ -993,14 +992,14 @@ in run level 0 !</font></tt>
 
 <p><font size=+1>Now lets install the the cluster software. Go to the directory
 ../checktree/install_core_system and start the test. After starting the
-test the user is getting asked for the root password. This is because the
-install_core_system test needs root access. The root password is stored
-in a global variable, so if it was entered once the testsuite will not
-asc again for it until the next restart of the hole testsuite. This is
-of course a security problem, look at "<a href="#Security Implications">Security
-Implications</a>" for more information. If the user won't enter the root
-password the testsuite can not run all tests. After running the install_core_system
-test the testsuite screen output should look like that:</font>
+test the user is asked for the root password. This is because the install_core_system
+test needs root access. The root password is stored in a global variable,
+so if it was entered once the testsuite will not ask again for it until
+the next restart of the whole testsuite. This is of course a security problem,
+look at "<a href="#Security Implications">Security Implications</a>" for
+more information. If the user doesn't enter the root password the testsuite
+can not run all tests. After running the install_core_system test the testsuite
+screen output should look like that:</font>
 <br>&nbsp;
 <br>&nbsp;
 <center><table BORDER COLS=1 WIDTH="80%" BGCOLOR="#330000" NOSAVE >
@@ -1046,23 +1045,24 @@ test</font></tt>
 <p>
 <hr WIDTH="100%"><a NAME="Internal test suite illustration"></a>
 <h1>
-Internal test suite illustration</h1>
-<font size=+1>This chapter shows the internal structure of the test suite.
+Internal testsuite illustration</h1>
+<font size=+1>This chapter shows the internal structure of the testsuite.
 It is recommended to read the chapter "About Tcl" and About "Expect" to
-get a short insight into this programming languages before reading this.</font>
-<p><font size=+1>The chapter "Implementation approach" later will show
-exactly how to integrate a new test by writing a short test example.</font>
+get a short insight into the programming language before reading this.</font>
+<p><font size=+1>The chapter "<a href="#Implementation Approach">Implementation
+approach</a>" later will show exactly how to integrate a new test by writing
+a short test example.</font>
 <br>
 <hr WIDTH="100%">
 <br><a NAME="Internal - structure"></a>
 <pre><font size=+1>Structure</font></pre>
-<font size=+1>The test suite's framework is written in Tcl (Tool command
+<font size=+1>The testsuite's framework is written in Tcl (Tool command
 language) and its Expect&nbsp; (A Tcl-based toolkit for automating interactive
-programs) enhancements. In order to make it simple to integrate new test
-procedures, every test has its own directory in a hierarchy structure called
+programs) extensions. In order to make it simple to integrate new test
+procedures, each test has its own directory in a hierarchy structure called
 "checktree". Each directory can have a file named "check.exp", which is
 a Tcl/Expect script containing one or more test procedures. These scripts
-are sourced from the test suite's framework script which also calls the
+are sourced from the testsuite's framework script which also calls the
 test procedures.</font>
 <p><font size=+1>The subdirectory "install_core_system" from the "checktree"
 directory is used for the installation and set-up of the cluster system
@@ -1086,22 +1086,17 @@ check_highest_level</font></tt>
 <p><b><tt><font color="#3333FF"># this is check specific</font></tt></b>
 <br><tt><font color="#330000"><b>set</b> check_root_access_needs </font><font color="#990000">"yes"</font></tt>
 <br><tt><font color="#330000"><b>set</b> check_name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 </font><font color="#990000">"qconf"</font></tt>
 <br><tt><font color="#330000"><b>set</b> check_description(0)&nbsp; </font><font color="#990000">"test
 qconf -aq and qconf -dq switch"</font></tt>
 <br><tt><font color="#330000"><b>set</b> check_needs&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 </font><font color="#990000">"init_core_system qstat qsub"</font></tt>
 <br><tt><font color="#330000"><b>set</b> check_functions&nbsp;&nbsp; </font><font color="#990000">"addqueue
 submitjob checkjob removequeue"</font></tt>
 <br><tt><font color="#330000"><b>set</b> check_errno&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 </font><font color="#990000">"-1"&nbsp;</font><font color="#330000">&nbsp;&nbsp;
-
 <b>;# 0 -> OK , != 0 means error</b></font></tt>
 <br><tt><font color="#330000"><b>set</b> check_errstr&nbsp;&nbsp;&nbsp;&nbsp;
-
 </font><font color="#990000">"was never running"</font><b><font color="#330000">;#
 string for error description</font></b></tt>
 <br><tt><font color="#330000"><b>set</b> check_init_level_procedure </font><font color="#990000">"onlevelchange"</font></tt>
@@ -1110,38 +1105,38 @@ string for error description</font></b></tt>
 </table></center>
 
 <p><font size=+1>The initial value "-1" for the variable "check_errno"
-is shown for the sake of completeness (The test suite will set it automatically
+is shown for the sake of completeness (The testsuite will set it automatically
 to "-1", when starting a new test). A test is stored as "successfully performed"
 when the value of "check_errno" is "0". So if a test does not explicitly
 set "check_errno" to "0" the test will never run successfully. This strategy
-prevents that a test programmer forgets to set the right result state.</font>
+prevents that a test programmer forgets to set the correct result state.</font>
 <p><b><i><u><font size=+1>check_root_access_needs</font></u></i></b>
 <br><font size=+1>This variable should be set to "yes" when the test needs
 root permissions. If the variable is not set or set to "" the testsuite
 will not ask for the root password. Once the root password is known the
-testsuite won't ask again for it.</font>
-<br><font size=+1>check_name</font>
-<br><font size=+1>Unique name of the test. Every "check.exp" file must
-have it's own name.</font>
+testsuite won't ask again for it.</font><font size=+1></font>
+<p><b><i><u><font size=+1>check_name</font></u></i></b>
+<br><font size=+1>Unique name of the test. Each "check.exp" file must have
+it's own name.</font>
 <p><b><i><u><font size=+1>check_description</font></u></i></b>
 <br><font size=+1>Short verbal test description array for each runlevel.
-Each array address ( nr. in the brackets ) should contain a short string
+Each array address (number in brackets) should contains a short string
 which describes the test runlevel.</font>
 <p><b><i><u><font size=+1>check_needs</font></u></i></b>
 <br><font size=+1>The name of the tests which should run before this one.&nbsp;
 This is to define dependencies on other tests.</font>
 <p><b><i><u><font size=+1>check_functions</font></u></i></b>
 <br><font size=+1>This is a space seperated list of procedure names. Each
-procedure is called by the framework script in the given order. Every procedure
-should perform a test and at least set the "check_errno" and "check_errstr"
+procedure is called by the framework script in the given order. Each procedure
+should perform a test and at last set the "check_errno" and "check_errstr"
 variables.</font>
 <p><b><i><u><font size=+1>check_errno and check_errstr</font></u></i></b>
 <br><font size=+1>Any test procedure can set the values check_errno and
-check_errstr. If a procedure had success with its test it should set check_errno
-to "0" and put a comment like "no errors" into check_errstr. If check_errno
-is not set to "0" the framework script will report the check_errstr content
-and store the test in the directory for failed checks. The following table
-will show the different meanings of the check_errno value.</font>
+check_errstr. If a procedure successfully performed&nbsp; its test, it
+should set check_errno to "0" and put a comment like "no errors" into check_errstr.
+If check_errno is not set to "0" the framework script will report the check_errstr
+content and store the test in the directory for failed checks. The following
+table will show the different meanings of the check_errno value.</font>
 <br>&nbsp;
 <center><table BORDER COLS=2 WIDTH="400" NOSAVE >
 <tr NOSAVE>
@@ -1188,9 +1183,9 @@ will show the different meanings of the check_errno value.</font>
 </table></center>
 
 <p><font size=+1>It is very important that the check_errstr variable will
-report the verbal error reasons, because the test suite will show this
-reasons to the test suite user. If the check_errstr is accurately described,
-the user will easier find an error.</font>
+report the verbal error reasons, because the testsuite will show this reasons
+to the testsuite user. If the check_errstr is accurately described, the
+user will easier find an error.</font>
 <p><font size=+1>The programmer can set the two variables by using the
 procedure set_error. The first parameter is the number for the check_errno,
 the second parameter is the error text for check_errstr.</font>
@@ -1204,17 +1199,17 @@ programmer can change some values for each level test run. The global variable
 CHECK_ACT_LEVEL shows the current run level of the testsuite.</font>
 <p><b><font size=+1>The check_init_level_procedure must return "-1" if
 a check level is not implemented or "0" when the check can run the level.
-Each test script must have at least a run level "0" to test his functional
+Each test script must have at least a run level "0" to test its functional
 behavior.</font></b>
 <p><font size=+1>If the test does not define check_highest_level and check_init_level_procedure
-the test suite will <b>only call run level 0.</b></font>
+the testsuite will <b>only call run level 0.</b></font>
 <br>&nbsp;
 <p><b><i><u><font size=+1>check_highest_level</font></u></i></b>
 <br><font size=+1>If a test can run with e.g. 2 different setups the check_highest_level
 should be set to 1. Of course this makes only sense when a check_init_level_procedure
 is defined.</font>
-<p><font size=+1>The two main characteristics of a test are his runtime
-and his category. The test category is defined by the position in the checktree
+<p><font size=+1>The two main characteristics of a test are its runtime
+and its category. The test category is defined by the position in the checktree
 <a href="checktree.jpg">hierarchy</a>.</font>
 <p><font size=+1>The tests runtime is defined by the use of different run
 levels. The table below shows a guideline for test levels:</font>
@@ -1296,7 +1291,7 @@ levels. The table below shows a guideline for test levels:</font>
 <tr>
 <td WIDTH="249" NOSAVE><font size=+1>CHECK_CHECKTREE_ROOT</font></td>
 
-<td WIDTH="487"><font size=+1>path where checktree lies</font></td>
+<td WIDTH="487"><font size=+1>path where checktree resides</font></td>
 </tr>
 
 <tr VALIGN=TOP>
@@ -1316,19 +1311,17 @@ tests or such tests which wasn't started.</font></td>
 <tr VALIGN=TOP>
 <td WIDTH="249"><font size=+1>CHECK_CORE_RESULT_DIR</font></td>
 
-<td WIDTH="487"><font size=+1>same meaning like $CHECK_BAD_RESULT_DIR,
-but not host specific. Some tests like the install_core_system test are
-effective for the hole cluster. This very are stored in the $CHECK_CORE_RESULT_DIR
-directory.</font></td>
+<td WIDTH="487"><font size=+1>same meaning as $CHECK_BAD_RESULT_DIR, but
+not host specific. Some tests like the install_core_system test are effective
+for the whole cluster.&nbsp;</font></td>
 </tr>
 
 <tr VALIGN=TOP>
 <td WIDTH="249"><font size=+1>CHECK_CORE_BAD_RESULT_DIR</font></td>
 
-<td WIDTH="487"><font size=+1>same meaning like $CHECK_BAD_RESULT_DIR,
-but not host specific. Some tests like the install_core_system test are
-effective for the hole cluster. This very tests are stored in the $CHECK_CORE_BAD_RESULT_DIR
-directory.</font></td>
+<td WIDTH="487"><font size=+1>same meaning as $CHECK_BAD_RESULT_DIR, but
+not host specific. Some tests like the install_core_system test are effective
+for the whole cluster.&nbsp;</font></td>
 </tr>
 
 <tr VALIGN=TOP>
@@ -1341,7 +1334,7 @@ etc.</font></td>
 <tr VALIGN=TOP>
 <td WIDTH="249"><font size=+1>CHECK_ACTUAL_TEST_PATH</font></td>
 
-<td WIDTH="487"><font size=+1>directory of current running test</font></td>
+<td WIDTH="487"><font size=+1>directory of currently running test</font></td>
 </tr>
 
 <tr VALIGN=TOP>
@@ -1353,14 +1346,15 @@ etc.</font></td>
 <tr VALIGN=TOP>
 <td WIDTH="249"><font size=+1>CHECK_OUTPUT</font></td>
 
-<td WIDTH="487"><font size=+1>output chanel ( e.g. stdout, filepointer)
-for test debug output ( puts $CHECK_OUTPUT "error .."</font></td>
+<td WIDTH="487"><font size=+1>output channel ( e.g. stdout, filepointer)
+for test debug output (puts $CHECK_OUTPUT "error ..")</font></td>
 </tr>
 
 <tr VALIGN=TOP>
 <td WIDTH="249"><font size=+1>CHECK_CURRENT_WORKING_DIR</font></td>
 
-<td WIDTH="487"><font size=+1>current work directory ( same as echo PWD)</font></td>
+<td WIDTH="487"><font size=+1>current working directory ( same as echo
+PWD)</font></td>
 </tr>
 
 <tr VALIGN=TOP>
@@ -1453,7 +1447,7 @@ system to test ( first line of qstat -help)</font></div>
 
 <td WIDTH="482">
 <div STYLE="text-decoration: none"><font size=+1>system architecture (e.g.
-irix6)</font></div>
+solaris64)</font></div>
 </td>
 </tr>
 
@@ -1515,8 +1509,8 @@ etna5 )</font></div>
 </td>
 
 <td WIDTH="482">
-<div STYLE="text-decoration: none"><font size=+1>real number of processors
-on each execution host (in order of $CHECK_CORE_EXECD)</font></div>
+<div STYLE="text-decoration: none"><font size=+1>number of processors on
+each execution host (in order of $CHECK_CORE_EXECD)</font></div>
 </td>
 </tr>
 
@@ -1538,7 +1532,7 @@ from 0 up to xxx )</font></div>
 
 <td WIDTH="482">
 <div STYLE="text-decoration: none"><font size=+1>path to source code directory
-(c4)</font></div>
+(gridengine/source)</font></div>
 </td>
 </tr>
 
@@ -1663,8 +1657,9 @@ ssh (0 = disable), default is "disable"</font></div>
 </table></center>
 </dl>
 <font size=+1>There are some more global definitions, but they are not
-so important for test programmers. Please refer to the top of the "check.exp"
-file in the testsuite's root directory for all global definitions.</font>
+so important for test programmers. Please refer to the comment at the beginning
+of the "check.exp" file in the testsuite's root directory for all global
+definitions.</font>
 <br>&nbsp;
 <br>&nbsp;
 <p>
@@ -1695,7 +1690,8 @@ The command before "["</font></tt></b>
 <br><tt><font size=+1>hello world!</font></tt>
 <br><tt><font size=+1>tcl></font></tt>
 <p><b><tt><font size=+1># if you want to calculate, use the expr command:</font></tt></b>
-<br><tt><font size=+1>puts [expr ( 1 + 4)]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br><tt><font size=+1>puts [expr ( 1 + 4)]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
 <b>;# Output: 5</b></font></tt>
 <br><tt><font size=+1>puts [ expr ( [expr (1 + 4 ) ] + 4 ) ] <b>;# Output:
 9</b></font></tt>
@@ -1747,7 +1743,7 @@ endless loop</b></font></tt>
 <br><tt><font size=+1>}</font></tt>
 <br>&nbsp;
 <p><b><tt><font size=+1># break; continue; have the same meaning in loops
-like in the "C" language</font></tt></b>
+as in the "C" language</font></tt></b>
 <p>
 <hr WIDTH="100%">
 <br><a NAME="TCL - Procedures"></a>
@@ -1913,7 +1909,6 @@ position of "uu")</b></font></tt>
 <br><tt><font size=+1>string tolower&nbsp;&nbsp; "FOO"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>
 ;# result foo</b></font></tt>
 <br><tt><font size=+1>string toupper&nbsp;&nbsp; "foo"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 <b>;# result FOO</b></font></tt>
 <br><tt><font size=+1>string trim&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "&nbsp;
 foo&nbsp;&nbsp;&nbsp;&nbsp; do&nbsp; "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>
@@ -1965,13 +1960,15 @@ returns the local name space level depth (0 = global level)</b></font></tt>
 <br><a NAME="TCL - Catch command"></a>
 <pre><font size=+1>The catch command</font></pre>
 <font size=+1>If a command error appears, Tcl has the default behavior
-to terminate the script and show the error message. The catch command is
-used to prevent abnormal script termination in case of an error.</font>
+to terminate the script and show the error message including a stack trace.
+The catch command is used to prevent abnormal script termination in case
+of an error.</font>
 <p><tt><font size=+1>set result [ catch { exec date } output ]</font></tt>
 <p><font size=+1>catch returns 0 if the command between the "{}" brackets
 completed correctly. Otherwise the result variable has the value 1. The
 output variable will get the output of the command. So if the date program
-is not found the error information is stored in output and the script will
+is
+not found the error information is stored in output and the script will
 not terminate.</font>
 <p>
 <hr WIDTH="100%">
@@ -2007,7 +2004,6 @@ variable name space.</font>
 <br><tt><font size=+1>set output [open "file" "w"]</font></tt>
 <br><tt><font size=+1>puts $output "$save_list"</font></tt>
 <br><tt><font size=+1>flush $output&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 <b>;# write output immediately to file</b></font></tt>
 <br><tt><font size=+1>close $output</font></tt>
 <p><b><tt><font size=+1># read from file</font></tt></b>
@@ -2022,12 +2018,10 @@ returns number of bytes read</b></font></tt>
 eof returns 1 if end of file is reached</b></font></tt>
 <p><b><tt><font size=+1># get file names in local directory</font></tt></b>
 <br><tt><font size=+1>tcl> glob *&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-<b>;# returns all files matching * (every file)</b></font></tt>
+<b>;# returns all files matching * (each file)</b></font></tt>
 <br><tt><font size=+1>CVS check.exp readme.txt checktree remoteinstall.csh
 results</font></tt>
 <p><tt><font size=+1>tcl>glob *.txt&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 <b>;# returns only readme.txt</b></font></tt>
 <br><tt><font size=+1>readme.txt</font></tt>
 <p>
@@ -2066,7 +2060,7 @@ look at the man pages ....</b></font></tt>
 <hr WIDTH="100%">
 <br><a NAME="TCL - Environment variables"></a>
 <pre><font size=+1>Access to the environment variables in Tcl</font></pre>
-<font size=+1>The user's invironment variables are stored in the array
+<font size=+1>The user's environment variables are stored in the array
 "env":</font>
 <p><tt><font size=+1>proc print_PATH {} {</font></tt>
 <p><tt><font size=+1>&nbsp; global env</font></tt>
@@ -2075,12 +2069,11 @@ to set VARIABLE without a value will just</b></font></tt>
 <br><tt><font size=+1>&nbsp;<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ;# return the content of VARIABLE!</b></font></tt>
 <br><tt><font size=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 <b>;# [set env(PATH)] is equal to $env(PATH)</b></font></tt>
 <p><tt><font size=+1>}</font></tt>
 <p><b><tt><font size=+1>#get a list of all set environment variables:</font></tt></b>
 <br><tt><font size=+1>set local_environment [array names env]</font></tt>
-<p><b><tt><font size=+1>#show every value</font></tt></b>
+<p><b><tt><font size=+1>#show each value</font></tt></b>
 <br><tt><font size=+1>foreach elem $local_environment {</font></tt>
 <br><tt><font size=+1>&nbsp; puts "$elem is set to [set env($elem)]"</font></tt>
 <br><tt><font size=+1>}</font></tt>
@@ -2096,7 +2089,7 @@ to set VARIABLE without a value will just</b></font></tt>
 <h1>
 About Expect</h1>
 
-<p><br><font size=+1>The test suite uses the tcl extensions from the expect
+<p><br><font size=+1>The testsuite uses the tcl extensions from the expect
 toolkit. Important are the commands spawn (start an application), expect
 (wait for special output from the application) and send (send input to
 the application).</font>
@@ -2164,11 +2157,10 @@ in detail):</font>
 <p><tt><font size=+1>expect "^log*\n"&nbsp;&nbsp;&nbsp; <b>;# look for
 "log" at beginning of the line followed by</b></font></tt>
 <br><tt><font size=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
 <b>;# arbitrary characters and a closing "\n"</b></font></tt>
 <br>&nbsp;
-<p><font size=+1>The expect call above returns when the application puts
-out something like that:</font>
+<p><font size=+1>The expect call above returns when the application outputs
+something like that:</font>
 <p><tt><font size=+1>time:&nbsp; 19</font></tt>
 <br><tt><font size=+1>login: tom</font></tt>
 <br><tt><font size=+1>usage: 12</font></tt>

@@ -39,6 +39,7 @@ enum {
    a_OPT,
    A_OPT,
    c_OPT,
+   cat_OPT,
    cl_OPT,
    cell_OPT,
    C_OPT,
@@ -79,6 +80,7 @@ enum {
    notify_OPT,
    now_OPT,
    b_OPT,
+   wd_OPT,
 
    masterq_OPT,
    d_OPT,
@@ -196,7 +198,6 @@ enum {
 
    dul_OPT,      /* "-dul <user_set>," in qconf */
    display_OPT,  /* -display option for qsh */
-   qs_args_OPT,  /* -qs_args option for qsub, qalter */
    mqattr_OPT,   /* modify particular queue attribute */
    Mqattr_OPT,   /* modify particular queue attributes from file */
    sss_OPT,      /* show scheduler state */

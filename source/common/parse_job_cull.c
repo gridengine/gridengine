@@ -76,6 +76,7 @@
 
 const char *default_prefix = "#$";
 
+static char *reroot_path (lListElem* pjob, const char *path, lList **alpp);
 /* static int skip_line(char *s); */
 
 /* returns true if line has only white spaces */
@@ -287,39 +288,32 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lRemoveElem(cmdline, ep);
    }
 
-
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
       char tmp_str[SGE_PATH_MAX + 1];
-      char tmp_str2[SGE_PATH_MAX + 1];
-      char tmp_str3[SGE_PATH_MAX + 1];
-      const char *env_value = job_get_env_string(*pjob, VAR_PREFIX "O_HOME");
+      char *path = NULL;
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
+         /* If getcwd() fails... */
          answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
                          STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
-      if (!chdir(env_value)) {
-         if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
-                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return answer;
-         }
-         chdir(tmp_str);
-         if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
-            sprintf(tmp_str3, "%s%s", env_value, 
-               (char *) tmp_str + strlen(tmp_str2));
-            strcpy(tmp_str, tmp_str3);
-         }
+      
+      path = reroot_path (*pjob, tmp_str, &answer);
+      
+      if (path == NULL) {
+         DEXIT;
+         return answer;
       }
-      lSetString(*pjob, JB_cwd, tmp_str);
+      
+      lSetString(*pjob, JB_cwd, path);
       lRemoveElem(cmdline, ep);
       
       lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
+      
+      FREE (path);
    }
-   path_alias = lFreeList(path_alias);
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-C"))) {
       lSetString(*pjob, JB_directive_prefix, 
@@ -485,11 +479,6 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    parse_list_hardsoft(cmdline, "-masterq", *pjob, 
                         JB_master_hard_queue_list, 0);
    
-   while ((ep = lGetElemStr(cmdline, SPA_switch, "-qs_args"))) {
-      lSwapList(*pjob, JB_qs_args, ep, SPA_argval_lListT);
-      lRemoveElem(cmdline, ep);
-   }
-
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-r"))) {
       lSetUlong(*pjob, JB_restart, lGetInt(ep, SPA_argval_lIntT));
       lRemoveElem(cmdline, ep);
@@ -541,6 +530,53 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lRemoveElem(cmdline, ep);
    }
 
+   /* There is technically no conflict between -cwd and -wd.  They both set the
+    * working directory, and by virtue of it's position in this method, -wd will
+    * always override -cwd.  However, at least at the moment, -wd can only come
+    * from the DRMAA attributes, and -cwd cannot come from the DRMAA attributes.
+    * Therefore, -wd should override -cwd.  Lucky me. */
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-wd"))) {
+      const char *wd = lGetString(ep, SPA_argval_lStringT);
+
+/* I've added a -wd option to cull_parse_job_parameter() to deal with the
+ * DRMAA_WD attribute.  It makes sense to me that since -wd exists and is
+ * handled by cull_parse_job_parameter() that -cwd should just become an alias
+ * for -wd.  The code to do that is ifdef'ed out below just in case we decide
+ * it's a good idea. */
+#if 0
+      if (strcmp (wd, SGE_HOME_DIRECTORY) == 0) {
+         wd = (char *)malloc (sizeof (char) * (SGE_PATH_MAX + 1));
+
+         if (!getcwd (wd, sizeof (wd))) {
+            /* If getcwd() fails... */
+            answer_list_add (&answer, MSG_ANSWER_GETCWDFAILED, 
+                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+      }
+#endif
+
+      char *path = reroot_path (*pjob, wd, &answer);
+      
+      if (path == NULL) {
+         DEXIT;
+         return answer;
+      }
+      
+      lSetString(*pjob, JB_cwd, path);
+      lRemoveElem(cmdline, ep);
+   
+      /* If -cwd didn't already set the JB_path_aliases field, set it. */
+      if (lGetList (*pjob, JB_path_aliases) == NULL) {
+         lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
+      }
+      
+      FREE (path);
+   }
+   
+   path_alias = lFreeList(path_alias);
+   
    /*
    ** no switch - must be scriptfile
    ** only for qalter and qsub, not for qsh
@@ -902,4 +938,39 @@ u_long32 flags
 
    DEXIT;
    return answer;
+}
+
+static char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
+   const char *home = job_get_env_string(pjob, VAR_PREFIX "O_HOME");
+   char tmp_str[SGE_PATH_MAX + 1];
+   char tmp_str2[SGE_PATH_MAX + 1];
+   char tmp_str3[SGE_PATH_MAX + 1];
+   
+   DENTER (TOP_LAYER, "reroot_path");
+   
+   strcpy (tmp_str, path);
+   
+   if (!chdir(home)) {
+      /* If chdir() succeeds... */
+      if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
+         /* If getcwd() fails... */
+         answer_list_add(alpp, MSG_ANSWER_GETCWDFAILED, 
+                         STATUS_EDISK, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return NULL;
+      }
+
+      chdir(tmp_str);
+
+      if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
+         /* If they are equal, build a new CWD using the value of the HOME
+          * as the root instead of whatever that directory is called by
+          * the -wd path. */
+         sprintf(tmp_str3, "%s%s", home, (char *) tmp_str + strlen(tmp_str2));
+         strcpy(tmp_str, tmp_str3);
+      }
+   }
+   
+   DEXIT;
+   return strdup (tmp_str);
 }

@@ -355,9 +355,14 @@ u_long32 flags
 /*-----------------------------------------------------------------------------*/
       /* "-cell cell_name or -ckpt ckpt_object" */
 
-      if (!strcmp("-cell", *sp) || !strcmp("-ckpt", *sp)) {
+      /* This is another small change that needed to be made to allow DRMAA to
+       * resuse this method.  The -cat option doesn't actually exist for any
+       * command line utility.  It is a qsub style representation of the
+       * DRMAA_JOB_CATEGORY attribute.  It will be processed and removed by the
+       * drmaa_job2sge_job method. */
+      if (!strcmp ("-cat", *sp) || !strcmp("-cell", *sp) || !strcmp("-ckpt", *sp)) {
 
-         /* next field is cell_name or ckpt_object*/
+         /* next field is job_cat or cell_name or ckpt_object*/
          sp++;
          if (!*sp) {
             sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S
@@ -393,7 +398,16 @@ u_long32 flags
       /* "-cwd" */
 
       if (!strcmp("-cwd", *sp)) {
-
+/* I've added a -wd option to cull_parse_job_parameter() to deal with the
+ * DRMAA_WD attribute.  It makes sense to me that since -wd exists and is
+ * handled by cull_parse_job_parameter() that -cwd should just become an alias
+ * for -wd.  The code to do that is ifdef'ed out below just in case we decide
+ * it's a good idea. */
+#if 0
+         ep_opt = sge_add_arg (args, wd_OPT, lStringT, "-wd", SGE_HOME_DIRECTORY);
+         lSetString (ep, SPA_argval_lStringT, SGE_HOME_DIRECTORY);
+         DPRINTF(("\"%s\" => -wd\n", *sp));
+#endif         
          ep_opt = sge_add_noarg(pcmdline, cwd_OPT, *sp, NULL);
          DPRINTF(("\"%s\"\n", *sp));
          sp++;
@@ -1257,45 +1271,6 @@ DTRACE;
          sp++;
          continue;
       }
-
-/*-----------------------------------------------------------------------------*/
-      /* "-qs_args  args ... -qs_end" */
-
-      if (!strcmp("-qs_args", *sp)) {
-         lList *qs_args_list = NULL;
-
-         if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
-            sprintf(str,
-               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
-            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
-         }
-         /* loop till we get -qs_end */
-         sp++;
-         if (!*sp) {
-             sprintf(str,MSG_PARSE_QSARGSOPTIONMUSTBETERMINATEDWITHQSEND);
-             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
-         }
-
-         for (;sp && *sp && strcmp("-qs_end", *sp); sp++) {
-            lAddElemStr(&qs_args_list, ST_name, *sp, ST_Type);
-         }
-
-         if ( !sp || !*sp || strcmp("-qs_end", *sp)) {
-             qs_args_list = lFreeList(qs_args_list);
-             sprintf(str,MSG_PARSE_QSARGSOPTIONMUSTBETERMINATEDWITHQSEND);
-             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-             DEXIT;
-             return answer;
-         }
-         ep_opt = sge_add_arg(pcmdline, qs_args_OPT, lListT, "-qs_args",
-                                 "args ... -qs_end");
-         lSetList(ep_opt, SPA_argval_lListT, qs_args_list);
-         sp++;
-         continue;
-      }
-
 
 /*-----------------------------------------------------------------------------*/
       /* "-r y|n" */

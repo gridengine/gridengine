@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 #if defined(CRAY)  
   struct sockaddr_in  addr;
 #else
-  unsigned long addr;
+  struct in_addr addr;
 #endif
     
   char **tp,**tp2;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
   addr.sin_addr.s_addr = inet_addr(argv[1]);
   he = gethostbyaddr((char *)&(addr.sin_addr), sizeof(struct in_addr), AF_INET);
 #else
-  addr = inet_addr(argv[1]);
+  addr.s_addr = inet_addr(argv[1]);
   he = gethostbyaddr((char *) &addr, 4, AF_INET);
 #endif
 

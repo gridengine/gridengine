@@ -876,7 +876,7 @@ if ( $JAVA == 1 || $BUILDJAVADOC == 1 ) then
    endif
 endif
 
-set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD -DENABLE_NGC $SECFLAGS"
+set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD $SECFLAGS"
 
 #---------------------------------------------------------------------------
 

@@ -1223,11 +1223,7 @@ char *err_str
          char daemon[SGE_PATH_MAX];
 
          fprintf(fp, "master_host=%s\n", sge_get_master(0));
-#ifdef ENABLE_NGC
-         fprintf(fp, "commd_port=-1\n");
-#else
-         fprintf(fp, "commd_port=%d\n", ntohs(commlib_state_get_commdport()));
-#endif
+         fprintf(fp, "commd_port=-1\n");  /* commd_port not used for GE > 6.0 */
                
          if((elem=lGetElemStr(environmentList, VA_variable, "QRSH_PORT")) != NULL) {
             fprintf(fp, "qrsh_control_port=%s\n", lGetString(elem, VA_value));

@@ -1,3 +1,6 @@
+CR-2004-08-25-1: Cleanup:    - removed all #ifndef ENABLE_NGC code and removed
+                               makro definition in aimk
+
 CR-2004-08-25-0: Bugfix:     - added man pages for qping, gethostname, 
                                gethostbyname, gethostbyaddr, getservbyname
                              - the binaries now support -help option and show

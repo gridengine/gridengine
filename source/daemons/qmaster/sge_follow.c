@@ -1239,13 +1239,8 @@ lList *ticket_orders
    u_long32 dummymid = 0;
    int n;
    u_long32 now;
-#ifdef ENABLE_NGC
    int cl_err = CL_RETVAL_OK;
    unsigned long last_heard_from;
-#else
-   int cl_err = 0;
-   static u_short number_one = 1;
-#endif
 
    DENTER(TOP_LAYER, "distribute_ticket_orders");
 
@@ -1302,17 +1297,11 @@ lList *ticket_orders
       hep = host_list_locate(Master_Exechost_List, master_host_name);
       n = lGetNumberOfElem(to_send);
 
-#ifdef ENABLE_NGC
       if (hep) {
          cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)master_host_name, (char*)prognames[EXECD],1, &last_heard_from);
       }
-      if (  hep &&  last_heard_from + 10 * conf.load_report_time > now)
-#else
-      if (  hep && last_heard_from(prognames[EXECD], &number_one, master_host_name) 
-            + 10 * conf.load_report_time > now) 
-#endif
-         {
+      if (  hep &&  last_heard_from + 10 * conf.load_report_time > now) {
 
          /* should have now all ticket orders for 'host' in 'to_send' */ 
          if (init_packbuffer(&pb, sizeof(u_long32)*3*n, 0)==PACK_SUCCESS) {
@@ -1321,16 +1310,9 @@ lList *ticket_orders
                packint(&pb, lGetUlong(ep2, OR_ja_task_number));
                packdouble(&pb, lGetDouble(ep2, OR_ticket));
             }
-
-#ifdef ENABLE_NGC
             cl_err = gdi_send_message_pb(0, prognames[EXECD], 1, master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
             clear_packbuffer(&pb);
             DPRINTF(("%s %d ticket changings to execd@%s\n", (cl_err==CL_RETVAL_OK)?"failed sending":"sent", n, master_host_name));
-#else
-            cl_err = gdi_send_message_pb(0, prognames[EXECD], 0, master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
-            clear_packbuffer(&pb);
-            DPRINTF(("%s %d ticket changings to execd@%s\n", cl_err?"failed sending":"sent", n, master_host_name));
-#endif
          }
       } else {
          DPRINTF(("     skipped sending of %d ticket changings to "

@@ -1192,11 +1192,7 @@ int force
    int mail_options;
    char sge_mail_subj[1024];
    char sge_mail_body[1024];
-#ifdef ENABLE_NGC
    unsigned long last_heard_from;
-#else
-   static u_short number_one = 1;
-#endif
 
 
    DENTER(TOP_LAYER, "notify");
@@ -1205,13 +1201,9 @@ int force
 
    hostname = lGetHost(lel, EH_name);
 
-#ifdef ENABLE_NGC
    cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)hostname, (char*)prognames[EXECD],1, &last_heard_from);
    execd_alive = last_heard_from;
-#else
-   execd_alive = last_heard_from(prognames[EXECD], &number_one, hostname);
-#endif
 
    if (!force && !execd_alive) {
       WARNING((SGE_EVENT, MSG_OBJ_NOEXECDONHOST_S, hostname));

@@ -2375,7 +2375,6 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list,
 
    for_each( ep, lGetList(job, name) ){
       int res = sge_resolve_host(ep, PN_host);
-#ifdef ENABLE_NGC
       DPRINTF(("after sge_resolve_host() which returned %s\n", cl_get_error_text(res)));
       if (res != CL_RETVAL_OK) { 
          const char *hostname = lGetHost(ep, PN_host);
@@ -2389,19 +2388,6 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list,
             ret_error=true;
          }
       } 
-#else
-      if( (res != 0) && (res != -1) && (res !=1 ) ){ /* 0 = everything is fine, 1 = no host specified*/
-         const char *hostname = lGetHost(ep, PN_host);
-
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret_error=true;
-      }  else if (res==-1) {/*something in the data-structure is wrong */
-         ERROR((SGE_EVENT, MSG_PARSE_NULLPOINTERRECEIVED));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         ret_error=true;
-      }
-#endif
       DPRINTF(("after sge_resolve_host() - II\n"));
 
       /* ensure, that each hostname is only specified once */

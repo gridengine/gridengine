@@ -740,12 +740,7 @@ lListElem *ep;
          ** resolve hostnames and replace them in list
          */
          for_each(ep, *pphost) {
-#ifdef ENABLE_NGC
-            if (sge_resolve_host(ep, ST_name) != CL_RETVAL_OK) 
-#else
-            if (sge_resolve_host(ep, ST_name)) 
-#endif
-            {
+            if (sge_resolve_host(ep, ST_name) != CL_RETVAL_OK) {
                char buf[BUFSIZ];
                sprintf(buf, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetString(ep,ST_name) );
                answer_list_add(&alp, buf, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);

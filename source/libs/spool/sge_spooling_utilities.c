@@ -457,7 +457,6 @@ bool spool_default_validate_func(lList **answer_list,
                cl_ret = sge_resolve_host(object, CONF_hname);
                /* if hostname resolving failed: create error */
                if (cl_ret != CL_RETVAL_OK) {
-#ifdef ENABLE_NGC
                   if (cl_ret != CL_RETVAL_GETHOSTNAME_ERROR) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                              ANSWER_QUALITY_ERROR, 
@@ -470,21 +469,6 @@ bool spool_default_validate_func(lList **answer_list,
                                              MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
                                              old_name, cl_get_error_text(ret));
                   }
-#else
-                  if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
-                      cl_ret != COMMD_NACK_TIMEOUT) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_ERROR, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_errstr(ret)); 
-                     ret = false;
-                  } else {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                             ANSWER_QUALITY_WARNING, 
-                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                             old_name, cl_errstr(ret));
-                  }
-#endif
                } else {
                   /* if hostname resolving changed hostname: spool */
                   const char *new_name = lGetHost(object, CONF_hname);

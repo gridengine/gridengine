@@ -1,3 +1,9 @@
+MD-2004-06-16-0: Bugfix:    Install script fails when sgeadmin is selected 
+                            as install user
+                 Changed:   inst_qmaster.sh
+                 Review:    JG
+                 Issue:     1090
+
 DT-2004-06-04-1: Bugfix:    o Fixed DRMAA Java binding build on Linux
                             o Added per thread init to japi_exit
                             o Fixed exit bug in TestDRMAA

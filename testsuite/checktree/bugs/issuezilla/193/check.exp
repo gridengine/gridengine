@@ -635,7 +635,7 @@ proc issue193_pe_jobs {} {
           add_proc_error "reschedule_pe_jobs" -1 "job $job does not start, pe $pe"
        } 
        if { [is_job_running $job "Sleeper"] != 1 } {
-          add_proc_error "issue193_pe_jobs" -1 "job $job_id is not running!!"
+          add_proc_error "issue193_pe_jobs" -1 "job $job is not running!!"
        }
 
        delete_job $job

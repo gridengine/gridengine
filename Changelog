@@ -1,3 +1,7 @@
+CR-2004-08-11-4: Testsuite: - fixed bug which caused error in qmod reschedule
+                              test
+                            - fixed tcl bug in issue test 193
+
 MD-2004-08-11-1: Bugfix:    - sge backup cannot override older backups
                  Issue:       1222
                  Bugtraq:     5085508

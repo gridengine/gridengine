@@ -837,6 +837,51 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
    return 0;
 }
 
+static int string_base_cmp(u_long32 type, const char *s1, const char *s2)
+{
+   int match;
+
+   if (type==TYPE_STR) 
+      match = strcmp(s1, s2);
+   else  {
+      if (type==TYPE_CSTR)
+         match = strcasecmp(s1, s2);
+      else
+         match = hostcmp(s1, s2);
+   }
+
+   return match;
+}
+
+static int string_cmp( u_long32 type, u_long32 relop, const char *request, const char *offer) {
+   int match;
+
+   switch(relop) { 
+   case CMPLXEQ_OP:
+      match = (string_base_cmp(type, request, offer) == 0);
+      break;
+   case CMPLXLE_OP :
+      match = (string_base_cmp(type, request, offer) <= 0);
+      break;
+   case CMPLXLT_OP :
+      match = (string_base_cmp(type, request, offer) < 0);
+      break;
+   case CMPLXGT_OP :
+      match = (string_base_cmp(type, request, offer) > 0);
+      break;
+   case CMPLXGE_OP :
+      match = (string_base_cmp(type, request, offer) >= 0);
+      break;
+   case CMPLXNE_OP :
+      match = (string_base_cmp(type, request, offer) != 0);
+      break;
+   default:
+      match = 0; /* default -> no match */
+   }
+
+   return match;      
+}
+
 static int resource_cmp(
 u_long32 relop,
 double req,
@@ -939,15 +984,8 @@ int force_existence
       DPRINTF(("%s(\"%s\", \"%s\")\n", type==TYPE_STR?"strcmp":"strcasecmp",
             request, offer)); 
 #endif
-      if (type==TYPE_STR) 
-         match = strcmp(request, offer);
-      else  {
-         if (type==TYPE_CSTR)
-            match = strcasecmp(request, offer);
-         else
-            match = hostcmp(request, offer);
-      }
-      match = !match;
+   
+      match = string_cmp(type, used_relop, request, offer);
 
       sprintf(availability_text, "%s:%s=%s", dom_str, name, offer);
 #if 0

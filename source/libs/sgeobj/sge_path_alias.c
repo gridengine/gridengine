@@ -177,10 +177,10 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
       /*
        * reset
        */
-      strcpy(origin, "");
-      strcpy(submit_host, "");
-      strcpy(exec_host, "");
-      strcpy(translation, "");
+      origin[0]      = '\0';
+      submit_host[0] = '\0';
+      exec_host[0]   = '\0';
+      translation[0] = '\0';   
 
       sscanf(buf, "%s %s %s %s", origin, submit_host, exec_host, translation);
 

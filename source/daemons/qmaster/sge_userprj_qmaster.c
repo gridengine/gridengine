@@ -69,6 +69,7 @@
 #include "sge_utility_qmaster.h"
 #include "sge_cqueue.h"
 #include "sge_suser.h"
+#include "sge_lock.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -446,6 +447,8 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "sge_automatic_user_cleanup_handler");
 
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    /*
     * Check each user for deletion time. We don't use for_each()
     * because we are deleting entries.
@@ -498,7 +501,10 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
 #endif
    }
 
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    DEXIT;
+   return;
 }
 
 /*-------------------------------------------------------------------------*/

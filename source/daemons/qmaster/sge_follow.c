@@ -1227,6 +1227,9 @@ lList **topp  /* ticket orders ptr ptr */
   return STATUS_OK;
 }
 
+/*
+ * MT-NOTE: distribute_ticket_orders() is NOT MT safe
+ */
 int distribute_ticket_orders(
 lList *ticket_orders 
 ) {

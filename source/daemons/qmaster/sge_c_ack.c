@@ -50,6 +50,7 @@
 #include "sge_job.h"
 #include "sge_qinstance.h"
 #include "sge_cqueue.h"
+#include "sge_lock.h"
 
 #include "spool/sge_spooling.h"
 
@@ -96,8 +97,7 @@ sge_pack_buffer *pb
       switch (ack_tag) {
       case TAG_SIGJOB:
       case TAG_SIGQUEUE:
-         /* an execd sends a job specific acknowledge 
-            ack_ulong == jobid of received job */
+         /* an execd sends a job specific acknowledge ack_ulong == jobid of received job */
          sge_c_job_ack(host, commproc, ack_tag, ack_ulong, ack_ulong2);
          break;
 
@@ -131,9 +131,12 @@ u_long32 ack_ulong2
 
    DENTER(TOP_LAYER, "sge_c_job_ack");
 
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    if (strcmp(prognames[EXECD], commproc) &&
       strcmp(prognames[QSTD], commproc)) {
       ERROR((SGE_EVENT, MSG_COM_ACK_S, commproc));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return;
    }
@@ -144,16 +147,16 @@ u_long32 ack_ulong2
       /* ack_ulong is the jobid */
       if (!(jep = job_list_locate(Master_Job_List, ack_ulong))) {
          ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKOWNJOB_U, u32c(ack_ulong) ));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
       jatep = job_search_task(jep, NULL, ack_ulong2);
       if (jatep == NULL) {
-         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, 
-                u32c(ack_ulong2), u32c(ack_ulong)));
+         ERROR((SGE_EVENT, MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU, u32c(ack_ulong2), u32c(ack_ulong)));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
-
       }
 
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
@@ -186,6 +189,7 @@ u_long32 ack_ulong2
          }
          if (qinstance == NULL) {
             ERROR((SGE_EVENT, MSG_COM_ACK_QUEUE_U, u32c(ack_ulong)));
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DEXIT;
             return;
          }
@@ -201,10 +205,13 @@ u_long32 ack_ulong2
 
    default:
       ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
       DEXIT;
       return;
    }
 
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   
    DEXIT;
    return;
 }

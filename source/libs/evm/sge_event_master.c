@@ -1996,7 +1996,7 @@ void sge_deliver_events_immediately(u_long32 aClientID)
 *  RESULT
 *     u_long32 - serial number for next event to deliver
 *
-*  MT-NOTE: sge_get_next_event_number() is NOT MT safe.
+*  MT-NOTE: sge_get_next_event_number() is MT safe.
 *
 *  BUGBUG-AD: Change signature of this function to allow for better error 
 *  BUGBUG-AD: handling!

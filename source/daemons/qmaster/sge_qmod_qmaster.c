@@ -73,6 +73,7 @@
 #include "sge_calendar.h"
 #include "sge_cqueue.h"
 #include "sge_qref.h"
+#include "sge_lock.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
@@ -1001,26 +1002,40 @@ void resend_signal_event(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "resend_signal_event");
 
-   if (!queue) {
-      if (!(jep = job_list_locate(Master_Job_List, jobid)) || 
-          !(jatep=job_search_task(jep, NULL, jataskid))) {
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+   if (!queue)
+   {
+      if (!(jep = job_list_locate(Master_Job_List, jobid)) || !(jatep=job_search_task(jep, NULL, jataskid)))
+      {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALTASK_UU, u32c(jobid), u32c(jataskid)));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
-      if ((qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                                   lGetString(jatep, JAT_master_queue))))
+      
+      if ((qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), lGetString(jatep, JAT_master_queue))))
+      {
          sge_signal_queue(lGetUlong(jatep, JAT_pending_signal), qep, jep, jatep);
-   } else {
-      if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue))) {
+      }
+   }
+   else
+   {
+      if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue)))
+      {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALQ_S, queue));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
          DEXIT;
          return;
       }
+      
       sge_signal_queue(lGetUlong(qep, QU_pending_signal), qep, NULL, NULL);
    }
 
    sge_free((char *)queue);
+
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    DEXIT;
    return;
 }

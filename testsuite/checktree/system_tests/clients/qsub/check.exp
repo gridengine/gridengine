@@ -197,7 +197,7 @@ proc select_queue {} {
 #*******************************
 proc check_submit {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD
-   global check_errno job_output_dir
+   global check_errno job_output_dir actual_queue
    global check_errstr CHECK_OUTPUT
 
 
@@ -205,12 +205,12 @@ proc check_submit {} {
    setup_output_directory
   
 
-   foreach elem $CHECK_CORE_EXECD {
-     set jobargs "-q ${elem}.q -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
-     set result [submit_job $jobargs] 
+   foreach host $CHECK_CORE_EXECD {
+     set jobargs "-q ${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+     set result [submit_job $jobargs 1 30 $host] 
 
      if {$result < 0} {
-        set_error -1 "could not submit job: $jobargs"
+        set_error -1 "could not submit job on host $host to queue $actual_queue"
      }
      # Wait job to run and for end of job
      set back [ wait_for_jobstart $result "leeper" 300 ]
@@ -236,6 +236,7 @@ proc qsub_starter_method {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_CORE_EXECD
    global check_errno job_output_dir
    global check_errstr CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+   global actual_queue
 
 
    # first clean up output directory:  
@@ -243,70 +244,64 @@ proc qsub_starter_method {} {
   
 
    # set starter method
-   foreach host $CHECK_CORE_EXECD {
-      set change_array(starter_method) "$CHECK_ACTUAL_TEST_PATH/starter.sh"
-      set_queue $host.q change_array
+   set change_array(starter_method) "$CHECK_ACTUAL_TEST_PATH/starter.sh"
+   set_queue $actual_queue change_array
+
+   set jobargs "-q ${actual_queue} -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
+   set result [submit_job $jobargs] 
+
+   if {$result < 0} {
+      set_error -1 "could not submit job: $jobargs"
+   }
+   # Wait job to run and for end of job
+   set back [ wait_for_jobstart $result "leeper" 300 ]
+   if { $back != 0 } {
+      set_error -1 "job $result doesn't start"
    }
 
-   foreach elem $CHECK_CORE_EXECD {
-     set jobargs "-q ${elem}.q -o $job_output_dir -e $job_output_dir $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5" 
-     set result [submit_job $jobargs] 
+   # Wait for end of job
+   set back [ wait_for_jobend $result "leeper" 300 ]
+   if { $back != 0 } {
+      set_error -1 "job $result doesn't stop"
+   }
 
-     if {$result < 0} {
-        set_error -1 "could not submit job: $jobargs"
-     }
-     # Wait job to run and for end of job
-     set back [ wait_for_jobstart $result "leeper" 300 ]
-     if { $back != 0 } {
-        set_error -1 "job $result doesn't start"
-     }
+   # check output file, should contain output from starter method
+   sleep 2
+   set outfilename "$job_output_dir/Sleeper.o$result"
+   puts $CHECK_OUTPUT "checking output file $outfilename"
 
-     # Wait for end of job
-     set back [ wait_for_jobend $result "leeper" 300 ]
-     if { $back != 0 } {
-        set_error -1 "job $result doesn't stop"
-     }
-
-     # check output file, should contain output from starter method
-     sleep 2
-     set outfilename "$job_output_dir/Sleeper.o$result"
-     puts $CHECK_OUTPUT "checking output file $outfilename"
-
-     if { ![file exists $outfilename]} {
-      add_proc_error "qsub_starter_method" -1 "output file for job $result on host $elem does not exist"
-     } else {
-        set f [open $outfilename r]
-        set ok 0
-        set num_lines 0
-        while {[gets $f line] >= 0} {
-         incr num_lines
-         puts $CHECK_OUTPUT $line
-          if {[string compare $line "starter method started"] == 0} {
-            set ok 1
-            break
-          }
+   if { ![file exists $outfilename]} {
+    add_proc_error "qsub_starter_method" -1 "output file for job $result in queue $actual_queue does not exist"
+   } else {
+      set f [open $outfilename r]
+      set ok 0
+      set num_lines 0
+      while {[gets $f line] >= 0} {
+       incr num_lines
+       puts $CHECK_OUTPUT $line
+        if {[string compare $line "starter method started"] == 0} {
+          set ok 1
+          break
         }
-        if {$num_lines == 0} {
-          add_proc_error "qsub_starter_method" -1 "error reading from job output file for job on $elem"
-        } else {
-          if {$ok == 0} {
-            add_proc_error "qsub_starter_method" -1 "starter method was not started for job on $elem"
-          }
-        }  
-        close $f
-     }   
+      }
+      if {$num_lines == 0} {
+        add_proc_error "qsub_starter_method" -1 "error reading from job output file for job $result in queue $actual_queue"
+      } else {
+        if {$ok == 0} {
+          add_proc_error "qsub_starter_method" -1 "starter method was not started for job $result in queue $actual_queue"
+        }
+      }  
+      close $f
+   }   
 
-     set back [ del_job_files $result $job_output_dir 2 ]
-     if { $back != 2 } {
-        set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
-     }
+   set back [ del_job_files $result $job_output_dir 2 ]
+   if { $back != 2 } {
+      set_error -1 "job $result did not produce error and output file\njobargs: $jobargs"
    }
 
    # unset starter method
-   foreach host $CHECK_CORE_EXECD {
-      set change_array(starter_method) "none"
-      set_queue $host.q change_array
-   }
+   set change_array(starter_method) "none"
+   set_queue $actual_queue change_array
 
    set_error 0 "no errors"
 }

@@ -3256,6 +3256,8 @@ proc delete_job { jobid } {
 #     {do_error_check 1}  - if 1 (default): add global erros (add_proc_error)
 #                           if not 1: do not add errors
 #     {submit_timeout 30} - timeout (default is 30 sec.)
+#     {host ""}           - host on which to execute qsub (default $CHECK_HOST)
+#     {user ""}           - user who shall submit job (default $CHECK_USER)
 #
 #  RESULT
 #     This procedure returns:
@@ -3280,14 +3282,25 @@ proc delete_job { jobid } {
 #     sge_procedures/delete_job()
 #     check/add_proc_error()
 #*******************************
-proc submit_job { args {do_error_check 1} {submit_timeout 30} } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""}} {
+  global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
+  global open_spawn_buffer
 
   set return_value " "
 
+  if {$host == ""} {
+    set host $CHECK_HOST
+  }
+
+  if {$user == ""} {
+    set user $CHECK_USER
+  }
+
+  set arch [resolve_arch $host]
+
   # spawn process
-  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qsub $args"
-  set id [ open_spawn_process $program  ]
+  set program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
+  set id [ open_remote_spawn_process "$host" "$user" "$program" "$args" ]
   set sp_id [ lindex $id 1 ]
 
   set timeout $submit_timeout
@@ -3325,6 +3338,10 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} } {
              }
              -i $sp_id timeout {
                 set return_value -1 
+             }
+             -i $sp_id "_exit_status_" {
+                puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"
+                set return_value $submitjob_jobid 
              }
              -i $sp_id eof {
                 puts $CHECK_OUTPUT "job submit returned ID: $submitjob_jobid"

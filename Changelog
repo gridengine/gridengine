@@ -1,3 +1,9 @@
+JG-2001-12-18-1: Testsuite: - Fixed qsub check_submit - now it submits jobs from
+                              any host to any host in the cluster as expected.
+                            - extended tcl library function "submit_job" by 
+                              parameters "host" on which to execute qsub 
+                              and "user" as account that will execute qsub.
+
 EB-2001-12-18-0: Bugfix:    'qstat -f' showed pending tasks multiple times 
                             Rescusciated '-g d' option of qstat
                  Issue:     None (Fix of Enhancem.: EB-2001-12-10-1)

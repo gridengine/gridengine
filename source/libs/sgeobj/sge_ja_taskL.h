@@ -55,7 +55,8 @@ extern "C" {
 *        Tasks start time.
 *
 *     SGE_ULONG(JAT_end_time)
-*        Tasks end time.
+*        Tasks end time. 
+*        Only used in Execd to simulate job runs.
 *
 *     SGE_ULONG(JAT_hold) 
 *        Second part of the state (user, operator, system hold) 
@@ -147,6 +148,7 @@ extern "C" {
 *
 *     SGE_ULONG(JAT_next_pe_task_id)         
 *        Used locally in execd to store next pe task id for this jatask on this execd.
+*
 *
 *  FUNCTION
 *     JAT_Type elements make only sense in conjunction with JB_Type 

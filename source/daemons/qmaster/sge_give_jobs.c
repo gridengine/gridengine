@@ -716,7 +716,11 @@ sge_commit_flags_t commit_flags
       }
 
       now = sge_get_gmt();
-      /* JG: TODO: shouldn't the start time better be set on the exec host? */
+      /* 
+       * Would be nice if we could use a more accurate start time that could be reported 
+       * by execd. However this would constrain time synchronization between qmaster and 
+       * execd host .. sigh!
+       */
       lSetUlong(jatep, JAT_start_time, now);
       job_enroll(jep, NULL, jataskid);
       {

@@ -213,6 +213,9 @@ lListElem *jatep
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
+      /*
+       * case 5: job being rescheduled because it was interrupted and a checkpoint exists
+       */
    else if (failed == SSTATE_MIGRATE) {
       DTRACE;
       job_log(jobid, jataskid, MSG_LOG_JCKPTRESCHEDULE);
@@ -225,6 +228,10 @@ lListElem *jatep
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
+      /*
+       * case 6: job being rescheduled because of exit 99 
+       *                            or because of a rerun e.g. triggered by qmod -r <jobid>
+       */
    else if (failed == SSTATE_AGAIN) {
       job_log(jobid, jataskid, MSG_LOG_JNORESRESCHEDULE);
       lSetUlong(jatep, JAT_job_restarted, 
@@ -235,6 +242,9 @@ lListElem *jatep
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
+      /*
+       * case 7: job finished 
+       */
    else {
       job_log(jobid, jataskid, MSG_LOG_EXITED);
       sge_log_dusage(jr, jep, jatep);

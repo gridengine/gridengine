@@ -53,10 +53,10 @@ extern "C" {
 *     SGE_ULONG(JJ_type)
 *        Job type - analoguous to JB_type
 *
-*     SGE_LIST(JJ_finished_tasks)
+*     SGE_LIST(JJ_finished_tasks, JJAT_Type)
 *        list of finished job tasks
 *
-*     SGE_LIST(JJ_not_yet_finished_ids)
+*     SGE_LIST(JJ_not_yet_finished_ids, RN_Type)
 *        id's of not yet finished tasks
 *
 *  FUNCTION

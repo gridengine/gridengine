@@ -1,3 +1,6 @@
+AS-2005-02-11-0: CVS        Created V60u4beta_TAG
+-------------------------------------------------
+
 HP-2005-02-11-0: Enhancem.: merged changes for win32-x86 from
                             V60_win_alpha_BRANCH which will be part of the
                             common.tar.gz
@@ -5,7 +8,7 @@ HP-2005-02-11-0: Enhancem.: merged changes for win32-x86 from
 
 EB-2005-02-07-0: Enhancem.: merged changes for win32-x86 from 
                             V60_win_alpha_BRANCH which will be part of the
-                            command.tar.gz
+                            common.tar.gz
                  Changed:   dist/util/arch_variables 
                             dist/util/install_modules/inst_common.sh
                  Review:    HP

@@ -33,10 +33,8 @@
 #___INFO__MARK_END__
 
 
-set TAG = HEAD
+set TAG = undefined
 set CODIR = "/tmp/CODIR"
-set OUTFILE = "/tmp/sge-HEAD-src.tar.gz"
-set EXCLUDEFILES = "SGE5_3alpha.pdf"
 set TAR = tar
 
 #
@@ -51,7 +49,6 @@ while ($#argv >= 1)
          set OUTFILE = "/tmp/sge-$TAG-src.tar.gz"
       else
          goto usage
-         exit 1
       endif
       breaksw
    case "-o":
@@ -60,7 +57,6 @@ while ($#argv >= 1)
          set OUTFILE = $argv[1]
       else
          goto usage
-         exit 1
       endif
       breaksw
    case "-gtar":
@@ -72,7 +68,6 @@ while ($#argv >= 1)
          set CODIR = $argv[1]
       else
          goto usage
-         exit 1
       endif
       breaksw
    case "-h":
@@ -91,6 +86,10 @@ end
 # main
 #
 
+if ( $TAG == undefined ) then
+   goto usage
+endif
+
 if ( ! -d $CODIR ) then
    mkdir -p $CODIR || exit 1
 endif
@@ -104,30 +103,25 @@ echo If the $CVSROOT is the wrong CVSROOT, press Ctrl-C
 cd $CODIR || exit 1
 rm -rf $CODIR/gridengine || exit 1
 
-cvs -z9 -q co -r $TAG gridengine/source gridengine/testsuite gridengine/INSTALL gridengine/Changelog gridengine/doc
+cvs -z9 -q co -r $TAG gridengine/{INSTALL,gep,source,Changelog,doc,review,testsuite}
 find gridengine -name Root -exec rm {} \;
-foreach i ( $EXCLUDEFILES ) 
-   find gridengine -name $i -exec rm {} \;
-end   
 
 $TAR cvzf $OUTFILE gridengine
 if ( $status == 0 ) then
-   rm -rf $CODIR/gridengine
+   echo resulting file is now in $CODIR
 else
-   echo tar failed. Leaving $CODIR/gridengine unchanged
+   echo tar command failed. Leaving $CODIR unchanged.
 endif
 
 exit 0
 
-#
-# 
-#
+#---------------------------------------------------------
 usage:
-   echo "usage: <OPTIONS>"
+   echo "usage: snapshot.csh -tag <tag> <OPTIONS>"
 
-   echo "OPTIONS are: "
-   echo "-tag <tagname>   -> checkout tag instead of HEAD revision"
-   echo "-o <file>        -> write to file <file> [default: $OUTFILE]"
-   echo "-w <dir>         -> set checkout directory to <dir> [default: $CODIR]"
-   echo "-gtar            -> use gtar as tar command"
+   echo "OPTIONS are:"
+   echo "   -tag <tagname> -> checkout tag or branch"
+   echo "   -o <file>      -> write to file <file> [default: /tmp/sge-<tag>-src.tar.gz"
+   echo "   -w <dir>       -> set checkout directory to <dir> [default: $CODIR]"
+   echo "   -gtar          -> use gtar as tar command"
    exit

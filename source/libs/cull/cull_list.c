@@ -1696,6 +1696,77 @@ int lRemoveElem(lList *lp, lListElem *ep)
    return 0;
 }
 
+/****** cull/list/lDechainList() **********************************************
+*  NAME
+*     lDechainList() -- splits a list into two at the given elem.
+*
+*  SYNOPSIS
+*     lListElem* lDechainList(lList *lp, lListElem *ep) 
+*
+*  FUNCTION
+*    splits a list into two at the given elem.
+*    If no target list is given, new one is created, otherwise the splited
+*    list is appended to the second one.
+*
+*  INPUTS
+*     lList *source  - list 
+*     lList **target - list
+*     lListElem *ep  - element 
+*
+*
+*  NOTES
+*     MT-NOTE: lDechainList() is MT safe
+******************************************************************************/
+void 
+lDechainList(lList *source, lList **target, lListElem *ep)
+{
+   DENTER(CULL_LAYER, "lDechainList");
+
+   if (source == NULL || target == NULL) {
+      LERROR(LELISTNULL);
+      DEXIT;
+      return;
+   }
+   if (ep == NULL) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return;
+   }
+
+   if (source->descr != ep->descr) {
+      DPRINTF(("Dechaining element from other list !!!\n"));
+      DEXIT;
+      abort();
+   }
+   
+   if (*target != NULL) {
+      if (source->descr != (*target)->descr) {
+         DPRINTF(("Dechaining into another list")); 
+         DEXIT;
+         abort();
+      }
+   }
+   else {
+      *target = lCreateList(lGetListName(source), source->descr);
+   }
+   
+   if (ep->prev != NULL) {
+      ep->prev->next = NULL;
+   }
+   else {
+      source->first = NULL;
+   }
+
+   (*target)->first = ep;
+  
+   cull_hash_free_descr(source->descr);
+   cull_hash_free_descr((*target)->descr);
+   cull_hash_create_hashtables(source);
+   cull_hash_create_hashtables(*target);
+   
+   DEXIT; 
+}
+
 /****** cull/list/lDechainElem() **********************************************
 *  NAME
 *     lDechainElem() -- Remove a element from a list 
@@ -1737,15 +1808,19 @@ lListElem *lDechainElem(lList *lp, lListElem *ep)
       abort();
    }
 
-   if (ep->prev)
+   if (ep->prev) {
       ep->prev->next = ep->next;
-   else
+   }   
+   else {
       lp->first = ep->next;
+   }   
 
-   if (ep->next)
+   if (ep->next) {
       ep->next->prev = ep->prev;
-   else
+   }   
+   else {
       lp->last = ep->prev;
+   }   
 
    /* remove hash entries */
    for(i = 0; ep->descr[i].mt != lEndT; i++) {

@@ -1,3 +1,16 @@
+SG-2004-10-21-1: Enhancem.: - 2/3 part of of the look ahead scheduler
+                            extention.
+                            - code cleanup
+                            - minor perf. improvements
+                 Changed:   scheduler
+                 Review:    EB
+
+SG-2004-10-21-0: Bugfix:    qsub und qalter accepted negativ ticket values
+                 Issue:     1304
+                 Bugtraq:   6174301
+                 Changed:   qsub, qalter
+                 Review:    EB
+
 CR-2004-10-21-1: Testsuite: - new procedure "startup_core_system"
                             - new menu selective "(28) restart cluster"
 
@@ -31,7 +44,7 @@ EB-2004-10-19-0: Bugfix:    fix of EB-2004-09-15-0: qstat will show
                             extended information for -pri -ext -urg
                  Issue:     not necessary
                  Bugtraq:   not necessary
-                 Review:    HAS TO BE DONE
+                 Review:    SG
 
 SG-2004-10-18-0: Enhancem.: - reworked the locking in qmaster and changed two
                               not thread save code sections in the order 
@@ -498,6 +511,9 @@ CR-2004-08-17-1: Enhancem.:  - added comment about flushing job reports
 
 CR-2004-08-17-0: Testsuite:  - added wait time in compile_source
                              - raised wait time for qmaster shutdown
+
+AS-2004-08-17-0: CVS        Created V60u1_TAG
+---------------------------------------------
 
 AA-2004-08-12-0: Bugfix:     - qmon_help.ad help corrections
                              - sge_centry_qconf.c missing parentheses break build

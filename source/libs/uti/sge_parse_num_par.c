@@ -141,8 +141,9 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
       } 
    }
 
-   if (!uvalp)
+   if (uvalp == NULL) {
       uvalp = &dummy_uval;
+   }   
 
    /*
       here we have to convert from string

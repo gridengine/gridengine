@@ -796,6 +796,7 @@ u_long32 flags
 
       if (!strcmp("-js", *sp)) {
          u_long32 jobshare;
+         double jobshare_d;
 
          sp++;
          if (!*sp) {
@@ -807,13 +808,23 @@ u_long32 flags
             return answer;
          }
 
-         if (!parse_ulong_val(NULL, &jobshare, TYPE_INT, *sp, NULL, 0)) {
+         if (!parse_ulong_val(&jobshare_d, NULL, TYPE_INT, *sp, NULL, 0)) {
             answer_list_add(&answer, MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT,
                              STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
 
+
+         if (jobshare_d < 0) {
+            answer_list_add(&answer, MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT,
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+
+         jobshare = jobshare_d;
+         
          ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, *(sp - 1), *sp);
          lSetUlong(ep_opt, SPA_argval_lUlongT, jobshare);
 
@@ -1110,6 +1121,7 @@ u_long32 flags
 
       if (!strcmp("-ot", *sp)) {
          int otickets;
+         double otickets_d;
 
          sp++;
          if (!*sp) {
@@ -1120,10 +1132,25 @@ u_long32 flags
              return answer;
          }
 
-         otickets = atol(*sp);
+         if (!parse_ulong_val(&otickets_d, NULL, TYPE_INT, *sp, NULL, 0)) {
+            answer_list_add(&answer, MSG_PARSE_INVALIDOTICKETSMUSTBEUINT,
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
 
+
+         if (otickets_d < 0) {
+            answer_list_add(&answer, MSG_PARSE_INVALIDOTICKETSMUSTBEUINT,
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+
+         otickets = otickets_d;
+         
          ep_opt = sge_add_arg(pcmdline, ot_OPT, lIntT, *(sp - 1), *sp);
-         lSetInt(ep_opt, SPA_argval_lIntT, otickets);
+         lSetUlong(ep_opt, SPA_argval_lUlongT, otickets);
 
          sp++;
          continue;

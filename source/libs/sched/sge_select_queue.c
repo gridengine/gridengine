@@ -2217,8 +2217,9 @@ u_long32 ttype
                }
             }
          }
-         if (load_alarm)
+         if (load_alarm) {
             lSetUlong(qep, QU_tagged4schedule, load_alarm);
+         }   
       }
    }
 
@@ -2229,9 +2230,12 @@ u_long32 ttype
    ret = lSplit(unloaded, overloaded, "overloaded queues", where);
    lFreeWhere(where);
 
-   if (overloaded)
-      for_each(qep, *overloaded) /* make sure QU_tagged4schedule is 0 on exit */
+   if (overloaded) {
+      for_each(qep, *overloaded) { /* make sure QU_tagged4schedule is 0 on exit */
          lSetUlong(qep, QU_tagged4schedule, 0);
+      }
+   }
+
    if (ret) {
       DEXIT;
       return -1;
@@ -2352,10 +2356,11 @@ lList **suspended         /* QU_Type */
    }
 
    /* split queues */
-   where = lWhere("%T(!(%I m= %u) && !(%I m= %u) && !(%I m= %u))", 
+   where = lWhere("%T(!(%I m= %u) && !(%I m= %u) && !(%I m= %u) && !(%I m= %u))", 
       lGetListDescr(*queue_list), 
          QU_state, QI_SUSPENDED,
          QU_state, QI_CAL_SUSPENDED,
+         QU_state, QI_CAL_DISABLED,
          QU_state, QI_SUSPENDED_ON_SUBORDINATE);
    ret = lSplit(queue_list, suspended, "full queues", where);
    lFreeWhere(where);
@@ -2385,19 +2390,21 @@ lList **suspended         /* QU_Type */
    splits the incoming queue list (1st arg) into non disabled queues and
    disabled queues (2nd arg) 
 
+   lList **queue_list,       QU_Type 
+   lList **disabled          QU_Type 
+
    returns:
       0 successful
      -1 errors in functions called by sge_split_queue_load
 
 */
-int sge_split_disabled(
-lList **queue_list,        /* QU_Type */
-lList **disabled         /* QU_Type */
-) {
+int 
+sge_split_disabled(lList **queue_list, lList **disabled) 
+{
    lCondition *where;
    int ret;
    lList *lp = NULL;
-   int do_free_list = 0;
+   bool do_free_list = false;
 
    DENTER(TOP_LAYER, "sge_split_disabled");
 
@@ -2406,9 +2413,9 @@ lList **disabled         /* QU_Type */
       return -1;
    }
 
-   if (!disabled) {
+   if (disabled == NULL) {
        disabled = &lp;
-       do_free_list = 1;
+       do_free_list = true;
    }
 
    /* split queues */
@@ -2417,19 +2424,20 @@ lList **disabled         /* QU_Type */
    ret = lSplit(queue_list, disabled, "full queues", where);
    lFreeWhere(where);
 
-   if (*disabled) {
+   if (*disabled != NULL) {
       lListElem* mes_queue;
 
-      for_each(mes_queue, *disabled)
+      for_each(mes_queue, *disabled) {
          schedd_mes_add_global(SCHEDD_INFO_QUEUEDISABLED_, lGetString(mes_queue, QU_full_name));
+      }   
  
       schedd_log_list(MSG_SCHEDD_LOGLIST_QUEUESDISABLEDANDDROPPED , *disabled, QU_full_name);
+
       if (do_free_list) {
-         lFreeList(*disabled);
-         *disabled = NULL;
+         *disabled = lFreeList(*disabled);
       }
    }
-
+   
    DEXIT;
    return ret;
 }

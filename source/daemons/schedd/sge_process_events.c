@@ -85,6 +85,7 @@
 #include "sge_answer.h"
 #include "sge_parse_num_par.h"
 #include "sge_qinstance_state.h"
+#include "sgeee.h"
 
 /* defined in sge_schedd.c */
 extern int shut_me_down;
@@ -190,32 +191,27 @@ int event_handler_default_scheduler()
    /* 
     * Within the scheduler we do only need QIs
     */
+
    {
       lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
       lListElem *cqueue = NULL;
 
-      copy.queue_list = NULL;
       for_each(cqueue, master_list) {
          lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lList *selected = NULL;
-         lList *all_selected = NULL;
-         selected = lSelect("", qinstance_list, where_queue, what_queue2);
+         lListElem *queue = NULL;
 
-         if (copy.queue_list == NULL) {
-            copy.queue_list = selected;
-         } else {
-            lAddList(copy.queue_list, selected);
+         if (copy.all_queue_list == NULL) {
+            copy.all_queue_list = lCreateList("qi", lGetListDescr(qinstance_list));
          }
 
-         /* name all queues not suitable for scheduling in tsm-logging */
-         all_selected = lCopyList("", qinstance_list);
-         if (copy.all_queue_list == NULL) {
-            copy.all_queue_list = all_selected;
-         } else {
-            lAddList(copy.all_queue_list, all_selected);
+         for_each(queue, qinstance_list) {
+            lAppendElem(copy.all_queue_list, lCopyElem(queue));
          }
       }
+      copy.queue_list = lSelect("sel_qi_list", copy.all_queue_list, where_queue, what_queue2);
+      copy.dis_queue_list = lSelect("dis_qi_list", copy.all_queue_list, where_queue2, what_queue2);
    }
+
 
    if (sconf_is_job_category_filtering()) {
       copy.job_list = sge_category_job_copy(Master_Job_List, copy.queue_list); 
@@ -314,6 +310,7 @@ int event_handler_default_scheduler()
    /* .. which gets deleted after using */
    copy.host_list = lFreeList(copy.host_list);
    copy.queue_list = lFreeList(copy.queue_list);
+   copy.dis_queue_list = lFreeList(copy.dis_queue_list);
    copy.all_queue_list = lFreeList(copy.all_queue_list);
    copy.job_list = lFreeList(copy.job_list);
    copy.centry_list = lFreeList(copy.centry_list);
@@ -501,17 +498,27 @@ DTRACE;
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
             " !(%I m= %u) &&"
+            " !(%I m= %u) &&"
             " !(%I m= %u))",
             queue_des,    
             QU_state, QI_SUSPENDED,        /* only not suspended queues      */
             QU_state, QI_SUSPENDED_ON_SUBORDINATE, 
+            QU_state, QI_CAL_DISABLED,
             QU_state, QI_CAL_SUSPENDED, 
             QU_state, QI_ERROR,            /* no queues in error state       */
             QU_state, QI_UNKNOWN,
             QU_state, QI_AMBIGUOUS,
             QU_state, QI_ORPHANED
             );         /* only known queues              */
-            
+           
+         where_queue2 = lWhere("%T("
+            " (%I m= %u) || (%I m= %u))", 
+            queue_des,    
+            QU_state, QI_CAL_SUSPENDED, 
+            QU_state, QI_CAL_DISABLED
+            );         /* only known queues              */
+
+         
          if (where_queue == NULL) {
             CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED));
          }
@@ -825,10 +832,13 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
          DEXIT;
          return false;
       }   
+      sge_do_priority_job(job); /* job got added or modified, recompute the priorities */
    }
+   
    switch (action) {
       case SGE_EMA_LIST:
          rebuild_categories = 1;
+         sge_do_priority(Master_Job_List, NULL); /* recompute the priorities */
          break;
 
       case SGE_EMA_ADD:

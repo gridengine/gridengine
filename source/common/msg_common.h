@@ -154,7 +154,7 @@
 #define MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S              _MESSAGE(23108, _("ERROR! Wrong job id list format "SFQ" specified\n"))
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23109, _("ERROR! invalid priority, must be an integer from -1023 to 1024\n"))
 #define MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT              _MESSAGE(23110, _("ERROR! invalid jobshare, must be an unsigned integer\n"))
-/*#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(23111,_("ERROR! two files are specified for the same host\n"))*/
+#define MSG_PARSE_INVALIDOTICKETSMUSTBEUINT              _MESSAGE(23111, _("ERROR! invalid override tickets, must be an unsigned integer\n"))
 
 /*
 ** parse_qconf.c

@@ -193,9 +193,9 @@ lListElem *job
 }
 
 /*-------------------------------------------------------------------------*/
-int sge_is_job_category_rejected(
-lListElem *job 
-) {
+int 
+sge_is_job_category_rejected(lListElem *job) 
+{
    int ret;
 
    DENTER(TOP_LAYER, "sge_is_job_category_rejected");

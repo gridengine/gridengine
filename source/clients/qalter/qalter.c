@@ -535,7 +535,7 @@ int *all_users
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-ot"))) {
-         lSetUlong(job, JB_override_tickets, lGetInt(ep, SPA_argval_lIntT));
+         lSetUlong(job, JB_override_tickets, lGetUlong(ep, SPA_argval_lUlongT));
          lRemoveElem(cmdline, ep);
          nm_set(job_field, JB_override_tickets);
       }

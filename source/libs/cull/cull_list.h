@@ -233,6 +233,7 @@ int lCopySwitch(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx, 
 
 int lAppendElem(lList *lp, lListElem *ep);
 lListElem *lDechainElem(lList *lp, lListElem *ep);
+void lDechainList(lList *source, lList **target, lListElem *ep);
 lListElem *lDechainObject(lListElem *parent, int name);
 int lRemoveElem(lList *lp, lListElem *ep);
 int lInsertElem(lList *lp, lListElem *ep, lListElem *new_elem);

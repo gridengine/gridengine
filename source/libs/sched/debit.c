@@ -108,18 +108,21 @@ debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_
       error if you try to debit a job from a queue where the 
       jobs user has no access.
 
+const sge_assignment_t *a - all information describing the assignemnt 
+int *sort_hostlist,       - do we have to resort the hostlist? 
+order_t *orders,          - needed to warn on jobs that were dispatched into
+                            queues and get suspended on subordinate in the very
+                            same interval 
+bool now,                 - if true this is or will be a running job
+                            false for all jobs that must only be put into the schedule 
+const char *type          - a string as forseen with serf_record_entry() 
+                            'type' parameter (may be NULL) 
+      
 */
-int debit_scheduled_job(
-const sge_assignment_t *a, /* all information describing the assignemnt */
-int *sort_hostlist,  /* do we have to resort the hostlist? */
-order_t *orders,  /* needed to warn on jobs that were dispatched into
-                        queues and get suspended on subordinate in the very
-                        same interval */
-bool now,             /* if true this is or will be a running job
-                         false for all jobs that must only be put into the schedule */
-const char *type      /* a string as forseen with serf_record_entry() 
-                         'type' parameter (may be NULL) */
-) {
+int 
+debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist,   
+                    order_t *orders, bool now, const char *type) 
+{
    DENTER(TOP_LAYER, "debit_scheduled_job");
 
    if (!a) {
@@ -128,8 +131,9 @@ const char *type      /* a string as forseen with serf_record_entry()
    }
 
    if (now) {
-      if (a->pe)
+      if (a->pe) {
          pe_debit_slots(a->pe, a->slots, a->job_id);
+      }   
       debit_job_from_hosts(a->job, a->gdil, a->host_list, a->centry_list, sort_hostlist);
       debit_job_from_queues(a->job, a->gdil, a->queue_list, a->centry_list, orders);
    }
@@ -156,8 +160,8 @@ const char *type      /* a string as forseen with serf_record_entry()
  *                    on subordinate in the very same interval 
  */
 static int 
-debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list, lList *centry_list,
-                      order_t *orders) 
+debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list, 
+                      lList *centry_list, order_t *orders) 
 {
    int qslots, total;
    unsigned int tagged;
@@ -191,8 +195,9 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list, 
                {
                   lListElem *order;
                   for_each (order, orders->jobStartOrderList) {
-                     if (lGetUlong(order, OR_type) != ORT_start_job)
+                     if (lGetUlong(order, OR_type) != ORT_start_job) {
                         continue;
+                     }   
                      if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_name), OR_queuelist)) {
                         WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, u32c(lGetUlong(job, JB_job_number)),
                         u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_name)));
@@ -200,8 +205,9 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list, 
                   }
                   
                   for_each (order, orders->sent_job_StartOrderList) {
-                     if (lGetUlong(order, OR_type) != ORT_start_job)
+                     if (lGetUlong(order, OR_type) != ORT_start_job) {
                         continue;
+                     }  
                      if (lGetSubStr(order, OQ_dest_queue, lGetString(so, SO_name), OR_queuelist)) {
                         WARNING((SGE_EVENT, MSG_SUBORDPOLICYCONFLICT_UUSS, u32c(lGetUlong(job, JB_job_number)),
                         u32c(lGetUlong(order, OR_job_number)), qname, lGetString(so, SO_name)));

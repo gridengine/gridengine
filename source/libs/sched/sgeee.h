@@ -62,5 +62,7 @@ lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
                       int seqno,
                       bool update_execd);
 
+void sge_do_priority(lList *running_jobs, lList *pending_jobs);
+void sge_do_priority_job(lListElem *jep);
 #endif /*  __SGEEE_H */
 

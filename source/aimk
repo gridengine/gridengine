@@ -799,18 +799,9 @@ case ALINUX:
 case ALPHA4:
 case ALPHA5:
    set COMPILE_DC = 1
-   if ( $CC == insure ) then
-      set WFLAG   = ""
-      if ( $?LD_LIBRARY_PATH ) then
-         setenv LD_LIBRARY_PATH $INSURE4_LIBDIR:$LD_LIBRARY_PATH
-      else
-         setenv LD_LIBRARY_PATH $INSURE4_LIBDIR
-      endif
-   else
-      set CXX = "cxx"
-      set WFLAG   = "-w2"
-      # set WFLAG = ""
-   endif
+   set CXX = "cxx"
+   set WFLAG   = "-w2"
+   # set WFLAG = ""
 
    set OFLAG = "-O"
    if ( $OPTIMIZATION == 1 ) then
@@ -1222,8 +1213,8 @@ case SOLARIS86:
    endif
 
    set LOADAVGLIBS = "-lkvm -lkstat"
-#   set PARALLEL = "-j 1"
-#   set MAKE=gmake
+#  set PARALLEL = "-j 1"
+#  set MAKE=gmake
    if ( $CC == gcc ) then
       set OFLAG = "-O3"
    else
@@ -1265,13 +1256,13 @@ case SOLARIS86:
       set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
       set CXXFLAGS = "-D_LARGEFILE64_SOURCE=1 $CXXFLAGS"
       set SOL64BITFLAG = ""
-      if ( $CC == cc ) then
+      if ( $CC == cc -o $CC == insure ) then
          set MEMCFLAG=-Xa
       endif
    endif
 
    if ( $BUILDARCH == SOLARIS86 ) then
-#      set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
+#     set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
       set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes" 
       set CFLAGS = "$CFLAGS -D$BUILDARCH"
    endif

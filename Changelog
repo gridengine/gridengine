@@ -1,3 +1,10 @@
+DT-2004-12-22-1: Enhancem.: o Updated distinst for DT-2004-12-22-0
+                 Changed:   distinst
+
+DT-2004-12-22-0: Enhancem.: o Created Ant build script for DRMAA Java language
+                              binding
+                 Changed:   aimk, DRMAA, global Makfile
+
 CR-2004-12-21-0: Bugfix:    -Werror CFLAG was missing for linux
                             architectures - fixed aimk
 

@@ -1301,7 +1301,7 @@ for i in $ARCH; do
 
          for filename in $JDRMAA_FILES; do
             if [ -f $filename ]; then
-                Install 0.0 755 $filename $DEST_SGE_ROOT/${UTILPREFIX}/`basename $filename`
+                Install 0.0 755 ../CLASSES/$filename $DEST_SGE_ROOT/${UTILPREFIX}/`basename $filename`
             fi
          done
       fi

@@ -1,3 +1,11 @@
+EB-2002-07-22-2: Testsuite: testsuite didn't find aimk
+                            use -z 9 for cvs update
+
+EB-2002-07-22-1: Enhancem.: job input file
+                 Issue:     #294
+
+EB-2002-07-22-0: Bugfix:    missing \n in qstat -j output
+
 CR-2002-07-19-0: Bugfix:    fixed broken build from CR-2002-07-18-4 on some
                             platforms.
 

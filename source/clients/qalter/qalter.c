@@ -393,9 +393,15 @@ int *all_users
          nm_set(job_field, JB_checkpoint_object);
       }
 
-      parse_list_simple(cmdline, "-e", job, JB_stderr_path_list, 0, 0, FLG_LIST_APPEND);
+      parse_list_simple(cmdline, "-e", job, JB_stderr_path_list, 0, 0, 
+                        FLG_LIST_APPEND);
       if (lGetList(job, JB_stderr_path_list))
          nm_set(job_field, JB_stderr_path_list);
+      
+      parse_list_simple(cmdline, "-i", job, JB_stdin_path_list, 0, 0, 
+                        FLG_LIST_APPEND);
+      if (lGetList(job, JB_stdin_path_list))
+         nm_set(job_field, JB_stdin_path_list);
    }
 
    /* STR_PSEUDO_JOBID */
@@ -523,7 +529,8 @@ int *all_users
          nm_set(job_field, JB_notify);
       }
 
-      parse_list_simple(cmdline, "-o", job, JB_stdout_path_list, 0, 0, FLG_LIST_APPEND);
+      parse_list_simple(cmdline, "-o", job, JB_stdout_path_list, 0, 0, 
+                        FLG_LIST_APPEND);
       if (lGetList(job, JB_stdout_path_list))
          nm_set(job_field, JB_stdout_path_list);
 
@@ -822,6 +829,7 @@ int *all_users
             JB_soft_resource_list,
             JB_mail_list,
             JB_stdout_path_list,
+            JB_stdin_path_list,
             JB_pe_range,
             JB_hard_queue_list,
             JB_soft_queue_list,

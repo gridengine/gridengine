@@ -190,6 +190,10 @@ XtResource sm_resources[] = {
    { "stdoutput_path_list", "stdoutput_path_list", QmonRPN_Type,
       sizeof(lList*), XtOffsetOf(tSMEntry, stdoutput_path_list),
       XtRImmediate, NULL },
+   
+   { "stdinput_path_list", "stdinput_path_list", QmonRPN_Type,
+      sizeof(lList*), XtOffsetOf(tSMEntry, stdinput_path_list),
+      XtRImmediate, NULL },
 
    { "stderror_path_list", "stderror_path_list", QmonRPN_Type,
       sizeof(lList*), XtOffsetOf(tSMEntry, stderror_path_list),
@@ -251,6 +255,13 @@ XtResource stdoutput_list_resources[] = {
       XtRImmediate, NULL }
 };
 
+XtResource stdinput_list_resources[] = {
+
+   { "stdinput_path_list", "stdinput_path_list", QmonRPN_Type,
+      sizeof(lList*), XtOffsetOf(tSMEntry, stdinput_path_list),
+      XtRImmediate, NULL }
+};
+
 XtResource stderror_list_resources[] = {
 
    { "stderror_path_list", "stderror_path_list", QmonRPN_Type,
@@ -303,6 +314,7 @@ static void qmonSubmitShellList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitMailList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitStderrList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitStdoutList(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSubmitStdinList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitEnvList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCtxList(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitCancel(Widget w, XtPointer cld, XtPointer cad);
@@ -361,6 +373,8 @@ static Widget submit_shellPB = 0;
 static Widget submit_output_merge = 0;
 static Widget submit_stdoutput = 0;
 static Widget submit_stdoutputPB = 0;
+static Widget submit_stdinput = 0;
+static Widget submit_stdinputPB = 0;
 static Widget submit_stderror = 0;
 static Widget submit_stderrorPB = 0;
 static Widget submit_env = 0;
@@ -397,6 +411,7 @@ static Widget shell_list_w = 0;
 static Widget mail_list_w = 0;
 static Widget stderror_list_w = 0;
 static Widget stdoutput_list_w = 0;
+static Widget stdinput_list_w = 0;
 static Widget env_list_w = 0;
 static Widget ctx_list_w = 0;
 
@@ -679,6 +694,7 @@ Widget parent
                           "submit_script", &submit_script,
                           "submit_shellPB", &submit_shellPB,
                           "submit_stdoutputPB", &submit_stdoutputPB,
+                          "submit_stdinputPB", &submit_stdinputPB,
                           "submit_stderrorPB", &submit_stderrorPB,
                           "submit_mail_userPB", &submit_mail_userPB,
                           "submit_envPB", &submit_envPB,
@@ -691,6 +707,7 @@ Widget parent
                           "submit_resources", &submit_resources,
                           "submit_shell", &submit_shell,
                           "submit_stdoutput", &submit_stdoutput,
+                          "submit_stdinput", &submit_stdinput,
                           "submit_stderror", &submit_stderror,
                           "submit_output_merge", &submit_output_merge,
                           "submit_cwd", &submit_cwd,
@@ -788,6 +805,8 @@ Widget parent
                      qmonSubmitOutputMerge, NULL);
    XtAddCallback(submit_stdoutputPB, XmNactivateCallback, 
                      qmonSubmitStdoutList, NULL);
+   XtAddCallback(submit_stdinputPB, XmNactivateCallback, 
+                     qmonSubmitStdinList, NULL);
    XtAddCallback(submit_stderrorPB, XmNactivateCallback, 
                      qmonSubmitStderrList, NULL);
    XtAddCallback(submit_exec_timePB, XmNactivateCallback, 
@@ -907,10 +926,11 @@ int submode
    XtSetSensitive(submit_execution_time, sensitive2);
    XtSetSensitive(submit_exec_timePB, sensitive2);
    XtSetSensitive(submit_stdoutput, sensitive2);
+   XtSetSensitive(submit_stdinput, sensitive2);
    XtSetSensitive(submit_stderror, sensitive2);
+   XtSetSensitive(submit_stdoutputPB, sensitive2);
+   XtSetSensitive(submit_stdinputPB, sensitive2); 
    XtSetSensitive(submit_stderrorPB, sensitive2);
-   XtSetSensitive(submit_stdoutputPB, sensitive2);
-   XtSetSensitive(submit_stdoutputPB, sensitive2);
    XtSetSensitive(submit_output_merge, sensitive2);
 /*    XtSetSensitive(submit_now, sensitive2); */
 
@@ -1291,6 +1311,7 @@ XtPointer cld, cad;
          JB_soft_resource_list,
          JB_merge_stderr,
          JB_stdout_path_list,
+         JB_stdin_path_list,
          JB_stderr_path_list,
          JB_mail_options,
          JB_mail_list,
@@ -1639,6 +1660,8 @@ tSMEntry *data
    data->mail_list = lFreeList(data->mail_list);
 
    data->stdoutput_path_list = lFreeList(data->stdoutput_path_list);
+   
+   data->stdinput_path_list = lFreeList(data->stdinput_path_list);
 
    data->stderror_path_list = lFreeList(data->stderror_path_list);
 
@@ -1774,6 +1797,8 @@ char *prefix
 
    data->stdoutput_path_list = lCopyList("JB_stdout_path_list", 
                                        lGetList(jep, JB_stdout_path_list));
+   data->stdinput_path_list = lCopyList("JB_stdin_path_list", 
+                                       lGetList(jep, JB_stdin_path_list));
    data->stderror_path_list = lCopyList("JB_stderr_path_list", 
                                        lGetList(jep, JB_stderr_path_list));
    data->merge_output = lGetUlong(jep, JB_merge_stderr);
@@ -2093,6 +2118,10 @@ int save
    lSetList(jep, JB_stdout_path_list, lCopyList("stdout",
                                              data->stdoutput_path_list));
    
+   DPRINTF(("JB_stdin_path_list %p\n", data->stdinput_path_list));
+   lSetList(jep, JB_stdin_path_list, lCopyList("stdin",
+                                             data->stdinput_path_list));
+   
    DPRINTF(("JB_stderr_path_list %p\n", data->stderror_path_list));
    lSetList(jep, JB_stderr_path_list, lCopyList("stderr", 
                                              data->stderror_path_list));
@@ -2407,6 +2436,26 @@ Widget w
                      qmonSubmitOkay, (XtPointer) stdoutput_list_w);
       XtAddCallback(cancel, XmNactivateCallback,
                      qmonSubmitCancel, (XtPointer) stdoutput_list_w);
+
+   }
+   
+   if (!stdinput_list_w) {
+      stdinput_list_w = XmtBuildQueryDialog( w, 
+                                       "submit_stdinput_list_shell", 
+                                       stdinput_list_resources, 
+                                       XtNumber(stdinput_list_resources), 
+                                       "stdinput_list_matrix", &matrix, 
+                                       "stdinput_list_cancel", &cancel,
+                                       "stdinput_list_okay", &okay,
+                                       "stdinput_list_reset", &reset,
+                                       NULL
+                                       );
+      XtAddCallback(reset, XmNactivateCallback, 
+                     qmonSubmitReset, (XtPointer) stdinput_list_w);
+      XtAddCallback(okay, XmNactivateCallback,
+                     qmonSubmitOkay, (XtPointer) stdinput_list_w);
+      XtAddCallback(cancel, XmNactivateCallback,
+                     qmonSubmitCancel, (XtPointer) stdinput_list_w);
 
    }
 
@@ -2744,6 +2793,28 @@ XtPointer cld, cad;
    
    XmtDialogSetDialogValues(stdoutput_list_w, &SMData);
    XtManageChild(stdoutput_list_w);
+   
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonSubmitStdinList(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   DENTER(GUI_LAYER, "qmonSubmitStdinList");
+   /* 
+   ** get the values from the dialog fields, if there have been entries
+   ** in the main dialog get them to set them in the subdialog
+   */
+   XmtDialogGetDialogValues(submit_layout, &SMData);
+   
+   /*
+   ** set the entries in the helper dialog and pop it up
+   */
+   
+   XmtDialogSetDialogValues(stdinput_list_w, &SMData);
+   XtManageChild(stdinput_list_w);
    
    DEXIT;
 }

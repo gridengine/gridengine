@@ -112,6 +112,8 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_NODE_SHARES_LIST; 
      case OA_PATH_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_PATH_LIST; 
+     case OA_FILE_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_FILE_LIST; 
      case OA_PRIORITY:
          return MSG_GDI_ARGUMENTSYNTAX_OA_PRIORITY; 
      case OA_RESOURCE_LIST:
@@ -520,8 +522,7 @@ FILE *fp
    if (VALID_OPT(e_OPT, me.who)) {
       if (me.who == QMOD) {
          PRINTITD(MSG_GDI_USAGE_e_OPT , MSG_GDI_UTEXT_e_OPT);
-      }
-      else {
+      } else {
          PRINTITD(MSG_GDI_USAGE_e_OPT_PATH_LIST, MSG_GDI_UTEXT_e_OPT_PATH_LIST );
          MARK(OA_PATH_LIST);
       }
@@ -564,6 +565,11 @@ FILE *fp
    if (VALID_OPT(hold_jid_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_hold_jid_OPT , MSG_GDI_UTEXT_hold_jid_OPT );
       MARK(OA_JOB_IDENTIFIER_LIST);
+   }
+   
+   if (VALID_OPT(i_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_i_OPT_PATH_LIST, MSG_GDI_UTEXT_i_OPT_PATH_LIST );
+      MARK(OA_FILE_LIST);
    }
 
    if (VALID_OPT(inherit_OPT, me.who)) {

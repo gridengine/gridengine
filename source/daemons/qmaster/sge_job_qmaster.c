@@ -2323,6 +2323,16 @@ int *trigger
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDERRPATHLIST, u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
+   
+   /* ---- JB_stdin_path_list */
+   if ((pos=lGetPosViaElem(jep, JB_stdin_path_list))>=0) {
+      DPRINTF(("got new JB_stdin_path_list\n")); 
+      lSetList(new_job, JB_stdin_path_list, 
+            lCopyList("", lGetList(jep, JB_stdin_path_list)));
+      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STDINPATHLIST, 
+              u32c(jobid));
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   }
 
    /* ---- JB_merge_stderr */
    if ((pos=lGetPosViaElem(jep, JB_merge_stderr))>=0) {

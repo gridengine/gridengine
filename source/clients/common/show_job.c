@@ -66,14 +66,12 @@ void cull_show_job(lListElem *job, int flags)
       return;
    }
 
-DTRACE;
    if (!(flags & FLG_QALTER)) {
       if (lGetUlong(job, JB_job_number))
          printf("job_number:                 %d\n", (int) lGetUlong(job, JB_job_number));
       else
          printf("job_number:                 %s\n", MSG_JOB_UNASSIGNED);
    }
-DTRACE;
 
    if (lGetPosViaElem(job, JB_exec_file)>=0)
       if (lGetString(job, JB_exec_file))
@@ -250,6 +248,16 @@ DTRACE;
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_stdout_path_list), fields, 
             delis, FLG_NO_DELIS_STRINGS);
       }
+   
+   if (lGetPosViaElem(job, JB_stdin_path_list)>=0)
+      if (lGetList(job, JB_stdin_path_list)) {
+         intprt_type fields[] = { PN_host, PN_path, 0 };
+
+         delis[0] = ":";
+         printf("stdin_path_list:            ");
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_stdin_path_list), 
+            fields, delis, FLG_NO_DELIS_STRINGS);
+      }
 
    if (lGetPosViaElem(job, JB_priority)>=0)
       if (lGetUlong(job, JB_priority) != BASE_PRIORITY) {
@@ -298,7 +306,9 @@ DTRACE;
       if (lGetUlong(job, JB_verify))
          printf("verify:                     %s\n", "-verify");
 
-   if (lGetPosViaElem(job, JB_env_list)>=0)
+   if (lGetPosViaElem(job, JB_env_list)>=0) {
+      int print_new_line = 1;
+
       if (lGetList(job, JB_env_list)) {
          lList *print = NULL;
          lList *do_not_print = NULL;
@@ -311,8 +321,16 @@ DTRACE;
          var_list_split_prefix_vars(print, &do_not_print, VAR_PREFIX);
          uni_print_list(stdout, NULL, 0, print, 
             fields, delis, FLG_NO_DELIS_STRINGS);
+         if (lGetNumberOfElem(print) > 0) {
+            print_new_line = 0;
+         }
          lAddList(print, do_not_print);
       }
+      if (print_new_line) {
+         printf("\n");
+      }
+   } 
+   
 
    if (lGetPosViaElem(job, JB_job_args)>=0)
       if (lGetList(job, JB_job_args) || (flags & FLG_QALTER)) {

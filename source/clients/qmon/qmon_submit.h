@@ -50,6 +50,7 @@ typedef struct _tSMEntry {
    lList    *shell_list;            /* PN_Type */
    lList    *mail_list;             /* MR_Type */
    lList    *stdoutput_path_list;   /* PN_Type */
+   lList    *stdinput_path_list;    /* PN_Type */
    lList    *stderror_path_list;    /* PN_Type */   
    lList    *hard_resource_list;     
    lList    *soft_resource_list;

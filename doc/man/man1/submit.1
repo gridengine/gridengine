@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/07/10 10:34:33 $     Revision: $Revision: 1.17 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/07/22 10:06:44 $     Revision: $Revision: 1.18 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/07/10 10:34:33 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/07/22 10:06:44 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -666,6 +666,31 @@ and/or job name list have completed successfully.
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
+.\"
+.IP "\fB\-i [hostname:]file,...\fP"
+Available for \fIqsub\fP, and \fIqalter\fP only.
+.sp 1
+Defines or redefines the file used for the standard input stream of
+the job. If the \fIfile\fP constitues an absolute filename, the input
+file attribute of the job is set to its value including the
+\fIhostname\fP. If the filename is relative, xxQS_NAMExx expands
+file either with the current working directory path in case the
+\fI-cwd\fP (see above) switch is also specified or with the home directory
+path otherwise. If \fIhostname\fP is present, the standart input stream
+will be found under the corresponding location if the job runs on the
+specified host.
+.sp 1
+By default /dev/null is the input stream for the job.
+.sp 1
+It is possible to use certain pseudo variables, their value will be
+expanded at runtime of the job and will be used to exert the
+standard input stream as described in the \fI-e\fP option for the standard
+error stream.
+.sp 1
+.I Qalter
+allows changing this option even while the job executes. The
+modified parameter will only be in effect after a restart or migration
+of the job, however.
 .\"
 .IP "\fB\-inherit\fP"
 Available only for \fIqrsh\fP and
@@ -1407,6 +1432,11 @@ scripts.
 the pathname of the file to which the standard output stream of the job is
 diverted. Commonly used for enhancing the output with messages from
 prolog, epilog, parallel environment start/stop or checkpointing scripts.
+.IP xxQS_NAME_Sxx_STDIN_PATH 1.5i
+the pathname of the file from which the standard input stream of the job
+is taken. This variable might be used in combination with xxQS_NAME_Sxx_O_HOST
+in prolog/epilog scripts to transfer the input file from the submit
+to the execution host.
 .IP xxQS_NAME_Sxx_JOB_SPOOL_DIR 1.5i
 The directory used by
 .M xxqs_name_sxx_shepherd 8

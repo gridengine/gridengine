@@ -445,6 +445,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_PATH            "node_path               [/]node_name[[/.]node_name...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_NODE_SHARES_LIST     "node_shares_list        node_path=shares[,node_path=shares,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PATH_LIST            "path_list               [host:]path[,[host:]path,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_FILE_LIST            "file_list               [host:]file[,[host:]file,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PRIORITY             "priority                -1023 - 1024"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_RESOURCE_LIST        "resource_list           resource[=value][,resource[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_SERVER               "server                  hostname"
@@ -1095,6 +1096,10 @@
 #define MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S  _MESSAGE(23496, _(""SFN" is already running\n"))
 #define MSG_SGETEXT_NULLPTRPASSED_S             _MESSAGE(23497, _("NULL ptr passed to "SFN"()\n"))
 #define MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S     _MESSAGE(23498, _("missing attribute "SFQ" in complexes\n"))
+
+#define MSG_GDI_USAGE_i_OPT_PATH_LIST                    "[-i file_list]"
+#define MSG_GDI_UTEXT_i_OPT_PATH_LIST                    _MESSAGE(23499, _("specify standard input stream file(s)"))
+
 
 #endif /* __MSG_COMMON_H */
 

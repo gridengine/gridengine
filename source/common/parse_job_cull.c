@@ -455,7 +455,10 @@ lListElem **pjob
    ** job element pointer the field name the option list and the option
    ** name and the field is filled
    */
-   parse_list_simple(cmdline, "-o", *pjob, JB_stdout_path_list, PN_host, PN_path, FLG_LIST_MERGE);
+   parse_list_simple(cmdline, "-o", *pjob, JB_stdout_path_list, PN_host, 
+                     PN_path, FLG_LIST_MERGE);
+   parse_list_simple(cmdline, "-i", *pjob, JB_stdin_path_list, PN_host, 
+                     PN_path, FLG_LIST_MERGE);
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-p"))) {
       lSetUlong(*pjob, JB_priority, 

@@ -44,6 +44,7 @@
 
 #include "sge_dstring.h"
 
+#define SGE_STDIN           0x00100000
 #define SGE_STDOUT          0x00200000
 #define SGE_STDERR          0x00400000
 #define SGE_SHELL           0x04000000

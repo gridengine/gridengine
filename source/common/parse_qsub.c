@@ -565,6 +565,41 @@ u_long32 flags
          continue;
       }
 
+/*----------------------------------------------------------------------------*/
+
+      /* "-i path_name" */
+
+      if (!strcmp("-i", *sp)) {
+         lList *path_list = NULL;
+
+         /* next field is path_name */
+         sp++;
+         if (!*sp) {
+             sprintf(str,
+             MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-i");
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+             DEXIT;
+             return answer;
+         }
+
+         DPRINTF(("\"-i %s\"\n", *sp));
+
+         i_ret = cull_parse_path_list(&path_list, *sp);
+         if (i_ret) {
+             sprintf(str,
+             MSG_PARSE_WRONGPATHLISTFORMATXSPECTOEOPTION_S,
+             *sp);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+             DEXIT;
+             return answer;
+         }
+         ep_opt = sge_add_arg(pcmdline, i_OPT, lListT, *(sp - 1), *sp);
+         lSetList(ep_opt, SPA_argval_lListT, path_list);
+
+         sp++;
+         continue;
+      }
+
 /*-----------------------------------------------------------------------------*/
       /* "-h [hold_list]" */
 

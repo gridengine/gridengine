@@ -102,7 +102,10 @@ char *script_file,
 int truncate_stderr_out 
 ) {
    int in, out, err;          /* hold fds */
-   char *stdout_path, *stderr_path = NULL, *shell_path;
+   char *stdin_path = NULL;
+   char *stdout_path = NULL;
+   char *stderr_path = NULL; 
+   char *shell_path = NULL;
    char *cwd;
    struct passwd *pw=NULL;
    char err_str[256];
@@ -345,20 +348,22 @@ int truncate_stderr_out
       shell_start_mode = "start_as_command";
 
       if (!strcmp(childname, "prolog") || !strcmp(childname, "epilog")) {
-         stdout_path  = build_path(SGE_STDOUT);
+         stdin_path = "/dev/null";
+         stdout_path = build_path(SGE_STDOUT);
          if (!merge_stderr)
             stderr_path  = build_path(SGE_STDERR);
       } else {
+         stdin_path = "/dev/null";
          stdout_path  = build_path(SGE_PAR_STDOUT);
          if (!merge_stderr)
             stderr_path  = build_path(SGE_PAR_STDERR);
       }
-   } 
-   else {
+   } else {
       shell_path = get_conf_val("shell_path");
       use_login_shell = atoi(get_conf_val("use_login_shell"));
-  
-      stdout_path  = build_path(SGE_STDOUT);
+ 
+      stdin_path = build_path(SGE_STDIN);  
+      stdout_path = build_path(SGE_STDOUT);
       if (!merge_stderr)
          stderr_path  = build_path(SGE_STDERR);
    }
@@ -372,6 +377,7 @@ int truncate_stderr_out
       if ((tmp_str = get_conf_val("set_sge_env")) 
           && (tmp_value = atoi(tmp_str)) 
           && tmp_value) {
+         sge_setenv("SGE_STDIN_PATH", stdin_path);
          sge_setenv("SGE_STDOUT_PATH", stdout_path);
          sge_setenv("SGE_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
          sge_setenv("SGE_CWD_PATH", cwd);
@@ -379,6 +385,7 @@ int truncate_stderr_out
       if ((tmp_str = get_conf_val("set_cod_env")) 
           && (tmp_value = atoi(tmp_str)) 
           && tmp_value) {
+         sge_setenv("COD_STDIN_PATH", stdin_path);
          sge_setenv("COD_STDOUT_PATH", stdout_path);
          sge_setenv("COD_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
          sge_setenv("COD_CWD_PATH", cwd);
@@ -386,6 +393,7 @@ int truncate_stderr_out
       if ((tmp_str = get_conf_val("set_grd_env")) 
           && (tmp_value = atoi(tmp_str)) 
           && tmp_value) {
+         sge_setenv("GRD_STDIN_PATH", stdin_path);
          sge_setenv("GRD_STDOUT_PATH", stdout_path);
          sge_setenv("GRD_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
          sge_setenv("GRD_CWD_PATH", cwd);
@@ -406,14 +414,15 @@ int truncate_stderr_out
                childname, script_file, strerror(errno));
          shepherd_error(err_str);
       }
-   } 
-   else {
+   } else {
       /* need to open a file as fd0 */
-      in = open("/dev/null", O_RDONLY); 
+      in = open(stdin_path, O_RDONLY); 
 
       if (in == -1) {
          shepherd_state = SSTATE_OPEN_OUTPUT;
-         shepherd_error("error: can't open /dev/null as dummy input file");
+         sprintf(err_str, "error: can't open %s as dummy input file", 
+                 stdin_path);
+         shepherd_error(err_str);
       }
    }
 
@@ -898,6 +907,10 @@ int type
       name = "stderr_path";
       postfix = "e";
       break;
+   case SGE_STDIN:
+      name = "stdin_path";
+      postfix = "i";
+      break;
    default:
       return NULL;
    }
@@ -923,24 +936,32 @@ int type
       return base; /* does not exist - must be path of file to be created */
    }
 
-   if (!(S_ISDIR(statbuf.st_mode)))
+   if (!(S_ISDIR(statbuf.st_mode))) {
       return base;
+   } else {
+      if (type == SGE_STDIN) {
+         sprintf(err_str, SFQ" id a directory not a file\n", base);
+         shepherd_state = SSTATE_OPEN_OUTPUT; /* job's failure */
+         shepherd_error(err_str);
+         return "/dev/null";
+      } else {
+         job_name = get_conf_val("job_name");
+         job_id = get_conf_val("job_id");
+         ja_task_id = get_conf_val("ja_task_id");
+         if (!(path = (char *)malloc(pathlen=(strlen(base) + strlen(job_name) 
+                       + strlen(job_id) + strlen(ja_task_id) + 25)))) {
+            sprintf(err_str, "malloc(%d) failed for %s@",
+               pathlen, name);
+            shepherd_error(err_str);
+         }
 
-   job_name = get_conf_val("job_name");
-   job_id = get_conf_val("job_id");
-   ja_task_id = get_conf_val("ja_task_id");
-   if (!(path = (char *)malloc(pathlen=(strlen(base) 
-         + strlen(job_name) + strlen(job_id) + strlen(ja_task_id) + 25)))) {
-      sprintf(err_str, "malloc(%d) failed for %s@",
-         pathlen, name);
-      shepherd_error(err_str);
+         if (atoi(ja_task_id))
+            sprintf(path, "%s/%s.%s%s.%s", base, job_name, postfix, job_id,
+               ja_task_id);
+         else
+            sprintf(path, "%s/%s.%s%s", base, job_name, postfix, job_id);
+      }
    }
-
-   if (atoi(ja_task_id))
-      sprintf(path, "%s/%s.%s%s.%s", base, job_name, postfix, job_id,
-         ja_task_id);
-   else
-      sprintf(path, "%s/%s.%s%s", base, job_name, postfix, job_id);
 
    return path;
 }

@@ -104,6 +104,7 @@ Qmon*submit_general.xmtChildren: \
    StrListField      submit_job_args = job_args, \
                      submit_task_hold = task_range, \
                      submit_stdoutput = stdoutput_path_list, \
+                     submit_stdinput = stdinput_path_list, \
                      submit_stderror = stderror_path_list, \
                      submit_shell = shell_list; \
    XmToggleButton    submit_output_merge = merge_output, \
@@ -113,8 +114,8 @@ Qmon*submit_general.xmtChildren: \
                      submit_now = now; \
    Spinbox           submit_priority = priority; \
    XmPushButton      submit_scriptPB, submit_resources, submit_stdoutputPB, \
-                     submit_stderrorPB, submit_exec_timePB, submit_projectPB, \
-                     submit_shellPB; \
+                     submit_stdinputPB, submit_stderrorPB, submit_exec_timePB, \
+                     submit_projectPB, submit_shellPB; \
    XmtChooser        submit_restart = restart;
 
 Qmon*submit_general.layout: \
@@ -160,6 +161,11 @@ Qmon*submit_general.layout: \
             <> \
             Fixed FlushBottom submit_stderrorPB \
          } \
+         Row { \
+            Centered Caption tl "@{stdin}" 30 em submit_stdinput \
+            <> \
+            Fixed FlushBottom submit_stdinputPB \
+         } \
          ### \
          Caption tl "@{Request Resources}" Row { \
             Centered Fixed submit_resources \
@@ -192,8 +198,9 @@ Qmon*submit_layout*submit_pe.errorBackground:     $warning_color
 Qmon*submit_layout*submit_pe_range.highlightOnError:    True
 Qmon*submit_layout*submit_pe_range.errorBackground:     $warning_color
 
-!Qmon*submit_layout*submit_stdoutput.editable:             False
-!Qmon*submit_layout*submit_stderror.editable:             False
+!Qmon*submit_layout*submit_stdoutput.editable:          False
+!Qmon*submit_layout*submit_stdinput.editable:           False
+!Qmon*submit_layout*submit_stderror.editable:           False
 !Qmon*submit_layout*submit_shell.editable:              False
 !Qmon*submit_layout*submit_env.editable:                False
 !Qmon*submit_layout*submit_ctx.editable:                False
@@ -219,6 +226,8 @@ Qmon*submit_layout*submit_projectPB.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_output_merge.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_stdoutput.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_stdoutputPB.navigationType: TAB_GROUP
+Qmon*submit_layout*submit_stdinput.navigationType: TAB_GROUP
+Qmon*submit_layout*submit_stdinputPB.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_stderror.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_stderrorPB.navigationType: TAB_GROUP
 
@@ -383,9 +392,13 @@ Qmon*submit_stderrorPB.labelType:                 PIXMAP
 Qmon*submit_stderrorPB.labelPixmap:               stderror
 Qmon*submit_stderrorPB.labelInsensitivePixmap:    stderror_ins
 
-Qmon*submit_stdoutputPB.labelType:                 PIXMAP
-Qmon*submit_stdoutputPB.labelPixmap:               stdoutput
-Qmon*submit_stdoutputPB.labelInsensitivePixmap:    stdoutput_ins
+Qmon*submit_stdoutputPB.labelType:                PIXMAP
+Qmon*submit_stdoutputPB.labelPixmap:              stdoutput
+Qmon*submit_stdoutputPB.labelInsensitivePixmap:   stdoutput_ins
+
+Qmon*submit_stdinputPB.labelType:                 PIXMAP
+Qmon*submit_stdinputPB.labelPixmap:               stdinput
+Qmon*submit_stdinputPB.labelInsensitivePixmap:    stdinput_ins
 
 Qmon*submit_mail_userPB.labelType:              PIXMAP
 Qmon*submit_mail_userPB.labelPixmap:            mailbox
@@ -611,6 +624,55 @@ Qmon*stdoutput_list_matrix.shadowThickness:     1
 Qmon*stdoutput_list_matrix*editable:            True
 
 Qmon*stdoutput_list.stdoutput_list_help.activateCallback:   XmtHelpDisplayContextHelp(self);
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*submit_stdinput_list_shell.stdinput_list.dialogTitle: @{Stdin Path List}
+Qmon*submit_stdinput_list_shell.stdinput_list.autoUnmanage: False
+Qmon*submit_stdinput_list_shell.stdinput_list.dialogStyle: DIALOG_FULL_APPLICATION_MODAL
+Qmon*submit_stdinput_list_shell.allowShellResize: True
+Qmon*submit_stdinput_list_shell.xmtChildren: unmanaged XmtLayout stdinput_list;
+Qmon*submit_stdinput_list_shell.stdinput_list.xmtChildren: \
+   Matrix_2xN     stdinput_list_matrix = stdinput_path_list; \
+   XmPushButton   stdinput_list_cancel, stdinput_list_okay, \
+                  stdinput_list_reset, stdinput_list_help;
+
+Qmon*submit_stdinput_list_shell.stdinput_list.layout: \
+   Row { \
+      Col { \
+         stdinput_list_matrix \
+         <> \
+      } \
+      Shadowed Col { \
+         Fixed stdinput_list_okay \
+         Fixed stdinput_list_cancel \
+         Fixed stdinput_list_reset \
+         Fixed stdinput_list_help \
+         <> \
+      } \
+   }
+
+Qmon*stdinput_list*stdinput_list_cancel.labelString:  @{Cancel}
+Qmon*stdinput_list*stdinput_list_okay.labelString:    @{Ok}
+Qmon*stdinput_list*stdinput_list_reset.labelString:   @{Reset}
+Qmon*stdinput_list*stdinput_list_help.labelString:    @{Help}
+
+Qmon*stdinput_list_matrix.rows:                5
+Qmon*stdinput_list_matrix.columns:             2
+Qmon*stdinput_list_matrix.columnWidths:        10,10
+Qmon*stdinput_list_matrix.columnMaxLengths:    1000,1000
+Qmon*stdinput_list_matrix.visibleRows:         5
+Qmon*stdinput_list_matrix.evenRowBackground:   $matrix_even_bg
+Qmon*stdinput_list_matrix.oddRowBackground:    $matrix_odd_bg
+Qmon*stdinput_list_matrix.gridType:            GRID_CELL_SHADOW
+Qmon*stdinput_list_matrix.cellShadowType:      SHADOW_IN
+Qmon*stdinput_list_matrix.cellShadowThickness: 1
+Qmon*stdinput_list_matrix.fontList:            $matrix_font
+Qmon*stdinput_list_matrix.columnLabels:        @{Path}, @{Host}
+Qmon*stdinput_list_matrix.boldLabels:          True
+Qmon*stdinput_list_matrix.shadowThickness:     1
+Qmon*stdinput_list_matrix*editable:            True
+
+Qmon*stdinput_list.stdinput_list_help.activateCallback:   XmtHelpDisplayContextHelp(self);
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Qmon*submit_env_list_shell.env_list.dialogTitle:    @{Environment Variable List}

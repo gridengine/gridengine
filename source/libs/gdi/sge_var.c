@@ -509,11 +509,36 @@ void var_list_remove_prefix_vars(lList *varl, const char *prefix)
    return;
 }
 
+/****** gdi/var/var_list_split_prefix_vars() **********************************
+*  NAME
+*     var_list_split_prefix_vars() -- split a list of variables 
+*
+*  SYNOPSIS
+*     void var_list_split_prefix_vars(lList *varl, 
+*                                     lList **pefix_vars, 
+*                                     const char *prefix) 
+*
+*  FUNCTION
+*     Move all variable elements form "varl" to "pefix_vars" which 
+*     begin with "prefix". *pefix_vars will be created if is does not
+*     exist.
+*
+*  INPUTS
+*     lList *varl        - VA_Type list 
+*     lList **pefix_vars - pointer to VA_Type list 
+*     const char *prefix - string (e.g. VAR_PREFIX) 
+*
+*  RESULT
+*     void - None
+*
+*  SEE ALSO
+*     gdi/var/var_list_remove_prefix_vars()
+*******************************************************************************/
 void var_list_split_prefix_vars(lList *varl, 
                                 lList **pefix_vars, 
                                 const char *prefix)
 {
-      int prefix_len = strlen(prefix);
+   int prefix_len = strlen(prefix);
    lListElem *var_elem = NULL;
    lListElem *next_var_elem = NULL;
 

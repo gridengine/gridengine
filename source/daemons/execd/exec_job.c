@@ -258,6 +258,7 @@ char *err_str
         shell_path[SGE_PATH_MAX], 
         stdout_path[SGE_PATH_MAX],
         stderr_path[SGE_PATH_MAX],
+        stdin_path[SGE_PATH_MAX],
         pe_stdout_path[SGE_PATH_MAX],
         pe_stderr_path[SGE_PATH_MAX];
    char mail_str[1024], *shepherd_name;
@@ -755,9 +756,16 @@ char *err_str
                 job_id,
                 job_is_array(jep) ? ja_task_id : 0,
                 SGE_STDERR, stderr_path);
+   sge_get_path(lGetList(jep, JB_stdin_path_list), cwd,
+                lGetString(jep, JB_owner), 
+                lGetString(jep, JB_job_name),
+                job_id,
+                job_is_array(jep) ? ja_task_id : 0,
+                SGE_STDIN, stdin_path);
 
    fprintf(fp, "stdout_path=%s\n", stdout_path);
    fprintf(fp, "stderr_path=%s\n", stderr_path);
+   fprintf(fp, "stdin_path=%s\n", stdin_path);
    fprintf(fp, "merge_stderr=%d\n", (int)lGetUlong(jep, JB_merge_stderr));
 
    if (lGetUlong(jep, JB_checkpoint_attr) && 

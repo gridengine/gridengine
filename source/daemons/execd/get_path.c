@@ -53,40 +53,32 @@ static const char* expand_path(const char *path_in, u_long32 job_id,
 
 static int getHomeDir(char *exp_path, const char *user);
 
-int sge_get_path(
-lList *lp,
-const char *cwd,
-const char *owner,
-const char *job_name,
-u_long32 job_number,
-u_long32 ja_task_number,
-int type,
-char *pathstr 
-) {
+int sge_get_path(lList *lp, const char *cwd, const char *owner, 
+                 const char *job_name, u_long32 job_number, 
+                 u_long32 ja_task_number, int type, char *pathstr) 
+{
    lListElem *ep;
    const char *path = NULL, *host;
-
    DENTER(TOP_LAYER, "sge_get_path");
 
    strcpy(pathstr, "");
 
    /*
-   ** check if there's a path for this host
-   */
-
+    * check if there's a path for this host
+    */
    ep = lGetElemHost(lp, PN_host, me.qualified_hostname);
    if (ep) {
       path = expand_path(lGetString(ep, PN_path), job_number, 
          ja_task_number, job_name, owner, me.qualified_hostname);
       host = lGetHost(ep, PN_host);
-   }
-   else {
+   } else {
       /* 
-      ** hostname: wasn't set, look for a default 
-      */
+       * hostname: wasn't set, look for a default 
+       */
       for_each(ep, lp) {
-         path = expand_path(lGetString(ep, PN_path), job_number, ja_task_number, 
-            job_name, owner, me.qualified_hostname);
+         path = expand_path(lGetString(ep, PN_path), job_number, 
+                            ja_task_number, job_name, owner, 
+                            me.qualified_hostname);
          host = lGetHost(ep, PN_host);
          if (!host) 
             break;
@@ -94,14 +86,20 @@ char *pathstr
    }
 
    /*
-   ** prepend cwd to path
-   */
-   if (path && path[0] != '/')              /* got relative path from -e/-o */
+    * prepend cwd to path
+    */
+   if (path && path[0] != '/') {
+      /* got relative path from -e/-o */
       sprintf(pathstr, "%s/%s", cwd, path);
-   else if (path)                           /* got absolute path from -e/-o */
+   } else if (path) { 
+      /* got absolute path from -e/-o */
       strcpy(pathstr, path);
-   else if (type != SGE_SHELL)              /* no -e/-o directive (but not for shells) */
+   } else if (type == SGE_STDIN) {
+      strcpy(pathstr, "/dev/null");
+   } else if (type != SGE_SHELL) {
+      /* no -e/-o directive (but not for shells) */
       strcpy(pathstr, cwd);
+   }
  
    DEXIT;
    return 0;

@@ -5316,7 +5316,7 @@ proc compile_source {} {
    if { $do_not_update == 0 } {
       puts $CHECK_OUTPUT "------------------------------------------"
       puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
-      set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs update -dP" ]
+      set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -z 9 update -dP" ]
       if { $prg_exit_state != 0 } {
          add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
          append html_body [ create_html_text "cvs update -dP error:\n$output" ]
@@ -5359,7 +5359,7 @@ proc compile_source {} {
       foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
          puts $CHECK_OUTPUT "------------------------------------------"
          puts $CHECK_OUTPUT "-> starting aimk clean on host $chost ..."
-         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk clean" prg_exit_state 60 0 "" 1 0 ]
+         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk clean" prg_exit_state 60 0 "" 1 0 ]
          puts $CHECK_OUTPUT "------------------------------------------"
          puts $CHECK_OUTPUT "return state: $prg_exit_state"
          puts $CHECK_OUTPUT "------------------------------------------"
@@ -5388,7 +5388,7 @@ proc compile_source {} {
       puts $CHECK_OUTPUT "-> adding compile option -csp"
    }
    puts $CHECK_OUTPUT "-> starting aimk -only-depend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"
@@ -5405,7 +5405,7 @@ proc compile_source {} {
 
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
+   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
    puts $CHECK_OUTPUT "------------------------------------------"
    puts $CHECK_OUTPUT "return state: $prg_exit_state"
    puts $CHECK_OUTPUT "------------------------------------------"

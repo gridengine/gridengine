@@ -278,6 +278,9 @@ enum {
 *     SGE_LIST(JB_stderr_path_list)   
 *        Std error path streams (PN_Type). ("qsub/qalter "-e path_name")
 *
+*     SGE_LIST(JB_stdin_path_list)   
+*        Std input path streams (PN_Type). ("qsub/qalter "-i path_name")
+*
 *     SGE_BOOL(JB_merge_stderr)   
 *        Merge stdout and stderr? ("qsub/qalter -j y|n")
 *
@@ -481,6 +484,7 @@ enum {
 
    JB_stdout_path_list,
    JB_stderr_path_list,
+   JB_stdin_path_list,
    JB_merge_stderr, 
 
    JB_hard_resource_list,
@@ -571,6 +575,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
 
    SGE_LIST(JB_stdout_path_list, PN_Type, CULL_DEFAULT) 
    SGE_LIST(JB_stderr_path_list, PN_Type, CULL_DEFAULT) 
+   SGE_LIST(JB_stdin_path_list, PN_Type, CULL_DEFAULT) 
    SGE_BOOL(JB_merge_stderr, CULL_DEFAULT)     
 
    SGE_LIST(JB_hard_resource_list, RE_Type, CULL_DEFAULT) 
@@ -707,6 +712,7 @@ NAMEDEF(JBN)
 
    NAME("JB_stdout_path_list")
    NAME("JB_stderr_path_list")
+   NAME("JB_stdin_path_list")
    NAME("JB_merge_stderr")
 
    NAME("JB_hard_resource_list")

@@ -877,5 +877,7 @@
 #define MSG_QMASTER_XNOVALIDSSM_S  _MESSAGE(33674, _(SFQ" is not a valid shell_start_mode\n"))
 #define MSG_QMASTER_XNOVALIDIS_S   _MESSAGE(33675, _(SFQ" is not a valid initial_state\n"))      
 
+#define MSG_JOB_STDINPATHLIST        _MESSAGE(33276, _("stdin path list"))
+
 #endif /* __MSG_QMASTER_H */
 

@@ -1,3 +1,11 @@
+CR-2003-04-03-0  Bugfix:    commd ignored first message for commlib client
+                            in case of priority tags messages (used for
+                            qmaster <-> execd communication). The first 
+                            message was ignored when more than one message
+                            with the same priority tag was ready to send.
+                 Review:    AH
+                 Changed:   commd
+
 EB-2003-04-03-1  Enhancem:  Added new testsuite test for issue 511
                  Bugtraq:   518
                  Review:    CR

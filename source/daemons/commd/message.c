@@ -403,17 +403,25 @@ int status
          if (tag || !ip[0] || m->tag == TAG_AUTH_FAILURE)
             return m;
 #endif /* KERBEROS */
+
+         /* figure out priority of message as specified by msg tag */
+         i = 0;
+         while (i < bestpriority && ip[i] && ip[i] != m->tag)
+            i++;
+
+         /* if we don't have a best the first is the best */
          if (best) {
-            i = 0;
-            while (i < bestpriority && ip[i] && ip[i] != m->tag)
-               i++;
+            /* we have a best, check if it's priority is better */
             if (i < bestpriority && ip[i] && ip[i] == m->tag) {
+               /* we have a new bestpriority */
                bestpriority = i;
                best = m;
             }
-         }
-         else
+         } else {
+            /* this is the first message for the comprog, mark it as best */
+            bestpriority = i;
             best = m;
+         }
       }
       m = m->next;
    }

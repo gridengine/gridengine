@@ -1,10 +1,10 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2002/08/28 12:30:54 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: access_list.5,v $     Last Update: $Date: 2004/04/19 10:52:07 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCESS_LIST 5 "$Date: 2002/08/28 12:30:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCESS_LIST 5 "$Date: 2004/04/19 10:52:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 access_list \- xxQS_NAMExx access list file format
@@ -50,7 +50,7 @@ format description. New access lists can be created and existing can be
 modified via the \fB\-au\fP and \fB\-du\fP options to
 .M qconf 1 .
 .PP
-xxQS_NAME_EExx departments are a special form of access list and allow in 
+Departments are a special form of access list and allow in 
 addition assignment of functional shares and override tickets. 
 .\"
 .\"
@@ -61,9 +61,6 @@ content:
 .SS "\fBname\fP"
 The name of the access list. 
 .SS "\fBtype\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not
-support this parameter.
-.PP
 The type of the acess list, currently  one  of 
 .I ACL,
 or 
@@ -71,23 +68,17 @@ or
 or a  combination of both in a comma separated list. Depending on this parameter  
 the access list can be used as access list only or as a department. 
 .SS "\fBoticket\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not
-support this parameter.
-.PP
 The amount of override tickets currently assigned to the department.
 .SS "\fBfshare\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not
-support this parameter.
-.PP
 The current functional share of the department.
 .SS "\fBentries\fP"
 The entries parameter contains the comma separated list of 
 those UNIX users or UNIX user groups that are assigned to the access list 
-or the xxQS_NAME_EExx department. Only symbolic names are allowed.  A group 
+or the department. Only symbolic names are allowed.  A group 
 is differentiated from a user name by prefixing the group name with a '@' sign. 
 Pure access lists allows enlisting any user or group in any access list.  
 .PP
-With xxQS_NAME_EExx departments each user or group enlisted may be enlisted 
+With departments each user or group enlisted may be enlisted 
 in only one department, to ensure a unique assignment of jobs to departments. 
 To jobs whose users do not match with any of the users or groups enlisted under entries the 
 .I defaultdepartment 

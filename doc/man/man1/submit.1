@@ -1,11 +1,11 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/04/13 19:22:03 $     Revision: $Revision: 1.44 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/04/19 10:52:02 $     Revision: $Revision: 1.45 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/04/13 19:22:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/04/19 10:52:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -534,9 +534,7 @@ and from \fB\-v\fP commandline options.
 .IP "\fB\-dl date_time\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
-This option is only supported in case of a 
-xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx systems.
-.br
+.sp1
 Specifies the deadline initiation time in [[CC]YY]MMDDhhmm[.SS] format (see
 \fB\-a\fP option above). The deadline initiation time is the time at
 which a deadline job has to reach top priority to be able to complete
@@ -789,21 +787,18 @@ however.
 .IP "\fB\-js job_share\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
-This option is only
-supported in case of a xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx systems.
-.br
 .sp 1
 Defines or redefines the job share of the job relative to other jobs.
 Job share is an unsigned integer value.
 The default job share value for jobs is 0.
 .sp 1
-In xxQS_NAME_EExx, the job share influences the Share Tree Policy and the Functional
+The job share influences the Share Tree Policy and the Functional
 Policy. It has no effect on the Urgency and Override Policies (see
 .M share_tree 5 ,
 .M sched_conf 5
 and the
-.I xxQS_NAME_EExx Installation and Administration Guide
-for further information on the resource management policies supported by xxQS_NAME_EExx).
+.I xxQS_NAMExx Installation and Administration Guide
+for further information on the resource management policies supported by xxQS_NAMExx).
 .sp 1
 In case of the Share Tree Policy, users can distribute the tickets to
 which they are currently entitled, among their jobs using different
@@ -1022,18 +1017,14 @@ however.
 .\"
 .IP "\fB\-ot override_tickets\fP"
 Available for \fIqalter\fP only.
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available  
-for xxQS_NAME_Cxx systems.
-.br
+.sp1
 Changes the number of override tickets for the specified job.
 Requires manager/operator privileges.
 .\"
 .IP "\fB\-P project_name\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
-This option is only
-supported in case of a xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx systems.
-.br
+.sp1
 Specifies the project to which this job is assigned. The administrator
 needs to give permission to individual users to submit jobs to a
 specific project. (see \fB\-aprj\fP option to
@@ -1048,10 +1039,9 @@ Priority is an integer in the range -1023 to 1024.
 The default priority value for jobs is 0.
 .sp 1
 Users may only decrease the priority of their jobs.
-xxQS_NAME_Cxx managers and administrators may also increase the priority
+xxQS_NAMExx managers and administrators may also increase the priority
 associated with jobs. If a pending job has higher priority, it is
-earlier eligible for being dispatched by the xxQS_NAME_Cxx scheduler. The job
-priority has no effect on running jobs in xxQS_NAME_Cxx.
+earlier eligible for being dispatched by the xxQS_NAMExx scheduler.
 .sp 1
 .\"
 .IP "\fB\-pe parallel_environment \fBn\fP[\fB-\fP[\fBm\fP]]|[\fB-\fP]\fBm\fP,...\fP"

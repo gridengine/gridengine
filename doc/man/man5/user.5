@@ -1,10 +1,10 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: user.5,v $     Last Update: $Date: 2004/02/05 16:07:31 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: user.5,v $     Last Update: $Date: 2004/04/19 10:52:11 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,18 +29,15 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH USER 5 "$Date: 2004/02/05 16:07:31 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH USER 5 "$Date: 2004/04/19 10:52:11 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
-user \- xxQS_NAME_EExx user entry file format
+user \- xxQS_NAMExx user entry file format
 .\"
 .SH DESCRIPTION
-The user object is only available in case of a xxQS_NAME_EExx system. xxQS_NAME_Cxx has
-no user object.
-.PP
-A user entry is used in xxQS_NAME_EExx to store ticket and usage information on a
+A user entry is used to store ticket and usage information on a
 per user basis. Maintaining user entries for all users participating in a
-xxQS_NAME_EExx system is required if xxQS_NAME_EExx is operated under a user share tree policy.
+xxQS_NAMExx system is required if xxQS_NAMExx is operated under a user share tree policy.
 .PP
 If the \fBenforce_user\fP cluster configuration parameter is set to \fIauto\fP,
 a user object for the submitting user will be created automatically during

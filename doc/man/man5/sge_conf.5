@@ -1,10 +1,10 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/11 00:41:38 $     Revision: $Revision: 1.29 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/19 10:52:10 $     Revision: $Revision: 1.30 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/11 00:41:38 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/19 10:52:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -424,11 +424,9 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SH "\fBprojects\fP"
-This parameter is only available for xxQS_NAME_EExx systems. It is not present in
-xxQS_NAME_Cxx.
 .PP
 The \fBprojects\fP list contains all projects which are granted access
-to xxQS_NAME_EExx. User belonging to none of these projects cannot use xxQS_NAME_EExx. If
+to xxQS_NAMExx. User belonging to none of these projects cannot use xxQS_NAMExx. If
 users belong to projects in the \fBprojects\fP list and the
 \fBxprojects\fP list (see below), they also cannot use the system.
 .PP
@@ -440,11 +438,8 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SH "\fBxprojects\fP"
-This parameter is only available for xxQS_NAME_EExx systems. It is not present in
-xxQS_NAME_Cxx.
-.PP
 The \fBxprojects\fP list contains all projects which are granted access
-to xxQS_NAME_EExx. User belonging to one of these projects cannot use xxQS_NAME_EExx. If
+to xxQS_NAMExx. User belonging to one of these projects cannot use xxQS_NAMExx. If
 users belong to projects in the \fBprojects\fP list (see above) and the
 \fBxprojects\fP list, they also cannot use the system.
 .PP
@@ -647,9 +642,6 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SH "\fBenforce_project\fP"
-This parameter is only available for xxQS_NAME_EExx systems. It is not present in
-xxQS_NAME_Cxx.
-.PP
 If set to \fItrue\fB, users are required to request a project whenever
 submitting a job. See the \fB\-P\fP option to
 .M qsub 1
@@ -664,15 +656,12 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SH "\fBenforce_user\fP"
-This parameter is only available for xxQS_NAME_EExx systems. It is not present in
-xxQS_NAME_Cxx.
-.PP
-If set to \fItrue\fB, a xxQS_NAME_EExx
+If set to \fItrue\fB, a
 .M user 5
 must exist to allow for job submission. Jobs are rejected if no corresponding user 
 exists. 
 .PP
-If set to \fIauto\fB, a xxQS_NAME_EExx
+If set to \fIauto\fB, a
 .M user 5
 object for the submitting user will automatically be created during
 job submission, if one does not already exist. The \fBauto_user_oticket\fP,
@@ -861,7 +850,7 @@ is started.
 .PP
 Changing \fBgid_range\fP will take immediate effect.
 There is no default for \fBgid_range\fP. The administrator will have to
-assign a value for \fBgid_range\fP during installation of xxQS_NAME_EExx.
+assign a value for \fBgid_range\fP during installation of xxQS_NAMExx.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -935,9 +924,7 @@ performed by the PTF module inside
 .M sge_execd 8 .
 .PP
 .IP "\fIPTF_MIN_PRIORITY\fP, \fIPTF_MAX_PRIORITY\fP"
-The parameters are only available in a xxQS_NAME_EExx system.
-.br
-The maximum/minumum priority which xxQS_NAME_EExx will assign to a job.
+The maximum/minumum priority which xxQS_NAMExx will assign to a job.
 Typically this is a negative/postive value in the range of -20
 (maximum) to 19 (minimum) for systems which allow setting of priorties
 with the
@@ -974,7 +961,7 @@ instance, or another
 signal name then this signal will be sent as notification signal.
 .PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
-If this parameter is set to true, reserved usage is taken for the xxQS_NAME_EExx share
+If this parameter is set to true, reserved usage is taken for the xxQS_NAMExx share
 tree consumption instead of measured usage.
 .PP
 Changing \fBexecd_params\fP will take immediate effect.

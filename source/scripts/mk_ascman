@@ -87,18 +87,14 @@ endif
 # Requires sed to be installed and accessible.
 if ( $MANMODE == "ge" ) then
    set xxQS_NAMExx = "Grid Engine" 
-   set xxQS_NAME_Cxx = "Grid Engine" 
-   set xxQS_NAME_EExx = "Grid Engine"
    set xxQS_NAME_Sxx = "SGE" 
    set xxqs_name_sxx = "sge" 
-   set xxRELxx = "GE 6.0beta"
+   set xxRELxx = "GE 6.0Beta2"
 else if ( $MANMODE == "sge" ) then
    set xxQS_NAMExx = "N1 Grid Engine"
-   set xxQS_NAME_Cxx = "N1 Grid Engine"
-   set xxQS_NAME_EExx = "N1 Grid Engine"
    set xxQS_NAME_Sxx = "SGE"
    set xxqs_name_sxx = "sge"
-   set xxRELxx = "N1GE 6.0beta"
+   set xxRELxx = "N1GE 6.0Beta2"
 else
    echo error wrong MANMODE=$MANMODE. Exit
    exit 1

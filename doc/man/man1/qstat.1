@@ -1,11 +1,11 @@
 '\" t
 .\"___INFO__MARK_BEGIN__
 .\"
-.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/04/13 19:22:03 $     Revision: $Revision: 1.18 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/04/19 10:52:02 $     Revision: $Revision: 1.19 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/04/13 19:22:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/04/19 10:52:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -95,10 +95,7 @@ The output format for the alarm reasons is one line per reason containing
 the resource value and threshold. For details about the resource value please
 refer to the description of the \fBFull Format\fP in section \fBOUTPUT FORMATS\fP below.
 .IP "\fB\-ext\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available
-for xxQS_NAME_Cxx systems.
-.br
-Displays additional information for each job related to the xxQS_NAME_EExx job ticket policy scheme 
+Displays additional information for each job related to the job ticket policy scheme 
 (see OUTPUT FORMATS below).
 .\"
 .IP "\fB\-f\fP"
@@ -229,14 +226,12 @@ options are specified additionally and if the user runs
 jobs in those queues.
 .\"
 .IP "\fB\-urg\fP"
-This option is only supported in case of a xxQS_NAME_EExx system. It is not available
-for xxQS_NAME_Cxx systems.
 .\"
 .IP "\fB\-xml\fP"
 This option can be used with all other options and changes the output to XML. The used
 schemas are referenced in the XML output. The output is printed to stdout.
 .br
-Displays additional information for each job related to the xxQS_NAME_EExx job urgency 
+Displays additional information for each job related to the job urgency 
 policy scheme
 (see OUTPUT FORMATS below).
 .\"
@@ -245,7 +240,7 @@ policy scheme
 Depending on the presence or absence of the \fB-explain\fP, \fB\-f\fP, \fB\-F\fP, or \fB\-qs\fP and
 \fB\-r\fP and \fB\-t\fP option three output formats need to be differentiated.
 .PP
-In case of a xxQS_NAME_EExx system, the \fB\-ext\fP and \fB\-urg\fP options may be used 
+The \fB\-ext\fP and \fB\-urg\fP options may be used 
 to display additional information for each job.
 .\"
 .SS "\fBCluster Queue Format (without \-g c)\fP"
@@ -284,9 +279,7 @@ consisting of
 the job ID.
 .IP "\(bu" 3n
 the priority of the job determining its position in the pending jobs list.
-In case of a xxQS_NAME_Cxx system the priority is assigned via the \fB\-p\fP
-.M submit 1
-option. In case of a xxQS_NAME_EExx system the priority value is determined 
+The priority value is determined 
 dynamically based on ticket and urgency policy set-up (see also
 .M sge_priority 5 
 ).
@@ -362,7 +355,7 @@ the status of the parallel task \- one of
 r(unning), R(estarted), s(uspended), S(uspended), T(hreshold), w(aiting),
 h(old), or x(exited).
 .IP "\(bu" 3n
-the cpu, memory, and I/O usage (xxQS_NAME_EExx only),
+the cpu, memory, and I/O usage,
 .IP "\(bu" 3n
 the exit status of the parallel task,
 .IP "\(bu" 3n
@@ -528,9 +521,7 @@ line contains
 the job ID,
 .IP "\(bu" 3n
 the priority of the job determining its position in the pending jobs list.
-In case of a xxQS_NAME_Cxx system the priority is assigned via the \fB\-p\fP
-.M submit 1
-option. In case of a xxQS_NAME_EExx system the priority value is determined 
+The priority value is determined 
 dynamically based on ticket and urgency policy set-up (see also
 .M sge_priority 5 
 ).
@@ -563,7 +554,7 @@ r(unning), R(estarted), s(uspended), S(uspended), T(hreshold), w(aiting),
 h(old), or x(exited) (see the
 \fBReduced Format\fP section for detailed information),
 .IP "\(bu" 3n
-the cpu, memory, and I/O usage (xxQS_NAME_EExx only),
+the cpu, memory, and I/O usage,
 .IP "\(bu" 3n
 the exit status of the task,
 .IP "\(bu" 3n
@@ -604,8 +595,8 @@ The job and master queue name.
 The hard and soft resource requirements of the job as specified
 with the
 .M qsub 1
-\fB\-l\fP option. In a xxQS_NAME_EExx system also the per resource 
-addend used when determining the jobs urgency contribution value is 
+\fB\-l\fP option. The per resource 
+addend when determining the jobs urgency contribution value is 
 printed (see also 
 .M sge_priority 5 ).
 .IP "\(bu" 3n
@@ -620,7 +611,7 @@ The requested checkpointing environment of the job (see the
 In case of running jobs, the granted
 parallel environment with the granted number of queue slots.
 .\"
-.SS "\fBEnhanced xxQS_NAME_EExx Output (with \-ext)\fP"
+.SS "\fBEnhanced Output (with \-ext)\fP"
 For each job the following additional items are displayed:
 .\"
 .IP "\fBntckts\fP"
@@ -668,7 +659,7 @@ job currently
 .IP "\fBshare\fP"
 The share of the total system to which the job is entitled currently.
 .\"
-.SS "\fBEnhanced xxQS_NAME_EExx Output (with \-urg)\fP"
+.SS "\fBEnhanced Output (with \-urg)\fP"
 For each job the following additional urgency policy related items are 
 displayed (see also
 .M sge_priority 5 ):

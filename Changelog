@@ -1,3 +1,7 @@
+JG-2004-03-11-0: Enhancem.: Additional information about the build process of 
+                            the Berkeley DB (architecture dependend configure 
+                            options).
+
 AH-2004-03-11-2: Enhancem.: Fix problem of frequent "cannot resend unknown 
                             job" messages.
                  Review:    AD

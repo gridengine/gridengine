@@ -6987,9 +6987,6 @@ proc source_tcl_files {} {
 
 # Main programm:
 
-
-
-
 set do_kill           0
 set do_install        0
 set do_compile        0

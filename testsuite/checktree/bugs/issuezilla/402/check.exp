@@ -52,7 +52,7 @@ set check_init_level_procedure "issue_402_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_402"
-set check_category        "COMPATIBILITY SYSTEM L10N"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   0
 set check_description(0)  "qsub -t 1-1:1 should create an array job with one task and not a singe job"
 

@@ -52,7 +52,7 @@ set check_init_level_procedure "issue_540_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_540"
-set check_category        "COMPATIBILITY SYSTEM L10N"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   0
 set check_description(0)  "file specification for qsub was changed as well, as the hostname resolving during job submission"
 

@@ -52,9 +52,9 @@ set check_init_level_procedure "issue_545_init_level"
 
 # define test's name and run level descriptions
 set check_name "issue_545"
-set check_category "COMPATIBILITY SYSTEM L10N"
+set check_category "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level 0
-set check_description(0) "maxujobs does not count jobs with certain state"
+set check_description(0) "schedd dies when priority of a running job is changed and user sort is configured"
 
 # define test's dependencies
 set check_needs "init_core_system" 

@@ -330,8 +330,7 @@ proc drmaa_test_st_input_becomes_output { host binary_path } {
    file delete "$output_file"
 
    if { $prg_exit_state != 0 } {
-      add_proc_error drmaa_check -1 "test_drmaa $st_test failed at host $host"
-      break
+      add_proc_error drmaa_check -1 "test_drmaa ST_INPUT_BECOMES_OUTPUT failed at host $host"
    }
 }
 

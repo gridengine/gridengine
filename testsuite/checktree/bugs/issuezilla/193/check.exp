@@ -238,10 +238,11 @@ proc issue193_submit_jobs {} {
 
    set jobs_string ""
    foreach elem $jobs {
-      wait_for_jobstart $elem "Sleeper" 300
-      wait_for_end_of_transfer $elem 300
+      wait_for_jobstart $elem "Sleeper" 30
+      wait_for_end_of_transfer $elem 30
       append jobs_string "$elem "
    }
+   # JG: TODO: here should be some error handling, in case not all jobs start running
 
    puts $CHECK_OUTPUT "running jobs: $jobs_string"
 
@@ -258,12 +259,12 @@ proc issue193_submit_jobs {} {
    set no_sched_jobs "[lindex $jobs 1] [lindex $jobs 3] [lindex $jobs 5 ]"
    puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
    foreach elem $sched_jobs {
-      wait_for_jobpending $elem "Sleeper" 300
+      wait_for_jobpending $elem "Sleeper" 60
    }
    
    puts $CHECK_OUTPUT "jobs $no_sched_jobs should still run ..."
    foreach elem $no_sched_jobs {
-      wait_for_jobstart $elem "Sleeper" 300
+      wait_for_jobstart $elem "Sleeper" 60
    }
 
    set qmod_arg [lindex $jobs 1]
@@ -277,9 +278,10 @@ proc issue193_submit_jobs {} {
    enable_queue $rerun_queue
 
    foreach elem $jobs {
-      wait_for_jobstart $elem "Sleeper" 300
-      wait_for_end_of_transfer $elem 300
+      wait_for_jobstart $elem "Sleeper" 60
+      wait_for_end_of_transfer $elem 60
    }
+
    
    puts $CHECK_OUTPUT "disabling queues $no_rerun_queue and $rerun_queue"
    disable_queue $no_rerun_queue
@@ -292,12 +294,12 @@ proc issue193_submit_jobs {} {
 
    puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
    foreach elem $sched_jobs {
-      wait_for_jobpending $elem "Sleeper" 300
+      wait_for_jobpending $elem "Sleeper" 60
    }
    
    puts $CHECK_OUTPUT "jobs $no_sched_jobs should still run ..."
    foreach elem $no_sched_jobs {
-      wait_for_jobstart $elem "Sleeper" 300
+      wait_for_jobstart $elem "Sleeper" 60
    }
 
    set qmod_arg [lindex $jobs 1]
@@ -305,20 +307,20 @@ proc issue193_submit_jobs {} {
    set result [run_command_as_user "$CHECK_HOST" "$ts_user_config(first_foreign_user)" "qmod" "-f -r $qmod_arg" 1]
    puts $CHECK_OUTPUT $result
    puts $CHECK_OUTPUT "waiting for job $qmod_arg to get in pending state ..."
-   wait_for_jobpending $qmod_arg "Sleeper" 300
+   wait_for_jobpending $qmod_arg "Sleeper" 60
    
    enable_queue $no_rerun_queue
    enable_queue $rerun_queue
 
    foreach elem $jobs {
-      wait_for_jobstart $elem "Sleeper" 300
-      wait_for_end_of_transfer $elem 300
+      wait_for_jobstart $elem "Sleeper" 60
+      wait_for_end_of_transfer $elem 60
    }
 
    # cleanup jobs
    foreach elem $jobs {
       delete_job $elem
-      wait_for_jobend $elem "Sleeper" 300 0
+      wait_for_jobend $elem "Sleeper" 60 0
    }
    set_error 0 "ok"
 }

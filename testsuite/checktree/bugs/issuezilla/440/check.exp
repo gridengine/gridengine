@@ -52,9 +52,9 @@ set check_init_level_procedure "issue_440_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_440"
-set check_category        "COMPATIBILITY SYSTEM L10N"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   0
-set check_description(0)  "qsub / qrsh command lines crasch qmaster with arg. lines > 10 K"
+set check_description(0)  "qsub / qrsh command lines crash qmaster with arg. lines > 10 K"
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -97,12 +97,12 @@ proc issue_440_setup  {} {
 
 proc issue_440_check_qsub {} {
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR issue_440_MAX_KBYTE
-   global CHECK_CORE_EXECD
+   global CHECK_HOST
 
    set submit_script_path "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/cmd_line_output.sh" 
    set start_length 0
    set end_length [ expr ( 1024 * $issue_440_MAX_KBYTE ) ]
-   set submit_queue "[lindex $CHECK_CORE_EXECD 0].q"
+   set submit_queue [get_queue_instance "all.q" $CHECK_HOST]
 
    # submit different command line length jobs
    while { $start_length <= $end_length } {
@@ -184,7 +184,7 @@ proc issue_440_check_qsub {} {
 
 proc issue_440_check_qrsh {} {
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_HOST CHECK_USER issue_440_MAX_KBYTE
-   global CHECK_CORE_EXECD
+   global CHECK_HOST
 
    # test script
    set submit_script_path "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/cmd_line_output.sh" 
@@ -192,7 +192,7 @@ proc issue_440_check_qrsh {} {
    # set start and end command line size
    set start_length 0
    set end_length [ expr ( 1024 * $issue_440_MAX_KBYTE ) ]
-   set submit_queue "[lindex $CHECK_CORE_EXECD 0].q"
+   set submit_queue [get_queue_instance "all.q" $CHECK_HOST]
 
    # submit qrsh jobs with different command line length
    while { $start_length <= $end_length } {

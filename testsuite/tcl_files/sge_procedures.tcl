@@ -4836,8 +4836,11 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
    while { $my_timeout > [timestamp] && $states_all_equal == 0 } {   
       set states_all_equal 1
 
-      set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" } result ]
-   
+      if {$ts_config(gridengine_version) == 53} {
+         set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" } result ]
+      } else {
+         set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" "-g" "t"} result ]
+      }
       if { $catch_state != 0 } {
          puts $CHECK_OUTPUT "debug: $result"
          return -1

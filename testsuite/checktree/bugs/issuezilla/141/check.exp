@@ -52,7 +52,7 @@ set check_init_level_procedure "issue_141_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_141"
-set check_category        "COMPATIBILITY SYSTEM L10N"
+set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level   0
 set check_description(0)  "partly qdel of job with more tasks shouldn't delete all tasks"
 

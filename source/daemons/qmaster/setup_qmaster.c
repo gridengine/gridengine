@@ -75,6 +75,7 @@
 #include "sched_conf_qmaster.h"
 #include "read_write_userprj.h"
 #include "sge_sharetree.h"
+#include "sge_sharetree_qmaster.h"
 #include "sge_userset.h"
 #include "read_write_ckpt.h"
 #include "read_write_queue.h"
@@ -727,6 +728,13 @@ int sge_setup_qmaster()
       /* SGEEE: read share tree */
       ep = read_sharetree(SHARETREE_FILE, NULL, 1, err_str, 1, NULL);
       if (ep) {
+         lList *alp = NULL;
+         lList *found = NULL;
+         ret = check_sharetree(&alp, ep, Master_User_List, Master_Project_List, 
+               NULL, &found);
+         found = lFreeList(found);
+         alp = lFreeList(alp); 
+
          Master_Sharetree_List = lCreateList("sharetree list", STN_Type);
          lAppendElem(Master_Sharetree_List, ep);
       }

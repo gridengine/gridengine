@@ -79,18 +79,13 @@
 #   define SETPGRP setpgrp()
 #elif defined(__sgi)
 #   define SETPGRP BSDsetpgrp(getpid(),getpid())
-#elif defined(SUN4) || defined(WIN32)
+#elif defined(WIN32)
 #   define SETPGRP setsid()
 #else
 #   define SETPGRP setpgrp(getpid(),getpid())
 #endif
 
-#ifdef SUN4
-#   define GETPGRP getpgrp(0)
-#else
-#   define GETPGRP getpgrp()
-#endif
-
+#define GETPGRP getpgrp()
 
 void sge_exit(int i);
 

@@ -46,7 +46,7 @@
 #endif
 #include <sys/types.h>
 #include <sys/socket.h>
-#if defined(AIX43) || defined(AIX42) || defined(sgi)
+#if defined(AIX43) || defined(sgi)
 #include <sys/param.h>
 #endif
 

@@ -362,7 +362,7 @@ CheckLocalFilesystem()
 {  
    FS=`dirname $1`
    case $ARCH in
-      solaris*)
+      sol-*)
          df -l $FS >/dev/null 2>&1
          if [ $? -eq 0 ]; then
             return 1
@@ -370,7 +370,7 @@ CheckLocalFilesystem()
             return 0
          fi
          ;;
-      *linux)
+      lx*)
          df -l $FS >/dev/null 2>&1
          if [ $? -eq 0 ]; then
             return 1

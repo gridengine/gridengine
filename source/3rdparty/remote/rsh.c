@@ -77,12 +77,6 @@ static const char rcsid[] =
 int rcmd(char **, u_short, char *, char *, char *, int *);
 #endif
 
-#ifdef SUN4
-extern char *optarg;
-extern int optind;
-int rcmd(char **, u_short, char *, char *, char *, int *);
-#endif
-
 #if !defined(FREEBSD) && !defined(DARWIN)
 #include <values.h>
 #endif
@@ -120,11 +114,7 @@ void	usage __P((void));
 int getNetworkPort(int port) {
    short port_short;
 
-#ifdef SUN4
-   if(port <= (256 * 256)) {
-#else   
    if(port <= (MAXSHORT)) {
-#endif   
       port_short = port % (256 * 256);
       return htons(port_short);
    } else {
@@ -385,13 +375,8 @@ try_connect:
 #endif
 #endif
 	{
-#ifdef SUN4
-		(void)ioctl(rfd2, FIONBIO, (caddr_t)&one);
-		(void)ioctl(rem, FIONBIO, (caddr_t)&one);
-#else
 		(void)ioctl(rfd2, FIONBIO, &one);
 		(void)ioctl(rem, FIONBIO, &one);
-#endif
    }
 
 	talk(nflag, omask, pid, rem, timeout);

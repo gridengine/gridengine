@@ -591,11 +591,7 @@ u_long32 sge_sysconf(sge_sysconf_t id)
    DENTER(BASIS_LAYER, "sge_sysconf");
    switch (id) {
       case SGE_SYSCONF_NGROUPS_MAX:
-#if defined(AIX42)
-         ret = NGROUPS;
-#else
          ret = sysconf(_SC_NGROUPS_MAX);
-#endif
       break;
       default:
          CRITICAL((SGE_EVENT, MSG_SYSCONF_UNABLETORETRIEVE_I, (int) id));

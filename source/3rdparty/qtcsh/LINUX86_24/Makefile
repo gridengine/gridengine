@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# $Id: Makefile,v 1.1 2004/01/29 17:00:57 andy Exp $
+# $Id: Makefile,v 1.2 2004/01/30 17:35:49 andy Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -30,7 +30,7 @@ LFLAGS=$(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = $(SGE_COPTS) -g -O2 -DLINUX6 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
+CFLAGS = $(SGE_COPTS) -g -O2 -DLINUX86 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....
@@ -226,7 +226,7 @@ LIBES= -lncurses -lcrypt 	 			 ## This is set by autoconf.
 
 
 EXTRAFLAGS =  $(AFSDEF) -I../../../libs/gdi
-EXTRALIBS =  $(AFSLIB) -L../../../LINUX6 $(SGE_LIBS) -lm
+EXTRALIBS =  $(AFSLIB) -L../../../LINUX86_24 $(SGE_LIBS) -lm
 
 
 # The difficult choice of a c-compiler...

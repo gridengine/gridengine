@@ -35,11 +35,6 @@
  *
  *--------------------------------------------------*/
 
-#ifdef SUN4
-#define EXIT_SUCCESS 0
-#define EXIT_FAILURE 1
-#endif
-
 #include <string.h>
 #include <stdlib.h>    /* need prototype for malloc */
 #include <errno.h>

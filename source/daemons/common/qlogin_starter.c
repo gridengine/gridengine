@@ -48,10 +48,6 @@
 #include <string.h>
 #include <netdb.h>
 
-#ifdef AIX41
-#  include <sys/select.h>
-#endif
-
 #include "basis_types.h"
 #include "sge_prog.h"
 #include "config_file.h"

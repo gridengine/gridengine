@@ -55,7 +55,7 @@
 #   include <rpcsvc/ypclnt.h>
 #endif
  
-#if defined(AIX32) || defined(AIX)
+#if defined(AIX)
 #   include <sys/select.h>
 #endif    
 

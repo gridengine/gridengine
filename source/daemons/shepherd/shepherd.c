@@ -43,10 +43,6 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 
-#if defined(AIX41)
-#  include <sys/select.h>
-#endif
-
 #if defined(LINUX)
 #  include <grp.h>
 #endif

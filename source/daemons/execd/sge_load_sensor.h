@@ -34,12 +34,6 @@
 
 #include <sys/time.h>
 
-
-
-#if defined(AIX32) || defined(AIX41)
-#   include "sys/select.h"
-#endif
-
 #define IDLE_LOADSENSOR_NAME "qidle"
 #define GNU_LOADSENSOR_NAME "qloadsensor"
 

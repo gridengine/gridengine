@@ -38,7 +38,7 @@ Content
    ----------------------------------------------------------------------
    aix42	AIX42		IBM AIX 4.2.x
    aix43	AIX43		IBM AIX 4.3.x, 32bit
-   aix51 AIX51 	runs only on AIX 5.1.x, 64bit kernel
+   aix51        AIX51 	        runs only on AIX 5.1.x, 64bit kernel
    alinux	ALINUX		Linux for Alpha AXP, glibc
    cray		UNICOS		Cray Unicos 10.0.x XMP, YMP, J90, C90, SV1, 
                                    and compatible hardware

@@ -653,7 +653,7 @@ spool_flatfile_open_file(lList **answer_list,
             return NULL;
          }
 
-#if !defined(AIX42) && !defined(DARWIN6)
+#if !defined(DARWIN6)
          flockfile(file);
 #endif
          fflush(file);

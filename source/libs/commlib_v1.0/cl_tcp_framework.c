@@ -1157,7 +1157,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
    struct sockaddr_in cli_addr;
    int new_sfd = 0;
    int sso;
-#if defined(AIX43) || defined(AIX51) || defined(AIX42)
+#if defined(AIX43) || defined(AIX51)
    size_t fromlen = 0;
 #else
    int fromlen = 0;

@@ -47,8 +47,6 @@
    typedef long long sge_rlim_t;
 #elif IRIX6
    typedef rlim64_t sge_rlim_t;
-#elif SUN4 || HPUX || AIX41
-   typedef int sge_rlim_t;
 #elif WIN32NATIVE
    typedef long sge_rlim_t;
 #else

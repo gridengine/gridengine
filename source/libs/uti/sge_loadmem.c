@@ -43,7 +43,7 @@
 #include "sge_os.h"
 #include "msg_utilib.h"
 
-#if !defined(LINUX) && !defined(SUN4) && !defined(HPUX) && !defined(CRAY) && !defined(DARWIN) && !defined(FREEBSD)
+#if !defined(LINUX) && !defined(CRAY) && !defined(DARWIN) && !defined(FREEBSD)
 
 #include <unistd.h>
 

@@ -76,10 +76,6 @@
 #	define strncasecmp( a, b, n) strnicmp( a, b, n)
 #endif
 
-#ifdef SUN4
-double strtod(const char *str, char **ptr);
-#endif
-
 u_long32 sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp, 
                            const char *str, const char *where, 
                            char *err_str, int err_len);

@@ -40,15 +40,8 @@ Boston, MA 02111-1307, USA.  */
 #include <rpc/types.h> /* MAXHOSTNAMELEN */
 #endif
 
-#if defined(AIX43) || defined(AIX42) || defined(sgi)
+#if defined(AIX43) || defined(sgi)
 #include <sys/param.h> /* MAXHOSTNAMELEN */
-#endif
-
-#ifdef SUN4
-#define MAXHOSTNAMELEN 1024
-#define PATH_MAX 1024
-#define EXIT_FAILURE 1
-extern char *strerror(int errno);
 #endif
 
 /****** Interactive/qmake/--Introduction ***************************************

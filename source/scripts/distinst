@@ -63,10 +63,6 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
 
 REMOTEBINARIES="rsh rshd rlogin"
 
-SUPPORTEDARCHS="aix42 aix43 aix51 alinux cray crayts craytsieee glinux hp10 \
-hp11 hp11-64 irix6 necsx4 sx slinux solaris solaris64 solaris86 osf4 tru64 \
-darwin fbsd-alpha fbsd-i386 fbsd-ia64 fbsd-ppc fbsd-sparc64"
-
 #SGEEE_UTILITYBINARIES="sge_share_mon sge_host_mon"
 SGEEE_UTILITYBINARIES="sge_share_mon"
 
@@ -148,23 +144,10 @@ ErrUsage()
    exit 1
 }
 
-IsSupportedArchBin()
-{
-   found=false
-   for i in $SUPPORTEDARCHS; do
-      if [ "$1" = "$i" ]; then
-         found=true
-      fi
-   done
-   echo $found
-}
-
 SetArchBin()
 {
    i=$1
-   if [ $i = aix42 ]; then
-      ARCHBIN=AIX42
-   elif [ $i = aix51 ]; then
+   if [ $i = aix51 ]; then
       ARCHBIN=AIX51
    elif [ $i = aix43 ]; then
       ARCHBIN=AIX43
@@ -174,23 +157,43 @@ SetArchBin()
       ARCHBIN=HP11 
    elif [ $i = hp11-64 ]; then
       ARCHBIN=HP1164 
-   elif [ $i = irix6 ]; then
-      ARCHBIN=IRIX6
-   elif  [ $i = glinux ]; then
-      ARCHBIN=LINUX6
-   elif  [ $i = alinux ]; then
-      ARCHBIN=ALINUX
-   elif  [ $i = slinux ]; then
-      ARCHBIN=SLINUX
+   elif [ $i = irix65 ]; then
+      ARCHBIN=IRIX65
+   elif  [ $i = lx22-alpha ]; then 
+      ARCHBIN=ALINUX_22
+   elif  [ $i = lx24-alpha ]; then 
+      ARCHBIN=ALINUX_24
+   elif  [ $i = lx26-alpha ]; then 
+      ARCHBIN=ALINUX_26
+   elif  [ $i = lx24-amd64 ]; then 
+      ARCHBIN=LINUXAMD64_24
+   elif  [ $i = lx26-amd64 ]; then 
+      ARCHBIN=LINUXAMD64_26
+   elif  [ $i = lx24-ia64 ]; then 
+      ARCHBIN=LINUXIA64_24
+   elif  [ $i = lx26-ia64 ]; then 
+      ARCHBIN=LINUXIA64_26
+   elif  [ $i = lx22-sparc ]; then 
+      ARCHBIN=SLINUX_22
+   elif  [ $i = lx24-sparc ]; then 
+      ARCHBIN=SLINUX_24
+   elif  [ $i = lx26-sparc ]; then 
+      ARCHBIN=SLINUX_26
+   elif  [ $i = lx22-x86 ]; then 
+      ARCHBIN=LINUX86_22
+   elif  [ $i = lx24-x86 ]; then 
+      ARCHBIN=LINUX86_24
+   elif  [ $i = lx26-x86 ]; then
+      ARCHBIN=LINUX86_26
    elif [ $i = osf4 ]; then
       ARCHBIN=ALPHA4
    elif [ $i = tru64 ]; then
       ARCHBIN=ALPHA5
-   elif [ $i = solaris86 ]; then
+   elif [ $i = sol-x86 ]; then
       ARCHBIN=SOLARIS86
-   elif [ $i = solaris64 ]; then
+   elif [ $i = sol-sparc64 ]; then
       ARCHBIN=SOLARIS64
-   elif [ $i = solaris ]; then
+   elif [ $i = sol-sparc ]; then
       ARCHBIN=SOLARIS
    elif [ $i = cray ]; then
       ARCHBIN=UNICOS
@@ -234,12 +237,8 @@ MakeArchDirs()
          Execute mkdir -p $DEST_SGE_ROOT/$d
       fi
       for a in $*; do
-         if [ `IsSupportedArchBin $a` = true ]; then
-            if [ ! -d $DEST_SGE_ROOT/$d/$a ]; then
-               Execute mkdir -p $DEST_SGE_ROOT/$d/$a
-            fi
-         else
-            echo architecture \"$a\" not supported
+         if [ ! -d $DEST_SGE_ROOT/$d/$a ]; then
+            Execute mkdir -p $DEST_SGE_ROOT/$d/$a
          fi
       done
    done

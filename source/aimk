@@ -43,6 +43,8 @@
 
 unsetenv buildarch BUILDARCH COMPILE_ARCH
 
+set COMPILE_ARCH = ""
+
 set buildarch = UNKNOWN
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -63,14 +65,11 @@ endif
 # Map buildarch into uppercase BUILDARCH
 #
 switch ($buildarch)
-case "aix42":
-   set BUILDARCH = AIX42
-   breaksw
 case "aix43":
    set BUILDARCH = AIX43
    breaksw
-case "alinux":
-   set BUILDARCH = ALINUX
+case "aix51":
+   set BUILDARCH = AIX51
    breaksw
 case "cray":
    set BUILDARCH = UNICOS
@@ -99,9 +98,6 @@ case "fbsd-ppc"
 case "fbsd-sparc64"
    set BUILDARCH = FREEBSD_SPARC64
    breaksw
-case "glinux":
-   set BUILDARCH = LINUX6
-   breaksw
 case "hp10":
    set BUILDARCH = HP10
    breaksw
@@ -111,8 +107,60 @@ case "hp11":
 case "hp11-64":
    set BUILDARCH = HP1164
    breaksw
-case "irix6":
-   set BUILDARCH = IRIX6
+case "irix65":
+   set BUILDARCH = IRIX65
+   breaksw
+case "lx22-alpha":
+   set BUILDARCH = ALINUX
+   set COMPILE_ARCH = ALINUX_22
+   breaksw
+case "lx24-alpha":
+   set BUILDARCH = ALINUX
+   set COMPILE_ARCH = ALINUX_24
+   breaksw
+case "lx26-alpha":
+   set BUILDARCH = ALINUX
+   set COMPILE_ARCH = ALINUX_26
+   breaksw
+case "lx24-amd64":
+   set BUILDARCH = LINUXAMD64
+   set COMPILE_ARCH = LINUXAMD64_24
+   breaksw
+case "lx26-amd64":
+   set BUILDARCH = LINUXAMD64
+   set COMPILE_ARCH = LINUXAMD64_26
+   breaksw
+case "lx24-ia64":
+   set BUILDARCH = LINUXIA64
+   set COMPILE_ARCH = LINUXIA64_24
+   breaksw
+case "lx26-ia64":               
+   set BUILDARCH = LINUXIA64
+   set COMPILE_ARCH = LINUXIA64_26
+   breaksw
+case "lx22-sparc":
+   set BUILDARCH = SLINUX
+   set COMPILE_ARCH = SLINUX_22
+   breaksw
+case "lx24-sparc":
+   set BUILDARCH = SLINUX
+   set COMPILE_ARCH = SLINUX_24
+   breaksw
+case "lx26-sparc":
+   set BUILDARCH = SLINUX 
+   set COMPILE_ARCH = SLINUX_26
+   breaksw
+case "lx22-x86":
+   set BUILDARCH = LINUX86
+   set COMPILE_ARCH = LINUX86_22
+   breaksw
+case "lx24-x86":
+   set BUILDARCH = LINUX86
+   set COMPILE_ARCH = LINUX86_24
+   breaksw
+case "lx26-x86":
+   set BUILDARCH = LINUX86
+   set COMPILE_ARCH = LINUX86_26
    breaksw
 case "necsx4":
    set BUILDARCH = NECSX4
@@ -125,30 +173,23 @@ case "sx":
 case "osf4":
    set BUILDARCH = ALPHA4
    breaksw
-case "slinux":
-   set BUILDARCH = SLINUX
-   breaksw
-case "solaris":
+case "sol-sparc":
    set BUILDARCH = SOLARIS
    breaksw
-case "solaris64":
+case "sol-sparc64":
    set BUILDARCH = SOLARIS64
    breaksw
-case "solaris86":
+case "sol-x86":
    set BUILDARCH = SOLARIS86
    breaksw
 case "tru64":
    set BUILDARCH = ALPHA5
    breaksw
-case "aix51":
-   set BUILDARCH = AIX51
-   breaksw
 default:
-   echo oops - no mapping for architecure \"$buildarch\" defined yet
+   echo cannot compile - no mapping for architecture \"$buildarch\" defined yet
    exit 1
    breaksw
 endsw
-
 
 # Source variables for definition of site dependent paths of software here
 #
@@ -177,7 +218,6 @@ usage:
    echo "-D*               -> include a macro definition in CFLAGS"
    echo "-catman           -> generate man pages in catman format"
    echo "-cc               -> use cc/CC to compile c/c++ code"
-   echo "-compress         -> enable compression of communication"
    echo "-dce              -> enable dce security"
    echo "-debug            -> compile with debug information"
    echo "-f                -> specify other Makefile instead of common/Makefile"
@@ -214,7 +254,6 @@ usage:
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
    echo "-only-remote      -> build only 3rdparty remote module (rsh, rshd, rlogin)"
-   echo "-only-zlib        -> build only 3rdparty zlib"
    echo "-opt              -> compile with high optimization"
    echo "-parallel n       -> spawn multiple make processes by passing option -j n to make"
    echo "-perlgui          -> build the experimental perlgui"
@@ -287,11 +326,9 @@ set   LFLAGS       = "-L."
 set   LIBS         = "-lm"
 set   OPTIMIZATION = 0
 set   GETTEXTBASE = "$SOURCE/3rdparty/gettext"
-set   MAKEZLIB    = 0
 set   TPLIB       = ""	# 3rdparty libs
 set   MAKESTRPTIME = 0
 set   MAKEFNMATCH = 0
-set   ZLIBBASE    = ""
 set   MTCFLAGS    = "-DSGE_MT"
 set   MTLFLAGS    = ""
 set   LOADAVGLIBS = ""
@@ -322,7 +359,6 @@ set   NOERR_CFLAG = ""
 set   GCC_NOERR_CFLAGS = ""
 set   GCC_NOSP = ""
 set   MEMCFLAG=""
-set   COMPILE_ARCH = ""
 set   INTERACTTARGETS = "qmake qtcsh"
 set   SLIBS=""
 # SECURE
@@ -365,7 +401,7 @@ set LFLAGS  = "-L$BERKELEYDB_HOME/lib $LFLAGS"
 # Compile with gettext and libintl
 # we have platform dependent defaults
 switch ($BUILDARCH) 
-   case LINUX6:
+   case LINUX86:
    case SOLARIS:
    case SOLARIS64:
    case SOLARIS86:
@@ -404,7 +440,6 @@ set   XmtFileSearchPath = ""
 # The following DEFINES are necessary in special cases
 # for more information see Xmt.tmpl
 # -DNO_EDITRES       if libXmu is not available (HP)
-# -DNO_MEMMOVE       if no memmove() define this (SUN4)
 # -DXMSTRING_TO_COMPOUND_TEXT_BUG  if tearoff menus dump core define this
 # -DBACKSPACEBUG     if BackSpace in a Cli widget dumps core define this
 # -DIBM_MANAGE_WORKAROUND     IBM/RS6000(AIX 3.2) if children of XmtLayout
@@ -445,7 +480,6 @@ while ($#argv >= 1 && $?found)
    case "-adoc":
       set CORE   = 0
       set MT     = 0
-      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -460,10 +494,6 @@ while ($#argv >= 1 && $?found)
       set CXX      = CC
       set CC_FORCED = 1
       breaksw
-   case "-compress"
-     set CFLAGS = "-DCOMMCOMPRESS $CFLAGS"
-     set ZLIBBASE = "$SOURCE/3rdparty/zlib"
-     breaksw
    case "-crypto":
       set CFLAGS  = "-DCRYPTO -I$OPENSSL_HOME/include $CFLAGS"
       set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
@@ -472,7 +502,7 @@ while ($#argv >= 1 && $?found)
         case SOLARIS:
         case SOLARIS64:
         case SOLARIS86:
-        case LINUX6:
+        case LINUX86:
            set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
            set KLIBS = ""
            breaksw
@@ -621,7 +651,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-core":
       set CORE   = 1
-      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -629,7 +658,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-depend":
       set CORE       = 0
-      set MAKEZLIB   = 0
       set QMAKE      = 0
       set QMON       = 0
       set QTCSH      = 0
@@ -639,7 +667,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-ngc":
       set CORE       = 0
-      set MAKEZLIB   = 0
       set QMAKE      = 0
       set QMON       = 0
       set QTCSH      = 0
@@ -648,7 +675,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-qmake":
       set CORE   = 0
-      set MAKEZLIB = 0
       set QMAKE  = 1
       set QMON   = 0
       set QTCSH  = 0
@@ -656,7 +682,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-qmon":
       set CORE   = 0
-      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 1
       set QTCSH  = 0
@@ -664,7 +689,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-qtcsh":
       set CORE   = 0
-      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 1
@@ -672,20 +696,10 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-only-remote":
       set CORE   = 0
-      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 1
-      breaksw
-   case "-only-zlib":
-      set CORE   = 0
-      set MAKEZLIB = 1
-      set QMAKE  = 0
-      set QMON   = 0
-      set QTCSH  = 0
-      set REMOTE = 0
-      set MT = 0
       breaksw
    case "-opt":
       set OPTIMIZATION = 1
@@ -772,7 +786,7 @@ while ($#argv >= 1 && $?found)
           case SOLARIS:
           case SOLARIS64:
           case SOLARIS86:
-          case LINUX6:
+          case LINUX86:
              set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
              set KLIBS = ""
              breaksw
@@ -866,13 +880,7 @@ if ( ! -d $COMPILE_ARCH ) then
 endif
 
 switch ($BUILDARCH)
-case AIX41:
-case AIX42:
 case AIX43:
-#   set INTERACTTARGETS = ""
-   if ( $BUILDARCH == AIX41 ) then
-      set INTERACTTARGETS = ""
-   endif
 
    set OFLAG    = "-O"
    if ( $OPTIMIZATION == 1 ) then
@@ -880,9 +888,6 @@ case AIX43:
    endif   
    
    set MT_FLAGS = "-DGETHOSTBYADDR_M"
-   if ( $BUILDARCH == AIX43 ) then
-      set MT_FLAGS = "-DGETHOSTBYNAME $MTFLAGS"
-   endif
 
    set CC       = xlc_r
    set CXX      = xlC_r
@@ -961,7 +966,7 @@ case ALINUX:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DALINUX -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DALINUX -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
@@ -1400,8 +1405,9 @@ case HP1164:
    set MTLFLAGS = "-lpthread"
    breaksw
 
-case LINUX5:
-case LINUX6:
+case LINUX86:
+case LINUXAMD64:
+case LINUXIA64:
    strings /lib/libc.so.6 | grep "GNU C Library" | grep '2.[23]' >& /dev/null
    if ( $status == 0 ) then
       set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
@@ -1411,15 +1417,13 @@ case LINUX6:
    if ( $USE_QMAKE == 0 ) then
       set MAKE = make
    endif
-   set OFLAG = "-O2"
-      if ( $OPTIMIZATION == 1 ) then
-         set OFLAG = "-O3"
-      endif
+   set OFLAG = "-O3"
    if ( "$CC" != insure ) then
       set CC       = gcc
       set CXX      = g++
    else
       set CFLAGS = "-Wno-error $CFLAGS"
+      set OFLAG = "-O2"
       set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
       set LIBS = "$LIBS"
    endif
@@ -1428,7 +1432,7 @@ case LINUX6:
       set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"
    endif
 
-   set CFLAGS = "-DLINUX -D$BUILDARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $CFLAGS"
+   set CFLAGS = "-DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SHAREDLD = $CC
@@ -1443,15 +1447,10 @@ case LINUX6:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   if ( $COMPILE_ARCH == "LINUX60" ) then
-      set GLIBC20DEF=-DLINUX60
-   else
-     set GLIBC20DEF = ""
-   endif
    if ( "$ADOC" != 1 ) then
-      set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+      set CFLAGS   = "$OFLAG -Wall -Werror $DEBUG_FLAG $CFLAGS"
    else 
-      set CFLAGS   = "$OFLAG $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+      set CFLAGS   = "$OFLAG $DEBUG_FLAG $CFLAGS"
    endif
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
@@ -1748,23 +1747,6 @@ foreach lib ( $TMP_SPOOLING_DEPS )
 end
 # end SPOOLING LIBRARY DEPENDENCIES
 
-# link against zlib. use absolute path to avoid conflicts with
-# pre-installed (probable older version) zlib
-# can be turned off by -nocompress
-if ( "$ZLIBBASE" != "" ) then
-   set ZLIB = "$ZLIBBASE/$COMPILE_ARCH/libz$LIBEXT"
-   set LINK_ZLIB = "-L$ZLIBBASE/$COMPILE_ARCH -lz"
-   set CORE_INCLUDE = "$CORE_INCLUDE -I$ZLIBBASE"
-#   set LIBS = "$LIBS -lz"
-#   set LFLAGS = "-L$ZLIBBASE/$COMPILE_ARCH $LFLAGS"
-   if ( $SHAREDLIBS == 1 ) then
-      set SHARED_LFLAGS = "-L$ZLIBBASE/$COMPILE_ARCH $SHARED_LFLAGS"
-   endif
-else
-   set ZLIB = ""
-   set LINK_ZLIB = ""
-endif
-
 #
 # for gettext
 #
@@ -1774,7 +1756,7 @@ if ( $WITH_GETTEXT == 1 ) then
       set LFLAGS = "-L $MYILIB"
       echo "Using $MYILIB path for i18n support"
    else
-      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" || $COMPILE_ARCH == "SOLARIS86" || $COMPILE_ARCH == "LINUX6" ) then
+      if ( $BUILDARCH == "SOLARIS" || $BUILDARCH == "SOLARIS64" || $BUILDARCH == "SOLARIS86" || $BUILDARCH == "LINUX86" ) then
          set LIBINTL = ""
          set HFLAGS = ""
       else
@@ -1986,34 +1968,6 @@ if ( "$MAKEFNMATCH" == 1 ) then
    cd $SOURCE
 endif
 
-if ( "$ZLIBBASE" != "" || "$MAKEZLIB" == 1 ) then
-   echo ______3_r_d_p_a_r_t_y__Z_L_I_B_______
-
-   cd $SOURCE/3rdparty/zlib
-
-   if ( ! -d $COMPILE_ARCH ) then
-      echo " INFO: Architecture dir $COMPILE_ARCH not existing for 3rdparty zlib. Making"
-      mkdir $COMPILE_ARCH
-   endif
-
-   cd $COMPILE_ARCH
-
-  $MAKE $MAKEOPT -f ../Makefile.aimk "MAKE=$MAKE" "CC=$CC" \
-      "CFLAGS=$CFLAGS" "SOURCE=$SOURCE" \
-      "KRBLIBS=$KRBLIBS" \
-      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
-      "AR=$AR" "ARFLAGS=$ARFLAGS" \
-      "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
-      "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
-
-   if ( $status != 0 ) then
-      echo not done
-      exit 1
-   endif
-
-   cd $SOURCE
-endif
-
 if ( "$ADD_COPYRIGHT" == 1 ) then
    set CFLAGS = "-DADD_COPYRIGHT -I$COPYRIGHT_DIR $CFLAGS"
 else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
@@ -2029,13 +1983,13 @@ if ( "$CORE" == 1 ) then
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
        "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
        "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
-       "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS $LINK_ZLIB" \
+       "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
        "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
        "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" \
        "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
        "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
        "GCC_NOSP=$GCC_NOSP" \
-       "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
+       "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
        "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
        "INTERACTTARGETS=$INTERACTTARGETS" \
        "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
@@ -2068,8 +2022,8 @@ if ( "$QMON" == 1) then
       "CFLAGS=$CFLAGS" "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
       "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" "KRBLIBS=$KRBLIBS" \
       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
-      "AR=$AR" "ARFLAGS=$ARFLAGS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
-      "MEMCFLAG=$MEMCFLAG" \
+      "AR=$AR" "ARFLAGS=$ARFLAGS" "TPLIB=$TPLIB" \
+      "MEMCFLAG=$MEMCFLAG"  \
       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
       "GSHARED_CFLAGS=$GSHARED_CFLAGS" "GSHARED_LFLAGS=$GSHARED_LFLAGS" "GLIBEXT=$GLIBEXT" \
       "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
@@ -2090,12 +2044,12 @@ if ( "$QMON" == 1) then
        "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" \
        "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" \
        "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-       "MSDIR=$MSDIR" "LIBS=$KLIBS $LIBS $LINK_ZLIB" \
+       "MSDIR=$MSDIR" "LIBS=$KLIBS $LIBS" \
        "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
        "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" \
        "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
        "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
-       "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
+       "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
        "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" "COMPILE_ARCH=$COMPILE_ARCH" \
        "INTERACTTARGETS=$INTERACTTARGETS" \
        "LIBEXT=$LIBEXT" "GLIBEXT=$GLIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
@@ -2170,20 +2124,18 @@ if ( "$QTCSH" == 1) then
    if ( $SHAREDLIBS == 1 ) then
       set SHARED_PATH_NAME = `dist/util/arch -lib`
 
-      switch ( $BUILDARCH )
-         case AIX41:
-         case AIX42:
+      switch ( $COMPILE_ARCH )
          case AIX43:
             set SGE_LOPTS = "-brtl"
             breaksw
       endsw
 
-      setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}:${ZLIBBASE}/${COMPILE_ARCH}
+      setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}
    endif
 
    set SGE_LIBS = "-lsge -lpthread -lngc -lngclists"
 
-   if ( "$BUILDARCH" == "NECSX5" ) then
+   if ( "$COMPILE_ARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"
    endif
 
@@ -2194,7 +2146,7 @@ if ( "$QTCSH" == 1) then
    endif
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
-         "SGE_LIBS=$SGE_LIBS $KRBLIB $LINK_ZLIB $LFLAGS $KLFLAGS $KLIBS $DLLIB" \
+         "SGE_LIBS=$SGE_LIBS $KRBLIB $LFLAGS $KLFLAGS $KLIBS $DLLIB" \
          "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" "DLLIB=$DLLIB" $argv
 
    if ( $status != 0 ) then

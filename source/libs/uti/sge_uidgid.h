@@ -37,11 +37,6 @@
 #include "sge_dstring.h"
 #include "sge_unistd.h"
 
-#if defined(SUN4)
-   int seteuid(uid_t euid);
-   int setegid(gid_t egid);
-#endif 
-
 #if defined(HP10) || defined(HP11)
 #  define seteuid(euid) setresuid(-1, euid, -1)
 #  define setegid(egid) setresgid(-1, egid, -1)

@@ -1,3 +1,6 @@
+AS-2004-01-30-1: Change:    Change architecture names according to Issue #644
+                 Issue:     #644
+
 EB-2004-01-30-0: Enhancem.: Changed some man-pages concerning CQs
 
 SG-2004-01-30-1: Bugfix:    The vmem usage did not decrease anymore.

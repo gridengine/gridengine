@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#if defined(SUN4) || defined(DARWIN) || defined(FREEBSD)
+#if defined(DARWIN) || defined(FREEBSD)
 #   include <sys/time.h>
 #endif
 

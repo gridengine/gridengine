@@ -35,10 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef AIX32
-#   include <sys/select.h>
-#endif
-
 #include "sge_bootstrap.h"
 #include "sge_unistd.h"
 #include "sge_loadsensorL.h"

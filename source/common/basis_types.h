@@ -87,10 +87,6 @@ typedef enum {
 #define u64c(x)  (unsigned long long)(x)
 #endif
 
-#if defined(SUN4)
-#  include <sys/param.h>
-#endif
-
 #if defined(ALPHA) || defined(HP11)
 #  include <limits.h>
 #else
@@ -141,9 +137,7 @@ extern "C" {
 
 #if (defined(SOLARIS) && !defined(SOLARIS64)) || defined(IRIX6) 
 #  define gid_t_fmt    "%ld"
-#elif defined(LINUX5)
-#  define gid_t_fmt    "%hu"
-#elif defined(LINUX6)
+#elif defined(LINUX86)
 #  define gid_t_fmt    "%u"
 #else
 #  define gid_t_fmt    "%d"
@@ -196,12 +190,6 @@ typedef char stringT[MAX_STRING_SIZE];
 /* non-quoted string not limited intentionally */
 #define SN_UNLIMITED  "%s"
 
-#if defined(SUN4)
-    int setgroups(int ngroups, gid_t gidset[]);
-    int seteuid(uid_t euid);
-    int setegid(gid_t egid);
-#endif
-
 #if defined(HP10) || defined(HP11)
 #  define seteuid(euid) setresuid(-1, euid, -1)
 #  define setegid(egid) setresgid(-1, egid, -1)
@@ -245,16 +233,14 @@ typedef char stringT[MAX_STRING_SIZE];
    else \
       variable = pthread_getspecific(key)
 
-#if !defined(AIX42) && !defined(FREEBSD)
+#if !defined(FREEBSD)
 #define HAS_GETPWNAM_R
 #define HAS_GETGRNAM_R
 #define HAS_GETPWUID_R
 #define HAS_GETGRGID_R
 #endif
 
-#if !defined(AIX42)
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R
-#endif
 
 #endif /* __BASIS_TYPES_H */

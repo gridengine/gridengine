@@ -32,7 +32,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 #
-# Get Grid Engine architecture and set architecutre dependent variables.
+# Get Grid Engine architecture and set architecture dependent variables.
 # This script is *sourced* by the installation procedure
 #
 # There are also a couple of shell functions defined which are used by other
@@ -53,7 +53,7 @@ fi
 ROOTGROUP=root
 
 case $ARCH in
- solaris|solaris64|solaris86)
+ sol-*)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=sysv_rc
@@ -66,7 +66,7 @@ case $ARCH in
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    GETTEXT=/usr/bin/gettext
    ;;
- alinux|glinux|slinux)
+ lx*)
    AWK=/usr/bin/gawk
    ECHO="/bin/echo -e"
    if [ -x /sbin/insserv ]; then
@@ -86,7 +86,7 @@ case $ARCH in
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    GETTEXT=/usr/bin/gettext
    ;;
- osf4|tru64)
+ tru64)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=sysv_rc
@@ -98,7 +98,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/telnetd
    RLOGIN_DAEMON=/usr/sbin/rlogind
    ;;
- irix6|irix65)
+ irix*)
    AWK=/usr/bin/nawk
    ECHO=/sbin/echo
    RC_FILE=sysv_rc
@@ -110,7 +110,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/etc/telnetd
    RLOGIN_DAEMON=/usr/etc/rlogind
    ;;
- hp10|hp11|hp11-64)
+ hp*)
    AWK=/usr/bin/awk
    ECHO=/bin/echo
    RC_FILE=sysv_rc
@@ -122,7 +122,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/lbin/telnetd
    RLOGIN_DAEMON=/usr/lbin/rlogind
    ;;
- aix42|aix43)
+ aix*)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=/etc/rc
@@ -132,7 +132,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/telnetd
    RLOGIN_DAEMON=/usr/sbin/rlogind
    ;;
- cray|crayts|craytsieee)
+ cray*)
    AWK=/usr/bin/nawk
    ECHO=/bin/echo
    RC_FILE=/etc/rc
@@ -142,7 +142,7 @@ case $ARCH in
    QLOGIN_DAEMON=/etc/telnetd
    RLOGIN_DAEMON=/etc/rlogind
    ;;
- necsx4|necsx5|sx)
+ nec*|sx*)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=

@@ -1569,6 +1569,14 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
                   }
                }
             } while (is_double == 1);
+            
+            /* always increment client id */
+            if (handle->next_free_client_id >= CL_DEFINE_MAX_MESSAGE_ID ) {
+               handle->next_free_client_id = 1;
+            } else {
+               handle->next_free_client_id = handle->next_free_client_id + 1;
+            }
+
          } else {
             CL_LOG(CL_LOG_WARNING,"handle of connection is not set");
             if ( connection->receiver->comp_id == 0) {
@@ -1578,7 +1586,6 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
                connection->remote->comp_id = 1;
             }
          }
-                 
       }
       connection->read_buffer_timeout_time = 0;
       connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + connection->data_read_buffer_processed;
@@ -2058,10 +2065,11 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
 
       handler = connection->handler;
       if (handler != NULL) {
-         if ( handler->service_provider != 0 ) {
-            if ( handler->local->comp_id == 0  ) {
-               CL_LOG(CL_LOG_ERROR,"handler comp id is set to zero and is service provider");
-               CL_LOG_INT(CL_LOG_ERROR,"setting handle comp id to reported client id:", connection->local->comp_id);
+         if ( handler->local->comp_id == 0  ) {
+            handler->local->comp_id = connection->local->comp_id;
+            CL_LOG_INT(CL_LOG_ERROR,"setting handler comp_id to reported client id:", handler->local->comp_id);
+            if ( handler->service_provider != 0 ) {
+               CL_LOG_INT(CL_LOG_ERROR,"setting service handle comp_id to reported client id:", connection->local->comp_id);
                handler->service_handler->local->comp_id = connection->local->comp_id;
             }
          }

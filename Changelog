@@ -1,3 +1,9 @@
+CR-2004-04-15-1: Enhancem.: - always increment auto client id pointer to ensure
+                              that event clients won't reconnect with a client
+                              id from a former connection
+                 Changed:   commlib 
+                 Review:    DT  
+
 AH-2004-04-15-0: Bugfix:    Fix sequential resource reservation broken by 
                             AH-2004-04-14-1.
 

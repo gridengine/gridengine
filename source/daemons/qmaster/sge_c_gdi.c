@@ -582,7 +582,6 @@ int sub_command
          {
             u_long32 event_number, now;
             static u_long32 last_order_arrived = 0;
-            lListElem *schedd = sge_locate_event_client(EV_ID_SCHEDD);
             
             /* statistics */
             if (lFirst(request->lp) == ep) {

@@ -1,3 +1,5 @@
+CR-2002-05-14-0: Cleanup:   Removed unused schedd variable in sge_c_gdi_add()
+
 AH-2002-05-13-1: Change:    Do no longer flush events immediately after orders 
                             arrival to 'guarantee' scheduling is done not more 
                             often than specified with schedule_interval in 

@@ -1,3 +1,7 @@
+AH-2004-11-18-0: Doc:       Fix doc/README-Autoinstall.txt missing in 
+                            distribution.
+                 Review:    TBD
+
 JG-2004-11-18-0: Testsuite: Fixes for tests bugs/issuezilla/1291,
                             system_tests/clients/qalter,
                             system_tests/clients/qsub.

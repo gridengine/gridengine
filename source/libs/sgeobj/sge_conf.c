@@ -139,6 +139,14 @@ bool sharetree_reserved_usage = false;
 bool use_qsub_gid = false;
 
 /*
+ * Job environment inheritance
+ */
+bool set_lib_path = false;
+/* This should match the default set in
+ * shepherd/builtin_starter.c:inherit_env(). */
+bool inherit_env = true;
+
+/*
  * notify_kill_default and notify_susp_default
  *       0  -> use the signal type stored in notify_kill and notify_susp
  *       1  -> user default signale (USR1 for susp and usr2 for kill)
@@ -698,6 +706,12 @@ int merge_configuration(lListElem *global, lListElem *local,
          }
          if (!strncasecmp(s, "EXECD_PRIORITY", sizeof("EXECD_PRIORITY")-1)) {
             execd_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
+            continue;
+         }
+         if (parse_bool_param(s, "SET_LIB_PATH", &set_lib_path)) {
+            continue;
+         }
+         if (parse_bool_param(s, "INHERIT_ENV", &inherit_env)) {
             continue;
          }
       }

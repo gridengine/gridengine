@@ -34,7 +34,10 @@
 
 
 void son(char *, char *, int);
-int set_environment(void);
+int sge_set_environment(void);
+char** sge_get_environment(void);
+int sge_set_env_value(const char *, const char *);
+const char *sge_get_env_value(const char *);
 void start_command(char *, char *, char *, char *, char *, int, int, int, int, char *);
 
 #endif /* __BUILTIN_STARTER_H */

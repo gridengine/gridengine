@@ -46,9 +46,6 @@
 #include "msg_common.h"
 #include "msg_clients_common.h"
 
-#ifndef QCONF_FLATFILE
-#include "spool/classic/read_write_host_group.h"
-#else
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "sgeobj/sge_hgroupL.h"
@@ -86,7 +83,6 @@ static const spool_flatfile_instr hgqconf_sfi =
    &hgqconf_sub_name_value_space_sfi,
    { NoName, NoName, NoName }
 };
-#endif
 
 static void 
 hgroup_list_show_elem(lList *hgroup_list, const char *name, int indent);
@@ -123,7 +119,7 @@ bool
 hgroup_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                            u_long32 gdi_command)
 {
-   bool ret = false;
+   bool ret = true;
 
    DENTER(TOP_LAYER, "hgroup_add_del_mod_via_gdi");
    if (this_elem != NULL) {
@@ -174,15 +170,12 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
 {
    bool ret = false;
    int status = 0;
-#ifdef QCONF_FLATFILE
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-#endif 
    
    DENTER(TOP_LAYER, "hgroup_provide_modify_context");
    if (this_elem != NULL && *this_elem) {
       char *filename = NULL;
-#ifdef QCONF_FLATFILE
       filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
                                                      false, HGRP_fields,
                                                      &hgqconf_sfi,
@@ -192,15 +185,12 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
          DEXIT;
          SGE_EXIT (1);
       }
-#else
-      filename = write_host_group(2, 1, *this_elem);
-#endif 
+      
       status = sge_edit(filename);
       
       if (status >= 0) {
          lListElem *hgroup;
 
-#ifdef QCONF_FLATFILE
          fields_out[0] = NoName;
          hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
                                          HGRP_fields, fields_out, true, &hgqconf_sfi,
@@ -218,9 +208,6 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
             hgroup = lFreeElem (hgroup);
             answer_list_output (answer_list);
          }      
-#else
-         hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL);
-#endif
 
          if (hgroup != NULL) {
             if (object_has_differences(*this_elem, answer_list,
@@ -283,11 +270,10 @@ bool hgroup_add(lList **answer_list, const char *name, bool is_name_validate )
          ret = false;
       }
       if (ret) {
-         ret &= hgroup_provide_modify_context(&hgroup, answer_list, true);
+         ret = hgroup_provide_modify_context(&hgroup, answer_list, true);
       }
       if (ret) {
-         ret &= hgroup_add_del_mod_via_gdi(hgroup, answer_list, 
-                                              SGE_GDI_ADD); 
+         ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_ADD); 
       } 
    }  
   
@@ -298,16 +284,13 @@ bool hgroup_add(lList **answer_list, const char *name, bool is_name_validate )
 bool hgroup_add_from_file(lList **answer_list, const char *filename) 
 {
    bool ret = true;
-#ifdef QCONF_FLATFILE
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-#endif 
 
    DENTER(TOP_LAYER, "hgroup_add");
    if (filename != NULL) {
       lListElem *hgroup;
 
-#ifdef QCONF_FLATFILE
       fields_out[0] = NoName;
       hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
                                       HGRP_fields, fields_out, true, &hgqconf_sfi,
@@ -325,14 +308,12 @@ bool hgroup_add_from_file(lList **answer_list, const char *filename)
          hgroup = lFreeElem (hgroup);
          answer_list_output (answer_list);
       }      
-#else
-      hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL);
-#endif
+
       if (hgroup == NULL) {
          ret = false;
       }
       if (ret) {
-         ret &= hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_ADD); 
+         ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_ADD); 
       } 
    }  
   
@@ -355,10 +336,10 @@ bool hgroup_modify(lList **answer_list, const char *name)
          ret = false;
       }
       if (ret) {
-         ret &= hgroup_provide_modify_context(&hgroup, answer_list, false);
+         ret = hgroup_provide_modify_context(&hgroup, answer_list, false);
       }
       if (ret) {
-         ret &= hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_MOD);
+         ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_MOD);
       }
       if (hgroup) {
          hgroup = lFreeElem(hgroup);
@@ -372,16 +353,13 @@ bool hgroup_modify(lList **answer_list, const char *name)
 bool hgroup_modify_from_file(lList **answer_list, const char *filename)
 {
    bool ret = true;
-#ifdef QCONF_FLATFILE
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-#endif 
 
    DENTER(TOP_LAYER, "hgroup_modify");
    if (filename != NULL) {
       lListElem *hgroup;
 
-#ifdef QCONF_FLATFILE
       fields_out[0] = NoName;
       hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
                                       HGRP_fields, fields_out, true, &hgqconf_sfi,
@@ -399,9 +377,7 @@ bool hgroup_modify_from_file(lList **answer_list, const char *filename)
          hgroup = lFreeElem (hgroup);
          answer_list_output (answer_list);
       }      
-#else
-      hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL);
-#endif
+
       if (hgroup == NULL) {
          sprintf(SGE_EVENT, MSG_HGROUP_FILEINCORRECT_S, filename);
          answer_list_add(answer_list, SGE_EVENT,
@@ -409,7 +385,7 @@ bool hgroup_modify_from_file(lList **answer_list, const char *filename)
          ret = false;
       }
       if (ret) {
-         ret &= hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_MOD);
+         ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_MOD);
       }
       if (hgroup) {
          hgroup = lFreeElem(hgroup);
@@ -429,7 +405,7 @@ bool hgroup_delete(lList **answer_list, const char *name)
       lListElem *hgroup = hgroup_create(answer_list, name, NULL, true); 
    
       if (hgroup != NULL) {
-         ret &= hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_DEL); 
+         ret = hgroup_add_del_mod_via_gdi(hgroup, answer_list, SGE_GDI_DEL); 
       }
    }
    DEXIT;
@@ -445,18 +421,15 @@ bool hgroup_show(lList **answer_list, const char *name)
       lListElem *hgroup = hgroup_get_via_gdi(answer_list, name); 
    
       if (hgroup != NULL) {
-#ifdef QCONF_FLATFILE
          spool_flatfile_write_object(answer_list, hgroup, false, HGRP_fields,
                                      &hgqconf_sfi, SP_DEST_STDOUT,
                                      SP_FORM_ASCII, NULL, false);
       
-      if (answer_list_output(answer_list)) {
-         DEXIT;
-         SGE_EXIT (1);
-      }
-#else
-         write_host_group(0, 0, hgroup);
-#endif 
+         if (answer_list_output(answer_list)) {
+            DEXIT;
+            SGE_EXIT (1);
+         }
+
          hgroup = lFreeElem(hgroup);
       } else {
          sprintf(SGE_EVENT, MSG_HGROUP_NOTEXIST_S, name);

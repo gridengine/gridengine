@@ -36,7 +36,7 @@
 #include "sge_dstring.h"
 #include "sge_subordinateL.h"
 
-int
+bool
 tst_sos(int used, int total, lListElem *so);
 
 const char *
@@ -48,6 +48,7 @@ so_list_add(lList **this_list, lList **answer_list, const char *so_name,
 
 bool
 so_list_resolve(const lList *so_list, lList **answer_list,
-                lList **resolved_so_list, const char *full_name);
+                lList **resolved_so_list, const char *qinstance_name,
+                const char *hostname);
 
 #endif /* __SGE_SUBORDINATE_H */

@@ -697,7 +697,36 @@ char *err_str
                                            lGetList(jep, JB_env_list),
                                            cplx);
 
-      var_list_set_sharedlib_path(&environmentList);
+      /* Bugfix: Issuezilla 1300
+       * Because this change could break pre-existing installations, it's been
+       * made optional. */
+      if (set_lib_path) {
+         /* If we're supposed to be inheriting the environment from shell that
+          * spawned the execd, we end up clobbering the lib path with the
+          * following call because what we write out overwrites what gets
+          * inherited.  To solve this, we have to set the inherited lib path
+          * into the environmentList so that the following call finds it,
+          * prepends to it, and write it out.
+          * This is really completely backwards from the point of this bug fix,
+          * but if we don't do this the resulting behavior is not what an
+          * average user would expect.
+          * This approach has the side effect that when inherit_env and
+          * set_lib_path are both true, the lib path will very likely end up
+          * containing two SGE lib entries because the shell that spawned the
+          * execd mostly likely had the SGE lib set in its lib path.  The hassle
+          * of checking through the lib path to see if the SGE lib is already
+          * set is not worth it, in my opinion. */
+         if (inherit_env) {
+            const char *lib_path_env = var_get_sharedlib_path_name();
+            const char *lib_path = sge_getenv(lib_path_env);
+
+            if (lib_path != NULL) {
+               var_list_set_string (&environmentList, lib_path_env, lib_path);
+            }
+         }
+         
+         var_list_set_sharedlib_path(&environmentList);
+      }
 
       /* set final of variables whose value shall be replaced */ 
       var_list_copy_prefix_vars(&environmentList, environmentList,
@@ -1274,7 +1303,10 @@ char *err_str
    }   
 
    /* shall shepherd write osjob_id, or is it done by (our) rshd */
-   fprintf(fp, "write_osjob_id=%d", write_osjob_id);
+   fprintf(fp, "write_osjob_id=%d\n", write_osjob_id);
+   
+   /* should the job inherit the execd's environment */
+   fprintf(fp, "inherit_env=%d", (int)inherit_env);
 
    lFreeList(environmentList);
    fclose(fp);

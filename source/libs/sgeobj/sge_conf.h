@@ -119,6 +119,8 @@ extern bool set_grd_environment;
 extern bool set_cod_environment;
 extern int scheduler_timeout;
 extern int max_dynamic_event_clients;
+extern bool set_lib_path;
+extern bool inherit_env;
 extern int spool_time;
 
 /* reporting params */

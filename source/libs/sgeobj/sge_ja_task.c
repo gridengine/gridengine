@@ -316,10 +316,14 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
    DENTER(TOP_LAYER, "sge_parse_jobtasks");
    job_str = strdup(str_jobtask);
 
+   /* An empty job id string is a bad job id string! */
+   if (strcmp (job_str, "") == 0) {
+      ret = -1;
+   }
    /*
    ** dup the input string for tokenizing
    */
-   if (isdigit(job_str[0])) {
+   else if(isdigit(job_str[0])) {
       const double epsilon = 1.0E-12;
       char *end_ptr = NULL;
       double dbl_value;
@@ -354,7 +358,7 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
    }
 
    if (ret == 1) {
-      if (!include_names && !isdigit(job_str[0]) && strcmp(job_str, "\"*\"")) {
+      if (!include_names && !isdigit(job_str[0]) && (strcmp(job_str, "\"*\"") != 0)) {
          ret = -1;
       }
       else {   

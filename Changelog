@@ -1,3 +1,24 @@
+DT-2004-11-12-0: Bugfix:    o qmaster now uses very little memory for
+                              calculating subordinate queue suspension.
+                            o qmaster now ignores NULL job ids.
+                            o "" is now rejected as an invalid job id.
+                            o qconf now sets status to 1 for failed host group
+                              and cluster queue operations.
+                            o The lib path will now only be updated if the execd
+                              param, SET_LIB_PATH, is set.
+                            o The inheritance by jobs of environment of the
+                              shell which started the execd can now be disabled
+                              with the INHERIT_ENV execd param.
+                            o qconf now correctly prints subordinate queue
+                              lists.
+                            o Subordinate queues are no properly suspended at
+                              qmaster startup.
+                            o Fixed broken build on Alpha 5
+                 Review:    AH, SG, AS, AA, EB
+                 Changed:   sgeobj, qmaster, execd, shepherd, qconf, qhost
+                 Issue:     1289, 1291, 1295, 1300, 1324, 1335
+                 Bugtraq:   6194625, 6176181, 6174915, 6185211, 6193348, 6194713
+
 CR-2004-11-12-0: Bugfix:    - commlib called connect() even when connect is
                               already in progress
                  Changed:   commlib
@@ -80,6 +101,7 @@ SG-2004-11-08-0: Bugfix:    fixed SG-2004-11-03-0
                  Changed:   master
                  Review:    EB
 
+>>>>>>> 1.2354
 CR-2004-11-05-1: Bugfix:    fixed broken build
 
 CR-2004-11-05-0: Enhancm.:  qping -dump (communication traffic) option

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/11/12 15:40:07 $     Revision: $Revision: 1.38 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/11/12 17:41:42 $     Revision: $Revision: 1.39 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/11/12 15:40:07 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/11/12 17:41:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1087,6 +1087,31 @@ if rsh and rshd components are used which are provided with xxQS_NAMExx
 not be changed from the default).
 .\"
 .\"
+.IP "\fIINHERIT_ENV\fP"
+This parameter indicates whether the shepherd should allow the environment
+inherited by the execution daemon from the shell that started it to be inherited
+by the job it's starting.  When true, any environment variable that is set in
+the shell which starts the execution daemon at the time the execution daemon is
+started will be set in the environment of any jobs run by that execution daemon,
+unless the environment variable is explictly overridden, such as PATH or
+LOGNAME.  If set to false, each job starts with only the environment variables
+that are explicitly passed on by the execution daemon, such as PATH and LOGNAME.
+The default value is true.
+.PP
+.IP "\fISET_LIB_PATH\fP"
+This parameter tells the execution daemon whether to add the xxQS_NAMExx shared
+library directory to the library path of executed jobs.  If set to true, and
+INHERIT_ENV is also set to true, the xxQS_NAMExx shared library directory will
+be prepended to the library path which is inherited from the shell which started
+the execution daemon.  If INHERIT_ENV is set to false, the library path will
+contain only the xxQS_NAMExx shared library directory.  If set to false, and
+INHERIT_ENV is set to true, the library path exported to the job will be the one
+inherited from the shell which started the execution daemon.  If INHERIT_ENV is
+also set to false, the library path will be empty.  After the execution daemon
+has set the library path, it may be further altered by the shell in which the
+job is executed, or by the job script itself.  The default value for
+SET_LIB_PATH is false.
+.PP
 .SH "\fBreporting_params\fP"
 Used to define the behaviour of reporting modules in the xxQS_NAMExx 
 qmaster. Changes to the \fBreporting_params\fP takes immediate effect.

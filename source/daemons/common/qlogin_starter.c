@@ -394,7 +394,7 @@ const char *get_error_of_qrsh_starter(void)
 *     11, if the acception of a connecting client fails
 *     12, if the execution of the daemon fails
 ******************************************************************************/
-int qlogin_starter(const char *cwd, char *daemon)
+int qlogin_starter(const char *cwd, char *daemon, char** env)
 {
    int ret;
    int port;
@@ -565,7 +565,7 @@ int qlogin_starter(const char *cwd, char *daemon)
 #endif
 
    /* that it. */
-   execv(args[0], args);
+   execve(args[0], args, env);
 
    /* oh oh, exec failed */
    /* no way to tell anyone, becuase all FDs are closed */

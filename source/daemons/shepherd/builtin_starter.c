@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "sge_string.h"
 #include "sge_stdlib.h"
@@ -77,12 +78,25 @@ struct rusage {
 #include "config_file.h"
 #include "sge_uidgid.h"
 
+/* The maximum number of env variables we can export. */
+#define MAX_NUMBER_OF_ENV_VARS 1023
+
+static char* shepherd_env[MAX_NUMBER_OF_ENV_VARS + 1];
+static int shepherd_env_index = -1;
+static int inherit_environ = -1;
+
 /* static functions */
 static char **read_job_args(char **args, int extra_args);
 static char *build_path(int type);
 static char *parse_script_params(char **script_file);
+static void setup_environment (void);
+static bool inherit_env (void);
+#if 0 /* Not currently used, but looks kinda useful... */
+static void set_inherit_env (bool inherit);
+#endif
 extern int  shepherd_state;
 extern char shepherd_job_dir[];
+extern char **environ;
 
 /************************************************************************
  This is the shepherds buitin starter.
@@ -263,7 +277,7 @@ int truncate_stderr_out
    
    setrlimits(!strcmp(childname, "job"));
 
-   set_environment();
+   sge_set_environment();
 
 	/* Create the "error" and the "exit" status file here.
 	 * The "exit_status" file indicates that the son is started.
@@ -533,10 +547,10 @@ int truncate_stderr_out
 
    cwd = get_conf_val("cwd");
 
-   sge_setenv("SGE_STDIN_PATH", stdin_path);
-   sge_setenv("SGE_STDOUT_PATH", stdout_path);
-   sge_setenv("SGE_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
-   sge_setenv("SGE_CWD_PATH", cwd);
+   sge_set_env_value("SGE_STDIN_PATH", stdin_path);
+   sge_set_env_value("SGE_STDOUT_PATH", stdout_path);
+   sge_set_env_value("SGE_STDERR_PATH", merge_stderr?stdout_path:stderr_path);
+   sge_set_env_value("SGE_CWD_PATH", cwd);
 
    /*
    ** for interactive jobs, we disregard the current shell_start_mode
@@ -630,13 +644,13 @@ int truncate_stderr_out
        (starter_method = get_conf_val("starter_method")) &&
        strcasecmp(starter_method, "none")) {
 
-      sge_setenv("SGE_STARTER_SHELL_PATH", shell_path);
+      sge_set_env_value("SGE_STARTER_SHELL_PATH", shell_path);
       shell_path = starter_method;
-      sge_setenv("SGE_STARTER_SHELL_START_MODE", shell_start_mode);
+      sge_set_env_value("SGE_STARTER_SHELL_START_MODE", shell_start_mode);
       if (!strcasecmp("unix_behavior", shell_start_mode))
          shell_start_mode = "posix_compliant";
       if (use_login_shell)
-         sge_setenv("SGE_STARTER_USE_LOGIN_SHELL", "true");
+         sge_set_env_value("SGE_STARTER_USE_LOGIN_SHELL", "true");
    }
 
    /* get basename of shell for building argv[0] */
@@ -751,14 +765,32 @@ int truncate_stderr_out
    return;
 }
 
-/*******************************************************************
- read environment from "environment"-file and make it actual
- *******************************************************************/
-int set_environment()
+/****** Shepherd/sge_set_environment() *****************************************
+*  NAME
+*     sge_set_environment () -- Read the environment from the "environment" file
+*     and store it in the appropriate environment, inherited or internal.
+*
+*  SYNOPSIS
+*      int sge_set_environment(void)
+*
+*  FUNCTION
+*     This function reads the "environment" file written out by the execd and
+*     stores each environment variable entry in the appropriate environment,
+*     either internal or inherited.
+*
+*  RESULTS
+*     int - error code: 0: good, 1: bad
+*
+*  NOTES
+*      MT-NOTE: sge_set_environment() is not MT safe
+*******************************************************************************/
+int sge_set_environment()
 {
    FILE *fp;
    char buf[10000], *name, *value, err_str[10000];
    int line=0;
+
+   setup_environment ();
    
    if (!(fp = fopen("environment", "r"))) {
       sprintf(err_str, "can't open environment file: %s",
@@ -779,7 +811,7 @@ int set_environment()
          if (ash) {
             char s[100];
             sprintf(s, "%lld", ash);
-            sge_setenv("OSJOBID", s);
+            sge_set_env_value("OSJOBID", s);
          }
       }
    }
@@ -796,7 +828,7 @@ int set_environment()
          if (jobid) {
             char s[100];
             sprintf(s, "%d", jobid);
-            sge_setenv("OSJOBID", s);
+            sge_set_env_value("OSJOBID", s);
          }
       }
    }
@@ -812,7 +844,7 @@ int set_environment()
          if (jobid) {
             char s[100];
             sprintf(s, "%ld", jobid);
-            sge_setenv("OSJOBID", s);
+            sge_set_env_value("OSJOBID", s);
          }                            
       }
    }
@@ -838,11 +870,186 @@ int set_environment()
       if (!value)
          value = "";
 
-      sge_setenv(name, value);
+      sge_set_env_value(name, value);
    }
 
    fclose(fp);
    return 0;
+}
+
+/****** Shepherd/setup_environment() *******************************************
+*  NAME
+*     setup_environment () -- Set up the internal environment
+*
+*  SYNOPSIS
+*     void setup_environment(void)
+*
+*  FUNCTION
+*     This function initializes the variables used to store the internal
+*     environment.
+*
+*  NOTES
+*      MT-NOTE: setup_environment() is not MT safe
+*******************************************************************************/
+static void setup_environment()
+{
+   /* Bugfix: Issuezilla 1300
+    * Because this fix could break pre-existing installations, it was made
+    * optional. */
+   if (!inherit_env ()) {
+      if (shepherd_env_index < 0) {
+         shepherd_env[0] = NULL;
+      }
+      else {
+         int index = 0;
+
+         while (shepherd_env[index] != NULL) {
+            FREE(shepherd_env[index]);
+            shepherd_env[index] = NULL;
+            index++;
+         }
+      }
+      
+      shepherd_env_index = 0;
+   }
+}
+
+/****** Shepherd/sge_get_environment() *****************************************
+*  NAME
+*     sge_get_environment () -- Get a pointer to the current environment
+*
+*  SYNOPSIS
+*     char **sge_get_environment(void)
+*
+*  FUNCTION
+*     This function returns a point to the current environment, inherited or
+*     internal.
+*
+*  RESULTS
+*     char ** - pointer to the current environment
+*
+*  NOTES
+*      MT-NOTE: sge_get_environment() is not MT safe
+*******************************************************************************/
+char** sge_get_environment()
+{
+   /* Bugfix: Issuezilla 1300
+    * Because this fix could break pre-existing installations, it was made
+    * optional. */
+   if (!inherit_env ()) {
+      return shepherd_env;
+   }
+   else {
+      return environ;
+   }
+}
+
+/****** Shepherd/sge_set_env_value() *******************************************
+*  NAME
+*     sge_set_env_value () -- Set the value for the given environment variable
+*
+*  SYNOPSIS
+*     const int sge_set_env_value(const char *name, const char *value)
+*
+*  FUNCTION
+*     This function sets the value of the given environment variable in
+*     the appropriate environment, inherited or internal.
+*
+*  INPUT
+*     const char *name - the name of the environment variable
+*     const char *value - the value of the environment variable
+*
+*  RESULTS
+*     int - error code: -1: bad, 0: good
+*
+*  NOTES
+*      MT-NOTE: sge_set_env_value() is not MT safe
+*******************************************************************************/
+int sge_set_env_value(const char *name, const char* value)
+{
+   int ret = -1;
+   
+   /* Bugfix: Issuezilla 1300
+    * Because this fix could break pre-existing installations, it was made
+    * optional. */
+   if (!inherit_env ()) {
+      char *entry = NULL;
+      int entry_size = 0;
+
+      if (shepherd_env_index < 0) {
+         setup_environment();
+      }
+      else if(shepherd_env_index < MAX_NUMBER_OF_ENV_VARS) {
+         /* entry = name + value + '=' + '\0' */
+         entry_size = strlen(name) + strlen(value) + 2;
+         entry = (char *)malloc(sizeof (char) * entry_size);
+
+         if (entry != NULL) {
+            snprintf(entry, entry_size, "%s=%s", name, value);
+            shepherd_env[shepherd_env_index] = entry;
+            shepherd_env_index++;
+            ret = 0;
+         }
+      }
+   }
+   else {
+      ret = sge_setenv (name, value);
+   }
+   
+   return ret;
+}
+
+/****** Shepherd/sge_get_env_value() *******************************************
+*  NAME
+*     sge_get_env_value () -- Get the value for the given environment variable
+*
+*  SYNOPSIS
+*     const char *sge_get_env_value(const char *name)
+*
+*  FUNCTION
+*     This function returns the value of the given environment variable from
+*     the appropriate environment, inherited or internal.
+*
+*  INPUT
+*     const char *name - the name of the environment variable
+* 
+*  RESULTS
+*     const char * - the value of the environment variable
+*
+*  NOTES
+*      MT-NOTE: sge_get_env_value() is not MT safe
+*******************************************************************************/
+const char *sge_get_env_value(const char *name)
+{
+   const char *ret = NULL;
+   /* Bugfix: Issuezilla 1300
+    * Because this fix could break pre-existing installations, it was made
+    * optional. */
+   if (!inherit_env ()) {
+      if (shepherd_env_index >= 0) {
+         int index = 0;
+
+         while (shepherd_env[index] != NULL) {
+            char *entry = shepherd_env[index++];
+            char *equals = strchr(entry, '=');
+
+            if (equals != NULL) {
+               equals[0] = '\0';
+
+               if (strcmp(entry, name) == 0) {
+                  equals[0] = '=';
+                  ret = (const char*)&equals[1];
+                  break;
+               }
+            }
+         }
+      }
+   }
+   else {
+      ret = sge_getenv (name);
+   }
+   
+   return ret;
 }
 
 #define PROC_ARG_DELIM " \t"
@@ -1068,8 +1275,10 @@ char *str_title
       /* build trace string */
       sprintf(err_str, "calling qlogin_starter(%s, %s);", shepherd_job_dir, args[1]);
       shepherd_trace(err_str);
-      qlogin_starter(shepherd_job_dir, args[1]);
+      qlogin_starter(shepherd_job_dir, args[1], sge_get_environment ());
    } else {
+      char *filename = NULL;
+
       /* build trace string */
       pc = err_str;
       sprintf(pc, "execvp(%s,", (pre_args_ptr[0] == argv0) ? shell_path : script_file);
@@ -1091,7 +1300,31 @@ char *str_title
       sprintf(pc, ")");
       shepherd_trace(err_str);
 
-      execvp((pre_args_ptr[0] == argv0) ? shell_path : script_file, args);
+      if (pre_args_ptr[0] == argv0) {
+         filename = shell_path;
+      }
+      else {
+         filename = script_file;
+      }
+         
+      /* Bugfix: Issuezilla 1300
+       * Because this fix could break pre-existing installations, it was made
+       * optional. */
+
+      if (!inherit_env ()) {
+         /* The closest thing to execvp that takes an environment pointer is
+          * execve.  The problem is that execve does not resolve the path.
+          * As there is no reasonable way to resolve the path ourselves, we
+          * have to resort to this ugly hack.  Don't try this at home. */
+         char **tmp = environ;
+
+         environ = sge_get_environment ();
+         execvp(filename, args);
+         environ = tmp;
+      }
+      else {
+         execvp(filename, args);
+      }
 
       /* Aaaah - execvp() failed */
       {
@@ -1197,7 +1430,7 @@ int type
    return path;
 }
 
-/****** parse_script_params() **************************************************
+/****** Shepherd/parse_script_params() *****************************************
 *  NAME
 *     parse_script_params() -- Parse prolog/epilog/pe_start/pe_stop line from
 *                              config
@@ -1238,3 +1471,67 @@ parse_script_params(char **script_file)
    return target_user;
 }
 
+/****** Shepherd/inherit_env() *************************************************
+*  NAME
+*     inherit_env () -- Test whether the evironment should be inherited from the
+*                       parent process or not
+*
+*  SYNOPSIS
+*     static bool inherit_env ()
+*
+*  FUNCTION
+*     Tests the INHERIT_ENV execd param to see if the job should inherit the
+*     environment of the execd that spawned this shepherd.
+*
+*  RESULT
+*     bool - whether the environment should be inherited
+* 
+*  NOTES
+*      MT-NOTE: inherit_env() is not MT safe
+*******************************************************************************/
+static bool inherit_env ()
+{
+   if (inherit_environ == -1) {
+      /* We have to use search_conf_val() instead of get_conf_val() because this
+       * change is happening in a patch, and we can't break backward
+       * compatibility.  In a later release, this should probably be changed to
+       * use get_conf_val() instead. */
+      char *inherit = search_conf_val ("inherit_env");
+      
+      if (inherit != NULL) {
+         inherit_environ = (strcmp (inherit, "1") == 0);
+      }
+      else {
+         /* This should match the default set in sgeobj/sge_conf.c. */
+         inherit_environ = true;
+      }
+   }
+   
+   return (inherit_environ == 1);
+}
+
+#if 0 /* Not currently used, but looks kinda useful... */
+/****** Shepherd/set_inherit_env() *********************************************
+*  NAME
+*     set_inherit_env () -- Set whether the evironment should be inherited from
+*                           the parent process or not
+*
+*  SYNOPSIS
+*     static void set_inherit_env (bool inherit)
+*
+*  FUNCTION
+*     Internally sets whether the job should inherit the
+*     environment of the execd that spawned this shepherd.  Overrides the
+*     INHERIT_ENV execd param in inherit_env()
+*
+*  INPUT
+*     bool inherit - whether the environment should be inherited
+* 
+*  NOTES
+*      MT-NOTE: set_inherit_env() is not MT safe
+*******************************************************************************/
+static void set_inherit_env (bool inherit)
+{
+   inherit_environ = inherit ? 1 : 0;
+}
+#endif

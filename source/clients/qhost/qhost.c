@@ -528,7 +528,7 @@ u_long32 show
 
          sge_dstring_clear(&resource_string);
 
-         switch (type) {
+         switch ((int)type) {
          case TYPE_HOST:   
          case TYPE_STR:   
          case TYPE_CSTR:   

@@ -1,0 +1,88 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+global check_root_access_needs
+
+set check_init_level_procedure "init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1291"
+set check_description(0)      "qdel \"\" causes the qmaster to segfault"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "no"
+set check_functions           ""
+lappend check_functions       "issue_1291_run"   ;# functions to call (in order)
+set check_highest_level       0
+
+proc init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   if { $ts_config(gridengine_version) == 53 } {       
+      return -1
+   }
+
+   # TODO setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+
+   return -1
+}
+
+proc issue_1291_run  {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT ts_config
+
+   set name "\"\""
+
+   # localize messages
+   set INVALID_AT_QDEL [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_JOB_XISINVALIDJOBTASKID_S] $name ]
+   set INVALID_AT_QMASTER [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_SPECIFYUSERORJID] ]
+
+   # Test
+   set catch_result [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" $name "2>/dev/null" } result]
+
+   if { [ string compare $result "$INVALID_AT_QDEL\n" ] == 0 } {
+      set_error 0 "ok"
+   } else if { [ string compare $result "$INVALID_AT_QMASTER\n" ] == 0 } {
+      add_proc_error "issue_1291_run" "-1" "qdel did not produce expected error message: ${result}"
+      set_error -1 "Issue 1291: qdel allows $name as a valid job id, but qmaster rejects it"
+   } else {
+      add_proc_error "issue_1291_run" "-1" "qdel did not produce expected error message: ${result}"
+      set_error -1 "Issue 1291: qdel allows $name as a valid job id"
+   }
+}

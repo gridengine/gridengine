@@ -1813,7 +1813,14 @@ proc qalter_t {} {
          return
       }
 
-   # Test invalid uses
+       # wait for job to stop
+       if { [wait_for_jobend $hold_job_T "leeper" 200] != 0 } {
+          set_error -1 "job $hold_job_T does not end"
+          delete_all_jobs
+          return 
+       }
+
+       # Test invalid uses
       set qalterresult [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qalter $option $hold_job_T -t 1-4 -t 1-4" } qalteroutput ]
       if {$qalterresult == 0} {
          set_error -1 "qalter $option - allowed invalid -t switch"
@@ -1870,6 +1877,18 @@ proc qalter_h {} {
    if {$qalterresult == 1} {
       set_error -1 "qalter $option - $qalteroutput"
       return
+   }
+
+   # wait for job to stop
+   if { [wait_for_jobend $hold_job_D "leeper" 200] != 0 } {
+      set_error -1 "job $hold_job_D does not end"
+      delete_all_jobs
+      return 
+   }
+   if { [wait_for_jobend $hold_job_U "leeper" 200] != 0 } {
+      set_error -1 "job $hold_job_U does not end"
+      delete_all_jobs
+      return 
    }
 
    set_error 0 "qalter $option - no errors"

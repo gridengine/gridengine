@@ -14,7 +14,7 @@ Date: 2004-10-04
                            qconf while inserting line breaks
 1.4 Changelog ID  : DT-2004-10-04-0
 1.5 Developer(s)  : DT
-1.6 Reviewer(s)   : 
+1.6 Reviewer(s)   : SG
 
 
 2 Conformance to specification

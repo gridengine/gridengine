@@ -147,7 +147,7 @@ test_cl_tcp_framework: test_cl_tcp_framework.o $(COMMLIB) $(COMMLISTSLIB) $(UTIL
 	$(CC) -o test_cl_tcp_framework $(LFLAGS) test_cl_tcp_framework.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_commlib: test_cl_commlib.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_commlib $(LFLAGS) test_cl_commlib.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
-test_cl_commlib_client: test_cl_commlib_client.o $(COMMLIB) -lpthread $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+test_cl_commlib_client: test_cl_commlib_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_commlib_client $(LFLAGS) test_cl_commlib_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_hostname_list: test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_hostname_list $(LFLAGS) test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)

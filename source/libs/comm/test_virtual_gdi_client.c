@@ -99,6 +99,7 @@ extern int main(int argc, char** argv)
 
 
 
+  while(do_shutdown == 0) {
 
 
   printf("startup commlib ...\n");
@@ -119,7 +120,9 @@ extern int main(int argc, char** argv)
   printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[3]);
 
   
+#if 0
   while(do_shutdown == 0) {
+#endif
      int                retval  = 0;
      cl_com_message_t*  message = NULL;
      cl_com_endpoint_t* sender  = NULL;
@@ -145,10 +148,14 @@ extern int main(int argc, char** argv)
         printf("do trigger\n");
      } 
      printf("status: %s\n",cl_get_error_text(retval));
+#if 0
   }
+#endif
+      
 
   printf("shutdown commlib ...\n");
   cl_com_cleanup_commlib();
+  }
 
   printf("main done\n");
   return 0;

@@ -42,7 +42,7 @@ You must fill in these fields:
 
   interface  hibernator      this name is mandatory for Hibernator
                              checkpointing. It defines the actions 
-                             which Codine will do, if Codine has to
+                             which SGE will do, if SGE has to
                              checkpoint a Hibernator job
   ckpt_command    full path name to the checkpoint command
   migr_command    full path name to the migration command

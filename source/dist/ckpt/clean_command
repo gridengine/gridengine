@@ -47,4 +47,4 @@ echo                                     >> $F 2>&1
 # Log information about our checkpoints
 /usr/bin/hibinfo                         >> $F 2>&1
 
-/usr/bin/hibrm codine_$1                 >> $F 2>&1
+/usr/bin/hibrm sge_$1                    >> $F 2>&1

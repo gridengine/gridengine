@@ -42,11 +42,11 @@ if [ ! -f $ckpt_dir/ckpt.log ]; then
    chmod 666 $ckpt_dir/ckpt.log
 fi
 
-codine_root=${GRD_ROOT:-$CODINE_ROOT}
-codine_cell=${GRD_CELL:-$COD_CELL}
+sge_root=${SGE_ROOT}
+sge_cell=${SGE_CELL}
 
 # workaround to force job to restart on same queue (svd)
-. $codine_root/${codine_cell:-default}/common/settings.sh
+. $sge_root/${sge_cell:-default}/common/settings.sh
 qalter -q $QUEUE $JOB_ID
 
 # create temp directory for holding checkpoint info

@@ -67,9 +67,9 @@ echo `date +"%D %T"` Job $1 "(osjobid=$job_id)" restarting >> $ckpt_dir/ckpt.log
 /usr/bin/restart -w -f chkpnt_$1  >> $F 2>&1
 
 # Now be careful: The restart command is the parent process of the restarted
-# job. Codine is the parent process of the restart command.
+# job. SGE is the parent process of the restart command.
 # If the job was killed (probably due to a migration request), we need to
-# tell our parent that by killing ourselves. Codine will also detect an 
+# tell our parent that by killing ourselves. SGE will also detect an 
 # exit status > 128 analogous to a KILL
 
 exit_status=$?
@@ -77,7 +77,7 @@ echo Exit status of restart command: $exit_status >> $F 2>&1
 
 if [ $exit_status = 1 ]
 then
-   jstat=`/bin/acctcom -j $job_id -b -p -Z -f -v /usr/adm/acct/day/pacct | $CODINE_ROOT/ckpt/cray_parse_job_status $2`
+   jstat=`/bin/acctcom -j $job_id -b -p -Z -f -v /usr/adm/acct/day/pacct | $SGE_ROOT/ckpt/cray_parse_job_status $2`
    echo "jobstatus $job_id $2 = $jstat" >> $F 2>&1
    if [ "$jstat" = "" ]
    then
@@ -89,14 +89,6 @@ then
       exit_status=`expr $jstat + 128`
    fi
 fi
-
-# This doesn't work under Irix 6.2, since the variable $$ is not
-# correctly set
-#if [ $exit_status -gt 128 ]; then
-#   signal=`expr $exit_status - 128`
-#   echo Killing ourself: kill -$signal $$        >> $F 2>&1   
-#   /usr/bin/kill -$signal $pid                   >> $F 2>&1
-#fi
 
 # If killing ourselves didn't help or the exit_status was  < 128 exit 
 # with the exit status of our child

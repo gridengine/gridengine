@@ -1,3 +1,6 @@
+RH-2004-08-16-1: Bugfix:     Type in man qhost(1) fixed.
+                 Changed:    qhost(1)
+                 
 RH-2004-08-16-0: Bugfix:     Typo in man qconf(1) fixed
                  Changed:    qconf(1)
 

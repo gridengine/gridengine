@@ -1,3 +1,10 @@
+AA-2004-10-27-0: Bugfix:    qmon job customize weird @{} field names
+                            additional fields canot be added
+                 Issue:     1307
+                 Bugtraq:   6185136
+                 Changed:   qmon
+                 Review:    CR
+                 
 SG-2004-10-27-0: Bugfix:    qmod can modify queues starting with digits
                             now.
                  Issue:     1308

@@ -957,7 +957,7 @@ void XmListAddItemUniqueSorted(Widget list, String item)
       ** a font change
       */
       char buf[10000];
-      if (item[0] == '@')
+      if (item[0] == '@' && item[1] != '{')
          sprintf(buf, "@%s", item);
       else
          sprintf(buf, item);

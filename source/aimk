@@ -1659,11 +1659,6 @@ if ( "$CORE" == 1 ) then
       exit 1
    endif
 
-   if ("$argv[$#argv]" == depend) then
-      echo Fixing dependencies
-      ../scripts/fix_dependencies
-   endif
-
    cd $SOURCE
 endif
 

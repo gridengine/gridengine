@@ -239,7 +239,11 @@ sge_str.o: $(SGEOBJLIB_DIR)/sge_str.c
 sge_subordinate.o: $(SGEOBJLIB_DIR)/sge_subordinate.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_subordinate.c
 
-sge_sub_object.c: $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c ../scripts/gen_subtype_info.sh
+# dummy rule to propagate dependencies for sge_sub_object.c
+sge_sub_object_cpp.o: $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c
+		touch sge_sub_object_cpp.o
+
+sge_sub_object.c: sge_sub_object_cpp.o $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c ../scripts/gen_subtype_info.sh
 		$(CC) $(CFLAGS) -E -c $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c | grep __SUBTYPE_MAPPING__ | ../scripts/gen_subtype_info.sh sge_sub_object.c
 
 sge_sub_object.o: sge_sub_object.c 

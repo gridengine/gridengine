@@ -1,3 +1,7 @@
+JG-2004-03-08-0: Bugfix:    Fixed dependencies for sge_sub_object.c
+                 Issue:     781
+                 Review:    AS
+
 DT-2004-03-07-0: Enhancem.: o Added DRMAA Java binding.  Not yet complete.
                  Changed:   DRMAA
 

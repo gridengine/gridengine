@@ -1320,7 +1320,7 @@ static void *implementation_thread(void *p)
 
    while (!stop_ec) {
       /* read events and add relevant information into library session data */
-      if (ec_get(&event_list)) {
+      if (!ec_get(&event_list)) {
          fprintf(stderr, "problems with ec_get()\n");
          continue;
       }

@@ -92,6 +92,8 @@ int gethostname(char *name, int namelen);
 #include "sgermon.h"
 #include "sge_io.h"
 #include "sge_log.h"
+#include "sge_profiling.h"
+
 #include "msg_commd.h"
 #include "msg_common.h"
 #include "sge_language.h"
@@ -479,7 +481,7 @@ int compressed
          return i;
       }   
 #endif
-
+   PROF_START_MEASUREMENT(SGE_PROF_COMMUNICATION);
    /* we have to block signals to make communication more reliable and to
       ensure all sockets are closed properly */
 #ifndef WIN32NATIVE
@@ -497,6 +499,7 @@ int compressed
             i, synchron, tocomproc, toid, tohost, tag, buffer, buflen,
             (mid != NULL) ? *mid : 0, sge_get_gmt() - now));
 
+   PROF_STOP_MEASUREMENT(SGE_PROF_COMMUNICATION);
    DEXIT;
    return i;
 }
@@ -765,6 +768,7 @@ u_short *compressed
          return i;
       }   
 #endif
+   PROF_START_MEASUREMENT(SGE_PROF_COMMUNICATION);
 
    i = receive_message_(fromcommproc, fromid, fromhost, tag, buffer, buflen,
                         synchron, compressed);
@@ -774,6 +778,7 @@ u_short *compressed
             i, fromcommproc, *fromid, fromhost, *tag, *buffer, *buflen,
             synchron, sge_get_gmt()-now));
 
+   PROF_STOP_MEASUREMENT(SGE_PROF_COMMUNICATION);
    DEXIT;
    return i;
 }

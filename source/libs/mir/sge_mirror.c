@@ -750,8 +750,9 @@ sge_mirror_error sge_mirror_process_events(void)
    PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
 
    now = sge_get_gmt();
+   num_events = 0;
 
-   if(ec_get(&event_list) == 0) {
+   if(ec_get(&event_list)) {
       last_heared = now;
       if(event_list != NULL) {
          ret = sge_mirror_process_event_list(event_list);
@@ -768,7 +769,7 @@ sge_mirror_error sge_mirror_process_events(void)
    if(prof_is_active()) {
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
 
-      INFO((SGE_EVENT, "processed %d requests in %.3f s\n", 
+      INFO((SGE_EVENT, "sge_mirror: processed %d events in %.3f s\n", 
             num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, false, NULL)
           ));
    }

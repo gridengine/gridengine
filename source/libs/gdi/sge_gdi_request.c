@@ -49,6 +49,7 @@
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sge_uidgid.h"
+#include "sge_profiling.h"
 #include "qm_name.h"
 #include "sge_unistd.h"
 #include "sge_security.h"
@@ -181,6 +182,8 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 
    DENTER(GDI_LAYER, "sge_gdi");
 
+   PROF_START_MEASUREMENT(SGE_PROF_GDI);
+
    operation = SGE_GDI_GET_OPERATION(cmd); 
    /* just in case */
 #ifndef QHOST_TEST   
@@ -190,6 +193,7 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 
    if ((id = sge_gdi_multi(&alp, SGE_GDI_SEND, target, cmd, lpp ? *lpp : NULL, 
                               cp, enp, &mal, &state)) == -1) {
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
       DEXIT;
       return alp;
    }
@@ -197,6 +201,8 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
    alp = sge_gdi_extract_answer(cmd, target, id, mal, lpp);
 
    mal = lFreeList(mal);
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
 
    DEXIT;
    return alp;
@@ -321,6 +327,8 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    int commlib_error = CL_OK;
 
    DENTER(GDI_LAYER, "sge_gdi_multi");
+
+   PROF_START_MEASUREMENT(SGE_PROF_GDI);
 
    operation = SGE_GDI_GET_OPERATION(cmd);
 
@@ -486,6 +494,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       state->sequence_id = 0;
    }
 
+   PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
    DEXIT;
    return ret;
 
@@ -496,6 +505,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       state->first = free_gdi_request(state->first);
       state->last = NULL;
       state->sequence_id = 0;
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
       DEXIT;
       return -1;
 }

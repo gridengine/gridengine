@@ -38,42 +38,42 @@
 
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (10)
 
-int ec_prepare_registration(ev_registration_id id, const char *name);
-int ec_register(void);
+bool ec_prepare_registration(ev_registration_id id, const char *name);
+bool ec_register(void);
 bool ec_deregister(void);
 bool ec_is_initialized(void);
 
-int ec_subscribe(ev_event event);
-int ec_subscribe_all(void);
+bool ec_subscribe(ev_event event);
+bool ec_subscribe_all(void);
 
-int ec_unsubscribe(ev_event event);
-int ec_unsubscribe_all(void);
+bool ec_unsubscribe(ev_event event);
+bool ec_unsubscribe_all(void);
 
 int ec_get_flush(ev_event event);
-int ec_set_flush(ev_event event, int flush);
-int ec_unset_flush(ev_event event);
+bool ec_set_flush(ev_event event, int flush);
+bool ec_unset_flush(ev_event event);
 
-int ec_subscribe_flush(ev_event event, int flush);
+bool ec_subscribe_flush(ev_event event, int flush);
 
 int ec_set_edtime(int intval);
 int ec_get_edtime(void);
 
-int ec_set_busy_handling(ev_busy_handling handling);
+bool ec_set_busy_handling(ev_busy_handling handling);
 ev_busy_handling ec_get_busy_handling(void);
 
-int ec_set_busy(int busy);
-int ec_get_busy(void);
+bool ec_set_busy(int busy);
+bool ec_get_busy(void);
 
 void ec_set_clientdata(u_long32 data);
 u_long32 ec_get_clientdata(void);
 
-int ec_commit(void);
+bool ec_commit(void);
 bool ec_commit_multi(lList **malp, state_gdi_multi *state);
 
-int ec_get(lList **);
+bool ec_get(lList **);
 
 void ec_mark4registration(void);
-int ec_need_new_registration(void);
+bool ec_need_new_registration(void);
 
 #endif /* __SGE_C_EVENT_H */
 

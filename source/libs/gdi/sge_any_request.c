@@ -38,6 +38,7 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_profiling.h"
 #include "qm_name.h"
 #include "pack.h"
 #include "sge_feature.h"
@@ -252,11 +253,14 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id,
 
    DENTER(GDI_LAYER, "sge_get_any_request");
 
+   PROF_START_MEASUREMENT(SGE_PROF_GDI);
+
    if (id)
       usid = (ushort)*id;
 
    if (!rhost) {
       ERROR((SGE_EVENT, MSG_GDI_RHOSTISNULLFORGETANYREQUEST ));
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
       DEXIT;
       return -1;
    }
@@ -302,6 +306,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id,
                 cl_errstr(i)));
          break;
       }
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
       DEXIT;
       return i;
    }
@@ -313,6 +318,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id,
    i = init_packbuffer_from_buffer(pb, buffer, buflen, compressed);
    if(i != PACK_SUCCESS) {
       ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(i)));
+      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
       DEXIT;
       return CL_READ;
    }
@@ -321,6 +327,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id,
       strcpy(rhost, host);
    }
 
+   PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
    DEXIT;
    return CL_OK;
 }

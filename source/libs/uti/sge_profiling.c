@@ -167,6 +167,7 @@ prof_level akt_level = SGE_PROF_NONE;
 
 typedef struct {
    const char *name;
+   int nested_calls;          /* number of nested calls within same level  */
    clock_t start;             /* start time of actual measurement          */
    clock_t end;               /* end time of last measurement              */
    struct tms tms_start;      /* time struct of measurement start          */
@@ -185,23 +186,23 @@ typedef struct {
 } prof_info;
 
 static prof_info prof_base[SGE_PROF_ALL] = {
-   { "other",           0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { "communication",   0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { "eventclient",     0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { "eventmaster",     0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { "mirror",          0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { "spooling",        0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { "gdi",             0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { NULL,              0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 }
+   { "other",           0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { "communication",   0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { "eventclient",     0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { "eventmaster",     0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { "mirror",          0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { "spooling",        0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { "gdi",             0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
+   { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 }
 };
 
 static const char *prof_add_error_sprintf(dstring *buffer, const char *fmt, ...);
@@ -401,30 +402,33 @@ bool prof_start_measurement(prof_level level, dstring *error)
 
    if (level >= SGE_PROF_ALL) {
       prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_start_measurement", level);
+   } else if (!prof_is_started) { 
+      prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_start_measurement");
    } else {
-      if (!prof_is_started) { 
-         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_start_measurement");
+      prof_info *info = &prof_base[level];
+
+      if (akt_level == level) {
+         /* multiple start_measurement calls within one level are allowed */
+         info->nested_calls++;
+         ret = true;
+      } else if (info->pre != SGE_PROF_NONE) {
+         /* we cannot yet handle cyclic measurements between multiple levels
+          * produce an error and stop profiling
+          */
+         prof_add_error_sprintf(error, MSG_PROF_CYCLICNOTALLOWED_SD, "prof_start_measurement", level);
+         prof_stop(error);
       } else {
-         prof_info *info = &prof_base[level];
+         info->pre = akt_level;
+         akt_level = level;
 
-         /* we cannot start a level multiple times */
-         if (info->pre != SGE_PROF_NONE) {
-            /* generate error message */
-            prof_add_error_sprintf(error, MSG_PROF_CYCLICNOTALLOWED_SD, "prof_start_measurement", level);
-            prof_stop(error);
-         } else {
-            info->pre = akt_level;
-            akt_level = level;
+         info->start = times(&(info->tms_start));
 
-            info->start = times(&(info->tms_start));
+         /* when we start a level, we have no sub usage */
+         info->sub = 0;
+         info->sub_utime = 0;
+         info->sub_utime= 0;
 
-            /* when we start a level, we have no sub usage */
-            info->sub = 0;
-            info->sub_utime = 0;
-            info->sub_utime= 0;
-
-            ret = true;
-         }
+         ret = true;
       }
    }
 
@@ -463,13 +467,16 @@ bool prof_stop_measurement(prof_level level, dstring *error)
 
    if (level >= SGE_PROF_ALL) {
       prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_stop_measurement", level);
+   } else if (!prof_is_started) {
+      prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_stop_measurement");
    } else {
-      if (!prof_is_started) {
-         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_stop_measurement");
-      } else {
-         prof_info *info = &prof_base[level];
-         clock_t time, utime, stime;
+      prof_info *info = &prof_base[level];
+      clock_t time, utime, stime;
 
+      if (info->nested_calls > 0) {
+         info->nested_calls--;
+         ret = true;
+      } else {
          info->end = times(&(info->tms_end));
          time  = info->end - info->start;
          utime = info->tms_end.tms_utime - info->tms_start.tms_utime;

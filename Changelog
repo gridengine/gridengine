@@ -1,3 +1,9 @@
+JG-2003-03-19-0  Enhancem.: - cleanup and profiling for libevc
+                            - basic profiling for commlib, gdilib
+                            - profiling: allow nested calls to the profiling 
+                              measurement start function within one level
+                 Review:    EB
+
 CR-2003-03-19-2  Testsuite: fixed compiler warnings for testsuite_rcv/snd
 
 CR-2003-03-19-1  Testsuite: new test for communication (commd) performance

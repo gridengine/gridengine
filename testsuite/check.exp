@@ -364,7 +364,7 @@ global CHECK_SETUP_NAMES
 
 
 global CHECK_CURRENT_SETTINGS_VERSION
-set CHECK_CURRENT_SETTINGS_VERSION "4"
+set CHECK_CURRENT_SETTINGS_VERSION "5"
 set CHECK_SETTINGS_VERSION $CHECK_CURRENT_SETTINGS_VERSION
 
 set CHECK_SETUP_NAMES(index) "settings_version"
@@ -1330,7 +1330,7 @@ proc read_edit_defaults_file { filename } {
    global CHECK_MAILX_HOST 
    global CHECK_REPORT_EMAIL_TO CHECK_REPORT_EMAIL_CC  CHECK_USE_SSH CHECK_SOURCE_CVS_RELEASE
    global CHECK_OUTPUT CHECK_SETUP_NAMES CHECK_CONFIG_DIR CHECK_SEND_ERROR_MAILS
-   global CHECK_MAX_ERROR_MAILS
+   global CHECK_MAX_ERROR_MAILS CHECK_HOST CHECK_USER
 
    set return_value -1
 
@@ -1361,6 +1361,55 @@ proc read_edit_defaults_file { filename } {
       
    } ]
 
+   
+   if { $CHECK_FIRST_FOREIGN_SYSTEM_USER == $CHECK_USER } {
+        puts $CHECK_OUTPUT "first_foreign_system_user should not be testsuite user"
+        return -1
+   }
+   if { $CHECK_SECOND_FOREIGN_SYSTEM_USER == $CHECK_USER } {
+        puts $CHECK_OUTPUT "second_foreign_system_user should not be testsuite user"
+        return -1
+   }
+
+   if { $CHECK_SECOND_FOREIGN_SYSTEM_USER == $CHECK_FIRST_FOREIGN_SYSTEM_USER } {
+        puts $CHECK_OUTPUT "second_foreign_system_user should not be first_foreign_system_user"
+        return -1
+   }
+ 
+   if { $CHECK_FIRST_FOREIGN_SYSTEM_USER == "" || 
+        $CHECK_SECOND_FOREIGN_SYSTEM_USER == "" ||
+        $CHECK_FIRST_FOREIGN_SYSTEM_GROUP == "" ||
+        $CHECK_SECOND_FOREIGN_SYSTEM_GROUP == "" } {
+        puts $CHECK_OUTPUT "no value for foreign system users/groups"
+        return -1
+   }
+   if { [llength $CHECK_FIRST_FOREIGN_SYSTEM_GROUP] != 2 } {
+        puts $CHECK_OUTPUT "syntax of \"first_foreign_system_groupname\":"
+        puts $CHECK_OUTPUT "main group name[SPACE]secondary group name, e.g. \"users projectA\""  
+        return -1
+   }
+
+   if { [llength $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] != 1 } {
+        puts $CHECK_OUTPUT "syntax of \"second_foreign_system_groupname\":"
+        puts $CHECK_OUTPUT "main group name \"projectB\""  
+        return -1
+   }
+
+
+
+   foreach gname $CHECK_FIRST_FOREIGN_SYSTEM_GROUP {
+      if { [ string compare $gname $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] == 0 } {
+          puts $CHECK_OUTPUT "\"second_foreign_system_groupname\" should not be member of \"first_foreign_system_groupname\""
+          return -1
+      } 
+   }
+
+    
+
+   
+
+
+
    if { [ string compare $CHECK_SETTINGS_VERSION $CHECK_CURRENT_SETTINGS_VERSION ] != 0 } {
         puts $CHECK_OUTPUT "you should not edit the settings_version - config error"
         puts $CHECK_OUTPUT "version should be \"$CHECK_CURRENT_SETTINGS_VERSION\""
@@ -1378,6 +1427,8 @@ proc read_edit_defaults_file { filename } {
         puts $CHECK_OUTPUT "error setting users environment"
         return -1
    }
+
+   
  
    if { [ string compare $CHECK_CORE_MASTER [lindex $CHECK_CORE_EXECD 0] ] != 0 } {
          set new_core_execd "$CHECK_CORE_MASTER"
@@ -1421,8 +1472,31 @@ proc read_edit_defaults_file { filename } {
          return -1
    }
 
+   set group1 [lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0]
+   set group2 [lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 1]
 
-
+   set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$CHECK_FIRST_FOREIGN_SYSTEM_USER"]
+   puts $CHECK_OUTPUT $result
+   if { [string first $group1 $result ] < 0 } {
+      puts $CHECK_OUTPUT "first_foreign_system_username ($CHECK_FIRST_FOREIGN_SYSTEM_USER) has not \"$group1\" as main group"
+      return -1
+   }
+   
+   set result [start_remote_prog $CHECK_HOST $CHECK_USER "groups" "$CHECK_FIRST_FOREIGN_SYSTEM_USER"]
+   puts $CHECK_OUTPUT $result
+   if { $prg_exit_state == 0 } {
+      if { [string first $group2 $result] < 0 } { 
+         puts $CHECK_OUTPUT "first_foreign_system_username ($CHECK_FIRST_FOREIGN_SYSTEM_USER) has not \"$group2\" as secondary group"
+         return -1
+      }
+   }
+   set result [start_remote_prog $CHECK_HOST $CHECK_USER "id" "$CHECK_SECOND_FOREIGN_SYSTEM_USER"]
+   puts $CHECK_OUTPUT $result
+   if { [string first $CHECK_SECOND_FOREIGN_SYSTEM_GROUP $result ] < 0 } {
+      puts $CHECK_OUTPUT "first_foreign_system_username ($CHECK_SECOND_FOREIGN_SYSTEM_USER) has not \"$CHECK_SECOND_FOREIGN_SYSTEM_GROUP\" as main group"
+      return -1
+   }
+   
 
    return $return_value ;# $catch_return
 }
@@ -1827,6 +1901,56 @@ proc load_defaults {} {
             source_procedures
             save_defaults 
             set CHECK_DO_SETUP 1 
+            setup 
+            puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
+            exit -1
+        }
+        if { $CHECK_SETTINGS_VERSION == 4 } {
+            puts $CHECK_OUTPUT "this settings file has version number 4 -> upgrading to version 5"
+            set CHECK_SETTINGS_VERSION "5"
+            set CHECK_TESTSUITE_ROOT                   [lindex $data 1]
+            set CHECK_CHECKTREE_ROOT                   [lindex $data 2]
+            set CHECK_CORE_MASTER                      [lindex $data 3]
+            set CHECK_CORE_EXECD                       [lindex $data 4]
+            set CHECK_CORE_PROCESSORS                  [lindex $data 5]
+            set CHECK_SUBMIT_ONLY_HOSTS                [lindex $data 6]      ;# added for version 3
+            set CHECK_COMMD_PORT                       [lindex $data 7]
+            set CHECK_MAIN_RESULTS_DIR                 [lindex $data 8]
+            set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols
+            set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
+           
+            set CHECK_PRODUCT_TYPE                     [lindex $data 9]
+            set CHECK_PRODUCT_ROOT                     [lindex $data 10]
+            set CHECK_SOURCE_DIR                       [lindex $data 11]
+            set CHECK_SOURCE_HOSTNAME                  [lindex $data 12]
+            set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 13]
+            set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 14]
+            set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 15]
+            set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 16]      ;# added for version 2
+            set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 17]      ;# added for version 2
+            set CHECK_DNS_DOMAINNAME                   [lindex $data 18]      ;# added for version 4
+            set CHECK_REMOTE_ENVIRONMENT               [lindex $data 19]      ;# added for version 4
+            set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 20]
+            set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 21]
+            set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 22]
+            set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 23]
+            set CHECK_DEFAULT_DOMAIN                   [lindex $data 24]
+            set CHECK_MAILX_HOST                       [lindex $data 25]
+            set CHECK_REPORT_EMAIL_TO                  [lindex $data 26]
+            set CHECK_REPORT_EMAIL_CC                  [lindex $data 27]
+            set CHECK_SEND_ERROR_MAILS                 [lindex $data 28]
+            set CHECK_MAX_ERROR_MAILS                  [lindex $data 29]
+            set CHECK_USE_SSH                          [lindex $data 30]
+            set CHECK_SOURCE_CVS_RELEASE               [lindex $data 31]
+            set CHECK_CONFIG_DIR                       [lindex $data 32]
+           
+            puts $CHECK_OUTPUT "updating second_foreign_system_groupname, first_foreign_system_groupname"
+            set CHECK_FIRST_FOREIGN_SYSTEM_GROUP  "$CHECK_FIRST_FOREIGN_SYSTEM_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP"
+            set CHECK_SECOND_FOREIGN_SYSTEM_GROUP ""
+            wait_for_enter
+            source_procedures
+            save_defaults 
+            set CHECK_DO_SETUP 1
             setup 
             puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
             exit -1

@@ -523,13 +523,28 @@ proc set_exechost { change_array host } {
 
   set vi_commands ""
   foreach elem $values {
+     # continue on unchangeable values
+     if { [string compare $elem "load_values"] == 0 } {
+        continue;
+     } 
+     if { [string compare $elem "processors"] == 0 } {
+        continue;
+     } 
+     if { [string compare $elem "reschedule_unknown_list"] == 0 } {
+        continue;
+     } 
+
      # this will quote any / to \/  (for vi - search and replace)
      set newVal $chgar($elem)
    
      if {[info exists old_values($elem)]} {
-        set newVal1 [split $newVal {/}]
-        set newVal [join $newVal1 {\/}]
-        lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+        if { $newVal == "" } {
+           lappend vi_commands ":%s/^$elem .*$//\n"
+        } else {
+           set newVal1 [split $newVal {/}]
+           set newVal [join $newVal1 {\/}]
+           lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+        }
      } else {
         lappend vi_commands "A\n$elem  $newVal"
         lappend vi_commands [format "%c" 27]
@@ -1761,6 +1776,143 @@ proc add_queue { change_array {fast_add 0} } {
   }
   return $result
 }
+
+#****** sge_procedures/get_scheduling_info() ***********************************
+#  NAME
+#     get_scheduling_info() -- get scheduling information 
+#
+#  SYNOPSIS
+#     get_scheduling_info { job_id { check_pending 1 } } 
+#
+#  FUNCTION
+#     This procedure starts the get_qstat_j_info() procedure and returns
+#     the "scheduling info" value. The procedure returns ALLWAYS an guilty
+#     text string.
+#
+#  INPUTS
+#     job_id              - job id
+#     { check_pending 1 } - 1(default): do a wait_forjob_pending first
+#                           0         : no wait_for_jobpending() call         
+#
+#  RESULT
+#     scheduling info text
+#
+#  SEE ALSO
+#     sge_procedures/get_qstat_j_info()
+#     sge_procedures/wait_forjob_pending()
+# 
+#*******************************************************************************
+proc get_scheduling_info { job_id { check_pending 1 }} {
+   global CHECK_OUTPUT
+
+   if { $check_pending == 1 } {
+      set result [ wait_for_jobpending $job_id "leeper" 120 ]
+      if { $result != 0 } {
+         return "job not pending"
+      }
+   }
+   set my_timeout [ expr ( [timestamp] + 120 ) ]
+   while { 1 } {
+      if { [get_qstat_j_info $job_id ] } {
+         set help_var_name "scheduling info" 
+         if { [info exists qstat_j_info($help_var_name)] } {
+            set sched_info $qstat_j_info($help_var_name)
+         } else {
+            set sched_info "no messages available"
+         }
+         if { [string first "no messages available" $sched_info] < 0 } {
+            puts $CHECK_OUTPUT $sched_info
+            return $sched_info
+         }
+      }
+      puts $CHECK_OUTPUT "waiting for scheduling info information ..."
+      sleep 2
+      if { [timestamp] > $my_timeout } {
+         return "timeout"
+      }
+   }
+}
+
+
+#****** sge_procedures/add_access_list() ***************************************
+#  NAME
+#     add_access_list() -- add user access list
+#
+#  SYNOPSIS
+#     add_access_list { user_array list_name } 
+#
+#  FUNCTION
+#     This procedure starts the qconf -au command to add a new user access list.
+#
+#  INPUTS
+#     user_array - tcl array with user names
+#     list_name  - name of the new list
+#
+#  RESULT
+#     -1 on error, 0 on success
+#
+#  SEE ALSO
+#     sge_procedures/del_access_list()
+#
+#*******************************************************************************
+proc add_access_list { user_array list_name } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+
+  set arguments ""
+  foreach elem $user_array {
+     append arguments "$elem,"
+  }
+  append arguments " $list_name"
+
+  set result ""
+  set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -au $arguments" 
+  } result ]
+  puts $CHECK_OUTPUT $result
+  if { [string first "added" $result ] < 0 } {
+     add_proc_error "add_access_list" "-1" "could not add access_list $list_name"
+     return -1
+  }
+  return 0
+}
+
+#****** sge_procedures/del_access_list() ***************************************
+#  NAME
+#     del_access_list() -- delete user access list
+#
+#  SYNOPSIS
+#     del_access_list { list_name } 
+#
+#  FUNCTION
+#     This procedure starts the qconf -dul command to delete a user access
+#     list.
+#
+#  INPUTS
+#     list_name - name of access list to delete
+#
+#  RESULT
+#     -1 on error, 0 on success
+#
+#  SEE ALSO
+#     sge_procedures/add_access_list()
+# 
+#*******************************************************************************
+proc del_access_list { list_name } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+
+  set result ""
+  set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dul $list_name" 
+  } result ]
+   puts $CHECK_OUTPUT $result
+
+  if { [string first "removed" $result ] < 0 } {
+     add_proc_error "add_access_list" "-1" "could not delete access_list $list_name"
+     return -1
+  }
+  return 0
+}
+
 
 #                                                             max. column:     |
 #****** sge_procedures/del_queue() ******
@@ -3586,7 +3738,8 @@ proc delete_job { jobid } {
 #        -8   unknown resource - error
 #        -9   can't resolve hostname - error
 #       -10   resource not requestable - error
-
+#       -11   not allowed to submit jobs - error
+#       -12   no access to project - error
 #      -100   on error 
 #     
 #
@@ -3702,6 +3855,12 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
        -i $sp_id -- "configured as non requestable" {
           set return_value -10
        }
+       -i $sp_id -- "not allowed to submit jobs" {
+          set return_value -11
+       }
+       -i $sp_id -- "no access to project" {
+          set return_value -12
+       }
      }
  
      # close spawned process 
@@ -3724,6 +3883,8 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
           "-8" { add_proc_error "submit_job" $return_value "unknown resource - error" }
           "-9" { add_proc_error "submit_job" $return_value "can't resolve hostname - error" }
           "-10" { add_proc_error "submit_job" $return_value "resource not requestable - error" }
+          "-11" { add_proc_error "submit_job" $return_value "not allowed to submit jobs - error" }
+          "-12" { add_proc_error "submit_job" $return_value "no acces to project - error" }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -4129,7 +4290,21 @@ proc get_qstat_j_info {jobid {variable qstat_j_info}} {
    set exit_code [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -j $jobid" } result]
    if { $exit_code == 0 } {
       set result "$result\n"
-      parse_qstat_j result jobinfo $jobid 
+      set my_result ""
+      set help [split $result "\n"]
+      foreach elem $help {
+         if { [string first ":" $elem] >= 0 } {
+            append my_result "\n$elem" 
+         } else {
+            append my_result ",$elem"
+         }
+      }
+      set my_result "$my_result\n"
+      parse_qstat_j my_result jobinfo $jobid 
+#      set a_names [array names jobinfo]
+#      foreach elem $a_names {
+#         puts $jobinfo($elem)
+#      }
       return 1
    }
    return 0

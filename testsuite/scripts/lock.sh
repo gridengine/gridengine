@@ -62,7 +62,7 @@ while [ $locked -eq 0 -a $loops -lt 10 ]; do
      fi
   fi
   loops=`expr $loops + 1`
-  sleep 2
+  sleep 1
 done
 umask 022
 exit $locked

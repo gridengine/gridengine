@@ -1,0 +1,878 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# define global variable in this namespace
+global check_name 
+global check_description 
+global check_needs
+global check_functions 
+global check_errno 
+global check_errstr 
+global check_highest_level
+global check_init_level_procedure
+global check_root_access_needs
+global env
+
+set check_root_access_needs "yes"
+
+
+# define a level initialization procedure:
+set check_init_level_procedure "access_lists_init_level"
+
+# define test's name and run level descriptions
+set check_name            "access_lists"
+set check_highest_level   0
+set check_description(0)  "Test (x)user_lists access for queue/cluster/pe"
+
+# define test's dependencies
+set check_needs           "init_core_system" 
+
+
+# define test's procedure order
+set check_functions ""
+lappend check_functions "access_lists_setup"
+lappend check_functions "access_lists_global_host"
+lappend check_functions "access_lists_exec_host"
+lappend check_functions "access_lists_queue"
+lappend check_functions "access_lists_cluster_config"
+lappend check_functions "access_lists_pe"
+lappend check_functions "access_lists_cleanup"
+
+proc access_lists_init_level {} {
+   global CHECK_ACT_LEVEL
+   global CHECK_PRODUCT_TYPE
+   global test_array_jobs 
+
+  switch -- $CHECK_ACT_LEVEL {
+     "0" { 
+           return 0    
+     } 
+     "1" {
+           return -1
+     }
+  } 
+  return -1  ;# no other level else
+}
+
+# -------- local test procedures -----------------------------------------------
+
+global access_lists_queue
+global access_lists_host
+
+global access_lists_host_conf
+global access_lists_queue_conf
+global access_lists_global_host_conf
+global access_lists_cluster_conf
+
+proc access_lists_setup  {} {
+   global access_lists_queue
+   global access_lists_host
+
+   global access_lists_host_conf
+   global access_lists_queue_conf
+   global access_lists_global_host_conf
+   global access_lists_cluster_conf
+
+   global CHECK_CORE_EXECD CHECK_OUTPUT
+   global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+
+   set access_lists_queue "[lindex $CHECK_CORE_EXECD 0].q"
+   set access_lists_host  [lindex $CHECK_CORE_EXECD 0]
+
+   puts $CHECK_OUTPUT "using queue $access_lists_queue"
+   puts $CHECK_OUTPUT "using host $access_lists_host"
+
+   #saving original configurations
+   get_exechost access_lists_host_conf $access_lists_host  
+   get_queue    $access_lists_queue       access_lists_queue_conf
+   get_exechost access_lists_global_host_conf "global"       
+   get_config                             access_lists_cluster_conf 
+
+   set group1 [lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0]
+   add_access_list "@${group1}"  userA_group
+   add_access_list "@${CHECK_SECOND_FOREIGN_SYSTEM_GROUP}" userB_group
+   add_access_list "$CHECK_FIRST_FOREIGN_SYSTEM_USER"   userA_name
+   add_access_list "$CHECK_SECOND_FOREIGN_SYSTEM_USER"  userB_name
+
+ 
+
+   set_error 0 "ok"
+}
+
+proc test_job_run { id_string job_id } {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ARCH
+
+   wait_for_jobpending $job_id "leeper" 60
+
+   puts $CHECK_OUTPUT "Trigger scheduler monitoring"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   puts $CHECK_OUTPUT $catch_result
+
+   if { [wait_for_jobstart $job_id "leeper" 60] != 0 } {
+      add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched"
+   } 
+   delete_job $job_id
+#   wait_for_jobend $job_id "leeper" 60
+}
+
+proc run_user_denied_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_host CHECK_USER
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
+   global access_lists_queue
+
+   puts $CHECK_OUTPUT "id_string is $id_string"
+   puts $CHECK_OUTPUT "jobargs are: $jobargs"
+
+   set job_id_A [ submit_job $jobargs 0 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER  ]
+   if { $A_ok == 1 } {
+      test_job_run "$id_string (A)" $job_id_A
+   }
+   set job_id_B [ submit_job $jobargs 0 30 "" $CHECK_SECOND_FOREIGN_SYSTEM_USER ]
+   if { $B_ok == 1 } {
+      test_job_run "$id_string (B)" $job_id_B
+   }
+
+   if { $C_ok != -1 } {
+      set job_id_C [ submit_job $jobargs 0 30 "" $CHECK_USER ]
+      if { $C_ok == 1 } {
+         test_job_run "$id_string (C)" $job_id_C
+      } else {
+         if { $job_id_C != -11 } {
+            add_proc_error "run_user_denied_jobs" "-1" "$id_string, job $job_id_C (C) should not run"
+         } 
+      }
+   }
+
+   if { $A_ok == 0 } {
+      if { $job_id_A != -11 } {
+         add_proc_error "run_user_denied_jobs" "-1" "$id_string, job $job_id_A (A) should not run"
+      }
+   }
+ 
+   if { $B_ok == 0 } {
+      if { $job_id_B != -11 } {
+         add_proc_error "run_user_denied_jobs" "-1" "$id_string, job $job_id_B (B) should not run"
+      }
+   }
+}
+
+proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_host CHECK_USER
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
+   global access_lists_queue
+
+   puts $CHECK_OUTPUT "id_string is $id_string"
+   puts $CHECK_OUTPUT "jobargs are: $jobargs"
+   set job_id_A [ submit_job $jobargs 1 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER  ]
+   if { $A_ok == 1 } {
+      test_job_run "$id_string (A)" $job_id_A
+   }
+
+   set job_id_B [ submit_job $jobargs 1 30 "" $CHECK_SECOND_FOREIGN_SYSTEM_USER ]
+   if { $B_ok == 1 } {
+      test_job_run "$id_string (B)" $job_id_B
+   }
+
+   if { $C_ok != -1 } {
+      set job_id_C [ submit_job $jobargs 1 30 "" $CHECK_USER ]
+      if { $C_ok == 1 } {
+         test_job_run "$id_string (C)" $job_id_C
+      } else {
+         if { [string first "no permission" [get_scheduling_info $job_id_C] ] < 0 && 
+              [string first "no access"     [get_scheduling_info $job_id_C] ] < 0   } {
+            add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_C (C) should not run"
+         }
+         wait_for_jobpending $job_id_C "leeper" 30
+         delete_job $job_id_C
+      }
+   }
+
+   if { $A_ok == 0 } {
+      if { [string first "no permission" [get_scheduling_info $job_id_A] ] < 0 && 
+           [string first "no access"     [get_scheduling_info $job_id_A] ] < 0} {
+         add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_A (A) should not run"
+      }
+      wait_for_jobpending $job_id_A "leeper" 30
+      delete_job $job_id_A
+   }
+ 
+   if { $B_ok == 0 } {
+      if { [string first "no permission" [get_scheduling_info $job_id_B] ] < 0 && 
+           [string first "no access"     [get_scheduling_info $job_id_B] ] < 0   } {
+         add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_B (B) should not run"
+      }
+      wait_for_jobpending $job_id_B "leeper" 30
+      delete_job $job_id_B
+   }
+}
+
+proc access_lists_global_host {} {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_host CHECK_USER
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
+   global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
+   global CHECK_GROUP 
+   global access_lists_queue
+
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
+
+
+   # testing user and group
+   set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
+   foreach elem $access_lists {
+      set A_USER [lindex $elem 0]
+      set B_USER [lindex $elem 1]
+      set group_test [lindex $elem 2]
+      puts $CHECK_OUTPUT "A_USER = $A_USER"
+      puts $CHECK_OUTPUT "B_USER = $B_USER"
+
+      # case 1
+      set my_global_host(xuser_lists) "$A_USER"
+      set my_global_host(user_lists)  "NONE"
+      set_exechost my_global_host "global"
+      run_user_jobs "case 1,$A_USER,$B_USER" "$jobargs" 0 1       ;# A = 0 (not running) B = 1 (should run)
+   
+      # case 2
+      set my_global_host(xuser_lists) "NONE"
+      set my_global_host(user_lists)  "$A_USER"
+      set_exechost my_global_host "global"
+      run_user_jobs "case 2,$A_USER,$B_USER" "$jobargs" 1 0
+   
+      # case 3
+      set my_global_host(xuser_lists) "$B_USER"
+      set my_global_host(user_lists)  "$A_USER"
+      set_exechost my_global_host "global"
+      run_user_jobs "case 3,$A_USER,$B_USER" "$jobargs" 1 0 
+   
+      #case 4
+      set my_global_host(xuser_lists) "$A_USER"
+      set my_global_host(user_lists)  "$B_USER"
+      set_exechost my_global_host "global"
+      run_user_jobs "case 4,$A_USER,$B_USER" "$jobargs" 0 1
+   
+      #case 5
+      set my_global_host(xuser_lists) "NONE"
+      set my_global_host(user_lists)  "NONE"
+      set_exechost my_global_host "global"
+      run_user_jobs "case 5,$A_USER,$B_USER" "$jobargs" 1 1
+   
+      #case 6
+      set my_global_host(xuser_lists) "$A_USER,$B_USER"
+      set my_global_host(user_lists)  "NONE"
+      set_exechost my_global_host "global"
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 0
+         } else {
+            set C_run 1
+         }
+      } else {
+         set C_run 1
+      }
+      run_user_jobs "case 6,$A_USER,$B_USER" "$jobargs" 0 0 $C_run
+   
+      #case 7
+      set my_global_host(xuser_lists) "NONE"
+      set my_global_host(user_lists)  "$A_USER,$B_USER"
+      set_exechost my_global_host "global"
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 1
+         } else {
+            set C_run 0
+         }
+      } else {
+         set C_run 0
+      }
+      run_user_jobs "case 7,$A_USER,$B_USER" "$jobargs" 1 1 $C_run
+  
+      #restore
+      set my_global_host(xuser_lists) "NONE"
+      set my_global_host(user_lists)  "NONE"
+      set_exechost my_global_host "global"
+   }
+
+
+   # test group/user combinations
+   # userA_name userB_name userA_group userB_group
+   set my_global_host(xuser_lists) "userA_group"
+   set my_global_host(user_lists)  "userA_name"
+   set_exechost my_global_host "global"
+   run_user_jobs "group/user case 1" "$jobargs" 0 0
+
+   set my_global_host(xuser_lists) "NONE"
+   set my_global_host(user_lists)  "userA_name,userA_group"
+   set_exechost my_global_host "global"
+   run_user_jobs "group/user case 2" "$jobargs" 1 0
+
+   set my_global_host(xuser_lists) "userA_name,userA_group"
+   set my_global_host(user_lists)  "NONE"
+   set_exechost my_global_host "global"
+   run_user_jobs "group/user case 3" "$jobargs" 0 1
+
+   set my_global_host(xuser_lists) "userA_name"
+   set my_global_host(user_lists)  "userA_group"
+   set_exechost my_global_host "global"
+   run_user_jobs "group/user case 4" "$jobargs" 0 0
+
+   #restore
+   set my_global_host(xuser_lists) "NONE"
+   set my_global_host(user_lists)  "NONE"
+   set_exechost my_global_host "global"
+
+
+   set_error 0 "ok"
+}
+
+proc access_lists_exec_host {} {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_host CHECK_USER
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
+   global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
+   global CHECK_GROUP access_lists_queue
+
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+
+
+   # testing user and group
+   set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
+   foreach elem $access_lists {
+      set A_USER [lindex $elem 0]
+      set B_USER [lindex $elem 1]
+      set group_test [lindex $elem 2]
+      puts $CHECK_OUTPUT "A_USER = $A_USER"
+      puts $CHECK_OUTPUT "B_USER = $B_USER"
+
+      # case 1
+      set my_exec_host(xuser_lists) "$A_USER"
+      set my_exec_host(user_lists)  "NONE"
+      set_exechost my_exec_host $access_lists_host
+      run_user_jobs "case 1,$A_USER,$B_USER" $jobargs 0 1       ;# A = 0 (not running) B = 1 (should run)
+   
+      # case 2
+      set my_exec_host(xuser_lists) "NONE"
+      set my_exec_host(user_lists)  "$A_USER"
+      set_exechost my_exec_host $access_lists_host
+      run_user_jobs "case 2,$A_USER,$B_USER" $jobargs 1 0
+   
+      # case 3
+      set my_exec_host(xuser_lists) "$B_USER"
+      set my_exec_host(user_lists)  "$A_USER"
+      set_exechost my_exec_host $access_lists_host
+      run_user_jobs "case 3,$A_USER,$B_USER" $jobargs 1 0 
+   
+      #case 4
+      set my_exec_host(xuser_lists) "$A_USER"
+      set my_exec_host(user_lists)  "$B_USER"
+      set_exechost my_exec_host $access_lists_host
+      run_user_jobs "case 4,$A_USER,$B_USER" $jobargs 0 1
+   
+      #case 5
+      set my_exec_host(xuser_lists) "NONE"
+      set my_exec_host(user_lists)  "NONE"
+      set_exechost my_exec_host $access_lists_host
+      run_user_jobs "case 5,$A_USER,$B_USER" $jobargs 1 1
+   
+      #case 6
+      set my_exec_host(xuser_lists) "$A_USER,$B_USER"
+      set my_exec_host(user_lists)  "NONE"
+      set_exechost my_exec_host $access_lists_host
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 0
+         } else {
+            set C_run 1
+         }
+      } else {
+         set C_run 1
+      }
+      run_user_jobs "case 6,$A_USER,$B_USER" $jobargs 0 0 $C_run
+   
+      #case 7
+      set my_exec_host(xuser_lists) "NONE"
+      set my_exec_host(user_lists)  "$A_USER,$B_USER"
+      set_exechost my_exec_host $access_lists_host
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 1
+         } else {
+            set C_run 0
+         }
+      } else {
+         set C_run 0
+      }
+      run_user_jobs "case 7,$A_USER,$B_USER" $jobargs 1 1 $C_run
+  
+      #restore
+      set my_exec_host(xuser_lists) "NONE"
+      set my_exec_host(user_lists)  "NONE"
+      set_exechost my_exec_host $access_lists_host
+   }
+
+
+   # test group/user combinations
+   # userA_name userB_name userA_group userB_group
+
+
+   set my_exec_host(xuser_lists) "userA_group"
+   set my_exec_host(user_lists)  "userA_name"
+   set_exechost my_exec_host $access_lists_host
+   run_user_jobs "group/user case 1" $jobargs 0 0
+
+   set my_exec_host(xuser_lists) "NONE"
+   set my_exec_host(user_lists)  "userA_name,userA_group"
+   set_exechost my_exec_host $access_lists_host
+   run_user_jobs "group/user case 2" $jobargs 1 0
+
+   set my_exec_host(xuser_lists) "userA_name,userA_group"
+   set my_exec_host(user_lists)  "NONE"
+   set_exechost my_exec_host $access_lists_host
+   run_user_jobs "group/user case 3" $jobargs 0 1
+
+   set my_exec_host(xuser_lists) "userA_name"
+   set my_exec_host(user_lists)  "userA_group"
+   set_exechost my_exec_host $access_lists_host
+   run_user_jobs "group/user case 4" $jobargs 0 0
+
+   #restore
+   set my_exec_host(xuser_lists) "NONE"
+   set my_exec_host(user_lists)  "NONE"
+   set_exechost my_exec_host $access_lists_host
+
+
+   set_error 0 "ok"
+}
+
+proc access_lists_queue {} {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_queue CHECK_USER
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
+   global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
+   global CHECK_GROUP
+
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+
+   # testing user and group
+   set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
+   foreach elem $access_lists {
+      set A_USER [lindex $elem 0]
+      set B_USER [lindex $elem 1]
+      set group_test [lindex $elem 2]
+      puts $CHECK_OUTPUT "A_USER = $A_USER"
+      puts $CHECK_OUTPUT "B_USER = $B_USER"
+
+      # case 1
+      set my_queue_conf(xuser_lists) "$A_USER"
+      set my_queue_conf(user_lists)  "NONE"
+      set_queue $access_lists_queue my_queue_conf
+      run_user_jobs "case 1,$A_USER,$B_USER" $jobargs 0 1       ;# A = 0 (not running) B = 1 (should run)
+   
+      # case 2
+      set my_queue_conf(xuser_lists) "NONE"
+      set my_queue_conf(user_lists)  "$A_USER"
+      set_queue $access_lists_queue my_queue_conf
+      run_user_jobs "case 2,$A_USER,$B_USER" $jobargs 1 0
+   
+      # case 3
+      set my_queue_conf(xuser_lists) "$B_USER"
+      set my_queue_conf(user_lists)  "$A_USER"
+      set_queue $access_lists_queue my_queue_conf
+      run_user_jobs "case 3,$A_USER,$B_USER" $jobargs 1 0 
+   
+      #case 4
+      set my_queue_conf(xuser_lists) "$A_USER"
+      set my_queue_conf(user_lists)  "$B_USER"
+      set_queue  $access_lists_queue my_queue_conf
+      run_user_jobs "case 4,$A_USER,$B_USER" $jobargs 0 1
+   
+      #case 5
+      set my_queue_conf(xuser_lists) "NONE"
+      set my_queue_conf(user_lists)  "NONE"
+      set_queue  $access_lists_queue my_queue_conf
+      run_user_jobs "case 5,$A_USER,$B_USER" $jobargs 1 1
+   
+      #case 6
+      set my_queue_conf(xuser_lists) "$A_USER,$B_USER"
+      set my_queue_conf(user_lists)  "NONE"
+      set_queue  $access_lists_queue my_queue_conf
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 0
+         } else {
+            set C_run 1
+         }
+      } else {
+         set C_run 1
+      }
+      run_user_jobs "case 6,$A_USER,$B_USER" $jobargs 0 0 $C_run
+   
+      #case 7
+      set my_queue_conf(xuser_lists) "NONE"
+      set my_queue_conf(user_lists)  "$A_USER,$B_USER"
+      set_queue  $access_lists_queue my_queue_conf
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 1
+         } else {
+            set C_run 0
+         }
+      } else {
+         set C_run 0
+      }
+      run_user_jobs "case 7,$A_USER,$B_USER" $jobargs 1 1 $C_run
+  
+      #restore
+      set my_queue_conf(xuser_lists) "NONE"
+      set my_queue_conf(user_lists)  "NONE"
+      set_queue  $access_lists_queue my_queue_conf
+   }
+
+
+   # test group/user combinations
+   # userA_name userB_name userA_group userB_group
+
+   set my_queue_conf(xuser_lists) "userA_group"
+   set my_queue_conf(user_lists)  "userA_name"
+   set_queue  $access_lists_queue my_queue_conf
+   run_user_jobs "group/user case 1" $jobargs 0 0
+
+   set my_queue_conf(xuser_lists) "NONE"
+   set my_queue_conf(user_lists)  "userA_name,userA_group"
+   set_queue  $access_lists_queue my_queue_conf
+   run_user_jobs "group/user case 2" $jobargs 1 0
+
+   set my_queue_conf(xuser_lists) "userA_name,userA_group"
+   set my_queue_conf(user_lists)  "NONE"
+   set_queue  $access_lists_queue my_queue_conf
+   run_user_jobs "group/user case 3" $jobargs 0 1
+
+   set my_queue_conf(xuser_lists) "userA_name"
+   set my_queue_conf(user_lists)  "userA_group"
+   set_queue  $access_lists_queue my_queue_conf
+   run_user_jobs "group/user case 4" $jobargs 0 0
+
+   #restore
+   set my_queue_conf(xuser_lists) "NONE"
+   set my_queue_conf(user_lists)  "NONE"
+   set_queue  $access_lists_queue my_queue_conf
+
+   set_error 0 "ok"
+}
+
+proc access_lists_cluster_config {} {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_queue CHECK_USER
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
+   global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
+   global CHECK_GROUP access_lists_queue
+  
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"  
+   
+   # testing user and group
+   set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
+   foreach elem $access_lists {
+      set A_USER [lindex $elem 0]
+      set B_USER [lindex $elem 1]
+      set group_test [lindex $elem 2]
+      puts $CHECK_OUTPUT "A_USER = $A_USER"
+      puts $CHECK_OUTPUT "B_USER = $B_USER"
+
+      # case 1
+      set my_cluster_conf(xuser_lists) "$A_USER"
+      set my_cluster_conf(user_lists)  "NONE"
+      set_config my_cluster_conf "global"
+      run_user_denied_jobs "case 1,$A_USER,$B_USER" $jobargs 0 1       ;# A = 0 (not running) B = 1 (should run)
+   
+      # case 2
+      set my_cluster_conf(xuser_lists) "NONE"
+      set my_cluster_conf(user_lists)  "$A_USER"
+      set_config my_cluster_conf "global"
+      run_user_denied_jobs "case 2,$A_USER,$B_USER" $jobargs 1 0
+   
+      # case 3
+      set my_cluster_conf(xuser_lists) "$B_USER"
+      set my_cluster_conf(user_lists)  "$A_USER"
+      set_config my_cluster_conf "global"
+      run_user_denied_jobs "case 3,$A_USER,$B_USER" $jobargs 1 0 
+   
+      #case 4
+      set my_cluster_conf(xuser_lists) "$A_USER"
+      set my_cluster_conf(user_lists)  "$B_USER"
+      set_config my_cluster_conf "global"
+      run_user_denied_jobs "case 4,$A_USER,$B_USER" $jobargs 0 1
+   
+      #case 5
+      set my_cluster_conf(xuser_lists) "NONE"
+      set my_cluster_conf(user_lists)  "NONE"
+      set_config my_cluster_conf "global"
+      run_user_denied_jobs "case 5,$A_USER,$B_USER" $jobargs 1 1
+   
+      #case 6
+      set my_cluster_conf(xuser_lists) "$A_USER,$B_USER"
+      set my_cluster_conf(user_lists)  "NONE"
+      set_config my_cluster_conf "global"
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 0
+         } else {
+            set C_run 1
+         }
+      } else {
+         set C_run 1
+      }
+      run_user_denied_jobs "case 6,$A_USER,$B_USER" $jobargs 0 0 $C_run
+   
+      #case 7
+      set my_cluster_conf(xuser_lists) "NONE"
+      set my_cluster_conf(user_lists)  "$A_USER,$B_USER"
+      set_config my_cluster_conf "global"
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 1
+         } else {
+            set C_run 0
+         }
+      } else {
+         set C_run 0
+      }
+      run_user_denied_jobs "case 7,$A_USER,$B_USER" $jobargs 1 1 $C_run
+  
+      #restore
+      set my_cluster_conf(xuser_lists) "NONE"
+      set my_cluster_conf(user_lists)  "NONE"
+      set_config my_cluster_conf "global"
+   }
+
+    
+   # test group/user combinations
+   # userA_name userB_name userA_group userB_group
+
+   set my_cluster_conf(xuser_lists) "userA_group"
+   set my_cluster_conf(user_lists)  "userA_name"
+   set_config  my_cluster_conf "global"
+   run_user_denied_jobs "group/user case 1" $jobargs 0 0
+
+   set my_cluster_conf(xuser_lists) "NONE"
+   set my_cluster_conf(user_lists)  "userA_name,userA_group"
+   set_config my_cluster_conf "global"
+   run_user_denied_jobs "group/user case 2" $jobargs 1 0
+
+   set my_cluster_conf(xuser_lists) "userA_name,userA_group"
+   set my_cluster_conf(user_lists)  "NONE"
+   set_config my_cluster_conf "global"
+   run_user_denied_jobs "group/user case 3" $jobargs 0 1
+
+   set my_cluster_conf(xuser_lists) "userA_name"
+   set my_cluster_conf(user_lists)  "userA_group"
+   set_config my_cluster_conf "global"
+   run_user_denied_jobs "group/user case 4" $jobargs 0 0
+
+
+   # restore     
+   set my_cluster_conf(xuser_lists) "NONE"
+   set my_cluster_conf(user_lists)  "NONE"
+   set_config  my_cluster_conf "global"
+ 
+   set_error 0 "ok"
+
+}
+
+proc access_lists_pe {} {
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_queue CHECK_USER
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
+   global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
+   global CHECK_GROUP
+
+   set jobargs "-o /dev/null -e /dev/null -pe access_test_pe 2 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   
+   set my_pe(pe_name)     "access_test_pe"
+   set my_pe(queue_list)  $access_lists_queue
+   set my_pe(slots)       "8"
+
+   # testing user and group
+   set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
+   foreach elem $access_lists {
+      set A_USER [lindex $elem 0]
+      set B_USER [lindex $elem 1]
+      set group_test [lindex $elem 2]
+      puts $CHECK_OUTPUT "A_USER = $A_USER"
+      puts $CHECK_OUTPUT "B_USER = $B_USER"
+
+      # case 1
+      set my_pe(xuser_lists) "$A_USER"
+      set my_pe(user_lists)  "NONE"
+      add_pe my_pe
+      run_user_jobs "case 1,$A_USER,$B_USER" $jobargs 0 1       ;# A = 0 (not running) B = 1 (should run)
+      del_pe "access_test_pe"  
+ 
+      # case 2
+      set my_pe(xuser_lists) "NONE"
+      set my_pe(user_lists)  "$A_USER"
+      add_pe my_pe
+      run_user_jobs "case 2,$A_USER,$B_USER" $jobargs 1 0
+      del_pe "access_test_pe"
+
+      # case 3
+      set my_pe(xuser_lists) "$B_USER"
+      set my_pe(user_lists)  "$A_USER"
+      add_pe my_pe
+      run_user_jobs "case 3,$A_USER,$B_USER" $jobargs 1 0 
+      del_pe "access_test_pe"
+
+   
+      #case 4
+      set my_pe(xuser_lists) "$A_USER"
+      set my_pe(user_lists)  "$B_USER"
+      add_pe my_pe
+      run_user_jobs "case 4,$A_USER,$B_USER" $jobargs 0 1
+      del_pe "access_test_pe"
+
+   
+      #case 5
+      set my_pe(xuser_lists) "NONE"
+      set my_pe(user_lists)  "NONE"
+      add_pe my_pe
+      run_user_jobs "case 5,$A_USER,$B_USER" $jobargs 1 1
+      del_pe "access_test_pe"
+
+   
+      #case 6
+      set my_pe(xuser_lists) "$A_USER,$B_USER"
+      set my_pe(user_lists)  "NONE"
+      add_pe my_pe
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 0
+         } else {
+            set C_run 1
+         }
+      } else {
+         set C_run 1
+      }
+      run_user_jobs "case 6,$A_USER,$B_USER" $jobargs 0 0 $C_run
+      del_pe "access_test_pe"
+
+   
+      #case 7
+      set my_pe(xuser_lists) "NONE"
+      set my_pe(user_lists)  "$A_USER,$B_USER"
+      add_pe my_pe
+      if { $group_test == 1 } {
+         set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
+         if { [string first $CHECK_GROUP $group1] >= 0 ||
+              [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {
+            set C_run 1
+         } else {
+            set C_run 0
+         }
+      } else {
+         set C_run 0
+      }
+      run_user_jobs "case 7,$A_USER,$B_USER" $jobargs 1 1 $C_run
+      del_pe "access_test_pe"
+   }
+   
+
+
+   # test group/user combinations
+   # userA_name userB_name userA_group userB_group
+   set my_pe(xuser_lists) "userA_group"
+   set my_pe(user_lists)  "userA_name"
+   add_pe my_pe
+   run_user_jobs "group/user case 1" "$jobargs" 0 0 
+   del_pe "access_test_pe"
+
+   set my_pe(xuser_lists) "NONE"
+   set my_pe(user_lists)  "userA_name,userA_group"
+   add_pe my_pe
+   run_user_jobs "group/user case 2" "$jobargs" 1 0
+   del_pe "access_test_pe"
+
+   set my_pe(xuser_lists) "userA_name,userA_group"
+   set my_pe(user_lists)  "NONE"
+   add_pe my_pe
+   run_user_jobs "group/user case 3" "$jobargs" 0 1
+   del_pe "access_test_pe"
+
+   set my_pe(xuser_lists) "userA_name"
+   set my_pe(user_lists)  "userA_group"
+   add_pe my_pe
+   run_user_jobs "group/user case 4" "$jobargs" 0 0
+   del_pe "access_test_pe"
+
+   set_error 0 "ok"
+}
+
+
+proc access_lists_cleanup  {} {
+   global access_lists_queue
+   global access_lists_host
+
+   global access_lists_host_conf
+   global access_lists_queue_conf
+   global access_lists_global_host_conf
+   global access_lists_cluster_conf
+
+   global CHECK_CORE_EXECD CHECK_OUTPUT
+
+   del_access_list "userA_group"
+   del_access_list "userB_group"
+   del_access_list "userA_name"
+   del_access_list "userB_name"
+
+
+   set_exechost  access_lists_host_conf $access_lists_host 
+   set_queue     $access_lists_queue access_lists_queue_conf
+   set_exechost  access_lists_global_host_conf "global"
+   set_config    access_lists_cluster_conf
+
+   set_error 0 "ok"
+}
+
+
+

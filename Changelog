@@ -1,3 +1,21 @@
+CR-2002-01-16-0: Testsuite: - faster lockfile check
+                            - new settings file version: 5
+                                (new foreign users/group setup)
+                            - syntax check for testsuite users/group setup
+                            - set_exechost(): ignore unchangable values
+                            - submit_job(): new error states for access errors
+                            - get_qstat_j_info(): joining lines, containing no ":"
+                                 in order to get complete scheduling info
+                            - new procedure: get_scheduling_info()
+                            - new procedure: add_access_list()
+                            - new procedure: del_access_list()
+                            - job_state_handling test: 
+                                 using new procedure get_scheduling_info()
+                            - qrsh test:
+                                 update for defaults file changes
+                            - new test: geee/project_access_lists
+                            - new test: functional/access_lists
+
 SD-2002-01-15-1: Enhancem.: NEC SX-6 compilation changes:
                             Added missing strptime and fnmatch functions (from BSD)
                             Added support for NECSX6 architecture (maps to NECSX5)

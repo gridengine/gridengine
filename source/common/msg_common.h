@@ -392,7 +392,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\""
-#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2         "obj_nm2                 \"queue\"|\"exechost\""
+#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2         "obj_nm2                 \"queue\"|\"queue_domain\"|\"queue_instance\"|\"exechost\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_ATTRIBUTE_NAME       "attr_nm                 (see man pages)"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_lst              objectname [ objectname ...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST     "evid_list               all | evid[,evid,...]" 

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2003/11/13 16:57:14 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2004/01/30 17:04:04 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2003/11/13 16:57:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2004/01/30 17:04:04 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -37,8 +37,8 @@ complex \- xxQS_NAMExx complexes configuration file format
 .\"
 .SH DESCRIPTION
 .I Complex
-reflects the format of the xxQS_NAMExx complexes configuration.  The
-definition of complexes provides all pertinent information
+reflects the format of the xxQS_NAMExx complex configuration.  The
+definition of complex attributes provides all pertinent information
 concerning the resource attributes a user may request for a xxQS_NAMExx
 job via the
 .M qsub 1
@@ -46,17 +46,17 @@ job via the
 and for the interpretation of these parameters within the xxQS_NAMExx
 system.
 .PP
-The complexes configuration files should not be accessed directly.
+The complex configuration files should not be accessed directly.
 In order to add or modify complexes,
 the
 .M qconf 1
-options \-Ac, \-ac, \-Mc and \-mc should be used instead.
-While the \-Ac and \-Mc options take a
+options -Mc and \-mc should be used instead.
+While the \-Mc option take a
 .I complex
-configuration file as an argument, the \-ac and \-mc options
-bring up an editor filled in with a template
+configuration file as an argument, the \-mc option
+bring up an editor filled in with the current
 .I complex
-configuration or the configuration of an existing complex.
+configuration.
 .PP
 The xxQS_NAMExx complexes object integrates 4 different types of complexes:
 .\"
@@ -319,27 +319,6 @@ Examples:
 .IP "\(bu" 3n
 \fBHOST\fP is like \fBCSTRING\fP but the string must be a valid hostname.   
 .\"
-.SS "\fBvalue\fP"
-The
-.B value
-field is a pre-defined value setting for an attribute, which only has 
-an effect if it is not overwritten while attempting to determine a concrete 
-value for the attribute with respect to a queue, a host or the xxQS_NAMExx 
-cluster. The value field can be overwritten by
-.IP "\(bu" 3n
-the queue configuration values of a referenced queue.
-.IP "\(bu" 3n
-host specific and cluster related load values.
-.IP "\(bu" 3n
-explicit specification of a value via the complex_values parameter in the 
-queue or host configuration (see
-.M queue_conf 5
-and
-.M host_conf 5
-for details.
-.PP
-If none of above is applicable, value is set for the attribute.
-.\"
 .SS "\fBrelop\fP"
 The
 .B relation operator.
@@ -358,6 +337,14 @@ If set to 'n' or 'no' this entry cannot be used by a
 user in order to request a queue or a class of queues.
 If the entry is set to 'forced' or 'f' the 
 attribute has to be requested by a job or it is rejected.
+.sp
+To enable resource request enforcement the existance of the
+resource has to be defined. This can be done on a cluster global, per host
+and per queue basis. The definition of resource availability is performed 
+with the complex_values entry in
+.M host_conf 5
+and
+.M queu_conf 5 .
 .\"
 .SS "\fBconsumable\fP"
 The

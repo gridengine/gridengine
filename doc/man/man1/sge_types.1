@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2004/01/25 20:02:34 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2004/01/30 17:04:04 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAMExx_INTRO 1 "$Date: 2004/01/25 20:02:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAMExx_INTRO 1 "$Date: 2004/01/30 17:04:04 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -46,46 +46,28 @@ types is explained in this page.
 .SH "TYPES"
 The syntax of xxQS_NAMExx types in alphabetic order:
 .\"
-.\" List of all descriptions contained in this file:
-.\"
-.\" host             => wc_host without pattern
-.\" hostgroup        => wc_hostgroup without pattern
-.\" qdomain          => wc_qdomain without pattern
-.\" qinstance        => wc_qinstance without pattern
-.\" queue            => wc_queue without pattern
-.\" wc_host          := wildcard expression matching a host
-.\" wc_hostgroup     := wildcard expression matching a hostgroup
-.\" wc_qdomain       := wc_cqueue@wc_hostgroup
-.\" wc_qinstance     := wc_cqueue@wc_host
-.\" wc_queue         := wc_cqueue|wc_qdomain|wc_qinstance
-.\" wc_queue_list    := wc_queue[,wc_queue,...]
-.\"
-.SS "\fBhost\fP"
-A valid hostname.
-.PP
-.\"
-.SS "\fBhostgroup\fP"
-A valid hostgroup name. Find more information concerning hostgroups in
-.M hostgroup 5 .
-Please note that hostgroup names always begin with an at-character '@'.
-.PP
-.\"
-.SS "\fBqdomain\fP"
-Similar to \fIwc_qdomain\fP with the exception that wildcard characters
-are not allowed in any part of the \fIqdomain\fP.
-.\"
-.SS "\fBqinstance\fP"
-Similar to \fIwc_qinstance\fP with the exception that wildcard characters
-are not allowed in any part of the \fIqinstance\fP.
-.\"
-.SS "\fBqueue\fP"
-Similar to \fIwc_queue\fP with the exception that wildcard characters
-are not allowed in any part of the \fIqueue\fP.
+.\" host          => wc_host without pattern
+.\" hostgroup     => wc_hostgroup without pattern
+.\" qdomain       => wc_qdomain without pattern
+.\" qinstance     => wc_qinstance without pattern
+.\" queue         => wc_queue without pattern
+.\" wc_host       := wildcard expression matching a host
+.\" wc_hostgroup  := wildcard expression matching a hostgroup
+.\" wc_qdomain    := wc_cqueue@wc_hostgroup
+.\" wc_qinstance  := wc_cqueue@wc_host
+.\" wc_queue      := wc_cqueue|wc_qdomain|wc_qinstance
+.\" wc_queue_list := wc_queue[,wc_queue,...]
 .\"
 .SS "\fBwc_host\fP"
 A wildcard host specification (\fIwc_host\fP) is a 
 wildcard expression which might match one or more hosts used in the cluster.
-The first character of that string never begins with an at-character '@' even
+The first character of that string never begins with an at-charcter '@' even
+if the expression begins with a wildcard character.
+.PP
+.SS "\fBwc_host\fP"
+A wildcard host specification (\fIwc_host\fP) is a 
+wildcard expression which might match one or more hosts used in the cluster.
+The first character of that string never begins with an at-charcter '@' even
 if the expression begins with a wildcard character.
 .PP
 .\"
@@ -100,8 +82,8 @@ a*	all host beginning with an 'a'
 .\"
 .SS "\fBwc_hostgroup\fP"
 A wildcard hostgroup specification (\fIwc_hostgroup\fP) is a 
-wildcard expression which might match one or more hostgroups.
-The first character of that string is always a at-character '@'.
+wildcard expression which night match one or more hostgroups.
+The first charcter of that string is always a at-charcter '@'.
 .PP
 More information concerning hostgroups can be found in
 .M hostgroup 5

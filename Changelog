@@ -1,3 +1,11 @@
+RH-2004-08-04-0: Bugfix:    Missing global defintion of variable 
+                            check_root_access_needs in some bugfix tests added
+                 Changed:   testsuite (tests for issues 1096 1104 1141 1146 
+                            and 1161)
+                 Review:    CR
+                 Issue:     -NA-
+                 Bugtraq:   -NA-
+
 SG-2004-08-03-2: Bugfix:    fixed qsat -g c output and qmon to show cqload
                             instead of load. The man page for qstat was
                             changed as well.

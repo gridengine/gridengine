@@ -36,7 +36,7 @@
  
 lList *sge_add_schedd_info(lList *or_list);
 
-lList *sge_create_orders(lList *or_list, u_long32 type, lListElem *job, lListElem *ja_task, lList *queue_list);
+lList *sge_create_orders(lList *or_list, u_long32 type, lListElem *job, lListElem *ja_task, lList *queue_list, bool no_tickets);
 
 int sge_send_orders2master(lList *orders);
 

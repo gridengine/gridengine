@@ -256,8 +256,8 @@ const char *attr_name
 
    /* build attributes */
    if ((ret = global?
-         global_complexes2scheduler(&attributes, hep, centry_list, 0):
-         host_complexes2scheduler(&attributes, hep, exechost_list, centry_list, 0))) {
+         global_complexes2scheduler(&attributes, hep, centry_list,  NULL, 0):
+         host_complexes2scheduler(&attributes, hep, exechost_list, centry_list, NULL, 0))) {
       fprintf(stderr, MSG_LIST_FAILEDBUILDINGATTRIBUTESFORHOST_S , unique);
       lFreeList(centry_list);
       lFreeList(exechost_list);

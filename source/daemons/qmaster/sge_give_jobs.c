@@ -151,7 +151,7 @@ lListElem *hep
 
       if ((q = queue_list_locate(Master_Queue_List, lGetString(gdil_ep, JG_qname)))) {
          resources = NULL;
-         queue_complexes2scheduler(&resources, q, Master_Exechost_List, Master_CEntry_List, 0);
+         queue_complexes2scheduler(&resources, q, Master_Exechost_List, Master_CEntry_List);
          lSetList(gdil_ep, JG_complex, resources);
       }
 

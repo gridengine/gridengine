@@ -201,7 +201,7 @@ char **argv
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 
-         host_complexes2scheduler(&centry_list, ep, ehl, cl, 0);
+         host_complexes2scheduler(&centry_list, ep, ehl, cl, NULL, 0);
          selected = sge_select_queue(centry_list, resource_match_list, 1, NULL,
                                      0, -1);
          centry_list = lFreeList(centry_list);
@@ -454,7 +454,7 @@ u_long32 show
       DEXIT;
       return;
    }
-   host_complexes2scheduler(&rlp, host, ehl, cl, 0);
+   host_complexes2scheduler(&rlp, host, ehl, cl, NULL, 0);
    for_each (rep , rlp) {
       if (resl) {
          lListElem *r1;

@@ -312,7 +312,7 @@ char **argv
          DPRINTF(("matching queue %s with qstat -l\n", lGetString(qep, QU_qname)));
          if (empty_qs)
             set_qs_state(QS_STATE_EMPTY);
-         queue_complexes2scheduler(&ce, qep, exechost_list, centry_list, 0);
+         queue_complexes2scheduler(&ce, qep, exechost_list, centry_list);
          selected = sge_select_queue(ce, resource_list, 1, NULL, 0, -1);
 
          lFreeList(ce);
@@ -408,12 +408,18 @@ char **argv
          show_job = 0;
 
          for_each(qep, queue_list) {
+            lList *host_resources;
+            lListElem *hep;
+
             if (!(lGetUlong(qep, QU_tagged) & TAG_SHOW_IT))
                continue;
 
-            ret = available_slots_at_queue(NULL, jep, qep, pe, ckpt, 
+            hep = host_list_locate(exechost_list, lGetHost(qep, QU_qhostname));
+            host_complexes2scheduler(&host_resources, hep, exechost_list, centry_list, NULL, 0);
+
+            ret = available_slots_at_queue(host_resources, jep, qep, pe, ckpt, 
                                            exechost_list, centry_list, 
-                                           acl_list, NULL, 1,/* NULL,*/ 0, NULL, 0, NULL);
+                                           acl_list, NULL, 1, 0, NULL, 0, NULL, NULL, 0);
             if (ret>0) {
                show_job = 1;
                break;

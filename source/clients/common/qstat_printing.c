@@ -199,7 +199,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
       u_long32 dominant;
 
       rlp = NULL;
-      queue_complexes2scheduler(&rlp, q, exechost_list, centry_list, 0);
+      queue_complexes2scheduler(&rlp, q, exechost_list, centry_list);
       for_each (rep , rlp) {
 
          /* we had a -F request */
@@ -1279,7 +1279,7 @@ char *indent
             const char *name;
             lListElem *hep;
 
-            queue_complexes2scheduler(&attributes, qep, exechost_list, centry_list, 0);
+            queue_complexes2scheduler(&attributes, qep, exechost_list, centry_list);
             for_each (ce, attributes) {
                double dval;
 

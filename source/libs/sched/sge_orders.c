@@ -100,7 +100,8 @@ lList *or_list,
 u_long32 type,
 lListElem *job,
 lListElem *ja_task,
-lList *granted 
+lList *granted ,
+bool no_tickets
 ) {
    lList *ql = NULL;
    lListElem *gel, *ep, *ep2;
@@ -142,7 +143,10 @@ lList *granted
    /* OR_force is set to zero */
    ep=lCreateElem(OR_Type);
    if (feature_is_enabled(FEATURE_SGEEE)) {
-      lSetDouble(ep, OR_ticket, lGetDouble(ja_task, JAT_ticket));
+      if(!no_tickets)
+         lSetDouble(ep, OR_ticket, lGetDouble(ja_task, JAT_ticket));
+      else
+         lSetDouble(ep, OR_ticket, 0.0);
 
       if (type == ORT_tickets|| type == ORT_ptickets) {
          lListElem *jep;
@@ -169,6 +173,17 @@ lList *granted
             if ((tmp_list = lSelect("", tlist, NULL, what))) {
                lFreeList(tlist);
                tlist = tmp_list;
+               if(no_tickets){
+                  lListElem *tmp;
+                  for_each(tmp, tlist){                 
+                     lSetDouble(tmp, JAT_ticket, 0.0);
+                     lSetDouble(tmp, JAT_oticket, 0.0);
+                     lSetDouble(tmp, JAT_dticket, 0.0);
+                     lSetDouble(tmp, JAT_fticket, 0.0);
+                     lSetDouble(tmp, JAT_sticket, 0.0);
+                     lSetDouble(tmp, JAT_share, 0.0);
+                  }
+               }
             }
             lFreeWhat(what);
          }
@@ -290,7 +305,7 @@ lList *order_list
          DPRINTF(("DELETE JOB "u32"."u32"\n", lGetUlong(job, JB_job_number),
             lGetUlong(ja_task, JAT_task_number)));
          order_list = sge_create_orders(order_list, ORT_remove_job, job, 
-            ja_task, NULL);
+            ja_task, NULL, false);
       }
    }
 

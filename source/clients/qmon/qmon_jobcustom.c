@@ -1988,7 +1988,7 @@ lList *exec_host_list
       DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
       ce = NULL;
       set_qs_state(QS_STATE_EMPTY);
-      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list, 0);
+      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list);
       set_qs_state(QS_STATE_FULL);
       if (!sge_select_queue(ce, request_list, 1, NULL, 0, 1)) {
          dep = qep;
@@ -2022,7 +2022,7 @@ lList *exec_host_list
    while (qep) {
       ce = NULL;
       set_qs_state(QS_STATE_EMPTY);
-      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list, 0);
+      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list);
       set_qs_state(QS_STATE_FULL);
       
       if (!sge_select_queue(ce, request_list, 1, NULL, 0, 1)) {
@@ -2139,7 +2139,7 @@ lList *complex_list
    */
    for_each(qep, queue_list) {
       ce = NULL;
-      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list, 0);
+      queue_complexes2scheduler(&ce, qep, exec_host_list, complex_list);
       if (sge_select_queue(ce, lGetList(jep, JB_hard_resource_list), 1, 
                                        NULL, 0, 1)) {
          ce = lFreeList(ce);

@@ -100,7 +100,7 @@ static bool remove_finished_job(sge_object_type type, sge_event_action action,
          job = job_list_locate(Master_Job_List, job_id);
          ja_task = job_search_task(job, NULL, ja_task_id);
 
-         order_list = sge_create_orders(order_list, ORT_remove_job, job, ja_task, NULL);
+         order_list = sge_create_orders(order_list, ORT_remove_job, job, ja_task, NULL, false);
          sge_send_orders2master(order_list);
       }
    }

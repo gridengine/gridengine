@@ -108,7 +108,8 @@ int simulate_hosts = 0;
  *      max_pending_tasks_per_job - The number of subtasks per pending job to
  *              schedule. This parameter exists in order to reduce overhead.
  *      halflife_decay_list - A list of halflife decay values (UA_Type)
- *
+ *      max_report_job_tickets - The number of pending job ticket orders send
+ *             to the qmaster. Range between 0 and 7FFFFFFF.
  *
  */
 
@@ -117,6 +118,7 @@ int share_override_tickets = 1;
 int share_functional_shares = 1;
 int share_deadline_tickets = 1;
 int max_functional_jobs_to_schedule = 200;
+int max_report_job_tickets = 0x7fffffff;
 int max_pending_tasks_per_job = 50;
 lList *halflife_decay_list = NULL;
 
@@ -734,6 +736,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       share_override_tickets = 1;
       share_functional_shares = 1;
       share_deadline_tickets = 1;
+      max_report_job_tickets = 0x7fffffff;
       max_functional_jobs_to_schedule = 200;
       max_pending_tasks_per_job = 50;
       halflife_decay_list = NULL;
@@ -753,6 +756,9 @@ int merge_configuration(lListElem *global, lListElem *local,
             share_override_tickets = 1;
             share_functional_shares = 0;
             share_deadline_tickets = 1;
+         } else if (!strcasecmp(s, "REPORT_PJOB_TICKETS=false") ||
+                    !strcasecmp(s, "REPORT_PJOB_TICKETS=0")) {
+            max_report_job_tickets = 0;
          } else if (!strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=false") ||
                     !strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=0")) {
             classic_sgeee_scheduling = 0;

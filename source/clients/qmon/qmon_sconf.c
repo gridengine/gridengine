@@ -645,7 +645,7 @@ XtPointer cad
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
 
    for_each (hep, ehl) {
-      host_complexes2scheduler(&entries, hep, ehl, cl, 0);   
+      host_complexes2scheduler(&entries, hep, ehl, cl, NULL, 0);   
    }
    
    if (!where)

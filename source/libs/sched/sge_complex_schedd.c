@@ -63,20 +63,17 @@ static int string_base_cmp(u_long32 type, const char *s1, const char *s2);
 static int string_cmp(u_long32 type, u_long32 relop, const char *request,
  const char *offer);
 
-static int fillComplexFromQueue(lList **new_complexl, lList *complexl, lListElem *queue, int recompute_debitation_dependent);
+static int fillComplexFromQueue(lList **new_complexl, lList *complexl, lListElem *queue, 
+                                const char** filter, int filter_count);
 
 static int decide_dominance(lListElem *ep, double dval, const char *as_str, u_long32 mask);
-static int append_complexes(lList **new_complex, lList *to_add, u_long32 layer, int recompute_debitation_dependent, const char** filter, int filter_count); 
+static int append_complexes(lList **new_complex, lList *to_add, u_long32 layer,  
+                            const char** filter, int filter_count, bool include_default); 
 
-static int fixed_and_consumable(lList *new_complex, lList *config, lList *actual, u_long32 layer, int recompute_debitation_dependent);
-
-static void build_name_filter(const char **filter, lList *list, int t_name, int *pos);
+static int fixed_and_consumable(lList *new_complex, lList *config, lList *actual, u_long32 layer );
 
 static int load_values(lList *new_complex, const char *hostname, 
-                       lList *lv_list, u_long32 layer, 
-                       int recompute_debitation_dependent, double lc_factor);
-
-static bool centry_list_trash_elem_with_no_value(lList *this_list);
+                       lList *lv_list, u_long32 layer, double lc_factor);
 
 static int max_resources = QS_STATE_FULL;
 static int global_load_correction = 0;
@@ -150,8 +147,7 @@ static int fixed_and_consumable(
 lList *new_complex,
 lList *config,
 lList *actual,
-u_long32 layer,
-int recompute_debitation_dependent 
+u_long32 layer
 ) {
    lListElem *conf_ep, *ep, *act_ep;
    double dval;
@@ -169,21 +165,8 @@ int recompute_debitation_dependent
 
       /* should be in our 'new_complex' list */
       if (!(ep=lGetElemStr(new_complex, CE_name, name))) {
-         ERROR((SGE_EVENT, MSG_ATTRIB_XINATTRIBLISTMISSING_SU, name, u32c(layer)));
-         continue; /* oops, bad configuration */
-      }
-
-      if (recompute_debitation_dependent) {
-         /* touch only debitation dependent attributes */
-#ifndef WIN32NATIVE
-         if (!lGetBool(ep, CE_consumable) && 
-			 !lGetElemStr(scheddconf.job_load_adjustments, CE_name, name)) {
-#else
-         if (!lGetBool(ep, CE_consumable)) {
-#endif
-            continue;
-         }
-/*          DPRINTF(("%s\tfixed_and_consumable()\n", name)); */
+      /*   ERROR((SGE_EVENT, MSG_ATTRIB_XINATTRIBLISTMISSING_SU, name, u32c(layer)));*/
+         continue; 
       }
 
       /* treat also consumables as fixed attributes when assuming an empty queuing system */
@@ -338,9 +321,9 @@ static int append_complexes(
 lList **new_complex,
 lList *lp_add,
 u_long32 layer, 
-int recompute_debitation_dependent,
 const char** filter,
-int filter_count  
+int filter_count,
+bool include_default
 ) {
    lListElem *newep, *ep, *already_here;
    const lDescr *lp_add_descr;
@@ -362,6 +345,8 @@ int filter_count
    for_each(ep, lp_add) {
 
       name = lGetPosString(ep, pos_CE_name);
+
+      /* is bound to qlobal, host or queue */
       if(filter){
          int pos = 0;
          skip = true;
@@ -370,6 +355,19 @@ int filter_count
                skip = false;
                break;
                }
+         }
+      }
+
+      if(skip && include_default){
+         skip = true;
+
+         /* is default request? */
+         if(lGetBool(ep, CE_consumable)){
+            double default_val = 0.0;
+            parse_ulong_val(&default_val, NULL, lGetUlong(ep, CE_valtype), 
+                            lGetString(ep, CE_default) , NULL, 0);
+            if(default_val != 0.0)
+               skip = false;
          }
       }
 
@@ -383,23 +381,9 @@ int filter_count
          It's expensive but the qmaster had to prevent 
          multiple occurances of complexes in queue and 
          host and global */
-      if (!recompute_debitation_dependent) {
-         if (already_here)
-            continue;
-      } else {
-         /* only reinit debitation dependent attributes */
-#ifndef WIN32NATIVE
-         if (!lGetElemStr(scheddconf.job_load_adjustments, CE_name, name) &&
-                  !lGetBool(ep, CE_consumable))
-#else
-         if (!lGetBool(ep, CE_consumable))
-#endif
-            continue; 
-
-      if(already_here)
-         lRemoveElem(*new_complex, already_here);
-      }
-
+      if (already_here)
+         continue;
+     
       if (!(newep = lCopyElem(ep))) {
          ERROR((SGE_EVENT,MSG_MEMORY_UNABLETOALLOCSPACEFORCOMPLEXBUILD ));
          *new_complex = lFreeList(*new_complex);
@@ -431,44 +415,18 @@ struct queue2cmplx {
    int relop;
 };
 
-static bool centry_list_trash_elem_with_no_value(lList *this_list) 
-{
-   DENTER(TOP_LAYER, "centry_list_trash_elem_with_no_value");
-  
-   if (this_list != NULL) { 
-      lListElem *centry, *next_centry;
-
-      next_centry = lFirst(this_list);
-      while ((centry = next_centry)) {
-         u_long32 dominant;
-
-         next_centry = lNext(centry);
-         if (!(lGetUlong(centry, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
-            dominant = lGetUlong(centry, CE_pj_dominant);
-         } else {
-            dominant = lGetUlong(centry, CE_dominant);
-         } 
-         if (dominant & DOMINANT_TYPE_VALUE) {
-            lRemoveElem(this_list, centry);
-         }
-      }
-   }
-   DEXIT;
-   return true;
-}
-
 /* provide a list of attributes containing all global attributes */
 int global_complexes2scheduler(
 lList **new_centry_list,
 lListElem *global_host,
 lList *centry_list,
-int recompute_debitation_dependent 
+const char **filter, int filter_cnt
 ) {
    DENTER(TOP_LAYER, "global_complexes2scheduler");
 
    fillComplexFromHost(new_centry_list, global_host, centry_list, 
-                       DOMINANT_LAYER_GLOBAL, recompute_debitation_dependent);
-/*   centry_list_trash_elem_with_no_value(*new_centry_list);*/
+                       DOMINANT_LAYER_GLOBAL, 
+                       filter, filter_cnt);
 
    DEXIT;
    return 0;
@@ -481,7 +439,7 @@ lList **new_centry_list,
 lListElem *host,
 lList *exechost_list,
 lList *centry_list, 
-int recompute_debitation_dependent 
+const char **filter, int filter_cnt
 ) {
    DENTER(TOP_LAYER, "host_comlexes2scheduler");
 
@@ -489,17 +447,16 @@ int recompute_debitation_dependent
       DPRINTF(("!!missing host!!\n"));
    }
    /* build global complex and add it to result */
-   if (recompute_debitation_dependent || !*new_centry_list) {
+   if ( !*new_centry_list) {
       global_complexes2scheduler(new_centry_list, 
                                  host_list_locate(exechost_list, "global"), 
                                  centry_list,
-                                 recompute_debitation_dependent);
+                                 filter, filter_cnt);
    }
 
    fillComplexFromHost(new_centry_list, host, centry_list, 
-                       DOMINANT_LAYER_HOST, recompute_debitation_dependent);
-
-/*   centry_list_trash_elem_with_no_value(*new_centry_list);*/
+                       DOMINANT_LAYER_HOST, 
+                       filter, filter_cnt);
 
    DEXIT;
    return 0;
@@ -517,12 +474,11 @@ int queue_complexes2scheduler(
 lList **new_centry_list,
 lListElem *queue,
 lList *exechost_list,
-lList *centry_list, 
-int recompute_debitation_dependent 
+lList *centry_list 
 ) {
    DENTER(TOP_LAYER, "queue_complexes2scheduler");
 
-   if (recompute_debitation_dependent || !*new_centry_list) {
+   if (!*new_centry_list) {
       host_complexes2scheduler(
          new_centry_list, 
          queue ?
@@ -530,14 +486,12 @@ int recompute_debitation_dependent
             :NULL, 
          exechost_list, 
          centry_list, 
-         recompute_debitation_dependent);
+         NULL, 0);
       
    }
 
    fillComplexFromQueue(new_centry_list, centry_list, queue, 
-                        recompute_debitation_dependent);
-
-   centry_list_trash_elem_with_no_value(*new_centry_list);
+                        NULL,0);
 
    DEXIT;
    return 0;
@@ -548,14 +502,13 @@ lList **new_centry_list,
 lListElem *queue,
 lList *exechost_list,
 lList *centry_list, 
-int recompute_debitation_dependent 
+const char **filter, int filter_cnt
 ) {
-   DENTER(TOP_LAYER, "queue_complexes2scheduler");
+   DENTER(TOP_LAYER, "queue_complexes");
 
    fillComplexFromQueue(new_centry_list, centry_list, queue, 
-                        recompute_debitation_dependent);
+                        filter, filter_cnt);
 
-/*   centry_list_trash_elem_with_no_value(*new_centry_list); */
 
    DEXIT;
    return 0;
@@ -589,7 +542,7 @@ recompute_debitation_dependent;  recompute only attribute types which
  **********************************************************************/
 int fillComplexFromHost(lList **new_centry_list,  
                         lListElem *host, lList *centry_list, u_long32 layer, 
-                        int recompute_debitation_dependent)
+                        const char **job_filter, int job_filter_count)
 {
    double lc_factor = 0; /* scaling for load correction */ 
    u_long32 ulc_factor;
@@ -604,13 +557,14 @@ int fillComplexFromHost(lList **new_centry_list,
       filter = malloc((lGetNumberOfElem(centry_list)+1) * sizeof(char**)); 
       memset(filter, 0,(lGetNumberOfElem(centry_list)+1) * sizeof(char**));
 
-      build_name_filter(filter, lGetList(host, EH_load_list), HL_name, &pos);
-      build_name_filter(filter, lGetList(host, EH_consumable_config_list), CE_name, &pos);
-      build_name_filter(filter, lGetList(host, EH_consumable_actual_list), CE_name, &pos);
+      build_name_filter(filter, lGetList(host, EH_load_list), HL_name, &pos, job_filter, job_filter_count );
+      build_name_filter(filter, lGetList(host, EH_consumable_config_list), CE_name, &pos, job_filter, job_filter_count);
+      build_name_filter(filter, lGetList(host, EH_consumable_actual_list), CE_name, &pos, job_filter, job_filter_count);
 
-      append_complexes(new_centry_list, centry_list, layer, recompute_debitation_dependent, filter, pos);
-
+      append_complexes(new_centry_list, centry_list, layer, filter, pos, job_filter != NULL);
+      
       FREE(filter);
+
    }
 
    if (!host) { /* there may be a queue which has no host object yet */
@@ -630,21 +584,46 @@ int fillComplexFromHost(lList **new_centry_list,
       lGetHost(host, EH_name),
       lGetList(host, EH_load_list),
       layer,
-      recompute_debitation_dependent,
       lc_factor);
 
    fixed_and_consumable(
       *new_centry_list, 
       lGetList(host, EH_consumable_config_list),
       lGetList(host, EH_consumable_actual_list),
-      layer, 
-      recompute_debitation_dependent);
+      layer );
 
    DEXIT;
    return 0;
 }
 
-static void build_name_filter(const char **filter, lList *list, int t_name, int *pos){
+/****** sge_complex_schedd/build_name_filter() *********************************
+*  NAME
+*     build_name_filter() -- fills in an array with complex nams, which can be used
+*                            as a filter. 
+*
+*  SYNOPSIS
+*     void build_name_filter(const char **filter, lList *list, int t_name, int 
+*     *pos, const char **job_filter, int job_filter_count) 
+*
+*  FUNCTION
+*     Takes an array of a given size and fills in complex names. These can be
+*     filtered by an other string array. 
+*
+*  INPUTS
+*     const char **filter     - target for the filter strings. It has to be of sufficant size. 
+*     lList *list             - a list of complexes, from which the names are extracted 
+*     int t_name              - specifies the field which is used as a name 
+*     int *pos                - current position in which the new strings are added. After a 
+*                               run it points to the next empty spot in the array. 
+*     const char **job_filter - if its not NULL, the array is used as a filter for the new filter 
+*     int job_filter_count    - the count of strings in the job_filter array
+*
+*  NOTES
+*     ??? 
+*
+*******************************************************************************/
+void build_name_filter(const char **filter, lList *list, int t_name, int *pos, 
+                       const char **job_filter, int job_filter_count ){
    lListElem *current = NULL;
    
    if(!list)
@@ -654,12 +633,27 @@ static void build_name_filter(const char **filter, lList *list, int t_name, int 
          const char* name = lGetString(current, t_name);
          bool add = true; 
          int i;
+
+         if(job_filter){
+            add = false;
+            for(i=0 ; i<job_filter_count; i++){
+               if(strcmp(job_filter[i], name) == 0){
+                  add = true;
+                  break;
+               }
+            }
+         }
+
+         if(!add)
+            continue;
+
          for(i=0 ; i<(*pos); i++){
             if(strcmp(filter[i], name) == 0){
                add = false;
                break;
             }
          }
+         
          if(add)
             filter[(*pos)++] = name; 
       }
@@ -670,7 +664,6 @@ lList *new_centry_list,
 const char *hostname,
 lList *lv_list,
 u_long32 layer,
-int recompute_debitation_dependent,
 double lc_factor 
 ) {
    lListElem *ep, *load_sensor;
@@ -690,17 +683,8 @@ double lc_factor
          continue; /* no */
 
       /* get load correction for this load value ? */
-#ifndef WIN32NATIVE
+
       job_load=lGetElemStr(scheddconf.job_load_adjustments, CE_name, name);
-#else
-     job_load=NULL;
-#endif
-      if (recompute_debitation_dependent) {
-         /* touch only debitation dependent attributes */
-         if (!job_load && !lGetBool(ep, CE_consumable)) {
-            continue;
-         }
-      }
 
       /* load values are accepted only in case they are static */
       if (get_qs_state()==QS_STATE_EMPTY && !sge_is_static_load_value(name))
@@ -817,7 +801,7 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
 static int 
 fillComplexFromQueue(lList** new_complex, 
                      lList *complex, lListElem *queue, 
-                     int recompute_debitation_dependent)
+                     const char** job_filter, int job_filter_count)
 {
    lListElem *complexel;
    const char *value;
@@ -858,21 +842,31 @@ fillComplexFromQueue(lList** new_complex,
 
    /* append main "queue" complex ... */
    if (complex){
-      int pos = 0;
-      const char **filter = NULL;
-
-      filter = malloc((lGetNumberOfElem(complex)+1) * sizeof(char**)); 
-      memset(filter, 0,(lGetNumberOfElem(complex)+1) * sizeof(char**));
-   
-      for (q2cptr = q2c; q2cptr->attrname[0]; q2cptr++){ 
-         filter[pos++] = q2cptr->attrname;
-      }
+         int pos = 0;
+         int filter_pos;
+         const char **filter = NULL;
       
-      build_name_filter(filter, lGetList(queue, QU_consumable_config_list), CE_name, &pos);
-      build_name_filter(filter, lGetList(queue, QU_consumable_actual_list), CE_name, &pos);
+         filter = malloc((lGetNumberOfElem(complex)) * sizeof(char**)); 
+         memset(filter, 0,(lGetNumberOfElem(complex)) * sizeof(char**));
+   
+         for (q2cptr = q2c; q2cptr->attrname[0]; q2cptr++){
+            bool skip = true;
+            for(filter_pos = 0; filter_pos < job_filter_count; filter_pos++){
+               if(strcmp(q2cptr->attrname, job_filter[filter_pos]) == 0){
+                  skip = false;
+                  break;
+                  }
+            } 
+            if(!skip)
+               filter[pos++] = q2cptr->attrname;
+         }
+         
+         build_name_filter(filter, lGetList(queue, QU_consumable_config_list), CE_name, &pos, job_filter, job_filter_count);
+         build_name_filter(filter, lGetList(queue, QU_consumable_actual_list), CE_name, &pos, job_filter, job_filter_count);
 
-      append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, recompute_debitation_dependent, filter, pos);
-      FREE(filter);
+      
+         append_complexes(new_complex, complex, DOMINANT_LAYER_QUEUE, filter, pos, job_filter != NULL);
+         FREE(filter);
    }
    
 
@@ -886,19 +880,6 @@ fillComplexFromQueue(lList** new_complex,
       double dval;
       if (!(complexel = lGetElemStr(*new_complex, CE_name, q2cptr->attrname)))
          continue;
-
-      if (recompute_debitation_dependent) {
-         /* touch only debitation dependent attributes */ 
-#ifndef WIN32NATIVE
-         if (!lGetElemStr(scheddconf.job_load_adjustments, CE_name, q2cptr->attrname) &&
-                  !lGetBool(complexel, CE_consumable)) {
-#else
-         if (!lGetBool(complexel, CE_consumable)) {
-#endif
-            continue;
-         }
-/*          DPRINTF(("%s\tfillComplexFromQueue()\n", q2cptr->attrname)); */
-      }
 
       /* read stuff from queue and set to new elements */
       switch (q2cptr->type) {
@@ -947,8 +928,7 @@ fillComplexFromQueue(lList** new_complex,
       *new_complex, 
       lGetList(queue, QU_consumable_config_list),
       lGetList(queue, QU_consumable_actual_list),
-      DOMINANT_LAYER_QUEUE,
-      recompute_debitation_dependent);
+      DOMINANT_LAYER_QUEUE);
 
    DEXIT;
    return 0;
@@ -1042,8 +1022,6 @@ double src_dl
  *********************************************************************/
 int compare_complexes(
 int slots,
-/* never used */
-/*lListElem *util_max_ep,*/ /* maximum of utilization - needed when computing slots for utilization attributes */
 lListElem *req_cplx,
 lListElem *src_cplx,
 char *availability_text,
@@ -1090,7 +1068,6 @@ int force_existence
    } else {
       used_relop = relop ;
    }
-
    switch (type) {
       const char *request;
       double req_all_slots;
@@ -1098,17 +1075,15 @@ int force_existence
    case TYPE_STR:
    case TYPE_CSTR:
    case TYPE_HOST:
-
       request = lGetString(req_cplx, CE_stringval);
+
       offer = lGetString(src_cplx, CE_stringval);
       monitor_dominance(dom_str, lGetUlong(src_cplx, CE_dominant));
 #if 0
       DPRINTF(("%s(\"%s\", \"%s\")\n", type==TYPE_STR?"strcmp":"strcasecmp",
             request, offer)); 
 #endif
-
       match = string_cmp(type, used_relop, request, offer);
-
       sprintf(availability_text, "%s:%s=%s", dom_str, name, offer);
 #if 0
       DPRINTF(("-l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
@@ -1125,7 +1100,9 @@ int force_existence
    case TYPE_DOUBLE:
       s=lGetString(req_cplx, CE_stringval); 
       if (!parse_ulong_val(&req_dl, NULL, type, s, NULL, 0)) {
+#if 0
          DPRINTF(("%s is not of type %s\n", s, map_type2str(type)));
+#endif
          req_dl = 0;
       }   
 
@@ -1165,35 +1142,35 @@ int force_existence
             break;
          case TYPE_MEM:
             double_print_memory_to_dstring(src_dl, &resource_string);
-#if 0
             { 
                dstring request_string = DSTRING_INIT;
 
                double_print_memory_to_dstring(req_dl, &request_string);
+#if 0
                DPRINTF(("%d times of -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
                         slots, name, sge_dstring_get_string(&request_string),
                         dom_str, name, map_op2str(used_relop),
                         sge_dstring_get_string(&resource_string), 
                         m1?"ok":"no match"));
+#endif
                sge_dstring_free(&request_string);
             }
-#endif
             break;
          case TYPE_TIM:
             double_print_time_to_dstring(src_dl, &resource_string);
-#if 0
             {
                dstring request_string = DSTRING_INIT;
 
                double_print_time_to_dstring(req_dl, &request_string);
+#if 0
                DPRINTF(("%d times of -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
                         slots, name, sge_dstring_get_string(&request_string),
                         dom_str, name, map_op2str(used_relop),
                         sge_dstring_get_string(&resource_string), 
                         m1?"ok":"no match"));
+#endif
                sge_dstring_free(&request_string);
             }
-#endif
             break;
          default:
             double_print_to_dstring(src_dl, &resource_string);
@@ -1226,35 +1203,35 @@ int force_existence
             break;
          case TYPE_MEM:
             double_print_memory_to_dstring(src_dl, &resource_string);
-#if 0
             {
                dstring request_string = DSTRING_INIT;
 
                double_print_time_to_dstring(req_dl, &request_string);
+#if 0
                DPRINTF(("per slot -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
                         name, sge_dstring_get_string(&request_string),
                         dom_str, name, map_op2str(used_relop),
                         sge_dstring_get_string(&resource_string), 
                         m2?"ok":"no match"));
+#endif
                sge_dstring_free(&request_string);
             }
-#endif
             break;
          case TYPE_TIM:
             double_print_time_to_dstring(src_dl, &resource_string);
-#if 0
             {
                dstring request_string = DSTRING_INIT;
 
                double_print_time_to_dstring(req_dl, &request_string);
+#if 0
                DPRINTF(("per slot -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
                         name, sge_dstring_get_string(&request_string),
                         dom_str, name, map_op2str(used_relop),
                         sge_dstring_get_string(&resource_string), 
                         m2?"ok":"no match"));
+#endif
                sge_dstring_free(&request_string);
             }
-#endif
             break;
          default:
             double_print_to_dstring(src_dl, &resource_string);

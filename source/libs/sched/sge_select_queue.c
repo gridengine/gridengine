@@ -78,7 +78,7 @@ static int is_requested(lList *req, const char *attr);
 static int sge_select_resource(lList *queue_attributes, lList *host_attributes,
                                lList *resources, int allow_non_requestable, 
                                char *reason, int reason_size, int slots, 
-                               int force_attr_existence);
+                               int force_attr_existence, bool ignore_strings);
 
 static int available_slots_global(lList **global_resources, lListElem *job, 
                                   lListElem *ja_task, lListElem *pe, 
@@ -203,7 +203,7 @@ int sge_select_queue(lList *complex_attributes, lList *resources,
    DENTER(TOP_LAYER, "sge_select_queue");
    ret = sge_select_resource(complex_attributes,NULL, resources, 
                              allow_non_requestable, reason, reason_size, 
-                             slots, 1);
+                             slots, 1, false);
 
    DEXIT;
    return ret;
@@ -224,12 +224,12 @@ int sge_select_queue(lList *complex_attributes, lList *resources,
 static int sge_select_resource(lList *queue_attributes, lList *host_attributes, lList *resources,
                                int allow_non_requestable, char *reason,
                                int reason_size, int slots,
-                               int force_attr_existence) 
+                               int force_attr_existence, bool ignore_strings) 
 {
    static lListElem *implicit_slots_request = NULL;
 
    DENTER(TOP_LAYER, "sge_select_resource");
-
+   
    /* check amount of slots */
    if (!implicit_slots_request) {
       implicit_slots_request = lCreateElem(CE_Type);
@@ -342,7 +342,7 @@ static int sge_select_resource(lList *queue_attributes, lList *host_attributes, 
    /* explicit requests */
    if (sge_match_complex_attributes(queue_attributes, host_attributes,
          resources, 1, allow_non_requestable, reason, reason_size, 1,
-        slots, force_attr_existence)) {
+        slots, force_attr_existence, ignore_strings)) {
       DEXIT;
       return 0;
    }
@@ -391,7 +391,7 @@ requested_attr: CE_Type list
 int sge_match_complex_attributes(lList *queue_attr, lList *host_attr, lList *requested_attr, 
                                  int quick_exit, int allow_non_requestable,
                                  char *reason, int reason_size, 
-                                 int is_a_request, int slots, int force_existence) 
+                                 int is_a_request, int slots, int force_existence, bool ignore_strings) 
 {
    lListElem *rep; /* a requested element */
    int ret=0;
@@ -399,6 +399,12 @@ int sge_match_complex_attributes(lList *queue_attr, lList *host_attr, lList *req
    DENTER(TOP_LAYER, "sge_match_complex_attributes");
 
    for_each (rep, requested_attr) {
+      if(ignore_strings){
+         u_long32 type = lGetUlong(rep, CE_valtype);
+         if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST){
+            continue;   
+         }
+      }
       if (fulfilled(rep, queue_attr, host_attr, reason, reason_size, allow_non_requestable, 
                   is_a_request, slots, force_existence)) {
          if (quick_exit) {
@@ -445,10 +451,12 @@ static int fulfilled(lListElem *rep, lList *queue_attr, lList *host_attr, char *
                      int reason_size, int allow_non_requestable, 
                      int is_a_request, int slots, int force_existence) 
 {
-   lListElem *cplx_el; /* a complex element */
+   lListElem *cplx_el=NULL; /* a complex element */
+   lListElem *host_el=NULL;
    const char *attrname; 
    char availability_text[2048];
    int match;
+   int type;
 /*   lListElem *util_max_ep = NULL;*/
 
    DENTER(TOP_LAYER, "fulfilled");
@@ -456,12 +464,41 @@ static int fulfilled(lListElem *rep, lList *queue_attr, lList *host_attr, char *
    /* resource_attr is a complex_entry (CE_Type) */
    attrname = lGetString(rep, CE_name);
    cplx_el = centry_list_locate(queue_attr, attrname);
-   if((!cplx_el) && (host_attr))
-      cplx_el = centry_list_locate(host_attr, attrname);
+   if(host_attr)
+      host_el = centry_list_locate(host_attr, attrname);
+
+   if(!cplx_el) 
+      cplx_el = host_el;
+   else if ( (host_attr) && 
+            strcmp("slots", attrname) !=0 &&
+            (type = lGetUlong(cplx_el, CE_valtype) != TYPE_STR) &&
+            (type != TYPE_CSTR) &&
+            (type != TYPE_HOST) ){ /* the attribut is defined in both complex lists.*/
+         u_long32 op;
+         double host_val = 0.0;
+         double queue_val = 0.0;
+
+         if (!(lGetUlong(cplx_el, CE_pj_dominant) & (DOMINANT_TYPE_VALUE))) {
+            host_val = lGetDouble(host_el, CE_pj_doubleval);
+            queue_val = lGetDouble(cplx_el, CE_pj_doubleval);
+         }
+         else{
+            host_val = lGetDouble(host_el, CE_doubleval);
+            queue_val = lGetDouble(cplx_el, CE_doubleval);         
+         }
+      
+         op=lGetUlong(cplx_el, CE_relop);
+        if ((op == CMPLXGE_OP || op == CMPLXGT_OP)? 
+            /* max */ (host_val >= queue_val):
+            /* min */ (host_val <= queue_val)) {
+            cplx_el = host_el;
+        }
+   } 
 
    if (!cplx_el ) { /* -l contains a complex we know nothing about -> dont select this queue */
       if (force_existence) {
          if (reason) {
+
             strncpy(reason, MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE , reason_size);
             strncat(reason, attrname, reason_size);
             strncat(reason, "\"", reason_size);
@@ -497,7 +534,7 @@ static int fulfilled(lListElem *rep, lList *queue_attr, lList *host_attr, char *
    }
 #endif
 
-   match = compare_complexes(slots,/* util_max_ep,*/ rep, cplx_el, 
+   match = compare_complexes(slots, rep, cplx_el, 
          availability_text, !is_a_request, force_existence);
 
    if (!match) {
@@ -793,7 +830,7 @@ static void sge_soft_violations(lList *queue_attributes, lList *host_attributes,
 
    /* count number of soft violations for _one_ slot of this job */
    soft_violation = sge_match_complex_attributes(queue_attributes, host_attributes,
-         lGetList(job, JB_soft_resource_list), 0, 0, reason, sizeof(reason)-1, 1, 1, 1);
+         lGetList(job, JB_soft_resource_list), 0, 0, reason, sizeof(reason)-1, 1, 1, 1, 0);
 
    DPRINTF(("queue %s does not fulfill soft %d requests (first: %s)\n", 
          queue_name, soft_violation, reason));
@@ -1231,7 +1268,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
       lListElem *tep;
 
       /* get actual complex values for queue */
-      queue_complexes2scheduler(&rlp, qep, exechost_list, centry_list, 0);
+      queue_complexes2scheduler(&rlp, qep, exechost_list, centry_list);
 
       /* check all thresholds */
       for_each (tep, threshold) {
@@ -1343,8 +1380,7 @@ u_long32 ttype       /* may be QU_suspend_thresholds or QU_load_thresholds */
             } else {
                DPRINTF(("queue %s tagged to be overloaded: %s\n", 
                      lGetString(qep, QU_qname), reason));
-               schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_qname),
-reason);
+               schedd_mes_add_global(SCHEDD_INFO_QUEUEOVERLOADED_SS, lGetString(qep, QU_qname), reason);
             }
          }
       }
@@ -1605,8 +1641,29 @@ int host_order_changed) {
       int have_master_host, suited_as_master_host;
       const char *eh_name, *qname;
 
+      const char* slots_str = "slots";
+      static const char **filter = NULL;
+      static int  max_filter_entries = 0;
+      int max_def_filter=0;
+
+      /* init filter */
+      if(max_filter_entries < lGetNumberOfElem(centry_list)){
+         if(filter != NULL)
+            FREE(filter);
+      
+         max_filter_entries = lGetNumberOfElem(centry_list);   
+         filter = malloc(max_filter_entries * sizeof(char*));
+      }
+      memset(filter, 0, max_filter_entries * sizeof(char*));
+
       /* untag all queues */
       queue_list_clear_tags(queues);
+
+      /* build filter */
+      filter[max_def_filter++] = slots_str;
+
+      build_name_filter(filter,lGetList(job, JB_hard_resource_list), CE_name, &max_def_filter, NULL, 0);
+      build_name_filter(filter,lGetList(job, JB_soft_resource_list), CE_name, &max_def_filter, NULL, 0);
 
       global_hep = host_list_locate(host_list, "global");
 
@@ -1686,15 +1743,62 @@ int host_order_changed) {
             *last_dispatch_type = DISPATCH_TYPE_FAST;
 
          }
+      
+         global_complexes2scheduler(&global_resources, global_hep, centry_list, filter, max_def_filter);
+         
+         if(available_slots_global(&global_resources, job, ja_task, pe, host_list, centry_list, 1, acl_list)){
+            for_each(hep, host_list){
 
+               eh_name = lGetHost(hep, EH_name);
+               if (!strcasecmp(eh_name, "global") || !strcasecmp(eh_name, "template"))
+                  continue;
+
+               host_resources = lCopyList("host", global_resources);
+               host_complexes2scheduler(&host_resources, hep, host_list, centry_list, filter, max_def_filter);
+               
+               if(available_slots_at_host(host_resources, job, ja_task, hep, 1, 1, 1, centry_list, acl_list)){
+
+                  for_each (qep, queues) {
+                     if (sge_hostcmp(lGetHost(qep, QU_qhostname), eh_name))
+                         continue;        
+                        
+                     if(available_slots_at_queue(host_resources, job, qep, pe, ckpt, host_list, centry_list, acl_list,
+                              load_adjustments, 1, ndispatched, global_hep, 1, hep, filter, max_def_filter)){
+                  
+                        lListElem *gdil_ep;
+                        lList *gdil = NULL;
+
+                        qname = lGetString(qep, QU_qname);
+                        eh_name = lGetHost(qep, QU_qhostname);
+
+                        DPRINTF((u32": 1 slot in queue %s@%s user %s\n",
+                           job_id, qname, eh_name, lGetString(job, JB_owner)));
+
+                        gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
+                        lSetUlong(gdil_ep, JG_qversion, lGetUlong(qep, QU_version));
+                        lSetHost(gdil_ep, JG_qhostname, eh_name);
+                        lSetUlong(gdil_ep, JG_slots, 1);
+                        scheduled_fast_jobs++;
+                        DEXIT;
+                        return gdil;
+                     }
+                  }          
+               }
+            }
+         }
+
+
+#if 0
          /* do static and dynamic checks for "global" host */ 
          if (!sge_why_not_job2host(job, ja_task, global_hep, centry_list, acl_list)) {
             for_each (qep, queues) { /* in queue sort order */
                hep = host_list_locate(host_list, lGetHost(qep, QU_qhostname));
 
+               host_complexes2scheduler(&host_resources, hep, host_list, centry_list, filter, max_def_filter);
+
                if (!sge_why_not_job2host(job, ja_task, hep, centry_list, acl_list) &&
-                     available_slots_at_queue(NULL, job, qep, pe, ckpt, host_list, centry_list, acl_list,
-                              load_adjustments, 1, ndispatched, global_hep, 1, hep)) {
+                     available_slots_at_queue(host_resources, job, qep, pe, ckpt, host_list, centry_list, acl_list,
+                              load_adjustments, 1, ndispatched, global_hep, 1, hep, filter, max_def_filter)) {
                   lListElem *gdil_ep;
                   lList *gdil = NULL;
 
@@ -1714,6 +1818,7 @@ int host_order_changed) {
                }
             }
          }
+#endif
          DEXIT;
          return NULL;
       } else {
@@ -1779,26 +1884,7 @@ int host_order_changed) {
           * ------------------------------------------------------------------ */
          *last_dispatch_type = DISPATCH_TYPE_COMPREHENSIVE;
 
-         if (get_qs_state()==QS_STATE_EMPTY) { /* no caching */
-            global_complexes2scheduler(&global_resources, global_hep, centry_list, 0);
-         } else {
-            if (!(global_resources=lGetList(global_hep, EH_cached_complexes))) {
-/*                DPRINTF(("--- GLOBAL\n")); */
-               global_complexes2scheduler(&global_resources, global_hep, centry_list, 0);
-               lSetList(global_hep, EH_cached_complexes, global_resources);
-               lSetUlong(global_hep, EH_cache_version, ndispatched);
-            } else {
-               if ((int) lGetUlong(global_hep, EH_cache_version)!=ndispatched) {
-/*                   DPRINTF(("=== GLOBAL\n")); */
-                  /* recompute attributes only if meanwhile job has been dispatched */
-                  global_complexes2scheduler(&global_resources, global_hep, centry_list, 1);
-                  lSetUlong(global_hep, EH_cache_version, ndispatched);
-               } else {
-/*                   DPRINTF(("+++ GLOBAL\n")); */
-               }
-            }
-         }
-
+         global_complexes2scheduler(&global_resources, global_hep, centry_list, filter, max_def_filter);
 
          /* iterate through all global amounts of slots */
          for (total_slots = (pe ?  
@@ -1849,27 +1935,9 @@ int host_order_changed) {
                if (!(qep=lGetElemHost(queues, QU_qhostname, eh_name)))
                   continue;   
 
-               if (get_qs_state()==QS_STATE_EMPTY) { /* no caching */
-                  host_complexes2scheduler(&host_resources, hep, host_list, centry_list, 0);
-               } else {
-                  if (!(host_resources=lGetList(hep, EH_cached_complexes))) {
-/*                      DPRINTF(("--- HOST %s\n", eh_name)); */
-                     host_resources = lCopyList(eh_name, global_resources); 
-                     host_complexes2scheduler(&host_resources, hep, host_list, centry_list, 0);
-                     lSetList(hep, EH_cached_complexes, host_resources);
-                     lSetUlong(hep, EH_cache_version, ndispatched);
-                  } else {
-                     if ((int) lGetUlong(hep, EH_cache_version)!=ndispatched) {
-/*                         DPRINTF(("=== HOST %s\n", eh_name)); */
-                        /* recompute attributes only if meanwhile job has been dispatched */
-                        host_complexes2scheduler(&host_resources, hep, host_list, centry_list, 1);
-                        lSetUlong(hep, EH_cache_version, ndispatched);
-                     } else {
-/*                         DPRINTF(("+++ HOST %s\n", eh_name)); */
-                     }
-                  }
-               }
-         
+               host_resources = lCopyList("host", global_resources);
+               host_complexes2scheduler(&host_resources, hep, host_list, centry_list, filter, max_def_filter);
+                        
                /* try it decreasinly for each slots amount which makes sense  
                 *  
                 * the loop body is passed multiple times only in case of non 
@@ -1897,7 +1965,7 @@ int host_order_changed) {
 
                         if ((queue_slots = available_slots_at_queue(host_resources, job, qep, pe, 
                                  ckpt, host_list, centry_list, acl_list, load_adjustments, host_slots, ndispatched, 
-                                       global_hep, total_slots, hep))) {   
+                                       global_hep, total_slots, hep, filter, max_def_filter))) {   
                            /* in case the load of two hosts is equal this
                               must be also reflected by the sequence number */
                            if (previous_load_inited && (previous_load < lGetDouble(hep, EH_sort_value)))
@@ -2229,23 +2297,23 @@ int host_order_changed) {
 *  RESULT
 *     int - the # of slots
 ******************************************************************************/
-int available_slots_at_queue(host_resources, job, qep, pe, ckpt, host_list, 
-centry_list, acl_list, load_adjustments, host_slots, ndispatched, 
-global_hep, total_slots, hep)
-lList *host_resources;
-lListElem *job;
-lListElem *qep;
-lListElem *pe;
-lListElem *ckpt;
-lList *host_list;
-lList *centry_list;
-lList *acl_list;
-lList *load_adjustments;
-int host_slots; /* maximum amount of slots at this host */
-int ndispatched;
-lListElem *global_hep;
-int total_slots; /* global amount of slots we want to dispatch */
-lListElem *hep;
+int available_slots_at_queue(
+      lList *host_resources,
+      lListElem *job,
+      lListElem *qep,
+      lListElem *pe,
+      lListElem *ckpt,
+      lList *host_list,
+      lList *centry_list,
+      lList *acl_list,
+      lList *load_adjustments,
+      int host_slots, /* maximum amount of slots at this host */
+      int ndispatched,
+      lListElem *global_hep,
+      int total_slots, /* global amount of slots we want to dispatch */
+      lListElem *hep,
+      const char **job_filter,
+      int job_filter_count)
 {
    int qslots;
    lListElem *cep;
@@ -2318,25 +2386,8 @@ lListElem *hep;
       }
    }
 
-   if (get_qs_state()==QS_STATE_EMPTY) {
-      queue_complexes(&queue_resources, qep, host_list, centry_list, 0);
-   } else {
-      if (!(queue_resources=lGetList(qep, QU_cached_complexes))) {
-         DPRINTF(("--- QUEUE %s\n", qname));
-/*         queue_resources = lCopyList(qname, host_resources); */
-         queue_complexes(&queue_resources, qep, host_list, centry_list, 0);
-         lSetList(qep, QU_cached_complexes, queue_resources);
-         lSetUlong(qep, QU_cache_version, ndispatched);
-      } else {
-         if ((int) lGetUlong(qep, QU_cache_version)!=ndispatched) {
-            DPRINTF(("=== QUEUE %s\n", qname));
-            queue_complexes(&queue_resources, qep, host_list, centry_list, 1);
-            lSetUlong(qep, QU_cache_version, ndispatched);
-         } else {
-            DPRINTF(("+++ QUEUE %s\n", qname));
-         }
-      }
- }
+   queue_complexes(&queue_resources, qep, host_list, centry_list, job_filter, job_filter_count);
+
 
    /* get QU_job_slots_used of queue */
    if (!(cep=lGetElemStr(queue_resources, CE_name, "slots"))) {
@@ -2349,14 +2400,14 @@ lListElem *hep;
 
    /* get QU_job_slots of queue */
 
-/* well has the host not at least as many open slots as this queue? */
+/* well, has the host not at least as many open slots as this queue? */
    qslots = MIN(host_slots, qslots);
 
    for (; qslots; qslots--) {
 
       /* check if queue fulfills hard request of the job */
       if (!sge_select_resource(queue_resources, host_resources, lGetList(job, JB_hard_resource_list), 
-               0, reason, sizeof(reason)-1, qslots, 1)) {
+               0, reason, sizeof(reason)-1, qslots, 1, false)) {
 
          if (qslots==1) {
             char buff[1024 + 1];
@@ -2365,8 +2416,6 @@ lListElem *hep;
             if (*buff && (buff[strlen(buff) - 1] == '\n'))
                buff[strlen(buff) - 1] = 0;
             schedd_mes_add(job_id, SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, qname, reason);
-/*            qslots=0;*/
-            
          } 
          continue;
       }
@@ -2430,7 +2479,7 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
    for (; hslots>=minslots; hslots--) {
       /* check if host fulfills hard request of the job */
       if (!sge_select_resource(host_resources, NULL, lGetList(job, JB_hard_resource_list), 
-            0, reason, sizeof(reason)-1, hslots, 0)) {
+            0, reason, sizeof(reason)-1, hslots, 0, true)) {
 
          if (hslots==minslots) {
             char buff[1024 + 1];
@@ -2512,7 +2561,7 @@ lList *acl_list;
 
    /* initially looked at global slots */
    if (!*global_resources)
-      global_complexes2scheduler(global_resources, host_list_locate(host_list, "global"), centry_list, 0);
+      global_complexes2scheduler(global_resources, host_list_locate(host_list, "global"), centry_list, NULL, 0);
  
    for (; global_slots; 
             global_slots = num_in_range(global_slots-1, lGetList(job, JB_pe_range))) {
@@ -2527,7 +2576,7 @@ lList *acl_list;
       not_select_resource = 0;
 
       if (!sge_select_resource(*global_resources, NULL, lGetList(job, JB_hard_resource_list),
-               0, reason, sizeof(reason)-1, global_slots, 0)) {
+               0, reason, sizeof(reason)-1, global_slots, 0, false)) {
 
          not_select_resource = 1;
          continue;
@@ -2578,7 +2627,7 @@ lList *centry_list
    DENTER(TOP_LAYER, "sge_get_ulong_qattr");
 
    /* fill in complexes */
-   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list, 0);
+   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list);
 
    /* find matching */
    if ((ep = centry_list_locate(attributes, attrname)) &&
@@ -2631,7 +2680,7 @@ sge_get_double_qattr(double *dvalp, char *attrname, lListElem *q,
    DENTER(TOP_LAYER, "sge_get_ulong_qattr");
 
    /* fill in complexes */
-   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list, 0);
+   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list);
 
    /* find matching */
    *has_value_from_object = false;
@@ -2685,7 +2734,7 @@ lList *centry_list
    DENTER(TOP_LAYER, "sge_get_string_qattr");
 
    /* fill in complexes */
-   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list, 0);
+   queue_complexes2scheduler(&attributes, q, exechost_list, centry_list);
 
    /* find matching */
    ep = centry_list_locate(attributes, attrname);

@@ -76,8 +76,8 @@ enum {
 };
 
 /* prototypes */
-static double scaled_mixed_load(lList *tcl);
-static int get_load_value(double *dval, lList *tcl, char *name);
+static double scaled_mixed_load(lList *tcl, const char* source_name);
+static int get_load_value(double *dval, lList *tcl, char *name, const char* source_name);
 
 /*************************************************************************
 
@@ -113,10 +113,9 @@ lList *centry_list   /* CE_Type */
    for_each (hlp, hl) {
       host = lGetHost(hlp,EH_name);
       if (strcmp(host,"global")) { /* don't treat global */
-
          /* build complexes for that host */
-         host_complexes2scheduler(&tcl, hlp, hl, centry_list, 0);
-         lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(tcl));
+         host_complexes2scheduler(&tcl, hlp, hl, centry_list, NULL, 0);
+         lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(tcl, host));
          tcl = lFreeList(tcl);  
          DPRINTF(("%s: %f\n", lGetHost(hlp, EH_name), load));
       }
@@ -156,7 +155,8 @@ lList *centry_list   /* CE_Type */
                        n load correction for n new jobs
 *************************************************************************/
 static double scaled_mixed_load(
-lList *tcl 
+lList *tcl,
+const char* source_name 
 ) {
    char *cp, *tf, *ptr, *ptr2, *par_name, *op_ptr=NULL;
    double val=0, val2=0;
@@ -182,7 +182,7 @@ lList *tcl
       if (!(val = strtol(cp, &ptr, 0)) && ptr == cp) {
          /* it is not an integer ==> it's got to be a load value */
          if (!(par_name = sge_delim_str(cp,&ptr,load_ops)) ||
-               get_load_value(&val, tcl, par_name)) {
+               get_load_value(&val, tcl, par_name, source_name)) {
             if (par_name)
                free(par_name);
             free(tf);
@@ -212,7 +212,7 @@ lList *tcl
          if (!(val2 = (double)strtol(ptr,&ptr2,0)) && ptr2 == ptr) {
             /* it is not an integer ==> it's got to be a load value */
             if (!(par_name = sge_delim_str(ptr,NULL,load_ops)) ||
-               get_load_value(&val2, tcl, par_name)) {
+               get_load_value(&val2, tcl, par_name, source_name)) {
                if (par_name)
                   free(par_name);
                free(tf);
@@ -293,7 +293,7 @@ lList *tcl
    get_load_value
 
  ***********************************************************************/
-static int get_load_value(double *dvalp, lList *tcl, char *name) 
+static int get_load_value(double *dvalp, lList *tcl, char *name, const char* source_name) 
 {
    lListElem *cep;
    u_long32 dominant;
@@ -306,7 +306,19 @@ static int get_load_value(double *dvalp, lList *tcl, char *name)
        * admin has forgotten to configure complex for 
        * load value in load formula 
        */
-      ERROR((SGE_EVENT, MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_S , name));
+
+      /**
+       * A host, which is currently down has no load values. All default
+       * values have been removed. Therefor an error message will be printed
+       * which is missleading. Until one has a better idea, this hack prevents
+       * the error message.
+       */
+
+      /* begin hack */
+      if(strcmp(name, "np_load_avg")!=0)
+      /* end hack */
+
+      ERROR((SGE_EVENT, MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS , name, source_name));
       DEXIT;
       return 1;
    }
@@ -373,8 +385,8 @@ int *sort_hostlist
       /* compute new combined load for this host and put it into the host */
       old_sort_value = lGetDouble(hep, EH_sort_value); 
       tcl = NULL;
-      host_complexes2scheduler(&tcl, hep, host_list, centry_list, 0);
-      new_sort_value = scaled_mixed_load(tcl);
+      host_complexes2scheduler(&tcl, hep, host_list, centry_list, NULL, 0);
+      new_sort_value = scaled_mixed_load(tcl, hnm);
       if(new_sort_value != old_sort_value) {
          lSetDouble(hep, EH_sort_value, new_sort_value);
          *sort_hostlist = 1;

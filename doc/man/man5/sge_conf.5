@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/10/10 12:22:40 $     Revision: $Revision: 1.18 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2003/08/26 13:13:18 $     Revision: $Revision: 1.19 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/10/10 12:22:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/08/26 13:13:18 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -906,6 +906,16 @@ between triggering a scheduler run and the submitting/finishing of a job.
 The most immediate scheduler reaction can be activated by setting both
 values to 0. The default scheduling behavior is enforced by either
 removing the parameters or setting them to a value of -1.
+.\"
+.IP "\fIREPORT_PJOB_TICKETS\fP"
+This parameter allows to tune the system's scheduling run time. It is used
+to enable / disable the reporting of pending job tickets to the qmaster , which 
+will be reported to the master and therefore displayed with qstat or qmon. 
+It does not influence the tickets calculation.  
+.br
+A system with a high throughput and a large number of pending jobs can disable
+the pending ticket reports be setting its value to 0 or false. 
+ 
 .\"
 .IP "\fICLASSIC_SGEEE_SCHEDULING\fP"                                         
 If set to "true" or "1", use the original SGEEE pending job scheduling       

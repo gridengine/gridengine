@@ -123,14 +123,16 @@ lList *sge_build_sge_orders ( sge_Sdescr_t *lists,
                               lList *queued_jobs,
                               lList *finished_jobs,
                               lList *order_list,
-                              int update_usage_and_configuration,
-                              int seqno );
+                              bool update_usage_and_configuration,
+                              int seqno , int max_queued_ticket_orders);
 
-int sge_scheduler ( sge_Sdescr_t *lists,
+int sgeee_scheduler ( sge_Sdescr_t *lists,
                     lList *running_jobs,
                     lList *finished_jobs,
                     lList *pending_jobs,
-                    lList **orderlist );
+                    lList **orderlist,
+                    bool has_queues,
+                    bool has_pending_jobs );
 
 int calculate_host_tickets ( lList **running, lList **hosts );
 

@@ -603,19 +603,19 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
          {
             lListElem *ja_task;
 
-            for_each (ja_task, (lGetList(job, JB_ja_tasks))) {
-               u_long32 was_running = running_status(lGetUlong(ja_task, 
-                                                     JAT_status));
-               /* decrease # of running jobs for this user */
-               if (was_running && !sgeee_mode && get_user_sort()) {
-                  at_dec_job_counter(lGetUlong(job, JB_priority), 
-                                     lGetString(job, JB_owner), 1);
-               }
-            }   
-
             /* delete job category if necessary */
             sge_delete_job_category(job);
-            if (!sgeee_mode) {
+            if(!sgeee_mode){
+               for_each (ja_task, (lGetList(job, JB_ja_tasks))) {
+                  u_long32 was_running = running_status(lGetUlong(ja_task, 
+                                                     JAT_status));
+                  /* decrease # of running jobs for this user */
+                  if (was_running && get_user_sort()) {
+                     at_dec_job_counter(lGetUlong(job, JB_priority), 
+                                        lGetString(job, JB_owner), 1);
+                  }
+               }   
+
                 at_unregister_job_array(job);
             }
          }   
@@ -718,6 +718,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
                ** after changing the job, readd category reference 
                ** for changed job
                */
+
                sge_add_job_category(job, Master_Userset_List);
                if (!sgeee_mode) {
                   at_register_job_array(job);
@@ -791,6 +792,7 @@ sge_process_ja_task_event_before(sge_object_type type,
                                  lListElem *event, void *clientdata)
 {
    DENTER(TOP_LAYER, "sge_process_ja_task_event_before");
+   
    DPRINTF(("callback processing ja_task event before default rule\n"));
 
    if (action == SGE_EMA_MOD || action == SGE_EMA_DEL) {
@@ -874,11 +876,11 @@ bool sge_process_ja_task_event_after(sge_object_type type,
                                     lListElem *event, void *clientdata)
 {
    DENTER(TOP_LAYER, "sge_process_ja_task_event_after");
-   DPRINTF(("callback processing ja_task event after default rule\n"));
 
    if (action == SGE_EMA_DEL) {
       lListElem *job;
       u_long32 job_id;
+      DPRINTF(("callback processing ja_task event after default rule SGE_EMA_DEL\n"));
 
       job_id = lGetUlong(event, ET_intkey);
       job = job_list_locate(Master_Job_List, job_id);
@@ -893,6 +895,8 @@ bool sge_process_ja_task_event_after(sge_object_type type,
          sge_delete_job_category(job);
       }   
    }
+   else
+      DPRINTF(("callback processing ja_task event after default rule\n"));
 
    DEXIT;
    return true;

@@ -98,7 +98,7 @@ lList **opp         /* OR_Type */
 
    DPRINTF(("JOB "u32"."u32" can't get dispatched - removing\n", 
       lGetUlong(job, JB_job_number), lGetUlong(ja_task, JAT_task_number)));
-   *opp = sge_create_orders(*opp, ORT_remove_immediate_job, job, ja_task, NULL) ;
+   *opp = sge_create_orders(*opp, ORT_remove_immediate_job, job, ja_task, NULL, false) ;
 
    DEXIT;
    return !*opp;

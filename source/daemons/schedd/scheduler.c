@@ -351,7 +351,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    int host_order_changed = 0;  /* is passed to assign_select_debit, queue list needs new sorting */
    int sort_hostlist = 1;       /* hostlist has to be sorted. Info returned by select_assign_debit */
                                 /* e.g. if load correction was computed */
-
+   int nr_pending_jobs=0;
    DENTER(TOP_LAYER, "dispatch_jobs");
 
 #ifdef TEST_DEMO
@@ -461,29 +461,13 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       return -1;
    }
 
+
    /*---------------------------------------------------------------------
     * FILTER JOBS
     *---------------------------------------------------------------------*/
 
    DPRINTF(("STARTING PASS 1 WITH %d PENDING JOBS\n", 
             lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))));
-
-   queue = lFirst(lists->queue_list);
-   if(queue == NULL) {
-      if (sgeee_mode) {
-         sge_scheduler(lists, 
-                       *(splitted_job_lists[SPLIT_RUNNING]), 
-                       *(splitted_job_lists[SPLIT_FINISHED]), 
-                       *(splitted_job_lists[SPLIT_PENDING]),
-                       orderlist);
-      }
-
-      DPRINTF(("queues dropped because of overload or full: ALL\n"));
-      schedd_mes_add_global(SCHEDD_INFO_ALLALARMOVERLOADED_);
-
-      DEXIT;
-      return 0;
-   }
 
    user_list_init_jc(&user_list, splitted_job_lists);
    job_lists_split_with_reference_to_max_running(splitted_job_lists,
@@ -493,36 +477,56 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
    trash_splitted_jobs(splitted_job_lists);
 
+   queue = lFirst(lists->queue_list);
+   nr_pending_jobs = lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]));
+
+   DPRINTF(("STARTING PASS 2 WITH %d PENDING JOBS\n",nr_pending_jobs ));
+
    /*--------------------------------------------------------------------
     * CALL SGEEE SCHEDULER TO
     * CALCULATE TICKETS FOR EACH JOB  - IN SUPPORT OF SGEEE
     *------------------------------------------------------------------*/
 
    if (sgeee_mode) {
+      int ret;
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
-      sge_scheduler(lists, 
+      ret = sgeee_scheduler(lists, 
                     *(splitted_job_lists[SPLIT_RUNNING]),
                     *(splitted_job_lists[SPLIT_FINISHED]),
                     *(splitted_job_lists[SPLIT_PENDING]),
-                    orderlist);     
+                    orderlist,
+                    queue != NULL,
+                    nr_pending_jobs > 0); 
 
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-
       if (prof_is_active()) {
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "PROF: SGEEE pending job ticket calculation took %.3f s\n",
-               prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, false, NULL)));
+         INFO((SGE_EVENT, "PROF: SGEEE job ticket calculation took %.3f s\n",
+               prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, true, NULL)));
          log_state_set_log_level(saved_logginglevel);
+      }
+
+      if(ret!=0){
+         lFreeList(user_list);
+         lFreeList(group_list);
+         DEXIT;
+         return -1;
+      
       }
    }
 
-   DPRINTF(("STARTING PASS 2 WITH %d PENDING JOBS\n",
-            lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))));
+   if(queue == NULL) {
+      DPRINTF(("queues dropped because of overload or full: ALL\n"));
+      schedd_mes_add_global(SCHEDD_INFO_ALLALARMOVERLOADED_);
 
-   if (lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING])) == 0) {
+      DEXIT;
+      return 0;
+   }
+
+   if (nr_pending_jobs == 0) {
       /* no jobs to schedule */
       SCHED_MON((log_string, MSG_SCHEDD_MON_NOPENDJOBSTOPERFORMSCHEDULINGON ));
       lFreeList(user_list);
@@ -530,72 +534,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       DEXIT;
       return 0;
    }
-
-   if (sgeee_mode) {
-      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
-
-      /* 
-       * calculate the number of tickets for all jobs already 
-       * running on the host 
-       */
-      if (calculate_host_tickets(splitted_job_lists[SPLIT_RUNNING], 
-                                 &(lists->host_list)))  {
-         DPRINTF(("no host for which to calculate host tickets\n"));
-         lFreeList(user_list);
-         lFreeList(group_list);
-         DEXIT;
-         return -1;
-      }
-
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
-
-      if (do_profiling) {
-         u_long32 saved_logginglevel = log_state_get_log_level();
-
-         log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "PROF: SGEEE active job ticket calculation took %.3f s\n",
-               prof_get_measurement_wallclock(SGE_PROF_CUSTOM2, false, NULL)));
-         log_state_set_log_level(saved_logginglevel);
-      }
-
-      /* 
-       * temporary job placement workaround - 
-       * calc tickets for running and queued jobs 
-       */
-      if (classic_sgeee_scheduling) {
-         int seqno;
-
-         seqno = sge_calc_tickets(lists, 
-                                  *(splitted_job_lists[SPLIT_RUNNING]), 
-                                  NULL, 
-                                  *(splitted_job_lists[SPLIT_PENDING]),
-                                  0);
-
-         *orderlist = sge_build_sge_orders(lists, NULL,
-                                           *(splitted_job_lists[SPLIT_PENDING]), NULL,
-                                           *orderlist, 0, seqno);
-      }
-
-      /* 
-       * Order Jobs in descending order according to tickets and 
-       * then job number 
-       */
-      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
-
-      sgeee_sort_jobs(splitted_job_lists[SPLIT_PENDING]);
-
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
-
-      if (do_profiling) {
-         u_long32 saved_logginglevel = log_state_get_log_level();
-
-         log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "PROF: SGEEE job sorting took %.3f s\n",
-               prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
-         log_state_set_log_level(saved_logginglevel);
-      }
-
-   }  /* if sgeee_mode */
 
    /*---------------------------------------------------------------------
     * SORT QUEUES OR HOSTS
@@ -914,7 +852,7 @@ SKIP_THIS_JOB:
         }
 #endif
 
-      if (dispatched_a_job && !(lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))==0))  {
+      if (dispatched_a_job && !(lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING]))==0) )  {
          if (sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE)  {
             sort_host_list_by_share_load(lists->host_list, lists->centry_list);
 
@@ -1056,7 +994,7 @@ int *sort_hostlist
    job_log(lGetUlong(job, JB_job_number), lGetUlong(ja_task, JAT_task_number), 
       "dispatched");
    *orders_list = sge_create_orders(*orders_list, ORT_start_job, 
-         job, ja_task, granted);
+         job, ja_task, granted, false);
    
    /*------------------------------------------------------------------
     * DEBIT JOBS RESOURCES IN DIFFERENT OBJECTS

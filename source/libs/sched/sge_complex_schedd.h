@@ -53,31 +53,32 @@ void set_global_load_correction(int flag);
 
 int get_global_load_correction(void);
 
+void build_name_filter(const char **filter, lList *list, int t_name, int *pos, const char** job_filter, int job_filter_count);
+
 void monitor_dominance(char *str, u_long32 mask);
 
 int global_complexes2scheduler(lList **new_complex_list, 
                                lListElem *global_host, lList *complex_list, 
-                               int recompute_debitation_dependent);
+                               const char **filter, int filter_cnt);
 
 int host_complexes2scheduler(lList **new_complex_list, lListElem *host, 
                              lList *exechost_list, lList *complex_list, 
-                             int recompute_debitation_dependent);  
+                             const char **filter, int filter_cnt);  
 
 int queue_complexes2scheduler(lList **new_complex_list, lListElem *queue, 
-                              lList *host_list, lList *complex_list, 
-                              int recompute_debitation_dependent);
+                              lList *host_list, lList *complex_list); 
 
 int queue_complexes(lList **new_complex_list, lListElem *queue, 
                         lList *host_list, lList *complex_list, 
-                        int recompute_debitation_dependent);
-/* util_max_ep was removed by stephan, because it is not used in the function */
-int compare_complexes(int slots,/* lListElem *util_max_ep,*/ lListElem *complex1, 
+                        const char **filter, int filter_cnt);
+
+int compare_complexes(int slots, lListElem *complex1, 
                       lListElem *complex2, char *availability_text, 
                       int is_threshold, int force_existence);
 
 int fillComplexFromHost(lList **new_complex,  
                         lListElem *host, lList *complex, u_long32 layer, 
-                        int recompute_debitation_dependent);
+                        const char **filter, int filter_cnt);
 
 int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list, 
                      int slots, int config_nm, int actual_nm, 

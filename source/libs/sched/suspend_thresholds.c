@@ -96,7 +96,7 @@ lList **orderlist
          /* generate suspend order for found job */
          found = 1;
          *orderlist = sge_create_orders(*orderlist, 
-            ORT_suspend_on_threshold, jep, ja_task, NULL);
+            ORT_suspend_on_threshold, jep, ja_task, NULL, false);
 
          DPRINTF(("++++ suspending job "u32"/"u32" on threshold\n", 
             lGetUlong(jep, JB_job_number), lGetUlong(ja_task, JAT_task_number)));
@@ -170,7 +170,7 @@ lList **orderlist
          /* generate unsuspend order for found job */
          found = 1;
          *orderlist = sge_create_orders(*orderlist, ORT_unsuspend_on_threshold, 
-            jep, ja_task, NULL) ;
+            jep, ja_task, NULL, false) ;
 
          DPRINTF(("---- unsuspending job "u32"/"u32" on threshold\n", 
             lGetUlong(jep, JB_job_number), lGetUlong(ja_task, JAT_task_number)));

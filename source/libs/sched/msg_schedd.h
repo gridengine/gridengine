@@ -380,7 +380,7 @@
 /* 
 ** schedd/sort_hosts.c
 */   
-#define MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_S           _MESSAGE(47262, _("no attribute "SFQ" in complex list\n"))
+#define MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS           _MESSAGE(47262, _("no attribute "SFQ" in complex list from "SFQ" \n"))
 
 /* 
 ** schedd/valid_queue_user.c

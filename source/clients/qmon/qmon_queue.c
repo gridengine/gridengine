@@ -838,7 +838,7 @@ lListElem *qep
    cl = qmonMirrorList(SGE_CENTRY_LIST);
 
    correct_capacities(ehl, cl);
-   queue_complexes2scheduler(&ncl, qep, ehl, cl, 0);
+   queue_complexes2scheduler(&ncl, qep, ehl, cl);
 
    sprintf(info, "%s %s", XmtLocalize(matrix, "Attributes for queue", "Attributes for queue"), lGetString(qep, QU_qname));
 

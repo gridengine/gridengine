@@ -706,7 +706,7 @@ char **argv
    
          set_qs_state(QS_STATE_EMPTY);
 
-         queue_complexes2scheduler(&complex_filled, queue, exechost_list, centry_list, 0);
+         queue_complexes2scheduler(&complex_filled, queue, exechost_list, centry_list);
 
          if (!complex_filled) {
             ERROR((SGE_EVENT, \

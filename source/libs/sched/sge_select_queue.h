@@ -40,7 +40,7 @@
 int sge_select_queue(lList *complex_attributes, lList *resources, int allow_non_requestable, char *reason, int reason_size, int slots);
 
 
-int sge_match_complex_attributes(lList *queue_attr, lList *host_attr, lList *requested_attr, int quick_exit, int allow_non_requestable, char *reason, int reason_size, int is_a_request, int slots, /*lList *consumable_config_list[3],*/ int force_existence);
+int sge_match_complex_attributes(lList *queue_attr, lList *host_attr, lList *requested_attr, int quick_exit, int allow_non_requestable, char *reason, int reason_size, int is_a_request, int slots, int force_existence, bool ignore_strings);
 
 /* 
  * is there a load alarm on this queue
@@ -128,6 +128,6 @@ char *trace_resource(lListElem *rep);
 
 void trace_resources(lList *resources);
 
-int available_slots_at_queue(lList *host_resources, lListElem *job, lListElem *queue, lListElem *pe, lListElem *ckpt, lList *host_list, lList *cplx_list, lList *acl_list, lList *load_adjustments, int host_slots,/* lList *ccl[3],*/ int ndispatched, lListElem *global_hep,    int total_slots, lListElem *hep);
+int available_slots_at_queue(lList *host_resources, lListElem *job, lListElem *queue, lListElem *pe, lListElem *ckpt, lList *host_list, lList *cplx_list, lList *acl_list, lList *load_adjustments, int host_slots, int ndispatched, lListElem *global_hep,    int total_slots, lListElem *hep, const char **job_filter, int job_filter_count);
 
 #endif

@@ -228,7 +228,7 @@ bool sge_ssi_job_start(const char *job_identifier, const char *pe, task_map task
    }
 
    /* create and send order */
-   order_list = sge_create_orders(order_list, ORT_start_job, job, ja_task, granted);
+   order_list = sge_create_orders(order_list, ORT_start_job, job, ja_task, granted, false);
    sge_send_orders2master(order_list);
 
    order_list = lFreeList(order_list);

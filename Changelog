@@ -1,6 +1,13 @@
+JG-2003-01-28-1  Bugfix:    qrsh crashed when job arguments exceeded 4k in size.
+                 IZ:        472
+                 Bugtraq:   4807677
+                 Review:    CR
+                 Changed:   qsh
+
 JG-2003-01-28-0  Bugfix:    startup failure of qrsh was reported as regular job
                             exit.
                  IZ:        #380
+                 Review:    AH
                  Changed:   qrsh_starter, sge_shepherd, qsh
 
 AA-2003-01-24-0  Bugfix:    qsub -C option analogue was missing in qmon

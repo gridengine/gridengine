@@ -51,6 +51,7 @@
 
 #include "basis_types.h"
 #include "symbols.h"
+#include "sge_dstring.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "usage.h"
@@ -1307,9 +1308,7 @@ static lList *merge_and_order_options(lList **opts_defaults,
 */
 void set_command_to_env(lList *envlp, lList *opts_qrsh)
 {
-   /* JG: TODO: use dstring instead of buffer */
-   char buffer[4096];
-   *buffer = 0;
+   dstring buffer = DSTRING_INIT;
 
    if(opts_qrsh) {
       lListElem *ep;
@@ -1321,13 +1320,13 @@ void set_command_to_env(lList *envlp, lList *opts_qrsh)
          sprintf(delimiter, "%c", 0xff);
          help = lGetString(ep, SPA_argval_lStringT);
          if (help != NULL) {
-            strcpy(buffer, help); 
+            sge_dstring_copy_string(&buffer, (char *)help); 
          } 
          while((ep = lNext(ep)) != NULL) {
             const char *arg = lGetString(ep, SPA_argval_lStringT);
-            strcat(buffer, delimiter);
+            sge_dstring_append(&buffer, delimiter);
             if (arg != NULL) {
-               strcat(buffer, arg);
+               sge_dstring_append(&buffer, arg);
             } 
          }   
       }
@@ -1339,7 +1338,8 @@ void set_command_to_env(lList *envlp, lList *opts_qrsh)
    fflush(stdout); fflush(stderr);
 #endif
 
-   add2env(&envlp, "QRSH_COMMAND", buffer);
+   add2env(&envlp, "QRSH_COMMAND", sge_dstring_get_string(&buffer));
+   sge_dstring_free(&buffer);
 }
 
 int main(

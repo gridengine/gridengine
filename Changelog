@@ -1,3 +1,7 @@
+CR-2002-03-04-1: Bugfix:    hostname resolving check was executed even when
+                            ignore_fqdn = true was set.
+
+
 EB-2002-03-04-2: Bugfix:    'qdel <array-jid>' might cause qmaster core
                             depending on the tasks history.
                  Issue:     #173  

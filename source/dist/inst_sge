@@ -239,7 +239,7 @@ CheckHostNameResolving()
 
    resolve_get_configuration=`ExecuteAsAdmin $V5BIN/qconf -sconf global | grep "^ignore_fqdn" `
    resolve_qmaster_params=`echo $resolve_get_configuration | egrep -i "true|1"`
-   if [ "$resolve_qmaster_params" = "" ]; then
+   if [ "x$resolve_qmaster_params" = "x" ]; then
       $ECHO ""
       set IGNORE_FQDN_DEFAULT=false
    else

@@ -1,3 +1,9 @@
+EB-2003-03-27-0  Bugfix:    maxujobs scheduler config functionality is broken
+                 Issue:     #514
+                 Bugtraq:   #4838549
+                 Changed:   sge_schedd
+                 Review:    STILL HAS TO BE DONE
+
 EB-2003-03-26-1  Bugfix:    maxujobs does not count suspended jobs
                             or running/suspended jobs which have an hold 
                             applied, a new starttime attached or new

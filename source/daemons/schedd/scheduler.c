@@ -171,7 +171,7 @@ int scheduler(sge_Sdescr_t *lists) {
               conf.max_aj_instances, splitted_job_lists);
  
 #if 0 /* EB: debug */
-   job_lists_print(splitted_job_lists);
+   job_lists_print(splitted_job_lists, "scheduler()");
 #endif                      
 
    trash_splitted_jobs(splitted_job_lists);

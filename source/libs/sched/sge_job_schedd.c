@@ -291,7 +291,7 @@ if(0)      {
       }
       while((user = next_user)) {
          u_long32 jobs_for_user = lGetUlong(user, JC_jobs);
-         const char *user_name = lGetString(user, JC_name);
+         const char *jc_user_name = lGetString(user, JC_name);
 
          if (user_name == NULL) {
             next_user = lNext(user);
@@ -303,14 +303,14 @@ if(0)      {
             lListElem *user_job = NULL;         /* JB_Type */
             lListElem *next_user_job = NULL;    /* JB_Type */
 
-            DPRINTF(("USER %s reached limit of %d jobs\n", user_name, 
+            DPRINTF(("USER %s reached limit of %d jobs\n", jc_user_name, 
                      max_jobs_per_user));
             next_user_job = lGetElemStrFirst(*(job_lists[SPLIT_PENDING]), 
-                                             JB_owner, user_name, 
+                                             JB_owner, jc_user_name, 
                                              &user_iterator);
             while ((user_job = next_user_job)) {
                next_user_job = lGetElemStrNext(*(job_lists[SPLIT_PENDING]), 
-                                               JB_owner, user_name, 
+                                               JB_owner, jc_user_name, 
                                                &user_iterator);
                if (monitor_get_next_run()) {
                   schedd_add_message(lGetUlong(user_job, JB_job_number),
@@ -328,8 +328,7 @@ if(0)      {
                      }
                   }
 
-                  *(job_lists[SPLIT_PENDING_EXCLUDED]) =
-                                      lCreateList("", descr);
+                  *(job_lists[SPLIT_PENDING_EXCLUDED]) = lCreateList("", descr);
                }
 
                lAppendElem(*(job_lists[SPLIT_PENDING_EXCLUDED]), user_job);

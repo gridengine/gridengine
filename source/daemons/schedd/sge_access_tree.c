@@ -176,12 +176,14 @@ lListElem *job_array
 
 static void at_trace()
 {
-#if 0
+#if 0 /* EB: debug */
    lListElem *u, *p, *j;
-   int user_sort = set_user_sort(-1);
-   char *s;
+   int user_sort;
+   const char *s;
    lListElem *current;
-
+   
+   DENTER(TOP_LAYER, "at_trace");
+   user_sort = set_user_sort(-1);
    for_each (p, priority_group_list) {
       DPRINTF(("%d%s\n", lGetUlong(p, PGR_priority), 
             lGetUlong(p, PGR_sort_me)?" sortme!":""));
@@ -206,6 +208,7 @@ static void at_trace()
          }
       }
    }
+   DEXIT;
 #endif
    return;
 }

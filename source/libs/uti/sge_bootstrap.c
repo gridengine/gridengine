@@ -284,13 +284,15 @@ bool sge_bootstrap(dstring *error_dstring)
       ret = false;
    /* read bootstrapping information */   
    } else if (sge_get_confval_array(bootstrap_file, NUM_BOOTSTRAP, name, 
-                                    value)) {
+                                    value, error_dstring)) {
+      /*
       if (error_dstring == NULL) {
-      CRITICAL((SGE_EVENT, MSG_UTI_CANNOTBOOTSTRAP_S, bootstrap_file));
+         CRITICAL((SGE_EVENT, MSG_UTI_CANNOTBOOTSTRAP_S, bootstrap_file));
       } else {
          sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTBOOTSTRAP_S, 
                              bootstrap_file);
       }
+      */
       ret = false;
    } else {
       /* store bootstrapping information */

@@ -569,7 +569,7 @@ char *sge_get_confval(const char *conf_val, const char *fname)
    const char *namev[1];
 
    namev[0] = conf_val;
-   if (sge_get_confval_array(fname, 1, namev, valuev)) {
+   if (sge_get_confval_array(fname, 1, namev, valuev, NULL)) {
       return NULL;
    } else {
       return valuev[0];
@@ -583,7 +583,8 @@ char *sge_get_confval(const char *conf_val, const char *fname)
 *  SYNOPSIS
 *     int sge_get_confval_array(const char *fname, int n, 
 *                               const char *name[], 
-*                               char value[][1025]) 
+*                               char value[][1025],
+*                               dstring *error_dstring) 
 *
 *  FUNCTION
 *     Reads in an array of configuration file entries
@@ -598,20 +599,29 @@ char *sge_get_confval(const char *conf_val, const char *fname)
 *     MT-NOTE: sge_get_confval_array() is MT safe
 ******************************************************************************/
 int sge_get_confval_array(const char *fname, int n, const char *name[], 
-                          char value[][1025]) 
+                          char value[][1025], dstring *error_dstring) 
 {
    FILE *fp;
    char buf[1024], *cp;
    int i, nmissing = n;
+   bool *is_found = NULL;
    
    DENTER(TOP_LAYER, "sge_get_confval_array");
 
    if (!(fp = fopen(fname, "r"))) {
-      ERROR((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno)));
+      if (error_dstring == NULL){
+         CRITICAL((SGE_EVENT, MSG_FILE_FOPENFAILED_SS, fname, strerror(errno)));
+      }
+      else {
+         sge_dstring_sprintf(error_dstring, MSG_FILE_FOPENFAILED_SS, 
+                             fname, strerror(errno));
+      }
       DEXIT;
       return n;
    }
-
+   is_found = malloc(sizeof(bool) * n);
+   memset(is_found, false, n * sizeof(bool));
+   
    while (fgets(buf, sizeof(buf), fp))
    {
       char *pos = NULL;
@@ -631,7 +641,9 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
          if (!strcasecmp(name[i], cp) && (cp = strtok_r(NULL, " \t\n", &pos))) {
              strncpy(value[i], cp, 512);
              cp = value[i];
+             is_found[i] = true;
              if (!--nmissing) {
+                FREE(is_found);
                 fclose(fp);
                 DEXIT;
                 return 0;
@@ -640,6 +652,21 @@ int sge_get_confval_array(const char *fname, int n, const char *name[],
          }
    }
 
+   for (i=0; i<n; i++) {
+      if (!is_found[i]) {
+         if (error_dstring == NULL){
+            CRITICAL((SGE_EVENT, MSG_UTI_CANNOTLOCATEATTRIBUTE_SS, name[i], fname));
+         }
+         else {
+            sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTLOCATEATTRIBUTE_SS, 
+                                name[i], fname);
+         }
+         
+         break;
+      }
+   }
+   
+   FREE(is_found);
    fclose(fp);
    DEXIT;
    return nmissing;

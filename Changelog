@@ -1,3 +1,8 @@
+SG-2004-03-03-0: Bugfix:    - the clients print an error message in case of a
+                              bad bootstrap file (part 2).
+                 Changed:   all
+                 Review:    pending
+
 SG-2004-03-02-0: Bugfix:    - fixed build for glinux
                             - the clients print an error message in case of a
                               bad bootstrap file (Part 1). A better error

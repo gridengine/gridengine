@@ -112,7 +112,7 @@ proc issue_440_check_qsub {} {
 
       # generate command line with corrent length
       set arg_name "argument"
-      set command_line "-o $output_file -e $error_file -N long_cmd $submit_script_path $arg_name" 
+      set command_line "-S /bin/sh -o $output_file -e $error_file -N long_cmd $submit_script_path $arg_name" 
       set arg_length 0
       while { [string length $command_line] < $start_length } {
          incr arg_length 1
@@ -122,7 +122,7 @@ proc issue_440_check_qsub {} {
          } else {
             append arg_name "_"
          }
-         set command_line "-o $output_file -e $error_file -N long_cmd $submit_script_path $arg_name" 
+         set command_line "-S /bin/sh -o $output_file -e $error_file -N long_cmd $submit_script_path $arg_name" 
       }
       puts $CHECK_OUTPUT "submitting job with command line length: [string length $command_line]"
 

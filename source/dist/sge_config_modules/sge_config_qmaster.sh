@@ -454,8 +454,8 @@ SetProductMode()
    fi
 
    if [ $CSP = true ]; then
-      X509_COUNT=`strings $SGE_BIN/sge_qmaster | grep X509 | wc -l`
-      if [ 50 -gt $X509_COUNT ]; then
+      SEC_COUNT=`strings $V5BIN/sge_qmaster | grep sec_init | wc -l`
+      if [ 5 -gt $SEC_COUNT ]; then
          $INFOTEXT "\n>sge_qmaster< binary is not compiled with >-secure< option!\n"
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to cancel the installation >> "
          exit 1

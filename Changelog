@@ -1,3 +1,6 @@
+RC-2005-03-13-1: Bugfix:   fixed build (uninitialized variable)
+                 Review:   Reuti
+
 RC-2005-03-13-0: Enhancem.: created target depend for qmake
                  Review:    Reuti
 

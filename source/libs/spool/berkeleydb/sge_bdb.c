@@ -379,7 +379,7 @@ spool_berkeleydb_open_database(lList **answer_list, bdb_info info,
       DB_ENV *env;
       DB *db;
 
-      int dbret;
+      int dbret = 0;
 
       /* we have to lock info, as multiple threads might try to (re)open
        * the database connection in parallel 

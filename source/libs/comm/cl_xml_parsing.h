@@ -37,12 +37,55 @@
 
 
 
-/* (1) gmsh message (GMSH) */
+/* (1) gmsh message (GMSH) 
+ 
+      Format: 
+
+      <gmsh>
+         <dl>GMSH_DL</dl>
+      </gmsh>
+
+      GMSH_DL:     Data Length of the following XML struct in byte. (1 Byte = 8 bit)
+
+ */
 #define CL_GMSH_MESSAGE      "<gmsh><dl>%ld</dl></gmsh>"
 #define CL_GMSH_MESSAGE_SIZE 22         /* size in byte of raw CL_GMSH_MESSAGE without parameter */
 
 
-/* (2) Message Information Header (MIH) */
+/* (2) Message Information Header (MIH) 
+ 
+      Format:
+
+      <mih version="MIH_VERSION">
+         <mid>MIH_MID</mid>
+         <dl>MIH_DL</dl>
+         <df>MIH_DF</df>
+         <mat>MIH_MAT</mat>
+         <tag>MIH_TAG</tag>
+         <rid>MIH_RID</rid>
+      </mih>
+
+      MIH_VERSION: Version number of MIH (e.g. "0.4")
+      MIH_MID:     Message ID (unsigned)
+      MIH_DL:      Data Length of the following XML struct in byte
+      MIH_DF:      Data Format of the following message:
+                      "bin"  = binary message  "xml" (Binary or XML data encoding)
+                      "xml"  = general xml message
+                      "am"   = acknowledge message (AM)
+                      "sim"  = status information message (SIM)
+                      "sirm" = status information response message (SIRM)
+                      "ccm"  = connection close message (CCM)
+                      "ccrm" = connection close response message (CCRM) 
+      MIH_MAT:     Message Acknowledge Type:
+                      "nak"  = not acknowledged
+                      "ack"  = acknowledged after application has read the message from NGC, 
+                      "sync" = acknowledged after application has read the message from NGC AND processed the message
+      MIH_TAG:     User defined
+      MIH_RID:     Response ID
+
+      
+
+ */
 #define CL_MIH_MESSAGE          "<mih version=\"%s\"><mid>%ld</mid><dl>%ld</dl><df>%s</df><mat>%s</mat><tag>%ld</tag><rid>%ld</rid></mih>"
 #define CL_MIH_MESSAGE_SIZE     84
 #define CL_MIH_MESSAGE_VERSION  "0.1"
@@ -57,12 +100,54 @@
 #define CL_MIH_MESSAGE_DATA_FORMAT_CCM  "ccm"
 #define CL_MIH_MESSAGE_DATA_FORMAT_CCRM "ccrm"
 
-/* (3) Acknowledge Message (AM) */
+/* (3) Acknowledge Message (AM) 
+      
+      Format:
+
+      <am version="AM_VERSION">
+         <mid>AM_MID</mid>
+      </am>
+
+      AM_VERSION: Version number of AM (e.g. "0.4")
+      AM_MID:     Acknowledged message id
+
+
+*/
 #define CL_AM_MESSAGE       "<am version=\"%s\"><mid>%ld</mid></am>"
 #define CL_AM_MESSAGE_SIZE  31
 #define CL_AM_MESSAGE_VERSION "0.1"
 
-/* (4) connect message (CM) */
+/* (4) connect message (CM) 
+
+      Format:
+  
+      <cm version="CM_VERSION">
+         <df>CM_DF</df>
+         <ct>CM_CT</ct>
+         <src host="CM_SRC_HOST" comp="CM_SRC_COMP" id="CM_SRC_ID"></src>
+         <dst host="CM_DST_HOST" comp="CM_DST_COMP" id="CM_DST_ID"></dst>
+         <rdata host="CM_RDATA_HOST" comp="CM_RDATA_COMP" id="CM_RDATA_ID"></rdata>
+         <port>CM_PORT</port>
+         <ac>CM_AC</ac>
+      </cm>
+      
+      CM_VERSION:     Version number of CM (e.g. "0.4")
+      CM_DF:          "bin" or "xml" (connection Binary or XML data encoding)
+      CM_CT:          "stream" or "message" (connection data flow control)
+      CM_SRC_HOST:    Host name of source endpoint
+      CM_SRC_COMP:    Component name of source endpoint
+      CM_SRC_ID:      Component id of source endpoint
+      CM_DST_HOST:    Host name of destination endpoint
+      CM_DST_COMP:    Component name of destination endpoint
+      CM_DST_ID:      Component id of destination endpoint
+      CM_RDATA_HOST:  Host name of routing host endpoint
+      CM_RDATA_COMP:  Component name of routing host endpoint
+      CM_RDATA_ID:    Component id of routing host endpoint
+      CM_PORT:        port where client is reachable (e.g. "0" not reachable, "5000" for port 5000 )
+      CM_AC:          "enabled" or "disabled", used for auto close of connected clients when max. connection
+                      count is reached at service component.
+
+*/
 #define CL_CONNECT_MESSAGE         "<cm version=\"%s\"><df>%s</df><ct>%s</ct><src host=\"%s\" comp=\"%s\" id=\"%ld\"></src><dst host=\"%s\" comp=\"%s\" id=\"%ld\"></dst><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata><port>%ld</port><ac>%s</ac></cm>"
 #define CL_CONNECT_MESSAGE_SIZE    141 + ( 22 )
 #define CL_CONNECT_MESSAGE_VERSION "0.2"
@@ -75,7 +160,36 @@
 
 
 
-/* (5) connect response message (CRM) */
+/* (5) connect response message (CRM) 
+
+      Format:
+
+      <crm version="CRM_VERSION">
+         <cs condition="CRM_CS_CONDITION">CRM_CS_TEXT</cs>
+         <src host="CRM_SRC_HOST" comp="CRM_SRC_COMP" id="CRM_SRC_ID"></src>
+         <dst host="CRM_DST_HOST" comp="CRM_DST_COMP" id="CRM_DST_ID"></dst>
+         <rdata host="CRM_RDATA_HOST" comp="CRM_RDATA_COMP" id="CRM_RDATA_ID"></rdata>
+      </crm>
+
+      CRM_VERSION:      Version number of CRM (e.g. "0.4")
+      CRM_CS_CONDITION: Connection Status: 
+                           "connected"                -> No Errors
+                           "access denied"            -> Service doesn't allow client to connect
+                           "unsupported data format"  -> Message Format error
+                           "endpoint not unique"      -> Client is already connected
+      CRM_CS_TEXT:      User defined connection status error text
+      CRM_SRC_HOST:     Host name of source endpoint
+      CRM_SRC_COMP:     Component name of source endpoint
+      CRM_SRC_ID:       Component id of source endpoint
+      CRM_DST_HOST:     Host name of destination endpoint
+      CRM_DST_COMP:     Component name of destination endpoint
+      CRM_DST_ID:       Component id of destination endpoint
+      CRM_RDATA_HOST:   Host name of routing host endpoint
+      CRM_RDATA_COMP:   Component name of routing host endpoint
+      CRM_RDATA_ID:     Component id of routing host endpoint
+
+
+*/
 #define CL_CONNECT_RESPONSE_MESSAGE                              "<crm version=\"%s\"><cs condition=\"%s\">%s</cs><src host=\"%s\" comp=\"%s\" id=\"%ld\"></src><dst host=\"%s\" comp=\"%s\" id=\"%ld\"></dst><rdata host=\"%s\" comp=\"%s\" id=\"%ld\"></rdata></crm>"
 #define CL_CONNECT_RESPONSE_MESSAGE_SIZE                         147
 #define CL_CONNECT_RESPONSE_MESSAGE_VERSION                      "0.1"
@@ -84,23 +198,82 @@
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE "endpoint not unique"
 #define CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_UNSUP_DATA_FORMAT "unsupported data format"
 
-/* (6) status information message (SIM) */
+/* (6) status information message (SIM) 
+   
+      Format:
+
+      <sim version="SIM_VERSION">
+      </sim>
+
+      SIM_VERSION: version number of SIM (e.g. "0.4")
+
+
+*/
 #define CL_SIM_MESSAGE               "<sim version=\"%s\"></sim>"
 #define CL_SIM_MESSAGE_SIZE          sizeof(CL_SIM_MESSAGE) - 3  /* 22   TODO: can we make this easier? */ 
 #define CL_SIM_MESSAGE_VERSION       "0.1"
 
-/* (7) status information response message (SIRM) */
+/* (7) status information response message (SIRM)
+   
+      Format:
+
+      <sirm version="SIRM_VERSION">
+         <mid>SIRM_MID/mid>
+         <starttime>SIRM_STARTTIME</starttime>
+         <runtime>SIRM_RUNTIME</runtime>
+         <application>
+            <messages>
+               <brm>SIRM_APPLICATION_MESSAGES_BRM</brm>
+               <bwm>SIRM_APPLICATION_MESSAGES_BWM</bwm>
+            </messages>
+            <connections>
+               <noc>SIRM_APPLICATION_CONNECTIONS_NOC</noc>
+            </connections>
+            <status>SIRM_APPLICATION_STATUS</status>
+         </application>
+         <info>SIRM_INFO</info>
+      </sirm>
+
+      SIRM_VERSION:                       Version number of CCM (e.g. "0.4")
+      SIRM_MID:                           Message Id of SIRM
+      SIRM_STARTTIME:                     (unsigned Integer) Starttime of service (Unix timestamp)
+      SIRM_RUNTIME:                       (unsigned Integer) Runtime since starttime (in seconds)
+      SIRM_APPLICATION_MESSAGES_BRM:      Buffered read messages for application (service)
+      SIRM_APPLICATION_MESSAGES_BWM:      Buffered write messages from application (service)
+      SIRM_APPLICATION_CONNECTIONS_NOC:   No. of connected clients
+      SIRM_APPLICATION_STATUS:            (Unsigned Integer) Application status
+      SIRM_INFO:                          Application status information string
+      
+
+ */
 #define CL_SIRM_MESSAGE            "<sirm version=\"%s\"><mid>%ld</mid><starttime>%ld</starttime><runtime>%ld</runtime><application><messages><brm>%ld</brm><bwm>%ld</bwm></messages><connections><noc>%ld</noc></connections><status>%ld</status></application><info>%s</info></sirm>"
 #define CL_SIRM_MESSAGE_SIZE       sizeof(CL_SIRM_MESSAGE) - 20 - 3 - 3
 #define CL_SIRM_MESSAGE_VERSION    "0.1"
 
 
-/* (8) connection close message (CCM) */
+/* (8) connection close message (CCM) 
+      
+      Format:
+
+      <ccm version="CCM_VERSION"></ccm>
+
+      CCM_VERSION: version number of CCM (e.g. "0.4")
+
+
+ */
 #define CL_CCM_MESSAGE                              "<ccm version=\"%s\"></ccm>" 
 #define CL_CCM_MESSAGE_SIZE                         22
 #define CL_CCM_MESSAGE_VERSION                      "0.1"
 
-/* (9) connection close response message (CCRM) */
+/* (9) connection close response message (CCRM) 
+
+      Format:
+
+      <ccrm version="CCRM_VERSION"></ccrm>
+
+      CCRM_VERSION: version number of CCRM (e.g. "0.4")
+
+*/
 #define CL_CCRM_MESSAGE                              "<ccrm version=\"%s\"></ccrm>"
 #define CL_CCRM_MESSAGE_SIZE                         24
 #define CL_CCRM_MESSAGE_VERSION                      "0.1"

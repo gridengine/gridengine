@@ -52,7 +52,7 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "qmod_auto_reschedule"
-set check_category        "COMPATIBILITY SYSTEM"
+set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   1 
 set check_description(0)  "checking auto_reschedule with global reschedule_unknown 00:03:00"
 set check_description(1)  "checking auto_reschedule with global reschedule_unknown 00:00:00"
@@ -127,8 +127,6 @@ lappend check_functions "auto_reschedule_cleanup"
 global auto_reschedule_host1 auto_reschedule_host2 queue1 queue2 global_resch
 global stored_configuration
 global stored_auto_reschedule_host1_config
-set queue1 "queue1"
-set queue2 "queue2"
 
 #
 #                                                             max. column:     |
@@ -165,28 +163,26 @@ proc init_level {} {
   global CHECK_ACT_LEVEL CHECK_HOST global_resch
   global auto_reschedule_host1 auto_reschedule_host2 CHECK_CORE_EXECD CHECK_OUTPUT
   
+   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+      return -1
+   }
 
-  if { [ llength $CHECK_CORE_EXECD ] >= 2 } {
-     set auto_reschedule_host1  [ lindex $CHECK_CORE_EXECD 0  ]
-     set auto_reschedule_host2  [ lindex $CHECK_CORE_EXECD 1  ]
-  }
 
-  set global_resch 1
+   set auto_reschedule_host1  [ lindex $CHECK_CORE_EXECD 0  ]
+   set auto_reschedule_host2  [ lindex $CHECK_CORE_EXECD 1  ]
 
-  switch -- $CHECK_ACT_LEVEL {
+   set global_resch 1
+
+   switch -- $CHECK_ACT_LEVEL {
      "0" { set global_resch 1
            return 0
          }
      "1" { set global_resch 0
            return 0 
          }
-  } 
-  return -1  ;# no other level else
-}
+   } 
 
-
-proc is_version_ok {} {
-   return 0
+   return -1  ;# no other level else
 }
 
 proc auto_reschedule_setup {} {
@@ -194,30 +190,17 @@ proc auto_reschedule_setup {} {
    global CHECK_CORE_EXECD stored_configuration CHECK_CORE_MASTER
    global stored_auto_reschedule_host1_config global_resch CHECK_PRODUCT_ROOT CHECK_ACT_LEVEL
 
-   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
-      set_error -3 "need 2 execd hosts"
-      return
-   }
-
-   if { [is_version_ok] != 0 } {
-      set_error -3 "This feature is not supportet for version [get_version_info]"
-      return -3
-   }
-
-   set new_queue(qname)    $queue1
-   set new_queue(hostname) $auto_reschedule_host1
    set new_queue(rerun)    "TRUE"
    set new_queue(qtype)    "BATCH INTERACTIVE PARALLEL CHECKPOINTING"
    set new_queue(load_thresholds) "np_load_avg=8.00"
    set new_queue(slots)    "100"
-   add_queue new_queue 
+   add_queue queue1 $auto_reschedule_host1 new_queue
+   set queue1 [get_queue_instance queue1 $auto_reschedule_host1]
  
-   set new_queue(qname)    $queue2
-   set new_queue(hostname) $auto_reschedule_host2 
-   add_queue new_queue
+   add_queue queue2 $auto_reschedule_host2 new_queue 
+   set queue2 [get_queue_instance queue2 $auto_reschedule_host2]
 
    puts $CHECK_OUTPUT "added queues"
-
 
    set schedd_config(schedule_interval) "00:00:04"
    set_schedd_config schedd_config
@@ -263,9 +246,10 @@ proc auto_reschedule_setup {} {
    puts $CHECK_OUTPUT "changed config for host $auto_reschedule_host1"
 
    puts $CHECK_OUTPUT "disabling all cluster queues"
-   foreach elem $CHECK_CORE_EXECD {
-      puts "${elem}.q"
-      disable_queue "${elem}.q"
+   foreach host $CHECK_CORE_EXECD {
+      set q [get_queue_instance all.q $host]
+      puts $CHECK_OUTPUT $q
+      disable_queue $q
    }
 
 
@@ -313,18 +297,6 @@ proc auto_reschedule_unknown_check_master {} {
    global CHECK_ADMIN_USER_SYSTEM CHECK_ARCH CHECK_PRODUCT_TYPE
    global global_resch CHECK_CORE_MASTER
 
-
-   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
-      set_error -3 "need 2 execd hosts"
-      return
-   }
-
-   if { [is_version_ok] != 0 } {
-      set_error -3 "This feature is not supportet for version [get_version_info]"
-      return -3
-   }
-
-
    puts $CHECK_OUTPUT "submitting job to queue $queue1 ..."
    set my_outputs "-o /dev/null -e /dev/null"
    set arguments "$my_outputs -q $queue1 -r y $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10000"
@@ -334,7 +306,6 @@ proc auto_reschedule_unknown_check_master {} {
    set my_outputs "-o /dev/null -e /dev/null"
    set arguments "$my_outputs -q $queue2 -r y $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10000"
    set job_id2 [ submit_job $arguments ]
-
    
    wait_for_jobstart $job_id1 "Sleeper" 100
    wait_for_jobstart $job_id2 "Sleeper" 100
@@ -342,15 +313,13 @@ proc auto_reschedule_unknown_check_master {} {
    wait_for_end_of_transfer $job_id1 100
    wait_for_end_of_transfer $job_id2 100
 
-   get_config my_config
-   shutdown_master_and_scheduler $CHECK_CORE_MASTER $my_config(qmaster_spool_dir) 
+   shutdown_master_and_scheduler $CHECK_CORE_MASTER [get_qmaster_spool_dir]
 
    puts $CHECK_OUTPUT "master and scheduler must be down now"
 
    puts $CHECK_OUTPUT "killing execd on host $auto_reschedule_host2"
    shutdown_system_daemon $auto_reschedule_host2 "execd"
    puts $CHECK_OUTPUT "execd on auto_reschedule_host2 ($auto_reschedule_host2) should be down now"   
-
 
    startup_qmaster
    puts $CHECK_OUTPUT "master and scheduler should be up again now"
@@ -360,8 +329,8 @@ proc auto_reschedule_unknown_check_master {} {
       puts $CHECK_OUTPUT "global reshedule_unkown enabled"
       wait_for_jobpending $job_id2 "Sleeper" 360
    } else {
-      # here we have global reshedule_unkown set to 00:00:00
-      puts $CHECK_OUTPUT "global reshedule_unkown set to 00:00:00"
+      # here we have global reschedule_unkown set to 00:00:00
+      puts $CHECK_OUTPUT "global reschedule_unkown set to 00:00:00"
       set my_timeout [ expr ( [timestamp] + 260 ) ]
       while { [timestamp] <= $my_timeout }  {
          set j_state [ is_job_running $job_id2 "Sleeper" ]
@@ -379,21 +348,17 @@ proc auto_reschedule_unknown_check_master {} {
    wait_for_jobstart $job_id1 "Sleeper" 100
    wait_for_end_of_transfer $job_id1 100
 
-
-
    # restart execds
    startup_execd $auto_reschedule_host2
 
    wait_for_jobstart $job_id2 "Sleeper" 300
    wait_for_end_of_transfer $job_id2 100
 
-
    delete_job $job_id1
    delete_job $job_id2
    
    wait_for_jobend $job_id1 "Sleeper" 200 0
    wait_for_jobend $job_id2 "Sleeper" 200 0
-
 
    set_error 0 "ok"
 }
@@ -403,19 +368,6 @@ proc auto_reschedule_unknown_check {} {
    global CHECK_CORE_EXECD stored_configuration CHECK_PRODUCT_ROOT
    global CHECK_ADMIN_USER_SYSTEM CHECK_ARCH CHECK_PRODUCT_TYPE
    global global_resch 
-
-
-   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
-      set_error -3 "need 2 execd hosts"
-      return
-   }
-
-
-   if { [is_version_ok] != 0 } {
-      set_error -3 "This feature is not supportet for version [get_version_info]"
-      return -3
-   }
-
 
    puts $CHECK_OUTPUT "submitting job to queue $queue1 ..."
    set my_outputs "-o /dev/null -e /dev/null"
@@ -427,13 +379,11 @@ proc auto_reschedule_unknown_check {} {
    set arguments "$my_outputs -q $queue2 -r y $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10000"
    set job_id2 [ submit_job $arguments ]
 
-   
    wait_for_jobstart $job_id1 "Sleeper" 100
    wait_for_jobstart $job_id2 "Sleeper" 100
 
    wait_for_end_of_transfer $job_id1 100
    wait_for_end_of_transfer $job_id2 100
-
 
    # shutdown execds
    puts $CHECK_OUTPUT "killing execd on host $auto_reschedule_host1 ..."
@@ -445,8 +395,6 @@ proc auto_reschedule_unknown_check {} {
    lappend my_queue_names $queue2
    wait_for_unknown_load 100 $my_queue_names
    puts $CHECK_OUTPUT "both execd should be down now"
-
-
 
    if { $global_resch != 0 } {
       # here we have global reshedule_unkown enabled
@@ -471,7 +419,6 @@ proc auto_reschedule_unknown_check {} {
          }
          sleep 10
       }
-      
    }
 
    # restart execds
@@ -479,7 +426,6 @@ proc auto_reschedule_unknown_check {} {
    startup_execd $auto_reschedule_host2 
 
    wait_for_load_from_all_queues 200 
-
 
    wait_for_jobstart $job_id1 "Sleeper" 100
    wait_for_jobstart $job_id2 "Sleeper" 100
@@ -493,7 +439,6 @@ proc auto_reschedule_unknown_check {} {
    wait_for_jobend $job_id1 "Sleeper" 200 0
    wait_for_jobend $job_id2 "Sleeper" 200 0
 
-
    set_error 0 "ok"
 }
 
@@ -503,43 +448,30 @@ proc auto_reschedule_cleanup {} {
    global CHECK_CORE_EXECD stored_configuration
    global stored_auto_reschedule_host1_config CHECK_USER
    
-   
-   if { [ llength $CHECK_CORE_EXECD ] < 2 } {
-      set_error -3 "need 2 execd hosts"
-      return
-   }
-   
-   
-   if { [is_version_ok] != 0 } {
-      set_error -3 "This feature is not supportet for version [get_version_info]"
-      return -3
-   }
-   
    reset_schedd_config
    
    get_config tmp_config $auto_reschedule_host2
    if {![info exists tmp_config(execd_spool_dir)]} {
          get_config tmp_config
    }
+
    set messages_name "$tmp_config(execd_spool_dir)/$auto_reschedule_host2/messages"
    set tail_id [open_remote_spawn_process $auto_reschedule_host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
 
    set sp_id [ lindex $tail_id 1 ] 
-
    
    set_config stored_configuration
    set_config stored_auto_reschedule_host1_config $auto_reschedule_host1
 
    puts $CHECK_OUTPUT "removing queues ..."
-   del_queue $queue1
-   del_queue $queue2
+   del_queue queue1 $auto_reschedule_host1 0 1
+   del_queue queue2 $auto_reschedule_host2 0 1
 
    puts $CHECK_OUTPUT "enabling queues ..."
-   foreach elem $CHECK_CORE_EXECD {
-      puts "${elem}.q"
-      enable_queue "${elem}.q"
+   foreach host $CHECK_CORE_EXECD {
+      puts $CHECK_OUTPUT $host
+      enable_queue [get_queue_instance all.q $host]
    }
-
     
    set timeout 300
    puts $CHECK_OUTPUT "waiting for configuration change ..."

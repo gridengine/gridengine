@@ -1,3 +1,7 @@
+JG-2002-07-18-0: Bugfix:    qsh mechanism passing options to xterm was broken.
+                            help output for qrsh and qlogin contained 
+                            unsupported options.
+
 CR-2002-07-18-4: Bugfix     i18n messages without _() macro will not get into
                             the gridengine.pot file. Fixed not i10n messages.
 

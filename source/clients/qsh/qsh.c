@@ -1842,6 +1842,9 @@ static void remove_unknown_opts(lList *lp)
    if (!lp || !lFirst(lp)) {
       return;
    }
+
+   lWriteListTo(lp, stdout);
+   
    ep = lFirst(lp);
    while (ep) {
       cp = lGetString(ep, SPA_switch);
@@ -1849,7 +1852,8 @@ static void remove_unknown_opts(lList *lp)
          ep = lNext(ep);
          continue;
       }
-      if (strcmp(cp, "-clear") && strcmp(cp, "-A") && strcmp(cp, "-cell") &&
+      if (strcmp(cp, "jobarg") && strcmp(cp, "script") &&
+          strcmp(cp, "-clear") && strcmp(cp, "-A") && strcmp(cp, "-cell") &&
           strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
           strcmp(cp, "-hold_jid") && strcmp(cp, "-h") &&
           strcmp(cp, "-l") && strcmp(cp, "-m") && strcmp(cp, "-masterq") &&
@@ -1880,4 +1884,6 @@ static void remove_unknown_opts(lList *lp)
          ep = lNext(ep);
       }
    }
+
+   lWriteListTo(lp, stdout);
 } 

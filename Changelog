@@ -1,3 +1,6 @@
+AA-2001-09-06-0: Fixed y out of range of allowed Xserver values in QControl
+                 This limits the number of displayable qs to 2758
+
 JG-2001-09-03-0: (Issue #51)
                  - PWD was set incorrectly for jobs submitted with qsub -cwd
                    if a path mapping was active (sge_aliases file)

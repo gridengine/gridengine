@@ -120,9 +120,14 @@ Qmon*queue_main_layout.queue_sw*queue_da.marginWidth: 0
 Qmon*queue_main_layout.queue_sw*queue_da.marginHeight: 0
 Qmon*queue_main_layout.queue_sw*queue_da.background: $bg
 
+!
+! queue_da.numColumns:  394 resulted from a bug report for Solaris9 Xserver
+!                           the x,y,w,h params of a window must lie in the correct scope
+!                           (see also qmon_queue.h it must be set there the same) 
+!
 Qmon*queue_main_layout.queue_sw*queue_da.packing:     PACK_COLUMN
 Qmon*queue_main_layout.queue_sw*queue_da.orientation: HORIZONTAL
-Qmon*queue_main_layout.queue_sw*queue_da.numColumns:  500
+Qmon*queue_main_layout.queue_sw*queue_da.numColumns:  394
 
 
 Qmon*queue_main_layout.queue_sw.height:                   300

@@ -1,3 +1,6 @@
+EB-2002-07-23-1: Bugfix:    job array task index values range not documented
+                 Issue:     #283
+
 EB-2002-07-23-0: Bugfix:    qsub/qalter -l <shortcut_name>... might select 
                             wrong resource.
                  Issue:     #328

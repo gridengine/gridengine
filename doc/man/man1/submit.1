@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/07/22 10:06:44 $     Revision: $Revision: 1.18 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/07/23 11:16:48 $     Revision: $Revision: 1.19 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/07/22 10:06:44 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/07/23 11:16:48 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1148,7 +1148,20 @@ almost like a series of jobs. The option argument to \fB\-t\fP specifies
 the number of array job tasks and the index number which will be associated
 with the tasks. The index numbers will be exported to the job tasks via the
 environment variable \fBxxQS_NAME_Sxx_TASK_ID\fP. The option arguments n, m and s will be available through the environment variables \fBxxQS_NAME_Sxx_TASK_FIRST\fP, \fBxxQS_NAME_Sxx_TASK_LAST\fP and  \fBxxQS_NAME_Sxx_TASK_STEPSIZE\fP.
-
+.sp 1
+.nf
+.RS
+Following restrictions apply to the values n and m:
+.sp 1
+.RS
+1 <= n <= MIN(2^31-1, max_aj_tasks)
+1 <= m <= MIN(2^31-1, max_aj_tasks)
+n <= m
+.RE
+.fi
+.sp 1
+\fImax_aj_tasks\fP is defined in the cluster configuration (see 
+.M sge_conf 5)
 .sp 1
 The task id range specified in the option argument
 may be a single number, a simple range of the form

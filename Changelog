@@ -1,3 +1,10 @@
+AA-2004-02-21-0: Enhancem.: qmon CQ changes and fixes
+                            partial fix of bool, lBool casting
+                            RR dialogue changes
+                            fixing of broken functionalities (Save settings)
+                            
+                 Changed:   all due to lib dependencies
+
 JG-2004-02-20-1: Enhancem.: Added some documenation related to reporting, 
                             cleanup of man page bootstrap.5.
                  Testsuite: Fixed some problems with tests

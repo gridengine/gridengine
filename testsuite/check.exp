@@ -5740,22 +5740,32 @@ proc compile_source { { do_only_install 0 } } {
    global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
    global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_USER
 
-
+   # settings for mail
    set check_name "compile_source"
    set CHECK_CUR_PROC_NAME "compile_source"
    set mail_subject "testsuite error - compile_source"
    set mail_body    "date: [exec date]\n"
 
-
+   # settings for html output
    set html_body [ create_html_text "date: [exec date]" 1 ]
    append html_body [ create_html_text "compiling ..." 1 ]
    update_compile_html_output $html_body
    set html_body [ create_html_text "date: [exec date]" 1 ]
 
- 
    set was_error 0
    set cvs_change_log ""
 
+   # if we configured to install precompiled packages - stop
+   if { $CHECK_PACKAGE_DIRECTORY != "none" } {
+      puts $CHECK_OUTPUT "can not compile -> using product packages"
+      puts $CHECK_OUTPUT "edit settings file and set package_directory to \"none\" if comilation should be possible"
+      mail_report $mail_subject "$mail_body can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" 
+      append html_body [ create_html_text "can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" ]
+      update_compile_html_output $html_body
+      return -1
+   }
+
+   # merge additional compile hosts into general compile hosts
    foreach host $CHECK_ADDITIONAL_COMPILE_HOSTS {
       if { [ lsearch -exact $CHECK_SOURCE_COMPILE_HOSTS $host ] < 0 } {
          lappend CHECK_SOURCE_COMPILE_HOSTS $host
@@ -5763,38 +5773,34 @@ proc compile_source { { do_only_install 0 } } {
       }
    }
 
-   if { $CHECK_PACKAGE_DIRECTORY != "none" } {
-       puts $CHECK_OUTPUT "can not compile -> using product packages"
-       puts $CHECK_OUTPUT "edit settings file and set package_directory to \"none\" if comilation should be possible"
-       mail_report $mail_subject "$mail_body can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" 
-       append html_body [ create_html_text "can not compile -> using product packages\nedit settings file and set package_directory to \"none\"" ]
-       update_compile_html_output $html_body
-       return -1
-   }
-
-
+   # check source directory
    if { ( [ string compare $CHECK_SOURCE_DIR "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_DIR "" ] == 0 ) } {
-       puts $CHECK_OUTPUT "source directory unknown - check defaults file"
-       mail_report $mail_subject "$mail_body source directory unknown - check defaults file" 
-       append html_body [ create_html_text "source directory unknown - check defaults file" ]
-       update_compile_html_output $html_body
-       return -1
-   }
-   if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {
-       puts $CHECK_OUTPUT "host for cvs checkout unknown - check defaults file"
-       mail_report $mail_subject "$mail_body host for cvs checkout unknown - check defaults file"
-       append html_body [ create_html_text "host for cvs checkout unknown - check defaults file" ]
-       update_compile_html_output $html_body
-       return -1
-   }
-   if { ( [ string compare $CHECK_SOURCE_COMPILE_HOSTS "unknown" ] == 0 ) || ([ string compare $CHECK_SOURCE_COMPILE_HOSTS "" ] == 0) } {
-       puts $CHECK_OUTPUT "host list to compile for unknown - check defaults file"
-       mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
-       append html_body [ create_html_text "host list to compile for unknown - check defaults file" ]
-       update_compile_html_output $html_body
-       return -1
+      puts $CHECK_OUTPUT "source directory unknown - check defaults file"
+      mail_report $mail_subject "$mail_body source directory unknown - check defaults file" 
+      append html_body [ create_html_text "source directory unknown - check defaults file" ]
+      update_compile_html_output $html_body
+      return -1
    }
 
+   # check compile host
+   if { ( [ string compare $CHECK_SOURCE_HOSTNAME "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_HOSTNAME "" ] == 0  ) } {
+      puts $CHECK_OUTPUT "host for cvs checkout unknown - check defaults file"
+      mail_report $mail_subject "$mail_body host for cvs checkout unknown - check defaults file"
+      append html_body [ create_html_text "host for cvs checkout unknown - check defaults file" ]
+      update_compile_html_output $html_body
+      return -1
+   }
+
+   # check compile hosts
+   if { ( [ string compare $CHECK_SOURCE_COMPILE_HOSTS "unknown" ] == 0 ) || ([ string compare $CHECK_SOURCE_COMPILE_HOSTS "" ] == 0) } {
+      puts $CHECK_OUTPUT "host list to compile for unknown - check defaults file"
+      mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
+      append html_body [ create_html_text "host list to compile for unknown - check defaults file" ]
+      update_compile_html_output $html_body
+      return -1
+   }
+
+   # figure out the compile archs
    set compile_arch_list ""
    foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
       puts $CHECK_OUTPUT "\n-> checking architecture for host $chost ..."
@@ -5806,10 +5812,11 @@ proc compile_source { { do_only_install 0 } } {
          update_compile_html_output $html_body
          return -1
       }
-      puts $CHECK_OUTPUT "output:\n$output"
+      puts $CHECK_OUTPUT "host $chost will build [string trim $output] binaries"
       lappend compile_arch_list $output
    }
 
+   # check if compile hosts are unique per arch
    foreach elem $compile_arch_list {
      set found 0
      set hostarch ""
@@ -5827,6 +5834,7 @@ proc compile_source { { do_only_install 0 } } {
      }
    }
 
+   # create protocol directory
    if {[file isdirectory "$CHECK_PROTOCOL_DIR"] != 1} {
       set catch_return [ catch {  file mkdir "$CHECK_PROTOCOL_DIR" } ]
       if { $catch_return != 0 } {
@@ -5837,90 +5845,87 @@ proc compile_source { { do_only_install 0 } } {
       } 
    }
 
-
-   # shutdown eventually running system
+   # shutdown possibly running system
    shutdown_core_system
 
-
+   # update sources
    if { $do_only_install != 1 } {
+      # update source 
+      if { $do_not_update == 0 } {
+         set tries 1
 
-   # update source 
-   if { $do_not_update == 0 } {
-
-      set tries 1
-
-      set output ""
-      set update_ok 0
-      while { $tries <= 3 && $update_ok == 0 } {
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "$tries. cvs update try ..."
-         puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
-         append output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -z 9 update -dP" ]
-         append output "\n"
-         if { $prg_exit_state != 0 } {
-            set update_ok 0
-            sleep 60
-         } else {
-            set update_ok 1
+         set output ""
+         set update_ok 0
+         while { $tries <= 3 && $update_ok == 0 } {
+            puts $CHECK_OUTPUT "------------------------------------------"
+            puts $CHECK_OUTPUT "$tries. cvs update try ..."
+            puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
+            append output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -z 9 update -dP" ]
+            append output "\n"
+            if { $prg_exit_state != 0 } {
+               set update_ok 0
+               sleep 60
+            } else {
+               set update_ok 1
+            }
+            incr tries 1
          }
-         incr tries 1
-      }
-      if { $update_ok != 1 } {
-         add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
-         append html_body [ create_html_text "cvs update -dP error:\n$output" ]
-         update_compile_html_output $html_body
-         return -1
-      }
+         if { $update_ok != 1 } {
+            add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
+            append html_body [ create_html_text "cvs update -dP error:\n$output" ]
+            update_compile_html_output $html_body
+            return -1
+         }
 
-      puts $CHECK_OUTPUT "------------------------------------------"
-      set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
-      puts $cvs_output $output
-      close $cvs_output
-      set update_output [split $output "\n"] 
-      set frame_work_script_update 0
-      set testsuite_update 0
-      foreach elem $update_output {
-         if { ([string range $elem 0 2 ] != "cvs") && ([string range $elem 0 0] != "?") } {
-            puts $CHECK_OUTPUT $elem
-            append cvs_change_log "$elem\n"
-            if { [ string first "testsuite/check.exp" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
-               set frame_work_script_update 1
-            }
-            if { [ string first "testsuite/tcl_files" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
-               set testsuite_update 1
-            }
-         } 
-      }
-      if { $frame_work_script_update == 1 } {
-         puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
-         flush $CHECK_OUTPUT
-         mail_report $mail_subject "$mail_body TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" 
-         append html_body [ create_html_text "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" ]
-         exit 1 
-      }
-      if { $testsuite_update == 1 } {
-         puts $CHECK_OUTPUT "testsuite source procedures were updated!!! resourcing it !!!"
-      }
-      puts $CHECK_OUTPUT "------------------------------------------"
+         puts $CHECK_OUTPUT "------------------------------------------"
+         set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
+         puts $cvs_output $output
+         close $cvs_output
+         set update_output [split $output "\n"] 
+         set frame_work_script_update 0
+         set testsuite_update 0
+         foreach elem $update_output {
+            if { ([string range $elem 0 2 ] != "cvs") && ([string range $elem 0 0] != "?") } {
+               puts $CHECK_OUTPUT $elem
+               append cvs_change_log "$elem\n"
+               if { [ string first "testsuite/check.exp" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
+                  set frame_work_script_update 1
+               }
+               if { [ string first "testsuite/tcl_files" $elem ] >= 0 && [string range $elem 0 0] != "M" } {
+                  set testsuite_update 1
+               }
+            } 
+         }
+         if { $frame_work_script_update == 1 } {
+            puts $CHECK_OUTPUT "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!"
+            flush $CHECK_OUTPUT
+            mail_report $mail_subject "$mail_body TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" 
+            append html_body [ create_html_text "TESTSUITE FRAMEWORK SCRIPT was updated!!! Stop !!!" ]
+            exit 1 
+         }
+         if { $testsuite_update == 1 } {
+            puts $CHECK_OUTPUT "testsuite source procedures were updated!!! resourcing it !!!"
+         }
+         puts $CHECK_OUTPUT "------------------------------------------"
 
-      foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "-> starting aimk clean on host $chost ..."
-         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk clean" prg_exit_state 60 0 "" 1 0 ]
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "return state: $prg_exit_state"
-         puts $CHECK_OUTPUT "------------------------------------------"
-         puts $CHECK_OUTPUT "output:\n$output"
-         puts $CHECK_OUTPUT "------------------------------------------"
+         foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
+            puts $CHECK_OUTPUT "------------------------------------------"
+            puts $CHECK_OUTPUT "-> starting aimk clean on host $chost ..."
+            set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk clean" prg_exit_state 60 0 "" 1 0 ]
+            puts $CHECK_OUTPUT "------------------------------------------"
+            puts $CHECK_OUTPUT "return state: $prg_exit_state"
+            puts $CHECK_OUTPUT "------------------------------------------"
+            puts $CHECK_OUTPUT "output:\n$output"
+            puts $CHECK_OUTPUT "------------------------------------------"
+         }
+         set macro_messages_file [get_macro_messages_file_name]
+         puts $CHECK_OUTPUT "deleting macro messages file after update!"
+         puts $CHECK_OUTPUT "file: $macro_messages_file"
+         if { [ file isfile $macro_messages_file] } {
+            file delete $macro_messages_file
+         }
+         update_macro_messages_list
       }
-      set macro_messages_file [get_macro_messages_file_name]
-      puts $CHECK_OUTPUT "deleting macro messages file after update!"
-      puts $CHECK_OUTPUT "file: $macro_messages_file"
-      if { [ file isfile $macro_messages_file] } {
-         file delete $macro_messages_file
-      }
-      update_macro_messages_list
-   }
    }
    
 

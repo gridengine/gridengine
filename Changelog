@@ -1,3 +1,6 @@
+JG-2004-07-07-0: Testsuite: - Source documentation for compile procedure.
+                            - Disable caching of testsuite generated html files.
+
 JG-2004-07-06-0: Bugfix:    Fixed the build for HPUX.
 
 CR-2004-07-06-0: Bugfix:    qmaster clients may not reconnect after qmaster 

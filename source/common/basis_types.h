@@ -80,7 +80,7 @@
 extern "C" {
 #endif
 
-#if defined(ALPHA) || defined(IRIX6) || defined(CRAY) || defined(SOLARIS64) || defined(NECSX4) || defined(NECSX5) || defined(ALINUX) || defined(IA64LINUX)
+#if defined(ALPHA) || defined(IRIX6) || defined(CRAY) || defined(SOLARIS64) || defined(NECSX4) || defined(NECSX5) || defined(ALINUX) || defined(IA64LINUX) || defined(LINUXAMD64)
 #  define u_long32 u_int
 #elif defined(WIN32NATIVE)
 #  define u_long32 unsigned long
@@ -90,7 +90,7 @@ extern "C" {
 
 /* set u32 and x32 for 64 or 32 bit machines */
 /* uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */
-#if defined(ALPHA) || defined(IRIX6) || defined(CRAY) || defined(SOLARIS64) || defined(NECSX4) || defined(NECSX5) || defined(ALINUX) || defined(IA64LINUX)
+#if defined(ALPHA) || defined(IRIX6) || defined(CRAY) || defined(SOLARIS64) || defined(NECSX4) || defined(NECSX5) || defined(ALINUX) || defined(IA64LINUX) || defined(LINUXAMD64)
 #  define u32    "%d"
 #  define uu32   "%u"
 #  define x32    "%x"

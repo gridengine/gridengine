@@ -203,23 +203,18 @@ char **argv
             continue;
 
          DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
+
          ce = NULL;
-
          host_complexes2scheduler(&ce, ep, ehl, cl, 0);
-         
-
          selected = sge_select_queue(ce, resource_match_list, 1, NULL, 0, -1, NULL);
          if (selected) 
             lSetUlong(ep, EH_tagged, 1);
-
          ce = lFreeList(ce);
       }
+
       /*
       ** reduce the hostlist, only the tagged ones survive
       */
-  
-       
-
       where = lWhere("%T(%I == %u)", EH_Type, EH_tagged, 1);
       lSplit(&ehl, NULL, NULL, where);
       where = lFreeWhere(where);

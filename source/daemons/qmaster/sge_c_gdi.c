@@ -607,13 +607,13 @@ int sub_command
             }
             /* trigger sending of generated events directly to schedd 
              * but only if events available
-             */
             if (event_number != sge_get_next_event_number(EV_ID_SCHEDD)) {
                lListElem *schedd = sge_locate_scheduler();
                if(schedd != NULL) {
                   sge_flush_events(schedd, FLUSH_EVENTS_SET);
                }
             }   
+             */
          }
          break;
       case SGE_JOB_LIST:

@@ -1,3 +1,9 @@
+MD-2005-03-17-0: Bugfix:   execd installation fails, if local spool dir is not entered
+                 Changed:  inst_execd.sh
+                 Issue:    1384
+                 Bugtraq:  6203977
+                 Review:   HP
+
 CR-2005-03-17-1: Bugfix:   change for CR-2005-03-17-0
                  Changed:  qmaster hard/soft limit limit setting
 

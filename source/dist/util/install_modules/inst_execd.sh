@@ -89,8 +89,8 @@ CheckQmasterInstallation()
     $CLEAR
     $INFOTEXT -u "\nGrid Engine cells"
     $INFOTEXT -n "\nPlease enter cell name which you used for the qmaster\n" \
-                 "installation or press <RETURN> to use default cell >default< >> "
-    INP=`Enter ""`
+                 "installation or press <RETURN> to use [%s] >> " $SGE_CELL
+    INP=`Enter $SGE_CELL`
     if [ "$INP" = "" ]; then
        SGE_CELL=default
     else
@@ -451,20 +451,55 @@ GetLocalExecdSpoolDir()
              "spool directory is configured.\n\n Now you can enter a local spool " \
              "directory for this host.\n"
    $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a local spool directory\n for this host (y/n) [n] >> "
+   ret=$?
 
-   if [ $? = 0 ]; then
+   while [ $ret = 0 ]; do 
       $INFOTEXT -n "Please enter the local spool directory now! >> " 
       LOCAL_EXECD_SPOOL=`Enter`
-      $INFOTEXT "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
-      $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-   else
-      $CLEAR
-   fi
+      if [ "$LOCAL_EXECD_SPOOL" = "" ]; then
+         $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a local spool directory\n for this host (y/n) [n] >> "
+         ret=$?
+         LOCAL_EXECD_SPOOL="undef"
+      else
+         $INFOTEXT "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         MakeLocalSpoolDir
+         ret=1
+      fi
+   done
 
    if [ $AUTO = "true" ]; then
       if [ "$EXECD_SPOOL_DIR_LOCAL" != "" ]; then
          LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
          $INFOTEXT -log "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
+         MakeLocalSpoolDir
       fi
+   fi
+}
+
+MakeLocalSpoolDir()
+{
+   tmp_dir=$LOCAL_EXECD_SPOOL
+   end_loop=0
+
+   while [ "$end_loop" = "0" ]; do
+      base_name=`basename $tmp_dir`
+      tmp_dir=`dirname $tmp_dir`
+
+      if [ -d $tmp_dir ]; then
+         dir_exists=$tmp_dir
+         end_loop=1
+      fi 
+   done
+
+   #try as root
+   mkdir -p $LOCAL_EXECD_SPOOL
+   
+   if [ $? = 0 ]; then
+      group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
+      chown -R $ADMINUSER:$group $dir_exists/$base_name
+   else
+      #try as adminuser
+      ExecuteAsAdmin mkdir -p $LOCAL_EXECD_SPOOL
    fi
 }

@@ -1,3 +1,6 @@
+JG-2002-02-27-0: Doc:       Documented the qrsh -noshell option in the
+                            qrsh/submit man page.
+
 EB-2002-02-26-1: Bugfix:    Fixed one problem repoted bye Patrik Koch.
                             - switched call order in
                               job_delete_not_enrolled_ja_task()

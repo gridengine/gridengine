@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/02/26 13:53:12 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/02/27 13:06:34 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/02/26 13:53:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/02/27 13:06:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -872,6 +872,29 @@ assigned to the job.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes.
+.\"
+.IP "\fB\-noshell\fP"
+Available only for \fIqrsh\fP with a commandline.
+.sp 1
+Do not start the commandline given to \fIqrsh\fP in a users login shell
+but execute it without the wrapping shell.
+.sp 1
+The option can be used to speed up execution as some overhead like the  
+shell startup and sourcing the shell resource files is avoided.
+.sp 1
+The option can only be used, if no shell specific commandline parsing is
+required. If the commandline contains shell syntax like environment
+variable substitution or (back) quoting, a shell must be started.
+In this case either do not use the \fB\-noshell\fP option or include
+the shell call in the commandline.
+.sp 1
+Example:
+.br 
+qrsh echo '$HOSTNAME'
+.br 
+Alternative call with the -noshell option
+.br 
+qrsh -noshell /bin/tcsh -f -c 'echo $HOSTNAME'
 .\"
 .IP "\fB\-nostdin\fP"
 Available only for \fIqrsh\fP.

@@ -1,3 +1,9 @@
+CR-2002-07-24-0: Bugfix:    wrong port output in qstat error message when qmaster
+                            (merged from maintrunc)
+                 Issue:     #331
+                 Bugtraq:   #4719755
+
+
 CR-2002-07-23-1: Testsuite: (merged from maintrunc) 
                             new feature for delete_job: wait for jobend 
                  Bugfix:    project_access_lists and access_lists could not

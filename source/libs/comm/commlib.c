@@ -55,7 +55,6 @@
 #	include "win32nativetypes.h"
 #endif 
 
-
 #if defined(AIX32) || defined(AIX41)
 #   include <sys/select.h>
 #endif
@@ -1460,7 +1459,7 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
    unsigned char *cp;
    DENTER(COMMD_LAYER, "cntl_");
 
-   if ((i = get_environments())) {        
+   if ((i = get_environments())) {
       /* look for port and host of commd */
       DEXIT;
       return i;
@@ -1517,7 +1516,7 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
       }
       closeconnection(0);
       if (!i) {
-         fprintf(stderr, MSG_COMMLIB_LOST_CONNECTION );
+         fprintf(stderr, MSG_COMMLIB_LOST_CONNECTION);
 #ifdef COMMLIB_ENABLE_DEBUG
          INFO((SGE_EVENT, "cntl_ returns CL_READ #1: %s\n",
                   strerror(stored_errno)));
@@ -1578,7 +1577,7 @@ static u_long mid_new()
    This is the version trying to avoid hanging around too long in connect().
    This was noticed on LINUX and caused us to hang for a minute.
  */
-int send2commd(unsigned char *buffer, int buflen 
+int send2commd(unsigned char *buffer, int buflen
 #ifdef COMMLIB_ENABLE_DEBUG
                , const char *context_string
 #endif
@@ -2057,7 +2056,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
 #ifdef COMMLIB_ENABLE_DEBUG
                   , "getuniquehostname (#01)"
 #endif
-                  );
+                 );
    if (i) {
       DEXIT;
       return i;
@@ -2067,7 +2066,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
    i = send2commd(header, headerlen
 #ifdef COMMLIB_ENABLE_DEBUG
                   , "getuniquehostname (#02)"
-#endif 
+#endif
                 );
    if (i) {
       DEXIT;
@@ -2188,7 +2187,7 @@ void generate_commd_port_and_service_status_message(int commlib_error, char* buf
 
    DPRINTF(("commlib_error =  %d\n",commlib_error));
 
-   port           = get_commlib_state_commdport();
+   port           = ntohs(get_commlib_state_commdport());
    service        = get_commlib_state_commdservice();
    commdhost      = get_commlib_state_commdhost();
    commd_port_env = getenv("COMMD_PORT");   
@@ -2263,9 +2262,9 @@ static int get_environments()
    }
 
    he = gethostbyname(commdhost);
-   if (!he)
+   if (!he) {
       return CL_RESOLVE;
-
+   }
    /* store ip address of commd */
 
    set_commlib_state_commdaddr_length(he->h_length);
@@ -2280,7 +2279,6 @@ static int get_environments()
 #else /* WIN32NATIVE */
          set_commlib_state_commdport(htons((u_short)atoi(cp)));
 #endif /* WIN32NATIVE */
-
          return 0;
       }
 
@@ -2299,12 +2297,12 @@ static int get_environments()
         
       nisretry = MAXNISRETRY;   /* NIS sometimes neede several attempts */
       while (nisretry-- && !((se = getservbyname(cp, "tcp"))));
-      if (!se)
+      if (!se) {
          return CL_SERVICE;
+      }
 
       set_commlib_state_commdport(se->s_port);
    }
-
    return 0;
 }
 
@@ -2496,6 +2494,34 @@ u_short* get_commlib_state_addr_componentid() {
    return &(commlib_state->componentid);
 }
 
+/****** commd/commlib/get_commlib_state_commdport() **********************************
+*  NAME
+*     get_commlib_state_commdport() -- ??? 
+*
+*  SYNOPSIS
+*     int get_commlib_state_commdport() 
+*
+*  FUNCTION
+*     returns used commd port in network byte order. Use ntohs() to re-convert 
+*     byteorder.
+*
+*  INPUTS
+*
+*  RESULT
+*     int - commd port in network byte order. 
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     ??? 
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 int get_commlib_state_commdport() {
 #ifdef QIDL
    struct commlib_state_t* commlib_state;

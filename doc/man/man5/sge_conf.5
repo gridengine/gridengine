@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/20 15:47:00 $     Revision: $Revision: 1.32 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/04/22 15:57:04 $     Revision: $Revision: 1.33 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/20 15:47:00 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/04/22 15:57:04 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -221,6 +221,63 @@ are started).
 .IP "\fI$queue\fP"
 The cluster queue name of the master queue instance, i.e. the cluster 
 queue in which the prolog and epilog procedures are started.
+.IP "\fI$stdin_path\fP"
+The pathname of the stdin file. This is always /dev/null for prolog, 
+pe_start, pe_stop and epilog. In the job script it is the pathname of the
+stdin file for the job. When delegated file staging is enabled, this path is set
+to $fs_stdin_tmp_path. When delegated file staging is not enabled, it is the stdin
+pathname given via DRMAA or qsub.
+.IP "\fI$stdout_path\fP"
+.IP "\fI$stderr_path\fP"
+The pathname of the stdout/stderr file. This always points to the
+output/error file. When delegated file staging is enabled, this path is set to
+$fs_stdout_tmp_path/$fs_stderr_tmp_path. When delegated file staging is not
+enabled, it is the stdout/stderr pathname given via DRMAA or qsub.
+.IP "\fI$merge_stderr\fP"
+If merging of stderr and stdout is requested, this flag is "1", otherwise it is "0".
+If this flag is 1, stdout and stderr are merged in one file, the stdout file.
+Merging of stderr and stdout can be requested via the DRMAA job template attribute 'drmaa_join_files' (see
+.M drmaa_attributes 3 
+) or the qsub parameter '-j y' (see
+.M qsub 1 
+).
+.IP "\fI$fs_stdin_host\fP"
+When delegated file staging is requested for the stdin file, this is the name of
+the host where the stdin file has to be copied from before the job is started.
+.IP "\fI$fs_stdout_host\fP"
+.IP "\fI$fs_stderr_host\fP"
+When delegated file staging is requested for the stdout/stderr file, this is the
+name of the host where the stdout/stderr file has to be copied to after the job has run.
+.IP "\fI$fs_stdin_path\fP"
+When delgated file staging is requested for the stdin file, this is the pathname
+of the stdin file on the host $fs_stdin_host.
+.IP "\fI$fs_stdout_path\fP"
+.IP "\fI$fs_stderr_path\fP"
+When delegated file staging is requested for the stdout/stderr file, this is the
+pathname of the stdout/stderr file on the host $fs_stdout_host/$fs_stderr_host.
+.IP "\fI$fs_stdin_tmp_path\fP"
+When delegated file staging is requested for the stdin file, this is the destination
+pathname of the stdin file on the execution host. The prolog script must copy the
+stdin file from $fs_stdin_host:$fs_stdin_path to localhost:$fs_stdin_tmp_path to
+establish delegated file staging of the stdin file.
+.IP "\fI$fs_stdout_tmp_path\fP"
+.IP "\fI$fs_stderr_tmp_path\fP"
+When delegated file staging is requested for the stdout/stderr file, this is the 
+source pathname of the stdout/stderr file on the execution host. The epilog script 
+must copy the stdout file from localhost:$fs_stdout_tmp_path to 
+$fs_stdout_host:$fs_stdout_path (the stderr file from localhost:$fs_stderr_tmp_path 
+to $fs_stderr_host:$fs_stderr_path) to establish delegated file staging of the 
+stdout/stderr file.
+.IP "\fI$fs_stdin_file_staging\fP"
+.IP "\fI$fs_stdout_file_staging\fP"
+.IP "\fI$fs_stderr_file_staging\fP"
+When delegated file staging is requested for the stdin/stdout/stderr file, the flag
+is set to "1", otherwise it is set to "0" (see in \fBdelegated_file_staging\fP how 
+to enable delegated file staging).
+ 
+These three flags correspond to the DRMAA job template attribute 'drmaa_transfer_files' (see 
+.M drmaa_attributes 3
+).
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -882,6 +939,16 @@ value 99 are rescheduled. This can be used to cause the
 job to be restarted at a different machine, for instance if there
 are not enough resources on the current one.
 .PP
+.IP "\fIFORBID_APPERROR\fP"
+If this parameter is set, the application cannot set itself to error state.
+Without this parameter jobs returning the value 100 are set to error state 
+(and therefore can be manually rescheduled by clearing the error state).
+This can be used to set the job to error state when a starting condition
+of the application is not fulfilled before the application itself has been 
+started, or when a clean up procedure (e.g. in the epilog) decides that it is
+neccessary to run the job again, by returning 100 in the prolog, pe_start, 
+job script, pe_stop or epilog script.
+.PP
 .IP "\fIDISABLE_AUTO_RESCHEDULING\fP"
 If set to "true" or "1", the \fIreschedule_unknown\fP parameter
 is not taken into account.
@@ -999,7 +1066,7 @@ not be changed from the default).
 .\"
 .SH "\fBreporting_params\fP"
 Used to define the behaviour of reporting modules in the xxQS_NAMExx 
-qmaster. Changes to the \fBreporting_params\f takes immediate effect.
+qmaster. Changes to the \fBreporting_params\fP takes immediate effect.
 The following values are recognized:
 .\"
 .IP "\fIaccounting\fP"
@@ -1178,6 +1245,20 @@ The global configuration entry for this value may be overwritten by the
 execution host local configuration.
 .\"
 .\"
+.SH "\fBdelegated_file_staging\fP"
+This flag must be set to "true" when the prolog and epilog are ready for
+delegated file staging, so that the DRMAA attribute 'drmaa_transfer_files'
+is supported. To establish delegated file staging, use the variables 
+beginning with "$fs_..." in prolog and epilog to move the input, output 
+and error files from one host to the other.
+When this flag is set to "false", no file staging is available 
+for the DRMAA interface. File staging is currently implemented only via
+the DRMAA interface.
+When an error occurs while moving the input, output and error files, return 
+error code 100 so that the error handling mechanism can handle the error
+correctly. (See also FORBID_APPERROR).
+.\"
+.\"
 .\"
 .\"
 .SH "SEE ALSO"
@@ -1188,6 +1269,7 @@ execution host local configuration.
 .M rsh 1 ,
 .M sh 1 ,
 .M getpwnam 3 ,
+.M drmaa_attributes 3 ,
 .M queue_conf 5 ,
 .M sched_conf 5 ,
 .M xxqs_name_sxx_execd 8 ,

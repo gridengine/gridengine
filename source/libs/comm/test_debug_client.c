@@ -68,6 +68,17 @@ int sig
 }
 
 
+void print_line(char* buffer) {
+
+   printf(buffer);
+   
+/*
+   value=strtok(buffer, " \n");
+   while( (value=strtok(NULL, " \n"))) {
+      printf("value:%s\n", value);
+   } 
+*/
+}
 
 
 #ifdef __CL_FUNCTION__
@@ -78,6 +89,8 @@ extern int main(int argc, char** argv)
 {
   struct sigaction sa;
   int i;
+  char line_buffer[8192];
+  int line_index=0;
 
 
   if (argc != 6) {
@@ -133,7 +146,22 @@ extern int main(int argc, char** argv)
      } else {
         int i;
         for (i=0; i < message->message_length; i++) {
-           printf("%c", message->message[i]);
+           line_buffer[line_index] = message->message[i];
+           
+           switch(line_buffer[line_index]) {
+              case 0:
+                 /* ignore string end information */
+                 break;
+              case '\n': {
+                 line_index++;
+                 line_buffer[line_index] = 0;
+                 print_line(line_buffer);
+                 line_index = 0;
+                 break;
+              }
+              default:
+                 line_index++;
+           }
         }
         fflush(stdout);
         cl_com_free_message(&message);

@@ -685,6 +685,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
 
    new_handle->local = NULL;
+   new_handle->debug_client_mode = CL_DEBUG_CLIENT_OFF;
    new_handle->debug_list = NULL;
    new_handle->messages_ready_for_read = 0;
    new_handle->messages_ready_mutex = NULL;
@@ -908,16 +909,12 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if (new_handle->service_provider == CL_TRUE) {
       /* create service */
+      cl_com_connection_t* new_con = NULL;
 
-#define ENABLE_DEBUG_CLIENTS 0 /* TODO: set this to 1 if we want support debug clients */
-#if ENABLE_DEBUG_CLIENTS      
       /* This list is only for debug clients (comp_name = "debug_client" )*/
       if ((return_value=cl_string_list_setup(&(new_handle->debug_list), "debug list")) != CL_RETVAL_OK) {
          CL_LOG(CL_LOG_ERROR,"could not setup debug information list");
       }
-#endif
-
-      cl_com_connection_t* new_con = NULL;
 
       CL_LOG(CL_LOG_INFO,"creating service ...");
       switch(new_handle->framework) {
@@ -1466,6 +1463,21 @@ int cl_com_get_auto_close_mode(cl_com_handle_t* handle, cl_xml_connection_autocl
       return CL_RETVAL_PARAMS;
    }
    *mode = handle->auto_close_mode;
+   return CL_RETVAL_OK;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_set_debug_client_mode()"
+int cl_com_set_debug_client_mode(cl_com_handle_t* handle, cl_debug_client_t mode) {
+   /* debug_client_mode */
+
+   if (handle == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   handle->debug_client_mode = mode;
    return CL_RETVAL_OK;
 }
 
@@ -2966,9 +2978,14 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
       return CL_RETVAL_PARAMS;
    }
 
+   if (handle->debug_client_mode == CL_DEBUG_CLIENT_OFF) {
+      CL_LOG(CL_LOG_INFO,"debug clients not enabled");
+      return CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
+   }
+
    if (handle->debug_list == NULL) {
       CL_LOG(CL_LOG_INFO,"debug clients not supported");
-      return CL_RETVAL_OK;
+      return CL_RETVAL_UNKNOWN;
    }
 
    if (lock_list == CL_TRUE) {
@@ -2997,28 +3014,30 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
          while(elem) {
             cl_com_connection_t* connection = elem->connection;
             if (connection->data_flow_type == CL_CM_CT_STREAM) {
-               if (strcmp(connection->remote->comp_name, "debug_client") == 0) {
-                  cl_com_message_t* message = NULL;
-                  char* message_text = strdup(log_string);
-
-                  if (message_text != NULL) {
+               if (connection->remote != NULL && connection->remote->comp_name != NULL) {
+                  if (strcmp(connection->remote->comp_name, "debug_client") == 0) {
+                     cl_com_message_t* message = NULL;
+                     char* message_text = strdup(log_string);
+   
+                     if (message_text != NULL) {
+                        
+                        CL_LOG_STR_STR_INT(CL_LOG_INFO, "flushing debug client:",
+                                           connection->remote->comp_host,
+                                           connection->remote->comp_name,
+                                           (int)connection->remote->comp_id);
                      
-                     CL_LOG_STR_STR_INT(CL_LOG_INFO, "flushing debug client:",
-                                        connection->remote->comp_host,
-                                        connection->remote->comp_name,
-                                        (int)connection->remote->comp_id);
-                  
-                     cl_raw_list_lock(connection->send_message_list);
-                     
-                     cl_com_setup_message(&message,
-                                          connection,
-                                          (cl_byte_t*) message_text,
-                                          strlen(message_text),
-                                          CL_MIH_MAT_NAK,
-                                          0,
-                                          0);
-                     cl_message_list_append_message(connection->send_message_list,message,0);
-                     cl_raw_list_unlock(connection->send_message_list);
+                        cl_raw_list_lock(connection->send_message_list);
+                        
+                        cl_com_setup_message(&message,
+                                             connection,
+                                             (cl_byte_t*) message_text,
+                                             strlen(message_text),
+                                             CL_MIH_MAT_NAK,
+                                             0,
+                                             0);
+                        cl_message_list_append_message(connection->send_message_list,message,0);
+                        cl_raw_list_unlock(connection->send_message_list);
+                     }
                   }
                }
             }

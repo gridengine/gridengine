@@ -1,3 +1,11 @@
+CR-2004-11-03-0: Enhancm.:  - commlib debug client support can be enabled via 
+                              compile time definition "ENABLE_DEBUG_CLIENT" for 
+                              execd and qmaster daemons. 
+                              The binary "test_debug_client" can be used as
+                              debug client.
+                 Changed:   commlib, gdilib
+                 Review:    AA
+
 AD-2004-11-03-0: Bugfix:    '-m a' qsub option did leave a zombie process
                  Review:    EB
                  Changed:   qmaster
@@ -18,7 +26,7 @@ CR-2004-11-02-0: Enhancm.:  - added new commlib test binary: test_debug_client
                             - outcommented unused function: 
                               should_flush_event_client()
                  Changed:   commlib, gdilib, qmaster
-                 Review:    pending
+                 Review:    AA
 
 SG-2004-11-02-0: Bugfix:    - fixed a memory leak in the scheduler configuration
                             - fixed a memory leak in the scheduler. It ocoured,

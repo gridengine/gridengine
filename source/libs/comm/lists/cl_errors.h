@@ -121,9 +121,10 @@
 #define CL_RETVAL_PROTOCOL_ERROR            (CL_RETVAL_START_ID + 85)
 #define CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE (CL_RETVAL_START_ID + 86)
 #define CL_RETVAL_TO_LESS_FILEDESCRIPTORS   (CL_RETVAL_START_ID + 87)
+#define CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED (CL_RETVAL_START_ID + 88)
 
 
-#define CL_RETVAL_LAST_ID                  (CL_RETVAL_START_ID + 88)  /* this must be the last number + 1 */
+#define CL_RETVAL_LAST_ID                  (CL_RETVAL_START_ID + 89)  /* this must be the last number + 1 */
 #define CL_RETVAL_UNDEFINED_STR "UNDEFINED"
 
 int         cl_is_commlib_error(int error_id);

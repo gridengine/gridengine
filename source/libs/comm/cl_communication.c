@@ -145,7 +145,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    char xml_buffer[512];
 
    const char*     message_tag = NULL;
-   char*           xml_data = "<xml data not available>";
+   char*           xml_data = "<not available>";
    char*           snd_host = "?";
    char*           snd_comp = "?";
    unsigned long   snd_id   = 0;
@@ -166,6 +166,10 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    if (handle == NULL) {
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
+   if (handle->debug_client_mode == CL_DEBUG_CLIENT_OFF) {
+      return CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
+   }
+ 
    if (handle->debug_list == NULL) {
       return CL_RETVAL_PARAMS;
    }

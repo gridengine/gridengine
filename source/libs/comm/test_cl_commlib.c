@@ -68,6 +68,9 @@ int sig
 }
 
 const char* my_application_tag_name(unsigned long tag) {
+   if (tag > 0) {
+      return "TAG > 0";
+   }
    return "DEFAULT_APPLICATION_TAG";
 }
 
@@ -171,6 +174,9 @@ extern int main(int argc, char** argv)
      printf("could not get handle\n");
      exit(-1);
   }
+
+  
+  cl_com_set_debug_client_mode(handle, CL_DEBUG_CLIENT_ON);
 
   cl_com_get_service_port(handle,&i), 
 

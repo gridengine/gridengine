@@ -323,6 +323,9 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_TO_LESS_FILEDESCRIPTORS: {
          return MSG_CL_RETVAL_TO_LESS_FILEDESCRIPTORS;
       }
+      case CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED: {
+         return MSG_CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

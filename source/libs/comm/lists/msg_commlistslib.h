@@ -123,6 +123,8 @@
 #define MSG_CL_RETVAL_PROTOCOL_ERROR            _MESSAGE(80085, _("can't send response for this message id - protocol error"))
 #define MSG_CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE _MESSAGE(80086, _("local endpoint is not unique"))
 #define MSG_CL_RETVAL_TO_LESS_FILEDESCRIPTORS   _MESSAGE(80087, _("operating system provides to less file descriptors"))
+#define MSG_CL_RETVAL_DEBUG_CLIENTS_NOT_ENABLED _MESSAGE(80088, _("debug client mode not active"))
+
 
 
 

@@ -63,6 +63,11 @@ typedef enum cl_max_count_def {
    CL_ON_MAX_COUNT_OFF
 } cl_max_count_t;
 
+typedef enum cl_debug_client_def {
+   CL_DEBUG_CLIENT_OFF = 0,
+   CL_DEBUG_CLIENT_ON
+} cl_debug_client_t;
+
 typedef enum cl_host_resolve_method_def {
    CL_SHORT = 1,
    CL_LONG  = 2
@@ -181,6 +186,7 @@ typedef struct cl_com_handle_statistic_type {
 typedef struct cl_com_connection_type cl_com_connection_t;
 
 typedef struct cl_com_handle {
+   cl_debug_client_t         debug_client_mode;
    cl_raw_list_t*            debug_list;
    cl_framework_t            framework;        /* framework type CL_CT_TCP, CL_CT_SSL */
    cl_xml_connection_type_t  data_flow_type;   /* data_flow type CL_CM_CT_STREAM, CL_CM_CT_MESSAGE  */

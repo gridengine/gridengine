@@ -342,15 +342,7 @@ sge_pack_buffer *pb
                                           jobid, jataskid, pe_task_id_str, 
                                           NULL, lGetString(jep, JB_session),
                                           lGetList(petask, PET_scaled_usage));
-                       /* JG: TODO we would need a PETASK_MOD event here!
-                        * this could replace the JOB_USAGE event above.
-                        * for spooling only, the ADD event is OK
-                        */
-                       sge_event_spool(&answer_list, 0, sgeE_PETASK_ADD, 
-                                       jobid, jataskid, pe_task_id_str, NULL,
-                                       lGetString(jep, JB_session),
-                                       jep, jatep, petask, false, true);
-                    }                            
+                    }
                     answer_list_output(&answer_list);
                   } else {
                      lListElem *jg;
@@ -376,6 +368,7 @@ sge_pack_buffer *pb
                         }
                   }
                }
+
                /* once a day write an intermediate usage record to the 
                 * reporting file to have correct daily usage reporting with
                 * long running jobs */

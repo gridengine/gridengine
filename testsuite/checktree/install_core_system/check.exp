@@ -321,7 +321,7 @@ proc install_qmaster {} {
  set timeout 100 
  set hostcount 0
 
-  set do_log_output 0
+ set do_log_output 0 ;# _LOG
  if { $CHECK_DEBUG_LEVEL == 2 } {
    set do_log_output  1 ;# 1
  }
@@ -417,7 +417,7 @@ proc install_qmaster {} {
           continue;
        }
  
-       -i $sp_id "Do you want to run SGE as admin user" { 
+       -i $sp_id "Do you want to * SGE as admin user" { 
           puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
           if {$do_log_output == 1} {
              puts "press RETURN"
@@ -427,7 +427,7 @@ proc install_qmaster {} {
           continue;
        }
 
-       -i $sp_id "Do you want to run SGEEE as admin user" { 
+       -i $sp_id "Do you want to * SGEEE as admin user" { 
           puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
           if {$do_log_output == 1} {
              puts "press RETURN"
@@ -491,7 +491,7 @@ proc install_qmaster {} {
           }
        }
 
-       -i $sp_id "Do you want to run the application as admin user" {
+       -i $sp_id "Do you want to * the application as admin user" {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
           if {$do_log_output == 1} {
                puts "press RETURN"
@@ -818,7 +818,7 @@ proc install_execd {} {
 
       set timeout 120
      
-      set do_log_output 0 ;# 1
+      set do_log_output 0 ;# 1 _LOG
       if { $CHECK_DEBUG_LEVEL == 2 } {
          set do_log_output 1
       }

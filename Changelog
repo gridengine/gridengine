@@ -1,3 +1,5 @@
+JG-2002-04-08-0  Bugfix:    qrsh -h did debug output (a job object).
+
 CR-2002-04-08-0  Bugfix:    Fixed compiler warning in ptf.c
 
 CR-2002-04-05-0  Testsuite: Merges from maintrunc

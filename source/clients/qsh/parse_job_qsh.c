@@ -314,9 +314,6 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
       if (in_hold_state) {
          lSetList(*pjob, JB_ja_n_h_ids, lCreateList("no hold list", RN_Type));
       }
-#if 1 /* EB: TODO */
-      lWriteElemTo(*pjob, stderr);
-#endif
       lRemoveElem(cmdline, ep);
    }
 

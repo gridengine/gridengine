@@ -1,3 +1,6 @@
+CR-2002-11-22-2  Testsuite: qrsh output change in maintrunc - adapted changes
+                            into testsuite
+
 CR-2002-11-22-0  Bugfix:    Uninitialized pointer caused segmentation fault in qsh/qrsh
                             on submit only hosts.
                  Testsuite: more info output for submit_hosts test

@@ -688,9 +688,13 @@ proc qrsh_accounting {} {
    } 
 
    puts $CHECK_OUTPUT "qrsh accounting test"
-   
-   set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D] "*"]
-   set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D] "__JOBID__"]
+   if { [resolve_version] > 2 } {
+      set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "*"]
+      set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "__JOBID__"]
+   } else {
+      set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D] "*"]
+      set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_D] "__JOBID__"]
+   }
    set job_id_start [ string first "__JOBID__" $INTERACTIVE_JOB_DUMMY ]
    puts $CHECK_OUTPUT "parsing for \"$INTERACTIVE_JOB\""
 

@@ -1,3 +1,9 @@
+EB-2003-04-08-1  Bugfix:    qdel -u <user> does not delete all jobs of the user
+                 Issue:     524
+                 Bugtraq:   4842878
+                 Changed:   qdel
+                 Review:    JG
+
 EB-2003-04-08-0  Bugfix:    sge_shepherd does not exit on SIGTERM
                  Issue:     522
                  Bugtraq:   4844838 

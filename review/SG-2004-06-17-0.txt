@@ -1,0 +1,88 @@
+Source Code Review Form 
+=======================
+(version 1.0)
+
+Date: 2004-06-16
+
+1 Identification
+1.1 Issue: 1087
+1.2 Bugtraq: 5063311
+1.3 Summary: high memory usage of schedd and qmaster (schedd_job_info)
+1.4 Changelog ID: SG-2004-06-16-0
+1.5 Developer(s): SG
+1.6 Reviewer(s): JG
+
+
+2 Conformance to specification
+2 [X] yes
+2 [ ] no - comment:
+
+
+3 Documentation
+3.1 user/admin guide
+3.1 [X] yes
+3.1 [ ] no - comment:
+
+3.2 man pages (user view)
+3.2 [X] yes
+3.2 [ ] no - comment:
+
+3.3 -help output
+3.3 [X] yes
+3.3 [ ] no - comment:
+
+3.4 documented interfaces (at least GDI, EVI, libs)
+3.4 [X] yes
+3.4 [ ] no - comment:
+
+3.5 messages, output formats
+3.5 [X] yes
+3.5 [ ] no - comment:
+
+
+4 Source review
+4.1 Style guide conformance
+4.1 [X] yes
+4.1 [ ] no - comment:
+
+4.2 Memory leaks
+4.2 [X] yes
+4.2 [ ] no - comment:
+
+4.3 Thread safe
+4.3 [X] yes
+4.3 [ ] no
+
+5 Tests
+5.1 Manual tests
+Description: see attachment to issue 1095
+Successfull execution
+5.1 [X] yes
+5.1 [ ] no - comment:
+
+5.1 Used memory leak debugger
+5.1 [ ] yes
+5.1 [X] no - comment:
+
+5.2 Testsuite covers issue
+5.2 [ ] yes
+5.2 [X] no - comment:
+
+5.3 If 5.2 = no: Testsuite issue created
+5.3 [X] yes
+5.3 [ ] no - comment:
+
+5.4 Testsuite run successfull
+5.4 [ ] yes
+5.4 [X] no - comment:
+
+
+6 Comments
+   see SG-2004-06-09-2.txt
+
+7 Accepted
+7 [ ] yes
+7 [X] no - comment:
+  - review AH missing
+
+

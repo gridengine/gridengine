@@ -3613,7 +3613,7 @@ int *trigger
                sge_select_parallel_environment(&a, Master_Pe_List);
                ngranted += nslots_granted(a.gdil, NULL);
             } else {
-               sge_sequential_assignment(&a, NULL, NULL);
+               sge_sequential_assignment(&a);
                ngranted += nslots_granted(a.gdil, NULL);
             }
 

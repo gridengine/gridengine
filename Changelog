@@ -1,3 +1,9 @@
+SG-2004-06-16-0: Bugfix:    Fixes wrong info-messages handling in the scheduler
+                            and the use of job categories for dispatching.
+                 Review:    JG
+                 Issue:     1087
+                 Bugtraq:   5063311
+
 MD-2004-06-16-0: Bugfix:    Install script fails when sgeadmin is selected 
                             as install user
                  Changed:   inst_qmaster.sh

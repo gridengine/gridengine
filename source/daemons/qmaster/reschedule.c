@@ -939,22 +939,24 @@ void update_reschedule_unknown_timeout(lListElem *host)
    u_long32 timeout = 0;
    
    DENTER(TOP_LAYER, "update_reschedule_unknown_timeout");
-   hostname = lGetString(host, EH_name);
-   timeout = lGetUlong(host, EH_reschedule_unknown);
-   config_elem = get_local_conf_val(hostname, "reschedule_unknown");
-   if (config_elem != NULL) {
-      const char *value = lGetString(config_elem, CF_value);
+   if (host != NULL) {
+      hostname = lGetString(host, EH_name);
+      timeout = lGetUlong(host, EH_reschedule_unknown);
+      config_elem = get_local_conf_val(hostname, "reschedule_unknown");
+      if (config_elem != NULL) {
+         const char *value = lGetString(config_elem, CF_value);
 
-      if (!parse_ulong_val(NULL, &timeout, TYPE_TIM, value, NULL, 0)) {
-         ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, hostname, value));
+         if (!parse_ulong_val(NULL, &timeout, TYPE_TIM, value, NULL, 0)) {
+            ERROR((SGE_EVENT, MSG_OBJ_RESCHEDULEUNKN_SS, hostname, value));
+            timeout = 0;
+         } 
+      } else {
          timeout = 0;
-      } 
-   } else {
-      timeout = 0;
+      }
+      DPRINTF(("reschedule_unknown timeout for host "SFN" is "u32"\n",
+               hostname, timeout));
+      lSetUlong(host, EH_reschedule_unknown, timeout); 
    }
-   DPRINTF(("reschedule_unknown timeout for host "SFN" is "u32"\n",
-            hostname, timeout));
-   lSetUlong(host, EH_reschedule_unknown, timeout); 
    DEXIT; 
 } 
 

@@ -255,7 +255,6 @@
 */
 #define MSG_OBJ_DELGLOBALHOST         _MESSAGE(33177, _("denied: pseudo host \"global\" may not be deleted\n"))
 #define MSG_OBJ_LOADREPORTIVAL_SS     _MESSAGE(33178, _("host "SFQ": "SFQ" is not a valid time value for \"load_report_time\" - assuming 120 seconds\n") )  
-#define MSG_OBJ_MAXUNHEARDVALUE_SS    _MESSAGE(33178, _("host "SFQ": "SFQ" is not a valid time value for \"max_unheard\" - assuming 120 seconds\n") )  
 #define MSG_OBJ_RESCHEDULEUNKN_SS     _MESSAGE(33179, _("host "SFQ": "SFQ" is not a valid time value for \"reschedule_unknown\" - assuming 0 => no auto rescheduling\n"))
 #define MSG_OBJ_SHUTDOWNPERMS         _MESSAGE(33180, _("shutting down execd requires manager privileges\n"))
 #define MSG_OBJ_NOEXECDONHOST_S       _MESSAGE(33181, _("no execd known on host "SFN"\n"))
@@ -746,5 +745,9 @@
 #define MSG_JOB_PERANGE_ONLY_FOR_PARALLEL _MESSAGE(33902, _("rejected: change request for PE range supported only for parallel jobs\n"))
 
 #define MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U _MESSAGE(33903, _("qmaster will use max. "U32CFormat" file descriptors for communication\n"))
+
+#define MSG_OBJ_MAXUNHEARDVALUE_SS    _MESSAGE(33904, _("host "SFQ": "SFQ" is not a valid time value for \"max_unheard\" - assuming 120 seconds\n") )  
+
+
 #endif
 

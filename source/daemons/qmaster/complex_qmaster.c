@@ -207,11 +207,13 @@ int sub_command
 
          lListElem *cr, *qep, *hep, *cxep;
          const char *name;
+         const char *shortcut;
 
          name = lGetString(cep, CE_name);
+         shortcut = lGetString(cep, CE_shortcut);
 
          if (!name ||
-             !lGetString(cep, CE_shortcut) ||
+             !shortcut ||
              !lGetString(cep, CE_stringval) ||
              !lGetString(cep, CE_default)) {
             ERROR((SGE_EVENT, MSG_CPLX_ATTRIBISNULL_SS,
@@ -247,8 +249,8 @@ int sub_command
             } 
 
             /* search for shortcut */
-            if (find_attribute_in_complex_list(name, lFirst(lGetList(cxep, CX_entries)))) {
-               ERROR((SGE_EVENT, MSG_CPLX_SHORTCUTALREADY_SS, name, lGetString(cxep, CX_name))); 
+            if (find_attribute_in_complex_list(shortcut, lFirst(lGetList(cxep, CX_entries)))) {
+               ERROR((SGE_EVENT, MSG_CPLX_SHORTCUTALREADY_SS, shortcut, lGetString(cxep, CX_name))); 
                sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
                goto ERROR;
             } 
@@ -263,8 +265,8 @@ int sub_command
          } 
 
          /* search for shortcut in remaining attribs */
-         if (find_attribute_in_complex_list(name, lNext(cep))) {
-            ERROR((SGE_EVENT, MSG_CPLX_SHORTCUTALREADY_SS, name, complex_name)); 
+         if (find_attribute_in_complex_list(shortcut, lNext(cep))) {
+            ERROR((SGE_EVENT, MSG_CPLX_SHORTCUTALREADY_SS, shortcut, complex_name)); 
             sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
             goto ERROR;
          } 

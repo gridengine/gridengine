@@ -65,6 +65,11 @@
 #include "qevent.h"
 
 
+#if defined(SOLARIS) || defined(ALPHA)
+/* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
+pid_t wait3(int *, int, struct rusage *);
+#endif
+
 
 u_long Global_jobs_running = 0;
 u_long Global_jobs_registered = 0;

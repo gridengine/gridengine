@@ -1103,7 +1103,7 @@ CheckRunningDaemon()
 
       sge_execd )
        h=`hostname`
-       $SGE_UTILBIN/qping -info $h $SGE_EXECD_PORT execd 1
+       $SGE_BIN/qping -info $h $SGE_EXECD_PORT execd 1
        return $?      
       ;;
 

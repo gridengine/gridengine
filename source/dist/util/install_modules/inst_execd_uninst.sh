@@ -81,8 +81,8 @@ FetchHostname()
         SuspendQueue $h
         SuspendJobs $h
         RescheduleJobs $h
-        RemoveExecd $h
         RemoveQueues $h
+        RemoveExecd $h
         RemoveSpoolDir $h
         RemoveRcScript $h execd $euid
 
@@ -210,8 +210,11 @@ RemoveExecd()
    $INFOTEXT -log "Removing exec host %s now!" $exechost
 
    qconf -dh $exechost
+   sleep 1
    qconf -ds $exechost
+   sleep 1
    qconf -ke $exechost
+   sleep 1
    qconf -de $exechost
  
 

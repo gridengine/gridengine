@@ -45,6 +45,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+#include "sge_profiling.h"
 #include "sge_host.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
@@ -513,7 +514,8 @@ int main(int argc, char *argv[])
    /* initialize mirroring */
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
    sge_mirror_subscribe(SGE_EMT_ALL, spool_event_before, spool_event_after, NULL);
-   
+   profiling_start();
+
    while(!shut_me_down) {
       sge_mirror_process_events();
    }

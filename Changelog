@@ -1,4 +1,10 @@
-EB-2002-11-11-0  Enhancem.: Allow binary submission with qsub and
+JG-2002-11-04-0  Enhancem.: Added utility functions for profiling.
+                            Made scheduler use these profiling functions 
+                            instead of former explicit implementation.
+                            Made event mirror and spooling test client use 
+                            profiling functions.
+
+EB-2002-11-04-0  Enhancem.: Allow binary submission with qsub and
                             allow script submission with qrsh
                  Issue:     #25 #26
                  Review:    AH

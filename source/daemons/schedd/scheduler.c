@@ -44,6 +44,7 @@
 #include <fnmatch.h>
 #include <unistd.h>
 
+#include "sge_profiling.h"
 #include "sge_conf.h"
 #include "sge_string.h"
 #include "sge.h"
@@ -131,10 +132,6 @@ int scheduler(sge_Sdescr_t *lists) {
    lList *error_list = NULL;                       /* JB_Type */
    lList *hold_list = NULL;                        /* JB_Type */
 
-   /* variables for profiling */
-   clock_t start;
-   struct tms tms_buffer;
-   
    int ret;
    int i;
 #ifdef TEST_DEMO
@@ -146,7 +143,8 @@ int scheduler(sge_Sdescr_t *lists) {
    fpdjp = fopen("/tmp/sge_debug_job_place.out", "a");
 #endif
 
-   start = times(&tms_buffer);
+   PROFILING_START_MEASUREMENT;
+
    scheduled_fast_jobs    = 0;
    scheduled_complex_jobs = 0;
    schedd_mes_initialize();
@@ -224,14 +222,15 @@ int scheduler(sge_Sdescr_t *lists) {
       return 0;
    }
 #endif
-   if(profile_schedd) {
-      clock_t now = times(&tms_buffer);
+   if(profiling_started) {
       extern u_long32 logginglevel;
       u_long32 saved_logginglevel = logginglevel;
 
+      PROFILING_STOP_MEASUREMENT;
+
       logginglevel = LOG_INFO;
       INFO((SGE_EVENT, "scheduled in %.3f s: %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J, %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
-         (now - start) * 1.0 / CLK_TCK, 
+         profiling_get_measurement_wallclock(),
          scheduled_fast_jobs,
          scheduled_complex_jobs,
          lGetNumberOfElem(orderlist), 

@@ -53,6 +53,7 @@ UTILIB_SRC = \
          sge_log.c \
          sge_nprocs.c \
          sge_os.c \
+         sge_profiling.c \
          sge_prog.c \
          sge_signal.c \
          sge_string.c \
@@ -142,6 +143,9 @@ sge_bitop.o:	$(UTILIB_DIR)/sge_bitop.c
 sge_prog.o:	$(UTILIB_DIR)/sge_prog.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_prog.c
 
+sge_profiling.o:	$(UTILIB_DIR)/sge_profiling.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_profiling.c
+
 sge_io.o: 	$(UTILIB_DIR)/sge_io.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_io.c
 
@@ -186,4 +190,12 @@ sge_dstring.o:	$(UTILIB_DIR)/sge_dstring.c
 
 sge_language.o:	$(UTILIB_DIR)/sge_language.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_language.c
+#---------------------------------------------------------------------
+# test programs
+test_sge_profiling: test_sge_profiling.o $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_sge_profiling.o: $(UTILIB_DIR)/test_sge_profiling.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_profiling.c
+
 

@@ -34,6 +34,7 @@
 #include <sys/types.h>
 
 #include "sge_time.h"
+#include "sge_profiling.h"
 
 #include "sge_mirror.h"
 #include "sge_event.h"
@@ -816,12 +817,16 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
 { 
    lListElem *event;
    sge_mirror_error function_ret;
+   int num_events = 0;
 
    DENTER(TOP_LAYER, "sge_mirror_process_event_list");
+
+   PROFILING_START_MEASUREMENT;
 
    function_ret = SGE_EM_OK;
 
    for_each(event, event_list) {
+      num_events++;
       sge_mirror_error ret = SGE_EM_OK;
 
       switch(lGetUlong(event, ET_type)) {
@@ -1129,6 +1134,15 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
       }
    }
 
+
+   if(profiling_started) {
+      profiling_stop_measurement();
+
+      INFO((SGE_EVENT, "processed %d requests, %s\n", 
+            num_events, profiling_get_info_string()
+          ));
+   }
+
    DEXIT;
    return function_ret;
 }
@@ -1395,6 +1409,41 @@ sge_mirror_error sge_mirror_update_master_list(lList **list, lDescr *list_descr,
 
 /* utility functions */
 
+/****** Eventmirror/sge_mirror_get_type_master_list() **************************
+*  NAME
+*     sge_mirror_get_type_master_list() -- get master list for an event type
+*
+*  SYNOPSIS
+*     lList** sge_mirror_get_type_master_list(const sge_event_type type) 
+*
+*  FUNCTION
+*     Returns a pointer to the master list holding objects that are manipulated
+*     by events of the given type.
+*
+*  INPUTS
+*     const sge_event_type type - the event type 
+*
+*  RESULT
+*     lList** - the corresponding master list, or NULL, if the event type has no
+*               associated master list
+*
+*  EXAMPLE
+*     sge_mirror_get_type_master_list(SGE_EMT_JOB) will return a pointer to the 
+*     Master_Job_List.
+*
+*     sge_mirror_get_type_master_list(SGE_EMT_SHUTDOWN) will return NULL,
+*     as this event type has no associated master list.
+*
+*  NOTES
+*     This and the following utility functions should be moved to some more 
+*     general object type handling.
+*
+*  SEE ALSO
+*     Eventmirror/sge_mirror_get_type_master_list()
+*     Eventmirror/sge_mirror_get_type_name()
+*     Eventmirror/sge_mirror_get_type_descr()
+*     Eventmirror/sge_mirror_get_type_key_nm()
+*******************************************************************************/
 lList **sge_mirror_get_type_master_list(const sge_event_type type)
 {
    DENTER(TOP_LAYER, "sge_mirror_get_type_master_list");
@@ -1407,6 +1456,30 @@ lList **sge_mirror_get_type_master_list(const sge_event_type type)
    return mirror_base[type].list;
 }
 
+/****** Eventmirror/sge_mirror_get_type_name() *********************************
+*  NAME
+*     sge_mirror_get_type_name() -- get a printable name for an event type
+*
+*  SYNOPSIS
+*     const char* sge_mirror_get_type_name(const sge_event_type type) 
+*
+*  FUNCTION
+*     Returns a printable name for an event type.
+*
+*  INPUTS
+*     const sge_event_type type - the event type
+*
+*  RESULT
+*     const char* - string describing the type
+*
+*  EXAMPLE
+*     sge_mirror_get_type_name(SGE_EMT_JOB) will return "JOB"
+*
+*  SEE ALSO
+*     Eventmirror/sge_mirror_get_type_master_list()
+*     Eventmirror/sge_mirror_get_type_descr()
+*     Eventmirror/sge_mirror_get_type_key_nm()
+*******************************************************************************/
 const char    *sge_mirror_get_type_name(const sge_event_type type)
 {
    DENTER(TOP_LAYER, "sge_mirror_get_type_name");
@@ -1424,6 +1497,33 @@ const char    *sge_mirror_get_type_name(const sge_event_type type)
    return mirror_base[type].type_name;
 }
 
+/****** Eventmirror/sge_mirror_get_type_descr() ********************************
+*  NAME
+*     sge_mirror_get_type_descr() -- get the descriptor for an event type
+*
+*  SYNOPSIS
+*     const lDescr* sge_mirror_get_type_descr(const sge_event_type type) 
+*
+*  FUNCTION
+*     Returns the CULL element descriptor for the object type associated with
+*     the given event.
+*
+*  INPUTS
+*     const sge_event_type type - the event type
+*
+*  RESULT
+*     const lDescr* - the descriptor, or NULL, if no descriptor is associated
+*                     with the type
+*
+*  EXAMPLE
+*     sge_mirror_get_type_descr(SGE_EMT_JOB) will return the descriptor JB_Type,
+*     sge_mirror_get_type_descr(SGE_EMT_SHUTDOWN) will return NULL
+*
+*  SEE ALSO
+*     Eventmirror/sge_mirror_get_type_master_list()
+*     Eventmirror/sge_mirror_get_type_name()
+*     Eventmirror/sge_mirror_get_type_key_nm()
+*******************************************************************************/
 const lDescr *sge_mirror_get_type_descr(const sge_event_type type)
 {
    DENTER(TOP_LAYER, "sge_mirror_get_type_descr");
@@ -1436,6 +1536,33 @@ const lDescr *sge_mirror_get_type_descr(const sge_event_type type)
    return mirror_base[type].descr;
 }
 
+/****** Eventmirror/sge_mirror_get_type_key_nm() *******************************
+*  NAME
+*     sge_mirror_get_type_key_nm() -- get the primary key attribute for a type
+*
+*  SYNOPSIS
+*     int sge_mirror_get_type_key_nm(const sge_event_type type) 
+*
+*  FUNCTION
+*     Returns the primary key attribute for the object type associated with
+*     the given event type.
+*
+*  INPUTS
+*     const sge_event_type type - event type
+*
+*  RESULT
+*     int - the key number (struct element nm of the descriptor), or
+*           -1, if no object type is associated with the event type
+*
+*  EXAMPLE
+*     sge_mirror_get_type_key_nm(SGE_EMT_JOB) will return JB_job_number
+*     sge_mirror_get_type_key_nm(SGE_EMT_SHUTDOWN) will return -1
+*
+*  SEE ALSO
+*     Eventmirror/sge_mirror_get_type_master_list()
+*     Eventmirror/sge_mirror_get_type_name()
+*     Eventmirror/sge_mirror_get_type_descr()
+*******************************************************************************/
 int sge_mirror_get_type_key_nm(const sge_event_type type)
 {
    DENTER(TOP_LAYER, "sge_mirror_get_type_key_nm");
@@ -1447,5 +1574,4 @@ int sge_mirror_get_type_key_nm(const sge_event_type type)
 
    return mirror_base[type].key_nm;
 }
-
 

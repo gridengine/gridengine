@@ -45,6 +45,7 @@
 #include "sge_feature.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_profiling.h"
 #include "sge_string.h"
 #include "sge_userset_qmaster.h"
 #include "sge_prog.h"
@@ -78,9 +79,9 @@ int do_authentication = 1;
 int use_qidle = 0;
 int disable_reschedule = 0;
 
+int do_profiling = FALSE;
 int flush_submit_sec = -1;
 int flush_finish_sec = -1;
-int profile_schedd = 0;
  
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
@@ -709,9 +710,9 @@ int merge_configuration(lListElem *global, lListElem *local,
          else if (!strncasecmp(s, "EXECD_PRIORITY", sizeof("EXECD_PRIORITY")-1))
             execd_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
 
+      do_profiling = FALSE;
       flush_submit_sec = -1;
       flush_finish_sec = -1;
-      profile_schedd = 0;
       classic_sgeee_scheduling = 0;
       share_override_tickets = 1;
       share_functional_shares = 1;
@@ -791,7 +792,7 @@ int merge_configuration(lListElem *global, lListElem *local,
             if (sv1)
                free(sv1);
          } else if (!strncasecmp(s, "PROFILE=1", sizeof("PROFILE=1")-1)) {
-            profile_schedd = 1;
+            do_profiling = TRUE;
          } else if (!strncasecmp(s, "POLICY_HIERARCHY=", 
                                  sizeof("POLICY_HIERARCHY=")-1)) {
             const char *value_string;
@@ -811,6 +812,15 @@ int merge_configuration(lListElem *global, lListElem *local,
             } 
          }
       }
+
+      /* post process schedd config: profiling */
+      if(do_profiling && !profiling_started) {
+         profiling_start();
+      }
+      if(!do_profiling && profiling_started) {
+         profiling_stop();
+      }
+      
    }
 
    if (mlist) {

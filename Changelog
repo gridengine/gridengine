@@ -1,3 +1,7 @@
+CR-2005-01-14-0: Testsuite: Modified test for issue #126 to report
+                            more error information into the testsuite
+                            error mail message. (using qping -dump)
+
 HP-2005-01-12-0: Enhancem.: Changed aimk in WIN32_X86 section
                  Changed:   aimk
 

@@ -4200,16 +4200,15 @@ proc get_grppid_of_job { jobid {host ""}} {
 }
 
 
-
-#                                                             max. column:     |
-#****** sge_procedures/get_suspend_state_of_job() ******
-# 
+#
+#****** sge_procedures/get_suspend_state_of_job() ******************************
+#
 #  NAME
-#     get_suspend_state_of_job -- get suspend state of job from ps command
+#     get_suspend_state_of_job() -- get suspend state of job from ps command
 #
 #  SYNOPSIS
 #     get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} 
-#     } 
+#     { pgi process_group_info } } 
 #
 #  FUNCTION
 #     This procedure returns the suspend state of jobid (letter from ps command). 
@@ -4217,10 +4216,11 @@ proc get_grppid_of_job { jobid {host ""}} {
 #     group are listed. The caller of the function can access the array pid_list!
 #
 #  INPUTS
-#     jobid                - job identification number
-#     { pidlist pid_list } - name of variable to store the pidlist
-#     {do_error_check 1}   - enable error messages (add_proc_error), default
-#                            if not 1 the procedure will not report errors
+#     jobid                      - job identification number
+#     { pidlist pid_list }       - name of variable to store the pidlist
+#     {do_error_check 1}         - enable error messages (add_proc_error), default
+#                                  if not 1 the procedure will not report errors
+#     { pgi process_group_info } - string with ps output of process group of job
 #
 #  RESULT
 #     suspend state (letter from ps command)
@@ -4228,12 +4228,13 @@ proc get_grppid_of_job { jobid {host ""}} {
 #  SEE ALSO
 #     sge_procedures/get_grppid_of_job()
 #     sge_procedures/add_proc_error()
-#*******************************
-proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} } {
+#*******************************************************************************
+proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} { pgi process_group_info } } {
   global ts_config
    global CHECK_OUTPUT CHECK_HOST CHECK_ARCH
 
    upvar $pidlist pidl 
+   upvar $pgi pginfo
 
    # give the system time to change the processes before ps call!!
    after 5000
@@ -4266,8 +4267,10 @@ proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} } 
       #  
       set state_count 0
       set state_letter ""
+      set pginfo ""
       foreach elem $pidl {
          puts $CHECK_OUTPUT $ps_list($elem,string)
+         append pginfo "$ps_list($elem,string)\n"
          if { $state_count == 0 } {
             set state_letter $ps_list($elem,state)
          }

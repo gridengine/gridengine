@@ -45,7 +45,7 @@ global check_root_access_needs
 global env
 global ts_config check_126_num_hosts
 
-# set check_root_access_needs "yes"
+set check_root_access_needs "yes"
 
 
 # define a level initialization procedure:
@@ -90,7 +90,7 @@ proc issue_126_init_level {} {
       set check_126_host [lindex $ts_config(execd_hosts) $minorlevel]
       switch -exact $majorlevel {
          0 {
-            set check_126_loops 10
+            set check_126_loops 15
          }
          1 {
             set check_126_loops 50
@@ -152,7 +152,10 @@ proc issue_126_setup  {} {
 
 proc issue_126_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
-   global check_126_host check_126_loops
+   global check_126_host check_126_loops ts_config CHECK_USER CHECK_HOST CHECK_ARCH
+
+
+   setup_qping_dump dump_handle
 
    # 
    # Scenario
@@ -182,17 +185,26 @@ proc issue_126_check {} {
    # 1
    #
 
+   set error_output ""
    set q1 [get_requestable_queue "q1" $check_126_host]
    set q2 [get_requestable_queue "q2" $check_126_host]
 
    set runs_failed 0
+   set printed_line 0
 
    for {set i 0} {$i < $check_126_loops} {incr i} {
       #
       # 2
       #
-      disable_queue $q1
-      disable_queue $q2
+      append error_output "\n[exec date] starting test run $i\n"
+
+      set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "-d $q1 $q2"]
+      puts $CHECK_OUTPUT $output
+      
+#      disable_queue "$q1 $q2"
+ 
+      append error_output "[exec date] disabled queue $q1 and $q2\n"
 
       #
       # 3
@@ -202,32 +214,49 @@ proc issue_126_check {} {
 
       set job1_args "-l q=$q1 "
       set job1_id [submit_job "$job1_args $job_script"]
+      append error_output "[exec date] submitted job $job1_id ($job1_args $job_script)\n"
 
       set job2_args "-l q=$q2 "
       set job2_id [submit_job "$job2_args $job_script"]
+      append error_output "[exec date] submitted job $job2_id ($job2_args $job_script)\n"
+
+      enable_queue "$q1 $q2"
 
       #
       # 4
       #
-      enable_queue $q1
-      enable_queue $q2
+      append error_output "[exec date] enabled queue $q1 and $q2\n"
 
       #
       # 5
       #
       wait_for_jobstart $job1_id $job_name 300 1 1
+      append error_output "[exec date] job $job1_id started\n"
       wait_for_jobstart $job2_id $job_name 300
+      append error_output "[exec date] job $job2_id started\n"
       wait_for_end_of_transfer $job1_id 300
+      append error_output "[exec date] job $job1_id: end of transfer\n"
       wait_for_end_of_transfer $job2_id 300
+      append error_output "[exec date] job $job2_id: end of transfer\n"
+
      
       # 
       # 6 wait until prolog of j1 has finished (prolog sleeps 10s)
       #
-      sleep 15 
+      append error_output "[exec date] waiting for 15 seconds ...\n"
+      sleep 15
+      
+      append error_output "[exec date] try to get suspend state of job $job1_id ...\n"
 
       set state1 [ get_suspend_state_of_job $job1_id "pid_list" 0 ]
+      append error_output "[exec date] job $job1_id has state \"$state1\"\n"
+
       puts $CHECK_OUTPUT "suspend state is \"$state1\""
+
+      append error_output "[exec date] process group info from ps output:\n$process_group_info"
+
       if { [string compare $state1 "T" ] != 0 } {
+         append error_output "[exec date] job $job1_id has state \"$state1\", but should have state \"T\" - bug #126 is present\n"
          #
          # Bug #126 is present
          #   
@@ -237,25 +266,83 @@ proc issue_126_check {} {
       #
       # 7
       #
-      set result [ delete_job $job1_id]
-      if { $result != 0 } {
-         add_proc_error "issue_126_check" "-1" "Could not delete job $job1_id"
+      append error_output "[exec date] deleting jobs $job1_id and $job2_id"
+
+      set program "$ts_config(product_root)/bin/$CHECK_ARCH/qdel"
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "$job1_id"]
+      puts $CHECK_OUTPUT $output
+      set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "$job2_id"]
+      puts $CHECK_OUTPUT $output
+
+
+#      set result [ delete_job $job1_id]
+#      if { $result != 0 } {
+#         add_proc_error "issue_126_check" "-1" "Could not delete job $job1_id"
+#      }
+#     set result [ delete_job $job2_id]
+#      if { $result != 0 } {
+#         add_proc_error "issue_126_check" "-1" "Could not delete job $job2_id"
+#      }
+
+      while { [get_qping_dump_output dump_handle] == 0 } {
       }
-      set result [ delete_job $job2_id]
-      if { $result != 0 } {
-         add_proc_error "issue_126_check" "-1" "Could not delete job $job2_id"
+      puts $CHECK_OUTPUT "try to print qping output"
+      while { $printed_line < $dump_handle(actual_line) } {
+         set time      $dump_handle(line,1,$printed_line)
+         set local     $dump_handle(line,2,$printed_line)
+         set direction $dump_handle(line,3,$printed_line)
+         set remote    $dump_handle(line,4,$printed_line)
+         set df        $dump_handle(line,5,$printed_line)
+         set ack       $dump_handle(line,6,$printed_line)
+         set msg_tag   $dump_handle(line,7,$printed_line)
+         set msg_id    $dump_handle(line,8,$printed_line)
+         set msg_rid   $dump_handle(line,9,$printed_line)
+         set msg_len   $dump_handle(line,10,$printed_line)
+         set msg_time  $dump_handle(line,11,$printed_line)
+         append error_output "$msg_time $direction $remote $df $ack $msg_tag\n"
+           
+         if { [string match "*TAG_SIGQUEUE*" $msg_tag] != 0 || 
+              [string match "*TAG_SIGJOB*" $msg_tag] != 0 ||
+              [string match "*TAG_ACK_REQUEST*" $msg_tag] != 0 ||
+              [string match "*TAG_CHANGE_TICKET*" $msg_tag] != 0 } {
+            puts $CHECK_OUTPUT "dumping out message tag $msg_tag:"
+            append error_output "dumping out message tag $msg_tag:"
+            puts $CHECK_OUTPUT "$dump_handle(block,$printed_line)"
+            append error_output "$dump_handle(block,$printed_line)\n"
+         }
+         incr printed_line 1
+         
       }
-   
    }
+   while { [get_qping_dump_output dump_handle] == 0 } {
+   }
+   puts $CHECK_OUTPUT "try to print qping output"
+   while { $printed_line < $dump_handle(actual_line) } {
+      set time      $dump_handle(line,1,$printed_line)
+      set local     $dump_handle(line,2,$printed_line)
+      set direction $dump_handle(line,3,$printed_line)
+      set remote    $dump_handle(line,4,$printed_line)
+      set df        $dump_handle(line,5,$printed_line)
+      set ack       $dump_handle(line,6,$printed_line)
+      set msg_tag   $dump_handle(line,7,$printed_line)
+      set msg_id    $dump_handle(line,8,$printed_line)
+      set msg_rid   $dump_handle(line,9,$printed_line)
+      set msg_len   $dump_handle(line,10,$printed_line)
+      set msg_time  $dump_handle(line,11,$printed_line)
+      append error_output "$msg_time $direction $remote $df $ack $msg_tag\n"
+      incr printed_line 1
+   }
+   cleanup_qping_dump_output dump_handle
 
    if {$runs_failed > 0} {
-      add_proc_error "issue_126_check" "-1" "Bug #126 is present - processes weren't suspended in $runs_failed of $check_126_loops test runs"
+      add_proc_error "issue_126_check" "-1" "Bug #126 is present - processes weren't suspended in $runs_failed of $check_126_loops test runs:\n$error_output"
    }
 
    #
    # 8   
    #
    wait_for_end_of_all_jobs "10"
+   set error_output ""
    set_error 0 "ok"
 }
 

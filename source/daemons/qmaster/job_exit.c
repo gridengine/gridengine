@@ -322,23 +322,22 @@ lListElem *jatep
 
    category_str = sge_build_job_category(jep, Master_Userset_List);
    write_result = sge_write_rusage(fp, jr, jep, jatep, category_str);
+
+   fclose(fp);
+   if (category_str)
+      free(category_str); 
+
    if (write_result == EOF) {
       ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path.acct_file));
-      fclose(fp);
       DEXIT;
       return;
    }
-   if (category_str)
-      free(category_str); 
    else if (write_result == -2) {
       /* The file should be open... */
       ERROR((SGE_EVENT, MSG_FILE_WRITEACCT));
-      fclose(fp);
       DEXIT;
       return;
    }
-
-   fclose(fp);
 
    DEXIT;
    return;

@@ -1,3 +1,8 @@
+RC-2004-03-06-0: Bugfix:    deny jobnames with a colon
+                 Issue:     314
+                 Review:    RC, BC (patch from BC)
+                 Changed:   qmaster
+
 AH-2004-03-04-1: Bugfix:    qselect/qstat -l selection wrongly considers 
                             load and utilization
                  Issue:     771

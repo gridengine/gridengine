@@ -2839,7 +2839,8 @@ int *trigger
 *  FUNCTION
 *     These checks are done for the attribute JB_job_name of 'job':
 *     #1 reject job name if it starts with a digit
-*     #2 reject job name if the same name is already used by another job 
+*     #2 reject job name if it contains colon(s) which confuse accounting
+*     #3 reject job name if the same name is already used by another job 
 *        of the same user and if this is the referenced as predecessor 
 *        in a -hold_jid list.
 *     A detailed problem description is added to the answer list.
@@ -2863,6 +2864,10 @@ static int job_verify_name(const lListElem *job, lList **alpp,
 
    if (isdigit(job_name[0])) {
       ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_SS, job_name, job_descr));
+      sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+      ret = STATUS_EUNKNOWN;
+   } else if (strchr(job_name, ':')) {
+      ERROR((SGE_EVENT, MSG_GDI_KEYSTR_MIDCHAR_SC, MSG_GDI_KEYSTR_COLON, ':'));
       sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       ret = STATUS_EUNKNOWN;
    } else {

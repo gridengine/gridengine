@@ -509,6 +509,12 @@ int *all_users
          nm_set(job_field, JB_priority);
       }
 
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
+         lSetUlong(job, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
+         lRemoveElem(cmdline, ep);
+         nm_set(job_field, JB_jobshare);
+      }
+
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
          lSetString(job, JB_project, lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(cmdline, ep);
@@ -797,6 +803,7 @@ int *all_users
             JB_deadline,
             JB_mail_options,
             JB_priority,
+            JB_jobshare,
             JB_override_tickets,
             JB_restart,
             JB_verify_suitable_queues,

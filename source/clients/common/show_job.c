@@ -273,6 +273,11 @@ void cull_show_job(lListElem *job, int flags)
          printf("%d\n", (int) lGetUlong(job, JB_priority) - BASE_PRIORITY);
       }
 
+   if (lGetPosViaElem(job, JB_jobshare)>=0) {
+      printf("jobshare:                   ");
+      printf(u32"\n", lGetUlong(job, JB_jobshare));
+   }
+
    if (lGetPosViaElem(job, JB_hard_queue_list)>=0)
       if (lGetList(job, JB_hard_queue_list)) {
          int fields[] = {QR_name, 0 };

@@ -1898,12 +1898,12 @@ calc_job_share_tree_tickets_pass1( sge_ref_t *ref,
    }
 
    /*-------------------------------------------------------
-    * sum POSIX priorities for each job for use in pass 2
+    * sum job shares for each job for use in pass 2
     *-------------------------------------------------------*/
 
    lSetUlong(node, STN_sum_priority,
              lGetUlong(node, STN_sum_priority) +
-             lGetUlong(job, JB_priority));
+             lGetUlong(job, JB_jobshare));
 }
 
 
@@ -1935,7 +1935,7 @@ calc_job_share_tree_tickets_pass2( sge_ref_t *ref,
 
    if (lGetUlong(node, STN_sum_priority)) {
       REF_SET_STICKET(ref, 
-                (u_long)((double)lGetUlong(job, JB_priority) *
+                (u_long)((double)lGetUlong(job, JB_jobshare) *
                 share_tree_tickets /
                 lGetUlong(node, STN_sum_priority)));
    } else {
@@ -1975,7 +1975,7 @@ static void copy_ftickets(sge_ref_list_t *source, sge_ref_list_t *dest){
       dest_r->jobclass_fshare = source_r->jobclass_fshare;
       dest_r->job_fshare = source_r->job_fshare;
 
-      REF_SET_FSHARE(dest_r, lGetUlong(source_r->job, JB_priority));
+      REF_SET_FSHARE(dest_r, lGetUlong(source_r->job, JB_jobshare));
       dest_r->total_jobclass_ftickets = source_r->total_jobclass_ftickets;
       REF_SET_FTICKET(dest_r, REF_GET_FTICKET(source_r));
    }
@@ -2092,7 +2092,7 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
          if(jref->dept){
             dept_shares = lGetUlong(jref->dept, US_fshare); 
          }
-         job_shares =  lGetUlong(jref->job, JB_priority);
+         job_shares =  lGetUlong(jref->job, JB_jobshare);
 
          /* locate the right category */
          for_each (current, *fcategories) {
@@ -2335,7 +2335,7 @@ static void calc_job_functional_tickets_pass1( sge_ref_t *ref,
     * Sum job functional shares
     *-------------------------------------------------------------*/
 
-   REF_SET_FSHARE(ref, lGetUlong(ref->job, JB_priority));
+   REF_SET_FSHARE(ref, lGetUlong(ref->job, JB_jobshare));
 
    *sum_of_job_functional_shares += REF_GET_FSHARE(ref);
 }
@@ -2489,7 +2489,7 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
     *-------------------------------------------------------*/
 
    if (sum_of_job_functional_shares)
-      job_functional_tickets = ((double)lGetUlong(ref->job, JB_priority) *
+      job_functional_tickets = ((double)lGetUlong(ref->job, JB_jobshare) *
                                  (double)total_functional_tickets /
                                   sum_of_job_functional_shares);
 
@@ -3385,10 +3385,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                      /* set the sort value based on tickets of higher level policy */
                      lSetDouble(child, STN_tickets, jref->tickets);
                      lSetDouble(child, STN_sort,
-                                jref->tickets + (0.01 * (double)lGetUlong(job, JB_priority)));
+                                jref->tickets + (0.01 * (double)lGetUlong(job, JB_jobshare)));
                   } else
                      /* set the sort value based on the priority of the job */
-                     lSetDouble(child, STN_sort, (double)lGetUlong(job, JB_priority));
+                     lSetDouble(child, STN_sort, (double)lGetUlong(job, JB_jobshare));
                }
             }
          }
@@ -4895,7 +4895,7 @@ main(int argc, char **argv)
 
    job = lAddElemUlong(&(lists->job_list), JB_job_number, job_number++, 
                            JB_Type);
-   lSetUlong(job, JB_priority, 0);
+   lSetUlong(job, JB_jobshare, 0);
    lSetString(job, JB_owner, "davidson");
    lSetString(job, JB_project, "sgeee");
    lSetString(job, JB_department, "software");
@@ -4909,7 +4909,7 @@ main(int argc, char **argv)
 
    job = lAddElemUlong(&(lists->job_list), JB_job_number, job_number++, 
                            JB_Type);
-   lSetUlong(job, JB_priority, 1000);
+   lSetUlong(job, JB_jobshare, 1000);
    lSetString(job, JB_owner, "davidson");
    lSetString(job, JB_project, "ms");
    lSetString(job, JB_department, "software");
@@ -4924,7 +4924,7 @@ main(int argc, char **argv)
    job = lAddElemUlong(&(lists->job_list), JB_job_number, job_number++, 
                            JB_Type);
    lSetUlong(job, JB_job_number, job_number++);
-   lSetUlong(job, JB_priority, 0);
+   lSetUlong(job, JB_jobshare, 0);
    lSetString(job, JB_owner, "stair");
    lSetString(job, JB_project, "sgeee");
    lSetString(job, JB_department, "hardware");
@@ -4938,7 +4938,7 @@ main(int argc, char **argv)
 
    job = lAddElemUlong(&(lists->job_list), JB_job_number, job_number++, 
                            JB_Type);
-   lSetUlong(job, JB_priority, 0);
+   lSetUlong(job, JB_jobshare, 0);
    lSetString(job, JB_owner, "garrenp");
    lSetString(job, JB_project, "sgeee");
    lSetString(job, JB_department, "software");

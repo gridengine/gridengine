@@ -116,6 +116,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    }
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
+   lSetUlong(*pjob, JB_jobshare, 0);
    lSetUlong(*pjob, JB_verify_suitable_queues, SKIP_VERIFY);
 
    /*
@@ -348,6 +349,11 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob)
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-p"))) {
       lSetUlong(*pjob, JB_priority, 
          BASE_PRIORITY + lGetInt(ep, SPA_argval_lIntT));
+      lRemoveElem(cmdline, ep);
+   }
+
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
+      lSetUlong(*pjob, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
       lRemoveElem(cmdline, ep);
    }
 

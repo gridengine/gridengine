@@ -590,6 +590,7 @@ DTRACE;
             JB_deadline,
             JB_host,
             JB_override_tickets,
+            JB_jobshare,
             JB_ja_structure,
             JB_ja_n_h_ids,
             JB_ja_u_h_ids,

@@ -245,6 +245,9 @@ enum {
 *     SGE_ULONG(JB_priority) 
 *        Priority ("qsub/qalter -p priority")     
 *
+*     SGE_ULONG(JB_jobshare) 
+*        Priority ("qsub/qalter -js jobshare")     
+*
 *     SGE_LIST(JB_shell_list, PN_Type)    
 *        Command interpreter to be used (PN_Type).
 *        ("qsub/qalter -S shell")
@@ -524,6 +527,7 @@ enum {
    JB_notify,        
    JB_type,
    JB_priority,         
+   JB_jobshare,         
    JB_shell_list,
    JB_verify,      
    JB_env_list,
@@ -622,6 +626,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_BOOL(JB_notify, CULL_DEFAULT | CULL_SPOOL)  
    SGE_ULONG(JB_type, CULL_DEFAULT | CULL_SPOOL)     
    SGE_ULONG(JB_priority, CULL_DEFAULT | CULL_SPOOL)       
+   SGE_ULONG(JB_jobshare, CULL_DEFAULT | CULL_SPOOL)       
    SGE_LIST(JB_shell_list, PN_Type, CULL_DEFAULT | CULL_SPOOL) 
    SGE_ULONG(JB_verify, CULL_DEFAULT | CULL_SPOOL) 
    SGE_LIST(JB_env_list, VA_Type, CULL_DEFAULT | CULL_SPOOL)  
@@ -765,6 +770,7 @@ NAMEDEF(JBN)
    NAME("JB_notify")
    NAME("JB_type")
    NAME("JB_priority")
+   NAME("JB_jobshare")
    NAME("JB_shell_list")
    NAME("JB_verify")
    NAME("JB_env_list")

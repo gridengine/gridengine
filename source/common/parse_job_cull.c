@@ -174,6 +174,7 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
    lSetUlong(*pjob, JB_priority, BASE_PRIORITY);
 
+   lSetUlong(*pjob, JB_jobshare, 0);
 
    /*
     * -b
@@ -458,6 +459,13 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
       lSetUlong(*pjob, JB_priority, 
          BASE_PRIORITY + lGetInt(ep, SPA_argval_lIntT));
       lRemoveElem(cmdline, ep);
+   }
+
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
+         lSetUlong(*pjob, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
+         lRemoveElem(cmdline, ep);
+      }
    }
 
    if (feature_is_enabled(FEATURE_SGEEE)) {

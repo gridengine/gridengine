@@ -925,7 +925,7 @@ lWriteListTo(ehl, stdout);
             jw = lAndWhere(jw, nw);
       }
 
-      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
+      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
                      JB_job_number, 
                      JB_script_file,
                      JB_owner,
@@ -936,6 +936,7 @@ lWriteListTo(ehl, stdout);
                      JB_jid_predecessor_list,
                      JB_env_list,
                      JB_priority,
+                     JB_jobshare,
                      JB_job_name,
                      JB_project,
                      JB_department,

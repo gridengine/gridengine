@@ -223,6 +223,17 @@ int flags
    }
 
    /*
+   ** -js
+   */
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      if ((ul = lGetUlong(job, JB_jobshare)) != 0)  {
+         sprintf(str, u32, ul);
+         ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, "-js", str);
+         lSetUlong(ep_opt, SPA_argval_lUlongT, ul);
+      }
+   }
+
+   /*
    ** -lj is in parsing but can't be unparsed here
    */
 

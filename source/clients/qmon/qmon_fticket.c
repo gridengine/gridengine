@@ -294,7 +294,7 @@ XtPointer cld, cad;
       if (fticket_info.dp == JB_Type) {
          lList *tlp = NULL;
          what = lWhat("%T(%I %I)", JB_Type, JB_job_number,
-                            JB_priority);
+                            JB_jobshare);
          tlp = lSelect("", lp, NULL, what);
          /*
          ** there is a weakness in the lEnumeration Definition which leads
@@ -302,13 +302,13 @@ XtPointer cld, cad;
          ** an lWhat build from the total descriptor of a special type
          ** e.g.
          ** what_from_whole_descr = lWhat("%T(%I %I)", JB_Type, 
-         **                               JB_job_number, JB_priority);
+         **                               JB_job_number, JB_jobshare);
          ** rl = lSelect("rl", l, null, what_from_whole_descr);
          ** rl2 = lSelect("rl", l, null, what_from_whole_descr);
          ** returns NULL which is probably not what we expect.
          ** The correct thing to do would be:
          ** what_from_reduced_descr = lWhat("%T(%I %I)", lGetListDescr(rl),
-         **                            JB_job_number, JB_priority);
+         **                            JB_job_number, JB_jobshare);
          ** rl2 = lSelect("rl", l, null, what_from_reduced_descr);
          ** 
          ** An alternative solution is to use what_all or NULL (==what_all)
@@ -746,7 +746,7 @@ XtPointer cad
 
       case FOT_JOB:
          fticket_info.field0 = JB_job_number;
-         fticket_info.field1 = JB_priority;
+         fticket_info.field1 = JB_jobshare;
          fticket_info.list_type = SGE_JOB_LIST;
          fticket_info.dp = JB_Type;
          break;

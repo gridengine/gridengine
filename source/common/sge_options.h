@@ -51,6 +51,7 @@ enum {
    hard_OPT,
    i_OPT,
    j_OPT,
+   js_OPT,
    l_OPT,
    m_OPT,
    M_OPT,

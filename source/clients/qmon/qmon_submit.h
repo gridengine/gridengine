@@ -63,6 +63,7 @@ typedef struct _tSMEntry {
    int      mail_options;
    int      merge_output;
    int      priority;
+   int      jobshare;
    Cardinal execution_time;
    Cardinal deadline;
    int      hold;

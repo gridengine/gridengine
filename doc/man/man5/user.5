@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: user.5,v $     Last Update: $Date: 2001/07/20 08:19:16 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: user.5,v $     Last Update: $Date: 2004/02/05 16:07:31 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH USER 5 "$Date: 2001/07/20 08:19:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH USER 5 "$Date: 2004/02/05 16:07:31 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 user \- xxQS_NAME_EExx user entry file format
@@ -41,6 +41,13 @@ no user object.
 A user entry is used in xxQS_NAME_EExx to store ticket and usage information on a
 per user basis. Maintaining user entries for all users participating in a
 xxQS_NAME_EExx system is required if xxQS_NAME_EExx is operated under a user share tree policy.
+.PP
+If the \fBenforce_user\fP cluster configuration parameter is set to \fIauto\fP,
+a user object for the submitting user will be created automatically during
+job submission, if one does not already exist. The \fBauto_user_oticket\fP,
+\fBauto_user_fshare\fP, \fBauto_user_default_project\fP, and
+\fBauto_user_delete_time\fP cluster configuration parameters will be used as
+default attributes of the new user object.
 .PP
 A list of currently configured user entries can be displayed via the
 .M qconf 1
@@ -62,11 +69,18 @@ The amount of override tickets currently assigned to the user.
 The current functional share of the user.
 .IP "\fBdefault_project\fP"
 The default project of the user.
+.IP "\fBdelete_time\fP"
+The wall-clock time when this user will be deleted. If set to zero, this is
+a permanent user. For additional information about automatically created
+users, see the \fBenforce_user\fP and \fBauto_user_delete_time\fP parameters
+in 
+.M sge_conf 5 .
 .\"
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
 .M qconf 1 .
+.M sge_conf 5 .
 .\"
 .SH "COPYRIGHT"
 See

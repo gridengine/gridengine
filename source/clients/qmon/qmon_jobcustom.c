@@ -184,6 +184,7 @@ static tJobField job_items[] = {
    { 0, JAT_sticket, "@{STicket}", 10, 30, PrintDoubleAsUlong },
    { 0, JAT_share, "@{Share}", 10, 30, PrintDouble },
    { 0, JB_override_tickets, "@{OverrideTickets}", 15, 30, PrintUlong },
+   { 0, JB_jobshare, "@{JobShare}", 10, 30, PrintUlong },
    { 0, JB_project, "@{Project}", 10, 30, PrintString },
    { 0, JB_department, "@{Department}", 10, 30, PrintString },
    { 0, JB_deadline, "@{Deadline}", 10, 30, PrintTime },

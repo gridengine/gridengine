@@ -163,6 +163,7 @@
 #define MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS              _MESSAGE(23107, _("ERROR! -- option must be followed by job arguments\n"))
 #define MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S              _MESSAGE(23108, _("ERROR! Wrong job id list format "SFQ" specified\n"))
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23109, _("ERROR! invalid priority, must be an integer from -1023 to 1024\n"))
+#define MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT              _MESSAGE(23109, _("ERROR! invalid jobshare, must be an unsigned integer\n"))
 /*#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(23111,_("ERROR! two files are specified for the same host\n"))*/
 
 /*
@@ -1027,6 +1028,9 @@
 
 #define MSG_GDI_USAGE_Msconf_OPT                         "[-Msconf fname]"
 #define MSG_GDI_UTEXT_Msconf_OPT                         _MESSAGE(23502, _("modify scheduler configuration from file"))
+
+#define MSG_GDI_USAGE_js_OPT_YN                          "[-js job_share]"
+#define MSG_GDI_UTEXT_js_OPT_YN                          _MESSAGE(23503, _("share tree or functional job share"))
 
 /* =================================================
  * global error messages 

@@ -174,10 +174,13 @@ int sub_command
          make_auto_user_permanent = 1;
       }
 
+#if 0 /* SVD040202 - commented out because we only make user permanent if
+         the delete_time is adjusted */
       /* if one of the attributes has been edited, make the user object permanent */
       if (!add && make_auto_user_permanent) {
          lSetUlong(modp, UP_delete_time, 0);
       }
+#endif
 
    }
    else {

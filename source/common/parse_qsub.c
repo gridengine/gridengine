@@ -812,6 +812,36 @@ u_long32 flags
       }
 
 /*----------------------------------------------------------------------------*/
+      /* "-js jobshare */
+
+      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-js", *sp)) {
+         u_long32 jobshare;
+
+         sp++;
+         if (!*sp) {
+            sprintf(str,
+            MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-js");
+            answer_list_add(&answer, str, 
+                            STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+
+         if (!parse_ulong_val(NULL, &jobshare, TYPE_INT, *sp, NULL, 0)) {
+            answer_list_add(&answer, MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT,
+                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+
+         ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, *(sp - 1), *sp);
+         lSetUlong(ep_opt, SPA_argval_lUlongT, jobshare);
+
+         sp++;
+         continue;
+      }
+
+/*----------------------------------------------------------------------------*/
       /* "-lj filename     log job processing */
 
       if (!strcmp("-lj", *sp)) {

@@ -1387,6 +1387,7 @@ XtPointer cld, cad;
          JB_job_name,
          JB_job_args,
          JB_priority,
+         JB_jobshare,
          JB_execution_time,
          JB_cwd,
          JB_hard_resource_list,
@@ -1885,6 +1886,7 @@ char *prefix
                                        lGetList(jep, JB_stderr_path_list));
    data->merge_output = lGetBool(jep, JB_merge_stderr);
    data->priority = lGetUlong(jep, JB_priority) - BASE_PRIORITY;
+   data->jobshare = lGetUlong(jep, JB_jobshare);
    data->execution_time = lGetUlong(jep, JB_execution_time);
    data->deadline = lGetUlong(jep, JB_deadline);
 
@@ -2113,6 +2115,7 @@ int save
     * process the resources from dialog
     */ 
    lSetUlong(jep, JB_priority, data->priority + (u_long32)BASE_PRIORITY);
+   lSetUlong(jep, JB_jobshare, data->jobshare);
    lSetUlong(jep, JB_execution_time, data->execution_time);
    lSetBool(jep, JB_merge_stderr, data->merge_output);
    lSetBool(jep, JB_notify, data->notify);

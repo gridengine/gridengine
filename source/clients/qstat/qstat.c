@@ -1000,7 +1000,7 @@ u_long32 show
          else
             jw = lAndWhere(jw, nw);
       }
-      j_all = lWhat("%T("FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_2 ")", JB_Type, 
+      j_all = lWhat("%T("FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_2 FORMAT_I_1 ")", JB_Type, 
                      JB_job_number, 
                      JB_owner,
                      JB_script_file,
@@ -1013,6 +1013,7 @@ u_long32 show
                      JB_jid_predecessor_list,
                      JB_env_list,
                      JB_priority,
+                     JB_jobshare,
 
                      JB_job_name,
                      JB_project,
@@ -1068,7 +1069,7 @@ u_long32 show
          else
             zw = lOrWhere(zw, nw);
       }
-      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_1 ")", JB_Type,
+      z_all = lWhat("%T(" FORMAT_I_20 FORMAT_I_10 FORMAT_I_2 FORMAT_I_2 FORMAT_I_2 ")", JB_Type,
                      JB_job_number,
                      JB_owner,
                      JB_group,
@@ -1078,6 +1079,7 @@ u_long32 show
                      JB_jid_predecessor_list,
                      JB_env_list,
                      JB_priority,
+                     JB_jobshare,
                      JB_job_name,
                      JB_project,
                      JB_department,

@@ -597,6 +597,10 @@ FILE *fp
       }
    }
 
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(js_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_js_OPT_YN , MSG_GDI_UTEXT_js_OPT_YN );
+   }
+
    if (VALID_OPT(ke_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_ke_OPT_HOSTS, MSG_GDI_UTEXT_ke_OPT_HOSTS );
       PRINTITD(MSG_GDI_USAGE_k_OPT_MASTERORSCHEDULINGDAEMON, MSG_GDI_UTEXT_k_OPT_MASTERORSCHEDULINGDAEMON );

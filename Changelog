@@ -1,3 +1,11 @@
+SD-2004-02-05-0: Enhancem.: Replaced use of qsub option -p <priority> with
+                            -js <job_share> for specifying GEEE job shares
+                            to influence the GEEE share tree and functional
+                            policies.
+                 Changed:   qmaster, schedd, qsub, qalter, qhost, qmon, qsh,
+                            qstat, submit(1), user(5)
+                 Issue:     636
+
 AD-2004-02-05-0: Bugfix:    If 'sge_mutex_lock/unlock()' do fail, the error
                             code is now part of the log message.
                  Changed:   lck

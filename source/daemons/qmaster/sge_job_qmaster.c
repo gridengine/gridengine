@@ -2423,6 +2423,31 @@ int *trigger
 
    }
 
+   /* ---- JB_jobshare */
+   if ((pos=lGetPosViaElem(jep, JB_jobshare))>=0) {
+      u_long32 old_jobshare;
+      uval=lGetPosUlong(jep, pos);
+      if (uval != (old_jobshare=lGetUlong(new_job, JB_jobshare))) { 
+         /* need to be owner or at least operator */
+         if (strcmp(ruser, lGetString(new_job, JB_owner)) && !manop_is_operator(ruser)) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_OPR_TO_SS, ruser, MSG_JOB_CHANGEJOBSHARE));
+            answer_list_add(alpp, SGE_EVENT, STATUS_ENOOPR, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_ENOOPR;   
+         }
+      }
+      /* ok, do it */
+      if (uval!=old_jobshare) 
+        *trigger |= PRIO_EVENT;
+
+      lSetUlong(new_job, JB_jobshare, uval);
+
+      sprintf(SGE_EVENT, MSG_JOB_JOBSHARESET_SSUU,
+               ruser, rhost, u32c(jobid), u32c(uval));
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+
+   }
+
    /* ---- JB_deadline */
    /* If it is a deadline job the user has to be a deadline user */
    if ((pos=lGetPosViaElem(jep, JB_deadline))>=0) {

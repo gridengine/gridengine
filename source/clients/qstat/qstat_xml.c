@@ -759,6 +759,7 @@ int slots_per_line  /* number of slots to be printed in slots column
          if (sge_ext || lGetList(jatep, JAT_granted_destin_identifier_list)) {
             xml_append_Attr_I(attributeList, "tickets", (int)tickets);
             xml_append_Attr_I(attributeList, "JB_override_tickets", (int)lGetUlong(job, JB_override_tickets));
+            xml_append_Attr_I(attributeList, "JB_jobshare", ((int)lGetUlong(job, JB_jobshare)));
             xml_append_Attr_I(attributeList, "otickets", (int)otickets);
             xml_append_Attr_I(attributeList, "ftickets", (int)ftickets);
             xml_append_Attr_I(attributeList, "stickets", (int)stickets);

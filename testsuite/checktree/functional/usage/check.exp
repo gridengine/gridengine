@@ -361,36 +361,6 @@ proc usage_job_finished {job_state} {
 }
 
 
-# JG: TODO: this is the same as large_cluster_parse_cpu
-#           move the function somewhere in tcl_files
-proc usage_parse_cpu {s_cpu} {
-   set l_cpu [split $s_cpu ":"]
-   set cpu 0
-
-   while {[llength $l_cpu] > 0} {
-      scan [lindex $l_cpu 0] "%02d" part
-      
-      switch [llength $l_cpu] {
-         1 {
-            incr cpu $part
-         }
-         2 {
-            incr cpu [expr $part * 60]
-         }
-         3 {
-            incr cpu [expr $part * 3600]
-         }
-         default {
-            add_proc_error "usage_parse_cpu" -1 "cannot parse cpu time $s_cpu"
-         }
-      }
-
-      set l_cpu [lreplace $l_cpu 0 0]
-   }
-
-   return $cpu
-}
-
 proc usage_check {jobid qstat_j_info slots} {
    global CHECK_OUTPUT
 
@@ -474,7 +444,7 @@ proc usage_monitor_check {id test_name slots} {
             if {[string compare [lindex $name 0] "usage"] == 0} {
                set usage_list [split $qstat_j_info($name) ","]
                set value_list [split [lindex $usage_list 0] "="]
-               set online_cpu [usage_parse_cpu [lindex $value_list 1]]
+               set online_cpu [parse_cpu_time [lindex $value_list 1]]
                set value_list [split [lindex $usage_list 1] "="]
                set online_mem [lindex [lindex $value_list 1] 0]
                set online_info(cpu) [max $online_info(cpu) $online_cpu]

@@ -328,45 +328,18 @@ proc restart_system {} {
 #     ???/???
 #*******************************
 proc init_ps {} {
-   global CHECK_ARCH CHECK_PRODUCT_ROOT
+   global CHECK_OUTPUT CHECK_ARCH CHECK_PRODUCT_ROOT
    global cmd_ps size_unit
    global qmaster_spool_dir
 
    # get qmaster pid
-   set pid_file "$qmaster_spool_dir/qmaster.pid"
-   set qmaster_pid ""
-   for {set x 0} {$x < 10} {incr x} {
-      if [file exists $pid_file] {
-         if {[file size $pid_file] > 0 } {
-            set f [open $pid_file r]
-            gets $f qmaster_pid
-            close $f
-
-            if { $qmaster_pid != "" } { 
-               break
-            }
-         }
-      }   
-      sleep 2
-   }
+   set qmaster_pid [get_qmaster_pid]
 
    # get schedd pid
-   set pid_file "$qmaster_spool_dir/schedd/schedd.pid"
-   set schedd_pid ""
-   for {set x 0} {$x < 10} {incr x} {
-      if [file exists $pid_file] {
-         if {[file size $pid_file] > 0 } {
-            set f [open $pid_file r]
-            gets $f schedd_pid
-            close $f
+   set schedd_pid [get_schedd_pid]
 
-            if { $schedd_pid != "" } { 
-               break
-            }
-         }
-      }   
-      sleep 2
-   }
+   puts $CHECK_OUTPUT "qmaster pid: $qmaster_pid"
+   puts $CHECK_OUTPUT "schedd  pid: $schedd_pid "
 
    if { $qmaster_pid == "" || $schedd_pid == ""} {
       set_error 1 "could not evaluate pid of qmaster and schedd"

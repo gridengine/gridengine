@@ -1370,3 +1370,66 @@ proc resolve_host { name { long 0 } } {
 #   }
 #}
 
+proc get_pid_from_file { pid_file } {
+   set pid ""
+   for {set x 0} {$x < 10} {incr x} {
+      if [file exists $pid_file] {
+         if {[file size $pid_file] > 0 } {
+            set f [open $pid_file r]
+            gets $f pid
+            close $f
+
+            if { $pid != "" } { 
+               break
+            }
+         }
+      }   
+      sleep 2
+   }
+
+   return $pid
+}
+
+proc get_qmaster_pid {} {
+   set qmaster_spool_dir [ get_qmaster_spool_dir ]
+
+   set pid_file "$qmaster_spool_dir/qmaster.pid"
+
+   return [get_pid_from_file $pid_file]
+}
+
+proc get_schedd_pid {} {
+   set qmaster_spool_dir [ get_qmaster_spool_dir ]
+
+   set pid_file "$qmaster_spool_dir/schedd/schedd.pid"
+
+   return [get_pid_from_file $pid_file]
+}
+
+proc parse_cpu_time {s_cpu} {
+   set l_cpu [split $s_cpu ":"]
+   set cpu 0
+
+   while {[llength $l_cpu] > 0} {
+      scan [lindex $l_cpu 0] "%02d" part
+      
+      switch [llength $l_cpu] {
+         1 {
+            incr cpu $part
+         }
+         2 {
+            incr cpu [expr $part * 60]
+         }
+         3 {
+            incr cpu [expr $part * 3600]
+         }
+         default {
+            add_proc_error "usage_parse_cpu" -1 "cannot parse cpu time $s_cpu"
+         }
+      }
+
+      set l_cpu [lreplace $l_cpu 0 0]
+   }
+
+   return $cpu
+}

@@ -31,10 +31,99 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#****** performance/throughput ***************************************
+#
+#  NAME
+#     throughput test -- test overall cluster throughput
+#
+#  FUNCTION
+#     Tests the overall throughput of a Grid Engine cluster.
+#
+#     Simple test jobs (sleeper) are submitted and run in a cluster,
+#     test data is gathered and a number of metrics are calculated from 
+#     this test data.
+#
+#     Raw data is delivered by
+#        - submission scripts
+#        - qevent client
+#        - scheduler profiling
+#
+#     Different scenarios are run:
+#        - queues are disabled during whole submission
+#        - queues are enabled during whole submission
+#        - queues are enabled after half of the test jobs have been submitted
+#        - test with sharetree, queues are disabled during whole submission
+#
+#     The test results are stored as HTML pages including a number of 
+#     charts.
+#  
+#     The following metrics are calculated:
+#        Average submit time
+#           The average runtime of a qsub command
+#
+#        Average run/transfer time
+#           The average time a job is in the transfer and running state
+#
+#        Average scheduler calculation time
+#           The average time required in scheduler for one scheduling run.
+#
+#        Average total scheduling time
+#           The average time required for scheduling jobs, delivering the
+#           orders to qmaster and for qmaster to process the scheduler orders.
+#
+#        Jobs per second
+#           The number of jobs finished per second.
+#           Measurement starts when queues have been enabled.
+#
+#        Submits per second
+#           The number of jobs submitted per second.
+#
+#        Total run time
+#           Total test runtime.
+#
+#        Total submit time
+#           Time required for submitting all jobs.
+#
+#        Utilization
+#           Cluster utilization (used slots / available slots).
+#           Only the time period during which queues are enabled is taken
+#           into account.
+#
+#     The following charts are part of the output:
+#        cluster usage analysis
+#           Shows the cluster usage over time. 
+#           Total available slots, free slots and occupied slots are drawn.
+#
+#        job submission / run time
+#           Shows the job submission times and the job runtimes over wallclock
+#           time.
+#
+#        job run time distribution
+#           Shows how many jobs had certain runtimes.
+#
+#        job throughput
+#           Shows the number of pending, running and finished jobs over time.
+#
+#        scheduling times
+#           Shows the scheduler calculation time and the total scheduling time
+#           (including order sending and processing in qmaster) over time.
+#
+#        schedd orders
+#           Shows the number of scheduler orders over time.
+#
+#        sharetree policy
+#           Shows the number of dispatched jobs per project over time.
+#           Verifies the scheduler decisions regarding sharetree policy.
+#
+#***************************************************************************
+# TODO: add qstat's on master host as second_foreign_user,
+# qstat script similar to submitter and process_info
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
 global check_init_level_procedure check_category
+global check_root_access_needs
 
+set check_root_access_needs  "yes"
 set check_init_level_procedure "init_level"
 set check_category            "PERFORMANCE VERIFIED"
 set check_name                "throughput"
@@ -93,6 +182,8 @@ proc init_level {} {
    global throughput_subdir             ;# subdirectory in protocols/throughput/
    global throughput_sharetree
    global host_list
+   global test_scenario
+   global ps_interval qstat_interval
 
     # paramters for all tests
    set run_throughput_test_SCHEDULE_INTERVAL        00:00:15
@@ -102,6 +193,7 @@ proc init_level {} {
    set enable_queues_job_count  0         ;# after witch job, enable queues
    set FLUSH_SUBMIT_SEC         1             ;# -1 or 0,1,2,3 ...
    set FLUSH_FINISH_SEC         1             ;# -1 or 0,1,2,3 ...
+   set qstat_interval 1000                    ;# try 1 qstat per second
 
    # host_list for all levels
    set host_list {}
@@ -118,21 +210,31 @@ proc init_level {} {
    switch -- $major_level {
       "0" {
          set job_count 90
+         set ps_interval 10
+         set qstat_interval 1000
       }
       "1" {
          set job_count 3000
+         set ps_interval 20
+         set qstat_interval 2000
       }
       "2" {
          set job_count 30000
+         set ps_interval 60
+         set qstat_interval 5000
       }
       "3" {
          set job_count 300000
+         set ps_interval 300
+         set qstat_interval 10000
       }
       default {
          return -1
       }
    }
-
+#if { $minor_level != 0 } {
+#   return -1
+#}
    switch -- $minor_level {
       "0" {
          # enable queues after all jobs have been submitted
@@ -140,7 +242,6 @@ proc init_level {} {
          set enable_queues_job_count  $job_count
          set throughput_sharetree     0
          set throughput_subdir        "disabled"
-         return 0
       }
       "1" {
          # have queues enabled during whole submit process
@@ -148,7 +249,6 @@ proc init_level {} {
          set enable_queues_job_count  0
          set throughput_sharetree     0
          set throughput_subdir        "enabled"
-         return 0
       }
       "2" {
          # enable queues after half of the jobs have been submitted
@@ -156,7 +256,6 @@ proc init_level {} {
          set enable_queues_job_count  [expr $job_count / 2]
          set throughput_sharetree     0
          set throughput_subdir        "mixed"
-         return 0
       }
       "3" {
          # test with sharetree, enable queues after all jobs have been submitted
@@ -167,14 +266,15 @@ proc init_level {} {
          set enable_queues_job_count  $job_count
          set throughput_sharetree     1
          set throughput_subdir        "sharetree"
-         return 0
       }
       default {
          return -1
       }
    }
 
-   return -1
+   set test_scenario "$CHECK_ACT_LEVEL ($throughput_subdir)"
+
+   return 0
 }
 
 proc throughput_set_share_tree {} {
@@ -465,9 +565,11 @@ proc run_throughput_test {} {
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH
    global queue_list CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global enable_queues_job_count CHECK_SOURCE_DIR 
-   global end_job_count host_list CHECK_FIRST_FOREIGN_SYSTEM_USER
+   global end_job_count host_list 
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
    global throughput_sharetree
    global global_job_run_time
+   global ps_interval qstat_interval
 
    if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -475,7 +577,12 @@ proc run_throughput_test {} {
    }
 
    # prepare results array
-   clean_current_system_status results_list result job_data schedd_data
+   clean_current_system_status results_list result job_data schedd_data monitoring qstat_data
+
+   # restart qmaster and scheduler - we want to measure their size
+   shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
+   startup_qmaster
+   wait_for_load_from_all_queues 300
 
    # evaluate path to qevent binary
    set up_arch [resolve_build_arch $CHECK_HOST]
@@ -542,13 +649,28 @@ proc run_throughput_test {} {
    } else {
       set are_enabled 1
    }
-   
-   # prepare job arguments 
-   set my_job "$ts_config(product_root)/examples/jobs/sleeper.sh"
-
-   # open shell on each execd host, used for submitting jobs
+  
+   # open shell on each execd host, used for submitting jobs and process info
    set spawn_list ""
    set remote_spawn_list ""
+
+   # start qmaster/scheduler process monitor
+   set expect_bin [get_binary_path $CHECK_HOST "expect"]
+   set qmaster_pid [get_qmaster_pid]
+   set schedd_pid  [get_schedd_pid]
+   puts $CHECK_OUTPUT "starting process monitor"
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/process_info.tcl $ts_config(product_root)" ]
+   lappend spawn_list [ lindex $id 1 ]
+   lappend remote_spawn_list $id
+
+   # start qstat monitor
+   puts $CHECK_OUTPUT "starting qstat monitor"
+   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_SECOND_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/qstat.tcl $ts_config(product_root)" ]
+   lappend spawn_list [ lindex $id 1 ]
+   lappend remote_spawn_list $id
+
+   # prepare job arguments 
+   set my_job "$ts_config(product_root)/examples/jobs/sleeper.sh"
 
    # start submitter (expect script)
    foreach host $host_list {
@@ -564,6 +686,9 @@ proc run_throughput_test {} {
    set num_submitters 0
    set next_submitter_list {}
 
+   set monitor_ok 0
+   set qstat_ok 0
+
    set my_timeout [ expr ( [timestamp] + 300 ) ]
    set submit_options "-o /dev/null -j y"
    set submit_script "$ts_config(product_root)/examples/jobs/sleeper.sh $global_job_run_time"
@@ -573,7 +698,8 @@ proc run_throughput_test {} {
    # then set script file
    # if everything succeeded, accept this submitter
    log_user 0
-   while { $num_submitters < [llength $host_list] } {
+   while { $num_submitters < [llength $host_list] || $monitor_ok == 0 || \
+           ($qstat_interval > 0 && $qstat_ok == 0) } {
       expect_user {
          -i $spawn_list full_buffer {
             set error 1
@@ -597,7 +723,8 @@ proc run_throughput_test {} {
             set output $expect_out(0,string) 
             set output [ split $output "\n" ]
             foreach line $output {
-               puts $CHECK_OUTPUT $line
+               set line [string trim $line]
+               # puts $CHECK_OUTPUT $line
                switch -glob -- $line {
                   "SUBMITTER*" {
                      puts $CHECK_OUTPUT "submitter started on host $host_name"
@@ -616,6 +743,69 @@ proc run_throughput_test {} {
                   "ERROR:*" {
                      set error 1
                      add_proc_error "run_throughput_test" -1 "got error from host $host_name: $line"
+                  }
+                  "PROCESS INFO STARTED" {
+                     puts $CHECK_OUTPUT "process monitor for qmaster and schedd started"
+                     puts $CHECK_OUTPUT "setting ps interval to $ps_interval"
+                     send -i $spawn_id "INTERVAL $ps_interval\n"
+                  }
+                  "PROCESS INFO INTERVAL OK" {
+                     puts $CHECK_OUTPUT "initialize qmaster monitoring"
+                     send -i $spawn_id "PROCESS $qmaster_pid qmaster\n"
+                  }
+                  "PROCESS INFO PROCESS qmaster OK" {
+                     puts $CHECK_OUTPUT "initialize schedd monitoring"
+                     send -i $spawn_id "PROCESS $schedd_pid schedd\n"
+                  }
+                  "PROCESS INFO PROCESS schedd OK" {
+                     puts $CHECK_OUTPUT "starting process monitoring"
+                     send -i $spawn_id "START\n"
+                  }
+                  "PROCESS INFO START OK" {
+                     set monitor_ok 1
+                  }
+                  "PROCESS DATA*" {
+                     set process_time [lindex $line 2]
+                     set process_name [lindex $line 4]
+                     set process_size [lindex $line 5]
+                     set process_cpu  [lindex $line 6]
+
+                     incr monitoring($process_name,count)
+                     set index $monitoring($process_name,count)
+                    
+                     set monitoring($process_name,$index,time) $process_time
+                     set monitoring($process_name,$index,size) $process_size
+                     set monitoring($process_name,$index,cpu)  $process_cpu
+                  }
+                  "QSTAT STARTED" {
+                     puts $CHECK_OUTPUT "qstat monitor started"
+                     puts $CHECK_OUTPUT "setting qstat interval to $qstat_interval ms"
+                     send -i $spawn_id "INTERVAL $qstat_interval\n"
+                  }
+                  "QSTAT INTERVAL OK" {
+                     puts $CHECK_OUTPUT "starting qstat monitoring"
+                     send -i $spawn_id "START\n"
+                  }
+                  "QSTAT START OK" {
+                     puts $CHECK_OUTPUT "qstat monitor running"
+                     set qstat_ok 1
+                  }
+                  "QSTAT DATA*" {
+                     set index $qstat_data(count)
+                     set qstat_data($index,time) [lindex $line, 2]
+                     set qstat_data($index,duration) [lindex $line 3]
+                     set qstat_data($index,error) 0
+                     incr qstat_data(count)
+                  }
+                  "QSTAT ERROR*" {
+                     set index $qstat_data(count)
+                     set qstat_data($index,time) [lindex $line, 2]
+                     set qstat_data($index,duration) [lindex $line 3]
+                     set qstat_data($index,error) 1
+                     incr qstat_data(count)
+                  }
+                  default {
+                     puts $CHECK_OUTPUT "unexpected output: |$line|"
                   }
                }
             }
@@ -651,9 +841,9 @@ proc run_throughput_test {} {
       set host_submit_count($host) 0
    }
 
-   set sent_jobs 0
-   set schedd_nr 0
-   set resend_list {}
+   set sent_jobs 0     ;# number of sent jobs
+   set resend_list {}  ;# list of commands to resend
+   set schedd_nr -1    ;# number of stored scheduler data
 
    set timeout 120
 
@@ -787,6 +977,33 @@ proc run_throughput_test {} {
                         lappend resend_list $sent_commands($host_name)
                      }
                      puts $CHECK_OUTPUT "submission on host $host_name failed"
+                  }
+                  "PROCESS DATA*" {
+                     set process_time [lindex $line 2]
+                     set process_name [lindex $line 4]
+                     set process_size [lindex $line 5]
+                     set process_cpu  [lindex $line 6]
+
+                     incr monitoring($process_name,count)
+                     set index $monitoring($process_name,count)
+                    
+                     set monitoring($process_name,$index,time) $process_time
+                     set monitoring($process_name,$index,size) $process_size
+                     set monitoring($process_name,$index,cpu)  $process_cpu
+                  }
+                  "QSTAT DATA*" {
+                     set index $qstat_data(count)
+                     set qstat_data($index,time) [lindex $line, 2]
+                     set qstat_data($index,duration) [lindex $line 3]
+                     set qstat_data($index,error) 0
+                     incr qstat_data(count)
+                  }
+                  "QSTAT ERROR*" {
+                     set index $qstat_data(count)
+                     set qstat_data($index,time) [lindex $line, 2]
+                     set qstat_data($index,duration) [lindex $line 3]
+                     set qstat_data($index,error) 1
+                     incr qstat_data(count)
                   }
                   default {
                      # puts $CHECK_OUTPUT "unexpected output (submitter): |$line|"
@@ -946,12 +1163,22 @@ proc run_throughput_test {} {
                      }
                      incr s_index -1
                      set orders_value [ lindex $schedd_string $s_index ]
+
+                     # store data
+                     # we increment it before storing new data, as we want to
+                     # monitor additional info in 6.x systems
+                     incr schedd_nr
                      set schedd_data($schedd_nr,system_time)   [timestamp] 
                      set schedd_data($schedd_nr,schedd_time)   $schedd_time
                      set schedd_data($schedd_nr,schedd_orders) $orders_value
+                     set schedd_data($schedd_nr,schedd_total_time) 0
                      set schedd_data(count) $schedd_nr
-                     incr schedd_nr 1
-                     continue
+                  }
+                  "*schedd run took: *" {
+                     set split_line [split $line "|"]
+                     set prof [lindex $split_line 4]
+                     set run_time [lindex $prof 4]
+                     set schedd_data($schedd_nr,schedd_total_time) $run_time
                   }
                   default {
                      # puts $CHECK_OUTPUT "unexpected output (qevent/tail): |$line|"
@@ -972,7 +1199,7 @@ proc run_throughput_test {} {
       # tasks to be done once a minute
       set time_now [timestamp]
       if { $result(test_run_time) != $time_now } {
-         show_current_system_status result job_data schedd_data
+         show_current_system_status result job_data schedd_data monitoring
          flush $CHECK_OUTPUT
 
          # enable queues when $enable_queues_job_count is reached
@@ -1008,8 +1235,15 @@ proc run_throughput_test {} {
    delete_all_jobs
    wait_for_jobend $last_job_id leeper 60 0 1
 
+   # output submission distribution
+   puts $CHECK_OUTPUT ""
+   puts $CHECK_OUTPUT "submitted jobs per host"
+   foreach host $host_list {
+      puts $CHECK_OUTPUT [format "%-15s\t%6d" $host $host_submit_count($host)]
+   }
+
    # create reports
-   create_reports results_list job_data schedd_data
+   create_reports results_list job_data schedd_data monitoring qstat_data
 
    set_error 0 "ok"
 }
@@ -1030,13 +1264,13 @@ proc get_submit_id_from_job_id { job_array_name job_id } {
 proc save_current_system_status { results_array array_name } {
    global ts_config
    global CHECK_OUTPUT
+   global result_names
 
    upvar $array_name data
    upvar $results_array results
 
    set count $results(count)
-   set names [array names data]
-   foreach name $names {
+   foreach name $result_names {
       set results($count,$name) $data($name)
    }
    incr results(count) 1
@@ -1408,7 +1642,7 @@ proc compare_dump_data_file { file1 file2 } {
 
    #   A absolut  |  B absolut | B compared to A (in %) 
    set table(COLS) 4
-   set table(ROWS) 9
+   set table(ROWS) 10
    set table(1,BGCOLOR) "#FFFFFF"
    set table(1,FNCOLOR) "#000000"
    set table(1,1) ""
@@ -1425,6 +1659,7 @@ proc compare_dump_data_file { file1 file2 } {
    lappend row_names "Average Submit time"
    lappend row_names "Average run/transfer time"
    lappend row_names "Average scheduler calculation time"
+   lappend row_names "Average total scheduling time"
 
    set A "dummy dummy"
    lappend A $test_data1(total_run_time)
@@ -1435,6 +1670,7 @@ proc compare_dump_data_file { file1 file2 } {
    lappend A $test_data1(avg_submit)
    lappend A $test_data1(avg_run)
    lappend A $test_data1(avg_schedd_time)
+   lappend A $test_data1(avg_schedd_total_time)
    set B "dummy dummy"
    lappend B $test_data2(total_run_time)
    lappend B $test_data2(total_submit_time)
@@ -1444,9 +1680,10 @@ proc compare_dump_data_file { file1 file2 } {
    lappend B $test_data2(avg_submit)
    lappend B $test_data2(avg_run)
    lappend B $test_data2(avg_schedd_time)
+   lappend B $test_data2(avg_schedd_total_time)
 
 
-   for { set row 2} { $row <= 9 } { incr row 1} {
+   for { set row 2} { $row <= 10 } { incr row 1} {
       set table($row,BGCOLOR) "#FFFFFF"
       set table($row,FNCOLOR) "#000000"
       set table($row,1) [lindex $row_names $row]
@@ -1590,12 +1827,12 @@ proc compare_dump_data_file { file1 file2 } {
        calculate_submit_run_xy_rows jobs1 xy_rows $test_start 0
 
        #  1) test run
-       calculate_test_run_xy_rows results2 xy_rows 11
+       calculate_test_run_xy_rows results2 xy_rows 18
        #  2) schedd run
        set test_start $results2(0,test_run_time)
-       calculate_schedd_run_xy_rows schedd2 xy_rows $test_start 11
+       calculate_schedd_run_xy_rows schedd2 xy_rows $test_start 18
        #  3) job submit times and job run times
-       calculate_submit_run_xy_rows jobs2 xy_rows $test_start 11
+       calculate_submit_run_xy_rows jobs2 xy_rows $test_start 18
 
 
 
@@ -1611,13 +1848,13 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(3,show) 0     ;# jobs subitted
        set xy_rows(4,show) 1     ;# total system slots
        set xy_rows(5,show) 1     ;# free system slots
-       set xy_rows(6,show) 0     ;# schedduler calculation time
-       set xy_rows(7,show) 0     ;# schedd orders
-       set xy_rows(8,show) 0     ;# job submit time
-       set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(6,show) 0     ;# scheduler calculation time
+       set xy_rows(8,show) 0     ;# schedd orders
+       set xy_rows(9,show) 0     ;# job submit time
+       set xy_rows(10,show) 0     ;# job run time
+       set xy_rows(11,show) 0     ;# job distribution
 
-       set start 11
+       set start 18
        set xy_rows($start,show) 1     ;# running jobs
        incr start 1
        set xy_rows($start,show) 0     ;# pending jobs
@@ -1630,7 +1867,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 1     ;# free system slots
        incr start 1
-       set xy_rows($start,show) 0     ;# schedduler calculation time
+       set xy_rows($start,show) 0     ;# scheduler calculation time
        incr start 1
        set xy_rows($start,show) 0     ;# schedd orders
        incr start 1
@@ -1651,14 +1888,14 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(3,show) 1     ;# jobs subitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# schedduler calculation time
-       set xy_rows(7,show) 0     ;# schedd orders
-       set xy_rows(8,show) 0     ;# job submit time
-       set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(6,show) 0     ;# scheduler calculation time
+       set xy_rows(8,show) 0     ;# schedd orders
+       set xy_rows(9,show) 0     ;# job submit time
+       set xy_rows(10,show) 0     ;# job run time
+       set xy_rows(11,show) 0     ;# job distribution
 
 
-       set start 11
+       set start 18
        set xy_rows($start,show) 0     ;# running jobs
        incr start 1
        set xy_rows($start,show) 1     ;# pending jobs
@@ -1671,7 +1908,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# free system slots
        incr start 1
-       set xy_rows($start,show) 0     ;# schedduler calculation time
+       set xy_rows($start,show) 0     ;# scheduler calculation time
        incr start 1
        set xy_rows($start,show) 0     ;# schedd orders
        incr start 1
@@ -1690,13 +1927,13 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(3,show) 0     ;# jobs subitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 1     ;# schedduler calculation time
-       set xy_rows(7,show) 0     ;# schedd orders
-       set xy_rows(8,show) 0     ;# job submit time
-       set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(6,show) 1     ;# scheduler calculation time
+       set xy_rows(8,show) 0     ;# schedd orders
+       set xy_rows(9,show) 0     ;# job submit time
+       set xy_rows(10,show) 0     ;# job run time
+       set xy_rows(11,show) 0     ;# job distribution
 
-       set start 11
+       set start 18
        set xy_rows($start,show) 0     ;# running jobs
        incr start 1
        set xy_rows($start,show) 0     ;# pending jobs
@@ -1709,7 +1946,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# free system slots
        incr start 1
-       set xy_rows($start,show) 1     ;# schedduler calculation time
+       set xy_rows($start,show) 1     ;# scheduler calculation time
        incr start 1
        set xy_rows($start,show) 0     ;# schedd orders
        incr start 1
@@ -1729,13 +1966,13 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(3,show) 0     ;# jobs subitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# schedduler calculation time
-       set xy_rows(7,show) 1     ;# schedd orders
-       set xy_rows(8,show) 0     ;# job submit time
-       set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(6,show) 0     ;# scheduler calculation time
+       set xy_rows(8,show) 1     ;# schedd orders
+       set xy_rows(9,show) 0     ;# job submit time
+       set xy_rows(10,show) 0     ;# job run time
+       set xy_rows(11,show) 0     ;# job distribution
 
-       set start 11
+       set start 18
        set xy_rows($start,show) 0     ;# running jobs
        incr start 1
        set xy_rows($start,show) 0     ;# pending jobs
@@ -1748,7 +1985,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# free system slots
        incr start 1
-       set xy_rows($start,show) 0     ;# schedduler calculation time
+       set xy_rows($start,show) 0     ;# scheduler calculation time
        incr start 1
        set xy_rows($start,show) 1     ;# schedd orders
        incr start 1
@@ -1767,13 +2004,13 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(3,show) 0     ;# jobs subitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# schedduler calculation time
-       set xy_rows(7,show) 0     ;# schedd orders
-       set xy_rows(8,show) 1     ;# job submit time
-       set xy_rows(9,show) 1     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(6,show) 0     ;# scheduler calculation time
+       set xy_rows(8,show) 0     ;# schedd orders
+       set xy_rows(9,show) 1     ;# job submit time
+       set xy_rows(10,show) 1     ;# job run time
+       set xy_rows(11,show) 0     ;# job distribution
 
-       set start 11
+       set start 18
        set xy_rows($start,show) 0     ;# running jobs
        incr start 1
        set xy_rows($start,show) 0     ;# pending jobs
@@ -1786,7 +2023,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# free system slots
        incr start 1
-       set xy_rows($start,show) 0     ;# schedduler calculation time
+       set xy_rows($start,show) 0     ;# scheduler calculation time
        incr start 1
        set xy_rows($start,show) 0     ;# schedd orders
        incr start 1
@@ -1807,13 +2044,13 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(3,show) 0     ;# jobs subitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# schedduler calculation time
-       set xy_rows(7,show) 0     ;# schedd orders
-       set xy_rows(8,show) 0     ;# job submit time
-       set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 1     ;# job distribution
+       set xy_rows(6,show) 0     ;# scheduler calculation time
+       set xy_rows(8,show) 0     ;# schedd orders
+       set xy_rows(9,show) 0     ;# job submit time
+       set xy_rows(10,show) 0     ;# job run time
+       set xy_rows(11,show) 1     ;# job distribution
 
-       set start 11
+       set start 18
        set xy_rows($start,show) 0     ;# running jobs
        incr start 1
        set xy_rows($start,show) 0     ;# pending jobs
@@ -1826,7 +2063,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# free system slots
        incr start 1
-       set xy_rows($start,show) 0     ;# schedduler calculation time
+       set xy_rows($start,show) 0     ;# scheduler calculation time
        incr start 1
        set xy_rows($start,show) 0     ;# schedd orders
        incr start 1
@@ -1868,19 +2105,17 @@ proc analyse_dump_data_file { file { force 0 } } {
    read_array_from_file $file "scheduler data" schedd
    read_array_from_file $file "test configuration" test_config
    read_array_from_file $file "execd list" host_list
+   read_array_from_file $file "monitoring" monitoring
+   read_array_from_file $file "qstat data" qstat_data
    puts $CHECK_OUTPUT "Test date:          $test_config(test_date)"
    puts $CHECK_OUTPUT "gridengine version: $test_config(gridengine_version)"
 
    read_array_from_file $file "schedd config" schedd_config
    
-
-   
    # job results
-   calculate_average_cluster_times results cluster_results $output_dir/cluster_times.txt
+   calculate_average_cluster_times results monitoring qstat_data cluster_results $output_dir/cluster_times.txt
    calculate_average_job_times jobs avg_values $output_dir/job_times.txt
    calculate_average_schedd_times schedd avg_schedd_values $output_dir/schedd_times.txt
-
-   
 
    set nr 0
    set execd_list ""
@@ -1982,6 +2217,7 @@ proc analyse_dump_data_file { file { force 0 } } {
    puts $CHECK_OUTPUT "avg. run/transfer (count=$avg_values(jobs_run))   : $avg_values(avg_run)    "
    puts $CHECK_OUTPUT ""
    puts $CHECK_OUTPUT "avg. schedd time (count=$avg_schedd_values(nr_of_schedd_runs))   : $avg_schedd_values(avg_schedd_time)"
+   puts $CHECK_OUTPUT "avg. total schedd time (count=$avg_schedd_values(nr_of_schedd_runs))   : $avg_schedd_values(avg_schedd_total_time)"
 
    
 
@@ -2022,13 +2258,39 @@ proc analyse_dump_data_file { file { force 0 } } {
    set table($test) $avg_schedd_values(avg_schedd_time)
    set test_data(avg_schedd_time) $avg_schedd_values(avg_schedd_time)
 
+   set test "Average total scheduling time"
+   set table($test) $avg_schedd_values(avg_schedd_total_time)
+   set test_data(avg_schedd_total_time) $avg_schedd_values(avg_schedd_total_time)
+
+   set test "Average qmaster cpu load (in percent)"
+   set table($test) $cluster_results(avg_qmaster_cpu)
+   set test_data(avg_qmaster_cpu)  $cluster_results(avg_qmaster_cpu)
+
+   set test "Average scheduler cpu load (in percent)"
+   set table($test) $cluster_results(avg_schedd_cpu)
+   set test_data(avg_schedd_cpu)  $cluster_results(avg_schedd_cpu)
+
+   set test "Maximum qmaster size (in kB)"
+   set table($test) $cluster_results(max_qmaster_size)
+   set test_data(max_qmaster_size)  $cluster_results(max_qmaster_size)
+
+   set test "Maximum scheduler size (in kB)"
+   set table($test) $cluster_results(max_schedd_size)
+   set test_data(max_schedd_size)  $cluster_results(max_schedd_size)
+
+   set test "Qstat average duration"
+   set table($test) $cluster_results(avg_qstat_time)
+   set test_data(avg_qstat_time)  $cluster_results(avg_qstat_time)
+
+   set test "Qstat number of errors"
+   set table($test) $cluster_results(qstat_errors)
+   set test_data(qstat_errors)  $cluster_results(qstat_errors)
+
    set tmp_file [get_tmp_file_name]
    spool_array_to_file $tmp_file "table" table
    append content [convert_spool_file_to_html $tmp_file $output_dir/index.html 1]
 
    spool_array_to_file $output_dir/test_results_array.dat "test results" test_data
-
-
 
    # links to other documents
    append content [ create_html_text "" ]
@@ -2044,12 +2306,18 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content [ create_html_text "" ]
    append content [create_html_link "   (6) Scheduler job order analysis" "schedd_orders.html"]
    append content [ create_html_text "" ]
+   append content [create_html_link "   (7) Size of qmaster and scheduler" "daemon_size.html"]
+   append content [ create_html_text "" ]
+   append content [create_html_link "   (8) CPU load of qmaster and scheduler" "daemon_cpu.html"]
+   append content [ create_html_text "" ]
+   append content [create_html_link "   (9) Qstat performance" "qstat.html"]
+   append content [ create_html_text "" ]
    if { $throughput_sharetree == 1 }  {
-      append content [create_html_link "   (7) Running project job analysis" "project_jobs.html"]
+      append content [create_html_link "   (10) Running project job analysis" "project_jobs.html"]
       append content [ create_html_text "" ]
-      append content [create_html_link "   (8) All charts in one html document" "all_charts.html"]
+      append content [create_html_link "   (11) All charts in one html document" "all_charts.html"]
    } else {
-      append content [create_html_link "   (7) All charts in one html document" "all_charts.html"]
+      append content [create_html_link "   (10) All charts in one html document" "all_charts.html"]
    }
 
    # links to data
@@ -2165,9 +2433,6 @@ proc analyse_dump_data_file { file { force 0 } } {
    set info_data(nr_of_local_spool_directories) $nr_of_local_spool_directories   
    spool_array_to_file $output_dir/test_results_array.dat "test settings" info_data
 
-
-   
-
    # generate chart files
    set content ""
    append content ""
@@ -2209,12 +2474,30 @@ proc analyse_dump_data_file { file { force 0 } } {
 
    set content ""
    append content ""
+   append content [create_html_image "Daemon size" "daemon_size.gif"]
+   generate_html_file $output_dir/daemon_size.html "$test_config(gridengine_version) from $test_config(test_date)" $content
+
+   set content ""
+   append content ""
+   append content [create_html_image "Daemon CPU load" "daemon_cpu.gif"]
+   generate_html_file $output_dir/daemon_cpu.html "$test_config(gridengine_version) from $test_config(test_date)" $content
+
+   set content ""
+   append content ""
+   append content [create_html_image "Qstat performance" "qstat.gif"]
+   generate_html_file $output_dir/qstat.html "$test_config(gridengine_version) from $test_config(test_date)" $content
+
+   set content ""
+   append content ""
    append content [create_html_image "Running jobs" "running_jobs.gif"]
    append content [create_html_image "Job times" "job_times.gif"]
    append content [create_html_image "Job distribution" "job_distribution.gif"]
    append content [create_html_image "Pending jobs" "pending_jobs.gif"]
    append content [create_html_image "Scheduler times" "schedd_calc_time.gif"]
    append content [create_html_image "Scheduler orders" "schedd_orders.gif"]
+   append content [create_html_image "Daemon size" "daemon_size.gif"]
+   append content [create_html_image "Daemon CPU load" "daemon_cpu.gif"]
+   append content [create_html_image "Qstat performance" "qstat.gif"]
    if { $throughput_sharetree == 1 }  {
       append content [create_html_image "Running project jobs" "project_jobs.gif"]
    }
@@ -2231,7 +2514,11 @@ proc analyse_dump_data_file { file { force 0 } } {
        # 3) job submit times and job run times
        calculate_submit_run_xy_rows jobs xy_rows $test_start 0
 
-       # 4) optional: calculate project times 
+       calculate_monitoring_xy_rows monitoring xy_rows $test_start 0
+
+      calculate_qstat_xy_rows qstat_data xy_rows $test_start 0
+
+       # 5) optional: calculate project times 
        if { $throughput_sharetree == 1 }  {
           calculate_project_run_xy_rows results jobs xy_rows 0
        }
@@ -2241,136 +2528,84 @@ proc analyse_dump_data_file { file { force 0 } } {
 
        set plot_data(title) "Throughput test results - running jobs"
        set plot_data(output_file) "$output_dir/running_jobs.gif"
+       clear_xy_rows_show xy_rows
        set xy_rows(0,show)  1     ;# running jobs
-       set xy_rows(1,show)  0     ;# pending jobs
-       set xy_rows(2,show)  0     ;# jobs done
-       set xy_rows(3,show)  0     ;# jobs subitted
        set xy_rows(4,show)  1     ;# total system slots
        set xy_rows(5,show)  1     ;# free system slots
-       set xy_rows(6,show)  0     ;# schedduler calculation time
-       set xy_rows(7,show)  0     ;# schedd orders
-       set xy_rows(8,show)  0     ;# job submit time
-       set xy_rows(9,show)  0     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
-       set xy_rows(11,show) 0     ;# running jobs project 1
-       set xy_rows(12,show) 0     ;# running jobs project 2
-       set xy_rows(13,show) 0     ;# running jobs project 3
        create_gnuplot_xy_gif plot_data xy_rows
-        
-
 
        set plot_data(title) "Throughput test results - pending jobs"
        set plot_data(output_file) "$output_dir/pending_jobs.gif"
-       set xy_rows(0,show) 0     ;# running jobs
+       clear_xy_rows_show xy_rows
        set xy_rows(1,show) 1     ;# pending jobs
        set xy_rows(2,show) 1     ;# jobs done
        set xy_rows(3,show) 1     ;# jobs subitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# schedduler calculation time
-       set xy_rows(7,show) 0     ;# schedd orders
-       set xy_rows(8,show) 0     ;# job submit time
-       set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 0    ;# job distribution
-       set xy_rows(11,show) 0    ;# running jobs project 1
-       set xy_rows(12,show) 0    ;# running jobs project 2
-       set xy_rows(13,show) 0    ;# running jobs project 3
        create_gnuplot_xy_gif plot_data xy_rows
 
        set plot_data(title) "Throughput test results - schedd calculation time"
        set plot_data(output_file) "$output_dir/schedd_calc_time.gif"
-       set xy_rows(0,show) 0     ;# running jobs
-       set xy_rows(1,show) 0     ;# pending jobs
-       set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs subitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 1     ;# schedduler calculation time
-       set xy_rows(7,show) 0     ;# schedd orders
-       set xy_rows(8,show) 0     ;# job submit time
-       set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
-       set xy_rows(11,show) 0    ;# running jobs project 1
-       set xy_rows(12,show) 0    ;# running jobs project 2
-       set xy_rows(13,show) 0    ;# running jobs project 3
+       clear_xy_rows_show xy_rows
+       set xy_rows(6,show) 1     ;# scheduler calculation time
+       set xy_rows(7,show) 1     ;# schedd total time
        create_gnuplot_xy_gif plot_data xy_rows
 
        set plot_data(title) "Throughput test results - schedd orders"
        set plot_data(output_file) "$output_dir/schedd_orders.gif"
-       set xy_rows(0,show) 0     ;# running jobs
-       set xy_rows(1,show) 0     ;# pending jobs
-       set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs subitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# schedduler calculation time
-       set xy_rows(7,show) 1     ;# schedd orders
-       set xy_rows(8,show) 0     ;# job submit time
-       set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
-       set xy_rows(11,show) 0    ;# running jobs project 1
-       set xy_rows(12,show) 0    ;# running jobs project 2
-       set xy_rows(13,show) 0    ;# running jobs project 3
+       clear_xy_rows_show xy_rows
+       set xy_rows(8,show) 1     ;# schedd orders
        create_gnuplot_xy_gif plot_data xy_rows
 
        set plot_data(title) "Throughput test results - job times"
        set plot_data(output_file) "$output_dir/job_times.gif"
-       set xy_rows(0,show) 0     ;# running jobs
-       set xy_rows(1,show) 0     ;# pending jobs
-       set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs subitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# schedduler calculation time
-       set xy_rows(7,show) 0     ;# schedd orders
-       set xy_rows(8,show) 1     ;# job submit time
-       set xy_rows(9,show) 1     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
-       set xy_rows(11,show) 0    ;# running jobs project 1
-       set xy_rows(12,show) 0    ;# running jobs project 2
-       set xy_rows(13,show) 0    ;# running jobs project 3
+       clear_xy_rows_show xy_rows
+       set xy_rows(9,show) 1     ;# job submit time
+       set xy_rows(10,show) 1     ;# job run time
        create_gnuplot_xy_gif plot_data xy_rows
 
        set plot_data(title) "Throughput test results - job distribution"
        set plot_data(output_file) "$output_dir/job_distribution.gif"
        set plot_data(xlabel) "job time\[s\]"
        set plot_data(ylabel) "number of jobs"
-       set xy_rows(0,show) 0     ;# running jobs
-       set xy_rows(1,show) 0     ;# pending jobs
-       set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs subitted
-       set xy_rows(4,show) 0     ;# total system slots
-       set xy_rows(5,show) 0     ;# free system slots
-       set xy_rows(6,show) 0     ;# schedduler calculation time
-       set xy_rows(7,show) 0     ;# schedd orders
-       set xy_rows(8,show) 0     ;# job submit time
-       set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 1    ;# job distribution
-       set xy_rows(11,show) 0    ;# running jobs project 1
-       set xy_rows(12,show) 0    ;# running jobs project 2
-       set xy_rows(13,show) 0    ;# running jobs project 3
+       clear_xy_rows_show xy_rows
+       set xy_rows(11,show) 1    ;# job distribution
        create_gnuplot_xy_gif plot_data xy_rows
 
+       set plot_data(title) "Throughput test results - size of daemons"
+       set plot_data(output_file) "$output_dir/daemon_size.gif"
+       set plot_data(xlabel) "time\[s\]"
+       set plot_data(ylabel) "size \[kB\]"
+       clear_xy_rows_show xy_rows
+       set xy_rows(12,show) 1     ;# qmaster size
+       set xy_rows(14,show) 1     ;# schedd size
+       create_gnuplot_xy_gif plot_data xy_rows
+
+       set plot_data(title) "Throughput test results - CPU load of daemons"
+       set plot_data(output_file) "$output_dir/daemon_cpu.gif"
+       set plot_data(xlabel) "time\[s\]"
+       set plot_data(ylabel) "cpu load \[%\]"
+       clear_xy_rows_show xy_rows
+       set xy_rows(13,show) 1     ;# qmaster CPU load
+       set xy_rows(15,show) 1     ;# schedd CPU load
+       create_gnuplot_xy_gif plot_data xy_rows
+
+       set plot_data(title) "Throughput test results - qstat performance"
+       set plot_data(output_file) "$output_dir/qstat.gif"
+       set plot_data(xlabel) "time\[s\]"
+       set plot_data(ylabel) "duration \[s\]"
+       clear_xy_rows_show xy_rows
+       set xy_rows(16,show) 1     ;# qstat duration
+       set xy_rows(17,show) 1     ;# failed qstat duration
+       create_gnuplot_xy_gif plot_data xy_rows
 
        if { $throughput_sharetree == 1 }  {
          set plot_data(xlabel) "time\[s\]"
          set plot_data(ylabel) "jobs done\[%\]"
          set plot_data(title) "Throughput test results - project jobs"
          set plot_data(output_file) "$output_dir/project_jobs.gif"
-         set xy_rows(0,show)  0     ;# running jobs
-         set xy_rows(1,show)  0     ;# pending jobs
-         set xy_rows(2,show)  0     ;# jobs done
-         set xy_rows(3,show)  0     ;# jobs subitted
-         set xy_rows(4,show)  0     ;# total system slots
-         set xy_rows(5,show)  0     ;# free system slots
-         set xy_rows(6,show)  0     ;# schedduler calculation time
-         set xy_rows(7,show)  0     ;# schedd orders
-         set xy_rows(8,show)  0     ;# job submit time
-         set xy_rows(9,show)  0     ;# job run time
-         set xy_rows(10,show) 0     ;# job distribution
-         set xy_rows(11,show) 1     ;# running jobs project 1
-         set xy_rows(12,show) 1     ;# running jobs project 2
-         set xy_rows(13,show) 1     ;# running jobs project 3
+         clear_xy_rows_show xy_rows
+         set xy_rows(18,show) 1     ;# running jobs project 1
+         set xy_rows(19,show) 1     ;# running jobs project 2
+         set xy_rows(20,show) 1     ;# running jobs project 3
          create_gnuplot_xy_gif plot_data xy_rows
        }
 }
@@ -2388,44 +2623,50 @@ proc calculate_schedd_run_xy_rows { results_array_name row_array_name test_start
       set add_info " B"
    }
 
-       set pos1 [ expr ( $start_numb + 6 ) ]
-       set pos2 [ expr ( $start_numb + 7 ) ]
+    set pos1 [ expr ( $start_numb + 6 ) ]
+    set pos2 [ expr ( $start_numb + 8 ) ]
+    set pos3 [ expr ( $start_numb + 7) ]
 
-        #  2) schedd run
-       if { $schedd(count) > 0 } {
-          set xy_rows($pos1,drawmode) "lines"
-          set xy_rows($pos1,title) "schedduler calculation time $add_info"
+     #  2) schedd run
+    if { $schedd(count) > 0 } {
+       set xy_rows($pos1,drawmode) "lines"
+       set xy_rows($pos1,title) "scheduler calculation time $add_info"
 
-          set xy_rows($pos2,drawmode) "lines"
-          set xy_rows($pos2,title) "schedd orders $add_info"
+       set xy_rows($pos2,drawmode) "lines"
+       set xy_rows($pos2,title) "schedd orders $add_info"
 
-          set last $schedd(count)
-          # core data: job_run_time
-          for { set i 0 } { $i <= $last } { incr i 1 } {
-             set x_time        [ expr ( $schedd($i,system_time) - $test_start) ]  ;# test run time in seconds
-             
-             #   x->time y->schedd_time
-             set xy_rows($pos1,$i,x) $x_time
-             set xy_rows($pos1,$i,y) $schedd($i,schedd_time)
+       set xy_rows($pos3,drawmode) "lines"
+       set xy_rows($pos3,title) "schedd total time $add_info"
 
-             #   x->time y->schedd_orders
-             set xy_rows($pos2,$i,x) $x_time
-             set xy_rows($pos2,$i,y) $schedd($i,schedd_orders)
+       set last $schedd(count)
+       # core data: job_run_time
+       for { set i 0 } { $i <= $last } { incr i 1 } {
+          set x_time        [ expr ( $schedd($i,system_time) - $test_start) ]  ;# test run time in seconds
+          
+          #   x->time y->schedd_time
+          set xy_rows($pos1,$i,x) $x_time
+          set xy_rows($pos1,$i,y) $schedd($i,schedd_time)
 
-          }
+          #   x->time y->schedd_orders
+          set xy_rows($pos2,$i,x) $x_time
+          set xy_rows($pos2,$i,y) $schedd($i,schedd_orders)
+
+          #   x->time y->schedd_total_time
+          set xy_rows($pos3,$i,x) $x_time
+          set xy_rows($pos3,$i,y) $schedd($i,schedd_total_time)
        }
-   
-   
+    }
 }
+
 proc calculate_submit_run_xy_rows { results_array_name row_array_name test_start start_numb} {
    global ts_config
 
    upvar $results_array_name jobs
    upvar $row_array_name xy_rows
 
-   set pos1 [ expr ( $start_numb + 8 ) ]
-   set pos2 [ expr ( $start_numb + 9 ) ]
-   set pos3 [ expr ( $start_numb + 10) ]
+   set pos1 [ expr ( $start_numb + 9 ) ]
+   set pos2 [ expr ( $start_numb + 10 ) ]
+   set pos3 [ expr ( $start_numb + 11) ]
 
    set add_info " A"
    if { $start_numb != 0 } {
@@ -2492,6 +2733,98 @@ proc calculate_submit_run_xy_rows { results_array_name row_array_name test_start
        }
 }
 
+proc calculate_monitoring_xy_rows { results_array_name row_array_name test_start start_numb} {
+   global ts_config
+
+   upvar $results_array_name monitoring
+   upvar $row_array_name xy_rows
+
+   set pos1 [ expr ( $start_numb + 12 ) ] ;# qmaster size
+   set pos2 [ expr ( $start_numb + 13 ) ] ;# qmaster cpu
+   set pos3 [ expr ( $start_numb + 14 ) ] ;# schedd size
+   set pos4 [ expr ( $start_numb + 15 ) ] ;# schedd cpu
+
+   set add_info " A"
+   if { $start_numb != 0 } {
+      set add_info " B"
+   }
+
+   #  qmaster size and cpu
+   set xy_rows($pos1,drawmode) "lines"
+   set xy_rows($pos1,title) "qmaster size $add_info"
+   set xy_rows($pos2,drawmode) "lines"
+   set xy_rows($pos2,title) "qmaster cpu $add_info"
+
+   set idx 0
+   for {set i 1} {$i <= $monitoring(qmaster,count)} {incr i} {
+      if { $monitoring(qmaster,$i,time) >= $test_start } {
+         set normalized_time [expr $monitoring(qmaster,$i,time) - $test_start]
+         set xy_rows($pos1,$idx,x) $normalized_time
+         set xy_rows($pos2,$idx,x) $normalized_time
+         set xy_rows($pos1,$idx,y) $monitoring(qmaster,$i,size)
+         set xy_rows($pos2,$idx,y) $monitoring(qmaster,$i,cpu)
+         incr idx
+      }
+   }
+
+   #  schedd size and cpu
+   set xy_rows($pos3,drawmode) "lines"
+   set xy_rows($pos3,title) "schedd size $add_info"
+   set xy_rows($pos4,drawmode) "lines"
+   set xy_rows($pos4,title) "schedd cpu $add_info"
+
+   set idx 0
+   for {set i 1} {$i <= $monitoring(schedd,count)} {incr i} {
+      if { $monitoring(schedd,$i,time) >= $test_start } {
+         set normalized_time [expr $monitoring(schedd,$i,time) - $test_start]
+         set xy_rows($pos3,$idx,x) $normalized_time
+         set xy_rows($pos4,$idx,x) $normalized_time
+         set xy_rows($pos3,$idx,y) $monitoring(schedd,$i,size)
+         set xy_rows($pos4,$idx,y) $monitoring(schedd,$i,cpu)
+         incr idx
+      }
+   }
+}
+
+proc calculate_qstat_xy_rows { results_array_name row_array_name test_start start_numb} {
+   global ts_config
+
+   upvar $results_array_name qstat_data
+   upvar $row_array_name xy_rows
+
+   set pos1 [ expr ( $start_numb + 16 ) ] ;# succeeded qstats
+   set pos2 [ expr ( $start_numb + 17 ) ] ;# qstat errors
+
+   set add_info " A"
+   if { $start_numb != 0 } {
+      set add_info " B"
+   }
+
+   #  qstat data
+   set xy_rows($pos1,drawmode) "points"
+   set xy_rows($pos1,title) "successfull qstats $add_info"
+   set xy_rows($pos2,drawmode) "points"
+   set xy_rows($pos2,title) "failed qstats $add_info"
+
+   set succeeded 0
+   set failed 0
+   for {set i 0} {$i < $qstat_data(count)} {incr i} {
+      if { $qstat_data($i,time) >= $test_start } {
+         set normalized_time [expr $qstat_data($i,time) - $test_start]
+         if {$qstat_data($i,error)} {
+            set xy_rows($pos2,$failed,x) $normalized_time
+            set xy_rows($pos2,$failed,y) $qstat_data($i,duration)
+            incr failed
+         } else {
+            set xy_rows($pos1,$succeeded,x) $normalized_time
+            set xy_rows($pos1,$succeeded,y) $qstat_data($i,duration)
+            incr succeeded
+         }
+      }
+   }
+}
+
+
 
 proc calculate_project_run_xy_rows { results_array_name job_array_name row_array_name start_numb } {
    global ts_config
@@ -2501,9 +2834,9 @@ proc calculate_project_run_xy_rows { results_array_name job_array_name row_array
    upvar $job_array_name jobs
    upvar $row_array_name xy_rows
 
-   set pos1 [ expr ( $start_numb + 11 ) ]
-   set pos2 [ expr ( $start_numb + 12 ) ]
-   set pos3 [ expr ( $start_numb + 13 ) ]
+   set pos1 [ expr ( $start_numb + 18 ) ]
+   set pos2 [ expr ( $start_numb + 19 ) ]
+   set pos3 [ expr ( $start_numb + 20 ) ]
 
    set add_info " A"
    if { $start_numb != 0 } {
@@ -2723,7 +3056,7 @@ proc calculate_test_run_xy_rows { results_array_name row_array_name start_numb }
    
 }
 
-proc create_reports { results_array job_array_name schedd_array_name} {
+proc create_reports { results_array job_array_name schedd_array_name monitoring_name qstat_name} {
    global ts_config
    global ts_host_config
    global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name throughput_subdir
@@ -2740,6 +3073,8 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    upvar $job_array_name jobs
    upvar $results_array results
    upvar $schedd_array_name schedd
+   upvar $monitoring_name monitoring
+   upvar $qstat_name qstat_data
 
    set nr_of_execd_hosts [llength $ts_config(execd_hosts)]
    incr nr_of_execd_hosts -1
@@ -2830,53 +3165,57 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    spool_array_to_file $prot_output_file "online data"    results 0
    spool_array_to_file $prot_output_file "job data"       jobs    0
    spool_array_to_file $prot_output_file "scheduler data" schedd  0
+   spool_array_to_file $prot_output_file "monitoring" monitoring  0
+   spool_array_to_file $prot_output_file "qstat data" qstat_data  0
 
    catch { file delete ${prot_output_file}.old }
 
-   # job results
-   calculate_average_cluster_times results cluster_results
-   puts $CHECK_OUTPUT "total run time     : $cluster_results(total_run_time)"
-   puts $CHECK_OUTPUT "total jobs done    : $cluster_results(total_jobs_done)"
-   puts $CHECK_OUTPUT "total submit time  : $cluster_results(total_submit_time)"
-   puts $CHECK_OUTPUT "submits per second : $cluster_results(submits_per_second)"
-   puts $CHECK_OUTPUT "jobs per second    : $cluster_results(jobs_per_second)"
-   puts $CHECK_OUTPUT "avg. slots free    : $cluster_results(avg_slots_free)"
-   puts $CHECK_OUTPUT "total slots        : $cluster_results(total_slots)"
-   puts $CHECK_OUTPUT "utilization        : $cluster_results(utilization)"
-   puts $CHECK_OUTPUT "job sleep time     : $cluster_results(jobs_sleep_time)"
-   puts $CHECK_OUTPUT "queue enable value : $cluster_results(queue_enable_value)"
-   puts $CHECK_OUTPUT "flush submit sec   : $cluster_results(flush_submit_sec)"
-   puts $CHECK_OUTPUT "flush finish sec   : $cluster_results(flush_finish_sec)"
-   puts $CHECK_OUTPUT "schedule interval  : $cluster_results(schedule_interval)"
-
-
-   calculate_average_job_times jobs avg_values
-   puts $CHECK_OUTPUT ""
-   puts $CHECK_OUTPUT "avg. submit       (count=$avg_values(jobs_submit))   : $avg_values(avg_submit) "
-   puts $CHECK_OUTPUT "avg. run/transfer (count=$avg_values(jobs_run))   : $avg_values(avg_run)    "
-
-   calculate_average_schedd_times schedd avg_schedd_values
-   puts $CHECK_OUTPUT ""
-   puts $CHECK_OUTPUT "avg. schedd time (count=$avg_schedd_values(nr_of_schedd_runs))   : $avg_schedd_values(avg_schedd_time)"
-
+#   # job results
+#   calculate_average_cluster_times results cluster_results
+#   puts $CHECK_OUTPUT "total run time     : $cluster_results(total_run_time)"
+#   puts $CHECK_OUTPUT "total jobs done    : $cluster_results(total_jobs_done)"
+#   puts $CHECK_OUTPUT "total submit time  : $cluster_results(total_submit_time)"
+#   puts $CHECK_OUTPUT "submits per second : $cluster_results(submits_per_second)"
+#   puts $CHECK_OUTPUT "jobs per second    : $cluster_results(jobs_per_second)"
+#   puts $CHECK_OUTPUT "avg. slots free    : $cluster_results(avg_slots_free)"
+#   puts $CHECK_OUTPUT "total slots        : $cluster_results(total_slots)"
+#   puts $CHECK_OUTPUT "utilization        : $cluster_results(utilization)"
+#   puts $CHECK_OUTPUT "job sleep time     : $cluster_results(jobs_sleep_time)"
+#   puts $CHECK_OUTPUT "queue enable value : $cluster_results(queue_enable_value)"
+#   puts $CHECK_OUTPUT "flush submit sec   : $cluster_results(flush_submit_sec)"
+#   puts $CHECK_OUTPUT "flush finish sec   : $cluster_results(flush_finish_sec)"
+#   puts $CHECK_OUTPUT "schedule interval  : $cluster_results(schedule_interval)"
+#
+#
+#   calculate_average_job_times jobs avg_values
+#   puts $CHECK_OUTPUT ""
+#   puts $CHECK_OUTPUT "avg. submit       (count=$avg_values(jobs_submit))   : $avg_values(avg_submit) "
+#   puts $CHECK_OUTPUT "avg. run/transfer (count=$avg_values(jobs_run))   : $avg_values(avg_run)    "
+#
+#   calculate_average_schedd_times schedd avg_schedd_values
+#   puts $CHECK_OUTPUT ""
+#   puts $CHECK_OUTPUT "avg. schedd time (count=$avg_schedd_values(nr_of_schedd_runs))   : $avg_schedd_values(avg_schedd_time)"
+#   puts $CHECK_OUTPUT "avg. total schedd time (count=$avg_schedd_values(nr_of_schedd_runs))   : $avg_schedd_values(avg_schedd_total_time)"
+#
    analyse_dump_data_file $prot_output_file 1
    compare_dump_directory $prot_output_dir
 #   puts $CHECK_OUTPUT "do gzip $prot_output_file ..."
 #   puts $CHECK_OUTPUT [start_remote_prog $CHECK_HOST $CHECK_USER gzip $prot_output_file prg_exit_state 60 0 "" 1 0 0]
-   
-   
 }
 
-proc calculate_average_cluster_times { results_array cluster_results_array { dump_file "" } } {
+proc calculate_average_cluster_times { results_array monitoring_array qstat_array cluster_results_array { dump_file "" } } {
    global ts_config
 
    global CHECK_OUTPUT enable_queues_job_count
    global FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
    upvar $results_array cluster
    upvar $cluster_results_array result
+   upvar $monitoring_array monitoring
+   upvar $qstat_array qstat_data
 
    set result(total_run_time)    0    ;#
-   set result(total_jobs_done)   0    ;#
+   set result(total_qenabled_time) 0  ;# queues were enabled during this period
+   set result(total_jobs_done)   0    ;# number of jobs that ran through
    set result(total_submit_time) 0    ;#
    set result(submits_per_second) 0   ;#
    set result(jobs_per_second) 0      ;#
@@ -2886,6 +3225,12 @@ proc calculate_average_cluster_times { results_array cluster_results_array { dum
    set result(flush_submit_sec) $FLUSH_SUBMIT_SEC
    set result(flush_finish_sec) $FLUSH_FINISH_SEC
    set result(schedule_interval) $run_throughput_test_SCHEDULE_INTERVAL
+   set result(avg_qmaster_cpu) 0
+   set result(avg_schedd_cpu) 0
+   set result(max_qmaster_size) 0
+   set result(max_schedd_size) 0
+   set result(avg_qstat_time) 0.0
+   set result(qstat_errors) 0
 
    if { $cluster(count) > 0 } {
       set result(avg_slots_free)    $cluster(0,total_slots)  ;# avg_slots_free
@@ -2917,8 +3262,13 @@ proc calculate_average_cluster_times { results_array cluster_results_array { dum
    for { set i 0 } { $i <= $last } { incr i 1 } {
       if { $cluster($i,jobs_submitted) > $highest_submit_count } {
          set highest_submit_count $cluster($i,jobs_submitted)
-      
       }
+      # compute the time period where queues were enabled
+      if { $result(total_qenabled_time) == 0 && \
+           $cluster($i,queues_enabled) == 1} {
+         set result(total_qenabled_time) [expr $cluster($last,test_run_time) - $cluster($i,test_run_time)]
+      }
+      
       # utilization (free jobs) will only be taken into account while
       # - queues are enabled
       # - there are pending jobs
@@ -2954,14 +3304,57 @@ proc calculate_average_cluster_times { results_array cluster_results_array { dum
       set result(submits_per_second) [ expr ( ${highest_submit_count}.00 / $result(total_submit_time) ) ]
    }
 
-   if { $result(total_run_time) > 0 } {
-      set result(jobs_per_second) [ expr ( $result(total_jobs_done).00 / $result(total_run_time) ) ]
+   # jobs per second is the cluster throughput while queues were enabled
+   if { $result(total_qenabled_time) > 0 } {
+      set result(jobs_per_second) [ expr ( $result(total_jobs_done).00 / $result(total_qenabled_time) ) ]
    }
 
    set result(utilization) [ expr 100.0 * (double($result(total_slots)) - $result(avg_slots_free)) / double($result(total_slots)) ]
    puts $CHECK_OUTPUT "total_slots    = $result(total_slots)"
    puts $CHECK_OUTPUT "avg_slots_free = $result(avg_slots_free)"
 
+
+   # calculate monitoring averages
+   set count 0
+   set sum_qmaster_cpu 0.0
+   for {set i 1} {$i <= $monitoring(qmaster,count)} {incr i} {
+      incr count
+      set sum_qmaster_cpu [expr $sum_qmaster_cpu + $monitoring(qmaster,$i,cpu)]
+      if {$result(max_qmaster_size) < $monitoring(qmaster,$i,size)} {
+         set result(max_qmaster_size) $monitoring(qmaster,$i,size)
+      }
+   }
+   if {$count > 0} {
+      set result(avg_qmaster_cpu) [expr $sum_qmaster_cpu / double($count)]
+   }
+
+   set count 0
+   set sum_schedd_cpu 0.0
+   for {set i 1} {$i <= $monitoring(schedd,count)} {incr i} {
+      incr count
+      set sum_schedd_cpu [expr $sum_schedd_cpu + $monitoring(schedd,$i,cpu)]
+      if {$result(max_schedd_size) < $monitoring(schedd,$i,size)} {
+         set result(max_schedd_size) $monitoring(schedd,$i,size)
+      }
+   }
+   if {$count > 0} {
+      set result(avg_schedd_cpu) [expr $sum_schedd_cpu / double($count)]
+   }
+
+   # calculate qstat data
+   set count 0
+   set sum_qstat_time 0.0
+   for {set i 0} {$i < $qstat_data(count)} {incr i} {
+      if { $qstat_data($i,error) } {
+         incr result(qstat_errors)
+      } else {
+         incr count
+         set sum_qstat_time [expr $sum_qstat_time + $qstat_data($i,duration)]
+      }
+   }
+   if {$count > 0} {
+      set result(avg_qstat_time) [expr $sum_qstat_time / double($count)]
+   }
 
 #   puts $CHECK_OUTPUT ""
 #   puts $CHECK_OUTPUT "total run time     : $result(total_run_time)"
@@ -3049,19 +3442,21 @@ proc calculate_average_schedd_times { schedd_array_name schedd_results_array { d
    
    set schedd 0
    set schedd_time_sum 0
+   set schedd_total_time_sum 0
    if { $dump_file != "" } {
       set dump_file [open $dump_file w]
-      puts $dump_file "nr|system_time|schedd_time|schedd_orders"
+      puts $dump_file "nr|system_time|schedd_time|schedd_total_time|schedd_orders"
    }
 
    while { [info exists schedd_array($schedd,schedd_time) ] } {
       set schedd_id_run_time $schedd_array($schedd,schedd_time)
 
       # add schedd times
-      set schedd_time_sum [ expr ( $schedd_time_sum + $schedd_id_run_time ) ]
+      set schedd_time_sum [ expr ( $schedd_time_sum + $schedd_array($schedd,schedd_time) ) ]
+      set schedd_total_time_sum [ expr ( $schedd_total_time_sum + $schedd_array($schedd,schedd_total_time) ) ]
 
       if { $dump_file != "" } {
-         set line "$schedd|$schedd_array($schedd,system_time)|$schedd_array($schedd,schedd_time)|$schedd_array($schedd,schedd_orders)"
+         set line "$schedd|$schedd_array($schedd,system_time)|$schedd_array($schedd,schedd_time)|$schedd_array($schedd,schedd_total_time)|$schedd_array($schedd,schedd_orders)"
          puts $dump_file $line
       }
 
@@ -3075,21 +3470,24 @@ proc calculate_average_schedd_times { schedd_array_name schedd_results_array { d
 
    # calculate average
    set result(avg_schedd_time) 0
+   set result(avg_schedd_total_time) 0
    set result(nr_of_schedd_runs) $schedd
    if { $schedd > 0 } {
       set result(avg_schedd_time) [ expr (  ( ($schedd_time_sum + 0.00 ) ) / $schedd ) ]
+      set result(avg_schedd_total_time) [ expr (  ( ($schedd_total_time_sum + 0.00 ) ) / $schedd ) ]
    }
 }
 
 
-proc show_current_system_status { array_name job_array_name schedd_array_name } {
+proc show_current_system_status { array_name job_array_name schedd_array_name monitoring_name} {
    global ts_config
-
    global CHECK_OUTPUT
+   global test_scenario
 
    upvar $array_name data
    upvar $job_array_name jobs
    upvar $schedd_array_name schedd
+   upvar $monitoring_name monitoring
 
    # string for queue status
    if { $data(queues_enabled) == 1 } {
@@ -3099,6 +3497,7 @@ proc show_current_system_status { array_name job_array_name schedd_array_name } 
    }
 
    clear_screen
+   puts $CHECK_OUTPUT "scenario         : $test_scenario"
    puts $CHECK_OUTPUT "queue status     : $queue_status"
    puts $CHECK_OUTPUT "jobs_done        : $data(jobs_done)" 
    puts $CHECK_OUTPUT "jobs_running     : $data(jobs_running)"
@@ -3108,7 +3507,10 @@ proc show_current_system_status { array_name job_array_name schedd_array_name } 
    puts $CHECK_OUTPUT "free slots       : $data(free_slots)"
    puts $CHECK_OUTPUT "jobs run time    : $data(job_run_time)"
    puts $CHECK_OUTPUT "test run time    : $data(test_run_time)"
-   puts $CHECK_OUTPUT "last schedd time : $schedd($schedd(count),schedd_time)"
+   puts $CHECK_OUTPUT "scheduling time  : $schedd($schedd(count),schedd_time)"
+   puts $CHECK_OUTPUT "schedd total time: $schedd($schedd(count),schedd_total_time)"
+   puts $CHECK_OUTPUT "qmaster size     : $monitoring(qmaster,$monitoring(qmaster,count),size)"
+   puts $CHECK_OUTPUT "schedd size      : $monitoring(schedd,$monitoring(schedd,count),size)"
    puts $CHECK_OUTPUT ""
 
    # check data
@@ -3118,15 +3520,22 @@ proc show_current_system_status { array_name job_array_name schedd_array_name } 
    flush $CHECK_OUTPUT
 }
 
-proc clean_current_system_status { results_array array_name job_array_name schedd_array_name } {
+proc clean_current_system_status { results_array array_name job_array_name schedd_array_name monitoring_name qstat_name } {
    global ts_config
-
    global queue_list global_job_run_time nr_slots
+   global result_names
+
    upvar $results_array results
    upvar $array_name data
    upvar $job_array_name jobs
    upvar $schedd_array_name schedd
+   upvar $monitoring_name monitor
+   upvar $qstat_name qstat_data
 
+   # names in result_array that shall be copied in each expect loop
+   set result_names "jobs_done jobs_submitted jobs_running jobs_pending total_slots free_slots queues_enabled test_run_time job_run_time"
+
+   # clean result array
    set data(jobs_done) 0
    set data(jobs_pending) 0
    set data(jobs_running) 0
@@ -3148,7 +3557,28 @@ proc clean_current_system_status { results_array array_name job_array_name sched
    set schedd(0,system_time) 0
    set schedd(0,schedd_time) 0
    set schedd(0,schedd_orders) 0
+   set schedd(0,schedd_total_time) 0
    
    set schedd(count) 0
    set results(count) 0
+
+   set monitor(qmaster,count) 0
+   set monitor(qmaster,0,time) 0
+   set monitor(qmaster,0,size) 0
+   set monitor(qmaster,0,cpu) 0
+
+   set monitor(schedd,count) 0
+   set monitor(schedd,0,time) 0
+   set monitor(schedd,0,size) 0
+   set monitor(schedd,0,cpu) 0
+
+   set qstat_data(count) 0
+}
+
+proc clear_xy_rows_show { xy_rows_name } {
+   upvar $xy_rows_name xy_rows
+
+   for {set i 0} {$i <= 20} {incr i} {
+      set xy_rows($i,show) 0
+   }
 }

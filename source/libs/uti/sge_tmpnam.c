@@ -47,8 +47,6 @@
 #include "sge_unistd.h"
 
 
-extern int errno;
-
 static int elect_path(dstring *aBuffer);
 static int spawn_file(dstring *aBuffer);
 

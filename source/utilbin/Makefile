@@ -38,13 +38,15 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog work \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
-                 testsuidroot infotext spooldefaults spoolinit
+                 testsuidroot infotext spooldefaults spoolinit \
+                 tst_pthread_signals
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
-               spooldefaults.c spoolinit.c
+               spooldefaults.c spoolinit.c \
+               tst_pthread_signals.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
@@ -205,3 +207,10 @@ work:	work.o
 
 work.o:	$(UTILBIN_DIR)/work.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/work.c
+#---------------------------------------------------------------------
+tst_pthread_signals: tst_pthread_signals.o
+		$(CC) -o $@ tst_pthread_signals.o $(LFLAGS) $(SLIBS) $(LIBS)
+
+tst_pthread_signals.o: $(UTILBIN_DIR)/tst_pthread_signals.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/tst_pthread_signals.c
+

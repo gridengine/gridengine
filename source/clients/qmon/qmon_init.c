@@ -228,7 +228,7 @@ void qmonInitSge( char *progname)
 
    DENTER(GUI_LAYER, "qmonInitSge");
    
-   sprintf(SGE_EVENT,"");
+   strcpy(SGE_EVENT,"");
    log_state_set_log_gui(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);

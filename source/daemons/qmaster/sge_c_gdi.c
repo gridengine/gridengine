@@ -1034,13 +1034,14 @@ static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_re
 static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_request *answer)
 {
    lList *alp = NULL;
+   u_long32 target = request->target;
    
    
    DENTER(GDI_LAYER, "sge_c_gdi_trigger");
 
    SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
-   switch (request->target)
+   switch (target)
    {
       case SGE_EXECHOST_LIST: /* kill execd */
       case SGE_MASTER_EVENT:  /* kill master */
@@ -1050,6 +1051,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
          {
             ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
+            SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
             DEXIT;
             return;
          }
@@ -1060,39 +1062,51 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
          break;
    }
 
-   switch (request->target)
-   {
-      case SGE_CQUEUE_LIST: /* do no break here! */
-      case SGE_JOB_LIST:    /* en/dis/able un/suspend clean/clear job/queue */
-         sge_gdi_qmod(host, request, answer);
-         break;
-
-      case SGE_EXECHOST_LIST: /* kill execd */
-         sge_gdi_kill_exechost(host, request, answer);
-         break;
-
-     case SGE_SC_LIST: /* trigger scheduler monitoring */
-         trigger_scheduler_monitoring(host, request, answer);
-         break;
-
-      case SGE_EVENT_LIST:
-         /* JG: TODO: why does sge_gdi_shutdown_event_client use two different answer lists? */
-         sge_gdi_shutdown_event_client(host, request, answer, &alp);
-         answer_list_output(&alp);
-         break;
-
-      default:
-         WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-         break;
-   }
-
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-      
-   if (SGE_MASTER_EVENT == (request->target))
+
+   if ((SGE_CQUEUE_LIST == target) || (SGE_JOB_LIST == target))
+   {
+      SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+      sge_gdi_qmod(host, request, answer);
+
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   }
+   else if (SGE_EXECHOST_LIST == target)
+   {
+      SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+      sge_gdi_kill_exechost(host, request, answer);
+
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   }
+   else if (SGE_SC_LIST == target)
+   {
+      SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+      trigger_scheduler_monitoring(host, request, answer);
+
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   }
+   else if (SGE_EVENT_LIST == target)
+   {
+      SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
+      /* JG: TODO: why does sge_gdi_shutdown_event_client use two different answer lists? */
+      sge_gdi_shutdown_event_client(host, request, answer, &alp);
+      answer_list_output(&alp);
+
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+   }
+   else if (SGE_MASTER_EVENT == target)
    {
       /* shutdown qmaster. Do NOT hold the global lock, while doing this !! */
       sge_gdi_kill_master(host, request, answer);
+   }
+   else
+   {
+      WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    }
       
    DEXIT;

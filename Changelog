@@ -1,3 +1,5 @@
+CR-2004-08-11-0: Testsuite: - fixed bug in issue test 193
+
 MD-2004-08-10-0: Bugfix:    Refix Issue 1113
                  Issue:     1214
                  Bugtraq:   5084927

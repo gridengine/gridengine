@@ -461,10 +461,11 @@ int is_array
          failed = shepherd_exit_status;   
       else 
          failed = SSTATE_BEFORE_PROLOG;
-      
+     
       sprintf(error, MSG_STATUS_ABNORMALTERMINATIONOFSHEPHERDFORJOBXY_UU,
                       u32c(jobid), u32c(jataskid));                
-      ERROR((SGE_EVENT, error));     
+      ERROR((SGE_EVENT, SFQ , error));    
+ 
       /* 
        * failed = ESSTATE_SHEPHERD_EXIT or exit status of shepherd if we are
        * parent in case we can't open the exit_status file
@@ -497,6 +498,7 @@ int is_array
        */   
    }
 
+
    /*
     * failed is:
     *    exit status of shepherd (one of SSTATE_* values)
@@ -518,7 +520,6 @@ int is_array
    if ((fp = fopen(fname, "r"))) {
       int n;
       char *new_line;
-
       if ((n = fread(error, 1, sizeof(error), fp))) {
          /* Non empty error file. The shepherd encounterd a problem. */ 
          if (!failed)
@@ -527,7 +528,6 @@ int is_array
          /* ensure only first line of error file is in 'error' */
          if ((new_line=strchr(error, '\n')))
             *new_line = '\0';
-
          DPRINTF(("ERRORFILE: %256s\n", error));
       }
       else if (feof(fp)) 
@@ -557,7 +557,7 @@ int is_array
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_UU, 
             u32c(jobid), u32c(jataskid));
       }
-      ERROR((SGE_EVENT, error));
+      ERROR((SGE_EVENT, SFQ, error));
       if (!failed)
          failed = SSTATE_FAILURE_AFTER_JOB;
       DTRACE;

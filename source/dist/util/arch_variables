@@ -58,6 +58,7 @@ case $ARCH in
    QLOGIN_COMMAND=telnet
    QLOGIN_DAEMON=/usr/sbin/in.telnetd
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
+   GETTEXT=/usr/bin/gettext
    ;;
  alinux|glinux|slinux)
    AWK=/usr/bin/gawk
@@ -77,6 +78,7 @@ case $ARCH in
    QLOGIN_COMMAND=telnet
    QLOGIN_DAEMON=/usr/sbin/in.telnetd
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
+   GETTEXT=/usr/bin/gettext
    ;;
  osf4|tru64)
    AWK=/usr/bin/nawk

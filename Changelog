@@ -6,9 +6,10 @@ JG-2004-03-24-0: Bugfix:    HP11 binaries ignored SHLIB_PATH due to missing
                             linker flag +s.
 
 AH-2004-03-24-0: Bugfix:    Earliest reservation not always found for parallel 
-                            jobs.
-                 Issue:     911
-                 Review:    TBD
+                            jobs. 
+                            Scheduler seg faults on jobs with soft requests.
+                 Issue:     899, 911
+                 Review:    EB
   
 EB-2004-03-24-0: Bugfix:    type in queue_conf(5)
                             improved logging

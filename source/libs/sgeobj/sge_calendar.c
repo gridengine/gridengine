@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include <time.h>
 #include <sys/time.h>

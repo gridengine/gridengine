@@ -92,6 +92,7 @@ int had_free_epoch
       { TYPE_RESCHEDULE_UNKNOWN_EVENT, reschedule_unknown_event },
       { TYPE_SPOOLING_TRIGGER, deliver_spooling_trigger },
       { TYPE_REPORTING_TRIGGER, reporting_deliver_trigger },
+      { TYPE_SHARELOG_TRIGGER, reporting_deliver_trigger },
       { 0, NULL }
    };
    te_deliver(now, te_tab);

@@ -1,5 +1,5 @@
-#ifndef _SGE_REPORTING_QMASTER_H_
-#define _SGE_REPORTING_QMASTER_H_
+#ifndef __SGE_SHARETREE_PRINTING_H
+#define __SGE_SHARETREE_PRINTING_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,39 +32,28 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#endif /* __SGE_SHARETREE_PRINTING_H */
+
 #include "cull.h"
 
 #include "sge_dstring.h"
 
-#include "sge_object.h"
+typedef struct {
+   bool name_format;
+   bool format_times;
+   const char *delim;
+   const char *line_delim;
+   const char *rec_delim;
+   const char *str_format;
+   const char *field_names;
+   const char *line_prefix;
+} format_t;
 
-bool
-reporting_initialize(lList **answer_list);
-
-bool
-reporting_shutdown(lList **answer_list);
+void 
+print_hdr(dstring *out, const format_t *format);
 
 void
-reporting_deliver_trigger(u_long32 type, u_long32 when, 
-                          u_long32 uval0, u_long32 uval1, const char *key);
-
-bool
-reporting_create_acct_record(lList **answer_list, 
-                       lListElem *job_report, 
-                       lListElem *job, lListElem *ja_task);
-
-bool
-reporting_create_host_record(lList **answer_list,
-                             const lListElem *host,
-                             u_long32 report_time);
-
-bool
-reporting_create_host_consumable_record(lList **answer_list,
-                                        const lListElem *host,
-                                        u_long32 report_time);
-
-bool
-reporting_create_sharelog_record(lList **answer_list);
-
-#endif /* _SGE_REPORTING_QMASTER_H_ */
-
+sge_sharetree_print(dstring *out, lList *sharetree, lList *users, 
+                    lList *projects, lList *config, 
+                    bool group_nodes, bool decay_usage, 
+                    const char **names, const format_t *format);

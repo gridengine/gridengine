@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 
 #include <math.h>
+#include <string.h>
 
 #include "basis_types.h"
 #include "sgermon.h" 

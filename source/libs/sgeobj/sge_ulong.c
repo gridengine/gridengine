@@ -33,6 +33,7 @@
 #include <math.h>
 #include <float.h>
 #include <time.h>
+#include <string.h>
 
 #include "basis_types.h"
 #include "sgermon.h"
@@ -48,6 +49,10 @@
 
 #define ULONG_LAYER TOP_LAYER
 
+/*
+* NOTES
+*     MT-NOTE: double_print_infinity_to_dstring() is MT safe
+*/
 bool double_print_infinity_to_dstring(double value, dstring *string)
 {
    bool ret = true;
@@ -64,6 +69,10 @@ bool double_print_infinity_to_dstring(double value, dstring *string)
    return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: double_print_time_to_dstring() is MT safe
+*/
 bool double_print_time_to_dstring(double value, dstring *string) 
 {
    bool ret = true;
@@ -97,6 +106,10 @@ bool double_print_time_to_dstring(double value, dstring *string)
    return ret; 
 }
 
+/*
+* NOTES
+*     MT-NOTE: double_print_memory_to_dstring() is MT safe
+*/
 bool double_print_memory_to_dstring(double value, dstring *string)
 {
    bool ret = true;
@@ -131,6 +144,10 @@ bool double_print_memory_to_dstring(double value, dstring *string)
    return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: double_print_to_dstring() is MT safe
+*/
 bool double_print_to_dstring(double value, dstring *string)
 {
    bool ret = true;

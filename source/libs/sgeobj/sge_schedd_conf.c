@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <string.h>
+
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull.h"

@@ -32,6 +32,7 @@
 
 #include "sge_qmaster_process_message.h"
 
+#include <string.h>
 #include <unistd.h>
 #include "sgermon.h"
 #include "commlib.h"

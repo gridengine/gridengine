@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <string.h>
+
 #include "sge_string.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -440,6 +442,10 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
 *     bool - error state 
 *        true  - success
 *        false - error
+*
+*  NOTES
+*     MT-NOTE: centry_print_resource_to_dstring() is MT safe
+*
 *******************************************************************************/
 bool
 centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)

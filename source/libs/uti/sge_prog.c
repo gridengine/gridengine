@@ -30,11 +30,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_prog.h"
-
 #include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <pwd.h>
 #include <errno.h>
 #include <pthread.h>
@@ -48,6 +47,7 @@
 #include "sge_string.h"
 #include "sge_unistd.h"
 
+#include "sge_prog.h"
 
 /* Must match Qxxx defines in sge_prog.h */
 const char *prognames[] =

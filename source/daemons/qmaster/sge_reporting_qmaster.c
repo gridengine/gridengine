@@ -34,8 +34,12 @@
 #include <errno.h>
 #include <string.h>
 
+/* rmon */
 #include "sgermon.h"
+
+/* uti */
 #include "sge_log.h"
+#include "sge_string.h"
 #include "sge_dstring.h"
 #include "setup_path.h"
 #include "sge_stdlib.h"
@@ -43,29 +47,41 @@
 #include "sge_spool.h"
 #include "sge_time.h"
 
+/* daemons/common */
 #include "category.h"
 
+/* sgeobj */
 #include "sge_answer.h"
 #include "sge_feature.h"
 #include "sge_object.h"
-
 #include "sge_centry.h"
 #include "sge_userset.h"
 #include "sge_host.h"
 #include "sge_str.h"
+#include "sge_sharetree.h"
+#include "sge_userprj.h"
 
+/* lck */
 #include "sge_lock.h"
 
+/* sched */
+#include "sge_sharetree_printing.h"
+
+/* local */
 #include "sge_rusage.h"
 #include "time_event.h"
 #include "sge_reporting_qmaster.h"
 
+/* messages */
 #include "msg_common.h"
+
+extern lList *Master_Sched_Config_List;
 
 /* flush time in seconds 
  * JG: TODO: this should be a reporting config parameter.
  */
 #define REPORTING_FLUSH_TIME 60
+#define SHARELOG_FLUSH_TIME  600
 
 /* do we need to write an accounting file?
  * JG: TODO: this should be a reporting config parameter
@@ -98,6 +114,61 @@ reporting_create_record(lList **answer_list,
                         const char *type,
                         const char *data);
 
+static bool
+reporting_write_load_values(lList **answer_list, dstring *buffer, 
+                            const lList *load_list, const lList *variables);
+
+
+/****** qmaster/reporting/--Introduction ***************************
+*  NAME
+*     qmaster reporting -- creation of a reporting file 
+*
+*  FUNCTION
+*     This module provides a set of functions that are used to write
+*     the SGE reporting file and the accounting file.
+*
+*     See the manpages accounting.5 and qacct.1 for information about the
+*     accounting file.
+*
+*     The reporting file contains entries for queues, hosts, accounting
+*     and sharetree usage.
+*     It can for example be used to transfer SGE data useful for reporting
+*     and analysis purposes to a database.
+*
+*  SEE ALSO
+*     qmaster/reporting/reporting_initialize()
+*     qmaster/reporting/reporting_shutdown()
+*     qmaster/reporting/reporting_deliver_trigger()
+*     qmaster/reporting/reporting_create_acct_record()
+*     qmaster/reporting/reporting_create_host_record()
+*     qmaster/reporting/reporting_create_host_consumable_record()
+*     qmaster/reporting/reporting_create_sharelog_record()
+*******************************************************************************/
+
+/* ------------- public functions ------------- */
+/****** qmaster/reporting/reporting_initialize() ***************************
+*  NAME
+*     reporting_initialize() -- initialize the reporting module
+*
+*  SYNOPSIS
+*     bool reporting_initialize(lList **answer_list) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list - used to return error messages
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: reporting_initialize() is not MT safe, as te_add is not MT safe.
+*
+*  SEE ALSO
+*     qmaster/reporting/reporting_shutdown()
+*     Timeeventmanager/te_add()
+*******************************************************************************/
 bool
 reporting_initialize(lList **answer_list)
 {
@@ -109,12 +180,35 @@ reporting_initialize(lList **answer_list)
 
    /* JG: TODO: analyze reporting configuration */
 
-   te_add(TYPE_REPORTING_TRIGGER, now, 0, 0, NULL);
+   te_add(TYPE_REPORTING_TRIGGER, now, 1, 0, NULL);
+   te_add(TYPE_SHARELOG_TRIGGER, now, 1, 0, NULL);
 
    DEXIT;
    return ret;
 }
 
+/****** qmaster/reporting/reporting_shutdown() *****************************
+*  NAME
+*     reporting_shutdown() -- shutdown the reporting module
+*
+*  SYNOPSIS
+*     bool reporting_shutdown(lList **answer_list) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list - used to return error messages
+*
+*  RESULT
+*     bool - true on success, false on error.
+*
+*  NOTES
+*     MT-NOTE: reporting_shutdown() is MT safe
+*
+*  SEE ALSO
+*     qmaster/reporting/reporting_initialize()
+*******************************************************************************/
 bool
 reporting_shutdown(lList **answer_list)
 {
@@ -122,7 +216,7 @@ reporting_shutdown(lList **answer_list)
 
    DENTER(TOP_LAYER, "reporting_shutdown");
 
-   /* flush the last reporting values */
+   /* flush the last reporting values, suppress adding new timer */
    reporting_deliver_trigger(TYPE_REPORTING_TRIGGER, 0, 0, 0, NULL);
 
    /* free memory of buffers */
@@ -138,15 +232,59 @@ reporting_shutdown(lList **answer_list)
    return ret;
 }
 
+/****** qmaster/reporting/reporting_deliver_trigger() **********************
+*  NAME
+*     reporting_deliver_trigger() -- process timer event
+*
+*  SYNOPSIS
+*     void 
+*     reporting_deliver_trigger(u_long32 type, u_long32 when, 
+*                               u_long32 uval0, u_long32 uval1, const char *key)
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     u_long32 type   - Event type (TYPE_REPORTING_TRIGGER)
+*     u_long32 when   - The time when the event is due to deliver.
+*     u_long32 uval0  - if != 0, a new timer will be started
+*     u_long32 uval1  - unused
+*     const char *key - unused
+*
+*  NOTES
+*     MT-NOTE: reporting_deliver_trigger() is MT safe if uval0 = 0, else it is
+*              not MT safe, as te_add is not MT safe.
+*
+*  SEE ALSO
+*     Timeeventmanager/te_deliver()
+*     Timeeventmanager/te_add()
+*******************************************************************************/
 void
 reporting_deliver_trigger(u_long32 type, u_long32 when, 
                           u_long32 uval0, u_long32 uval1, const char *key)
 {
+   u_long32 flush_interval = 0;
    u_long32 next_flush = 0;
    u_long32 now;
    lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "reporting_deliver_trigger");
+
+   switch (type) {
+      case TYPE_SHARELOG_TRIGGER:
+         /* dump sharetree usage and flush reporting file */
+         if (!reporting_create_sharelog_record(&answer_list)) {
+            answer_list_output(&answer_list);
+         }
+         flush_interval = SHARELOG_FLUSH_TIME;
+         break;
+      case TYPE_REPORTING_TRIGGER:
+         /* only flush reporting file */
+         flush_interval = REPORTING_FLUSH_TIME;
+         break;
+      default:
+         return;
+   }
 
    /* flush the reporting data */
    if (!reporting_flush(&answer_list, when, &next_flush)) {
@@ -155,17 +293,43 @@ reporting_deliver_trigger(u_long32 type, u_long32 when,
 
    /* validate next_trigger. If it is invalid, set it to one minute after now */
    now = sge_get_gmt();
-   if (next_flush <= now) {
-      next_flush = now + 60;
-   }
+   next_flush = now + flush_interval;
 
    /* set timerevent for next flush */
-   te_add(type, next_flush, 0, 0, NULL);
+   if (uval0 != 0) {
+      te_add(type, next_flush, 1, 0, NULL);
+   }
 
    DEXIT;
    return;
 }
 
+/****** qmaster/reporting/reporting_create_acct_record() *******************
+*  NAME
+*     reporting_create_acct_record() -- create an accounting record
+*
+*  SYNOPSIS
+*     bool reporting_create_acct_record(lList **answer_list, 
+*                                       lListElem *job_report, 
+*                                       lListElem *job, lListElem *ja_task) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list   - used to report error messages
+*     lListElem *job_report - job report from execd
+*     lListElem *job        - job referenced in report
+*     lListElem *ja_task    - array task that finished
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: reporting_create_acct_record() is not MT safe as the
+*              MT safety of called functions sge_build_job_category and
+*              sge_write_rusage is not defined.
+*******************************************************************************/
 bool
 reporting_create_acct_record(lList **answer_list, 
                        lListElem *job_report, 
@@ -215,38 +379,29 @@ reporting_create_acct_record(lList **answer_list,
    return ret;
 }
 
-static bool
-reporting_write_load_values(lList **answer_list, dstring *buffer, 
-                            const lList *load_list, const lList *variables)
-{
-   bool ret = true;
-   bool first = true;
-   const lListElem *variable;
-
-   DENTER(TOP_LAYER, "reporting_write_load_values");
-
-   for_each (variable, variables) {
-      const char *name;
-      const lListElem *load;
-
-      name = lGetString(variable, STU_name);
-      load = lGetElemStr(load_list, HL_name, name);
-      if (load != NULL) {
-         if (first) {
-            first = false;
-         } else {
-            sge_dstring_append_char(buffer, ',');
-         }
-         sge_dstring_sprintf_append(buffer, "%s=%s", 
-                                    name, lGetString(load, HL_value));
-      }
-
-   }
-
-   DEXIT;
-   return ret;
-}
-
+/****** qmaster/reporting/reporting_write_consumables() ********************
+*  NAME
+*     reporting_write_consumables() -- dump consumables to a buffer
+*
+*  SYNOPSIS
+*     bool reporting_write_consumables(lList **answer_list, dstring *buffer, 
+*                                      const lList *actual, const lList *total) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list - used to return error messages
+*     dstring *buffer     - target buffer
+*     const lList *actual - actual consumable values
+*     const lList *total  - configured consumable values
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: reporting_write_consumables() is MT safe
+*******************************************************************************/
 bool
 reporting_write_consumables(lList **answer_list, dstring *buffer,
                             const lList *actual, const lList *total)
@@ -275,6 +430,30 @@ reporting_write_consumables(lList **answer_list, dstring *buffer,
    return ret;
 }
 
+/****** qmaster/reporting/reporting_create_host_record() *******************
+*  NAME
+*     reporting_create_host_record() -- create host reporting record
+*
+*  SYNOPSIS
+*     bool 
+*     reporting_create_host_record(lList **answer_list, 
+*                                  const lListElem *host, 
+*                                  u_long32 report_time) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     const lListElem *host - the host to output
+*     u_long32 report_time  - time of the last load report
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: reporting_create_host_record() is MT safe
+*******************************************************************************/
 bool
 reporting_create_host_record(lList **answer_list,
                              const lListElem *host,
@@ -309,11 +488,34 @@ reporting_create_host_record(lList **answer_list,
                                     sge_dstring_get_string(&host_dstring));
    }
 
-
    DEXIT;
    return ret;
 }
 
+/****** qmaster/reporting/reporting_create_host_consumable_record() ********
+*  NAME
+*     reporting_create_host_consumable_record() -- write host consumables
+*
+*  SYNOPSIS
+*     bool 
+*     reporting_create_host_consumable_record(lList **answer_list, 
+*                                             const lListElem *host, 
+*                                             u_long32 report_time) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list   - used to return error messages
+*     const lListElem *host - host to output
+*     u_long32 report_time  - time when consumables changed
+*
+*  RESULT
+*     bool - true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: reporting_create_host_consumable_record() is MT safe
+*******************************************************************************/
 bool
 reporting_create_host_consumable_record(lList **answer_list,
                                         const lListElem *host,
@@ -350,8 +552,141 @@ reporting_create_host_consumable_record(lList **answer_list,
    return ret;
 }
 
+/****** qmaster/reporting/reporting_create_sharelog_record() ***************
+*  NAME
+*     reporting_create_sharelog_record() -- dump sharetree usage
+*
+*  SYNOPSIS
+*     bool 
+*     reporting_create_sharelog_record(lList **answer_list) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list - used to return error messages
+*
+*  RESULT
+*     bool -  true on success, false on error
+*
+*  NOTES
+*     MT-NOTE: reporting_create_sharelog_record() is most probably MT safe
+*              (depends on sge_sharetree_print with uncertain MT safety)
+*******************************************************************************/
+bool
+reporting_create_sharelog_record(lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "reporting_create_sharelog_record");
+
+   /* only create sharelog entries if we have a sharetree */
+   if (lGetNumberOfElem(Master_Sharetree_List) > 0) {
+      dstring prefix_dstring = DSTRING_INIT;
+      dstring data_dstring   = DSTRING_INIT;
+      format_t format;
+      char delim[2] = { REPORTING_DELIMITER, '\0' };
+
+      /* we need a prefix containing the reporting file std fields */
+      sge_dstring_sprintf(&prefix_dstring, U32CFormat"%csharelog%c",
+                          sge_get_gmt(),
+                          REPORTING_DELIMITER, REPORTING_DELIMITER);
+
+      /* define output format */
+      format.name_format  = false;
+      format.delim        = delim;
+      format.line_delim   = "\n";
+      format.rec_delim    = "";
+      format.str_format   = "%s";
+      format.field_names  = NULL;
+      format.format_times = false;
+      format.line_prefix  = sge_dstring_get_string(&prefix_dstring);
+
+      /* dump the sharetree data */
+      /* JG: TODO: where do we need write locks? 
+       * probably not on user, project and schedd_config list.
+       * cleanup would require to change a number of prototypes in schedlib.
+       * Stephan?
+       */
+      SGE_LOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
+      SGE_LOCK(LOCK_MASTER_USER_LST, LOCK_WRITE);
+      SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_WRITE);
+      SGE_LOCK(LOCK_SCHEDD_CONFIG_LST, LOCK_WRITE);
+
+      /* JG: TODO: Where is calculation of the data done?
+       *           Do we really do it here, or is it delivered from scheduler?
+       *           Stephan?
+       */
+      sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
+                          Master_User_List,
+                          Master_Project_List,
+                          Master_Sched_Config_List,
+                          true,
+                          false,
+                          NULL,
+                          &format);
+      SGE_UNLOCK(LOCK_SCHEDD_CONFIG_LST, LOCK_WRITE);
+      SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_WRITE);
+      SGE_UNLOCK(LOCK_MASTER_USER_LST, LOCK_WRITE);
+      SGE_UNLOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
+
+      /* write data to reporting buffer */
+      SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+      sge_dstring_append(&reporting_data,
+                         sge_dstring_get_string(&data_dstring));
+      SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+
+      /* cleanup */
+      sge_dstring_free(&prefix_dstring);
+      sge_dstring_free(&data_dstring);
+   }
+
+   DEXIT;
+   return ret;
+}
+
 /* ----- static functions ----- */
 
+/*
+* NOTES
+*     MT-NOTE: reporting_write_load_values() is MT-safe
+*/
+static bool
+reporting_write_load_values(lList **answer_list, dstring *buffer, 
+                            const lList *load_list, const lList *variables)
+{
+   bool ret = true;
+   bool first = true;
+   const lListElem *variable;
+
+   DENTER(TOP_LAYER, "reporting_write_load_values");
+
+   for_each (variable, variables) {
+      const char *name;
+      const lListElem *load;
+
+      name = lGetString(variable, STU_name);
+      load = lGetElemStr(load_list, HL_name, name);
+      if (load != NULL) {
+         if (first) {
+            first = false;
+         } else {
+            sge_dstring_append_char(buffer, ',');
+         }
+         sge_dstring_sprintf_append(buffer, "%s=%s", 
+                                    name, lGetString(load, HL_value));
+      }
+
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/*
+* NOTES
+*     MT-NOTE: reporting_create_record() is MT-safe
+*/
 static bool 
 reporting_create_record(lList **answer_list, 
                         const char *type,
@@ -375,6 +710,10 @@ reporting_create_record(lList **answer_list,
    return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: reporting_flush_accounting() is MT-safe
+*/
 static bool 
 reporting_flush_accounting(lList **answer_list)
 {
@@ -398,6 +737,10 @@ reporting_flush_accounting(lList **answer_list)
    return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: reporting_flush_reporting() is MT-safe
+*/
 static bool 
 reporting_flush_reporting(lList **answer_list)
 {
@@ -420,6 +763,10 @@ reporting_flush_reporting(lList **answer_list)
    return ret;
 }
 
+/*
+* NOTES
+*     MT-NOTE: reporting_flush_report_file() is MT-safe
+*/
 static bool 
 reporting_flush_report_file(lList **answer_list, dstring *contents, 
                       const char *filename)
@@ -437,6 +784,10 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
       FILE *fp;
       bool write_comment = false;
       SGE_STRUCT_STAT statbuf;
+      char error_buffer[MAX_STRING_SIZE];
+      dstring error_dstring;
+
+      sge_dstring_init(&error_dstring, error_buffer, sizeof(error_buffer));
 
       /* if file doesn't exist: write a comment after creating it */
       if (SGE_STAT(filename, &statbuf)) {
@@ -448,12 +799,12 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
       if (fp == NULL) {
          if (answer_list == NULL) {
             ERROR((SGE_EVENT, MSG_ERROROPENINGFILEFORWRITING_SS, filename, 
-                   strerror(errno)));
+                   sge_strerror(errno, &error_dstring)));
          } else {
             answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_ERROROPENINGFILEFORWRITING_SS, filename, 
-                                    strerror(errno));
+                                    sge_strerror(errno, &error_dstring));
          }
 
          ret = false;
@@ -475,12 +826,13 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
             spool_ret = sge_spoolmsg_write(fp, COMMENT_CHAR, version_string);
             if (spool_ret != 0) {
                if (answer_list == NULL) {
-                  ERROR((SGE_EVENT, MSG_ERROR_WRITINGFILE_SS, filename, strerror(errno)));
+                  ERROR((SGE_EVENT, MSG_ERROR_WRITINGFILE_SS, filename, 
+                         sge_strerror(errno, &error_dstring)));
                } else {
                   answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                           ANSWER_QUALITY_ERROR, 
                                           MSG_ERROR_WRITINGFILE_SS, filename, 
-                                          strerror(errno));
+                                          sge_strerror(errno, &error_dstring));
                } 
                ret = false;
             }
@@ -492,12 +844,12 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
          if (fwrite(sge_dstring_get_string(contents), size, 1, fp) != 1) {
             if (answer_list == NULL) {
                ERROR((SGE_EVENT, MSG_ERROR_WRITINGFILE_SS, filename, 
-                      strerror(errno)));
+                      sge_strerror(errno, &error_dstring)));
             } else {
                answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                        ANSWER_QUALITY_ERROR, 
                                        MSG_ERROR_WRITINGFILE_SS, filename, 
-                                       strerror(errno));
+                                       sge_strerror(errno, &error_dstring));
             }
 
             ret = false;
@@ -508,12 +860,12 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
       if (fclose(fp) != 0) {
          if (answer_list == NULL) {
             ERROR((SGE_EVENT, MSG_ERRORCLOSINGFILE_SS, filename, 
-                   strerror(errno)));
+                   sge_strerror(errno, &error_dstring)));
          } else {
             answer_list_add_sprintf(answer_list, STATUS_EDISK, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_ERRORCLOSINGFILE_SS, filename, 
-                                    strerror(errno));
+                                    sge_strerror(errno, &error_dstring));
          }
          ret = false;
       }
@@ -522,7 +874,10 @@ reporting_flush_report_file(lList **answer_list, dstring *contents,
    DEXIT;
    return ret;
 }
-
+/*
+* NOTES
+*     MT-NOTE: reporting_flush() is MT-safe
+*/
 static bool 
 reporting_flush(lList **answer_list, u_long32 flush, u_long32 *next_flush)
 {

@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 
-#include <string.h>
+#include "sge_dstring.h"
 
 struct saved_vars_s {
    char *static_cp;
@@ -87,6 +87,8 @@ void sge_compress_slashes(char *str);
 void sge_strip_quotes(char **pstr);
 
 char **string_list(char *str, char *delis, char **pstr);
+
+const char *sge_strerror(int errnum, dstring *buffer);
 
 #ifndef WIN32NATIVE
 #define SGE_STRCASECMP(a, b) strcasecmp(a, b)

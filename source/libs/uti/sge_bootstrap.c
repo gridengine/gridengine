@@ -30,8 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_bootstrap.h"
-
+#include <string.h>
 #include <errno.h>
 #include <pthread.h>
 
@@ -46,6 +45,7 @@
 #include "setup_path.h"
 #include "msg_utilib.h"
 
+#include "sge_bootstrap.h"
 
 struct bootstrap_state_t {
     const char* admin_user;      

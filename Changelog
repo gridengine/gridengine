@@ -1,3 +1,8 @@
+JG-2003-11-28-0: Enhancem.: Added sharelog (sharetree usage) to reporting file.
+                            Added thread safe sge_strerror to replace strerror.
+                            Added documentation and MT safety information.
+                 Review:    AD
+
 AH-2003-11-27-1: Bugfix:    Fix schedd crash in case PE/CKTP are used.
                             Disabled shepherd signal handler logging 
                             to fix shepherd deadlock.

@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 
 #include <ctype.h>
+#include <string.h>
 
 #include "sgermon.h"
 #include "sge_log.h"

@@ -70,11 +70,13 @@
 #include "sge_m_event.h"
 #include "sge_string.h"
 #include "sge_dirent.h"
+#include "reschedule.h"
 
 static int check_config(lList **alpp, lListElem *conf);
    
 extern lList *Master_Config_List;
 extern lList *Master_Project_List;
+extern lList *Master_Exechost_List;
 
 /* make chached values from configuration invalid */
 int new_config = 1;
@@ -294,6 +296,8 @@ char *rhost
    /* make chached values from configuration invalid */
    new_config = 1;
 
+   update_reschedule_unknown_timout_values(config_name);
+
    sge_add_answer(alpp, SGE_EVENT, STATUS_OK, NUM_AN_INFO);
    DEXIT;
    return STATUS_OK;
@@ -317,6 +321,7 @@ char *rhost
    char real_fname[SGE_PATH_MAX];
    u_long32 old_conf_version = 0;
    int ret;
+   int reschedule_unknown_changed = 1;
 
    DENTER(TOP_LAYER, "sge_mod_configuration");
 
@@ -343,11 +348,24 @@ char *rhost
    }
 
    if (!(ep = lGetElemHost(Master_Config_List, CONF_hname, config_name))) {
-      DTRACE;
       added = TRUE; 
-   }
-   else {
-      DTRACE;
+   } else {
+      const char *const name = "reschedule_unknown";
+      lListElem *old_reschedule_unknown = NULL;
+      lListElem *new_reschedule_unknown = NULL;
+
+      old_reschedule_unknown = lGetElemStr(lGetList(ep, CONF_entries), CF_name,
+                                           name);
+      new_reschedule_unknown = lGetElemStr(lGetList(confp, CONF_entries),
+                                           CF_name, name);
+      if (old_reschedule_unknown && new_reschedule_unknown &&
+          strcmp(lGetString(old_reschedule_unknown, CF_value),
+                 lGetString(new_reschedule_unknown, CF_value)) == 0) {
+         reschedule_unknown_changed = 0;
+      }
+      DPRINTF(("reschedule_unknown_changed = %d\n", 
+               reschedule_unknown_changed));
+
       old_conf_version = lGetUlong(ep, CONF_version);
       lRemoveElem(Master_Config_List, ep);
       added = FALSE;
@@ -410,7 +428,11 @@ char *rhost
       set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, 
          NULL, NULL);
    }
-   
+  
+   if (reschedule_unknown_changed) {
+      update_reschedule_unknown_timout_values(config_name);
+   }
+ 
    if (added)
       cp = MSG_SGETEXT_ADDEDTOLIST_SSSS;
    else

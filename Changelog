@@ -1,3 +1,9 @@
+EB-2001-11-13-0: Bugfix (Issue #92; Bugtraq #4525963):
+                  - Qmaster did not change the reschedule unknown
+                    value immediately after using the qconf command.
+                 Modified binaries:
+                  - qmaster 
+
 JG-2001-11-08-0: Updated recent GDI versions for version check and error 
                  handling in qmaster.
 

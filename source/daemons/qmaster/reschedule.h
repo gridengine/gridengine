@@ -51,6 +51,10 @@ lListElem* add_to_reschedule_unknown_list(lListElem *hostr, u_long32 job_number,
 lListElem* get_from_reschedule_unknown_list(lListElem *host, u_long32 job_number, u_long32 task_number);
  
 void delete_from_reschedule_unknown_list(lListElem *host);
+
+void update_reschedule_unknown_timout_values(const char *config_name);
+
+void update_reschedule_unknown_timeout(lListElem *host);
  
 void update_reschedule_unknown_list(lListElem *host);
  

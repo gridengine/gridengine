@@ -4982,7 +4982,7 @@ proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
        }
        return -1
     }
-    sleep 1
+    after 500
   }
   return 0
 }

@@ -265,14 +265,11 @@ proc check_calendardisable_migration_on_slavequeue_threshold_suspend {} {
      return
    }
 
-
    # wait for job to start running
    wait_for_end_of_transfer $checkpoint_job_id 100
 
-
    # find out where the slave task is running
    set slave_queue [slave_queue_of $checkpoint_job_id]
-  
    calendardisable_queue "$q1 $q2"  ;# pass list of queues to procedure
   
    # now threshold suspend the slave queue

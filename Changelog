@@ -1,3 +1,6 @@
+JG-2004-03-11-0: Testsuite: fixed tests functional/binary_submission and 
+                            functional/migration.
+
 CR-2004-03-11-0: Bugfix:    fixed error compiling qmon for aix43 
                  Changed:   qmon
 

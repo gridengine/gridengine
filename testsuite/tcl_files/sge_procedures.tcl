@@ -6038,7 +6038,9 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
              if { [ have_root_passwd ] == -1 } {
                 set_root_passwd 
              }
-             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+             if { $CHECK_ADMIN_USER_SYSTEM != 1 } {
+                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+             }
           }
           if { $prg_exit_state == 0 } {
              set do_it_as_root 1 

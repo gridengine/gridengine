@@ -1396,11 +1396,16 @@ proc get_spool_dir {host subdir} {
 #     ???/???
 #*******************************
 proc setup_queues {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno
+  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno CHECK_HOST
   global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_CORE_PROCESSORS
   global check_use_installed_system CHECK_OUTPUT CHECK_PRODUCT_TYPE
 
-
+  set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" } result ]
+  if { $catch_return != 0 } {
+     add_proc_error "setup_queues" -2 "error connecting qmaster: $result"
+     set_error -2 "error connecting qmaster"
+     return
+  }
 
     
   puts $CHECK_OUTPUT "\ncleaning up system"

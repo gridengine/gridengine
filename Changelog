@@ -1,3 +1,9 @@
+CR-2002-03-19-1  Testsuite: (Merge from V53_beta2_BRANCH)
+                            - stop install_core_system check if qmaster 
+                              is not reachable after installing last execd
+                            - shutdown_core_system(): only try to use root
+                              access if password is available
+
 CR-2002-03-19-0  Bugfix:    Fixed broken build for IRIX6 arch
 
 CR-2002-03-18-1             (merge from V53_beta2_BRANCH)

@@ -98,7 +98,7 @@
 #define MSG_SHEPHERD_CANTFINDACTIVEJOBSDIRXFORREAPINGJOBY_SU    _("can't find active jobs directory \"%s\" for reaping job "U32CFormat )
 #define MSG_SHEPHERD_INCORRECTCONFIGFILEFORJOBXY_UU    _("incorrect config file for job "U32CFormat"."U32CFormat"")
 #define MSG_SHEPHERD_CANTSTARTJOBXY_US     _("can't start job \""U32CFormat"\": %s")
-#define MSG_SHEPHERD_PROBLEMSAFTERSTART_DS _("problems after job start \""U32CFormat"\": %s")
+#define MSG_SHEPHERD_PROBLEMSAFTERSTART_US _("problems after job start \""U32CFormat"\": %s")
 #define MSG_SHEPHERD_JATASKXYISKNOWNREPORTINGITTOQMASTER    _("ja-task \"" U32CFormat"."U32CFormat"\" is unknown - reporting it to qmaster")
 #define MSG_SHEPHERD_CKECKINGFOROLDJOBS    _("checking for old jobs")
 #define MSG_SHEPHERD_NOOLDJOBSATSTARTUP    _("no old jobs at startup")

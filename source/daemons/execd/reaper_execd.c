@@ -1080,7 +1080,7 @@ int failed
    ERROR((SGE_EVENT, 
       (failed==SSTATE_FAILURE_BEFORE_JOB)?
          MSG_SHEPHERD_CANTSTARTJOBXY_US:
-         MSG_SHEPHERD_PROBLEMSAFTERSTART_DS, u32c(jobid), error_string));
+         MSG_SHEPHERD_PROBLEMSAFTERSTART_US, u32c(jobid), error_string));
 
    jr = get_job_report(jobid, jataskid, lGetString(jep, JB_pe_task_id_str));
    if (!jr) {

@@ -1963,7 +1963,7 @@ CheckCSP()
 
    $V5UTILBIN/adminrun $ADMINUSER test -f $HOME/.sge/$CA_PORT/$SGE_CELL
    if [ ! $? ]; then
-      $INFOTEXT -e "Please remove the old CSP security directory $HOME/.sge/$CA_PORT/$SGE_CELL. Exit."
+      $INFOTEXT -e "Please remove the old CSP security directory \$HOME/.sge/\$CA_PORT/\$SGE_CELL. Exit."
       exit 1
    fi
 }

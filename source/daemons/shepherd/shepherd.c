@@ -1483,6 +1483,15 @@ pid_t ctrl_pid[3];
                   }
                }
             } else {
+               if (notify) {
+                  /* when notify is used for SIGSTOP the SIGCONT might be sent by execd before 
+                     the actual SIGSTOP has been delivered. We must clean this state at this point 
+                     otherwise the next SIGSTOP signal will be delivered without a notify because it
+                     is seen just as repeated initiation of notify mechanism */
+                  if (*postponed_signal == SIGSTOP) {
+                     *postponed_signal = 0;
+                  }
+               }
                /* default signalling method */
                SHEPHERD_TRACE((err_str, "%s SIGCONT)", kill_str));
             }
@@ -1498,6 +1507,7 @@ pid_t ctrl_pid[3];
                /* detect and prevent repeated initiation of notify mechanism 
                   as this can delay final job suspension endlessly */
                if (*postponed_signal == SIGKILL || *postponed_signal == SIGSTOP) {
+
                   SHEPHERD_TRACE((err_str, "ignoring repeated (%s) initiation of suspension notify", 
                         sys_sig2str(*postponed_signal)));
                   alarm(remaining_alarm);
@@ -2242,7 +2252,7 @@ char *childname            /* "job", "pe_start", ...     */
    int rest_ckpt_interval;
    FILE *fp;
    int inArena, inCkpt, kill_job_after_checkpoint, job_pid;
-   int postponed_signal = 0;
+   int postponed_signal = 0; /* used for implementing SIGSTOP/SIGKILL notifiy mechanism */
    int remaining_alarm;
    pid_t ctrl_pid[3];
 
@@ -2878,7 +2888,7 @@ int sig
          first_kill = 0;
       }
 
-      sprintf(err_str, "now sending signal %d to pid " pid_t_fmt "\n", sig, pid);
+      sprintf(err_str, "now sending signal %d to pid " pid_t_fmt, sig, pid);
       shepherd_trace(err_str);
    }
 

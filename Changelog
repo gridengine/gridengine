@@ -1,3 +1,9 @@
+AH-2003-03-26-1  Bugfix:    NOTIFY_SUSP signal only sent for first suspension of job
+                 Isssue:    #510
+                 Bugtraq:   #4835832
+                 Changed:   sge_shepherd
+                 Review:    EB
+
 JG-2003-03-26-2  Bugfix:    deleted sharetree showed up again after qmaster 
                             restart, as the spool file was not deleted.
                  Changed:   sge_qmaster

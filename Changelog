@@ -1,4 +1,7 @@
-EB-2004-04-19-0: Bugfix:    stale resource_unknown_list
+RC-2004-04-25-0: Enhancem:  NetBSD port, patch submitted by Dan McMahill
+                 Review:    RC
+
+EB-2004-04-19-0: Bugfix:    stale reschedule_unknown_list
                  Issue:     942
                  Changed:   sge_qmaster
                  Review:    JG

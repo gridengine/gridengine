@@ -848,17 +848,17 @@ int sub_command
        * if ID_ja_structure not empty delete specified tasks
        * otherwise delete whole job
        */
+      start = job_get_smallest_task_id(job);
+      end = job_get_biggest_task_id(job);
       rn = lFirst(lGetList(idep, ID_ja_structure));
       if (rn) {
-         start = lGetUlong(rn, RN_min);
-         end = lGetUlong(rn, RN_max);
+         start = MAX(lGetUlong(rn, RN_min), start);
+         end = MIN(lGetUlong(rn, RN_max), end);
          step = lGetUlong(rn, RN_step);
          if (!step)
             step = 1;
          alltasks = 0;
       } else {
-         start = range_list_get_first_id(lGetList(job, JB_ja_structure), NULL);
-         end = range_list_get_last_id(lGetList(job, JB_ja_structure), NULL);
          step = 1;
          alltasks = 1;
       }
@@ -884,12 +884,13 @@ int sub_command
       deleted_unenrolled_tasks = 0;
       deleted_tasks = 0;
       existing_tasks = job_get_ja_tasks(job);
-      for (task_number = start; task_number <= end; task_number++) {
+      for (task_number = start; task_number <= end; task_number += step) {
          int is_defined = job_is_ja_task_defined(job, task_number); 
 
          if (is_defined) {
-            int is_enrolled = job_is_enrolled(job, task_number);
-
+            int is_enrolled;
+ 
+            is_enrolled = job_is_enrolled(job, task_number);
             if (!is_enrolled) {
                lListElem *tmp_task = NULL;
 
@@ -925,8 +926,7 @@ int sub_command
          if (existing_tasks > deleted_tasks) {
             job_write_common_part(job, 0, SPOOL_DEFAULT);
          } else {
-            sge_add_event(NULL, sgeE_JOB_DEL, job_number, 0,
-                          NULL, NULL);
+            sge_add_event(NULL, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
          }
          schedd = sge_locate_scheduler();
          if(schedd != NULL) {
@@ -937,7 +937,9 @@ int sub_command
        * Delete enrolled ja tasks
        */
       if (existing_tasks > deleted_tasks) { 
-         for (task_number = start; task_number <= end; task_number++) {
+
+
+         for (task_number = start; task_number <= end; task_number += step) {
             int spool_job = 1;
             int is_defined = job_is_ja_task_defined(job, task_number);
            
@@ -972,6 +974,7 @@ int sub_command
             increment_heartbeat(sge_get_gmt()); 
          }
       }
+
       if (alltasks && showmessage) {
          get_rid_of_schedd_job_messages(job_number);
          INFO((SGE_EVENT, MSG_JOB_DELETEJOB_SU, ruser, u32c(job_number)));
@@ -1633,10 +1636,8 @@ lListElem *locate_job_by_identifier(const char *pre_ident, const char *owner)
  
       next_user_job = lGetElemStrFirst(Master_Job_List, JB_owner, 
                                        owner, &user_iterator);
-DTRACE;
       while ((user_job = next_user_job)) {
          const char *job_name = lGetString(user_job, JB_job_name);
-DTRACE;
 
          next_user_job = lGetElemStrNext(Master_Job_List, JB_owner, 
                                          owner, &user_iterator);     

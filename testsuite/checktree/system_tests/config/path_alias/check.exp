@@ -189,7 +189,7 @@ proc path_alias_setup {} {
        puts $diff $elem 
        close $diff
 
-       set catch_return [ catch { eval exec "diff -w /tmp/test1.txt /tmp/test2.txt" } diff_output ]
+       set catch_return [ catch { eval exec "diff -w $CHECK_PROTOCOL_DIR/test1.txt $CHECK_PROTOCOL_DIR/test2.txt" } diff_output ]
        if { $catch_return != 0 } {
           add_proc_error "path_alias_setup" "-1" "error compareing output of cat command:\n$diff_output"
        }

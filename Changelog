@@ -1,3 +1,7 @@
+CR-2002-03-21-3  Testsuite: - used wrong path in path_alias test
+                 Bugfix:    - don't use shepherd wrapper script (code is
+                              just out commented for later reuse)
+
 EB-2002-03-21-1  Enhancem.: sort output of qconf -sep
 
 CR-2002-03-21-2  Bugfix:    changed error messages when master commd is not

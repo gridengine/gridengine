@@ -300,6 +300,8 @@ void range_sort_uniq_compress(lList *range_list)
       }
    }
 
+   lFreeList(tmp_list);
+
    range_compress(range_list);
 }
 

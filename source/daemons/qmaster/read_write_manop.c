@@ -107,6 +107,8 @@ int target
       if (str[0] != COMMENT_CHAR) {
          lSetString(ep, MO_name, str);
          lAppendElem(*lpp, ep);
+      } else {
+         lFreeElem(ep);
       }
    }
 

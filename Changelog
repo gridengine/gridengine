@@ -1,3 +1,5 @@
+JG-2001-10-25-0: Fixed some memory leaks
+
 JG-2001-10-23-0: Fixed a bug in the implementation of non unique hash tables:
                  The key data has to be duplicated in the hash table.
                  Therefore a duplication function has to be passed when
@@ -9,7 +11,7 @@ EB-2001-10-20-0: Added 'const' in libraries
 
 JG-2001-10-18-0: Execd:
                   - bugfix: reporting of a parallel array jobs pe task in
-                            tight integration could.
+                            tight integration could fail.
                   - use cull hashing iterators for searches in job list          
 
 JG-2001-10-17-0: (Issue #57)

@@ -957,6 +957,7 @@ lCondition **cpp
    }
 
    if ((ret = unpackint(pb, &i))) {
+      lFreeWhere(cp);
       DEXIT;
       return ret;
    }
@@ -975,16 +976,19 @@ lCondition **cpp
    case SUBSCOPE:
    case HOSTNAMECMP:
       if ((ret = unpackint(pb, &i))) {
+         lFreeWhere(cp);
          DEXIT;
          return ret;
       }
       cp->operand.cmp.pos = i;
       if ((ret = unpackint(pb, &i))) {
+         lFreeWhere(cp);
          DEXIT;
          return ret;
       }
       cp->operand.cmp.mt = i;
       if ((ret = unpackint(pb, &i))) {
+         lFreeWhere(cp);
          DEXIT;
          return ret;
       }
@@ -992,12 +996,14 @@ lCondition **cpp
 
       if (cp->operand.cmp.mt != lListT) {
          if ((ret = cull_unpack_switch(pb, &(cp->operand.cmp.val), cp->operand.cmp.mt))) {
+            lFreeWhere(cp);
             DEXIT;
             return ret;
          }
       }
       else {
          if ((ret = cull_unpack_cond(pb, &(cp->operand.cmp.val.cp)))) {
+            lFreeWhere(cp);
             DEXIT;
             return ret;
          }
@@ -1006,6 +1012,7 @@ lCondition **cpp
 
    case NEG:
       if ((ret = cull_unpack_cond(pb, &(cp->operand.log.first)))) {
+         lFreeWhere(cp);
          DEXIT;
          return ret;
       }
@@ -1014,16 +1021,19 @@ lCondition **cpp
    case AND:
    case OR:
       if ((ret = cull_unpack_cond(pb, &(cp->operand.log.first)))) {
+         lFreeWhere(cp);
          DEXIT;
          return ret;
       }
       if ((ret = cull_unpack_cond(pb, &(cp->operand.log.second)))) {
+         lFreeWhere(cp);
          DEXIT;
          return ret;
       }
       break;
 
    default:
+      lFreeWhere(cp);
       DEXIT;
       return PACK_FORMAT;
    }

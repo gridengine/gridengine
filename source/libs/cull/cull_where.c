@@ -1145,6 +1145,7 @@ lCondition *cp
    case BITMASK:
    case STRCASECMP:
    case PATTERNCMP:
+   case HOSTNAMECMP:
 
       if (cp->operand.cmp.mt == lStringT) {
          if (cp->operand.cmp.val.str) {
@@ -1422,6 +1423,7 @@ const lCondition *cp
          break;
       default:
          unknownType("lCopyWhere");
+         new = lFreeWhere(new);
          DEXIT;
          return NULL;
       }
@@ -1442,6 +1444,7 @@ const lCondition *cp
 
    default:
       LERROR(LEOPUNKNOWN);
+      new = lFreeWhere(new);
       DEXIT;
       return NULL;
    }

@@ -1,3 +1,9 @@
+SG-2005-03-15-1: Bugfix:    reprioritize parameter is NOT documented
+                 Issue:     1501
+                 Bugtraq:   6229603
+                 Changed:   man5/sge_conf.5
+                 Review:    DT
+
 SG-2005-03-15-0: Bugfix:    Reservation of wrong hosts
                  Issue:     1484
                  Bugtraq:   pending

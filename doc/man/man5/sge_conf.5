@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/02/14 13:39:47 $     Revision: $Revision: 1.40 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/03/15 13:57:44 $     Revision: $Revision: 1.41 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/02/14 13:39:47 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/03/15 13:57:44 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1309,6 +1309,14 @@ the DRMAA interface.
 When an error occurs while moving the input, output and error files, return 
 error code 100 so that the error handling mechanism can handle the error
 correctly. (See also FORBID_APPERROR).
+.\"
+.\"
+.SH "\fBreprioritize\fP"
+This flag enables or disables the reprioritization of jobs based on their
+ticket amount. This is the master switch. The \fBreprioritize_interval\fP takes
+only affect, if \fBreprioritze\fP is set to true (the default). In case one wants
+to turn off the reprioritization of jobs, one should set the \fBreprioritize\fP flag
+to false and the \fBreprioritize_interval\fP to 0.
 .\"
 .\"
 .\"

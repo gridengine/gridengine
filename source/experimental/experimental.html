@@ -44,6 +44,24 @@ to <a href="#qidl">qidl</a>.
 a guideline for any form of automatic translation of CULL declarations
 into other forms of data definitions.
 <h2>
+<a NAME="JAM"></a>JAM</h2>
+
+JAM (for Job & Application Manager) is a proof-of-concept, Jini(TM) technology
+based, graphical interface to Grid Engine.  Applications to be submitted
+through this interface must be specially wrapped to be represented as Jini
+services.  Grid Engine queues are automatically represented as Jini services,
+as are jobs launched through JAM, which can be monitored and controlled through
+this interface.  JAM utilizes JavaSapces(TM) technology to coordinate this job
+monitoring & control.  JAM is compatible with the API (GDI) in Grid Engine 5.3.
+<p>There is some documentation in the source tree, including a <a
+href="jam/README.txt">README</a> file, a <a
+href="jam/doc/JAM_Whitepaper.pdf">technical whitepaper</a>, and slides (<a
+href="jam/doc/jamSC2000.pdf">pdf</a>; <a
+href="jam/doc/jamSC2000.sdd">StarOffice</a>) from a presentation given in the
+Sun Microsystems booth at the SC2000 trade show.  There are also javadoc
+comments in the code, along with a Makefile target to generate the javadoc
+documentation.
+<h2>
 <a NAME="jqmon"></a>jqmon</h2>
 Jqmon is a very early prototype of a Java graphical user interface to Grid
 Engine (back then Codine/GRD). It doesn't implement nearly as much functionality

@@ -2687,28 +2687,41 @@ int sig
    /*
    ** if child is a qrsh job (config rsh_daemon exists), get pid of started command
    ** and pass signal to that one
+   ** if the signal is the kill signal, we first kill the pid of the started command.
+   ** subsequent kills are passed to the shepherds child.
    */
    {
-      if(search_conf_val("qrsh_pid_file") != NULL) {
-         char *pid_file_name = NULL;
-         FILE *pid_file = NULL;
+      char err_str[256];
+      static int first_kill = 1;
+   
+      if(first_kill == 1 || sig != SIGKILL) {
+         if(search_conf_val("qrsh_pid_file") != NULL) {
+            char *pid_file_name = NULL;
+            FILE *pid_file = NULL;
 
-         pid_file_name = get_conf_val("qrsh_pid_file");
+            pid_file_name = get_conf_val("qrsh_pid_file");
 
-         switch2start_user();
-         if((pid_file = fopen(pid_file_name, "r")) != NULL) {
-            pid_t qrsh_pid = 0;
-            if(fscanf(pid_file, pid_t_fmt, &qrsh_pid) == 1) {
-               char err_str[256];
-               pid = -qrsh_pid;
-               sprintf(err_str, "found pid of qrsh client command: " pid_t_fmt, pid);
-               shepherd_trace(err_str);
+            switch2start_user();
+            if((pid_file = fopen(pid_file_name, "r")) != NULL) {
+               pid_t qrsh_pid = 0;
+               if(fscanf(pid_file, pid_t_fmt, &qrsh_pid) == 1) {
+                  pid = -qrsh_pid;
+                  sprintf(err_str, "found pid of qrsh client command: " pid_t_fmt, pid);
+                  shepherd_trace(err_str);
+               }
+               fclose(pid_file);
             }
-            fclose(pid_file);
+            switch2admin_user();
          }
-         switch2admin_user();
       }
-   }   
+
+      if(sig == SIGKILL) {
+         first_kill = 0;
+      }
+
+      sprintf(err_str, "now sending signal %d to pid " pid_t_fmt "\n", sig, pid);
+      shepherd_trace(err_str);
+   }
 
    switch2start_user();
    kill(pid, sig);

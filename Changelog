@@ -1,3 +1,9 @@
+JG-2002-01-25-0: Enhancem.: If killing a qrsh <command> job (by the pid of the
+                            qrsh_starter) is not successful (because the started
+                            application left the process group) a second kill
+                            request will kill the process group of the shepherds
+                            child (the rshd) to ensure the job is terminated.
+
 AH-2002-01-24-0: Enhancem.: - added 'maxvmem' as new per job usage information
                               in qmon and accounting 
                             - fix problem with wrong 'maxvmem' information

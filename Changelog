@@ -1,4 +1,4 @@
-CR-2004-11-02-1: Bugfix:    - fixed brocken build
+CR-2004-11-02-1: Bugfix:    - fixed build
 
 CR-2004-11-02-0: Enhancm.:  - added new commlib test binary: test_debug_client
                             - added new parameter to statistic calculate function

@@ -86,6 +86,7 @@ int profile_schedd = 0;
  
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
+int execd_priority = 0;
 int keep_active = 0;
 
 /* allow the simulation of (non existent) hosts */
@@ -596,6 +597,7 @@ lList **lpp
       notify_susp_type = 1;
       ptf_max_priority = -999;
       ptf_min_priority = -999;
+      execd_priority = -999;
       keep_active = 0;
       use_qsub_gid = 0;
       set_sge_environment = 1;
@@ -698,6 +700,8 @@ lList **lpp
             ptf_max_priority=atoi(&s[sizeof("PTF_MAX_PRIORITY=")-1]);
          else if (!strncasecmp(s, "PTF_MIN_PRIORITY", sizeof("PTF_MIN_PRIORITY")-1))
             ptf_min_priority=atoi(&s[sizeof("PTF_MIN_PRIORITY=")-1]);
+         else if (!strncasecmp(s, "EXECD_PRIORITY", sizeof("EXECD_PRIORITY")-1))
+            ptf_min_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
 
       flush_submit_sec = -1;
       flush_finish_sec = -1;

@@ -2034,7 +2034,7 @@ int ptf_init(void)
    }
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
    if (getuid() == 0) {
-      if (setpriority(PRIO_PROCESS, getpid(), -20) < 0) {
+      if (setpriority(PRIO_PROCESS, getpid(), PTF_MAX_PRIORITY) < 0) {
          ERROR((SGE_EVENT, MSG_PRIO_SETPRIOFAILED_S, strerror(errno)));
       }
    }

@@ -62,4 +62,10 @@
 #define MSG_DONTKNOWHOWTOSPOOLSUBLIST_SS _MESSAGE(59100, _("don't know how to spool list attribute "SFQ" in function "SFQ"\n"))
 #define MSG_UNKNOWNOBJECTTYPEFOR_SS _MESSAGE(59101, _("unknown object type for list attribute "SFQ" in function "SFQ"\n"))
 #define MSG_NONAMEFORATTRIBUTE_D _MESSAGE(59103, _("no or invalid name for attribute %d\n"))
+
+/*
+ * libs/spool/<method>/<code>
+ * messages common to different spooling methods
+ */
+#define MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S  _MESSAGE(59900, _("(un)spooling objects of type "SFQ" not supported\n"))
 #endif /* __MSG_SPOOLLIB_H */

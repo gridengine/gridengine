@@ -820,7 +820,7 @@ spool_flatfile_default_list_func(lList **answer_list,
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
-                                 MSG_FLATFILE_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
                                  object_type_get_name(event_type));
          ret = false;
          break;
@@ -1010,7 +1010,7 @@ spool_flatfile_default_read_func(lList **answer_list,
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
-                                 MSG_FLATFILE_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
                                  object_type_get_name(event_type));
          break;
    }
@@ -1177,6 +1177,8 @@ spool_flatfile_default_write_func(lList **answer_list,
          filename  = SCHED_CONF_FILE;
          break;
       case SGE_TYPE_JOB:
+      case SGE_TYPE_JATASK:
+      case SGE_TYPE_PETASK:
          {
             u_long32 job_id, ja_task_id;
             char *pe_task_id;
@@ -1200,7 +1202,7 @@ spool_flatfile_default_write_func(lList **answer_list,
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
-                                 MSG_FLATFILE_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
                                  object_type_get_name(event_type));
          ret = false;
          break;
@@ -1882,7 +1884,7 @@ spool_flatfile_align_list(lList **answer_list, const lList *list,
          
          sge_dstring_clear(&buffer);
          value = object_append_field_to_dstring(object, answer_list, 
-                                                &buffer, fields[i].nm);
+                                                &buffer, fields[i].nm, '\0');
          fields[i].width = MAX(fields[i].width, sge_strlen(value));
       }
    }
@@ -2496,7 +2498,8 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
       } else {
          sge_dstring_clear(&field_buffer);
          value = object_append_field_to_dstring(object, answer_list, 
-                                                &field_buffer, fields[i].nm);
+                                                &field_buffer, fields[i].nm, 
+                                                '\0');
          if (instr->align_data) {
             sge_dstring_sprintf_append(buffer, "%-*s", fields[i].width, value);
          } else {

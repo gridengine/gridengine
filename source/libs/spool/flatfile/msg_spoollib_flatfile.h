@@ -43,7 +43,6 @@
 #define MSG_DONTKNOWHOWTOHANDLELIST_S  _MESSAGE(62006, _("don't know how to handle sublist "SFQ"\n"))
 #define MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS _MESSAGE(62007, _("can't resolve host name "SFQ": "SFN"\n"))
 #define MSG_FLATFILE_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(62008, _("can't creae queue "SFQ": host "SFQ" is not known\n"))
-#define MSG_FLATFILE_SPOOLINGOFXNOTSUPPORTED_S  _MESSAGE(62009, _("(un)spooling objects of type "SFQ" not supported\n"))
 
 
 #endif /* __MSG_SPOOLLIB_FLATFILE_H */

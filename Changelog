@@ -1,3 +1,7 @@
+CR-2002-09-30-0  Testsuite: - qsh/qrsh does not accept -o/-e arguments anymore
+                 Bugfix:    - added version support for 5.3.1beta9 and
+                              5.3p2
+
 EB-2002-09-25-1  Bugfix:    Exiting sgeee jobs will be shown in qmons dialog
                             for pending jobs.
                  IZ:        has no id until now (IZ does not work)

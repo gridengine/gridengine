@@ -93,7 +93,7 @@ proc job_environment_setup  {} {
    set_error 0 "ok"
 }
 proc job_environment_parse_env_test_output { file array } {
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER
 
    upvar $array job_env_array
 
@@ -101,8 +101,9 @@ proc job_environment_parse_env_test_output { file array } {
       unset job_env_array
    }
 
-
+   wait_for_remote_file $CHECK_HOST $CHECK_USER $file
    set o_file [ open "$file" "r" ]
+   
    set variable_names_list ""
    while { [gets $o_file line] >= 0 } {
       set pos [ string first "=" $line ]
@@ -280,6 +281,16 @@ proc job_environment_JOB_NAME {} {
    job_environment_check_env_value "REQNAME" "jobenv.sh" $job_env(REQNAME)
    job_environment_check_env_value "REQUEST" "jobenv.sh" $job_env(REQUEST)
 
+   puts $CHECK_OUTPUT "\nqsub -N ..."
+   job_environment_qsub_job "newnam" job_env "-o /dev/null -e /dev/null -N newnam"
+#   foreach env $job_env(index) {
+#      puts $CHECK_OUTPUT "$env=\"$job_env($env)\""
+#   }
+   job_environment_check_env_value "JOB_NAME" "newnam" $job_env(JOB_NAME)
+   job_environment_check_env_value "REQNAME" "newnam" $job_env(REQNAME)
+   job_environment_check_env_value "REQUEST" "newnam" $job_env(REQUEST)
+   
+
    puts $CHECK_OUTPUT "\nqresub ..."
    job_environment_qresub_job "jobenv.sh" job_env "-o /dev/null -e /dev/null"
    job_environment_check_env_value "JOB_NAME" "jobenv.sh" $job_env(JOB_NAME)
@@ -293,7 +304,7 @@ proc job_environment_JOB_NAME {} {
    job_environment_check_env_value "REQUEST" "newnam" $job_env(REQUEST)
 
    puts $CHECK_OUTPUT "\nqsh ..."
-   job_environment_qsh_job job_env "-o /dev/null -e /dev/null"
+   job_environment_qsh_job job_env ""
    job_environment_check_env_value "JOB_NAME" "INTERACTIVE" $job_env(JOB_NAME)
    job_environment_check_env_value "REQNAME" "INTERACTIVE" $job_env(REQNAME)
    job_environment_check_env_value "REQUEST" "INTERACTIVE" $job_env(REQUEST)
@@ -303,7 +314,7 @@ proc job_environment_JOB_NAME {} {
 #   puts $CHECK_OUTPUT "job name is \"$job_env(JOB_NAME)\""
 
    puts $CHECK_OUTPUT "\nqrsh ..."
-   job_environment_qrsh_job job_env "-o /dev/null -e /dev/null"
+   job_environment_qrsh_job job_env ""
    job_environment_check_env_value "JOB_NAME" "jobenv.sh" $job_env(JOB_NAME)
    job_environment_check_env_value "REQNAME" "jobenv.sh" $job_env(REQNAME)
    job_environment_check_env_value "REQUEST" "jobenv.sh" $job_env(REQUEST)

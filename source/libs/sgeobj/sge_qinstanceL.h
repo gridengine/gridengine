@@ -48,6 +48,10 @@ enum {
    IQ = 0x02                 /* interactive Q */
 };
 
+enum {
+   GDI_DO_LATER = 0x01
+};
+
 #if 0
 /* *INDENT-OFF* */
 
@@ -159,7 +163,7 @@ enum {
    QU_host_seq_no,
    QU_resource_utilization,
    QU_message_list,
-   QU_gdi_do_laster
+   QU_gdi_do_later
 };
 
 SLISTDEF(QU_Type, QInstance)
@@ -244,7 +248,7 @@ SLISTDEF(QU_Type, QInstance)
    SGE_ULONG(QU_host_seq_no, CULL_DEFAULT)
    SGE_LIST(QU_resource_utilization, RUE_Type, CULL_DEFAULT)
    SGE_LIST(QU_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
-   SGE_ULONG(QU_gdi_do_laster, CULL_DEFAULT)
+   SGE_ULONG(QU_gdi_do_later, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(QUN)
@@ -329,7 +333,7 @@ NAMEDEF(QUN)
    NAME("QU_host_seq_no")
    NAME("QU_resource_utilization")
    NAME("QU_message_list")
-   NAME("QU_gdi_do_laster")
+   NAME("QU_gdi_do_later")
 NAMEEND
 
 #define QUS sizeof(QUN)/sizeof(char*)

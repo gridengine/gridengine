@@ -684,7 +684,7 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
     */
    qinstances = lGetList(cqueue, CQ_qinstances);
    for_each(qinstance, qinstances) {
-      if (lGetUlong(qinstance, QU_gdi_do_laster) == 1) {
+      if (lGetUlong(qinstance, QU_gdi_do_later) == GDI_DO_LATER) {
          lList *master_job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
          lListElem *job;
 
@@ -698,21 +698,22 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
                if (ISSET(state, JSUSPENDED_ON_THRESHOLD)) {
                   const char *queue_name = lGetString(lFirst(lGetList(ja_task,
                               JAT_granted_destin_identifier_list)), JG_qname);
-                  const char *hostname = lGetHost(qinstance, QU_qhostname);
-                  const char *cqueue_name = lGetString(qinstance, QU_qname);
                   const char *full_name = lGetString(qinstance, QU_full_name);
 
                   if (!strcmp(queue_name, full_name)) {
+                     const char *hostname = lGetHost(qinstance, QU_qhostname);
+                     const char *cqueue_name = lGetString(qinstance, QU_qname);
+
                      if (!ISSET(state, JSUSPENDED)) {
                         sge_signal_queue(SGE_SIGCONT, qinstance, job, ja_task);
                         SETBIT(JRUNNING, state);
+                        sge_event_spool(NULL, 0, sgeE_QINSTANCE_MOD,
+                                        0, 0, cqueue_name, hostname, NULL,
+                                        qinstance, NULL, NULL, true, true);
                      }
 
                      CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
                      lSetUlong(ja_task, JAT_state, state);
-                     sge_event_spool(NULL, 0, sgeE_QINSTANCE_MOD,
-                                     0, 0, cqueue_name, hostname, NULL,
-                                     qinstance, NULL, NULL, true, true);
                   }
                }
             }

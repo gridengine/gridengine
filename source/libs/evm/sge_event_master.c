@@ -989,7 +989,8 @@ int sge_set_event_client_data(u_long32 aClientID, u_long32 theData)
 *
 *******************************************************************************/
 void sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
-   u_long32 intkey2, const char *strkey, const char *strkey2, const char *session, lListElem *element) 
+   u_long32 intkey2, const char *strkey, const char *strkey2, 
+   const char *session, lListElem *element) 
 {
    lListElem *event_client = NULL;
    DENTER(TOP_LAYER, "sge_add_event"); 

@@ -380,7 +380,8 @@ set QMAKE            = 1
 set QTCSH            = 1
 set MAKESTRPTIME     = 0
 set MAKEFNMATCH      = 0
-set MAKEWINGRIDLIB   = 0
+set MAKEWINGRIDLIB   = 1
+set MAKEWINGRIDAPP   = 1
 set WITH_USERMAPPING = 0 # Compile without usermapping feature
 
 # Default Flags and Libraries 
@@ -734,6 +735,8 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
+      set MAKEWINGRIDAPP = 0
+      set MAKEWINGRIDLIB = 0
       breaksw
    case "-only-depend":
       set CORE       = 0
@@ -742,6 +745,8 @@ while ($#argv >= 1 && $?found)
       set QTCSH      = 0
       set REMOTE     = 0
       set SGE_DEPEND = 1
+      set MAKEWINGRIDAPP = 0
+      set MAKEWINGRIDLIB = 0
       breaksw
    case "-only-qmake":
       set CORE   = 0
@@ -749,6 +754,8 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
+      set MAKEWINGRIDAPP = 0
+      set MAKEWINGRIDLIB = 0
       breaksw
    case "-only-qmon":
       set CORE   = 0
@@ -756,6 +763,8 @@ while ($#argv >= 1 && $?found)
       set QMON   = 1
       set QTCSH  = 0
       set REMOTE = 0
+      set MAKEWINGRIDAPP = 0
+      set MAKEWINGRIDLIB = 0
       breaksw
    case "-only-qtcsh":
       set CORE   = 0
@@ -763,6 +772,17 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 1
       set REMOTE = 0
+      set MAKEWINGRIDAPP = 0
+      set MAKEWINGRIDLIB = 0
+      breaksw
+   case "-only-wingrid":
+      set CORE   = 0
+      set QMAKE  = 0
+      set QMON   = 0
+      set QTCSH  = 0
+      set REMOTE = 0
+      set MAKEWINGRIDAPP = 1
+      set MAKEWINGRIDLIB = 1
       breaksw
    case "-only-remote":
       set CORE   = 0
@@ -770,6 +790,8 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 1
+      set MAKEWINGRIDAPP = 0
+      set MAKEWINGRIDLIB = 0
       breaksw
    case "-parallel":
       set argv     = ($argv[2-])
@@ -924,6 +946,8 @@ endif
 switch ($BUILDARCH)
 case AIX43:
 case AIX51:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3 -qstrict -qmaxmem=8192"
    else
@@ -950,6 +974,8 @@ case AIX51:
    breaksw
 
 case ALPHA5:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
    if ( $OPTIMIZATION == 1 ) then
@@ -992,6 +1018,8 @@ case ALPHA5:
    breaksw
 
 case DARWIN:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
    if ( $OPTIMIZATION == 1 ) then
@@ -1081,6 +1109,8 @@ case DARWIN:
    breaksw
 
 case FREEBSD_*:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
    set MAKE = gmake
    set OFLAG = "-O"
@@ -1109,6 +1139,8 @@ case FREEBSD_*:
    breaksw 
 
 case IRIX65:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
    else
@@ -1144,6 +1176,8 @@ case IRIX65:
 
 case HP11:
 case HP1164:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    set MAKE = gmake
    set DLLIB = ""
    set OFLAG = ""
@@ -1206,6 +1240,8 @@ case ALINUX:
 case LINUX86:
 case LINUXAMD64:
 case LINUXIA64:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
    if ($OPTIMIZATION == 1) then
@@ -1295,41 +1331,37 @@ case LINUXIA64:
    
 case WIN32_X86:
    set CC = gcc
+   set RM = "rm -f"
 
    # option -no-secure always on
-   set SEC         = 0
-   set SECCLEAN    = ""  
-   set SECDEPEND   = ""
-   set SECFLAGS    = ""
-   set SECLIB      = ""
-   set SECLIBS     = ""
-   set SECLIBOBJS  = ""
-   set SECTARGETS  = ""
-   set KLFLAGS     = ""
+#   set SEC         = 0
+#   set SECCLEAN    = ""  
+#   set SECDEPEND   = ""
+#   set SECFLAGS    = ""
+#   set SECLIB      = ""
+#   set SECLIBS     = ""
+#   set SECLIBOBJS  = ""
+#   set SECTARGETS  = ""
+#   set KLFLAGS     = ""
 
    # Default build targets for WIN32_X86 for which we have seperate make files
    set SGE_DEPEND       = 0
    set QMON             = 0
-   set CORE             = 1
+#   set CORE             = 1
    set REMOTE           = 0
    set QMAKE            = 0
    set QTCSH            = 0
    set MAKESTRPTIME     = 0
    set MAKEFNMATCH      = 0
-   set MAKEWINGRIDLIB   = 0
    set WITH_USERMAPPING = 0 # Compile without usermapping feature
 
    set COMPILE_DC       = 1
-   set MAKEWINGRIDLIB   = 1
 
    # WIN32_X86 core build targets
    if ($CORE == 1) then
-      set argv = "work getservbyname qsh qrsh qrsh_starter sge_execd sge_schedd sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel qacct qmod qhost qping adminrun checkprog checkuser filestat gethostname gethostbyname gethostbyaddr infotext now qrsh_starter sge_share_mon testsuidroot uidgid test_cl_commlib test_cl_commlib_client test_cl_hostalias_list test_cl_hostname_list test_cl_tcp_framework test_debug_client test_multithread_io test_server_connection test_status_info test_virtual_event_client test_virtual_gdi_client test_virtual_qmaster"
+#      set argv = "work getservbyname qsh qrsh qrsh_starter sge_execd sge_schedd sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel qacct qmod qhost qping adminrun checkprog checkuser filestat gethostname gethostbyname gethostbyaddr infotext now qrsh_starter sge_share_mon testsuidroot uidgid test_cl_commlib test_cl_commlib_client test_cl_hostalias_list test_cl_hostname_list test_cl_tcp_framework test_debug_client test_multithread_io test_server_connection test_status_info test_virtual_event_client test_virtual_gdi_client test_virtual_qmaster"
 
       set TOUCH_DIR = $COMPILE_ARCH
-
-      echo touching files
-      echo TOUCH_DIR = $TOUCH_DIR
 
       #generate all other binaries using touch
 #      touch ./3rdparty/qmake/$COMPILE_ARCH/make
@@ -1340,7 +1372,6 @@ case WIN32_X86:
 #      touch ./3rdparty/qtcsh/$COMPILE_ARCH/tcsh
       touch $TOUCH_DIR/sge_qmaster
       touch $TOUCH_DIR/sge_shadowd
-
       touch $TOUCH_DIR/berkeley_db_svc
       touch $TOUCH_DIR/db_archive
       touch $TOUCH_DIR/db_checkpoint
@@ -1361,7 +1392,7 @@ case WIN32_X86:
    
 
    set CORE_INCLUDE = "$CORE_INCLUDE -I../libs/wingrid"
-   #set LIBS = "$LIBS -lwingrid"
+   # set LIBS = "$LIBS -lwingrid"
 
    if ($OPTIMIZATION == 1) then
       set OFLAG = "-O3"
@@ -1415,6 +1446,8 @@ case WIN32_X86:
    breaksw
    
 case NECSX4:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
 #
 # we need the '-hfloat0'-flag for CFLAGS and LFLAGS because the
 # XDR-Libraray does not work properly for other floating point models
@@ -1440,6 +1473,8 @@ case NECSX4:
    breaksw
 
 case NECSX5:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    set INTERACTTARGETS = ""
    set COMPILE_DC = 1
    if ( $CORE == 1 ) then
@@ -1468,6 +1503,8 @@ case NECSX5:
    breaksw
 
 case SLINUX:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 0
    set OFLAG = "-O"
    if ( $OPTIMIZATION == 1 ) then
@@ -1507,6 +1544,8 @@ case SOLARIS:
 case SOLARIS64:
 case SOLARIS86:
 case SOLARISAMD64:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
    if ($OPTIMIZATION == 1) then 
       if ( $CC == gcc ) then
@@ -1619,6 +1658,8 @@ case SOLARISAMD64:
    breaksw
 
 case UNICOS*:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    set INTERACTTARGETS = ""
    set MAKE = gmake
    set ARFLAGS = rcv
@@ -1658,6 +1699,8 @@ case UNICOS*:
    set JAVA_ARCH = ""
    breaksw
 default:
+   set MAKEWINGRIDLIB   = 0
+   set MAKEWINGRIDAPP   = 0
    echo "ERROR: Architecture $BUILDARCH not supported by aimk"
    exit 1
 endsw
@@ -1853,9 +1896,54 @@ if ( "$SGE_DEPEND" == 1 ) then
    cd $SOURCE
 endif
 
+if ( "$MAKEWINGRIDAPP" == 1 ) then
+   echo ____W_I_N_3_2__A_P_P_L_I_C_A_T_I_O_N_S____
+
+   if ( ! -d "${COMPILE_ARCH}" ) then
+      mkdir "${COMPILE_ARCH}"
+   endif
+   cd "${COMPILE_ARCH}"
+
+   set WINCC = cl.exe
+
+   set WINCFLAGS = "/Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /Gm /EHsc "
+   set WINCFLAGS = "${WINCFLAGS} /RTC1 /MLd /W3 /nologo /c /Wp64 /ZI /TC "
+   set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I1}'"
+   set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I2}'"
+
+   set WINLFLAGS = "/INCREMENTAL /NOLOGO /DEBUG /SUBSYSTEM:CONSOLE /MACHINE:X86"
+   set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L1}'"
+   set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L2}'"
+
+   set WINLIBS = "pdh.lib ws2_32.lib advapi32.lib"
+
+   switch ( "$argv" )
+      case clean:
+         set param = clean 
+         set DEPEND = ""
+      breaksw
+      case depend:
+         set param = depend
+         set DEPEND = "../3rdparty/sge_depend/$COMPILE_ARCH/sge_depend -l -S -Y $DEPEND_FLAGS"
+      default
+         set param = ""
+         set DEPEND = ""
+      breaksw
+   endsw
+
+   $MAKE -f $SOURCE/experimental/wingrid/Makefile "MAKE=$MAKE" "WINCC=$WINCC" \
+      "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "SDIR=$SDIR" "RM=$RM" \
+      "DEPEND=$DEPEND" "WINLIBS=$WINLIBS" $argv
+
+   cd ..
+endif
+
 if ( "$MAKEWINGRIDLIB" == 1 ) then
    echo _________L_I_B__W_I_N_G_R_I_D_____________
 
+   if ( ! -d "$COMPILE_ARCH" ) then
+      mkdir $COMPILE_ARCH
+   endif
    cd $COMPILE_ARCH
 
    switch ( "$argv" )
@@ -1877,12 +1965,12 @@ if ( "$MAKEWINGRIDLIB" == 1 ) then
       default:
          set param = wingridlib
          set DEPEND = ""
+# EB: TODO: INTERIX: Is rpclib needed?
          set LIBS = "$LIBS -lwingrid -lrpclib" 
       breaksw
    endsw
 
-   
-  $MAKE $MAKEOPT -f $SOURCE/libs/wingrid/Makefile "MAKE=$MAKE" "CC=$CC" \
+   $MAKE $MAKEOPT -f $SOURCE/libs/wingrid/Makefile "MAKE=$MAKE" "CC=$CC" \
       "COMPILE_ARCH=$COMPILE_ARCH" \
       "CFLAGS=$CFLAGS $CORE_INCLUDE" "SOURCE=$SOURCE" \
       "KRBLIBS=$KRBLIBS" \

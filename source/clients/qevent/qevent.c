@@ -314,25 +314,25 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       int pid2;
       int exit_status;
 
-      #if !(defined(CRAY) || defined(INTERIX))
+#if !(defined(CRAY) || defined(INTERIX))
          struct rusage rusage;
-      #endif
+#endif
 
-      #if defined(SVR3) || defined(_BSD)
+#if defined(SVR3) || defined(_BSD)
          union wait status;
-      #else
+#else
          int status;
-      #endif
-      #if defined(CRAY) || defined(INTERIX)
+#endif
+#if defined(CRAY) || defined(INTERIX)
          pid2 = waitpid(pid, &status, 0);
-      #else
+#else
          pid2 = wait3(&status, 0, &rusage);
-      #endif
-      #if defined(SVR3) || defined(_BSD)
+#endif
+#if defined(SVR3) || defined(_BSD)
          exit_status = status.w_retcode;
-      #else
+#else
          exit_status = status;
-      #endif
+#endif
 
       if ( WEXITSTATUS(exit_status) == 0 ) {
          INFO((SGE_EVENT,"exit status of script: "U32CFormat"\n", u32c(WEXITSTATUS(exit_status))));

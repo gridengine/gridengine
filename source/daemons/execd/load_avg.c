@@ -378,6 +378,7 @@ static int sge_get_loadavg(lList **lpp)
 
    loads = sge_getloadavg(avg, 3);
    nprocs = sge_nprocs();
+#ifndef INTERIX
    if (loads == -1) {
       static u_long32 next_log = 0;
       u_long32 now;
@@ -390,6 +391,7 @@ static int sge_get_loadavg(lList **lpp)
          next_log = now + 7200;
       }
    }
+#endif
 
    /* build a list of load values */
    if (loads != -1) {
@@ -575,12 +577,15 @@ static int sge_get_loadavg(lList **lpp)
       if (sge_getcpuload(&cpu_percentage) != -1) {
          sge_add_double2load_report(lpp, "cpu", cpu_percentage, uti_state_get_qualified_hostname(), NULL);
       } else {
+#ifndef INTERIX
          static u_long32 next_log2 = 0;
+
          u_long32 now = sge_get_gmt();
          if (now >= next_log2) {
             WARNING((SGE_EVENT, MSG_SGETEXT_NO_LOAD));
             next_log2 = now + 7200;
          }
+#endif
       }
          
    }

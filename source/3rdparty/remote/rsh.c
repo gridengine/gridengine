@@ -68,6 +68,10 @@ static const char rcsid[] =
 #include <string.h>
 #include <unistd.h>
 
+#if defined(INTERIX)
+#  include <arpa/inet.h>
+#endif
+
 #ifdef SOLARIS
 #include <sys/filio.h>
 #endif
@@ -77,7 +81,7 @@ static const char rcsid[] =
 int rcmd(char **, u_short, char *, char *, char *, int *);
 #endif
 
-#if !defined(FREEBSD) && !defined(DARWIN)
+#if !defined(FREEBSD) && !defined(DARWIN) && !defined(INTERIX)
 #include <values.h>
 #endif
 

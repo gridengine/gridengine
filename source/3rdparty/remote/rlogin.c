@@ -64,7 +64,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#if !defined(FREEBSD) && !defined(DARWIN)
+#if defined(INTERIX)
+#  include <arpa/inet.h>
+#endif
+
+#if !defined(FREEBSD) && !defined(DARWIN) && !defined(INTERIX)
 #include <values.h>
 #endif
 
@@ -321,7 +325,7 @@ main(argc, argv)
 		if (len + len2 < sizeof(term)) {
 /*			(void)snprintf(term + len, len2 + 1, "/%d", ospeed); */
          char Buffer[32];
-#ifndef DARWIN         
+#if !defined(DARWIN) && !defined(INTERIX)
          sprintf(Buffer, "/%d", ospeed);
 #else         
          sprintf(Buffer, "/%ld", ospeed);
@@ -681,7 +685,7 @@ writer()
 			}
 
 /* VDSUSP (delayed suspend job control character) does not exist on LINUX */         
-#ifndef LINUX         
+#if !defined(LINUX) && !defined(INTERIX)
 			if (CCEQ(deftty.c_cc[VDSUSP], c)) {
 				bol = 1;
 				echo((int)c);

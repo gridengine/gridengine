@@ -143,7 +143,7 @@
 */
 #define MSG_LOAD_NOMEMINDICES          _MESSAGE(29088, _("failed retrieving memory indices\n"))
 #define MSG_LOAD_NOPTFUSAGE_S          _MESSAGE(29089, _("ptf failed to determine job usage: "SFN))
-#define MSG_SGETEXT_NO_LOAD                           _MESSAGE(29090, _("can't get load values\n"))
+#define MSG_SGETEXT_NO_LOAD            _MESSAGE(29090, _("can't get load values\n"))
 
 
 

@@ -110,10 +110,6 @@ static void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender
       DEBUG((SGE_EVENT,"gdi_rcv: message id:        "U32CFormat"\n",  u32c((*message)->message_id) ));
       DEBUG((SGE_EVENT,"gdi_rcv: receive time:      %s\n",            sge_ctime((*message)->message_receive_time.tv_sec, &ds)));
       DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
-   } else {
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
-      DEBUG((SGE_EVENT,"gdi_rcv: some parameters are not set\n"));
-      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
    }
    DEXIT;
 }

@@ -138,3 +138,28 @@ switch($buildarch)
       set JNI_INCLUDES = ""
 endsw
 
+# set some variables which are necessary to compile GE for win32 architecture
+#
+# WIN32_VS_BASE:  Base directory of Visual Studio installation
+# WIN32_VS_SDK:   SDK subdirectory within WIN32_VS_BASE
+# WIN32_VS_CORE:  Compiler subdirectory within WIN32_VS_BASE
+switch($buildarch)
+   case "win32-x86":
+#      default path for a default installation
+#      set WIN32_VS_BASE = "C:\Programme\Microsoft Visual Studio .NET 2003"
+#     path on host bofur
+      set WIN32_VS_BASE = "C:\VisualStudio"
+      set WIN32_VS_I1 = "${WIN32_VS_BASE}\Vc7\include"
+      set WIN32_VS_I2 = "${WIN32_VS_BASE}\Vc7\PlatformSDK\Include"
+      set WIN32_VS_L1 = "${WIN32_VS_BASE}\Vc7\Lib"
+      set WIN32_VS_L2 = "${WIN32_VS_BASE}\Vc7\PlatformSDK\Lib"
+      breaksw
+   deafult:
+      set WIN32_VS_BASE = ""
+      set WIN32_VS_I1 = ""
+      set WIN32_VS_I2 = ""
+      set WIN32_VS_L1 = ""
+      set WIN32_VS_L2 = ""
+      breaksw
+endsw
+

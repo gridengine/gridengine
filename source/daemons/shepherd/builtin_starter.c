@@ -194,7 +194,11 @@ int truncate_stderr_out
    if(qlogin_starter) {
       /* must force to run the qlogin starter as root, since it needs
          access to /dev/something */
+#ifndef INTERIX
       target_user = "root";
+#else
+      target_user = "Administrator";
+#endif
    }
 
    pid = getpid();
@@ -256,8 +260,10 @@ int truncate_stderr_out
    }
 #endif
 
-   sprintf(err_str, "pid="pid_t_fmt" pgrp="pid_t_fmt" sid="pid_t_fmt" old pgrp="pid_t_fmt" getlogin()=%s", 
-           pid, newpgrp, newpgrp, pgrp, (cp = getlogin()) ? cp : "<no login set>");
+   sprintf(err_str, "pid="pid_t_fmt" pgrp="pid_t_fmt" sid="pid_t_fmt
+                    " old pgrp="pid_t_fmt" getlogin()=%s", 
+                    pid, newpgrp, newpgrp, pgrp, 
+                    (cp = getlogin()) ? cp : "<no login set>");
    shepherd_trace(err_str);
 
    pw = sge_getpwnam(target_user);

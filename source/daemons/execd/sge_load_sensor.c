@@ -48,6 +48,10 @@
 #include "sge_report_execd.h"
 #include "sge_report.h"
 
+#ifdef INTERIX
+#include "misc.h"
+#endif
+
 #include "msg_execd.h"
 
 
@@ -551,11 +555,15 @@ static int read_ls(void)
             DPRINTF(("format error in line: \"%100s\"\n", input));
             ERROR((SGE_EVENT, MSG_LS_FORMAT_ERROR_SS,
                    lGetString(ls_elem, LS_command), input));
-            DTRACE;
-            break;
+         } else {
+#ifdef INTERIX
+            if (ws_handle_ls_results(name, value, host)) 
+#endif
+            {
+               tmp_list = lGetList(ls_elem, LS_incomplete);
+               sge_add_str2load_report(&tmp_list, name, value, host);
+            }
          }
-         tmp_list = lGetList(ls_elem, LS_incomplete);
-         sge_add_str2load_report(&tmp_list, name, value, host);
       }
    }
 

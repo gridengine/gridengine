@@ -201,10 +201,8 @@ typedef kvm_t* kernel_fd_type;
 typedef int kernel_fd_type;
 #endif
 
-#if !defined(INTERIX)
 #ifdef SGE_LOADCPU
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs);   
-#endif
 #endif
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(TEST_AIX51)
@@ -874,7 +872,6 @@ double get_cpu_load()
    }
    return cpu_load;
 }
-
 #elif defined(INTERIX)
 
 double get_cpu_load()
@@ -1232,7 +1229,7 @@ int sge_getcpuload(double *cpu_load)
    DEXIT;
    return ret;
 }
-#if !defined(INTERIX)
+
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs)
 {
    int i;
@@ -1273,7 +1270,6 @@ static long percentages(int cnt, double *out, long *new, long *old, long *diffs)
    return total_change;
 }       
 
-#endif
 #endif
 
 #ifdef TEST

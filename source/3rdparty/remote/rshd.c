@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.16 2004/04/19 14:05:45 andreas Exp $	*/
+/*	$Id: rshd.c,v 1.17 2004/12/13 17:13:24 ernst Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -113,8 +113,8 @@ typedef unsigned short in_port_t;
 extern int ruserok(char *host, int root_user, char *remote_user, char *local_user);
 #endif 
 
-#ifdef IRIX
-#define NCARGS ARG_MAX
+#if defined(IRIX) || defined(INTERIX)
+#  define NCARGS ARG_MAX
 #endif
 
 #if defined SOLARIS && ! SOLARIS64
@@ -157,7 +157,7 @@ main(argc, argv)
 {
 	struct linger linger;
 	int ch, on = 1;
-#ifdef ALPHA5   
+#if defined(ALPHA5) || defined(INTERIX)
    int fromlen;
 #else   
    socklen_t fromlen;
@@ -267,7 +267,7 @@ doit(fromp)
       {
 	u_char optbuf[BUFSIZ/3], *cp;
 	char lbuf[BUFSIZ], *lp;
-#ifdef ALPHA5   
+#if defined(ALPHA5) || defined(INTERIX)
 	int optsize = sizeof(optbuf); 
 #else   
 	socklen_t optsize = sizeof(optbuf); 
@@ -562,7 +562,9 @@ fail:
    }
 
 	(void) setgid((gid_t)pwd->pw_gid);
+#if !defined(INTERIX) /* EB: TODO: There is no initgroups() in INTERIX? */
 	initgroups(pwd->pw_name, pwd->pw_gid);
+#endif
    
 #if (SOLARIS || ALPHA || LINUX)     
    /* add Additional group id to current list of groups */

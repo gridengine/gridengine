@@ -83,8 +83,11 @@
 #include "sge_job_qmaster.h"
 #include "sge_profiling.h"
 
+#if !defined(INTERIX)
 
 static void init_sig_action_and_mask(void);
+
+#endif
 
 
 /****** qmaster/sge_qmaster_main/sge_qmaster_application_status() ************
@@ -311,7 +314,10 @@ int main(int argc, char* argv[])
 
    sge_mt_init();
 
+/* EB: TODO: INTERIX: might be enabled later */
+#if !defined(INTERIX)
    init_sig_action_and_mask();
+#endif
 
    /* init qmaster threads without becomming admin user */
    sge_qmaster_thread_init(false);
@@ -378,6 +384,8 @@ int main(int argc, char* argv[])
    return 0;
 } /* main() */
 
+#if !defined(INTERIX)
+
 /****** qmaster/sge_qmaster_main/init_sig_action_and_mask() *******************
 *  NAME
 *     init_sig_action_and_mask() -- initialize signal action and mask 
@@ -414,4 +422,6 @@ static void init_sig_action_and_mask(void)
    
    return;
 }
+
+#endif
 

@@ -155,7 +155,8 @@ void uidgid_mt_init(void)
 int sge_is_start_user_superuser(void)
 {
    int ret = 0; 
-   DENTER(UIDGID_LAYER, "sge_is_real_user_superuser");
+
+   DENTER(UIDGID_LAYER, "sge_is_start_user_superuser");
 
 #if defined(INTERIX) || defined(WIN32)
    {
@@ -167,10 +168,11 @@ int sge_is_start_user_superuser(void)
       }
    }
 #else
-   if (getuid() == 0)
+   if (getuid() == 0) {
      ret = 1;
-   else
+   } else {
      ret = 0; 
+   }
 #endif
 
    DEXIT;

@@ -90,6 +90,11 @@ if [ -d libs/wingrid ]; then
    touch libs/wingrid/wingrid_dependencies
 fi
 
+if [ -d experimental/wingrid ]; then
+   rm -f experimental/wingrid/qloadsensor/exp_wingrid_dependencies
+   touch experimental/wingrid/qloadsensor/exp_wingrid_dependencies
+fi
+
 if [ -d experimental/culltrans ]; then
    rm -f experimental/culltrans/culltrans_dependencies
    touch experimental/culltrans/culltrans_dependencies

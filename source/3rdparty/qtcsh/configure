@@ -2690,9 +2690,9 @@ else
   grd=no
 fi;
 if test "$grd" != no; then
-   GRDDEF="-I../../apilib"
-   GRDLIB="-L../../$grd -lcodine -L/home/codine/zlib/$grd -lz -lm"
-   CFLAGS="$CFLAGS -DPROG_NAME='\"qtcsh\"'"
+   GRDDEF="-I../../../libs/gdi"
+   GRDLIB="-L../../../$grd -R${SGE_ROOT}/lib/${SGE_ARCH} \$(SGE_LIBS) ${LDFLAGS}"
+   CFLAGS="$CFLAGS -DPROG_NAME='\"qtcsh\"' -D$grd"
 fi
 
 ac_config_files="$ac_config_files Makefile"

@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.1 2001/07/18 11:06:04 root Exp $
+# $Id: Makefile.in,v 1.2 2004/05/19 19:21:16 brooks Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -25,7 +25,7 @@ CF=-c
 
 CPPFLAGS=-I. -I$(srcdir)
 
-LFLAGS=
+LFLAGS= $(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
@@ -142,7 +142,7 @@ DFLAGS = -D_PATH_TCSHELL='"${DESTBIN}/tcsh"' @DFLAGS@ @CPPFLAGS@
 ################################################################
 ## LDFLAGS.  Define something here if you need to
 ################################################################
-LDFLAGS= @LDFLAGS@		## This is set by autoconf.
+LDFLAGS= $(SGE_LOPTS)		## This is set by autoconf.
 #LDFLAGS= 			## The simplest, suitable for all.
 #LDFLAGS= -s			## Stripped. Takes less space on disk.
 #LDFLAGS= -s -n			## Pure executable. Spares paging over
@@ -627,3 +627,6 @@ ${EDOBJS} ${EDDINC}: ed.defns.h
 
 # tc.defs.o
 tc.defs.${SUF}:	tc.defs.c sh.h
+
+depend:
+	echo "No depends target for qtsch yet"

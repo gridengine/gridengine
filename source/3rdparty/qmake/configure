@@ -4457,7 +4457,7 @@ else
 fi
 
 
- REMOTE=stub
+ REMOTE=${REMOTE:-stub}
 make_try_customs=no
 # Check whether --with-customs or --without-customs was given.
 if test "${with_customs+set}" = set; then

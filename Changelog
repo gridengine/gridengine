@@ -1,3 +1,8 @@
+BD-2004-05-19-0: Cleanup:   Clean up configure related files in qmake
+                            and qtcsh so configure generates useful
+                            output.
+                 Changed:   qmake, qtcsh
+
 AD-2004-05-19-0: Bugfix:    - Did eradicate global 'Master_Config_List'.
                               Qmaster configuration module now does use a
                               module local list, which is properly synchronized.

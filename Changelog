@@ -1,3 +1,5 @@
+CR-2003-01-23-0  Testsuite: Bugfix for "check" command line option
+
 EB-2003-01-23-1  Bugfix:    execd does process tracking even if no job has to 
                             be controlled.
                  IZ:        #416

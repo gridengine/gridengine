@@ -14626,9 +14626,6 @@ if { $do_compile } {
    }
 }
 if { $do_one_test } {
-   set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT"
-   delete_tests $CHECK_ACT_PATH/$do_one_test_name
-
    set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/$do_one_test_name"
    set dirs [ get_dir_names $CHECK_ACT_PATH ]
    set files [get_file_names $CHECK_ACT_PATH ]
@@ -14639,8 +14636,9 @@ if { $do_one_test } {
    for {set i 0} {$i<= $do_one_test_level} {incr i 1} {
       lappend CHECK_GUILTY_RUNLEVELS [ expr ( $i * 100 )  ]
    }
-
-   print_menu_header
+ 
+   delete_tests $CHECK_ACT_PATH
+   # print_menu_header
    puts $CHECK_OUTPUT "run all tests ..."
 
    run_tests $CHECK_ACT_PATH 0

@@ -142,7 +142,7 @@ case $ARCH in
    QLOGIN_DAEMON=/etc/telnetd
    RLOGIN_DAEMON=/etc/rlogind
    ;;
- necsx4|necsx5)
+ necsx4|necsx5|sx)
    AWK=/usr/bin/nawk
    ECHO=/usr/bin/echo
    RC_FILE=

@@ -1,3 +1,6 @@
+JG-2002-01-24-2: Bugfix:    np_load_avg was not correctly computed for multi
+                            processor machines.
+
 EB-2002-01-24-0: Bugfix:    Fixed "bug" within the code handling task id
                             ranges which caused performance problem
                             in scheduler for huge fragmented array jobs

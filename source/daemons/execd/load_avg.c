@@ -242,11 +242,19 @@ lList *sge_build_load_report()
    sge_ls_get(&lp);
 
    /* make derived load values */
+   /* retrieve num procs first - we need it for all other derived load values */
+   ep = lGetElemStrFirst(lp, LR_name, LOAD_ATTR_NUM_PROC, &iterator);
+   while(ep != NULL) {
+      if ((hostcmp(lGetHost(ep, LR_host), me.qualified_hostname) == 0) && (s = lGetString(ep, LR_value))) {
+         nprocs = MAX(1, atoi(s));
+         break;
+      }   
+      ep = lGetElemStrNext(lp, LR_name, LOAD_ATTR_NUM_PROC, &iterator);
+   }
+
+   /* now make the derived load values */
    ep = lGetElemHostFirst(lp, LR_host, me.qualified_hostname, &iterator);
    while(ep != NULL) {
-      if ((strcmp(lGetString(ep, LR_name), LOAD_ATTR_NUM_PROC) == 0) && (s = lGetString(ep, LR_value)))
-         nprocs = MAX(1, atoi(s));
-
       if ((strcmp(lGetString(ep, LR_name), LOAD_ATTR_LOAD_AVG) == 0) && (s = lGetString(ep, LR_value))) {
          load = strtod(s, NULL);
          sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_AVG, (load/nprocs), me.qualified_hostname, NULL);

@@ -3241,12 +3241,6 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                   tmp_ndx = sort_list[i];
                   sort_list[i] = sort_list[j];
                   sort_list[j] = tmp_ndx;
-
-                  temp_user = user_fshares;
-                  temp_proj = proj_fshares;
-                  temp_dept = dept_fshares;
-                  temp_jobclass = jobclass_fshares;
-                  temp_job = job_fshares;
                }
             }
 

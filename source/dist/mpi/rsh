@@ -38,8 +38,10 @@ me=`basename $0`
 # just_wrap=1
 
 # remove path to wrapping rsh from path list
-PATH=`echo $PATH|tr : "\012"|grep -v $TMPDIR| tr "\012" :`
-export PATH
+if [ "x$TMPDIR" != "x" ]; then
+   PATH=`echo $PATH|tr : "\012"|grep -v $TMPDIR| tr "\012" :`
+   export PATH
+fi
 
 # rehash 
 hash -r
@@ -54,8 +56,14 @@ if [ $# -lt 1 ]; then
    echo $me: missing hostname
    exit 1
 fi  
-rhost=$1
-shift
+
+# Handle hostname before options
+rhost=
+if ! expr "$1" : "-*" >/dev/null 2>&1; then
+   rhost=$1
+   shift
+fi
+
 ruser=
 minus_n=0
 
@@ -73,12 +81,26 @@ while [ "$1" != "" ]; do
       -n)
          minus_n=1
          ;;
+      -*)
+         echo $me: Unsupported option - $1
+         exit 1
+         ;;
       *)
          break;
          ;;
    esac
    shift
 done
+
+# Handle hostname after options
+if [ "x$rhost" = x ]; then
+   if [ $# -lt 1 ]; then 
+      echo $me: missing hostname
+      exit 1
+   fi  
+   rhost=$1
+   shift
+fi
 
 # should the command to be started preceeded with any starter command
 if [ "x$RCMD_PREFIX" = x ]; then

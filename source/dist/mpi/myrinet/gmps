@@ -1,0 +1,77 @@
+#!/bin/ksh
+
+set +u
+
+usage() {
+   print -u2 " "
+   print -u2 "usage: gmps [-a] [-h] [-k] [-v]"
+   print -u2 " "
+   print -u2 "  -a   Get info for all hosts"
+   print -u2 "  -h   Display this usage information"
+   print -u2 "  -k   Kill processes"
+   print -u2 "  -v   Verbose output (pid and port)"
+   print -u2 " "
+}
+
+gethosts() {
+   gm_board_info | grep "^  [ 0-9][0-9] " | awk '{ print $3 }' | sort
+}
+
+gm_board_info=$(whence gm_board_info)
+if [ "$gm_board_info" = "" ]; then
+   print -u2 gm_board_info is not in your path
+   exit 1
+fi
+
+verbose=0
+kill=0
+allhosts=0
+while [ "$1" != "" ]; do
+
+   case "$1" in
+      -v) verbose=1;;
+      -k) kill=1;;
+      -a) allhosts=1;;
+      -h) usage; exit 0;;
+      *) print -u2 gmps: Unknown option - $1; usage; exit 1;;
+   esac
+
+   shift
+done
+
+if [ $allhosts -eq 1 ]; then
+   hosts=$(gethosts)
+   gmps=$(whence gmps)
+   if [ "$gmps" = "" ]; then
+      print -u2 gmps is not in your PATH
+      exit 2
+   fi
+   gmpath=$(dirname $gm_board_info)
+   gmopts=
+   [ $verbose -eq 1 ] && gmopts="$gmopts -v"
+   [ $kill -eq 1 ] && gmopts="$gmopts -k"
+   for h in $hosts; do
+      print "$h:"
+      rsh $h "PATH=$PATH:$gmpath; export PATH; $gmps $gmopts" 2>/dev/null
+   done
+   exit 0
+fi
+
+pids="$(gm_board_info | egrep '[2-7]: *BUSY' | awk '{ print $3; }')"
+
+if [ $kill -eq 1 ]; then
+   for a in $pids; do
+      kill $a
+   done
+fi
+
+if [ "$pids" != "" ]; then
+   if [ $verbose -eq 1 ]; then
+      print "   PID PORT"
+      gm_board_info | egrep '[2-7]: *BUSY' | awk '{ printf("%6d %s\n", $3, substr($1, 0, 1)); }'
+   else
+      print -- "$pids"
+   fi
+fi
+
+

@@ -1950,11 +1950,11 @@ dstring *sb
             }
  
             if (header) {
-               if (!first_run)
+               if (!first_run) {
                   if (fp)
                      printf("\n\n");
                   else   
-                     sge_string_printf(sb, "\n\n");
+                     sge_dstring_sprintf_append(sb, "\n\n");
                } else
                   first_run = 0;
                sge_dstring_sprintf_append(sb, "%s\n", sge_schedd_text(mid+SCHEDD_INFO_OFFSET));

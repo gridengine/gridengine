@@ -1,0 +1,169 @@
+<html>
+<head>
+<title>GridEngine Downloads</title></head>
+<body bgcolor="#FFFFFF">
+&nbsp; 
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td><b><font color="#336699">Download</font></b></td>
+</tr>
+</table>
+
+<table BORDER=0 CELLSPACING=0 CELLPADDING=2 WIDTH="100%" >
+<tr>
+<td><! begin content -->
+<h2>
+<b><font color="#990000">General Instructions for Downloads</font></b></h2>
+You can download most files by clicking on their corresponding links. In
+some cases, this will launch a browser's plug-in such as Adobe Acrobat
+for PDF files, or an archive extractor for ZIP files. If you prefer to
+download a file rather than viewing it with your browser's plug-in, click
+on the right mouse button, and select <b>Save Link As</b> for Netscape&reg;
+or <b>Save Target As</b> for Microsoft&reg; Internet Explorer to specify
+where the file will be saved on your system.&nbsp;
+      <p><a NAME="Binaries"></a><b><font color="#990000">Grid Engine Binary Download</font></b> 
+      <p> 1. Download common files (necessary for all architectures<br>
+        <br>
+      <table width="384" border="1" cellspacing="0" cellpadding="2" bordercolor="#CCCCCC">
+        <tr>
+          <td width="22" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="354" bordercolor="#CCCCCC"><a href="http://gridengine.sunsource.net/servlets/ProjectDocumentList?dcID=13&action=download">Grid 
+            Engine common files</a></td>
+        </tr>
+      </table>
+      <p>2. Download binary and data files for every architecture you need</p>
+      <table width="384" border="1" cellspacing="0" cellpadding="2" bordercolor="#CCCCCC">
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><a href="/project/gridengine-download/sge-5.3-bin-osf4.tar.gz">Compaq 
+            - Tru64 Unix 4.0</a> </td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><a href="/project/gridengine-download/sge-5.3-bin-tru64.tar.gz">Compaq 
+            - Tru64 Unix 5.0, 5.1</a></td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><a href="/project/gridengine-download/sge-5.3-bin-hp10.tar.gz">Hewlett 
+            Packard - HP-UX 10.20</a> </td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><a href="/project/gridengine-download/sge-5.3-bin-hp11.tar.gz">Hewlett 
+            Packard - HP-UX 11.00</a></td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><a href="/project/gridengine-download/sge-5.3-bin-aix42.tar.gz">IBM 
+            - AIX 4.2.x</a> </td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><a href="/project/gridengine-download/sge-5.3-bin-aix43.tar.gz">IBM 
+            - AIX 4.3.x</a></td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><a href="/project/gridengine-download/sge-5.3-bin-glinux.tar.gz">Linux 
+            i386</a> </td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"> <a href="/project/gridengine-download/sge-5.3-bin-alinux.tar.gz">Linux 
+            alpha</a></td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><a href="/project/gridengine-download/sge-5.3-bin-irix6.tar.gz">Silicon 
+            Graphics - IRIX 6.0 - 6.4</a></td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><a href="/project/gridengine-download/sge-5.3-bin-solaris.tar.gz">SUN 
+            - Solaris (sparc) 2.6, 7, 8&nbsp; 32-bit&nbsp;</a> </td>
+        </tr>
+        <tr> 
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF">&nbsp;</td>
+          <td width="357"><br>
+            <a href="/project/gridengine-download/sge-5.3-bin-solaris64.tar.gz">SUN 
+            - Solaris (sparc) 7, 8&nbsp; 64-bit</a> </td>
+        </tr>
+        <tr>
+          <td width="19" bgcolor="#FFFFFF" bordercolor="#FFFFFF" height="2">&nbsp;</td>
+          <td width="357" height="2"><a href="/project/gridengine-download/sge-5.3-bin-solaris86.tar.gz">SUN 
+            - Solaris (x86) 8</a></td>
+        </tr>
+      </table>
+      <br>
+      3. Installation<br>
+      <br>
+      <i>Unpacking the files</i> 
+      <p>All files must be unpacked to a directory which is accessible from all 
+        machines which use Grid Engine. For execution hosts this directory should 
+        be read/write exported for the root user. 
+      <ul>
+        &nbsp; <br>
+        create SGE_ROOT directory (and export it for NFS access if necessary) 
+        <pre>% mkdir &lt;your_gridengine_root_direcotry>
+% cd &lt;your_gridengine_root_direcotry></pre>
+        unpack the "common" files 
+        <pre STYLE="margin-bottom: 0.2in">% gzip -dc sge_&lt;version>_common.tar.gz | tar xvf -</pre>
+        unpack the binaries for all architectures 
+        <pre STYLE="margin-bottom: 0.2in">% gzip -dc sge_&lt;version>_&lt;arch>.tar.gz | tar xvf -</pre>
+      </ul>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; It's recommended 
+      to add the service 
+      <pre STYLE="margin-bottom: 0.2in">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sge_commd xxx/tcp</pre>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; to your services 
+      database (/etc/services or at your NIS server). You should use an unused 
+      number below 1024. <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; If you don't want 
+      to add this service, you will be prompted for a port number during installation. 
+      <p><i>Install Grid Engine</i> 
+      <p>Run the script "inst_sge" in the $SGE_ROOT directory to install Grid 
+        Engine. 
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; First 
+        run 
+      <pre STYLE="margin-bottom: 0.2in">&nbsp;&nbsp;&nbsp;&nbsp; % ./install_qmaster</pre>
+      <ol>
+        <div STYLE="margin-bottom: 0.2in">&nbsp; on the machine where the Grid 
+          Engine master daemon (sge_qmaster) will run.</div>
+      </ol>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The script 
+      asks you to add one queue for each host, where you plan to install an execution 
+      host. 
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; On 
+        all hosts (including the qmaster machine) on which you want to execute 
+        jobs, run the the script 
+      <pre STYLE="margin-bottom: 0.2in">&nbsp;&nbsp;&nbsp;&nbsp; %./install_execd</pre>
+      The "Quick Start Guide" in the Grid Engine manual (which is included as 
+      a postscript file in the doc/ directory of your distribution) contains more 
+      information about installing Grid Engine. 
+      <div STYLE="margin-bottom: 0.2in">&nbsp;</div>
+
+<h2>
+<a NAME="GESource"></a><b><font color="#990000">Grid Engine Source Code
+Downloads</font></b></h2>
+
+       To browse the Grid Engine source code or retrieve it using CVS follow 
+        <a href="../../../cvs_suns000/gridengine/www/rabarber">Grid Engine Source</a> 
+        . <br>
+      To retrieve a Grid Engine source tarball follow one of these links: <br>
+      <br>
+      <table width="384" border="1" cellspacing="0" cellpadding="2" bordercolor="#CCCCCC">
+        <tr> 
+            
+          <td width="19" bordercolor="#FFFFFF">&nbsp;</td>
+            <td width="357"><a href="#GESource">Grid Engine Prebuilt Source Tarball</a> 
+            </td>
+          </tr>
+        </table>
+        <p> <br>
+        </p>
+<!-- end content --></td>
+</tr>
+</table>
+
+</body>
+</html>

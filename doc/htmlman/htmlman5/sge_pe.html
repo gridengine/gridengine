@@ -1,0 +1,272 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     sge_pe - Grid Engine parallel environment configuration file
+     format
+
+DESCRIPTION
+     Parallel environments are parallel programming  and  runtime
+     environments  allowing for the execution of shared memory or
+     distributed  memory  parallelized   applications.   Parallel
+     environments usually require some kind of setup to be opera-
+     tional before starting parallel applications.  Examples  for
+     common  parallel  environments  are  shared  memory parallel
+     operating systems and the  distributed  memory  environments
+     Parallel  Virtual Machine (PVM) or Message Passing Interface
+     (MPI).
+
+     <I>sge</I>_<I>pe</I> allows for the definition of interfaces to  arbitrary
+     parallel  environments.   Once  a  parallel  environment  is
+     defined or modified with the -ap or -mp options to  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
+     the  environment  can  be  requested  for  a job via the -pe
+     switch to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> together with a request of a range for the
+     number of parallel process to be allocated by the job. Addi-
+     tional -l options may be used to specify the job requirement
+     to further detail.
+
+FORMAT
+     The format of a <I>sge</I>_<I>pe</I> file is defined as follows:
+
+  pe_name
+     The name of the parallel environment.  To  be  used  in  the
+     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -pe switch.
+
+  queue_list
+     A comma separated list of  queues  to  which  parallel  jobs
+     belonging to this parallel environment have access to.
+
+  slots
+     The number of parallel processes being  allowed  to  run  in
+     total under the parallel environment concurrently.
+
+  user_lists
+     A comma separated  list  of  user  access  list  names  (see
+     <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>).  Each user contained in at least one of the
+     enlisted access lists has access to  the  parallel  environ-
+     ment.  If  the  user_lists  parameter  is  set  to NONE (the
+     default) any user has access being not  explicitly  excluded
+     via the xuser_lists parameter described below.  If a user is
+     contained both in an access list enlisted in xuser_lists and
+     user_lists  the  user  is  denied  access  to  the  parallel
+     environment.
+
+  xuser_lists
+     The xuser_lists parameter contains a comma separated list of
+     so  called user access lists as described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.
+     Each user contained in at least one of the  enlisted  access
+     lists  is not allowed to access the parallel environment. If
+     the xuser_lists parameter is set to NONE (the  default)  any
+     user  has  access.  If a user is contained both in an access
+     list enlisted in xuser_lists  and  user_lists  the  user  is
+     denied access to the parallel environment.
+
+  start_proc_args
+     The invocation command line of a start-up procedure for  the
+     parallel  environment.  The start-up procedure is invoked by
+     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> prior to executing the job script. Its  pur-
+     pose is to setup the parallel environment correspondingly to
+     its needs.  An optional prefix "user@"  specifies  the  user
+     under  which  this procedure is to be started.  The standard
+     output of the start-up procedure is redirected to  the  file
+     <I>REQNAME</I>.po<I>JID</I>  in the job's working directory (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>),
+     with <I>REQNAME</I> being the name  of  the  job  as  displayed  by
+     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>  and  <I>JID</I>  being  the  job's identification number.
+     Likewise,  the  standard  error  output  is  redirected   to
+     <I>REQNAME</I>.pe<I>JID</I>
+     The following special variables being  expanded  at  runtime
+     can  be  used  (besides  any  other strings which have to be
+     interpreted by the start and stop procedures) to  constitute
+     a command line:
+
+     $<I>pe</I>_<I>hostfile</I>
+          The pathname of a file containing a  detailed  descrip-
+          tion  of  the  layout of the parallel environment to be
+          setup by the start-up procedure. Each line of the  file
+          refers  to a host on which parallel processes are to be
+          run. The first entry of each line denotes the hostname,
+          the second entry the number of parallel processes to be
+          run on the host and the third entry a  processor  range
+          to be used in case of a multiprocessor machines.
+
+     $<I>host</I>
+          The name of the host on which the start-up or stop pro-
+          cedures are started.
+
+     $<I>job</I>_<I>owner</I>
+          The user name of the job owner.
+
+     $<I>job</I>_<I>id</I>
+          Grid Engine's unique job identification number.
+
+     $<I>job</I>_<I>name</I>
+          The name of the job.
+
+     $<I>pe</I>  The name of the parallel environment in use.
+
+     $<I>pe</I>_<I>slots</I>
+          Number of slots granted for the job.
+
+     $<I>processors</I>
+          The processors string as contained in the queue  confi-
+          guration  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) of the master queue (the
+          queue in which the start-up  and  stop  procedures  are
+          started).
+
+     $<I>queue</I>
+          The master queue, i.e. the queue in which the  start-up
+          and stop procedures are started.
+
+  stop_proc_args
+     The invocation command line of a shutdown procedure for  the
+     parallel  environment.  The shutdown procedure is invoked by
+     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> after the job script has finished. Its  pur-
+     pose  is  to  stop the parallel environment and to remove it
+     from all participating systems.  An optional prefix  "user@"
+     specifies  the  user  under  which  this  procedure is to be
+     started.  The standard output of the stop procedure is  also
+     redirected  to  the  file <I>REQNAME</I>.po<I>JID</I> in the job's working
+     directory (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>), with <I>REQNAME</I> being the name of  the
+     job  as  displayed by <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> and <I>JID</I> being the job's iden-
+     tification number.  Likewise, the standard error  output  is
+     redirected to <I>REQNAME</I>.pe<I>JID</I>
+     The same special variables as  for  start_proc_args  can  be
+     used to constitute a command line.
+
+  allocation_rule
+     The allocation rule  is  interpreted  by  <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>  and
+     helps  the  scheduler  to  decide how to distribute parallel
+     processes among the available machines. If, for instance,  a
+     parallel environment is built for shared memory applications
+     only, all parallel processes have to be assigned to a single
+     machine, no matter how much suitable machines are available.
+     If, however, the parallel environment  follows  the  distri-
+     buted  memory  paradigm,  an  even distribution of processes
+     among machines may be favorable.
+     The current version of the scheduler  only  understands  the
+     following allocation rules:
+
+     &lt;int&gt;:    An integer number fixing the number  of  processes
+               per  host.  If the number is 1, all processes have
+               to reside  on  different  hosts.  If  the  special
+               denominator  $pe_slots  is used, the full range of
+               processes as specified with the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -pe switch
+               has  to  be  allocated on a single host (no matter
+               which value belonging  to  the  range  is  finally
+               chosen for the job to be allocated).
+
+     $fill_up: Starting from the best  suitable  host/queue,  all
+               available  slots  are allocated. Further hosts and
+               queues are "filled up" as  long  as  a  job  still
+               requires slots for parallel tasks.
+
+     $round_robin:
+               From all suitable hosts a single slot is allocated
+               until  all tasks requested by the parallel job are
+               dispatched. If more tasks are requested than suit-
+               able hosts are found, allocation starts again from
+               the  first  host.  The  allocation  scheme   walks
+               through  suitable  hosts  in a best-suitable-first
+               order.
+
+  control_slaves
+     This parameter can be set to TRUE or FALSE (the default). It
+     indicates  whether  Grid  Engine is the creator of the slave
+     tasks  of  a  parallel  application  via  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>   and
+     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> and thus has full control over all processes
+     in a parallel application, which enables  capabilities  such
+     as  resource  limitation and correct accounting. However, to
+     gain control over the slave tasks of a parallel application,
+     a  sophisticated  PE  interface  is  required,  which  works
+     closely together with Grid Engine facilities. Such PE inter-
+     faces  are  available through your local Grid Engine support
+     office.
+
+     Please set the control_slaves parameter  to  false  for  all
+     other PE interfaces.
+
+  job_is_first_task
+     This parameter is only checked if control_slaves (see above)
+     is  set  to  TRUE and thus Grid Engine is the creator of the
+     slave tasks of a parallel application via  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  and
+     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.  In this case, a sophisticated PE interface
+     is required closely coupling the  parallel  environment  and
+     Grid  Engine.  The documentation accompanying such PE inter-
+     faces will recommend the setting for job_is_first_task.
+
+     The job_is_first_task parameter can be set to TRUE or FALSE.
+     A  value  of  TRUE indicates that the Grid Engine job script
+     already contains one of the tasks of the  parallel  applica-
+     tion,  while  a value of FALSE indicates that the job script
+     (and its child processes) is not part of the  parallel  pro-
+     gram.
+
+RESTRICTIONS
+     Note, that the functionality of the start-up,  shutdown  and
+     signalling procedures remains the full responsibility of the
+     administrator configuring the  parallel  environment.   Grid
+     Engine  will just invoke these procedures and evaluate their
+     exit status. If the procedures do not  perform  their  tasks
+     properly  or  if  the  parallel  environment or the parallel
+     application behave unexpectedly, Grid Engine has no means to
+     detect this.
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>,    <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,    <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,
+     <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,        <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,        <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

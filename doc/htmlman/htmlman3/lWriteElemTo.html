@@ -1,0 +1,272 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     lCreateElem, lFreeElem, lCopyElem, lAppendElem, lInsertElem,
+     lDechainElem,   lFirst,  lLast,  lNext,  lPrev,  lFindFirst,
+     lFindLast,  lFindNext,  lFindPrev,  lDumpElem,  lUndumpElem,
+     lWriteElem, lWriteElemTo, lGetPosViaElem
+
+     generic list element manipulation and information functions
+
+SYNOPSIS
+     #include "cull.h"
+
+     lListElem* lCreateElem( lDescr *descriptor );
+
+     void lFreeElem( lListElem *element );
+
+     lListElem* lCopyElem( lListElem *source );
+
+     lListElem* lAppendElem( lList *list, lListElem *newelem );
+
+     lListElem* lDechainElem(
+          lList* list,
+          lListElem* element
+     );
+
+     lListElem* lFirst( lList* list );
+
+     lListElem* lLast( lList* list );
+
+     lListElem* lNext( lListElem* element );
+
+     lListElem* lPrev( lListElem* element );
+
+     lListElem* lFindFirst(
+          lList* list,
+          lCondition* condition
+     );
+
+     lListElem* lFindLast(
+          lList* list,
+          lCondition* condition
+     );
+
+     lListElem* lFindNext(
+          lListElem* element,
+          lCondition* element
+     );
+
+     lListElem* lFindPrev(
+          lListElem* element,
+          lCondition* element
+     );
+
+     int lDumpElem(
+          FILE *file,
+          lListElem *element,
+          int indent,
+          int number
+     );
+
+     lListElem* lUndumpElem( FILE *file, lDescr *descriptor );
+
+     void lWriteElem( lListElem *element );
+
+     void lWriteElemTo( lListElem *element, FILE *fp );
+
+     int lGetPosViaElem( lListElem *element, int nm );
+
+DESCRIPTION
+     lCreateElem
+          creates a new list element specified by descriptor.  In
+          case  of  success,  a  pointer  to  the list element is
+          returned, otherwise the return value is NULL. All  list
+          element  fields are set to zero.  There is memory allo-
+          cated for the list element, that must be released  with
+          <I>lFreeElem</I>.
+
+     lFreeElem
+          frees the memory allocated by <I>lCreateElem</I>. If there are
+          sub-list   or   string  fields  their  memory  is  also
+          released. If the list element is NULL the function sim-
+          ply returns.
+
+     lCopyElem
+          duplicates a list element with all  its  sub-lists  and
+          strings. If an error occurs NULL is returned, otherwise
+          a pointer to the copied list element is  returned.   If
+          the  copied  list  element is no longer used, the allo-
+          cated memory has to be released with <I>lFreeElem</I>.
+
+     lAppendElem
+          append a list element to a generic  list  as  the  last
+          element.  The  first  argument is the list to which the
+          new element shall be appended. The second  argument  is
+          the  new  element.  Sometimes it may be useful to use a
+          copy of the element to be inserted  in  the  list  (see
+          <I>lCopyList</I>).
+
+     lInsertElem
+          inserts a new element after the  specified  element  in
+          the  list.  The  first argument is the list, the second
+          argument is the list element, after which the new  ele-
+          ment  shall  be  inserted, and the third element is the
+          new list element.  Sometimes it may be useful to use  a
+          copy  of  the  element  to be inserted in the list (see
+          <I>lCopyList</I>).
+
+     lDechainElem
+          dechains the specified element from the generic list. A
+          pointer  to the list element is returned. The list ele-
+          ment  is  not  destroyed.  If  it  shall  be  destroyed
+          <I>lFreeElem</I> should be called.
+
+     lFirst, lLast
+          get the first/last element of the specified list. If no
+          list is specified or no elements are contained, NULL is
+          returned.  Otherwise a pointer to the  first/last  list
+          element is returned.
+
+     lNext, lPrev
+          get the successor/predecessor of the specified element.
+          If the specified element is NULL or the last/first ele-
+          ment in the list, NULL is returned. Otherwise a pointer
+          to the successor/predecessor is returned.
+
+     lFindFirst, lFindLast
+          find the first/last element matching the specified con-
+          dition.  The  first  argument is the generic list where
+          the requested  list  element  may  be  contained.   The
+          second element is the condition that shall be fulfilled
+          by the element. The  list  is  searched  in  the  order
+          first/last  to  last/first element. If there is no ele-
+          ment that matches the condition NULL  is  returned.  If
+          there  is  no  list specified, the return value is also
+          NULL, otherwise a pointer to  the  first/last  matching
+          list element is returned.
+
+     lFindNext, lFindPrev
+          find the next/previous element matching  the  specified
+          condition.  The  first  argument  is  the  list element
+          returned       by        <I>lFindFirst</I>/<I>lFindLast</I>        or
+          <I>lFindNext</I>/<I>lFindPrev</I>.  The second argument is the condi-
+          tion which should be equal to the  one  stated  in  the
+          corresponding  <I>lFindFirst</I>/<I>lFindLast</I>  call.  The  return
+          value is NULL, if the specified list element is NULL or
+          no  matching  element is found.  Otherwise a pointer to
+          the matching list element is returned.
+
+     lDumpElem
+          dumps a list element in ASCII format  to  a  file.  The
+          first  argument  is a FILE pointer, the second argument
+          is the list element to be dumped, the third argument is
+          the number of indentation units for formatting purposes
+          and the fourth argument is the number of  the  element.
+          This function is normally called by <B><A HREF="../htmlman3/lDumpList.html">lDumpList(3)</A></B>.
+
+     lUndumpElem
+          undumps a list element from  a  dump  file.  The  first
+          argument is a FILE pointer of the dump file. The second
+          argument is the descriptor of the list element.  If one
+          or  both  of  the  function arguments are NULL, NULL is
+          retuned.  Otherwise a pointer to the newly created list
+          element is returned.  If the element is no longer used,
+          <I>lFreeElem</I> has to be called.  This function is  normally
+          called by <B><A HREF="../htmlman3/lUndumpList.html">lUndumpList(3)</A></B> only.
+
+     lWriteElem
+          writes the contents of a  list  element  with  all  its
+          sub-lists  if  Monitoring  Level  CULL_LAYER  is set to
+          info.  The only argument is a list element.
+
+     lWriteElemTo
+          writes the contents of a  list  element  with  all  its
+          sub-lists to the stream connected with the file pointer
+          fp.  The first argument is a list element,  the  second
+          argument is a file pointer or NULL. If the file pointer
+          is NULL, this function behaves exactly as lWriteElemTo.
+
+     lGetPosViaElem
+          get the field position of a field with name nm  in  the
+          list  element element.  The position of the field named
+          nm is returned. If the field does not exist in the list
+          element -1 is returned.
+
+RETURN VALUES
+     In case of error the return value is -1 or NULL, otherwise 0
+     or a valid pointer to the corresponding struct is returned.
+
+ERRORS
+     The following errors may occur. The affected  functions  are
+     listed in parentheses.
+
+     LECOUNTDESCR
+          Counting the descriptor  length  failed.  (<I>lCreateElem</I>,
+          <I>lUndumpElem</I>)
+
+     LEMALLOC
+          <B><A HREF="../htmlman3/Malloc.html">Malloc(3)</A></B> failed. (<I>lCreateElem</I>)
+
+     LEELEMNULL
+          List element is NULL.  (<I>lFreeElem</I>,  <I>lCopyElem</I>,  <I>lAppen-</I>
+          <I>dElem</I>,   <I>lInsertElem</I>,  <I>lDechainElem</I>,  <I>lFindNext</I>,  <I>lWri-</I>
+          <I>teElem</I>, <I>lGetPosViaElem</I>, <I>lDumpElem</I>)
+
+     LELISTNULL
+          List is NULL. (<I>lAppendElem</I>, <I>lInsertElem</I>,  <I>lDechainElem</I>,
+          <I>lFindFirst</I>)
+
+     LECREATEELEM
+          Creation of a list element failed. (<I>lCopyElem</I>,  <I>lUndum-</I>
+          <I>pElem</I>)
+
+     LEFILENULL
+          File pointer is NULL. (<I>lDumpElem</I>, <I>lUndumpElem</I>)
+
+     LEDESCRNULL
+          List descriptor pointer is NULL. (<I>lUndumpElem</I>)
+
+     LECOPYSWITCH
+          Copying a list element field failed. (<I>lCopyElem</I>)
+
+     LESYNTAX
+          A syntax error occurred  (missing  opening  or  closing
+          brackets).  (<I>lUndumpElem</I>)
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman3/list_intro.html">list_intro(3)</A></B>.
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

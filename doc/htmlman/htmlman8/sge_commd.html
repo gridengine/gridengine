@@ -1,0 +1,168 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     sge_commd - Grid Engine communication agent
+
+SYNOPSIS
+     sge_commd [ -S ] [ -a aliasfile ] [ -dhr ] [ -help ]  [  -ll
+     loglevel ] [ -ml fname ] [ -nd ] [ -p port ] [ -s service ]
+
+DESCRIPTION
+     All network communication in a Grid Engine cluster  is  per-
+     formed  via the communication daemons <I>sge</I>_<I>commd</I>. Client pro-
+     grams like <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> or <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> as well as Grid  Engine  dae-
+     mons  such as <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> or <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> use the service
+     provided by <I>sge</I>_<I>commd</I>  in  order  to  send/receive  messages
+     to/from other Grid Engine components.
+
+     <I>sge</I>_<I>commd</I> handles an arbitrary number of concurrent synchro-
+     nous  or  asynchronous communications. Usually one <I>sge</I>_<I>commd</I>
+     is  started  up  automatically  on  each   host   on   which
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,   <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>   or/and   <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>  are
+     invoked. It is however possible to  connect  multiple  hosts
+     via  one  <I>sge</I>_<I>commd</I>  or  to  use  a <I>sge</I>_<I>commd</I> on a submit or
+     administrative Grid Engine host (without running one of  the
+     other  Grid  Engine  daemons) as communication agent for the
+     Grid Engine client programs invoked from that host.
+
+OPTIONS
+     -S   Forces  secure  ports  to  be  used  for  communication
+          between  <I>sge</I>_<I>commd</I>s  and between other Grid Engine com-
+          ponents and the  <I>sge</I>_<I>commd</I>s.  This  requires  all  Grid
+          Engine  daemons  to be started with root permission and
+          the client programs to be configured set-uid  root.  In
+          turn,  it  ensures  that  unauthorized communication is
+          prohibited for non-root accounts.
+
+     -a aliasfile
+          A file containing Grid Engine host aliases used by  the
+          <I>sge</I>_<I>commd</I>  to  resolve Grid Engine unique hostnames for
+          all hosts in the cluster. The hostname  resolving  ser-
+          vice of <I>sge</I>_<I>commd</I> is also used by all other Grid Engine
+          components.  The file format and the implication of its
+          usage are described in <B><A HREF="../htmlman5/sge_h_aliases.html">sge_h_aliases(5)</A></B>.
+
+     -dhr The hostname resolving  C-library  functions  (such  as
+          <B><A HREF="../htmlman3/gethostent.html">gethostent(3)</A></B>,  <B><A HREF="../htmlman3/gethostbyname.html">gethostbyname(3)</A></B>  and <B><A HREF="../htmlman3/gethostbyaddr.html">gethostbyaddr(3)</A></B>)
+          perform some kind of caching on some OS  architectures.
+          Network wide hostname databases distributed by services
+          such as DNS (Domain  Name  Service)  and  NIS  (Network
+          Information  Service)  are  updated  with  a  delay  of
+          several minutes. This only affects  applications  which
+          repeatedly  resolve  hostnames  (such as <I>sge</I>_<I>commd</I>). At
+          start-up of a program the most  recent  information  is
+          accessed,  thus  commands like <B><A HREF="../htmlman1/telnet.html">telnet(1)</A></B> or <B><A HREF="../htmlman1/nslookup.html">nslookup(1)</A></B>
+          are not affected.
+          However, for <I>sge</I>_<I>commd</I> it makes  no  sense  to  resolve
+          hostnames  anytime (the returned information may be out
+          of date anyway)  and  resolving  can  be  an  expensive
+          operation  if  the  network is overloaded and/or NIS or
+          DNS  servers  are  very  busy.   Therefore,   <I>sge</I>_<I>commd</I>
+          resolves hostname information from time to time only.
+          Yet, if hostname resolving still causes problems due to
+          network  load,  for  example, it can be turned off with
+          the -dhr switch.  The administrator has  to  be  aware,
+          that if the hostname resolving is turned off, <I>sge</I>_<I>commd</I>
+          has to be restarted as soon as the  hostname  databases
+          change significantly.
+
+     -help
+          Prints  a listing of all options.
+
+     -ll loglevel
+          Sets a logging level for error tracing. The error trace
+          information      is     written     to     the     file
+          /<I>tmp</I>/<I>commd</I>/<I>err</I>.&lt;<I>pid</I>&gt;. However, the directory /<I>tmp</I>/<I>commd</I>
+          must  be  present, otherwise the tracing output is dis-
+          carded. At present,  255  is  the  only  valid  logging
+          level.
+
+     -nd  Do not daemonize. If started with -nd, <I>sge</I>_<I>commd</I>  main-
+          tains  its  connection  to the controlling terminal and
+          thus outputs trace information directly to the terminal
+          from which <I>sge</I>_<I>commd</I> was invoked. The trace information
+          is the same as being accessible via the -ll option (see
+          above).
+
+     -p port_number
+          Use this TCP port for communication with other commds.
+
+     -s service_name
+          Use this service name and thus the associated TCP  port
+          for communication with other commds.
+
+ENVIRONMENTAL VARIABLES
+     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+                    standard configuration files.
+
+     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
+                    <I>sge</I>_<I>commd</I>  is expected to listen for communi-
+                    cation requests.  Most installations will use
+                    a  services  map entry instead to define that
+                    port.
+
+     COMMD_HOST     (Does not affect the  behavior  of  <I>sge</I>_<I>commd</I>
+                    but  of the other Grid Engine components con-
+                    tacting <I>sge</I>_<I>commd</I>.)  If  set,  specifies  the
+                    host  on which the particular <I>sge</I>_<I>commd</I> to be
+                    used for Grid Engine communication  of  arbi-
+                    trary  Grid Engine client programs or daemons
+                    resides. Per default the local host is used.
+
+RESTRICTIONS
+     <I>sge</I>_<I>commd</I> usually is invoked by  a  starting  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>
+     and  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> and thus is running under root permission.
+     If started by a normal user the -S switch may not be used as
+     the secure mode requires root permission (see above).
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,        <B><A HREF="../htmlman5/sge_h_aliases.html">sge_h_aliases(5)</A></B>,         <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/commdcntl.html">commdcntl(8)</A></B>.
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

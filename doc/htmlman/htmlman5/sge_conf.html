@@ -1,0 +1,1001 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     sge_conf - Grid Engine configuration files
+
+DESCRIPTION
+     <I>sge</I>_<I>conf</I> defines the global and local Grid Engine configura-
+     tions  and  can  be  shown/modified  by  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  using the
+     -sconf/-mconf options. Only root or the cluster  administra-
+     tor may modify <I>sge</I>_<I>conf</I>.
+
+     At its initial start-up, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> checks to see  if  a
+     valid Grid Engine configuration is available at a well known
+     location in the Grid Engine  internal  directory  hierarchy.
+     If so, it loads that configuration information and proceeds.
+     If not, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> writes a generic  configuration  con-
+     taining  default  values  to  that  same location.  The Grid
+     Engine execution daemons <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> upon start-up retrieve
+     their configuration from <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+
+     The  actual  configuration  for  both   <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>   and
+     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> is a superposition of a so called <I>global</I> confi-
+     guration and a <I>local</I> configuration being pertinent  for  the
+     host  on  which  a master or execution daemon resides.  If a
+     local configuration is available, its entries overwrite  the
+     corresponding entries of the global configuration. Note: The
+     local configuration does not have to contain all valid  con-
+     figuration entries, but only those which need to be modified
+     against the global entries.
+
+FORMAT
+     The paragraphs that follow provide brief descriptions of the
+     individual parameters that compose the global and local con-
+     figurations for a Grid Engine cluster:
+
+qmaster_spool_dir
+     The location where the master spool directory resides.  Only
+     the  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  needs to have access to this directory.
+     It needs read/write permission for root, however. The master
+     spool  directory  - in particular the jobs directory and the
+     message log file - may become quite large depending  on  the
+     size of the cluster and the number of jobs. Be sure to allo-
+     cate enough disk space  and  regularly  clean  off  the  log
+     files, e.g. via a <B><A HREF="../htmlman8/cron.html">cron(8)</A></B> job.
+
+     Changing the master spool  directory  will  have  an  effect
+     after restarting <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> only.
+
+     The default location  for  the  master  spool  directory  is
+     &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+execd_spool_dir
+     The execution daemon spool directory path. Again, a feasible
+     spool  directory  requires  read/write access permission for
+     root. The entry in the global configuration for this parame-
+     ter  can  be  overwritten by execution host local configura-
+     tions, i.e. each  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  may  have  a  private  spool
+     directory  with  a different path, in which case it needs to
+     provide read/write permission for the root  account  of  the
+     corresponding execution host only.
+
+     Under execd_spool_dir a directory named corresponding to the
+     unqualified  hostname  of  the  execution host is opened and
+     contains all information spooled to disk. Thus, it is possi-
+     ble  for the execd_spool_dirs of all execution hosts to phy-
+     sically reference the same directory path (the  root  access
+     restrictions mentioned above need to be met, however).
+
+     Changing the execution daemon spool directory will  have  an
+     effect after restarting <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> only.
+
+     The default location for the execution daemon  spool  direc-
+     tory is &lt;sge_root&gt;/&lt;cell&gt;/spool.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+binary_path
+     The directory path where the Grid Engine binaries reside. It
+     is  used within Grid Engine components to locate and startup
+     other Grid Engine programs.
+
+     The path name given here is searched for binaries as well as
+     any  directory  below  with  a  directory  name equal to the
+     current   operating    system    architecture.    Therefore,
+     /usr/SGE/bin   will  work  for  all  architectures,  if  the
+     corresponding binaries are located in  subdirectories  named
+     aix43, cray, glinux, hp10, irix6, osf4, solaris, etc.
+
+     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may have its private binary path.   Chang-
+     ing   the   binary  path  will  have  immediate  effect  for
+     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
+
+     The default location for the binary path is &lt;sge_root&gt;/bin
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+mailer
+     mailer is the  absolute  pathname  to  the  electronic  mail
+     delivery  agent on your system. It must accept the following
+     syntax:
+
+          mailer -s &lt;subject-of-mail-message&gt; &lt;recipient&gt;
+
+     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a  private  mail  agent.  Changing
+     mailer will take immediate effect.
+
+     The default for mailer depends on the  operating  system  of
+     the  host  on  which the Grid Engine master installation was
+     run. Common values are /bin/mail or /usr/bin/Mail.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+xterm
+     xterm is the absolute pathname to the X Window System termi-
+     nal emulator, <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B>.
+
+     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a  private  mail  agent.  Changing
+     xterm will take immediate effect.
+
+     The default for xterm is /usr/bin/X11/xterm.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+load_sensor
+     A comma separated list of executable shell script  paths  or
+     programs  to  be  started  by <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> and to be used in
+     order to retrieve site configurable load  information  (e.g.
+     free space on a certain disk partition).
+
+     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a set of private load_sensor  pro-
+     grams  or  scripts.  Changing  load_sensor  will take effect
+     after two load report intervalls (see  load_report_time).  A
+     load  sensor  will  be  restarted  automatically if the file
+     modification time of the load sensor executable changes.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+     In addition to the load sensors configured via  load_sensor,
+     <B><A HREF="../htmlman8/sge_exec.html">sge_exec(8)</A></B>  searches for an executable file named <I>qloadsen-</I>
+     <I>sor</I> in the execution host's  Grid  Engine  binary  directory
+     path.   If such a file is found, it is treated like the con-
+     figurable load sensors defined in load_sensor. This facility
+     is intended for pre-installing a default load sensor.
+
+prolog
+     The executable path of a shell script that is started before
+     execution of Grid Engine jobs with the same environment set-
+     ting as that for the Grid Engine jobs to be  started  after-
+     wards.  An  optional prefix "user@" specifies the user under
+     which this procedure is to be started.   This  procedure  is
+     intended  as  a  means  for the Grid Engine administrator to
+     automate the execution of general site specific  tasks  like
+     the  preparation of temporary file systems with the need for
+     the same context information as the job.  Each  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
+     may use a private prologue script. Correspondingly, the exe-
+     cution host local configurations is can  be  overwritten  by
+     the  queue configuration (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> ). Changing pro-
+     log will take immediate effect.
+
+     Note: prolog is executed <I>exactly</I> as the job script.   There-
+     fore,   all  implications  described  under  the  parameters
+     shell_start_mode and login_shells below apply.
+
+     The default for prolog is  the  special  value  NONE,  which
+     prevents from execution of a prologue script.
+
+     The following special variables being  expanded  at  runtime
+     can  be  used  (besides  any  other strings which have to be
+     interpreted by the procedure) to constitute a command line:
+
+     $<I>host</I>
+          The name of the host on which the prolog or epilog pro-
+          cedures are started.
+
+     $<I>job</I>_<I>owner</I>
+          The user name of the job owner.
+
+     $<I>job</I>_<I>id</I>
+          Grid Engine's unique job identification number.
+
+     $<I>job</I>_<I>name</I>
+          The name of the job.
+
+     $<I>processors</I>
+          The processors string as contained in the queue  confi-
+          guration  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) of the master queue (the
+          queue in which the prolog  and  epilog  procedures  are
+          started).
+
+     $<I>queue</I>
+          The master queue, i.e. the queue in  which  the  prolog
+          and epilog procedures are started.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+epilog
+     The executable path of a shell script that is started  after
+     execution of Grid Engine jobs with the same environment set-
+     ting as that for the Grid Engine jobs  that  has  just  com-
+     pleted.  An optional prefix "user@" specifies the user under
+     which this procedure is to be started.   This  procedure  is
+     intended  as  a  means  for the Grid Engine administrator to
+     automate the execution of general site specific  tasks  like
+     the  cleaning up of temporary file systems with the need for
+     the same context information as the job.  Each  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
+     may use a private epilogue script. Correspondingly, the exe-
+     cution host local configurations is can  be  overwritten  by
+     the queue configuration (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> ).  Changing epi-
+     log will take immediate effect.
+
+     Note: epilog is executed <I>exactly</I> as the job script.   There-
+     fore,   all  implications  described  under  the  parameters
+     shell_start_mode and login_shells below apply.
+
+     The default for epilog is  the  special  value  NONE,  which
+     prevents  from  execution  of  a epilogue script.  The  same
+     special variables as for prolog can be used to constitute  a
+     command line.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+shell_start_mode
+     This parameter defines the  mechanisms  which  are  used  to
+     actually  invoke the job scripts on the execution hosts. The
+     following values are recognized:
+
+     <I>unix</I>_<I>behavior</I>
+          If a user starts a job shell script under UNIX interac-
+          tively  by  invoking  it  just with the script name the
+          operating system's executable loader uses the  informa-
+          tion  provided in a comment such as `#!/bin/csh' in the
+          first line of the script to detect which command inter-
+          preter to start to interpret the script. This mechanism
+          is  used  by  Grid  Engine  when   starting   jobs   if
+          <I>unix</I>_<I>behavior</I> is defined as shell_start_mode.
+
+     <I>posix</I>_<I>compliant</I>
+          POSIX does not consider first script line comments such
+          a `#!/bin/csh' as being significant. The POSIX standard
+          for batch queuing systems (P1003.2d) therefore requires
+          a  compliant queuing system to ignore such lines but to
+          use user specified or configured default command inter-
+          preters  instead.  Thus,  if shell_start_mode is set to
+          <I>posix</I>_<I>compliant</I> Grid Engine will either use the command
+          interpreter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
+          command or the shell parameter of the queue to be  used
+          (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details).
+
+     <I>script</I>_<I>from</I>_<I>stdin</I>
+          Setting  the  shell_start_mode  parameter   either   to
+          <I>posix</I>_<I>compliant</I>  or  <I>unix</I>_<I>behavior</I>  requires you to set
+          the umask in use for <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> such that every  user
+          has  read  access  to  the active_jobs directory in the
+          spool directory of the corresponding execution  daemon.
+          In  case you have prolog and epilog scripts configured,
+          they also need to be readable by any user who may  exe-
+          cute jobs.
+          If this violates your site's security policies you  may
+          want to set shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I>. This
+          will force Grid Engine to open the job script  as  well
+          as  the  epilogue and prologue scripts for reading into
+          STDIN as root (if <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  was  started  as  root)
+          before  changing  to the job owner's user account.  The
+          script is then fed into the STDIN stream of the command
+          interpreter  indicated  by the -S option of the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
+          command or the shell parameter of the queue to be  used
+          (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details).
+          Thus setting shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I> also
+          implies  <I>posix</I>_<I>compliant</I>  behavior. Note, however, that
+          feeding scripts into the  STDIN  stream  of  a  command
+          interpreter  may  cause trouble if commands like <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>
+          are invoked inside a job script as  they  also  process
+          the  STDIN  stream  of  the  command interpreter. These
+          problems can usually be  resolved  by  redirecting  the
+          STDIN  channel of those commands to come from /dev/null
+          (e.g. rsh host date &lt; /dev/null). Note also,  that  any
+          command-line options associated with the job are passed
+          to the executing shell. The  shell  will  only  forward
+          them  to  the  job  if they are not recognized as valid
+          shell options.
+
+     Changes to shell_start_mode will take immediate effect.  The
+     default for shell_start_mode is <I>posix</I>_<I>compliant</I>.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+login_shells
+     UNIX command interpreters like the Bourne-Shell (see  <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>)
+     or  the  C-Shell  (see <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>) can be used by Grid Engine to
+     start job scripts. The command interpreters  can  either  be
+     started  as  login-shells  (i.e. all system and user default
+     resource files like .login or .profile will be executed when
+     the  command  interpreter is started and the environment for
+     the job will be set up as if the user has just logged in) or
+     just   for  command  execution  (i.e.  only  shell  specific
+     resource files like .cshrc will be executed  and  a  minimal
+     default environment is set up by Grid Engine - see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
+     The parameter login_shells contains a comma  separated  list
+     of  the  executable  names of the command interpreters to be
+     started as login-shells.   Shells  in  this  list  are  only
+     started  as  login  shells if the parameter shell_start_mode
+     (see above) is set to <I>posix</I>_<I>compliant</I>.
+     Changes to login_shells will  take  immediate  effect.   The
+     default for login_shells is sh,csh,tcsh,ksh.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+min_uid
+     min_uid places a lower bound on user IDs that  may  use  the
+     cluster. Users whose user ID (as returned by <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>) is
+     less than min_uid will not be allowed to  run  jobs  on  the
+     cluster.
+
+     Changes to min_uid will take immediate effect.  The  default
+     for min_uid is 0.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+min_gid
+     This parameter sets the lower bound on group  IDs  that  may
+     use  the cluster.  Users whose default group ID (as returned
+     by <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>) is less than min_gid will not be allowed  to
+     run jobs on the cluster.
+
+     Changes to min_gid will take immediate effect.  The  default
+     for min_gid is 0.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+user_lists
+     The user_lists parameter contains a comma separated list  of
+     so  called user access lists as described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.
+     Each user contained in at least one of the  enlisted  access
+     lists has access to the cluster. If the user_lists parameter
+     is set to NONE (the default) any user has access  being  not
+     explicitly  excluded via the xuser_lists parameter described
+     below.  If a user  is  contained  both  in  an  access  list
+     enlisted  in  xuser_lists  and user_lists the user is denied
+     access to the cluster.
+
+     Changes to user_lists will take immediate effect
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+xuser_lists
+     The xuser_lists parameter contains a comma separated list of
+     so  called user access lists as described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.
+     Each user contained in at least one of the  enlisted  access
+     lists  is  denied  access to the cluster. If the xuser_lists
+     parameter is set to NONE (the default) any user has  access.
+     If  a  user  is contained both in an access list enlisted in
+     xuser_lists and user_lists (see above) the  user  is  denied
+     access to the cluster.
+
+     Changes to xuser_lists will take immediate effect
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+administrator_mail
+     administrator_mail specifies a comma separated list  of  the
+     electronic  mail address(es) of the cluster administrator(s)
+     to whom internally-generated problem reports are  sent.  The
+     mail  address  format depends on your electronic mail system
+     and how it is configured; consult your  system's  configura-
+     tion guide for more information.
+
+     Changing administrator_mail  takes  immediate  effect.   The
+     default for administrator_mail is an empty mail list.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+projects
+     This parameter is only available for Grid Engine  Enterprise
+     Edition systems. It is not present in Grid Engine.
+
+     The projects list contains all projects  which  are  granted
+     access  to Grid Engine Enterprise Edition. User belonging to
+     none of these projects cannot  use  Grid  Engine  Enterprise
+     Edition.  If  users  belong to projects in the projects list
+     and the xprojects list (see below), they also cannot use the
+     system.
+
+     Changing projects takes immediate effect.  The  default  for
+     projects is none.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+xprojects
+     This parameter is only available for Grid Engine  Enterprise
+     Edition systems. It is not present in Grid Engine.
+
+
+     The xprojects list contains all projects which  are  granted
+     access  to Grid Engine Enterprise Edition. User belonging to
+     one of these projects cannot use Grid Engine Enterprise Edi-
+     tion.  If users belong to projects in the projects list (see
+     above) and the xprojects list, they also cannot use the sys-
+     tem.
+
+     Changing xprojects takes immediate effect.  The default  for
+     xprojects is none.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+load_report_time
+     System load is reported periodically by the  execution  dae-
+     mons  to  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.   The  parameter  load_report_time
+     defines the time interval between load reports.
+
+     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use  a  different  load  report  time.
+     Changing load_report_time will take immediate effect.
+
+     Note: Be careful when modifying load_report_time.  Reporting
+     load too frequently might block <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> especially if
+     the number of execution hosts is large. Moreover, since  the
+     system load typically increases and decreases smoothly, fre-
+     quent load reports hardly offer any benefit.
+
+     The default for load_report_time is 40 seconds.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+stat_log_time
+     Grid Engine periodically logs a snapshot of  the  status  of
+     the queues currently configured in the cluster to disk.  The
+     time interval in seconds between  consecutive  snapshots  is
+     defined by stat_log_time.
+
+     Changing stat_log_time takes immediate effect.  The  default
+     for stat_log_time is 2 hours 30 minutes.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+max_unheard
+     If <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> could not contact or was not contacted  by
+     the  execution daemon of a host for max_unheard seconds, all
+     queues residing on that particular host are  set  to  status
+     unknown.   <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,  at least, should be contacted by
+     the execution daemons in order  to  get  the  load  reports.
+     Thus,    max_unheard    should    by    greater   than   the
+     load_report_time (see above).
+
+     Changing max_unheard takes immediate  effect.   The  default
+     for max_unheard is 2 minutes 30 seconds.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+loglevel
+     This parameter specifies  the  level  of  detail  that  Grid
+     Engine components such as <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> or <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> use
+     to produce informative, warning or error messages which  are
+     logged  to  the  <I>messages</I>  files in the master and execution
+     daemon  spool  directories  (see  the  description  of   the
+     qmaster_spool_dir  and the execd_spool_dir parameter above).
+     The following message levels are available:
+
+     <I>log</I>_<I>err</I>
+          All error events being recognized are logged.
+
+     <I>log</I>_<I>warning</I>
+          All error events  being  recognized  and  all  detected
+          signs of potentially erroneous behavior are logged.
+
+     <I>log</I>_<I>info</I>
+          All error events being recognized, all  detected  signs
+          of  potentially  erroneous  behavior  and  a variety of
+          informative messages are logged.
+
+     Changing loglevel will take immediate effect.
+
+     The default for loglevel is <I>log</I>_<I>info</I>.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+enforce_project
+     This parameter is only available for Grid Engine  Enterprise
+     Edition systems. It is not present in Grid Engine.
+
+     If set to <I>true</I>, users are  required  to  request  a  project
+     whenever  submitting a job. See the -P option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> for
+     details.
+
+     Changing enforce_project will take  immediate  effect.   The
+     default for enforce_project is <I>false</I>.
+
+     This value is a global configuration parameter only. It can-
+     not   be   overwritten   by   the   execution   host   local
+     configuration.
+
+set_token_cmd
+     This parameter is only present if your Grid Engine system is
+     licensed to support AFS.
+
+     Set_token_cmd points to a command which sets and extends AFS
+     tokens for Grid Engine jobs. In the standard Grid Engine AFS
+     distribution, it is supplied as a script which  expects  two
+     command  line  parameters.  It  reads  the token from STDIN,
+     extends the token's expiration time and sets the token:
+
+          &lt;set_token_cmd&gt; &lt;user&gt; &lt;token_extend_after_seconds&gt;
+
+     As a shell script this command will call the programs:
+
+          - SetToken
+          - forge
+
+     which are provided by your distributor as source  code.  The
+     script looks as follows:
+
+          --------------------------------
+          #!/bin/sh
+          # set_token_cmd
+          forge -u $1 -t $2 | SetToken
+          --------------------------------
+
+     Since it is necessary for  <I>forge</I>  to  read  the  secret  AFS
+     server  key,  a site might wish to replace the set_token_cmd
+     script by a command, which connects to a self written daemon
+     at  the  AFS  server.  The  token  must be forged at the AFS
+     server and returned to the local machine, where <I>SetToken</I>  is
+     executed.
+
+     Changing set_token_cmd  will  take  immediate  effect.   The
+     default for set_token_cmd is none.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+pag_cmd
+     This parameter is only present if your Grid Engine system is
+     licensed to support AFS.
+
+     The path to your <I>pagsh</I> is specified via this parameter.  The
+     <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>  process  and the job run in a <I>pagsh</I>. Please
+     ask your AFS administrator for details.
+
+     Changing pag_cmd will take immediate  effect.   The  default
+     for pag_cmd is none.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+token_extend_time
+     This parameter is only present if your Grid Engine system is
+     licensed to support AFS.
+
+     the time  period  for  which  AFS  tokens  are  periodically
+     extended.  Grid  Engine  will  call  the  token extension 30
+     minutes before the tokens expire until  jobs  have  finished
+     and the corresponding tokens are no longer required.
+
+     Changing token_extend_time will take immediate effect.   The
+     default for token_extend_time is 24:0:0, i.e. 24 hours.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+gid_range
+     This parameter is only available for Grid Engine  Enterprise
+     Edition systems. It is not present in Grid Engine.
+
+     The gid_range is a comma separated list of range expressions
+     of  the  form  n-m  (n  as well as m being positive non-zero
+     integer numbers), where m is an abbreviation for m-m.  These
+     numbers  are  used  in  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  to  identify processes
+     belonging to the same job.
+
+     Each <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may use a separate set up  group  ids  for
+     this  purpose.   All number in the group id range have to be
+     unused supplementary group ids  on  the  system,  where  the
+     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> is started.
+
+     Changing gid_range will take immediate effect.  There is  no
+     default for gid_range. The administrator will have to assign
+     a value for gid_range during  installation  of  Grid  Engine
+     Enterprise Edition.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+qmaster_params
+     A list of additional parameters can be passed  to  the  Grid
+     Engine qmaster. The following values are recognized:
+
+     <I>ENABLE</I>_<I>FORCED</I>_<I>QDEL</I>
+          If this parameter is set, non-administrative users  can
+          foce  deletion  of  their own jobs via the -<I>f</I> option of
+          <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>.  Without this parameter,  forced  deletion  of
+          jobs  is  only  allowed  by  the Grid Engine manager or
+          operator.
+
+          Note: Forced deletion for jobs is executed  differently
+          depending  on whether users are Grid Engine administra-
+          tors or not. In case of administrative users, the  jobs
+          are  removed  from the internal database of Grid Engine
+          immediately. For regular users,  the  equivalent  of  a
+          normal  <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>  is  executed  first,  and  deletion is
+          forced only if the normal cancellation  was  unsuccess-
+          ful.
+
+          Changing qmaster_params  will  take  immediate  effect.
+          The default for qmaster_params is none.
+
+          This value is a global configuration parameter only. It
+          cannot  be overwritten by the execution host local con-
+          figuration.
+
+     <I>FORBID</I>_<I>RESCHEDULE</I>
+          If this parameter is set, re-queuing of jobs cannot  be
+          initiated  by  the job script which is under control of
+          the user. Without this  parameter  jobs  returning  the
+          value 99 are rescheduled. This can be used to cause the
+          job  to  be  restarted  at  a  different  machine,  for
+          instance  if  there  are  not  enough  resources on the
+          current one.
+
+     Changing qmaster_params will  take  immediate  effect.   The
+     default for qmaster_params is none.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+schedd_params
+     This is foreseen for passing additional  parameters  to  the
+     Grid  Engine  scheduler. The following values are recognized
+     currently:
+
+     <I>FLUSH</I>_<I>SUBMIT</I>_<I>SEC</I>, <I>FLUSH</I>_<I>FINISH</I>_<I>SEC</I>
+          The parameters are provided  for  tuning  the  system's
+          scheduling  behavior.   By  default, a scheduler run is
+          triggered in the scheduler interval which is defined in
+          the  scheduler  configuration  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>, parameter
+          schedule_interval.
+          The parameters FLUSH_SUBMIT_SEC/FLUSH_FINISH_SEC define
+          the  time  gaps  between triggering a scheduler run and
+          the submitting/finishing of a job.
+          The most immediate scheduler reaction can be  activated
+          by  setting  both  values  to 0. The default scheduling
+          behavior is enforced by either removing the  parameters
+          or setting them to a value of -1.
+
+
+     Changing schedd_params  will  take  immediate  effect.   The
+     default for schedd_params is none.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+     <I>IGNORE</I>_<I>FQDN</I>
+          Ignore fully qualified domain names. It is switched  on
+          if  set  to  either  "true"  or "1". Can be used if all
+          hosts belonging to a Grid Engine cluster are part of  a
+          single  DNS  domain.  Switching it on my solve problems
+          with load reports due to different hostname resolutions
+          across the cluster.
+
+execd_params
+     This is foreseen for passing additional  parameters  to  the
+     Grid  Engine  execution  daemon.  The  following  values are
+     recognized:
+
+     <I>ACCT</I>_<I>RESERVED</I>_<I>USAGE</I>
+          If this parameter is set to true, for reserved usage is
+          used for the accounting entries cpu, mem and io instead
+          of the measured usage.
+
+     <I>DISABLE</I>_<I>AUTO</I>_<I>RESCHEDULING</I>
+          If   set   to   "true"   or   "1",   the    execd_param
+          <I>RESCHEDULE</I>_<I>UNKNOWN</I>   (see  below)  is  not  taken  into
+          account.
+
+     <I>KEEP</I>_<I>ACTIVE</I>
+          This value should only be set for  debugging  purposes.
+          If  set  to  true, the execution daemon will not remove
+          the spool directory maintained by <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> for a
+          job.
+
+     <I>PTF</I>_<I>MIN</I>_<I>PRIORITY</I>, <I>PTF</I>_<I>MAX</I>_<I>PRIORITY</I>
+          The parameters are only  available  in  a  Grid  Engine
+          Enterprise Edition system.
+          The maximum/minumum priority which Grid  Engine  Enter-
+          prise  Edition will assign to a job.  Typically this is
+          a negative/postive value in the range of -20  (maximum)
+          to  19  (minimum)  for  systems  which allow setting of
+          priorties with the <B><A HREF="../htmlman2/nice.html">nice(2)</A></B> system call.  Other  systems
+          may provide different ranges.
+          The default priority range (varies from system to  sys-
+          tem)  is installed either by removing the parameters or
+          by setting a value of -999.
+          See the "messages" file of the execution daemon for the
+          predefined  default value on your hosts. The values are
+          logged during the startup of the execution daemon.
+
+     <I>NOTIFY</I>_<I>KILL</I>
+          The parameter allows you  to  change  the  notification
+          signal  for  the  signal SIGKILL (see -<I>notify</I> option of
+          <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).  The parameter either  accepts  signal  names
+          (use  the  -<I>l</I>  option  of <B><A HREF="../htmlman1/kill.html">kill(1)</A></B>) or the special value
+          <I>none</I>. If set to <I>none</I>, no notification  signal  will  be
+          sent.  If  it  is set to <I>TERM</I>, for instance, or another
+          signal name then this signal will be sent as  notifica-
+          tion signal.
+
+     <I>NOTIFY</I>_<I>SUSP</I>
+          With this parameter it is possible to modify the notif-
+          ication  signal  for  the  signal  SIGSTOP (see -<I>notify</I>
+          parameter of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).  The  parameter  either  accepts
+          signal names (use the -<I>l</I> option of <B><A HREF="../htmlman1/kill.html">kill(1)</A></B>) or the spe-
+          cial value <I>none</I>. If set to <I>none</I>, no notification signal
+          will  be  sent.  If it is set to <I>TSTP</I>, for instance, or
+          another signal name then this signal will  be  sent  as
+          notification signal.
+
+     <I>RESCHEDULE</I>_<I>UNKNOWN</I>
+          Determines whether jobs on hosts in unknown  state  are
+          rescheduled  and  thus  sent  to other hosts. Hosts are
+          registered as unknown if <B><A HREF="../htmlman8/sge_master.html">sge_master(8)</A></B> cannot establish
+          contact   to  the  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  on  those  hosts  (see
+          max_unheard). Likely reasons are  a  breakdown  of  the
+          host  or  a  breakdown  of  the  network  connection in
+          between, but also <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> may not be executing  on
+          such hosts.
+          In any case, Grid Engine can reschedule jobs running on
+          such  hosts  to another system. <I>RESCHEDULE</I>_<I>UNKNOWN</I> con-
+          trols the time which Grid Engine will wait before  jobs
+          are  rescheduled  after a host became unknown. The time
+          format specification is RESCHEDULE_UNKNOWN=hh:mm:ss. If
+          the  special  value RESCHEDULE_UNKNOWN=00:00:00 is set,
+          then jobs will not be rescheduled from this host.
+          Rescheduling is only  initiated  for  jobs  which  have
+          actiated the rerun flag (see the -r y option of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
+          and the rerun option of <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).  Parallel  jobs
+          are  only rescheduled if the host on which their master
+          tasks executes is in unknown  state.  Interactive  jobs
+          (see  <B><A HREF="../htmlman1/qsh.html">qsh(1)</A></B>,  <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>,  <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>) are not rescheduled.
+          Migrating checkpointing jobs  (and  starting  from  the
+          last checkpoint) will be supported in a future release.
+
+     <I>SHARETREE</I>_<I>RESERVED</I>_<I>USAGE</I>
+          If this parameter is set to  true,  reserved  usage  is
+          taken for the Grid Engine Enterprise Edition share tree
+          consumption instead of measured usage.
+
+     Changing  execd_params  will  take  immediate  effect.   The
+     default for execd_params is none.
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+     <I>USE</I>_<I>QSUB</I>_<I>GID</I>
+          If this parameter is set to true, the primary group  id
+          being  active  when  a job was submitted will be set to
+          become the primary group id for job execution.  If  the
+          parameter  is  not set, the primary group id as defined
+          for the job owner in the execution host <B><A HREF="../htmlman5/passwd.html">passwd(5)</A></B>  file
+          is used.
+          The feature is only available for  jobs  submitted  via
+          <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B> and <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>.  Also, it only
+          works for <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> jobs (and thus also for <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>  and
+          <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B>) if rsh and rshd components are used which are
+          provided with Grid Engine  (i.e.,  the  rsh_daemon  and
+          rsh_command  parameters  may  not  be  changed from the
+          default).
+
+admin_user
+     Administrative user account used  by  Grid  Engine  for  all
+     internal  file  handling  (status spooling, message logging,
+     etc.). Can be used in cases where the root account does  not
+     have  the  corresponding  file access permissions (e.g. on a
+     shared file system without global root read/write access).
+
+     Changing admin_user  will  take  immediate  effect,  but  if
+     access to the Grid Engine spooling area is interrupted, this
+     will result  in  unpredictable  behaviour.   The  admin_user
+     parameter  has  no  default value, but instead it is defined
+     during the master installation procedure.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+finished_jobs
+     Grid Engine stores a certain number of <I>just</I> <I>finished</I> jobs to
+     provide  post  mortem  status information. The finished_jobs
+     parameter defines the number of finshed jobs  being  stored.
+     If  this  maximum  number is reached, the eldest finshed job
+     will be discarded for every  now  job  being  added  to  the
+     finshed job list.
+
+     Changing finished_jobs  will  take  immediate  effect.   The
+     default for finished_jobs is 0.
+
+     This value is a global configuration parameter only. It can-
+     not  be  overwritten  by the execution host local configura-
+     tion.
+
+qlogin_daemon
+     This parameter  specifies  the  executable  that  is  to  be
+     started  on  the server side of a <B><A HREF="../htmlman1/qlogin.html">qlogin(1)</A></B> request. Usually
+     this is the fully qualified pathname of the system's  telnet
+     daemon. If no value is given, a specialized Grid Engine com-
+     ponent is used.
+
+     Changing qlogin_daemon  will  take  immediate  effect.   The
+     default for qlogin_daemon is none.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+qlogin_command
+     This is the command to be executed on the client side  of  a
+     <B><A HREF="../htmlman1/qlogin.html">qlogin(1)</A></B>  request.   Usually  this  is  the fully qualified
+     pathname of the systems's telnet client program. If no value
+     is given, a specialized Grid Engine component is used. It is
+     automatically started with the target host and  port  number
+     as parameters.
+
+     Changing qlogin_command will  take  immediate  effect.   The
+     default for qlogin_command is none.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+rlogin_daemon
+     This parameter  specifies  the  executable  that  is  to  be
+     started  on  the  server side of a <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> request without a
+     command argument to be executed remotely.  Usually  this  is
+     the  fully qualified pathname of the system's rlogin daemon.
+     If no value is given, a specialized Grid Engine component is
+     used.
+
+     Changing  rlogin_daemon  will  take  immediate  effect.  The
+     default for rlogin_daemon is none.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+rlogin_command
+     This is the command to be executed on the client side  of  a
+     <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  request  without  a command argument to be executed
+     remotely. Usually this is the fully  qualified  pathname  of
+     the  system's rlogin client program. If no value is given, a
+     specialized Grid Engine component is used.  The  command  is
+     automatically  started  with the target host and port number
+     as parameters like required for <B><A HREF="../htmlman1/telnet.html">telnet(1)</A></B>.  The Grid  Engine
+     rlogin  client  has  been extened to accept and use the port
+     number argument. You can only  use  clients,  such  as  <I>ssh</I>,
+     which also understand this syntax.
+
+     Changing rlogin_command  will  take  immediate  effect.  The
+     default for rlogin_command is none.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+rsh_daemon
+     This parameter  specifies  the  executable  that  is  to  be
+     started  on the server side of a <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> request with a com-
+     mand argument to be executed remotely.  Usually this is  the
+     fully  qualified  pathname of the system's rsh daemon. If no
+     value is given, a specialized Grid Engine component is used.
+
+     Changing rsh_daemon will take immediate effect. The  default
+     for rsh_daemon is none.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+rsh_command
+     This is the command to be executed on the client side  of  a
+     <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  request  with  a  command  argument  to be executed
+     remotely. Usually this is the fully  qualified  pathname  of
+     the  system's  rsh  client  program. If no value is given, a
+     specialized Grid Engine component is used.  The  command  is
+     automatically  started  with the target host and port number
+     as parameters like required for <B><A HREF="../htmlman1/telnet.html">telnet(1)</A></B> plus  the  command
+     with  its arguments to be executed remotely. The Grid Engine
+     rsh client has been extened  to  accept  and  use  the  port
+     number  argument.  You  can  only  use clients, such as <I>ssh</I>,
+     which also understand this syntax.
+
+     Changing rsh_command will take immediate effect. The default
+     for rsh_command is none.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+default_domain
+     Should be set if your hostname resolving yields  unqualified
+     hostnames for your cluster hosts. In that case, the value of
+     default_domain is appended to the  unqualified  hostname  to
+     define a fully qualified hostname.
+
+     Changing default_domain  will  take  immediate  effect.  The
+     default  for  default_domain  is none, in which case it will
+     not be used.
+
+     The  global  configuration  entry  for  this  value  may  be
+     overwritten by the execution host local configuration.
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>,  <B><A HREF="../htmlman1/sh.html">sh(1)</A></B>,
+     <B><A HREF="../htmlman3/getpwnam.html">getpwnam(3)</A></B>,   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>,  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>, <B><A HREF="../htmlman8/cron.html">cron(8)</A></B>, <I>Grid</I>  <I>Engine</I>  <I>Ins-</I>
+     <I>tallation</I> <I>and</I> <I>Administration</I> <I>Guide</I>.
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

@@ -1,0 +1,168 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     sge_gdi_host_attribute, sge_gdi_host_scaling,
+     sge_gdi_host_nslots, sge_gdi_myhost_attribute,
+     sge_gdi_myhost_scaling, sge_gdi_myhost_nslots
+     - Grid Engine/TRM GDI calls
+
+SYNOPSIS
+     #include "sge_gdi_attributes.h"
+
+     char *sge_gdi_host_attribute(
+          char *hostname,
+          char *attr_name
+     );
+
+     double sge_gdi_host_scaling(
+          char *hostname,
+          char *attr_name
+     );
+
+     int sge_gdi_host_nslots(
+          char *hostname,
+          u_long32 jobid
+     );
+
+     char *sge_gdi_myhost_attribute(
+          char *attr_name
+     );
+
+     double sge_gdi_myhost_scaling(
+          char *attr_name
+     );
+
+     int sge_gdi_myhost_nslots(
+          u_long32 jobid
+     );
+
+DESCRIPTION
+     The Transparent Resource Manager (TRM) extension to the Grid
+     Engine  Database  Interface  (GDI) of Grid Engine simplifies
+     integration of (parallel)  applications  with  Grid  Engine.
+     Access  is  provided to information which describes the run-
+     time environment of a Grid Engine job.  In many  cases  this
+     information   can   be   used   to   optimize   runtime   of
+     jobs/applications  by  adapting  its  behavior  to   runtime
+     environment or load situation.
+
+     The following is a description of the basic functionality of
+     all Grid Engine TRM GDI functions:
+
+  sge_gdi_host_attribute
+     Returns value  of  the  requested  attribute  at  the  host.
+     Depending  on  the  attribute  this  can  be a load value, a
+     statically configured value or  a  consumable  resource.  On
+     error  NULL  is  returned.  Otherwise  a pointer is returned
+     which  points  to  a  static  address.  Please   note   that
+     <I>sge</I>_<I>gdi</I>_<I>host</I>_<I>attribute</I>  will fail if the Grid Engine GDI was
+     not successfully initialized by use of <B><A HREF="../htmlman3/sge_gdi_setup.html">sge_gdi_setup(3)</A></B>.
+
+  sge_gdi_host_scaling
+     Returns the scaling factor which is used to scale the  given
+     load  value from the host. The scaling values for a host can
+     be modified using the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> command.  If  no  scaling  is
+     active for the attribute a value of 1 is returned.  On error
+     -1 is returned. Please note that  <I>sge</I>_<I>gdi</I>_<I>host</I>_<I>scaling</I>  will
+     fail if the Grid Engine GDI was not successfully initialized
+     by use of <B><A HREF="../htmlman3/sge_gdi_setup.html">sge_gdi_setup(3)</A></B>.
+
+  sge_gdi_host_nslots
+     Returns the number of slots the job got from the Grid Engine
+     scheduler  for  the given host. This number can be important
+     in case of  multithreaded  parallel  applications.   If  the
+     jobid  is  0  the  value  of  the JOB_ID environment is used
+     instead.   On  error  0  is  returned.  Please   note   that
+     <I>sge</I>_<I>gdi</I>_<I>host</I>_<I>nslots</I> will fail if the Grid Engine GDI was not
+     successfully initialized by use of <B><A HREF="../htmlman3/sge_gdi_setup.html">sge_gdi_setup(3)</A></B>.
+
+  sge_gdi_myhost_attribute
+     Returns the value of the requested attribute  at  the  local
+     host.   Depending on the attribute this can be a load value,
+     a statically configured value or a consumable  resource.  On
+     error  NULL  is  returned.  Otherwise  a pointer is returned
+     which points to  a  static  address.  <I>sge</I>_<I>gdi</I>_<I>host</I>_<I>attribute</I>
+     should  be  called  without  setting  up the Grid Engine GDI
+     since this is done inside of this function.
+
+  sge_gdi_myhost_scaling
+     Returns the scaling factor which is used to scale the  given
+     load  value  from  the  local host. The scaling values for a
+     host can be modified using the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> command. If no scal-
+     ing  is  active  for the attribute a value of 1 is returned.
+     On error -1 is returned.  <I>sge</I>_<I>gdi</I>_<I>myhost</I>_<I>scaling</I>  should  be
+     called  without setting up the Grid Engine GDI since this is
+     done inside of this function.
+
+  sge_gdi_myhost_nslots
+     Returns the number of slots the job got from the Grid Engine
+     scheduler  for  the local host. This number can be important
+     in case of  multithreaded  parallel  applications.   If  the
+     jobid  is  0  the  value  of  the JOB_ID environment is used
+     instead.  On  error  0  is  returned.  <I>sge</I>_<I>gdi</I>_<I>myhost</I>_<I>nslots</I>
+     should  be  called  without  setting  up the Grid Engine GDI
+     since this is done inside of this function.
+
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman3/sge_gdi_setup.html">sge_gdi_setup(3)</A></B>.  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

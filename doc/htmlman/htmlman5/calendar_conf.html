@@ -1,0 +1,222 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     calendar_conf - Grid Engine calendar configuration file for-
+     mat
+
+DESCRIPTION
+     <I>calendar</I>_<I>conf</I> reflects the format of the Grid Engine  calen-
+     dar  configuration.  The  definition of calendars is used to
+     specify "on duty" and  "off  duty"  time  periods  for  Grid
+     Engine  queues  on a time of day, day of week or day of year
+     basis.  Various  calendars  can  be  implemented   and   the
+     appropriate  calendar definition for a certain class of jobs
+     can be attached to a queue.
+
+     <I>calendar</I>_<I>conf</I> entries can be added, modified  and  displayed
+     with  the  -<I>Acal</I>,  -<I>acal</I>,  -<I>Mcal</I>,  -<I>mcal</I>,  -<I>scal</I>  and -<I>scall</I>
+     options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> or with the calendar configuration  dia-
+     log  of the graphical user interface <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B>.  The format of
+     the calendar configuration entries is defined as follows:
+
+FORMAT
+  calendar_name
+     The name of the calendar to be used  when  attaching  it  to
+     queues or when administering the calendar definition.
+
+  year
+     The queue status definition on a day of the year basis. This
+     field  generally  will  specify on which days of a year (and
+     optionally at which times on those days) a queue,  to  which
+     the  calendar  is  attached, will change to a certain state.
+     The syntax of the year field is defined as follows:
+
+     year:=
+         {year_day_range_list[=daytime_range_list][=state]
+         |[year_day_range_list=]daytime_range_list[=state]
+         |[year_day_range_list=][daytime_range_list=]state} ...
+
+     Where
+
+     <B>o</B>  at least one of  year_day_range_list,  daytime_range_list
+        and state always have to be present,
+
+     <B>o</B>  every day in the year is assumed  if  year_day_range_list
+        is omitted,
+
+     <B>o</B>  all day long is assumed if daytime_range_list is omitted,
+
+     <B>o</B>  switching the queue  to  "off"  (i.e.  disabling  it)  is
+        assumed if state is omitted,
+
+     <B>o</B>  the queue is assumed  to  be  enabled  for  days  neither
+        referenced      implicitly      (by      omitting     the
+        year_day_range_list) nor explicitly
+
+     and the syntactical components are defined as follows:
+
+       year_day_range_list := {yearday-yearday|yearday},...
+       daytime_range_list :=  hour[:minute][:second]-
+                              hour[:minute][:second],...
+       state :=     {on|off|suspended}
+       year_day :=  month_day.month.year
+       month_day := {1|2|...|31}
+       month :=     {jan|feb|...|dec|1|2|...|12}
+       year :=      {1970|1971|...|2037}
+
+  week
+     The queue status definition on a day of the week basis. This
+     field  generally  will  specify on which days of a week (and
+     optionally at which times on those days) a queue,  to  which
+     the  calendar  is  attached, will change to a certain state.
+     The syntax of the week field is defined as follows:
+
+     week:=
+         {week_day_range_list[=daytime_range_list][=state]
+         |[week_day_range_list=]daytime_range_list[=state]
+         |[week_day_range_list=][daytime_range_list=]state} ...
+
+     Where
+
+     <B>o</B>  at least one of  week_day_range_list,  daytime_range_list
+        and state always have to be present,
+
+     <B>o</B>  every day in the week is assumed  if  week_day_range_list
+        is omitted,
+
+     <B>o</B>  syntax and semantics of daytime_range_list and state  are
+        identical  to  the  definition  given  for the year field
+        above,
+
+     <B>o</B>  the queue is assumed  to  be  enabled  for  days  neither
+        referenced      implicitly      (by      omitting     the
+        week_day_range_list) nor explicitly
+
+     and where week_day_range_list is defined as
+
+       week_day_range_list := {weekday-weekday|weekday},...
+       week_day :=  {mon|tue|wed|thu|fri|sat|sun}
+
+SEMANTICS
+     Successive entries to the year and week fields (separated by
+     blanks) are combined in compliance with the following rule:
+
+     <B>o</B>  "off"-areas  are  overridden  by  overlapping  "on"-  and
+        "suspended"-areas.
+
+
+     Hence an entry of the form
+
+       week  12-18 tue=13-17=on
+
+     means that queues referencing the corresponding calendar are
+     disabled  the  entire  week  with  the  exception of Tuesday
+     between 13.00-17.00 where the queues are available.
+
+EXAMPLES
+     (The following  examples  are  contained  in  the  directory
+     $SGE_ROOT/util/resources/calendars).
+
+     <B>o</B>  Night, weekend and public holiday calendar:
+
+        On public holidays "night" queues are explicitly enabled.
+        On  working  days  queues  are  disabled between 6.00 and
+        20.00. Saturday and  Sunday  are  implicitly  handled  as
+        enabled times:
+
+          calendar_name  night
+          year           1.1.1999,6.1.1999,28.3.1999,30.3.1999-
+          31.3.1999,18.5.1999-19.5.1999,3.10.1999,25.12.1999,26
+          .12.1999=on
+          week           mon-fri=6-20
+
+
+     <B>o</B>  Day calendar:
+
+        On public holidays "day"-queues are disabled. On  working
+        days  such  queues  are  closed  during the night between
+        20.00 and 6.00, i.e. the queues are also closed on Monday
+        from  0.00  to 6.00 and on Friday from 20.00 to 24.00. On
+        Saturday and Sunday the queues are disabled.
+
+          calendar_name  day
+          year           1.1.1999,6.1.1999,28.3.1999,30.3.1999-
+          31.3.1999,18.5.1999-19.5.1999,3.10.1999,25.12.1999,26
+          .12.1999
+          week           mon-fri=20-6 sat-sun
+
+
+     <B>o</B>  Night, weekend and public holiday calendar  with  suspen-
+        sion:
+
+        Essentially the same scenario as the  first  example  but
+        queues are suspended instead of switching them "off".
+
+          calendar_name  night_s
+          year           1.1.1999,6.1.1999,28.3.1999,30.3.1999-
+          31.3.1999,18.5.1999-19.5.1999,3.10.1999,25.12.1999,26
+          .12.1999=on
+          week           mon-fri=6-20=suspended
+
+     <B>o</B>  Day calendar with suspension:
+
+        Essentially the same scenario as the second  example  but
+        queues are suspended instead of switching them "off".
+
+          calendar_name  day_s
+          year           1.1.1999,6.1.1999,28.3.1999,30.3.1999-
+          31.3.1999,18.5.1999-19.5.1999,3.10.1999,25.12.1999,26
+          .12.1999=suspended
+          week           mon-fri=20-6=suspended sat-sun=suspend
+          ed
+
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

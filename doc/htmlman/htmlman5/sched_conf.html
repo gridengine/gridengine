@@ -1,0 +1,324 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     sched_conf - Grid  Engine  default  scheduler  configuration
+     file
+
+DESCRIPTION
+     <I>sched</I>_<I>conf</I> defines the configuration file  format  for  Grid
+     Engine's  default  scheduler  provided by <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  In
+     order to modify the configuration, use the graphical  user's
+     interface <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B> or the -<I>msconf</I> option of the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> com-
+     mand. A default configuration is provided together with  the
+     Grid Engine distribution package.
+
+FORMAT
+     The following parameters are recognized by the  Grid  Engine
+     scheduler if present in <I>sched</I>_<I>conf</I>:
+
+  algorithm
+     Allows for the selection  of  alternative  scheduling  algo-
+     rithms.
+
+     Currently default is the only allowed setting.
+
+  load_formula
+     A simple  algebraic  expression  used  to  derive  a  single
+     weighted  load value from all or part of the load parameters
+     reported by <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for each host and from all or  part
+     of  the  consumable  resources  (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>) being main-
+     tained for each host.  The load formula expression syntax is
+     that of a summation weighted load values, that is:
+
+          load_val1[*w1][{+|-}load_val2[*w2][{+|-}...]]
+
+     Note, no blanks are allowed in the load formula.
+     The load values and consumable  resources  (load_val1,  ...)
+     are  specified  by the name defined in the complex (see <I>com-</I>
+     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>).
+     Note: Administrator defined load values (see the load_sensor
+     parameter   in   <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  for  details)  and  consumable
+     resources available for all hosts (see  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>)  may  be
+     used as well as Grid Engine default load parameters.
+     The weighting factors (w1, ...) are positive integers. After
+     the  expression  is  evaluated for each host the results are
+     assigned to the  hosts  and  are  used  to  sort  the  hosts
+     corresponding  to the weighted load. The sorted host list is
+     used to sort queues subsequently.
+     The default load formula is "load_avg".
+
+  job_load_adjustments
+     The load, which is imposed by the Grid Engine  jobs  running
+     on  a  system  varies  in  time, and often, e.g. for the CPU
+     load, requires some amount of time to  be  reported  in  the
+     appropriate  quantity by the operating system. Consequently,
+     if a job was started very recently, the  reported  load  may
+     not provide a sufficient representation of the load which is
+     already imposed on that host by the job. The  reported  load
+     will  adapt  to  the  real load over time, but the period of
+     time, in which the reported load is  too  low,  may  already
+     lead to an oversubscription of that host. Grid Engine allows
+     the administrator to specify job_load_adjustments which  are
+     used  in  the  Grid  Engine scheduler to compensate for this
+     problem.
+     The job_load_adjustments are specified as a comma  separated
+     list  of  arbitrary  load parameters or consumable resources
+     and (separated by an equal sign) an associated load  correc-
+     tion  value.  Whenever  a  job  is  dispatched  to a host by
+     <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>, the load parameter and consumable  value  set
+     of  that  host  is  increased  by the values provided in the
+     job_load_adjustments  list.  These  correction  values   are
+     decayed      linearly      over     time     until     after
+     load_adjustment_decay_time from the  start  the  corrections
+     reach  the  value  0.   If  the job_load_adjustments list is
+     assigned the special denominator NONE, no  load  corrections
+     are performed.
+     The adjusted load and consumable values are used to  compute
+     the  combined  and  weighted  load  of  the  hosts  with the
+     load_formula (see above) and to compare the load and consum-
+     able  values against the load threshold lists defined in the
+     queue   configurations   (see   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).    If   your
+     load_formula simply consists of the CPU load average parame-
+     ter <I>load</I>_<I>avg</I> and if your jobs are  very  compute  intensive,
+     you  might  want  to  set  the  job_load_adjustments list to
+     <I>load</I>_<I>avg</I>=<I>100</I>, which means that every new job dispatched to a
+     host will require 100 % CPU time and thus the machine's load
+     is instantly raised by 100.
+
+  load_adjustment_decay_time
+     The load  corrections  in  the  "job_load_adjustments"  list
+     above  are  decayed linearly over time from the point of the
+     job start, where the corresponding load or consumable param-
+     eter  is  raised by the full correction value, until after a
+     time  period  of  "load_adjustment_decay_time",  where   the
+     correction      becomes     0.     Proper     values     for
+     "load_adjustment_decay_time" greatly depend upon the load or
+     consumable   parameters  used  and  the  specific  operating
+     system(s). Therefore, they can only  be  determined  on-site
+     and experimentally.  For the default <I>load</I>_<I>avg</I> load parameter
+     a "load_adjustment_decay_time" of 7 minutes  has  proven  to
+     yield reasonable results.
+
+  maxujobs
+     The maximum number of jobs any user may have  running  in  a
+     Grid  Engine cluster at the same time. If set to 0 (default)
+     the users may run  an  arbitrary  number  of  jobs.  If  the
+     user_sort  scheduling  policy  is  active  (see  below)  the
+     scheduler allows at the most maxujobs in each priority group
+
+     The maxujobs parameter has no effect in a Grid Engine Enter-
+     prise  Edition  system.  Grid Engine Enterprise Edition pro-
+     vides more sophisticated means to control share entitlement.
+
+  maxgjobs
+     Not implemented yet. Provided for later extension.
+
+  schedule_interval
+     At   the   time   <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>   initially   registers   to
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  schedule_interval  is  used  to set the time
+     interval in  which  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  sends  scheduling  event
+     updates  to  <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.   A scheduling event is a status
+     change that has occurred  within  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  which  may
+     trigger  or  affect scheduler decisions (e.g. a job has fin-
+     ished and thus the allocated resources are available again).
+     In the Grid  Engine  default  scheduler  the  arrival  of  a
+     scheduling  event  report  triggers  a  scheduler  run.  The
+     scheduler waits for event reports otherwise.
+     Schedule_interval is a time value (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  for  a
+     definition of the syntax of time values).
+
+  user_sort
+     Grid Engine usually schedules user jobs corresponding  to  a
+     first-come-first-served  policy.  In  case  a user submits a
+     large amount of jobs in very short time, this can lead to  a
+     rather unfair situation, because all users submitting after-
+     wards are blocked until most of the first  user's  jobs  are
+     completed.   Therefore,  Grid  Engine  allows to change this
+     policy to the so called equal share sort: As soon as a  user
+     has  a  job  running his other jobs are sorted to the end of
+     the pending jobs list. Thus, the first  jobs  of  all  other
+     users  have  comparable  chances  to find a queue. Note: The
+     equal share sort only applies within the same  job  priority
+     category  (refer  to  the  <I>mp</I>  option  of  the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  and
+     <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> commands for more information).
+
+     The default for user_sort is FALSE.
+
+  queue_sort_method
+     This parameter determines in which  order  several  criteria
+     are  taken  into  account  to  product  a sorted queue list.
+     Currently, two settings are valid:  seqno and load.  However
+     in  both  cases, Grid Engine attempts to maximize the number
+     of soft requests (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -s option) being fulfilled  by
+     the queues for a particular as the primary criterion.
+     Then, if the queue_sort_method parameter is  set  to  seqno,
+     Grid  Engine  will use the seq_no parameter as configured in
+     the current queue configurations (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) as  the
+     next criterion to sort the queue list. The load_formula (see
+     above) has only a meaning if two queues have equal  sequence
+     numbers.   If  queue_sort_method  is  set  to  load the load
+     according the load_formula is the criterion after maximizing
+     a  job's  soft requests and the sequence number is only used
+     if two hosts have the same load.  The sequence number  sort-
+     ing  is  most  useful if you want to define a fixed order in
+     which queues are to be filled (e.g.   the cheapest  resource
+     first).
+
+     The default for this parameter is load.
+
+  sgeee_schedule_interval
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The time period between job priority adjustments by the Grid
+     Engine  Enterprise  Edition  global dynamic scheduler (GDS).
+     Valid values are specified of  type  time  as  specified  in
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
+
+  halftime
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     When executing under  a  share  based  policy,  Grid  Engine
+     Enterprise  Edition  "ages" (i.e. decreases) usage to imple-
+     ment a sliding window for achieving the  share  entitlements
+     as  defined by the share tree. The halftime defines the time
+     interval in which accumulated usage will have  been  decayed
+     to  half  its  original value. Valid values are specified of
+     type time as specified in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
+
+  usage_weight_list
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     Grid Engine Enterprise Edition accounts for the  consumption
+     of  the  resources  CPU-time, memory and IO to determine the
+     usage which is imposed on a system by a job. A single  usage
+     value  is computed from these three input parameters by mul-
+     tiplying the individual values by weights  and  adding  them
+     up.  The  weights  are defined in the usage_weight_list. The
+     format of the list is
+
+          cpu=wcpu,mem=wmem,io=wio
+
+     where wcpu, wmem and wio are the configurable  weights.  The
+     weights  are real number. The sum of all tree weights should
+     be 1.
+
+  compensation_factor
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+     Determines how fast Grid Engine  Enterprise  Edition  should
+     compensate  for past usage below of above the share entitle-
+     ment defined in  the  share  tree.  Recommended  values  are
+     between 2 and 10, where 10 means faster compensation.
+
+  weight_user
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The relative importance of the user shares in the functional
+     policy.  Values are of type real.
+
+  weight_project
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The relative importance of the project shares in  the  func-
+     tional policy.  Values are of type real.
+
+  weight_jobclass
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The relative importance of the job class (i.e. queue) shares
+     in the functional policy. Values are of type real.
+
+  weight_department
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The relative importance of  the  department  shares  in  the
+     functional policy. Values are of type real.
+
+  weight_job
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The relative importance of the job shares in the  functional
+     policy. Values are of type real.
+
+  weight_tickets_functional
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The maximum number of functional tickets available for  dis-
+     tribution  by Grid Engine Enterprise Edition. Determines the
+     relative importance of the functional policy.
+
+  weight_tickets_share
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The maximum number of share based tickets available for dis-
+     tribution  by Grid Engine Enterprise Edition. Determines the
+     relative importance of the share tree policy.
+
+  weight_deadline
+     This parameter is only available in a Grid Engine Enterprise
+     Edition system. Grid Engine does not support this parameter.
+
+     The maximum number of deadline tickets available for distri-
+     bution  by  Grid  Engine  Enterprise Edition. Determines the
+     relative importance of the deadline policy.
+
+  schedd_job_info
+     The default scheduler can keep track why jobs could  not  be
+     scheduled  during  the  last  scheduler  run. This parameter
+     enables or disables the observation.  The value true enables
+     the monitoring false turns it off.
+
+     It is also possible to activate  the  observation  only  for
+     certain  jobs.  This will be done if the parameter is set to
+     job_list followed by a comma separated list of job ids.
+
+     The user can obtain the collected information with the  com-
+     mand qstat -j.
+
+FILES
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sched</I>_<I>configuration</I>
+                sge_schedd configuration
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <I>com-</I>
+     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,   <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,   <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I>  <I>Administration</I>
+     <I>Guide</I>
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

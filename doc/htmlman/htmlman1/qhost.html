@@ -1,0 +1,272 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     qhost - show the status of Grid Engine hosts, queues, jobs
+
+SYNTAX
+     qhost [ -F [resource_name,...]  [ -help ] [ -h host_list ] [
+     -j ] [ -l resource=val,... ] [ -u user,... ]
+
+DESCRIPTION
+     <I>qhost</I> shows the current status of the available Grid  Engine
+     hosts,  queues  and  the  jobs  associated  with the queues.
+     Selection  options  allow  you  to  get  information   about
+     specific  hosts,  queues, jobs or users.  Without any option
+     <I>qhost</I> will display a list of all hosts without queue or  job
+     information.
+
+OPTIONS
+     -F [ resource_name,... ]
+          <I>qhost</I> will present a detailed listing  of  the  current
+          resource  availability  per  host  with  respect to all
+          resources (if the option argument is omitted)  or  with
+          respect   to   those   resources   contained   in   the
+          resource_name list. Please refer to the description  of
+          the  Full  Format  in  section OUTPUT FORMATS below for
+          further detail.
+
+     -help
+          Prints a listing of all options.
+
+     -h host_list
+          Prints a list of all hosts contained in host_list.
+
+     -j   Prints all jobs running on the  queues  hosted  by  the
+          shown hosts. This switch calls -q implicitly.
+
+     -l resource[=value],...
+          Defines the resources required by the  hosts  on  which
+          information  is  requested.   Matching  is performed on
+          hosts.
+
+     -q   Show  information  about  the  queues  hosted  by   the
+          displayed hosts.
+
+     -u user,...
+          Display information only on those jobs and queues being
+          associated with the users from the given user list.
+
+OUTPUT FORMATS
+     Depending on the presence or absence of the -q or -F and  -j
+     option three output formats need to be differentiated.  PP
+
+  Default Format (without -q, -F and -j)
+     Following the header line a line is printed  for  each  host
+     consisting of
+
+     <B>o</B>  the Hostname
+
+     <B>o</B>  the Architecture.
+
+     <B>o</B>  the  Number of processors.
+
+     <B>o</B>  the Load.
+
+     <B>o</B>  the Total Memory.
+
+     <B>o</B>  the Used Memory.
+
+     <B>o</B>  the Total Swapspace.
+
+     <B>o</B>  the Used Swapspace.
+
+     If the -q option is supplied, each  host  status  line  also
+     contains extra lines for every queue hosted by the host con-
+     sisting of,
+
+     <B>o</B>  the queue name.
+
+     <B>o</B>  the  queue  type  -  one   of   B(atch),   I(nteractive),
+        C(heckpointing),  P(arallel),  T(ransfer) or combinations
+        thereof,
+
+     <B>o</B>  the number of used and available job slots,
+
+     <B>o</B>  the state  of  the  queue  -  one  of  u(nknown)  if  the
+        corresponding  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> cannot be contacted, a(larm),
+        A(larm),     C(alendar      suspended),      s(uspended),
+        S(ubordinate),  d(isabled), D(isabled), E(rror) or combi-
+        nations thereof.
+
+     If the state is a(alarm) at least one of the load thresholds
+     defined  in the <I>load</I>_<I>thresholds</I> list of the queue configura-
+     tion  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  is  currently  exceeded,   which
+     prevents from scheduling further jobs to that queue.
+
+     As opposed to this, the  state  A(larm)  indicates  that  at
+     least  one  of  the  suspend  thresholds  of  the queue (see
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) is currently exceeded. This  will  result  in
+     jobs  running  in  that  queue  being successively suspended
+     until no threshold is violated.
+
+     The states s(uspended) and d(isabled)  can  be  assigned  to
+     queues  and  released  via the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command. Suspending a
+     queue will cause all jobs executing  in  that  queue  to  be
+     suspended.
+
+     The states D(isabled) and C(alendar suspended) indicate that
+     the  queue  has been disabled or suspended automatically via
+     the calendar facility of Grid Engine (see <B><A HREF="../htmlman5/calendar_conf.html">calendar_conf(5)</A></B>),
+     while  the S(ubordinate) state indicates, that the queue has
+     been  suspend  via  subordination  to  another  queue   (see
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details). When suspending a queue (regard-
+     less of the cause) all jobs  executing  in  that  queue  are
+     suspended too.
+
+     If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
+     on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> exe-
+     cutable on that host in order to start a job.  Please  check
+     the  error  logfile of that <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for leads on how to
+     resolve the problem. Please enable the queue afterwards  via
+     the -c option of the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command manually.
+
+     If the -F option was used, resource availability information
+     is printed following the host status line. For each resource
+     (as selected  in  an  option  argument  to  -F  or  for  all
+     resources  if the option argument was omitted) a single line
+     is displayed with the following format:
+
+     <B>o</B>  a one letter specifier  indicating  whether  the  current
+        resource availability value was dominated by either
+        `g' - a cluster global,
+        `h' - a host total or
+
+     <B>o</B>  a second one letter specifier indicating the  source  for
+        the current resource availability value, being one of
+        `l' - a load value reported for the resource,
+        `L' - a load value for the resource  after  administrator
+        defined load scaling has been applied,
+        `c' - availability derived from the consumable  resources
+        facility (see <B><A HREF="../htmlman5/complexes.html">complexes(5)</A></B>),
+        `v' -  a  default  complexes  configuration  value  never
+        overwritten by a load report or a consumable update or
+        `f' - a fixed  availability  definition  derived  from  a
+        non-consumable  complex  attribute  or  a  fixed resource
+        limit.
+
+     <B>o</B>  after a colon the name of the resource on which  informa-
+        tion is displayed.
+
+     <B>o</B>  after an equal sign  the  current  resource  availability
+        value.
+
+     The displayed availability values and the sources from which
+     they  derive  are  always the minimum values of all possible
+     combinations.  Hence,  for  example,  a  line  of  the  form
+     "qf:h_vmem=4G"  indicates  that a queue currently has a max-
+     imum availability in virtual memory  of  4  Gigabyte,  where
+     this  value  is  a fixed value (e.g. a resource limit in the
+     queue configuration) and it is  queue  dominated,  i.e.  the
+     host  in  total  may have more virtual memory available than
+     this, but the queue doesn't allow  for  more.  Contrarily  a
+     line  "hl:h_vmem=4G" would also indicate an upper bound of 4
+     Gigabyte virtual memory availability, but the limit would be
+     derived  from  a load value currently reported for the host.
+     So while the queue might allow for jobs with higher  virtual
+     memory requirements, the host on which this particular queue
+     resides currently only has 4 Gigabyte available.
+
+     After the queue status line (in case of -j) a single line is
+     printed  for  each job running currently in this queue. Each
+     job status line contains
+
+     <B>o</B>  the job ID,
+
+     <B>o</B>  the job name,
+
+     <B>o</B>  the job owner name,
+
+     <B>o</B>  the status of the job - one of t(ransfering),  r(unning),
+        R(estarted), s(uspended), S(uspended) or T(hreshold) (see
+        the Reduced Format section for detailed information),
+
+     <B>o</B>  the start date and time and the function of the job (MAS-
+        TER or SLAVE - only meaningful in case of a parallel job)
+        and
+
+     <B>o</B>  the priority of the jobs.
+
+ENVIRONMENTAL VARIABLES
+     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+                    standard configuration files.
+
+     SGE_CELL       If set, specifies  the  default  Grid  Engine
+                    cell.  To  address  a  Grid Engine cell <I>qstat</I>
+                    uses (in the order of precedence):
+
+                         The name of the cell  specified  in  the
+                         environment  variable SGE_CELL, if it is
+                         set.
+
+                         The  name  of  the  default  cell,  i.e.
+                         default.
+
+
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
+                    should  be written to stderr. In addition the
+                    level of detail in which debug information is
+                    generated is defined.
+
+     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  services  map entry instead to define
+                    that port.
+
+     COMMD_HOST     If set, specifies the host on which the  par-
+                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
+                    Engine  communication  of  the  <I>qstat</I>  client
+                    resides.  Per default the local host is used.
+
+FILES
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                     Grid Engine master host file
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,
+     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

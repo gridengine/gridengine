@@ -1,0 +1,168 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     qmod - modify a Grid Engine queue
+
+SYNTAX
+     qmod [ options ] [ job/task_id_list | queue_list ]
+
+DESCRIPTION
+     <I>Qmod</I> enables users classified as <I>owners</I>  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>
+     for  details)  of  a workstation to modify the state of Grid
+     Engine queues for his/her machine as well as  the  state  of
+     his/her  own  jobs.   A manager/operator or root can execute
+     <I>qmod</I> for any queue and job in a cluster.
+
+OPTIONS
+     -c   Clears the error state of the specified queue(s).
+
+     -d   Disables  the  queue(s),  i.e.  no  further  jobs   are
+          dispatched  to  disabled queues while jobs already exe-
+          cuting in these queues are allowed to finish.
+
+          (Is the successor of the CODINE version 3 -soc option.)
+
+     -e   Enables the queue(s).
+
+          (Is  the  successor  of  the  CODINE  version  3  -xsoc
+          option.)
+
+     -f   Force the modification action for the queue despite the
+          apparent  current  state of the queue. For example if a
+          queue appears to be suspended  but  the  job  execution
+          seems to be continuing the manager/operator can force a
+          suspend operation which will  send  a  SIGSTOP  to  the
+          jobs.  In any case, the queue or job status will be set
+          even if the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  controlling  the  queues/jobs
+          cannot    be    reached.    Requires   manager/operator
+          privileges.
+
+     -help
+          Prints a listing of all options.
+
+     -s   If applied to queues, suspends the queues and any  jobs
+          which  might  be  active.  If  applied to running jobs,
+          suspends the jobs. If a job is  both  suspended  expli-
+          citly  and  via  suspension  of  its queue, a following
+          unsuspend of the queue will not release the  suspension
+          state on the job.
+
+     -us  If applied to queues, unsuspends  the  queues  and  any
+          jobs  which  might  be  active.  If  applied  to  jobs,
+          unsuspends the jobs. If a job is both suspended  expli-
+          citly  and  via  suspension  of  its queue, a following
+          unsuspend of the queue will not release the  suspension
+          state on the job.
+
+     -verify
+          performs no modifications but just prints what would be
+          done if -verify was not present.
+
+     job/task_id_list | queue_list
+          The jobs or queues  upon  which  <I>qmod</I>  is  supposed  to
+          operate.  The  job/task_id_list  is specified by one of
+          the following forms:
+
+              <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>][,<I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>],...]
+              <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>][ <I>job</I>_<I>id</I>[.<I>task</I>_<I>range</I>] ...]
+
+          If present, the <I>task</I>_<I>range</I> restricts the effect of  the
+          <I>qmod</I> operation to the job array task range specified as
+          suffix to the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  for
+          further details on job arrays).
+
+          The task range specifier has  the  form  n[-m[:s]][,n[-
+          m[:s]], ...] or n[-m[:s]][ n[-m[:s]] ...] and thus con-
+          sists of a comma  or  blank  separated  list  of  range
+          specifiers  n[-m[:s]].  The  ranges are concatenated to
+          the complete task id range. Each range may be a  single
+          number,  a simple range of the form n-m or a range with
+          a step size.
+
+ENVIRONMENTAL VARIABLES
+     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+                    standard configuration files.
+
+     SGE_CELL       If set, specifies  the  default  Grid  Engine
+                    cell. To address a Grid Engine cell <I>qmod</I> uses
+                    (in the order of precedence):
+
+                         The name of the cell  specified  in  the
+                         environment  variable SGE_CELL, if it is
+                         set.
+
+                         The  name  of  the  default  cell,  i.e.
+                         default.
+
+
+     SGE_DEBUG_LEVEL
+                    If  set,  specifies  that  debug  information
+                    should  be written to stderr. In addition the
+                    level of detail in which debug information is
+                    generated is defined.
+
+     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  services  map entry instead to define
+                    that port.
+
+     COMMD_HOST     If set, specifies the host on which the  par-
+                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
+                    Engine  communication  of  the  <I>qmod</I>   client
+                    resides.  Per default the local host is used.
+
+FILES
+     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                     Grid Engine master host file
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,    <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B>,    <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
+
+COPYRIGHT
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

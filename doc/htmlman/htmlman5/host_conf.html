@@ -1,0 +1,324 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     host_conf - Grid Engine execution  host  configuration  file
+     format
+
+DESCRIPTION
+     <I>Host</I>_<I>conf</I> reflects the format of the template file  for  the
+     execution  host  configuration.  Via the -ae and -me options
+     of the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> command, you can  add  execution  hosts  and
+     modify  the configuration of any execution host in the clus-
+     ter. Default execution host entries are added  automatically
+     as  soon  as  a <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> registers to <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> for
+     the very first time from a certain host. The  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -sel
+     switch can be used to display a list of execution host being
+     currently configured in your Grid Engine system. Via the -se
+     option  you  can print the execution host configuration of a
+     specified host.
+
+     The special hostname "global" can be used to define  cluster
+     global characteristics.
+
+FORMAT
+     The format of a <I>host</I>_<I>conf</I> file is defined as follows:
+
+     hostname
+          The name of the execution host.
+
+     load_scaling
+          A comma separated list of scaling values to be  applied
+          to  each  or  part of the load values being reported by
+          the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the host and being defined  in  the
+          cluster  global  "host"  complex (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  The
+          load scaling factors are intended to level hardware  or
+          operating system specific differences between execution
+          hosts.  If,  for  example,  the  load   average   value
+          (load_avg in the "host" complex; see also <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>) of
+          a multiprocessor machine is to be compared with a  sin-
+          gle  processor machine the load as reported by the sin-
+          gle CPU host needs to be weighted up against  the  mul-
+          tiprocessor  load  (given  the same CPU hardware) to be
+          comparable. The load scaling factors are integers being
+          multiplied with the reported load quantities to consti-
+          tute weighted load values. Thus, following the  example
+          given  above,  the  load  value of the single processor
+          machine needs to be multiplied by the number of proces-
+          sors  of the single processor machine to become compar-
+          able.
+
+          The syntax of a load factor specification  is  as  fol-
+          lows:  First  the name of the load value (as defined in
+          the "host" complex) is given and, separated by an equal
+          sign, the load scaling value is provided. No blanks are
+          allowed in between the load_scaling value string.
+          The parameter load_scaling is not  meaningful  for  the
+          definition of the "global" host.
+
+     complex_list
+          The comma separated list of administrator defined  com-
+          plexes  (see  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>  for details) to be associated
+          with the host. Only complex attributes contained in the
+          enlisted  complexes  and  those  from  the "global" and
+          "host" complex, which are implicitly attached  to  each
+          host,  can be used in the complex_values list below. In
+          case of the "global" host, the "host"  complex  is  not
+          attached  and  only  "global"  complex  attributes  are
+          allowed per default in the complex_values list  of  the
+          "global" host.
+
+          The default value for this parameter is NONE,  i.e.  no
+          administrator defined complexes are associated with the
+          host.
+
+     complex_values
+          complex_values defines quotas for  resource  attributes
+          managed  via  this host. Each complex attribute is fol-
+          lowed by an "=" sign and the value  specification  com-
+          pliant  with  the  complex  attribute  type  (see  <I>com-</I>
+          <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>).  Quota specifications are separated  by  com-
+          mas.  Only  attributes  as defined in complex_list (see
+          above) may be used.
+
+          The quotas are related to the resource  consumption  of
+          all  jobs on a host in the case of consumable resources
+          (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B> for details on consumable resources) or
+          they  are  interpreted  on  a per job slot basis in the
+          case of non-consumable resources.  Consumable  resource
+          attributes  are  commonly  used  to manage free memory,
+          free disk space or available floating software licenses
+          while non-consumable attributes usually define distinc-
+          tive characteristics like type of hardware installed.
+
+          For  consumable  resource   attributes   an   available
+          resource   amount  is  determined  by  subtracting  the
+          current resource consumption of all running jobs on the
+          host  from  the  quota in the complex_values list. Jobs
+          can only  be  dispatched  to  a  host  if  no  resource
+          requests exceed any corresponding resource availability
+          obtained by this scheme. The quota  definition  in  the
+          complex_values  list  is  automatically replaced by the
+          current load value reported for this attribute, if load
+          is monitored for this resource and if the reported load
+          value is more stringent than  the  quota.  This  effec-
+          tively avoids oversubscription of resources.
+
+          Note: Load values replacing  the  quota  specifications
+          may  have  become more stringent because they have been
+          scaled (see load_scaling above)  and/or  load  adjusted
+          (see <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>).  The -<I>F</I> option of <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> and the
+          load  display  in  the  <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B>  queue  control  dialog
+          (activated  by  clicking  on  a  queue  icon  while the
+          "Shift" key is pressed) provide detailed information on
+          the  actual availability of consumable resources and on
+          the origin of the values taken into account currently.
+
+          Note also: The resource  consumption  of  running  jobs
+          (used  for the availability calculation) as well as the
+          resource requests of the jobs waiting to be  dispatched
+          either  may be derived from explicit user requests dur-
+          ing job submission (see the -<I>l</I> option  to  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>)  or
+          from  a  "default" value configured for an attribute by
+          the administrator (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  The -<I>r</I>  option  to
+          <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>  can be used for retrieving full detail on the
+          actual resource requests of all jobs in the system.
+
+          For non-consumable resources Grid  Engine  simply  com-
+          pares the job's attribute requests with the correspond-
+          ing specification in complex_values taking the relation
+          operator  of  the  complex  attribute  definition  into
+          account (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).  If the result  of  the  com-
+          parison  is  "true",  the  host is suitable for the job
+          with respect to the particular attribute. For  parallel
+          jobs each job slot to be occupied by a parallel task is
+          meant to provide the same resource attribute value.
+
+          Note: Only numeric complex attributes can be defined as
+          consumable  resources  and hence non-numeric attributes
+          are always handled on a per job slot basis.
+
+          The default value for this parameter is NONE,  i.e.  no
+          administrator  defined  resource  attribute  quotas are
+          associated with the host.
+
+     load_values
+          This entry cannot be configured but is  only  displayed
+          in  case of a <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -se command. All load values are
+          displayed as reported by the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the  host.
+          The load values are enlisted in a comma separated list.
+          Each load value start with its  name,  followed  by  an
+          equal sign and the reported value.
+
+     processors
+          This entry cannot be configured but is  only  displayed
+          in  case  of  a  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -se command. Its value is the
+          number  of  processors  which  has  been  detected   by
+          <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the corresponding host.
+
+     usage_scaling
+          This entry is only present in a Grid Engine  Enterprise
+          Edition system. It is not available in Grid Engine.
+
+          The format is equivalent to load_scaling  (see  above),
+          the  only valid attributes to be scaled however are cpu
+          for CPU time consumption, mem  for  Memory  consumption
+          aggregated  over  the life-time of jobs and io for data
+          transferred via any I/O devices. The default NONE means
+          "no scaling", i.e. all scaling factors are 1.
+
+     resource_capability_factor
+          This entry is only present in a Grid Engine  Enterprise
+          Edition system. It is not available in Grid Engine.
+
+          The resource capability factor is used by  Grid  Engine
+          Enterprise  Edition  when  assigning  jobs to execution
+          hosts. The resource capability factor tells Grid Engine
+          Enterprise Edition how the resources (CPU, memory, I/O,
+          etc.) of one execution host compare to the resources of
+          other  execution hosts. This helps to ensure that a job
+          requiring a large percentage of resources (i.e. lots of
+          tickets)  gets placed on an execution host containing a
+          large percentage of the available resources.  The  load
+          situation  on the execution hosts is taken into account
+          in addition, to guarantee that  the  selected  host  is
+          both powerful enough and lightly loaded.
+
+          For example, you might consider setting  your  resource
+          capability factors for each execution host based on the
+          number of CPUs, the speed of the CPUs and the installed
+          main memory:
+
+             #_of_CPUs * (MHz/200) + GB_of_memory
+
+          This would give an execution host with 32 200 MHz  CPUs
+          and 10 gigabytes of memory a resource capability factor
+          of 42, while an execution host with 24 200 MHz CPUs and
+          40  gigabytes of memory would get a resource capability
+          factor of 64, i.e. memory has a significant  impact  in
+          this example.
+
+          Other factors that you might want to consider  in  set-
+          ting the resource capability factor are:
+
+             job mix              - CPU or memory bound jobs
+             CPU benchmarks       - comparison by CPU vendor
+             megaflops (MFLOPS)   - for number crunching
+             I/O capabilities     - disk/network speed
+             available disk space - at the execution host
+
+          The resource capability factor is stored as a  floating
+          point  double  value.  The  range of values used is not
+          important. Grid Engine Enterprise Edition only looks at
+          the relation between values of different hosts.
+
+     user_lists
+          The user_lists parameter  contains  a  comma  separated
+          list  of  so  called  user access lists as described in
+          <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.  Each user contained in at least one of
+          the  enlisted  access  lists has access to the host. If
+          the user_lists parameter is set to NONE  (the  default)
+          any  user  has access being not explicitly excluded via
+          the xuser_lists parameter described below.  If  a  user
+          is  contained  both  in  an  access  list  enlisted  in
+          xuser_lists and user_lists the user is denied access to
+          the host.
+
+     xuser_lists
+          The xuser_lists parameter contains  a  comma  separated
+          list  of  so  called  user access lists as described in
+          <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.  Each user contained in at least one of
+          the  enlisted access lists is not allowed to access the
+          host. If the xuser_lists parameter is set to NONE  (the
+          default)  any  user has access.  If a user is contained
+          both in an access  list  enlisted  in  xuser_lists  and
+          user_lists the user is denied access to the host.
+
+     projects
+          The projects parameter contains a comma separated  list
+          of  projects that have access to the host. Any projects
+          not in this list are denied access to the host. If  set
+          to  NONE  (the default), any project has access that is
+          not specifically excluded via the  xprojects  parameter
+          described  below.  If a project is in both the projects
+          and xprojects parameters, the project is denied  access
+          to  the  host.   This  parameter is only available in a
+          Grid Engine Enterprise Edition system.
+
+     xprojects
+          The xprojects parameter contains a comma separated list
+          of  projects that are denied access to the host. If set
+          to NONE (the default), no projects  are  denied  access
+          other  than  those  denied access based on the projects
+          parameter described above.  If a project is in both the
+          projects  and  xprojects  parameters,  the  project  is
+          denied access to the  host.   This  parameter  is  only
+          available in a Grid Engine Enterprise Edition system.
+
+SEE ALSO
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,   <I>com-</I>
+     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmater.html">sge_qmater(8)</A></B>.
+
+COPYRIGHT
+     See  <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>  for  a  full  statement  of  rights   and
+     permissions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

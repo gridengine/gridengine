@@ -500,7 +500,7 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
    }
 
    if (!host_list_locate(Master_Adminhost_List, host)) {
-      lAddElemStr(&Master_Adminhost_List, AH_name, host, AH_Type);
+      lAddElemHost(&Master_Adminhost_List, AH_name, host, AH_Type);
       admin_host_added = 1;
    }
 
@@ -561,7 +561,7 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
    }
 
    if (admin_host_added) {
-      lDelElemStr(&Master_Adminhost_List, AH_name, host);
+      lDelElemHost(&Master_Adminhost_List, AH_name, host);
    }
 
    DEXIT;

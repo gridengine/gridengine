@@ -1,3 +1,7 @@
+AD-2004-02-24-0: Bugfix:    Did fix CULL run time type error.
+                 Changed:   qmaster
+                 Issue:     699
+
 AH-2004-02-23-2: Bugfix:    Improved diagnosis output of drmaa_init()
                             in case $SGE_ROOT is not set
 

@@ -53,7 +53,8 @@ int cl_com_cleanup_commlib(void);
 
 
 /* local handle functions */
-cl_com_handle_t* cl_com_create_handle(int           framework,
+cl_com_handle_t* cl_com_create_handle(int*          commlib_error,
+                                      int           framework,
                                       int           data_flow_type ,
                                       int           service_provider ,
                                       int           port,
@@ -159,6 +160,10 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
                                    cl_com_SIRM_t** status);
                                    
 
+int cl_commlib_search_endpoint    (cl_com_handle_t* handle,
+                                   char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                                   cl_bool_t only_connected,
+                                   cl_raw_list_t** endpoint_list);
 
 /* defines from old commlib */
 

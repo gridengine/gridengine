@@ -550,11 +550,13 @@ int japi_init(const char *contact, const char *session_key_in,
    /* No need to worry about locking for this global since it is only used in
     * japi_init(), and only one thread may be in japi_init() at a time. */
    if (!virgin_session) {
+      int commlib_error = CL_RETVAL_OK;
+
       /* Make sure the commlib handle exists  If it doesn't, create it. */
       handle = cl_com_get_handle ((char*)uti_state_get_sge_formal_prog_name(), 0);
 
       if (handle == NULL) {
-         handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,
+         handle = cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, 0,
                                        sge_get_qmaster_port(),
                                        (char*)prognames[uti_state_get_mewho()],
                                        0, 1, 0);      
@@ -562,7 +564,7 @@ int japi_init(const char *contact, const char *session_key_in,
 
       if (handle == NULL) {
          JAPI_UNLOCK_SESSION();
-         sge_dstring_sprintf (diag, MSG_JAPI_NO_HANDLE);
+         sge_dstring_sprintf (diag, MSG_JAPI_NO_HANDLE_S, cl_get_error_text(commlib_error));
          return DRMAA_ERRNO_INTERNAL_ERROR;
       }
    }
@@ -3200,6 +3202,17 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          DEXIT;
          return DRMAA_ERRNO_INVALID_JOB;
       }
+
+      /* 
+       * JJAT_stat must indicate whether the job finished or failed 
+       * at this point we simply assume it finished successfully 
+       * when it is found in the finished tasks list
+       */
+
+      JAPI_UNLOCK_JOB_LIST();
+      *remote_ps = DRMAA_PS_DONE;
+      DEXIT;
+      return DRMAA_ERRNO_SUCCESS;
    }
 
    if (!is_array_task) {

@@ -98,6 +98,7 @@ lListElem **lepp
    int success;
    static int already_logged = 0;
    u_long32 status;
+   cl_com_handle_t* handle = NULL;
    
    DENTER(TOP_LAYER, "get_configuration");
 
@@ -117,16 +118,11 @@ lListElem **lepp
       is_global_requested = 1;
    }
    else {
+      int commlib_error = CL_RETVAL_OK;
       hep = lCreateElem(EH_Type);
       lSetHost(hep, EH_name, config_name);
 
       ret = sge_resolve_host(hep, EH_name);
-
-      if ( sge_get_communication_error() == CL_RETVAL_ENDPOINT_NOT_UNIQUE) {
-         CRITICAL((SGE_EVENT, "endpoint not unique error"));
-         DEXIT;
-         return -6;
-      }
 
       if (ret != CL_RETVAL_OK) {
          DPRINTF(("get_configuration: error %d resolving host %s: %s\n", ret, config_name, cl_get_error_text(ret)));
@@ -135,8 +131,40 @@ lListElem **lepp
          DEXIT;
          return -2;
       }
-
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
+
+      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+      commlib_error = sge_get_communication_error();
+
+      switch (commlib_error) {
+         case CL_RETVAL_OK:
+            break;
+         case CL_RETVAL_ENDPOINT_NOT_UNIQUE:
+            if (handle == NULL) {
+               ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
+            } else {
+               ERROR((SGE_EVENT, MSG_GDI_ALREADY_CONECTED_SSU,
+                                    handle->local->comp_host,
+                                    handle->local->comp_name,
+                                    handle->local->comp_id));
+            }
+            DEXIT;
+            return -6;
+         case CL_RETVAL_ACCESS_DENIED:
+            if (handle == NULL) {
+               ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
+            } else {
+               ERROR((SGE_EVENT, MSG_GDI_ACCESS_DENIED_SSU,
+                                    handle->local->comp_host,
+                                    handle->local->comp_name,
+                                    handle->local->comp_id));
+            }
+
+            DEXIT;
+            return -6;
+         default:
+            ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
+      }
    }
 
    if (!is_global_requested && !lepp) {
@@ -219,6 +247,7 @@ lList **conf_list
 ) {
    lListElem *global = NULL;
    lListElem *local = NULL;
+   int sleep_counter = 0;
    int ret;
    time_t now, last;
 
@@ -237,14 +266,17 @@ lList **conf_list
          return -1;
       }
       if (!uti_state_get_daemonized()) {
-         ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
-         if (!getenv("SGE_ND"))
+         /* do not daemonize the first time to be able
+            to report communication errors to stdout/stderr */
+         if (!getenv("SGE_ND") && sleep_counter > 2) {
+            ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
             dfunc();
-         else
+         } else {
             WARNING((SGE_EVENT, MSG_CONF_NOCONFSLEEP));
-         sleep(10);
-      }
-      else {
+         }
+         sleep(5);
+         sleep_counter++;
+      } else {
          DTRACE;
          sleep(60);
          now = (time_t) sge_get_gmt();

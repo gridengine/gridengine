@@ -293,7 +293,7 @@
 #define MSG_CONF_NOGLOBAL             _MESSAGE(23278, _("global configuration not defined"))
 #define MSG_CONF_NOLOCAL_S            _MESSAGE(23279, _("local configuration "SFN" not defined - using global configuration"))
 #define MSG_CONF_NOCONFBG             _MESSAGE(23280, _("can't get configuration from qmaster -- backgrounding"))
-#define MSG_CONF_NOCONFSLEEP          _MESSAGE(23281, _("can't get configuration from qmaster -- sleep(10)"))
+#define MSG_CONF_NOCONFSLEEP          _MESSAGE(23281, _("can't get configuration from qmaster -- waiting ..."))
 #define MSG_CONF_NOCONFSTILL          _MESSAGE(23282, _("still can't get configuration from qmaster -- trying further"))
 #define MSG_CONF_NOREADCONF_IS        _MESSAGE(23283, _("Error %d reading configuration "SFQ"\n"))
 #define MSG_CONF_NOMERGECONF_IS       _MESSAGE(23284, _("Error %d merging configuration "SFQ"\n"))

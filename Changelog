@@ -1,3 +1,10 @@
+CR-2004-08-05-2: Bugfix:    Need more verbose diagnosis msg if execd port is 
+                            already bound
+                 Issue:     1101
+                 Bugtraq:   5083115
+                 Changed:   commlib, execd, gdi, japi
+                 Review:    SG
+
 AA-2004-08-05-0: Bugfix:    tight integration doesn't work with CSP
                  Issue:     1080
                  Bugtraq:   5063314

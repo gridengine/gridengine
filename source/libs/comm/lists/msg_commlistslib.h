@@ -84,4 +84,7 @@
 #define MSG_CL_RETVAL_MAX_CON_COUNT_REACHED     _MESSAGE(80083, _("max. connection count reached"))
 #define MSG_CL_RETVAL_NO_PORT_ERROR             _MESSAGE(80084, _("got no valid port number"))
 #define MSG_CL_RETVAL_PROTOCOL_ERROR            _MESSAGE(80085, _("can't send response for this message id - protocol error"))
+#define MSG_CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE _MESSAGE(80086, _("local endpoint is not unique"))
+#define MSG_CL_RETVAL_TO_LESS_FILEDESCRIPTORS   _MESSAGE(80087, _("operating system provides to less file descriptors"))
+
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/03/06 11:52:40 $     Revision: $Revision: 1.9.2.3 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/03/08 14:36:23 $     Revision: $Revision: 1.9.2.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/03/06 11:52:40 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/03/08 14:36:23 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -564,6 +564,11 @@ Note, that the "~" sign also works in combination with user names,
 so that "~<user>" expands to the home directory of <user>. Using
 another user ID than that of the job owner
 requires corresponding permissions, of course.
+.sp 1
+See 
+.M sge_pe 1
+how the use of the \-o/\-e submit flags affect the name and location of the
+PE output files.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes. The modified

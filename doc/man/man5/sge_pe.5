@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2001/07/20 08:19:16 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2002/03/08 14:36:24 $     Revision: $Revision: 1.3.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2001/07/20 08:19:16 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2002/03/08 14:36:24 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -107,8 +107,19 @@ displayed by
 .M qstat 1
 and \fIJID\fP being the job's identification number.
 Likewise, 
-the standard error output is redirected to \fIREQNAME\fP.pe\fIJID\fP
-.br
+the standard error output is redirected to \fIREQNAME\fP.pe\fIJID\fP.
+.sp 1
+If the location of the stdout and stderr output has been redirected with the
+.M qsub 1
+\-o/\-e flags the following rules apply for the name of the output files of the
+\-PE procedures:
+.sp 1
+If the basename of the stdout/stderr file is a directory, the PE output
+files are created with their default names in that directory.
+.sp 1
+If the  basename of the stdout/stderr file is a plain file, the PE output
+files are joined with the stdout/stderr files of the job.
+.sp 1
 The following special
 variables being expanded at runtime can be used (besides any other
 strings which have to be interpreted by the start and stop procedures)

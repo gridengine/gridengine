@@ -142,7 +142,7 @@ static gdi_object_t gdi_object[] = {
 void sge_clean_lists(void) {
    int i = 0;
 
-   for(;i < gdi_object[i].target != 0 ; i++) {
+   for(;gdi_object[i].target != 0 ; i++) {
       if (gdi_object[i].master_list != NULL) {
          *gdi_object[i].master_list = lFreeList(*gdi_object[i].master_list);
       }   

@@ -1,3 +1,9 @@
+JG-2004-05-18-2: Bugfix:    qmaster Master_* lists weren't deleted at shutdown.
+                            Fixed a core dump in qmaster if reporting file 
+                            couldn't be opened.
+                            Free the spooling context at qmaster shutdown.
+                 Review:    SG
+
 MD-2004-05-18-2: Bugfix:    - forgot sourcing of a module
                  Changed:   inst_sge
 

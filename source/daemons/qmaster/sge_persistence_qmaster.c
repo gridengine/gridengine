@@ -123,6 +123,9 @@ sge_shutdown_persistence(lList **answer_list)
       if (answer_list == NULL) {
          answer_list_output(&local_answer);
       }
+
+      context = lFreeElem(context);
+      spool_set_default_context(context);
    }
 
    DEXIT;

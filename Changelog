@@ -1,3 +1,13 @@
+MD-2005-03-31-0: Bugfix:    - upgrade failed at sharetree
+                            - inst_sge -x fails with fqdn
+                            - autoinst does not fully consider ignore_fqdn
+                            - load.sh returns wrong load values, if uptime 
+                              higher than 1 hour
+                 Issue:     1494, 1478, 1119, 1535
+                 Bugtraq:   6233300, 6239640, 5071527, 5086193
+                 Changed:   inst_sge, install_modules
+                 Review:    CR
+
 CR-2005-03-31-1: Testsuite: increased timeout waiting after qconf -km to
                             shutdown qmaster with kill signal
 

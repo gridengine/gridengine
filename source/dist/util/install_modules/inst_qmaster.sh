@@ -1286,9 +1286,7 @@ GetQmasterPort()
        comm_port_max=65500
     fi
 
-    $SGE_UTILBIN/getservbyname $SGE_QMASTER_SRV > /dev/null 2>&1
-
-    ret=$?
+    CheckServiceAndPorts service $SGE_QMASTER_SRV
 
     if [ "$SGE_QMASTER_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
@@ -1335,8 +1333,8 @@ GetQmasterPort()
       service_available=false
       done=false
       while [ $done = false ]; do
-         $SGE_UTILBIN/getservbyname $SGE_QMASTER_SRV 2>/dev/null
-         if [ $? != 0 ]; then
+         CheckServiceAndPorts service $SGE_QMASTER_SRV
+         if [ $ret != 0 ]; then
             $CLEAR
             $INFOTEXT -u "\nNo TCP/IP service >sge_qmaster< yet"
             $INFOTEXT -n "\nIf you have just added the service it may take a while until the service\n" \
@@ -1375,11 +1373,9 @@ GetQmasterPort()
                elif [ $INP -le 1024 -a $euid != 0 ]; then
                   $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
                else
-                  #ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
-                  #cat /etc/services | grep -v "^#" | grep ${INP}
-                  $SGE_UTILBIN/getservbyname -check ${INP} > /dev/null 2>&1
+                  CheckServiceAndPorts port ${INP}
 
-                  if [ $? = 0 ]; then
+                  if [ $ret = 0 ]; then
                      $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
                   else
                      done=true
@@ -1430,10 +1426,7 @@ GetExecdPort()
     else
        comm_port_max=65500
     fi
-
-    $SGE_UTILBIN/getservbyname $SGE_EXECD_SRV > /dev/null 2>&1
-
-    ret=$?
+    CheckServiceAndPorts service $SGE_EXECD_SRV
 
     if [ "$SGE_EXECD_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
@@ -1484,8 +1477,8 @@ GetExecdPort()
       service_available=false
       done=false
       while [ $done = false ]; do
-         $SGE_UTILBIN/getservbyname $SGE_EXECD_SRV 2>/dev/null
-         if [ $? != 0 ]; then
+         CheckServiceAndPorts service $SGE_EXECD_SRV
+         if [ $ret != 0 ]; then
             $CLEAR
             $INFOTEXT -u "\nNo TCP/IP service >sge_execd< yet"
             $INFOTEXT -n "\nIf you have just added the service it may take a while until the service\n" \
@@ -1538,8 +1531,8 @@ GetExecdPort()
                else
                   #ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
                   #cat /etc/services | grep -v "^#" | grep ${INP}
-                  $SGE_UTILBIN/getservbyname -check ${INP} > /dev/null 2>&1
-                  if [ $? = 0 ]; then
+                  CheckServiceAndPorts port ${INP}
+                  if [ $ret = 0 ]; then
                      $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
                   else
                      done=true

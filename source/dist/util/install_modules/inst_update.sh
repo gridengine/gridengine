@@ -571,7 +571,7 @@ GetOldUsersets()
 
 GetOldShareTree()
 {
-   if [ -d $OLD_QMASTER_SPOOL/sharetree ]; then
+   if [ -f $OLD_QMASTER_SPOOL/sharetree ]; then
       ExecuteAsAdmin $SPOOLDEFAULTS sharetree $OLD_QMASTER_SPOOL/sharetree
    fi
 }

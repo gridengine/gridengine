@@ -72,7 +72,7 @@ while [ $end = false ]; do
    # send load value arch
    #
    echo "$HOST:arch:$ARCH"
-   load=`uptime|cut -f4 -d":"`
+   load=`uptime |cut -f4- -d"," |cut -f2 -d":"`
 
    # ---------------------------------------- 
    # send load value load.5m

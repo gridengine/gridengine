@@ -2014,3 +2014,66 @@ RestoreCheckBootStrapFile()
       exit 1
    fi
 }
+
+CheckServiceAndPorts()
+{
+   to_check=$1
+   check_val=$2
+
+   if [ "$to_check" = "service" ]; then
+      case $ARCH in
+
+       win*)
+          `cat /etc/services | grep $check_val > /dev/null 2>&1`
+          ret=$? 
+          if [ "$ret" = 1 ]; then
+             `ypcat.exe services.byname | grep $check_val > /dev/null 2>&1`
+             ret=$?
+          fi
+       ;;
+
+       lx*)
+          `cat /etc/services | grep $check_val > /dev/null 2>&1`
+          ret=$? 
+          if [ "$ret" = 1 ]; then
+             `ypcat services.byname | grep $check_val > /dev/null 2>&1`
+             ret=$?
+          fi
+       ;;
+
+       *)
+          $SGE_UTILBIN/getservbyname $check_val > /dev/null 2>&1
+          ret=$?
+       ;;
+
+      esac
+   elif [ "$to_check" = "port" ]; then
+      case $ARCH in
+
+       win*)
+          `cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1`
+          ret=$? 
+          if [ "$res" = 1 ]; then
+             `ypcat.exe services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1`
+             ret=$?
+          fi
+       ;;
+
+       lx*)
+          `cat /etc/services | grep -w "$check_val/tcp" > /dev/null 2>&1`
+          ret=$? 
+          if [ "$res" = 1 ]; then
+             `ypcat services.byname | grep -w "$check_val/tcp" > /dev/null 2>&1`
+             ret=$?
+          fi
+       ;;
+
+       *)
+          $SGE_UTILBIN/getservbyname -check $check_val > /dev/null 2>&1
+          ret=$?
+       ;;
+
+      esac
+   fi
+
+}

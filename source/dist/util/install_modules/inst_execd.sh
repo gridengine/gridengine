@@ -88,6 +88,9 @@ CheckQmasterInstallation()
    else
     $CLEAR
     $INFOTEXT -u "\nGrid Engine cells"
+    if [ "$SGE_CELL" = "" ]; then
+       SGE_CELL="default"
+    fi
     $INFOTEXT -n "\nPlease enter cell name which you used for the qmaster\n" \
                  "installation or press <RETURN> to use [%s] >> " $SGE_CELL
     INP=`Enter $SGE_CELL`
@@ -297,12 +300,14 @@ CheckHostNameResolving()
          fi
 
          myaname=`ExecuteAsAdmin $SGE_UTILBIN/gethostname -aname`
-         myname=`echo $myaname | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+         #myname=`echo $myaname | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
          
          if [ $ignore_fqdn = true ]; then
             admin_host_list=`ExecuteAsAdmin $SGE_BIN/qconf -sh | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+            myname=`echo $myaname | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
          else
             admin_host_list=`ExecuteAsAdmin $SGE_BIN/qconf -sh | tr "[A-Z]" "[a-z]"`
+            myname=$myaname
             if [ "$default_domain" != none ]; then
                hasdot=`echo $myname|grep '\.'`
                if [ "$hasdot" = "" ]; then
@@ -420,7 +425,32 @@ AddQueue()
    #   return
    #fi
 
-   exechost=`$SGE_UTILBIN/gethostname -aname | cut -f1 -d.`
+   #exechost=`$SGE_UTILBIN/gethostname -aname | cut -f1 -d.`
+
+   ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^ignore_fqdn" | awk '{print $2}'| egrep -i "true|1"`
+   if [ "$ignore_fqdn" != "" ]; then
+      ignore_fqdn=true
+   else
+      ignore_fqdn=false
+   fi
+
+   default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "^default_domain" | awk '{print $2}' | tr "[A-Z]" "[a-z]"`
+   if [ "$default_domain" = NONE ]; then
+      default_domain=none
+   fi
+
+   myaname=`$SGE_UTILBIN/gethostname -aname`
+   if [ $ignore_fqdn = true ]; then
+      exechost=`echo $myaname | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+   else
+      exechost=$myaname
+      if [ "$default_domain" != none ]; then
+         hasdot=`echo $exechost|grep '\.'`
+         if [ "$hasdot" = "" ]; then
+            exechost=$exechost.$default_domain
+         fi
+      fi
+   fi
 
    slots=`$SGE_UTILBIN/loadcheck -loadval num_proc 2>/dev/null | sed "s/num_proc *//"`
 

@@ -188,7 +188,7 @@ while [ $ARGC != 0 ]; do
      UPDATE=true
      OLD_SGE_ROOT=$2
      OLD_SGE_CELL=$3
-     if [ "$OLD_SGE_ROOT" = "" -o "$OLD_SGE_CELL" = "" -a "$EXECD" != "install" ]; then
+     if [ "$OLD_SGE_ROOT" = "" -o "$OLD_SGE_CELL" = "" ]; then
         ErrUsage
         exit 1    
      fi
@@ -249,7 +249,7 @@ if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "i
 fi
 
 
-if [ $UPDATE = "true" -a "$OLD_SGE_ROOT" != "" -a "$OLD_SGE_CELL" != "" ]; then
+if [ $UPDATE = "true" -a "$OLD_SGE_ROOT" != "" -a "$OLD_SGE_CELL" != "" -a "$EXECD" != "install" ]; then
    WelcomeTheUserUpgrade
    CheckForLocalHostResolving
    CheckWhoInstallsSGE
@@ -549,31 +549,35 @@ if [ $SHADOW = "install" ]; then
 
       #check if spooling is supported!
       spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_method" | awk '{ print $2 }'`
-      db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_params" | awk '{ print $2 }' | cut -d";" -f1`
-      fstype=`$SGE_UTILBIN/fstype $db_home`
-      if [ $? != 0 ]; then
-         $INFOTEXT "\n Shadow master can not access spool directory at %s! \n" $db_home 
-         $INFOTEXT "Check if the spool directory is mounted and has read/write permissions.\n"
-         exit 1
-      elif [ `echo $db_home | cut -d":" -f2` = "$db_home" ]; then
-         if [ "$spooling_method" = "berkeleydb" ]; then
-            if [ `echo $fstype | grep "nfs" | wc -l` -gt 0 ]; then
-               if [ "$fstype" != "nfs4" ]; then
-                  $INFOTEXT "Spooling directory exported as $s is not supported!\n" $fstype
-                  $INFOTEXT "\nPlease install the database directory on a NFSv4 fileserver or use the RPC Client/Server mechanism"
-                  exit 1;
-               else
-                  $INFOTEXT "We detected local Berkeley DB Spooling without a RPC Server. Local spooling\n is not working under " \
-                            "mixed architectures.\n\n "
-                  $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to continue (y/n) ('n' will abort) [y] >> "
-                  if [ $? != 0 ]; then
-                     $INFOTEXT "Installation aborted"
+      #if spooling_params contains no "/" then we have rpc server spooling
+      `cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }' | grep "/"`
+      if [ $? = 0 ]; then
+         db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_params" | awk '{ print $2 }' | cut -d";" -f1`
+         fstype=`$SGE_UTILBIN/fstype $db_home`
+         if [ $? != 0 ]; then
+            $INFOTEXT "\n Shadow master can not access spool directory at %s! \n" $db_home 
+            $INFOTEXT "Check if the spool directory is mounted and has read/write permissions.\n"
+            exit 1
+         elif [ `echo $db_home | cut -d":" -f2` = "$db_home" ]; then
+            if [ "$spooling_method" = "berkeleydb" ]; then
+               if [ `echo $fstype | grep "nfs" | wc -l` -gt 0 ]; then
+                  if [ "$fstype" != "nfs4" ]; then
+                     $INFOTEXT "Spooling directory exported as $s is not supported!\n" $fstype
+                     $INFOTEXT "\nPlease install the database directory on a NFSv4 fileserver or use the RPC Client/Server mechanism"
                      exit 1;
+                  else
+                     $INFOTEXT "We detected local Berkeley DB Spooling without a RPC Server. Local spooling\n is not working under " \
+                               "mixed architectures.\n\n "
+                     $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to continue (y/n) ('n' will abort) [y] >> "
+                     if [ $? != 0 ]; then
+                        $INFOTEXT "Installation aborted"
+                        exit 1;
+                     fi
                   fi
                fi
             fi
          fi
-      fi
+       fi
 
       #creating the local_conf now!
       AddLocalConfiguration_With_Qconf

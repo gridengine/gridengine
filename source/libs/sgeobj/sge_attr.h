@@ -61,9 +61,7 @@ bool                                                                          \
 PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
                          const char *hostname, INTERNAL_TYPE *value,          \
                          bool *is_ambiguous);                                 \
-bool                                                                          \
-PREFIX##_list_verify(const lList *this_list, lList **answer_list,             \
-                     bool *is_ambiguous);                                     \
+                                                                              \
 bool                                                                          \
 PREFIX##_list_append_to_dstring(const lList *this_list, dstring *string);     \
                                                                               \

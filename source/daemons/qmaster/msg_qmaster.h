@@ -787,5 +787,10 @@
 #define MSG_CQUEUE_NONAMECHANGE           _MESSAGE(33688, _("unable to change cluster queue name\n"))
 #define MSG_CQUEUE_ERRORWRITESPOOLFILE_S  _MESSAGE(33689, _("error writing spoolfile for cluster queue "SFQ))
 
+#define MSG_HGROUP_CYCLEINDEF_SS          _MESSAGE(33690, _("Hostgroup "SFQ" in specification of "SFQ" would create a cycle\n"))
+#define MSG_HGROUP_REFINHGOUP_SS          _MESSAGE(33691, _("denied: following hostgroups still reference "SFQ": "SFN"\n"))
+#define MSG_HGROUP_REFINCUSER_SS          _MESSAGE(33692, _("denied: following user mapping entries still reference "SFQ": "SFN"\n"))
+#define MSG_HGROUP_REFINCQUEUE_SS         _MESSAGE(33693, _("denied: following cluster queues still reference "SFQ": "SFN"\n"))
+
 #endif /* __MSG_QMASTER_H */
 

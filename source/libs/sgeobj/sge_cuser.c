@@ -147,13 +147,14 @@ cuser_list_find_hgroup_references(const lList *this_list,
    lListElem *cuser;
 
    DENTER(CUSER_LAYER, "cuser_find_hgroup_references");
-   if (this_list != NULL && hgroup != NULL && string_list != NULL)
-   for_each(cuser, this_list) {
-      if (cuser_is_hgroup_referenced(cuser, hgroup)) {
-         const char *name = lGetString(cuser, CU_name);
+   if (this_list != NULL && hgroup != NULL && string_list != NULL) {
+      for_each(cuser, this_list) {
+         if (cuser_is_hgroup_referenced(cuser, hgroup)) {
+            const char *name = lGetString(cuser, CU_name);
 
-         lAddElemStr(string_list, ST_name, name, ST_Type);
-      } 
+            lAddElemStr(string_list, ST_name, name, ST_Type);
+         } 
+      }
    }
    DEXIT;
    return ret;

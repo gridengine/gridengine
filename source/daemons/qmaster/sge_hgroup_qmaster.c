@@ -64,6 +64,168 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+static bool
+hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
+                    lListElem *reduced_elem, int sub_command,
+                    lList **add_hosts, lList **rem_hosts,
+                    lList **occupant_groups);
+
+static void 
+hgroup_commit(lListElem *hgroup);
+
+static void 
+hgroup_rollback(lListElem *this_elem);
+
+static bool
+hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
+                    lListElem *reduced_elem, int sub_command,
+                    lList **add_hosts, lList **rem_hosts,
+                    lList **occupant_groups)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "hgroup_mod_hostlist");
+   if (hgroup != NULL && reduced_elem != NULL) {
+      int pos = lGetPosViaElem(reduced_elem, HGRP_host_list);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+         lList *old_href_list = lCopyList("", lGetList(hgroup, HGRP_host_list));
+         lList *master_list = *(hgroup_list_get_master_list());
+         lList *href_list = NULL;
+         lList *add_groups = NULL;
+         lList *rem_groups = NULL;
+
+         if (ret) {
+            ret &= href_list_resolve_hostnames(list, answer_list);
+         }
+         if (ret) {
+            attr_mod_sub_list(answer_list, hgroup, HGRP_host_list, HR_name,
+                              reduced_elem, sub_command, SGE_ATTR_HOSTLIST,
+                              SGE_OBJ_HGROUP, 0);
+            href_list = lGetList(hgroup, HGRP_host_list);
+         }
+         if (ret) {
+            ret &= href_list_find_diff(href_list, answer_list, old_href_list,
+                                       add_hosts, rem_hosts, &add_groups,
+                                       &rem_groups);
+         }
+         if (ret && add_groups != NULL) {
+            ret &= hgroup_list_exists(master_list, answer_list, add_groups);
+         }
+         if (ret) {
+            ret &= href_list_find_effective_diff(answer_list, add_groups,
+                                                 rem_groups, master_list,
+                                                 add_hosts, rem_hosts);
+         }
+
+
+         /*
+          * Try to find cycles in the definition
+          */
+         if (ret) {
+            ret &= hgroup_find_all_referencees(hgroup, answer_list,
+                                               master_list, occupant_groups);
+            ret &= href_list_add(occupant_groups, answer_list,
+                                 lGetHost(hgroup, HGRP_name));
+            if (ret) {
+               if (*occupant_groups != NULL && add_groups != NULL) {
+                  lListElem *add_group = NULL;
+
+                  for_each(add_group, add_groups) {
+                     const char *name = lGetHost(add_group, HR_name);
+
+                     if (href_list_has_member(*occupant_groups, name)) {
+                        break;
+                     }
+                  }
+                  if (add_group == NULL) {
+                     /*
+                      * No cycle found => success
+                      */
+                     ;
+                  } else {
+                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_HGROUP_CYCLEINDEF_SS,
+                                            lGetHost(add_group, HR_name),
+                                            lGetHost(hgroup, HGRP_name)));
+                     answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
+                                     ANSWER_QUALITY_ERROR);
+                     ret = false;
+                  }
+               }
+            }
+         }
+
+         /*
+          * Make sure that:
+          *   - added hosts where not already part the old hostlist
+          *   - removed hosts are not part of the new hostlist
+          */
+         if (ret) {
+            lList *tmp_hosts = NULL;
+
+            ret &= href_list_find_all_references(old_href_list, answer_list,
+                                                 master_list, &tmp_hosts, NULL);
+            ret &= href_list_remove_existing(add_hosts, answer_list, tmp_hosts);
+            tmp_hosts = lFreeList(tmp_hosts);
+
+            ret &= href_list_find_all_references(href_list, answer_list,
+                                                 master_list, &tmp_hosts, NULL);
+            ret &= href_list_remove_existing(rem_hosts, answer_list, tmp_hosts);
+            tmp_hosts = lFreeList(tmp_hosts);
+         }
+
+#if 1 /* debug */
+         if (ret) {
+            href_list_debug_print(*add_hosts, "add_hosts: ");
+            href_list_debug_print(*rem_hosts, "rem_hosts: ");
+         }
+#endif
+
+         /*
+          * Cleanup
+          */
+         old_href_list = lFreeList(old_href_list);
+         add_groups = lFreeList(add_groups);
+         rem_groups = lFreeList(rem_groups);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+static void 
+hgroup_commit(lListElem *hgroup) 
+{
+   lList *cqueue_master_list = *(cqueue_list_get_master_list());
+   lList *cqueue_list = lGetList(hgroup, HGRP_cqueue_list);
+   lListElem *next_cqueue = NULL;
+   lListElem *cqueue = NULL;
+
+   DENTER(TOP_LAYER, "hgroup_commit");
+   next_cqueue = lFirst(cqueue_list);
+   while ((cqueue = next_cqueue)) {
+      const char *name = lGetString(cqueue, CQ_name);
+      lListElem *org_queue = lGetElemStr(cqueue_master_list, CQ_name, name);
+
+      next_cqueue = lNext(cqueue);
+      cqueue_commit(cqueue);
+      lDechainElem(cqueue_list, cqueue);
+      lAppendElem(cqueue_master_list, cqueue);
+      lRemoveElem(cqueue_master_list, org_queue);
+   }
+   lSetList(hgroup, HGRP_cqueue_list, NULL);
+   DEXIT;
+}
+
+static void 
+hgroup_rollback(lListElem *this_elem) 
+{
+   DENTER(TOP_LAYER, "hgroup_rollback");
+   lSetList(this_elem, HGRP_cqueue_list, NULL);
+   DEXIT;
+}
+
 int 
 hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
            int add, const char *remote_user, const char *remote_host, 
@@ -173,12 +335,12 @@ hgroup_mod(lList **answer_list, lListElem *hgroup, lListElem *reduced_elem,
 }
 
 int 
-sge_del_hgroup(lListElem *this_elem, lList **answer_list, 
-               char *remote_user, char *remote_host) 
+hgroup_del(lListElem *this_elem, lList **answer_list, 
+           char *remote_user, char *remote_host) 
 {
    int ret = true;
 
-   DENTER(TOP_LAYER, "sge_del_hgroup");
+   DENTER(TOP_LAYER, "hgroup_del");
    /*
     * Check all incoming parameter
     */
@@ -190,6 +352,7 @@ sge_del_hgroup(lListElem *this_elem, lList **answer_list,
        */
       if (name != NULL) {
          lList *master_hgroup_list = *(hgroup_list_get_master_list());
+         lList *master_cqueue_list = *(cqueue_list_get_master_list());
 #ifndef __SGE_NO_USERMAPPING__
          lList *master_cuser_list = *(cuser_list_get_master_list());
 #endif
@@ -216,9 +379,7 @@ sge_del_hgroup(lListElem *this_elem, lList **answer_list,
                   dstring string = DSTRING_INIT;
 
                   href_list_append_to_dstring(href_list, &string);
-                  /* EB: TODO: move to msg file */
-                  ERROR((SGE_EVENT, "denied: following hostgroups "
-                         "still reference "SFQ": "SFN"\n", name,
+                  ERROR((SGE_EVENT, MSG_HGROUP_REFINHGOUP_SS, name,
                          sge_dstring_get_string(&string)));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                   ANSWER_QUALITY_ERROR);
@@ -241,8 +402,7 @@ sge_del_hgroup(lListElem *this_elem, lList **answer_list,
                   dstring string = DSTRING_INIT;
 
                   str_list_append_to_dstring(string_list, &string, ','); 
-                  ERROR((SGE_EVENT, "denied: following user mapping entries "
-                         "still reference "SFQ": "SFN"\n", name,
+                  ERROR((SGE_EVENT, MSG_HGROUP_REFINCUSER_SS, name,
                          sge_dstring_get_string(&string)));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                   ANSWER_QUALITY_ERROR);
@@ -253,15 +413,26 @@ sge_del_hgroup(lListElem *this_elem, lList **answer_list,
             string_list = lFreeList(string_list);
 #endif
                                                         
-
-            /* 
-             * EB: TODO: reject removal of still referenced hostgroups
-             *    - cluster queue
-             */
+            /*
+             * Is it still referenced in a cluster queue object 
+             */ 
+            ret &= cqueue_list_find_hgroup_references(master_cqueue_list,
+                                                      answer_list, hgroup,
+                                                      &string_list);
             if (ret) {
-               ;
+               if (string_list != NULL) {
+                  dstring string = DSTRING_INIT;
+
+                  str_list_append_to_dstring(string_list, &string, ','); 
+                  ERROR((SGE_EVENT, MSG_HGROUP_REFINCQUEUE_SS, name,
+                         sge_dstring_get_string(&string)));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
+                                  ANSWER_QUALITY_ERROR);
+                  sge_dstring_free(&string);
+                  ret = false;
+               }
             }
-            
+            string_list = lFreeList(string_list);
             
             /*
              * Try to unlink the concerned spoolfile
@@ -340,28 +511,6 @@ hgroup_success(lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object)
    return 0;
 }
 
-void hgroup_commit(lListElem *hgroup) 
-{
-   lList *cqueue_master_list = *(cqueue_list_get_master_list());
-   lList *cqueue_list = lGetList(hgroup, HGRP_cqueue_list);
-   lListElem *next_cqueue = NULL;
-   lListElem *cqueue = NULL;
-
-   DENTER(TOP_LAYER, "hgroup_commit");
-   next_cqueue = lFirst(cqueue_list);
-   while ((cqueue = next_cqueue)) {
-      const char *name = lGetString(cqueue, CQ_name);
-      lListElem *org_queue = lGetElemStr(cqueue_master_list, CQ_name, name);
-
-      next_cqueue = lNext(cqueue);
-      cqueue_commit(cqueue);
-      lDechainElem(cqueue_list, cqueue);
-      lAppendElem(cqueue_master_list, cqueue);
-      lRemoveElem(cqueue_master_list, org_queue);
-   }
-   lSetList(hgroup, HGRP_cqueue_list, NULL);
-   DEXIT;
-}
 
 int 
 hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object) 
@@ -404,11 +553,3 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
    DEXIT;
    return tmp_ret ? 0 : 1;
 }
-
-void hgroup_rollback(lListElem *this_elem) 
-{
-   DENTER(TOP_LAYER, "hgroup_rollback");
-   lSetList(this_elem, HGRP_cqueue_list, NULL);
-   DEXIT;
-}
-

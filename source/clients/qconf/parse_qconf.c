@@ -4048,8 +4048,6 @@ DPRINTF(("ep: %s %s\n",
       }
 #endif
 
-#ifdef __SGE_CQUEUE_DEBUG__
-
       /* "-scql" */
       if (!strcmp("-scql", *spp)) {
          show_object_list(SGE_CQUEUE_LIST, CQ_Type, CQ_name, "cqueue list");
@@ -4120,7 +4118,6 @@ DPRINTF(("ep: %s %s\n",
          spp++;
          continue;
       }
-#endif
 
 /*----------------------------------------------------------------------------*/
 

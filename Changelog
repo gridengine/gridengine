@@ -1,3 +1,9 @@
+EB-2003-10-09-0: Bugfix:    Changes concerning CQs-GDIBASE package
+                            - fixed several bugs
+                            - modifications due to review with SG
+                            - added/changed comments
+                            - moved several functions 
+
 JG-2003-10-09-0: Enhancem.: Bootstrapping: Added qmaster_spool_dir and 
                             binary_path to bootstrap file to make scripts and 
                             shadowd work for spooling methods other than 
@@ -29,7 +35,7 @@ JG-2003-10-07-0: Enhancem.: Bootstrapping: Removed admin_user, ignore_fqdn and
 
 EB-2003-10-07-0: Bugfix.:   Fixed bug (SG-2003-09-25-1)
 
-EB-2003-10-06-0: Enhancem.: Fixed many bugs concerning CQs-APIBASE package
+EB-2003-10-06-0: Enhancem.: Fixed many bugs concerning CQs-GDIBASE package
                             - spooling
                             - verification code
                             - hostlist modification in HGRP and CQ

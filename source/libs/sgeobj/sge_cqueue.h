@@ -101,13 +101,13 @@ cqueue_list_find_all_matching_references(const lList *this_list,
                                          lList **qref_list);
 
 bool
-cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list);
-
+cqueue_list_find_hgroup_references(const lList *this_list, 
+                                   lList **answer_list,
+                                   const lListElem *hgroup, 
+                                   lList **string_list);
 
 bool
-cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
-                    lListElem *reduced_elem, int sub_command,
-                    lList **add_hosts, lList **rem_hosts);
+cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list);
 
 bool
 cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,

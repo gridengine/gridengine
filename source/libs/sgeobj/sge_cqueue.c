@@ -259,6 +259,26 @@ cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href)
 } 
 
 bool 
+cqueue_is_hgroup_referenced(const lListElem *this_elem, const lListElem *hgroup)
+{
+   bool ret = false;
+
+   if (this_elem != NULL && hgroup != NULL) {
+      const char *name = lGetHost(hgroup, HGRP_name);
+      
+      if (name != NULL) {
+         lList *href_list = lGetList(this_elem, CQ_hostlist);
+         lListElem *tmp_href = lGetElemHost(href_list, HR_name, name);
+
+         if (tmp_href != NULL) {
+            ret = true;
+         }
+      }
+   }
+   return ret;
+} 
+
+bool 
 cqueue_is_a_href_referenced(const lListElem *this_elem, const lList *href_list)
 {
    bool ret = false;
@@ -667,103 +687,6 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
 }
 
 bool
-cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
-                    lListElem *reduced_elem, int sub_command, 
-                    lList **add_hosts, lList **rem_hosts)
-{
-   bool ret = true;
-
-   DENTER(CQUEUE_LAYER, "cqueue_mod_hostlist");
-   if (cqueue != NULL && reduced_elem != NULL) {
-      int pos = lGetPosViaElem(reduced_elem, CQ_hostlist);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-         lList *old_href_list = lCopyList("", lGetList(cqueue, CQ_hostlist));
-         lList *master_list = *(hgroup_list_get_master_list());
-         lList *href_list = NULL;
-         lList *add_groups = NULL;
-         lList *rem_groups = NULL;
-
-         /*
-          * Make sure that all given hostnames exist
-          */
-         if (ret) {
-            ret &= href_list_resolve_hostnames(list, answer_list);
-         }
-
-         /*
-          * Find: added/removed hosts/groups
-          */
-         if (ret) {
-            ret &= href_list_find_diff(list, answer_list, old_href_list, 
-                                       add_hosts, rem_hosts, &add_groups,
-                                       &rem_groups);
-         }
-
-         /*
-          * Make sure that all added groups exist
-          */
-         if (ret && add_groups != NULL) {
-            ret &= hgroup_list_exists(master_list, answer_list, add_groups);
-         }
-
-         /*
-          * Remove added elements which were removed somewhere else
-          * and remove removed elements which where added somewhere else 
-          */
-         if (ret) {
-            ret &= href_list_find_effective_diff(answer_list, add_groups, 
-                                                 rem_groups, master_list, 
-                                                 add_hosts, rem_hosts);
-         }
-
-         /*
-          * Modify hostlist
-          */
-         if (ret) {
-            attr_mod_sub_list(answer_list, cqueue, CQ_hostlist, HR_name, 
-                              reduced_elem, sub_command, SGE_ATTR_HOST_LIST,
-                              SGE_OBJ_CQUEUE, 0);         
-            href_list = lGetList(cqueue, CQ_hostlist);
-         }
-
-         /*
-          * Make sure that:
-          *   - added hosts where not already part the old hostlist
-          *   - removed hosts are not part of the new hostlist
-          */
-         if (ret) {
-            lList *tmp_hosts = NULL;
-
-            ret &= href_list_find_all_references(old_href_list, answer_list,
-                                                 master_list, &tmp_hosts, NULL);
-            ret &= href_list_remove_existing(add_hosts, answer_list, tmp_hosts);
-            tmp_hosts = lFreeList(tmp_hosts);
-
-            ret &= href_list_find_all_references(href_list, answer_list,
-                                                 master_list, &tmp_hosts, NULL);
-            ret &= href_list_remove_existing(rem_hosts, answer_list, tmp_hosts);
-            tmp_hosts = lFreeList(tmp_hosts);
-         }
-
-#if 1 /* EB: debug */
-         if (ret) {
-            href_list_debug_print(*add_hosts, "add_hosts: ");
-            href_list_debug_print(*rem_hosts, "rem_hosts: ");
-         }
-#endif
-
-         old_href_list = lFreeList(old_href_list);
-         add_groups = lFreeList(add_groups);
-         rem_groups = lFreeList(rem_groups);
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool
 cqueue_handle_qinstances(lListElem *cqueue, lList **answer_list,
                          lListElem *reduced_elem, lList *add_hosts,
                          lList *rem_hosts) 
@@ -979,24 +902,113 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
                                      cqueue_attribute_array[index].cqueue_attr);
 
             if (pos >= 0) {
-               lList *list = lGetList(cqueue,
-                                  cqueue_attribute_array[index].cqueue_attr);
-               lListElem *elem = lGetElemHost(list,
-                                    cqueue_attribute_array[index].href_attr,
-                                    HOSTREF_DEFAULT);
+               lList *list = NULL;
 
-               if (elem == NULL) {
-                  /* EB: TODO: move to msg file */
-                  ERROR((SGE_EVENT, SFQ" has no default value\n",
+               list = lGetList(cqueue,
+                               cqueue_attribute_array[index].cqueue_attr);
+
+               /*
+                * Configurations without default setting are rejected
+                */
+               if (ret) {
+                  lListElem *elem = lGetElemHost(list, 
+                      cqueue_attribute_array[index].href_attr, HOSTREF_DEFAULT);
+
+                  if (elem == NULL) {
+                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
+                                    MSG_CQUEUE_NODEFVALUE_S, 
                                     cqueue_attribute_array[index].name));
-                  answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                                  ANSWER_QUALITY_ERROR);
-                  ret = false;
-               } 
+                     answer_list_add(answer_list, SGE_EVENT,
+                                     STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+                     ret = false;
+                  } 
+               }
+
+               /*
+                * Reject multiple settings for one domain/host
+                */
+               if (ret) {
+                  lListElem *elem = NULL;
+
+                  for_each(elem, list) {
+                     const char *hostname = NULL;
+                     const void *iterator = NULL;
+                     lListElem *first_elem = NULL;
+
+                     hostname = lGetHost(elem, 
+                           cqueue_attribute_array[index].href_attr);
+                     first_elem = lGetElemHostFirst(list,
+                           cqueue_attribute_array[index].href_attr,
+                           hostname, &iterator);
+
+                     if (elem != first_elem) {
+                        /* EB: TODO: move to msg file */
+                        SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
+                                    MSG_CQUEUE_MULVALNOTALLOWED_S, hostname));
+                        answer_list_add(answer_list, SGE_EVENT,
+                                        STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+                        ret = false;
+                        break;
+                     }
+                  }
+               }
+
+
+#if 0
+               /*
+                * Reject settings for domains/hosts which are not part of
+                * the hostlist specification
+                */
+               if (ret & in_master) {
+                  lList *hostlist = lGetList(cqueue, CQ_hostlist);
+                  lList *master_list = *(hgroup_list_get_master_list());
+                  lList *hosts = NULL;
+                  lList *groups = NULL;
+                  lListElem *elem = NULL;
+
+                  ret &= href_list_find_all_references(hostlist, answer_list,
+                                                       master_list, &hosts,
+                                                       &groups);
+                  if (ret) {
+                     for_each(elem, list) {
+                        const char *host_hgroup = lGetHost(elem,
+                              cqueue_attribute_array[index].href_attr);
+                        lList *tmp_host_hgroup = NULL;
+                        
+                        href_list_add(&tmp_host_hgroup, 
+                                      answer_list, host_hgroup);
+                        href_list_resolve_hostnames(tmp_host_hgroup,
+                                                    answer_list);
+                        host_hgroup = lGetHost(lFirst(tmp_host_hgroup), 
+                                               HR_name);
+                        lSetHost(elem, cqueue_attribute_array[index].href_attr,
+                                 host_hgroup);
+                        if (strcmp(HOSTREF_DEFAULT, host_hgroup) != 0 &&
+                            !href_list_has_member(hostlist, host_hgroup) &&
+                            !href_list_has_member(hosts, host_hgroup) &&
+                            !href_list_has_member(groups, host_hgroup)) {
+                           SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
+                                          MSG_CQUEUE_NOTINHOSTLIST_S, 
+                                          host_hgroup));
+                           answer_list_add(answer_list, SGE_EVENT,
+                                           STATUS_EUNKNOWN, 
+                                           ANSWER_QUALITY_ERROR);
+                           ret = false;
+                           break;
+                        }
+                        tmp_host_hgroup = lFreeList(tmp_host_hgroup);
+                     }
+                  }
+                  hosts = lFreeList(hosts);
+                  groups = lFreeList(groups);
+               }
+#endif
 
                if (ret && 
                    cqueue_attribute_array[index].verify_function != NULL &&
                    (cqueue_attribute_array[index].verify_client || in_master)) {
+                  lListElem *elem = NULL;
+
                   for_each(elem, list) {
                      ret &= cqueue_attribute_array[index].
                                     verify_function(cqueue, answer_list, elem);
@@ -1024,7 +1036,11 @@ cqueue_verify_priority(lListElem *cqueue, lList **answer_list,
       if (priority_string != NULL) {
          const int priority = atoi(priority_string);
 
-         if (priority < -20 || priority > 20 ) {
+         if (priority == 0 && priority_string[0] != '0') {
+            answer_list_add(answer_list, MSG_CQUEUE_WRONGCHARINPRIO, 
+                            STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            ret = false;
+         } else if (priority < -20 || priority > 20 ) {
             answer_list_add(answer_list, MSG_CQUEUE_PRIORITYNOTINRANGE, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = false;
@@ -1208,3 +1224,25 @@ cqueue_verify_shell_start_mode(lListElem *cqueue, lList **answer_list,
    DEXIT;
    return ret;
 }
+
+bool
+cqueue_list_find_hgroup_references(const lList *this_list, lList **answer_list,
+                                   const lListElem *hgroup, lList **string_list)
+{
+   bool ret = true;
+   lListElem *cqueue;
+
+   DENTER(CQUEUE_LAYER, "cqueue_list_find_hgroup_references");
+   if (this_list != NULL && hgroup != NULL && string_list != NULL) {
+      for_each(cqueue, this_list) {
+         if (cqueue_is_hgroup_referenced(cqueue, hgroup)) {
+            const char *name = lGetString(cqueue, CQ_name);
+
+            lAddElemStr(string_list, ST_name, name, ST_Type);
+         }
+      }
+   }
+   DEXIT;
+   return ret;
+}
+

@@ -44,7 +44,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define HOSTREF_LAYER BASIS_LAYER
+#define HOSTREF_LAYER TOP_LAYER
 
 /****** sgeobj/href/href_list_add() *******************************************
 *  NAME
@@ -121,7 +121,8 @@ href_list_add(lList **this_list, lList **answer_list, const char *host_or_group)
 *        true  - Success
 *        false - Error
 *******************************************************************************/
-bool href_list_has_member(const lList *this_list, const char *host_or_group)
+bool 
+href_list_has_member(const lList *this_list, const char *host_or_group)
 {
    bool ret = false;
 
@@ -184,10 +185,11 @@ bool href_list_has_member(const lList *this_list, const char *host_or_group)
 *  SEE ALSO
 *     sgeobj/href/href_list_find_diff()
 *******************************************************************************/
-bool href_list_compare(const lList *this_list, lList **answer_list,
-                       const lList *list, lList **add_hosts,
-                       lList **add_groups, lList **equity_hosts,
-                       lList **equity_groups) 
+bool 
+href_list_compare(const lList *this_list, lList **answer_list,
+                  const lList *list, lList **add_hosts,
+                  lList **add_groups, lList **equity_hosts, 
+                  lList **equity_groups) 
 {
    bool ret = true;
    lListElem *this_elem;   /* HR_Type */
@@ -265,10 +267,10 @@ bool href_list_compare(const lList *this_list, lList **answer_list,
 *  SEE ALSO
 *     sgeobj/href/href_list_find_diff()
 *******************************************************************************/
-bool href_list_find_diff(const lList *this_list, lList **answer_list,
-                         const lList *list, lList **add_hosts,
-                         lList **rem_hosts, lList **add_groups,
-                         lList **rem_groups) 
+bool 
+href_list_find_diff(const lList *this_list, lList **answer_list,
+                    const lList *list, lList **add_hosts,
+                    lList **rem_hosts, lList **add_groups, lList **rem_groups) 
 {
    bool ret = true;
 
@@ -367,7 +369,8 @@ href_list_find_effective_diff(lList **answer_list, const lList *add_groups,
 *  RESULT
 *     lListElem* - Pointer to host or hostgroup element or NULL 
 *******************************************************************************/
-lListElem *href_list_locate(const lList *this_list, const char *name) 
+lListElem *
+href_list_locate(const lList *this_list, const char *name) 
 {
    lListElem *ret = NULL;  /* HR_Type */
 
@@ -431,9 +434,14 @@ href_list_find_references(const lList *this_list, lList **answer_list,
 
          /*
           * Try to locate the concerned hgroup object
+          * or add host
           */
          if (is_group) {
             hgroup = hgroup_list_locate(master_list, name);
+         } else {
+            if (used_hosts != NULL) {
+               href_list_add(used_hosts, answer_list, name);
+            }
          }
 
          if (hgroup != NULL) {
@@ -698,48 +706,6 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
    return ret;
 }
 
-/****** sgeobj/href/href_list_append_to_string() ******************************
-*  NAME
-*     href_list_append_to_string() -- append hrefs to dstring 
-*
-*  SYNOPSIS
-*     bool 
-*     href_list_append_to_string(const lList *this_list, 
-*                                dstring *string) 
-*
-*  FUNCTION
-*     Append all host and hostgroup references contained in 'this_list'
-*     to 'string'. One space character separated each entry in 'string'. 
-*
-*  INPUTS
-*     const lList *this_list - RN_Type list 
-*     dstring *string        - dynamic string 
-*
-*  RESULT
-*     bool - error state 
-*        true  - Success
-*        false - Error
-*******************************************************************************/
-bool href_list_append_to_string(const lList *this_list, dstring *string)
-{
-   bool ret = true;
-   
-   DENTER(HOSTREF_LAYER, "href_list_print_to_string");
-   if (this_list != NULL || string != NULL) {
-      lListElem *href;
-
-      for_each(href, this_list) {
-         const char *name = lGetHost(href, HR_name);
-
-         if (name != NULL) {
-            sge_dstring_sprintf_append(string, "%s ", name);
-         }
-      }
-   } 
-   DEXIT;
-   return ret;
-}
-
 /****** sgeobj/href/href_list_resolve_hostnames() *****************************
 *  NAME
 *     href_list_resolve_hostnames() -- resolve hostnames 
@@ -760,7 +726,8 @@ bool href_list_append_to_string(const lList *this_list, dstring *string)
 *        true  - Success
 *        false - Error
 *******************************************************************************/
-bool href_list_resolve_hostnames(lList *this_list, lList **answer_list) 
+bool 
+href_list_resolve_hostnames(lList *this_list, lList **answer_list) 
 {
    bool ret = true;
 
@@ -812,7 +779,8 @@ bool href_list_resolve_hostnames(lList *this_list, lList **answer_list)
 *        true  - Success
 *        false - Error
 *******************************************************************************/
-bool href_list_append_to_dstring(const lList *this_list, dstring *string)
+bool 
+href_list_append_to_dstring(const lList *this_list, dstring *string)
 {
    const char *const delim = " ";
    bool ret = true;

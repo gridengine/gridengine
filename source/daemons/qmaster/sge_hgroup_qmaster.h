@@ -42,11 +42,7 @@ int hgroup_mod(lList **alpp, lListElem *modp, lListElem *ep, int add,
 
 int hgroup_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
 
-int sge_del_hgroup(lListElem *cep, lList **alpp, char *ruser, char *rhost);
-
-void hgroup_rollback(lListElem *this_elem);
-
-void hgroup_commit(lListElem *hgroup);
+int hgroup_del(lListElem *cep, lList **alpp, char *ruser, char *rhost);
 
 #endif /* _SGE_HOSTGROUP_QMASTER_H_ */
 

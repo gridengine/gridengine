@@ -828,7 +828,7 @@ int sub_command
             break;
 #endif
          case SGE_HGROUP_LIST:
-            sge_del_hgroup(ep, &(answer->alp), user, host);
+            hgroup_del(ep, &(answer->alp), user, host);
             break;
          default:
             SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));

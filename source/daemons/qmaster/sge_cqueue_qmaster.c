@@ -67,6 +67,88 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+static bool
+cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
+                    lListElem *reduced_elem, int sub_command, 
+                    lList **add_hosts, lList **rem_hosts);
+
+static bool
+cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
+                    lListElem *reduced_elem, int sub_command, 
+                    lList **add_hosts, lList **rem_hosts)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "cqueue_mod_hostlist");
+   if (cqueue != NULL && reduced_elem != NULL) {
+      int pos = lGetPosViaElem(reduced_elem, CQ_hostlist);
+
+      if (pos >= 0) {
+         lList *list = lGetPosList(reduced_elem, pos);
+         lList *old_href_list = lCopyList("", lGetList(cqueue, CQ_hostlist));
+         lList *master_list = *(hgroup_list_get_master_list());
+         lList *href_list = NULL;
+         lList *add_groups = NULL;
+         lList *rem_groups = NULL;
+
+         if (ret) {
+            ret &= href_list_resolve_hostnames(list, answer_list);
+         }
+         if (ret) {
+            attr_mod_sub_list(answer_list, cqueue, CQ_hostlist, HR_name, 
+                              reduced_elem, sub_command, SGE_ATTR_HOST_LIST,
+                              SGE_OBJ_CQUEUE, 0);         
+            href_list = lGetList(cqueue, CQ_hostlist);
+         }
+         if (ret) {
+            ret &= href_list_find_diff(href_list, answer_list, old_href_list, 
+                                       add_hosts, rem_hosts, &add_groups,
+                                       &rem_groups);
+         }
+         if (ret && add_groups != NULL) {
+            ret &= hgroup_list_exists(master_list, answer_list, add_groups);
+         }
+         if (ret) {
+            ret &= href_list_find_effective_diff(answer_list, add_groups, 
+                                                 rem_groups, master_list, 
+                                                 add_hosts, rem_hosts);
+         }
+
+         /*
+          * Make sure that:
+          *   - added hosts where not already part the old hostlist
+          *   - removed hosts are not part of the new hostlist
+          */
+         if (ret) {
+            lList *tmp_hosts = NULL;
+
+            ret &= href_list_find_all_references(old_href_list, answer_list,
+                                                 master_list, &tmp_hosts, NULL);
+            ret &= href_list_remove_existing(add_hosts, answer_list, tmp_hosts);
+            tmp_hosts = lFreeList(tmp_hosts);
+
+            ret &= href_list_find_all_references(href_list, answer_list,
+                                                 master_list, &tmp_hosts, NULL);
+            ret &= href_list_remove_existing(rem_hosts, answer_list, tmp_hosts);
+            tmp_hosts = lFreeList(tmp_hosts);
+         }
+
+#if 1 /* EB: debug */
+         if (ret) {
+            href_list_debug_print(*add_hosts, "add_hosts: ");
+            href_list_debug_print(*rem_hosts, "rem_hosts: ");
+         }
+#endif
+
+         old_href_list = lFreeList(old_href_list);
+         add_groups = lFreeList(add_groups);
+         rem_groups = lFreeList(rem_groups);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
 int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem, 
                int add, const char *remote_user, const char *remote_host,
                gdi_object_t *object, int sub_command) 
@@ -178,45 +260,6 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
    return 0;
 }
 
-/* EB: TODO: is not needed anymore */
-void cqueue_rollback(lListElem *cqueue) 
-{
-   lList *qinstances = lGetList(cqueue, CQ_qinstances);
-   lListElem *next_qinstance = NULL;
-   lListElem *qinstance = NULL;
-
-   DENTER(TOP_LAYER, "cqueue_rollback"); 
-
-   next_qinstance = lFirst(qinstances);
-   while ((qinstance = next_qinstance)) {
-      u_long32 tag = lGetUlong(qinstance, QI_tag);
-
-      next_qinstance = lNext(qinstance);
-
-      /*
-       * Reset QI tag
-       */
-      lSetUlong(qinstance, QI_tag, SGE_QI_TAG_DEFAULT);
-
-      if (tag == SGE_QI_TAG_DEL) {
-         /*
-          * Tag has been reset some lines above.
-          * There is nothing else to do.
-          */
-         ;
-      } else if (tag == SGE_QI_TAG_ADD) {
-         /*
-          * Trash created qinstances
-          */
-         lRemoveElem(qinstances, qinstance);
-      }
-   }
-   if (lGetNumberOfElem(qinstances) == 0) {
-      lSetList(cqueue, CQ_qinstances, NULL);
-   }
-   DEXIT;
-}
-
 void cqueue_commit(lListElem *cqueue) 
 {
    lList *qinstances = lGetList(cqueue, CQ_qinstances);
@@ -309,7 +352,7 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
                if (sge_event_spool(answer_list, 0, sgeE_QINSTANCE_DEL,
                                    0, 0, sge_dstring_get_string(&key), 
                                    NULL, NULL, NULL, NULL, NULL, true, true)) {
-                  ; /* EB: TODO: Ask JG what we can do here? */
+                  ; 
                }
                sge_dstring_free(&key);
             }
@@ -359,5 +402,4 @@ int cqueue_del(lListElem *this_elem, lList **answer_list,
       return STATUS_EUNKNOWN;
    } 
 }
-
 

@@ -57,7 +57,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define HOSTREF_LAYER TOP_LAYER
+#define HGROUP_LAYER TOP_LAYER
 
 lList *Master_HGroup_List = NULL;
 
@@ -78,7 +78,8 @@ lList *Master_HGroup_List = NULL;
 *  RESULT
 *     void - none 
 *******************************************************************************/
-void correct_hgroup_name(dstring *string, const char *name) 
+void 
+correct_hgroup_name(dstring *string, const char *name) 
 {
    if (string != NULL && name != NULL) {
       if (name[0] != HOSTGROUP_INITIAL_CHAR) {
@@ -86,6 +87,33 @@ void correct_hgroup_name(dstring *string, const char *name)
       } 
       sge_dstring_sprintf_append(string, "%s", name);
    } 
+}
+
+/****** sgeobj/hgroup/is_hgroup_name() ****************************************
+*  NAME
+*     is_hgroup_name() -- Is the given name a hostgroup name 
+*
+*  SYNOPSIS
+*     bool is_hgroup_name(const char *name) 
+*
+*  FUNCTION
+*     Is the given name a hostgroup name 
+*
+*  INPUTS
+*     const char *name - hostname or hostgroup name 
+*
+*  RESULT
+*     bool - true for hostgroupnames otherwise faslse
+******************************************************************************/
+bool 
+is_hgroup_name(const char *name)
+{
+   bool ret = false;
+
+   if (name != NULL) {
+      ret = (name[0] == HOSTGROUP_INITIAL_CHAR);
+   }
+   return ret;
 }
 
 /****** sgeobj/hgroup/hgroup_list_get_master_list() ***************************
@@ -104,7 +132,8 @@ void correct_hgroup_name(dstring *string, const char *name)
 *  RESULT
 *     lList** - HGRP_Type list 
 *******************************************************************************/
-lList **hgroup_list_get_master_list(void) 
+lList **
+hgroup_list_get_master_list(void) 
 {
    return &Master_HGroup_List;
 }
@@ -127,11 +156,12 @@ lList **hgroup_list_get_master_list(void)
 *  RESULT
 *     lListElem* - found element or NULL 
 ******************************************************************************/
-lListElem *hgroup_list_locate(const lList *this_list, const char *group) 
+lListElem *
+hgroup_list_locate(const lList *this_list, const char *group) 
 {
-   lListElem *ret;
+   lListElem *ret = NULL;
    
-   DENTER(HOSTREF_LAYER, "hgroup_list_locate");
+   DENTER(HGROUP_LAYER, "hgroup_list_locate");
    ret = lGetElemHost(this_list, HGRP_name, group);
    DEXIT;
    return ret;
@@ -155,11 +185,12 @@ lListElem *hgroup_list_locate(const lList *this_list, const char *group)
 *        true  - success
 *        false - error 
 *******************************************************************************/
-bool hgroup_correct_name(lListElem *this_elem) 
+bool 
+hgroup_correct_name(lListElem *this_elem) 
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_correct_name");
+   DENTER(HGROUP_LAYER, "hgroup_correct_name");
    if (this_elem != NULL) {
       const char *name = lGetHost(this_elem, HGRP_name);
 
@@ -200,7 +231,7 @@ hgroup_create(lList **answer_list, const char *name, lList *href_or_groupref)
 {
    lListElem *ret = NULL;  /* HGRP_Type */
 
-   DENTER(HOSTREF_LAYER, "hgroup_create");
+   DENTER(HGROUP_LAYER, "hgroup_create");
    if (name != NULL) {
       ret = lCreateElem(HGRP_Type);
       if (ret != NULL) {
@@ -250,7 +281,7 @@ hgroup_add_references(lListElem *this_elem, lList **answer_list,
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_add_references");
+   DENTER(HGROUP_LAYER, "hgroup_add_references");
    if (this_elem != NULL && href_or_groupref != NULL) {
       lList *href_list = NULL;   /* HR_Type */
       lListElem *href;           /* HR_Type */
@@ -310,7 +341,7 @@ hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_find_all_references");
+   DENTER(HGROUP_LAYER, "hgroup_find_all_references");
    if (this_elem != NULL && master_list != NULL) {
       lList *href_list = NULL;   /* HR_Type */
       const char *name;
@@ -366,7 +397,7 @@ hgroup_find_references(const lListElem *this_elem, lList **answer_list,
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_find_all_references");
+   DENTER(HGROUP_LAYER, "hgroup_find_all_references");
    if (this_elem != NULL && master_list != NULL) {
       const char *name = lGetHost(this_elem, HGRP_name);
       lList *href_list = NULL;   /* HR_Type */
@@ -413,13 +444,14 @@ hgroup_find_references(const lListElem *this_elem, lList **answer_list,
 *        true  - Success
 *        false - Error 
 *******************************************************************************/
-bool hgroup_find_all_referencees(const lListElem *this_elem, 
-                                 lList **answer_list, const lList *master_list, 
-                                 lList **occupants_groups)
+bool 
+hgroup_find_all_referencees(const lListElem *this_elem, 
+                            lList **answer_list, const lList *master_list, 
+                            lList **occupants_groups)
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_find_all_referencees");
+   DENTER(HGROUP_LAYER, "hgroup_find_all_referencees");
    if (this_elem != NULL && occupants_groups != NULL) {
       lList *href_list = NULL;
       const char *name;
@@ -472,7 +504,7 @@ hgroup_find_referencees(const lListElem *this_elem, lList **answer_list,
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_find_all_referencees");
+   DENTER(HGROUP_LAYER, "hgroup_find_all_referencees");
    if (this_elem != NULL && occupants_groups != NULL) {
       lList *href_list = NULL;
       const char *name;
@@ -519,20 +551,24 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_list_exists");
-   if (this_list != NULL && href_list != NULL) {
+   DENTER(HGROUP_LAYER, "hgroup_list_exists");
+   if (href_list != NULL) {
       lListElem *href;
 
       for_each(href, href_list) {
          const char *name = lGetHost(href, HR_name);
-         lListElem *hgroup = hgroup_list_locate(this_list, name);
-      
-         if (hgroup == NULL) {
-            ret = false;
-            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, "host group", name));
-            answer_list_add(answer_list, SGE_EVENT,
-                            STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            break;      
+
+         if (sge_is_hgroup_ref(name)) {
+            lListElem *hgroup = hgroup_list_locate(this_list, name);
+         
+            if (hgroup == NULL) {
+               ret = false;
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
+                              MSG_SGETEXT_DOESNOTEXIST_SS, "host group", name));
+               answer_list_add(answer_list, SGE_EVENT,
+                               STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+               break;      
+            }
          }
       }
    }
@@ -540,7 +576,34 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
    return ret;
 }
 
-/* HB: TODO: comment is missing */
+/****** sgeobj/hgroup/hgroup_list_find_all_matching_references() **************
+*  NAME
+*     hgroup_list_find_all_matching_references() -- Finds hostnames 
+*
+*  SYNOPSIS
+*     bool 
+*     hgroup_list_find_all_matching_references(const lList *this_list, 
+*                                              lList **answer_list, 
+*                                              const char *hgroup_pattern, 
+*                                              lList **used_hosts) 
+*
+*  FUNCTION
+*    Selects all hostgroups of "this_list" which match the pattern 
+*    "hgroup_pattern". All hostnames which are directly or indirectly
+*     rferenced will be added to "used_hosts"
+*      
+*
+*  INPUTS
+*     const lList *this_list     - HGRP_Type 
+*     lList **answer_list        - AN_Type 
+*     const char *hgroup_pattern - fnmatch pattern 
+*     lList **used_hosts         - HR_Type 
+*
+*  RESULT
+*     bool - error state
+*        true  - Success
+*        false - Error
+*******************************************************************************/
 bool
 hgroup_list_find_all_matching_references(const lList *this_list,
                                          lList **answer_list,
@@ -549,7 +612,7 @@ hgroup_list_find_all_matching_references(const lList *this_list,
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "hgroup_list_find_all_matching_references");
+   DENTER(HGROUP_LAYER, "hgroup_list_find_all_matching_references");
    if (this_list != NULL && hgroup_pattern != NULL) {
       lListElem *hgroup;
 
@@ -576,133 +639,3 @@ hgroup_list_find_all_matching_references(const lList *this_list,
    DEXIT;
    return ret;
 }
-
-/* HB: TODO: comment is missing */
-bool
-hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
-                    lListElem *reduced_elem, int sub_command,
-                    lList **add_hosts, lList **rem_hosts, 
-                    lList **occupant_groups)
-{
-   bool ret = true;
-
-   DENTER(HOSTREF_LAYER, "hgroup_mod_hostlist");
-   if (hgroup != NULL && reduced_elem != NULL) {
-      int pos = lGetPosViaElem(reduced_elem, HGRP_host_list);
-
-      if (pos >= 0) {
-         lList *old_href_list = lCopyList("", lGetList(hgroup, HGRP_host_list));
-         lList *master_list = *(hgroup_list_get_master_list());
-         lList *href_list = NULL; 
-         lList *add_groups = NULL;
-         lList *rem_groups = NULL;
-
-         /*
-          * Modify hostlist
-          */
-         attr_mod_sub_list(answer_list, hgroup, HGRP_host_list, HR_name,
-                           reduced_elem, sub_command, SGE_ATTR_HOSTLIST,
-                           SGE_OBJ_HGROUP, 0);
-         href_list = lGetList(hgroup, HGRP_host_list);
-
-         /*
-          * Resolve hostnames; Find new hgroups and make sure they exist;
-          */
-         if (ret) {
-            ret &= href_list_resolve_hostnames(href_list, answer_list);
-         }
-         if (ret) {
-            ret &= href_list_find_diff(href_list, answer_list, old_href_list, 
-                                       add_hosts, rem_hosts, &add_groups,
-                                       &rem_groups);
-         }
-         if (ret && add_groups != NULL) {
-            ret &= hgroup_list_exists(master_list, answer_list, add_groups);
-         }
-
-         /*
-          * Try to find cycles in the definition
-          */
-         if (ret) {
-            ret &= hgroup_find_all_referencees(hgroup, answer_list,
-                                               master_list, occupant_groups);
-            ret &= href_list_add(occupant_groups, answer_list,
-                                 lGetHost(hgroup, HGRP_name));
-            if (ret) {
-               if (*occupant_groups != NULL && add_groups != NULL) {
-                  lListElem *add_group = NULL;
-
-                  for_each(add_group, add_groups) {
-                     const char *name = lGetHost(add_group, HR_name);
-
-                     if (href_list_has_member(*occupant_groups, name)) {
-                        break;
-                     }
-                  }
-                  if (add_group == NULL) {
-                     /*
-                      * No cycle found => success
-                      */
-                     ;
-                  } else {
-                     /* EB: TODO: move to msg file */
-                     ERROR((SGE_EVENT, "Hostgroup "SFQ" in specification "
-                            "of "SFQ" would create a cycle\n",
-                            lGetHost(add_group, HR_name),
-                            lGetHost(hgroup, HGRP_name)));
-                     answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
-                                     ANSWER_QUALITY_ERROR);
-                     ret = false;
-                  }
-               }
-            } 
-         }
-
-         /*
-          * Find effective hostname changes (resolve group names)
-          */
-         if (ret) {
-            ret &= href_list_find_effective_diff(answer_list, add_groups,
-                                                 rem_groups, master_list,
-                                                 add_hosts, rem_hosts);
-         }
-
-         /*
-          * Make sure that:
-          *   - added hosts where not already part the old hostlist
-          *   - removed hosts are not part of the new hostlist
-          */
-         if (ret) {
-            lList *tmp_hosts = NULL;
-
-            ret &= href_list_find_all_references(old_href_list, answer_list,
-                                                 master_list, &tmp_hosts, NULL);
-            ret &= href_list_remove_existing(add_hosts, answer_list, tmp_hosts);
-            tmp_hosts = lFreeList(tmp_hosts);
-
-            ret &= href_list_find_all_references(href_list, answer_list,
-                                                 master_list, &tmp_hosts, NULL);
-            ret &= href_list_remove_existing(rem_hosts, answer_list, tmp_hosts);
-            tmp_hosts = lFreeList(tmp_hosts);
-         }
-
-#if 1 /* EB: debug */
-         if (ret) {
-            href_list_debug_print(*add_hosts, "add_hosts: ");
-            href_list_debug_print(*rem_hosts, "rem_hosts: ");
-         }
-#endif
-
-         /*
-          * Cleanup
-          */
-         old_href_list = lFreeList(old_href_list);
-         add_groups = lFreeList(add_groups);
-         rem_groups = lFreeList(rem_groups);
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-

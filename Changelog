@@ -1,3 +1,8 @@
+BD-2004-02-24-2: Bugfix:    If we're going to hardcode a path to tcsh
+                            in qtcsh, we should use the system tcsh in
+                            /bin/tcsh.
+		 Changed:   qtcsh
+
 BD-2004-02-24-1: Bugfix:    Fix missing closing " in previous commit.
 
 BD-2004-02-24-0: Bugfix:    Clean up FreeBSD alpha, amd64, ia64, and

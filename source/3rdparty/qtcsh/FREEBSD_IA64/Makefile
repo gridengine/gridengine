@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# $Id: Makefile,v 1.1.2.1 2003/03/19 16:39:03 andre Exp $
+# $Id: Makefile,v 1.1.2.2 2004/02/25 04:11:55 brooks Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -137,7 +137,9 @@ CFLAGS = -g -O2 -DPROG_NAME='"qtcsh"' $(SGE_COPTS) -DFREEBSD		# This is set by a
 #DFLAGS=
 #DFLAGS=-D_PATH_TCSHELL='"${DESTBIN}/tcsh"'
 ## The following is set by autoconf.
-DFLAGS = -D_PATH_TCSHELL='"${DESTBIN}/tcsh"'  
+#DFLAGS = -D_PATH_TCSHELL='"${DESTBIN}/tcsh"'   
+# FreeBSD has a /bin/tcsh
+DFLAGS = -D_PATH_TCSHELL='"/bin/tcsh"'
 
 
 ################################################################

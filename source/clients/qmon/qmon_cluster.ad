@@ -491,9 +491,9 @@ Qmon*cluster_extra_layout.layout: \
       ## \
       Etched Through Caption tl "@{@fBAFS Parameters}" Col { \
          # \
-         Row { cluster_set_token_cmd_label "@{set_token command}" <> Fixed 50 em cluster_set_token_cmd }\
-         Row { cluster_pag_cmd_label "@{pag command}" <> Fixed 50 em cluster_pag_cmd }\
-         Row { cluster_token_extend_time_label "@{token_extend_time}" <> Fixed 50 em cluster_token_extend_time }\
+         Row { cluster_set_token_cmd_label <> Fixed 50 em cluster_set_token_cmd }\
+         Row { cluster_pag_cmd_label <> Fixed 50 em cluster_pag_cmd }\
+         Row { cluster_token_extend_time_label <> Fixed 50 em cluster_token_extend_time }\
       } \
       <> \
    }

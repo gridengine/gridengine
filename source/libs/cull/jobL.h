@@ -43,9 +43,9 @@ enum {
 
 
 LISTDEF( JobT )
-   SGE_ULONG   ( J_id )
-   SGE_STRING  ( J_name )
-   SGE_LIST    ( J_hardrequest )
+   SGE_ULONG   ( J_id, CULL_DEFAULT )
+   SGE_STRING  ( J_name, CULL_DEFAULT )
+   SGE_LIST    ( J_hardrequest, JobRequestT, CULL_DEFAULT )
 LISTEND
 
 NAMEDEF( JobN )

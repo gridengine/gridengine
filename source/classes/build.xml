@@ -2,7 +2,9 @@
 <project basedir="." default="common_all" name="drmaa">
    <target name="init">
       <property location="../CLASSES" name="classes.dir"/>
+      <property location="../CLASSES/test" name="classes.dir.test"/>
       <property location="." name="src.dir"/>
+      <property location="${src.dir}/test" name="src.dir.test"/>
       <property location="../../doc/javadocs" name="javadoc.dir"/>
       <property name="project.name" value="${ant.project.name}"/>
       <property location="${classes.dir}/${project.name}.jar" name="jar"/>
@@ -10,24 +12,33 @@
       <property location="${classes.dir}/${project.name}-api.jar" name="api.jar"/>
    </target>
 
-   <target depends="init" name="compile">
-      <!-- Both srcdir and destdir should be package roots. -->
+   <target depends="init" description="Compile core classes." name="compile">
       <mkdir dir="${classes.dir}"/>
       <javac debug="true" deprecation="true" destdir="${classes.dir}">
          <src path="${src.dir}/"/>
-         <include name="**/drmaa/**/*.java"/>
-         <include name="*.java"/>
-         <classpath><pathelement location="${junit}"/></classpath>
+         <include name="org/ggf/drmaa/*.java"/>
+         <include name="com/sun/grid/drmaa/*.java"/>
+         <include name="com/sun/grid/drmaa/howto/*.java"/>
+         <include name="DrmaaExample.java"/>
       </javac>
    </target>
 
-   <target depends="init,compile" name="jar">
+   <target depends="init,compile" description="Compile test classes." name="compile.test">
+      <mkdir dir="${classes.dir.test}"/>
+      <javac debug="true" deprecation="true" destdir="${classes.dir.test}">
+         <src path="${src.dir.test}"/>
+         <include name="org/ggf/drmaa/*.java"/>
+         <include name="com/sun/grid/drmaa/*.java"/>
+         <include name="TestDrmaa.java"/>
+         <include name="DrmaaSuite.java"/>
+      </javac>
+   </target>
+
+   <target depends="init,compile" description="Build release jar." name="jar">
       <jar compress="true" jarfile="${jar}">
          <fileset dir="${classes.dir}">
-            <include name="**/drmaa**/*.class"/>
-            <exclude name="**/*Test.class"/>
-            <exclude name="**/*Suite.class"/>
-            <exclude name="**/howto/**"/>
+            <include name="org/ggf/drmaa/*.class"/>
+            <include name="com/sun/grid/drmaa/*.class"/>
          </fileset>
          <fileset dir="${src.dir}">
             <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
@@ -35,11 +46,17 @@
       </jar>
    </target>
 
-   <target depends="init,compile" name="test">
+   <target depends="init,compile.test" description="Build stand-alone test jar." name="test">
       <jar compress="true" jarfile="${test.jar}">
          <fileset dir="${classes.dir}">
-            <exclude name="*.jar"/>
-            <exclude name="**/howto/**"/>
+            <include name="org/ggf/drmaa/*.class"/>
+            <include name="com/sun/grid/drmaa/*.class"/>
+         </fileset>
+         <fileset dir="${classes.dir.test}">
+            <include name="org/ggf/drmaa/*.class"/>
+            <include name="com/sun/grid/drmaa/*.class"/>
+            <include name="TestDrmaa*.class"/>
+            <include name="DrmaaSuite.class"/>
          </fileset>
          <fileset dir="${src.dir}">
             <include name="META-INF/services/org.ggf.drmaa.SessionFactory"/>
@@ -47,10 +64,21 @@
       </jar>
    </target>
 
-   <target depends="init,compile" name="api">
+   <target depends="init,compile.test" description="Build test jar." name="test.only">
+      <jar compress="true" jarfile="${test.jar}">
+         <fileset dir="${classes.dir.test}">
+            <include name="org/ggf/drmaa/*.class"/>
+            <include name="com/sun/grid/drmaa/*.class"/>
+            <include name="TestDrmaa*.class"/>
+            <include name="DrmaaSuite.class"/>
+         </fileset>
+      </jar>
+   </target>
+
+   <target depends="init,compile" description="Build API jar." name="api">
       <jar compress="true" jarfile="${api.jar}">
          <fileset dir="${classes.dir}">
-            <include name="org/**"/>
+            <include name="org/ggf/drmaa/*.class"/>
          </fileset>
       </jar>
    </target>
@@ -63,13 +91,21 @@
 
    <target depends="init,javadoc.clean" description="Javadoc tool docs for DRMAA" name="javadoc">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html">
-          <fileset dir="${src.dir}">
-             <include name="**/drmaa/**/*.java"/>
-             <exclude name="**/*Test.java"/>
-             <exclude name="**/*Suite.java"/>
-             <exclude name="**/howto/**"/>
-          </fileset>
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public">
+         <fileset dir="${src.dir}">
+            <include name="org/ggf/drmaa/*.java"/>
+            <include name="com/sun/grid/drmaa/*.java"/>
+         </fileset>
+      </javadoc>
+   </target>
+
+   <target depends="init,javadoc.clean" description="Javadoc tool docs for DRMAA" name="javadoc.all">
+      <mkdir dir="${javadoc.dir}"/>
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected">
+         <fileset dir="${src.dir}">
+            <include name="org/ggf/drmaa/*.java"/>
+            <include name="com/sun/grid/drmaa/*.java"/>
+         </fileset>
       </javadoc>
    </target>
 
@@ -81,8 +117,6 @@
    
    <target depends="init" description="Clean all build products." name="clean">
       <delete dir="${classes.dir}"/>
-      <delete file="${jar}"/>
-      <delete file="${test.jar}"/>
    </target>
 
 </project>

@@ -36,12 +36,12 @@ sed 's/%@/@@/; s/@%/@@/; s/%g$/@g/; /@g$/s/[\\&%]/\\&/g;
 
 
 s%@SHELL@%/bin/sh%g
-s%@CFLAGS@%-D_ALL_SOURCE%g
-s%@CPPFLAGS@%-D_ALL_SOURCE -I/usr/local/include  -I/usr/local/ssl/include -I../glob -I../glob%g
-s%@CXXFLAGS@%-D_ALL_SOURCE -I/usr/local/include -D_ALL_SOURCE -I/usr/local/include %g
+s%@CFLAGS@%-g -O2 -D_ALL_SOURCE%g
+s%@CPPFLAGS@%-D_ALL_SOURCE -I../glob%g
+s%@CXXFLAGS@%%g
 s%@FFLAGS@%%g
 s%@DEFS@%-DHAVE_CONFIG_H%g
-s%@LDFLAGS@%-L/usr/local/ssl/lib%g
+s%@LDFLAGS@%%g
 s%@LIBS@%%g
 s%@exec_prefix@%${prefix}%g
 s%@prefix@%/usr/local%g
@@ -63,11 +63,11 @@ s%@INSTALL_SCRIPT@%${INSTALL_PROGRAM}%g
 s%@INSTALL_DATA@%${INSTALL} -m 644%g
 s%@PACKAGE@%make%g
 s%@VERSION@%3.78.1%g
-s%@ACLOCAL@%/net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing aclocal%g
-s%@AUTOCONF@%/net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing autoconf%g
-s%@AUTOMAKE@%/net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing automake%g
-s%@AUTOHEADER@%/net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing autoheader%g
-s%@MAKEINFO@%/net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rdparty/qmake/missing makeinfo%g
+s%@ACLOCAL@%../missing aclocal%g
+s%@AUTOCONF@%../missing autoconf%g
+s%@AUTOMAKE@%../missing automake%g
+s%@AUTOHEADER@%../missing autoheader%g
+s%@MAKEINFO@%../missing makeinfo%g
 s%@SET_MAKE@%%g
 s%@host@%%g
 s%@host_alias@%win32-x86%g

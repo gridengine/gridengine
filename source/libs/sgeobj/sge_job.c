@@ -1670,14 +1670,18 @@ void job_initialize_env(lListElem *job, lList **answer_list,
       int i = -1;
       const char* env_name[] = {"HOME", "LOGNAME", "PATH", 
                                 "SHELL", "TZ", "MAIL", NULL};
+      dstring new_env_name = DSTRING_INIT;
 
       while (env_name[++i] != 0) {
          const char *env_value = sge_getenv(env_name[i]);
-         char new_env_name[SGE_PATH_MAX];
 
-         sprintf(new_env_name, "%s%s%s", VAR_PREFIX, "O_", env_name[i]);
-         var_list_set_string(&env_list, new_env_name, env_value);
+         sge_dstring_sprintf(&new_env_name, "%s%s%s", VAR_PREFIX, "O_",
+                             env_name[i]);
+         var_list_set_string(&env_list, sge_dstring_get_string (&new_env_name),
+                             env_value);
       }
+      
+      sge_dstring_free (&new_env_name);
    }
    {
       const char* host = sge_getenv("HOST"); /* ??? */

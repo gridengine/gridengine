@@ -35,7 +35,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.exp.c,v 1.1 2001/07/18 11:06:04 root Exp $")
+RCSID("$Id: sh.exp.c,v 1.2 2005/01/19 11:12:50 ernst Exp $")
 
 /*
  * C shell
@@ -954,7 +954,11 @@ filetest(cp, vp, ignore)
 		break;
 
 	    case 'G':
+#ifdef INTERIX
+      if ( altout && (gr = getgrgid_nomembers(st->st_gid))) {
+#else
 		if ( altout && (gr = getgrgid(st->st_gid))) {
+#endif
 		    xfree((ptr_t) ep);
 		    return(Strsave(str2short(gr->gr_name)));
 		}

@@ -70,6 +70,42 @@ public class SessionImplJobTest extends TestCase {
    }
    
    /** Test of runJob method, of class com.sun.grid.drmaa.SessionImpl. */
+   public void testBadJobTemplate () {
+      System.out.println ("testBadJobTemplate");
+
+      JobTemplate jt = new BadJobTemplate ();
+      
+      try {
+         try {
+            session.runJob (jt);
+            fail ("Allowed bad job template");
+         }
+         catch (InvalidJobTemplateException e) {
+            /* Don't care */
+         }
+
+         try {
+            session.runBulkJobs (jt, 1, 3, 1);
+            fail ("Allowed bad job template");
+         }
+         catch (InvalidJobTemplateException e) {
+            /* Don't care */
+         }
+
+         try {
+            session.deleteJobTemplate (jt);
+            fail ("Allowed bad job template");
+         }
+         catch (InvalidJobTemplateException e) {
+            /* Don't care */
+         }
+      }
+      catch (DrmaaException e) {
+         fail ("Exception while trying to run job: " + e.getMessage ());
+      }
+   }
+   
+   /** Test of runJob method, of class com.sun.grid.drmaa.SessionImpl. */
    public void testBadRunJob () {
       System.out.println ("testBadRunJob");
 
@@ -785,7 +821,7 @@ public class SessionImplJobTest extends TestCase {
          JobTemplate jt = session.createJobTemplate ();
 
          jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         jt.setArgs (new String[] {"15"});
 
          /* Test timed wait (timeout), dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -969,7 +1005,7 @@ public class SessionImplJobTest extends TestCase {
          JobTemplate jt = session.createJobTemplate ();
 
          jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         jt.setArgs (new String[] {"15"});
 
          /* Test timed wait (timeout), no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1152,7 +1188,7 @@ public class SessionImplJobTest extends TestCase {
          JobTemplate jt = session.createJobTemplate ();
 
          jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         jt.setArgs (new String[] {"15"});
 
          /* Test timed wait (timeout), dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1336,7 +1372,7 @@ public class SessionImplJobTest extends TestCase {
          JobTemplate jt = session.createJobTemplate ();
 
          jt.setRemoteCommand (SCRIPT);
-         jt.setArgs (new String[] {"5"});
+         jt.setArgs (new String[] {"15"});
 
          /* Test timed wait (timeout), no dispose */
          List jobIds = new LinkedList (session.runBulkJobs (jt, 1, 3, 1));
@@ -1656,6 +1692,11 @@ public class SessionImplJobTest extends TestCase {
       }
       catch (DrmaaException e) {
          fail ("Exception while trying to get job status: " + e.getMessage ());
+      }
+   }
+   
+   private class BadJobTemplate extends JobTemplate {
+      public BadJobTemplate () {         
       }
    }
 }

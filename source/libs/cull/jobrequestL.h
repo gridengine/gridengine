@@ -43,9 +43,9 @@ enum {
 
 
 LISTDEF( JobRequestT )
-   SGE_STRING   ( R_name )
-   SGE_STRING   ( R_operator )
-   SGE_STRING   ( R_value )
+   SGE_STRING   ( R_name, CULL_DEFAULT )
+   SGE_STRING   ( R_operator, CULL_DEFAULT )
+   SGE_STRING   ( R_value, CULL_DEFAULT )
 LISTEND
 
 NAMEDEF( JobRequestN )

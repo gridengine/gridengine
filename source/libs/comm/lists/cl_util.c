@@ -98,13 +98,11 @@ unsigned long cl_util_get_ulong_value(const char* text) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_util_get_ascii_hex_buffer()"
-int cl_util_get_ascii_hex_buffer(char* buffer, unsigned long buf_len, char** ascii_buffer, char* separator) {
+int cl_util_get_ascii_hex_buffer(unsigned char* buffer, unsigned long buf_len, char** ascii_buffer, char* separator) {
    char*         asc_buffer       = NULL;
    unsigned long asc_buffer_size  = 0;
    unsigned long asc_buffer_index = 0;
    unsigned long buffer_index     = 0;
-   int           value_hi         = 0;
-   int           value_lo         = 0;
    int           sep_length       = 0;
 
    if (buffer == NULL || ascii_buffer == NULL) {
@@ -129,16 +127,14 @@ int cl_util_get_ascii_hex_buffer(char* buffer, unsigned long buf_len, char** asc
 
    asc_buffer_index = 0;
    for(buffer_index = 0; buffer_index < buf_len; buffer_index++) {
-      value_hi = buffer[buffer_index] / 16;
-      value_lo = buffer[buffer_index] % 16;
-      asc_buffer[asc_buffer_index++] = cl_util_get_ascii_hex_char(value_hi);
-      asc_buffer[asc_buffer_index++] = cl_util_get_ascii_hex_char(value_lo);
+      asc_buffer[asc_buffer_index++] = cl_util_get_ascii_hex_char( (buffer[buffer_index] & 0xf0) >> 4 );
+      asc_buffer[asc_buffer_index++] = cl_util_get_ascii_hex_char( (buffer[buffer_index] & 0x0f) );
       if (separator != NULL && (buffer_index + 1) < buf_len) {
          strcpy(&asc_buffer[asc_buffer_index], separator);
          asc_buffer_index += sep_length;
       }
    }
-   asc_buffer[asc_buffer_index] = 0;
+   asc_buffer[asc_buffer_index] = '\0';
    
    *ascii_buffer = asc_buffer;
 
@@ -149,16 +145,14 @@ int cl_util_get_ascii_hex_buffer(char* buffer, unsigned long buf_len, char** asc
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_util_get_binary_buffer()"
-int cl_util_get_binary_buffer(char* hex_buffer, char** buffer, unsigned long* buffer_lenght) {
-   int   ret_val    = CL_RETVAL_OK;
-
-   char*         bin_buffer = NULL;
-   unsigned long bin_buffer_len = 0;
-   unsigned long bin_buffer_index = 0;
-
-   unsigned long hex_buffer_index = 0;
-   unsigned long hex_buffer_len = 0;
-   int hi,lo;
+int cl_util_get_binary_buffer(char* hex_buffer, unsigned char** buffer, unsigned long* buffer_lenght) {
+   unsigned char* bin_buffer = NULL;
+   unsigned long  bin_buffer_len = 0;
+   unsigned long  bin_buffer_index = 0;
+   unsigned long  hex_buffer_index = 0;
+   unsigned long  hex_buffer_len = 0;
+   int            hi=0;
+   int            lo=0;
 
    if (hex_buffer == NULL || buffer == NULL || buffer_lenght == NULL) {
       return CL_RETVAL_PARAMS;
@@ -173,7 +167,7 @@ int cl_util_get_binary_buffer(char* hex_buffer, char** buffer, unsigned long* bu
       return CL_RETVAL_PARAMS;
    }
    bin_buffer_len = hex_buffer_len / 2;
-   bin_buffer = (char*) malloc(sizeof(char) * bin_buffer_len);
+   bin_buffer = (unsigned char*) malloc(sizeof(char) * bin_buffer_len);
    if (bin_buffer == NULL) {
       return CL_RETVAL_MALLOC;
    }
@@ -181,13 +175,18 @@ int cl_util_get_binary_buffer(char* hex_buffer, char** buffer, unsigned long* bu
    while(bin_buffer_index < bin_buffer_len) {
       hi = cl_util_get_hex_value(hex_buffer[hex_buffer_index++]);
       lo = cl_util_get_hex_value(hex_buffer[hex_buffer_index++]);
-      bin_buffer[bin_buffer_index++] = hi * 16 + lo; 
+      if (hi != -1 && lo != -1) {
+         bin_buffer[bin_buffer_index++] = (hi << 4) + lo; 
+      } else {
+         free(bin_buffer);
+         return CL_RETVAL_UNEXPECTED_CHARACTERS;
+      }
    }
 
    *buffer_lenght = bin_buffer_len;
    *buffer = bin_buffer;
 
-   return ret_val;
+   return CL_RETVAL_OK;
 }
 
 
@@ -196,24 +195,30 @@ int cl_util_get_binary_buffer(char* hex_buffer, char** buffer, unsigned long* bu
 #endif
 #define __CL_FUNCTION__ "cl_util_get_hex_value()"
 int  cl_util_get_hex_value(char hex_char) {
-   int ret_val = 0;
+   int ret_val;
    switch(hex_char) {
       case 'f':
+      case 'F':
          ret_val = 15;
          break;
       case 'e':
+      case 'E':
          ret_val = 14;
          break;
       case 'd':
+      case 'D':
          ret_val = 13;
          break;
       case 'c':
+      case 'C':
          ret_val = 12;
          break;
       case 'b':
+      case 'B':
          ret_val = 11;
          break;
       case 'a':
+      case 'A':
          ret_val = 10;
          break;
       case '9':
@@ -246,6 +251,8 @@ int  cl_util_get_hex_value(char hex_char) {
       case '0':
          ret_val = 0;
          break;
+      default:
+         ret_val = -1;
    }
    return ret_val;
 }
@@ -255,8 +262,8 @@ int  cl_util_get_hex_value(char hex_char) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_util_get_ascii_hex_char()"
-char cl_util_get_ascii_hex_char(int value) {
-   char ret_val = '0';
+char cl_util_get_ascii_hex_char(unsigned char value) {
+   char ret_val;
    switch(value) {
       case 15:
          ret_val = 'f';
@@ -306,6 +313,8 @@ char cl_util_get_ascii_hex_char(int value) {
       case 0:
          ret_val = '0';
          break;
+      default:
+         ret_val = '?';
    }
    return ret_val;
 }

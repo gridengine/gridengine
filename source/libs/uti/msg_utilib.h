@@ -187,7 +187,6 @@
 */ 
 #define MSG_MEMORY_MALLOCFAILED                    _MESSAGE(49072, _("malloc() failure\n"))
 #define MSG_MEMORY_REALLOCFAILED                   _MESSAGE(49073, _("realloc() failure\n") ) 
-#define MSG_GDI_STRING_LENGTHEXCEEDED_SI           _MESSAGE(49074, _("strlen($"SFN") exceeds MAX_STRING_SIZE %d\n") ) 
 
 /* 
 ** utilib/sge_unistd.c

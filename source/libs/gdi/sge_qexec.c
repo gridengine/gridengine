@@ -225,6 +225,9 @@ const char *s;
       tid = NULL;
    }
 
+   /* now close message to execd */
+   cl_commlib_shutdown_handle(cl_com_get_handle("execd_handle", 0),CL_FALSE);
+
    DEXIT;
    return tid;
 }

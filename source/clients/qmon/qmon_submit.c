@@ -34,9 +34,11 @@
 #include <unistd.h> 
 #include <sys/types.h>
 #include <fcntl.h>
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qmon.h"
+
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 
 #include <Xm/Xm.h>
 #include <Xm/List.h>
@@ -54,6 +56,10 @@
 #include <Xmt/MsgLine.h>
 
 /*----------------------------------------------------------------------------*/
+#include "msg_common.h"
+#include "msg_clients_common.h"
+#include "msg_qmon.h"
+
 #include "sge_unistd.h"
 #include "sge_prog.h"
 #include "sge_all_listsL.h"

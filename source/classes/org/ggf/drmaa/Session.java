@@ -191,6 +191,7 @@ public abstract interface Session {
     * @throws DrmaaException May be one of the following:
     * <UL>
     * <LI>DrmCommunicationException</LI>
+    * <LI>InvalidJobTemplateException</LI>
     * </UL>
     */
    public abstract void deleteJobTemplate (JobTemplate jt) throws DrmaaException;
@@ -205,6 +206,7 @@ public abstract interface Session {
     * <LI>DeniedByDrmException</LI>
     * <LI>DrmCommunicationException</LI>
     * <LI>AuthorizationException</LI>
+    * <LI>InvalidJobTemplateException</LI>
     * </UL>
     * @return job identifier String identical to that returned from the
     * underlying DRM system
@@ -230,6 +232,7 @@ public abstract interface Session {
     * <LI>DeniedByDrmException</LI>
     * <LI>DrmCommunicationException</LI>
     * <LI>AuthorizationException</LI>
+    * <LI>InvalidJobTemplateException</LI>
     * </UL>
     */
 	public abstract List runBulkJobs (JobTemplate jt, int start, int end, int incr) throws DrmaaException;
@@ -387,7 +390,7 @@ public abstract interface Session {
 	public abstract String getContact ();
 	
 	/** Returns a Version object containing the major and minor version numbers of the
-    * DRMAA library.  For DRMAA 1.0, major is 1 and minor is 0.
+    * DRMAA library.  For DRMAA 0.5, major is 0 and minor is 5.
     * @return the version number as a Version object
     * @see Version
     */	

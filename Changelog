@@ -1,11 +1,168 @@
+AS-2004-11-26-0: CVS        Created V60_s10amd64_beta_TAG
+---------------------------------------------------------
+
+CR-2005-01-26-0: Enhancem.: - qping -dump now supports application debug
+                              messages
+                 Review:    MD
+
+CR-2005-01-25-1: Enhancem.: - code cleanup 
+
+CR-2005-01-25-0: Bugfix:    - fixed qping connect problem checked in with
+                              CR-2005-01-21-0
+                 Enhancem.: - qping to a running service (e.g. telnet) did
+                              not cancel when pressing CTRL + C.
+                 Review:    SG
+
+SG-2005-01-25-0: Bugfix:    the scheduler crashed in case of a restart and
+                            a running MPI job.
+                 Changed:   scheduler
+                 Review:    EB
+                 Issue:     1416
+                 Bugtraq:   6221167
+
+AS-2005-01-25-1: Bugfix:    set file permissions in destination directory"
+                 Changed:   scripts/distinst
+                 Review:    MD
+
+AA-2005-01-24-0: Bugfix:    labels of AFS section shwon twice
+                 Changed:   qmon
+
+CR-2005-01-21-0: Enhancem.: - finished commlib SSL framework support
+                              ( not yet integrated in gdi )
+                            - code cleanup
+                 Review:    AA
+
+SG-2005-01-21-1: Bugfix:   - qmaster crashed in case of some calendar configs.
+                 Review:   AH
+                 Changed:  qmaster
+                 Issue:    1427
+                 Bugtraq:  6220060
+
+SG-2005-01-21-0: Bugfix:   - fixed qstat -t
+                           - fixed a minor uninit variables in the execd
+                 Review:   DT
+                 Changed:  qstat, execd
+                 Issue:    1420
+                 Bugtraq:  6218877
+
+RD-2005-01-19-0: Bugfix:    CULL examples fixed
+                 Review:    AH
+ 
+EB-2005-01-19-0: Enhancem.: qtcsh port for WIN32_X86
+                 Changed:   qtcsh
+
+DT-2005-01-19-0: Testuite:  o Fixed drmaa-j test
+
+DT-2005-01-18-0: Cleanup:   o Made JAPI Makefile more readable
+                            o Made class and jar file compilation cleaner
+                 Bugfix:    o Added new test target for Ant for testing binaries
+                 Changed:   DRMAA
+
+RD-2005-01-17-0: Bugfix:    make qmon compile on sol-amd64
+                 Changed:   qmon
+
+HP-2005-01-17-0: Bugfix:    qmake Makefile for WIN32_X86 now with relative 
+                            pathes
+                 Changed    qmake
+
+DT-2005-01-17-0: Bugfix:    o JAPI makefile didn't delete drmaa.o on clean
+                 Changed:   DRMAA
+
+CR-2005-01-17-0: Testsuite: cleanup for issue check 126
+
+DT-2005-01-16-0: Enhancem.: o aimk now can build javadocs with or without
+                              protected fields and methods.
+                 Bugfix:    o Changed Session.getVersion() to return the binding
+                              spec version.
+                 Changed:   DRMAA, aimk
+
+HP-2005-01-15-0: Enhancem.: Changed aimk in WIN32_X86 section
+                 Changed:   aimk
+
+CR-2005-01-14-0: Testsuite: Modified test for issue #126 to report
+                            more error information into the testsuite
+                            error mail message. (using qping -dump)
+
+HP-2005-01-12-0: Enhancem.: Changed aimk in WIN32_X86 section
+                 Changed:   aimk
+
+CR-2005-01-13-0: Bugfix:    - qping -dump hex buffer converting error from
+                              CR-2004-12-01-0 (only concerns maintrunk)
+                            - code cleanup
+                 Changed:   commlib, qping, execd, qmaster
+                 Review:    HP
+
+AH-2005-01-12-0: Doc:       Errors with load_avg in sched_conf(5)
+                            sched_conf(5) wrongly mentioned load_avg 
+                            rather than np_load_avg and 100 rather than
+                            1.0 for a job that utilizes a full cpu
+                 Changed:   man
+                 Review:    AS
+                 Issue:     1417
+                 Bugtraq:   6216694
+
+CR-2005-01-12-0: Enhancem.: commlib read/write errors closing connection
+                            messages in the daemon log files will now also
+                            contain the name of the connection where the
+                            read/write error appeared.
+                 Changed:   commlib
+                 Review:    AA
+
+CR-2005-01-11-2: Testsuite: added testsuite code for parsing qping -dump
+                            output into tcl_files/remote_procedures.tcl
+
+CR-2005-01-11-1: Testsuite: modified issue test #141 for detection
+                            of issue #1414
+
+CR-2005-01-11-0: Bugfix:    pending job task deletion may not work
+                 Changed:   qmaster
+                 Issue:     1414
+                 Bugtraq:   6216020
+                 Review:    SG
+
+EB-2005-01-11-0: Enhancem.: Merged missing code from V60_win_alpha_BRANCH.
+
+HP-2005-01-10-2: Enhancem.: Optimized aimk section for WIN32_X86
+                 Changed:   aimk
+
+HP-2005-01-10-1: Added:     qmake configure files for Interix
+
 HP-2005-01-10-0: Enhancem.: Changed name of function in libwingrid
                  Changed:   sge_load_sensor.c
 
 EB-2005-01-10-0: Enhancem.: Changed distinst for Interix installation
                  Review:    HP
 
+CR-2005-01-07-0: Bugfix:    - master task will close connection to
+                              execd after job delivery
+                 Changed:   qsh, gdilib
+                 Issue:     1413
+                 Bugtraq:   6215580
+                 Review:    SG
+
+CR-2005-01-07-0: Testsuite: enhanced tight integration check to report
+                            errors for issue #1413
+
+DT-2005-01-05-2: Enhancem.: o aimk now checks the Java version
+                 Changed:   aimk.site
+
+DT-2005-01-05-1: Bugfix:    o Fixed DRMAA-J PartialTimestamp bugs
+                 Docs:      o Added section to DRMAA-J howto
+                 Changed:   DRMAA, www
+
+DT-2005-01-05-0: Bugfix:    o Fixed minor DRMAA-J bugs
+                            o Removed JGDI flags from aimk
+                            o Reduced MAX_STRING_SIZE to 2048
+                            o Added DRMAA-J testsuite test
+                            o Made symlink to JNI lib on MacOS X
+                 Changed:   DRMAA, aimk, basis_types, job, stdlib, testsuite,
+                            distinst
+                 Issue:     538
+                 Review:    SG, AS
+
 HP-2005-01-04-1: Bugfix:    Fixed bug in aimk in code for Interix and Win32 
                  Changed:   aimk
+
 
 HP-2005-01-04-0: Bugfix:    Improved "root" or "Administrator" detection
                             in Interix.

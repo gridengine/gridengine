@@ -66,6 +66,7 @@ int sig
    printf("do_shutdown\n");
    /* shutdown all sockets */
    do_shutdown = 1;
+   cl_com_ignore_timeouts(CL_TRUE);
 }
 
 
@@ -141,7 +142,31 @@ extern int main(int argc, char** argv)
   }
 
   cl_com_set_alias_file("./alias_file");
-
+  if ( framework == CL_CT_SSL) {
+     cl_ssl_setup_t ssl_config;
+     ssl_config.ssl_method           = CL_SSL_v23;                 /*  v23 method                                  */
+     ssl_config.ssl_CA_cert_pem_file = getenv("SSL_CA_CERT_FILE"); /*  CA certificate file                         */
+     ssl_config.ssl_CA_key_pem_file  = NULL;                       /*  private certificate file of CA (not used)   */
+     ssl_config.ssl_cert_pem_file    = getenv("SSL_CERT_FILE");    /*  certificates file                           */
+     ssl_config.ssl_key_pem_file     = getenv("SSL_KEY_FILE");     /*  key file                                    */
+     ssl_config.ssl_rand_file        = getenv("SSL_RAND_FILE");    /*  rand file (if RAND_status() not ok)         */
+     ssl_config.ssl_reconnect_file   = NULL;                       /*  file for reconnect data    (not used)       */
+     ssl_config.ssl_refresh_time     = 0;                          /*  key alive time for connections (not used)   */
+     ssl_config.ssl_password         = NULL;                       /*  password for encrypted keyfiles (not used)  */
+     ssl_config.ssl_verify_func      = NULL;                       /*  function callback for peer user/name check  */
+   
+     if (ssl_config.ssl_CA_cert_pem_file == NULL ||
+         ssl_config.ssl_cert_pem_file    == NULL ||
+         ssl_config.ssl_key_pem_file     == NULL ||
+         ssl_config.ssl_rand_file        == NULL) {
+        printf("please set the following environment variables:\n");
+        printf("SSL_CA_CERT_FILE         = CA certificate file\n");
+        printf("SSL_CERT_FILE            = certificates file\n");
+        printf("SSL_KEY_FILE             = key file\n");
+        printf("(optional) SSL_RAND_FILE = rand file (if RAND_status() not ok)\n");
+     }
+     cl_com_specify_ssl_configuration(&ssl_config);
+  }
   CL_LOG_STR(CL_LOG_INFO,"connection to server on host", argv[1]);
   CL_LOG_INT(CL_LOG_INFO,"using port",atoi(argv[2])); 
   
@@ -199,7 +224,15 @@ extern int main(int argc, char** argv)
      unsigned long mid;
      int after_new_connection = 0;
      int my_sent_error = 0;
+     static int runs = 100;
+
      CL_LOG(CL_LOG_INFO,"main loop");
+#if 0
+     runs--;
+#endif
+    if (runs<= 0) {
+        do_shutdown = 1;
+     }
 
      /* printf("sending to \"%s\" ...\n", argv[1]);  */
 

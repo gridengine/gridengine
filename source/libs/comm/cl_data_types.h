@@ -42,6 +42,13 @@
 #include "cl_lists.h"
 #include "cl_xml_parsing.h"
 
+typedef enum cl_com_debug_message_tag_type {
+   CL_DMT_MESSAGE = 1,  /* default */
+   CL_DMT_APP_MESSAGE,
+/* ... */
+   CL_DMT_MAX_TYPE  /* this must be the last one */
+} cl_com_debug_message_tag_t;
+
 /* typedef for tcp port options */
 typedef enum cl_tcp_connect_def {
    CL_TCP_DEFAULT = 1,           /* standard tcp/ip options */
@@ -117,20 +124,29 @@ typedef enum cl_service_handler_type {
 /*connection types for cl_com_connection_t->connection_state */
 typedef enum cl_connection_state_type {
    CL_DISCONNECTED = 1,
-   CL_CLOSING,
    CL_OPENING,
+   CL_ACCEPTING,
    CL_CONNECTING,
-   CL_CONNECTED
+   CL_CONNECTED,
+   CL_CLOSING
 } cl_connection_state_t;
 
 /*connection types for cl_com_connection_t->connection_sub_state */
 typedef enum cl_connection_sub_state_type {
+   /* when CL_DISCONNECTED */
+   CL_COM_SUB_STATE_UNDEFINED = 1,
 
    /* when CL_COM_OPENING */
-   CL_COM_OPEN_INIT = 1,
+   CL_COM_OPEN_INIT, 
    CL_COM_OPEN_CONNECT,
    CL_COM_OPEN_CONNECT_IN_PROGRESS,
    CL_COM_OPEN_CONNECTED,
+   CL_COM_OPEN_SSL_CONNECT_INIT,
+   CL_COM_OPEN_SSL_CONNECT,
+
+   /* when CL_ACCEPTING */
+   CL_COM_ACCEPT_INIT,
+   CL_COM_ACCEPT,
 
    /* when CL_COM_CONNECTING */
    CL_COM_READ_INIT,
@@ -151,7 +167,10 @@ typedef enum cl_connection_sub_state_type {
    CL_COM_SENDING_CCRM,
    CL_COM_CCRM_SENT,
    CL_COM_DONE,
-   CL_COM_DONE_FLUSHED
+   CL_COM_DONE_FLUSHED,
+
+   /* when CL_CLOSING */
+   CL_COM_DO_SHUTDOWN
 
 } cl_connection_sub_state_type;
 
@@ -173,6 +192,46 @@ typedef enum cl_message_state_type {
 }cl_message_state_t;
 
 
+/* commlib supports the following SSL connection methods */
+typedef enum cl_ssl_method_type {
+   CL_SSL_v23 = 1
+} cl_ssl_method_t;
+
+typedef enum cl_ssl_verify_mode_type {
+   CL_SSL_PEER_NAME = 1,
+   CL_SSL_USER_NAME = 2
+} cl_ssl_verify_mode_t;
+
+
+/* callback for verify peer names */
+typedef cl_bool_t    (*cl_ssl_verify_func_t)  (cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value );
+
+/*
+ *  this structure has the following setup functions:
+ *
+ *  cl_com_create_ssl_setup(),
+ *  cl_com_dup_ssl_setup() and
+ *  cl_com_free_ssl_setup() 
+ *
+ */
+/* TODO: 
+ * a) make cl_com_create_ssl_setup() function fail if not unused parameters are missing 
+ * b) make TODO parameters check
+ */
+typedef struct cl_ssl_setup_type {
+   cl_ssl_method_t ssl_method;                 /*  used for call to SSL_CTX_new() as parameter       */
+   char*           ssl_CA_cert_pem_file;       /*  CA certificate file                           ->ca_cert_file<-              */
+   char*           ssl_CA_key_pem_file;        /*  private certificate file of CA                ->ca_key_file (not used)<-    */
+   char*           ssl_cert_pem_file;          /*  certificates file                             ->cert_file<-                 */
+   char*           ssl_key_pem_file;           /*  key file                                      ->key_file<-                  */
+   char*           ssl_rand_file;              /*  rand file (if RAND_status() not ok)           ->rand_file<-                 */
+   char*           ssl_reconnect_file;         /*  file for reconnect data                       ->reconnect_file (not used)<- */
+   unsigned long   ssl_refresh_time;           /*  key alive time for connections (for services) ->refresh_time (not used)<-   */
+   char*           ssl_password;               /*  password for encrypted keyfiles               ->not used<-                  */
+
+   cl_ssl_verify_func_t  ssl_verify_func;       /*  function callback for peer user/name check */
+} cl_ssl_setup_t;
+
 
 
 typedef struct cl_com_handle_statistic_type {
@@ -193,8 +252,10 @@ typedef struct cl_com_handle_statistic_type {
 typedef struct cl_com_connection_type cl_com_connection_t;
 
 typedef struct cl_com_handle {
-   cl_debug_client_t         debug_client_mode;
-   cl_raw_list_t*            debug_list;
+   cl_ssl_setup_t*           ssl_setup;         /* used for SSL framework */
+
+   cl_debug_client_t         debug_client_mode; /* used for debug clients */
+   cl_raw_list_t*            debug_list;        /* used for debug clients */
    cl_framework_t            framework;        /* framework type CL_CT_TCP, CL_CT_SSL */
    cl_tcp_connect_t          tcp_connect_mode; /* used for reserved port selection for tcp connect */
    cl_xml_connection_type_t  data_flow_type;   /* data_flow type CL_CM_CT_STREAM, CL_CM_CT_MESSAGE  */
@@ -307,7 +368,9 @@ typedef struct cl_com_message_type {
    unsigned long            message_snd_pointer;
    unsigned long            message_rcv_pointer;
    struct timeval           message_receive_time;
+   struct timeval           message_remove_time;
    struct timeval           message_send_time;
+   struct timeval           message_insert_time;
    cl_byte_t*               message;
 } cl_com_message_t;
 

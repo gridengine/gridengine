@@ -140,7 +140,7 @@ public class SessionImplTest extends TestCase {
    public void testGetVersion () {
       System.out.println ("testGetVersion");
       
-      Version v = new Version (1, 0);
+      Version v = new Version (0, 5);
       
       this.initSession ();
       

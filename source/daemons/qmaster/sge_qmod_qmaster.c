@@ -1090,12 +1090,14 @@ lListElem *jatep
       if((i = init_packbuffer(&pb, 256, 0)) == PACK_SUCCESS) {
          /* identifier for acknowledgement */
          if (jep) {
+            /* TAG_SIGJOB */
             packint(&pb, lGetUlong(jep, JB_job_number));    /* one for acknowledgement */
             packint(&pb, lGetUlong(jatep, JAT_task_number)); 
             packint(&pb, lGetUlong(jep, JB_job_number));    /* and one for processing */
             packint(&pb, lGetUlong(jatep, JAT_task_number));
          }
          else {
+            /* TAG_SIGQUEUE */
             packint(&pb, lGetUlong(qep, QU_queue_number));
             packint(&pb, 0); 
             packint(&pb, 0); 

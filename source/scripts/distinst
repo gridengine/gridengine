@@ -42,8 +42,7 @@ HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
              sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel \
-             qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping \
-             qloadsensor"
+             qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping qloadsensor"
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
@@ -869,7 +868,7 @@ if [ $instcommon = true ]; then
       MakeDir examples
       MakeDir examples/jobs      
       Execute cp dist/examples/jobs/*.sh $DEST_SGE_ROOT/examples/jobs
-      Execute chmod 755 dist/examples/jobs/*.sh
+      Execute chmod 755 $DEST_SGE_ROOT/examples/jobs/*.sh
       MakeDir examples/drmaa
       Execute cp libs/japi/example.c $DEST_SGE_ROOT/examples/drmaa
       Execute cp libs/japi/howto/*.c $DEST_SGE_ROOT/examples/drmaa
@@ -1303,7 +1302,7 @@ for i in $ARCH; do
                rm $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
             fi
 
-            ln $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
+            ln -s $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$shlibext $DEST_SGE_ROOT/lib/$DSTARCH/$lib.$jnilibext
          fi
 
          for filename in $DRMAAJ_FILES; do

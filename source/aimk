@@ -343,6 +343,7 @@ usage:
    echo "-perlgui          -> build the experimental perlgui"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
+   echo "-protected        -> create complete class file documentation"
    echo "-purify           -> instrument code with purify (implies -debug)"
    echo "-qmake            -> use qmake instead of make"
    echo "-shared-libs      -> create libraries as shared libs"
@@ -409,6 +410,7 @@ set JAVA_INCL        = "include"
 set JAVA_SHAREDEXT   = ""
 set JNI              = 1
 set DRMAA_TARGET     = "ALL"
+set PROTECTED        = 0
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -848,6 +850,9 @@ while ($#argv >= 1 && $?found)
       echo "Uniqing pot file"
       scripts/msgmerge.csh merge
       exit 0
+      breaksw
+   case "-protected":
+      set PROTECTED = 1
       breaksw
    case "-purify":
       set LD_WRAPPER = "purify"
@@ -1347,44 +1352,23 @@ case LINUXIA64:
 case WIN32_X86:
    set CC = gcc
    set RM = "rm -f"
-
-   # option -no-secure always on
-#   set SEC         = 0
-#   set SECCLEAN    = ""  
-#   set SECDEPEND   = ""
-#   set SECFLAGS    = ""
-#   set SECLIB      = ""
-#   set SECLIBS     = ""
-#   set SECLIBOBJS  = ""
-#   set SECTARGETS  = ""
-#   set KLFLAGS     = ""
+   set MAKE = gmake
 
    # Default build targets for WIN32_X86 for which we have seperate make files
-   set SGE_DEPEND       = 0
    set QMON             = 0
-#   set CORE             = 1
-   set REMOTE           = 1
-   set QMAKE            = 1
-   set QTCSH            = 0
    set MAKESTRPTIME     = 0
    set MAKEFNMATCH      = 0
    set WITH_USERMAPPING = 0 # Compile without usermapping feature
-
    set COMPILE_DC       = 1
 
-   # WIN32_X86 core build targets
-   if ($CORE == 1) then
-#      set argv = "work getservbyname qsh qrsh qrsh_starter sge_execd sge_schedd sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel qacct qmod qhost qping adminrun checkprog checkuser filestat gethostname gethostbyname gethostbyaddr infotext now qrsh_starter sge_share_mon testsuidroot uidgid test_cl_commlib test_cl_commlib_client test_cl_hostalias_list test_cl_hostname_list test_cl_tcp_framework test_debug_client test_multithread_io test_server_connection test_status_info test_virtual_event_client test_virtual_gdi_client test_virtual_qmaster"
 
+   # generate all not compilable targets using touch
+   if ($CORE == 1) then
       set TOUCH_DIR = $COMPILE_ARCH
 
-      #generate all other binaries using touch
-#      touch ./3rdparty/qmake/$COMPILE_ARCH/make
       touch $TOUCH_DIR/qmon
+      mkdir ./3rdparty/qmon/$COMPILE_ARCH/
       touch ./3rdparty/qmon/$COMPILE_ARCH/libXltree.so
-#      touch $TOUCH_DIR/qsh
-#      mkdir ./3rdparty/qtcsh/$COMPILE_ARCH
-#      touch ./3rdparty/qtcsh/$COMPILE_ARCH/tcsh
       touch $TOUCH_DIR/sge_qmaster
       touch $TOUCH_DIR/sge_shadowd
       touch $TOUCH_DIR/berkeley_db_svc
@@ -1392,20 +1376,12 @@ case WIN32_X86:
       touch $TOUCH_DIR/db_checkpoint
       touch $TOUCH_DIR/db_dump
       touch $TOUCH_DIR/db_load
-#      touch $TOUCH_DIR/fstype
-#      touch $TOUCH_DIR/getservbyname
-#      touch $TOUCH_DIR/loadcheck
       touch $TOUCH_DIR/openssl
-#      touch ./3rdparty/remote/$COMPILE_ARCH/rlogin
-#      touch ./3rdparty/remote/$COMPILE_ARCH/rsh
-#      touch ./3rdparty/remote/$COMPILE_ARCH/rshd
       touch $TOUCH_DIR/spooldefaults
       touch $TOUCH_DIR/spooledit
       touch $TOUCH_DIR/spoolinit
-#      touch $TOUCH_DIR/work
    endif
    
-
    set CORE_INCLUDE = "$CORE_INCLUDE -I../libs/wingrid"
    set LIBS = "$LIBS -lwingrid"
 
@@ -1418,7 +1394,6 @@ case WIN32_X86:
    if ($CC == gcc) then
       set CC  = gcc
       set CXX = gcc
-      #set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -I/dev/fs/C/Program\ Files/Microsoft\ Visual\ Studio\ .NET\ 2003/Vc7/PlatformSDK/Include -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
       set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -D_ALL_SOURCE -D_REENTRANT $DEBUG_FLAG $CFLAGS"      
    else
       set CC  = cc
@@ -1430,6 +1405,7 @@ case WIN32_X86:
       set DEBUG_FLAG = "-g $INSURE_FLAG"
       set OFLAG = ""
    endif
+
    if ($GPROFFED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
@@ -1441,23 +1417,21 @@ case WIN32_X86:
       endif
    endif
 
-   set LFLAGS   = "$DEBUG_FLAG $LFLAGS -L$SOURCE/$COMPILE_ARCH"
+   set LFLAGS        = "$DEBUG_FLAG $LFLAGS -L$SOURCE/$COMPILE_ARCH"
 
-   set SHAREDLD = $CC
-#   set SHARED_CFLAGS = "-fPIC"
+   set SHAREDLD      = $CC
    set SHARED_LFLAGS = "-L. -shared"
 
-   set NOERR_CFLAG = "-Wno-error"
-   set NOERR_PROTO = "-Wno-strict-prototypes"
-#   set LIBS     = "-lgcc -ldb -ll -lm -lpthread -lpsxdll -lc -lrpclib -lsocket -ly -lfrtbegin -litcl3.2 -litk3.2 -lg2c $LIBS"
+   set NOERR_CFLAG  = "-Wno-error"
+   set NOERR_PROTO  = "-Wno-strict-prototypes"
    
-   set XMTDEF   = ""
-   set XLIBD    = "-L/usr/X11R6/lib64"
-   set XLFLAGS  = "$XLIBD"
+   set XMTDEF       = ""
+   set XLIBD        = "-L/usr/X11R6/lib64"
+   set XLFLAGS      = "$XLIBD"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include -I/usr/local/include/bind"
-   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
-   set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
+   set XINCD        = "$XMTINCD $XINCD -I/usr/X11R6/include -I/usr/local/include/bind"
+   set XCFLAGS      = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBS        = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
    breaksw
    
 case NECSX4:
@@ -1875,7 +1849,13 @@ if ( "$BUILDJAVADOC" == 1 ) then
 
    cd $SOURCE/classes
 
-   ant -f build.xml javadoc
+   set target = "javadoc"
+
+   if ( "$PROTECTED" == 1 ) then
+      set target = "${target}.all"
+   endif
+
+   ant -f build.xml $target
 
    if ( $status != 0 ) then
       echo not done
@@ -1930,6 +1910,8 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
 
    if ( $DEBUGGED == 1 ) then
       set WINLFLAGS = "/DEBUG"
+   else
+      set WINLFLAGS = ""
    endif 
    set WINLFLAGS = "${WINLFLAGS} /INCREMENTAL:NO /NOLOGO"
    set WINLFLAGS = "${WINLFLAGS} /SUBSYSTEM:CONSOLE /MACHINE:X86"
@@ -1986,7 +1968,6 @@ if ( "$MAKEWINGRIDLIB" == 1 ) then
       default:
          set param = wingridlib
          set DEPEND = ""
-         set LIBS = "$LIBS -lwingrid" 
       breaksw
    endsw
 
@@ -2142,7 +2123,6 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
          "CORE_INCLUDE=$CORE_INCLUDE" \
-         "JNI_INCLUDES=$JNI_INCLUDES" \
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
          "DRMAA_TARGET=$DRMAA_TARGET" \
@@ -2322,6 +2302,8 @@ if ( "$QTCSH" == 1) then
 
    if ( "$COMPILE_ARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"
+   else if ( "$COMPILE_ARCH" == "WIN32_X86" ) then
+      set SGE_LIBS = "$SGE_LIBS -lwingrid"
    endif
 
    if ( ! -d $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH || \

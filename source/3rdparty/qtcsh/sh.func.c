@@ -35,11 +35,17 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.func.c,v 1.1 2001/07/18 11:06:05 root Exp $")
+RCSID("$Id: sh.func.c,v 1.2 2005/01/19 11:12:51 ernst Exp $")
 
 #include "ed.h"
 #include "tw.h"
 #include "tc.h"
+
+#ifdef INTERIX
+#include <interix/interix.h>
+#include <paths.h>
+#endif
+
 #ifdef WINNT
 #include "nt.const.h"
 #endif /* WINNT */
@@ -1721,7 +1727,7 @@ doumask(v, c)
 #  if defined(BSD4_4) && !defined(__386BSD__)
     typedef quad_t RLIM_TYPE;
 #  else
-#   if defined(SOLARIS2) || (defined(sgi) && SYSVREL > 3)
+#   if defined(SOLARIS2) || (defined(sgi) && SYSVREL > 3) || defined(INTERIX)
      typedef rlim_t RLIM_TYPE;
 #   else
 #    if defined(_SX)

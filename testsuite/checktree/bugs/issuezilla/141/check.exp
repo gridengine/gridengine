@@ -94,40 +94,47 @@ proc issue_141_setup  {} {
 
 proc issue_141_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT
+   global ts_config CHECK_ARCH CHECK_HOST CHECK_USER
   
    puts $CHECK_OUTPUT "Starting job ..."
-   set arguments "-o /dev/null -e /dev/null -t 1-100"
+   set arguments "-o /dev/null -e /dev/null -t 1-250"
    set job_id [ submit_job "$arguments $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" ]
 
-   puts $CHECK_OUTPUT "Waiting for start of job tasks ${job_id}.1-100 ..."
+   puts $CHECK_OUTPUT "Waiting for start of job tasks ${job_id}.1-250 ..."
    wait_for_jobstart $job_id "Sleeper" 60 1 1
+
+   set program "$ts_config(product_root)/bin/$CHECK_ARCH/qdel"
    
-
-   puts $CHECK_OUTPUT "Delete array job $job_id.1-100:2"
-   delete_job "${job_id}.1-100:2"
-
+   puts $CHECK_OUTPUT "Delete array job $job_id.1-250:2"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "${job_id}.1-250:2"]
+#   catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   set    qdel_output "qdel ${job_id}.1-250:2\n"
+   append qdel_output $output
+ 
    set statelist [get_job_state $job_id 1 tasklist]
    set length [ llength $statelist ]
    incr length -1
    set taskcount 0
+   set error_mail_output ""
+
    for {set i 0} {$i < $length} {incr i 1} {
       set task  $tasklist($i,task)
       set state $tasklist($i,state)
-      puts $CHECK_OUTPUT "examining task $task ..."
+#      puts $CHECK_OUTPUT "examining task $task ..."
       set is_even [ expr ( $task % 2 ) ]
       if {$is_even == 0} {
-         puts $CHECK_OUTPUT "task $task is even, must be running ..."
-         puts $CHECK_OUTPUT "state is $state"
+#         puts $CHECK_OUTPUT "task $task is even, must be running ..."
+#         puts $CHECK_OUTPUT "state is $state"
          incr taskcount 1
          if { [ string first "d" $state ] >= 0 } {
             add_proc_error "issue_141_check" -1 "task $task should be running"
          }
       } else {
-         puts $CHECK_OUTPUT "task $task is not even, should be in delete state ..."
-         puts $CHECK_OUTPUT "state is $state"
+#         puts $CHECK_OUTPUT "task $task is not even, should be in delete state ..."
+#         puts $CHECK_OUTPUT "state is $state"
 
          if { [ string first "d" $state ] < 0 } {
-            add_proc_error "issue_141_check" -1 "task $task should be in delete state"
+            append error_mail_output "job $job_id.$task should be in delete state, but state is \"$state\" (test 1)\n"
          }
       }
    }
@@ -135,25 +142,43 @@ proc issue_141_check {} {
       add_proc_error "issue_141_check" -1 "no even task is running"
    }
 
-   puts $CHECK_OUTPUT "Delete array job $job_id.1-100:3"
-   delete_job "${job_id}.1-100:3"
+   puts $CHECK_OUTPUT "Delete array job $job_id.1-250:3"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "${job_id}.1-250:3"]
+#   catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   append qdel_output "qdel ${job_id}.1-250:3\n"
+   append qdel_output $output
 
 
-   puts $CHECK_OUTPUT "Delete array job $job_id.2-100:2"
-   delete_job "${job_id}.2-100:2"
+   puts $CHECK_OUTPUT "Delete array job $job_id.2-250:2"
+   set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "${job_id}.2-250:2"]
+#   catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } result
+   append qdel_output "qdel ${job_id}.2-250:2\n"
+   append qdel_output $output
 
    set statelist [get_job_state $job_id 1 tasklist]
    set length [ llength $statelist ]
    incr length -1
+   set error_mail_output ""
    for {set i 0} {$i < $length} {incr i 1} {
       set task  $tasklist($i,task)
       set state $tasklist($i,state)
-      puts $CHECK_OUTPUT "task $task should be in delete state ..."
-      puts $CHECK_OUTPUT "state is $state"
+#      puts $CHECK_OUTPUT "task $task should be in delete state ..."
+#      puts $CHECK_OUTPUT "state is $state"
 
       if { [ string first "d" $state ] < 0 } {
-         add_proc_error "issue_141_check" -1 "task $task should be in delete state (2)"
+         append error_mail_output "job $job_id.$task should be in delete state, but state is \"$state\" (test 2)\n"
+
       }
+   }
+
+   if { $error_mail_output != "" } {
+      
+
+      set mail_text "\nqdel output information:\n $qdel_output"
+      append mail_text $error_mail_output
+      add_proc_error "issue_141_check" -1 $mail_text
+      puts $CHECK_OUTPUT "deleting job because of errors ..."
+      delete_job $job_id
    }
 
    wait_for_jobend $job_id "Sleeper" 300 0 1

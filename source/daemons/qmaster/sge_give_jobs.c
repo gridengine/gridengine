@@ -156,6 +156,7 @@ lListElem *hep
          lSetList(gdil_ep, JG_complex, resources);
       } else {
          DTRACE;
+         /* SG: should this not be an error case? */
       }
 
 
@@ -168,6 +169,7 @@ lListElem *hep
          }
          if (!cep) {
             DPRINTF(("complex %s not found\n", lGetString(ep1, CE_name)));
+            /* SG: should this not be an error? */
          }
       }
    }
@@ -175,7 +177,7 @@ lListElem *hep
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
       lListElem *slave_hep;
 
-      if (lGetUlong(gdil_ep, JG_tag_slave_job)) {
+      if (lGetUlong(gdil_ep, JG_tag_slave_job)) {/* only for tightly integrated jobs */
 
          if (!(slave_hep = host_list_locate(Master_Exechost_List, lGetHost(gdil_ep, JG_qhostname)))) {
             ret = -1;   
@@ -202,8 +204,9 @@ lListElem *hep
    }
 
    /* free complex list in gdil list */
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) 
+   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       lSetList(gdil_ep, JG_complex, NULL);
+   }   
 
    DEXIT;
    return ret;
@@ -393,8 +396,9 @@ int master
    lFreeElem(tmpjep);
    lFreeList(qlp);
 
-   if (pe) 
+   if (pe != NULL) {
       lAppendElem(Master_Pe_List, pe);
+   }   
 
 
    /*

@@ -249,7 +249,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
       struct timeval now;
       int res_port = IPPORT_RESERVED -1;
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_INIT");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_INIT");
       private->sockfd = -1;
       
       switch(connection->tcp_connect_mode) {
@@ -326,7 +326,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
       int i;
       cl_bool_t connect_state = CL_FALSE;
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECT");
 
       errno = 0;
       i = connect(private->sockfd, (struct sockaddr *) &(private->client_addr), sizeof(struct sockaddr_in));
@@ -388,7 +388,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT_IN_PROGRESS ) {
       int    do_stop      = 0;
       fd_set writefds;
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
 
       while (do_stop == 0) {
          int select_back = 0;
@@ -457,7 +457,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECTED) {
       int on = 1; 
 
-      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECTED");
+      CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECTED");
 
   
 #if defined(SOLARIS) && !defined(SOLARIS64)
@@ -617,10 +617,6 @@ static int cl_com_tcp_free_com_private(cl_com_connection_t* connection) {
       return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
 
-   private->server_port = -1;
-   private->connect_port = -1;
-   private->sockfd = -1;
-
    /* free struct cl_com_tcp_private_t */
    free(private);
    connection->com_private = NULL;
@@ -682,64 +678,37 @@ int cl_com_tcp_close_connection(cl_com_connection_t** connection) {
 
 
 
-
-/****** cl_tcp_framework/cl_com_tcp_write() ************************************
-*  NAME
-*     cl_com_tcp_write() -- ??? 
-*
-*  SYNOPSIS
-*     static cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, 
-*     long size) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     long timeout_time  - ??? 
-*     int fd             - ??? 
-*     cl_byte_t* message - ??? 
-*     long size          - ??? 
-*
-*  RESULT
-*     static - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     ??? 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_write()"
-int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write) {
-   struct timeval now;
+int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long *only_one_write) {
+   cl_com_tcp_private_t* private = NULL;
    long data_written = 0;
    long data_complete = 0;
    int my_errno;
-   fd_set writefds;
-   int select_back = 0;
-   struct timeval timeout;
 
-
-   if ( message == NULL) {
-      CL_LOG(CL_LOG_ERROR,"no message to write");
+   if (connection == NULL || message == NULL) {
+      if ( message == NULL) {
+         CL_LOG(CL_LOG_ERROR,"no message to write");
+      }
+      if (connection == NULL) {
+         CL_LOG(CL_LOG_ERROR,"no connection object");
+      }
       return CL_RETVAL_PARAMS;
    }
-   
+
+   private = cl_com_tcp_get_private(connection);
+   if (private == NULL) {
+      return CL_RETVAL_NO_FRAMEWORK_INIT;
+   }
+
    if ( size == 0 ) {
       CL_LOG(CL_LOG_ERROR,"data size is zero");
       return CL_RETVAL_PARAMS;
    }
 
-   if (fd < 0) {
+   if (private->sockfd < 0) {
       CL_LOG(CL_LOG_ERROR,"no file descriptor");
       return CL_RETVAL_PARAMS;
    }
@@ -750,21 +719,26 @@ int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned lon
 
    while ( data_complete != size ) {
       if (only_one_write == NULL) {
+         struct timeval timeout;
+         fd_set writefds;
+         int select_back = 0;
+
+
          FD_ZERO(&writefds);
-         FD_SET(fd, &writefds);
+         FD_SET(private->sockfd, &writefds);
          timeout.tv_sec = 1; 
          timeout.tv_usec = 0;  /* 0 ms */
          /* do select */
-         select_back = select(fd + 1, NULL, &writefds, NULL , &timeout);
+         select_back = select(private->sockfd + 1, NULL, &writefds, NULL , &timeout);
    
          if (select_back == -1) {
             CL_LOG(CL_LOG_INFO,"select error");
             return CL_RETVAL_SELECT_ERROR;
          }
    
-         if (FD_ISSET(fd, &writefds)) {
+         if (FD_ISSET(private->sockfd, &writefds)) {
             errno = 0;
-            data_written = write(fd, &message[data_complete], size - data_complete );   
+            data_written = write(private->sockfd, &message[data_complete], size - data_complete );   
             my_errno = errno;
             if (data_written < 0) {
                if (my_errno == EPIPE) {
@@ -778,8 +752,9 @@ int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned lon
             }
          }
          if (data_complete != size) {
+            struct timeval now;
             gettimeofday(&now,NULL);
-            if ( now.tv_sec >= timeout_time ) {
+            if ( now.tv_sec >= connection->write_buffer_timeout_time ) {
                CL_LOG(CL_LOG_ERROR,"send timeout error");
                return CL_RETVAL_SEND_TIMEOUT;
             }
@@ -788,7 +763,7 @@ int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned lon
          }
       } else {
          errno = 0;
-         data_written = write(fd, &message[data_complete], size - data_complete );   
+         data_written = write(private->sockfd, &message[data_complete], size - data_complete );   
          my_errno = errno;
          if (data_written < 0) {
             if (my_errno != EWOULDBLOCK && my_errno != EAGAIN && my_errno != EINTR) {
@@ -804,8 +779,10 @@ int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned lon
          }
          *only_one_write = data_complete;
          if (data_complete != size) {
+            struct timeval now;
+
             gettimeofday(&now,NULL);
-            if ( now.tv_sec >= timeout_time ) {
+            if ( now.tv_sec >= connection->write_buffer_timeout_time ) {
                CL_LOG(CL_LOG_ERROR,"send timeout error");
                return CL_RETVAL_SEND_TIMEOUT;
             }
@@ -817,59 +794,33 @@ int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned lon
    return CL_RETVAL_OK;
 }
 
-/****** cl_tcp_framework/cl_com_tcp_read() *************************************
-*  NAME
-*     cl_com_tcp_read() -- ??? 
-*
-*  SYNOPSIS
-*     static cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, 
-*     long size) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     long timeout_time  - ??? 
-*     int fd             - ??? 
-*     cl_byte_t* message - ??? 
-*     long size          - ??? 
-*     int* only_one_read - if not NULL: read only once and save data count
-*                          into this variable.
-*
-*  RESULT
-*     static - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     ??? 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_read()"
-int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long* only_one_read) {
-   struct timeval now;
+int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long* only_one_read) {
+   cl_com_tcp_private_t* private = NULL;
    long data_read = 0;
    long data_complete = 0;
    int my_errno;
-   int select_back = 0;
-   fd_set readfds;
-   struct timeval timeout;
 
-   if (message == NULL) {
-      CL_LOG(CL_LOG_ERROR,"no message buffer");
+   if (connection == NULL || message == NULL) {
+      if (message == NULL) {
+         CL_LOG(CL_LOG_ERROR,"no message buffer");
+      }
+      if (connection == NULL) {
+         CL_LOG(CL_LOG_ERROR,"no connection object");
+      }
       return CL_RETVAL_PARAMS;
    }
 
-   if (fd < 0) {
+   private = cl_com_tcp_get_private(connection);
+
+   if (private == NULL) {
+      return CL_RETVAL_NO_FRAMEWORK_INIT;
+   }
+
+   if (private->sockfd < 0) {
       CL_LOG(CL_LOG_ERROR,"no file descriptor");
       return CL_RETVAL_PARAMS;
    }
@@ -892,21 +843,25 @@ int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long
 
    while ( data_complete != size ) {
       if (only_one_read == NULL) {
+         int select_back = 0;
+         fd_set readfds;
+         struct timeval timeout;
+
          FD_ZERO(&readfds);
-         FD_SET(fd, &readfds);
+         FD_SET(private->sockfd, &readfds);
          timeout.tv_sec = 1; 
          timeout.tv_usec = 0;  /* 0 ms */
    
          /* do select */
-         select_back = select(fd + 1, &readfds,NULL , NULL , &timeout);
+         select_back = select(private->sockfd + 1, &readfds,NULL , NULL , &timeout);
          if (select_back == -1) {
             CL_LOG(CL_LOG_INFO,"select error");
             return CL_RETVAL_SELECT_ERROR;
          }
          
-         if (FD_ISSET(fd, &readfds)) {
+         if (FD_ISSET(private->sockfd, &readfds)) {
             errno = 0;
-            data_read = read(fd, &message[data_complete], size - data_complete );
+            data_read = read(private->sockfd, &message[data_complete], size - data_complete );
             my_errno = errno;
             if (data_read <= 0) {
                if (data_read == 0) {
@@ -919,14 +874,15 @@ int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long
                   return CL_RETVAL_PIPE_ERROR;
                }
                CL_LOG_INT(CL_LOG_ERROR,"receive error errno:", my_errno);
-               return CL_RETVAL_RECEIVE_ERROR;
+               return CL_RETVAL_READ_ERROR;
             } else {
                data_complete = data_complete + data_read;
             }
          }
          if (data_complete != size) {
+            struct timeval now;
             gettimeofday(&now,NULL);
-            if ( now.tv_sec >= timeout_time ) {
+            if ( now.tv_sec >= connection->read_buffer_timeout_time ) {
                return CL_RETVAL_READ_TIMEOUT;
             }
          } else {
@@ -934,7 +890,7 @@ int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long
          }
       } else {
          errno = 0;
-         data_read = read(fd, &message[data_complete], size - data_complete );
+         data_read = read(private->sockfd, &message[data_complete], size - data_complete );
          my_errno = errno;
          if (data_read <= 0) {
             if (data_read == 0) {
@@ -948,15 +904,16 @@ int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long
                   return CL_RETVAL_PIPE_ERROR;
                }
                CL_LOG_INT(CL_LOG_ERROR,"receive error errno:", my_errno);
-               return CL_RETVAL_RECEIVE_ERROR;
+               return CL_RETVAL_READ_ERROR;
             }
          } else {
             data_complete = data_complete + data_read;
          }
          *only_one_read = data_complete;
          if (data_complete != size) {
+            struct timeval now;
             gettimeofday(&now,NULL);
-            if ( now.tv_sec >= timeout_time ) {
+            if ( now.tv_sec >= connection->read_buffer_timeout_time ) {
                return CL_RETVAL_READ_TIMEOUT;
             }
             return CL_RETVAL_UNCOMPLETE_READ;
@@ -974,30 +931,24 @@ int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long
 int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_one_read) {
    int retval = CL_RETVAL_OK;
    unsigned long data_read = 0;
-   cl_com_tcp_private_t* private = NULL;
    unsigned long processed_data = 0;
 
    if (connection == NULL) {
       return CL_RETVAL_PARAMS;
-   }
-   if ( (private=cl_com_tcp_get_private(connection)) == NULL) {
-      return CL_RETVAL_NO_FRAMEWORK_INIT;
    }
 
    /* first read size of gmsh header without data */
    if ( connection->data_read_buffer_pos < CL_GMSH_MESSAGE_SIZE ) {
       if (only_one_read != NULL) {
          data_read = 0;
-         retval = cl_com_tcp_read(connection->read_buffer_timeout_time, 
-                                  private->sockfd, 
+         retval = cl_com_tcp_read(connection, 
                                   &(connection->data_read_buffer[connection->data_read_buffer_pos]),
                                   CL_GMSH_MESSAGE_SIZE - connection->data_read_buffer_pos,
                                   &data_read);
          connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;
          *only_one_read = data_read;
       } else {
-         retval = cl_com_tcp_read(connection->read_buffer_timeout_time, 
-                               private->sockfd, 
+         retval = cl_com_tcp_read(connection, 
                                connection->data_read_buffer,
                                CL_GMSH_MESSAGE_SIZE ,
                                NULL);
@@ -1017,16 +968,14 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
       }
       if (only_one_read != NULL) {
          data_read = 0;
-         retval = cl_com_tcp_read(connection->read_buffer_timeout_time, 
-                                  private->sockfd, 
+         retval = cl_com_tcp_read(connection, 
                                   &(connection->data_read_buffer[connection->data_read_buffer_pos]),
                                   1,
                                   &data_read);
          connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;
          *only_one_read = data_read;
       } else {
-         retval = cl_com_tcp_read(connection->read_buffer_timeout_time, 
-                                  private->sockfd, 
+         retval = cl_com_tcp_read(connection, 
                                   &(connection->data_read_buffer[connection->data_read_buffer_pos]),
                                   1,
                                   NULL);
@@ -1056,112 +1005,6 @@ int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_on
       return CL_RETVAL_MAX_MESSAGE_LENGTH_ERROR;
    }
    return retval;
-}
-
-
-
-
-
-/****** cl_tcp_framework/cl_com_tcp_send_message() *****************************
-*  NAME
-*     cl_com_tcp_send_message() -- send a message over an open tcp connection
-*
-*  SYNOPSIS
-*     int cl_com_tcp_send_message(cl_com_connection_t* connection, int timeout, 
-*     cl_byte_t* data, long size) 
-*
-*  FUNCTION
-*     This function will send size bytes from data buffer. When the connection
-*     data flow type is set to CL_CM_CT_MESSAGE, the first byte sent is the size
-*     of the message. After that the message is send. When the data flow type
-*     is set to CL_CM_CT_STREAM the message is directly sent.
-*
-*  INPUTS
-*     cl_com_connection_t* connection - pointer to open connection struct
-*     int timeout                     - timeout for sending the message
-*     cl_byte_t* data                 - data to send
-*     long size                       - length of data in bytes
-*
-*  RESULT
-*     int - CL_RETVAL_XXXX error or CL_RETVAL_OK on success
-*
-*  SEE ALSO
-*     cl_tcp_framework/cl_com_tcp_receive_message()
-*******************************************************************************/
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_tcp_send_message()"
-int cl_com_tcp_send_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data , unsigned long size , unsigned long *only_one_write) {
-   cl_com_tcp_private_t* private = NULL;
-
-   if (connection == NULL || data == NULL) {
-      CL_LOG(CL_LOG_ERROR,"no connection or no data");
-      return CL_RETVAL_PARAMS;
-   }
-   private = cl_com_tcp_get_private(connection);
-   if (private == NULL) {
-      CL_LOG(CL_LOG_ERROR,"framework not initalized");
-      return CL_RETVAL_NO_FRAMEWORK_INIT;
-   }
-   return cl_com_tcp_write(timeout_time, private->sockfd, data, size, only_one_write);
-}
-
-/****** cl_tcp_framework/cl_com_tcp_receive_message() **************************
-*  NAME
-*     cl_com_tcp_receive_message() -- get a message from an open tcp connection
-*
-*  SYNOPSIS
-*     int cl_com_tcp_receive_message(cl_com_connection_t* connection, int 
-*     timeout, cl_byte_t** data) 
-*
-*  FUNCTION
-*     This function will read data from an open tcp connection. If the data 
-*     flow type of the connection is set to CL_CM_CT_MESSAGE then the first
-*     data byte read from the connection is the length of the message. After
-*     that a data buffer is requested and the full message is read and stored
-*     into that buffer. The data parameter will get the memory address from
-*     the buffer. The user has to free the memory if not used anymore.
-*
-*     If the data flow type of the connection is set to CL_CM_CT_STREAM only
-*     one byte is read from the open connection. The rest is qual to the
-*     CL_CM_CT_MESSAGE data flow type.
-*
-*  INPUTS
-*     cl_com_connection_t* connection - pointer to open connection struct
-*     int timeout                     - timeout for receive the message 
-*     cl_byte_t** data                - address of an pointer to cl_byte_t
-*
-*  RESULT
-*     int - CL_RETVAL_XXXX error or CL_RETVAL_OK on success
-*
-*  SEE ALSO
-*     cl_tcp_framework/cl_com_tcp_send_message()
-*******************************************************************************/
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_tcp_receive_message()"
-int cl_com_tcp_receive_message(cl_com_connection_t* connection,
-                               int                  timeout_time,
-                               cl_byte_t*           data_buffer,
-                               unsigned long        data_buffer_size,
-                               unsigned long*       only_one_read) {
-
-   cl_com_tcp_private_t* private = NULL;
-   
-   if (connection == NULL || data_buffer == NULL) {
-      CL_LOG(CL_LOG_ERROR,"no connection or no data buffer");
-      return CL_RETVAL_PARAMS;
-   }
-  
-   private = cl_com_tcp_get_private(connection);
-   if (private == NULL) {
-      CL_LOG(CL_LOG_ERROR,"framework not initalized");
-      return CL_RETVAL_NO_FRAMEWORK_INIT;
-   }
-
-   return cl_com_tcp_read(timeout_time, private->sockfd, data_buffer, data_buffer_size, only_one_read);
 }
 
 
@@ -1661,14 +1504,28 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
                   }
                   break;
                case CL_OPENING:
-                  /* this is to come out of select when connection socket is ready to connect */
+                  CL_LOG_STR(CL_LOG_DEBUG,"connection_sub_state:", cl_com_get_connection_sub_state(connection));
                   switch(connection->connection_sub_state) {
-                     case CL_COM_OPEN_CONNECTED:
-                     case CL_COM_OPEN_CONNECT_IN_PROGRESS:
+                     case CL_COM_OPEN_INIT:
                      case CL_COM_OPEN_CONNECT: {
-                        if ( con_private->sockfd > 0 && do_read_select != 0) {
+                        if (do_read_select != 0) {
+                           connection->data_read_flag = CL_COM_DATA_READY;
+                        }
+                        break;
+                     }
+                     case CL_COM_OPEN_CONNECTED:
+                     case CL_COM_OPEN_CONNECT_IN_PROGRESS: {
+                        if (do_read_select != 0) {
+                           max_fd = MAX(max_fd,con_private->sockfd);
+                           FD_SET(con_private->sockfd,&my_read_fds); 
+                           nr_of_descriptors++;
+                           connection->data_read_flag = CL_COM_DATA_NOT_READY;
+                        }
+                        if ( do_write_select != 0) {
                            max_fd = MAX(max_fd, con_private->sockfd);
                            FD_SET(con_private->sockfd,&my_write_fds);
+                           connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
+                           connection->data_write_flag = CL_COM_DATA_READY;
                         } 
                         break;
                      }
@@ -1677,6 +1534,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
                   }
                   break;
                case CL_DISCONNECTED:
+               case CL_ACCEPTING:
                case CL_CLOSING:
                   break;
             }

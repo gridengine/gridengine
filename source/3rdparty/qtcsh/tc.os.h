@@ -50,6 +50,10 @@
 # define BACKPIPE
 #endif /* notdef */
 
+#ifdef INTERIX
+#  undef NEEDstrerror
+#endif
+
 #ifdef   _VMS_POSIX
 # ifndef  NOFILE 
 #  define  NOFILE 64
@@ -81,7 +85,7 @@
 # define NOFILE 256
 #endif /* NOFILE */
 
-#if defined(linux) || defined(__NetBSD__) || defined(__FreeBSD__) || SYSVREL >= 4 
+#if defined(INTERIX) || defined(linux) || defined(__NetBSD__) || defined(__FreeBSD__) || SYSVREL >= 4 
 # undef NEEDstrerror
 #endif /* linux || __NetBSD__ || __FreeBSD__ || SYSVREL >= 4 */
 
@@ -526,7 +530,7 @@ typedef struct timeval timeval_t;
 # define free tcsh_free
 #endif /* NeXT */
 
-#if !defined(AIX51) && !defined(BSD4_4) && !defined(__linux__) && !defined(__hpux) && !defined(sgi)
+#if !defined(AIX51) && !defined(BSD4_4) && !defined(__linux__) && !defined(__hpux) && !defined(sgi) && !defined(INTERIX)
 #ifndef NEEDgethostname
 extern int gethostname __P((char *, int));
 #endif /* NEEDgethostname */

@@ -187,16 +187,31 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
       /* search and enroll task */
       jatp = job_search_task(jep, NULL, task_number);
       if(jatp == NULL) {
-         lList *answer_list = NULL;
+         if (range_list_is_id_within(lGetList(jep, JB_ja_n_h_ids), task_number)) {
+            lList *answer_list = NULL;
+           
+            /* 
+             * CR - TODO:
+             *
+             * job_create_task() should check if it should create the task and
+             * not the user by first checking the function range_list_is_id_within()
+             *
+             */
 
-         jatp = job_create_task(jep, NULL, task_number);
-         /* spooling of the JATASK will be done in sge_commit_job */
-         sge_add_event(0, sgeE_JATASK_ADD, job_number, task_number, 
-                       NULL, NULL, lGetString(jep, JB_session), jatp);
-         sge_event_spool(&answer_list, 0, sgeE_JOB_MOD,
-                         job_number, 0, NULL, NULL, 
-                         lGetString(jep, JB_session),
-                         jep, NULL, NULL, true, true);
+            jatp = job_create_task(jep, NULL, task_number);
+            /* spooling of the JATASK will be done in sge_commit_job */
+            sge_add_event(0, sgeE_JATASK_ADD, job_number, task_number, 
+                          NULL, NULL, lGetString(jep, JB_session), jatp);
+            sge_event_spool(&answer_list, 0, sgeE_JOB_MOD,
+                            job_number, 0, NULL, NULL, 
+                            lGetString(jep, JB_session),
+                            jep, NULL, NULL, true, true);
+         } else {
+            INFO((SGE_EVENT, MSG_JOB_IGNORE_DELETED_TASK_UU,
+                  u32c(job_number), u32c(task_number)));
+            DEXIT;
+            return 0;
+         }
       }
       if (!jatp) {
          WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), 
@@ -280,8 +295,9 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          }
 
          /* the first queue is the master queue */
-         if (!master_qep)
+         if (master_qep == NULL) {
             master_qep = qep;
+         }   
 
          /* check queue version */
          if (q_version != lGetUlong(qep, QU_version)) {
@@ -427,12 +443,14 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
                } else {
                   lSetUlong(first_at_host, JG_tag_slave_job, 1);   
                }
-            } else 
+            } else  {
                DPRINTF(("master host %s\n", lGetHost(master_host, EH_name)));
+            }   
          }
          /* in case of a pe job update free_slots on the pe */
-         if (pe) 
+         if (pe) { 
             pe_slots += q_slots;
+         }   
       }
          
       /* fill in master_queue */

@@ -88,6 +88,7 @@ int cl_com_set_alias_file_dirty(void);
 int cl_com_append_host_alias(char* local_resolved_name, char* alias_name);
 int cl_com_remove_host_alias(char* alias_name);
 
+int cl_com_specify_ssl_configuration(cl_ssl_setup_t* new_config);
 
 int cl_com_append_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int service_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static );
 int cl_com_remove_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id);
@@ -116,6 +117,8 @@ int cl_com_set_error_func(cl_error_func_t error_func);
 int cl_com_set_tag_name_func(cl_tag_name_func_t tag_name_func);
 int cl_com_setup_callback_functions(cl_com_connection_t* connection);
 
+/* allow application to send messages to connected debug clients */
+int cl_com_application_debug(cl_com_handle_t* handle, const char* message);
 
 
 

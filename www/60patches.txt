@@ -1,3 +1,82 @@
+Bugs fixed in SGE 6.0u3 since release 6.0u2
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+1389     6205648   error in commlib read/write timeout handling 
+1401     6211243   The qstat -ext -xml command is broken with N1GE6 Update 2 patch 
+1400     6211309   qmaster running out of file descriptors 
+1392     6211725   uninstall of exec host doesn't work 
+1413     6215580   execd messages file contains errors for tight integrated jobs 
+1414     6216020   pending job task deletion may not work 
+
+
+Bugs fixed in SGE 6.0u2 since release 6.0u1
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------  ------------------------------------------------------------------------------------------
+
+790      5063315   Confusing Install Text: spooling method
+791      5063317   Confusing Install Text: port numbers
+1132     5071878   no man page for qping and gethostname binaries
+1283     5075968   Thread enabled commlib coredumps on exit on a 32bit Solaris x86 box
+1221     5085010   qmon customize filter for running jobs does not filter
+1287     5086108   wrong message appears when queue instance becomes error state
+1216     5089222   scheduling weirdness with wild-card PE's
+1234     5089255   Submit to a queue domain is never scheduled
+1313     5090162   qmake does not export shell env. vars
+1253     5092487   hard resource requests ignored in parallel jobs
+1224     5094016   o-tickets assigned to departments are ignored
+1261     5095907   qacct -l is not working
+1275     5097732   Need detailed error messages from communication layer
+1274     5102320   memory leak in the scheduler, with pe jobs and resource requests
+1270     5102340   drmaa_synchronize() waits for all jobs, including newly submitted jobs
+1269     5102442   qconf -de <live_exec_host> crashes qmaster
+1235     5104270   Cannot add calendar with \ syntax
+1277     5104789   mail sent by qmaster leaves zombie processes
+1176     5108635   $ARCH required in path for qloadsensor and qidle.
+1251     5108639   qconf -sstree seg faults with large share trees
+1304     6174301   N1GE6: qsub -js and negative job_share numbers acts strangely/unexpectedly.
+1198     6174326   qconf -sq displayes "slots" in the complex_values line
+1255     6174331   Option "-v VAR" does not fetch from envrionment
+1286     6174821   segmentation fault when vmemsize limit is reached
+1295     6174915   qconf has wrong exit status
+1294     6176115   Show qmaster/execd application status in qping
+1239     6176177   restoring a backup does not restore the job_scripts dir.
+1291     6176181   qdel "" kills qmaster
+-        6178328   Admin/Users Guide: qstat has been enhanced.
+1299     6180529   meaningless job error state diagnosis text in qstat -j
+1251     6183365   qconf -sstree gives a SIGBUS error
+1308     6184460   qmod -[d|e] cannot handle the folowing qnames: "[0-9]*"
+978      6184466   scheduler does not look ahead to consider queue calendars state transitions
+1307     6185136   Job customize shows weird characters for fields, additional fields cannot be added
+1267     6185169   qmon returns an error dialog, when editing a calendar
+1302     6185208   qmon and equal job arguments
+1300     6185211   Job environments should not include Grid Engine dynamic library path
+1315     6189286   memory leak in the scheduler with consumables as load thresholds
+1316     6189289   a cluster queue can be deleted, even though it is referenced in an other cq
+1279     6190164   too many array tasks are deleted
+-        6191366   tightly integrated pe jobs: scheduler doesn't respect usage of pe tasks in sharetree calculation
+1324     6193348   qconf -mq does not output the subordinate_list correct
+1323     6193361   Jobs fail in case of NFS execd installation on volumes exported without root write priviledges
+1328     6193866   backup/restore does not work under Linux and others..
+1329     6194002   sgemaster -migrate on qmaster host tries to start second qmaster
+1289     6194625   subordinate queues consume excessive memory
+1335     6194713   Only first subordinate queue will be suspended at qmaster restart
+1336     6194729   Subordinate queue thresholds are not spooled with BDB
+-        6195249   QMON Cluster Queue Window: Heading line words does not match into column width
+1344     6196578   backup failes, when...
+1345     6197253   DRMAA_DURATION_{H|S}LIMIT misspelled as "durartion"
+1360     6199261   a sharetree delete can kill qmon
+1357     6200013   util/arch script OS matching problems for Linux x86 and amd64
+1280     6201033   qmaster might fail if jobs are deleted which have multiple hold states applied
+-        6201038   reduce the impact of qstat on the overall performance
+1319     6201039   qconf -ks gives bad error message if scheduler isn't running
+1317     6201040   Exit 99 jobs are not rescheduled to hosts where they ran before
+1030     6201042   qdel "*" produces error logging in qmaster messages file
+
+
 Bugs fixed in SGE 6.0u1 since release 6.0
 -----------------------------------------
 

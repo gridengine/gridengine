@@ -196,6 +196,12 @@ proc tight_integration_setup  {} {
    global ts_config CHECK_OUTPUT CHECK_USER
    global TIGHT_INTEGRATION_ERROR_MESSAGES TIGHT_INTEGRATION_WARNING_MESSAGES
 
+
+   # shutdown and restart an execd
+   set execd_host [ lindex $ts_config(execd_hosts) 0 ]
+   shutdown_system_daemon $execd_host execd
+   startup_execd $execd_host
+
    # create parallel environment
    set pe(pe_name)            tight
    set pe(slots)              1000
@@ -237,8 +243,10 @@ proc tight_integration_cleanup  {} {
    puts $CHECK_OUTPUT "additional sleep of 5 seconds ..."
    sleep 5
 
+   puts $CHECK_OUTPUT "reading messages files ..."
    tight_integration_parse_execd_messages cleanup
 
+   puts $CHECK_OUTPUT "compare error messages ..."
    tight_integration_check_messages startup cleanup
    
    unassign_queues_with_pe_object tight

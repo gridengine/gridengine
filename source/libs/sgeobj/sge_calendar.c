@@ -810,6 +810,11 @@ static time_t compute_limit(bool today, bool active, const lList *year_time, con
       return 0;
    }
 
+   if (year_time == NULL && week_time == NULL) {
+      DPRINTF(("we have no a calendar time definition. It is most likely set to \"off\" or \"suspended\""));
+      return 0;
+   }
+
    time = lFirst(day_time);
 
    { /* should only be one entry in case that the calendar is valid for whole days*/

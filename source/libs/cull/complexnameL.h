@@ -41,7 +41,7 @@ enum {
 
 
 LISTDEF( ComplexNameT )
-   SGE_XSTRING   ( N_complexname )
+   SGE_STRING   ( N_complexname, CULL_DEFAULT )
 LISTEND
 
 NAMEDEF( ComplexNameN )

@@ -634,12 +634,12 @@
 
    <H2>
       <FONT COLOR="#336699">
-         Getting DRM information
+         Getting DRM Information
       </FONT>
    </H2>
 
    <P STYLE="margin-bottom: 0cm">
-      Lastly, let's look at how to query the DRMAA library for information about
+      Next, let's look at how to query the DRMAA library for information about
       the DRMS and the DRMAA implementation itself:
    </P>
 
@@ -734,6 +734,208 @@
 
    <P STYLE="margin-bottom: 0cm">
       Finally, on line 31, we end the session with drmaa_exit().
+   </P>
+
+   <H2>
+      <FONT COLOR="#336699">
+         Using the New Utility Classes
+      </FONT>
+   </H2>
+
+   <P STYLE="margin-bottom: 0cm">
+      The JobTemplate class uses two new classes to represent some of its
+      property types.  They are FileTransferMode and PartialTimestamp.  The
+      PartialTimestampFormat is used to print a PartialTimestamp.  The Session
+      interface uses the Version class to represent version information.
+   </P>
+
+   <H3>FileTransferMode</H3>
+
+   <P STYLE="margin-bottom: 0cm">
+      The FileTransferMode class is a simple container which holds the state of
+      three boolean properties: errorStream, inputStream, and outputStream.
+      Each property indicated whether the given stream should be used for file
+      transfers.  When a given property is true, the corresponding path
+      property is taken to represent the source or destination for the file
+      transfer.  For example, if the errorStream property of the active
+      FileTransferMode object is true, the errorPath property of the JobTemplate
+      object is treated as the destination to which to copy the resulting error
+      output.
+   </P>
+
+   <H3>PartialTimestamp</H3>
+
+   <P STYLE="margin-bottom: 0cm">
+      The PartialTimestamp class is used to represent incomplete time
+      specifications, e.g. &quot;1:00&quot; as opposed to &quot;2005/01/05
+      01:00&quot;.  Such partial time specifications will be resolved to the
+      soonest time which is still in the future.  For example, before 1:00,
+      &quot;1:00&quot; will be resolved to 1:00 on that same day.  After 1:00,
+      it will be resolved to 1:00 on the next day.  The PartialTimestamp class
+      is a subclass of java.util.Calendar and behaves as much like
+      java.util.GregorianCalendar as possible, with the exception of allowing
+      incomplete time specifications.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      The PartialTimestamp class has one other new feature not present in the
+      java.util.Calendar class, field modifiers.  Since it may be desirable to
+      appy a modifier to a field which is not yet set, the PartialTimestamp
+      class allows for field modifiers to be kept separately from field values.
+      If a modifier is applied to a set field, that modifier is ultimately added
+      to the field's value.  If a modifier is applied to an unset field, the
+      modifier is added to the field's value at the time it is resolved.  For
+      example, if a PartialTimestamp object has HOUR_OF_DAY=1 and MINUTE=0 and
+      a +1 modifier to the DAY_OF_MONTH field, and the PartialTimestamp object
+      is resolved at 0:55 on a Tuesday, the result will be 1:00 on the following
+      Wednesday.  If the same PartialTimestamp object were resolved at 1:01 on
+      a Tuesday, the result would be 1:00 on the following Thursday.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      For a PartialTimestamp object, there are primary fields and secondary
+      fields.  The primary fields are actually used by DRMAA and the
+      PartialTimestampFormat class.  The secondary fields are used only to
+      calculate the unset primary fields.  The primary fields are CENTURY, YEAR,
+      MONTH, DAY_OF_MONTH/DATE, HOUR_OF_DAY, MINUTE, SECOND, and ZONE_OFFSET.
+      The secondary fields are DAY_OF_WEEK, DAY_OF_YEAR, DAY_OF_WEEK_IN_MONTH,
+      WEEK_OF_MONTH, and WEEK_OF_YEAR.  The MILLISECOND field is neither primary
+      nor secondary because it outside of the scope of the DRMAA time stamp
+      format specification, and hence is largely ignored.
+   </P>
+
+   <H3>PartialTimestampFormat</H3>
+
+   <P STYLE="margin-bottom: 0cm">
+      To convert a PartialTimestamp object to or from a String, one should use
+      a PartialTimestampFormat object.  The parse() method converts a String
+      into a PartialTimestamp object, and the format() method convers a
+      PartialTimestamp object into a String.  In order for the
+      PartialTimestampFormat class to properly do the conversions, the no field
+      of a lower order than the highest order set field may be unset.  For
+      example, if the DAY_OF_WEEK field is set, the HOUR_OF_DAY and MINUTE
+      fields must also be set.  (These two field are actually required in all
+      cases.)  If the MONTH field is set, the DAY_OF_MONTH, HOUR_OF_DAY, and
+      MINUTE fields must be set.  If the CENTURY field is set, the YEAR, MONTH,
+      DAY_OF_MONTH, HOUR_OF_DAY, and MINUTE fields must be set.  If the
+      MILLISECOND field is set, the HOUR_OF_DAY, MINUTE, and SECOND fields must
+      be set.  The SECOND and ZONE_OFFSET fields are always optional.  The same
+      applies for strings to be parsed.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Since the PartialTimestamp class is somewhat complicated, let's look at an
+      example:
+   </P>
+
+   <H3>Example 7</H3>
+<PRE>01: package com.sun.grid.drmaa.howto;
+02: 
+03: import org.ggf.drmaa.*;
+04: 
+05: public class Howto7 {
+06:    public static void main (String[] args) {
+07:       try {
+08:          PartialTimestamp date = new PartialTimestamp ();
+09:          PartialTimestampFormat format = new PartialTimestampFormat ();
+10: 
+11:          date.set (PartialTimestamp.HOUR_OF_DAY, 13);
+12:          date.set (PartialTimestamp.MINUTE, 0);
+13:          
+14:          System.out.println (format.format (date));
+15:          
+16:          date.setModifier (PartialTimestamp.DAY_OF_MONTH, 1);
+17:          
+18:          System.out.println (format.format (date));
+19:          System.out.println (date.getTime ().toString ());
+20: 
+21:          date.setTimeInMillis (System.currentTimeMillis ());
+22:          
+23:          System.out.println (format.format (date));
+24:          
+25:          date = format.parse ("01/05 14:07:29");
+26:          
+27:          System.out.println (format.format (date));
+28:       }
+29:       catch (java.text.ParseException e) {
+30:          System.out.println ("Error: " + e.getMessage ());
+31:       }
+32:    }
+33: }</PRE>
+
+
+   <P STYLE="margin-bottom: 0cm">
+      Since the PartialTimestamp class is useable outside of a DRMAA session,
+      this example does not create a SessionFactory or Session instance.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 8, we create a PartialTimestamp with no fields set.  Other
+      constructors could be used to create a PartialTimestamp object with
+      various fields already set.  See the JavaDocs for more details.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 9, we create a PartialTimestampFormat object.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On lines 11 and 12, we set the two required PartialTimestamp fields.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 14, we use the PartialTimestampFormat object to convert the
+      PartialTimestamp to a String and print it out.  This will print
+      &quot;13:00&quot;.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 16, we set a modifier for the DAY_OF_MONTH field.  This means that
+      when the PartialTimestamp is resolved to a concrete time, that time will
+      be one day later than the earliest time which is still in the future.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 18, we use the PartialTimestampFormat object to convert the
+      PartialTimestamp to a String and print it out again.  This will also print
+      &quot;13:00&quot; because modifiers are ignored by the
+      PartialTimestampFormat class.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 19, we resolve the PartialTimestamp to a concrete Date object and
+      print the value of that object.  If this code is executed at 3:49:25pm on
+      Tuesday, January 4th 2005, the result will be &quot;Thu Jan 06 13:00:00
+      MET 2005&quot;.  (The timezone is MET because that's where I am.)
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 21, we set the value of the time to the current time in
+      milliseconds.  Setting the time directly, either in milliseconds or as a
+      Date object, results in all fields being set.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On line 23, we use the PartialTimestampFormat object to convert the
+      PartialTimestamp to a String and print it out.  Because all the fields
+      have been set, the result is &quot;2005/01/05 15:49:25 +01:00&quot;.
+      (Again, the timezone setting is because I am in GMT+1.)
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      On lines 25-27, we use the PartialTimestampFormat object to convert the
+      String to a PartialTimestamp and then back to a String to be printed it
+      out.  The result is the same string, &quot;01/05 14:07:29&quot;
+   </P>
+
+   <H3>Version</H3>
+
+   <P STYLE="margin-bottom: 0cm">
+      The Version class is used by the Session instance to return the version of
+      DRMAA supported by the implementation.  The major and minor fields of the
+      Version class represent the major and minor version numbers, respectively.
+      For example, DRMAA 1.0 is represented by a Version object with major=1 and
+      minor=0.
    </P>
    </BODY>
 </HTML>

@@ -34,6 +34,10 @@
 #include <sys/types.h>
 #include <sys/times.h>
 
+#ifdef SOLARISAMD64
+#include <sys/stream.h>
+#endif
+
 #include <Xmt/Xmt.h>
 #include <Xmt/Dialogs.h>
 

@@ -791,10 +791,6 @@ pid_t *pidp,
 int timeout,
 int ckpt_type 
 ) {
-   /* don't know what behaviour is expected by customers */
-   static int truncate_stderr_out = 0;
-   static int truncate_pe_stderr_out = 0;
-   int *truncate_flag;
    SGE_STRUCT_STAT buf;
    u_long32 start_time;
    u_long32 end_time;
@@ -813,14 +809,6 @@ int ckpt_type
    int jobid = 0;
 #endif
    
-   /* which flag to use ? */
-   if (!strcmp(childname, "pe_start") ||
-       !strcmp(childname, "pe_stop") ||
-       !strcmp(childname, "pe_signal")) 
-      truncate_flag = &truncate_pe_stderr_out;
-   else 
-      truncate_flag = &truncate_stderr_out;
-      
    /* Don't care about checkpointing for "commands other than "job" */
    if (strcmp(childname, "job"))
       ckpt_type = 0;
@@ -855,7 +843,7 @@ int ckpt_type
 
       pid = fork();
       if (pid==0)
-         son(childname, script_file, *truncate_flag);
+         son(childname, script_file, 0);
    }
    if (pid == -1) {
       shepherd_error_sprintf("can't fork \"%s\"", childname);
@@ -865,8 +853,6 @@ int ckpt_type
    change_shepherd_signal_mask();
    
    start_time = sge_get_gmt();
-
-   *truncate_flag = 0;  /* only first child truncates stderr/out */  
 
    /* Write pid to job_pid file and set ckpt_pid to original job pid 
     * Kill job if we can't write job_pid file and exit with error
@@ -885,8 +871,6 @@ int ckpt_type
                    sizeof(clean_command) - 1,
                    &ckpt_interval);
    
-   *truncate_flag = 0;  /* only first child truncates stderr/out */
-
    if (received_signal > 0 && received_signal != SIGALRM) {
       int sig = map_signal(received_signal);
       int tmp_ret = add_signal(sig);

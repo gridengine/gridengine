@@ -1,3 +1,7 @@
+AH-2003-10-15-0: Cleanup:   Removed null-statement code in shepherd about 
+                            truncating of job stdout/stderr. There is no 
+                            case when we truncate.
+
 AH-2003-10-14-0: Bugfix:    - matching for -l a=<arch> was broken
 
 AD-2003-10-14-0: Bugfix:    Fixed the build

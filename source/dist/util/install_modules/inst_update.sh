@@ -258,7 +258,7 @@ GetOldComplexes()
                      echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
                      echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
                      echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo
+                     echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
                   fi
                elif [ $CE_TYPE = "TIME" ]; then
                     if [ $CE_DEFAULT != "0:0:0" ]; then
@@ -276,7 +276,7 @@ GetOldComplexes()
                      echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
                      echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
                      echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo
+                     echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
 
                     fi
                fi
@@ -292,7 +292,7 @@ GetOldComplexes()
                echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
                echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
                echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo
+               echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
             fi
          else
             CE_CONSUMABLE="NO"
@@ -307,7 +307,7 @@ GetOldComplexes()
             echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
             echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
             echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo
+            echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
 
             if [ $CE_TYPE = "BOOL" ]; then
                CE_DEFAULT="0"
@@ -322,7 +322,7 @@ GetOldComplexes()
                echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
                echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
                echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo
+               echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
             elif [ $CE_TYPE = "STRING" -o $CE_TYPE = "CSTRING" -o $CE_TYPE = "RESTRING" -o $CE_TYPE = "HOST" ]; then
                CE_DEFAULT="NONE"
                echo "Changed complex:  " >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
@@ -336,7 +336,7 @@ GetOldComplexes()
                echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
                echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
                echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo
+               echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
             fi
          fi 
          
@@ -357,7 +357,7 @@ GetOldComplexes()
                   echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
                   echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
                   echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo
+                  echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
                fi
             fi
 
@@ -376,7 +376,7 @@ GetOldComplexes()
                echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
                echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
                echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo
+               echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
 
             fi   
          fi
@@ -395,11 +395,12 @@ GetOldComplexes()
 
 #   export SGE_ROOT
 #   export SGE_CELL
-
-   cp -fR $SGE_ROOT/util/resources/centry/* /tmp/centry
+   CPR="cp -fR"
+   RM="rm -fR"
+   ExecuteAsAdmin $CPR $SGE_ROOT/util/resources/centry/* /tmp/centry
    ExecuteAsAdmin $SPOOLDEFAULTS complexes /tmp/centry
    ExecuteAsAdmin $RM /tmp/centry/*
-   rm -fR /tmp/centry
+   ExecuteAsAdmin $RM /tmp/centry
     
 }
 

@@ -409,6 +409,12 @@ SetSpoolingOptionsBerkeleyDB()
       ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
       if [ $ret -gt 1 ]; then
          $INFOTEXT "We found a running berkeley db on this host!"
+         if [ $AUTO = true ]; then
+            $INFOTEXT -log "We found a running berkeley db on this host!"
+            $INFOTEXT -log "Please, check this first! Exiting Installation!"
+            MoveLog
+         fi
+
          $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
          if [ $? = 1 ]; then
             $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"

@@ -367,15 +367,15 @@ int tag
       /* FIX_CONST */
       if ((ret = receive_message((char*)prognames[EXECD], &from_id, host, 
             &tag, &msg, &msg_len, (options&OPT_SYNCHRON)?1:0, &compressed))!=0 
-                  && ret!=NACK_TIMEOUT) {
+                  && ret!=COMMD_NACK_TIMEOUT) {
          sprintf(lasterror, MSG_GDI_MESSAGERECEIVEFAILED_SI , 
                cl_errstr(ret), ret);
          DEXIT;
          return -1;
       }
-   } while (options&OPT_SYNCHRON && ret == NACK_TIMEOUT);
+   } while (options&OPT_SYNCHRON && ret == COMMD_NACK_TIMEOUT);
 
-   if (ret==NACK_TIMEOUT) {
+   if (ret==COMMD_NACK_TIMEOUT) {
       DEXIT;
       return 1;
    }

@@ -117,7 +117,7 @@ int commdport
    /********** security section ******************/
 
    if (port_security && !mp->reserved_port) {
-      mp->ackchar = NACK_PERM;
+      mp->ackchar = COMMD_NACK_PERM;
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
       DEBUG((SGE_EVENT, "message denied cause of unsecure port"));
@@ -128,7 +128,7 @@ int commdport
    }
 
    /*********** a commproc wants to enroll **********/
-   if (mp->flags & ENROLL) {
+   if (mp->flags & COMMD_ENROLL) {
 
       DEBUG((SGE_EVENT, "* enrolling commproc"));
 
@@ -141,7 +141,7 @@ int commdport
                   inet_ntoa(mp->fromaddr)));
             trace(SGE_EVENT);
 
-            mp->ackchar = NACK_UNKNOWN_HOST;
+            mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
             DEXIT;
@@ -165,7 +165,7 @@ int commdport
                   get_mainname(h), newname, id));
             trace(SGE_EVENT);
 
-            mp->ackchar = NACK_CONFLICT;
+            mp->ackchar = COMMD_NACK_CONFLICT;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
             DEXIT;
@@ -187,7 +187,7 @@ int commdport
       strcpy(new->name, newname);
 
       if (setcommprocid(new, id)) {
-         mp->ackchar = NACK_COMMD_NOT_READY;
+         mp->ackchar = COMMD_NACK_COMMD_NOT_READY;
          
          ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_OUTOFCOMMPROCIDS ));
          trace(SGE_EVENT);
@@ -214,7 +214,7 @@ int commdport
 
       /* reassemble message as acknowledge message */
 
-      mp->ackchar = CACK;
+      mp->ackchar = COMMD_CACK;
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
       mp->bufprogress = &(mp->bufstart[HEADERLEN - 3]);
 #else
@@ -235,7 +235,7 @@ int commdport
    }                            /* ENROLL */
 
 /*********** CONTROL OPERATION **********/
-   if (mp->flags & CNTL) {
+   if (mp->flags & COMMD_CNTL) {
 
       DEBUG((SGE_EVENT, "* controlling operation"));
 
@@ -248,7 +248,7 @@ int commdport
                     inet_ntoa(mp->fromaddr)));
             trace(SGE_EVENT);
 
-            mp->ackchar = NACK_UNKNOWN_HOST;
+            mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
             DEXIT;
@@ -278,13 +278,13 @@ int commdport
             DEBUG((SGE_EVENT, "open tracefd=%d", mp->fromfd));
 
             message_tracefd = mp->fromfd;
-            ackchar = CACK;
+            ackchar = COMMD_CACK;
             write(message_tracefd, &ackchar, 1);
             delete_message_(mp, 1, NULL);
          }
          else {
             trace("rejected trace cntl message (only one trace allowed)");
-            ackchar = NACK_OPONCE;
+            ackchar = COMMD_NACK_OPONCE;
             i = write(mp->fromfd, &ackchar, 1);
             DEBUG((SGE_EVENT, "fromfd=%d i=%d", mp->fromfd, i));
             delete_message(mp, "only one trace commproc allowed");
@@ -296,7 +296,7 @@ int commdport
       if (operation == O_GETID) {
          commp = search_commproc(NULL, op_carg, 0);
          if (commp) {
-            mp->ackchar = CACK;
+            mp->ackchar = COMMD_CACK;
             mp->headerlen = (u_short) (1 + pack_ulong_len(commp->id));
             mp->bufprogress = HEADERSTART(mp);
             cp = mp->bufprogress;
@@ -311,7 +311,7 @@ int commdport
             return 0;
          }
          else {
-            mp->ackchar = NACK_UNKNOWN_TARGET;
+            mp->ackchar = COMMD_NACK_UNKNOWN_TARGET;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
             
             DEXIT;
@@ -333,14 +333,14 @@ int commdport
          }
 
          if (found) {
-            mp->ackchar = CACK;
+            mp->ackchar = COMMD_CACK;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
             
             DEXIT;
             return 0;
          }
          else {
-            mp->ackchar = NACK_UNKNOWN_TARGET;
+            mp->ackchar = COMMD_NACK_UNKNOWN_TARGET;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
             
             DEXIT;
@@ -349,7 +349,7 @@ int commdport
       }
       /* reassemble message as acknowledge message */
 
-      mp->ackchar = CACK;
+      mp->ackchar = COMMD_CACK;
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
       log_message(mp);
@@ -361,7 +361,7 @@ int commdport
       a commd */
 
    /* unknown host ? */
-   if (!h && (mp->flags & SCOMMD)) {
+   if (!h && (mp->flags & COMMD_SCOMMD)) {
       read_aliasfile(aliasfile);
       h = newhost_addr((char *) &mp->fromaddr);
    }
@@ -369,14 +369,14 @@ int commdport
       WARNING((SGE_EVENT, "can't resolve host address %s", inet_ntoa(mp->fromaddr)));
       trace(SGE_EVENT);
 
-      mp->ackchar = NACK_ENROLL;
+      mp->ackchar = COMMD_NACK_ENROLL;
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
       DEXIT;
       return 0;
    }
 
 /*********** a commproc wants to leave **********/
-   if (mp->flags & LEAVE) {
+   if (mp->flags & COMMD_LEAVE) {
 
       DEBUG((SGE_EVENT, "* leaving commproc"));
 
@@ -391,14 +391,14 @@ int commdport
 
       if (commp) {
          if (mp->new_connection && reconnect_commproc_with_fd(commp, mp->fromfd, "LEAVE")) {
-            mp->ackchar = NACK_CONFLICT;
+            mp->ackchar = COMMD_NACK_CONFLICT;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
             DEXIT;
             return 0;
          }
 
-         mp->ackchar = CACK;
+         mp->ackchar = COMMD_CACK;
          reset_messages_for_commproc(commp);
          commp->fd = -1;    /* this leaves the fd open for a short time */
                             /* otherwise we could not send ACK */
@@ -406,7 +406,7 @@ int commdport
          delete_commproc(commp);
       }
       else
-         mp->ackchar = NACK_ENROLL;
+         mp->ackchar = COMMD_NACK_ENROLL;
 
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
@@ -419,7 +419,7 @@ int commdport
    /* a commproc asks about a unique hostname and may force a reread
       of the alias file */
 
-   if (mp->flags & UNIQUEHOST) {
+   if (mp->flags & COMMD_UNIQUEHOST) {
 
       DEBUG((SGE_EVENT, "* commproc asks about UNIQUE HOST"));
 
@@ -455,7 +455,7 @@ int commdport
                from.name, get_mainname(from.host)));
          trace(SGE_EVENT);
 
-         mp->ackchar = NACK_UNKNOWN_RECEIVER;
+         mp->ackchar = COMMD_NACK_UNKNOWN_RECEIVER;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
          DEXIT;
@@ -464,7 +464,7 @@ int commdport
 
       commproc_touch(commp, now);       /* sign of life */
       if (mp->new_connection && reconnect_commproc_with_fd(commp, mp->fromfd, "UNIQUE HOST")) {
-         mp->ackchar = NACK_CONFLICT;
+         mp->ackchar = COMMD_NACK_CONFLICT;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
          DEXIT;
@@ -472,7 +472,7 @@ int commdport
       }
 
       if (!h) {
-         mp->ackchar = NACK_UNKNOWN_HOST;
+         mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
          
          DEXIT;
@@ -481,7 +481,7 @@ int commdport
 
       /* reassemble message as acknowledge message */
 
-      mp->ackchar = CACK;
+      mp->ackchar = COMMD_CACK;
       mp->headerlen = strlen(uhostname) + 4;
       mp->bufprogress = HEADERSTART(mp);
       cp = mp->bufprogress;
@@ -502,14 +502,14 @@ int commdport
    /**********************************************************************
      process receive message 
     **********************************************************************/
-   if (mp->flags & RECEIVE) {
+   if (mp->flags & COMMD_RECEIVE) {
 
       DEBUG((SGE_EVENT, "* receive message"));
 
       memset(&from, 0, sizeof(from));
       memset(&to, 0, sizeof(to));
 
-      synchron = mp->flags & SYNCHRON;
+      synchron = mp->flags & COMMD_SYNCHRON;
 
       /* look into header of message */
       cp = HEADERSTART(mp);
@@ -536,7 +536,7 @@ int commdport
                   fromhost));
             trace(SGE_EVENT);
 
-            mp->ackchar = NACK_UNKNOWN_HOST;
+            mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
             DEXIT;
@@ -555,7 +555,7 @@ int commdport
                to.name, get_mainname(to.host)));
          trace(SGE_EVENT);
 
-         mp->ackchar = NACK_UNKNOWN_RECEIVER;
+         mp->ackchar = COMMD_NACK_UNKNOWN_RECEIVER;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
          DEXIT;
@@ -565,7 +565,7 @@ int commdport
       commproc_touch(commp, now);       /* sign of life */
 
       if (mp->new_connection && reconnect_commproc_with_fd(commp, mp->fromfd, "RECEIVE")) {
-         mp->ackchar = NACK_CONFLICT;
+         mp->ackchar = COMMD_NACK_CONFLICT;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
          DEXIT;
@@ -627,7 +627,7 @@ int commdport
             DEBUG((SGE_EVENT, "receive query: no message available for receiver"));
             trace(SGE_EVENT);
 
-            mp->ackchar = NACK_NO_MESSAGE;
+            mp->ackchar = COMMD_NACK_NO_MESSAGE;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
             DEXIT;
             return 0;
@@ -648,7 +648,7 @@ int commdport
    cp = unpack_string(mp->to.name, MAXCOMPONENTLEN, cp);
    cp = unpack_ushort(&mp->to.id, cp);
 
-   if (mp->flags & SCOMMD)
+   if (mp->flags & COMMD_SCOMMD)
       cp = unpack_string(fromhost, MAXHOSTLEN, cp);
 
    cp = unpack_string(mp->from.name, MAXCOMPONENTLEN, cp);
@@ -668,7 +668,7 @@ int commdport
       ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_UNKNOWNRECEIVERHOST_S , tohost));
       trace(SGE_EVENT);
 
-      mp->ackchar = NACK_UNKNOWN_HOST;
+      mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
       
       DEXIT;
@@ -677,16 +677,16 @@ int commdport
 
    DEBUG((SGE_EVENT,
          "message to send%s%s: to=(%s %s %d) from=(%s %s %d) tag=%d len="u32" mid=%d",
-         ((mp->flags & ASK_COMMPROC) ? " (ask)" : ""),
-         ((mp->flags & SCOMMD) ? " (COMMD<->COMMD)" : ""),
+         ((mp->flags & COMMD_ASK_COMMPROC) ? " (ask)" : ""),
+         ((mp->flags & COMMD_SCOMMD) ? " (COMMD<->COMMD)" : ""),
          tohost, mp->to.name, mp->to.id,
-         ((mp->flags & SCOMMD) ? fromhost : get_mainname(h)), mp->from.name,
+         ((mp->flags & COMMD_SCOMMD) ? fromhost : get_mainname(h)), mp->from.name,
          mp->from.id, mp->tag, mp->buflen, (int)mp->mid));
    trace(SGE_EVENT);
 
    /* If the message came direct from the sender 'fromhost' is the host we got
       from accept(). If not we have to rely on the commd who is sending */
-   if (mp->flags & SCOMMD) {
+   if (mp->flags & COMMD_SCOMMD) {
       fhost = search_host(fromhost, NULL);
       if (!fhost) {
          read_aliasfile(aliasfile);
@@ -695,7 +695,7 @@ int commdport
             ERROR((SGE_EVENT, MSG_PROC_RECEIVED_MESS_UNKNOWNSENDERHOST_S , fromhost));
             trace(SGE_EVENT);
 
-            mp->ackchar = NACK_UNKNOWN_HOST;
+            mp->ackchar = COMMD_NACK_UNKNOWN_HOST;
             SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
          
             /* there was a delete_message() */   
@@ -714,9 +714,9 @@ int commdport
       don't know whether to close the fd or not So lets find the commproc.
       does not apply to COMMD<->COMMD communication */
    commp = match_commproc(&mp->from);
-   if (!commp && !(mp->flags & SCOMMD)) {
+   if (!commp && !(mp->flags & COMMD_SCOMMD)) {
       DEBUG((SGE_EVENT, "send message: unknown sender of message"));
-      mp->ackchar = NACK_ENROLL;
+      mp->ackchar = COMMD_NACK_ENROLL;
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
       DEXIT;
@@ -728,7 +728,7 @@ int commdport
    if(commp) {
       commproc_touch(commp, now);
       if (mp->new_connection && reconnect_commproc_with_fd(commp, mp->fromfd, "SEND")) {
-         mp->ackchar = NACK_CONFLICT;
+         mp->ackchar = COMMD_NACK_CONFLICT;
          SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
 
          DEXIT;
@@ -736,7 +736,7 @@ int commdport
       }
    }
 
-   if (mp->flags & SYNCHRON) {
+   if (mp->flags & COMMD_SYNCHRON) {
       SET_MESSAGE_STATUS(mp, S_RDY_4_SND);
       log_message(mp);
       init_send(mp, port_security, commdport);
@@ -746,7 +746,7 @@ int commdport
    }
    else {
       /* asynchron messages are acknowledged immediately */
-      mp->ackchar = CACK;
+      mp->ackchar = COMMD_CACK;
       SET_MESSAGE_STATUS(mp, S_WRITE_ACK_SND);
       log_message(mp);
       

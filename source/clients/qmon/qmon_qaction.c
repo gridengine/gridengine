@@ -942,7 +942,7 @@ XtPointer cld, cad;
    if (cbs->input && cbs->input[0]!='\0' && name && strcmp(name, "template")) {
       ret = sge_resolve_hostname((char*)cbs->input, unique, EH_name);
       switch ( ret ) {
-         case NACK_UNKNOWN_HOST:
+         case COMMD_NACK_UNKNOWN_HOST:
 /*             cbs->okay = False; */
 /*             qmonMessageShow(w, True, "Can't resolve host '%s'\n",  */
 /*                               cbs->input);   */

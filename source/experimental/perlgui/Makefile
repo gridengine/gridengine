@@ -29,8 +29,7 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-SWIG=swig
-PERL=perl
+PERLGUI_DIR = $(SDIR)/experimental/perlgui
 
 CC=$(shell $(PERL) -V:cc | sed -e "s/.*'\(.*\)'.*/\1/")
 LD=$(shell $(PERL) -V:ld | sed -e "s/.*'\(.*\)'.*/\1/")
@@ -39,25 +38,23 @@ LDDLFLAGS=$(shell $(PERL) -V:lddlflags | sed -e "s/.*'\(.*\)'.*/\1/")
 CCFLAGS=$(shell $(PERL) -V:ccflags | sed -e "s/.*'\(.*\)'.*/\1/")
 CCCDLFLAGS=$(shell $(PERL) -V:cccdlflags | sed -e "s/.*'\(.*\)'.*/\1/")
 LDFLAGS=$(shell $(PERL) -V:ldflags | sed -e "s/.*'\(.*\)'.*/\1/")
-LIBPATH=$(shell $(PERL) -V:libpth | sed -e "s/.*'\(.*\)'.*/-L\1/" -e "s/ \([^ ]\)/ -L\1/g)
+LIBPATH=$(shell $(PERL) -V:libpth | sed -e "s/.*'\(.*\)'.*/-L\1/" -e "s/ \([^ ]\)/ -L\1/g")
 LIBS=$(shell $(PERL) -V:libs | sed -e "s/.*'\(.*\)'.*/\1/")
-SGELIBPATH=-L $(SGE_ROOT)/lib/$(ARCH)
+SGELIBPATH=-L.
 
 
-all: SGE.so
+perlgui_all: SGE.so
 
-realclean: clean
-	rm -f SGE_wrap.c SGE.pm
-
-clean:
-	rm -f SGE.so SGE_wrap.o
+perlgui_clean:
+	rm -f SGE_wrap.c SGE.pm SGE.so SGE_wrap.o $(PERLGUI_DIR)/SGE.pm
 
 SGE.so: SGE_wrap.o
 	$(LD) $(LDFLAGS) $(LDDLFLAGS) -L$(PERLARCHLIB)/CORE $(LIBPATH) $(SGELIBPATH) -o SGE.so SGE_wrap.o -lsge -lperl
 
 SGE_wrap.o: SGE_wrap.c
-	$(CC) $(CCFLAGS) $(CCCDLFLAGS) -I$(PERLARCHLIB)/CORE -I$(SGE_ROOT)/gdi/include -c SGE_wrap.c
+	$(CC) $(CCFLAGS) $(CCCDLFLAGS) -I$(PERLARCHLIB)/CORE $(CORE_INCLUDE) -c SGE_wrap.c
 
-SGE_wrap.c: SGE.i
-	$(SWIG) -I$(SGE_ROOT)/gdi/include -perl5 SGE.i; true
+SGE_wrap.c: $(PERLGUI_DIR)/SGE.i
+	$(SWIG) -v $(CORE_INCLUDE) -perl5 -o ./SGE_wrap.c $(PERLGUI_DIR)/SGE.i; true
+	cp SGE.pm $(PERLGUI_DIR)
 

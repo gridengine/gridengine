@@ -47,7 +47,7 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-libs: gdilib commlib culllib rmonlib schedlib utilib $(SGELIB) $(SECLIBS) $(KRBLIBS)
+libs: gdilib commlib culllib rmonlib schedlib utilib $(SGELIB)
 
 libs_clean: gdilib_clean commlib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean $(SGELIB)_clean
 
@@ -62,9 +62,9 @@ libs_messages: gdilib_messages commlib_messages culllib_messages rmonlib_message
 ###############################################################################
 # rules to build library libsge.a
 ###############################################################################
-libsge.a:	$(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) 
-	$(AR) $(ARFLAGS) libsge.a $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) 
+libsge.a:	$(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SECLIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) 
+	$(AR) $(ARFLAGS) libsge.a $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SECLIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) 
 	$(RANLIB) $(SGELIB)
 
-libsge$(SHAREDEXT): $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(ZLIB)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libsge$(SHAREDEXT) $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LOADAVGLIBS) $(LIBS) -lc
+libsge$(SHAREDEXT): $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SECLIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(ZLIB)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libsge$(SHAREDEXT) $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SECLIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LOADAVGLIBS) $(LIBS) -lc

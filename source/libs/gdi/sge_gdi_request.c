@@ -811,8 +811,11 @@ sge_gdi_request **arp
 
 
       if ((ret=unpackint(pb, &(ar->version)) )) goto error;
+DTRACE;      
       if ((ret=cull_unpack_list(pb, &(ar->lp)) )) goto error;
+DTRACE;      
       if ((ret=cull_unpack_list(pb, &(ar->alp)) )) goto error;
+DTRACE;      
       if ((ret=cull_unpack_cond(pb, &(ar->cp)) )) goto error;
       if ((ret=cull_unpack_enum(pb, &(ar->enp)) )) goto error;
       

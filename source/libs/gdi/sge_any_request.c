@@ -268,11 +268,11 @@ int synchron
 
    if (i) {
       switch (i) {
-      case NACK_NO_MESSAGE:
+      case COMMD_NACK_NO_MESSAGE:
          DPRINTF(("got no message\n"));
          break;
          
-      case NACK_TIMEOUT:
+      case COMMD_NACK_TIMEOUT:
          DPRINTF(("receive message timed out\n"));
          break;
 

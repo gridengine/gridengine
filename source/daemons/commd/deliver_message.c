@@ -90,7 +90,7 @@ int local
    cp = pack_ushort(mp->compressed, cp);
 
    /* build prolog */
-   mp->flags |= SCOMMD;
+   mp->flags |= COMMD_SCOMMD;
    cp = pack_ulong(mp->flags, mp->prolog);
    cp = pack_ushort(mp->headerlen, cp);
    cp = pack_ulong(mp->buflen, cp);
@@ -99,7 +99,7 @@ int local
    mp->bufprogress = mp->prolog;
 
    if (local) {
-      mp->ackchar = CACK;
+      mp->ackchar = COMMD_CACK;
       SET_MESSAGE_STATUS(mp, S_ACK_THEN_PROLOG);
    }
    else

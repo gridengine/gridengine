@@ -74,7 +74,7 @@ sge_commd:	$(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_LIB_DEPENDS)
 	$(CC) $(CFLAGS) $(LFLAGS) -o $@ $(COMMD_OBJS) $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(LIBS)
 
 commdcntl:	commdcntl.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(KRBLIBS)
-	$(CC) $(CFLAGS) $(LFLAGS) -o $@ commdcntl.o $(COMMD_ADD_OBJS) -lgdi $(KRBLIBS) -lcull -lcom -luti -lrmon $(LIBS)
+	$(CC) $(CFLAGS) $(LFLAGS) -o $@ commdcntl.o $(COMMD_ADD_OBJS) $(COMMD_ADD_LIBS) $(LIBS)
 
 tstsnd:	tstsnd.o $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
 	$(CC) $(CFLAGS) $(LFLAGS) -o $@ tstsnd.o $(COMMD_ADD_OBJS) -lcull -lcom -luti -lrmon $(LIBS)

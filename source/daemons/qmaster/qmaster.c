@@ -341,7 +341,7 @@ char **argv
             startprog(argv[0], NULL, SGE_COMMD, NULL);
             sleep(5);
          }
-         else if (ret == NACK_CONFLICT) {
+         else if (ret == COMMD_NACK_CONFLICT) {
             ERROR((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, prognames[me.who]));
             SGE_EXIT(1);
          }
@@ -512,7 +512,7 @@ char **argv
       if (i != CL_OK) {
          log_time(TIMELEVEL, "sge_get_any_request != 0");
          
-         if ( i != NACK_TIMEOUT ) {
+         if ( i != COMMD_NACK_TIMEOUT ) {
             DPRINTF(("Problems reading request: %s\n", cl_errstr(i)));
             sleep(2);
          }

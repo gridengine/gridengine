@@ -60,9 +60,9 @@ SHEPHERD_OBJS = $(SHEPHERD_SRC:.c=.o)
 
 SHEPHERD_ADD_OBJS = $(SHEPHERD_ADD_SRC:.c=.o) 
 
-SHEPHERD_ADD_LIBS = -lgdi -lcull -lcom -luti -lrmon -lgdi
+SHEPHERD_ADD_LIBS = -lgdi $(KRBLIBS) -lcull -lcom -luti -lrmon
 
-SHEPHERD_LIB_DEPENDS = $(GDILIB) $(CULLLIB) $(COMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
+SHEPHERD_LIB_DEPENDS = $(GDILIB) $(KRBLIBS) $(CULLLIB) $(COMLIB) $(UTILIB) $(RMONLIB) $(ZLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

@@ -39,9 +39,9 @@ DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLA
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-all: common libs daemons clients utilbin coshepherd
+all: $(SECTARGETS) common libs daemons clients utilbin coshepherd $(PERLGUI)
 
-clean:  common_clean libs_clean clients_clean daemons_clean utilbin_clean coshepherd_clean $(SECCLEAN) $(KRBCLEAN) $(GSSCLEAN)
+clean:  common_clean libs_clean clients_clean daemons_clean utilbin_clean coshepherd_clean $(SECCLEAN) $(KRBCLEAN) $(GSSCLEAN) $(PERLGUI_CLEAN)
 
 depend: common_depend libs_depend clients_depend daemons_depend utilbin_depend $(SECDEPEND) $(KRBDEPEND) $(GSSDEPEND)
 
@@ -50,11 +50,12 @@ messages: common_messages clients_messages daemons_messages utilbin_messages cos
 # include sub Makefiles
 ###############################################################################
 include  $(SDIR)/common/Makefile
-include  $(SDIR)/libs/Makefile
 include  $(SDIR)/security/coshepherd/Makefile
 include  $(SDIR)/security/krb/Makefile
 include  $(SDIR)/security/sec/Makefile
 include  $(SDIR)/security/gss/Makefile
+include  $(SDIR)/libs/Makefile
+include  $(SDIR)/experimental/perlgui/Makefile
 include  $(SDIR)/daemons/Makefile
 include  $(SDIR)/clients/Makefile
 include  $(SDIR)/utilbin/Makefile

@@ -928,7 +928,7 @@ u_long now
       while (mp) {
          next = mp->next;       /* may be init_send deletes message */
          if (MESSAGE_STATUS(mp) == S_RDY_4_SND &&
-             (!(mp->flags & (RECEIVE | LEAVE | CNTL)))) {
+             (!(mp->flags & (COMMD_RECEIVE | COMMD_LEAVE | COMMD_CNTL)))) {
             DEBUG((SGE_EVENT, "rescheduling message mid=%d", (int)mp->mid));
             trace(SGE_EVENT);
             init_send(mp, reserved_port, commdport);

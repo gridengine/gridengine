@@ -1380,7 +1380,7 @@ char *object_dir
 
    ret = sge_resolve_host(ep, nm);
    if (ret != CL_OK ) {
-      if (ret != NACK_UNKNOWN_HOST && ret != NACK_TIMEOUT) {
+      if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
          /* finish qmaster setup only if hostname resolving
             does not work at all generally or a timeout
             indicates that commd itself blocks in resolving

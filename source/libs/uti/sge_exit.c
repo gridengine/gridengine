@@ -46,23 +46,6 @@
 static exit_func_type exit_func = NULL;
 
 
-#ifdef SECURE
-typedef int (*sec_exit_func_type)(void);
-static sec_exit_func_type sec_exit_func = NULL;
-static sec_exit_func_type install_sec_exit_func(sec_exit_func_type);
-
-static sec_exit_func_type install_sec_exit_func(
-sec_exit_func_type new 
-) {
-   sec_exit_func_type old;
-
-   old = sec_exit_func;
-   sec_exit_func = new;
-   return(old);
-}
-#endif
-
-
 /*---------------------------------------------------------------
  * Name:  sge_exit
  * Descr: wrapped exit function
@@ -76,9 +59,11 @@ int i
       exit_func(i);
    }
 
+#if 0
 #ifdef SECURE
    if (sec_exit_func && !i)
       sec_exit_func();
+#endif
 #endif
 
    DCLOSE;

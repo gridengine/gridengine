@@ -9,46 +9,35 @@
    part of the SGE distribution
 
 To build, install swig, perl, perltk.
+(special note for perltk under solaris64, the search path for X11 must be adjusted:
+ /usr/openwin/lib/sparcv9 otherwise you get a wrong elf class error message, this may
+ be due to a wrong perl/perltk installation under solaris64)
+ 
 Then do:
-% make
+% aimk -perlgui
 this generates the perl/c-wrapper code and compiles it.
-The generated files are:
+The generated files are under the <BUILDARCH> directory:
    1. SGE_wrap.c
       SGE.pm
 
    2. SGE.so
       SGE_wrap.o
 
-If you "make realclean", 1. and 2. are deleted,
-if you type a simple "make clean" only the
-binaries (2.) are deleted.
-The wrapper code is believed to be platform-
-independend, so that there is no need to
-build it everytime, but once.
+To tidy up everything do:
+% aimk -perlgui perlgui_clean 
 
-make gets it's information how to build the
-shared library SGE.so from perl itself;
-thus if you have a perl-binary that is
-in a different binary format (by the meaning of
-"compiled") then the shared library of GridEngine,
-it won't work ... (e.g. 32bit-perl and 64bit GridEngine).
 
-HOW TO INSTALL:
-===============
-
-copy the following files into you favourite place:
-
-SGE.pm
-SGE.so
-Qmon.pl
-Qmon  <the whole directory>
-
-and adjust the path of the perl-binary
-in the first line of Qmon.pl
+The wrapper code SGE.pm is platformindependend.
 
 HOW TO RUN:
 ===========
-Set your environment: % setenv LD_LIBRARY_PATH .:$SGE_ROOT/lib/$ARCH
+
+To test the prototype do:
+
+% cp <BUILDARCH>/SGE.so <BUILDARCH>/SGE.pm experimental/perlgui
+% cd experimental/perlgui
+% source $SGE_ROOT/default/common/settings.csh
+% setenv LD_LIBRARY_PATH .:$LD_LIBRARY_PATH
 
 Adjust the #!/usr/bin/perl in Qmon.pl to your perl path and simply type
 

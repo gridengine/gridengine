@@ -179,7 +179,7 @@ fi
 if [ "$ARCH" = sun4 ]; then
    REL=`/bin/uname -r`
    case $REL in
-   5.[78]*)
+   5.[789]*)
       if [ `isainfo -b` = 64 ]; then
          ARCH=solaris64
       else

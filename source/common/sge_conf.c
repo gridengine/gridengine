@@ -970,7 +970,7 @@ lListElem **lepp
          DPRINTF(("get_configuration: error %d resolving host %s: %s\n", 
                   ret, config_name, cl_errstr(ret)));
          lFreeElem(hep);
-         if (ret==NACK_CONFLICT) {
+         if (ret==COMMD_NACK_CONFLICT) {
             DEXIT;
             return -6;
          } else {

@@ -225,7 +225,7 @@ char **argv
             CRITICAL((SGE_EVENT, MSG_SGETEXT_NOCOMMD));
             SGE_EXIT(1);
             break;
-         case NACK_CONFLICT:
+         case COMMD_NACK_CONFLICT:
             /* usually daemons end here if they get enrolled twice */
             /* or if they get started after a daemon that made no leave() before exit() */
             CRITICAL((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, 
@@ -239,7 +239,7 @@ char **argv
             SGE_EXIT(1);
          }     
       }
-      else if (ret == NACK_CONFLICT) {
+      else if (ret == COMMD_NACK_CONFLICT) {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, 
             prognames[me.who]));
          SGE_EXIT(1);

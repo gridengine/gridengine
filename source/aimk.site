@@ -55,11 +55,24 @@ set MAN2HTMLPATH = /vol2/tools/SW/$buildarch/bin
 set GROFFPATH = /vol2/tools/SW/$buildarch/bin
 
 #
+# SWIG path 
+#
+set SWIG = /vol2/tools/SW/$buildarch/bin/swig
+
+#
+# PERL path
 # Location of a copyright.h file which containes a copyright string
 # which should be included in each binary part of Grid Engine for courtesy
 # binaries
 #
-set COPYRIGHT_DIR      = /off_home/codine/copyright
+set PERL = /vol2/tools/SW/$buildarch/bin/perl
+
+#
+# Location of a copyright.h file which containes a copyright string
+# which should be included in each binary part of Grid Engine
+#
+set COPYRIGHT_DIR = /off_home/codine/copyright
+
 
 #
 # Location of a copyright.h file which containes a copyright string

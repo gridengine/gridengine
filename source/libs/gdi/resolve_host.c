@@ -63,7 +63,7 @@ int nm
    ret = sge_resolve_hostname(hostname, unique, nm);
    
    switch ( ret ) {
-   case NACK_UNKNOWN_HOST:
+   case COMMD_NACK_UNKNOWN_HOST:
       DEXIT;
       return ret;
    case CL_OK:

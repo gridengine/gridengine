@@ -43,17 +43,14 @@
 
 #define KeyPath         "KEY"
 #define CertPath        "CERT"
-#define SGESecPath      "SGE_SECURE"
+#define SGESecPath      ".SGE_SECURE"
 
-#define CaKey           "ca_key.pem"
-#define CaText          "ca_cert.txt"
-#define CaTextDefault   "ca_def.txt"
-#define CaCert          "ca_cert.pem"
+#define CaKey           "cakey.pem"
+#define CaCert          "cacert.pem"
+
+#define CA_CERT_FILE    "/cod_home/andre/.SGE/sge_sec/default/demoCA/cacert.pem"
 
 #define RsaKey          "rsakey.pem"
-#define CertText        "cert.txt"
-#define CertTextDefault "default.txt"
-#define CertReq         "request.pem"
 #define Cert            "cert.pem"
 
 #define ReconnectFile   "reconnect.dat"
@@ -70,52 +67,33 @@
 
 typedef struct path_str {
    char *ca_key_file;
-   char *ca_text_file;
-   char *ca_textdefault_file;
    char *ca_cert_file;
    char *key_file;
-   char *text_file;
-   char *textdefault_file;
-   char *req_file;
    char *cert_file;
    char *reconnect_file;
 } FILES;
 
 
 typedef struct gsd_str {
+   EVP_CIPHER *cipher;
+   EVP_MD *digest;
    int crypt_space;
    int block_len;
    u_char *key_mat;
    int key_mat_len;
-   char *keys;
-   int keys_len;
-   RSA *rsa;
+   EVP_PKEY *private_key;
    X509 *x509;
-   int x509_len;
-   void (*crypt_init)(u_char *key_material);
-   u_long32 (*crypt)(u_long32 len, u_char *from, u_char *to, int encrypt);
    u_long32 connid;
    u_long32 connid_counter;
-   int issgesys;
+   int is_daemon;
    int connect;
    lList *conn_list;
    u_long32 seq_send;
    u_long32 seq_receive;
-   char *refresh_time;
+   ASN1_UTCTIME *refresh_time;
    FILES *files;
 } GlobalSecureData;
 
-typedef struct des_ede3_cbc_state_st {
-   des_key_schedule        k1;
-   des_key_schedule        k2;
-   des_key_schedule        k3;
-   des_cblock              iv;
-} DES_EDE3_CBC_STATE;
-
-typedef struct des_cbc_state_st {
-   des_key_schedule        k1;
-   des_cblock              iv;
-} DES_CBC_STATE;
 
 #define c4TOl(c,l)      (l =((unsigned long)(*((c)++)))<<24, \
                          l|=((unsigned long)(*((c)++)))<<16, \
@@ -132,10 +110,6 @@ typedef struct des_cbc_state_st {
 #define GSD_KEY_MAT_32     32
 #define GSD_KEY_MAT_16     16
 
-#ifdef SEC_MAIN
-GlobalSecureData   gsd;
-#else
-extern GlobalSecureData        gsd;
-#endif /* SEC_MAIN   */
+extern GlobalSecureData gsd;
 
 #endif /* __SEC_LOCAL_H */

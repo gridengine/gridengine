@@ -195,7 +195,7 @@ int wait4commd;
       }
 
       switch (i) {
-      case NACK_TIMEOUT:
+      case COMMD_NACK_TIMEOUT:
          de.tag = -1;  
          /* no break; */
       case CL_OK:

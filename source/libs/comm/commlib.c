@@ -536,10 +536,10 @@ u_short compressed
    cp = header;
 
    if (synchron)
-      flags |= SYNCHRON;
+      flags |= COMMD_SYNCHRON;
 
    if (ask_commproc)
-      flags |= ASK_COMMPROC;
+      flags |= COMMD_ASK_COMMPROC;
 
    newmid = mid_new();
    if (mid)
@@ -582,7 +582,7 @@ u_short compressed
       /* write prolog and header */
       DPRINTF(("send_message: sending message prolog and header\n"));
       i = send2commd(prolog_header, PROLOGLEN+headerlen);
-      if (i == NACK_ENROLL) {
+      if (i == COMMD_NACK_ENROLL) {
          if (retry <= max_retrys) {
             force_reenroll();
             retry++;
@@ -604,7 +604,7 @@ u_short compressed
       DPRINTF(("send_message: sending message buffer\n"));
       if (buflen) {
          i = send2commd(buffer, buflen);
-         if (i == NACK_ENROLL) {
+         if (i == COMMD_NACK_ENROLL) {
             if (retry <= max_retrys) {
                force_reenroll();
                retry++;
@@ -634,7 +634,7 @@ u_short compressed
       set_commlib_state_timeout(old_param_timeout);
 
       DPRINTF(("send_message: acknowledge recvfromcommd returned %d\n", i));
-      if ((unsigned int) ackchar == NACK_ENROLL) {
+      if ((unsigned int) ackchar == COMMD_NACK_ENROLL) {
          /* This happens, when commd goes down and is now up again. He lost
             the enroll()-information. We have to renew this. */
          closeconnection(1);
@@ -756,7 +756,7 @@ u_short *compressed
    u_short headerlen;
    unsigned char prolog_header[PROLOGLEN + HEADERLEN];
    unsigned char *header, *prolog;
-   u_long32 flags = RECEIVE;
+   u_long32 flags = COMMD_RECEIVE;
    u_long32 mid;
    int old_param_timeout;
    ushort ustag ,uscompressed;
@@ -803,7 +803,7 @@ u_short *compressed
    cp = header;
 
    if (synchron)
-      flags |= SYNCHRON;
+      flags |= COMMD_SYNCHRON;
 
    /* known from enroll */
    cp = pack_string(get_commlib_state_componentname(), cp);
@@ -869,7 +869,7 @@ u_short *compressed
       set_commlib_state_timeout(old_param_timeout);
 
       if ((unsigned int) ackchar == CL_UNKNOWN_RECEIVER ||
-          (unsigned int) ackchar == NACK_ENROLL) {
+          (unsigned int) ackchar == COMMD_NACK_ENROLL) {
          /* This happens, when commd goes down and is now up again. He lost
             the enroll()-information. We have to renew this */
          closeconnection(1);
@@ -1039,7 +1039,7 @@ int *tag_priority_list
    }
 
    /* prolog */
-   cp = pack_ulong(ENROLL, buffer);
+   cp = pack_ulong(COMMD_ENROLL, buffer);
 #ifndef WIN32NATIVE
    cp = pack_ushort(strlen(name) + 1 + 2 + 2 + 20, cp);
 #else /* WIN32NATIVE */
@@ -1147,7 +1147,7 @@ int remove_pending_messages (char *fromcommproc, u_short fromid,
 
    } while (!i);
 
-   if (i == NACK_NO_MESSAGE) {
+   if (i == COMMD_NACK_NO_MESSAGE) {
       DEXIT;
       return CL_OK;
    }
@@ -1254,7 +1254,7 @@ static int leave_()
    headerlen = cp - header;
 
    /* prolog */
-   cp = pack_ulong(LEAVE, prolog);
+   cp = pack_ulong(COMMD_LEAVE, prolog);
 #ifndef WIN32NATIVE
    cp = pack_ushort(headerlen, cp);
 #else /* WIN32NATIVE */
@@ -1390,7 +1390,7 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
 
    /* prolog */
    headerlen = pack_string_len(carg ? carg : "") + 6;
-   cp = pack_ulong(CNTL, buffer);
+   cp = pack_ulong(COMMD_CNTL, buffer);
 #ifndef WIN32NATIVE
    cp = pack_ushort(headerlen, cp);
 #else /* WIN32NATIVE */
@@ -1676,7 +1676,7 @@ int buflen
    if (i) {
       if (i == -4) {
          DEXIT;
-         return NACK_ENROLL;
+         return COMMD_NACK_ENROLL;
       }
       if (i == -2) {
          DEXIT;
@@ -1724,7 +1724,7 @@ u_long32 *buflen
             closeconnection(1);  /* instead of the former RCV_TIMEOUT:
                                     force close connection to commd */
             DEXIT;
-            return NACK_TIMEOUT;
+            return COMMD_NACK_TIMEOUT;
          }
 
          if (i == -3) {
@@ -1910,7 +1910,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
    /* fill header */
    cp = header;
 
-   flags |= UNIQUEHOST;
+   flags |= COMMD_UNIQUEHOST;
 
    cp = pack_string(hostin, cp);
 #ifndef WIN32NATIVE
@@ -1959,7 +1959,7 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
          return i;
       }
       if ((unsigned int) ackchar == CL_UNKNOWN_RECEIVER ||
-          (unsigned int) ackchar == NACK_ENROLL) {
+          (unsigned int) ackchar == COMMD_NACK_ENROLL) {
          /* This happens, when commd goes down and is now up again. He lost
             the enroll()-information. We have to renew this */
          closeconnection(1);

@@ -348,24 +348,24 @@ FILE *fp
    fprintf(fp, "tofd=%d fromfd=%d tag=%d status=%ld (%s)\n", mp->tofd,
            mp->fromfd, mp->tag, status, message_status_string(mp));
    fprintf(fp, "flags: %s, creation date: %s\n",
-           (mp->flags & SYNCHRON) ? "SYNCHRON" : "ASYNCHRON",
+           (mp->flags & COMMD_SYNCHRON) ? "SYNCHRON" : "ASYNCHRON",
            sge_ctime32(& mp->creation_date));
 
-   if (mp->flags & ENROLL)
+   if (mp->flags & COMMD_ENROLL)
       fprintf(fp, "ENROLL ");
-   if (mp->flags & RESVPORT)
+   if (mp->flags & COMMD_RESVPORT)
       fprintf(fp, "RESVPORT ");
-   if (mp->flags & SCOMMD)
+   if (mp->flags & COMMD_SCOMMD)
       fprintf(fp, "COMMD ");
-   if (mp->flags & RECEIVE)
+   if (mp->flags & COMMD_RECEIVE)
       fprintf(fp, "RECEIVE ");
-   if (mp->flags & LEAVE)
+   if (mp->flags & COMMD_LEAVE)
       fprintf(fp, "LEAVE ");
-   if (mp->flags & CNTL)
+   if (mp->flags & COMMD_CNTL)
       fprintf(fp, "CNTL ");
-   if (mp->flags & ASK_COMMPROC)
+   if (mp->flags & COMMD_ASK_COMMPROC)
       fprintf(fp, "ASK_COMMPROC ");
-   if (mp->flags & ASK_COMMPROC)
+   if (mp->flags & COMMD_ASK_COMMPROC)
       fprintf(fp, "ASK_COMMPROCR ");
 
    fprintf(fp, "\n");

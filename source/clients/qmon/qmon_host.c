@@ -1276,7 +1276,7 @@ XtPointer cld, cad;
       ret=sge_resolve_hostname(host, unique, EH_name);
 
       switch ( ret ) {
-         case NACK_UNKNOWN_HOST:
+         case COMMD_NACK_UNKNOWN_HOST:
             qmonMessageShow(w, True, "can't resolve host '%s'\n", host);
             break;
          case CL_OK:
@@ -1383,7 +1383,7 @@ XtPointer cld, cad;
       ret=sge_resolve_hostname((String)cbs->input, unique, EH_name);
 
       switch ( ret ) {
-         case NACK_UNKNOWN_HOST:
+         case COMMD_NACK_UNKNOWN_HOST:
             qmonMessageShow(w, True, "can't resolve host '%s'\n", cbs->input);
             cbs->okay = False;
             break;

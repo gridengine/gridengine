@@ -188,6 +188,7 @@ usage:
    echo "-only-zlib        -> build only 3rdparty zlib"
    echo "-opt              -> compile with high optimization"
    echo "-parallel n       -> spawn multiple make processes by passing option -j n to make"
+   echo "-perlgui          -> build the experimental perlgui"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
    echo "-qmake            -> use qmake instead of make"
@@ -282,7 +283,9 @@ set   INTERACTTARGETS = "qmake qtcsh"
 # SECURE
 set   SEC	  = 0
 set   SECTARGETS  = ""
+set   SECLIB_OBJS = ""
 set   SECDEPEND   = ""
+set   SECCLEAN   = ""
 # end secure
 # GSS
 set GSSDEPEND = ""
@@ -299,6 +302,10 @@ set   KRBLIB      = ""
 set   KLIBS       = ""
 set   KLFLAGS      = ""
 # end kerberos
+# PERLGUI
+set PERLGUI = ""
+set PERLGUI_CLEAN = ""
+# end PERLGUI
 
 # Compile with gettext and libintl
 set WITH_GETTEXT = 0
@@ -594,6 +601,10 @@ while ($#argv >= 1 && $?found)
       set argv     = ($argv[2-])
       set PARALLEL = "-j $argv[1]"
       breaksw
+   case "-perlgui":
+      set PERLGUI = "perlgui_all"
+      set PERLGUI_CLEAN = "perlgui_clean"
+      breaksw
    case  "-po"
       if ( $BUILDARCH == glinux ) then
          util/msgmerge.csh merge
@@ -623,13 +634,15 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-secure":
       set SEC    = 1
-      set SECTARGETS = "sec_req sec_ca sec_sign sec_verify"
+      set SECTARGETS = "sec_all"
       set SECDEPEND = "sec_depend"
       set SECCLEAN = "sec_clean"
-      set CFLAGS  = " -DSECURE -I../sec/src -I$OPENSSL_HOME/include  $CFLAGS"
-      set CXXFLAGS  = " -DSECURE -I../sec/src -I$OPENSSL_HOME/include  $CXXFLAGS"
+      set SECLIB_OBJS = "sec_lib.o"
+      set KRBLIBS = "libsec.a"
+      set CFLAGS  = " -DSECURE -I../security/sec -I$OPENSSL_HOME/include  $CFLAGS"
+      set CXXFLAGS  = " -DSECURE -I../security/sec -I$OPENSSL_HOME/include  $CXXFLAGS"
       set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
-      set KLIBS = "-lsec -lssl -lcrypto"
+      set KLIBS = "-lcrypto"
       breaksw
    case "-shared":
       set STATIC = 0
@@ -1202,7 +1215,6 @@ case SOLARIS86:
    if ( $BUILDARCH == SOLARIS86 ) then
       set WITH_GETTEXT = 0
    endif
-
    if ( $CC == gcc ) then
       set OFLAG = "-O3"
    else
@@ -1543,7 +1555,9 @@ if ( "$CORE" == 1 ) then
 
    echo ________C_O_R_E__S_Y_S_T_E_M_________
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-       "SDIR=$SDIR" "SOURCE=$SOURCE" "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" \
+       "SDIR=$SDIR" "SOURCE=$SOURCE" \
+       "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
+       "SECLIB_OBJS=$SECLIB_OBJS" \
        "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
        "KRBLIBS=$KRBLIBS" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "LIBS= $GSSLIBS $KLIBS $LIBS $LINK_ZLIB" \
        "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
@@ -1555,7 +1569,8 @@ if ( "$CORE" == 1 ) then
        "INTERACTTARGETS=$INTERACTTARGETS" \
        "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
        "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
-       "MEMCFLAG=$MEMCFLAG" $argv $TARGET
+       "MEMCFLAG=$MEMCFLAG" \
+       "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" $argv $TARGET 
    if ( $status != 0 ) then
       echo not done
       exit 1

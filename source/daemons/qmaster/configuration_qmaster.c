@@ -178,7 +178,7 @@ lList **lpp
          old_name = strdup(lGetString(el, CONF_hname));
 
          if ((ret = sge_resolve_host(el, CONF_hname))!= CL_OK) {
-            if (ret != NACK_UNKNOWN_HOST && ret != NACK_TIMEOUT) {
+            if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
                ERROR((SGE_EVENT, MSG_CONFIG_CANTRESOLVEHOSTNAMEX_SSS,
                         "local configuration", old_name, cl_errstr(ret)));
                free(old_name);

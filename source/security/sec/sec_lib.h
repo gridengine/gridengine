@@ -32,19 +32,32 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sec_set_encrypt(int tag);
-int sec_init(char *progname);
-int sec_files(void);
-int sec_dump_connlist(void);
-int sec_undump_connlist(void);
-int sec_announce_connection(char *commproc, char *cell);
-int sec_respond_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen);
-int sec_handle_announce(char *comproc, u_short id, char *host, char *buffer, u_long32 buflen);
-int sec_send_message(int synchron, char *tocomproc, int toid, char *tohost, int tag, char *buffer, u_long32 buflen, u_long32 *mid, int compressed);
-int sec_encrypt(char **buffer, int *buflen);
-int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost, int *tag, char **buffer, u_long32 *buflen, int synchron, u_short *compressed);
-int sec_decrypt(char **buffer, u_long32 *buflen, char *host, char *commproc, int id);
-int sec_reconnect(void);
-int sec_write_data2hd(void);
+#include "sec_local.h"
+
+typedef int (*sec_exit_func_type)(void);
+extern sec_exit_func_type sec_exit_func;
+
+int sec_init(const char *progname);
+
+int sec_send_message(
+   int synchron, 
+   const char *tocomproc, 
+   int toid, 
+   const char *tohost, 
+   int tag, 
+   char *buffer, 
+   int buflen, 
+   u_long32 *mid, 
+   int compressed);
+
+int sec_receive_message(
+   char *fromcommproc, 
+   u_short *fromid, 
+   char *fromhost, 
+   int *tag, 
+   char **buffer, 
+   u_long32 *buflen, 
+   int synchron, 
+   u_short *compressed);
 
 #endif /* __SEC_LIB_H */

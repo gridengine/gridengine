@@ -35,10 +35,9 @@
  * Based on the code of David Flanagan's Xmt library
  */
 
-#define True    1
-#define False   0
+#define True   1
+#define False  0 
 
-typedef long bool;
 typedef struct _HashTableRec *HashTable;
 
 typedef void (*HashTableForEachProc)(
@@ -48,7 +47,7 @@ typedef void (*HashTableForEachProc)(
 extern HashTable HashTableCreate(int size, const void *(*dup_func)(const void *), int (*hash_func)(const void *), int (*compare_func)(const void *, const void *));
 extern void HashTableDestroy(HashTable ht);
 extern void HashTableStore(HashTable ht, const void* key, const void* data);
-extern bool HashTableLookup(HashTable ht, const void* key, const void** data);
+extern int HashTableLookup(HashTable ht, const void* key, const void** data);
 extern void HashTableDelete(HashTable ht, const void* key);
 extern void HashTableForEach(HashTable ht, HashTableForEachProc proc);
 

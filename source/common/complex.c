@@ -255,7 +255,7 @@ lList **alpp
             /* resolve hostname and store it */
             ret = sge_resolve_host(ep, CE_stringval);
             if (ret) {
-               if (ret == NACK_UNKNOWN_HOST) {
+               if (ret == COMMD_NACK_UNKNOWN_HOST) {
                   ERROR((SGE_EVENT, MSG_COM_COMMDLOCKED));
                   ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
                } else {
@@ -385,7 +385,7 @@ lList **alpp
             /* resolve hostname and store it */
             ret = sge_resolve_host(ep, CE_stringval);
             if (ret) {
-               if (ret == NACK_UNKNOWN_HOST) {
+               if (ret == COMMD_NACK_UNKNOWN_HOST) {
                   ERROR((SGE_EVENT, MSG_COM_COMMDLOCKED));
                   ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
                } else {
@@ -775,7 +775,7 @@ int allow_neg_consumable
          /* resolve hostname and store it */
          ret = sge_resolve_host(cep, CE_stringval);
          if (ret) {
-            if (ret == NACK_UNKNOWN_HOST) {
+            if (ret == COMMD_NACK_UNKNOWN_HOST) {
                ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, s));
             } else {
                ERROR((SGE_EVENT, MSG_SGETEXT_INVALIDHOST_S, s));

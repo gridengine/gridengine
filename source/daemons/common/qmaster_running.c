@@ -142,7 +142,7 @@ int *enrolled
       strcpy(err_str, master);
       ret = 0;
       break;
-   case NACK_CONFLICT:
+   case COMMD_NACK_CONFLICT:
       /* qmaster already registered on commd host, assume he is running */
       strcpy(err_str, master);
       ret = 1;
@@ -162,13 +162,13 @@ int *enrolled
       strcpy(err_str, MSG_QMASTER_CANTRESOLVESERVEICESGECOMMDTCP);
       ret = -3;
       break;
-   case NACK_PERM:         
+   case COMMD_NACK_PERM:         
       /* we didn't use reserved port, but commd expects it */
       sprintf(err_str, MSG_QMASTER_COMMDONHOSTXEXPECTSRESERVEDPORT_S,
               master);
       ret = -4;
       break;
-   case NACK_UNKNOWN_HOST:
+   case COMMD_NACK_UNKNOWN_HOST:
       /* commd couldn't resolve our name */
       sprintf(err_str, MSG_QMASTER_COMMDONHOSTXCANTRESOLVEOURHOSTNAME_S, master);
       ret = -5;

@@ -253,7 +253,7 @@ char **argv
             printf(MSG_TSTSND_ENROLLED );
             break;
          case CL_UNKNOWN_RECEIVER:
-         case NACK_DELIVERY:
+         case COMMD_NACK_DELIVERY:
             printf(MSG_TSTSND_NOTENROLLED );
             break;
          default:

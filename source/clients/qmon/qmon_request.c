@@ -617,7 +617,7 @@ int maxlen
             /* try to resolve hostname */
             ret=sge_resolve_hostname(stringval, unique, EH_name);
             switch ( ret ) {
-               case NACK_UNKNOWN_HOST:
+               case COMMD_NACK_UNKNOWN_HOST:
                   qmonMessageShow(w, True, "can't resolve host '%s'\n", 
                                        stringval);
                   status = False;

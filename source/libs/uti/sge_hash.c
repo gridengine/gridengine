@@ -53,7 +53,7 @@
 *     HashTable HashTableCreate(int size, int (*hash_func)(const void *), int (*compare_func)(const void *, const void *));
 *     void HashTableDestroy(HashTable ht);
 *     void HashTableStore(HashTable ht, const void* key, const void* data);
-*     bool HashTableLookup(HashTable ht, const void* key, const void** data);
+*     int HashTableLookup(HashTable ht, const void* key, const void** data);
 *     void HashTableDelete(HashTable ht, const void* key);
 *     void HashTableForEach(HashTable ht, HashTableForEachProc proc);
 *
@@ -93,7 +93,7 @@ typedef struct _HashTableRec {
 *     ResizeTable() -- Resize the hash table
 *
 *  SYNOPSIS
-*     static void ResizeTable(register HashTable ht, bool grow) 
+*     static void ResizeTable(register HashTable ht, int grow) 
 *
 *  FUNCTION
 *     Hash tables are dynamically resized if necessary.
@@ -109,7 +109,7 @@ typedef struct _HashTableRec {
 *
 *  INPUTS
 *     register HashTable ht - the hashtable  to resize 
-*     bool grow             - true  = double size of the table,
+*     int grow             - true  = double size of the table,
 *                             false = shrink table to half the size
 *
 *  NOTE
@@ -123,7 +123,7 @@ typedef struct _HashTableRec {
 
 extern u_long32 logginglevel;
 
-static void ResizeTable(register HashTable ht, bool grow)    
+static void ResizeTable(register HashTable ht, int grow)    
 {
    Bucket **otable;
    int otablesize;
@@ -325,7 +325,7 @@ void HashTableStore(HashTable table, const void* key, const void* data)
 *     HashTableLookup() -- search for an element
 *
 *  SYNOPSIS
-*     bool HashTableLookup(HashTable table, const void* key, const void** data) 
+*     int HashTableLookup(HashTable table, const void* key, const void** data) 
 *
 *  FUNCTION
 *     Search for a certain object characterized by a unique key in the 
@@ -338,10 +338,10 @@ void HashTableStore(HashTable table, const void* key, const void* data)
 *     const void** data - object if found, else NULL
 *
 *  RESULT
-*     bool - true, when an object was found, else false
+*     int - true, when an object was found, else false
 *
 *******************************************************************************/
-bool HashTableLookup(HashTable table, const void* key, const void** data)
+int HashTableLookup(HashTable table, const void* key, const void** data)
 {
     register Bucket *bucket;
 

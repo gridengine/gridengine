@@ -1,3 +1,6 @@
+EB-2001-12-07-0: Bugfix:    Reanimated code for 'qconf -sep'
+                 Issue:     None (Bug only appeared in beta1)
+
 JG-2001-12-07-0: Bugfix:    scheduler could dump core in SGE systems with 
                             usersort and maxujobs activated, if no pending jobs
                             existed.

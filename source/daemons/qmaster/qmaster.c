@@ -104,6 +104,8 @@
 #include "setup_path.h"
 #include "sge_dirent.h"
 #include "sge_security.h"
+#include "read_write_host.h"
+#include "complex_history.h"
 
 #ifdef PW
 /* The license key - to be replaced when serialized */
@@ -155,6 +157,7 @@ static void increment_heartbeat(time_t);
 
 static lList *sge_parse_cmdline_qmaster(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qmaster(lList **ppcmdline, lList **ppreflist, u_long32 *help);
+static int update_license_data(lListElem *hep, lList *lp_lic); 
 
 extern char **environ;
 
@@ -667,6 +670,65 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
 }
 
 
+/*
+** NAME
+**   update_license_data
+** PARAMETER
+**   hep                 - pointer to host element, EH_Type
+**   lp_lic              - list of license data, LIC_Type
+**
+** RETURN
+**    0                  - ok
+**   -1                  - NULL pointer received for hep
+**   -2                  - NULL pointer received for lp_lic
+** EXTERNAL
+**   none
+** DESCRIPTION
+**   updates the number of processors in the host element
+**   spools and writes history if it has changed
+*/
+static int update_license_data(lListElem *hep, lList *lp_lic)
+{
+   u_long32 processors, old_processors;
+
+   DENTER(TOP_LAYER, "update_license_data");
+
+   if (!hep) {
+      DEXIT;
+      return -1;
+   }
+
+   /*
+   ** if it was clear what to do in this case we could return 0
+   */
+   if (!lp_lic) {
+      DEXIT;
+      return -2;
+   }
+
+   /*
+   ** at the moment only the first element is evaluated
+   */
+   processors = lGetUlong(lFirst(lp_lic), LIC_processors);
+   /* arch = lGetString(lFirst(lp_lic), LIC_arch); */ 
+
+   old_processors = lGetUlong(hep, EH_processors);
+   lSetUlong(hep, EH_processors, processors);
+   /*
+   ** we spool and write history, cf. cod_update_load_values()
+   */
+   if (processors != old_processors) {
+      DPRINTF(("%s has " u32 " processors\n",
+         lGetHost(hep, EH_name), processors));
+      write_host(1, 2, hep, EH_name, NULL);
+      if (!is_nohist()) {
+         write_host_history(hep);
+      }
+   }
+   DEXIT;
+   return 0;
+}       
+
 /*-------------------------------------------------------------------------*/
 static void sge_c_report(
 char *rhost,
@@ -764,13 +826,11 @@ lList *report_list
          /*
          ** save number of processors
          */
-#ifdef PW        
          ret = update_license_data(hep, lGetList(report, REP_list));
          if (ret) {
             ERROR((SGE_EVENT, MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I, ret));
             break;
          }
-#endif
 
          break;
 

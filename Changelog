@@ -189,6 +189,7 @@ JG-2002-04-30-1: Enhancem.: Contribution of Guiseppe Palumbo: Make the
 JG-2002-04-30-0: Bugfix:    Buffer for task_id of pe task was too small.
                             This could cause a buffer overflow and probably
                             crashes of execd.
+                 Issue:     #299           
                  Bugtraq:   #4677087    
                  Changed:   sge_execd           
 

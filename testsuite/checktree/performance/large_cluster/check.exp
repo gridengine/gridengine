@@ -76,13 +76,13 @@ for {set i 300} {$i <= $check_highest_level} {incr i} {
 }
 
 #debug settings
-set LARGE_CLUSTER_HOSTS_PER_HOST    10
-set LARGE_CLUSTER_JOB_SIZES         "40 5*1-20:2"
-set LARGE_CLUSTER_JOB_DURATION      20
-set LARGE_CLUSTER_POLICIES_PROJECTS "10 20"
-set LARGE_CLUSTER_POLICIES_JOBS     100
-set LARGE_CLUSTER_SLOTS_PER_QUEUE   2
-set check_highest_level   301
+#set LARGE_CLUSTER_HOSTS_PER_HOST    10
+#set LARGE_CLUSTER_JOB_SIZES         "40 5*1-20:2"
+#set LARGE_CLUSTER_JOB_DURATION      20
+#set LARGE_CLUSTER_POLICIES_PROJECTS "10 20"
+#set LARGE_CLUSTER_POLICIES_JOBS     100
+#set LARGE_CLUSTER_SLOTS_PER_QUEUE   2
+#set check_highest_level   301
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -92,10 +92,10 @@ set check_needs           ""
 set check_functions ""
 lappend check_functions "large_cluster_setup"
 lappend check_functions "large_cluster_jobs"
-#lappend check_functions "large_cluster_throughput"
-#lappend check_functions "large_cluster_usersort"
-#lappend check_functions "large_cluster_sharetree"
-#lappend check_functions "large_cluster_global"
+lappend check_functions "large_cluster_throughput"
+lappend check_functions "large_cluster_usersort"
+lappend check_functions "large_cluster_sharetree"
+lappend check_functions "large_cluster_global"
 lappend check_functions "large_cluster_cleanup"
 
 

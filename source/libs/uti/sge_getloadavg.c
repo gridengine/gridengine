@@ -48,6 +48,7 @@
 #  include <kvm.h>
 #  include <nlist.h> 
 #  include <sys/cpuvar.h>
+#include <kstat.h> 
 #  if defined(SOLARIS64) || defined(SOLARISAMD64)
 #     include <sys/loadavg.h> 
 #  endif
@@ -353,19 +354,24 @@ char *refstr
    return 0;
 }
 
-
 #if defined(SOLARIS)
+/* MT-NOTE kstat is not thread save */
 int get_freemem(
 long *freememp 
 ) {
-   kvm_t *kd;
-
-   long address_freemem;
-   if (sge_get_kernel_fd(&kd) && sge_get_kernel_address("freemem", &address_freemem)) {
-      getkval(address_freemem, (int *)freememp, sizeof(long), "freemem");
-      return 0;
-   } else
+   kstat_ctl_t   *kc;  
+   kstat_t       *ksp;  
+   kstat_named_t *knp;
+   kc = kstat_open();  
+   ksp = kstat_lookup(kc, "unix", 0, "system_pages");
+   if (kstat_read(kc, ksp, NULL) == -1) {
+      kstat_close(kc);
       return -1;
+   } 
+   knp = kstat_data_lookup(ksp, "freemem");
+   *freememp = (long)knp -> value.ul;
+   kstat_close(kc);
+   return 0;
 }
 #endif
 
@@ -1178,9 +1184,9 @@ int nelem
 ) {
    int   elem = 0;   
 
-#if defined(SOLARIS64) || defined(SOLARISAMD64) || defined(FREEBSD) || defined(DARWIN)
+#if defined(SOLARIS) || defined(FREEBSD) || defined(DARWIN)
    elem = getloadavg(loadavg, nelem); /* <== library function */
-#elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(TEST_AIX51)
+#elif (defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(TEST_AIX51)
    elem = get_load_avg(loadavg, nelem); 
 #else
    elem = -1;    

@@ -1,3 +1,9 @@
+RD-2005-02-02-0: Bugfix:    switched use of /dev/kmem to kstat
+                 Issue:     1403
+                 Bugtraq:   6218430
+                 Changed:   loadcheck, execd
+                 Review:    JG, CR
+
 MD-2005-01-31-0: Bugfix:    distinst assumes certain files always exist
                  Issue:     1361
                  Review:    AS

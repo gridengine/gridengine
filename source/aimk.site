@@ -30,6 +30,18 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#
+# Set default aimk switches
+#
+switch($buildarch)
+   case "win32-x86":
+      set argv = ( -no-java -no-jni $* )
+      breaksw
+   deafult:
+      set argv = ( $* )
+      breaksw
+endsw
+
 # 
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed

@@ -1346,6 +1346,7 @@ case LINUXIA64:
    
 case WIN32_X86:
    set CC = gcc
+   set MAKE = gmake
    set RM = "rm -f"
    set MAKE = gmake
 
@@ -1902,6 +1903,8 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
 
    if ( $DEBUGGED == 1 ) then
       set WINLFLAGS = "/DEBUG"
+   else
+      set WINLFLAGS = ""
    endif 
    set WINLFLAGS = "${WINLFLAGS} /INCREMENTAL:NO /NOLOGO"
    set WINLFLAGS = "${WINLFLAGS} /SUBSYSTEM:CONSOLE /MACHINE:X86"

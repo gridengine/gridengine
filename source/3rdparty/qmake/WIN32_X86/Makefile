@@ -72,7 +72,7 @@ MAKEINFO = /net/es-ergb01-01/export/share00/cod_home/hp150085/current/source/3rd
 PACKAGE = make
 PERL = perl
 RANLIB = ranlib
-REMOTE = stub
+REMOTE = sge
 VERSION = 3.78.1
 
 AUTOMAKE_OPTIONS = 1.4

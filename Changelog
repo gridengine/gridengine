@@ -1,3 +1,6 @@
+EB-2005-01-10-1: Enhancem.: Changed qmake Makefile; aimk; aimk.site
+		           Review:    HP
+
 HP-2005-01-10-2: Enhancem.: Optimized aimk section for WIN32_X86
                  Changed:   aimk
 

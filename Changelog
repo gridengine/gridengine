@@ -1,3 +1,7 @@
+MD-2004-03-23-1: Bugfix:    changed back to old boot order
+                            supressing the message, if execd starts first
+                 Changed:   rc template, inst_sge
+
 MD-2004-03-23-0: Bugfix:    fixed rc scripts boot order
                             rc script output if master didn't start
                  Issue:     784, 876

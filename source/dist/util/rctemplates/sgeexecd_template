@@ -254,6 +254,7 @@ if [ "$startup" = true ]; then
    # execution daemon is started on this host!
 
       echo "   starting sge_execd"
+      exec 1>/dev/null 2>&1
       $bin_dir/sge_execd
 else
    if [ $execd = true ]; then

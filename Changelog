@@ -1,3 +1,11 @@
+DT-2004-09-15-1: Bugfix:    o Fixed qmaster crash
+                            o Added leftover files from DT-2004-09-15-0
+                            - Testsuite test for 1269 not yet working
+                 Changed:   sge_host.c
+                 Review:    SG
+                 Issue:     1269
+                 Bugtraq:   5102442
+
 EB-2004-09-15-0: Enhancem.: qstat requests only that attributes of JB_Type
                             and JAT_Type elements which are really needed 
                             to execute qstat successfully

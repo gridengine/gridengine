@@ -59,13 +59,14 @@ set check_description(0)  "test all qconf options (test not complete)"
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 
 set check_functions     ""
-lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
-lappend check_functions "qconf_removequeues"
-lappend check_functions "qconf_auser"
-lappend check_functions "qconf_duser"
-lappend check_functions "qconf_Auser"
-lappend check_functions "qconf_muser"
-lappend check_functions "qconf_Muser"
+#lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
+#lappend check_functions "qconf_removequeues"
+#lappend check_functions "qconf_auser"
+#lappend check_functions "qconf_duser"
+#lappend check_functions "qconf_Auser"
+#lappend check_functions "qconf_muser"
+#lappend check_functions "qconf_Muser"
+lappend check_functions "qconf_de_check"
 
 # TODO: check all options
 #lappend check_functions "qconf_aattr_check"
@@ -113,7 +114,7 @@ global submitjob_jobid
 #     ???/???
 #*******************************
 proc init_level {} {
-  global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue_names
+  global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue_names ts_config
 
   set queue_names     ""
   for { set i 0 } { $i < 1000 }  {incr i 1} {
@@ -121,7 +122,14 @@ proc init_level {} {
   }
 
   switch -- $CHECK_ACT_LEVEL {
-     "0" {  return 0   } 
+     "0" {
+        if { [llength $ts_config(execd_hosts)] <= 1 } {
+           set_error -1 "need more than one host for this test"
+           return -1
+        } else {
+           return 0
+        }
+     } 
   } 
   return -1  ;# no other level else
 }
@@ -818,4 +826,80 @@ proc qconf_rattr_check {} {
 #     ???/???
 #*******************************
 proc qconf_Rattr_check {} {
+}
+
+#                                                             max. column:     |
+#****** qconf/qconf_Rattr_check() ******
+# 
+#  NAME
+#     qconf_Rattr_check -- ??? 
+#
+#  SYNOPSIS
+#     qconf_Rattr_check { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qconf_de_check {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER CHECK env ts_config
+   puts $CHECK_OUTPUT "testing qconf -de ..."
+
+   # Setup
+   set execd [lindex $ts_config(execd_hosts) 0]
+
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -se $execd | grep -v load_values | grep -v processors > /tmp/$execd" } result ]
+   
+   if { $catch_result != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not store execd config"
+   }
+
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -dattr hostgroup hostlist $execd @allhosts" } result ]
+   
+   if { $catch_result != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not remove host from hostgroup @allhosts"
+   }
+
+   # - Disable line breaks in qconf so that the grep can work
+   set env(SGE_SINGLE_LINE) 1
+
+   # Test
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf" "-de" "$execd" } result ]
+   
+   if { $catch_result != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not delete live execd"
+   }
+
+   # Cleanup
+   unset env(SGE_SINGLE_LINE)
+
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -Ae /tmp/$execd" } result ]
+   
+   if { $catch_result != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not create exec host"
+   }
+
+   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qconf -aattr hostgroup hostlist $execd @allhosts" } result ]
+   
+   if { $catch_result != 0 } {
+      add_proc_error "qconf_de_check" "-1" "could not add host to hostgroup @allhosts"
+   }
+
+   set_error 0 "ok"
 }

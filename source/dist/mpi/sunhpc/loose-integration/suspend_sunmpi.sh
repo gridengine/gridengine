@@ -112,6 +112,8 @@ GetCreJid()
   /bin/rm $adb_comms $corefile $outputfile
 }
 
+job_pid=$1
+
 GetCreJid
 #
 # Save CRE Job ID for resume script
@@ -119,6 +121,10 @@ GetCreJid
 /usr/bin/echo $cre_jid > $TMPDIR/resume_cre_jid
 
 /opt/SUNWhpc/bin/mpkill -STOP $cre_jid
+#
+# Use kill to stop the job script
+#
+kill -STOP -$job_pid 
 
 # signal success to caller
 exit 0

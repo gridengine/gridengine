@@ -254,6 +254,15 @@ located at $SGE_ROOT/mpi/sunhpc/loose-integration directory. A resume method
 resume method uses the CRE Job Id saved at the $TMPDIR/cre_job_id by the
 suspend method.
 
+When a batch job script launches more than one MPI jobs or contains other 
+tasks in it, it is necessary to propagate the suspend/resume/terminate 
+signals to the process group. This can be done by executing the corresponding 
+kill command with specifying negative pid of the batch job script, which is 
+passed to the suspend/resume/terminate scripts via $job_pid, right after 
+issuing the mpkill command within the suspend/resume/terminate scripts. The 
+mechanism to pass $job_pid to the suspend/resume/terminate scripts is 
+described in the 4.2 Queue objects section.
+
 
 3.6. MPRUN script
 -----------------
@@ -351,14 +360,22 @@ modified lines relevant to loose integration with Sun HPC ClusterTools.
 
 	qname               <hostname>.cre
 	qtype                BATCH INTERACTIVE PARALLEL 
-	suspend_method       $SGE_ROOT/mpi/sunhpc/loose-integration/suspend_sunmpi.sh 
-	terminate_method     $SGE_ROOT/mpi/sunhpc/loose-integration/terminate_sunmpi.sh
+	suspend_method       $SGE_ROOT/mpi/sunhpc/loose-integration/suspend_sunmpi.sh $job_pid
+        resume_method        $SGE_ROOT/mpi/sunhpc/loose-integration/resume_sunmpi.sh $job_pid
+	terminate_method     $SGE_ROOT/mpi/sunhpc/loose-integration/terminate_sunmpi.sh $job_pid
 	complex_list         cre_exclusive
 	complex_values       cre=true
 
 where $SGE_ROOT represents an absolute path for the Grid Engine
 installation.
 
+Users can also use the "qconf -mqattr" command to modify each attribute of 
+the existing queues individually. For example, the following shows how to 
+customize the suspend_method attribute of a queue object.
+
+% qconf -mqattr suspend_method \
+  "$SGE_ROOT/mpi/sunhpc/loose-integration/suspend_sunmpi.sh "'$job_pid' \
+  <queue_object_name>
 
 4.3. PE object
 --------------
@@ -607,9 +624,9 @@ it exclusive for Sun HPC ClusterTools.
 
 qname <hostname>.cre
 qtype BATCH  INTERACTIVE  PARALLEL
-suspend_method $SGE_ROOT/mpi/sunhpc/loose-integration/suspend_sunmpi.sh
-resume_method $SGE_ROOT/mpi/sunhpc/loose-integration/resume_sunmpi.sh
-terminate_method $SGE_ROOT/mpi/sunhpc/loose-integration/terminate_sunmpi.sh
+suspend_method $SGE_ROOT/mpi/sunhpc/loose-integration/suspend_sunmpi.sh $job_pid
+resume_method $SGE_ROOT/mpi/sunhpc/loose-integration/resume_sunmpi.sh $job_pid
+terminate_method $SGE_ROOT/mpi/sunhpc/loose-integration/terminate_sunmpi.sh $job_pid
 complex_list cre_exclusive
 complex_values cre=true
 

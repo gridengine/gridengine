@@ -1,0 +1,108 @@
+<html><head><title>SGE module for Globus Toolkit (v2.2+)</title></head>
+<body bgcolor="#ffffff" text="#000000" link="#0000d0" vlink="#000080">
+
+<h2>GRAM Job Manager and Reporter Support for SGE (Sun Grid Engine)</h2>
+
+<table aligh="CENTER" border="0" width="80%">
+<tbody><tr><td><ul>
+  <li><p>Globus team has provided GRAM Job Manager and Reporter Scheduler
+    Support for many popular schedulers (see
+    <a href="http://www.globus.org/gt2.4/download.html">download page</a>).
+    Unfortunately, the support for Sun Grid Engine is lacking.
+  </p></li><li><p>Some time ago, I've made a <a href="http://www.doc.ic.ac.uk/%7Emarko/ETF/grd.html">perl module for GRD</a>
+    (<strong>now obsolete</strong>), which was used at London eScience Centre
+    (LeSC).
+  </p></li><li><p>Since then, the module has been improved, all known bugs fixed
+    and packaged. Furthermore, a package for GRAM SGE Reporter is also
+    available. You are welcome to download and use the packages.
+  </p></li><li><p>I would like to thank Paulo Tiberio Bulhoes who was involved at one
+    stage of the project for his suggestions.
+  </p></li><li><p>The packages has been tested on all LeSC's Globus (v2.2.3 and
+    v2.2.4) and SGE/SGEEE (v5.3) enabled resources. Of course, your feedback
+    (positive or negative) is welcome (marko at imperial.ac.uk).
+  </p></li><li><p>Please note that I take no responsibility for any loss and/or
+    damage this might cause.
+</p></li></ul></td></tr>
+</tbody></table>
+
+<p>
+</p><h3>Download/Installation</h3>
+<p>
+<table aligh="CENTER" border="0" width="80%" cellpadding="2">
+<tbody><tr><td>
+  <ul>
+  <li>The SGE job manager is available as:
+    <a href="http://gridengine.sunsource.net/project/gridengine/howto/globus/globus_gram_job_manager_setup_sge-0.9.tar.gz">
+    globus_gram_job_manager_setup_sge-0.9.tar.gz</a>
+  </li><li>The SGE reporter is available as:
+    <a href="http://gridengine.sunsource.net/project/gridengine/howto/globus/globus_gram_reporter_setup_sge-0.8.tar.gz">
+    globus_gram_reporter_setup_sge-0.8.tar.gz</a>
+  </li><li><p>If you are happy with the default options (see below) for job
+    manager, download it and do the same as with other Globus packages:
+    </p><p><tt>
+    $GPT_LOCATION/sbin/gpt-build globus_gram_job_manager_setup_sge-0.9.tar.gz<br>
+    $GPT_LOCATION/sbin/gpt-postinstall
+    </tt>
+  </p></li><li><p>If you would like to change some options, download
+    the package for the job manager, untar it, and run <tt>configure</tt>
+    (see <tt>configure --help</tt> for more info), <tt>make, make
+    install</tt>. And finally, run <tt>$GPT_LOCATION/sbin/gpt-postinstall</tt>.
+  </p></li><li>To install the reporter, run:
+    <p><tt>
+    $GPT_LOCATION/sbin/gpt-build globus_gram_reporter_setup_sge-0.8.tar.gz<br>
+    $GPT_LOCATION/sbin/gpt-postinstall
+    </tt>
+  </p></li></ul>
+</td></tr>
+</tbody></table>
+
+
+</p><p>
+</p><h3>Features</h3>
+<table aligh="CENTER" border="0" width="80%">
+<tbody><tr><td><ul>
+  <li>The job manager is installed as <tt>jobmanager-sge</tt> by default.
+    This option can be easily changed.
+  </li><li>If available, Sun MPI is used by default. One can disable Sun MPI and
+    use another implementation.
+  </li><li>We have the following mapping:
+    <p>
+    </p><ul>
+    <li>If job type is single and count is one, run a single copy of a job
+    </li><li>If job type is single and count is at least 2, submit a job array
+        with corresponding count.
+    </li><li>If job type is multiple, submit count copies of a job
+    </li><li>If job is mpi, run mpirun
+    </li></ul>
+    <p>
+  </p></li><li>System admin can specify a default MPI Parallel Envirnonment (PE),
+    which will be used for MPI/multiple jobs. Of course, only PEs integrated
+    into SGE/SGEEE on your system are supported. By default, no PE is
+    specified. Note that this value will be over-written by SGE_PE/GRD_PE
+    value in a RSL file.
+  </li><li>One can enable PE and queue validation. That is, available PEs and
+    queues are found and added in a RVF validation file
+    (<tt>$GLOBUS_LOCATION/share/globus_gram_job_manager/sge.rvf</tt>). PE and
+    queue validation is disabled by default.
+  </li><li>Monitoring your job by email is also supported, that is, one can
+    specify <tt>email_address, emailonexecution, emailontermination,
+    emailonabort</tt> and <tt>emailonsuspend</tt> as additional RSL
+    attributes.
+  </li><li>After installing the SGE job manager, your RVF
+    (<tt>$GLOBUS_LOCATION/share/globus_gram_job_manager/sge.rvf</tt>) will
+    look something like <a href="http://gridengine.sunsource.net/project/gridengine/howto/globus/sge.rvf">this</a>.
+  </li><li>A sample RSL file is also provided: <a href="http://gridengine.sunsource.net/project/gridengine/howto/globus/sge.rsl">sge.rsl</a>.
+</li></ul></td></tr>
+</tbody></table>
+
+
+<h3>Changelog</h3>
+<ul>
+  <li>4 June 2003 - first release of SGE reporter
+  </li><li>2 June 2003 - first release of SGE job manager
+</li></ul>
+
+<p>
+</p><hr>
+Last update: 4th June 2003
+</body></html>

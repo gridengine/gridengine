@@ -90,7 +90,7 @@ echo "set shlib_path_name = \`\$SGE_ROOT/util/arch -lib\`"       >> $SP_CSH
 
 echo "if ( \`eval echo '\$?'\$shlib_path_name\` ) then"          >> $SP_CSH
 echo "   set old_value = \`eval echo '\$'\$shlib_path_name\`"    >> $SP_CSH
-echo "   setenv \$shlib_path_name \"\$old_value\":\"\$SGE_ROOT/lib/\$ARCH\""   >> $SP_CSH
+echo "   setenv \$shlib_path_name \"\$SGE_ROOT/lib/\$ARCH\":\"\$old_value\""   >> $SP_CSH
 echo "else"                                                      >> $SP_CSH
 echo "   setenv \$shlib_path_name \$SGE_ROOT/lib/\$ARCH"         >> $SP_CSH
 echo "endif"                                                     >> $SP_CSH
@@ -137,7 +137,7 @@ echo "old_value=\`eval echo '\$'\$shlib_path_name\`"             >> $SP_SH
 echo "if [ x\$old_value = "x" ]; then"                           >> $SP_SH
 echo "   eval \$shlib_path_name=\$SGE_ROOT/lib/\$ARCH"           >> $SP_SH
 echo "else"                                                      >> $SP_SH
-echo "   eval \$shlib_path_name=\$old_value:\$SGE_ROOT/lib/\$ARCH" >> $SP_SH
+echo "   eval \$shlib_path_name=\$SGE_ROOT/lib/\$ARCH:\$old_value" >> $SP_SH
 echo "fi"                                                        >> $SP_SH
 echo "export \$shlib_path_name"                                  >> $SP_SH
 echo "unset ARCH DEFAULTMANPATH MANTYPE shlib_path_name"         >> $SP_SH

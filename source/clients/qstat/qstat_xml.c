@@ -1345,24 +1345,15 @@ lList **target_list
                   if (!lGetNumberOfElem(user_list) || 
                      (lGetNumberOfElem(user_list) && (lGetUlong(jatep, JAT_suitable)&TAG_SELECT_IT))) {
                      if (print_jobs_of_queue && (job_tag & TAG_SHOW_IT)) {
-                        int different, print_jobid;
+                        int print_jobid = 1;
+                        int different = 1;
 
                         old_jid = jid;
                         jid = lGetUlong(jlep, JB_job_number);
                         old_jataskid = jataskid;
                         jataskid = lGetUlong(jatep, JAT_task_number);
                         sge_dstring_sprintf(&dyn_task_str, u32, jataskid);
-                        different = (jid != old_jid) || (jataskid != old_jataskid);
-
-                        if (different) 
-                           print_jobid = 1;
-                        else {
-                           if (!(full_listing & QSTAT_DISPLAY_RUNNING))
-                              print_jobid = master && (i==0);
-                           else 
-                              print_jobid = 0;
-                        }
-
+                        
                         if (!already_printed && (full_listing & QSTAT_DISPLAY_RUNNING) &&
                               (lGetUlong(jatep, JAT_state) & JRUNNING)) {
                            elem = sge_job_to_XML(jlep, jatep, qep, print_jobid,

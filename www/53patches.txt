@@ -1,9 +1,25 @@
+Bugs fixed in SGE 5.3p5 since release 5.3p4
+-------------------------------------------
+
+Issue   Sun BugId  Description
+------- ---------- ---------------------------------------------------------------------------------
+628     4923403    When installing using -csp the sge_ssl* files are not up to date
+627     4958080    suspend and resume with HPC Cluster tools 5 not properly working
+626     4957760    Fix needed for CERT CA-2003-26 Multiple Vulnerabilities in SSL/TLS
+619     4952767    qrsh -notify doesn't work
+617     4952236    Broken mail option with SGE 5.3p4 qrsh
+597                infotext ignores parameters for HP10, HP11 systems
+592     4930789    An overwritten string attribut was ignored in the scheduler
+589     4930786    global load values are ignored
+        4949917    qmon seg faults with a user hold job from qtcsh qtask file
+        4930793    minor issues with the sgeee ticket update interval
+                   Fixed problem reading in qmaster_param halflife_decay_list
+
 Bugs fixed in SGE 5.3p4 since release 5.3p3
 -------------------------------------------
 
 Issue   Sun BugId  Description
 ------- ---------- ---------------------------------------------------------------------------------
-174                Checkpointed job was migrated on bad exit status
 415     4775325    qrong qstat -j diagnosis message wrongly indicates not enough PE slots
 469,489 4815795    qstat -alarm was broken
 485     4813965    Reject tightly integrated array jobs (not supported in SGE 5.3)
@@ -46,6 +62,7 @@ Issue   Sun BugId  Description
 578     4885906    NSLOTS and NHOSTS incorrectly set in environment of tightly integrated tasks
 579     4885930    failure of master task of a tightly integrated PE job did not delete the job
 580                 *_RESERVED_USAGE gives wrong values for PE jobs
+174                Checkpointed job was migrated on bad exit status
         4749151    sge_ca script -usercert needs RANDFILE env var
         4822799    cannot install on Solaris 10
         4876169    An incomplete resource request (-l =1) caused qmaster to crash

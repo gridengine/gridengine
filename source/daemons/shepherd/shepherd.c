@@ -160,6 +160,7 @@ int notify; /* 0 if no notify or # of seconds to delay signal */
 
 static void signal_handler(int signal);
 static void set_shepherd_signal_mask(void);
+static void change_shepherd_signal_mask(void);
 
 extern char **environ;
 
@@ -858,8 +859,9 @@ int ckpt_type
    if (pid == -1) {
       shepherd_error_sprintf("can't fork \"%s\"", childname);
    }
-
    shepherd_trace_sprintf("forked \"%s\" with pid %d", childname, pid);
+
+   change_shepherd_signal_mask();
    
    start_time = sge_get_gmt();
 
@@ -1505,6 +1507,15 @@ static void set_shepherd_signal_mask(void)
    sigdelset(&mask, SIGALRM);
 
    /* set mask */
+   sigprocmask(SIG_SETMASK, &mask, NULL);
+}
+
+static void change_shepherd_signal_mask()
+{
+   sigset_t mask;
+
+   sigprocmask(SIG_SETMASK, NULL, &mask);
+   sigdelset(&mask, SIGTERM);
    sigprocmask(SIG_SETMASK, &mask, NULL);
 }
 

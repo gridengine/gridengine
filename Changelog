@@ -1,3 +1,9 @@
+EB-2003-04-08-0  Bugfix:    sge_shepherd does not exit on SIGTERM
+                 Issue:     522
+                 Bugtraq:   4844838 
+                 Changed:   sge_shepherd
+                 Review:    AH
+
 CR-2003-04-08-3  Bugfix:    used wrong variable type (int) for return value
                             of lGetUlong()
                  Changed:   qmaster.c

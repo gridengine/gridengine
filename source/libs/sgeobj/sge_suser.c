@@ -36,7 +36,6 @@
 #include "sge_ja_task.h"
 #include "sge_answer.h"
 #include "sge_log.h"
-#include "msg_qmaster.h"   
 #include "sge_suserL.h"
 #include "sge_job.h"
 #include "sge_suser.h"

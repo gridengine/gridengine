@@ -445,7 +445,7 @@ int
 hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object) 
 {
    int ret = 0; 
-   const char *name = lGetHost(this_elem, HGRP_name);; 
+   const char *name = lGetHost(this_elem, HGRP_name);
 
    DENTER(TOP_LAYER, "hgroup_spool");
    if (!spool_write_object(spool_get_default_context(), this_elem, name,

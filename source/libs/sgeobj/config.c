@@ -748,7 +748,7 @@ _Insight_set_option("suppress", "PARM_NULL");
 #endif
    lList *tmplp = NULL;
    const char *str;
-   const char *tmp_str = NULL;;
+   const char *tmp_str = NULL;
    char delims[] = "\t \v\r,"; 
 
    DENTER(TOP_LAYER, "set_conf_list");

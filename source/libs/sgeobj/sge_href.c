@@ -904,7 +904,23 @@ href_list_debug_print(const lList *this_list, const char *prefix)
    DEXIT;
 }
 
-/* EB: ADOC: add commets */
+/****** sgeobj/href/href_list_make_uniq() *************************************
+*  NAME
+*     href_list_make_uniq() -- remove duplicates 
+*
+*  SYNOPSIS
+*     void href_list_make_uniq(lList *this_list, lList **answer_list) 
+*
+*  FUNCTION
+*     Remove duplicates from "this_list" 
+*
+*  INPUTS
+*     lList *this_list    - HR_Type list 
+*     lList **answer_list - AN_Type list 
+*
+*  RESULT
+*     void - none 
+*******************************************************************************/
 void
 href_list_make_uniq(lList *this_list, lList **answer_list)
 {

@@ -1,33 +1,38 @@
-DT-2004-01-21-0: Bugfix:   drmaa_run_bulk_jobs() wasn't submiting the job as an
-                           array job.  Also cleaned up DT-2004-01-19-0.
-                 Changed:  drmaa.c, interactive_sched.c
-                 Review:   AH
+EB-2004-01-21-2: Enhancem.: Cleanup / Comments
 
-AD-2004-01-21-1: Bugfix:   Handling of 'SGE_DEBUG_TARGET' env var was broken
-                 Changed:  rmon
+DT-2004-01-21-0: Bugfix:    drmaa_run_bulk_jobs() wasn't submiting the job as an
+                            array job.  Also cleaned up DT-2004-01-19-0.
+                 Changed:   drmaa.c, interactive_sched.c
+                 Review:    AH
 
-AD-2004-01-21-0: Enhancem: - 'sge_qmaster' does now handle 'SIGTERM'.
-                           - overwork of signal handling.
-                 Changed:  qmaster
+AD-2004-01-21-1: Bugfix:    Handling of 'SGE_DEBUG_TARGET' env var was broken
+                 Changed:   rmon
 
-AA-2004-01-21-0: Enhancem. qmon cluster queue changes, NOT YET COMPLETED
-                           to get the rest of qmon functionality operable
-                           again (indexes for lists changed with the intro
-                           of cluster queues)
-                 Changed:  all, sge_attr.c, sge_object.c
+AD-2004-01-21-0: Enhancem:  - 'sge_qmaster' does now handle 'SIGTERM'.
+                            - overwork of signal handling.
+                 Changed:   qmaster
 
-JG-2004-01-21-0: Bugfix:   Categories (job requests) were truncated in the 
-                           accounting and the reporting file.
-                           Fixed build for solaris86.
-                 Changed:  sge_qmaster
-                 Review:   pending
+AA-2004-01-21-0: Enhancem.  qmon cluster queue changes, NOT YET COMPLETED
+                            to get the rest of qmon functionality operable
+                            again (indexes for lists changed with the intro
+                            of cluster queues)
+                 Changed:   all, sge_attr.c, sge_object.c
 
-EB-2004-01-21-1: Bugfix:   Handled TODO-Sections concernings CQs
-                 Changed:  sge_schedd
+JG-2004-01-21-0: Bugfix:    Categories (job requests) were truncated in the 
+                            accounting and the reporting file.
+                            Fixed build for solaris86.
+                 Changed:   sge_qmaster
+                 Review:    pending
 
-EB-2004-01-21-0: Bugfix:   Queue selection did not work in combination
-                           with cluster queue printing (qstat -g c -q <QI>)
-                 Changed:  qstat
+EB-2004-01-21-1: Bugfix:    Handled TODO-Sections concernings CQs
+                 Changed:   sge_schedd
+
+EB-2004-01-21-1: Bugfix:    Handled TODO-Sections concernings CQs
+                 Changed:   sge_schedd
+
+EB-2004-01-21-0: Bugfix:    Queue selection did not work in combination
+                            with cluster queue printing (qstat -g c -q <QI>)
+                 Changed:   qstat
 
 RC-2004-01-20-0: Enhancem.: use sysconf(_SC_NPROCESSORS_ONLN) to get nprocs on 
                             Linux.

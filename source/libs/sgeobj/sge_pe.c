@@ -323,7 +323,7 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    return STATUS_OK;
 }
 
-/****** sge_pe/pe_validate_urgency_slots() ****************************************
+/****** sgeobj/pe/pe_validate_urgency_slots() *********************************
 *  NAME
 *     pe_validate_urgency_slots() -- Ensure urgency slot setting is valid.
 *
@@ -405,9 +405,9 @@ lList **pe_list_get_master_list(void)
 *     before an assignment.
 *
 *  INPUTS
-*     const lListElem *pe              - The PE object.
+*     const lListElem *pe              - PE_Type object.
 *     const char *urgency_slot_setting - Ugency slot setting as in sge_pe(5)
-*     const lList* range_list          - A jobs PE range as in JB_pe_range.
+*     const lList* range_list          - RN_Type list.
 *
 *  RESULT
 *     int - The slot amount.
@@ -417,7 +417,7 @@ lList **pe_list_get_master_list(void)
 *******************************************************************************/
 int 
 pe_urgency_slots(const lListElem *pe, const char *urgency_slot_setting, 
-      const lList* range_list)
+                 const lList* range_list)
 {
    int n;
 
@@ -426,23 +426,27 @@ pe_urgency_slots(const lListElem *pe, const char *urgency_slot_setting,
    if (!strcasecmp(urgency_slot_setting, SGE_ATTRVAL_MIN)) {
       n = range_list_get_first_id(range_list, NULL);
    } else if (!strcasecmp(urgency_slot_setting, SGE_ATTRVAL_MAX)) {
-      /* in case of an infinity slot range we use the 
-         maximum PE slot number instead */
+      /* 
+       * in case of an infinity slot range we use the 
+       * maximum PE slot number instead 
+       */
       n = range_list_get_last_id(range_list, NULL);
-      if (n == RANGE_INFINITY) 
+      if (n == RANGE_INFINITY) {
          n = lGetUlong(pe, PE_slots);
+      }
    } else if (!strcasecmp(urgency_slot_setting, SGE_ATTRVAL_AVG)) {
-      /* to handle infinity slot ranges we use the maximum PE 
-         slot number as upper bound when determining the average */
+      /* 
+       * to handle infinity slot ranges we use the maximum PE 
+       * slot number as upper bound when determining the average 
+       */
       n = range_list_get_average(range_list, lGetUlong(pe, PE_slots));
    } else if (isdigit(urgency_slot_setting[0])) {
       n = atoi(urgency_slot_setting);
    } else {
-      CRITICAL((SGE_EVENT, "unknown urgency_slot_setting \"%s\" for PE \"%s\"\n",
-         urgency_slot_setting, lGetString(pe, PE_name)));
+      CRITICAL((SGE_EVENT, "unknown urgency_slot_setting \"%s\" for PE "
+                "\"%s\"\n", urgency_slot_setting, lGetString(pe, PE_name)));
       n = 1;
    }
-
    DEXIT;
    return n;
 }

@@ -592,7 +592,6 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
 *    Selects all hostgroups of "this_list" which match the pattern 
 *    "hgroup_pattern". All hostnames which are directly or indirectly
 *     referenced will be added to "used_hosts"
-*      
 *
 *  INPUTS
 *     const lList *this_list     - HGRP_Type 
@@ -641,10 +640,36 @@ hgroup_list_find_matching_and_resolve(const lList *this_list,
    return ret;
 }
 
-/* EB: ADOC: add commets */
+/****** sgeobj/hgroup/hgroup_list_find_matching() *****************************
+*  NAME
+*     hgroup_list_find_matching() -- Find hgroups which match pattern 
+*
+*  SYNOPSIS
+*     bool 
+*     hgroup_list_find_matching(const lList *this_list, 
+*                               lList **answer_list, 
+*                               const char *hgroup_pattern, 
+*                               lList **href_list) 
+*
+*  FUNCTION
+*    Selects all hostgroups of "this_list" which match the pattern 
+*    "hgroup_pattern". All matching hostgroup names will be added to
+*    "href_list"
+*
+*  INPUTS
+*     const lList *this_list     - HGRP_Type list 
+*     lList **answer_list        - AN_Type list 
+*     const char *hgroup_pattern - hostgroup pattern 
+*     lList **used_hosts         - HR_Type list  
+*
+*  RESULT
+*     bool - error state
+*        true  - success
+*        false - error
+*******************************************************************************/
 bool
 hgroup_list_find_matching(const lList *this_list, lList **answer_list,
-                          const char *hgroup_pattern, lList **used_hosts) 
+                          const char *hgroup_pattern, lList **href_list) 
 {
    bool ret = true;
 
@@ -656,8 +681,8 @@ hgroup_list_find_matching(const lList *this_list, lList **answer_list,
          const char *hgroup_name = lGetHost(hgroup, HGRP_name);
 
          if (!fnmatch(hgroup_pattern, hgroup_name, 0)) {
-            if (used_hosts != NULL) {
-               lAddElemHost(used_hosts, HR_name, hgroup_name, HR_Type);
+            if (href_list != NULL) {
+               lAddElemHost(href_list, HR_name, hgroup_name, HR_Type);
             }
          }
       }

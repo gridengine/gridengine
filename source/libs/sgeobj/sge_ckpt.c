@@ -149,16 +149,27 @@ lListElem *ckpt_list_locate(const lList *ckpt_list, const char *ckpt_name)
    return lGetElemStr(ckpt_list, CK_name, ckpt_name);
 }
 
-/*-----------------------------------------------------------
- * sge_parse_checkpoint_attr
- *    parse checkpoint "when" string
- * return:
- *    bitmask of checkpoint specifers
- *    0 if attr_str == NULL or nothing set or value may be a time value
- *
- * NOTES
- *    MT-NOTE: sge_parse_checkpoint_attr() is MT safe
- *-----------------------------------------------------------*/
+/****** sgeobj/ckpt/sge_parse_checkpoint_attr() *******************************
+*  NAME
+*     sge_parse_checkpoint_attr() -- make "when" bitmask from string 
+*
+*  SYNOPSIS
+*     int sge_parse_checkpoint_attr(const char *attr_str) 
+*
+*  FUNCTION
+*     Parse checkpoint "when" string and return a bitmask. 
+*
+*  INPUTS
+*     const char *attr_str - when string 
+*
+*  RESULT
+*     int - bitmask of checkpoint specifers
+*           0 if attr_str == NULL or nothing set or value 
+*           may be a time value 
+*
+*  NOTES
+*     MT-NOTE: sge_parse_checkpoint_attr() is MT safe
+*******************************************************************************/
 int sge_parse_checkpoint_attr(const char *attr_str)
 {
    int opr;
@@ -194,7 +205,7 @@ int sge_parse_checkpoint_attr(const char *attr_str)
    return opr;
 }
 
-/****** gdi/ckpt/ckpt_validate() ******************************************
+/****** sgeobj/ckpt/ckpt_validate() ******************************************
 *  NAME
 *     ckpt_validate -- validate all ckpt interface parameters
 *
@@ -205,11 +216,9 @@ int sge_parse_checkpoint_attr(const char *attr_str)
 *     This function will test all ckpt interface parameters.
 *     If all are valid then it will return successfull.
 *
-*
 *  INPUTS
 *     ep     - element which sould be verified.
 *     answer - answer list where the function stored error messages
-*
 *
 *  RESULT
 *     [answer] - error messages will be added to this list
@@ -308,14 +317,47 @@ int ckpt_validate(lListElem *this_elem, lList **alpp)
    return STATUS_OK;
 }
 
-/* EB: ADOC: add commets */
-
+/****** sgeobj/ckpt/ckpt_list_get_master_list() *******************************
+*  NAME
+*     ckpt_list_get_master_list() -- Return pointer to master ckpt list 
+*
+*  SYNOPSIS
+*     lList ** ckpt_list_get_master_list(void) 
+*
+*  FUNCTION
+*     Return pointer to master ckpt list 
+*
+*  RESULT
+*     lList ** - master ckpt list
+*******************************************************************************/
 lList **
 ckpt_list_get_master_list(void)
 {
    return &Master_Ckpt_List;
 }
 
+/****** sgeobj/ckpt/ckpt_list_do_all_exist() **********************************
+*  NAME
+*     ckpt_list_do_all_exist() -- Do all ckpt's exist? 
+*
+*  SYNOPSIS
+*     bool 
+*     ckpt_list_do_all_exist(const lList *ckpt_list, 
+*                            lList **answer_list, 
+*                            const lList *ckpt_ref_list) 
+*
+*  FUNCTION
+*     Test if the checkpointing objects whose name is contained in
+*     "ckpt_ref_list" is contained in "ckpt_list". 
+*
+*  INPUTS
+*     const lList *ckpt_list     - CK_Type list 
+*     lList **answer_list        - AN_Type list 
+*     const lList *ckpt_ref_list - ST_Type list containing ckpt names 
+*
+*  RESULT
+*     bool - true if all ckpt objects exist 
+*******************************************************************************/
 bool
 ckpt_list_do_all_exist(const lList *ckpt_list, lList **answer_list,
                        const lList *ckpt_ref_list)

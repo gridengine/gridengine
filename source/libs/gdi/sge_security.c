@@ -66,6 +66,7 @@
 #define ENCODE_TO_STRING   1
 #define DECODE_FROM_STRING 0
 
+
 static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static int sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
@@ -868,7 +869,7 @@ void tgt2cc(lListElem *jep, const char *rhost, const char* target)
    krb5_error_code rc;
    krb5_creds ** tgt_creds = NULL;
    krb5_data inbuf;
-   char *tgtstr = NULL;
+   const char *tgtstr = NULL;
    u_long32 jid = 0;
    
    DENTER(TOP_LAYER, "tgt2cc");
@@ -1181,7 +1182,7 @@ int sge_security_verify_user(const char *host, const char *commproc, u_short id,
    return True;
 }   
 
-void sge_security_ck_to_do(void)
+void sge_security_ck_to_do()
 {
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
@@ -1191,6 +1192,5 @@ void sge_security_ck_to_do(void)
    
 #ifdef KERBEROS
    krb_check_for_idle_clients();
-   krb_renew_tgts(Master_Job_List);
 #endif
 }

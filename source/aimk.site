@@ -40,7 +40,7 @@ set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.6g/$buildarch
 # KRB_HOME the directory where the include and lib directory of kerberos is
 # installed
 #
-set KRB_HOME = /vol2/tools/SW/krb5-1.2.2/$buildarch
+set KRB_HOME = /vol2/tools/SW/krb5/$buildarch
 
 # 
 # INSURE4_LIBDIR the directory where the insure library is installed

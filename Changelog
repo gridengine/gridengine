@@ -1,3 +1,5 @@
+AA-2002-11-14-0  Kerberos:  changes to fix build problems with krb5
+
 CR-2002-11-07-0  Testsuite: sort checktree directory path list before starting
                             test run to get an alphabetic test run order.
 

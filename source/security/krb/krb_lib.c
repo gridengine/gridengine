@@ -119,18 +119,20 @@ static char *ptr2str(void *ptr, char *str);
 static void *str2ptr(const char *str);
 static int krb_send_auth_failure(char *tocommproc, int toid, char *tohost);
 static krb5_error_code krb_get_new_auth_con(krb5_auth_context *auth, krb5_rcache rcache);
-static krb5_error_code krb_get_tkt_for_daemon(char *qmaster_host);
-static int krb_set_idle_client_interval(int interval); 
+static krb5_error_code krb_get_tkt_for_daemon(const char *qmaster_host);
+/* static int krb_set_idle_client_interval(int interval);  */
 static int krb_delete_client(lListElem *client);
 
 
+#if 0
 static int krb_set_idle_client_interval(int interval) 
 {
     gsd.idle_client_interval = interval;
     return 0;
 }
+#endif
 
-static krb5_error_code krb_get_tkt_for_daemon(char *qmaster_host) 
+static krb5_error_code krb_get_tkt_for_daemon(const char *qmaster_host) 
 {
    krb5_error_code rc;
    char ccname[256];
@@ -172,7 +174,7 @@ static krb5_error_code krb_get_tkt_for_daemon(char *qmaster_host)
 }
 
 
-int krb_init(char *progname) 
+int krb_init(const char *progname) 
 {
    int rc;
    char keytab[256];
@@ -594,9 +596,9 @@ static krb5_error_code krb_get_forwardable_tgt(char *host,
 int
 krb_send_message(
 int synchron,
-char *tocomproc,
+const char *tocomproc,
 int toid,
-char *tohost,
+const char *tohost,
 int tag,
 char *buffer,
 int buflen,
@@ -615,7 +617,6 @@ int compressed
    krb5_principal server = NULL;
    int I_am_a_client = 0;
    krb5_creds **tgt_creds;
-   krb5_rcache old_rcache = NULL;
 #ifdef KRB_DO_REPLAY_STUFF
    krb5_address *portlocal_addr;
    krb5_rcache rcache;
@@ -672,7 +673,7 @@ int compressed
       auth = (krb5_auth_context)str2ptr(lGetString(client, KRB_auth_context));
 
    } else {
-      char *service;
+      const char *service;
 
       /* we are a client, we need to get a fresh auth_context */
 
@@ -709,7 +710,7 @@ int compressed
 
       /* build AP_REQ */
 
-      inbuf.data = tohost;
+      inbuf.data = (char *) tohost;
       inbuf.length = strlen(tohost);
 
       /* Use SGE service for msgs to qmaster,
@@ -720,7 +721,8 @@ int compressed
       else
          service = tocomproc;
       
-      if ((rc = krb5_mk_req(gsd.context, &auth, 0, service, tohost,
+      if ((rc = krb5_mk_req(gsd.context, &auth, 0, 
+             (char *)service, (char *) tohost,
 			    &inbuf, gsd.ccdef, &ap_req))) {
 	 ERROR((SGE_EVENT, MSG_KRB_FAILEDCREATINGAP_REQFORWXZY_SSIS,
 		tohost, tocomproc, toid, error_message(rc)));
@@ -826,7 +828,7 @@ int compressed
          goto error;
       }
 
-      if ((rc = krb5_fwd_tgt_creds(gsd.context, auth, tohost,
+      if ((rc = krb5_fwd_tgt_creds(gsd.context, auth, (char*) tohost,
                                    gsd.clientp, server,
                                    gsd.ccdef, 1,
                                    &tgtbuf))) {
@@ -844,7 +846,7 @@ int compressed
 
       /* get forwardable TGT for client for the execution host */
 
-      if ((rc = krb_get_forwardable_tgt(tohost, auth, tgt_creds,
+      if ((rc = krb_get_forwardable_tgt((char*) tohost, auth, tgt_creds,
                                         &tgtbuf))) {
          ERROR((SGE_EVENT, MSG_KRB_COULDNOTGETFORWARDABLETGTFORWXYZ_SSIS ,
                 tohost, tocomproc, toid, error_message(rc)));
@@ -973,7 +975,6 @@ u_short *compressed      /* this one is for the original message */
    krb5_error_code rc;
    int ret = SEC_RECEIVE_FAILED;
    krb5_auth_context auth=NULL;
-   krb5_ticket *ticket = NULL;
    krb5_creds ** tgt_creds = NULL;
    lListElem  *client=NULL;
    lCondition *where=NULL;
@@ -1343,10 +1344,10 @@ u_short *compressed      /* this one is for the original message */
 
 int
 krb_verify_user(
-char *host,
-char *commproc,
+const char *host,
+const char *commproc,
 int id,
-char *user 
+const char *user 
 ) {
    krb5_error_code rc;
    int ret=-1;
@@ -1504,10 +1505,9 @@ const char *str,
 void *data,
 int *rlen 
 ) {
-   char *src, *dest, *end;
+   char *src, *dest;
    unsigned int len=0;
    int i;
-   char *odata = data;
 
    if (str == NULL)
       return NULL;

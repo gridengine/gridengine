@@ -108,6 +108,10 @@ int had_free_epoch
    */
    sge_security_ck_to_do();
 
+#ifdef KERBEROS
+   krb_renew_tgts(Master_Job_List);
+#endif      
+
    DEXIT;
    return;
 }

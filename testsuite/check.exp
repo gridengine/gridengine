@@ -10834,11 +10834,13 @@ proc run_tests { path runcompleted } {
             append mail_body "Date: [ lindex $check_warning_date $index ]\n" 
             append mail_body "Test: [ lindex $check_warning_name $index ]\n"
             append mail_body "Info: Pass[lindex $check_warning_pass $index], State: [lindex $check_warning_state $index]\n\n"
-            foreach err_message $check_warning_text("[ lindex $check_warning_name $index ]") {
-                foreach sm $err_message {
-                   set error_output [ create_error_message $sm ]
-                   append mail_body $error_output
-                }
+            if { [info exists check_warning_text("[ lindex $check_warning_name $index ]")] } {
+               foreach err_message $check_warning_text("[ lindex $check_warning_name $index ]") {
+                  foreach sm $err_message {
+                     set error_output [ create_error_message $sm ]
+                     append mail_body $error_output
+                  }
+               }
             }
         }
         set nr_unsupported [llength $check_warning_name]

@@ -370,7 +370,7 @@ proc install_qmaster {} {
  log_user 1
  puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
 
- set timeout 100 
+ set timeout 300
  set hostcount 0
 
  set do_log_output 0 ;# _LOG
@@ -1536,7 +1536,7 @@ proc install_execd {} {
       set sp_id [ lindex $id 1 ] 
 
 
-      set timeout 120
+      set timeout 300
      
       set do_log_output 0 ;# 1 _LOG
       if { $CHECK_DEBUG_LEVEL == 2 } {
@@ -1553,7 +1553,7 @@ proc install_execd {} {
              set anykey [wait_for_enter 1]
          }
      
-         set timeout 60
+         set timeout 300
          log_user 1 
          expect {
             -i $sp_id full_buffer {

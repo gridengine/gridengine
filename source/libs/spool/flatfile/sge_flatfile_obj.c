@@ -536,7 +536,7 @@ static int write_PE_free_slots(const lListElem *ep, int nm, dstring *buffer, lLi
 {
    char tmp[128];
    
-   sprintf (tmp, "%ld", lGetUlong (ep, PE_slots) - pe_get_slots_used(ep));
+   sprintf (tmp, U32CFormat, u32c(lGetUlong (ep, PE_slots) - pe_get_slots_used(ep)));
    
    sge_dstring_append (buffer, tmp);
    

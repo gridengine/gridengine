@@ -1,3 +1,9 @@
+MD-2005-03-17-1: Bugfix:   adminuser is not considered in autoinstall!
+                 Changed:  auto_inst template, inst_common.sh
+                 Issue:    1243
+                 Bugtraq:  6239504
+                 Review:   HP
+
 MD-2005-03-17-0: Bugfix:   execd installation fails, if local spool dir is not entered
                  Changed:  inst_execd.sh
                  Issue:    1384

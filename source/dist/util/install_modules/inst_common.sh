@@ -555,7 +555,12 @@ CheckWhoInstallsSGE()
 
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
                 "Do you want to install Grid Engine as admin user >%s< (y/n) [y] >> " $this_dir_user
-      if [ $? = 0 ]; then
+                ret=$?
+      if [ "$AUTO" = "true" -a "$ADMIN_USER" != "" ]; then
+         ret=1
+      fi
+
+      if [ "$ret" = 0 ]; then
          $INFOTEXT "Installing Grid Engine as admin user >%s<" "$this_dir_user"
          $INFOTEXT -log "Installing Grid Engine as admin user >%s<" "$this_dir_user"
          ADMINUSER=$this_dir_user
@@ -586,6 +591,10 @@ CheckWhoInstallsSGE()
          $INFOTEXT -u "\nChoosing a Grid Engine admin user name"
          $INFOTEXT -n "\nPlease enter a valid user name >> "
          INP=`Enter ""`
+         if [ "$AUTO" = "true" ]; then
+            INP=`Enter $ADMIN_USER`
+         fi
+
          if [ "$INP" != "" ]; then
             $SGE_UTILBIN/checkuser -check "$INP"
             if [ $? != 0 ]; then
@@ -980,7 +989,15 @@ AddSGEStartUpScript()
 
    SGE_STARTUP_FILE=$SGE_ROOT_VAL/$COMMONDIR/$STARTUP_FILE_NAME
 
+   InstallRcScript 
 
+   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+   $CLEAR
+}
+
+
+InstallRcScript()
+{
    if [ $euid != 0 ]; then
       return 0
    fi
@@ -998,14 +1015,19 @@ AddSGEStartUpScript()
       return
    else
       if [ $ret = 1 ]; then
-         $CLEAR
          return
       fi
    fi
 
+   # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
+   if [ "$RC_FILE" = lsb ]; then
+      echo cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      Execute /usr/lib/lsb/install_initd $RC_PREFIX/$STARTUP_FILE_NAME
    # If we have System V we need to put the startup script to $RC_PREFIX/init.d
    # and make a link in $RC_PREFIX/rc2.d to $RC_PREFIX/init.d
-   if [ "$RC_FILE" = "sysv_rc" ]; then
+   elif [ "$RC_FILE" = "sysv_rc" ]; then
       $INFOTEXT "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
       Execute rm -f $RC_PREFIX/$RC_DIR/$S95NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/init.d/$STARTUP_FILE_NAME
@@ -1092,10 +1114,8 @@ AddSGEStartUpScript()
          Execute rm -f /tmp/$savedfile.1
       fi
    fi
-
-   $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
-   $CLEAR
 }
+
 
 
 #-------------------------------------------------------------------------
@@ -1120,13 +1140,20 @@ AddDefaultOperator()
 
 MoveLog()
 {
-   if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
-      cp /tmp/$LOGSNAME $QMDIR/uninstall_`hostname`_$DATE.log 2>&1
-   else
-      cp /tmp/$LOGSNAME $QMDIR/install_`hostname`_$DATE.log 2>&1
-   fi
+   master_spool_dir=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
 
-   rm /tmp/$LOGSNAME 2>&1
+   if [ -d $master_spool_dir ]; then
+      if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
+         cp /tmp/$LOGSNAME $master_spool_dir/uninstall_`hostname`_$DATE.log 2>&1
+      else
+         cp /tmp/$LOGSNAME $master_spool_dir/install_`hostname`_$DATE.log 2>&1
+      fi
+      rm /tmp/$LOGSNAME 2>&1
+   else
+      RestoreStdout
+      $INFOTEXT "%s does not exist.\n Please check your file permissions!" $master_spool_dir
+      $INFOTEXT "Check %s to get the install log!" /tmp/$LOGSNAME
+   fi
 }
 
 CreateLog()
@@ -1143,6 +1170,25 @@ fi
 }
 
 
+Stdout2Log()
+{
+   # make Filedescriptor(FD) 4 a copy of stdout (FD 1)
+   exec 4>&1
+   # open logfile for writing
+   exec 1> /tmp/$LOGSNAME 2>&1
+}
+
+
+RestoreStdout()
+{
+   unset SGE_ND
+   # close file logfile 
+   exec 1>&-
+   # make stdout a copy of FD 4 (reset stdout)
+   exec 1>&4
+   # close FD4
+   exec 4>&-
+}
 #-------------------------------------------------------------------------
 # CheckRunningDaemon
 #
@@ -1388,7 +1434,7 @@ RestoreConfig()
       $INFOTEXT -n "\nYour configuration has been restored\n"
       rm -fR /tmp/bup_tmp_$DATE
    else
-      loop_stop=false
+      loop_stop="false"
       while [ $loop_stop = "false" ]; do
          $INFOTEXT -n "\nPlease enter the full path to your backup files." \
                       "\nDefault: [%s]" $SGE_ROOT/backup

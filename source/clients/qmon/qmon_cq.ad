@@ -166,7 +166,7 @@ Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.visibleCo
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columns: 18
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columnWidths: 20,6,6,6,6,6,6,4,4,4,4,4,4,4,4,4,4,4 
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columnMaxLengths: 200,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
-Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columnLabels: @{CLUSTER QUEUE},@{LOAD},@{USED},@{AVAIL},@{TOTAL},aoACDS,cdsuE,s,A,S,C,u,a,d,D,c,o,E
+Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columnLabels: @{CLUSTER QUEUE},@{CQLOAD},@{USED},@{AVAIL},@{TOTAL},aoACDS,cdsuE,s,A,S,C,u,a,d,D,c,o,E
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.gridType:     GRID_CELL_SHADOW
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.cellShadowType: SHADOW_IN
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.cellShadowThickness: 1

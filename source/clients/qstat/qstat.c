@@ -568,7 +568,7 @@ char **argv
                   char fields[] = "%7s %6s %6s %6s %6s %6s ";
                   sprintf(queue_def, "%%-%d.%ds %s ", longest_queue_length, longest_queue_length, fields);                         
                   printf( queue_def,
-                         "CLUSTER QUEUE", "LOAD", 
+                         "CLUSTER QUEUE", "CQLOAD", 
                          "USED", "AVAIL", "TOTAL", "aoACDS", "cdsuE");
                   if (show_states) {
                      printf("%5s %5s %5s %5s %5s %5s %5s %5s %5s %5s %5s", 

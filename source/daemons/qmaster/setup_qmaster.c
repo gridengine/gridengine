@@ -946,11 +946,13 @@ static int setup_qmaster(void)
 
    DPRINTF(("scheduler config -----------------------------------\n"));
    
-   if (sge_read_sched_configuration(spooling_context, answer_list) != 0)
+   if (sge_read_sched_configuration(spooling_context, &answer_list) != 0)
    {
+      answer_list_output(&answer_list);
       DEXIT;
       return -1;
    }
+   answer_list_output(&answer_list);
 
    /* SGEEE: read user list */
    spool_read_list(&answer_list, spooling_context, &Master_User_List, SGE_TYPE_USER);

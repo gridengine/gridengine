@@ -786,6 +786,7 @@ sge_conf_type *conf
    FREE(conf->shepherd_cmd);
    FREE(conf->qmaster_params);
    FREE(conf->execd_params);
+   FREE(conf->reporting_params);
    FREE(conf->gid_range);
    FREE(conf->qlogin_daemon);
    FREE(conf->qlogin_command);
@@ -793,6 +794,7 @@ sge_conf_type *conf
    FREE(conf->rsh_command);
    FREE(conf->rlogin_daemon);
    FREE(conf->rlogin_command);
+   FREE(conf->auto_user_default_project);
    FREE(conf->delegated_file_staging);
    
    memset(conf, 0, sizeof(sge_conf_type));

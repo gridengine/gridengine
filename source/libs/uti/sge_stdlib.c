@@ -152,7 +152,9 @@ char *sge_realloc(char *ptr, int size)
 ******************************************************************************/
 char *sge_free(char *cp) 
 {
-   free(cp);
+   if (cp != NULL) {
+      free(cp);
+   }
    return NULL;
 }  
 

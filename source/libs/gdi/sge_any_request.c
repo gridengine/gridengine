@@ -232,9 +232,13 @@ void prepare_enroll(const char *name)
    }
  
    /* set alias file */
-   ret_val = cl_com_set_alias_file(sge_get_alias_path());
-   if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+   {
+      char *alias_path = sge_get_alias_path();
+      ret_val = cl_com_set_alias_file(alias_path);
+      if (ret_val != CL_RETVAL_OK) {
+         ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+      }
+      FREE(alias_path);
    }
 
    /* set hostname resolve (compare) method */
@@ -469,7 +473,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
          /* This if for errors */
          DEBUG((SGE_EVENT, MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS , 
                (commproc[0] ? commproc : "any"), 
-               (unsigned int) usid, 
+               (int) usid, 
                (host[0] ? host : "any"),
                 cl_get_error_text(i)));
       }

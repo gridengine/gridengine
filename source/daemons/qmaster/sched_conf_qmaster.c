@@ -58,13 +58,13 @@
 static void check_reprioritize_interval(lList **alpp, char *ruser, char *rhost);
 
 
-int sge_read_sched_configuration(lListElem *aSpoolContext, lList *anAnswer)
+int sge_read_sched_configuration(lListElem *aSpoolContext, lList **anAnswer)
 {
    lList *sched_conf = NULL;
 
    DENTER(TOP_LAYER, "sge_read_sched_configuration");
 
-   spool_read_list(&anAnswer, aSpoolContext, &sched_conf, SGE_TYPE_SCHEDD_CONF);
+   spool_read_list(anAnswer, aSpoolContext, &sched_conf, SGE_TYPE_SCHEDD_CONF);
 
    if (lGetNumberOfElem(sched_conf) == 0)
    {
@@ -75,20 +75,17 @@ int sge_read_sched_configuration(lListElem *aSpoolContext, lList *anAnswer)
       }
    
       lAppendElem(sched_conf, ep);
-      spool_write_object(&anAnswer, spool_get_default_context(), ep, "schedd_conf", SGE_TYPE_SCHEDD_CONF);
-      answer_list_output(&anAnswer);
+      spool_write_object(anAnswer, spool_get_default_context(), ep, "schedd_conf", SGE_TYPE_SCHEDD_CONF);
    }
    
-   if (!sconf_set_config(&sched_conf, &anAnswer))
+   if (!sconf_set_config(&sched_conf, anAnswer))
    {
-      answer_list_output(&anAnswer);
-      lFreeList(anAnswer);
       lFreeList(sched_conf);
       DEXIT;
       return -1;
    } 
 
-   check_reprioritize_interval(&anAnswer, "local" , "local");
+   check_reprioritize_interval(anAnswer, "local" , "local");
 
    DEXIT;
    return 0;

@@ -368,6 +368,10 @@ New behaviour:
     */
    enrolled = check_for_running_qmaster();
 
+   /* don't wanna get old messages */
+   if (enrolled)
+      remove_pending_messages(NULL, 0, 0, 0);
+
    /* --- Here we think we are the only qmaster in the system --- */
    
    set_commlib_param(CL_P_COMMDHOST, 0, me.qualified_hostname, NULL);
@@ -463,8 +467,6 @@ New behaviour:
 
    sge_log_pid(QMASTER_PID_FILE);
 
-   /* don't wanna get old messages */
-   remove_pending_messages(NULL, 0, 0, 0);
 
    /* commlib call to mark all commprocs as unknown */
    reset_last_heard();

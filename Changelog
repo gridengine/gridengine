@@ -1,3 +1,9 @@
+JG-2002-03-26-1  Bugfix:    At startup qmaster removed pending messages too
+                            late (after daemonizing instead of after enrolling). 
+                            In rare cases (starting schedd immediately after
+                            qmaster daemonized on a fast machine) this could
+                            produce an error.
+
 CR-2002-03-26-2  Bugfix:    - wrong error handling if qmaster is down and
                               user tries qdel -f 
                             - changed code formating

@@ -1,3 +1,9 @@
+JG-2002-03-28-2: Testsuite: - sge_procedures: new functions shutdown_qmaster, 
+                              shutdown_scheduler and startup_scheduler.
+                            - large_cluster test: shutdown scheduler before 
+                              initializing new test to get time for first 
+                              scheduling.
+
 AS-2002-03-28-0: CVS:       Created V53_TAG
 -------------------------------------------
 

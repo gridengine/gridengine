@@ -76,13 +76,13 @@ for {set i 300} {$i <= $check_highest_level} {incr i} {
 }
 
 #debug settings
-#set LARGE_CLUSTER_HOSTS_PER_HOST    10
-#set LARGE_CLUSTER_JOB_SIZES         "40 5*1-20:2"
-#set LARGE_CLUSTER_JOB_DURATION      20
-#set LARGE_CLUSTER_POLICIES_PROJECTS "10 20"
-#set LARGE_CLUSTER_POLICIES_JOBS     100
-#set LARGE_CLUSTER_SLOTS_PER_QUEUE   2
-#set check_highest_level   301
+set LARGE_CLUSTER_HOSTS_PER_HOST    10
+set LARGE_CLUSTER_JOB_SIZES         "40 5*1-20:2"
+set LARGE_CLUSTER_JOB_DURATION      20
+set LARGE_CLUSTER_POLICIES_PROJECTS "10 20"
+set LARGE_CLUSTER_POLICIES_JOBS     100
+set LARGE_CLUSTER_SLOTS_PER_QUEUE   2
+set check_highest_level   301
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -665,12 +665,16 @@ proc large_cluster_size {size} {
 }
 
 proc large_cluster_process_jobs {type} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACT_LEVEL
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACT_LEVEL CHECK_HOST
    global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
    global LARGE_CLUSTER_HOSTS_PER_HOST LARGE_CLUSTER_QUEUES_PER_HOST LARGE_CLUSTER_SLOTS_PER_QUEUE
    global LARGE_CLUSTER_JOB_SIZES LARGE_CLUSTER_JOB_DURATION
 
    foreach size $LARGE_CLUSTER_JOB_SIZES {
+      # shutdown scheduler
+      puts $CHECK_OUTPUT "shutting down scheduler"
+      shutdown_scheduler $CHECK_HOST [get_qmaster_spool_dir]
+
       # disable all queues
       large_cluster_disable_queues
 
@@ -681,22 +685,18 @@ proc large_cluster_process_jobs {type} {
          large_cluster_submit_jobs $size
       }
 
-      # trigger a scheduling run to make sure we see the first one after enabling all queues
-      puts $CHECK_OUTPUT "trigger a scheduling run"
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" -tsm}
-
       # initialize scheduler monitoring
       set tail_id [large_cluster_init_monitoring]
 
       # enable all queues
       large_cluster_enable_queues
 
+      # restart scheduler
+      startup_scheduler
+      large_cluster_update_schedd_pid
+
       # initialize statistic
       large_cluster_statistics start_time start_cpu mem dummy $size
-
-      # trigger scheduling run
-      puts $CHECK_OUTPUT "triggering scheduling run"
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" -tsm}
 
       # gather statistics until all jobs have completed
       puts $CHECK_OUTPUT "waiting for all jobs to finish"
@@ -811,6 +811,10 @@ proc large_cluster_sharetree {} {
    }
 
    foreach size $LARGE_CLUSTER_POLICIES_PROJECTS {
+      # shutdown scheduler
+      puts $CHECK_OUTPUT "shutting down scheduler"
+      shutdown_scheduler $CHECK_HOST [get_qmaster_spool_dir]
+
       # setup sharetree
       large_cluster_setup_sharetree $size
    
@@ -820,22 +824,18 @@ proc large_cluster_sharetree {} {
       # submit jobs
       large_cluster_submit_jobs $LARGE_CLUSTER_POLICIES_JOBS "$CHECK_USER $CHECK_FIRST_FOREIGN_SYSTEM_USER" $project_list
 
-      # trigger a scheduling run to make sure we see the first one after enabling all queues
-      puts $CHECK_OUTPUT "trigger a scheduling run"
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" -tsm}
-
       # initialize scheduler monitoring
       set tail_id [large_cluster_init_monitoring]
 
       # enable all queues
       large_cluster_enable_queues
 
+      # restart scheduler
+      startup_scheduler
+      large_cluster_update_schedd_pid
+
       # initialize statistic
       large_cluster_statistics start_time start_cpu mem dummy $size
-
-      # trigger scheduling run
-      puts $CHECK_OUTPUT "triggering scheduling run"
-      catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" -tsm}
 
       # gather statistics until all jobs have completed
       puts $CHECK_OUTPUT "waiting for all jobs to finish"
@@ -856,6 +856,14 @@ proc large_cluster_sharetree {} {
    large_cluster_write_statistics stree $LARGE_CLUSTER_POLICIES_PROJECTS start_time end_time start_cpu end_cpu mem first_sched total_sched job_runtime
 
    set_error 0 "ok"
+}
+
+proc large_cluster_update_schedd_pid {} {
+   global pids qmaster_spool_dir
+
+   set f [open "$qmaster_spool_dir/schedd/schedd.pid" r]
+   gets $f pids(schedd)
+   close $f
 }
 
 proc large_cluster_setup {} {

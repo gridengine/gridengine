@@ -1,3 +1,9 @@
+CR-2002-07-22-4: Bugfix:    (merge) Junk messages in installation
+                 Bugtraq:   #4705066
+
+CR-2002-07-22-3: Testsuite: (merge) New version strings for 5.3.1beta3 and beta4
+                 Enhancem.: 
+
 EB-2002-07-22-2: Testsuite: testsuite didn't find aimk
                             use -z 9 for cvs update
 

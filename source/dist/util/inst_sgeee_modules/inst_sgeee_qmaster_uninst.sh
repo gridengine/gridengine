@@ -85,13 +85,13 @@ ShutdownMaster()
    master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
    
    $INFOTEXT "Removing qmaster spool directory!"
-   rm -fR $master_spool
+   ExecuteAsAdmin rm -fR $master_spool
 
    berkeley_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }'`
 
    $INFOTEXT "Removing berkeley spool directory!"
-   rm -fR $berkeley_spool
+   ExecuteAsAdmin rm -fR $berkeley_spool
 
    $INFOTEXT "Removing %s directory!" $SGE_CELL
-   rm -fR $SGE_CELL
+   ExecuteAsAdmin rm -fR $SGE_CELL
 }

@@ -1,3 +1,8 @@
+MD-2004-02-18-0: Bugfix:    - cleanup during execd uninst
+                            - if spooldir exists -> ask for deleting
+                            - testsuite adaption
+                 Changed:   inst_sgeee, testsuite
+
 DT-2004-02-18-4: Bugfix:    Revamped JAPI signal handling to be more POSIX
                             friendly and less dangerous.
                             Reworked JAPI event client thread so that it doesn't

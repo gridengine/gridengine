@@ -266,6 +266,11 @@ SetSpoolingOptions()
          if [ $AUTO = "true" ]; then
             SPOOLING_SERVER=$DB_SPOOLING_SERVER
             SPOOLING_DIR="$DB_SPOOLING_DIR"
+            if [ -d $SPOOLING_DIR ]; then
+               $INFOTEXT -log "The spooling directory [%s] already exists! Exiting installation!" $SPOOLING_DIR
+               MoveLog
+               exit 0 
+            fi
             SpoolingCheckParams
             params_ok=1
             #TODO: exec rcrpc script
@@ -277,21 +282,53 @@ SetSpoolingOptions()
                $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute < inst_sgeee -db >"
                $INFOTEXT -auto $AUTO -wait "Please do not continue, before the Berkeley DB installation with \n" \
                                            "< inst_sgeee -db > is completed, continue with <RETURN>"
+               is_server="true"
             else
+               is_server="false"
                $INFOTEXT -auto $AUTO -wait "\nHit <RETURN> to continue >> "
             fi
-            done="false"
-            while [ $done = "false" ]; do
+
+            if [ $is_server = "true" ]; then
                SpoolingQueryChange
-               CheckLocalFilesystem $SPOOLING_DIR
-               ret=$?
-               if [ $ret -eq 0 ]; then
-                  $INFOTEXT -e "\nThe database directory >%s<\n" \
-                               "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
-               else
-                  done="true" 
-               fi
-            done
+            else
+               done="false"
+               is_spool="false"
+
+               while [ $is_spool = "false" ] && [ $done = "false" ]; do
+                  SpoolingQueryChange
+                  if [ -d $SPOOLING_DIR ]; then
+                     $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
+                     if [ $? = 0 ]; then
+                           ExecuteAsAdmin `rm -r $SPOOLING_DIR`
+                           if [ -d $SPOOLING_DIR ]; then
+                              $INFOTEXT "You are not the owner of this directory. You can't delete it!"
+                           else
+                              is_spool="true"
+                           fi
+                     else
+                        $INFOTEXT "Please choose any other spooling directory!"
+                     fi
+                   else
+                      is_spool="true"
+                   fi
+
+                  CheckLocalFilesystem $SPOOLING_DIR
+                  ret=$?
+                  if [ $ret -eq 0 ]; then
+                     $INFOTEXT -e "\nThe database directory >%s<\n" \
+                                  "is not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" $SPOOLING_DIR
+                  else
+                     done="true" 
+                  fi
+                  
+                  if [ $is_spool = "false" ]; then
+                     done="false"
+                  elif [ $done = "false" ]; then
+                     is_spool="false"
+                  fi
+
+               done
+             fi
          else
             ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
             if [ $ret -gt 1 ]; then

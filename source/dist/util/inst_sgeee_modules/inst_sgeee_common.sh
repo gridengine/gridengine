@@ -157,7 +157,7 @@ Makedir()
    if [ ! -d $file ]; then
        $INFOTEXT "creating directory: %s" "$file"
        ExecuteAsAdmin $MKDIR -p $1
-    fi
+   fi
 
    ExecuteAsAdmin $CHMOD $DIRPERM $file
 }
@@ -931,3 +931,4 @@ else
    touch /tmp/$LOGNAME
 fi
 }
+

@@ -194,6 +194,10 @@ RemoveSpoolDir()
    HOST_DIR=`echo $exechost | tr "[A-Z]" "[a-z]"` 
    
    $INFOTEXT "Removing spool directory [%s]" $SPOOL_DIR/$HOST_DIR
-   `rm -R $SPOOL_DIR/$HOST_DIR`
+   ExecuteAsAdmin `rm -R $SPOOL_DIR/$HOST_DIR`
+
+   if [ `ls -la $SPOOL_DIR | wc -l` -lt 4 ]; then
+      ExecuteAsAdmin `rm -R $SPOOL_DIR`
+   fi
 
 }

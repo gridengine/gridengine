@@ -141,6 +141,7 @@ proc install_qmaster {} {
  set ACCEPT_CONFIGURATION         [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ACCEPT_CONFIGURATION] ]
  set INSTALL_STARTUP_SCRIPT       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_STARTUP_SCRIPT] ]
  set ENTER_SCHEDLUER_SETUP        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SCHEDLUER_SETUP] ]
+ set DELETE_DB_SPOOL_DIR          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DELETE_DB_SPOOL_DIR] ]
 
 
  # berkeley db
@@ -751,6 +752,16 @@ proc install_qmaster {} {
          continue;
       }
 
+       -i $sp_id $DELETE_DB_SPOOL_DIR {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(12)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_YES\n"
+          continue;
+       }
+
       -i $sp_id $ENTER_SCHEDLUER_SETUP {
          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
          if {$do_log_output == 1} {
@@ -782,7 +793,7 @@ proc install_qmaster {} {
       }
 
       -i $sp_id $ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING {
-         set spooldir [get_spool_dir $CHECK_CORE_MASTER spooldb 1]
+         set spooldir [get_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
   
          if { $spooldir == "" } {
             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"

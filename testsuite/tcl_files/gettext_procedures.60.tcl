@@ -195,6 +195,7 @@ proc sge_macro { macro_name } {
       "DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ASK" { set value "Do you want to configure a local spool directory\n for this host (y/n) \[n\] >> " }
       "DISTINST_ENTER_LOCAL_EXECD_SPOOL_DIR_ENTER" { set value "Please enter the local spool directory now! >> " }
       "DISTINST_ENTER_SCHEDLUER_SETUP" { set value "Enter the number of your prefered configuration and hit <RETURN>! \nDefault configuration is \[1\] >> " }
+      "DISTINST_DELETE_DB_SPOOL_DIR" { set value "The spooling directory already exists! Do you want to delete it? \[n\] >> " }
 
 
    }

@@ -189,6 +189,7 @@ GetPathToUtilbin()
 #
 ExecuteAsAdmin()
 {
+   ADMINUSER=`GetAdminUser`
    if [ "$verbose" = true ]; then
       echo $*
    fi
@@ -299,7 +300,7 @@ if [ "$startup" = true ]; then
    #CheckSpoolDir
    #CheckIfLocal SPOOLING_DIR
    # TODO: should better run under admin_user account!
-   exec $utilbin_dir/berkeley_db_svc $BDBHOMES &
+   ExecuteAsAdmin $utilbin_dir/berkeley_db_svc $BDBHOMES &
 else
    echo Stopping Berkeley DB
    Shutdown

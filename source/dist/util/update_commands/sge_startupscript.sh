@@ -91,34 +91,33 @@ if [ "$SGE_CELL" = "" ]; then
    SGE_CELL=default
 fi
 
-#-------------------------------------------------------------------------
-# setup i18n
+#---------------------------------------
+# setup INFOTEXT begin
+#---------------------------------------
 
-if [ "$GETTEXT" != "" -a "SGE_I18N" = true ]; then
-   unset TEXTDOMAINDIR TEXTDOMAIN
-   TEXTDOMAINDIR="`/bin/pwd/`locale"
-   TEXTDOMAIN=gridengine
-   translation=1
-else
-   translation=0
-   unset LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY
-   unset LC_NUMERIC LC_TIME LANGUAGE
-fi
-
-# end of internationalization setup
-#-------------------------------------------------------------------------
-
-V5BIN=$SGE_ROOT/bin/$ARCH                                                      
+V5BIN=$SGE_ROOT/bin/$ARCH
 V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
+INFOTEXT=$V5UTILBIN/infotext
+if [ ! -x $INFOTEXT ]; then
+   echo "can't find binary \"$INFOTXT\""
+   echo "Installation failed."
+   exit 1
+fi
+SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
+
+#---------------------------------------
+# setup INFOTEXT end
+#---------------------------------------
+
 
 ME=`whoami`
 if [ "$ME" = "" ]; then
-   Translate 0 "Can't determine your username with \"%s\" command. Exit." whoami
+   $INFOTEXT -e "Can't determine your username with \"whoami\" command. Exit."
    exit 1
 fi
 
 if [ "$ME" != root ]; then
-   Translate 0 "Need to be user >root< to install startup script."
+   $INFOTEXT -e "Need to be user >root< to install startup script."
    exit 1
 fi
 
@@ -126,20 +125,20 @@ STARTUP_FILE_NAME=rcsge
 S95NAME=S95rcsge
 
 if [ ! -f $SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME ]; then
-   Translate 0 "Can't find startup script: %s" $SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
+   $INFOTEXT -e "Can't find startup script: %s" $SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME
    exit 1
 fi
 
 if [ "$RC_FILE" = "sysv_rc" ]; then
-   Translate 0 "Installing startup script %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
+   $INFOTEXT "Installing startup script: %s" "$RC_PREFIX/$RC_DIR/$S95NAME"
 
    if [ -f $RC_PREFIX/$RC_DIR/S95codine5 ]; then
-      Translate 0 "   Deleting old startup script: %s" $RC_PREFIX/$RC_DIR/S95codine5
+      $INFOTEXT "   Deleting old startup script: %s" $RC_PREFIX/$RC_DIR/S95codine5
       rm $RC_PREFIX/$RC_DIR/S95codine5
    fi
 
    if [ -f $RC_PREFIX/$RC_DIR/S95grd5 ]; then
-      Translate 0 "   Deleting old startup script: %s" $RC_PREFIX/$RC_DIR/S95grd5
+      $INFOTEXT "   Deleting old startup script: %s" $RC_PREFIX/$RC_DIR/S95grd5
       rm $RC_PREFIX/$RC_DIR/S95grd5
    fi
 
@@ -157,16 +156,16 @@ if [ "$RC_FILE" = "sysv_rc" ]; then
    if [ $ARCH = glinux -o $ARCH = alinux -o $ARCH = slinux ]; then
       runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
       if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
-         Translate 0 "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
+         $INFOTEXT "Installing startup script also in %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME"
          Execute rm -f $RC_PREFIX/rc${runlevel}.d/$S95NAME
          Execute ln -s $RC_PREFIX/init.d/$STARTUP_FILE_NAME $RC_PREFIX/rc${runlevel}.d/$S95NAME
       fi
    fi
 elif [ "$RC_FILE" = "insserv-linux" ]; then
-   Translate 0 "Installing startup script >%s< with >%s<" $RC_PREFIX/$STARTUP_FILE_NAME insserv
+   $INFOTEXT "Installing startup script >%s< with >%s<" $RC_PREFIX/$STARTUP_FILE_NAME insserv
    Execute cp $SGE_ROOT/$SGE_CELL/common/$STARTUP_FILE_NAME $RC_PREFIX/$STARTUP_FILE_NAME
    /sbin/insserv $RC_PREFIX/$STARTUP_FILE_NAME
 else
-   Translate 0 "Adding the startup script to your boot scripts is not supported"
-   Translate 0 "on this operating system"
+   $INFOTEXT "Adding the startup script to your boot scripts is not supported\n"
+             "on this operating system."
 fi

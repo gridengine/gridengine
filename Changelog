@@ -1,3 +1,8 @@
+AS-2004-03-05-0: Bugfix:    wrong dependencies for sge_sub_object.c are now
+                            corrected through new script 
+                            scripts/fix_dependencies
+                 Issue:     781
+
 DT-2004-03-05-2: Bugfix:    o Removed help output on qstat with no args
                  Changed:   qstat
                  Issue:     782

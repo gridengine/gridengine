@@ -613,8 +613,6 @@ proc save_file { filename array_name } {
    set last_line $data(0)
    puts $CHECK_OUTPUT "saving file \"$filename\""
    for { set i 1 } { $i <= $last_line } { incr i 1 } {
-#      puts -nonewline $CHECK_OUTPUT [washing_machine $i]
-#      flush $CHECK_OUTPUT
       puts $file $data($i)
    }
    close $file
@@ -659,8 +657,6 @@ proc read_file { filename array_name } {
    set file [open $filename "r"]
    set x 1
    while { [gets $file line] >= 0 } {
-#       puts -nonewline $CHECK_OUTPUT [washing_machine $x]
-#       flush $CHECK_OUTPUT
        set data($x) $line
        incr x 1
    }
@@ -869,6 +865,13 @@ proc read_array_from_file { filename obj_name array_name { enable_washing_machin
   global CHECK_OUTPUT
   upvar $array_name data
 
+   # output washing machine only on tty
+   if {$enable_washing_machine} {
+      if {![check_output_is_tty]} {
+         set enable_washing_machine 0
+      }
+   }
+
   read_file $filename file_dat
   set obj_start [search_for_obj_start file_dat $obj_name]
   if { $obj_start < 0 } {
@@ -937,6 +940,13 @@ proc read_array_from_file_data { file_data obj_name array_name { enable_washing_
   upvar $array_name data
   upvar $file_data file_dat
 
+   # output washing machine only on tty
+   if {$enable_washing_machine} {
+      if {![check_output_is_tty]} {
+         set enable_washing_machine 0
+      }
+   }
+
   set obj_start [search_for_obj_start file_dat $obj_name]
   if { $obj_start < 0 } {
      return -1
@@ -945,8 +955,7 @@ proc read_array_from_file_data { file_data obj_name array_name { enable_washing_
   if { $obj_end < 0 } {
      return -1
   }
-#  puts $CHECK_OUTPUT "start: $obj_start"
-#  puts $CHECK_OUTPUT "end: $obj_end"
+
   set wcount 0
   set time 0
   for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
@@ -2700,4 +2709,21 @@ proc create_path_aliasing_file { filename data elements} {
 #   }
 #} 
 
+# do we have access to a tty?
+# returns true, if the $CHECK_OUTPUT is stdout and we have access to a tty
+proc check_output_is_tty {} {
+   global CHECK_OUTPUT
 
+   set ret 0
+
+   # if testsuite outputs to stdout
+   if {[string compare $CHECK_OUTPUT stdout] == 0} {
+      set result [catch stty output]
+      # and we have a tty
+      if { $result == 0 } {
+         set ret 1
+      }
+   }
+
+   return $ret
+}

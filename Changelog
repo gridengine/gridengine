@@ -1,3 +1,6 @@
+JG-2004-12-08-1: Testsuite: Suppress output of "washing machine", if testsuite
+                            output is not a tty.
+
 JG-2004-12-08-0: Testsuite: Fixed infinite loop while waiting for a script file
                             being created.
                             Do not try to shutdown commd processes in 6.x 

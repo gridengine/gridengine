@@ -116,7 +116,7 @@ int main(int argc, char **argv);
 
 #define VERBOSE_LOG(x) if(sge_log_is_verbose()) { fprintf x; fflush(stderr); }
 
-/****** Interactive/qsh/--Introduction ***************************************
+/****** Interactive/qsh/--Interactive ***************************************
 *
 *  NAME
 *     qsh -- qsh, qlogin, qrsh, qrlogin, qrexec
@@ -161,13 +161,13 @@ int main(int argc, char **argv);
 *  BUGS
 *
 *  SEE ALSO
-*     Interactive/qrsh_starter/--Introduction
+*     Interactive/qrsh/--qrsh_starter
 *
 ****************************************************************************
 *
 */
 
-/****** Interactive/qsh/-Global_Variables ***************************************
+/****** Interactive/qsh/-Interactive-Global_Variables ***************************************
 *
 *  NAME
 *     Global Variables -- global variables
@@ -188,7 +188,7 @@ int main(int argc, char **argv);
 extern char **environ;
 pid_t child_pid = 0;
 
-/****** Interactive/qsh/-Defines ***************************************
+/****** Interactive/qsh/-Interactive-Defines ***************************************
 *
 *  NAME
 *     Defines -- defines/constants 

@@ -1,3 +1,11 @@
+JG-2002-03-11-1  Doc:       - Updated adoc description: Some new categories,
+                              replacement of the --Introduction categories,
+                              an example how to document cull objects.
+                            - adoc: Allow entries beginning with '-' to be
+                              included in the function index.
+                            - Updated some autodoc headers to reflect changes
+                              described above.
+
 JG-2002-03-11-0  Cleanup:   Moved event client interface (client code) from
                             scheduler to the gdi library and removed 
                             all scheduler dependencies left from previous

@@ -53,7 +53,7 @@
 
 pid_t child_pid = 0;
 
-/****** Interactive/qrsh_starter/sge_putenv() **********************************************
+/****** Interactive/qrsh/sge_putenv() **********************************************
 *  NAME
 *     sge_putenv() -- put an environment variable to environment
 *
@@ -101,7 +101,7 @@ static int sge_putenv(const char *var)
    return 1;
 }
 
-/****** Interactive/qrsh_starter/setEnvironment() ***************************************
+/****** Interactive/qrsh/setEnvironment() ***************************************
 *
 *  NAME
 *     setEnvironment() -- set environment from file
@@ -224,7 +224,7 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    return command;
 }
 
-/****** Interactive/qrsh_starter/readConfig() *****************************************
+/****** Interactive/qrsh/readConfig() *****************************************
 *  NAME
 *     readConfig() -- read the jobs configuration
 *
@@ -267,7 +267,7 @@ static int readConfig(const char *jobdir)
    return 1;
 }
 
-/****** Interactive/qrsh_starter/changeDirectory() *****************************************
+/****** Interactive/qrsh/changeDirectory() *****************************************
 *  NAME
 *     changeDirectory() -- change to directory named in job config
 *
@@ -283,7 +283,7 @@ static int readConfig(const char *jobdir)
 *     static int - 0, if an error occured
 *                  1, if function completed without errors
 *  SEE ALSO
-*     Interactive/qrsh_starter/readConfig()
+*     Interactive/qrsh/readConfig()
 *
 *******************************************************************************/
 static int changeDirectory(void) 
@@ -308,7 +308,7 @@ static int changeDirectory(void)
 }
 
 
-/****** Interactive/qrsh_starter/write_pid_file() ***************************************
+/****** Interactive/qrsh/write_pid_file() ***************************************
 *
 *  NAME
 *     write_pid_file()  -- write a pid to file pid in $TMPDIR
@@ -363,7 +363,7 @@ static int write_pid_file(pid_t pid)
    return 1;
 }
 
-/****** Interactive/qrsh_starter/forward_signal() ***************************************
+/****** Interactive/qrsh/forward_signal() ***************************************
 *
 *  NAME
 *     forward_signal() -- forward a signal to qrsh_starter's child
@@ -387,7 +387,7 @@ static void forward_signal(int sig)
    }
 }
 
-/****** Interactive/qrsh_starter/split_command() *******************************************
+/****** Interactive/qrsh/split_command() *******************************************
 *  NAME
 *     split_command() -- split commandline into tokens
 *
@@ -412,7 +412,7 @@ static void forward_signal(int sig)
 *     static int - the number of arguments or 0 if an error occured
 *
 *  SEE ALSO
-*     Interactive/qrsh_starter/join_command()
+*     Interactive/qrsh/join_command()
 *
 *******************************************************************************/
 static int split_command(char *command, char ***cmdargs) {
@@ -465,7 +465,7 @@ static int split_command(char *command, char ***cmdargs) {
    return argc;
 }
 
-/****** Interactive/qrsh_starter/join_command() ********************************************
+/****** Interactive/qrsh/join_command() ********************************************
 *  NAME
 *     join_command() -- join arguments to a single string
 *
@@ -486,7 +486,7 @@ static int split_command(char *command, char ***cmdargs) {
 *     static char* - the resulting commandline or NULL, if an error occured.
 *
 *  SEE ALSO
-*     Interactive/qrsh_starter/split_command()
+*     Interactive/qrsh/split_command()
 *
 *******************************************************************************/
 static char *join_command(int argc, char **argv) {
@@ -518,7 +518,7 @@ static char *join_command(int argc, char **argv) {
 }
 
 
-/****** Interactive/qrsh_starter/startJob() ***************************************
+/****** Interactive/qrsh/startJob() ***************************************
 *
 *  NAME
 *     startJob() -- start a shell with commands to execute
@@ -556,9 +556,9 @@ static char *join_command(int argc, char **argv) {
 *        - executing the shell failed
 *
 *  SEE ALSO
-*     Interactive/qrsh_starter/write_pid_file()
-*     Interactive/qrsh_starter/split_command()
-*     Interactive/qrsh_starter/join_command()
+*     Interactive/qrsh/write_pid_file()
+*     Interactive/qrsh/split_command()
+*     Interactive/qrsh/join_command()
 *
 ****************************************************************************
 */
@@ -676,7 +676,7 @@ static int startJob(char *command, char *wrapper, int noshell)
    return EXIT_FAILURE; 
 }
 
-/****** Interactive/qrsh_starter/writeExitCode() ***************************************
+/****** Interactive/qrsh/writeExitCode() ***************************************
 *
 *  NAME
 *    writeExitCode() -- write exit code of child process to file
@@ -749,7 +749,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
    return EXIT_SUCCESS;
 }
 
-/****** Interactive/qrsh_starter/--Introduction ***************************************
+/****** Interactive/qrsh/--qrsh_starter ***************************************
 *
 *  NAME
 *     qrsh_starter -- start a command special correct environment
@@ -788,7 +788,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
 *     rsh <hostname> qrsh_starter ~/myenvironment 
 *
 *  SEE ALSO
-*     Interactive/qsh/--Introduction
+*     Interactive/qsh/--Interactive
 *
 ****************************************************************************
 */

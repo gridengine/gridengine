@@ -3,7 +3,7 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="Author" content="Joachim Gabler">
-   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD  [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
 </head>
 <body>
 
@@ -115,7 +115,7 @@ category.
 <br>The module qsh has the function category <tt>Interactive/qsh</tt>:
 It is a tool to create an interactive job in Grid Engine, its name is qsh.
 <p>Possible function identifiers then are
-<br><tt>Interactive/qsh/--Introduction</tt>
+<br><tt>Interactive/qsh/--Interactive</tt>
 <br><tt>Interactive/qsh/add2env()</tt>
 <br><tt>...</tt>
 <p>To enable the doc_tool.tcl to insert adoc headers with the correct function
@@ -135,7 +135,20 @@ Function categories for the library documentation</h4>
 
 <ul>
 <li>
-comm</li>
+Eventclient</li>
+
+<ul>
+<li>
+Client</li>
+</ul>
+
+<li>
+commd</li>
+
+<ul>
+<li>
+commlib</li>
+</ul>
 
 <li>
 cull</li>
@@ -145,11 +158,46 @@ cull</li>
 hash - cull specific hash table extensions, based on uti/hash</li>
 
 <li>
-search - searching certain elements</li>
+list</li>
+
+<li>
+multitype</li>
 </ul>
 
 <li>
 gdi</li>
+
+<ul>
+<li>
+feature</li>
+
+<li>
+job_jatask</li>
+
+<li>
+queue</li>
+
+<li>
+range</li>
+
+<li>
+request</li>
+
+<li>
+security</li>
+
+<li>
+setup</li>
+
+<li>
+sge</li>
+
+<li>
+suser</li>
+
+<li>
+usermap</li>
+</ul>
 
 <li>
 rmon</li>
@@ -162,10 +210,58 @@ uti</li>
 
 <ul>
 <li>
-hash - generic hash table implementation</li>
+afsutil</li>
 
 <li>
-string - string parsing functions</li>
+bitop</li>
+
+<li>
+dstring</li>
+
+<li>
+hostname</li>
+
+<li>
+htable - generic hash table implementation</li>
+
+<li>
+io</li>
+
+<li>
+language</li>
+
+<li>
+log</li>
+
+<li>
+os</li>
+
+<li>
+prog</li>
+
+<li>
+signal</li>
+
+<li>
+spool</li>
+
+<li>
+stdio</li>
+
+<li>
+stdlib</li>
+
+<li>
+string- string parsing functions</li>
+
+<li>
+time</li>
+
+<li>
+uidgid</li>
+
+<li>
+unistd</li>
 </ul>
 </ul>
 
@@ -233,25 +329,34 @@ schadowd</li>
 shepherd</li>
 
 <li>
-Interactive/qsh</li>
+Interactive</li>
+
+<ul>
+<li>
+qsh</li>
+</ul>
+
+<ul>
+<li>
+qlogin</li>
 
 <li>
-Interactive/qlogin</li>
+qmake</li>
 
 <li>
-Interactive/qmake</li>
+qrsh</li>
 
 <li>
-Interactive/qrsh</li>
+qtcsh</li>
+</ul>
 
 <li>
 Eventclient</li>
 
+<ul>
 <li>
-Eventclient/Client</li>
-
-<li>
-Eventclient/Server</li>
+Server</li>
+</ul>
 </ul>
 
 <h4>
@@ -389,10 +494,9 @@ before the detailed function descriptions.
 gives a short overview of the category and may refer to other autodoc headers
 giving more details.
 <p>The header of such an introductory page has the form
-<br><tt>/****** chapter/section/--Introduction *****************</tt>
-<p>The hyphens (-) before the word "Introductions" influence autodoc's
-sorting algorithm: The introductory page will always be the the first page
-of a section.
+<br><tt>/****** chapter/section/--topic *****************</tt>
+<p>The hyphens (-) before the topic influence autodoc's sorting algorithm:
+The introductory page will always be the the first page of a section.
 <br>&nbsp;
 <br>&nbsp;
 <h3>
@@ -401,22 +505,20 @@ It is desirable to have documentation also for constants/defines, global
 variables, structures, typedefs etc.
 <p>The following special function identifiers are used for this type of
 documentation:
-<br>-Defines
-<br>-Global_Variables
-<br>-Templates
-<br>-Typedefs
-<br>-Misc
+<br>-topic-Defines
+<br>-topic-Global_Variables
+<br>-topic-Templates
+<br>-topic-Typedefs
+<br>-topic-Misc
 <p>Again, the hyphen before the identifiers name influence adoc's sorting
 algorithm.
-<br>In addition, identifiers starting with a hyphen are not listed in the
-function index.
 <br>&nbsp;
 <h2>
 <a NAME="Examples for adoc headers"></a>Examples for adoc headers</h2>
 
 <h3>
 An introduction header</h3>
-<tt>/****** Interactive/qmake/--Introduction ***************************************</tt>
+<tt>/****** Interactive/qmake/--qmake ***************************************</tt>
 <br><tt>*</tt>
 <br><tt>*&nbsp; NAME</tt>
 <br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; qmake -- Scheduled parallel distributed
@@ -460,7 +562,7 @@ is written to stderr.</tt>
 <br>&nbsp;
 <h3>
 A header describing defines</h3>
-<tt>/****** Interactive/qmake/-Defines ***************************************</tt>
+<tt>/****** Interactive/qmake/-qmake-Defines ***************************************</tt>
 <br><tt>*</tt>
 <br><tt>*&nbsp; NAME</tt>
 <br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; Defines -- constant and macro definitions</tt>
@@ -531,6 +633,86 @@ size) {</tt>
 <br><tt>****************************************************************************</tt>
 <br><tt>*/</tt>
 <br>&nbsp;
+<h3>
+Description of a Cull object/class</h3>
+<tt>/****** gdi/range/--RN_Type ***************************************************</tt>
+<br><tt>*&nbsp; NAME</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; RN_Type - CULL range element</tt>
+<br><tt>*</tt>
+<br><tt>*&nbsp; ELEMENTS</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; SGE_ULONG(RN_min)</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; minimum or start value
+of an id range (e.g. 1)</tt>
+<br><tt>*</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; SGE_ULONG(RN_max)</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; maximum or end value
+of an id range (e.g. 9)</tt>
+<br><tt>*</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; SGE_ULONG(RN_step)</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stepsize (e.g. 2)</tt>
+<br><tt>*</tt>
+<br><tt>*&nbsp; FUNCTION</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; CULL element holding values which define
+a id range</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; (e.g. 1-9:2 => 1, 3, 5, 7, 9).</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; Lists of this CULL element are hold within
+a CULL job element</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; (JB_Type) to hold job array task ids.</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; Several functions may be used to access/modify/delete
+range</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; elements and range lists. You may find
+them in the 'SEE ALSO'</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; section. It is highly advised to use
+these access functions</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; because they assure and require a defined
+structure of</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; elements and lists.</tt>
+<br><tt>*</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; Range elements and lists stored in other
+CULL elements fullfill</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; following conditions:</tt>
+<br><tt>*</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - min &lt;= max</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - step >= 1</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - real range elements
+(e.g. 1-9:2 instead of 1-10:2)</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - min-ids within range
+elements part of the same</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; list are
+in ascending order: min_id(n) &lt; min_id(n+1)</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (e.g. NOT
+11-20:1; 1-9:2)</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - ids within range
+elements part of the same</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; list are
+non-overlapping: max_id(n) &lt; min_id(n+1)</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (e.g. 1-9:2;
+11-20:1; 25-28:3)</tt>
+<br><tt>*</tt>
+<br><tt>*&nbsp; SEE ALSO</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/RN_Type</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_calculate_union_set()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_calculate_difference_set()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_calculate_intersection_set()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_compress()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_get_first_id()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_get_last_id()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_get_number_of_ids()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_initialize()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_insert_id()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_is_id_within()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_move_first_n_ids()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_print_to_string()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_list_remove_id()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_correct_end()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_get_all_ids()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_get_number_of_ids()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_is_overlapping()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_is_id_within()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_set_all_ids()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/range/range_sort_uniq_compress()</tt>
+<br><tt>*&nbsp;&nbsp;&nbsp;&nbsp; gdi/job/JB_Type</tt>
+<br><tt>******************************************************************************/</tt>
 <h3>
 Documentation of a TCL function</h3>
 #<tt>****** library/control/ps_grep() ******</tt>
@@ -619,7 +801,7 @@ or exceeds the number of</tt>
 are disabled.</tt>
 <br><tt>#</tt>
 <br><tt>#&nbsp; SEE ALSO</tt>
-<br><tt>#&nbsp;&nbsp;&nbsp;&nbsp; utilities/preemption/--Introduction</tt>
+<br><tt>#&nbsp;&nbsp;&nbsp;&nbsp; utilities/preemption/--Preemption</tt>
 <br><tt>#&nbsp;&nbsp;&nbsp;&nbsp; utilities/preemption/high_epilog.sh</tt>
 <br><tt>#&nbsp;&nbsp;&nbsp;&nbsp; utilities/preemption/low_prolog.sh</tt>
 <br><tt>#&nbsp;&nbsp;&nbsp;&nbsp; utilities/preemption/low_epilog.sh</tt>

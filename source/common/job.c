@@ -47,7 +47,7 @@ extern lList *Master_Job_List;
     ==JTYPE_JOB          -  job is a real job
     ==JTYPE_JOB_ARRAY    -  job is job array
  */
-int is_array(lListElem *job) 
+int is_array(const lListElem *job) 
 {
    u_long32 start, end, step;
    
@@ -64,7 +64,7 @@ int job_get_number_of_ja_tasks(lListElem *job)
 }   
 
 /***********************************************************************/
-int job_get_ja_task_ids(lListElem *job, u_long32 *start, u_long32 *end, 
+int job_get_ja_task_ids(const lListElem *job, u_long32 *start, u_long32 *end, 
                         u_long32 *step) 
 {
    lListElem *range_elem = NULL; /* RN_Type */

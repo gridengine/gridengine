@@ -538,8 +538,6 @@ int is_array
       /* There is no error file. */
    }
 
-   DTRACE;
-
    /*
    ** now that shepherd stops on errors there is no usage file
    ** if the job never ran

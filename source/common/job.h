@@ -41,11 +41,11 @@
 #define JTYPE_JOB_ARRAY  1
 #define JTYPE_JOB        0
 
-int is_array(lListElem *job); 
+int is_array(const lListElem *job); 
 
 int job_get_number_of_ja_tasks(lListElem *job);
 
-int job_get_ja_task_ids(lListElem *job, u_long32 *start, u_long32 *end, 
+int job_get_ja_task_ids(const lListElem *job, u_long32 *start, u_long32 *end, 
                         u_long32 *step);
 
 int job_set_ja_task_ids(lListElem *job, u_long32 start, u_long32 end,

@@ -208,7 +208,7 @@ sge_pack_buffer *pb
 
    lXchgList(report, REP_list, &jrl);
 
-   DPRINTF(("received job report with %d elements:\n", lGetNumberOfElem(jrl)));
+   DPRINTF(("received job report with %d elements\n", lGetNumberOfElem(jrl)));
 
    /* 
    ** first process job reports of sub tasks to ensure this we put all these 
@@ -316,6 +316,26 @@ sge_pack_buffer *pb
                         && lGetUlong(pe, PE_control_slaves)
                         && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
 
+#ifdef ENABLE_214_FIX /* EB #214 */
+                     /* 
+                      * if we receive a report from execd about
+                      * a 'running' pe_task but the ja_task of the cocerned
+                      * job is still in the 'deleted' state, than
+                      * we have to initiate the kill of this pe_task.
+                      */
+                     {
+                        u_long32 state = lGetUlong(jatep, JAT_state);
+
+                        if (ISSET(state, JDELETED)) {
+                           DPRINTF(("Received report from "u32"."u32
+                                    " which is already in \"deleted\" state. "
+                                    "==> send kill signal\n", jobid, jataskid));
+                                     
+                           pack_job_kill(pb, jobid, jataskid);
+                        }
+                     }
+#endif
+
                     if (!task) {
                         lList* task_tasks;
                         lListElem *task_task;
@@ -346,7 +366,7 @@ sge_pack_buffer *pb
                            lGetList(hep, EH_usage_scaling_list), 
                            lGetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_previous_usage_list));
 
-                              /* notify scheduler of task usage event */
+                    /* notify scheduler of task usage event */
                     if (feature_is_enabled(FEATURE_SGEEE)) {
                          if (new_task)
                              sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
@@ -354,6 +374,7 @@ sge_pack_buffer *pb
                              sge_add_list_event(NULL, sgeE_JOB_USAGE, jobid, jataskid, pe_task_id_str,
                                                 lGetList(lFirst(lGetList(task, JB_ja_tasks)), JAT_scaled_usage_list));
                     }
+
 
                   } else {
                      lListElem *jg;
@@ -376,7 +397,8 @@ sge_pack_buffer *pb
                                queue_name, shouldbe_queue_name, 
                                shouldbe_host_name, 
                                status2str(lGetUlong(jatep, JAT_status))));
-                        }
+                     } else {
+                     }
                   }
                }
                break;
@@ -441,9 +463,6 @@ sge_pack_buffer *pb
 
                   host = lGetElemHost(Master_Exechost_List, EH_name, rhost);
                   update_reschedule_unknown_list_for_job(host, jobid, jataskid);
-
-                  DPRINTF(("RU: CLEANUP FOR SLAVE JOB "u32"."u32" on host "SFN"\n", 
-                     jobid, jataskid, rhost));
                }
 
                /* clean up */
@@ -613,8 +632,19 @@ sge_pack_buffer *pb
                      }
                      if (failed == SSTATE_FAILURE_AFTER_JOB && 
                            !lGetString(jep, JB_checkpoint_object)) {
-                        get_rid_of_job(NULL, jep, jatep, 0, pb, rhost, me.user_name, 
-                              me.qualified_hostname, lGetString(jr, JR_err_str), commproc);
+#ifdef  ENABLE_214_FIX /* EB #214 */
+                        job_ja_task_send_abort_mail(jep, jatep, 
+                                                    me.user_name, 
+                                                    me.qualified_hostname,
+                                                    lGetString(jr, JR_err_str)); 
+                        get_rid_of_job_due_to_report(jep, jatep, NULL,
+                                                     pb, rhost, commproc);
+                                                     
+#else
+                        get_rid_of_job(NULL, jep, jatep, 0, pb, rhost, 
+                                       me.user_name, me.qualified_hostname, 
+                                       lGetString(jr, JR_err_str), commproc);
+#endif
                         pack_job_kill(pb, jobid, jataskid);
                         ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_SU, pe_task_id_str, u32c(jobid)));
                      }

@@ -193,7 +193,7 @@ proc qmake_submit {slots target {variables ""}} {
                set line [string trim $line]
                if {$line != ""} {
                   switch -glob -- $line {
-                     "_start_mark_*" {
+                     "*_start_mark_*" {
                         puts $CHECK_OUTPUT "qmake starting"
                         set done 1
                      }

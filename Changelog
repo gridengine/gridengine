@@ -1,3 +1,6 @@
+CR-2004-08-05-0: Testsuite: unsetting SGE_DEBUG_LEVEL in testsuite test
+                            scripts pe_task.sh and pe_job.sh
+
 SG-2004-08-04-1: Bugfix:    fixed an aspect of bug 1195: the error message
                             truncated to 100 characters.
                  Review:    RH

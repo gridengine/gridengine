@@ -1,3 +1,11 @@
+CR-2001-07-25-1: Testsuite:
+                    - CHECK_EXPECT_MATCH_MAX_BUFFER reset to 640 KB
+                    - full_buffer caused not the error in compile_source procedure
+                      (removed add_proc_error call in compile_source on full_buffer)
+                      (full_buffer themes not to work correctly for multiple spawn/
+                       expect calls)
+                       
+
 EB-2001-07-25-1: (Issue# 4) fixed build error (LINUX6, ALINUX)
 
 EB-2001-07-25-0: (Issue# 5) qmaster - qconf:

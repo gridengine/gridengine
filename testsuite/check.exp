@@ -147,7 +147,7 @@ global CHECK_SCRIPT_FILE_DIR  ;# testsuite's subdir for script files
 set CHECK_SCRIPT_FILE_DIR "scripts"
 
 global CHECK_EXPECT_MATCH_MAX_BUFFER   ;# read buffer for expect
-set CHECK_EXPECT_MATCH_MAX_BUFFER 6400000
+set CHECK_EXPECT_MATCH_MAX_BUFFER 640000
 
 # to redefine in checks:
 global check_name                  ;# name of actual check module 
@@ -4532,7 +4532,6 @@ proc compile_source {} {
       }
       expect {
          -i $spawn_list full_buffer {
-              add_proc_error "compile_source" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
          }
          -i $spawn_list "remotecompile * aimk compile error" {
               set spawn_id $expect_out(spawn_id)

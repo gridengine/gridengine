@@ -182,6 +182,7 @@ bool sconf_get_global_load_correction(void);
 
 void     sconf_set_default_duration(u_long32 duration);
 u_long32 sconf_get_default_duration(void);
+const char *sconf_get_default_duration_str(void);
 
 void     sconf_set_now(u_long32);
 u_long32 sconf_get_now(void);

@@ -108,7 +108,6 @@ static int sge_select_parallel_environment(sge_assignment_t *best, lList *pe_lis
 static int sge_select_pe_time(sge_assignment_t *best);
 static int sge_maximize_slots(sge_assignment_t *best);
 
-static u_long32 determine_default_duration(const lList *centry_list);
 static bool job_get_duration(u_long32 *duration, const lListElem *jep);
 static void prepare_resource_schedules(const lList *running_jobs, const lList *suspended_jobs, 
    lList *pe_list, lList *host_list, lList *queue_list, lList *centry_list);
@@ -436,10 +435,17 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    sconf_set_global_load_correction(global_lc);
    
    if (max_reserve != 0) {
+      char tmp_error[1024];
+      u_long32 default_duration;
       /*----------------------------------------------------------------------
        * ENSURE RUNNING JOBS ARE REFLECTED IN PER RESOURCE SCHEDULE
        *---------------------------------------------------------------------*/
-      sconf_set_default_duration(determine_default_duration(lists->centry_list));
+      const char *s = sconf_get_default_duration_str();
+      if (!parse_ulong_val(NULL, &default_duration, TYPE_TIM, s, tmp_error, sizeof(tmp_error))) {
+         ERROR((SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, "default_duration", tmp_error));
+         default_duration = 10*60; /* may never happen - must be prevented by qmaster */
+      }
+      sconf_set_default_duration(default_duration);
       prepare_resource_schedules(*(splitted_job_lists[SPLIT_RUNNING]),
                               *(splitted_job_lists[SPLIT_SUSPENDED]),
                               lists->pe_list, lists->host_list, lists->queue_list, 
@@ -1498,73 +1504,6 @@ static bool job_get_duration(u_long32 *duration, const lListElem *jep)
 
    DEXIT;
    return true;
-}
-
-/****** scheduler/determine_default_duration() *********************************
-*  NAME
-*     determine_default_duration() -- Determine jobs default duration
-*
-*  SYNOPSIS
-*     static u_long32 determine_default_duration(const lList *centry_list) 
-*
-*  FUNCTION
-*     The default duration is needed for those jobs that do not have a
-*     -l h_rt=<time> and -l s_rt=<time> specification. Unfortunately 
-*     the {h,s}_cpu can't be used as this is net time while we need 
-*     gross time.
-*
-*  INPUTS
-*     const lList *centry_list - ??? 
-*
-*  RESULT
-*     static u_long32 - The default time.
-*
-*  NOTES
-*     MT-NOTE: determine_default_duration() is MT safe 
-*******************************************************************************/
-static u_long32 determine_default_duration(const lList *centry_list)
-{
-   double h_rt, s_rt;
-   lListElem *cep;
-   char error_str[1024];
-   const char *s;
-
-   DENTER(TOP_LAYER, "determine_default_duration");
-
-   if (!(cep = centry_list_locate(centry_list, SGE_ATTR_H_RT))) {
-      ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S, SGE_ATTR_H_RT));
-      DEXIT;
-      return 0;
-   }
-   if (!(parse_ulong_val(&h_rt, NULL, TYPE_TIM, (s=lGetString(cep, CE_default)),
-            error_str, sizeof(error_str)-1))) {
-      ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_H_RT, s, error_str));
-      DEXIT;
-      return 0;
-   }
- 
-   if (!(cep = centry_list_locate(centry_list, SGE_ATTR_S_RT))) {
-      ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S, SGE_ATTR_S_RT));
-      DEXIT;
-      return 0;
-   }
-   if (!(parse_ulong_val(&s_rt, NULL, TYPE_TIM, (s=lGetString(cep, CE_default)),
-            error_str, sizeof(error_str)-1))) {
-      ERROR((SGE_EVENT, MSG_CPLX_WRONGTYPE_SSS, SGE_ATTR_S_RT, s, error_str));
-      DEXIT;
-      return 0;
-   }
-
-   if (h_rt >= MAX_ULONG32 || s_rt >= MAX_ULONG32) {
-      DEXIT;
-      return MAX_ULONG32;
-   } 
-   
-   s_rt = MAX(h_rt, s_rt);
-   DPRINTF(("determine_default_duration() = %f\n", s_rt));
-
-   DEXIT;
-   return s_rt;
 }
 
 

@@ -1,3 +1,9 @@
+AH-2004-02-25-0: Enhanc.:   Added 'default_duration' to sched_conf(5).
+                 Doc:       Man pages changes for reservation scheduling.
+                 Bugfix:    Wrong error message for qsub -R 
+                 Issue:     694
+                 Review:    AD
+
 DT-2004-02-25-0: Bugfix:    o Fixed qconf -sq queue@hostname output.
                             o Fixed DRMAA example program
                  Issue:     701, 704

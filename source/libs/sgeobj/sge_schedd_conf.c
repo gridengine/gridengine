@@ -114,6 +114,7 @@
 #define MAXUJOBS                            0
 #define MAXGJOBS                            0
 #define SCHEDD_JOB_INFO                     "true"
+#define DEFAULT_DURATION                    "0:10:"
 
 
 /* 
@@ -189,6 +190,7 @@ typedef struct{
    int weight_urgency;
    int max_reservation;
    int weight_priority;
+   int default_duration;
 }config_pos_type;
 
 
@@ -213,7 +215,7 @@ static config_pos_type pos = {true,
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        -1, -1, -1, -1, -1, -1, -1, -1,
                        SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, 
-                       -1, -1, -1, -1, -1};
+                       -1, -1, -1, -1, -1, -1};
 
 /*
  * a list of all valid "params" parameters
@@ -308,6 +310,7 @@ static void sconf_clear_pos(void){
          pos.weight_urgency = -1;
          pos.max_reservation = -1;
          pos.weight_priority = -1;
+         pos.default_duration = -1;
 }
 
 static bool sconf_calc_pos(void){
@@ -363,6 +366,7 @@ static bool sconf_calc_pos(void){
          ret &= (pos.weight_urgency = lGetPosViaElem(config, SC_weight_urgency)) != -1;
          ret &= (pos.weight_priority = lGetPosViaElem(config, SC_weight_priority)) != -1;
          ret &= (pos.max_reservation = lGetPosViaElem(config, SC_max_reservation)) != -1;
+         ret &= (pos.default_duration = lGetPosViaElem(config, SC_default_duration)) != -1;
       }
       else
          ret = false;
@@ -630,6 +634,7 @@ lListElem *sconf_create_default()
    lSetDouble(ep, SC_weight_urgency, 0.5 );
    lSetUlong(ep, SC_max_reservation, 0);
    lSetDouble(ep, SC_weight_priority, 0.0 );
+   lSetString(ep, SC_default_duration, DEFAULT_DURATION);
 
    DEXIT;
    return ep;
@@ -1452,6 +1457,27 @@ u_long32 sconf_get_max_reservations(void) {
       return 0;
 }
 
+/****** sge_schedd_conf/sconf_get_default_duration_str() **********************
+*  NAME
+*     sconf_get_default_duration_str() -- Return default_duration string
+*
+*  SYNOPSIS
+*     const char* sconf_get_default_duration_str(void) 
+*
+*  FUNCTION
+*     Returns default duration string from scheduler configuration.
+*
+*  RESULT
+*     const char* - 
+*******************************************************************************/
+const char *sconf_get_default_duration_str(void){
+   const lListElem *sc_ep =  sconf_get_config();
+      
+   if (pos.schedule_interval != -1) 
+      return lGetPosString(sc_ep, pos.default_duration );
+   else
+      return DEFAULT_DURATION;
+}
 /****** sge_schedd_conf/sconf_get_weight_priority() ****************************
 *  NAME
 *     sconf_get_weight_priority() -- ??? 
@@ -1479,6 +1505,7 @@ double sconf_get_weight_priority(void) {
    else
       return 0;
 }     
+
 
 /****** sge_schedd_conf/sconf_get_share_override_tickets() *********************
 *  NAME
@@ -2158,6 +2185,29 @@ bool sconf_validate_config_(lList **answer_list){
          ret = false;          
       }
    }
+
+   /* --- SC_max_reservation and SC_default_duration */
+   {
+      const char *s = sconf_get_default_duration_str();
+      u_long32 max_reservation = sconf_get_max_reservations();
+
+      if (!s || !extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0) ) {
+         if (!s)
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", "not defined"));   
+         else
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "default_duration", tmp_error));    
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         ret =  false;
+      } else {
+         /* ensure we get a non-zero/non-infinity duration default in reservation scheduling mode */
+         if (max_reservation != 0 && (uval == 0 || uval == MAX_ULONG32)) {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_RR_REQUIRES_DEFAULT_DURATION));    
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
+            ret = false; 
+         }
+      }
+   }
+
 
    DEXIT;
    return ret;

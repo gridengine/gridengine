@@ -340,6 +340,7 @@
 /*
  * sgeobj/sge_schedd_conf.c 
  */
+#define MSG_RR_REQUIRES_DEFAULT_DURATION              _MESSAGE(47295, _("denied: resource reservation requires valid default duration\n"))
 #define MSG_SCHEDD_NOVALUEFORATTR_S                   _MESSAGE(47296, _("no value for complex attribute "SFQ))
 #define MSG_SCHEDD_JOB_LOAD_ADJUSTMENTS_S             _MESSAGE(47297, _("cannot parse job load adjustment list "SFQ))  
 #define MSG_SCHEDD_USAGE_WEIGHT_LIST_S                _MESSAGE(47298, _("cannot parse usage weight list "SFQ))

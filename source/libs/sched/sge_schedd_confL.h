@@ -89,7 +89,8 @@ enum {
    SC_weight_deadline,
    SC_weight_urgency,
    SC_weight_priority,
-   SC_max_reservation
+   SC_max_reservation,
+   SC_default_duration
    };
 
 
@@ -160,6 +161,10 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_ULONG(SC_max_reservation, CULL_DEFAULT | CULL_SPOOL)                /* Maximum number of reservations within a *
                                                                             * schedule run. The value U_LONG32_MAX    *
                                                                             * stands for 'infinity'                   */
+   SGE_STRING(SC_default_duration, CULL_DEFAULT | CULL_SPOOL)              /* Default duration assumed for in         *
+                                                                            * reseration scheduling mode for jobs     *
+                                                                            * that specify no h_rt/s_rt. May not be   *
+                                                                            * null if reservation is enabled */
 LISTEND 
 
 NAMEDEF(SCN)
@@ -203,6 +208,7 @@ NAMEDEF(SCN)
    NAME("SC_weight_urgency")
    NAME("SC_weight_priority")
    NAME("SC_max_reservation")
+   NAME("SC_default_duration")
 NAMEEND
 #define SCS sizeof(SCN)/sizeof(char*)
 

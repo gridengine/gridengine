@@ -801,8 +801,7 @@ u_long32 flags
             lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
          }
          else {
-             sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTJX_S ,
-             *sp);
+             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENT_SS, "-j", *sp);
              answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
@@ -1383,8 +1382,7 @@ DTRACE;
             lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
          }
          else {
-             sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTJX_S ,
-             *sp);
+             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENT_SS, "-R", *sp);
              answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;

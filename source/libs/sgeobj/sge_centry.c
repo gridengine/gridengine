@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 
 #include <string.h>
+#include <float.h>
 
 #include "sge.h"
 #include "sge_string.h"
@@ -50,6 +51,7 @@
 #include "sge_centry.h"
 
 #include "msg_common.h"
+#include "msg_schedd.h"
 #include "msg_sgeobjlib.h"
 
 #define CENTRY_LAYER BASIS_LAYER
@@ -204,13 +206,14 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
             DEXIT;
             return -1;
          }
-         /* normelize time values, so that the string value is based on seconds */
-         if (TYPE_TIM == type){
-            char str_value[100]; 
+
+         /* normalize time values, so that the string value is based on seconds */
+         if (TYPE_TIM == type && dval != DBL_MAX) {
+            char str_value[100];
             dstring ds;
             sge_dstring_init(&ds, str_value, sizeof(str_value));
             sge_dstring_sprintf(&ds, "%.0f", dval);
-            DPRINTF(("normalized time value from \"%s\" to \"%s\"\n", 
+            DPRINTF(("normalized time value from \"%s\" to \"%s\"\n",
                      lGetString(this_elem, CE_stringval), str_value));
             lSetString(this_elem, CE_stringval, str_value);
          }
@@ -1024,8 +1027,8 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
                   ret = false;
                }
 
-               /* accept non-zero default values for consumables and h_rt/s_rt only */
-               if (dval != 0 && strcmp(attrname, SGE_ATTR_H_RT) && strcmp(attrname, SGE_ATTR_S_RT)) {
+               /* accept non-zero default values for consumables only */
+               if (dval != 0) {
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                   MSG_INVALID_CENTRY_DEFAULT_S, attrname);
                   ret = false;

@@ -144,10 +144,11 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       lList *tmp_list = NULL;
       lList *qref_list = NULL;
       bool found_something = true;
+      u_long32 id_action = lGetUlong(dep, ID_action);
 
       found = false;
       
-      if ((lGetUlong(dep, ID_action) & JOB_DO_ACTION) == 0) {
+      if ((id_action & JOB_DO_ACTION) == 0) {
          qref_list_add(&qref_list, NULL, lGetString(dep, ID_str));
          qref_list_resolve(qref_list, NULL, &tmp_list, 
                            &found_something, cqueue_list,
@@ -155,6 +156,8 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                            true, true);
          if (found_something) { 
             lListElem *qref = NULL;
+
+            id_action = (id_action & (~QUEUE_DO_ACTION));
 
             for_each(qref, tmp_list) {
                dstring cqueue_buffer = DSTRING_INIT;
@@ -180,7 +183,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                sge_dstring_free(&hostname_buffer);
 
                sge_change_queue_state(user, host, qinstance,
-                     lGetUlong(dep, ID_action), lGetUlong(dep, ID_force),
+                     id_action, lGetUlong(dep, ID_force),
                      &alp);
                found = true;
             }
@@ -191,8 +194,9 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       if (!found) {
          bool is_jobName_suport = false; 
          u_long action = lGetUlong(dep, ID_action);
-         if ((action & JOB_DO_ACTION)) {
-            action = action - JOB_DO_ACTION;
+         if ((action & JOB_DO_ACTION) > 0 && 
+             (action & QUEUE_DO_ACTION) == 0) {
+            action = (action & (~JOB_DO_ACTION));
             is_jobName_suport = true;
          }
          
@@ -365,19 +369,22 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
 
       if (!found) {
          u_long action = lGetUlong(dep, ID_action);
-
+/*
          if ((action & JOB_DO_ACTION)) {
             action = action - JOB_DO_ACTION;
          }
+*/         
          /*
          ** If the action is QI_DO_UNSUSPEND or QI_DO_SUSPEND, 
          ** 'invalid queue or job' will be printed,
          ** otherwise 'invalid queue' will be printed, because these actions
          ** are not suitable for jobs.
          */
-         if ((action == QI_DO_SUSPEND) || 
-             (action == QI_DO_UNSUSPEND) || 
-             (action == QI_DO_CLEAN))
+         if ((action & QUEUE_DO_ACTION) == 0 && (
+             (action & JOB_DO_ACTION) != 0 ||
+             (action & QI_DO_SUSPEND) != 0 || 
+             (action & QI_DO_UNSUSPEND) != 0|| 
+             (action & QI_DO_CLEAN) != 0))
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQORJOB_S, lGetString(dep, ID_str)));
          else
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQ_S, lGetString(dep, ID_str)));  

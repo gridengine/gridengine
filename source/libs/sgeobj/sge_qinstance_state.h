@@ -77,6 +77,7 @@
 
 /* job/queue state transition via job identifier */
 #define JOB_DO_ACTION                  0x80000000
+#define QUEUE_DO_ACTION                0x40000000
 
 /*
  *

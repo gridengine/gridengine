@@ -2797,35 +2797,30 @@ DPRINTF(("ep: %s %s\n",
          /* edit user */
          newep = edit_userprj(ep, 1);
 
-         /* look whether name has changed. If so we have to delete the
-            user with the old name */
+         /* if the user name has changed, we need to print an error message */   
          if (strcmp(lGetString(ep, UP_name), lGetString(newep, UP_name))) {
-            alp = sge_gdi(SGE_USER_LIST, SGE_GDI_DEL, &lp, NULL, NULL);
+            fprintf(stderr, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, lGetString(ep, UP_name), lGetString(newep, UP_name));
+            SGE_EXIT(1);
+         }
+         else {
+            lp = lFreeList(lp);
+            /* send it to qmaster */
+            lp = lCreateList("User list to modify", UP_Type); 
+            lAppendElem(lp, newep);
+
+            alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+
             aep = lFirst(alp);
             answer_exit_if_not_recoverable(aep);
-            answer_get_status(aep);
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-            alp = lFreeList(alp);
+            if (answer_get_status(aep) != STATUS_OK) {
+               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               alp = lFreeList(alp);
+               lp = lFreeList(lp);
+               SGE_EXIT(1);
+            } else {
+               fprintf(stdout, "%s", lGetString(aep, AN_text));
+            }
          }
-
-         lp = lFreeList(lp);
-         /* send it to qmaster */
-         lp = lCreateList("User list to modify", UP_Type); 
-         lAppendElem(lp, newep);
-
-         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
-
-         aep = lFirst(alp);
-         answer_exit_if_not_recoverable(aep);
-         if (answer_get_status(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-            alp = lFreeList(alp);
-            lp = lFreeList(lp);
-            SGE_EXIT(1);
-         } else {
-            fprintf(stdout, "%s", lGetString(aep, AN_text));
-         }
-         
          alp = lFreeList(alp);
          lp = lFreeList(lp);
 

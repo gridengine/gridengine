@@ -301,18 +301,18 @@ int usageshowed = 0;
       static const u_long32 transitions[] = {
          QI_DO_CLEARERROR,
          QI_DO_CLEARERROR | JOB_DO_ACTION,
-         QI_DO_CLEARERROR,
+         QI_DO_CLEARERROR | QUEUE_DO_ACTION,
          QI_DO_DISABLE,
          QI_DO_RESCHEDULE,
          QI_DO_RESCHEDULE | JOB_DO_ACTION,
-         QI_DO_RESCHEDULE,
+         QI_DO_RESCHEDULE | QUEUE_DO_ACTION,
          QI_DO_ENABLE,
          QI_DO_SUSPEND,
          QI_DO_SUSPEND | JOB_DO_ACTION,
-         QI_DO_SUSPEND,
+         QI_DO_SUSPEND | QUEUE_DO_ACTION,
          QI_DO_UNSUSPEND, 
          QI_DO_UNSUSPEND | JOB_DO_ACTION,
-         QI_DO_UNSUSPEND,
+         QI_DO_UNSUSPEND | QUEUE_DO_ACTION,
 #ifdef __SGE_QINSTANCE_STATE_DEBUG__
          QI_DO_SETERROR,
          QI_DO_SETORPHANED,
@@ -387,23 +387,23 @@ char *what
       /* display full usage */
       fprintf(fp,"%s qmod [options]\n", MSG_SRC_USAGE); 
       fprintf(fp, "   [-c job_wc_queue_list]  %s", MSG_QMOD_c_OPT_USAGE);
-      fprintf(fp, "   [-cj wc_queue_list]     %s", MSG_QMOD_c_OPT_USAGE);
-      fprintf(fp, "   [-cq job_list]          %s", MSG_QMOD_c_OPT_USAGE);
+      fprintf(fp, "   [-cj wc_queue_list]     %s", MSG_QMOD_c_OPT_USAGE_J);
+      fprintf(fp, "   [-cq job_list]          %s", MSG_QMOD_c_OPT_USAGE_Q);
 
       fprintf(fp, "   [-d wc_queue_list]      %s", MSG_QMOD_d_OPT_USAGE);
       fprintf(fp, "   [-e wc_queue_list]      %s", MSG_QMOD_e_OPT_USAGE);
       fprintf(fp, "   [-f]                    %s", MSG_QMOD_f_OPT_USAGE);
       fprintf(fp, "   [-help]                 %s", MSG_QMOD_help_OPT_USAGE);
       fprintf(fp, "   [-r job_wc_queue_list]  %s", MSG_QMOD_r_OPT_USAGE);
-      fprintf(fp, "   [-rj job_list]          %s", MSG_QMOD_r_OPT_USAGE);
-      fprintf(fp, "   [-rq wc_queue_list]     %s", MSG_QMOD_r_OPT_USAGE);
+      fprintf(fp, "   [-rj job_list]          %s", MSG_QMOD_r_OPT_USAGE_J);
+      fprintf(fp, "   [-rq wc_queue_list]     %s", MSG_QMOD_r_OPT_USAGE_Q);
 
       fprintf(fp, "   [-s job_wc_queue_list]  %s", MSG_QMOD_s_OPT_USAGE);
-      fprintf(fp, "   [-sj job_list]          %s", MSG_QMOD_s_OPT_USAGE);
-      fprintf(fp, "   [-sq wc_queue_list]     %s", MSG_QMOD_s_OPT_USAGE);
+      fprintf(fp, "   [-sj job_list]          %s", MSG_QMOD_s_OPT_USAGE_J);
+      fprintf(fp, "   [-sq wc_queue_list]     %s", MSG_QMOD_s_OPT_USAGE_Q);
       fprintf(fp, "   [-us job_wc_queue_list] %s", MSG_QMOD_us_OPT_USAGE);
-      fprintf(fp, "   [-usj job_list]         %s", MSG_QMOD_us_OPT_USAGE);
-      fprintf(fp, "   [-usq wc_queue_list]    %s", MSG_QMOD_us_OPT_USAGE);
+      fprintf(fp, "   [-usj job_list]         %s", MSG_QMOD_us_OPT_USAGE_J);
+      fprintf(fp, "   [-usq wc_queue_list]    %s", MSG_QMOD_us_OPT_USAGE_Q);
       
 #ifdef __SGE_QINSTANCE_STATE_DEBUG__
       fprintf(fp, "   [-_e queue_list]        %s", MSG_QMOD_err_OPT_ISAGE);
@@ -414,6 +414,7 @@ char *what
       fprintf(fp, "   [-_c queue_list]        %s", MSG_QMOD_c_OPT_ISAGE);
       fprintf(fp, "   [-_dc queue_list]       %s", MSG_QMOD_dc_OPT_ISAGE);
 #endif
+      fprintf(fp, "\n");
       fprintf(fp, "job_wc_queue_list          {job_tasks|wc_queue}[{,| }{job_tasks|wc_queue}{,| }...]\n");
       fprintf(fp, "job_list                   {job_tasks}[{,| }{job_tasks}{,| }...]\n");
       fprintf(fp, "job_tasks                  [job_id|job_name|pattern]['.'task_id_range]\n");

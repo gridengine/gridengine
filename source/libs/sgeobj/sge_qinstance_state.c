@@ -223,7 +223,8 @@ transition_is_valid_for_qinstance(u_long32 transition, lList **answer_list)
 {
    bool ret = false;
   
-   transition = transition & (!JOB_DO_ACTION);
+   transition = transition & (~JOB_DO_ACTION);
+   transition = transition & (~QUEUE_DO_ACTION);
    
    if (transition == QI_DO_NOTHING ||
        transition == QI_DO_DISABLE ||

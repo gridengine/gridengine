@@ -1662,7 +1662,6 @@ static void send_events(void)
 #else
          if (ret == 0) {
 #endif
-printf("send events %d to host: %s id: %d\n", numevents, host, id);            
             switch (busy_handling) {
             case EV_THROTTLE_FLUSH:
                /* increase busy counter */

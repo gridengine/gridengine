@@ -211,7 +211,7 @@ Content
 6. Xmt Library
 ---------------
 
-   qmon/xmt_212/Xmt/*
+   qmon/Xmt310/Xmt/*
 
    Xmt is open source now - it has not been at the time of the acquisition.
    The Xmt open source license can be found at
@@ -263,28 +263,16 @@ Content
    EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-
-
-   Copyright as of July 2000
-   -------------------------
-
-   Copyright (c) 1992, 1993, 1994 by Dovetail Systems 
-   Written by David Flanagan
-
-   COPYRIGHT
-   ---------
    The Xmt library and all its supporting programs and documentation are 
 
-       Copyright (c) 1992, 1993, 1994 by Dovetail Systems.  
+       Copyright (c) 1992 through 2001 by David Flanagan.
        All Rights Reserved.
 
-   This is not free software; if you use it, we ask that you pay a small
-   fee which will enable Dovetail Systems to continue to maintain this
-   library and develop other useful products.  See the file SHAREWARE for
-   details and the fee schedule.  The file LICENSE explains the terms and
-   conditions under which you can use, modify, and distribute the Xmt
-   library.  There is NO WARRANTY for this software.  See the file
-   NO_WARRANTY for details.
+   This is software provided at no charge. It is Open Source software as
+   defined by OpenSource.org. There is no requirement to purchase
+   anything. Please read the file LICENSE for the details.  There is NO
+   WARRANTY for this software.  Please see the file NO_WARRANTY for
+   details.
 
    Portions of the Xmt library are derived from other sources, and fall
    under additional copyrights and restrictions.  Where code has been used
@@ -369,260 +357,6 @@ Content
        permission.  M.I.T. makes no representations about the suitability of
        this software for any purpose.  It is provided "as is" without express
        or implied warranty.
-
-
-
-
-   License PO Confirmation
-   -----------------------
-
-   Date: Mon, 17 Nov 1997 03:50:13 -0500
-   From: info@digibuy.com
-   To: andre@genias.de
-   Subject: Your order
-
-   Thank you for your purchase.
-
-   ** PLEASE PRINT THIS OUT AND RETAIN IT FOR FUTURE REFERENCE **
-
-   About your order:
-
-   Your order has been processed by Maagnum Commerce Services.  This
-   is the name that will appear on your credit card statement.
-
-   Please include your name and address plus the following information
-   in all correspondence concerning your order:
-
-   Name:                     Andre Alefeld
-   Order number:             RE105276
-   Date of purchase:         Mon Nov 17 03:50:08 1997
-   Total amount (incl. tax): $500.00
-   Payment method:           MASTERCARD
-
-   =======================================================================
-   You purchased product #87894807074: Xmt Library Site License
-   Price: $500.00
-   Delivery Method: e-mail confirmation of license - $0.00
-   Qty: 1
-   Total: $500.00
-
-   If you have any questions concerning this product, please contact the
-   publisher at this e-mail address: xmt@davidflanagan.com
-
-   If you do not hear from the publisher within 5 days, please go to the
-   "About DigiBuy" section of our web site and follow the instructions.
-   =======================================================================
-
-   Once again, thank you for your purchase.
-
-   DigiBuy - the digital marketplace
-   http://www.digibuy.com
-
-
-
-
-
-
-
-   License
-   -------
-
-   Date: Mon, 17 Nov 1997 12:19:24 -0800
-   From: David Flanagan <david@ora.com>
-   To: andre@genias.de
-   Cc: david@oxymoron.ora.com
-   Subject: Xmt License Confirmation
-
-
-   Andre Alefeld
-   Erzgebirgstr. 2
-   Neutraubling, D 93073
-   Germany
-
-   Dear Andre Alefeld,
-
-   Thank you for your purchase of 1 Xmt site license @ US$500.00
-
-   Each license entitles any number of programmers at one site within one
-   organization to develop programs with the Xmt library under the terms
-   set forth in the LICENSE file of the Xmt distribution.
-
-   If you have not done so already, you can download the Xmt library source
-   code by following the links at http://www.davidflanagan.com/Xmt
-
-           Sincerely,
-
-           David Flanagan
-
-
-
-
-
-
-   License file of Xmt distribution as referenced above
-   ----------------------------------------------------
-
-   ===============================================================================
-             LICENSE FOR THE XMT LIBRARY
-   ===============================================================================
-
-                PREAMBLE
-
-   The Xmt library and all its supporting programs and documentation are:
-
-       Copyright (c) 1992, 1993, 1994 by Dovetail Systems.
-       All Rights Reserved.
-
-   Xmt is not free software, and it is not in the public domain.  See the
-   file COPYRIGHT for more information on the copyright.
-
-   Xmt is provided "as is" with no warranty of any kind.  See the file
-   NO_WARRANTY for more information.
-
-   The Xmt library may only be used by under the terms of this license.
-   Purchase of the book Motif Tools, published by O'Reilly & Associates
-   gives you a license for one developer to use the Xmt library on one
-   CPU.  If Xmt is to be used by more than one developer or on more than
-   one CPU, then you must purchase additional licenses, as described in the
-   file SHAREWARE.
-
-   You'll find that this license gives you a lot of flexibility in the
-   ways you use Xmt.  It does not allow you, however, to sell Xmt or
-   modified versions of Xmt, or to distribute Xmt as part of toolkits of
-   your own.
-
-   This license below is a non-standard one, and is longer and more
-   detailed than many.  This is because we are trying to give the software
-   developer as much freedom as possible to use Xmt, and at the same time
-   protect some key commercial rights of our own.  Indented paragraphs are
-   the formal definitions, terms and conditions of this license.  Text that
-   is flush left is less formal commentary on those definitions, terms and
-   conditions.
-
-
-                DEFINITIONS
-
-       A "licensed user" is anyone who has purchased a copy of the
-       book "Motif Tools", or who has otherwised purchased a
-       license to the Xmt library.
-
-       A "library" means a collection of software functions and/or data
-       prepared so as to be conveniently linked with application programs
-       (which use some of those functions and data) to form executables.
-
-       "Source code" for a work means the preferred form of the work for
-       making modifications to it.
-
-       "Object code" is a compiled, machine-readable form of a work, which has
-       not been linked with libraries or other object code to form an
-       executable.
-
-       "Linking" is the process of combining modules of object code and
-       libraries into a form that can be executed by a computer.
-
-       An "executable" is software that has been linked.
-
-       "Portions of the library" mean a subset of the software functions that
-       comprise the library which have been extracted from the library and are
-       distributed directly as part of an application, and not as part of a
-       library or as a library themselves.
-
-
-                TERMS AND CONDITIONS
-
-       1) Permission is granted to copy and distribute unmodified
-       versions of the Xmt library for any non-commercial purpose.
-       This distribution must be under terms identical to those set
-       forth here.
-
-   Paragraph 1 of the license covers only distribution of the unmodified
-   library: anyone may give an unmodified copy of this library to anyone
-   who wants it, and anyone may also make the unmodified library available
-   for anonymous ftp, for example.  You can't charge money to make copies
-   for people, and you can't distribute modified versions of the library.
-   "Unmodified" means that you have to include all files in the
-   distribution, including those that contain this license.  You don't have
-   to be a licensed user to distribute unmodified copies, but note that you
-   aren't allowed to actually use the library unless you are licensed.
-
-       2) Permission is granted to licensed users to use and modify
-       the Xmt library, on a single CPU, for any purpose.
-
-   Paragraph 2 explains that licensed users can use and modify Xmt however
-   they want.  Note, though, that distribution of programs linked with Xmt
-   or modified versions of Xmt is covered separately in the paragraphs
-   below.
-
-       3) Permission is granted to licensed users to freely
-       distribute executable programs that have been linked with
-       the Xmt library or with modified versions of the library.
-
-   Paragraph 3 says that if licensed users link an application with this
-   library, they can distribute the executable freely; there's no run-time
-   royalty or any other charges.
-
-       4) Permission is granted to licensed users to distribute
-       modified or unmodified portions of the Xmt library, in
-       source code or object code form, as part of an application
-       which is itself distributed in source or object code form,
-       provided that the files LICENSE, COPYRIGHT, SHAREWARE and
-       NO_WARRANTY from the Xmt library are included with the
-       application distribution, and provided that any code derived
-       from Xmt is clearly labeled as such.  Documentation for the
-       Xmt library, or for any portion of it, may not be
-       distributed under the terms of this section.
-
-   Much useful software is distributed in source-code form.  Paragraph 4
-   allows you to distribute applications that use Xmt in source code form
-   without requiring all the users of the application to pay a license fee
-   for Xmt: if you write an application that uses only some of modules from
-   this library, or uses modified modules from the library, and you are
-   distributing the application in source code form, then you can include
-   the source code modules from Xmt or derived from Xmt with the
-   application.  You must include the files that explain this license if
-   you do so.  Note that you can only distribute portions of the library in
-   this way--not the whole library--and that those portions must be part of
-   an application--they may not form a library themselves.  You may not
-   distribute documentation for the portions of the library you distribute
-   under the terms of this section--since your users need only to compile
-   and run your application, there is no need for the Xmt programmer
-   documentation.  Distribution of the documentation might encourage
-   modification or reuse of the distributed portions of Xmt, which is
-   forbidden in Paragraph 5.
-
-       5) Permission is granted to use, without fee, portions of
-       the Xmt library distributed with an application within that
-       application only.
-
-   Paragraph 4 allows application developers to distribute portions of the
-   Xmt library with their applications.  Paragraph 5 specifies the terms
-   under which those portions may be used by those who receive the
-   distribution: anyone who receives portions of the Xmt library as part of
-   an application may compile and run that application without becoming a
-   licensed user.  But no one may modify those portions, or reuse them in
-   another application without becoming a licensed user.
-
-       6) Any permissions not explicitly granted above are reserved
-       by Dovetail Systems.
-
-   Paragraph 6 says that the paragraphs above specify the only ways that
-   you are allowed to use, modify, and distribute the Xmt library.  In
-   particular, note that you are not permitted to distribute modified
-   versions of Xmt without the prior written permission of Dovetail
-   Systems; this is to prevent a proliferation of versions and avoid
-   confusion over which version is the "official" one.  Also, while you are
-   allowed to distribute portions of the library in or with your
-   applications, you are not allowed to distribute portions of the library
-   in your own libraries or toolkits, or in any way that would allow them
-   to be reused, unless you obtain prior written permission to do so.  For
-   example, if you write an interface builder application, you may use the
-   widgets from the Xmt library in your application's executable, but you
-   may not include the source or object code for those widgets in any form
-   that the users of your builder application can use in their
-   applications.  Instead, you must require your users to obtain a license
-   for the Xmt library in order to use the Xmt widgets.
-
-   
    
    The current GUI depends strongly on the Xmt library. A license has been acquired.
    There have been fixes applied coming from the Xmt mailing list and smaller adaptions

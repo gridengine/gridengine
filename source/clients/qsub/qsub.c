@@ -101,7 +101,6 @@ char **argv
 
    /* Set up the program information name */
    sge_setup_sig_handlers(QSUB);
-   qsub_setup_sig_handlers ();
 
    DPRINTF (("Initializing JAPI\n"));
 
@@ -202,6 +201,7 @@ char **argv
    if (is_immediate || wait_for_job) {
       pthread_t sigt;
       
+      qsub_setup_sig_handlers(); 
       if (pthread_create (&sigt, NULL, sig_thread, (void *)NULL) != 0) {
          printf (MSG_QSUB_COULDNOTINITIALIZEENV_U, " error preparing signal handling thread");
          

@@ -400,12 +400,6 @@ int japi_init_mt(dstring *diag)
    if ( uti_state_get_mewho() == QUSERDEFINED) { 
       sge_gdi_param(SET_MEWHO, prog_number, NULL);
    } 
-   gdi_errno = sge_gdi_setup(prognames[prog_number], &alp);
-   if (gdi_errno!=AE_OK && gdi_errno != AE_ALREADY_SETUP) {
-      answer_to_dstring(lFirst(alp), diag);
-      lFreeList(alp);
-      return DRMAA_ERRNO_INTERNAL_ERROR;
-   }
 
    /* current major assumptions are
       - if code was compiled with -SECURE then
@@ -418,6 +412,13 @@ int japi_init_mt(dstring *diag)
    /* as long as signal handling is not restored japi_init_mt() is
       good place to install library signal handling */  
    japi_use_library_signals();
+
+   gdi_errno = sge_gdi_setup(prognames[prog_number], &alp);
+   if (gdi_errno!=AE_OK && gdi_errno != AE_ALREADY_SETUP) {
+      answer_to_dstring(lFirst(alp), diag);
+      lFreeList(alp);
+      return DRMAA_ERRNO_INTERNAL_ERROR;
+   }
 
    return DRMAA_ERRNO_SUCCESS;
 }

@@ -1,3 +1,11 @@
+CR-2004-02-27-0: Bugfix:    - Use thread signal handler for qsub only when 
+                              -sync yes or -now yes is used (when a thread is
+                              started) otherwise the default sge signal handler
+                              is used.
+                            - japi_init_mt():
+                              block PIPE signal before doing sge_gdi_setup()
+                 Changed:   qsub, japi
+
 AS-2004-02-26-0: Enhancem:  - Tru64 compile port
                             - QIDL remove, header file cleanup
                             - Makefile cleanup (did not fix not working rules)

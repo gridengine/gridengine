@@ -34,8 +34,12 @@
 #include <string.h>
 #include <fnmatch.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #ifdef WIN32NATIVE
-#	include "win32nativetypes.h"
+#  include "win32nativetypes.h"
 #endif
 
 #include "sge_sched.h"

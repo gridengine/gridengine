@@ -36,6 +36,10 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <fcntl.h>
+
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif    
              
 #include "sgermon.h"
 #include "sge.h"

@@ -31,6 +31,10 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #include "sge_gdiP.h"
 #include "sge_any_request.h"
 #include "sge_prog.h"

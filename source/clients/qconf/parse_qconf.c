@@ -40,6 +40,10 @@
 #include <ctype.h>
 #include <fnmatch.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif
+
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sge_gdi.h"

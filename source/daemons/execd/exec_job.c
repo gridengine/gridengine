@@ -39,6 +39,10 @@
 #include <stdlib.h>
 #include <signal.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #ifdef __sgi
 #   include <sys/schedctl.h>
 #endif

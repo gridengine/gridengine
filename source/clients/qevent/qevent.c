@@ -34,12 +34,17 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+
 #if defined(FREEBSD) || defined(DARWIN)
 #include <sys/time.h>
 #endif
+
 #include <sys/resource.h>
 #include <sys/wait.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif
 
 #include "sge_string.h"
 #include "setup.h"

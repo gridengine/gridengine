@@ -34,6 +34,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #include "sge_bootstrap.h"
 
 #include "sgermon.h"

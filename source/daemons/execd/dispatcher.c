@@ -35,6 +35,10 @@
 #include <string.h>
 #include <signal.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #include "basis_types.h"
 #include "commlib.h"
 #include "dispatcher.h"

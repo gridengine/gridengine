@@ -41,6 +41,10 @@
 #include <float.h>
 #include <math.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge_profiling.h"
 #include "sge_log.h"
 #include "sge.h"

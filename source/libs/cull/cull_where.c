@@ -36,6 +36,10 @@
 #include <ctype.h>
 #include <fnmatch.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
 #define NO_SGE_COMPILE_DEBUG

@@ -33,6 +33,10 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge.h"
 #include "sge_ja_task.h"
 #include "sge_job_refL.h"

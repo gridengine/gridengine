@@ -31,6 +31,10 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "basis_types.h"
 #include "sgermon.h"
 #include "sge.h"

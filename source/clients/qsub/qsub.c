@@ -33,6 +33,10 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif
+
 #include "sge_all_listsL.h"
 #include "usage.h"
 #include "parse_qsub.h"

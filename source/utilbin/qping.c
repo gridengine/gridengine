@@ -35,6 +35,11 @@
 #include <signal.h>
 #include <string.h>
 #include <ctype.h>
+
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif
+
 #include "msg_utilbin.h"
 #include "sge_time.h"
 #include "cl_commlib.h"

@@ -37,12 +37,12 @@
 #include <ctype.h> 
 
 #ifndef WIN32NATIVE
-#	include <netdb.h>
+#  include <netdb.h>
 #  include <sys/socket.h>
 #  include <sys/types.h>
 #  include <netinet/in.h> 
 #else 
-#	include <winsock2.h>
+#  include <winsock2.h>
 #endif 
 
 #include "sge_unistd.h"

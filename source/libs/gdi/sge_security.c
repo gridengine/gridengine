@@ -34,6 +34,10 @@
 #include <pwd.h>
 #include <pthread.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif 
+
 #include "cull.h"
 #include "sgermon.h"
 #include "sge_gdiP.h"

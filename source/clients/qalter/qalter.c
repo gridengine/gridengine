@@ -32,6 +32,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif
+
 #include "sge_gdi.h"
 #include "sge_unistd.h"
 #include "symbols.h"

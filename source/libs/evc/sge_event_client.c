@@ -35,6 +35,10 @@
 #include <string.h>
 #include <strings.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif 
+
 #include "sge_any_request.h"
 #include "sge_ack.h"
 #include "sge_unistd.h"

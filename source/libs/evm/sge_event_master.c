@@ -30,13 +30,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_event_master.h"
-
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
 
 #include "sge_event_master.h"
 #include "sge.h"

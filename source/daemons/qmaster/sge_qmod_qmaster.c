@@ -34,6 +34,10 @@
 #include <limits.h>
 #include <fnmatch.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif    
+
 #include "sge.h"
 #include "symbols.h"
 #include "sge_ja_task.h"

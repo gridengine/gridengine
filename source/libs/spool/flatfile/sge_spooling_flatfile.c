@@ -33,6 +33,10 @@
 /* system */
 #include <errno.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif
+
 #include "sge.h"
 #include "setup_path.h"
 #include "sgermon.h"

@@ -215,6 +215,10 @@ case "sol-x86":
    set BUILDARCH = SOLARIS86
    set TARGET_BITS = TARGET_32BIT
    breaksw
+case "sol-amd64":
+   set BUILDARCH = SOLARISAMD64
+   set TARGET_BITS = TARGET_64BIT
+   breaksw
 case "tru64":
    set BUILDARCH = ALPHA5
    set TARGET_BITS = TARGET_32BIT
@@ -495,6 +499,7 @@ switch ($BUILDARCH)
    case SOLARIS:
    case SOLARIS64:
    case SOLARIS86:
+   case SOLARISAMD64:
       set WITH_GETTEXT = 1
       breaksw
    default:
@@ -1246,7 +1251,7 @@ case LINUXIA64:
       endif
    endif
 
-   set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
+   set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
    if ("$ADOC" == 1) then
       set CFLAGS = "$CFLAGS -Wno-error"
    endif
@@ -1501,6 +1506,7 @@ case SLINUX:
 case SOLARIS:
 case SOLARIS64:
 case SOLARIS86:
+case SOLARISAMD64:
    set COMPILE_DC = 1
    if ($OPTIMIZATION == 1) then 
       if ( $CC == gcc ) then
@@ -1522,7 +1528,7 @@ case SOLARIS86:
      #          set OFLAG = "-xO3 -fns -fsimple=2 -fsingle -ftrap=%none -nofstore -xbuiltin=%all -xdepend -xlibmil"
             endif
          else
-            set OFLAG = "-fast -xchip=generic -xcache=generic"
+	    set OFLAG = "-fast -xchip=generic -xcache=generic"
          endif
       endif
    else
@@ -1559,7 +1565,12 @@ case SOLARIS86:
       endif
    else
       set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
-      set MEMFLAG = "-xarch=generic"
+      if ( $BUILDARCH == SOLARISAMD64 ) then
+         set MEMFLAG = "-xarch=amd64"
+         set LFLAGS = "-xarch=amd64 $LFLAGS"
+      else
+         set MEMFLAG = "-xarch=generic"
+      endif
       if ( $CC == cc ) then
          set MEMCFLAG = "-Xa"
          set LFLAGS = "-xildoff $LFLAGS"
@@ -1579,7 +1590,11 @@ case SOLARIS86:
       if ( $BUILDARCH == SOLARIS64 ) then
          set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=v9"
       else
-         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
+	 if ( $BUILDARCH == SOLARISAMD64 ) then
+	   set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=amd64"
+	 else
+           set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G"
+	 endif
       endif
    endif
 
@@ -1591,6 +1606,10 @@ case SOLARIS86:
 
    set XINCD    = "-I/usr/dt/include -I/usr/openwin/include $XMTINCD $XINCD"
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
+
+   if ( $BUILDARCH == SOLARISAMD64 ) then
+      set XMTDEF = "-DMOTIF12_HEADERS $XMTDEF"
+   endif
    set XCFLAGS  = "-Xc -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
@@ -1699,7 +1718,7 @@ if ( $WITH_GETTEXT == 1 ) then
       set LFLAGS = "-L $MYILIB"
       echo "Using $MYILIB path for i18n support"
    else
-      if ( $BUILDARCH == "SOLARIS" || $BUILDARCH == "SOLARIS64" || $BUILDARCH == "SOLARIS86" || $BUILDARCH == "LINUX86" || $BUILDARCH == LINUXIA64 || $BUILDARCH == LINUXAMD64) then
+      if ( $BUILDARCH == "SOLARIS" || $BUILDARCH == "SOLARIS64" || $BUILDARCH == "SOLARIS86" || $BUILDARCH == "SOLARISAMD64" || $BUILDARCH == "LINUX86" || $BUILDARCH == LINUXIA64 || $BUILDARCH == LINUXAMD64) then
          set LIBINTL = ""
          set HFLAGS = ""
       else

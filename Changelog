@@ -1,3 +1,8 @@
+SG-2004-12-13-0: Enhancem.: part 1 of SOLARIS 10 AMD 64. The core system compiles
+                            with classic spooling. 
+                 Changed:   everything
+                 Review:    AA
+
 JG-2004-12-09-1: Testsuite: Improved testsuite ssh login.
 
 JG-2004-12-09-0: Bugfix:    Fixed broken build on lx22-alpha.

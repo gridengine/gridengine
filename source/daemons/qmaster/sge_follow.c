@@ -32,6 +32,10 @@
 #include <string.h>
 #include <pthread.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #include "sge_conf.h"
 #include "sge.h"
 #include "sge_pe.h"

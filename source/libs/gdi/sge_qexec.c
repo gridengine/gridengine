@@ -38,6 +38,10 @@
 #include <sys/wait.h>
 #include <errno.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif       
+
 #include "cull.h"
 #include "commlib.h"
 #include "commd_message_flags.h"

@@ -35,6 +35,10 @@
 #include <errno.h>
 #include <float.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif     
+
 #include <pwd.h>
 #include <sys/types.h>
 #include <sys/time.h>

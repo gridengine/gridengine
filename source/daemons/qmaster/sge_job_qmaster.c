@@ -35,6 +35,10 @@
 #include <fnmatch.h>
 #include <ctype.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif     
+
 #include "sge_stdlib.h"
 
 #include "sgermon.h"

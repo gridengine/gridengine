@@ -193,6 +193,8 @@ SetArchBin()
       ARCHBIN=ALPHA5
    elif [ $i = sol-x86 ]; then
       ARCHBIN=SOLARIS86
+   elif [ $i = sol-amd64 ]; then
+      ARCHBIN=SOLARISAMD64
    elif [ $i = sol-sparc64 ]; then
       ARCHBIN=SOLARIS64
    elif [ $i = sol-sparc ]; then
@@ -265,6 +267,7 @@ ArchTable()
    echo "osf4                  OSF 4.x"
    echo "tru64                 TRU64 UNIX"
    echo "sol-x86               Solaris x86"
+   echo "sol-amd64             Solaris 10 AMD64"
    echo "sol-sparc             Solaris SPARC"
    echo "sol-sparc64           Solaris SPARC 64bit"
    echo "cray                  UNICOS"

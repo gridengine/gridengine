@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.5 2004/02/09 13:19:27 andy Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.h,v 1.6 2004/12/13 14:09:48 sgrell Exp $ */
 /*
  * sh.h: Catch it all globals and includes file!
  */
@@ -414,7 +414,9 @@ typedef int sigret_t;
 # else
 #  define __P(a) ()
 #  if !__STDC__
-#   define const
+#   ifndef SOLARISAMD64
+#    define const 
+#   endif
 #   ifndef apollo
 #    define volatile	/* Apollo 'c' extensions need this */
 #   endif /* apollo */

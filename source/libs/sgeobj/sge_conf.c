@@ -35,6 +35,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif     
+
 #include "sge.h"
 #include "basis_types.h"
 #include "sge_conf.h"

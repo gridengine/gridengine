@@ -32,6 +32,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #include "cull.h"
 #include "sge_report_execd.h"
 #include "sge_usageL.h"

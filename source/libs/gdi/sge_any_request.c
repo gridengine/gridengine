@@ -32,6 +32,10 @@
 #include <sys/types.h>
 #include <string.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #include "setup.h"
 #include "sge_gdiP.h"
 #include "sge_any_request.h"

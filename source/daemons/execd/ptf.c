@@ -30,6 +30,11 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif     
+
 #if defined(ALPHA) || defined(SOLARIS)
 #  include <sys/param.h>        /* for MAX() macro */
 #endif

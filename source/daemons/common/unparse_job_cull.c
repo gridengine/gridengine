@@ -31,6 +31,10 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif    
+
 #include "symbols.h"
 #include "sge_options.h"
 #include "sge_ja_task.h"

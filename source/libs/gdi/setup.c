@@ -35,6 +35,10 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #include "sge_bootstrap.h"
 #include "sge_prog.h"
 #include "sge_gdiP.h"

@@ -34,6 +34,10 @@
 #include <string.h>
 #include <float.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif     
+
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_usageL.h"

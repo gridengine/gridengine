@@ -38,6 +38,10 @@
 #include <pthread.h>
 #include <pwd.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "sge_mtutil.h"
 #include "drmaa.h"
 #include "japi.h"

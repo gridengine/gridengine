@@ -37,6 +37,10 @@
 #include <errno.h>
 #include <time.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #include "sge_bootstrap.h"
 #include "sge.h"
 #include "sge_conf.h"

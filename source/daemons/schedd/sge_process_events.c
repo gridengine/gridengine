@@ -44,6 +44,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif
+
 #include "sge_profiling.h"
 #include "sge.h"
 #include "sge_string.h"

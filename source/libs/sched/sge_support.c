@@ -38,6 +38,10 @@
 #include <limits.h>
 #include <math.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #ifndef NO_SGE_COMPILE_DEBUG   
 #   define NO_SGE_COMPILE_DEBUG
 #endif

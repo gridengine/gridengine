@@ -31,6 +31,10 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif  
+
 #include "sge_all_listsL.h"
 #include "sge_any_request.h"
 #include "qmaster_to_execd.h"

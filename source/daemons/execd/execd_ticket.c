@@ -29,6 +29,11 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif 
+
 #include "sge_pe.h"
 #include "sge_ja_task.h"
 #include "sgermon.h"

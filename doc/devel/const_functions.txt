@@ -1,0 +1,12 @@
+Functions to be changed to accept and/or return const objects
+(- means still to do, + means finished)
+
+- sge_basename
+- sge_delim_str
+- sge_dirname
+- sge_strdup
+- sge_strtok
+- sge_is_pattern
++ sge_qexecve
+- set_commlib_param
+- send_message_pb

@@ -1089,9 +1089,7 @@ proc large_cluster_cleanup {} {
    global check_description check_functions check_errno check_init_level_procedure check_use_installed_system
 
    # dump html code
-   if {$CHECK_ACT_LEVEL == $check_highest_level} {
-      large_cluster_create_html
-   }
+   large_cluster_create_html
 
    # reinit system
 

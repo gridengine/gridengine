@@ -1,13 +1,16 @@
+AS-2004-04-06-0: CVS        Created V53p6_TAG
+---------------------------------------------
+
 HP-2004-04-02-0  Bugfix:    shepherd created world writable file now also
                             fixed for prolog/pe_start/pe_stop/epilog
-					  Issue:     931
-					  Review:    AS
-					  Changed    shepherd
+		 Issue:     931
+		 Review:    AS
+		 Changed    shepherd
 
-HP-2004-04-01-0  Bugfix:	 shepherd created world writable file
-					  Issue:		 931
-					  Review:	 AS
-					  Changed:   shepherd
+HP-2004-04-01-0  Bugfix:    shepherd created world writable file
+		 Issue:     931
+		 Review:    AS
+		 Changed:   shepherd
 					  
 BD-2004-03-29-0  Bugfix:    qmon does not link on fbsd-amd64.
                  Changed:   qmon
@@ -24,9 +27,10 @@ HP-2004-03-29-0  Bugfix:    shepherd creates world writable files
                  Bugtraq:   5020371
                  Review:    AS
 
-AA-2004-03-26-1: Bugfix:    -2 spinbox bug
+AA-2004-03-26-1: Bugfix:    qmon displays wrong numerical values on AMD
+                            Linux and Alpha Linux in spinbox widgets
                  Changed:   qmon
-                 Bugtraq:   ???
+                 Bugtraq:   5022074
                  Review:    AS
 
 AA-2004-03-26-0: Bugfix:    CSP reconnect problem of scheduler and execd

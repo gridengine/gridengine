@@ -41,7 +41,7 @@ LEX    = flex
 ###############################################################################
 common_all: $(SECTARGETS) common libs daemons clients utilbin coshepherd $(PERLGUI)
 
-clean:  common_clean libs_clean clients_clean daemons_clean utilbin_clean coshepherd_clean $(SECCLEAN) $(KRBCLEAN) $(GSSCLEAN) $(PERLGUI_CLEAN)
+clean:  common_clean libs_clean clients_clean daemons_clean utilbin_clean coshepherd_clean classes_clean $(SECCLEAN) $(KRBCLEAN) $(GSSCLEAN) $(PERLGUI_CLEAN)
 
 depend: common_depend libs_depend clients_depend daemons_depend utilbin_depend $(SECDEPEND) $(KRBDEPEND) $(GSSDEPEND)
 
@@ -59,3 +59,4 @@ include  $(SDIR)/experimental/perlgui/Makefile
 include  $(SDIR)/daemons/Makefile
 include  $(SDIR)/clients/Makefile
 include  $(SDIR)/utilbin/Makefile
+include  $(SDIR)/classes/Makefile

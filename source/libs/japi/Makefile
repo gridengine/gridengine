@@ -35,9 +35,7 @@
 
 JAPILIB_DIR   = $(SDIR)/libs/japi
 
-CLASSES_DIR   = $(SDIR)/classes
-
-JAPILIB 	    = libjapi$(LIBEXT)
+JAPILIB       = libjapi$(LIBEXT)
 JAPILIB_SRC   = japi.c
 JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
 
@@ -48,15 +46,11 @@ DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o) $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS) $(EVCL
                 $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(COMMLIB_OBJS) \
                 $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS)
 
-JDRMAALIB     = $(DRMAALIB)
-JDRMAALIB_SRC = com_sun_grid_drmaa_SGESession.c
-JDRMAALIB_OBJS = $(JDRMAALIB_SRC:.c=.o) $(DRMAALIB_OBJS)
-
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c
 
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
 JAPI_ADD_LIBS = -lsched -levc -lgdi -lsgeobj -lsgeobjd \
-				    $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists \
+                $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists \
                 -luti -lrmon -llck $(DLLIB)
                 
 JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
@@ -66,7 +60,7 @@ JAPI_DEPEND_LIBS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(UTILIB) $(RMONLIB) $(LCKLIB)
 
 JAPI_ALL      = japilib drmaalib test_drmaa example howto1 howto2 howto2_1 \
-								howto3 howto3_1 howto3_2 howto4 howto5 howto6
+                howto3 howto3_1 howto3_2 howto4 howto5 howto6
 
 japi_all: $(JAPI_ALL)
 
@@ -112,15 +106,6 @@ include $(JAPILIB_DIR)/japi_dependencies
 include $(JAPILIB_DIR)/howto/Makefile
 
 ###############################################################################
-# rules to build DRMAA Java binding
-###############################################################################
-jdrmaa: $(JDRMAALIB_OBJS) $(DRMAALIB) $(DRMAALIB_OBJS)
-	@rm $(DRMAALIB)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libdrmaa$(SHAREDEXT) $(JDRMAALIB_OBJS) $(DRMAALIB_OBJS) $(SLIBS) $(LIBS) -lc
-	$(JAVA_HOME)/bin/javac -classpath $(CLASSES_DIR) -d $(CLASSES_DIR) $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java $(CLASSES_DIR)/*.java
-	@cd $(CLASSES_DIR); $(JAVA_HOME)/bin/jar cvf $(SOURCE)/$(COMPILE_ARCH)/drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class; cd $(SOURCE)/$(COMPILE_ARCH)
-
-###############################################################################
 # rules to build object codes
 ###############################################################################
 drmaa.o: $(JAPILIB_DIR)/drmaa.c
@@ -128,9 +113,6 @@ drmaa.o: $(JAPILIB_DIR)/drmaa.c
 
 japi.o: $(JAPILIB_DIR)/japi.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c
-
-com_sun_grid_drmaa_SGESession.o: $(JAPILIB_DIR)/com_sun_grid_drmaa_SGESession.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/com_sun_grid_drmaa_SGESession.c
 
 #---------------------------------------------------------------------
 

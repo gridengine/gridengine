@@ -306,9 +306,11 @@ usage:
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
    echo "-insure           -> compile in debug mode and detect memory leaks)"
    echo "-intl             -> compile with internationalization library (libintl)"
+   echo "-java             -> compile Java sources such as DRMAA Java binding"
+   echo "-javadoc          -> create JavaDoc for Java sources such as DRMAA Java binding"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
-   echo "-mankv		   -> generate man pages checked out with '-kv' flag"
+   echo "-mankv		      -> generate man pages checked out with '-kv' flag"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-no-core          -> don't compile the core system"
    echo "-no-intl          -> do not compile with internationalization library"
@@ -388,7 +390,7 @@ set NOERR_CFLAG      = ""
 set NOERR_PROTO      = ""
 set MEMCFLAG         = ""
 set JAVA_ARCH        = ""
-set JDRMAA           = 0
+set JAVA             = 0
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -412,6 +414,7 @@ set BUILDMAN          = 0
 set BUILDCATMAN       = 0
 set BUILDGETTEXT      = 0
 set BUILDHTMLMAN      = 0
+set BUILDJAVADOC      = 0
 set SGE_PRODUCT_MODE  = ge
 set ADD_COPYRIGHT     = 0
 set ADD_SUN_COPYRIGHT = 0
@@ -639,8 +642,11 @@ while ($#argv >= 1 && $?found)
    case  "-intl"
       set WITH_GETTEXT = 1
       breaksw
-   case  "-jdrmaa"
-      set JDRMAA = 1
+   case  "-java"
+      set JAVA = 1
+      breaksw
+   case  "-javadoc"
+      set BUILDJAVADOC = 1
       breaksw
    case "-kerberos":
       set KRB        = 1
@@ -858,13 +864,15 @@ if ( $DEBUGGED && $USE_QMAKE ) then
    set MAKEOPT = "-verbose $MAKEOPT"
 endif
 
-if ( $JDRMAA == 1 ) then
-   # Make sure we can find the Java header files
+if ( $JAVA == 1 || $BUILDJAVADOC == 1 ) then
+   # Make sure we can find JAVA_HOME
    if ( ${?JAVA_HOME} == 0 ) then
       echo "Please set JAVA_HOME"
       exit
    else
-      set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/include"
+      if ($JAVA == 1) then
+         set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/include"
+      endif
    endif
 endif
 
@@ -1502,7 +1510,7 @@ default:
    exit 1
 endsw
 
-if ($JDRMAA == 1 && "$JAVA_ARCH" != "") then
+if ($JAVA == 1 && "$JAVA_ARCH" != "") then
    set CFLAGS = "$CFLAGS -I${JAVA_HOME}/include/${JAVA_ARCH}"
 endif
 
@@ -1642,6 +1650,29 @@ if ( "$BUILDGETTEXT" == 1 ) then
 
 endif   
 
+if ( "$BUILDJAVADOC" == 1 ) then
+   echo _________J_A_V_A_D_O_C_S__________________
+
+   cd $SOURCE/$COMPILE_ARCH
+
+   if ( ! -d ../../doc/javadoc ) then
+      echo " INFO: JavaDoc directory does not exist. Creating"
+      mkdir ../../doc/javadoc
+   else
+      echo " INFO: clearing old JavaDoc directory."
+      rm -Rf ../../doc/javadoc/*
+   endif
+
+   $JAVA_HOME/bin/javadoc -sourcepath $SOURCE/classes -classpath . -d ../../doc/javadoc -version org.ggf.drmaa
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
+
 if ( "$SGE_DEPEND" == 1 ) then
    echo _________S_G_E__D_E_P_E_N_D_______________
 
@@ -1654,6 +1685,7 @@ if ( "$SGE_DEPEND" == 1 ) then
 
    cd $COMPILE_ARCH
    $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS -U_GNU_SOURCE" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
+
    if ( $status != 0 ) then
       echo not done
       exit 1
@@ -1731,7 +1763,6 @@ else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
 endif
 
 if ( "$CORE" == 1 ) then
-
    if ( "$COMPILE_DIR" == "" ) then
       cd $COMPILE_ARCH
    else
@@ -1804,7 +1835,7 @@ if ( "$CORE" == 1 ) then
       exit 1
    endif
 
-   if ( $JDRMAA == 1 ) then
+   if ( $JAVA == 1 ) then
       $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
             "LD_WRAPPER=$LD_WRAPPER" \
             "CFLAGS=$CFLAGS $CORE_INCLUDE" \
@@ -1830,8 +1861,7 @@ if ( "$CORE" == 1 ) then
             "DLLIB=$DLLIB" \
             "MEMCFLAG=$MEMCFLAG" \
             "CORE_INCLUDE=$CORE_INCLUDE" \
-            "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
-            jdrmaa
+            classes_all
       if ( $status != 0 ) then
          echo not done
          exit 1

@@ -548,10 +548,11 @@ spooling_field *sge_build_UP_field_list (int spool, int user)
                              UPP_sub_fields, NULL, NULL, NULL);
    }
    
-   create_spooling_field (&fields[count++], UP_default_project, 0, "default_project",
-                          NULL, NULL, NULL, NULL);
-   
-   if (!user) {
+   if (user) {
+      create_spooling_field (&fields[count++], UP_default_project, 0,
+                             "default_project", NULL, NULL, NULL, NULL);
+   }
+   else {
       create_spooling_field (&fields[count++], UP_acl, 0, "acl", US_sub_fields,
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], UP_xacl, 0, "xacl",

@@ -69,7 +69,7 @@ BERKELEYDB_SHARED_LIBRARIES="libdb-4.2"
 
 DRMAA_SHARED_LIBRARIES="libdrmaa"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
-DRMAA_JAR_FILES="drmaa"
+JDRMAA_FILES="drmaa.jar libjdrmaa.so"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -449,6 +449,7 @@ instexamples=false
 instman=false
 instdoc=false
 insttxtdoc=false
+instjavadoc=false
 instpvm=false
 instmpi=false
 instqmon=false
@@ -723,6 +724,7 @@ for prog in $PROG; do
             instman=true
             instdoc=true
             insttxtdoc=true
+            instjavadoc=true
             ;;
          esac    
          ;;
@@ -734,6 +736,7 @@ for prog in $PROG; do
          instdoc=true
          insttxtdoc=true
          instcommon=true
+         instjavadoc=true
          ;;
       examples)
          instexamples=true
@@ -996,6 +999,16 @@ if [ $instcommon = true ]; then
       Execute cp ../doc/README-DRMAA.txt $DEST_SGE_ROOT/doc
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
       Cleanup doc      
+   fi
+
+   if [ $instjavadoc = true ]; then
+      if [ -d ../doc/javadoc ]; then
+         Execute rm -rf $DEST_SGE_ROOT/javadoc
+         Makedir javadoc
+         Execute cp -R ../doc/javadoc $DEST_SGE_ROOT
+         Execute chmod -R a+r $DEST_SGE_ROOT/javadoc
+         Cleanup javadoc
+      fi
    fi
 
    if [ $instckpt = true ]; then
@@ -1264,10 +1277,9 @@ for i in $ARCH; do
             fi
          done
 
-         for jar in $DRMAA_JAR_FILES; do
-            jarname=$jar.jar
-            if [ -f $jarname ]; then
-                InstallProg $jarname
+         for filename in $JDRMAA_FILES; do
+            if [ -f $filename ]; then
+                InstallProg $filename
             fi
          done
       fi

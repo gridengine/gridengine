@@ -1,3 +1,9 @@
+DT-2004-06-02-1: Bugfix:    o qconf no longer presents a default project when
+                              editing projects
+                 Cleanup:   o Created separate Makefile for DRMAA Java binding
+                 Changed:   DRMAA, flatfile spooling, aimk, distinst
+                 Issue:     1077
+
 JG-2004-06-02-0: Bugfix:    QU_full_name of queue instances was not set after a
                             qmaster restart.
                  Review:    AD

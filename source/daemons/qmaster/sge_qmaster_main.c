@@ -30,7 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_qmaster_main.h"
 
 #include <signal.h>
 #include <pthread.h>
@@ -72,6 +71,7 @@
 #include "msg_daemons_common.h"
 #include "msg_utilib.h"  /* remove once 'daemonize_qmaster' did become 'sge_daemonize' */
 #include "sge_any_request.h"
+#include "sge_qmaster_main.h"
 
 
 /*

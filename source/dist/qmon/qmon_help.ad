@@ -353,37 +353,41 @@ A refresh can be forced by pressing the @fBRefresh@fR button.
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_queue.queue_main_layout*xmtHelpTitle: Queue Control Help
-Qmon*qmon_queue.queue_main_layout*xmtHelp: \
+Qmon*qmon_cq.cq*xmtHelpTitle: Queue Control Help
+Qmon*qmon_cq.cq*xmtHelp: \
 The purpose of the @fBQueue Control@fR dialogue is to provide a quick overview of the\n\
 queues available and their state in the cluster.\n\
 Furthermore new queues can be @fBadded@fR, existing queues can be @fBmodified or deleted@fR\n\
 and they can be @fBsuspended and resumed or disabled and enabled@fR.\n\
 If put into an error state they can be reactivated by @fBClear Error@fR.\n\
 \n\
-The main dialogue displays a @fBQueue Icon@fR for each queue in the xxQS_NAMExx system.\n\
-If the main display area is empty no queues are configured or the @fBQueue Customize@fR\n\
+The dialogue displays a tabular view of @fBCluster Queues@fR and the corresponding\n\
+@fBQueue Instances@fR for each queue in the xxQS_NAMExx system.\n\
+If the main display area is empty no queues are configured or the @fBCustomize@fR\n\
 hides the queues not fulfilling the @fIfilter criteria@fR.\n\
-Each queue icon is labeled with the queue name, the name of the host on which the queue resides\n\
-and the number of job slots occupied as used slots/free slots.\n\
-If a @fBxxqs_name_sxx_execd@fR is running on the queue host and has already registered with\n\
-@fBxxqs_name_sxx_qmaster@fR a picture on the queue icon indicates the queue host's operating system\n\
-architecture and a color bar at the bottom of the icon shows the current status of the queue.\n\
-A legend on the right side of the @fBQueue Control@fR dialogue displays the meaning of the\n\
-colors. For the suspend state there has to be remarked that if a queue is suspended on\n\
-subordinate only the bottom of the square is filled with color.\n\
+If this is the case the @fBCustomize@fR button is renamed to @fBCustomize +@fR.\n\
+Under Customize it is possible to select queues according to accessability by a user, referencing\n\
+special parallel environments, fulfilling a queue name pattern or being in a special queue state.\n\
 \n\
-The @fBLoad Information@fR can be popped up by pressing @f[I]Shift + Mouse1@fR over a\n\
-queue icon.\n\
+Every line in the table corresponds to a cluster queue or queue instance. To perform an action on\n\
+a queue or queue instance one (or more) entries can be selected.\n\
+For cluster queues the following actions are possible:\n\n\
+@fBAdd@fR to add a new cluster queue\n\
+@fBModify@fR to delete one or more cluster queues\n\
+@fBQueue Sick ?@fR to perform a sanity check of a queue\n\
 \n\
-To act on the queues they have to be selected. This is done by pressing the @f[I]Left Mouse@fR\n\
-button over a queue. They are unselected by pressing the left mouse button again.\n\
-Clicking the @f[I]Right Mouse@fR button brings up the action popup.\n\
+For cluster queues and queue instances these actions apply:\n\
+@fBSuspend@fR to suspend all queue instances of a cluster queue or\n\
+only a subset thereof\n\
+@fBResume, Disable, Enable, Reschedule, Clear Error@fR to unsuspend, disable,\n\
+enable, reschedule and clear errors like for Suspend above.\n\
 \n\
-Here or on the right side of the dialogue the manipulation of the selected queues can be\n\
-performed.\n\
-The @fBDelete, Suspend/Resume and Disable/Enable and Clear Error@fR buttons perform the according\n\
-action on the selected queues.\n\
+For Queue Instances these two additional actions are available:\n\
+@fBLoad@fR pops up a load dialogue for the selected queue instances.\n\
+@fBExplain@fR shows a browser listing of @fBa@fRlarm, suspend @fBA@fRlarm,\n\
+@fBE@fRrror and ambiguous @fBc@fRonfiguration reasons in the qmon browser\n\
+dialogue depending on the explain toggle selector.\n\
+\n\
 The @fBSuspend/Resume or Disable/Enable@fR operation require notification of the\n\
 corresponding @fBxxqs_name_sxx_execd@fR. If this is not possible (e.g. because the host is down) a\n\
 @fBxxqs_name_sxx_qmaster@fR internal status change can be forced if the @fBForce@fR toggle is enabled.\n\
@@ -397,8 +401,7 @@ state for a certain reason the Clear Error is used to reset the queue.\n\
 To perform suspend/resume and disable/enable operations @fBowner@fR or @fBxxQS_NAMExx manager\n\
 or operator@fR privileges are required.\n\
 \n\
-The information about queues is updated periodically. To force an instant update press\n\
-the @fBRefresh@fR button.\n\
+To force an update of queue information press the @fBRefresh@fR button.\n\
 With the @fBDone@fR button the @fBQueue Control@fR dialogue is closed.\n\
 \n\
 The @fBAdd@fR button opens the @fBQueue Configuration@fR subdialogue in @fBAdd mode@fR\n\
@@ -414,56 +417,72 @@ across qmon sessions.
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_queue.qc_dialog_shell*xmtHelpTitle: Queue Configuration Help
-Qmon*qmon_queue.qc_dialog_shell*xmtHelp: \
+Qmon*cq_dialog_shell*xmtHelpTitle: Queue Configuration Help
+Qmon*cq_dialog_shell*xmtHelp: \
 The @fBQueue Configuration@fR subdialogue provides the means to @fBadd and modify@fR queues.\n\
-It consists of two sections, the upper part shows two input fields for the @fIqueue name@fR\n\
-and the @fIhost name@fR and the three buttons @fBClone, Reset, Refresh@fR.\n\
-On the right there is the @fBOk, Cancel and Help@fR button.\n\
-The lower part consists of a folder of configuration pages for the different categories of\n\
-queue attributes. These categories of queue parameters are present:\n\
+It consists of two sections, the upper part shows two input fields for the @fIQueue Name@fR\n\
+and one to add a @fIhost or hostgroup name@fR to the @fIHostlist@fR. The Hostlist shows the hostgroups\n\
+or hosts that are represented by the cluster queue.\n\
+The @fBAdd@fR and @fBDelete@fR buttons let you add a new host or hostgroup entered in the inputfield next\n\
+to the Hostlist or delete a host or hostgroup selected in the Hostlist.\n\
+The button @fBClone@fR presents a list of already existing cluster queues and a change of the queue name\n\
+allows you to start configuring a new queue with the settings of an already defined queue changing only\n\
+those parameters that shall be different.\n\
+The button @fBReset@fR resets the queue to queue template settings and @fBRefresh@fR updates\n\
+any input helpers that changed during editing e.g. the available PE or Checkpoint object lists.\n\n\
+On the right there is the @fBOk, Cancel and Help@fR button.\n\n\
+The lower part consists of a list containing @fIHost or Hostgroup@fR entries named\n\
+@fBAttributes for Host/Hostgroup@fR.\n\
+Next to this list a folder of configuration pages for the different categories of\n\
+queue attributes is presented. The following categories of queue parameters are shown:\n\
 @fBGeneral Configuration, Execution Method, Checkpointing, Load/Suspend Thresholds, Limits,\n\
-Complexes, Subordinates, User Access, Project Access (SGEEE mode only) and Owners.@fR\n\
+Complexes, Subordinates, User Access, Project Access and Owners.@fR\n\
 \n\
-To @fIadd a queue@fR enter first the @fIqueue name and the hostname@fR of the new queue and\n\
-change the queue attributes to your needs. To modify it only the attributes are editable.\n\
-To report the changes to the xxQS_NAMExx system press @fBOk@fR after having finished filling\n\
-in the different queue parameters.\n\
-To quit the dialog without registering the changes with the xxQS_NAMExx system press\n\
-@fBCancel@fR.\n\
-The @fBClone@fR button allows to clone the attributes of a similar queue and to adjust only\n\
-those attributes that are different.\n\
-With @fBReset@fR the forms are reset to the values of the xxQS_NAMExx template queue,\n\
-which serves as a standard queue. This values are also filled in when @fBQueue Configuration@fR\n\
-is popped up in Add mode.\n\
+The following steps are usually processed to define a new cluster queue:\n\n\
+@fBStep 1:@fR\n\
+Enter the queue name and enter the hosts or preferably one or more hostgroups.\n\n\
+@fBStep 2:@fR\n\
+Adjust the default settings for the cluster queue (select @@/) and enter your changes\n\
+for the different tabbed pages.\n\n\
+@fBStep3:@fR\n\
+Define any hosts or hostgroups within this cluster queue that have special attribute values\n\
+by adding them to the list on the left, selecting it and entering the deviating values.\n\
+The fields are made editable by pressing the toggle buttons left to the attribute name.\n\
+To access the different attribute categories select the corresponding tabbed page.\n\
+When the host or hostgroup is changed the changes are temporarily saved.\n\
+To delete a special setting either check off the corresponding attribute toggle or delete the host or hostgroup\n\
+completely from the list on the left.\n\n\
+@fBStep 4:@fR\n\
+Save or dismiss your changes by pressing @fBOk@fR or @fBCancel@fR. If an error\n\
+or misconfiguration occurs a error dialogue pops up. Otherwise the dialogue closes.\n\
 \n\
 The forms of the different attribute categories comprise the following fields, for a more\n\
 thorough explanation of the meaning of the different parameters refer to the @fBqueue_conf@fR\n\
 manual page.\n\
 \n\
 @fBGeneral Configuration@fR\n\
-Sequence Nr allows the @fBSort by Sequence Number@fR sorting of queues during scheduling.\n\
-Processor Range (s.th. like 1-4) that shall be used by the jobs running on the queue.\n\
-Temporary directory path.\n\
-Shell that shall be used to execute the job scripts. This can also be another command interpreter\n\
+@fISequence Nr@fR allows the @fBSort by Sequence Number@fR sorting of queues during scheduling.\n\
+Processors (s.th. like 1-4) that shall be used by the jobs running on the queue.\n\
+@fItmp Directory@fR the temporary directory.\n\
+@fIShell@fR that shall be used to execute the job scripts. This can also be another command interpreter\n\
 than a usual Unix shell.\n\
-Shell Start Mode defines the way how shell scripts are handled by the Shell.\n\
-Initial State defines if this queue is accessible for scheduling after startup.\n\
-Calendar contains the name of the calendar attached to this queue to manage the accessability of\n\
-the queue based on date and time.\n\
-Notify Time is the time that passes before a KILL signal is sent after sending user defined signals.\n\
-Job's Nice is the UNIX nice value that the job is started with.\n\
-Slots defines the maximum number of jobs that can run on this queue.\n\
-Rerun Jobs defines that jobs that aborted on this queue are restarted automatically this may be useful\n\
+@fIShell Start Mode@fR defines the way how shell scripts are handled by the Shell.\n\
+@fIInitial State@fR defines if this queue is accessible for scheduling after startup.\n\
+@fIRerun Jobs@fR defines that jobs that aborted on this queue are restarted automatically this may be useful\n\
 for checkpointed jobs for example.\n\
-Type defines the capability of the queue to handle special classes of jobs.\n\
+@fICalendar@fR contains the name of the calendar attached to this queue to manage the accessability of\n\
+the queue based on date and time.\n\
+@fINotify Time@fR is the time that passes before a KILL signal is sent after sending user defined signals.\n\
+@fIJob's Nice@fR is the UNIX nice value that the job is started with.\n\
+@fISlots@fR defines the maximum number of jobs that can run on this queue per queue instance.\n\
+@fIType@fR defines the capability of the queue to handle special classes of jobs like Batch or Interactive.\n\
 \n\
 @fBExecution Method@fR\n\
-Prolog defines the prolog path. The prolog is executed before the job is executed.\n\
-Epilog defines the epilog path. The epilog is executed after the job has been executed.\n\
-Starter Method defines the executable that is used to start a job.\n\
-Suspend Method, Resume Method and Terminate Method can be used as a replacement for the\n\
-default mechanisms for suspension, release of a suspension and terminating a job.\n\
+@fIProlog@fR defines the prolog path. The prolog is executed before the job is executed.\n\
+@fIEpilog@fR defines the epilog path. The epilog is executed after the job has been executed.\n\
+@fIStarter Method@fR defines the executable that is used to start a job.\n\
+@fISuspend Method, Resume Method and Terminate Method@fR can be used as a replacement for the\n\
+default mechanisms for suspension, release of a suspension and termination of a job.\n\
 Per default the signals SIGSTOP, SIGCONT and SIGKILL are delivered which may not be\n\
 appropriate.\n\ It is either possible to define an executable path here to execute a\n\
 corresponding command or to define a different signal as a positive number or with the SIG\n\
@@ -476,40 +495,29 @@ prefix. There are the following variables that can be used and that are expanded
 @fI$job_pid@fR: the UNIX pid of the job\n\
 \n\
 @fBCheckpointing@fR\n\
-The Migration Load Thresholds initiating a job migration. A threshold value can be supplied for\n\
-any load parameter. This is done by pressing the Load title button\n\
-and delivering the corresponding value in the @fBValue@fR field of the corresponding row.\n\
-No longer needed lines or lines to be changed can be selected with the mouse and\n\
-removed from the load threshold matrix by pressing the right mouse button and selecting\n\
-@fBDelete@fR from the context menu.\n\
-MaxMigrTime defines the time to wait between a checkpoint signal and a kill signal.\n\
-If set, enforces a checkpoint being generated at the time of the migration.\n\
-@fBMaxNoMigr@fR is the time a checkpointing job is allowed to spent in nointerruptible\n\
-sections of the batch script.\n\
-MinCpuTime is the periodical checkpoint interval.\n\
+@fIMinCpuTime@fR is the periodic checkpoint interval.\n\
 All time values can be set using the time input helper subdialogue.\n\
+@fIReferenced Ckpt Objects@fR allows to attach special checkpoint objects that have been defined already\n\
+to the cluster queue.\n\
 \n\
 @fBLoad/Suspend Thresholds@fR\n\
-The Load Thresholds prevent the scheduling of additional jobs to the queue. A threshold\n\
+The @fILoad Thresholds@fR prevent the scheduling of additional jobs to the queue. A threshold\n\
 can be supplied for any load value.\n\
 For entering load values see the remarks in @fBCheckpointing Parameters@fR above.\n\
 If one of the load thresholds is exceeded the queue is set to the @fBalarm state@fR and\n\
 no more jobs are scheduled to this queue.\n\
-The Suspend Thresholds can be used to suspend jobs running on this queue if a load\n\
+The @fISuspend Thresholds@fR can be used to suspend jobs running on this queue if a load\n\
 value is exceeded.\n\
+@fISuspend Interval@fR is the time interval in which further @fIJobs suspended per Interval@fR jobs\n\
+are suspended.\n\
 \n\
 @fBLimits@fR\n\
 The hard and soft limits which are imposed on the jobs running in the queue.\n\
-To fill in values either @fBDouble Click@fR on the value fields of the table and enter them directly\n\
-or use the helper dialogues by @fBDouble Clicking@fR again.\n\
+To fill in values either @fBDouble Click@fR on the value fields and enter them directly\n\
+or use the helper dialogues by @fBClicking the helper icon@fR.\n\
 \n\
 @fBComplexes@fR\n\
-The set of user defined complexes (see @fBUser Defined Complexes@fR in the manuals)\n\
-being attached to the queue.\n\
-There is a link to the @fBComplex Configuration@fR dialogue. Click the button to open\n\
-it up. To see the changes made in the  @fBComplex Configuration@fR dialogue in the\n\
-@fBAvailable@fR list, press the @fBRefresh@fR button.\n\
-Additionally @fBConsumable/Fixed Attributes@fR of the queue can be defined here.\n\
+@fBConsumable/Fixed Attributes@fR of the queue can be defined here.\n\
 \n\
 @fBSubordinates@fR\n\
 The queues which are subordinated to the configured queue. Subordinated queues are\n\
@@ -530,7 +538,7 @@ in the deny list.\n\
 There is a link to the @fBUser Configuration Dialogue@fR where it is possible to setup\n\
 user access lists. Click on the icon to go there.\n\
 \n\
-@fBProject Access (only in SGEEE mode)@fR\n\
+@fBProject Access@fR\n\
 The project being attached to the allow or deny project access lists of the queue.\n\
 Jobs running under a project belonging to the project allow list have access to the queue.\n\
 Those being associated with the project deny list may not access the queue. If the allow list is\n\

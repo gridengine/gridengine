@@ -72,7 +72,6 @@ Qmon*browser_layout.browser_object.strings: \
    "@{stdout}", \
    "@{stderr}", \
    "@{Queue}", \
-   "@{Queue sick}", \
    "@{Job}", \
    "@{Messages}"
 

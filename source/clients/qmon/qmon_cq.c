@@ -89,6 +89,7 @@ static Widget cq_message = 0;
 static Widget cluster_queue_settings = 0;
 static Widget qinstance_settings = 0;
 static Widget cq_add = 0;
+static Widget cq_clone = 0;
 static Widget cq_mod = 0;
 static Widget cq_delete = 0;
 static Widget cq_load = 0;
@@ -268,6 +269,7 @@ Widget parent
                            "cq_force", &cq_force,
                            "cq_update", &cq_update,
                            "cq_add", &cq_add,
+                           "cq_clone", &cq_clone,
                            "cq_mod", &cq_mod,
                            "cq_delete", &cq_delete,
                            "cq_suspend", &cq_suspend,
@@ -315,8 +317,10 @@ Widget parent
 
    XtAddCallback(cq_add, XmNactivateCallback, 
                      qmonQCPopup, NULL);
+   XtAddCallback(cq_clone, XmNactivateCallback, 
+                     qmonCQModify, (XtPointer)QC_CLONE);
    XtAddCallback(cq_mod, XmNactivateCallback, 
-                     qmonCQModify, NULL);
+                     qmonCQModify, (XtPointer)QC_MODIFY);
    XtAddCallback(cq_delete, XmNactivateCallback, 
                      qmonCQDelete, NULL);
 
@@ -1474,7 +1478,6 @@ lListElem *qep
    return info;
 }
 
-
 /*-------------------------------------------------------------------------*/
 static void qmonCQModify(Widget w, XtPointer cld, XtPointer cad)
 {
@@ -1484,6 +1487,8 @@ static void qmonCQModify(Widget w, XtPointer cld, XtPointer cad)
    char *str = NULL;
    lList *alp = NULL;
    Widget matrix = cluster_queue_settings;
+   int mode = (int) cld;
+   tQCAction qc_action = {QC_ADD, NULL};
    
    DENTER(GUI_LAYER, "qmonCQModify");
 
@@ -1503,7 +1508,9 @@ static void qmonCQModify(Widget w, XtPointer cld, XtPointer cad)
             str = XbaeMatrixGetCell(cluster_queue_settings, i, 0);
             if ( str && *str != '\0' ) { 
                DPRINTF(("CQ to modify: %s\n", str));
-               qmonQCPopup(matrix, (XtPointer)str, NULL); 
+               qc_action.action = mode;
+               qc_action.qname = str;
+               qmonQCPopup(matrix, (XtPointer)(&qc_action), NULL); 
             }
          }
       }
@@ -1517,13 +1524,15 @@ static void qmonCQModify(Widget w, XtPointer cld, XtPointer cad)
       if (nr_selected_rows > 1) {
          qmonMessageShow(w, True, "@{Select only one queue !}");
       } else {
-         qmonMessageShow(w, True, "@{To modify a queue select this queue !}");
+         qmonMessageShow(w, True, "@{Select one queue !}");
       }
    }
 
 
    DEXIT;
 }
+
+
 /*-------------------------------------------------------------------------*/
 static void qmonCQDelete(Widget w, XtPointer cld, XtPointer cad) 
 {
@@ -2001,7 +2010,7 @@ static void qmonQinstanceShowLoad(Widget w, XtPointer cld, XtPointer cad)
                                              "lmon_matrix", &lmon_matrix,
                                              NULL);
 
-         qmonCQUpdate(w, NULL, NULL);
+/*          qmonCQUpdate(w, NULL, NULL); */
          XtManageChild(lmon);
          qmonQinstanceSetLoad(lmon_matrix, qiname);
 
@@ -2141,8 +2150,7 @@ static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad)
             }
          }
       }
-      if (sge_dstring_get_string(&ds) && 
-            qmonBrowserObjectEnabled(BROWSE_QUEUE_SICK)) 
+      if (sge_dstring_get_string(&ds)) 
          qmonBrowserShow(sge_dstring_get_string(&ds));
       sge_dstring_free(&ds);
       qmonMessageBox(w, alp, 0);

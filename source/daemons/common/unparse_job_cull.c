@@ -194,6 +194,15 @@ int flags
    }
 
    /*
+   ** -i
+   */
+   if (sge_unparse_path_list(job, JB_stdin_path_list, "-i", pcmdline, 
+                     &answer) != 0) {
+      DEXIT;
+      return answer;
+   }
+
+   /*
    ** -j
    */
    if ((ul = lGetBool(job, JB_merge_stderr))) {
@@ -434,6 +443,13 @@ int flags
    /*
    ** -S
    */
+#if 1   
+   if (sge_unparse_path_list(job, JB_shell_list, "-S", pcmdline, 
+                     &answer) != 0) {
+      DEXIT;
+      return answer;
+   }
+#else
    if ((lp = lGetList(job, JB_shell_list))) {
       int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
       const char *delis[] = {":", ",", NULL};
@@ -448,6 +464,7 @@ int flags
       ep_opt = sge_add_arg(pcmdline, S_OPT, lListT, "-S", str);
       lSetList(ep_opt, SPA_argval_lListT, lCopyList("shell list", lp));
    }
+#endif
 
    /*
    ** -v, -V

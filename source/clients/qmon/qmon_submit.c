@@ -98,6 +98,48 @@ extern char **environ;
 
 /*-------------------------------------------------------------------------*/
 
+typedef struct _tSMEntry {
+   String   job_script;
+   String   job_tasks;
+   String   job_name;
+   String   project;
+   String   ckpt_obj;
+   String   directive_prefix;
+   String   cell;
+   String   account_string;
+   String   pe;
+   lList    *task_range;            /* RN_Type */
+   lList    *job_args;              /* ST_Type */
+   lList    *shell_list;            /* PN_Type */
+   lList    *mail_list;             /* MR_Type */
+   lList    *stdoutput_path_list;   /* PN_Type */
+   lList    *stdinput_path_list;    /* PN_Type */
+   lList    *stderror_path_list;    /* PN_Type */   
+   lList    *hard_resource_list;     
+   lList    *soft_resource_list;
+   lList    *hard_queue_list;       /* QR_Type */
+   lList    *soft_queue_list;       /* QR_Type */
+   lList    *master_queue_list;       /* QR_Type */
+   lList    *env_list;              /* Environment */
+   lList    *ctx_list;              /* Context */
+   lList    *hold_jid;              /* JB_jid_predecessor_list */
+   int      mail_options;
+   int      merge_output;
+   int      priority;
+   int      jobshare;
+   Cardinal execution_time;
+   Cardinal deadline;
+   int      hold;
+   int      now;
+   int      notify;
+   int      reservation;
+   int      restart;
+   int      cwd;
+   int      checkpoint_attr;
+   int      checkpoint_interval;
+   int      verify_mode;
+} tSMEntry;
+
    
 XtResource sm_resources[] = {
    { "job_script", "job_script", XtRString,
@@ -149,6 +191,10 @@ XtResource sm_resources[] = {
       sizeof(int), XtOffsetOf(tSMEntry, priority),
       XtRImmediate, NULL },
 
+   { "jobshare", "jobshare", XtRInt,
+      sizeof(int), XtOffsetOf(tSMEntry, jobshare),
+      XtRImmediate, NULL },
+
    { "restart", "restart", XtRInt,
       sizeof(int), XtOffsetOf(tSMEntry, restart),
       XtRImmediate, NULL },
@@ -159,6 +205,10 @@ XtResource sm_resources[] = {
 
    { "hold", "hold", XtRInt,
       sizeof(int), XtOffsetOf(tSMEntry, hold),
+      XtRImmediate, (XtPointer) 0 },
+
+   { "reservation", "reservation", XtRInt,
+      sizeof(int), XtOffsetOf(tSMEntry, reservation),
       XtRImmediate, (XtPointer) 0 },
 
    { "task_range", "task_range", QmonRTRN_Type,
@@ -388,6 +438,7 @@ static Widget submit_mail = 0;
 static Widget submit_mail_user = 0;
 static Widget submit_mail_userPB = 0;
 static Widget submit_notify = 0;
+static Widget submit_reservation = 0;
 static Widget submit_hold = 0;
 static Widget submit_task_hold = 0;
 static Widget submit_now = 0;
@@ -711,6 +762,7 @@ Widget parent
                           "submit_output_merge", &submit_output_merge,
                           "submit_cwd", &submit_cwd,
                           "submit_notify", &submit_notify,
+                          "submit_reservation", &submit_reservation,
                           "submit_hold", &submit_hold,
                           "submit_task_hold", &submit_task_hold,
                           "submit_now", &submit_now,
@@ -1938,6 +1990,8 @@ char *prefix
 
    data->notify = lGetBool(jep, JB_notify);
 
+   data->reservation = lGetBool(jep, JB_reserve);
+
    data->verify_mode = lGetUlong(jep, JB_verify_suitable_queues);
 
    data->checkpoint_attr = 0;
@@ -2108,6 +2162,7 @@ int save
    lSetUlong(jep, JB_execution_time, data->execution_time);
    lSetBool(jep, JB_merge_stderr, data->merge_output);
    lSetBool(jep, JB_notify, data->notify);
+   lSetBool(jep, JB_reserve, data->reservation);
    lSetUlong(jep, JB_restart, data->restart);
    lSetUlong(jep, JB_deadline, data->deadline);
    {
@@ -3248,11 +3303,25 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonToggleHoldNow");
 
    /* hold selected => deselect now) */
-   if(XmToggleButtonGetState(submit_hold) && !SMData.hold)
+   if (XmToggleButtonGetState(submit_hold) && !SMData.hold) {
       XmToggleButtonSetState(submit_now, 0, False);
-   /* now selected => deselect hold */
-   if(XmToggleButtonGetState(submit_now) && !SMData.now)
-      XmToggleButtonSetState(submit_hold, 0, False);
+      XtSetSensitive(submit_now, False);
+   } else {   
+      XtSetSensitive(submit_now, True);
+   }
 
+   if (XmToggleButtonGetState(submit_now) && !SMData.now) {
+      XmToggleButtonSetState(submit_hold, 0, False);
+   }   
+
+   if (XmToggleButtonGetState(submit_now)) {
+      XtSetSensitive(submit_hold, False);
+      XtSetSensitive(submit_reservation, False);
+      XmToggleButtonSetState(submit_reservation, 0, False);
+   } else {
+      XtSetSensitive(submit_hold, True);
+      XtSetSensitive(submit_reservation, True);
+   }
+   
    DEXIT;
 }

@@ -181,11 +181,14 @@ int flags
       ** problem: exception for -l makes this function slightly
       ** less generally appliccable
       */
+#if 0      
       if ((strlen(cp) > 1) && !strncmp(cp, "-l", 2)) {
          i = fprintf(fp, "%s", cp);
          i++;
       }
-      else if (*cp == '-') {
+      else 
+#endif      
+      if (*cp == '-') {
          i = fprintf(fp, "%s ", cp);
       }
       if ((*cp == '-') && (i != (int) strlen(cp) + 1)) {

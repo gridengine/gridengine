@@ -91,7 +91,8 @@ Qmon*sconf_general.xmtChildren: \
    XmtChooser     sconf_queue_sort_method = queue_sort_method; \
    XmtChooser     sconf_job_info; \
    Spinbox        sconf_flush_submit_secs = flush_submit_secs, \
-                  sconf_flush_finish_secs = flush_finish_secs; \
+                  sconf_flush_finish_secs = flush_finish_secs, \
+                  sconf_max_reservation = max_reservation; \
    XmPushButton   sconf_schedule_intervalPB, sconf_reprioritize_intervalPB;
 
 
@@ -126,6 +127,7 @@ Qmon*sconf_general.layout: \
          Fixed Caption tl "@{@fBLoad Formula}" sconf_load_formula \
          Fixed Caption tl "@{@fBFlush Submit Seconds}" sconf_flush_submit_secs \
          Fixed Caption tl "@{@fBFlush Finish Seconds}" sconf_flush_finish_secs \
+         Fixed Caption tl "@{@fBMaximum Reservation}" sconf_max_reservation \
          Fixed Caption tl "@{@fBParams}" sconf_sc_params \
       } \
    }
@@ -155,6 +157,14 @@ Qmon*sconf_general*sconf_flush_finish_secs.columns: 5
 Qmon*sconf_general*sconf_flush_finish_secs.spinboxUseClosestValue: True
 Qmon*sconf_general*sconf_flush_finish_secs.value: 0
 Qmon*sconf_general*sconf_flush_finish_secs.incrementLarge: 10
+
+Qmon*sconf_general*sconf_max_reservation.minimum: 0
+Qmon*sconf_general*sconf_max_reservation.spinboxStyle: SPINBOX_STACKED_RIGHT
+Qmon*sconf_general*sconf_max_reservation.buttonSizeFixed: True
+Qmon*sconf_general*sconf_max_reservation.columns: 5
+Qmon*sconf_general*sconf_max_reservation.spinboxUseClosestValue: True
+Qmon*sconf_general*sconf_max_reservation.value: 0
+Qmon*sconf_general*sconf_max_reservation.incrementLarge: 10
 
 Qmon*sconf_general*sconf_queue_sort_method.chooserType: ChooserOption
 Qmon*sconf_general*sconf_queue_sort_method.strings: \
@@ -193,8 +203,8 @@ Qmon*sconf_special*sconf_load_namePB.labelPixmap:       qask
 
 
 Qmon*sconf_special*sconf_load_adjustments.buttonLabels: True
-Qmon*sconf_special*sconf_load_adjustments.rows: 8
-Qmon*sconf_special*sconf_load_adjustments.visibleRows: 8
+Qmon*sconf_special*sconf_load_adjustments.rows: 20
+Qmon*sconf_special*sconf_load_adjustments.visibleRows: 20
 Qmon*sconf_special*sconf_load_adjustments.columns: 2
 Qmon*sconf_special*sconf_load_adjustments.columnWidths: 15, 15
 Qmon*sconf_special*sconf_load_adjustments.columnMaxLengths: 100, 100

@@ -1667,7 +1667,7 @@ object_set_any_type(lListElem *this_elem, int name, void *value)
    } else if (type == lCharT) {
       ret = lSetPosChar(this_elem, pos, *((lChar*)value));
    } else if (type == lBoolT) {
-      ret = lSetPosBool(this_elem, pos, *((lBool*)value));
+      ret = lSetPosBool(this_elem, pos, *((bool*)value));
    } else if (type == lIntT) {
       ret = lSetPosInt(this_elem, pos, *((int*)value));
    } else if (type == lObjectT) {
@@ -1768,7 +1768,7 @@ object_get_any_type(lListElem *this_elem, int name, void *value)
       } else if (type == lCharT) {
          *((lChar*)value) = lGetPosChar(this_elem, pos);
       } else if (type == lBoolT) {
-         *((bool*)value) = (bool) lGetPosBool(this_elem, pos);
+         *((bool*)value) = lGetPosBool(this_elem, pos) ? true : false;
       } else if (type == lIntT) {
          *((int*)value) = lGetPosInt(this_elem, pos);
       } else if (type == lObjectT) {

@@ -196,7 +196,7 @@ XtPointer cld, cad;
       ** set the icon and iconName
       */
       XmtCreatePixmapIcon(qmon_tov, qmonGetIcon("toolbar_ticket"), None);
-      XtVaSetValues(qmon_tov, XtNiconName, "qmon:Ticket Overview", NULL);
+      XtVaSetValues(qmon_tov, XtNiconName, "qmon:Policy Configuration", NULL);
       XmtAddDeleteCallback(qmon_tov, XmDO_NOTHING, 
                               qmonPopdownTicketOverview, NULL);
       XtAddEventHandler(qmon_tov, StructureNotifyMask, False, 

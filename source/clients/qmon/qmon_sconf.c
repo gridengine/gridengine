@@ -89,6 +89,7 @@ typedef struct _tSCEntry {
    int  maxujobs;
    int  flush_submit_secs;
    int  flush_finish_secs;
+   int  max_reservation;
    int  queue_sort_method;
    char *load_adjustment_decay_time;
    char *load_formula;
@@ -121,6 +122,10 @@ static XtResource sc_resources[] = {
       sizeof(int), XtOffsetOf(tSCEntry, flush_finish_secs),
       XtRImmediate, NULL },
    
+   { "max_reservation", "max_reservation", XtRInt,
+      sizeof(int), XtOffsetOf(tSCEntry, max_reservation),
+      XtRImmediate, NULL },
+   
    { "queue_sort_method", "queue_sort_method", XtRInt, 
       sizeof(int), XtOffsetOf(tSCEntry, queue_sort_method), 
       XtRImmediate, NULL },
@@ -143,7 +148,7 @@ static XtResource sc_resources[] = {
 };
 
 
-static tSCEntry data = {NULL, NULL, NULL, 0, 0, 0, 0, NULL, NULL, NULL, NULL};
+static tSCEntry data = {NULL, NULL, NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL};
 
 
 static Widget qmon_sconf = 0;
@@ -153,6 +158,7 @@ static Widget sconf_sc_params = 0;
 static Widget sconf_maxujobs = 0;
 static Widget sconf_flush_submit_secs = 0;
 static Widget sconf_flush_finish_secs = 0;
+static Widget sconf_max_reservation = 0;
 static Widget sconf_lad_time = 0;
 static Widget sconf_load_formula = 0;
 static Widget sconf_load_adjustments = 0;
@@ -234,6 +240,7 @@ Widget parent
                            "sconf_maxujobs", &sconf_maxujobs,
                            "sconf_flush_submit_secs", &sconf_flush_submit_secs,
                            "sconf_flush_finish_secs", &sconf_flush_finish_secs,
+                           "sconf_max_reservation", &sconf_max_reservation,
                            "sconf_lad_time", &sconf_lad_time,
                            "sconf_load_formula", &sconf_load_formula,
                            "sconf_load_adjustments", &sconf_load_adjustments,
@@ -418,6 +425,8 @@ lListElem *sep
    data.flush_submit_secs = lGetUlong(sep, SC_flush_submit_sec);
    data.flush_finish_secs = lGetUlong(sep, SC_flush_finish_sec);
 
+   data.max_reservation = lGetUlong(sep, SC_max_reservation);
+
    /* this depends on the kind queue_sort_method is represented */
    data.queue_sort_method = lGetUlong(sep, SC_queue_sort_method);
 
@@ -443,6 +452,7 @@ printf("->data.sc_params: '%s'\n", data.sc_params ? data.sc_params : "-NA-");
 printf("->data.maxujobs: '%d'\n", data.maxujobs );
 printf("->data.flush_submit_secs: '%d'\n", data.flush_submit_secs );
 printf("->data.flush_finish_secs: '%d'\n", data.flush_finish_secs );
+printf("->data.max_reservation: '%d'\n", data.max_reservation );
 printf("->data.queue_sort_method: '%d'\n", data.queue_sort_method );
 printf("->data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
 printf("->data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-NA-");
@@ -517,6 +527,7 @@ printf("<-data.sc_params: '%s'\n", data.sc_params ? data.sc_params : "-NA-");
 printf("<-data.maxujobs: '%d'\n", data.maxujobs );
 printf("<-data.flush_submit_secs: '%d'\n", data.flush_submit_secs );
 printf("<-data.flush_finish_secs: '%d'\n", data.flush_finish_secs );
+printf("<-data.max_reservation: '%d'\n", data.max_reservation );
 printf("<-data.queue_sort_method: '%d'\n", data.queue_sort_method );
 printf("<-data.load_adjustment_decay_time: '%s'\n", data.load_adjustment_decay_time ? data.load_adjustment_decay_time : "-NA-");
 printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-NA-");
@@ -544,6 +555,8 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
 
    lSetUlong(sep, SC_flush_submit_sec, (u_long32) data.flush_submit_secs);
    lSetUlong(sep, SC_flush_finish_sec, (u_long32) data.flush_finish_secs);
+
+   lSetUlong(sep, SC_max_reservation, (u_long32) data.max_reservation);
   
    lSetUlong(sep, SC_queue_sort_method, (u_long32) data.queue_sort_method);
 

@@ -188,6 +188,7 @@ static tJobField job_items[] = {
    { 0, JB_department, "@{Department}", 10, 30, PrintString },
    { 0, JB_deadline, "@{Deadline}", 10, 30, PrintTime },
    { 0, JB_nppri, "@{N Priority}", 10, 30, PrintDouble },
+   { 0, JB_reserve, "@{Reservation}", 10, 30, PrintBool },
 /**** EE urgency specific fields *****/
    { 0, JB_nurg, "@{N Urgency}", 10, 30, PrintDouble },
    { 0, JB_urg, "@{Urgency}", 10, 30, PrintDoubleOpti },

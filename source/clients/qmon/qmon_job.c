@@ -128,7 +128,7 @@ static void qmonJobPopdown(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobStartUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobStopUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobHandleEnterLeave(Widget w, XtPointer cld, XEvent *ev, Boolean *ctd);
-static String qmonJobShowBrowserInfo(lListElem *jep);
+static void qmonJobShowBrowserInfo(dstring *info, lListElem *jep);
 static void qmonJobChangeState(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobPriority(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobHold(Widget w, XtPointer cld, XtPointer cad);
@@ -142,6 +142,7 @@ static Boolean AskForHold(Widget w, Cardinal *hold, dstring *dyn_tasks);
 static void AskHoldCancelCB(Widget w, XtPointer cld, XtPointer cad);
 static void AskHoldOkCB(Widget w, XtPointer cld, XtPointer cad);
 static void qmonJobScheddInfo(Widget w, XtPointer cld, XtPointer cad);
+/* static void qmonJobSort(Widget w, XtPointer cld, XtPointer cad); */
 /*-------------------------------------------------------------------------*/
 static int show_info_for_jobs(lList *jid_list, FILE *fp, lList **alpp, dstring *sb);
 static int show_info_for_job(FILE *fp, lList **alpp, dstring *sb);
@@ -375,6 +376,14 @@ Widget parent
                      qmonMatrixSelect, (XtPointer) rw);
    XtAddCallback(job_pending_jobs, XmNselectCellCallback, 
                      qmonMatrixSelect, (XtPointer) pw);
+#if 0                     
+   XtAddCallback(job_pending_jobs, XmNlabelActivateCallback, 
+                     qmonJobSort, NULL);
+   XtAddCallback(job_running_jobs, XmNlabelActivateCallback, 
+                     qmonJobSort, NULL);
+   XtAddCallback(job_zombie_jobs, XmNlabelActivateCallback, 
+                     qmonJobSort, NULL);
+#endif                     
    XtAddCallback(job_suspend, XmNactivateCallback, 
                      qmonJobChangeState, (XtPointer)QI_DO_SUSPEND);
    XtAddCallback(job_unsuspend, XmNactivateCallback, 
@@ -535,6 +544,26 @@ XtPointer cad
    DEXIT;
 }
 
+#if 0
+/*-------------------------------------------------------------------------*/
+static void qmonJobSort(
+Widget w,
+XtPointer cld,
+XtPointer cad  
+) {
+   XbaeMatrixLabelActivateCallbackStruct *cbs = 
+            (XbaeMatrixLabelActivateCallbackStruct *) cad;
+/*    lList *entries = NULL; */
+/*    int column_nm[] = {CE_name, CE_shortcut, CE_valtype, CE_relop, CE_consumable, CE_default}; */
+   
+   DENTER(GUI_LAYER, "qmonJobSort");
+
+   printf("JobSort = cbs->column = %d\n", cbs->column);
+   
+   DEXIT;
+}
+#endif
+
 /*----------------------------------------------------------------------------*/
 void updateJobList(void)
 {
@@ -549,7 +578,6 @@ void updateJobList(void)
    lCondition *where_no_template = NULL;
    lCondition *where_notexiting = NULL;
    lEnumeration *what_queue = NULL;
-   lSortOrder *job_so = NULL;
    u_long32 jstate, qstate;
    StringConst qnm;
    lList *ehl = NULL;
@@ -1409,7 +1437,6 @@ Boolean *ctd
    String str;
    int job_nr;
    lListElem *jep;
-   String job_info;
    
    DENTER(GUI_LAYER, "qmonJobHandleEnterLeave");
    
@@ -1431,11 +1458,12 @@ Boolean *ctd
                      jep = job_list_locate(qmonMirrorList(SGE_JOB_LIST), 
                                           (u_long32)job_nr);
                      if (jep) {
+                        dstring job_info = DSTRING_INIT;
                         sprintf(line, "+++++++++++++++++++++++++++++++++++++++++++\n");  
                         qmonBrowserShow(line);
-                        job_info = qmonJobShowBrowserInfo(jep);      
-                        qmonBrowserShow(job_info);
-                        qmonBrowserShow(line);
+                        qmonJobShowBrowserInfo(&job_info, jep);      
+                        qmonBrowserShow(sge_dstring_get_string(&job_info));
+                        sge_dstring_free(&job_info);
                      }
                   }
                }
@@ -1447,31 +1475,26 @@ Boolean *ctd
 }
 
 /*-------------------------------------------------------------------------*/
-static String qmonJobShowBrowserInfo(
+static void qmonJobShowBrowserInfo(
+dstring *info,
 lListElem *jep 
 ) {
-#define WIDTH  "%s%-30.30s"
-
-   static char info[60000];
-   char buf[1024];
-   dstring ds;
-   char buffer[128];
-
-/*    int status; */
 
    DENTER(GUI_LAYER, "qmonJobShowBrowserInfo");
 
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-
-   sprintf(info, WIDTH"%d\n", "\n","Job:", (int)lGetUlong(jep, JB_job_number));
-   sprintf(info, WIDTH"%s\n", info, "Job Name:", 
-                  lGetString(jep, JB_job_name));
-   sprintf(info, WIDTH"%s\n", info, "Job Script:", 
-                  lGetString(jep, JB_script_file) ? lGetString(jep, JB_script_file): "-NA-");
-   sprintf(info, WIDTH"%s\n", info, "Owner:", 
+   sge_dstring_sprintf(info, "%-30.30s"u32"\n", "Job:", lGetUlong(jep, JB_job_number));
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Full job name:", 
+                              lGetString(jep, JB_job_name));
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Job Script:", 
+                  lGetString(jep, JB_script_file) ? 
+                  lGetString(jep, JB_script_file): "-NA-");
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Owner:", 
                   lGetString(jep, JB_owner));
-   sprintf(info, WIDTH"%d\n", info, "Priority:", 
+   sge_dstring_sprintf_append(info, "%-30.30s%d\n", "Priority:", 
                   (int)(lGetUlong(jep, JB_priority) - BASE_PRIORITY));
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Checkpoint Object:", 
+            lGetString(jep, JB_checkpoint_name) ? 
+            lGetString(jep, JB_checkpoint_name) : "-NA-");
 
 #ifdef FIXME
    if (lGetList(jep, JB_jid_predecessor_list) || lGetUlong(jep, JB_hold)) {
@@ -1505,20 +1528,11 @@ lListElem *jep
       "-none-");
 #endif
 
-#if 0
-   str = lGetString(jep, JB_directive_prefix);
-   sprintf(info, WIDTH"%s\n", info, "Directive Prefix:", str ? str : "#$"); 
-#endif
-
-   sprintf(info, WIDTH"%s\n", info, "Checkpoint Object:", 
-         lGetString(jep, JB_checkpoint_name) ? 
-            lGetString(jep, JB_checkpoint_name) : "");
-
    if (lGetString(jep, JB_pe)) {
       dstring range_string = DSTRING_INIT;
 
       range_list_print_to_string(lGetList(jep, JB_pe_range), &range_string, 1);
-      sprintf(info, WIDTH"%s %s\n", info, "Requested PE:", 
+      sge_dstring_sprintf_append(info, "%-30.30s%s %s\n", "Requested PE:", 
               lGetString(jep, JB_pe), sge_dstring_get_string(&range_string));
       sge_dstring_free(&range_string);
    }
@@ -1533,6 +1547,9 @@ lListElem *jep
                lGetString(jep, JB_pe), pe_slots);
    }
 #endif
+
+#ifdef FIXME
+   sge_dstring_sprintf_append(info, "%-30.30s%s\n", "Hard Resources:", 
 
    strcpy(buf, "");
    centry_list_parse_from_string(lGetList(jep, JB_hard_resource_list), buf, sizeof(buf));
@@ -1551,9 +1568,9 @@ lListElem *jep
 /*    lWriteListTo(lGetList(jep, JB_qs_args), stdout); */
    
    DPRINTF(("info is %d long\n", strlen(info)));
-   
+#endif
+
    DEXIT;
-   return info;
 }
 
 /*-------------------------------------------------------------------------*/

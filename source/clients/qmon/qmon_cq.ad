@@ -52,7 +52,7 @@ Qmon*qmon_cq.cq.xmtChildren: \
    XmtMsgLine        cq_message; \
    XmToggleButton    cq_force; \
    XmtChooser        cq_explain_states; \
-   XmPushButton      cq_add, cq_mod, cq_delete, cq_close, cq_update, cq_help, \
+   XmPushButton      cq_add, cq_mod, cq_clone, cq_delete, cq_close, cq_update, cq_help, \
                      cq_suspend, cq_resume, cq_tickets, cq_customize, cq_load,\
                      cq_disable, cq_enable, cq_reschedule, cq_clear_error, \
                      cq_sick, cq_explain;
@@ -75,6 +75,7 @@ Qmon*qmon_cq.cq.layout: \
          # \
          Shadowed Out Col { \
             Fixed cq_add \
+            Fixed cq_clone \
             Fixed cq_mod \
             Fixed cq_delete \
             Fixed cq_sick \
@@ -108,6 +109,7 @@ Qmon*qmon_cq.cq.cq_main_link.marginWidth:        0
 
 Qmon*qmon_cq.cq.cq_update.labelString:       @{Refresh}
 Qmon*qmon_cq.cq.cq_add.labelString:          @{Add}
+Qmon*qmon_cq.cq.cq_clone.labelString:        @{Clone}
 Qmon*qmon_cq.cq.cq_mod.labelString:          @{Modify}
 Qmon*qmon_cq.cq.cq_delete.labelString:       @{Delete}
 Qmon*qmon_cq.cq.cq_force.labelString:        @{Force}
@@ -118,7 +120,7 @@ Qmon*qmon_cq.cq.cq_enable.labelString:       @{Enable}
 Qmon*qmon_cq.cq.cq_reschedule.labelString:   @{Reschedule}
 Qmon*qmon_cq.cq.cq_clear_error.labelString:  @{Clear Error}
 Qmon*qmon_cq.cq.cq_load.labelString:         @{Load}
-Qmon*qmon_cq.cq.cq_sick.labelString:         @{Queue Sick ?}
+Qmon*qmon_cq.cq.cq_sick.labelString:         @{Show Detached Settings}
 Qmon*qmon_cq.cq.cq_customize.labelString:    @{Customize}
 Qmon*qmon_cq.cq.cq_explain.labelString:      @{Explain}
 Qmon*qmon_cq.cq.cq_tickets.labelString:      @{Tickets}
@@ -148,7 +150,7 @@ Qmon*qmon_cq.cq.cq_cqfolder.xmtChildren: \
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! clusterqueue_layout
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout.tabLabel: @{@fBCluster Queue}
+Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout.tabLabel: @{@fBCluster Queues}
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout.xmtChildren: \
    Matrix_2xN      cluster_queue_settings;
 

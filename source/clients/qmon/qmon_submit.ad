@@ -112,8 +112,10 @@ Qmon*submit_general.xmtChildren: \
                      submit_cwd = cwd, \
                      submit_notify  = notify, \
                      submit_hold = hold, \
+                     submit_reservation = reservation, \
                      submit_now = now; \
    Spinbox           submit_priority = priority; \
+   Spinbox           submit_jobshare = jobshare; \
    XmPushButton      submit_scriptPB, submit_resources, submit_stdoutputPB, \
                      submit_stdinputPB, submit_stderrorPB, submit_exec_timePB, \
                      submit_projectPB, submit_shellPB; \
@@ -131,7 +133,12 @@ Qmon*submit_general.layout: \
          Row { Fixed Caption tl "@{Job Tasks}" 30 em submit_tasks <> } \
          Row { Fixed Caption tl "@{Job Name}" 30 em submit_name <> } \
          Row { Fixed Caption tl "@{Job Args}" 30 em submit_job_args <> } \
-         Row { Fixed Caption tl "@{Priority}" submit_priority ### } \
+         Row { \
+            Fixed Caption tl "@{Priority}" submit_priority \
+            <> \
+            Fixed Caption tl "@{Job Share}" submit_jobshare \
+            <> \
+         } \
          Row { \
             Centered Caption tl "@{Start At}" 30 em submit_execution_time \
             <> \
@@ -179,6 +186,7 @@ Qmon*submit_general.layout: \
             <> \
          } \
          Fixed submit_now \
+         Fixed submit_reservation \
          <> \
       } \
    }
@@ -214,6 +222,14 @@ Qmon*submit_layout*submit_priority.buttonSizeFixed: True
 Qmon*submit_layout*submit_priority.columns:         5
 Qmon*submit_layout*submit_priority.spinboxUseClosestValue:   True
 Qmon*submit_layout*submit_priority.value:           0
+
+Qmon*submit_layout*submit_jobshare.minimum:         0
+Qmon*submit_layout*submit_jobshare.incrementLarge:  10
+Qmon*submit_layout*submit_jobshare.spinboxStyle:    SPINBOX_STACKED_RIGHT
+Qmon*submit_layout*submit_jobshare.buttonSizeFixed: True
+Qmon*submit_layout*submit_jobshare.columns:         5
+Qmon*submit_layout*submit_jobshare.spinboxUseClosestValue:   True
+Qmon*submit_layout*submit_jobshare.value:           0
 
 Qmon*submit_layout*submit_script.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_scriptPB.navigationType: TAB_GROUP
@@ -328,6 +344,8 @@ Qmon*submit_cwd.alignment:          ALIGNMENT_BEGINNING
 Qmon*submit_cwd.labelString:        @{Current Working Directory}
 Qmon*submit_now.alignment:          ALIGNMENT_BEGINNING
 Qmon*submit_now.labelString:        @{Start Job Immediately}
+Qmon*submit_reservation.alignment:     ALIGNMENT_BEGINNING
+Qmon*submit_reservation.labelString:   @{Job Reservation}
 
 Qmon*submit_output_merge.alignment:      ALIGNMENT_BEGINNING
 Qmon*submit_output_merge.labelString:    @{Merge Output}

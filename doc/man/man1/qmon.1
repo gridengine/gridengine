@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmon.1,v $     Last Update: $Date: 2003/07/30 12:21:48 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: qmon.1,v $     Last Update: $Date: 2004/02/21 19:46:14 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMON 1 "$Date: 2003/07/30 12:21:48 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMON 1 "$Date: 2004/02/21 19:46:14 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmon \- X-Windows OSF/Motif graphical user's interface for xxQS_NAMExx
 .\"
@@ -126,23 +126,17 @@ and is used on following startups for the initial configuration of the
 The \fBQueue Control\fP dialogue with its sub-dialogue hierarchy enables the
 user to control the status of the xxQS_NAMExx queues being actually configured
 in the system and allows the administrator to add new queues or to modify
-or delete already existing ones. Each icon button in the top level
-\fBQueue Control\fP dialogue window represents a configured xxQS_NAMExx queue.
-The icon symbols, the coloring and the text on the buttons informs
-about the architecture, the status and some basic attributes of the queues.
-The top level dialogue also allows for deleting those queues previously
-selected. Queues are selected by clicking with the left mouse button on the
-icons or into a rectangular area surrounding the buttons.
+or delete already existing ones. The \fBQueue Control\fP dialogue shows a
+tabbed view of Cluster Queues or their corresponding Queue Instances in a tabular way.
 .sp 1
-By pushing the \fBAdd\fP or \fBModify\fP button or using a pop-up menu that
-is raised 
-when clicking the right mouse button in the icon window of the top level 
-\fBQueue Control\fP dialogue, a sub-dialogue for configuring xxQS_NAMExx queues is 
-opened. A queue needs to be selected to use the modify operation. The 
-configuration sub-dialogue allows for definition of the queue and host name
-or 
-displays the corresponding names in case of a modification. The queue 
-configuration parameters (see
+By pushing the \fBAdd\fP or \fBModify\fP button, a sub-dialogue for 
+configuring xxQS_NAMExx queues is opened. 
+A queue needs to be selected to use the modify operation. The 
+configuration sub-dialogue allows for definition of the queue and its attributes.
+The configuration sub-dialogue contains in the upper section the queue name and a list of hosts or hostgroups for which this queue contains the configuration.
+The lower section contains a list of hosts or hostgroups at the left, where the default attributes are shown when the "@/" entry is highlighted.
+These default attributes can be overruled on a hostgroup or host basis by enabling attributes and changing their values after this hostgroup or host entry has been added in the "Attributes for Host/Hostgroup" listbox. 
+The queue configuration parameters (see
 .M queue_conf 5 )
 are subdivided in different categories (\fBGeneral Configuration\fP,
 \fBExecution Methods\fP, \fBCheckpointing\fP, \fBLoad/Suspend Thresholds\fP,
@@ -150,8 +144,8 @@ are subdivided in different categories (\fBGeneral Configuration\fP,
 \fBProject Access (only for xxQS_NAME_EExx)\fP, \fBSubordinate Queues\fP, \fBOwners\fP)
 which are selectable by the tab widget area presented in the lower region 
 of the queue configuration sub-dialogue. 
-The administrator may select default values from 
-already configured queues (\fBClone\fP button). By pushing the \fBOk\fP
+The administrator may select previously configured settings from 
+already existing queues (\fBClone\fP button). By pushing the \fBOk\fP
 button, the definitions are registered with
 .M xxqs_name_sxx_qmaster 8 .
 The \fBQueue Control\fP dialogue can be customized in a similar way as the
@@ -196,41 +190,37 @@ button on the top level \fBSubmit\fP dialogue submits the job.
 .SS "\fBComplex Config\fP"
 The
 .B Complex Config
-allows the administrator to add new complexes or to 
+allows the administrator to add new complex attributes or to 
 modify or delete existing ones (see
 .M complex 5 ).
-The dialogue offers a 
-selection list for the existing complexes and displays the configuration of
-the one being selected. By pushing the
-.B Delete
-button, the selected complex is 
-deleted from the configuration. Pushing the
-.B Add/Modify
-button will open a 
-complex configuration dialogue, which allows to create new complexes or 
-which provides the means to change the existing ones. If a new complex is
-to 
-be created, a name must be defined for it. The name of the complex to be 
-modified is displayed in the same text input filed in case of a modify 
-operation. The complex configuration dialogue provides a tabulated list of
-the 
-complex entries and an input region for the declaration of new or modified 
+The complex configuration dialogue provides a tabulated list of
+the complex attribute entries and an input region for the declaration of new or modified 
 entries. The
 .B Add
-button updates the tabulated list with the new or changed 
-entry and the
+button updates the tabulated list with a new attribute.
+The
+.B Modify
+button changes a highlighted existing entry.
+The
+.B Delete
+button removes the highlighted attributes.
+The
+.B Load and Save
+buttons allow saving or reloading the whole attribute list to or from file.
+The
 .B Ok
-button registers the additional or modified complex with 
+button registers the additional or modified complex attributes with 
 .M xxqs_name_sxx_qmaster 8 .
 .\"
 .SS "\fBHost Config\fP"
-Three types of host lists can be maintained via the \fBHost Config\fP
+Four types of host related lists can be maintained via the \fBHost Config\fP
 dialogue:
 .sp 1
 .nf
 .RS
 Administration Hosts
 Submit Hosts
+Hosti Groups
 Execution Hosts
 .RE
 .fi
@@ -239,6 +229,7 @@ The host list to be manipulated is selected via clicking at one of the tabs
 named correspondingly. The first two host lists only provide for adding or 
 deleting entries, thereby allowing administrative or submit permission for the 
 hosts on the lists, or denying it otherwise respectively.
+The host group list allows the manipulation of host groups. Host groups can reference either other host groups or hosts.
 The execution host list 
 entries in addition provide the ability to define scaling factors for the load 
 sensors, consumable complex attributes and access attributes 
@@ -534,9 +525,9 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBCOMMD_PORT\fP" 1.5i
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_commd 8
+.M xxqs_name_sxx_qmaster 8
 is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.

@@ -121,7 +121,7 @@ static XmtMenuItem task_menu_items[] = {
    ** the 'Ticket Overview' is only managed if SGE_MODE is true
    ** !!!!!! Attention the position is referenced in qmonCreateMainControl
    */
-   {XmtMenuItemPushButton, "@{Ticket Overview}", 'i', "Alt<Key>i", "Alt+i",
+   {XmtMenuItemPushButton, "@{Policy Configuration}", 'i', "Alt<Key>i", "Alt+i",
          qmonPopupTicketOverview, NULL},
 
    {XmtMenuItemPushButton, "@{Project Configuration}", 'r', "Alt<Key>r", "Alt+r",
@@ -209,7 +209,7 @@ static tCallbacksUsed callback_array[] = {
    { qmonPopupManopConfig, NULL, "@{@fBUser Configuration}" },
    { qmonPopupPEConfig, NULL, "@{@fBParallel Environment Configuration}" },
    { qmonPopupCkptConfig, NULL, "@{@fBCheckpoint Configuration}" },
-   { qmonPopupTicketOverview, NULL, "@{@fBTicket Configuration}" },
+   { qmonPopupTicketOverview, NULL, "@{@fBPolicy Configuration}" },
    { qmonPopupProjectConfig, NULL, "@{@fBProject Configuration}" },
    { qmonBrowserOpen, NULL, "@{@fBBrowser}" },
    { qmonExitCB, NULL, "@{@fBExit}" }

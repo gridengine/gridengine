@@ -1,3 +1,9 @@
+MD-2004-07-19-0: Bugfix:    sched_conf(5) reprioritize_interval should default to 0
+                 Issue:     1139
+                 Bugtraq:   5075451
+                 Review:    SG
+                 Changed:   schedd default config, schedd
+
 DT-2004-07-19-1: Bugfix:    o Changes from DT-2004-07-16-0 review
                  Changed:   DRMAA, qstat, qconf, qsub
 

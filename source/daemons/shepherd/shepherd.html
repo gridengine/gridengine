@@ -213,7 +213,8 @@ wait_my_child</tt>).
 <p>The spool files are located in a host specific spool directory (usually
 <tt>$SGE_ROOT/default/spool/&lt;hostname></tt>).
 The spool directory can be defined in the cluster configuration - see parameter
-<tt>execd_spool_dir</tt> in the cluster configuration, <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a></font>.
+<tt>execd_spool_dir</tt>
+in the cluster configuration, <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a></font>.
 <p>Under the host specific spool directory, a subdirectory active_jobs
 is created by the execd, for each job, the execd creates a subdirectory
 <tt>&lt;jobid>.&lt;taskid></tt>
@@ -363,7 +364,11 @@ hostname is the name of the execution host</li>
 (see <tt>daemons/common/qlogin_starter.c: qlogin_starter</tt>)
 <br>If the interactive job has exited, the exit code is written to the
 qlogin/qrsh client as number in ASCII format.
-<br>(see <tt>source/daemons/common/qlogin_starter.c: write_exit_code_to_qrsh</tt>)</ul>
+<br>(see <tt>source/daemons/common/qlogin_starter.c: write_exit_code_to_qrsh</tt>)
+<br>&nbsp;
+<center>
+<p>Copyright 2001 Sun Microsystems, Inc. All rights reserved.</center>
+</ul>
 
 </body>
 </html>

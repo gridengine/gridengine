@@ -19,8 +19,7 @@
 
 <div STYLE="margin-top: 0.17in; page-break-after: avoid"><b><font face="Helvetica, sans-serif"><font size=+2>Qmake
 - a distributed parallel make</font></font></b></div>
-
-<p>qmake provides a parallel distributed make utility integrated with Grid
+qmake provides a parallel distributed make utility integrated with Grid
 Engine.
 <p>It is based on GNU make Revision 3.78.1 which is copyrighted under the
 GNU General Public License (see file COPYING).
@@ -29,8 +28,9 @@ to start each make task as a task in a Grid Engine parallel job.
 <p>To create a Grid Engine parallel job, qmake submits itsself using qrsh
 and requests a parallel environment with a certain number of slots.
 <br>In the resulting parallel job, qmake starts the single make tasks using
-the Grid Engine feature "qrsh -inherit".
-<p>For additional information and usage see the manual page <font color="#FF0000">qmake.1</font>
+the Grid Engine feature "qrsh -inherit" - see <a href="../../clients/qrsh/qrsh.html">documentation
+of qrsh</a>.
+<p>For additional information and usage see the manual page <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman1/qmake.html">qmake.1</a></font>
 and autodoc headers included in the source code <tt>remote-sge.c</tt>.
 <p>The following changes have been made to the GNU make source tree:
 <ul>added a file <tt>remote-sge.c</tt> that implements the stub functions

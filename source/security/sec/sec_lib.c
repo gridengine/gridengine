@@ -848,14 +848,19 @@ static u_char *sec_state_get_key_mat(void)
       DEXIT;
       return sec_state->key_mat;
    } else { 
+      u_char * ret_val = NULL;
       /* copy global data to thread specific data */
       SEC_LOCK_GLOBAL_SD();
-      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat");
-      sec_state->key_mat = gsd.sec_state.key_mat;
+      {
+         GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat");
+         sec_state->key_mat = gsd.sec_state.key_mat;
+         ret_val = sec_state->key_mat;
+      }
       SEC_UNLOCK_GLOBAL_SD();
       DEXIT;
-      return sec_state->key_mat;
+      return ret_val;
    }
+   return 0;
 }
 
 static void sec_state_set_key_mat_len(u_long32 key_mat_len)
@@ -884,13 +889,18 @@ static u_long32 sec_state_get_key_mat_len(void)
       return sec_state->key_mat_len;
    } else { 
       /* copy global data to thread specific data */
+      u_long32 ret_val;
       SEC_LOCK_GLOBAL_SD();
-      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat_len");
-      sec_state->key_mat_len = gsd.sec_state.key_mat_len;
+      {
+         GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat_len");
+         sec_state->key_mat_len = gsd.sec_state.key_mat_len;
+         ret_val = sec_state->key_mat_len;
+      }
       SEC_UNLOCK_GLOBAL_SD();
       DEXIT;
-      return sec_state->key_mat_len;
+      return ret_val;
    }
+   return 0;
 }
 
 static void sec_state_set_connid(u_long32 connid)
@@ -918,14 +928,19 @@ static u_long32 sec_state_get_connid(void)
       DEXIT;
       return sec_state->connid;
    } else {
+      u_long32 ret_val;
       /* copy global data to thread specific data */
       SEC_LOCK_GLOBAL_SD();
-      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connid");
-      sec_state->connid = gsd.sec_state.connid;
+      {
+         GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connid");
+         sec_state->connid = gsd.sec_state.connid;
+         ret_val = sec_state->connid;
+      }
       SEC_UNLOCK_GLOBAL_SD();
       DEXIT;
-      return sec_state->connid;
+      return ret_val;
    }
+   return 0;
 }
 
 static void sec_state_set_connect(int connect)
@@ -953,14 +968,19 @@ static int sec_state_get_connect(void)
 
       return sec_state->connect;
    } else {
+      int ret_val;
       /* copy global data to thread specific data */
       SEC_LOCK_GLOBAL_SD();
-      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connect");
-      sec_state->connect = gsd.sec_state.connect;   
+      {
+         GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connect");
+         sec_state->connect = gsd.sec_state.connect;   
+         ret_val = sec_state->connect;
+      }
       SEC_UNLOCK_GLOBAL_SD();
       DEXIT;
-      return sec_state->connect;
+      return ret_val;
    }
+   return 0;
 }
 
 static void sec_state_set_seq_receive(u_long32 seq_receive)
@@ -988,14 +1008,19 @@ static u_long32 sec_state_get_seq_receive(void)
       DEXIT;
       return sec_state->seq_receive;
    } else {
+      u_long32 ret_val;
       /* copy global data to thread specific data */
       SEC_LOCK_GLOBAL_SD();
-      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_receive");
-      sec_state->seq_receive = gsd.sec_state.seq_receive;
+      {
+         GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_receive");
+         sec_state->seq_receive = gsd.sec_state.seq_receive;
+         ret_val = sec_state->seq_receive;
+      }
       SEC_UNLOCK_GLOBAL_SD();
       DEXIT;
-      return sec_state->seq_receive;
+      return ret_val;
    }
+   return 0;
 }
 
 static void sec_state_set_seq_send(u_long32 seq_send)
@@ -1022,14 +1047,19 @@ static u_long32 sec_state_get_seq_send(void)
       DEXIT;
       return sec_state->seq_send;
    } else {
-      SEC_LOCK_GLOBAL_SD();
+      u_long32 ret_val;
       /* copy global data to thread specific data */
-      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_send");
-      sec_state->seq_send = gsd.sec_state.seq_send;
+      SEC_LOCK_GLOBAL_SD();
+      {
+         GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_send");
+         sec_state->seq_send = gsd.sec_state.seq_send;  
+         ret_val = sec_state->seq_send;
+      }
       SEC_UNLOCK_GLOBAL_SD();
       DEXIT;
-      return sec_state->seq_send;
+      return ret_val;
    }
+   return 0;
 }
 
 static void sec_state_set_refresh_time(ASN1_UTCTIME *refresh_time)
@@ -1057,13 +1087,17 @@ static ASN1_UTCTIME *sec_state_get_refresh_time(void)
       DEXIT;
       return sec_state->refresh_time;
    } else {
-      SEC_LOCK_GLOBAL_SD();
+      ASN1_UTCTIME * ret_val;
       /* copy global data to thread specific data */
-      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_refresh_time");
-      sec_state->refresh_time = gsd.sec_state.refresh_time;
+      SEC_LOCK_GLOBAL_SD();
+      {
+         GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_refresh_time");
+         sec_state->refresh_time = gsd.sec_state.refresh_time;
+         ret_val = sec_state->refresh_time;
+      }
       SEC_UNLOCK_GLOBAL_SD();
       DEXIT;
-      return sec_state->refresh_time;
+      return ret_val;
    }
 }
 
@@ -1077,13 +1111,18 @@ static char *sec_state_get_unique_identifier(void)
       return sec_state->unique_identifier;
    } else {
       /* copy global data to thread specific data */
+      char* ret_val;
       SEC_LOCK_GLOBAL_SD();
-      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_unique_identifier");
-      strncpy(sec_state->unique_identifier, gsd.sec_state.unique_identifier , BUFSIZ);
+      {
+         GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_unique_identifier");
+         strncpy(sec_state->unique_identifier, gsd.sec_state.unique_identifier , BUFSIZ);
+         ret_val = sec_state->unique_identifier;
+      }
       SEC_UNLOCK_GLOBAL_SD();
       DEXIT;
-      return sec_state->unique_identifier;
+      return ret_val;
    }
+   return "";
 }
 
 static void sec_state_set_unique_identifier(const char *unique_identifier)
@@ -1985,8 +2024,6 @@ const cl_com_endpoint_t *sender
                  *tmp = NULL,
                  *x509_buf = NULL;
    sge_pack_buffer pb;
-   char *buffer;
-   u_long32 buflen;
    u_short compressed = 0;
    EVP_MD_CTX ctx;
    EVP_CIPHER_CTX ectx;
@@ -2701,7 +2738,6 @@ static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint
    int i;
    unsigned long mid;
    SGE_STRUCT_STAT file_info;
-   int compressed = 0;
    int ngc_error;
 
    DENTER(GDI_LAYER, "sec_handle_announce");

@@ -1,3 +1,5 @@
+JG-2004-12-09-0: Bugfix:    Fixed broken build on lx22-alpha.
+
 JG-2004-12-08-1: Testsuite: Suppress output of "washing machine", if testsuite
                             output is not a tty.
 

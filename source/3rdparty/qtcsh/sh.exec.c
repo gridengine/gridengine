@@ -35,7 +35,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.exec.c,v 1.2 2002/06/13 11:35:42 joga Exp $")
+RCSID("$Id: sh.exec.c,v 1.3 2005/01/19 11:12:50 ernst Exp $")
 
 #include "tc.h"
 #include "tw.h"
@@ -841,8 +841,10 @@ dohash(vv, c)
 	is_windir = nt_check_if_windir(short2str(*pv));
 #endif /* WINNT */
 	while ((dp = readdir(dirp)) != NULL) {
+#ifndef INTERIX
 	    if (dp->d_ino == 0)
 		continue;
+#endif
 	    if (dp->d_name[0] == '.' &&
 		(dp->d_name[1] == '\0' ||
 		 (dp->d_name[1] == '.' && dp->d_name[2] == '\0')))

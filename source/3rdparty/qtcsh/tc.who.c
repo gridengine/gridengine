@@ -35,7 +35,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: tc.who.c,v 1.1 2001/07/18 11:06:06 root Exp $")
+RCSID("$Id: tc.who.c,v 1.2 2005/01/19 11:12:52 ernst Exp $")
 
 #include "tc.h"
 
@@ -56,7 +56,11 @@ RCSID("$Id: tc.who.c,v 1.1 2001/07/18 11:06:06 root Exp $")
 #  define _PATH_UTMP UTMPX_FILE
 # endif /* _PATH_UTMP */
 # define utmp utmpx
-# define ut_time ut_xtime
+#  ifndef INTERIX
+#   define ut_time ut_xtime
+#  else
+#   define ut_time ut_tv.tv_sec
+#  endif
 #else /* !HAVEUTMPX */
 # ifndef WINNT
 #  include <utmp.h>

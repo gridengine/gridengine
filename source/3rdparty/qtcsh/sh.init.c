@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.init.c,v 1.1 2001/07/18 11:06:05 root Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.init.c,v 1.2 2005/01/19 11:12:51 ernst Exp $ */
 /*
  * sh.init.c: Function and signal tables
  */
@@ -36,7 +36,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.init.c,v 1.1 2001/07/18 11:06:05 root Exp $")
+RCSID("$Id: sh.init.c,v 1.2 2005/01/19 11:12:51 ernst Exp $")
 
 #include "ed.h"
 #include "tw.h"
@@ -221,11 +221,15 @@ int nsrchn = sizeof srchn / sizeof *srchn;
  */
 
 /* We define NUMSIG to avoid changing NSIG or MAXSIG */
+#ifdef INTERIX
+#define NUMSIG NSIG
+#else
 #ifdef POSIX
 # define NUMSIG 65
 #else /* !POSIX */
 # define NUMSIG 33
 #endif /* POSIX */
+#endif
 
 int	nsig = NUMSIG - 1;	/* This should be the number of real signals */
 				/* not counting signal 0 */

@@ -1,3 +1,6 @@
+EB-2005-01-19-0: Enhancem.: qtcsh port for WIN32_X86
+                 Changed:   qtcsh
+
 DT-2005-01-19-0: Testuite:  o Fixed drmaa-j test
 
 DT-2005-01-18-0: Cleanup:   o Made JAPI Makefile more readable
@@ -8,7 +11,8 @@ DT-2005-01-18-0: Cleanup:   o Made JAPI Makefile more readable
 RD-2005-01-17-0: Bugfix:    make qmon compile on sol-amd64
                  Changed:   qmon
 
-HP-2005-01-17-0: Bugfix:    qmake Makefile for WIN32_X86 now with relative pathes
+HP-2005-01-17-0: Bugfix:    qmake Makefile for WIN32_X86 now with relative 
+                            pathes
                  Changed    qmake
 
 DT-2005-01-17-0: Bugfix:    o JAPI makefile didn't delete drmaa.o on clean

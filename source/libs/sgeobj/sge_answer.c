@@ -205,7 +205,7 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
 {
    DENTER(ANSWER_LAYER, "answer_exit_if_not_recoverable");
    if (!answer_is_recoverable(answer)) {
-      fprintf(stderr, "%s %s", answer_get_quality_text(answer),
+      fprintf(stderr, "%s: %s", answer_get_quality_text(answer),
               lGetString(answer, AN_text));
       DEXIT;
       SGE_EXIT(1);

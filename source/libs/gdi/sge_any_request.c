@@ -378,7 +378,6 @@ static int commd_monitor(int cl_err)
  *  NOTES
  *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
  *---------------------------------------------------------*/
-#ifdef ENABLE_NGC
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
                          const char *commproc, int id, sge_pack_buffer *pb, 
                          int tag,u_long32  response_id)
@@ -441,71 +440,6 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
    DEXIT;
    return i;
 }
-#else
-int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
-                         const char *commproc, int id, sge_pack_buffer *pb, 
-                         int tag) 
-{
-   u_long32 dummymid;
-   int i;
-
-   DENTER(GDI_LAYER, "sge_send_any_request");
-
-   if (!rhost) {
-      ERROR((SGE_EVENT, MSG_GDI_RHOSTISNULLFORSENDREQUEST ));
-      DEXIT;
-      return -4;
-   }
-   
-   /*
-    *  the first time a client calls synchronous the 
-    *  qmaster he gets an ask_commproc() for free
-    */
-   i = 0;
-   if (gdi_state_get_first_time() && synchron) {
-      if (check_isalive(rhost)) {
-         i = -4;
-      }
-      gdi_state_set_first_time(0);
-   }
-
-   if (i == 0) {
-      u_long32 me_who = uti_state_get_mewho();
-      if ((me_who == SCHEDD || me_who == EXECD) && gdi_state_get_daemon_first()) {
-         remove_pending_messages(NULL, 0, 0, 0);
-         /* commlib call to mark all commprocs as unknown */
-         reset_last_heard();
-         gdi_state_set_daemon_first(0);
-      }
-
-      i = gdi_send_message_pb(synchron, commproc, id, rhost, tag,
-                           pb, mid?mid:&dummymid);
-      
-      sge_log_commd_state_transition(i);
-
-      if (i) {
-         switch (i) {
-         case CL_CONNECT: 
-         case CL_INTR:
-         case CL_WRITE_TIMEOUT:
-            /* break; */
-
-         default:
-            ERROR((SGE_EVENT, MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS ,
-                   (synchron ? "" : "a"),
-                   commproc, 
-                   id, 
-                   rhost, 
-                   cl_errstr(i)));
-            break;
-         }
-      }
-   }
-
-   DEXIT;
-   return i;
-}
-#endif
 
 
 /*----------------------------------------------------------
@@ -772,7 +706,6 @@ int gdi_send_message_pb(int synchron, const char *tocomproc, int toid,
  *  NOTES
  *     MT-NOTE: check_isalive() is MT safe
  *-------------------------------------------------------------------------*/
-#ifdef ENABLE_NGC
 int check_isalive(const char *masterhost) 
 {
    int alive = CL_RETVAL_OK;
@@ -796,7 +729,7 @@ int check_isalive(const char *masterhost)
    ret = cl_commlib_get_endpoint_status(handle,(char*)masterhost,(char*)prognames[QMASTER] , 1, &status);
    if (ret != CL_RETVAL_OK) {
       DPRINTF(("cl_commlib_get_endpoint_status() returned "SFQ"\n", cl_get_error_text(ret)));
-      alive = CL_RETVAL_UNKNOWN;
+      alive = ret;
    } else {
       DEBUG((SGE_EVENT,"qmaster is still running\n"));   
       alive = CL_RETVAL_OK;
@@ -810,36 +743,3 @@ int check_isalive(const char *masterhost)
    DEXIT;
    return alive;
 }
-#else
-int check_isalive(const char *masterhost) 
-{
-   int alive = 0;
- 
-   DENTER(TOP_LAYER, "check_isalive");
- 
-   if (!masterhost) {
-      DPRINTF(("can't get masterhost\n"));
-      DEXIT;
-      return CL_FIRST_FREE_EC+1;
-   }
- 
-   /* check if prog is alive */
-   if (uti_state_get_mewho() == QMON) {
-      if (!is_commd_alive()) {
-         DPRINTF(("can't connect to commd\n"));
-         DEXIT;
-         return CL_FIRST_FREE_EC+2;
-      }
-   }
- 
-   alive = ask_commproc(masterhost, prognames[QMASTER], 1);
- 
-   if (alive) {
-      DPRINTF(("no qmaster: ask_commproc(\"%s\", \"%s\", %d): %s\n",
-               masterhost, prognames[QMASTER], 1, cl_errstr(alive)));
-   }
- 
-   DEXIT;
-   return alive;
-}
-#endif 

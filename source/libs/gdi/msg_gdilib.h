@@ -59,7 +59,7 @@
 #define MSG_GDI_COMMDUP                               _MESSAGE(43048, _("commd is up"))
 #define MSG_GDI_COMMDDOWN_S                           _MESSAGE(43049, _("commd is down: "SFN""))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43050, _("parameter rhost = NULL for sge_send_any_request()"))
-#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN""))
+#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN"\n"))
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))
 #define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _MESSAGE(43053, _("can't receive message from commproc ("SFN":%d) on host "SFQ": "SFN""))
 
@@ -123,6 +123,7 @@
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _MESSAGE(43124, _("failed to getgrgid(%d): "SFN"\n"))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request\n"))
 #define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43126, _("failed receiving gdi request\n"))
+#define MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUUSS  _MESSAGE(43300, _("can't send message to ("SFN","U32CFormat") at port "U32CFormat" on host "SFQ": %s\n"))
 #define MSG_GDI_SIGNALED                                 _MESSAGE(43127, _("signaled\n"))
 #define MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I     _MESSAGE(43128, _("general error (%d) sending and receiving gdi request\n"))
 #define MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST  _MESSAGE(43129, _("NULL list passed to sge_send_receive_gdi_request()"))

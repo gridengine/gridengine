@@ -78,6 +78,8 @@ char **argv
    
    DENTER_MAIN(TOP_LAYER, "qmod");
 
+   log_state_set_log_gui(0);
+
    sge_gdi_param(SET_MEWHO, QMOD, NULL);
    if (sge_gdi_setup(prognames[QMOD], &alp)!=AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));

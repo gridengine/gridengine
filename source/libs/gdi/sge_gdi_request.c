@@ -53,6 +53,7 @@
 #include "qm_name.h"
 #include "sge_unistd.h"
 #include "sge_security.h"
+#include "sge_hostname.h"
 #include "sge_answer.h"
 #ifdef KERBEROS
 #  include "krb_lib.h"
@@ -439,8 +440,14 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED));
                break;
             case -4:
-               /* fills SGE_EVENT with diagnosis information */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "general gdi error\n"));
+               /* gdi error */
+               
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUUSS,
+                                 prognames[QMASTER], 
+                                 u32c(1), 
+                                 u32c(sge_get_qmaster_port()), 
+                                 sge_get_master(gdi_state_get_reread_qmaster_file()),
+                                 cl_get_error_text(commlib_error)));
                break;
             case -5:
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SIGNALED ));
@@ -835,7 +842,7 @@ static int sge_send_receive_gdi_request(int *commlib_error,
    *commlib_error = ret;
 
 
-   INFO((SGE_EVENT,"send request with id "U32CFormat"\n", u32c(gdi_request_mid) ));
+   DPRINTF(("send request with id "U32CFormat"\n", u32c(gdi_request_mid)));
    if (ret != CL_RETVAL_OK) {
       if (( *commlib_error = check_isalive(rhost)) != CL_RETVAL_OK) {
          DEXIT;
@@ -866,7 +873,7 @@ static int sge_send_receive_gdi_request(int *commlib_error,
    }
 
    if (ret) {
-      if (check_isalive(rhost) != CL_RETVAL_OK) {
+      if ( (*commlib_error = check_isalive(rhost) != CL_RETVAL_OK)) {
          DEXIT;
          return -4;
       } 
@@ -1085,17 +1092,10 @@ static int sge_get_gdi_request(int *commlib_error,
    int ret;
 
    DENTER(GDI_LAYER, "sge_get_gdi_request");
-#ifdef ENABLE_NGC
    if ( (*commlib_error = sge_get_any_request(host, commproc, id, &pb, &tag, 1, request_mid,0)) != CL_RETVAL_OK) {
       DEXIT;
       return -1;
    }
-#else
-   if ( (*commlib_error = sge_get_any_request(host, commproc, id, &pb, &tag, 1)) ) {
-      DEXIT;
-      return -1;
-   }
-#endif
 
 
    ret = sge_unpack_gdi_request(&pb, arp);

@@ -175,6 +175,8 @@ char **argv
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
+   log_state_set_log_gui(0);
+
    sge_gdi_param(SET_MEWHO, QACCT, NULL);
    if (sge_gdi_setup(prognames[QACCT], &alp)!=AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));
@@ -620,12 +622,7 @@ char **argv
                SGE_EXIT(1);
             }
             DPRINTF(("checking if qmaster is alive ...\n"));
-   #ifdef ENABLE_NGC
-            if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) 
-   #else
-            if (check_isalive(sge_get_master(0))) 
-   #endif
-            {
+            if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) {
                ERROR((SGE_EVENT, "qmaster is not alive"));
                SGE_EXIT(1);
             }

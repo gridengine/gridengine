@@ -78,18 +78,10 @@ report_source *report_sources
    if (now > next_alive_time || state == STATE_ERROR) {
       DPRINTF(("ALIVE TEST OF MASTER\n"));
       next_alive_time = now + ALIVE_INTERVAL;
-     
-#ifdef ENABLE_NGC
       state = STATE_OK;
       if (check_isalive(sge_get_master(state == STATE_ERROR)) != CL_RETVAL_OK) {
          state = STATE_ERROR;
       }
-#else
-      if (check_isalive(sge_get_master(state == STATE_ERROR)))
-         state = STATE_ERROR;
-      else 
-         state = STATE_OK;
-#endif
    }
 
    if (state == STATE_OK) {

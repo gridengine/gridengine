@@ -330,15 +330,11 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    /* check if master is alive */
    if (gdi_state_get_isalive()) {
       DEXIT;  /* TODO: shall we rework the gdi function return values ? CR */
-#ifdef ENABLE_NGC
       if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) {
          return AE_QMASTER_DOWN;
       } else {
          return AE_OK;
       }
-#else      
-      return check_isalive(sge_get_master(0));
-#endif
    }
 
    DEXIT;

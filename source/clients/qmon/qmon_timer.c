@@ -392,10 +392,9 @@ XtIntervalId *id
    */
    status = check_isalive(sge_get_master(0));
 
-#ifdef ENABLE_NGC
    DPRINTF(("check_isalive() returns %d (%s)\n", status, cl_get_error_text(status)));
    if (status != CL_RETVAL_OK) {
-      sprintf(msg, XmtLocalize(AppShell, "cannot reach %s", "cannot reach %s"), cl_get_error_text(status));
+      sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster: %s", "cannot reach qmaster: %s"), cl_get_error_text(status));
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
                                                 msg, "@{Retry}", "@{Abort}",
                                                 XmtYesButton, NULL);
@@ -407,25 +406,6 @@ XtIntervalId *id
          qmonExitFunc(1);
       }
    }
-#else
-   DPRINTF(("check_isalive() returns %d (%s)\n", status, cl_errstr(status)));
-   if (status != CL_OK) {
-      if (status == CL_UNKNOWN_RECEIVER)
-         sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
-      else
-         sprintf(msg, XmtLocalize(AppShell, "cannot reach %s", "cannot reach %s"), cl_errstr(status));
-      contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
-                                                msg, "@{Retry}", "@{Abort}",
-                                                XmtYesButton, NULL);
-      /*
-      ** we don't want to retry, so go down
-      */
-      if (!contact_ok) {
-         DEXIT;
-         qmonExitFunc(1);
-      }
-   }
-#endif
    
       
    /*

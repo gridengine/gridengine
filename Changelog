@@ -1,3 +1,13 @@
+CR-2004-03-02-2  Bugfix:    - removed some ENABLE_NGC code parts
+                 Cleanup:   - qconf -mconf did not print out an error message when
+                              qmaster wasn't reachable
+                            - check_isalive() returns now commlib error
+                            - all clients will no longer log error and critical 
+                              messages to stderr ( log_state_set_log_gui(False) )
+                              (produces duplicate error messages)
+                 Issue:     662           
+                 Changed:   all clients
+
 DT-2004-03-02-1  Bugfix:    o Ulong parsing now complains about negative numbers
                             o Tweaked freefix.pl search parameters
                             NOTE: I have to check this in before I can compile

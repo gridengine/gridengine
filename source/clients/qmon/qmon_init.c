@@ -67,9 +67,13 @@
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "qm_name.h"
+#include "sge_hostname.h"
+#include "sge_any_request.h"
+#include "sge_gdiP.h"
 
 #include "msg_clients_common.h"
 #include "msg_common.h"
+#include "msg_gdilib.h"
 
 static String icon_names[] = {
    "21cal",
@@ -219,45 +223,31 @@ String name
 /*-------------------------------------------------------------------------*/
 void qmonInitSge( char *progname) 
 {
-#ifdef ENABLE_NGC
    int error = 0;
    lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonInitSge");
    
+   sprintf(SGE_EVENT,"");
    log_state_set_log_gui(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);
    if ((error=sge_gdi_setup(prognames[QMON], &alp))) {
-      fprintf(stderr,"sge_qmaster is down");
-      SGE_EXIT(1);
-   }
-   log_state_set_log_gui(False);
-   DEXIT;
-#else
-   int error = 0;
-   DENTER(GUI_LAYER, "qmonInitSge");
-   
-   log_state_set_log_gui(True);
-   sge_gdi_param(SET_MEWHO, QMON, NULL);
-   sge_gdi_param(SET_ISALIVE, 1, NULL);
-   if ((error=sge_gdi_setup(prognames[QMON], NULL))) {
-
-      /* fills SGE_EVENT with diagnosis information */
-      if (error == AE_QMASTER_DOWN ||
-          error == CL_FIRST_FREE_EC+2 || 
-          error == CL_FIRST_FREE_EC+1 ) {
-         error = -1;  /* this error code is ambiguous, make 
-                         no suggestions in error message */ 
+      log_state_set_log_gui(False);
+      if ( sge_get_master(0) != NULL) {
+         error=check_isalive(sge_get_master(0));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUUSS,
+                             prognames[QMASTER], 
+                             u32c(1), 
+                             u32c(sge_get_qmaster_port()), 
+                             sge_get_master(0),
+                             cl_get_error_text(error)));
+         fprintf(stderr,SGE_EVENT);
       }
-      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(error, SGE_EVENT));
-      fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }
    log_state_set_log_gui(False);
-
    DEXIT;
-#endif
 }
 
 /*-------------------------------------------------------------------------
@@ -268,11 +258,7 @@ void qmonExitFunc(
 int i 
 ) {
    DENTER(GUI_LAYER, "qmonExitFunc");
-#ifdef ENABLE_NGC
    cl_com_cleanup_commlib();
-#else
-   leave_commd();  /* tell commd we're going */
-#endif
    DCLOSE;
    exit(i);
 }

@@ -337,19 +337,11 @@ static int sge_ck_qmaster(const char *former_master_host)
       return -1;
    }
 
-#ifdef ENABLE_NGC
    if (check_isalive(current_master) != CL_RETVAL_OK) {
       DPRINTF(("qmaster is not alive\n"));
       DEXIT;
       return 1;
    }
-#else
-   if (check_isalive(current_master)) {
-      DPRINTF(("qmaster is not alive\n"));
-      DEXIT;
-      return 1;
-   }
-#endif
 
 /*---------------------------------------------------------------*/
    DPRINTF(("Checking if user \"%s\" is manager\n", uti_state_get_user_name()));

@@ -78,6 +78,8 @@ int main(int argc, char **argv) {
 
    DENTER_MAIN(TOP_LAYER, "qdel");
 
+   log_state_set_log_gui(0);
+
    sge_gdi_param(SET_MEWHO, QDEL, NULL);
    if (sge_gdi_setup(prognames[QDEL], &alp) != AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));
@@ -130,14 +132,9 @@ int main(int argc, char **argv) {
    if (all_users) {
       lAddElemStr(&ref_list, ID_str, "0", ID_Type);
    }
-#ifdef ENABLE_NGC
+
    handle=cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
    cl_com_set_synchron_receive_timeout(handle, 10*60);
-#else
-   /* set timeout */
-   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
-   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);   
-#endif
 
    /* prepare gdi request for 'all' and '-uall' parameters */
    cmd = SGE_GDI_DEL;

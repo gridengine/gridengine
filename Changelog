@@ -1,6 +1,7 @@
 AH-2003-02-24-0  Enhancem.: Documented MT safety of gdi 
                             Made more funcs MT safe
                             Cleanup with gdi headers
+                 Review:    CR
 
 CR-2003-02-26-2  Testsuite: testsuite sent more mails than allowed in 
                  Bugfix:    enable_error_mails setup.

@@ -1,3 +1,6 @@
+AH-2003-03-25-1  Enhancem:  Fix broken build for aimk -only-mt -secure
+                            JAPI can now be compiled with -secure
+
 EB-2003-03-25-0  Bugfix:    Multiple job script writes cause ETXTBSY
                             (Text File Busy) Errors
                  Changed:   sge_execd

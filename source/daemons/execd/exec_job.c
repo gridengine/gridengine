@@ -37,6 +37,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #ifdef __sgi
 #   include <sys/schedctl.h>
@@ -611,6 +612,7 @@ char *err_str
    lListElem *env;
    lList *environmentList;
    const char *arch = sge_get_arch();
+   sigset_t sigset, sigset_oset;
 
    int write_osjob_id = 1;
 
@@ -1725,6 +1727,23 @@ char *err_str
       return -2;
    }
 
+   {
+      /* Add the signals to the set of blocked signals. Save previous signal mask
+       *  We do this before the fork() to avoid any race conditions with
+       *  signals being immediately sent to the shepherd after the fork.
+       *  After the fork we  need to restore the oldsignal mask in the execd
+       */             
+      sigemptyset(&sigset);
+      sigaddset(&sigset, SIGTTOU);
+      sigaddset(&sigset, SIGTTIN);    
+      sigaddset(&sigset, SIGUSR1);
+      sigaddset(&sigset, SIGUSR2);            
+      sigaddset(&sigset, SIGCONT);            
+      sigaddset(&sigset, SIGWINCH);           
+      sigaddset(&sigset, SIGTSTP);            
+      sigprocmask(SIG_BLOCK, &sigset, &sigset_oset);
+   }
+
    /* now fork and exec the shepherd */
    if (getenv("SGE_FAILURE_BEFORE_FORK") || getenv("SGE_FAILURE_BEFORE_FORK")) {
       i = -1;
@@ -1733,6 +1752,7 @@ char *err_str
       i = fork();
 
    if (i != 0) { /* parent */
+      sigprocmask(SIG_SETMASK, &sigset_oset, NULL);
 
       lSetUlong(jep, JB_hard_wallclock_gmt, 0); /* in case we are restarting! */
       lSetUlong(jatep, JAT_pending_signal, 0);
@@ -1750,7 +1770,8 @@ char *err_str
       DEXIT;
       return i;
    }
-
+   
+   
    {  /* close all fd's except 0,1,2 */ 
       fd_set keep_open;
       FD_ZERO(&keep_open); 

@@ -188,9 +188,7 @@ static int start_async_command(char *descr, char *cmd);
 static void start_clean_command(char *);
 static pid_t start_token_cmd(int, char *, char *, char *, char *);
 static int do_wait(pid_t);
-static void set_sig_handler(int);
 static void shepherd_signal_handler(int);
-
 
 /* overridable control methods */
 static void verify_method(char *method_name);
@@ -529,8 +527,6 @@ char **argv
       foreground = 0;   /* no output to stderr */
 
    /* make sure pending SIGPIPE signals logged in trace file */ 
-   set_sig_handler(SIGPIPE);
-   sge_set_def_sig_mask(SIGPIPE, NULL);
    set_shepherd_signal_mask();
 
    config_errfunc = shepherd_error;
@@ -2077,49 +2073,89 @@ char *err_str
  * set_shepherd_signal_mask
  * set signal mask that shpher can handle signals from execd
  *--------------------------------------------------------------------*/
-static void set_shepherd_signal_mask()   
-{
-   struct sigaction sigact, sigact_old;
-   sigset_t mask;
-      
-   /* get mask */
-   sigprocmask(SIG_SETMASK, NULL, &mask);
-
-   sigact.sa_handler = signal_handler;
-   sigact.sa_mask = mask;
-
-   /* SA_INTERRUPT is at least needed on SUN4 to interupt waitxx() 
-    * when a signal arrives 
-    */
-
-#ifdef SA_INTERRUPT
-   sigact.sa_flags = SA_INTERRUPT;
-#else
-   sigact.sa_flags = 0;
+#if defined(ALPHA)
+#  undef NSIG
+#  define NSIG (SIGUSR2+1)
 #endif
 
-   sigaction(SIGTTOU, &sigact, &sigact_old); /* init checkpointing    */
-   sigaction(SIGTTIN, &sigact, &sigact_old); /* read signal from file */
-   sigaction(SIGUSR1, &sigact, &sigact_old);
-   sigaction(SIGUSR2, &sigact, &sigact_old);
-   sigaction(SIGCONT, &sigact, &sigact_old);
-   sigaction(SIGWINCH, &sigact, &sigact_old);
-   sigaction(SIGTSTP, &sigact, &sigact_old);
-   sigaction(SIGALRM, &sigact, &sigact_old);
+static void set_shepherd_signal_mask()   
+{
+   struct sigaction sigact, sigdfl,sigpipe;
+   sigset_t mask;
+   char err_str[256];
+   int i;
+   
+   /* get current signal mask and set it as signal mask for signal handler */
+   sigprocmask(SIG_SETMASK, NULL, &mask);
+   sigact.sa_mask = mask;
+   sigact.sa_handler = signal_handler;
+#ifdef SA_INTERRUPT
+   sigact.sa_flags = SA_INTERRUPT;
+#else    
+   sigact.sa_flags = 0;
+#endif   
+   
+   sigemptyset(&sigdfl.sa_mask);
+   sigdfl.sa_flags = 0;
+   sigdfl.sa_handler = SIG_DFL;
+   
+   sigprocmask(SIG_SETMASK, NULL, &mask);
+   sigpipe.sa_mask = mask;
+   sigpipe.sa_handler = shepherd_signal_handler;
+#ifdef SA_RESTART
+   sigpipe.sa_flags = SA_RESTART;
+#else    
+   sigpipe.sa_flags = 0;
+#endif   
+         
+   for (i = 1; i < NSIG; i++) {
+#if !defined(HP10) && !defined(HP10_01) && !defined(HPCONVEX) && !defined(HP11)
+      if (i != SIGKILL && i != SIGSTOP)
+#else
+      if (i != SIGKILL && i != SIGSTOP && i != _SIGRESERVE && i != SIGDIL)
+#endif
+      {
+         switch(i) {
+         case SIGTTOU:
+         case SIGTTIN:
+         case SIGUSR1:
+         case SIGUSR2:
+         case SIGCONT:
+         case SIGWINCH:
+         case SIGTSTP:
+         case SIGALRM:         
+            if (sigaction(i, &sigact, NULL)) {
+               sprintf(err_str, "sigaction for signal %d failed: %s", i, strerror(errno));
+               shepherd_trace(err_str);
+            }  
+            sigdelset(&mask, i);
+            break;
+         
+         case SIGPIPE:
+            if (sigaction(i, &sigpipe, NULL)) {         
+               sprintf(err_str, "sigaction for signal %d failed: %s", i, strerror(errno));
+               shepherd_trace(err_str);
+            }
+            sigdelset(&mask, i);
+            break;
 
-   /* allow some more signals */
-   sigdelset(&mask, SIGTTOU);
-   sigdelset(&mask, SIGTTIN);
-   sigdelset(&mask, SIGUSR1);
-   sigdelset(&mask, SIGUSR2);
-   sigdelset(&mask, SIGCONT);
-   sigdelset(&mask, SIGWINCH);
-   sigdelset(&mask, SIGTSTP);
-   sigdelset(&mask, SIGALRM);
+         default:
+            if (sigaction(i, &sigdfl, NULL)) {
+               sprintf(err_str, "sigaction for signal %d failed: %s", i, strerror(errno));
+               shepherd_trace(err_str);
+            }
+            break;
+         }   
+      }
+   }
 
-   /* set mask */
+   /* set signal mask for shepherd this is a combination of the inherited
+    * signal mask from execd with unblocked signal set which we may receive
+    * from execd
+    */
    sigprocmask(SIG_SETMASK, &mask, NULL);
 }
+
 
 static void change_shepherd_signal_mask()   
 {
@@ -3048,6 +3084,7 @@ pid_t pid
    return exit_status;
 }
 
+#if 0
 /*-------------------------------------------------------------------
  * set_sig_handler
  * define a signal handler for SIGPIPE
@@ -3068,6 +3105,7 @@ int sig_num
       
    sigaction(sig_num, &sa, NULL);
 }
+#endif
 
 /*-------------------------------------------------------------------*/
 static void shepherd_signal_handler(

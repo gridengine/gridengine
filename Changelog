@@ -1,3 +1,7 @@
+JG-2002-03-06-0: Doc.:      Enhanced description of execd_params
+                            SET_[SGE|COD|GRD]_ENV.
+                 Issue:     #120
+
 AH-2002-03-05-0: Doc.:      Fixed description of seq_no queue parameter 
                             in queue_conf(5). 
                  Bugtraq:   #4490117

@@ -58,6 +58,7 @@ struct bootstrap_t {
     const char       *spooling_params;
     const char       *binary_path;
     const char       *qmaster_spool_dir;
+    const char       *product_mode;
 };
 
 #if defined(SGE_MT)
@@ -81,6 +82,7 @@ static void bootstrap_destroy(void* bootstrap) {
    FREE(((struct bootstrap_t*)bootstrap)->spooling_params);
    FREE(((struct bootstrap_t*)bootstrap)->binary_path);
    FREE(((struct bootstrap_t*)bootstrap)->qmaster_spool_dir);
+   FREE(((struct bootstrap_t*)bootstrap)->product_mode);
    free(bootstrap);
 }
  
@@ -145,6 +147,13 @@ const char *bootstrap_get_qmaster_spool_dir(void)
    return bootstrap->qmaster_spool_dir;
 }
 
+const char *bootstrap_get_product_mode(void)
+{
+   GET_SPECIFIC(struct bootstrap_t, bootstrap, bootstrap_init, bootstrap_key, 
+                "bootstrap_get_product_mode");
+   return bootstrap->product_mode;
+}
+
 void bootstrap_set_admin_user(const char *value)
 {
    GET_SPECIFIC(struct bootstrap_t, bootstrap, bootstrap_init, bootstrap_key, 
@@ -206,6 +215,14 @@ void bootstrap_set_qmaster_spool_dir(const char *value)
                                            value);
 }
 
+void bootstrap_set_product_mode(const char *value)
+{
+   GET_SPECIFIC(struct bootstrap_t, bootstrap, bootstrap_init, bootstrap_key, 
+                "bootstrap_set_product_mode");
+   bootstrap->product_mode = sge_strdup((char *)bootstrap->product_mode, 
+                                           value);
+}
+
 /****** sge_bootstrap/sge_bootstrap() ******************************************
 *  NAME
 *     sge_bootstrap() -- read and process bootstrap file 
@@ -231,7 +248,7 @@ void bootstrap_set_qmaster_spool_dir(const char *value)
 *  NOTES
 *     MT-NOTE: sge_bootstrap() is MT safe
 *******************************************************************************/
-#define NUM_BOOTSTRAP 8
+#define NUM_BOOTSTRAP 9
 bool sge_bootstrap(dstring *error_dstring) 
 {
    bool ret = true;
@@ -244,7 +261,8 @@ bool sge_bootstrap(dstring *error_dstring)
                                        "spooling_lib", 
                                        "spooling_params",
                                        "binary_path", 
-                                       "qmaster_spool_dir"
+                                       "qmaster_spool_dir",
+                                       "product_mode"
                                      };
    char value[NUM_BOOTSTRAP][1025];
 
@@ -278,6 +296,7 @@ bool sge_bootstrap(dstring *error_dstring)
       bootstrap_set_spooling_params(value[5]);
       bootstrap_set_binary_path(value[6]);
       bootstrap_set_qmaster_spool_dir(value[7]);
+      bootstrap_set_product_mode(value[8]);
       {
          u_long32 uval;
          parse_ulong_val(NULL, &uval, TYPE_BOO, value[2], 
@@ -294,6 +313,7 @@ bool sge_bootstrap(dstring *error_dstring)
       DPRINTF(("spooling_params     >%s<\n", bootstrap_get_spooling_params()));
       DPRINTF(("binary_path         >%s<\n", bootstrap_get_binary_path()));
       DPRINTF(("qmaster_spool_dir   >%s<\n", bootstrap_get_qmaster_spool_dir()));
+      DPRINTF(("product_mode        >%s<\n", bootstrap_get_product_mode()));
    } 
    
    DEXIT;
@@ -313,5 +333,6 @@ void sge_delete_bootstrap()
 	FREE(bootstrap->spooling_params);
 	FREE(bootstrap->binary_path);
 	FREE(bootstrap->qmaster_spool_dir);
+	FREE(bootstrap->product_mode);
 }
 #endif /* WIN32NATIVE */

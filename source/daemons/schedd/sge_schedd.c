@@ -163,7 +163,6 @@ char *argv[]
 
    lInit(nmv);
 
-   feature_initialize_from_file(path_state_get_product_mode_file(), NULL);
    sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    parse_cmdline_schedd(argc, argv);
 

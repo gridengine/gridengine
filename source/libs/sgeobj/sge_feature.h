@@ -104,8 +104,6 @@ void feature_init_mt(void);
 
 void feature_initialize(void);
  
-int feature_initialize_from_file(const char *filename, lList **alpp);
- 
 int feature_initialize_from_string(const char *mode);
  
 void feature_activate(featureset_id_t id);

@@ -121,7 +121,7 @@ lList **alpp
       SGE_EXIT(1);
    }
 
-   if (feature_initialize_from_file(path_state_get_product_mode_file(), alpp)) {
+   if (feature_initialize_from_string(bootstrap_get_product_mode())) {
       if (!uti_state_get_exit_on_error()) {
          DEXIT;
          return -1;

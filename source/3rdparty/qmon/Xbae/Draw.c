@@ -20,7 +20,7 @@
  * LOST PROFITS OR OTHER INCIDENTAL OR CONSEQUENTIAL DAMAGES RELAT-
  * ING TO THE SOFTWARE.
  *
- * $Id: Draw.c,v 1.1 2001/07/18 11:05:59 root Exp $
+ * $Id: Draw.c,v 1.2 2003/10/10 19:49:47 joga Exp $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -234,11 +234,7 @@ int depth;
  * to the correct window and the cell is drawn in that window.
  */
 static void
-xbaeDrawCellString(mw, row, column, x, y, string, bg, fg)
-XbaeMatrixWidget mw;
-int row, column;
-String string;
-Pixel bg, fg;
+xbaeDrawCellString(XbaeMatrixWidget mw, int row, int column, int x, int y, String string, Pixel bg, Pixel fg)
 {
     GC gc;
     Widget w;

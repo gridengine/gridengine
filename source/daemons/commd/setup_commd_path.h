@@ -32,10 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 int  use_reserved_port(void);
-int  read_product_mode_file(const char *filename);
 const char* get_short_product_name(void);
 void sge_commd_setup( u_long32 sge_formal_prog_name);
-char *get_act_master_path(const char *);
-char *get_product_mode_file_path(const char*);
 
 #endif /* __SETUP_COMMD_PATH_H */

@@ -99,8 +99,6 @@ int message_tracefd = -1;
 int messagelog_fd = -1;
 int hostname_refresh = 1;       /* resolve hostnames on a regular basis */
 char *aliasfile = NULL;         /* File used for specifying host aliases */
-char *actmasterfile = NULL;     /* File with actual qmaster name */
-char *product_mode_file = NULL; /* File with actual product mode */
 u_long too_many_fds_open = 0;   /* time at which too many fds were open */
 
 char logfile[256] = "/tmp/commd.errors";
@@ -294,16 +292,7 @@ char **argv
       /* expect alias file at default location */
       aliasfile = sge_get_alias_path();
 
-   }   
-   if (actmasterfile == NULL) {
-      /* expect act_master file at default location */
-      actmasterfile = get_act_master_path(uti_state_get_default_cell());
    }
-   if (product_mode_file == NULL) {
-      /* expect product_mode_file file at default location */
-      product_mode_file = get_product_mode_file_path(uti_state_get_default_cell());
-   }
- 
 
    /* read aliasfile */
    if (aliasfile) {

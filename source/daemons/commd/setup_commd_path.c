@@ -49,14 +49,12 @@
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 
+#include "sge_bootstrap.h"
+#include "setup_path.h"
+
 #include "msg_common.h"
 #include "msg_commd.h"
 
-
-static char  commd_product_mode[128] = "";  
-static char  commd_version_string[255] = "";
-extern char* product_mode_file; 
-extern char* actmasterfile;
 
 void sge_commd_setup( u_long32 sge_formal_prog_name ) {
    DENTER(TOP_LAYER, "sge_commd_setup");
@@ -74,52 +72,23 @@ void sge_commd_setup( u_long32 sge_formal_prog_name ) {
        SGE_EXIT(1);
    }
 
-   if (actmasterfile == NULL) {
-      /* expect act_master file at default location */
-      actmasterfile = get_act_master_path(uti_state_get_default_cell());
-   }
-   if (product_mode_file == NULL) {
-      /* expect product_mode_file file at default location */
-      product_mode_file = get_product_mode_file_path(uti_state_get_default_cell());
-   }
+   sge_setup_paths(uti_state_get_default_cell(), NULL);
 
-   read_product_mode_file(product_mode_file);
+   sge_bootstrap(NULL);
 
    DEXIT;
    return;
 }
 
-int read_product_mode_file(const char *filename) 
-{
-
-   FILE *fp = NULL;
-   struct stat file_info;
-   char buf[128] = "";
-
-   if (filename == NULL) {
-      return -1;
-   } 
-   if (stat(filename, &file_info) || !(fp=fopen(filename,"r"))) {
-      return -1;
-   }    
-   fgets(buf, 127, fp);
-   fclose(fp);
-    
-   sscanf(buf, "%s", commd_product_mode);
-   return 0;
-}
-
 int use_reserved_port(void) {
+   const char *product_mode;
+
    DENTER(TOP_LAYER, "use_reserved_port");
 
-   if (commd_product_mode == NULL) { 
-      read_product_mode_file(product_mode_file);
-   }
-   if ( strlen(commd_product_mode) == 0) {
-      read_product_mode_file(product_mode_file);
-   }
-   DPRINTF(("product mode is \"%s\"\n",commd_product_mode ));
-   if (strstr(commd_product_mode, "reserved_port") != NULL) {
+   product_mode = bootstrap_get_product_mode();
+
+   DPRINTF(("product mode is \"%s\"\n",product_mode ));
+   if (strstr(product_mode, "reserved_port") != NULL) {
       DPRINTF(("use_reserved_port return: 1\n" ));
       DEXIT;
       return 1;
@@ -129,85 +98,16 @@ int use_reserved_port(void) {
 }
 
 const char* get_short_product_name(void) {
-   if (commd_product_mode == NULL) { 
-      read_product_mode_file(product_mode_file);
-   }
-   if ( strlen(commd_product_mode) == 0) {
-      read_product_mode_file(product_mode_file);
-   }
-   if (strstr(commd_product_mode, "sgeee") != NULL) {
+   static char *commd_version_string;
+
+   const char *product_mode = bootstrap_get_product_mode();
+
+   if (strstr(product_mode, "sgeee") != NULL) {
       sprintf(commd_version_string,""SFN" "SFN"", "SGEEE", GDI_VERSION);
    } else {
       sprintf(commd_version_string,""SFN" "SFN"", "SGE", GDI_VERSION);
    }   
    return commd_version_string;
 }
-
-
-/*-----------------------------------------------------------------------
- * get_act_master_path
- *-----------------------------------------------------------------------*/
-char *get_act_master_path( const char *sge_cell ) {
-   const char *sge_root;
-   char *cp;
-   int len;
-   SGE_STRUCT_STAT sbuf;
-      
-   DENTER(TOP_LAYER, "get_act_master_path");
-   
-   sge_root = sge_get_root_dir(1, NULL, 0, 1);
-   if (SGE_STAT(sge_root, &sbuf)) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
-      SGE_EXIT(1);
-   }
-
-   len = strlen(sge_root) + strlen(sge_cell) 
-         + strlen(COMMON_DIR) + strlen(ACT_QMASTER_FILE) + 5;
-
-   if (!(cp = malloc(len))) {
-      CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILEDFORPATHTOACTQMASTERFILE ));
-      SGE_EXIT(1);
-   }
-
-   sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR,ACT_QMASTER_FILE ); 
-   DEXIT;
-   return cp;
-}
-
-
-
-/*-----------------------------------------------------------------------
- * get_product_mode_file_path
- *-----------------------------------------------------------------------*/
-char *get_product_mode_file_path( const char *sge_cell ) {
-   const char *sge_root;
-   char *cp;
-   int len;
-   SGE_STRUCT_STAT sbuf;
-      
-   DENTER(TOP_LAYER, "get_product_mode_file_path");
-   
-   sge_root = sge_get_root_dir(1, NULL, 0, 1); 
-   if (SGE_STAT(sge_root, &sbuf)) {
-      CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
-      SGE_EXIT(1);
-   }
-
-   len = strlen(sge_root) + strlen(sge_cell) + strlen(COMMON_DIR) + strlen(PRODUCT_MODE_FILE) + 5;
-
-   if (!(cp = malloc(len))) {
-      CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILEDFORPATHTOPRODMODFILE ));
-      SGE_EXIT(1);
-   }
-
-   sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR,PRODUCT_MODE_FILE ); 
-   DEXIT;
-   return cp;
-}
-
-
-
-
-
 
 

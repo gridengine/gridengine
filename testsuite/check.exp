@@ -9096,7 +9096,7 @@ proc setup2 { } {
 }
 
 proc init_bootstrap {} {
-   global bootstrap
+   global bootstrap ts_config
    global CHECK_USER CHECK_DEFAULT_DOMAIN
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT
 
@@ -9106,7 +9106,8 @@ proc init_bootstrap {} {
    }
 
    # we don't have bootstrapping in versions prior 6.x
-   if {[resolve_version] >= 3} {
+   set version [resolve_version]
+   if {$version >= 3} {
       # read bootstrapping info from file
       # if it does not yet exist, initialize if from configuration
       set bootstrap_file "$CHECK_PRODUCT_ROOT/default/common/bootstrap"
@@ -9114,9 +9115,14 @@ proc init_bootstrap {} {
          puts $CHECK_OUTPUT "reading bootstrap file $bootstrap_file"
          set f [open $bootstrap_file r]
          while {[gets $f line] > 0} {
-            set name [lindex $line 0]
-            set value [lrange $line 1 end]
-            set bootstrap($name) "$value"
+            if {[string range $line 0 0] != "#"} {
+               set name [lindex $line 0]
+               set value [lrange $line 1 end]
+               set bootstrap($name) "$value"
+               #puts $CHECK_OUTPUT "read $name: $value"
+            } else {
+               #puts $CHECK_OUTPUT "skipping comment"
+            }
          }
       } else {
          puts $CHECK_OUTPUT "initializing bootstrap from scratch"
@@ -9128,7 +9134,21 @@ proc init_bootstrap {} {
          set bootstrap(spooling_params) "unknown"
          set bootstrap(binary_path) "$CHECK_PRODUCT_ROOT/bin"
          set bootstrap(qmaster_spool_dir) "$CHECK_PRODUCT_ROOT/default/spool/qmaster"
+         set bootstrap(product_mode) "$ts_config(product_type)"
       }
+   } else {
+      puts $CHECK_OUTPUT "no need to read bootstrap file for sge testsuite version $version"
+   }
+
+   #dump_bootstrap
+   #sleep 10
+}
+
+proc dump_bootstrap {} {
+   global bootstrap CHECK_OUTPUT
+
+   foreach entry [array names bootstrap] {
+      puts $CHECK_OUTPUT "$entry: $bootstrap($entry)"
    }
 }
 

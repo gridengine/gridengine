@@ -37,6 +37,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+#include "sge_bootstrap.h"
 #include "sge_feature.h"
 
 #include "sge_unistd.h"
@@ -120,9 +121,12 @@ int main(int argc, char *argv[])
    } else if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
       /* will never be reached, as sge_setup_paths exits on failure */
       ret = EXIT_FAILURE;
+   } else if (!sge_bootstrap(NULL)) {
+      ret = EXIT_FAILURE;
+   } else if (feature_initialize_from_string(bootstrap_get_product_mode())) {
+      ret = EXIT_FAILURE;
    } else {
       spooling_maintenance_command cmd = SPM_info;
-      feature_initialize_from_file(path_state_get_product_mode_file(), NULL);
       /* parse commandline */
      if (argc < 4) {
          usage(argv[0]);

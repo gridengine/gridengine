@@ -73,7 +73,6 @@ const char *path_state_get_acct_file(void);
 const char *path_state_get_stat_file(void);
 const char *path_state_get_local_conf_dir(void);
 const char *path_state_get_shadow_masters_file(void);
-const char *path_state_get_product_mode_file(void);
 
 void path_state_set_sge_root(const char *path);
 void path_state_set_cell_root(const char *path);
@@ -84,7 +83,6 @@ void path_state_set_acct_file(const char *path);
 void path_state_set_stat_file(const char *path);
 void path_state_set_local_conf_dir(const char *path);
 void path_state_set_shadow_masters_file(const char *path);
-void path_state_set_product_mode_file(const char *path);
 
 bool sge_setup_paths(const char *cell, dstring *error_dstring);
 

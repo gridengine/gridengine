@@ -424,9 +424,6 @@ MakeDirsMaster()
 #
 InitSpoolingDatabase()
 {
-   $INFOTEXT -u "\nDumping bootstrapping information"
-   PrintBootstrap > $COMMONDIR/bootstrap
-
    $INFOTEXT -u "\nInitializing spooling database"
    ExecuteAsAdmin $SPOOLINIT $SPOOLING_LIB "$SPOOLING_ARGS" init
 
@@ -454,6 +451,13 @@ PrintLocalConf()
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
 }
 
+AddBootstrap()
+{
+   $INFOTEXT -u "\nDumping bootstrapping information"
+
+   PrintBootstrap > $COMMONDIR/bootstrap
+}
+
 #-------------------------------------------------------------------------
 # PrintBootstrap: print SGE/SGEEE default configuration
 #
@@ -473,6 +477,7 @@ PrintBootstrap()
    $ECHO "spooling_params        $SPOOLING_ARGS"
    $ECHO "binary_path            $QSYST_ROOT_VAL/bin"
    $ECHO "qmaster_spool_dir      $QMDIR"
+   $ECHO "product_mode           $PRODUCT_MODE"
 }
 
 #-------------------------------------------------------------------------
@@ -733,11 +738,10 @@ AddConfiguration()
 }
 
 #-------------------------------------------------------------------------
-# WriteProductMode
+# SetProductMode
 #
-WriteProductMode()
+SetProductMode()
 {
-   TruncCreateAndMakeWriteable $COMMONDIR/product_mode
    if [ $inst = sge ]; then
       PRODUCT_PREFIX=sge
    else
@@ -769,8 +773,7 @@ WriteProductMode()
       CSP_PREFIX=""
    fi
 
-   $ECHO ${PRODUCT_PREFIX}${RESPORT_PREFIX}${AFS_PREFIX}${CSP_PREFIX} >> $COMMONDIR/product_mode
-   SetPerm $COMMONDIR/product_mode
+   PRODUCT_MODE="${PRODUCT_PREFIX}${RESPORT_PREFIX}${AFS_PREFIX}${CSP_PREFIX}"
 }
 
 #-------------------------------------------------------------------------
@@ -2325,7 +2328,8 @@ qmaster)
    SetSpoolingOptions
    MakeDirsMaster
    SelectHostNameResolving
-   WriteProductMode
+   SetProductMode
+   AddBootstrap
    InitSpoolingDatabase
    AddConfiguration
    AddLocalConfiguration

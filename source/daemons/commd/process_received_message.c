@@ -45,6 +45,8 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "rwfd.h"
+#include "setup_path.h"
+
 #include "msg_commd.h"
 
 
@@ -59,7 +61,6 @@ extern message *termination_message;
 extern int message_tracefd;
 
 extern char *aliasfile;
-extern char *actmasterfile;
 
 extern void deliver_message(message *mp, int local);
 extern void init_send(message *mp, int reserved_port, int commdport);
@@ -304,7 +305,7 @@ int commdport
 
          /* only allow connections from qmaster host or local host */
          
-         if (read_qmaster_name_from_file(master_name,actmasterfile ) == 0) {
+         if (read_qmaster_name_from_file(master_name, path_state_get_act_qmaster_file()) == 0) {
             DEBUG((SGE_EVENT, "master file host name is %s", master_name )); 
             master_host = sge_host_search( master_name ,NULL);
             if (master_host == NULL) {

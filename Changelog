@@ -1,3 +1,7 @@
+JG-2003-10-09-0: Enhancem.: Moved product mode to bootstrap file.
+                 Bugfix:    Fixed the build (new solarisx86 compiler is more
+                            critical).
+
 AD-2003-10-10-0: Bugfix:    Fixed the build
                  Changed:   msg_sgeobjlib.h
 

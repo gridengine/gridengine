@@ -310,11 +310,9 @@ int main(int argc, char *argv[])
    if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
       /* will never be reached, as sge_setup_paths exits on failure */
       ret = EXIT_FAILURE;
-   } else if (feature_initialize_from_file(path_state_get_product_mode_file(),
-                                           &answer_list)) {
-      answer_list_output(&answer_list);
-      ret = EXIT_FAILURE;
    } else if (!sge_bootstrap(NULL)) {
+      ret = EXIT_FAILURE;
+   } else if (feature_initialize_from_string(bootstrap_get_product_mode())) {
       ret = EXIT_FAILURE;
    } else {
       /* parse commandline */

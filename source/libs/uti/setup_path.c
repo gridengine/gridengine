@@ -65,14 +65,13 @@ struct path_state_t {
     char       *stat_file;
     char       *local_conf_dir;
     char       *shadow_masters_file;
-    char       *product_mode_file;
 };
 
 #if defined(SGE_MT)
 static pthread_key_t   path_state_key;
 #else
 static struct path_state_t path_state_opaque = {
-  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 struct path_state_t *path_state = &path_state_opaque;
 #endif
 
@@ -92,7 +91,6 @@ static void path_state_destroy(void* state) {
    FREE(((struct path_state_t*)state)->stat_file);
    FREE(((struct path_state_t*)state)->local_conf_dir);
    FREE(((struct path_state_t*)state)->shadow_masters_file);
-   FREE(((struct path_state_t*)state)->product_mode_file);
    free(state);
 }
  
@@ -151,13 +149,6 @@ const char *path_state_get_shadow_masters_file(void)
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_shadow_masters_file");
    return path_state->shadow_masters_file;
 }
-const char *path_state_get_product_mode_file(void)
-{
-   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_product_mode_file");
-   return path_state->product_mode_file;
-}
-
-
 
 
 void path_state_set_sge_root(const char *path)
@@ -209,11 +200,6 @@ void path_state_set_shadow_masters_file(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_shadow_masters_file");
    path_state->shadow_masters_file = sge_strdup(path_state->shadow_masters_file, path);
-}
-void path_state_set_product_mode_file(const char *path)
-{
-   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_product_mode_file");
-   path_state->product_mode_file = sge_strdup(path_state->product_mode_file, path);
 }
 
 /****** setup_path/sge_setup_paths() *******************************************
@@ -362,8 +348,6 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
    sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, SHADOW_MASTERS_FILE);
    path_state_set_shadow_masters_file(sge_dstring_get_string(&bw));
 
-   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, PRODUCT_MODE_FILE);
-   path_state_set_product_mode_file(sge_dstring_get_string(&bw));
    FREE(cell_root);
 
    DPRINTF(("sge_root            >%s<\n", path_state_get_sge_root()));
@@ -375,7 +359,6 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
    DPRINTF(("stat_file           >%s<\n", path_state_get_stat_file()));
    DPRINTF(("local_conf_dir      >%s<\n", path_state_get_local_conf_dir()));
    DPRINTF(("shadow_masters_file >%s<\n", path_state_get_shadow_masters_file()));
-   DPRINTF(("product_mode_file   >%s<\n", path_state_get_product_mode_file()));
    
    DEXIT;
    return true;
@@ -395,6 +378,5 @@ void sge_delete_paths()
 	FREE(path_state->stat_file);
 	FREE(path_state->local_conf_dir);
 	FREE(path_state->shadow_masters_file);
-	FREE(path_state->product_mode_file);
 }
 #endif /* WIN32NATIVE */

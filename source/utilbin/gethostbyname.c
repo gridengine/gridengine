@@ -42,6 +42,8 @@
 #include "sge_string.h"
 #include "sge_hostname.h"
 
+#include "cl_commlib.h"
+
 #ifndef h_errno
 extern int h_errno;
 #endif
@@ -52,6 +54,98 @@ void usage(void)
   exit(1);
 }
 
+#ifdef ENABLE_NGC
+int main(int argc, char *argv[]) {
+   struct hostent *he = NULL;
+   char* resolved_name = NULL;
+   int retval = CL_RETVAL_OK;
+   char **tp,**tp2;
+   int name_only = 0;
+   int sge_aliasing = 0;
+
+   
+
+  
+   if (argc < 2 ) {
+      usage();
+   }
+
+  if (!strcmp(argv[1], "-name")) {
+     if (argc != 3) {
+        usage(); 
+     }
+     name_only = 1;
+  }   
+  if (!strcmp(argv[1], "-aname")) {
+     if (argc != 3) {
+        usage(); 
+     }
+     name_only = 1;
+     sge_aliasing = 1;
+  }   
+     
+  retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL );
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     exit(1);
+  }
+
+  /* cl_com_append_host_alias("",""); */
+  retval = cl_com_cached_gethostbyname(argv[1+name_only], &resolved_name, NULL, &he);
+
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     cl_com_cleanup_commlib();
+     exit(1);
+  }
+
+  if (name_only) {
+     if (sge_aliasing) {
+        if (resolved_name != NULL) {
+           printf("%s\n",resolved_name);
+        } else {
+           printf("%s\n","unexpected error");
+        }
+     } else {
+        if (he != NULL) {
+           printf("%s\n",he->h_name);
+        } else {
+           printf("%s\n","could not get hostent struct");
+        }
+     }
+  } else {
+     if (he != NULL) {
+        printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
+        
+        if (resolved_name != NULL) {
+           printf("SGE name: %s\n",resolved_name);
+        }
+
+        printf(MSG_SYSTEM_ALIASES );
+
+        for (tp = he->h_aliases; *tp; tp++)
+           printf("%s ", *tp);
+        printf("\n");
+  
+        printf(MSG_SYSTEM_ADDRESSES );
+        for (tp2 = he->h_addr_list; *tp2; tp2++)
+           printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));  /* inet_ntoa() is not MT save */
+        printf("\n");  
+     } else {   
+        fprintf(stderr,"%s\n","could not get hostent struct");
+     }
+  }
+  free(resolved_name);
+  sge_free_hostent(&he);
+
+  retval = cl_com_cleanup_commlib();
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     exit(1);
+  }
+  return 0;  
+}
+#else
 int main(int argc, char *argv[])
 {
   struct hostent *he;
@@ -113,3 +207,4 @@ int main(int argc, char *argv[])
   
   return 0;
 }
+#endif

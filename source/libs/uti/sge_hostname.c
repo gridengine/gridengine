@@ -75,19 +75,17 @@ static host *hostlist = NULL;
 /* MT-NOTE: localhost used only in commd */
 static host *localhost = NULL;
 
+#ifdef ENABLE_NGC
+#else
 static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom);
+static host *sge_host_create(void);
+static int sge_host_alias(host *h1, host *h2);
+#endif
 static int matches_addr(struct hostent *he, char *addr);
 static host *sge_host_search_pred_alias(host *h);
 
 static int matches_name(struct hostent *he, const char *name);    
-static host *sge_host_create(void);
 static void sge_host_delete(host *h);
-static int sge_host_alias(host *h1, host *h2);
-#ifndef GETHOSTBYNAME
-#ifndef GETHOSTBYNAME_M
-static struct hostent *sge_copy_hostent (struct hostent *orig);
-#endif
-#endif
 
 /* this globals are used for profiling */
 unsigned long gethostbyname_calls = 0;
@@ -138,8 +136,11 @@ host *uti_state_get_localhost(void)
 *     Wraps sge_gethostbyname() function calls, and retries if the host is not
 *     found.
 *
+*     return value must be released by function caller (don't forget the 
+*     char*‹‹ array lists inside of struct hostent)
+*
 *  NOTES
-*     MT-NOTE: sge_gethostbyname_retry() is MT safe
+*     MT-NOTE: see sge_gethostbyname()
 *******************************************************************************/
 struct hostent *sge_gethostbyname_retry(
 const char *name 
@@ -178,6 +179,10 @@ const char *name
 *  FUNCTION
 *     Wrapps gethostbyname() function calls, measures time spent 
 *     in gethostbyname() and logs when very much time has passed.
+*
+*     return value must be released by function caller (don't forget the 
+*     char*‹‹ array lists inside of struct hostent)
+*
 *
 *  NOTES
 *     MT-NOTE: sge_gethostbyname() is MT safe
@@ -291,6 +296,11 @@ struct hostent *sge_gethostbyname(const char *name)
     * already screwed, so we won't worry too much about it.
     * An alternative would be to set errno to HOST_NOT_FOUND. */
    l_errno = h_errno;
+   if (he != NULL) {
+      struct hostent *new_he = sge_copy_hostent (he);
+      /* do NOT free he, there was no malloc() */
+      he = new_he;
+   }
 #endif
 #ifdef GETHOSTBYNAME_M
    /* This is for Mac OS < 10.2, IRIX, and everyone else
@@ -303,6 +313,11 @@ struct hostent *sge_gethostbyname(const char *name)
    he = gethostbyname(name);
    l_errno = h_errno;
 
+   if (he != NULL) {
+      struct hostent *new_he = sge_copy_hostent (he);
+      /* do NOT free he, there was no malloc() */
+      he = new_he;
+   }
    sge_mutex_unlock("hostbyname", SGE_FUNC, __LINE__, &hostbyname_mutex);
 
 #endif
@@ -325,13 +340,6 @@ struct hostent *sge_gethostbyname(const char *name)
    return he;
 }
 
-/* This function is only needed on architectures where gethostbyname_r() and/or
- * gethostbyaddr_r is used.  We can just check for the GETHOSTBYNAME and
- * GETHOSTBYNAME_M because there is no case where GETHOSTBYNAME or
- * GETHOSTBYNAME_M is defined along with a GETHOSTBYADDR_R*.
- */
-#ifndef GETHOSTBYNAME
-#ifndef GETHOSTBYNAME_M
 /****** uti/host/sge_copy_hostent() ****************************************
 *  NAME
 *     sge_copy_hostent() -- make a deep copy of a struct hostent
@@ -346,7 +354,7 @@ struct hostent *sge_gethostbyname(const char *name)
 *  NOTES
 *     MT-NOTE: sge_copy_hostent() is MT safe
 *******************************************************************************/
-static struct hostent *sge_copy_hostent(struct hostent *orig)
+struct hostent *sge_copy_hostent(struct hostent *orig)
 {
    struct hostent *copy = (struct hostent *)malloc (sizeof (struct hostent));
    char **p = NULL;
@@ -404,8 +412,6 @@ static struct hostent *sge_copy_hostent(struct hostent *orig)
    DEXIT;
    return copy;
 }
-#endif
-#endif
 
 /****** uti/host/sge_gethostbyaddr() ****************************************
 *  NAME
@@ -417,6 +423,9 @@ static struct hostent *sge_copy_hostent(struct hostent *orig)
 *  FUNCTION
 *     Wrapps gethostbyaddr() function calls, measures time spent 
 *     in gethostbyaddr() and logs when very much time has passed.
+*
+*     return value must be released by function caller (don't forget the 
+*     char*‹‹ array lists inside of struct hostent)
 *
 *  NOTES
 *     MT-NOTE: sge_gethostbyaddr() is MT safe
@@ -529,6 +538,11 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
     * already screwed, so we won't worry too much about it.
     * An alternative would be to set errno to HOST_NOT_FOUND. */
    l_errno = h_errno;
+   if (he != NULL) {
+      struct hostent *new_he = sge_copy_hostent(he);
+      /* do not free he, there was no malloc() */
+      he = new_he;
+   }
 #endif
 #ifdef GETHOSTBYADDR_M
    /* This is for everone else. */
@@ -543,6 +557,11 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 #endif
 
    l_errno = h_errno;
+   if (he != NULL) {
+      struct hostent *new_he = sge_copy_hostent(he);
+      /* do not free he, there was no malloc() */
+      he = new_he;
+   }
    sge_mutex_unlock("hostbyaddr", SGE_FUNC, __LINE__, &hostbyaddr_mutex);
 #endif
 
@@ -574,6 +593,8 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 *     MT-NOTE: gethostbyaddr() is not MT safe, due to access to global variables
 *
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 void sge_host_list_initialize(void)
 {
    char localname[MAXHOSTLEN];
@@ -601,6 +622,7 @@ void sge_host_list_initialize(void)
    }
    DEXIT;
 }
+#endif
 
 /****** sge_hostname/sge_host_create() *****************************************
 *  NAME
@@ -616,6 +638,8 @@ void sge_host_list_initialize(void)
 *     MT-NOTE: sge_host_create() is not MT safe due to access to global variable
 *
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static host *sge_host_create(void)
 {
    host *new = (host *) malloc(sizeof(host));
@@ -630,6 +654,7 @@ static host *sge_host_create(void)
 
    return new;
 }
+#endif
 
 /****** sge_hostname/sge_host_delete() *****************************************
 *  NAME
@@ -674,6 +699,7 @@ static void sge_host_delete(host *h)
    sge_host_delete(nextalias);
 }
 
+
 /****** uti/hostname/sge_host_new_addr() **************************************
 *  NAME
 *     sge_host_new_addr() -- Create new host from internet address 
@@ -694,6 +720,8 @@ static void sge_host_delete(host *h)
 *  RESULT
 *     host* - host entry
 ******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 host *sge_host_new_addr(const struct in_addr *addr) 
 {
    host *new = sge_host_create();
@@ -716,6 +744,7 @@ host *sge_host_new_addr(const struct in_addr *addr)
 
    return new;
 }
+#endif
 
 /****** uti/hostname/sge_host_new_name() **************************************
 *  NAME
@@ -739,6 +768,8 @@ host *sge_host_new_addr(const struct in_addr *addr)
 *  RESULT
 *     host* - host entry
 ******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 host *sge_host_new_name(const char *name, int *not_really_new) 
 {
    host *new, *h;
@@ -780,6 +811,7 @@ host *sge_host_new_name(const char *name, int *not_really_new)
    DEXIT;
    return new;
 }
+#endif
 
 /****** sge_hostname/sge_host_search_pred_alias() ******************************
 *  NAME
@@ -838,6 +870,8 @@ static host *sge_host_search_pred_alias(host *h)
 *     MT-NOTE: sge_host_search_pred_alias()
 *
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static int sge_host_alias(host *h1, host *h2) 
 {
    host *h3;
@@ -856,6 +890,7 @@ static int sge_host_alias(host *h1, host *h2)
 
    return 0;
 }
+#endif
 
 /****** sge_hostname/matches_name() ********************************************
 *  NAME
@@ -1042,6 +1077,8 @@ void sge_host_list_print(FILE *fp)
 *  NOTES
 *     MT-NOTE: sge_host_copy_entry() is MT safe
 *******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom) 
 {
 
@@ -1060,6 +1097,7 @@ static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom)
 
    return 0;
 }
+#endif
 
 /****** uti/hostname/sge_host_list_read_aliasfile() ***************************
 *  NAME
@@ -1086,6 +1124,8 @@ static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom)
 *     MT-NOTE: sge_host_list_read_aliasfile() is not MT safe 
 *     MT-NOTE: due to strtok(), hostlist global variable access 
 ******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 int sge_host_list_read_aliasfile(char *fname) 
 {
 #ifdef __INSIGHT__   
@@ -1159,6 +1199,7 @@ _Insight_set_option("suppress", "LEAK_SCOPE");
 _Insight_set_option("suppress", "LEAK_SCOPE");
 #endif
 }
+#endif
 
 /****** uti/hostname/sge_host_get_aliased_name() ******************************
 *  NAME
@@ -1180,6 +1221,8 @@ _Insight_set_option("suppress", "LEAK_SCOPE");
 *  NOTES:
 *     MT-NOTE: sge_host_get_aliased_name() is not MT safe
 ******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 const char *sge_host_get_aliased_name(const char *name)
 {
    host *h = sge_host_search(name, NULL);
@@ -1188,6 +1231,52 @@ const char *sge_host_get_aliased_name(const char *name)
       h = sge_host_new_name(name, NULL);
    }
    return h?sge_host_get_mainname(h):NULL;
+}
+#endif
+
+void sge_free_hostent( struct hostent** he_to_del ) {
+   struct hostent *he = NULL; 
+   char** help = NULL;
+
+   /* nothing to free */
+   if (he_to_del == NULL) {
+      return;
+   }
+
+   /* pointer points to NULL, nothing to free */
+   if (*he_to_del == NULL) {
+      return;
+   }
+
+   he = *he_to_del;
+
+   /* free unique host name */
+   free(he->h_name);
+   he->h_name = NULL;
+
+   /* free host aliases */  
+   if (he->h_aliases != NULL) {
+      help = he->h_aliases;
+      while(*help) {
+         free(*help++);
+      }
+      free(he->h_aliases);
+   }
+   he->h_aliases = NULL;
+
+   /* free addr list */
+   if (he->h_addr_list != NULL) {
+      help = he->h_addr_list;
+      while(*help) {
+         free(*help++);
+      }
+      free(he->h_addr_list);
+   }
+   he->h_addr_list = NULL;
+
+   /* free hostent struct */
+   free(*he_to_del);
+   *he_to_del = NULL;
 }
 
 
@@ -1204,6 +1293,8 @@ const char *sge_host_get_aliased_name(const char *name)
 *  NOTES:
 *     MT-NOTE: sge_host_list_refresh() is not MT safe
 ******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 void sge_host_list_refresh(void)
 {
    host *hl = hostlist;
@@ -1223,6 +1314,7 @@ void sge_host_list_refresh(void)
    DEXIT;
    return;
 }
+#endif
 
 /****** uti/hostname/sge_host_get_mainname() **********************************
 *  NAME
@@ -1282,6 +1374,8 @@ char *sge_host_get_mainname(host *h)
 *  NOTES:
 *     MT-NOTE: sge_host_resolve_name_local() is not MT safe
 ******************************************************************************/
+#ifdef ENABLE_NGC
+#else
 const char *sge_host_resolve_name_local(const char *unresolved)
 {  
    const char *s;
@@ -1307,6 +1401,7 @@ const char *sge_host_resolve_name_local(const char *unresolved)
    DEXIT;
    return s;
 }
+#endif
 
 
 /****** uti/hostname/sge_hostcpy() ********************************************
@@ -1410,7 +1505,7 @@ int sge_hostcmp(const char *h1, const char*h2)
  
    DEXIT;
    return cmp;
-}       
+}
 
 /****** uti/hostname/sge_is_hgroup_ref() **************************************
 *  NAME

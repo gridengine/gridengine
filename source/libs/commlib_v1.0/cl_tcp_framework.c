@@ -205,7 +205,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
 /*      client_addr.sin_port = htons(cl_com_tcp_get_private(connection)->connect_port);
       client_addr.sin_family = AF_INET;
 */
-      if ( cl_com_cached_gethostbyname(connection->remote->comp_host, &unique_host, &(cl_com_tcp_get_private(connection)->client_addr.sin_addr) ) != CL_RETVAL_OK) {
+      if ( cl_com_cached_gethostbyname(connection->remote->comp_host, &unique_host, &(cl_com_tcp_get_private(connection)->client_addr.sin_addr),NULL ) != CL_RETVAL_OK) {
          shutdown(sockfd, 2);
          close(sockfd);
          free(unique_host);
@@ -1218,7 +1218,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
       if (new_sfd > -1) {
           char* resolved_host_name = NULL;
           CL_LOG(CL_LOG_INFO,"new connection setup ...");
-          cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ); 
+          cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL); 
           if (resolved_host_name != NULL) {
              CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name  );
           } else {
@@ -1416,7 +1416,7 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
       /* printf("resolving \"%s\"\n", cm_message->src->comp_host); */
       CL_LOG_STR(CL_LOG_INFO,"resolving host", cm_message->src->comp_host);
     
-      if ( cl_com_cached_gethostbyname(cm_message->src->comp_host, &unique_host, NULL) != CL_RETVAL_OK) {
+      if ( cl_com_cached_gethostbyname(cm_message->src->comp_host, &unique_host, NULL, NULL) != CL_RETVAL_OK) {
          free(unique_host);
          cl_com_free_cm_message(&cm_message);
          return CL_RETVAL_GETHOSTNAME_ERROR; 
@@ -1436,7 +1436,7 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
       free(unique_host);
       unique_host = NULL;
       
-      if ( cl_com_cached_gethostbyname(cm_message->dst->comp_host, &unique_host, NULL) != CL_RETVAL_OK) {
+      if ( cl_com_cached_gethostbyname(cm_message->dst->comp_host, &unique_host, NULL,NULL) != CL_RETVAL_OK) {
          cl_com_free_endpoint(&(connection->receiver));
          free(unique_host);
          cl_com_free_cm_message(&cm_message);
@@ -1451,7 +1451,7 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
       unique_host = NULL;
 
       if (cm_message->rdata != NULL) {
-         if ( cl_com_cached_gethostbyname(cm_message->rdata->comp_host, &unique_host,NULL) != CL_RETVAL_OK) {
+         if ( cl_com_cached_gethostbyname(cm_message->rdata->comp_host, &unique_host,NULL,NULL) != CL_RETVAL_OK) {
             cl_com_free_endpoint(&(connection->sender));
             cl_com_free_endpoint(&(connection->receiver));
             free(unique_host);
@@ -1645,7 +1645,7 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
                        elem != NULL; 
                        elem = cl_string_list_get_next_elem(connection->handler->allowed_host_list,elem)) {
                      char* resolved_host = NULL;
-                     retval = cl_com_cached_gethostbyname(elem->string, &resolved_host, NULL );
+                     retval = cl_com_cached_gethostbyname(elem->string, &resolved_host, NULL, NULL );
                      if (retval == CL_RETVAL_OK && resolved_host != NULL) {
                         if(cl_com_compare_hosts(resolved_host, connection->client_host_name) == CL_RETVAL_OK) {
                            is_ok = 1;

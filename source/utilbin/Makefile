@@ -84,22 +84,22 @@ uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/uidgid.c
 
 #---------------------------------------------------------------------
-gethostname:	gethostname.o $(UTILIB) $(RMONLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(LCKLIB)
-		$(CC) -o $@ gethostname.o sge_mt_init.o $(LFLAGS) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lngc -lngclists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
+gethostname:	gethostname.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(LCKLIB)
+		$(CC) -o $@ gethostname.o $(LFLAGS) -luti -llck -lrmon -lngc -lngclists $(LIBS)
 
 gethostname.o:	$(UTILBIN_DIR)/gethostname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostname.c
 
 #---------------------------------------------------------------------
-gethostbyname:	gethostbyname.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) -o $@ gethostbyname.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+gethostbyname:	gethostbyname.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(LCKLIB)
+		$(CC) -o $@ gethostbyname.o $(LFLAGS) -luti -llck -lrmon -lngc -lngclists $(LIBS)
 
 gethostbyname.o:	$(UTILBIN_DIR)/gethostbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyname.c
 
 #---------------------------------------------------------------------
-gethostbyaddr:	gethostbyaddr.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) -o $@ gethostbyaddr.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+gethostbyaddr:	gethostbyaddr.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(LCKLIB)
+		$(CC) -o $@ gethostbyaddr.o $(LFLAGS) -luti -llck -lrmon -lngc -lngclists $(LIBS)
 
 gethostbyaddr.o:	$(UTILBIN_DIR)/gethostbyaddr.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyaddr.c

@@ -38,6 +38,8 @@
 #include <stdlib.h>
 #include "basis_types.h"
 #include "msg_utilbin.h"
+#include "sge_hostname.h"
+#include "cl_commlib.h"
 
 void usage(void)
 {
@@ -45,6 +47,84 @@ void usage(void)
   exit(1);
 }
 
+#ifdef ENABLE_NGC
+int main(int argc, char *argv[])
+{
+  struct hostent *he = NULL;
+  char* resolved_name = NULL;
+  int retval = CL_RETVAL_OK;
+  char** tp = NULL;
+  char** tp2 = NULL;
+#if defined(CRAY)  
+  struct sockaddr_in  addr;
+#else
+  struct in_addr addr;
+#endif
+
+  if (argc != 2) {
+    usage();
+  }
+
+  retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL );
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     exit(1);
+  }
+
+  /* cl_com_append_host_alias("",""); */
+  
+
+#if defined(CRAY)
+  addr.sin_addr.s_addr = inet_addr(argv[1]);
+#else
+  addr.s_addr = inet_addr(argv[1]);
+#endif
+
+  retval = cl_com_cached_gethostbyaddr(&addr, &resolved_name, &he);
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     cl_com_cleanup_commlib();
+     exit(1);
+  }
+
+  if (he == NULL) {
+     fprintf(stderr,"%s\n","could not get hostent struct");
+  }
+
+  if (he != NULL) {
+     printf(MSG_SYSTEM_HOSTNAMEIS_S,he->h_name);
+  }
+
+  if (resolved_name != NULL) {
+     printf("SGE name: %s\n",resolved_name);
+     free(resolved_name);
+  } else {
+     printf("SGE name: %s\n","unexpected error");
+  }
+
+  if (he != NULL) {
+     printf(MSG_SYSTEM_ALIASES );
+
+     for (tp = he->h_aliases; *tp; tp++)
+       printf("%s ", *tp);
+     printf("\n");
+  
+     printf(MSG_SYSTEM_ADDRESSES );
+
+     for (tp2 = he->h_addr_list; *tp2; tp2++)
+        printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));  /* inet_ntoa() is not MT save */
+     printf("\n");    
+  }
+  sge_free_hostent(&he);
+
+  retval = cl_com_cleanup_commlib();
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     exit(1);
+  }
+  return 0;
+}
+#else
 int main(int argc, char *argv[])
 {
   struct hostent *he;
@@ -90,3 +170,4 @@ int main(int argc, char *argv[])
   exit(0);
   return 0;
 }
+#endif

@@ -159,10 +159,10 @@ struct in_addr {
 
 
 
-int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr);
+int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy);
 int cl_com_host_list_refresh(cl_raw_list_t* host_list);
-int cl_com_cached_gethostbyname( char *host, char **unique_hostname, struct in_addr *copy_addr);
-int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname);
+int cl_com_cached_gethostbyname( char *host, char **unique_hostname, struct in_addr *copy_addr,struct hostent **he_copy);
+int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy);
 int cl_com_compare_hosts(char* host1, char* host2);
 int cl_com_dup_host(char** host_dest, char* source, cl_host_resolve_method_t method, char* domain);
 

@@ -502,10 +502,14 @@ const char *shadow_master_file
 
    /* we are on the same machine as old qmaster */
    if (!strcmp(hp->h_name, uti_state_get_qualified_hostname())) {
+      sge_free_hostent(&hp);
       DPRINTF(("qmaster was running on same machine\n"));
       DEXIT;
       return -2;
    }
+
+   sge_free_hostent(&hp);
+
 
    /* we are not in the shadow master file */
    if (host_in_file(uti_state_get_qualified_hostname(), shadow_master_file)) {
@@ -552,7 +556,7 @@ const char *file
 ) {
    FILE *fp;
    char buf[512], *cp;
-   struct hostent *hp;
+   struct hostent *hp = NULL;
 
    DENTER(TOP_LAYER, "host_in_file");
 
@@ -568,10 +572,12 @@ const char *file
          if (hp && hp->h_name) {
             if (!sge_hostcmp(host, hp->h_name)) {
                fclose(fp);
+               sge_free_hostent(&hp);
                DEXIT;
                return 0;
             }
          }
+         sge_free_hostent(&hp);
       }      
    }
 

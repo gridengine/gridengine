@@ -438,18 +438,19 @@ static void qmaster_init(char **anArgv)
 static void communication_setup(char **anArgv)
 {
    const char *msg_prio = NULL;
-   const char *host = NULL;
    int enrolled = 0;
    cl_com_handle_t* com_handle = NULL;
    int ret_val = CL_RETVAL_OK;
    char* qmaster_port = NULL;
+   char* resolved_hostname = NULL;
+   int resolve_error;
 
    DENTER(TOP_LAYER, "communication_setup");
 
    WARNING((SGE_EVENT,"starting up ngc in NO THREADS mode\n"));
    ERROR((SGE_EVENT,"problem for sge_daemonize() when threads are running?"));
 
-   ret_val = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_DEBUG, qmaster_log_flush_func );
+   ret_val = cl_com_setup_commlib(CL_ONE_THREAD, CL_LOG_DEBUG, qmaster_log_flush_func );
 
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, "cl_com_setup_commlib: %s\n",cl_get_error_text(ret_val)));
@@ -467,12 +468,18 @@ static void communication_setup(char **anArgv)
       ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT\n"));
       SGE_EXIT(1);
    }
+   resolve_error=cl_com_cached_gethostbyname((char*)uti_state_get_qualified_hostname() ,
+                                             &resolved_hostname,
+                                             NULL, NULL);
+   
+   if ( resolve_error != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT,"cl_com_cached_gethostbyname() returned: %s", cl_get_error_text(resolve_error) ));
+   }
 
-   /* to ensure SGE host_aliasing is considered when resolving
-    * me.qualified_hostname before commd might be available
-    */
-   if ((host = sge_host_resolve_name_local(uti_state_get_qualified_hostname()))) {
-      uti_state_set_qualified_hostname(host);
+   if (resolved_hostname != NULL) {
+      uti_state_set_qualified_hostname(resolved_hostname);
+      free(resolved_hostname);
+      resolved_hostname = NULL;
    }
 
    com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
@@ -498,9 +505,7 @@ static void communication_setup(char **anArgv)
    DEXIT;
    return;
 } /* communication_setup() */
-
 #else /* !ENABLE_NGC */
-
 static void communication_setup(char **anArgv)
 {
    const char *msg_prio = NULL;

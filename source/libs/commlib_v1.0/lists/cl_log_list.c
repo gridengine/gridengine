@@ -146,14 +146,16 @@ static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, i
 const char* cl_log_list_convert_type_id(int id)  {  /* CR check */
 
    switch (id) {
+      case CL_LOG_OFF:
+         return "LOG_OFF";
       case CL_LOG_ERROR: 
-         return "ERROR";
+         return "LOG_ERROR";
       case CL_LOG_WARNING:
-         return "WARNING";
+         return "LOG_WARNING";
       case CL_LOG_INFO:
-         return "INFO";
+         return "LOG_INFO";
       case CL_LOG_DEBUG:
-         return "DEBUG";
+         return "LOG_DEBUG";
       default:
          return "undefined";
    }
@@ -163,12 +165,20 @@ const char* cl_log_list_convert_type_id(int id)  {  /* CR check */
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_log_list_set_log_level()"
-int cl_log_list_set_log_level(cl_raw_list_t* list_p, int log_level) {  /* CR check */
+int cl_log_list_set_log_level(cl_raw_list_t* list_p, int new_log_level) {  /* CR check */
    cl_log_list_data_t* ldata = NULL;
+   int log_level = 0;
    if (list_p == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   if (log_level < CL_LOG_ERROR || log_level > CL_LOG_DEBUG) {
+
+   /* check for environment variable SGE_NGC_DEBUG */
+   log_level = new_log_level;
+   if (getenv("SGE_NGC_DEBUG") != NULL) {
+      log_level = (int) cl_util_get_ulong_value(getenv("SGE_NGC_DEBUG"));
+   }
+
+   if (log_level < CL_LOG_OFF || log_level > CL_LOG_DEBUG) {
       CL_LOG(CL_LOG_ERROR,"undefined log level");
       return CL_RETVAL_PARAMS;
    }
@@ -179,6 +189,7 @@ int cl_log_list_set_log_level(cl_raw_list_t* list_p, int log_level) {  /* CR che
       ldata->current_log_level = log_level;
       return CL_RETVAL_OK;
    }
+
    return CL_RETVAL_LIST_DATA_IS_NULL;
 }
 
@@ -329,7 +340,7 @@ int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int crea
    /* initialization done, now set list_data to enable logging */
    (*list_p)->list_data = ldata;
    ldata->list_creator_settings = creator_settings;
-   ldata->current_log_level = CL_LOG_INFO;  /* initial loglevel is CL_LOG_WARNING */
+   ldata->current_log_level = CL_LOG_WARNING;  /* initial loglevel is CL_LOG_WARNING */
    ldata->flush_type = flush_type;
    if (flush_func != NULL) {
       ldata->flush_function = *flush_func;
@@ -337,6 +348,10 @@ int cl_log_list_setup(cl_raw_list_t** list_p, const char* creator_name, int crea
       ldata->flush_function = cl_log_list_flush_list;
    }
 
+   /* check for environment variable SGE_NGC_DEBUG */
+   if ( getenv("SGE_NGC_DEBUG") != NULL) {
+      ldata->current_log_level = (int) cl_util_get_ulong_value(getenv("SGE_NGC_DEBUG"));
+   }
 
    CL_LOG(CL_LOG_INFO,"cl_log_list_setup() complete");
 
@@ -457,8 +472,8 @@ int cl_log_list_log(int log_type,int line, const char* function_name,const char*
    /* check current log level */
    ldata = thread_config->thread_log_list->list_data;
    if (ldata != NULL) {
-      if (ldata->current_log_level < log_type) {
-         return CL_RETVAL_OK;  /* message log doesn't match current log level */
+      if (ldata->current_log_level < log_type || ldata->current_log_level == CL_LOG_OFF) {
+         return CL_RETVAL_OK;  /* message log doesn't match current log level or is switched off */
       }
    } else {
       return CL_RETVAL_OK;  /* never try logging without list data ( this happens on setting up the log list ) */

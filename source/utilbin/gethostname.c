@@ -41,12 +41,9 @@
 #include "basis_types.h"
 #include "msg_utilbin.h"
 #include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_mt_init.h"
 
-#if defined(SOLARIS)
-int gethostname(char *, int);
-#endif
+#include "sge_hostname.h"
+#include "cl_commlib.h"
 
 int usage(void)
 {
@@ -55,61 +52,96 @@ int usage(void)
   return 0;
 }
 
-int main(int argc,char *argv[])
-{
-  struct hostent *he;
-  char **tp,**tp2;
-  char buf[128];
-  int name_only = 0;
-  int sge_aliasing = 0;
+int main(int argc,char *argv[]) {
+   struct hostent *he = NULL;
+   char* resolved_name = NULL;
+   int retval = CL_RETVAL_OK;
+   char **tp,**tp2;
+   int name_only = 0;
+   int sge_aliasing = 0;
+
+   if (argc < 1 ) {
+      usage();
+   } 
+   if (argc >= 2) {
+      if (!strcmp(argv[1], "-name")) {
+         if (argc != 2) {
+            usage(); 
+         }
+         name_only = 1;
+      }   
+      if (!strcmp(argv[1], "-aname")) {
+         if (argc != 2) {
+            usage(); 
+         }
+         name_only = 1;
+         sge_aliasing = 1;
+      }   
+   }
   
-
-  sge_mt_init();
-
-  if (argc == 2) {
-     if (!strcmp(argv[1], "-name"))
-        name_only = 1;
-     else if (!strcmp(argv[1], "-aname")) {
-        name_only = 1;
-        sge_aliasing = 1;
-     } else
-        usage();
-  }
-  else if (argc > 2)
+  if (name_only == 0 && argc != 1) {
      usage();
-      
-  if (gethostname(buf, sizeof(buf))) {
-     perror(MSG_SYSTEM_GETHOSTNAMEFAILED );
+  }
+     
+  retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL );
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
      exit(1);
   }
-  
-  he = gethostbyname(buf);
 
-  if (!he) {
-    perror(MSG_SYSTEM_GETHOSTBYNAMEFAILED );
-    exit(1);
+  /* cl_com_append_host_alias("",""); */
+  retval = cl_com_gethostname(&resolved_name, NULL, &he);
+
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     cl_com_cleanup_commlib();
+     exit(1);
   }
-  strcpy(buf, he->h_name);
+
 
   if (name_only) {
-     const char *s;
-     if (sge_aliasing && (s=sge_host_resolve_name_local(buf)))
-        printf("%s\n", s);
-     else /* no aliased name */
-        printf("%s\n", buf);
-  } else {    
-     printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
-     printf(MSG_SYSTEM_ALIASES );
+     if (sge_aliasing) {
+        if (resolved_name != NULL) {
+           printf("%s\n",resolved_name);
+        } else {
+           printf("%s\n","unexpected error");
+        }
+     } else {
+        if (he != NULL) {
+           printf("%s\n",he->h_name);
+        } else {
+           printf("%s\n","could not get hostent struct");
+        }
+     }
+  } else {
+     if (he != NULL) {
+        printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
+        
+        if (resolved_name != NULL) {
+           printf("SGE name: %s\n",resolved_name);
+        }
 
-     for (tp = he->h_aliases; *tp; tp++)
-        printf("%s ", *tp);
-     printf("\n");
+        printf(MSG_SYSTEM_ALIASES );
+
+        for (tp = he->h_aliases; *tp; tp++)
+           printf("%s ", *tp);
+        printf("\n");
   
-     printf(MSG_SYSTEM_ADDRESSES );
-     for (tp2 = he->h_addr_list; *tp2; tp2++)
-        printf("%s ", inet_ntoa(* (struct in_addr *) *tp2)); /* inet_ntoa() is not MT save */
-     printf("\n");  
+        printf(MSG_SYSTEM_ADDRESSES );
+        for (tp2 = he->h_addr_list; *tp2; tp2++)
+           printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));  /* inet_ntoa() is not MT save */
+        printf("\n");  
+     } else {   
+        fprintf(stderr,"%s\n","could not get hostent struct");
+     }
   }
-  
-  return 0;
+  free(resolved_name);
+  sge_free_hostent(&he);
+
+  retval = cl_com_cleanup_commlib();
+  if (retval != CL_RETVAL_OK) {
+     fprintf(stderr,"%s\n",cl_get_error_text(retval));
+     exit(1);
+  }
+  return 0;  
 }

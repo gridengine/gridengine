@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/12/10 13:58:53 $     Revision: $Revision: 1.9.2.14 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/12/18 09:27:54 $     Revision: $Revision: 1.9.2.15 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2003/12/10 13:58:53 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2003/12/18 09:27:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -604,7 +604,7 @@ options in effect act as "toggles" during the scan.
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
-List of holds to place on the job.
+List of holds to place on a job, a task, or some tasks of a job.
 .sp 1
 .nf
 .ta \w'|u|  'u

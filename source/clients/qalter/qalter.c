@@ -759,10 +759,13 @@ int *all_users
       }
      
       /* build task list from ID_Type from JB_job_identifier */
+      /*
       if (!lGetList(ep, ID_ja_structure)) {
          task = lAddElemUlong(&task_list, JAT_task_number, 0, task_descr);      
          lSetUlong(task, JAT_hold, lGetUlong(ep, ID_force));
       } else {
+      */
+      if (lGetList(ep, ID_ja_structure)) {
          lListElem *range;
          for_each(range, lGetList(ep, ID_ja_structure)) {
             u_long32 start = lGetUlong(range, RN_min);
@@ -775,7 +778,13 @@ int *all_users
             } 
          }
       }
-            
+
+      if ((lGetPosViaElem(rep, JB_ja_tasks) == -1) && (lGetNumberOfElem(task_list))){
+         sge_add_answer(&answer, MSG_OPTIONWORKSONLYONJOB, STATUS_EUNKNOWN, 0);
+                          
+         DEXIT;
+         return answer;
+      }      
       lSetList(job, JB_ja_tasks, task_list);
       lSetList(job, JB_ja_structure, 
                lCopyList("", lGetList(ep, ID_ja_structure)));

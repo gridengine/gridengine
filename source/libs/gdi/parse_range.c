@@ -357,7 +357,9 @@ lList *parse_ranges(const char *str, int just_parse, int step_allowed,
    const char *s;
    lListElem *r = NULL;
    lList *range_list = NULL;
-   int undefined = 0, first = 1;
+   int undefined = 0;
+   int first = 1;
+   int _error=0;
 
    DENTER(TOP_LAYER, "parse_ranges");
   
@@ -365,7 +367,8 @@ lList *parse_ranges(const char *str, int just_parse, int step_allowed,
       rl = &range_list;
 
    for (s = sge_strtok(str,SEPCHARS); s; s = sge_strtok(NULL,SEPCHARS)) {
-      if ( !first && undefined ) {
+      if ( !first && undefined && !_error) {
+         _error = 1;
          /* first was undefined - no more ranges allowed */
          ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED ));
          if (alpp) {
@@ -409,6 +412,20 @@ lList *parse_ranges(const char *str, int just_parse, int step_allowed,
          lFreeElem(r);
       }
    }
+
+   if ( !first && undefined && !_error) {
+      _error=1;
+      /* first was undefined - no more ranges allowed */
+      ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED ));
+      if (alpp) {
+         sge_add_answer(alpp, SGE_EVENT, STATUS_ESYNTAX, 0);
+         DEXIT;
+         return NULL;
+      }
+      else
+         SGE_EXIT(1);
+   }
+
 
    DEXIT;
    return *rl;

@@ -2976,6 +2976,12 @@ static int job_verify_predecessors(const lListElem *job, lList **alpp,
       const char *pre_ident = lGetString(pre, JRE_job_name);
 
       if (isdigit(pre_ident[0])) {
+         if (strchr(pre_ident, '.')) {
+            ERROR((SGE_EVENT, MSG_JOB_MOD_UNKOWNJOBTOWAITFOR));
+            sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+            DEXIT;
+            return STATUS_EUNKNOWN;
+         }
          if (jobid && atoi(pre_ident) == jobid) {
             DPRINTF(("got my own jobid in JRE_job_name\n"));
             ERROR((SGE_EVENT, MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U, 

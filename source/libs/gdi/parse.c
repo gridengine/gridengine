@@ -135,7 +135,6 @@ lList **alpp
    char *token;
    char *job_str, *str;
    lList *task_id_range_list = NULL;
-   lListElem *range;
 
 /*
    Digit = '0' | '1' | ... | '9' .
@@ -167,9 +166,10 @@ lList **alpp
          return -1;
       }
       if (!task_id_range_list) {
-         range = lAddElemUlong(&task_id_range_list, RN_min, 1, RN_Type);
-         lSetUlong(range, RN_max, 1);
-         lSetUlong(range, RN_step, 1);
+         /** should not happen. unknown error */
+         free(str);
+         DEXIT;
+         return -1;
       }
    }
 

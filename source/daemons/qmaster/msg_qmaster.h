@@ -434,6 +434,7 @@
 #define MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS             _MESSAGE(33332, _("job rejected: no access to project "SFQ" for user "SFQ"\n") ) 
 #define MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID        _MESSAGE(33333, _("it is not allowed to select users and job ids together\n"))
 #define MSG_SGETEXT_MODIFIEDINLIST_SSUS               _MESSAGE(33334, _(""SFN"@"SFN" modified \"" U32CFormat "\" in "SFN" list\n"))
+#define MSG_JOB_MOD_UNKOWNJOBTOWAITFOR              _MESSAGE(33335, _("cannot reference a task in an array job\n"))
 
 
 

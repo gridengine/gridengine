@@ -1,3 +1,18 @@
+SG-2003-12-18-0: Bugfix:    qdel XXXX.YY- deleted the first task in an
+                            array job. Qdel will generate an error message
+                            now.
+                 Changed:   qdel
+                 Review:    AS
+
+SG-2003-12-17-0: Bugfix:    The fix ensures, that a job task is not used
+                            with the -hold_jid flag together and that in
+                            qalter only job_tasks are acepted, when they
+                            are allowed.
+                 Issue:     551
+                 bugtraq:   4969825
+                 Changed:   qmaster, qalter, submit.1
+                 Review:    AS
+
 SG-2003-12-10-0: Bugfix:    qsh and qlogin allowed -hold_jid even so it was
                             not part of the -help output. Disabled -hold_jid
                             and -h option for qsh and qlogin. Updated the

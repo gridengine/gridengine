@@ -1,3 +1,6 @@
+JG-2001-12-05-0: Testsuite: Adapt qrsh test to use newer spawn function
+                            open_remote_spawn_process.
+
 EB-2001-12-05-0: Bugfix:    Master got pending tickets for jobs which
                             where already started.
                  Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)

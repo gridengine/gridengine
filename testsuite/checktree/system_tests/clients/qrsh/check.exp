@@ -69,7 +69,7 @@ lappend check_functions "qrsh_batch"                 ;# run qrsh in batch mode
 lappend check_functions "qrsh_limits"                ;# limits (e.g. cpu) passed correctly
 lappend check_functions "qrsh_trap"                  ;# started command traps SIGINT
 
-#set check_functions "qrsh_qsub_gid"
+#set check_functions "qrsh_accounting"
 
 # test specific global variables
 global qrsh_hostlist
@@ -162,7 +162,8 @@ proc init_level {} {
 #     ???/???
 #*******************************
 proc qrsh_function {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
+   global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer
 
 
@@ -174,8 +175,8 @@ proc qrsh_function {} {
 
    puts $CHECK_OUTPUT "qrsh functional test"
    foreach host $qrsh_hostlist {
-      set qrsh_id [open_spawn_process $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
-                                      -l hostname=$host echo qrsh sucessfully started]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
+                                      "-l hostname=$host echo qrsh sucessfully started"]
       set sp_id [ lindex $qrsh_id 1 ] 
   
       set timeout 60
@@ -265,6 +266,10 @@ proc qrsh_alltoall {} {
                close_spawn_process $qrsh_id
                puts $CHECK_OUTPUT "qrsh from host $source to host $dest ok"
             }   
+            -i $sp_id eof {
+               close_spawn_process $qrsh_id
+               add_proc_error "qrsh_alltoall"  -1 "open_remote_spawn_process closed connection (eof)"
+            }
          }
       }
    }
@@ -332,25 +337,25 @@ proc qrsh_trap {} {
 
          while 1 {
          expect {
-            -i $sp_id full_buffer {
-               close_spawn_process $qrsh_id
-               add_proc_error "qrsh_trap" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
-               break
+               -i $sp_id full_buffer {
+                  close_spawn_process $qrsh_id
+                  add_proc_error "qrsh_trap" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+                  break
+               }
+               -i $sp_id default {
+                  close_spawn_process $qrsh_id
+                  add_proc_error "qrsh_trap" -1 "qrsh from host $source to host $dest failed"
+                  break
+               }
+               -i $sp_id "my pid is *\n" {
+                  set qrsh_pid [lindex $expect_out(0,string) 3]
+               }
+               -i $sp_id "qrsh trap test with JOB_ID *\n" {
+                  set job_id [lindex $expect_out(0,string) 5]
+                  puts $CHECK_OUTPUT "qrsh from host $source to host $dest with JOB_ID $job_id ok"
+                  break
+               }   
             }
-            -i $sp_id default {
-               close_spawn_process $qrsh_id
-               add_proc_error "qrsh_trap" -1 "qrsh from host $source to host $dest failed"
-               break
-            }
-            -i $sp_id "my pid is *\n" {
-               set qrsh_pid [lindex $expect_out(0,string) 3]
-            }
-            -i $sp_id "qrsh trap test with JOB_ID *\n" {
-               set job_id [lindex $expect_out(0,string) 5]
-               puts $CHECK_OUTPUT "qrsh from host $source to host $dest with JOB_ID $job_id ok"
-               break
-            }   
-         }
          }
 
          # send signal and parse result
@@ -418,6 +423,7 @@ proc qrsh_trap {} {
 #*******************************
 proc qrsh_accounting {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
+   global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer
 
 
@@ -426,11 +432,10 @@ proc qrsh_accounting {} {
       return
    } 
 
-
    puts $CHECK_OUTPUT "qrsh accounting test"
    
    foreach host $qrsh_hostlist {
-      set qrsh_id [open_spawn_process $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -verbose -l hostname=$host $CHECK_PRODUCT_ROOT/examples/jobs/worker.sh 120]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -nostdin -l hostname=$host $CHECK_PRODUCT_ROOT/examples/jobs/worker.sh 120"]
       
       set state startup
       set job_id ""
@@ -448,18 +453,22 @@ proc qrsh_accounting {} {
             -i $sp_id timeout {
                if { [string compare $state running] } {
                   close_spawn_process $qrsh_id
-                  set_error -1 "qrsh to host $host failed"
+                  add_proc_error "qrsh_accounting"  -1 "qrsh to host $host failed"
+                  set state exit
                } else {
                   if {$CHECK_PRODUCT_TYPE == "sgeee"} {
                      if { $job_id == "" } {
-                        set_error -1 "unknown job_id for qrsh job on host $host"
+                        add_proc_error "qrsh_accounting"  -1 "unknown job_id for qrsh job on host $host"
                      } else {
+                        if {[info exists job_info]} {
+                           unset job_info
+                        }
                         if {[get_extended_job_info $job_id] } {
                            if { $job_info(cpu) < 10 } {
-                              set_error -1 "online usage probably does not work on $host"
+                              add_proc_error "qrsh_accounting"  -1 "online usage probably does not work on $host"
                            }
                         } else {
-                           set_error -1 "get_extended_jobinfo failed for job $job_id on host $host"
+                           add_proc_error "qrsh_accounting"  -1 "get_extended_jobinfo failed for job $job_id on host $host"
                         }
                      }
                   }
@@ -472,14 +481,18 @@ proc qrsh_accounting {} {
             -i $sp_id "Forking" {
                set state running
             }
-            -i $sp_id eof {
+            -i $sp_id "_exit_status_" {
                if { [string compare $state running] } {
-                  set_error -1 "qrsh to host $host failed"
+                  add_proc_error "qrsh_accounting"  -1 "qrsh to host $host failed"
                }
                close_spawn_process $qrsh_id
                set state exit
             }
-            
+            -i $sp_id eof {
+               close_spawn_process $qrsh_id
+               add_proc_error "qrsh_accounting"  -1 "open_remote_spawn_process closed connection (eof)"
+               set state exit
+            }
          }
       }
 
@@ -487,19 +500,19 @@ proc qrsh_accounting {} {
 
       if { $job_id != "" } {
          if { [get_qacct $job_id] == 0 } {
-            set_error -1 "qacct for job $job_id on host $host failed"
+            add_proc_error "qrsh_accounting"  -1 "qacct for job $job_id on host $host failed"
          } else {
             set cpu [expr $qacct_info(ru_utime) + $qacct_info(ru_stime)]
             if { $cpu < 30 } {
-               set_error -1 "cpu entry \"$cpu\" in accounting seems to be wrong for job $job_id on host $host"
+               add_proc_error "qrsh_accounting"  -1 "cpu entry \"$cpu\" in accounting seems to be wrong for job $job_id on host $host"
             }
 
             if { $CHECK_PRODUCT_TYPE == "sgeee" } {
                # compute absolute diffence between cpu and ru_utime + ru_stime
                set difference [expr $cpu - $qacct_info(cpu)]
                set difference [expr $difference * $difference]
-               if { $difference > 1 } {
-                  set_error -1 "accounting: cpu($qacct_info(cpu)) is not the sum of ru_utime and ru_stime ($cpu) for job $job_id on host $host"
+               if { $difference > 2 } {
+                  add_proc_error "qrsh_accounting"  -1 "accounting: cpu($qacct_info(cpu)) is not the sum of ru_utime and ru_stime ($cpu) for job $job_id on host $host"
                }
             }
          }
@@ -540,6 +553,7 @@ proc qrsh_accounting {} {
 #*******************************
 proc qrsh_suspend {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
+   global CHECK_HOST CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
    global qrsh_hostlist open_spawn_buffer
 
    if { [have_root_passwd] == -1 } {
@@ -563,14 +577,14 @@ proc qrsh_suspend {} {
          }
       }
       # start qrsh job (shell script that outputs its pid)
-      set qrsh_id [open_spawn_process $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 60]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 60"]
       
       # evaluate pid and JOB_ID
-      set timeout 60
       set done 0
       set sp_id [ lindex $qrsh_id 1 ] 
 
       while { $done == 0 } {
+         set timeout 60
          expect {
             -i $sp_id full_buffer {
                close_spawn_process $qrsh_id
@@ -588,9 +602,14 @@ proc qrsh_suspend {} {
                add_proc_error "qrsh_suspend" -1 "qrsh to host $host failed"
                set done 1
             }
-            -i $sp_id eof {
+            -i $sp_id "_exit_status_" {
                close_spawn_process $qrsh_id
                add_proc_error "qrsh_suspend" -1 "qrsh to host $host failed"
+               set done 1
+            }
+            -i $sp_id eof {
+               close_spawn_process $qrsh_id
+               add_proc_error "qrsh_suspend" -1 "open_remote_spawn_process closed connection (eof)"
                set done 1
             }
          }
@@ -640,7 +659,32 @@ proc qrsh_suspend {} {
                continue
          }
       }
-      close_spawn_process $qrsh_id 1
+
+      set done 0
+      while { $done == 0 } {
+         set timeout 60
+         expect {
+            -i $sp_id full_buffer {
+               close_spawn_process $qrsh_id
+               add_proc_error "qrsh_suspend" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               set done 1
+            }
+            -i $sp_id timeout {
+               close_spawn_process $qrsh_id
+               add_proc_error "qrsh_suspend" -1 "timeout waiting for qrsh to host $host to finish"
+               set done 1
+            }
+            -i $sp_id "_exit_status_" {
+               close_spawn_process $qrsh_id
+               set done 1
+            }
+            -i $sp_id eof {
+               close_spawn_process $qrsh_id
+               add_proc_error "qrsh_suspend" -1 "open_remote_spawn_process closed connection (eof)"
+               set done 1
+            }
+         }
+      }
    }
 
    set_error 0 "ok"
@@ -677,6 +721,7 @@ proc qrsh_suspend {} {
 #*******************************
 proc qrsh_delete {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
+   global CHECK_HOST CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER
    global qrsh_hostlist open_spawn_buffer
 
    if { [have_root_passwd] == -1 } {
@@ -689,7 +734,7 @@ proc qrsh_delete {} {
 
    foreach host $qrsh_hostlist {
       # start qrsh job (shell script that outputs its pid)
-      set qrsh_id [open_spawn_process $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120"]
       set sp_id [ lindex $qrsh_id 1 ] 
  
       # evaluate pid and JOB_ID
@@ -776,6 +821,7 @@ proc qrsh_delete {} {
 #*******************************
 proc qrsh_terminate {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
+   global CHECK_HOST CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_COMMD_PORT
    global qrsh_hostlist open_spawn_buffer
 
    if { [have_root_passwd] == -1 } {
@@ -786,21 +832,21 @@ proc qrsh_terminate {} {
 
    puts $CHECK_OUTPUT "check if terminate method for a qrsh job gets right job_pid"
 
-   set terminate_out_file "$CHECK_ACTUAL_TEST_PATH/terminate.out"
+   set terminate_out_file "/tmp/terminate.$CHECK_COMMD_PORT"
 
    # set terminate method
    foreach host $qrsh_hostlist {
-      set change_array(terminate_method) "$CHECK_ACTUAL_TEST_PATH/terminate.sh \$job_id \$job_pid $CHECK_ACTUAL_TEST_PATH"
+      set change_array(terminate_method) "$CHECK_ACTUAL_TEST_PATH/terminate.sh \$job_id \$job_pid $terminate_out_file"
       set_queue $host.q change_array
    }
 
    foreach host $qrsh_hostlist {
       # start qrsh job (shell script that outputs its pid)
       if {[file exists $terminate_out_file]} {
-         file delete $terminate_out_file
+         start_remote_prog $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER rm $terminate_out_file
       }
 
-      set qrsh_id [open_spawn_process $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120"]
       
       # evaluate pid and JOB_ID
       set timeout 60
@@ -873,7 +919,37 @@ proc qrsh_terminate {} {
             set_error -1 "process of deleted job $job_pid on host $host is still running"
          }
       }
-      close_spawn_process $qrsh_id 1
+      
+      set done 0
+      while { $done == 0 } {
+         set timeout 60
+         expect {
+            -i $sp_id full_buffer {
+               close_spawn_process $qrsh_id
+               add_proc_error "qrsh_suspend" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               set done 1
+            }
+            -i $sp_id timeout {
+               close_spawn_process $qrsh_id
+               add_proc_error "qrsh_suspend" -1 "timeout waiting for qrsh to host $host to finish"
+               set done 1
+            }
+            -i $sp_id "_exit_status_" {
+               close_spawn_process $qrsh_id
+               set done 1
+            }
+            -i $sp_id eof {
+               close_spawn_process $qrsh_id
+               add_proc_error "qrsh_suspend" -1 "open_remote_spawn_process closed connection (eof)"
+               set done 1
+            }
+         }
+      }
+
+      if {[file exists $terminate_out_file]} {
+         start_remote_prog $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER rm $terminate_out_file
+      }
+
    }
 
    # reset terminate method
@@ -968,7 +1044,7 @@ proc check_qsub_gid_output {output check_group} {
 proc qrsh_qsub_gid {} {
    global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_PROTOCOL_DIR
    global CHECK_PRODUCT_ROOT CHECK_ARCH
-   global QSUB_GID_USER QSUB_GID_GROUPS
+   global QSUB_GID_USER QSUB_GID_GROUPS CHECK_SECOND_FOREIGN_SYSTEM_USER
    global qrsh_hostlist open_spawn_buffer CHECK_HOST
 
    if { [have_root_passwd] == -1 } {
@@ -996,7 +1072,7 @@ proc qrsh_qsub_gid {} {
       close $f
 
       # call qsub_gid.sh, gid must be primary gid
-      set output [run_command_as_user "$CHECK_HOST" $QSUB_GID_USER $CHECK_ACTUAL_TEST_PATH/qsub_gid.sh "[lindex $QSUB_GID_GROUPS 1] $CHECK_PROTOCOL_DIR/qrsh.sh" 1]
+      set output [start_remote_prog "$CHECK_HOST" $QSUB_GID_USER $CHECK_ACTUAL_TEST_PATH/qsub_gid.sh "[lindex $QSUB_GID_GROUPS 1] $CHECK_PROTOCOL_DIR/qrsh.sh"]
       set group [lindex $QSUB_GID_GROUPS 0]
       if {[check_qsub_gid_output $output $group] == 0} {
          set_error -1 "qrsh job on host $host was executed with wrong gid, should be $group, output of qrsh job was $output"
@@ -1010,7 +1086,9 @@ proc qrsh_qsub_gid {} {
       set messages_name "$config(execd_spool_dir)/$host/messages"
       
       # spawn a tail -f to messages file and skip first (old) lines
-      set tail_id [open_spawn_process rsh $host /usr/bin/tail -f $messages_name]
+      # we use the second configured test user to avoid having two open_remote_spawn
+      # processes with same userid and same host
+      set tail_id [open_remote_spawn_process $host $CHECK_SECOND_FOREIGN_SYSTEM_USER /usr/bin/tail "-f $messages_name"]
       set skipping 1
       set sp_id [ lindex $tail_id 1 ] 
 
@@ -1055,24 +1133,26 @@ proc qrsh_qsub_gid {} {
             continue
          }
          -i $sp_id default {
+            send -i $sp_id "\003"
             close_spawn_process $tail_id
             add_proc_error "qrsh_qsub_gid" -1 "setting execd_params to USE_QSUB_GID=true failed on host $host"
             continue
          }
          -i $sp_id "using*USE_QSUB_GID=true*" {
+            send -i $sp_id "\003"
             close_spawn_process $tail_id
          }
       }
 
       # call qsub_gid.sh, gid must be secondary gid
-      set output [run_command_as_user "$CHECK_HOST" $QSUB_GID_USER $CHECK_ACTUAL_TEST_PATH/qsub_gid.sh "[lindex $QSUB_GID_GROUPS 1] $CHECK_PROTOCOL_DIR/qrsh.sh" 1]
+      set output [start_remote_prog "$CHECK_HOST" $QSUB_GID_USER $CHECK_ACTUAL_TEST_PATH/qsub_gid.sh "[lindex $QSUB_GID_GROUPS 1] $CHECK_PROTOCOL_DIR/qrsh.sh"]
       set group [lindex $QSUB_GID_GROUPS 1]
       if {[check_qsub_gid_output $output $group] == 0} {
          set_error -1 "qrsh job on host $host was executed with wrong gid, should be $group, output of qrsh job was $output"
       }
 
       # spawn a tail -f to messages file and skip first (old) lines
-      set tail_id [open_spawn_process rsh $host /usr/bin/tail -f $messages_name]
+      set tail_id [open_remote_spawn_process $host $CHECK_SECOND_FOREIGN_SYSTEM_USER /usr/bin/tail "-f $messages_name"]
       set sp_id [ lindex $tail_id 1 ] 
       set skipping 1
       while {$skipping == 1} {
@@ -1104,11 +1184,13 @@ proc qrsh_qsub_gid {} {
             continue
          }
          -i $sp_id timeout {
+            send -i $sp_id "\003"
             close_spawn_process $tail_id
             add_proc_error "qrsh_qsub_gid" -1 "clearing execd_params from USE_QSUB_GID=true failed on host $host"
             continue
          }
          -i $sp_id "using*finished_jobs*" {
+            send -i $sp_id "\003"
             close_spawn_process $tail_id
          }
       }
@@ -1148,6 +1230,7 @@ proc qrsh_qsub_gid {} {
 #*******************************
 proc qrsh_batch {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer
 
    if { [have_root_passwd] == -1 } {
@@ -1162,7 +1245,7 @@ proc qrsh_batch {} {
       # disable queue
       disable_queue $host.q
       # start qrsh - must be rejected
-      set qrsh_id [open_spawn_process $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -q $host.q echo blahblah]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-q $host.q echo blahblah"]
       set sp_id [ lindex $qrsh_id 1 ] 
 
       # evaluate pid and JOB_ID
@@ -1186,7 +1269,7 @@ proc qrsh_batch {} {
             add_proc_error "qrsh_batch" -1 "qrsh -now yes failed without error message on host $host"
          }
       }
-      close_spawn_process $qrsh_id 1
+      close_spawn_process $qrsh_id
  
       if { $error } {
          set_error -1 "skipping test on host $host"
@@ -1195,7 +1278,7 @@ proc qrsh_batch {} {
       }
  
       # start qrsh -now no
-      set qrsh_id [open_spawn_process $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -verbose -q $host.q -now no echo blahblah]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -q $host.q -now no echo blahblah"]
       # must be in pending jobs
       set sp_id [ lindex $qrsh_id 1 ] 
 
@@ -1224,6 +1307,10 @@ proc qrsh_batch {} {
          close_spawn_process $qrsh_id
          enable_queue $host.q
          continue
+      }
+
+      if {[info exists job_info]} {
+         unset job_info
       }
 
       if { [get_extended_job_info $job_id] == 0} {
@@ -1297,6 +1384,7 @@ proc qrsh_batch {} {
 #*******************************
 proc qrsh_limits {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
+   global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer
 
    if { [have_root_passwd] == -1 } {
@@ -1309,7 +1397,7 @@ proc qrsh_limits {} {
    set limit_in 10
 
    foreach host $qrsh_hostlist {
-      set qrsh_id [open_spawn_process $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -l hostname=$host -l h_cpu=$limit_in $CHECK_ACTUAL_TEST_PATH/ulimit.sh]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host -l h_cpu=$limit_in $CHECK_ACTUAL_TEST_PATH/ulimit.sh"]
       set sp_id [ lindex $qrsh_id 1 ] 
 
       set timeout 60

@@ -31,6 +31,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-echo job_id=$1 job_pid=$2 >$3/terminate.out
+echo job_id=$1 job_pid=$2 >$3
 kill -9 -$2
 exit 0

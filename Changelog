@@ -1,3 +1,8 @@
+EB-2002-01-10-0: Bugfix:   qrsh -notify <command>
+
+EB-2002-01-09-0: Bugfix:   qselect -pe 
+                 Bugtraq:  #4584673
+
 CR-2002-01-10-0: Testsuite:
                  Enhancem.: settings file parameter "user_environment"
                             Testsuite will read users environment value

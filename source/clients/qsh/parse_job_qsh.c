@@ -79,10 +79,7 @@
 **   me
 ** DESCRIPTION
 */
-lList *cull_parse_qsh_parameter(
-lList *cmdline,
-lListElem **pjob 
-) {
+lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
    const char *cp;
    lListElem *ep;
    lList *answer = NULL;
@@ -95,15 +92,6 @@ lListElem **pjob
       sge_add_answer(&answer, MSG_PARSE_NULLPOINTERRECEIVED, STATUS_EUNKNOWN, 0);
       DEXIT;
       return answer;
-   }
-
-   if (!*pjob) {
-      *pjob = lCreateElem(JB_Type);
-      if (!*pjob) {
-      sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
-      DEXIT;
-      return answer;
-      }
    }
 
    if (!lGetUlong(*pjob, JB_submission_time)) {
@@ -159,6 +147,12 @@ lListElem **pjob
        || JB_NOW_IS_QRSH(job_now) || JB_NOW_IS_QRLOGIN(job_now)) {
       lSetUlong(*pjob, JB_restart, 2);
    }
+
+   while (JB_NOW_IS_QRSH(job_now)
+          && (ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
+      lSetUlong(*pjob, JB_notify, TRUE);
+      lRemoveElem(cmdline, ep);
+   }  
 
    /* 
    ** turn on immediate scheduling as default - can be overwriten by option -now n 

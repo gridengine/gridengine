@@ -85,6 +85,7 @@
 #include "sge_security.h"
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
+#include "msg_common.h"
 
 void write_client_name_cache(const char *cache_path, const char *client_name);
 static void add2env(lList **envlpp, const char *name, const char *value);
@@ -1504,11 +1505,27 @@ char **argv
    opts_all = merge_and_order_options(&opts_defaults, &opts_scriptfile, &opts_cmdline);
    /* remove_unknown_opts(opts_all); */
 
+   if (!job) {
+      lList *answer = NULL;
+
+      job = lCreateElem(JB_Type);
+      if (!job) {
+         sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, STATUS_EMALLOC, 0);
+         do_exit = parse_result_list(alp, &alp_error);
+         lFreeList(answer);
+         if (alp_error) {
+            SGE_EXIT(1);
+         }
+      }
+   }  
+   if(!existing_job) {
+      set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
+   }
+
    alp = cull_parse_qsh_parameter(opts_all, &job);
    do_exit = parse_result_list(alp, &alp_error);
    lFreeList(alp);
    lFreeList(opts_all);
-
    if (alp_error) {
       SGE_EXIT(1);
    }
@@ -1521,8 +1538,7 @@ char **argv
    }   
    
    if(!existing_job) {
-      set_job_info(job, name, is_qlogin, is_rsh, is_rlogin);
-   
+      set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
       DPRINTF(("Everything ok\n"));
 #ifndef NO_SGE_COMPILE_DEBUG
       if (rmon_mlgetl(&DEBUG_ON, TOP_LAYER) & INFOPRINT) { 

@@ -1086,7 +1086,7 @@ lList *pe_list
 
    if (lGetNumberOfElem(pe_selected)==0) {
       fprintf(stderr, MSG_PE_NOSUCHPARALLELENVIRONMENT);
-      return 1;
+      return -1;
    }
 
    /* untag all non-parallel queues and queues not referenced 

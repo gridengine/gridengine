@@ -1,3 +1,7 @@
+SG-2004-12-15-0: Enhancem.: - fixed load values and arch for Sol-AMD64
+		 Changed:   execd	
+                 Review:    AA
+
 SG-2004-12-14-0: Enhancem.: - missed two files in SG-2004-12-13-0
 			    - ported infotext
 			    - fixed a output problem in the install

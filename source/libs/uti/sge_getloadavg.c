@@ -48,7 +48,7 @@
 #  include <kvm.h>
 #  include <nlist.h> 
 #  include <sys/cpuvar.h>
-#  if defined(SOLARIS64)
+#  if defined(SOLARIS64) || defined(SOLARISAMD64)
 #     include <sys/loadavg.h> 
 #  endif
 #  define USE_KSTAT
@@ -205,7 +205,7 @@ typedef int kernel_fd_type;
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs);   
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(TEST_AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(HPUX) || defined(SOLARISAMD64) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX) || defined(LINUX) || defined(DARWIN) || defined(TEST_AIX51)
 
 #ifndef DARWIN
 static int get_load_avg(double loadv[], int nelem);    
@@ -883,7 +883,7 @@ double get_cpu_load()
 }
 #endif
 
-#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || (defined(SOLARIS) && !defined(SOLARIS64)) || defined(TEST_AIX51)
+#if defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HP10) || (defined(SOLARIS) && !defined(SOLARISAMD64) && !defined(SOLARIS64)) || defined(TEST_AIX51)
 
 static int get_load_avg(
 double loadavg[],
@@ -1178,7 +1178,7 @@ int nelem
 ) {
    int   elem = 0;   
 
-#if defined(SOLARIS64) || defined(FREEBSD) || defined(DARWIN)
+#if defined(SOLARIS64) || defined(SOLARISAMD64) || defined(FREEBSD) || defined(DARWIN)
    elem = getloadavg(loadavg, nelem); /* <== library function */
 #elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(TEST_AIX51)
    elem = get_load_avg(loadavg, nelem); 

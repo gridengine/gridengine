@@ -80,6 +80,8 @@ const char *sge_get_arch(void)
 #   elif defined(HP1164)
 #      define ARCHBIN "hp11-64"
 #   endif
+#elif defined(SOLARISAMD64)
+#   define ARCHBIN "sol-amd64"
 #elif defined(SOLARIS86)
 #   define ARCHBIN "sol-x86"
 #elif defined(SOLARIS64)

@@ -1,3 +1,6 @@
+CR-2002-05-23-0: Enhancem.: - added infotext_msg_parse.tcl
+                            - merge of infotext changes in V53_beta2_BRANCH
+
 JG-2002-05-23-1: Bugfix:    qlogin jobs made execd crash.
 
 JG-2002-05-23-0: Cleanup:   Made behaviour of sge_dstring_sprintf conformable 

@@ -71,7 +71,50 @@ static void  sge_infotext_format_output(dstring* dash_buf, sge_infotext_options*
 static char* sge_infotext_get_next_word(dstring* buf,char* text);
 static const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* options);
 static char* sge_infotext_build_test_msgstr(dstring* buffer, char* text);
+static char* sge_infotext_make_line_break(dstring* buffer, char* text);
+static int   sge_infotext_all_spaces(char* text);
 int main(int argc, char *argv[]);
+
+static int   sge_infotext_all_spaces(char* text) {
+   int i;
+   int back = 0;
+   if (text != NULL) {
+      for(i=0;i<strlen(text);i++) {
+         if(text[i] != ' ') {
+            back = 1;
+            break;
+         }
+      }
+   }
+   return back;
+}
+
+
+static char* sge_infotext_make_line_break(dstring* buffer, char* text) {
+
+   int h;
+   int line;
+   char hbuf[3];
+
+   strcpy(hbuf,"a");
+
+   sge_dstring_copy_string(buffer,"");
+   sge_dstring_append(buffer,"\"");
+
+   line = 0;
+   for (h=0; h < strlen(text) ; h++) {
+      if (line > 75 && text[h] == ' ' ) {
+         line = 0;
+         sge_dstring_append(buffer,"\"\n\"");
+      }
+      hbuf[0] = text[h];
+      sge_dstring_append(buffer, hbuf);
+      line++;
+   }
+   sge_dstring_append(buffer,"\"");
+   return (char*) sge_dstring_get_string(buffer);
+
+}
 
 
 char* sge_infotext_build_test_msgstr(dstring* buffer, char* text) {
@@ -90,8 +133,14 @@ char* sge_infotext_build_test_msgstr(dstring* buffer, char* text) {
              if ( text[h-1] == '\\' ) {
                 continue;
              }
+             if ( text[h-1] == '%' ) {
+                continue;
+             }
+
           }
-          sge_dstring_append(buffer,"_");
+          if (text[h] != ' ') {
+             sge_dstring_append(buffer,".");
+          }
       }
    }
    return (char*) sge_dstring_get_string(buffer);
@@ -110,6 +159,8 @@ const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* opt
    }
    return sge_dstring_get_string(dash_buf);
 }
+
+
 
 char* sge_infotext_get_next_word(dstring* buf, char* text) {
    char* p1;
@@ -130,9 +181,12 @@ char* sge_infotext_get_next_word(dstring* buf, char* text) {
       }
    }
    if (nr_spaces > 1) {
-      for (i=0;i<strlen(p1);i++) {
+      int stop;
+      stop = strlen(p1);
+      for (i=0;i<stop;i++) {
           if( p1[i] != ' ') {
              p1[i-1] = 0;
+             break;
           }
       } 
       return p1;
@@ -213,14 +267,17 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
       if (strlen(next_word) == 0 ) {
          if (nr_word != 0) {
             options->n = new_line_opt;
-            sge_infotext_print_line(dash_buf,options,&line);
+            sge_infotext_print_line(dash_buf,options,&line); 
          }
          nr_word = 0;
          break;
       }
 
-      if(nr_word != 0) {
-         sge_dstring_append(&line," ");
+      
+      if(nr_word != 0 ) {
+         if (sge_infotext_all_spaces(next_word) != 0 ) {
+            sge_dstring_append(&line," ");
+         }
       }
       
       sge_dstring_append(&line,next_word);
@@ -262,8 +319,13 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
          /*  this will do no word break */ 
          /*  ========================== */
          new_line_buffer = options->n;
-         options->n = 1;
-         sge_infotext_print_line(dash_buf,options,&line);
+         next_word = sge_infotext_get_next_word(&tmp_buf,tp);
+         if (strlen(next_word) == 0) { 
+             options->n = 0;
+         } else {
+             options->n = 1;
+         }
+         sge_infotext_print_line(dash_buf,options,&line); 
          options->n = new_line_buffer;
 #endif
 
@@ -273,7 +335,7 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
          next_word = sge_infotext_get_next_word(&tmp_buf,tp);
          if (strlen(next_word) == 0) {
             options->n = new_line_opt;
-            sge_infotext_print_line(dash_buf,options,&line);
+            sge_infotext_print_line(dash_buf,options,&line); 
             nr_word = 0;
          break;
          }
@@ -281,7 +343,7 @@ void  sge_infotext_format_output(dstring* dash_buf,sge_infotext_options* options
             nr_word != 0 ) {
             sge_infotext_print_line(dash_buf,options,&line);
             nr_word = 0;
-            sge_dstring_copy_dstring(&line,&dash);
+            sge_dstring_copy_dstring(&line,&dash);  
          }      
       }
    }
@@ -310,9 +372,8 @@ void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, 
    for(i=0;i< sge_dstring_strlen(&line);i++) {
       sge_dstring_append(&dash," ");
    }
+   sge_dstring_copy_dstring(&line, line_arg);
 
-   line_buf = sge_infotext_string_replace(&line_buf_buffer,(char*)sge_dstring_get_string(line_arg),"\n",(char*)sge_dstring_get_string(&dash),0);
-   sge_dstring_copy_string(&line, line_buf);
 
    line_length = 0;
    lc = 0;
@@ -358,33 +419,98 @@ void  sge_infotext_print_line(dstring* dash_buf, sge_infotext_options* options, 
 
 
 char* sge_infotext_string_input_parsing(dstring* string_buffer,char* string) {
-    
-    dstring tmp_buf = DSTRING_INIT;
+    char* h1 = NULL;
+    char* h2 = NULL;
+    char buf[10];
+    int special_sign = 0;
 
-    sge_dstring_copy_string(string_buffer, sge_infotext_string_replace(&tmp_buf, string       , "\\n", "\n",0));
-    sge_dstring_copy_string(string_buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(string_buffer), "\\r", " ",0));
-    sge_dstring_copy_string(string_buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(string_buffer), "\\t", " ",0));
+    if (string == NULL) {
+       return NULL;
+    }
+    if (strlen(string) == 0) {
+       sge_dstring_copy_string(string_buffer,"");
+       return (char*)sge_dstring_get_string(string_buffer);
+    }
 
-    sge_dstring_free(&tmp_buf);
+    h1 = string;
+    h2 = h1;
+    h2++;
+    strcpy(buf,"a");
+    sge_dstring_copy_string(string_buffer,"");
+    while (*h1 != 0 && *h2 != 0) {
+        special_sign = 0;
+        if (*h1 == '\\' && *h2 == 'n') {
+           sge_dstring_append(string_buffer, "\n");
+           special_sign = 1;
+        } 
+        if (*h1 == '\\' && *h2 == '\"') {
+           sge_dstring_append(string_buffer, "\"");
+           special_sign = 1;
+        } 
+        if (*h1 == '\\' && *h2 == 'r') {
+           sge_dstring_append(string_buffer, " ");
+           special_sign = 1;
+        } 
+        if (*h1 == '\\' && *h2 == 't') {
+           sge_dstring_append(string_buffer, " ");
+           special_sign = 1;
+        } 
+        if (special_sign == 1) {
+           h1++;
+           h2++;
+           if (*h1 == 0 || *h2 == 0) {
+              break;
+           }
+           h1++;
+           h2++;
+           continue;
+        }
+        buf[0] = *h1;
+        sge_dstring_append(string_buffer, buf);
+        h1++;
+        h2++;
+    }
+    if (special_sign != 1) {
+       buf[0] = *h1;
+       sge_dstring_append(string_buffer, buf);
+    }
     return (char*)sge_dstring_get_string(string_buffer);
 }
 
 char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
+    char* h1 = NULL;
+    char buf[10];
 
-    dstring tmp_buf = DSTRING_INIT;
-
-
-    sge_dstring_copy_string(string_buffer, sge_infotext_string_replace(&tmp_buf, string       , "\n", "\\n",0));
-
-    sge_dstring_free(&tmp_buf);
-
+    sge_dstring_copy_string(string_buffer,"");
+    h1 = string;
+    while (*h1 != 0) {
+/*       if (*h1 == '\\') {
+          sge_dstring_append(string_buffer, "\\\\");
+          h1++;
+          continue;
+       } 
+*/
+       if (*h1 == '\n') {
+          sge_dstring_append(string_buffer, "\\n");
+          h1++;
+          continue;
+       } 
+       if (*h1 == '\"') {
+          sge_dstring_append(string_buffer, "\\\"");
+          h1++;
+          continue;
+       } 
+       buf[0] = *h1;
+       sge_dstring_append(string_buffer, buf);
+       h1++; 
+    }
     return (char*)sge_dstring_get_string(string_buffer);
 }
 
 
 
 char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
-   int i;
+   int i,o;
    char* p1;
    char* p2;
 
@@ -727,8 +853,13 @@ char **argv
    /* if we have to much args add the rest to the string buffer */
    while(real_args > string_arguments) {
       char* arg = argv[first_arg];
-      if (strcmp((char*)sge_dstring_get_string(&buffer),"") != 0) {
-         sge_dstring_append(&buffer," ");
+      char* hcp = NULL;
+
+      hcp = (char*)sge_dstring_get_string(&buffer);
+      if (strcmp(hcp,"") != 0 ) {
+         if (arg[0] != ' ') {
+            sge_dstring_append(&buffer," ");
+         }
       }
       sge_dstring_append(&buffer,sge_infotext_string_input_parsing(&tmp_buf, arg));
       first_arg++;
@@ -739,66 +870,80 @@ char **argv
    /* 3rd pass - localize format string */
    if (do_message == 1) {
       dstring help_buf = DSTRING_INIT;
+      dstring help_buf2 = DSTRING_INIT;
       if (strlen(options.D) > 0) {
          printf("#\n# This is a (dash) sign, used for enumerations\n");
-         printf("msgid  \"%s\"\n", options.D);
+         printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.D));
          if(do_message_space == 0) {
             DPRINTF(("do_message_space == 1\n"));
             printf("msgstr \"\"\n\n");
          } else {
             sge_infotext_build_test_msgstr(&help_buf, options.D);
-            printf("msgstr \"%s\"\n\n",(char*)sge_dstring_get_string(&help_buf));  
+            printf("msgstr %s\n\n",
+                   sge_infotext_make_line_break(&help_buf2,
+                                               (char*)sge_dstring_get_string(&help_buf)));  
          }
       }
 
       if (strlen(options.yes) > 0) {
          printf("#\n# This is used as shortcut for yes\n");
-         printf("msgid  \"%s\"\n", options.yes);
+         printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.yes));
          if(do_message_space == 0) {
             DPRINTF(("do_message_space == 1\n"));
             printf("msgstr \"\"\n\n");
          } else {
             sge_infotext_build_test_msgstr(&help_buf, options.yes);
-            printf("msgstr \"%s\"\n\n",(char*)sge_dstring_get_string(&help_buf));  
+            printf("msgstr %s\n\n",
+                   sge_infotext_make_line_break(&help_buf2,
+                                               (char*)sge_dstring_get_string(&help_buf)));
          }
       }
       if (strlen(options.no) > 0) {
          printf("#\n# This is used as shortcut for no\n");
-         printf("msgid  \"%s\"\n", options.no);
+         printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.no));
          if(do_message_space == 0) {
             DPRINTF(("do_message_space == 1\n"));
             printf("msgstr \"\"\n\n");
          } else {
             sge_infotext_build_test_msgstr(&help_buf, options.no);
-            printf("msgstr \"%s\"\n\n",(char*)sge_dstring_get_string(&help_buf));  
+            printf("msgstr %s\n\n",
+                   sge_infotext_make_line_break(&help_buf2,
+                                               (char*)sge_dstring_get_string(&help_buf)));
          }
       }
       if (strlen(options.def) > 0) {
          printf("#\n# This is a default sign, must be shortcut for yes or no\n");
-         printf("msgid  \"%s\"\n", options.def);
+         printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.def));
          if(do_message_space == 0) {
             DPRINTF(("do_message_space == 1\n"));
             printf("msgstr \"\"\n\n");
          } else {
             sge_infotext_build_test_msgstr(&help_buf, options.def);
-            printf("msgstr \"%s\"\n\n",(char*)sge_dstring_get_string(&help_buf));  
+            printf("msgstr %s\n\n",
+                   sge_infotext_make_line_break(&help_buf2,
+                                               (char*)sge_dstring_get_string(&help_buf)));
          }
       }
 
 
-      printf("msgid  \"%s\"\n",sge_infotext_string_output_parsing(&tmp_buf,(char*)sge_dstring_get_string(&buffer)));
+      printf("msgid \"\"\n%s\n", 
+             sge_infotext_make_line_break(&help_buf2, 
+                                          sge_infotext_string_output_parsing(&tmp_buf,(char*)sge_dstring_get_string(&buffer))));
       if(do_message_space == 0) { 
          printf("msgstr \"\"\n");
       } else {
          sge_infotext_build_test_msgstr(&help_buf,
                                         sge_infotext_string_output_parsing(&tmp_buf,
                                                                            (char*)sge_dstring_get_string(&buffer)));
-         printf("msgstr \"%s\"\n",(char*)sge_dstring_get_string(&help_buf));  
+         printf("msgstr %s\n\n", sge_infotext_make_line_break(&help_buf2,
+                                                             (char*)sge_dstring_get_string(&help_buf)));
       }
       printf("\n");
       sge_dstring_free(&sge_infotext_dash_buffer);
       sge_dstring_free(&tmp_buf);
       sge_dstring_free(&help_buf);
+      sge_dstring_free(&help_buf2);
+
       exit(0);
    }
 

@@ -1,3 +1,8 @@
+CR-2002-07-25-1: I18N:      English messages show up when running install 
+                            in localized environment    
+                 Bugtraq:   #4719203
+                 Changed:   all binaries
+
 CR-2002-07-25-0: Testsuite: bugfix (can't open product mode file - error)
                  Bugfix:    
 

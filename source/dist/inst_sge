@@ -45,10 +45,6 @@ PATH=/bin:/usr/bin:/usr/bsd
 CLEAR=clear
 #CLEAR=:
 
-# set to false if you don't want this script uses the i18n functions
-#
-SGE_INFOTEXT_MAX_COLUMN=500; export SGE_INFOTEXT_MAX_COLUMN
-
 
 
 #-------------------------------------------------------------------------
@@ -2079,16 +2075,33 @@ DIRPERM=755
 FILEPERM=644
 
 
-#-----------------------------
-# setup INFOTEXT
-#-----------------------------
-INFOTEXT=$V5UTILBIN/infotext
+#---------------------------------------
+# setup INFOTEXT begin
+#---------------------------------------
+
+# set column break for automatic line break 
+SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
+
+
+# export locale directory 
+if [ "$SGE_ROOT" = "" ]; then 
+   TMP_SGE_ROOT=`pwd | sed 's/\/tmp_mnt//'`
+   GRIDLOCALEDIR="$TMP_SGE_ROOT/locale"
+   export GRIDLOCALEDIR
+fi
+
+# set infotext binary path
 INFOTXT_DUMMY=$V5UTILBIN/infotext
+INFOTEXT=$INFOTXT_DUMMY
 if [ ! -f $INFOTXT_DUMMY ]; then
    $ECHO "can't find \"$INFOTXT_DUMMY\""
    $ECHO "Installation failed."
    exit 1
 fi
+#---------------------------------------
+# setup INFOTEXT end
+#---------------------------------------
+
 
 
 HOST=`$V5UTILBIN/gethostname -name`

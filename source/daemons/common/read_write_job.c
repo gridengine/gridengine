@@ -316,7 +316,7 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
             logginglevel = saved_logginglevel;
 
             firststart = start;
-            all = spooling_all = spooling_user = spooling_system = 0;
+            sumall = sumuser = sumsystem = 0;
             jobs = 0;
          }
       }

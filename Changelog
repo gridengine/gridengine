@@ -1,7 +1,7 @@
 EB-2004-03-10-1: Bugfix:    Unsuspend on subordinate is broken
                  Issue:     807
                  Changed:   sge_qmaster
-                 Review:    SG
+                 Review:    AH 
 
 SG-2004-03-10-1: Bugfix:    the japi event client does get qmaster goes down 
                             events and client shut down events. Part of 788

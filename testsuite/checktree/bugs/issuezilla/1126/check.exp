@@ -1,0 +1,224 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+
+set check_init_level_procedure "init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1126"
+set check_description(0)      "qmaster clients may not reconnect after qmaster outage"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "yes"
+set check_functions           ""
+lappend check_functions       "issue_1126_setup"          ;# functions to call (in order)
+lappend check_functions       "issue_1126_run"
+lappend check_functions       "issue_1126_cleanup"
+set check_highest_level       0
+
+proc init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   if { $ts_config(gridengine_version) == 53 } {
+       
+       return -1
+   }
+
+    # TODO setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+   return -1
+}
+
+
+
+
+
+
+proc issue_1126_setup {} {
+   global ts_config CHECK_HOST
+
+   shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
+
+   set_error 0 "ok"
+}
+proc issue_1126_run  {} {
+   global ts_config  CHECK_OUTPUT CHECK_USER
+
+   
+
+
+   set up_arch [resolve_build_arch $ts_config(master_host)]
+   set client_binary $ts_config(source_dir)/$up_arch/test_cl_commlib_client
+   set client_args "$ts_config(master_host) $ts_config(commd_port) 0 0 0 0"
+
+   set server_binary $ts_config(source_dir)/$up_arch/test_server_connection
+   set server_args "0 $ts_config(commd_port) 10"
+   
+   set client_sid [ open_remote_spawn_process $ts_config(master_host) "ts_def_con" $client_binary $client_args]
+   set client_id  [lindex $client_sid 1]
+
+   set server_sid [ open_remote_spawn_process $ts_config(master_host) "root" $server_binary $server_args]
+   set server_id  [lindex $server_sid 1]
+
+   set both_list "$client_id $server_id"
+
+   
+   set kbit_count 0
+   set in_loop 1
+   while { $in_loop } {
+      set timeout 15 
+      expect {
+         -i $both_list full_buffer {
+            add_proc_error "issue_1126_run" -1 "expect full_buffer error"
+            return -1
+         }
+         -i $both_list timeout {
+            puts $CHECK_OUTPUT "---->>>>>>>>> got timeout"
+            add_proc_error "issue_1126_run" -1 "got timeout"
+            set in_loop 0   
+         }
+         -i $both_list eof {
+            set spawn_id $expect_out(spawn_id)
+            puts $CHECK_OUTPUT "got eof for spawn_id $spawn_id"
+            add_proc_error "issue_1126_run" -1 "got eof"
+            set in_loop 0   
+         }
+         -i $server_id -- "*\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+               set help [string trim $line]
+               puts $CHECK_OUTPUT "server: $help"
+            }
+         }
+         -i $client_id -- "*\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+               set help [string trim $line]
+               if { [string match "*KBit*" $help] } {
+                  incr kbit_count 1
+                  puts $CHECK_OUTPUT "client: $help"
+               }
+            }
+         }
+      }
+      if { $kbit_count == 5 } {
+         set in_loop 0   
+      }
+   }
+   close_spawn_process $server_sid
+
+   sleep 5  
+
+   set server_sid [ open_remote_spawn_process $ts_config(master_host) "root" $server_binary $server_args]
+   set server_id  [lindex $server_sid 1]
+
+   set both_list "$client_id $server_id"
+
+
+   set kbit_count 0
+   set in_loop 1
+   while { $in_loop } {
+      set timeout 15 
+      expect {
+         -i $both_list full_buffer {
+            add_proc_error "issue_1126_run" -1 "expect full_buffer error"
+            return -1
+         }
+         -i $both_list timeout {
+            puts $CHECK_OUTPUT "---->>>>>>>>> got timeout"
+            add_proc_error "issue_1126_run" -1 "got timeout - client doesn't reconnect"
+            set in_loop 0   
+         }
+         -i $both_list eof {
+            set spawn_id $expect_out(spawn_id)
+            puts $CHECK_OUTPUT "got eof for spawn_id $spawn_id"
+            add_proc_error "issue_1126_run" -1 "got eof"
+            set in_loop 0   
+         }
+         -i $server_id -- "*\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+               set help [string trim $line]
+               puts $CHECK_OUTPUT "server: $help"
+            }
+         }
+         -i $client_id -- "*\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+               set help [string trim $line]
+               if { [string match "*KBit*" $help] } {
+                  incr kbit_count 1
+                  puts $CHECK_OUTPUT "client: $help"
+               }
+            }
+         }
+      }
+      if { $kbit_count == 5 } {
+         set in_loop 0   
+      }
+   }
+   close_spawn_process $server_sid
+   close_spawn_process $client_sid
+
+   sleep 5
+
+
+   set_error 0 "ok"
+}
+
+
+proc issue_1126_cleanup {} {
+   global ts_config 
+
+   startup_qmaster
+   set_error 0 "ok"
+}
+
+
+
+
+
+
+
+
+

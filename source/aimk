@@ -98,6 +98,7 @@ case "necsx4":
    breaksw
 case "necsx5":
 case "necsx6":
+case "sx":
    set BUILDARCH = NECSX5
    breaksw
 case "osf4":

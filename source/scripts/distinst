@@ -65,7 +65,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
 REMOTEBINARIES="rsh rshd rlogin"
 
 SUPPORTEDARCHS="aix42 aix43 alinux cray crayts craytsieee glinux hp10 \
-hp11 irix6 necsx4 necsx5 slinux solaris solaris64 solaris86 osf4 tru64"
+hp11 irix6 necsx4 sx slinux solaris solaris64 solaris86 osf4 tru64"
 
 #SGEEE_UTILITYBINARIES="sge_share_mon sge_host_mon"
 SGEEE_UTILITYBINARIES="sge_share_mon"
@@ -189,6 +189,8 @@ SetArchBin()
    elif [ $i = necsx5 ]; then
       ARCHBIN=NECSX5
    elif [ $i = necsx6 ]; then
+      ARCHBIN=NECSX5
+   elif [ $i = sx ]; then
       ARCHBIN=NECSX5
    else
       echo No ARCHBIN name for \"$i\"
@@ -631,6 +633,8 @@ if [ $instcommon = true ]; then
          if [ "$SGE_PRODUCT_MODE" = ge ]; then
              :
             (cd $DEST_SGE_ROOT; ln -s inst_sge inst_sgeee)
+            Execute cp dist/README.inst_sgeee $DEST_SGE_ROOT
+            Execute chmod 644 $DEST_SGE_ROOT/README.inst_sgeee
          fi
       else
          echo Installing \"inst_sge\" as \"inst_sgeee\"

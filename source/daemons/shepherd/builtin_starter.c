@@ -177,6 +177,9 @@ int truncate_stderr_out
 #ifdef SOLARIS
    if(!qlogin_starter || is_rsh)
 #endif
+#ifdef NECSX5
+   if (!qlogin_starter)
+#endif
    if ((newpgrp = setsid()) < 0) {
       sprintf(err_str, "setsid() failed, errno=%d", errno);
       shepherd_error(err_str);

@@ -2069,7 +2069,7 @@ else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
    set CFLAGS = "-DADD_COPYRIGHT -DADD_SUN_COPYRIGHT -I$SUN_COPYRIGHT_DIR $CFLAGS"
 endif
 
-if ( "$CORE" == 1 ) then
+if ( "$CORE" == 1 && "$JAVA" != 2 ) then
    if ( "$COMPILE_DIR" == "" ) then
       cd $COMPILE_ARCH
    else
@@ -2294,7 +2294,7 @@ if ( "$QTCSH" == 1) then
 
    # with shared libs: qtcsh requires finding libsge.so during build
    # for AIX, we have to pass special options to make
-   set SGE_COPTS = ""
+   set SGE_COPTS = "$DEBUG_FLAG"
    set SGE_LOPTS = ""
 
 

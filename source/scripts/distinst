@@ -1305,7 +1305,7 @@ for i in $ARCH; do
          for filename in $DRMAAJ_FILES; do
             if [ -f $filename ]; then
                 echo Installing `basename $filename`
-                Execute rm -f $DEST_SGE_ROOT/`basename $filename`
+                Execute rm -f $DEST_SGE_ROOT/lib/`basename $filename`
                 Install 0.0 755 $filename $DEST_SGE_ROOT/lib
             fi
          done

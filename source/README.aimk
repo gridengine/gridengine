@@ -121,14 +121,14 @@ Content
       % aimk -only-core sge_qmaster
 
    By default, the JNI library for the DRMAA Java language binding will be
-   built, but the classes files will not.  To compile SGE without the DRMAA
+   built, but the class files will not.  To compile SGE without the DRMAA
    Java language binding, use:
 
       % aimk -no-jni -no-java
 
    The -no-java is not strictly necessary in most cases, but it ensures that
    no class files are compiled, even if the aimk.private contains the -java
-   switch.  Note that without or without the -no-jni switch, the libdrmaa
+   switch.  Note that with or without the -no-jni switch, the libdrmaa
    shared library will be created.  The difference will be in whether the
    shared library contains the JNI components.
 

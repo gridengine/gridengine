@@ -432,33 +432,33 @@ if [ "$startup" = true ]; then
    fi
       
    if [ $shadowd = true -a $shadow_host = true ]; then
-      start_shadowd=false
-        UQpidfile=$qmaster_spool_dir/shadowd_$UQHOST.pid
-        pidfile=$qmaster_spool_dir/shadowd_$HOST.pid
+      start_shadowd=true
+      UQpidfile=$qmaster_spool_dir/shadowd_$UQHOST.pid
+      pidfile=$qmaster_spool_dir/shadowd_$HOST.pid
 
       if [ -f $pidfile ]; then
          pid=`cat $pidfile`
          $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
          if [ "$?" = 0 ]; then
             echo "   found running sge_shadowd - not starting"
-            exit 1
-         else
-            start_shadowd=true
+            start_shadowd=false 
          fi
-      elif [ -f $UQpidfile ]; then
-           pid=`cat $UQpidfile`
-           $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
-           if [ "$?" = 0 ]; then
-              echo "   found running sge_shadowd - not starting"
-              exit 1
-           else
-              start_shadowd=true
-           fi
+      fi
+
+      if [ -f $UQpidfile ]; then
+         pid=`cat $UQpidfile`
+         $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
+         if [ "$?" = 0 ]; then
+            echo "   found running sge_shadowd - not starting"
+            start_shadowd=false
+         fi
       fi
 
       if [ $start_shadowd = true ]; then
          echo "   starting sge_shadowd"
          $bin_dir/sge_shadowd
+      else
+         exit 1
       fi
    fi
 else

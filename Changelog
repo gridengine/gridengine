@@ -1,3 +1,8 @@
+CR-2004-11-10-1: Bugfix:    sgemaster -shadowd did not start shadowd if
+                            no shadowd pid file exist.
+                 Review:    AA
+                 Changed:   sgemaster_template
+
 CR-2004-11-10-0: Testsuite: - fixed remote loggin problem on slow
                               hosts
                             - increased timeout for csp key installation

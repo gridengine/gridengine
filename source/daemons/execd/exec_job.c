@@ -340,6 +340,11 @@ char *err_str
          used_slots, used_slots+1));
    set_qslots_used(master_q, used_slots+1);
 
+   nhosts = get_nhosts(lGetList(jatep, JAT_granted_destin_identifier_list));
+   pe_slots = 0;
+   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+      pe_slots += (int)lGetUlong(gdil_ep, JG_slots);
+   }
    
    /***************** write out sge host file ******************************/
    /* JG: TODO: create function write_pe_hostfile() */
@@ -367,8 +372,6 @@ char *err_str
          We need to combine the processor sets of all queues on this host. 
          They need to get passed to shepherd
       */
-      nhosts = get_nhosts(lGetList(jatep, JAT_granted_destin_identifier_list));
-      pe_slots = 0;
       host_slots = 0;
       for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
          int slots;
@@ -377,7 +380,6 @@ char *err_str
 
          slots = (int)lGetUlong(gdil_ep, JG_slots);
          q_set = lGetString(gdil_ep, JG_processors);
-         pe_slots += slots;
          fprintf(fp, "%s %d %s %s\n", 
             lGetHost(gdil_ep, JG_qhostname),
             slots, 

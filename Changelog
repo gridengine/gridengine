@@ -1,4 +1,7 @@
-AH-2002-12-12-0  Bugfix     conflicting policies can cause job being started and 
+JG-2002-12-19-0  Bugfix:    Wrong error output if a userlist shall be deleted
+                            that is still referenced in an execution host.
+
+AH-2002-12-12-0  Bugfix:    conflicting policies can cause job being started and
                             immediately suspended
                  IZ:        #437
                  Bugtraq:   #4790592 
@@ -8,7 +11,7 @@ AH-2002-12-12-0  Bugfix     conflicting policies can cause job being started and
                  Bugtraq:   #4787623 
                  Review:    AS
 
-AH-2002-12-11-0  Bugfix     job arguments larger than 10k crash qmaster
+AH-2002-12-11-0  Bugfix:    job arguments larger than 10k crash qmaster
                  IZ:        #440
                  Bugtraq:   #4792036
                  Review:    AS

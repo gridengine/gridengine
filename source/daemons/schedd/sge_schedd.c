@@ -143,6 +143,7 @@ char *argv[]
    prof_set_level_name(SGE_PROF_CUSTOM5, "send orders", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM6, "scheduler event loop", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM7, "copy lists", NULL);
+   prof_set_level_name(SGE_PROF_SCHEDLIB4, NULL, NULL);
 
    /* we wish these functions be used for schedule entry recording */
    serf_init(schedd_serf_record_func, schedd_serf_newline);
@@ -279,6 +280,7 @@ char *argv[]
             prof_start(SGE_PROF_CUSTOM5, NULL);
             prof_start(SGE_PROF_CUSTOM6, NULL);
             prof_start(SGE_PROF_CUSTOM7, NULL);
+            prof_start(SGE_PROF_SCHEDLIB4, NULL);
          } else {
             prof_stop(SGE_PROF_OTHER, NULL);
             prof_stop(SGE_PROF_PACKING, NULL);
@@ -293,6 +295,7 @@ char *argv[]
             prof_stop(SGE_PROF_CUSTOM5, NULL);
             prof_stop(SGE_PROF_CUSTOM6, NULL);
             prof_stop(SGE_PROF_CUSTOM7, NULL);
+            prof_stop(SGE_PROF_SCHEDLIB4, NULL);
          }
       }
    

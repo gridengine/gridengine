@@ -333,7 +333,7 @@ bool prof_start(prof_level level, dstring *error)
       if (level == SGE_PROF_ALL) {
          for (i = 0; i <= SGE_PROF_ALL; i++) {
             /* we have no actual profiling level */
-            theInfo[thread_num][i].akt_level = SGE_PROF_NONE;
+            theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
 
             /* get start time */
             theInfo[thread_num][i].start_clock = times(&tms_buffer);
@@ -347,7 +347,7 @@ bool prof_start(prof_level level, dstring *error)
          } 
       } else {
          /* we have no actual profiling level */
-         theInfo[thread_num][level].akt_level = SGE_PROF_NONE;
+         theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
 
          /* get start time */
          theInfo[thread_num][level].start_clock = times(&tms_buffer);
@@ -474,7 +474,7 @@ bool prof_start_measurement(prof_level level, dstring *error)
       prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_start_measurement");
    } else {
 
-      if (theInfo[thread_num][level].akt_level == level) {
+      if (theInfo[thread_num][SGE_PROF_ALL].akt_level == level) {
          /* multiple start_measurement calls within one level are allowed */
          theInfo[thread_num][level].nested_calls++;
          ret = true;
@@ -486,7 +486,7 @@ bool prof_start_measurement(prof_level level, dstring *error)
          prof_stop(level, error);
       } else {
          theInfo[thread_num][level].pre = theInfo[thread_num][level].akt_level;
-         theInfo[thread_num][level].akt_level = level;
+         theInfo[thread_num][SGE_PROF_ALL].akt_level = level;
 
          theInfo[thread_num][level].start = times(&(theInfo[thread_num][level].tms_start));
 
@@ -571,10 +571,10 @@ bool prof_stop_measurement(prof_level level, dstring *error)
             theInfo[thread_num][level].sub_total_utime += utime;
             theInfo[thread_num][level].sub_total_stime += stime;
             
-            theInfo[thread_num][level].akt_level = theInfo[thread_num][level].pre;
+            theInfo[thread_num][SGE_PROF_ALL].akt_level = theInfo[thread_num][level].pre;
             theInfo[thread_num][level].pre = SGE_PROF_NONE;
          } else {
-            theInfo[thread_num][level].akt_level = SGE_PROF_NONE;
+            theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
          }
 
          ret = true;
@@ -617,7 +617,7 @@ bool prof_reset(prof_level level, dstring *error)
 
    thread_num = get_prof_info_thread_id(thread_id);
 
-   if (theInfo[thread_num][level].akt_level > SGE_PROF_OTHER) {
+   if (theInfo[thread_num][SGE_PROF_ALL].akt_level > SGE_PROF_OTHER) {
       prof_add_error_sprintf(error, MSG_PROF_RESETWHILEMEASUREMENT_S, "prof_reset");
       ret = false;
    } else {
@@ -1352,7 +1352,7 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
              theInfo[thread_num][i].name = "all";
              break;
            default:
-             theInfo[thread_num][i].name = "custom";  
+             theInfo[thread_num][i].name = NULL/* "custom"*/;  
              break;
          }
 
@@ -1381,7 +1381,7 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
             
             theInfo[thread_num][i].prof_is_started = false;
             theInfo[thread_num][i].start_clock = 0;
-            theInfo[thread_num][i].akt_level = SGE_PROF_NONE;
+            theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
             theInfo[thread_num][i].ever_started = false;
 
             theInfo[thread_num][i].info_string.s = NULL;
@@ -1460,7 +1460,7 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
          
          theInfo[thread_num][level].prof_is_started = false;
          theInfo[thread_num][level].start_clock = 0;
-         theInfo[thread_num][level].akt_level = SGE_PROF_NONE;
+         theInfo[thread_num][SGE_PROF_ALL].akt_level = SGE_PROF_NONE;
          theInfo[thread_num][level].ever_started = false;
 
          theInfo[thread_num][level].info_string.s = NULL;

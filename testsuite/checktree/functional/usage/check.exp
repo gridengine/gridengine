@@ -146,6 +146,9 @@ global submit_command
 proc usage_setup  {} {
    global ts_config
    global reserved_usage saved_config
+   global master_host
+
+   set master_host [lindex $ts_config(execd_nodes) 0]
 
    # modify config and remember old values
    get_config config
@@ -239,6 +242,7 @@ proc usage_cleanup  {} {
 proc usage_monitor_job {id started_var finished_var jobid_var info_var {my_timeout 180} {timeout_error 1}} {
    global ts_config
    global CHECK_OUTPUT
+   global master_host
 
    upvar $started_var  started
    upvar $finished_var finished
@@ -301,7 +305,7 @@ proc usage_monitor_job {id started_var finished_var jobid_var info_var {my_timeo
                      set jobid [lindex $line 6]
                      lappend info(tasks) master
                      set info(master,pid) [lindex $line 9]
-                     set info(master,host) $ts_config(master_host)
+                     set info(master,host) $master_host
                      puts $CHECK_OUTPUT "job $jobid started"
                      set ret "master started"
                   }
@@ -491,9 +495,10 @@ proc usage_single {} {
    global CHECK_OUTPUT
    global CHECK_SCRIPT_FILE_DIR
    global submit_command
+   global master_host
    puts $CHECK_OUTPUT "usage: single cpu job submitted with $submit_command"
 
-   set queue [get_queue_instance "usage.q" $ts_config(master_host)]
+   set queue [get_queue_instance "usage.q" $master_host]
    set id [submit_with_method $submit_command "-N usage -q $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
 
    usage_monitor_check $id "usage_single" 1
@@ -505,9 +510,10 @@ proc usage_tight {} {
    global CHECK_OUTPUT
    global CHECK_SCRIPT_FILE_DIR
    global submit_command
+   global master_host
    puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command"
 
-   set queue [get_queue_instance "usage.q" $ts_config(master_host)]
+   set queue [get_queue_instance "usage.q" $master_host]
    set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120"]
 
    usage_monitor_check $id "usage_tight" 5
@@ -519,9 +525,10 @@ proc usage_loose {pe expected_slots} {
    global CHECK_OUTPUT
    global CHECK_SCRIPT_FILE_DIR
    global submit_command
+   global master_host
    puts $CHECK_OUTPUT "usage: parallel job in pe $pe submitted with $submit_command"
 
-   set queue [get_queue_instance "usage.q" $ts_config(master_host)]
+   set queue [get_queue_instance "usage.q" $master_host]
    set id [submit_with_method $submit_command "-N usage -pe $pe 4 -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
 
    usage_monitor_check $id "usage_loose" $expected_slots

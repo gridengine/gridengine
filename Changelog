@@ -1,3 +1,10 @@
+JG-2005-03-24-0: Testsuite: Testsuite didn't compile / instal binaries for 
+                            bdb_server and submit_only_hosts.
+                 Issue:     1523
+                            Fixed checks functional/usage and 
+                            performance/throughput
+                            Cleanup.
+
 RC-2005-03-24-3: Bugfix:    allow installation of binaries compiled on
                             Linux 2.6 kernels
                  Review:    AS, JM

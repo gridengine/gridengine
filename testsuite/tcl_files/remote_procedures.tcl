@@ -44,7 +44,7 @@ puts "    *********************************************"
 puts "    * CONNECTION SETUP (remote_procedures.tcl)"
 puts "    *********************************************"
 puts "    * descriptors = $descriptors"
-set rlogin_max_open_connections [expr ($descriptors - 9) / 3]
+set rlogin_max_open_connections [expr ($descriptors - 12) / 3]
 puts "    * rlogin_max_open_connections = $rlogin_max_open_connections"
 puts "    *********************************************"
 
@@ -870,7 +870,7 @@ proc open_remote_spawn_process { hostname
   debug_puts "exec_command:   $exec_command"
   debug_puts "exec_arguments: $exec_arguments"
 
-  if { [string compare $user $CHECK_USER] != 0 && [string compare $user "ts_def_con"] != 0  && [string compare $user "ts_def_con2"] } {
+  if { [string compare $user $CHECK_USER] != 0 && [string compare $user "ts_def_con"] != 0  && [string compare $user "ts_def_con2"] != 0 && [string compare $user "ts_def_con_translate"] != 0} {
       if {[have_root_passwd] == -1} {
          add_proc_error "open_remote_spawn_process" -2 "root access required"
          return "" 
@@ -924,6 +924,13 @@ proc open_remote_spawn_process { hostname
      set open_spawn_buffer $user
      uplevel 1 { set open_remote_spawn__user $open_spawn_buffer }
      set using_ts_def_con 2
+  }
+
+  if { $user == "ts_def_con_translate" } {
+     set user $CHECK_USER
+     set open_spawn_buffer $user
+     uplevel 1 { set open_remote_spawn__user $open_spawn_buffer }
+     set using_ts_def_con 3
   }
 
   if { $con_data(pid) != 0 } {
@@ -1238,6 +1245,9 @@ proc open_remote_spawn_process { hostname
          }
          if { $using_ts_def_con == 2 } {
             add_open_spawn_rlogin_session $hostname "ts_def_con2" $sp_id $pid $nr_of_shells
+         }
+         if { $using_ts_def_con == 3 } {
+            add_open_spawn_rlogin_session $hostname "ts_def_con_translate" $sp_id $pid $nr_of_shells
          }
       } else {
          add_open_spawn_rlogin_session $hostname $user $sp_id $pid $nr_of_shells
@@ -1814,7 +1824,7 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
       set ok 0
       set mytries  5
       debug_puts "check_rlogin_session -> waiting for shell response ..."
-      if { $user == "ts_def_con" || $user == "ts_def_con2" } {
+      if { $user == "ts_def_con" || $user == "ts_def_con2" || $user == "ts_def_con_translate" } {
          set user $CHECK_USER
       }      
 

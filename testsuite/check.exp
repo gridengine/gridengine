@@ -80,7 +80,6 @@ global CHECK_SOURCE_DIR            ;# path to source code directory (c4)
 global CHECK_SOURCE_CVS_RELEASE    ;# release name to check out e.g. V52_BRANCH
 set CHECK_SOURCE_CVS_RELEASE "maintrunk"    ;# default is "maintrunk"
 global CHECK_SOURCE_HOSTNAME       ;# name of host with cvs installed on (e.g. fangorn)
-global CHECK_SOURCE_COMPILE_HOSTS     ;# list of hostnames on which the source should be compiled
 global CHECK_AIMK_COMPILE_OPTIONS     ;# optional: aimk options
 global CHECK_DIST_INSTALL_OPTIONS     ;# optional: mydistinst options
 global CHECK_PACKAGE_DIRECTORY        ;# optional: no compile directory, use distribution (tar or sun packages)
@@ -120,8 +119,6 @@ global CHECK_GROUP                 ;# group of user who start test
 global CHECK_HOST                  ;# hostname of this system (e.g. DWAIN)
 global CHECK_CORE_EXECD            ;# known execd hostnames
 set CHECK_CORE_EXECD ""
-global CHECK_ADDITIONAL_COMPILE_HOSTS
-set CHECK_ADDITIONAL_COMPILE_HOSTS ""
 global CHECK_SUBMIT_ONLY_HOSTS     ;# list of submithosts (no execd/commd running)
 set CHECK_SUBMIT_ONLY_HOSTS ""
 global CHECK_CORE_MASTER           ;# qmaster hostname
@@ -832,7 +829,7 @@ proc get_setup_change_state {} {
    global CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
    global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE 
    global CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
-   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
+   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
    global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
    global CHECK_QMASTER_INSTALL_OPTIONS CHECK_EXECD_INSTALL_OPTIONS
@@ -1902,75 +1899,6 @@ proc get_configuration_element_count { config_array } {
 
 
 
-#****** check/config_execd_hosts_set_compile_hosts() ***************************
-#  NAME
-#     config_execd_hosts_set_compile_hosts() -- set compile host array
-#
-#  SYNOPSIS
-#     config_execd_hosts_set_compile_hosts { value } 
-#
-#  FUNCTION
-#     This procedure is called to set the global CHECK_SOURCE_COMPILE_HOSTS
-#     variable. 
-#
-#  INPUTS
-#     value - host list, used in execd list
-#
-#  SEE ALSO
-#     check/config_execd_hosts()
-#*******************************************************************************
-proc config_execd_hosts_set_compile_hosts { value } {
-   global CHECK_OUTPUT do_nomain
-   global CHECK_SOURCE_COMPILE_HOSTS
-   global ts_host_config
-
-   set CHECK_SOURCE_COMPILE_HOSTS ""
-   foreach host $value {
-      if { $ts_host_config($host,compile) == 1 } {
-         # ok we can compile on this host
-         lappend CHECK_SOURCE_COMPILE_HOSTS $host
-      } else {
-         # is other host with that arch in host list ?
-         set act_host_arch $ts_host_config($host,arch)
-         set found_c_host 0
-         foreach tmp_host $value {
-            if { [string compare $ts_host_config($tmp_host,arch) $act_host_arch] == 0 } {
-               if { $ts_host_config($tmp_host,compile) == 1 } {
-                  lappend CHECK_SOURCE_COMPILE_HOSTS $tmp_host
-                  set found_c_host 1
-                  break
-               }
-            }
-         }
-         if { $found_c_host == 0 } {
-            # try to find at least one compile host
-            foreach tmp_host $ts_host_config(hostlist) {
-               if { [string compare $ts_host_config($tmp_host,arch) $act_host_arch] == 0 } {
-                  if { $ts_host_config($tmp_host,compile) == 1 } {
-                     lappend CHECK_SOURCE_COMPILE_HOSTS $tmp_host
-                     set found_c_host 1
-                     break
-                  }
-               }
-            } 
-         }
-         if { $found_c_host == 0 } {
-            puts $CHECK_OUTPUT "no compile host found for architecture $act_host_arch"
-            return -1
-         }
-      }
-   }
-   # sort CHECK_SOURCE_COMPILE_HOSTS
-   set new_comp_host_list ""
-   foreach elem $CHECK_SOURCE_COMPILE_HOSTS {
-      if { [lsearch $new_comp_host_list $elem] < 0 } {
-         lappend new_comp_host_list $elem
-      }
-   }
-   set CHECK_SOURCE_COMPILE_HOSTS [lsort $new_comp_host_list]
-   return 0
-}
-
 #****** check/update_ts_host_config_version() **********************************
 #  NAME
 #     update_ts_host_config_version() -- used for version update of ts_host_config
@@ -2222,7 +2150,6 @@ proc setup2 { } {
    global CHECK_SOURCE_DIR
    global CHECK_SOURCE_CVS_RELEASE
    global CHECK_SOURCE_HOSTNAME
-   global CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_AIMK_COMPILE_OPTIONS
    global CHECK_DIST_INSTALL_OPTIONS
    global CHECK_PACKAGE_DIRECTORY
@@ -4191,7 +4118,7 @@ proc run_test {path runcompleted {run_single_test "all"} { send_mail_report 1 } 
       }
    }
 
-   if { ! $immediate_return } {
+   if { $immediate_return == 0 } {
   for {set level 0} { $level <= $check_highest_level} {incr level 1} {
      if {[is_level_enabled $level] == -1 } {
         continue
@@ -5850,10 +5777,10 @@ proc check_packages_directory { path { mode "check_both" } { get_files "no" } } 
 #*******************************
 #
 proc compile_source { { do_only_install 0 } } {
-   global ts_config
-   global CHECK_SOURCE_DIR CHECK_OUTPUT CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
+   global ts_config ts_host_config
+   global CHECK_SOURCE_DIR CHECK_OUTPUT CHECK_SOURCE_HOSTNAME
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
-   global CHECK_ADDITIONAL_COMPILE_HOSTS CHECK_HTML_DIRECTORY
+   global CHECK_HTML_DIRECTORY
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
    global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_USER CHECK_HOST check_do_clean_compile
@@ -5885,13 +5812,18 @@ proc compile_source { { do_only_install 0 } } {
       return -1
    }
 
-   # merge additional compile hosts into general compile hosts
-   foreach host $CHECK_ADDITIONAL_COMPILE_HOSTS {
-      if { [ lsearch -exact $CHECK_SOURCE_COMPILE_HOSTS $host ] < 0 } {
-         lappend CHECK_SOURCE_COMPILE_HOSTS $host
-         puts $CHECK_OUTPUT "adding additional compile host $host"
+   # compile hosts required for master, exec, shadow, submit_only, bdb_server hosts
+   set compile_hosts [compile_host_list]
+
+   # add compile hosts for additional compile archs
+   if {$ts_config(add_compile_archs) != "none"} {
+      foreach arch $ts_config(add_compile_archs) {
+         lappend compile_hosts [compile_search_compile_host $arch]
       }
    }
+
+   # eliminate duplicates
+   set compile_hosts [compile_unify_host_list $compile_hosts]
 
    # check source directory
    if { ( [ string compare $CHECK_SOURCE_DIR "unknown" ] == 0 ) || ( [ string compare $CHECK_SOURCE_DIR "" ] == 0 ) } {
@@ -5912,7 +5844,7 @@ proc compile_source { { do_only_install 0 } } {
    }
 
    # check compile hosts
-   if { ( [ string compare $CHECK_SOURCE_COMPILE_HOSTS "unknown" ] == 0 ) || ([ string compare $CHECK_SOURCE_COMPILE_HOSTS "" ] == 0) } {
+   if { ( [ string compare $compile_hosts "unknown" ] == 0 ) || ([ string compare $compile_hosts "" ] == 0) } {
       puts $CHECK_OUTPUT "host list to compile for unknown - check defaults file"
       mail_report $mail_subject "$mail_body host list to compile for unknown - check defaults file"
       append html_body [ create_html_text "host list to compile for unknown - check defaults file" ]
@@ -5922,7 +5854,7 @@ proc compile_source { { do_only_install 0 } } {
 
    # figure out the compile archs
    set compile_arch_list ""
-   foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
+   foreach chost $compile_hosts {
       puts $CHECK_OUTPUT "\n-> checking architecture for host $chost ..."
       set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -no-mk" prg_exit_state 60 0 "" 1 0 ]
       puts $CHECK_OUTPUT "return state: $prg_exit_state"
@@ -6031,7 +5963,7 @@ proc compile_source { { do_only_install 0 } } {
          puts $CHECK_OUTPUT "------------------------------------------"
 
          # after an update, do an aimk clean
-         foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
+         foreach chost $compile_hosts {
             puts $CHECK_OUTPUT "------------------------------------------"
             puts $CHECK_OUTPUT "-> starting aimk $CHECK_AIMK_COMPILE_OPTIONS clean on host $chost ..."
             set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $CHECK_AIMK_COMPILE_OPTIONS clean" prg_exit_state 60 0 "" 1 0 ]
@@ -6054,7 +5986,7 @@ proc compile_source { { do_only_install 0 } } {
    }
 
    if { $check_do_clean_compile == 1 } {
-      foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
+      foreach chost $compile_hosts {
          puts $CHECK_OUTPUT "------------------------------------------"
          puts $CHECK_OUTPUT "-> starting aimk $CHECK_AIMK_COMPILE_OPTIONS clean on host $chost ..."
          set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $CHECK_AIMK_COMPILE_OPTIONS clean" prg_exit_state 60 0 "" 1 0 ]
@@ -6069,67 +6001,66 @@ proc compile_source { { do_only_install 0 } } {
 
    # choose a host for aimk depend, we prefer to do it on solaris 64bit
    if { $do_only_install != 1 } {
-   set depend_host_name [lindex $CHECK_SOURCE_COMPILE_HOSTS 0] 
+      set depend_host_name [lindex $compile_hosts 0] 
 
-   foreach help_host $CHECK_SOURCE_COMPILE_HOSTS {
-      if { [ string compare [resolve_arch $help_host] "solaris64"] == 0 || 
-           [ string compare [resolve_arch $help_host] "sol-sparc64"] == 0 } {
-         puts $CHECK_OUTPUT "using host $help_host to create dependencies"
-         set depend_host_name $help_host
+      foreach help_host $compile_hosts {
+         if { [ string compare $ts_host_config($help_host,arch) "solaris64"] == 0 || 
+              [ string compare $ts_host_config($help_host,arch) "sol-sparc64"] == 0 } {
+            puts $CHECK_OUTPUT "using host $help_host to create dependencies"
+            set depend_host_name $help_host
+         }
+      }
+
+      # clean dependency files (zerodepend)
+      puts $CHECK_OUTPUT "------------------------------------------"
+      puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $depend_host_name ..."
+      set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" prg_exit_state 60 0 "" 1 0 ]
+      puts $CHECK_OUTPUT "------------------------------------------"
+      puts $CHECK_OUTPUT "return state: $prg_exit_state"
+      puts $CHECK_OUTPUT "------------------------------------------"
+      puts $CHECK_OUTPUT "output:\n$output"
+      puts $CHECK_OUTPUT "------------------------------------------"
+
+      puts $CHECK_OUTPUT "------------------------------------------"
+
+      # build the depencency building program
+      set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
+      puts $CHECK_OUTPUT "-> starting aimk -only-depend on host $depend_host_name ..."
+      set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
+      puts $CHECK_OUTPUT "------------------------------------------"
+      puts $CHECK_OUTPUT "return state: $prg_exit_state"
+      puts $CHECK_OUTPUT "------------------------------------------"
+      puts $CHECK_OUTPUT "output:\n$output"
+      puts $CHECK_OUTPUT "------------------------------------------"
+      if { $prg_exit_state != 0 } {
+         mail_report $mail_subject "$mail_body aimk -only-depend on host $depend_host_name returned:\n$output"
+         append html_body [ create_html_text "aimk -only-depend on host $depend_host_name returned:\n$output" ]
+         update_compile_html_output $html_body
+
+         return -1
+      }
+
+      # build the dependencies
+      puts $CHECK_OUTPUT "------------------------------------------"
+      puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
+      set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
+      puts $CHECK_OUTPUT "------------------------------------------"
+      puts $CHECK_OUTPUT "return state: $prg_exit_state"
+      puts $CHECK_OUTPUT "------------------------------------------"
+      puts $CHECK_OUTPUT "output:\n$output"
+      puts $CHECK_OUTPUT "------------------------------------------"
+
+      if { $prg_exit_state != 0 } {
+         mail_report $mail_subject "$mail_body aimk $my_compile_options depend on host $depend_host_name returned:\n$output"
+         append html_body [ create_html_text "aimk $my_compile_options depend on host $depend_host_name returned:\n$output" ]
+         update_compile_html_output $html_body
+
+         return -1
       }
    }
 
-   # clean dependency files (zerodepend)
-   puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "-> starting scripts/zerodepend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; scripts/zerodepend" prg_exit_state 60 0 "" 1 0 ]
-   puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "return state: $prg_exit_state"
-   puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "output:\n$output"
-   puts $CHECK_OUTPUT "------------------------------------------"
-
-   puts $CHECK_OUTPUT "------------------------------------------"
-
-   # build the depencency building program
-   set my_compile_options $CHECK_AIMK_COMPILE_OPTIONS
-   puts $CHECK_OUTPUT "-> starting aimk -only-depend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -only-depend" prg_exit_state 60 0 "" 1 0 ]
-   puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "return state: $prg_exit_state"
-   puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "output:\n$output"
-   puts $CHECK_OUTPUT "------------------------------------------"
-   if { $prg_exit_state != 0 } {
-      mail_report $mail_subject "$mail_body aimk -only-depend on host $depend_host_name returned:\n$output"
-      append html_body [ create_html_text "aimk -only-depend on host $depend_host_name returned:\n$output" ]
-      update_compile_html_output $html_body
-
-      return -1
-   }
-
-   # build the dependencies
-   puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "-> starting aimk $my_compile_options depend on host $depend_host_name ..."
-   set output [ start_remote_prog $depend_host_name $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $my_compile_options depend" prg_exit_state 60 0 "" 1 0 ]
-   puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "return state: $prg_exit_state"
-   puts $CHECK_OUTPUT "------------------------------------------"
-   puts $CHECK_OUTPUT "output:\n$output"
-   puts $CHECK_OUTPUT "------------------------------------------"
-
-   if { $prg_exit_state != 0 } {
-      mail_report $mail_subject "$mail_body aimk $my_compile_options depend on host $depend_host_name returned:\n$output"
-      append html_body [ create_html_text "aimk $my_compile_options depend on host $depend_host_name returned:\n$output" ]
-      update_compile_html_output $html_body
-
-      return -1
-   }
-
-   }
-
    # now start build on all compile hosts
-   set host_list $CHECK_SOURCE_COMPILE_HOSTS
+   set host_list $compile_hosts
    if { $do_only_install != 1 } {
    
    set num 0
@@ -7152,6 +7083,7 @@ proc source_tcl_files {} {
    ts_source $libdir/config_user
    ts_source $libdir/config_host
 
+   ts_source $libdir/compile
    ts_source $libdir/file_procedures
    ts_source $libdir/gettext_procedures
    ts_source $libdir/remote_procedures

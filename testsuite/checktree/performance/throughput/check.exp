@@ -223,7 +223,7 @@ proc init_level {} {
    global run_throughput_test_SCHEDULE_INTERVAL             ;# 00:00:30 ...
    global throughput_subdir             ;# subdirectory in protocols/throughput/
    global throughput_sharetree functional_policy
-   global host_list
+   global host_list submit_hosts
    global test_scenario
    global ps_interval qstat_interval array_size do_requests parallel_jobs
    global reservation job_options
@@ -256,6 +256,14 @@ proc init_level {} {
    foreach host $ts_config(execd_nodes) {
       if { [string compare $host $ts_config(master_host)] != 0 } { 
          lappend host_list $host
+      }
+   }
+
+   # submit host list
+   set submit_hosts {}
+   foreach host $ts_config(execd_hosts) {
+      if { [string compare $host $ts_config(master_host)] != 0 } {
+         lappend submit_hosts $host
       }
    }
 
@@ -594,7 +602,7 @@ proc throughput_setup {} {
    global ts_config
    global CHECK_OUTPUT
    global CHECK_SOURCE_DIR
-   global nr_queues queue_list host_list nr_slots
+   global nr_queues queue_list host_list submit_hosts nr_slots
    global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
    global global_job_run_time
    global throughput_sharetree functional_policy parallel_jobs
@@ -672,7 +680,7 @@ proc throughput_setup {} {
       add_pe pe
    }
 
-   # now setup submit queues for hosts in host_list:
+   # now setup queues for hosts in host_list:
    # set queue_list:
    set queue_list {}
 
@@ -700,7 +708,7 @@ proc throughput_setup {} {
    set change_array(qtype) INTERACTIVE
    add_queue interactive "@allhosts" change_array 1
    
-   puts $CHECK_OUTPUT "using [llength $host_list] hosts to submit jobs"
+   puts $CHECK_OUTPUT "using [llength $submit_hosts] hosts to submit jobs"
 
    if { $throughput_sharetree == 1 } {
       throughput_setup_sharetree
@@ -786,7 +794,7 @@ proc run_throughput_test {} {
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ARCH
    global queue_list CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global enable_queues_job_count CHECK_SOURCE_DIR 
-   global end_job_count host_list 
+   global end_job_count host_list submit_hosts
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
    global throughput_sharetree functional_policy
    global global_job_run_time
@@ -810,7 +818,7 @@ proc run_throughput_test {} {
    }
    puts $CHECK_OUTPUT "using event client: $event_client_bin"
 
-   # start event client (if compiled) 
+   # start event client on master host, using special user ts_def_con2
    set event_client_sid [ open_remote_spawn_process $ts_config(master_host) "ts_def_con2" $event_client_bin ""]
    set event_client_id [lindex $event_client_sid 1]
 
@@ -852,7 +860,7 @@ proc run_throughput_test {} {
       set event_client_id [lindex $event_client_sid 1]
    }
 
-   # open scheduler messages file
+   # open scheduler messages file, done with special file handle ts_def_con
    puts $CHECK_OUTPUT "opening scheduler messages file (tail)"
    set schedd_messages_file [check_schedd_messages 2]
    set schedd_messages_sid [ open_remote_spawn_process $ts_config(master_host) "ts_def_con" "tail" "-f $schedd_messages_file"]
@@ -874,7 +882,7 @@ proc run_throughput_test {} {
       unset spawn_host_map
    }
 
-   # start qmaster/scheduler process monitor
+   # start qmaster/scheduler process monitor (on master host, first testsuite user)
    set expect_bin [get_binary_path $ts_config(master_host) "expect"]
    set qmaster_pid [get_qmaster_pid]
    set schedd_pid  [get_schedd_pid]
@@ -886,7 +894,7 @@ proc run_throughput_test {} {
    set spawn_host_map($spawn_id) $ts_config(master_host)
 
    if { $qstat_interval > 0 } {
-      # start qstat monitor
+      # start qstat monitor (on master host, second testsuite user)
       puts $CHECK_OUTPUT "starting qstat monitor"
       set id [ open_remote_spawn_process $ts_config(master_host) $CHECK_SECOND_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/qstat.tcl $ts_config(product_root)" ]
       set spawn_id [lindex $id 1]
@@ -912,8 +920,8 @@ proc run_throughput_test {} {
    # prepare job arguments 
    set my_job "$ts_config(product_root)/examples/jobs/sleeper.sh"
 
-   # start submitter (expect script)
-   foreach host $ts_config(execd_hosts) {
+   # start submitter (expect script) on all execd hosts, not no master host
+   foreach host $submit_hosts {
       set expect_bin [get_binary_path $host "expect"]
       puts $CHECK_OUTPUT "starting submitter process on host $host"
       set id [ open_remote_spawn_process $host $CHECK_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/submitter.tcl $ts_config(product_root) $host" ]
@@ -949,7 +957,7 @@ proc run_throughput_test {} {
    # then set script file
    # if everything succeeded, accept this submitter
    log_user 0
-   while { $num_submitters < [llength $ts_config(execd_hosts)] || $monitor_ok == 0 || \
+   while { $num_submitters < [llength $submit_hosts] || $monitor_ok == 0 || \
            ($qstat_interval > 0 && $qstat_ok == 0) } {
       expect_user {
          -i $spawn_list full_buffer {
@@ -1103,7 +1111,7 @@ proc run_throughput_test {} {
 
    set current_output_line 0
 
-   foreach host $ts_config(execd_hosts) {
+   foreach host $submit_hosts {
       set host_submit_count($host) 0
    }
 
@@ -1521,8 +1529,6 @@ proc run_throughput_test {} {
             if { ! $are_enabled && $result(jobs_submitted) >= $enable_queues_job_count } {
                set are_enabled 1
                enable_queue $queue_list
-               catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
-               puts $CHECK_OUTPUT $catch_result
             }
 
          }
@@ -1554,7 +1560,7 @@ proc run_throughput_test {} {
    # output submission distribution
    puts $CHECK_OUTPUT ""
    puts $CHECK_OUTPUT "submitted jobs per host"
-   foreach host $ts_config(execd_hosts) {
+   foreach host $submit_hosts {
       puts $CHECK_OUTPUT [format "%-15s\t%6d" $host $host_submit_count($host)]
    }
 

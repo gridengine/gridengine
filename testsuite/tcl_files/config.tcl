@@ -1443,6 +1443,11 @@ proc config_master_host { only_check name config_array } {
             setup_host_config $config(host_config_file) 1
          }
       }
+       if { [compile_check_compile_hosts $value] != 0 } {
+          puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
+          wait_for_enter
+          setup_host_config $config(host_config_file) 1
+       }
       puts $CHECK_OUTPUT "Press enter to use host \"$CHECK_HOST\" as qmaster host"
       wait_for_enter
       set value $CHECK_HOST
@@ -1462,6 +1467,10 @@ proc config_master_host { only_check name config_array } {
 
    if { [ lsearch $ts_host_config(hostlist) $value ] < 0  } {
       puts $CHECK_OUTPUT "Master host \"$value\" is not in host configuration file"
+      return -1
+   }
+
+   if { [compile_check_compile_hosts $value] != 0 } {
       return -1
    }
 
@@ -1494,7 +1503,6 @@ proc config_execd_hosts { only_check name config_array } {
    global CHECK_OUTPUT do_nomain
    global CHECK_HOST
    global CHECK_CORE_EXECD
-   global CHECK_SOURCE_COMPILE_HOSTS
    global ts_host_config
 
    set CHECK_CORE_EXECD ""
@@ -1585,7 +1593,7 @@ proc config_execd_hosts { only_check name config_array } {
              }
           }
        }
-       if { [config_execd_hosts_set_compile_hosts $value] != 0 } {
+       if { [compile_check_compile_hosts $value] != 0 } {
           puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
           wait_for_enter
           setup_host_config $config(host_config_file) 1
@@ -1630,7 +1638,7 @@ proc config_execd_hosts { only_check name config_array } {
    # TODO: should be eliminated, use $ts_config(execd_nodes) instead
    set CHECK_CORE_EXECD $config(execd_nodes)
 
-   if { [config_execd_hosts_set_compile_hosts $value] != 0 } {
+   if { [compile_check_compile_hosts $value] != 0 } {
       return -1
    }
 
@@ -1751,6 +1759,11 @@ proc config_submit_only_hosts { only_check name config_array } {
              }
           }
        }
+       if { [compile_check_compile_hosts $value] != 0 } {
+          puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
+          wait_for_enter
+          setup_host_config $config(host_config_file) 1
+       }
        if { $value == "" } {
           set value "none"
        }
@@ -1767,10 +1780,16 @@ proc config_submit_only_hosts { only_check name config_array } {
             return -1
          }
       }
+
+      if { [compile_check_compile_hosts $value] != 0 } {
+         return -1
+      }
+
       set CHECK_SUBMIT_ONLY_HOSTS $value
    } else {
       set CHECK_SUBMIT_ONLY_HOSTS ""
    }
+
    return $value
 }
 
@@ -3298,7 +3317,7 @@ proc config_testsuite_spooling_method { only_check name config_array } {
 #*******************************************************************************
 proc config_testsuite_bdb_server { only_check name config_array } {
    global CHECK_OUTPUT CHECK_USER
-   global ts_config
+   global ts_config ts_host_config
 
    upvar $config_array config
    set actual_value  $config($name)
@@ -3329,19 +3348,35 @@ proc config_testsuite_bdb_server { only_check name config_array } {
       } else {
          puts $CHECK_OUTPUT "using default value"
       }
-   } 
+      if { $value != "none" } {
+          if { [ lsearch $ts_host_config(hostlist) $value ] < 0  } {
+             puts $CHECK_OUTPUT "host \"$host\" is not in host configuration file"
+             puts $CHECK_OUTPUT "Press enter to add host \"$host\" to global host configuration ..."
+             wait_for_enter
+             set errors 0
+             incr errors [host_config_hostlist_add_host ts_host_config  $host]
+             incr errors [host_config_hostlist_edit_host ts_host_config $host]
+             incr errors [save_host_configuration $config(host_config_file)]
+             if { $errors != 0 } {
+                setup_host_config $config(host_config_file) 1
+             }
+          }
+          if { [compile_check_compile_hosts $value] != 0 } {
+             puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
+             wait_for_enter
+             setup_host_config $config(host_config_file) 1
+          }
+       }
+    } 
 
    # check parameter
-   set host $value
-   if { [string compare $host "none"] != 0 } {
-      set result [ start_remote_prog $host $CHECK_USER "echo" "\"hello $host\"" prg_exit_state 60 0 "" 1 0 ]
-      if { $prg_exit_state != 0 } {
-         puts $CHECK_OUTPUT "rlogin to host $host doesn't work correctly"
+   if { $value != "none" } {
+      if { [ lsearch $ts_host_config(hostlist) $value ] < 0  } {
+         puts $CHECK_OUTPUT "Host \"$value\" is not in host configuration file"
          return -1
       }
-      if { [ string first "hello $host" $result ] < 0 } {
-         puts $CHECK_OUTPUT "$result"
-         puts $CHECK_OUTPUT "echo \"hello $host\" doesn't work"
+
+      if { [compile_check_compile_hosts $value] != 0 } {
          return -1
       }
    }
@@ -3488,7 +3523,6 @@ proc config_testsuite_cell { only_check name config_array } {
 #*******************************************************************************
 proc config_add_compile_archs { only_check name config_array } {
    global CHECK_OUTPUT 
-   global CHECK_ADDITIONAL_COMPILE_HOSTS
    global ts_host_config
 
    upvar $config_array config
@@ -3534,6 +3568,7 @@ proc config_add_compile_archs { only_check name config_array } {
                 set new_arch $arch_array($new_arch,arch)
              }
           }
+
           # now we have arch string in new_arch
           set found_arch 0
           foreach host $ts_host_config(hostlist) {
@@ -3541,7 +3576,7 @@ proc config_add_compile_archs { only_check name config_array } {
                 set compile_arch $ts_host_config($host,arch)
                 if { [ string compare $compile_arch $new_arch ] == 0 } {
                    set found_arch 1
-                   continue
+                   break
                 }
              }
           }
@@ -3563,30 +3598,6 @@ proc config_add_compile_archs { only_check name config_array } {
        if { $value == "" } {
           set value "none"
        }
-   } 
-
-   if { [string compare $value "none"] != 0 }  {
-      set add_compile_host_list ""
-      foreach arch $value {
-         set found_arch 0
-         foreach host $ts_host_config(hostlist) {
-             if { $ts_host_config($host,compile) == 1 } {
-                set compile_arch $ts_host_config($host,arch)
-                if { [ string compare $compile_arch $arch ] == 0 } {
-                   set found_arch 1
-                   lappend add_compile_host_list $host
-                   continue
-                }
-             }
-         }
-         if { $found_arch == 0 } {
-            puts $CHECK_OUTPUT "could not find compile host with architecture \"$arch\""
-            return -1
-         }
-      } 
-      set CHECK_ADDITIONAL_COMPILE_HOSTS $add_compile_host_list
-   } else {
-      set CHECK_ADDITIONAL_COMPILE_HOSTS ""
    }
 
    return $value
@@ -3616,7 +3627,6 @@ proc config_shadowd_hosts { only_check name config_array } {
    global CHECK_OUTPUT do_nomain
    global CHECK_HOST
    global CHECK_CORE_SHADOWD
-   global CHECK_SOURCE_COMPILE_HOSTS
    global ts_host_config
 
    set CHECK_CORE_SHADOWD ""
@@ -3707,7 +3717,7 @@ proc config_shadowd_hosts { only_check name config_array } {
              }
           }
        }
-       if { [config_execd_hosts_set_compile_hosts $value] != 0 } {
+       if { [compile_check_compile_hosts $value] != 0 } {
           puts $CHECK_OUTPUT "Press enter to edit global host configuration ..."
           wait_for_enter
           setup_host_config $config(host_config_file) 1
@@ -3728,7 +3738,7 @@ proc config_shadowd_hosts { only_check name config_array } {
    }
    set CHECK_CORE_SHADOWD $value
 
-   if { [config_execd_hosts_set_compile_hosts $value] != 0 } {
+   if { [compile_check_compile_hosts $value] != 0 } {
       return -1
    }
 

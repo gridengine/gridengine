@@ -1224,10 +1224,12 @@ int local
       ep = lGetElemStr(confl, CF_name, "qlogin_daemon");
       if (clen->qlogin_daemon && clen->qlogin_daemon[0] != '\0'
            /* && strcmp(lGetString(ep, CF_value), clen->qlogin_daemon)*/) {
+         /*  
          if (check_white(clen->qlogin_daemon)) {
             strcpy(errstr, "No whitespace allowed in value for qlogin_daemon");
             goto error;
          }
+         */
          new = lCopyElem(ep);
          lSetString(new, CF_value, clen->qlogin_daemon);
          lAppendElem(lp, new);
@@ -1236,10 +1238,12 @@ int local
       ep = lGetElemStr(confl, CF_name, "qlogin_command");
       if (clen->qlogin_command && clen->qlogin_command[0] != '\0'
            /* && strcmp(lGetString(ep, CF_value), clen->qlogin_command)*/) {
+         /*  
          if (check_white(clen->qlogin_command)) {
             strcpy(errstr, "No whitespace allowed in value for qlogin_command");
             goto error;
          }
+         */
          new = lCopyElem(ep);
          lSetString(new, CF_value, clen->qlogin_command);
          lAppendElem(lp, new);

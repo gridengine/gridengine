@@ -1,5 +1,9 @@
 SG-2004-05-25-0: Bugfix:    fixed a memory leak in qmaster
                  Changed:   qmaster
+                 Review:    JG
+
+SG-2004-05-25-0: Bugfix:    fixed a memory leak in qmaster
+                 Changed:   qmaster
                  Review:    JG, DT
 
 JG-2004-05-25-0: Testsuite: Fixed installation (parsing messages from inst_sge).

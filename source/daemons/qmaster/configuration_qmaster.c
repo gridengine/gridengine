@@ -556,39 +556,26 @@ int sge_compare_configuration(lListElem *aHost, lList *aConf)
 lListElem *sge_get_configuration_entry_by_name(const char *aHost, const char *anEntryName)
 {
    lListElem *conf = NULL;
+   lListElem *elem = NULL;
    
    DENTER(TOP_LAYER, "sge_get_configuration_value_by_name");
    
    SGE_ASSERT((NULL != aHost) && (NULL != anEntryName));
    
    /* try local configuration first */
-   if ((conf = sge_get_configuration_for_host(aHost)) != NULL)
-   {
-      lListElem *elem = NULL;
-      
-      if ((elem = get_entry_from_conf(conf, anEntryName)) != NULL)
-      {
-         lFreeElem(conf);         
-         DEXIT;
-         return elem;
-      }
+   if ((conf = sge_get_configuration_for_host(aHost)) != NULL) {
+      elem = get_entry_from_conf(conf, anEntryName);
    }
+   conf = lFreeElem(conf);
    
    /* local configuration did not work, try global one */
-   if ((conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) != NULL)
-   {
-      lListElem *elem = NULL;
-      
-      if ((elem = get_entry_from_conf(conf, anEntryName)) != NULL)
-      {
-         lFreeElem(conf);         
-         DEXIT;
-         return elem;
-      }
+   if ((elem == NULL) && (conf = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) != NULL) {
+      elem = get_entry_from_conf(conf, anEntryName);
    }
-   
+  
+   conf = lFreeElem(conf);
    DEXIT;
-   return NULL;
+   return elem;
 }
 
 lListElem *get_entry_from_conf(lListElem *aConf, const char *anEntryName)

@@ -173,7 +173,7 @@
 #define MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS              _MESSAGE(23112, _("ERROR! -- option must be followed by job arguments\n"))
 #define MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S              _MESSAGE(23113, _("ERROR! Wrong job id list format \"%s\" specified\n"))
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23114, _("ERROR! invalid priority, must be an integer from -1023 to 1024\n"))
-
+#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(23115,_("ERROR! two files are specified for the same host\n"))
 
 /*
 ** parse_qconf.c

@@ -3884,7 +3884,7 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
 
    for_each( ep, lGetList(job, name) ){
       int res=sge_resolve_host(ep, PN_host);
-
+printf("host ret: %d\n", res);
       if( (res!=0) && (res!=-1) && (res!=1)){ /* 0 = everything is fine, 1 = no host specified*/
          const char *hostname = lGetHost(ep, PN_host);
 
@@ -3903,25 +3903,25 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list, in
       {
          const char *hostname = lGetHost(ep, PN_host);       
          lListElem *temp;         
-
          for(temp= lPrev(ep); temp; temp = lPrev(temp)){
             const char *temp_hostname = lGetHost(temp, PN_host);
-
             if(hostname == NULL){
                if(temp_hostname == NULL){
-                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
+                  ERROR((SGE_EVENT, MSG_PARSE_DUPLICATEHOSTINFILESPEC));
                   sge_add_answer(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
             
                   DEXIT;
                   return STATUS_EUNKNOWN;
                }
             } 
-            else if(strcmp(hostname, temp_hostname)==0){
-               ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hostname));
+            else{
+                if(strcmp(hostname, temp_hostname)==0){
+               ERROR((SGE_EVENT, MSG_PARSE_DUPLICATEHOSTINFILESPEC));
                sge_add_answer(answer_list, SGE_EVENT, STATUS_EUNKNOWN, 0);
 
                DEXIT;
                return STATUS_EUNKNOWN;
+            }
             }
          } 
       }

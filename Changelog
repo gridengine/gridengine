@@ -1,3 +1,8 @@
+SG-2003-06-10-0: Bugix:     I added a new bug while fixing issue 540
+                            The qmaster creashed in a special error case.
+                  Review:   AA
+                  Changed:  qmaster
+
 EB-2003-06-06-0  Bugfix    Impossible to disable qmaster profiling
                  IZ:       ???
                  Bugtraq:  ???

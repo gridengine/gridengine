@@ -142,6 +142,12 @@ GetCell()
    $CLEAR
    fi
    export SGE_CELL
+
+  HOST=`$SGE_UTILBIN/gethostname -aname`
+  if [ "$HOST" = "" ]; then
+     $INFOTEXT -e "can't get hostname of this machine. Installation failed."
+     exit 1
+  fi
 }
 
 
@@ -406,21 +412,30 @@ SetSpoolingOptionsBerkeleyDB()
    else
       ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
       if [ $ret -gt 1 ]; then
-         $INFOTEXT "We found a running berkeley db on this host!"
+         $INFOTEXT "We found a running berkeley db server on this host!"
          if [ $AUTO = true ]; then
-            $INFOTEXT -log "We found a running berkeley db on this host!"
+               if [ $SPOOLING_SERVER = "none" ]; then
+                  $ECHO
+                  Makedir $SPOOLING_DIR
+                  SPOOLING_ARGS="$SPOOLING_DIR"
+               fi
+         else
+
+            $INFOTEXT -log "We found a running berkeley db server on this host!"
             $INFOTEXT -log "Please, check this first! Exiting Installation!"
             MoveLog
          fi
 
-         $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
-         if [ $? = 1 ]; then
-            $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
-            TMP_STARTUP_SCRIPT=`Enter`
-            SpoolingQueryChange
-            EditStartupScript
-         else
-            exit 1
+         if [ $AUTO = "false" ]; then
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
+            if [ $? = 1 ]; then
+               $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
+               TMP_STARTUP_SCRIPT=`Enter`
+               SpoolingQueryChange
+               EditStartupScript
+            else
+               exit 1
+            fi
          fi 
       else
          while [ $params_ok -eq 0 ]; do

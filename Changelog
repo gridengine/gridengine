@@ -6,6 +6,8 @@ EB-2002-08-07-0  Bugfix:    maxujobs prevents dispatching even if job limit is
 
 AS-2002-08-07-0  Bugfix:    wrong setting of SGE_CELL in settings.sh
                             created by util/create_settings.sh
+                 Bugtraq:   #4727457
+                 Issue:     #346
 
 AS-2002-07-31-0  CVS        Re-Tagged V53p1_TAG --> SGE 5.3p1
 -------------------------------------------------------------

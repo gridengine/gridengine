@@ -282,11 +282,7 @@ sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
          case TYPE_BOO:  
          case TYPE_DOUBLE:  
          default:
-            if (!(dominant & DOMINANT_TYPE_VALUE)) {
-               printf("\t%s:%s=%s\n", dom, lGetString(rep, CE_name), s);
-            } else {
-               printf("\t%s:%s=<<<has_no_value>>>\n", "NA", lGetString(rep, CE_name));
-            }
+            printf("\t%s:%s=%s\n", dom, lGetString(rep, CE_name), s);
             break;
          }
       }

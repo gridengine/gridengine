@@ -1,3 +1,8 @@
+EB-2003-07-21-0: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
+                            hard resource request caused core of qmaster
+                 Changed:   all
+                 Review:    AH
+
 EB-2003-07-18-0: Enhancem.: Added support for memory and time values
                             in configuration sublists of CQs
                  Changed:   sge_qmaster, qconf

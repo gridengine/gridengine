@@ -1256,23 +1256,13 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
 
          monitor_dominance(dom_str, dom_val);
 
-         if (dom_val & DOMINANT_TYPE_VALUE) {
-            sprintf(buffer, "\talarm %s:%s=%s %s-threshold=%s\n",
-                    "NA",
-                    name, 
-                    "<<<has_no_value>>>",
-                    threshold_type,
-                    limit_value
-                   );
-         } else {
-            sprintf(buffer, "\talarm %s:%s=%s %s-threshold=%s\n",
-                    dom_str,
-                    name, 
-                    load_value,
-                    threshold_type,
-                    limit_value
-                   );
-         }
+         sprintf(buffer, "\talarm %s:%s=%s %s-threshold=%s\n",
+                 dom_str,
+                 name, 
+                 load_value,
+                 threshold_type,
+                 limit_value
+                );
 
          strncat(reason, buffer, reason_size);
       }

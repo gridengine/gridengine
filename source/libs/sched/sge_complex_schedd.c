@@ -74,6 +74,8 @@ static int load_values(lList *new_complex, const char *hostname,
                        lList *lv_list, u_long32 layer, 
                        int recompute_debitation_dependent, double lc_factor);
 
+static bool centry_list_trash_elem_with_no_value(lList *this_list);
+
 static int max_resources = QS_STATE_FULL;
 static int global_load_correction = 0;
 
@@ -396,6 +398,32 @@ struct queue2cmplx {
    int relop;
 };
 
+static bool centry_list_trash_elem_with_no_value(lList *this_list) 
+{
+   DENTER(TOP_LAYER, "centry_list_trash_elem_with_no_value");
+  
+   if (this_list != NULL) { 
+      lListElem *centry, *next_centry;
+
+      next_centry = lFirst(this_list);
+      while ((centry = next_centry)) {
+         u_long32 dominant;
+
+         next_centry = lNext(centry);
+         if (!(lGetUlong(centry, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+            dominant = lGetUlong(centry, CE_pj_dominant);
+         } else {
+            dominant = lGetUlong(centry, CE_dominant);
+         } 
+         if (dominant & DOMINANT_TYPE_VALUE) {
+            lRemoveElem(this_list, centry);
+         }
+      }
+   }
+   DEXIT;
+   return true;
+}
+
 /* provide a list of attributes containing all global attributes */
 int global_complexes2scheduler(
 lList **new_centry_list,
@@ -408,10 +436,11 @@ int recompute_debitation_dependent
    fillComplexFromHost(new_centry_list, global_host, centry_list, 
                        DOMINANT_LAYER_GLOBAL, recompute_debitation_dependent);
 
+   centry_list_trash_elem_with_no_value(*new_centry_list);
+
    DEXIT;
    return 0;
 }
-
 
 
 /* provide a list of attributes containing all attributes for the given host */
@@ -438,6 +467,8 @@ int recompute_debitation_dependent
 
    fillComplexFromHost(new_centry_list, host, centry_list, 
                        DOMINANT_LAYER_HOST, recompute_debitation_dependent);
+
+   centry_list_trash_elem_with_no_value(*new_centry_list);
 
    DEXIT;
    return 0;
@@ -474,6 +505,8 @@ int recompute_debitation_dependent
 
    fillComplexFromQueue(new_centry_list, centry_list, queue, 
                         recompute_debitation_dependent);
+
+   centry_list_trash_elem_with_no_value(*new_centry_list);
 
    DEXIT;
    return 0;

@@ -253,7 +253,7 @@ void var_list_set_sharedlib_path(lList **varl)
 {
    char *sharedlib_path;
    char *sge_sharedlib_path;
-   const char *sge_root = sge_get_root_dir(0, NULL, 0);
+   const char *sge_root = sge_get_root_dir(0, NULL, 0, 1);
    const char *sharedlib_path_name = var_get_sharedlib_path_name();
    lListElem *sharedlib_elem = NULL;
 

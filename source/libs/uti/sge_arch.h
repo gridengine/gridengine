@@ -34,7 +34,7 @@
 
 const char *sge_get_arch(void);
 
-const char *sge_get_root_dir(int exit, char *buffer, size_t size);
+const char *sge_get_root_dir(int exit, char *buffer, size_t size, int do_error_log);
 
 const char *sge_get_default_cell(void); 
 

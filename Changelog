@@ -1,3 +1,8 @@
+CR-2003-06-25-0: Bugfix:    disabled infotext error output if SGE_ROOT is
+                            not set.
+                 Review:    AS
+                 Changed:   utilib (all binaries)
+
 CR-2003-06-18-1: Testsuite: modified drmaa test
                             - disabled test for GE versions < 6.0
 

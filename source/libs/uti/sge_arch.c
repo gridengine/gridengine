@@ -137,7 +137,10 @@ const char *sge_get_arch(void)
 *     sge_get_root_dir() -- SGE/SGEEE installation directory 
 *
 *  SYNOPSIS
-*     const char* sge_get_root_dir(int do_exit) 
+*     const char* sge_get_root_dir(int do_exit, 
+*                                  char *buffer, 
+*                                  size_t size,
+*                                  int do_error_log ) 
 *
 *  FUNCTION
 *     This function returns the installation directory of SGE/SGEEE.
@@ -146,16 +149,16 @@ const char *sge_get_arch(void)
 *     If the environment variable does not exist or is not set then
 *     this function will handle this as error and return NULL 
 *     (do_exit = 0). If 'do_exit' is 1 and an error occures, the 
-*     function will log an appropriate message and terminate the 
-*     calling application.
+*     function will terminate the  calling application.
 *
 *  INPUTS
 *     int do_exit - Terminate the application in case of an error
+*     char *buffer - buffer to be used for error message
+*     size_t size - size of buffer
+*     int do_error_log - enable/disable error logging
 *
 *  RESULT
 *     const char* - Root directory of the SGE/SGEEE installation
-*     char *buffer - buffer to be used for error message
-*     size_t size - size of buffer
 *
 *  NOTES
 *     For compatibility reason this function accepts following
@@ -171,7 +174,7 @@ const char *sge_get_arch(void)
 *     MT-NOTE: sge_get_arch() is MT safe
 *
 *******************************************************************************/
-const char *sge_get_root_dir(int do_exit, char *buffer, size_t size)
+const char *sge_get_root_dir(int do_exit, char *buffer, size_t size, int do_error_log)
 {
    char *sge_root, *codine_root, *grd_root;
    char *s;
@@ -241,22 +244,24 @@ const char *sge_get_root_dir(int do_exit, char *buffer, size_t size)
    return s;
 
 error:
-   switch(error_number) {
-      case 1:
-         CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
-         break;
-      case 2:
-         CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
-         break;
-      case 3:
-         CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
-         break;
-      case 4:
-         CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
-         break;
-      default:
-         CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
-         break;
+   if (do_error_log) {
+      switch(error_number) {
+         case 1:
+            CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
+            break;
+         case 2:
+            CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
+            break;
+         case 3:
+            CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
+            break;
+         case 4:
+            CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
+            break;
+         default:
+            CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
+            break;
+      }
    }
    if (buffer)
       strncpy(buffer, SGE_EVENT, size);
@@ -395,7 +400,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
 
    DENTER(TOP_LAYER, "sge_get_alias_path");
 
-   sge_root = sge_get_root_dir(1, NULL, 0);
+   sge_root = sge_get_root_dir(1, NULL, 0, 1);
    sge_cell = sge_get_default_cell();
 
    if (SGE_STAT(sge_root, &sbuf)) {

@@ -155,7 +155,7 @@ char *get_act_master_path( const char *sge_cell ) {
       
    DENTER(TOP_LAYER, "get_act_master_path");
    
-   sge_root = sge_get_root_dir(1, NULL, 0);
+   sge_root = sge_get_root_dir(1, NULL, 0, 1);
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
       SGE_EXIT(1);
@@ -187,7 +187,7 @@ char *get_product_mode_file_path( const char *sge_cell ) {
       
    DENTER(TOP_LAYER, "get_product_mode_file_path");
    
-   sge_root = sge_get_root_dir(1, NULL, 0); 
+   sge_root = sge_get_root_dir(1, NULL, 0, 1); 
    if (SGE_STAT(sge_root, &sbuf)) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_SGEROOTNOTFOUND_S , sge_root));
       SGE_EXIT(1);

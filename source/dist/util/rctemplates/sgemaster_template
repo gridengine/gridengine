@@ -318,10 +318,6 @@ CheckRunningQmaster()
       echo "sge_qmaster didn't start!"
       echo "Please check the messages file"
       echo
-   else
-      echo
-      echo "   ...sge_qmaster started!"
-      echo
    fi
 }
 

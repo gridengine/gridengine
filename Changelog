@@ -1,3 +1,6 @@
+MD-2004-04-21-2: Bugfix:    removed confusing text!
+                 Changed:   rc-template
+
 JG-2004-04-22-0: Enhancem.: distinst: Copy Berkeley DB backup/restore utilities
                             to utilbin.
                             Output diagnosis messages for Berkeley DB spooling

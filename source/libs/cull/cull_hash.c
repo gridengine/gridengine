@@ -302,31 +302,41 @@ void cull_hash_insert(const lListElem *ep, void *key, cull_htable ht, bool uniqu
    if (unique) {
       sge_htable_store(ht->ht, key, ep);
    } else {
-      non_unique_header *head = NULL;
-      non_unique_hash *nuh = NULL;
+      union {
+         non_unique_header *l;
+         void *p;
+      } head; 
+
+      union {
+         non_unique_hash *l;
+         void *p;
+      } nuh;
+
+      head.l = NULL;
+      nuh.l = NULL;
 
       /* do we already have a list of elements with this key? */
-      if(sge_htable_lookup(ht->ht, key, (const void **)&head) == True) {
+      if(sge_htable_lookup(ht->ht, key, (const void **) &head.p) == True) {
          /* We only have something to do if ep isn't already stored */
-         if (sge_htable_lookup(ht->nuht, &ep, (const void **)&nuh) == False) {
-            nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
-            nuh->data = ep;
-            nuh->prev = head->last;
-            nuh->next = NULL;
-            nuh->prev->next = nuh;
-            head->last = nuh;
-            sge_htable_store(ht->nuht, &ep, nuh);
+         if (sge_htable_lookup(ht->nuht, &ep, (const void **)&nuh.p) == False) {
+            nuh.p = (non_unique_hash *)malloc(sizeof(non_unique_hash));
+            nuh.l->data = ep;
+            nuh.l->prev = head.l->last;
+            nuh.l->next = NULL;
+            nuh.l->prev->next = nuh.p;
+            head.l->last = nuh.p;
+            sge_htable_store(ht->nuht, &ep, nuh.p);
          }
       } else { /* no list of non unique elements for this key, create new */
-         head = (non_unique_header *)malloc(sizeof(non_unique_header));
-         nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
-         head->first = nuh;
-         head->last = nuh;
-         nuh->prev = NULL;
-         nuh->next = NULL;
-         nuh->data = ep;
-         sge_htable_store(ht->ht, key, head);
-         sge_htable_store(ht->nuht, &ep, nuh);
+         head.p = (non_unique_header *)malloc(sizeof(non_unique_header));
+         nuh.p = (non_unique_hash *)malloc(sizeof(non_unique_hash));
+         head.l->first = nuh.p;
+         head.l->last = nuh.p;
+         nuh.l->prev = NULL;
+         nuh.l->next = NULL;
+         nuh.l->data = ep;
+         sge_htable_store(ht->ht, key, head.p);
+         sge_htable_store(ht->nuht, &ep, nuh.p);
       }
    }
 }
@@ -367,35 +377,45 @@ void cull_hash_remove(const lListElem *ep, const int pos)
       if(mt_is_unique(ep->descr[pos].mt)) {
         sge_htable_delete(ht->ht, key);
       } else {
-         non_unique_header *head = NULL;
-         non_unique_hash *nuh = NULL;
+         union {
+            non_unique_header *l;
+            void *p;
+         } head;
+         union {
+            non_unique_hash *l;
+            void *p;
+         } nuh;
+
+         head.l = NULL;
+         nuh.l = NULL;
+
          /* search element in key hashtable */
-         if(sge_htable_lookup(ht->ht, key, (const void **)&head) == True) {
+         if(sge_htable_lookup(ht->ht, key, (const void **)&head.p) == True) {
             /* search element in non unique access hashtable */
-            if (sge_htable_lookup(ht->nuht, &ep, (const void **)&nuh) == True) {
-               if (head->first == nuh) {
-                  head->first = nuh->next;
-                  if (head->last == nuh) {
-                     head->last = NULL;
+            if (sge_htable_lookup(ht->nuht, &ep, (const void **)&nuh.p) == True) {
+               if (head.l->first == nuh.p) {
+                  head.l->first = nuh.l->next;
+                  if (head.l->last == nuh.p) {
+                     head.l->last = NULL;
                   } else {
-                     head->first->prev = NULL;
+                     head.l->first->prev = NULL;
                   }
-               } else if (head->last == nuh) {
-                  head->last = nuh->prev;
-                  head->last->next = NULL;
+               } else if (head.l->last == nuh.p) {
+                  head.l->last = nuh.l->prev;
+                  head.l->last->next = NULL;
                } else {
-                  nuh->prev->next = nuh->next;
-                  nuh->next->prev = nuh->prev;
+                  nuh.l->prev->next = nuh.l->next;
+                  nuh.l->next->prev = nuh.l->prev;
                }
                
                sge_htable_delete(ht->nuht, &ep);
-               free(nuh); nuh = NULL; /* JG: TODO: use FREE */
+               free(nuh.p); nuh.p = NULL; /* JG: TODO: use FREE */
             } else {
              /* JG: TODO: error output */
             }
 
-            if (head->first == NULL && head->last == NULL) {
-               free(head); head = NULL;
+            if (head.l->first == NULL && head.l->last == NULL) {
+               free(head.p); head.p = NULL;
                sge_htable_delete(ht->ht, key);
             }
          }   
@@ -469,7 +489,11 @@ void cull_hash_elem(const lListElem *ep) {
 lListElem *cull_hash_first(cull_htable ht, const void *key, bool unique, 
                            const void **iterator)
 {
-   lListElem *ep = NULL;
+   union {
+      lListElem *l;
+      void *p;
+   } ep;
+   ep.l = NULL;
 
    if (iterator == NULL) {
       return NULL;
@@ -480,19 +504,24 @@ lListElem *cull_hash_first(cull_htable ht, const void *key, bool unique,
       return NULL;
    }
 
-   if(unique) {
+   if (unique) {
       *iterator = NULL;
-      if(sge_htable_lookup(ht->ht, key, (const void **)&ep) == True) {
-         return ep;
+      if (sge_htable_lookup(ht->ht, key, (const void **)&ep.p) == True) {
+         return ep.p;
       } else {
          return NULL;
       }
    } else {
-      non_unique_header *head;
-      if(sge_htable_lookup(ht->ht, key, (const void **)&head) == True) {
-         ep = (lListElem *)head->first->data;
-         *iterator = head->first;
-         return ep;
+      union {
+         non_unique_header *l;
+         void *p;
+      } head;
+      head.l = NULL;
+
+      if (sge_htable_lookup(ht->ht, key, (const void **)&head.p) == True) {
+         ep.p = (lListElem *)head.l->first->data;
+         *iterator = head.l->first;
+         return ep.p;
       } else {
          *iterator = NULL;
          return NULL;

@@ -1,3 +1,7 @@
+RD-2005-03-02-0: Cleanup:  compile with gcc-3.3
+                 Issue:    558
+                 Review:   SG
+
 SG-2005-03-02-0: Bugfix:   fixed build for lx24-amd
                  Review:   RD
 

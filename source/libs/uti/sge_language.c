@@ -666,10 +666,15 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
 #ifndef __SGE_COMPILE_WITH_GETTEXT__
    return msg_str;
 #else
-   sge_error_message_t* message_p = NULL;
+   union {
+      sge_error_message_t *l;
+      void *p;
+   } message_p;
    long key;
 
    DENTER(CULL_LAYER, "sge_gettext_");
+
+   message_p.l = NULL;
 
    if (msg_str == NULL) {
       DEXIT;
@@ -687,7 +692,7 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
                                                     hash_func_long, 
                                                     hash_compare_long);
       }
-      if (sge_htable_lookup(sge_message_hash_table, &key, (const void**)&message_p) == False) {
+      if (sge_htable_lookup(sge_message_hash_table, &key, (const void**)&message_p.p) == False) {
          /* add element */ 
          sge_error_message_t* new_mp = NULL;
          char* org_message = NULL;
@@ -721,17 +726,17 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
       } else {
          /* check element */
          DPRINTF(("using old hash entry for message id: %d\n",msg_id));
-         if (strcmp(msg_str,message_p->message) != 0) {
+         if (strcmp(msg_str,message_p.l->message) != 0) {
             DPRINTF(("duplicate message id error: returning gettext() message"));
             DPRINTF(("msg in : \"%s\"\n",msg_str));
-            DPRINTF(("msg out: \"%s\"\n",message_p->message));
+            DPRINTF(("msg out: \"%s\"\n",message_p.l->message));
             DEXIT;
             return sge_gettext__((char*)msg_str);
          } else {
-            message_p->counter = (message_p->counter) + 1;
-            DPRINTF(("message count: "U32CFormat"\n", u32c(message_p->counter)));
+            message_p.l->counter = (message_p.l->counter) + 1;
+            DPRINTF(("message count: "U32CFormat"\n", u32c(message_p.l->counter)));
             DEXIT;
-            return message_p->local_message;
+            return message_p.l->local_message;
          }
       } 
    }

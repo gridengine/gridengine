@@ -1724,7 +1724,7 @@ set MAKEOPT = "$MAKEOPT $PARALLEL"
 if ($CC == gcc) then
    expr `gcc -dumpversion` : 3.3 > /dev/null
    if ($status == 0) then
-      set CFLAGS = "$CFLAGS -Wno-sign-compare -Wno-strict-aliasing"
+      set CFLAGS = "$CFLAGS"
    endif
    expr `gcc -dumpversion` : 2.96 > /dev/null
    if ($status == 0) then

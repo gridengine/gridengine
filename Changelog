@@ -43,14 +43,14 @@ EB-2003-01-23-1  Bugfix:    execd does process tracking even if no job has to
                             be controlled.
                  IZ:        #416
                  Bugtraq:   #4776016
-                 Review:    has to be done
+                 Review:    JG 
                  Changed:   sge_execd
 
 EB-2003-01-23-0  Bugfix:    qacct -l selection broken and
                             qacct -nohist -l selection broken
                  IZ:        #455
                  Bugtraq:   #4802171
-                 Review:    has to be done
+                 Review:    JG 
                  Changed:   qacct
 
 AH-2003-01-23-0: Bugfix:    qtcsh can't be used as normal tcsh
@@ -70,7 +70,7 @@ SD-2003-01-22-0  Enhancem.  Added code to source/libs/cull/cull_list.c to
 EB-2003-01-22-1  Bugfix:    ":" in account string breaks accounting file
                  IZ:        #314
                  Bugtraq:   #4713013
-                 Review:    has to be done
+                 Review:    JG 
                  Changed:   sge_qmaster, submit.1
 
 JG-2003-01-22-1  Bugfix:    Empty sge_request file caused submission error.

@@ -290,7 +290,7 @@ static XtResource resources[] =
        XmNincrementLarge, XmCIncrementLarge,
        XmRLong, sizeof(long),
        XtOffsetOf(struct _XmpSpinboxRec, spinbox.increment_large),
-       XtRImmediate, int2xtp(0)
+       XtRImmediate, int2xtp(5)
     },
     {
        XmNitemCount, XmCItemCount,

@@ -1,3 +1,9 @@
+AA-2004-03-18-0  Bugfix:    - qmon spinbox on lx24-amd, lx22-alpha
+                            - cluster dialogue crash,
+                            - Modify button in User dialogue
+                 Issues:    816, 840, 747
+                 Changed:   qmon
+
 AS-2004-03-18-2  Bugfix:    Product name for qmon help file qmon_help.ad
 
 AS-2004-03-18-1  Enhancem.: added check for "localhost" resolving to
@@ -95,6 +101,7 @@ RH-2004-03-17-0: Bugfix:    improvements for bug 799
 
 AA-2004-03-16-0: Bugfix:    - default_duration sconf param added
                             - unused var compile warnings
+                 Issue:     839
                  Changed:   qmon
                  Review:    EB
 

@@ -2159,7 +2159,7 @@ tCClEntry *clen
    }
    if (clen->administrator_mail) {
       XtFree((char*)clen->administrator_mail);
-      clen->mailer = NULL;
+      clen->administrator_mail = NULL;
    }
    if (clen->prolog) {
       XtFree((char*)clen->prolog);

@@ -510,7 +510,7 @@ char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
 
 
 char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
-   int i,o;
+   int i;
    char* p1;
    char* p2;
 

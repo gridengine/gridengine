@@ -1,11 +1,13 @@
+JG-2004-05-10-0: Testsuite: Fixed test system_tests/qmaster/size.
+
 CR-2004-05-10-0: Bugfix:    commlib:
                                o cl_commlib_receive_message() will now trigger
-                                 communication estabilshment when connection list 
-                                 is empty. The application will not have to react
-                                 (sleep/trigger) this case when it acts as a service.
+                                 communication estabilshment when connection 
+                                 list is empty. The application will not have to
+                                 react (sleep/trigger) this case when it acts as
+                                 a service.
                                o fixed test_cl_endpoint_list application
                                o enhancements to test_virtual_xxx applications
-
 
 CR-2004-05-07-0: Bugfix:    commlib:
                                o forbid to create a service handle with 

@@ -40,7 +40,7 @@ global check_init_level_procedure
 
 set check_root_access_needs  "yes"
 set check_name         "qmaster-size"
-set check_category     "COMPATIBILITY SYSTEM L10N"
+set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_highest_level 400
 set check_description(0)    "check qmaster/schedd for memory leaks - functional test"
 set check_description(200)  "check qmaster/schedd for memory leaks - normal test"
@@ -77,7 +77,7 @@ global MONITOR_SIZE_FILENAME MONITOR_SIZE_INTERVAL MONITOR_SIZE_ERROR
 global NUM_ZOMBIES
 global time_start last_size next_report size_unit
 
-set MONITOR_SIZE_ERROR 0
+set MONITOR_SIZE_ERROR -1
 
 set time_start [clock seconds]
 set last_size(master) 0
@@ -671,16 +671,20 @@ proc stabilize {text delay interval commands} {
 #*******************************
 proc output_monitor_result {start_size end_size} {
    global MONITOR_SIZE_ERROR
+   global CHECK_OUTPUT
    global size_unit
 
    if { $start_size < $end_size } {
-      set_error $MONITOR_SIZE_ERROR "size of qmaster increased from $start_size $size_unit to $end_size $size_unit" 
+      set message "size of qmaster increased from $start_size $size_unit to $end_size $size_unit"
+      puts $CHECK_OUTPUT $message
+      set_error $MONITOR_SIZE_ERROR $message
    } else {
       if { $start_size == $end_size } {
-         set_error 0 "size of qmaster remained $end_size $size_unit"
+         set message "size of qmaster remained $end_size $size_unit"
       } else {
-         set_error 0 "size of qmaster reduced from $start_size $size_unit to $end_size $size_unit"
+         set message "size of qmaster reduced from $start_size $size_unit to $end_size $size_unit"
       }
+      set_error 0 $message
    }
 }
 
@@ -923,11 +927,10 @@ proc check_miniworm {} {
 
    set queue_list {}
    foreach i $CHECK_CORE_EXECD {
-      lappend queue_list $i.q
+      lappend queue_list [get_queue_instance all.q $i]
    }
    puts $CHECK_OUTPUT "disabling queues $queue_list"
-   exec "$CHECK_ACTUAL_TEST_PATH/sge_start.sh" "qmod" "-d" "$queue_list"
-   
+   disable_queue $queue_list
    puts $CHECK_OUTPUT "deleting miniworms"
    
    while {[get_job_count] > 0} {
@@ -935,7 +938,7 @@ proc check_miniworm {} {
       sleep 5
    }   
    puts $CHECK_OUTPUT "enabling queues $queue_list"
-   exec "$CHECK_ACTUAL_TEST_PATH/sge_start.sh" "qmod" "-e" "$queue_list"
+   enable_queue $queue_list
 
    monitor_size [get_job_count] "check_miniworm finished [expr [get_last_jobid] - $last_job] jobs"
 
@@ -1019,12 +1022,26 @@ proc get_last_jobid {} {
 #     ???/???
 #*******************************
 proc get_job_count {} {
-   global CHECK_ACTUAL_TEST_PATH
-   global qmaster_spool_dir
+   global ts_config
+   global CHECK_ARCH CHECK_OUTPUT
 
    set job_count 0
 
-   catch {set job_count [llength [glob -directory $qmaster_spool_dir/jobs "*/*/*"]]}
+   # JG: TODO: It would be much better to retrieve this information using
+   # an eventclient like qevent -ts
+
+   # get number of lines of qstat output
+   set result [catch {exec $ts_config(product_root)/bin/$CHECK_ARCH/qstat | wc -l} output]  
+
+   if { $result == 0 } {
+      # qstat output contains 2 header lines
+      if { $output > 0 } {
+         set job_count [expr $output - 2]
+      }
+   } else {
+      puts $CHECK_OUTPUT "qstat failed: $output"
+   }
+
    return $job_count
 }
 
@@ -1076,7 +1093,7 @@ proc check_flood {} {
 
    set queue_list {}
    foreach i $CHECK_CORE_EXECD {
-      lappend queue_list $i.q
+      lappend queue_list [get_queue_instance all.q $i]
    }
 
    foreach amount $amounts {
@@ -1088,7 +1105,7 @@ proc check_flood {} {
       set jobs_total [expr $num_hosts * $jobs_per_host * [llength $types]]
    
       puts $CHECK_OUTPUT "disabling queues $queue_list"
-      exec "$CHECK_ACTUAL_TEST_PATH/sge_start.sh" "qmod" "-d" "$queue_list"
+      disable_queue $queue_list
 
       monitor_size [get_job_count] "check_flood submitting $jobs_total"
 
@@ -1160,7 +1177,7 @@ proc check_flood {} {
       set size [monitor_size [get_job_count] "check_flood submitted $jobs_total"]
 
       puts $CHECK_OUTPUT "enabling queues $queue_list"
-      exec "$CHECK_ACTUAL_TEST_PATH/sge_start.sh" "qmod" "-e" "$queue_list"
+      enable_queue $queue_list
      
       puts $CHECK_OUTPUT "monitoring size until no jobs remain"
       set start_size [get_size master]

@@ -97,7 +97,7 @@ InstallGridEnginePortal()
    $ECHO
    $INFOTEXT "The following default installation information is available"
    $INFOTEXT "O'Reilly servlet:          %s" "$OREILLY_SERVLET"
-   $INFOTEXT "Grid Engine Portal root:   %s" "$SGP_ROOT"
+   $INFOTEXT "Grid Engine Portal root:   %s" "$GEP_ROOT"
    $INFOTEXT "Application home:          %s" "$APP_HOME"
    $INFOTEXT "S1PS install dir:          %s" "$IPS"
    $INFOTEXT "Grid Engine Portal domain: %s" "$IPS_DOMAIN"
@@ -204,7 +204,7 @@ InstallGridEnginePortal()
       $ECHO
       $INFOTEXT "You entered the following installation information"
       $INFOTEXT "O'Reilly servlet:          %s" "$OREILLY_SERVLET"
-      $INFOTEXT "Grid Engine Portal root:   %s" "$SGP_ROOT"
+      $INFOTEXT "Grid Engine Portal root:   %s" "$GEP_ROOT"
       $INFOTEXT "Application home:          %s" "$APP_HOME"
       $INFOTEXT "S1PS install dir:          %s" "$IPS"
       $INFOTEXT "Grid Engine Portal domain: %s" "$IPS_DOMAIN"
@@ -250,24 +250,24 @@ InstallServlet()
    IWS_SERVER_HOME=$IPS/SUNWam/servers
    export IWS_SERVER_HOME
    
-   # copy O'Reilly servlet to WEB-INF/lib, generate war file and deploy it under $SGP_ROOT/deploy under URI /gridportal
-   cp $OREILLY_SERVLET $SGP_ROOT/WEB-INF/lib
+   # copy O'Reilly servlet to WEB-INF/lib, generate war file and deploy it under $GEP_ROOT/deploy under URI /gridportal
+   cp $OREILLY_SERVLET $GEP_ROOT/WEB-INF/lib
 
    # prepare the deployment descriptor and display it
-   sed "s#SGP_ROOT#$SGP_ROOT#" $SGP_ROOT/WEB-INF/web.xml.template | \
+   sed "s#GEP_ROOT#$GEP_ROOT#" $GEP_ROOT/WEB-INF/web.xml.template | \
    sed "s#APP_HOME#$APP_HOME#" | \
    sed "s#SGE_ROOT#$SGE_ROOT#" | \
    sed "s#SGE_CELL#$SGE_CELL#" | \
    sed "s#COMMD_PORT#$COMMD_PORT#" | \
-   sed "s#VNC_ROOT#$VNC_ROOT#" > $SGP_ROOT/WEB-INF/web.xml
+   sed "s#VNC_ROOT#$VNC_ROOT#" > $GEP_ROOT/WEB-INF/web.xml
 
    # enter the Grid Engine and Xvnc info and change the deployment descriptor WEB-INF/web.xml
    $INFOTEXT -n -ask y n -def n "Do you want to edit the deployment descriptor (y/n) [n]>> "
    if [ $? = 0 ]; then
       if [ "$EDITOR" != "" ];then
-         $EDITOR $SGP_ROOT/WEB-INF/web.xml
+         $EDITOR $GEP_ROOT/WEB-INF/web.xml
       else
-         vi $SGP_ROOT/WEB-INF/web.xml
+         vi $GEP_ROOT/WEB-INF/web.xml
       fi
    fi
 
@@ -423,10 +423,10 @@ if [ "$ME" = "" ]; then
    exit 1
 fi
 
-SGP_ROOT=`pwd`
+GEP_ROOT=`pwd`
 
-if [ -f $SGP_ROOT/install.defaults ]; then
-   . $SGP_ROOT/install.defaults
+if [ -f $GEP_ROOT/install.defaults ]; then
+   . $GEP_ROOT/install.defaults
    INSTALL_DEFAULTS_PRESENT="true"
 fi   
 

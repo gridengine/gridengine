@@ -1,3 +1,10 @@
+AA-2003-08-22-0:  - SunTCP.java + AdminTCP.java -> GEPServlet.java
+                  - Makefile & install adjusted
+                  - renamings in the code
+                  - renaming of application files .suntcp* -> .gep*
+                  - renamings and additions in web.xml.template 
+                  - automatic adding of roles during install (!!!! not complete)
+
 AA-2002-12-17-0:  - documentation
                   - removal of obsolete files
 

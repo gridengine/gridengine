@@ -24,42 +24,42 @@
          <Properties merge="fuse" lock="false" propagate="true" advanced="false" name="_properties">
             <String name="title" value="Job List" advanced="false" merge="replace" lock="false" propagate="true"/>
             <String name="description" value="Grid Engine Job List" advanced="false" merge="replace" lock="false" propagate="true"/>
-            <String name="url" value="/gridportal/SunTCP?action=jobList" advanced="false" merge="replace" lock="false" propagate="true"/>
+            <String name="url" value="/gridportal/GEPServlet?action=jobList" advanced="false" merge="replace" lock="false" propagate="true"/>
          </Properties>
       </Channel>
       <Channel name="GEPProjectList" provider="URLScraperProvider" merge="replace" lock="false" advanced="false">
          <Properties merge="fuse" lock="false" propagate="true" advanced="false" name="_properties">
             <String name="title" value="Project List" advanced="false" merge="replace" lock="false" propagate="true"/>
             <String name="description" value="Project List" advanced="false" merge="replace" lock="false" propagate="true"/>
-            <String name="url" value="/gridportal/SunTCP?action=projectList" advanced="false" merge="replace" lock="false" propagate="true"/>
+            <String name="url" value="/gridportal/GEPServlet?action=projectList" advanced="false" merge="replace" lock="false" propagate="true"/>
          </Properties>
       </Channel>
       <Channel name="GEPApplicationList" provider="URLScraperProvider" merge="replace" lock="false" advanced="false">
          <Properties merge="fuse" lock="false" propagate="true" advanced="false" name="_properties">
             <String name="title" value="Application List" advanced="false" merge="replace" lock="false" propagate="true"/>
             <String name="description" value="Application List" advanced="false" merge="replace" lock="false" propagate="true"/>
-            <String name="url" value="/gridportal/SunTCP?action=applicationList" advanced="false" merge="replace" lock="false" propagate="true"/>
+            <String name="url" value="/gridportal/GEPServlet?action=applicationList" advanced="false" merge="replace" lock="false" propagate="true"/>
          </Properties>
       </Channel>
       <Channel name="GEPAdminApplicationList" provider="URLScraperProvider" merge="replace" lock="false" advanced="false">
          <Properties merge="fuse" lock="false" propagate="true" advanced="false" name="_properties">
             <String name="title" value="Admin Application List" advanced="false" merge="replace" lock="false" propagate="true"/>
             <String name="description" value="Admin Application List" advanced="false" merge="replace" lock="false" propagate="true"/>
-            <String name="url" value="/gridportal/AdminTCP?action=applicationList" advanced="false" merge="replace" lock="false" propagate="true"/>
+            <String name="url" value="/gridportal/GEPServlet?action=applicationAdminList" advanced="false" merge="replace" lock="false" propagate="true"/>
          </Properties>
       </Channel>
       <Channel name="GEPAdminJobAccounting" provider="URLScraperProvider" merge="replace" lock="false" advanced="false">
          <Properties merge="fuse" lock="false" propagate="true" advanced="false" name="_properties">
-            <String name="title" value="Job Accounting" advanced="false" merge="replace" lock="false" propagate="true"/>
-            <String name="description" value="Job Accounting" advanced="false" merge="replace" lock="false" propagate="true"/>
-            <String name="url" value="/gridportal/AdminTCP?action=jobList" advanced="false" merge="replace" lock="false" propagate="true"/>
+            <String name="title" value="Admin Job Accounting" advanced="false" merge="replace" lock="false" propagate="true"/>
+            <String name="description" value="Admin Job Accounting" advanced="false" merge="replace" lock="false" propagate="true"/>
+            <String name="url" value="/gridportal/GEPServlet?action=jobAdminList" advanced="false" merge="replace" lock="false" propagate="true"/>
          </Properties>
       </Channel>
       <Channel name="GEPDebug" provider="URLScraperProvider" merge="replace" lock="false" advanced="false">
          <Properties merge="fuse" lock="false" propagate="true" advanced="false" name="_properties">
             <String name="title" value="Debug" advanced="false" merge="replace" lock="false" propagate="true"/>
             <String name="description" value="Grid Portal Debug" advanced="false" merge="replace" lock="false" propagate="true"/>
-            <String name="url" value="/gridportal/SunTCP?action=debug" advanced="false" merge="replace" lock="false" propagate="true"/>
+            <String name="url" value="/gridportal/GEPServlet?action=debug" advanced="false" merge="replace" lock="false" propagate="true"/>
          </Properties>
       </Channel>
    </Channels>

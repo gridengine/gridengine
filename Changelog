@@ -1,3 +1,7 @@
+JG-2003-07-21-0: Testsuite: Added test functional/usage checking for issue 580.
+                            Cleanup of test functional/tight_integration.
+                 Review:    CR
+
 EB-2003-07-21-0: Enhancem.: Bugfix for Enhancem. EB-2003-07-09-0
                             hard resource request caused core of qmaster
                  Changed:   all

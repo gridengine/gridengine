@@ -1,0 +1,4 @@
+Issue 580:  *_RESERVED_USAGE gives wrong values for PE jobs
+
+Test:       functional/usage
+Function:   usage_tight, usage_loose1, usage_loose2

@@ -8273,6 +8273,107 @@ proc delete_operator {anOperator} {
    }
 }
 
+#                                                             max. column:     |
+#****** sge_procedures/submit_with_method() ******
+# 
+#  NAME
+#     submit_with_method
+#
+#  SYNOPSIS
+#     submit_with_method {submit_method options script args}
+#
+#  FUNCTION
+#     Submit a job using different submit methods, e.g. qsub, qrsh, qsh, 
+#     qrlogin (qrsh without command), qlogin
+#
+#     The job output is available via the sid returned.
+#
+#  INPUTS
+#     submit_method - method to use: "qsub" or "qrsh"
+#     options       - options to the submit command
+#     script        - script to start
+#     args          - arguments to the script
+#
+#  RESULT
+#     a session id from open_spawn_process, or an empty string ("") on error
+#
+#  NOTES
+#     Only qsub and qrsh are implemented.
+#
+#*******************************
+#
+proc submit_with_method {submit_method options script args} {
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_PRODUCT_ROOT 
+   global CHECK_PROTOCOL_DIR
+   global file_procedure_logfile_wait_sp_id
+  
+   # preprocessing args - it is treated as list for some reason - options not.
+   set job_args [lindex $args 0]
+   foreach arg [lrange $args 1 end] {
+      append job_args " $arg"
+   }
+   
+  
+   switch -exact $submit_method {
+      qsub {
+         puts $CHECK_OUTPUT "submitting job using qsub, reading from job output file"
+         # create job output file
+         set job_output_file "$CHECK_PROTOCOL_DIR/check.out"
+         catch {exec touch $job_output_file} output
+         # initialize tail to logfile
+         init_logfile_wait $CHECK_HOST $job_output_file
+         # submit job
+         submit_job "-o $job_output_file -j y $options $script $job_args" 1 30
+         # return global file handle
+         set sid $file_procedure_logfile_wait_sp_id
+      }
+
+      qrsh {
+         puts $CHECK_OUTPUT "submitting job using qrsh, reading from stdout/stderr"
+#         set command "-c \\\"$CHECK_PRODUCT_ROOT/bin/[resolve_arch $CHECK_HOST]/qrsh -noshell $options $script $job_args\\\""
+         set command "$CHECK_PRODUCT_ROOT/bin/[resolve_arch $CHECK_HOST]/qrsh"
+         set cmd_args "-noshell $options $script $job_args"
+#set command ls
+#set cmd_args "-la"
+         set sid [open_remote_spawn_process $CHECK_HOST $CHECK_USER "$command" "$cmd_args"]
+         set sp_id [lindex $sid 1]
+         set done 0
+         while {!$done} {
+            set timeout 60
+            expect {
+               -i $sp_id full_buffer {
+                  add_proc_error "submit_with_method" -1 "expect full_buffer error"
+                  set done 1
+               }
+               -i $sp_id timeout {
+                  add_proc_error "submit_with_method" -1 "timeout"
+                  set done 1
+               }
+               -i $sp_id eof {
+                  add_proc_error "submit_with_method" -1 "got eof"
+                  set done 1
+               }
+               -i $sp_id "_start_mark_*\n" {
+                  puts $CHECK_OUTPUT "remote command started"
+                  set done 1
+               }
+               -i $sp_id default {
+                  
+               }
+            }
+         }
+      }
+
+      default {
+         set sid ""
+         add_proc_error "submit_with_method" -1 "unknown submit method $submit_method"
+      }
+   }
+
+   puts $CHECK_OUTPUT "submitted job, sid = $sid"
+   return $sid
+}
+
 # main
 if { [info exists argc ] != 0 } {
    set TS_ROOT ""

@@ -140,47 +140,6 @@ proc tight_integration_cleanup  {} {
 }
 
 # -------- local test procedures: utilities --------------------------
-proc tight_integration_submit {cwd options script args} {
-   global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_PRODUCT_ROOT
-   global submit_command file_procedure_logfile_wait_sp_id
-  
-   # preprocessing args - it is treated as list for some reason - options not.
-   set job_args [lindex $args 0]
-   foreach arg [lrange $args 1 end] {
-      append job_args " $arg"
-   }
-   
-  
-   switch -exact $submit_command {
-      qsub {
-         puts $CHECK_OUTPUT "submitting job using qsub, reading from job output file"
-         # create job output file
-         set job_output_file "$cwd/check.out"
-         catch {exec touch $job_output_file} output
-         # initialize tail to logfile
-         init_logfile_wait $CHECK_HOST $job_output_file
-         # submit job
-         submit_job "-o $job_output_file -j y $options $script $job_args" 1 30 "" "" $cwd
-         # return global file handle
-         set sid $file_procedure_logfile_wait_sp_id
-      }
-
-      qrsh {
-         puts $CHECK_OUTPUT "submitting job using qrsh, reading from stdout/stderr"
-         set command "/bin/sh -c \\\"cd $cwd;$CHECK_PRODUCT_ROOT/bin/[resolve_arch $CHECK_HOST]/qrsh -noshell $options ./$script $job_args\\\""
-         set sid [uplevel 1 open_spawn_process "\"$command\""]
-      }
-
-      default {
-         set sid ""
-         add_proc_error tight_integration_submit -1 "unknown submit method $submit_command"
-      }
-   }
-
-   puts $CHECK_OUTPUT "submitted job, sid = $sid"
-   return $sid
-}
-
 proc tight_integration_monitor {id started_var finished_var jobid_var info_var {iz_578 0}} {
    global CHECK_OUTPUT CHECK_HOST
 
@@ -304,13 +263,38 @@ proc tight_integration_job_finished {job_state} {
    return $job_finished
 }
 
+proc tight_integration_wait_for_delete_state {jobid timeout} {
+   global CHECK_OUTPUT
+
+   set now [clock seconds]
+   set end [expr $now + $timeout]
+   while {$now < $end} {
+      set state [lindex [get_job_state $jobid 1] 0]
+      puts $CHECK_OUTPUT "job $jobid is in state $state"
+      if {[string compare $state "dr"] == 0} {
+         return 1
+      } else {
+         if {$state == -1} {
+            puts $CHECK_OUTPUT "expected to see job $jobid in dr state, but job vanished. OK!"
+            return 1
+         }
+      }
+      set now [clock seconds]
+      sleep 1
+   }
+
+   return 0
+}
+
 # -------- local test procedures: tests ------------------------------
 proc tight_integration_function {} {
-   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_HOST
+   global CHECK_OUTPUT CHECK_HOST
+   global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
+   global submit_command
    puts $CHECK_OUTPUT "tight_integration: functional test"
 
-   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" pe_job.sh "./sleep.sh 1 $TIGHT_INTEGRATION_FUNCTIONAL_DURATION"]
+   set id [submit_with_method $submit_command "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 $TIGHT_INTEGRATION_FUNCTIONAL_DURATION"]
 
    set started 0
    set finished 0
@@ -340,9 +324,10 @@ proc tight_integration_function {} {
 
 # check if tasks are killed when they hit a wallclock limit
 proc tight_integration_iz_575 {} {
-   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_HOST CHECK_USER 
-   global CHECK_CORE_EXECD
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER 
+   global CHECK_CORE_EXECD CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
+   global submit_command
    puts $CHECK_OUTPUT "tight_integration: iz 575 task wallclock limit"
 
    if {[resolve_version] < 3} {
@@ -372,7 +357,7 @@ proc tight_integration_iz_575 {} {
    }
 
    # submit job
-   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" pe_job.sh "./sleep.sh 1 3600"]
+   set id [submit_with_method $submit_command "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 3600"]
 
    set started 0
    set finished 0
@@ -389,13 +374,9 @@ proc tight_integration_iz_575 {} {
    # if startup was ok
    if {$job_finished == 0} {
       # job has to go into deleted state after rt limit - allow for 5s delay
-      if {[wait_for_job_state $jobid "dr" 35] == -1} {
-         if {[is_job_running $jobid tightf] == -1} {
-            puts $CHECK_OUTPUT "didn't see dr state, but job vanished - OK!"
-         } else {
-            add_proc_error "tight_integration_iz_575" -1 "slave tasks should have been killed due to runtime limit and set the job into dr state - issue 575 present"
-            delete_job $jobid
-         }
+      if {![tight_integration_wait_for_delete_state $jobid 35]} {
+         add_proc_error "tight_integration_iz_575" -1 "slave tasks should have been killed due to runtime limit and set the job into dr state - issue 575 present"
+         delete_job $jobid
       }
    }
 
@@ -414,11 +395,13 @@ proc tight_integration_iz_575 {} {
 
 # check NSLOTS, NHOSTS, NQUEUES for tasks
 proc tight_integration_iz_578 {} {
-   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_HOST
+   global CHECK_OUTPUT CHECK_HOST 
+   global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
+   global submit_command
    puts $CHECK_OUTPUT "tight_integration: Issue 578 NSLOTS NHOSTS NQUEUES"
 
-   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" pe_job.sh "./sleep.sh 1 $TIGHT_INTEGRATION_FUNCTIONAL_DURATION"]
+   set id [submit_with_method $submit_command "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 $TIGHT_INTEGRATION_FUNCTIONAL_DURATION"]
 
    set started 0
    set finished 0
@@ -440,11 +423,13 @@ proc tight_integration_iz_578 {} {
 
 # master task killed -> job has to be deleted
 proc tight_integration_master_killed {} {
-   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER
+   global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
+   global submit_command
    puts $CHECK_OUTPUT "tight_integration: master task killed - issue 579"
 
-   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" pe_job.sh "./sleep.sh 1 3600"]
+   set id [submit_with_method $submit_command "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 3600"]
 
    set started 0
    set finished 0
@@ -467,13 +452,9 @@ proc tight_integration_master_killed {} {
       puts $CHECK_OUTPUT "killing master task: pid $info(master,pid) on host $info(master,host)"
       start_remote_prog $info(master,host) $CHECK_USER kill "-9 $info(master,pid)"
 
-      if {[wait_for_job_state $jobid "dr" 60] == -1} {
-         if {[is_job_running $jobid tightf] == -1} {
-            puts $CHECK_OUTPUT "didn't see dr state, but job vanished - OK!"
-         } else {
-            add_proc_error "tight_integration_master_killed" -1 "failed master task does not cause the job to be deleted (issue 579 present)"
-            delete_job $jobid
-         }
+      if {![tight_integration_wait_for_delete_state $jobid 60]} {
+         add_proc_error "tight_integration_master_killed" -1 "failed master task does not cause the job to be deleted (issue 579 present)"
+         delete_job $jobid
       }
    }
 
@@ -486,11 +467,13 @@ proc tight_integration_master_killed {} {
 
 # slave task killed -> job has to be deleted
 proc tight_integration_slave_killed {} {
-   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_HOST CHECK_USER
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER
+   global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global TIGHT_INTEGRATION_FUNCTIONAL_SLOTS TIGHT_INTEGRATION_FUNCTIONAL_DURATION
+   global submit_command
    puts $CHECK_OUTPUT "tight_integration: slave task killed"
 
-   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" pe_job.sh "./sleep.sh 1 3600"]
+   set id [submit_with_method $submit_command "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $CHECK_HOST.q -cwd -N tightf" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 3600"]
 
    set started 0
    set finished 0
@@ -514,13 +497,9 @@ proc tight_integration_slave_killed {} {
       puts $CHECK_OUTPUT "killing slave task: process group $info(1,pid) on host $info(1,host)"
       start_remote_prog $info(1,host) $CHECK_USER kill "-9 -$info(1,pid)"
 
-      if {[wait_for_job_state $jobid "dr" 60] == -1} {
-         if {[is_job_running $jobid tightf] == -1} {
-            puts $CHECK_OUTPUT "didn't see dr state, but job vanished - OK!"
-         } else {
-            add_proc_error "tight_integration_slave_killed" -1 "failed slave task does not cause the job to be deleted"
-            delete_job $jobid
-         }
+      if {![tight_integration_wait_for_delete_state $jobid 60]} {
+         add_proc_error "tight_integration_slave_killed" -1 "failed slave task does not cause the job to be deleted"
+         delete_job $jobid
       }
    }
 
@@ -532,8 +511,10 @@ proc tight_integration_slave_killed {} {
 }
 
 proc tight_integration_massive {} {
-   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_CORE_EXECD CHECK_HOST
+   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_HOST
    global TIGHT_INTEGRATION_MASSIVE_SLOTS TIGHT_INTEGRATION_MASSIVE_DURATION
+   global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
+   global submit_command
    puts $CHECK_OUTPUT "tight_integration: massive parallel test"
 
    # check if test can run at all in this cluster
@@ -548,7 +529,7 @@ proc tight_integration_massive {} {
       return
    }
 
-   set id [tight_integration_submit $CHECK_ACTUAL_TEST_PATH "-pe tight $TIGHT_INTEGRATION_MASSIVE_SLOTS -masterq $CHECK_HOST.q -cwd -N tightm" pe_job.sh "./sleep.sh 1 $TIGHT_INTEGRATION_MASSIVE_DURATION"]
+   set id [submit_with_method $submit_command "-pe tight $TIGHT_INTEGRATION_MASSIVE_SLOTS -masterq $CHECK_HOST.q -cwd -N tightm" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 $TIGHT_INTEGRATION_MASSIVE_DURATION"]
 
    set started 0
    set finished 0

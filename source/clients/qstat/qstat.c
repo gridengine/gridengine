@@ -1316,6 +1316,7 @@ u_long32 *isXML
       }
 
       while (parse_flag(ppcmdline, "-xml", &alp, isXML)){
+         qstat_filter_add_xml_attributes();
          continue;
       }
       

@@ -1096,3 +1096,53 @@ const char *qname
    DEXIT;
    return 0;
 }
+
+/****** sgeobj/queue/queue_list_add_queue() ***********************************
+*  NAME
+*     queue_list_add_queue() -- add a new queue to the queue masterlist
+*
+*  SYNOPSIS
+*     bool queue_list_add_queue(lListElem *qep) 
+*
+*  FUNCTION
+*     Adds the queue to the queue masterlist. The queue is inserted 
+*     in the sort order of the queue (by queue name).
+*
+*  INPUTS
+*     lListElem *qep - the queue to insert
+*
+*  RESULT
+*     bool - true, if the queue could be inserted, else false
+*
+*  NOTES
+*     Appending the queue and quick sorting the queue list would 
+*     probably be much faster in systems with many queues.
+******************************************************************************/
+bool queue_list_add_queue(lListElem *queue)
+{
+   static lSortOrder *so = NULL;
+
+   DENTER(TOP_LAYER, "queue_list_add_queue");
+
+   if (queue == NULL) {
+      ERROR((SGE_EVENT, MSG_QUEUE_NULLPTR));
+      DEXIT;
+      return false;
+   }
+
+   /* create SortOrder: */
+   if(so == NULL) {
+      so = lParseSortOrderVarArg(QU_Type, "%I+", QU_qname);
+   };
+
+   /* insert Element: */
+   if(Master_Queue_List == NULL) {
+      Master_Queue_List = lCreateList("Master_Queue_List", QU_Type);
+   }
+
+   lInsertSorted(so, queue, Master_Queue_List);
+
+   DEXIT;
+   return true;
+}
+

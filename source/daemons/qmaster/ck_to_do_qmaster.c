@@ -56,6 +56,7 @@
 #include "sge_security.h"
 #include "sge_qinstance.h"
 #include "sge_centry.h"
+#include "sge_qinstance_state.h"
 
 extern lList *Master_Job_List;
 
@@ -155,8 +156,13 @@ u_long32 now
                      (int) qslots_used(qep) */
 
             /* states */
-            queue_get_state_string(str, lGetUlong(qep, QU_state));
-            fprintf(fp, "%s:", str);
+            {
+               dstring state_string_buffer = DSTRING_INIT;
+
+               qinstance_state_append_to_dstring(qep, &state_string_buffer);
+               fprintf(fp, "%s:", sge_dstring_get_string(&state_string_buffer));
+               sge_dstring_free(&state_string_buffer);
+            }
 
             /* queue consumables */
             log_consumables(fp, lGetList(qep, QU_consumable_actual_list), lGetList(qep, QU_consumable_config_list));

@@ -54,5 +54,7 @@ void queue_list_set_unknown_state_to(lList *queue_list,
                                      int send_events,
                                      int new_state);
 
+bool queue_list_add_queue(lListElem *queue);
+
 #endif /* __SGE_QUEUE_QMASTER_H */
 

@@ -128,11 +128,15 @@ static char *setEnvironment(const char *envFileName, char **wrapper)
             strcpy(command, line + 13);
          } else {  
             if(strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
-               if((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
-                  fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-                  return NULL;
+               if(*(line + 13) == 0) {
+                  fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
+               } else {
+                  if((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
+                     fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+                     return NULL;
+                  }
+                  strcpy(*wrapper, line + 13);
                }
-               strcpy(*wrapper, line + 13);
             } else {
                /* set variable */
                if((duplicate = (char *)malloc(strlen(line) + 1)) == NULL) {

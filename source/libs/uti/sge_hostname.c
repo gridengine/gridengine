@@ -128,7 +128,7 @@ int sge_get_qmaster_port(void) {
    if (int_port < 0 ) {
       ERROR((SGE_EVENT, MSG_UTI_CANT_GET_ENV_OR_PORT_SS, "SGE_QMASTER_PORT", "sge_qmaster"));
       if ( cached_port >= 0 ) {
-         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_qmaster", cached_port ));
+         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_qmaster", u32c(cached_port) ));
          int_port = cached_port; 
       } else {
          sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
@@ -198,7 +198,7 @@ int sge_get_execd_port(void) {
    if (int_port < 0 ) {
       ERROR((SGE_EVENT, MSG_UTI_CANT_GET_ENV_OR_PORT_SS, "SGE_EXECD_PORT" , "sge_execd"));
       if ( cached_port >= 0 ) {
-         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_execd", cached_port ));
+         WARNING((SGE_EVENT, MSG_UTI_USING_CACHED_PORT_SU, "sge_execd", u32c(cached_port) ));
          int_port = cached_port; 
       } else {
          sge_mutex_unlock("get_execd_port_mutex", SGE_FUNC, __LINE__, &get_execd_port_mutex);

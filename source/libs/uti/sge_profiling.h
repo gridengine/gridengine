@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include <time.h>
+#include <sys/time.h>
 #include <sys/times.h>
 
 

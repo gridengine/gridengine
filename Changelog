@@ -1,3 +1,6 @@
+MD-2004-10-11-0: Bugfix:    fixed broken build
+                 Changed:   sge_profiling
+
 MD-2004-10-08-1: Bugfix:    restoring a backup does not 
                             restore the job_scripts dir 
                  Review:    CR

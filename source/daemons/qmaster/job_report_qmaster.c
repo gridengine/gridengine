@@ -212,8 +212,9 @@ sge_pack_buffer *pb
          jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
       }
 
-      if (jep && jatep)
+      if (jep && jatep) {
          status = lGetUlong(jatep, JAT_status);
+      }
 
       queue_name = (s=lGetString(jr, JR_queue_name))?s:(char*)MSG_OBJ_UNKNOWNQ;
       if ((pe_task_id_str = lGetString(jr, JR_pe_task_id_str)) && jep && jatep)
@@ -228,24 +229,41 @@ sge_pack_buffer *pb
             switch (status) {
             case JTRANSFERING:
             case JRUNNING:   
-               if (!pe_task_id_str) {
+               if (pe_task_id_str == NULL) {
+                  /* 
+                   * If a ja_task was deleted while the execd was down, we'll
+                   * get a "job running" report when the execd starts up again.
+                   * The ja_task will be deleted by a timer triggered event
+                   * (TYPE_SIGNAL_RESEND_EVENT), but this can take up to one
+                   * minute - better send a kill signal immediately.
+                   */
+                  {
+                     u_long32 state = lGetUlong(jatep, JAT_state);
+
+                     if (ISSET(state, JDELETED)) {
+                        DPRINTF(("Received report from "u32"."u32
+                                 " which is already in \"deleted\" state. "
+                                 "==> send kill signal\n", jobid, jataskid));
+
+                        pack_job_kill(pb, jobid, jataskid);
+                     }
+                  }
+                    
                   /* store unscaled usage directly in job */
                   lXchgList(jr, JR_usage, lGetListRef(jatep, JAT_usage_list));
 
                   /* update jobs scaled usage list */
-
                   lSetList(jatep, JAT_scaled_usage_list, 
                       lCopyList("scaled", lGetList(jatep, JAT_usage_list)));
                   scale_usage(lGetList(hep, EH_usage_scaling_list), 
                               lGetList(jatep, JAT_previous_usage_list),
                               lGetList(jatep, JAT_scaled_usage_list));
                  
-                  if (status==JTRANSFERING) { /* got async ack for this job */ 
+                  if (status == JTRANSFERING) { /* got async ack for this job */
                      DPRINTF(("--- transfering job "u32" is running\n", jobid));
                      sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT); /* implicitly sending usage to schedd */
                      cancel_job_resend(jobid, jataskid);
-                  } 
-                  else {
+                  } else {
                      /* need to generate a job event for new usage 
                       * the timestamp should better come from report object
                       */

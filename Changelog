@@ -1,3 +1,11 @@
+JG-2004-04-13-0: Enhancem.: When an execd reports a job as running, but the job
+                            is in state deleted, send a kill signal for the job
+                            immediately, instead of waiting for the next 
+                            repeated signal delivery to occur.
+                 Issue:     866
+                 Changed:   sge_qmaster
+                 Review:    AH
+
 CR-2004-04-13-0: Bugfix:    execd logging every 3 minutes
                  Changed:   gdi
                  Issue:     915

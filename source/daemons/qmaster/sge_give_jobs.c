@@ -833,6 +833,7 @@ sge_commit_flags_t commit_flags
 
       lSetList(jatep, JAT_previous_usage_list, lCopyList("name", lGetList(jatep, JAT_scaled_usage_list)));
       lSetList(jatep, JAT_scaled_usage_list, NULL);
+      lSetList(jatep, JAT_reported_usage_list, NULL);
       {
          lListElem *ep;
          const char *s;

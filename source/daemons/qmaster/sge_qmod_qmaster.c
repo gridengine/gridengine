@@ -1115,7 +1115,7 @@ lListElem *jatep
       te_event_t ev = NULL;
 
       DPRINTF(("JOB "u32": %s signal %s (retry after "u32" seconds) host: %s\n", 
-            lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time, 
+            lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now, 
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, lGetUlong(jep, JB_job_number),
          lGetUlong(jatep, JAT_task_number), NULL);
@@ -1131,7 +1131,7 @@ lListElem *jatep
       te_event_t ev = NULL;
 
       DPRINTF(("QUEUE %s: %s signal %s (retry after "u32" seconds) host %s\n", 
-            lGetString(qep, QU_qname), sent?"sent":"queued", sge_sig2str(how), next_delivery_time,
+            lGetString(qep, QU_qname), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now,
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_qname));
       lSetUlong(qep, QU_pending_signal, how);

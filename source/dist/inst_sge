@@ -74,6 +74,7 @@ START_RPC_SERVICE=false
 ADD_TO_RC=false
 REMOVE_RC=false
 SET_FILE_PERMS=false
+MAKE_RC=false
 
 QMASTER="undef"
 EXECD="undef"
@@ -195,6 +196,10 @@ while [ $ARGC != 0 ]; do
      . ./util/install_modules/inst_berkeley.sh
      . ./util/install_modules/inst_update.sh
      #update from 5.3 to 6.0
+     ;;
+   -rccreate)
+     MAKE_RC=true
+     #Generate new rc scripts from settings file
      ;; 
    -noremote)
      NOREMOTE=true
@@ -520,10 +525,15 @@ if [ $SHADOW = "install" ]; then
       SGE_CELL=`Enter default`
       export SGE_CELL
  
-      if [ $HOST = "" ]; then
-         SHADOW_HOST=`$SGE_UTILBIN/gethostname -aname`
+      if [ $HOST != "" ]; then
+         $SGE_UTILBIN/gethostname -all | grep $HOST > /dev/null
+         if [ "$?" = 0 ]; then 
+            SHADOW_HOST=`$SGE_UTILBIN/gethostname -aname`
+         else
+            SHADOW_HOST=$HOST
+         fi
       else
-         SHADOW_HOST=$HOST
+         SHADOW_HOST=`$SGE_UTILBIN/gethostname -aname`
       fi
 
       #creating the local_conf now!
@@ -601,6 +611,49 @@ fi
 
 if [ $RESTORE = "true" ]; then
    RestoreConfig
+fi
+
+if [ $MAKE_RC = "true" ]; then
+
+   DATE=`date '+%Y-%m-%d_%H:%M:%S'`
+
+   $INFOTEXT -u "\nRC Startup Script Generation"   
+   $INFOTEXT -wait -n "\nThis option allows you to generate a new rc startup script" \
+                   "from\n the given information. Your old rc-scripts will be saved!" \
+                   "\n\n Hit <RETURN> to continue >> "
+   ProcessSGERoot
+
+   $INFOTEXT -n "\nPlease enter your SGE_CELL directory or use the default [default] >> "
+
+   SGE_CELL=`Enter default`
+   SGE_CELL_VAL=$SGE_CELL
+
+   export SGE_CELL
+   export SGE_CELL_VAL
+
+   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sgemaster ]; then
+      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/sgemaster $SGE_ROOT/$SGE_CELL/common/sgemaster_$DATE
+   fi
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sgeexecd ]; then
+      ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/sgeexecd $SGE_ROOT/$SGE_CELL/common/sgeexecd_$DATE
+   fi   
+
+   COMMONDIR=$SGE_CELL/common
+
+   . $SGE_ROOT/$SGE_CELL/common/settings.sh
+
+      CreateSGEStartUpScripts 0 true master
+      CreateSGEStartUpScripts 0 true execd
+
+   $INFOTEXT -n "\nYour new startup scripts are created. You will find them in:\n\n" \
+                "   %s\n\n" $SGE_ROOT/$COMMONDIR
+
+   $INFOTEXT -n "Please now copy the scripts, by hand to your system wide startup location\n" \
+                "on all sge_qmaster, sge_execd and sge_shdowd hosts!"
+
 fi
 
 exit 0

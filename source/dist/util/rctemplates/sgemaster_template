@@ -433,17 +433,27 @@ if [ "$startup" = true ]; then
       
    if [ $shadowd = true -a $shadow_host = true ]; then
       start_shadowd=false
-      pidfile=$qmaster_spool_dir/shadowd_$UQHOST.pid
+        UQpidfile=$qmaster_spool_dir/shadowd_$UQHOST.pid
+        pidfile=$qmaster_spool_dir/shadowd_$HOST.pid
+
       if [ -f $pidfile ]; then
          pid=`cat $pidfile`
          $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
          if [ "$?" = 0 ]; then
             echo "   found running sge_shadowd - not starting"
+            exit 1
          else
             start_shadowd=true
          fi
-      else
-        start_shadowd=true
+      elif [ -f $UQpidfile ]; then
+           pid=`cat $UQpidfile`
+           $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
+           if [ "$?" = 0 ]; then
+              echo "   found running sge_shadowd - not starting"
+              exit 1
+           else
+              start_shadowd=true
+           fi
       fi
 
       if [ $start_shadowd = true ]; then
@@ -455,7 +465,11 @@ else
    if [ $shadow_host = true ]; then
       # Send SIGTERM to shadowd
       echo "   Shutting down Grid Engine shadowd"
-      Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
+      if [ -f $qmaster_spool_dir/shadowd_$UQHOST.pid ]; then
+         Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$UQHOST.pid
+      elif [ -f $qmaster_spool_dir/shadowd_$HOST.pid ]; then
+         Shutdown sge_shadowd $qmaster_spool_dir/shadowd_$HOST.pid
+      fi
    fi
 
    if [ $qmaster = true ]; then

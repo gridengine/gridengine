@@ -1,3 +1,7 @@
+DT-2004-07-05-0: Bugfix:    o Fixed broken build on AIX
+                            o Fixed typos in JGrid
+                 Changed:   shepherd, JGrid
+
 JG-2004-07-01-0: Testsuite: Added check for qmaster spooling containing a 
                             testcase for issue 1122.
 

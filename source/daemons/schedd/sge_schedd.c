@@ -85,7 +85,6 @@
 int current_scheduler = 0; /* default scheduler */
 int new_global_config = 0;
 int start_on_master_host = 0;
-int sgeee_mode = 0;
 
 static void schedd_serf_record_func(u_long32 job_id, u_long32 ja_taskid, 
    const char *state, u_long32 start_time, u_long32 end_time, char level_char,
@@ -176,7 +175,6 @@ char *argv[]
 
    lInit(nmv);
 
-   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    parse_cmdline_schedd(argc, argv);
 
    /* daemonizes if qmaster is unreachable */

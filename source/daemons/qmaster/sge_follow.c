@@ -239,19 +239,17 @@ lList **topp  /* ticket orders ptr ptr */
 
       master_qep = NULL;
        
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         /* fill number of tickets into job */
-         lSetDouble(jatp, JAT_tix,                   lGetDouble(ep, OR_ticket));
-         lSetDouble(jatp, JAT_ntix,                  lGetDouble(ep, OR_ntix));
-         lSetDouble(jatp, JAT_prio,                  lGetDouble(ep, OR_prio));
+      /* fill number of tickets into job */
+      lSetDouble(jatp, JAT_tix,                   lGetDouble(ep, OR_ticket));
+      lSetDouble(jatp, JAT_ntix,                  lGetDouble(ep, OR_ntix));
+      lSetDouble(jatp, JAT_prio,                  lGetDouble(ep, OR_prio));
 
-         sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, u32c((u_long32)lGetDouble(ep, OR_ticket)));
+      sprintf(opt_sge, MSG_ORD_INITIALTICKETS_U, u32c((u_long32)lGetDouble(ep, OR_ticket)));
 
-         if ((oep = lFirst(lGetList(ep, OR_queuelist)))) {
-            lSetDouble(jatp, JAT_oticket, lGetDouble(oep, OQ_oticket));
-            lSetDouble(jatp, JAT_fticket, lGetDouble(oep, OQ_fticket));
-            lSetDouble(jatp, JAT_sticket, lGetDouble(oep, OQ_sticket));
-         }
+      if ((oep = lFirst(lGetList(ep, OR_queuelist)))) {
+         lSetDouble(jatp, JAT_oticket, lGetDouble(oep, OQ_oticket));
+         lSetDouble(jatp, JAT_fticket, lGetDouble(oep, OQ_fticket));
+         lSetDouble(jatp, JAT_sticket, lGetDouble(oep, OQ_sticket));
       }
 
       for_each(oep, lGetList(ep, OR_queuelist)) {
@@ -275,9 +273,8 @@ lList **topp  /* ticket orders ptr ptr */
 
          DPRINTF(("%sORDER #%d: start %d slots of job \"%d\" on"
                   " queue \"%s\" v%d%s\n", 
-            force ? "FORCE ": "", seq_no, q_slots, job_number, q_name, 
-               (int)q_version, 
-               (feature_is_enabled(FEATURE_SGEEE) ? opt_sge : "") ));
+               force ? "FORCE ": "", seq_no, q_slots, job_number, q_name, 
+               (int)q_version, (opt_sge ) ));
 
          qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), q_name);
          if (!qep) {
@@ -418,12 +415,10 @@ lList **topp  /* ticket orders ptr ptr */
           */
          if (pe && lGetBool(pe, PE_control_slaves)) {
       
-            if (feature_is_enabled(FEATURE_SGEEE)) {
-               lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
-               lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
-               lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
-               lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
-            }
+            lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
+            lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
+            lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
+            lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
 
             if (sge_hostcmp(lGetHost(master_host, EH_name), lGetHost(hep, EH_name))) {
                lListElem *first_at_host;
@@ -501,7 +496,7 @@ lList **topp  /* ticket orders ptr ptr */
    case ORT_ptickets:
 
       DPRINTF(("ORDER ORT_ptickets\n"));
-      if (feature_is_enabled(FEATURE_SGEEE)) {
+      {
 
          lListElem *joker;
          int pos;
@@ -625,7 +620,7 @@ lList **topp  /* ticket orders ptr ptr */
    case ORT_tickets:
 
       DPRINTF(("ORDER ORT_tickets\n"));
-      if (feature_is_enabled(FEATURE_SGEEE)) {
+      {
 
          lList *oeql;
          lListElem *joker;
@@ -902,7 +897,7 @@ lList **topp  /* ticket orders ptr ptr */
    case ORT_update_project_usage:
    case ORT_update_user_usage:
       DPRINTF(("ORDER: ORT_update_project_usage/ORT_update_user_usage\n"));
-      if (feature_is_enabled(FEATURE_SGEEE)) {
+      {
          lListElem *up_order, *up, *ju, *up_ju, *next;
          int pos;
          const char *up_name;
@@ -1047,8 +1042,7 @@ lList **topp  /* ticket orders ptr ptr */
     * ----------------------------------------------------------------------- */
    case ORT_share_tree:
       DPRINTF(("ORDER: ORT_share_tree\n"));
-      if (feature_is_enabled(FEATURE_SGEEE) && 
-           !sge_init_node_fields(lFirst(Master_Sharetree_List)) &&
+      if ( !sge_init_node_fields(lFirst(Master_Sharetree_List)) &&
 	        update_sharetree(alpp, Master_Sharetree_List, lGetList(ep, OR_joker))) {
          /* alpp gets filled by update_sharetree */
          DPRINTF(("%sORDER #%d: ORT_share_tree\n", force?"FORCE ":"", seq_no));
@@ -1063,7 +1057,7 @@ lList **topp  /* ticket orders ptr ptr */
     * ----------------------------------------------------------------------- */
    case ORT_sched_conf:
       DPRINTF(("ORDER: ORT_sched_conf\n"));
-      if (feature_is_enabled(FEATURE_SGEEE)) {
+      {
          lListElem *joker;
          int pos;
 

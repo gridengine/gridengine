@@ -141,15 +141,13 @@ int flags
       ep_opt = sge_add_noarg(pcmdline, cwd_OPT, "-cwd", NULL);
    }
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      /*
-       * -P
-       */
-      if (sge_unparse_string_option(job, JB_project, "-P",
-               pcmdline, &answer) != 0) {
-         DEXIT;
-         return answer;
-      }
+   /*
+    * -P
+    */
+   if (sge_unparse_string_option(job, JB_project, "-P",
+            pcmdline, &answer) != 0) {
+      DEXIT;
+      return answer;
    }
 
    /*
@@ -225,12 +223,10 @@ int flags
    /*
    ** -js
    */
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      if ((ul = lGetUlong(job, JB_jobshare)) != 0)  {
-         sprintf(str, u32, ul);
-         ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, "-js", str);
-         lSetUlong(ep_opt, SPA_argval_lUlongT, ul);
-      }
+   if ((ul = lGetUlong(job, JB_jobshare)) != 0)  {
+      sprintf(str, u32, ul);
+      ep_opt = sge_add_arg(pcmdline, js_OPT, lUlongT, "-js", str);
+      lSetUlong(ep_opt, SPA_argval_lUlongT, ul);
    }
 
    /*

@@ -105,15 +105,12 @@ lListElem *jatep
    const char *hostname = MSG_OBJ_UNKNOWNHOST;
    u_long32 jobid, jataskid;
    lListElem *hep;
-   int enhanced_product_mode;
    u_long32 timestamp;
 
    u_long32 failed, general_failure;
 
    DENTER(TOP_LAYER, "sge_job_exit");
    
-   enhanced_product_mode = feature_is_enabled(FEATURE_SGEEE); 
-
    /* JG: TODO: we'd prefer some more precise timestamp, e.g. from jr */
    timestamp = sge_get_gmt();
                      
@@ -183,8 +180,7 @@ lListElem *jatep
       /* JG: TODO: we need more information in the log message */
       reporting_create_job_log(NULL, timestamp, JL_DELETED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_JREMOVED);
 
-      sge_commit_job(jep, jatep, jr, (enhanced_product_mode ? COMMIT_ST_FINISHED_FAILED_EE : COMMIT_ST_FINISHED_FAILED), COMMIT_DEFAULT |
-      COMMIT_NEVER_RAN);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
    } 
      /*
       * case 2: set job in error state
@@ -274,7 +270,7 @@ lListElem *jatep
 /*       job_log(jobid, jataskid, MSG_LOG_EXITED); */
       reporting_create_acct_record(NULL, jr, jep, jatep);
       reporting_create_job_log(NULL, timestamp, JL_FINISHED, MSG_EXECD, hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
-      sge_commit_job(jep, jatep, jr, (enhanced_product_mode ? COMMIT_ST_FINISHED_FAILED_EE : COMMIT_ST_FINISHED_FAILED), COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT);
    }
 
    if (queueep) {

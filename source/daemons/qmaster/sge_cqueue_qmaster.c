@@ -130,32 +130,27 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
    *is_ambiguous = false;
    index = 0;
    while (cqueue_attribute_array[index].cqueue_attr != NoName) {
-      /*
-       * Skip geee attributes in ge mode
-       */
-      if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
-          feature_is_enabled(FEATURE_SGEEE)) {
-         bool tmp_is_ambiguous = false;
-         bool tmp_has_changed_conf_attr = false;
-         bool tmp_has_changed_state_attr = false;
-         const char *matching_host_or_group = NULL;
-         const char *matching_group = NULL;
+      bool tmp_is_ambiguous = false;
+      bool tmp_has_changed_conf_attr = false;
+      bool tmp_has_changed_state_attr = false;
+      const char *matching_host_or_group = NULL;
+      const char *matching_group = NULL;
 
-         qinstance_modify_attribute(ret, answer_list, cqueue, 
-                          cqueue_attribute_array[index].qinstance_attr,
-                          cqueue_attribute_array[index].cqueue_attr, 
-                          cqueue_attribute_array[index].href_attr,
-                          cqueue_attribute_array[index].value_attr,
-                          cqueue_attribute_array[index].primary_key_attr,
-                          &matching_host_or_group,
-                          &matching_group,
-                          &tmp_is_ambiguous, 
-                          &tmp_has_changed_conf_attr,
-                          &tmp_has_changed_state_attr);
+      qinstance_modify_attribute(ret, answer_list, cqueue, 
+                       cqueue_attribute_array[index].qinstance_attr,
+                       cqueue_attribute_array[index].cqueue_attr, 
+                       cqueue_attribute_array[index].href_attr,
+                       cqueue_attribute_array[index].value_attr,
+                       cqueue_attribute_array[index].primary_key_attr,
+                       &matching_host_or_group,
+                       &matching_group,
+                       &tmp_is_ambiguous, 
+                       &tmp_has_changed_conf_attr,
+                       &tmp_has_changed_state_attr);
 
-         DPRINTF(("tmp_is_ambiguous == %d\n", tmp_is_ambiguous));
-         *is_ambiguous |= tmp_is_ambiguous;
-      }
+      DPRINTF(("tmp_is_ambiguous == %d\n", tmp_is_ambiguous));
+      *is_ambiguous |= tmp_is_ambiguous;
+
       index++;
    }
 
@@ -434,69 +429,64 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
             const char *matching_host_or_group = NULL;
             const char *matching_group = NULL;
 
+            int pos = lGetPosViaElem(reduced_elem,
+                                 cqueue_attribute_array[index].cqueue_attr);
+
+
             /*
-             * Skip geee attributes in ge mode
+             * We try to find changes only for attributes which were 
+             * sent by the client. Only for those attributes 'pos' will
+             * be >= 0.
+             *
+             * There are two situations which make it absolutely necessary
+             * to have a look on ALL attributes:
+             *
+             * 1) refresh_all_values == true
+             *    The hostlist of "cqueue" changed. As a result it
+             *    might be possible that a value for an attribute is
+             *    now ambiguous. 
+             * 
+             * 2) is_ambiguous == true
+             *    The qinstance is currently in the ambiguous state.
+             *    It is not enough to test only modified attributes if
+             *    they are nonambigous. It is also necesssary to check
+             *    if all attributes which are not changed now are
+             *    nonambigous to clear the ambigous-state from qinstance. 
              */
-            if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
-                feature_is_enabled(FEATURE_SGEEE)) {
-               int pos = lGetPosViaElem(reduced_elem,
-                                    cqueue_attribute_array[index].cqueue_attr);
+            if (pos >= 0 || refresh_all_values || is_ambiguous) {
+               bool tmp_is_ambiguous = false;
+               bool tmp_has_changed_conf_attr = false;
+               bool tmp_has_changed_state_attr = false;
 
+               ret &= qinstance_modify_attribute(qinstance,
+                          answer_list, cqueue,
+                          cqueue_attribute_array[index].qinstance_attr,
+                          cqueue_attribute_array[index].cqueue_attr,
+                          cqueue_attribute_array[index].href_attr,
+                          cqueue_attribute_array[index].value_attr,
+                          cqueue_attribute_array[index].primary_key_attr,
+                          &matching_host_or_group,
+                          &matching_group,
+                          &tmp_is_ambiguous,
+                          &tmp_has_changed_conf_attr,
+                          &tmp_has_changed_state_attr);
 
-               /*
-                * We try to find changes only for attributes which were 
-                * sent by the client. Only for those attributes 'pos' will
-                * be >= 0.
-                *
-                * There are two situations which make it absolutely necessary
-                * to have a look on ALL attributes:
-                *
-                * 1) refresh_all_values == true
-                *    The hostlist of "cqueue" changed. As a result it
-                *    might be possible that a value for an attribute is
-                *    now ambiguous. 
-                * 
-                * 2) is_ambiguous == true
-                *    The qinstance is currently in the ambiguous state.
-                *    It is not enough to test only modified attributes if
-                *    they are nonambigous. It is also necesssary to check
-                *    if all attributes which are not changed now are
-                *    nonambigous to clear the ambigous-state from qinstance. 
-                */
-               if (pos >= 0 || refresh_all_values || is_ambiguous) {
-                  bool tmp_is_ambiguous = false;
-                  bool tmp_has_changed_conf_attr = false;
-                  bool tmp_has_changed_state_attr = false;
-
-                  ret &= qinstance_modify_attribute(qinstance,
-                             answer_list, cqueue,
-                             cqueue_attribute_array[index].qinstance_attr,
-                             cqueue_attribute_array[index].cqueue_attr,
-                             cqueue_attribute_array[index].href_attr,
-                             cqueue_attribute_array[index].value_attr,
-                             cqueue_attribute_array[index].primary_key_attr,
-                             &matching_host_or_group,
-                             &matching_group,
-                             &tmp_is_ambiguous,
-                             &tmp_has_changed_conf_attr,
-                             &tmp_has_changed_state_attr);
-
-                  if (tmp_is_ambiguous) {
-                     /*
-                      * Add a message which explains the reason for
-                      * ambiguous state
-                      */   
-                     sprintf(SGE_EVENT, MSG_ATTR_HASAMBVAL_SSS, 
-                             cqueue_attribute_array[index].name,
-                             matching_host_or_group, matching_group);
-                     qinstance_message_add(qinstance, QI_AMBIGUOUS, SGE_EVENT);
-                  }
-
-                  will_be_ambiguous |= tmp_is_ambiguous;
-                  state_changed |= tmp_has_changed_state_attr;
-                  conf_changed |= tmp_has_changed_conf_attr;
+               if (tmp_is_ambiguous) {
+                  /*
+                   * Add a message which explains the reason for
+                   * ambiguous state
+                   */   
+                  sprintf(SGE_EVENT, MSG_ATTR_HASAMBVAL_SSS, 
+                          cqueue_attribute_array[index].name,
+                          matching_host_or_group, matching_group);
+                  qinstance_message_add(qinstance, QI_AMBIGUOUS, SGE_EVENT);
                }
+
+               will_be_ambiguous |= tmp_is_ambiguous;
+               state_changed |= tmp_has_changed_state_attr;
+               conf_changed |= tmp_has_changed_conf_attr;
             }
+            
             index++;
          }
 

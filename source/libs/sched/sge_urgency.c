@@ -317,11 +317,7 @@ int sge_job_slot_request(const lListElem *job, const lList *pe_list)
       return 1;
    }
 
-   /* assume max slot request in non SGEEE case */
-   if (!feature_is_enabled(FEATURE_SGEEE))
-      urgency_slot_setting = SGE_ATTRVAL_MAX;
-   else
-      urgency_slot_setting = lGetString(pep, PE_urgency_slots);
+   urgency_slot_setting = lGetString(pep, PE_urgency_slots);
 
    n = pe_urgency_slots(pep, urgency_slot_setting, range_list); 
 

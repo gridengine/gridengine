@@ -448,39 +448,35 @@ int sub_command
             sub_command, SGE_ATTR_XUSER_LISTS, SGE_OBJ_EXECHOST, 0);
       }
 
-      if (feature_is_enabled(FEATURE_SGEEE)) {
 
-         /* ---- EH_prj */
-         if (lGetPosViaElem(ep, EH_prj)>=0) {
-            DPRINTF(("got new EH_prj\n"));
-            /* check prj list */
-            if (verify_userprj_list(alpp, lGetList(ep, EH_prj),
-                     Master_Project_List, "projects",
-                     object->object_name, host)!=STATUS_OK)
-               goto ERROR;
-         attr_mod_sub_list(alpp, new_host, EH_prj, UP_name, ep,
-            sub_command, SGE_ATTR_PROJECTS, SGE_OBJ_EXECHOST, 0);    
-         }
-
-         /* ---- EH_xprj */
-         if (lGetPosViaElem(ep, EH_xprj)>=0) {
-            DPRINTF(("got new EH_xprj\n"));
-            /* check xprj list */
-            if (verify_userprj_list(alpp, lGetList(ep, EH_xprj), 
-                     Master_Project_List, "xprojects",
-                     object->object_name, host)!=STATUS_OK)
-               goto ERROR;
-         attr_mod_sub_list(alpp, new_host, EH_xprj, UP_name, ep,
-            sub_command, SGE_ATTR_XPROJECTS, SGE_OBJ_EXECHOST, 0);   
-         }
+      /* ---- EH_prj */
+      if (lGetPosViaElem(ep, EH_prj)>=0) {
+         DPRINTF(("got new EH_prj\n"));
+         /* check prj list */
+         if (verify_userprj_list(alpp, lGetList(ep, EH_prj),
+                  Master_Project_List, "projects",
+                  object->object_name, host)!=STATUS_OK)
+            goto ERROR;
+      attr_mod_sub_list(alpp, new_host, EH_prj, UP_name, ep,
+         sub_command, SGE_ATTR_PROJECTS, SGE_OBJ_EXECHOST, 0);    
       }
 
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         /* ---- EH_usage_scaling_list */
-         if (lGetPosViaElem(ep, EH_usage_scaling_list)>=0) {
-            attr_mod_sub_list(alpp, new_host, EH_usage_scaling_list, HS_name, ep,
-            sub_command, SGE_ATTR_USAGE_SCALING, SGE_OBJ_EXECHOST, 0); 
-         }
+      /* ---- EH_xprj */
+      if (lGetPosViaElem(ep, EH_xprj)>=0) {
+         DPRINTF(("got new EH_xprj\n"));
+         /* check xprj list */
+         if (verify_userprj_list(alpp, lGetList(ep, EH_xprj), 
+                  Master_Project_List, "xprojects",
+                  object->object_name, host)!=STATUS_OK)
+            goto ERROR;
+      attr_mod_sub_list(alpp, new_host, EH_xprj, UP_name, ep,
+         sub_command, SGE_ATTR_XPROJECTS, SGE_OBJ_EXECHOST, 0);   
+      }
+
+      /* ---- EH_usage_scaling_list */
+      if (lGetPosViaElem(ep, EH_usage_scaling_list)>=0) {
+         attr_mod_sub_list(alpp, new_host, EH_usage_scaling_list, HS_name, ep,
+         sub_command, SGE_ATTR_USAGE_SCALING, SGE_OBJ_EXECHOST, 0); 
       }
 
       if (lGetPosViaElem(ep, EH_report_variables)>=0) {

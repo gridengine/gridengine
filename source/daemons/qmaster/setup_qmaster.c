@@ -869,13 +869,13 @@ static int setup_qmaster(void)
    time_end = time(0);
    answer_list_output(&answer_list);
 
-{
-   u_long32 saved_logginglevel = log_state_get_log_level();
-   log_state_set_log_level(LOG_INFO);
-   INFO((SGE_EVENT, "read job database with %d entries in %ld seconds\n", 
-         lGetNumberOfElem(Master_Job_List), time_end - time_start));
-   log_state_set_log_level(saved_logginglevel);
-}
+   {
+      u_long32 saved_logginglevel = log_state_get_log_level();
+      log_state_set_log_level(LOG_INFO);
+      INFO((SGE_EVENT, "read job database with %d entries in %ld seconds\n", 
+            lGetNumberOfElem(Master_Job_List), time_end - time_start));
+      log_state_set_log_level(saved_logginglevel);
+   }
 
    for_each(jep, Master_Job_List) {
       DPRINTF(("JOB "u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 
@@ -960,58 +960,54 @@ static int setup_qmaster(void)
        *  configuration, we have to update the master configuration.
        */   
        
-    {
-      lListElem *conf = NULL; 
-      lList *ep_list = NULL;
-      lListElem *ep = NULL; 
-      int reprioritize = (sconf_get_reprioritize_interval() != 0); 
-      char value[20];
-      conf = lGetElemHost(Master_Config_List, CONF_hname, "global");
-      ep_list = lGetList(conf, CONF_entries);
+      {
+         lListElem *conf = NULL; 
+         lList *ep_list = NULL;
+         lListElem *ep = NULL; 
+         int reprioritize = (sconf_get_reprioritize_interval() != 0); 
+         char value[20];
+         conf = lGetElemHost(Master_Config_List, CONF_hname, "global");
+         ep_list = lGetList(conf, CONF_entries);
 
-      ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
-      if (!ep){
-         ep = lCreateElem(CF_Type);
-         lSetString(ep, CF_name, REPRIORITIZE);
-         lAppendElem(ep_list, ep);           
+         ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
+         if (!ep){
+            ep = lCreateElem(CF_Type);
+            lSetString(ep, CF_name, REPRIORITIZE);
+            lAppendElem(ep_list, ep);           
+         }
+         
+         sprintf(value, "%d", reprioritize);
+         lSetString(ep, CF_value, value);
+         lSetUlong(ep, CF_local, 0);    
       }
       
-      sprintf(value, "%d", reprioritize);
-      lSetString(ep, CF_value, value);
-      lSetUlong(ep, CF_local, 0);    
    }
-      
-   }
-   if (feature_is_enabled(FEATURE_SGEEE)) {
 
-      /* SGEEE: read user list */
-      spool_read_list(&answer_list, spooling_context, &Master_User_List, SGE_TYPE_USER);
-      answer_list_output(&answer_list);
+   /* SGEEE: read user list */
+   spool_read_list(&answer_list, spooling_context, &Master_User_List, SGE_TYPE_USER);
+   answer_list_output(&answer_list);
 
-      remove_invalid_job_references(1);
+   remove_invalid_job_references(1);
 
-      /* SGE: read project list */
-      spool_read_list(&answer_list, spooling_context, &Master_Project_List, SGE_TYPE_PROJECT);
-      answer_list_output(&answer_list);
+   /* SGE: read project list */
+   spool_read_list(&answer_list, spooling_context, &Master_Project_List, SGE_TYPE_PROJECT);
+   answer_list_output(&answer_list);
 
-      remove_invalid_job_references(0);
+   remove_invalid_job_references(0);
+   
+   /* SGEEE: read share tree */
+   spool_read_list(&answer_list, spooling_context, &Master_Sharetree_List, SGE_TYPE_SHARETREE);
+   answer_list_output(&answer_list);
+   ep = lFirst(Master_Sharetree_List);
+   if (ep) {
+      lList *alp = NULL;
+      lList *found = NULL;
+      ret = check_sharetree(&alp, ep, Master_User_List, Master_Project_List, 
+            NULL, &found);
+      found = lFreeList(found);
+      alp = lFreeList(alp); 
    }
    
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      /* SGEEE: read share tree */
-      spool_read_list(&answer_list, spooling_context, &Master_Sharetree_List, SGE_TYPE_SHARETREE);
-      answer_list_output(&answer_list);
-      ep = lFirst(Master_Sharetree_List);
-      if (ep) {
-         lList *alp = NULL;
-         lList *found = NULL;
-         ret = check_sharetree(&alp, ep, Master_User_List, Master_Project_List, 
-               NULL, &found);
-         found = lFreeList(found);
-         alp = lFreeList(alp); 
-      }
-   }
-
    /* RU: */
    /* initiate timer for all hosts because they start in 'unknown' state */ 
    if (Master_Exechost_List) {

@@ -889,98 +889,96 @@ cqueue_verify_attributes(lListElem *cqueue, lList **answer_list,
       int index = 0;
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
-         if (!cqueue_attribute_array[index].is_sgeee_attribute ||
-             feature_is_enabled(FEATURE_SGEEE)) {
-            int pos = lGetPosViaElem(reduced_elem,
-                                     cqueue_attribute_array[index].cqueue_attr);
+         int pos = lGetPosViaElem(reduced_elem,
+                                  cqueue_attribute_array[index].cqueue_attr);
 
-            if (pos >= 0) {
-               lList *list = NULL;
+         if (pos >= 0) {
+            lList *list = NULL;
 
-               list = lGetList(cqueue,
-                               cqueue_attribute_array[index].cqueue_attr);
+            list = lGetList(cqueue,
+                            cqueue_attribute_array[index].cqueue_attr);
 
-               /*
-                * Configurations without default setting are rejected
-                */
-               if (ret) {
-                  lListElem *elem = lGetElemHost(list, 
-                      cqueue_attribute_array[index].href_attr, HOSTREF_DEFAULT);
+            /*
+             * Configurations without default setting are rejected
+             */
+            if (ret) {
+               lListElem *elem = lGetElemHost(list, 
+                   cqueue_attribute_array[index].href_attr, HOSTREF_DEFAULT);
 
-                  if (elem == NULL) {
+               if (elem == NULL) {
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
+                                 MSG_CQUEUE_NODEFVALUE_S, 
+                                 cqueue_attribute_array[index].name));
+                  answer_list_add(answer_list, SGE_EVENT,
+                                  STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+                  ret = false;
+               } 
+            }
+
+            /*
+             * Reject multiple settings for one domain/host
+             * and resolve all hostnames
+             */
+            if (ret) {
+               lListElem *elem = NULL;
+
+               for_each(elem, list) {
+                  const char *hostname = NULL;
+                  const void *iterator = NULL;
+                  lListElem *first_elem = NULL;
+
+                  hostname = lGetHost(elem, 
+                        cqueue_attribute_array[index].href_attr);
+                  first_elem = lGetElemHostFirst(list,
+                        cqueue_attribute_array[index].href_attr,
+                        hostname, &iterator);
+
+                  if (elem != first_elem) {
                      SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
-                                    MSG_CQUEUE_NODEFVALUE_S, 
-                                    cqueue_attribute_array[index].name));
+                                   MSG_CQUEUE_MULVALNOTALLOWED_S, hostname));
                      answer_list_add(answer_list, SGE_EVENT,
                                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                      ret = false;
-                  } 
-               }
-
-               /*
-                * Reject multiple settings for one domain/host
-                * and resolve all hostnames
-                */
-               if (ret) {
-                  lListElem *elem = NULL;
-
-                  for_each(elem, list) {
-                     const char *hostname = NULL;
-                     const void *iterator = NULL;
-                     lListElem *first_elem = NULL;
-
-                     hostname = lGetHost(elem, 
-                           cqueue_attribute_array[index].href_attr);
-                     first_elem = lGetElemHostFirst(list,
-                           cqueue_attribute_array[index].href_attr,
-                           hostname, &iterator);
-
-                     if (elem != first_elem) {
-                        SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
-                                      MSG_CQUEUE_MULVALNOTALLOWED_S, hostname));
+                     break;
+                  }
+                  if (!sge_is_hgroup_ref(hostname)) {
+                     char resolved_name[MAXHOSTLEN+1];
+                     int back = getuniquehostname(hostname, resolved_name, 0);
+#ifdef ENABLE_NGC
+                     if (back == CL_RETVAL_OK)
+#else
+                     if (back == 0)
+#endif
+                     {
+                        lSetHost(elem, 
+                                 cqueue_attribute_array[index].href_attr, 
+                                 resolved_name);
+                     } else {
+                        ERROR((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, hostname));
                         answer_list_add(answer_list, SGE_EVENT,
-                                        STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+                                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                         ret = false;
                         break;
                      }
-                     if (!sge_is_hgroup_ref(hostname)) {
-                        char resolved_name[MAXHOSTLEN+1];
-                        int back = getuniquehostname(hostname, resolved_name, 0);
-#ifdef ENABLE_NGC
-                        if (back == CL_RETVAL_OK)
-#else
-                        if (back == 0)
-#endif
-                        {
-                           lSetHost(elem, 
-                                    cqueue_attribute_array[index].href_attr, 
-                                    resolved_name);
-                        } else {
-                           ERROR((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, hostname));
-                           answer_list_add(answer_list, SGE_EVENT,
-                                         STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                           ret = false;
-                           break;
-                        }
-                     }
-                  }
-               }
-         
-               /*
-                * Call native verify function if it is possible
-                */
-               if (ret && 
-                   cqueue_attribute_array[index].verify_function != NULL &&
-                   (cqueue_attribute_array[index].verify_client || in_master)) {
-                  lListElem *elem = NULL;
-
-                  for_each(elem, list) {
-                     ret &= cqueue_attribute_array[index].
-                                    verify_function(cqueue, answer_list, elem);
                   }
                }
             }
+      
+            /*
+             * Call native verify function if it is possible
+             */
+            if (ret && 
+                cqueue_attribute_array[index].verify_function != NULL &&
+                (cqueue_attribute_array[index].verify_client || in_master)) {
+               lListElem *elem = NULL;
+
+               for_each(elem, list) {
+                  ret &= cqueue_attribute_array[index].
+                                 verify_function(cqueue, answer_list, elem);
+               }
+            }
          }
+         
          index++;
       }
    }

@@ -240,9 +240,10 @@ sge_pack_buffer *pb
                  
                   if (status==JTRANSFERING) { /* got async ack for this job */ 
                      DPRINTF(("--- transfering job "u32" is running\n", jobid));
-                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT); /* implicitly sending usage to schedd in sgeee_mode */
+                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT); /* implicitly sending usage to schedd */
                      cancel_job_resend(jobid, jataskid);
-                  } else if (feature_is_enabled(FEATURE_SGEEE)) {
+                  } 
+                  else {
                      /* need to generate a job event for new usage 
                       * the timestamp should better come from report object
                       */

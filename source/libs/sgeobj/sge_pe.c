@@ -316,12 +316,11 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    }
 
    /* -------- PE_urgency_slots */
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      if ((ret=pe_validate_urgency_slots(alpp, lGetString(pep, PE_urgency_slots)))!=STATUS_OK) {
-         DEXIT;
-         return ret;
-      }
+   if ((ret=pe_validate_urgency_slots(alpp, lGetString(pep, PE_urgency_slots)))!=STATUS_OK) {
+      DEXIT;
+      return ret;
    }
+   
    DEXIT;
    return STATUS_OK;
 }

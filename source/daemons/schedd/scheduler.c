@@ -70,7 +70,6 @@
 #include "shutdown.h"
 #include "schedd_message.h"
 #include "sge_process_events.h"
-#include "sge_access_tree.h"
 #include "sge_category.h"
 #include "msg_schedd.h"
 #include "msg_common.h"
@@ -381,7 +380,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    u_long32 maxujobs;
    const lList *job_load_adjustments = NULL;
    double total_running_job_tickets=0; 
-   int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    int nreservation = 0;
 #if 0
    int dipatch_type = DISPATCH_TYPE_NONE;
@@ -543,7 +541,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
     * CALCULATE TICKETS FOR EACH JOB  - IN SUPPORT OF SGEEE
     *------------------------------------------------------------------*/
 
-   if (sgeee_mode) {
+   {
       int ret;
       PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
@@ -637,13 +635,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
     * DISPATCH JOBS TO QUEUES
     *---------------------------------------------------------------------*/
 
-   if (!sgeee_mode) {
-      /* 
-       * establish the access tree for all job arrays containing runnable tasks 
-       */
-      at_notice_runnable_job_arrays(*splitted_job_lists[SPLIT_PENDING]);
-   }
-
    /* we will assume this time as start time for now assignments */
    sconf_set_now(sge_get_gmt());
 
@@ -653,8 +644,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    /*
     * loop over the jobs that are left in priority order
     */
-   while ((orig_job=(sgeee_mode?lFirst(*(splitted_job_lists[SPLIT_PENDING]))
-          : at_get_actual_job_array(*(splitted_job_lists[SPLIT_PENDING])))) &&
+   while ( (orig_job = lFirst(*(splitted_job_lists[SPLIT_PENDING])) ) &&
          (job = lCopyElem(orig_job))) {
       int result = -1;
 
@@ -703,7 +693,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
          /* Don't need to look for a 'now' assignment if the last job 
             of this category got no 'now' assignement either */
-         if (sgeee_mode && sge_is_job_category_rejected(job))
+         if (sge_is_job_category_rejected(job))
             dont_start = true;
          else
             dont_start = false;
@@ -747,10 +737,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
           */
          orig_job = NULL;
 
-         /* notify access tree */
-         if (!sgeee_mode) 
-            at_dispatched_a_task(job, 1);
-      
          /* 
           * drop idle jobs that exceed maxujobs limit 
           * should be done after resort_job() 'cause job is referenced 
@@ -798,7 +784,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
        * list in case another job is higher priority (i.e. has more tickets)
        *------------------------------------------------------------------*/
 
-      if (sgeee_mode && dispatched_a_job) {
+      if (dispatched_a_job) {
          sgeee_resort_pending_jobs(splitted_job_lists[SPLIT_PENDING],
                                    *orderlist);
       }
@@ -811,7 +797,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM4);
 
-   if (sgeee_mode && do_profiling) {
+   if (do_profiling) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);
@@ -865,7 +851,6 @@ int *sort_hostlist,
 bool dont_start,  /* don't try to find a now assignment */
 bool dont_reserve /* don't try to find a reservation assignment */
 ) {
-   int sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    lListElem *granted_el;     
    int result = 1;
    const char *pe_name, *ckpt_name;
@@ -978,7 +963,7 @@ bool dont_reserve /* don't try to find a reservation assignment */
 
    if (result == 0) {
       /* in SGEEE we must account for job tickets on hosts due to parallel jobs */
-      if (sgeee_mode) {
+      {
          double job_tickets_per_slot;
          double job_ftickets_per_slot;
          double job_otickets_per_slot;

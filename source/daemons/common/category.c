@@ -53,7 +53,6 @@
 #include "unparse_job_cull.h"
 #include "sge_dstring.h"
 #include "parse_qsubL.h"
-#include "sge_access_tree.h"
 #include "parse.h"
 #include "category.h"
 #include "sge_job.h"
@@ -135,20 +134,11 @@ lList *acl_list
    }
       
    /*
-   ** job type
+   ** project
    */
-
-   /*
-   ** SGE only
-   */
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      /*
-      ** project
-      */
-      if (sge_unparse_string_option(job, JB_project, "-P", 
-               &cmdl, NULL) != 0) {
-         goto ERROR;
-      }
+   if (sge_unparse_string_option(job, JB_project, "-P", 
+            &cmdl, NULL) != 0) {
+      goto ERROR;
    }
 
    /*

@@ -1837,11 +1837,9 @@ total_update(lListElem *event_client)
    total_update_event(event_client, sgeE_SUBMITHOST_LIST);
    total_update_event(event_client, sgeE_USERSET_LIST);
 
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      total_update_event(event_client, sgeE_NEW_SHARETREE);
-      total_update_event(event_client, sgeE_PROJECT_LIST);
-      total_update_event(event_client, sgeE_USER_LIST);
-   }
+   total_update_event(event_client, sgeE_NEW_SHARETREE);
+   total_update_event(event_client, sgeE_PROJECT_LIST);
+   total_update_event(event_client, sgeE_USER_LIST);
 
    total_update_event(event_client, sgeE_HGROUP_LIST);
 

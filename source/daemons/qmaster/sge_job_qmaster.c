@@ -460,104 +460,101 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
 
    /* check sge attributes */
-   if (feature_is_enabled(FEATURE_SGEEE)) {
 
-      /* if enforce_user flag is "auto" and user doesn't exist, add the user */
-      if (conf.enforce_user && !strcasecmp(conf.enforce_user, "auto") && 
-          !userprj_list_locate(Master_User_List, ruser)) {
-         int status = sge_add_auto_user(ruser, rhost, request, alpp);
-         if (status != STATUS_OK) {
-            DEXIT;
-            return status;
-         }
+   /* if enforce_user flag is "auto" and user doesn't exist, add the user */
+   if (conf.enforce_user && !strcasecmp(conf.enforce_user, "auto") && 
+       !userprj_list_locate(Master_User_List, ruser)) {
+      int status = sge_add_auto_user(ruser, rhost, request, alpp);
+      if (status != STATUS_OK) {
+         DEXIT;
+         return status;
       }
+   }
 
-      /* ensure user exists if enforce_user flag is set */
-      if (conf.enforce_user && !strcasecmp(conf.enforce_user, "true") && 
-               !userprj_list_locate(Master_User_List, ruser)) {
-         ERROR((SGE_EVENT, MSG_JOB_USRUNKNOWN_S, ruser));
+   /* ensure user exists if enforce_user flag is set */
+   if (conf.enforce_user && !strcasecmp(conf.enforce_user, "true") && 
+            !userprj_list_locate(Master_User_List, ruser)) {
+      ERROR((SGE_EVENT, MSG_JOB_USRUNKNOWN_S, ruser));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   } 
+
+   /* set default project */
+   if (!lGetString(jep, JB_project) && ruser && Master_User_List) {
+      lListElem *uep;
+      if ((uep = userprj_list_locate(Master_User_List, ruser)))
+         lSetString(jep, JB_project, lGetString(uep, UP_default_project));
+   }
+
+   /* project */
+   if ((project=lGetString(jep, JB_project))) {
+      lListElem *pep;
+      if (!(pep = userprj_list_locate(Master_Project_List, project))) {
+         ERROR((SGE_EVENT, MSG_JOB_PRJUNKNOWN_S, project));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
-      } 
-
-      /* set default project */
-      if (!lGetString(jep, JB_project) && ruser && Master_User_List) {
-         lListElem *uep;
-         if ((uep = userprj_list_locate(Master_User_List, ruser)))
-            lSetString(jep, JB_project, lGetString(uep, UP_default_project));
       }
 
-      /* project */
-      if ((project=lGetString(jep, JB_project))) {
-         lListElem *pep;
-         if (!(pep = userprj_list_locate(Master_Project_List, project))) {
-            ERROR((SGE_EVENT, MSG_JOB_PRJUNKNOWN_S, project));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-
-         /* ensure user belongs to this project */
-         if (!sge_has_access_(user, group, 
-               lGetList(pep, UP_acl), 
-               lGetList(pep, UP_xacl), Master_Userset_List)) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS,
-               project, user));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-
-         /* verify project can submit jobs */
-         if ((conf.xprojects &&
-              userprj_list_locate(conf.xprojects, project)) ||
-             (conf.projects &&
-              !userprj_list_locate(conf.projects, project))) {
-            ERROR((SGE_EVENT, MSG_JOB_PRJNOSUBMITPERMS_S, project));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-
-      } else {
-
-         if (lGetNumberOfElem(conf.projects)>0) {
-            ERROR((SGE_EVENT, MSG_JOB_PRJREQUIRED)); 
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-
-         if (conf.enforce_project && !strcasecmp(conf.enforce_project, "true")) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_NO_PROJECT));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
-      }
-   }
-
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      /* try to dispatch a department to the job */
-      if (set_department(alpp, jep, Master_Userset_List)!=1) {
-         /* alpp gets filled by set_department */
+      /* ensure user belongs to this project */
+      if (!sge_has_access_(user, group, 
+            lGetList(pep, UP_acl), 
+            lGetList(pep, UP_xacl), Master_Userset_List)) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS,
+            project, user));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
       }
 
-      /* 
-         If it is a deadline job the user has to be a deadline user
-      */
-      if (lGetUlong(jep, JB_deadline)) {
-         if (!userset_is_deadline_user(Master_Userset_List, ruser)) {
-            ERROR((SGE_EVENT, MSG_JOB_NODEADLINEUSER_S, ruser));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EUNKNOWN;
-         }
+      /* verify project can submit jobs */
+      if ((conf.xprojects &&
+           userprj_list_locate(conf.xprojects, project)) ||
+          (conf.projects &&
+           !userprj_list_locate(conf.projects, project))) {
+         ERROR((SGE_EVENT, MSG_JOB_PRJNOSUBMITPERMS_S, project));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
+   } else {
+
+      if (lGetNumberOfElem(conf.projects)>0) {
+         ERROR((SGE_EVENT, MSG_JOB_PRJREQUIRED)); 
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+
+      if (conf.enforce_project && !strcasecmp(conf.enforce_project, "true")) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_NO_PROJECT));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
       }
    }
+
+   /* try to dispatch a department to the job */
+   if (set_department(alpp, jep, Master_Userset_List)!=1) {
+      /* alpp gets filled by set_department */
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   }
+
+   /* 
+      If it is a deadline job the user has to be a deadline user
+   */
+   if (lGetUlong(jep, JB_deadline)) {
+      if (!userset_is_deadline_user(Master_Userset_List, ruser)) {
+         ERROR((SGE_EVENT, MSG_JOB_NODEADLINEUSER_S, ruser));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+   
    /* 
       here we have to fill in user 
       and group into the job 
@@ -2712,26 +2709,7 @@ int *trigger
 
          /* in SGE jobs are exited when they dont exist */ 
          if (!job) {
-            if (feature_is_enabled(FEATURE_SGEEE))
               move_to_exited = 1;
-            else {
-               /* in SGEEE the job may be still known by qmaster
-                  and in state JFINISHED but it is exited */ 
-               lListElem *ja_task; 
-
-               if (job) {   /* yes, we have the job */
-                  if (lGetList(job, JB_ja_tasks) == NULL ) {
-                     move_to_exited = 1;
-                     for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-                        if (lGetUlong(ja_task, JAT_status)!=JFINISHED) {
-                           move_to_exited = 0;
-                        }
-                     } 
-                  }
-               } else {     /* job not found */
-                 move_to_exited = 1; 
-               }
-            }
          }
          
          if (move_to_exited) {
@@ -3505,7 +3483,7 @@ static int job_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_rang
    /* PE slot ranges used in conjunction with wildcards can cause number of slots 
       finally being used for urgency value computation be ambiguous. We reject such 
       jobs */ 
-   if (feature_is_enabled(FEATURE_SGEEE) && range_list_get_number_of_ids(pe_range)>1) {
+   if (range_list_get_number_of_ids(pe_range)>1) {
       const lListElem *reference_pe = pe_list_find_matching(Master_Pe_List, pe_name);
       lListElem *pe;
       int nslots = pe_urgency_slots(reference_pe, lGetString(reference_pe, PE_urgency_slots), pe_range);

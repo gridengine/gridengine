@@ -584,11 +584,6 @@ lListElem *sconf_create_default()
 
    ep = lCreateElem(SC_Type);
 
-   /* 
-    * 
-    * SGE & SGEEE
-    *
-    */
    lSetString(ep, SC_algorithm, "default");
    lSetString(ep, SC_schedule_interval, SCHEDULE_TIME);
    lSetUlong(ep, SC_maxujobs, MAXUJOBS);
@@ -605,46 +600,40 @@ lListElem *sconf_create_default()
    lSetUlong(ep, SC_flush_submit_sec, 0);
    lSetUlong(ep, SC_flush_finish_sec, 0);
    lSetString(ep, SC_params, "none");
-   /* 
-    * 
-    * SGEEE
-    *
-    */
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      lSetString(ep, SC_reprioritize_interval, SGEEE_SCHEDULE_TIME);
-      lSetUlong(ep, SC_halftime, 168);
+   
+   lSetString(ep, SC_reprioritize_interval, SGEEE_SCHEDULE_TIME);
+   lSetUlong(ep, SC_halftime, 168);
 
-      added = lAddSubStr(ep, UA_name, USAGE_ATTR_CPU, SC_usage_weight_list, UA_Type);
-      lSetDouble(added, UA_value, 1.00);
-      added = lAddSubStr(ep, UA_name, USAGE_ATTR_MEM, SC_usage_weight_list, UA_Type);
-      lSetDouble(added, UA_value, 0.0);
-      added = lAddSubStr(ep, UA_name, USAGE_ATTR_IO, SC_usage_weight_list, UA_Type);
-      lSetDouble(added, UA_value, 0.0);
+   added = lAddSubStr(ep, UA_name, USAGE_ATTR_CPU, SC_usage_weight_list, UA_Type);
+   lSetDouble(added, UA_value, 1.00);
+   added = lAddSubStr(ep, UA_name, USAGE_ATTR_MEM, SC_usage_weight_list, UA_Type);
+   lSetDouble(added, UA_value, 0.0);
+   added = lAddSubStr(ep, UA_name, USAGE_ATTR_IO, SC_usage_weight_list, UA_Type);
+   lSetDouble(added, UA_value, 0.0);
 
-      lSetDouble(ep, SC_compensation_factor, 5);
-      lSetDouble(ep, SC_weight_user, 0.2);
-      lSetDouble(ep, SC_weight_project, 0.2);
-      lSetDouble(ep, SC_weight_jobclass, 0.2);
-      lSetDouble(ep, SC_weight_department, 0.2);
-      lSetDouble(ep, SC_weight_job, 0.2);
-      lSetUlong(ep, SC_weight_tickets_functional, 0);
-      lSetUlong(ep, SC_weight_tickets_share, 0);
+   lSetDouble(ep, SC_compensation_factor, 5);
+   lSetDouble(ep, SC_weight_user, 0.2);
+   lSetDouble(ep, SC_weight_project, 0.2);
+   lSetDouble(ep, SC_weight_jobclass, 0.2);
+   lSetDouble(ep, SC_weight_department, 0.2);
+   lSetDouble(ep, SC_weight_job, 0.2);
+   lSetUlong(ep, SC_weight_tickets_functional, 0);
+   lSetUlong(ep, SC_weight_tickets_share, 0);
 
-      lSetBool(ep, SC_share_override_tickets, true);  
-      lSetBool(ep, SC_share_functional_shares, true);
-      lSetUlong(ep, SC_max_functional_jobs_to_schedule, 200);
-      lSetBool(ep, SC_report_pjob_tickets, true);
-      lSetUlong(ep, SC_max_pending_tasks_per_job, 50);
-      lSetString(ep, SC_halflife_decay_list, "none"); 
-      lSetString(ep, SC_policy_hierarchy, policy_hierarchy_chars );
+   lSetBool(ep, SC_share_override_tickets, true);  
+   lSetBool(ep, SC_share_functional_shares, true);
+   lSetUlong(ep, SC_max_functional_jobs_to_schedule, 200);
+   lSetBool(ep, SC_report_pjob_tickets, true);
+   lSetUlong(ep, SC_max_pending_tasks_per_job, 50);
+   lSetString(ep, SC_halflife_decay_list, "none"); 
+   lSetString(ep, SC_policy_hierarchy, policy_hierarchy_chars );
 
-      lSetDouble(ep, SC_weight_ticket, 0.5);
-      lSetDouble(ep, SC_weight_waiting_time, 0.278); 
-      lSetDouble(ep, SC_weight_deadline, 3600000 );
-      lSetDouble(ep, SC_weight_urgency, 0.5 );
-      lSetUlong(ep, SC_max_reservation, 0);
-      lSetDouble(ep, SC_weight_priority, 0.0 );
-   }
+   lSetDouble(ep, SC_weight_ticket, 0.5);
+   lSetDouble(ep, SC_weight_waiting_time, 0.278); 
+   lSetDouble(ep, SC_weight_deadline, 3600000 );
+   lSetDouble(ep, SC_weight_urgency, 0.5 );
+   lSetUlong(ep, SC_max_reservation, 0);
+   lSetDouble(ep, SC_weight_priority, 0.0 );
 
    DEXIT;
    return ep;
@@ -1884,107 +1873,101 @@ void sconf_print_config(void){
    s=lGetString(lFirst(Master_Sched_Config_List), SC_params);
    INFO((SGE_EVENT, MSG_READ_PARAM_S, s)); 
 
-   /**
-    * check for SGEEE scheduler configurations
-    */
-   if (feature_is_enabled(FEATURE_SGEEE)) {
+   /* --- SC_reprioritize_interval */
+   s = sconf_reprioritize_interval_str();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "reprioritize_interval"));
 
-      /* --- SC_reprioritize_interval */
-      s = sconf_reprioritize_interval_str();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "reprioritize_interval"));
+   /* --- SC_halftime */
+   uval = sconf_get_halftime();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US ,  u32c (uval), "halftime"));
 
-      /* --- SC_halftime */
-      uval = sconf_get_halftime();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US ,  u32c (uval), "halftime"));
+   /* --- SC_usage_weight_list */
+   uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0);
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, tmp_buffer, "usage_weight_list"));
 
-      /* --- SC_usage_weight_list */
-      uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0);
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, tmp_buffer, "usage_weight_list"));
+   /* --- SC_compensation_factor */
+   dval = sconf_get_compensation_factor();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "compensation_factor"));
 
-      /* --- SC_compensation_factor */
-      dval = sconf_get_compensation_factor();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "compensation_factor"));
+   /* --- SC_weight_user */
+   dval = sconf_get_weight_user();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_user"));
 
-      /* --- SC_weight_user */
-      dval = sconf_get_weight_user();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_user"));
+   /* --- SC_weight_project */
+   dval = sconf_get_weight_project();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_project"));
 
-      /* --- SC_weight_project */
-      dval = sconf_get_weight_project();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_project"));
+   /* --- SC_weight_jobclass */
+   dval = sconf_get_weight_jobclass();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_jobclass"));
 
-      /* --- SC_weight_jobclass */
-      dval = sconf_get_weight_jobclass();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_jobclass"));
+   /* --- SC_weight_department */
+   dval = sconf_get_weight_department();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_department"));
 
-      /* --- SC_weight_department */
-      dval = sconf_get_weight_department();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_department"));
+   /* --- SC_weight_job */
+   dval = sconf_get_weight_job();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_job"));
 
-      /* --- SC_weight_job */
-      dval = sconf_get_weight_job();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS, dval, "weight_job"));
+   /* --- SC_weight_tickets_functional */
+   uval = sconf_get_weight_tickets_functional();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_functional"));
 
-      /* --- SC_weight_tickets_functional */
-      uval = sconf_get_weight_tickets_functional();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_functional"));
+   /* --- SC_weight_tickets_share */
+   uval = sconf_get_weight_tickets_share();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_share"));
 
-      /* --- SC_weight_tickets_share */
-      uval = sconf_get_weight_tickets_share();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_share"));
+   /* --- SC_share_override_tickets */
+   uval = sconf_get_share_override_tickets();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_override_tickets"));
+   
+   /* --- SC_share_functional_shares */
+   uval = sconf_get_share_functional_shares();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_functional_shares"));
 
-      /* --- SC_share_override_tickets */
-      uval = sconf_get_share_override_tickets();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_override_tickets"));
-      
-      /* --- SC_share_functional_shares */
-      uval = sconf_get_share_functional_shares();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_functional_shares"));
+   /* --- SC_max_functional_jobs_to_schedule */
+   uval = sconf_get_max_functional_jobs_to_schedule();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_functional_jobs_to_schedule"));
+   
+   /* --- SC_report_job_tickets */
+   uval = sconf_get_report_pjob_tickets();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "report_pjob_tickets"));
+   
+   /* --- SC_max_pending_tasks_per_job */
+   uval = sconf_get_max_pending_tasks_per_job();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_pending_tasks_per_job"));
 
-      /* --- SC_max_functional_jobs_to_schedule */
-      uval = sconf_get_max_functional_jobs_to_schedule();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_functional_jobs_to_schedule"));
-      
-      /* --- SC_report_job_tickets */
-      uval = sconf_get_report_pjob_tickets();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "report_pjob_tickets"));
-      
-      /* --- SC_max_pending_tasks_per_job */
-      uval = sconf_get_max_pending_tasks_per_job();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_pending_tasks_per_job"));
+   /* --- SC_halflife_decay_list_str */
+   s = sconf_get_halflife_decay_list_str();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "halflife_decay_list"));
+  
+   /* --- SC_policy_hierarchy */
+   s = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "policy_hierarchy"));
 
-      /* --- SC_halflife_decay_list_str */
-      s = sconf_get_halflife_decay_list_str();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "halflife_decay_list"));
-     
-      /* --- SC_policy_hierarchy */
-      s = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "policy_hierarchy"));
+   /* --- SC_weight_ticket */
+   dval = sconf_get_weight_ticket();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_ticket"));
 
-      /* --- SC_weight_ticket */
-      dval = sconf_get_weight_ticket();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_ticket"));
+   /* --- SC_weight_waiting_time */
+   dval = sconf_get_weight_waiting_time();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_waiting_time"));
 
-      /* --- SC_weight_waiting_time */
-      dval = sconf_get_weight_waiting_time();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_waiting_time"));
+   /* --- SC_weight_deadline */
+   dval = sconf_get_weight_deadline();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_deadline"));
 
-      /* --- SC_weight_deadline */
-      dval = sconf_get_weight_deadline();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_deadline"));
+   /* --- SC_weight_urgency */
+   dval = sconf_get_weight_urgency();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_urgency"));
 
-      /* --- SC_weight_urgency */
-      dval = sconf_get_weight_urgency();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_urgency"));
+   /* --- SC_weight_priority */
+   dval = sconf_get_weight_priority();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_priority"));
 
-      /* --- SC_weight_priority */
-      dval = sconf_get_weight_priority();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_priority"));
-
-      /* --- SC_max_reservation */
-      dval = sconf_get_max_reservations();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "max_reservation"));
-   }
+   /* --- SC_max_reservation */
+   dval = sconf_get_max_reservations();
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "max_reservation"));
 
    DEXIT;
    return;
@@ -2134,68 +2117,62 @@ bool sconf_validate_config_(lList **answer_list){
       }     
    }
 
-   /**
-    * check for SGEEE scheduler configurations
-    */
-   if (feature_is_enabled(FEATURE_SGEEE)) {
+   /* --- SC_reprioritize_interval */
+   s = sconf_reprioritize_interval_str();
+   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "reprioritize_interval", tmp_error));    
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false; 
+   }
 
-      /* --- SC_reprioritize_interval */
-      s = sconf_reprioritize_interval_str();
-      if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "reprioritize_interval", tmp_error));    
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         ret = false; 
-      }
+   /* --- SC_usage_weight_list */
+   if (uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0) < 0) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDD_USAGE_WEIGHT_LIST_S, tmp_error));    
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
+      ret = false; 
+   }
 
-      /* --- SC_usage_weight_list */
-      if (uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0) < 0) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDD_USAGE_WEIGHT_LIST_S, tmp_error));    
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
-         ret = false; 
-      }
-
-      /* --- SC_halflife_decay_list_str */
-      {
-         s = sconf_get_halflife_decay_list_str();
-         if (!s || !strcasecmp(s, "none")) {
-         } else {
-            lList *halflife_decay_list = NULL;
-            lListElem *ep;
-            const char *s0,*s1,*s2,*s3;
-            double value;
-            struct saved_vars_s *sv1=NULL, *sv2=NULL;
-            s0 = s; 
-            for(s1=sge_strtok_r(s0, ":", &sv1); s1;
-                s1=sge_strtok_r(NULL, ":", &sv1)) {
-               if ((s2=sge_strtok_r(s1, "=", &sv2)) &&
-                   (s3=sge_strtok_r(NULL, "=", &sv2)) &&
-                   (sscanf(s3, "%lf", &value)==1)) {
-                  ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
-                  lSetDouble(ep, UA_value, value);
-               }
-               if (sv2)
-                  free(sv2);
+   /* --- SC_halflife_decay_list_str */
+   {
+      s = sconf_get_halflife_decay_list_str();
+      if (!s || !strcasecmp(s, "none")) {
+      } else {
+         lList *halflife_decay_list = NULL;
+         lListElem *ep;
+         const char *s0,*s1,*s2,*s3;
+         double value;
+         struct saved_vars_s *sv1=NULL, *sv2=NULL;
+         s0 = s; 
+         for(s1=sge_strtok_r(s0, ":", &sv1); s1;
+             s1=sge_strtok_r(NULL, ":", &sv1)) {
+            if ((s2=sge_strtok_r(s1, "=", &sv2)) &&
+                (s3=sge_strtok_r(NULL, "=", &sv2)) &&
+                (sscanf(s3, "%lf", &value)==1)) {
+               ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
+               lSetDouble(ep, UA_value, value);
             }
-            if (sv1)
-               free(sv1);
-            pos.c_halflife_decay_list = halflife_decay_list;   
-         } 
-      }
-     
-      /* --- SC_policy_hierarchy */
-      {
-         const char *value_string = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
-         if (value_string) {
-            policy_hierarchy_t hierarchy[POLICY_VALUES];
+            if (sv2)
+               free(sv2);
+         }
+         if (sv1)
+            free(sv1);
+         pos.c_halflife_decay_list = halflife_decay_list;   
+      } 
+   }
+  
+   /* --- SC_policy_hierarchy */
+   {
+      const char *value_string = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
+      if (value_string) {
+         policy_hierarchy_t hierarchy[POLICY_VALUES];
 
-            if (policy_hierarchy_verify_value(value_string) != 0) {
-               answer_list_add(answer_list, MSG_GDI_INVALIDPOLICYSTRING, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);  
-               ret = false;
-               lSetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy, policy_hierarchy_chars);
-            }
-            sconf_ph_fill_array(hierarchy);
-         } 
-      }
+         if (policy_hierarchy_verify_value(value_string) != 0) {
+            answer_list_add(answer_list, MSG_GDI_INVALIDPOLICYSTRING, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);  
+            ret = false;
+            lSetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy, policy_hierarchy_chars);
+         }
+         sconf_ph_fill_array(hierarchy);
+      } 
    }
 
    DEXIT;

@@ -429,21 +429,6 @@ int *after
       return;
    }
 
-   /* ensure sge objects are licensed */
-
-   switch (request->target) {
-   case SGE_USER_LIST:
-   case SGE_PROJECT_LIST:
-   case SGE_SHARETREE_LIST:
-      if (!feature_is_enabled(FEATURE_SGEEE)) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
-         feature_get_product_name(FS_SHORT, &ds)));
-         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return;
-      }
-   }
-
    switch (request->target) {
 #ifdef QHOST_TEST
    case SGE_QHOST:
@@ -525,20 +510,6 @@ int sub_command
          continue;
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, request->host, request->commproc, 0, NULL))
          continue;
-
-      /* ensure sge objects are licensed */
-      switch (request->target) {
-      case SGE_USER_LIST:
-      case SGE_PROJECT_LIST:
-      case SGE_SHARETREE_LIST:
-         if (!feature_is_enabled(FEATURE_SGEEE)) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
-            feature_get_product_name(FS_SHORT, &ds) ));
-            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return;
-         }
-      }
 
       /* add each element */
       switch (request->target) {
@@ -727,20 +698,6 @@ int sub_command
          if (sge_chck_mod_perm_host(&(answer->alp), request->target, 
                                     request->host, request->commproc, 0, NULL))
             continue;
-
-         /* ensure sge objects are licensed */
-         switch (request->target) {
-         case SGE_USER_LIST:
-         case SGE_PROJECT_LIST:
-         case SGE_SHARETREE_LIST:
-            if (!feature_is_enabled(FEATURE_SGEEE)) {
-               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
-               feature_get_product_name(FS_SHORT, &ds)));
-               answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return;
-            }
-         }
 
          /* try to remove the element */
          switch (request->target) {
@@ -1270,20 +1227,6 @@ int sub_command
       if (sge_chck_mod_perm_host(&(answer->alp), request->target, 
             request->host, request->commproc, 1, ep)) {
          continue;
-      }
-
-      /* ensure sge objects are licensed */
-      switch (request->target) {
-      case SGE_USER_LIST:
-      case SGE_PROJECT_LIST:
-      case SGE_SHARETREE_LIST:
-         if (!feature_is_enabled(FEATURE_SGEEE)) {
-            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
-            feature_get_product_name(FS_SHORT, &ds) ));
-            answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return;
-         }
       }
 
       /* try to mod the element */

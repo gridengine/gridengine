@@ -259,13 +259,11 @@ lList *sge_set_defined_defaults(lList *lpCfg)
    lpCfg = NULL;
    i = 0;       
    while (conf_entries[i].name) {
-      if (feature_is_enabled(FEATURE_SGEEE) ||             
-          strcmp("enforce_project", conf_entries[i].name) || 
-          strcmp("enforce_user", conf_entries[i].name)) {
-         ep = lAddElemStr(&lpCfg, CF_name, conf_entries[i].name, CF_Type);
-         lSetString(ep, CF_value, conf_entries[i].value);
-         lSetUlong(ep, CF_local, conf_entries[i].local);
-      }   
+      
+      ep = lAddElemStr(&lpCfg, CF_name, conf_entries[i].name, CF_Type);
+      lSetString(ep, CF_value, conf_entries[i].value);
+      lSetUlong(ep, CF_local, conf_entries[i].local);
+      
       i++;
    }      
 
@@ -567,7 +565,7 @@ int merge_configuration(lListElem *global, lListElem *local,
       sharetree_reserved_usage = false;
 #else
       acct_reserved_usage = false;
-      sharetree_reserved_usage = (feature_is_enabled(FEATURE_SGEEE)!=0);
+      sharetree_reserved_usage = true;
 #endif
       notify_kill_type = 1;
       notify_susp_type = 1;

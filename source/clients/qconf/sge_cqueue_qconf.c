@@ -41,6 +41,7 @@
 
 #include "sge_answer.h"
 #include "sge_cqueue.h"
+#include "sge_object.h"
 #include "sge_qinstance.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
@@ -224,9 +225,15 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list)
 
          cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
          if (cqueue != NULL) {
-            *this_elem = lFreeElem(*this_elem);
-            *this_elem = cqueue; 
-            ret = true;
+            if (object_has_differences(*this_elem, answer_list, 
+                                       cqueue, false)) {
+               *this_elem = lFreeElem(*this_elem);
+               *this_elem = cqueue; 
+               ret = true;
+            } else {
+               answer_list_add(answer_list, MSG_FILE_NOTCHANGED,
+                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+            }
          } else {
             answer_list_add(answer_list, MSG_FILE_ERRORREADINGINFILE,
                             STATUS_ERROR1, ANSWER_QUALITY_ERROR);

@@ -1713,8 +1713,35 @@ cqueue_trash_used_href_setting(lListElem *this_elem, lList **answer_list,
    return ret;
 }
 
-bool
-cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_list, const char *hgroup_or_hostname)
+/****** sge_cqueue/cqueue_purge_host() *****************************************
+*  NAME
+*     cqueue_purge_host() -- purge attributes from queue
+*
+*  SYNOPSIS
+*     bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList 
+*     *attr_list, const char *hgroup_or_hostname) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lListElem *this_elem           - cqueue list element 
+*     lList **answer_list            - answer list 
+*     lList *attr_list               - list with attributes to search for
+*                                      hgroup_or_hostname      
+*                                      wildcards allowed 
+*     const char *hgroup_or_hostname -  host group or hostname which should be purged 
+*
+*  RESULT
+*     bool -  
+*        true     - hostname found and purged
+*        false    - attribute or hostname not found    
+*
+*  NOTES
+*     MT-NOTE: cqueue_purge_host() is not MT safe 
+*
+*******************************************************************************/
+bool cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_list, const char *hgroup_or_hostname)
 {
    bool ret = false;
    int index;
@@ -1724,11 +1751,22 @@ cqueue_purge_host(lListElem *this_elem, lList **answer_list, lList *attr_list, c
    const char *attr_name = NULL;
 
    DENTER(CQUEUE_LAYER, "cqueue_purge_host");
+
    if (this_elem != NULL) {
       for_each (ep, attr_list) {
          attr_name = lGetString(ep, US_name);
          DPRINTF((SFQ"\n", attr_name));
       
+         /* purge hostlist */ 
+         if (!fnmatch(attr_name, SGE_ATTR_HOSTLIST,0)) {
+            sublist = lGetList(this_elem, CQ_hostlist ); 
+            if (lDelElemHost(&sublist, HR_name, hgroup_or_hostname) == 1) {
+               DPRINTF((SFQ" deleted in "SFQ"\n", hgroup_or_hostname, SGE_ATTR_HOSTLIST ));
+               ret = true;
+            }
+         }
+         
+         /* purge attributes */ 
          index = 0;
          while(cqueue_attribute_array[index].name != NULL) {
 

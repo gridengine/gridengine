@@ -1,3 +1,6 @@
+RD-2005-03-03-0: Bugfix:    purge don't clean hostlist attribute
+                 Review:    MD           
+                            
 SG-2005-03-03-0: Bugfix:    fixed locking issues in the commlib
                  Review:    AA
                  Changed:   all

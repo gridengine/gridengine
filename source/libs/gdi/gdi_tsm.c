@@ -66,7 +66,7 @@ const char *cell
 ** NAME
 **   gdi_kill  - send shutdown/kill request to scheduler, master, execds 
 ** PARAMETER
-**   host_list     - host list, EH_Type
+**   id_list     - id list, EH_Type or EV_Type
 **   cell          - cell, ignored!!!
 **   option_flags  - 0
 **   action_flag   - combination of MASTER_KILL, SCHEDD_KILL, EXECD_KILL, 
@@ -79,13 +79,12 @@ const char *cell
 **
 */
 lList *gdi_kill(
-lList *host_list,
+lList *id_list,
 const char *cell,
 u_long32 option_flags,
 u_long32 action_flag 
 ) {
-   lListElem *hlep, *hep = NULL;
-   lList *hlp = NULL, *alp = NULL, *tmpalp;
+   lList *alp = NULL, *tmpalp;
 
    DENTER(TOP_LAYER, "gdi_kill");
 
@@ -97,17 +96,37 @@ u_long32 action_flag
    }
 
    if (action_flag & SCHEDD_KILL) {
-      tmpalp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_TRIGGER, NULL, NULL, NULL);
+      lListElem *idep;
+      char buffer[10];
+
+      sprintf(buffer, "%d", EV_ID_SCHEDD);
+      id_list = lCreateList("kill scheduler", ID_Type);
+      idep = lAddElemStr(&id_list, ID_str, buffer, ID_Type);
+      tmpalp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
+      lAddList(alp, tmpalp);  
+   }
+
+   if (action_flag & EVENTCLIENT_KILL) {
+      lListElem *idep;
+      if(id_list == NULL) {
+         char buffer[10];
+         sprintf(buffer, "%d", EV_ID_ANY);
+         id_list = lCreateList("kill all event clients", ID_Type);
+         idep = lAddElemStr(&id_list, ID_str, buffer, ID_Type);
+      }
+      tmpalp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       lAddList(alp, tmpalp);  
    }
 
    if ((action_flag & EXECD_KILL) || (action_flag & JOB_KILL)) {
-      if(host_list) {
+      lListElem *hlep = NULL, *hep = NULL;
+      lList *hlp = NULL;
+      if(id_list) {
          /*
          ** we have to convert the EH_Type to ID_Type
          ** It would be better to change the call to use ID_Type!
          */
-         for_each(hep, host_list) {
+         for_each(hep, id_list) {
             hlep = lAddElemStr(&hlp, ID_str, lGetHost(hep, EH_name), ID_Type);
             lSetUlong(hlep, ID_force, (action_flag & JOB_KILL)?1:0);
          }

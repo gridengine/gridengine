@@ -152,7 +152,9 @@ static char* get_argument_syntax(int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST;
      case OA_PROJECT_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST;
- 
+     case OA_EVENTCLIENT_LIST:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST;
+
      default:
          break; 
    }
@@ -585,6 +587,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_k_OPT_MASTERORSCHEDULINGDAEMON, MSG_GDI_UTEXT_k_OPT_MASTERORSCHEDULINGDAEMON );
    }
 
+   if (VALID_OPT(kec_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_kec_OPT, MSG_GDI_UTEXT_kec_OPT );
+      MARK(OA_EVENTCLIENT_LIST);
+   }
+
    if (VALID_OPT(kqs_OPT, me.who)) {
       PRINTIT(MSG_GDI_USAGE_kqs_OPT );
    }
@@ -928,6 +935,10 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_se_OPT_SERVER, MSG_GDI_UTEXT_se_OPT_SERVER);
    }
 
+   if (VALID_OPT(secl_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_secl_OPT, MSG_GDI_UTEXT_secl_OPT );
+   }
+
    if (VALID_OPT(sel_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_sel_OPT, MSG_GDI_UTEXT_sel_OPT);
    }
@@ -1154,6 +1165,7 @@ FILE *fp
    if (VALID_OPT(verbose_OPT, me.who)) {
       PRINTITD(MSG_GDI_USAGE_verbose_OPT, MSG_GDI_UTEXT_verbose_OPT );
    }
+
 
    if (me.who == QMASTER) {
       PRINTITD(MSG_GDI_USAGE_show_license_OPT , MSG_GDI_UTEXT_show_license_OPT );

@@ -459,6 +459,11 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /*  shgrpl_OPT -  show host group entry list */
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /*  Mhgrp_OPT  -  modify host group entry from file */    
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+
+/* secl_OPT - show event client list */
+ {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+/* kec_OPT  - kill event client */
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
 /*                  
   n  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  q  c  n  A

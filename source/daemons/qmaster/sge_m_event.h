@@ -46,6 +46,7 @@ void reinit_schedd(void);
 
 int sge_add_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost);
 void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buffer *pb);
+void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
 int sge_ack_event(lListElem *er, u_long32 event_number);
 void ck_4_deliver_events(u_long32 now);
@@ -70,7 +71,6 @@ void sge_add_event(lListElem *event_client,
 
 u_long32 sge_get_next_event_number(u_long32 client_id);
 
-void sge_gdi_kill_sched(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
 lListElem* sge_locate_scheduler(void);

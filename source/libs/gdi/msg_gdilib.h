@@ -284,6 +284,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_ATTRIBUTE_NAME       "attr_nm                 (see man pages)"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_lst              objectname [ objectname ...]" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST     "evid_list               all | evid[,evid,...]" 
 
 
 
@@ -838,6 +839,12 @@
 
 #define MSG_GDI_USAGE_verbose_OPT                        "[-verbose]"
 #define MSG_GDI_UTEXT_verbose_OPT                        _("verbose information output")
+
+#define MSG_GDI_USAGE_secl_OPT                           "[-secl]"
+#define MSG_GDI_UTEXT_secl_OPT                           _("show event client list)")
+
+#define MSG_GDI_USAGE_kec_OPT                            "[-kec evid_list]"
+#define MSG_GDI_UTEXT_kec_OPT                            _("kill event client")
 
 #define MSG_GDI_USAGE_inherit_OPT                        "[-inherit]"
 #define MSG_GDI_UTEXT_inherit_OPT                        _("inherit existing job environment JOB_ID for rsh")

@@ -236,7 +236,10 @@
 #define MSG_TABLE_PROCESSORS                      "PROCESSORS"
 #define MSG_TABLE_ARCH                            "ARCH"
 #define MSG_TABLE_SUM_F                           "SUM"
+#define MSG_TABLE_EV_ID                           "ID"
+#define MSG_TABLE_EV_NAME                         "NAME"
 #define MSG_QCONF_NOEXECUTIONHOSTSDEFINED         _("no execution hosts defined\n")
+#define MSG_QCONF_NOEVENTCLIENTSREGISTERED        _("no event clients registered\n")
 #define MSG_QCONF_XISNOVALIDCOMPLEXNAME_S         _("%s is no valid complex name\n")
 #define MSG_ANSWER_MALFORMEDREQUEST               _("malformed request\n")
 #define MSG_ANSWER_COMPLEXXALREADYEXISTS_S        _("complex %s already exists\n")

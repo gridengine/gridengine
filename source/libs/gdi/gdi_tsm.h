@@ -32,10 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define MASTER_KILL     (1<<0)
-#define SCHEDD_KILL     (1<<1)
-#define EXECD_KILL      (1<<2)
-#define JOB_KILL        (1<<3)
+#define MASTER_KILL       (1<<0)
+#define SCHEDD_KILL       (1<<1)
+#define EXECD_KILL        (1<<2)
+#define JOB_KILL          (1<<3)
+#define EVENTCLIENT_KILL  (1<<4)
 
 lList *gdi_tsm(const char *schedd_name, const char *cell); 
 

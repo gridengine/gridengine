@@ -449,10 +449,11 @@
 #define MSG_EVE_UNREG_SU              _("event client "SFQ" with id "U32CFormat" deregistered")
 #define MSG_EVE_EVENTCLIENT           _("event client")
 
+#define MSG_EVE_ILLEGALEVENTCLIENTID_S _("illegal event client id "SFQ"\n")
 #define MSG_EVE_ILLEGALIDREGISTERED_U _("illegal event client id "U32CFormat" for registration\n")
 
 #define MSG_COM_ACKTIMEOUT4EV_ISIS    _("acknowledge timeout after %d seconds for event client (%s:%d) on host \"%s\"")
-#define MSG_COM_NOSHUTDOWNPERMS       _("shutdown of \"schedd\" requires manager privileges\n")
+#define MSG_COM_NOSHUTDOWNPERMS       _("shutdown requires manager privileges\n")
 #define MSG_COM_NOSCHEDDREGMASTER     _("no scheduler registered at qmaster\n")
 #define MSG_COM_NOSCHEDMONPERMS       _("starting scheduler monitoring requires manager privileges\n")
 #define MSG_COM_SCHEDMON_SS           _("%s@%s triggers scheduler monitoring\n")

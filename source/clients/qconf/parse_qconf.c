@@ -111,6 +111,7 @@ static int sge_error_and_exit(const char *ptr);
 /* ------------------------------------------------------------- */
 static int show_object_list(u_long32, lDescr *, int, char *);
 static int show_processors(void);
+static int show_eventclients(void);
 #ifndef __SGE_NO_USERMAPPING__
 static int show_user_map_entry(char *user);
 static void show_gdi_request_answer(lList *alp);
@@ -1574,6 +1575,34 @@ DPRINTF(("ep: %s %s\n",
          }
          alp = lFreeList(alp);
 
+         spp++;
+         continue;
+      }
+
+/*----------------------------------------------------------------------------*/
+
+      /* -kec [<id> ...] */
+      /* parse before -ke[j] */
+
+      if (!strncmp("-kec", *spp, 4)) {
+         int opt = EVENTCLIENT_KILL;
+         /* no adminhost/manager check needed here */
+
+         spp = sge_parser_get_next(spp);
+         /* found namelist -> process */
+         if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
+            alp = gdi_kill(NULL, me.default_cell, 0, opt);
+         } else {
+            lString2List(*spp, &lp, ID_Type, ID_str, ", ");
+            alp = gdi_kill(lp, me.default_cell, 0, opt);
+         }      
+
+         for_each(aep, alp) {
+            sge_get_recoverable(aep);
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+         }
+         alp = lFreeList(alp);
+         lp = lFreeList(lp);
          spp++;
          continue;
       }
@@ -3137,6 +3166,13 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 /*-----------------------------------------------------------------------------*/
+      /* "-secl" */
+      if (!strcmp("-secl", *spp)) {
+         show_eventclients();
+         spp++;
+         continue;
+      }
+/*-----------------------------------------------------------------------------*/
       /* "-sel" */
       if (!strcmp("-sel", *spp)) {
          show_object_list(SGE_EXECHOST_LIST, EH_Type, EH_name, 
@@ -4501,6 +4537,47 @@ char *name
    DEXIT;
    return 0;
 }
+
+static int show_eventclients()
+{
+   lEnumeration *what;
+   lList *alp = NULL, *lp = NULL;
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "show_eventclients");
+
+   what = lWhat("%T(%I %I %I)", EV_Type, EV_id, EV_name, EV_host);
+
+   alp = sge_gdi(SGE_EVENT_LIST, SGE_GDI_GET, &lp, NULL, what);
+   what = lFreeWhat(what);
+
+   ep = lFirst(alp);
+   if (sge_get_recoverable(ep) != STATUS_OK) {
+      fprintf(stderr, "%s\n", lGetString(ep, AN_text));
+      DEXIT;
+      return -1;
+   }
+
+   if (lp) {
+      printf("%8s %-15s %-25s\n",MSG_TABLE_EV_ID, MSG_TABLE_EV_NAME, MSG_TABLE_HOST);
+      printf("--------------------------------------------------\n");
+      for_each (ep, lp) {
+         printf("%8d ", (int)lGetUlong(ep, EV_id));
+         printf("%-15s ", lGetString(ep, EV_name));
+         printf("%-25s\n", lGetString(ep, EV_host));
+      }
+   }
+   else
+      fprintf(stderr,  MSG_QCONF_NOEVENTCLIENTSREGISTERED);
+   
+   lFreeList(alp);
+   lFreeList(lp);
+   
+   DEXIT;
+   return 0;
+}
+
+
 
 static int show_processors()
 {

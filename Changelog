@@ -1,3 +1,6 @@
+JG-2001-11-26-0: Added qconf options -secl (show event client list) and
+                 -kec (kill event client).
+
 AH-2001-11-23-1: Removed unused configuration parameters in queue 
                  configuration (IssueZilla #71) and scheduler configuration 
                  (Bugtraq #4431000). 

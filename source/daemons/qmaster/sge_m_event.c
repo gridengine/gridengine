@@ -81,6 +81,7 @@ static int sge_add_list_event_(lListElem *event_client,
                                lList *list, int need_copy_elem);
 
 static void sge_flush_events_(lListElem *event_client, int cmd, int now);
+void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, sge_gdi_request *answer);
 
 #define FLUSH_INTERVAL 15
 
@@ -931,15 +932,15 @@ lListElem* sge_locate_scheduler()
    return ep;
 }
 
-void sge_gdi_kill_sched(char *host, sge_gdi_request *request, sge_gdi_request *answer) 
+void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, sge_gdi_request *answer) 
 {
    uid_t uid;
    gid_t gid;
    char user[128];
    char group[128];
-   lListElem *scheduler;
+   lListElem *idep, *event_client;
 
-   DENTER(GDI_LAYER, "sge_gdi_kill_sched");
+   DENTER(GDI_LAYER, "sge_gdi_kill_eventclient");
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
@@ -955,21 +956,51 @@ void sge_gdi_kill_sched(char *host, sge_gdi_request *request, sge_gdi_request *a
       return;
    }
 
-   scheduler = sge_locate_scheduler();
+   for_each(idep, request->lp) {
+      int id;
+      const char *idstr = lGetString(idep, ID_str);
 
-   if (scheduler == NULL) {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_WARNING);
-      DEXIT;
-      return;
+      if(idstr == NULL) {
+         id = EV_ID_ANY;
+      } else {
+         char *dptr;
+         id = strtol(idstr, &dptr, 0); 
+         if(dptr == idstr) {
+            ERROR((SGE_EVENT, MSG_EVE_ILLEGALEVENTCLIENTID_S, idstr));
+            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EEXIST, 0);
+            continue;
+         }
+      }
+
+      if(id == EV_ID_ANY) {
+         /* kill all event clients except schedd */
+         for_each(event_client, EV_Clients) {
+            if(lGetUlong(event_client, EV_id) >= EV_ID_FIRST_DYNAMIC) {
+               sge_gdi_kill_eventclient_(event_client, host, user, answer);
+            }
+         }
+      } else {
+         event_client = lGetElemUlong(EV_Clients, EV_id, id);
+         if(event_client == NULL) {
+            ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_U, u32c(id)));
+            sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EEXIST, 0);
+            continue;
+         }
+         sge_gdi_kill_eventclient_(event_client, host, user, answer);
+      }
    }
-
+}
+   
+void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, sge_gdi_request *answer) 
+{
+   DENTER(GDI_LAYER, "sge_gdi_kill_eventclient_");
    /* add a sgeE_SHUTDOWN event */
-   sge_add_event(scheduler, sgeE_SHUTDOWN, 0, 0, NULL, NULL);
-   sge_flush_events(scheduler, FLUSH_EVENTS_SET);
+   sge_add_event(event_client, sgeE_SHUTDOWN, 0, 0, NULL, NULL);
+   sge_flush_events(event_client, FLUSH_EVENTS_SET);
 
-   INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, user, host, prognames[SCHEDD]));
+   INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, user, host, lGetString(event_client, EV_name)));
    sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_OK, NUM_AN_INFO);
+   DEXIT;
 }
 
 void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer) 

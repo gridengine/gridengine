@@ -1048,7 +1048,7 @@ sge_gdi_request *answer
       sge_gdi_kill_master(host, request, answer);
       break;
    case SGE_EVENT_LIST: /* kill schedler */
-      sge_gdi_kill_sched(host, request, answer);
+      sge_gdi_kill_eventclient(host, request, answer);
       break;
    case SGE_SC_LIST: /* trigger scheduler monitoring */
       sge_gdi_tsm(host, request, answer);

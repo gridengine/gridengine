@@ -261,8 +261,12 @@ enum {
    mhgrp_OPT,    /* modify host group entry */
    shgrp_OPT,    /* show host group entry */
    shgrpl_OPT,   /* show host group entry list  */
-   Mhgrp_OPT     /* modify host group entry from file */
+   Mhgrp_OPT    /* modify host group entry from file */
 #endif
+
+   /* added for event clients */
+   ,secl_OPT,     /* show event client list */
+   kec_OPT       /* kill event client */
 };
 
 /* macros used in parsing */

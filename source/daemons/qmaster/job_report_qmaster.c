@@ -208,21 +208,11 @@ sge_pack_buffer *pb
          continue;
       }
 
-      /* seach job/jatask */
-      for_each (jep, Master_Job_List) {
-         if (lGetUlong(jep, JB_job_number) == jobid) {
-            int Break = 0;
-
-            for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-               if (lGetUlong(jatep, JAT_task_number) == jataskid) {
-                  Break = 1;
-                  break;
-               }
-            }
-            if (Break)  
-               break;
-         }
+      jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid);
+      if(jep != NULL) {
+         jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
       }
+
       if (jep && jatep)
          status = lGetUlong(jatep, JAT_status);
 
@@ -259,11 +249,14 @@ sge_pack_buffer *pb
                   /* register running task qmaster will log accounting for all registered tasks */
                   lListElem *pe;
                   int new_task = 0;
+
+                  /* do we expect a pe task report from this host? */
                   if (lGetString(jatep, JAT_granted_pe)
                         && (pe=sge_locate_pe(lGetString(jatep, JAT_granted_pe)))
                         && lGetUlong(pe, PE_control_slaves)
                         && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
-
+                    
+                    /* is the task already known (object was created earlier)? */
                     if (!task) {
                         lList* task_tasks;
                         lListElem *task_task;
@@ -502,6 +495,7 @@ sge_pack_buffer *pb
                      sprintf(failed_msg, u32" %s %s", failed, err_str?":":"", err_str?err_str:"");
                      lSetString(task, JB_sge_o_mail, failed_msg);
                      sge_log_dusage(jr, jep, jatep);
+
                      job_write_spool_file(jep, 0, SPOOL_DEFAULT);
 
 

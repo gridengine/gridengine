@@ -6146,7 +6146,7 @@ proc gethostname {} {
 #*******************************
 proc resolve_arch { { host "none" } } {
   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
-  global CHECK_SCRIPT_FILE_DIR CHECK_USER
+  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR
 
 
   if { [ info exists arch_cache($host) ] } {
@@ -6159,10 +6159,10 @@ proc resolve_arch { { host "none" } } {
   }
 
   if { [ string compare $host "none" ] == 0 } {
-      set prg_exit_state [ catch { eval exec "$CHECK_PRODUCT_ROOT/util/arch" } result ]
+      set prg_exit_state [ catch { eval exec "$CHECK_SOURCE_DIR/dist/util/arch" } result ]
   } else {
       puts $CHECK_OUTPUT "resolve_arch: resolving architecture for host $host"
-      set result [ start_remote_prog $host $CHECK_USER "$CHECK_PRODUCT_ROOT/util/arch" "" ]
+      set result [ start_remote_prog $host $CHECK_USER "$CHECK_SOURCE_DIR/dist/util/arch" "" ]
   }
 
   set result2 [split $result "\n"]
@@ -6182,13 +6182,13 @@ proc resolve_arch { { host "none" } } {
       return "unknown"
   }
   if { [string first ":" $result] >= 0 } {
-     puts $CHECK_OUTPUT "architecture or file \"$CHECK_PRODUCT_ROOT/util/arch\" not found"
+     puts $CHECK_OUTPUT "architecture or file \"$CHECK_SOURCE_DIR/dist/util/arch\" not found"
      return "unknown"
   }
   set result [lindex $result 0]  ;# remove CR
 
   if { [ string compare $result "" ] == 0 } {
-     puts $CHECK_OUTPUT "architecture or file \"$CHECK_PRODUCT_ROOT/util/arch\" not found"
+     puts $CHECK_OUTPUT "architecture or file \"$CHECK_SOURCE_DIR/dist/util/arch\" not found"
      return "unknown"
   } 
 

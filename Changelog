@@ -1,3 +1,10 @@
+CR-2002-03-01-0: Testsuite: - using source/dist/util/arch from source directory and
+                              not from product_root/util/arch. This prevents errors
+                              on testsuite first setup call. 
+
+CR-2002-03-01-0: Testsuite: - runlevel of large_cluster performance test set to
+                              300++ ( day )
+
 EB-2002-03-01-0: Bugfix:    "scheduler tries to schedule xxx twice" logging in 
                             qmaster
                  Issue:     #167

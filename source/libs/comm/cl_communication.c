@@ -63,7 +63,43 @@
 static int cl_com_gethostbyname(char *hostname, cl_com_hostent_t **hostent, int* system_error );
 static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent, int* system_error_retval );
 static int cl_com_dup_host(char** host_dest, char* source, cl_host_resolve_method_t method, char* domain);
+static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
+
 static cl_bool_t cl_ingore_timeout = CL_FALSE;
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_default_ssl_verify_func()"
+static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
+   switch(mode) {
+      case CL_SSL_PEER_NAME: {
+         CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME");
+         break;
+      }
+      case CL_SSL_USER_NAME: {
+         CL_LOG(CL_LOG_WARNING,"CL_SSL_USER_NAME");
+         break;
+      }
+   }
+   switch(service_mode) {
+      case CL_TRUE: {
+         CL_LOG(CL_LOG_WARNING,"running in service mode");
+         break;
+      }
+      case CL_FALSE: {
+         CL_LOG(CL_LOG_WARNING,"running in client mode");
+         break;
+      }
+   }
+   if (value != NULL) {
+      CL_LOG_STR(CL_LOG_WARNING,"compare value is:",value);
+   } else {
+      CL_LOG(CL_LOG_ERROR,"compare value is not set");
+   }
+   return CL_TRUE;
+}
 
 
 #ifdef __CL_FUNCTION__
@@ -302,6 +338,202 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    }
 
    return ret_val;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_create_ssl_setup()"
+int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
+                            cl_ssl_method_t      ssl_method,
+                            char*                ssl_CA_cert_pem_file,
+                            char*                ssl_CA_key_pem_file,
+                            char*                ssl_cert_pem_file,
+                            char*                ssl_key_pem_file,
+                            char*                ssl_rand_file,
+                            char*                ssl_reconnect_file,
+                            unsigned long        ssl_refresh_time,
+                            char*                ssl_password,
+                            cl_ssl_verify_func_t ssl_verify_func) {
+
+   cl_ssl_setup_t* tmp_setup = NULL;
+
+   if (new_setup == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (*new_setup != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+ 
+   switch(ssl_method) {
+      case CL_SSL_v23:
+         break;
+      default:
+         CL_LOG(CL_LOG_ERROR,"unsupported ssl method");
+         return CL_RETVAL_PARAMS;
+   }
+
+
+   tmp_setup = (cl_ssl_setup_t*) malloc(sizeof(cl_ssl_setup_t));
+   if (tmp_setup == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+   memset(tmp_setup, 0, sizeof(cl_ssl_setup_t));
+   
+   tmp_setup->ssl_method = ssl_method;
+
+   if (ssl_CA_cert_pem_file != NULL) {
+      tmp_setup->ssl_CA_cert_pem_file = strdup(ssl_CA_cert_pem_file);
+      if (tmp_setup->ssl_CA_cert_pem_file == NULL) {
+         cl_com_free_ssl_setup(&tmp_setup);
+         return CL_RETVAL_MALLOC;
+      }
+   } else {
+      CL_LOG(CL_LOG_ERROR,"CA certificate file not set");
+      cl_com_free_ssl_setup(&tmp_setup);
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (ssl_CA_key_pem_file != NULL) {
+      tmp_setup->ssl_CA_key_pem_file = strdup(ssl_CA_key_pem_file);
+      if (tmp_setup->ssl_CA_key_pem_file == NULL) {
+         cl_com_free_ssl_setup(&tmp_setup);
+         return CL_RETVAL_MALLOC;
+      }
+   }
+   
+   if (ssl_cert_pem_file != NULL) {
+      tmp_setup->ssl_cert_pem_file = strdup(ssl_cert_pem_file);
+      if (tmp_setup->ssl_cert_pem_file == NULL) {
+         cl_com_free_ssl_setup(&tmp_setup);
+         return CL_RETVAL_MALLOC;
+      }
+   } else {
+      CL_LOG(CL_LOG_ERROR,"certificates file not set");
+      cl_com_free_ssl_setup(&tmp_setup);
+      return CL_RETVAL_PARAMS;
+   }
+
+
+   if (ssl_key_pem_file != NULL) {
+      tmp_setup->ssl_key_pem_file = strdup(ssl_key_pem_file);
+      if (tmp_setup->ssl_key_pem_file == NULL) {
+         cl_com_free_ssl_setup(&tmp_setup);
+         return CL_RETVAL_MALLOC;
+      }
+   } else {
+      CL_LOG(CL_LOG_ERROR,"key file not set");
+      cl_com_free_ssl_setup(&tmp_setup);
+      return CL_RETVAL_PARAMS;
+   }
+
+
+   if (ssl_rand_file != NULL) {
+      tmp_setup->ssl_rand_file = strdup(ssl_rand_file);
+      if (tmp_setup->ssl_rand_file == NULL) {
+         cl_com_free_ssl_setup(&tmp_setup);
+         return CL_RETVAL_MALLOC;
+      }
+   }
+
+   if (ssl_reconnect_file != NULL) {
+      tmp_setup->ssl_reconnect_file = strdup(ssl_reconnect_file);
+      if (tmp_setup->ssl_reconnect_file == NULL) {
+         cl_com_free_ssl_setup(&tmp_setup);
+         return CL_RETVAL_MALLOC;
+      }
+   }
+
+   tmp_setup->ssl_refresh_time = ssl_refresh_time;
+
+   if (ssl_password != NULL) {
+      tmp_setup->ssl_password = strdup(ssl_password);
+      if (tmp_setup->ssl_password == NULL) {
+         cl_com_free_ssl_setup(&tmp_setup);
+         return CL_RETVAL_MALLOC;
+      }
+   }
+   
+   if (ssl_verify_func != NULL) {
+      tmp_setup->ssl_verify_func = ssl_verify_func;
+   } else {
+      CL_LOG(CL_LOG_WARNING,"no verify func set, doing no additional certificate checks");
+      tmp_setup->ssl_verify_func = cl_com_default_ssl_verify_func;
+   }
+
+   *new_setup = tmp_setup;
+
+   return CL_RETVAL_OK;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_dup_ssl_setup()"
+int cl_com_dup_ssl_setup(cl_ssl_setup_t** new_setup, cl_ssl_setup_t* source) {
+
+   if ( source == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   return cl_com_create_ssl_setup(new_setup, 
+                                  source->ssl_method,
+                                  source->ssl_CA_cert_pem_file,
+                                  source->ssl_CA_key_pem_file,
+                                  source->ssl_cert_pem_file,
+                                  source->ssl_key_pem_file,
+                                  source->ssl_rand_file,
+                                  source->ssl_reconnect_file,
+                                  source->ssl_refresh_time,
+                                  source->ssl_password,
+                                  source->ssl_verify_func);
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_free_ssl_setup()"
+int cl_com_free_ssl_setup(cl_ssl_setup_t** del_setup) {
+   if (del_setup == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (*del_setup == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   /* free structure members */
+   if ((*del_setup)->ssl_CA_cert_pem_file != NULL) {
+      free((*del_setup)->ssl_CA_cert_pem_file);
+   }
+   if ((*del_setup)->ssl_CA_key_pem_file != NULL) {
+      free((*del_setup)->ssl_CA_key_pem_file);
+   }
+   if ((*del_setup)->ssl_cert_pem_file != NULL) {
+      free((*del_setup)->ssl_cert_pem_file);
+   }
+   if ((*del_setup)->ssl_key_pem_file != NULL) {
+      free((*del_setup)->ssl_key_pem_file);
+   }
+   if ((*del_setup)->ssl_rand_file != NULL) {
+      free((*del_setup)->ssl_rand_file);
+   }
+   if ((*del_setup)->ssl_reconnect_file != NULL) {
+      free((*del_setup)->ssl_reconnect_file);
+   }
+   
+   if ((*del_setup)->ssl_password != NULL) {
+      free((*del_setup)->ssl_password);
+   }
+
+   /* free structure itself */
+   free(*del_setup);
+   *del_setup = NULL;
+
+   return CL_RETVAL_OK;
 }
 
 
@@ -714,6 +946,9 @@ const char* cl_com_get_connection_state(cl_com_connection_t* connection) {   /* 
       case CL_OPENING: {
          return "CL_OPENING";
       }
+      case CL_ACCEPTING: {
+         return "CL_ACCEPTING";
+      }
       case CL_CONNECTED: {
          return "CL_CONNECTED";
       }
@@ -740,7 +975,12 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
          return "UNEXPECTED CONNECTION SUB STATE";
       }
       case CL_CLOSING: {
-         return "UNEXPECTED CONNECTION SUB STATE";
+         switch( connection->connection_sub_state ) {
+            case CL_COM_DO_SHUTDOWN:
+               return "CL_COM_DO_SHUTDOWN";
+            default:
+               return "UNEXPECTED CONNECTION SUB STATE";
+         }
       }
       case CL_OPENING: {
          switch( connection->connection_sub_state ) {
@@ -750,6 +990,10 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
                return "CL_COM_OPEN_CONNECT";
             case CL_COM_OPEN_CONNECTED:
                return "CL_COM_OPEN_CONNECTED";
+            case CL_COM_OPEN_SSL_CONNECT_INIT:
+               return "CL_COM_OPEN_SSL_CONNECT_INIT";
+            case CL_COM_OPEN_SSL_CONNECT:
+               return "CL_COM_OPEN_SSL_CONNECT";
             default:
                return "UNEXPECTED CONNECTION SUB STATE";
          }
@@ -797,6 +1041,16 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
                return "CL_COM_SEND_READ_GMSH";
             case CL_COM_SEND_READ_CRM:
                return "CL_COM_SEND_READ_CRM";
+            default:
+               return "UNEXPECTED CONNECTION SUB STATE";
+         }
+      }
+      case CL_ACCEPTING: {
+         switch( connection->connection_sub_state ) {
+            case CL_COM_ACCEPT_INIT:
+               return "CL_COM_ACCEPT_INIT";
+            case CL_COM_ACCEPT:
+               return "CL_COM_ACCEPT";
             default:
                return "UNEXPECTED CONNECTION SUB STATE";
          }
@@ -2697,106 +2951,6 @@ int cl_com_print_host_info(cl_com_hostent_t *hostent_p ) {
 }
 
 
-
-/****** cl_communication/cl_com_send_message() *********************************
-*  NAME
-*     cl_com_send_message() -- send a message to an open connection
-*
-*  SYNOPSIS
-*     int cl_com_send_message(cl_com_connection_t* connection, int timeout, 
-*     cl_byte_t* data, long size) 
-*
-*  FUNCTION
-*     This wrapper function will call the correct cl_com_xxx_send_message()
-*     function for the selected framework.
-*
-*  INPUTS
-*     cl_com_connection_t* connection - pointer to open connection object
-*     int timeout                     - timeout for sending the message
-*     cl_byte_t* data                 - data buffer to send
-*     long size                       - size of data buffer
-*
-*  RESULT
-*     int - CL_RETVAL_XXXX error or CL_RETVAL_OK on success
-*
-*  SEE ALSO
-*     cl_communication/cl_com_receive_message()
-*******************************************************************************/
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_send_message()"
-int cl_com_send_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data, unsigned long size, unsigned long *only_one_write ) {  /* CR check */
-   if (connection != NULL) {
-      switch(connection->framework_type) {
-         case CL_CT_TCP: {
-            return cl_com_tcp_send_message( connection, timeout_time, data, size, only_one_write );
-         }
-         case CL_CT_SSL: {
-            return cl_com_ssl_send_message( connection, timeout_time, data, size, only_one_write );
-         }
-         case CL_CT_UNDEFINED: {
-            break;
-         }
-      }
-   } else {
-      CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
-   }
-   return CL_RETVAL_UNDEFINED_FRAMEWORK;
-
-}
-
-/****** cl_communication/cl_com_receive_message() ******************************
-*  NAME
-*     cl_com_receive_message() -- receive a message from an open connection
-*
-*  SYNOPSIS
-*     int cl_com_receive_message(cl_com_connection_t* connection, int timeout, 
-*     cl_byte_t** data) 
-*
-*  FUNCTION
-*     This wrapper function will cal the correct cl_com_xxx_receive_message()
-*     function for the selected framework. The caller has to free the data
-*     buffer returned in data.
-*
-*  INPUTS
-*     cl_com_connection_t* connection - pointer to open connection object
-*     int timeout                     - timeout for receiving the message 
-*     cl_byte_t** data                - address of an pointer
-*
-*  RESULT
-*     int - CL_RETVAL_XXXX error or CL_RETVAL_OK on success
-*
-*  SEE ALSO
-*     cl_communication/cl_com_send_message()
-*******************************************************************************/
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_receive_message()"
-int cl_com_receive_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data_buffer, unsigned long data_buffer_size, unsigned long *only_one_read) {   /* CR check */
-     
-   if (connection != NULL) {
-      switch(connection->framework_type) {
-         case CL_CT_TCP: {
-            return cl_com_tcp_receive_message(connection, timeout_time, data_buffer, data_buffer_size, only_one_read);
-         }
-         case CL_CT_SSL: {
-            return cl_com_ssl_receive_message(connection, timeout_time, data_buffer, data_buffer_size, only_one_read);
-         }
-         case CL_CT_UNDEFINED: {
-            break;
-         }
-      }
-   } else {
-      CL_LOG(CL_LOG_ERROR, "connection pointer is NULL");
-   }
-   return CL_RETVAL_UNDEFINED_FRAMEWORK;
-}
-
-
-
-
 /****** cl_communication/cl_com_connection_request_handler_setup() *************
 *  NAME
 *     cl_com_connection_request_handler_setup() -- Setup service
@@ -2944,9 +3098,22 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_con
       connection->data_read_flag = CL_COM_DATA_NOT_READY;
       if (*new_connection != NULL && retval == CL_RETVAL_OK) {
          /* setup new cl_com_connection_t */
+         switch(connection->framework_type) {
+            case CL_CT_TCP: {
+               (*new_connection)->connection_state = CL_CONNECTING;
+               (*new_connection)->connection_sub_state = CL_COM_READ_INIT;
+               break;
+            }
+            case CL_CT_SSL: {
+               (*new_connection)->connection_state = CL_ACCEPTING;
+               (*new_connection)->connection_sub_state = CL_COM_ACCEPT_INIT;
+               break;
+            }
+            case CL_CT_UNDEFINED: {
+               break;
+            }
+         }
          (*new_connection)->service_handler_flag = CL_COM_CONNECTION;
-         (*new_connection)->connection_state = CL_CONNECTING;
-         (*new_connection)->connection_sub_state = CL_COM_READ_INIT;
          (*new_connection)->was_accepted = CL_TRUE;
          (*new_connection)->local = cl_com_create_endpoint(connection->local->comp_host,
                                                            connection->local->comp_name, 
@@ -3112,7 +3279,6 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
    unsigned long data_to_read;
    unsigned long data_written = 0;
 
-   int sockfd = -1;
    int connect_port = -1;
 
 
@@ -3122,10 +3288,6 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
    }
 
    
-   if ( (retval=cl_com_connection_get_fd(connection, &sockfd)) != CL_RETVAL_OK ) {
-      return retval;
-   }
-
    if (connection->connection_state != CL_CONNECTING) {
       CL_LOG(CL_LOG_ERROR,"connection statis is not connecting");
       return CL_RETVAL_ALLREADY_CONNECTED;
@@ -3201,17 +3363,13 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
          if (data_to_read > 0) {
             if (only_once != 0) {
                data_read = 0;
-               retval = cl_com_read(connection->framework_type,
-                                    connection->read_buffer_timeout_time,
-                                    sockfd, 
+               retval = cl_com_read(connection,
                                     &(connection->data_read_buffer[(connection->data_read_buffer_pos)]), /* position to continue */
                                     data_to_read, 
                                     &data_read);               /* returns the data bytes read */
                connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read; /* add data read count to buff position */
             } else {
-               retval = cl_com_read(connection->framework_type,
-                                    connection->read_buffer_timeout_time,
-                                    sockfd, 
+               retval = cl_com_read(connection,
                                     &(connection->data_read_buffer[(connection->data_read_buffer_pos)]),
                                     data_to_read, 
                                     NULL);
@@ -3983,18 +4141,14 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             CL_LOG(CL_LOG_INFO,"state is CL_COM_READ_SEND_CRM");
             if (only_once != 0) {
                data_written = 0;
-               retval = cl_com_write(connection->framework_type,
-                                     connection->write_buffer_timeout_time,
-                                     sockfd, 
+               retval = cl_com_write(connection,
                                      &(connection->data_write_buffer[(connection->data_write_buffer_pos)]),  /* position to continue */
                                      connection->data_write_buffer_to_send, 
                                      &data_written);               /* returns the data bytes read */
                connection->data_write_buffer_pos = connection->data_write_buffer_pos + data_written;  /* add data read count to buff position */
                connection->data_write_buffer_to_send = connection->data_write_buffer_to_send - data_written; 
             } else {
-               retval = cl_com_write(connection->framework_type,
-                                     connection->write_buffer_timeout_time,
-                                     sockfd, 
+               retval = cl_com_write(connection,
                                      &(connection->data_write_buffer[(connection->data_write_buffer_pos)]),
                                      connection->data_write_buffer_to_send, 
                                      NULL);
@@ -4150,18 +4304,14 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
          CL_LOG(CL_LOG_INFO,"connection state: CL_COM_SEND_CM");
          if (only_once != 0) {
             data_written = 0;
-            retval = cl_com_write(connection->framework_type,
-                                  connection->write_buffer_timeout_time,
-                                  sockfd, 
+            retval = cl_com_write(connection,
                                   &(connection->data_write_buffer[(connection->data_write_buffer_pos)]),  /* position to continue */
                                   connection->data_write_buffer_to_send, 
                                   &data_written);               /* returns the data bytes read */
             connection->data_write_buffer_pos = connection->data_write_buffer_pos + data_written;  /* add data read count to buff position */
             connection->data_write_buffer_to_send = connection->data_write_buffer_to_send - data_written;
          } else {
-            retval = cl_com_write(connection->framework_type,
-                                  connection->write_buffer_timeout_time,
-                                  sockfd, 
+            retval = cl_com_write(connection,
                                   &(connection->data_write_buffer[(connection->data_write_buffer_pos)]),
                                   connection->data_write_buffer_to_send, 
                                   NULL);
@@ -4218,17 +4368,13 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
          if (data_to_read > 0) {
             if (only_once != 0) {
                data_read = 0;
-               retval = cl_com_read(connection->framework_type,
-                                    connection->read_buffer_timeout_time,
-                                    sockfd, 
+               retval = cl_com_read(connection,
                                     &(connection->data_read_buffer[(connection->data_read_buffer_pos)]),  /* position to continue */
                                     data_to_read, 
                                     &data_read);               /* returns the data bytes read */
                connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;  /* add data read count to buff position */
             } else {
-               retval = cl_com_read(connection->framework_type,
-                                    connection->read_buffer_timeout_time,
-                                    sockfd, 
+               retval = cl_com_read(connection,
                                     &(connection->data_read_buffer[(connection->data_read_buffer_pos)]),
                                     data_to_read, 
                                     NULL);
@@ -4322,39 +4468,113 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
    return CL_RETVAL_OK;
 }
 
-
+/* caller has to lock the connection list */
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
-#define __CL_FUNCTION__ "cl_com_read()"
-int cl_com_read(cl_framework_t framework, long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long* only_one_read) {
+#define __CL_FUNCTION__ "cl_com_connection_complete_accept()"
+int cl_com_connection_complete_accept( cl_com_connection_t* connection, long timeout, unsigned long only_once ) {
+   if (connection == NULL) {
+      CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
+      return CL_RETVAL_PARAMS;
+   }
 
-   switch(framework) {
+   if (connection->connection_state != CL_ACCEPTING) {
+      CL_LOG(CL_LOG_ERROR,"unexpected connection state");
+      return CL_RETVAL_CONNECTION_STATE_ERROR;
+   }
+   
+   switch(connection->framework_type) {
       case CL_CT_TCP: {
-         return cl_com_tcp_read(timeout_time, fd, message, size, only_one_read);
+         /* tcp framework does not support this state */
+         return CL_RETVAL_OK;
       }
       case CL_CT_SSL: {
-         return cl_com_ssl_read(timeout_time, fd, message, size, only_one_read);
+         return cl_com_ssl_connection_complete_accept(connection,timeout,only_once);
+         
       }
       case CL_CT_UNDEFINED: {
          break;
       }
    }
    return CL_RETVAL_UNDEFINED_FRAMEWORK;
+}
 
+
+
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_read()"
+int cl_com_read(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long* only_one_read) {
+
+   if (connection == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   switch(connection->framework_type) {
+      case CL_CT_TCP: {
+         return cl_com_tcp_read(connection, message, size, only_one_read);
+      }
+      case CL_CT_SSL: {
+         return cl_com_ssl_read(connection, message, size, only_one_read);
+      }
+      case CL_CT_UNDEFINED: {
+         break;
+      }
+   }
+   return CL_RETVAL_UNDEFINED_FRAMEWORK;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_connection_complete_shutdown()"
+int cl_com_connection_complete_shutdown(cl_com_connection_t* connection) {
+   if (connection == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (connection->connection_state != CL_CLOSING) {
+      CL_LOG(CL_LOG_ERROR,"unexpected connection state");
+      return CL_RETVAL_CONNECTION_STATE_ERROR;
+   }
+
+
+   switch(connection->framework_type) {
+      case CL_CT_TCP: {
+         /* tcp framework does not support this state */
+         return CL_RETVAL_OK;
+      }
+      case CL_CT_SSL: {
+         return cl_com_ssl_connection_complete_shutdown(connection);
+      }
+      case CL_CT_UNDEFINED: {
+         break;
+      }
+   }
+   return CL_RETVAL_UNDEFINED_FRAMEWORK;
 }
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_write()"
-int cl_com_write(cl_framework_t framework, long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write) {
-    switch(framework) {
+int cl_com_write(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long *only_one_write) {
+
+
+   if (connection == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   switch(connection->framework_type) {
       case CL_CT_TCP: {
-         return cl_com_tcp_write(timeout_time, fd, message, size, only_one_write);
+         return cl_com_tcp_write(connection, message, size, only_one_write);
       }
       case CL_CT_SSL: {
-         return cl_com_ssl_write(timeout_time, fd, message, size, only_one_write);
+         return cl_com_ssl_write(connection, message, size, only_one_write);
       }
       case CL_CT_UNDEFINED: {
          break;

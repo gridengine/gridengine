@@ -345,9 +345,9 @@ void *server_thread(void *t_conf) {
             if (connection->data_read_flag == CL_COM_DATA_READY) {
                CL_LOG( CL_LOG_INFO, "we have data to read");
                gettimeofday(&now,NULL);
-              
-               retval = cl_com_receive_message(connection, now.tv_sec + 10, connection->data_read_buffer, sizeof(data), NULL); 
-               CL_LOG_STR(CL_LOG_INFO, "cl_com_receive_message() returned ", cl_get_error_text(retval) );
+               connection->read_buffer_timeout_time = now.tv_sec + 10;
+               retval = cl_com_read(connection, connection->data_read_buffer, sizeof(data), NULL); 
+               CL_LOG_STR(CL_LOG_INFO, "cl_com_read() returned ", cl_get_error_text(retval) );
 
                if (retval != CL_RETVAL_OK && retval != CL_RETVAL_UNCOMPLETE_READ) {
                   /* close this connection */
@@ -358,8 +358,8 @@ void *server_thread(void *t_conf) {
                }
                CL_LOG_STR( CL_LOG_WARNING, "data is:", (char*)connection->data_read_buffer);
                gettimeofday(&now,NULL);
-               
-               retval = cl_com_send_message(connection, now.tv_sec + 10, connection->data_read_buffer, sizeof(data), NULL); 
+               connection->write_buffer_timeout_time = now.tv_sec + 10;
+               retval = cl_com_write(connection, connection->data_read_buffer, sizeof(data), NULL); 
             } else {
                CL_LOG( CL_LOG_INFO, "no data");
             }
@@ -476,11 +476,11 @@ void *client_thread(void *t_conf) {
          for(i=0;i<1;i++) {
 #if 1
             gettimeofday(&now,NULL);
-
-            retval = cl_com_send_message(con, now.tv_sec + 10, (cl_byte_t*)data, sizeof(data), NULL ); 
-            CL_LOG_INT( CL_LOG_INFO, "cl_com_send_message() nr ",i );
+            con->write_buffer_timeout_time = now.tv_sec + 10;
+            retval = cl_com_write(con, (cl_byte_t*)data, sizeof(data), NULL ); 
+            CL_LOG_INT( CL_LOG_INFO, "cl_com_write() nr ",i );
             if (retval != CL_RETVAL_OK) {
-               CL_LOG_STR(CL_LOG_INFO, "cl_com_send_message() returned ", cl_get_error_text(retval) );
+               CL_LOG_STR(CL_LOG_INFO, "cl_com_write() returned ", cl_get_error_text(retval) );
                retval = cl_com_close_connection(&con);
                CL_LOG_STR(CL_LOG_INFO, "cl_com_close_connection() returned ", cl_get_error_text(retval) );
             }
@@ -494,9 +494,9 @@ void *client_thread(void *t_conf) {
       if (con != NULL) {
          size = 0;
          gettimeofday(&now,NULL);
-         
-         retval = cl_com_receive_message(con, now.tv_sec + 5, con->data_read_buffer, sizeof(data), NULL); 
-         CL_LOG_STR(CL_LOG_INFO, "cl_com_receive_message() returned ", cl_get_error_text(retval) );
+         con->read_buffer_timeout_time = now.tv_sec + 5;
+         retval = cl_com_read(con, con->data_read_buffer, sizeof(data), NULL); 
+         CL_LOG_STR(CL_LOG_INFO, "cl_com_read() returned ", cl_get_error_text(retval) );
          CL_LOG_STR( CL_LOG_WARNING, "data is:", (char*)con->data_read_buffer);
 #endif
 #if 0  /* enable this to close the connection each time an answer is read */

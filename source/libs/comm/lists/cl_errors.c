@@ -146,9 +146,6 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_SELECT_ERROR              : {
          return MSG_CL_RETVAL_SELECT_ERROR;
       }
-      case CL_RETVAL_RECEIVE_ERROR             : {
-         return MSG_CL_RETVAL_RECEIVE_ERROR;
-      }
       case CL_RETVAL_PIPE_ERROR                : {
          return MSG_CL_RETVAL_PIPE_ERROR;
       }
@@ -335,8 +332,71 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_NO_LOCAL_HOST_CONNECTION: {
          return MSG_CL_RETVAL_NO_LOCAL_HOST_CONNECTION;
       }
+      case CL_RETVAL_SSL_COULD_NOT_SET_METHOD: {
+         return MSG_CL_RETVAL_SSL_COULD_NOT_SET_METHOD;
+      }
+      case CL_RETVAL_SSL_COULD_NOT_CREATE_CONTEXT: {
+         return MSG_CL_RETVAL_SSL_COULD_NOT_CREATE_CONTEXT;
+      } 
+      case CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE: {
+         return MSG_CL_RETVAL_SSL_COULD_NOT_SET_CA_CHAIN_FILE;
+      }
+      case CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE: {
+         return MSG_CL_RETVAL_SSL_CANT_SET_CA_KEY_PEM_FILE;
+      }
+      case CL_RETVAL_SSL_CANT_READ_CA_LIST: {
+         return MSG_CL_RETVAL_SSL_CANT_READ_CA_LIST;
+      }
+      case CL_RETVAL_SSL_NO_SYMBOL_TABLE: {
+         return MSG_CL_RETVAL_SSL_NO_SYMBOL_TABLE;
+      }
+      case CL_RETVAL_SSL_SYMBOL_TABLE_ALREADY_LOADED: {
+         return MSG_CL_RETVAL_SSL_SYMBOL_TABLE_ALREADY_LOADED;
+      }
+      case CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED: {
+         return MSG_CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED;
+      }
+      case CL_RETVAL_SSL_CANT_LOAD_ALL_FUNCTIONS: {
+         return MSG_CL_RETVAL_SSL_CANT_LOAD_ALL_FUNCTIONS;
+      }
+      case CL_RETVAL_SSL_SHUTDOWN_ERROR: {
+         return MSG_CL_RETVAL_SSL_SHUTDOWN_ERROR;
+      }
+      case CL_RETVAL_SSL_CANT_CREATE_SSL_OBJECT: {
+         return MSG_CL_RETVAL_SSL_CANT_CREATE_SSL_OBJECT;
+      }
+      case CL_RETVAL_SSL_CANT_CREATE_BIO_SOCKET: {
+         return MSG_CL_RETVAL_SSL_CANT_CREATE_BIO_SOCKET;
+      }
+      case CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT: {
+         return MSG_CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT;
+      }
+      case CL_RETVAL_SSL_ACCEPT_ERROR: {
+         return MSG_CL_RETVAL_SSL_ACCEPT_ERROR;
+      }
+      case CL_RETVAL_SSL_CONNECT_HANDSHAKE_TIMEOUT: {
+         return MSG_CL_RETVAL_SSL_CONNECT_HANDSHAKE_TIMEOUT;
+      }
+      case CL_RETVAL_SSL_CONNECT_ERROR: {
+         return MSG_CL_RETVAL_SSL_CONNECT_ERROR;
+      }
+      case CL_RETVAL_SSL_CERTIFICATE_ERROR: {
+         return MSG_CL_RETVAL_SSL_CERTIFICATE_ERROR;
+      }
+      case CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR: {
+         return MSG_CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR;
+      }
+      case CL_RETVAL_SSL_GET_SSL_ERROR: {
+         return MSG_CL_RETVAL_SSL_GET_SSL_ERROR;
+      }
       case CL_RETVAL_UNEXPECTED_CHARACTERS: {
          return MSG_CL_RETVAL_UNEXPECTED_CHARACTERS;
+      }
+      case CL_RETVAL_SSL_NO_SERVICE_PEER_NAME: {
+         return MSG_CL_RETVAL_SSL_NO_SERVICE_PEER_NAME;
+      }
+      case CL_RETVAL_SSL_RAND_SEED_FAILURE: {
+         return MSG_CL_RETVAL_SSL_RAND_SEED_FAILURE;
       }
    }
    return CL_RETVAL_UNDEFINED_STR;

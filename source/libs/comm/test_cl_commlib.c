@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <pwd.h>
 
 #include "cl_commlib.h"
 #include "cl_log_list.h"
@@ -87,9 +88,70 @@ unsigned long my_application_status(char** info_message) {
    return (unsigned long)1;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "my_ssl_verify_func()"
+static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
+   char* user_name = NULL;
+   struct passwd *paswd = NULL;
+
+   paswd = getpwuid(getuid());
+   if (paswd) {
+      user_name = paswd->pw_name;
+   }
+   if (user_name == NULL) {
+      user_name = "unexpected user name";
+   }
+   if (service_mode == CL_TRUE) {
+      CL_LOG(CL_LOG_WARNING,"running in service mode");
+      switch(mode) {
+         case CL_SSL_PEER_NAME: {
+            CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME");
+            if (strcmp(value,"SGE admin user") != 0) {
+               CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME is not \"SGE admin user\"");
+               return CL_FALSE;
+            }
+            break;
+         }
+         case CL_SSL_USER_NAME: {
+            CL_LOG(CL_LOG_WARNING,"CL_SSL_USER_NAME");
+            if (strcmp(value,user_name) != 0) {
+               CL_LOG_STR(CL_LOG_WARNING,"CL_SSL_USER_NAME is not", user_name);
+               return CL_FALSE;
+            }
+            break;
+         }
+      }
+   } else {
+      CL_LOG(CL_LOG_WARNING,"running in client mode");
+      switch(mode) {
+         case CL_SSL_PEER_NAME: {
+            CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME");
+            if (strcmp(value,"SGE admin user") != 0) {
+               CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME is not \"SGE Daemon\"");
+               return CL_FALSE;
+            }
+            break;
+         }
+         case CL_SSL_USER_NAME: {
+            CL_LOG(CL_LOG_WARNING,"CL_SSL_USER_NAME");
+            if (strcmp(value,user_name) != 0) {
+               CL_LOG_STR(CL_LOG_WARNING,"CL_SSL_USER_NAME is not", user_name);
+               return CL_FALSE;
+            }
+            break;
+         }
+      }
+   }
+   return CL_TRUE;
+}
+
+
 extern int main(int argc, char** argv)
 {
   struct sigaction sa;
+  cl_ssl_setup_t ssl_config;
 
 
   cl_com_handle_t* handle = NULL; 
@@ -101,6 +163,17 @@ extern int main(int argc, char** argv)
   cl_framework_t framework = CL_CT_TCP;
 
   
+  ssl_config.ssl_method           = CL_SSL_v23;                 /*  v23 method                                  */
+  ssl_config.ssl_CA_cert_pem_file = getenv("SSL_CA_CERT_FILE"); /*  CA certificate file                         */
+  ssl_config.ssl_CA_key_pem_file  = NULL;                       /*  private certificate file of CA (not used)   */
+  ssl_config.ssl_cert_pem_file    = getenv("SSL_CERT_FILE");    /*  certificates file                           */
+  ssl_config.ssl_key_pem_file     = getenv("SSL_KEY_FILE");     /*  key file                                    */
+  ssl_config.ssl_rand_file        = getenv("SSL_RAND_FILE");    /*  rand file (if RAND_status() not ok)         */
+  ssl_config.ssl_reconnect_file   = NULL;                       /*  file for reconnect data    (not used)       */
+  ssl_config.ssl_refresh_time     = 0;                          /*  key alive time for connections (not used)   */
+  ssl_config.ssl_password         = NULL;                       /*  password for encrypted keyfiles (not used)  */
+  ssl_config.ssl_verify_func      = my_ssl_verify_func;         /*  function callback for peer user/name check  */
+
   if (argc < 2) {
       printf("param1=debug_level [param2=framework(TCP/SSL)]\n");
       exit(1);
@@ -115,6 +188,17 @@ extern int main(int argc, char** argv)
      if (strcmp(argv[2], "SSL") == 0) {
         framework=CL_CT_SSL;
         printf("using SSL framework\n");
+
+        if (ssl_config.ssl_CA_cert_pem_file == NULL ||
+            ssl_config.ssl_cert_pem_file    == NULL ||
+            ssl_config.ssl_key_pem_file     == NULL ||
+            ssl_config.ssl_rand_file        == NULL) {
+           printf("please set the following environment variables:\n");
+           printf("SSL_CA_CERT_FILE         = CA certificate file\n");
+           printf("SSL_CERT_FILE            = certificates file\n");
+           printf("SSL_KEY_FILE             = key file\n");
+           printf("(optional) SSL_RAND_FILE = rand file (if RAND_status() not ok)\n");
+        }
      }
      if (framework == CL_CT_UNDEFINED) {
         printf("unexpected framework type\n");
@@ -169,6 +253,7 @@ extern int main(int argc, char** argv)
  
   cl_com_set_tag_name_func(my_application_tag_name);
 
+  cl_com_specify_ssl_configuration(&ssl_config);
 
   handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, 0, CL_TCP_DEFAULT, "server", 1, 1, 0 );
   if (handle == NULL) {
@@ -199,10 +284,17 @@ extern int main(int argc, char** argv)
   while(do_shutdown != 1) {
      unsigned long mid;
      int ret_val;
+     static int runs = 100;
 
      CL_LOG(CL_LOG_INFO,"main()");
      cl_commlib_trigger(handle); 
 
+#if 0
+     runs--;
+#endif
+     if (runs<= 0) {
+        do_shutdown = 1;
+     }
 #if 0
      {
         cl_raw_list_t* tmp_endpoint_list = NULL;
@@ -314,10 +406,6 @@ extern int main(int argc, char** argv)
   
 
   printf("main done\n");
+  fflush(stdout);
   return 0;
 }
-
-
-
-
-

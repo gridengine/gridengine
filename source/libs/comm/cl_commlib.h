@@ -88,6 +88,7 @@ int cl_com_set_alias_file_dirty(void);
 int cl_com_append_host_alias(char* local_resolved_name, char* alias_name);
 int cl_com_remove_host_alias(char* alias_name);
 
+int cl_com_specify_ssl_configuration(cl_ssl_setup_t* new_config);
 
 int cl_com_append_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int service_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static );
 int cl_com_remove_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id);

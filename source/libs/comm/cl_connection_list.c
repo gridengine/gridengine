@@ -187,7 +187,7 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_connection_list_destroy_connections_to_close()"
-int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int do_lock ) {   /* CR check */
+int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int do_lock ) {
    int ret_val = CL_RETVAL_OK;
    cl_connection_list_elem_t* elem = NULL;
    cl_connection_list_elem_t* elem2 = NULL;
@@ -334,6 +334,24 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
       }
 
       if (connection->connection_state == CL_CLOSING ) {
+         ret_val=cl_com_connection_complete_shutdown(connection);
+         if (ret_val != CL_RETVAL_OK) {
+            struct timeval now;
+            gettimeofday(&now,NULL);
+            if ( connection->connection_close_time.tv_sec <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+               CL_LOG(CL_LOG_ERROR,"close connection timeout - skipping another connection shutdown");
+            } else {
+               if (ret_val == CL_RETVAL_UNCOMPLETE_READ || ret_val == CL_RETVAL_UNCOMPLETE_WRITE) {
+                  CL_LOG_STR(CL_LOG_WARNING,"cl_com_connection_complete_shutdown() returned:", cl_get_error_text(ret_val));
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                  continue;
+               }
+            }
+            connection->connection_sub_state = CL_COM_DONE;
+            CL_LOG_STR(CL_LOG_ERROR,"skipping another connection shutdown, last one returned:", cl_get_error_text(ret_val));
+            CL_LOG(CL_LOG_ERROR,"skipping shutdown");
+         }
+
          if (delete_connections == NULL) {
             ret_val = cl_connection_list_setup(&delete_connections, "delete_connections", 0);
             if (ret_val != CL_RETVAL_OK) {

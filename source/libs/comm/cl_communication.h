@@ -86,6 +86,20 @@ int cl_com_free_hostspec(cl_com_host_spec_t **hostspec);
 int cl_com_print_host_info(cl_com_hostent_t *hostent_p );                 /* CR check */
 
 
+int cl_com_create_ssl_setup(cl_ssl_setup_t** new_setup,
+                            cl_ssl_method_t  ssl_method,
+                            char*            ssl_CA_cert_pem_file,
+                            char*            ssl_CA_key_pem_file,
+                            char*            ssl_cert_pem_file,
+                            char*            ssl_key_pem_file,
+                            char*            ssl_rand_file,
+                            char*            ssl_reconnect_file,
+                            unsigned long    ssl_refresh_time,
+                            char*            ssl_password,
+                            cl_ssl_verify_func_t  ssl_verify_func);
+
+int cl_com_dup_ssl_setup(cl_ssl_setup_t** new_setup, cl_ssl_setup_t* source);
+int cl_com_free_ssl_setup(cl_ssl_setup_t** del_setup);
 
 /* debug / help functions */
 void cl_dump_connection(cl_com_connection_t* connection);                     /* CR check */
@@ -120,6 +134,14 @@ int cl_com_free_connection(cl_com_connection_t** connection);
 /* after this line are the main functions used by lib user */
 /* ======================================================= */
 
+
+int cl_com_connection_complete_accept(cl_com_connection_t* connection,
+                                      long timeout,
+                                      unsigned long only_once);
+
+int cl_com_connection_complete_shutdown(cl_com_connection_t* connection);
+
+
 int cl_com_open_connection(cl_com_connection_t* connection, 
                                             int timeout, 
                              cl_com_endpoint_t* remote_endpoint, 
@@ -129,21 +151,10 @@ int cl_com_open_connection(cl_com_connection_t* connection,
 
 int cl_com_close_connection(cl_com_connection_t** connection);  /* CR check */
 
-int cl_com_send_message(cl_com_connection_t* connection, 
-                                         int timeout_time, 
-                                  cl_byte_t* data, 
-                               unsigned long size,
-                              unsigned long* only_one_write);          /* CR check */
-
 int cl_com_read_GMSH(cl_com_connection_t* connection, unsigned long *only_one_read);
-int cl_com_read(cl_framework_t framework, long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long* only_one_read);
-int cl_com_write(cl_framework_t framework, long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write);
+int cl_com_read(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long* only_one_read);
+int cl_com_write(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long *only_one_write);
 
-int cl_com_receive_message(cl_com_connection_t* connection, 
-                                            int timeout_time, 
-                                     cl_byte_t* data_buffer, 
-                                  unsigned long data_buffer_size, 
-                                 unsigned long* only_one_read);   /* CR check */
 
 
 /* This functions need service connection pointer = cl_com_connection_request_handler_setup */

@@ -58,11 +58,13 @@ int cl_com_tcp_setup_connection(cl_com_connection_t** connection,
                                 cl_xml_data_format_t           data_format_type,
                                 cl_tcp_connect_t               tcp_connect_mode);
 
-int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, unsigned long only_once);  /* CR check */
-int cl_com_tcp_close_connection(cl_com_connection_t** connection);  /* CR check */
-int cl_com_tcp_send_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data, unsigned long size, unsigned long *only_one_write );  /* CR check */
-int cl_com_tcp_receive_message(cl_com_connection_t* connection, int timeout_time, cl_byte_t* data_buffer, unsigned long data_buffer_size, unsigned long *only_one_read);  /* CR check */
-int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode ); /* CR check */
+int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, unsigned long only_once);
+int cl_com_tcp_close_connection(cl_com_connection_t** connection);
+int cl_com_tcp_open_connection_request_handler(cl_raw_list_t*       connection_list,
+                                               cl_com_connection_t* service_connection,
+                                               int                  timeout_val_sec,
+                                               int                  timeout_val_usec,
+                                               cl_select_method_t   select_mode );
 
 
 int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection);
@@ -71,8 +73,8 @@ int cl_com_tcp_connection_request_handler_cleanup(cl_com_connection_t* connectio
 
 /* connection establish help functions */
 int cl_com_tcp_read_GMSH(cl_com_connection_t* connection, unsigned long *only_one_read);
-int cl_com_tcp_write(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_write);
-int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsigned long size, unsigned long *only_one_read);
+int cl_com_tcp_write(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long *only_one_write);
+int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigned long size, unsigned long *only_one_read);
 
 
 

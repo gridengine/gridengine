@@ -1,3 +1,8 @@
+CR-2005-01-21-0: Enhancem.: - finished commlib SSL framework support
+                              ( not yet integrated in gdi )
+                            - code cleanup
+                 Review:    AA
+
 SG-2005-01-21-1: Bugfix:   - qmaster crashed in case of some calendar configs.
                  Review:   AH
                  Changed:  qmaster

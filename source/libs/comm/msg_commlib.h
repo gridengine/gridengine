@@ -78,8 +78,11 @@
 #define MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_LOCAL_HOST_SSUS                     _MESSAGE(85038, _("debug client \""SFN"/"SFN"/"U32CFormat"\" is not running on host "SFQ""))
 #define MSG_CL_TCP_FW_LOCAL_HOST_CONNECT_ERROR                                _MESSAGE(85039, _("debug client is not running on local host"))
 #define MSG_CL_TCP_FW_STANDARD_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU          _MESSAGE(85040, _("client \""SFN"/"SFN"/"U32CFormat"\" did not use a reserved port below 1024"))
+#define MSG_CL_TCP_FW_SSL_CONNECT_TIMEOUT                                     _MESSAGE(85041, _("connect timeout error"))
+#define MSG_CL_SSL_FW_OPEN_SSL_CRYPTO_FAILED                                  _MESSAGE(85042, _("Unable to open the OpenSSL library.  Please make sure libssl is accessible from your shared library path.\n"))
+#define MSG_CL_SSL_FW_LOAD_CRYPTO_SYMBOL_FAILED                               _MESSAGE(85043, _("Unable to load symbol from libssl.\n"))
 
-#define MSG_CL_COMMLIB_CLOSING_SSU                                            _MESSAGE(85040, _("closing \""SFN"/"SFN"/"U32CFormat"\""))
+#define MSG_CL_COMMLIB_CLOSING_SSU                                            _MESSAGE(85044, _("closing \""SFN"/"SFN"/"U32CFormat"\""))
 
 
 

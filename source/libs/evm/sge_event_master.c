@@ -29,26 +29,25 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#include "sge_event_master.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
-#include "sge_event_master.h"
 
 #include "sge.h"
 #include "cull.h"
 #include "sge_feature.h"
 #include "sge_time.h"
 #include "sge_host.h"
-#include "sge_pe_qmaster.h"
 #include "sge_event.h"
 #include "sge_all_listsL.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_conf.h"
-#include "sge_security.h"
 #include "sge_answer.h"
 #include "sge_qinstance.h"
 #include "sge_report.h"
@@ -68,6 +67,7 @@
 #include "sge_object.h"
 #include "sge_mtutil.h"
 #include "setup_qmaster.h"
+#include "cl_errors.h"
 
 #include "msg_common.h"
 #include "msg_evmlib.h"
@@ -142,7 +142,7 @@ typedef struct {
  *
  *
  * SEE ALSO:
- *     evm/sge_event_master/sge_list_select()
+ *     evm/sge_event_master/list_select()
  *     evm/sge_event_master/elem_select() 
  *  and
  *     evm/sge_event_master/add_list_event
@@ -189,30 +189,29 @@ const int SOURCE_LIST[LIST_MAX][3] = {
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
 
 static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, false, false, NULL};
-static pthread_once_t         Event_Master_Once  = PTHREAD_ONCE_INIT;
+static pthread_once_t         Event_Master_Once = PTHREAD_ONCE_INIT;
 static pthread_t              Event_Thread;
 
 
-static void  event_master_once_init(void);
-static void  init_send_events(void); 
-static void* send_thread(void*);
-static void  send_events(void);
-static bool  should_exit(void);
-
-static void total_update(lListElem*);
-static void sge_total_update_event(lListElem*, ev_event);
-static void add_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lListElem*);
-static int  add_list_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lList*, int); 
-static void flush_events(lListElem*, int, int );
-static int  eventclient_subscribed(const lListElem *, ev_event, const char*);
-static void check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
-static void sge_build_subscription(lListElem*);
-static const lDescr* getDescriptorL(subscription_t*, const lList*, int);
+static void       event_master_once_init(void);
+static void       init_send_events(void); 
+static void*      send_thread(void*);
+static bool       should_exit(void);
+static void       send_events(void);
+static void       flush_events(lListElem*, int, int );
+static void       total_update(lListElem*);
+static void       build_subscription(lListElem*);
+static void       check_send_new_subscribed_list(const subscription_t*, const subscription_t*, lListElem*, ev_event);
+static int        eventclient_subscribed(const lListElem *, ev_event, const char*);
+static int        purge_event_list(lList* aList, ev_event anEvent); 
+static int        add_list_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lList*, int); 
+static void       add_event(lListElem*, u_long32, ev_event, u_long32, u_long32, const char*, const char*, lListElem*);
+static void       total_update_event(lListElem*, ev_event);
+static bool       list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
+static lListElem* elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
+static lListElem* eventclient_list_locate_by_adress(const char*, const char*, u_long32);
 static const lDescr* getDescriptor(subscription_t*, const lListElem*, int);
-static bool sge_list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*);
-static lListElem *elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
-static lListElem * eventclient_list_locate_by_adress(const char*, const char*, u_long32);
-static int purge_event_list(lList* aList, ev_event anEvent); 
+static const lDescr* getDescriptorL(subscription_t*, const lList*, int);
 
 
 /****** Eventclient/Server/sge_add_event_client() ******************************
@@ -355,7 +354,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       lAppendElem(*eclpp, ret_el);
    }
 
-   sge_build_subscription(ep);
+   build_subscription(ep);
 
    /* build events for total update */
    total_update(ep);
@@ -479,7 +478,7 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       subscription_t *new_sub = NULL; 
       subscription_t *old_sub = NULL; 
 
-      sge_build_subscription(clio);
+      build_subscription(clio);
       new_sub = lGetRef(clio, EV_sub_array);
       old_sub = lGetRef(event_client, EV_sub_array);
  
@@ -1486,6 +1485,31 @@ static void init_send_events(void)
    return;
 } /* init_send_events() */
 
+/****** evm/sge_event_master/send_thread() *************************************
+*  NAME
+*     send_thread() -- send events due 
+*
+*  SYNOPSIS
+*     static void* send_thread(void *anArg) 
+*
+*  FUNCTION
+*     Event send thread. Do common thread initialization. Send events until
+*     shutdown is requestet. 
+*
+*  INPUTS
+*     void *anArg - none 
+*
+*  RESULT
+*     void* - none 
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: send_thread() is a thread function. Do NOT use this function
+*     MT-NOTE: in any other way!
+*
+*******************************************************************************/
 static void* send_thread(void *anArg)
 {
    DENTER(TOP_LAYER, "send_thread");
@@ -1501,6 +1525,28 @@ static void* send_thread(void *anArg)
    return NULL;
 } /* send_thread() */
 
+/****** evm/sge_event_master/should_exit() *************************************
+*  NAME
+*     should_exit() -- should thread exit? 
+*
+*  SYNOPSIS
+*     static bool should_exit(void) 
+*
+*  FUNCTION
+*     Determine if send thread should exit. Does return value of the Master
+*     Control struct 'exit' flag. 
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     true   - exit
+*     false  - continue 
+*
+*  NOTES
+*     MT-NOTE: should_exit() is MT safe 
+*
+*******************************************************************************/
 static bool should_exit(void)
 {
    bool res = false;
@@ -1517,6 +1563,37 @@ static bool should_exit(void)
    return res;
 } /* should_exit() */
 
+/****** evm/sge_event_master/send_events() *************************************
+*  NAME
+*     send_events() -- send events to event clients 
+*
+*  SYNOPSIS
+*     static void send_events(void) 
+*
+*  FUNCTION
+*     Loop over all event clients and send events due. If an event client did
+*     time out, it will be removed from the list of registered event clients.
+*
+*     Events will be delivered only, if the so called 'busy handling' of a 
+*     client does allow it. Events will be delivered as a report (REP_Type)
+*     with a report list of type ET_Type. 
+*
+*  INPUTS
+*     void - none 
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: send_events() is MT safe 
+*     MT-NOTE:
+*     MT-NOTE: After all events for all clients have been sent. This function
+*     MT-NOTE: will wait on the condition variable 'Master_Control.cond_var'
+*     MT-NOTE:
+*     MT-NOTE: The condition variable will be signaled if a new event client
+*     MT-NOTE: or a new event have been added.
+*
+*******************************************************************************/
 static void send_events(void)
 {
    lListElem *report;
@@ -1712,35 +1789,6 @@ static void flush_events(lListElem *event_client, int interval, int now)
    return;
 } /* flush_events() */
 
-/****** Eventclient/Server/reinit_event_client() *******************************
-*  NAME
-*     reinit_event_client() -- do a total update for the scheduler
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     int 
-*     reinit_event_client(ev_registration_id id) 
-*
-*  FUNCTION
-*     Does a total update (send all lists) to the event client specified by id
-*     and outputs an error message.
-*
-*  INPUTS
-*     ev_registration_id id - the id of the event client to reinitialize.
-*
-*  RESULT
-*     int - 0 if reinitialization failed, e.g. because the event client does
-*           not exits, else 0
-*
-*  NOTES
-*     MT-NOTE: reinit_event_client() is MT safe.
-*
-*  SEE ALSO
-*     Eventclient/Server/total_update()
-*
-*******************************************************************************/
-
 /****** Eventclient/Server/total_update() **************************************
 *  NAME
 *     total_update() -- send all data to eventclient
@@ -1773,32 +1821,32 @@ total_update(lListElem *event_client)
 {
    DENTER(TOP_LAYER, "total_update");
 
-   sge_total_update_event(event_client, sgeE_ADMINHOST_LIST);
-   sge_total_update_event(event_client, sgeE_CALENDAR_LIST);
-   sge_total_update_event(event_client, sgeE_CKPT_LIST);
-   sge_total_update_event(event_client, sgeE_CENTRY_LIST);
-   sge_total_update_event(event_client, sgeE_CONFIG_LIST);
-   sge_total_update_event(event_client, sgeE_EXECHOST_LIST);
-   sge_total_update_event(event_client, sgeE_JOB_LIST);
-   sge_total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST);
-   sge_total_update_event(event_client, sgeE_MANAGER_LIST);
-   sge_total_update_event(event_client, sgeE_OPERATOR_LIST);
-   sge_total_update_event(event_client, sgeE_PE_LIST);
-   sge_total_update_event(event_client, sgeE_CQUEUE_LIST);
-   sge_total_update_event(event_client, sgeE_SCHED_CONF);
-   sge_total_update_event(event_client, sgeE_SUBMITHOST_LIST);
-   sge_total_update_event(event_client, sgeE_USERSET_LIST);
+   total_update_event(event_client, sgeE_ADMINHOST_LIST);
+   total_update_event(event_client, sgeE_CALENDAR_LIST);
+   total_update_event(event_client, sgeE_CKPT_LIST);
+   total_update_event(event_client, sgeE_CENTRY_LIST);
+   total_update_event(event_client, sgeE_CONFIG_LIST);
+   total_update_event(event_client, sgeE_EXECHOST_LIST);
+   total_update_event(event_client, sgeE_JOB_LIST);
+   total_update_event(event_client, sgeE_JOB_SCHEDD_INFO_LIST);
+   total_update_event(event_client, sgeE_MANAGER_LIST);
+   total_update_event(event_client, sgeE_OPERATOR_LIST);
+   total_update_event(event_client, sgeE_PE_LIST);
+   total_update_event(event_client, sgeE_CQUEUE_LIST);
+   total_update_event(event_client, sgeE_SCHED_CONF);
+   total_update_event(event_client, sgeE_SUBMITHOST_LIST);
+   total_update_event(event_client, sgeE_USERSET_LIST);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
-      sge_total_update_event(event_client, sgeE_NEW_SHARETREE);
-      sge_total_update_event(event_client, sgeE_PROJECT_LIST);
-      sge_total_update_event(event_client, sgeE_USER_LIST);
+      total_update_event(event_client, sgeE_NEW_SHARETREE);
+      total_update_event(event_client, sgeE_PROJECT_LIST);
+      total_update_event(event_client, sgeE_USER_LIST);
    }
 
-   sge_total_update_event(event_client, sgeE_HGROUP_LIST);
+   total_update_event(event_client, sgeE_HGROUP_LIST);
 
 #ifndef __SGE_NO_USERMAPPING__
-   sge_total_update_event(event_client, sgeE_CUSER_LIST);
+   total_update_event(event_client, sgeE_CUSER_LIST);
 #endif
 
    DEXIT;
@@ -1806,13 +1854,13 @@ total_update(lListElem *event_client)
 } /* total_update() */
 
 
-/****** sge_event_master/sge_build_subscription() ******************************
+/****** evm/sge_event_master/build_subscription() ******************************
 *  NAME
-*     sge_build_subscription() -- generates an array out of the cull registration
+*     build_subscription() -- generates an array out of the cull registration
 *                                 structure
 *
 *  SYNOPSIS
-*     static void sge_build_subscription(lListElem *event_el) 
+*     static void build_subscription(lListElem *event_el) 
 *
 *  FUNCTION
 *      generates an array out of the cull registration
@@ -1825,12 +1873,13 @@ total_update(lListElem *event_client)
 *     lListElem *event_el - the event element, which event structure will be transformed 
 *
 *******************************************************************************/
-static void sge_build_subscription(lListElem *event_el) {
+static void build_subscription(lListElem *event_el)
+{
    lList *subscription = lGetList(event_el, EV_subscribed);
    lListElem *sub_el = NULL;
    subscription_t *sub_array = NULL; 
 
-   DENTER(TOP_LAYER, "sge_build_subscription");
+   DENTER(TOP_LAYER, "build_subscription");
 
 
    if (!lGetBool(event_el, EV_changed)) {
@@ -1885,7 +1934,7 @@ static void sge_build_subscription(lListElem *event_el) {
       lSetBool(event_el, EV_changed, false);
    }
    DEXIT;
-}
+} /* build_subscription() */
 
 /****** Eventclient/Server/check_send_new_subscribed_list() ********************
 *  NAME
@@ -1909,7 +1958,7 @@ static void sge_build_subscription(lListElem *event_el) {
 *     ev_event event               - the event to check
 *
 *  SEE ALSO
-*     Eventclient/Server/sge_total_update_event()
+*     Eventclient/Server/total_update_event()
 *
 *******************************************************************************/
 static void 
@@ -1919,7 +1968,7 @@ check_send_new_subscribed_list(const subscription_t *old_subscription,
 {
    if ((new_subscription[event].subscription & EV_SUBSCRIBED) && 
        (old_subscription[event].subscription == EV_NOT_SUBSCRIBED)) {
-      sge_total_update_event(event_client, event);
+      total_update_event(event_client, event);
    }   
 }
 
@@ -2092,7 +2141,7 @@ add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
          type, (selection!=NULL), (fields!=NULL)));
 
          if (fields) {
-            if (!sge_list_select(subscription, type, &cp_list, list, selection, fields, descr)){
+            if (!list_select(subscription, type, &cp_list, list, selection, fields, descr)){
                cp_list = lSelectD("updating list", list, selection,descr, fields); 
             }   
             
@@ -2227,13 +2276,13 @@ add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
    return;
 }
 
-/****** Eventclient/Server/sge_total_update_event() ****************************
+/****** Eventclient/Server/total_update_event() *******************************
 *  NAME
-*     sge_total_update_event() -- create a total update event
+*     total_update_event() -- create a total update event
 *
 *  SYNOPSIS
 *     static void 
-*     sge_total_update_event(lListElem *event_client, ev_event type) 
+*     total_update_event(lListElem *event_client, ev_event type) 
 *
 *  FUNCTION
 *     Creates an event delivering a certain list of objects for an event client.
@@ -2245,8 +2294,7 @@ add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
 *     ev_event type           - event describing the list to update
 *
 *******************************************************************************/
-static void 
-sge_total_update_event(lListElem *event_client, ev_event type) 
+static void total_update_event(lListElem *event_client, ev_event type) 
 {
    u_long32 i;
    lListElem *event;
@@ -2258,7 +2306,7 @@ sge_total_update_event(lListElem *event_client, ev_event type)
    lEnumeration *fields = NULL;
    const lDescr *descr=NULL;
 
-   DENTER(TOP_LAYER, "sge_total_update_event");
+   DENTER(TOP_LAYER, "total_update_event");
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    session = lGetString(event_client, EV_session);
 
@@ -2353,7 +2401,7 @@ sge_total_update_event(lListElem *event_client, ev_event type)
 
          if (fields) {
             lList *reduced_lp = NULL;
-            if (!sge_list_select(subscription, type, &reduced_lp, lp, selection, fields, descr)){
+            if (!list_select(subscription, type, &reduced_lp, lp, selection, fields, descr)){
                reduced_lp = lSelectD("updating list", lp, selection,descr, fields); 
             }   
             lSetList(event, ET_new_version, reduced_lp);
@@ -2379,15 +2427,15 @@ sge_total_update_event(lListElem *event_client, ev_event type)
 
    DEXIT;
    return;
-}
+} /* total_update_event() */
 
 
-/****** sge_event_master/sge_list_select() ******************************************
+/****** evm/sge_event_master/list_select() *************************************
 *  NAME
-*     sge_list_select() -- makes a reduced job list dublication 
+*     list_select() -- makes a reduced job list dublication 
 *
 *  SYNOPSIS
-*     static bool sge_list_select(subscription_t *subscription, int type, lList 
+*     static bool list_select(subscription_t *subscription, int type, lList 
 *     **reduced_lp, lList *lp, const lCondition *selection, const lEnumeration 
 *     *fields, const lDescr *descr) 
 *
@@ -2411,13 +2459,13 @@ sge_total_update_event(lListElem *event_client, ev_event type)
 *     static bool - true, if it was a job event 
 *
 *******************************************************************************/
-static bool sge_list_select(subscription_t *subscription, int type, lList **reduced_lp, lList *lp, const lCondition *selection, 
-                       const lEnumeration *fields,  const lDescr *descr){
+static bool list_select(subscription_t *subscription, int type, lList **reduced_lp, lList *lp, const lCondition *selection, const lEnumeration *fields,  const lDescr *descr)
+{
    bool ret = false;
    int entry_counter;
    int event_counter;
 
-   DENTER(TOP_LAYER, "sge_list_select");
+   DENTER(TOP_LAYER, "list_select");
    
    for (entry_counter = 0; entry_counter < LIST_MAX; entry_counter++) {
       event_counter = -1;
@@ -2583,6 +2631,51 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
    return el;
 }
 
+/****** Eventclient/Server/eventclient_list_locate() **************************
+*  NAME
+*     eventclient_list_locate_by_adress() -- search event client by adress
+*
+*  SYNOPSIS
+*     #include "sge_event_master.h"
+*
+*     lListElem *
+*     eventclient_list_locate_by_adress(const char *host, 
+*                     const char *commproc, u_long32 id) 
+*
+*  FUNCTION
+*     Searches the event client list for an event client with the
+*     specified commlib adress.
+*     Returns a pointer to the event client object or
+*     NULL, if no such event client is registered.
+*
+*  INPUTS
+*     const char *host     - hostname of the event client to search
+*     const char *commproc - commproc of the event client to search
+*     u_long32 id          - id of the event client to search
+*
+*  RESULT
+*     lListElem* - event client object or NULL.
+*
+*  NOTES
+*
+*******************************************************************************/
+static lListElem *
+eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long32 id)
+{
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "eventclient_list_locate_by_adress");
+
+   for_each (ep, Master_Control.clients)
+      if (lGetUlong(ep, EV_commid) == id &&
+          !sge_hostcmp(lGetHost(ep, EV_host), host) &&
+           !strcmp(lGetString(ep, EV_commproc), commproc))
+           break;
+
+   DEXIT;
+   return ep;
+}
+
 /****** sge_event_master/getDescriptor() **************************************
 *  NAME
 *     getDescriptor() -- returns a reduced desciptor 
@@ -2648,49 +2741,3 @@ static const lDescr* getDescriptorL(subscription_t *subscription, const lList* l
    }
    return dp;
 }
-
-/****** Eventclient/Server/eventclient_list_locate() **************************
-*  NAME
-*     eventclient_list_locate_by_adress() -- search event client by adress
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     lListElem *
-*     eventclient_list_locate_by_adress(const char *host, 
-*                     const char *commproc, u_long32 id) 
-*
-*  FUNCTION
-*     Searches the event client list for an event client with the
-*     specified commlib adress.
-*     Returns a pointer to the event client object or
-*     NULL, if no such event client is registered.
-*
-*  INPUTS
-*     const char *host     - hostname of the event client to search
-*     const char *commproc - commproc of the event client to search
-*     u_long32 id          - id of the event client to search
-*
-*  RESULT
-*     lListElem* - event client object or NULL.
-*
-*  NOTES
-*
-*******************************************************************************/
-static lListElem *
-eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long32 id)
-{
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "eventclient_list_locate_by_adress");
-
-   for_each (ep, Master_Control.clients)
-      if (lGetUlong(ep, EV_commid) == id &&
-          !sge_hostcmp(lGetHost(ep, EV_host), host) &&
-           !strcmp(lGetString(ep, EV_commproc), commproc))
-           break;
-
-   DEXIT;
-   return ep;
-}
-

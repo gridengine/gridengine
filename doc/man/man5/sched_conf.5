@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/01/30 18:58:42 $     Revision: $Revision: 1.11 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/02/24 17:07:40 $     Revision: $Revision: 1.12 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/01/30 18:58:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/02/24 17:07:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -271,13 +271,6 @@ this parameter.
 .PP
 The relative importance of the project shares in the functional policy.
 Values are of type real.
-.\"
-.SS "\fBweight_jobclass\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support
-this parameter.
-.PP
-The relative importance of the job class (i.e. queue) shares in the
-functional policy. Values are of type real.
 .\"
 .SS "\fBweight_department\fP"
 This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support

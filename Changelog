@@ -1,3 +1,6 @@
+SD-2004-02-24-0: Cleanup:   man page updates, automatic user documentation
+                 Issue:     636
+
 AD-2004-02-24-1: Bugfix:    Did fix NULL pointer assignment.
                  Changed:   qstat
                  Issue:     696

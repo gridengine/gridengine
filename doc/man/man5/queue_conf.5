@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/01/25 20:02:35 $     Revision: $Revision: 1.15 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/02/24 17:07:39 $     Revision: $Revision: 1.16 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2004/01/25 20:02:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2004/02/24 17:07:39 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -646,20 +646,6 @@ explicit '\fIqmod \-e\fP' command (see
 The queue is disable in either case. This is equivalent to a manual and 
 explicit '\fIqmod \-d\fP' command (see
 .M qmod 1 ).
-.SS "\fBfshare\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not 
-support this parameter.
-.PP
-The functional shares of the queue (i.e. job class). Jobs executing in this 
-queue may get functional tickets derived from the relative importance of 
-the queue if the functional policy is activated.
-.SS "\fBoticket\fP"
-This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not 
-support this parameter.
-.PP
-The override tickets of the queue (i.e. job class). xxQS_NAME_EExx distributes the 
-configured amount of override tickets among all jobs executing in this 
-queue.
 .PP
 .SH "RESOURCE LIMITS"
 The first two resource limit parameters,

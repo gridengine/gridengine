@@ -1,3 +1,7 @@
+JG-2002-06-05-0: Bugfix:    Load values on HP-UX 11 multiprocessor machines 
+                            were incorrect.
+                 Issue:     #246
+
 SD-2002-06-03-0: Bugfix:    Fixed GRD 5.1.9 to SGEEE 5.3 upgrade
                  Issue:     #273
 

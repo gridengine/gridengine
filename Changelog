@@ -1,3 +1,6 @@
+CR-2002-02-21-0: Testsuite: added scripts/qlogin.sh (used for qmod
+                            reschedule test)
+
 CR-2002-02-20-0: Testsuite: cleanup of qmod reschedule test
                  Issue:     #118
 

@@ -68,6 +68,8 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    ldata->entry_life_time      = entry_life_time;
    ldata->entry_update_time    = entry_update_time;
    ldata->entry_reresolve_time = entry_reresolve_time;
+   ldata->last_refresh_time    = 0;
+   ldata->host_alias_file      = NULL;
 
    if (local_domain_name == NULL && method == CL_LONG) {
       CL_LOG(CL_LOG_WARNING,"can't compare long hosts without domain name");

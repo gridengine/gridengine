@@ -1,3 +1,6 @@
+DT-2004-01-16-0: Bugfix:    Fixed uninitialized read in new commlib on Solaris 9
+                 Changed:   cl_host_list.c
+
 SG-2004-01-16-0: Bugfix:    the slots attribute could not be overwritten on host
                             or global level. This has been changed.
                  Changed:   scheduler

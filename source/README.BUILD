@@ -22,7 +22,7 @@ Content
 0) Overview and files referenced in this document
 -------------------------------------------------
 
-   This document gives you a brief overview about the steps how to compile,
+   This document provides a brief overview about the steps how to compile,
    install and start Grid Engine. It is highly recommend to read this file
    and the files referenced here, if you are going to compile and run Grid
    Engine the first time.
@@ -155,24 +155,27 @@ Content
       % aimk -only-core
 
    When compilation begins a subdirectory named as an uppercase architecture
-   string will be created and the system is compiled.
+   string will be created and Grid Engine objects and binaires will be
+   created in these architecture dependent sub directories. This allows to
+   compile and store object files and binaries for different architectures
+   at the same time without deleting or moving them.
 
    At least on the supported and tested platforms problems with compilation
-   most likely will be related to the required compiler (often the operating
-   system compiler is used and other compilers like gcc are not supported or
-   not well tested) or compiler version, partially to the default memory
-   model on your machine (32 or 64bit). Usually these problems can be solved
-   by tuning aimk.
+   most likely will be related to the required compiler or compilerversion
+   Often the operating system compiler is used and other compilers like gcc
+   are not supported or not extensivley tested. Also the default memory
+   model of your target machine might be wrong (32 vs. 64bit). Usually these
+   problems can be solved by passing command line flags to aimk or by
+   changing aimk.
 
    By default the Grid Engine libraries are linked statically to the
-   binaries. Shared libraries are also supported, but installation is a bit
-   more complicated.
+   binaries. Shared libraries are also supported.
 
-   See 'README.aimk' for more information on all compilation issues.
+   See 'README.aimk' for more information on typical compilation issues.
 
 
-5) Creating man pages and qmon help file
-----------------------------------------
+5) Creating man pages
+---------------------
 
    Man pages in nroff format are created with
 
@@ -197,20 +200,20 @@ Content
 ---------------------------
 
    Once Grid Engine is compiled it can be prepared for installation by
-   staging it to an appropriate place. Two types are supported. The script
-   'scripts/distinst' is responsible for this purpose. If called as
-   'myinst' it will copy the files directly to a local installation in the
-   directory $SGE_ROOT. This option is useful for quickly testing the
-   results of your compilation. If the script is called as 'distinst' it
-   will copy the files to a distribution directory where you can create
-   customized distributions in tar format etc.
+   either directly installing the Grid Engine file or by staging it to a
+   temporary place. The script 'scripts/distinst' installs Grid Engine If
+   its called as 'myinst' it will copy the files directly to a local
+   installation in the directory $SGE_ROOT. This option is useful for
+   quickly testing the results of your compilation. If the script is called
+   under its original name 'distinst' it will copy the files to a
+   distribution directory where you can create customized distributions in
+   tar.gz format.
 
    See the file
 
        scripts/README.distinst
 
    for more details about options of the 'distinst' script.
-
 
 6.1) Creating a local distribution
 ----------------------------------
@@ -220,23 +223,24 @@ Content
    quickly install and run Grid Engine after compilation or other changes of
    the distribution.
 
-   If 'scripts/distinst' is invoked as 'myinst' (create a symlink:
-   "ln -s scripts/distinst myinst") it will check for the variable SGE_ROOT
-   and take this directory as staging target.
+   If 'scripts/distinst' is invoked as 'myinst' (create a symlink: "ln -s
+   scripts/distinst myinst") it will check for the variable SGE_ROOT and
+   take this directory as installation target.
 
    By default 'myinst' in this mode will issue only warnings if one or more 
-   targets cannot be installed successfully.
+   targets cannot be installed successfully. It will usually not exit on
+   errors.
 
 
 6.2) Creating a distribution repository
 ---------------------------------------
 
-   If you are planning to create a distribution which later should be used
-   to create further distributions (currently tar.gz is supported), the
-   files are first copied to a distribution repository. From that
-   distribution repository you later can create distributions. The base
-   directory for the distribution repository is defined in the 'distinst'
-   script or can be overridden with command line parameters.
+   If you are planning to create a staging distribution which later should
+   be used to create further distributions the files are first copied to a
+   distribution repository. From that distribution repository you later can
+   create distributions. The base directory for the distribution repository
+   is defined in the 'distinst' script or can be overridden with command
+   line parameters.
    
    By default distinst in this mode will have a "strict" behavior. It will
    exit, if one of the installation targets cannot be installed
@@ -259,7 +263,7 @@ Content
 
      scripts/README.mk_dist
 
-   how to create a Grid Engine distribution
+   how to create a Grid Engine distribution.
 
 
 8) Installing Grid Engine

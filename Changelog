@@ -1,3 +1,6 @@
+AS-2003-09-29-0: CVS        Created V53p4_1_TAG (Darwin port availability)
+--------------------------------------------------------------------------
+
 JG-2003-09-29-0: Bugfix:    statistics file hostload twice instead of load and
                             virtual memory used.
                  Enhancem.: sge_share_mon option -o now appends to an existing
@@ -7,14 +10,13 @@ JG-2003-09-29-0: Bugfix:    statistics file hostload twice instead of load and
                  Review:    AA
                  Changed:   sge_qmaster, sge_share_mon
 
-SG-2003-09-15-2: Bugfix:    The running ticket update did not work correctly when the
-                            sgeee_scheduling interval was set to a very very long time,
-                            a sge_scheduling run was done and the sgeee_scheduling 
-                            interval was set back to a normal amount of time. The
-                            scheduler had the very long sgeee_scheduling interval 
+SG-2003-09-15-2: Bugfix:    The running ticket update did not work correctly
+                            when the sgeee_scheduling interval was set to a
+                            very very long time, a sge_scheduling run was
+                            done and the sgeee_scheduling interval was set
+                            back to a normal amount of time. The scheduler
+                            had the very long sgeee_scheduling interval
 
-AS-2003-09-29-0: CVS        Created V53p4_1_TAG (Darwin port availability)
---------------------------------------------------------------------------
 AA-2003-09-29-0: Bugfix:    change in openssl 0.9.7b uniqueIdentifier now
                             userId
                             additional switches for sge_ca

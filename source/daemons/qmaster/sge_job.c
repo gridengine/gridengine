@@ -223,32 +223,10 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       return STATUS_EUNKNOWN;
    }
 
-   {
-      int field[] = { 
-         JB_ja_structure,
-         JB_ja_n_h_ids,             
-         JB_ja_u_h_ids,             
-         JB_ja_s_h_ids,             
-         JB_ja_o_h_ids,             
-         JB_ja_z_ids,
-         -1
-      };
-      int i = -1;
-
-      while (field[++i] != -1) {
-         lList *range_list = lGetList(jep, field[i]);
-         lListElem *range = NULL;
-
-         for_each(range, range_list) { 
-            if (range_is_id_within(range, 0)) {
-               ERROR((SGE_EVENT, MSG_JOB_NULLNOTALLOWEDT));
-               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-               DEXIT;
-               return STATUS_EUNKNOWN;
-            }
-            range_correct_end(range);
-         }
-      }
+   job_check_correct_id_sublists(jep, alpp);
+   if (answer_list_has_error(alpp)) {
+      DEXIT;
+      return STATUS_EUNKNOWN;
    }
 
    /*

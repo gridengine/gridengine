@@ -939,6 +939,8 @@
 #define MSG_JOB_JLPPNULL              _("jlpp == NULL in job_add_job()\n")
 #define MSG_JOB_JEPNULL               _("jep == NULL in job_add_job()\n")
 #define MSG_JOB_JOBALREADYEXISTS_U    _("can't add job \"" U32CFormat "\" - job already exists\n") 
+#define MSG_JOB_NULLNOTALLOWEDT       _("job rejected: 0 is an invalid task id\n")
+#define MSG_JOB_NOIDNOTALLOWED        _("job rejected: Job comprises no tasks in its id lists") 
 
 /* 
 ** sge_c_event.c

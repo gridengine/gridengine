@@ -133,4 +133,6 @@ const char* job_get_env_string(const lListElem *job, const char *variable);
 void job_set_env_string(lListElem *job, const char *variable, 
                         const char *value);
 
+void job_check_correct_id_sublists(lListElem *job, lList **answer_list);
+
 #endif /* __SGE_JOB_JATASK_H */    

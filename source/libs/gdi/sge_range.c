@@ -725,6 +725,30 @@ int range_list_is_id_within(const lList *range_list, u_long32 id)
    return ret;
 }
 
+/****** gdi/range/range_list_is_empty() ***************************************
+*  NAME
+*     range_list_is_empty() -- check if id lists containes ids 
+*
+*  SYNOPSIS
+*     int range_list_is_empty(const lList *range_list) 
+*
+*  FUNCTION
+*     Returns true (1) if "range_list" containes no ids. 
+*
+*  INPUTS
+*     const lList *range_list - RN_Type list 
+*
+*  RESULT
+*     int - 0 or 1 
+*
+*  SEE ALSO
+*     gdi/range/RN_Type
+*******************************************************************************/
+int range_list_is_empty(const lList *range_list)
+{
+   return (range_list_get_number_of_ids(range_list) == 0);
+}
+
 /****** gdi/range/range_is_id_within() *****************************************
 *  NAME
 *     range_is_id_within() -- Is id contained in range? 

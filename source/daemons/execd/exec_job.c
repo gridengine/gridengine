@@ -997,6 +997,8 @@ char *err_str
       }      
    }
 
+   sprintf(fname, "%s/%s", conf.binary_path, arch);
+   add_or_replace_env(environmentList, "SGE_BINARY_PATH", fname);
    add_or_replace_env(environmentList, "REQUEST", lGetString(job_jep, JB_job_name));
    add_or_replace_env(environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
    add_or_replace_env(environmentList, "QUEUE", lGetString(master_q, QU_qname));

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/25 17:43:23 $     Revision: $Revision: 1.9.2.16 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/03/25 10:53:48 $     Revision: $Revision: 1.9.2.17 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/02/25 17:43:23 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/03/25 10:53:48 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1405,7 +1405,8 @@ command submitting the task (qrsh -inherit).
 .PP
 Furthermore, xxQS_NAMExx sets additional variables into the
 job's environment, as listed below.
-.IP "ARC" 1.5i
+.IP "ARC"
+.IP "SGE_ARCH" 1.5i
 The xxQS_NAMExx architecture name of the node on which the job is
 running. The name is compiled-in into the
 .M xxqs_name_sxx_execd 8
@@ -1478,6 +1479,13 @@ A default shell search path of:
 .br
 .ta 5i
 /usr/local/bin:/usr/ucb:/bin:/usr/bin
+.IP "SGE_BINARY_PATH" 1.5i
+The path where the xxQS_NAMExx binaries are installed. The value is the
+concatenation of the cluster configuration value
+.B binary_path 
+and the architecture name
+.B $SGE_ARCH
+.
 .IP "PE" 1.5i
 The parallel environment under which the job executes (for parallel
 jobs only).

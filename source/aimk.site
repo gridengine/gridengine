@@ -42,6 +42,12 @@ switch($buildarch)
       breaksw
 endsw
 
+#
+# TMPDIR the directory where gcc puts intermediate files. Points to a
+# local directory for faster compilation
+#
+setenv TMPDIR /tmp
+
 # 
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed
@@ -130,10 +136,15 @@ switch ($BUILDARCH)
 endsw
 
 if ( ! $?JAVA_HOME ) then
-   set JAVA_BIN = `which java`
+   set JAVA_BIN = `which \java`
 
    if ( -e "$JAVA_BIN" ) then
-      set JAVA_HOME = `expr //$JAVA_BIN : '//\(.*\)/bin/.*'`
+      set JAVAV = `$JAVA_BIN -version |& head -1`
+      set JAVAV = `expr "$JAVAV" : 'java version "1\.\([0-9]\).*"'`
+
+      if ( $JAVAV >= 4 ) then
+         setenv JAVA_HOME `expr //$JAVA_BIN : '//\(.*\)/bin/.*'`
+      endif
    endif
 endif
 

@@ -986,6 +986,21 @@ if [ $instcommon = true ]; then
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$MANSRCDIR/SEDMAN/man $DEST_SGE_ROOT
       Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
+
+      if [ -d MANSBUILD_$MANSRCDIR/ASCMAN/man ]; then
+         SOURCEDIR=MANSBUILD_$MANSRCDIR/ASCMAN/man
+         DESTDIR=$DEST_SGE_ROOT/man
+         for dir in `ls $SOURCEDIR`; do
+            dir_num=`basename $dir | cut -d"n" -f2`
+            for file in `ls $SOURCEDIR/$dir`; do
+               if [ ! -d "$DESTDIR/cat$dir_num" ]; then
+                  mkdir -p $DESTDIR/cat$dir_num
+               fi
+               Execute cp $SOURCEDIR/$dir/$file $DESTDIR/cat$dir_num/$file.$dir_num
+            done
+         done
+      fi
+
       Cleanup man catman
    fi
 
@@ -1276,15 +1291,17 @@ for i in $ARCH; do
             fi
          done
 
-         for lib in $BERKELEYDB_SHARED_LIBRARIES; do
-            libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
-            if [ -f $libname ]; then
-               InstallProg $libname
-            elif [ $exit_on_error = true ]; then
-               echo "\"$libname\" not found. Installation failed."
-                exit 1
-            fi
-         done
+         if [ $DSTARCH != win32-x86 ]; then
+            for lib in $BERKELEYDB_SHARED_LIBRARIES; do
+               libname="$BERKELEYDBBASE/$DSTARCH/lib/$lib.$shlibext"
+               if [ -f $libname ]; then
+                  InstallProg $libname
+               elif [ $exit_on_error = true ]; then
+                  echo "\"$libname\" not found. Installation failed."
+                  exit 1
+               fi
+            done
+         fi 
 
          for lib in $DRMAA_SHARED_LIBRARIES; do
             libname=$lib.$shlibext

@@ -127,7 +127,7 @@ int scheduler(sge_Sdescr_t *lists) {
    lList *suspended_list = NULL;                   /* JB_Type */
    lList *finished_list = NULL;                    /* JB_Type */
    lList *pending_list = NULL;                     /* JB_Type */
-   lList *pending_excludedlist = NULL;                     /* JB_Type */
+   lList *pending_excludedlist = NULL;             /* JB_Type */
    lList *running_list = NULL;                     /* JB_Type */
    lList *error_list = NULL;                       /* JB_Type */
    lList *hold_list = NULL;                        /* JB_Type */
@@ -144,7 +144,8 @@ int scheduler(sge_Sdescr_t *lists) {
    fpdjp = fopen("/tmp/sge_debug_job_place.out", "a");
 #endif
 
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
+
    prof_job_count = lGetNumberOfElem(lists->job_list);
 
    scheduled_fast_jobs    = 0;

@@ -46,7 +46,11 @@ extern lList *Master_Queue_List;
 
 void queue_or_job_get_states(int nm, char *str, u_long32 op);
 
+
 void queue_get_state_string(char *str, u_long32 op);
+
+bool 
+queue_list_suspends_ja_task(lList *queue_list, lList *granted_queue_list);
 
 lListElem *queue_list_locate(lList *queue_list, const char *queue_name);
 

@@ -39,7 +39,7 @@ int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_init(contact, error_diagnosis?&diag:NULL);
 }
 
@@ -68,7 +68,7 @@ int drmaa_exit(char *error_diagnosis, size_t error_diag_len)
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_exit(error_diagnosis?&diag:NULL);
 }
 
@@ -88,7 +88,7 @@ int drmaa_allocate_job_template(drmaa_job_template_t **jtp, char *error_diagnosi
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_allocate_job_template(jtp, error_diagnosis?&diag:NULL);
 }
 
@@ -112,7 +112,7 @@ int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, s
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_delete_job_template(jt, error_diagnosis?&diag:NULL);
 }
 
@@ -140,7 +140,7 @@ int drmaa_set_attribute(drmaa_job_template_t *jt, const char *name, const char *
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_set_attribute(jt, name, value, error_diagnosis?&diag:NULL);
 }
 
@@ -156,9 +156,9 @@ int drmaa_get_attribute(drmaa_job_template_t *jt, const char *name, char *value,
 {
    dstring val, diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    if (value) 
-      sge_dstring_init(&val, value, value_len);
+      sge_dstring_init(&val, value, value_len+1);
    return japi_get_attribute(jt, name, &val, error_diagnosis?&diag:NULL);
 }
 
@@ -172,7 +172,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name,
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_set_vector_attribute(jt, name, value, error_diagnosis?&diag:NULL);
 }
 
@@ -186,7 +186,7 @@ int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_get_vector_attribute(jt, name, values, error_diagnosis?&diag:NULL);
 }
 
@@ -202,7 +202,7 @@ int drmaa_get_attribute_names(drmaa_string_vector_t **values, char *error_diagno
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_get_attribute_names(values, error_diagnosis?&diag:NULL);
 }
 
@@ -217,7 +217,7 @@ int drmaa_get_vector_attribute_names(drmaa_string_vector_t **values, char *error
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_get_vector_attribute_names(values, error_diagnosis?&diag:NULL);
 }
 
@@ -250,9 +250,9 @@ int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, cha
    dstring diag;
    dstring jobid;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    if (job_id) 
-      sge_dstring_init(&jobid, job_id, job_id_len);
+      sge_dstring_init(&jobid, job_id, job_id_len+1);
    return japi_run_job(job_id?&jobid:NULL, jt, error_diagnosis?&diag:NULL); 
 }
 
@@ -287,7 +287,7 @@ int drmaa_run_bulk_jobs(drmaa_string_vector_t **jobids, drmaa_job_template_t *jt
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_run_bulk_jobs(jobids, jt, start, end, incr, error_diagnosis?&diag:NULL);
 }
 
@@ -322,7 +322,7 @@ int drmaa_control(const char *jobid, int action, char *error_diagnosis, size_t e
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_control(jobid, action, error_diagnosis?&diag:NULL);
 }
 
@@ -360,7 +360,7 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose, char *e
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_synchronize(job_ids, timeout, dispose, error_diagnosis?&diag:NULL);
 }
 
@@ -421,9 +421,9 @@ int drmaa_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int 
    dstring diag;
    dstring waited_job;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    if (job_id_out) 
-      sge_dstring_init(&waited_job, job_id_out, job_id_out_len);
+      sge_dstring_init(&waited_job, job_id_out, job_id_out_len+1);
    return japi_wait(job_id, job_id_out?&waited_job:NULL, stat, timeout, rusage, error_diagnosis?&diag:NULL);
 }
 
@@ -460,7 +460,7 @@ int drmaa_job_ps(const char *job_id, int *remote_ps, char *error_diagnosis, size
 {
    dstring diag;
    if (error_diagnosis) 
-      sge_dstring_init(&diag, error_diagnosis, error_diag_len);
+      sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_job_ps(job_id, remote_ps, error_diagnosis?&diag:NULL);
 }
 
@@ -490,7 +490,7 @@ int drmaa_string_vector_get_first(drmaa_string_vector_t* values, char *value, in
 {
    dstring val;
    if (value) 
-      sge_dstring_init(&val, value, value_len);
+      sge_dstring_init(&val, value, value_len+1);
    return japi_string_vector_get_first(values, value?&val:NULL);
 }
 
@@ -498,7 +498,7 @@ int drmaa_string_vector_get_next(drmaa_string_vector_t* values, char *value, int
 {
    dstring val;
    if (value) 
-      sge_dstring_init(&val, value, value_len);
+      sge_dstring_init(&val, value, value_len+1);
    return japi_string_vector_get_next(values, value?&val:NULL);
 }
 

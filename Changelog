@@ -1,3 +1,16 @@
+AH-2003-04-07-0  Enhancem:  - implemented drmaa_job_ps()
+                            - fix problems with drmaa_wait() operating on 
+                              individual jobids rather than on 
+                              DRMAA_JOB_IDS_SESSION_ANY
+                            - event client thread reconnects to qmaster 
+                              during session when qmaster is down
+                            - ensure event client does not exit(1) DRMAA
+                              library
+                            - investigate sgeE_JOB_LIST event to update
+                              library session data
+                            - ensure low level GDI errors/warnings are not
+                              printed but reported in DRMAA diagnosis buffer
+
 EB-2003-04-06-0  Testsuite: Added new testsuite test for issue 509
                  Issue:     520
                  Review:    CR

@@ -981,7 +981,7 @@ ec_get_clientdata(void)
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
 bool 
-ec_register(void)
+ec_register(bool exit_on_qmaster_down)
 {
    bool ret = false;
 
@@ -1053,7 +1053,13 @@ ec_register(void)
       } else {
          if (lGetUlong(aep, AN_quality) == ANSWER_QUALITY_ERROR) {
             ERROR((SGE_EVENT, "%s", lGetString(aep, AN_text)));
-            SGE_EXIT(1);
+            if (exit_on_qmaster_down) {
+               DPRINTF(("exiting in ec_register()\n"));
+               SGE_EXIT(1);
+            } else {
+               DEXIT;
+               return false;
+            }
          }   
       }
 
@@ -1930,8 +1936,8 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
 *     Eventclient/Client/ec_commit()
 *******************************************************************************/
 bool 
-ec_get(lList **event_list) 
-{  
+ec_get(lList **event_list, bool exit_on_qmaster_down) 
+{
    bool ret = true;
    lList *report_list = NULL;
    u_long32 wrong_number;
@@ -1945,7 +1951,7 @@ ec_get(lList **event_list)
       ret = false;
    } else if (ec_need_new_registration()) {
       next_event = 1;
-      ret = ec_register();
+      ret = ec_register(exit_on_qmaster_down);
    }
   
    if (ret) {

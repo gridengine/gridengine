@@ -737,6 +737,9 @@ void range_list_compress(lList *range_list)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_list_is_id_within() is MT safe
 *******************************************************************************/
 bool range_list_is_id_within(const lList *range_list, u_long32 id)
 {
@@ -867,6 +870,9 @@ bool range_containes_id_less_than(const lListElem *range, u_long32 id)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_is_id_within() is MT safe
 ******************************************************************************/
 bool range_is_id_within(const lListElem *range, u_long32 id)
 {
@@ -1165,6 +1171,9 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
+*
+*  NOTES
+*     MT-NOTE: range_get_all_ids() is MT safe
 ******************************************************************************/
 void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
                        u_long32 *step)

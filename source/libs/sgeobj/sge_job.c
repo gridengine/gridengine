@@ -440,6 +440,9 @@ bool job_is_enrolled(const lListElem *job, u_long32 task_number)
 *
 *  RESULT
 *     bool - true or false 
+*
+*  NOTES
+*     MT-NOTE: job_is_ja_task_defined() is MT safe
 ******************************************************************************/
 bool job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number) 
 {
@@ -901,6 +904,7 @@ u_long32 job_get_hold_state(lListElem *job, u_long32 ja_task_id)
 *  NOTES
 *     In case of errors, the function should return a message in a
 *     given answer_list (answer_list != NULL).
+*     MT-NOTE: job_search_task() is MT safe
 ******************************************************************************/
 lListElem *job_search_task(const lListElem *job, lList **answer_list,
                            u_long32 ja_task_id)

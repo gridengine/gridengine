@@ -584,28 +584,12 @@ void split_jobs(lList **job_list, lList **answer_list,
                 * Jobs in suspended queues are not in suspend state.
                 * Therefore we have to take this info from the queue state.
                 */
-               lList *granted_queue_list = lGetList(ja_task, 
-                             JAT_granted_destin_identifier_list); /* QU_Type */
-               lListElem *granted_queue = NULL;    /* QU_Type */
-
-               for_each(granted_queue, granted_queue_list) {
-                  const char *queue_name = NULL; 
-                  lListElem *queue = NULL;
-                  u_long32 queue_state;
-
-                  queue_name = lGetString(granted_queue, JG_qname);  
-                  queue = queue_list_locate(queue_list, queue_name);
-                  queue_state = lGetUlong(queue, QU_state);
-                  
-                  if ((queue_state & QSUSPENDED) ||
-                      (queue_state & QSUSPENDED_ON_SUBORDINATE) ||
-                      (queue_state & QCAL_SUSPENDED)) {
+               if (queue_list_suspends_ja_task(queue_list, 
+                        lGetList(ja_task, JAT_granted_destin_identifier_list))) {
 #ifdef JOB_SPLIT_DEBUG
-                     DPRINTF(("Task "u32" is in suspended state\n",ja_task_id));
+                  DPRINTF(("Task "u32" is in suspended state\n",ja_task_id));
 #endif
-                     target = &(target_tasks[SPLIT_SUSPENDED]);
-                     break;
-                  }     
+                  target = &(target_tasks[SPLIT_SUSPENDED]);
                }
             }
          } 

@@ -164,6 +164,55 @@ void queue_get_state_string(char *str, u_long32 op)
    queue_or_job_get_states(QU_qname, str, op);
 }
 
+/****** sge_queue/queue_list_suspends_ja_task() ********************************
+*  NAME
+*     queue_list_suspends_ja_task() -- is a task due to the queue 
+*
+*  SYNOPSIS
+*     bool queue_list_suspends_ja_task(lList *queue_list, lList 
+*     *granted_queue_list) 
+*
+*  FUNCTION
+*     Jobs in suspended queues are not in suspend state.
+*     Therefore we have to take this info from the queue state.
+*
+*  INPUTS
+*     lList *queue_list         - the queue list (QU_Type)
+*     lList *granted_queue_list - the tasks granted resources list (JG_Type)
+*
+*  RESULT
+*     bool - suspended/not suspended
+*
+*  NOTES
+*     MT-NOTE: queue_list_suspends_ja_task() is MT safe
+*******************************************************************************/
+bool queue_list_suspends_ja_task(lList *queue_list, lList *granted_queue_list)
+{
+   lListElem *granted_queue = NULL;    /* QU_Type */
+
+   DENTER(TOP_LAYER, "queue_list_suspends_ja_task");
+
+   for_each(granted_queue, granted_queue_list) {
+      const char *queue_name = NULL;
+      lListElem *queue = NULL;
+      u_long32 queue_state;
+
+      queue_name = lGetString(granted_queue, JG_qname);
+      queue = queue_list_locate(queue_list, queue_name);
+      queue_state = lGetUlong(queue, QU_state);
+
+      if ((queue_state & QSUSPENDED) ||
+          (queue_state & QSUSPENDED_ON_SUBORDINATE) ||
+          (queue_state & QCAL_SUSPENDED)) {
+         DEXIT;
+         return true;
+      }
+   }
+
+   DEXIT;
+   return false;
+}
+
 /****** sgeobj/queue/queue_list_locate() **************************************
 *  NAME
 *     queue_list_locate() -- locate queue given by name 

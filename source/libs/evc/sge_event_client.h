@@ -39,7 +39,7 @@
 #define DEFAULT_EVENT_DELIVERY_INTERVAL (10)
 
 bool ec_prepare_registration(ev_registration_id id, const char *name);
-bool ec_register(void);
+bool ec_register(bool exit_on_qmaster_down);
 bool ec_deregister(void);
 bool ec_is_initialized(void);
 
@@ -70,7 +70,7 @@ u_long32 ec_get_clientdata(void);
 bool ec_commit(void);
 bool ec_commit_multi(lList **malp, state_gdi_multi *state);
 
-bool ec_get(lList **);
+bool ec_get(lList **, bool exit_on_qmaster_down);
 
 void ec_mark4registration(void);
 bool ec_need_new_registration(void);

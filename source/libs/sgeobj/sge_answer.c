@@ -353,7 +353,7 @@ void answer_to_dstring(const lListElem *answer, dstring *diag)
          const char *s, *t;
          s = lGetString(answer, AN_text);
          if ((t=strchr(s, '\n')))
-            sge_dstring_sprintf(diag, "%*s", t-s, s);
+            sge_dstring_sprintf(diag, "%.*s", t-s, s);
          else
             sge_dstring_copy_string(diag, s);
       }

@@ -77,7 +77,7 @@ struct log_state_t {
 static pthread_key_t   log_state_key;
 #else
 static struct log_state_t log_state_opaque = {
-   LOG_WARNING, "", TMP_ERR_FILE_SNBU, 0, 1, 0, NULL };
+   LOG_WARNING, "", TMP_ERR_FILE_SNBU, 0, 1, 1, NULL };
 struct log_state_t *log_state = &log_state_opaque;
 #endif
 
@@ -88,8 +88,8 @@ static void log_state_init(struct log_state_t* state) {
    strcpy(state->log_buffer, "");
    state->log_file          = TMP_ERR_FILE_SNBU;
    state->log_as_admin_user = 0;
-   state->verbose           = 0;
-   state->gui_log           = 0;
+   state->verbose           = 1;
+   state->gui_log           = 1;
    state->trace_func        = NULL;
 }
 
@@ -538,7 +538,7 @@ int sge_log(int log_level, const char *mesg, const char *file__,
    }
 #endif /* WIN32NATIVE */
 
-   if (uti_state_get_mewho() == QMON && !log_state_get_log_gui()) {
+   if (!log_state_get_log_gui()) {
       return 0;
    }
 

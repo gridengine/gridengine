@@ -48,7 +48,7 @@ void schedd_mes_initialize(void);
 void schedd_mes_release(void);
 
 /* Get message structure */
-lListElem *schedd_mes_obtain_package(void);
+lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count);
 
 void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...);
 

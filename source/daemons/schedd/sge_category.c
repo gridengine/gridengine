@@ -59,6 +59,40 @@
 
 #include "msg_schedd.h"
 
+/******************************************************
+ *
+ * Description:
+ * 
+ * Categories are used to speed up the job dispatching
+ * in the scheduler. Before the job dispatching starts,
+ * the categories have to be build for new jobs and 
+ * reseted for existing jobs. A new job gets a reference 
+ * to its category regardless if it is existing or not.
+ *
+ * This is done with:
+ * - sge_add_job_category(lListElem *job, lList *acl_list)
+ * - sge_rebuild_job_category(lList *job_list, lList *acl_list)
+ * - int sge_reset_job_category(void)
+ *
+ * During the dispatch run for a job, the category caches
+ * all hosts and queues, which are not suitable for that
+ * category. This leads toa speed improvement when other
+ * jobs of the same category are matched. In addition to
+ * the host and queues, it has to cach the generated messages
+ * as well, since the are not generated again. If a category
+ * cannot run in the cluster at all, the category is rejected
+ * and the messages are added for all jobs in the category.
+ *
+ * This is done for simple and parallel jobs. In addition it
+ * also caches the results of soft request matching. Since
+ * a job can only soft request a fixed resource, it is not
+ * changing during a scheduling run and the soft request violation
+ * for a given queue are the same for all jobs in one 
+ * category.
+ *
+ ******************************************************/
+
+
 /* Categories of the job are managed here */
 lList *CATEGORY_LIST = NULL;
 
@@ -93,28 +127,21 @@ int sge_add_job_category( lListElem *job, lList *acl_list) {
    DENTER(TOP_LAYER, "sge_add_job_category");
    
    cstr = sge_build_job_category(&category_str, job, acl_list);
-   if (!cstr) 
+   if (!cstr)  {
       cstr = sge_dstring_copy_string(&category_str, no_requests);
+   }   
 
    jobid = lGetUlong(job, JB_job_number);
-   if (!CATEGORY_LIST)
+   if (!CATEGORY_LIST) {
       CATEGORY_LIST = lCreateList("new category list", CT_Type);
+   }   
    else {
       cat = lGetElemStr(CATEGORY_LIST, CT_str, cstr);
    }
 
-#if 0
-   if (cat) {
-      DPRINTF(("############## Job "u32": Found %s in category list\n", jobid, cstr));
-   } else {
-      DPRINTF(("############## Job "u32": Added %s to category list\n", jobid, cstr));
-      cat = lAddElemStr(&CATEGORY_LIST, CT_str, cstr, CT_Type);
-   }   
-#else   
    if (!cat) {
        cat = lAddElemStr(&CATEGORY_LIST, CT_str, cstr, CT_Type);
    }
-#endif
 
    /* increment ref counter and set reference to this element */
    rc = lGetUlong(cat, CT_refcount);
@@ -210,9 +237,31 @@ int sge_rebuild_job_category( lList *job_list, lList *acl_list) {
    return 0;
 }
 
-/*-------------------------------------------------------------------------*/
-/* reset the category CT_rejected field to 0                               */
-/*-------------------------------------------------------------------------*/
+/****** sge_category/sge_reset_job_category() **********************************
+*  NAME
+*     sge_reset_job_category() -- resets the category temp information
+*
+*  SYNOPSIS
+*     int sge_reset_job_category() 
+*
+*  FUNCTION
+*     Some information in the category should only life throu one scheduling run.
+*     These informations are reseted in the call:
+*     - dispatching messages
+*     - not suitable queues
+*     - soft violations
+*     - not suitable hosts
+*     - not suitable cluster
+*     - the flag that identifies, if the messages are already added to the schedd infos
+*     - something with the resource reservation
+*
+*  RESULT
+*     int - always 0
+*
+*  NOTES
+*     MT-NOTE: sge_reset_job_category() is not MT safe 
+*
+*******************************************************************************/
 int sge_reset_job_category()
 {
    lListElem *cat;
@@ -223,6 +272,7 @@ int sge_reset_job_category()
       lSetList(cat, CT_ignore_queues, NULL);
       lSetList(cat, CT_ignore_hosts, NULL);
       lSetList(cat, CT_queue_violations, NULL);
+      lSetList(cat, CT_job_messages, NULL);
       lSetBool(cat, CT_messages_added, false);
       lSetBool(cat, CT_rc_valid, false);
    }

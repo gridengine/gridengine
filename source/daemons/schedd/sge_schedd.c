@@ -102,11 +102,12 @@ int daemonize_schedd(void);
 sched_func_struct sched_funcs[] =
 {
    {"default",      "Default scheduler",   subscribe_default_scheduler, event_handler_default_scheduler, (void *)scheduler },
+   
 #ifdef SCHEDULER_SAMPLES
    {"ext_mysched",  "sample #1 scheduler", subscribe_default_scheduler, event_handler_default_scheduler, (void *)my_scheduler },
    {"ext_mysched2", "sample #2 scheduler", subscribe_my_scheduler,      event_handler_my_scheduler,      (void *)scheduler },
 #endif
-   {NULL, NULL, NULL, NULL}
+   {NULL, NULL, NULL, NULL} 
 };
 
 

@@ -124,7 +124,7 @@ void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);
 void assignment_release(sge_assignment_t *a);
 
-int sge_sequential_assignment(sge_assignment_t *a, lList **ignore_hosts, lList **ignore_queues);
+int sge_sequential_assignment(sge_assignment_t *a);
 int sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list);
 
 

@@ -47,14 +47,39 @@
 #include "sge_profiling.h"
 
 
-lList *sge_add_schedd_info(lList *or_list) 
+/****** sge_orders/sge_add_schedd_info() ***************************************
+*  NAME
+*     sge_add_schedd_info() -- retrieves the messages and generates an order out 
+*                              of it.
+*
+*  SYNOPSIS
+*     lList* sge_add_schedd_info(lList *or_list, int *global_mes_count, int 
+*     *job_mes_count) 
+*
+*  FUNCTION
+*     retrieves all messages, puts them into an order package, and frees the
+*     orginal messages. It also returns the number of global and job messages.
+*
+*  INPUTS
+*     lList *or_list        - int: the order list to which the message order is added
+*     int *global_mes_count - out: global message count
+*     int *job_mes_count    - out: job message count
+*
+*  RESULT
+*     lList* - the order list
+*
+*  NOTES
+*     MT-NOTE: sge_add_schedd_info() is not MT safe 
+*
+*******************************************************************************/
+lList *sge_add_schedd_info(lList *or_list, int *global_mes_count, int *job_mes_count) 
 {
    lList *jlist;
    lListElem *sme, *ep;
 
    DENTER(TOP_LAYER, "sge_add_schedd_info");
 
-   sme = schedd_mes_obtain_package();
+   sme = schedd_mes_obtain_package(global_mes_count, job_mes_count);
 
    if (!sme || (lGetNumberOfElem(lGetList(sme, SME_message_list))<1 
          && lGetNumberOfElem(lGetList(sme, SME_global_message_list))<1)) {

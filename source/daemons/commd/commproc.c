@@ -211,10 +211,13 @@ char *str
    DENTER(TOP_LAYER, "reconnect_commproc_with_fd");
 
    if (cop->fd != -1) {
-      ERROR((SGE_EVENT, "commproc to be reconnected via %s fd=%d is still connected to fd=%d", str, fd, cop->fd));
-      trace(SGE_EVENT);
-      DEXIT;
-      return -1;
+      disconnect_commproc_using_fd(cop->fd);
+      if (cop->fd != -1) {
+         ERROR((SGE_EVENT, "commproc to be reconnected via %s fd=%d is still connected to fd=%d", str, fd, cop->fd));
+         trace(SGE_EVENT);
+         DEXIT;
+         return -1;
+      }
    }
 
    DEBUG((SGE_EVENT, "reconnecting commproc %s %s %d with fd=%d",

@@ -716,7 +716,8 @@ lList *report_list
    if ((this_seqno < last_seqno && (last_seqno - this_seqno) <= 9000) &&
       !(last_seqno > 9990 && this_seqno < 10)) {
       /* this must be an old report, log and then ignore it */
-      WARNING((SGE_EVENT, MSG_GOTOLDSTATUSREPORT_DDS, this_seqno, last_seqno+1, rhost));
+      DPRINTF(("received old load report (%d < %d) from exec host %s\n", 
+         this_seqno, last_seqno+1, rhost));
       DEXIT;
       return;
    }

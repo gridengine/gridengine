@@ -60,7 +60,7 @@
 #define MSG_NET_SELECTREADFAILEDNOCORSPDOBJECT_SI     _("select error: %s read(%d) - no corresponding object")
 #define MSG_NET_SELECTWRITEFAILEDMESSAGEFOLLOWS_SI    _("select error: %s write(%d) - corresponding message follows")
 #define MSG_NET_SELECTWRITEFAILEDNOCORSPDOBJECT_SI    _("select error: %s write(%d) - no corresponding object")
-#define MSG_NET_SELECTDELCOMMPROCRCVANDEOF_I          _("select error: deleting commproc using fd %d because the fd is ready to receive AND ready to send an EOF")
+#define MSG_NET_SELECTIGNCOMMPROCRCVANDEOF_I          _("select error: ignoring commproc using fd %d because the fd is ready to receive AND ready to send an EOF")
 #define MSG_NET_SELECTERROR_SSS                       _("select error: %s (%s) (%s)")
 #define MSG_USAGE                                     _("usage:")
 #define MSG_COMMD_s_OPT_USAGE                         _("use this service for connections from other commds")

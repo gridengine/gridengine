@@ -764,7 +764,6 @@
 #define MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES              _("shutting down qmaster requires manager privileges\n")
 #define MSG_GOTSTATUSREPORTOFUNKNOWNCOMMPROC_S    _("got load report of unknown commproc "SFQ"\n")
 #define MSG_GOTSTATUSREPORTOFUNKNOWNEXECHOST_S    _("got load report of unknown exec host "SFQ"\n")
-#define MSG_GOTOLDSTATUSREPORT_DDS                _("received old load report (%d < %d) from exec host %s\n")
 #define MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S    _("can't notify exec host "SFQ" of new conf\n")
 #define MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I    _("error %d updating license data\n")
 #define MSG_HEARTBEAT_FAILEDTOINCREMENTHEARBEATFILEXINSPOOLDIR_S    _("failed to increment heartbeat file "SFQ" in spool directory")

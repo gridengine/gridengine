@@ -584,14 +584,15 @@ char **argv
                            again and again and...
                            so if we still find an active message for
                            this fd, we have to kill it manually */
-                        ERROR((SGE_EVENT, MSG_NET_SELECTDELCOMMPROCRCVANDEOF_I, i));
+                        WARNING((SGE_EVENT, MSG_NET_SELECTIGNCOMMPROCRCVANDEOF_I, i));
+#if 0
                         dump();
 
                         if(delete_commproc_using_fd(i) == 0)
                            /* this is the dead commd case */
                            while((mp = search_message(i, 0)))
                               delete_message(mp, "receive and EOF");
-
+#endif
                         FD_CLR(i, &writefds);
                         nfd--;
                      }

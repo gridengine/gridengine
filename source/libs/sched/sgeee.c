@@ -4188,7 +4188,9 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
          - now to determine initial normalized ticket amount
          - but also later on after tickets recomputation when a job was assigned */
       tix_range_set(min_tix, max_tix);
-   }
+   } else
+      seqno = ++sge_scheduling_run;
+
 
 #ifdef DEBUG_TASK_REF
    task_ref_print_table();

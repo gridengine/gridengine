@@ -212,7 +212,7 @@ proc install_execd {} {
       set HIT_RETURN_TO_CONTINUE       [translate $exec_host 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
       set EXECD_INSTALL_COMPLETE       [translate $exec_host 0 1 0 [sge_macro DISTINST_EXECD_INSTALL_COMPLETE] ]
       set PREVIOUS_SCREEN              [translate $exec_host 0 1 0 [sge_macro DISTINST_PREVIOUS_SCREEN ] ]
-      set CELL_NAME_FOR_EXECD          [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_EXECD ] ]
+      set CELL_NAME_FOR_EXECD          [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_EXECD ] "*"]
       set ANSWER_YES                   [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_YES] ]
       set ANSWER_NO                    [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_NO] ]
       set ADD_DEFAULT_QUEUE_INSTANCE   [translate $exec_host 0 1 0 [sge_macro DISTINST_ADD_DEFAULT_QUEUE_INSTANCE] ]
@@ -220,7 +220,6 @@ proc install_execd {} {
       set IF_NOT_OK_STOP_INSTALLATION  [translate $exec_host 0 1 0 [sge_macro DISTINST_IF_NOT_OK_STOP_INSTALLATION] ]
       set LOCAL_CONFIG_FOR_HOST        [translate $exec_host 0 1 0 [sge_macro DISTINST_LOCAL_CONFIG_FOR_HOST] "$exec_host"]
       set MESSAGES_LOGGING             [translate $exec_host 0 1 0 [sge_macro DISTINST_MESSAGES_LOGGING] ]
-      set CELL_NAME_FOR_QMASTER        [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] ]
       set USE_CONFIGURATION_PARAMS     [translate $exec_host 0 1 0 [sge_macro DISTINST_USE_CONFIGURATION_PARAMS] ]
       set CURRENT_GRID_ROOT_DIRECTORY  [translate $exec_host 0 1 0 [sge_macro DISTINST_CURRENT_GRID_ROOT_DIRECTORY] "*" "*" ]
       set CHECK_ADMINUSER_ACCOUNT      [translate $exec_host 0 1 0 [sge_macro DISTINST_CHECK_ADMINUSER_ACCOUNT] "*" "*" "*" "*" ]
@@ -342,14 +341,16 @@ proc install_execd {} {
 
 
             -i $sp_id $CELL_NAME_FOR_EXECD {
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(cell)"
+               set input "$ts_config(cell)\n"
+
                if {$do_log_output == 1} {
-                   puts "press RETURN"
-                   set anykey [wait_for_enter 1]
+                  puts "-->testsuite: press RETURN"
+                  set anykey [wait_for_enter 1]
                }
-               send -i $sp_id "\n"
+               send -i $sp_id $input
                continue;
-            }
+            } 
 
             -i $sp_id $MESSAGES_LOGGING {
                puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"

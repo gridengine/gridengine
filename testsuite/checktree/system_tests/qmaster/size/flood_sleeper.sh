@@ -33,17 +33,18 @@
 
 # args: root-dir, number of loops, job types, id
 
-if [ $# -ne 4 ]; then
+if [ $# -ne 5 ]; then
    echo wrong number of args
    exit 1
 fi
 
 root_dir=$1
-loops=$2
-job_types=$3
-submitter_id=$4
+cell=$2
+loops=$3
+job_types=$4
+submitter_id=$5
 
-. $root_dir/default/common/settings.sh
+. $root_dir/$cell/common/settings.sh
 
 ARCH=`$SGE_ROOT/util/arch`
 QSUB=$SGE_ROOT/bin/$ARCH/qsub

@@ -33,28 +33,29 @@
 
 
 # par1: product root
+# par2: cell
 # par2: submit util this job id is existent
 # par3: protocol dir
 # par4: sleep seconds time list
 # par5: optional - jobscript to submit
 # par6: optional - second parameter for jobscript
-. $1/default/common/settings.sh
+. $1/$2/common/settings.sh
 
 arch=`$1/util/arch`
 jobscript=$1/examples/jobs/sleeper.sh
 touchdir=""
-if [ $# -ge 5 ]; then
-   jobscript=$5
-   touchdir=$6
+if [ $# -ge 6 ]; then
+   jobscript=$6
+   touchdir=$5
 fi
 
-stop_job_id=$2
-times=$4
+stop_job_id=$3
+times=$5
 
 hostname=`$1/utilbin/$arch/gethostname -name | cut -f 1 -d .`
 
-logfile="$3/${hostname}.submit.log"
-jobs_submitted_file="$3/${hostname}.submitted"
+logfile="$4/${hostname}.submit.log"
+jobs_submitted_file="$4/${hostname}.submitted"
 
 if [ -f $logfile ]; then
    mv $logfile $logfile.`date +20%y%m%d_%H-%M-%S`

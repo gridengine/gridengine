@@ -36,7 +36,7 @@ if [ x$SGE_ROOT = x ]; then
    exit 1
 fi
 
-. $SGE_ROOT/default/common/settings.sh
+. $SGE_ROOT/$SGE_CELL/common/settings.sh
 
 
 $* 2>&1

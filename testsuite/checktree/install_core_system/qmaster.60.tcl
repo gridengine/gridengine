@@ -104,7 +104,7 @@ proc install_qmaster {} {
 
  set HIT_RETURN_TO_CONTINUE       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
  set CURRENT_GRID_ROOT_DIRECTORY  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CURRENT_GRID_ROOT_DIRECTORY] "*" "*" ]
- set CELL_NAME_FOR_QMASTER        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] ]
+ set CELL_NAME_FOR_QMASTER        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] "*"]
  set VERIFY_FILE_PERMISSIONS      [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_VERIFY_FILE_PERMISSIONS] ]
  set NOT_COMPILED_IN_SECURE_MODE  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_NOT_COMPILED_IN_SECURE_MODE] ] 
  set ENTER_HOSTS                  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_HOSTS] ]
@@ -150,12 +150,11 @@ proc install_qmaster {} {
 
 # berkeley db
  set DATABASE_LOCAL_SPOOLING     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_LOCAL_SPOOLING]]
- set ENTER_DATABASE_SERVER_LOCAL_SPOOLING     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_SERVER_LOCAL_SPOOLING]]
  set ENTER_DATABASE_SERVER       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_SERVER] "*"]
  set ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING] "*"]
- set ENTER_DATABASE_DIRECTORY    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_DIRECTORY] "*"]
+ set ENTER_DATABASE_SERVER_DIRECTORY    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SERVER_DATABASE_DIRECTORY] "*"]
  set DATABASE_DIR_NOT_ON_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS] "*"]
- set STARTUP_RPC_SERVER [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_STARTUP_RPC_SERVER] "*"]
+ set STARTUP_RPC_SERVER [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_STARTUP_RPC_SERVER]]
  set DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS]]
 
  cd "$ts_config(product_root)"
@@ -744,12 +743,18 @@ proc install_qmaster {} {
       # SGE 6.0 Berkeley DB Spooling
       #
        -i $sp_id $DATABASE_LOCAL_SPOOLING {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(9)"
+          if { $ts_config(bdb_server) == "none" } {
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(9)"
+            set input "$ANSWER_NO\n"
+          } else {
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(9)"
+            set input "$ANSWER_YES\n"
+          }
           if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
           }
-          send -i $sp_id "$ANSWER_NO\n"
+          send -i $sp_id $input
           continue;
        }
 
@@ -761,17 +766,6 @@ proc install_qmaster {} {
          }
 
          send -i $sp_id "$ts_config(bdb_server)\n"
-         continue;
-      }
-
-      -i $sp_id $ENTER_DATABASE_SERVER_LOCAL_SPOOLING {
-         puts $CHECK_OUTPUT "\n -->testsuite: sending >none<"
-         if {$do_log_output == 1} {
-            puts "press RETURN"
-            set anykey [wait_for_enter 1]
-         }
-
-         send -i $sp_id "none\n"
          continue;
       }
 
@@ -797,7 +791,7 @@ proc install_qmaster {} {
       }
 
 
-      -i $sp_id $ENTER_DATABASE_DIRECTORY {
+      -i $sp_id $ENTER_DATABASE_SERVER_DIRECTORY {
          # if we set a specific bdb_dir, send this one, else accept
          # the default suggested by inst_sge(ee)
          if {[string compare $ts_config(bdb_dir) "none"] != 0 } {
@@ -843,17 +837,7 @@ proc install_qmaster {} {
       }
 
       -i $sp_id $STARTUP_RPC_SERVER {
-         # startup RPC server
-         set result [start_remote_prog $ts_config(bdb_server) "ts_def_con2" "$ts_config(product_root)/$ts_config(cell)/common/rcrpc" "start"]
-         if {[string length $result] > 0} {
-            puts $CHECK_OUTPUT $result
-            set_error "-2" "install_qmaster - starting Berkeley DB RPC server failed: $result"
-            close_spawn_process $id;
-            return;  
-         }
-
-         # sleep some time to let RPC server startup and register
-         sleep 2
+         send -i $sp_id "\n"
          continue;
       }
 
@@ -956,12 +940,14 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $CELL_NAME_FOR_QMASTER {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(cell)"
+          set input "$ts_config(cell)\n"
+
           if {$do_log_output == 1} {
                puts "-->testsuite: press RETURN"
                set anykey [wait_for_enter 1]
           }
-          send -i $sp_id "\n"
+          send -i $sp_id $input
           continue;
        }
 

@@ -6270,7 +6270,7 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   sleep 5  ;# give the qmaster some time to shutdown
+   sleep 10  ;# give the qmaster some time to shutdown
 
    if { $ts_config(gridengine_version) == 53 } {
       puts $CHECK_OUTPUT "killing all commds in the cluster ..." 

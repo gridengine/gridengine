@@ -1541,6 +1541,9 @@ proc create_shell_script { scriptfile
          puts $script "fi"
       }
 
+      puts $script "SGE_CELL=$ts_config(cell)"
+      puts $script "export SGE_CELL"
+
       puts $script "SGE_SINGLE_LINE=1"
       puts $script "export SGE_SINGLE_LINE"
    

@@ -87,7 +87,7 @@ proc sge_macro { macro_name } {
       "DISTINST_USING_GID_RANGE_HIT_RETURN" { set value "\nUsing >%s< as gid range. Hit <RETURN> to continue >> " }
       "DISTINST_EXECD_INSTALL_COMPLETE" { set value "Your execution daemon installation is now completed." }
       "DISTINST_LOCAL_CONFIG_FOR_HOST" { set value "Local configuration for host >%s< created." }
-      "DISTINST_CELL_NAME_FOR_QMASTER" { set value "\nPlease enter cell name which you used for the qmaster\ninstallation or press <RETURN> to use default cell >default< >> " }
+      "DISTINST_CELL_NAME_FOR_QMASTER" { set value "\nPlease enter cell name which you used for the qmaster\ninstallation or press <RETURN> to use default cell >%s< >> " }
       "DISTINST_ADD_DEFAULT_QUEUE" { set value "Do you want to add a default queue for this host (y/n) \[y\] >> " }
 
 

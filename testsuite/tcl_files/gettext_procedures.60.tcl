@@ -90,21 +90,19 @@ proc sge_macro { macro_name } {
       "DISTINST_USING_GID_RANGE_HIT_RETURN" { set value "\nUsing >%s< as gid range. Hit <RETURN> to continue >> " }
       "DISTINST_EXECD_INSTALL_COMPLETE" { set value "Your execution daemon installation is now completed." }
       "DISTINST_LOCAL_CONFIG_FOR_HOST" { set value "Local configuration for host >%s< created." }
-      "DISTINST_CELL_NAME_FOR_QMASTER" { set value "\nGrid Engine supports multiple cells.\n\nIf you are not planning to run multiple Grid Engine clusters or if you don't\nknow yet what is a Grid Engine cell it is safe to keep the default cell name\n\n   default\n\nIf you want to install multiple cells you can enter a cell name now.\n\nThe environment variable\n\n   \\\$SGE_CELL=<your_cell_name>\n\nwill be set for all further Grid Engine commands.\n\nEnter cell name \[default\] >> " }
-      "DISTINST_CELL_NAME_FOR_EXECD" { set value "\nPlease enter cell name which you used for the qmaster\ninstallation or press <RETURN> to use default cell >default< >> " }
+      "DISTINST_CELL_NAME_FOR_QMASTER" { set value "\nGrid Engine supports multiple cells.\n\nIf you are not planning to run multiple Grid Engine clusters or if you don't\nknow yet what is a Grid Engine cell it is safe to keep the default cell name\n\n   default\n\nIf you want to install multiple cells you can enter a cell name now.\n\nThe environment variable\n\n   \\\$SGE_CELL=<your_cell_name>\n\nwill be set for all further Grid Engine commands.\n\nEnter cell name \[%s\] >> " }
+      "DISTINST_CELL_NAME_FOR_EXECD" { set value "\nPlease enter cell name which you used for the qmaster\ninstallation or press <RETURN> to use default cell >%s< >> " }
       "DISTINST_CELL_NAME_EXISTS" { set value "Do you want to select another cell name? (y/n) \[y\] >> " }
       "DISTINST_CELL_NAME_OVERWRITE" { set value "Do you want to overwrite \[y\] or delete \[n\] the directory? (y/n) \[y\] >> " }
       "DISTINST_ADD_DEFAULT_QUEUE" { set value "Do you want to add a default queue for this host (y/n) \[y\] >> " }
       "DISTINST_ALL_QUEUE_HOSTGROUP" { set value "Creating the default <all.q> queue and <allhosts> hostgroup" }
       "DISTINST_ADD_DEFAULT_QUEUE_INSTANCE" { set value "Do you want to add a default queue instance for this host (y/n) \[y\] >> " }
 
-      "DISTINST_ENTER_DATABASE_SERVER" { set value "Enter database server (none for local spooling)\nor hit <RETURN> to use default \[%s\] >> " }
-      "DISTINST_ENTER_DATABASE_SERVER_LOCAL_SPOOLING" { set value "Please enter the name of your Berkeley DB Spooling Server!\nFor local spooling without Server, hit <RETURN> else enter the Servername! >>" }
-      "DISTINST_ENTER_DATABASE_DIRECTORY" { set value "Enter the database directory\nor hit <RETURN> to use default \[%s\] >> " }
-      "DISTINST_ENTER_DATABASE_DIRECTORY" { set value "Please enter the Database Directory now, even if you want to spool locally\nit is necessary to enter this Database Directory. \n\nDefault: \[] >> " }
+      "DISTINST_ENTER_DATABASE_SERVER" { set value "Please enter the name of your Berkeley DB Spooling Server! >> " }
+      "DISTINST_ENTER_SERVER_DATABASE_DIRECTORY" { set value "Please enter the Database Directory now!\n\nDefault: \[%s\] >> " }
       "DISTINST_ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING" { set value "\nPlease enter the Database Directory now, even if you want to spool locally\n it is necessary to enter this Database Directory. \n\nDefault: \[%s\] >> " }
       "DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS" { set value "The database directory >%s<\nis not on a local filesystem.\nPlease choose a local filesystem or configure the RPC Client/Server mechanism" }
-      "DISTINST_STARTUP_RPC_SERVER" { set value "Please startup the rc script >%s< on the RPC server machine" }
+      "DISTINST_STARTUP_RPC_SERVER" { set value "*is completed, continue with <RETURN>" }
       "DISTINST_DONT_KNOW_HOW_TO_TEST_FOR_LOCAL_FS" { set value "Don't know how to test for local filesystem. Exit." }
       "DISTINST_CURRENT_GRID_ROOT_DIRECTORY" { set value "The Grid Engine root directory is:\n\n   \\\$SGE_ROOT = %s\n\nIf this directory is not correct (e.g. it may contain an automounter\nprefix) enter the correct path to this directory or hit <RETURN>\nto use default \[%s\] >> " }
       "DISTINST_DATABASE_LOCAL_SPOOLING" { set value "Do you want to use a Berkeley DB Spooling Server? (y/n) \[n\] >> " }

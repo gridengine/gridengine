@@ -1394,7 +1394,6 @@ proc check_executable_files {  } {
 
    set filelist ""
    lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/lock.sh"
-   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_submit.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_submit_log.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_tcl_command.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remotecompile.sh"
@@ -1404,7 +1403,6 @@ proc check_executable_files {  } {
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/functional/migration/migrate.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qmod/general/qmod_job.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/qsub_gid.sh"
-   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/remote_qrsh.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/sleep_pid.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/terminate.sh"
    lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/trap.sh" 
@@ -2361,6 +2359,7 @@ proc setup2 { } {
 #     check/setup2()
 #*******************************************************************************
 proc enhanced_setup {} {
+   global ts_config
    global CHECK_CHECKTREE_ROOT CHECK_ENABLED_RUNLEVELS
    global CHECK_ENABLED_CATEGORIES CHECK_OUTPUT check_name
    global be_quiet CHECK_PACKAGE_DIRECTORY
@@ -2375,6 +2374,7 @@ proc enhanced_setup {} {
    set env(SGE_QMASTER_PORT) $CHECK_COMMD_PORT;
    set env(SGE_EXECD_PORT) [expr ( $CHECK_COMMD_PORT + 1 ) ];
    set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
+   set env(SGE_CELL) $ts_config(cell)
    set env(SGE_SINGLE_LINE) 1
 
    set_users_environment $CHECK_HOST
@@ -5402,7 +5402,7 @@ proc prepare_packages { } {
       catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)" } 
       catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common" } 
 
-      # copy pos. host_aliases file to new product root /default/common
+      # copy pos. host_aliases file to new product root /$SGE_CELL/common
       if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 && 
            $restore_host_aliases_file == 1 } {
          puts $CHECK_OUTPUT "restoring host_aliases file ..."
@@ -6399,7 +6399,7 @@ proc compile_source { { do_only_install 0 } } {
    catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common" } 
 
   
-   # copy pos. host_aliases file to new product root /default/common
+   # copy pos. host_aliases file to new product root /$SGE_CELL/common
    if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 } {
         puts $CHECK_OUTPUT "restoring host_aliases file ..."
         catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" } result

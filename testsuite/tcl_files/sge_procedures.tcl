@@ -3762,7 +3762,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set PARSE_DUPLICATEHOSTINFILESPEC [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_DUPLICATEHOSTINFILESPEC]] 
 
   if { $ts_config(gridengine_version) == 60 } {
-     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED] ]
+     set COLON_NOT_ALLOWED "aöslfjaöskljf aöskljfaösdf"
   } else {
      set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
      set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":" ]
@@ -4076,10 +4076,12 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- $ONLY_ONE_RANGE {
              set return_value -18
           }
-          -i $sp_id -- $PARSE_DUPLICATEHOSTINFILESPEC { 
+          -i $sp_id -- "$PARSE_DUPLICATEHOSTINFILESPEC" { 
              set return_value -19
           }
-
+          -i $sp_id -- "two files are specified for the same host" { 
+             set return_value -19
+          }
         }
      }
  

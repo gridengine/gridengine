@@ -170,17 +170,17 @@ AS       AS      521     4869772    resource limits not correctly set for Linux 
          SD      496                Functional policy pending ticket calculations are not intuitive
 
 SG       SG      2003-07-17-0       Optimized functional ticket computation (see 2003-07-16)
-         SG      2003-12-08-0       Storing a job template in qmon set -hold_jid to wrong value
-         SG      2003-12-10-0       qsh and qlogin allowed -hold_jid
+SG       SG      2003-12-08-0       Storing a job template in qmon set -hold_jid to wrong value
+SG       SG      2003-12-10-0       qsh and qlogin allowed -hold_jid
 SG       SG      2004-01-22-0       a user cannot be renamed anymore
 SG       SG      2004-01-26-0       qdel XXXX.YY- deleted the first task...
-         SG      540                enabled output file names to have a ":" inside for qsub
+SG       SG      540                enabled output file names to have a ":" inside for qsub
 SG       SG      544     4886017    qstat crashed, when used with the options -r -s z
-         SG      551     4969825    do not use job task with -hold_jid flag, qlater accepts only tasks when allowed
-         SG      555     4886025    queue name was truncated to 10 chars
-         SG      576     4886026    max_u_jobs could count rejected jobs as submitted
-         SG      585     4930793    minor issues with the sgeee ticket update interval
-         SG      589     4930786    global load values are ignored
-         SG      592     4930789    An overwritten string attribut was ignored in the scheduler
+SG       SG      551     4969825    do not use job task with -hold_jid flag, qlater accepts only tasks when allowed
+SG       SG      555     4886025    queue name was truncated to 10 chars
+SG       SG      576     4886026    max_u_jobs could count rejected jobs as submitted
+SG       SG      585     4930793    minor issues with the sgeee ticket update interval
+SG       SG      589     4930786    global load values are ignored
+SG       SG      592     4930789    An overwritten string attribut was ignored in the scheduler
 SG       SG      607                qhost -F -h Name did not display global consumables
 SG       SG      635                The reported vmem for a job from the exec host got never smaller

@@ -135,6 +135,7 @@ proc sge_macro { macro_name } {
       "MSG_TREE_CHANGEDSHARETREE" -
       "MSG_QCONF_CANTREADSHARETREEX_S" -
       "MSG_JOB_PRIOSET_SSUU" -
+      "MSG_PARSE_DUPLICATEHOSTINFILESPEC" -
       "MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S" { set value "" }
 
       "DISTINST_HIT_RETURN_TO_CONTINUE" { set value "\nHit <RETURN> to continue >> " } 

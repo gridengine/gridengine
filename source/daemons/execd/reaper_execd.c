@@ -1346,19 +1346,14 @@ int startup
    return 0;
 }
 
-static void examine_job_task_from_file(
-   
-int startup,
-char *dir,
-lListElem *jep,
-lListElem *jatep,
-lListElem *petep,
-pid_t *pids,
-int npids 
-) {
-   lListElem *jr;
+static void 
+examine_job_task_from_file(int startup, char *dir, lListElem *jep,
+                           lListElem *jatep, lListElem *petep, pid_t *pids, 
+                           int npids) 
+{
+   lListElem *jr = NULL;
    int shepherd_alive;  /* =1 -> this shepherd is in the process table */
-   FILE *fp;
+   FILE *fp = NULL;
    SGE_STRUCT_STAT statbuf;
    char fname[SGE_PATH_MAX];
    pid_t pid;           /* pid of shepherd */
@@ -1369,8 +1364,9 @@ int npids
 
    DENTER(TOP_LAYER, "examine_job_task_from_file");
    
-   if (!startup_time)
+   if (!startup_time) {
       startup_time = sge_get_gmt();
+   }   
    
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
@@ -1391,8 +1387,9 @@ int npids
    }
 
    DPRINTF(("Found job directory: %s\n", dir));
-   if (startup)
+   if (startup) {
       INFO((SGE_EVENT, MSG_SHEPHERD_FOUNDDIROFJOBX_S, dir));
+   }   
 
    /* Look for pid of shepherd */
    sprintf(fname, "%s/pid", dir);

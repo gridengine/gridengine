@@ -137,7 +137,7 @@ int dispatch( dispatch_entry*   table,
    u_long rcvtimeoutt=rcvtimeout;
    u_long32 dummyid = 0;
    sge_pack_buffer *pb = NULL, apb;
-   int synchron;
+   int synchron = 0;
    time_t next_prof_output = 0;
 
    DENTER(TOP_LAYER, "dispatch");
@@ -517,8 +517,8 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
 static int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
               void (*errfunc)(const char *err_str))
 {
-   int i;
-   u_long32 dummy;
+   int i = CL_RETVAL_OK;
+   u_long32 dummy = 0;
    char err_str[256];
 
    DENTER(TOP_LAYER, "sendAckPb");

@@ -1062,6 +1062,12 @@ lListElem *jatep
 
    now = sge_get_gmt();
 
+   DEBUG((SGE_EVENT, "queue_signal: %d, queue: %s, job: %d, jatask: %d", how, 
+            (qep?lGetString(qep, QU_full_name):"none"),
+            (int)(jep?lGetUlong(jep,JB_job_number):-1),
+            (int)(jatep?lGetUlong(jatep,JAT_task_number):-1)
+        ));
+   
    /* don't try to signal unheard queues */
    if (!qinstance_state_is_unknown(qep)) {
       const char *hnm, *pnm;

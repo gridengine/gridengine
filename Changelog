@@ -1,3 +1,7 @@
+JG-2002-06-05-2: Bugfix:    qsub allowed submission of binary files
+                 Issue:     #247
+                 Bugtraq:   #4696768
+
 JG-2002-06-05-1: Bugfix:    Error handling when reading configuration at
                             qmaster startup was incomplete and produced
                             confusing error messages.

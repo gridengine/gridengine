@@ -37,7 +37,7 @@ Content
     mk_dist -vdir vdir -version version [-basedir dir] [-cdrom] \
             [-sgeee] [-bin] [-common] [-doc] binarchs ...
 
-    -vdir <versiondir> use this subdirectory form which distribution
+    -vdir <versiondir> use this subdirectory from which distribution
                        is created
 
     -version version   string which will be used for filenames

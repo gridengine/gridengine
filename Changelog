@@ -1,40 +1,44 @@
-AA-2002-03-20-0  Bugfix:   qhost formatting
+CR-2002-03-21-0  Testsuite: merge from maintrunc
+                            sending "vt100" when client host is using tset
+                            for terminal settings.
 
-EB-2002-03-20-1  Bugfix:   can't receive request: READ ERROR
-                           - replaced closeconnection(0) calls within 
-                             recvfromcommd() through closeconnection(1) calls 
-                             in case of read error
-                           - improved logging; additional messages may be 
-                             found in the messages files of the daemons which 
-                             might help if these errors occure again
-                 Issue:    #176 (partially)
+AA-2002-03-20-0  Bugfix:    qhost formatting
 
-EB-2002-03-20-0  Cleanup:  removed global variable monitor_next_run
+EB-2002-03-20-1  Bugfix:    can't receive request: READ ERROR
+                            - replaced closeconnection(0) calls within 
+                              recvfromcommd() through closeconnection(1) calls 
+                              in case of read error
+                            - improved logging; additional messages may be 
+                              found in the messages files of the daemons which 
+                              might help if these errors occure again
+                 Issue:     #176 (partially)
 
-JG-2002-03-20-1  Bugfix:   Check return code of fclose in spooling functions
-                           and handle error situations:
-                           - log critical error
-                           - remove file
-                 Issue:    #185
+EB-2002-03-20-0  Cleanup:   removed global variable monitor_next_run
 
-CR-2002-03-20-0  Bugfix:   qselect/qstat -U is (partially) broken
-                 Issue:    #191
+JG-2002-03-20-1  Bugfix:    Check return code of fclose in spooling functions
+                            and handle error situations:
+                            - log critical error
+                            - remove file
+                 Issue:     #185
 
-JG-2002-03-20-0  Bugfix:   Reduce memory consumption of qmaster and size of 
-                           spool files for tightly integrated parallel jobs 
-                           that start series of tasks per slot reserved 
-                           (e.g. qmake). 
+CR-2002-03-20-0  Bugfix:    qselect/qstat -U is (partially) broken
+                 Issue:     #191
+
+JG-2002-03-20-0  Bugfix:    Reduce memory consumption of qmaster and size of 
+                            spool files for tightly integrated parallel jobs 
+                            that start series of tasks per slot reserved 
+                            (e.g. qmake). 
 
 AS-2002-03-19-0  Install:   openssl command not required if not "-csp" mode
 
-AA-2002-03-19-4  Bugfix:   - scripts for I18N, gettext-1.11
+AA-2002-03-19-4  Bugfix:    - scripts for I18N, gettext-1.11
 
-AA-2002-03-19-3  Bugfix:   - qmon cluster_token_extend_time was lost
+AA-2002-03-19-3  Bugfix:    - qmon cluster_token_extend_time was lost
 
-AA-2002-03-19-2  Feature:  - install doc for CSP
+AA-2002-03-19-2  Feature:   - install doc for CSP
 
-AA-2002-03-19-1  Bugfix:   - STN_type sharetree read from disk
-                           - qmon Sharetree Find fix scrollbars
+AA-2002-03-19-1  Bugfix:    - STN_type sharetree read from disk
+                            - qmon Sharetree Find fix scrollbars
 
 CR-2002-03-19-1  Testsuite: - stop install_core_system check if qmaster 
                               is not reachable after installing last execd

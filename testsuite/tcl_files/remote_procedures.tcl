@@ -541,7 +541,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                 }
              }
    
-             set mytries 60
+             set mytries 20
              debug_puts "waiting for shell response ..."
              set timeout 1
              set ok 0
@@ -557,12 +557,15 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                       
                       flush $CHECK_OUTPUT
                       send -i $spawn_id -- "\necho \"__ my id is ->\`id\`<-\"\n\n"
-                      set timeout 3
+                      set timeout 5
                       incr mytries -1 ; 
                       if  { $mytries < 0 } { 
                           set ok 1
                           add_proc_error "open_remote_spawn_process" -2 "shell doesn't start or runs not as user $open_remote_spawn__check_user on host $open_remote_spawn__hostname" 
                       }
+                   }
+                   -i $spawn_id -- "Terminal type?" {
+                      send -i $spawn_id -- "vt100\n"
                    }
                    -i $spawn_id -- "__ my id is ->*${open_remote_spawn__check_user}*<-" { 
                        debug_puts "shell response! - fine" 
@@ -1343,6 +1346,9 @@ proc check_rlogin_session { spawn_id pid hostname user nr_of_shells} {
                 set ok 1
                 send -i $spawn_id "\n"
                 debug_puts "sending new line"
+            }
+            -i $spawn_id -- "Terminal type?" {
+                      send -i $spawn_id -- "vt100\n"
             }
             -i $spawn_id default {
                flush $CHECK_OUTPUT

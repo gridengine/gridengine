@@ -1,3 +1,10 @@
+AA-2003-05-09-0  Bugfix:    unexpected output for qstat -j and qmon Why? 
+                            with no job selected due to wrong order of 
+                            message ids fixed
+                 Bugtraq:   #4851939
+                 Review:    CR 
+                 Changed:   all binaries that link against schedlib
+
 JG-2003-05-08-0  Bugfix:    qmake dumped core when starting recursive make calls
                  IZ:        #547
                  Bugtraq:   #4860391

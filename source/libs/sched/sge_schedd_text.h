@@ -37,11 +37,15 @@
 ** in sge_text.h ( sge_text() is now sge_schedd_text() )
 */
 
-/* Info strings used in scheduler (detailed information)
-* and Info strings used in qstat (we group jobs)
-*
-* Info strings used in scheduler and info strings used in qstat must
-* have same sequence because we use offset to map messages
+/* 
+** Info strings used in scheduler (detailed information)
+** and Info strings used in qstat (we group jobs)
+**
+** The first section in the following enum until the empty comment defines the
+** message ids for the -j <jobid> and the second section the corresponding message
+** ids for the -j case. 
+** Therefore to add a new message id it has to be added twice for -j <jobid> and -j
+** in the corresponding section and the order has to be maintained.
 */
 enum { 
    SCHEDD_INFO_CANNOTRUNATHOST_SSS = 0 ,
@@ -89,6 +93,7 @@ enum {
    SCHEDD_INFO_NOPEMATCH_,
    SCHEDD_INFO_CLEANUPNECESSARY_S,
    SCHEDD_INFO_MAX_AJ_INSTANCES_,
+   SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S,
 
    /* */
    SCHEDD_INFO_CANNOTRUNATHOST,
@@ -136,9 +141,8 @@ enum {
    SCHEDD_INFO_NOPEMATCH,
    SCHEDD_INFO_CLEANUPNECESSARY,
    SCHEDD_INFO_MAX_AJ_INSTANCES,
-
-   SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S,
    SCHEDD_INFO_TOTALPESLOTSNOTINRANGE,
+   
    TOOBIG /* don't move from last position! */
 };
 #define SCHEDD_INFO_OFFSET (SCHEDD_INFO_CANNOTRUNATHOST-SCHEDD_INFO_CANNOTRUNATHOST_SSS)

@@ -132,7 +132,7 @@ int sge_cwd_chdir(char *cp);
 static int notify_tasker(u_long32 exit_status);
 int main(int argc, char **argv);
 static int start_child(char *childname, char *script_file, pid_t *pidp, int timeout, int ckpt_type);
-static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, pid_t ctrl_pid[3]);
+static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, int remaining_alarm, pid_t ctrl_pid[3]);
 static int check_ckpttype(void);
 static int wait_my_child(int pid, int ckpt_pid, int ckpt_type, struct rusage *rusage, int timeout, int ckpt_interval, char *childname);
 static void set_ckpt_params(int, char *, int, char *, int, char *, int, int *);
@@ -1080,10 +1080,11 @@ char *method_name
  We have gotten a signal. Look for it and forward it to the
  group of the job.
  ***************************************************************/
-static void forward_signal_to_job(pid, timeout, postponed_signal, ctrl_pid)
+static void forward_signal_to_job(pid, timeout, postponed_signal, remaining_alarm, ctrl_pid)
 int pid;
 int timeout; /* no timeout means implicitly the job */
 int *postponed_signal;
+int remaining_alarm;
 pid_t ctrl_pid[3];
 {
    int sig;
@@ -1277,6 +1278,15 @@ pid_t ctrl_pid[3];
                   int notify_susp_signal;
                   char *tmp_str;
 
+                  /* detect and prevent repeated initiation of notify mechanism
+                     as this can delay final job suspension endlessly */
+                  if (*postponed_signal == SIGKILL || *postponed_signal == SIGSTOP) {
+                     SHEPHERD_TRACE((err_str, "ignoring repeated (%s) initiation of suspension notify",
+                           sge_sys_sig2str(*postponed_signal)));
+                     alarm(remaining_alarm);
+                     return;
+                  }
+
                   /* default signal for suspend notification */ 
                   notify_signal = SIGUSR1;
                   notify_susp_type = 1;
@@ -1290,7 +1300,7 @@ pid_t ctrl_pid[3];
                      tmp_str = search_conf_val("notify_susp");
                      if (tmp_str) {
                         notify_susp_signal = sge_sys_str2signal(tmp_str);
-                        SHEPHERD_TRACE((err_str, "%s %s) notification for delayed(%d s) SIGSTOP.",
+                        SHEPHERD_TRACE((err_str, "%s %s) notification for delayed (%d s) SIGSTOP.",
                            kill_str, tmp_str, notify));
                         notify_signal = notify_susp_signal;
                      }
@@ -1334,6 +1344,15 @@ pid_t ctrl_pid[3];
                   int notify_kill_signal;
                   char *tmp_str; 
 
+                  /* detect and prevent repeated initiation of notify mechanism
+                     as this can delay final job termination endlessly */
+                  if (*postponed_signal == SIGKILL) {
+                     SHEPHERD_TRACE((err_str, "ignoring repeated (%s) initiation of termination notify",
+                         sge_sys_sig2str(*postponed_signal)));
+                     alarm(remaining_alarm);
+                     return;
+                  }
+
                   /* default signal for kill notification */
                   notify_signal = SIGUSR2;
                   notify_kill_type = 1;
@@ -1347,7 +1366,7 @@ pid_t ctrl_pid[3];
                      tmp_str = search_conf_val("notify_kill");
                      if (tmp_str) {
                         notify_kill_signal = sge_sys_str2signal(tmp_str);
-                        SHEPHERD_TRACE((err_str, "%s %s) notification for delayed(%d s) SIGKILL.",
+                        SHEPHERD_TRACE((err_str, "%s %s) notification for delayed (%d s) SIGKILL.",
                            kill_str, tmp_str, notify));
                         notify_signal = notify_kill_signal;
                      }
@@ -1550,6 +1569,7 @@ char *childname            /* "job", "pe_start", ...     */
    int rest_ckpt_interval;
    int inArena, inCkpt, kill_job_after_checkpoint, job_pid;
    int postponed_signal = 0;
+   int remaining_alarm;
    pid_t ctrl_pid[3];
 
 #if defined(HP10) || defined(HP11)
@@ -1598,7 +1618,7 @@ char *childname            /* "job", "pe_start", ...     */
       getrusage(RUSAGE_CHILDREN, &rusage_hp10);
 #endif
 
-      alarm(0);
+      remaining_alarm = alarm(0);
      
       if (npid == -1) {
          sprintf(err_str, "wait3 returned -1");
@@ -1665,7 +1685,7 @@ char *childname            /* "job", "pe_start", ...     */
                kill_job_after_checkpoint = 1; /* kill job after end of ckpt_command   */
          }
          else
-            forward_signal_to_job(pid, timeout, &postponed_signal, ctrl_pid);
+            forward_signal_to_job(pid, timeout, &postponed_signal, remaining_alarm, ctrl_pid);
       }
             
       /* here we reap the control action methods */

@@ -1,3 +1,8 @@
+AH-2002-06-05-1: Bugfix:    Fix problem with notify mechanism causing actual
+                            termination/suspension signal being delayed endlessly
+                 Issue:     #231
+                 Bugtraq:   #4697491
+
 JG-2002-06-05-3: Cleanup:   Replaced %s in messages with macros SFN and SFQ
                             for utilib.
                  Issue:     #252           

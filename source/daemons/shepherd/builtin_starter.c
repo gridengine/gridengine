@@ -879,6 +879,7 @@ char *str_title
       } else {
          /* the script file also contains procedure arguments
             need to disassemble the string and put into args vector */
+         pre_args_ptr[0] = NULL;   
          args = disassemble_proc_args(script_file, pre_args, 0);
          script_file = args[0];
       }

@@ -1,3 +1,6 @@
+JG-2002-10-31-1  Bugfix:    shepherd dumped core when starting command with
+                            unix behaviour (e.g. pe_start procedure).
+
 JG-2002-10-31-0  Enhancem.  Documentation and some small enhancements for the 
                             spooling framework.
                             Adapted naming conventions and wrote documentation 

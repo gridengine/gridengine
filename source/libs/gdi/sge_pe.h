@@ -40,4 +40,7 @@ lListElem *pe_match(const char *wildcard);
 
 lListElem *pe_locate(const char *pe_name);
 
+int pe_is_referenced(const lListElem *pe, lList **answer_list,
+                     const lList *master_job_list);
+
 #endif /* __SGE_PE_H */

@@ -1856,3 +1856,35 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id,
    DEXIT;
    return sge_dstring_get_string(&id);
 }
+
+/****** gdi/job_jatask/job_is_pe_referenced() *********************************
+*  NAME
+*     job_is_pe_referenced() -- Does job reference the given PE? 
+*
+*  SYNOPSIS
+*     int job_is_pe_referenced(const lListElem *job, const char* pe_name) 
+*
+*  FUNCTION
+*     The function returns true (1) if "job" references the PE 
+*     given by "pe_name". This is also the case if job requests a 
+*     wildcard PE and the wildcard name matches the given "pe_name". 
+*
+*  INPUTS
+*     const lListElem *job - JB_Type element 
+*     const char* pe_name  - name of a PE_Type object 
+*
+*  RESULT
+*     int - true (1) or false (0) 
+*******************************************************************************/
+int job_is_pe_referenced(const lListElem *job, const char* pe_name)
+{
+   const char *ref_pe_name = lGetString(job, JB_pe);
+   int ret = 0;
+
+   /* wildcard pe */
+   if (!fnmatch(ref_pe_name, pe_name, 0)) {
+      ret = 1;
+   }
+   return ret;
+}
+

@@ -217,20 +217,11 @@ gdi_object_t *object
    return 0;
 }
 
-/* ------------------------------------------------------------
-
-   deletes an parallel environment object
-
-*/
-int sge_del_pe(
-lListElem *pep,
-lList **alpp,
-char *ruser,
-char *rhost 
-) {
+int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost) 
+{
    int pos;
-   lListElem *ep;
-   const char *pe;
+   lListElem *ep = NULL;
+   const char *pe = NULL;
 
    DENTER(TOP_LAYER, "sge_del_pe");
 
@@ -262,6 +253,24 @@ char *rhost
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
+   }
+
+   /* 
+    * Try to find references in other objects
+    */
+   {
+      lList *local_answer_list = NULL;
+
+      if (pe_is_referenced(ep, &local_answer_list, Master_Job_List)) {
+         lListElem *answer = lFirst(local_answer_list);
+
+         ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 
+                         ANSWER_QUALITY_ERROR);
+         local_answer_list = lFreeList(local_answer_list);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
    }
 
    /* remove host file */

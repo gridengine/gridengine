@@ -141,6 +141,9 @@ void job_set_env_string(lListElem *job, const char *variable,
 
 void job_check_correct_id_sublists(lListElem *job, lList **answer_list);
 
-const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id);
+const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id, 
+                              const char *pe_task_id);
+
+int job_is_pe_referenced(const lListElem *job, const char* pe_name);
 
 #endif /* __SGE_JOB_JATASK_H */    

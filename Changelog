@@ -1,3 +1,7 @@
+EB-2002-06-27-1: Bugfix:    prevent deletion of still referenced objects
+                            - PE objects
+                 Issue:     #302 (partially)
+
 AH-2002-06-27-0: Enhancem.: Improved load alarm/suspend alarm diagnosis 
                             messages
 

@@ -37,6 +37,9 @@
 #include "def.h"   
 #include "cull_list.h"
 
+#include "sge_jobL.h"
+#include "sge_answer.h"
+#include "sge_job_jatask.h"
 #include "sge_pe.h"
 
 lList *Master_Pe_List = NULL;
@@ -90,3 +93,44 @@ lListElem *pe_locate(const char *pe_name)
    return lGetElemStr(Master_Pe_List, PE_name, pe_name);
 }
 
+/****** gdi/pe/pe_is_referenced() **********************************************
+*  NAME
+*     pe_is_referenced() -- Is a given PE referenced in other objects? 
+*
+*  SYNOPSIS
+*     int pe_is_referenced(const lListElem *pe, lList **answer_list, 
+*                          const lList *master_job_list) 
+*
+*  FUNCTION
+*     This function returns true (1) if the given "pe" is referenced
+*     in a job contained in "master_job_list". If this is the case than
+*     a corresponding message will be added to the "answer_list". 
+*
+*  INPUTS
+*     const lListElem *pe          - PE_Type object 
+*     lList **answer_list          - AN_Type object 
+*     const lList *master_job_list - JB_Type list 
+*
+*  RESULT
+*     int - true (1) or false (0) 
+******************************************************************************/
+int pe_is_referenced(const lListElem *pe, lList **answer_list,
+                     const lList *master_job_list)
+{
+   const char *pe_name = lGetString(pe, PE_name);
+   lListElem *job = NULL;
+   int ret = 0;
+
+   for_each(job, master_job_list) {
+      if (job_is_pe_referenced(job, pe_name)) {
+         u_long32 job_id = lGetUlong(job, JB_job_number);
+
+         sprintf(SGE_EVENT, "Pe "SFQ" is still referenced in job "
+                 U32CFormat".\n", pe_name, job_id);
+         answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
+                         ANSWER_QUALITY_INFO);
+         ret = 1;
+      }
+   } 
+   return ret;
+}

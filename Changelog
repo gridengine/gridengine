@@ -1,3 +1,6 @@
+JG-2001-11-08-0: Updated recent GDI versions for version check and error 
+                 handling in qmaster.
+
 JG-2001-11-07-2: aimk: recognize the necessity to set -DHAS_IN_PORT_T for 
                  the LINUX6 platform dependent on the libc version.
 

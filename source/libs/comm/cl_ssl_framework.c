@@ -2012,7 +2012,6 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                break;
             }
          }
-         cl_commlib_push_application_error(CL_RETVAL_SSL_ACCEPT_ERROR, cl_com_ssl_get_error_text(ssl_error) );
          return CL_RETVAL_SSL_ACCEPT_ERROR;
       }
 

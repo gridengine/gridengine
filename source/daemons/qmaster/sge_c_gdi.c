@@ -192,6 +192,9 @@ int id
       { 0x100000F2, "5.3beta1" },
       { 0x100000F3, "5.3beta2" },
       { 0x100000F4, "5.3" },
+      { 0x10000FFF, "6.0"   },
+      { 0x10001000, "6.0u3" },
+      { 0x10001001, "6.0u4" }, /* not used for 6.0u4 version check which must be < 6.0u4 */
       { 0,          NULL   }
    };
 

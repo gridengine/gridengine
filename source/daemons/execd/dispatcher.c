@@ -52,6 +52,7 @@
 #include "sig_handlers.h"
 #include "sge_profiling.h"
 #include "sge_time.h"
+#include "qm_name.h"
 #include "execd.h"
 
 /* number of messages to cache in server process
@@ -201,6 +202,21 @@ int dispatch( dispatch_entry*   table,
       case CL_RETVAL_NO_MESSAGE:
       case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
       case CL_RETVAL_OK:
+
+         /* 
+          * trigger re-read of act_qmaster_file in case of
+          * do_re_register == true
+          */
+         if (do_re_register == true) {
+            u_long32 now = sge_get_gmt();
+            static u_long32 last_qmaster_file_read = 0;
+            if ( now - last_qmaster_file_read >= 5 ) {
+               /* re-read act qmaster file (max. every 5 seconds) */
+               DPRINTF(("re-read actual qmaster file\n"));
+               sge_get_master(true);
+               last_qmaster_file_read = now;
+            }
+         }
 
          if (do_re_register == true && i != CL_RETVAL_CONNECTION_NOT_FOUND) {
             /* re-register at qmaster when connection is up again */

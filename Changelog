@@ -4,6 +4,8 @@ JG-2003-05-15-0: Bugfix:    - Installation of SGE(EE) as non root user failed,
                             - removed confusing error messages about changing 
                               into the spool directory and scheduler 
                               configuration not existing
+                 IZ:        535
+                 Changed:   spooldefaults, sge_qmaster
                  Review:    CR
 
 EB-2003-05-15-0: Enhancem.: Move queue_list from PE/CKPT to queue configuartion

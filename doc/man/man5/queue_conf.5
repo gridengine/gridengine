@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2001/07/20 08:19:15 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2001/11/19 17:29:19 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2001/07/20 08:19:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2001/11/19 17:29:19 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -380,10 +380,25 @@ definitions of the cluster configuration (see
 .M xxqs_name_sxx_conf 5 ).
 
 .SS "\fBstarter_method\fP"
-The executable path given here is intended to be used as a starter
-facility which is responsible for starting the job itself.
+The specified executable path will be used as a job starter
+facility responsible for starting batch jobs.
+The executable path will be executed instead of the configured
+shell to start the job. The job arguments will be passed as
+arguments to the job starter. The following environment
+variables are used to pass information to the job starter
+concerning the shell environment which was configured or
+requested to start the job.
+
+.IP "\fISGE_STARTER_SHELL_PATH\fP"
+The name of the requested shell to start the job
+.IP "\fISGE_STARTER_SHELL_START_MODE\fP"
+The configured \fBshell_start_mode\fP
+.IP "\fISGE_STARTER_USE_LOGIN_SHELL\fP"
+Set to "true" if the shell is supposed to be used as a login shell
+(see \fBlogin_shells\fP in
+.M xxqs_name_sxx_conf 5 )
 .PP
-Not supported in this release.
+The starter_method will not be invoked for interactive jobs.
 
 .SS "\fBsuspend_method\fP"
 .SS "\fBresume_method\fP"

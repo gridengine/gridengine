@@ -128,6 +128,7 @@ int truncate_stderr_out
    int use_qsub_gid;
    gid_t gid;
    char *tmp_str;
+   char *starter_method;
    
    if (starter) {
       close(starter->pipefds[0][1]); 
@@ -494,6 +495,24 @@ int truncate_stderr_out
    #endif
          }
       }
+   }
+
+   /*
+    * Use starter_method if it is supplied
+    */
+
+   if (!starter && !is_interactive && !is_qlogin && !qlogin_starter &&
+       !strcmp(childname, "job") &&
+       (starter_method = get_conf_val("starter_method")) &&
+       strcasecmp(starter_method, "none")) {
+
+      sge_setenv("SGE_STARTER_SHELL_PATH", shell_path);
+      shell_path = starter_method;
+      sge_setenv("SGE_STARTER_SHELL_START_MODE", shell_start_mode);
+      if (!strcasecmp("unix_behavior", shell_start_mode))
+         shell_start_mode = "posix_compliant";
+      if (use_login_shell)
+         sge_setenv("SGE_STARTER_USE_LOGIN_SHELL", "true");
    }
 
    /* get basename of shell for building argv[0] */

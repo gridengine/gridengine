@@ -90,7 +90,7 @@ proc issue_126_init_level {} {
       set check_126_host [lindex $ts_config(execd_hosts) $minorlevel]
       switch -exact $majorlevel {
          0 {
-            set check_126_loops 15
+            set check_126_loops 10
          }
          1 {
             set check_126_loops 50
@@ -196,7 +196,8 @@ proc issue_126_check {} {
       #
       # 2
       #
-      append error_output "\n[exec date] starting test run $i\n"
+      append error_output "\n======================================================================\n"
+      append error_output "[exec date] starting test run $i\n"
 
       set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
       set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "-d $q1 $q2"]
@@ -274,16 +275,6 @@ proc issue_126_check {} {
       set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "$job2_id"]
       puts $CHECK_OUTPUT $output
 
-
-#      set result [ delete_job $job1_id]
-#      if { $result != 0 } {
-#         add_proc_error "issue_126_check" "-1" "Could not delete job $job1_id"
-#      }
-#     set result [ delete_job $job2_id]
-#      if { $result != 0 } {
-#         add_proc_error "issue_126_check" "-1" "Could not delete job $job2_id"
-#      }
-
       while { [get_qping_dump_output dump_handle] == 0 } {
       }
       puts $CHECK_OUTPUT "try to print qping output"
@@ -299,15 +290,14 @@ proc issue_126_check {} {
          set msg_rid   $dump_handle(line,9,$printed_line)
          set msg_len   $dump_handle(line,10,$printed_line)
          set msg_time  $dump_handle(line,11,$printed_line)
-         append error_output "$msg_time $direction $remote $df $ack $msg_tag\n"
+         append error_output "$time $direction $remote $df $ack $msg_tag $msg_id $msg_rid $msg_time\n"
            
          if { [string match "*TAG_SIGQUEUE*" $msg_tag] != 0 || 
               [string match "*TAG_SIGJOB*" $msg_tag] != 0 ||
               [string match "*TAG_ACK_REQUEST*" $msg_tag] != 0 ||
               [string match "*TAG_CHANGE_TICKET*" $msg_tag] != 0 } {
-            puts $CHECK_OUTPUT "dumping out message tag $msg_tag:"
+            puts $CHECK_OUTPUT "dumping out message tag $msg_tag"
             append error_output "dumping out message tag $msg_tag:"
-            puts $CHECK_OUTPUT "$dump_handle(block,$printed_line)"
             append error_output "$dump_handle(block,$printed_line)\n"
          }
          incr printed_line 1

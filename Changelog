@@ -1,3 +1,5 @@
+CR-2005-01-17-0: Testsuite: cleanup for issue check 126
+
 DT-2005-01-16-0: Enhancem.: o aimk now can build javadocs with or without
                               protected fields and methods.
                  Bugfix:    o Changed Session.getVersion() to return the binding

@@ -331,17 +331,33 @@ int slave
          lListElem *tmp_job = NULL;
          lListElem *next_tmp_job = NULL;
          u_long32 job_id = lGetUlong(jelem, JB_job_number);
+         lList *gdi_list = NULL;
+         lList *ja_task_list = NULL;   
+         const char *hostname = NULL;
+         const char *tmp_hostname = NULL;
 
+         gdi_list = lGetList(jatep, JAT_granted_destin_identifier_list);
+         hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
+         
          /*
           * Is another array task of the same job already here?
           * In this case it is not necessary to spool the jobscript.
+          *
+          * But it is not enough, just to look for another array task. we have
+          * check wether there is another master task of the same job running
+          * on this host. This is important in case of array pe-jobs.
           */
          next_tmp_job = lGetElemUlongFirst(Master_Job_List,
                                            JB_job_number, job_id, &iterator);
          while((tmp_job = next_tmp_job) != NULL) {
             next_tmp_job = lGetElemUlongNext(Master_Job_List,
                                            JB_job_number, job_id, &iterator);
-            if (lGetUlong(tmp_job, JB_job_number) == job_id) {
+           
+            ja_task_list = lGetList(tmp_job,JB_ja_tasks);
+            gdi_list = lGetList(lFirst(ja_task_list), JAT_granted_destin_identifier_list);
+            tmp_hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
+           
+            if (sge_hostcmp(hostname, tmp_hostname) == 0) {
                found_script = 1;
                break;
             }
@@ -373,10 +389,10 @@ int slave
             }      
             close(fd);
             lSetString(jelem, JB_script_ptr, NULL);
-         } 
+         }
       }
    }
-
+      
    /* 
    ** security hook
    **
@@ -418,6 +434,7 @@ Error:
    {
       lListElem *jr;
       jr = execd_job_start_failure(jelem, jatep, NULL, sge_dstring_get_string(&err_str), general);
+      
       if (mail_on_error) {
          reaper_sendmail(jelem, jr);
       }

@@ -32,6 +32,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "sgermon.h"
 #include "sge_log.h"
@@ -194,11 +195,13 @@ int main(int argc, char **argv) {
       }
       while (delete_mode) {
          int no_forced_deletion = delete_mode & 2;
-         int do_again;
-         int error_occured;
-         int first_try = 1;
+         bool do_again;
+         bool first_try = true;
+         const int MAX_DELETE_JOBS = 500;
+         lList *part_ref_list = NULL;
+         lList *cp_ref_list = lCopyList("", ref_list);
 
-         for_each(idep, ref_list) {
+         for_each(idep, cp_ref_list) {
             lSetUlong(idep, ID_force, !no_forced_deletion);
          } 
 
@@ -209,30 +212,61 @@ int main(int argc, char **argv) {
           * transaction (STATUS_OK_DOAGAIN). In this case the client has 
           * to redo the transaction.
           */ 
-         do_again = 0;
          do {
+            do_again = false;
 
-            do_again = 0;
-            error_occured = 0;
-            alp = sge_gdi(SGE_JOB_LIST, cmd, &ref_list, NULL, NULL);
+            if (part_ref_list == NULL) {
+               int i;
+               int max = MIN(lGetNumberOfElem(cp_ref_list), MAX_DELETE_JOBS); 
+               lListElem *temp_ref = NULL;
+
+               first_try = true;
+
+               part_ref_list = lCreateList("part_del_jobs", ID_Type);
+               for (i = 0; i < max; i++){
+                  const char* job = NULL;
+                  temp_ref = lFirst(cp_ref_list);
+                  job = lGetString(temp_ref, ID_str);
+                  /* break if we got job ids first and hit a job name now */
+                  if (!isdigit(job[0]) && (i > 0)) {
+                     break;
+                  }   
+                  temp_ref = lDechainElem(cp_ref_list, temp_ref);
+                  lAppendElem(part_ref_list, temp_ref);
+                  /* break, if we got a job name by it self */
+                  if (!isdigit(job[0])){
+                     break;
+                  }   
+               }
+            }
+            
+            alp = sge_gdi(SGE_JOB_LIST, cmd, &part_ref_list, NULL, NULL);
+
             for_each(aep, alp) {
                status = lGetUlong(aep, AN_status);
 
                if (delete_mode != 5 && 
-                   ((first_try == 1 && status != STATUS_OK_DOAGAIN) ||
-                    (first_try == 0 && status == STATUS_OK))) {
+                   ((first_try  && status != STATUS_OK_DOAGAIN) ||
+                    (!first_try && status == STATUS_OK))) {
+                  
                   printf("%s", lGetString(aep, AN_text) );
+                  
                }
-               if (status != STATUS_OK && 
-                   status != STATUS_OK_DOAGAIN) {
-                  error_occured = 1;
-               }
+               /* but a job name might have extended to more than MAX_DELETE_JOBS */
                if (status == STATUS_OK_DOAGAIN) {
-                  do_again = 1;
+                  do_again = true;
                }
             }
-            first_try = 0;
-         } while ((user_list != NULL || all_users || all_jobs) && do_again && !error_occured);
+
+            if (!do_again){
+               part_ref_list = lFreeList(part_ref_list);
+            }
+            alp = lFreeList(alp);
+
+            first_try = false;
+         } while (do_again || (lGetNumberOfElem(cp_ref_list) > 0));
+
+         cp_ref_list = lFreeList(cp_ref_list);
 
          if (delete_mode == 7) {
             /* 

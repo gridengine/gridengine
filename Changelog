@@ -1,4 +1,16 @@
-AS-2004-02-04-0  Enhancem.: "aimk -32" creates Solaris 32 bit binaries on 64
+SG-2004-03-04-1: Bugfix:    the update list event has to be delivered allways.
+                            In case, that all elements got removed due to 
+                            filtering, the event was not sent. This is changed.
+                 Changed:   qmaster
+                 Review:    DT
+
+SG-2004-02-04-0: Bugfix:    - qdel "*" deleted only some jobs but not all.
+                            - the max deletion time in qmaster is set to 3
+                              seconds.
+                 Changed:   qdel, qmaster
+                 Review:    DT
+
+AS-2004-02-04-0: Enhancem.: "aimk -32" creates Solaris 32 bit binaries on 64
                             bit kernel
 
 JG-2004-02-04-3: Testsuite: Fixed system_tests/clients/qrsh and functions

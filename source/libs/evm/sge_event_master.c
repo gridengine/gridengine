@@ -83,6 +83,31 @@ typedef struct {
 
 /********************************************************************
  *
+ * Some events have to be delivered even so they have no date left
+ * after filtering for them. These are for example all update list
+ * events. 
+ * The ensure, that is is done as fast as posible, we define an 
+ * array of the size of the number of events, we have a init function
+ * which sets the events which will be updated. To add a new event
+ * ones has only to update that function.
+ * Events which do not contain any data are not affected. They are
+ * allways delivered.
+ *
+ * SEE ALSO:
+ * - Array:
+ *    SEND_EVENTS
+ *    IS_INIT_SEND_EVENTS
+ *
+ * - Init function:
+ *    evm/sge_event_master/sge_init_send_events()
+ *
+ *******************************************************************/
+ 
+static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
+static bool IS_INIT_SEND_EVENTS = false;
+
+/********************************************************************
+ *
  * The next three array are important for lists, which can be
  * subscripted by the event client and which contain a sub-list
  * that can be subscripted by it self again (such as the: job list
@@ -167,11 +192,11 @@ const int SOURCE_LIST[LIST_MAX][3] = {
 *     Eventclient/Server/eventclient_list_locate()
 *     Eventclient/Server/set_event_client_busy()
 *******************************************************************************/
-static void 
-total_update(lListElem *event_client);
+static void sge_init_send_events(void); 
 
-static void 
-sge_total_update_event(lListElem *event_client, ev_event type);
+static void total_update(lListElem *event_client);
+
+static void sge_total_update_event(lListElem *event_client, ev_event type);
 
 static void 
 sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
@@ -628,6 +653,8 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    u_long32 commproc_id;
 
    DENTER(TOP_LAYER,"sge_add_event_client");
+
+   sge_init_send_events();
 
    id = lGetUlong(clio, EV_id);
    name = lGetString(clio, EV_name);
@@ -1571,7 +1598,7 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
                     u_long32 intkey, u_long32 intkey2, const char *strkey, 
                     const char *strkey2, lList *list, int need_copy_list) 
 {
-   lListElem *event;
+   lListElem *event = NULL;
    u_long32 i;
    lList *lp;
    int consumed = 0;
@@ -1583,24 +1610,6 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
-   event = lCreateElem(ET_Type); 
-   /* 
-      fill in event number and increment 
-      EV_next_number of event recipient 
-   */
-   i = lGetUlong(event_client, EV_next_number);
-
-   lSetUlong(event, ET_number, i++);
-   lSetUlong(event_client, EV_next_number, i);
-
-   lSetUlong(event, ET_timestamp, timestamp);
-
-   lSetUlong(event, ET_type, type); 
-   lSetUlong(event, ET_intkey, intkey); 
-   lSetUlong(event, ET_intkey2, intkey2); 
-   lSetString(event, ET_strkey, strkey);
-   lSetString(event, ET_strkey2, strkey2);
- 
    { 
       lList *cp_list;
       if (list && need_copy_list) {
@@ -1618,7 +1627,9 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
             }   
             
             /* no elements in the event list, no need for an event */
-            if (lGetNumberOfElem(cp_list) == 0){
+            if (!SEND_EVENTS[ET_type] && lGetNumberOfElem(cp_list) == 0){
+               if (cp_list != NULL)
+                  lFreeList(cp_list);
                return 0;
             }
          }
@@ -1632,6 +1643,21 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
          consumed = 1;
       }   
 
+      event = lCreateElem(ET_Type); 
+      /* 
+         fill in event number and increment 
+         EV_next_number of event recipient 
+      */
+      i = lGetUlong(event_client, EV_next_number);
+      lSetUlong(event_client, EV_next_number, (i + 1));
+
+      lSetUlong(event, ET_number, i);
+      lSetUlong(event, ET_timestamp, timestamp);
+      lSetUlong(event, ET_type, type); 
+      lSetUlong(event, ET_intkey, intkey); 
+      lSetUlong(event, ET_intkey2, intkey2); 
+      lSetString(event, ET_strkey, strkey);
+      lSetString(event, ET_strkey2, strkey2);
       lSetList(event, ET_new_version, cp_list );
    }     
 
@@ -2604,3 +2630,56 @@ set_event_client_busy(lListElem *event_client, int busy)
    DEXIT;
    return;
 } /* set_event_client_busy() */
+
+
+/****** sge_event_master/sge_init_send_events() ********************************
+*  NAME
+*     sge_init_send_events() -- sets the events, that should allways be delivered 
+*
+*  SYNOPSIS
+*     void sge_init_send_events() 
+*
+*  FUNCTION
+*     sets the events, that should allways be delivered 
+*
+*  NOTES
+*     MT-NOTE: sge_init_send_events() is not MT safe 
+*     changes two global variables (SEND_EVENTS,IS_INIT_SEND_EVENTS).
+*     Should only be executed ones, during init of the event master
+*
+*******************************************************************************/
+static void sge_init_send_events(void) {
+   DENTER(TOP_LAYER, "sge_init_send_events");
+
+   if (!IS_INIT_SEND_EVENTS) {
+      IS_INIT_SEND_EVENTS = true;
+
+      memset(SEND_EVENTS, false, sizeof(bool) * sgeE_EVENTSIZE);
+
+      SEND_EVENTS[sgeE_ADMINHOST_LIST] = true;
+      SEND_EVENTS[sgeE_CALENDAR_LIST] = true;
+      SEND_EVENTS[sgeE_CKPT_LIST] = true;
+      SEND_EVENTS[sgeE_CENTRY_LIST] = true;
+      SEND_EVENTS[sgeE_CONFIG_LIST] = true;
+      SEND_EVENTS[sgeE_EXECHOST_LIST] = true;
+      SEND_EVENTS[sgeE_JOB_LIST] = true;
+      SEND_EVENTS[sgeE_JOB_SCHEDD_INFO_LIST] = true;
+      SEND_EVENTS[sgeE_MANAGER_LIST] = true;
+      SEND_EVENTS[sgeE_OPERATOR_LIST] = true;
+      SEND_EVENTS[sgeE_PE_LIST] = true;
+      SEND_EVENTS[sgeE_PROJECT_LIST] = true;
+      SEND_EVENTS[sgeE_QMASTER_GOES_DOWN] = true;
+      SEND_EVENTS[sgeE_CQUEUE_LIST] = true;
+      SEND_EVENTS[sgeE_SUBMITHOST_LIST] = true;
+      SEND_EVENTS[sgeE_USER_LIST] = true;
+      SEND_EVENTS[sgeE_USERSET_LIST] = true;
+      SEND_EVENTS[sgeE_HGROUP_LIST] = true;
+#ifndef __SGE_NO_USERMAPPING__      
+      SEND_EVENTS[sgeE_CUSER_LIST] = true;
+#endif      
+
+   }
+
+   DEXIT;
+   return;
+}

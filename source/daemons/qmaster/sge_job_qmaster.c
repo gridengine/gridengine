@@ -105,6 +105,8 @@
 
 extern int enable_forced_qdel;
 
+static const int MAX_DELETION_TIME = 3;
+
 static int mod_task_attributes(lListElem *job, lListElem *new_ja_task, lListElem *tep, 
                                lList **alpp, char *ruser, char *rhost, int *trigger, 
                                int is_array, int is_task_enrolled);
@@ -1117,7 +1119,7 @@ int sub_command
          }
       
          time = sge_get_gmt();
-         if (time - start_time > 1) {
+         if ((njobs > 0 || deleted_tasks > 0) && ((time - start_time) > MAX_DELETION_TIME)) {
             INFO((SGE_EVENT, MSG_JOB_DISCONTINUEDTRANS_SU, ruser, 
                   u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 

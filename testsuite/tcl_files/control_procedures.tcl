@@ -132,7 +132,11 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
                set stop_line_wait 1
             }
             -i $sp_id timeout {  
-               send ""
+               send -i $sp_id ""
+            }
+            -i $sp_id "erminal too wide" {
+               add_proc_error "handle_vi_edit" -2 "got terminal to wide vi error"
+               set stop_line_wait 1
             }
             -i $sp_id eof {
                add_proc_error "handle_vi_edit" -1 "unexpected end of file"
@@ -147,7 +151,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
          set com_length [ string length $elem ]
          set com_sent 0
          expect -i $sp_id
-         send -s -- "$elem"
+         send -s -i $sp_id -- "$elem"
          expect -i $sp_id
 
         
@@ -173,7 +177,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
 #            }
 ##            puts -nonewline $CHECK_OUTPUT "$send_string"
 #
-#            send -s -- "$send_string"
+#            send -s -i $sp_id -- "$send_string"
 #
 ##            puts -nonewline $CHECK_OUTPUT ":"
 #
@@ -194,7 +198,7 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       # wait 1 second for new file date!!! 
       while { [ timestamp ] == $start_time } { 
       }
-      send ":wq\n"
+      send -i $sp_id ":wq\n"
       set timeout 100
       set doStop 0
       while { $doStop == 0 } {

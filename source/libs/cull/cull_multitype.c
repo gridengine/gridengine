@@ -2612,7 +2612,7 @@ lUlong val
 
 lListElem *lGetElemUlongFirst(const lList *lp, int nm, lUlong val, const void **iterator)
 {
-   lListElem *ep;
+   lListElem *ep = NULL;
    int val_pos;
 
    DENTER(CULL_LAYER, "lGetElemUlongFirst");

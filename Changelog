@@ -1,3 +1,12 @@
+CR-2001-10-26-0: Source: 
+                  - Added variable initialization
+                  - Removed double defined message
+                 Testsuite:
+                  - using cvs -P parameter for source update
+                  - issue #8 (one rlogin at startup):
+                  - new parameter "close_rlogin" for compatibility
+
+
 EB-2001-10-25-0: Modified qdel, qmon, qmaster
                   - removed job attribute vom "Job Customize" dialog
                   - bugfix: qdel -u <list of users>

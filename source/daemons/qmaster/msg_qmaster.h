@@ -432,7 +432,6 @@
 #define MSG_SGETEXT_SPECIFYUSERORJID            _("You have to specify a username or job ids\n")
 #define MSG_SGETEXT_SPECIFYONEORALLUSER         _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n")
 #define MSG_SGETEXT_THEREARENOJOBS              _("There are no jobs registered\n")
-#define MSG_SGETEXT_THEREARENOJOBSFORUSERS_S    _("There are no jobs registered for following users: "SFN"\n")
 #define MSG_SGETEXT_NOJOBSDELETED               _("No jobs deleted\n")
 #define MSG_SGETEXT_NOJOBSMODIFIED              _("No jobs modified\n")
 

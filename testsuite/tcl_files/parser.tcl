@@ -804,11 +804,10 @@ proc repeat_column {input {column 0}} {
 #     ???/???
 #*******************************
 proc transform_cpu { s_cpu } {
-   scan $s_cpu "%d:%02d:%02d:%02d" days hours minutes seconds
-   set cpu  [expr $days * 86400 + \
-            $hours * 3600  + \
-            $minutes * 60    + \
-            $seconds]
+   catch {
+      scan $s_cpu "%d:%02d:%02d:%02d" days hours minutes seconds
+      set cpu  [expr $days * 86400 + $hours * 3600 + $minutes * 60 + $seconds]
+   }
 }
 
 #                                                             max. column:     |

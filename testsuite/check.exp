@@ -40,7 +40,8 @@ global be_quiet
 set be_quiet 0
 global write_mail_to_file
 set write_mail_to_file 0
-
+global do_close_rlogin
+set do_close_rlogin 0
 
 global do_compile
 
@@ -4570,7 +4571,7 @@ proc compile_source {} {
    # update source 
    if { $do_not_update == 0 } {
       puts $CHECK_OUTPUT "updating source in directory $CHECK_SOURCE_DIR on host $CHECK_SOURCE_HOSTNAME ..."
-      set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; cvs update -d\"" } output ]
+      set return_state [ catch { eval exec rsh $CHECK_SOURCE_HOSTNAME "\"cd $CHECK_SOURCE_DIR ; cvs update -dP \"" } output ]
       set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
       puts $cvs_output $output
       close $cvs_output
@@ -5263,6 +5264,10 @@ for { set i 0 } { $i < $argc } { incr i } {
       set be_quiet 1
       continue
    }
+   if {([string compare [lindex $argv $i] "--close_rlogin"] == 0) || ([string compare [lindex $argv $i] "close_rlogin"] == 0) } {
+      set do_close_rlogin 1
+      continue
+   }
 
 
    if {([string compare [lindex $argv $i] "--help"] == 0) || ([string compare [lindex $argv $i] "help"] == 0) } {
@@ -5285,6 +5290,10 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "             0=no debug, 1=more output, 2=1+user response"
       puts "quiet        no output on setup"
       puts "mfile FILE   write all mails into file FILE (when mail is enabled)"
+      puts "close_rlogin don't let rlogin connections open for next command (per default the testsuite"
+      puts "             not close a rlogin connection. The testsuite will reuse the open connection"
+      puts "             for a later remote command. Use close_rlogin if the number of open file "
+      puts "             descriptors is low on your system)"
       exit 1
    }
    if { ( [string compare [lindex $argv $i] "--re_init"] == 0 ) || ([string compare [lindex $argv $i] "re_init"] == 0) } {
@@ -5399,7 +5408,26 @@ set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n---
 
 if { $no_action == 1 } {
 
-#   shutdown_system_daemon sauron execd
+  set hosts ""   
+  foreach elem $hosts {
+     set output [start_remote_prog $elem cr114091 hostname ";id" prg_exit_state 15]
+#     puts "-------->out : $output"
+#     puts "-------->exit: $prg_exit_state"
+#     puts [exec pstree [getpid]]
+     if { [string first $elem $output ] < 0 } {
+        exit -1
+     }
+     set output [start_remote_prog $elem codadmin hostname ";id" prg_exit_state 15]
+#     puts "-------->out : $output"
+#     puts "-------->exit: $prg_exit_state"
+
+#     puts [exec pstree [getpid]]
+     if { [string first $elem $output ] < 0 } {
+        exit -1
+     }
+
+  }
+
   puts "No action flag is set -> exit 1"
   exit 1
 }

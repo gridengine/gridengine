@@ -1,3 +1,6 @@
+CR-2004-02-11-4: Testsuite: - removed "press RETURN" in cleanup_system 
+                              procedure of install_core_system test
+
 CR-2004-02-11-3: Cleanup:   - removed unused static function 
                               qmaster_log_flush_func()
 

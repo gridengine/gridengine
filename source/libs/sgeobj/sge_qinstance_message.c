@@ -95,13 +95,11 @@ qinstance_message_add(lListElem *this_elem, u_long32 type, const char *message)
 
    DENTER(TOP_LAYER, "qinstance_message_add");
    if (this_elem != NULL) {
-      lList *old_qim_list = lGetList(this_elem, QU_message_list);
-      lList *qim_list = old_qim_list;
+      lList *qim_list = NULL;
 
+      lXchgList(this_elem, QU_message_list, &qim_list);
       ret &= qim_list_add(&qim_list, type, message);
-      if (ret && old_qim_list != qim_list) {
-         lSetList(this_elem, QU_message_list, qim_list);
-      }
+      lXchgList(this_elem, QU_message_list, &qim_list);
    }
    DEXIT;
    return ret;
@@ -113,12 +111,12 @@ qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
    bool ret = true;
 
    DENTER(TOP_LAYER, "qinstance_message_trash_all_of_type_X");
-   lList *old_qim_list = lGetList(this_elem, QU_message_list);
-   lList *qim_list = old_qim_list;
+   if (this_elem != NULL) {
+      lList *qim_list = NULL;
 
-   ret &= qim_list_trash_all_of_type_X(&qim_list, type);
-   if (ret && old_qim_list != qim_list) {
-      lSetList(this_elem, QU_message_list, qim_list);
+      lXchgList(this_elem, QU_message_list, &qim_list);
+      ret &= qim_list_trash_all_of_type_X(&qim_list, type);
+      lXchgList(this_elem, QU_message_list, &qim_list);
    }
    DEXIT;
    return ret;

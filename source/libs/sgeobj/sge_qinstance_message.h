@@ -39,8 +39,11 @@
 #include "sge_qinstance.h"
 
 enum {
-   QIM_DEFAULT,
-   QIM_AMBIGUOUS
+   QIM_DEFAULT       = 0x00,
+   QIM_AMBIGUOUS     = 0x01,
+   QIM_LOAD_ALARM    = 0x02,
+   QIM_SUSPEND_ALARM = 0x04,
+   QIM_ERROR         = 0x08
 };
 
 bool

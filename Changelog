@@ -1,3 +1,10 @@
+CR-2001-11-30-0: Bugfix:    qsub parsing does not handle blanks on job args correctly
+                 Issue:     #93
+                            Only fixed qmaster output text ("your job X (...) has 
+                            been submitted."), problem of lost blanks does not 
+                            appear any more. Maybe someone else fixed it in an
+                            other check in.
+
 AA-2001-11-30-3: Feature:   Security changes:
                             - Makefiles, aimk, aimk.site
                               additions for CSP and Kerberos security 

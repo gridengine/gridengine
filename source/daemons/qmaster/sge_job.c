@@ -660,14 +660,38 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       lListElem *se;
 
       for_each(se,sp) {
+         int do_quote = 0;
+         int i = 0;
          const char *s = lGetString(se,STR);
-         if (strlen(str) + (s ? strlen(s) : 2) > sizeof(str)-1)
-            break;
+
+         /* handle NULL as empty string */
+         if (s == NULL) {
+            s = "";
+         }
+ 
+         /* quote for empty strings */
+         if (strlen(s) == 0)
+            do_quote++;
+
+         /* quote when white space is in argument */         
+         for( i=0 ; i < strlen(s) ; i++ ) {
+            if (s[i] == ' ') {
+                do_quote++;
+                break;
+            }
+         }
+
          strcat(str, " ");
-         strcat(str, s ? s : "\"\"");
+         if (do_quote != 0) {
+            strcat(str, "\"");
+         }
+         strcat(str, s);
+         if (do_quote != 0) {
+            strcat(str, "\"");
+         }
+
       }
    }
-
    if (!is_array(jep)) {
       sprintf(SGE_EVENT, MSG_JOB_SUBMITJOB_USS,  
             u32c(lGetUlong(jep, JB_job_number)), 

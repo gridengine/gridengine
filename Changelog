@@ -1,3 +1,28 @@
+AH-2003-06-02-0: Enhacem.:  Use session filtering with all non-total-update 
+                            events. Since sgeE_JOB_USAGE and 
+                            sgeE_JOB_FINAL_USAGE are non-total-update events 
+                            session event filtering is applied to these events.
+                            Don't use job error state for DRMAA jobs 
+                            (JOB_TYPE_NO_ERROR).
+                            Started implementing drmaa_wif*() functions.
+                            Made DRMAA work also with GEEE. To facilitate this 
+                            now only sgeE_JOB_FINISH events (JR_Type) are used 
+                            to track job exists events in JAPI.
+                            Code deriving SGE job templates from a DRMAA job 
+                            template is now kept in drmaa.c
+                            Added automated session key generation to JAPI.
+                            Added session restart capability to JAPI.
+                            Interface JAPI session restart capability in DRMAA 
+                            by means of SGE_SESSION_KEY and SGE_KEEP_SESSION 
+                            env var.
+                            Use env var SGE_DELAY_AFTER_SUBMIT to interface 
+                            with hook for delayed submission.
+                            Added new test cases to ensure jobs finish with 
+                            DRMAA_PS_FAILED state and drmaa_wifaborted()==true 
+                            if wrong input/output/error file was specified.
+                 Review:    EB           
+                        
+
 CR-2003-05-28-0: Testsuite: fixed errors when deleting SGE_ROOT directory
                             in compile_source() procedure.
 

@@ -188,7 +188,7 @@ int sge_setup_qmaster(char* anArgv[])
 *     sge_qmaster_thread_init() -- Initialize a qmaster thread.
 *
 *  SYNOPSIS
-*     int sge_qmaster_thread_init(void) 
+*     int sge_qmaster_thread_init(bool switch_to_admin_user) 
 *
 *  FUNCTION
 *     Subsume functions which need to be called immediately after thread
@@ -196,7 +196,7 @@ int sge_setup_qmaster(char* anArgv[])
 *     structures do contain reasonable values.
 *
 *  INPUTS
-*     void - none 
+*     bool switch_to_admin_user - become admin user if set to true
 *
 *  RESULT
 *     0 - success 
@@ -208,7 +208,7 @@ int sge_setup_qmaster(char* anArgv[])
 *     MT-NOTE: of a thread function.
 *
 *******************************************************************************/
-int sge_qmaster_thread_init(void)
+int sge_qmaster_thread_init(bool switch_to_admin_user)
 {
    DENTER(TOP_LAYER, "sge_qmaster_thread_init");
 
@@ -219,13 +219,13 @@ int sge_qmaster_thread_init(void)
    reresolve_me_qualified_hostname();
 
    DEBUG((SGE_EVENT,"%s: qualified hostname \"%s\"\n", SGE_FUNC, uti_state_get_qualified_hostname()));
-
+  
 #if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64)
-   {
+   uidgid_mt_init();
+#endif
+
+   if ( switch_to_admin_user == true ) {   
       char str[1024];
-
-      uidgid_mt_init();
-
       if (sge_set_admin_username(bootstrap_get_admin_user(), str) == -1) {
          CRITICAL((SGE_EVENT, str));
          SGE_EXIT(1);
@@ -236,7 +236,6 @@ int sge_qmaster_thread_init(void)
          SGE_EXIT(1);
       }
    }
-#endif
 
    DEXIT;
    return 0;

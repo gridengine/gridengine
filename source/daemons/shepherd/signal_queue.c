@@ -31,11 +31,16 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <stdio.h>
 #include <ctype.h>
 
 #include "signal_queue.h"
 #include "err_trace.h"
 #include "sge_signal.h"
+
 
 #define MAXSIG 100
 

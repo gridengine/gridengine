@@ -2255,7 +2255,7 @@ static void* send_thread(void *anArg)
 
    DENTER(TOP_LAYER, "send_thread");
 
-   sge_qmaster_thread_init();
+   sge_qmaster_thread_init(true);
 
    report_list = lCreateListHash("report list", REP_Type, false);
    report = lCreateElem(REP_Type);

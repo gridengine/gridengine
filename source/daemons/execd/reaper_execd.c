@@ -680,24 +680,24 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          lListElem *job = NULL; 
          lListElem *ja_task = NULL;
          lListElem *master_queue = NULL;
+         const void *iterator = NULL;
 
          /* Bugfix: Issuezilla 1031/1034
           * The problem in 1031 is that each task got added as its own job
           * structure, but the reaper was only looking at the first job
           * structure in the list.  Instead, we have to iterate through the
           * list by hand to make sure we find every instance. */
-         job = lFirst (Master_Job_List);
-         
-         while ((job != NULL) && (ja_task == NULL)) {
-            if (job != NULL) { 
-               ja_task = job_search_task(job, NULL, ja_task_id);
+
+         job = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
+         while(job != NULL) {
+            ja_task = job_search_task(job, NULL, ja_task_id);
+            if(ja_task != NULL) {
+               break;
             }
-            
-            if (ja_task == NULL) {
-               job = lNext (job);
-            }
+            job = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, 
+                                    &iterator);
          }
-         
+
          if ((job != NULL) && (ja_task != NULL)) {
             master_queue = responsible_queue(job, ja_task, NULL);
          }
@@ -708,16 +708,14 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
                JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
                JOB_TYPE_IS_NO_SHELL(lGetUlong(job, JB_type))))) {
             job_caused_failure = 1;
-         }
-         else if ((failed == SSTATE_NO_SHELL) && (master_queue != NULL)) {
+         } else if ((failed == SSTATE_NO_SHELL) && (master_queue != NULL)) {
             const char *mode = job_get_shell_start_mode(job, master_queue, 
                                                    conf.shell_start_mode);
 
             if (!strcmp(mode, "unix_behavior") != 0) {
                job_caused_failure = 1;
             }
-         }
-         else if ((failed == SSTATE_BEFORE_JOB) && (job != NULL) &&
+         } else if ((failed == SSTATE_BEFORE_JOB) && (job != NULL) &&
                   JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
                   !sge_is_file(lGetString(job, JB_script_file))) {
             job_caused_failure = 1;

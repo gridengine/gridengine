@@ -1416,7 +1416,6 @@ char *err_str
       DEXIT;
       return -2;
    }
-
    {
 
       /* 

@@ -683,7 +683,7 @@ sge_commit_flags_t commit_flags
                /* debit in all layers */
                if (debit_host_consumable(jep, global_host_ep, Master_CEntry_List, slots) > 0 ) {
                   /* this info is not spooled */
-                  sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
+                  sge_add_event(now, sgeE_EXECHOST_MOD, 0, 0, 
                                 "global", NULL, NULL, global_host_ep );
                   reporting_create_host_consumable_record(&answer_list, global_host_ep, now);
                   answer_list_output(&answer_list);
@@ -693,7 +693,7 @@ sge_commit_flags_t commit_flags
                hep = host_list_locate(Master_Exechost_List, qep_QU_qhostname);
                if ( debit_host_consumable(jep, hep, Master_CEntry_List, slots) > 0 ) {
                   /* this info is not spooled */
-                  sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, 
+                  sge_add_event( now, sgeE_EXECHOST_MOD, 0, 0, 
                                 qep_QU_qhostname, NULL, NULL, hep);
                   reporting_create_host_consumable_record(&answer_list, hep, now);
                   answer_list_output(&answer_list);
@@ -718,7 +718,7 @@ sge_commit_flags_t commit_flags
       {
          const char *session = lGetString (jep, JB_session);
 
-         sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
+         sge_event_spool(&answer_list, now, sgeE_JATASK_MOD,
                          jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
@@ -832,13 +832,13 @@ sge_commit_flags_t commit_flags
             container = pe_task_sum_past_usage_all(pe_task_list);
             if(existing_container == NULL) {
                /* the usage container is not spooled */
-               sge_add_event( 0, sgeE_PETASK_ADD, jobid, jataskid, 
+               sge_add_event( now, sgeE_PETASK_ADD, jobid, jataskid, 
                              PE_TASK_PAST_USAGE_CONTAINER, NULL,
                              session, container);
                lListElem_clear_changed_info(container);
             } else {
                /* the usage container is not spooled */
-               sge_add_list_event( 0, sgeE_JOB_USAGE, jobid, jataskid, 
+               sge_add_list_event( now, sgeE_JOB_USAGE, jobid, jataskid, 
                                   PE_TASK_PAST_USAGE_CONTAINER, NULL,
                                   lGetString(jep, JB_session), 
                                   lGetList(container, PET_scaled_usage));
@@ -859,7 +859,7 @@ sge_commit_flags_t commit_flags
       {
          lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
-         sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
+         sge_event_spool(&answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
@@ -893,17 +893,23 @@ sge_commit_flags_t commit_flags
       sge_clear_granted_resources(jep, jatep, 1);
       job_enroll(jep, NULL, jataskid);
       for_each(petask, lGetList(jatep, JAT_task_list)) {
-         sge_add_list_event( 0, sgeE_JOB_FINAL_USAGE, jobid,
+         sge_add_list_event( now, sgeE_JOB_FINAL_USAGE, jobid,
                             lGetUlong(jatep, JAT_task_number),
                             lGetString(petask, PET_id), 
                             NULL, lGetString(jep, JB_session),
                             lGetList(petask, PET_scaled_usage));
       }
-      /* job usage is not spooled */
-      sge_add_list_event( 0, sgeE_JOB_FINAL_USAGE, jobid,
-                         lGetUlong(jatep, JAT_task_number),
-                         NULL, NULL, lGetString(jep, JB_session), 
-                         lGetList(jatep, JAT_scaled_usage_list));
+
+      {
+         u_long32 ja_task_id = lGetUlong(jatep, JAT_task_number);
+         const char *session = lGetString(jep, JB_session);
+         lList *usage_list = lGetList(jatep, JAT_scaled_usage_list);
+         sge_add_list_event(now, sgeE_JOB_FINAL_USAGE, jobid,
+                            ja_task_id,
+                            NULL, NULL, session, 
+                            usage_list);
+      }
+
       {
          /* IZ 664
           * Workaround to fix qdel -f.
@@ -915,7 +921,7 @@ sge_commit_flags_t commit_flags
           */
          char save[4 * MAX_STRING_SIZE];
          strncpy(save, SGE_EVENT, sizeof(save) - 1);
-         sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
+         sge_event_spool(&answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, false, true);
          strncpy(SGE_EVENT, save, sizeof(save) - 1);
@@ -960,7 +966,7 @@ sge_commit_flags_t commit_flags
       {
          lList *answer_list = NULL;
          const char *session = lGetString (jep, JB_session);
-         sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
+         sge_event_spool(&answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);

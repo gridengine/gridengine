@@ -1462,7 +1462,7 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
    pthread_once(&Event_Master_Once, event_master_once_init);
 
    if (list != NULL) {
-      lp = lCreateListHash("Events", lGetElemDescr(element), false); 
+      lp = lCreateListHash("Events", lGetListDescr(list), false); 
       if (lp == NULL) {
          return false;
       }

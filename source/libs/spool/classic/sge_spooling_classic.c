@@ -427,13 +427,11 @@ spool_classic_default_maintenance_func(lList **answer_list,
          /* create spool sub directories */
          sge_mkdir(JOB_DIR, 0755, true, false);
          sge_mkdir(ZOMBIE_DIR, 0755, true, false);
-         sge_mkdir(QUEUE_DIR, 0755, true, false);
          sge_mkdir(CQUEUE_DIR, 0755, true, false);
          sge_mkdir(QINSTANCES_DIR, 0755, true, false);
          sge_mkdir(EXECHOST_DIR, 0755, true, false);
          sge_mkdir(SUBMITHOST_DIR, 0755, true, false);
          sge_mkdir(ADMINHOST_DIR, 0755, true, false);
-         sge_mkdir(COMPLEX_DIR, 0755, true, false);
          sge_mkdir(CENTRY_DIR, 0755, true, false);
          sge_mkdir(EXEC_DIR, 0755, true, false);
          sge_mkdir(PE_DIR, 0755, true, false);

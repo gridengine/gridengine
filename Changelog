@@ -1,3 +1,7 @@
+JG-2004-04-28-1: Cleanup:   Removed no longer used directories QUEUE_DIR and
+                            COMPLEX_DIR.
+                 Review:    MD
+
 JG-2004-04-28-0: Testsuite: Fixed tests system_tests/clients/qdel and 
                             system_tests/clients/qsub, use 
                             $SGE_ROOT/util/resources/loadsensors/ibm-loadsensor

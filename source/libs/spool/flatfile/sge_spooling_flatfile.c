@@ -357,11 +357,12 @@ spool_flatfile_default_startup_func(lList **answer_list,
       /* create spool sub directories */
       sge_mkdir2(url, JOB_DIR,  0755, true);
       sge_mkdir2(url, ZOMBIE_DIR, 0755, true);
-      sge_mkdir2(url, QUEUE_DIR,  0755, true);
+      sge_mkdir2(url, CQUEUE_DIR,  0755, true);
+      sge_mkdir2(url, QINSTANCES_DIR,  0755, true);
       sge_mkdir2(url, EXECHOST_DIR, 0755, true);
       sge_mkdir2(url, SUBMITHOST_DIR, 0755, true);
       sge_mkdir2(url, ADMINHOST_DIR, 0755, true);
-      sge_mkdir2(url, COMPLEX_DIR, 0755, true);
+      sge_mkdir2(url, CENTRY_DIR, 0755, true);
       sge_mkdir2(url, EXEC_DIR, 0755, true);
       sge_mkdir2(url, PE_DIR, 0755, true);
       sge_mkdir2(url, CKPTOBJ_DIR, 0755, true);

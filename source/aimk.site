@@ -117,21 +117,13 @@ switch ($BUILDARCH)
    breaksw
 endsw
 
+if ( ! $?JAVA_HOME ) then
+   set JAVA_BIN = `which \java`
 
-switch($buildarch)
-   case "lx24-x86":
-   case "lx26-x86":
-   case "lx24-amd64":
-   case "glinux":
-      set JNI_INCLUDES  = "-I$JAVA_HOME/include -I$JAVA_HOME/include/linux"
-      breaksw
-   case "sol-sparc":
-   case "sol-sparc64":
-   case "sol-x86":
-   case "solaris":
-      set JNI_INCLUDES  = "-I$JAVA_HOME/include -I$JAVA_HOME/include/solaris"
-      breaksw
-   default:
-      set JNI_INCLUDES = ""
-endsw
-
+   if ( -e "$JAVA_BIN" ) then
+      set JAVA_HOME = `expr //$JAVA_BIN : '//\(.*\)/bin/.*'`
+      echo Using $JAVA_HOME for JAVA_HOME
+   else
+      echo Unable to locate Java
+   endif
+endif

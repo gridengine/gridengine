@@ -1,9 +1,23 @@
+DT-2005-01-05-0: Bugfix:    o Removed JGDI flags from aimk
+                            o Reduced MAX_STRING_SIZE to 2048
+                            o Made symlink to JNI lib on MacOS X
+                            o Fixed minor DRMAA-J bugs
+                            - merged from maintrunk DT-2004-01-05-0
+                 Changed:   aimk, basis_types, job, stdlib, distinst
+                 Issue:     538
+                 Review:    SG, AS
+
 CR-2005-01-03-0: Testsuite: added binary test module for issue #1389
                             and issue #1400
 
 AS-2005-01-01-0: Bugfix:    set version to 6.0u3
 
 JG-2005-01-03-0: Bugfix:    Fixed aimk -no-mk.
+
+DT-2004-12-31-1: Bugfix:    o Really backed out conflicting changes
+                            o Resolved conflict between ARCo and DRMAA
+                            - merged from maintrunk DT-2004-12-31-1
+                 Changed:   aimk.site, DRMAA Makefiles
 
 DT-2004-12-31-0: Bugfix:    o Backed out some changes from DT-2004-12-30-3
                               which conflicted with aimk -j 2

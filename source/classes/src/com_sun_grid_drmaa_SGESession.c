@@ -770,7 +770,8 @@ static void throw_exception (JNIEnv *env, int errnum, char *message)
       state = (*env)->GetStaticIntField(env, newExcCls, id);         
       meth = (*env)->GetMethodID (env, newExcCls, "<init>",
                                   "(ILjava/lang/String;)V");
-      e = (*env)->NewObject (env, newExcCls, meth, state, message);
+      e = (*env)->NewObject (env, newExcCls, meth, state,
+                             (*env)->NewStringUTF (env, message));
       /* Throw the exception. */
       (*env)->Throw(env, e);
    }

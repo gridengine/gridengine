@@ -84,8 +84,7 @@ jdrmaa_meta_clean:
 jdrmaa: jdrmaa_jar jdrmaa_lib
 
 jdrmaa_jar: jdrmaa_jar_clean jdrmaa_classes jdrmaa_meta
-	@cd $(CLASSES_DIR); $(JAVA_HOME)/bin/jar cvf $(SOURCE)/$(COMPILE_ARCH)/drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class; cd $(SOURCE)/$(COMPILE_ARCH)
-	@$(JAVA_HOME)/bin/jar uf drmaa.jar META-INF
+	$(JAVA_HOME)/bin/jar cvf drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class META-INF
 
 jdrmaa_classes:
 	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java

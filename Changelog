@@ -1,3 +1,6 @@
+DT-2004-06-03-4: Bugfix:    o Fixed check-in problem with DT-2004-06-03-3
+                 Changed:   DRMAA
+
 DT-2004-06-03-3: Bugfix:    o Fixed various bugs in DRMAA Java binding
                  Changed:   DRMAA
 

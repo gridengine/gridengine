@@ -58,10 +58,15 @@ cqueue_update_master_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "cqueue_update_master_list");
    name = lGetString(event, ET_strkey);
    list = object_type_get_master_list(SGE_TYPE_CQUEUE); 
+#if 1
+   list_descr = lGetListDescr(lGetList(event, ET_new_version));
+#else
    list_descr = lGetListDescr(*list);
+#endif
    cqueue = cqueue_list_locate(*list, name);
 
-   if (action == SGE_EMA_MOD && cqueue != NULL) {
+   if ((action == SGE_EMA_MOD || action == SGE_EMA_ADD) 
+       && cqueue != NULL) {
       /*
        * EB:   
        * modify events for CQ_Type objects; we may not update
@@ -74,7 +79,8 @@ cqueue_update_master_list(sge_object_type type, sge_event_action action,
                          name, action, event) == SGE_EM_OK) ? true : false;
    cqueue = cqueue_list_locate(*list, name);
 
-   if (action == SGE_EMA_MOD && cqueue != NULL) {
+   if ((action == SGE_EMA_MOD || action == SGE_EMA_ADD)
+       && cqueue != NULL) {
       /*
        * Replace CQ_qinstances list
        */         
@@ -99,6 +105,7 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "qinstance_update_cqueue_list");
    name = lGetString(event, ET_strkey);
    hostname = lGetString(event, ET_strkey2);
+
    cqueue = cqueue_list_locate(
                         *(object_type_get_master_list(SGE_TYPE_CQUEUE)), name);
    if (cqueue != NULL) {
@@ -106,7 +113,10 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
       lList *list = lGetList(cqueue, CQ_qinstances);
       lDescr *list_descr = QU_Type;
       lListElem *qinstance = qinstance_list_locate(list, hostname, NULL);
-      const char *key = qinstance_get_name(qinstance, &key_buffer);
+      const char *key = NULL;
+
+      sge_dstring_sprintf(&key_buffer, SFN"@"SFN, name, hostname);
+      key = sge_dstring_get_string(&key_buffer);
 
       if (action == SGE_EMA_MOD) {
          u_long32 type = lGetUlong(event, ET_type);
@@ -135,6 +145,7 @@ qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
       ERROR((SGE_EVENT, MSG_CQUEUE_CANTFINDFORUPDATEIN_SS, name, SGE_FUNC));
       ret = false;
    }
+
    DEXIT;
    return ret;
 }

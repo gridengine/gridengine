@@ -599,6 +599,10 @@ int sge_read_cqueue_list_from_disk(void)
 
    DENTER(TOP_LAYER, "sge_read_cqueue_list_from_disk");
 
+   if (Master_CQueue_List == NULL) {
+      Master_CQueue_List = lCreateList("", CQ_Type);
+   }
+
    direntries = sge_get_dirents(CQUEUE_DIR);
    if (direntries) {
       const char *queue_str;

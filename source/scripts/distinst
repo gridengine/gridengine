@@ -1027,12 +1027,18 @@ for i in $ARCH; do
          done
 
          for lib in $OPENSSL_SHARED_LIBRARIES; do
-            libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
+            if ($DSTARCH != tru64) then
+               libname="$OPENSSLBASE/$DSTARCH/lib/$lib.${shlibext}.0.9.7"
+            else
+               libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
+            fi
             # echo checking $libname
             if [ -f $libname ]; then
                InstallProg $libname
-               # echo linking $libname
-               (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.$shlibext.0.9.7 $lib.$shlibext)
+               if ($DSTARCH != tru64) then
+                  # echo linking $libname
+                  (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.0.9.7 $lib.$shlibext)
+               fi
             fi
          done
 

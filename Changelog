@@ -1,3 +1,10 @@
+CR-2005-01-07-0: Bugfix:    - master task will close connection to
+                              execd after job delivery
+                 Changed:   qsh, gdilib
+                 Issue:     1413
+                 Bugtraq:   n.a.
+                 Review:    SG
+
 DT-2005-01-05-0: Bugfix:    o Removed JGDI flags from aimk
                             o Reduced MAX_STRING_SIZE to 2048
                             o Made symlink to JNI lib on MacOS X

@@ -37,7 +37,10 @@ CLIENTS_COMMON_DIR = $(SDIR)/clients/common
 CLIENTS_COMMON_SRC = qstat_printing.c \
                      read_defaults.c \
                      show_job.c \
-                     write_job_defaults.c
+                     write_job_defaults.c \
+                     sge_hgroup_qconf.c \
+                     sge_centry_qconf.c
+
 
 CLIENTS_COMMON_OBJS = $(CLIENTS_COMMON_SRC:.c=.o)
 
@@ -78,4 +81,10 @@ show_job.o : $(CLIENTS_COMMON_DIR)/show_job.c
 
 write_job_defaults.o:	$(CLIENTS_COMMON_DIR)/write_job_defaults.c
 		$(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/write_job_defaults.c
+
+sge_hgroup_qconf.o: $(CLIENTS_COMMON_DIR)/sge_hgroup_qconf.c
+		$(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_hgroup_qconf.c
+
+sge_centry_qconf.o: $(CLIENTS_COMMON_DIR)/sge_centry_qconf.c
+		$(CC) $(CFLAGS) -c $(CLIENTS_COMMON_DIR)/sge_centry_qconf.c
 

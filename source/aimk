@@ -1097,7 +1097,7 @@ case DARWIN:
    set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib -L$MOTIFHOME/lib"
    set XLFLAGS  = "-bind_at_load $XLIBD"
-   set XLIBS    = "-lXm -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+   set XLIBS    = "-lXm -lXpm -lXt -lXext -lX11 -lSM -lICE"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
@@ -1438,7 +1438,7 @@ case LINUX6:
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
-   set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
+   set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
 
    set MTCFLAGS = "-DSGE_MT -pthread"
    set MTLFLAGS = "-lpthread"

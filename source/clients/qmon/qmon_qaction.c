@@ -601,8 +601,7 @@ Widget parent
    Widget suspend_thresholds, suspend_delete,
           suspend_interval, suspend_intervalPB;
    Widget limits_hard, limits_soft;
-   Widget complexes_dialog, complexes_add, complexes_remove,
-          complexes_ccl, consumable_delete;
+   Widget complexes_dialog, complexes_ccl, consumable_delete;
    Widget access_add, access_remove, access_dialog;
    Widget project_add, project_remove, project_dialog, project_config;
    Widget owner_add, owner_remove;

@@ -56,6 +56,7 @@
 #include "sge_complex_schedd.h"
 #include "sge_answer.h"
 #include "sge_centry.h"
+#include "sge_centry_qconf.h"
 #include "spool/classic/read_write_complex.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
@@ -75,8 +76,6 @@ enum _cplx_mode {
    CPLX_MODIFY_MODE
 };
 
-static int add_mode = 0;
-
 static Widget qmon_cplx = 0;
 static Widget attr_add = 0;
 static Widget attr_del = 0;
@@ -84,32 +83,22 @@ static Widget attr_load = 0;
 static Widget attr_save = 0;
 static Widget attr_mx = 0;
 static Widget attr_aname = 0;
-static Widget attr_avalue = 0;
 static Widget attr_atype = 0;
 static Widget attr_ashort = 0;
 static Widget attr_arel = 0;
 static Widget attr_areq = 0;
 static Widget attr_aconsumable = 0;
 static Widget attr_adefault = 0;
-static Widget cplx_attributes_title = 0;
 
 
 /*-------------------------------------------------------------------------*/
 static void qmonPopdownCplxConfig(Widget w, XtPointer cld, XtPointer cad);
 static Widget qmonCreateCplxConfig(Widget parent);
-static Widget qmonCreateCplxAsk(Widget parent);
-static void qmonCplxSelect(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxChange(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxCancel(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxOk(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxShowCplx(Widget matrix, char *cx_name);
 static void qmonCplxLoadAttr(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxSaveAttr(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxAddAttr(Widget w, XtPointer cld, XtPointer cad);
 static void qmonCplxDelAttr(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxNoEdit(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxSelectAttr(Widget w, XtPointer cld, XtPointer cad);
-static void qmonCplxScrollBar(Widget w, XtPointer cld, XtPointer cad);
 
 #if AUTOMATIC_UPDATE
 static void qmonCplxStartUpdate(Widget w, XtPointer cld, XtPointer cad);
@@ -150,7 +139,6 @@ XtPointer cld, cad;
       DEXIT;
       return;
    }
-
    entries = qmonMirrorList(SGE_CENTRY_LIST);
 
    /*
@@ -191,7 +179,6 @@ Widget parent
                            "attr_mx", &attr_mx,
                            "attr_aname", &attr_aname,
                            "attr_ashort", &attr_ashort,
-                           "attr_avalue", &attr_avalue,
                            "attr_atype", &attr_atype,
                            "attr_arel", &attr_arel,
                            "attr_areq", &attr_areq,
@@ -203,7 +190,7 @@ Widget parent
                      qmonMainControlRaise, NULL);
 
    XtAddCallback(cplx_commit, XmNactivateCallback, 
-                     qmonPopdownCplxConfig, NULL);
+                     qmonCplxOk, NULL);
    XtAddCallback(cplx_reset, XmNactivateCallback, 
                      qmonPopdownCplxConfig, NULL);
 
@@ -234,7 +221,6 @@ XtPointer cld, cad;
    DEXIT;
 }
 
-#ifdef ANDRE
 /*-------------------------------------------------------------------------*/
 static void qmonCplxOk(w, cld, cad)
 Widget w;
@@ -242,56 +228,23 @@ XtPointer cld, cad;
 {
    static lEnumeration *what = NULL;
    lList *entries = NULL;
-   lList *lp = NULL;
    lList *alp = NULL;
-   char *cplx_name;
-   XmString xcplx_name;
    
    DENTER(GUI_LAYER, "qmonCplxOk");
 
-   cplx_name = XmtInputFieldGetString(cplx_ask_name_w);
-   
-   if (!cplx_name || cplx_name[0] == '\0') {
-      qmonMessageShow(w, True, "Name of Complex required !");
-      DEXIT;
-      return;
-   }
-   
-   if (!(lp = lCreateElemList("CC", CX_Type, 1))) {
-      DEXIT;
-      return;
-   }
-
-   lSetString(lFirst(lp), CX_name, qmon_trim(cplx_name));
-   entries = qmonGetCE_Type(attr_mx);
-   lSetList(lFirst(lp), CX_entries, entries);
-
    if (!what)
-      what = lWhat("%T(ALL)", CX_Type);
+      what = lWhat("%T(ALL)", CE_Type);
 
-   if (add_mode == CPLX_ADD_MODE)
-      alp = qmonAddList(SGE_COMPLEX_LIST, qmonMirrorListRef(SGE_COMPLEX_LIST), 
-                        CX_name, &lp, NULL, what);
-   else
-      alp = qmonModList(SGE_COMPLEX_LIST, qmonMirrorListRef(SGE_COMPLEX_LIST), 
-                        CX_name, &lp, NULL, what);
-      
+   entries = qmonGetCE_Type(attr_mx);
+   centry_list_add_del_mod_via_gdi(entries, &alp, qmonMirrorList(SGE_CENTRY_LIST));                     
    qmonMessageBox(w, alp, 0);
-
-   if (lGetUlong(lFirst(alp), AN_status) == STATUS_OK) {
-      updateCplxList();
-      xcplx_name = XmtCreateXmString(cplx_name);
-      XmListSelectItem(cplx_names, xcplx_name, True);
-      XmStringFree(xcplx_name);
-      XtUnmanageChild(cplx_ask_layout);
-   }
-   lp = lFreeList(lp);
    alp = lFreeList(alp);
+
+   XtUnmanageChild(qmon_cplx);
+   XtPopdown(XtParent(qmon_cplx));
 
    DEXIT;
 }
-
-#endif
 
 
 /*-------------------------------------------------------------------------*/
@@ -300,9 +253,9 @@ Widget w;
 XtPointer cld, cad;
 {
    Widget matrix = (Widget) cld;
-   String new_str[1][8];
+   String new_str[1][7];
    int rows = 0;
-   int num_columns = 8;
+   int num_columns = 7;
    int row, i;
    String str;
    int req_state;
@@ -322,12 +275,7 @@ XtPointer cld, cad;
       DEXIT;
       return;
    }
-   if (XmtChooserGetState(attr_atype) == 0 && 
-         is_empty_word(XmtInputFieldGetString(attr_avalue))) {
-      qmonMessageShow(matrix, True, "Value required !");
-      DEXIT;
-      return;
-   }
+
    if (is_empty_word(XmtInputFieldGetString(attr_adefault))) {
       qmonMessageShow(matrix, True, "Default required !");
       DEXIT;
@@ -341,23 +289,22 @@ XtPointer cld, cad;
    new_str[0][1] = XtNewString(XmtInputFieldGetString(attr_ashort));
    new_str[0][2] = XtNewString(map_type2str(1 +
                         XmtChooserGetState(attr_atype)));
-   new_str[0][3] = XtNewString(XmtInputFieldGetString(attr_avalue));
-   new_str[0][4] = XtNewString(map_op2str(1 +
+   new_str[0][3] = XtNewString(map_op2str(1 +
                         XmtChooserGetState(attr_arel)));
    req_state = XmtChooserGetState(attr_areq); 
    switch (req_state) {
       case 1:  
-         new_str[0][5] = XtNewString("YES");
+         new_str[0][4] = XtNewString("YES");
          break;
       case 2:  
-         new_str[0][5] = XtNewString("FORCED");
+         new_str[0][4] = XtNewString("FORCED");
          break;
       default:
-         new_str[0][5] = XtNewString("NO");
+         new_str[0][4] = XtNewString("NO");
    }
       
-   new_str[0][6] = XtNewString(XmtChooserGetState(attr_aconsumable) ? "YES" : "NO");
-   new_str[0][7] = XtNewString(XmtInputFieldGetString(attr_adefault));
+   new_str[0][5] = XtNewString(XmtChooserGetState(attr_aconsumable) ? "YES" : "NO");
+   new_str[0][6] = XtNewString(XmtInputFieldGetString(attr_adefault));
          
 
    /*
@@ -383,11 +330,9 @@ XtPointer cld, cad;
    /* refresh the matrix */
    XbaeMatrixRefresh(matrix);
    
-/*    XmtInputFieldSetString(cplx_ask_name_w, ""); */
    XmtInputFieldSetString(attr_aname, "");
    XmtInputFieldSetString(attr_ashort, "");
    XmtChooserSetState(attr_atype, 0, False);
-   XmtInputFieldSetString(attr_avalue, "");
    XmtChooserSetState(attr_arel, 0, False);
    XmtChooserSetState(attr_areq, 0, False);
    XmtChooserSetState(attr_aconsumable, 0, False);
@@ -440,7 +385,6 @@ XtPointer cad
    XmtInputFieldSetString(attr_aname, "");
    XmtInputFieldSetString(attr_ashort, "");
    XmtChooserSetState(attr_atype, 0, False);
-   XmtInputFieldSetString(attr_avalue, "");
    XmtChooserSetState(attr_arel, 0, False);
    XmtChooserSetState(attr_areq, 0, False);
    XmtChooserSetState(attr_aconsumable, 0, False);
@@ -461,7 +405,6 @@ XtPointer cld, cad;
    static char filename[BUFSIZ];
    static char directory[BUFSIZ];
    int status;
-   lListElem *cep;
    lList *entries;
    lList *alp = NULL;
  
@@ -530,21 +473,6 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonCplxNoEdit(w, cld, cad)
-Widget w;
-XtPointer cld, cad;
-{
-   XbaeMatrixEnterCellCallbackStruct *cbs = 
-            (XbaeMatrixEnterCellCallbackStruct*) cad;
-
-   DENTER(GUI_LAYER, "qmonCplxNoEdit");
-
-   cbs->doit = False;
-   
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
 static void qmonCplxSelectAttr(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
@@ -575,10 +503,6 @@ XtPointer cld, cad;
       }
       XmtChooserSetState(attr_atype, type, False); 
 
-      /* value */
-      str = XbaeMatrixGetCell(w, cbs->row, 3);
-      XmtInputFieldSetString(attr_avalue, str ? str : "");
-      
       /* relop */
       str = XbaeMatrixGetCell(w, cbs->row, 4);
       relop = 0;

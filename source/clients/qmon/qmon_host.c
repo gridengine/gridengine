@@ -168,7 +168,6 @@ static void qmonHostAvailableAcls(void);
 static void qmonHostAvailableProjects(void);
 
 static void qmonLoadNamesHost(Widget w, XtPointer cld, XtPointer cad); 
-static lList* GetAttributes(char *qhostname, lList *attached_cplx_list);
 
 static void qmonExecHostAccessToggle(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonExecHostAccessAdd(Widget w, XtPointer cld, XtPointer cad); 
@@ -1459,7 +1458,6 @@ XtPointer cad
 
 #ifdef ANDRE
   FIXME  folgende Funktion pruefen
-#endif
 
 /*-------------------------------------------------------------------------*/
 static lList* GetAttributes(
@@ -1492,6 +1490,7 @@ lList *attached_cplx_list
    DEXIT;
    return entries;
 }
+#endif
 
 /*-------------------------------------------------------------------------*/
 /* A C C E S S L I S T     P A G E                                         */

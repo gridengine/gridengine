@@ -1,3 +1,5 @@
+AA-2003-07-28-0: Enhancem.: - cq preparation: qmon adaption
+
 CR-2003-07-28-0: Testsuite: - fixed error in path_alias test, using
                               qrsh/qsh -now no option to wait for the
                               job to be scheduled.

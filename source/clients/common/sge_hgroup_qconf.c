@@ -38,9 +38,9 @@
 #include "sge_unistd.h"
 
 #include "sge_answer.h"
+#include "sge_edit.h"
 #include "sge_hgroup.h"
 #include "sge_hgroup_qconf.h"
-#include "parse_qconf.h"
 
 #include "msg_common.h"
 

@@ -727,9 +727,6 @@ int full
             /* FIX_CONST_GUI */
             XbaeMatrixSetCell(w, row, 2, 
                ce_entry[CE_RELOP] ? (String)ce_entry[CE_RELOP] : "");
-            /* FIX_CONST_GUI */
-            XbaeMatrixSetCell(w, row, 3, 
-               ce_entry[CE_VALUE] ? (String)ce_entry[CE_VALUE] : "");
          }
       }
       else
@@ -805,7 +802,6 @@ StringConst *ce_entry
    default:
       ce_entry[CE_RELOP] = "??";
    }
-   ce_entry[CE_VALUE] = lGetString(ep, CE_stringval);
    ce_entry[CE_REQUEST] = lGetUlong(ep, CE_requestable) == REQU_FORCED ? "FORCED" : 
                            (lGetUlong(ep, CE_requestable) == REQU_YES ? "YES" : "NO");
    ce_entry[CE_CONSUMABLE] = lGetBool(ep, CE_consumable) ? "YES" : "NO";
@@ -846,29 +842,6 @@ String *ce_entry
       return False;
    }
    lSetUlong(ep, CE_valtype, type);
-   lSetString(ep, CE_stringval, ce_entry[CE_VALUE]);    /* save string representation */
-
-   switch (type) {
-   case TYPE_INT:
-   case TYPE_TIM:
-   case TYPE_MEM:
-   case TYPE_BOO:
-   case TYPE_DOUBLE:
-      if (!parse_ulong_val(&tmp_double, NULL, type, ce_entry[CE_VALUE], NULL, 0)) {
-         DPRINTF(("setCE_TypeValues: failed parsing ulong value\n"));
-         DEXIT;
-         return False;
-      }
-      lSetDouble(ep, CE_doubleval, tmp_double);
-      break;
-   case TYPE_STR:
-   case TYPE_CSTR:
-      break;
-
-   case TYPE_HOST:
-      /* may be we should test if we're able to resolve this hostname */
-      break;
-   }
 
    relop = 0;
    for (i=CMPLXEQ_OP; !relop && i<=CMPLXNE_OP; i++) {

@@ -96,6 +96,7 @@
 #include "sge_hgroup_qconf.h"
 #include "sge_cuser_qconf.h"
 #include "sge_centry_qconf.h"
+#include "sge_edit.h"
 
 #include "msg_common.h"
 #include "msg_qconf.h"
@@ -4101,88 +4102,6 @@ char *s
 
    DEXIT;
    return;
-}
-
-/***********************************************************************/
-
-int sge_edit(
-char *fname 
-
-) {
-
-   SGE_STRUCT_STAT before, after;
-   pid_t pid;
-   int status;
-   int ws = 0;
-
-   DENTER(TOP_LAYER, "sge_edit");;
-
-   if (SGE_STAT(fname, &before)) {
-      ERROR((SGE_EVENT, MSG_FILE_EDITFILEXDOESNOTEXIST_S, fname));
-      DEXIT;
-      return (-1);
-   }
-
-   chown(fname, uti_state_get_uid(), uti_state_get_gid());
-
-   pid = fork();
-   if (pid) {
-      while (ws != pid) {
-         ws = waitpid(pid, &status, 0);
-         if (WIFEXITED(status)) {
-            if (WEXITSTATUS(status) != 0) {
-               ERROR((SGE_EVENT, MSG_QCONF_EDITOREXITEDWITHERROR_I,
-                      (int) WEXITSTATUS(status)));
-               DEXIT;
-               return -1;
-            }
-            else {
-               if (SGE_STAT(fname, &after)) {
-                  ERROR((SGE_EVENT, MSG_QCONF_EDITFILEXNOLONGEREXISTS_S, fname));
-                  DEXIT;
-                  return -1;
-               }
-               if ((before.st_mtime != after.st_mtime) ||
-                   (before.st_size != after.st_size)) {
-                  DEXIT;
-                  return 0;
-               }
-               else {
-                  /* file is unchanged; inform caller */
-                  DEXIT;
-                  return 1;
-               }
-            }
-         }
-#ifndef WIN32  /* signals b18 */
-         if (WIFSIGNALED(status)) {
-            ERROR((SGE_EVENT, MSG_QCONF_EDITORWASTERMINATEDBYSIGX_I,
-                   (int) WTERMSIG(status)));
-            DEXIT;
-            return -1;
-         }
-#endif
-      }
-   }
-   else {
-      const char *cp = NULL;
-
-      sge_set_def_sig_mask(0, NULL);   
-      sge_unblock_all_signals();
-      setuid(getuid());
-      setgid(getgid());
-
-      cp = sge_getenv("EDITOR");
-      if (!cp || strlen(cp) == 0)
-         cp = DEFAULT_EDITOR;
-         
-      execlp(cp, cp, fname, (char *) 0);
-      ERROR((SGE_EVENT, MSG_QCONF_CANTSTARTEDITORX_S, cp));
-      SGE_EXIT(1);
-   }
-
-   DEXIT;
-   return (-1);
 }
 
 /****************************************************************************/

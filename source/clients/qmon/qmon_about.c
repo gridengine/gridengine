@@ -57,7 +57,6 @@ Widget w;
 XtPointer cld, cad;
 {
    int sgeee_mode; 
-   static char *copyright = NULL;
    dstring ds;
    char buffer[256];
 

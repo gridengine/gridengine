@@ -40,13 +40,13 @@
 
 #include "sge_answer.h"
 #include "sge_centry_qconf.h"
-#include "parse_qconf.h"
 #include "sge_centry.h"
 #include "sge_object.h"
 #include "sge_io.h"
+#include "sge_edit.h"
 
 #include "msg_common.h"
-#include "msg_qconf.h"
+#include "msg_clients_common.h"
 
 bool 
 centry_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,

@@ -1,0 +1,263 @@
+<H3>
+<b><font size="+2" class="PageHeader">Standard Compatibility Test</font></b></H3>
+<br><br>
+<p>Compatibility is an important aspect of the <a href="/project/gridengine/license.html">License</a>
+under which Grid Engine source code is made available. In this context,
+cross compatibility may have to be certified between a version of the Grid
+Engine software which you have enhanced and a version declared as one of
+Grid Engine's <font color="#990000">Reference Builds</font> from which
+your modification deviates. Note, that over time there can be multiple
+Reference Builds representing different stable software release levels.
+You might intend to test compatibility with one or with multiple of those
+Reference Builds. A list of the currently available Reference Builds with
+all pertinent information can be found <a href="/project/gridengine/standards.html">here</a>.
+<p>The following describes how to test compatibility between two bilds.
+You will need to create a <a href="../source/dist/dist.html">binary distribution
+package</a>&nbsp; for both builds before you start with the compatibility
+checking process. You will also have to make all preparations to be able
+to run the Grid Engine <a href="../testsuite/testsuite.html">Testsuite</a>.
+You will have to use the Testsuite level as defined in the <a href="/project/gridengine/standards.html">Reference
+Build definition</a>.
+<p>The compatibility test consist of a preparation step, a validation run
+of the Standard Version and multiple compatibility checks. Your changed
+version has to pass all tests without error and has to deliver the same
+results as the validation run to be considered compatible.
+<br>&nbsp;
+<H3>
+<font class="ParagraphHeader">Preparation:</font></H3>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Set up a testsuite cluster with more than one host</font></li>
+</ul>
+
+<blockquote>The <a href="../testsuite/testsuite.html">Testsuite</a> documentation
+is describing how this can be done. Use the <b><i>Reference Build</i></b>
+to which you want to test compatibility and run:</blockquote>
+
+<blockquote>
+<blockquote><tt>expect check.exp install</tt></blockquote>
+<tt>You will be asked on which hosts you want to install a testsuite cluster
+and you will have to use at least 2 for the purpose of the compatibility
+test.</tt></blockquote>
+
+<H3>
+<font class="ParagraphHeader">Validation:</font></H3>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Run testsuite on Reference Build</font></li>
+
+<p><br>Run the testsuite with runlevel&nbsp; 1:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt></ul>
+
+<p><br><tt>Do not remove the test results of the validation run. Every
+testsuite run will manipulate the results directory, so copy your validation
+results before running another test. You will need to compare your validation
+run results with the subsequent compatibility runs. No errors must occur
+during the validation run. If you encounter errors then this might be due
+to network setup problems in your cluster or similar issues. Fix those
+first before you proceed. Report your problem if it persits. You cannot
+test compatibility with a validation run with errors.</tt></ul>
+
+<H3>
+<font class="ParagraphHeader">Check 1: Qmaster compatibility</font></H3>
+
+<ul><tt>(If you are absolutely sure that your modification did not change
+sge_qmaster you may skip this step, but be aware that changes in some libraries,
+like for instance the scheduler library, may also modify sge_qmaster. Carry
+out the test if you are not 100% sure.)</tt>
+<br>&nbsp;
+<li>
+<font class="ParagraphHeader">Shutdown the system</font></li>
+
+<p><br>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul><tt>expect check.exp kill</tt></ul>
+</ul>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Exchange the sge_qmaster binary with the one from your modified
+build</font></li>
+</ul>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Run the testsuite</font></li>
+
+<p><br>Run the testsuite again:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
+
+<li>
+<font class="ParagraphHeader">Compare results with validation run</font></li>
+
+<p><br>Stop if the results are not equal.
+<br>&nbsp;
+<li>
+<font class="ParagraphHeader">Shutdown the system</font></li>
+
+<p><br>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul><tt>expect check.exp kill</tt>
+<br><tt></tt>&nbsp;</ul>
+
+<li>
+<font class="ParagraphHeader">Re-Exchange the sge_qmaster binary with the one from the
+Reference Build</font></li>
+</ul>
+
+<H3>
+<font class="ParagraphHeader">Check 2: Scheduler compatibility</font></H3>
+
+<ul><tt>(If you are absolutely sure that your modification did not change
+sge_schedd you may skip this step, but be aware that changes in some libraries,
+like for instance the GDI library, may also modify sge_schedd. Carry out
+the test if you are not 100% sure.)</tt></ul>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Exchange the sge_schedd binary with the one from your modified
+build</font></li>
+</ul>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Run the testsuite</font></li>
+
+<p><br>Run the testsuite again:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
+
+<li>
+<font class="ParagraphHeader">Compare results with validation run</font></li>
+
+<p><br>Stop if the results are not equal.
+<br>&nbsp;
+<li>
+<font class="ParagraphHeader">Shutdown the system</font></li>
+
+<p><br>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul><tt>expect check.exp kill</tt>
+<br><tt></tt>&nbsp;</ul>
+
+<li>
+<font class="ParagraphHeader">Re-Exchange the sge_schedd binary with the one from the Reference
+Build</font></li>
+</ul>
+
+<H3>
+<font class="ParagraphHeader">Check 3: Commd compatibility</font></H3>
+
+<blockquote><tt>(If you are absolutely sure that your modification did
+not change sge_commd you may skip this step, but be aware that changes
+in some libraries, like for instance the zlib, may also modify the sge_commd.
+Carry out the test if you are not 100% sure.)</tt></blockquote>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Exchange all sge_commd binaries with the ones from your modified
+build</font></li>
+</ul>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Run the testsuite</font></li>
+
+<p><br>Run the testsuite again:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
+
+<li>
+<font class="ParagraphHeader">Compare results with validation run</font></li>
+
+<ul>&nbsp;</ul>
+Stop if the results are not equal.
+<br>&nbsp;
+<li>
+<font class="ParagraphHeader">Shutdown the system</font></li>
+
+<p><br>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul><tt>expect check.exp kill</tt>
+<br><tt></tt>&nbsp;</ul>
+
+<li>
+<font class="ParagraphHeader">Re-Exchange the sge_commd binaries with the ones from the
+Reference Build</font></li>
+</ul>
+
+<H3>
+<font class="ParagraphHeader">Check 4: Client compatibility</font></H3>
+
+<blockquote><tt>(If you are absolutely sure that your modification did
+not change any Grid Engine client binary you may skip this step, but be
+aware that changes in some libraries, like the GDI library,&nbsp; may also
+modify the client binaries. Carry out the test if you are not 100% sure.)</tt></blockquote>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Exchange all client binaries with the new ones</font></li>
+</ul>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Run the testsuite</font></li>
+
+<p><br>Run the testsuite again:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
+
+<li>
+<font class="ParagraphHeader">Compare results with validation run</font></li>
+
+<ul>&nbsp;</ul>
+Stop if the results are not equal.</ul>
+
+<H3>
+<font class="ParagraphHeader">Check 5: General compatibility</font></H3>
+
+<ul>
+<li>
+<font class="ParagraphHeader">Shutdown the system</font></li>
+
+<p><br>Use the testsuite to shutdown the cluster:
+<br>&nbsp;
+<ul>expect check.exp kill</ul>
+
+<li>
+<font class="ParagraphHeader">Set up a testsuite cluster with more than one host using
+the modified build</font></li>
+
+<p><br>The <a href="../testsuite/testsuite.html">Testsuite</a> documentation
+is describing how this can be done. Use the <b><i>modified build</i></b>.
+<br>&nbsp;
+<ul>&nbsp;expect check.exp install</ul>
+
+<p><br>You will be asked on which hosts you want to install a testsuite
+cluster and you will have to use at least 2 for the purpose of this test.
+<br>&nbsp;
+<li>
+<font class="ParagraphHeader">Run the testsuite on your modified build</font></li>
+
+<p><br>Run the testsuite test with runlevel&nbsp; 1:
+<br>&nbsp;
+<ul><tt>expect check.exp all 1</tt>
+<br><tt></tt>&nbsp;</ul>
+
+<li>
+<font class="ParagraphHeader">Compare results with validation run</font></li>
+
+<ul>&nbsp;</ul>
+Stop if the results are not equal.
+<ul>&nbsp;</ul>
+</ul>
+
+<P ALIGN=CENTER>Copyright &copy; 2001 Sun Microsystems Inc. All rights reserved.</P>

@@ -197,19 +197,12 @@ _Messages_.en.*.Account: Account
 _Messages_.en.*.AccountString: AccountString
 _Messages_.en.*.Actual Resource Share: Actual Resource Share
 _Messages_.en.*.Add: Add
-_Messages_.en.*.Modify: Modify
-_Messages_.en.*.Delete: Delete
-_Messages_.en.*.Suspend: Suspend
-_Messages_.en.*.Resume: Resume
-_Messages_.en.*.Disable: Disable
-_Messages_.en.*.Enable: Enable
 _Messages_.en.*.Add Leaf: Add Leaf
 _Messages_.en.*.Add Node: Add Node
 _Messages_.en.*.Add/Modify Calendar: Add/Modify Calendar
 _Messages_.en.*.Add/Modify Exec Host: Add/Modify Exec Host
 _Messages_.en.*.Add/Modify Project: Add/Modify Project
 _Messages_.en.*.Add/Modify PE: Add/Modify PE
-_Messages_.en.*.Add: Add
 _Messages_.en.*.Admin Mail: Admin Mail
 _Messages_.en.*.Admin User: Admin User
 _Messages_.en.*.Algorithm required!: Algorithm required!
@@ -715,7 +708,7 @@ Qmon*dirListLabelString: Directories
 Qmon*fileListLabelString: Files
 Qmon*filterLabelString: Filter
 Qmon*applyLabelString: Apply
-Qmon*xmtBooleanDialog*title: Question
+Qmon*xmtBooleanDialog*title: QMON
 _Messages_.en.*.XmtAskForInteger.title: Enter an integer 
 _Messages_.en.*.XmtAskForInteger.badInput: Please enter an integer.
 _Messages_.en.*.XmtAskForInteger.tooSmall: Please enter a larger number.

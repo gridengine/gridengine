@@ -1,3 +1,7 @@
+AA-2002-09-13-0  Bugfix:    QERROR action bugfix for qmon
+                            aimk.site -> openssl-0.9.6g
+                            aimk -> gettext libs change for gettext 11.4
+
 JG-2002-09-11-1  Bugfix:    qmake without information about parallel execution
                             on commandline failed.
                             qmake made an incorrect resource request if the 

@@ -1479,7 +1479,7 @@ if ( $WITH_GETTEXT == 1 ) then
       else
          set HFLAGS = "-I$GETTEXTBASE/$BUILDARCH/include"
          set LFLAGS = "-L$GETTEXTBASE/$BUILDARCH/lib $LFLAGS"
-         set LIBINTL = "-lintl -lnlsut"
+         set LIBINTL = "-lintl"
       endif
    endif
    set LIBS = "$LIBINTL $LIBS"

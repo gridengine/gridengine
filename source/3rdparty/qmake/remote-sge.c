@@ -823,7 +823,7 @@ static void unlock_hostentry(off_t offset) {
       lock_hostfile();
    
       if(be_verbose) {
-         fprintf(stderr, "unlock_hostentry %d\n", offset);
+         fprintf(stderr, "unlock_hostentry %d\n", (int) offset);
       }
    
       if(lseek(hostfile, offset * (MAXHOSTNAMELEN + sizeof(char)) + sizeof(hostfile_info), SEEK_SET) < 0) {

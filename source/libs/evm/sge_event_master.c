@@ -1770,6 +1770,8 @@ static void send_events(lListElem *report, lList *report_list) {
 
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
 
+         now = sge_get_gmt();
+
          /* on failure retry is triggered automatically */
          if (ret == CL_RETVAL_OK) {
             /*printf("send events %d to host: %s id: %d: now: %d\n", numevents, host, id, sge_get_gmt()); */           
@@ -1788,8 +1790,9 @@ static void send_events(lListElem *report, lList *report_list) {
             }
             now = sge_get_gmt();
             lSetUlong(event_client, EV_last_send_time, now);
-            lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
          }
+
+         lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
 
          /* don't delete sent events - deletion is triggerd by ack's */
          lXchgList(report, REP_list, &lp);

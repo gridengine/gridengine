@@ -524,7 +524,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "PROF: SGEEE job ticket calculation took %.3f s\n",
+         INFO((SGE_EVENT, "PROF: job-order calculation took %.3f s\n",
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, true, NULL)));
          log_state_set_log_level(saved_logginglevel);
       }
@@ -771,7 +771,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "PROF: SGEEE job dispatching took %.3f s\n",
+      INFO((SGE_EVENT, "PROF: job dispatching took %.3f s\n",
             prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL)));
       log_state_set_log_level(saved_logginglevel);
    }

@@ -1,3 +1,9 @@
+SG-2004-04-20-1: Bugfix:    - fixed the build for DARWIN
+                            - set a max limit for MAX_DYN_EC in qmaster
+                            - updated the profiling in the scheduler
+                 Changed:   sge_schedd, sge_qmaster
+                 Review:    CR
+                            
 SD-2004-04-20-0: Bugfix:    Modified auto user behavior to be more intuitive
                             Fixed qconf to display delete_time
                             Updated documentation and man pages

@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing aclocal
-AUTOCONF = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing autoconf
-AUTOMAKE = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing automake
-AUTOHEADER = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing autoheader
+ACLOCAL =  aclocal
+AUTOCONF =  autoconf
+AUTOMAKE =  automake
+AUTOHEADER =  autoheader
 
 INSTALL = ../../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO = /cod_home/jg114090/V53_beta2_BRANCH/source/3rdparty/qmake/missing makeinfo
+MAKEINFO =  makeinfo
 MAKE_HOST = hppa2.0w-hp-hpux11.11
 PACKAGE = make
 PERL = perl

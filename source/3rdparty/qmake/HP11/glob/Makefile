@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing aclocal
-AUTOCONF = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing autoconf
-AUTOMAKE = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing automake
-AUTOHEADER = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing autoheader
+ACLOCAL =  aclocal
+AUTOCONF =  autoconf
+AUTOMAKE =  automake
+AUTOHEADER =  autoheader
 
 INSTALL = ../../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO = /tmp_mnt/cod_home/bablick/Devel/MAINTRUNC_NEWLOADAVG/c4/qmake/missing makeinfo
+MAKEINFO =  makeinfo
 MAKE_HOST = hppa1.1-hp-hpux11.00
 PACKAGE = make
 PERL = perl

@@ -16,9 +16,9 @@
 
 SHELL = /bin/sh
 
-srcdir = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/glob
-top_srcdir = /home/brooks/working/sge/gridengine/source/3rdparty/qmake
-VPATH = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/glob
+srcdir = ../../glob
+top_srcdir = ../..
+VPATH = ../../glob
 prefix = /usr/local
 exec_prefix = ${prefix}
 
@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/missing aclocal
-AUTOCONF = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/missing autoconf
-AUTOMAKE = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/missing automake
-AUTOHEADER = /home/brooks/working/sge/gridengine/source/3rdparty/qmake/missing autoheader
+ACLOCAL =  aclocal
+AUTOCONF =  autoconf
+AUTOMAKE =  automake
+AUTOHEADER =  autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)

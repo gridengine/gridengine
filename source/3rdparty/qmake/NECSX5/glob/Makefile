@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL = /home/nec/aschwier/MAINTRUNC/c4/qmake/missing aclocal
-AUTOCONF = /home/nec/aschwier/MAINTRUNC/c4/qmake/missing autoconf
-AUTOMAKE = /home/nec/aschwier/MAINTRUNC/c4/qmake/missing automake
-AUTOHEADER = /home/nec/aschwier/MAINTRUNC/c4/qmake/missing autoheader
+ACLOCAL =  aclocal
+AUTOCONF =  autoconf
+AUTOMAKE =  automake
+AUTOHEADER =  autoheader
 
 INSTALL = ../../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO = /home/nec/aschwier/MAINTRUNC/c4/qmake/missing makeinfo
+MAKEINFO =  makeinfo
 MAKE_HOST = 
 PACKAGE = make
 PERL = perl

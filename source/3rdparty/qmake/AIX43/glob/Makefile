@@ -43,10 +43,10 @@ pkgincludedir = $(includedir)/make
 
 top_builddir = ..
 
-ACLOCAL = /cod_home/joga/devel/new/c4/qmake/missing aclocal
-AUTOCONF = /cod_home/joga/devel/new/c4/qmake/missing autoconf
-AUTOMAKE = /cod_home/joga/devel/new/c4/qmake/missing automake
-AUTOHEADER = /cod_home/joga/devel/new/c4/qmake/missing autoheader
+ACLOCAL = aclocal
+AUTOCONF = autoconf
+AUTOMAKE = automake
+AUTOHEADER = autoheader
 
 INSTALL = ../../install-sh -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -68,7 +68,7 @@ CPP = cc -E
 GETCONF = getconf
 GLOBLIB = glob/libglob.a
 LIBOBJS =  getloadavg.o
-MAKEINFO = /cod_home/joga/devel/new/c4/qmake/missing makeinfo
+MAKEINFO = makeinfo
 MAKE_HOST = powerpc-ibm-aix4.3.2.0
 PACKAGE = make
 PERL = perl

@@ -207,7 +207,7 @@ int user        /* =1 user, =0 project */
       }
    }
 
-   {
+   if (user) {
       const char *dproj = lGetString(ep, UP_default_project);
       FPRINTF((fp, "default_project %s\n", dproj ? dproj : "NONE"));
    }

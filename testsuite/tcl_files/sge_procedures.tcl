@@ -6147,7 +6147,7 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
 
    set result ""
    set do_ps_kill 0
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ke all -ks" ]
+   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ks -ke all" ]
 
    puts $CHECK_OUTPUT "qconf -ke all -ks returned $prg_exit_state"
    if { $prg_exit_state == 0 } {
@@ -6157,7 +6157,9 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       puts $CHECK_OUTPUT "shutdown_core_system - qconf error or binary not found\n$result"
    }
 
-   sleep 15 ;# give the schedd and execd's some time to shutdown
+#   sleep 15 ;# give the schedd and execd's some time to shutdown
+   wait_for_unknown_load 120 all.q 0
+
 
    puts $CHECK_OUTPUT "killing qmaster ..."
 
@@ -6315,6 +6317,8 @@ proc wait_till_qmaster_is_down { host } {
       if { $nr_of_found_qmaster_processes_or_threads == 0 } {
          puts $CHECK_OUTPUT "no qmaster processes running"
          return 0      
+      } else {
+         puts $CHECK_OUTPUT "still qmaster processes running ..."
       }
    }
 }

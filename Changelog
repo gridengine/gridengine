@@ -1,3 +1,8 @@
+CR-2004-08-10-2: Testsuite: - wait for all queues to report load before
+                              starting any test
+                            - wait for all queues to report unknown load
+                              after qconf -ke all in shutdown_core_system
+
 CR-2004-08-10-1: Testsuite: startup_shadowd did not use sgemaster -shadowd
                             command line argument
 

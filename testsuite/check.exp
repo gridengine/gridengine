@@ -3737,6 +3737,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
       if { [is_scheduler_alive $CHECK_CORE_MASTER [get_qmaster_spool_dir]] != 1 } {
          add_proc_error "run_test_level" -1 "scheduler is not alive"
       }
+      wait_for_load_from_all_queues 60
    }
 
    if { [info exists check_functions] == 1 } {

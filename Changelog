@@ -1,3 +1,6 @@
+CR-2002-07-29-1: Bugfix:    corrected CR-2002-07-29-0 and added sc_OPT
+                            for qalter binary
+
 CR-2002-07-29-0: Bugfix:    CLI: invalid option "-jid jid" for qconf in 
                             qconf -help
                  Bugtraq:   #4722060

@@ -242,5 +242,11 @@
 #define MSG_SYSTEM_GETPWUIDFAILED_US               _MESSAGE(49096, _("getpwuid("U32CFormat") failed: %s\n"))
 #define MSG_SYSTEM_GETGRGIDFAILED_US               _MESSAGE(49097, _("getgrgid("U32CFormat") failed: %s\n"))
 
+/* 
+** libs/uti/host.c
+*/ 
+#define MSG_SYSTEM_BADMAINNAME_SS                  _MESSAGE(49098, _("unresolvable mainname "SFQ" in alias file "SFN"\n"))
+#define MSG_SYSTEM_BADALIASNAME_SS                 _MESSAGE(49099, _("unresolvable aliasname "SFQ" in alias file "SFN"\n"))
+
 #endif /* __MSG_UTILIB_H */
 

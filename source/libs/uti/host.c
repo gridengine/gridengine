@@ -46,6 +46,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_commd.h"
+#include "msg_utilib.h"
 #include "sge_language.h"
 #include "sge_stat.h" 
 #include "sge_time.h" 
@@ -614,9 +615,8 @@ _Insight_set_option("suppress", "LEAK_SCOPE");
       if (!h1)
          h1 = newhost_name(mainname, NULL);
       if (!h1) {
-         fclose(fp);
-         DEXIT;
-         return -1;             /* main hostname could not be resolved */
+         ERROR((SGE_EVENT, MSG_SYSTEM_BADMAINNAME_SS, mainname, fname));
+         continue; /* skip this line */
       }
 
       /* Insert main hostname */
@@ -625,11 +625,14 @@ _Insight_set_option("suppress", "LEAK_SCOPE");
       /* iterate on aliases */
       while ((name = strtok(NULL, ALIAS_DELIMITER))) {
 
-         h2 = search_host(name, NULL);
-         if (!h2)
-            h2 = newhost_name(name, NULL);
+         if (!(h2 = search_host(name, NULL))) {
+            if (!(h2 = newhost_name(name, NULL))) {
+               ERROR((SGE_EVENT, MSG_SYSTEM_BADALIASNAME_SS, name, fname));
+               continue; /* skip this alias name */
+            }
+         }
 
-         if (h2 && (h1 != h2)) {        /* be sure to not alias to itself 
+         if (h1 != h2) {                   /* be sure to not alias to itself 
                                            could happen if 2 aliases resolve to
                                            the same */
             alias_host(h1, h2);
@@ -707,11 +710,18 @@ host *h
 /*****************************************************************************/
 const char *resolve_hostname_local(const char *unresolved)
 {  
+   static int read_file = 0;
+
    const char *s;
-   char *apath;
-   apath = get_alias_path();
-   read_aliasfile(apath);
-   free(apath);
+
+   if (!read_file) {
+      char *apath;
+      apath = get_alias_path();
+      read_aliasfile(apath);
+      free(apath);
+      read_file = 1;
+   }
+
    s = get_aliased_name(unresolved);
    if (s)
      DPRINTF(("%s as aliased from %s\n", s, unresolved));

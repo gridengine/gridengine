@@ -318,10 +318,6 @@ static lList *parse_cmdline_qmaster(char **argv, lList **ppcmdline )
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, &alp)) != sp)
          continue;
 
-      /* -nostart-commd */
-      if ((rp = parse_noopt(sp, "-nostart-commd", NULL, ppcmdline, &alp)) != sp)
-         continue;
-
       /* -s */
       if ((rp = parse_noopt(sp, "-s", NULL, ppcmdline, &alp)) != sp)
          continue;
@@ -385,12 +381,6 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
          usageshowed = 1;
          sge_usage(stdout);
          break;
-      }
-
-      /* -nostart-commd */
-      if(parse_flag(ppcmdline, "-nostart-commd", &alp, &flag)) {
-         start_commd = false;
-         continue;
       }
 
       /* -s */

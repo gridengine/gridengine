@@ -929,9 +929,6 @@
 #define MSG_GDI_USAGE_nostart_schedd_OPT                 "[-nostart-schedd]"
 /* #define MSG_GDI_UTEXT_nostart_schedd_OPT                 _message(23468, _("do not start schedd")) __TS Removed automatically from testsuite!! TS__*/
 
-#define MSG_GDI_USAGE_nostart_commd_OPT                  "[-nostart-commd]"
-#define MSG_GDI_UTEXT_nostart_commd_OPT                  _MESSAGE(23469, _("do not start commd"))
-
 #define MSG_GDI_USAGE_verbose_OPT                        "[-verbose]"
 #define MSG_GDI_UTEXT_verbose_OPT                        _MESSAGE(23470, _("verbose information output"))
 

@@ -1,17 +1,5 @@
-AS-2004-02-19-1  Cleanup:   Crude port to HP1164. Just COMPILES!!!!
-                            No testing at all done yet!
-                            "qtcsh" is not really working. Reason is that
-                            "-ltermcap" does not exist on our system
-                            as 64-bit library. Use "-lcurses" instead.
-                            However tcsh prints at startup:
-
-                                  tcsh: using dumb terminal settings.
-                             
-                            Need to run configure for qtcsh and suggest
-                            to run it for other 3rd party binaries as well
-
-AS-2004-02-19-1  Cleanup    pass -mips3 flag fro 3rd binaires to compiler
-                            aimk cleanup
+AD-2004-02-19-0: Cleanup:   Did remove '-nostart-commd' command line argument.
+                 Changed:   qmaster, common, man
 
 AH-2004-02-19-1: Bugfix:    sge_schedd crashed when parallel jobs were assigned 
                             into more than one queues instance of the same host.

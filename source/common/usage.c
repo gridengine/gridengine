@@ -1154,10 +1154,6 @@ FILE *fp
       }
    }
 
-   if (VALID_OPT(nostart_commd_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_nostart_commd_OPT, MSG_GDI_UTEXT_nostart_commd_OPT );
-   }
-
    if (VALID_OPT(verbose_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_verbose_OPT, MSG_GDI_UTEXT_verbose_OPT );
    }

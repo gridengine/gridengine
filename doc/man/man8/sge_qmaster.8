@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2003/05/20 12:58:15 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: sge_qmaster.8,v $     Last Update: $Date: 2004/02/19 13:31:05 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2003/05/20 12:58:15 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_QMASTER 8 "$Date: 2004/02/19 13:31:05 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_qmaster \- xxQS_NAMExx master control daemon
 .\"
@@ -41,12 +41,8 @@ xxqs_name_sxx_qmaster \- xxQS_NAMExx master control daemon
 ] [
 .B \-lj log_file
 ] [
-.B \-nostart-commd
-] [
 .B \-s
-] [
-.PP
-.B xxqs_name_sxx_qmaster -show-license
+]
 .\"
 .\"
 .SH DESCRIPTION
@@ -56,11 +52,6 @@ purpose of scheduling jobs
 .I xxqs_name_sxx_qmaster
 cooperates with
 .M xxqs_name_sxx_schedd 8 .
-At start-up of
-.I xxqs_name_sxx_qmaster
-.M xxqs_name_sxx_commd 8
-is usually brought up automatically on the same machine
-(if not already present).
 .\"
 .\"
 .SH OPTIONS
@@ -76,10 +67,6 @@ the
 .M xxqs_name_sxx_execd 8
 daemon.
 .\"
-.IP "\fB\-nostart-commd\fP"
-Do not start-up
-.M xxqs_name_sxx_commd 8
-automatically with \fIxxqs_name_sxx_qmaster\fP.
 .\"
 .IP "\fB\-s\fP"
 turns on \fIxxqs_name_sxx_qmaster\fPs silent mode. Usually

@@ -68,7 +68,8 @@ hp11 hp11-64 irix6 necsx4 sx slinux solaris solaris64 solaris86 osf4 tru64 \
 darwin fbsd-alpha fbsd-amd64 fbsd-i386 fbsd-ia64 fbsd-ppc fbsd-sparc64 \
 ia64linux lx24-amd64 nbsd-alpha nbsd-arm nbsd-arm32 nbsd-armeb nbsd-hppa \
 nbsd-i386 nbsd-m68000 nbsd-m68k nbsd-mipseb nbsd-mipsel nbsd-ns32k nbsd-pdp10 \
-nbsd-powerpc nbsd-sparc nbsd-sparc64 nbsd-x86_64"
+nbsd-powerpc nbsd-sh3 nbsd-sh3eb nbsd-sh3el nbsd-sh5eb nbsd-sh5el nbsd-sparc \
+nbsd-sparc64 nbsd-vax nbsd-x86_64"
 
 #SGEEE_UTILITYBINARIES="sge_share_mon sge_host_mon"
 SGEEE_UTILITYBINARIES="sge_share_mon"

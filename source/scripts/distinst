@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 #set -x
-#  distinst
+#
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -335,6 +335,7 @@ inst3rdparty=false
 
 exit_on_error=true
 sgeee=false
+sundist=false
 localinst=false
 setfileperm=true
 
@@ -361,12 +362,14 @@ elif [ $cmdname = sgeinst ]; then
    BASEDIR=/dist/SGEDIST
    VERSIONDIR=SGE53p1
    SGE_PRODUCT_MODE=sge
+   sundist=true
 elif [ $cmdname = sgeeeinst ]; then
    # This special rule creates a distribution which will be provided by Sun
    BASEDIR=/dist/SGEDIST
    VERSIONDIR=SGEEE53p1
    SGE_PRODUCT_MODE=sgeee
    sgeee=true
+   sundist=true
 else
    echo echo Unsupported command name: $cmdname.
    echo
@@ -466,7 +469,6 @@ if [ $localinst = false ]; then
    fi
 
    DEST_SGE_ROOT=$BASEDIR/$VERSIONDIR
-
    if [ -f $DEST_SGE_ROOT/LOCKED ]; then
       echo "Sorry, file \"$DEST_SGE_ROOT/LOCKED\" exits. Installation failed."
       exit 1
@@ -685,10 +687,15 @@ if [ $instcommon = true ]; then
       Execute chmod 644 $DEST_SGE_ROOT/qmon/PIXMAPS/*.xpm
       Execute chmod 644 $DEST_SGE_ROOT/qmon/PIXMAPS/big/*.xpm
 
-      Execute cp dist/qmon/Qmon $DEST_SGE_ROOT/qmon/Qmon
+      Execute cp dist/qmon/Qmon $DEST_SGE_ROOT/qmon
       Execute chmod 644 $DEST_SGE_ROOT/qmon/Qmon
    
-      Execute cp dist/qmon/qmon_help.ad $DEST_SGE_ROOT/qmon
+      Execute scripts/sed_help
+      if [ $sgeee = false ]; then
+         Execute cp dist/qmon/qmon_help.ad.ge $DEST_SGE_ROOT/qmon/qmon_help.ad
+      else
+         Execute cp dist/qmon/qmon_help.ad.geee $DEST_SGE_ROOT/qmon/qmon_help.ad
+      fi
       Execute chmod 644 $DEST_SGE_ROOT/qmon/qmon_help.ad
 
       ( echo changing to $DEST_SGE_ROOT/qmon/PIXMAPS ; \
@@ -818,6 +825,10 @@ if [ $instcommon = true ]; then
    if [ $setfileperm = true ]; then
       echo Setting file permissions
       SetFilePerm $DEST_SGE_ROOT
+   fi
+
+   if [ $sundist = true ]; then
+      touch $DEST_SGE_ROOT/.COMMON_CHANGED
    fi
 
    # Remove CVS directories, ".#" files, backup files
@@ -968,7 +979,7 @@ for i in $ARCH; do
 
       for lib in $QMON_SHARED_LIBRARIES; do
          libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"
-         echo checking $libname
+         # echo checking $libname
          if [ -f $libname ]; then
             InstallProg $libname
          fi
@@ -976,7 +987,7 @@ for i in $ARCH; do
 
       for lib in $ZLIB_SHARED_LIBRARIES; do
          libname="../3rdparty/zlib/$ARCHBIN/$lib.$shlibext"
-         echo checking $libname
+         # echo checking $libname
          if [ -f $libname ]; then
             InstallProg $libname
          fi

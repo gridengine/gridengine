@@ -1,3 +1,7 @@
+AS-2004-03-11-1: Bugfix:    installation fixes and formatting
+
+AS-2004-03-11-0: Enhancem.: Merged HPCT changes from 5.3
+
 JG-2004-03-11-0: Testsuite: fixed tests functional/binary_submission and 
                             functional/migration.
 

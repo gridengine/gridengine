@@ -71,6 +71,7 @@
 #include "sge_string.h"
 #include "sge_dirent.h"
 #include "reschedule.h"
+#include "sge_switch_user.h"
 
 static int check_config(lList **alpp, lListElem *conf);
    
@@ -95,6 +96,7 @@ lList **lpp
    char fstr[256];
    lListElem *el, *epc;
    int ret;
+   static int admin_user_initialized = 0;
 
    DENTER(TOP_LAYER, "read_all_configurations");
 
@@ -145,6 +147,22 @@ lList **lpp
             return 1;
          }
       }
+   }
+
+   if (!admin_user_initialized) {
+      const char *admin_user = NULL;
+      char err_str[MAX_STRING_SIZE];
+      int lret;
+
+      admin_user = read_adminuser_from_configuration(el, path.conf_file,
+                                             SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
+      lret = set_admin_username(admin_user, err_str);
+      if (lret == -1) {
+         ERROR((SGE_EVENT, err_str));
+         DEXIT;
+         return -1;
+      }
+      admin_user_initialized = 1;
    }
    
    /* read local configurations from local_conf_dir */ 
@@ -199,26 +217,32 @@ lList **lpp
             continue;
          }
 
+
          /* rename config file if resolving changed name */
          if (strcmp(old_name, new_name)) {
 
             sprintf(fname, "%s/.%s", path.local_conf_dir, new_name);
             sprintf(real_fname, "%s/%s", path.local_conf_dir, new_name);
 
+            switch2admin_user();
             DPRINTF(("path.conf_file: %s\n", fname));
             if ((ret=write_configuration(1, &alp, fname, el, NULL, FLG_CONF_SPOOL))) {
                /* answer list gets filled in write_configuration() */
                free(old_name);
+               switch2start_user();
                DEXIT;
                return -1;
             } else {
                if (rename(fname, real_fname) == -1) {
                   free(old_name);
+                  switch2start_user();
                   DEXIT;
                   return -1;
                }
             }
+            switch2start_user();
          }
+
          lFreeList(alp);
          free(old_name);
       }

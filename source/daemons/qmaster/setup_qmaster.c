@@ -197,14 +197,6 @@ int sge_setup_qmaster()
    sge_show_conf();         
    new_config = 1;
 
-   /*
-   ** switch to admin user
-   */
-   if (set_admin_username(conf.admin_user, err_str)) {
-      CRITICAL((SGE_EVENT, err_str));
-      SGE_EXIT(1);
-   }
-
    if (switch2admin_user()) {
       CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
       SGE_EXIT(1);

@@ -195,6 +195,7 @@ SG-2004-03-16-0: Enhancem.: added the output of long qnames in qstat (again)
 
 EB-2004-03-16-0: Bugfix:    mail bomb upon abort with tightly int. par. job 
                  Issue:     637
+                 Bugtraq:   5020153
                  Changed:   sge_execd
                  Review:    JG
 

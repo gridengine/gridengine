@@ -236,6 +236,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 #ifdef DEBUG_MAX_RUNNING
    clock_t now, start;
    struct tms tms_now, tms_start;
+   int count = 0;
 #endif
    DENTER(TOP_LAYER, "job_lists_split_with_reference_to_max_running");
 
@@ -252,8 +253,11 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
       /* 
        * create a hash table on JB_owner to speedup 
        * searching for jobs of a specific owner
+       *
+       * JG: Disabled hashing - it seems to have negative impact
+       *     on performance - further analysis has to follow.
        */
-if(1)      {
+if(0)      {
          const lDescr *descr = lGetListDescr(*(job_lists[SPLIT_PENDING]));
          int pos = lGetPosInDescr(descr, JB_owner);
         
@@ -313,6 +317,9 @@ if(1)      {
                }
 
                lAppendElem(*(job_lists[SPLIT_PENDING_EXCLUDED]), user_job);
+#ifdef DEBUG_MAX_RUNNING
+               count++;
+#endif
             }
          }
       }
@@ -320,9 +327,10 @@ if(1)      {
 #ifdef DEBUG_MAX_RUNNING
       now = times(&tms_now);
       ERROR((SGE_EVENT, "job_lists_split_with_reference_to_max_running "
-            "%.3f s %3f s\n",
+            "%.3f s %3f s, %d actions\n",
             (now - start) * 1.0 / CLK_TCK, 
-            (tms_now.tms_utime - tms_start.tms_utime) * 1.0 / CLK_TCK));
+            (tms_now.tms_utime - tms_start.tms_utime) * 1.0 / CLK_TCK, 
+            count));
 #endif
    
    }

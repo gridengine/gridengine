@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/07/26 10:13:29 $     Revision: $Revision: 1.17.2.2 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/07/30 15:07:50 $     Revision: $Revision: 1.17.2.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/07/26 10:13:29 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/07/30 15:07:50 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -320,6 +320,23 @@ The user can obtain the collected information with the command qstat -j.
 .SS "\fBparams\fP"
 This is foreseen for passing additional paramters to the N1 Grid Engine
 scheduler. The following values are recognized:
+.\"
+.IP "\fIJC_FILTER\fP"
+If set to true, the scheduler limits the number of jobs it looks at during
+a scheduling run. At the beginning of the scheduling run it assigns each
+job a specific category, which is based on the job's requests, priority
+settings, and the job owner. All scheduling policies will assign the same
+importance to each job in one category. Therefore the number of jobs per
+category have a FIFO order and can be limited to the number of free slots 
+in the system.
+
+A exception are jobs, which request a resource reservation. They are included 
+regardsless of the number of jobs in a category. 
+
+This setting is turned off per default, because in very rare cases, the scheduler
+can make a wrong decision. It is also advised to turn report_pjob_tickets off. 
+Otherwise qstat -ext can report outdated ticket amounts. The information shown
+with a qstat -j for a job, that was excluded in a scheduling run, is very limited.
 .\"
 .IP "\fIPROFILE\fP"
 If set equal to 1, the scheduler logs profiling information summarizing

@@ -89,7 +89,6 @@ int schedd_log(const char *logstr) {
    DENTER(TOP_LAYER, "schedd_log");
 
    if (!monitor_next_run) {
-      DPRINTF(("monitor_next_run is 0\n"));
       DEXIT;
       return 0;
    }

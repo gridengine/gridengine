@@ -1,3 +1,15 @@
+AH-2002-04-26-0: Bugfix:    - queue nsuspend > 1 was not used to suspend
+                              multiple jobs in a queue at a time in case of a
+                              suspend threshold alarm.
+                 Issue:     #239
+                 Bugtraq:   #4675410
+                            - use of suspend thresholds and user sort policy
+                              could cause "inconsistent access tree data" schedd
+                              logging and break user sort policy
+                 Issue:     #240
+                 Bugtraq:   #4675416
+                 Changed:   sge_schedd
+
 CR-2002-04-25-1: Testsuite: - access_list test:
                               -> submit jobs with 30 sec instead of 15 secs
                                  due to evtl. timeout problems

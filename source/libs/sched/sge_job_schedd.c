@@ -265,10 +265,10 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                lAppendElem(*(job_lists[SPLIT_PENDING_EXCLUDED]), user_job);
             }
          }
-      } 
+      }
    }
    DEXIT;
-}      
+}
 
 void split_jobs(lList **job_list, lList **answer_list,
                 lList *queue_list, u_long32 max_aj_instances, 

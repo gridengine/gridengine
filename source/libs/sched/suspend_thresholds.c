@@ -103,7 +103,7 @@ lList **orderlist
 
          /* prevent multiple selection of this job */
          lSetUlong(ja_task, JAT_state, lGetUlong(ja_task, JAT_state) 
-            & JSUSPENDED_ON_THRESHOLD);
+             | JSUSPENDED_ON_THRESHOLD);
       }
 
       if (i==0 && !found) {
@@ -173,7 +173,7 @@ lList **orderlist
 
          /* prevent multiple selection of this job */
          lSetUlong(ja_task, JAT_state, lGetUlong(ja_task, JAT_state) 
-            & JSUSPENDED_ON_THRESHOLD);
+            & ~JSUSPENDED_ON_THRESHOLD);
       }
       
       if (i==0 && !found) {

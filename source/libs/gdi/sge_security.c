@@ -57,6 +57,7 @@
 #include "sge_var.h"
 #include "sge_job.h"
 #include "sge_answer.h"
+#include "sge_time.h"
 
 
 #include "msg_common.h"
@@ -87,7 +88,59 @@ static pthread_mutex_t sec_rw_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
+static void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender);
+static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsigned long component_id, cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid );
 
+static void dump_rcv_info(cl_com_message_t** message, cl_com_endpoint_t** sender) {
+   DENTER(TOP_LAYER, "dump_rcv_info");
+   if ( message  != NULL && sender   != NULL && *message != NULL && *sender  != NULL &&
+        (*sender)->comp_host != NULL && (*sender)->comp_name != NULL ) {
+         char buffer[512];
+         dstring ds;
+         sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+      DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
+      DEBUG((SGE_EVENT,"gdi_rcv: reseived message from %s/%s/"U32CFormat": \n",(*sender)->comp_host, (*sender)->comp_name, u32c((*sender)->comp_id)));
+      DEBUG((SGE_EVENT,"gdi_rcv: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string((*message)->message_mat)));
+      DEBUG((SGE_EVENT,"gdi_rcv: message tag:       %s\n",            sge_dump_message_tag( (int) (*message)->message_tag) ));
+      DEBUG((SGE_EVENT,"gdi_rcv: message id:        "U32CFormat"\n",  u32c((*message)->message_id) ));
+      DEBUG((SGE_EVENT,"gdi_rcv: receive time:      %s\n",            sge_ctime((*message)->message_receive_time.tv_sec, &ds)));
+      DEBUG((SGE_EVENT,"<<<<<<<<<<<<<<<<<<<<\n"));
+   } else {
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+      DEBUG((SGE_EVENT,"gdi_rcv: some parameters are not set\n"));
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+   }
+   DEXIT;
+}
+
+static void dump_snd_info(char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                          cl_xml_ack_type_t ack_type, unsigned long tag, unsigned long* mid ) {
+   char buffer[512];
+   dstring ds;
+
+   DENTER(TOP_LAYER, "dump_snd_info");
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   if (un_resolved_hostname != NULL && component_name != NULL) {
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+      DEBUG((SGE_EVENT,"gdi_snd: sending message to %s/%s/"U32CFormat": \n", (char*)un_resolved_hostname,(char*)component_name ,u32c(component_id)));
+      DEBUG((SGE_EVENT,"gdi_snd: cl_xml_ack_type_t: %s\n",            cl_com_get_mih_mat_string(ack_type)));
+      DEBUG((SGE_EVENT,"gdi_snd: message tag:       %s\n",            sge_dump_message_tag( (int) tag) ));
+      if (mid) {
+         DEBUG((SGE_EVENT,"gdi_snd: message id:        "U32CFormat"\n",  u32c(*mid) ));
+      } else {
+         DEBUG((SGE_EVENT,"gdi_snd: message id:        not handled by caller\n"));
+      }
+      DEBUG((SGE_EVENT,"gdi_snd: send time:         %s\n",            sge_ctime(0, &ds)));
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+   } else {
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+      DEBUG((SGE_EVENT,"gdi_snd: some parameters are not set\n"));
+      DEBUG((SGE_EVENT,">>>>>>>>>>>>>>>>>>>>\n"));
+   }
+   DEXIT;
+}
 
 /****** gdi/security/sge_security_initialize() ********************************
 *  NAME
@@ -178,6 +231,7 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
       SEC_LOCK_RW();
       ret = sec_receive_message( handle, un_resolved_hostname,  component_name,  component_id,  synchron,   response_mid,  message, sender);
+      dump_rcv_info(message,sender);
       SEC_UNLOCK_RW();
       DEXIT;
       return ret;
@@ -186,6 +240,7 @@ int gdi_receive_sec_message(cl_com_handle_t* handle,char* un_resolved_hostname, 
 
    ret = cl_commlib_receive_message(handle, un_resolved_hostname,  component_name,  component_id,  
                                      synchron, response_mid,  message,  sender);
+   dump_rcv_info(message,sender);
 
    DEXIT;
    return ret;
@@ -208,6 +263,7 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
       ret = sec_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
                                   ack_type, data,  size ,
                                   mid,  response_mid,  tag , copy_data, wait_for_ack);
+      dump_snd_info(un_resolved_hostname, component_name, component_id, ack_type, tag, mid);
       SEC_UNLOCK_RW();
       DEXIT;
       return ret;
@@ -217,6 +273,7 @@ int gdi_send_sec_message(cl_com_handle_t* handle,
    ret = cl_commlib_send_message(handle, un_resolved_hostname,  component_name,  component_id, 
                                   ack_type, data,  size ,
                                   mid,  response_mid,  tag , copy_data, wait_for_ack);
+   dump_snd_info(un_resolved_hostname, component_name, component_id, ack_type, tag, mid);
    DEXIT;
    return ret;
 
@@ -308,7 +365,6 @@ int compressed
       dummy_mid = *mid;
    }
 
-   DEBUG((SGE_EVENT,"gdi_send_message(): sending message to %s,%s,%ld\n",(char*)tohost,(char*)tocomproc ,(unsigned long)toid));
    ret = gdi_send_sec_message( handle, 
                                   (char*)tohost ,(char*)tocomproc ,toid , 
                                   ack_type , 

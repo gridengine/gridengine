@@ -39,6 +39,10 @@
 
 FetchHostname()
 {
+   if [ $AUTO = "true" ]; then
+      HOST=$EXEC_HOST_LIST_RM
+   fi
+
    for h in $HOST; do
      qconf -se $h
      ret=$?

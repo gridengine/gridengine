@@ -1,3 +1,7 @@
+MD-2004-01-24-0: Enhancem.: - Add auto uninstall function for execd
+                            - Some documentation
+                 Changed:   sge_config, sge.conf, sge_config_execd_uninst.sh
+
 MD-2004-01-23-0: Enhancem.: - Added new installation script (sge_config)
                              
                  Changed:   all installation files, create_settings.sh,

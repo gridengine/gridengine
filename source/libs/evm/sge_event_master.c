@@ -2673,6 +2673,7 @@ static void send_events(lListElem *report, lList *report_list) {
 
       /* Keep looking for a non-NULL client. */
       if (event_client == NULL) {
+         unlock_client (ec_id);
          continue; /* while */
       }
       

@@ -1,3 +1,7 @@
+DT-2004-04-28-0: Bugfix:    o Fixed deadlock in EVM from DT-2004-04-27-0
+                 Changed:   o EMV
+                 Review:    SG
+
 DT-2004-04-27-1: Enhancem.: o Further progress on DRMAA Java binding
                  Changed:   DRMAA Java binding
 

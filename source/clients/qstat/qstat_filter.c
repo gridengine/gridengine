@@ -265,6 +265,20 @@ void qstat_filter_add_xml_attributes(void)
    lMergeWhat(&what_JB_Type, &tmp_what);
 }
 
+void qstat_filter_add_U_attributes(void) 
+{
+   lEnumeration *tmp_what = NULL;
+
+   const int nm_JB_Type[] = {
+      JB_checkpoint_name,
+      JB_hard_resource_list,
+      NoName
+   };
+
+   tmp_what = lIntVector2What(JB_Type, nm_JB_Type);
+   lMergeWhat(&what_JB_Type, &tmp_what);
+}
+
 void qstat_filter_add_t_attributes(void) 
 {
    lEnumeration *tmp_what = NULL;

@@ -41,6 +41,7 @@ void qstat_filter_add_q_attributes(void);
 void qstat_filter_add_r_attributes(void);
 void qstat_filter_add_xml_attributes(void);
 void qstat_filter_add_t_attributes(void);
+void qstat_filter_add_U_attributes(void);
 
 lEnumeration *qstat_get_JB_Type_filter(void);
 lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show);

@@ -1502,14 +1502,18 @@ u_long32 *isXML
          continue;
       }
 
-      while (parse_multi_stringlist(ppcmdline, "-u", &alp, ppluser, ST_Type, ST_name)) 
+      while (parse_multi_stringlist(ppcmdline, "-u", &alp, ppluser, ST_Type, ST_name)) {
          continue;
+      }
       
-      while (parse_multi_stringlist(ppcmdline, "-U", &alp, pplqueue_user, ST_Type, ST_name)) 
+      while (parse_multi_stringlist(ppcmdline, "-U", &alp, pplqueue_user, ST_Type, ST_name)) {
+         qstat_filter_add_U_attributes();
          continue;
+      }   
       
-      while (parse_multi_stringlist(ppcmdline, "-pe", &alp, pplpe, ST_Type, ST_name)) 
+      while (parse_multi_stringlist(ppcmdline, "-pe", &alp, pplpe, ST_Type, ST_name)) {
          continue;
+      }   
       
       while (parse_multi_stringlist(ppcmdline, "-q", &alp, pplqueueref, QR_Type, QR_name)) {
          qstat_filter_add_q_attributes();

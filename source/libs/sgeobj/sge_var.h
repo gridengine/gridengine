@@ -74,4 +74,6 @@ void var_list_split_prefix_vars(lList **varl,
                                 lList **pefix_vars,
                                 const char *prefix);
 
+int var_list_add_as_set(lList *varl, lList *vars);
+
 #endif /* __SGE_VAR_H */

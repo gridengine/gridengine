@@ -603,17 +603,17 @@ lWriteListTo(environmentList, stderr);
 
       job_get_submit_task_ids(jep, &start, &end, &step);
 
-      var_list_set_u32(&environmentList, VAR_PREFIX_NR "TASK_ID", ja_task_id);
-      var_list_set_u32(&environmentList, VAR_PREFIX_NR "TASK_FIRST", start);
-      var_list_set_u32(&environmentList, VAR_PREFIX_NR "TASK_LAST", end);
-      var_list_set_u32(&environmentList, VAR_PREFIX_NR "TASK_STEPSIZE", step);
+      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", ja_task_id);
+      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_FIRST", start);
+      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_LAST", end);
+      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_STEPSIZE", step);
    } else {
       const char *udef = "undefined";
 
-      var_list_set_string(&environmentList, VAR_PREFIX_NR "TASK_ID", udef);
-      var_list_set_string(&environmentList, VAR_PREFIX_NR "TASK_FIRST", udef);
-      var_list_set_string(&environmentList, VAR_PREFIX_NR "TASK_LAST", udef);
-      var_list_set_string(&environmentList, VAR_PREFIX_NR "TASK_STEPSIZE", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX "TASK_ID", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX "TASK_FIRST", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX "TASK_LAST", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX "TASK_STEPSIZE", udef);
    }
 
    var_list_set_string(&environmentList, "ENVIRONMENT", "BATCH");
@@ -624,8 +624,8 @@ lWriteListTo(environmentList, stderr);
    if ((cp=getenv("TZ")) && strlen(cp))
       var_list_set_string(&environmentList, "TZ", cp);
 
-   if ((cp=getenv("COMMD_PORT")) && strlen(cp))
-      var_list_set_string(&environmentList, "COMMD_PORT", cp);
+   if ((cp=getenv("SGE_QMASTER_PORT")) && strlen(cp))
+      var_list_set_string(&environmentList, "SGE_QMASTER_PORT", cp);
      
    var_list_set_string(&environmentList, VAR_PREFIX "ROOT", path_state_get_sge_root());
 

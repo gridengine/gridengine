@@ -508,7 +508,9 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
 
          new = (pbcache *)malloc(sizeof(pbcache));        
          new->pb = (sge_pack_buffer *)malloc(sizeof(sge_pack_buffer));
+         memset (new->pb, 0, sizeof(sge_pack_buffer));
          new->de = (dispatch_entry *)malloc(sizeof(dispatch_entry));
+         memset (new->de, 0, sizeof(dispatch_entry));
          alloc_de(new->de);
          copy_de(new->de, &deact);
          new->next = 0;
@@ -946,14 +948,14 @@ dispatch_entry *dedst, *desrc;
    dedst->tag = desrc->tag;
 
    if (desrc->commproc && desrc->commproc[0]) {
-      desrc->commproc[MAXHOSTLEN + 1] = '\0';
+      desrc->commproc[MAXHOSTLEN] = '\0';
       strcpy(dedst->commproc, desrc->commproc);
    } else {
       dedst->commproc[0] = '\0';
    }
 
    if (desrc->host && desrc->host[0]) {
-      desrc->host[MAXHOSTLEN + 1] = '\0';
+      desrc->host[MAXHOSTLEN] = '\0';
       strcpy(dedst->host, desrc->host);
    } else {
       dedst->host[0] = '\0';

@@ -416,7 +416,7 @@ void var_list_copy_prefix_vars(lList **varl,
    if (*varl == NULL) {
       *varl = lCreateList("", VA_Type);
    }
-   lAddList(*varl, var_list2); 
+   var_list_add_as_set (*varl, var_list2); 
    DEXIT;
 }
 
@@ -672,4 +672,83 @@ void var_list_split_prefix_vars(lList **varl,
    }
    DEXIT;
    return;
+}
+
+/****** sgeobj/var/var_list_add_as_set() ***************************************
+*  NAME
+*     var_list_add_as_set() -- Concatenate two lists as sets
+*
+*  SYNOPSIS
+*     int var_list_add_as_set(lList *lp0, lList *lp1) 
+*
+*  FUNCTION
+*     Concatenate two lists of equal type throwing away the second list.
+*     Elements in the second list will replace elements with the same key in the
+*     the first list.  If the first list contains duplicate element keys, only
+*     the first element with a given key will be replaced by an element from the
+*     second list with the same key.
+*
+*  INPUTS
+*     lList *lp0 - first list 
+*     lList *lp1 - second list 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int var_list_add_as_set(lList *lp0, lList *lp1) 
+{
+   lListElem *ep0, *ep1;
+   const lDescr *dp0, *dp1;
+   const char *name, *value;
+
+   DENTER(CULL_LAYER, "lReplaceList");
+
+   if (!lp1 || !lp0) {
+      DEXIT;
+      return -1;
+   }
+
+   /* Check if the two lists are equal */
+   dp0 = lGetListDescr(lp0);
+   dp1 = lGetListDescr(lp1);
+   if (lCompListDescr(dp0, dp1)) {
+      DEXIT;
+      return -1;
+   }
+
+   while (lp1->first) {
+      /* Get the first element from the second list */
+      if (!(ep1 = lDechainElem(lp1, lp1->first))) {
+         DEXIT;
+         return -1;
+      }
+   
+      /* Get it's name, and use the name to look for a matching element in the
+       * first list. */
+      name = lGetString (ep1, VA_variable);
+      ep0 = lGetElemStr (lp0, VA_variable, name);
+
+      /* If there is a matching element in the first list, set it's value to the
+       * value of the element from the second list. */
+      if (ep0 != NULL) {
+         value = lGetString (ep1, VA_value);         
+         lSetString (ep0, VA_value, strdup (value));
+      }
+      /* If there is no matching element, add the element from the second list
+       * to the first list. */
+      else {
+         if (lAppendElem(lp0, ep1) == -1) {
+            DEXIT;
+            return -1;
+         }
+      }
+   }
+
+   /* The second list is no longer needed. */
+   lFreeList(lp1);
+
+   DEXIT;
+   return 0;
 }

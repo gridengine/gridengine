@@ -1250,7 +1250,7 @@ lListElem *jatep
       DPRINTF(("JOB "u32": %s signal %s (retry after "u32" seconds) host: %s\n", 
             lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time, 
             lGetString(qep, QU_qhostname)));
-      te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, lGetUlong(jep, JB_job_number), 0);
+      te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number));
       lSetUlong(jatep, JAT_pending_signal, how);
       te_add(TYPE_SIGNAL_RESEND_EVENT, next_delivery_time, lGetUlong(jep, JB_job_number),
             lGetUlong(jatep, JAT_task_number), NULL);

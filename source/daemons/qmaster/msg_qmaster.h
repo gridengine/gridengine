@@ -409,6 +409,8 @@
 #define MSG_SGETEXT_MUST_BE_OPR_TO_SS                 _("denied: "SFQ" must be operator to "SFN"\n")
 #define MSG_SGETEXT_MOD_JOBS_SU                       _("modified "SFN" of job "U32CFormat"\n")     
 #define MSG_SGETEXT_DOESNOTEXIST_SU                   _(""SFN" \"" U32CFormat "\" does not exist\n")
+#define MSG_SGETEXT_DOESNOTEXISTTASK_UU               _("job \"" U32CFormat "\" task \"" U32CFormat "\" does not exist\n")
+#define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU        _("job \"" U32CFormat "\" task id range \"" U32CFormat "-" U32CFormat ":" U32CFormat "\" comprises no tasks\n")
 #define MSG_SGETEXT_NO_PROJECT                        _("job rejected: no project assigned to job\n")     
 #define MSG_SGETEXT_MOD_JATASK_SUU                    _("modified "SFN" of job-array task "U32CFormat"."U32CFormat"\n")  
 #define MSG_SGETEXT_MUST_BE_MGR_TO_SS                 _("denied: "SFQ" must be manager to "SFN"\n")

@@ -127,7 +127,7 @@ static int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger);
 
 static lCondition *job_list_filter(int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser);
 static int verify_job_list_filter(lList **alpp, int all_users_flag, int all_jobs_flag, int jid_flag, int user_list_flag, char *ruser);
-static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser);   
+static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser, int is_array, u_long32 start, u_long32 end, u_long32 step);   
 static u_long32 sge_get_job_number(void);
 static int sge_add_job(lListElem *jep, int check);
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
@@ -802,6 +802,7 @@ int sub_command
          alltasks = 1;
       }
 
+      DPRINTF(("----> alltasks = %d, start = %d, end = %d, step = %d\n", alltasks, start, end, step));
 
       /* Does user have privileges to delete the job/task? */
       if (sge_job_owner(ruser, lGetUlong(job, JB_job_number)) 
@@ -817,17 +818,25 @@ int sub_command
       jatask = lFirst(lGetList(job, JB_ja_tasks));
       while ((tmp_task = jatask)) {
          u_long32 task_number;
+
          jatask = lNext(tmp_task);
          task_number = lGetUlong(tmp_task, JAT_task_number);
-
-         if (lGetUlong(tmp_task, JAT_status) == JFINISHED)
-            continue;
-
-         njobs++; 
 
          if (task_number >= start && task_number <= end &&
             ((task_number-start)%step) == 0) {
             int spool_job = 1;
+
+            if (lGetUlong(tmp_task, JAT_status) == JFINISHED) {
+               DPRINTF(("job "U32CFormat", task "U32CFormat" already in state finished\n", job_number, task_number));
+               continue;
+            }   
+
+            njobs++; 
+
+            if(lGetUlong(idep, ID_force) == 0 && lGetUlong(tmp_task, JAT_state) & JDELETED) {
+               DPRINTF(("job "U32CFormat", task "U32CFormat" already in state deleted\n", job_number, task_number));
+               continue;
+            }   
 
             /* spool job after the deletion of the last task */      
             if (jatask) {
@@ -867,7 +876,8 @@ int sub_command
       empty_job_list_filter(alpp, 0, user_list_flag,
             lGetList(idep, ID_user_list), jid_flag,
             jid_flag?atol(lGetString(idep, ID_str)):0,
-            all_users_flag, all_jobs_flag, ruser);
+            all_users_flag, all_jobs_flag, ruser,
+            alltasks == 0 ? 1 : 0, start, end, step);
       DEXIT;
       return STATUS_EEXIST;
    }    
@@ -885,7 +895,11 @@ int jid_flag,
 u_long32 jobid,
 int all_users_flag,
 int all_jobs_flag,
-char *ruser 
+char *ruser, 
+int is_array,
+u_long32 start, 
+u_long32 end, 
+u_long32 step
 ) {
    DENTER(TOP_LAYER, "empty_job_list_filter");
 
@@ -910,7 +924,15 @@ char *ruser
    } else if (all_jobs_flag)
       ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOJOBSFORUSERS_S, ruser));
    else if (jid_flag) {
-      ERROR((SGE_EVENT,MSG_SGETEXT_DOESNOTEXIST_SU, "job", u32c(jobid)));
+      if(is_array) {
+         if(start == end) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASK_UU, u32c(jobid), u32c(start)));
+         } else {
+            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU, u32c(jobid), u32c(start), u32c(end), u32c(step)));
+         }
+      } else {
+         ERROR((SGE_EVENT,MSG_SGETEXT_DOESNOTEXIST_SU, "job", u32c(jobid)));
+      }      
    } else {
       /* Should not be possible */
       ERROR((SGE_EVENT,
@@ -1442,7 +1464,7 @@ int sub_command
       empty_job_list_filter(alpp, 1, user_list_flag,
             user_list_flag?lGetPosList(jep, user_list_pos):NULL,
             jid_flag, jid_flag?lGetPosUlong(jep, job_id_pos):0,
-            all_users_flag, all_jobs_flag, ruser);
+            all_users_flag, all_jobs_flag, ruser, 0, 0, 0, 0);
       DEXIT;
       return STATUS_EEXIST;
    }   

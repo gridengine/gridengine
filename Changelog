@@ -1,3 +1,12 @@
+JG-2001-07-24-1: qmaster - qdel:
+                 - if a job is already in state deleted additional qdel's do 
+                   not generate additional events to execd
+                 - improved error output concerning tasks to be deleted 
+                   (former output contained only job id), additional messages:
+                   job "1595" task "4" does not exist
+                   job "1595" task id range "1-4:2" comprises no tasks
+                 - fixed bug in deletion of events to be resent  
+
 JG-2001-07-24-0: Adoc: Function identifiers beginning with "-" 
                        (e.g. --Introduction) are not included in the function
                        index

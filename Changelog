@@ -1,3 +1,8 @@
+SD-2004-10-11-0: Enhancem.: added user to unable to run interactive
+                            job log message
+                 Changed:   qmaster
+                 Issue:     1296
+
 MD-2004-10-11-2: Bugfix:    fixed segfaults of clients
                  Changed:   qdel, qalter, qevent, qacct, qhost
 

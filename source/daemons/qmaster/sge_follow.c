@@ -888,7 +888,8 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
          }
          INFO((SGE_EVENT, MSG_JOB_NOFREERESOURCEIA_UU, 
                u32c(lGetUlong(jep, JB_job_number)), 
-               u32c(lGetUlong(jatp, JAT_task_number))));
+               u32c(lGetUlong(jatp, JAT_task_number)),
+               lGetString(jep, JB_owner)));
 
          /* remove it */
          sge_commit_job(jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN);

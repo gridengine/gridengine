@@ -1717,7 +1717,7 @@ if ( "$QMON" == 1 ) then
          $argv
    if ( $status != 0 ) then
       echo not done
-      exit 0; exit 1
+      exit 1
    endif
    
    cd $SOURCE
@@ -1750,7 +1750,7 @@ if ( "$REMOTE" == 1) then
 
    if ( $status != 0 ) then
       echo not done
-      exit 0; exit 1
+      exit 1
    endif
 
    cd $SOURCE
@@ -1765,7 +1765,7 @@ if ( "$QMAKE" == 1) then
 
    if ( $status != 0 ) then
       echo not done
-      exit 0; exit 1
+      exit 1
    endif
 
    cd $SOURCE
@@ -1811,7 +1811,7 @@ if ( "$QTCSH" == 1) then
 
    if ( $status != 0 ) then
       echo not done
-      exit 0; exit 1
+      exit 1
    endif
 
    if ( $SHAREDLIBS == 1 ) then
@@ -1838,7 +1838,7 @@ if ( "$ADOC" == 1) then
 
    if ( $status != 0 ) then
       echo not done
-      exit 0; exit 1
+      exit 1
    endif
 
    cd $SOURCE

@@ -1,3 +1,8 @@
+DT-2004-05-28-3: Bugfix:    o Changed to DRMAA howto
+                            o Added file staging howto
+                 Changed:   howtos
+                 Issue:     952
+
 MD-2004-05-28-0: Bugfix:    - some file creation/deletion
                             - hints
                             - logging

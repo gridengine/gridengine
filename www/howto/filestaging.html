@@ -1,0 +1,265 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<HTML>
+   <HEAD>
+      <TITLE>Delegated File Staging with Grid Engine 6.0</TITLE>
+   </HEAD>
+   <BODY>
+   <H1>
+      <FONT COLOR="#336699">
+         How does file staging work?
+      </FONT>
+   </H1>
+
+   <P STYLE="margin-bottom: 0cm">
+      When the submit host and the execution host do not have access to a
+      common, shared file system or are simply using different root directories,
+      the necessary job data must be copied (via rcp or a similar utility) to
+      the execution host, and the job results must be copied back to the submit
+      host.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Because such a file staging mechanism must be very flexible and fully
+      configurable, it is desirable to let the actual copying be handled by the
+      system itself, such as by a script written by the administrator, so that
+      one can focus on just the necessary data.  Because the actual work of
+      copying is delegated to the system, i.e. the script, the term
+      &quot;delegated file staging&quot; is used.  With delegated file staging
+      in the Grid Engine 6.0 release two scripts are needed.  The first is
+      called in the prolog and copies the input data to the selected execution
+      host.  The second is called in the epilog and copies the results to the
+      submit host.
+   </P>
+
+   <H1>
+      <FONT COLOR="#336699">
+         What do the delegated file staging scripts do?
+      </FONT>
+   </H1>
+
+   <P STYLE="margin-bottom: 0cm">
+      The scripts must, at a minimum, copy the stdin, stdout, and stderr files
+      either from the submit host to the execution host or vice versa.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      The additional needed information is obtained by the script from
+      command-line parameters, which can be set in the cluster configuration
+      using the &quot;qconf -mconf&quot; command.  Under &quot;prolog&quot;,
+      after the path to the prolog script(s), the following variables can be
+      given to be replaced automatically by the DRM with the appropriate,
+      corresponding values when the prolog is called:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <TABLE border=1 width="600">
+         <TR>
+            <TD width='200'>
+               $fs_stdin_file_staging
+            </TD>
+            <TD rowspan='3' width='400'>
+               <P STYLE="margin-bottom: 0cm">
+                  The values of these variables at the time the prolog is called
+                  will either be &quot;1&quot; or &quot;0&quot;, according to
+                  whether file staging is enabled for that particular data type.
+               </P>
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdout_file_staging
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stderr_file_staging
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdin_host
+            </TD>
+            <TD rowspan='3'>
+               <P STYLE="margin-bottom: 0cm">
+                  The values of these variables at the time the prolog is called
+                  will be the names of the hosts from which the data is to be
+                  copied.
+               </P>
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdout_host
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stderr_host
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdin_path
+            </TD>
+            <TD rowspan='3'>
+               <P STYLE="margin-bottom: 0cm">
+                  The values of these variables at the time the prolog is called
+                  will be the path (relative to the respective hosts) to the
+                  data to be copied.
+               </P>
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdout_path
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stderr_path
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdin_tmp_path
+            </TD>
+            <TD rowspan='3'>
+               <P STYLE="margin-bottom: 0cm">
+                  The values of these variables at the time the prolog is called
+                  will be the path to where the data is to be copied.
+               </P>
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stdout_tmp_path
+            </TD>
+         </TR>
+         <TR>
+            <TD>
+               $fs_stderr_tmp_path
+            </TD>
+         </TR>
+      </TABLE>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      A typical call to a prolog script, i.e. what would appear in
+      &quot;qconf -mconf&quot; would look like:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         <CODE>
+            prolog    /..../scripts/fs_prolog.sh $fs_stdin_file_staging \</BR>
+            $fs_stdin_host $fs_stdin_path $fs_stdin_tmp_path
+         </CODE>
+      </UL>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      and a typical call to an epilog script would look like:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         <CODE>
+            epilog   /..../scripts/fs_epilog.sh $fs_stdout_file_staging \</BR>
+            $fs_stdout_host $fs_stdout_path $fs_stdout_tmp_path \</BR>
+            $fs_stderr_file_staging $fs_stderr_host $fs_stderr_path
+            $fs_stderr_tmp_path
+         </CODE>
+      </UL>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      The following must then appear in the prolog script:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         (In pseudo-code)<BR><BR>
+<PRE>...
+if( $1 ) then
+   rcp $2:$3 $4
+endif
+...
+</PRE>
+      </UL>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      and similarly in the epilog script:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         (In pseudo-code)<BR><BR>
+<PRE>...
+if( $1 ) then
+   rcp $4 $2:$3
+endif
+
+if( $5 ) then
+   rcp $8 $6:$7
+endif
+...</PRE>
+      </UL>
+   </P>
+
+   <H1>
+      <FONT COLOR="#336699">
+         And then it works?
+      </FONT>
+   </H1>
+
+   <P STYLE="margin-bottom: 0cm">
+      Almost.  The administrator must add the following entry to the cluster
+      configuration:
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      <UL>
+         <CODE>
+            delegated_file_staging   true
+         </CODE>
+      </UL>
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Now delegated file staging is available for use.
+   </P>
+
+   <H1>
+      <FONT COLOR="#336699">
+         And how does one use the thing?
+      </FONT>
+   </H1>
+
+   <P STYLE="margin-bottom: 0cm">
+      From this point forward, we are talking specifically about using delegated
+      file staging with DRMAA.  For more information on DRMAA, see the
+      <A HREF="drmaa.html">DRMAA howto</A>.
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      Because drmaa_transfer_files is an optional attribute in DRMAA, the first
+      thing an application must do is use drmaa_get_attribute_names() to
+      determine if the attribute is supported by the DRMAA implementation in
+      use.  The DRMAA implementation provided with Grid Engine 6.0 only supports
+      the drmaa_transfer_files attribute when <CODE>delegated_file_staging
+      true</CODE> is enabled in the cluster configuration.  (See the previous
+      section.)
+   </P>
+
+   <P STYLE="margin-bottom: 0cm">
+      If the drmaa_transfer_files attribute is available, the application can
+      set this attribute's value to one of following: &quot;i&quot;,
+      &quot;o&quot;, &quot;e&quot;, or a concatinated combination of the three,
+      such as &quot;oi&quot;.  Each letter, if present in the attribute's value
+      indicated that the corresponding data source should be copied using
+      delegated file tranferal.
+   </P>
+   </BODY>
+</HTML>

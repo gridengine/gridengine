@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 
    start_heartbeat();
 
-   sge_setup_qmaster(argv);
+   sge_setup_qmaster(argv);  /* setup communication etc. */
    setup_lock_service();
 
    pthread_create(&(thrds[0]), NULL, signal_thread, NULL);

@@ -107,7 +107,7 @@ int main(int argc,char *argv[])
   
      printf(MSG_SYSTEM_ADDRESSES );
      for (tp2 = he->h_addr_list; *tp2; tp2++)
-        printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));
+        printf("%s ", inet_ntoa(* (struct in_addr *) *tp2)); /* inet_ntoa() is not MT save */
      printf("\n");  
   }
   

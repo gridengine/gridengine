@@ -68,9 +68,10 @@ main(int argc, char** argv)
 
   printf("reslovling host addr 129.157.141.10 ...\n");
   addr = inet_makeaddr(129*256+157,141*256+10);
-  printf("ip addr: %s\n",inet_ntoa(addr));
+  printf("ip addr: %s\n",inet_ntoa(addr));  /* inet_ntoa() is not MT save */
   addr2 = inet_makeaddr(192*256+168,11*256+1);
-  printf("ip addr2: %s\n",inet_ntoa(addr2));
+  printf("ip addr2: %s\n",inet_ntoa(addr2));  /* inet_ntoa() is not MT save */
+
 
 
   while ((loops--) != 0) { 
@@ -87,7 +88,8 @@ main(int argc, char** argv)
            rhost = NULL;
         }
    
-        printf("cl_com_gethostbyaddr ... %s\n", inet_ntoa(addr));
+        printf("cl_com_gethostbyaddr ... %s\n", inet_ntoa(addr)); /* inet_ntoa() is not MT save */
+
         retval = cl_com_cached_gethostbyaddr(&addr, &rhost);
         printf("%s\n",cl_get_error_text(retval));
    
@@ -97,7 +99,8 @@ main(int argc, char** argv)
         free(rhost);
         rhost = NULL;
    
-        printf("cl_com_gethostbyaddr ... %s\n",inet_ntoa(addr2) );
+        printf("cl_com_gethostbyaddr ... %s\n",inet_ntoa(addr2) ); /* inet_ntoa() is not MT save */
+
    
         retval = cl_com_cached_gethostbyaddr(&addr2, &rhost);
         printf("%s\n",cl_get_error_text(retval));

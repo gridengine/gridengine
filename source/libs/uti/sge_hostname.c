@@ -544,8 +544,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 
    /* warn about blocking gethostbyaddr() calls */
    if (time > MAX_RESOLVER_BLOCKING) {
-      WARNING((SGE_EVENT, "gethostbyaddr(%s) took %d seconds and returns %s\n", 
-            inet_ntoa(*addr), time, he?"success":
+      WARNING((SGE_EVENT, "gethostbyaddr() took %d seconds and returns %s\n", time, he?"success":
           (l_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
           (l_errno == TRY_AGAIN)?"TRY_AGAIN":
           (l_errno == NO_RECOVERY)?"NO_RECOVERY":
@@ -965,7 +964,7 @@ host *sge_host_search(const char *name, char *addr)
 *     FILE *fp - file 
 *
 *  NOTES
-*     MT-NOTE: sge_host_print() is MT safe
+*     MT-NOTE: sge_host_print() is NOT MT safe ( because of inet_ntoa() call)
 ******************************************************************************/
 void sge_host_print(host *h, FILE *fp) 
 {

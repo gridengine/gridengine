@@ -1,3 +1,10 @@
+CR-2004-01-19-0: Bugfix:    - changed debug level of communication system from
+                              TOP_LAYER to COMMD_LAYER
+                            - removed not necessary calls to not thread save
+                              function inet_ntoa() and changed thread safety
+                              comments
+                 Changed:   qmaster, util lib, gdi lib (all binaries)
+
 EB-2004-01-19-0: Bugfix:    qstat -g xxx did not show error message for
                             characters which are not allowed
                  Changed:   qstat

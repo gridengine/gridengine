@@ -590,7 +590,7 @@ static int qmaster_log_flush_func(cl_raw_list_t* list_p)
    int ret_val;
    cl_log_list_elem_t* elem = NULL;
 
-   DENTER(TOP_LAYER, "qmaster_log_flush_func");
+   DENTER(COMMD_LAYER, "qmaster_log_flush_func");
 
    if (list_p == NULL) {
       DEXIT;

@@ -352,15 +352,25 @@ MakeCAcert()
 #
 MakeRandFile()
 {
-   if [ -f /dev/random ]; then 
-      rfile=/dev/random
-   elif [ -f /kernel/genunix ]; then
-      rfile=/kernel/genunix
-   elif [ -f /bin/vi ]; then
-      rfile=/bin/vi
+   # OpenSSL uses /dev/urandom by default so if it's there, don't
+   # polute the PRNG with predictable data.
+   rfile=""
+   if [ ! -r /dev/urandom ]; then
+      if [ -f /dev/random ]; then 
+         rfile=/dev/random
+      elif [ -f /kernel/genunix ]; then
+         rfile=/kernel/genunix
+      elif [ -f /bin/vi ]; then
+         rfile=/bin/vi
+      fi
    fi
-   $INFOTEXT "Creating RANDFILE from >%s< in >%s<" $rfile $1
-   ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $1 2048
+   if [ -n "$rfile" ]; then
+      $INFOTEXT "Creating RANDFILE from >%s< in >%s<" $rfile $1
+      ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $1 2048
+   else
+      $INFOTEXT "Creating RANDFILE in >%s<" $1
+      ExecuteAsAdmin $OPENSSL rand -out $1 2048
+   fi
 }
 
 #--------------------------------------------------------------------------

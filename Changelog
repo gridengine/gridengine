@@ -1,3 +1,6 @@
+BD-2003-04-11-0  Bugfix:    Don't try to choose an external PRNG seed
+                            when the default (/dev/urandom) exists.
+                            
 BD-2003-04-10-3  Bugfix:    Install the startup script on FreeBSD.
 
 BD-2003-04-10-2  Bugfix:    Use $ROOTGROUP not literal "root".

@@ -198,6 +198,12 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
 
       lSetList(*pjob, JB_ja_structure, new_range_list);
       lRemoveElem(cmdline, ep);
+   
+      {
+         u_long32 job_type = lGetUlong(*pjob, JB_type);
+         JOB_TYPE_SET_ARRAY(job_type);
+         lSetUlong(*pjob, JB_type, job_type);
+      }
    } else {
       job_set_submit_task_ids(*pjob, 1, 1, 1);
    }

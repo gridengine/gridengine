@@ -317,7 +317,7 @@ void cull_show_job(lListElem *job, int flags)
          printf("env_list:                   ");
 
          print = lGetList(job, JB_env_list);
-         var_list_split_prefix_vars(print, &do_not_print, VAR_PREFIX);
+         var_list_split_prefix_vars(&print, &do_not_print, VAR_PREFIX);
          uni_print_list(stdout, NULL, 0, print, 
             fields, delis, FLG_NO_DELIS_STRINGS);
          if (lGetNumberOfElem(print) > 0) {

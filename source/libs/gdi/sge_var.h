@@ -35,18 +35,28 @@
 #include "sge_varL.h"
 
 #define VAR_PREFIX "__SGE_PREFIX__"
+#define VAR_PREFIX_NR "__SGE_PREFIX2__"
 #define VAR_COMPLEX_PREFIX "SGE_COMPLEX_"
 
 void var_list_dump_to_file(const lList *varl, FILE *file);
 
-void var_list_copy_complex_vars_and_value(lList *varl,
+void var_list_copy_complex_vars_and_value(lList **varl,
                                           const lList* src_varl,
                                           const lList* cplx_list);
 
-void var_list_copy_prefix_vars(lList *varl, 
+void var_list_copy_env_vars_and_value(lList **varl,
+                                      const lList* src_varl,
+                                      const char *ignore_prefix);
+
+void var_list_copy_prefix_vars(lList **varl, 
                                const lList *src_varl,
                                const char *prefix, 
                                const char *new_prefix);
+
+void var_list_copy_prefix_vars_undef(lList **varl, 
+                                     const lList *src_varl,
+                                     const char *prefix, 
+                                     const char *new_prefix);
 
 const char* var_list_get_string(lList *varl, const char *name);
 
@@ -58,9 +68,9 @@ void var_list_set_u32(lList **varl, const char *name, u_long32 value);
 
 void var_list_set_sharedlib_path(lList **varl);
 
-void var_list_remove_prefix_vars(lList *varl, const char *prefix);
+void var_list_remove_prefix_vars(lList **varl, const char *prefix);
 
-void var_list_split_prefix_vars(lList *varl,
+void var_list_split_prefix_vars(lList **varl,
                                 lList **pefix_vars,
                                 const char *prefix);
 

@@ -50,7 +50,12 @@
 #define JOB_TYPE_QLOGIN     0x04L
 #define JOB_TYPE_QRSH       0x08L
 #define JOB_TYPE_QRLOGIN    0x10L
+
+/* submitted via "qsub -b y" or "qrsh [-b y]" */ 
 #define JOB_TYPE_BINARY     0x20L
+
+/* array job (qsub -t ...) */
+#define JOB_TYPE_ARRAY      0x40L
 
 #define JOB_TYPE_QXXX_MASK \
    (JOB_TYPE_QSH | JOB_TYPE_QLOGIN | JOB_TYPE_QRSH | JOB_TYPE_QRLOGIN)
@@ -82,12 +87,16 @@
 #define JOB_TYPE_SET_BINARY(jb_now) \
    jb_now = jb_now | JOB_TYPE_BINARY
 
+#define JOB_TYPE_SET_ARRAY(jb_now) \
+   jb_now = jb_now | JOB_TYPE_ARRAY
+
 #define JOB_TYPE_IS_IMMEDIATE(jb_now)      (jb_now & JOB_TYPE_IMMEDIATE)
 #define JOB_TYPE_IS_QSH(jb_now)            (jb_now & JOB_TYPE_QSH)
 #define JOB_TYPE_IS_QLOGIN(jb_now)         (jb_now & JOB_TYPE_QLOGIN)
 #define JOB_TYPE_IS_QRSH(jb_now)           (jb_now & JOB_TYPE_QRSH)
 #define JOB_TYPE_IS_QRLOGIN(jb_now)        (jb_now & JOB_TYPE_QRLOGIN)
 #define JOB_TYPE_IS_BINARY(jb_now)         (jb_now & JOB_TYPE_BINARY)
+#define JOB_TYPE_IS_ARRAY(jb_now)          (jb_now & JOB_TYPE_ARRAY)
 
 
 extern lList *Master_Job_List;

@@ -2700,6 +2700,7 @@ int *trigger
    /* ---- JB_env_list */
    if ((pos=lGetPosViaElem(jep, JB_env_list))>=0) {
       lList *prefix_vars = NULL;
+      lList *tmp_var_list = NULL;
 
       DPRINTF(("got new JB_env_list\n")); 
       
@@ -2715,8 +2716,8 @@ int *trigger
       /* save existing prefix env vars from being overwritten
          TODO: can we rule out that after that step a prefix 
                env var appears two times in the env var list ? */
-      var_list_split_prefix_vars(lGetList(new_job, JB_env_list), 
-                                 &prefix_vars, VAR_PREFIX);
+      tmp_var_list = lGetList(new_job, JB_env_list);
+      var_list_split_prefix_vars(&tmp_var_list, &prefix_vars, VAR_PREFIX);
       lSetList(new_job, JB_env_list, 
                lCopyList("", lGetList(jep, JB_env_list)));
       lAddList(lGetList(new_job, JB_env_list), prefix_vars);

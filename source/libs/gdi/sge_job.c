@@ -1104,10 +1104,9 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 ******************************************************************************/
 int job_is_array(const lListElem *job)
 {
-   u_long32 start, end, step;
+   u_long32 job_type = lGetUlong(job, JB_type);
 
-   job_get_submit_task_ids(job, &start, &end, &step);
-   return (start != 1 || end != 1 || step != 1);
+   return JOB_TYPE_IS_ARRAY(job_type);
 }  
 
 /****** gdi/job/job_is_parallel() *********************************************
@@ -1337,7 +1336,6 @@ int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
       lSetUlong(range_elem, RN_max, end);
       lSetUlong(range_elem, RN_step, step);
    }
-
    return ret;
 }          
 
@@ -1811,6 +1809,7 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
          lListElem *range = NULL;
 
          for_each(range, range_list) {
+            range_correct_end(range);
             if (range_is_id_within(range, 0)) {
                ERROR((SGE_EVENT, MSG_JOB_NULLNOTALLOWEDT));
                answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
@@ -1818,7 +1817,6 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
                DEXIT;
                return;
             }
-            range_correct_end(range);
          }
       }
    }    

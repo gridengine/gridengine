@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/11/04 13:35:33 $     Revision: $Revision: 1.22 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/11/14 14:30:59 $     Revision: $Revision: 1.23 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/11/04 13:35:33 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/11/14 14:30:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1493,16 +1493,21 @@ account and commonly is not open for read or write access to regular users.
 The index number of the current array job task (see \fB\-t\fP option
 above). This is an unique number in each array job and can be used to
 reference different input data records, for example. This environment
-variable is set to "undefined" for non-array jobs.
+variable is set to "undefined" for non-array jobs. It is possible to
+change the predefined value of this variable with \fB\-v\fP or \fB\-V\fP
+(see options above).
 .IP xxQS_NAME_Sxx_TASK_FIRST 1.5i
 The index number of the first array job task (see \fB\-t\fP option
-above). 
+above). It is possible to change the predefined value of this variable with
+\fB\-v\fP or \fB\-V\fP (see options above).
 .IP xxQS_NAME_Sxx_TASK_LAST 1.5i
 The index number of the last array job task (see \fB\-t\fP option
-above).
+above). It is possible to change the predefined value of this variable with
+\fB\-v\fP or \fB\-V\fP (see options above).
 .IP xxQS_NAME_Sxx_TASK_STEPSIZE 1.5i
 The stepsize of the array job specification (see \fB\-t\fP option
-above).
+above). It is possible to change the predefined value of this variable with
+\fB\-v\fP or \fB\-V\fP (see options above).
 .IP "ENVIRONMENT" 1.5i
 The ENVIRONMENT variable is set to BATCH to identify that the job is being
 executed under xxQS_NAMExx control.

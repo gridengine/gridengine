@@ -2012,7 +2012,6 @@ int save
 
       range_list_parse_from_string(&range_list, &alp, data->job_tasks,
                                    0, 1, INF_NOT_ALLOWED);
-      range_list = lFreeList(range_list);
 
       if (alp) {
          qmonMessageBox(qmon_submit, alp, 0);
@@ -2026,6 +2025,11 @@ int save
       } else {
          if (!reduced_job) {
             lSetList(jep, JB_ja_structure, range_list);
+         }
+         {
+            u_long32 job_type = lGetUlong(jep, JB_type);
+            JOB_TYPE_SET_ARRAY(job_type);
+            lSetUlong(jep, JB_type, job_type);
          } 
       } 
 

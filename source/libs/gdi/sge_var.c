@@ -121,7 +121,7 @@ static const char *var_get_sharedlib_path_name(void)
 *     var_list_set_string -- add/change an variable
 *
 *  SYNOPSIS
-*     void var_list_set_string(lList *varl, 
+*     void var_list_set_string(lList **varl, 
 *                              const char *name, 
 *                              const char *value);
 *
@@ -131,9 +131,9 @@ static const char *var_get_sharedlib_path_name(void)
 *     Otherwise, its value is overwritten with <value>
 *
 *  INPUTS
-*     varl  - VA_Type list
-*     name  - the name of the variable
-*     value - the (new) value of the variable
+*     lList **varl      - VA_Type list
+*     const char *name  - the name of the variable
+*     const char *value - the (new) value of the variable
 *
 *  SEE ALSO
 *     gdi/var/var_list_set_int()
@@ -196,7 +196,7 @@ void var_list_set_int(lList **varl, const char *name, int value)
 *     var_list_set_u32 -- add/change a variable
 *
 *  SYNOPSIS
-*     void var_list_set_u32(lList *varl, 
+*     void var_list_set_u32(lList **varl, 
 *                           const char *name, 
 *                           u_long32 value);
 *
@@ -206,9 +206,9 @@ void var_list_set_int(lList **varl, const char *name, int value)
 *     Otherwise, its value is overwritten with <value>
 *
 *  INPUTS
-*     varl  - VA_Type list
-*     name  - the name of the variable
-*     value - the (new) value of the variable
+*     lList **varl      - VA_Type list
+*     const char *name  - the name of the variable
+*     u_long32 value    - the (new) value of the variable
 *
 *  SEE ALSO
 *     gdi/var/var_list_set_string()
@@ -230,7 +230,7 @@ void var_list_set_u32(lList **varl, const char *name, u_long32 value)
 *     var_list_set_sharedlib_path -- set shared lib path
 *
 *  SYNOPSIS
-*     void var_list_set_sharedlib_path(lList varl);
+*     void var_list_set_sharedlib_path(lList **varl);
 *
 *  FUNCTION
 *     Sets or replaces the shared lib path in the list of variables.
@@ -239,7 +239,7 @@ void var_list_set_u32(lList **varl, const char *name, u_long32 value)
 *     (security, see var_get_sharedlib_path_name())
 *
 *  INPUTS
-*     varl - list of nment variables
+*     lList **varl - list of nment variables
 *
 *  SEE ALSO
 *     gdi/var/var_get_sharedlib_path_name()
@@ -300,7 +300,7 @@ void var_list_set_sharedlib_path(lList **varl)
 *     void var_list_dump_to_file(const lList *varl, FILE *file);
 *
 *  FUNCTION
-*     Parses the list of type VA_type <varl> containing the
+*     Parses the list of type VA_Type <varl> containing the
 *     description of variables.
 *     Dumps all list elements to <file> in the format:
 *     <name>=<value>
@@ -366,7 +366,7 @@ const char* var_list_get_string(lList *varl, const char *variable)
 *     var_list_copy_prefix_vars() -- copy vars with certain prefix 
 *
 *  SYNOPSIS
-*     void var_list_copy_prefix_vars(lList *varl, 
+*     void var_list_copy_prefix_vars(lList **varl, 
 *                                    const lList *src_varl,
 *                                    const char *prefix, 
 *                                    const char *new_prefix) 
@@ -378,7 +378,7 @@ const char* var_list_get_string(lList *varl, const char *variable)
 *     "varl".
 *
 *  INPUTS
-*     lList *varl            - VA_Type list 
+*     lList **varl           - VA_Type list 
 *     const char *prefix     - prefix string (e.g. VAR_PREFIX) 
 *     const char *new_prefix - new prefix string (e.g. "SGE_") 
 *
@@ -388,7 +388,7 @@ const char* var_list_get_string(lList *varl, const char *variable)
 *  SEE ALSO
 *     gdi/var/var_list_remove_prefix_vars()
 ******************************************************************************/
-void var_list_copy_prefix_vars(lList *varl, 
+void var_list_copy_prefix_vars(lList **varl, 
                                const lList *src_varl,
                                const char *prefix, 
                                const char *new_prefix)
@@ -411,7 +411,71 @@ void var_list_copy_prefix_vars(lList *varl,
          var_list_set_string(&var_list2, name, value);
       }
    }
-   lAddList(varl, var_list2); 
+   if (*varl == NULL) {
+      *varl = lCreateList("", VA_Type);
+   }
+   lAddList(*varl, var_list2); 
+   DEXIT;
+}
+
+/****** gdi/var/var_list_copy_prefix_vars() ***********************************
+*  NAME
+*     var_list_copy_prefix_vars() -- copy vars with certain prefix 
+*
+*  SYNOPSIS
+*     void var_list_copy_prefix_vars(lList **varl, 
+*                                    const lList *src_varl,
+*                                    const char *prefix, 
+*                                    const char *new_prefix) 
+*
+*  FUNCTION
+*     Make a copy of all entries in "src_varl" 
+*     beginning with "prefix". "prefix" is replaced by "new_prefix"
+*     for all created elements. The new elements will be added to 
+*     "varl" if it is undefined in "varl".
+*
+*  INPUTS
+*     lList **varl           - VA_Type list 
+*     const char *prefix     - prefix string (e.g. VAR_PREFIX_NR) 
+*     const char *new_prefix - new prefix string (e.g. "SGE_") 
+*
+*  EXAMPLE
+*     "__SGE_PREFIX2__TASK_ID" ===> "SGE_TASK_ID 
+*
+*  SEE ALSO
+*     gdi/var/var_list_remove_prefix_vars()
+******************************************************************************/
+void var_list_copy_prefix_vars_undef(lList **varl, 
+                                     const lList *src_varl,
+                                     const char *prefix, 
+                                     const char *new_prefix)
+{
+   int prefix_len = strlen(prefix);
+   lListElem *var_elem = NULL;
+   lList *var_list2 = NULL;
+
+   DENTER(TOP_LAYER, "var_list_copy_prefix_vars");
+   for_each(var_elem, src_varl) {
+      const char *prefix_name = lGetString(var_elem, VA_variable);
+      const char *value = lGetString(var_elem, VA_value);
+      char *name_without_prefix = (char*)(prefix_name + prefix_len);
+
+      if (!strncmp(prefix_name, prefix, prefix_len)) {
+         char name[MAX_STRING_SIZE];
+         lListElem *existing_variable;
+
+         prefix_name += prefix_len;
+         sprintf(name, "%s%s", new_prefix, name_without_prefix);
+         existing_variable = lGetElemStr(*varl, VA_variable, name);
+         if (existing_variable == NULL) {
+            var_list_set_string(&var_list2, name, value);
+         }
+      }
+   }
+   if (*varl == NULL) {
+      *varl = lCreateList("", VA_Type);
+   }
+   lAddList(*varl, var_list2); 
    DEXIT;
 }
 
@@ -420,9 +484,9 @@ void var_list_copy_prefix_vars(lList *varl,
 *     var_list_copy_complex_vars_and_value() -- copy certain vars 
 *
 *  SYNOPSIS
-*     void var_list_copy_complex_vars_and_value(lList *varl, 
-*                                               const lList* src_varl, 
-*                                               const lList* cplx_list) 
+*     void var_list_copy_complex_vars_and_value(lList **varl, 
+*                                               const lList *src_varl, 
+*                                               const lList *cplx_list) 
 *
 *  FUNCTION
 *     Copy all variables from "src_varl" into
@@ -434,11 +498,11 @@ void var_list_copy_prefix_vars(lList *varl,
 *     SGE_COMPLEX_hostname="" ==> SGE_COMPLEX_hostname="fangorn.sun.com" 
 *
 *  INPUTS
-*     lList *varl            - VA_Type list 
-*     const lList* src_varl  - source VA_Type list 
-*     const lList* cplx_list - complex list 
+*     lList **varl           - VA_Type list 
+*     const lList *src_varl  - source VA_Type list 
+*     const lList *cplx_list - complex list 
 ******************************************************************************/
-void var_list_copy_complex_vars_and_value(lList *varl,
+void var_list_copy_complex_vars_and_value(lList **varl,
                                           const lList* src_varl,
                                           const lList* cplx_list)
 {
@@ -456,16 +520,61 @@ void var_list_copy_complex_vars_and_value(lList *varl,
             const char *value = lGetString(attr, CE_stringval);
    
             if (value != NULL) {
-               var_list_set_string(&varl, name, value);
+               var_list_set_string(varl, name, value);
             } else {
-               var_list_set_string(&varl, name, "");
+               var_list_set_string(varl, name, "");
             }
          } else {
-            var_list_set_string(&varl, name, "");
+            var_list_set_string(varl, name, "");
          }
       }
    }
    DEXIT;
+}
+
+/****** gdi/var/var_list_copy_env_vars_and_value() ***************************
+*  NAME
+*     var_list_copy_env_vars_and_value() -- Copy env. vars 
+*
+*  SYNOPSIS
+*     void var_list_copy_env_vars_and_value(lList **varl, 
+*                                           const lList *src_varl, 
+*                                           const char *ignore_prefix) 
+*
+*  FUNCTION
+*     Copy all variables from "src_varl" into "varl". Ignore
+*     all variables beginning with "ignore_prefix".
+*
+*  INPUTS
+*     lList **varl           - VA_Type list 
+*     const lList *src_varl  - source VA_Type list 
+*     const lList *cplx_list - complex list 
+*
+*  RESULT
+*     void - none
+******************************************************************************/
+void var_list_copy_env_vars_and_value(lList **varl,
+                                      const lList* src_varl,
+                                      const char *ignore_prefix) 
+{
+   lListElem *env;
+   int n = strlen(ignore_prefix);
+
+   for_each(env, src_varl) {
+      const char *s, *name;
+
+      /*
+       * var_list_copy_complex_vars_and_value() might be used to handle 
+       * variables which will skip now 
+       */
+      name = lGetString(env, VA_variable);
+      if (n > 0 && !strncmp(name, ignore_prefix, n)) {
+         continue; 
+      }
+
+      s = lGetString(env, VA_value);
+      var_list_set_string(varl, name, s ? s : "");
+   }
 }
 
 /****** gdi/var/var_list_remove_prefix_vars() *********************************
@@ -473,7 +582,7 @@ void var_list_copy_complex_vars_and_value(lList *varl,
 *     var_list_remove_prefix_vars() -- remove vars with certain prefix 
 *
 *  SYNOPSIS
-*     void var_list_remove_prefix_vars(lList *varl, 
+*     void var_list_remove_prefix_vars(lList **varl, 
 *                                      const char *prefix) 
 *
 *  FUNCTION
@@ -481,26 +590,26 @@ void var_list_copy_complex_vars_and_value(lList *varl,
 *     beginns with "prefix" 
 *
 *  INPUTS
-*     lList *varl        - VA_Type list 
+*     lList **varl       - VA_Type list 
 *     const char *prefix - prefix string (e.g. VAR_PREFIX) 
 *
 *  SEE ALSO
 *     gdi/var/var_list_remove_prefix_vars()
 *******************************************************************************/
-void var_list_remove_prefix_vars(lList *varl, const char *prefix)
+void var_list_remove_prefix_vars(lList **varl, const char *prefix)
 {
    int prefix_len = strlen(prefix);
    lListElem *var_elem = NULL;
    lListElem *next_var_elem = NULL;
 
    DENTER(TOP_LAYER, "var_list_remove_prefix_vars");
-   next_var_elem = lFirst(varl);
+   next_var_elem = lFirst(*varl);
    while((var_elem = next_var_elem)) {
       const char *prefix_name = lGetString(var_elem, VA_variable);
       next_var_elem = lNext(var_elem);
 
       if (!strncmp(prefix_name, prefix, prefix_len)) {
-         lRemoveElem(varl, var_elem);
+         lRemoveElem(*varl, var_elem);
       } 
    }
    DEXIT;
@@ -512,7 +621,7 @@ void var_list_remove_prefix_vars(lList *varl, const char *prefix)
 *     var_list_split_prefix_vars() -- split a list of variables 
 *
 *  SYNOPSIS
-*     void var_list_split_prefix_vars(lList *varl, 
+*     void var_list_split_prefix_vars(lList **varl, 
 *                                     lList **pefix_vars, 
 *                                     const char *prefix) 
 *
@@ -522,7 +631,7 @@ void var_list_remove_prefix_vars(lList *varl, const char *prefix)
 *     exist.
 *
 *  INPUTS
-*     lList *varl        - VA_Type list 
+*     lList **varl        - VA_Type list 
 *     lList **pefix_vars - pointer to VA_Type list 
 *     const char *prefix - string (e.g. VAR_PREFIX) 
 *
@@ -532,7 +641,7 @@ void var_list_remove_prefix_vars(lList *varl, const char *prefix)
 *  SEE ALSO
 *     gdi/var/var_list_remove_prefix_vars()
 *******************************************************************************/
-void var_list_split_prefix_vars(lList *varl, 
+void var_list_split_prefix_vars(lList **varl, 
                                 lList **pefix_vars, 
                                 const char *prefix)
 {
@@ -541,13 +650,13 @@ void var_list_split_prefix_vars(lList *varl,
    lListElem *next_var_elem = NULL;
 
    DENTER(TOP_LAYER, "var_list_remove_prefix_vars");
-   next_var_elem = lFirst(varl);
+   next_var_elem = lFirst(*varl);
    while((var_elem = next_var_elem)) {
       const char *prefix_name = lGetString(var_elem, VA_variable);
       next_var_elem = lNext(var_elem);
 
       if (!strncmp(prefix_name, prefix, prefix_len)) {
-         lListElem *dechained_elem = lDechainElem(varl, var_elem);
+         lListElem *dechained_elem = lDechainElem(*varl, var_elem);
 
          if (*pefix_vars == NULL) {
             *pefix_vars = lCreateList("", VA_Type);

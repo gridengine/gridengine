@@ -265,7 +265,7 @@ char *err_str
    lListElem *gdil_ep, *master_q;
    lListElem *ep;
    lListElem *env;
-   lList *environmentList;
+   lList *environmentList = NULL;
    const char *arch = sge_get_arch();
 
    int write_osjob_id = 1;
@@ -285,8 +285,6 @@ char *err_str
    if(petep != NULL) {
       pe_task_id = lGetString(petep, PET_id);
    }
-
-   environmentList = lCreateList("environment list", VA_Type);
 
    DPRINTF(("job: %ld jatask: %ld petask: %s\n", 
       job_id, ja_task_id,
@@ -420,33 +418,15 @@ char *err_str
    }
 
    /* write environment of job */
-   {   
-      const char *s, *name;
-      int n = strlen(VAR_COMPLEX_PREFIX);
-
-      for_each(env, lGetList(jep, JB_env_list)) {
-         name = lGetString(env, VA_variable);
-         if (!strncmp(name, VAR_COMPLEX_PREFIX, n)) 
-            continue; /* we handle them later on in var_list_copy_complex_vars_and_value() */
-
-         s = lGetString(env, VA_value);
-         var_list_set_string(&environmentList, name, s ? s : "");
-      }
-   }
+   var_list_copy_env_vars_and_value(&environmentList, 
+                                    lGetList(jep, JB_env_list),
+                                    VAR_COMPLEX_PREFIX);
 
    /* write environment of petask */
-   if(petep != NULL) {
-      const char *s, *name;
-      int n = strlen(VAR_COMPLEX_PREFIX);
-
-      for_each(env, lGetList(petep, PET_environment)) {
-         name = lGetString(env, VA_variable);
-         if (!strncmp(name, VAR_COMPLEX_PREFIX, n)) 
-            continue; /* we handle them later on in var_list_copy_complex_vars_and_value() */
-
-         s = lGetString(env, VA_value);
-         var_list_set_string(&environmentList, name, s ? s : "");
-      }
+   if (petep != NULL) {
+      var_list_copy_env_vars_and_value(&environmentList,
+                                       lGetList(petep, PET_environment),
+                                       VAR_COMPLEX_PREFIX);
    }
   
    /* 1.) try to read cwd from pe task */
@@ -614,22 +594,23 @@ char *err_str
    var_list_set_u32(&environmentList, "JOB_ID", job_id);
   
    /* JG: TODO (ENV): shouldn't we better use SGE_JATASK_ID and have an additional SGE_PETASK_ID? */
+lWriteListTo(environmentList, stderr);
    if (job_is_array(jep)) {
       u_long32 start, end, step;
 
       job_get_submit_task_ids(jep, &start, &end, &step);
 
-      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", ja_task_id);
-      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_FIRST", start);
-      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_LAST", end);
-      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_STEPSIZE", step);
+      var_list_set_u32(&environmentList, VAR_PREFIX_NR "TASK_ID", ja_task_id);
+      var_list_set_u32(&environmentList, VAR_PREFIX_NR "TASK_FIRST", start);
+      var_list_set_u32(&environmentList, VAR_PREFIX_NR "TASK_LAST", end);
+      var_list_set_u32(&environmentList, VAR_PREFIX_NR "TASK_STEPSIZE", step);
    } else {
       const char *udef = "undefined";
 
-      var_list_set_string(&environmentList, VAR_PREFIX "TASK_ID", udef);
-      var_list_set_string(&environmentList, VAR_PREFIX "TASK_FIRST", udef);
-      var_list_set_string(&environmentList, VAR_PREFIX "TASK_LAST", udef);
-      var_list_set_string(&environmentList, VAR_PREFIX "TASK_STEPSIZE", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX_NR "TASK_ID", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX_NR "TASK_FIRST", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX_NR "TASK_LAST", udef);
+      var_list_set_string(&environmentList, VAR_PREFIX_NR "TASK_STEPSIZE", udef);
    }
 
    var_list_set_string(&environmentList, "ENVIRONMENT", "BATCH");
@@ -691,25 +672,35 @@ char *err_str
       var_list_set_string(&environmentList, VAR_PREFIX "JOB_SPOOL_DIR", buffer);
    }
 
-   var_list_copy_complex_vars_and_value(environmentList, 
+   var_list_copy_complex_vars_and_value(&environmentList, 
                                         lGetList(jep, JB_env_list),
                                         cplx);
 
    var_list_set_sharedlib_path(&environmentList);
 
    if (set_sge_environment) {
-      var_list_copy_prefix_vars(environmentList, environmentList,
+      /* set final of variables whose value shall be replaced */ 
+      var_list_copy_prefix_vars(&environmentList, environmentList,
                                 VAR_PREFIX, "SGE_");
+
+      /* set final of variables whose value shall not be replaced */ 
+      var_list_copy_prefix_vars_undef(&environmentList, environmentList,
+                                      VAR_PREFIX_NR, "SGE_");
    }
    if (set_cod_environment) {
-      var_list_copy_prefix_vars(environmentList, environmentList,
+      var_list_copy_prefix_vars(&environmentList, environmentList,
                                 VAR_PREFIX, "COD_");
+      var_list_copy_prefix_vars_undef(&environmentList, environmentList,
+                                      VAR_PREFIX_NR, "COD_");
    }
    if (set_grd_environment) {
-      var_list_copy_prefix_vars(environmentList, environmentList,
+      var_list_copy_prefix_vars(&environmentList, environmentList,
                                 VAR_PREFIX, "GRD_");
+      var_list_copy_prefix_vars_undef(&environmentList, environmentList,
+                                      VAR_PREFIX_NR, "GRD_");
    }
-   var_list_remove_prefix_vars(environmentList, VAR_PREFIX);
+   var_list_remove_prefix_vars(&environmentList, VAR_PREFIX);
+   var_list_remove_prefix_vars(&environmentList, VAR_PREFIX_NR);
 
    var_list_dump_to_file(environmentList, fp);
 

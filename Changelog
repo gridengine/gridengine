@@ -1,5 +1,15 @@
+EB-2002-11-14-0  Bugfix:    - memopy leak in execd
+                            - stepsize 0 in array job specification
+                              results in qmaster exception
+                            - job env variables SGE_TASK_* might be
+                              overwritten by qsub -v
+                 IZ:        423, 424, 402, 264
+                 Bugtraq:   4778757, 4778758, 4778762
+                 Review:    partially AH
+
 EB-2002-11-12-0  Enhancem.: Allow qsub -b y to handle built-in commands
                  Issue:     #25 #26
+                 Review:    AH
 
 JG-2002-11-04-0  Enhancem.: Added utility functions for profiling.
                             Made scheduler use these profiling functions 

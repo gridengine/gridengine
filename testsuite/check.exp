@@ -5729,12 +5729,17 @@ proc compile_source {} {
          puts $CHECK_OUTPUT " arch on host $elem is $host_arch - successfully installed binaries"
       } else {
          puts $CHECK_OUTPUT " error installing binaries for host $elem"
+         set found 0
          for { set html_c 2 } { $html_c <= $table_row }  { incr html_c 1 } {
             if { [ string compare $html_table($html_c) $elem ] == 0 } {
                set html_table($html_c,BGCOLOR) "#CC0000"
                set html_table($html_c,FNCOLOR) "#FFFFFF"
                set html_table($html_c,3) "error installing binaries"
+               set found 1
             }
+         }
+         if ($found != 1) {
+            append html_body [ create_html_text "ERROR installing binaries for host $elem !!!" ]
          }
          set was_error 1
       }

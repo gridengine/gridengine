@@ -587,7 +587,7 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                 }
              }
    
-             set mytries 10
+             set mytries 15
              debug_puts "waiting for shell response ..."
              set timeout 1
              set next_timeout 1

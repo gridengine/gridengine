@@ -40,6 +40,7 @@
 #include "sge_loadmem.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_os.h"
 #include "msg_utilib.h"
 
 #if !defined(LINUX) && !defined(SUN4) && !defined(HPUX) && !defined(CRAY)

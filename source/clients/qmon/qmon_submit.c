@@ -1797,18 +1797,18 @@ char *prefix
    /* 
    ** read in default values from a job 
    */
-   if ((job_script = lGetString(jep, JB_script_file)))
+   if ((job_script = (StringConst)lGetString(jep, JB_script_file)))
       data->job_script = XtNewString(job_script);
    else
       data->job_script = NULL;
 
    if (job_is_array(jep))
       ja_task_list_print_to_string(lGetList(jep, JB_ja_tasks), &dyn_job_tasks);
-   tmp_string = sge_dstring_get_string(&dyn_job_tasks);
+   tmp_string = (const char *)sge_dstring_get_string(&dyn_job_tasks);
    if (tmp_string && tmp_string[0] != '\0')
       data->job_tasks = XtNewString(tmp_string);
 
-   if ((job_name = lGetString(jep, JB_job_name)))
+   if ((job_name = (StringConst)lGetString(jep, JB_job_name)))
       data->job_name = XtNewString(job_name);
    else
       data->job_name = NULL;
@@ -1819,7 +1819,7 @@ char *prefix
    if (prefix) 
       data->directive_prefix = XtNewString(prefix);
    else {
-      if ((directive_prefix = lGetString(jep, JB_directive_prefix)))
+      if ((directive_prefix = (StringConst)lGetString(jep, JB_directive_prefix)))
          data->directive_prefix = XtNewString(directive_prefix);
       else
          data->directive_prefix = XtNewString("#$");
@@ -1837,17 +1837,17 @@ char *prefix
    }
 #endif   
 
-   if ((project = lGetString(jep, JB_project)))
+   if ((project = (StringConst)lGetString(jep, JB_project)))
       data->project = XtNewString(project);
    else
       data->project = NULL;
 
-   if ((ckpt_obj = lGetString(jep, JB_checkpoint_name)))
+   if ((ckpt_obj = (StringConst)lGetString(jep, JB_checkpoint_name)))
       data->ckpt_obj = XtNewString(ckpt_obj);
    else
       data->ckpt_obj = NULL;
 
-   if ((account_string = lGetString(jep, JB_account)))
+   if ((account_string = (StringConst)lGetString(jep, JB_account)))
       data->account_string = XtNewString(account_string);
    else
       data->account_string = NULL;
@@ -1909,7 +1909,7 @@ char *prefix
                                     
    data->restart = lGetUlong(jep, JB_restart);
 
-   if ((pe = lGetString(jep, JB_pe))) {
+   if ((pe = (StringConst)lGetString(jep, JB_pe))) {
       dstring range_string = DSTRING_INIT;
 
       range_list_print_to_string(lGetList(jep, JB_pe_range), &range_string, 1);
@@ -2091,8 +2091,8 @@ int save
       /*
       ** path aliasing
       */
-      if (path_alias_list_initialize(&path_alias, &alp, uti_state_get_user_name(), 
-                                     uti_state_get_qualified_hostname()) == -1) {
+      if (path_alias_list_initialize(&path_alias, &alp, (StringConst)uti_state_get_user_name(), 
+                                     (StringConst)uti_state_get_qualified_hostname()) == -1) {
          if (alp) {
             qmonMessageBox(qmon_submit, alp, 0);
             alp = lFreeList(alp);
@@ -2671,7 +2671,7 @@ XtPointer cld, cad;
         /*
         ** we get only references don't free, the strings
         */
-        strs[i] = lGetString(pep, PE_name);
+        strs[i] = (StringConst)lGetString(pep, PE_name);
       }
     
       strcpy(buf, "");
@@ -2733,7 +2733,7 @@ XtPointer cld, cad;
         /*
         ** we get only references don't free, the strings
         */
-        strs[i] = lGetString(cep, CK_name);
+        strs[i] = (StringConst)lGetString(cep, CK_name);
       }
     
       strcpy(buf, "");
@@ -2787,7 +2787,7 @@ XtPointer cld, cad;
         /*
         ** we get only references don't free, the strings
         */
-        strs[i] = lGetString(cep, UP_name);
+        strs[i] = (StringConst)lGetString(cep, UP_name);
       }
     
       strcpy(buf, "");

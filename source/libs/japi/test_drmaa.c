@@ -285,6 +285,12 @@ enum {
          - the DRM system name is printed
          - then drmaa_exit() is called */
 
+   ST_DRMAA_IMPL,
+      /* - drmaa_init() is called
+         - drmaa_get_DRMAA_implementation() is called
+         - the DRMAA implemention name is printed
+         - then drmaa_exit() is called */
+
    ST_EMPTY_SESSION_WAIT,
       /* - drmaa_init() is called
          - drmaa_wait() must return DRMAA_ERRNO_INVALID_JOB
@@ -382,6 +388,7 @@ const struct test_name2number_map {
    { "ST_ATTRIBUTE_CHECK",                        ST_ATTRIBUTE_CHECK,                       2, "<exit_arg_job> <email_addr>" },
    { "ST_VERSION",                                ST_VERSION,                                0, "" },
    { "ST_DRM_SYSTEM",                             ST_DRM_SYSTEM,                             0, "" },
+   { "ST_DRMAA_IMPL",                             ST_DRMAA_IMPL,                             0, "" },
    { "ST_CONTACT",                                ST_CONTACT,                                0, "" },
    { "ST_EMPTY_SESSION_WAIT",                     ST_EMPTY_SESSION_WAIT,                     0, "" },
    { "ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE",      ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE,      0, "" },
@@ -1687,6 +1694,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
    case ST_CONTACT:
    case ST_DRM_SYSTEM:
+   case ST_DRMAA_IMPL:
       {
          char output_string[1024];
          
@@ -1698,16 +1706,24 @@ static int test(int *argc, char **argv[], int parse_args)
          if (test_case == ST_CONTACT)
             drmaa_errno = drmaa_get_contact(output_string, sizeof(output_string)-1, 
                          diagnosis, sizeof(diagnosis)-1);
-         else
+         else if (test_case == ST_DRM_SYSTEM)
             drmaa_errno = drmaa_get_DRM_system(output_string, sizeof(output_string)-1,
+                         diagnosis, sizeof(diagnosis)-1);
+         else if (test_case == ST_DRMAA_IMPL)
+            drmaa_errno = drmaa_get_DRMAA_implementation(output_string, sizeof(output_string)-1,
                          diagnosis, sizeof(diagnosis)-1);
          
          if (drmaa_errno != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_get_contact()/drmaa_get_DRM_system() failed: %s\n", diagnosis);
             return 1;
          }
-         printf("%s() returned \"%s\"\n", (test_case==ST_CONTACT)
-            ?"drmaa_get_contact":"drmaa_get_DRM_system", output_string);
+            
+         if (test_case == ST_CONTACT)
+            printf("drmaa_get_contact() returned \"%s\"\n", output_string);
+         else if (test_case == ST_DRM_SYSTEM)
+            printf("drmaa_get_DRM_system() returned \"%s\"\n", output_string);
+         else if (test_case == ST_DRMAA_IMPL)
+            printf("drmaa_get_DRMAA_implementation() returned \"%s\"\n", output_string);
 
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);

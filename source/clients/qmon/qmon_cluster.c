@@ -1856,31 +1856,31 @@ tCClEntry *clen
       clen->administrator_mail = XtNewString(lGetString(ep, CF_value));
 
    if ((ep = lGetElemStr(confl, CF_name, "min_uid"))) {
-      min_uid = lGetString(ep, CF_value);
+      min_uid = (StringConst)lGetString(ep, CF_value);
       clen->min_uid = min_uid ? atoi(min_uid) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "min_gid"))) {
-      min_gid = lGetString(ep, CF_value);
+      min_gid = (StringConst)lGetString(ep, CF_value);
       clen->min_gid = min_gid ? atoi(min_gid) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "max_aj_instances"))) {
-      max_aj_instances = lGetString(ep, CF_value);
+      max_aj_instances = (StringConst)lGetString(ep, CF_value);
       clen->max_aj_instances = max_aj_instances ? atoi(max_aj_instances) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "max_aj_tasks"))) {
-      max_aj_tasks = lGetString(ep, CF_value);
+      max_aj_tasks = (StringConst)lGetString(ep, CF_value);
       clen->max_aj_tasks = max_aj_tasks ? atoi(max_aj_tasks) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "max_u_jobs"))) {
-      max_u_jobs = lGetString(ep, CF_value);
+      max_u_jobs = (StringConst)lGetString(ep, CF_value);
       clen->max_u_jobs = max_u_jobs ? atoi(max_u_jobs) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "max_jobs"))) {
-      max_jobs = lGetString(ep, CF_value);
+      max_jobs = (StringConst)lGetString(ep, CF_value);
       clen->max_jobs = max_jobs ? atoi(max_jobs) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "finished_jobs"))) {
-      zombie_jobs = lGetString(ep, CF_value);
+      zombie_jobs = (StringConst)lGetString(ep, CF_value);
       clen->zombie_jobs = zombie_jobs ? atoi(zombie_jobs) : 0;
    }
 
@@ -1926,7 +1926,7 @@ tCClEntry *clen
       clen->reschedule_unknown = XtNewString(lGetString(ep, CF_value));
 
    if ((ep = lGetElemStr(confl, CF_name, "shell_start_mode")))
-      str = lGetString(ep, CF_value);
+      str = (StringConst)lGetString(ep, CF_value);
    if (str && !strcmp(str, "script_from_stdin"))
       clen->shell_start_mode = 1;
    else if (str && !strcmp(str, "unix_behavior"))
@@ -1936,7 +1936,7 @@ tCClEntry *clen
 
 
    if ((ep = lGetElemStr(confl, CF_name, "loglevel")))
-      str = lGetString(ep, CF_value);
+      str = (StringConst)lGetString(ep, CF_value);
    if (str && !strcmp(str, "log_info"))
       clen->loglevel = 0;
    if (str && !strcmp(str, "log_warning"))
@@ -1970,14 +1970,14 @@ tCClEntry *clen
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
       if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
-         str = lGetString(ep, CF_value);
+         str = (StringConst)lGetString(ep, CF_value);
       if (str && !strcasecmp(str, "true"))
          clen->enforce_project = 0;
       else
          clen->enforce_project = 1;
 
       if ((ep = lGetElemStr(confl, CF_name, "enforce_user")))
-         str = lGetString(ep, CF_value);
+         str = (StringConst)lGetString(ep, CF_value);
       if (str && !strcasecmp(str, "true"))
          clen->enforce_user = 0;
       else

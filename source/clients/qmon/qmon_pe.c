@@ -244,22 +244,22 @@ lListElem *ep
    sge_dstring_free(&sb);
    
    /* start_proc_args */
-   str = lGetString(ep, PE_start_proc_args);
+   str = (StringConst)lGetString(ep, PE_start_proc_args);
    sprintf(buf, "%-20.20s %s", "Start Proc Args", str ? str : "NONE" );
    items[i++] = XmStringCreateLocalized(buf);
 
    /* stop_proc_args */
-   str = lGetString(ep, PE_stop_proc_args);
+   str = (StringConst)lGetString(ep, PE_stop_proc_args);
    sprintf(buf, "%-20.20s %s", "Stop Proc Args", str ? str : "NONE" );
    items[i++] = XmStringCreateLocalized(buf);
 
    /* allocation_rule */
-   str = lGetString(ep, PE_allocation_rule);
+   str = (StringConst)lGetString(ep, PE_allocation_rule);
    sprintf(buf, "%-20.20s %s", "Allocation Rule", str ? str : "NONE" );
    items[i++] = XmStringCreateLocalized(buf);
 
    /* urgency slots */
-   str = lGetString(ep, PE_urgency_slots);
+   str = (StringConst)lGetString(ep, PE_urgency_slots);
    sprintf(buf, "%-20.20s %s", "Urgency Slots", str ? str : "NONE" );
    items[i++] = XmStringCreateLocalized(buf);
 
@@ -503,7 +503,7 @@ XtPointer cld, cad;
    if (pel) {
       if (qmonPEGetAsk(lFirst(pel))) {
 
-         pename = lGetString(lFirst(pel), PE_name);
+         pename = (StringConst)lGetString(lFirst(pel), PE_name);
          /*
          ** gdi call 
          */
@@ -622,7 +622,7 @@ lListElem *pep
       return;
    }
 
-   pe_name = lGetString(pep, PE_name);
+   pe_name = (StringConst)lGetString(pep, PE_name);
    if (pe_name)
       XmtInputFieldSetString(pe_name_w, pe_name);
 
@@ -635,19 +635,19 @@ lListElem *pep
    xacl = lGetList(pep, PE_xuser_list);
    UpdateXmListFromCull(pe_xacl_w, XmFONTLIST_DEFAULT_TAG, xacl, US_name);
       
-   start_args = lGetString(pep, PE_start_proc_args);
+   start_args = (StringConst)lGetString(pep, PE_start_proc_args);
    if (start_args)
       XmtInputFieldSetString(pe_start_w, start_args);
 
-   stop_args = lGetString(pep, PE_stop_proc_args);
+   stop_args = (StringConst)lGetString(pep, PE_stop_proc_args);
    if (stop_args)
       XmtInputFieldSetString(pe_stop_w, stop_args);
 
-   alloc_rule = lGetString(pep, PE_allocation_rule);
+   alloc_rule = (StringConst)lGetString(pep, PE_allocation_rule);
    if (alloc_rule)
       XmtInputFieldSetString(pe_alloc_w, alloc_rule);
 
-   urgency_slots = lGetString(pep, PE_urgency_slots);
+   urgency_slots = (StringConst)lGetString(pep, PE_urgency_slots);
    if (urgency_slots)
       XmtInputFieldSetString(pe_urgency_w, urgency_slots);
 

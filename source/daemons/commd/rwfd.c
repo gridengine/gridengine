@@ -635,7 +635,11 @@ int sockfd
 #ifdef AIX43
    size_t fromlen = 0;
 #else
+#ifdef AIX51
+   socklen_t fromlen = 0;
+#else
    int fromlen = 0;
+#endif
 #endif
 
    DENTER(TOP_LAYER, "mknewconnect");

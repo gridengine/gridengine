@@ -542,10 +542,10 @@ int field2
       */
       switch (lGetType(lGetListDescr(lp), field1)) {
          case lStringT:
-            col1 = lGetString(ep, field1);
+            col1 = (StringConst)lGetString(ep, field1);
             break;
          case lHostT:
-            col1 = lGetHost(ep,field1);
+            col1 = (StringConst)lGetHost(ep,field1);
             break;
       }
       /*
@@ -553,10 +553,10 @@ int field2
       */
       switch (lGetType(lGetListDescr(lp), field2)) {
          case lStringT:
-            col2 = lGetString(ep, field2);
+            col2 = (StringConst)lGetString(ep, field2);
             break;
          case lHostT:
-            col2 = lGetHost(ep,field2);
+            col2 = (StringConst)lGetHost(ep,field2);
             break;
          case lUlongT:
             val = (int)lGetUlong(ep, field2);
@@ -751,9 +751,9 @@ StringConst *ce_entry
    }
       
    /* name type relation value */ 
-   ce_entry[CE_NAME] = lGetString(ep, CE_name);
-   ce_entry[CE_SHORTCUT] = lGetString(ep, CE_shortcut);
-   ce_entry[CE_TYPE] = map_type2str(lGetUlong(ep, CE_valtype));
+   ce_entry[CE_NAME] = (StringConst)lGetString(ep, CE_name);
+   ce_entry[CE_SHORTCUT] = (StringConst)lGetString(ep, CE_shortcut);
+   ce_entry[CE_TYPE] = (StringConst)map_type2str(lGetUlong(ep, CE_valtype));
 
    switch (lGetUlong(ep, CE_relop)) {
    case CMPLXLT_OP:
@@ -780,8 +780,8 @@ StringConst *ce_entry
    ce_entry[CE_REQUEST] = lGetUlong(ep, CE_requestable) == REQU_FORCED ? "FORCED" : 
                            (lGetUlong(ep, CE_requestable) == REQU_YES ? "YES" : "NO");
    ce_entry[CE_CONSUMABLE] = lGetBool(ep, CE_consumable) ? "YES" : "NO";
-   ce_entry[CE_DEFAULT] = lGetString(ep, CE_default);
-   ce_entry[CE_URGENCY] = lGetString(ep, CE_urgency_weight);
+   ce_entry[CE_DEFAULT] = (StringConst)lGetString(ep, CE_default);
+   ce_entry[CE_URGENCY] = (StringConst)lGetString(ep, CE_urgency_weight);
       
    DEXIT;
    return True;

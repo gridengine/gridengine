@@ -34,6 +34,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <pthread.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
@@ -57,6 +58,7 @@
 
 
 #include "msg_utilib.h"
+#include "sge_mtutil.h"
 
 #define ALIAS_DELIMITER "\n\t ,;"
 
@@ -98,16 +100,25 @@ unsigned long gethostbyaddr_sec = 0;
 int gethostname(char *name, int namelen);
 #endif
 
+#ifdef GETHOSTBYNAME_M
+/* guards access to the non-MT-safe gethostbyname system call */
+static pthread_mutex_t hostbyname_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
+#ifdef GETHOSTBYADDR_M
+/* guards access to the non-MT-safe gethostbyaddr system call */
+static pthread_mutex_t hostbyaddr_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 
-/****** libs/uti/uti_state_get_????() ************************************
+/****** libs/uti/uti_state_get_localhost() *************************************
 *  NAME
-*     uti_state_get_????() - read access to uti lib global variables
+*     uti_state_get_localhost() - read access to uti lib global variables
 *
 *  FUNCTION
 *     Provides access to either global variable or per thread global variable.
 *
-******************************************************************************/
+*******************************************************************************/
 host *uti_state_get_localhost(void)
 {
    /* so far called only by commd */ 
@@ -170,10 +181,15 @@ const char *name
 *
 *  NOTES
 *     MT-NOTE: sge_gethostbyname() is MT safe
+*     MT-NOTE: sge_gethostbyname() uses a mutex to guard access to the
+*     MT-NOTE: gethostbyname() system call on all platforms other than Solaris,
+*     MT-NOTE: Linux, AIX, Tru64, HP-UX, and MacOS 10.2 and greater.  Therefore,
+*     MT-NOTE: except on the aforementioned platforms, MT calls to
+*     MT-NOTE: gethostbyname() must go through sge_gethostbyname() to be MT safe.
 *******************************************************************************/
 struct hostent *sge_gethostbyname(const char *name)
 {
-   struct hostent *he;
+   struct hostent *he = NULL;
    time_t now;
    int time;
    int l_errno;
@@ -230,8 +246,9 @@ struct hostent *sge_gethostbyname(const char *name)
    }
 #endif
 #ifdef GETHOSTBYNAME_R3
-   DPRINTF (("Getting host by name - 3 arg\n"));
    /* This is for AIX < 4.3, HPUX < 11, and Tru64 */
+   DPRINTF (("Getting host by name - 3 arg\n"));
+   
    {
       struct hostent_data he_data;
       
@@ -244,7 +261,7 @@ struct hostent *sge_gethostbyname(const char *name)
       }
       /* The location of the error code is actually undefined.  I'm just
        * assuming that it's in h_errno since that's where it is in the unsafe
-       * version.  I'll look into this a little deeper.
+       * version.
        * h_errno is, of course, not thread safe, but if there's an error we're
        * already screwed, so we won't worry to much about it.
        * An alternative would be to set errno to HOST_NOT_FOUND. */
@@ -265,9 +282,9 @@ struct hostent *sge_gethostbyname(const char *name)
    he = gethostbyname(name);
    /* The location of the error code is actually undefined.  I'm just
     * assuming that it's in h_errno since that's where it is in the unsafe
-    * version.  I'll look into this a little deeper.
+    * version.
     * h_errno is, of course, not thread safe, but if there's an error we're
-    * already screwed, so we won't worry to much about it.
+    * already screwed, so we won't worry too much about it.
     * An alternative would be to set errno to HOST_NOT_FOUND. */
    l_errno = h_errno;
 #endif
@@ -275,14 +292,14 @@ struct hostent *sge_gethostbyname(const char *name)
    /* This is for Mac OS < 10.2, IRIX, and everyone else
     *  - Actually, IRIX 6.5.17 supports a reentrant getaddrinfo(), but it's not
     *    worth the effort. */
-   DPRINTF (("Getting host by name - Not thread safe\n"));
+   DPRINTF (("Getting host by name - Mutex guarded\n"));
 
-   /*** INSERT MUTEX HERE ***/
+   sge_mutex_lock("hostbyname", SGE_FUNC, __LINE__, &hostbyname_mutex);
 
    he = gethostbyname(name);
    l_errno = h_errno;
 
-   /*** INSERT MUTEX HERE ***/
+   sge_mutex_unlock("hostbyname", SGE_FUNC, __LINE__, &hostbyname_mutex);
 
 #endif
 
@@ -304,7 +321,11 @@ struct hostent *sge_gethostbyname(const char *name)
    return he;
 }
 
-/* This function is only needed on architectures where gethostbyname_r() is used. */
+/* This function is only needed on architectures where gethostbyname_r() and/or
+ * gethostbyaddr_r is used.  We can just check for the GETHOSTBYNAME and
+ * GETHOSTBYNAME_M because there is no case where GETHOSTBYNAME or
+ * GETHOSTBYNAME_M is defined along with a GETHOSTBYADDR_R*.
+ */
 #ifndef GETHOSTBYNAME
 #ifndef GETHOSTBYNAME_M
 /****** uti/host/sge_copy_hostent() ****************************************
@@ -347,8 +368,10 @@ static struct hostent *sge_copy_hostent(struct hostent *orig)
    /* Copy the entries */
    count = 0;
    for (p = orig->h_addr_list; *p != 0; p++) {
-      copy->h_addr_list[count] = (char *)malloc (sizeof (struct in_addr));
-      memcpy (copy->h_addr_list[count++], *p, sizeof (struct in_addr));
+      int tmp_size = (strlen (*p) + 1) * sizeof (char);
+      
+      copy->h_addr_list[count] = (char *)malloc (tmp_size);
+      memcpy (copy->h_addr_list[count++], *p, tmp_size);
    }
    
    copy->h_addr_list[count] = NULL;
@@ -366,15 +389,10 @@ static struct hostent *sge_copy_hostent(struct hostent *orig)
    /* Copy the entries */
    count = 0;
    for (p = orig->h_aliases; *p != 0; p++) {
-#if 0 /* EB: dbx memory access */
-      copy->h_aliases[count] = (char *)malloc (sizeof (struct in_addr));
-      memcpy (copy->h_aliases[count++], *p, sizeof (struct in_addr));
-#else
       int tmp_size = (strlen(*p) + 1) * sizeof(char);
 
       copy->h_aliases[count] = (char *)malloc (tmp_size);
       memcpy (copy->h_aliases[count++], *p, tmp_size);
-#endif
    }
    
    copy->h_aliases[count] = NULL;
@@ -397,22 +415,119 @@ static struct hostent *sge_copy_hostent(struct hostent *orig)
 *     in gethostbyaddr() and logs when very much time has passed.
 *
 *  NOTES
-*     MT-NOTE: sge_gethostbyaddr() is not MT safe
-*     MT-NOTE: to make it MT safe gethostbyaddr_r() interface must be used
-*     MT-NOTE: and it must have same interface as gethostbyaddr_r()
+*     MT-NOTE: sge_gethostbyaddr() is MT safe
+*     MT-NOTE: sge_gethostbyaddr() uses a mutex to guard access to the
+*     MT-NOTE: gethostbyaddr() system call on all platforms other than Solaris,
+*     MT-NOTE: Linux, and HP-UX.  Therefore, except on the aforementioned
+*     MT-NOTE: platforms, MT calls to gethostbyaddr() must go through
+*     MT-NOTE: sge_gethostbyaddr() to be MT safe.
 *******************************************************************************/
 struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
 {
-   struct hostent *he;
+   struct hostent *he = NULL;
    time_t now;
    int time;
+   int l_errno;
 
    DENTER(TOP_LAYER, "sge_gethostbyaddr");
+
+   /* This method goes to great lengths to slip a reentrant gethostbyaddr into
+    * the code without making changes to the rest of the source base.  That
+    * basically means that we have to make some redundant copies to
+    * return to the caller.  This method doesn't appear to be highly utilized,
+    * so that's probably ok.  If it's not ok, the interface can be changed
+    * later. */
 
    gethostbyaddr_calls++;      /* profiling */
    now = sge_get_gmt();
 
-   /*** INSERT MUTEX HERE ***/
+#ifdef GETHOSTBYADDR_R8
+   /* This is for Linux */
+   DPRINTF (("Getting host by addr - Linux\n"));
+   {
+      struct hostent re;
+      char buffer[4096];
+
+      /* No need to malloc he because it will end up pointing to re. */
+      gethostbyaddr_r ((const char *)addr, 4, AF_INET, &re, buffer, 4096, &he, &l_errno);
+      
+      /* Since re contains pointers into buffer, and both re and the buffer go
+       * away when we exit this code block, we make a deep copy to return. */
+      /* Yes, I do mean to check if he is NULL and then copy re!  No, he
+       * doesn't need to be freed first. */
+      if (he != NULL) {
+         he = sge_copy_hostent (&re);
+      }
+   }
+#endif
+#ifdef GETHOSTBYADDR_R7
+   /* This is for Solaris */
+   DPRINTF (("Getting host by addr - Solaris\n"));
+   {
+      char buffer[4096];
+      
+      he = (struct hostent *)malloc (sizeof (struct hostent));
+      /* On Solaris, this function returns the pointer to my struct on success
+       * and NULL on failure. */
+      he = gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, buffer, 4096, &l_errno);
+      
+      /* Since he contains pointers into buffer, and buffer goes away when we
+       * exit this code block, we make a deep copy to return. */
+      if (he != NULL) {
+         struct hostent *new_he = sge_copy_hostent (he);
+         FREE (he);
+         he = new_he;
+      }
+   }
+#endif
+#ifdef GETHOSTBYADDR_R5
+   /* This is for HPUX < 11 */
+   DPRINTF (("Getting host by addr - 3 arg\n"));
+   
+   {
+      struct hostent_data he_data;
+      
+      he = (struct hostent *)malloc (sizeof (struct hostent));
+      if (gethostbyname_r ((const char *)addr, 4, AF_INET, he, &he_data) < 0) {
+         /* If this function fails, free he so that we can test if it's NULL
+          * later in the code. */
+         FREE (he);
+         he = NULL;
+      }
+      /* The location of the error code is actually undefined.  I'm just
+       * assuming that it's in h_errno since that's where it is in the unsafe
+       * version.
+       * h_errno is, of course, not thread safe, but if there's an error we're
+       * already screwed, so we won't worry to much about it.
+       * An alternative would be to set errno to HOST_NOT_FOUND. */
+      l_errno = h_errno;
+      
+      /* Since he contains pointers into he_data, and he_data goes away when we
+       * exit this code block, we make a deep copy to return. */
+      if (he != NULL) {
+         struct hostent *new_he = sge_copy_hostent (he);
+         FREE (he);
+         he = new_he;
+      }
+   }
+#endif
+#ifdef GETHOSTBYADDR
+   /* This is for HPUX >= 11 */
+   DPRINTF (("Getting host by addr - Thread safe\n"));
+   he = gethostbyaddr((const char *)addr, 4, AF_INET);
+   /* The location of the error code is actually undefined.  I'm just
+    * assuming that it's in h_errno since that's where it is in the unsafe
+    * version.
+    * h_errno is, of course, not thread safe, but if there's an error we're
+    * already screwed, so we won't worry too much about it.
+    * An alternative would be to set errno to HOST_NOT_FOUND. */
+   l_errno = h_errno;
+#endif
+#ifdef GETHOSTBYADDR_M
+   /* This is for everone else. */
+   DPRINTF (("Getting host by addr - Mutex guarded\n"));
+   
+   sge_mutex_lock("hostbyaddr", SGE_FUNC, __LINE__, &hostbyaddr_mutex);
 
 #if defined(CRAY)
    he = gethostbyaddr((const char *)addr, sizeof(struct in_addr), AF_INET);
@@ -420,7 +535,8 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    he = gethostbyaddr((const char *)addr, 4, AF_INET);
 #endif
 
-   /*** INSERT MUTEX HERE ***/
+   sge_mutex_unlock("hostbyaddr", SGE_FUNC, __LINE__, &hostbyaddr_mutex);
+#endif
 
    time = sge_get_gmt() - now;
    gethostbyaddr_sec += time;   /* profiling */

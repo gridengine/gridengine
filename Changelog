@@ -1,3 +1,10 @@
+DT-2004-01-09-1: Enhancem.: Finished making sge_gethostbyname() MT-safe.  Also
+                            made sge_gethostbyaddr() MT-safe.  Updated libdrmaa
+                            to match latest spec changes.  Updated test_drmaa to
+                            match libdrmaa.
+                 Bugfix:    Fixed qmon and commd compile issues on AIX.
+                 Changed:   DRMAA, sge_hostname.c, aimk, qmon, commd, sge_time.c
+
 SG-2004-01-09-1: Bugfix:    The scheduler did not renew its event subscriptions
                             after the qmaster went down and up again.
                  Changed:   scheduler                            

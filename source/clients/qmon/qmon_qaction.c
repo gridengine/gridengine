@@ -523,7 +523,7 @@ XtPointer cld, cad;
    if (!ql) 
       qmonQCSetData(&current_entry, "template", QC_ALL);
    else {
-      const char *qname = lGetString(lFirst(ql), QU_qname);
+      const char *qname = (const char *)lGetString(lFirst(ql), QU_qname);
       qmonQCSetData(&current_entry, qname, QC_ALL);
    }
       
@@ -986,7 +986,7 @@ XtPointer cld, cad;
         /*
         ** we get only references don't free, the strings
         */
-        strs[i] = lGetString(qep, QU_qname);
+        strs[i] = (StringConst)lGetString(qep, QU_qname);
       }
     
       strcpy(buf, "");
@@ -1338,14 +1338,14 @@ DTRACE;
                   XmtSizeOf(tQCEntry, qname));
 
          qmonMirrorMulti(EXECHOST_T);
-         qhostname = lGetHost(qep, QU_qhostname); 
+         qhostname = (StringConst)lGetHost(qep, QU_qhostname); 
          strncpy(data->qhostname, qhostname,  XmtSizeOf(tQCEntry, qhostname));
       }
 
       data->qtype       = lGetUlong(qep, QU_qtype);
       strncpy(data->processors, lGetString(qep, QU_processors),  
                XmtSizeOf(tQCEntry, processors));
-      if ((str = lGetString(qep, QU_priority)))
+      if ((str = (const char *)lGetString(qep, QU_priority)))
          data->priority = atoi(str);
       else
          data->priority = 0;
@@ -1383,12 +1383,12 @@ DTRACE;
          else 
             data->shell_start_mode = 0; 
       }
-      data->prolog = lGetString(qep, QU_prolog);
-      data->epilog = lGetString(qep, QU_epilog);
-      data->starter_method = lGetString(qep, QU_starter_method);
-      data->suspend_method = lGetString(qep, QU_suspend_method);
-      data->resume_method = lGetString(qep, QU_resume_method);
-      data->terminate_method = lGetString(qep, QU_terminate_method);
+      data->prolog = (StringConst)lGetString(qep, QU_prolog);
+      data->epilog = (StringConst)lGetString(qep, QU_epilog);
+      data->starter_method = (StringConst)lGetString(qep, QU_starter_method);
+      data->suspend_method = (StringConst)lGetString(qep, QU_suspend_method);
+      data->resume_method = (StringConst)lGetString(qep, QU_resume_method);
+      data->terminate_method = (StringConst)lGetString(qep, QU_terminate_method);
    }         
 
 DTRACE;
@@ -1433,13 +1433,13 @@ DTRACE;
       for (i=0, ep=lFirst(data->limits_hard); i<XtNumber(hard_variable) && 
                data->limits_hard; i++, ep=lNext(ep)) {
          lSetString(ep, VA_variable, hard_variable[i]);
-         str = lGetString(qep, hard_value[i]);
+         str = (const char *)lGetString(qep, hard_value[i]);
          lSetString(ep, VA_value, str?str:"");
       }
       for (i=0, ep=lFirst(data->limits_soft); i<XtNumber(soft_variable) && 
                data->limits_soft; i++, ep=lNext(ep)) {
          lSetString(ep, VA_variable, soft_variable[i]);
-         str = lGetString(qep, soft_value[i]);
+         str = (const char *)lGetString(qep, soft_value[i]);
          lSetString(ep, VA_value, str?str:"");
       }
    }
@@ -1463,7 +1463,7 @@ DTRACE;
       data->suspend_thresholds = lFreeList(data->suspend_thresholds);
       data->suspend_thresholds = lCopyList("suspend_thresholds", 
                                   lGetList(qep, QU_suspend_thresholds));
-      susp_interval = lGetString(qep, QU_suspend_interval);
+      susp_interval = (StringConst)lGetString(qep, QU_suspend_interval);
       strncpy(data->suspend_interval, susp_interval ? susp_interval : "",  
                XmtSizeOf(tQCEntry, suspend_interval));
       data->nsuspend = lGetUlong(qep, QU_nsuspend);
@@ -1869,7 +1869,7 @@ XtPointer cld, cad;
         /*
         ** we get only references don't free, the strings
         */
-        strs[i] = lGetString(cep, CAL_name);
+        strs[i] = (StringConst)lGetString(cep, CAL_name);
       }
     
       strcpy(buf, "");
@@ -2029,7 +2029,7 @@ XtPointer cld, cad;
            /*
            ** we get only references don't free, the strings
            */
-           strs[i] = lGetString(qep, QU_qname);
+           strs[i] = (StringConst)lGetString(qep, QU_qname);
          }
        
          strcpy(buf, "");

@@ -1717,7 +1717,7 @@ void drmaa_release_job_ids(drmaa_job_ids_t* values)
 *     *error_diagnosis, size_t error_diag_len) 
 *
 *  FUNCTION
-*     Returns SGE system implementation information. The output contains the 
+*     Returns SGE system information. The output contains the 
 *     DRM name and release information.
 *
 *  OUTPUTS
@@ -1741,6 +1741,38 @@ int drmaa_get_DRM_system(char *drm_system, size_t drm_system_len,
    if (error_diagnosis) 
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
    return japi_get_drm_system(drm_system?&drm:NULL, error_diagnosis?&diag:NULL); 
+}
+
+/****** DRMAA/drmaa_get_DRMAA_implementation() *********************************
+*  NAME
+*     drmaa_get_DRMAA_implementation() -- Return DRMAA system information
+*
+*  SYNOPSIS
+*     int drmaa_get_DRMAA_implementation(char *drm_impl, size_t drm_impl_len,
+*     char *error_diagnosis, size_t error_diag_len) 
+*
+*  FUNCTION
+*     Returns SGE implementation information. The output is the same as that of
+*     the drmaa_get_DRM_system() call.
+*
+*  OUTPUTS
+*     char *drmaa_impl      - Buffer for the DRMAA system name.
+*     size_t drmaa_impl_len - Buffer length.
+*     char *error_diagnosis - Buffer for error diagnosis information.
+*     size_t error_diag_len - Buffer length.
+*
+*  RESULT
+*     int - DRMAA_ERRNO_INTERNAL_ERROR on error or DRMAA_ERRNO_SUCCESS
+*
+*  NOTES
+*     MT-NOTE: drmaa_get_DRMAA_implementation() is MT safe
+*******************************************************************************/
+int drmaa_get_DRMAA_implementation(char *drmaa_impl, size_t drmaa_impl_len, 
+         char *error_diagnosis, size_t error_diag_len)
+{
+   /* Since this DRMAA implementation is very tightly coupled to SGE, I just
+    * return the DRM system information as the DRMAA implementation string. */
+   return drmaa_get_DRM_system (drmaa_impl, drmaa_impl_len, error_diagnosis, error_diag_len); 
 }
 
 /****** DRMAA/drmaa_get_contact() **********************************************

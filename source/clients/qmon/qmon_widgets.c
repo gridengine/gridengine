@@ -436,8 +436,8 @@ Cardinal size
       }
 
       for (ep=lFirst(lp), i=0; ep; ep=lNext(ep), i++) {
-         str1 = lGetString(ep, MR_user);
-         str2 = lGetHost(ep, MR_host);
+         str1 = (StringConst)lGetString(ep, MR_user);
+         str2 = (StringConst)lGetHost(ep, MR_host);
          if (str1) {
             if (!str2)
                strncpy(buf, str1, BUFSIZ);
@@ -707,7 +707,7 @@ Cardinal size
          range_list_parse_from_string(&ret_list, &alp, str,
                                       0, 0, INF_ALLOWED);
          if (alp) {
-            qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
+            qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);
          }
       }
@@ -715,7 +715,7 @@ Cardinal size
          range_list_parse_from_string(&ret_list, &alp, str,
                                       0, 1, INF_NOT_ALLOWED);
          if (alp) {
-            qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
+            qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);
          }
       }
@@ -796,15 +796,15 @@ int type
          strcat(pair_string, comma);
 
       if (nm1 == PN_host ) {
-         field1 = lGetHost(ep, nm1);
+         field1 = (StringConst)lGetHost(ep, nm1);
       } else {
-         field1 = lGetString(ep, nm1);
+         field1 = (StringConst)lGetString(ep, nm1);
       }
 
       if (nm2 == MR_host) {
-         field2 = lGetHost(ep, nm2);
+         field2 = (StringConst)lGetHost(ep, nm2);
       } else {
-         field2 = lGetString(ep, nm2);
+         field2 = (StringConst)lGetString(ep, nm2);
       }
       
       if (field1 && field1[0] != '\0') {

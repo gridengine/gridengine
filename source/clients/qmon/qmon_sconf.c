@@ -425,13 +425,13 @@ lListElem *sep
 /* lWriteElemTo(sep, stdout);    */
 
    data.algorithm = sge_strdup(data.algorithm, 
-                                 lGetString(sep, SC_algorithm));
+                                 (StringConst)lGetString(sep, SC_algorithm));
 
    data.schedule_interval = sge_strdup(data.schedule_interval, 
-                                 lGetString(sep, SC_schedule_interval));
+                                 (StringConst)lGetString(sep, SC_schedule_interval));
 
    data.sc_params = sge_strdup(data.sc_params, 
-                                 lGetString(sep, SC_params));
+                                 (StringConst)lGetString(sep, SC_params));
 
 
    data.maxujobs = lGetUlong(sep, SC_maxujobs);
@@ -453,14 +453,14 @@ lListElem *sep
    data.job_load_adjustments =  lCopyList("copy", lGetList(sep, SC_job_load_adjustments));
    
    data.load_adjustment_decay_time = sge_strdup(data.load_adjustment_decay_time, 
-               lGetString(sep, SC_load_adjustment_decay_time));
+               (StringConst)lGetString(sep, SC_load_adjustment_decay_time));
 
    data.load_formula = sge_strdup(data.load_formula, 
-                              lGetString(sep, SC_load_formula));
+                              (StringConst)lGetString(sep, SC_load_formula));
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
       data.reprioritize_interval = sge_strdup(data.reprioritize_interval, 
-                              lGetString(sep, SC_reprioritize_interval));
+                              (StringConst)lGetString(sep, SC_reprioritize_interval));
    }
 
 /**
@@ -633,7 +633,7 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
             range_list = lFreeList(range_list);
          }
          if (alp) {
-            qmonMessageShow(sconf_job_range, True, lGetString(lFirst(alp), AN_text));
+            qmonMessageShow(sconf_job_range, True, (StringConst)lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);
             DEXIT;
             return False;

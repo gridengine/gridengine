@@ -1,3 +1,6 @@
+AS-2004-04-19-1  Bugfix:    removed afs requirement for Linux insserv method
+                 Changed:   util/rctemplates/*
+
 AS-2004-04-19-0: Bugfix:    remove references to Enterprise Edition mode
                  Changed:   scripts/mk_ascman, man pages
                

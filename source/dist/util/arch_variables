@@ -50,6 +50,8 @@ else
    exit 1
 fi
 
+ROOTGROUP=root
+
 case $ARCH in
  solaris|solaris64|solaris86)
    AWK=/usr/bin/nawk

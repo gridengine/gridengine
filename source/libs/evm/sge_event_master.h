@@ -37,7 +37,7 @@
 
 
 extern int    sge_add_event_client(lListElem*, lList**, lList**, char*, char*);
-extern int    sge_mod_event_client(lListElem*, lList**, lList**, char*, char*);
+extern int    sge_mod_event_client(lListElem*, lList**, char*, char*);
 extern void   sge_remove_event_client(u_long32);
 extern lList* sge_select_event_clients(const char*, const lCondition*, const lEnumeration*);
 extern int    sge_shutdown_event_client(u_long32, const char*, uid_t, lList **alpp);

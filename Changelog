@@ -1,3 +1,8 @@
+SG-2004-12-01-0: Enhancem.: limited the amount of data send to change the busy
+                            state in the event client.
+                 Review:    EB
+                 Changed:   scheduler, master
+
 CR-2004-12-01-0: Enhancm.:  qping -dump now can unpack gdi requests and print
                             out the message data
                  Changed:   commlib qping

@@ -1325,7 +1325,7 @@ static void sge_c_gdi_mod(gdi_object_t *ao, char *host, sge_gdi_request *request
          /* fill in authentication infos from request */
          lSetUlong(ep, EV_uid, uid);
  
-         sge_mod_event_client(ep, &(answer->alp), NULL, user, host);      
+         sge_mod_event_client(ep, &(answer->alp), user, host);      
       }
       else 
       {

@@ -480,7 +480,7 @@
 *     
 *        sgeE_SUBMITHOST_LIST             send submit host list at registration
 *        sgeE_SUBMITHOST_ADD              event add submit host
-*        sgeE_SUBMITHOST_DEL              event delete submit host
+*        sgeE_SUBMITHOST_DEL              event delete submit hostsource/libs/evc/sge_event_client.c
 *        sgeE_SUBMITHOST_MOD              event modify submit host
 *     
 *        sgeE_USER_LIST                   send user list at registration
@@ -604,7 +604,6 @@ static void ec_config_changed(void);
 *     allowing one client to connect to multiple event client servers.
 *
 *******************************************************************************/
-static bool config_changed  = false;
 static bool need_register   = true;
 static lListElem *ec       = NULL;
 static u_long32 ec_reg_id  = 0;
@@ -673,7 +672,7 @@ ec_prepare_registration(ev_registration_id id, const char *name)
 
          ec_set_busy_handling(EV_BUSY_UNTIL_ACK);
          lSetUlong(ec, EV_busy, 0);
-
+         ec_config_changed();
          ret = true;
       }
    }
@@ -1143,7 +1142,6 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
             lSetUlong(ec, EV_id, new_id);
             DPRINTF(("REGISTERED with id "U32CFormat"\n", new_id));
             lSetBool(ec, EV_changed, false);
-            config_changed = false;
             need_register = false;
             
          }
@@ -1232,7 +1230,6 @@ ec_deregister(void)
             need_register = true;
             ec_reg_id = 0;
             lSetBool(ec, EV_changed, false);
-            config_changed = false;
             next_event = 1;
 
             ret = true;
@@ -1880,8 +1877,6 @@ ec_set_busy(int busy)
    } else {
       lSetUlong(ec, EV_busy, busy);
 
-      /* force communication to qmaster - we may be out of sync */
-      ec_config_changed();
       ret = true;
    }
 
@@ -2058,7 +2053,7 @@ ev_registration_id ec_get_id(void)
 static void 
 ec_config_changed(void) 
 {
-   config_changed = true;
+   lSetBool(ec, EV_changed, true);
 }
 
 /****** Eventclient/Client/ec_commit() ****************************************
@@ -2103,13 +2098,14 @@ ec_commit(void)
    } else if (ec_need_new_registration()) {
       /* not (yet) registered? Cannot send modification to qmaster! */
       DPRINTF((MSG_EVENT_NOTREGISTERED));
-   } else if (!config_changed) {
-      DPRINTF(("no changes to commit\n"));
    } else {
       lList *lp, *alp;
 
       lp = lCreateList("change configuration", EV_Type);
       lAppendElem(lp, lCopyElem(ec));
+      if (!lGetBool(ec, EV_changed)) {
+         lSetList(lFirst(lp), EV_subscribed, NULL);
+      }
 
       /*
        *  to add may also means to modify
@@ -2122,7 +2118,6 @@ ec_commit(void)
       lFreeList(alp);
       
       if (ret) {
-         config_changed = false;
          lSetBool(ec, EV_changed, false);
       }
    }
@@ -2186,6 +2181,9 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
        */
       lp = lCreateList("change configuration", EV_Type);
       lAppendElem(lp, lCopyElem(ec));
+      if (!lGetBool(ec, EV_changed)) {
+         lSetList(lFirst(lp), EV_subscribed, NULL);
+      }
 
       /*
        *  to add may also means to modify
@@ -2206,7 +2204,7 @@ ec_commit_multi(lList **malpp, state_gdi_multi *state)
          gdi_ret = answer_list_handle_request_answer_list(&alp, stderr);
 
          if (gdi_ret == STATUS_OK) {
-            config_changed = false;
+            lSetBool(ec, EV_changed, false);  /* TODO: call changed method */
             ret = true;
          }
       }
@@ -2277,7 +2275,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
    }
   
    if (ret) {
-      if (config_changed) {
+      if (lGetBool(ec, EV_changed)) {
          ret = ec_commit();
       }
    }

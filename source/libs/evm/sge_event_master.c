@@ -494,7 +494,6 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    u_long32 id;
    u_long32 ed_time;
    const char *name;
-   lList *subscription;
    const char *host;
    const char *commproc;
    u_long32 commproc_id;
@@ -505,7 +504,6 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    id = lGetUlong(clio, EV_id);
    name = lGetString(clio, EV_name);
-   subscription = lGetList(clio, EV_subscribed);
    ed_time = lGetUlong(clio, EV_d_time);
    host = lGetHost(clio, EV_host);
    commproc = lGetString(clio, EV_commproc);
@@ -517,7 +515,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    }
    
    /* EV_ID_ANY is 0, therefor the compare is always true (Irix complained) */
-   if (/*(id < EV_ID_ANY) ||*/ (id >= EV_ID_FIRST_DYNAMIC)) { /* invalid request */
+   if (id >= EV_ID_FIRST_DYNAMIC) { /* invalid request */
       ERROR((SGE_EVENT, MSG_EVE_ILLEGALIDREGISTERED_U, u32c(id)));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
@@ -525,7 +523,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       return STATUS_ESEMANTIC;
    }
 
-   if (subscription == NULL) {
+   if (lGetBool(clio, EV_changed) && lGetList(clio, EV_subscribed) == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
@@ -684,7 +682,6 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 *  INPUTS
 *     lListElem *clio - object containing the data to change
 *     lList **alpp    - answer list pointer
-*     lList **eclpp   - list pointer to return changed object
 *     char *ruser     - user that triggered the modify action
 *     char *rhost     - host that triggered the modify action
 *
@@ -695,7 +692,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 *     MT-NOTE: sge_mod_event_client() is NOT MT safe.
 *
 *******************************************************************************/
-int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, char *rhost) 
+int sge_mod_event_client(lListElem *clio, lList **alpp, char *ruser, char *rhost) 
 {
    lListElem *event_client=NULL;
    u_long32 id;
@@ -738,7 +735,7 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       return STATUS_ESEMANTIC;
    }
 
-   if (lGetList(clio, EV_subscribed) == NULL) {
+   if (lGetBool(clio, EV_changed) && lGetList(clio, EV_subscribed) == NULL) {
       unlock_client (id);
 
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
@@ -760,7 +757,6 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    }
 
    /* subscription changed */
-   /*old_subscription = lGetString(event_client, EV_subscription);*/
    if (lGetBool(clio, EV_changed)) {
       subscription_t *new_sub = NULL; 
       subscription_t *old_sub = NULL; 
@@ -824,15 +820,6 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
          ruser, rhost, lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-
-   /* return modified event client object to event client */
-   if (eclpp != NULL) {
-      if (*eclpp == NULL) {
-         *eclpp = lCreateListHash("modified event client", EV_Type, true);
-      }
-
-      lAppendElem(*eclpp, lCopyElem(event_client));
-   }
 
    unlock_client (id);
 

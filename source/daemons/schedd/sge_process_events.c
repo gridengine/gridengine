@@ -533,7 +533,7 @@ void cleanup_default_scheduler(void)
 
 bool 
 sge_process_schedd_conf_event(sge_object_type type, sge_event_action action, 
-                                  lListElem *event, void *clientdata)
+                              lListElem *event, void *clientdata)
 {
    lListElem *ep;
 

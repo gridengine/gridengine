@@ -2072,6 +2072,7 @@ SetSpoolingOptions()
       berkeleydb)
          SPOOLING_LIB=none
          SPOOLING_ARGS="$QMDIR/spooldb"
+         Makedir $QMDIR/spooldb
          ;;
       *)
          $INFOTEXT -e "\nUnknown spooling method. Exit."

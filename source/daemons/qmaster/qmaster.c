@@ -329,17 +329,26 @@ static void set_message_priorities(const char* thePriorities)
 
 static void daemonize_qmaster(void)
 {
-   fd_set fds;
-   int fd;
-
    DENTER(TOP_LAYER, "daemonize_qmaster");
 
    if (!getenv("SGE_ND")) {
+      fd_set fds;
+      int fd;
+      lList *answer_list = NULL;
+
+      /* close database and reopen it in child */
+      spool_shutdown_context(&answer_list, spool_get_default_context());
+      answer_list_output(&answer_list);
+
       FD_ZERO(&fds);
       fd = commlib_state_get_sfd();
       if (fd>=0) { FD_SET(fd, &fds); }
       sge_daemonize((commlib_state_get_closefd() ? NULL : &fds));
+
+      spool_startup_context(&answer_list, spool_get_default_context(), true);
+      answer_list_output(&answer_list);
    }
+
 
    DEXIT;
    return;

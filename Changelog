@@ -1,3 +1,8 @@
+JG-2003-10-15-0: Enhancem.: Berkeleydb Spooling:
+                            - added transaction handling
+                            - qmaster: shutdown and restart spooling framework
+                              while daemonizing
+
 AH-2003-10-15-0: Cleanup:   Removed null-statement code in shepherd about 
                             truncating of job stdout/stderr. There is no 
                             case when we truncate.

@@ -32,4 +32,4 @@
 
 # Base directory where the openssl binary and libraries resides
 OPENSSLBASE=/vol2/tools/SW/openssl-0.9.7c
-BERKELEYDBBASE=/vol2/tools/SW/db-4.1.25
+BERKELEYDBBASE=/vol2/tools/SW/db-4.0.14

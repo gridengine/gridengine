@@ -1923,34 +1923,35 @@ XtPointer cld, cad;
    
    DENTER(GUI_LAYER, "qmonQCSOQ");
    
-   qmonMirrorMulti(QUEUE_T);
-   ql = qmonMirrorList(SGE_QUEUE_LIST);
-   n = lGetNumberOfElem(ql);
-   if (n>0) {
-      strs = (String*)XtMalloc(sizeof(String)*n); 
-      for (qep=lFirst(ql), i=0; i<n; qep=lNext(qep), i++) {
-        /*
-        ** we get only references don't free, the strings
-        */
-        strs[i] = lGetString(qep, QU_qname);
+   if (cbs->column == 0) {
+      qmonMirrorMulti(QUEUE_T);
+      ql = qmonMirrorList(SGE_QUEUE_LIST);
+      n = lGetNumberOfElem(ql);
+      if (n>0) {
+         strs = (String*)XtMalloc(sizeof(String)*n); 
+         for (qep=lFirst(ql), i=0; i<n; qep=lNext(qep), i++) {
+           /*
+           ** we get only references don't free, the strings
+           */
+           strs[i] = lGetString(qep, QU_qname);
+         }
+       
+         strcpy(buf, "");
+         status = XmtAskForItem(w, NULL, "@{Get Queue}",
+                           "@{Available Queues}", strs, n,
+                           False, buf, BUFSIZ, NULL); 
+         
+         if (status) {
+             XbaeMatrixSetCell(w, cbs->row, cbs->column, buf);
+         }
+         /*
+         ** don't free referenced strings, they are in the queue list
+         */
+         XtFree((char*)strs);
       }
-    
-      strcpy(buf, "");
-      status = XmtAskForItem(w, NULL, "@{Get Queue}",
-                        "@{Available Queues}", strs, n,
-                        False, buf, BUFSIZ, NULL); 
-      
-      if (status) {
-          XbaeMatrixSetCell(w, cbs->row, cbs->column, buf);
-      }
-      /*
-      ** don't free referenced strings, they are in the queue list
-      */
-      XtFree((char*)strs);
+      else
+         qmonMessageShow(w, True, "@{No queues to select}");
    }
-   else
-      qmonMessageShow(w, True, "@{No queues to select}");
-   
    DEXIT;
 }
 

@@ -1,3 +1,5 @@
+AA-2001-09-03-0: Fix for IZ 52, popup in Queue Configuration-Subordinates
+
 EB-2001-08-30-0: Removed help output from qconf concerning 'meattr'
                  and 'Meattr' (Issue# 50)  
 

@@ -1,4 +1,9 @@
-SG-2004-02-01-9: Bugfix:    in case a job start failed, the queue is set
+DT-2004-02-01-0: Bugfix:		Increased MAX_STRING_SIZE from 2048 to 8192 to allow
+														for longer PATHs.
+								 Issue:			538
+								 Changed:		sge_basis.h
+
+SG-2004-02-01-0: Bugfix:    in case a job start failed, the queue is set
                             into error state when it is a job script but not
                             for binary jobs. This has be fixed. The queue is
                             set into error state, when ever a job start fails.

@@ -1280,7 +1280,7 @@ cqueue_list_locate_qinstance(lList *cqueue_list, const char *full_name)
    lListElem *ret = NULL;
 
    DENTER(TOP_LAYER, "cqueue_list_locate_qinstance");
-   if (full_name != NULL)
+   if (full_name != NULL) {
       lListElem *cqueue = NULL;
       dstring cqueue_name_buffer = DSTRING_INIT;
       dstring host_domain_buffer = DSTRING_INIT;

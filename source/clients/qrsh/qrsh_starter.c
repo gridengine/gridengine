@@ -211,9 +211,10 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
     */
     
    if(*wrapper == NULL) {
-      *wrapper = get_conf_val("starter_method");
-      if(*wrapper != NULL) { 
+      char *starter_method = get_conf_val("starter_method");
+      if(starter_method != NULL && strcasecmp(starter_method, "none") != 0) { 
          char buffer[128];
+         *wrapper = starter_method;
          sprintf(buffer, "%s=%s", "SGE_STARTER_SHELL_PATH", ""); sge_putenv(buffer);
          sprintf(buffer, "%s=%s", "SGE_STARTER_SHELL_START_MODE", "unix_behavior"); sge_putenv(buffer);
          sprintf(buffer, "%s=%s", "SGE_STARTER_USE_LOGIN_SHELL", "false"); sge_putenv(buffer);

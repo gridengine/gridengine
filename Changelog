@@ -1,3 +1,6 @@
+JG-2001-12-17-2: Bugfix:    Bugfix for JG-2001-12-17-0 handling "none" as
+                            starter_method.
+
 EB-2001-12-17-1: Bugfix:    qstat -j <job_id> did not show a monitoring message
                  Issue:     #113
                  Bugtraq:   #4614501

@@ -116,7 +116,7 @@
 #define MSG_SCHEDD_INFO_WOULDSETQEUEINALARM_IS        _MESSAGE(47057, _("(%d slots) would set queue "SFQ" in load alarm state") ) 
 #define MSG_SCHEDD_INFO_NOSLOTSINQUEUE_S              _MESSAGE(47058, _("cannot run in queue "SFQ" because it has \"0\" slots"))
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUE_SSS          _MESSAGE(47059, _("(-l"SFN") cannot run in queue "SFQ" because "SFN"") ) 
-#define MSG_SCHEDD_INFO_NOSLOTSUPPORTBYPE_S           _MESSAGE(47060, _("cannot run because requested amount of slots is not supported by pe "SFQ""))
+#define MSG_SCHEDD_INFO_NORESOURCESPE_                _MESSAGE(47060, _("cannot run because resources requested are not available for parallel job"))
 #define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY_SS          _MESSAGE(47061, _("(-l"SFN") cannot run globally because "SFN"\n") ) 
 #define MSG_SCHEDD_INFO_NOFORCEDRES_SS                _MESSAGE(47062, _("does not request 'forced' resource "SFQ" of host "SFN"") )  
 #define MSG_SCHEDD_INFO_NOGLOBFORCEDRES_SS            _MESSAGE(47063, _("does not request globally 'forced' resource "SFQ"") )    
@@ -163,7 +163,7 @@
 #define MSG_SCHEDD_INFO_WOULDSETQEUEINALARM           _MESSAGE(47102, _("Jobs would set queue in load alarm state") )     
 #define MSG_SCHEDD_INFO_NOSLOTSINQUEUE                _MESSAGE(47103, _("Jobs can not run because queue has 0 slots") )    
 #define MSG_SCHEDD_INFO_CANNOTRUNINQUEUE              _MESSAGE(47104, _("Jobs can not run because the resource requirements can not be satified"))
-#define MSG_SCHEDD_INFO_NOSLOTSUPPORTBYPE             _MESSAGE(47105, _("Jobs can not run because requested amount of slots is not supported by pe"))
+#define MSG_SCHEDD_INFO_NORESOURCESPE                 _MESSAGE(47105, _("Jobs can not run because resources requested are not available for parallel job"))
 #define MSG_SCHEDD_INFO_CANNOTRUNGLOBALLY             _MESSAGE(47106, _("Jobs can not run globally because the resource requirements can not be satified"))
 #define MSG_SCHEDD_INFO_NOFORCEDRES                   _MESSAGE(47107, _("Jobs can not run because they do not request 'forced' resource"))
 #define MSG_SCHEDD_INFO_NOGLOBFORCEDRES               _MESSAGE(47108, _("Jobs can not run globally because they do not request 'forced' resource"))
@@ -194,6 +194,8 @@
 #define MSG_SYSTEM_INVALIDERRORNUMBER                 _MESSAGE(47132, _("invalid error number"))
 #define MSG_SYSTEM_GOTNULLASERRORTEXT                 _MESSAGE(47133, _("no error text available"))
 
+#define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S      _MESSAGE(47134, _("cannot run because total slots of pe "SFQ" not in range of job"))
+#define MSG_SCHEDD_INFO_TOTALPESLOTSNOTINRANGE        _MESSAGE(47135, _("Jobs can not run because total slots of pe are not in range of job") )
 
 /* 
 ** schedd/sge_pe_schedd.c

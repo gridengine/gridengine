@@ -26,8 +26,7 @@ Content
 
    Simply put, DRMAA is an API for submitting and controling jobs.  DRMAA
    has been implemented in several lanuages and for several DRMs.  The Grid
-   Engine 6.0 release includes a C implementation, or C binding as well as a
-   Java[TM] language binding.
+   Engine 6.0 release includes a C implementation, or C binding.
 
    For more information about DRMAA and the various bindings that are
    available, visit the DRMAA website at:

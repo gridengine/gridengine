@@ -1536,13 +1536,20 @@ proc create_shell_script { scriptfile
 
 
    set file_size 0
+   set timeout [expr [clock seconds] + 60]
    while { $file_size == 0 } {
       catch { set file_size [file size "$scriptfile"]}
       if { $file_size == 0 } { 
          puts $CHECK_OUTPUT "--> file size of \"$scriptfile\": $file_size ; waiting for filesize > 0"
-         sleep 1
+         after 1000
+      }
+
+      if { [clock seconds] > $timeout } {
+         add_proc_error "create_shell_script" "-2" "timeout waiting for file $scriptfile having filesize > 0"
+         return
       }
    }
+
 #   catch { exec "touch" "$scriptfile" } result
 #   puts $CHECK_OUTPUT "touch result: $result"
   

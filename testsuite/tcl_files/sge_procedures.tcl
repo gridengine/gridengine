@@ -6274,7 +6274,9 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       set proccess_names "sched"
       lappend proccess_names "execd"
       lappend proccess_names "qmaster"
-      lappend proccess_names "commd"
+      if {$ts_config(gridengine_version) == 53} {
+         lappend proccess_names "commd"
+      }
 
       foreach host $hosts_to_check { 
             puts $CHECK_OUTPUT ""

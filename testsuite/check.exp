@@ -1087,8 +1087,6 @@ proc send_mail { address cc subject body } {
      }  
   }
   file delete "$CHECK_TESTSUITE_ROOT/mailbody_testsuite_tmp" 
-
-
 }
 
 

@@ -1,7 +1,7 @@
 SG-2004-01-22-1: Bugfix:    Removed the renaming of users via qconf. It never
                             worked and should not have been part of qconf.
                  Changed:   qconf
-                 Issue:     639
+                 Issue:     646
 
 SG-2004-01-22-0: Ehancem.:  2 part of the qmod adaption
                  Changed:   qmod, qmaster

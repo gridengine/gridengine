@@ -441,7 +441,6 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 *******************************************************************************/
 static void qmaster_init(char **anArgv)
 {
-   int ret_val;
    DENTER(TOP_LAYER, "qmaster_init");
 
    if (setup_qmaster()) {

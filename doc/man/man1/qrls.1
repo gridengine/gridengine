@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qrls.1,v $     Last Update: $Date: 2001/07/20 08:18:59 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: qrls.1,v $     Last Update: $Date: 2002/07/04 09:50:11 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QRLS 1 "$Date: 2001/07/20 08:18:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QRLS 1 "$Date: 2002/07/04 09:50:11 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qrls \- release xxQS_NAMExx jobs from previous hold states
 .SH SYNTAX
@@ -109,10 +109,10 @@ Specified by the following form:
 .ta 0.0i
 .sp 1
 If present, the \fItask_range\fP restricts the effect of the
-operation to the job array task range specified as suffix to the job id
+operation to the array job task range specified as suffix to the job id
 (see the \fB\-t\fP option to
 .M qsub 1
-for further details on job arrays).
+for further details on array jobs).
 .sp 1
 The task range specifier has the
 form n[-m[:s]]. The range may be a single number, a  simple

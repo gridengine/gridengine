@@ -1,3 +1,6 @@
+EB-2002-07-04-0: Doc:       renamed "job array" to "array job" in 
+                            the manual pages                          
+
 JG-2002-07-04-0: Bugfix:    non immediate interactive jobs (-now no) failed,
                             for immediate qsub jobs (-now yes) the job script
                             was not checked.

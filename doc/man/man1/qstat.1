@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2002/01/25 14:04:54 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2002/07/04 09:50:11 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2002/01/25 14:04:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2002/07/04 09:50:11 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -108,9 +108,9 @@ resource_name list. Please refer to the description of the
 section \fBOUTPUT FORMATS\fP below for further detail.
 .\"
 .IP "\fB\-g d\fP"
-Displays job arrays verbosely in a one line per job task fashion. By
-default, job arrays are grouped and all tasks with the same status (for
-pending tasks only) are displayed in a single line. The job array task
+Displays array jobs verbosely in a one line per job task fashion. By
+default, array jobs are grouped and all tasks with the same status (for
+pending tasks only) are displayed in a single line. The array job task
 id range field in the output (see section
 \fBOUTPUT FORMATS\fP) specifies the
 corresponding set of tasks.
@@ -179,7 +179,7 @@ and \fB\-hold_jid\fP option to
 Prints extended information about the controlled sub-tasks
 of the displayed parallel jobs. Please refer to the \fBOUTPUT FORMATS\fP
 sub-section \fBExpanded Format\fP below for detailed information. Sub-tasks
-of parallel jobs should not be confused with job array tasks (see \fB\-g\fP
+of parallel jobs should not be confused with array job tasks (see \fB\-g\fP
 option above and \fB\-t\fP option to
 .M qsub 1 ).
 .\"
@@ -266,7 +266,7 @@ jobs only).
 the function of the running jobs (MASTER or SLAVE \- the latter
 for parallel jobs only).
 .IP "\(bu" 3n
-the job array task id. Will be empty for non-array jobs. See the
+the array job task id. Will be empty for non-array jobs. See the
 \fB\-t\fP option to
 .M qsub 1
 and the \fB\-g\fP above for additional information.
@@ -274,7 +274,7 @@ and the \fB\-g\fP above for additional information.
 .PP
 If the \fB\-t\fP option is supplied, each job status line also contains
 .IP "\(bu" 3n
-the parallel task ID (do not confuse parallel tasks with job array tasks),
+the parallel task ID (do not confuse parallel tasks with array job tasks),
 .IP "\(bu" 3n
 the status of the parallel task \- one of 
 r(unning), R(estarted), s(uspended), S(uspended), T(hreshold), w(aiting),

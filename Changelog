@@ -1,3 +1,7 @@
+AA-2004-04-22-0: Bugfix:    - loadadjustments display of load values was broken
+                 Changed:   qmon
+                 Review:    SG
+
 JG-2004-04-22-3: Bugfix:    qmake output warning "cannot determine architecture"
                             even if the commandline contained an explicit 
                             resource request.

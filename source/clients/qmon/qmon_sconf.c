@@ -674,7 +674,7 @@ XtPointer cad
 
    DENTER(GUI_LAYER, "qmonLoadNamesSC");
 
-   qmonMirrorMultiAnswer(CENTRY_T, &alp);
+   qmonMirrorMultiAnswer(CENTRY_T | EXECHOST_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -685,8 +685,17 @@ XtPointer cad
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
 
    for_each (hep, ehl) {
-      host_complexes2scheduler(&entries, hep, ehl, cl);   
+      lList *temp_entries = NULL;
+      host_complexes2scheduler(&temp_entries, hep, ehl, cl);   
+      if (entries == NULL) {
+         entries = temp_entries;
+      }
+      else {
+         lAddList(entries, temp_entries);
+         temp_entries = NULL;
+      }
    }
+   lUniqStr(entries, CE_name);
    
    if (!where)
       where = lWhere("%T(%I == %u || %I == %u || %I == %u || %I == %u)", 

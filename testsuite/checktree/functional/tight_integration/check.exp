@@ -171,7 +171,7 @@ proc tight_integration_monitor {id started_var finished_var jobid_var info_var {
       # individual line.
       -i $sp_id "?*" {
          #puts $CHECK_OUTPUT "entered default branch, data: $expect_out(0,string)"
-         foreach line [split $expect_out(0,string) "\n"] {
+         foreach line [ string trim [split $expect_out(0,string) "\n"]] {
             if {[string length [string trim $line]] > 0} {
                #puts $CHECK_OUTPUT "processing line: $line"
                switch -glob $line {
@@ -219,6 +219,12 @@ proc tight_integration_monitor {id started_var finished_var jobid_var info_var {
                         }
                      }
                      set ret "task running"
+                  }
+                  "_exit_status_:(*)" {
+                     puts $CHECK_OUTPUT "got exit status from remote prog shell script"
+                  }
+                  "script done." {
+                     puts $CHECK_OUTPUT "got \"script done.\" from remote prog shell script"
                   }
                   default {
                      add_proc_error tight_integration_monitor -1 "unexpected job output $line"
@@ -402,6 +408,7 @@ proc tight_integration_iz_578 {} {
    set masterq [get_queue_instance "tight.q" $CHECK_HOST]
 
    set id [submit_with_method $submit_command "-pe tight $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS -masterq $masterq -cwd -N tightf" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 $TIGHT_INTEGRATION_FUNCTIONAL_DURATION"]
+
 
    set started 0
    set finished 0

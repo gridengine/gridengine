@@ -1,3 +1,7 @@
+CR-2004-07-21-0: Testsuite: modified /functional/tight_integration check to be more
+                            error tolerant
+                 Review:    JG
+
 JG-2004-07-21-0: Bugfix:    Fixed a bug in aimk -shared-libs.
                             Fixed default busy handling in event client.
                  Doc.:      Described use of bdb_checkpoint.sh in Berkeley DB

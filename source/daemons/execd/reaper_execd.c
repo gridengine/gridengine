@@ -717,6 +717,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    case SSTATE_OPEN_OUTPUT:
    case SSTATE_NO_CWD:
    case SSTATE_AFS_PROBLEM:
+   case SSTATE_APPERROR:
       general_failure = GFSTATE_JOB;
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(jr, is_array);
@@ -1950,6 +1951,8 @@ lListElem *jr
          action = MSG_MAIL_ACTION_MIGR;
       } else if (failed==SSTATE_AGAIN) {
          action = MSG_MAIL_ACTION_RESCH;
+      } else if (failed==SSTATE_APPERROR) {
+         action = MSG_MAIL_ACTION_APPERROR;
       } else if (lGetUlong(jr, JR_general_failure)==GFSTATE_JOB) {
          action = MSG_MAIL_ACTION_ERR;
          comment = MSG_MAIL_ACTION_ERR_COMMENT;

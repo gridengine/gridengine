@@ -78,7 +78,8 @@ int admail_states[MAX_SSTATE + 1] = {
 /* 26 SSTATE_OPEN_OUTPUT         */   0,
 /* 27 SSTATE_NO_SHELL            */   0,
 /* 28 SSTATE_NO_CWD              */   0,
-/* 29 SSTATE_AFS_PROBLEM         */   0 };
+/* 29 SSTATE_AFS_PROBLEM         */   0,
+/* 30 SSTATE_APPERROR            */   0 };
 
 u_long32 admail_times[MAX_SSTATE + 1];
 

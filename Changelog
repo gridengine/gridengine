@@ -1,3 +1,9 @@
+HP-2004-02-19-0: Enhance:   - filestaging for drmaa
+                            - prolog handles application error
+                 Changed:   all
+                 Review:    AH
+                 Issue:     638, 377
+                 
 AD-2004-02-19-1: Cleanup:   Did remove '-s' command line argument.
                  Changed:   qmaster, common, man
 

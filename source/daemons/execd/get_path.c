@@ -85,10 +85,10 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
    /*
     * prepend cwd to path
     */
-   if (path && path[0] != '/') {
+   if (path && path[0]!='\0' && path[0] != '/') {
       /* got relative path from -e/-o */
       sprintf(pathstr, "%s/%s", cwd, path);
-   } else if (path) { 
+   } else if (path && path[0]!='\0' ) { 
       /* got absolute path from -e/-o */
       strcpy(pathstr, path);
    } else if (type == SGE_STDIN) {
@@ -100,6 +100,60 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
  
    DEXIT;
    return 0;
+}
+
+/****** execd/fileio/sge_get_fs_path() ********************************
+*  NAME
+*     sge_get_fs_path() -- Retrieve the file staging host and path
+*
+*  SYNOPSIS
+*     bool sge_get_fs_path( lList* lp, char* fs_host, char* fs_path )
+*
+*  FUNCTION
+*     Retrieves the file staging host and path from the
+*     job list element.
+*
+*  INPUTS
+*     lList *lp        - pointer to the path sublist
+*     char  *fs_host   - buffer to hold the host name
+*     char  *fs_path   - buffer to hold the file path
+*
+*  RESULT
+*     bool - Is file staging enabled for this (stdin/stdout/stderr)
+*            path sublist?
+*
+*  EXAMPLES
+*
+*  NOTES
+*
+*  SEE ALSO
+*******************************************************************************/
+bool sge_get_fs_path( lList* lp, char* fs_host, char* fs_path )
+{
+   lListElem* ep;
+   bool       bFileStaging=false;
+
+   DENTER(TOP_LAYER, "sge_get_fs_path");
+
+   if( lp && (ep=lFirst( lp ))) {
+      bFileStaging = lGetBool( ep, PN_file_staging );
+ 
+      if( bFileStaging ) {
+         if( lGetHost( ep, PN_file_host )) {
+            strcpy( fs_host, lGetHost( ep, PN_file_host ));
+         }
+         /*else {
+            strcpy( fs_host, 
+               var_list_get_string( lGetList( lpJobList, JB_env_list ), VAR_PREFIX "O_HOST" ));
+         }
+         */
+         if( lGetString( ep, PN_path )) {
+            strcpy( fs_path, lGetString( ep, PN_path ));
+         }
+      }
+   }
+   DEXIT;
+   return bFileStaging;
 }
 
 const char* expand_path(
@@ -116,7 +170,6 @@ const char *host
    char tmp[255];
    
    DENTER(TOP_LAYER, "expand_path");
-   
    exp_path[0] = '\0';
 
    if (in_path) {

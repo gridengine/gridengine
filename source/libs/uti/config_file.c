@@ -85,6 +85,22 @@ char *pe_variables[] = {
    "pe_slots",
    "processors",
    "queue",
+   "stdin_path",
+   "stdout_path",
+   "stderr_path",
+   "merge_stderr",
+   "fs_stdin_host",
+   "fs_stdin_path",
+   "fs_stdin_tmp_path",
+   "fs_stdin_file_staging",
+   "fs_stdout_host",
+   "fs_stdout_path",
+   "fs_stdout_tmp_path",
+   "fs_stdout_file_staging",
+   "fs_stderr_host",
+   "fs_stderr_path",
+   "fs_stderr_tmp_path",
+   "fs_stderr_file_staging",
    NULL
 };
 
@@ -96,6 +112,22 @@ char *prolog_epilog_variables[] = {
    "job_name",
    "processors",
    "queue",
+   "stdin_path",
+   "stdout_path",
+   "stderr_path",
+   "merge_stderr",
+   "fs_stdin_host",
+   "fs_stdin_path",
+   "fs_stdin_tmp_path",
+   "fs_stdin_file_staging",
+   "fs_stdout_host",
+   "fs_stdout_path",
+   "fs_stdout_tmp_path",
+   "fs_stdout_file_staging",
+   "fs_stderr_host",
+   "fs_stderr_path",
+   "fs_stderr_tmp_path",
+   "fs_stderr_file_staging",
    NULL
 };
 
@@ -173,7 +205,7 @@ const char *fname
 
 /******************************************************/
 int add_config_entry(name, value)
-char *name, *value;
+const char *name, *value;
 {
    config_entry *new;
 
@@ -231,6 +263,39 @@ char *name
    if (config_errfunc)
       config_errfunc(err_str);
    return NULL;
+}
+
+/*****************************************************************************
+ * set_conf_val
+ *   Sets the value of a config entry.
+ *   If the config entry already exists, it replaces the value.
+ *   If the config entry does not exist, it creates a new config entry.
+ *
+ * Parameters:
+ *   name:  Name of the config entry
+ *   value: Value of the config entry
+ *
+ * Return Value:
+ *   - NULL if a new config value was created or an error occured.
+ *   - The old value of the config entry if it already existed.
+ *****************************************************************************/
+char* set_conf_val( const char* name, const char* value )
+{
+   config_entry* pConfigEntry;
+   char* szOldValue=NULL;
+
+   if( !name || !value ) {
+      return NULL;
+   }
+   
+   pConfigEntry = find_conf_entry( name, config_list );
+   if( pConfigEntry ) {
+      szOldValue = pConfigEntry->value;
+      pConfigEntry->value = strdup( value );
+   } else {
+      add_config_entry( name, value );
+   }
+   return szOldValue;
 }
 
 /***************************************************/
@@ -408,7 +473,6 @@ char **allowed
             while (*value)
                *dp++ = *value++;
          }
-
          break;
 
       default:

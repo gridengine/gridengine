@@ -43,7 +43,8 @@ char *search_nonone_conf_val(char *name);
 
 int replace_params(const char *src, char *dst, int dst_len, char **alllowed);
 void delete_config(void);
-int add_config_entry(char *name, char *value);
+int add_config_entry(const char *name, const char *value);
+char* set_conf_val( const char* name, const char* value );
 
 bool parse_bool_param(const char *string, const char *variable, bool *value);
 bool parse_int_param(const char *input, const char *variable, 

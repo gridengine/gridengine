@@ -187,6 +187,7 @@ lListElem *jatep
       *    --> owner requested wrong 
       *        -e/-o/-S/-cwd
       *    --> user did not exist at the execution machine
+      *    --> application controlled job error
       */
    else if ((failed && general_failure==GFSTATE_JOB)) {
 /*       job_log(jobid, jataskid, MSG_LOG_JERRORSET); */

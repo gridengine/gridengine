@@ -129,7 +129,8 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[]);
 static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_jt, 
    int is_bulk, int start, int end, int step, dstring *diag);
 static int japi_drmaa_path2path_opt(const lList *attrs, lList **args,
-   int is_bulk, const char *attribute_key, const char *sw, int opt, dstring *diag);
+   int is_bulk, const char *attribute_key, const char *sw, int opt, dstring *diag,
+   bool bFileStaging);
 static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk, 
    dstring *diag);
 static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
@@ -1976,7 +1977,7 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
 *******************************************************************************/
 static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
                                     const char *attribute_key, const char *sw,
-                                    int opt, dstring *diag)
+                                    int opt, dstring *diag, bool bFileStaging )
 {
    const char *new_path = NULL;
    int ret_val;
@@ -1995,10 +1996,15 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
          const char *value = lGetString(ep, VA_value);
          char *cell = NULL;
          char *path = NULL;
-
-         DPRINTF (("%s = \"%s\"\n", sw, new_path));
-
-         if (new_path[0] == ':') {  /* :path */
+   
+         /* We must accept an empty path. This must be set to the default
+            path later.
+            A empty path means that the drmaa attribute is not set, so it
+            obviously doesn't  have to start with a colon.
+         */
+         if( strlen( new_path )==0 ) {
+            path = "";
+         } else if (new_path[0] == ':') {  /* :path */
             path = (char *)new_path + 1;
          } else if ((path = strstr (new_path, ":"))){ /* host:path */
             path[0] = '\0';
@@ -2006,23 +2012,42 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
             path[0] = ':';
             path += 1;
          } else { /* path */
-            path = (char *)new_path;
+            /* DRMAA-Spec says: The path MUST begin with a colon! */
+            return DRMAA_ERRNO_INVALID_ARGUMENT;
          }
-
-         ep = lCreateElem (AT_Type);
+   
+         ep = lCreateElem( PN_Type );
          lAppendElem (path_list, ep);
          DPRINTF (("PN_path = \"%s\"\n", path));
-         lSetString (ep, PN_path, path);
-
-         if (cell) {
-            DPRINTF (("PN_host = \"%s\"\n", cell));
-            lSetHost (ep, PN_host, cell);
-            FREE (cell);
+         if( strlen( path )>0 ) {
+            lSetString( ep, PN_path, path );
+         } else if( !strcmp( sw, "-i" ) && bFileStaging==true ) {
+            /* No default stdin_path for file staging! */
+            ret_val = 1;
          }
 
-         ep = sge_add_arg (args, opt, lListT, sw, value);
-         lSetList (ep, SPA_argval_lListT, path_list);
+         if( cell ) {
+            DPRINTF(( "PN_file_host = \"%s\"\n", cell ));
+            lSetHost( ep, PN_file_host, cell );
+            FREE( cell );
+         } else {
+            /* No host was given, so we use this host we are running on.*/
+            const char* host = sge_getenv("HOST");
+            if (host == NULL) {
+               host = uti_state_get_unqualified_hostname();
+            }
+            lSetHost( ep, PN_file_host, host );
+         }
          
+
+         DPRINTF(( "FileStaging = %d\n", bFileStaging ));
+         lSetBool( ep, PN_file_staging, bFileStaging );
+         
+         DPRINTF(( "Adding args\n" ));
+         ep = sge_add_arg (args, opt, lListT, sw, value);
+         DPRINTF(( "Setting List\n" ));
+         lSetList (ep, SPA_argval_lListT, path_list);
+         DPRINTF(( "Freeing Path\n" ));
          FREE (new_path);
       }   
       else {
@@ -2571,23 +2596,31 @@ static int opt_list_append_opts_from_drmaa_attr(lList **args, const lList *attrs
    }
 
    /* jobs input/output/error stream -- -i/o/e */
-   if ((drmaa_errno = japi_drmaa_path2path_opt (attrs, args, is_bulk, DRMAA_OUTPUT_PATH,
-                                                "-o", o_OPT, diag))
-        != DRMAA_ERRNO_SUCCESS) {
-      DEXIT;
-      return drmaa_errno;
-   }
-   if ((drmaa_errno = japi_drmaa_path2path_opt (attrs, args, is_bulk, DRMAA_ERROR_PATH,
-                                                "-e", e_OPT, diag))
-        != DRMAA_ERRNO_SUCCESS) {
-      DEXIT;
-      return drmaa_errno;
-   }
-   if ((drmaa_errno = japi_drmaa_path2path_opt (attrs, args, is_bulk, DRMAA_INPUT_PATH,
-                                                "-i", i_OPT, diag))
-        != DRMAA_ERRNO_SUCCESS) {
-      DEXIT;
-      return drmaa_errno;
+   {
+      const char* strvalue="";
+      if( (ep=lGetElemStr( attrs, VA_variable, DRMAA_TRANSFER_FILES ))) {
+         strvalue = lGetString( ep, VA_value );   
+      }
+      
+      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
+               DRMAA_OUTPUT_PATH, "-o", o_OPT, diag, strchr( strvalue, 'o')?true:false))
+         != DRMAA_ERRNO_SUCCESS) {
+         DEXIT;
+         return drmaa_errno;
+      }
+
+      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
+               DRMAA_ERROR_PATH, "-e", e_OPT, diag, strchr( strvalue, 'e')?true:false))
+         != DRMAA_ERRNO_SUCCESS) {
+         DEXIT;
+         return drmaa_errno;
+      }
+      if((drmaa_errno = japi_drmaa_path2path_opt(attrs, args, is_bulk,
+               DRMAA_INPUT_PATH, "-i", i_OPT, diag, strchr( strvalue, 'i')?true:false))
+         != DRMAA_ERRNO_SUCCESS) {
+         DEXIT;
+         return drmaa_errno;
+      }
    }
 
    /* user hold state -- -h */

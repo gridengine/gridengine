@@ -24,7 +24,6 @@
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
@@ -117,6 +116,7 @@ pid_t wait3(int *, int, struct rusage *);
 #define CKPT_APPLICATION 0x200     /* application checkpointing              */
 
 #define RESCHEDULE_EXIT_STATUS 99
+#define APPERROR_EXIT_STATUS 100
 
 int signalled_ckpt_job = 0;   /* marker if signalled a ckpt job */
 int ckpt_signal = 0;          /* signal to send to ckpt job */
@@ -241,10 +241,15 @@ static int do_prolog(int timeout, int ckpt_type)
           *    exists, to allow some cleanup. The exit status of 
           *    this prolog failure may not get lost.
           */
-         if (exit_status==RESCHEDULE_EXIT_STATUS) {
-            shepherd_state = SSTATE_AGAIN;
-         } else {
-            shepherd_state = SSTATE_PROLOG_FAILED;
+         switch( exit_status ) {
+            case RESCHEDULE_EXIT_STATUS:
+               shepherd_state = SSTATE_AGAIN;
+               break;
+            case APPERROR_EXIT_STATUS:
+               shepherd_state = SSTATE_APPERROR;
+               break;
+            default:
+               shepherd_state = SSTATE_PROLOG_FAILED;
          }
          sprintf(err_str, "exit_status of prolog = %d", exit_status);
          shepherd_error_impl(err_str, 0);
@@ -286,10 +291,15 @@ static int do_epilog(int timeout, int ckpt_type)
       }
 
       if (exit_status) {
-         if (exit_status==RESCHEDULE_EXIT_STATUS) {
-            shepherd_state = SSTATE_AGAIN;
-         } else {
-            shepherd_state = SSTATE_EPILOG_FAILED;
+         switch( exit_status ) {
+            case RESCHEDULE_EXIT_STATUS:
+               shepherd_state = SSTATE_AGAIN;
+               break;
+            case APPERROR_EXIT_STATUS:
+               shepherd_state = SSTATE_APPERROR;
+               break;
+            default:
+               shepherd_state = SSTATE_EPILOG_FAILED;
          }
          sprintf(err_str, "exit_status of epilog = %d", exit_status);
          shepherd_error_impl(err_str, 0);
@@ -344,10 +354,15 @@ static int do_pe_start(int timeout, int ckpt_type, pid_t *pe_pid)
           *    allow some cleanup. The exit status of this pe_start
           *    failure may not get lost.
           */
-         if (exit_status==RESCHEDULE_EXIT_STATUS) {
-            shepherd_state = SSTATE_AGAIN;
-         } else {
-            shepherd_state = SSTATE_PESTART_FAILED;
+         switch( exit_status ) {
+            case RESCHEDULE_EXIT_STATUS:
+               shepherd_state = SSTATE_AGAIN;
+               break;
+            case APPERROR_EXIT_STATUS:
+               shepherd_state = SSTATE_APPERROR;
+               break;
+            default:
+               shepherd_state = SSTATE_PESTART_FAILED;
          }
 
          sprintf(err_str, "exit_status of pe_start = %d", exit_status);
@@ -405,10 +420,15 @@ static int do_pe_stop(int timeout, int ckpt_type, pid_t *pe_pid)
           *    exists, to allow cleanup. The exit status of this 
           *    pe_start failure may not get lost.
           */
-         if (exit_status==RESCHEDULE_EXIT_STATUS) {
-            shepherd_state = SSTATE_AGAIN;
-         } else {
-            shepherd_state = SSTATE_PESTOP_FAILED;
+         switch( exit_status ) {
+            case RESCHEDULE_EXIT_STATUS:
+               shepherd_state = SSTATE_AGAIN;
+               break;
+            case APPERROR_EXIT_STATUS:
+               shepherd_state = SSTATE_APPERROR;
+               break;
+            default:
+               shepherd_state = SSTATE_PESTOP_FAILED;
          }
 
          sprintf(err_str, "exit_status of pe_stop = %d", exit_status);
@@ -706,10 +726,26 @@ int main(int argc, char **argv)
                      start pe_stop and epilog before exiting */
                   shepherd_trace("failed starting job");
                } else {
-                  if (exit_status==RESCHEDULE_EXIT_STATUS && !atoi(get_conf_val("forbid_reschedule"))) {
-                     shepherd_state = SSTATE_AGAIN;
-                     sprintf(err_str, "exit_status of job start = %d", exit_status);
-                     shepherd_error_impl(err_str, 0);
+                  bool call_error_impl = false;
+
+                  switch( exit_status ) {
+                     case RESCHEDULE_EXIT_STATUS:
+                        if( !atoi(get_conf_val("forbid_reschedule"))) {
+                           shepherd_state = SSTATE_AGAIN;
+                           call_error_impl = true;
+                        }
+                        break;
+                     case APPERROR_EXIT_STATUS:
+                        if( !atoi(get_conf_val("forbid_apperror"))) {
+                           shepherd_state = SSTATE_APPERROR;
+                           call_error_impl = true;
+                        }
+                        break;
+                  }
+                  if( call_error_impl ) {
+                     sprintf( err_str,
+                        "exit_status of job start = %d", exit_status);
+                     shepherd_error_impl(err_str,0);
                   }
                } 
             }
@@ -971,9 +1007,10 @@ int ckpt_type
 
       if (WIFEXITED(status)) {
          exit_status = WEXITSTATUS(status);
-         shepherd_trace_sprintf("%s exited with status %d%s", childname, 
-                                exit_status, 
-            (exit_status==RESCHEDULE_EXIT_STATUS)?" -> rescheduling":"");
+         shepherd_trace_sprintf("%s exited with status %d%s",
+            childname, exit_status, 
+            (exit_status==RESCHEDULE_EXIT_STATUS || exit_status==APPERROR_EXIT_STATUS)?
+            " -> rescheduling":"");
 
          wait_status = SGE_SET_WEXITED(wait_status, 1);
          wait_status = SGE_SET_WEXITSTATUS(wait_status, exit_status);
@@ -1131,12 +1168,16 @@ int ckpt_type
 
       /* 
        *  we are not interested in exit status of job
-       *  except it was the RESCHEDULE_EXIT_STATUS 
+       *  except it was the RESCHEDULE_EXIT_STATUS or APPERROR_EXIT_STATUS
        */
-      if (exit_status != RESCHEDULE_EXIT_STATUS)
+      if( exit_status != RESCHEDULE_EXIT_STATUS
+       && exit_status != APPERROR_EXIT_STATUS ) {
          exit_status = 0;
-      else 
+      } else if( exit_status == RESCHEDULE_EXIT_STATUS ) {
          shepherd_trace("keep RESCHEDULE_EXIT_STATUS");
+      } else if( exit_status == APPERROR_EXIT_STATUS ) {
+         shepherd_trace("keep APPERROR_EXIT_STATUS");
+      }
 
    } /* if child == job */
 

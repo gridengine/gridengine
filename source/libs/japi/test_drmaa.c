@@ -371,11 +371,15 @@ enum {
          DRMAA_V_ARGV
          DRMAA_V_EMAIL
          DRMAA_V_ENV */
-   ST_USAGE_CHECK
+   ST_USAGE_CHECK,
       /* - one thread 
          - submit jobs 
          - wait for jobend
          - print job usage */
+   ST_TRANSFER_FILES_SINGLE_JOB,
+   ST_TRANSFER_FILES_BULK_JOB
+      /* Set Job InputHost:/InputPath, OutputHost:/OutputPath, ErrorHost:/ErrorPath */
+            
 };
 
 const struct test_name2number_map {
@@ -439,7 +443,14 @@ const struct test_name2number_map {
    /* tests that test_drmaa can't test in an automated fashion (so far) */
    { "ST_DRMAA_JOB_PS",                          ST_DRMAA_JOB_PS,                            1, "<jobid> ..."   },
    { "ST_DRMAA_CONTROL",                         ST_DRMAA_CONTROL,                           3, "DRMAA_CONTROL_* DRMAA_ERRNO_* <jobid> ..." },
-   { "ST_USAGE_CHECK",                            ST_USAGE_CHECK,                            1, "<exit_job>" },
+   { "ST_USAGE_CHECK",                           ST_USAGE_CHECK,                             1, "<exit_job>" },
+
+   { "ST_TRANSFER_FILES_SINGLE_JOB",             ST_TRANSFER_FILES_SINGLE_JOB,               6, "<sleeper_job> <file_staging_flags "
+         "{\"i\"|\"o\"|\"e\" }> <merge_stderr {\"y\"|\"n\"}> <[inputhost]:/inputpath> <[outputhost]:/outputpath> <[errorhost]:/errorpath>" },
+
+
+   { "ST_TRANSFER_FILES_BULK_JOB",               ST_TRANSFER_FILES_BULK_JOB,                 6, "<sleeper_job> <file_staging_flags "
+         "{\"i\"|\"o\"|\"e\" }> <<merge_stderr {\"y\"|\"n\"}> [inputhost]:/inputpath> <[outputhost]:/outputpath> <[errorhost]:/errorpath>" },
 
    { NULL,                                       0 }
 };
@@ -611,8 +622,9 @@ int main(int argc, char *argv[])
 
 static int test(int *argc, char **argv[], int parse_args)
 {
-   int i;
-   int job_chunk = JOB_CHUNK;
+   bool bBulkJob = false;
+   int  i;
+   int  job_chunk = JOB_CHUNK;
    char diagnosis[DRMAA_ERROR_STRING_BUFFER];
    drmaa_job_template_t *jt = NULL;
    int drmaa_errno=0;
@@ -3864,6 +3876,122 @@ static int test(int *argc, char **argv[], int parse_args)
          
          break;
       }
+   case ST_TRANSFER_FILES_BULK_JOB:
+      bBulkJob = true;
+   case ST_TRANSFER_FILES_SINGLE_JOB:
+      {
+         int aborted, stat, remote_ps;
+         char jobid[100];
+         const char *session_all[] = { DRMAA_JOB_IDS_SESSION_ALL, NULL };
+         char* szPath;
+         char* szTemp;
+
+         if (parse_args)
+            sleeper_job = NEXT_ARGV(argc, argv);
+
+         if (drmaa_init(NULL, diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_init() failed: %s\n", diagnosis);
+            return 1;
+         }
+         report_session_key();
+       
+         /* submit a working job from a local directory to the execution host */
+         drmaa_allocate_job_template(&jt, NULL, 0);
+         drmaa_set_attribute(jt, DRMAA_REMOTE_COMMAND, sleeper_job, NULL, 0);
+
+         szTemp = NEXT_ARGV(argc,argv);
+         /*fprintf( stderr, "arg=%s\n", szTemp );*/
+         drmaa_set_attribute(jt, DRMAA_TRANSFER_FILES, szTemp, NULL, 0);
+        
+         szTemp = NEXT_ARGV(argc,argv);
+         /*fprintf( stderr, "arg=%s\n", szTemp );*/
+         drmaa_set_attribute(jt, DRMAA_JOIN_FILES, szTemp, NULL, 0);
+
+         if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
+            szPath="";
+         }
+         drmaa_set_attribute(jt, DRMAA_INPUT_PATH, szPath, NULL, 0);
+         /*fprintf( stderr, "arg=%s\n", szPath );*/
+
+         if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
+            szPath="";
+         }
+         drmaa_set_attribute(jt, DRMAA_OUTPUT_PATH,szPath, NULL, 0);
+         /*fprintf( stderr, "arg=%s\n", szPath );*/
+
+         if( !strcmp( (szPath=NEXT_ARGV(argc,argv)), "NULL" )) {
+            szPath="";
+         }
+         drmaa_set_attribute(jt, DRMAA_ERROR_PATH, szPath, NULL, 0);
+         /*fprintf( stderr, "arg=%s\n", szPath );*/
+
+         if( bBulkJob ) {
+            drmaa_job_ids_t *jobids;
+            int j;
+         
+            if((drmaa_errno=drmaa_run_bulk_jobs(&jobids, jt, 1, 3, 1,
+               diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+               printf("failed submitting bulk job (%s): %s\n", drmaa_strerror(drmaa_errno), diagnosis);
+               return 1;
+            } 
+
+            printf("submitted bulk job with jobids:\n");
+            for (j=0; j<3; j++) {
+               drmaa_get_next_job_id(jobids, jobid, sizeof(jobid)-1);
+               printf("\t \"%s\"\n", jobid);
+            } 
+            drmaa_release_job_ids(jobids);
+
+         } else {
+            /* synchronize with job to finish but do not dispose job finish information */
+            if((drmaa_errno = drmaa_run_job(jobid, sizeof(jobid)-1, jt, diagnosis,
+                sizeof(diagnosis)-1)) != DRMAA_ERRNO_SUCCESS) {
+               fprintf(stderr, "drmaa_run_job() failed: %s\n", diagnosis);
+               return 1;
+            }
+         }
+
+         drmaa_delete_job_template(jt, NULL, 0);
+
+         /* synchronize with job to finish but do not dispose job finish information */
+         if ((drmaa_errno = drmaa_synchronize(session_all, DRMAA_TIMEOUT_WAIT_FOREVER, 0, 
+                     diagnosis, sizeof(diagnosis)-1))!=DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_synchronize(DRMAA_JOB_IDS_SESSION_ALL, dispose) failed: %s\n", diagnosis);
+            return 1;
+         }
+         printf("synchronized with job finish\n");
+
+         /* get job state */
+         drmaa_errno = drmaa_job_ps(jobid, &remote_ps, diagnosis, sizeof(diagnosis)-1);
+         if (remote_ps != DRMAA_PS_FAILED) {
+            fprintf(stderr, "job \"%s\" is not in failed state: %s\n", 
+                     jobid, drmaa_state2str(remote_ps));
+            return 1;
+         }
+
+         /* wait job */
+         if ((drmaa_errno = drmaa_wait(jobid, NULL, 0, &stat, DRMAA_TIMEOUT_WAIT_FOREVER, NULL, 
+               diagnosis, sizeof(diagnosis)-1)) != DRMAA_ERRNO_SUCCESS) {
+            printf("drmaa_wait() failed %s: %s\n", drmaa_strerror(drmaa_errno), diagnosis);
+            return 1;
+         }
+
+         /* job finish information */
+         drmaa_wifaborted(&aborted, stat, diagnosis, sizeof(diagnosis)-1);
+         if (!aborted) {
+            fprintf(stderr, "job \"%s\" failed but drmaa_wifaborted() returns false\n", 
+                  jobid);
+            return 1;
+         }
+         printf("waited job \"%s\" that never ran\n", jobid);
+
+         if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
+            fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
+            return 1;
+         }
+      }
+      break;
+      
    default:
       break;
    }

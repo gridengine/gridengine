@@ -191,7 +191,7 @@ void cull_show_job(lListElem *job, int flags)
 
    if (lGetPosViaElem(job, JB_stderr_path_list)>=0)
       if (lGetList(job, JB_stderr_path_list)) {
-         int fields[] = { PN_host, PN_path, 0 };
+         int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
 
          delis[0] = ":";
          printf("stderr_path_list:           ");
@@ -256,7 +256,7 @@ void cull_show_job(lListElem *job, int flags)
    
    if (lGetPosViaElem(job, JB_stdout_path_list)>=0)
       if (lGetList(job, JB_stdout_path_list)) {
-         int fields[] = { PN_host, PN_path, 0 };
+         int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
 
          delis[0] = ":";
          printf("stdout_path_list:           ");
@@ -266,7 +266,7 @@ void cull_show_job(lListElem *job, int flags)
    
    if (lGetPosViaElem(job, JB_stdin_path_list)>=0)
       if (lGetList(job, JB_stdin_path_list)) {
-         int fields[] = { PN_host, PN_path, 0 };
+         int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
 
          delis[0] = ":";
          printf("stdin_path_list:            ");

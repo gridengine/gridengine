@@ -2113,7 +2113,6 @@ int lSetHost(lListElem *ep, int name, const char *value)
    int changed;
 
    DENTER(CULL_BASIS_LAYER, "lSetHost");
-
    if (!ep) {
       LERROR(LEELEMNULL);
       DEXIT;
@@ -2151,13 +2150,11 @@ int lSetHost(lListElem *ep, int name, const char *value)
          changed = strcmp(value, str);
       }
    }
-
    if(changed) {
       /* remove old hash entry */
       if(ep->descr[pos].ht != NULL) {
          cull_hash_remove(ep, pos);
       }
-      
       /* strdup new string value */
       /* do so before freeing the old one - they could point to the same object! */
       if (value) {
@@ -2169,12 +2166,10 @@ int lSetHost(lListElem *ep, int name, const char *value)
       } else {
          str = NULL;               /* value is NULL */
       }
-
       /* free old string value */
       if (ep->cont[pos].host) {
          free(ep->cont[pos].host);
       }   
-
 
       ep->cont[pos].host = str;
 
@@ -2182,11 +2177,9 @@ int lSetHost(lListElem *ep, int name, const char *value)
       if(ep->descr[pos].ht != NULL) {
          cull_hash_insert(ep, pos);
       }
-
       /* remember that field changed */
       sge_bitfield_set(ep->changed, pos);
    }
-
    DEXIT;
    return 0;
 }
@@ -3843,7 +3836,6 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
    }
 
    listDescriptor = lGetListDescr(lp);
-
 
    /* get position of nm in sdp */
    str_pos = lGetPosInDescr(listDescriptor, nm);

@@ -2153,6 +2153,7 @@ char *path_str
       return 1;
    }
 */
+
    if(!ret_error){
       path_string = sge_strdup(NULL, path_str);
       ret_error = !path_string;
@@ -2206,8 +2207,7 @@ char *path_str
          }
 
          SGE_ASSERT((path));
-
-         ep = lCreateElem(AT_Type);
+         ep = lCreateElem(PN_Type);
          /* SGE_ASSERT(ep); */
          lAppendElem(*lpp, ep);
 

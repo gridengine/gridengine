@@ -435,7 +435,7 @@ int flags
    ** -S
    */
    if ((lp = lGetList(job, JB_shell_list))) {
-      int fields[] = { PN_host, PN_path, 0 };
+      int fields[] = { PN_host, PN_file_host, PN_path, PN_file_staging, 0 };
       const char *delis[] = {":", ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, FLG_NO_DELIS_STRINGS);

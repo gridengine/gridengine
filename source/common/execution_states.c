@@ -84,6 +84,7 @@ int sstate
       {"opening input/output file", SSTATE_OPEN_OUTPUT},
       {"searching requested shell", SSTATE_NO_SHELL},
       {"changing into working directory", SSTATE_NO_CWD},
+      {"rescheduling on application error", SSTATE_APPERROR}
    };
 
    for (i=0; i<sizeof(state_message)/sizeof(struct _state_message); i++) {

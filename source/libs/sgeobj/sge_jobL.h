@@ -861,17 +861,23 @@ NAMEEND
    
 enum {
    PN_path = PN_LOWERBOUND,
-   PN_host
+   PN_host,
+   PN_file_host,
+   PN_file_staging
 };
 
 SLISTDEF(PN_Type, PathName)
    SGE_STRING(PN_path, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)
-   SGE_HOST(PN_host, CULL_DEFAULT | CULL_SUBLIST)                    /* CR - hostname change */
+   SGE_HOST(PN_host, CULL_DEFAULT )                    /* CR - hostname change */
+   SGE_HOST(PN_file_host, CULL_DEFAULT )
+   SGE_BOOL(PN_file_staging, CULL_DEFAULT )
 LISTEND
 
 NAMEDEF(PNN)
    NAME("PN_path")
    NAME("PN_host")
+   NAME("PN_file_host")
+   NAME("PN_file_staging")
 NAMEEND
 
 #define PNS sizeof(PNN)/sizeof(char*)

@@ -88,9 +88,10 @@
 #define SSTATE_NO_SHELL            27
 #define SSTATE_NO_CWD              28
 #define SSTATE_AFS_PROBLEM         29
+#define SSTATE_APPERROR            30
 
 
-#define MAX_SSTATE SSTATE_AFS_PROBLEM
+#define MAX_SSTATE SSTATE_APPERROR
 
 #define SSTATE_FAILURE_AFTER_JOB  100
 

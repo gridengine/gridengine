@@ -70,6 +70,7 @@ lList *Master_Config_List = NULL;
 sge_conf_type conf = { NULL };
 
 bool forbid_reschedule = false;
+bool forbid_apperror = false;
 bool enable_forced_qdel = false;
 bool do_credentials = true;
 bool do_authentication = true;
@@ -495,6 +496,7 @@ int merge_configuration(lListElem *global, lListElem *local,
    {
       const char *s;
       forbid_reschedule = false;
+      forbid_apperror = false;
       enable_forced_qdel = false;
       do_credentials = true;
       do_authentication = true;
@@ -509,6 +511,9 @@ int merge_configuration(lListElem *global, lListElem *local,
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
             continue;
          } 
+         if (parse_bool_param(s, "FORBID_APPERROR", &forbid_apperror)) {
+            continue;
+         }   
          if (parse_bool_param(s, "ENABLE_FORCED_QDEL", &enable_forced_qdel)) {
             continue;
          } 

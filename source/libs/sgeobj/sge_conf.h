@@ -97,6 +97,7 @@ extern sge_conf_type conf;
 
 extern bool use_qidle;
 extern bool forbid_reschedule;
+extern bool forbid_apperror;
 extern bool do_credentials;   
 extern bool do_authentication;  
 extern bool acct_reserved_usage;

@@ -216,6 +216,7 @@
 #define MSG_MAIL_TYPE_STATE                     _MESSAGE(27088, _("job abortion/end"))
 /* #define MSG_MAIL_TYPE_ABORT                     _message(27089, _("job abortion")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_MAIL_UNKNOWN_NAME                   _MESSAGE(27090, _("<unknown>"))
+#define MSG_MAIL_ACTION_APPERROR                _MESSAGE(27091, _("Rescheduled due to application error"))
 
 #endif /* MSG_DAEMONS_COMMON_H */
 

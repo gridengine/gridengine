@@ -2257,7 +2257,7 @@ spool_flatfile_open_file(lList **answer_list,
          break;
       case SP_DEST_TMP:
          {
-            char buffer[L_tmpnam];
+            char buffer[SGE_PATH_MAX];
             
             /* get filename for temporary file, pass buffer to make it
              * thread safe.

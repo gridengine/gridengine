@@ -972,13 +972,21 @@ const char *qhostname
 ) {
    lListElem *gdil_ep;
    int nslots = 0;
+   const void *iterator = NULL;
 
-   for_each (gdil_ep, granted) {
-      if (qhostname && 
-            hostcmp(qhostname, lGetHost(gdil_ep, JG_qhostname)))
-         continue; 
-      nslots += lGetUlong(gdil_ep, JG_slots);
+
+   if (qhostname == NULL) {
+      for_each (gdil_ep, granted) {   
+         nslots += lGetUlong(gdil_ep, JG_slots);
+      }
+   } else {
+      gdil_ep = lGetElemHostFirst(granted, JG_qhostname, qhostname, &iterator); 
+      while (gdil_ep != NULL) {
+         nslots += lGetUlong(gdil_ep, JG_slots);
+         gdil_ep = lGetElemHostNext(granted, JG_qhostname , qhostname, &iterator); 
+      }
    }
+
    return nslots;
 }
 
@@ -1026,17 +1034,30 @@ const char *qhostname
    lList *task_list;
    lListElem *gdil_ep, *ja_task;
    int nslots = 0;
+   const void *iterator = NULL;
 
-   for_each (gdil_ep, granted) {
-      if (qhostname && 
-            hostcmp(qhostname, lGetHost(gdil_ep, JG_qhostname)))
-         continue; 
-      for_each (ja_task, lGetList(job, JB_ja_tasks)) {
-         task_list = lGetList(ja_task, JAT_task_list);
-         if (task_list == NULL || active_subtasks(job, lGetString(gdil_ep, JG_qname)))
-            nslots += lGetUlong(gdil_ep, JG_slots);
+
+   if (qhostname == NULL) {
+      for_each (gdil_ep, granted) {   /* for all hosts */
+         for_each (ja_task, lGetList(job, JB_ja_tasks)) {
+            task_list = lGetList(ja_task, JAT_task_list);
+            if (task_list == NULL || active_subtasks(job, lGetString(gdil_ep, JG_qname)))
+               nslots += lGetUlong(gdil_ep, JG_slots);
+         }
+      }
+   } else {
+      /* only for qhostname */
+      gdil_ep = lGetElemHostFirst(granted, JG_qhostname, qhostname, &iterator);
+      while (gdil_ep != NULL) {
+         for_each (ja_task, lGetList(job, JB_ja_tasks)) {
+            task_list = lGetList(ja_task, JAT_task_list);
+            if (task_list == NULL || active_subtasks(job, lGetString(gdil_ep, JG_qname)))
+               nslots += lGetUlong(gdil_ep, JG_slots);
+         }
+         gdil_ep = lGetElemHostNext(granted, JG_qhostname , qhostname, &iterator); 
       }
    }
+
    return nslots;
 }
 

@@ -47,6 +47,8 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
 {
    lListElem *job = NULL;
    u_long32 now;
+   lListElem *global_host = NULL;
+
    
    DENTER(TOP_LAYER, "correct_load");
 
@@ -55,15 +57,15 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
       return 1;
    }
 
+   global_host = lGetElemHost(host_list, EH_name, "global");
    now = sge_get_gmt();
 
-   for_each (job, running_jobs) {
+   for_each (job, running_jobs) {   
       u_long32 job_id = lGetUlong(job, JB_job_number);
-      lListElem *global_host = NULL;
       lListElem *ja_task = NULL;
       double global_lcf = 0.0;
 
-      for_each (ja_task, lGetList(job, JB_ja_tasks)) {
+      for_each (ja_task, lGetList(job, JB_ja_tasks)) {  
          u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number); 
          u_long32 running_time = now - lGetUlong(ja_task, JAT_start_time);
          lListElem *granted_queue = NULL;
@@ -141,8 +143,6 @@ int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                         EH_load_correction_factor)));
          }
       }
-
-      global_host = lGetElemHost(host_list, EH_name, "global");
       lSetUlong(global_host, EH_load_correction_factor, 
                 global_lcf * 100 + 
                 lGetUlong(global_host, EH_load_correction_factor));
@@ -170,10 +170,10 @@ lList *complex_list
 
    DENTER(TOP_LAYER, "correct_capacities");
  
-   for_each (hep, host_list) {
+   for_each (hep, host_list) {   
       const char *host_name = lGetHost(hep, EH_name);
 
-      for_each (ep, lGetList(hep, EH_load_list)) {
+      for_each (ep, lGetList(hep, EH_load_list)) {  
          const char *attr_name = lGetString(ep, HL_name);
  
          /* seach for appropriate complex attribute */

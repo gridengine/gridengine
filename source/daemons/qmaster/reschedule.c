@@ -106,6 +106,8 @@ void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 timeout,
    lList *answer_list = NULL; /* AN_Type */
    lListElem *hep;            /* EH_Type */
    u_long32 new_timeout = 0;
+   const void *iterator = NULL;
+
 
    DENTER(TOP_LAYER, "reschedule_unknown_event");
  
@@ -154,16 +156,16 @@ void reschedule_unknown_event(u_long32 type, u_long32 when, u_long32 timeout,
    /*
     * Check if host is still in unknown state
     */
-   for_each(qep, Master_Queue_List) {
-      if (!hostcmp(hostname, lGetHost(qep, QU_qhostname))) {
-         u_long32 state;
+   qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, hostname, &iterator); 
 
-         state = lGetUlong(qep, QU_state);
-         if (!VALID(QUNKNOWN, state)) {
-            DEXIT;
-            goto Error;
-         }
-      }
+   while (qep != NULL) {
+      u_long32 state;
+      state = lGetUlong(qep, QU_state);
+      if (!VALID(QUNKNOWN, state)) {
+        DEXIT;
+        goto Error;
+      } 
+      qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, hostname, &iterator); 
    }
 
    /*
@@ -895,24 +897,29 @@ void update_reschedule_unknown_list_for_job(lListElem *host,
 ******************************************************************************/
 void update_reschedule_unknown_timout_values(const char *config_name) 
 {
+   lListElem *host = NULL;
+
    if (strcmp(SGE_GLOBAL_NAME, config_name) == 0) {
-      lListElem *host;
- 
+      lListElem *global_exechost_elem   = NULL;
+      lListElem *template_exechost_elem = NULL;
+
+      global_exechost_elem   = lGetElemHost(Master_Exechost_List, EH_name, SGE_GLOBAL_NAME); 
+      template_exechost_elem = lGetElemHost(Master_Exechost_List, EH_name, SGE_TEMPLATE_NAME); 
+
       for_each(host, Master_Exechost_List) {
-         if (strcmp(SGE_GLOBAL_NAME, lGetHost(host, EH_name)) != 0 &&
-             strcmp(SGE_TEMPLATE_NAME, lGetHost(host, EH_name)) != 0) {
- 
+         if ( (host != global_exechost_elem) && (host != template_exechost_elem) ) {
             update_reschedule_unknown_timeout(host);
          }
       }
-   } else if (strcmp(SGE_GLOBAL_NAME, config_name) != 0 &&
-              strcmp(SGE_TEMPLATE_NAME, config_name) != 0){
-      lListElem *host = lGetElemHost(Master_Exechost_List, EH_name, config_name); 
-      if (!host) {
-         DPRINTF(("!!!!!!!update_reschedule_unknown_timout_values: got null for host\n"));
-      }
-      update_reschedule_unknown_timeout(host);
-   }       
+   } else {
+      if ( strcmp(SGE_TEMPLATE_NAME, config_name) != 0 ) {
+         host = lGetElemHost(Master_Exechost_List, EH_name, config_name); 
+         if (!host) {
+            DPRINTF(("!!!!!!!update_reschedule_unknown_timout_values: got null for host\n"));
+         }
+         update_reschedule_unknown_timeout(host);
+      }       
+   }
 }
 
 /****** reschedule/update_reschedule_unknown_timeout() ************************

@@ -1,3 +1,10 @@
+CR-2001-12-17-1: Feature:   - Grep for host-type and foreach loops, optimize via
+                              first/next hash table functions.
+                            - set exit state of qconf -ks to "1" if no scheduler
+                              is enrolled
+                            - is_requested() will accept CE_name AND CE_shortcut
+                              now. 
+ 
 AH-2001-12-17-0: Bugfix:    Ensure immediate return of sync send_message() in case
                             receiver is not enrolled
 

@@ -283,7 +283,7 @@ FILE *fpdchu;
    fprintf(fpdchu, "finished_jobs \n");
    lDumpList(fpdchu, finished_jobs, 5);
 #endif
-   for_each (hep, hosts) {
+   for_each (hep, hosts) {    
       host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global")) { /* don't treat global */
 
@@ -303,17 +303,17 @@ FILE *fpdchu;
         for_each (rjq, lGetList(running_job_elem, JB_granted_destin_identifier_list)) {
 
 #ifdef TEST_CALC_HOST_USAGE
-
           fprintf(fpdchu, "Job %u is on host %s\n", lGetUlong(running_job_elem, JB_job_number), lGetHost(rjq, JG_qhostname));
-
 #endif
           job_usage_list = NULL;
           if (hostcmp(lGetHost(rjq, JG_qhostname), host_name) == 0) {
+
 #ifdef TEST_CALC_HOST_USAGE
             fprintf(fpdchu, "found running job on host %s \n", host_name);
 #endif
             num_running_jobs_on_host += 1; 
             job_usage_list = lGetList(running_job_elem, JB_scaled_usage_list);
+
 #ifdef TEST_CALC_HOST_USAGE
             fprintf(fpdchu, "job_usage_list \n");
             lDumpList(fpdchu, job_usage_list, 5);
@@ -424,89 +424,83 @@ was added here because it was a convenient place to gather the information */
    /*  EH_scaled_usage_pct_list is comprised of the individual usage 
        percentages for cpu, mem, and io on a host basis */
 
-   for_each (hep, hosts)  {
+   for_each (hep, hosts)  {   
       host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global")) { /* don't treat global */
+         lList *hep_EH_scaled_usage_list = NULL;
 
-   lSetList(hep, EH_scaled_usage_pct_list, build_usage_list("hostusagelist", NULL));
+         lSetList(hep, EH_scaled_usage_pct_list, build_usage_list("hostusagelist", NULL));
 
-   for_each(host_usage_pct_elem, lGetList(hep, EH_scaled_usage_pct_list))  {
-      if (strcmp(lGetString(host_usage_pct_elem, UA_name), "cpu") == 0)  {
-         if (total_host_cpu_usage != 0)  {
-            host_cpu_usage = lGetDouble(lGetElemStr(lGetList(hep, EH_scaled_usage_list), UA_name, "cpu"), UA_value);
-            host_cpu_usage_pct = 100.0 * (host_cpu_usage/total_host_cpu_usage);
-         }
-         else  {
-            host_cpu_usage_pct = 0.0;
-         }        
-         lSetDouble(host_usage_pct_elem, UA_value, host_cpu_usage_pct);
-      }
-      else  {
-         if (strcmp(lGetString(host_usage_pct_elem, UA_name), "mem") == 0)
-{
-         if (total_host_mem_usage != 0)  {
-            host_mem_usage = lGetDouble(lGetElemStr(lGetList(hep, EH_scaled_usage_list), UA_name, "mem"), UA_value);
-            host_mem_usage_pct = 100.0 * (host_mem_usage/total_host_mem_usage);
-         }
-         else { 
-            host_mem_usage_pct = 0.0;
-         }
-   
-         lSetDouble(host_usage_pct_elem, UA_value, host_mem_usage_pct);
-         }
-         else  {
-            if (strcmp(lGetString(host_usage_pct_elem, UA_name), "io") == 0)  {
-         if (total_host_io_usage != 0)  {
-            host_io_usage = lGetDouble(lGetElemStr(lGetList(hep, EH_scaled_usage_list), UA_name, "io"), UA_value);
-            host_io_usage_pct = 100 * (host_io_usage/total_host_io_usage);
-         }
-         else  {
-            host_io_usage_pct = 0.0;
-        }
-
-               lSetDouble(host_usage_pct_elem, UA_value, host_io_usage_pct);
-            } /* if (lGetString(host_usage_elem, UA_name)=="io")*/
-         } /* if (lGetString(host_usage_elem, UA_name)=="mem")*/
-      }  /* if (lGetString(host_usage_elem, UA_name)=="cpu")*/
-   }  /*for_each(host_usage_elem, lGetList(hep, EH_scaled_usage_pct_list)*/
-       } /* if (strcmp(host_name,"global")) */
-    }  /* for_each (hep, hosts) */
+         hep_EH_scaled_usage_list = lGetList(hep, EH_scaled_usage_list);        
+ 
+         for_each(host_usage_pct_elem, lGetList(hep, EH_scaled_usage_pct_list)) {
+            if (strcmp(lGetString(host_usage_pct_elem, UA_name), "cpu") == 0)  {
+               if (total_host_cpu_usage != 0)  {
+                  host_cpu_usage = lGetDouble(lGetElemStr(hep_EH_scaled_usage_list, UA_name, "cpu"), UA_value);
+                  host_cpu_usage_pct = 100.0 * (host_cpu_usage/total_host_cpu_usage);
+               } else {
+                  host_cpu_usage_pct = 0.0;
+               }        
+               lSetDouble(host_usage_pct_elem, UA_value, host_cpu_usage_pct);
+            } else {
+               if (strcmp(lGetString(host_usage_pct_elem, UA_name), "mem") == 0) {
+                  if (total_host_mem_usage != 0)  {
+                     host_mem_usage = lGetDouble(lGetElemStr(hep_EH_scaled_usage_list, UA_name, "mem"), UA_value);
+                     host_mem_usage_pct = 100.0 * (host_mem_usage/total_host_mem_usage);
+                  } else { 
+                     host_mem_usage_pct = 0.0;
+                  }
+                  lSetDouble(host_usage_pct_elem, UA_value, host_mem_usage_pct);
+               } else {
+                  if (strcmp(lGetString(host_usage_pct_elem, UA_name), "io") == 0)  {
+                     if (total_host_io_usage != 0)  {
+                        host_io_usage = lGetDouble(lGetElemStr(hep_EH_scaled_usage_list, UA_name, "io"), UA_value);
+                        host_io_usage_pct = 100 * (host_io_usage/total_host_io_usage);
+                     } else {
+                        host_io_usage_pct = 0.0;
+                     }
+                     lSetDouble(host_usage_pct_elem, UA_value, host_io_usage_pct);
+                  } /* if (lGetString(host_usage_elem, UA_name)=="io")*/
+               } /* if (lGetString(host_usage_elem, UA_name)=="mem")  (else) */
+            }  /* if (lGetString(host_usage_elem, UA_name)=="cpu")*/
+         }  /*for_each(host_usage_elem, lGetList(hep, EH_scaled_usage_pct_list)*/
+      } /* if (strcmp(host_name,"global")) */
+   }  /* for_each (hep, hosts) */
 
 
 
 
 /*****************************************************************/
 /* Calculate host tickets    */
-   for_each (hep, hosts) {
+   for_each (hep, hosts) { 
       host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global"))  {
-      lSetUlong(hep, EH_sge_tickets, 0);
-      host_sge_tickets = 0;
-      for_each (running_job_elem, running_jobs) {
-         for_each (rjq, lGetList(running_job_elem, JB_granted_destin_identifier_list)) {
-            if (strcmp(lGetHost(rjq, JG_qhostname), host_name) == 0)
-               host_sge_tickets += lGetUlong(running_job_elem, JB_ticket);
+         lSetUlong(hep, EH_sge_tickets, 0);
+         host_sge_tickets = 0;
+         for_each (running_job_elem, running_jobs) {
+            for_each (rjq, lGetList(running_job_elem, JB_granted_destin_identifier_list)) {
+               if (strcmp(lGetHost(rjq, JG_qhostname), host_name) == 0) {
+                  host_sge_tickets += lGetUlong(running_job_elem, JB_ticket);
+               }
+            }
          }
-      }
-      lSetUlong(hep, EH_sge_tickets, host_sge_tickets);
-      total_host_tickets += host_sge_tickets;
+         lSetUlong(hep, EH_sge_tickets, host_sge_tickets);
+         total_host_tickets += host_sge_tickets;
       } /* if (strcmp(host_name,"global")) */
    }  /* for_each (hep, hosts) */
 
 /* Calculate percentage of tickets for each host */
 
-   for_each (hep, hosts) {
+   for_each (hep, hosts) {  
       host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global"))  {
          if (total_host_tickets != 0)  {
-
-     lSetDouble(hep, EH_sge_ticket_pct, (double)lGetUlong(hep, EH_sge_tickets)/(double)total_host_tickets);
-      }
-      else  {
-      lSetDouble(hep, EH_sge_ticket_pct, 0.0);
+            lSetDouble(hep, EH_sge_ticket_pct, (double)lGetUlong(hep, EH_sge_tickets)/(double)total_host_tickets);
+         } else {
+            lSetDouble(hep, EH_sge_ticket_pct, 0.0);
          }  /* (total_host_tickets != 0) */
-      }  /* if (strcmp(host_name,"global"))  */
-   }   /* for_each (hep, hosts) */
+      }   /* if (strcmp(host_name,"global"))  */
+   }    /* for_each (hep, hosts) */
 
 
 
@@ -557,7 +551,7 @@ lListElem *hep, *running_job_elem, *rjq;
       return 0;
    }
 
-   for_each (hep, hosts) {
+   for_each (hep, hosts) {         
       host_name = lGetHost(hep, EH_name);
       lSetUlong(hep, EH_sge_tickets, 0);
       host_sge_tickets = 0;
@@ -572,7 +566,7 @@ lListElem *hep, *running_job_elem, *rjq;
       total_host_tickets += host_sge_tickets;
 
    }  /* for_each (hep, hosts) */
-   for_each (hep, hosts) {
+   for_each (hep, hosts) {       
      lSetDouble(hep, EH_sge_ticket_pct, double(lGetUlong(hep, EH_sge_tickets))/total_host_tickets);
    }   /* for_each (hep, hosts) */
    DEXIT;
@@ -613,7 +607,7 @@ int calculate_host_pcts(lList *hosts, lList *complex)
  
 /*  Calculate the total_resource_capability_factor and the total_sge_load */
 
-   for_each (hep, hosts)  {
+   for_each (hep, hosts)  {     
       host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global"))  {
 
@@ -626,7 +620,7 @@ int calculate_host_pcts(lList *hosts, lList *complex)
 
 /*  Calculate the percentages of resource_capability_factor and sge load for each host */
 
-   for_each (hep, hosts)  {
+   for_each (hep, hosts)  {     
       host_name = lGetHost(hep, EH_name);
       if (strcmp(host_name,"global"))  {
          if (total_resource_capability_factor != 0.0)  {

@@ -348,7 +348,7 @@ int *sort_hostlist
    }
 
    /* debit from hosts */
-   for_each(gel, granted) {
+   for_each(gel, granted) {  
       u_long32 ulc_factor;
       lList *tcl;
       int slots = lGetUlong(gel, JG_slots);

@@ -547,6 +547,8 @@ const char *target    /* prognames[QSTD|EXECD] */
    lListElem *qep;
    const char *host;
    u_long32 state;
+   const void *iterator = NULL;
+
 
    DENTER(TOP_LAYER, "sge_mark_unheard");
 
@@ -571,16 +573,20 @@ const char *target    /* prognames[QSTD|EXECD] */
       }
    }    
 
+
+
    /* set all queues residing at this host to QUNKNOWN */
-   for_each(qep, Master_Queue_List) {
-      if ( !hostcmp(lGetHost(qep, QU_qhostname), host) 
-            && !ISSET(lGetUlong(qep, QU_state), QUNKNOWN)) {
+   qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, host, &iterator); 
+   while (qep != NULL) {
+      if ( !ISSET(lGetUlong(qep, QU_state), QUNKNOWN) ) {
          state = lGetUlong(qep, QU_state);
          SETBIT(QUNKNOWN, state);
          lSetUlong(qep, QU_state, state);
          sge_add_queue_event(sgeE_QUEUE_MOD, qep);
       }
+      qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, host, &iterator); 
    }
+
    DEXIT;
    return;
 }
@@ -591,15 +597,12 @@ const char *target    /* prognames[QSTD|EXECD] */
 static int sge_has_active_queue(
 char *unique 
 ) {
-   lListElem *qep;
-
    DENTER(TOP_LAYER, "sge_has_active_queue");
 
-   for_each(qep, Master_Queue_List) {
-      if (!hostcmp(unique, lGetHost(qep, QU_qhostname))) {
-         DEXIT;
-         return 1;
-      }
+
+   if (lGetElemHost(Master_Queue_List, QU_qhostname, unique) != NULL) {
+      DEXIT;
+      return 1;
    }
 
    DEXIT;
@@ -621,6 +624,8 @@ lList *lp
    lListElem *lep;
    lListElem *global_ep = NULL, *host_ep = NULL;
    int added_non_static = 0, statics_changed = 0;
+   const void *iterator = NULL;
+
 
    DENTER(TOP_LAYER, "sge_update_load_values");
    now = sge_get_gmt();
@@ -704,21 +709,22 @@ lList *lp
    if (added_non_static) {
       lListElem *qep;
       u_long32 state;
+      const char* tmp_hostname;
 
-      for_each(qep, Master_Queue_List) {
-         if (!hostcmp(lGetHost(host_ep, EH_name), 
-             lGetHost(qep, QU_qhostname))) {
-            state = lGetUlong(qep, QU_state);
-            CLEARBIT(QUNKNOWN, state);
-            lSetUlong(qep, QU_state, state);
-            sge_add_queue_event(sgeE_QUEUE_MOD, qep);
-         }
+
+      tmp_hostname = lGetHost(host_ep, EH_name);
+      qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, tmp_hostname , &iterator); 
+      while (qep != NULL) {
+         state = lGetUlong(qep, QU_state);
+         CLEARBIT(QUNKNOWN, state);
+         lSetUlong(qep, QU_state, state);
+         sge_add_queue_event(sgeE_QUEUE_MOD, qep);
+         qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, tmp_hostname , &iterator); 
       }
    }
 
    if (global_ep) {
-      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0,
-            SGE_GLOBAL_NAME, global_ep);
+      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, SGE_GLOBAL_NAME, global_ep);
    }
 
    if (host_ep) {
@@ -739,14 +745,19 @@ u_long32 now
 ) {
    extern int new_config;
    lListElem *qep, *hep, *ep, *nextep; 
+   lList *h_list;
    const char *host;
    int host_unheard;
    u_short id = 1;
    const char *comproc;
-   const char *real_host;
    u_long32 timeout; 
    int nstatics, nbefore;
    static u_long32 next_garbage_collection = 0;
+   lListElem *global_host_elem   = NULL;
+   lListElem *template_host_elem = NULL;
+
+   const void *iterator = NULL;
+
 
    DENTER(TOP_LAYER, "sge_load_value_garbage_collector");
 
@@ -755,32 +766,32 @@ u_long32 now
       return;
    }
 
+   
    next_garbage_collection = now + 15; 
 
+   comproc = prognames[EXECD];
+   /* get "global" element pointer */
+   global_host_elem   = lGetElemHost(Master_Exechost_List, EH_name, SGE_GLOBAL_NAME);    
+   /* get "template" element pointer */
+   template_host_elem = lGetElemHost(Master_Exechost_List, EH_name, SGE_TEMPLATE_NAME); 
    /* take each host including the "global" host */
-   for_each(hep, Master_Exechost_List) {
-      host = lGetHost(hep, EH_name);
+   for_each(hep, Master_Exechost_List) {   
 
-      if (!strcasecmp(host, "template"))
+      if (hep == template_host_elem)
          continue;
 
-      real_host = host;
+      host = lGetHost(hep, EH_name);
 
       timeout = MAX(load_report_interval(hep)*3, conf.max_unheard); 
 
-      comproc = prognames[EXECD];
-      
-      if ((now > last_heard_from(comproc, &id, real_host) 
-                        + timeout) && 
-               strcmp(SGE_GLOBAL_NAME, host)) {
+      if ( (hep != global_host_elem )  && 
+           (now > last_heard_from(comproc, &id, host) + timeout)) {
          host_unheard = 1;
-
-
 #if 0
-         DPRINTF(("id = %d, comproc = %s, real_host = %s, timeout = "u32", "
-               "now = "u32", last_heard = "u32"\n", id, comproc, real_host, 
+         DPRINTF(("id = %d, comproc = %s, host = %s, timeout = "u32", "
+               "now = "u32", last_heard = "u32"\n", id, comproc, host, 
                u32c(timeout), u32c(now), 
-               u32c(last_heard_from(comproc, &id, real_host))));
+               u32c(last_heard_from(comproc, &id, host))));
 #endif
       } else {
          host_unheard = 0;
@@ -798,33 +809,35 @@ u_long32 now
             nstatics++;
          } else {
             if ((lGetUlong(ep, HL_last_update)+timeout<now || host_unheard)) {
-               DPRINTF(("host %s: trashing load value "SFQ": %s\n",
-                 host, lGetString(ep, HL_name),
-                 (lGetUlong(ep, HL_last_update)+timeout < now)?
-                     "HL_last_update":"last_heard_from"));
+               DPRINTF(("host %s: trashing load value "SFQ": %s\n", 
+                        host, 
+                        lGetString(ep, HL_name),
+                        (lGetUlong(ep, HL_last_update)+timeout < now)? "HL_last_update":"last_heard_from"));
               lDelSubStr(hep, HL_name, lGetString(ep, HL_name), EH_load_list);
             }  
          }
          ep = nextep;
       }
-      if (nstatics == lGetNumberOfElem(lGetList(hep, EH_load_list)) &&
-         nbefore > lGetNumberOfElem(lGetList(hep, EH_load_list))) {
+      h_list   = lGetList(hep, EH_load_list);
+      if ( (nstatics == lGetNumberOfElem(h_list)) &&
+           (nbefore   > lGetNumberOfElem(h_list))    ) {
          /* load reports were trashed and only the 
             static load values remained: 
             set all queues residing at this host in unknown state */
-         for_each(qep, Master_Queue_List) {
-            if (!hostcmp(host, lGetHost(qep, QU_qhostname))) {
-               u_long32 state = lGetUlong(qep, QU_state);
-               SETBIT(QUNKNOWN, state);
-               lSetUlong(qep, QU_state, state);
-               sge_add_queue_event(sgeE_QUEUE_MOD, qep);
-               DPRINTF(("%s: trashed all (%d) non-static load values -> "
-                  "unknown\n", lGetString(qep, QU_qname), 
-                  nbefore - lGetNumberOfElem(lGetList(hep, EH_load_list))));
+ 
+         qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, host, &iterator);
+         while (qep != NULL) {
+            u_long32 state = lGetUlong(qep, QU_state);
+            SETBIT(QUNKNOWN, state);
+            lSetUlong(qep, QU_state, state);
+            sge_add_queue_event(sgeE_QUEUE_MOD, qep);
+            DPRINTF(("%s: trashed all (%d) non-static load values -> unknown\n", 
+                     lGetString(qep, QU_qname), 
+                     nbefore - lGetNumberOfElem(lGetList(hep, EH_load_list))));
 
-               /* initiate timer for this host because they turn into 'unknown' state */
-               reschedule_unknown_trigger(hep); 
-            }
+            /* initiate timer for this host because they turn into 'unknown' state */
+            reschedule_unknown_trigger(hep); 
+            qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, host, &iterator); 
          }
       } 
    }
@@ -924,6 +937,8 @@ const char *exechost_name
 ) {
    int change_all = 0;
    lListElem *qep;
+   const void *iterator = NULL;
+
 
    DENTER(TOP_LAYER, "sge_change_queue_version_exechost");
 
@@ -937,18 +952,22 @@ const char *exechost_name
             "because host "SGE_GLOBAL_NAME" changed\n"));
    }
 
-   for_each(qep, Master_Queue_List) {
-      if (change_all 
-          || !hostcmp(exechost_name, lGetHost(qep, QU_qhostname))) {
-         if (!change_all) {
-            DPRINTF(("increasing version of queue "SFQ" because exec host "
-                  SFQ" changed\n", lGetString(qep, QU_qname), exechost_name));
-         }
+   if (change_all) {
+      for_each(qep, Master_Queue_List) {   
          sge_change_queue_version(qep, 0, 0);
-         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), 
-            NULL, qep);
+         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep);
       }
-   }
+   } else {
+      qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
+      while (qep != NULL) {
+         DPRINTF(("increasing version of queue "SFQ" because exec host "
+                  SFQ" changed\n", lGetString(qep, QU_qname), exechost_name));
+         sge_change_queue_version(qep, 0, 0);
+         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep);
+         qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, exechost_name, &iterator); 
+      }
+   } 
+
 
    DEXIT;
    return;
@@ -1099,7 +1118,7 @@ sge_gdi_request *answer
       kill_jobs = lGetUlong(lFirst(request->lp), ID_force)?1:0;
       /* walk over exechost list and send every exechosts execd a
          notification */
-      for_each(lel, Master_Exechost_List) {
+      for_each(lel, Master_Exechost_List) {  
          hostname = lGetHost(lel, EH_name);
          if (strcmp(hostname, "template") && strcmp(hostname, "global")) {
             notify(lel, answer, kill_jobs, 0); 
@@ -1150,11 +1169,10 @@ void master_notify_execds()
    lListElem *host;
    const char *hostname;
 
-   for_each(host , Master_Exechost_List) {
+   for_each(host , Master_Exechost_List) {  
       hostname = lGetHost(host, EH_name);
       if (strcmp(hostname, "template") && strcmp(hostname, "global")) {
-         notify_new_features(host, feature_get_active_featureset_id(), 
-            prognames[EXECD]);
+         notify_new_features(host, feature_get_active_featureset_id(), prognames[EXECD]);
       }
    }   
 }
@@ -1206,24 +1224,37 @@ int force
 
    if(kill_jobs) {
       /* mark killed jobs as deleted */
-      for_each(jep, Master_Job_List) {
+      for_each(jep, Master_Job_List) {   
          lListElem *jatep;
+         mail_users = NULL;
+         mail_options = 0;
 
          for_each(jatep, lGetList(jep, JB_ja_tasks)) {
             gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
             if(gdil) {
                if(!(hostcmp(lGetHost(lFirst(gdil), JG_qhostname), hostname))) {
                   /*   send mail to users if requested                  */
-                  mail_users = lGetList(jep, JB_mail_list);
-                  mail_options = lGetUlong(jep, JB_mail_options);
+                  if (mail_users == NULL) {
+                     mail_users = lGetList(jep, JB_mail_list);
+                  }
+                  if (mail_options == 0) {
+                     mail_options = lGetUlong(jep, JB_mail_options);
+                  }
                   
                   if (VALID(MAIL_AT_ABORT, mail_options) && !(lGetUlong(jatep, JAT_state) & JDELETED)) {
+                     lUlong jep_JB_job_number;
+                     const char* jep_JB_job_name;
+
+                     jep_JB_job_number = lGetUlong(jep, JB_job_number);
+                     jep_JB_job_name   = lGetString(jep, JB_job_name);
+
                      sprintf(sge_mail_subj, MSG_MAIL_JOBKILLEDSUBJ_US, 
-                             u32c(lGetUlong(jep, JB_job_number)), 
-                             lGetString(jep, JB_job_name));
+                             u32c(jep_JB_job_number), 
+                             jep_JB_job_name);
                      sprintf(sge_mail_body, MSG_MAIL_JOBKILLEDBODY_USS, 
-                             u32c(lGetUlong(jep, JB_job_number)), 
-                             lGetString(jep, JB_job_name), hostname);
+                             u32c(jep_JB_job_number), 
+                             jep_JB_job_name, 
+                             hostname);
                      cull_mail(mail_users, sge_mail_subj, sge_mail_body, "job abortion");
                   }
     
@@ -1316,6 +1347,7 @@ char *ruser,
 char *rhost,
 u_long32 target) {
    lListElem *hep, *qep;
+   const void *iterator = NULL;
 
    DENTER(TOP_LAYER, "sge_execd_startedup");
 
@@ -1348,13 +1380,14 @@ u_long32 target) {
 
 
    /* reinit state of all queues at this host according to initial_state */
-   for_each (qep, Master_Queue_List) {
-      if (!hostcmp(lGetHost(qep, QU_qhostname), rhost)) {
-         if (queue_initial_state(qep, rhost)) {
-            sge_change_queue_version(qep, 0, 0);
-            cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep);
-         } 
-      }
+
+   qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, rhost, &iterator); 
+   while (qep != NULL) {
+      if (queue_initial_state(qep, rhost)) {
+         sge_change_queue_version(qep, 0, 0);
+         cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep);
+      } 
+      qep = lGetElemHostNext(Master_Queue_List, QU_qhostname, rhost, &iterator); 
    }
 
    DPRINTF(("=====>STARTING_UP: %s %s on >%s< is starting up\n", 

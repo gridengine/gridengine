@@ -278,13 +278,15 @@ lList **alpp
 
    DPRINTF(("############ ORIGINAL PATH >>%s<<\n", outpath));
  
-   if (path_aliases) { /* use aliases */
+   if (path_aliases) { /* use aliases */ 
       for_each(pap, path_aliases) {
+         size_t orign_str_len = 0; 
          origin = lGetString(pap, PA_origin);
+         orign_str_len = strlen(origin);
          exec_host = lGetHost(pap, PA_exec_host);
          translation = lGetString(pap, PA_translation);
 
-         if (strncmp(origin, the_path, strlen(origin))) {
+         if (strncmp(origin, the_path, orign_str_len )) {
             /* path leaders aren't the same ==> no match */
             continue;
          }
@@ -310,7 +312,7 @@ lList **alpp
          strcpy(outpath, translation);
  
          /* now append the trailer of the original cwd */
-         strcat(outpath, the_path + strlen(origin));
+         strcat(outpath, the_path + orign_str_len );
  
          DPRINTF(("############ PATH ALIASED TO >>%s<<\n", outpath));
  

@@ -99,6 +99,7 @@
 #include "msg_qmaster.h"
 #include "sge_range.h"
 #include "sge_job_jatask.h"
+#include "sge_string.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -168,9 +169,11 @@ lListElem *hep
    DPRINTF(("execd host: %s\n", rhost));
 
    /* build complex list for all queues in the gdil list */
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
       lList *resources;
+      lList *gdil_ep_JG_complex;
       lListElem *ep1, *ep2, *cep;
+       
 
       if ((q = sge_locate_queue(lGetString(gdil_ep, JG_qname)))) {
          resources = NULL;
@@ -178,10 +181,12 @@ lListElem *hep
          lSetList(gdil_ep, JG_complex, resources);
       }
 
+
       /* job requests overrides complex list */
+      gdil_ep_JG_complex = lGetList(gdil_ep, JG_complex); 
       for_each (ep1, lGetList(jep, JB_hard_resource_list)) {
          for_each (ep2, lGetList(ep1, RE_entries)) {
-            if ((cep=lGetElemStr(lGetList(gdil_ep, JG_complex), CE_name, lGetString(ep2, CE_name))))  {  
+            if ((cep=lGetElemStr(gdil_ep_JG_complex, CE_name, lGetString(ep2, CE_name))))  {  
                lSetString(cep, CE_stringval, lGetString(ep2, CE_stringval));
                DPRINTF(("complex: %s = %s\n", lGetString(ep2, CE_name), lGetString(ep2, CE_stringval)));
                break;
@@ -193,7 +198,7 @@ lListElem *hep
       }
    }
 
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
       lListElem *slave_hep;
 
       if (lGetUlong(gdil_ep, JG_tag_slave_job)) {
@@ -224,7 +229,7 @@ lListElem *hep
    }
 
    /* free complex list in gdil list */
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list))
+   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) 
       lSetList(gdil_ep, JG_complex, NULL);
 
    DEXIT;
@@ -661,6 +666,7 @@ int mode,
 sge_commit_flags_t commit_flags
 ) {
    lListElem *qep, *hep, *task, *tmp_ja_task;
+   lListElem *global_host_ep;
    int slots;
    lUlong jid, ja_task_id;
    int no_unlink = 0;
@@ -687,24 +693,27 @@ sge_commit_flags_t commit_flags
       job_log(jid, ja_task_id, MSG_LOG_SENT2EXECD);
 
       /* should use jobs gdil instead of tagging queues */
-      for_each(qep, Master_Queue_List) {
+      global_host_ep = sge_locate_host("global", SGE_EXECHOST_LIST);
+      for_each(qep, Master_Queue_List) {     
          if (lGetUlong(qep, QU_tagged)) {
+            const char* qep_QU_qhostname;
+
             slots = lGetUlong(qep, QU_tagged);
             lSetUlong(qep, QU_tagged, 0);
 
-            /* debit in all layers */
-            if (debit_host_consumable(jep, hep=sge_locate_host("global", SGE_EXECHOST_LIST), 
-                     Master_Complex_List, slots)>0)
-               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, "global", hep);
+            qep_QU_qhostname = lGetHost(qep, QU_qhostname);
 
-            if (debit_host_consumable(jep, hep=sge_locate_host(lGetHost(qep, QU_qhostname), 
-                     SGE_EXECHOST_LIST), Master_Complex_List, slots)>0)
-               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(qep, QU_qhostname), hep);
+            /* debit in all layers */
+            if ( debit_host_consumable(jep, global_host_ep, Master_Complex_List, slots) > 0 )
+               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, "global", global_host_ep );
+
+            hep = sge_locate_host(qep_QU_qhostname, SGE_EXECHOST_LIST);
+            if ( debit_host_consumable(jep, hep, Master_Complex_List, slots) > 0 )
+               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, qep_QU_qhostname, hep);
 
             debit_queue_consumable(jep, qep, Master_Complex_List, slots);
             sge_add_queue_event(sgeE_QUEUE_MOD, qep);
          }
-
       }
 
       now = sge_get_gmt();
@@ -739,16 +748,17 @@ sge_commit_flags_t commit_flags
          if (pe_name) {
             pe = lGetElemStr(Master_Pe_List, PE_name, pe_name);
             if (pe && lGetUlong(pe, PE_control_slaves)) { 
-               for_each(granted_queue, 
-                     lGetList(jatep, JAT_granted_destin_identifier_list)) {
+               for_each(granted_queue, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
                   lListElem *host;
+                  const char *granted_queue_JG_qhostname;
+
+                  granted_queue_JG_qhostname = lGetHost(granted_queue, JG_qhostname);
 
                   if (!master_host) {
-                     master_host = lGetHost(granted_queue, JG_qhostname);
+                     master_host = granted_queue_JG_qhostname;
                   } 
-                  
-                  if (strcasecmp(master_host, lGetHost(granted_queue, JG_qhostname))) {
-                     host = lGetElemHost(Master_Exechost_List, EH_name, lGetHost(granted_queue, JG_qhostname)); 
+                  if (hostcmp(master_host, granted_queue_JG_qhostname )) {
+                     host = lGetElemHost(Master_Exechost_List, EH_name, granted_queue_JG_qhostname ); 
                      
                      add_to_reschedule_unknown_list(host, 
                         lGetUlong(jep, JB_job_number),

@@ -186,7 +186,7 @@ char *argv[]
    char *cp = NULL;
    char **spp = NULL;
    int opt;
-   int ret = 0;
+   int sge_parse_return = 0;
 
    lEnumeration *what;
    lCondition *where;
@@ -418,7 +418,7 @@ DPRINTF(("ep: %s %s\n",
          if ( !arglp ) {
             fprintf(stderr, MSG_EXEC_XISNOEXECHOST_S, host);   
             spp++;
-            ret = 1;
+            sge_parse_return = 1;
             continue;
          }
 
@@ -529,7 +529,8 @@ DPRINTF(("ep: %s %s\n",
 
          spp = sge_parser_get_next(spp);
          parse_name_list_to_cull("host to add", &lp, AH_Type, AH_name, *spp);
-         ret = add_host_of_type(lp, SGE_ADMINHOST_LIST);
+         if ( add_host_of_type(lp, SGE_ADMINHOST_LIST) != 0)
+            sge_parse_return = 1; 
          lFreeList(lp);
 
          spp++;
@@ -1629,8 +1630,11 @@ DPRINTF(("ep: %s %s\n",
 
          alp = gdi_kill(NULL, me.default_cell, 0, SCHEDD_KILL);
          for_each(aep, alp) {
+            if (sge_get_recoverable(aep) != STATUS_OK)
+               sge_parse_return = 1;
             fprintf(stderr, "%s", lGetString(aep, AN_text));
          }
+
          alp = lFreeList(alp);
 
          spp++;
@@ -3346,7 +3350,7 @@ DPRINTF(("ep: %s %s\n",
                         cull_write_qconf(0, 1, NULL, NULL, NULL, lFirst(lp));
                      else {
                         fprintf(stderr, MSG_OBJ_UNABLE2FINDQ_S, lGetString(argep, QR_name));
-                        ret = 1;
+                        sge_parse_return = 1;
                      }
                      aep = lFirst(alp);
                      if(sge_get_recoverable(aep) != STATUS_OK) {
@@ -4022,7 +4026,7 @@ DPRINTF(("ep: %s %s\n",
    }
 
    DEXIT;
-   return ret;
+   return sge_parse_return;
 }
 
 /***********************************************************************/
@@ -6159,7 +6163,7 @@ const char *config_name
 ) {
    lList *alp = NULL, *lp = NULL;
    lListElem *ep;
-   int fail;
+   int fail = 0;
    
    DENTER(TOP_LAYER, "delete_config");
 

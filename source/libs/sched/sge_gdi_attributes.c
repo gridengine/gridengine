@@ -298,10 +298,13 @@ u_long32 jobid
 ) {
    lListElem *gdil_ep, *aep;
    lList *job_list = NULL, *alp;
+   lList *help_list = NULL;
    lCondition *where;
    lEnumeration *what;
    char unique[MAXHOSTLEN];
    int pos, nslots = 0;
+   const void *iterator = NULL;
+
 
    DENTER(TOP_LAYER, "sge_gdi_host_nslots");
 
@@ -337,13 +340,14 @@ u_long32 jobid
    }
    lFreeList(alp);
 
-   /* accumulate slots if host matches */
-   for_each (gdil_ep, lGetList(lFirst(lGetList(lFirst(job_list), JB_ja_tasks)), 
-      JAT_granted_destin_identifier_list)) {
-	   if (!hostcmp(unique, lGetHost(gdil_ep, JG_qhostname)))
-         nslots += lGetUlong(gdil_ep, JG_slots);
+   /* accumulate slots if host matches */    
+   help_list = lGetList(lFirst(lGetList(lFirst(job_list), JB_ja_tasks)), JAT_granted_destin_identifier_list);
+   gdil_ep = lGetElemHostFirst(help_list, JG_qhostname, unique, &iterator); 
+   while (gdil_ep != NULL) {
+      nslots += lGetUlong(gdil_ep, JG_slots);
+      gdil_ep = lGetElemHostNext(help_list, JG_qhostname , unique, &iterator); 
    }
-     
+
    DEXIT;
    return nslots;
 }

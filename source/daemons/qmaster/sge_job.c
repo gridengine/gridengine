@@ -1287,7 +1287,7 @@ char *commproc
       lListElem *granted_queue;
       sge_pack_buffer tmp_pb;
 
-      for_each (granted_queue, lGetList(t, JAT_granted_destin_identifier_list)) {
+      for_each (granted_queue, lGetList(t, JAT_granted_destin_identifier_list)) { 
          if (hostcmp(pb_host, lGetHost(granted_queue, JG_qhostname))) {
             if(init_packbuffer(&tmp_pb, 1024, 0) == PACK_SUCCESS) {
 

@@ -934,9 +934,9 @@ static int is_requested(lList *req, const char *attr)
 {
    lListElem *res;
 
-   for_each (res, req) {
+   for_each (res, req) {  
       if (lGetSubStr(res, CE_name, attr, RE_entries) ||
-          lGetSubStr(res, CE_name, attr, RE_entries)) {
+          lGetSubStr(res, CE_shortcut , attr, RE_entries)) {
          return 1;
       }
    }
@@ -1572,6 +1572,8 @@ int host_order_changed) {
    int minslots = 0;
    int need_master_host;
    u_long32 job_id;
+   const void *iterator = NULL;
+
 
    DENTER(TOP_LAYER, "sge_replicate_queues_suitable4job");
 
@@ -1644,10 +1646,11 @@ int host_order_changed) {
       
                /* set host_seqno for all queues of this host */
                eh_name = lGetHost(hep, EH_name);
-               for_each (qep, queues) {
-                  if (hostcmp(lGetHost(qep, QU_qhostname), eh_name))
-                     continue;
-                  lSetUlong(qep, QU_host_seq_no, host_seqno);
+               
+               qep = lGetElemHostFirst(queues, QU_qhostname, eh_name, &iterator); 
+               while (qep != NULL) {
+                   lSetUlong(qep, QU_host_seq_no, host_seqno);
+                   qep = lGetElemHostNext(queues, QU_qhostname, eh_name, &iterator);
                }
       
                /* detect whether host_seqno has changed since last dispatch operation */

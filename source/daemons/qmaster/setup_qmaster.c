@@ -746,11 +746,18 @@ int sge_setup_qmaster()
    /* RU: */
    /* initiate timer for all hosts because they start in 'unknown' state */ 
    if (Master_Exechost_List) {
-      lListElem *host;
- 
+      lListElem *host               = NULL;
+      lListElem *global_host_elem   = NULL;
+      lListElem *template_host_elem = NULL;
+
+      /* get "global" element pointer */
+      global_host_elem   = lGetElemHost(Master_Exechost_List, EH_name, SGE_GLOBAL_NAME);   
+
+      /* get "template" element pointer */
+      template_host_elem = lGetElemHost(Master_Exechost_List, EH_name, SGE_TEMPLATE_NAME);
+  
       for_each(host, Master_Exechost_List) {
-         if (strcmp(lGetHost(host , EH_name), SGE_GLOBAL_NAME) 
-             && strcmp(lGetHost(host , EH_name), SGE_TEMPLATE_NAME)) {
+         if ( (host != global_host_elem ) && (host != template_host_elem ) ) {
             reschedule_add_additional_time(load_report_interval(host));
             reschedule_unknown_trigger(host);
             reschedule_add_additional_time(0); 

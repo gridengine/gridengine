@@ -722,7 +722,7 @@ lList **topp  /* ticket orders ptr ptr */
                   }
                }
 
-               while((oep=lFirst(oeql))) {
+               while((oep=lFirst(oeql))) {          
                   if (((oep_qname=lGetString(oep, OQ_dest_queue))) &&
                       ((oep_qep = sge_locate_queue(oep_qname))) &&
                       ((oep_hname=lGetHost(oep_qep, QU_qhostname)))) {
@@ -737,7 +737,7 @@ lList **topp  /* ticket orders ptr ptr */
                         if (((curr_oep_qname=lGetString(curr_oep, OQ_dest_queue))) &&
                             ((curr_oep_qep = sge_locate_queue(curr_oep_qname))) &&
                             ((curr_oep_hname=lGetHost(curr_oep_qep, QU_qhostname))) &&
-                            !hostcmp(oep_hname, curr_oep_hname)) {
+                            !hostcmp(oep_hname, curr_oep_hname)) {     /* CR SPEEDUP CANDIDATE */
                            job_tickets_on_host += lGetDouble(curr_oep, OQ_ticket);
                            lRemoveElem(oeql, curr_oep);
                         }
@@ -1176,7 +1176,7 @@ lList *ticket_orders
 
    now = sge_get_gmt();
 
-   while ((ep=lFirst(ticket_orders))) {
+   while ((ep=lFirst(ticket_orders))) {     /* CR SPEEDUP CANDIDATE */
       lListElem *hep;
    
       jobid = lGetUlong(ep, OR_job_number);
@@ -1192,8 +1192,7 @@ lList *ticket_orders
       }
  
       /* seek master queue */
-      master_host_name = lGetHost(lFirst(
-         lGetList(jatask, JAT_granted_destin_identifier_list)), JG_qhostname);
+      master_host_name = lGetHost(lFirst( lGetList(jatask, JAT_granted_destin_identifier_list)), JG_qhostname);
 
       /* put this one in 'to_send' */ 
       to_send = lCreateList("to send", lGetElemDescr(ep));
@@ -1206,7 +1205,7 @@ lList *ticket_orders
          and add them to 'to_send'
       */ 
       next = lFirst(ticket_orders);
-      while ((other=next)) {
+      while ((other=next)) {      /* CR SPEEDUP CANDIDATE */
          next = lNext(other);
 
          other_jep = sge_locate_job(lGetUlong(other, OR_job_number)); 

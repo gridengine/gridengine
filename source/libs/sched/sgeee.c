@@ -3965,6 +3965,9 @@ calculate_host_tickets( lList **running,   /* JB_Type */
    const char *host_name;
    double host_sge_tickets;
    lListElem *hep, *running_job_elem, *rjq;
+   lList *help_list;
+   const void *iterator = NULL;
+
 
    DENTER(TOP_LAYER, "calculate_host_tickets");
 
@@ -3981,17 +3984,19 @@ calculate_host_tickets( lList **running,   /* JB_Type */
       return 0;
    }
 
-   for_each (hep, *hosts) {
+   for_each (hep, *hosts) { 
       host_name = lGetHost(hep, EH_name);
       lSetDouble(hep, EH_sge_tickets, 0);
       host_sge_tickets = 0;
-      for_each (running_job_elem, *running) {
+      for_each (running_job_elem, *running) { 
          lListElem* ja_task;
 
-         for_each(ja_task, lGetList(running_job_elem, JB_ja_tasks)) {
-            for_each (rjq, lGetList(ja_task, JAT_granted_destin_identifier_list)) {
-               if (hostcmp(lGetHost(rjq, JG_qhostname), host_name) == 0)
-                  host_sge_tickets += lGetDouble(ja_task, JAT_ticket);
+         for_each(ja_task, lGetList(running_job_elem, JB_ja_tasks)) {  
+            help_list = lGetList(ja_task, JAT_granted_destin_identifier_list);
+            rjq = lGetElemHostFirst(help_list, JG_qhostname, host_name, &iterator );
+            while (rjq != NULL) {
+               host_sge_tickets += lGetDouble(ja_task, JAT_ticket);
+               rjq = lGetElemHostNext(help_list, JG_qhostname, host_name, &iterator);
             }
          }
       }
@@ -4027,8 +4032,10 @@ int
 sort_host_list_by_share_load( lList *hl,
                               lList *cplx_list )
 {
-   lListElem *hlp;
-   const char *host;
+   lListElem *hlp                = NULL;
+   lListElem *global_host_elem   = NULL; 
+   lListElem *template_host_elem = NULL;
+
    double total_SGE_tickets = 0;
    double total_resource_capability_factor = 0.0;
    double resource_allocation_factor = 0.0;
@@ -4053,32 +4060,40 @@ sort_host_list_by_share_load( lList *hl,
 #endif
 
    /* collect  share load parameter totals  for each host*/
-
+   global_host_elem   = lGetElemHost(hl, EH_name, SGE_GLOBAL_NAME);    /* get "global" element pointer */
+   template_host_elem = lGetElemHost(hl, EH_name, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
    for_each (hlp, hl) {
+      lDouble hlp_EH_sort_value;
       /* EH_sort_value (i.e., load) should not be less than 1 */
-      host = lGetHost(hlp,EH_name);
-      if (strcmp(host, "global")) { /* don't treat global */
-         if (lGetDouble(hlp, EH_sort_value) < 1) {
-            lSetDouble(hlp, EH_sort_value, 1);
-         }
-      }
+      
+      if (hlp == template_host_elem)
+         continue;                      /* don't treat template at all */
+
+      hlp_EH_sort_value = lGetDouble(hlp, EH_sort_value); 
+ 
+      if ( ( hlp != global_host_elem ) && ( hlp_EH_sort_value < 1 ) ) {  /* don't treat global */
+         lSetDouble(hlp, EH_sort_value, 1);
+         hlp_EH_sort_value = (lDouble) 1;
+      } 
 
       total_SGE_tickets += lGetDouble(hlp, EH_sge_tickets);
 
-      if (strcmp(host, "global") && !(lGetDouble(hlp, EH_sort_value) == ERROR_LOAD_VAL)) { /* don't treat global */
+      /* don't treat global and ERROR_LOAD_VAL */
+      if ( (hlp != global_host_elem) && (hlp_EH_sort_value != ERROR_LOAD_VAL) ) { 
          total_resource_capability_factor +=  lGetDouble(hlp, EH_resource_capability_factor);
-      }   /* don't treat global */
+      } 
 
-
-      if (!(lGetDouble(hlp, EH_sort_value) == ERROR_LOAD_VAL)){
-         total_load += lGetDouble(hlp, EH_sort_value);
-      }
+      if ( hlp_EH_sort_value != ERROR_LOAD_VAL ) {
+         total_load += hlp_EH_sort_value;
+      } 
    }
 
    if ( total_resource_capability_factor == 0.0)  {
-      for_each(hlp, hl)  {
-         host = lGetHost(hlp,EH_name);
-         if (strcmp(host, "global") && !(lGetDouble(hlp, EH_sort_value) == ERROR_LOAD_VAL)) { /* don't treat global */
+      global_host_elem   = lGetElemHost(hl, EH_name, SGE_GLOBAL_NAME);    /* get "global" element pointer */
+      template_host_elem = lGetElemHost(hl, EH_name, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
+      for_each(hlp, hl)  { 
+         if ( (hlp != global_host_elem) && (hlp != template_host_elem) &&  /* don't treat global and template */
+               !(lGetDouble(hlp, EH_sort_value) == ERROR_LOAD_VAL)) { 
             lSetDouble(hlp, EH_resource_capability_factor, 1.0);
             total_resource_capability_factor += 1.0;
          } /* for_each(hlp, hl) */
@@ -4087,10 +4102,17 @@ sort_host_list_by_share_load( lList *hl,
  
 
    /* Calculate share load parameter percentages for each host*/
+   global_host_elem   = lGetElemHost(hl, EH_name, SGE_GLOBAL_NAME);    /* get "global" element pointer */
+   template_host_elem = lGetElemHost(hl, EH_name, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
+   for_each (hlp, hl) {  
 
-   for_each (hlp, hl) {
-      host = lGetHost(hlp,EH_name);
-      if (strcmp(host, "global")) { /* don't treat global */
+      if (hlp == template_host_elem)
+         continue;
+
+      if ( (hlp != global_host_elem) ) { /* don't treat global */
+         lDouble hlp_EH_sort_value;
+
+         hlp_EH_sort_value = lGetDouble(hlp, EH_sort_value);
 
          if (!(total_SGE_tickets == 0)){
              lSetDouble(hlp, EH_sge_ticket_pct, (((double) lGetDouble(hlp, EH_sge_tickets))/((double) total_SGE_tickets))*100.0);
@@ -4100,72 +4122,58 @@ sort_host_list_by_share_load( lList *hl,
          }
          lSetDouble(hlp, EH_resource_capability_factor_pct, (lGetDouble(hlp,EH_resource_capability_factor)/total_resource_capability_factor)*100);
 
-      if (!(lGetDouble(hlp, EH_sort_value)==ERROR_LOAD_VAL)){
-         if (!total_load == 0) {
-            lSetDouble(hlp, EH_sge_load_pct, ((lGetDouble(hlp,EH_sort_value))/((double) total_load))*100.0);
+         if ( hlp_EH_sort_value != ERROR_LOAD_VAL ){
+            if (!total_load == 0) {
+               lSetDouble(hlp, EH_sge_load_pct, (hlp_EH_sort_value/((double) total_load))*100.0);
+            }
+            else {
+            lSetDouble(hlp, EH_sge_load_pct, 1.0);
+            }
+         } else {
+            lSetDouble(hlp, EH_sge_load_pct, (double) ERROR_LOAD_VAL);
          }
-         else {
-         lSetDouble(hlp, EH_sge_load_pct, 1.0);
-         }
-      }
-      else {
-         lSetDouble(hlp, EH_sge_load_pct, (double) ERROR_LOAD_VAL);
-      }
-
-       } /* don't treat global */
+      } /* don't treat global */
    } /* for_each(hlp, hl) */
 
    /* Calculate share load quantities for each job */
+   global_host_elem   = lGetElemHost(hl, EH_name, SGE_GLOBAL_NAME);    /* get "global" element pointer */
+   template_host_elem = lGetElemHost(hl, EH_name, SGE_TEMPLATE_NAME);  /* get "template" element pointer */
 
-   for_each (hlp, hl) {
-      host = lGetHost(hlp,EH_name);
-      if (strcmp(host,"global")) { /* don't treat global */
+   for_each (hlp, hl) {  
+      if (hlp == template_host_elem)
+         continue;
+
+      if ( hlp != global_host_elem ) { /* don't treat global */
          if (!(lGetDouble(hlp, EH_sort_value)==ERROR_LOAD_VAL)){
+
             resource_allocation_factor = (( lGetDouble(hlp, EH_resource_capability_factor_pct)) - ( lGetDouble(hlp,EH_sge_ticket_pct)));
 
 #ifdef notdef
 /*  REMOVE AFTER TESTING */
-        lSetUlong(hlp, EH_sge_load, (u_long) (((( lGetDouble(hlp, EH_resource_capability_factor_pct)) - ( lGetDouble(hlp,EH_sge_ticket_pct)))/( lGetDouble(hlp,EH_sge_load_pct)))*100.0 + 1000.0));
+            lSetUlong(hlp, EH_sge_load, (u_long) (((( lGetDouble(hlp, EH_resource_capability_factor_pct)) - ( lGetDouble(hlp,EH_sge_ticket_pct)))/( lGetDouble(hlp,EH_sge_load_pct)))*100.0 + 1000.0));
 #endif /* notdef */
 
-         if (resource_allocation_factor < 0) {
-
-            s_load = (((resource_allocation_factor)/(101.0 -  lGetDouble(hlp,EH_sge_load_pct)))*100.0);
-
-
-            if (s_load < -100000.0) {
-
-               lSetUlong(hlp, EH_sge_load, 1);
-
-            }
-            else  {
-
-               lSetUlong(hlp, EH_sge_load, (u_long) (((resource_allocation_factor)/(101.0 -  lGetDouble(hlp,EH_sge_load_pct)))*100.0 +
-100000.0));
-            }
-         }
-         else {
-
-            lSetUlong(hlp, EH_sge_load, (u_long) (((resource_allocation_factor)/( lGetDouble(hlp,EH_sge_load_pct)))*100.0 + 100000.0));
-
-
-         } /* if resource_allocation_factor */
-
-         }
-         else {
+            if (resource_allocation_factor < 0) {
+               s_load = (((resource_allocation_factor)/(101.0 -  lGetDouble(hlp,EH_sge_load_pct)))*100.0);
+               if (s_load < -100000.0) {
+                  lSetUlong(hlp, EH_sge_load, 1);
+               } else {
+                  lSetUlong(hlp, EH_sge_load, (u_long) (((resource_allocation_factor)/(101.0 - lGetDouble(hlp,EH_sge_load_pct)))*100.0 + 100000.0));
+               }
+            } else {
+               lSetUlong(hlp, EH_sge_load, (u_long) (((resource_allocation_factor)/( lGetDouble(hlp,EH_sge_load_pct)))*100.0 + 100000.0));
+            } /* if resource_allocation_factor */
+         } else {
             lSetUlong(hlp, EH_sge_load, 0);
          } /* ERROR_LOAD ? */
-
 #ifdef notdef
-       lSetDouble(hlp, EH_sort_value,
-       load = scaled_mixed_load(lGetList(hlp, EH_load_list),
-       lGetList(hlp, EH_scaling_list),
-       host_complex_attributes,
-       (double)lGetUlong(hlp, EH_load_correction_factor)/100));
+         lSetDouble(hlp, EH_sort_value,
+         load = scaled_mixed_load(lGetList(hlp, EH_load_list),
+         lGetList(hlp, EH_scaling_list),
+         host_complex_attributes,
+         (double)lGetUlong(hlp, EH_load_correction_factor)/100));
 #endif /* notdef */
-
-      }
-      else {
+      } else {
          lSetUlong(hlp, EH_sge_load, 0);
       } /* don't treat global */
    }

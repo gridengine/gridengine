@@ -120,7 +120,8 @@ int sub_command
         
          new_cl = lGetList(ep, CX_entries); 
          for_each(old_cep, lGetList(new_complex, CX_entries)) {
-            new_cep = lGetElemStr(new_cl, CE_name, lGetString(old_cep, CE_name));
+            const char* old_cep_CE_name = lGetString(old_cep, CE_name);
+            new_cep = lGetElemStr(new_cl, CE_name, old_cep_CE_name );
             
             if (!new_cep) {
                lListElem *qep;
@@ -132,24 +133,20 @@ int sub_command
                for_each(qep, Master_Queue_List) {
                   lListElem *ceep;
 
-                  ceep = lGetElemStr(lGetList(qep, QU_consumable_config_list), 
-                     CE_name, lGetString(old_cep, CE_name));   
+                  ceep = lGetElemStr(lGetList(qep, QU_consumable_config_list), CE_name, old_cep_CE_name );   
                   if (ceep) {
-                     ERROR((SGE_EVENT, MSG_ATTRSTILLREFINQUEUE_SS, lGetString(old_cep, CE_name), 
-                        lGetString(qep, QU_qname)));
+                     ERROR((SGE_EVENT, MSG_ATTRSTILLREFINQUEUE_SS, old_cep_CE_name, lGetString(qep, QU_qname)));
                      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
                      goto ERROR;
                   }
                }
                /* try to find reference for CE element in each Host */
-               for_each(hep, Master_Exechost_List) {
+               for_each(hep, Master_Exechost_List) { 
                   lListElem *ceep;
 
-                  ceep = lGetElemStr(lGetList(hep, EH_consumable_config_list),
-                     CE_name, lGetString(old_cep, CE_name));
+                  ceep = lGetElemStr(lGetList(hep, EH_consumable_config_list), CE_name, old_cep_CE_name );
                   if (ceep) {
-                     ERROR((SGE_EVENT, MSG_ATTRSTILLREFINHOST_SS, lGetString(old_cep, CE_name), 
-                        lGetHost(hep, EH_name)));
+                     ERROR((SGE_EVENT, MSG_ATTRSTILLREFINHOST_SS, old_cep_CE_name, lGetHost(hep, EH_name)));
                      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
                      goto ERROR;
                   }        
@@ -159,13 +156,10 @@ int sub_command
                if (scep) {
                   lListElem *ceep;
 
-                  ceep = lGetElemStr(lGetList(scep, SC_job_load_adjustments),
-                     CE_name, lGetString(old_cep, CE_name));
+                  ceep = lGetElemStr(lGetList(scep, SC_job_load_adjustments), CE_name, old_cep_CE_name );
                   if (ceep) {
-                     ERROR((SGE_EVENT, MSG_ATTRSTILLREFINSCHED_S, 
-                        lGetString(old_cep, CE_name)));
-                     sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, 
-                        NUM_AN_ERROR);
+                     ERROR((SGE_EVENT, MSG_ATTRSTILLREFINSCHED_S, old_cep_CE_name ));
+                     sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
                      goto ERROR;
                   }                      
                }
@@ -175,8 +169,7 @@ int sub_command
                   int reference_found = 0;
                   char *first_occur;
 
-                  first_occur = strstr(load_formula, 
-                     lGetString(old_cep, CE_name));
+                  first_occur = strstr(load_formula, old_cep_CE_name);
                   if (first_occur) {
                      char front, behind;
                      int begin = 0, end = 0;
@@ -191,7 +184,7 @@ int sub_command
                         begin = 1;
                      }
 
-                     behind = first_occur[strlen(lGetString(old_cep, CE_name))];
+                     behind = first_occur[strlen(old_cep_CE_name )];
                      if (behind == '+' || behind == '-' || behind == '*' 
                          || behind == '\0') {
                         end = 1; 
@@ -201,7 +194,7 @@ int sub_command
                      }   
                   }
                   if (reference_found) {
-                     ERROR((SGE_EVENT, MSG_ATTRSTILLREFINSCHED_S, lGetString(old_cep, CE_name)));
+                     ERROR((SGE_EVENT, MSG_ATTRSTILLREFINSCHED_S, old_cep_CE_name ));
                      sge_add_answer(alpp, SGE_EVENT, STATUS_ESEMANTIC, NUM_AN_ERROR);
                      goto ERROR;
                   }
@@ -294,7 +287,7 @@ int sub_command
             /* search through resource lists of queues and exechosts 
                reject this request in case there is an entry which is not parsable 
                -> to prevent mysterious errors in scheduler */
-            for_each (hep, Master_Exechost_List) {
+            for_each (hep, Master_Exechost_List) {  
                if ((cr = lGetSubStr(hep, CE_name, name, EH_consumable_config_list)) && 
                      !parse_ulong_val(NULL, NULL, type, lGetString(cr, CE_stringval), NULL, 0)) {
                   ERROR((SGE_EVENT, MSG_CPLX_ATTRIBNOCONSUMEH_SS, name, lGetHost(hep, EH_name))) ;

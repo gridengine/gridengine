@@ -781,6 +781,7 @@ int sge_process_all_events(lList *event_list) {
                   DPRINTF(("sge_process_all_events: copy all strings\n"));
                   lSetString(ep, str_nm[i], lGetString(job, str_nm[i]));
                }
+            /* copy all hosts */
             for (i = 0; host_nm[i] != NoName; i++)
                if (lGetPosViaElem(job, host_nm[i])) {
                   DPRINTF(("sge_process_all_events: copy all hosts\n"));

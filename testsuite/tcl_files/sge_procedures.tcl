@@ -5424,7 +5424,9 @@ proc startup_qmaster { {and_scheduler 1} } {
          puts $CHECK_OUTPUT $result
       }
    }
-   
+ 
+   after 5000
+     
    return 0
 }
 

@@ -1790,9 +1790,6 @@ static void delete_job(u_long32 job_id, lList *jlp)
       return;
    }
 
-   lAddSubUlong(jep, JRE_job_number, job_id, JB_job_identifier_list, JRE_Type);
-   lSetUlong(jep, JB_job_number, job_id);
-
    sprintf(job_str, u32, job_id);
    lAddElemStr(&idlp, ID_str, job_str, ID_Type);
 

@@ -43,15 +43,18 @@ extern "C" {
 /* *INDENT-OFF* */
 
 enum {
-   JRE_job_number = JRE_LOWERBOUND
+   JRE_job_number = JRE_LOWERBOUND,  /* used in JB_jid_successor_list */
+   JRE_job_name                      /* used in JB_jid_predecessor_list */
 };
 
 LISTDEF(JRE_Type)
    SGE_ULONG(JRE_job_number)
+   SGE_STRING(JRE_job_name)
 LISTEND 
 
 NAMEDEF(JREN)
    NAME("JRE_job_number")
+   NAME("JRE_job_name")
 NAMEEND
 
 /* *INDENT-ON* */

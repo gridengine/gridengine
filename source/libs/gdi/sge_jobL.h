@@ -369,16 +369,16 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_LIST(JB_master_hard_queue_list)  /* QR_Type - "-masterq dest_identifier" */
                                         /* specifies a queue (qsub)         */
 
-   SGE_LIST(JB_job_identifier_list)     /* JRE_Type                         */
+   SGE_LIST(JB_job_identifier_list)     /* ID_Type                          */
    SGE_XSTRING(JB_message)
    SGE_XSTRING(JB_job_source)           /* name of the component that fed   */
    SGE_XULONG(JB_ext)
    SGE_XSTRING(JB_pe)                   /* see JB_pe_object for qidl obj    */
    SGE_TLIST(JB_pe_range, RN_Type)      /* RN_Type                          */
    SGE_XULONG(JB_scheduling_priority)   /* unused ? */
-   SGE_XLIST(JB_jid_predecessor_list,JRE_Type) /* JRE_Type               */ 
-   SGE_ILIST(JB_jid_predecessor_list, JB_Type) /* IDL only               */ 
-   SGE_LIST(JB_jid_sucessor_list)       /* JRE_Type                         */
+   SGE_XLIST(JB_jid_predecessor_list,JRE_Type) /* JRE_Type only JRE_job_name */ 
+   SGE_ILIST(JB_jid_predecessor_list, JB_Type) /* IDL only                   */ 
+   SGE_LIST(JB_jid_sucessor_list)       /* JRE_Type only JRE_job_number      */
    SGE_XULONG(JB_pvm_pid)
    SGE_XULONG(JB_verify_suitable_queues)  
    SGE_XULONG(JB_sig)

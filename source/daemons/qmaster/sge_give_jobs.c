@@ -889,21 +889,29 @@ static void release_successor_jobs(
 lListElem *jep 
 ) {
    lListElem *jid, *suc_jep;
+   char job_ident[256];
 
    DENTER(TOP_LAYER, "release_successor_jobs");
 
    for_each(jid, lGetList(jep, JB_jid_sucessor_list)) {
       suc_jep = sge_locate_job(lGetUlong(jid, JRE_job_number));
       if (suc_jep) {
-         lDelSubUlong(suc_jep, JRE_job_number, lGetUlong(jep, JB_job_number), 
-            JB_jid_predecessor_list);
-         if (lGetList(suc_jep, JB_jid_predecessor_list))
-            DPRINTF(("removed job "u32"'s dependance from exiting job "u32"\n",
+         /* if we don't find it by job id we try it with the name */
+         sprintf(job_ident, u32, lGetUlong(jep, JB_job_number));
+         if (!lDelSubStr(suc_jep, JRE_job_name, job_ident, JB_jid_predecessor_list) &&
+             !lDelSubStr(suc_jep, JRE_job_name, lGetString(jep, JB_job_name), JB_jid_predecessor_list)) {
+             DPRINTF(("no reference %s and %s to job "u32" in predecessor list of job "u32"\n", 
+               job_ident, lGetString(jep, JB_job_name),
                lGetUlong(suc_jep, JB_job_number), lGetUlong(jep, JB_job_number)));
-         else 
-            DPRINTF(("job "u32"'s job exit triggers start of job "u32"\n",
-               lGetUlong(jep, JB_job_number), lGetUlong(suc_jep, JB_job_number)));
-         sge_add_job_event(sgeE_JOB_MOD, suc_jep, 0);
+         } else {
+            if (lGetList(suc_jep, JB_jid_predecessor_list)) {
+               DPRINTF(("removed job "u32"'s dependance from exiting job "u32"\n",
+                  lGetUlong(suc_jep, JB_job_number), lGetUlong(jep, JB_job_number)));
+            } else 
+               DPRINTF(("job "u32"'s job exit triggers start of job "u32"\n",
+                  lGetUlong(jep, JB_job_number), lGetUlong(suc_jep, JB_job_number)));
+            sge_add_job_event(sgeE_JOB_MOD, suc_jep, 0);
+         }
       }
    }
 

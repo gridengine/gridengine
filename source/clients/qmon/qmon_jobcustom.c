@@ -303,7 +303,7 @@ int nm
    
    strcpy(buf, "");
    for_each(jep, pred) {
-      sprintf(buf, "%s %d", buf, (int) lGetUlong(jep, JRE_job_number));
+      sprintf(buf, "%s %s", buf, lGetString(jep, JRE_job_name));
    }
    str = XtNewString(buf);
 

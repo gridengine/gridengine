@@ -404,7 +404,7 @@ DTRACE;
 
    if (lGetPosViaElem(job, JB_jid_predecessor_list)>=0)
       if (lGetList(job, JB_jid_predecessor_list)) {
-         intprt_type fields[] = { JRE_job_number, 0 };
+         intprt_type fields[] = { JRE_job_name, 0 };
 
          delis[0] = "";
          printf("jid_predecessor_list:       ");

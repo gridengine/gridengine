@@ -63,7 +63,6 @@
 #include "msg_qsub.h"
 
 
-/* static u_long32 get_jobid_from_string(char *str, int scan_array); */
 static void delete_job(u_long32 job_id, lList *lp);
 
 extern char **environ;
@@ -400,11 +399,6 @@ lList *jlp
       return;
    }
    
-#if 0
-   lAddSubUlong(jep, JRE_job_number, job_id, JB_job_identifier_list, JRE_Type);
-   lSetUlong(jep, JB_job_number, job_id);
-#endif
-
    sprintf(job_str, u32, job_id);
    idp = lAddElemStr(&idlp, ID_str, job_str, ID_Type);
 
@@ -415,32 +409,3 @@ lList *jlp
    */
 }
 
-
-/* not used anymore since SGE_GDI_RETURN_NEW_VERSION
-*  static u_long32 get_jobid_from_string(str, parse_ja_job_id)
-*  char *str;
-*  int parse_ja_job_id;
-* {
-*     char *cp;
-*   int jobid = 0;
-*
-*
-*   if (parse_ja_job_id) {
-*     cp = strstr(str, "your job-array ");
-*      if (!cp) {
-*         return 0;
-*      }
-*      cp += strlen("your job-array ");
-*      sscanf(cp, "%d", &jobid); 
-*  } else {
-*      cp = strstr(str, "your job ");
-*      if (!cp) {
-*         return 0;
-*      }
-*      cp += strlen("your job ");
-*      sscanf(cp, "%d", &jobid);
-*   }
-*
-*   return (u_long32) jobid;
-*}
-*/

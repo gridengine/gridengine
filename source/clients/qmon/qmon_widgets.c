@@ -640,10 +640,10 @@ Cardinal size
          for_each(ep, list) {
             if (first_time) {
                first_time = 0;
-               sprintf(buf, "%d", (int) lGetUlong(ep, JRE_job_number));
+               sprintf(buf, "%s", lGetString(ep, JRE_job_name));
             }
             else
-               sprintf(buf, "%s %d", buf, (int)lGetUlong(ep, JRE_job_number));
+               sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
          }
       }
       str = buf;
@@ -711,8 +711,7 @@ Cardinal size
          lListElem *ep = NULL;
          cull_parse_jid_hold_list(&sl, str); 
          for_each (ep, sl) {
-            u_long32 id = atol(lGetString(ep, STR));
-            lAddElemUlong(&ret_list, JRE_job_number, id, JRE_Type);
+            lAddElemStr(&ret_list, JRE_job_name, lGetString(ep, STR), JRE_Type);
          }
          sl = lFreeList(sl);
       }

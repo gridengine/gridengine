@@ -1976,10 +1976,13 @@ const char *str
          lFreeList(*lpp);
          *lpp = NULL;
       }
+
+      DEXIT;
+      return 1;
    }
 
    DEXIT;
-   return 1;
+   return 0;
 }
 
 /****** cull_multitype/lGetSubStr() *******************************************

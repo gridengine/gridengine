@@ -1,3 +1,5 @@
+MD-2004-03-02-1  Enhancem:  - renamed installation files
+              
 CR-2004-03-02-2  Bugfix:    - removed some ENABLE_NGC code parts
                  Cleanup:   - qconf -mconf did not print out an error message when
                               qmaster wasn't reachable

@@ -60,6 +60,7 @@
 #include "sge_answer.h"
 #include "sge_uidgid.h"
 #include "setup_path.h"
+#include "sge_feature.h"
 
 static void default_exit_func(int i);
 

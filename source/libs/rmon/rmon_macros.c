@@ -783,7 +783,7 @@ char *message
 /*       printf("layer: %d ", LAYER); */
 
 #if defined(SGE_MT)
-      fprintf(rmon_fp, "%6ld %6d %d ", DEBUG_TRACEID++, (int)getpid(), pthread_self());
+      fprintf(rmon_fp, "%6ld %6d %ld ", DEBUG_TRACEID++, (int)getpid(), pthread_self());
 #else
       fprintf(rmon_fp, "%6ld %6d", DEBUG_TRACEID++, (int)getpid());
 #endif

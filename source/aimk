@@ -371,17 +371,17 @@ endsw
 
 # Compile with mutlithreading 
 # we have platform dependent defaults
-# switch ($BUILDARCH) 
-#    case SOLARIS64:
-#       set MT = 1
-#       breaksw
-#    case LINUX6:
-#    case SOLARIS:
-#    case SOLARIS86:
-#    default:
-#       set MT = 0
-#       breaksw
-# endsw      
+switch ($BUILDARCH) 
+   case LINUX6:
+   case SOLARIS:
+   case SOLARIS64:
+   case SOLARIS86:
+      set MT = 1
+      breaksw
+   default:
+      set MT = 0
+      breaksw
+endsw      
 # end Compile with mutlithreading
 
 # Compile with usermapping feature
@@ -624,6 +624,7 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
+      set MT = 0
       breaksw
    case "-only-mt":
       set MT = 1
@@ -643,6 +644,7 @@ while ($#argv >= 1 && $?found)
       set QTCSH      = 0
       set REMOTE     = 0
       set SGE_DEPEND = 1
+      set MT = 0
       breaksw
    case "-only-qmake":
       set CORE   = 0
@@ -651,6 +653,7 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
+      set MT = 0
       breaksw
    case "-only-qmon":
       set CORE   = 0
@@ -659,6 +662,7 @@ while ($#argv >= 1 && $?found)
       set QMON   = 1
       set QTCSH  = 0
       set REMOTE = 0
+      set MT = 0
       breaksw
    case "-only-qtcsh":
       set CORE   = 0
@@ -667,6 +671,7 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 1
       set REMOTE = 0
+      set MT = 0
       breaksw
    case "-only-remote":
       set CORE   = 0
@@ -675,6 +680,7 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 1
+      set MT = 0
       breaksw
    case "-only-zlib":
       set CORE   = 0
@@ -683,6 +689,7 @@ while ($#argv >= 1 && $?found)
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
+      set MT = 0
       breaksw
    case "-opt":
       set OPTIMIZATION = 1
@@ -1394,6 +1401,9 @@ case LINUX6:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
 
+   set MTCFLAGS = "-DSGE_MT -pthread"
+   set MTLFLAGS = "-lpthread"
+
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
    breaksw
@@ -1724,7 +1734,6 @@ if ( $WITH_USERMAPPING == 0 ) then
    set CFLAGS = "$CFLAGS -D__SGE_NO_USERMAPPING__"
 endif
 
-
 echo making in $COMPILE_ARCH/ for $COMPILE_ARCH
 
 # create shared lib from LGPL code
@@ -1949,8 +1958,8 @@ endif
 if ( "$MT" == 1 ) then
    
    set COMPILE_ARCH_MT = "${COMPILE_ARCH}_MT"
-   set CFLAGS = "$CFLAGS $MTCFLAGS"
-   set LFLAGS = "$LFLAGS $MTLFLAGS"
+
+   echo making in $COMPILE_ARCH_MT/ for $COMPILE_ARCH
 
    if ( ! -d $COMPILE_ARCH_MT ) then
       echo " INFO: Architecture dir $COMPILE_ARCH_MT not existing. Making"
@@ -1960,14 +1969,14 @@ if ( "$MT" == 1 ) then
    cd $COMPILE_ARCH_MT
 
    echo ________C_O_R_E__S_Y_S_T_E_M___M_T________
-   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-       "SDIR=$SDIR" "SOURCE=$SOURCE" \
+   $MAKE $MAKEOPT -f $SOURCE/libs/japi/Makefile "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $MTCFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+       "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
        "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
        "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
        "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS $LINK_ZLIB" \
        "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
+       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" \
        "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
        "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
        "GCC_NOSP=$GCC_NOSP" \

@@ -8,13 +8,7 @@
 
 #define JOIN_ECT
 
-#if 0
-/* this must be moved to 3rdparty directory */
-
-/* EB: where is this file ? */
-#include "rdwr.h"
-#endif
-
+#include "drmaa.h"
 #include "japi.h"
 
 /* CULL */
@@ -67,7 +61,7 @@ static pthread_once_t japi_once_control = PTHREAD_ONCE_INIT;
 /* ------------------------------------- 
 
    japi_session is used to control drmaa calls can 
-   be used only between drmaa_init() and drmaa_exit()
+   be used only between japi_init() and japi_exit()
 
 */
 
@@ -102,7 +96,7 @@ int japi_ec_state = JAPI_EC_DOWN;
 /* guards access to japi_ec_state global variable */
 static pthread_mutex_t japi_ec_state_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-/* needed in drmaa_init() to allow waiting for event 
+/* needed in japi_init() to allow waiting for event 
    client thread being up and running */
 static pthread_cond_t japi_ec_state_starting_cv = PTHREAD_COND_INITIALIZER;
 
@@ -127,7 +121,7 @@ static pthread_cond_t Master_japi_job_list_finished_cv = PTHREAD_COND_INITIALIZE
 
    japi_threads_in_session is a counter indicating the 
    number of threads depending upon session state 
-   (Master_japi_job_list). In case of a drmaa_exit() this 
+   (Master_japi_job_list). In case of a japi_exit() this 
    state must remain valid until the last thread has finished 
    it's operation.
 
@@ -150,7 +144,7 @@ static pthread_cond_t japi_threads_in_session_cv = PTHREAD_COND_INITIALIZER;
 /* ------------------------------------- */
 
 /* these non vector job template attributes are supported */
-static const char *japi_supported_nonvector[] = {
+const char *japi_supported_nonvector[] = {
    DRMAA_REMOTE_COMMAND,
    DRMAA_JS_STATE,
    DRMAA_WD,
@@ -173,13 +167,14 @@ static const char *japi_supported_nonvector[] = {
 };
 
 /* these vector job template attributes are supported */
-static const char *japi_supported_vector[] = {
+const char *japi_supported_vector[] = {
    DRMAA_V_ARGV,
    DRMAA_V_ENV,
    DRMAA_V_EMAIL,
    NULL
 };
 
+#if 0
 static int is_supported(const char *name, const char *supported_list[])
 {
    int i;
@@ -189,11 +184,12 @@ static int is_supported(const char *name, const char *supported_list[])
    }
    return 0;
 }
+#endif
 
-static void drmaa_once_init(void)
+static void japi_once_init(void)
 {
    /* initialize read write mutex to allow only one thread running
-      drmaa_init()/drmaa_exit() but multiple ones other drmaa_xxx() calls */
+      japi_init()/japi_exit() but multiple ones other japi_xxx() calls */
 }
 
 static void japi_lock_mutex(const char *mutex_name, const char *func, pthread_mutex_t *mutex)
@@ -228,11 +224,13 @@ static void japi_dec_threads(const char *SGE_FUNC)
    JAPI_UNLOCK_REFCOUNTER();
 }
 
-static int drmaa_init_mt(void)
+static int japi_init_mt(void)
 {
    int gdi_errno;
    lList *alp = NULL;
-
+   
+   /* enable rmon monitoring */
+   rmon_mopen(NULL, 0, "japilib");
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);
    gdi_errno = sge_gdi_setup("japi", &alp);
    if (gdi_errno!=AE_OK && gdi_errno != AE_ALREADY_SETUP) {
@@ -258,9 +256,9 @@ static int drmaa_init_mt(void)
    return DRMAA_ERRNO_SUCCESS;
 }
 
-/****** DRMAA/drmaa_init() ****************************************************
+/****** DRMAA/japi_init() ****************************************************
 *  NAME
-*     drmaa_init() -- Initialize DRMAA API library
+*     japi_init() -- Initialize DRMAA API library
 *
 *  SYNOPSIS
 *
@@ -268,7 +266,7 @@ static int drmaa_init_mt(void)
 *     Initialize DRMAA API library and create a new DRMAA Session. 'Contact'
 *     is an implementation dependent string which may be used to specify
 *     which DRM system to use. This routine must be called before any
-*     other DRMAA calls, except for drmaa_version().
+*     other DRMAA calls, except for japi_version().
 *     If 'contact' is NULL, the default DRM system will be used.
 *     Initializes internal data structures and registers with qmaster
 *     using the event client mechanisms.
@@ -280,15 +278,15 @@ static int drmaa_init_mt(void)
 *      japi_session_mutex -> japi_ec_state_mutex
 *
 *******************************************************************************/
-int drmaa_init(const char *contact)
+int japi_init(const char *contact, char *error_diagnosis, size_t error_diag_len)
 {
    int i;
    int ret;
    int *value;
 
-   DENTER(TOP_LAYER, "drmaa_init");
+   DENTER(TOP_LAYER, "japi_init");
 
-   pthread_once(&japi_once_control, drmaa_once_init);
+   pthread_once(&japi_once_control, japi_once_init);
 
    JAPI_LOCK_SESSION();
    if (japi_session == JAPI_SESSION_ACTIVE) {
@@ -298,7 +296,7 @@ int drmaa_init(const char *contact)
    }
 
    /* per thread initialization */
-   if (drmaa_init_mt()!=DRMAA_ERRNO_SUCCESS) {
+   if (japi_init_mt()!=DRMAA_ERRNO_SUCCESS) {
       JAPI_UNLOCK_SESSION();
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
@@ -318,7 +316,7 @@ int drmaa_init(const char *contact)
       pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 #endif
       if ((i=pthread_create(&event_client_thread, &attr, implementation_thread, (void *) NULL))) {
-         fprintf(stderr, "error: couldn't create event client thread: %d %d\n", i, strerror(errno));
+         fprintf(stderr, "error: couldn't create event client thread: %d %s\n", i, strerror(errno));
          JAPI_UNLOCK_SESSION();
          DEXIT;
          return DRMAA_ERRNO_INTERNAL_ERROR;
@@ -342,7 +340,7 @@ int drmaa_init(const char *contact)
 #ifdef JOIN_ECT
    if (ret == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
       if (pthread_join(event_client_thread, (void *)&value)) {
-         DPRINTF(("drmaa_init(): pthread_join returned %d\n", *value));
+         DPRINTF(("japi_init(): pthread_join returned %d\n", *value));
       }
    }
 #endif
@@ -356,9 +354,9 @@ int drmaa_init(const char *contact)
 
 
 
-/****** DRMAA/drmaa_exit() ****************************************************
+/****** DRMAA/japi_exit() ****************************************************
 *  NAME
-*     drmaa_exit() -- Shutdown DRMAA API library
+*     japi_exit() -- Shutdown DRMAA API library
 *
 *  SYNOPSIS
 *
@@ -375,10 +373,10 @@ int drmaa_init(const char *contact)
 *      japi_session_mutex -> japi_threads_in_session_mutex
 *
 *******************************************************************************/
-int drmaa_exit(void)
+int japi_exit(char *error_diagnosis, size_t error_diag_len)
 {
 
-   DENTER(TOP_LAYER, "drmaa_exit");
+   DENTER(TOP_LAYER, "japi_exit");
 
    JAPI_LOCK_SESSION();
    if (japi_session != JAPI_SESSION_ACTIVE) {
@@ -401,13 +399,11 @@ int drmaa_exit(void)
       int *value;
       int i;
       i = pthread_join(event_client_thread, (void *)&value); 
-      DPRINTF(("drmaa_exit(): value = %d pthread_join returned %d: %s\n", *value, i, strerror(errno)));
+      DPRINTF(("japi_exit(): value = %d pthread_join returned %d: %s\n", *value, i, strerror(errno)));
    }
 #endif
 
    {
-      int i;
-
       /* do not destroy session state until last japi call 
          depending on it is finished */
       JAPI_LOCK_REFCOUNTER();
@@ -426,47 +422,47 @@ int drmaa_exit(void)
    return DRMAA_ERRNO_SUCCESS;
 }
 
-/****** japi/drmaa_allocate_job_template() *************************************
+/****** japi/japi_allocate_job_template() *************************************
 *  NAME
-*     drmaa_allocate_job_template() -- Allocate a new job template. 
+*     japi_allocate_job_template() -- Allocate a new job template. 
 *
 *  SYNOPSIS
 *
 *  FUNCTION
 *  RESULT
 *******************************************************************************/
-int drmaa_allocate_job_template(job_template_t **jtp)
+int japi_allocate_job_template(drmaa_job_template_t **jtp, char *error_diagnosis, size_t error_diag_len)
 {
-   DENTER(TOP_LAYER, "drmaa_allocate_job_template");
+   DENTER(TOP_LAYER, "japi_allocate_job_template");
 
    if (!jtp) {
       DEXIT;
       return DRMAA_ERRNO_INVALID_ARGUMENT;
    } 
  
-   *jtp = (job_template_t *)malloc(sizeof(job_template_t));
+   *jtp = (drmaa_job_template_t *)malloc(sizeof(drmaa_job_template_t));
    (*jtp)->strings = (*jtp)->string_vectors = NULL;
 
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;
 }
 
-/****** japi/drmaa_delete_job_template() ***************************************
+/****** japi/japi_delete_job_template() ***************************************
 *  NAME
-*     drmaa_delete_job_template() -- Deallocate a job template. This routine has no effect on jobs.
+*     japi_delete_job_template() -- Deallocate a job template. This routine has no effect on jobs.
 *
 *  SYNOPSIS
 *
 *  FUNCTION
 *
 *  INPUTS
-*     job_template_t *jt - job template to be deleted
+*     drmaa_job_template_t *jt - job template to be deleted
 *
 *  RESULT
 *******************************************************************************/
-int drmaa_delete_job_template(job_template_t *jt)
+int japi_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len)
 {
-   DENTER(TOP_LAYER, "drmaa_delete_job_template");
+   DENTER(TOP_LAYER, "japi_delete_job_template");
 
    if (!jt) {
       DEXIT;
@@ -483,9 +479,9 @@ int drmaa_delete_job_template(job_template_t *jt)
 }
 
 
-/****** japi/drmaa_set_attribute() *********************************************
+/****** japi/japi_set_attribute() *********************************************
 *  NAME
-*     drmaa_set_attribute() -- Set non vector attribute in job template
+*     japi_set_attribute() -- Set non vector attribute in job template
 *
 *  SYNOPSIS
 *
@@ -494,17 +490,17 @@ int drmaa_delete_job_template(job_template_t *jt)
 *     Only non-vector attributes may be passed.
 *
 *  INPUTS
-*     job_template_t *jt - job template
+*     drmaa_job_template_t *jt - job template
 *     const char *name   - name 
 *     const char *value  - value
 *
 *  RESULT
 *******************************************************************************/
-int drmaa_set_attribute(job_template_t *jt, const char *name, const char *value)
+int japi_set_attribute(drmaa_job_template_t *jt, const char *name, const char *value, char *error_diagnosis, size_t error_diag_len)
 {
    lListElem *ep;
 
-   DENTER(TOP_LAYER, "drmaa_set_attribute");
+   DENTER(TOP_LAYER, "japi_set_attribute");
       
    if (!jt) {
       DEXIT;
@@ -537,7 +533,8 @@ int drmaa_set_attribute(job_template_t *jt, const char *name, const char *value)
  * template 'jt', then the value of 'name' is returned; otherwise, 
  * NULL is returned.
  */ 
-int drmaa_get_attribute(job_template_t *jt, const char *name, char *value, size_t value_size)
+int japi_get_attribute(drmaa_job_template_t *jt, const char *name, char *value, 
+   size_t value_len, char *error_diagnosis, size_t error_diag_len)
 {
    return DRMAA_ERRNO_SUCCESS;
 }
@@ -545,13 +542,14 @@ int drmaa_get_attribute(job_template_t *jt, const char *name, char *value, size_
 /* Adds ('name', 'values') pair to list of vector attributes in job template 'jt'.
  * Only vector attributes may be passed. 
  */
-int drmaa_set_vector_attribute(job_template_t *jt, const char *name, char *value[])
+int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name, 
+      char *value[], char *error_diagnosis, size_t error_diag_len)
 {
    int i;
    lList *lp;
    lListElem *ep, *sep;
 
-   DENTER(TOP_LAYER, "drmaa_set_vector_attribute");
+   DENTER(TOP_LAYER, "japi_set_vector_attribute");
 
    if (!jt) {
       DEXIT;
@@ -579,7 +577,7 @@ int drmaa_set_vector_attribute(job_template_t *jt, const char *name, char *value
  * If 'name' is an existing vector attribute name in the job template 'jt',
  * then the values of 'name' are returned; otherwise, NULL is returned.
  */
-int drmaa_get_vector_attribute(job_template_t *jt, const char *name /* , vector of attribute values */ )
+int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name /* , vector of attribute values */, char *error_diagnosis, size_t error_diag_len)
 {
 /*       sge_stradup()/sge_strafree() */
    return DRMAA_ERRNO_SUCCESS;
@@ -591,7 +589,7 @@ int drmaa_get_vector_attribute(job_template_t *jt, const char *name /* , vector 
  * value type is String. This set will include supported DRMAA reserved 
  * attribute names and native attribute names. 
  */
-int drmaa_get_attribute_names( void /* vector of attribute name (string vector) */)
+int japi_get_attribute_names( /* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len)
 {
    return DRMAA_ERRNO_SUCCESS;
 }
@@ -600,15 +598,15 @@ int drmaa_get_attribute_names( void /* vector of attribute name (string vector) 
  * Returns the set of supported attribute names whose associated 
  * value type is String Vector.  This set will include supported DRMAA reserved 
  * attribute names and native attribute names. */
-int drmaa_get_vector_attribute_names(void /* vector of attribute name (string vector) */)
+int japi_get_vector_attribute_names(/* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len)
 {
    return DRMAA_ERRNO_SUCCESS;
 }
 
 
-/****** DRMAA/drmaa_run_job() ****************************************************
+/****** DRMAA/japi_run_job() ****************************************************
 *  NAME
-*     drmaa_run_job() -- Submit a job
+*     japi_run_job() -- Submit a job
 *
 *  SYNOPSIS
 *
@@ -627,20 +625,20 @@ int drmaa_get_vector_attribute_names(void /* vector of attribute name (string ve
 *      Master_japi_job_list_mutex
 *      japi_threads_in_session_mutex
 *******************************************************************************/
-int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt, char *error_diagnosis, int error_diag_len)
+int japi_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len)
 {
    lListElem *job, *ep, *aep;
    lList *job_lp, *alp;
    u_long32 jobid;
 
-   DENTER(TOP_LAYER, "drmaa_run_job");
+   DENTER(TOP_LAYER, "japi_run_job");
 
-   /* ensure drmaa_init() was called */
+   /* ensure japi_init() was called */
    JAPI_LOCK_SESSION();
    if (japi_session != JAPI_SESSION_ACTIVE) {
       JAPI_UNLOCK_SESSION();
       if (error_diagnosis)
-         strncat(error_diagnosis, drmaa_strerror(DRMAA_ERRNO_NO_ACTIVE_SESSION), error_diag_len-1);
+         strncat(error_diagnosis, japi_strerror(DRMAA_ERRNO_NO_ACTIVE_SESSION), error_diag_len-1);
       DEXIT;
       return DRMAA_ERRNO_NO_ACTIVE_SESSION;
    }
@@ -651,12 +649,12 @@ int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt, char *error
    JAPI_UNLOCK_SESSION();
 
    /* per thread initialization */
-   if (drmaa_init_mt()!=DRMAA_ERRNO_SUCCESS) {
+   if (japi_init_mt()!=DRMAA_ERRNO_SUCCESS) {
 
       japi_dec_threads(SGE_FUNC);
 
       if (error_diagnosis)
-         strncat(error_diagnosis, "drmaa_init_mt() failed", error_diag_len-1);
+         strncat(error_diagnosis, "japi_init_mt() failed", error_diag_len-1);
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -727,7 +725,7 @@ int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt, char *error
    }
    
    {
-      u_long32 quality, job_id;
+      u_long32 quality;
       quality = lGetUlong(aep, AN_quality);
       if (quality == ANSWER_QUALITY_ERROR) {
 
@@ -747,7 +745,7 @@ int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt, char *error
    }
 
    /* return jobid as string */
-   snprintf(job_id, job_id_size, "%ld", jobid);
+   snprintf(job_id, job_id_len, "%ld", jobid);
 
    /* need this to enforce certain error conditions */
    if (delay_after_submit) {
@@ -785,9 +783,9 @@ int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt, char *error
    return DRMAA_ERRNO_SUCCESS;
 }
 
-/****** DRMAA/drmaa_run_bulk_jobs() ****************************************************
+/****** DRMAA/japi_run_bulk_jobs() ****************************************************
 *  NAME
-*     drmaa_run_bulk_jobs() -- Submit a bulk of jobs
+*     japi_run_bulk_jobs() -- Submit a bulk of jobs
 *
 *  SYNOPSIS
 *
@@ -808,11 +806,12 @@ int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt, char *error
 *  RESULT
 *
 *******************************************************************************/
-int drmaa_run_bulk_jobs(char *job_ids[], job_template_t *jt, int start, int end, int incr)
+int japi_run_bulk_jobs(/* vector of job ids (string vector), */ drmaa_job_template_t *jt, 
+      int start, int end, int incr, char *error_diagnosis, size_t error_diag_len)
 {
-   DENTER(TOP_LAYER, "drmaa_run_bulk_jobs");
+   DENTER(TOP_LAYER, "japi_run_bulk_jobs");
 
-   /* ensure drmaa_init() was called */
+   /* ensure japi_init() was called */
    JAPI_LOCK_SESSION();
    if (japi_session != JAPI_SESSION_ACTIVE) {
       JAPI_UNLOCK_SESSION();
@@ -824,7 +823,7 @@ int drmaa_run_bulk_jobs(char *job_ids[], job_template_t *jt, int start, int end,
    JAPI_UNLOCK_SESSION();
 
    /* per thread initialization */
-   if (drmaa_init_mt()!=DRMAA_ERRNO_SUCCESS) {
+   if (japi_init_mt()!=DRMAA_ERRNO_SUCCESS) {
       japi_dec_threads(SGE_FUNC);
 
       DEXIT;
@@ -844,9 +843,9 @@ int drmaa_run_bulk_jobs(char *job_ids[], job_template_t *jt, int start, int end,
    return DRMAA_ERRNO_SUCCESS;
 }
 
-/****** DRMAA/drmaa_control() ****************************************************
+/****** DRMAA/japi_control() ****************************************************
 *  NAME
-*     drmaa_control() -- Start, stop, restart, or kill jobs
+*     japi_control() -- Start, stop, restart, or kill jobs
 *
 *  SYNOPSIS
 *
@@ -868,11 +867,11 @@ int drmaa_run_bulk_jobs(char *job_ids[], job_template_t *jt, int start, int end,
 *  RESULT
 *
 *******************************************************************************/
-int drmaa_control(const char *jobid, int action)
+int japi_control(const char *jobid, int action, char *error_diagnosis, size_t error_diag_len)
 {
-   DENTER(TOP_LAYER, "drmaa_control");
+   DENTER(TOP_LAYER, "japi_control");
 
-   /* ensure drmaa_init() was called */
+   /* ensure japi_init() was called */
    JAPI_LOCK_SESSION();
    if (japi_session != JAPI_SESSION_ACTIVE) {
       JAPI_UNLOCK_SESSION();
@@ -882,7 +881,7 @@ int drmaa_control(const char *jobid, int action)
    JAPI_UNLOCK_SESSION();
 
    /* per thread initialization */
-   if (drmaa_init_mt()!=DRMAA_ERRNO_SUCCESS) {
+   if (japi_init_mt()!=DRMAA_ERRNO_SUCCESS) {
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -953,9 +952,9 @@ static int japi_wait_retry(int wait4any, int jobid, int taskid, lListElem **japi
    return JAPI_WAIT_FINISHED;
 }
 
-/****** DRMAA/drmaa_synchronize() ****************************************************
+/****** DRMAA/japi_synchronize() ****************************************************
 *  NAME
-*     drmaa_synchronize() -- Synchronize with jobs to finish
+*     japi_synchronize() -- Synchronize with jobs to finish
 *
 *  SYNOPSIS
 *
@@ -980,11 +979,11 @@ static int japi_wait_retry(int wait4any, int jobid, int taskid, lListElem **japi
 *  MUTEXES
 *      japi_session_mutex -> japi_threads_in_session_mutex
 *******************************************************************************/
-int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose)
+int japi_synchronize(char *job_ids[], signed long timeout, int dispose, char *error_diagnosis, size_t error_diag_len)
 {
-   DENTER(TOP_LAYER, "drmaa_synchronize");
+   DENTER(TOP_LAYER, "japi_synchronize");
 
-   /* ensure drmaa_init() was called */
+   /* ensure japi_init() was called */
    JAPI_LOCK_SESSION();
    if (japi_session != JAPI_SESSION_ACTIVE) {
       JAPI_UNLOCK_SESSION();
@@ -998,7 +997,7 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose)
    JAPI_UNLOCK_SESSION();
 
    /* per thread initialization */
-   if (drmaa_init_mt()!=DRMAA_ERRNO_SUCCESS) {
+   if (japi_init_mt()!=DRMAA_ERRNO_SUCCESS) {
       japi_dec_threads(SGE_FUNC);
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
@@ -1015,9 +1014,9 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose)
 }
 
 
-/****** DRMAA/drmaa_wait() ****************************************************
+/****** DRMAA/japi_wait() ****************************************************
 *  NAME
-*     drmaa_wait() -- Wait job
+*     japi_wait() -- Wait job
 *
 *  SYNOPSIS
 *
@@ -1034,10 +1033,10 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose)
 *     The caller should check system time before and after this call
 *     in order to check how much time has passed.
 *     The routine reaps jobs on a successful call, so any subsequent calls
-*     to drmaa_wait should fail returning an error DRMAA_ERRNO_INVALID_JOB meaning
+*     to japi_wait() should fail returning an error DRMAA_ERRNO_INVALID_JOB meaning
 *     that the job has been already reaped. This error is the same as if the job was
 *     unknown. Failing due to an elapsed timeout has an effect that it is possible to
-*     issue drmaa_wait multiple times for the same job_id.
+*     issue japi_wait() multiple times for the same job_id.
 *
 *  INPUTS
 *  RESULT
@@ -1063,16 +1062,17 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose)
 *      japi_session_mutex -> japi_threads_in_session_mutex
 *      Master_japi_job_list_mutex -> japi_ec_state_mutex
 *******************************************************************************/
-int drmaa_wait(const char *job_id, char *job_id_out, int job_id_size, int *stat, signed long timeout, char *rusage[])
+int japi_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, signed long timeout, 
+   /* rusage: vector of job ids (string vector), */ char *error_diagnosis, size_t error_diag_len)
 {
    u_long32 jobid, taskid;
    int wait4any = 0;
    int wait_result;
    lListElem *japi_job, *japi_task;
 
-   DENTER(TOP_LAYER, "drmaa_wait");
+   DENTER(TOP_LAYER, "japi_wait");
 
-   /* ensure drmaa_init() was called */
+   /* ensure japi_init() was called */
    JAPI_LOCK_SESSION();
    if (japi_session != JAPI_SESSION_ACTIVE) {
       JAPI_UNLOCK_SESSION();
@@ -1086,7 +1086,7 @@ int drmaa_wait(const char *job_id, char *job_id_out, int job_id_size, int *stat,
    JAPI_UNLOCK_SESSION();
 
    /* per thread initialization */
-   if (drmaa_init_mt()!=DRMAA_ERRNO_SUCCESS) {
+   if (japi_init_mt()!=DRMAA_ERRNO_SUCCESS) {
       japi_dec_threads(SGE_FUNC);
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
@@ -1107,8 +1107,8 @@ int drmaa_wait(const char *job_id, char *job_id_out, int job_id_size, int *stat,
       while ((wait_result=japi_wait_retry(wait4any, jobid, taskid, &japi_job, &japi_task)) == JAPI_WAIT_UNFINISHED) {
 
          /* must return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE when event client 
-            thread was shutdown during drmaa_wait() use japi_ec_state ?? */
-         /* has drmaa_exit() been called meanwhile ? */
+            thread was shutdown during japi_wait() use japi_ec_state ?? */
+         /* has japi_exit() been called meanwhile ? */
          pthread_mutex_lock(&japi_ec_state_mutex);
          if (japi_ec_state != JAPI_EC_UP) {
             pthread_mutex_unlock(&japi_ec_state_mutex);
@@ -1124,7 +1124,7 @@ int drmaa_wait(const char *job_id, char *job_id_out, int job_id_size, int *stat,
 
       if (wait_result==JAPI_WAIT_FINISHED) {
          /* copy jobid of finished job into buffer provided by caller */
-         snprintf(job_id_out, job_id_size, "%ld", lGetUlong(japi_job, JJ_jobid));
+         snprintf(job_id_out, job_id_out_len, "%ld", lGetUlong(japi_job, JJ_jobid));
 
          /* remove reaped jobs from library session data */
          lDechainElem(lGetList(japi_job, JJ_finished_tasks), japi_task);
@@ -1147,9 +1147,9 @@ int drmaa_wait(const char *job_id, char *job_id_out, int job_id_size, int *stat,
 }
 
 
-/****** DRMAA/drmaa_job_ps() ****************************************************
+/****** DRMAA/japi_job_ps() ****************************************************
 *  NAME
-*     drmaa_job_ps() -- Get job status
+*     japi_job_ps() -- Get job status
 *
 *  SYNOPSIS
 *
@@ -1172,11 +1172,11 @@ int drmaa_wait(const char *job_id, char *job_id_out, int job_id_size, int *stat,
 *  RESULT
 *
 *******************************************************************************/
-int drmaa_job_ps(const char *job_id, int *remote_ps)
+int japi_job_ps(const char *job_id, int *remote_ps, char *error_diagnosis, size_t error_diag_len)
 {
-   DENTER(TOP_LAYER, "drmaa_job_ps");
+   DENTER(TOP_LAYER, "japi_job_ps");
 
-   /* ensure drmaa_init() was called */
+   /* ensure japi_init() was called */
    JAPI_LOCK_SESSION();
    if (japi_session != JAPI_SESSION_ACTIVE) {
       JAPI_UNLOCK_SESSION();
@@ -1186,7 +1186,7 @@ int drmaa_job_ps(const char *job_id, int *remote_ps)
    JAPI_UNLOCK_SESSION();
 
    /* per thread initialization */
-   if (drmaa_init_mt()!=DRMAA_ERRNO_SUCCESS) {
+   if (japi_init_mt()!=DRMAA_ERRNO_SUCCESS) {
       DEXIT;
       return DRMAA_ERRNO_INTERNAL_ERROR;
    }
@@ -1198,12 +1198,12 @@ int drmaa_job_ps(const char *job_id, int *remote_ps)
    return DRMAA_ERRNO_SUCCESS;
 }
 
-/****** DRMAA/implementation_thread() ****************************************************
+/****** DRMAA/japi_strerror() ****************************************************
 *  NAME
-*     implementation_thread() -- Control flow implementation thread
+*     japi_strerror() -- JAPI strerror()
 *
 *  SYNOPSIS
-*     void drmaa_strerror(int drmaa_errno, char *error_string, int error_len)
+*     void japi_strerror(int drmaa_errno, char *error_string, int error_len)
 *
 *  FUNCTION
 *     Returns readable text version of errno (constant string)
@@ -1212,7 +1212,7 @@ int drmaa_job_ps(const char *job_id, int *remote_ps)
 *  RESULT
 *
 *******************************************************************************/
-const char *drmaa_strerror(int drmaa_errno)
+const char *japi_strerror(int drmaa_errno)
 {
    struct error_text_s {
       int drmaa_errno;
@@ -1248,7 +1248,7 @@ const char *drmaa_strerror(int drmaa_errno)
       { DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE, "The job has not been running, and it cannot be suspended." },
       { DRMAA_ERRNO_HOLD_INCONSISTENT_STATE, "The job cannot be moved to a HOLD state." },
       { DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, "The job is not in a HOLD state." },
-      { DRMAA_ERRNO_EXIT_TIMEOUT, "We have encountered a time-out condition for drmaa_synchronize or drmaa_wait." },
+      { DRMAA_ERRNO_EXIT_TIMEOUT, "time-out condition" },
 
       { DRMAA_NO_ERRNO, NULL }
    };
@@ -1276,7 +1276,6 @@ const char *drmaa_strerror(int drmaa_errno)
 *******************************************************************************/
 static void *implementation_thread(void *p)
 {
-   int i;
    lList *alp = NULL, *event_list = NULL;
    lListElem *event;
    char buffer[1024];
@@ -1370,7 +1369,7 @@ static void *implementation_thread(void *p)
       }
       event_list = lFreeList(event_list);
 
-      /* has drmaa_exit() been called meanwhile ? */ 
+      /* has japi_exit() been called meanwhile ? */ 
       pthread_mutex_lock(&japi_ec_state_mutex);   
       if (japi_ec_state == JAPI_EC_FINISHING) {
          stop_ec = 1;

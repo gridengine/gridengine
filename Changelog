@@ -1,3 +1,12 @@
+AH-2003-03-20-0  Enhancem.: - Integrated DRMAA/JAPI build into regular aimk build 
+                              procedure 
+                            - Cleanly separated DRMAA and JAPI implementation
+                            - DRMAA library now covers all Grid Engine objects files
+                            - Renamed test_japi to test_drmaa
+                            - Integrated rmon into JAPI to allow it being used 
+                              in DRMAA clients without interfacing rmon
+                 Review:    AS
+
 AA-2003-03-19-0  Enhancem.: - Darwin port
 
 JG-2003-03-19-0  Enhancem.: - cleanup and profiling for libevc

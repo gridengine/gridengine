@@ -1,89 +1,53 @@
 #ifndef __JAPI_H
+#define __JAPI_H
 
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ *
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ *
+ *  Sun Microsystems Inc., March, 2001
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ *
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ *
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *   All Rights Reserved.
+ *
+ ************************************************************************/
+/*___INFO__MARK_END__*/
 
-#ifdef JAPI_HOOKS
-extern int delay_after_submit;
+#include "drmaa.h"
+
+#ifdef  __cplusplus
+extern "C" {
 #endif
 
-enum {
-   /* -------------- these are relevant to all sections ---------------- */
-   DRMAA_ERRNO_SUCCESS = 0, /* Routine returned normally with success. */
-   DRMAA_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like memory allocation, system call failure, etc. */
-   DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE, /* Could not contact DRM system for this request. */
-   DRMAA_ERRNO_AUTH_FAILURE, /* The specified request is not processed successfully due to authorization failure. */
-   DRMAA_ERRNO_INVALID_ARGUMENT, /* The input value for an argument is invalid. */
-   DRMAA_ERRNO_NO_ACTIVE_SESSION, /* Exit routine failed because there is no active session */
-
-   /* -------------- init and exit specific --------------- */
-   DRMAA_ERRNO_INVALID_CONTACT_STRING, /* Initialization failed due to invalid contact string. */
-   DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR, /* DRMAA could not use the default contact string to connect to DRM system. */
-   DRMAA_ERRNO_DRMS_INIT_FAILED, /* Initialization failed due to failure to init DRM system. */
-   DRMAA_ERRNO_ALREADY_ACTIVE_SESSION, /* Initialization failed due to existing DRMAA session. */
-   DRMAA_ERRNO_DRMS_EXIT_ERROR, /* DRM system disengagement failed. */
-
-   /* ---------------- job attributes specific -------------- */
-   DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT, /* The format for the job attribute value is invalid. */
-   DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE, /* The value for the job attribute is invalid. */
-   DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES, /* The value of this attribute is conflicting with a previously set attributes. */
-
-   /* --------------------- job submission specific -------------- */
-   DRMAA_ERRNO_TRY_LATER, /* Could not pass job now to DRM system. A retry may succeed however (saturation). */
-   DRMAA_ERRNO_DENIED_BY_DRM, /* The DRM system rejected the job. The job will never be accepted due to DRM configuration or job template settings. */
-
-   /* ------------------------------- job control specific ---------------- */
-   DRMAA_ERRNO_INVALID_JOB, /* The job specified by the 'jobid' does not exist. */
-   DRMAA_ERRNO_RESUME_INCONSISTENT_STATE, /* The job has not been suspended. The RESUME request will not be processed. */
-   DRMAA_ERRNO_SUSPEND_INCONSISTENT_STATE, /* The job has not been running, and it cannot be suspended. */
-   DRMAA_ERRNO_HOLD_INCONSISTENT_STATE, /* The job cannot be moved to a HOLD state. */
-   DRMAA_ERRNO_RELEASE_INCONSISTENT_STATE, /* The job is not in a HOLD state. */
-   DRMAA_ERRNO_EXIT_TIMEOUT, /* We have encountered a time-out condition for drmaa_synchronize or drmaa_wait. */
-
-   DRMAA_NO_ERRNO
-};
-
-#define DRMAA_ERROR_STRING_BUFFER   1024
-#define DRMAA_JOBNAME_BUFFER        1024
-#define DRMAA_SIGNAL_BUFFER         32
-#define DRMAA_TIMEOUT_WAIT_FOREVER  -1
-#define DRMAA_TIMEOUT_NO_WAIT       0 
-
-#define DRMAA_JOB_IDS_SESSION_ANY "*"
-
-/* names of job template attributes */
-#define DRMAA_REMOTE_COMMAND         "drmaa_remote_command"
-#define DRMAA_JS_STATE               "drmaa_js_state"
-#define DRMAA_WD                     "drmaa_wd"
-#define DRMAA_JOB_CATEGORY           "drmaa_job_category"
-#define DRMAA_NATIVE_SPECIFICATION   "drmaa_native_specification"
-#define DRMAA_BLOCK_EMAIL            "drmaa_block_email"
-#define DRMAA_START_TIME             "drmaa_start_time"
-#define DRMAA_JOB_NAME               "drmaa_job_name"
-#define DRMAA_INPUT_PATH             "drmaa_input_path"
-#define DRMAA_OUTPUT_PATH            "drmaa_output_path"
-#define DRMAA_ERROR_PATH             "drmaa_error_path"
-#define DRMAA_JOIN_FILES             "drmaa_join_files"
-#define DRMAA_TRANSFER_FILES         "drmaa_transfer_files"
-#define DRMAA_DEADLINE_TIME          "drmaa_deadline_time"
-#define DRMAA_WCT_HLIMIT             "drmaa_wct_hlimit"
-#define DRMAA_WCT_SLIMIT             "drmaa_wct_slimit"
-#define DRMAA_DURATION_HLIMIT        "drmaa_durartion_hlimit"
-#define DRMAA_DURATION_SLIMIT        "drmaa_durartion_slimit"
-
-/* names of job template vector attributes */
-#define DRMAA_V_ARGV                 "drmaa_v_argv"
-#define DRMAA_V_ENV                  "drmaa_v_env"
-#define DRMAA_V_EMAIL                "drmaa_v_email"
-
-typedef struct job_template_s job_template_t;
-
+/* ------------------- init/exit routines ------------------- */
 /*
  * Initialize DRMAA API library and create a new DRMAA Session. 'Contact'
  * is an implementation dependent string which may be used to specify
  * which DRM system to use. This routine must be called before any
- * other DRMAA calls, except for drmaa_version().
+ * other DRMAA calls, except for japi_version().
  * If 'contact' is NULL, the default DRM system will be used.
  */ 
-int drmaa_init(const char *contact);
+int japi_init(const char *contact, char *error_diagnosis, size_t error_diag_len);
 
 
 /*
@@ -92,26 +56,26 @@ int drmaa_init(const char *contact);
  * This routine ends this DRMAA Session, but does not effect any jobs (e.g.,
  * queued and running jobs remain queued and running).
  */
-int drmaa_exit(void);
+int japi_exit(char *error_diagnosis, size_t error_diag_len);
 
 /* ------------------- job template routines ------------------- */
 
 /* 
  * Allocate a new job template. 
  */
-int drmaa_allocate_job_template(job_template_t **jt);
+int japi_allocate_job_template(drmaa_job_template_t **jt, char *error_diagnosis, size_t error_diag_len);
 
 /* 
  * Deallocate a job template. This routine has no effect on jobs.
  */
-int drmaa_delete_job_template(job_template_t *jt);
+int japi_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
  * Adds ('name', 'value') pair to list of attributes in job template 'jt'.
  * Only non-vector attributes may be passed.
  */
-int drmaa_set_attribute(job_template_t *jt, const char *name, const char *value);
+int japi_set_attribute(drmaa_job_template_t *jt, const char *name, const char *value, char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
@@ -119,19 +83,19 @@ int drmaa_set_attribute(job_template_t *jt, const char *name, const char *value)
  * template 'jt', then the value of 'name' is returned; otherwise, 
  * NULL is returned.
  */ 
-int drmaa_get_attribute(job_template_t *jt, const char *name, char *value, size_t value_size);
+int japi_get_attribute(drmaa_job_template_t *jt, const char *name, char *value, size_t value_len, char *error_diagnosis, size_t error_diag_len);
 
 /* Adds ('name', 'values') pair to list of vector attributes in job template 'jt'.
  * Only vector attributes may be passed.
  */
-int drmaa_set_vector_attribute(job_template_t *jt, const char *name, char *value[]);
+int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name, char *value[], char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
  * If 'name' is an existing vector attribute name in the job template 'jt',
  * then the values of 'name' are returned; otherwise, NULL is returned.
  */
-int drmaa_get_vector_attribute(job_template_t *jt, const char *name /* , vector of attribute values */ );
+int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name, /* vector of attribute values (string vector), */ char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
@@ -139,13 +103,13 @@ int drmaa_get_vector_attribute(job_template_t *jt, const char *name /* , vector 
  * value type is String. This set will include supported DRMAA reserved 
  * attribute names and native attribute names. 
  */
-int drmaa_get_attribute_names( void /* vector of attribute name (string vector) */);
+int japi_get_attribute_names( /* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len);
 
 /*
  * Returns the set of supported attribute names whose associated 
  * value type is String Vector.  This set will include supported DRMAA reserved 
  * attribute names and native attribute names. */
-int drmaa_get_vector_attribute_names(void /* vector of attribute name (string vector) */);
+int japi_get_vector_attribute_names(/* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len);
 
 /* ------------------- job submission routines ------------------- */
 
@@ -154,8 +118,7 @@ int drmaa_get_vector_attribute_names(void /* vector of attribute name (string ve
  * The job identifier 'job_id' is a printable, NULL terminated string,
  * identical to that returned by the underlying DRM system.
  */
-int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt, 
-      char *error_diagnosis, int error_diag_len);
+int japi_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len);
 
 /* 
  * Submit a set of parametric jobs, dependent on the implied loop index, each
@@ -170,7 +133,9 @@ int drmaa_run_job(char *job_id, int job_id_size, job_template_t *jt,
  * For example:
  * drmaa_set_attribute(pjt, "stderr", drmaa_incr_ph + ".err" ); (C++/java string syntax used)
  */
-int drmaa_run_bulk_jobs(char *job_ids[], job_template_t *jt, int start, int end, int incr);
+int japi_run_bulk_jobs( /* vector of job ids (string vector), */ drmaa_job_template_t *jt, int start, int end, int incr, char *error_diagnosis, size_t error_diag_len);
+
+/* ------------------- job control routines ------------------- */
 
 /*
  * Start, stop, restart, or kill the job identified by 'job_id'.
@@ -186,7 +151,7 @@ int drmaa_run_bulk_jobs(char *job_ids[], job_template_t *jt, int start, int end,
  * the DRM system, but does not necessarily wait until the action
  * has been completed.
  */
-int drmaa_control(const char *jobid, int action);
+int japi_control(const char *jobid, int action, char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
@@ -204,7 +169,7 @@ int drmaa_control(const char *jobid, int action);
  * True=1 "fake reap", i.e. dispose of the rusage data
  * False=0 do not reap
  */ 
-int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose);
+int japi_synchronize(char *job_ids[], signed long timeout, int dispose, char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
@@ -225,48 +190,61 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose);
  * unknown. Failing due to an elapsed timeout has an effect that it is possible to
  * issue drmaa_wait multiple times for the same job_id.
  */
-int drmaa_wait(const char *job_id, char *job_id_out, int job_id_size, int *stat, signed long timeout, char *rusage[]);
+int japi_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, 
+   signed long timeout, /* vector of rusage strings (string vector), */
+   char *error_diagnosis, size_t error_diagnois_len);
 
-#if 0
-drmaa_wifexited(OUT exited, IN stat,  INOUT drmaa_context_error_buf)
-    Evaluates into 'exited' a non-zero value if stat was returned for a
-    job that terminated normally. A zero value can also indicate that
-    altough the job has terminated normally an exit status is not available
-    or that it is not known whether the job terminated normally. In both
-    cases drmaa_wexitstatus() will not provide exit status information.
-    A non-zero 'exited' value indicates more detailed diagnosis can be provided
-    by means of drmaa_wifsignaled(), drmaa_wtermsig() and drmaa_wcoredump().
+/* 
+ * Evaluates into 'exited' a non-zero value if stat was returned for a
+ * job that terminated normally. A zero value can also indicate that
+ * altough the job has terminated normally an exit status is not available
+ * or that it is not known whether the job terminated normally. In both
+ * cases japi_wexitstatus() will not provide exit status information.
+ * A non-zero 'exited' value indicates more detailed diagnosis can be provided
+ * by means of japi_wifsignaled(), japi_wtermsig() and japi_wcoredump(). 
+ */
+int japi_wifexited(int *exited, int stat, char *error_diagnosis, size_t error_diag_len);
 
-drmaa_wexitstatus(OUT exited, IN stat,  INOUT drmaa_context_error_buf)
-     If the OUT parameter 'exited' of drmaa_wifexited() is non-zero,
-     this function evaluates into 'exit_code' the exit code that the
-     job passed to _exit() (see exit(2)) or exit(3C), or the value that
-     the child process returned from main.
+/* 
+ * If the OUT parameter 'exited' of japi_wifexited() is non-zero,
+ * this function evaluates into 'exit_code' the exit code that the
+ * job passed to _exit() (see exit(2)) or exit(3C), or the value that
+ * the child process returned from main. 
+ */
+int japi_wexitstatus(int *exit_status, int stat, char *error_diagnosis, size_t error_diag_len);
 
-drmaa_wifsignaled(OUT signaled, IN stat, INOUT drmaa_context_error_buf )
-     Evaluates into 'signaled' a non-zero value if status was returned
-     for a job that terminated due to the receipt of a signal. A zero value
-     can also indicate that altough the job has terminated due to the receipt
-     of a signal the signal is not available or that it is not known whether
-     the job terminated due to the receipt of a signal. In both cases
-     drmaa_wtermsig() will not provide signal information.
+/* 
+ * Evaluates into 'signaled' a non-zero value if status was returned
+ * for a job that terminated due to the receipt of a signal. A zero value
+ * can also indicate that altough the job has terminated due to the receipt
+ * of a signal the signal is not available or that it is not known whether
+ * the job terminated due to the receipt of a signal. In both cases
+ * japi_wtermsig() will not provide signal information. 
+ */
+int japi_wifsignaled(int *signaled, int stat, char *error_diagnosis, size_t error_diag_len);
 
-drmaa_wtermsig(OUT signal, IN stat, INOUT drmaa_context_error_buf )
-     If the OUT parameter 'signaled' of drmaa_wifsignaled(stat) is
-     non-zero, this function evaluates into signal a string representation of the signal
-     that caused the termination of the job. For signals declared by POSIX, the symbolic
-     names are returned (e.g., SIGABRT, SIGALRM).
-     For signals not declared by POSIX, any other string may be returned.
+/* 
+ * If the OUT parameter 'signaled' of japi_wifsignaled(stat) is
+ * non-zero, this function evaluates into signal a string representation of the signal
+ * that caused the termination of the job. For signals declared by POSIX, the symbolic
+ * names are returned (e.g., SIGABRT, SIGALRM).
+ * For signals not declared by POSIX, any other string may be returned. 
+ */
+int japi_wtermsig(char *signal, size_t signal_len, int stat, char *error_diagnosis, size_t error_diag_len);
 
-drmaa_wcoredump(OUT core_dumped, IN stat, INOUT drmaa_context_error_buf )
-     If the OUT parameter 'signaled' of drmaa_wifsignaled(stat) is
-     non-zero, this function evaluates into 'core_dumped' a non-zero value
-     if a core image of the terminated job was created.
+/* 
+ * If the OUT parameter 'signaled' of japi_wifsignaled(stat) is
+ * non-zero, this function evaluates into 'core_dumped' a non-zero value
+ * if a core image of the terminated job was created. 
+ */
+int japi_wcoredump(int *core_dumped, int stat, char *error_diagnosis, size_t error_diag_len);
 
-drmaa_wifaborted( OUT aborted, IN stat, INOUT drmaa_context_error_buf )
-      Evaluates into 'aborted' a non-zero value if 'stat'
-      was returned for a job that ended before entering the running state.
-#endif
+/* 
+ * Evaluates into 'aborted' a non-zero value if 'stat'
+ * was returned for a job that ended before entering the running state. 
+ */
+int japi_wifaborted(int *aborted, int stat, char *error_diagnosis, size_t error_diag_len);
+
 
 
 /* 
@@ -284,13 +262,38 @@ drmaa_wifaborted( OUT aborted, IN stat, INOUT drmaa_context_error_buf )
  * DRMAA_PS_DONE = 30H : job finished normally, and
  * DRMAA_PS_FAILED = 40H : job finished, but failed.
  */
-int drmaa_job_ps( const char *job_id, int *remote_ps);
+int japi_job_ps( const char *job_id, int *remote_ps, char *error_diagnosis, size_t error_diag_len);
 
-const char *drmaa_strerror(int drmaa_errno);
-
+/* ------------------- auxiliary routines ------------------- */
+ 
 /*
-contact drmaa_get_contact();
-OUT contact Current contact information for DRM system (string)
-*/
+ * Get the error message text associated with the errno number. 
+ */
+const char *japi_strerror(int drmaa_errno);
+
+/* 
+ * Current contact information for DRM system (string)
+ */ 
+void japi_get_contact(char *contact, size_t contact_len);
+
+/* 
+ * OUT major - major version number (non-negative integer)
+ * OUT minor - minor version number (non-negative integer)
+ * Returns the major and minor version numbers of the DRMAA library;
+ * for DRMAA 1.0, 'major' is 1 and 'minor' is 0. 
+ */
+void japi_version(unsigned int *major, unsigned int *minor);
+
+
+/* 
+ * returns DRM system implementation information
+ * Output (string) is implementation dependent and could contain the DRM system and the
+ * implementation vendor as its parts.
+ */
+void japi_get_DRM_system(char *drm_system, size_t drm_system_len);
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif /* __JAPI_H */

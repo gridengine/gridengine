@@ -1,3 +1,11 @@
+JG-2002-04-08-1: Merge:     Merged JG-2002-03-26-1 from V53_beta2_BRANCH
+                 Bugfix:    At startup qmaster removed pending messages too
+                            late (after daemonizing instead of after
+                            enrolling).  In rare cases (starting schedd
+                            immediately after qmaster daemonized on a fast
+                            machine) this could produce an error and cause a
+                            delayed registration of the scheduler.
+
 JG-2002-04-08-0: Merge:     Merged JG-2002-03-21-0 from V53_beta2_BRANCH
                  Bugfix:    prioritization of messages to qmaster could
                             block reports from execd's to qmaster and make

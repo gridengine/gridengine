@@ -160,10 +160,10 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 }
 
 /****** uti/dstring/sge_dstring_sprintf_append() ******************************
-*  name
+*  NAME
 *     sge_dstring_sprintf_append() -- sprintf() and append for dstring's 
 *
-*  synopsis
+*  SYNOPSIS
 *     const char* sge_dstring_sprintf_append(dstring *sb, 
 *                                            const char *format, ...) 
 *

@@ -250,6 +250,24 @@ sge_pack_buffer *pb
                         && (pe=pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe)))
                         && lGetBool(pe, PE_control_slaves)
                         && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
+
+                     /* 
+                      * if we receive a report from execd about
+                      * a 'running' pe_task but the ja_task of the cocerned
+                      * job is still in the 'deleted' state, than
+                      * we have to initiate the kill of this pe_task.
+                      */
+                     {
+                        u_long32 state = lGetUlong(jatep, JAT_state);
+
+                        if (ISSET(state, JDELETED)) {
+                           DPRINTF(("Received report from "u32"."u32
+                                    " which is already in \"deleted\" state. "
+                                    "==> send kill signal\n", jobid, jataskid));
+
+                           pack_job_kill(pb, jobid, jataskid);
+                        }
+                     }
                     
                     /* is the task already known (object was created earlier)? */
                     if (petask == NULL) {
@@ -534,10 +552,15 @@ sge_pack_buffer *pb
                      }
                      if (failed == SSTATE_FAILURE_AFTER_JOB && 
                            !lGetString(jep, JB_checkpoint_name)) {
-                        get_rid_of_job(NULL, jep, jatep, 0, pb, rhost, me.user_name, 
-                              me.qualified_hostname, lGetString(jr, JR_err_str), commproc);
+                        job_ja_task_send_abort_mail(jep, jatep,
+                                                    me.user_name,
+                                                    me.qualified_hostname,
+                                                    lGetString(jr, JR_err_str)); 
+                        get_rid_of_job_due_to_report(jep, jatep, NULL,
+                                                     pb, rhost, commproc);
                         pack_job_kill(pb, jobid, jataskid);
-                        ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_SU, pe_task_id_str, u32c(jobid)));
+                        ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_SU, 
+                               pe_task_id_str, u32c(jobid)));
                      }
                   }
 

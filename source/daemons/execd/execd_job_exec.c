@@ -283,23 +283,32 @@ int slave
    /* initialize job */
    /* store queues as sub elems of gdil */
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-      qnm=lGetString(gdil_ep, JG_qname);
-      if (!(qep=queue_list_locate(qlp, qnm))) {
-         sge_dstring_sprintf(&err_str, MSG_JOB_MISSINGQINGDIL_SU, qnm, u32c(lGetUlong(jelem, JB_job_number)));
-         DEXIT;
-         goto Error;
+      /*
+       * attach queues to the master queue gdil element and all gdil elements
+       * which refer to queues which are located on this host.
+       */
+      if (!sge_hostcmp(me.unqualified_hostname, lGetHost(gdil_ep, JG_qhostname)) ||
+          lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)) == gdil_ep) {
+
+         qnm=lGetString(gdil_ep, JG_qname);
+         if (!(qep=queue_list_locate(qlp, qnm))) {
+            sge_dstring_sprintf(&err_str, MSG_JOB_MISSINGQINGDIL_SU, qnm, 
+                                u32c(lGetUlong(jelem, JB_job_number)));
+            DEXIT;
+            goto Error;
+         }
+
+         qep = lDechainElem(qlp, qep);
+         /* clear any queue state that might be set from qmaster */
+         lSetUlong(qep, QU_state, 0);
+
+         /* store number of slots we got in this queue for this job */
+         slots = lGetUlong(gdil_ep, JG_slots);
+         lSetUlong(qep, QU_job_slots, slots);
+         set_qslots_used(qep, 0);
+         lSetObject(gdil_ep, JG_queue, qep);
+         DPRINTF(("Q: %s %d\n", qnm, slots));
       }
-
-      qep = lDechainElem(qlp, qep);
-      /* clear any queue state that might be set from qmaster */
-      lSetUlong(qep, QU_state, 0);
-
-      /* store number of slots we got in this queue for this job */
-      slots = lGetUlong(gdil_ep, JG_slots);
-      lSetUlong(qep, QU_job_slots, slots);
-      set_qslots_used(qep, 0);
-      lSetObject(gdil_ep, JG_queue, qep);
-      DPRINTF(("Q: %s %d\n", qnm, slots));
    }
    /* trash envelope */
    qlp = lFreeList(qlp);

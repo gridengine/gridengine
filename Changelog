@@ -1,3 +1,17 @@
+EB-2002-09-12-1: Bugfix:    msg size used in tight PE integr. job start sync.
+                            protocol should be smaller
+                 Issue:     #213
+                 Bugtraq:   #4658706
+                 Review:    AH
+                 Changed:   sge_execd, sge_qmaster
+
+EB-2002-09-12-0  Bugfix:    protocol doing termin. on failure for tightly
+                            integr. par. job could be leaner
+                 Issue:     #214
+                 Bugtraq:   #4658716
+                 Review:    AH
+                 Changed:   sge_qmaster
+
 JG-2002-09-12-1  Bugfix     qrsh and qlogin accept unexpected options.
                             qsh/qrsh/qlogin did not accept options
                             -ac, -dc, -sc and -w

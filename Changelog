@@ -1,3 +1,5 @@
+AA-2002-07-23-0: I18N:      sge_ca script infotextized
+
 EB-2002-07-23-0: Bugfix:    qsub/qalter -l <shortcut_name>... might select
                             wrong resource.
                  Issue:     #328

@@ -643,10 +643,13 @@ while ($#argv >= 1 && $?found)
       $0 -intl -only-core messages
       echo "Adding script messages"
       setenv BUILDARCH $BUILDARCH
-      $TCLSH scripts/infotext_msg_parse.tcl -F /tmp/scripts.pot dist/inst_sge
-      echo "Concatenating pot files"
-      cat /tmp/scripts.pot >> dist/locale/gridenginenotuniq.pot
-      rm /tmp/scripts.pot
+      foreach f ( dist/inst_sge  dist/util/sgeCA/sge_ca )
+         set pf = "/tmp/`basename $f`.pot"
+         $TCLSH scripts/infotext_msg_parse.tcl -F $pf $f
+         echo "Appending script pot file $pf" 
+         cat $pf >> dist/locale/gridenginenotuniq.pot
+         rm $pf
+      end
       exit 0
       breaksw
    case "-pr-geee":  

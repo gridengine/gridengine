@@ -91,6 +91,9 @@ SUNHPC_SCRIPTS="HPC_GE_Integration.sh MPRUN PRISM resume_sunmpi.sh \
 SUNHPCACCT_FILES="README"
 SUNHPCACCT_SCRIPTS="MPRUN PRISM ctacct1.pl ctacct2.pl stopsunmpi.sh"
 
+SUNHPCTIGHT_FILES="README pe_sunmpi_ci.template"
+SUNHPCTIGHT_SCRIPTS="resume_sunmpi_ci.sh suspend_sunmpi_ci.sh"
+
 SECFILES="security/gss/get_cred.c security/gss/put_cred.c \
           security/gss/delete_cred.c security/gss/sge_gsslib.c \
           security/gss/sge_gsslib.h security/gss/renew_cred.ksh \
@@ -742,27 +745,40 @@ if [ $instcommon = true ]; then
       done
       chmod 755 $DEST_SGE_ROOT/mpi/*.sh $DEST_SGE_ROOT/mpi/hostname $DEST_SGE_ROOT/mpi/rsh
 
-      HPCBASE=mpi/sunhpc/loose-integration
-      Execute mkdir -p $DEST_SGE_ROOT/$HPCBASE/accounting
+      HPCBASE=mpi/sunhpc
+      HPCBASE_LOOSE=$HPCBASE/loose-integration
+      HPCBASE_TIGHT=$HPCBASE/tight-integration
+      Execute mkdir -p $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting
+      Execute mkdir -p $DEST_SGE_ROOT/$HPCBASE_TIGHT
       
       for f in $SUNHPC_FILES; do
-         Execute cp dist/$HPCBASE/$f $DEST_SGE_ROOT/$HPCBASE
-         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE/$f
+         Execute cp dist/$HPCBASE_LOOSE/$f $DEST_SGE_ROOT/$HPCBASE_LOOSE
+         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE_LOOSE/$f
       done
    
       for f in $SUNHPC_SCRIPTS; do
-         Execute cp dist/$HPCBASE/$f $DEST_SGE_ROOT/$HPCBASE
-         Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE/$f
+         Execute cp dist/$HPCBASE_LOOSE/$f $DEST_SGE_ROOT/$HPCBASE_LOOSE
+         Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE_LOOSE/$f
       done
 
       for f in $SUNHPCACCT_FILES; do
-         Execute cp dist/$HPCBASE/accounting/$f $DEST_SGE_ROOT/$HPCBASE/accounting
-         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE/accounting/$f
+         Execute cp dist/$HPCBASE_LOOSE/accounting/$f $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting
+         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting/$f
       done
    
       for f in $SUNHPCACCT_SCRIPTS; do
-         Execute cp dist/$HPCBASE/accounting/$f $DEST_SGE_ROOT/$HPCBASE/accounting
-          Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE/accounting/$f
+         Execute cp dist/$HPCBASE_LOOSE/accounting/$f $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting
+          Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting/$f
+      done
+
+      for f in $SUNHPCTIGHT_FILES; do
+         Execute cp dist/$HPCBASE_TIGHT/$f $DEST_SGE_ROOT/$HPCBASE_TIGHT
+         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE_TIGHT/$f
+      done
+   
+      for f in $SUNHPCTIGHT_SCRIPTS; do
+         Execute cp dist/$HPCBASE_TIGHT/$f $DEST_SGE_ROOT/$HPCBASE_TIGHT
+         Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE_TIGHT/$f
       done
    fi
 

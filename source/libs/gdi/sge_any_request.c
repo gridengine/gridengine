@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <string.h>
 
+#include "setup.h"
 #include "sge_gdiP.h"
 #include "sge_any_request.h"
 #include "commlib.h"
@@ -245,7 +246,7 @@ void prepare_enroll(const char *name)
    if (bootstrap_get_ignore_fqdn() == false) {
       resolve_method = CL_LONG;
    } 
-   if ( bootstrap_get_default_domain() != NULL && SGE_STRCASECMP(bootstrap_get_default_domain(), "none") != 0) {
+   if ( bootstrap_get_default_domain() != NULL && SGE_STRCASECMP(bootstrap_get_default_domain(), NONE_STR) != 0) {
       default_domain = bootstrap_get_default_domain();
    }
    ret_val = cl_com_set_resolve_method(resolve_method, (char*)default_domain);
@@ -333,6 +334,9 @@ void prepare_enroll(const char *name)
       DPRINTF(("waiting for 15 seconds, because environment SGE_TEST_SOCKET_BIND is set\n"));
       sleep(15);   
    }
+
+   /* reresolve qualified hostname with use of host aliases */
+   reresolve_me_qualified_hostname();
 
    DEXIT;
 }

@@ -606,7 +606,7 @@ int main(int argc, char *argv[]) {
          
          if ( retval != CL_RETVAL_OK) {
             if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
-                printf("open connection to \"%s/%s/%lu\" ... " ,resolved_comp_host , comp_name, comp_id );
+                printf("open connection to \"%s/%s/"U32CFormat"\" ... " ,resolved_comp_host , comp_name, u32c(comp_id) );
                 retval = cl_commlib_open_connection(handle, resolved_comp_host , comp_name, comp_id);
                 printf("%s\n", cl_get_error_text(retval));
                 if (retval == CL_RETVAL_CREATE_RESERVED_PORT_SOCKET) {

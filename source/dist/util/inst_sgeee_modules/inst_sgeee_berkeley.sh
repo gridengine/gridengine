@@ -56,9 +56,9 @@ SpoolingQueryChange()
    else
      $INFOTEXT "Please enter the name of your Berkeley DB Spooling Server >>"
      $INFOTEXT "For local spooling without Server, type >none< else enter the servername!"
-                SPOOLING_SERVER=`Enter`
+     SPOOLING_SERVER=`Enter`
      $INFOTEXT "Please enter the database directory now >>" 
-                SPOOLING_DIR=`Enter`
+     SPOOLING_DIR=`Enter`
    fi
  
 }
@@ -81,8 +81,9 @@ SpoolingCheckParams()
       # create a script to start the rpc server
       Makedir $SPOOLING_DIR
       CreateRPCServerScript
-      $INFOTEXT "Now we have to startup the rc script >%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
-      $INFOTEXT "If you already have a configured Berkeley DB Spooling Server, then continue with >no<\n"
+      $INFOTEXT "\nNow we have to startup the rc script\n >%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
+      $INFOTEXT "If you already have a configured Berkeley DB Spooling Server, you have to restart\n"
+      $INFOTEXT "the Database with the rc script and continue with >NO<\n"
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installation script try to start the RPC server? (y/n) [y] >>"
 
       if [ $? = 0 -a $AUTO = "false" ]; then
@@ -90,6 +91,10 @@ SpoolingCheckParams()
          $INFOTEXT "Starting rpc server on host %s!" $SPOOLING_SERVER
          exec $SGE_ROOT/$COMMONDIR/sgebdb start &
          sleep 5
+         $INFOTEXT "The Berkely DB has been started with these parameters:\n\n"
+         $INFOTEXT "Spooling Server Name: %s" $SPOOLING_SERVER
+         $INFOTEXT "DB Spooling Directory: %s\n" $SPOOLING_DIR
+         $INFOTEXT -wait "Please remember these values, during Qmaster installation\n you will be asked for! Hit <ENTER> to continue!"
       else
          $INFOTEXT "Please start the rc script >%s< on the RPC server machine\n" $SGE_ROOT/$COMMONDIR/sgebdb
          $INFOTEXT "If your database is already running, then continue with <Enter>\n"
@@ -261,10 +266,10 @@ EditStartupScript()
 {
  TMP_BDBHOME=`cat $TMP_STARTUP_SCRIPT | grep "^[ \t]*BDBHOMES" | cut -d"=" -f2 | sed s/\"//g | cut -d" " -f2`
  BDBHOME=$SPOOLING_DIR
- BDBHOMES="-h"$TMP_BDBHOME"-h"$BDBHOME
+ BDBHOMES=" -h "$TMP_BDBHOME" -h "$BDBHOME
 
 
- cat $TMP_STARTUP_SCRIPT | sed -e s§$TMP_BDBHOME§$BDBHOMES§g > $TMP_STARTUP_SCRIPT.0
+ cat $TMP_STARTUP_SCRIPT | sed -e s§\"$TMP_BDBHOME\"§\"$BDBHOMES\"§g > $TMP_STARTUP_SCRIPT.0
  `cp $TMP_STARTUP_SCRIPT.0 $TMP_STARTUP_SCRIPT`
  rm $TMP_STARTUP_SCRIPT.0
 

@@ -84,15 +84,6 @@ HOST="undef"
 HOSTRANGE="undef"
 
 SGE_NOMSG="undef"
-LOGNAME=install.$$
-DATE=`date '+%Y-%m-%d_%H:%M:%S'`
-
-if [ -f /tmp/$LOGNAME ]; then
-   rm /tmp/$LOGNAME
-   touch /tmp/$LOGNAME
-else
-   touch /tmp/$LOGNAME
-fi
 
 BasicSettings
 SetUpInfoText
@@ -117,6 +108,7 @@ while [ $ARGC != 0 ]; do
      CLEAR=:
      SGE_NOMSG=1
      export SGE_NOMSG
+     CreateLog
      exec 1>/tmp/$LOGNAME 2>&1
      ;;
    -m)
@@ -150,6 +142,7 @@ while [ $ARGC != 0 ]; do
      ;;
    -db)
      BERKELEY="install"
+     SPOOLING_SERVER=`hostname`
      . ./util/inst_sgeee_modules/inst_sgeee_qmaster.sh
      . ./util/inst_sgeee_modules/inst_sgeee_berkeley.sh
      ;;

@@ -402,7 +402,12 @@ CheckWhoInstallsSGE()
    euid=`$SGE_UTILBIN/uidgid -euid`
    if [ $euid != 0 ]; then
       $CLEAR
-      $INFOTEXT -u "\nGrid Engine - test installation"
+      if [ $BERKELEY = "install" ]; then
+         $INFOTEXT -u "\nBerkeley DB - test installation"
+      else
+         $INFOTEXT -u "\nGrid Engine - test installation"
+      fi
+
       $INFOTEXT "\nYou are installing not as user >root<!\n\n" \
                   "This will allow you to run Grid Engine only under your user id for testing\n" \
                   "a limited functionality of Grid Engine.\n"
@@ -605,6 +610,7 @@ GiveHints()
                 "   - \$SGE_ROOT    (always necessary)\n" \
                 "   - \$SGE_CELL    (if you are using a cell other than >default<)\n" \
                 "   - \$SGE_QMASTER_PORT   (if you haven't added the service >sge_qmaster<)\n" \
+                "   - \$SGE_EXECD_PORT   (if you haven't added the service >sge_execd<)\n" \
                 "   - \$PATH/\$path (to find the Grid Engine binaries)\n" \
                 "   - \$MANPATH     (to access the manual pages)\n" \
                 $SGE_ROOT_VAL/$SGE_CELL_VAL/common/settings.csh \
@@ -646,6 +652,7 @@ GiveHints()
                   "   # qconf -ah <hostname>\n\n"
        $INFOTEXT -wait "Please, hit <RETURN>"
        $CLEAR
+       QMASTER="undef"
       return 0
    else
       $INFOTEXT -wait "Your execution daemon installation is now completed."
@@ -905,4 +912,17 @@ MoveLog()
    fi
 
    rm /tmp/$LOGNAME 2>&1
+}
+
+CreateLog()
+{
+LOGNAME=install.$$
+DATE=`date '+%Y-%m-%d_%H:%M:%S'`
+
+if [ -f /tmp/$LOGNAME ]; then
+   rm /tmp/$LOGNAME
+   touch /tmp/$LOGNAME
+else
+   touch /tmp/$LOGNAME
+fi
 }

@@ -251,7 +251,7 @@ SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSelect spooling method"
    SPOOLING_METHOD=`ExecuteAsAdmin $SPOOLINIT method`
-   $ECHO $SPOOLING_METHOD
+   $INFOTEXT "The selected spooling method is: %s" $SPOOLING_METHOD
    $INFOTEXT -log "Setting spooling method to %s" $SPOOLING_METHOD
    case $SPOOLING_METHOD in 
       classic)
@@ -271,8 +271,9 @@ SetSpoolingOptions()
             #TODO: exec rcrpc script
          fi
          if [ $QMASTER = "install" ]; then
-            $INFOTEXT "Please, log in to your berkeley db spooling host and execute < inst_sgeee -db >\n"
-            $INFOTEXT -auto $AUTO -wait "After berkeley db installation, continue with < Enter >"
+            $INFOTEXT "If you want to use a Berkeley DB spooling server, then"
+            $INFOTEXT "\nplease, log in to your Berkeley DB spooling host first and execute < inst_sgeee -db >\n"
+            $INFOTEXT -auto $AUTO -wait "After Berkeley DB installation, continue with < Enter >"
             SpoolingQueryChange
             CheckLocalFilesystem $SPOOLING_DIR
          else
@@ -790,7 +791,7 @@ InitCA()
    if [ $? != 0 ]; then
       CAErrUsage
    fi
-   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+   $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "
    $CLEAR
 }
 

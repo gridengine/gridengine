@@ -47,6 +47,12 @@ WelcomeTheUserExecHost()
    if [ $AUTO = true ]; then
       return
    fi
+   $INFOTEXT -u "\n\n\n\n  CONTINUING WITH EXECHOST INSTALLATION!!!"
+   sleep 1
+   $CLEAR
+   $INFOTEXT -u "\n\n\n\n  CONTINUING WITH EXECHOST INSTALLATION!!!"
+   sleep 1
+   $CLEAR
  
    $INFOTEXT -u "\nWelcome to the Grid Engine execution host installation"
    $INFOTEXT "\nIf you haven't installed the Grid Engine qmaster host yet, you must execute\n" \

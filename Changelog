@@ -1,3 +1,6 @@
+MD-2004-02-02-2: Bugfix:    - Text 
+                 Changed:   - inst_sgeee 
+
 MD-2004-02-02-1: Bugfix:    - renamed sge_config to inst_sgeee
                             - moved sge_config_modules to util/inst_sgeee_modules
                             - adaptions of distinst 
@@ -8,7 +11,7 @@ SG-2004-01-02-1: Bugfix:    reverted the changes from SG-2004-02-01-0. Reopend
 
 AD-2004-02-02-0: Cleanup:   qmaster threads now do call 'sge_qmaster_thread_
                             init()' at the beginning.
-                 Changed:   qmaster
+                 
 
 MD-2004-02-02-0: Bugfix:    - DB installation 
                             - Test for local fs, new archs 

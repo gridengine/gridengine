@@ -294,8 +294,7 @@ proc setup_queues {} {
       } else {
          set myconfig(schedd_params)    "$my_schedd_params,FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
       }
-   } 
-   else{
+   } else {
       get_schedd_config stored_schedd_config
       if { [string compare "none" $stored_schedd_config(params)] != 0 } {
          append my_schedd_params ",$stored_schedd_config(params)"
@@ -307,7 +306,6 @@ proc setup_queues {} {
       if { $FLUSH_FINISH_SEC > 0} {
          set my_schedd_config(flush_finish_sec) "$FLUSH_FINISH_SEC"
       }
-
    } 
    
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"

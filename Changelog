@@ -1,3 +1,10 @@
+CR-2004-11-11-0: Bugfix:    sgemaster -migrate on qmaster host starts second 
+                            qmaster
+                 Issue:     1329, 1325
+                 Bugtraq:   6194002
+                 Changed:   sgemaster startup script
+                 Review:    AS
+
 JG-2004-11-11-0: Bugfix:    Fixed memory access and uninitialized erros in
                             qmaster.
                  Review:    DT

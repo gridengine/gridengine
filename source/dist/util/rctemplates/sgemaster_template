@@ -293,12 +293,13 @@ CheckRunningQmaster()
    fi
 
    while [ $running = "false" -a $loop -ne 10 ]; do 
-      $bin_dir/qping -info $masterhost $SGE_QMASTER_PORT qmaster 1 > /dev/null
+      $bin_dir/qping -info $masterhost $SGE_QMASTER_PORT qmaster 1 > /dev/null 2>&1
 
       if [ "$?" = 0 ]; then
          running=true
       else
          sleep 3 
+         masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
          loop=`expr $loop + 1`
       fi
    done
@@ -397,6 +398,11 @@ if [ "$startup" = true ]; then
 
    qmaster_host=`CheckIfQmasterHost $HOST`
    primary_qmaster_host=`CheckIfPrimaryQmasterHost $HOST`
+
+   if [ $qmaster = true -a $qmaster_host = true -a $migrate_qmaster = true ]; then
+      echo "   qmaster and scheduler running on this host. Will not migrate qmaster."
+      exit 1
+   fi
 
    if [ $qmaster = true -a $qmaster_host = false -a  \
         \( $primary_qmaster_host = true -o $migrate_qmaster = true \) ]; then

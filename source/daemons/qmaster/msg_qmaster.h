@@ -205,6 +205,7 @@
 #define MSG_SGETEXT_OPNOIMPFORTARGET            _("operation not implemented for target\n")
 #define MSG_SGETEXT_NOADMINHOST_S               _("denied: host "SFQ" is no admin host\n")
 #define MSG_SGETEXT_NOSUBMITHOST_S              _("denied: host "SFQ" is no submit host\n")
+#define MSG_SGETEXT_NOSUBMITORADMINHOST_S       _("denied: host "SFQ" is neither submit nor admin host\n")
 #define MSG_SGETEXT_ALREADYEXISTS_SS            _(""SFN" "SFQ" already exists\n")
 #define MSG_SGETEXT_ADDEDTOLIST_SSSS            _(""SFN"@"SFN" added "SFQ" to "SFN" list\n")
 #define MSG_SGETEXT_MODIFIEDINLIST_SSSS         _(""SFN"@"SFN" modified "SFQ" in "SFN" list\n")

@@ -809,6 +809,7 @@ sge_conf_type *conf
  *   -4   request to qmaster failed
  *   -5   there is no global configuration
  *   -6   commproc already registered
+ *   -7   no permission to get configuration
  * EXTERNAL
  *
  * DESCRIPTION
@@ -833,6 +834,7 @@ lListElem **lepp
    lListElem *hep = NULL;
    int success;
    static int already_logged = 0;
+   u_long32 status;
    
    DENTER(TOP_LAYER, "get_configuration");
 
@@ -899,7 +901,7 @@ lListElem **lepp
    lFreeWhat(what);
    lFreeWhere(where);
 
-   success = (lGetUlong(lFirst(alp), AN_status) == STATUS_OK);
+   success = ((status= lGetUlong(lFirst(alp), AN_status)) == STATUS_OK);
    if (!success) {
       if (!already_logged) {
          ERROR((SGE_EVENT, MSG_CONF_GETCONF_S, lGetString(lFirst(alp), AN_text)));
@@ -910,7 +912,7 @@ lListElem **lepp
       lFreeList(lp);
       lFreeElem(hep);
       DEXIT;
-      return -4;
+      return (status != STATUS_EDENIED2HOST)?-4:-7;
    }
    lFreeList(alp);
 
@@ -968,7 +970,7 @@ lList **conf_list
    
    now = last = (time_t) sge_get_gmt();
    while ((ret = get_configuration(me.qualified_hostname, &global, &local))) {
-      if (ret==-6) {
+      if (ret==-6 || ret==-7) {
          /* confict: COMMPROC ALREADY REGISTERED */
          DEXIT;
          return -1;

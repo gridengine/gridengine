@@ -82,7 +82,9 @@ void sge_setup_sge_execd()
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
-   get_conf_and_daemonize(daemonize_execd, &execd_config_list);
+   if (get_conf_and_daemonize(daemonize_execd, &execd_config_list)) {
+      SGE_EXIT(1);
+   }
    sge_show_conf();         
 
    /*

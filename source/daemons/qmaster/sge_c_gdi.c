@@ -113,6 +113,7 @@ static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_requ
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep);
+static int sge_chck_get_perm_host(lList **alpp, u_long32 target, char *host, char *commproc);
 
 
 /* ------------------------------ generic gdi objects --------------------- */
@@ -408,12 +409,7 @@ int *after
 
    DENTER(GDI_LAYER, "sge_c_gdi_get");
 
-   /* 
-   ** host must be in SGE_SUBMITHOST_LIST 
-   */
-   if ( request->host && !sge_locate_host(request->host, SGE_SUBMITHOST_LIST)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITHOST_S, request->host));
-      sge_add_answer(&(answer->alp), SGE_EVENT, STATUS_EDENIED2HOST, 0);
+   if (sge_chck_get_perm_host(&(answer->alp), request->target, request->host, request->commproc)) {
       DEXIT;
       return;
    }
@@ -1322,7 +1318,61 @@ lListElem *ep
    return 0;
 }
 
+static int sge_chck_get_perm_host(
+lList **alpp,
+u_long32 target,
+char *host,
+char *commproc
+) {
 
+   DENTER(TOP_LAYER, "sge_chck_get_perm_host");
+
+   /* check permissions of host */
+   switch (target) {
+
+   case SGE_ORDER_LIST:
+   case SGE_EVENT_LIST:
+   case SGE_ADMINHOST_LIST:
+   case SGE_OPERATOR_LIST:
+   case SGE_MANAGER_LIST:
+   case SGE_SUBMITHOST_LIST:
+   case SGE_QUEUE_LIST:
+   case SGE_COMPLEX_LIST:
+   case SGE_PE_LIST:
+   case SGE_CONFIG_LIST:
+   case SGE_SC_LIST:
+   case SGE_USER_LIST:
+   case SGE_USERSET_LIST:
+   case SGE_PROJECT_LIST:
+   case SGE_SHARETREE_LIST:
+   case SGE_CKPT_LIST:
+   case SGE_CALENDAR_LIST:
+   case SGE_USER_MAPPING_LIST:
+   case SGE_HOST_GROUP_LIST:
+   case SGE_FEATURESET_LIST:
+   case SGE_EXECHOST_LIST:
+   case SGE_JOB_LIST:
+      
+      /* host must be SGE_ADMINHOST_LIST */
+      if ( !sge_locate_host(host, SGE_ADMINHOST_LIST) &&
+           !sge_locate_host(host, SGE_SUBMITHOST_LIST)) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
+         sge_add_answer(alpp, SGE_EVENT, STATUS_EDENIED2HOST, 0);
+         DEXIT;
+         return 1;
+      }
+      break;
+
+   default:
+      sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET);
+      sge_add_answer(alpp, SGE_EVENT, STATUS_ENOIMP, 0);
+      DEXIT;
+      return 1;
+   }
+
+   DEXIT;
+   return 0;
+}
 
 
 /*

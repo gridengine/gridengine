@@ -587,7 +587,7 @@ lList **finished_jobs
 
 
    /*
-   ** loop over the jobs that are left
+   ** loop over the jobs that are left in priority order
    */
    while ( (job = lCopyElem(
    orig_job=(sge_mode? lFirst(lists->job_list) :at_get_actual_job_array())

@@ -631,6 +631,8 @@ if [ $instcommon = true ]; then
          if [ "$SGE_PRODUCT_MODE" = ge ]; then
              :
             (cd $DEST_SGE_ROOT; ln -s inst_sge inst_sgeee)
+            Execute cp dist/README.inst_sgeee $DEST_SGE_ROOT
+            Execute chmod 644 $DEST_SGE_ROOT/README.inst_sgeee
          fi
       else
          echo Installing \"inst_sge\" as \"inst_sgeee\"

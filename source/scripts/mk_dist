@@ -209,8 +209,12 @@ done
 
 PVMCONTENT="pvm/README pvm/*.sh pvm/*.template pvm/src"
 DOC_PACKAGE="doc/SGE53beta2_doc.pdf"
-COMMON_DOCS="doc/INSTALL doc/*.asc"
+COMMON_DOCS="doc/INSTALL doc/UPGRADE doc/*.asc"
 COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs $INSTALL_SCRIPT install_qmaster install_execd man $PVMCONTENT mpi qmon util"
+
+if [ $makesgeee = false ]; then
+   COMMON_PACKAGE="$COMMON_PACKAGE inst_sgeee README.inst_sgeee"
+fi
 
 if [ "$VERSION" = "" -o "$VDIR" = "" ]; then
    ErrUsage
@@ -238,7 +242,7 @@ if [ $makebin = true ]; then
    cd $VDIR
    echo creating tar.gz files for $SELECTED_ARCHS
    for i in $SELECTED_ARCHS; do
-         ADIR="bin/$i utilbin/$i examples/jobsbin/$i"
+         ADIR="bin/$i utilbin/$i examples/jobsbin/$i lib/$i"
          filename=$BASEDIR/${PRODUCT}-${VERSION}-bin-${i}.tar.gz         
          echo Command: $TAR cvzf $filename $ADIR
                        $TAR cvzf $filename $ADIR

@@ -147,7 +147,8 @@ int user        /* =1 user, =0 project */
       FPRINTF((fp, "oticket " u32 "\n", lGetUlong(ep, UP_oticket)));
       FPRINTF((fp, "fshare " u32 "\n", lGetUlong(ep, UP_fshare)));
 #if defined(allow_delete_time_modification)
-      FPRINTF((fp, "delete_time " u32 "\n", lGetUlong(ep, UP_delete_time)));
+      if (user)
+         FPRINTF((fp, "delete_time " u32 "\n", lGetUlong(ep, UP_delete_time)));
 #endif
 
       if (spool) {

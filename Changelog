@@ -1,3 +1,7 @@
+JG-2004-02-01-1: Bugfix:    qconf -aprj was broken.
+                 Changed:   qconf, sge_qmaster with classic spooling
+                 Review:    pending
+
 JG-2004-02-01-0: Testsuite: Fixed setting of scheduler configuration.
                             Shutdown qmaster separately, after execds and 
                             scheduler have been shutdown.

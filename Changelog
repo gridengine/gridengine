@@ -1,3 +1,7 @@
+AH-2004-03-10-0: Enhancem.: Use more intuitive defaults for weight_ticket, 
+                            weight_urgency and weight_priority. Lower 
+                            impact of waiting time in urgency formula.
+   
 EB-2004-03-10-2: Bugfix:    calendar handling is broken
                  Issue:     825
                  Changed:   sge_qmaster

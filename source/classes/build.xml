@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." default="common_all" name="drmaa">
    <target name="init">
-      <property location="." name="classes.dir"/>
-      <property location="../classes" name="src.dir"/>
+      <property location="../CLASSES" name="classes.dir"/>
+      <property location="." name="src.dir"/>
       <property location="../../doc/javadocs" name="javadoc.dir"/>
       <property name="project.name" value="${ant.project.name}"/>
-      <property location="${project.name}.jar" name="jar"/>
-      <property location="${project.name}-test.jar" name="test.jar"/>
-      <property location="${project.name}-api.jar" name="api.jar"/>
+      <property location="${classes.dir}/${project.name}.jar" name="jar"/>
+      <property location="${classes.dir}/${project.name}-test.jar" name="test.jar"/>
+      <property location="${classes.dir}/${project.name}-api.jar" name="api.jar"/>
    </target>
 
    <target depends="init" name="compile">
@@ -80,9 +80,6 @@
    </target>
    
    <target depends="init,javadoc.clean" description="Clean all build products." name="clean">
-      <delete>
-         <fileset dir="${javadoc.dir}" excludes="**/CVS"/>
-      </delete>
       <delete dir="${classes.dir}"/>
       <delete file="${jar}"/>
       <delete file="${test.jar}"/>

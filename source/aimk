@@ -2150,9 +2150,9 @@ endif
 if ( "$JAVA" > 0 ) then
    echo _________J_A_V_A__C_L_A_S_S__F_I_L_E_S____
 
-   cd CLASSES
+   cd classes
 
-   ant -f $SOURCE/classes/build.xml $argv
+   ant -f build.xml $argv
 
    if ( $status != 0 ) then
       echo not done

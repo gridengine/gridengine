@@ -1,3 +1,21 @@
+DT-2004-12-30-1: Bugfix:    o Fixed broken Java build
+                 Changed:   aimk, DRMAA
+                 Review:    pending
+
+DT-2004-12-30-0: Bugfix:    o Fixed minor bug in aimk
+                            o Fixed minor bug in distinst
+                            o Backed out part of DT-2004-12-29-0
+                            o un-DOS'ed JobTemplateImplTest.java
+                            o Fixed typos in README.aimk
+                 Changed:   DRMAA, aimk, zerodepend, distinst, README.aimk
+                 Review:    pending
+
+DT-2004-12-29-0: Bugfix:    o Restructured DRMAA build proceedure
+                            o Fixed minor bug in findcheckin script
+                 Changed:   DRMAA, aimk, distinst, zerodepend
+                 Issue:     1405
+                 Review:    pending
+
 DT-2004-12-28-0: Bugfix:    o Added missing files from previous checkins
                             o Fixed bugs in DRMAA-J test suite
                             o Fixed packaging for DrmaaExample and TestDrmaa

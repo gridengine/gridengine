@@ -124,14 +124,20 @@ SpoolingCheckParams()
 
 CreateRPCServerScript()
 {
+   pid=$$
+   TMP_DIR=/tmp/$pid
+   TMP_RC=/tmp/$pid/sgebdb
    RPCSCRIPT=$SGE_ROOT/$COMMONDIR/sgebdb
-   Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
-               -e "s%GENCELL%${SGE_CELL_VAL}%g" \
-               -e "s%GENADMINUSER%${ADMINUSER}%g" \
-               -e "s%SPOOLING_DIR%${SPOOLING_DIR}%g" \
-               -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-               util/rctemplates/sgebdb_template > ${RPCSCRIPT}
-   Execute $CHMOD a+x $RPCSCRIPT
+   ExecuteAsAdmin mkdir -p $TMP_DIR
+   ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
+                      -e "s%GENCELL%${SGE_CELL_VAL}%g" \
+                      -e "s%GENADMINUSER%${ADMINUSER}%g" \
+                      -e "s%SPOOLING_DIR%${SPOOLING_DIR}%g" \
+                      -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
+                      util/rctemplates/sgebdb_template > ${TMP_RC}
+   ExecuteAsAdmin cp $TMP_RC $RPCSCRIPT
+   ExecuteAsAdmin rm -fR $TMP_DIR 
+   ExecuteAsAdmin $CHMOD a+x $RPCSCRIPT
 }
 
 

@@ -1,3 +1,6 @@
+MD-2004-06-01-1: Bugfix:    - permission problem, rc-scripts creation
+                 Changed:   inst_sge, inst_berkeley.sh
+
 DT-2004-06-01-3: Bugfix:    o Fixing DT-2004-06-01-2
                  Changed:   qsub
                  Issue:     Related to 1075

@@ -1279,9 +1279,7 @@ RestoreConfig()
 
       #reinitializing berkeley db
       for f in `ls $db_home`; do
-         if [ $f != "sge_job" ]; then
             ExecuteAsAdmin rm $db_home/$f
-         fi
       done
       #ExecuteAsAdmin touch $db_home/sge
       
@@ -1340,9 +1338,7 @@ RestoreConfig()
 
       #reinitializing berkeley db
       for f in `ls $db_home`; do
-         if [ $f != "sge_job" ]; then
             ExecuteAsAdmin rm $db_home/$f
-         fi
       done
       #ExecuteAsAdmin touch $db_home/sge
       

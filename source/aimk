@@ -233,10 +233,9 @@ while ($i <= $#argv)
          set BUILDARCH = SOLARIS  
          set buildarch = sol-sparc
       endif
-      set IRIX_ABI = -mips1
       breaksw
    case "-64":
-      set IRIX_ABI = -64
+      ::
       breaksw
    case "-help":
    case "--help":
@@ -291,7 +290,6 @@ usage:
    echo "-man              -> generate man pages"
    echo "-mankv		      -> generate man pages checked out with '-kv' flag"
    echo "-mo               -> generate the message catalogues (Solaris only)"
-   echo "-n32              -> irix: generate n32 objects"
    echo "-no-core          -> don't compile the core system"
    echo "-no-intl          -> do not compile with internationalization library"
    echo "-no-mk            -> only return the specific architecture string"
@@ -360,8 +358,6 @@ set   SHAREDLD     = ""
 set   SHARED_CFLAGS = ""
 set   SHARED_LFLAGS = ""
 set   DLLIB         = "-ldl"
-set   IRIX_ABI      = ""
-set   IRIX_ARCHDEF  = IRIX6
 set   OSREL         = ""
 set   CC           = cc
 set   LD_WRAPPER   = ""
@@ -621,10 +617,6 @@ while ($#argv >= 1 && $?found)
    case  "-intl"
       set WITH_GETTEXT = 1
       breaksw
-   case "-irix65":
-      set IRIX_ARCHDEF = IRIX65
-      set IRIX_ABI = -n32
-      breaksw
    case "-kerberos":
       set KRB    = 1
       set KRBTARGETS = ""
@@ -652,9 +644,6 @@ while ($#argv >= 1 && $?found)
          echo "Use a Solaris machine"
       endif
       exit 0
-      breaksw
-   case "-n32":
-      set IRIX_ABI = -n32
       breaksw
    case "-no-core":
       set CORE = 0
@@ -1100,26 +1089,6 @@ case FREEBSD_*:
    breaksw 
 
 case IRIX65:
-   set COMPILE_DC = 1
-
-   set ARCH = $IRIX_ARCHDEF
-
-   set MAKE = gmake
-
-   # IRIX >= 6.4 has no DEADLINE in sys/schedctl.h, so turn off these
-   # code passages
-   set hasdeadline = `grep DEADLINE /usr/include/sys/schedctl.h`
-   if ( "X$hasdeadline" == "X" ) then
-      set CFLAGS = "-DIRIX_NODEADLINE $CFLAGS"
-   endif
-
-   # IRIX >= 6.4 has no MP_PSET in sys/sysmp.h, so turn off these
-   # code passages
-   set haspset = `grep MP_PSET /usr/include/sys/sysmp.h`
-   if ( "X$haspset" == "X" ) then
-      set CFLAGS = "-DIRIX_NOPSET $CFLAGS"
-   endif
-
    set OFLAG = "-O"
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O2"
@@ -1127,12 +1096,12 @@ case IRIX65:
       set OFLAG = "-O"
    endif
 
-   set CFLAGS   = "$OFLAG -D$IRIX_ARCHDEF -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $IRIX_ABI $DEBUG_FLAG $CFLAGS"
-   if ( $CC == gcc ) then
-      set CFLAGS   = "-D$IRIX_ARCHDEF $DEBUG_FLAG $CFLAGS -Wall -Wstrict-prototypes -Werror"
-   endif
+   set COMPILE_DC = 1
+   set MAKE = gmake
+
+   set CFLAGS   = "$OFLAG -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set LFLAGS   = "$IRIX_ABI $DEBUG_FLAG $LFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
    set LOADAVGLIBS = "-lelf"
    set XMTDEF   = ""
@@ -1143,21 +1112,11 @@ case IRIX65:
    set XLIBS    = "-lXm -lXt -lXext -lX11 -lPW -lm"
    set RANLIB   = echo
 
-   if ( $CC == gcc ) then
-      set NOERR_CFLAG = "-Wno-error"
-      set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-   else
-      set GCC_NOERR_CFLAGS = "$CFLAGS"
-   endif
+   set GCC_NOERR_CFLAGS = "$CFLAGS"
 
    set SHAREDLD = $CC
-   if ( $CC == gcc ) then
-      set SHARED_CFLAGS = "-fPIC"
-      set SHARED_LFLAGS = "-L. -shared"
-   else
-      set SHARED_CFLAGS = "-KPIC"
-      set SHARED_LFLAGS = "-L. -shared"
-   endif
+   set SHARED_CFLAGS = "-KPIC"
+   set SHARED_LFLAGS = "-L. -shared"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
    breaksw
@@ -1176,7 +1135,7 @@ case HP10:
       if ( $OPTIMIZATION == 1 ) then
          set OFLAG = "+O3"
       endif
-      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Ae $OFLAG -DHPUX -D$BUILDARCH -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS"
    endif
 
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -1212,8 +1171,8 @@ case HP11:
    set OFLAG = "-O"
    set DLLIB = ""
    if ( $CC == gcc ) then
-      if ( $OPTIMIZATION == 1 ) then
-         set OFLAG = "-O3"
+      if ( $OPTIMIZATION == 0 ) then
+         set OFLAG = "-O2"
       endif
       set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR $DEBUG_FLAG $CFLAGS"
    else
@@ -1221,7 +1180,7 @@ case HP11:
          set OFLAG = "+O3"
       endif
       set CXX = "aCC"
-      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Ae $OFLAG -DHPUX -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR $DEBUG_FLAG $CFLAGS"
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
@@ -1351,11 +1310,18 @@ case LINUXIA64:
    set SHARED_LFLAGS = "-L. -shared"
 
    set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOSP = "-Wno-strict-prototypes"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
    set LIBS     = "$LIBS"
 
    set XMTDEF   = ""
-   set XLIBD    = "-L/usr/X11R6/lib"
+
+   if ($TARGET_BITS == TARGET_32BIT) then
+      set XLIBD    = "-L/usr/X11R6/lib"
+   else
+      set XLIBD    = "-L/usr/X11R6/lib64"
+   endif
+
    set XLFLAGS  = "$XLIBD"
 
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -1673,7 +1639,7 @@ if ( $WITH_GETTEXT == 1 ) then
       set LFLAGS = "-L $MYILIB"
       echo "Using $MYILIB path for i18n support"
    else
-      if ( $BUILDARCH == "SOLARIS" || $BUILDARCH == "SOLARIS64" || $BUILDARCH == "SOLARIS86" || $BUILDARCH == "LINUX86" ) then
+      if ( $BUILDARCH == "SOLARIS" || $BUILDARCH == "SOLARIS64" || $BUILDARCH == "SOLARIS86" || $BUILDARCH == "LINUX86" || $BUILDARCH == LINUXIA64 || $BUILDARCH == LINUXAMD64) then
          set LIBINTL = ""
          set HFLAGS = ""
       else

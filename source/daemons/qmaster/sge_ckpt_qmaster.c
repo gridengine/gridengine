@@ -58,6 +58,7 @@
 #include "sge_stdlib.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+#include "sge_ckpt.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -67,6 +68,7 @@
 #include "sge_parse_num_par.h"
 
 extern lList *Master_Ckpt_List;
+extern lList *Master_Job_List;
 
 /****** qmaster/ckpt/ckpt_mod() ***********************************************
 *  NAME
@@ -356,6 +358,24 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_EEXIST;
+   }
+
+   /* 
+    * Try to find references in other objects
+    */
+   {
+      lList *local_answer_list = NULL;
+
+      if (ckpt_is_referenced(found, &local_answer_list, Master_Job_List)) {
+         lListElem *answer = lFirst(local_answer_list);
+
+         ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN,
+                         ANSWER_QUALITY_ERROR);
+         local_answer_list = lFreeList(local_answer_list);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
    }
 
    /* remove ckpt file 1st */

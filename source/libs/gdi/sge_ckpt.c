@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <fnmatch.h>
-
 #include "sgermon.h"
 #include "sge_log.h"
 #include "def.h"   
@@ -40,94 +38,43 @@
 #include "sge_jobL.h"
 #include "sge_answer.h"
 #include "sge_job_jatask.h"
-#include "sge_pe.h"
+#include "sge_ckpt.h"
 
 #include "msg_gdilib.h"
 
-lList *Master_Pe_List = NULL;
-
-/****** gdi/pe/pe_match() *****************************************************
+/****** gdi/ckpt/ckpt_is_referenced() *****************************************
 *  NAME
-*     pe_match() -- Find a PE matching a wildcard expression 
+*     ckpt_is_referenced() -- Is a given CKPT referenced in other objects? 
 *
 *  SYNOPSIS
-*     lListElem* pe_match(const char *wildcard) 
+*     int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list, 
+*                            const lList *master_job_list) 
 *
 *  FUNCTION
-*     Try to find a PE that matches the given "wildcard" expression.
-*
-*  INPUTS
-*     const char *wildcard - Wildcard expression 
-*
-*  RESULT
-*     lListElem* - PE_Type object or NULL
-*******************************************************************************/
-lListElem *pe_match(const char *wildcard) 
-{
-   lListElem *pep;
-
-   for_each (pep, Master_Pe_List) {
-      if (!fnmatch(wildcard, lGetString(pep, PE_name), 0)) {
-         return pep;
-      }
-   }
-   return NULL;
-}
-
-/****** gdi/pe/pe_locate() ****************************************************
-*  NAME
-*     pe_locate() -- Locate a certain PE 
-*
-*  SYNOPSIS
-*     lListElem* pe_locate(const char *pe_name) 
-*
-*  FUNCTION
-*     Locate the PE with the name "pe_name". 
-*
-*  INPUTS
-*     const char *pe_name - PE name 
-*
-*  RESULT
-*     lListElem* - PE_Type object or NULL
-*******************************************************************************/
-lListElem *pe_locate(const char *pe_name) 
-{
-   return lGetElemStr(Master_Pe_List, PE_name, pe_name);
-}
-
-/****** gdi/pe/pe_is_referenced() **********************************************
-*  NAME
-*     pe_is_referenced() -- Is a given PE referenced in other objects? 
-*
-*  SYNOPSIS
-*     int pe_is_referenced(const lListElem *pe, lList **answer_list, 
-*                          const lList *master_job_list) 
-*
-*  FUNCTION
-*     This function returns true (1) if the given "pe" is referenced
+*     This function returns true (1) if the given "ckpt" is referenced
 *     in a job contained in "master_job_list". If this is the case than
 *     a corresponding message will be added to the "answer_list". 
 *
 *  INPUTS
-*     const lListElem *pe          - PE_Type object 
+*     const lListElem *ckpt        - CK_Type object 
 *     lList **answer_list          - AN_Type list 
 *     const lList *master_job_list - JB_Type list 
 *
 *  RESULT
 *     int - true (1) or false (0) 
 ******************************************************************************/
-int pe_is_referenced(const lListElem *pe, lList **answer_list,
-                     const lList *master_job_list)
+int ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
+                       const lList *master_job_list)
 {
-   const char *pe_name = lGetString(pe, PE_name);
+   const char *ckpt_name = lGetString(ckpt, CK_name);
    lListElem *job = NULL;
    int ret = 0;
 
    for_each(job, master_job_list) {
-      if (job_is_pe_referenced(job, pe_name)) {
+      if (job_is_ckpt_referenced(job, ckpt_name)) {
          u_long32 job_id = lGetUlong(job, JB_job_number);
 
-         sprintf(SGE_EVENT, MSG_PEREFINJOB_SU, pe_name, u32c(job_id));
+         sprintf(SGE_EVENT, MSG_CKPTREFINJOB_SU, ckpt_name, u32c(job_id));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                          ANSWER_QUALITY_INFO);
          ret = 1;

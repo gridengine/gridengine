@@ -1888,3 +1888,32 @@ int job_is_pe_referenced(const lListElem *job, const char* pe_name)
    return ret;
 }
 
+/****** gdi/job_jatask/job_is_ckpt_referenced() *******************************
+*  NAME
+*     job_is_ckpt_referenced() -- Does job reference the given CKPT? 
+*
+*  SYNOPSIS
+*     int job_is_ckpt_referenced(const lListElem *job, const char* ckpt_name) 
+*
+*  FUNCTION
+*     The function returns true (1) if "job" references the 
+*     checkpointing object given by "ckpt_name". 
+*
+*  INPUTS
+*     const lListElem *job  - JB_Type element 
+*     const char* ckpt_name - name of a CK_Type object 
+*
+*  RESULT
+*     int - true (1) or false (0) 
+*******************************************************************************/
+int job_is_ckpt_referenced(const lListElem *job, const char* ckpt_name)
+{
+   const char *ref_ckpt_name = lGetString(job, JB_checkpoint_object);
+   int ret = 0;
+
+   if (!strcmp(ref_ckpt_name, ckpt_name)) {
+      ret = 1;
+   }
+   return ret;
+}
+

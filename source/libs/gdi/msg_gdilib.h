@@ -400,6 +400,8 @@
 #define MSG_EVENT_DELPETASK_UUUS                   _MESSAGE(43248, _(U32CFormat". EVENT DEL PETASK "U32CFormat"."U32CFormat" task "SFN"\n"))
 #define MSG_EVENT_MODPETASK_UUUS                   _MESSAGE(43249, _(U32CFormat". EVENT MOD PETASK "U32CFormat"."U32CFormat" task "SFN"\n"))
 #define MSG_EVENT_NOTKNOWN_I                       _MESSAGE(43250, _("%d. EVENT ????????\n"))
+#define MSG_PEREFINJOB_SU                          _MESSAGE(43251, _("Pe "SFQ" is still referenced in job "U32CFormat".\n"))
+#define MSG_CKPTREFINJOB_SU                        _MESSAGE(43252, _("Checkpointing object "SFQ" is still referenced in job " U32CFormat".\n"))
 
 #endif /* __MSG_GDILIB_H */
 

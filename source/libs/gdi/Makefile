@@ -76,6 +76,7 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_answer.c \
          sge_schedd_conf.c \
          sge_pe.c \
+         sge_ckpt.c \
          sge_queue.c \
          version.c
 
@@ -232,6 +233,9 @@ sge_schedd_conf.o: $(GDILIB_DIR)/sge_schedd_conf.c
 
 sge_pe.o: $(GDILIB_DIR)/sge_pe.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_pe.c
+
+sge_ckpt.o: $(GDILIB_DIR)/sge_ckpt.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_ckpt.c
 
 sge_queue.o: $(GDILIB_DIR)/sge_queue.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_queue.c

@@ -146,4 +146,6 @@ const char *job_get_id_string(u_long32 job_id, u_long32 ja_task_id,
 
 int job_is_pe_referenced(const lListElem *job, const char* pe_name);
 
+int job_is_ckpt_referenced(const lListElem *job, const char* ckpt_name);
+
 #endif /* __SGE_JOB_JATASK_H */    

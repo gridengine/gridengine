@@ -1,3 +1,7 @@
+CR-2002-12-03-0  Testsuite: a) Bugfix: procedure del_access_list()
+                            b) Added new error handling for submit_job() (error open file)
+                               The error handling is used by binary_submission test.
+
 CR-2002-12-02-2  Testsuite: a) test job_environment:
                                report only warning for JOB_NAME bug if version
                                is <= 5.3p2

@@ -2324,7 +2324,7 @@ proc del_access_list { list_name } {
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $list_name $USER]
   puts $CHECK_OUTPUT $REMOVED
 
-  if { [ string match "*REMOVED" $result ] == 0 } {
+  if { [ string match "*$REMOVED" $result ] == 0 } {
      add_proc_error "add_access_list" "-1" "could not delete access_list $list_name"
      return -1
   }
@@ -4557,7 +4557,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
 #*******************************
 proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} } {
   global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
-  global open_spawn_buffer
+  global open_spawn_buffer CHECK_DEBUG_LEVEL
 
   set return_value " "
 
@@ -4572,6 +4572,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set arch [resolve_arch $host]
 
   set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+  set ERROR_OPENING       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_FILE_ERROROPENINGXY_SS] "*" "*"]
   set NOT_ALLOWED_WARNING [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_NOTINANYQ_S] "*" ]
   set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
   set JOB_ARRAY_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOBARRAY_UUUUSS] "*" "*" "*" "*" "*" "*" ]
@@ -4614,6 +4615,10 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
 
 
   log_user 0  ;# debug log_user 0
+  if { $CHECK_DEBUG_LEVEL != 0 } {
+     log_user 1
+  }
+
   while { $do_again == 1 } {
      set do_again 0
      expect {
@@ -4623,26 +4628,26 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           }
           -i $sp_id timeout {
              puts $CHECK_OUTPUT "submit_job - timeout(1)"
-             add_proc_error "submit_job" "-1" "got timeout(1) error\nexpect_out(buffer):\n\"$expect_out(buffer)\""
+             add_proc_error "submit_job" "-1" "got timeout(1) error\nexpect_out(buffer):\n\"$expect_out(buffer)\"\nexpect_out(0,string): \"$expect_out(0,string)\""
              set return_value -1 
           }
           -i $sp_id eof {
              puts $CHECK_OUTPUT "submit_job - end of file unexpected"
              set return_value -1
           }
-          -i $sp_id $NOT_ALLOWED_WARNING {
+          -i $sp_id -- $NOT_ALLOWED_WARNING {
              puts $CHECK_OUTPUT "got warning: job can't run in any queue" 
              set outtext $expect_out(0,string) 
              puts $CHECK_OUTPUT "string is: \"$outtext\""
              set do_again 1
           }
-          -i $sp_id $WARNING_OPTION_ALREADY_SET {
+          -i $sp_id -- $WARNING_OPTION_ALREADY_SET {
              puts $CHECK_OUTPUT "got warning: option has already been set" 
              set outtext $expect_out(0,string) 
              puts $CHECK_OUTPUT "string is: \"$outtext\""
              set do_again 1
           }
-          -i $sp_id $JOB_SUBMITTED {
+          -i $sp_id -- $JOB_SUBMITTED {
              set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
              set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
              set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
@@ -4699,7 +4704,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
              }       
    
           }
-          -i $sp_id $JOB_ARRAY_SUBMITTED {
+          -i $sp_id -- $JOB_ARRAY_SUBMITTED {
              set job_id_pos [ string first "__JOB_ID__" $JOB_ARRAY_SUBMITTED_DUMMY ]
              set job_name_pos [ string first "__JOB_NAME__" $JOB_ARRAY_SUBMITTED_DUMMY ]
              set job_arg_pos [ string first "__JOB_ARG__" $JOB_ARRAY_SUBMITTED_DUMMY ]
@@ -4758,7 +4763,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           }
           
           
-          -i $sp_id "job*has been submitted" {
+          -i $sp_id -- "job*has been submitted" {
              
              set outtext $expect_out(0,string) 
              set submitjob_jobid [lindex $outtext 1];
@@ -4890,6 +4895,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- "using job name \"*\" for*violates reference unambiguousness" {
              set return_value -15
           }
+          -i $sp_id -- $ERROR_OPENING {
+             set return_value -16
+          }
         }
      }
  
@@ -4918,6 +4926,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-13" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-14" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-15" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-16" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -4966,6 +4975,7 @@ proc get_submit_error { error_id } {
       "-13" { return "Unkown option - error" }
       "-14" { return "non-ambiguous jobnet predecessor - error" }
       "-15" { return "job violates reference unambiguousness - error" }
+      "-16" { return "error opening file - error" }
       default { return "unknown error" }
    }
 }

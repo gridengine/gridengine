@@ -54,6 +54,7 @@
 #include "sge_mailrec.h"
 #include "sge_range.h"
 #include "sge_qinstance.h"
+#include "sge_str.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"
@@ -719,7 +720,7 @@ Cardinal size
       if ( type == QmonQENV_Type || type == QmonQCTX_Type )
          var_list_parse_from_string(&ret_list, str, 0); 
       if (type == QmonQST_Type) {
-         lString2List(str, &ret_list, ST_Type, ST_name, " ");
+         str_list_parse_from_string(&ret_list, str, " ");
       }
       if (type == QmonQRN_Type) {
          range_list_parse_from_string(&ret_list, &alp, str,

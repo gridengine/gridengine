@@ -102,10 +102,9 @@ proc issue_509_check {} {
 
    # 2
    set arguments "-t 2,3,6 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10"
-   set job_id1 [ submit_job "$arguments" "1" ]
+   set job_id1 [ submit_job "$arguments" 0 ]
    if { ( [ string compare "$job_id1" "-18" ] == -1 ) } {
       add_proc_error "issue_509_check" "-1" "qsub command did not fail"
-      return
    }
 
    set_error 0 "ok"

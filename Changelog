@@ -1,3 +1,8 @@
+CR-2003-06-30-0: Testsuite: fixed aftereffect in test for IZ 509. Enhancments
+                            in submit_job() procedure caused unexpected error
+                            when testing -t option with invalid range 
+                            specification.
+
 AD-2003-06-25-1: Bugfix:    spool_flatfile_open_file(): Changed size
                             of buffer for tmp filename from L_tmpnam
                             to SGE_PATH_MAX.

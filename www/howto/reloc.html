@@ -1,17 +1,13 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
-	<META NAME="AUTHOR" CONTENT=" ">
-	<META NAME="CREATED" CONTENT="20010703;19063800">
-	<META NAME="CHANGEDBY" CONTENT=" ">
-	<META NAME="CHANGED" CONTENT="20010704;16221800">
-</HEAD>
-<BODY BGCOLOR="#ffffff">
-<H1>Relocating Jobs From a User's Workstation 
-</H1>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699" size="+2">Relocating Jobs From a User's Workstation</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+<br><br>
 <P STYLE="margin-bottom: 0in">Grid Engine may be configured to
 relocate a job, useful in the case where the host being used is a
 desktop system and is only to be used when the owner is not actively
@@ -20,33 +16,23 @@ to kill and restart the job elsewhere when the user returns and moves
 the mouse or presses a key.</P>
 <P STYLE="margin-bottom: 0in">To set up this configuration, the
 following steps are needed:</P>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
+
 <P STYLE="margin-bottom: 0in">1) Configure Grid Engine to track
 interactive idle time<BR>2) Configure the checkpointing interface<BR>3)
 Add the checkpoint ability to the appropriate queues<BR>4) Set the
 load threshold in the queues to trigger the relocation</P>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
-<P STYLE="margin-bottom: 0in"><U>1) Configure Grid Engine to track
-interactive idle time</U></P>
-<OL>
-	<P STYLE="margin-bottom: 0in"></P>
-</OL>
+<P STYLE="margin-bottom: 0in"><B>1) Configure Grid Engine to track
+interactive idle time</B></P>
+
 <P STYLE="margin-bottom: 0in">Please see the following application
 note: <A HREF="idle.html">Tracking Interactive Idle Time</A></P>
-<P STYLE="margin-bottom: 0in"><BR>
+<P STYLE="margin-bottom: 0in">
 </P>
-<P STYLE="margin-bottom: 0in"><U>2) Configure the checkpointing
-interface</U></P>
-<OL START=2>
-	<P STYLE="margin-bottom: 0in"></P>
-</OL>
+<P STYLE="margin-bottom: 0in"><B>2) Configure the checkpointing
+interface</B></P>
 <P STYLE="margin-bottom: 0in">The checkpointing interface needs to be
 created. This can be done in qmon:</P>
-<P STYLE="margin-bottom: 0in"><BR>
+<P STYLE="margin-bottom: 0in">
 </P>
 <UL>
 	<LI><P STYLE="margin-bottom: 0in">Click on the &quot;Checkpoint
@@ -71,17 +57,11 @@ created. This can be done in qmon:</P>
 	<LI><P STYLE="margin-bottom: 0in">Click &quot;Done&quot; to close
 	this dialog box</P>
 </UL>
-<UL>
-	<P STYLE="margin-bottom: 0in"></P>
-</UL>
-<P STYLE="margin-bottom: 0in"><U>3) Add the checkpoint ability to the
-appropriate queues</U></P>
-<OL START=3>
-	<P STYLE="margin-bottom: 0in"></P>
-</OL>
+<P STYLE="margin-bottom: 0in"><B>3) Add the checkpoint ability to the
+appropriate queues</B></P>
 <P STYLE="margin-bottom: 0in">In qmon, modify the appropriate queues
 to give them the checkpointing ability:</P>
-<P STYLE="margin-bottom: 0in"><BR>
+<P STYLE="margin-bottom: 0in">
 </P>
 <UL>
 	<LI><P STYLE="margin-bottom: 0in">Click &quot;Queue Control&quot; 
@@ -93,24 +73,22 @@ to give them the checkpointing ability:</P>
 		</P>
 	<LI><P STYLE="margin-bottom: 0in">Click &quot;Ok&quot;</P>
 </UL>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
-<P STYLE="margin-bottom: 0in"><U>4) Set the load threshold in the
-queues to trigger the relocation</U></P>
-<P STYLE="margin-bottom: 0in"><BR>
+<P STYLE="margin-bottom: 0in"><B>4) Set the load threshold in the
+queues to trigger the relocation</B></P>
+<P STYLE="margin-bottom: 0in">
 </P>
 <P STYLE="margin-bottom: 0in">In qmon &quot;Queue Control&quot;,
 select and modify an appropriate queue. On the &quot;Load/Suspend
 Thresholds&quot; tab, add to the currently set load threshold by
 clicking on the heading labelled &quot;Load&quot; and selecting the
 idle time resource. Enter the desired value under the value column.</P>
-<P STYLE="margin-bottom: 0in"><BR>
+<P STYLE="margin-bottom: 0in">
 </P>
 <P STYLE="margin-bottom: 0in">When submitting a job that is eligible
 to be moved, the checkpointing interface needs to be specified. For
 example, if the interface created above was named &quot;reloc&quot;,
 I would submit the job as such:</P>
-<P STYLE="margin-bottom: 0in"><BR>
+<P STYLE="margin-bottom: 0in">
 </P>
 <PRE STYLE="margin-left: 0.79in">qsub -ckpt reloc myjob.sh</PRE><P STYLE="margin-bottom: 0in">
 <BR>
@@ -119,7 +97,7 @@ I would submit the job as such:</P>
 queue which has the checkpointing ability. Then, if the job is
 subsequently suspended (as when the queue it is running in is
 suspended when the user clears the interactive idle time), it will be
-killed, then requeued. <BR><BR><BR>
+killed, then requeued. 
 </P>
-</BODY>
-</HTML>
+<p></p>
+</table>

@@ -1,17 +1,16 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
-	<META NAME="AUTHOR" CONTENT=" ">
-	<META NAME="CREATED" CONTENT="20010703;18385200">
-	<META NAME="CHANGEDBY" CONTENT=" ">
-	<META NAME="CHANGED" CONTENT="20010706;15180600">
-</HEAD>
-<BODY BGCOLOR="#ffffff">
-<H2>Basic Usage of the Grid Engine</H2>
-<P><VAR><B><U><SPAN STYLE="font-style: normal">qstat - Show job/queue
+
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699" size="+2">Basic Usage of Grid Engine</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<br><br>
+<VAR><B><U><SPAN STYLE="font-style: normal">qstat - Show job/queue
 status</SPAN></U></B><I><BR><BR></I><SPAN STYLE="font-style: normal">no
 arguments Show currently running/pending jobs<BR>-f Show full listing
 of all queues<BR>-j Shows detailed information on pending/running
@@ -24,10 +23,7 @@ Shows detailed information on pending/running job<BR>-q Shows
 detailed information on queues at each host</SPAN></VAR></P>
 <P><VAR><B><SPAN STYLE="font-style: normal">Using Grid Engine</SPAN></B><I><BR><BR></I><SPAN STYLE="font-style: normal">The
 main submit commands are qsub, qrsh and qtcsh. See the man pages for
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman1/submit.html?content-type=text/html" NAME="submit">submit(1)</A>
-and 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman1/qtcsh.html?content-type=text/html" NAME="submit">qtcsh(1)</A>
-for more details.</SPAN></VAR></P>
+submit(1) and qtcsh(1) for more details.</SPAN></VAR></P>
 <P><VAR><VAR><VAR><VAR><B><U><SPAN STYLE="font-style: normal">qsub -
 submit scripts</SPAN></U></B><I><BR><BR></I><SPAN STYLE="font-style: normal">Started
 with no arguments it accepts input from STDIN (^D to send submit
@@ -42,9 +38,7 @@ Home directory)<BR><BR>Example:</SPAN></VAR></VAR></VAR></VAR></VAR></VAR></VAR>
 <P><VAR><I><BR></I><SPAN STYLE="font-style: normal">In general, qsub
 is used for traditional batch submit, that is where I/O is directed
 to a file. Note that qsub only accepts shell scripts, not executable
-files.<BR><BR>See the 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman1/qsub.html?content-type=text/html" NAME="submit">qsub(1)</A>
-man page for more details.</SPAN></VAR></P>
+files.<BR><BR>See the qsub(1) man page for more details.</SPAN></VAR></P>
 <P><VAR><VAR><B><U><SPAN STYLE="font-style: normal">qrsh</SPAN></U></B><I><BR><BR></I><SPAN STYLE="font-style: normal">Qrsh
 acts similar to the rsh command, except that a host name is not
 given. Instead, a shell script or an executable file is run,
@@ -65,17 +59,10 @@ host. To allow the command to queue:</SPAN><I><BR><BR></I><SPAN STYLE="font-styl
 a suitable host is not immediately available the command will block
 until a suitable host is available. At that time, the command output
 will be displayed on the submitting terminal. </SPAN><I><BR><BR></I><SPAN STYLE="font-style: normal">See
-the 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman1/qrsh.html?content-type=text/html" NAME="qrsh">qrsh(1)</A>
-man page for more details.</SPAN></VAR></VAR></P>
+the qrsh(1) man page for more details.</SPAN></VAR></VAR></P>
 <P><VAR><B><U><SPAN STYLE="font-style: normal">qtcsh</SPAN></U></B><I><BR><BR></I><SPAN STYLE="font-style: normal">Grid
 Engine contains a modified tcsh, qtcsh which will automatically
-submit jobs listed in a task file to the cluster. See the 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman1/qtcsh.html?content-type=text/html" NAME="qtcsh">qtcsh(1)</A>
-and 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman5/qtask.html?content-type=text/html" NAME="qtask">qtask(5)</A>
-
-man pages for more details. </SPAN></VAR>
+submit jobs listed in a task file to the cluster. See the qtcsh(1)
+and qtask(5) man pages for more details. </SPAN></VAR>
+</table>
 </P>
-</BODY>
-</HTML>

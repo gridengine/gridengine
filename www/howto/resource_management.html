@@ -1,27 +1,25 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
-	<META NAME="AUTHOR" CONTENT=" ">
-	<META NAME="CREATED" CONTENT="20010223;15042900">
-	<META NAME="CHANGEDBY" CONTENT=" ">
-	<META NAME="CHANGED" CONTENT="20010704;17245000">
-</HEAD>
-<BODY BGCOLOR="#ffffff">
-<H2>Different Resource Management Strategies with Grid Engine</H2>
-<P>This HOWTO discusses the pro's and con's of different approaches
-for management resource. It originates from a response on the
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699" size="+2">Different Resource Management Strategies with Grid Engine</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<br><br>
+This HOWTO discusses the pro's and con's of different approaches
+for managing resources. It originates from a response on the
 question &quot;How can I minimize the delay of a load sensor tracking
 software licenses?&quot; asked in the <A HREF="http://supportforum.sun.com/gridengine/">Sun
 SupportForum</A>. The answer was:</P>
-<P>It's quite natural that <A HREF="loadsensor.html">load sensors</A>
+<P>It's quite natural that <A HREF="/project/gridengine/howto/loadsensor.html">load sensors</A>
 have a delay. It can't be prevented and for this reason using load
 sensors is only the 3<SUP>rd</SUP> best approach to manage license
 consumption.</P>
 <UL>
-	<LI><P>The best way for managing licenses is the use of <A HREF="consumable.html">consumable
+	<LI><P>The best way for managing licenses is the use of <A HREF="/project/gridengine/howto/consumable.html">consumable
 	resources</A> (CR). Floating licenses can easily be managed with a
 	global CR. Node-locked licenses can be managed in an analogous
 	fashion. If you don't consider interactive use of your licenses you
@@ -42,10 +40,10 @@ consumption.</P>
 </UL>
 <UL>
 	<LI><P>If it is not practicable for you to cause interactive
-	license-bound jobs guided through Grid Engine you can use the
+	license-bound jobs to be started through Grid Engine you can use the
 	consumable resource setup as described above in combination with
 	your load sensor for the same resource attribute. Grid Engine uses
-	both information sources and does it's best to derive from this how
+	both information sources and does its best to derive from this how
 	much of the resource is really available. Unfortunately due to the
 	load sensors delay it can't be 100% excluded in this case that batch
 	jobs are dispatched and started though the license has been grasped
@@ -55,7 +53,5 @@ consumption.</P>
 	help to reduce the number of reruns but it is only a solution, if
 	you have a mostly homogenous job profile.</P>
 </UL>
-<P STYLE="margin-left: 0.79in"><BR><BR>
-</P>
-</BODY>
-</HTML>
+<P>
+</table>

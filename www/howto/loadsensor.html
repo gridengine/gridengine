@@ -1,19 +1,15 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
-	<META NAME="AUTHOR" CONTENT=" ">
-	<META NAME="CREATED" CONTENT="20010703;18494600">
-	<META NAME="CHANGEDBY" CONTENT=" ">
-	<META NAME="CHANGED" CONTENT="20010704;15182300">
-</HEAD>
-<BODY BGCOLOR="#ffffff">
-<H2>Setting Up A Load Sensor in Grid Engine</H2>
-<P><BR><BR>
-</P>
-<P><U>Overview</U><BR><BR>Grid Engine contains a certain set of load
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699" size="+2">Setting Up A Load Sensor in Grid Engine</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<br><br>
+<B>Overview</B><BR><BR>Grid Engine contains a certain set of load
 parameters which it tracks automatically. Should it be necessary to
 track a load value not tracked by Grid Engine, a load sensor can be
 used. A load sensor is a small script which simply outputs one or
@@ -27,8 +23,8 @@ consumable resource. The steps for adding a load sensor are as
 follows:<BR><BR>Step 1: Define the resource<BR>Step 2: Configure the
 resource<BR>Step 3: View/Verify the resource<BR>Step 4: Request the
 resource</P>
-<P><U>Step 1: Define the resource attributes in the host
-complex</U><BR><BR>First, modify the complex called &quot;host&quot;
+<P><B>Step 1: Define the resource attributes in the host
+complex</B><BR><BR>First, modify the complex called &quot;host&quot;
 or &quot;global&quot;, depending on the type of resource,
 host-specific or clusterwide. To modify the complex, click on
 &quot;Complexes Configuration&quot; on the main toolbar of qmon.
@@ -57,8 +53,8 @@ command line by running the following:</P>
    tmpfree   tmpfree    MEMORY   0     &lt;=    YES         YES        0    
    tmptot    tmptot     MEMORY   0     &lt;=    YES         NO         0    
    tmpused   tmpused    MEMORY   0     &gt;=    NO          NO         0  </PRE><P>
-<U>Step 2: Configure the &quot;global&quot; host in the cluster
-configuration</U><BR><BR>In this case, the load sensor should run on
+<B>Step 2: Configure the &quot;global&quot; host in the cluster
+configuration</B><BR><BR>In this case, the load sensor should run on
 all hosts (each host will return a different value). Therefore, the
 pseudo host &quot;global&quot; needs to be configured. In the case of
 a floating license, a single host would be configured to run our load
@@ -73,7 +69,7 @@ each host. This may take several minutes. <BR><BR>Note: The resource
 names output by the load sensor must be the same as the names added
 to the host or global complex. Grid Engine takes the smaller of the
 two values when determining the current value.</P>
-<P><U>Step 3: View the new global resources</U><BR><BR>The new global
+<P><B>Step 3: View the new global resources</B><BR><BR>The new global
 resource can be viewed by running the following:</P>
 <PRE>   % qhost -F tmpfree,tmptot,tmpused 
 
@@ -83,15 +79,13 @@ resource can be viewed by running the following:</P>
        Host Resource(s):      hl:tmpfree=337.744000M
        hl:tmptot=338.808000M
        hl:tmpused=1.014709M</PRE><P>
-See the 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/htmlman1/qhost.html?content-type=text/html" NAME="qhost">qhost(1)</A>
-man page for more information.</P>
-<P><U>Step 4: Requesting a resource</U><BR><BR>Include the -l switch
+See the qhost(1) man page for more information.</P>
+<P><B>Step 4: Requesting a resource</B><BR><BR>Include the -l switch
 on the command line to request a resource:</P>
 <PRE STYLE="margin-bottom: 0.2in"> % qsub -l tmpfree=100 myjob.sh</PRE><P>
 This will dispatch the job only to those machines whose tmpfree value
 is greater than or equal to 100 MB.</P>
-<P><U>Note on Using a Load Sensor for Floating Licenses</U><BR><BR>In
+<P><B>Note on Using a Load Sensor for Floating Licenses</B><BR><BR>In
 order to track the number of floating licenses used outside of Grid
 Engine, a load sensor may be used in conjunction with a consumable
 resource. The lessor of the Consumable Resources or the load sensor
@@ -151,5 +145,5 @@ while [ $ende = false ]; do
 done
 
 #----------------------&lt; CUT HERE &gt;--------------------------------</PRE>
-</BODY>
-</HTML>
+<p></p>
+</table>

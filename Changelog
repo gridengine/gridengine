@@ -1,6 +1,12 @@
-JG-2004-09-30-0: Enhancem.: Added module test for libs/uti/sge_bitfield.
+SG-2004-08-30-0: Bugfix:    new algorithm for o-ticket 
+                 Changed:   man-page, scheduler
+                 Review:    MD
+                 Issue:     1224
+                 Bugtraq:   9094016
 
-SG-2004-09-27-0: Bugfix:    fix SG-2004-08-19-0 crashed the qmaster, if 
+JG-2004-08-30-0: Enhancem.: Added module test for libs/uti/sge_bitfield.
+
+SG-2004-08-27-0: Bugfix:    fix SG-2004-08-19-0 crashed the qmaster, if 
                             qsub -w v was submitted
                  Changed:   scheduler                            
 

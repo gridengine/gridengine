@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/07/30 15:04:55 $     Revision: $Revision: 1.20 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2004/08/30 13:59:52 $     Revision: $Revision: 1.21 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2004/07/30 15:04:55 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2004/08/30 13:59:52 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -401,8 +401,9 @@ The special value "NONE" switches off policy hierarchies.
 .\"
 .SS "\fBshare_override_tickets\fP"
 If set to "true" or "1", override tickets of any override object instance  
-are shared equally among all jobs associated with the object. If set to    
-"false" or "0", each job gets the full value of the override tickets       
+are shared equaly among all running jobs associated with the object. The pending
+jobs will get as many override tickets, as they would have, when they were
+running. If set to "false" or "0", each job gets the full value of the override tickets       
 associated with the object. The default value is "true".                   
 .\"
 .SS "\fBshare_functional_shares\fP"

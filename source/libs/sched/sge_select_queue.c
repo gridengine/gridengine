@@ -1655,7 +1655,8 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
    lListElem *job_load;
    double limit, load;
    int match;
-   char lc_diagnosis1[1024], lc_diagnosis2[1024];
+#define STR_LC_DIAGNOSIS 1024   
+   char lc_diagnosis1[STR_LC_DIAGNOSIS], lc_diagnosis2[STR_LC_DIAGNOSIS];
    
    DENTER(TOP_LAYER, "sge_check_load_alarm");
 
@@ -1678,7 +1679,7 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
             return 1;
          }
          if (load_is_value) { /* we got no load - this is just the complex value */
-            strcpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNOLOAD);
+            strncpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNOLOAD, STR_LC_DIAGNOSIS);
          } else if (((hlep && lc_host) || lc_global) &&
             (job_load = lGetElemStr(load_adjustments, CE_name, name))) { /* load correction */
             const char *load_correction_str;
@@ -1730,18 +1731,21 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                sprintf(lc_diagnosis2, MSG_SCHEDD_LCDIAGNEGATIVE_SS, load_value, lc_diagnosis1);
                break;
             }
-         } else 
-            strcpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNONE);
+         } else  {
+            strncpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNONE, STR_LC_DIAGNOSIS);
+         }   
 
          /* is threshold exceeded ? */
          if (resource_cmp(relop, load, limit)) {
             if (reason) {
-               if (type == TYPE_BOO)
+               if (type == TYPE_BOO){
                   sprintf(reason, MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS,
                         name, load?MSG_TRUE:MSG_FALSE, lc_diagnosis2, map_op2str(relop), limit_value);
-               else
+               }         
+               else {
                   sprintf(reason, MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS,
                         name, load, lc_diagnosis2, map_op2str(relop), limit_value);
+               }         
             }
             DEXIT;
             return 1;
@@ -2025,9 +2029,9 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
          if ((cep = lGetElemStr(rlp, CE_name, name)) == NULL) {
             /* no complex attribute for threshold -> ERROR */
             if (qinstance_state_is_unknown(qep)) {
-               sprintf(buffer, MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S, name);
+               snprintf(buffer, MAX_STRING_SIZE, MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S, name);
             } else {
-               sprintf(buffer, MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S, name);
+               snprintf(buffer, MAX_STRING_SIZE, MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S, name);
             }
             strncat(reason, buffer, reason_size);
             continue;
@@ -2045,7 +2049,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
 
          monitor_dominance(dom_str, dom_val);
 
-         sprintf(buffer, "\talarm %s:%s=%s %s-threshold=%s\n",
+         snprintf(buffer, MAX_STRING_SIZE, "\talarm %s:%s=%s %s-threshold=%s\n",
                  dom_str,
                  name, 
                  load_value,

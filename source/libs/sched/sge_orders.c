@@ -148,8 +148,9 @@ bool update_execd
    }
 
    /* create orders list if not existent */
-   if (!or_list) 
+   if (!or_list) {
       or_list = lCreateList("orderlist", OR_Type);
+   }   
 
    /* build sublist of granted */
    if (update_execd) {
@@ -186,7 +187,7 @@ bool update_execd
       lSetDouble(ep, OR_ntix, 0.0); 
       lSetDouble(ep, OR_prio, 0.0);
    }
-   if (type == ORT_tickets|| type == ORT_ptickets) {
+   if (type == ORT_tickets || type == ORT_ptickets) {
       lListElem *jep;
       lList *jlist = lCreateList("", lGetElemDescr(job));
       lList *tlist;
@@ -297,8 +298,9 @@ bool update_execd
       const char *s;
 
       s = lGetString(ja_task, JAT_granted_pe);
-      if (s)
+      if (s) {
          lSetString(ep, OR_pe, s);
+      }   
    }
 
    lAppendElem(or_list, ep);

@@ -952,6 +952,7 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
       return NULL;
    }
    if (!(lp->listname = strdup(listname))) {
+      FREE(lp);
       LERROR(LESTRDUP);
       DEXIT;
       return NULL;
@@ -959,6 +960,8 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
 
    lp->nelem = 0;
    if ((n = lCountDescr(descr)) <= 0) {
+      FREE(lp->listname);
+      FREE(lp);
       LERROR(LECOUNTDESCR);
       DEXIT;
       return NULL;
@@ -967,6 +970,8 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
    lp->first = NULL;
    lp->last = NULL;
    if (!(lp->descr = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
+      FREE(lp->listname);
+      FREE(lp);
       LERROR(LEMALLOC);
       DEXIT;
       return NULL;

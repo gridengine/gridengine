@@ -1,5 +1,9 @@
-AA-2004-05-17-0: Bugfix:    - AIX51 load, switch on incomplete AIX51 load code with
-                              aimk -DTEST_AIX51
+JG-2004-05-17-0: Bugfix:    Fixed a memory leak in qmaster.
+                 Changed:   sge_qmaster
+                 Review:    SG
+
+AA-2004-05-17-0: Bugfix:    - AIX51 load, switch on incomplete AIX51 load code 
+                              with aimk -DTEST_AIX51
                             - make broken on AIX43
                  IZ:        754
                  Changed:   sge_execd, load_check

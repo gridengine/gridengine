@@ -1454,6 +1454,7 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
                         u_long32 intkey, u_long32 intkey2, const char *strkey, 
                         const char *strkey2, const char *session, lList *list) 
 {
+   bool ret;
    lList *lp = NULL;
    lList *temp_sub_lp = NULL;
    int sub_list_elem = 0;
@@ -1486,8 +1487,9 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
       }
    }
    
-   return add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
-                                     strkey, strkey2, session, lp, false);
+   ret = add_list_event_for_client (EV_ID_ANY, timestamp, type, intkey, intkey2,
+                                    strkey, strkey2, session, lp, false);
+   return ret;
 }
 
 /****** Eventclient/Server/add_list_event_for_client() *************************
@@ -1573,8 +1575,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
       if (res) {
          lAppendElem (qlp, evp);
       }
-   }
-   else {
+   } else {
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
 
       lAppendElem (Master_Control.send_events, evp);
@@ -1691,8 +1692,7 @@ static void process_sends ()
             event = lFreeElem(event);
             event = lFirst (event_list);
          } /* while */
-      } /* if */
-      else {
+      } else {
          DPRINTF (("Processing event for client %d.\n", ec_id));
 
          lock_client (ec_id, true);
@@ -1726,7 +1726,6 @@ static void process_sends ()
          unlock_client (ec_id);
       } /* else */
 
-      send = lFreeElem (send);
       if (send != lastElem) {
          send = lFreeElem (send);
 
@@ -1736,10 +1735,9 @@ static void process_sends ()
          send = lFirst (Master_Control.send_events);
       }
       else {
+         send = lFreeElem (send);
          sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__,
                         &Master_Control.send_mutex);
-
-         send = lFirst (Master_Control.send_events);
       }
    } /* while */
 
@@ -3054,6 +3052,11 @@ static void add_list_event_direct(lListElem *event_client, lListElem *event,
          if (!SEND_EVENTS[type] && lGetNumberOfElem(clp) == 0) {
             if (clp != NULL) {
                clp = lFreeList(clp);
+            }
+
+            if (!copy_event) {
+               lp = lFreeList(lp);
+               event = lFreeElem(event);
             }
 
             DPRINTF (("Skipping event because it has no content for this client.\n"));

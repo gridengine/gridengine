@@ -774,6 +774,12 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
+   /* do job logging */
+   reporting_create_new_job_record(NULL, jep);
+   reporting_create_job_log(NULL, lGetUlong(jep, JB_submission_time), 
+                            JL_PENDING, ruser, rhost, NULL, 
+                            jep, NULL, NULL, MSG_LOG_NEWJOB);
+
    /*
    **  add element to return list if necessary
    */
@@ -781,13 +787,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       if (!*lpp)
          *lpp = lCreateList("Job Return", JB_Type);
       lAppendElem(*lpp, lCopyElem(jep));
-   }   
+   }
 
-/*    job_log(lGetUlong(jep, JB_job_number), 0, MSG_LOG_NEWJOB); */
-   reporting_create_new_job_record(NULL, jep);
-   reporting_create_job_log(NULL, lGetUlong(jep, JB_submission_time), 
-                            JL_PENDING, ruser, rhost, NULL, 
-                            jep, NULL, NULL, MSG_LOG_NEWJOB);
    DEXIT;
    return STATUS_OK;
 }
@@ -3727,7 +3728,7 @@ sge_gdi_request *request
    /* call add() method */
    ret = sge_gdi_add_job(new_jep, alpp, lpp, ruser, rhost, request);
 
-   lFreeElem(new_jep);
+   new_jep = lFreeElem(new_jep);
 
    DEXIT;
    return ret;

@@ -42,9 +42,10 @@ Visible Attributes
 - Fields below are new JC attributes:
 
    jcname               <usual naming convention for objects>
-   queue_list           'all' (or list of queue names)
-   slots                number of processes being allowed to
-                        run in total under this JC evironment concurrently
+   user_list
+   xuser_list
+   project_list
+   xproject_list
    command_line         'none' or a commandline similar to
                         qsub/qalter-commandlines which will be 
                         used to modify submitted jobs:
@@ -59,10 +60,15 @@ Visible Attributes
                         +   ===> The submitter of a jobs has to use this
                                  option to overwrite the specification
 
-                        e.g "!pe nodeXY 4 -ckpt ckpt1 +l a=solaris64"
+                        e.g "!pe nodeXY 4 -ckpt ckpt1 +l a=solaris64
+                             !-l lic=1 -q small_ckpt.q"
 
                         Options not used in the JC commandline might
                         be used by the user (similar to -).
+
+                        Multiple use of '?l' provides the possibilty
+                        to force certain resource requests whereas others
+                        have to or might be provided by the user.
                         
 - Following Attributes will be moved from the Q object definition into the JC.
   Corresponding values are default values for new JCs and default values for
@@ -80,23 +86,6 @@ Visible Attributes
    notify               00:00:60
    fshare               0
    oticket              0
-
-- Following Attributes will be copied from the Q object definition into the JC.
-  Corresponding values are default values for new JCs and default values for
-  the "default JC":                                
-   s_rt                 NONE
-   h_rt                 NONE
-   s_cpu                NONE
-   h_cpu                NONE
-   s_fsize              NONE
-   h_fsize              NONE
-   s_data               NONE
-   h_data               NONE
-   s_stack              NONE
-   h_stack              NONE
-   s_core               NONE
-   h_core               NONE
-   s_rss                NONE
 
 qconf
 -----
@@ -152,3 +141,52 @@ qmon
       
 - modification of the "Queue Configuration" dialog
    * removal of moved attributes 
+-------------------------------------------------------------------------------
+QSUB/QALTER/...
+===============
+
+Command line clients and qmon accepting the '-pe' option should either
+accept
+
+   -pe <pe_name> <slot_specification> 
+
+or 
+
+   -pe <pe_name> -pe_slots <slot_specification>
+
+format. This whould give an administartor the possibility to
+force a certain pe whereas the slot specification might be overwritten by
+the user ("!pe pe_name +pe_slots 4)
+-------------------------------------------------------------------------------
+Replacement for "qtask"
+=======================
+
+- Jobs without JC specification implicitely request a JC which has the
+  same name like the job script.
+- If this JC does not exist than the "default JC" will be used.
+- Client applications like qtcsh (possibly in future also qsub and qrsh)
+  request the list of configured JC names.
+
+e.g.
+
+a)
+   qtcsh> netscape
+
+   might either be executed locally if no netscape-JC exists
+   or
+   it might result in a call to "qrsh -jc netscape netscape".
+ 
+b)  
+   qsub/qrsh netscape
+
+   implicitely requests the netscape-JC but if this JC does not exist than 
+   the "default JC" will be used. 
+   (something like "qsub -soft -jc netscape netscape")
+
+c)
+   qsub -jc ns netscape
+
+   ns-JC has to exist otherwise the user will get an error message.
+
+
+ 

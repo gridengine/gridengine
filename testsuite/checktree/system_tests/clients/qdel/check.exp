@@ -255,7 +255,6 @@ proc qdel_submit_delete_when_transfered { } {
       puts $CHECK_OUTPUT $output
    }
 
-
    set_error 0 "ok"
 }
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/01/29 21:14:51 $     Revision: $Revision: 1.35 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/05 13:26:55 $     Revision: $Revision: 1.36 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/01/29 21:14:51 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/02/05 13:26:55 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -81,7 +81,7 @@ submit a copy of an existing xxQS_NAMExx job.
 [
 .B options
 ]
-.B job/task_id_list
+.B wc_job_range_list 
 [
 .B --
 [
@@ -1301,7 +1301,7 @@ For managers it is possible to use the \fB\qalter -uall\fP command
 to modify all jobs of all users.
 .sp 1
 If you use the \fB\-u\fP or \fB\-uall\fP switch it is not permitted to
-specify an additional \fI\job/task_id_list\fP.
+specify an additional \fI\wc_job_range_list\fP.
 .\"
 .IP "\fB\-v variable[=value],...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
@@ -1393,27 +1393,6 @@ the format as described for the
 \fBFull Format\fP in section \fBOUTPUT FORMATS\fP of the
 .M qstat 1
 manual page.
-.\"
-.IP "\fBjob/task_id_list\fP"
-Specified by the following form:
-.sp 1
-.ta 0.5i
-    \fI[job_id|job_name|pattern][.task_range][,[job_id|job_name|pattern][.task_range],...]\fP
-.ta 0.0i
-.sp 1
-If present, the \fItask_range\fP restricts the effect of the 
-operation to the array job task range specified as suffix to the job id
-(see the \fB\-t\fP option to
-.M qsub 1
-for further details on array jobs).
-.sp 1
-The task range specifier has the
-form n[-m[:s]]. The range may be a single number, a  simple
-range  of the form n-m or a range with a step size.
-.sp 1
-Instead of job/task_id_list it is possible to
-use the keyword 'all' to modify all jobs of the
-current user.
 .\"       
 .IP "\fBcommand\fP"
 Available for \fIqsub\fP and \fIqrsh\fP only.

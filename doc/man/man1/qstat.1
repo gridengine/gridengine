@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/01/28 16:05:13 $     Revision: $Revision: 1.14 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/02/05 13:26:54 $     Revision: $Revision: 1.15 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/01/28 16:05:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/02/05 13:26:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -70,6 +70,8 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 .B -u user,...
 ] [
 .B -urg
+] [
+.B -xml
 ]
 .\"
 .SH DESCRIPTION
@@ -224,6 +226,10 @@ jobs in those queues.
 .IP "\fB\-urg\fP"
 This option is only supported in case of a xxQS_NAME_EExx system. It is not available
 for xxQS_NAME_Cxx systems.
+.\"
+.IP "\fB\-xml\fP"
+This option can be used with all other options and changes the output to XML. The used
+schemas are referenced in the XML output. The output is printed to stdout.
 .br
 Displays additional information for each job related to the xxQS_NAME_EExx job urgency 
 policy scheme

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2004/01/30 17:04:04 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2004/02/05 13:26:54 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAMExx_INTRO 1 "$Date: 2004/01/30 17:04:04 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAMExx_INTRO 1 "$Date: 2004/02/05 13:26:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -46,18 +46,58 @@ types is explained in this page.
 .SH "TYPES"
 The syntax of xxQS_NAMExx types in alphabetic order:
 .\"
-.\" host          => wc_host without pattern
-.\" hostgroup     => wc_hostgroup without pattern
-.\" qdomain       => wc_qdomain without pattern
-.\" qinstance     => wc_qinstance without pattern
-.\" queue         => wc_queue without pattern
-.\" wc_host       := wildcard expression matching a host
-.\" wc_hostgroup  := wildcard expression matching a hostgroup
-.\" wc_qdomain    := wc_cqueue@wc_hostgroup
-.\" wc_qinstance  := wc_cqueue@wc_host
-.\" wc_queue      := wc_cqueue|wc_qdomain|wc_qinstance
-.\" wc_queue_list := wc_queue[,wc_queue,...]
+.\" host              => wc_host without pattern
+.\" hostgroup         => wc_hostgroup without pattern
+.\" pattern           => a pattern definition
+.\" qdomain           => wc_qdomain without pattern
+.\" qinstance         => wc_qinstance without pattern
+.\" queue             => wc_queue without pattern
+.\" range             := n[-m[:s]][,n[-m[:s]],...]
+.\" user              => wc_user without pattern
+.\" user_list         := user[,user,...]
+.\" wc_host           := wildcard expression matching a host
+.\" wc_hostgroup      := wildcard expression matching a hostgroup
+.\" wc_job            := job-id|job-name|pattern
+.\" wc_job_range      := wc_job[ -t range]
+.\" wc_job_list       := wc_job[,wc_job,...]
+.\" wc_job_range_list := wc_job_range[,wc_job_range,...]
+.\" wc_qdomain        := wc_cqueue@wc_hostgroup
+.\" wc_qinstance      := wc_cqueue@wc_host
+.\" wc_queue          := wc_cqueue|wc_qdomain|wc_qinstance
+.\" wc_queue_list     := wc_queue[,wc_queue,...]
+.\" wc_user           := user_name|pattern
+.\" wc_user_list      := wc_user[,wc_user,...]
 .\"
+.SS "\fBpattern\fP"
+When ever patterns are used the following definition applies:
+.RS
+ - "*"   : matches any character and any number of 
+           chars (between 0 and inv).
+ - "?"   : matches any character. It cannot be no 
+           character
+ - "."   : is the character ".". It has no other 
+           meaning
+ - "\\"   : escape character. "\\\\" = "\\", "\\*" = "*", 
+           "\\?" = "?"
+ - "[xx]": specifies an array or a range of allowed 
+           characters for one character at a specific 
+           position
+.RE    
+The pattern itself should be put into '"' to ensure, that
+the clients get the pattern. The or '|' operator is not supported.
+.PP
+.SS "\fBrange\fP"
+The task range specifier has the form 
+.sp 1
+n[-m[:s]][,n[-m[:s]], ...] 
+or 
+n[-m[:s]][ n[-m[:s]] ...] 
+.sp 1
+and thus consists of a comma or blank separated
+list of range specifiers n[-m[:s]]. The ranges are concatenated to the
+complete task id range. Each range may be a single number, a simple
+range of the form n-m or a range with a step size.
+.PP
 .SS "\fBwc_host\fP"
 A wildcard host specification (\fIwc_host\fP) is a 
 wildcard expression which might match one or more hosts used in the cluster.
@@ -97,6 +137,40 @@ e.g.
 @solaris	the @solaris hostgroup
 .fi
 .\"
+.SS "\fBwc_job\fP"
+The wildcard job specification is a placeholder for job ids, job names 
+include job name wildcard expressions. A job id allways references one
+job, while the names and patterns might reference multiple jobs.
+.sp 1
+wc_job := job-id|job-name|pattern
+.PP
+.SS "\fBwc_job_range\fP"
+The wildcard job range specification allows to reference specific array
+tasks for one or multipe jobs. The job is referenced via wc_job and in
+addition gets a range specifier for the array tasks.
+.sp 1
+wc_job_range := wc_job[ -t range]
+
+.PP
+.SS "\fBwc_job_list\fP"
+The wildcard job list specification allows to reference multiple jobs 
+with one command.
+.sp 1
+wc_job_list       := wc_job[,wc_job,...]
+.PP
+.SS "\fBwc_job_range_list\fP"
+ The \fBwc_job_range_list\fP is specified by one of the following forms:
+.sp 1
+.ta 0.5i
+    \fIwc_job[ -t range][{, }wc_job[ -t range]{, }...]\fP
+.ta 0.0i
+.sp 1
+If present, the \fItask_range\fP restricts the effect of the \fIqmod\fP
+operation to the array job task range specified as suffix to the job id
+(see the \fB\-t\fP option to
+.M qsub 1
+for further details on array jobs).
+.PP
 .SS "\fBwc_qdomain\fP"
 \fIwc_qdomain\fP := \fIwc_cqueue\fP "@" \fIwc_hostgroup\fP
 .PP
@@ -170,10 +244,23 @@ Comma separated list of wildcard queue expressions.
 e.g. 
 .RS
 big, medium_*@@sol*, *@fangorn.sun.com
+.PP
+.SS "\fBwc_user\fP"
+A wildcard user name expression is either a wildcard user name specification
+or a full user name.
+.ps 1
+wc_user := user_name|pattern
+
+.PP
+.SS "\fbwc_user_list\fP"
+A list of user names.
+.ps 1
+wc_user_list := wc_user[,wc_user,...]
+.PP
 .\"
 .SH SEE ALSO
 .M qacct 1 ,
-.M qconf 1 ,
+.M qconf 1 
 .\"
 .SH COPYRIGHT
 Copyright: 2001 by Sun Microsystems, Inc.

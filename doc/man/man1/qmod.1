@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2004/01/28 16:05:13 $     Revision: $Revision: 1.12 $
+.\" $RCSfile: qmod.1,v $     Last Update: $Date: 2004/02/05 13:26:54 $     Revision: $Revision: 1.13 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QMOD 1 "$Date: 2004/01/28 16:05:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QMOD 1 "$Date: 2004/02/05 13:26:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qmod \- modify a xxQS_NAMExx queue
 .\"
@@ -39,7 +39,7 @@ qmod \- modify a xxQS_NAMExx queue
 [
 .B options
 ] [
-.B job/task_id_list
+.B wc_job_range_list
 |
 .B wc_queue_list
 ]
@@ -54,7 +54,7 @@ as the state of his/her own jobs.
 A manager/operator or root can execute
 .I qmod
 for any queue and job in a cluster. Find additional information concerning
-\fIwc_queue_list\fP in
+\fIwc_queue_list\fP and \fIwc_job_list\fP in
 .M sge_types 1 .
 .\"
 .SH OPTIONS
@@ -139,47 +139,6 @@ state on the job.
 If applied to queues,
 unsuspends the queues and any jobs which might
 be active. 
-.\"
-.IP "\fBjob/task_id_list | queue_list\fP"
-The jobs or queues upon which
-.I qmod
-is supposed to operate. The \fBjob/task_id_list\fP is
-specified by one of the following forms:
-.sp 1
-.ta 0.5i
-    \fIjob_id[.task_range][,job_id[.task_range],...]\fP
-.br
-    \fIjob_id[.task_range][ job_id[.task_range] ...]\fP
-.ta 0.0i
-.sp 1
-If present, the \fItask_range\fP restricts the effect of the \fIqmod\fP
-operation to the array job task range specified as suffix to the job id
-(see the \fB\-t\fP option to
-.M qsub 1
-for further details on array jobs).
-.sp 1
-The task range specifier has the
-form n[-m[:s]][,n[-m[:s]], ...] or n[-m[:s]][ n[-m[:s]] ...] and thus
-consists of a comma or blank separated
-list of range specifiers n[-m[:s]]. The ranges are concatenated to the
-complete task id range. Each range may be a single number, a simple
-range of the form n-m or a range with a step size.
-.sp 1
-The \fIqueue_list\fP is specified by one of the following forms:
-.sp 1
-.ta 0.5i
-    \fIqueuename[,queuename ...]\fP
-.br
-    \fIqueuename[ queuename ...]\fP
-.ta 0.0i
-.sp 1
-Alternatively a wildcard charcter "*" can be used for specifying
-queues,  e.g. "s*" will select all queues starting with "s".
-.\"
-.sp 1
-The same features of the \fIqueue_list\fP work as well for the 
-job list. A job list can contain of any mixure of job name, job id, and
-pattern separated by "," or " ".
 .\"
 .SH "ENVIRONMENTAL VARIABLES"
 .\" 

@@ -1,3 +1,6 @@
+SG-2004-02-05-0: Enhancem.: updated man pages to reflect my latest changes
+                 Changed:   qdel.1, qmod.1, qstat.1, sge_types.1, submit.1
+
 JG-2004-02-05-0: Testsuite: Fixed functional/tight_integration.
 
 JG-2004-02-04-4: Testsuite: Fixed system_tests/clients/qmod/general, del_queue, 

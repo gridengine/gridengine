@@ -1,0 +1,116 @@
+<HTML>
+<BODY BGCOLOR=white>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     drmaa_strerror,      drmaa_get_contact,       drmaa_version,
+     drmaa_get_DRM_system - Miscellaneous DRMAA functions.
+
+SYNOPSIS
+     #include "drmaa.h"
+
+     const char *drmaa_strerror(
+          int drmaa_errno
+     );
+
+     int drmaa_get_contact(
+          char *contact,
+          size_t contact_len,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_version(
+          unsigned int *major,
+          unsigned int *minor,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_get_DRM_system(
+          char *drm_system,
+          size_t drm_system_len,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+DESCRIPTION
+     The drmaa_strerror() function returns a message text associ-
+     ated  with  the  DRMAA error number <I>drmaa</I>_<I>errno</I>. For invalid
+     DRMAA error codes `NULL' is returned.
+
+  drmaa_get_contact()
+     The drmaa_get_contact() is  supposed  to  return  an  opaque
+     string containing contact information related to the current
+     DRMAA session. As <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B>  parameter  <I>contact</I>  has  no
+     effect     in     the     current     implementation    also
+     <B><A HREF="../htmlman3/drmaa_get_contact.html">drmaa_get_contact(3)</A></B> simply returns an empty string.
+
+  drmaa_version()
+     The  drmaa_version()  function  returns  into  the  integers
+     pointed  to  by <I>major</I> and <I>minor</I> version numbers of the DRMAA
+     library. For a DRMAA 1.0 compliant  implementation  `1'  and
+     `0' will be returned in <I>major</I> and <I>minor</I>.
+
+  drmaa_get_DRM_system()
+     The drmaa_get_DRM_system() function returns into  <I>drm</I>_<I>system</I>
+     up  to <I>drm</I>_<I>system</I>_<I>len</I> characters of a string containing Grid
+     Engine product and version information.
+
+RETURN VALUES
+     Upon     successful     completion,     drmaa_get_contact(),
+     drmaa_version(),     and    drmaa_get_DRM_system()    return
+     DRMAA_ERRNO_SUCCESS. Other values indicate an error.  Up  to
+     <I>error</I>_<I>diag</I>_<I>len</I>  characters of error related diagnosis infor-
+     mation is then provided in the buffer <I>error</I>_<I>diagnosis</I>.
+
+ERRORS
+     The      drmaa_get_contact(),      drmaa_version(),      and
+     drmaa_get_DRM_system() will fail if:
+
+  DRMAA_ERRNO_INTERNAL_ERROR
+     Unexpected or internal DRMAA error like  memory  allocation,
+     system call failure, etc.
+
+  DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE
+     Could not contact DRM system for this request.
+
+  DRMAA_ERRNO_AUTH_FAILURE
+     The specified request is not processed successfully  due  to
+     authorization failure.
+
+  DRMAA_ERRNO_INVALID_ARGUMENT
+     The input value for an argument is invalid.
+
+  DRMAA_ERRNO_NO_MEMORY
+     Failed allocating memory.
+
+     The drmaa_get_contact() and drmaa_get_DRM_system() will fail
+     if:
+
+  DRMAA_ERRNO_NO_ACTIVE_SESSION
+     Failed because there is no active session.
+
+SEE ALSO
+     <B><A HREF="../htmlman3/drmaa_session.html">drmaa_session(3)</A></B>.
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

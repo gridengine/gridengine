@@ -1,0 +1,220 @@
+<HTML>
+<BODY BGCOLOR=white>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     drmaa_allocate_job_template,      drmaa_delete_job_template,
+     drmaa_set_attribute,                    drmaa_get_attribute,
+     drmaa_set_vector_attribute,      drmaa_get_vector_attribute,
+     drmaa_get_next_attr_value,  drmaa_release_attr_values - Grid
+     Engine DRMAA job template handling
+
+SYNOPSIS
+     #include "drmaa.h"
+
+     int drmaa_allocate_job_template(
+          drmaa_job_template_t **jt,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_delete_job_template(
+          drmaa_job_template_t *jt,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_set_attribute(
+          drmaa_job_template_t *jt,
+          const char *name,
+          const char *value,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_get_attribute(
+          drmaa_job_template_t *jt,
+          const char *name,
+          char *value,
+          size_t value_len,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_set_vector_attribute(
+          drmaa_job_template_t *jt,
+          const char *name,
+          const char *value[],
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_get_vector_attribute(
+          drmaa_job_template_t *jt,
+          const char *name,
+          drmaa_attr_values_t **values,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_get_next_attr_value(
+          drmaa_attr_values_t* values,
+          char *value,
+          int value_len
+     );
+
+     void drmaa_release_attr_values(
+          drmaa_attr_values_t* values
+     );
+
+DESCRIPTION
+     The drmaa_allocate_job_template() function allocates into <I>jt</I>
+     a  new  DRMAA  job  template.  DRMAA  job templates describe
+     specifics of jobs that are submitted using  <B><A HREF="../htmlman3/drmaa_run_job.html">drmaa_run_job(3)</A></B>
+     and <B><A HREF="../htmlman3/drmaa_run_bulk_jobs.html">drmaa_run_bulk_jobs(3)</A></B>.
+
+  drmaa_delete_job_template()
+     The  drmaa_delete_job_template()   function   releases   all
+     resources  associated  with  the DRMAA job template <I>jt</I>. Jobs
+     that were submitted using the job template are not affected.
+
+  drmaa_set_attribute()
+     The drmaa_set_attribute() function stores  the  <I>value</I>  under
+     <I>name</I> for the refered DRMAA job template <I>jt</I> . Only non-vector
+     attributes may be passed.
+
+  drmaa_get_attribute()
+     The drmaa_get_attribute() function returns into <I>value</I> up  to
+     <I>value</I>_<I>len</I>  bytes  from  the string stored for the non-vector
+     attribute <I>name</I> in the DRMAA job template <I>jt</I>.
+
+  drmaa_set_vector_attribute()
+     The drmaa_set_vector_attribute() function stores the strings
+     in <I>value</I> under <I>name</I> in the list of vector attributes for the
+     refered DRMAA job template <I>jt</I> . Only vector  attributes  may
+     be passed. The <I>value</I> pointer array must be <I>NULL</I> terminated.
+
+  drmaa_get_vector_attribute()
+     The  drmaa_get_vector_attribute()  function   returns   into
+     <I>values</I> a DRMAA attribute string vector containing all string
+     values that are stored in the list of vector  attributes  of
+     the DRMAA job template <I>jt</I> for the non-vector attribute <I>name</I>.
+     The  values  in  the  DRMAA  values  string  vector  can  be
+     extracted using <B><A HREF="../htmlman3/drmaa_get_next_attr_value.html">drmaa_get_next_attr_value(3)</A></B>.  The caller is
+     responsible for releasing the  DRMAA  values  string  vector
+     returned into <I>values</I> using <B><A HREF="../htmlman3/drmaa_release_attr_values.html">drmaa_release_attr_values(3)</A></B>.
+
+  drmaa_get_next_attr_value()
+     Each time drmaa_get_next_attr_value() is called  it  returns
+     into <I>value</I> up to <I>value</I>_<I>len</I> bytes of the next entry stored in
+     the DRMAA values string vector <I>values</I>.
+
+  drmaa_release_attr_values()
+     The  drmaa_release_attr_values()   function   releases   all
+     resources  associated  with  the  DRMAA values string vector
+     <I>values</I>.
+
+RETURN VALUES
+     Upon successful  completion,  drmaa_allocate_job_template(),
+     drmaa_delete_job_template(),          drmaa_set_attribute(),
+     drmaa_get_attribute(),         drmaa_set_vector_attribute(),
+     drmaa_get_vector_attribute(),                            and
+     drmaa_get_next_attr_value()   return    DRMAA_ERRNO_SUCCESS.
+     Other  values indicate an error.  Up to <I>error</I>_<I>diag</I>_<I>len</I> char-
+     acters of error related diagnosis information is  then  pro-
+     vided in the buffer <I>error</I>_<I>diagnosis</I>.
+
+ERRORS
+     The                           drmaa_allocate_job_template(),
+     drmaa_delete_job_template(),          drmaa_set_attribute(),
+     drmaa_get_attribute(),         drmaa_set_vector_attribute(),
+     drmaa_get_vector_attribute(),                            and
+     drmaa_get_next_attr_value() functions will fail if:
+
+  DRMAA_ERRNO_INTERNAL_ERROR
+     Unexpected or internal DRMAA error like  memory  allocation,
+     system call failure, etc.
+
+  DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE
+     Could not contact DRM system for this request.
+
+  DRMAA_ERRNO_AUTH_FAILURE
+     The specified request is not processed successfully  due  to
+     authorization failure.
+
+  DRMAA_ERRNO_INVALID_ARGUMENT
+     The input value for an argument is invalid.
+
+  DRMAA_ERRNO_NO_ACTIVE_SESSION
+     Failed because there is no active session.
+
+  DRMAA_ERRNO_NO_MEMORY
+     Failed allocating memory.
+
+     The drmaa_set_attribute()  and  drmaa_set_vector_attribute()
+     will fail if:
+
+  DRMAA_ERRNO_INVALID_ATTRIBUTE_FORMAT
+     The format for the attribute value is invalid.
+
+
+  DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE
+     The value for the attribute is invalid.
+
+  DRMAA_ERRNO_CONFLICTING_ATTRIBUTE_VALUES
+     The value of this attribute is conflicting with a previously
+     set attributes.
+
+     The drmaa_get_attribute()  and  drmaa_get_vector_attribute()
+     will fail if:
+
+  DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE
+     The specified attribute is not set in  the  DRMAA  job  tem-
+     plate.
+
+     The drmaa_get_next_attr_value() will fail if:
+
+  DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE
+     When there are no more entries in the vector.
+
+SEE ALSO
+     <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>and <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

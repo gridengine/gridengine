@@ -1,0 +1,116 @@
+<HTML>
+<BODY BGCOLOR=white>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     drmaa_init, drmaa_exit - Start/finish Grid Engine DRMAA ses-
+     sion
+
+SYNOPSIS
+     #include "drmaa.h"
+
+     int drmaa_init(
+          const char *contact,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_exit(
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+DESCRIPTION
+     The drmaa_init() function initializes Grid Engine DRMAA  API
+     library  for  all  threads  of the process and creates a new
+     DRMAA Session. This routine must be called once  before  any
+     other  DRMAA  call, except for <B><A HREF="../htmlman3/drmaa_version.html">drmaa_version(3)</A></B>.  <I>Contact</I> is
+     an implementation dependent string  which  may  be  used  to
+     specify  which  Grid Engine cell to use. If <I>contact</I> is NULL,
+     the default Grid Engine cell will be used.  In  the  current
+     implementation setting <I>contact</I> has no effect.
+
+  drmaa_exit()
+     The drmaa_exit() function called by any thread finishes  the
+     process  DRMAA  session  for all threads and is necessary to
+     perform DRMAA library internal clean up.  Running  jobs  are
+     not effected.
+
+RETURN VALUES
+     Upon successful completion,  drmaa_init()  and  drmaa_exit()
+     return DRMAA_ERRNO_SUCCESS.  Other values indicate an error.
+     Up to <I>error</I>_<I>diag</I>_<I>len</I> characters of error  related  diagnosis
+     information is then provided in the buffer <I>error</I>_<I>diagnosis</I>.
+
+ERRORS
+     The drmaa_init() and drmaa_exit() functions will fail if:
+
+  DRMAA_ERRNO_INTERNAL_ERROR
+     Unexpected or internal DRMAA error like  memory  allocation,
+     system call failure, etc.
+
+  DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE
+     Could not contact DRM system for this request.
+
+  DRMAA_ERRNO_AUTH_FAILURE
+     The specified request is not processed successfully  due  to
+     authorization failure.
+
+  DRMAA_ERRNO_INVALID_ARGUMENT
+     The input value for an argument is invalid.
+
+     The drmaa_init() will fail if:
+
+  DRMAA_ERRNO_INVALID_CONTACT_STRING
+     Initialization failed due to invalid contact string.
+
+  DRMAA_ERRNO_DEFAULT_CONTACT_STRING_ERROR
+     Could not use the default contact string to connect  to  DRM
+     system.
+
+  DRMAA_ERRNO_DRMS_INIT_FAILED
+     Initialization failed due to failure to init DRM system.
+
+  DRMAA_ERRNO_ALREADY_ACTIVE_SESSION
+     Initialization failed due to existing DRMAA session.
+
+  DRMAA_ERRNO_NO_MEMORY
+     Failed allocating memory.
+
+     The drmaa_exit() will fail if:
+
+  DRMAA_ERRNO_NO_ACTIVE_SESSION
+     Failed because there is no active session.
+
+  DRMAA_ERRNO_DRMS_EXIT_ERROR
+     DRM system disengagement failed.
+
+SEE ALSO
+     <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

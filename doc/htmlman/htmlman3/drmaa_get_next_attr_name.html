@@ -1,0 +1,376 @@
+<HTML>
+<BODY BGCOLOR=white>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+NAME
+     drmaa_get_attribute_names, drmaa_get_vector_attribute_names,
+     drmaa_get_next_attr_name,  drmaa_release_attr_names  - DRMAA
+     job template attributes
+
+SYNOPSIS
+     #include "drmaa.h"
+
+     int drmaa_get_attribute_names(
+          drmaa_attr_names_t **values,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_get_vector_attribute_names(
+          drmaa_attr_names_t **values,
+          char *error_diagnosis,
+          size_t error_diag_len
+     );
+
+     int drmaa_get_next_attr_name(
+          drmaa_attr_names_t* values,
+          char *value,
+          int value_len
+     );
+
+     void drmaa_release_attr_names(
+          drmaa_attr_names_t* values
+     );
+
+DESCRIPTION
+     The drmaa_get_attribute_names() function returns into <I>values</I>
+     a  DRMAA names string vector containing the set of supported
+     non-vector DRMAA  job  template  attribute  names.  The  set
+     includes  supported  DRMAA reserved attribute names and Grid
+     Engine native attribute names. The names in the names string
+     vector  can  be extracted using <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html">drmaa_get_next_attr_name(3)</A></B>.
+     The caller is responsible for  releasing  the  names  string
+     vector        returned        into        <I>values</I>       using
+     <B><A HREF="../htmlman3/drmaa_release_attr_names.html">drmaa_release_attr_names(3)</A></B>.  Use <B><A HREF="../htmlman3/drmaa_set_attribute.html">drmaa_set_attribute(3)</A></B> and
+     <B><A HREF="../htmlman3/drmaa_get_attribute.html">drmaa_get_attribute(3)</A></B> for setting and inspecting non-vector
+     attributes.
+
+  drmaa_get_vector_attribute_names()
+     The drmaa_get_vector_attribute_names() function returns into
+     <I>values</I>  a  DRMAA  names  string vector containing the set of
+     supported vector DRMAA job template attribute names. The set
+     includes  supported  DRMAA reserved attribute names and Grid
+     Engine native attribute names. The names in the names string
+     vector  can  be extracted using <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html">drmaa_get_next_attr_name(3)</A></B>.
+     The caller is responsible for  releasing  the  names  string
+     vector        returned        into        <I>values</I>       using
+     <B><A HREF="../htmlman3/drmaa_release_attr_names.html">drmaa_release_attr_names(3)</A></B>.                             Use
+     <B><A HREF="../htmlman3/drmaa_set_vector_attribute.html">drmaa_set_vector_attribute(3)</A></B>                            and
+     <B><A HREF="../htmlman3/drmaa_get_vector_attribute.html">drmaa_get_vector_attribute(3)</A></B>  for  setting  and  inspecting
+     vector attributes.
+
+  drmaa_get_next_attr_name()
+     Each time drmaa_get_next_attr_name() is  called  it  returns
+     into  the  buffer  <I>value</I>  up  to <I>value</I>_<I>len</I> bytes of the next
+     entry stored in the DRMAA names string vector <I>values</I>.
+
+  drmaa_release_attr_names()
+     The   drmaa_release_attr_names()   function   releases   all
+     resources  associated  with  the  DRMAA  names string vector
+     <I>values</I>.
+
+DRMAA JOB TEMPLATE ATTRIBUTES
+  drmaa_remote_command - "&lt;remote_command&gt;"
+     Specifies the remote command to execute. The  <I>remote</I>_<I>command</I>
+     must  be  the path of an executable that is available at the
+     jobs execution host.
+
+  drmaa_js_state - "{drmaa_hold|drmaa_active}"
+     Specifies the job state  at  submission.  As  string  values
+     `drmaa_hold'   and   `drmaa_active'   are   supported.  When
+     `drmaa_active' setting is used the  job  is  runnable.  When
+     `drmaa_hold'  setting  is  used the job is submitted in user
+     hold     state     (either     DRMAA_PS_USER_ON_HOLD      or
+     DRMAA_PS_USER_SYSTEM_ON_HOLD). This is equivalent to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
+     submit option `-h'.
+
+  drmaa_wd - "&lt;directory_name&gt;"
+     Specifies the directory name where the job will be executed.
+     A `$drmaa_hd_ph$' placeholder at the begin of <I>directory</I>_<I>name</I>
+     denotes the remaining string portion as a relative directory
+     name  that is resolved relative to the job users home direc-
+     tory at the execution host. When the DRMAA job template will
+     be    used    for    bulk    job    submission   (see   also
+     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>) the `$drmaa_incr_ph$' placeholder can
+     be  used  at  any  position within <I>directory</I>_<I>name</I> to cause a
+     substitution   with   the   parametric   jobs   index.   The
+     <I>directory</I>_<I>name</I>  must be specified in a syntax that is common
+     at the host where the job is executed. If set and no  place-
+     holder  is  used  an  absolute  directory  specification  is
+     expected. If set and the directory does not  exist  the  job
+     enters the state DRMAA_PS_FAILED.
+
+  drmaa_job_name - "&lt;job_name&gt;"
+     Specifies the jobs name. Setting the job name is  equivalent
+     to use of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> submit option `-N' with <I>job</I>_<I>name</I> as option
+     argument.
+
+
+  drmaa_input_path - "[&lt;hostname&gt;]:&lt;file_path&gt;"
+     Specifies the standard input of the job.  Unless  set  else-
+     where, if not explicitly set in the job template, the job is
+     started with an empty input stream. If the standard input is
+     set  it  specifies the network path of the jobs input stream
+     file.
+
+     When the `drmaa_transfer_files' job  template  attribute  is
+     supported  and  contains  the  character `i', the input file
+     will be fetched by Grid Engine from the  specified  host  or
+     from  the  submit host if no <I>hostname</I> is specified. When the
+     `drmaa_transfer_files' job template attribute  is  not  sup-
+     ported or does not contain the character `i', the input file
+     is always expected at the host where  the  job  is  executed
+     irrespectively of a possibly <I>hostname</I> specified.
+
+     If the DRMAA job template will be used for of bulk job  sub-
+     mission     (see     also     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>)     the
+     `$drmaa_incr_ph$' placeholder can be used  at  any  position
+     within <I>file</I>_<I>path</I> to cause a substitution with the parametric
+     jobs index. A `$drmaa_hd_ph$' placeholder at  the  begin  of
+     <I>file</I>_<I>path</I>  denotes the remaining portion of the <I>file</I>_<I>path</I> as
+     a relative file specification resolved relative to  the  job
+     users  home directory at the host where the file is located.
+     A `$drmaa_wd_ph$' placeholder  at  the  begin  of  <I>file</I>_<I>path</I>
+     denotes the remaining portion of the <I>file</I>_<I>path</I> as a relative
+     file specification resolved relative  to  the  jobs  working
+     directory  at  the  host  where  the  file  is  located. The
+     <I>file</I>_<I>path</I> must be specified in a syntax that  is  common  at
+     the  host  where  the  file  is located. If set and the file
+     can't be read the job enters the state DRMAA_PS_FAILED.
+
+  drmaa_output_path - "[&lt;hostname&gt;]:&lt;file_path&gt;"
+     Specifies the standard output of the job. If not  explicitly
+     set  in the job template, the whereabouts of the jobs output
+     stream is not defined. If set specifies the network path  of
+     the jobs output stream file.
+
+     When the `drmaa_transfer_files' job  template  attribute  is
+     supported  and  contains  the character 'o', the output file
+     will be transferred by Grid Engine to the specified host  or
+     to  the  submit  host  if no <I>hostname</I> is specified. When the
+     `drmaa_transfer_files' job template attribute  is  not  sup-
+     ported  or  does  not  contain the character 'o', the output
+     file is always kept at the host where the  job  is  executed
+     irrespectively of a possibly <I>hostname</I> specified.
+
+     If the DRMAA job template will be used for of bulk job  sub-
+     mission     (see     also     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>)     the
+     `$drmaa_incr_ph$' placeholder can be used  at  any  position
+     within  the  <I>file</I>_<I>path</I>  to  cause  a  substitution  with the
+     parametric jobs index. A `$drmaa_hd_ph$' placeholder at  the
+     begin  of  <I>file</I>_<I>path</I>  denotes  the  remaining portion of the
+     <I>file</I>_<I>path</I> as a relative file specification resolved relative
+     to  the  job users home directory at the host where the file
+     is located. A `$drmaa_wd_ph$' placeholder at  the  begin  of
+     the  <I>file</I>_<I>path</I> denotes the remaining portion of <I>file</I>_<I>path</I> as
+     a relative file specification resolved relative to the  jobs
+     working directory at the host where the file is located. The
+     <I>file</I>_<I>path</I> must be specified in a syntax that  is  common  at
+     the  host  where  the  file  is located. If set and the file
+     can't be written before execution the job enters  the  state
+     DRMAA_PS_FAILED.
+
+  drmaa_error_path - "[&lt;hostname&gt;]:&lt;file_path&gt;"
+     Specifies the standard error of the job. If  not  explicitly
+     set  in  the job template, the whereabouts of the jobs error
+     stream is not defined. If set, specifies the network path of
+     the jobs error stream file.
+
+     When the `drmaa_transfer_files' job  template  attribute  is
+     supported  and  contains  the character 'e', the output file
+     will be transferred by Grid Engine to the specified host  or
+     to  the  submit  host  if no <I>hostname</I> is specified. When the
+     `drmaa_transfer_files' job template attribute  is  not  sup-
+     ported or does not contain the character 'e', the error file
+     is always kept  at  the  host  where  the  job  is  executed
+     irrespectively of a possibly <I>hostname</I> specified.
+
+     If the DRMAA job template will be used for of bulk job  sub-
+     mission     (see     also     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>)     the
+     `$drmaa_incr_ph$' placeholder can be used  at  any  position
+     within  the  <I>file</I>_<I>path</I>  to  cause  a  substitution  with the
+     parametric jobs index. A `$drmaa_hd_ph$' placeholder at  the
+     begin  of the <I>file</I>_<I>path</I> denotes the remaining portion of the
+     <I>file</I>_<I>path</I> as a relative file specification resolved relative
+     to  the  job users home directory at the host where the file
+     is located. A `$drmaa_wd_ph$' placeholder at  the  begin  of
+     the <I>file</I>_<I>path</I> denotes the remaining portion of the <I>file</I>_<I>path</I>
+     as a relative file specification resolved  relative  to  the
+     jobs  working  directory  at  the  host  where  the  file is
+     located. The <I>file</I>_<I>path</I> must be specified in a syntax that is
+     common at the host where the file is located. If set and the
+     file can't be written before execution the  job  enters  the
+     state     DRMAA_PS_FAILED.    The    attribute    name    is
+     drmaa_error_path.
+
+
+  drmaa_join_files - "{y|n}"
+     Specifies if the jobs error stream should be intermixed with
+     the output stream. If not explicitly set in the job template
+     the attribute defaults to `n'. Either  `y'  or  `n'  can  be
+     specified.  If  `y' is specified Grid Engine will ignore the
+     value of the `drmaa_error_path' job template  attribute  and
+     intermix  the standard error stream with the standard output
+     stream as specified with `drmaa_output_path'.
+
+  drmaa_v_argv - "argv1 argv2 ..."
+     Specifies the arguments to the job.
+
+  drmaa_job_category - "&lt;category&gt;"
+     Specifies the DRMAA job category. The <I>category</I>  string  will
+     presumably  be  used  by  Grid  Engine as reference into the
+     <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> file. Certain <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> options used  in  the  refer-
+     enced qtask file line are applied to the job template before
+     submission to allow  site-specific  resolving  of  resources
+     and/or  policies.  Both  the cluster qtask file and the user
+     qtask file are searched. Job  settings  resulting  from  job
+     template  category  can  be overridden by settings resulting
+     from job template `drmaa_native_specification' as well as by
+     explict DRMAA job template settings. Not yet implemented.
+
+  drmaa_native_specification - "&lt;native_specification&gt;"
+     Specifies Grid Engine native specification. Presumably  cer-
+     tain  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  options  containedin the <I>native</I>_<I>specification</I>
+     are applied to the job template before job  submission.  Job
+     settings resulting from native specification can be overrid-
+     den with explict DRMAA job template settings. Not yet imple-
+     mented.
+
+  drmaa_v_env - "&lt;name1&gt;=&lt;value1&gt; &lt;name2&gt;=&lt;value2&gt; ...
+     Specifies  the  job  environment.  Each  environment   <I>value</I>
+     defines  the  remote  environment.  The  <I>value</I> overrides the
+     remote environment values if there is a collision.  Not  yet
+     implemented.
+
+  drmaa_v_email - "&lt;email1&gt; &lt;email2&gt; ...
+     Specifies e-mail adresses that are used to  report  the  job
+     completion and status. Not yet implemented.
+
+  drmaa_block_email - "{0|1}"
+     Specifies whether e-mail sending shall blocked or  not.  Not
+     yet implemented.
+
+  drmaa_start_time - "[[[[CC]YY/]MM/]DD] hh:mm[:ss] [{-|+}UU:uu]"
+     Specifies the earliest time when the job may be eligible  to
+     be run where
+
+          CC is the first two digits of the year (century-1)
+          YY is the last two digits of the year
+          MM is the two digits of the month [01,12]
+          DD is the two digit day of the month [01,31]
+          hh is the two digit hour of the day [00,23]
+          mm is the two digit minute of the day [00,59]
+          ss is the two digit second of the minute [00,61]
+          UU is the two digit hours since (before) UTC
+          uu is the two digit minutes since (before) UTC
+
+     If the optional UTC-offset  is  not  specified,  the  offset
+     associated  with the local timezone will be used. If the day
+     (DD) is not specified, the current day will be  used  unless
+     the  specified hour:mm:ss has already elapsed, in which case
+     the next day will be used. Similarly for  month  (MM),  year
+     (YY),  and  century-1 (CC). Example: The time: Sep 3 4:47:27
+     PM PDT 2002, could be represented  as:  2002/09/03  16:47:27
+     -07:00.  Not yet implemented.
+      .PP
+
+RETURN VALUES
+     Upon  successful  completion,   drmaa_get_attribute_names(),
+     drmaa_get_vector_attribute_names(),                      and
+     drmaa_get_next_attr_name() return DRMAA_ERRNO_SUCCESS. Other
+     values  indicate  an error.  Up to <I>error</I>_<I>diag</I>_<I>len</I> characters
+     of error related diagnosis information is then  provided  in
+     the buffer <I>error</I>_<I>diagnosis</I>.
+
+ERRORS
+     The                             drmaa_get_attribute_names(),
+     drmaa_get_vector_attribute_names(),                      and
+     drmaa_get_next_attr_name() functions will fail if:
+
+  DRMAA_ERRNO_INTERNAL_ERROR
+     Unexpected or internal DRMAA error like  memory  allocation,
+     system call failure, etc.
+
+  DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE
+     Could not contact DRM system for this request.
+
+  DRMAA_ERRNO_AUTH_FAILURE
+     The specified request is not processed successfully  due  to
+     authorization failure.
+
+  DRMAA_ERRNO_INVALID_ARGUMENT
+     The input value for an argument is invalid.
+
+  DRMAA_ERRNO_NO_ACTIVE_SESSION
+     Failed because there is no active session.
+
+  DRMAA_ERRNO_NO_MEMORY
+     Failed allocating memory.
+
+     The drmaa_get_next_attr_name() will fail if:
+
+  DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE
+     When there are no more entries in the vector.
+
+SEE ALSO
+     <B><A HREF="../htmlman3/drmaa_jobtemplate.html">drmaa_jobtemplate(3)</A></B>and <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>

@@ -457,9 +457,9 @@ proc error_states_job_output {} {
    global CHECK_CORE_EXECD
 
 
-   set test_dir  "/tmp/testsuite_temp_dir"
-   set test_file "/tmp/testsuite_temp_file"
-   set test_local_dir "/tmp/testsuite_temp_local_dir"
+   set test_dir  [get_tmp_directory_name "" temp "dir" ]
+   set test_file [get_tmp_file_name "" temp]
+   set test_local_dir [get_tmp_directory_name "" local "dir" ]
 
    set result [ start_remote_prog $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER "mkdir" $test_dir ]
    puts $CHECK_OUTPUT $result

@@ -86,13 +86,12 @@ proc submit_del_init_level {} {
 
 global submit_del_qconfig
 global submit_del_check_queue
-global tmp_shepherd_dir
 
 proc submit_del_setup  {} {
    global CHECK_OUTPUT CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_CORE_EXECD CHECK_MAIN_RESULTS_DIR CHECK_USER
    global submit_del_qconfig CHECK_PRODUCT_ROOT CHECK_HOST
-   global submit_del_check_queue tmp_shepherd_dir
+   global submit_del_check_queue
 
 
    get_config submit_del_qconfig
@@ -103,13 +102,6 @@ proc submit_del_setup  {} {
    
    wait_for_end_of_all_jobs 100
 
-   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 } {
-      set tmp_shepherd_dir "/tmp/"
-   } else {
-      set tmp_shepherd_dir  "$CHECK_MAIN_RESULTS_DIR/"
-   }
-
-   
    puts $CHECK_OUTPUT "waiting 15 seconds to give qmaster time to update configurations on execds ..."
    sleep 15
 
@@ -211,7 +203,7 @@ proc submit_del_test { } {
 
 proc submit_del_cleanup  {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD
-   global submit_del_qconfig submit_del_check_queue tmp_shepherd_dir CHECK_HOST
+   global submit_del_qconfig submit_del_check_queue CHECK_HOST
 
    set_config submit_del_qconfig
    
@@ -220,15 +212,6 @@ proc submit_del_cleanup  {} {
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
    puts $CHECK_OUTPUT $catch_result
    wait_for_end_of_all_jobs 100
-
-#   foreach hostname $CHECK_CORE_EXECD {
-#      set arch [resolve_arch $hostname]
-#      set sge_shepherd_file "$CHECK_PRODUCT_ROOT/bin/$arch/sge_shepherd"
-#      start_remote_prog $hostname "root" "rm" "$sge_shepherd_file"
-#      start_remote_prog $hostname "root" "mv" "${sge_shepherd_file}.tmp $sge_shepherd_file"
-#      set script_path "$tmp_shepherd_dir/${hostname}_sge_shepherd_wrapper_script" 
-#      delete_file $script_path
-#   }
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
    foreach hostname $CHECK_CORE_EXECD {

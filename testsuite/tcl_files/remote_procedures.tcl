@@ -538,11 +538,7 @@ proc open_remote_spawn_process { hostname
       }
   }
   set type [ file tail $exec_command ]
-  if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 } {
-     set script_name "/tmp/temp_${hostname}_${type}_[timestamp].sh"
-  } else {
-     set script_name "$CHECK_MAIN_RESULTS_DIR/temp_${hostname}_${type}_[timestamp].sh"
-  }
+  set script_name [get_tmp_file_name $hostname $type "sh" ]
   create_shell_script "$script_name" $hostname "$exec_command" "$exec_arguments" users_env "/bin/sh" 0 $source_settings_file
   set open_spawn_buffer $script_name
   uplevel 1 { set open_remote_spawn__script_name $open_spawn_buffer }
@@ -911,7 +907,7 @@ proc open_remote_spawn_process { hostname
    }
 
 
-   delete_file_at_startup $script_name
+   # delete_file_at_startup $script_name
 
    debug_puts "number of open shells: $nr_of_shells"
    lappend back $nr_of_shells

@@ -113,6 +113,95 @@ proc get_dir_names { path } {
   return $r2;
 }
 
+#****** file_procedures/get_tmp_directory_name() *******************************
+#  NAME
+#     get_tmp_directory_name() -- returns temporary directory path
+#
+#  SYNOPSIS
+#     get_tmp_directory_name { { hostname "" } { type "default" } 
+#     { dir_ext "tmp" } } 
+#
+#  FUNCTION
+#     Generates a temporary usable directory name (full path). The parameters
+#     are used to define substrings of the directory name. The path
+#     is located in the testsuite main results directory or in "tmp" if the
+#     testsuite results directory is not accessable.
+#
+#  INPUTS
+#     { hostname "" }    - a hostname substring
+#     { type "default" } - a type substring
+#     { dir_ext "tmp" }  - a extension substring
+#
+#  RESULT
+#     full path string of a directory
+#
+#  SEE ALSO
+#     file_procedures/get_tmp_file_name()
+#*******************************************************************************
+proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp" } } {
+   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT
+
+   if { $hostname == "" } {
+      set hostname $CHECK_HOST
+   }
+
+   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 } {
+     set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp]_${dir_ext}"
+   } else {
+     set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp]_${dir_ext}"
+   }
+   return $file_name
+}
+
+#****** file_procedures/get_tmp_file_name() ************************************
+#  NAME
+#     get_tmp_file_name() -- generate temporary filename 
+#
+#  SYNOPSIS
+#     get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } 
+#     } 
+#
+#  FUNCTION
+#     Generates a temporary usable file name (full path). The parameters
+#     are used to define substrings of the file name. The path
+#     is located in the testsuite main results directory or in "tmp" if the
+#     testsuite results directory is not accessable.
+#
+#     The file is automatically erased when:
+#
+#        a) The testsuite menu() procedure is called
+#        b) A new test ( or testlevel) is started
+#
+#     So if the caller is generating this file, he as not to delete it.
+#
+#  INPUTS
+#     { hostname "" }    - a hostname substring
+#     { type "default" } - a type substring
+#     { file_ext "tmp" } - a extension substring
+#
+#  RESULT
+#    a filename string ( absolute path )
+#
+#  SEE ALSO
+#     file_procedures/get_tmp_directory_name()
+#*******************************************************************************
+proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } } {
+   
+   global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT
+
+   if { $hostname == "" } {
+      set hostname $CHECK_HOST
+   }
+
+   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 } {
+     set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
+   } else {
+     set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
+   }
+   delete_file_at_startup $file_name
+ 
+   return $file_name
+}
 
 #****** file_procedures/dump_array_data() **************************************
 #  NAME
@@ -1471,9 +1560,6 @@ proc cleanup_spool_dir { topleveldir subdir } {
 proc delete_file_at_startup { filename } {
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
-   if { [ file isfile $filename ] != 1 } {
-      return 
-   }
    set del_file_name "$CHECK_TESTSUITE_ROOT/.testsuite_delete"
    if {[file isfile $del_file_name] != 1} {
        set del_file [ open $del_file_name "w" ]

@@ -770,21 +770,16 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       set no_jobs 3
    } else {
 
-#      set qlogin_id  [ open_root_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue" ]
-#      set qlogin_id  [ open_remote_spawn_process $CHECK_HOST "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin" "-q $rerun_queue" ]
-      
-      catch { eval exec "rm /tmp/qlogin_out.txt" }
+      set qlogin_out_file [get_tmp_file_name "" "qlogin" "txt" ]
 
-
-      set qlogin_id  [ open_spawn_process "$CHECK_SCRIPT_FILE_DIR/qlogin.sh $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue" ]
-
+      set qlogin_id  [ open_spawn_process "$CHECK_SCRIPT_FILE_DIR/qlogin.sh $qlogin_out_file $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue" ]
       set no_jobs 4
       set result ""
       set my_timeout [timestamp]
       incr my_timeout 60
       while { [ string first "login:" $result] < 0 } {     
          sleep 2
-         catch { eval exec "cat /tmp/qlogin_out.txt" } result
+         catch { eval exec "cat $qlogin_out_file" } result
          puts $CHECK_OUTPUT $result
          if { $my_timeout < [timestamp] } {
             break;
@@ -813,7 +808,7 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       set timeout 0
       while { [ string first "assword:" $result] < 0 } {     
          sleep 2
-         catch { eval exec "cat /tmp/qlogin_out.txt" } result
+         catch { eval exec "cat $qlogin_out_file" } result
          puts $CHECK_OUTPUT $result
          if { $my_timeout < [timestamp] } {
             break;
@@ -890,7 +885,6 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    if { [have_root_passwd] != -1 } {
       send -i $qlogin_id "\003"
       close_spawn_process $qlogin_id 1
-      catch { eval exec "rm /tmp/qlogin_out.txt" }
    }
    set_error 0 "ok"
 

@@ -11079,6 +11079,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
 
 
    # get lock  
+   delete_temp_script_files
    lock_testsuite
 
  
@@ -11112,7 +11113,6 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    if { [info exists check_functions] == 1 } {
       foreach elem $check_functions {
          
-         delete_temp_script_files
          puts $CHECK_OUTPUT "\n>>>>>>>>>>>>>>>>>>>>>>"
          puts $CHECK_OUTPUT "$elem"    
          puts $CHECK_OUTPUT "runlevel: [get_run_level_name $level]($level)"
@@ -11342,20 +11342,18 @@ proc check_root_access {path} {
 }
 
 proc delete_temp_script_files { } {
-  global CHECK_TESTSUITE_ROOT
+  global CHECK_TESTSUITE_ROOT CHECK_OUTPUT
 
   set del_file_name "$CHECK_TESTSUITE_ROOT/.testsuite_delete"
   if { [ file isfile $del_file_name ] == 1 } {
-     set files_deleted 0
      set del_file [ open $del_file_name "r" ]
      while { [gets $del_file line] >= 0 } {
-        file delete $line
-        incr files_deleted 1 
+        if { [ file isfile $line ] == 1 } {
+           file delete $line
+        }
      }
      close $del_file
-     if { $files_deleted > 0 } {
-        file delete $del_file_name     
-     } 
+     file delete $del_file_name     
   } 
 }
 # run test
@@ -14030,6 +14028,8 @@ proc menu {} {
   global daemon_debug CHECK_DEBUG_LEVEL CHECK_DEFAULTS_FILE CHECK_DO_SETUP
   global CHECK_PACKAGE_DIRECTORY CHECK_SETUP_CHANGES CHECK_PACKAGE_TYPE
   global check_reinit_on_tcl_error
+
+  delete_temp_script_files
 
   set files [  print_menu_header ]
  

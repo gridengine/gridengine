@@ -1110,7 +1110,7 @@ proc qrsh_terminate {} {
 
    puts $CHECK_OUTPUT "check if terminate method for a qrsh job gets right job_pid"
 
-   set terminate_out_file "/tmp/terminate.$CHECK_COMMD_PORT"
+   set terminate_out_file [get_tmp_file_name "" "qrsh" $CHECK_COMMD_PORT]
 
    # set terminate method
    foreach host $qrsh_hostlist {
@@ -1121,9 +1121,6 @@ proc qrsh_terminate {} {
    foreach host $qrsh_hostlist {
       # start qrsh job (shell script that outputs its pid)
       start_remote_prog $host $CHECK_USER ls $terminate_out_file exit_code
-      if {$exit_code == 0} {
-         start_remote_prog $host $CHECK_USER "rm" "$terminate_out_file"
-      }
       set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-l hostname=$host $CHECK_ACTUAL_TEST_PATH/sleep_pid.sh 120"]
       
       # evaluate pid and JOB_ID
@@ -1235,9 +1232,6 @@ proc qrsh_terminate {} {
       }
 
       start_remote_prog $host $CHECK_USER ls $terminate_out_file exit_code
-      if {$exit_code == 0} {
-         start_remote_prog $host $CHECK_USER rm $terminate_out_file
-      }
    }
 
    # reset terminate method

@@ -321,14 +321,20 @@ proc share_tree_setup  {} {
 
 proc get_project_member { prj1 prj2 prj3 job_id } {
    
-   if { [string first $job_id $prj1] >= 0 } {
-      return 1
+   foreach elem $prj1 {
+      if { $elem == $job_id } {
+         return 1
+      }
    }
-   if { [string first $job_id $prj2] >= 0 } {
-      return 2
+   foreach elem $prj2 {
+      if { $elem == $job_id } {
+         return 2
+      }
    }
-   if { [string first $job_id $prj3] >= 0 } {
-      return 3
+   foreach elem $prj3 {
+      if { $elem == $job_id } {
+         return 3
+      }
    }
    return 0
 }

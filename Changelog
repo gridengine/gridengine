@@ -1,3 +1,5 @@
+MD-2004-05-18-4: Enhamcem:  - more comments in inst_template.conf
+
 JG-2004-05-18-3: Bugfix:    Fixed a core dump in qmaster.
 
 SG-2004-05-18-4: Bugfix:    fixed the qstat -t -xml output. 

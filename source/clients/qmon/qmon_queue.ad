@@ -122,7 +122,7 @@ Qmon*queue_main_layout.queue_sw*queue_da.background: $bg
 
 Qmon*queue_main_layout.queue_sw*queue_da.packing:     PACK_COLUMN
 Qmon*queue_main_layout.queue_sw*queue_da.orientation: HORIZONTAL
-Qmon*queue_main_layout.queue_sw*queue_da.numColumns:  500
+Qmon*queue_main_layout.queue_sw*queue_da.numColumns:  394
 
 
 Qmon*queue_main_layout.queue_sw.height:                   300

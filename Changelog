@@ -1,3 +1,6 @@
+AA-2001-09-06-0: Fixed y out of range of allowed Xserver values in QControl
+                 This limits the number of displayable qs to 2758
+
 AA-2001-09-03-0: Fix for IZ 52, popup in Queue Configuration-Subordinates
 
 EB-2001-08-30-0: Removed help output from qconf concerning 'meattr'

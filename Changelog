@@ -1,3 +1,7 @@
+EB-2001-11-05-0: Bugfix: Ckpt jobs and jobs exiting with exit state 99
+                 could meet an old instance of the same job if the 
+                 scheduler was to fast.
+
 AH-2001-11-05-0: Fixes with qstat -pe <pe_name> and qselect -pe <pe_name>
                  - 'all' keyword in PE's queue_list was not honoured
                  - non-parallel queues were selected

@@ -768,6 +768,18 @@ int spool_job
                   }
                }
             }
+         } else {
+            lList *granted_list = NULL;
+            lListElem *granted_queue = NULL;
+            lListElem *host = NULL;
+
+            granted_list = lGetList(jatep, JAT_granted_destin_identifier_list);
+            granted_queue = lFirst(granted_list);
+            host = lGetElemCaseStr(Master_Exechost_List, EH_name,
+                                   lGetString(granted_queue, JG_qhostname));
+            add_to_reschedule_unknown_list(host, lGetUlong(jep, JB_job_number),
+                                           lGetUlong(jatep, JAT_task_number),
+                                           RESCHEDULE_SKIP_JR);
          }
       }
 

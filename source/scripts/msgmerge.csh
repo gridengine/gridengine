@@ -33,10 +33,10 @@
 
 set cmd = $1 
 set ARCH = `./aimk -nomk`
-set MSGMERGE = /home/codine/gettext/${ARCH}/bin/msgmerge
-#set MSGFMT = /home/codine/gettext/${ARCH}/bin/msgfmt
+set MSGMERGE = ./3rdparty/gettext-0.11/${ARCH}/bin/msgmerge
+#set MSGFMT = ./3rdparty/gettext-0.11/${ARCH}/bin/msgfmt
 set MSGFMT = /usr/bin/msgfmt
-set LOCALEDIR = "./locale"
+set LOCALEDIR = "./dist/locale"
 set LANGUAGES = "de en en_FW.MBE en_FW.ASCII"
 set MSGPO = "gridengine.po"
 set MSGMO = "gridengine.mo"

@@ -233,10 +233,6 @@ XtResource sm_resources[] = {
       sizeof(lList*), XtOffsetOf(tSMEntry, master_queue_list),
       XtRImmediate, NULL },
 
-   { "qs_args", "qs_args", QmonRST_Type,
-      sizeof(lList*), XtOffsetOf(tSMEntry, qs_args),
-      XtRImmediate, NULL },
-
    { "hold_jid", "hold_jid", QmonRJRE_Type,
       sizeof(lList*), XtOffsetOf(tSMEntry, hold_jid),
       XtRImmediate, NULL },
@@ -842,6 +838,12 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonSubmitInteractive");
 
+   if (!cbs->set) {
+      submit_mode_data.sub_mode = SUBMIT_NORMAL;
+   } else {
+      submit_mode_data.sub_mode = SUBMIT_QSH;
+   }   
+   
    /*
    ** clear the entries and set default name of job
    */
@@ -850,10 +852,7 @@ XtPointer cld, cad;
    /*
    ** reset the sensitivity depending on state
    */
-   if (!cbs->set) {
-      submit_mode_data.sub_mode = SUBMIT_NORMAL;
-   } else {
-      submit_mode_data.sub_mode = SUBMIT_QSH;
+   if (submit_mode_data.sub_mode == SUBMIT_QSH) {
       XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
       dsp = DisplayString(XtDisplay(w));
       if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
@@ -912,7 +911,7 @@ int submode
    XtSetSensitive(submit_stdoutputPB, sensitive2);
    XtSetSensitive(submit_stdoutputPB, sensitive2);
    XtSetSensitive(submit_output_merge, sensitive2);
-   XtSetSensitive(submit_now, sensitive2);
+/*    XtSetSensitive(submit_now, sensitive2); */
 
    /*
    ** detail submit dialogue section, mail allowed only for abort
@@ -1301,7 +1300,6 @@ XtPointer cld, cad;
          JB_hard_queue_list,
          JB_soft_queue_list,
          JB_master_hard_queue_list,
-         JB_qs_args,
          JB_jid_predecessor_list,
          JB_shell_list,
          JB_env_list,
@@ -1568,7 +1566,7 @@ tSMEntry *data
 ) {
    DENTER(GUI_LAYER, "qmonInitSMData");
    
-   memset((void*)data, sizeof(tSMEntry), 0);
+   memset((void*)data, 0, sizeof(tSMEntry));
    data->verify_mode = SKIP_VERIFY;
 
    DEXIT;
@@ -1649,8 +1647,6 @@ tSMEntry *data
    data->soft_queue_list = lFreeList(data->soft_queue_list);
 
    data->master_queue_list = lFreeList(data->master_queue_list);
-
-   data->qs_args = lFreeList(data->qs_args);
 
    data->hold_jid = lFreeList(data->hold_jid);
 
@@ -1786,9 +1782,6 @@ char *prefix
    data->master_queue_list = lCopyList("JB_master_hard_queue_list", 
                                     lGetList(jep, JB_master_hard_queue_list));;
 
-   data->qs_args = lCopyList("JB_qs_args", 
-                                    lGetList(jep, JB_qs_args));;
-
    data->hold_jid = lCopyList("JB_jid_predecessor_list", 
                                     lGetList(jep, JB_jid_predecessor_list));;
 
@@ -1870,7 +1863,7 @@ int save
    if (!reduced_job) {
       lSetString(jep, JB_directive_prefix, data->directive_prefix);
    
-      if (!save) {
+      if (!save && (submit_mode_data.sub_mode != SUBMIT_QSH)) {
          /* Job Script/Name */
          lSetString(jep, JB_script_file, data->job_script);
          job_script = sge_file2string(data->job_script, &len);
@@ -2172,11 +2165,6 @@ int save
             data->master_queue_list ? "NOT NULL" : "NULL"));
    lSetList(jep, JB_master_hard_queue_list, 
                lCopyList("master_hard_queue_list", data->master_queue_list));
-
-   DPRINTF(("data->qs_args is %s\n", 
-            data->qs_args ? "NOT NULL" : "NULL"));
-   lSetList(jep, JB_qs_args, 
-               lCopyList("qs_args", data->qs_args));
 
    DPRINTF(("data->hold_jid is %s\n", 
             data->hold_jid ? "NOT NULL" : "NULL"));
@@ -2851,6 +2839,21 @@ XtPointer cld, cad;
       XtSetSensitive(submit_stderror, True);
       XtSetSensitive(submit_stderrorPB, True);
    }
+   else {
+      char buf[512];
+      String dsp = NULL;
+
+      XmtInputFieldSetString(submit_name, "INTERACTIVE"); 
+      dsp = DisplayString(XtDisplay(w));
+      if (!strcmp(dsp, ":0") || !strcmp(dsp, ":0.0"))
+         sprintf(buf, "DISPLAY=%s%s", me.qualified_hostname, 
+                        dsp); 
+      else
+         sprintf(buf, "DISPLAY=%s", dsp); 
+      XmtInputFieldSetString(submit_env, buf); 
+      XmToggleButtonSetState(submit_now, 1, True);
+   }
+
 
    /*
    ** change the resources pixmap icon if necessary
@@ -2861,7 +2864,6 @@ XtPointer cld, cad;
    ** clear message line
    */
    XmtMsgLineClear(submit_message, XmtMsgLineNow); 
-
 
    DEXIT;
 }

@@ -33,8 +33,8 @@
 
 set ARCH = `./aimk -nomk`
 set MBEMSG = /usr/bin/mbemsg
-set MSGFMT = /home/codine/gettext/${ARCH}/bin/msgfmt
-set LOCALEDIR = "./locale"
+set MSGFMT = ./3rdparty/gettext-0.11/${ARCH}/bin/msgfmt
+set LOCALEDIR = "./dist/locale"
 set MSGPO = "gridengine.po"
 set MSGMO = "gridengine.mo"
 set MSGPOT = "gridengine.pot"

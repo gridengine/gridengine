@@ -365,7 +365,9 @@ MakeCAcert()
 #
 MakeRandFile()
 {
-   if [ -f /kernel/genunix ]; then
+   if [ -f /dev/random ]; then 
+      rfile=/dev/random
+   elif [ -f /kernel/genunix ]; then
       rfile=/kernel/genunix
    elif [ -f /bin/vi ]; then
       rfile=/bin/vi

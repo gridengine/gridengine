@@ -65,7 +65,6 @@ extern lList *Master_Sharetree_List;
 extern lList *Master_Userset_List;
 
 
-static int check_sharetree(lList **alpp, lListElem *node, lList *user_list, lList *project_list, lListElem *project, lList **found);
 
 /************************************************************
   sge_add_sharetree - Master code
@@ -225,7 +224,7 @@ char *rhost
    to the project
 
  ********************************************************/
-static int check_sharetree(
+int check_sharetree(
 lList **alpp,
 lListElem *node,
 lList *user_list,
@@ -322,6 +321,11 @@ lList **found  /* tmp list that contains one entry for each found u/p */
    } else {
 
       /* a leaf node */
+
+      /* check if this is a project node */
+      if (sge_locate_user_prj(name, project_list)) {
+         lSetUlong(node, STN_type, STT_PROJECT);
+      }   
 
       if (project) {
 

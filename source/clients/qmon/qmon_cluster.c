@@ -348,9 +348,13 @@ static Widget cluster_global_layout = 0;
 static Widget cluster_host = 0;
 
 static Widget cluster_qmaster_spool_dir = 0;
+static Widget cluster_qmaster_spool_dir_label = 0;
 static Widget cluster_execd_spool_dir = 0;
+static Widget cluster_execd_spool_dir_label = 0;
 static Widget cluster_admin_mail = 0;
+static Widget cluster_admin_mail_label = 0;
 static Widget cluster_login_shells = 0;
+static Widget cluster_login_shells_label = 0;
 static Widget cluster_default_domain = 0;
 static Widget cluster_min_uid = 0;
 static Widget cluster_min_gid = 0;
@@ -398,6 +402,13 @@ static Widget cluster_pag_cmd = 0;
 static Widget cluster_token_extend_time = 0;
 static Widget cluster_gid_range = 0;
 static Widget cluster_admin_user = 0;
+static Widget cluster_admin_user_label = 0;
+static Widget cluster_default_domain_label = 0;
+static Widget cluster_qmaster_params_label = 0;
+static Widget cluster_schedd_params_label = 0;
+static Widget cluster_set_token_cmd_label = 0;
+static Widget cluster_pag_cmd_label = 0;
+static Widget cluster_token_extend_time_label = 0;
 
 /*-------------------------------------------------------------------------*/
 static void qmonPopdownClusterConfig(Widget w, XtPointer cld, XtPointer cad);
@@ -470,8 +481,8 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 void updateClusterList(void)
 {
-   lList *cl;
-   XmString *selectedItems;
+   lList *cl = NULL;
+   XmString *selectedItems = NULL;
    Cardinal selectedItemCount;
    Cardinal itemCount;
    XmString xglobal;
@@ -479,8 +490,9 @@ void updateClusterList(void)
    DENTER(GUI_LAYER, "updateClusterList");
 
    cl = qmonMirrorList(SGE_CONFIG_LIST);
-   lPSortList(cl, "%I+", CONF_hname);
    UpdateXmListFromCull(cluster_host_list, XmFONTLIST_DEFAULT_TAG, cl, CONF_hname);
+   XmListMoveItemToPos(cluster_host_list, "global", 1);
+
    XtVaGetValues( cluster_host_list,
                   XmNselectedItems, &selectedItems,
                   XmNselectedItemCount, &selectedItemCount,
@@ -669,11 +681,18 @@ Widget parent
                            "cluster_xprojects", &cluster_xprojects,
                            "cluster_qmaster_spool_dir", 
                                     &cluster_qmaster_spool_dir,
+                           "cluster_qmaster_spool_dir_label", 
+                                    &cluster_qmaster_spool_dir_label,
                            "cluster_execd_spool_dir", 
                                     &cluster_execd_spool_dir,
+                           "cluster_execd_spool_dir_label", 
+                                    &cluster_execd_spool_dir_label,
                            "cluster_admin_mail", &cluster_admin_mail,
+                           "cluster_admin_mail_label", &cluster_admin_mail_label,
                            "cluster_login_shells", &cluster_login_shells,
+                           "cluster_login_shells_label", &cluster_login_shells_label,
                            "cluster_default_domain", &cluster_default_domain,
+                           "cluster_default_domain_label", &cluster_default_domain_label,
                            "cluster_min_uid", &cluster_min_uid,
                            "cluster_min_gid", &cluster_min_gid,
                            "cluster_max_aj_instances", &cluster_max_aj_instances,
@@ -695,7 +714,9 @@ Widget parent
                            "cluster_loglevel", &cluster_loglevel,
                            "cluster_ignore_fqdn", &cluster_ignore_fqdn,
                            "cluster_qmaster_params", &cluster_qmaster_params,
+                           "cluster_qmaster_params_label", &cluster_qmaster_params_label,
                            "cluster_schedd_params", &cluster_schedd_params,
+                           "cluster_schedd_params_label", &cluster_schedd_params_label,
                            "cluster_execd_params", &cluster_execd_params,
                            "cluster_shepherd_cmd", &cluster_shepherd_cmd,
                            "cluster_rsh_daemon", &cluster_rsh_daemon,
@@ -703,13 +724,19 @@ Widget parent
                            "cluster_rlogin_daemon", &cluster_rlogin_daemon,
                            "cluster_rlogin_command", &cluster_rlogin_command,
                            "cluster_set_token_cmd", &cluster_set_token_cmd,
+                           "cluster_set_token_cmd_label", &cluster_set_token_cmd_label,
+                           "cluster_pag_cmd_label", &cluster_pag_cmd_label,
                            "cluster_pag_cmd", &cluster_pag_cmd,
+                           "cluster_token_extend_time_label", 
+                                    &cluster_token_extend_time_label,
                            "cluster_token_extend_time", 
                                     &cluster_token_extend_time,
                            "cluster_gid_range", 
                                     &cluster_gid_range,
                            "cluster_admin_user", 
                                     &cluster_admin_user,
+                           "cluster_admin_user_label", 
+                                    &cluster_admin_user_label,
                            NULL);
 
    if (!feature_is_enabled(FEATURE_SGEEE)) {
@@ -950,15 +977,22 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 {
    DENTER(GUI_LAYER, "qmonClusterLayoutSetSensitive");
 
-
    XtSetSensitive(cluster_qmaster_spool_dir, False);
+   XtSetSensitive(cluster_qmaster_spool_dir_label, False);
+
    XtSetSensitive(cluster_execd_spool_dir, False);
+   XtSetSensitive(cluster_execd_spool_dir_label, False);
+
    XtSetSensitive(cluster_ignore_fqdn, False);
    XtSetSensitive(cluster_default_domain, False);
+   XtSetSensitive(cluster_default_domain_label, False);
    XtSetSensitive(cluster_admin_user, False);
+   XtSetSensitive(cluster_admin_user_label, False);
    
    XtSetSensitive(cluster_admin_mail, mode);
+   XtSetSensitive(cluster_admin_mail_label, mode);
    XtSetSensitive(cluster_login_shells, mode);
+   XtSetSensitive(cluster_login_shells_label, mode);
    XtSetSensitive(cluster_min_uid, mode);
    XtSetSensitive(cluster_min_gid, mode);
    XtSetSensitive(cluster_max_aj_instances, mode);
@@ -981,7 +1015,9 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 
 
    XtSetSensitive(cluster_qmaster_params, mode);
+   XtSetSensitive(cluster_qmaster_params_label, mode);
    XtSetSensitive(cluster_schedd_params, mode);
+   XtSetSensitive(cluster_schedd_params_label, mode);
   
    if (feature_is_enabled(FEATURE_SGEEE)) {
       XtSetSensitive(cluster_enforce_project, mode);
@@ -994,8 +1030,11 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       XtSetSensitive(cluster_set_token_cmd, mode);
+      XtSetSensitive(cluster_set_token_cmd_label, mode);
       XtSetSensitive(cluster_pag_cmd, mode);
+      XtSetSensitive(cluster_pag_cmd_label, mode);
       XtSetSensitive(cluster_token_extend_time, mode);
+      XtSetSensitive(cluster_token_extend_time_label, mode);
    }
 
    DEXIT;

@@ -379,6 +379,7 @@ static void qmonHostFillList(void)
    lp = lSelect("EHL", qmonMirrorList(SGE_EXECHOST_LIST), where, what);
    lPSortList(lp, "%I+", EH_name);
    UpdateXmListFromCull(exechost_list, XmFONTLIST_DEFAULT_TAG, lp, EH_name);
+   XmListMoveItemToPos(exechost_list, "global", 1);
    lp = lFreeList(lp);
    XmListSelectPos(exechost_list, 1, True);
 

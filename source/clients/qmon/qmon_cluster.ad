@@ -183,22 +183,27 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_load_report_timePB, \
                   cluster_reschedule_unknownPB, \
                   cluster_stat_log_timePB, cluster_max_unheardPB;
+   XmLabel        cluster_qmaster_spool_dir_label, \
+                  cluster_execd_spool_dir_label, \
+                  cluster_admin_mail_label, \
+                  cluster_login_shells_label, \
+                  cluster_admin_user_label;
 
 
 Qmon*cluster_global_layout.layout: \
    Even Row { \
       Col { \
-         Row { "@{Master Spool Dir}" <> Fixed 25 em cluster_qmaster_spool_dir }\
-         Row { "@{Execd Spool Dir} " <> Fixed 25 em cluster_execd_spool_dir }\
+         Row { cluster_qmaster_spool_dir_label <> Fixed 25 em cluster_qmaster_spool_dir }\
+         Row { cluster_execd_spool_dir_label <> Fixed 25 em cluster_execd_spool_dir }\
          Row { "@{Binary Path}     " <> Fixed 25 em cluster_binary_path }\
          Row { "@{Mailer}          " <> Fixed 25 em cluster_mailer }\
          Row { "@{Xterm}           " <> Fixed 25 em cluster_xterm }\
          Row { "@{Load Sensor}     " <> Fixed 25 em cluster_load_sensor }\
-         Row { "@{Admin User}      " <> Fixed 25 em cluster_admin_user }\
-         Row { "@{Admin Mail}      " <> Fixed 25 em cluster_admin_mail }\
+         Row { cluster_admin_user_label <> Fixed 25 em cluster_admin_user }\
+         Row { cluster_admin_mail_label <> Fixed 25 em cluster_admin_mail }\
          Row { "@{Prolog}          " <> Fixed 25 em cluster_prolog }\
          Row { "@{Epilog}          " <> Fixed 25 em cluster_epilog }\
-         Row { "@{Login Shells}    " <> Fixed 25 em cluster_login_shells }\
+         Row { cluster_login_shells_label  <> Fixed 25 em cluster_login_shells }\
          ### \
          Equal Row { \
             Caption "@{Maximal Array\nJob Instances}" <> cluster_max_aj_instances \
@@ -278,6 +283,12 @@ Qmon*cluster_global_layout.layout: \
          <> \
       } \
    }
+
+Qmon*cluster_global_layout.cluster_qmaster_spool_dir_label.labelString: @{Master Spool Dir}
+Qmon*cluster_global_layout.cluster_execd_spool_dir_label.labelString: @{Execd Spool Dir}
+Qmon*cluster_global_layout.cluster_admin_user_label.labelString: @{Admin User}
+Qmon*cluster_global_layout.cluster_admin_mail_label.labelString: @{Admin Mail}
+Qmon*cluster_global_layout.cluster_login_shells.labelString: @{Login Shells}
 
 Qmon*cluster_global_layout.cluster_min_uid*columns: 5
 Qmon*cluster_global_layout.cluster_min_gid*columns: 5
@@ -419,7 +430,13 @@ Qmon*cluster_extra_layout.xmtChildren: \
                   cluster_rsh_daemon = rsh_daemon, \
                   cluster_rsh_command = rsh_command, \
                   cluster_rlogin_daemon = rlogin_daemon, \
-                  cluster_rlogin_command = rlogin_command;
+                  cluster_rlogin_command = rlogin_command; \
+   XmLabel        cluster_default_domain_label, \
+                  cluster_qmaster_params_label, \
+                  cluster_schedd_params_label, \
+                  cluster_set_token_cmd_label, \
+                  cluster_pag_cmd_label, \
+                  cluster_token_extend_time_label;
 
 !!
 !!                  cluster_starter_method = starter_method, \
@@ -439,11 +456,11 @@ Qmon*cluster_extra_layout.layout: \
    Col { \
       Etched Through Caption tl "@{@fBAdditional Parameters}" Col { \
          # \
-         Row { "@{Master Parameters}" <> Fixed 50 em cluster_qmaster_params }\
-         Row { "@{Schedd Parameters}" <> Fixed 50 em cluster_schedd_params }\
+         Row { cluster_qmaster_params_label <> Fixed 50 em cluster_qmaster_params }\
+         Row { cluster_schedd_params_label <> Fixed 50 em cluster_schedd_params }\
          Row { "@{Execd Parameters}" <> Fixed 50 em cluster_execd_params }\
          Row { "@{Shepherd Command}" <> Fixed 50 em cluster_shepherd_cmd }\
-         Row { "@{Default Domain}" <> Fixed 50 em cluster_default_domain }\
+         Row { cluster_default_domain_label <> Fixed 50 em cluster_default_domain }\
       } \
       ## \
       Etched Through Caption tl "@{@fBInteractive Parameters}" Col { \
@@ -458,12 +475,19 @@ Qmon*cluster_extra_layout.layout: \
       ## \
       Etched Through Caption tl "@{@fBAFS Parameters}" Col { \
          # \
-         Row { "@{set_token command}" <> Fixed 50 em cluster_set_token_cmd }\
-         Row { "@{pag command}" <> Fixed 50 em cluster_pag_cmd }\
-         Row { "@{token_extend_time}" <> Fixed 50 em cluster_token_extend_time }\
+         Row { cluster_set_token_cmd_label "@{set_token command}" <> Fixed 50 em cluster_set_token_cmd }\
+         Row { cluster_pag_cmd_label "@{pag command}" <> Fixed 50 em cluster_pag_cmd }\
+         Row { cluster_token_extend_time_label "@{token_extend_time}" <> Fixed 50 em cluster_token_extend_time }\
       } \
       <> \
    }
+
+Qmon*cluster_extra_layout.cluster_default_domain_label.labelString: @{Default Domain}
+Qmon*cluster_extra_layout.cluster_qmaster_params_label.labelString: @{Master Parameters}
+Qmon*cluster_extra_layout.cluster_schedd_params_label.labelString: @{Schedd Parameters}
+Qmon*cluster_extra_layout.cluster_set_token_cmd_label.labelString: @{set_token command}
+Qmon*cluster_extra_layout.cluster_pag_cmd_label.labelString: @{pag command}
+Qmon*cluster_extra_layout.cluster_token_extend_time_label.labelString: @{token_extend_time}
 
 Qmon*cluster_extra_layout.cluster_qmaster_params.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_schedd_params.verifyCallback: TrimAndTrail(self);

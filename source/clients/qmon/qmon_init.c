@@ -220,8 +220,6 @@ String name
 /*-------------------------------------------------------------------------*/
 void qmonInitSge( char *progname) 
 {
-   int cl_err = 0;
-   
    DENTER(GUI_LAYER, "qmonInitSge");
    
    sge_log_set_qmon(True);

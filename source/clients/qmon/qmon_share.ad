@@ -59,7 +59,7 @@ Qmon*qmon_sharetree.sharetree.xmtChildren: \
    XmtMsgLine        st_message; \
    XmPushButton      st_apply, st_close, st_update, st_delete, st_add_leaf, \
                      st_add_node, st_copy, st_cut, st_paste, st_help, st_more, \
-                     st_mod_node, st_find, st_next;
+                     st_mod_node, st_find, st_next, st_clear_usage;
 
 Qmon*qmon_sharetree.sharetree.layout: \
    Fixed Shadowed Out 4 2 LREvenSpaced Row sharetree_title { \
@@ -99,6 +99,10 @@ Qmon*qmon_sharetree.sharetree.layout: \
          Fixed st_paste \
          Fixed st_find \
          Fixed st_next \
+         #\
+         = \
+         #\
+         Fixed st_clear_usage \
          <> \
          Fixed Centered st_more \
          Fixed st_message \
@@ -127,6 +131,7 @@ Qmon*qmon_sharetree.sharetree.st_next.labelString:         @{Find Next}
 Qmon*qmon_sharetree.sharetree.st_apply.labelString:        @{Apply}
 Qmon*qmon_sharetree.sharetree.st_close.labelString:        @{Done}
 Qmon*qmon_sharetree.sharetree.st_help.labelString:         @{Help}
+Qmon*qmon_sharetree.sharetree.st_clear_usage.labelString:  @{Clear Usage}
 
 Qmon*qmon_sharetree.sharetree.st_more.labelType:           PIXMAP
 Qmon*qmon_sharetree.sharetree.st_more.labelPixmap:         rightarrow

@@ -784,6 +784,9 @@ ListTreeWidget w;
       else {
          int top, bot, size;
 
+         DBG(DARG, "topItemPos = %d, botItemPos = %d, visibleCount = %d, itemCount= %d\n", w->list.topItemPos, w->list.bottomItemPos,
+           w->list.visibleCount, w->list.itemCount);
+           
          top = w->list.topItemPos;
          bot=w->list.itemCount;
          size=w->list.visibleCount;
@@ -2399,12 +2402,13 @@ int findy;
 /*-------------------------------------------------------------------------*/
 #if NeedFunctionPrototypes
 static int SearchPosition(ListTreeWidget w, ListTreeItem *item, int y, 
-                           ListTreeItem *finditem, Boolean *found)
+                          int *counter, ListTreeItem *finditem, Boolean *found)
 #else
-static int SearchPosition(w, item, y, finditem, found)
+static int SearchPosition(w, item, y, counter, finditem, found)
 ListTreeWidget w;
 ListTreeItem *item;
 int y;
+int *counter;
 ListTreeItem *finditem;
 Boolean *found;
 #endif
@@ -2413,7 +2417,7 @@ Boolean *found;
    Pixinfo *pix;
 
    while (item) {
-   /*              DBG(DARG,"Checking y=%d  item=%s\n",y,item->text); */
+      DBG(DARG,"Checking y=%d  item=%s\n",y,item->text);
       if (item == finditem) {
          *found = True;
          return y;
@@ -2428,33 +2432,35 @@ Boolean *found;
 
       y += height + (int) w->list.VSpacing;
       if ((item->firstchild) && (item->open)) {
-         y = SearchPosition(w, item->firstchild, y, finditem, found);
+         ++(*counter);
+         y = SearchPosition(w, item->firstchild, y, counter, finditem, found);
          if (*found)
             return y;
       }
       item = item->nextsibling;
+      ++(*counter);
    }
    return y;
 }
 
 /*-------------------------------------------------------------------------*/
 #if NeedFunctionPrototypes
-static Position GetPosition(ListTreeWidget w, ListTreeItem *finditem)
+static Position GetPosition(ListTreeWidget w, ListTreeItem *finditem, int *counter)
 #else
-static Position GetPosition(w, finditem)
+static Position GetPosition(w, finditem, counter)
 ListTreeWidget w;
 ListTreeItem *finditem;
+int *counter;
 #endif
 {
-   int y, height;
+   int y = 0, height = 0;
    ListTreeItem *item;
    Pixinfo *pix;
-   Boolean found;
+   Boolean found = False;
 
    TreeCheck(w, "in GetPosition");
    y = (int)w->list.viewY + (int) w->list.Margin;
    item = w->list.first;
-   found = False;
    while (item && item != finditem) {
       pix=GetItemPix(w,item);
     
@@ -2465,15 +2471,19 @@ ListTreeItem *finditem;
 
       y += height + (int) w->list.VSpacing;
       if ((item->firstchild) && (item->open)) {
-         y = SearchPosition(w, item->firstchild, y, finditem, &found);
+         y = SearchPosition(w, item->firstchild, y, counter, finditem, &found);
+         DBG(DARG,"y=%d counter=%d\n", y, counter);
          if (found)
             return (Position) y;
       }
       item = item->nextsibling;
+      (*counter)++;
    }
    TreeCheck(w, "exiting GetPosition");
    if (item != finditem)
       y = 0;
+
+   DBG(DARG,"y=%d counter=%d\n", y, counter);
 
    return (Position) y;
 }
@@ -3376,22 +3386,6 @@ int level;
 
 /*-------------------------------------------------------------------------*/
 #if NeedFunctionPrototypes
-ListTreeItem* ListTreeCloneBranch(Widget w, ListTreeItem *item)
-#else
-ListTreeItem* ListTreeCloneBranch(w, item)
-Widget w;
-ListTreeItem * item;
-#endif
-{
-   ListTreeItem *clone = NULL;
-
-
-   
-   return clone;
-}
-
-/*-------------------------------------------------------------------------*/
-#if NeedFunctionPrototypes
 Position ListTreeGetItemPosition(Widget w, ListTreeItem *item)
 #else
 Position ListTreeGetItemPosition(w, item)
@@ -3400,8 +3394,9 @@ ListTreeItem *item;
 #endif
 {
    ListTreeWidget lw = (ListTreeWidget)w;
+   int counter = 0;
 
-   return GetPosition(lw, item);
+   return GetPosition(lw, item, &counter);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -3415,27 +3410,25 @@ ListTreeItem *item;
 {
    ListTreeWidget lw = (ListTreeWidget)w;
    Position item_pos;
+   int counter = 0;
    
-   item_pos = GetPosition(lw, item);
+   GetPosition(lw, item, &counter);
+   item_pos = counter;
    
-/* printf("topItemPos = %d, botItemPos = %d, visibleCount = %d, pos = %d\n", */
-/*            lw->list.topItemPos, lw->list.bottomItemPos, */
-/*            lw->list.visibleCount, item_pos); */
+   DBG(DARG, ".. topItemPos = %d, botItemPos = %d, visibleCount = %d, item_pos = %d, itemCount= %d\n", lw->list.topItemPos, lw->list.bottomItemPos,
+           lw->list.visibleCount, item_pos, lw->list.itemCount);
 
-   if (item_pos > lw->list.visibleCount) {
-      lw->list.topItemPos = item_pos - lw->list.visibleCount;   
-      if (lw->list.topItemPos!=lw->list.lastItemPos) {
+   if (item_pos > (lw->list.topItemPos + lw->list.visibleCount) ||
+         (item_pos < lw->list.topItemPos)) {
+      lw->list.topItemPos = item_pos;   
+      lw->list.bottomItemPos = item_pos + lw->list.visibleCount - 1;   
          GotoPosition(lw);
          DrawAll(lw);
          SetScrollbars(lw);
-      }
    }
+   DBG(DARG, ".. topItemPos = %d, botItemPos = %d, visibleCount = %d, item_pos = %d, itemCount= %d\n", lw->list.topItemPos, lw->list.bottomItemPos,
+           lw->list.visibleCount, item_pos, lw->list.itemCount);
 
-   if (item_pos < lw->list.topItemPos) {
-      GotoPosition(lw);
-      DrawAll(lw);
-      SetScrollbars(lw);
-   }
 }
 
 /*-------------------------------------------------------------------------*/

@@ -2308,8 +2308,7 @@ static int sec_set_secdata(const char *host, const char *commproc, int id)
    element = lFindFirst(conn_list, where);
    where = lFreeWhere(where);
    if (!element) {
-      ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY_SSI,
-             host,commproc,id));
+      ERROR((SGE_EVENT, MSG_SEC_CONNECTIONNOENTRY_SSI, host,commproc,id));
       DEXIT;
       return -1;
    } 
@@ -2360,7 +2359,6 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
                     SEC_Commproc, commproc,
                     SEC_Id, id);
    if (!where) {
-      ERROR((SGE_EVENT, "can't build condition\n"));
       DEXIT;
       return -1;
    }
@@ -2372,7 +2370,6 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
                        SEC_Host, host,
                        SEC_Commproc, commproc);
       if (!where) {
-         ERROR((SGE_EVENT, "can't build condition\n"));
          DEXIT;
          return -1;
       }

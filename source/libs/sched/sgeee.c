@@ -2487,7 +2487,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
        *
        *-----------------------------------------------------------------*/
 
-      if (total_share_tree_tickets > 0) {
+      if (total_share_tree_tickets > 0 && root) {
 
          for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
             sge_ref_t *jref = &job_ref[job_ndx];

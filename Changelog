@@ -1,3 +1,7 @@
+EB-2001-10-29-0: Fix for sgeee scheduler
+                  - empty sharetree && sharetreetickets > 0 caused
+                    fatal exit of scheduler
+
 CR-2001-10-26-1: Testsuite:
                   - bugfix for path_alias check: problems with file
                     creating on NFS directory. The check will now make
@@ -12,7 +16,6 @@ CR-2001-10-26-0: Source:
                   - using cvs -P parameter for source update
                   - issue #8 (one rlogin at startup):
                   - new parameter "close_rlogin" for compatibility
-
 
 EB-2001-10-25-0: Modified qdel, qmon, qmaster
                   - removed job attribute vom "Job Customize" dialog

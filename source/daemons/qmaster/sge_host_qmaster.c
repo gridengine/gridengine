@@ -361,8 +361,8 @@ int sub_command
       if (lGetPosViaElem(ep, EH_complex_list)>=0) {
          DPRINTF(("got new EH_complex_list\n"));
          /* check complex list */
-         if (verify_complex_list(alpp, object->object_name, host, 
-               lGetList(ep, EH_complex_list))!=STATUS_OK)
+         if (complex_list_verify(lGetList(ep, EH_complex_list), alpp, 
+                                 object->object_name, host)!=STATUS_OK)
             goto ERROR;
 
          attr_mod_sub_list(alpp, new_host, EH_complex_list, CX_name, ep, 
@@ -1439,7 +1439,7 @@ u_long32 target) {
 
    qep = lGetElemHostFirst(Master_Queue_List, QU_qhostname, rhost, &iterator); 
    while (qep != NULL) {
-      if (queue_initial_state(qep, rhost)) {
+      if (queue_set_initial_state(qep, rhost)) {
          sge_change_queue_version(qep, 0, 0);
          cull_write_qconf(1, 0, QUEUE_DIR, lGetString(qep, QU_qname), NULL, qep);
       } 

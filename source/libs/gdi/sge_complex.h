@@ -45,4 +45,7 @@ void complex_list_init_double_attr(lList *cl);
 
 lListElem* complex_list_locate_attr(lList *complex_list, const char *name);
 
+int complex_list_verify(lList *complex_list, lList **alpp,
+                        const char *obj_name, const char *qname); 
+
 #endif /* __SGE_COMPLEX_H */

@@ -395,37 +395,6 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    return STATUS_OK;
 }                     
 
-/****** src/sge_change_queue_version_qr_list() ********************************
-*  NAME
-*     sge_change_queue_version_qr_list --  
-*
-*  SYNOPSIS
-*     int sge_change_queue_version_qr_list(
-*        lList *nq; 
-*        lList *oq; 
-*        char *obj_name;
-*        char *ckpt_name;  
-*     );
-*
-*  FUNCTION
-*
-*
-*  INPUTS
-*     nq - QR_Type
-*     oq - QR_Type
-*     obj_name -
-*     ckpt_name -
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*******************************************************************************/         
 void sge_change_queue_version_qr_list(lList *nq, lList *oq, 
                                       const char *obj_name,
                                       const char *ckpt_name) 

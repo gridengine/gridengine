@@ -138,6 +138,24 @@ void queue_get_state_string(char *str, u_long32 op)
    queue_or_job_get_states(QU_qname, str, op);
 }
 
+/****** gdi/queue/queue_list_locate() ******************************************
+*  NAME
+*     queue_list_locate() -- locate queue given by name 
+*
+*  SYNOPSIS
+*     lListElem* queue_list_locate(lList *queue_list, 
+*                                  const char *queue_name) 
+*
+*  FUNCTION
+*     Finds and returnis the queue with name "queue_name" in "queue_list".
+*
+*  INPUTS
+*     lList *queue_list      - QU_Type list 
+*     const char *queue_name - name of the queue 
+*
+*  RESULT
+*     lListElem* - pointer to a QU_Type element or NULL
+*******************************************************************************/
 lListElem *queue_list_locate(lList *queue_list, const char *queue_name) 
 {
    return lGetElemStr(queue_list, QU_qname, queue_name);

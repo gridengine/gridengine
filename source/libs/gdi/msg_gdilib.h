@@ -398,6 +398,8 @@
 #define MSG_EVENT_NOTKNOWN_I                       _MESSAGE(43250, _("%d. EVENT ????????\n"))
 #define MSG_PEREFINJOB_SU                          _MESSAGE(43251, _("Pe "SFQ" is still referenced in job "U32CFormat".\n"))
 #define MSG_CKPTREFINJOB_SU                        _MESSAGE(43252, _("Checkpointing object "SFQ" is still referenced in job " U32CFormat".\n"))
+#define MSG_SGETEXT_UNKNOWNCOMPLEX_SSS             _MESSAGE(43253, _("denied: complex "SFQ" referenced in "SFN" "SFQ" does not exist\n")) 
+#define MSG_SGETEXT_COMPLEXNOTUSERDEFINED_SSS      _MESSAGE(43254, _("denied: complex "SFQ" referenced in "SFN" "SFQ" is not a user complex\n") )
 
 #endif /* __MSG_GDILIB_H */
 

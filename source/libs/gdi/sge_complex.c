@@ -38,11 +38,13 @@
 
 #include "resolve_host.h"
 #include "commd_message_flags.h"
+#include "sge_answer.h"
 #include "sge_complex.h"
 #include "sge_schedd_conf.h"
 #include "sge_parse_num_par.h"
 
 #include "msg_common.h"
+#include "msg_gdilib.h"
 
 lList *Master_Complex_List = NULL;
 
@@ -319,4 +321,39 @@ lListElem* complex_list_locate_attr(lList *complex_list, const char* name)
    return ret;
 }
 
+/* complex_list: CX_Type */
+int complex_list_verify(lList *complex_list, lList **alpp,
+                        const char *obj_name, const char *qname) 
+{
+   lListElem *cep;
+   const char *s;
+   int ret = STATUS_OK;
+
+   DENTER(TOP_LAYER, "complex_list_verify");
+
+   for_each (cep, complex_list) {
+      s = lGetString(cep, CX_name);
+
+      /* it is not allowed to put standard complexes into a complex list */
+      if (!strcmp(s, "global") ||
+          !strcmp(s, "host")   ||
+          !strcmp(s, "queue")) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXNOTUSERDEFINED_SSS,
+               s, obj_name, qname));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         ret = STATUS_EUNKNOWN;
+      }
+
+      /* verify that all complex names in the queues complex list exist */
+      if (!lGetElemStr(Master_Complex_List, CX_name, s)) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNCOMPLEX_SSS,
+               s, obj_name, qname));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
+         ret = STATUS_EUNKNOWN;
+      }
+   }
+
+   DEXIT;
+   return ret;
+}       
 

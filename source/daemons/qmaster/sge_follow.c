@@ -215,7 +215,7 @@ lList **topp  /* ticket orders ptr ptr */
 
 
       /* untag all queues */
-      sge_clear_tags();
+      queue_list_clear_tags(Master_Queue_List);
 
       if (lGetString(jep, JB_pe)) {
          pe = pe_list_locate(Master_Pe_List, or_pe);

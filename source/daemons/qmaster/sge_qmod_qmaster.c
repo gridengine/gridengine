@@ -1454,35 +1454,55 @@ u_long32 new_state
    return;
 }
 
+/****** qmaster/queue/queue_set_initial_state() *******************************
+*  NAME
+*     queue_set_initial_state() -- set "initial" state 
+*
+*  SYNOPSIS
+*     int queue_set_initial_state(lListElem *queue, char *rhost) 
+*
+*  FUNCTION
+*     Change the "queue" state according to the "initial" state 
+*     configuration (QU_initial_state).
+*
+*  INPUTS
+*     lListElem *queue - QU_Type element 
+*     char *rhost      - hostname (used to write to SGE_EVENT)
+*
+*  RESULT
+*     int - was the queue changed?
+*        0 - no queue change
+*        1 - queue state was changed due to initial state
+*******************************************************************************/
+int queue_set_initial_state(lListElem *queue, char *rhost) 
+{
+   const char *is = lGetString(queue, QU_initial_state);
+   int changed = 0;
 
+   DENTER(TOP_LAYER, "queue_set_initial_state");
 
-int queue_initial_state(
-lListElem *qep,
-char *rhost  /* rhost != NULL -> mod */
-) {
-   const char *is;
-   int enable, changed = 0;
-   u_long32 state;
+   if (is != NULL && strcmp(is, "default")) {
+      int enable = !strcmp(is, "enabled");
+      u_long32 state = lGetUlong(queue, QU_state);
 
-   DENTER(TOP_LAYER, "queue_initial_state");
-
-   if ((is = lGetString(qep, QU_initial_state)) && strcmp(is, "default")) {
-      enable = !strcmp(is, "enabled");
-      state = lGetUlong(qep, QU_state);
-
-      if ((enable && (state&QDISABLED)) ||
-          (!enable && !(state&QDISABLED))) {
+      if ((enable && (state & QDISABLED)) || 
+          (!enable && !(state & QDISABLED))) {
+         const char *queue_name = lGetString(queue, QU_qname);
 
          if (!rhost) {
-            if (enable)
-               WARNING((SGE_EVENT, MSG_QUEUE_ADDENABLED_S, lGetString(qep, QU_qname)));
-            else
-               WARNING((SGE_EVENT, MSG_QUEUE_ADDDISABLED_S, lGetString(qep, QU_qname)));
+            if (enable) {
+               WARNING((SGE_EVENT, MSG_QUEUE_ADDENABLED_S, queue_name));
+            } else {
+               WARNING((SGE_EVENT, MSG_QUEUE_ADDDISABLED_S, queue_name));
+            }
          } else {
-            if (enable)
-               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTENABLEQ_SS, rhost, lGetString(qep, QU_qname)));
-            else         
-               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTDISABLEQ_SS, rhost, lGetString(qep, QU_qname)));
+            if (enable) {
+               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTENABLEQ_SS, 
+                        rhost, queue_name));
+            } else { 
+               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTDISABLEQ_SS, 
+                        rhost, queue_name));
+            }
          }
 
          if (enable) {
@@ -1490,7 +1510,7 @@ char *rhost  /* rhost != NULL -> mod */
          } else {
             SETBIT(QDISABLED, state);
          }
-         lSetUlong(qep, QU_state, state);
+         lSetUlong(queue, QU_state, state);
          changed = 1;
       }
    }

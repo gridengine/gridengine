@@ -588,11 +588,9 @@
 #define MSG_SGETEXT_OPNOTALLOWED_S              _MESSAGE(33462, _("operation not allowed: "SFN"\n"))
 #define MSG_NOTALLOWEDTODELSUBORDINATE_SS              _MESSAGE(33463, _("deleting queue "SFQ" is not allowed because it is subordinate queue of "SFQ"\n"))
 #define MSG_SGETEXT_ACTIVEUNITS_SSIS            _MESSAGE(33464, _(""SFN" "SFQ" has %d active "SFN"\n"))
-#define MSG_SGETEXT_COMPLEXNOTUSERDEFINED_SSS         _MESSAGE(33465, _("denied: complex "SFQ" referenced in "SFN" "SFQ" is not a user complex\n") )  
 #define MSG_SGETEXT_UNKNOWNQUEUE_SSSS                 _MESSAGE(33466, _("denied: queue "SFQ" referenced in "SFN" of "SFN" "SFQ" does not exist\n"))
 #define MSG_SGETEXT_QUEUEALLANDQUEUEARENOT_SSSS        _MESSAGE(33467, _("queuenames and keyword "SFQ" are not allowed in "SFQ" of "SFQ" "SFQ"\n"))
 #define MSG_SGETEXT_CANTCOUNT_QSIQ_S                  _MESSAGE(33468, _("can't count qsi queues in "SFN"\n") ) 
-#define MSG_SGETEXT_UNKNOWNCOMPLEX_SSS                _MESSAGE(33469, _("denied: complex "SFQ" referenced in "SFN" "SFQ" does not exist\n") )  
 #define MSG_AT_LEASTONEQTYPE                          _MESSAGE(33470, _("At least one queue type must be selected\n"))
 
 /*

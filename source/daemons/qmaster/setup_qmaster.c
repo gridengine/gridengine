@@ -460,8 +460,9 @@ int sge_setup_qmaster()
                /* init double values of consumable configuration */
                sge_fill_requests(lGetList(qep, QU_consumable_config_list), Master_Complex_List, 1, 0, 1);
 
-               if (verify_complex_list(NULL, "queue", lGetString(qep, QU_qname),
-                              lGetList(qep, QU_complex_list))!=STATUS_OK) {
+               if (complex_list_verify(lGetList(qep, QU_complex_list), NULL, 
+                                       "queue", lGetString(qep, QU_qname))
+                    !=STATUS_OK) {
                   qep = lFreeElem(qep);            
                   DEXIT;
                   return -1;
@@ -523,7 +524,7 @@ int sge_setup_qmaster()
          }
       }
       lFreeList(direntries);
-      set_queues_to_unknown(); 
+      queue_list_set_to_unknown(Master_Queue_List); 
    }
    
 
@@ -954,8 +955,8 @@ static int sge_read_host_list_from_disk()
             sge_fill_requests(lGetList(ep, EH_consumable_config_list), 
                   Master_Complex_List, 1, 0, 1);
 
-            if (verify_complex_list(NULL, "host", lGetHost(ep, EH_name),
-                        lGetList(ep, EH_complex_list))!=STATUS_OK) {
+            if (complex_list_verify(lGetList(ep, EH_complex_list), NULL, 
+                                    "host", lGetHost(ep, EH_name))!=STATUS_OK) {
                DEXIT;
                return -1;
             }

@@ -530,7 +530,7 @@ char *rhost
    /* ensure there are no complex lists in
       a queue/host refering to this complex */
    if ((ret=verify_complex_deletion(alpp, cmplxname))!=STATUS_OK) {
-      /* answerlist gets filled by verify_complex_list() in case of errors */
+      /* answerlist gets filled by complex_list_verify() in case of errors */
       DEXIT;
       return ret;
    }

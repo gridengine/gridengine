@@ -89,24 +89,35 @@
 static int mod_queue_attributes(lList **alpp, lListElem *new_queue, lListElem *qep, int add, int sub_command);
 
 
-static void clear_unknown(lListElem *qep);
+static void queue_clear_unknown(lListElem *qep);
 
-static u_long32 sge_get_queue_number(void);
+static u_long32 queue_get_queue_number(void);
 
-/* ------------------------------------------------------------
-
-   written for: qmaster at setup timeA
-
-   sets unknown state for all queues
-*/
-void set_queues_to_unknown()
+/****** daemon/queue/queue_list_set_to_unknown() ******************************
+*  NAME
+*     queue_list_set_to_unknown() -- set all given queues to u state 
+*
+*  SYNOPSIS
+*     void queue_list_set_to_unknown(lList *queue_list) 
+*
+*  FUNCTION
+*     Sets all queues in "queue_list" into the unknown state.
+*     This might be necessary during startup. 
+*
+*  INPUTS
+*     lList *queue_list - QU_Type list 
+*
+*  RESULT
+*     void - NONE
+*******************************************************************************/
+void queue_list_set_to_unknown(lList *queue_list)
 {
    u_long32 state;
    lListElem *qep;
 
-   DENTER(TOP_LAYER, "set_queues_to_unknown");
+   DENTER(TOP_LAYER, "queue_list_set_to_unknown");
 
-   for_each(qep, Master_Queue_List) {
+   for_each(qep, queue_list) {
       state = lGetUlong(qep, QU_state);
       SETBIT(QUNKNOWN, state);
       lSetUlong(qep, QU_state, state);
@@ -116,70 +127,123 @@ void set_queues_to_unknown()
    return;
 }        
 
-/* ------------------------------------------------------------
-
-   written for: qmaster when adding new queues
-
-   clears unknown state for queue if load values are available
-*/
-static void clear_unknown(
-lListElem *qep 
-) {
+/****** qmaster/queue/queue_clear_unknown() ***********************************
+*  NAME
+*     queue_clear_unknown() -- clear the u state of a queue 
+*
+*  SYNOPSIS
+*     static void queue_clear_unknown(lListElem *queue) 
+*
+*  FUNCTION
+*     Clear the unknown state of "queue" if there are load values 
+*     available for the corresponding host. 
+*
+*  INPUTS
+*     lListElem *queue - QU_Type list 
+*
+*  RESULT
+*     static void - None 
+*******************************************************************************/
+static void queue_clear_unknown(lListElem *queue) 
+{
    lListElem *ep, *hep;
+   const char *hostname = lGetHost(queue, QU_qhostname);
+   const char *queue_name = lGetString(queue, QU_qname);
 
-   DENTER(TOP_LAYER, "clear_unknown");
+   DENTER(TOP_LAYER, "queue_clear_unknown");
 
-   if (!(hep = host_list_locate(Master_Exechost_List, 
-                  lGetHost(qep, QU_qhostname)))) {
-      ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(qep, QU_qhostname)));
+   hep = host_list_locate(Master_Exechost_List, hostname);
+   if (hep == NULL) {
+      ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, hostname));
       DEXIT;
       return;
    }
 
    for_each (ep, lGetList(hep, EH_load_list)) {
       if (!sge_is_static_load_value(lGetString(ep, HL_name))) {
-         u_long32 state = lGetUlong(qep, QU_state);
+         u_long32 state = lGetUlong(queue, QU_state);
+
          CLEARBIT(QUNKNOWN, state);
-         lSetUlong(qep, QU_state, state);
-         DPRINTF(("QUEUE %s CLEAR UNKNOWN STATE\n", lGetString(qep, QU_qname)));
+         lSetUlong(queue, QU_state, state);
+         DPRINTF(("QUEUE %s CLEAR UNKNOWN STATE\n", queue_name));
          DEXIT;
          return;
       }
    }
 
    DPRINTF(("no non-static load value for host %s of queue %s\n",
-         lGetHost(qep, QU_qhostname), lGetString(qep, QU_qname)));
+            hostname, queue_name));
 
    DEXIT;
    return;
 }
 
-static u_long32 sge_get_queue_number()
+/****** qmaster/queue/queue_get_queue_number() ********************************
+*  NAME
+*     queue_get_queue_number() -- Returns a unique (unused) queue number 
+*
+*  SYNOPSIS
+*     static u_long32 queue_get_queue_number(void) 
+*
+*  FUNCTION
+*     This function returns a unique queue number which is not used
+*     until now. 
+*
+*  INPUTS
+*     void - None
+*
+*  RESULT
+*     static u_long32 - unique queue id
+*******************************************************************************/
+static u_long32 queue_get_queue_number(void)
 {
    static u_long32 queue_number=1;
    int start = queue_number;
 
+   DENTER(TOP_LAYER, "queue_get_queue_number");
    while (1) {
-      if (queue_number > MAX_SEQNUM)
+      if (queue_number > MAX_SEQNUM) {
          queue_number = 1;
+      }
 
-      if (!lGetElemUlong(Master_Queue_List, QU_queue_number, queue_number))
+      if (!lGetElemUlong(Master_Queue_List, QU_queue_number, queue_number)) {
+         DEXIT;
          return queue_number++;
+      }
 
       queue_number++;
 
       if (start == queue_number) {
-         return 0;      /* out of queue numbers -> real awkward */
+         /* out of queue numbers -> real awkward */
+         DEXIT;
+         return 0; 
       }
    }
 }
 
-void sge_clear_tags()
+/****** qmaster/queue/queue_list_clear_tags() *********************************
+*  NAME
+*     queue_list_clear_tags() -- clear the QU_tagged field 
+*
+*  SYNOPSIS
+*     void queue_list_clear_tags(lList *queue_list) 
+*
+*  FUNCTION
+*     Clear the QU_tagged field of all queues contained in "queue_list". 
+*
+*  INPUTS
+*     lList *queue_list - QU_Type list 
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void queue_list_clear_tags(lList *queue_list)
 {
    lListElem *qep;
 
-   for_each(qep, Master_Queue_List)
+   for_each(qep, queue_list) {
       lSetUlong(qep, QU_tagged, 0);
+   }
 }
 
 static int mod_queue_attributes(
@@ -240,7 +304,8 @@ int sub_command
 
       /* check complex list */
       normalize_sublist(qep, QU_complex_list);
-      if (verify_complex_list(alpp, "queue", qname, lGetList(qep, QU_complex_list))!=STATUS_OK)
+      if (complex_list_verify(lGetList(qep, QU_complex_list), alpp, "queue", 
+                              qname)!=STATUS_OK)
          goto ERROR;
 #if 0
       lSetList(new_queue, QU_complex_list, lCopyList("", 
@@ -577,8 +642,9 @@ int sub_command
          goto ERROR;
       }
 
-      if (add)
-         queue_initial_state(new_queue, NULL);
+      if (add) {
+         queue_set_initial_state(new_queue, NULL);
+      }
    }
 
    /* resource limits */
@@ -636,7 +702,7 @@ int sub_command
    if (add) {
       /* initialization of internal fields */
       lSetUlong(new_queue, QU_state, lGetUlong(new_queue, QU_state)|QUNKNOWN);
-      lSetUlong(new_queue, QU_queue_number, sge_get_queue_number());
+      lSetUlong(new_queue, QU_queue_number, queue_get_queue_number());
    }
 
    DEXIT;
@@ -901,7 +967,7 @@ int sub_command
                            lGetHost(new_queue, QU_qhostname)) &&
          !(lGetUlong(new_queue, QU_qtype) & TQ))
          sge_add_host_of_type(lGetHost(new_queue, QU_qhostname), SGE_EXECHOST_LIST);
-      clear_unknown(new_queue);
+      queue_clear_unknown(new_queue);
    }
 
    /* disabling susp. thresholds (part 2) */
@@ -1122,43 +1188,6 @@ char *rhost
 
 }
 
-int verify_complex_list(
-lList **alpp,
-const char *obj_name,
-const char *qname,
-lList *complex_list  /* CX_Type */
-) {
-   lListElem *cep;
-   const char *s;
-   int ret = STATUS_OK;
-
-   DENTER(TOP_LAYER, "verify_complex_list");
-
-   for_each (cep, complex_list) {
-      s = lGetString(cep, CX_name);
-
-      /* it is not allowed to put standard complexes into a complex list */
-      if (!strcmp(s, "global") ||
-          !strcmp(s, "host")   ||
-          !strcmp(s, "queue")) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_COMPLEXNOTUSERDEFINED_SSS,
-               s, obj_name, qname));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         ret = STATUS_EUNKNOWN;
-      } 
-
-      /* verify that all complex names in the queues complex list exist */
-      if (!lGetElemStr(Master_Complex_List, CX_name, s)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNCOMPLEX_SSS, 
-               s, obj_name, qname));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
-         ret = STATUS_EUNKNOWN;
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
 /* ----------------------------------------
 
    written for: qmaster

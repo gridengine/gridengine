@@ -32,11 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "sge_c_gdi.h"
 
-void set_queues_to_unknown(void);
+void queue_list_set_to_unknown(lList *queue_list);
 
 int sge_gdi_add_mod_queue(lListElem *qep, lList **alpp, char *ruser, char *rhost, int add, int sub_command);
 
@@ -56,12 +54,9 @@ int check_qsiq_lic(int licensed_qsi_queues, int verbose);
 int verify_project_list(lList **alpp, char *obj_name, char *qname, lList *project_list);
 #endif
 
-int verify_complex_list(lList **alpp, const char *obj_name, const char *qname, 
-                        lList *complex_list);
-
 int verify_qr_list(lList **alpp, lList *qr_list, const char *attr_name, const char *obj_descr, const char *obj_name);  
 
-void sge_clear_tags(void);
+void queue_list_clear_tags(lList *queue_list);
 
 #endif /* __SGE_QUEUE_QMASTER_H */
 

@@ -11,6 +11,7 @@ SG-2004-06-16-0: Bugfix:    This bugfix is related to SG-2004-06-09-2. The
                  Changed:   scheduler
                  Review:    JG
                  Issue:     1087
+                 Bugtraq:   5063311
 
 DT-2004-06-15-1: Bugfix:    o Fixed DRMAA Java binding Makefile
                             o Fixed installation of libjdrmaa in distinst
@@ -42,6 +43,7 @@ SG-2004-06-09-2: Bugfix:    The scheduler did not corectly compress the schedule
                  Changed:   scheduler                            
                  Review:    JG
                  Issue:     1087
+                 Bugtraq:   5063311
 
 SG-2004-06-09-1: Bugfix:    - fixed minor issues in the scheduler profiling
                  Changed:   scheduler

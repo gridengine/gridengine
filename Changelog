@@ -1,3 +1,9 @@
+AD-2004-01-08-0: Bugfix:    'log_state_t' has only been allocated for the
+                            first thread calling one of the log state
+                            get/set functions.
+                 Changed:   uti
+                 Review:    CR
+
 AD-2004-01-07-3: Enhancem:  'SGE_LOCK' and 'SGE_UNLOCK' now use 'DLOCKPRINTF'.
                  Changed:   lck
 

@@ -62,9 +62,10 @@ typedef struct {
 static pthread_once_t log_once = PTHREAD_ONCE_INIT;
 static pthread_key_t log_state_key;
 
-static void log_once_init(void);
-static void log_state_destroy(void* theState);
-static void log_state_init(log_state_t *theState);
+static void         log_once_init(void);
+static void         log_state_destroy(void* theState);
+static log_state_t* log_state_getspecific(pthread_key_t aKey);
+static void         log_state_init(log_state_t *theState);
 
 static void sge_do_log(int log_level, int levelchar, const char *err_str, const char *newline); 
 
@@ -90,7 +91,7 @@ char *log_state_get_log_buffer(void)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    return log_state->log_buffer;
 }
@@ -115,7 +116,7 @@ u_long32 log_state_get_log_level(void)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    return log_state->log_level;
 }
@@ -140,7 +141,7 @@ const char *log_state_get_log_file(void)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    return log_state->log_file;
 }
@@ -169,7 +170,7 @@ int log_state_get_log_verbose(void)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    return log_state->verbose;
 }
@@ -197,7 +198,7 @@ int log_state_get_log_gui(void)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    return log_state->gui_log;
 }
@@ -226,7 +227,7 @@ trace_func_type log_state_get_log_trace_func(void)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    return log_state->trace_func;
 }
@@ -253,7 +254,7 @@ int log_state_get_log_as_admin_user(void)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    return log_state->log_as_admin_user;
 }
@@ -280,7 +281,7 @@ void log_state_set_log_level(u_long32 i)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    log_state->log_level = i;
 
@@ -309,7 +310,7 @@ void log_state_set_log_file(char *file)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    log_state->log_file = file;
 
@@ -339,7 +340,7 @@ void log_state_set_log_verbose(int i)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    log_state->verbose = i;
 
@@ -366,7 +367,7 @@ void log_state_set_log_gui(int i)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    log_state->gui_log = i;
 
@@ -397,13 +398,12 @@ void log_state_set_log_trace_func(trace_func_type func)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    log_state->trace_func = func;
 
    return;
 }
-
 
 /****** uti/log/log_state_set_log_as_admin_user() *****************************
 *  NAME
@@ -431,7 +431,7 @@ void log_state_set_log_as_admin_user(int i)
 
    pthread_once(&log_once, log_once_init);
 
-   log_state = pthread_getspecific(log_state_key);
+   log_state = log_state_getspecific(log_state_key);
 
    log_state->log_as_admin_user = i;
 
@@ -631,7 +631,6 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str, const 
 *
 *  FUNCTION
 *     Create access key for thread local storage. Register cleanup function.
-*     Allocate and set thread local storage.
 *
 *     This function must be called exactly once.
 *
@@ -647,22 +646,7 @@ static void sge_do_log(int log_level, int levelchar, const char *err_str, const 
 *******************************************************************************/
 static void log_once_init(void)
 {
-   log_state_t *log_state = NULL;
-   int res = EINVAL;
-
    pthread_key_create(&log_state_key, &log_state_destroy);
-
-   log_state = (log_state_t*)sge_malloc(sizeof(log_state_t));
-
-   log_state_init(log_state);
-
-   res = pthread_setspecific(log_state_key, (const void*)log_state);
-
-   if (0 != res) {
-      fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "log_once_init", strerror(res));
-      abort();
-   }
-
    return;
 } /* log_once_init */
 
@@ -690,6 +674,51 @@ static void log_state_destroy(void* theState)
 {
    sge_free((char*)theState);
 }
+
+/****** uti/log/log_state_getspecific() ****************************************
+*  NAME
+*     log_state_getspecific() -- Get thread local log state
+*
+*  SYNOPSIS
+*     static log_state_t* log_state_getspecific(pthread_key_t aKey) 
+*
+*  FUNCTION
+*     Return thread local log state.
+*
+*     If a given thread does call this function for the first time, no thread
+*     local log state is available for this particular thread. In this case the
+*     thread local log state is allocated and set.
+*
+*  INPUTS
+*     pthread_key_t aKey - Key for thread local log state 
+*
+*  RESULT
+*     static log_state_t* - Pointer to thread local log state.
+*
+*  NOTES
+*     MT-NOTE: log_state_getspecific() is MT safe 
+*
+*******************************************************************************/
+static log_state_t* log_state_getspecific(pthread_key_t aKey)
+{
+   log_state_t *log_state = NULL;
+   int res = EINVAL;
+
+   if ((log_state = pthread_getspecific(aKey)) != NULL) { return log_state; }
+
+   log_state = (log_state_t*)sge_malloc(sizeof(log_state_t));
+
+   log_state_init(log_state);
+
+   res = pthread_setspecific(log_state_key, (const void*)log_state);
+
+   if (0 != res) {
+      fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "log_once_init", strerror(res));
+      abort();
+   }
+   
+   return log_state;
+} /* log_state_getspecific() */
 
 /****** uti/log/log_state_init() *******************************************
 *  NAME

@@ -640,7 +640,6 @@
 #define MSG_OBJ_EH                    _MESSAGE(33512, _("exechost"))
 #define MSG_OBJ_CONF                  _MESSAGE(33513, _("configuration"))
 #define MSG_OBJ_GLOBAL                _MESSAGE(33514, _("global"))
-#define MSG_FILE_RM_S                 _MESSAGE(33515, _("cant remove "SFN" from disk"))
 /* #define MSG_JOB_CREDMOD_SSF           _message(33516, _(SFN"@"SFN" modified credit to %.2f\n")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_JOB_CREDMODLOW_SSF        _message(33517, _(SFN"@"SFN" modified low_credit to %.2f\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SGETEXT_CANT_DELETE_UP_IN_SHARE_TREE_SS   _MESSAGE(33518, _("denied: may not remove "SFN" "SFQ" still referenced in share tree\n") ) 
@@ -670,7 +669,6 @@
 #define MSG_ATTRSTILLREFINHOST_SS     _MESSAGE(33536, _("attribute "SFQ" still referenced in host "SFQ" - complex not modified"))
 #define MSG_ATTRSTILLREFINSCHED_S     _MESSAGE(33537, _("attribute "SFQ" still referenced in scheduler configuration - complex not modified"))
 #define MSG_SGETEXT_CANTDELCMPLX_S              _MESSAGE(33538, _("can't delete complex "SFQ" from list\n"))
-#define MSG_SGETEXT_CANTDELCMPLXDISK_S          _MESSAGE(33539, _("can't delete complex "SFQ" from disk\n"))
 #define MSG_SGETEXT_COMPLEXSTILLREFERENCED_SSS        _MESSAGE(33540, _("denied: complex "SFQ" is still referenced in complex_list of "SFN" "SFQ"\n"))
 
 
@@ -684,7 +682,6 @@
 */
 #define MSG_SGETEXT_CANT_DEL_CONFIG_S           _MESSAGE(33541, _("can't delete configuration "SFQ" from list\n"))
 #define MSG_CONF_DELLOCCONFFORXWITHEXECDSPOOLDENIED_S  _MESSAGE(33542, _("Deleting local configuration for "SFQ" with a local execd_spool_dir setting only supported in a shut-down cluster.\n"))
-#define MSG_SGETEXT_CANT_DEL_CONFIG_DISK_SS     _MESSAGE(33543, _("can't delete configuration "SFQ" from disk: "SFN"\n"))
 #define MSG_CONF_CANTSELECTCONFIGURATIONFORHOST_SI _MESSAGE(33545, _("can't select configuration for host "SFQ": %d"))
 #define MSG_CONF_CANTMERGECONFIGURATIONFORHOST_SI _MESSAGE(33546, _("can't merge configuration for host "SFQ": %d"))
 #define MSG_CONF_CHANGEPARAMETERXONLYSUPONSHUTDOWN_S _MESSAGE(33547, _("Changing parameter "SFQ" only supported in a shut-down cluster.\n"))
@@ -775,8 +772,6 @@
 #define MSG_CONFIG_CANTWRITEMANAGERLIST       _MESSAGE(33621, _("can't write manager list\n"))
 #define MSG_CONFIG_CANTWRITEOPERATORLIST      _MESSAGE(33622, _("can't write operator list\n"))
 #define MSG_CONFIG_CANTWRITEHISTORYFORQUEUEX_S       _MESSAGE(33630, _("can't write history for queue "SFQ"\n"))
-#define MSG_CONFIG_READINGINSCHEDULERCONFIG       _MESSAGE(33631, _("Reading in scheduler configuration\n"))
-#define MSG_CONFIG_CANTLOADSHARETREEXSTARTINGUPWITHEMPTYSHARETREE_S       _MESSAGE(33634, _("cant load sharetree ("SFN"), starting up with empty sharetree"))
 /* #define MSG_CONFIG_CANTRESOLVEEXECHOSTNAMEX_S       _message(33636, _("cannot resolve exechost name "SFQ)) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU       _MESSAGE(33648, _("can't find queue "SFQ" referenced in job "U32CFormat))
 /* #define MSG_CONFIG_FAILEDREMOVINGBADJOBFILEREASONXPLEASEDELETEYMANUALY_SS       _message(33649, _("failed removing bad jobfile (reason: "SFN"): please delete "SFQ" manually\n")) __TS Removed automatically from testsuite!! TS__*/

@@ -142,16 +142,6 @@
 
 
 
-
-
-/* 
-** commd/commlib_last_heard.c
-*/ 
-#define MSG_COMMLIB_LAST_HEARD_USIS       _MESSAGE(39085, _(U32CFormat" = last_heard_from(commproc="SFN", id=%d, host="SFN")\n"))
-#define MSG_COMMLIB_SET_LAST_HEARD_ISIU   _MESSAGE(39086, _("%d = set_last_heard_from(commproc="SFN", id=%d, host="SFN", time="U32CFormat")\n"))
-#define MSG_COMMLIB_DROPPING_SISUU         _MESSAGE(39087, _("dropping (commproc="SFN", id=%d, host="SFN", time="U32CFormat") now = "U32CFormat"\n"))
-#define MSG_COMMLIB_RESET_LAST_HEARD_SISU _MESSAGE(39088, _("reset_last_heard drops (commproc="SFN", id=%d, host="SFN", time="U32CFormat")\n"))
-
 /* 
 ** commd/commproc.c
 */ 

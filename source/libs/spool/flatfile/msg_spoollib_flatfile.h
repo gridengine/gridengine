@@ -37,9 +37,7 @@
  */
 #define MSG_FLATFILE_NODATATOSPOOL  _MESSAGE(62000, _("no data available for spooling\n"))
 #define MSG_PARSINGOBJECTEXPECTEDBUTGOT_SSD _MESSAGE(62001, _("reading object: expected "SFQ", but got "SFQ" in line %d\n"))
-#define MSG_CANTGETATTRIBUTEPREFIX _MESSAGE(62002, _("can't read attribute prefix\n"))
 #define MSG_UNKNOWNATTRIBUTENAME_S _MESSAGE(62003, _("unknown attribute name "SFQ"\n"))
-#define MSG_ATTRIBUTENOTINLIST_S _MESSAGE(62004, _("attribute "SFQ" not in list of fields to spool\n"))
 #define MSG_ATTRIBUTENOTINOBJECT_S _MESSAGE(62005, _("attribute "SFQ" is not part of current object\n"))
 #define MSG_DONTKNOWHOWTOHANDLELIST_S  _MESSAGE(62006, _("don't know how to handle sublist "SFQ"\n"))
 #endif /* __MSG_SPOOLLIB_FLATFILE_H */

@@ -98,6 +98,11 @@
 /* 
 ** gss/put_cred.c
 */ 
+#define MSG_GSS_GETCRED_USAGE       _( \
+"Usage: %s [-v] service\n" \
+"   -v          verbose output\n" \
+"   service     Get credentials for service\n" )
+
 #define MSG_GSS_PUTCRED_USAGE       _( \
 "Usage: %s [-u user] [-b user] [-s service] [-c cmd]\n" \
 "   -b user     Become user before storing credentials and/or executing cmd\n" \

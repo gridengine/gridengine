@@ -43,7 +43,7 @@ gss_all:        get_cred put_cred delete_cred starter_cred renew_cred get_cred.s
 
 gss_clean:
 	rm -f $(GSSLIBOBJS) get_cred.o put_cred.o delete_cred.o get_cred put_cred delete_cred starter_cred renew_cred \
-         put_cred.sh get_cred.sh
+         put_cred.sh get_cred.sh k5dcelogin.o k5dcelogin
 
 gss_depend:
 	$(DEPEND) -f$(GSS_SDIR)/gss_dependencies $(GSS_SDIR)/*.c
@@ -68,14 +68,20 @@ delete_cred.o:      $(GSS_SDIR)/delete_cred.c
 put_cred.o:      $(GSS_SDIR)/put_cred.c
 	$(CC) $(CFLAGS) -c $(GSS_SDIR)/put_cred.c
 
+k5dcelogin.o:	$(GSS_SDIR)/k5dcelogin.c
+	$(CC) $(CFLAGS) -I$(SDIR) -c $?
+
 get_cred:        get_cred.o sge_gsslib.o
-	$(CC) -o $@ $(LFLAGS) get_cred.o sge_gsslib.o -luti -lrmon $(LIBS)
+	$(CC) -o $@ $(LFLAGS) get_cred.o sge_gsslib.o -luti -lrmon $(LIBS) $(SLIBS)
 
 delete_cred:        delete_cred.o sge_gsslib.o
-	$(CC) -o $@ $(LFLAGS) delete_cred.o sge_gsslib.o -luti -lrmon $(LIBS)
+	$(CC) -o $@ $(LFLAGS) delete_cred.o sge_gsslib.o -luti -lrmon $(LIBS) $(SLIBS)
+
+k5dcelogin:	k5dcelogin.o
+	$(CC) -o $@ $(LFLAGS) k5dcelogin.o $(LIBS) $(SLIBS)
 
 put_cred:        put_cred.o sge_gsslib.o
-	$(CC) -o $@ $(LFLAGS) put_cred.o sge_gsslib.o -luti -lrmon $(LIBS)
+	$(CC) -o $@ $(LFLAGS) put_cred.o sge_gsslib.o -luti -lrmon $(LIBS) $(SLIBS)
 
 starter_cred:	$(GSS_SDIR)/starter_cred.ksh
 	cp $(GSS_SDIR)/starter_cred.ksh starter_cred

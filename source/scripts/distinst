@@ -74,14 +74,17 @@ PVMSCRIPTS="startpvm.sh stoppvm.sh pvm.sh pvm_nogs.sh README pvm.template"
 MPIFILES="README README.atm hostname mpi.template mpich.template mpi.sh \
           mpi_cpi.sh rsh startmpi.sh stopmpi.sh"
 
-SECFILES="gss/get_cred.c gss/put_cred.c gss/delete_cred.c gss/sge_gsslib.c \
-          gss/sge_gsslib.h gss/renew_cred.ksh gss/starter_cred.ksh \
-          gss/aimk gss/Makefile.security gss/README.customer \
-          src/basis_types.h gss/put_cred.sh gss/get_cred.sh \
-          gss/k5dcelogin.c gss/k5dce.h"
+SECFILES="security/gss/get_cred.c security/gss/put_cred.c \
+          security/gss/delete_cred.c security/gss/sge_gsslib.c \
+          security/gss/sge_gsslib.h security/gss/renew_cred.ksh \
+          security/gss/starter_cred.ksh security/gss/msg_gss.h \
+          security/gss/aimk security/gss/Makefile.security \
+          security/gss/doc/gss_customer.html \
+          common/basis_types.h security/gss/put_cred.sh security/gss/get_cred.sh \
+          security/gss/k5dcelogin.c security/gss/k5dce.h"
 
 SECURITYBINARIES="get_cred put_cred delete_cred renew_cred \
-                  starter_cred get_cred.sh put_cred.sh"
+                  starter_cred get_cred.sh put_cred.sh k5dcelogin"
 
 ErrUsage()
 {
@@ -732,7 +735,7 @@ if [ $instcommon = true ]; then
             chmod 644 $DEST_SGE_ROOT/security/$fb
          fi
       done
-      Execute mv $DEST_SGE_ROOT/security/README.customer $DEST_SGE_ROOT/security/README
+      Execute ln -s $DEST_SGE_ROOT/security/gss_customer.html $DEST_SGE_ROOT/security/README.html
    fi      
 
    # Set file and directory permissions to 755/644 and owner to 0.0

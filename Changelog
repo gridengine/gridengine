@@ -1,3 +1,10 @@
+SD-2001-12-06-4: Cleanup:   Cleaned up the security gss modules for Kerberos
+                            and DCE support.  Fixed a bug in get_cred.c.
+                            Updated the HTML documentation on using the
+                            GSS security modules. Updated aimk, Makefiles
+                            and distinst to fully support security modules
+                            or security binaries distributions.
+
 EB-2001-12-06-3: Bugfix:    qstat -s r didn't show running jobs
                  Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)
 

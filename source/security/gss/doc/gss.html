@@ -18,7 +18,16 @@ see <a href="gss_customer.html">Customer Info</a>
 see <a href="gss_customer.html">Customer Info</a>
 <h2>
 <font color="#660000">DCE version differences</font></h2>
-The DCE GSSAPI library forwards credentials but the forwarded credentials
+<p>This section is obsolete and is only included for historical reasons.
+A Grid Engine / DCE integration now uses the security modules compiled
+with the Kerberos GSSAPI rather than using the DCE GSSAPI library. There
+were too many problems with the DCE GSSAPI library and forwarding of
+DCE credentials. Some of the problems are explained below.
+For additional information on Grid Engine using DCE, see 
+<font color="#660000">Running Kerberos binaries in a DCE environment</font>
+at the bottom of this page.
+
+<p>The DCE GSSAPI library forwards credentials but the forwarded credentials
 apparently cannot be inherited by child programs. I found the following
 comment in the DCE source code which explains this.
 <blockquote>dce/src/src/security/client/login/sec_login.c, line 1295 of
@@ -84,17 +93,13 @@ because only descendants of this process can use the credentials.
 Engine</font></h2>
 To make dependencies:
 <br><font face="Courier New,Courier">% aimk gss_depend</font>
-<br>To compile Kerberos binaries:
-<br><font face="Arial,Helvetica">% aimk -only-core -kerberos -gss gss_all</font>
-<p>To compile DCE binaries:
-<br><font face="Arial,Helvetica">% aimk -only-core -dce gss_all</font>
+<br>To compile the security binaries for Kerberos or DCE:
+<br>Make sure KRB_HOME is set correctly in aimk.site or aimk.private.
+<br><font face="Arial,Helvetica">% aimk -only-core -gss gss_all</font>
+<p>To compile k5dcelogin for DCE:
+<br><font face="Arial,Helvetica">% aimk -only-core -dce k5dcelogin</font>
 <p>To clean:
 <br><font face="Arial,Helvetica">% aimk -gss gss_clean</font>
-<p>These programs have been tested under Kerberos on IRIX 6.2 and under
-DCE on Digital Unix V4.0D. I would like to test under DCE on IRIX 6.5,
-but this requires updating bradley to IRIX 6.5.2 and installing DCE 1.2.2a
-which can be downloaded for free from SGI:
-<br><a href="http://www.sgi.com/software/dce/overview.html">http://www.sgi.com/software/dce/overview.html</a>
 <br>&nbsp;
 <h2>
 <font color="#660000">DCE / Kerberos Configuration</font></h2>

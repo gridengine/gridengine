@@ -154,6 +154,8 @@ main(int argc, char **argv)
       return 3;
    }
    client_cred.length = gsslib_unpackint(lenbuf);
+   if (verbose)
+      fprintf(stderr, "credentials length = %d\n", client_cred.length);
 
    if ((client_cred.value = (char *)malloc(client_cred.length)) == 0) {
       fprintf(stderr, MSG_GSS_COULDNOTALLOCATEXBYTESFORCREDENTIALS_I ,

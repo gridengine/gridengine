@@ -51,6 +51,16 @@
 /* #include "sge_language.h" */
 #include "msg_gss.h"
 
+void
+usage(char *progname)
+{
+   char *p;
+   p = (NULL == (p = strrchr(progname,'/'))) ? progname : p+1;
+   fprintf(stderr, MSG_GSS_GETCRED_USAGE, p);
+   exit(1);
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -60,10 +70,21 @@ main(int argc, char **argv)
    gss_cred_id_t client_creds = GSS_C_NO_CREDENTIAL; 
    int verbose = 0;
    char lenbuf[GSSLIB_INTSIZE];
+   int ch;
 
+   while ((ch = getopt(argc, argv, "v")) != EOF) {
+      switch (ch) {
+         case 'v':
+            verbose = 1;
+            break;
+         default:
+            usage(argv[0]);
+            break;
+      }
+   }
 
-   if (argc >= 2)
-      service = argv[1];
+   if (argc > optind)
+      service = argv[optind];
    else
       service = SERVICE_NAME;
 
@@ -102,6 +123,7 @@ main(int argc, char **argv)
       if (verbose)
          fprintf(stderr, MSG_GSS_WRITINGXBYTESTOSTDOUT_I, (int) cred.length);
       gsslib_packint(cred.length, lenbuf);
+      write(1, lenbuf, GSSLIB_INTSIZE);
       write(1, cred.value, cred.length);
    } else {
       fprintf(stderr, MSG_GSS_GETCREDNOCREDENTIALSFOUND );

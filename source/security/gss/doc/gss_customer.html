@@ -34,7 +34,7 @@ Engine client programs and Grid Engine daemons.
 <li>
 get_cred</li>
 
-<br>this program builds a GSSAPI security context and gets the user's forwardable
+<br>This program builds a GSSAPI security context and gets the user's forwardable
 credentials, tokenizes them into a buffer and writes them to standard output.
 It is called by qsub, qsh, and qmon when submitting jobs. It is also called
 by sge_qmaster on behalf of the user before a job is sent to an execution
@@ -42,7 +42,7 @@ host.
 <li>
 put_cred</li>
 
-<br>this program accepts a tokenized security context from standard input,
+<br>This program accepts a tokenized security context from standard input,
 authenticates the user, verifies that the user is who Grid Engine thinks
 he is, and creates the forwarded credentials for the user. The routine
 also checks to make sure the qsub request is not a replay (i.e. a qsub
@@ -54,20 +54,16 @@ cache files are stored in /tmp/krb5cc_sge_&lt;job_id>.
 <li>
 delete_cred</li>
 
-<br>this program deletes a set of credentials. Deleting a user's credentials
+<br>This program deletes a set of credentials. Deleting a user's credentials
 means that the user's credentials cache files are deleted. The delete_cred
 program is called by the sge_qmaster and sge_execd when a job completes.
 <li>
 starter_cred</li>
 
-<br>this shell script is used as a shepherd wrapper program in a DCE environment.
+<br>This shell script is used as a shepherd wrapper program in a DCE environment.
 It executes the k5dcelogin program to turn the forwarded Kerberos TGT into
-DCE credentials and then executes the sge_shepherd. These programs can
-be executed standalone in the following fashion.
-<br>$ setenv KRB5CCNAME FILE:/tmp/krb5cc_test_sge
-<br>$ get_cred sge > cred.out
-<br>$ put_cred -s sge -u joe -b joe &lt; cred.out
-<br>$ delete_cred</ul>
+DCE credentials and then executes the sge_shepherd.
+
 
 <h2>
 <font color="#660000">How the security modules work</font></h2>
@@ -105,7 +101,7 @@ credentials cache files</li>
 </ol>
 
 <h2>
-<font color="#660000">Building the binaries</font></h2>
+<font color="#660000">Building and installing the binaries</font></h2>
 First, you must obtain, compile and install the Kerberos libraries for
 each architecture. For a DCE environment, you will also need to compile
 the k5dcelogin program for each execution host architecture.
@@ -140,8 +136,9 @@ Kerberos Instructions</h4>
 <li>
 Create a "sge" principal for each qmaster and execution host. In the example
 below sdremote.hpc-mo.com is the qmaster host and o2.hpc-mo.com is an execution
-host. # ./kadmin</li>
+host.</li>
 
+<br># ./kadmin
 <br>Enter password: xxxxxxx
 <br>kadmin: addprinc -randkey sge/sdremote.hpc-mo.com
 <br>Principal "sge/sdremote.hpc-mo.com@HPC-MO.COM" created.
@@ -225,11 +222,28 @@ be OK:</li>
 <br>&nbsp;</ol>
 
 <h2>
+<font color="#660000">Testing the security modules</font></h2>
+Once the binaries are built and installed and you have configured Kerberos
+or DCE, you can verify that the binaries work in your environment by
+testing them standalone. First, you must obtain valid
+Kerberos or DCE credentials. The following instructions assume that the
+user is named joe.
+
+<ul>
+<br>$ get_cred sge > /tmp/cred.out
+<br>$ su
+<br># setenv KRB5CCNAME FILE:/tmp/krb5cc_test_sge
+<br># put_cred -s sge -u joe -b joe &lt; /tmp/cred.out
+<br># delete_cred</ul>
+
+<h2>
 <font color="#660000">Grid Engine Configuration</font></h2>
 To use the security sub-programs with Grid Engine, you must switch on Kerberos
 or DCE in $SGE_ROOT/{$SGE_CELL|default}/product_mode.
 <br>The string that must be in the product_mode file is either sge-dce
-or sgeee-dce. If one of this entries are present, the Kerberos/DCE is active.
+or sgeee-dce for a DCE environment or sge-kerberos or sgeee-kerberos for
+a Kerberos environment. If one of these entries is present, the Kerberos/DCE
+security modules are active.
 <h2>
 <font color="#660000">Instructions for Grid Engine spool directories in
 DFS</font></h2>
@@ -244,9 +258,9 @@ modify the Grid Engine startup scripts. The lines which start the sge_qmaster,
 sge_schedd, and sge_execd should be modified to use dce_login to start
 the daemons. For example,
 <p>Change:
-<br>/gridengine/test/bin/osf4/sge_qmaster
+<br>/gridengine/test/bin/arch/sge_qmaster
 <br>to:
-<br>dce_login sge_daemon -k /krb5/v5srvtab -e /gridengine/test/bin/osf4/sge_qmaster
+<br>dce_login sge_daemon -k /krb5/v5srvtab -e /gridengine/test/bin/arch/sge_qmaster
 <p>To install Grid Engine into a DFS directory, the user should be running
 as root and with the DCE Grid Engine daemon identity. The execution daemon
 spool directories should be stored on a local non-DFS file system.
@@ -275,7 +289,8 @@ configuration and add the string "DO_AUTHENTICATION" to the global or host-speci
 cluster configuration of the execution host(s).
 <h2>
 <font color="#660000">Renewing credentials</font></h2>
-Credentials can be automatically renewed through the use of the renew_cred
+Credentials can be automatically renewed in a Kerberos environment
+through the use of the renew_cred
 script included in the security distribution. In order for the script to
 automatically renew credentials, users must initially obtain renewable
 credentials. In Kerberos, this can be set up as the default, or users can

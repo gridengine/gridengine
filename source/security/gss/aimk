@@ -45,7 +45,9 @@ if (! $?SGE_ROOT) then
       exit 1
 endif
 
-KRB_HOME=/krb5/
+#set KRB_HOME = /krb5/
+
+set KRB_HOME = /usr/local/
 
 # common compiler and linker settings 
 #
@@ -76,8 +78,7 @@ while ($#argv >= 1 && $?found)
       echo '     -debug     compile with "-g" option'
       echo '     -cc        force usage of "cc" as compiler'
       echo '     -gcc       force usage of "gcc" as compiler'
-      echo '     -dce       compile with DCE libraries'
-      echo '     -kerberos  compile with Kerberos libraries'
+      echo '     -gss       compile with the Kerberos GSSAPI libraries'
       exit 0
       breaksw
    case "-nomk":
@@ -96,10 +97,10 @@ while ($#argv >= 1 && $?found)
       set argv     = ($argv[2-])
       set CC       = cc
       breaksw
-   case "-kerberos"
+   case "-gss"
       set argv     = ($argv[2-])
-      set CFLAGS  = "-DKERBEROS ­I$(KRB_HOME)/include/gssapi -I$(KRB_HOME)/include $CFLAGS"
-      set LFLAGS  = "-L$(KRB_HOME)/lib $LFLAGS"
+      set CFLAGS  = "-DKERBEROS ­I$KRB_HOME/include/gssapi -I$KRB_HOME/include $CFLAGS"
+      set LFLAGS  = "-L$KRB_HOME/lib $LFLAGS"
       set LIBS    = "$LIBS -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err"
       breaksw
    case "-dce"

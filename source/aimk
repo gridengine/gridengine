@@ -450,8 +450,8 @@ while ($#argv >= 1 && $?found)
    case "-gss":
       set GSSDEPEND = "gss_depend"
       set GSSCLEAN = "gss_clean"
-      set CFLAGS  = "-I../security/gss $CFLAGS"
-      set GSSLIBS = "-lgssapi_krb5"
+      set CFLAGS  = "-DKERBEROS -I../security/gss -I$KRB_HOME/include -I$KRB_HOME/include/gssapi $CFLAGS"
+      set GSSLIBS = "-lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err"
       breaksw
    case "-help"
       goto usage

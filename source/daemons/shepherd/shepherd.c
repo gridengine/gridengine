@@ -1038,7 +1038,6 @@ int ckpt_type
    /* make us the owner of the error/trace/exit_status file again */
    err_trace_chown_files(geteuid());
 
-#if 0 /* EB: review with AS */
    if (ckpt_type) {
       /* empty file is a hint to reschedule that job. If we already have a
        * checkpoint in the arena there is a dummy string in the file
@@ -1048,37 +1047,20 @@ int ckpt_type
             fclose(fp);
       }
    }
-#else
-   if (!strcmp("job", childname) && ckpt_type) {
-      if (signalled_ckpt_job) {
-         if (SGE_STAT("checkpointed", &buf)) {
-            if ((fp = fopen("checkpointed", "w"))) {
-               fclose(fp);
-            }
-         }
-      } else {
-         if (ckpt_type & CKPT_KERNEL) {
-            start_clean_command(clean_command);
-         }
-      }
-   }
-
-#endif
 
    if (WIFSIGNALED(status)) {
       sprintf(err_str, "%s exited due to signal", childname);
       shepherd_trace(err_str);
 
-#if 0 /* EB: review with AS */
       if (ckpt_type && !signalled_ckpt_job) {
          unlink("checkpointed");
-         shepherd_trace("%s exited due to signal but not due to checkpoint", childname);
+         sprintf(err_str, "%s exited due to signal but not due to checkpoint", childname);
+         shepherd_trace(err_str);
          if (ckpt_type & CKPT_KERNEL) {
             shepherd_trace("starting ckpt clean command");
             start_clean_command(clean_command);
          }   
       }  
-#endif 
          
       child_signal = WTERMSIG(status);
 #ifdef WCOREDUMP
@@ -1098,10 +1080,11 @@ int ckpt_type
       sprintf(err_str, "%s exited not due to signal", childname);
       shepherd_trace(err_str);
 
-#if 0 /* EB: review with AS */
       if (!strcmp("job", childname)) {
          /* remove indication of checkpoints */
+#if 1 /* EB: review with AS; #174 */
          if (WEXITSTATUS(status) < 128) {
+#endif
             if (!signalled_ckpt_job && ckpt_type) {
                shepherd_trace("checkpointing job exited normally");
                unlink("checkpointed");
@@ -1110,9 +1093,10 @@ int ckpt_type
                   start_clean_command(clean_command);
                }
             }
+#if 1
          }
-      }
 #endif
+      }
 
       if (WIFEXITED(status)) {
          exit_status = WEXITSTATUS(status);

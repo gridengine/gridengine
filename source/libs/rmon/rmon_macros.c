@@ -242,8 +242,21 @@ int rmon_mexeclp(char *file,...)
    DENTER;
 
    va_start(ap, file);
-   /* how many args are given ? */
-   for (countap = ap; va_arg(countap, char *); n++);
+
+/* how many args are given ? */
+
+#if (!defined(va_copy) && defined(__va_copy))
+     #define va_copy(to, from)  __va_copy((to), (from))
+#endif
+
+#ifdef va_copy
+    va_copy(countap, ap);
+    for (; va_arg(countap, char *); n++);
+    va_end(countap);
+#else
+     for (countap = ap; va_arg(countap, char *); n++);
+#endif
+
 
    /* build extended argv */
    newargv = (char **) malloc(sizeof(char *) * (n + 3 + 1));

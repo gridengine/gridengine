@@ -797,9 +797,9 @@ AddSGEStartUpScript()
    $INFOTEXT -u "\nGrid Engine startup script"
 
    # --- from here only if root installs ---
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
+   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
              "\nWe can install the startup script that\n" \
-             "Grid Engine is started at machine boot (y/n) [n] >> "
+             "Grid Engine is started at machine boot (y/n) [y] >> "
 
    if [ $AUTO = "true" -a $ADD_TO_RC = "false" ]; then
       $CLEAR

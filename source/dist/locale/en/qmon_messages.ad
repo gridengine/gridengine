@@ -342,6 +342,10 @@ _Messages_.en.*.Finished Jobs: Finished Jobs
 _Messages_.en.*.Force: Force
 _Messages_.en.*.GByte (1024x1024x1024): GByte (1024x1024x1024)
 _Messages_.en.*.GID Range for Job Monitoring: GID Range for Job Monitoring
+_Messages_.en.*.@fBAutomatic User Defaults: @fBAutomatic User Defaults
+_Messages_.en.*.Override Tickets: Override Tickets 
+_Messages_.en.*.Functional Shares: Functional Shares 
+_Messages_.en.*.Delete Time: Delete Time
 _Messages_.en.*.SGEEE Schedule Interval required!: SGEEE Schedule Interval required!
 _Messages_.en.*.Get Environment: Get Environment
 _Messages_.en.*.Get Queue Attributes from: Get Queue Attributes from

@@ -125,6 +125,10 @@ typedef struct _tCClEntry {
    String token_extend_time;
    String gid_range;
    int zombie_jobs;
+   int auto_user_oticket;
+   int auto_user_fshare;
+   String auto_user_default_project;
+   String auto_user_delete_time;
 } tCClEntry;
 
 XtResource ccl_resources[] = {
@@ -314,6 +318,22 @@ XtResource ccl_resources[] = {
       sizeof(int), XtOffsetOf(tCClEntry, zombie_jobs),
       XtRImmediate, NULL },
 
+   { "auto_user_oticket", "auto_user_oticket", XtRInt,
+      sizeof(int), XtOffsetOf(tCClEntry, auto_user_oticket),
+      XtRImmediate, NULL },
+
+   { "auto_user_fshare", "auto_user_fshare", XtRInt,
+      sizeof(int), XtOffsetOf(tCClEntry, auto_user_fshare),
+      XtRImmediate, NULL },
+
+   { "auto_user_default_project", "auto_user_default_project", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, auto_user_default_project), 
+      XtRImmediate, NULL },
+      
+   { "auto_user_delete_time", "auto_user_delete_time", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, auto_user_delete_time), 
+      XtRImmediate, NULL },
+      
 };
 
 
@@ -378,6 +398,12 @@ static Widget cluster_reporting_params_label = 0;
 static Widget cluster_set_token_cmd_label = 0;
 static Widget cluster_pag_cmd_label = 0;
 static Widget cluster_token_extend_time_label = 0;
+static Widget cluster_auto_user_defaults_label = 0;
+static Widget cluster_auto_user_oticket = 0;
+static Widget cluster_auto_user_fshare = 0;
+static Widget cluster_auto_user_default_project = 0;
+static Widget cluster_auto_user_delete_time = 0;
+static Widget cluster_auto_user_delete_timePB = 0;
 
 /*-------------------------------------------------------------------------*/
 static void qmonPopdownClusterConfig(Widget w, XtPointer cld, XtPointer cad);
@@ -696,11 +722,29 @@ Widget parent
                                     &cluster_token_extend_time,
                            "cluster_gid_range", 
                                     &cluster_gid_range,
+                           "cluster_auto_user_defaults_label", 
+                                    &cluster_auto_user_defaults_label,
+                           "cluster_auto_user_fshare", 
+                                    &cluster_auto_user_fshare,
+                           "cluster_auto_user_oticket", 
+                                    &cluster_auto_user_oticket,
+                           "cluster_auto_user_default_project", 
+                                    &cluster_auto_user_default_project,
+                           "cluster_auto_user_delete_time", 
+                                    &cluster_auto_user_delete_time,
+                           "cluster_auto_user_delete_timePB", 
+                                    &cluster_auto_user_delete_timePB,
                            NULL);
 
    if (!feature_is_enabled(FEATURE_SGEEE)) {
       XtUnmanageChild(cluster_enforce_project);
       XtUnmanageChild(cluster_enforce_user);
+      XtUnmanageChild(cluster_auto_user_defaults_label);
+      XtUnmanageChild(cluster_auto_user_oticket);
+      XtUnmanageChild(cluster_auto_user_fshare);
+      XtUnmanageChild(cluster_auto_user_default_project);
+      XtUnmanageChild(cluster_auto_user_delete_time);
+      XtUnmanageChild(cluster_auto_user_delete_timePB);
       XtVaGetValues( cluster_projectsPB,
                      XmtNlayoutIn, &cluster_projects_col,
                      NULL);
@@ -736,6 +780,8 @@ Widget parent
                     qmonClusterAskForProjects, (XtPointer)cluster_projects);
       XtAddCallback(cluster_xprojectsPB, XmNactivateCallback, 
                     qmonClusterAskForProjects, (XtPointer)cluster_xprojects);
+      XtAddCallback(cluster_auto_user_delete_timePB, XmNactivateCallback, 
+                    qmonClusterTime, (XtPointer)cluster_auto_user_delete_time);
    }
 
    XtAddCallback(cluster_load_report_timePB, XmNactivateCallback, 
@@ -976,6 +1022,12 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
       XtSetSensitive(cluster_projectsPB, mode);
       XtSetSensitive(cluster_xprojects, mode);
       XtSetSensitive(cluster_xprojectsPB, mode);
+      XtSetSensitive(cluster_auto_user_defaults_label, mode);
+      XtSetSensitive(cluster_auto_user_fshare, mode);
+      XtSetSensitive(cluster_auto_user_oticket, mode);
+      XtSetSensitive(cluster_auto_user_default_project, mode);
+      XtSetSensitive(cluster_auto_user_delete_time, mode);
+      XtSetSensitive(cluster_auto_user_delete_timePB, mode);
    }
 
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
@@ -1671,6 +1723,29 @@ int local
          }
          ep = lGetElemStr(confl, CF_name, "xprojects");
          lSetString(ep, CF_value, buf);
+
+         ep = lGetElemStr(confl, CF_name, "auto_user_fshare");
+         sprintf(buf, "%d", clen->auto_user_fshare);
+         lSetString(ep, CF_value, buf);
+
+         ep = lGetElemStr(confl, CF_name, "auto_user_oticket");
+         sprintf(buf, "%d", clen->auto_user_oticket);
+         lSetString(ep, CF_value, buf);
+         
+         ep = lGetElemStr(confl, CF_name, "auto_user_delete_time");
+         if (check_white(clen->auto_user_delete_time)) {
+            strcpy(errstr, "No whitespace allowed in value for auto_user_delete_time");
+            goto error;
+         }
+         lSetString(ep, CF_value, clen->auto_user_delete_time);
+
+         ep = lGetElemStr(confl, CF_name, "auto_user_default_project");
+         if (clen->auto_user_default_project && clen->auto_user_default_project[0] != '\0') {
+            lSetString(ep, CF_value, clen->auto_user_default_project);
+         }
+         else
+            lSetString(ep, CF_value, "none");
+         
       }
 
       /*
@@ -1857,6 +1932,8 @@ tCClEntry *clen
    StringConst max_u_jobs;
    StringConst max_jobs;
    StringConst zombie_jobs;
+   StringConst auto_user_fshare;
+   StringConst auto_user_oticket;
 
    DENTER(GUI_LAYER, "qmonCullToCClEntry");
 
@@ -2018,6 +2095,22 @@ tCClEntry *clen
          lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
                               UP_Type, UP_name, NULL);
       }
+
+      if ((ep = lGetElemStr(confl, CF_name, "auto_user_oticket"))) {
+         auto_user_oticket = (StringConst)lGetString(ep, CF_value);
+         clen->auto_user_oticket = auto_user_oticket ? atoi(auto_user_oticket) : 0;
+      }
+
+      if ((ep = lGetElemStr(confl, CF_name, "auto_user_fshare"))) {
+         auto_user_fshare = (StringConst)lGetString(ep, CF_value);
+         clen->auto_user_fshare = auto_user_fshare ? atoi(auto_user_fshare) : 0;
+      }
+
+      if ((ep = lGetElemStr(confl, CF_name, "auto_user_default_project")))
+         clen->auto_user_default_project = XtNewString(lGetString(ep, CF_value));
+
+      if ((ep = lGetElemStr(confl, CF_name, "auto_user_delete_time")))
+         clen->auto_user_delete_time = XtNewString(lGetString(ep, CF_value));
 
    }
 
@@ -2217,6 +2310,16 @@ tCClEntry *clen
    if (clen->gid_range) {
       XtFree((char*)clen->gid_range);
       clen->gid_range = NULL;
+   }
+   clen->auto_user_oticket = 0;
+   clen->auto_user_fshare = 0;
+   if (clen->auto_user_default_project) {
+      XtFree((char*)clen->auto_user_default_project);
+      clen->auto_user_default_project = NULL;
+   }
+   if (clen->auto_user_delete_time) {
+      XtFree((char*)clen->auto_user_delete_time);
+      clen->auto_user_delete_time = NULL;
    }
    DEXIT;
 }

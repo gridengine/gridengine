@@ -1,3 +1,8 @@
+SD-2004-02-10-1: Enhancem:  Added automatic user fields to qmon cluster
+                            configuration
+                 Changed:   qmon
+                 Issue:     636
+
 MD-2004-02-10-0: Bugfix:    -fixed some typos
                             -fixed local execd spool dir support
                             -added local execd spool dir support (auto mode)

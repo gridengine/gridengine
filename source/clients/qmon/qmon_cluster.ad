@@ -161,11 +161,15 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_reschedule_unknown = reschedule_unknown, \
                   cluster_gid_range = gid_range, \
                   cluster_prolog = prolog, \
-                  cluster_epilog = epilog; \
+                  cluster_epilog = epilog, \
+                  cluster_auto_user_default_project = auto_user_default_project, \
+                  cluster_auto_user_delete_time = auto_user_delete_time; \
    Spinbox        cluster_max_aj_instances = max_aj_instances, \
                   cluster_max_aj_tasks = max_aj_tasks, \
                   cluster_max_u_jobs = max_u_jobs, \
-                  cluster_max_jobs = max_jobs; \
+                  cluster_max_jobs = max_jobs, \
+                  cluster_auto_user_oticket = auto_user_oticket, \
+                  cluster_auto_user_fshare = auto_user_fshare; \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
                   cluster_loglevel = loglevel , \
                   cluster_enforce_project = enforce_project, \
@@ -178,13 +182,15 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_projectsPB, cluster_xprojectsPB, \
                   cluster_load_report_timePB, \
                   cluster_reschedule_unknownPB, \
-                  cluster_stat_log_timePB, cluster_max_unheardPB; \
+                  cluster_stat_log_timePB, cluster_max_unheardPB, \
+                  cluster_auto_user_delete_timePB; \
    XmLabel        cluster_execd_spool_dir_label, \
                   cluster_admin_mail_label, \
                   cluster_login_shells_label, \
                   cluster_max_aj_instances_label, \
                   cluster_max_aj_tasks_label, \
-                  cluster_max_job_per_user_label;
+                  cluster_max_job_per_user_label, \
+                  cluster_auto_user_defaults_label;
 
 
 
@@ -220,6 +226,7 @@ Qmon*cluster_global_layout.layout: \
             Caption tl "@{Shell Start Mode}" cluster_shell_start_mode \
             Caption tl "@{Log Level}" cluster_loglevel \
          } \
+         Fixed Caption tl "@{GID Range for Job Monitoring}" cluster_gid_range \
          <> \
       } \
       ## \
@@ -271,13 +278,31 @@ Qmon*cluster_global_layout.layout: \
                Fixed Centered cluster_xprojectsPB \
             } \
          } \
-         Fixed Caption "@{Enforce Project}"  cluster_enforce_project \
-         Fixed Caption "@{Enforce User}"  cluster_enforce_user \
-         Fixed Caption tl "@{GID Range for Job Monitoring}" cluster_gid_range \
+         Fixed Equal Row { \
+            Fixed Caption tl "@{Enforce Project}"  cluster_enforce_project \
+            <> \
+            Fixed Caption tl "@{Enforce User}"  cluster_enforce_user \
+         } \
+         Fixed Equal Row { Centered cluster_auto_user_defaults_label } \
+         Fixed Equal Row { \
+            Caption tl "@{Override Tickets}" 8 em cluster_auto_user_oticket \
+            <> \
+            Caption tl "@{Functional Shares}" 8 em cluster_auto_user_fshare \
+         } \
+         Fixed Equal Row { \
+            Caption tl "@{Default Project}" 8 em cluster_auto_user_default_project \
+            <> \
+            Row { \
+               Caption tl "@{Delete Time}" 8 em cluster_auto_user_delete_time \
+               Fixed FlushBottom cluster_auto_user_delete_timePB \
+            } \
+         } \
          <> \
       } \
    }
 
+
+Qmon*cluster_global_layout*cluster_auto_user_defaults_label.labelString: @{@fBAutomatic User Defaults}
 Qmon*cluster_global_layout*cluster_execd_spool_dir_label.labelString: @{Execd Spool Dir}
 Qmon*cluster_global_layout*cluster_admin_mail_label.labelString: @{Admin Mail}
 Qmon*cluster_global_layout*cluster_login_shells_label.labelString: @{Login Shells}
@@ -350,6 +375,9 @@ Qmon*cluster_global_layout.cluster_max_unheardPB.labelInsensitivePixmap:   time
 Qmon*cluster_global_layout.cluster_reschedule_unknownPB.labelType:    PIXMAP
 Qmon*cluster_global_layout.cluster_reschedule_unknownPB.labelPixmap:  time
 Qmon*cluster_global_layout.cluster_reschedule_unknownPB.labelInsensitivePixmap: time
+Qmon*cluster_global_layout.cluster_auto_user_delete_timePB.labelType:         PIXMAP
+Qmon*cluster_global_layout.cluster_auto_user_delete_timePB.labelPixmap:       time
+Qmon*cluster_global_layout.cluster_auto_user_delete_timePB.labelInsensitivePixmap: time
 
 Qmon*cluster_global_layout.cluster_max_aj_instances.minimum: 0
 Qmon*cluster_global_layout.cluster_max_aj_instances.spinboxStyle: SPINBOX_STACKED_RIGHT
@@ -397,6 +425,9 @@ Qmon*cluster_global_layout.cluster_max_unheard.verifyCallback: TrimAndTrail(self
 Qmon*cluster_global_layout.cluster_prolog.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_epilog.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_gid_range.verifyCallback: TrimAndTrail(self);
+Qmon*cluster_global_layout.cluster_auto_user_oticket.verifyCallback: TrimAndTrail(self);
+Qmon*cluster_global_layout.cluster_auto_user_fshare.verifyCallback: TrimAndTrail(self);
+Qmon*cluster_global_layout.cluster_auto_user_default_project.verifyCallback: TrimAndTrail(self);
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! extra config
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

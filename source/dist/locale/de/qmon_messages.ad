@@ -267,7 +267,6 @@ _Messages_.de.DTicket: DTicket
 _Messages_.de.Day: Tag
 _Messages_.de.Days: Tage
 _Messages_.de.Deadline: Stichtermin
-_Messages_.de.Default Project: Standardprojekt
 _Messages_.de.Default: Standard
 _Messages_.de.Delete: Löschen
 _Messages_.de.Deny Access: Zugriffsverbot
@@ -317,6 +316,11 @@ _Messages_.de.Finished Jobs: Beendete Aufträge
 _Messages_.de.Force: Erzwingen
 _Messages_.de.GByte (1024x1024x1024): GByte (1024x1024x1024)
 _Messages_.de.GID Range for Job Monitoring: GID Bereich für Auftragsverfolgung
+_Messages_.de.@fBAutomatic User Defaults: xxxxxxxxxxxxxxxxxxxxxx
+_Messages_.de.Override Tickets: xxxxxxxxxxxxxxxxxxxxxx
+_Messages_.de.Functional Shares: xxxxxxxxxxxxxxxxxxxxxx
+_Messages_.de.Default Project: xxxxxxxxxxxxxxxxxxxxxx
+_Messages_.de.Delete Time: xxxxxxxxxxxxxxxxxxxxxx
 _Messages_.de.GRD Schedule Interval required!: GRD Zuordnungszeitraum erforderlich !
 _Messages_.de.Get Environment: Umgebung laden
 _Messages_.de.Get Queue Attributes from: Warteschlangeneigenschaften übernehmen von

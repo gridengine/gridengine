@@ -456,7 +456,7 @@ sge_change_queue_version_centry(const char *centry_name)
          sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
                          0, 0, lGetString(qinstance, QU_qname), 
                          lGetHost(qinstance, QU_qhostname), NULL,
-                         qinstance, NULL, NULL, false, true);
+                         qinstance, NULL, NULL, true, true);
       }
    }
    for_each(ep, Master_Exechost_List) {

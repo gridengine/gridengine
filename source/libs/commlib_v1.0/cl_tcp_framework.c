@@ -202,9 +202,6 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
       memset((char *) &(cl_com_tcp_get_private(connection)->client_addr), 0, sizeof(struct sockaddr_in));
       cl_com_tcp_get_private(connection)->client_addr.sin_port = htons(cl_com_tcp_get_private(connection)->connect_port);
       cl_com_tcp_get_private(connection)->client_addr.sin_family = AF_INET;
-/*      client_addr.sin_port = htons(cl_com_tcp_get_private(connection)->connect_port);
-      client_addr.sin_family = AF_INET;
-*/
       if ( cl_com_cached_gethostbyname(connection->remote->comp_host, &unique_host, &(cl_com_tcp_get_private(connection)->client_addr.sin_addr),NULL ) != CL_RETVAL_OK) {
          shutdown(sockfd, 2);
          close(sockfd);
@@ -262,7 +259,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
    
             if (my_error == ECONNREFUSED || my_error == EADDRNOTAVAIL ) {
                /* can't open connection */
-               CL_LOG(CL_LOG_ERROR,"connection refused or not available");
+               CL_LOG_INT(CL_LOG_ERROR,"connection refused or not available on port",cl_com_tcp_get_private(connection)->connect_port);
                shutdown(sockfd, 2);
                close(sockfd);
                cl_com_tcp_get_private(connection)->sockfd = -1;

@@ -37,6 +37,8 @@ echo "workdir:          =$1="
 echo "SGE_ROOT:         =$2="
 echo "COMMD_PORT:       =$3="
 echo "SGE_QMASTER_PORT: =$3="
+set execd_port=`expr ${3} + 1`
+echo "SGE_EXECD_PORT:   =${execd_port}="
 echo "run command:      =$4="
 echo "arg(5)            =$5="
 echo "arg(6)            =$6="
@@ -49,6 +51,7 @@ cd $1
 setenv SGE_ROOT $2
 setenv COMMD_PORT $3
 setenv SGE_QMASTER_PORT $3
+setenv SGE_EXECD_PORT $execd_port
 
 set counter = 5
 set com_args = ""

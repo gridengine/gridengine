@@ -212,7 +212,7 @@ const char *s;
 
    pack_job_delivery(&pb, petrep, NULL, NULL);
 
-   ret = gdi_send_message_pb(1, prognames[EXECD], 0, hostname,
+   ret = gdi_send_message_pb(1, prognames[EXECD], 1, hostname,
             TAG_JOB_EXECUTION, &pb, &dummymid);
 
    clear_packbuffer(&pb);

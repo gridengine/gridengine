@@ -76,10 +76,12 @@
 #include "sge_security.h"
 #include "sge_answer.h"
 #include "sge_var.h"
+#include "sge_gdi.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
 #include "msg_common.h"
+#include "sge_hostname.h"
 
 void write_client_name_cache(const char *cache_path, const char *client_name);
 static int open_qrsh_socket(int *port);
@@ -1531,13 +1533,16 @@ int main(int argc, char **argv)
    ** add the job
    */
    if(existing_job) {
+#if 0
+      int execd_status = -1;
+#endif
       int msgsock   = -1;
       sge_tid_t tid;
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 
 #ifdef ENABLE_NGC
-      cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),0);
+      cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
 #else
       /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
       leave_commd();
@@ -1570,6 +1575,18 @@ int main(int argc, char **argv)
 
       exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
                                          is_rsh, is_rlogin, nostdin, noshell, sock);
+      /* CR: TODO: This code is not active because there is no need to wait for an
+       *           task exit message. The exit_status is allready reported by 
+       *           start_client_program().
+       *
+       *           The code who sends the task exit message is located in the execd code
+       *           in file reaper_execd.c, function clean_up_job(). Activate this code
+       *           to enable task exit messages again and use sge_qwaittid() to wait for
+       *           task exit messages.
+       */
+#if 0
+      sge_qwaittid(tid,&execd_status,1);
+#endif
    } else {
       int polling_interval;
       
@@ -1647,7 +1664,7 @@ int main(int argc, char **argv)
          DPRINTF(("random polling set to %d\n", random_poll));
 
 #ifdef ENABLE_NGC
-         cl_commlib_shutdown_handle(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),0);
+         cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
 #else
          /* leave commd while waiting for connection / sleeping while polling */
          leave_commd();

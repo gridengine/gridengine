@@ -117,5 +117,7 @@ void sge_free_hostent( struct hostent** he );
 struct hostent *sge_copy_hostent (struct hostent *orig);
 
 
+int sge_get_qmaster_port(void);
+int sge_get_execd_port(void);
 
 #endif /* __HOST_H */

@@ -2633,6 +2633,9 @@ proc disable_queue { queuelist } {
         } else {
            # try to find localized output
            foreach q_name $queues {
+#              MSG_QINSTANCE_CHANGEDST_SSSS  user@host changed state of "queue@host" (disabled)
+#              "SFN"@"SFN" changed state of "SFQ" ("SFN")\n"
+#              or just MSG_QINSTANCE_DISABLED
               set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_DISABLEQ_SSS] $q_name $CHECK_USER "*" ]
                
               if { [ string match "*$HAS_DISABLED" $result ] } {

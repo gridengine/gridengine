@@ -44,7 +44,7 @@
 #include "sge_feature.h"
 #include "sge_security.h"
 #include "sge_unistd.h"
-
+#include "sge_hostname.h"
 #include "msg_gdilib.h"
 
 static int gdi_log_flush_func(cl_raw_list_t* list_p);
@@ -134,8 +134,6 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
 void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 {
    int ret_val;
-   char* qmaster_port = NULL;
-
    DENTER(BASIS_LAYER, "prepare_enroll");
 
    /* TODO: setup security for NGC */
@@ -144,12 +142,6 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
       SGE_EXIT(1);
    }
    
-   /* TODO: get port via service */
-   qmaster_port = getenv("SGE_QMASTER_PORT");
-   if (qmaster_port == NULL) {
-      ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT\n"));
-      SGE_EXIT(1);
-   }
 
    /* TODO: activate mutlithreaded communication for SCHEDD and EXECD !!!
             This can only by done when the daemonize functions of SCHEDD and EXECD
@@ -348,7 +340,14 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
            me_who == SCHEDD  ) {
          my_component_id = 1;   
       }
-      handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,0,atoi(getenv("SGE_QMASTER_PORT")), (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
+
+      if ( me_who == EXECD ) {
+         /* execd creates service on SGE_EXECD_PORT */
+         handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,sge_get_execd_port(), sge_get_qmaster_port(), (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
+      } else {
+         /* this is for "normal" gdi clients of qmaster */
+         handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,0, sge_get_qmaster_port(), (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
+      }
       if (handle == NULL) {
          CRITICAL((SGE_EVENT,"can't create handle\n"));
       } else {

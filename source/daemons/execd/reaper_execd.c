@@ -765,7 +765,10 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
     *           communication of qrsh with other components instead of qrsh socket.
     */
    if (pe_task_id != NULL) {
-      lListElem *jep = NULL, *jatep = NULL, *petep = NULL, *uep = NULL;
+#if 0
+      lListElem *petep = NULL, *uep = NULL;
+#endif
+      lListElem *jep = NULL, *jatep = NULL;
       const void *iterator;
 
       jep = lGetElemUlongFirst(Master_Job_List, JB_job_number, job_id, &iterator);
@@ -777,8 +780,12 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          jep = lGetElemUlongNext(Master_Job_List, JB_job_number, job_id, &iterator);
       }
 
-      if (jatep && (petep = lGetSubStr(jatep, PET_id, pe_task_id, 
-            JAT_task_list))) {
+      /* CR: TODO: This code is not active because there is no one who calls 
+       *           sge_qwaittid() to receive task exit message. Activate this
+       *           code when sge_qwaittid() is needed.
+       */
+#if 0
+      if (jatep && (petep = lGetSubStr(jatep, PET_id, pe_task_id, JAT_task_list))) {
          const char *host, *commproc;
          u_short id;
          sge_pack_buffer pb;
@@ -804,8 +811,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             ret=gdi_send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
 #ifdef ENABLE_NGC
             DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
-                  (ret==CL_RETVAL_OK)?"failed":"success", pe_task_id, 
-                  lGetString(petep, PET_source), (ret==CL_RETVAL_OK)?cl_get_error_text(ret):""));
+                  (ret!=CL_RETVAL_OK)?"failed":"success", pe_task_id, 
+                  lGetString(petep, PET_source), cl_get_error_text(ret)));
 #else
             DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
                   ret?"failed":"success", pe_task_id, 
@@ -814,6 +821,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             clear_packbuffer(&pb);
          }
       }
+#endif
    }
 
    sge_dstring_free(&fname);

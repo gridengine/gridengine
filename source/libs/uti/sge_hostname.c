@@ -76,6 +76,41 @@ static host *hostlist = NULL;
 /* MT-NOTE: localhost used only in commd */
 static host *localhost = NULL;
 
+
+int sge_get_qmaster_port(void) {
+   /* TODO: get port from service file */
+   char* port = NULL;
+   int int_port = -1;
+   DENTER(TOP_LAYER, "sge_get_qmaster_port");
+   port = getenv("SGE_QMASTER_PORT");   
+   if (port != NULL) {
+      int_port = atoi(port);
+   }
+   if (int_port < 0 ) {
+      ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT\n"));
+      SGE_EXIT(1);
+   } 
+   DEXIT;
+   return int_port;
+}
+
+int sge_get_execd_port(void) {
+   /* TODO: get port from service file */
+   char* port = NULL;
+   int int_port = -1;
+   DENTER(TOP_LAYER, "sge_get_execd_port");
+   port = getenv("SGE_EXECD_PORT");   
+   if (port != NULL) {
+      int_port = atoi(port);
+   }
+   if (int_port < 0 ) {
+      ERROR((SGE_EVENT, "could not get environment variable SGE_EXECD_PORT\n"));
+      SGE_EXIT(1);
+   } 
+   DEXIT;
+   return int_port;
+
+}
 #ifdef ENABLE_NGC
 #else
 static int sge_host_copy_entry(struct hostent *heto, struct hostent *hefrom);

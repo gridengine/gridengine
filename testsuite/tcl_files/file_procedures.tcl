@@ -1528,6 +1528,9 @@ proc create_shell_script { scriptfile
          puts $script "   export COMMD_PORT"
          puts $script "   SGE_QMASTER_PORT=$CHECK_COMMD_PORT"
          puts $script "   export SGE_QMASTER_PORT"
+         set my_execd_port [expr ($CHECK_COMMD_PORT + 1) ]
+         puts $script "   SGE_EXECD_PORT=$my_execd_port"
+         puts $script "   export SGE_EXECD_PORT"
       }
       if { [info exists CHECK_PRODUCT_ROOT] } {
          puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"

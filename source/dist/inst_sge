@@ -87,6 +87,13 @@ PreCheckForFastInstall()
       qmaster_port_max=65500
    fi
 
+   if [ $resport = true ]; then
+      execd_port_max=1023
+   else
+      execd_port_max=65500
+   fi
+
+
    # must be first check - sets variable $euid
    euid=`$V5UTILBIN/uidgid -euid`
 
@@ -105,12 +112,21 @@ PreCheckForFastInstall()
       return 1
    fi
 
+   if [ $ret = 1 -a "$SGE_EXECD_PORT" = "" ]; then
+      return 1
+   fi
+
    if [ "$SGE_QMASTER_PORT" != "" ]; then
       if [ "$SGE_QMASTER_PORT" -le 1 -o $SGE_QMASTER_PORT -ge $qmaster_port_max ]; then
          return 1
       fi
    fi
 
+   if [ "$SGE_EXECD_PORT" != "" ]; then
+      if [ "$SGE_EXECD_PORT" -le 1 -o $SGE_EXECD_PORT -ge $execd_port_max ]; then
+         return 1
+      fi
+   fi
 
    this_dir_user=`$V5UTILBIN/filestat -owner . 2> /dev/null`
    ret=$?
@@ -343,6 +359,8 @@ AskIfDefaultOkAndSetVariables()
    else
       $INFOTEXT "      service            = %s" $QSYST_SERVICE
    fi
+
+   $INFOTEXT "      \$SGE_EXECD_PORT    = %s" $SGE_EXECD_PORT
 
    if [ $ADMINUSER = default ]; then
       $INFOTEXT "      admin user account = root"
@@ -1049,6 +1067,7 @@ GiveHints()
                 "   - \$SGE_ROOT    (always necessary)\n" \
                 "   - \$SGE_CELL    (if you are using a cell other than >default<)\n" \
                 "   - \$SGE_QMASTER_PORT   (if you haven't added the service >%s<)\n" \
+                "   - \$SGE_EXECD_PORT\n" \
                 "   - \$PATH/\$path (to find the Grid Engine binaries)\n" \
                 "   - \$MANPATH     (to access the manual pages)\n" \
                 $QSYST_ROOT_VAL/$QSYST_CELL_VAL/common/settings.csh \
@@ -1210,13 +1229,15 @@ CheckForCommdPort()
    $V5UTILBIN/getservbyname $QSYST_SERVICE  >/dev/null 2>&1
    ret=$?
 
-   if [ "$SGE_QMASTER_PORT" != "" ]; then
+   if [ "$SGE_QMASTER_PORT" != "" -a "$SGE_EXECD_PORT" != "" ]; then
       $INFOTEXT -u "\nGrid Engine TCP/IP communication service"
-
-      if [ $SGE_QMASTER_PORT -ge 1 -a $SGE_QMASTER_PORT -le $qmaster_port_max ]; then
+      if [ $SGE_QMASTER_PORT -ge 1 -a $SGE_QMASTER_PORT -le $qmaster_port_max -a $SGE_EXECD_PORT -ge 1 -a $SGE_EXECD_PORT -le $execd_port_max ]; then
          $INFOTEXT "\nUsing the environment variable\n\n" \
                    "   \$SGE_QMASTER_PORT=%s\n\n" \
                      "as port for communication with >sge_qmaster<.\n\n" $SGE_QMASTER_PORT
+         $INFOTEXT "\nUsing the environment variable\n\n" \
+                   "   \$SGE_EXECD_PORT=%s\n\n" \
+                     "as port for communication with >sge_execd<.\n\n" $SGE_EXECD_PORT
          if [ $ret = 0 ]; then
             $INFOTEXT "This overrides the preset TCP/IP service >%s<.\n" $QSYST_SERVICE
          fi
@@ -1225,10 +1246,10 @@ CheckForCommdPort()
          return
       else
          $INFOTEXT "\nThe environment variable\n\n" \
-                   "   \$SGE_QMASTER_PORT=%s\n\n" \
+                   "   \$SGE_QMASTER_PORT=%s\nor\n    \$SGE_EXECD_PORT=%s\n\n" \
                    "has an invalid value (it must be in range 1..%s).\n\n" \
-                   "Please set the environment variable \$SGE_QMASTER_PORT and restart\n" \
-                   "the installation or configure the service >%s<." $SGE_QMASTER_PORT $qmaster_port_max $QSYST_SERVICE
+                   "Please set the environment variable(s) and restart\n" \
+                   "the installation or configure the service >%s<." $SGE_QMASTER_PORT $SGE_EXECD_PORT $qmaster_port_max $QSYST_SERVICE
       fi
    fi
 
@@ -1285,6 +1306,16 @@ CheckForCommdPort()
                   ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
                   if [ "$ser" = "$INP/tcp" ]; then
                      $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
+                     done=false
+                  else
+                     done=true
+                  fi
+                  execd_inp=`expr ${INP} + 1` 
+                  ser=`awk '{ print $2 }' /etc/services | grep "^${execd_inp}/tcp"`
+                  if [ "$ser" = "$execd_inp/tcp" ]; then
+                     $INFOTEXT "\nNeed an additional port for exec daemons (SGE_EXECD_PORT = SGE_QMASTER_PORT + 1)" 
+                     $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$execd_inp"
+                     done=false
                   else
                      done=true
                   fi
@@ -1302,11 +1333,15 @@ CheckForCommdPort()
       if [ $service_available = false ]; then
          SGE_QMASTER_PORT=$INP
          export SGE_QMASTER_PORT
+         SGE_EXECD_PORT=`expr ${SGE_QMASTER_PORT} + 1`
+         export SGE_EXECD_PORT
          $INFOTEXT "\nUsing port >%s<. No service >%s< available.\n" $SGE_QMASTER_PORT $QSYST_SERVICE
+         $INFOTEXT "\nUsing port >%s< for execution daemons.\n" $SGE_EXECD_PORT
          $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
          $CLEAR
       else
          unset SGE_QMASTER_PORT
+         unset SGE_EXECD_PORT
          $INFOTEXT "\nService >%s< is now available.\n" $QSYST_SERVICE
          $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
          $CLEAR
@@ -1482,11 +1517,13 @@ AddQsystStartUpScript()
                   -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
                   util/startup_template > ${TMP_V5_STARTUP_FILE}.0
 
-      if [ "$SGE_QMASTER_PORT" != "" ]; then
+      if [ "$SGE_QMASTER_PORT" != "" -a "$SGE_EXECD_PORT" != "" ]; then
          Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
+                     -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/"     \
                      ${TMP_V5_STARTUP_FILE}.0 > $TMP_V5_STARTUP_FILE
       else
          Execute sed -e "/GENSGE_QMASTER_PORT/d" \
+                     -e "/GENSGE_EXECD_PORT/d"   \
                      ${TMP_V5_STARTUP_FILE}.0 > $TMP_V5_STARTUP_FILE
       fi
 

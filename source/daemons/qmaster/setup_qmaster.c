@@ -454,7 +454,6 @@ static void communication_setup(char **anArgv)
    int enrolled = 0;
    cl_com_handle_t* com_handle = NULL;
    int ret_val = CL_RETVAL_OK;
-   char* qmaster_port = NULL;
    char* resolved_hostname = NULL;
    int resolve_error;
 
@@ -473,13 +472,6 @@ static void communication_setup(char **anArgv)
       ERROR((SGE_EVENT, "SGE_PRIORITY_TAGS not supported by NGC\n"));
    }
 
-   qmaster_port = getenv("SGE_QMASTER_PORT");   
-
-   if (qmaster_port == NULL) {
-      /* TODO: */
-      ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT\n"));
-      SGE_EXIT(1);
-   }
    resolve_error=cl_com_cached_gethostbyname((char*)uti_state_get_qualified_hostname() ,
                                              &resolved_hostname,
                                              NULL, NULL);
@@ -499,7 +491,7 @@ static void communication_setup(char **anArgv)
    if (com_handle != NULL) {
       cl_commlib_remove_messages(cl_com_get_handle((char*)prognames[QMASTER],1));
    } else {
-      com_handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,atoi(qmaster_port), 0,(char*)prognames[QMASTER], 1, 1 , 0 );
+      com_handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,sge_get_qmaster_port(), sge_get_execd_port() ,(char*)prognames[QMASTER], 1, 1 , 0 );
       if (com_handle == NULL) {
          ERROR((SGE_EVENT, "could not create communication handle\n"));
          SGE_EXIT(1);

@@ -185,10 +185,55 @@ int compressed
    cl_com_handle_t* handle = NULL;
    cl_xml_ack_type_t ack_type;
    unsigned long dummy_mid;
+   int use_execd_handle = 0;
    DENTER(TOP_LAYER, "gdi_send_message");
 
    /* TODO: handle Kerberos and SECURE send message */
-   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+
+
+
+   /* CR- TODO: This is for tight integration of qrsh -inherit
+    *       
+    *       All GDI functions normally connect to qmaster, but
+    *       qrsh -inhert want's to talk to execd. A second handle
+    *       is created. All gdi functions should accept a pointer
+    *       to a cl_com_handle_t* handle and use this handle to
+    *       send/receive messages to the correct endpoint.
+    */
+   if ( tocomproc[0] == '\0') {
+      DEBUG((SGE_EVENT,"tocomproc is empty string\n"));
+   }
+   switch (uti_state_get_mewho()) {
+      case QMASTER:
+      case EXECD:
+         use_execd_handle = 0;
+         break;
+      default:
+         if (strcmp(tocomproc,prognames[QMASTER]) == 0) {
+            use_execd_handle = 0;
+         } else {
+            if (tocomproc != NULL && tocomproc[0] != '\0') {
+               use_execd_handle = 1;
+            }
+         }
+   }
+   
+ 
+   if (use_execd_handle == 0) {
+      /* normal gdi send to qmaster */
+      DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
+      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   } else {
+      /* we have to send a message to another component than qmaster */
+      DEBUG((SGE_EVENT,"search handle to \"%s\"\n", tocomproc));
+      handle = cl_com_get_handle("execd_handle", 0);
+      if (handle == NULL) {
+         DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", tocomproc));
+         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         handle = cl_com_get_handle("execd_handle", 0);
+      }
+   }
+
    ack_type = CL_MIH_MAT_NAK;
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
@@ -197,6 +242,7 @@ int compressed
       dummy_mid = *mid;
    }
 
+   DEBUG((SGE_EVENT,"gdi_send_message(): sending message to %s,%s,%ld\n",(char*)tohost,(char*)tocomproc ,(unsigned long)toid));
    ret = cl_commlib_send_message( handle, 
                                   (char*)tohost ,(char*)tocomproc ,toid , 
                                   ack_type , 
@@ -285,12 +331,54 @@ u_short *compressed
    cl_com_handle_t* handle = NULL;
    cl_com_message_t* message = NULL;
    cl_com_endpoint_t* sender = NULL;
+   int use_execd_handle = 0;
 
    DENTER(TOP_LAYER, "gdi_receive_message");
    /* TODO: handle Kerberos and SECURE send message */
 
+      /* CR- TODO: This is for tight integration of qrsh -inherit
+    *       
+    *       All GDI functions normally connect to qmaster, but
+    *       qrsh -inhert want's to talk to execd. A second handle
+    *       is created. All gdi functions should accept a pointer
+    *       to a cl_com_handle_t* handle and use this handle to
+    *       send/receive messages to the correct endpoint.
+    */
 
-   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+
+   if ( fromcommproc[0] == '\0') {
+      DEBUG((SGE_EVENT,"fromcommproc is empty string\n"));
+   }
+   switch (uti_state_get_mewho()) {
+      case QMASTER:
+      case EXECD:
+         use_execd_handle = 0;
+         break;
+      default:
+         if (strcmp(fromcommproc,prognames[QMASTER]) == 0) {
+            use_execd_handle = 0;
+         } else {
+            if (fromcommproc != NULL && fromcommproc[0] != '\0') {
+               use_execd_handle = 1;
+            }
+         }
+   }
+
+   if (use_execd_handle == 0) {
+      /* normal gdi send to qmaster */
+      DEBUG((SGE_EVENT,"standard gdi request to qmaster\n"));
+      handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   } else {
+      /* we have to send a message to another component than qmaster */
+      DEBUG((SGE_EVENT,"search handle to \"%s\"\n", fromcommproc));
+      handle = cl_com_get_handle("execd_handle", 0);
+      if (handle == NULL) {
+         DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", fromcommproc));
+         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         handle = cl_com_get_handle("execd_handle", 0);
+      }
+   } 
+
    ret = cl_commlib_receive_message( handle,fromhost ,fromcommproc ,*fromid , synchron, 0 ,&message, &sender );
 
    if (ret == CL_RETVAL_CONNECTION_NOT_FOUND) {
@@ -320,7 +408,7 @@ u_short *compressed
 
       if (sender != NULL) {
          INFO((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id)));
-         if (fromcommproc != NULL) {
+         if (fromcommproc != NULL && fromcommproc[0] == '\0') {
             strcpy(fromcommproc, sender->comp_name);
          }
          if (fromhost != NULL) {

@@ -1792,13 +1792,29 @@ proc config_commd_port { only_check name config_array } {
       puts $CHECK_OUTPUT "" 
       puts $CHECK_OUTPUT "Please enter the port number value the testsuite should use for COMMD_PORT,"
       puts $CHECK_OUTPUT "or press >RETURN< to use the default value."
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "(IMPORTANT NOTE: COMMD_PORT must be a even number, because for"
+      puts $CHECK_OUTPUT "SGE/EE 6.0 sytems or later COMMD_PORT is used for SGE_QMASTER_PORT and"
+      puts $CHECK_OUTPUT "COMMD_PORT + 1 is used for SGE_EXECD_PORT)"
+      puts $CHECK_OUTPUT ""
       puts $CHECK_OUTPUT "(default: $value)"
-      puts -nonewline $CHECK_OUTPUT "> "
-      set input [ wait_for_enter 1]
-      if { [ string length $input] > 0 } {
-         set value $input 
-      } else {
-         puts $CHECK_OUTPUT "using default value"
+      set ok 0
+      while { $ok == 0 } {
+         puts -nonewline $CHECK_OUTPUT "> "
+         set input [ wait_for_enter 1]
+      
+         if { [ string length $input] > 0 } {
+            if { [ expr ( $input % 2 ) ] == 0  } {
+               set value $input
+               set ok 1
+            } else {
+               puts $CHECK_OUTPUT "value is not even"
+               set ok 0
+            }
+         } else {
+            puts $CHECK_OUTPUT "using default value"
+            set ok 1
+         }
       }
 
 
@@ -1846,6 +1862,22 @@ proc config_commd_port { only_check name config_array } {
       puts $CHECK_OUTPUT "Port $value not in portlist of user $CHECK_USER" 
       return -1
    }
+
+   if { $value <= 1  } {
+      puts $CHECK_OUTPUT "Port $value is <= 1"
+      return -1;
+   }
+
+   if { [ expr ( $value % 2 ) ] == 1 } {
+      puts $CHECK_OUTPUT "Port $value is not even"
+      return -1;
+   }
+
+   if { $value > 65000 } {
+      puts $CHECK_OUTPUT "Port $value is > 65000"
+      return -1;
+   }
+
  
    set CHECK_COMMD_PORT $value
 
@@ -3457,7 +3489,7 @@ proc config_build_ts_config {} {
    set parameter "commd_port"
    set ts_config($parameter)            ""
    set ts_config($parameter,desc)       "Grid Engine COMMD_PORT"
-   set ts_config($parameter,default)    "7777"
+   set ts_config($parameter,default)    "7778"
    set ts_config($parameter,setup_func) "config_$parameter"
    set ts_config($parameter,onchange)   "install"
    set ts_config($parameter,pos)        $ts_pos

@@ -627,6 +627,9 @@ lWriteListTo(environmentList, stderr);
    if ((cp=getenv("SGE_QMASTER_PORT")) && strlen(cp))
       var_list_set_string(&environmentList, "SGE_QMASTER_PORT", cp);
      
+   if ((cp=getenv("SGE_EXECD_PORT")) && strlen(cp))
+      var_list_set_string(&environmentList, "SGE_EXECD_PORT", cp);
+
    var_list_set_string(&environmentList, VAR_PREFIX "ROOT", path_state_get_sge_root());
 
    var_list_set_int(&environmentList, "NQUEUES", 

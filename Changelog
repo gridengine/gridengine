@@ -1,3 +1,11 @@
+CR-2004-01-27-1: Bugfix.:   - Tight integration (qrsh -inherit)
+                              (supports now new communication lib)
+                            - Execution daemons now have a socket port 
+                              (SGE_EXECD_PORT)
+                            - Integrate SGE_EXECD_PORT in (old) install
+                              script and testsuite
+                 Review:    JG 
+
 CR-2004-01-27-0: Enhancem.: Produce compile error when there is no define in
                             aimk for sge_gethostbyname() and 
                             sge_gethostbyaddr().

@@ -2362,6 +2362,7 @@ proc enhanced_setup {} {
 
    set env(COMMD_PORT) $CHECK_COMMD_PORT;
    set env(SGE_QMASTER_PORT) $CHECK_COMMD_PORT;
+   set env(SGE_EXECD_PORT) [expr ( $CHECK_COMMD_PORT + 1 ) ];
    set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
 
    set_users_environment $CHECK_HOST

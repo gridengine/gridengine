@@ -43,7 +43,7 @@ ErrUsage()
    echo
    echo "usage: `basename $0` outdir"
    echo "       \$SGE_ROOT must be set"
-   echo "       \$SGE_CELL and \$SGE_QMASTER_PORT must be set if used in your environment"
+   echo "       \$SGE_CELL, \$SGE_QMASTER_PORT and \$SGE_EXECD_PORT must be set if used in your environment"
    exit 1
 }
 

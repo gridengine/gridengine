@@ -130,10 +130,9 @@ static void   set_message_priorities(const char*);
 *     int sge_setup_qmaster(char* anArgv[]) 
 *
 *  FUNCTION
-*     Process commandline arguments. Change CWD to qmaster spool directory. Set
-*     qmaster message file name. Remove qmaster lock file. Write qmaster host
-*     to the 'act_qmaster' file. Write qmaster PID file. Initialize qmaster and
-*     reporting.  
+*     Process commandline arguments. Remove qmaster lock file. Write qmaster
+*     host to the 'act_qmaster' file. Write qmaster PID file. Initialize
+*     qmaster and reporting.  
 *
 *     NOTE: Before this function is invoked, qmaster must become admin user.
 *
@@ -156,10 +155,6 @@ int sge_setup_qmaster(char* anArgv[])
    umask(022); /* this needs a better solution */
 
    process_cmdline(anArgv);
-
-   sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
-
-   log_state_set_log_file(ERR_FILE);
 
    INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
 

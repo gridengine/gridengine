@@ -166,6 +166,10 @@ int main(int argc, char* argv[])
 
    become_admin_user();
 
+   sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
+
+   log_state_set_log_file(ERR_FILE);
+
    uti_state_set_exit_func(exit_func);
 
    start_heartbeat();

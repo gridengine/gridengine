@@ -1,3 +1,6 @@
+AD-2004-01-28-3: Bugfix:    'startup heartbeat' went into wrong directory.
+                 Changed:   qmaster
+
 AD-2004-01-28-2: Bugfix:    Did add 'startup heartbeat'.
                  Changed:   qmaster
 

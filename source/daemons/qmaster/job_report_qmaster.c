@@ -467,109 +467,111 @@ sge_pack_buffer *pb
                   && (pe=pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe)))
                   && lGetBool(pe, PE_control_slaves)
                   && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
-                  /* here we get usage of tasks that ran on slave/master execd's 
-                     we store a job element for each job in the task list of the job
-                     this is needed to prevent multiple debitation of one task 
-                     -- need a state in qmaster for each task */
+                  /* 
+                   * here we get usage of tasks that ran on slave/master execd's
+                   * we store the pe task id of finished pe tasks in the ja task
+                   * to prevent multiple handling of pe task finish in case 
+                   * execd resends job report.
+                   */
 
-                  if (petask == NULL) {
-                     petask = lAddSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list, PET_Type);
-                     lSetUlong(petask, PET_status, JRUNNING);
-                     sge_add_event(NULL, 0, sgeE_PETASK_ADD, jobid, jataskid, pe_task_id_str, petask);
-                  }
-
-                  /* store unscaled usage directly in sub-task */
-                  /* lXchgList(jr, JR_usage, lGetListRef(task, JB_usage_list)); */
-                  /* copy list because we need to keep usage in jr for sge_log_dusage() */
-         		   lSetList(petask, PET_usage, lCopyList(NULL, lGetList(jr, JR_usage)));
-
-                  /* update task's scaled usage list */
-                  lSetList(petask, PET_scaled_usage,
-                           lCopyList("scaled", lGetList(petask, PET_usage)));
-                  scale_usage(lGetList(hep, EH_usage_scaling_list), 
-                              lGetList(petask, PET_previous_usage),
-                              lGetList(petask, PET_scaled_usage));
-
-
-                  if (lGetUlong(petask, PET_status)==JRUNNING ||
-                      lGetUlong(petask, PET_status)==JTRANSFERING) {
-                     u_long32 failed;
-
-                     failed = lGetUlong(jr, JR_failed);
-
-                     DPRINTF(("--- petask "u32"."u32"/%s -> final usage\n", 
-                        jobid, jataskid, pe_task_id_str));
-                     lSetUlong(petask, PET_status, JFINISHED);
-
-                     sge_log_dusage(jr, jep, jatep);
-
-                     /* add tasks (scaled) usage to past usage container */
-                     {
-                        lListElem *container = lGetSubStr(jatep, PET_id, PE_TASK_PAST_USAGE_CONTAINER, JAT_task_list);
-                        if(container == NULL) {
-                           container = pe_task_sum_past_usage_list(lGetList(jatep, JAT_task_list), petask);
-                           sge_add_event(NULL, 0, sgeE_PETASK_ADD, 
-                                         jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
-                                         container);
-                        } else {
-                           pe_task_sum_past_usage(container, petask);
-                           sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
-                                              jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER,
-                                              lGetList(container, PET_scaled_usage));
-                        }
+                  if (ja_task_add_finished_pe_task(jatep, pe_task_id_str)) {
+                     if (petask == NULL) {
+                        petask = lAddSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list, PET_Type);
+                        lSetUlong(petask, PET_status, JRUNNING);
+                        sge_add_event(NULL, 0, sgeE_PETASK_ADD, jobid, jataskid, pe_task_id_str, petask);
                      }
 
-                     /* remove pe task from job/jatask */
-                     job_remove_spool_file(jobid, jataskid, pe_task_id_str,
-                                           SPOOL_DEFAULT);
-                     lRemoveElem(lGetList(jatep, JAT_task_list), petask);
-                     sge_add_event(NULL, 0, sgeE_PETASK_DEL, jobid, jataskid, 
-                                   pe_task_id_str, NULL);
-                     
-                     /* get rid of this job in case a task died from XCPU/XFSZ or 
-                        exited with a core dump */
-                     if (failed==SSTATE_FAILURE_AFTER_JOB
-                           && (ep=lGetElemStr(lGetList(jr, JR_usage), UA_name, "signal"))) {
-                        u_long32 sge_signo;
-                        sge_signo = (int)lGetDouble(ep, UA_value);
-                        switch (sge_signo) {
-                        case SGE_SIGXFSZ:
-                           INFO((SGE_EVENT, MSG_JOB_FILESIZEEXCEED_SSUU, 
-                                pe_task_id_str, rhost, u32c(jobid), u32c(jataskid)));
-                           break;
-                        case SGE_SIGXCPU:
-                           INFO((SGE_EVENT, MSG_JOB_CPULIMEXCEED_SSUU, 
+                     /* store unscaled usage directly in sub-task */
+                     /* lXchgList(jr, JR_usage, lGetListRef(task, JB_usage_list)); */
+                     /* copy list because we need to keep usage in jr for sge_log_dusage() */
+                     lSetList(petask, PET_usage, lCopyList(NULL, lGetList(jr, JR_usage)));
+
+                     /* update task's scaled usage list */
+                     lSetList(petask, PET_scaled_usage,
+                              lCopyList("scaled", lGetList(petask, PET_usage)));
+                     scale_usage(lGetList(hep, EH_usage_scaling_list), 
+                                 lGetList(petask, PET_previous_usage),
+                                 lGetList(petask, PET_scaled_usage));
+
+
+                     if (lGetUlong(petask, PET_status)==JRUNNING ||
+                         lGetUlong(petask, PET_status)==JTRANSFERING) {
+                        u_long32 failed;
+
+                        failed = lGetUlong(jr, JR_failed);
+
+                        DPRINTF(("--- petask "u32"."u32"/%s -> final usage\n", 
+                           jobid, jataskid, pe_task_id_str));
+                        lSetUlong(petask, PET_status, JFINISHED);
+
+                        sge_log_dusage(jr, jep, jatep);
+
+                        /* add tasks (scaled) usage to past usage container */
+                        {
+                           lListElem *container = lGetSubStr(jatep, PET_id, PE_TASK_PAST_USAGE_CONTAINER, JAT_task_list);
+                           if(container == NULL) {
+                              container = pe_task_sum_past_usage_list(lGetList(jatep, JAT_task_list), petask);
+                              sge_add_event(NULL, 0, sgeE_PETASK_ADD, 
+                                            jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
+                                            container);
+                           } else {
+                              pe_task_sum_past_usage(container, petask);
+                              sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
+                                                 jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER,
+                                                 lGetList(container, PET_scaled_usage));
+                           }
+                        }
+
+                        /* remove pe task from job/jatask */
+                        job_remove_spool_file(jobid, jataskid, pe_task_id_str,
+                                              SPOOL_DEFAULT);
+                        lRemoveElem(lGetList(jatep, JAT_task_list), petask);
+                        sge_add_event(NULL, 0, sgeE_PETASK_DEL, jobid, jataskid, 
+                                      pe_task_id_str, NULL);
+                        
+                        /* get rid of this job in case a task died from XCPU/XFSZ or 
+                           exited with a core dump */
+                        if (failed==SSTATE_FAILURE_AFTER_JOB
+                              && (ep=lGetElemStr(lGetList(jr, JR_usage), UA_name, "signal"))) {
+                           u_long32 sge_signo;
+                           sge_signo = (int)lGetDouble(ep, UA_value);
+                           switch (sge_signo) {
+                           case SGE_SIGXFSZ:
+                              INFO((SGE_EVENT, MSG_JOB_FILESIZEEXCEED_SSUU, 
+                                   pe_task_id_str, rhost, u32c(jobid), u32c(jataskid)));
+                              break;
+                           case SGE_SIGXCPU:
+                              INFO((SGE_EVENT, MSG_JOB_CPULIMEXCEED_SSUU, 
+                                    pe_task_id_str, rhost, u32c(jobid), u32c(jataskid)));
+                              break;
+                           default: 
+                              INFO((SGE_EVENT, MSG_JOB_DIEDTHROUGHSIG_SSUUS, 
+                                   pe_task_id_str, rhost, u32c(jobid), u32c(jataskid), sge_sig2str(sge_signo)));
+                              break;
+                           }   
+                        } else {
+                           if (failed==0) {
+                              INFO((SGE_EVENT, MSG_JOB_TASKFINISHED_SSUU, 
                                  pe_task_id_str, rhost, u32c(jobid), u32c(jataskid)));
-                           break;
-                        default: 
-                           INFO((SGE_EVENT, MSG_JOB_DIEDTHROUGHSIG_SSUUS, 
-                                pe_task_id_str, rhost, u32c(jobid), u32c(jataskid), sge_sig2str(sge_signo)));
-                           break;
-                        }   
-                     } else {
-                        if (failed==0) {
-                           INFO((SGE_EVENT, MSG_JOB_TASKFINISHED_SSUU, 
-                              pe_task_id_str, rhost, u32c(jobid), u32c(jataskid)));
-                        } else {
-                           INFO((SGE_EVENT, MSG_JOB_TASKFAILED_SSUUU,
-                              pe_task_id_str, rhost, u32c(jobid), u32c(jataskid), u32c(failed)));
+                           } else {
+                              INFO((SGE_EVENT, MSG_JOB_TASKFAILED_SSUUU,
+                                 pe_task_id_str, rhost, u32c(jobid), u32c(jataskid), u32c(failed)));
+                           }
+                        }
+                        if (failed == SSTATE_FAILURE_AFTER_JOB && 
+                              !lGetString(jep, JB_checkpoint_name)) {
+                           job_ja_task_send_abort_mail(jep, jatep,
+                                                       uti_state_get_user_name(),
+                                                       uti_state_get_qualified_hostname(),
+                                                       lGetString(jr, JR_err_str)); 
+                           get_rid_of_job_due_to_report(jep, jatep, NULL,
+                                                        pb, rhost, commproc);
+                           pack_job_kill(pb, jobid, jataskid);
+                           ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_SU, 
+                                  pe_task_id_str, u32c(jobid)));
                         }
                      }
-                     if (failed == SSTATE_FAILURE_AFTER_JOB && 
-                           !lGetString(jep, JB_checkpoint_name)) {
-                        job_ja_task_send_abort_mail(jep, jatep,
-                                                    uti_state_get_user_name(),
-                                                    uti_state_get_qualified_hostname(),
-                                                    lGetString(jr, JR_err_str)); 
-                        get_rid_of_job_due_to_report(jep, jatep, NULL,
-                                                     pb, rhost, commproc);
-                        pack_job_kill(pb, jobid, jataskid);
-                        ERROR((SGE_EVENT, MSG_JOB_JOBTASKFAILED_SU, 
-                               pe_task_id_str, u32c(jobid)));
-                     }
                   }
-
-
                } else {
                   lListElem *jg;
                   const char *shouldbe_queue_name;

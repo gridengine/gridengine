@@ -348,3 +348,24 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
    return TRUE;
 }
 
+bool 
+ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id)
+{
+   lListElem *pe_task;
+
+   DENTER(TOP_LAYER, "ja_task_add_finished_pe_task");
+
+   pe_task = lGetSubStr(ja_task, FPET_id, pe_task_id, JAT_finished_task_list);
+   if (pe_task != NULL) {
+      DPRINTF(("already handled exit of pe task "SFQ" in ja_task "U32CFormat
+               "\n", pe_task_id, lGetUlong(ja_task, JAT_task_number)));
+      DEXIT;
+      return false;
+   }
+
+   pe_task = lAddSubStr(ja_task, FPET_id, pe_task_id, JAT_finished_task_list, 
+                        FPET_Type);
+
+   DEXIT;
+   return true;
+}

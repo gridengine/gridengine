@@ -50,4 +50,7 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
 
 int ja_task_update_master_list_usage(lListElem *event);
 
+bool 
+ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id);
+
 #endif /* __SGE_JA_TASK_H */

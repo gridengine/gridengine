@@ -261,6 +261,31 @@ NAMEEND
 
 #define PETRS sizeof(PETRN)/sizeof(char*)
 
+/* 
+ * We need to store information about finished pe tasks to avoid 
+ * duplicate accounting records (see IZ 438).
+ * A ja task will contain a list of finished pe tasks.
+ * Only the task id of finished tasks will be stored.
+ */
+
+/* *INDENT-OFF* */
+
+enum {
+   FPET_id = FPET_LOWERBOUND
+};
+
+LISTDEF(FPET_Type)
+   SGE_STRING(FPET_id, CULL_HASH | CULL_UNIQUE)
+LISTEND
+
+NAMEDEF(FPETN)
+   NAME("FPET_id")
+NAMEEND
+
+/* *INDENT-ON* */
+
+#define FPETS sizeof(FPETN)/sizeof(char *)
+
 #ifdef  __cplusplus
 }
 #endif

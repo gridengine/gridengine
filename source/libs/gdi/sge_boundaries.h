@@ -249,8 +249,12 @@ enum NameSpaceBoundaries {
    PETR_LOWERBOUND = PET_UPPERBOUND + 1,
    PETR_UPPERBOUND = PETR_LOWERBOUND + 1*BASIC_UNIT - 1,
 
+   /* finished pe task reference */
+   FPET_LOWERBOUND = PETR_UPPERBOUND + 1,
+   FPET_UPPERBOUND = FPET_LOWERBOUND * 1*BASIC_UNIT - 1,
+
    /* job report */
-   JR_LOWERBOUND = PETR_UPPERBOUND + 1,
+   JR_LOWERBOUND = FPET_UPPERBOUND + 1,
    JR_UPPERBOUND = JR_LOWERBOUND + 1*BASIC_UNIT - 1,
 
    /* license report */

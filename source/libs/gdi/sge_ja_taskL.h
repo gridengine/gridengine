@@ -134,9 +134,11 @@ extern "C" {
 *
 *     SGE_ULONG(JAT_suitable) ---> only for output.
 *        
-*     SGE_LIST(JAT_task_list, JB_Type) --> other type: PETask object
-*        Parallel task information (JB_Type). Each of those JB_Type
-*        elements has exact one JAT_Type subelement.
+*     SGE_LIST(JAT_task_list, PET_Type)
+*        List of running parallel tasks
+*
+*     SGE_LIST(JAT_finished_task_list, FPET_Type)
+*        List of finished parallel tasks - contains only task names.
 *
 *     SGE_LIST(JAT_previous_usage_list)
 *
@@ -211,6 +213,7 @@ enum {
    JAT_share,
    JAT_suitable,
    JAT_task_list,
+   JAT_finished_task_list,
 
    JAT_previous_usage_list,
 
@@ -249,6 +252,7 @@ SLISTDEF(JAT_Type, Task)
    SGE_DOUBLE(JAT_share, CULL_DEFAULT)
    SGE_ULONG(JAT_suitable, CULL_DEFAULT)
    SGE_LIST(JAT_task_list, PET_Type, CULL_DEFAULT)
+   SGE_LIST(JAT_finished_task_list, FPET_Type, CULL_DEFAULT)
 
    SGE_LIST(JAT_previous_usage_list, UA_Type, CULL_DEFAULT)
 
@@ -285,6 +289,7 @@ NAMEDEF(JATN)
 
    NAME("JAT_suitable")
    NAME("JAT_task_list")
+   NAME("JAT_finished_task_list")
    NAME("JAT_previous_usage_list")
    NAME("JAT_reference")
 

@@ -150,7 +150,8 @@ extern "C" {
       {STN_LOWERBOUND, STNS, STNN},     /* SGEEE - share tree node */
       {SC_LOWERBOUND, SCS, SCN},        /* scheduler config */
       {PET_LOWERBOUND, PETS, PETN},     /* PE Task object */
-      {PETR_LOWERBOUND, PETRS, PETRN},   /* PE Task request object */
+      {PETR_LOWERBOUND, PETRS, PETRN},  /* PE Task request object */
+      {FPET_LOWERBOUND, FPETS, FPETN},  /* finished PE Task reference */
       {JR_LOWERBOUND, JRS, JRN},        /* Job report */
       {LIC_LOWERBOUND, LICS, LICN},     /* structure of license report */
       {CK_LOWERBOUND, CKS, CKN},        /* checkpointing object */

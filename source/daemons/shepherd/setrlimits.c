@@ -54,7 +54,7 @@
 #   undef _KERNEL
 #endif
 
-#if defined(IRIX6)
+#if defined(IRIX6) ||  defined(LINUX6)
 #   define RLIMIT_STRUCT_TAG rlimit64
 #else
 #   define RLIMIT_STRUCT_TAG rlimit
@@ -404,9 +404,9 @@ int trace_rlimit
       if (rlp->rlim_max < rlp->rlim_cur)
          rlp->rlim_cur = rlp->rlim_max;
 
-#if defined(LINUX) || ( defined(SOLARIS) && !defined(SOLARIS64) ) || defined(NECSX4) || defined(NECSX5)
+#if defined(ALINUX) || defined(LINUX5) || ( defined(SOLARIS) && !defined(SOLARIS64) ) || defined(NECSX4) || defined(NECSX5)
 #  define limit_fmt "%ld"
-#elif defined(IRIX6) || defined(HP11) || defined(HP10) || defined(DARWIN) || defined(FREEBSD)
+#elif defined(LINUX6) || defined(IRIX6) || defined(HP11) || defined(HP10) || defined(DARWIN) || defined(FREEBSD)
 #  define limit_fmt "%lld"
 #elif defined(ALPHA) || defined(SOLARIS64)
 #  define limit_fmt "%lu"
@@ -415,7 +415,7 @@ int trace_rlimit
 #endif
 
       switch2start_user();
-#ifdef IRIX6
+#if defined(IRIX6) || defined(LINUX6)
       ret = setrlimit64(resource, rlp);
 #else
       ret = setrlimit(resource,rlp);
@@ -429,7 +429,7 @@ int trace_rlimit
             shepherd_trace(trace_str);
       }
       else {
-#ifdef IRIX6
+#if defined(IRIX6) || defined(LINUX6)
          getrlimit64(resource,&dlp);
 #else
          getrlimit(resource,&dlp);

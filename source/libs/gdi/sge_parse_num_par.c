@@ -59,6 +59,9 @@
    /* to be independent from irix' compiler options */
 #  undef RLIM_INFINITY
 #  define  RLIM_INFINITY  0x7fffffffffffffffLL
+#elif defined(LINUX6)
+#  undef RLIM_INFINITY
+#  define  RLIM_INFINITY RLIM64_INFINITY
 #elif defined(CRAY)
 #  define  RLIM_INFINITY  0
 #elif defined(ALPHA)
@@ -73,7 +76,9 @@
 #  define  RLIM_INFINITY  0x7fffffff
 #endif
 
-#if !defined(CRAY) && !defined(SOLARIS64)
+#if defined(LINUX6)
+#  define RLIM_MAX  0x7fffffffffffffffLL
+#elif !defined(CRAY) && !defined(SOLARIS64)
 #  define RLIM_MAX RLIM_INFINITY
 #else
 #  define RLIM_MAX 0x7fffffffffffffff

@@ -45,7 +45,7 @@
    typedef long sge_rlim_t;
 #elif defined(NECSX4) || defined(NECSX5)
    typedef long long sge_rlim_t;
-#elif IRIX6
+#elif defined (IRIX6) || defined(LINUX6)
    typedef rlim64_t sge_rlim_t;
 #elif SUN4 || HPUX || AIX41
    typedef int sge_rlim_t;

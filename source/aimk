@@ -527,7 +527,8 @@ while ($#argv >= 1 && $?found)
       #set DEBUG_FLAG = "$DEBUG_FLAG -g -Zsl -Zvm -Zvm -Zkt"
       #set DEBUG_FLAG = "$DEBUG_FLAG -g -Zsl"
       #set DEBUG_FLAG = "$DEBUG_FLAG -Zsl"
-      set INSURE_FLAG = "-Zsl -Zvm"
+      #set INSURE_FLAG = "-Zsl -Zvm -D__INSURE__"
+      set INSURE_FLAG = "-Zsl -D__INSURE__ -D__INSIGHT__"
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
       breaksw
@@ -1334,8 +1335,8 @@ case LINUX6:
       set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"
    endif
 
-   set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
-   set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"
+   set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS -D_LARGEFILE64_SOURCE=1"
+   set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS -D_LARGEFILE64_SOURCE=1"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SHAREDLD = $CC
@@ -1352,13 +1353,8 @@ case LINUX6:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   if ( $COMPILE_ARCH == "LINUX60" ) then
-      set GLIBC20DEF=-DLINUX60
-   else
-     set GLIBC20DEF = ""
-   endif
-   set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
-   set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes $GLIBC20DEF $DEBUG_FLAG $CXXFLAGS"
+   set CFLAGS   = "$OFLAG -Wall -Werror $DEBUG_FLAG $CFLAGS"
+   set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes $DEBUG_FLAG $CXXFLAGS"
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
    set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
@@ -1487,12 +1483,12 @@ case SOLARIS86:
       set OFLAG = "-O3"
    else
       if ( $BUILDARCH == SOLARIS86 ) then
-         echo "Do not compile Grid Engine with -xO4 on SOLARIS86 platform"
+         # Do not compile Grid Engine with -xO4 on SOLARIS86 platform
+         # with Sun workshop compiler 5 or 6
          set OFLAG = "-xO3"
       else
          set OFLAG = "-xO4"
       endif
-      
    endif
 
    if ( $OPTIMIZATION == 1 ) then
@@ -1647,7 +1643,7 @@ if ( "$GCC_NOERR_CFLAGS" == "" ) then
    set GCC_NOERR_CXXFLAGS = "$CXXFLAGS"
 endif
 
-# gcc-3.3
+# suppress gcc 3.3 warnings
 if ( $CC == gcc ) then
    if ( `gcc --version` == "3.3") then
       set CFLAGS = "$CFLAGS -Wno-sign-compare -Wno-strict-aliasing"

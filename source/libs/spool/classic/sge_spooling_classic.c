@@ -202,10 +202,13 @@ spool_classic_create_context(lList **answer_list, const char *args)
                                           spool_classic_default_startup_func,
                                           NULL,
                                           spool_classic_default_maintenance_func,
+                                          NULL,
+                                          NULL,
                                           spool_classic_default_list_func,
                                           spool_classic_default_read_func,
                                           spool_classic_default_write_func,
                                           spool_classic_default_delete_func,
+                                          NULL,
                                           NULL);
          type = spool_context_create_type(answer_list, context, SGE_TYPE_ALL);
          spool_type_add_rule(answer_list, type, rule, true);
@@ -217,10 +220,13 @@ spool_classic_create_context(lList **answer_list, const char *args)
                                           spool_classic_common_startup_func,
                                           NULL,
                                           spool_classic_common_maintenance_func,
+                                          NULL,
+                                          NULL,
                                           spool_classic_default_list_func,
                                           spool_classic_default_read_func,
                                           spool_classic_default_write_func,
                                           spool_classic_default_delete_func,
+                                          NULL,
                                           NULL);
          type = spool_context_create_type(answer_list, context, 
                                           SGE_TYPE_CONFIG);
@@ -539,7 +545,7 @@ spool_classic_common_maintenance_func(lList **answer_list,
 *     spool_classic_default_list_func(lList **answer_list, 
 *                                     const lListElem *type, 
 *                                     const lListElem *rule, lList **list, 
-*                                     const sge_object_type event_type) 
+*                                     const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Depending on the object type given, calls the appropriate functions
@@ -551,7 +557,7 @@ spool_classic_common_maintenance_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -568,13 +574,13 @@ bool
 spool_classic_default_list_func(lList **answer_list, 
                                 const lListElem *type, 
                                 const lListElem *rule, lList **list, 
-                                const sge_object_type event_type)
+                                const sge_object_type object_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_classic_default_list_func");
 
-   switch (event_type) {
+   switch (object_type) {
       case SGE_TYPE_ADMINHOST:
          if (sge_read_adminhost_list_from_disk() != 0) {
             ret = false;
@@ -728,7 +734,7 @@ spool_classic_default_list_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
          ret = false;
          break;
    }
@@ -746,7 +752,7 @@ spool_classic_default_list_func(lList **answer_list,
 *     spool_classic_default_read_func(lList **answer_list, 
 *                                     const lListElem *type, 
 *                                     const lListElem *rule, const char *key, 
-*                                     const sge_object_type event_type) 
+*                                     const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Reads an individual object by calling the appropriate classic spooling 
@@ -757,7 +763,7 @@ spool_classic_default_list_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     lListElem* - the object, if it could be read, else NULL
@@ -774,13 +780,13 @@ lListElem *
 spool_classic_default_read_func(lList **answer_list, 
                                 const lListElem *type, 
                                 const lListElem *rule, const char *key, 
-                                const sge_object_type event_type)
+                                const sge_object_type object_type)
 {
    lListElem *ep = NULL;
 
    DENTER(TOP_LAYER, "spool_classic_default_read_func");
 
-   switch (event_type) {
+   switch (object_type) {
       case SGE_TYPE_ADMINHOST:
          ep = cull_read_in_host(ADMINHOST_DIR, key, CULL_READ_SPOOL, AH_name, 
                                 NULL, NULL);
@@ -879,7 +885,7 @@ spool_classic_default_read_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
          break;
    }
 
@@ -897,7 +903,7 @@ spool_classic_default_read_func(lList **answer_list,
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, 
 *                                      const lListElem *object, const char *key,
-*                                      const sge_object_type event_type) 
+*                                      const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate classic spooling functions.
@@ -908,7 +914,7 @@ spool_classic_default_read_func(lList **answer_list,
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to spool
 *     const char *key                 - unique key
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -926,12 +932,12 @@ spool_classic_default_write_func(lList **answer_list,
                                  const lListElem *type, 
                                  const lListElem *rule, 
                                  const lListElem *object, const char *key, 
-                                 const sge_object_type event_type)
+                                 const sge_object_type object_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_classic_default_write_func");
-   switch (event_type) {
+   switch (object_type) {
       case SGE_TYPE_ADMINHOST:
          write_host(1, 2, object, AH_name, NULL);
          break;
@@ -1130,7 +1136,7 @@ spool_classic_default_write_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
          ret = false;
          break;
    }
@@ -1149,7 +1155,7 @@ spool_classic_default_write_func(lList **answer_list,
 *                                       const lListElem *type, 
 *                                       const lListElem *rule, 
 *                                       const char *key, 
-*                                       const sge_object_type event_type) 
+*                                       const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Deletes an object in the classic spooling.
@@ -1161,7 +1167,7 @@ spool_classic_default_write_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -1179,13 +1185,13 @@ spool_classic_default_delete_func(lList **answer_list,
                                   const lListElem *type, 
                                   const lListElem *rule, 
                                   const char *key, 
-                                  const sge_object_type event_type)
+                                  const sge_object_type object_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_classic_default_delete_func");
 
-   switch (event_type) {
+   switch (object_type) {
       case SGE_TYPE_ADMINHOST:
          ret = sge_unlink(ADMINHOST_DIR, key) == 0;
          break;
@@ -1285,7 +1291,7 @@ spool_classic_default_delete_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
          ret = false;
          break;
    }

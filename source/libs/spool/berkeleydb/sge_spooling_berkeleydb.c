@@ -129,11 +129,14 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
                                        spool_berkeleydb_default_startup_func,
                                        spool_berkeleydb_default_shutdown_func,
                                        spool_berkeleydb_default_maintenance_func,
+                                       NULL,
+                                       NULL,
                                        spool_berkeleydb_default_list_func,
                                        spool_berkeleydb_default_read_func,
                                        spool_berkeleydb_default_write_func,
                                        spool_berkeleydb_default_delete_func,
-                                       spool_default_verify_func);
+                                       spool_default_validate_func,
+                                       spool_default_validate_list_func);
 
       db = bdb_create();
       lSetRef(rule, SPR_clientdata, db);
@@ -622,7 +625,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info *db,
 *                                      lList **answer_list, 
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, lList **list, 
-*                                      const sge_object_type event_type) 
+*                                      const sge_object_type object_type) 
 *
 *  FUNCTION
 *
@@ -631,7 +634,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info *db,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -648,7 +651,7 @@ bool
 spool_berkeleydb_default_list_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, lList **list, 
-                                 const sge_object_type event_type)
+                                 const sge_object_type object_type)
 {
    bool ret = true;
    bool local_transaction = false; /* did we start a transaction? */
@@ -661,8 +664,8 @@ spool_berkeleydb_default_list_func(lList **answer_list,
    DENTER(TOP_LAYER, "spool_berkeleydb_default_list_func");
 
    db = (bdb_info *)lGetRef(rule, SPR_clientdata);
-   descr = object_type_get_descr(event_type);
-   table_name = object_type_get_name(event_type);
+   descr = object_type_get_descr(object_type);
+   table_name = object_type_get_name(object_type);
 
    if (db == NULL || db->env == NULL || db->db == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -675,7 +678,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_WARNING, 
                               MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                              object_type_get_name(event_type));
+                              object_type_get_name(object_type));
       ret = false;
    } else {
       /* if no transaction was opened from outside, open a new one */
@@ -687,89 +690,112 @@ spool_berkeleydb_default_list_func(lList **answer_list,
       }
 
       if (ret) {
-      switch (event_type) {
-         case SGE_TYPE_JATASK:
-         case SGE_TYPE_PETASK:
-            break;
-         case SGE_TYPE_JOB:
-            {
-               lListElem *job;
-               dstring key_dstring;
-               char key_buffer[MAX_STRING_SIZE];
-               const char *key;
+         switch (object_type) {
+            case SGE_TYPE_JATASK:
+            case SGE_TYPE_PETASK:
+               break;
+            case SGE_TYPE_JOB:
+               {
+                  lListElem *job;
+                  dstring key_dstring;
+                  char key_buffer[MAX_STRING_SIZE];
+                  const char *key;
 
-               sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
-              
-               /* read all jobs */
-               ret = spool_berkeleydb_read_list(answer_list, db, 
-                                                list, descr,
-                                                table_name);
-               if (ret) {
-                  const char *ja_task_table;
-                  /* for all jobs: read ja_tasks */
-                  ja_task_table = object_type_get_name(SGE_TYPE_JATASK);
-                  for_each(job, *list) {
-                     lList *task_list = NULL;
-                     u_long32 job_id = lGetUlong(job, JB_job_number);
+                  sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
+                 
+                  /* read all jobs */
+                  ret = spool_berkeleydb_read_list(answer_list, db, 
+                                                   list, descr,
+                                                   table_name);
+                  if (ret) {
+                     const char *ja_task_table;
+                     /* for all jobs: read ja_tasks */
+                     ja_task_table = object_type_get_name(SGE_TYPE_JATASK);
+                     for_each(job, *list) {
+                        lList *task_list = NULL;
+                        u_long32 job_id = lGetUlong(job, JB_job_number);
 
-                     key = sge_dstring_sprintf(&key_dstring, "%s:%d.",
-                                               ja_task_table,
-                                               job_id);
-                     ret = spool_berkeleydb_read_list(answer_list, db,
-                                                      &task_list, JAT_Type,
-                                                      key);
-                     /* reading ja_tasks succeeded */
-                     if (ret) {
-                        /* we actually found ja_tasks for this job */
-                        if (task_list != NULL) {
-                           lListElem *ja_task;
-                           const char *pe_task_table;
+                        key = sge_dstring_sprintf(&key_dstring, "%s:%d.",
+                                                  ja_task_table,
+                                                  job_id);
+                        ret = spool_berkeleydb_read_list(answer_list, db,
+                                                         &task_list, JAT_Type,
+                                                         key);
+                        /* reading ja_tasks succeeded */
+                        if (ret) {
+                           /* we actually found ja_tasks for this job */
+                           if (task_list != NULL) {
+                              lListElem *ja_task;
+                              const char *pe_task_table;
 
-                           lSetList(job, JB_ja_tasks, task_list);
-                           pe_task_table = object_type_get_name(SGE_TYPE_PETASK);
+                              lSetList(job, JB_ja_tasks, task_list);
+                              pe_task_table = object_type_get_name(SGE_TYPE_PETASK);
 
-                           for_each(ja_task, task_list) {
-                              lList *pe_task_list = NULL;
-                              u_long32 ja_task_id = lGetUlong(ja_task, 
-                                                              JAT_task_number);
-/* JG: TODO: we have to format the job/ja_task id's to have them sorted 
- *           e.g. %08d
- */
-                              key = sge_dstring_sprintf(&key_dstring, "%s:%d.%d.",
-                                                        pe_task_table,
-                                                        job_id, ja_task_id);
-                              
-                              ret = spool_berkeleydb_read_list(answer_list, db,
-                                                      &pe_task_list, PET_Type,
-                                                      key);
-                              if (ret) {
-                                 if (pe_task_list != NULL) {
-                                    lSetList(ja_task, JAT_task_list, pe_task_list);
+                              for_each(ja_task, task_list) {
+                                 lList *pe_task_list = NULL;
+                                 u_long32 ja_task_id = lGetUlong(ja_task, 
+                                                                 JAT_task_number);
+   /* JG: TODO: we have to format the job/ja_task id's to have them sorted 
+    *           e.g. %08d
+    */
+                                 key = sge_dstring_sprintf(&key_dstring, "%s:%d.%d.",
+                                                           pe_task_table,
+                                                           job_id, ja_task_id);
+                                 
+                                 ret = spool_berkeleydb_read_list(answer_list, db,
+                                                         &pe_task_list, PET_Type,
+                                                         key);
+                                 if (ret) {
+                                    if (pe_task_list != NULL) {
+                                       lSetList(ja_task, JAT_task_list, pe_task_list);
+                                    }
+                                 } else {
+                                    break;
                                  }
-                              } else {
-                                 break;
                               }
                            }
                         }
-                     }
 
-                     if (!ret) {
-                        break;
+                        if (!ret) {
+                           break;
+                        }
                      }
                   }
                }
-            }
-            break;
-         default:
-            ret = spool_berkeleydb_read_list(answer_list, db, 
-                                             list, descr,
-                                             table_name);
-            break;
+               break;
+            default:
+               ret = spool_berkeleydb_read_list(answer_list, db, 
+                                                list, descr,
+                                                table_name);
+               break;
+         }
+         /* spooling is done, now end the transaction, if we have an own one */
+         if (local_transaction) {
+            ret = spool_berkeleydb_end_transaction(answer_list, db, ret);
+         }
       }
-      /* spooling is done, now end the transaction, if we have an own one */
-      if (local_transaction) {
-         ret = spool_berkeleydb_end_transaction(answer_list, db, ret);
+   }
+
+   if (ret) {
+      lListElem *ep;
+      spooling_validate_func validate = 
+         (spooling_validate_func)lGetRef(rule, SPR_validate_func);
+      spooling_validate_list_func validate_list = 
+         (spooling_validate_list_func)lGetRef(rule, SPR_validate_list_func);
+
+      /* validate each individual object */
+      /* JG: TODO: is it valid to validate after reading all objects? */
+      for_each(ep, *list) {
+         ret = validate(answer_list, type, rule, ep, object_type);
+         if (!ret) {
+            /* error message has been created in the validate func */
+            break;
+         }
       }
+
+      if (ret) {
+         /* validate complete list */
+         ret = validate_list(answer_list, type, rule, object_type);
       }
    }
 
@@ -788,7 +814,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
 *     spool_berkeleydb_default_read_func(lList **answer_list, 
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, const char *key, 
-*                                      const sge_object_type event_type) 
+*                                      const sge_object_type object_type) 
 *
 *  FUNCTION
 *
@@ -797,7 +823,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     lListElem* - the object, if it could be read, else NULL
@@ -814,7 +840,7 @@ lListElem *
 spool_berkeleydb_default_read_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, const char *key, 
-                                 const sge_object_type event_type)
+                                 const sge_object_type object_type)
 {
    lListElem *ep = NULL;
 
@@ -824,12 +850,12 @@ spool_berkeleydb_default_read_func(lList **answer_list,
 
    db = (bdb_info *)lGetRef(rule, SPR_clientdata);
 
-   switch (event_type) {
+   switch (object_type) {
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
          break;
    }
 
@@ -988,7 +1014,7 @@ spool_berkeleydb_write_job(lList **answer_list, bdb_info *db,
 *                                       const lListElem *rule, 
 *                                       const lListElem *object, 
 *                                       const char *key, 
-*                                       const sge_object_type event_type) 
+*                                       const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate berkeleydb spooling functions.
@@ -999,7 +1025,7 @@ spool_berkeleydb_write_job(lList **answer_list, bdb_info *db,
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to spool
 *     const char *key                 - unique key
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -1018,7 +1044,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                                   const lListElem *rule, 
                                   const lListElem *object, 
                                   const char *key, 
-                                  const sge_object_type event_type)
+                                  const sge_object_type object_type)
 {
    bool ret = true;
    bool local_transaction = false; /* did we start a transaction? */
@@ -1049,7 +1075,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
       }
 
       if (ret) {
-         switch (event_type) {
+         switch (object_type) {
             case SGE_TYPE_JOB:
             case SGE_TYPE_JATASK:
             case SGE_TYPE_PETASK:
@@ -1087,7 +1113,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                                    dbkey_buffer, sizeof(dbkey_buffer));
 
                   dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", 
-                                              object_type_get_name(event_type),
+                                              object_type_get_name(object_type),
                                               key);
 
                   ret = spool_berkeleydb_write_object(answer_list, db, 
@@ -1285,7 +1311,7 @@ spool_berkeleydb_delete_job(lList **answer_list, bdb_info *db,
 *                                        const lListElem *type, 
 *                                        const lListElem *rule, 
 *                                        const char *key, 
-*                                        const sge_object_type event_type) 
+*                                        const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Deletes an object in the berkeleydb spooling.
@@ -1295,7 +1321,7 @@ spool_berkeleydb_delete_job(lList **answer_list, bdb_info *db,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -1313,7 +1339,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                                    const lListElem *type, 
                                    const lListElem *rule,
                                    const char *key, 
-                                   const sge_object_type event_type)
+                                   const sge_object_type object_type)
 {
    bool ret = true;
    bool local_transaction = false; /* did we start a transaction? */
@@ -1338,7 +1364,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
       }
 
       if (ret) {
-   switch (event_type) {
+   switch (object_type) {
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:
       case SGE_TYPE_PETASK:
@@ -1369,7 +1395,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
          }
          break;
       default:
-         table_name = object_type_get_name(event_type);
+         table_name = object_type_get_name(object_type);
          dbkey = sge_dstring_sprintf(&dbkey_dstring, "%s:%s", 
                                      table_name,
                                      key);

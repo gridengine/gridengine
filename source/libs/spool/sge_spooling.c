@@ -427,6 +427,82 @@ spool_shutdown_context(lList **answer_list, lListElem *context)
    return ret;
 }
 
+bool
+spool_trigger_context(lList **answer_list, lListElem *context)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_trigger_context");
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
+
+   if (context == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
+                              SGE_FUNC);
+      ret = false;
+   } else {
+      lListElem *rule;
+
+      for_each (rule, lGetList(context, SPC_rules)) {
+         spooling_trigger_func func = (spooling_trigger_func)
+                                       lGetRef(rule, SPR_trigger_func);
+         if (func != NULL) {
+            if (!func(answer_list, rule)) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_SPOOL_TRIGGEROFRULEFAILED_SS,
+                                       lGetString(rule, SPR_name), 
+                                       lGetString(context, SPC_name));
+               ret = false;
+               break;
+            }
+         }
+      }
+   }
+   
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   DEXIT;
+   return ret;
+}
+
+bool spool_transaction(lList **answer_list, lListElem *context, 
+                       spooling_transaction_command cmd)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_transaction");
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLING);
+
+   if (context == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, MSG_SPOOL_NOVALIDCONTEXT_S,
+                              SGE_FUNC);
+      ret = false;
+   } else {
+      lListElem *rule;
+
+      for_each (rule, lGetList(context, SPC_rules)) {
+         spooling_transaction_func func = (spooling_transaction_func)
+                                       lGetRef(rule, SPR_transaction_func);
+         if (func != NULL) {
+            if (!func(answer_list, rule, cmd)) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_SPOOL_TRANSACTIONOFRULEFAILED_SS,
+                                       lGetString(rule, SPR_name), 
+                                       lGetString(context, SPC_name));
+               ret = false;
+               break;
+            }
+         }
+      }
+   }
+   
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLING);
+   DEXIT;
+   return ret;
+}
+
 
 /****** spool/spool_set_default_context() *******************************
 *  NAME
@@ -522,7 +598,7 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *                               spooling_read_func read_func, 
 *                               spooling_write_func write_func, 
 *                               spooling_delete_func delete_func) 
-*                               spooling_verify_func verify_func) 
+*                               spooling_validate_func validate_func) 
 *
 *  FUNCTION
 *     Creates a rule in the given context and assigns it the given attributes.
@@ -543,7 +619,7 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *                                            object
 *     spooling_delete_func delete_func     - function deleting an individual 
 *                                            object
-*     spooling_verify_func verify_func     - function verifying an individual 
+*     spooling_validate_func validate_func     - function validateing an individual 
 *                                            object
 *
 *  RESULT
@@ -558,11 +634,14 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
                           spooling_startup_func startup_func, 
                           spooling_shutdown_func shutdown_func, 
                           spooling_maintenance_func maintenance_func, 
+                          spooling_trigger_func trigger_func, 
+                          spooling_transaction_func transaction_func, 
                           spooling_list_func list_func, 
                           spooling_read_func read_func, 
                           spooling_write_func write_func, 
                           spooling_delete_func delete_func,
-                          spooling_verify_func verify_func)
+                          spooling_validate_func validate_func,
+                          spooling_validate_list_func validate_list_func)
 {
    lListElem *ep = NULL;
 
@@ -590,11 +669,14 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
       lSetRef(ep, SPR_startup_func, (void *)startup_func);
       lSetRef(ep, SPR_shutdown_func, (void *)shutdown_func);
       lSetRef(ep, SPR_maintenance_func, (void *)maintenance_func);
+      lSetRef(ep, SPR_trigger_func, (void *)trigger_func);
+      lSetRef(ep, SPR_transaction_func, (void *)transaction_func);
       lSetRef(ep, SPR_list_func, (void *)list_func);
       lSetRef(ep, SPR_read_func, (void *)read_func);
       lSetRef(ep, SPR_write_func, (void *)write_func);
       lSetRef(ep, SPR_delete_func, (void *)delete_func);
-      lSetRef(ep, SPR_verify_func, (void *)verify_func);
+      lSetRef(ep, SPR_validate_func, (void *)validate_func);
+      lSetRef(ep, SPR_validate_list_func, (void *)validate_list_func);
 
       /* append rule to rule list */
       lp = lGetList(context, SPC_rules);
@@ -618,7 +700,7 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
 *  SYNOPSIS
 *     lListElem* 
 *     spool_context_search_type(const lListElem *context, 
-*                               const  sge_object_type event_type) 
+*                               const  sge_object_type object_type) 
 *
 *  FUNCTION
 *     Searches the object type description with the given type in the 
@@ -629,7 +711,7 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
 *
 *  INPUTS
 *     const lListElem *context        - the context to search
-*     const sge_object_type event_type - the object type to search
+*     const sge_object_type object_type - the object type to search
 *
 *  RESULT
 *     lListElem* - an object type description or NULL, if none was found.
@@ -639,12 +721,12 @@ spool_context_create_rule(lList **answer_list, lListElem *context,
 *******************************************************************************/
 lListElem *
 spool_context_search_type(const lListElem *context, 
-                          const sge_object_type event_type)
+                          const sge_object_type object_type)
 {
    lListElem *ep;
 
    /* search fitting rule */
-   ep = lGetElemUlong(lGetList(context, SPC_types), SPT_type, event_type);
+   ep = lGetElemUlong(lGetList(context, SPC_types), SPT_type, object_type);
 
    /* if no specific rule is found, return default rule */
    if (ep == NULL) {
@@ -661,13 +743,13 @@ spool_context_search_type(const lListElem *context,
 *  SYNOPSIS
 *     lListElem* 
 *     spool_context_create_type(lList **answer_list, lListElem *context, 
-*                               const sge_object_type event_type) 
+*                               const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Creates a new description how a certain object type shall be 
 *     spooled.
 *
-*     If the given event_type is SGE_TYPE_ALL, the description will
+*     If the given object_type is SGE_TYPE_ALL, the description will
 *     be the default for object types that are not individually
 *     handled.
 *
@@ -675,7 +757,7 @@ spool_context_search_type(const lListElem *context,
 *     lList **answer_list  - to return error messages
 *     lListElem *context              - the context to contain the new 
 *                                       description
-*     const sge_object_type event_type - the object type
+*     const sge_object_type object_type - the object type
 *
 *  RESULT
 *     lListElem* - the new object type description
@@ -685,7 +767,7 @@ spool_context_search_type(const lListElem *context,
 *******************************************************************************/
 lListElem *
 spool_context_create_type(lList **answer_list, lListElem *context, 
-                          const sge_object_type event_type)
+                          const sge_object_type object_type)
 {
    lListElem *ep = NULL;
 
@@ -701,8 +783,8 @@ spool_context_create_type(lList **answer_list, lListElem *context,
 
       /* create new type */
       ep = lCreateElem(SPT_Type);
-      lSetUlong(ep, SPT_type, event_type);
-      lSetString(ep, SPT_name, object_type_get_name(event_type));
+      lSetUlong(ep, SPT_type, object_type);
+      lSetString(ep, SPT_name, object_type_get_name(object_type));
     
       /* append it to the types list of the context */
       lp = lGetList(context, SPC_types);
@@ -838,7 +920,7 @@ spool_type_add_rule(lList **answer_list, lListElem *spool_type,
 *  SYNOPSIS
 *     bool
 *     spool_read_list(lList **answer_list, const lListElem *context, 
-*                     lList **list, const sge_object_type event_type) 
+*                     lList **list, const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Read the list of objects associated with a certain object type
@@ -851,7 +933,7 @@ spool_type_add_rule(lList **answer_list, lListElem *spool_type,
 *     lList **answer_list  - to return error messages
 *     const lListElem *context        - the context to use for reading
 *     lList **list                    - the target list
-*     const sge_object_type event_type - the object type
+*     const sge_object_type object_type - the object type
 *
 *  RESULT
 *     int - true, on success, false, if an error occured
@@ -865,7 +947,7 @@ spool_type_add_rule(lList **answer_list, lListElem *spool_type,
 *******************************************************************************/
 bool 
 spool_read_list(lList **answer_list, const lListElem *context, 
-                lList **list, const sge_object_type event_type)
+                lList **list, const sge_object_type object_type)
 {
    bool ret = false;
 
@@ -880,12 +962,12 @@ spool_read_list(lList **answer_list, const lListElem *context,
       lListElem *type;
 
       /* find the object type description */
-      type = spool_context_search_type(context, event_type);
+      type = spool_context_search_type(context, object_type);
       if (type == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS, 
-                                 object_type_get_name(event_type), 
+                                 object_type_get_name(object_type), 
                                  lGetString(context, SPC_name));
       } else {
          lListElem *rule;
@@ -896,7 +978,7 @@ spool_read_list(lList **answer_list, const lListElem *context,
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_SPOOL_NODEFAULTRULEFORTYPEINCONTEXT_SS,
-                                    object_type_get_name(event_type), 
+                                    object_type_get_name(object_type), 
                                     lGetString(context, SPC_name));
          } else {
             spooling_list_func func;
@@ -911,7 +993,7 @@ spool_read_list(lList **answer_list, const lListElem *context,
                                        lGetString(context, SPC_name),
                                        SGE_FUNC);
             } else {
-               ret = func(answer_list, type, rule, list, event_type);
+               ret = func(answer_list, type, rule, list, object_type);
             }
          }
       }
@@ -929,7 +1011,7 @@ spool_read_list(lList **answer_list, const lListElem *context,
 *  SYNOPSIS
 *     lListElem* 
 *     spool_read_object(lList **answer_list, const lListElem *context, 
-*                       const  sge_object_type event_type, const char *key) 
+*                       const  sge_object_type object_type, const char *key) 
 *
 *  FUNCTION
 *     Read an objects characterized by its type and a unique key
@@ -941,7 +1023,7 @@ spool_read_list(lList **answer_list, const lListElem *context,
 *  INPUTS
 *     lList **answer_list  - to return error messages
 *     const lListElem *context        - the context to use
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *     const char *key                 - unique key
 *
 *  RESULT
@@ -952,7 +1034,7 @@ spool_read_list(lList **answer_list, const lListElem *context,
 *******************************************************************************/
 lListElem *
 spool_read_object(lList **answer_list, const lListElem *context, 
-                  const sge_object_type event_type, const char *key)
+                  const sge_object_type object_type, const char *key)
 {
    lListElem *result = NULL;
 
@@ -967,12 +1049,12 @@ spool_read_object(lList **answer_list, const lListElem *context,
       lListElem *type;
 
       /* find the object type description */
-      type = spool_context_search_type(context, event_type);
+      type = spool_context_search_type(context, object_type);
       if (type == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
-                                 object_type_get_name(event_type), 
+                                 object_type_get_name(object_type), 
                                  lGetString(context, SPC_name));
       } else {
          lListElem *rule;
@@ -983,7 +1065,7 @@ spool_read_object(lList **answer_list, const lListElem *context,
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_SPOOL_NODEFAULTRULEFORTYPEINCONTEXT_SS,
-                                    object_type_get_name(event_type), 
+                                    object_type_get_name(object_type), 
                                     lGetString(context, SPC_name));
          } else {
             spooling_read_func func;
@@ -998,7 +1080,7 @@ spool_read_object(lList **answer_list, const lListElem *context,
                                        lGetString(context, SPC_name),
                                        SGE_FUNC);
             } else {
-               result = func(answer_list, type, rule, key, event_type);
+               result = func(answer_list, type, rule, key, object_type);
             }
          }
       }
@@ -1017,7 +1099,7 @@ spool_read_object(lList **answer_list, const lListElem *context,
 *     bool 
 *     spool_write_object(lList **answer_list, const lListElem *context, 
 *                             const lListElem *object, const char *key, 
-*                             const sge_object_type event_type) 
+*                             const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Writes a single object using the given spooling context.
@@ -1029,7 +1111,7 @@ spool_read_object(lList **answer_list, const lListElem *context,
 *     const lListElem *context        - context to use
 *     const lListElem *object         - object to spool
 *     const char *key                 - unique key
-*     const sge_object_type event_type - type of the object
+*     const sge_object_type object_type - type of the object
 *
 *  RESULT
 *     bool - true, if writing was successfull, else false
@@ -1040,7 +1122,7 @@ spool_read_object(lList **answer_list, const lListElem *context,
 bool 
 spool_write_object(lList **answer_list, const lListElem *context, 
                    const lListElem *object, const char *key, 
-                   const sge_object_type event_type)
+                   const sge_object_type object_type)
 {
    int ret = false;
 
@@ -1055,12 +1137,12 @@ spool_write_object(lList **answer_list, const lListElem *context,
       lListElem *type;
 
       /* find the object type description */
-      type = spool_context_search_type(context, event_type);
+      type = spool_context_search_type(context, object_type);
       if (type == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
-                                 object_type_get_name(event_type), 
+                                 object_type_get_name(object_type), 
                                  lGetString(context, SPC_name));
       } else {
          lList *type_rules;
@@ -1071,7 +1153,7 @@ spool_write_object(lList **answer_list, const lListElem *context,
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS,
-                                    object_type_get_name(event_type), 
+                                    object_type_get_name(object_type), 
                                     lGetString(context, SPC_name));
          } else {
             lListElem *type_rule;
@@ -1094,7 +1176,7 @@ spool_write_object(lList **answer_list, const lListElem *context,
                                           SGE_FUNC);
                          ret = false;
                } else {
-                  if(!func(answer_list, type, rule, object, key, event_type)) {
+                  if(!func(answer_list, type, rule, object, key, object_type)) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                              ANSWER_QUALITY_WARNING, 
                                              MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
@@ -1120,7 +1202,7 @@ spool_write_object(lList **answer_list, const lListElem *context,
 *  SYNOPSIS
 *     bool 
 *     spool_delete_object(lList **answer_list, const lListElem *context, 
-*                         const sge_object_type event_type, const char *key) 
+*                         const sge_object_type object_type, const char *key) 
 *
 *  FUNCTION
 *     Deletes a certain object characterized by type and a unique key
@@ -1131,7 +1213,7 @@ spool_write_object(lList **answer_list, const lListElem *context,
 *  INPUTS
 *     lList **answer_list  - to return error messages
 *     const lListElem *context        - the context to use
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *     const char *key                 - unique key
 *
 *  RESULT
@@ -1142,7 +1224,7 @@ spool_write_object(lList **answer_list, const lListElem *context,
 *******************************************************************************/
 bool 
 spool_delete_object(lList **answer_list, const lListElem *context, 
-                    const sge_object_type event_type, const char *key)
+                    const sge_object_type object_type, const char *key)
 {
    int ret = false;
 
@@ -1157,12 +1239,12 @@ spool_delete_object(lList **answer_list, const lListElem *context,
       lListElem *type;
 
       /* find the object type description */
-      type = spool_context_search_type(context, event_type);
+      type = spool_context_search_type(context, object_type);
       if (type == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_SPOOL_UNKNOWNOBJECTTYPEINCONTEXT_SS,
-                                 object_type_get_name(event_type), 
+                                 object_type_get_name(object_type), 
                                  lGetString(context, SPC_name));
       } else {
          lList *type_rules;
@@ -1173,7 +1255,7 @@ spool_delete_object(lList **answer_list, const lListElem *context,
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_SPOOL_NORULESFORTYPEINCONTEXT_SS,
-                                    object_type_get_name(event_type), 
+                                    object_type_get_name(object_type), 
                                     lGetString(context, SPC_name));
          } else {
             lListElem *type_rule;
@@ -1196,7 +1278,7 @@ spool_delete_object(lList **answer_list, const lListElem *context,
                                           SGE_FUNC);
                   ret = false;
                } else {
-                  if (!func(answer_list, type, rule, key, event_type)) {
+                  if (!func(answer_list, type, rule, key, object_type)) {
                      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                              ANSWER_QUALITY_WARNING, 
                                              MSG_SPOOL_RULEINCONTEXTFAILEDWRITING_SS,
@@ -1222,7 +1304,7 @@ spool_delete_object(lList **answer_list, const lListElem *context,
 *  SYNOPSIS
 *     bool
 *     spool_compare_objects(lList **answer_list, const lListElem *context, 
-*                           const sge_object_type event_type, 
+*                           const sge_object_type object_type, 
 *                           const lListElem *ep1, const lListElem *ep2) 
 *
 *  FUNCTION
@@ -1232,7 +1314,7 @@ spool_delete_object(lList **answer_list, const lListElem *context,
 *  INPUTS
 *     lList **answer_list  - to return error messages
 *     const lListElem *context        - context to use
-*     const sge_object_type event_type - type of the object
+*     const sge_object_type object_type - type of the object
 *     const lListElem *ep1            - object 1
 *     const lListElem *ep2            - object 2
 *
@@ -1249,7 +1331,7 @@ spool_delete_object(lList **answer_list, const lListElem *context,
 *******************************************************************************/
 bool
 spool_compare_objects(lList **answer_list, const lListElem *context, 
-                      const sge_object_type event_type, 
+                      const sge_object_type object_type, 
                       const lListElem *ep1, const lListElem *ep2)
 {
    bool ret = false;

@@ -475,11 +475,14 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
                                           spool_flatfile_default_startup_func,
                                           NULL,
                                           NULL,
+                                          NULL,
+                                          NULL,
                                           spool_flatfile_default_list_func,
                                           spool_flatfile_default_read_func,
                                           spool_flatfile_default_write_func,
                                           spool_flatfile_default_delete_func,
-                                          spool_default_verify_func);
+                                          spool_default_validate_func,
+                                          spool_default_validate_list_func);
          lSetRef(rule, SPR_clientdata, field_info);
          type = spool_context_create_type(answer_list, context, SGE_TYPE_ALL);
          spool_type_add_rule(answer_list, type, rule, true);
@@ -491,11 +494,14 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
                                           spool_flatfile_common_startup_func,
                                           NULL,
                                           NULL,
+                                          NULL,
+                                          NULL,
                                           spool_flatfile_default_list_func,
                                           spool_flatfile_default_read_func,
                                           spool_flatfile_default_write_func,
                                           spool_flatfile_default_delete_func,
-                                          spool_default_verify_func);
+                                          spool_default_validate_func,
+                                          spool_default_validate_list_func);
          lSetRef(rule, SPR_clientdata, field_info);
          type = spool_context_create_type(answer_list, context, 
                                           SGE_TYPE_CONFIG);
@@ -642,33 +648,33 @@ spool_flatfile_common_startup_func(lList **answer_list,
 }
 
 static bool
-read_verify_object(lList **answer_list, 
+read_validate_object(lList **answer_list, 
                    const lListElem *type, const lListElem *rule, 
                    const char *key, int key_nm, 
-                   sge_object_type event_type, lList **master_list)
+                   sge_object_type object_type, lList **master_list)
 {
    bool ret = true;
    lListElem *ep;
 
-   DPRINTF(("reading "SFN" "SFQ"\n", object_type_get_name(event_type), key));
+   DPRINTF(("reading "SFN" "SFQ"\n", object_type_get_name(object_type), key));
 
    ep = spool_flatfile_default_read_func(answer_list, type, rule, key, 
-                                         event_type);
+                                         object_type);
    if (ep == NULL) {
       ret = false;
    } else {
-      spooling_verify_func verify_func;
+      spooling_validate_func validate_func;
 
       /* set key from filename */
       if (key_nm != NoName) {
          object_parse_field_from_string(ep, NULL, key_nm, key);
       }
 
-      /* verify object */
-      verify_func = (spooling_verify_func)
-                    lGetRef(rule, SPR_verify_func);
-      if (verify_func != NULL) {
-         if (!verify_func(answer_list, type, rule, ep, event_type)) {
+      /* validate object */
+      validate_func = (spooling_validate_func)
+                    lGetRef(rule, SPR_validate_func);
+      if (validate_func != NULL) {
+         if (!validate_func(answer_list, type, rule, ep, object_type)) {
             lFreeElem(ep);
             ep = NULL;
             ret = false;
@@ -676,7 +682,7 @@ read_verify_object(lList **answer_list,
       }
    }
 
-   /* object read correctly and verify succeeded */
+   /* object read correctly and validate succeeded */
    if (ep != NULL) {
       lAppendElem(*master_list, ep);
    }
@@ -694,7 +700,7 @@ read_verify_object(lList **answer_list,
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, 
 *                                      lList **list, 
-*                                      const sge_object_type event_type) 
+*                                      const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Depending on the object type given, calls the appropriate functions
@@ -706,7 +712,7 @@ read_verify_object(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -724,7 +730,7 @@ spool_flatfile_default_list_func(lList **answer_list,
                                  const lListElem *type, 
                                  const lListElem *rule,
                                  lList **list, 
-                                 const sge_object_type event_type)
+                                 const sge_object_type object_type)
 {
    lList **master_list;
    const lDescr *descr;
@@ -739,14 +745,14 @@ spool_flatfile_default_list_func(lList **answer_list,
    DENTER(TOP_LAYER, "spool_flatfile_default_list_func");
 
    url = lGetString(rule, SPR_url);
-   master_list = object_type_get_master_list(event_type);
-   descr = object_type_get_descr(event_type);
+   master_list = object_type_get_master_list(object_type);
+   descr = object_type_get_descr(object_type);
 
    if (master_list != NULL && descr != NULL && *master_list == NULL) {
       *master_list = lCreateList("master list", descr);
    }
 
-   switch(event_type) {
+   switch(object_type) {
       case SGE_TYPE_ADMINHOST:
          directory = ADMINHOST_DIR;
          break;
@@ -821,7 +827,7 @@ spool_flatfile_default_list_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
          ret = false;
          break;
    }
@@ -846,16 +852,16 @@ spool_flatfile_default_list_func(lList **answer_list,
             const char *key = lGetString(direntry, ST_name);
 
             if (key[0] != '.') {
-               ret = read_verify_object(answer_list, type, rule, key, key_nm, 
-                                        event_type, master_list);
+               ret = read_validate_object(answer_list, type, rule, key, key_nm, 
+                                        object_type, master_list);
             }
          }
       } 
       
       /* single file to parse (SHARETREE, global config, schedd config */
       if (filename != NULL) {
-         ret = read_verify_object(answer_list, type, rule, filename, key_nm, 
-                                  event_type, master_list);
+         ret = read_validate_object(answer_list, type, rule, filename, key_nm, 
+                                  object_type, master_list);
       }
    }
 
@@ -864,6 +870,14 @@ spool_flatfile_default_list_func(lList **answer_list,
       lWriteListTo(*master_list, stderr);
    }
 #endif
+
+   /* validate complete list */
+   if (ret) {
+      spooling_validate_list_func validate_list = 
+         (spooling_validate_list_func)lGetRef(rule, SPR_validate_list_func);
+      
+      ret = validate_list(answer_list, type, rule, object_type);
+   }
 
    DEXIT;
    return ret;
@@ -879,7 +893,7 @@ spool_flatfile_default_list_func(lList **answer_list,
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, 
 *                                      const char *key, 
-*                                      const sge_object_type event_type) 
+*                                      const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Reads an individual object by calling the appropriate flatfile spooling 
@@ -890,7 +904,7 @@ spool_flatfile_default_list_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     lListElem* - the object, if it could be read, else NULL
@@ -908,7 +922,7 @@ spool_flatfile_default_read_func(lList **answer_list,
                                  const lListElem *type, 
                                  const lListElem *rule,
                                  const char *key, 
-                                 const sge_object_type event_type)
+                                 const sge_object_type object_type)
 {
    const char *url = NULL;
    const char *directory = NULL;
@@ -921,12 +935,12 @@ spool_flatfile_default_read_func(lList **answer_list,
    DENTER(TOP_LAYER, "spool_flatfile_default_read_func");
 
    rule_clientdata = lGetRef(rule, SPR_clientdata);
-   field_info = &(rule_clientdata[event_type]);
+   field_info = &(rule_clientdata[object_type]);
    url = lGetString(rule, SPR_url);
-   descr = object_type_get_descr(event_type);
+   descr = object_type_get_descr(object_type);
 
    /* prepare filenames */
-   switch(event_type) {
+   switch(object_type) {
       case SGE_TYPE_ADMINHOST:
          directory = ADMINHOST_DIR;
          filename  = key;
@@ -1011,7 +1025,7 @@ spool_flatfile_default_read_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
          break;
    }
 
@@ -1048,7 +1062,7 @@ spool_flatfile_default_read_func(lList **answer_list,
 *                                       const lListElem *rule, 
 *                                       const lListElem *object, 
 *                                       const char *key, 
-*                                       const sge_object_type event_type) 
+*                                       const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate flatfile spooling functions.
@@ -1059,7 +1073,7 @@ spool_flatfile_default_read_func(lList **answer_list,
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to spool
 *     const char *key                 - unique key
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -1078,7 +1092,7 @@ spool_flatfile_default_write_func(lList **answer_list,
                                   const lListElem *rule, 
                                   const lListElem *object, 
                                   const char *key, 
-                                  const sge_object_type event_type)
+                                  const sge_object_type object_type)
 {
    const char *url = NULL;
    const char *directory = NULL;
@@ -1092,11 +1106,11 @@ spool_flatfile_default_write_func(lList **answer_list,
    DENTER(TOP_LAYER, "spool_flatfile_default_write_func");
 
    rule_clientdata = lGetRef(rule, SPR_clientdata);
-   field_info = &(rule_clientdata[event_type]);
+   field_info = &(rule_clientdata[object_type]);
    url = lGetString(rule, SPR_url);
 
    /* prepare filenames */
-   switch(event_type) {
+   switch(object_type) {
       case SGE_TYPE_ADMINHOST:
          directory = ADMINHOST_DIR;
          filename  = key;
@@ -1203,7 +1217,7 @@ spool_flatfile_default_write_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
          ret = false;
          break;
    }
@@ -1260,7 +1274,7 @@ spool_flatfile_default_write_func(lList **answer_list,
 *                                        const lListElem *type, 
 *                                        const lListElem *rule, 
 *                                        const char *key, 
-*                                        const sge_object_type event_type) 
+*                                        const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Deletes an object in the flatfile spooling.
@@ -1272,7 +1286,7 @@ spool_flatfile_default_write_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -1290,13 +1304,13 @@ spool_flatfile_default_delete_func(lList **answer_list,
                                    const lListElem *type, 
                                    const lListElem *rule,
                                    const char *key, 
-                                   const sge_object_type event_type)
+                                   const sge_object_type object_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_flatfile_default_delete_func");
 
-   switch(event_type) {
+   switch(object_type) {
       case SGE_TYPE_ADMINHOST:
          ret = sge_unlink(ADMINHOST_DIR, key) == 0;
          break;
@@ -1398,278 +1412,6 @@ spool_flatfile_default_delete_func(lList **answer_list,
    DEXIT;
    return ret;
 }
-#if 0 /* JG: has been moved to sge_spooling_utilities */
-/****** spool/flatfile/spool_flatfile_default_verify_func() ****************
-*  NAME
-*     spool_flatfile_default_verify_func() -- verify objects
-*
-*  SYNOPSIS
-*     bool
-*     spool_flatfile_default_verify_func(lList **answer_list, 
-*                                        const lListElem *type, 
-*                                        const lListElem *rule, 
-*                                        const lListElem *object, 
-*                                        const char *key, 
-*                                        const sge_object_type event_type) 
-*
-*  FUNCTION
-*     Verifies an object.
-*
-*  INPUTS
-*     lList **answer_list - to return error messages
-*     const lListElem *type           - object type description
-*     const lListElem *rule           - rule to use
-*     const lListElem *object         - object to verify
-*     const sge_object_type event_type - object type
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*     This function should not be called directly, it is called by the
-*     spooling framework.
-*     It should be moved to libs/spool/spooling_utilities or even to
-*     libs/sgeobj/sge_object
-*
-*  SEE ALSO
-*     spool/flatfile/--Flatfile-Spooling
-*******************************************************************************/
-bool
-spool_flatfile_default_verify_func(lList **answer_list, 
-                                   const lListElem *type, 
-                                   const lListElem *rule,
-                                   lListElem *object,
-                                   const sge_object_type event_type)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "spool_flatfile_default_verify_func");
-
-   switch(event_type) {
-      case SGE_TYPE_ADMINHOST:
-      case SGE_TYPE_EXECHOST:
-      case SGE_TYPE_SUBMITHOST:
-         {
-            int cl_ret;
-            int key_nm = object_type_get_key_nm(event_type);
-            char *old_name = strdup(lGetHost(object, key_nm));
-
-            /* try hostname resolving */
-            cl_ret = sge_resolve_host(object, key_nm);
-
-            /* if hostname resolving failed: create error */
-            if (cl_ret != CL_OK) {
-               if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
-                   cl_ret != COMMD_NACK_TIMEOUT) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, 
-                                          old_name, cl_errstr(ret)); 
-                  ret = false;
-               } else {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_WARNING, 
-                                          MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, 
-                                          old_name, cl_errstr(ret));
-               }
-            } else {
-               /* if hostname resolving changed hostname: spool */
-               const char *new_name;
-               new_name = lGetHost(object, key_nm);
-               if (strcmp(old_name, new_name) != 0) {
-                  spooling_write_func write_func = 
-                          (spooling_write_func)lGetRef(rule, SPR_write_func);
-                  spooling_delete_func delete_func = 
-                          (spooling_delete_func)lGetRef(rule, SPR_delete_func);
-                  write_func(answer_list, type, rule, object, new_name, 
-                             event_type);
-                  delete_func(answer_list, type, rule, old_name, event_type);
-               }
-            }
-            free(old_name);
-         }
-
-         if (event_type == SGE_TYPE_EXECHOST) {
-            if (ret) {
-               /* necessary to setup actual list of exechost */
-               debit_host_consumable(NULL, object, Master_CEntry_List, 0);
-
-               /* necessary to init double values of consumable configuration */
-               centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
-                                        Master_CEntry_List, true, false, true);
-
-            }
-
-            if (ret) {
-               if (ensure_attrib_available(NULL, object, 
-                                           EH_consumable_config_list)) {
-                  ret = false;
-               }
-            }
-         }
-         break;
-      case SGE_TYPE_QUEUE:
-         {
-            /* handle slots from now on as a consumble attribute of queue */
-            slots2config_list(object); 
-
-            /* setup actual list of queue */
-            debit_queue_consumable(NULL, object, Master_CEntry_List, 0);
-
-            /* init double values of consumable configuration */
-            centry_list_fill_request(lGetList(object, QU_consumable_config_list), 
-                                     Master_CEntry_List, true, false, true);
-
-            if (ret) {
-               if (ensure_attrib_available(NULL, object, 
-                                           QU_load_thresholds) ||
-                   ensure_attrib_available(NULL, object, 
-                                           QU_suspend_thresholds) ||
-                   ensure_attrib_available(NULL, object, 
-                                           QU_consumable_config_list)) {
-                  ret = false;
-               }
-            }
-
-            if (ret) {
-               qinstance_state_set_unknown(object, true);
-               qinstance_state_set_disabled(object, false);
-               qinstance_state_set_cal_suspended(object, false);               
-               set_qslots_used(object, 0);
-               
-               if (host_list_locate(Master_Exechost_List, 
-                                    lGetHost(object, QU_qhostname)) == NULL) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_FLATFILE_HOSTFORQUEUEDOESNOTEXIST_SS,
-                                          lGetString(object, QU_qname), 
-                                          lGetHost(object, QU_qhostname));
-                  ret = false;
-               }
-            }
-         }
-         break;
-      case SGE_TYPE_QUEUE:
-         {
-#if 0 /*  EB: TODO: APIBASE */
-            /* handle slots from now on as a consumble attribute of queue */
-            slots2config_list(object); 
-
-            /* setup actual list of queue */
-            debit_queue_consumable(NULL, object, Master_CEntry_List, 0);
-
-            /* init double values of consumable configuration */
-            centry_list_fill_request(lGetList(object, QU_consumable_config_list), 
-                                     Master_CEntry_List, true, false, true);
-
-            if (ret) {
-               if (ensure_attrib_available(NULL, object, 
-                                           QU_load_thresholds) ||
-                   ensure_attrib_available(NULL, object, 
-                                           QU_suspend_thresholds) ||
-                   ensure_attrib_available(NULL, object, 
-                                           QU_consumable_config_list)) {
-                  ret = false;
-               }
-            }
-
-            if (ret) {
-               qinstance_state_set_unknown(object, true);
-               qinstance_state_set_cal_disabled(object, false);
-               qinstance_state_set_cal_suspended(object, false);
-               set_qslots_used(object, 0);
-               
-               if (host_list_locate(Master_Exechost_List, 
-                                    lGetHost(object, QU_qhostname)) == NULL) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_FLATFILE_HOSTFORQUEUEDOESNOTEXIST_SS,
-                                          lGetString(object, QU_qname), 
-                                          lGetHost(object, QU_qhostname));
-                  ret = false;
-               }
-            }
-#endif
-         }
-         break;
-      case SGE_TYPE_CONFIG:
-         {
-            int cl_ret;
-            char *old_name = strdup(lGetHost(object, CONF_hname));
-
-            /* try hostname resolving */
-            cl_ret = sge_resolve_host(object, CONF_hname);
-
-            /* if hostname resolving failed: create error */
-            if (cl_ret != CL_OK) {
-               if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
-                   cl_ret != COMMD_NACK_TIMEOUT) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, 
-                                          old_name, cl_errstr(ret)); 
-                  ret = false;
-               } else {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_WARNING, 
-                                          MSG_FLATFILE_CANTRESOLVEHOSTNAME_SS, 
-                                          old_name, cl_errstr(ret));
-               }
-            } else {
-               /* if hostname resolving changed hostname: spool */
-               const char *new_name = lGetHost(object, CONF_hname);
-               if (strcmp(old_name, new_name) != 0) {
-                  spooling_write_func write_func = 
-                          (spooling_write_func)lGetRef(rule, SPR_write_func);
-                  spooling_delete_func delete_func = 
-                          (spooling_delete_func)lGetRef(rule, SPR_delete_func);
-                  write_func(answer_list, type, rule, object, new_name, 
-                             event_type);
-                  delete_func(answer_list, type, rule, old_name, event_type);
-               }
-            }
-            free(old_name);
-         }
-         break;
-      case SGE_TYPE_USERSET:
-         if (userset_validate_entries(object, answer_list, 1) != STATUS_OK) {
-            ret = false;
-         }
-         break;
-      case SGE_TYPE_CKPT:
-         if (ckpt_validate(object, answer_list) != STATUS_OK) {
-            ret = false;
-         }
-         break;
-      case SGE_TYPE_PE:
-         if (pe_validate(object, answer_list, 1) != STATUS_OK) {
-            ret = false;
-         }
-         break;
-      case SGE_TYPE_MANAGER:
-      case SGE_TYPE_OPERATOR:
-      case SGE_TYPE_HGROUP:
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_CUSER:
-#endif
-      case SGE_TYPE_CALENDAR:
-      case SGE_TYPE_PROJECT:
-      case SGE_TYPE_USER:
-      case SGE_TYPE_SHARETREE:
-         /* JG: TODO: we need a function verify_sharetree.
-          * there is a function search_unspecified_node(), what is 
-          * qmaster doing?
-          */
-      case SGE_TYPE_SCHEDD_CONF:
-      case SGE_TYPE_JOB:
-      default:
-         break;
-   }
-
-   DEXIT;
-   return ret;
-}
-#endif
 
 const spool_flatfile_instr spool_flatfile_instr_conf_sublist = 
 {

@@ -229,11 +229,14 @@ spool_postgres_create_context(lList **answer_list, const char *args)
                                        spool_postgres_default_startup_func,
                                        spool_postgres_default_shutdown_func,
                                        spool_postgres_default_maintenance_func,
+                                       NULL,
+                                       NULL,
                                        spool_postgres_default_list_func,
                                        spool_postgres_default_read_func,
                                        spool_postgres_default_write_func,
                                        spool_postgres_default_delete_func,
-                                       spool_postgres_default_verify_func);
+                                       spool_default_validate_func,
+                                       spool_default_validate_list_func);
 
       ret = spool_database_initialize(answer_list, rule);
       if (ret) {
@@ -1235,7 +1238,7 @@ spool_postgres_read_object(lList **answer_list, PGconn *connection,
 *     spool_postgres_default_list_func(lList **answer_list, 
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, lList **list, 
-*                                      const sge_object_type event_type) 
+*                                      const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Read a list of objects from database.
@@ -1245,7 +1248,7 @@ spool_postgres_read_object(lList **answer_list, PGconn *connection,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -1262,14 +1265,14 @@ bool
 spool_postgres_default_list_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, lList **list, 
-                                 const sge_object_type event_type)
+                                 const sge_object_type object_type)
 {
    bool ret = true;
    spooling_field *fields;
 
    DENTER(TOP_LAYER, "spool_postgres_default_list_func");
 
-   fields = spool_database_get_fields(rule, event_type);
+   fields = spool_database_get_fields(rule, object_type);
    if (fields == NULL) {
       ret = false;
    }
@@ -1280,8 +1283,8 @@ spool_postgres_default_list_func(lList **answer_list,
       bool with_history;
       PGconn *connection;
 
-      descr       = object_type_get_descr(event_type);
-      master_list = object_type_get_master_list(event_type);
+      descr       = object_type_get_descr(object_type);
+      master_list = object_type_get_master_list(object_type);
       with_history = spool_database_get_history(rule);
       connection   = spool_database_get_handle(rule);
 
@@ -1289,6 +1292,29 @@ spool_postgres_default_list_func(lList **answer_list,
                                      fields, with_history, 
                                      master_list, descr,
                                      NULL, NULL);
+   }
+
+   if (ret) {
+      lListElem *ep;
+      spooling_validate_func validate = 
+         (spooling_validate_func)lGetRef(rule, SPR_validate_func);
+      spooling_validate_list_func validate_list = 
+         (spooling_validate_list_func)lGetRef(rule, SPR_validate_list_func);
+
+      /* validate each individual object */
+      /* JG: TODO: is it valid to validate after reading all objects? */
+      for_each(ep, *list) {
+         ret = validate(answer_list, type, rule, ep, object_type);
+         if (!ret) {
+            /* error message has been created in the validate func */
+            break;
+         }
+      }
+
+      if (ret) {
+         /* validate complete list */
+         ret = validate_list(answer_list, type, rule, object_type);
+      }
    }
 
    DEXIT;
@@ -1304,7 +1330,7 @@ spool_postgres_default_list_func(lList **answer_list,
 *     spool_postgres_default_read_func(lList **answer_list, 
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, const char *key, 
-*                                      const sge_object_type event_type) 
+*                                      const sge_object_type object_type) 
 *
 *  FUNCTION
 *
@@ -1313,7 +1339,7 @@ spool_postgres_default_list_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     lListElem* - the object, if it could be read, else NULL
@@ -1330,19 +1356,19 @@ lListElem *
 spool_postgres_default_read_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, const char *key, 
-                                 const sge_object_type event_type)
+                                 const sge_object_type object_type)
 {
    lListElem *ep = NULL;
 
    DENTER(TOP_LAYER, "spool_postgres_default_read_func");
 
-   switch (event_type) {
+   switch (object_type) {
       default:
 #if 0
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
 #endif
          break;
    }
@@ -2019,7 +2045,7 @@ spool_postgres_write_sublists(lList **answer_list, PGconn *connection,
 *                                       const lListElem *rule, 
 *                                       const lListElem *object, 
 *                                       const char *key, 
-*                                       const sge_object_type event_type) 
+*                                       const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate postgres spooling functions.
@@ -2048,7 +2074,7 @@ spool_postgres_write_sublists(lList **answer_list, PGconn *connection,
 *     const lListElem *rule            - rule to use
 *     const lListElem *object          - object to spool
 *     const char *key                  - unique key
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -2067,7 +2093,7 @@ spool_postgres_default_write_func(lList **answer_list,
                                   const lListElem *rule, 
                                   const lListElem *object, 
                                   const char *key, 
-                                  const sge_object_type event_type)
+                                  const sge_object_type object_type)
 {
    bool ret = true;
    spooling_field *fields;
@@ -2076,7 +2102,7 @@ spool_postgres_default_write_func(lList **answer_list,
 
    DENTER(TOP_LAYER, "spool_postgres_default_write_func");
 
-   switch (event_type) {
+   switch (object_type) {
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:
       case SGE_TYPE_PETASK:
@@ -2121,7 +2147,7 @@ spool_postgres_default_write_func(lList **answer_list,
          }
          break;
       default:
-         fields = spool_database_get_fields(rule, event_type);
+         fields = spool_database_get_fields(rule, object_type);
          break;
    }
 
@@ -2129,7 +2155,7 @@ spool_postgres_default_write_func(lList **answer_list,
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_WARNING, 
                               MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                              object_type_get_name(event_type));
+                              object_type_get_name(object_type));
       ret = false;
    }
 
@@ -2483,7 +2509,7 @@ spool_postgres_delete_all_sublists(lList **answer_list, PGconn *connection,
 *                                        const lListElem *type, 
 *                                        const lListElem *rule, 
 *                                        const char *key, 
-*                                        const sge_object_type event_type) 
+*                                        const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Deletes an object in the postgres spooling.
@@ -2493,7 +2519,7 @@ spool_postgres_delete_all_sublists(lList **answer_list, PGconn *connection,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
-*     const sge_object_type event_type - object type
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -2511,7 +2537,7 @@ spool_postgres_default_delete_func(lList **answer_list,
                                    const lListElem *type, 
                                    const lListElem *rule,
                                    const char *key, 
-                                   const sge_object_type event_type)
+                                   const sge_object_type object_type)
 {
    bool ret = true;
    spooling_field *fields;
@@ -2520,7 +2546,7 @@ spool_postgres_default_delete_func(lList **answer_list,
 
    DENTER(TOP_LAYER, "spool_postgres_default_delete_func");
 
-   switch (event_type) {
+   switch (object_type) {
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:
       case SGE_TYPE_PETASK:
@@ -2562,7 +2588,7 @@ spool_postgres_default_delete_func(lList **answer_list,
          }
          break;
       default:
-         fields = spool_database_get_fields(rule, event_type);
+         fields = spool_database_get_fields(rule, object_type);
          break;
    }
 
@@ -2571,7 +2597,7 @@ spool_postgres_default_delete_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
+                                 object_type_get_name(object_type));
 #endif
       ret = false;
    }
@@ -2598,68 +2624,6 @@ spool_postgres_default_delete_func(lList **answer_list,
 
    if (parent_key != NULL) {
       free((char *)parent_key);
-   }
-
-   DEXIT;
-   return ret;
-}
-
-/****** spool/postgres/spool_postgres_default_verify_func() ****************
-*  NAME
-*     spool_postgres_default_verify_func() -- verify objects
-*
-*  SYNOPSIS
-*     bool
-*     spool_postgres_default_verify_func(lList **answer_list, 
-*                                        const lListElem *type, 
-*                                        const lListElem *rule, 
-*                                        const lListElem *object, 
-*                                        const char *key, 
-*                                        const sge_object_type event_type) 
-*
-*  FUNCTION
-*     Verifies an object.
-*
-*  INPUTS
-*     lList **answer_list - to return error messages
-*     const lListElem *type           - object type description
-*     const lListElem *rule           - rule to use
-*     const lListElem *object         - object to verify
-*     const sge_object_type event_type - object type
-*
-*  RESULT
-*     bool - true on success, else false
-*
-*  NOTES
-*     This function should not be called directly, it is called by the
-*     spooling framework.
-*     It should be moved to libs/spool/spooling_utilities or even to
-*     libs/sgeobj/sge_object
-*
-*  SEE ALSO
-*     spool/postgres/--Postgres-Spooling
-*******************************************************************************/
-bool
-spool_postgres_default_verify_func(lList **answer_list, 
-                                   const lListElem *type, 
-                                   const lListElem *rule,
-                                   lListElem *object,
-                                   const sge_object_type event_type)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "spool_postgres_default_verify_func");
-
-   switch (event_type) {
-      default:
-#if 0
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
-         ret = false;
-#endif
-         break;
    }
 
    DEXIT;

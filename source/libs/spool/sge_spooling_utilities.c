@@ -323,18 +323,18 @@ spool_free_spooling_fields(spooling_field *fields)
    return NULL;
 }
 
-/****** spool/utilities/spool_default_verify_func() ****************
+/****** spool/utilities/spool_default_validate_func() ****************
 *  NAME
-*     spool_default_verify_func() -- verify objects
+*     spool_default_validate_func() -- validate objects
 *
 *  SYNOPSIS
 *     bool
-*     spool_default_verify_func(lList **answer_list, 
+*     spool_default_validate_func(lList **answer_list, 
 *                               const lListElem *type, 
 *                               const lListElem *rule, 
 *                               const lListElem *object, 
 *                               const char *key, 
-*                               const sge_object_type event_type) 
+*                               const sge_object_type object_type) 
 *
 *  FUNCTION
 *     Verifies an object.
@@ -343,8 +343,8 @@ spool_free_spooling_fields(spooling_field *fields)
 *     lList **answer_list - to return error messages
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
-*     const lListElem *object         - object to verify
-*     const sge_object_type event_type - object type
+*     const lListElem *object         - object to validate
+*     const sge_object_type object_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -356,23 +356,23 @@ spool_free_spooling_fields(spooling_field *fields)
 *  SEE ALSO
 *******************************************************************************/
 bool
-spool_default_verify_func(lList **answer_list, 
+spool_default_validate_func(lList **answer_list, 
                           const lListElem *type, 
                           const lListElem *rule,
                           lListElem *object,
-                          const sge_object_type event_type)
+                          const sge_object_type object_type)
 {
    bool ret = true;
 
-   DENTER(TOP_LAYER, "spool_default_verify_func");
+   DENTER(TOP_LAYER, "spool_default_validate_func");
 
-   switch(event_type) {
+   switch(object_type) {
       case SGE_TYPE_ADMINHOST:
       case SGE_TYPE_EXECHOST:
       case SGE_TYPE_SUBMITHOST:
          {
             int cl_ret;
-            int key_nm = object_type_get_key_nm(event_type);
+            int key_nm = object_type_get_key_nm(object_type);
             char *old_name = strdup(lGetHost(object, key_nm));
 
             /* try hostname resolving */
@@ -403,14 +403,14 @@ spool_default_verify_func(lList **answer_list,
                   spooling_delete_func delete_func = 
                           (spooling_delete_func)lGetRef(rule, SPR_delete_func);
                   write_func(answer_list, type, rule, object, new_name, 
-                             event_type);
-                  delete_func(answer_list, type, rule, old_name, event_type);
+                             object_type);
+                  delete_func(answer_list, type, rule, old_name, object_type);
                }
             }
             free(old_name);
          }
 
-         if (event_type == SGE_TYPE_EXECHOST) {
+         if (object_type == SGE_TYPE_EXECHOST) {
             if (ret) {
                /* necessary to setup actual list of exechost */
                debit_host_consumable(NULL, object, Master_CEntry_List, 0);
@@ -496,8 +496,8 @@ spool_default_verify_func(lList **answer_list,
                   spooling_delete_func delete_func = 
                           (spooling_delete_func)lGetRef(rule, SPR_delete_func);
                   write_func(answer_list, type, rule, object, new_name, 
-                             event_type);
-                  delete_func(answer_list, type, rule, old_name, event_type);
+                             object_type);
+                  delete_func(answer_list, type, rule, old_name, object_type);
                }
             }
             free(old_name);
@@ -522,10 +522,6 @@ spool_default_verify_func(lList **answer_list,
          if (!centry_elem_validate(object, Master_CEntry_List, answer_list)) {
             ret = false;
          }
-         /* JG: TODO: we need a verify_list function, the following action
-          *           has to move there.
-          */
-         centry_list_sort(Master_CEntry_List);
          break;
       case SGE_TYPE_MANAGER:
       case SGE_TYPE_OPERATOR:
@@ -537,7 +533,7 @@ spool_default_verify_func(lList **answer_list,
       case SGE_TYPE_PROJECT:
       case SGE_TYPE_USER:
       case SGE_TYPE_SHARETREE:
-         /* JG: TODO: we need a function verify_sharetree.
+         /* JG: TODO: we need a function validate_sharetree.
           * there is a function search_unspecified_node(), what is 
           * qmaster doing?
           */
@@ -551,4 +547,46 @@ spool_default_verify_func(lList **answer_list,
    return ret;
 }
 
+
+bool
+spool_default_validate_list_func(lList **answer_list, 
+                          const lListElem *type, const lListElem *rule,
+                          const sge_object_type object_type)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_default_validate_list_func");
+
+   switch(object_type) {
+      case SGE_TYPE_ADMINHOST:
+      case SGE_TYPE_EXECHOST:
+      case SGE_TYPE_SUBMITHOST:
+      case SGE_TYPE_QUEUE:
+      case SGE_TYPE_CONFIG:
+      case SGE_TYPE_USERSET:
+      case SGE_TYPE_CKPT:
+      case SGE_TYPE_PE:
+         break;
+      case SGE_TYPE_CENTRY:
+         centry_list_sort(Master_CEntry_List);
+         break;
+      case SGE_TYPE_MANAGER:
+      case SGE_TYPE_OPERATOR:
+      case SGE_TYPE_HGROUP:
+#ifndef __SGE_NO_USERMAPPING__
+      case SGE_TYPE_CUSER:
+#endif
+      case SGE_TYPE_CALENDAR:
+      case SGE_TYPE_PROJECT:
+      case SGE_TYPE_USER:
+      case SGE_TYPE_SHARETREE:
+      case SGE_TYPE_SCHEDD_CONF:
+      case SGE_TYPE_JOB:
+      default:
+         break;
+   }
+
+   DEXIT;
+   return ret;
+}
 

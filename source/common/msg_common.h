@@ -178,7 +178,7 @@
 /*
 ** parse_qconf.c
 */
-#define MSG_QCONF_CANTCHANGEQUEUENAME_S           _MESSAGE(23115, _("%s: cannot change queuename\n"))
+#define MSG_QCONF_CANTCHANGEQUEUENAME_S           _MESSAGE(23116, _("%s: cannot change queuename\n"))
 #define MSG_FILE_NOFILEARGUMENTGIVEN           _MESSAGE(23117, _("no file argument given\n"))
 #define MSG_PARSE_EDITFAILED                   _MESSAGE(23118, _("edit failed\n"))
 #define MSG_FILE_FILEUNCHANGED                 _MESSAGE(23119, _("file unchanged\n"))

@@ -1873,6 +1873,9 @@ static void destribute_ftickets(lList *root, int dependent){
 *     sge_ref_t *job_ref     - array of pointers to the job reference structure 
 *     int num_jobs           - amount of elements in the job_ref array 
 *     sge_fcategory_t **root - root pointer to the functional category list 
+*     sge_ref_list_t ** ref_array - has to be a pointer to NULL pointer. The momory 
+*                                   will be allocated
+*                                   in this function and freed with free_fcategories.
 *     int dependent          - does the functional tickets depend on prior computed tickets? 
 *
 *
@@ -1956,7 +1959,6 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
             sge_ref_list_t  *cur_ref_entry = NULL;
             sge_ref_list_t *new_elem = &((*ref_array)[ref_array_pos++]);
 
-
             new_elem->ref = jref;
 
             /* find the location for the new element */
@@ -2029,13 +2031,15 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
 *
 *  INPUTS
 *     sge_fcategory_t **fcategories /- pointer to a pointer of the first fcategory 
+*     sge_ref_list_t **ref_array - memory for internal structures, allocated with
+*     build_functional_categories. Needs to be freed as well.
 *
 *  NOTES
 *     - it does not delete the sge_ref_t structures, which are stored in
 *       in the job lists. 
 *
 *******************************************************************************/
-static void free_fcategories(lList **fcategories, sge_ref_list_t ** ref_array) {
+static void free_fcategories(lList **fcategories, sge_ref_list_t **ref_array) {
 
    lListElem *fcategory;
 
@@ -2046,7 +2050,8 @@ static void free_fcategories(lList **fcategories, sge_ref_list_t ** ref_array) {
       lSetRef(fcategory, FCAT_dept, NULL);
       lSetRef(fcategory, FCAT_project, NULL);
    }
-   *fcategories= lFreeList(*fcategories);
+
+   *fcategories = lFreeList(*fcategories);
    FREE(*ref_array);
 
 }

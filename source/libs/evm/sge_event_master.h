@@ -34,11 +34,10 @@
 
 #include "sge_gdiP.h"
 #include "sge_eventL.h"
+#include "sge_qmaster_timed_event.h"
+
 
 extern lList *EV_Clients;
-#ifdef QIDL
-extern u_long32 qidl_event_count;
-#endif
 
 int reinit_event_client(ev_registration_id id);
 
@@ -56,7 +55,7 @@ void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request,
 
 int sge_ack_event(lListElem *er, ev_event event_number);
 
-void ck_4_deliver_events(u_long32 now);
+void sge_remote_event_delivery_handler(te_event_t anEvent);
 
 void sge_flush_events(lListElem *event_client, int interval);
 

@@ -1,3 +1,8 @@
+AD-2004-01-15-0: Enhancem:  - MT version of sge_qmaster.
+                            - added locks for MT saftey
+                 Review:    TBD
+                 Changed:   qmaster, evm, gdi, lck, sgeobj, common
+
 SG-2004-01-15-2: Enhancem:  - changed delimeter for the reporting file (new ":")
                             - changed the allowed characters in a job name
                               to the common object name specification

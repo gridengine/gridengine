@@ -40,6 +40,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_mtutil.h"
+#include "sge_prog.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -175,6 +176,8 @@ void te_register_event_handler(te_handler_t aHandler, te_type_t aType)
 *     timed event due time in seconds since the Epoch. If event type is
 *     'RECURRING_EVENT', 'aTime' does determine the timed event INTERVAL in
 *     seconds.
+*
+*     If 'aStrKey' is not 'NULL', the new timed event will contain a copy.
 *
 *  INPUTS
 *     time_t aTime        - event due time or interval 
@@ -468,12 +471,16 @@ void te_shutdown(void)
    pthread_once(&Timed_Event_Once, timed_event_once_init);
 
    sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
+
    Event_Control.exit = true;
+
    sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
    DPRINTF(("%s: wait for event thread termination\n", SGE_FUNC));
 
    pthread_join(Event_Thread, NULL);
+
+   sge_free((char *)Handler_Tbl.list);
 
    DEXIT;
    return;
@@ -817,6 +824,8 @@ static void* deliver_events(void* anArg)
    time_t now;
 
    DENTER(TOP_LAYER, "deliver_events");
+
+   sge_getme(QMASTER);
 
    while (should_exit() == false) {
       sge_mutex_lock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);

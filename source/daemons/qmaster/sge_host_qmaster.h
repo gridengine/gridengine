@@ -32,11 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "sge_gdiP.h"
 #include "sge_c_gdi.h"
 #include "sge_feature.h"
+#include "sge_qmaster_timed_event.h"
+
 
 /* funtions called via gdi and inside the qmaster */
 int sge_del_host(lListElem *, lList **, char *, char *, u_long32);
@@ -55,7 +55,7 @@ void sge_gdi_kill_exechost(char *host, sge_gdi_request *request, sge_gdi_request
 
 void sge_update_load_values(char *rhost, lList *lp);
 
-void sge_load_value_garbage_collector(u_long32 now);
+void sge_load_value_cleanup_handler(te_event_t anEvent);
 
 int sge_count_uniq_hosts(lList *ahl, lList *shl);
 

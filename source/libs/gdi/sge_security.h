@@ -36,6 +36,8 @@
 #include "sge_gdiP.h"
 #include "dispatcher.h"
 #include "sec_lib.h"
+#include "sge_qmaster_timed_event.h"
+
 
 #ifdef KERBEROS
 #   include "krb_lib.h"
@@ -93,7 +95,7 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
 
 int sge_security_verify_user(const char *host, const char *commproc, u_short id, const char *user); 
 
-void sge_security_ck_to_do(void);
+void sge_security_event_handler(te_event_t anEvent);
 
 #endif /* __SGE_SECURITY_H */
 

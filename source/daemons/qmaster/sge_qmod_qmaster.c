@@ -56,7 +56,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
-#include "time_event.h"
 #include "reschedule.h"
 #include "sge_security.h"
 #include "sge_job.h"
@@ -919,48 +918,63 @@ char *host
 void rebuild_signal_events()
 {
    lListElem *cqueue, *jep, *jatep;
-   u_long32 next_delivery_time;
 
    DENTER(TOP_LAYER, "rebuild_signal_events");
 
    /* J O B */
-   for_each(jep, Master_Job_List) {
-      for_each (jatep, lGetList(jep, JB_ja_tasks)) { 
-         if (lGetUlong(jatep, JAT_pending_signal) && 
-               (next_delivery_time=lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
-            te_add(TYPE_SIGNAL_RESEND_EVENT, next_delivery_time, 
-                  lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), NULL);
+   for_each(jep, Master_Job_List)
+   {
+      for_each (jatep, lGetList(jep, JB_ja_tasks))
+      { 
+         u_long32 when = lGetUlong(jatep, JAT_pending_signal_delivery_time);
+
+         if (lGetUlong(jatep, JAT_pending_signal) && (when > 0))
+         {
+            u_long32 key1 = lGetUlong(jep, JB_job_number);
+            u_long32 key2 = lGetUlong(jatep, JAT_task_number);
+            te_event_t ev = NULL;
+            
+            ev = te_new_event(when, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, key1, key2, NULL);
+            te_add_event(ev);
+            te_free_event(ev);
          }
       }
    }
 
    /* Q U E U E */
-   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) { 
+   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE)))
+   { 
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance;
 
-      for_each(qinstance, qinstance_list) {
-         if (lGetUlong(qinstance, QU_pending_signal) && 
-             ((next_delivery_time=lGetUlong(qinstance, QU_pending_signal_delivery_time)))) {
-               /* EB: TODO: full_name? */
-               te_add(TYPE_SIGNAL_RESEND_EVENT, next_delivery_time, 
-                     0, 0, lGetString(qinstance, QU_qname));
+      for_each(qinstance, qinstance_list)
+      {
+         u_long32 when = lGetUlong(qinstance, QU_pending_signal_delivery_time);
+
+         if (lGetUlong(qinstance, QU_pending_signal) && (when > 0))
+         {
+            const char* str_key = lGetString(qinstance, QU_qname); 
+            te_event_t ev = NULL;
+
+            /* EB: TODO: full_name? */
+            ev = te_new_event(when, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0, str_key);
+            te_add_event(ev);
+            te_free_event(ev);
          }
       }
    }
 
    DEXIT;
-}
+   return;
+} /* rebuild_signal_events() */
 
 /* this function is called by our timer mechanism for resending signals */  
-void resend_signal_event(
-u_long32 type,
-u_long32 when,
-u_long32 jobid,
-u_long32 jataskid,
-const char *queue 
-) {
+void resend_signal_event(te_event_t anEvent)
+{
    lListElem *qep, *jep, *jatep;
+   u_long32 jobid = te_get_first_numeric_key(anEvent);
+   u_long32 jataskid = te_get_second_numeric_key(anEvent);
+   const char* queue = te_get_alphanumeric_key(anEvent);
 
    DENTER(TOP_LAYER, "resend_signal_event");
 
@@ -984,6 +998,7 @@ const char *queue
       sge_signal_queue(lGetUlong(qep, QU_pending_signal), qep, NULL, NULL);
    }
 
+   sge_free((char *)queue);
    DEXIT;
    return;
 }
@@ -1081,23 +1096,35 @@ lListElem *jatep
    /* If this is a operation on one job we enter the signal request in the
       job structure. If the operation is not acknowledged in time we can do
       further steps */
-   if (jep) {
+   if (jep)
+   {
+      te_event_t ev = NULL;
+
       DPRINTF(("JOB "u32": %s signal %s (retry after "u32" seconds) host: %s\n", 
             lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time, 
             lGetHost(qep, QU_qhostname)));
-      te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number));
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, lGetUlong(jep, JB_job_number),
+         lGetUlong(jatep, JAT_task_number), NULL);
       lSetUlong(jatep, JAT_pending_signal, how);
-      te_add(TYPE_SIGNAL_RESEND_EVENT, next_delivery_time, lGetUlong(jep, JB_job_number),
-            lGetUlong(jatep, JAT_task_number), NULL);
+      ev = te_new_event(next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT,
+         lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), NULL);
+      te_add_event(ev);
+      te_free_event(ev);
       lSetUlong(jatep, JAT_pending_signal_delivery_time, next_delivery_time); 
    }
-   else {
+   else
+   {
+      te_event_t ev = NULL;
+
       DPRINTF(("QUEUE %s: %s signal %s (retry after "u32" seconds) host %s\n", 
             lGetString(qep, QU_qname), sent?"sent":"queued", sge_sig2str(how), next_delivery_time,
             lGetHost(qep, QU_qhostname)));
-      te_delete(TYPE_SIGNAL_RESEND_EVENT, lGetString(qep, QU_qname), 0, 0);
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_qname));
       lSetUlong(qep, QU_pending_signal, how);
-      te_add(TYPE_SIGNAL_RESEND_EVENT, next_delivery_time, 0, 0, lGetString(qep, QU_qname));
+      ev = te_new_event(next_delivery_time, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0,
+         lGetString(qep, QU_qname));
+      te_add_event(ev);
+      te_free_event(ev);
       lSetUlong(qep, QU_pending_signal_delivery_time, next_delivery_time);
    }
 
@@ -1111,7 +1138,7 @@ lListElem *jatep
 
    DEXIT;
    return 0;
-}
+} /* sge_signal_queue() */
 
 /* in case we have to signal a queue 
    in which slave tasks are running 

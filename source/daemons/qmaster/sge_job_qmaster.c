@@ -79,7 +79,7 @@
 #include "sge_security.h"
 #include "sge_range.h"
 #include "sge_job.h"
-#include "qmaster.h"
+#include "sge_qmaster_main.h"
 #include "sge_suser.h"
 #include "sge_io.h"
 #include "sge_hostname.h"
@@ -949,8 +949,6 @@ int sub_command
                }
             }
          }
-
-         increment_heartbeat(sge_get_gmt());
          
          if (deleted_unenrolled_tasks) {
 
@@ -1032,7 +1030,6 @@ int sub_command
                } else {
                   ; /* Task did never exist! - Ignore silently */
                }
-               increment_heartbeat(sge_get_gmt()); 
             }
          }
 

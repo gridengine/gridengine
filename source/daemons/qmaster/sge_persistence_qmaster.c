@@ -47,7 +47,6 @@
 #include "spool/sge_spooling.h"
 #include "spool/dynamic/sge_spooling_loader.h"
 
-#include "time_event.h"
 
 #include "sge_persistence_qmaster.h"
 
@@ -74,12 +73,15 @@ sge_initialize_persistence(lList **answer_list)
          ret = false;
       } else {
          time_t now = time(0);
+         te_event_t ev = NULL;
 
          /* set this context as default */
          spool_set_default_context(spooling_context);
 
          /* initialize timer for spooling trigger function */
-         te_add(TYPE_SPOOLING_TRIGGER, now, 0, 0, NULL);
+         ev = te_new_event(now, TYPE_SPOOLING_TRIGGER, ONE_TIME_EVENT, 0, 0, NULL);
+         te_add_event(ev);
+         te_free_event(ev);
       }
    }
 
@@ -91,13 +93,16 @@ bool
 sge_shutdown_persistence(lList **answer_list)
 {
    bool ret = true;
-
+   time_t time = 0;
+   lList* alp = NULL;
    lListElem *context;
 
    DENTER(TOP_LAYER, "sge_shutdown_persistence");
 
    /* trigger spooling actions (flush data) */
-   deliver_spooling_trigger(TYPE_SPOOLING_TRIGGER, 0, 0, 0, NULL);
+   if (!spool_trigger_context(&alp, spool_get_default_context(), 0, &time)) {
+      answer_list_output(&alp);
+   }
 
    /* shutdown spooling */
    context = spool_get_default_context();
@@ -119,18 +124,18 @@ sge_shutdown_persistence(lList **answer_list)
 }
 
 void
-deliver_spooling_trigger(u_long32 type, u_long32 when, 
-                         u_long32 uval0, u_long32 uval1, const char *key)
+deliver_spooling_trigger(te_event_t anEvent)
 {
    time_t next_trigger = 0;
    time_t now;
    lList *answer_list = NULL;
+   te_event_t ev = NULL;
 
    DENTER(TOP_LAYER, "deliver_spooling_trigger");
 
    /* trigger spooling regular actions */
    if (!spool_trigger_context(&answer_list, spool_get_default_context(), 
-                              when, &next_trigger)) {
+                              te_get_when(anEvent), &next_trigger)) {
       answer_list_output(&answer_list);
    }
 
@@ -141,7 +146,9 @@ deliver_spooling_trigger(u_long32 type, u_long32 when,
    }
 
    /* set timerevent for next trigger */
-   te_add(type, next_trigger, 0, 0, NULL);
+   ev = te_new_event(next_trigger, te_get_type(anEvent), ONE_TIME_EVENT, 0, 0, NULL);
+   te_add_event(ev);
+   te_free_event(ev);
 
    DEXIT;
    return;

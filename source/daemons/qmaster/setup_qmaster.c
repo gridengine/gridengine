@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>  
@@ -67,7 +68,6 @@
 #include "sge_log.h"
 #include "config_file.h"
 #include "sge_qmod_qmaster.h"
-#include "time_event.h"
 #include "sge_give_jobs.h"
 #include "setup_path.h"
 #include "msg_daemons_common.h"
@@ -90,21 +90,673 @@
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
 #include "sge_centry.h"
-
+#include "sge_reporting_qmaster.h"
+#include "parse.h"
+#include "usage.h"
+#include "job_log.h"
+#include "qmaster_to_execd.h"
+#include "shutdown.h"
+#include "sge_hostname.h"
+#include "qmaster_running.h"
+#include "sge_any_request.h"
+#include "sge_os.h"
+#include "lock.h"
 #include "sge_persistence_qmaster.h"
-
+#include "msg_common.h"
 #include "spool/sge_spooling.h"
 
-#include "msg_common.h"
 
-static int 
-remove_invalid_job_references(int user);
 
-static int 
-debit_all_jobs_from_qs(void);
+static void   process_cmdline(char**);
+static lList* parse_cmdline_qmaster(char**, lList**);
+static lList* parse_qmaster(lList**, u_long32*);
+static void   qmaster_init(char**);
+static void   communication_setup(char**);
+static int    qmaster_log_flush_func(cl_raw_list_t* list_p);
+static void   qmaster_lock_and_shutdown(int);
+static int    setup_qmaster(void);
+static int    remove_invalid_job_references(int user);
+static int    debit_all_jobs_from_qs(void);
 
-/*------------------------------------------------------------*/
-int sge_setup_qmaster()
+#if !defined(ENABLE_NGC)
+static void   set_message_priorities(const char*);
+#endif
+
+
+/****** qmaster/setup_qmaster/sge_setup_qmaster() ******************************
+*  NAME
+*     sge_setup_qmaster() -- setup qmaster 
+*
+*  SYNOPSIS
+*     int sge_setup_qmaster(char* anArgv[]) 
+*
+*  FUNCTION
+*     Process commandline arguments. Initialize qmaster. Initialize reporting. 
+*
+*     NOTE: A temporary qmaster message file will be used in the beginning.
+*     The qmaster spool directory may not exist yet. This will be changed
+*     during qmaster initialization.
+*
+*  INPUTS
+*     char* anArgv[] - commandline argument vector 
+*
+*  RESULT
+*     0 - success 
+*
+*  NOTES
+*     MT-NOTE: sge_setup_qmaster() is NOT MT safe! 
+*
+*******************************************************************************/
+int sge_setup_qmaster(char* anArgv[])
+{
+   DENTER(TOP_LAYER, "sge_setup_qmaster");
+
+   log_state_set_log_file(TMP_ERR_FILE_QMASTER);
+
+   process_cmdline(anArgv);
+
+   qmaster_init(anArgv);
+
+   reporting_initialize(NULL);
+
+   DEXIT;
+   return 0;
+} /* sge_setup_qmaster() */
+
+/****** qmaster/setup_qmaster/process_cmdline() ********************************
+*  NAME
+*     process_cmdline() -- Handle command line arguments 
+*
+*  SYNOPSIS
+*     static void process_cmdline(char **anArgv) 
+*
+*  FUNCTION
+*     Handle command line arguments. Parse argument vector and handle options.
+*
+*  INPUTS
+*     char **anArgv - pointer to agrument vector 
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: process_cmdline() is NOT MT safe. 
+*
+*******************************************************************************/
+static void process_cmdline(char **anArgv)
+{
+   lList *alp, *pcmdline;
+   lListElem *aep;
+   u_long32 help = 0;
+
+   DENTER(TOP_LAYER, "process_cmdline");
+
+   alp = pcmdline = NULL;
+
+   alp = parse_cmdline_qmaster(&anArgv[1], &pcmdline);
+   if(alp) {
+      /*
+      ** high level parsing error! show answer list
+      */
+      for_each(aep, alp) {
+         fprintf(stderr, "%s", lGetString(aep, AN_text));
+      }
+      lFreeList(alp);
+      lFreeList(pcmdline);
+      SGE_EXIT(1);
+   }
+
+   alp = parse_qmaster(&pcmdline, &help);
+   if(alp) {
+      /*
+      ** low level parsing error! show answer list
+      */
+      for_each(aep, alp) {
+         fprintf(stderr, "%s", lGetString(aep, AN_text));
+      }
+      lFreeList(alp);
+      lFreeList(pcmdline);
+      SGE_EXIT(1);
+   }
+
+   if(help) {
+      /* user wanted to see help. we can exit */
+      lFreeList(pcmdline);
+      SGE_EXIT(0);
+   }
+
+   DEXIT;
+   return;
+} /* process_cmdline */
+
+/****** qmaster/setup_qmaster/parse_cmdline_qmaster() **************************
+*  NAME
+*     parse_cmdline_qmaster() -- Parse command line arguments
+*
+*  SYNOPSIS
+*     static lList* parse_cmdline_qmaster(char **argv, lList **ppcmdline) 
+*
+*  FUNCTION
+*     Decompose argument vector. Handle options and option arguments. 
+*
+*  INPUTS
+*     char **argv       - pointer to argument vector 
+*     lList **ppcmdline - pointer to lList pointer which does contain the 
+*                         command line arguments upon return. 
+*
+*  RESULT
+*     lList* - pointer to answer list 
+*
+*  NOTES
+*     MT-NOTE: parse_cmdline_qmaster() is MT safe. 
+*
+*******************************************************************************/
+static lList *parse_cmdline_qmaster(char **argv, lList **ppcmdline )
+{
+   char **sp;
+   char **rp;
+   stringT str;
+   lList *alp = NULL;
+
+   DENTER(TOP_LAYER, "parse_cmdline_qmaster");
+
+   rp = argv;
+   while(*(sp=rp)) {
+      /* -help */
+      if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, &alp)) != sp)
+         continue;
+
+      /* -nostart-commd */
+      if ((rp = parse_noopt(sp, "-nostart-commd", NULL, ppcmdline, &alp)) != sp)
+         continue;
+
+      /* -s */
+      if ((rp = parse_noopt(sp, "-s", NULL, ppcmdline, &alp)) != sp)
+         continue;
+
+      /* -lj */
+      if ((rp = parse_until_next_opt(sp, "-lj", NULL, ppcmdline, &alp)) != sp)
+         continue;
+
+      /* oops */
+      sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
+      printf("%s\n", *sp);
+      sge_usage(stderr);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return alp;
+   }
+
+   DEXIT;
+   return alp;
+} /* parse_cmdline_qmaster() */
+
+/****** qmaster/setup_qmaster/parse_qmaster() **********************************
+*  NAME
+*     parse_qmaster() -- Process options. 
+*
+*  SYNOPSIS
+*     static lList* parse_qmaster(lList **ppcmdline, u_long32 *help) 
+*
+*  FUNCTION
+*     Process options 
+*
+*  INPUTS
+*     lList **ppcmdline - list of options
+*     u_long32 *help    - flag is set upon return if help has been requested
+*
+*  RESULT
+*     lList* - answer list 
+*
+*  NOTES
+*     MT-NOTE: parse_qmaster() is not MT safe. 
+*
+*******************************************************************************/
+static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
+{
+   stringT str;
+   lList *alp = NULL;
+   int usageshowed = 0;
+   u_long32 flag;
+   char *filename;
+
+   DENTER(TOP_LAYER, "parse_qmaster");
+
+   /* Loop over all options. Only valid options can be in the 
+      ppcmdline list.
+   */
+   while(lGetNumberOfElem(*ppcmdline))
+   {
+      flag = 0;
+      /* -help */
+      if(parse_flag(ppcmdline, "-help", &alp, help)) {
+         usageshowed = 1;
+         sge_usage(stdout);
+         break;
+      }
+
+      /* -nostart-commd */
+      if(parse_flag(ppcmdline, "-nostart-commd", &alp, &flag)) {
+         start_commd = false;
+         continue;
+      }
+
+      /* -s */
+      if(parse_flag(ppcmdline, "-s", &alp, &flag)) {
+         sge_silent_set(1);
+         continue;
+      }
+      
+      /* -lj */
+      if(parse_string(ppcmdline, "-lj", &alp, &filename)) {
+         enable_job_logging(filename);
+         FREE(filename);
+         continue;
+      }
+   }
+
+   if(lGetNumberOfElem(*ppcmdline)) {
+      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
+      if(!usageshowed)
+         sge_usage(stderr);
+      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return alp;
+   }
+   DEXIT;
+   return alp;
+} /* parse_qmaster() */
+
+/****** qmaster/setup_qmaster/qmaster_init() ***********************************
+*  NAME
+*     qmaster_init() -- Initialize qmaster 
+*
+*  SYNOPSIS
+*     static void qmaster_init(char **anArgv) 
+*
+*  FUNCTION
+*     Initialize qmaster. Do general setup and communication setup. Transfer
+*     qmaster into a daemon. Write qmaster pid file and startup message.
+*
+*  INPUTS
+*     char **anArgv - process argument vector 
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: qmaster_init() is NOT MT safe. 
+*
+*******************************************************************************/
+static void qmaster_init(char **anArgv)
+{
+   DENTER(TOP_LAYER, "qmaster_init");
+
+   umask(022); /* this needs a better solution */
+
+   lInit(nmv); /* set CULL namespace */
+
+   sge_setup(QMASTER, NULL); /* misc setup */
+
+   INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
+
+   communication_setup(anArgv);
+
+   if (setup_qmaster()) {
+      CRITICAL((SGE_EVENT, MSG_STARTUP_SETUPFAILED));
+      SGE_EXIT(1);
+   }
+
+   uti_state_set_exit_func(qmaster_lock_and_shutdown); /* CWD is spool directory */
+
+   sge_write_pid(QMASTER_PID_FILE);
+
+   host_list_notify_about_featureset(Master_Exechost_List, feature_get_active_featureset_id());
+
+   starting_up(); /* write startup info message to message file */
+
+   DEXIT;
+   return;
+} /* qmaster_init() */
+
+/****** qmaster/setup_qmaster/communication_setup() ****************************
+*  NAME
+*     communication_setup() -- Communication setup 
+*
+*  SYNOPSIS
+*     static void communication_setup(char **anArgv) 
+*
+*  FUNCTION
+*     Set message priorities. Do local host name resolution. Check if qmaster
+*     is already running. Enroll in 'commd'.
+*
+*  INPUTS
+*     char **anArgv - process argument vector 
+*
+*  RESULT
+*     void - none 
+*
+*  NOTES
+*     MT-NOTE: communication_setup() is NOT MT safe. 
+*
+*******************************************************************************/
+#ifdef ENABLE_NGC
+static void communication_setup(char **anArgv)
+{
+   const char *msg_prio = NULL;
+   const char *host = NULL;
+   int enrolled = 0;
+   cl_com_handle_t* com_handle = NULL;
+   int ret_val = CL_RETVAL_OK;
+   char* qmaster_port = NULL;
+
+   DENTER(TOP_LAYER, "communication_setup");
+
+   WARNING((SGE_EVENT,"starting up ngc in NO THREADS mode\n"));
+   ERROR((SGE_EVENT,"problem for sge_daemonize() when threads are running?"));
+
+   ret_val = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_DEBUG, qmaster_log_flush_func );
+
+   if (ret_val != CL_RETVAL_OK) {
+      ERROR((SGE_EVENT, "cl_com_setup_commlib: %s\n",cl_get_error_text(ret_val)));
+   }
+
+   if ((msg_prio = getenv("SGE_PRIORITY_TAGS")) != NULL) {
+      /* TODO: message priority flags ?*/
+      ERROR((SGE_EVENT, "SGE_PRIORITY_TAGS not supported by NGC\n"));
+   }
+
+   qmaster_port = getenv("SGE_QMASTER_PORT");   
+
+   if (qmaster_port == NULL) {
+      /* TODO: */
+      ERROR((SGE_EVENT, "could not get environment variable SGE_QMASTER_PORT\n"));
+      SGE_EXIT(1);
+   }
+
+   /* to ensure SGE host_aliasing is considered when resolving
+    * me.qualified_hostname before commd might be available
+    */
+   if ((host = sge_host_resolve_name_local(uti_state_get_qualified_hostname()))) {
+      uti_state_set_qualified_hostname(host);
+   }
+
+   com_handle = cl_com_get_handle((char*)prognames[QMASTER], 1);
+
+   if (com_handle != NULL) {
+      cl_commlib_remove_messages(cl_com_get_handle((char*)prognames[QMASTER],1));
+   } else {
+      com_handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,atoi(qmaster_port), 0,(char*)prognames[QMASTER], 1, 1 , 0 );
+      if (com_handle == NULL) {
+         ERROR((SGE_EVENT, "could not create communication handle\n"));
+         SGE_EXIT(1);
+      }
+   }
+   
+   if (com_handle) {
+      cl_com_add_allowed_host(com_handle,com_handle->local->comp_host);
+   }
+
+   if ((enrolled = check_for_running_qmaster())> 0) {
+      cl_commlib_remove_messages(com_handle);
+   }
+
+   DEXIT;
+   return;
+} /* communication_setup() */
+
+#else /* !ENABLE_NGC */
+
+static void communication_setup(char **anArgv)
+{
+   const char *msg_prio = NULL;
+   const char *host = NULL;
+   int enrolled = 0;
+
+   DENTER(TOP_LAYER, "communication_setup");
+
+   if ((msg_prio = getenv("SGE_PRIORITY_TAGS")) != NULL) {
+      set_message_priorities(msg_prio);
+   }
+
+   /* to ensure SGE host_aliasing is considered when resolving
+    * me.qualified_hostname before commd might be available
+    */
+   if ((host = sge_host_resolve_name_local(uti_state_get_qualified_hostname()))) {
+      uti_state_set_qualified_hostname(host);
+   }
+
+   if ((enrolled = check_for_running_qmaster())> 0) {
+      remove_pending_messages(NULL, 0, 0, 0);
+   }
+
+   set_commlib_param(CL_P_COMMDHOST, 0, uti_state_get_qualified_hostname(), NULL);
+   commlib_state_set_logging_function(sge_log);     
+   
+   if (!enrolled) {
+      int ret;
+
+      set_commlib_param(CL_P_NAME, 0, prognames[QMASTER], NULL);
+      set_commlib_param(CL_P_ID, 1, NULL, NULL);
+
+      if ((ret = enroll())) {
+         if (ret == CL_CONNECT && start_commd) {
+            startprog(1, 2, anArgv[0], NULL, SGE_COMMD, NULL);
+            sleep(5);
+         } else if (ret == COMMD_NACK_CONFLICT) {
+            ERROR((SGE_EVENT, MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S, uti_state_get_sge_formal_prog_name()));
+            SGE_EXIT(1);
+         } else {
+            ERROR((SGE_EVENT, MSG_COMMD_CANTENROLLTOCOMMD_S, cl_errstr(ret)));
+            SGE_EXIT(1);
+         }             
+      } else {
+         WARNING((SGE_EVENT, MSG_COMMD_FOUNDRUNNINGCOMMDONLOCALHOST));
+      }
+   } /* !enrolled */
+
+   reset_last_heard(); /* commlib call to mark all commprocs as unknown */
+
+   DEXIT;
+   return;
+} /* communication_setup() */
+
+#endif /* ENABLE_NGC */
+
+/****** qmaster/setup_qmaster/qmaster_log_flush_func() *************************
+*  NAME
+*     qmaster_log_flush_func() -- ??? 
+*
+*  SYNOPSIS
+*     static int qmaster_log_flush_func(cl_raw_list_t* list_p) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     cl_raw_list_t* list_p - ??? 
+*
+*  RESULT
+*     static int - 
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: qmaster_log_flush_func() is not MT safe 
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static int qmaster_log_flush_func(cl_raw_list_t* list_p)
+{
+   int ret_val;
+   cl_log_list_elem_t* elem = NULL;
+
+   DENTER(TOP_LAYER, "qmaster_log_flush_func");
+
+   if (list_p == NULL) {
+      DEXIT;
+      return CL_RETVAL_LOG_NO_LOGLIST;
+   }
+
+   if (  ( ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
+      DEXIT;
+      return ret_val;
+   }
+
+   while ( (elem = cl_log_list_get_first_elem(list_p) ) != NULL)
+   {
+      char* param;
+      char* module;
+      if (elem->log_parameter == NULL) {
+         param = "";
+      } else {
+         param = elem->log_parameter;
+      }
+      if (elem->log_module_name == NULL) {
+         module = "";
+      } else {
+         module = elem->log_module_name;
+      }
+      switch(elem->log_type) {
+         case CL_LOG_ERROR: 
+            ERROR((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+         case CL_LOG_WARNING:
+            WARNING((SGE_EVENT,"%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+         case CL_LOG_INFO:
+            INFO((SGE_EVENT,   "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+         case CL_LOG_DEBUG:
+            DEBUG((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            break;
+      }
+      cl_log_list_del_log(list_p);
+   }
+   
+   if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+      DEXIT;
+      return ret_val;
+   } 
+
+   DEXIT;
+   return CL_RETVAL_OK;
+} /* qmaster_log_flush_func() */
+
+#if !defined(ENABLE_NGC)
+/****** qmaster/setup_qmaster/set_message_priorities() *************************
+*  NAME
+*     set_message_priorities() -- set message priorities for commd
+*
+*  SYNOPSIS
+*     static void set_message_priorities(const char* thePriorities)
+*
+*  FUNCTION
+*     Message priorities are used by 'commd' to determine the sequence of message
+*     delivery. Messages with higher priorities are delivered prior to messages 
+*     with lower priorities.
+*
+*     'thePriorities' contains a blank separated list of tag id's (values
+*     0-n, n = enum value of the TAG_* enum as defined in libs/gdi/sge_any_request.h
+*     The position within the string determines the priority of the message tag
+*     denoted by the given integer.
+*
+*  INPUTS
+*     const char* thePriorities - blank separated list of priotities
+*
+*  EXAMPLE
+*
+*     '3 2 9'
+*
+*       Position  Value    Message Tag     Priority
+*
+*           0       3    TAG_ACK_REQUEST      0 (lowest)
+*           1       2    TAG_GDI_REQUEST      1
+*           2       9    TAG_SIGJOB           2 (highest)
+* 
+*     The old message priorities used correspond to the string '3 2'.
+*
+*  RESULT
+*     void - none
+*
+*  NOTES
+*     MT-NOTE: set_message_priorities() is MT safe. 
+*
+******************************************************************************/
+static void set_message_priorities(const char* thePriorities)
+{
+   enum { NUM_OF_PRIORITIES = 10 };
+
+   int prio[NUM_OF_PRIORITIES] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+   char *str, *tok, *pos = NULL;
+   int cnt = 0;
+
+   DENTER(TOP_LAYER, "set_message_priorities");
+   INFO((SGE_EVENT, MSG_SETTING_PRIORITY_TAGS_S, thePriorities));
+
+   str = strdup(thePriorities);
+   tok = strtok_r(str, " ", &pos);
+   while (tok != NULL) {
+      if (cnt >= (NUM_OF_PRIORITIES - 1) ) {
+         WARNING((SGE_EVENT, MSG_TOO_MANY_PRIORITY_TAGS_S, thePriorities));
+         break;
+      }   
+      prio[cnt++] = atoi(tok);
+      tok = strtok_r(NULL, " ", &pos);
+   }
+   free(str);
+
+   prepare_enroll(prognames[QMASTER], 1, prio);
+
+   DEXIT;
+   return;
+} /* set_message_priorities */
+#endif /* !ENABLE_NGC */
+
+/****** qmaster/setup_qmaster/qmaster_lock_and_shutdown() ***************************
+*  NAME
+*     qmaster_lock_and_shutdown() -- Acquire qmaster lock file and shutdown 
+*
+*  SYNOPSIS
+*     static void qmaster_lock_and_shutdown(int anExitValue) 
+*
+*  FUNCTION
+*     qmaster exit function. This version MUST NOT be used, if the current
+*     working   directory is NOT the spool directory. Other components do rely
+*     on finding the lock file in the spool directory.
+*
+*  INPUTS
+*     int anExitValue - exit value 
+*
+*  RESULT
+*     void - none
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: qmaster_lock_and_shutdown() is MT safe 
+*
+*******************************************************************************/
+static void qmaster_lock_and_shutdown(int anExitValue)
+{
+   DENTER(TOP_LAYER, "qmaster_lock_and_shutdown");
+   
+   if (qmaster_lock(QMASTER_LOCK_FILE) == -1) {
+      CRITICAL((SGE_EVENT, MSG_QMASTER_LOCKFILE_ALREADY_EXISTS));
+   }
+   sge_gdi_shutdown();
+
+   DEXIT;
+   return;
+} /* qmaster_lock_and_shutdown() */
+
+static int setup_qmaster(void)
 {
    lListElem *jep, *ep, *tmpqep;
    static bool first = true;

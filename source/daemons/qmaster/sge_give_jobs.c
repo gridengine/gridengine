@@ -51,7 +51,6 @@
 #include "sge.h"
 #include "sge_conf.h"
 #include "sge_any_request.h"
-#include "time_event.h"
 #include "commlib.h"
 #include "job_log.h"
 #include "pack_job_delivery.h"
@@ -97,6 +96,7 @@
 #include "sge_todo.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
+#include "sge_lock.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
@@ -478,17 +478,14 @@ int master
    return 0;
 }
 
-void resend_job(
-u_long32 type,
-u_long32 when,
-u_long32 jobid,
-u_long32 jataskid,
-const char *queue 
-) {
+void resend_job(te_event_t anEvent)
+{
    lListElem* jep, *jatep, *ep, *hep, *pe, *mqep;
    lList* jatasks;
    const char *qnm, *hnm;
    time_t now;
+   u_long32 jobid = te_get_first_numeric_key(anEvent);
+   u_long32 jataskid = te_get_second_numeric_key(anEvent);
    
    DENTER(TOP_LAYER, "resend_job");
 
@@ -571,54 +568,62 @@ const char *queue
 }
 
 
-void cancel_job_resend(
-u_long32 jid,
-u_long32 ja_task_id 
-) {
+void cancel_job_resend(u_long32 jid, u_long32 ja_task_id)
+{
    DENTER(TOP_LAYER, "cancel_job_resend");
+
    DPRINTF(("CANCEL JOB RESEND "u32"/"u32"\n", jid, ja_task_id)); 
-   te_delete(TYPE_JOB_RESEND_EVENT, NULL, jid, ja_task_id);
+   te_delete_one_time_event(TYPE_JOB_RESEND_EVENT, jid, ja_task_id, NULL);
+
    DEXIT;
+   return;
 }
 
 /* 
  * if hep equals to NULL resend is triggered immediatelly 
  */ 
-void trigger_job_resend(
-u_long32 now,
-lListElem *hep,
-u_long32 jid,
-u_long32 ja_task_id 
-) {
+void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_task_id)
+{
    u_long32 seconds;
+   time_t when = 0;
+   te_event_t ev = NULL;
+
    DENTER(TOP_LAYER, "trigger_job_resend");
-   seconds = hep? MAX(load_report_interval(hep), MAX_JOB_DELIVER_TIME):0;
+
+   seconds = hep ? MAX(load_report_interval(hep), MAX_JOB_DELIVER_TIME) : 0;
    DPRINTF(("TRIGGER JOB RESEND "u32"/"u32" in %d seconds\n", jid, ja_task_id, seconds)); 
 
-   te_delete(TYPE_JOB_RESEND_EVENT, NULL, jid, ja_task_id);
-   te_add(TYPE_JOB_RESEND_EVENT, now + seconds, jid, ja_task_id, NULL);
+   when = now + seconds;
+   ev = te_new_event(when, TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, jid, ja_task_id, NULL);
+   te_add_event(ev);
+   te_free_event(ev);
+
    DEXIT;
+   return;
 }
 
 
 /***********************************************************************
- ck_4_zombie_jobs
+ sge_zombie_job_cleanup_handler
 
  Remove zombie jobs, which have expired (currently, we keep a list of
  conf.zombie_jobs entries)
  ***********************************************************************/
-void ck_4_zombie_jobs(
-u_long now 
-) {
+void sge_zombie_job_cleanup_handler(te_event_t anEvent)
+{
    lListElem *dep;
    
-   DENTER(TOP_LAYER, "ck_4_zombie_jobs");
+   DENTER(TOP_LAYER, "sge_zombie_job_cleanup_handler");
+
+   SGE_LOCK(LOCK_MASTER_ZOMBIE_LST, LOCK_WRITE);
 
    while (Master_Zombie_List &&
             (lGetNumberOfElem(Master_Zombie_List) > conf.zombie_jobs)) {
       dep = lFirst(Master_Zombie_List);
       lRemoveElem(Master_Zombie_List, dep);
    }
+
+   SGE_UNLOCK(LOCK_MASTER_ZOMBIE_LST, LOCK_WRITE);
 
    DEXIT;
 }
@@ -1278,7 +1283,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
    DENTER(TOP_LAYER, "sge_bury_job");
 
    job = job_list_locate(Master_Job_List, job_id);
-   te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, job_id, ja_task_id);
+   te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, job_id, ja_task_id, NULL);
 
 
    /*

@@ -60,7 +60,6 @@
 #include "sort_hosts.h"
 #include "sge_userset_qmaster.h"
 #include "sge_userprj_qmaster.h"
-#include "time_event.h"
 #include "sge_complex_schedd.h"
 #include "reschedule.h"
 #include "sge_string.h"
@@ -82,6 +81,7 @@
 #include "sge_cqueue.h"
 #include "sge_str.h"
 #include "sge_load.h"
+#include "sge_lock.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
@@ -813,9 +813,8 @@ lList *lp
    trash old load values 
    
 */
-void sge_load_value_garbage_collector(
-u_long32 now 
-) {
+void sge_load_value_cleanup_handler(te_event_t anEvent)
+{
    extern int new_config;
    lListElem *hep, *ep, *nextep; 
    lList *h_list;
@@ -825,9 +824,9 @@ u_long32 now
    const char *comproc;
    u_long32 timeout; 
    int nstatics, nbefore;
-   static u_long32 next_garbage_collection = 0;
    lListElem *global_host_elem   = NULL;
    lListElem *template_host_elem = NULL;
+   time_t now = time(NULL);
 #ifdef ENABLE_NGC
    unsigned long last_heard_from;
 #endif
@@ -835,17 +834,12 @@ u_long32 now
    const void *iterator = NULL;
 
 
-   DENTER(TOP_LAYER, "sge_load_value_garbage_collector");
-
-   if (next_garbage_collection && next_garbage_collection > now) {
-      DEXIT;
-      return;
-   }
-
-   
-   next_garbage_collection = now + 15; 
+   DENTER(TOP_LAYER, "sge_load_value_cleanup_handler");
 
    comproc = prognames[EXECD];
+
+   SGE_LOCK(LOCK_MASTER_EXEC_HOST_LST, LOCK_WRITE);
+
    /* get "global" element pointer */
    global_host_elem   = host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME);    
    /* get "template" element pointer */
@@ -940,6 +934,8 @@ u_long32 now
          }
       } 
    }
+
+   SGE_UNLOCK(LOCK_MASTER_EXEC_HOST_LST, LOCK_WRITE);
 
    new_config = 0;
 

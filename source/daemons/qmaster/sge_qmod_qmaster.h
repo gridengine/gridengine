@@ -32,13 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #ifndef __SGE_GDIP_H
 #   include "sge_gdiP.h"
 #endif
 
-void resend_signal_event(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, const char *queue);
+#include "sge_qmaster_timed_event.h"
+
+
+void resend_signal_event(const te_event_t anEvent);
 void rebuild_signal_events(void);
 void sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 

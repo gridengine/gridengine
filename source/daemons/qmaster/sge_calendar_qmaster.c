@@ -39,7 +39,6 @@
 #include "sge_log.h"
 #include "sgermon.h"
 #include "sge_event_master.h"
-#include "time_event.h"
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
@@ -170,7 +169,7 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove timer for this calendar */
-   te_delete(TYPE_CALENDAR_EVENT, cal_name, 0, 0);
+   te_delete_one_time_event(TYPE_CALENDAR_EVENT, 0, 0, cal_name);
 
    sge_event_spool(alpp, 0, sgeE_CALENDAR_DEL, 
                    0, 0, cal_name, NULL, NULL,
@@ -185,10 +184,10 @@ sge_del_calendar(lListElem *cep, lList **alpp, char *ruser, char *rhost)
 }
 
 void 
-calendar_event(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, 
-               const char *cal_name) 
+calendar_event(te_event_t anEvent) 
 {
    lListElem *cep;
+   const char* cal_name = te_get_alphanumeric_key(anEvent);
 
    DENTER(TOP_LAYER, "calendar_event");
 
@@ -200,14 +199,15 @@ calendar_event(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1,
       
    calendar_update_queue_states(cep, 0, NULL);
 
+   sge_free((char *)cal_name);
    DEXIT;
 }
 
-int 
-calendar_update_queue_states(lListElem *cep, lListElem *old_cep, 
-                             gdi_object_t *object) {
+int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_t *object)
+{
    const char *cal_name = lGetString(cep, CAL_name);
    lListElem *cqueue = NULL;
+   time_t when = 0;
 
    DENTER(TOP_LAYER, "calendar_update_queue_states");
 
@@ -215,11 +215,13 @@ calendar_update_queue_states(lListElem *cep, lListElem *old_cep,
                  0, 0, cal_name, NULL, NULL, cep);
    lListElem_clear_changed_info(cep);
 
-   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE)))
+   {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance = NULL;
 
-      for_each(qinstance, qinstance_list) {
+      for_each(qinstance, qinstance_list)
+      {
          const char *queue_calendar = lGetString(qinstance, QU_calendar);
 
          if (queue_calendar != NULL && !strcmp(queue_calendar, cal_name)) {
@@ -228,15 +230,17 @@ calendar_update_queue_states(lListElem *cep, lListElem *old_cep,
       }
    }
 
+   calendar_get_current_state_and_end(cep, &when);
+
+   if (when)
    {
-      time_t next_event;
+      te_event_t ev;
 
-      calendar_get_current_state_and_end(cep, &next_event);
-      if (next_event) {
-         te_add(TYPE_CALENDAR_EVENT, next_event, 0, 0, cal_name);
-      }
+      ev = te_new_event(when, TYPE_CALENDAR_EVENT, ONE_TIME_EVENT, 0, 0, cal_name);
+      te_add_event(ev);
+      te_free_event(ev);
    }
-
+  
    DEXIT;
    return 0;
 }

@@ -33,10 +33,10 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
-
 #include "sge_dstring.h"
-
 #include "sge_object.h"
+#include "sge_qmaster_timed_event.h"
+
 
 typedef enum {
    JL_UNKNOWN,       /* job is in unknown state - should never be seen */
@@ -63,8 +63,7 @@ bool
 reporting_shutdown(lList **answer_list);
 
 void
-reporting_deliver_trigger(u_long32 type, u_long32 when, 
-                          u_long32 uval0, u_long32 uval1, const char *key);
+reporting_deliver_trigger(te_event_t anEvent);
 
 bool
 reporting_create_new_job_record(lList **answer_list, const lListElem *job);

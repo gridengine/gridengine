@@ -47,7 +47,7 @@
 #include "sge_c_gdi.h"
 #include "sge_c_ack.h"
 #include "sge_c_report.h"
-#include "qmaster.h"
+#include "sge_qmaster_main.h"
 
 
 #ifdef ENABLE_NGC

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_setup_qmaster(void);
+int sge_setup_qmaster(char* anArgv[]);
 
 #endif /* __SETUP_QMASTER_H */
 

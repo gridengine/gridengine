@@ -45,7 +45,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time_eventL.h"
-#include "time_event.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "sge_job.h"
@@ -198,8 +197,7 @@ u_long32 ack_ulong2
    case TAG_SIGQUEUE:
       DPRINTF(("QUEUE %s: SIGNAL ACK\n", lGetString(qinstance, QU_qname)));
                lSetUlong(qinstance, QU_pending_signal, 0);
-      te_delete(TYPE_SIGNAL_RESEND_EVENT, 
-                lGetString(qinstance, QU_qname), 0, 0);
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qinstance, QU_qname));
       spool_write_object(&answer_list, spool_get_default_context(), qinstance, 
                          lGetString(qinstance, QU_qname), SGE_TYPE_QINSTANCE);
       answer_list_output(&answer_list);
@@ -207,7 +205,7 @@ u_long32 ack_ulong2
    case TAG_SIGJOB:
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
-      te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, ack_ulong, ack_ulong2);
+      te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, ack_ulong, ack_ulong2, NULL);
       {
          dstring buffer = DSTRING_INIT;
          spool_write_object(&answer_list, spool_get_default_context(), jep, 

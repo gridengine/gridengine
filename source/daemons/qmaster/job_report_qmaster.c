@@ -54,7 +54,6 @@
 #include "sge_give_jobs.h"
 #include "sge_pe_qmaster.h"
 #include "sge_time.h"
-#include "time_event.h"
 #include "reschedule.h"
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"

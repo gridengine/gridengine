@@ -1326,7 +1326,7 @@ int sge_security_verify_user(const char *host, const char *commproc, u_short id,
 }   
 
 /* MT-NOTE: sge_security_ck_to_do() is MT safe (assumptions) */
-void sge_security_ck_to_do(void)
+void sge_security_event_handler(te_event_t anEvent)
 {
 #ifdef SECURE
    if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
@@ -1338,3 +1338,4 @@ void sge_security_ck_to_do(void)
    krb_check_for_idle_clients();
 #endif
 }
+

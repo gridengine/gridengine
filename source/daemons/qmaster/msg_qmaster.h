@@ -665,9 +665,9 @@
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU       _MESSAGE(33648, _("can't find queue "SFQ" referenced in job "U32CFormat))
 
 /*
-** time_event.c
+** sge_qmaster_timed_event.c
 */
-#define MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I       _MESSAGE(33663, _("system time has been modified (%d seconds)\n"))
+#define MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I       _MESSAGE(33663, _("system clock has been put back (%d seconds)\n"))
 #define MSG_SYSTEM_RECEIVEDUNKNOWNEVENT       _MESSAGE(33664, _("received unkown event\n"))
 
 /*

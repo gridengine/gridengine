@@ -1,5 +1,39 @@
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ * 
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ * 
+ *  Sun Microsystems Inc., March, 2001
+ * 
+ * 
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ * 
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ * 
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ * 
+ *   Copyright: 2003 by Sun Microsystems, Inc.
+ * 
+ *   All Rights Reserved.
+ * 
+ ************************************************************************/
+/*___INFO__MARK_END__*/
+
+#include <stdlib.h>
 #include <pthread.h>
 #include <sys/time.h>
+
 #include "sgermon.h"
 
 /****** sge_mtutil/sge_mutex_lock() ********************************************
@@ -32,11 +66,20 @@
 void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
    DENTER(TOP_LAYER, "sge_mutex_lock");
+
    DLOCKPRINTF(("%s() line %d: about to lock mutex \"%s\"\n", func, line, mutex_name));
-   pthread_mutex_lock(mutex);
+
+   if (pthread_mutex_lock(mutex) != 0)
+   {
+      DLOCKPRINTF(("%s failed to lock %s\n", func, mutex_name));
+      abort(); /* TODO-AD: add error message */
+   }
+
    DLOCKPRINTF(("%s() line %d: locked mutex \"%s\"\n", func, line, mutex_name));
+
    DEXIT;
-}
+   return;
+} /* sge_mutex_lock() */
 
 /****** sge_mtutil/sge_mutex_unlock() ********************************************
 *  NAME
@@ -68,11 +111,18 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
 void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthread_mutex_t *mutex)
 {
    DENTER(TOP_LAYER, "sge_mutex_unlock");
-/* ?? is this relevant ??  DPRINTF(("%s() line %d: about to unlock mutex \"%s\"\n", func, line, mutex_name)); */
-   pthread_mutex_unlock(mutex);
+
+   if (pthread_mutex_unlock(mutex) != 0)
+   {
+      DLOCKPRINTF(("%s failed to lock %s\n", func, mutex_name));
+      abort(); /* TODO-AD: add error message */
+   }
+
    DLOCKPRINTF(("%s() line %d: unlocked mutex \"%s\"\n", func, line, mutex_name));
+
    DEXIT;
-}
+   return;
+} /* sge_mutex_unlock() */
 
 
 /****** sge_mtutil/sge_relative_timespec() **************************************

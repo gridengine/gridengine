@@ -32,9 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #include "sge_c_gdi.h"
+#include "sge_qmaster_timed_event.h"
+
 
 int calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command);
 
@@ -44,7 +44,7 @@ int calendar_update_queue_states(lListElem *cep, lListElem *old_cep, gdi_object_
 
 int sge_del_calendar(lListElem *ep, lList **alpp, char *ruser, char *rhost);
 
-void calendar_event(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, const char *sval);
+void calendar_event(te_event_t anEvent);
 
 #endif /* __SGE_CALENDAR_QMASTER_H */
 

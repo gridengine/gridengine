@@ -73,7 +73,6 @@
 
 /* local */
 #include "sge_rusage.h"
-#include "time_event.h"
 #include "sge_reporting_qmaster.h"
 
 /* messages */
@@ -161,7 +160,7 @@ lGetStringNotNull(const lListElem *ep, int nm);
 *     bool - true on success, false on error
 *
 *  NOTES
-*     MT-NOTE: reporting_initialize() is not MT safe, as te_add is not MT safe.
+*     MT-NOTE: reporting_initialize() is MT safe.
 *
 *  SEE ALSO
 *     qmaster/reporting/reporting_shutdown()
@@ -171,15 +170,18 @@ bool
 reporting_initialize(lList **answer_list)
 {
    bool ret = true;
-
-   u_long32 now = sge_get_gmt();
+   te_event_t ev = NULL;
 
    DENTER(TOP_LAYER, "reporting_initialize");
 
-   te_add(TYPE_REPORTING_TRIGGER, now, 1, 0, NULL);
+   ev = te_new_event(time(NULL), TYPE_REPORTING_TRIGGER, ONE_TIME_EVENT, 1, 0, NULL);
+   te_add_event(ev);
+   te_free_event(ev);
 
    if (sharelog_time > 0) {
-      te_add(TYPE_SHARELOG_TRIGGER, now, 1, 0, NULL);
+      ev = te_new_event(time(NULL), TYPE_SHARELOG_TRIGGER , ONE_TIME_EVENT, 1, 0, NULL);
+      te_add_event(ev);
+      te_free_event(ev);
    }
 
    DEXIT;
@@ -212,11 +214,15 @@ bool
 reporting_shutdown(lList **answer_list)
 {
    bool ret = true;
+   lList* alp = NULL;
+   u_long32 dummy = 0;
 
    DENTER(TOP_LAYER, "reporting_shutdown");
 
    /* flush the last reporting values, suppress adding new timer */
-   reporting_deliver_trigger(TYPE_REPORTING_TRIGGER, 0, 0, 0, NULL);
+   if (!reporting_flush(&alp, 0, &dummy)) {
+      answer_list_output(&alp);
+   }
 
    /* free memory of buffers */
    SGE_LOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
@@ -237,39 +243,32 @@ reporting_shutdown(lList **answer_list)
 *
 *  SYNOPSIS
 *     void 
-*     reporting_deliver_trigger(u_long32 type, u_long32 when, 
-*                               u_long32 uval0, u_long32 uval1, const char *key)
+*     reporting_deliver_trigger(te_event_t anEvent)
 *
 *  FUNCTION
 *     ??? 
 *
 *  INPUTS
-*     u_long32 type   - Event type (TYPE_REPORTING_TRIGGER)
-*     u_long32 when   - The time when the event is due to deliver.
-*     u_long32 uval0  - if != 0, a new timer will be started
-*     u_long32 uval1  - unused
-*     const char *key - unused
+*     te_event_t - timed event
 *
 *  NOTES
-*     MT-NOTE: reporting_deliver_trigger() is MT safe if uval0 = 0, else it is
-*              not MT safe, as te_add is not MT safe.
+*     MT-NOTE: reporting_deliver_trigger() is MT safe.
 *
 *  SEE ALSO
 *     Timeeventmanager/te_deliver()
 *     Timeeventmanager/te_add()
 *******************************************************************************/
 void
-reporting_deliver_trigger(u_long32 type, u_long32 when, 
-                          u_long32 uval0, u_long32 uval1, const char *key)
+reporting_deliver_trigger(te_event_t anEvent)
 {
    u_long32 flush_interval = 0;
    u_long32 next_flush = 0;
-   u_long32 now;
    lList *answer_list = NULL;
+   
 
    DENTER(TOP_LAYER, "reporting_deliver_trigger");
 
-   switch (type) {
+   switch (te_get_type(anEvent)) {
       case TYPE_SHARELOG_TRIGGER:
          /* dump sharetree usage and flush reporting file */
          if (!reporting_create_sharelog_record(&answer_list)) {
@@ -286,7 +285,7 @@ reporting_deliver_trigger(u_long32 type, u_long32 when,
    }
 
    /* flush the reporting data */
-   if (!reporting_flush(&answer_list, when, &next_flush)) {
+   if (!reporting_flush(&answer_list, time(NULL), &next_flush)) {
       answer_list_output(&answer_list);
    }
 
@@ -295,13 +294,12 @@ reporting_deliver_trigger(u_long32 type, u_long32 when,
     * add trigger 
     */
    if (flush_interval > 0) {
-      now = sge_get_gmt();
-      next_flush = now + flush_interval;
+      u_long32 next = time(NULL) + flush_interval;
+      te_event_t ev = NULL;
 
-      /* set timerevent for next flush */
-      if (uval0 != 0) {
-         te_add(type, next_flush, 1, 0, NULL);
-      }
+      ev = te_new_event(next, te_get_type(anEvent), ONE_TIME_EVENT, 1, 0, NULL);
+      te_add_event(ev);
+      te_free_event(ev);
    }
 
    DEXIT;

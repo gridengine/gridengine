@@ -1,5 +1,5 @@
-#ifndef __TIME_EVENT_H
-#define __TIME_EVENT_H
+#ifndef _SGE_QMASTER_MAIN_H_
+#define _SGE_QMASTER_MAIN_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,31 +25,19 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2003 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_gdi_request.h"
 
 
-#include "sge_time_eventL.h"
-
-typedef void (*te_deliver_func_t)(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, const char *sval);
-
-typedef struct {
-   u_long32 type;
-   te_deliver_func_t func;
-} te_tab_t;
-
-void te_deliver(u_long32 now, te_tab_t *tab);
-void te_add(u_long32 type, u_long32 when, u_long32 uval0, u_long32 uval1, 
-            const char *sval);
-
-/* removes all pending events with 'str' as key */
-int te_delete(u_long32 type, const char *str, u_long32 uval0, u_long32 uval1);
+int main(int argc, char* argv[]);
+void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
 
-#endif /* __TIME_EVENT_H */
+#endif /* _SGE_QMASTER_MAIN_H_ */
 

@@ -32,6 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_qmaster_timed_event.h"
+
+
 #define MAX_JOB_DELIVER_TIME (5*60)
 
 typedef enum {
@@ -59,9 +62,9 @@ int sge_give_job(lListElem *jep, lListElem *jatep, lListElem *master_qep, lListE
 
 void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr, sge_commit_mode_t mode, sge_commit_flags_t commit_flags);
 
-void ck_4_zombie_jobs(u_long now);
+void sge_zombie_job_cleanup_handler(te_event_t anEvent);
 
-void resend_job(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, const char *queue);
+void resend_job(te_event_t anEvent);
 
 void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 tid);
 

@@ -195,8 +195,9 @@ void cull_show_job(lListElem *job, int flags)
 
          delis[0] = ":";
          printf("stderr_path_list:           ");
-         uni_print_list(stdout, NULL, 0, lGetList(job, JB_stderr_path_list), fields, 
-            delis, FLG_NO_DELIS_STRINGS);
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_stderr_path_list), 
+                        fields, delis, FLG_NO_DELIS_STRINGS);
+         printf("\n");
       }
 
    if (lGetPosViaElem(job, JB_reserve)>=0)
@@ -217,14 +218,12 @@ void cull_show_job(lListElem *job, int flags)
       if (lGetList(job, JB_hard_resource_list)) {
          printf("hard resource_list:         ");
          sge_show_ce_type_list(lGetList(job, JB_hard_resource_list));
-         printf("\n");
       }
 
    if (lGetPosViaElem(job, JB_soft_resource_list)>=0)
       if (lGetList(job, JB_soft_resource_list)) {
          printf("soft resource_list:         ");
          sge_show_ce_type_list(lGetList(job, JB_soft_resource_list));
-         printf("\n");
       }
 
    if (lGetPosViaElem(job, JB_mail_options)>=0)
@@ -260,8 +259,9 @@ void cull_show_job(lListElem *job, int flags)
 
          delis[0] = ":";
          printf("stdout_path_list:           ");
-         uni_print_list(stdout, NULL, 0, lGetList(job, JB_stdout_path_list), fields, 
-            delis, FLG_NO_DELIS_STRINGS);
+         uni_print_list(stdout, NULL, 0, lGetList(job, JB_stdout_path_list), 
+                        fields, delis, FLG_NO_DELIS_STRINGS);
+         printf("\n");
       }
    
    if (lGetPosViaElem(job, JB_stdin_path_list)>=0)
@@ -271,7 +271,8 @@ void cull_show_job(lListElem *job, int flags)
          delis[0] = ":";
          printf("stdin_path_list:            ");
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_stdin_path_list), 
-            fields, delis, FLG_NO_DELIS_STRINGS);
+                        fields, delis, FLG_NO_DELIS_STRINGS);
+         printf("\n");
       }
 
    if (lGetPosViaElem(job, JB_priority)>=0)
@@ -292,7 +293,7 @@ void cull_show_job(lListElem *job, int flags)
          delis[0] = " ";
          printf("hard_queue_list:            ");
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_hard_queue_list), 
-            fields, delis, FLG_NO_DELIS_STRINGS);
+                        fields, delis, FLG_NO_DELIS_STRINGS);
       }
 
    if (lGetPosViaElem(job, JB_soft_queue_list)>=0)
@@ -302,7 +303,7 @@ void cull_show_job(lListElem *job, int flags)
          delis[0] = " ";
          printf("soft_queue_list:            ");
          uni_print_list(stdout, NULL, 0, lGetList(job, JB_soft_queue_list),
-            fields, delis, FLG_NO_DELIS_STRINGS);
+                        fields, delis, FLG_NO_DELIS_STRINGS);
       }
 
    if (lGetPosViaElem(job, JB_restart)>=0)

@@ -1,3 +1,6 @@
+EB-2004-03-08-1: Bugfix:    missing newline in qstat -j <jid> output
+                 Changed:   qstat
+
 EB-2004-03-08-0: Bugfix:    qstat -g c takes to long time if there are many 
                             jobs in the cluster
                  Changed:   qstat

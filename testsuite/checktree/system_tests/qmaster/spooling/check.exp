@@ -85,10 +85,10 @@ proc qmaster_spooling_setup  {} {
    set_error 0 "ok"
 }
 
-proc restart_qmaster {} {
+# JG: TODO: move to sge_procedures
+proc shutdown_and_restart_qmaster {} {
    global CHECK_HOST
    shutdown_qmaster $CHECK_HOST [get_qmaster_spool_dir]
-   after 10000
    startup_qmaster 0
 }
 
@@ -131,7 +131,7 @@ proc qmaster_spooling_prj_restart {} {
 #           use this information and do some status output
    add_prj config
 
-   restart_qmaster
+   shutdown_and_restart_qmaster
 
    get_prj "spool_prj" new_config
 

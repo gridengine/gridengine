@@ -1,3 +1,9 @@
+JG-2004-07-05-0: Bugfix:    projects not available after sge_qmaster restart
+                 Changed:   sge_qmaster
+                 Issue:     1122
+                 Bugtraq:   5071498
+                 Review:    CR
+
 DT-2004-07-05-0: Bugfix:    o Fixed broken build on AIX
                             o Fixed typos in JGrid
                  Changed:   shepherd, JGrid

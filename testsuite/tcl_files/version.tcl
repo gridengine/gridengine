@@ -73,10 +73,12 @@ proc ts_source {filebase} {
       set version $ts_config(gridengine_version)
 
       set filename "$filebase.tcl"
+      set sourced 0
 
       if {[file exists $filename]} {
          puts $CHECK_OUTPUT "reading file $filename"
          source $filename
+         incr sourced
       }
 
       if { $version != "" } {
@@ -84,8 +86,13 @@ proc ts_source {filebase} {
          if {[file exists $filename]} {
             puts $CHECK_OUTPUT "reading version specific file $filename"
             source $filename
+            incr sourced
          }
       }
+   }
+
+   if {$sourced == 0} {
+      puts $CHECK_OUTPUT "no files sourced for filename \"$filebase.*\""
    }
 
    return $ret

@@ -88,35 +88,6 @@ proc test {m p} {
 #  SEE ALSO
 #     sge_procedures/assign_queues_with_ckpt_object()
 #*******************************************************************************
-proc assign_queues_with_pe_object { queue_list pe_obj } {
-   global CHECK_OUTPUT
-   if { [get_pe_ckpt_version] > 0 } {
-      foreach queue $queue_list {
-         get_queue $queue org_val
-         if { [string match "NONE" $org_val(pe_list)] ||
-              [string match "none" $org_val(pe_list)] } {
-            puts $CHECK_OUTPUT "overwriting NONE value for pe_list in queue $queue"
-            set new_val(pe_list) $pe_obj
-         } else {
-            puts $CHECK_OUTPUT "adding new pe object to pe_list in queue $queue"
-            set new_val(pe_list) "$org_val(pe_list),$pe_obj"
-         }
-         set_queue $queue new_val
-      }
-   } else {
-      set q_list ""
-      foreach elem $queue_list {
-         if [ string compare $q_list "" ] {
-            set q_list "$q_list,$elem"
-         } else {
-            set q_list "$elem"
-         }
-      }
-      set my_change(queue_list) $q_list
-      set_pe $pe_obj my_change
-   }
-}
-
 #****** sge_procedures/assign_queues_with_ckpt_object() ************************
 #  NAME
 #     assign_queues_with_ckpt_object() -- setup queue <-> ckpt connection
@@ -134,83 +105,6 @@ proc assign_queues_with_pe_object { queue_list pe_obj } {
 #  SEE ALSO
 #     sge_procedures/assign_queues_with_pe_object()
 #*******************************************************************************
-proc assign_queues_with_ckpt_object { queue_list ckpt_obj } {
-   global CHECK_OUTPUT
-   if { [get_pe_ckpt_version] > 0 } {
-      foreach queue $queue_list {
-         get_queue $queue org_val
-         if { [string match "NONE" $org_val(ckpt_list)] ||
-              [string match "none" $org_val(ckpt_list)] } {
-            puts $CHECK_OUTPUT "overwriting NONE value for ckpt_list in queue $queue"
-            set new_val(ckpt_list) $ckpt_obj
-         } else {
-            puts $CHECK_OUTPUT "adding new ckpt object to ckpt_list in queue $queue"
-            set new_val(ckpt_list) "$org_val(ckpt_list),$ckpt_obj"
-         }
-
-         set_queue $queue new_val
-      }
-   } else {
-      set q_list ""
-      foreach elem $queue_list {
-         if [ string compare $q_list "" ] {
-            set q_list "$q_list,$elem"
-         } else {
-            set q_list "$elem"
-         }
-      }
-      set my_change(queue_list) $q_list
-      set_checkpointobj $ckpt_obj my_change
-   }
-}
-
-#****** sge_procedures/get_pe_ckpt_version() ***********************************
-#  NAME
-#     get_pe_ckpt_version() -- get information about used qconf version
-#
-#  SYNOPSIS
-#     get_pe_ckpt_version { } 
-#
-#  FUNCTION
-#     This procedure returns 0 for qconf supporting queue_list in pe and ckpt
-#     objects, otherwise 1.
-#
-#  INPUTS
-#
-#  RESULT
-#     0 - qconf supporting queue_list in pe and ckpt
-#     1 - queue has pe_list and ckpt_list reference pointer 
-#  SEE ALSO
-#     sge_procedures/get_complex_version()
-#
-#*******************************************************************************
-proc get_pe_ckpt_version {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT pe_for_version_check_result
-
-   if { [string compare "undefined" $pe_for_version_check_result] != 0} {
-      return $pe_for_version_check_result
-   }
-
-   set version 0
-
-   set change(pe_name) "pe_for_version_check"
-
-   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sp pe_for_version_check" } result
-   if { [string match "*xuser_lists*" $result] != 1 } {
-      add_pe change 0  ;# no version check (infinitive loop!)
-   }
-   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sp pe_for_version_check" } result
-   if { [string match "*queue_list*" $result] } {
-      set version 0
-   } else {
-      set version 1
-   }
-   set pe_for_version_check_result $version
-   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dp pe_for_version_check" } result
-   puts $CHECK_OUTPUT $result
-   return $version
-}
-
 #****** sge_procedures/get_complex_version() ***********************************
 #  NAME
 #     get_complex_version() -- get information about used qconf version
@@ -229,14 +123,14 @@ proc get_pe_ckpt_version {} {
 #     1 - qconf is not supporting complex_list in queue 
 #
 #  SEE ALSO
-#     sge_procedures/get_pe_ckpt_version()
 #*******************************************************************************
 proc get_complex_version {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_CORE_MASTER
+   global ts_config
+   global CHECK_ARCH CHECK_OUTPUT CHECK_CORE_MASTER
    set version 0
 
    puts $CHECK_OUTPUT "checking complex version ..."
-   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-scl" } result
+   catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-scl" } result
    set INVALID_OPTION [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro MSG_ANSWER_INVALIDOPTIONARGX_S] "-scl"]
    set INVALID_OPTION [string trim $INVALID_OPTION]
    
@@ -363,6 +257,7 @@ proc get_execd_spool_dir {host} {
 #
 #*******************************************************************************
 proc check_messages_files { } {
+   global ts_config
    global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_CORE_MASTER
 
 
@@ -439,7 +334,8 @@ proc get_qmaster_messages_file { } {
 #     sge_procedures/check_schedd_messages()
 #*******************************************************************************
 proc check_qmaster_messages { { show_mode 0 } } {
-   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
+   global ts_config
+   global CHECK_ARCH CHECK_HOST CHECK_USER
    global CHECK_OUTPUT CHECK_CORE_MASTER
 
    set spool_dir [get_qmaster_spool_dir]
@@ -509,7 +405,8 @@ proc get_schedd_messages_file { } {
 #     sge_procedures/check_qmaster_messages()
 #*******************************************************************************
 proc check_schedd_messages { { show_mode 0 } } {
-   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
+   global ts_config
+   global CHECK_ARCH CHECK_HOST CHECK_USER
    global CHECK_OUTPUT CHECK_CORE_MASTER
 
    set spool_dir [get_qmaster_spool_dir]
@@ -583,14 +480,15 @@ proc get_execd_messages_file { hostname } {
 #     sge_procedures/check_schedd_messages()
 #*******************************************************************************
 proc check_execd_messages { hostname { show_mode 0 } } {
-   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_HOST CHECK_USER
+   global ts_config
+   global CHECK_ARCH CHECK_HOST CHECK_USER
    global CHECK_OUTPUT
 
-   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+   set program "$ts_config(product_root)/bin/$CHECK_ARCH/qconf"
    set program_arg "-sconf $hostname" 
    set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
    if { [string first "execd_spool_dir" $output ] < 0 } {
-      set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"
+      set program "$ts_config(product_root)/bin/$CHECK_ARCH/qconf"
       set program_arg "-sconf global" 
       set output [ start_remote_prog $CHECK_HOST $CHECK_USER $program $program_arg]
    }
@@ -671,10 +569,11 @@ proc check_execd_messages { hostname { show_mode 0 } } {
 #     sge_procedures/set_exechost()
 #*******************************
 proc get_exechost {change_array host} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH
+   global ts_config
+  global CHECK_ARCH
   upvar $change_array chgar
 
-  set catch_result [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-se" "$host" } result ]
+  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-se" "$host" } result ]
   if { $catch_result == 0 } {
      # split each line as listelement
      set help [split $result "\n"]
@@ -865,6 +764,7 @@ proc submit_waitjob_job { jobargs wait_job_id} {
 #     sge_procedures/get_exechost()
 #*******************************
 proc set_exechost { change_array host } {
+   global ts_config
 # the array should look like this:
 #
 # set change_array(load_scaling) NONE
@@ -885,7 +785,7 @@ proc set_exechost { change_array host } {
 # -1   on timeout
 # 0    if ok
 
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global env CHECK_ARCH open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_HOST
 
   upvar $change_array chgar
@@ -924,7 +824,7 @@ proc set_exechost { change_array host } {
      }
   } 
   set CHANGED  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S] "*" ]
-  set result [handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" $CHANGED]
+  set result [handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-me $host" $vi_commands "modified" $CHANGED]
   if { $result == -2 } {
      set result 0
   }
@@ -958,6 +858,7 @@ proc set_exechost { change_array host } {
 #     ???/???
 #*******************************************************************************
 proc get_loadsensor_path { host } {
+   global ts_config
    global CHECK_OUTPUT
    global ts_host_config
 
@@ -996,6 +897,7 @@ proc get_loadsensor_path { host } {
 #*******************************
 #
 proc get_gid_range { user port } {
+   global ts_config
 
   global CHECK_OUTPUT
   global ts_user_config
@@ -1039,7 +941,8 @@ proc get_gid_range { user port } {
 #     ???/???
 #*******************************
 proc move_qmaster_spool_dir { new_spool_dir } {
-  global CHECK_CORE_MASTER CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT
+   global ts_config
+  global CHECK_CORE_MASTER CHECK_OUTPUT CHECK_USER 
   global CHECK_HOST
 
   set old_spool_dir [ get_qmaster_spool_dir ]
@@ -1076,7 +979,7 @@ proc move_qmaster_spool_dir { new_spool_dir } {
   lappend vi_commands ":%s/^qmaster_spool_dir .*$/qmaster_spool_dir    $newVal/\n"
   set vi_binary [get_binary_path $CHECK_HOST "vim"]
   # JG: TODO: this is version dependent! Use set_qmaster_spool_dir instead!
-  set result [ handle_vi_edit "$vi_binary" "$CHECK_PRODUCT_ROOT/default/common/bootstrap" "$vi_commands" "" ] 
+  set result [ handle_vi_edit "$vi_binary" "$ts_config(product_root)/default/common/bootstrap" "$vi_commands" "" ] 
   puts $CHECK_OUTPUT "result: \"$result\""
   if { $result != 0 } {
      add_proc_error "shadowd_kill_master_and_scheduler" -1 "edit error when changing global configuration"
@@ -1155,7 +1058,6 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 #     sge_procedures/set_schedd_config()
 #*******************************
 proc reset_schedd_config {} {
-  global CHECK_PRODUCT_TYPE
   global ts_config
  
   set default_array(algorithm)                  "default"
@@ -1174,7 +1076,7 @@ proc reset_schedd_config {} {
   }
 
 # this is sgeee
-  if { [string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
+  if { [string compare $ts_config(product_type) "sgeee"] == 0 } {
      set default_array(queue_sort_method)          "share"
      if { $ts_config(gridengine_version) == 60 } {
         set default_array(reprioritize_interval)    "00:00:40"
@@ -1250,12 +1152,13 @@ proc reset_schedd_config {} {
 #     ???/???
 #*******************************
 proc get_hosts { } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
 
   set host_list ""
-  set catch_result [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sh" } result ]
+  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sh" } result ]
   if { $catch_result != 0 } {
-     add_proc_error "get_hosts" "-1" "qconf error or binary not found ($CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf)\n$result"
+     add_proc_error "get_hosts" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
      return ""
   } 
 
@@ -1340,12 +1243,13 @@ proc get_hosts { } {
 #     sge_procedures/set_config()
 #*******************************
 proc get_config { change_array {host global}} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
   upvar $change_array chgar
 
-  set catch_result [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sconf" "$host"} result ]
+  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sconf" "$host"} result ]
   if { $catch_result != 0 } {
-     add_proc_error "get_config" "-1" "qconf error or binary not found ($CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf)\n$result"
+     add_proc_error "get_config" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
      return
   } 
 
@@ -1381,12 +1285,13 @@ proc get_config { change_array {host global}} {
 #     sge_procedures/set_queue()
 #*******************************************************************************
 proc get_checkpointobj { ckpt_obj change_array } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
   upvar $change_array chgar
 
-  set catch_result [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sckpt" "$ckpt_obj"} result ]
+  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sckpt" "$ckpt_obj"} result ]
   if { $catch_result != 0 } {
-     add_proc_error "get_checkpointobj" "-1" "qconf error or binary not found ($CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf)\n$result"
+     add_proc_error "get_checkpointobj" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
      return
   } 
 
@@ -1427,12 +1332,13 @@ proc get_checkpointobj { ckpt_obj change_array } {
 #    
 #*******************************************************************************
 proc get_complex { change_array complex_list } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
   upvar $change_array chgar
 
-  set catch_result [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sc" "$complex_list"} result ]
+  set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sc" "$complex_list"} result ]
   if { $catch_result != 0 } {
-     add_proc_error "get_complex" "-1" "qconf error or binary not found ($CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf)\n$result"
+     add_proc_error "get_complex" "-1" "qconf error or binary not found ($ts_config(product_root)/bin/$CHECK_ARCH/qconf)\n$result"
      return
   } 
 
@@ -1526,9 +1432,9 @@ proc get_complex { change_array complex_list } {
 #     sge_procedures/get_config()
 #*******************************
 proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
-  global CHECK_CORE_MASTER CHECK_USER
   global ts_config
+  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global CHECK_CORE_MASTER CHECK_USER
 
   upvar $change_array chgar
   set values [array names chgar]
@@ -1568,7 +1474,7 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
 
   set EDIT_FAILED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PARSE_EDITFAILED]]
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands $MODIFIED $EDIT_FAILED $ADDED $GIDRANGE ]
   
   if { ($ignore_error == 1) && ($result == -4) } {
      # ignore error -4 
@@ -1609,7 +1515,8 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
 #
 #*******************************************************************************
 proc set_complex { change_array complex_list { create 0 } } {
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
+  global ts_config
+  global env CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   global CHECK_CORE_MASTER
   upvar $change_array chgar
   set values [array names chgar]
@@ -1641,9 +1548,9 @@ proc set_complex { change_array complex_list { create 0 } } {
 
 
   if { $create == 0 } {
-     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -mc $complex_list" $vi_commands $MODIFIED $EDIT_FAILED $ADDED ]
+     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mc $complex_list" $vi_commands $MODIFIED $EDIT_FAILED $ADDED ]
   } else {
-     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ac $complex_list" $vi_commands $ADDED $EDIT_FAILED $MODIFIED ]
+     set result [ handle_vi_edit "echo" "\"\"\nSGE_ENABLE_MSG_ID=1\nexport SGE_ENABLE_MSG_ID\n$ts_config(product_root)/bin/$CHECK_ARCH/qconf -ac $complex_list" $vi_commands $ADDED $EDIT_FAILED $MODIFIED ]
   }
   if { $result != 0  } {
      add_proc_error "set_complex" -1 "could not modify complex $complex_list ($result)"
@@ -1719,7 +1626,8 @@ proc set_complex { change_array complex_list { create 0 } } {
 #     sge_procedures/get_schedd_config()
 #*******************************
 proc set_schedd_config { change_array } {
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global ts_config
+  global env CHECK_ARCH open_spawn_buffer
   global CHECK_OUTPUT CHECK_CORE_MASTER
   upvar $change_array chgar
 
@@ -1735,7 +1643,7 @@ proc set_schedd_config { change_array } {
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   }
   set CHANGED_SCHEDD_CONFIG [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION]]
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-msconf" $vi_commands $CHANGED_SCHEDD_CONFIG ]  
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-msconf" $vi_commands $CHANGED_SCHEDD_CONFIG ]  
 
   if { $result != 0 } {
      add_proc_error "set_schedd_config" -1 "error changing scheduler configuration"
@@ -1804,10 +1712,11 @@ proc set_schedd_config { change_array } {
 #     sge_procedures/set_schedd_config()
 #*******************************
 proc get_schedd_config { change_array } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH
+  global ts_config
+  global CHECK_ARCH
   upvar $change_array chgar
 
-  set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ssconf" } result ]
+  set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -ssconf" } result ]
   if { $catch_return != 0 } {
      add_proc_error "get_schedd_config" "-1" "qconf error or binary not found"
      return
@@ -1924,59 +1833,6 @@ proc get_schedd_config { change_array } {
 #     sge_procedures/disable_queue()
 #     sge_procedures/enable_queue()
 #*******************************
-proc set_queue { q_name change_array } {
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_OUTPUT
-  global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_OUTPUT
-
-  upvar $change_array chgar
-
-  if { [get_pe_ckpt_version] > 0 && [info exists chgar(qtype)]} {
-     if { [ string match "*CHECKPOINTING*" $chgar(qtype) ] ||
-          [ string match "*PARALLEL*" $chgar(qtype) ]   } { 
-
-        set new_chgar_qtype ""
-        foreach elem $chgar(qtype) {
-           if { [ string match "*CHECKPOINTING*" $elem ] } {
-              puts $CHECK_OUTPUT "this qconf version doesn't support CHECKPOINTING value for qtype"
-              continue
-           } 
-           if { [ string match "*PARALLEL*" $elem ] } {
-              puts $CHECK_OUTPUT "this qconf version doesn't support PARALLEL value for qtype"
-              continue
-           } 
-           append new_chgar_qtype "$elem "
-        } 
-        set chgar(qtype) [string trim $new_chgar_qtype]
-        puts $CHECK_OUTPUT "using qtype=$chgar(qtype)" 
-     }
-  }
-
-  puts $CHECK_OUTPUT "setting queue parameters for queue \"$q_name\""
-  set values [array names chgar]
-
-  set vi_commands ""
-  foreach elem $values {
-     if { $elem == "" } {
-        continue;
-     }
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  } 
-  set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-  set NOT_A_QUEUENAME [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QUEUE_XISNOTAQUEUENAME_S] $q_name ]
-  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" $q_name $QUEUE ]
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mq ${q_name}" $vi_commands $MODIFIED $NOT_A_QUEUENAME]
-  if { $result == -2 } {
-    add_proc_error "set_queue" -1 "$q_name is not a queue"
-  }
-  if { $result != 0  } {
-    add_proc_error "set_queue" -1 "error modify queue $q_name, $result"
-  } 
-  return $result
-}
 
 #                                                             max. column:     |
 #****** sge_procedures/add_queue() ******
@@ -2079,160 +1935,63 @@ proc set_queue { q_name change_array } {
 #     sge_procedures/disable_queue()
 #     sge_procedures/enable_queue()
 #*******************************
-proc add_queue { change_array {fast_add 0} } {
-  global ts_config
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
-  global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PRODUCT_TYPE
-  global CHECK_USER CHECK_CORE_MASTER CHECK_HOST
+proc set_queue_defaults { change_array } {
+   global ts_config
 
-  upvar $change_array chgar
+   upvar $change_array chgar
 
-  if { $ts_config(gridengine_version) == 60 && $fast_add != 0 } {
-     puts $CHECK_OUTPUT "WARNING: add_queue : ignoring fast_add option !!!!!!!!!!"
-     set fast_add 0
-  }
-
-  if { [get_pe_ckpt_version] > 0 && [info exists chgar(qtype)]} {
-     if { [ string match "*CHECKPOINTING*" $chgar(qtype) ] ||
-          [ string match "*PARALLEL*" $chgar(qtype) ]   } { 
-
-        set new_chgar_qtype ""
-        foreach elem $chgar(qtype) {
-           if { [ string match "*CHECKPOINTING*" $elem ] } {
-              puts $CHECK_OUTPUT "this qconf version doesn't support CHECKPOINTING value for qtype"
-              continue
-           } 
-           if { [ string match "*PARALLEL*" $elem ] } {
-              puts $CHECK_OUTPUT "this qconf version doesn't support PARALLEL value for qtype"
-              continue
-           } 
-           append new_chgar_qtype "$elem "
-        } 
-        set chgar(qtype) [string trim $new_chgar_qtype]
-        puts $CHECK_OUTPUT "using qtype=$chgar(qtype)" 
-     }
-  }
-
-
-  set values [array names chgar]
-
-    if { $fast_add != 0 } {
-     # add queue from file!
-     set default_array(qname)                "queuename"
-     set default_array(hostname)             "hostname"
-     set default_array(seq_no)               "0"
-     set default_array(load_thresholds)      "np_load_avg=7.00"
-     set default_array(suspend_thresholds)   "NONE"
-     set default_array(nsuspend)             "1"
-     set default_array(suspend_interval)     "00:05:00"
-     set default_array(priority)             "0"
-     set default_array(min_cpu_interval)     "00:05:00"
-     set default_array(processors)           "UNDEFINED"
-     if { [get_pe_ckpt_version] > 0 } {
-        set default_array(qtype)                "BATCH INTERACTIVE"
-        set default_array(pe_list)              "NONE"
-        set default_array(ckpt_list)            "NONE"
-     } else {
-        set default_array(qtype)                "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
-     }
-     set default_array(rerun)                "FALSE"
-     set default_array(slots)                "10"
-     set default_array(tmpdir)               "/tmp"
-     set default_array(shell)                "/bin/csh"
-     set default_array(shell_start_mode)     "NONE"
-     set default_array(prolog)               "NONE"
-     set default_array(epilog)               "NONE"
-     set default_array(starter_method)       "NONE"
-     set default_array(suspend_method)       "NONE"
-     set default_array(resume_method)        "NONE"
-     set default_array(terminate_method)     "NONE"
-     set default_array(notify)               "00:00:60"
-     set default_array(owner_list)           "NONE"
-     set default_array(user_lists)           "NONE"
-     set default_array(xuser_lists)          "NONE"
-     set default_array(subordinate_list)     "NONE"
-     if { [get_complex_version] == 0 } {
-        set default_array(complex_list)         "NONE"
-     }
-     set default_array(complex_values)       "NONE"
-     set default_array(calendar)             "NONE"
-     set default_array(initial_state)        "default"
-     set default_array(s_rt)                 "INFINITY"
-     set default_array(h_rt)                 "INFINITY"
-     set default_array(s_cpu)                "INFINITY"
-     set default_array(h_cpu)                "INFINITY"
-     set default_array(s_fsize)              "INFINITY"
-     set default_array(h_fsize)              "INFINITY"
-     set default_array(s_data)               "INFINITY"
-     set default_array(h_data)               "INFINITY"
-     set default_array(s_stack)              "INFINITY"
-     set default_array(h_stack)              "INFINITY"
-     set default_array(s_core)               "INFINITY"
-     set default_array(h_core)               "INFINITY"
-     set default_array(s_rss)                "INFINITY"
-     set default_array(h_rss)                "INFINITY"
-     set default_array(s_vmem)               "INFINITY"
-     set default_array(h_vmem)               "INFINITY"
+   set chgar(qname)                "queuename"
+   set chgar(seq_no)               "0"
+   set chgar(load_thresholds)      "np_load_avg=7.00"
+   set chgar(suspend_thresholds)   "NONE"
+   set chgar(nsuspend)             "1"
+   set chgar(suspend_interval)     "00:05:00"
+   set chgar(priority)             "0"
+   set chgar(min_cpu_interval)     "00:05:00"
+   set chgar(processors)           "UNDEFINED"
+   set chgar(rerun)                "FALSE"
+   set chgar(slots)                "10"
+   set chgar(tmpdir)               "/tmp"
+   set chgar(shell)                "/bin/csh"
+   set chgar(shell_start_mode)     "NONE"
+   set chgar(prolog)               "NONE"
+   set chgar(epilog)               "NONE"
+   set chgar(starter_method)       "NONE"
+   set chgar(suspend_method)       "NONE"
+   set chgar(resume_method)        "NONE"
+   set chgar(terminate_method)     "NONE"
+   set chgar(notify)               "00:00:60"
+   set chgar(owner_list)           "NONE"
+   set chgar(user_lists)           "NONE"
+   set chgar(xuser_lists)          "NONE"
+   set chgar(subordinate_list)     "NONE"
+   set chgar(complex_values)       "NONE"
+   set chgar(calendar)             "NONE"
+   set chgar(initial_state)        "default"
+   set chgar(s_rt)                 "INFINITY"
+   set chgar(h_rt)                 "INFINITY"
+   set chgar(s_cpu)                "INFINITY"
+   set chgar(h_cpu)                "INFINITY"
+   set chgar(s_fsize)              "INFINITY"
+   set chgar(h_fsize)              "INFINITY"
+   set chgar(s_data)               "INFINITY"
+   set chgar(h_data)               "INFINITY"
+   set chgar(s_stack)              "INFINITY"
+   set chgar(h_stack)              "INFINITY"
+   set chgar(s_core)               "INFINITY"
+   set chgar(h_core)               "INFINITY"
+   set chgar(s_rss)                "INFINITY"
+   set chgar(h_rss)                "INFINITY"
+   set chgar(s_vmem)               "INFINITY"
+   set chgar(h_vmem)               "INFINITY"
   
-     if { $CHECK_PRODUCT_TYPE == "sgeee" } {
-       set default_array(projects)           "NONE"
-       set default_array(xprojects)          "NONE"
-       set default_array(fshare)             "0"
-       set default_array(oticket)            "0"
-     }
-  
-     foreach elem $values {
-        set value [set chgar($elem)]
-        puts $CHECK_OUTPUT "--> setting \"$elem\" to \"$value\""
-        set default_array($elem) $value
-     }
-     if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
-        file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"
-     }
-
-     set tmpfile "$CHECK_TESTSUITE_ROOT/testsuite_trash/tmpfile"
-     set file [open $tmpfile "w"]
-     set values [array names default_array]
-     foreach elem $values {
-        set value [set default_array($elem)]
-        puts $file "$elem                   $value"
-     }
-     close $file
-
-     set result ""
-     set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Aq ${tmpfile}" } result ]
-     puts $CHECK_OUTPUT $result
-     set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-     set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $default_array(qname) $QUEUE ]
-
-     if { [string match "*$ADDED" $result ] == 0 } {
-        add_proc_error "add_queue" "-1" "qconf error or binary not found"
-        return
-     } 
-     return
-  }
-
-
-  set vi_commands "" 
-  foreach elem $values {
-     # this will quote any / to \/  (for vi - search and replace)
-     set newVal [set chgar($elem)]
-     set newVal1 [split $newVal {/}]
-     set newVal [join $newVal1 {\/}]
-     lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-  } 
-
-  set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
-  set ALREADY_EXISTS [ translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] $QUEUE $chgar(qname)]
-  set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" $chgar(qname) $QUEUE ]
-
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $ADDED $ALREADY_EXISTS ]  
-  if { $result != 0 } {
-     add_proc_error "add_queue" -1 "could not add queue [set chgar(qname)] (error: $result)"
-  }
-  return $result
+   if { $ts_config(product_type) == "sgeee" } {
+      set chgar(projects)           "NONE"
+      set chgar(xprojects)          "NONE"
+      set chgar(fshare)             "0"
+      set chgar(oticket)            "0"
+   }
 }
-
 
 #                                                             max. column:     |
 #****** sge_procedures/add_exechost() ******
@@ -2284,8 +2043,9 @@ proc add_queue { change_array {fast_add 0} } {
 #     change_array(resource_capability_factor)  "0.000000"
 #*******************************
 proc add_exechost { change_array {fast_add 0} } {
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
-  global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_PRODUCT_TYPE
+  global ts_config
+  global env CHECK_ARCH open_spawn_buffer
+  global CHECK_OUTPUT CHECK_TESTSUITE_ROOT 
   global CHECK_CORE_MASTER
 
   upvar $change_array chgar
@@ -2300,7 +2060,7 @@ proc add_exechost { change_array {fast_add 0} } {
      set default_array(user_lists)        "NONE"
      set default_array(xuser_lists)       "NONE"
   
-     if { $CHECK_PRODUCT_TYPE == "sgeee" } {
+     if { $ts_config(product_type) == "sgeee" } {
        set default_array(projects)                    "NONE"
        set default_array(xprojects)                   "NONE"
        set default_array(usage_scaling)               "NONE"
@@ -2327,7 +2087,7 @@ proc add_exechost { change_array {fast_add 0} } {
      close $file
 
      set result ""
-     set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Ae ${tmpfile}" } result ]
+     set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -Ae ${tmpfile}" } result ]
      puts $CHECK_OUTPUT $result
      set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S] "*"
 
@@ -2351,7 +2111,7 @@ proc add_exechost { change_array {fast_add 0} } {
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*" ]
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S] "*"
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ae" $vi_commands $ADDED $ALREADY_EXISTS ]  
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ae" $vi_commands $ADDED $ALREADY_EXISTS ]  
   if { $result != 0 } {
      add_proc_error "add_exechost" -1 "could not add queue [set chgar(qname)] (error: $result)"
   }
@@ -2384,7 +2144,8 @@ proc add_exechost { change_array {fast_add 0} } {
 # 
 #*******************************************************************************
 proc get_scheduling_info { job_id { check_pending 1 }} {
-   global CHECK_OUTPUT CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_CORE_MASTER
+  global ts_config
+   global CHECK_OUTPUT CHECK_ARCH CHECK_CORE_MASTER
 
    if { $check_pending == 1 } {
       set result [ wait_for_jobpending $job_id "leeper" 120 ]
@@ -2393,7 +2154,7 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
       }
    }
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
+   catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
    # timeout 120
 
@@ -2452,7 +2213,8 @@ proc get_scheduling_info { job_id { check_pending 1 }} {
 #
 #*******************************************************************************
 proc add_access_list { user_array list_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_CORE_MASTER 
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT CHECK_CORE_MASTER 
 
   set arguments ""
   foreach elem $user_array {
@@ -2462,7 +2224,7 @@ proc add_access_list { user_array list_name } {
 
   set result ""
   set catch_return [ catch {  
-      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -au $arguments" 
+      eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -au $arguments" 
   } result ]
   puts $CHECK_OUTPUT $result
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_GDI_ADDTOACL_SS ] $user_array $list_name]
@@ -2495,12 +2257,13 @@ proc add_access_list { user_array list_name } {
 # 
 #*******************************************************************************
 proc del_access_list { list_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  global ts_config
+  global CHECK_ARCH CHECK_OUTPUT
   global CHECK_CORE_MASTER CHECK_USER CHECK_HOST
 
   set result ""
   set catch_return [ catch {  
-      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dul $list_name" 
+      eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -dul $list_name" 
   } result ]
    puts $CHECK_OUTPUT $result
   set USER [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_USERSET]]
@@ -2551,11 +2314,12 @@ proc del_access_list { list_name } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc del_queue { q_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT CHECK_HOST
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT CHECK_HOST
 
   set result ""
   set catch_return [ catch {  
-      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dq ${q_name}" 
+      eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -dq ${q_name}" 
   } result ]
 
   set QUEUE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_QUEUE]]
@@ -2662,12 +2426,13 @@ proc del_queue { q_name } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc get_queue { q_name change_array } {
+  global ts_config
 
 
-  global CHECK_PRODUCT_ROOT CHECK_ARCH
+  global CHECK_ARCH
   upvar $change_array chgar
 
-  set catch_return [ catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sq ${q_name}" } result ]
+  set catch_return [ catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -sq ${q_name}" } result ]
   if { $catch_return != 0 } {
      add_proc_error "get_queue" "-1" "qconf error or binary not found"
      return
@@ -2716,14 +2481,15 @@ proc get_queue { q_name change_array } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc suspend_queue { qname } {
- global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
+  global ts_config
+ global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
  global CHECK_OUTPUT
   log_user 0 
   set WAS_SUSPENDED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_SUSPENDQ_SSS] "*" "*" "*" ]
 
   
   # spawn process
-  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod"
+  set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
   set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-s $qname" ]
   set sp_id [ lindex $sid 1 ]
   set result -1	
@@ -2788,7 +2554,8 @@ proc suspend_queue { qname } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc unsuspend_queue { queue } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
+  global ts_config
+   global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
    global CHECK_OUTPUT
 
   set timeout 30
@@ -2797,7 +2564,7 @@ proc unsuspend_queue { queue } {
   set UNSUSP_QUEUE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QUEUE_UNSUSPENDQ_SSS] "*" "*" "*" ]
 
   # spawn process
-  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod"
+  set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
   set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-us $queue" ]     
   set sp_id [ lindex $sid 1 ]
   set result -1	
@@ -2860,7 +2627,8 @@ proc unsuspend_queue { queue } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc disable_queue { queuelist } {
- global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer 
+  global ts_config
+ global CHECK_ARCH open_spawn_buffer 
   global CHECK_OUTPUT CHECK_HOST CHECK_USER
   global CHECK_CORE_MASTER CHECK_USER
   
@@ -2889,7 +2657,7 @@ proc disable_queue { queuelist } {
      }   
      
      set result ""
-     set catch_return [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -d $queues" } result ]
+     set catch_return [ catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qmod -d $queues" } result ]
      debug_puts $CHECK_OUTPUT "disable queue(s) $queues"
      set res_split [ split $result "\n" ]   
      foreach elem $res_split {
@@ -2949,7 +2717,8 @@ proc disable_queue { queuelist } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc enable_queue { queuelist } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer 
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer 
   global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_CORE_MASTER 
   
   set return_value ""
@@ -2976,7 +2745,7 @@ proc enable_queue { queuelist } {
         incr i -1
      }   
      set result ""
-     set catch_return [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -e $queues" } result ]
+     set catch_return [ catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qmod -e $queues" } result ]
      debug_puts $CHECK_OUTPUT "enable queue(s) $queues"
      set res_split [ split $result "\n" ]   
      foreach elem $res_split {
@@ -3034,11 +2803,12 @@ proc enable_queue { queuelist } {
 #
 #*******************************
 proc get_queue_state { queue } {
+  global ts_config
 
-  global CHECK_PRODUCT_ROOT CHECK_ARCH
+  global CHECK_ARCH
 
   set catch_return [ catch { 
-     eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -f -q $queue" 
+     eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat -f -q $queue" 
   } result ]
 
   if { $catch_return != 0 } {
@@ -3109,12 +2879,12 @@ proc get_queue_state { queue } {
 #*******************************
 proc add_checkpointobj { change_array } {
    global ts_config
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global env CHECK_ARCH open_spawn_buffer
   global CHECK_USER CHECK_CORE_MASTER CHECK_HOST CHECK_OUTPUT
 
   upvar $change_array chgar
 
-  if { [get_pe_ckpt_version] > 0 } {
+  if { $ts_config(gridengine_version) == 60 } {
      if { [ info exists chgar(queue_list) ] } { 
         puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
         add_proc_error "add_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
@@ -3142,9 +2912,9 @@ proc add_checkpointobj { change_array } {
   if { $ts_config(gridengine_version) == 60 } {
      set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
 
-     set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
+     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
   } else {
-     set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS ] 
+     set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $ADDED $ALREADY_EXISTS ] 
 
   }
   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
@@ -3180,13 +2950,13 @@ proc add_checkpointobj { change_array } {
 #     sge_procedures/get_checkpointobj()
 #*******************************************************************************
 proc set_checkpointobj { ckpt_obj change_array } {
-
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+   global ts_config
+  global env CHECK_ARCH open_spawn_buffer
   global CHECK_USER CHECK_CORE_MASTER CHECK_HOST CHECK_OUTPUT
 
   upvar $change_array chgar
 
-  if { [get_pe_ckpt_version] > 0 && [info exists chgar(queue_list)]} {
+  if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]} {
      if { [ info exists chgar(queue_list) ] } { 
         puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for ckpt objects"
         add_proc_error "set_checkpointobj" -3 "this qconf version doesn't support queue_list for ckpt objects,\nuse assign_queues_with_ckpt_object() after adding checkpoint\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test ckpt version"
@@ -3212,7 +2982,7 @@ proc set_checkpointobj { ckpt_obj change_array } {
 
   set REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNQUEUE_SSSS] "*" "*" "*" "*"] 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $MODIFIED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" $my_args $vi_commands $MODIFIED $ALREADY_EXISTS $REFERENCED_IN_QUEUE_LIST_OF_CHECKPOINT ] 
   
   if { $result == -1 } { add_proc_error "add_checkpointobj" -1 "timeout error" }
   if { $result == -2 } { add_proc_error "add_checkpointobj" -1 "already exists" }
@@ -3246,50 +3016,16 @@ proc set_checkpointobj { ckpt_obj change_array } {
 #     sge_procedures/add_checkpointobj()
 #*******************************
 proc del_checkpointobj { checkpoint_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+   global ts_config
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   global CHECK_OUTPUT
 
-  if { [get_pe_ckpt_version] > 0 } {
-     puts $CHECK_OUTPUT "searching for references in all defined queues ..."
-     set NO_QUEUE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
-     catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sql" } result
-     if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
-        puts $CHECK_OUTPUT "no queue defined"
-     } else {
-        foreach elem $result {
-           puts $CHECK_OUTPUT "queue: $elem"
-           if {[info exists params]} {
-              unset params
-           }
-           get_queue $elem params
-           if { [string first $checkpoint_name $params(ckpt_list)] >= 0 } {
-              puts $CHECK_OUTPUT "ckpt obj $checkpoint_name is referenced in queue $elem, removing entry."
-              set new_params ""
-              set help_list [split $params(ckpt_list) ","]
-              set help_list2 ""
-              foreach element $help_list {
-                 append help_list2 "$element "
-              }
-              set help_list [string trim $help_list2] 
-              foreach help_ckpt $help_list {
-                 if { [string match $checkpoint_name $help_ckpt] != 1 } {
-                    append new_params "$help_ckpt "
-                 }
-              }
-              if { [llength $new_params ] == 0 } {
-                 set new_params "NONE"
-              }
-              set mod_params(ckpt_list) [string trim $new_params]
-              set_queue $elem mod_params 
-           }
-        }
-     }
-  }
-  
+   unassign_queues_with_ckpt_object $checkpoint_name
+
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $checkpoint_name "*" ]
 
   log_user 0 
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dckpt $checkpoint_name"  ]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dckpt $checkpoint_name"  ]
   set sp_id [ lindex $id 1 ]
   set timeout 30
   set result -1 
@@ -3391,14 +3127,14 @@ proc add_pe { change_array { version_check 1 } } {
 # control_slaves    FALSE
 # job_is_first_task TRUE
 
-
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+   global ts_config
+  global env CHECK_ARCH open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
   upvar $change_array chgar
 
   if { $version_check == 1 } {
-     if { [get_pe_ckpt_version] > 0 && [info exists chgar(queue_list)]} {
+     if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]} {
         if { [ info exists chgar(queue_list) ] } { 
            puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
            add_proc_error "add_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
@@ -3424,7 +3160,7 @@ proc add_pe { change_array { version_check 1 } } {
   set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ap [set chgar(pe_name)]" $vi_commands $ADDED $ALREADY_EXISTS $NOT_EXISTS ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ap [set chgar(pe_name)]" $vi_commands $ADDED $ALREADY_EXISTS $NOT_EXISTS ]
   
   if {$result == -1 } { add_proc_error "add_pe" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "add_pe" -1 "parallel environment \"[set chgar(pe_name)]\" already exists" }
@@ -3468,15 +3204,15 @@ proc set_pe { pe_obj change_array } {
 # control_slaves    FALSE
 # job_is_first_task TRUE
 
-
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+   global ts_config
+  global env CHECK_ARCH open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
   upvar $change_array chgar
 
 
 
-  if { [get_pe_ckpt_version] > 0 && [info exists chgar(queue_list)]} {
+  if { $ts_config(gridengine_version) == 60 && [info exists chgar(queue_list)]} {
      if { [ info exists chgar(queue_list) ] } { 
         puts $CHECK_OUTPUT "this qconf version doesn't support queue_list for pe objects"
         add_proc_error "set_pe" -3 "this qconf version doesn't support queue_list for pe objects,\nuse assign_queues_with_pe_object() after adding pe\nobjects and don't use queue_list parameter.\nyou can call get_pe_ckpt_version() to test pe version"
@@ -3500,7 +3236,7 @@ proc set_pe { pe_obj change_array } {
   set NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_UNKNOWNUSERSET_SSSS] "*" "*" "*" "*" ]
 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-mp $pe_obj" $vi_commands $MODIFIED $ALREADY_EXISTS $NOT_EXISTS ]
   
   if {$result == -1 } { add_proc_error "set_pe" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "set_pe" -1 "parallel environment \"$pe_obj\" already exists" }
@@ -3542,12 +3278,13 @@ proc set_pe { pe_obj change_array } {
 #     ???/???
 #*******************************
 proc add_user { change_array { from_file 0 } } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
+  global ts_config
+  global CHECK_ARCH 
   global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_USER CHECK_OUTPUT
   upvar $change_array chgar
   set values [array names chgar]
 
-  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
      add_proc_error "add_user" -1 "not possible for sge systems"
      return -3
   }
@@ -3598,7 +3335,7 @@ proc add_user { change_array { from_file 0 } } {
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-auser" $vi_commands $ADDED $ALREADY_EXISTS ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-auser" $vi_commands $ADDED $ALREADY_EXISTS ]
   
   if {$result == -1 } { add_proc_error "add_user" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "add_user" -1 "\"[set chgar(name)]\" already exists" }
@@ -3634,12 +3371,13 @@ proc add_user { change_array { from_file 0 } } {
 #     ???/???
 #*******************************************************************************
 proc mod_user { change_array { from_file 0 } } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
+  global ts_config
+  global CHECK_ARCH 
   global CHECK_CORE_MASTER CHECK_USER CHECK_HOST CHECK_USER CHECK_OUTPUT
   upvar $change_array chgar
   set values [array names chgar]
 
-  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
      add_proc_error "mod_user" -1 "not possible for sge systems"
      return -3
   }
@@ -3712,7 +3450,7 @@ proc mod_user { change_array { from_file 0 } } {
      lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
   } 
 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-muser $chgar(name)" $vi_commands $MODIFIED $ALREADY_EXISTS ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-muser $chgar(name)" $vi_commands $MODIFIED $ALREADY_EXISTS ]
   
   if {$result == -1 } { add_proc_error "mod_user" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "mod_user" -1 "\"[set chgar(name)]\" already exists" }
@@ -3753,6 +3491,7 @@ proc mod_user { change_array { from_file 0 } } {
 #     ???/???
 #*******************************
 proc add_prj { change_array } {
+  global ts_config
 
 # returns 
 # -100 on unknown error
@@ -3766,13 +3505,13 @@ proc add_prj { change_array } {
 # acl       NONE
 # xacl      NONE  
 # 
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
+  global CHECK_ARCH 
   global CHECK_CORE_MASTER CHECK_USER
 
   upvar $change_array chgar
   set values [array names chgar]
 
-  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
      add_proc_error "add_prj" -1 "not possible for sge systems"
      return
   }
@@ -3789,7 +3528,7 @@ proc add_prj { change_array } {
 #  set PROJECT [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_PROJECT]]
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-aprj" $vi_commands $ADDED $ALREADY_EXISTS ]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aprj" $vi_commands $ADDED $ALREADY_EXISTS ]
   
   if {$result == -1 } { add_proc_error "add_prj" -1 "timeout error" }
   if {$result == -2 } { add_proc_error "add_prj" -1 "\"[set chgar(name)]\" already exists" }
@@ -3823,51 +3562,16 @@ proc add_prj { change_array } {
 #     sge_procedures/add_pe()
 #*******************************
 proc del_pe { mype_name } {
-   
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+   global ts_config 
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   global CHECK_OUTPUT
 
-  if { [get_pe_ckpt_version] > 0 } {
-     puts $CHECK_OUTPUT "searching for references in all defined queues ..."
-     set NO_QUEUE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
-     catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sql" } result
-     if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
-        puts $CHECK_OUTPUT "no queue defined"
-     } else {
-        foreach elem $result {
-           puts $CHECK_OUTPUT "queue: $elem"
-           if {[info exists params]} {
-              unset params
-           }
-           get_queue $elem params
-           if { [string first $mype_name $params(pe_list)] >= 0 } {
-              puts $CHECK_OUTPUT "pe obj $mype_name is referenced in queue $elem, removing entry."
-              set new_params ""
-              set help_list [split $params(pe_list) ","]
-              set help_list2 ""
-              foreach element $help_list {
-                 append help_list2 "$element "
-              }
-              set help_list [string trim $help_list2] 
-              foreach help_pe $help_list {
-                 if { [string match $mype_name $help_pe] != 1 } {
-                    append new_params "$help_pe "
-                 }
-              }
-              if { [llength $new_params ] == 0 } {
-                 set new_params "NONE"
-              }
-              set mod_params(pe_list) [string trim $new_params]
-              set_queue $elem mod_params 
-           }
-        }
-     }
-  }
+   unassign_queues_with_pe_object $mype_name
 
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mype_name "*" ]
 
   log_user 0 
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dp $mype_name"]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dp $mype_name"]
 
   set sp_id [ lindex $id 1 ]
 
@@ -3932,10 +3636,11 @@ proc del_pe { mype_name } {
 #     ???/???
 #*******************************
 proc del_prj { myprj_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE CHECK_USER CHECK_CORE_MASTER
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_CORE_MASTER
   global CHECK_HOST
 
-  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
      set_error -1 "del_prj - not possible for sge systems"
      return
   }
@@ -3943,7 +3648,7 @@ proc del_prj { myprj_name } {
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $myprj_name "*" ]
 
   log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dprj $myprj_name"]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dprj $myprj_name"]
   set sp_id [ lindex $id 1 ]
   set result -1
   set timeout 30 	
@@ -4004,9 +3709,10 @@ proc del_prj { myprj_name } {
 #     ???/???
 #*******************************
 proc del_user { myuser_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_PRODUCT_TYPE CHECK_HOST CHECK_USER CHECK_OUTPUT
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER CHECK_OUTPUT
 
-  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
+  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
      set_error -1 "del_user - not possible for sge systems"
      return
   }
@@ -4014,7 +3720,7 @@ proc del_user { myuser_name } {
   set REMOVED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" "*" "*" ]
 
   log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-duser $myuser_name"]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-duser $myuser_name"]
    
 
   set sp_id [ lindex $id 1 ]
@@ -4078,12 +3784,13 @@ proc del_user { myuser_name } {
 #     ???/???
 #*******************************
 proc del_calendar { mycal_name } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer CHECK_CORE_MASTER CHECK_USER CHECK_HOST
   
   set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER "*" $mycal_name "*" ]
 
   log_user 0
-  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dcal $mycal_name"]
+  set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dcal $mycal_name"]
 
   set sp_id [ lindex $id 1 ]
   set timeout 30 
@@ -4164,7 +3871,8 @@ proc del_calendar { mycal_name } {
 #     ???/???
 #*******************************
 proc add_calendar { change_array } {
-  global env CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer
+  global ts_config
+  global env CHECK_ARCH open_spawn_buffer
   global CHECK_CORE_MASTER CHECK_USER CHECK_OUTPUT
 
   upvar $change_array chgar
@@ -4183,7 +3891,7 @@ proc add_calendar { change_array } {
   # xyz is neccessary, as there is no template for calendards existing!!!
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
   set ALREADY_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ALREADYEXISTS_SS] "*" "*"]
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-acal xyz" $vi_commands $ADDED $ALREADY_EXISTS]
+  set result [ handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-acal xyz" $vi_commands $ADDED $ALREADY_EXISTS]
   if { $result == -1 } { add_proc_error "add_calendar" -1 "timeout error" }
   if { $result == -2 } { add_proc_error "add_calendar" -1 "\"[set chgar(calendar_name)]\" already exists" }
   if { $result != 0  } { add_proc_error "add_calendar" -1 "could not add callendar \"[set chgar(calendar_name)]\"" }
@@ -4218,7 +3926,8 @@ proc add_calendar { change_array } {
 #     check/add_proc_error()
 #*******************************
 proc was_job_running {jobid {do_errorcheck 1} } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer check_timestamp CHECK_OUTPUT
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer check_timestamp CHECK_OUTPUT
 # returns
 # -1 on error
 # qacct in listform else
@@ -4231,7 +3940,7 @@ proc was_job_running {jobid {do_errorcheck 1} } {
   }
   set check_timestamp $mytime
 
-  set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qacct" "-j" "$jobid" } result ]
+  set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qacct" "-j" "$jobid" } result ]
   
   if { $catch_state != 0 } {
       if {$do_errorcheck == 1 } { 
@@ -4269,6 +3978,7 @@ proc was_job_running {jobid {do_errorcheck 1} } {
 #     sge_procedures/master_queue_of()
 #*******************************
 proc slave_queue_of { job_id } {
+  global ts_config
    global CHECK_OUTPUT
 # return last slave queue of job
 # no slave -> return ""
@@ -4312,6 +4022,7 @@ proc slave_queue_of { job_id } {
 #     sge_procedures/slave_queue_of()
 #*******************************
 proc master_queue_of { job_id } {
+  global ts_config
    global CHECK_OUTPUT
 # return master queue of job
 # no master -> return "": ! THIS MAY NOT HAPPEN !
@@ -4364,7 +4075,8 @@ proc master_queue_of { job_id } {
 #     sge_procedures/wait_for_jobend()
 #*******************************
 proc wait_for_load_from_all_queues { seconds } {
-   global check_errno check_errstr CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
+  global ts_config
+   global check_errno check_errstr CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
 
    set time [timestamp]
 
@@ -4372,7 +4084,7 @@ proc wait_for_load_from_all_queues { seconds } {
       puts $CHECK_OUTPUT "waiting for load value report from all queues ..."
       sleep 1
       set result ""
-      set catch_return [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f"} result ]
+      set catch_return [ catch {exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f"} result ]
       if { $catch_return == 0 } {
          # split each line as listelement
          set help [split $result "\n"]
@@ -4455,6 +4167,7 @@ proc wait_for_load_from_all_queues { seconds } {
 #     sge_procedures/wait_for_queue_state()
 #*******************************************************************************
 proc wait_for_job_state { jobid state wait_timeout } {
+  global ts_config
 
    global CHECK_OUTPUT 
 
@@ -4495,6 +4208,7 @@ proc wait_for_job_state { jobid state wait_timeout } {
 #     sge_procedures/wait_for_job_state()
 #*******************************************************************************
 proc wait_for_queue_state { queue state wait_timeout } {
+  global ts_config
    global CHECK_OUTPUT
 
    set my_timeout [ expr ( [timestamp] + $wait_timeout ) ]
@@ -4537,14 +4251,15 @@ proc wait_for_queue_state { queue state wait_timeout } {
 #     sge_procedures/shutdown_system_daemon()
 #*******************************************************************************
 proc soft_execd_shutdown { host } {
+  global ts_config
  
    global CHECK_CORE_MASTER CHECK_OUTPUT
-   global CHECK_PRODUCT_ROOT CHECK_USER CHECK_ARCH
+   global CHECK_USER CHECK_ARCH
 
    set tries 0
    while { $tries <= 8 } {   
       incr tries 1
-      set result [ start_remote_prog $CHECK_CORE_MASTER $CHECK_USER $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf "-ke $host" ]
+      set result [ start_remote_prog $CHECK_CORE_MASTER $CHECK_USER $ts_config(product_root)/bin/$CHECK_ARCH/qconf "-ke $host" ]
       if { $prg_exit_state != 0 } {
          puts $CHECK_OUTPUT "qconf -ke $host returned $prg_exit_state, hard killing execd"
          shutdown_system_daemon $host execd
@@ -4583,14 +4298,15 @@ proc soft_execd_shutdown { host } {
 #  
 #*******************************************************************************
 proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
-   global check_errno check_errstr CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
+  global ts_config
+   global check_errno check_errstr CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
 
    set time [timestamp]
    while { 1 } {
       sleep 1
       puts $CHECK_OUTPUT "wait_for_unknown_load - waiting for queues\n\"$queue_array\"\nto get unknown load state ..."
       set result ""
-      set catch_return [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f"} result ]
+      set catch_return [ catch {exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f"} result ]
       if { $catch_return == 0 } {
          # split each line as listelement
          set help [split $result "\n"]
@@ -4677,7 +4393,8 @@ proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
 #*******************************
 #
 proc wait_for_end_of_all_jobs { seconds } {
-   global check_errno check_errstr CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
+  global ts_config
+   global check_errno check_errstr CHECK_ARCH CHECK_CORE_EXECD CHECK_HOST CHECK_OUTPUT
 
    set time [timestamp]
 
@@ -4685,7 +4402,7 @@ proc wait_for_end_of_all_jobs { seconds } {
       puts $CHECK_OUTPUT "waiting for end of all jobs ..."
       sleep 1
       set result ""
-      set catch_return [ catch {eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -s pr" } result ]
+      set catch_return [ catch {eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat -s pr" } result ]
       if { $catch_return == 0 } {
          if { [ string compare $result "" ] == 0 } {
             puts $CHECK_OUTPUT "no further jobs in system"
@@ -4752,17 +4469,18 @@ proc wait_for_end_of_all_jobs { seconds } {
 #     sge_procedures/enable_queue()
 #*******************************
 proc mqattr { attribute entry queue_list } {
+  global ts_config
 # returns
 # -1 on error
 # 0 on success
   
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER CHECK_OUTPUT CHECK_USER
+  global CHECK_ARCH CHECK_CORE_MASTER CHECK_OUTPUT CHECK_USER
 
   puts "Trying to change attribute $attribute of queues $queue_list to $entry."
 
   set help "$attribute \"$entry\""   ;# create e.g. slots "5" as string
   set catch_return [ catch {  
-    eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -mqattr $help $queue_list" 
+    eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -mqattr $help $queue_list" 
   } result ]
   if { $catch_return != 0 } {
      add_proc_error "mqattr" "-1" "qconf error or binary not found"
@@ -4820,14 +4538,15 @@ proc mqattr { attribute entry queue_list } {
 #     sge_procedures/unsuspend_job()
 #*******************************
 proc suspend_job { id } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_HOST
+  global ts_config
+   global CHECK_ARCH open_spawn_buffer CHECK_USER CHECK_HOST
 
    set SUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDTASK_SUU] "*" "*" "*" ]
    set SUSPEND2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUSPENDJOB_SU] "*" "*" ]
 
 
    log_user 0 
-	set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod"
+	set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
    set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-s $id"  ]     
 
    set sp_id [ lindex $sid 1 ]
@@ -4887,7 +4606,8 @@ proc suspend_job { id } {
 #     sge_procedures/suspend_job()
 #*******************************
 proc unsuspend_job { job } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
+  global ts_config
+  global CHECK_ARCH open_spawn_buffer CHECK_HOST CHECK_USER
 
 
   set UNSUSPEND1 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_UNSUSPENDTASK_SUU] "*" "*" "*" ]
@@ -4895,7 +4615,7 @@ proc unsuspend_job { job } {
 
   log_user 0 
   # spawn process
-  set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod"
+  set program "$ts_config(product_root)/bin/$CHECK_ARCH/qmod"
   set sid [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "-us $job" ]
   set sp_id [ lindex $sid 1 ]
   set timeout 30
@@ -4952,6 +4672,7 @@ proc unsuspend_job { job } {
 #     ???/???
 #*******************************************************************************
 proc is_job_id { job_id } {
+  global ts_config
 
    if { [string is integer $job_id] != 1} {
       if { [set pos [string first "." $job_id ]] >= 0 } {
@@ -5000,7 +4721,8 @@ proc is_job_id { job_id } {
 #     sge_procedures/submit_job()
 #*******************************
 proc delete_job { jobid { wait_for_end 0 }} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer CHECK_HOST
+  global ts_config
+   global CHECK_ARCH CHECK_OUTPUT open_spawn_buffer CHECK_HOST
    global CHECK_USER
 
 
@@ -5013,7 +4735,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
    set result -100
    if { [ is_job_id $jobid] } {
       # spawn process
-      set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel"
+      set program "$ts_config(product_root)/bin/$CHECK_ARCH/qdel"
       set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "$program" "$jobid" ]
       set sp_id [ lindex $id 1 ]
       set timeout 60 	
@@ -5135,7 +4857,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
 #  EXAMPLE
 #     set jobs ""
 #     set my_outputs "-o /dev/null -e /dev/null"
-#     set arguments "$my_outputs -q $rerun_queue -r y $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
+#     set arguments "$my_outputs -q $rerun_queue -r y $ts_config(product_root)/examples/jobs/sleeper.sh 1000"
 #     lappend jobs [submit_job $arguments]
 #
 #  SEE ALSO
@@ -5144,7 +4866,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
 #*******************************
 proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} { show_args 1 } } {
    global ts_config
-  global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
+  global CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
   global open_spawn_buffer CHECK_DEBUG_LEVEL
 
   set return_value " "
@@ -5200,7 +4922,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
      puts $CHECK_OUTPUT "job submit args:\n$args"
   }
   # spawn process
-  set program "$CHECK_PRODUCT_ROOT/bin/$arch/qsub"
+  set program "$ts_config(product_root)/bin/$arch/qsub"
   if { $cd_dir != "" } {
      set id [ open_remote_spawn_process "$host" "$user" "cd" "$cd_dir;$program $args" ]
      puts $CHECK_OUTPUT "cd to $cd_dir"
@@ -5573,6 +5295,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
 #     sge_procedures/submit_job()
 #*******************************************************************************
 proc get_submit_error { error_id } {
+  global ts_config
    switch -- $error_id {
       "-1"  { return "timeout error" }
       "-2"  { return "usage was printed on -help or commandfile argument - ok" }
@@ -5622,6 +5345,7 @@ proc get_submit_error { error_id } {
 #     sge_procedures/get_suspend_state_of_job()
 #*******************************
 proc get_grppid_of_job { jobid } {
+  global ts_config
    global CHECK_OUTPUT CHECK_HOST
 
    get_config value $CHECK_HOST
@@ -5685,6 +5409,7 @@ proc get_grppid_of_job { jobid } {
 #     sge_procedures/add_proc_error()
 #*******************************
 proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} } {
+  global ts_config
    global CHECK_OUTPUT CHECK_HOST CHECK_ARCH
 
    upvar $pidlist pidl 
@@ -5773,18 +5498,19 @@ proc get_suspend_state_of_job { jobid { pidlist pid_list } {do_error_check 1} } 
 #     sge_procedures/get_extended_job_info()
 #*******************************
 proc get_job_info { jobid } {
+  global ts_config
 # return:
 # info of qstat -ext for jobid
 # nothing if job was not found
 # complete joblist if jobid is -1
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
+   global CHECK_ARCH 
 
-   if { [string compare $CHECK_PRODUCT_TYPE "sge"] == 0 } {
+   if { [string compare $ts_config(product_type) "sge"] == 0 } {
       add_proc_error "get_job_info" -1 "this call is not accepted for sge system"
       return "" 
    }
 
-   set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-ext" } result ]
+   set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-ext" } result ]
    if { $catch_return != 0 } {
       add_proc_error "get_job_info" -1 "qstat error or binary not found"
       return ""
@@ -5855,9 +5581,10 @@ proc get_job_info { jobid } {
 #     sge_procedures/get_extended_job_info()
 #*******************************
 proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  global ts_config
+   global CHECK_ARCH CHECK_OUTPUT
 
-   set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" } result ]
+   set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result ]
    if { $catch_return != 0 } {
       add_proc_error "get_standard_job_info" -1 "qstat error or binary not found"
       return ""
@@ -5954,14 +5681,15 @@ proc get_standard_job_info { jobid { add_empty 0} { get_all 0 } } {
 #     sge_procedures/get_extended_job_info()
 #*******************************
 proc get_extended_job_info {jobid {variable job_info}} {
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ARCH
+  global ts_config
+   global CHECK_ARCH
    upvar $variable jobinfo
 
-   if {$CHECK_PRODUCT_TYPE == "sgeee" } {
-      set exit_code [catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" -ext} result]
+   if {$ts_config(product_type) == "sgeee" } {
+      set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" -ext} result]
       set ext 1
    } else {
-      set exit_code [catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" } result]
+      set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result]
       set ext 0
    }
 
@@ -5992,11 +5720,12 @@ proc get_extended_job_info {jobid {variable job_info}} {
 #     parser/parse_qstat_j()
 #*******************************************************************************
 proc get_qstat_j_info {jobid {variable qstat_j_info}} {
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ARCH
+  global ts_config
+   global CHECK_ARCH
    global CHECK_OUTPUT
    upvar $variable jobinfo
 
-   set exit_code [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -j $jobid" } result]
+   set exit_code [catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat -j $jobid" } result]
    if { $exit_code == 0 } {
       set result "$result\n"
       set my_result ""
@@ -6051,11 +5780,12 @@ proc get_qstat_j_info {jobid {variable qstat_j_info}} {
 #      parser/parse_qconf_se()
 #*******************************************************************************
 proc get_qconf_se_info {hostname {variable qconf_se_info}} {
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ARCH
+  global ts_config
+   global CHECK_ARCH
    global CHECK_OUTPUT
    upvar $variable jobinfo
 
-   set exit_code [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -se $hostname" } result]
+   set exit_code [catch { eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf -se $hostname" } result]
    if { $exit_code == 0 } {
       set result "$result\n"
       parse_qconf_se result jobinfo $hostname 
@@ -6100,7 +5830,7 @@ proc get_qconf_se_info {hostname {variable qconf_se_info}} {
 #                         to be wrong for job $job_id on host $host"
 #        }
 #
-#        if { $CHECK_PRODUCT_TYPE == "sgeee" } {
+#        if { $ts_config(product_type) == "sgeee" } {
 #           # compute absolute diffence between cpu and ru_utime + ru_stime
 #           set difference [expr $cpu - $qacct_info(cpu)]
 #           set difference [expr $difference * $difference]
@@ -6119,10 +5849,11 @@ proc get_qconf_se_info {hostname {variable qconf_se_info}} {
 #     parser/parse_qacct()
 #*******************************
 proc get_qacct {jobid {variable qacct_info}} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+  global ts_config
+   global CHECK_ARCH CHECK_OUTPUT
    upvar $variable qacctinfo
    
-   set exit_code [catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qacct" -j $jobid} result]
+   set exit_code [catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qacct" -j $jobid} result]
    if { $exit_code == 0 } {
       parse_qacct result qacctinfo $jobid
       return 1
@@ -6164,9 +5895,10 @@ proc get_qacct {jobid {variable qacct_info}} {
 #     sge_procedures/is_pid_with_name_existing()
 #*******************************
 proc is_job_running { jobid jobname } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT check_timestamp
+  global ts_config
+   global CHECK_ARCH CHECK_OUTPUT check_timestamp
 
-   set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } result ]
+   set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" } result ]
 
    set mytime [timestamp]
    if { $mytime == $check_timestamp } {
@@ -6238,7 +5970,8 @@ proc is_job_running { jobid jobname } {
 #
 #*******************************************************************************
 proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT check_timestamp
+  global ts_config
+   global CHECK_ARCH CHECK_OUTPUT check_timestamp
    upvar $taskid r_task_id
    set mytime [timestamp]
 
@@ -6252,7 +5985,7 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
    while { $my_timeout > [timestamp] && $states_all_equal == 0 } {   
       set states_all_equal 1
 
-      set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } result ]
+      set catch_state [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" "-f" } result ]
    
       if { $catch_state != 0 } {
          puts $CHECK_OUTPUT "debug: $result"
@@ -6351,8 +6084,9 @@ proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
 #     sge_procedures/wait_for_jobend()
 #*******************************
 proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
+  global ts_config
   
-  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+  global CHECK_OUTPUT CHECK_ARCH
 
   if { [is_job_id $jobid] != 1  } {
      if { $do_errorcheck == 1 } {
@@ -6363,7 +6097,7 @@ proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
 
   if { $do_tsm == 1 } {
      puts $CHECK_OUTPUT "Trigger scheduler monitoring"
-     catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
+     catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-tsm" } result
      puts $CHECK_OUTPUT $result
   }
 
@@ -6425,6 +6159,7 @@ proc wait_for_jobstart { jobid jobname seconds {do_errorcheck 1} {do_tsm 0} } {
 #     sge_procedures/wait_for_jobend()
 #*******************************
 proc wait_for_end_of_transfer { jobid seconds } {
+  global ts_config
   global CHECK_OUTPUT
 
   puts $CHECK_OUTPUT "Waiting for job $jobid to finish transfer state"
@@ -6508,6 +6243,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     sge_procedures/wait_for_jobend()
 #*******************************
 proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
+  global ts_config
   
   global CHECK_OUTPUT
 
@@ -6566,14 +6302,15 @@ proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
 #     sge_procedures/hold_job()
 #*******************************
 proc hold_job { jobid } {
+  global ts_config
 
-   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
+   global CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
 
    set MODIFIED_HOLD [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JOBS_SU] "*" "*"]
 
    # spawn process
    log_user 0
-   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qhold"
+   set program "$ts_config(product_root)/bin/$CHECK_ARCH/qhold"
    set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "$jobid" ]
 
    set sp_id [ lindex $id 1 ]
@@ -6633,8 +6370,9 @@ proc hold_job { jobid } {
 #     sge_procedures/hold_job()
 #*******************************
 proc release_job { jobid } {
+  global ts_config
 
-   global CHECK_PRODUCT_ROOT CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
+   global CHECK_ARCH  open_spawn_buffer CHECK_HOST CHECK_USER
  
    # spawn process
    log_user 0
@@ -6642,7 +6380,7 @@ proc release_job { jobid } {
    set MODIFIED_HOLD [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JOBS_SU] "*" "*"]
    set MODIFIED_HOLD_ARRAY [ translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_MOD_JATASK_SUU] "*" "*" "*"]
 
-   set program "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrls"
+   set program "$ts_config(product_root)/bin/$CHECK_ARCH/qrls"
    set id [ open_remote_spawn_process $CHECK_HOST $CHECK_USER $program "$jobid" ]
 
    set sp_id [ lindex $id 1 ]
@@ -6732,6 +6470,7 @@ proc release_job { jobid } {
 #     sge_procedures/wait_for_jobend()
 #*******************************
 proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
+  global ts_config
   
   global CHECK_OUTPUT
 
@@ -6811,7 +6550,8 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
 #     sge_procedures/startup_shadowd()
 #*******************************
 proc startup_qmaster {} {
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
+  global ts_config
+   global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
    global schedd_debug master_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
@@ -6831,22 +6571,22 @@ proc startup_qmaster {} {
 
    if { $master_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.qmaster.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_qmaster &" prg_exit_state 60 2 ""
    } else {
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_qmaster" ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_qmaster" ""
    }
    if { $schedd_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
       puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
    } else {
       puts $CHECK_OUTPUT "starting schedd as $startup_user" 
-      set result [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ";sleep 5"]
+      set result [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ";sleep 5"]
       puts $CHECK_OUTPUT $result
    }
    
 
-#   set output [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/default/common/$CHECK_START_SCRIPT_NAME" "-qmaster" ]
+#   set output [start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/default/common/$CHECK_START_SCRIPT_NAME" "-qmaster" ]
 
 #   if { [string first "found running qmaster with pid" $output] >= 0 } {
 #      add_proc_error "startup_qmaster" -1 "qmaster on host $CHECK_CORE_MASTER is allready running"
@@ -6883,7 +6623,8 @@ proc startup_qmaster {} {
 #     ???/???
 #*******************************************************************************
 proc startup_scheduler {} {
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
+  global ts_config
+   global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_START_SCRIPT_NAME CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
    global schedd_debug CHECK_DISPLAY_OUTPUT CHECK_SGE_DEBUG_LEVEL
@@ -6903,9 +6644,9 @@ proc startup_scheduler {} {
 
    if { $schedd_debug != 0 } {
       puts $CHECK_OUTPUT "using DISPLAY=${CHECK_DISPLAY_OUTPUT}"
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "/usr/openwin/bin/xterm" "-bg darkolivegreen -fg navajowhite -sl 5000 -sb -j -display $CHECK_DISPLAY_OUTPUT -e $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/debug_starter.sh /tmp/out.$CHECK_USER.schedd.$CHECK_CORE_MASTER \"$CHECK_SGE_DEBUG_LEVEL\" $ts_config(product_root)/bin/${arch}/sge_schedd &" prg_exit_state 60 2 ""
    } else {
-      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/${arch}/sge_schedd" ""
+      start_remote_prog "$CHECK_CORE_MASTER" "$startup_user" "$ts_config(product_root)/bin/${arch}/sge_schedd" ""
    }
    
    return 0
@@ -6948,7 +6689,8 @@ proc startup_scheduler {} {
 #     sge_procedures/startup_shadowd()
 #*******************************
 proc startup_execd { hostname } {
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
+  global ts_config
+   global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_START_SCRIPT_NAME CHECK_CORE_MASTER
 
@@ -6964,7 +6706,7 @@ proc startup_execd { hostname } {
    }
 
    puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
-   set output [start_remote_prog "$hostname" "$startup_user" "$CHECK_PRODUCT_ROOT/default/common/$CHECK_START_SCRIPT_NAME" "-execd"]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/default/common/$CHECK_START_SCRIPT_NAME" "-execd"]
 
    set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
 
@@ -6996,7 +6738,8 @@ proc startup_execd { hostname } {
 #     sge_procedures/startup_execd()
 #*******************************************************************************
 proc startup_execd_raw { hostname } {
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
+  global ts_config
+   global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_START_SCRIPT_NAME CHECK_CORE_MASTER
 
@@ -7013,7 +6756,7 @@ proc startup_execd_raw { hostname } {
    puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
    set remote_arch [ resolve_arch $hostname ]
    set my_environment(COMMD_HOST) $CHECK_CORE_MASTER
-   set output [start_remote_prog "$hostname" "$startup_user" "$CHECK_PRODUCT_ROOT/bin/$remote_arch/sge_execd" "-nostart-commd" prg_exit_state 60 0 my_environment 1 1 1]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/bin/$remote_arch/sge_execd" "-nostart-commd" prg_exit_state 60 0 my_environment 1 1 1]
 
 
    set ALREADY_RUNNING [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_COMMPROC_ALREADY_STARTED_S] "*"]
@@ -7062,7 +6805,8 @@ proc startup_execd_raw { hostname } {
 #     sge_procedures/startup_shadowd()
 #*******************************
 proc startup_shadowd { hostname } {
-   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_OUTPUT
+  global ts_config
+   global CHECK_OUTPUT
    global CHECK_HOST CHECK_CORE_MASTER CHECK_ADMIN_USER_SYSTEM CHECK_USER
    global CHECK_START_SCRIPT_NAME
 
@@ -7080,7 +6824,7 @@ proc startup_shadowd { hostname } {
 
    puts $CHECK_OUTPUT "starting up shadowd on host \"$hostname\" as user \"$startup_user\""
 
-   set output [start_remote_prog "$hostname" "$startup_user" "$CHECK_PRODUCT_ROOT/default/common/$CHECK_START_SCRIPT_NAME" "-shadowd"]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/default/common/$CHECK_START_SCRIPT_NAME" "-shadowd"]
    puts $CHECK_OUTPUT $output
    if { [string first "starting sge_shadowd" $output] >= 0 } {
        return 0
@@ -7127,8 +6871,9 @@ proc startup_shadowd { hostname } {
 #     ???/???
 #*******************************
 proc are_master_and_scheduler_running { hostname qmaster_spool_dir } {
+  global ts_config
  
-   global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT
+   global CHECK_OUTPUT CHECK_USER 
 
    set qmaster_pid -1
    set scheduler_pid -1
@@ -7238,8 +6983,9 @@ proc shutdown_master_and_scheduler {hostname qmaster_spool_dir} {
 #     ???/???
 #*******************************************************************************
 proc shutdown_scheduler {hostname qmaster_spool_dir} {
-   global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
-   global CHECK_PRODUCT_TYPE CHECK_ARCH
+   global ts_config
+   global CHECK_OUTPUT CHECK_USER CHECK_ADMIN_USER_SYSTEM
+   global CHECK_ARCH
 
    puts $CHECK_OUTPUT "shutdown_scheduler ..."
 
@@ -7256,7 +7002,7 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
       if { [ is_pid_with_name_existing $hostname $scheduler_pid "sge_schedd" ] == 0 } { 
          puts $CHECK_OUTPUT "killing schedd with pid $scheduler_pid on host $hostname"
 
-         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ks" } result
+         catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ks" } result
 
          shutdown_system_daemon $hostname sched
 
@@ -7301,6 +7047,7 @@ proc shutdown_scheduler {hostname qmaster_spool_dir} {
 #     ???/???
 #*******************************************************************************
 proc is_scheduler_alive { hostname qmaster_spool_dir } {
+   global ts_config
 
    set scheduler_pid [get_scheduler_pid $hostname $qmaster_spool_dir]
    get_ps_info $scheduler_pid $hostname
@@ -7345,6 +7092,7 @@ proc is_scheduler_alive { hostname qmaster_spool_dir } {
 #     ???/???
 #*******************************************************************************
 proc get_scheduler_pid { hostname qmaster_spool_dir } {
+   global ts_config
    global CHECK_USER 
 
    set scheduler_pid -1
@@ -7386,8 +7134,9 @@ proc get_scheduler_pid { hostname qmaster_spool_dir } {
 #     ???/???
 #*******************************************************************************
 proc shutdown_qmaster {hostname qmaster_spool_dir} {
-   global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_ADMIN_USER_SYSTEM
-   global CHECK_PRODUCT_TYPE CHECK_ARCH
+   global ts_config
+   global CHECK_OUTPUT CHECK_USER CHECK_ADMIN_USER_SYSTEM
+   global CHECK_ARCH
 
    puts $CHECK_OUTPUT "shutdown_qmaster ..."
 
@@ -7411,7 +7160,7 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
 
          puts $CHECK_OUTPUT "killing qmaster with pid $qmaster_pid on host $hostname"
 
-         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-km" } result
+         catch {  eval exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-km" } result
 
          shutdown_system_daemon $hostname qmaster
 
@@ -7463,15 +7212,16 @@ proc shutdown_qmaster {hostname qmaster_spool_dir} {
 #     sge_procedures/startup_shadowd()
 #*******************************
 proc shutdown_all_shadowd { hostname } {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ADMIN_USER_SYSTEM
-   global CHECK_USER CHECK_PRODUCT_TYPE
+   global ts_config
+   global CHECK_OUTPUT CHECK_ADMIN_USER_SYSTEM
+   global CHECK_USER 
 
    set num_proc 0
 
    puts $CHECK_OUTPUT ""
-   puts $CHECK_OUTPUT "shutdown all shadowd daemon for system installed at $CHECK_PRODUCT_ROOT ..."
+   puts $CHECK_OUTPUT "shutdown all shadowd daemon for system installed at $ts_config(product_root) ..."
 
-   set index_list [ ps_grep "$CHECK_PRODUCT_ROOT" "$hostname" ]
+   set index_list [ ps_grep "$ts_config(product_root)" "$hostname" ]
    set new_index ""
    foreach elem $index_list {
       if { [ string first "shadowd" $ps_info(string,$elem) ] >= 0 } {
@@ -7525,11 +7275,12 @@ proc shutdown_all_shadowd { hostname } {
 #*******************************
 #
 proc is_pid_with_name_existing { host pid proc_name } {
-  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
+   global ts_config
+  global CHECK_OUTPUT CHECK_ARCH CHECK_USER
 
   puts $CHECK_OUTPUT "$host: checkprog $pid $proc_name ..."
   set my_arch [ resolve_arch $host ]
-  puts $CHECK_OUTPUT [start_remote_prog $host $CHECK_USER $CHECK_PRODUCT_ROOT/utilbin/$my_arch/checkprog "$pid $proc_name"]
+  puts $CHECK_OUTPUT [start_remote_prog $host $CHECK_USER $ts_config(product_root)/utilbin/$my_arch/checkprog "$pid $proc_name"]
   puts $CHECK_OUTPUT "return: $prg_exit_state"
   return $prg_exit_state
 }
@@ -7577,8 +7328,9 @@ proc is_pid_with_name_existing { host pid proc_name } {
 #*******************************
 #
 proc shutdown_system_daemon { host typelist } {
-global CHECK_HOST CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_PRODUCT_TYPE CHECK_CORE_EXECD 
-global CHECK_CORE_MASTER CHECK_CORE_INSTALLED CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_TYPE
+   global ts_config
+global CHECK_HOST CHECK_ARCH CHECK_CORE_EXECD 
+global CHECK_CORE_MASTER CHECK_CORE_INSTALLED CHECK_OUTPUT CHECK_USER 
 global CHECK_ADMIN_USER_SYSTEM
 
 
@@ -7605,7 +7357,7 @@ global CHECK_ADMIN_USER_SYSTEM
       return -1
    }
 
-   set found_p [ ps_grep "$CHECK_PRODUCT_ROOT/" $host ]
+   set found_p [ ps_grep "$ts_config(product_root)/" $host ]
 
    foreach process_name $process_names {
 
@@ -7686,8 +7438,8 @@ global CHECK_ADMIN_USER_SYSTEM
 #     sge_procedures/startup_shadowd()
 #*******************************
 proc shutdown_core_system {} {
+   global ts_config
 global CHECK_ARCH 
-global CHECK_PRODUCT_ROOT 
 global CHECK_CORE_EXECD 
 global CHECK_CORE_MASTER 
 global CHECK_OUTPUT
@@ -7698,7 +7450,7 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
 
    set result ""
    set do_ps_kill 0
-   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ke all -ks -km" ]
+   set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-ke all -ks -km" ]
 
    puts $CHECK_OUTPUT "qconf -ke all -ks -km returned $prg_exit_state"
    if { $prg_exit_state == 0 } {
@@ -7715,9 +7467,9 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
    foreach elem $CHECK_CORE_EXECD { 
        puts $CHECK_OUTPUT "killing commd on host $elem"
        if { $do_it_as_root == 0 } { 
-          set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
+          set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-U -k -host $elem"  ]
        } else {
-          set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+          set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
        } 
        if { $prg_exit_state == 0 } {
           puts $CHECK_OUTPUT $result
@@ -7730,7 +7482,7 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
                 set_root_passwd 
              }
              if { $CHECK_ADMIN_USER_SYSTEM != 1 } {
-                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
+                set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "$ts_config(product_root)/bin/$CHECK_ARCH/sgecommdcntl" "-k -host $elem"  ]
              }
           }
           if { $prg_exit_state == 0 } {
@@ -7789,9 +7541,10 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
 #*******************************
 #
 proc add_operator { anOperator } {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH CHECK_CORE_MASTER
 
-   catch {eval exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf "-ao $anOperator" } result
+   catch {eval exec $ts_config(product_root)/bin/$CHECK_ARCH/qconf "-ao $anOperator" } result
    set result [string trim $result]
 
    set ADDEDTOLIST   [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] "*" "*" $anOperator "*" ]
@@ -7834,9 +7587,10 @@ proc add_operator { anOperator } {
 #*******************************
 #
 proc delete_operator {anOperator} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global ts_config
+   global CHECK_OUTPUT CHECK_ARCH CHECK_CORE_MASTER
 
-   catch {eval exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf "-do $anOperator" } result
+   catch {eval exec $ts_config(product_root)/bin/$CHECK_ARCH/qconf "-do $anOperator" } result
    set result [string trim $result]
 
    set REMOVEDFROMLIST [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] "*" "*" $anOperator "*" ]
@@ -7883,7 +7637,8 @@ proc delete_operator {anOperator} {
 #*******************************
 #
 proc submit_with_method {submit_method options script args} {
-   global CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_PRODUCT_ROOT 
+   global ts_config
+   global CHECK_OUTPUT CHECK_HOST CHECK_USER 
    global CHECK_PROTOCOL_DIR
    global file_procedure_logfile_wait_sp_id
   
@@ -7910,8 +7665,8 @@ proc submit_with_method {submit_method options script args} {
 
       qrsh {
          puts $CHECK_OUTPUT "submitting job using qrsh, reading from stdout/stderr"
-#         set command "-c \\\"$CHECK_PRODUCT_ROOT/bin/[resolve_arch $CHECK_HOST]/qrsh -noshell $options $script $job_args\\\""
-         set command "$CHECK_PRODUCT_ROOT/bin/[resolve_arch $CHECK_HOST]/qrsh"
+#         set command "-c \\\"$ts_config(product_root)/bin/[resolve_arch $CHECK_HOST]/qrsh -noshell $options $script $job_args\\\""
+         set command "$ts_config(product_root)/bin/[resolve_arch $CHECK_HOST]/qrsh"
          set cmd_args "-noshell $options $script $job_args"
 #set command ls
 #set cmd_args "-la"

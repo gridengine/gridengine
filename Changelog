@@ -1,3 +1,8 @@
+JG-2003-12-10-0: Testsuite: Removed SGE version dependencies in the testsuite 
+                            installation process, prepared cluster queue 
+                            changes. Cleanup.
+                 Review:    CR
+
 SG-2003-12-09-1: Enhancem.: Reqular expression are allowed for the switch
                             -hold_jid in qsub, qalter, and qmon. Qstat -j
                             displayes an extra row, showing the requested

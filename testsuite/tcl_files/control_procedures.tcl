@@ -35,7 +35,65 @@
 global module_name
 set module_name "control_procedures.tcl"
 
+# update an array with values of a second array
+proc update_change_array { target_array change_array } {
+   global CHECK_OUTPUT
 
+   upvar $target_array target
+   upvar $change_array chgar
+
+   if [info exists chgar] {
+      foreach elem [array names chgar] {
+         set value [set chgar($elem)]
+         puts $CHECK_OUTPUT "attribute \"$elem\" will be set to \"$value\""
+         set target($elem) $value
+      }
+   }
+}
+
+# dump an array to a temporary file, return filename
+proc dump_array_to_tmpfile { change_array } {
+   global ts_config
+
+   upvar $change_array chgar
+
+   if { ! [file isdirectory "$ts_config(testsuite_root_dir)/testsuite_trash"] } {
+      file mkdir "$ts_config(testsuite_root_dir)/testsuite_trash"
+   }
+
+   set tmpfile "$ts_config(testsuite_root_dir)/testsuite_trash/tmpfile"
+   set file [open $tmpfile "w"]
+
+   if [info exists chgar] {
+      foreach elem [array names chgar] {
+         set value [set chgar($elem)]
+         puts $file "$elem                   $value"
+      }
+   }
+
+   close $file
+
+   return $tmpfile
+}
+
+# take a name/value array and build a vi command to set new values
+proc build_vi_command { change_array } {
+   upvar $change_array chgar
+
+   set vi_commands "" 
+
+   if [info exists chgar] {
+      foreach elem [array names chgar] {
+         # this will quote any / to \/  (for vi - search and replace)
+         set newVal [set chgar($elem)]
+         set newVal1 [split $newVal {/}]
+         set newVal [join $newVal1 {\/}]
+         lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+      } 
+   }
+
+   return $vi_commands
+}
 
 # procedures
 #                                                             max. column:     |

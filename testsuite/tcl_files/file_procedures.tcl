@@ -1955,19 +1955,19 @@ proc remote_delete_directory { hostname path } {
 
       start_remote_prog $hostname "ts_def_con2" "mv" "$path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" prg_exit_state 60 0 "" 1 0 1
       if { $prg_exit_state != 0 } {
-         puts $CHECK_OUTPUT "delete_directory - mv error:\n$result"
+         puts $CHECK_OUTPUT "delete_directory - mv error"
          puts $CHECK_OUTPUT "delete_directory - try to copy the directory"
          start_remote_prog $hostname "ts_def_con2" "cp" "-r $path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" prg_exit_state 60 0 "" 1 0 1
          if { $prg_exit_state != 0 } {
-            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder, $result"
-            add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder, $result"
+            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder"
+            add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder"
             set return_value -1
          } else { 
             puts $CHECK_OUTPUT "copy ok -  removing directory"
             start_remote_prog $hostname "ts_def_con2" "rm" "-rf $path" prg_exit_state 60 0 "" 1 0 1
             if { $prg_exit_state != 0 } {
-               puts $CHECK_OUTPUT "could not remove directory \"$path\", $result"
-               add_proc_error "delete_directory" -1 "could not remove directory \"$path\", $result"
+               puts $CHECK_OUTPUT "could not remove directory \"$path\""
+               add_proc_error "delete_directory" -1 "could not remove directory \"$path\""
                set return_value -1
             } else {
                puts $CHECK_OUTPUT "done"

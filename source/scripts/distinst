@@ -995,7 +995,7 @@ if [ $instcommon = true ]; then
    if [ $insttxtdoc = true ]; then
       echo "Installing README, ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
-#      Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
+      Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
 #      Execute cp ../doc/README-Upgrade.txt $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-DRMAA.txt $DEST_SGE_ROOT/doc
       Execute chmod 644 $DEST_SGE_ROOT/doc/*

@@ -57,8 +57,8 @@ const char *
 get_spooling_method(void);
 
 lListElem *
-spool_dynamic_create_context(lList **answer_list, const char *shlib_name, 
-                             const char *args);
+spool_dynamic_create_context(lList **answer_list, const char *method,
+                             const char *shlib_name, const char *args);
 
 #endif /* __SGE_SPOOLING_DYNAMIC_H */    
 

@@ -1,3 +1,10 @@
+JG-2004-04-22-1: Enhancem.: Allow the mixed use of binaries with dynamic and 
+                            static spooling. 
+                            aimk.site contains a rule to switch to static 
+                            spooling for platforms that don't support dynamic 
+                            loading of libraries (HP11).
+                 Review:    AS, MD
+
 JG-2004-04-22-0: Bugfix:    Fixed broken build on lx22-alpha.
 
 AH-2004-04-21-1: Bugfix:    Fix broken qalter -R y|n

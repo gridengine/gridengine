@@ -68,8 +68,8 @@ static void usage(const char *argv0)
    fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO9);
 }
 
-static int init_framework(const char *shlib, const char *libargs, 
-                          bool check_context)
+static int init_framework(const char *method, const char *shlib, 
+                          const char *libargs, bool check_context)
 {
    int ret = EXIT_FAILURE;
 
@@ -79,7 +79,7 @@ static int init_framework(const char *shlib, const char *libargs,
    DENTER(TOP_LAYER, "init_framework");
 
    /* create spooling context */
-   spooling_context = spool_create_dynamic_context(&answer_list, shlib, 
+   spooling_context = spool_create_dynamic_context(&answer_list, method, shlib, 
                                                    libargs);
    answer_list_output(&answer_list);
    if (spooling_context == NULL) {
@@ -121,14 +121,15 @@ int main(int argc, char *argv[])
    } else {
       spooling_maintenance_command cmd = SPM_info;
       /* parse commandline */
-     if (argc < 4) {
+     if (argc < 5) {
          usage(argv[0]);
          ret = EXIT_FAILURE;
       } else {
          bool check_framework = true;
-         const char *shlib = argv[1];
-         const char *libargs = argv[2];
-         const char *command = argv[3];
+         const char *method  = argv[1];
+         const char *shlib   = argv[2];
+         const char *libargs = argv[3];
+         const char *command = argv[4];
          const char *args    = NULL;
 
          if (strcmp(command, "init") == 0) {
@@ -153,13 +154,13 @@ int main(int argc, char *argv[])
          /* parse arguments to command */
          if (ret == EXIT_SUCCESS) {
             if (cmd == SPM_init) {
-               if (argc == 5) {
-                  args = argv[4];
+               if (argc == 6) {
+                  args = argv[5];
                }
             } else if (cmd == SPM_history || cmd == SPM_backup || 
                        cmd == SPM_purge) {
-               if (argc == 5) {
-                  args = argv[4];
+               if (argc == 6) {
+                  args = argv[5];
                } else {
                   usage(argv[0]);
                   ret = EXIT_FAILURE;
@@ -169,7 +170,7 @@ int main(int argc, char *argv[])
       
          /* initialize spooling */
          if (ret == EXIT_SUCCESS) {
-            ret = init_framework(shlib, libargs, check_framework);
+            ret = init_framework(method, shlib, libargs, check_framework);
          }
 
          /* call maintenance command */

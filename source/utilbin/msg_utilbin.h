@@ -147,7 +147,7 @@
  * utilbin/spoolinit.c
  */
 
-#define MSG_SPOOLINIT_COMMANDINTRO0   _MESSAGE(57060, _("shlib libargs command [args]"))
+#define MSG_SPOOLINIT_COMMANDINTRO0   _MESSAGE(57060, _("method shlib libargs command [args]"))
 #define MSG_SPOOLINIT_COMMANDINTRO1   _MESSAGE(57061, _("database maintenance\n"))
 #define MSG_SPOOLINIT_COMMANDINTRO2   _MESSAGE(57062, _("following are the valid commands\n"))
 #define MSG_SPOOLINIT_COMMANDINTRO3   _MESSAGE(57063, _("init [history]    initialize the database [with history enabled]\n"))

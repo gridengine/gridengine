@@ -279,7 +279,8 @@ SetPermissions()
 
 SetSpoolingOptionsBerkeleyDB()
 {
-   SPOOLING_LIB=$1
+   SPOOLING_METHOD=berkeleydb
+   SPOOLING_LIB=libspoolb
    SPOOLING_SERVER=none
    SPOOLING_DIR="$QMDIR/spooldb"
    params_ok=0
@@ -401,7 +402,8 @@ SetSpoolingOptionsBerkeleyDB()
 
 SetSpoolingOptionsClassic()
 {
-   SPOOLING_LIB=$1
+   SPOOLING_METHOD=classic
+   SPOOLING_LIB=libspoolc
    SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
 }
 
@@ -409,26 +411,24 @@ SetSpoolingOptionsDynamic()
 {
    if [ $AUTO = "true" ]; then
       if [ "$SPOOLING_METHOD" != "berkeleydb" -o "$SPOOLING_METHOD" != "classic" ]; then
-         INP="berkeleydb"
-      else
-         INP=$SPOOLING_METHOD
+         SPOOLING_METHOD="berkeleydb"
       fi
    else
       $INFOTEXT -n "Your SGE binaries are compiled to link the spooling libraries\n" \
                    "during runtime (dynamically). So you can choose between Berkeley DB \n" \
                    "spooling and Classic spooling method."
       $INFOTEXT -n "\nPlease choose a spooling method (berkeleydb|classic) [berkeleydb] >> "
-      INP=`Enter berkeleydb`
+      SPOOLING_METHOD=`Enter berkeleydb`
    fi
 
    $CLEAR
 
-   case $INP in 
+   case $SPOOLING_METHOD in 
       classic)
-         SetSpoolingOptionsClassic libspoolc
+         SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB libspoolb
+         SetSpoolingOptionsBerkeleyDB
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
@@ -444,14 +444,14 @@ SetSpoolingOptionsDynamic()
 SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSetup spooling"
-   SPOOLING_METHOD=`ExecuteAsAdmin $SPOOLINIT method`
-   $INFOTEXT -log "Setting spooling method to %s" $SPOOLING_METHOD
-   case $SPOOLING_METHOD in 
+   COMPILED_IN_METHOD=`ExecuteAsAdmin $SPOOLINIT method`
+   $INFOTEXT -log "Setting spooling method to %s" $COMPILED_IN_METHOD
+   case $COMPILED_IN_METHOD in 
       classic)
-         SetSpoolingOptionsClassic none
+         SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB none
+         SetSpoolingOptionsBerkeleyDB
          ;;
       dynamic)
          SetSpoolingOptionsDynamic
@@ -604,7 +604,7 @@ InitSpoolingDatabase()
 {
    $INFOTEXT "Initializing spooling database"
    $INFOTEXT -log "Initializing spooling database"
-   ExecuteAsAdmin $SPOOLINIT $SPOOLING_LIB "$SPOOLING_ARGS" init
+   ExecuteAsAdmin $SPOOLINIT $SPOOLING_METHOD $SPOOLING_LIB "$SPOOLING_ARGS" init
 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR

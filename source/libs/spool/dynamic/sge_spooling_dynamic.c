@@ -35,6 +35,7 @@
 #endif
 
 #include <dlfcn.h>
+#include <string.h>
 
 #ifdef LINUX
 #undef __USE_GNU
@@ -60,15 +61,21 @@ const char *get_spooling_method(void)
 }
 
 lListElem *
-spool_dynamic_create_context(lList **answer_list, const char *shlib_name,
-                             const char *args)
+spool_dynamic_create_context(lList **answer_list, const char *method,
+                             const char *shlib_name, const char *args)
 {
+   bool ok = true;
    lListElem *context = NULL;
+
+   /* shared lib name buffer and handle */
    char shlib_buffer[MAX_STRING_SIZE];
    dstring shlib_dstring;
    const char *shlib_fullname;
-
    void *shlib_handle;
+
+   /* get_method function pointer and result */
+   spooling_get_method_func get_spooling_method;
+   const char *spooling_name;
 
    DENTER(TOP_LAYER, "spool_dynamic_create_context");
 
@@ -96,9 +103,11 @@ spool_dynamic_create_context(lList **answer_list, const char *shlib_name,
                               ANSWER_QUALITY_ERROR, 
                               MSG_SPOOL_ERROROPENINGSHAREDLIB_SS, 
                               shlib_fullname, dlerror());
-   } else {
-      spooling_get_method_func get_spooling_method;
+      ok = false;
+   } 
 
+   /* retrieve function pointer of get_method function in shared lib */
+   if (ok) {
       get_spooling_method = (spooling_get_method_func)
                             dlsym(shlib_handle, "get_spooling_method");
       if (get_spooling_method == NULL) {
@@ -106,36 +115,59 @@ spool_dynamic_create_context(lList **answer_list, const char *shlib_name,
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_SPOOL_SHLIBDOESNOTCONTAINSPOOLING_SS, 
                                  shlib_fullname, dlerror());
-      } else {
-         const char *spooling_name;
-         char buffer[MAX_STRING_SIZE];
-         dstring create_context_func_name;
-         spooling_create_context_func create_context;
+         ok = false;
+      }
+   }
 
-         sge_dstring_init(&create_context_func_name, buffer, 
-                          MAX_STRING_SIZE);
-         spooling_name = get_spooling_method();
+   /* retrieve name of spooling method in shared lib */
+   if (ok) {
+      spooling_name = get_spooling_method();
 
+      if (spooling_name == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_INFO, 
-                                 MSG_SPOOL_LOADINGSPOOLINGMETHOD_SS, 
-                                 spooling_name, shlib_fullname);
-
-         sge_dstring_sprintf(&create_context_func_name, 
-                             "spool_%s_create_context", spooling_name);
-
-         create_context = 
-               (spooling_create_context_func) 
-               dlsym(shlib_handle, 
-                     sge_dstring_get_string(&create_context_func_name));
-         if (create_context == NULL) {
+                                 MSG_SPOOL_SHLIBGETMETHODRETURNSNULL_S, 
+                                 shlib_fullname);
+         ok = false;
+      } else {
+         if (strcmp(spooling_name, method) != 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    MSG_SPOOL_SHLIBDOESNOTCONTAINSPOOLING_SS,
-                                    shlib_fullname, dlerror());
-         } else {
-            context = create_context(answer_list, args);
+                                    ANSWER_QUALITY_INFO, 
+                                    MSG_SPOOL_SHLIBCONTAINSXWENEEDY_SSS, 
+                                    shlib_fullname, spooling_name, method);
+            ok = false;
          }
+      }
+   }
+
+   /* create spooling context from shared lib */
+   if (ok) {
+      char buffer[MAX_STRING_SIZE];
+      dstring create_context_func_name;
+      spooling_create_context_func create_context;
+
+      sge_dstring_init(&create_context_func_name, buffer, 
+                       MAX_STRING_SIZE);
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_INFO, 
+                              MSG_SPOOL_LOADINGSPOOLINGMETHOD_SS, 
+                              spooling_name, shlib_fullname);
+
+      sge_dstring_sprintf(&create_context_func_name, 
+                          "spool_%s_create_context", spooling_name);
+
+      create_context = 
+            (spooling_create_context_func) 
+            dlsym(shlib_handle, 
+                  sge_dstring_get_string(&create_context_func_name));
+      if (create_context == NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_SPOOL_SHLIBDOESNOTCONTAINSPOOLING_SS,
+                                 shlib_fullname, dlerror());
+         ok = false;
+      } else {
+         context = create_context(answer_list, args);
       }
    }
 

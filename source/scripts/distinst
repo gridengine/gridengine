@@ -377,7 +377,7 @@ InstallProg()
 InstallProgAs()
 {
    echo Installing $1 as $2
-   Install 0.0 755 $1 $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/`basename $1`/$2
+   Install 0.0 755 $1 $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/$2
 }
 
 #-------------------------------------------------------------------------
@@ -1062,18 +1062,25 @@ for i in $ARCH; do
                echo Installing qtcsh
                Install 0.0 755 ../3rdparty/qtcsh/$ARCHBIN/tcsh $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qtcsh
                ;; 
+            sge_qmaster|spoolinit|spooldefaults)
+               if [ $instclassictargets = false ]; then
+                  InstallProg $prog
+               else
+                  if [ -f ../${ARCHBIN}_classic/$prog ]; then
+                     InstallProgAs ../${ARCHBIN}_classic/$prog ${prog}.spool_classic
+                     InstallProgAs $prog ${prog}.spool_bdb
+                     ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                       cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                       echo ln -s ${prog}.spool_bdb $prog ; \
+                       ln -s ${prog}.spool_bdb $prog
+                     )
+                  else
+                     InstallProg $prog
+                  fi
+               fi
+               ;;
             *)
                InstallProg $prog
-               echo bin in `pwd`
-               if [ $instclassictargets = true ]; then
-                  case $prog in
-                     sge_qmaster|spoolinit|spooldefaults)
-                        if [ -f ../${ARCHBIN}_classic/$prog ]; then
-                           InstallProgAs ../${ARCHBIN}_classic/$prog $prog.classicspool
-                        fi
-                        ;;
-                  esac
-               fi        
                if [ $prog = qstat ]; then
                   ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
                     cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
@@ -1120,7 +1127,21 @@ for i in $ARCH; do
                InstallProgSUID $prog
             elif [ $prog = berkeley_db_svc -o $prog = db_dump -o $prog = db_load ]; then
                InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
-            else   
+            elif [ $prog = spoolinit -o $prog = spooldefaults ]; then
+               if [ $instclassictargets = false ]; then
+                  InstallProg $prog
+               elif [ -f ../${ARCHBIN}_classic/$prog ]; then
+                  InstallProgAs ../${ARCHBIN}_classic/$prog ${prog}.spool_classic
+                  InstallProgAs $prog ${prog}.spool_bdb
+                  ( echo changing to $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
+                    cd $DEST_SGE_ROOT/utilbin/$DSTARCH ; \
+                    echo ln -s ${prog}.spool_bdb $prog ; \
+                    ln -s ${prog}.spool_bdb $prog
+                   )
+               else
+                  InstallProg $prog
+               fi
+            else
                InstallProg $prog
             fi
          done

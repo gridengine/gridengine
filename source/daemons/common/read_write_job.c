@@ -127,8 +127,10 @@ static lListElem *job_create_from_file(u_long32 job_id, u_long32 ja_task_id,
          ja_tasks = NULL;
          lPSortList(ja_tasks, "%I+", JAT_task_number); 
       } else {
-         DTRACE;
-         goto error;
+         /*
+          * This is no error! It only means that there is no enrolled
+          * task in the spool area (all tasks are unenrolled)
+          */
       }
    } else {
       job = lReadElemFromDisk(NULL, spool_path, JB_Type, "job");

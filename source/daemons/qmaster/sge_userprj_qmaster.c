@@ -69,6 +69,7 @@
 #include "sge_utility_qmaster.h"
 #include "sge_cqueue.h"
 #include "sge_suser.h"
+#include "sge_lock.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -446,6 +447,8 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
 
    DENTER(TOP_LAYER, "sge_automatic_user_cleanup_handler");
 
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    /*
     * Check each user for deletion time. We don't use for_each()
     * because we are deleting entries.
@@ -498,7 +501,10 @@ sge_automatic_user_cleanup_handler(te_event_t anEvent)
 #endif
    }
 
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
+
    DEXIT;
+   return;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -612,5 +618,54 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
    
    DEXIT;
    return status;
+}
+
+
+/****** sge_userprj_qmaster/sge_userprj_spool() ********************************
+*  NAME
+*     sge_userprj_spool() -- updates the spooled user and projects
+*
+*  SYNOPSIS
+*     void sge_userprj_spool(void) 
+*
+*  FUNCTION
+*     The usage is only stored every 2 min. To have the acual usage stored when
+*     the qmaster is going down, we have to through all user/projects and store
+*     them again.
+*
+*  NOTES
+*     MT-NOTE: sge_userprj_spool() is not MT safe, because it is working on global
+*              master lists (only reading)
+*
+*******************************************************************************/
+void sge_userprj_spool(void) {
+   lListElem *elem = NULL;
+   lList *answer_list = NULL;
+   const char *name = NULL;
+   u_long32 now = sge_get_gmt();
+
+   DENTER(TOP_LAYER, "sge_userprj_spool");
+
+   SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
+   
+
+   for_each(elem, Master_User_List) {
+      name = lGetString(elem, UP_name);
+      sge_event_spool(&answer_list, now, 0, 0, 0, name, NULL, NULL,
+                      elem, NULL, NULL, false, true);
+   }
+
+   for_each(elem, Master_Project_List) {
+      name = lGetString(elem, UP_name);
+      sge_event_spool(&answer_list, now, 0, 0, 0, name, NULL, NULL,
+                      elem, NULL, NULL, false, true);   
+   }
+
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
+   
+   answer_list_output(&answer_list);
+   
+   DEXIT;
+   return;
 }
 

@@ -37,6 +37,7 @@
 #include "sge_c_gdi.h"
 #include "sge_qmaster_timed_event.h"
 
+void sge_userprj_spool(void);
 
 int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 

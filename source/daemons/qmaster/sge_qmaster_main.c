@@ -212,9 +212,11 @@ int main(int argc, char* argv[])
 
    create_and_join_threads();
 
+   qmaster_shutdown();
+
    teardown_lock_service();
 
-   qmaster_shutdown();
+   sge_shutdown();
 
    DEXIT;
    return 0;
@@ -714,14 +716,19 @@ static void start_periodic_tasks(void)
 *******************************************************************************/
 static void setup_lock_service(void)
 {
+   pthread_mutexattr_t attr;
+   
    DENTER(TOP_LAYER, "setup_lock_service");
 
-   pthread_mutex_init(&Global_Lock, NULL);
+   pthread_mutexattr_init(&attr);
+   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+   
+   pthread_mutex_init(&Global_Lock, (const pthread_mutexattr_t *)(&attr));
 
    sge_set_lock_callback(lock_callback);
    sge_set_unlock_callback(unlock_callback);
    sge_set_id_callback(id_callback);
-
+   
    DEXIT;
    return;
 } /* setup_lock_service() */
@@ -1170,6 +1177,8 @@ static void qmaster_shutdown(void)
 {
    DENTER(TOP_LAYER, "qmaster_shutdown");
 
+   sge_userprj_spool(); /* spool the latest usage */
+
    sge_shutdown_persistence(NULL);
 
    reporting_shutdown(NULL);
@@ -1179,8 +1188,6 @@ static void qmaster_shutdown(void)
    sge_event_shutdown();
 
    sge_clean_lists();
-
-   sge_shutdown();
 
    DEXIT;
    return;

@@ -1,3 +1,12 @@
+SG-2004-07-19-0: Bugfix:    - The usage in the sharetree got lost.
+                            - fixed a mirror interface time out, which disabled
+                              sheduling intervals greater than 1 min.
+                            - fixed a mt problem on qmaster shutdown  
+                 Changed:   qmaster
+                 Issue:     1094
+                 Bugtraq:   5075346
+                 Review:    DT
+
 RC-2004-07-17-0: Bugfix:    fixed a typo in the source that causes build break
 
 AH-2004-07-13-2: Bugfix:    Deleted pending job appears in qstat

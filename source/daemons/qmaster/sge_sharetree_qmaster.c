@@ -360,16 +360,18 @@ lList **found  /* tmp list that contains one entry for each found u/p */
          const char *objname = MSG_OBJ_USER;
 
          /* non project sub-tree leaf nodes must be a user or a project */
-         if (!userprj_list_locate(user_list, name) &&
-             strcmp(name, "default") &&
-             ((objname=MSG_JOB_PROJECT) &&
-              !userprj_list_locate(project_list, name))) {
+         if (userprj_list_locate(user_list, name) == NULL &&
+             strcmp(name, "default") != 0) {
 
-            ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_SHARE_TREE_REF_TO_SS, 
-                     MSG_OBJ_USERPRJ, name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
+             objname=MSG_JOB_PROJECT;
+
+             if (userprj_list_locate(project_list, name) == NULL) {
+               ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_SHARE_TREE_REF_TO_SS, 
+                        MSG_OBJ_USERPRJ, name));
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               DEXIT;
+               return -1;
+            }
          }
 
          /* make sure this user or project is in the non­project sub-tree 

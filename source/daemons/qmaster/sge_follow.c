@@ -30,6 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
+#include <pthread.h>
 
 #include "sge_conf.h"
 #include "sge.h"
@@ -85,8 +86,14 @@
 #include "msg_common.h"
 #include "msg_evmlib.h"
 #include "msg_qmaster.h"
+#include "sge_mtutil.h"
 
-/* static double get_usage_value(lList *usage, char *name); */
+typedef struct {
+   pthread_mutex_t last_update_mutex; /* gards the last_update access */
+   u_long32 last_update;               /* used to store the last time, when the usage was stored */
+} sge_follow_t;
+
+static sge_follow_t Follow_Control = {PTHREAD_MUTEX_INITIALIZER, 0};
 
 /**********************************************************************
  Gets an order and executes it.
@@ -102,7 +109,6 @@
  -3 if delivery to an execd failed
 
  **********************************************************************/ 
-
 int sge_follow_order(
 lListElem *ep,
 lList **alpp,
@@ -166,8 +172,10 @@ lList **topp  /* ticket orders ptr ptr */
          return -2;
       }
       task_number=lGetUlong(ep, OR_ja_task_number);
-      if (!task_number) {
+
+      if (!task_number) { 
          ERROR((SGE_EVENT, MSG_JOB_NOORDERTASK_US, job_number, "ORT_start_job"));
+
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;
@@ -823,8 +831,9 @@ lList **topp  /* ticket orders ptr ptr */
       }
       task_number=lGetUlong(ep, OR_ja_task_number);
       if (!task_number) {
-         ERROR((SGE_EVENT, MSG_JOB_NOORDERTASK_US, job_number,
-               (or_type==ORT_remove_immediate_job)?"ORT_remove_immediate_job":"ORT_remove_job"));
+         ERROR((SGE_EVENT, MSG_JOB_NOORDERTASK_US, job_number, 
+            (or_type==ORT_remove_immediate_job)?"ORT_remove_immediate_job":"ORT_remove_job"));
+         
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;
@@ -919,9 +928,20 @@ lList **topp  /* ticket orders ptr ptr */
          int pos;
          const char *up_name;
          lList *tlp;
-#if 0  /* SVD040128 - commented out because we only extend auto_user life based on qsub */
          u_long32 now = sge_get_gmt();
-#endif
+         bool is_spool = true;
+
+         
+         sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
+         if (now < Follow_Control.last_update) {
+            Follow_Control.last_update = now;
+         }   
+
+         if (now >= (Follow_Control.last_update + 120)) {
+            is_spool = true; 
+            Follow_Control.last_update = now;
+         }
+         sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
 
          DPRINTF(("%sORDER #%d: update %d users/prjs\n", 
             force?"FORCE ":"", 
@@ -929,8 +949,9 @@ lList **topp  /* ticket orders ptr ptr */
 
          for_each (up_order, lGetList(ep, OR_joker)) {
             if ((pos=lGetPosViaElem(up_order, UP_name))<0 || 
-                  !(up_name = lGetString(up_order, UP_name)))
+                  !(up_name = lGetString(up_order, UP_name))) {
                continue;
+            }   
 
             DPRINTF(("%s %s usage updating with %d jobs\n",
                or_type==ORT_update_project_usage?"project":"user",
@@ -938,29 +959,10 @@ lList **topp  /* ticket orders ptr ptr */
                UP_debited_job_usage))));
 
             if (!(up=userprj_list_locate( 
-                  or_type==ORT_update_project_usage ? Master_Project_List : Master_User_List, up_name )))
+                  or_type==ORT_update_project_usage ? Master_Project_List : Master_User_List, up_name ))) {
                /* order contains reference to unknown user/prj object */
                continue;
-
-#if 0
-            {
-               lList *old_usage = lGetList(up, UP_usage);
-               lList *new_usage = lGetList(up_order, UP_usage);
-               INFO((SGE_EVENT, "ORDER #%d: %s %s %d update users/prjs (%8.3f/%8.3f/%8.3f) -> (%8.3f/%8.3f/%8.3f)\n", 
-                  (int)seq_no, 
-                  or_type==ORT_update_project_usage?"project":"user",
-                  up_name,
-                  lGetNumberOfElem(lGetList(up_order, UP_debited_job_usage)),
-
-                  get_usage_value(old_usage, USAGE_ATTR_CPU),
-                  get_usage_value(old_usage, USAGE_ATTR_MEM),
-                  get_usage_value(old_usage, USAGE_ATTR_IO),
-
-                  get_usage_value(new_usage, USAGE_ATTR_CPU),
-                  get_usage_value(new_usage, USAGE_ATTR_MEM),
-                  get_usage_value(new_usage, USAGE_ATTR_IO)));
-            }
-#endif
+            }   
 
             if ((pos=lGetPosViaElem(up_order, UP_version))>=0 &&
                 (lGetPosUlong(up_order, pos) != lGetUlong(up, UP_version))) {
@@ -970,13 +972,6 @@ lList **topp  /* ticket orders ptr ptr */
                /* Note: Should we apply the debited job usage in this case? */
                continue;
             }
-
-#if 0  /* SVD040128 - commented out because we only extend auto_user life based on qsub */
-            /* Extend life of automatic users */
-            if (lGetUlong(up, UP_delete_time) > 0) {
-               lSetUlong(up, UP_delete_time, now + conf.auto_user_delete_time);
-            }
-#endif
 
             lSetUlong(up, UP_version, lGetUlong(up, UP_version)+1);
 
@@ -1040,13 +1035,14 @@ lList **topp  /* ticket orders ptr ptr */
             }
 
             /* spool and send event */
+            
             {
                lList *answer_list = NULL;
-               sge_event_spool(&answer_list, 0,
+               sge_event_spool(&answer_list, now,
                                or_type == ORT_update_user_usage ? 
                                           sgeE_USER_MOD:sgeE_PROJECT_MOD,
                                0, 0, up_name, NULL, NULL,
-                               up, NULL, NULL, true, true);
+                               up, NULL, NULL, true, is_spool);
                answer_list_output(&answer_list);
             }
          }
@@ -1227,6 +1223,9 @@ lList **topp  /* ticket orders ptr ptr */
   return STATUS_OK;
 }
 
+/*
+ * MT-NOTE: distribute_ticket_orders() is NOT MT safe
+ */
 int distribute_ticket_orders(
 lList *ticket_orders 
 ) {

@@ -61,41 +61,39 @@
     
 <div id="Table of Contents1">  
 <div style="margin-bottom: 0in;"><a
- href="#Introduction%20&amp;%20Technical%20Acknowledgments">Introduction &amp; 
-Technical Acknowledgments</a>  
-<p><a href="#Solution%20Components%20Detail">Solution Components Detail</a>
- </p>
+ href="#IntroductionTechnicalAcknowledgement">Introduction &amp; Technical
+Acknowledgements</a>  
+<p><a href="#SolutionComponentsDetail">Solution Components Detail</a>  </p>
  
-<blockquote><a href="#Compute%20Engine">Compute Engine</a> <br>
-   <a href="#Java%20Servlet">Java Servlet</a> <br>
-   <a href="#Portal%20Environment">Portal Environment</a> <br>
-   <a href="#Multi-%20Domain%20Environment">Multi- Domain Environment</a></blockquote>
+<blockquote><a href="#ComputeEngine">Compute Engine</a> <br>
+   <a href="#JavaServlet">Java Servlet</a> <br>
+   <a href="#PortalEnvironment">Portal Environment</a> <br>
+   <a href="#MultiDomainEnvironment">Multi-Domain Environment</a></blockquote>
   </div>
     
-<div style="margin-bottom: 0in;"><a href="#Installation%20Procedure">Installation
+<div style="margin-bottom: 0in;"><a href="#InstallationProcedure">Installation
  Procedure</a>  
-<blockquote><a href="#Installation%20Procedure%20Summary">Installation Procedure 
+<blockquote><a href="#InstallationProcedureSummary">Installation Procedure 
 Summary</a> <br>
-   <a href="#Step%201:%20Grid%20Engine">Step 1: Sun ONE Grid Engine</a> <br>
-   <a href="#Step%202:%20iPlanet%20Portal%20Server">Step 2: Sun ONE Portal
- Server</a> <br>
-   <a
- href="#Step%203:%20Install%20the%20SGP%20integration%20%28Glue%29%20package.">Step
- 3: Grid Engine Portal Integration Package</a> <br>
-   <a href="#Step%204:%20Configure%20iPlanet%20Portal%20Server.">Step 4:
-Configuring Sun ONE Portal Server</a> <br>
-   <a href="#Step%205:%20Using%20Grid%20Portal">Step 5: Using Grid Engine
-Portal</a>    <br>
-   <a href="#Step%206:%20Register%20New%20Applications%20with%20SGP">Step
-6: Registering New Applications with Grid Engine Portal</a></blockquote>
+   <a href="#Step1SunONEGridEngine">Step 1: Sun ONE Grid Engine</a> <br>
+   <a href="#Step2SunONEPortalServer">Step 2: Sun ONE Portal  Server</a>
+  <br>
+   <a href="#Step3GridEnginePortalIntegrationPackage">Step  3: Grid Engine
+Portal Integration Package</a> <br>
+   <a href="#Step4ConfiguringSunONEPortalServer">Step 4: Configuring Sun
+ONE Portal Server</a> <br>
+   <a href="#Step5UsingGridEnginePortal">Step 5: Using Grid Engine Portal</a>
+   <br>
+   <a href="#Step6RegisteringNewApplicationsWithGridEngine">Step 6: Registering
+New Applications with Grid Engine Portal</a></blockquote>
   </div>
-  <a href="#A%20Tip%20for%20Developers">A Tip for Developers</a>  
-<p><a href="#Appendix%20B%20-%20Screen%20shots">Appendix A: Screenshots</a></p>
+  <a href="#ATipForDevelopers">A Tip for Developers</a>  
+<p><a href="#AppendixAScreenShots">Appendix A: Screenshots</a></p>
  </div>
    <br>
  &nbsp;  
-<h1> <a name="Introduction &amp; Technical Acknowledgments"></a>Introduction &amp;
-Technical Acknowledgments</h1>
+<h1> <a name="IntroductionTechnicalAcknowledgement"></a>Introduction &amp;
+Technical Acknowledgements</h1>
     
 <div style="margin-bottom: 0in;">The Grid Engine Portal solution enables
 organizations to provide flexible, secure and managed access to High Performance
@@ -118,16 +116,16 @@ of the Grid Engine Portal servlet source code.
 to Grid Engine Portal.</p>
  </div>
     
-<h1> <a name="Solution Components Detail"></a>Solution Components Detail</h1>
+<h1> <a name="SolutionComponentsDetail"></a>Solution Components Detail</h1>
     
-<h2 class="western"> <a name="Compute Engine"></a>Compute Engine</h2>
+<h2 class="western"> <a name="ComputeEngine"></a>Compute Engine</h2>
   The Compute Engine layer is essentially Sun ONE Grid Engine. Sun ONE Grid
  Engine is a distributed resource management solution from Sun Microsystems
  which controls the submission and distribution of jobs to execution hosts
  and the administration, management and auditing of these jobs to and from
  processing queues. Sun ONE Grid Engine can be integrated with other applications
  used in the processing of compute intensive problems.  
-<h2 class="western"> <a name="Java Servlet"></a>Java Servlet</h2>
+<h2 class="western"> <a name="JavaServlet"></a>Java Servlet</h2>
     
 <div style="margin-bottom: 0in;">The Java Servlets used in this solution
 have been created by Sun Microsystems to provide an interface between Sun
@@ -137,14 +135,13 @@ conditions as detailed in the source code. These applications interact with
 Sun ONE Grid Engine's functions and Sun ONE Portal Server's APIs to produce
 Content Provider windows for the portal environment.</div>
     
-<h2 class="western"> <a name="Portal Environment"></a>Portal Environment</h2>
+<h2 class="western"> <a name="PortalEnvironment"></a>Portal Environment</h2>
   The Portal Environment is implemented using the Sun ONE Portal Server.
 Sun ONE Portal Server provides the capabilities of personalization, customization,
  security and aggregation to a Java enabled web browser. Sun ONE Portal Server 
 can be deployed in a multi-domain scenario, utilizing varying authentication
  methods and role functions within each domain.  
-<h2 class="western"> <a name="Multi- Domain Environment"></a>Multi- Domain 
-Environment</h2>
+<h2 class="western"> <a name="MultiDomainEnvironment"></a>Multi-Domain Environment</h2>
   The Multi-Domain Environment enables organizations to provision specific
  content, manage multiple authentication and security structures and create
  a personalized and customizable user experience with consistent look and
@@ -160,10 +157,10 @@ those functions "inherited" by lower level categories. For example an applicatio
 could be provisioned at the portal server level and this application could
 then be made available to all domains, roles and users within the portal
 environment.  
-<h1 style="margin-bottom: 0in;"> <a name="Installation Procedure"></a>Installation 
+<h1 style="margin-bottom: 0in;"> <a name="InstallationProcedure"></a>Installation 
 Procedure</h1>
     
-<h2 class="western"> <a name="Installation Procedure Summary"></a>Installation 
+<h2 class="western"> <a name="InstallationProcedureSummary"></a>Installation 
 Procedure Summary</h2>
   We will assume that the computer hardware, base operating system (including
  latest patches) and network configuration has been completed.  
@@ -181,8 +178,7 @@ Procedure Summary</h2>
 <p>Step 6: Register new applications with Grid Engine Portal <br>
  &nbsp; </p>
  
-<h2 class="western"> <a name="Step 1: Grid Engine"></a>Step 1: Sun ONE Grid 
-Engine</h2>
+<h2 class="western"> <a name="Step1GridEngine"></a>Step 1: Sun ONE Grid Engine</h2>
   Download Sun ONE Grid Engine (version 5.3p2 or later)&nbsp; from <a
  href="http://www.sun.com/gridware">http://www.sun.com/gridware.</a>   
 <p
@@ -204,8 +200,8 @@ version of the HPC ClusterTools software at&nbsp; <a
  and may be found under the directory <b>HPC_GE_Integration</b>. Follow the 
 directions in the <b>README</b> file. </p>
  
-<h2 class="western"> <a name="Step 2: iPlanet Portal Server"></a>Step 2: Sun
-ONE Portal Server</h2>
+<h2 class="western"> <a name="Step2SunONEPortalServer"></a>Step 2: Sun ONE
+Portal Server</h2>
     
 <div style="margin-bottom: 0in;">First, download Sun ONE Portal Server, Secure 
 Remote Access 6.0 from <a href="http://www.iplanet.com/">http://www.sun.com/software</a>.
@@ -540,9 +536,8 @@ follows: </p>
  and <b>gepadm</b> (administrative user).&nbsp; This will be important when
  <b>Roles</b> are assigned later in this document. </p>
  
-<h2 class="Western"> <a
- name="Step 3: Install the SGP integration (Glue) package."></a>Step 3: Grid 
-Engine Portal Integration Package.</h2>
+<h2 class="Western"> <a name="Step3GridEnginePortalIntegrationPackage"></a>Step
+3: Grid Engine Portal Integration Package.</h2>
   </div>
     
 <div
@@ -900,7 +895,7 @@ seconds.&nbsp;  SUCCESS!</font></tt> </p>
   <b><tt>/export/GridEnginePortal/workspace/username</tt></b></p>
  </div>
     
-<h2 class="western"> <a name="Step 4: Configure iPlanet Portal Server."></a>Step 
+<h2 class="western"> <a name="Step4ConfiguringSunONEPortalServer"></a>Step 
 4: Configuring Sun ONE Portal Server</h2>
     
 <div
@@ -1076,7 +1071,7 @@ then for <b>Client Port</b>, enter <b>5901</b>, for <b>Target Host(s)</b>,
 </ol>
   </div>
     
-<h2 class="western"> <a name="Step 5: Using Grid Portal"></a>Step 5: Using 
+<h2 class="western"> <a name="Step5UsingGridEnginePortal"></a>Step 5: Using 
 Grid Engine Portal</h2>
   Access Sun ONE Portal Server via the link <b>https://mercury.sun.com/</b>.
  When you login, a small <b>Netlet</b> window will pop up. This window hosts
@@ -1091,7 +1086,7 @@ when you logout. You must manually dismiss it, or netlet functions will not
 work the next time you login.  
 <p>In the portal server, the <b>Project List</b>, <b>Job List</b>, and <b>Application
  List</b> channels should be visible. If logged in as root or as an administrative
- user there will be <b>Admin Application List</b> and <b>Job Control</b>
+ user there will be <b>Admin Application List</b> and <b>Job Accounting</b>
 channels. (If these channels display errors, check for incorrect paths and
 make sure Grid Engine is accessible from the portal. Also it is sometimes
 helpful to view the source behind the channels, which can be accomplished
@@ -1212,7 +1207,7 @@ to make sure your X-based jobs are no longer running before killing the X
 session explicitly or logging out. </p>
  
 <h2 class="western"> <a
- name="Step 6: Register New Applications with SGP"></a>Step 6: Registering
+ name="Step6RegisteringNewApplicationsWithGridEngine"></a>Step 6: Registering
  New Applications with Grid Engine Portal</h2>
     
 <div class="western">Registering applications with Grid Engine Portal involves
@@ -1260,7 +1255,7 @@ for creating the execution line arguments. (Technical note: the<b> form.elements
  Do not modify the lines of code that use this element. Begin modifying the 
 [1] element.) </p>
  
-<h1> <a name="A Tip for Developers"></a>A Tip for Developers</h1>
+<h1> <a name="ATipForDevelopers"></a>A Tip for Developers</h1>
     
 <div
  style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">The
@@ -1310,7 +1305,7 @@ subdirectory<br>
 <div
  style="margin-bottom: 0in; font-variant: normal; font-style: normal; text-decoration: none;">
  
-<h1> <a name="Appendix B - Screen shots"></a>Appendix A - Screen shots</h1>
+<h1> <a name="AppendixAScreenShots"></a>Appendix A - Screen shots</h1>
   </div>
    <br>
  Admin login, make sure you are using the complete hostnames you entered

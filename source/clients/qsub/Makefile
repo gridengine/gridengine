@@ -46,11 +46,11 @@ QSUB_OBJS = $(QSUB_SRC:.c=.o)
 
 QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) 
 
-QSUB_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QSUB_ADD_LIBS = -lgdi -lsgeobj sge_all_listsL.o $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QSUB_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
-	                $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) \
-                        $(TPLIB)
+QSUB_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) sge_all_listsL.o $(SECLIBS) $(KRBLIBS) \
+                   $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) \
+                   $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

@@ -38,7 +38,7 @@
 #include "sge_usageL.h"
 #include "sge_time.h"
 #include "execution_states.h"
-#include "parse_mail.h"
+#include "sge_mailrec.h"
 #include "admin_mail.h"
 #include "mail.h"
 #include "sgermon.h"
@@ -192,7 +192,7 @@ int is_array
       if (!(err_str=lGetString(jr, JR_err_str)))
          err_str = MSG_MAIL_UNKNOWN_REASON;
 
-      ret = cull_parse_mail_list(&lp_mail, conf.administrator_mail);
+      ret = mailrec_parse(&lp_mail, conf.administrator_mail);
       if (ret) {
          ERROR((SGE_EVENT, MSG_MAIL_PARSE_S,
             (conf.administrator_mail ? conf.administrator_mail : MSG_NULL)));

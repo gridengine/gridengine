@@ -65,6 +65,7 @@
 #include "sge_parse_num_par.h"
 #include "show_job.h"
 #include "mail.h"
+#include "sge_mailrec.h"
 #include "sgermon.h"
 #include "commlib.h"
 #include "basis_types.h"
@@ -950,7 +951,7 @@ lWriteListTo(environmentList, stderr);
    fprintf(fp, "use_login_shell=%d\n", ck_login_sh(shell) ? 1 : 0);
 
    /* the following values are needed by the reaper */
-   if (sge_unparse_ma_list(lGetList(jep, JB_mail_list), 
+   if (mailrec_unparse(lGetList(jep, JB_mail_list), 
             mail_str, sizeof(mail_str))) {
       ERROR((SGE_EVENT, MSG_MAIL_MAILLISTTOOLONG_U, u32c(job_id)));
    }

@@ -76,7 +76,7 @@
 #include "qmon_globals.h"
 #include "qmon_project.h"
 #include "AskForTime.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_queue.h"

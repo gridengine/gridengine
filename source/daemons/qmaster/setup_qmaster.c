@@ -82,7 +82,7 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "config_file.h"
 #include "sge_qmod_qmaster.h"
 #include "time_event.h"

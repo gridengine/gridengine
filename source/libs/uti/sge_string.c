@@ -886,11 +886,130 @@ void sge_strip_quotes(char **pstr)
    return;
 }
 
+/****** uti/string/sge_strlen() ***********************************************
+*  NAME
+*     sge_strlen() -- replacement for strlen() 
+*
+*  SYNOPSIS
+*     int sge_strlen(const char *str) 
+*
+*  FUNCTION
+*     replacement for strlen 
+*
+*  INPUTS
+*     const char *str - NULL or pointer to string 
+*
+*  RESULT
+*     int - length of string or 0 if NULL pointer
+*******************************************************************************/
 int sge_strlen(const char *str)
 {
-   if(str == NULL) {
-      return 0;
+   int ret = 0;
+
+   if (str != NULL) {
+      ret = strlen(str);
+   }
+   return ret;
+}
+
+/*
+** problem: modifies input string,
+** this is the most frequently used mode
+** but allocating extra memory (as it was in
+** sge_string2list) should also be possible
+** problem: default delimiters should be possible
+** note: there is a similar cull function lString2List
+*/
+/*
+** NAME
+**   string_list
+** PARAMETER
+**   str       -    string to be parsed
+**   delis     -    string containing delimiters
+**   pstr      -    NULL or string array to return
+** RETURN
+**   NULL      -    error
+**   char **   -    pointer to an array of strings containing
+**                  the string list
+** EXTERNAL
+**
+** DESCRIPTION
+**
+*/
+char **string_list(char *str, char *delis, char **pstr) 
+{
+   unsigned int i = 0, j = 0;
+   int is_space = 0;
+   int found_first_quote = 0;
+   char **head;
+
+   DENTER(BASIS_LAYER, "string_list");
+
+   if (!str) {
+      DEXIT;
+      return NULL;
    }
 
-   return strlen(str);
+   while (strchr(delis, str[0])) {
+      str++;
+   }
+   if (str[0] == '\0') {
+      DEXIT;
+      return NULL;
+   }
+
+   /*
+    * not more items than length of string is possible
+    */
+   if (!pstr) {
+      head = malloc((sizeof(void *)) * (strlen(str) + 1));
+      if (!head) {
+         DEXIT;
+         return NULL;
+      }
+   }
+   else {
+      head = pstr;
+   }
+
+   while (1) {
+      while (str[i] && strchr(delis, str[i])) {
+         i++;
+      }
+      if (str[i] == '\0') {
+         break;
+      }
+      head[j] = &str[i];
+      j++;
+      /*
+      ** parse one string
+      */
+      is_space = 0;
+      while (str[i] && !is_space) {
+         if (str[i] == '"') {
+            found_first_quote = 1;
+         }
+         i++;
+         if (found_first_quote) {
+            is_space = 0;
+         }
+         else {
+            is_space = (strchr(delis, str[i]) != NULL);
+         }
+         if (found_first_quote && (str[i] == '"')) {
+            found_first_quote = 0;
+         }
+      }
+      if (str[i] == '\0') {
+         break;
+      }
+
+      str[i] = '\0';
+      i++;
+   }
+   head[j] = NULL;
+
+   DEXIT;
+   return head;
 }
+

@@ -32,6 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-extern const char GDI_VERSION[];  /* set in version.c  */
+#define GDI_VERSION "pre6.0 (Maintrunk)"
 
 #endif /* __VERISON_H */

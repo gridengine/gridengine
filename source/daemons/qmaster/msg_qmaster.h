@@ -43,7 +43,9 @@
 ** sge_ckptobj.c
 */
 #define MSG_OBJ_CKPT                  _MESSAGE(33005, _("checkpointing environment"))
+/* EB: remove
 #define MSG_OBJ_CKPTI                 _MESSAGE(33006, _("checkpoint interface"))
+*/
 /* #define MSG_SGETEXT_CANT_COPY_ELEM_S                  _message(33008, _("can't copy element "SFQ"\n") )    __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SGETEXT_CANTCOUNT_CKPT_S                  _message(33009, _("can't count checkpoint objects in "SFN"\n") )  __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SGETEXT_NO_CKPT_LIC                       _MESSAGE(33010, _("no checkpoint license available\n") )  
@@ -226,8 +228,10 @@
 #define MSG_COM_NOTENROLLEDONHOST_SSU _MESSAGE(33137, _("target "SFQ" not enrolled on host "SFQ" for delivering job \""U32CFormat"\"\n"))
 #define MSG_OBJ_UNABLE2FINDCKPT_S     _MESSAGE(33138, _("can't find checkpointing object "SFQ"\n"))
 #define MSG_OBJ_UNABLE2CREATECKPT_SU  _MESSAGE(33139, _("can't create checkpointing object "SFQ" for job " U32CFormat "\n"))
+/* EB: remove
 #define MSG_SEC_NOCRED_USSI           _MESSAGE(33140, _("could not get credentials for job " U32CFormat " for execution host "SFN" - command "SFQ" failed with return code %d\n"))
 #define MSG_SEC_NOCREDNOBIN_US        _MESSAGE(33141, _("could not get client credentials for job " U32CFormat" - "SFN" binary does not exist\n"))
+*/
 #define MSG_COM_SENDJOBTOHOST_US      _MESSAGE(33142, _("can't send job \"" U32CFormat"\" to host "SFQ))
 #define MSG_COM_RESENDUNKNOWNJOB_UU   _MESSAGE(33143, _("cannot resend unknown job "U32CFormat"."U32CFormat"\n"))
 #define MSG_JOB_UNKNOWNGDIL4TJ_UU     _MESSAGE(33144, _("transfering job "U32CFormat"."U32CFormat" has an invalid gdi list --- deleting"))
@@ -235,10 +239,12 @@
 #define MSG_JOB_NOHOST4TJ_SUU         _MESSAGE(33146, _("execution host "SFQ" for transfering job "U32CFormat"."U32CFormat" doesn't exist. deleting task"))
 #define MSG_JOB_NOPE4TJ_SUU           _MESSAGE(33147, _("parallel environment "SFQ" for transfering job "U32CFormat"." U32CFormat" doesn't exist. deleting job"))
 #define MSG_JOB_DELIVER2Q_UUS         _MESSAGE(33148, _("failed to deliver job "U32CFormat"."U32CFormat" to queue "SFQ))
+/* EB: remove 
 #define MSG_SEC_STARTDELCREDCMD_SU    _MESSAGE(33149, _("can't start command "SFQ" for job " U32CFormat " to delete credentials\n"))
 #define MSG_SEC_DELCREDSTDERR_S       _MESSAGE(33150, _("delete_cred stderr: "SFN))
 #define MSG_SEC_DELCREDRETCODE_USI    _MESSAGE(33151, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
 #define MSG_SEC_DELCREDNOBIN_US       _MESSAGE(33152, _("could not delete credentials for job "U32CFormat" - "SFN" binary does not exist\n"))
+*/
 #define MSG_LOG_SENT2EXECD            _MESSAGE(33153, _("sent to execd"))
 #define MSG_LOG_EXITED                _MESSAGE(33154, _("job exited"))
 #define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33155, _("job waits for schedds deletion"))
@@ -337,11 +343,13 @@
 #define MSG_JOB_NOJOBNAME_U           _MESSAGE(33226, _("job "U32CFormat" was rejected cause there is no job_name in the request\n"))
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33227, _("job "U32CFormat" was rejected cause it can't be written: "SFN"\n"))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33228, _("job "U32CFormat" was rejected cause it couldn't be written\n"))
+/* EB: remove
 #define MSG_SEC_NOAUTH_U              _MESSAGE(33229, _("job "U32CFormat" rejected because authentication failed\n"))
 #define MSG_SEC_NOSTARTCMD4GETCRED_SU _MESSAGE(33230, _("can't start command "SFQ" for job " U32CFormat " to get credentials\n"))
 #define MSG_SEC_PUTCREDSTDERR_S       _MESSAGE(33231, _("put_cred stderr: "SFN))
 #define MSG_SEC_NOSTORECRED_USI       _MESSAGE(33232, _("could not store credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
 #define MSG_SEC_NOSTORECREDNOBIN_US   _MESSAGE(33233, _("could not store client credentials for job " U32CFormat" - "SFN" binary does not exist\n"))
+*/
 #define MSG_JOB_SUBMITJOB_USS         _MESSAGE(33234, _("your job "U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_JOB_SUBMITJOBARRAY_UUUUSS _MESSAGE(33235, _("your job-array "U32CFormat"."U32CFormat"-"U32CFormat":"U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_LOG_NEWJOB                _MESSAGE(33236, _("new job"))
@@ -491,7 +499,9 @@
 /* #define MSG_PE_SLOTSTOOLOW_I          _message(33362, _("new number of slots may not be less than %d that are in use\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_OBJ_USERLIST              _MESSAGE(33363, _("user list"))
 #define MSG_OBJ_XUSERLIST             _MESSAGE(33364, _("xuser list"))
+/* EB: remove 
 #define MSG_PE_ALLOCRULE_SS           _MESSAGE(33365, _("parameter allocation_rule of pe "SFQ": "SFN"\n"))
+*/
 /* #define MSG_PE_DEBITSLOTS_IS          _message(33366, _("debiting %d slots on pe "SFN)) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_PE_USEDSLOTSBELOWZERO_S   _message(33367, _("PE_used_slots of pe "SFN" sunk under 0!\n")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_PE_REVERSESLOTS_IS        _message(33368, _("reversing %d slots on pe "SFN)) __TS Removed automatically from testsuite!! TS__*/

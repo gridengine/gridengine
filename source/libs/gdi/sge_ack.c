@@ -37,12 +37,9 @@
 #include "commlib.h"
 #include "qm_name.h"
 
-int sge_send_ack_to_qmaster(
-int sync,
-u_long32 type,
-u_long32 ulong_val,
-u_long32 ulong_val_2
-) {
+int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, 
+                            u_long32 ulong_val_2) 
+{
    int ret;
    sge_pack_buffer pb;
 

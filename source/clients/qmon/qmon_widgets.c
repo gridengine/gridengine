@@ -51,7 +51,7 @@
 #include "sge_gdi_intern.h"
 #include "parse_qsub.h"
 #include "sge_time.h"
-#include "parse_mail.h"
+#include "sge_mailrec.h"
 #include "sge_parse_date_time.h"
 #include "sge_range.h"
 #include "qmon_quarks.h"
@@ -708,7 +708,7 @@ Cardinal size
          cull_parse_path_list(&ret_list, str);
       }
       if (type == QmonQMR_Type) {
-         cull_parse_mail_list(&ret_list, str);
+         mailrec_parse(&ret_list, str);
       }
       if (type == QmonQQR_Type) {
          lString2List(str, &ret_list, QR_Type, QR_name, ",");

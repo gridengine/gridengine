@@ -47,7 +47,7 @@
 #include "commlib.h"
 #include "commd_message_flags.h"
 
-#include "resolve_host.h"
+#include "sge_host.h"
 
 #include "sge.h"
 #include "sge_dirent.h"
@@ -70,6 +70,8 @@
 #include "sge_queue.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_utility.h"
+#include "sge_todo.h"
 
 #include "sge_stringL.h"
 

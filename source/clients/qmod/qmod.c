@@ -33,7 +33,6 @@
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
-#include "gdi_qmod.h"
 #include "sig_handlers.h"
 #include "parse_qsub.h"
 #include "parse.h"
@@ -45,6 +44,8 @@
 #include "sge_language.h"
 #include "sge_unistd.h"
 #include "sge_answer.h"
+#include "gdi_tsm.h"
+#include "gdi_qmod.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"

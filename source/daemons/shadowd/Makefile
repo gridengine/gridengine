@@ -47,9 +47,9 @@ SHADOWD_OBJS = $(SHADOWD_SRC:.c=.o)
 
 SHADOWD_ADD_OBJS = $(SHADOWD_ADD_SRC:.c=.o) 
 
-SHADOWD_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
+SHADOWD_ADD_LIBS = -lsched -lgdi -lsgeobj sge_all_listsL.o $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
 
-SHADOWD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB) $(TPLIB)
+SHADOWD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) sge_all_listsL.o $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

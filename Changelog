@@ -1,3 +1,7 @@
+EB-2003-02-12-0: Enhancem.: created new library which contains CULL object
+                            related code. Several files were moved from
+                            libs/gdi into libs/sgeobj directory.
+
 CR-2003-02-12-0  Testsuite: - fixed tcl error (in test report generation)
                             - updated scheduler profile string parsing
                               for new string content (throughput test)

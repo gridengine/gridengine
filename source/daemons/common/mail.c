@@ -46,8 +46,9 @@
 #include "sge_prog.h"
 #include "sge_os.h"
 #include "sge_job.h"
-#include "msg_daemons_common.h"
+#include "sge_mailrec.h"
 
+#include "msg_daemons_common.h"
 
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */

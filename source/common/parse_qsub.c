@@ -39,7 +39,7 @@
 #include "sge_resource.h"
 #include "sge_parse_date_time.h"
 #include "parse_job_cull.h"
-#include "parse_mail.h"
+#include "sge_mailrec.h"
 #include "parse_qsub.h"
 #include "sge_feature.h"
 #include "sge_userset.h"
@@ -963,7 +963,7 @@ u_long32 flags
 
          DPRINTF(("\"-M %s\"\n", *sp));
 
-         i_ret = cull_parse_mail_list(&mail_list, *sp);
+         i_ret = mailrec_parse(&mail_list, *sp);
           if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGMAILLISTFORMATXSPECTOMOPTION_S ,
              *sp);

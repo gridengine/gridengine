@@ -62,6 +62,7 @@
 #include "sge_host.h"
 #include "sge_userset.h"
 #include "sge_sharetree.h"
+#include "sge_utility.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

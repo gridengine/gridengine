@@ -86,6 +86,8 @@ void sge_compress_slashes(char *str);
 
 void sge_strip_quotes(char **pstr);
 
+char **string_list(char *str, char *delis, char **pstr);
+
 #ifndef WIN32NATIVE
 #define SGE_STRCASECMP(a, b) strcasecmp(a, b)
 #else

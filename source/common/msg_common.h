@@ -1137,6 +1137,20 @@
 #define MSG_ERRORCREATINGLIST           _MESSAGE(60404, _("error creating list\n"))
 #define MSG_NULLOREMPTYSTRINGFOR_S  _MESSAGE(60405, _("null or empty string for attribute "SFQ"\n"))
 
+#define MSG_SEC_NOCRED_USSI           _MESSAGE(60406, _("could not get credentials for job " U32CFormat " for execution host "SFN" - command "SFQ" failed with return code %d\n"))
+#define MSG_SEC_STARTDELCREDCMD_SU    _MESSAGE(60407, _("can't start command "SFQ" for job " U32CFormat " to delete credentials\n"))
+#define MSG_SEC_NOAUTH_U              _MESSAGE(60408, _("job "U32CFormat" rejected because authentication failed (no credentials supplied)\n"))
+#define MSG_SEC_NOSTORECRED_USI       _MESSAGE(60409, _("could not store credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
+#define MSG_SEC_NOSTORECREDNOBIN_US   _MESSAGE(60410, _("could not store client credentials for job " U32CFormat" - "SFN" binary does not exist\n"))
+#define MSG_SEC_DELCREDSTDERR_S       _MESSAGE(60411, _("delete_cred stderr: "SFN""))
+#define MSG_SEC_DELCREDRETCODE_USI    _MESSAGE(60412, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
+#define MSG_SEC_DELCREDNOBIN_US       _MESSAGE(60413, _("could not delete credentials for job "U32CFormat" - "SFN" binary does not exist\n"))
+#define MSG_SEC_PUTCREDSTDERR_S       _MESSAGE(60414, _("put_cred stderr: "SFN""))                                                                              
+#define MSG_SEC_NOSTARTCMD4GETCRED_SU _MESSAGE(60415, _("can't start command "SFQ" for job " U32CFormat " to get credentials\n"))
+#define MSG_PE_ALLOCRULE_SS           _MESSAGE(60416, _("parameter allocation_rule of pe "SFQ": "SFN"\n"))
+#define MSG_OBJ_CKPTI                 _MESSAGE(60417, _("checkpoint interface"))
+#define MSG_GDI_OUTOFMEMORY           _MESSAGE(60418, _("out of memory"))
+
 /* =================================================
  * please do not enter new messages after this point,
  * if they are global messages (meaningfull for all modules)

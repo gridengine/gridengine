@@ -46,7 +46,7 @@
 #include "sge_conf.h"
 #include "configuration_qmaster.h"
 #include "cull.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "config_file.h"
 #include "rw_configuration.h"
 #include "sge_userset_qmaster.h"

@@ -48,7 +48,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_parse_util.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "sge_path_alias.h"
 #include "msg_common.h"
 #include "sge_job_refL.h"
@@ -59,6 +59,7 @@
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_host.h"
+#include "sge_mailrec.h"
 
 /*
 ** NAME

@@ -104,7 +104,7 @@ QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_loadmon.ad
 
 QMON_ADD_SRC = read_write_complex.c parse_job_cull.c unparse_job_cull.c \
-            parse_qsub.c read_defaults.c parse_mail.c sge_userset.c \
+            parse_qsub.c read_defaults.c sge_userset.c \
             read_object.c write_job_defaults.c sge_options.c usage.c
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
@@ -112,12 +112,12 @@ QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
 QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o)
 
 QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
-                -L. -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
+                -L. -lsched -lgdi -lsgeobj sge_all_listsL.o $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
                 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
-                   $(XLTREELIB) $(XTABLIB) $(SCHEDLIB) $(GDILIB) $(SECLIBS) \
-                   $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) \
-                   $(ZLIB) $(TPLIB)
+                   $(XLTREELIB) $(XTABLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
+                   sge_all_listsL.o $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
+                   $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

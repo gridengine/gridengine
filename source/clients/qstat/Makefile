@@ -49,9 +49,10 @@ QSTAT_OBJS = $(QSTAT_SRC:.c=.o)
 
 QSTAT_ADD_OBJS = $(QSTAT_ADD_SRC:.c=.o)
 
-QSTAT_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QSTAT_ADD_LIBS = -lsched -lgdi -lsgeobj sge_all_listsL.o $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QSTAT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
+QSTAT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) sge_all_listsL.o \
+                    $(SECLIBS) $(KRBLIBS) \
 	                 $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
                          $(ZLIB) $(TPLIB)
 

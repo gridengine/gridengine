@@ -40,7 +40,6 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               ck_to_do_qmaster.c \
               sge_c_ack.c \
               sge_c_gdi$(QIDLEXT).c \
-              sge_calendar_qmaster$(QIDLEXT).c \
               sge_follow.c \
               sge_give_jobs$(QIDLEXT).c \
               reschedule.c \
@@ -54,6 +53,7 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               sge_queue_qmaster$(QIDLEXT).c \
               sge_rusage.c \
               sge_sharetree_qmaster.c \
+              sge_calendar_qmaster.c \
               sge_userprj_qmaster.c \
               sge_usermap_qmaster.c \
               sge_hostgroup_qmaster.c \
@@ -99,15 +99,16 @@ QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
               sched_conf.c \
               read_write_sharetree.c \
               sig_handlers.c \
-              unparse_job_cull.c 
+              unparse_job_cull.c \
+              sge_all_listsL.c
 
 QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
 QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o) 
 
-QMASTER_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QMASTER_ADD_LIBS = -lsched -lgdi -lsgeobj $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SECLIBS) $(KRBLIBS) \
+QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SECLIBS) $(KRBLIBS) \
                       $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
                       $(ZLIB) $(TPLIB)
 
@@ -157,9 +158,6 @@ sge_c_ack.o:    $(QMASTER_DIR)/sge_c_ack.c
 sge_c_gdi$(QIDLEXT).o:	$(QMASTER_DIR)/sge_c_gdi.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_c_gdi.c
 
-sge_calendar_qmaster$(QIDLEXT).o: $(QMASTER_DIR)/sge_calendar_qmaster.c
-		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_calendar_qmaster.c
-
 sge_job_qmaster.o:	$(QMASTER_DIR)/sge_job_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_job_qmaster.c
 
@@ -198,6 +196,9 @@ sge_usermap_qmaster.o:	$(QMASTER_DIR)/sge_usermap_qmaster.c
 
 sge_hostgroup_qmaster.o:	$(QMASTER_DIR)/sge_hostgroup_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_hostgroup_qmaster.c
+
+sge_calendar_qmaster.o: $(QMASTER_DIR)/sge_calendar_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_calendar_qmaster.c
 
 sge_sharetree_qmaster.o: $(QMASTER_DIR)/sge_sharetree_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sharetree_qmaster.c

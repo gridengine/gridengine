@@ -57,7 +57,7 @@
 #include "mail.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "sge_parse_num_par.h"
 #include "configuration_qmaster.h"
 #include "sge_qmod_qmaster.h"
@@ -81,6 +81,7 @@
 #include "sge_queue.h"
 #include "sge_queue_qmaster.h"
 #include "qmaster_to_execd.h"
+#include "sge_todo.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

@@ -68,6 +68,7 @@
 #include "sge_queue.h"
 #include "sge_range.h"
 #include "sge_complex.h"
+#include "sge_todo.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

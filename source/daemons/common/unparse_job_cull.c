@@ -60,6 +60,8 @@
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_userset.h"
+#include "sge_mailrec.h"
+
 #include "msg_daemons_common.h"
 
 static char *sge_unparse_checkpoint_attr(int opr, char *string);

@@ -63,6 +63,7 @@
 #include "sge_prog.h"
 #include "sge_var.h"
 #include "sge_answer.h"
+#include "sge_mailrec.h"
 
 #define USE_CLIENT_QSUB 1
 

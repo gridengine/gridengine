@@ -35,7 +35,7 @@
 
 #include "sge_unistd.h"
 #include "sge_gdi_intern.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "sge_sched.h"
 #include "cull.h"
 #include "commlib.h"

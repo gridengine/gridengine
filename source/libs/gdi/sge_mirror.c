@@ -57,6 +57,8 @@
 #include "sge_usermap.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_answer.h"
+#include "sge_todo.h"
 
 #include "sge_unistd.h"
 #include "sgermon.h"

@@ -229,7 +229,7 @@ endif
 
 set   CFLAGS       = "$INP_CFLAGS"
 set   CXXFLAGS     = "$CFLAGS"
-set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs/uti -I../libs/gdi -I../libs/spool -I../libs/spool/classic -I../libs/spool/flatfile -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
+set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs/uti -I../libs/gdi -I../libs/spool -I../libs/spool/classic -I../libs/spool/flatfile -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 
 set   ADD_COPYRIGHT     = 0
 set   ADD_SUN_COPYRIGHT = 0

@@ -95,6 +95,7 @@
 #include "sge_complex.h"
 #include "sge_hostgroup.h"
 #include "sge_usermap.h"
+#include "sge_todo.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"

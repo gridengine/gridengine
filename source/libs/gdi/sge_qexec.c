@@ -52,9 +52,11 @@
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_stringL.h"
-#include "msg_gdilib.h"
 #include "sge_security.h"
 #include "sge_var.h"
+
+#include "msg_common.h"
+#include "msg_gdilib.h"
 
 static lList *remote_task_list = 0;
 static char lasterror[1024];

@@ -52,9 +52,9 @@ QACCT_OBJS = $(QACCT_SRC:.c=.o)
 
 QACCT_ADD_OBJS = $(QACCT_ADD_SRC:.c=.o)
 
-QACCT_ADD_LIBS = -lsched -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QACCT_ADD_LIBS = -lsched -lgdi -lsgeobj sge_all_listsL.o $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QACCT_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
+QACCT_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) sge_all_listsL.o $(SECLIBS) $(KRBLIBS) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

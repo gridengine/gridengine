@@ -45,9 +45,9 @@ QALTER_OBJS = $(QALTER_SRC:.c=.o)
 
 QALTER_ADD_OBJS = $(QALTER_ADD_SRC:.c=.o)
                
-QALTER_ADD_LIBS = -lgdi $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QALTER_ADD_LIBS = -lgdi -lsgeobj sge_all_listsL.o $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QALTER_LIB_DEPENDS = $(GDILIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
+QALTER_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) sge_all_listsL.o $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

@@ -34,8 +34,10 @@
 #include "gdi_qmod.h"
 #include "sgermon.h"
 #include "parse.h"
-#include "msg_gdilib.h"
 #include "sge_answer.h"
+
+#include "msg_common.h"
+#include "msg_gdilib.h"
 
 /*
 ** NAME

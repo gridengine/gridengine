@@ -42,7 +42,7 @@
 #include "sge_ja_task.h"
 #include "sge_answer.h"
 #include "sgermon.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "msg_schedd.h"
 #include "sge_string.h"
 #include "sge_prog.h"

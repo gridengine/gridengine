@@ -64,6 +64,7 @@
 #include "sge_queue.h"
 #include "sge_job.h"
 #include "sge_complex.h"
+#include "sge_utility.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

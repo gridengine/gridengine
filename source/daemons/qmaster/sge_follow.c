@@ -77,6 +77,7 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_sharetree.h"
+#include "sge_todo.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

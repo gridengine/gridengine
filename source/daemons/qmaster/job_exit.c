@@ -68,6 +68,7 @@
 #include "sge_report.h"
 #include "sge_report_execd.h"
 #include "sge_userset.h"
+#include "sge_todo.h"
 
 /************************************************************************
  Master routine for job exit

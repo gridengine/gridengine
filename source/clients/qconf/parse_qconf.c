@@ -79,7 +79,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_stringL.h"
-#include "resolve_host.h"
 #include "scheduler.h"
 #include "sge_support.h"
 #include "sge_stdlib.h"

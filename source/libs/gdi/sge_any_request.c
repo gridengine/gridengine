@@ -95,9 +95,8 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 /*----------------------------------------------------------
  * sge_log_commd_state_transition
  *----------------------------------------------------------*/
-static void sge_log_commd_state_transition(
-int cl_err 
-) {
+static void sge_log_commd_state_transition(int cl_err) 
+{
    DENTER(BASIS_LAYER, "sge_log_commd_state_transition");
 
    switch (commd_monitor(cl_err)) {
@@ -122,9 +121,8 @@ int cl_err
  *     COMMD_UP   commd gone up
  *     COMMD_DOWN commd gone down
  *----------------------------------------------------------*/
-static int commd_monitor(
-int cl_err 
-) {
+static int commd_monitor(int cl_err) 
+{
    int state = gdi_state_get_commd_state();
 
    /* initial setup of state - only down commd is reported */
@@ -154,15 +152,10 @@ int cl_err
  *          -4 if peer is not alive or rhost == NULL
  *          return value of gdi_send_message() for other errors
  *---------------------------------------------------------*/
-int sge_send_any_request(
-int synchron,
-u_long32 *mid,
-const char *rhost,
-const char *commproc,
-int id,
-sge_pack_buffer *pb,
-int tag 
-) {
+int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
+                         const char *commproc, int id, sge_pack_buffer *pb, 
+                         int tag) 
+{
    u_long32 dummymid;
    int i;
 
@@ -230,14 +223,9 @@ int tag
  *         -1              rhost is NULL 
  *         commlib return values (always positive)
  *----------------------------------------------------------*/
-int sge_get_any_request(
-char *rhost,
-char *commproc,
-u_short *id,
-sge_pack_buffer *pb,
-int *tag,
-int synchron 
-) {
+int sge_get_any_request(char *rhost, char *commproc, u_short *id, 
+                        sge_pack_buffer *pb, int *tag, int synchron) 
+{
    int dummytag=0;
    char *buffer = NULL;
    u_long32 buflen;
@@ -331,15 +319,10 @@ int synchron
   Always use this function instead of gdi_send_message directly, even
   if compression is turned off.
 **********************************************************************/
-int gdi_send_message_pb(
-int synchron,
-const char *tocomproc,
-int toid,
-const char *tohost,
-int tag,
-sge_pack_buffer *pb,
-u_long32 *mid 
-) {
+int gdi_send_message_pb(int synchron, const char *tocomproc, int toid, 
+                        const char *tohost, int tag, sge_pack_buffer *pb, 
+                        u_long32 *mid) 
+{
    long ret = 0;
 
    DENTER(GDI_LAYER, "gdi_send_message_pb");

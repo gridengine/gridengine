@@ -67,7 +67,7 @@
 #include "sge_job_schedd.h"
 #include "sge_resource.h"
 #include "sge_all_listsL.h"
-#include "gdi_qmod.h"
+#include "sge_utility.h"
 #include "sge_gdi_intern.h"
 #include "sge_feature.h"
 #include "qmon_matrix.h"

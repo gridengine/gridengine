@@ -60,7 +60,7 @@
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_time.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "gdi_utility.h"
 #include "sge_qmod_qmaster.h"
 #include "config_file.h"
@@ -78,6 +78,8 @@
 #include "sge_complex.h"
 #include "sge_calendar.h"
 #include "sge_complex_schedd.h"
+#include "sge_utility.h"
+#include "sge_todo.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

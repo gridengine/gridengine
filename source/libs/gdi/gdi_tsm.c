@@ -29,11 +29,16 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "gdi_tsm.h"
 #include "sge_answer.h"
 #include "sgermon.h"
+#include "parse.h"
+
+#include "msg_common.h"
+#include "msg_gdilib.h"
 
 /*
 ** NAME
@@ -78,12 +83,9 @@ const char *cell
 ** DESCRIPTION
 **
 */
-lList *gdi_kill(
-lList *id_list,
-const char *cell,
-u_long32 option_flags,
-u_long32 action_flag 
-) {
+lList *gdi_kill(lList *id_list, const char *cell, u_long32 option_flags, 
+                u_long32 action_flag ) 
+{
    lList *alp = NULL, *tmpalp;
 
    DENTER(TOP_LAYER, "gdi_kill");
@@ -144,3 +146,4 @@ u_long32 action_flag
    DEXIT;
    return alp;
 }
+

@@ -56,6 +56,8 @@
 #include "sge_ckpt.h"
 #include "sge_queue.h"
 #include "sge_job.h"
+#include "sge_utility.h"
+#include "sge_todo.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

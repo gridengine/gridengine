@@ -53,6 +53,8 @@
 #include "sge_complex.h"
 #include "sge_var.h"
 #include "sge_host.h"
+#include "sge_mailrec.h"
+
 #include "qmon_rmon.h"
 #include "qmon_quarks.h"
 #include "qmon_matrix.h"

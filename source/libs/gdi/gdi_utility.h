@@ -75,8 +75,6 @@ int attr_mod_mem_str(lList **alpp, lListElem *qep, lListElem *new_queue, int nm,
 
 int attr_mod_time_str(lList **alpp, lListElem *qep, lListElem *new_queue, int nm, char *attr_name, int enable_infinity);
 
-int verify_str_key(lList **alpp, const char *str, const char *name);
-
 int multiple_occurances(lList **alpp, lList *lp1, lList *lp2, int nm, const char *name, const char *obj_name);
 
 void normalize_sublist(lListElem *ep, int nm);

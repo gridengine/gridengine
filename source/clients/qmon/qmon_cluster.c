@@ -70,7 +70,7 @@
 #include "qmon_cluster.h"
 #include "qmon_globals.h"
 #include "sge_feature.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "rw_configuration.h"
 #include "AskForItems.h"
 #include "AskForTime.h"

@@ -61,7 +61,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qmaster.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "sge_user_mapping.h"
 #include "sge_time.h"  
 #include "version.h"  

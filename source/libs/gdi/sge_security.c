@@ -55,6 +55,7 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 
+#include "msg_common.h"
 #include "msg_gdilib.h"
 
 #ifdef CRYPTO
@@ -71,7 +72,6 @@ static int sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
 
 /****** gdi/security/sge_security_initialize() ********************************
-*
 *  NAME
 *     sge_security_initialize -- initialize sge security
 *
@@ -87,14 +87,6 @@ static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usi
 *
 *  RETURN
 *     0  in case of success, something different otherwise 
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 ******************************************************************************/
 int sge_security_initialize(const char *name)
 {
@@ -137,14 +129,6 @@ int sge_security_initialize(const char *name)
 *
 *  INPUTS
 *     status - exit status value
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
 ******************************************************************************/
 void sge_security_exit(int i)
 {

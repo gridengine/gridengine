@@ -50,7 +50,7 @@
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_resource.h"
-#include "resolve_host.h"
+#include "sge_host.h"
 #include "slots_used.h"
 #include "sge_complex_schedd.h"
 #include "sge_parse_num_par.h"

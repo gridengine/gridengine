@@ -81,14 +81,6 @@ MYRINET_FILES="README README.x mpi.template mpich.template \
 MYRINET_SCRIPTS="gmps sge_mpirun sge_mpirun.x startmpi.sh startmpi.sh.x \
                  stopmpi.sh"
 
-SUNHPC_FILES="README batch.sunmpi.template sunmpi.pe.template"
-SUNHPC_SCRIPTS="HPC_GE_Integration.sh MPRUN PRISM resume_sunmpi.sh \
-                startsunmpi.sh stopsunmpi.sh suspend_sunmpi.sh \
-                terminate_sunmpi.sh"
-
-SUNHPCACCT_FILES="README"
-SUNHPCACCT_SCRIPTS="MPRUN PRISM ctacct1.pl ctacct2.pl stopsunmpi.sh"
-
 SUNHPCTIGHT_FILES="README pe_sunmpi_ci.template"
 SUNHPCTIGHT_SCRIPTS="resume_sunmpi_ci.sh suspend_sunmpi_ci.sh"
 
@@ -123,6 +115,7 @@ ErrUsage()
    echo "       -noinst        = no install, show target arch"
    echo "       -nosource      = do not source \"distinst.private\""
    echo "       -onlybin       = all binaries, no libraries"
+   echo "       -classic-targets = qmaster+spool* from <ARCHDIR>_classic"
    echo "       -resetarch     = set PROG="" (useful to override distinst.privat)"
    echo "       -resetprog     = set ARCH="" (useful to override distinst.privat)"
    echo "       -tcc           = create file .COMMON_CHANGED if common changed"
@@ -381,6 +374,14 @@ InstallProg()
 
 #-------------------------------------------------------------------------
 #
+InstallProgAs()
+{
+   echo Installing $1 as $2
+   Install 0.0 755 $1 $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/`basename $1`/$2
+}
+
+#-------------------------------------------------------------------------
+#
 InstallProgSUID()
 {
    echo Installing $1
@@ -454,6 +455,7 @@ instutilbin=false
 instsec=false
 instsecbin=false
 inst3rdparty=false
+instclassictargets=false
 
 cmdname=`basename $0`
 
@@ -535,6 +537,9 @@ while [ $# -ge 1 ]; do
       ;;
    -resetarch)
       ARCH=""
+      ;;
+   -classic-targets)
+      instclassictargets=true
       ;;
    -tcc)
       touchcommonchanged=true
@@ -946,40 +951,17 @@ if [ $instcommon = true ]; then
          Execute chmod 755 $DEST_SGE_ROOT/$MYRINETBASE/$f
       done
 
-      HPCBASE=mpi/sunhpc
-      HPCBASE_LOOSE=$HPCBASE/loose-integration
-      HPCBASE_TIGHT=$HPCBASE/tight-integration
-      Execute mkdir -p $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting
-      Execute mkdir -p $DEST_SGE_ROOT/$HPCBASE_TIGHT
+      HPCBASE=mpi/SunHPCT5
+      Execute mkdir -p $DEST_SGE_ROOT/$HPCBASE
       
-      for f in $SUNHPC_FILES; do
-         Execute cp dist/$HPCBASE_LOOSE/$f $DEST_SGE_ROOT/$HPCBASE_LOOSE
-         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE_LOOSE/$f
-      done
-   
-      for f in $SUNHPC_SCRIPTS; do
-         Execute cp dist/$HPCBASE_LOOSE/$f $DEST_SGE_ROOT/$HPCBASE_LOOSE
-         Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE_LOOSE/$f
-      done
-
-      for f in $SUNHPCACCT_FILES; do
-         Execute cp dist/$HPCBASE_LOOSE/accounting/$f $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting
-         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting/$f
-      done
-   
-      for f in $SUNHPCACCT_SCRIPTS; do
-         Execute cp dist/$HPCBASE_LOOSE/accounting/$f $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting
-         Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE_LOOSE/accounting/$f
-      done
-
       for f in $SUNHPCTIGHT_FILES; do
-         Execute cp dist/$HPCBASE_TIGHT/$f $DEST_SGE_ROOT/$HPCBASE_TIGHT
-         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE_TIGHT/$f
+         Execute cp dist/$HPCBASE/$f $DEST_SGE_ROOT/$HPCBASE
+         Execute chmod 644 $DEST_SGE_ROOT/$HPCBASE/$f
       done
    
       for f in $SUNHPCTIGHT_SCRIPTS; do
-         Execute cp dist/$HPCBASE_TIGHT/$f $DEST_SGE_ROOT/$HPCBASE_TIGHT
-         Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE_TIGHT/$f
+         Execute cp dist/$HPCBASE/$f $DEST_SGE_ROOT/$HPCBASE
+         Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE/$f
       done
 
       Cleanup mpi
@@ -1003,12 +985,9 @@ if [ $instcommon = true ]; then
    # this rule must come *after* the "instdoc" rule
    #
    if [ $insttxtdoc = true ]; then
-      echo "Installing README, INSTALL ... files"
+      echo "Installing README, ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
-      Execute cp ../doc/INSTALL $DEST_SGE_ROOT/doc
       Execute cp ../doc/README-Autoinstall.txt $DEST_SGE_ROOT/doc
-      # No upgrade procedure in Beta
-#      Execute cp ../doc/UPGRADE-2-53 $DEST_SGE_ROOT/doc/UPGRADE
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
       Cleanup doc      
    fi
@@ -1076,15 +1055,25 @@ for i in $ARCH; do
                : 
                ;;
             qmake)
-                echo Installing qmake
-                Install 0.0 755 ../3rdparty/qmake/$ARCHBIN/make $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qmake
+               echo Installing qmake
+               Install 0.0 755 ../3rdparty/qmake/$ARCHBIN/make $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qmake
                ;;
             qtcsh)
-                echo Installing qtcsh
-                Install 0.0 755 ../3rdparty/qtcsh/$ARCHBIN/tcsh $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qtcsh
+               echo Installing qtcsh
+               Install 0.0 755 ../3rdparty/qtcsh/$ARCHBIN/tcsh $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH/qtcsh
                ;; 
             *)
                InstallProg $prog
+               echo bin in `pwd`
+               if [ $instclassictargets = true ]; then
+                  case $prog in
+                     sge_qmaster|spoolinit|spooldefaults)
+                        if [ -f ../${ARCHBIN}_classic/$prog ]; then
+                           InstallProgAs ../${ARCHBIN}_classic/$prog $prog.classicspool
+                        fi
+                        ;;
+                  esac
+               fi        
                if [ $prog = qstat ]; then
                   ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
                     cd $DEST_SGE_ROOT/bin/$DSTARCH ; \

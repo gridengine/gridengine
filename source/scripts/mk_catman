@@ -39,13 +39,14 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-set MANBUILDDIR = $1/MANSBUILD 
+set MANBUILDDIR = $1/MANSBUILD_$2
 
 if ( `/sbin/uname` != "IRIX" ) then
         echo "Error: need to be executed on an SGI - we need pack."
         exit 1
 endif
 
+echo Building catman pages in $MANBUILDDIR/ASCMAN/man
 
 foreach n ( 1 3 5 8 )
         if ( ! -d $MANBUILDDIR/ASCMAN/man/man${n} ) then

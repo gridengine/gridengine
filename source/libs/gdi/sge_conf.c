@@ -729,9 +729,6 @@ int merge_configuration(lListElem *global, lListElem *local,
       flush_submit_sec = -1;
       flush_finish_sec = -1;
       profile_schedd = 0;
-#ifdef PROFILEMASTER
-      profile_master = 0;
-#endif
       classic_sgeee_scheduling = 0;
       share_override_tickets = 1;
       share_functional_shares = 1;

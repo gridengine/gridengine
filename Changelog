@@ -1,4 +1,7 @@
-EB-2004-12-22-0: Bigfix:    The qstat -ext -xml command is broken with 
+JG-2004-12-23-0: Testsuite: Do not check directory permissions and messages 
+                            files at install re_init.
+
+EB-2004-12-22-0: Bugfix:    The qstat -ext -xml command is broken with 
                             N1GE6 Update 2 patch
                  Changed:   qstat
                  Issue:     1401

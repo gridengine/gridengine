@@ -1202,10 +1202,15 @@ proc setup_default_calendars {} {
 #*******************************
 proc setup_check_user_permissions {} {
    global ts_config
-  global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
-  global CHECK_OUTPUT
-  global CHECK_SCRIPT_FILE_DIR CHECK_ADMIN_USER_SYSTEM
+   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
+   global CHECK_OUTPUT
+   global CHECK_SCRIPT_FILE_DIR CHECK_ADMIN_USER_SYSTEM
+   global check_use_installed_system 
 
+   if {$check_use_installed_system} {
+      set_error 0 "ok"
+      return
+   }
 
   set time [timestamp]
   if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
@@ -1246,6 +1251,12 @@ proc setup_check_messages_files {} {
    global ts_config
    global CHECK_OUTPUT
    global CHECK_USER
+   global check_use_installed_system 
+
+   if {$check_use_installed_system} {
+      set_error 0 "ok"
+      return
+   }
 
    puts $CHECK_OUTPUT "scheduler ..."
    set messages [get_schedd_messages_file]

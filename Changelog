@@ -1,3 +1,5 @@
+CR-2002-07-26-4: Bugfix:    merged l10n fixes from V53_beta2_BRANCH
+
 CR-2002-07-26-3: Bugfix:    removed debug output from qsh client
 
 EB-2002-07-26-0: Cleanup:   removed duplicated code.

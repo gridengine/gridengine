@@ -1040,8 +1040,8 @@ char **argv
             ret_val = 1;
             done = 1;
          }
-         if (  (strcmp(_SGE_GETTEXT__(options.yes),"") == 0) && 
-               (strcmp(_SGE_GETTEXT__(options.no) ,"") == 0) ) {
+         if (  (strcmp(options.yes,"") == 0) && 
+               (strcmp(options.no ,"") == 0) ) {
             ret_val = 0;
             done = 1;
             strcpy(input_buffer,"");

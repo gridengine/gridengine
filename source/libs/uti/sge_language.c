@@ -34,7 +34,6 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sgermon.h"
@@ -44,7 +43,13 @@
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
 
-#define SGE_ENABLE_MSG_ID "SGE_ENABLE_MSG_ID"
+/*
+ *  environment variable "SGE_ENABLE_MSG_ID"
+ *  supported values: 0 - off
+ *                    1 - on for error messages
+ *                    2 - on for every message
+ */
+#define SGE_ENABLE_MSG_ID "SGE_ENABLE_MSG_ID"  
 #define PACKAGE "GRIDPACKAGE"
 #define LOCALEDIR "GRIDLOCALEDIR"
 #define SGE_DEFAULT_PACKAGE      "gridengine"
@@ -73,6 +78,7 @@ typedef struct {
 static language_functions_struct sge_language_functions;
 static int sge_message_id_view_flag = 0;
 static int sge_enable_msg_id = 0;    /* used to enable/disable message ids */
+static int sge_enable_msg_id_to_every_message = 0;
 static htable sge_message_hash_table = NULL; 
 
 
@@ -128,90 +134,126 @@ int sge_init_languagefunc(char *package, char *localeDir)
   char* sge_enable_msg_id_string = NULL;
   int   success  = FALSE;  
   int   back;
+  int   stop = 0;
 
-  DENTER(BASIS_LAYER, "sge_init_language");
+  DENTER(TOP_LAYER, "sge_init_language");
 
   DPRINTF(("****** starting localisation procedure ... **********\n"));
 
-  /* try to get the package name */
-  if (package != NULL) {
-     packName = strdup(package);
-  } else if (getenv(PACKAGE) != NULL) {
-     packName = strdup(getenv(PACKAGE));
-     DPRINTF(("try to get language package name from environment "SFQ"\n",PACKAGE));
-  } else {
-     DPRINTF(("could not get environment variable "SFQ"\n", PACKAGE));
-  }
 
-  /* no package name given, using default one */
-  if (packName == NULL) {
-     packName = strdup(SGE_DEFAULT_PACKAGE);
-  }
+  while ( stop <= 2 ) {
+
+     /* free memory for evt. second run */
+     if (packName != NULL) {
+        free(packName);
+        packName = NULL;
+     }
+     if (locDir   != NULL) {
+        free(locDir);
+        locDir = NULL;
+     }
+     if (language != NULL) {
+        free(language);
+        language = NULL;
+     }
+     if (pathName != NULL) {
+        free(pathName);
+        pathName = NULL;
+     }
+
+     /* try to get the package name */
+     if (package != NULL) {
+        packName = strdup(package);
+     } else if (getenv(PACKAGE) != NULL) {
+        packName = strdup(getenv(PACKAGE));
+        DPRINTF(("try to get language package name from environment "SFQ"\n",PACKAGE));
+     } else {
+        DPRINTF(("could not get environment variable "SFQ"\n", PACKAGE));
+     }
    
-  /* try to get the localization directory */ 
-  if (localeDir != NULL) {
-     locDir = strdup(localeDir);
-  } else if (getenv(LOCALEDIR) != NULL) {
-     locDir = strdup(getenv(LOCALEDIR));
-     DPRINTF(("try to get language package directory path from environment "SFQ"\n",LOCALEDIR));
-  } else {
-     DPRINTF(("could not get environment variable "SFQ"\n", LOCALEDIR));
-  }
-
-  /* no directory given, using default one */
-  if (locDir == NULL) {
-     const char *sge_root = sge_get_root_dir(0);
-     char* root = NULL;
-     
-     if (sge_root != NULL) {
-         root = strdup(sge_root);
+     /* no package name given, using default one */
+     if (packName == NULL) {
+        packName = strdup(SGE_DEFAULT_PACKAGE);
+     }
+      
+     /* try to get the localization directory */ 
+     if (localeDir != NULL) {
+        locDir = strdup(localeDir);
+     } else if ( getenv(LOCALEDIR) != NULL ) {
+        if (stop != 0) {
+           DPRINTF(("ignoring environment "SFQ"\n",LOCALEDIR ));
+        } else {
+           locDir = strdup(getenv(LOCALEDIR)); /* only the first time */
+           stop++;
+           DPRINTF(("try to get language package directory path from environment "SFQ"\n",LOCALEDIR));
+        }
+     } else {
+        DPRINTF(("could not get environment variable "SFQ"\n", LOCALEDIR));
+     }
+   
+     /* no directory given, using default one */
+     if (locDir == NULL) {
+        const char *sge_root = sge_get_root_dir(0);
+        char* root = NULL;
+        
+        if (sge_root != NULL) {
+            root = strdup(sge_root);
+        } 
+        
+        if ( root == NULL ) {
+            locDir = strdup("/usr/lib/locale");
+        } else {
+            locDir = malloc(sizeof(char)*(strlen(root)+strlen(SGE_DEFAULT_LOCALEDIR)+100));
+            sprintf(locDir,"%s/%s",root,SGE_DEFAULT_LOCALEDIR);
+        }
+        free(root);
+        root = NULL;
+     }
+   
+     /* try to get a language stylename (only for output of package path) */
+   
+     if (getenv("LANGUAGE") != NULL) {
+        language = strdup(getenv("LANGUAGE"));
+     } else {
+        if (getenv("LANG") != NULL) {
+          language = strdup(getenv("LANG"));
+        }
+     }
+   
+     if (language == NULL) {
+        DPRINTF(("environment LANGUAGE or LANG is not set; no language selected - using defaults\n"));
+        language = strdup("C");
      } 
      
-     if ( root == NULL ) {
-         locDir = strdup("/usr/local/share/nls/src");
+   
+     /* packName, locDir and language strings are now surely not NULL,
+        so we can now try to setup the choosen language package (*.mo - file) */
+     pathName = malloc(sizeof(char)*(strlen(locDir)+strlen(language)+strlen(packName)+100));
+     sprintf(pathName,"%s/%s/LC_MESSAGES/%s.mo",locDir,language,packName);
+     DPRINTF(("locale directory: >%s<\n",locDir));
+     DPRINTF(("package file:     >%s.mo<\n",packName));
+     DPRINTF(("language (LANG):  >%s<\n",language));
+     DPRINTF(("loading message file: %s\n",pathName ));
+     
+   
+     /* is the package file allright */
+     back = open (pathName, O_RDONLY);
+     if (back >= 0) {
+        DPRINTF(("found message file - ok\n"));
+        success = TRUE;
+        close(back);
+        stop = 2;
      } else {
-         locDir = malloc(sizeof(char)*(strlen(root)+strlen(SGE_DEFAULT_LOCALEDIR)+100));
-         sprintf(locDir,"%s/%s",root,SGE_DEFAULT_LOCALEDIR);
+        DPRINTF(("could not open message file - error\n"));
+        success = FALSE;
      }
-     free(root);
-     root = NULL;
-  }
+     if(stop==0) {
+        stop = 2;   /* only when stop = 1: Try to repeat without LOCALEDIR environment variable */
+     } 
+     stop++;
+  }  
 
-  /* try to get a language stylename (only for output of package path) */
 
-  if (getenv("LANGUAGE") != NULL) {
-     language = strdup(getenv("LANGUAGE"));
-  } else {
-     if (getenv("LANG") != NULL) {
-       language = strdup(getenv("LANG"));
-     }
-  }
-
-  if (language == NULL) {
-     DPRINTF(("environment LANGUAGE or LANG is not set; no language selected - using defaults\n"));
-     language = strdup("C");
-  } 
-  
-
-  /* packName, locDir and language strings are now surely not NULL,
-     so we can now try to setup the choosen language package (*.mo - file) */
-  pathName = malloc(sizeof(char)*(strlen(locDir)+strlen(language)+strlen(packName)+100));
-  sprintf(pathName,"%s/%s/LC_MESSAGES/%s.mo",locDir,language,packName);
-  DPRINTF(("locale directory: >%s<\n",locDir));
-  DPRINTF(("package file:     >%s.mo<\n",packName));
-  DPRINTF(("language (LANG):  >%s<\n",language));
-  DPRINTF(("loading message file: %s\n",pathName ));
-  
-
-  /* is the package file allright */
-  back = open (pathName, O_RDONLY);
-  if (back >= 0) {
-     success = TRUE;
-     close(back);
-  } else {
-     success = FALSE;
-  }
-  
   /* now startup the language package for gettext */
 /*   setlocale(LC_ALL, ""); */
 
@@ -226,6 +268,9 @@ int sge_init_languagefunc(char *package, char *localeDir)
      DPRINTF(("sge_init_language() called without valid sge_language_functions pointer!\n"));
      success = FALSE;
   }
+
+
+
  
   free(packName);
   free(locDir);
@@ -237,11 +282,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
   pathName = NULL;
 
   if (success == TRUE) {
-     if ( (strcmp(language, "en") == 0) ) {
-        sge_enable_msg_id=0;
-     } else {
-        sge_enable_msg_id=1;
-     }
+     sge_enable_msg_id=1;
   } 
 
   sge_enable_msg_id_string = getenv(SGE_ENABLE_MSG_ID);
@@ -253,6 +294,9 @@ int sge_init_languagefunc(char *package, char *localeDir)
          sge_enable_msg_id = 0;
      } else {
          sge_enable_msg_id = 1;
+     }
+     if (env_value == 2) {
+        sge_enable_msg_id_to_every_message = 1;
      }
   }
 
@@ -391,6 +435,9 @@ void sge_set_message_id_output(int flag) {
 *     uti/language/sge_set_message_id_output()
 *******************************************************************************/
 int sge_get_message_id_output(void) {
+   if (sge_enable_msg_id_to_every_message == 1) {
+      return 1;
+   } 
    if (sge_enable_msg_id == 0) {
       return 0;
    } 

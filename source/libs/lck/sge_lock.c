@@ -125,7 +125,9 @@ static const char* locktype_names[NUM_OF_TYPES] = {
    "master_user_list",           /* LOCK_MASTER_USER_LST */
    "master_submit_user_lst",     /* LOCK_MASTER_SUBMIT_USER_LST */
    "master_user_set_lst",        /* LOCK_MASTER_USER_SET_LST */
-   "master_project_lst"          /* LOCK_MASTER_PROJECT_LST */
+   "master_project_lst",         /* LOCK_MASTER_PROJECT_LST */
+   "master_accounting_buffer",   /* LOCK_MASTER_ACCOUNTING_BUFFER */
+   "master_reporting_buffer"     /* LOCK_MASTER_REPORTING_BUFFER */
 };
 
 static void (*lock_callback) (sge_locktype_t, sge_lockmode_t, sge_locker_t);

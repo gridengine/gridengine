@@ -111,8 +111,8 @@
       thread is used to receive updates from the queue master about the state
       of jobs and the system in general.  Once drmaa_init() has been called
       successfully, it is the responsibility of the calling application to also
-      call japi_exit() before terminating.  If an application does not call
-      japi_exit() before terminating, session state maz be left behind in the
+      call drmaa_exit() before terminating.  If an application does not call
+      drmaa_exit() before terminating, session state may be left behind in the
       user's home directory (under .sge/drmaa), and the queue master may be left
       with a dead event client handle, which can decrease queue master
       performance.

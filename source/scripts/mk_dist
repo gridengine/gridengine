@@ -102,6 +102,7 @@ VDIR=""
 VERSION=""
 PRODUCT=sge
 SELECTED_ARCHS=""
+INSTALL_SCRIPT=inst_sge
 
 ARGC=$#
 while [ $ARGC -gt 0 ]; do

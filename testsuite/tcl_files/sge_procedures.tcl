@@ -301,6 +301,26 @@ proc check_messages_files { } {
 }
 
 
+#****** sge_procedures/get_qmaster_messages_file() *****************************
+#  NAME
+#     get_qmaster_messages_file() -- get path to qmaster's messages file
+#
+#  SYNOPSIS
+#     get_qmaster_messages_file { } 
+#
+#  FUNCTION
+#     This procedure returns the path to the running qmaster's messages file
+#
+#  RESULT
+#     path to qmaster's messages file
+#
+#  SEE ALSO
+#     sge_procedures/get_execd_messages_file()
+#
+#*******************************************************************************
+proc get_qmaster_messages_file { } {
+   return [ check_qmaster_messages 2 ]
+}
 
 #****** sge_procedures/check_qmaster_messages() ********************************
 #  NAME
@@ -358,6 +378,29 @@ proc check_qmaster_messages { { show_mode 0 } } {
        }
    }
    return $return_value
+}
+
+#****** sge_procedures/get_execd_messages_file() *******************************
+#  NAME
+#     get_execd_messages_file() -- get messages file path of execd
+#
+#  SYNOPSIS
+#     get_execd_messages_file { hostname } 
+#
+#  FUNCTION
+#     This procedure returns the full path to the given execd's messages file
+#
+#  INPUTS
+#     hostname - hostname where the execd is running
+#
+#  RESULT
+#     path to messages file of the given execd host
+#
+#  SEE ALSO
+#     sge_procedures/get_qmaster_messages_file()
+#*******************************************************************************
+proc get_execd_messages_file { hostname } {
+   return [ check_execd_messages $hostname 2 ]
 }
 
 #****** sge_procedures/check_execd_messages() **********************************

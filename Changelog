@@ -1,3 +1,19 @@
+CR-2002-04-03-0  Testsuite: - replaced rsh calls with start_remote_proc()
+                              and open_remote_spawn_process() calls
+                            - new procedures:
+                              wait_for_remote_file()
+                                  -> wait for file to appear on remote host
+                                     (should fix NFS problems)
+                              init_logfile_wait()
+                              logfile_wait()
+                                  -> new tail mechanism for parsing logfiles
+                              washing_machine()
+                              get_qmaster_messages_file()
+                              get_execd_messages_file()
+                                  -> get path to messages files
+                            - enhanced procedures:
+                              start_remote_prog()
+                              
 JG-2002-04-02-2  Feature    Compile time switch -DCULL_NO_HASH to
                             switch of hashing of cull lists - mainly
                             usefull for performance comparison.

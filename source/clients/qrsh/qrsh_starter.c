@@ -145,8 +145,12 @@ static void qrsh_error(const char *fmt, ...)
 *     Special handling for variable QRSH_WRAPPER: this is a wrapper to be called
 *     instead of a shell to execute the command.
 *     If this variable is contained in the environment, it will be returned in
-*     the parameter wrapper. Memory will be allocated to hold the variable, it is
-*     in the responsibility of the caller to free this memory.
+*     the parameter wrapper. Memory will be allocated to hold the variable, it 
+*     is in the responsibility of the caller to free this memory.
+*     Special handling for variable DISPLAY: if it is already set, do not 
+*     overwrite it. Usually  it is not set, but if ssh is used as transport
+*     mechanism for qrsh, the ssh -X option can be used to enable 
+*     X11 forwarding.
 *
 *  INPUTS
 *     jobdir - the jobs spool directory
@@ -170,8 +174,14 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    char *command   = NULL;
    SGE_STRUCT_STAT statbuf;
    int size;
+   bool set_display = true;
 
    *wrapper = NULL;
+
+   /* don't set DISPLAY, if it is already set (e.g. by ssh) */
+   if (getenv("DISPLAY") != NULL) {
+      set_display = false;
+   }
 
    /* build path of environmentfile */
    envFileName = (char *)malloc(strlen(jobdir) + strlen("environment") + 2);
@@ -216,6 +226,11 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          *c = 0;
       }
 
+      /* skip setting of display variable */
+      if (strncmp(line, "DISPLAY=", 8) == 0 && !set_display) {
+         continue;
+      }
+      
       if (strncmp(line, "QRSH_COMMAND=", 13) == 0) {
          if ((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
@@ -225,28 +240,26 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
             return NULL;
          }
          strcpy(command, line + 13);
-      } else {  
-         if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
-            if (*(line + 13) == 0) {
-               fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
-            } else {
-               if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
-                  qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-                  fclose(envFile); 
-                  FREE(envFileName);
-                  FREE(line);
-                  return NULL;
-               }
-               strcpy(*wrapper, line + 13);
-            }
+      } else if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
+         if (*(line + 13) == 0) {
+            fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
          } else {
-            /* set variable */
-            if (!sge_putenv(line)) {
+            if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
+               qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
                fclose(envFile); 
                FREE(envFileName);
                FREE(line);
                return NULL;
             }
+            strcpy(*wrapper, line + 13);
+         }
+      } else {
+         /* set variable */
+         if (!sge_putenv(line)) {
+            fclose(envFile); 
+            FREE(envFileName);
+            FREE(line);
+            return NULL;
          }
       }
    }

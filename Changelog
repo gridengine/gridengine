@@ -1,3 +1,10 @@
+JG-2003-12-29-0: Enhancem.: qrsh_starter will no longer overwrite the DISPLAY
+                            variable if it is already set to enable ssh display 
+                            forwarding if ssh is used as transport mechanism for
+                            qrsh.
+                 Changed:   qrsh_starter
+                 Review:    TBD
+
 AD-2003-12-24-1: Bugfix:    Did apply changes of 'AD-2003-12-24-0' to
                             'sge_lock.c'
                  Changed:   uti

@@ -1,3 +1,9 @@
+MD-2004-05-25-1: Buxfix:    - delete spool dir, message was not shown
+                            - setting file perms to /tmp/configuration
+                            - asking for SGE_ROO/SGE_CELL during uninst, 
+                              if not set
+                 Changed:   inst_sge
+
 DT-2004-05-25-0: Bugfix:    o Fixed build for Solaris make
                             o Changed DRMAA job usage to unscaled
                  Changed:   DRMAA, execd Makefile

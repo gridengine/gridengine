@@ -133,6 +133,7 @@ while [ $ARGC != 0 ]; do
    -ux)
      EXECD="uninstall"
      . ./util/install_modules/inst_execd_uninst.sh
+     . ./util/install_modules/inst_qmaster.sh
      ;;
    -sm)
      SHADOW="install"
@@ -439,12 +440,22 @@ fi
 if [ $EXECD = "uninstall" ]; then
 
    WelcomeUninstall 
-   INFOTEXT=$SGE_ROOT/$INFOTEXT
-   . $SGE_ROOT/$SGE_CELL/common/settings.sh
 
    if [ $AUTO = "true" ]; then
       GetConfigFromFile
    fi
+
+   if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
+      $INFOTEXT -wait "Your SGE_ROOT or SGE_CELL variable is not set!\n" \
+                "Please, enter SGE_ROOT and SGE_CELL in the following\n" \
+                "screens!\n\nHit, <ENTER> to continue!"
+      $CLEAR
+      ProcessSGERoot
+      GetCell
+   fi
+
+    . $SGE_ROOT/$SGE_CELL/common/settings.sh
+
    FetchHostname
    
    if [ $AUTO = "true" ]; then

@@ -362,13 +362,13 @@ SetSpoolingOptionsBerkeleyDB()
             SpoolingQueryChange
             if [ -d $SPOOLING_DIR ]; then
                $INFOTEXT -n -ask "y" "n" -def "n" "The spooling directory already exists! Do you want to delete it? [n] >> "
-               
+               ret=$?               
                if [ $AUTO = true ]; then
                   $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
                   exit 1
                fi
  
-               if [ $? = 0 ]; then
+               if [ $ret = 0 ]; then
                      RM="rm -r"
                      ExecuteAsAdmin $RM $SPOOLING_DIR
                      if [ -d $SPOOLING_DIR ]; then
@@ -377,7 +377,7 @@ SetSpoolingOptionsBerkeleyDB()
                         is_spool="true"
                      fi
                else
-                  $INFOTEXT "Please choose any other spooling directory!"
+                  $INFOTEXT -wait "Please hit <ENTER>, to choose any other spooling directory!"
                fi
              else
                 is_spool="true"
@@ -660,6 +660,7 @@ AddConfiguration()
       TMPC=/tmp/configuration
       rm -f $TMPC
       PrintConf > $TMPC
+      SetPerm $TMPC
       ExecuteAsAdmin $SPOOLDEFAULTS configuration $TMPC
       rm -f $TMPC
    fi

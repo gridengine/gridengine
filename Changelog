@@ -1,3 +1,13 @@
+CR-2003-01-24-1  Testsuite: bugfix: check issuezilla/126:
+                                    - used global "host1" variable for getting
+                                      hostname. This variable was initalized
+                                      from migration and auto_reschedule test.
+                                    - set load_thresholds and 
+                                      suspend_thresholds for the test queues
+                                      to a high value
+                                    - renamed "host1" and "host2" variable 
+                                      from migration and auto_reschedule test.
+
 CR-2003-01-24-0  Testsuite: - bugfix: get_tmp_file_name() - it was possible
                                       to get the same filename when calling
                                       procedure one after onother.

@@ -58,11 +58,11 @@ lappend check_functions "clean_up_queues"
 
 
 #global test variables
-global host1 host2 q1 q2 q3 q4 migration_pe_name migration_ckpt_name CHECK_CORE_EXECD
+global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_pe_name migration_ckpt_name CHECK_CORE_EXECD
 global checkpoint_job_id 
 
-set host1 [lindex $CHECK_CORE_EXECD 0] 
-set host2 [lindex $CHECK_CORE_EXECD 1]
+set checkpoint_host1 [lindex $CHECK_CORE_EXECD 0] 
+set checkpoint_host2 [lindex $CHECK_CORE_EXECD 1]
 set q1 "ckpt_mig-1"
 set q2 "ckpt_mig-2"
 set q3 "ckpt_mig-3"
@@ -589,7 +589,7 @@ proc clean_up_checkpoint_job {} {
 #     ???/???
 #*******************************
 proc setup_checkpointing {} {
-  global host1 host2 q1 q2 q3 q4 migration_ckpt_name CHECK_ACTUAL_TEST_PATH
+  global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_ckpt_name CHECK_ACTUAL_TEST_PATH
 
   if { [check_test_dependencies] != 0 } {
      return
@@ -645,7 +645,7 @@ proc setup_checkpointing {} {
 #     ???/???
 #*******************************
 proc clean_up_checkpointing {} {
-  global host1 host2 q1 q2 q3 q4 migration_ckpt_name
+  global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_ckpt_name
 
    if { [check_test_dependencies] != 0 } {
      return
@@ -720,7 +720,7 @@ proc check_test_dependencies { } {
 #     ???/???
 #*******************************
 proc setup_pe {} {
-  global host1 host2 q1 q2 q3 q4 migration_pe_name CHECK_CORE_EXECD
+  global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_pe_name CHECK_CORE_EXECD
   
   if { [check_test_dependencies] != 0 } {
      return
@@ -778,7 +778,7 @@ proc setup_pe {} {
 #     ???/???
 #*******************************
 proc clean_up_pe {} {
-  global host1 host2 q1 q2 q3 q4 migration_pe_name
+  global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4 migration_pe_name
 
    if { [check_test_dependencies] != 0 } {
      return
@@ -833,14 +833,14 @@ proc clean_up_pe {} {
 proc setup_queues {} {
 # we need SOLARIS64 and AIX4.3 machines !
 
-  global CHECK_CORE_EXECD host1 host2 q1 q2 q3 q4
+  global CHECK_CORE_EXECD checkpoint_host1 checkpoint_host2 q1 q2 q3 q4
 
   if { [check_test_dependencies] != 0 } {
      return
   }
   # queues on host 1
   set q_param(qname)                 "$q1"
-  set q_param(hostname)              "$host1"
+  set q_param(hostname)              "$checkpoint_host1"
   set q_param(load_thresholds)       "np_load_avg=7.00"
   set q_param(qtype)                 "BATCH PARALLEL CHECKPOINTING"
   set q_param(suspend_thresholds)    "np_load_avg=7"            ;# migrate on suspend threshold
@@ -863,7 +863,7 @@ proc setup_queues {} {
 
   # queues on host 2
   set q_param(qname)                 "$q2"
-  set q_param(hostname)              "$host2"
+  set q_param(hostname)              "$checkpoint_host2"
   set result [ add_queue q_param ]
   if { $result != 0  } {
      set_error -1 "setup_queues - could not add queue $q3"
@@ -910,7 +910,7 @@ proc setup_queues {} {
 #     ???/???
 #*******************************
 proc clean_up_queues {} {
-  global host1 host2 q1 q2 q3 q4
+  global checkpoint_host1 checkpoint_host2 q1 q2 q3 q4
 
    if { [check_test_dependencies] != 0 } {
      return

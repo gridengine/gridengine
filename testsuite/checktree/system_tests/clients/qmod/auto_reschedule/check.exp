@@ -72,7 +72,7 @@ lappend check_functions "auto_reschedule_cleanup"
 # CHECK description
 # =================
 # 
-# disable all queues (but not host1.q and host2.q )
+# disable all queues (but not auto_reschedule_host1.q and auto_reschedule_host2.q )
 # 
 # paramters
 #
@@ -84,14 +84,14 @@ lappend check_functions "auto_reschedule_cleanup"
 #  max_unheard                00:00:30
 #  reschedule_value           00:03:00
 #
-#  host1:
+#  auto_reschedule_host1:
 #  reschedule_unknown         00:01:00
 #
-#  host2:
+#  auto_reschedule_host2:
 #  no changes
 #
 #  queue1:
-#  hostname                   host1  
+#  hostname                   auto_reschedule_host1  
 #  rerun                      TRUE
 #  qtype                      BATCH INTERACTIVE PARALLEL CHECKPOINTING
 #  load_thresholds            np_load_avg=8.00
@@ -99,23 +99,23 @@ lappend check_functions "auto_reschedule_cleanup"
 #
 #
 #  queue2:
-#  hostname                   host2  
+#  hostname                   auto_reschedule_host2  
 #  rerun                      TRUE
 #  qtype                      BATCH INTERACTIVE PARALLEL CHECKPOINTING
 #  load_thresholds            np_load_avg=8.00
 #  slots                      100
 #
 #  1) submit a job to each hosts ...
-#     qsub -o /dev/null -e /dev/null -q host1.q -r y sleeper 10000
-#     qsub -o /dev/null -e /dev/null -q host2.q -r y sleeper 10000
+#     qsub -o /dev/null -e /dev/null -q auto_reschedule_host1.q -r y sleeper 10000
+#     qsub -o /dev/null -e /dev/null -q auto_reschedule_host2.q -r y sleeper 10000
 #
 #     wait till jobs are in "r" state
 #
-#  2) kill execd on host1 and host2 
+#  2) kill execd on auto_reschedule_host1 and auto_reschedule_host2 
 #
-#  3) wait 80 sec for job on host1.q to get into pending state
+#  3) wait 80 sec for job on auto_reschedule_host1.q to get into pending state
 #
-#  4) job on host2.q should still run until 3 minutes are over
+#  4) job on auto_reschedule_host2.q should still run until 3 minutes are over
 #
 #  5) restart execds, wait for jobs to get rescheduled, remove jobs
 #
@@ -124,9 +124,9 @@ lappend check_functions "auto_reschedule_cleanup"
 
 # -------- local test procedures -----------------------------------------------
 
-global host1 host2 queue1 queue2 global_resch
+global auto_reschedule_host1 auto_reschedule_host2 queue1 queue2 global_resch
 global stored_configuration
-global stored_host1_config
+global stored_auto_reschedule_host1_config
 set queue1 "queue1"
 set queue2 "queue2"
 
@@ -163,12 +163,12 @@ set queue2 "queue2"
 #
 proc init_level {} {
   global CHECK_ACT_LEVEL CHECK_HOST global_resch
-  global host1 host2 CHECK_CORE_EXECD CHECK_OUTPUT
+  global auto_reschedule_host1 auto_reschedule_host2 CHECK_CORE_EXECD CHECK_OUTPUT
   
 
   if { [ llength $CHECK_CORE_EXECD ] >= 2 } {
-     set host1  [ lindex $CHECK_CORE_EXECD 0  ]
-     set host2  [ lindex $CHECK_CORE_EXECD 1  ]
+     set auto_reschedule_host1  [ lindex $CHECK_CORE_EXECD 0  ]
+     set auto_reschedule_host2  [ lindex $CHECK_CORE_EXECD 1  ]
   }
 
   set global_resch 1
@@ -190,9 +190,9 @@ proc is_version_ok {} {
 }
 
 proc auto_reschedule_setup {} {
-   global queue1 queue2 CHECK_OUTPUT host1 host2 CHECK_USER
+   global queue1 queue2 CHECK_OUTPUT auto_reschedule_host1 auto_reschedule_host2 CHECK_USER
    global CHECK_CORE_EXECD stored_configuration CHECK_CORE_MASTER
-   global stored_host1_config global_resch CHECK_PRODUCT_ROOT CHECK_ACT_LEVEL
+   global stored_auto_reschedule_host1_config global_resch CHECK_PRODUCT_ROOT CHECK_ACT_LEVEL
 
    if { [ llength $CHECK_CORE_EXECD ] < 2 } {
       set_error -3 "need 2 execd hosts"
@@ -205,7 +205,7 @@ proc auto_reschedule_setup {} {
    }
 
    set new_queue(qname)    $queue1
-   set new_queue(hostname) $host1
+   set new_queue(hostname) $auto_reschedule_host1
    set new_queue(rerun)    "TRUE"
    set new_queue(qtype)    "BATCH INTERACTIVE PARALLEL CHECKPOINTING"
    set new_queue(load_thresholds) "np_load_avg=8.00"
@@ -213,7 +213,7 @@ proc auto_reschedule_setup {} {
    add_queue new_queue 
  
    set new_queue(qname)    $queue2
-   set new_queue(hostname) $host2 
+   set new_queue(hostname) $auto_reschedule_host2 
    add_queue new_queue
 
    puts $CHECK_OUTPUT "added queues"
@@ -229,12 +229,12 @@ proc auto_reschedule_setup {} {
       unset stored_configuration
    }
    get_config stored_configuration
-   get_config tmp_config $host2
+   get_config tmp_config $auto_reschedule_host2
    if {![info exists tmp_config(execd_spool_dir)]} {
          get_config tmp_config
    }
-   set messages_name "$tmp_config(execd_spool_dir)/$host2/messages"
-   set tail_id [open_remote_spawn_process $host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
+   set messages_name "$tmp_config(execd_spool_dir)/$auto_reschedule_host2/messages"
+   set tail_id [open_remote_spawn_process $auto_reschedule_host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
    set sp_id [ lindex $tail_id 1 ] 
 
 
@@ -253,14 +253,14 @@ proc auto_reschedule_setup {} {
    puts $CHECK_OUTPUT "changed global config"
 
 
-   get_config stored_host1_config $host1
-   if { [info exists stored_host1_config(reschedule_unknown)] != 1 } {
-       set stored_host1_config(reschedule_unknown) ""
+   get_config stored_auto_reschedule_host1_config $auto_reschedule_host1
+   if { [info exists stored_auto_reschedule_host1_config(reschedule_unknown)] != 1 } {
+       set stored_auto_reschedule_host1_config(reschedule_unknown) ""
    }
    set myhostconfig(reschedule_unknown) "00:01:00"
-   set_config myhostconfig $host1
+   set_config myhostconfig $auto_reschedule_host1
 
-   puts $CHECK_OUTPUT "changed config for host $host1"
+   puts $CHECK_OUTPUT "changed config for host $auto_reschedule_host1"
 
    puts $CHECK_OUTPUT "disabling all cluster queues"
    foreach elem $CHECK_CORE_EXECD {
@@ -308,7 +308,7 @@ proc auto_reschedule_setup {} {
 }
 
 proc auto_reschedule_unknown_check_master {} {
-   global queue1 queue2 CHECK_OUTPUT host1 host2
+   global queue1 queue2 CHECK_OUTPUT auto_reschedule_host1 auto_reschedule_host2
    global CHECK_CORE_EXECD stored_configuration CHECK_PRODUCT_ROOT
    global CHECK_ADMIN_USER_SYSTEM CHECK_ARCH CHECK_PRODUCT_TYPE
    global global_resch CHECK_CORE_MASTER
@@ -347,9 +347,9 @@ proc auto_reschedule_unknown_check_master {} {
 
    puts $CHECK_OUTPUT "master and scheduler must be down now"
 
-   puts $CHECK_OUTPUT "killing execd on host $host2"
-   shutdown_system_daemon $host2 "execd"
-   puts $CHECK_OUTPUT "execd on host2 ($host2) should be down now"   
+   puts $CHECK_OUTPUT "killing execd on host $auto_reschedule_host2"
+   shutdown_system_daemon $auto_reschedule_host2 "execd"
+   puts $CHECK_OUTPUT "execd on auto_reschedule_host2 ($auto_reschedule_host2) should be down now"   
 
 
    startup_qmaster
@@ -382,7 +382,7 @@ proc auto_reschedule_unknown_check_master {} {
 
 
    # restart execds
-   startup_execd $host2
+   startup_execd $auto_reschedule_host2
 
    wait_for_jobstart $job_id2 "Sleeper" 300
    wait_for_end_of_transfer $job_id2 100
@@ -399,7 +399,7 @@ proc auto_reschedule_unknown_check_master {} {
 }
 
 proc auto_reschedule_unknown_check {} {
-   global queue1 queue2 CHECK_OUTPUT host1 host2
+   global queue1 queue2 CHECK_OUTPUT auto_reschedule_host1 auto_reschedule_host2
    global CHECK_CORE_EXECD stored_configuration CHECK_PRODUCT_ROOT
    global CHECK_ADMIN_USER_SYSTEM CHECK_ARCH CHECK_PRODUCT_TYPE
    global global_resch 
@@ -436,10 +436,10 @@ proc auto_reschedule_unknown_check {} {
 
 
    # shutdown execds
-   puts $CHECK_OUTPUT "killing execd on host $host1 ..."
-   shutdown_system_daemon $host1 "execd" 
-   puts $CHECK_OUTPUT "killing execd on host $host2 ..."
-   shutdown_system_daemon $host2 "execd"  
+   puts $CHECK_OUTPUT "killing execd on host $auto_reschedule_host1 ..."
+   shutdown_system_daemon $auto_reschedule_host1 "execd" 
+   puts $CHECK_OUTPUT "killing execd on host $auto_reschedule_host2 ..."
+   shutdown_system_daemon $auto_reschedule_host2 "execd"  
 
    set my_queue_names $queue1
    lappend my_queue_names $queue2
@@ -475,8 +475,8 @@ proc auto_reschedule_unknown_check {} {
    }
 
    # restart execds
-   startup_execd $host1
-   startup_execd $host2 
+   startup_execd $auto_reschedule_host1
+   startup_execd $auto_reschedule_host2 
 
    wait_for_load_from_all_queues 200 
 
@@ -499,9 +499,9 @@ proc auto_reschedule_unknown_check {} {
 
 proc auto_reschedule_cleanup {} {
    
-   global queue1 queue2 CHECK_OUTPUT host1 host2
+   global queue1 queue2 CHECK_OUTPUT auto_reschedule_host1 auto_reschedule_host2
    global CHECK_CORE_EXECD stored_configuration
-   global stored_host1_config CHECK_USER
+   global stored_auto_reschedule_host1_config CHECK_USER
    
    
    if { [ llength $CHECK_CORE_EXECD ] < 2 } {
@@ -517,18 +517,18 @@ proc auto_reschedule_cleanup {} {
    
    reset_schedd_config
    
-   get_config tmp_config $host2
+   get_config tmp_config $auto_reschedule_host2
    if {![info exists tmp_config(execd_spool_dir)]} {
          get_config tmp_config
    }
-   set messages_name "$tmp_config(execd_spool_dir)/$host2/messages"
-   set tail_id [open_remote_spawn_process $host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
+   set messages_name "$tmp_config(execd_spool_dir)/$auto_reschedule_host2/messages"
+   set tail_id [open_remote_spawn_process $auto_reschedule_host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
 
    set sp_id [ lindex $tail_id 1 ] 
 
    
    set_config stored_configuration
-   set_config stored_host1_config $host1
+   set_config stored_auto_reschedule_host1_config $auto_reschedule_host1
 
    puts $CHECK_OUTPUT "removing queues ..."
    del_queue $queue1

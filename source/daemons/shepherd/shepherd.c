@@ -881,7 +881,7 @@ int ckpt_type
    } 
 
    if (WIFSIGNALED(status)) {
-      sprintf(err_str, "exited due to uncaught signal");
+      sprintf(err_str, "%s exited due to signal", childname);
       shepherd_trace(err_str);
 
       child_signal = WTERMSIG(status);
@@ -900,7 +900,7 @@ int ckpt_type
 
       exit_status = 128 + child_signal;
    } else {
-      sprintf(err_str, "exited NOT due to uncaught signal");
+      sprintf(err_str, "%s exited not due to signal", childname);
       shepherd_trace(err_str);
 
       if (WIFEXITED(status)) {
@@ -2006,7 +2006,7 @@ static int start_async_command(char *descr, char *cmd)
       }   
 
       sge_set_def_sig_mask(0, NULL);
-      start_command(get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "");
+      start_command(descr, get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "");
       return 0;   
    }
 

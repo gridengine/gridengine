@@ -35,6 +35,6 @@
 
 void son(char *, char *, int);
 int set_environment(void);
-void start_command(char *, char *, char *, char *, int, int, int, int, char *);
+void start_command(char *, char *, char *, char *, char *, int, int, int, int, char *);
 
 #endif /* __BUILTIN_STARTER_H */

@@ -340,8 +340,8 @@ int truncate_stderr_out
       sprintf(err_str, "using \"%s\" as shell of user \"%s\"", pw->pw_shell, target_user);
       shepherd_trace(err_str);
       
-      /* use -c for starting */
-      shell_start_mode = "start_as_command";
+      /* unix_behaviour */
+      shell_start_mode = "unix_behaviour";
 
       if (!strcmp(childname, "prolog") || !strcmp(childname, "epilog")) {
          stdin_path = "/dev/null";
@@ -601,7 +601,7 @@ int truncate_stderr_out
       }
    }
 
-   start_command(shell_path, script_file, argv0, shell_start_mode, is_interactive, is_qlogin, is_rsh, is_rlogin, str_title);
+   start_command(childname, shell_path, script_file, argv0, shell_start_mode, is_interactive, is_qlogin, is_rsh, is_rlogin, str_title);
    return;
 }
 
@@ -699,6 +699,43 @@ int set_environment()
    return 0;
 }
 
+#define PROC_ARG_DELIM " \t"
+static char **disassemble_proc_args(const char *script_file, char **preargs, int extra_args)
+{
+   char *s;
+   unsigned long n_preargs = 0, n_procargs = 0, i;
+   char **args, **pstr;
+
+   /* count preargs */
+   for (pstr = preargs; pstr && *pstr; pstr++)
+      n_preargs++;
+
+   /* count procedure args */
+   for (s = sge_strtok(script_file, PROC_ARG_DELIM); s; s = sge_strtok(NULL, PROC_ARG_DELIM))
+      n_procargs++;
+
+   if (!(n_preargs + n_procargs))
+      return NULL;
+
+   /* malloc new argv */
+   args = malloc((n_preargs + n_procargs + extra_args + 1)*sizeof(char *));
+   if (!args)
+      return NULL;
+
+   /* copy preargs */
+   for (i = 0; i < n_preargs; i++)
+      args[i] = strdup(preargs[i]);
+   args[i] = NULL;
+
+   /* add procedure args */
+   for (s = sge_strtok(script_file, PROC_ARG_DELIM); s; s = sge_strtok(NULL, PROC_ARG_DELIM))
+      args[i++] = strdup(s);
+   args[i] = NULL;
+
+   return args;
+}
+
+
 static char **read_job_args(char **preargs, int extra_args)
 {
    int n_preargs = 0;
@@ -709,23 +746,28 @@ static char **read_job_args(char **preargs, int extra_args)
    char conf_val[256];
    char *cp;
 
+   /* count preargs */
    for (pstr = preargs; pstr && *pstr; pstr++)
       n_preargs++;
-   
+  
+   /* get number of job args */ 
    n_job_args = atoi(get_conf_val("njob_args"));
    
    if (!(n_preargs + n_job_args))
       return NULL;
-   
+  
+   /* malloc new argv */ 
    args = malloc((n_preargs + n_job_args + extra_args + 1)*sizeof(char *));
    if (!args)
       return NULL;
-   
+  
+   /* copy preargs */ 
    for (i = 0; i < n_preargs; i++)
       args[i] = strdup(preargs[i]);
 
    args[i] = NULL;
 
+   /* add job args */
    for (i = 0; i < n_job_args; i++) {
       sprintf(conf_val, "job_arg%lu", i + 1);
       cp = get_conf_val(conf_val);
@@ -747,6 +789,7 @@ static char **read_job_args(char **preargs, int extra_args)
  * set signal mask that shpher can handle signals from execd
  *--------------------------------------------------------------------*/
 void start_command(
+char *childname,
 char *shell_path,
 char *script_file,
 char *argv0,
@@ -829,9 +872,16 @@ char *str_title
       /*
       ** unix_behaviour/raw_exec
       */
-      pre_args_ptr[0] = script_file;
-      pre_args_ptr[1] = NULL;   
-      args = read_job_args(pre_args, 0);
+      if (!strcmp(childname, "job")) {
+         pre_args_ptr[0] = script_file;
+         pre_args_ptr[1] = NULL;   
+         args = read_job_args(pre_args, 0);
+      } else {
+         /* the script file also contains procedure arguments
+            need to disassemble the string and put into args vector */
+         args = disassemble_proc_args(script_file, pre_args, 0);
+         script_file = args[0];
+      }
    }
 
    if(is_qlogin) {

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/08/28 12:30:54 $     Revision: $Revision: 1.17 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2002/10/10 12:22:40 $     Revision: $Revision: 1.18 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/08/28 12:30:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2002/10/10 12:22:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -242,10 +242,6 @@ configurations is can be overwritten by the queue configuration (see
 Changing \fBprolog\fP will take
 immediate effect.
 .PP
-\fBNote:\fP \fBprolog\fP is executed \fIexactly\fP as the job script.
-Therefore, all implications described under the parameters
-\fBshell_start_mode\fP and \fBlogin_shells\fP below apply.
-.PP
 The default for \fBprolog\fP is the special value NONE, which prevents
 from execution of a prologue script. 
 .PP
@@ -297,10 +293,6 @@ configurations is can be overwritten by the queue configuration (see
 ).
 Changing \fBepilog\fP will take
 immediate effect.
-.PP
-\fBNote:\fP \fBepilog\fP is executed \fIexactly\fP as the job script.
-Therefore, all implications described under the parameters
-\fBshell_start_mode\fP and \fBlogin_shells\fP below apply.
 .PP
 The default for \fBepilog\fP is the special value NONE, which prevents
 from execution of a epilogue script.

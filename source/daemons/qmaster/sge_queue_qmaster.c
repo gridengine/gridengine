@@ -188,69 +188,6 @@ static u_long32 queue_get_queue_number(void)
    }
 }
 
-/****** qmaster/queue/queue_set_initial_state() *******************************
-*  NAME
-*     queue_set_initial_state() -- set "initial" state 
-*
-*  SYNOPSIS
-*     int queue_set_initial_state(lListElem *queue, char *rhost) 
-*
-*  FUNCTION
-*     Change the "queue" state according to the "initial" state 
-*     configuration (QU_initial_state).
-*
-*  INPUTS
-*     lListElem *queue - QU_Type element 
-*     char *rhost      - hostname (used to write to SGE_EVENT)
-*
-*  RESULT
-*     int - was the queue changed?
-*        0 - no queue change
-*        1 - queue state was changed due to initial state
-*******************************************************************************/
-int queue_set_initial_state(lListElem *queue, char *rhost)
-{
-   const char *is = lGetString(queue, QU_initial_state);
-   int changed = 0;
-
-   DENTER(TOP_LAYER, "queue_set_initial_state");
-
-   if (is != NULL && strcmp(is, "default")) {
-      int enable = !strcmp(is, "enabled");
-
-      if ((enable && qinstance_state_is_manual_disabled(queue)) ||
-          (!enable && !qinstance_state_is_manual_disabled(queue))) {
-         const char *queue_name = lGetString(queue, QU_qname);
-
-         if (!rhost) {
-            if (enable) {
-               WARNING((SGE_EVENT, MSG_QUEUE_ADDENABLED_S, queue_name));
-            } else {
-               WARNING((SGE_EVENT, MSG_QUEUE_ADDDISABLED_S, queue_name));
-            }
-         } else {
-            if (enable) {
-               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTENABLEQ_SS,
-                        rhost, queue_name));
-            } else {
-               WARNING((SGE_EVENT, MSG_QUEUE_EXECDRESTARTDISABLEQ_SS,
-                        rhost, queue_name));
-            }
-         }
-
-         if (enable) {
-            qinstance_state_set_manual_disabled(queue, false);
-         } else {
-            qinstance_state_set_manual_disabled(queue, true);
-         }
-         changed = 1;
-      }
-   }
-
-   DEXIT;
-   return changed;
-}
-
 static int mod_queue_attributes(
 lList **alpp,
 lListElem *new_queue,
@@ -1127,35 +1064,6 @@ char *rhost
 
 }
 
-/* ----------------------------------------
-
-   written for: qmaster
-
-   increase version of queue 
-   generate an queue modify event
-
-*/
-int sge_change_queue_version(
-lListElem *qep,
-int add,
-int write_history 
-) {
-   DENTER(TOP_LAYER, "sge_change_queue_version");
-
-   /*
-   ** problem: error handling missing here
-   */
-
-   lSetUlong(qep, QU_version, add ? 0 : lGetUlong(qep, QU_version) + 1);
-
-#if 0 /* EB: TODO: send QI mod event */
-   sge_add_queue_event(add?sgeE_QUEUE_ADD:sgeE_QUEUE_MOD, qep);
-#endif
-
-   DEXIT;
-   return 0;
-}
-
 /* -------------------------------------------------------
    sge_del_queue - delete elements of the queue structure
 
@@ -1189,69 +1097,3 @@ const char *qname
    DEXIT;
    return 0;
 }
-
-
-/****** qmaster/queue/queue_list_set_unknown_state_to() ********************
-*  NAME
-*     queue_list_set_unknown_state_to() -- set/clear u state of queues
-*
-*  SYNOPSIS
-*     void queue_list_set_unknown_state_to(lList *queue_list,
-*                                          const char *hostname,
-*                                          int send_events,
-*                                          int new_state)
-*
-*  FUNCTION
-*     Clears or sets the unknown state of all queues in "queue_list" which
-*     reside on host "hostname". If "hostname" is NULL than all queues
-*     mentioned in "queue_list" will get the new unknown state.
-*
-*     Modify events for all modified queues will be generated if
-*     "send_events" is 1 (true).
-*
-*  INPUTS
-*     lList *queue_list    - QU_Type list
-*     const char *hostname - valid hostname or NULL
-*     int send_events      - 0 or 1
-*     int new_state        - new unknown state (0 or 1)
-*
-*  RESULT
-*     void - None
-*******************************************************************************/
-void queue_list_set_unknown_state_to(lList *queue_list,
-                                     const char *hostname,
-                                     int send_events,
-                                     int new_state)
-{
-   const void *iterator = NULL;
-   lListElem *queue = NULL;
-   lListElem *next_queue = NULL;
-
-   if (hostname != NULL) {
-      next_queue = lGetElemHostFirst(queue_list, QU_qhostname,
-                                     hostname, &iterator);
-   } else {
-      next_queue = lFirst(queue_list);
-   }
-   while ((queue = next_queue)) {
-      if (hostname != NULL) {
-         next_queue = lGetElemHostNext(queue_list, QU_qhostname,
-                                       hostname, &iterator);
-      } else {
-         next_queue = lNext(queue);
-      }
-      if ((qinstance_state_is_unknown(queue)) != (new_state > 0)) {
-         if (new_state) {
-            qinstance_state_set_unknown(queue, true);
-         } else {
-            qinstance_state_set_unknown(queue, false);
-         }
-         if (send_events) {
-#if 0 /* EB: TODO: send QI mod event */
-            sge_add_queue_event(sgeE_QUEUE_MOD, queue);
-#endif
-         }
-      }
-   }
-}
-

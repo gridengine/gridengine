@@ -47,6 +47,7 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_job.h"
+#include "sge_cqueue.h"
 
 /* ------------------------------------------------
 
@@ -74,7 +75,7 @@ u_long32 jobid  /* just for logging in case of errors */
    for_each(ep, gdil) {
 
       qname = lGetString(ep, JG_qname);
-      if (!(qep = queue_list_locate(Master_Queue_List, qname))) {
+      if (!(qep = cqueue_list_locate_qinstance(Master_CQueue_List, qname))) {
          ERROR((SGE_EVENT, MSG_JOB_SOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US, u32c(jobid), qname));
          ret = -1;
          continue; /* should never happen */
@@ -94,7 +95,8 @@ u_long32 jobid  /* just for logging in case of errors */
             continue;
 
          /* suspend it */
-         if (!(subqep = queue_list_locate(Master_Queue_List, lGetString(so, SO_name)))) {
+         /* EB: TODO: qname might be CQ QD or QI */
+         if (!(subqep = cqueue_list_locate_qinstance(Master_CQueue_List, lGetString(so, SO_name)))) {
             DPRINTF(("WARNING: sos_using_gdil for job "u32": can't "
                   "find subordinated queue "SFQ, 
                   lGetString(qep, QU_qname), lGetString(so, SO_name)));
@@ -179,7 +181,7 @@ u_long32 jobid  /* just for logging in case of errors */
    for_each(ep, gdil) {
 
       qname = lGetString(ep, JG_qname);
-      if (!(qep = queue_list_locate(Master_Queue_List, qname))) {
+      if (!(qep = cqueue_list_locate_qinstance(Master_CQueue_List, qname))) {
          /* inconsistent data */
          ERROR((SGE_EVENT, MSG_JOB_USOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US, u32c(jobid), qname));
          ret = -1;
@@ -199,7 +201,8 @@ u_long32 jobid  /* just for logging in case of errors */
             lGetUlong(qep, QU_job_slots), lGetUlong(qep, QU_suspended_on_subordinate), so))
             continue;
 
-         subqep = queue_list_locate(Master_Queue_List, lGetString(so, SO_name));
+         /* EB: TODO: might be CQ QD or QI */
+         subqep = cqueue_list_locate_qinstance(Master_CQueue_List, lGetString(so, SO_name));
          if (!subqep) {
             DPRINTF(("queue "SFQ": can't find "
                   "subordinated queue "SFQ".\n", 
@@ -287,7 +290,8 @@ int how
       }
 
       /* try to find a referenced queue which does not exist */
-      if (!(refqep=queue_list_locate(Master_Queue_List, so_qname))) {
+      /* EB: TODO: might be CQ QD or QI */
+      if (!(refqep=cqueue_list_locate_qinstance(Master_CQueue_List, so_qname))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNSUB_SS, so_qname, qname));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          if (how!=CHECK4SETUP) {
@@ -401,7 +405,8 @@ int recompute_caches
 
    for_each(so, sol) {
       qnm = lGetString(so, SO_name);
-      qep = queue_list_locate(Master_Queue_List, qnm);
+      /* EB: TODO: might be CQ QD or QI */
+      qep = cqueue_list_locate_qinstance(Master_CQueue_List, qnm);
       if (qep)
          ret |=sos(qep, recompute_caches);
    }

@@ -49,7 +49,7 @@ lListElem *qep
    if (!(slots_ep = lGetSubStr(qep, CE_name, "slots", 
             QU_consumable_actual_list))) {
       /* aaargh! may never happen */
-      CRITICAL((SGE_EVENT, MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S , lGetString(qep, QU_qname)));
+      CRITICAL((SGE_EVENT, MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S , lGetString(qep, QU_full_name)));
       DEXIT;
       return 1000000;
    }
@@ -72,7 +72,7 @@ int slots
    if (!(slots_ep = lGetSubStr(qep, CE_name, "slots", 
             QU_consumable_actual_list))) {
       /* aaargh! may never happen */
-      ERROR((SGE_EVENT, MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S, lGetString(qep, QU_qname)));
+      ERROR((SGE_EVENT, MSG_SLOTSUSED_SLOTSENTRYINQUEUEMISSING_S, lGetString(qep, QU_full_name)));
       DEXIT;
       return;
    }

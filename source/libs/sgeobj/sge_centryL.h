@@ -126,7 +126,7 @@ SLISTDEF(CE_Type, ComplexEntry)
    SGE_STRING(CE_pj_stringval, CULL_DEFAULT) /* per job string value */
    SGE_DOUBLE(CE_pj_doubleval, CULL_DEFAULT) /* per job parsed CE_stringval */
    SGE_ULONG(CE_pj_dominant, CULL_DEFAULT)   /* per job monitoring facility */
-   SGE_ULONG(CE_requestable, CULL_DEFAULT)
+   SGE_ULONG(CE_requestable, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(CE_tagged, CULL_DEFAULT)        /* used to tag resource request, which can be fulfilled */
    SGE_STRING(CE_urgency_weight, CULL_DEFAULT|CULL_SPOOL) /* static weighting factor */
 LISTEND 

@@ -469,7 +469,7 @@ int *after
 
    *before = lGetNumberOfElem(lp);
 
-   answer->lp = lSelect("sge_c_gdi_get(answer)", 
+   answer->lp = lSelect("qmaster_response", 
             lp, request->cp, request->enp);
 
    *after = lGetNumberOfElem(answer->lp);

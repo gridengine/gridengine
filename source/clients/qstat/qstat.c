@@ -2089,9 +2089,8 @@ char *what
          fprintf(fp, "        [-g {t}]                        %s",MSG_QSTAT_USAGE_DISPLAYALLPARALLELJOBTASKS);
       }
       fprintf(fp, "        [-help]                         %s",MSG_QSTAT_USAGE_PRINTTHISHELP);
-      if (!qselect_mode) 
       if (!qselect_mode)
-         fprintf(fp, "        [-j job_identifier_list ]                  %s",MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO);
+         fprintf(fp, "        [-j job_identifier_list ]       %s",MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO);
       fprintf(fp, "        [-l resource_list]              %s",MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES);
       if (!qselect_mode) 
          fprintf(fp, "        [-ne]                           %s",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);

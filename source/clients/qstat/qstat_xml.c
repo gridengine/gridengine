@@ -918,7 +918,7 @@ int slots_per_line  /* number of slots to be printed in slots column
          ql = lGetList(job, JB_jid_predecessor_list);
          if (ql) {
             for_each(qrep, ql) {
-               xml_append_Attr_S(attributeList, "predecessor_jobs", lGetString(qrep, JRE_job_number));
+               xml_append_Attr_I(attributeList, "predecessor_jobs", (int) lGetUlong(qrep, JRE_job_number));
             }
          }
    }

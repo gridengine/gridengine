@@ -430,10 +430,12 @@ char **argv
 
             for_each(qep, qinstance_list) {
                u_long32 now_time = DISPATCH_TIME_NOW;
+               int dummy = 0;
+
                if (!(lGetUlong(qep, QU_tag) & TAG_SHOW_IT))
                   continue;
                 
-               ret = queue_time_by_slots(1, &now_time, 0, NULL, jep, qep, pe, ckpt, 
+               ret = queue_time_by_slots(1, &now_time, 0, &dummy, jep, qep, pe, ckpt, 
                         centry_list, acl_list);
 
                if (ret>0) {

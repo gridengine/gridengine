@@ -48,15 +48,10 @@
 
 PATH=/bin:/usr/bin:/usr/sbin
 
-SECFILELIST="bin lib utilbin"
+FILELIST="3rd_party bin ckpt examples inst_sge install_execd install_qmaster \
+          lib mpi pvm qmon util utilbin"
 
-FILELIST="3rd_party bin ckpt examples install_execd install_qmaster mpi \
-          pvm qmon util utilbin"
-
-OPTFILES="catman doc locale man inst_sge inst_sgeee" 
-
-CLIENTFILES="qacct qalter qconf qdel qhost qlogin qmod qmon qrsh qsh \
-             qstat qsub qping"
+OPTFILES="catman dbwriter doc include man reporting" 
 
 umask 022
 
@@ -66,8 +61,8 @@ umask 022
 SetFilePerm()
 {
    f="$1"
-   user="$2"
-   group="$3"
+   user="0"
+   group="0"
 
    $ECHO "Verifying and setting file permissions and owner in >$f<"
 
@@ -83,7 +78,6 @@ SetFilePerm()
 #
 
 instauto=false
-instresport=false
 
 if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
    echo 
@@ -111,13 +105,13 @@ fi
 
 . $SGE_ROOT/util/arch_variables
 
-if [ $# -lt 3 ]; then
+if [ $# -lt 1 ]; then
    echo
    echo Set file permissions and owner of Grid Engine distribution in \$SGE_ROOT
    echo 
-   echo "usage: $0 [-auto] [-resport] \"adminuser\" \"group\" <codine_root>"
+   echo "usage: $0 [-auto] <sge_root>"
    echo 
-   echo example: $0 codadmin adm \$SGE_ROOT
+   echo example: $0 \$SGE_ROOT
    echo
    exit 1
 fi
@@ -127,22 +121,14 @@ if [ $1 = -auto ]; then
    shift
 fi
 
-if [ $1 = -resport ]; then
-   instresport=true
-   shift
-elif [ $1 = -noresport ]; then
-   instresport=false
-   shift
-fi
-
-if [ $3 = / -o $3 = /etc ]; then
+if [ $1 = / -o $1 = /etc ]; then
    echo
-   echo ERROR: cannot set permissions in \"$3\" directory of your system.
+   echo ERROR: cannot set permissions in \"$1\" directory of your system.
    echo
    exit 1
 fi
 
-if [ `echo $3 | env LC_ALL=C cut -c1` != / ]; then
+if [ `echo $1 | env LC_ALL=C cut -c1` != / ]; then
    echo
    echo ERROR: Please give an absolute path for the distribution.
    echo
@@ -158,9 +144,9 @@ else
    $ECHO "                    -----------------------"
    $ECHO "We will set the the file ownership and permission to"
    $ECHO
-   $ECHO "   User:         $1"
-   $ECHO "   Group:        $2"
-   $ECHO "   In directory: $3"
+   $ECHO "   UserID:         0"
+   $ECHO "   GroupID:        0"
+   $ECHO "   In directory:   $1"
    $ECHO
    $ECHO "We will also install the following binaries as SUID-root:"
    $ECHO
@@ -185,16 +171,16 @@ else
    done
 fi
 
-cd $3
+cd $1
 if [ $? != 0 ]; then
-   $ECHO "ERROR: can't change to directory \"$3\". Exiting."
+   $ECHO "ERROR: can't change to directory \"$1\". Exiting."
    exit 1
 fi
 
 for f in $FILELIST; do
    if [ ! -f $f -a ! -d $f ]; then
       $ECHO
-      $ECHO "Obviously this is not a complete SGE distribution or this"
+      $ECHO "Obviously this is not a complete Grid Engine distribution or this"
       $ECHO "is not your \$SGE_ROOT directory."
       $ECHO
       $ECHO "Missing file or directory: $f"
@@ -207,32 +193,13 @@ done
 
 for f in $FILELIST $OPTFILES; do
    if [ -d $f -o -f $f ]; then
-      SetFilePerm $f $1 $2
+      SetFilePerm $f 
    fi
 done
-
-# These files and dirs are owned by root for security reasons
-for f in $SECFILELIST; do
-   if [ -d $f -o -f $f ]; then
-      SetFilePerm $f root $ROOTGROUP
-   fi
-done
-
-# Set permissions of SGE_ROOT itself
-chown $1 .
-chgrp $2 .
-chmod 755 .
 
 chown 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
 chgrp 0 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
 chmod 4511 utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot
-
-if [ $instresport = true ]; then
-   for i in $CLIENTFILES; do
-      chown 0 bin/*/$i
-      chmod 4511 bin/*/$i   
-   done
-fi
 
 $ECHO
 $ECHO "Your file permissions were set"

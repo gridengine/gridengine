@@ -244,14 +244,12 @@ SetPermissions()
 
       $INFOTEXT "\nWe can't set file permissions on this machine, because user root\n" \
                   "has not the necessary privileges to change file permissions\n" \
-                  "on this file system.\n" \
+                  "on this file system.\n\n" \
                   "Probably this file system is an NFS mount where user root is\n" \
-                  "mapped to user >nobody<.\n" \
+                  "mapped to user >nobody<.\n\n" \
                   "Please login now at your file server and set the file permissions and\n" \
-                  "ownership of the entire distribution with the command:\n" \
-                  "   # \$SGE_ROOT/util/setfileperm.sh <adminuser> <admingroup> \$SGE_ROOT\n\n" \
-                  "where <adminuser> and <admingroup> are the Unix user/group names under which\n" \
-                  "the files should be installed and created.\n\n"
+                  "ownership of the entire distribution with the command:\n\n" \
+                  "   # \$SGE_ROOT/util/setfileperm.sh \$SGE_ROOT\n\n" 
 
       $INFOTEXT -wait -auto $AUTO -n "Please hit <RETURN> to continue once you set your file permissions >> "
       $CLEAR
@@ -291,7 +289,7 @@ SetPermissions()
 
       $CLEAR
 
-      util/setfileperm.sh -auto $resportarg $fileowner $filegid $SGE_ROOT
+      util/setfileperm.sh -auto $SGE_ROOT
 
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
    else

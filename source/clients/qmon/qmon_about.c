@@ -45,11 +45,11 @@
 #include "sge_me.h"
 #include "version.h"
 
-static char header[] = "@fBWelcome %s@@%s@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s";
+static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s";
 extern char SFLN_ELN[];
 
 #ifdef ADD_SUN_COPYRIGHT
-static char mailto[] = "For further information and feedback use: sgebeta53-support@@sun.com\n\n";
+static char mailto[] = "For further information and feedback use: @fBsgebeta53-support@@sun.com@fR\n\n";
 #else
 static char mailto[] = "\n";
 #endif

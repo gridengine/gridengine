@@ -41,8 +41,7 @@ char SFLN_ELN[] = "\n\
    Grid Engine is based on code donated by Sun Microsystems.\n\
    The copyright is owned by Sun Microsystems and other contributors.\n\
    It has been made available to the open source community under the SISSL license.\n\
-   For further information and the latest news visit:\n\n\
-   http://gridengine.sunsource.net\n\n";
+   For further information and the latest news visit: @fBhttp://gridengine.sunsource.net\n\n";
 
 const char DQS_ACK[] = "\n\
 We would like to acknowledge and thank the efforts of the\n\

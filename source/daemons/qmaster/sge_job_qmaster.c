@@ -2891,7 +2891,7 @@ static bool contains_dependency_cycles(const lListElem * new_job, u_long32 job_n
       pre_nr = lGetUlong(pre_elem, JRE_job_number);
       if (pre_nr == job_number) {
          u_long32 temp = lGetUlong(new_job, JB_job_number);
-         ERROR((SGE_EVENT, MSG_JOB_DEPENDENCY_CYCLE_UU, job_number, temp));
+         ERROR((SGE_EVENT, MSG_JOB_DEPENDENCY_CYCLE_UU, u32c(job_number), u32c(temp)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
 
          is_cycle = true;

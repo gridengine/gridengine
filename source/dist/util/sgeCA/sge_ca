@@ -454,6 +454,7 @@ MakeCert()
       Translate 0 "Can't sign certificate request %s. Exit." $REQFILE 
       exit 1
    fi
+   ExecuteAsAdmin $CHMOD 444 $CERTFILE
 
    $RM -f $TMPFILE $TMPFILE1 
 
@@ -512,7 +513,8 @@ MakeCADirs()
       exit 1
    fi
 
-   $RM -rf $CATOP $CALOCALTOP >/dev/null 2>/dev/null
+   Execute $RM -rf $CALOCALTOP >/dev/null 2>/dev/null
+   ExecuteAsAdmin $RM -rf $CATOP >/dev/null 2>/dev/null
 
    if [ -f $CATOP -o -d $CATOP -o -f $CALOCALTOP -o -d $CALOCALTOP ]; then
       Translate 0 "Can't delete the CA directories"

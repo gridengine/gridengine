@@ -169,93 +169,6 @@ MV=mv
 #
 autoinst=false
 
-#--------------------------------------------------------------------------
-# Translate
-# create localized version of arguments using "gettext" and "printf"
-#
-# USES: variable "$translation" to either translate or not
-# 
-# $1 = 0  stdout, newline
-# $1 = 1  stderr, newline
-# $1 = 2  stdout, no newline
-# $1 = 3  stderr, no newline
-# $1 = 4  just store string in variable $transout
-# $2 = string to localize
-# $2- args not to localize
-#
-Translate()
-{
-   newline=""
-   stderr=0
-
-   if [ "$1" = 0 -o "$1" = 1 ]; then
-      newline="\n"
-   fi
-
-   if [ "$1" = 1 -o "$1" = 3 ]; then
-      stderr=1
-   fi
-   if [ "$1" = 4 ]; then
-      stderr=4
-   fi
-   shift
-
-   if [ "$translation" = 1 ]; then
-      transout=`env TEXTDOMAIN=$TEXTDOMAIN TEXTDOMAINDIR=$TEXTDOMAINDIR $GETTEXT "$1"`
-      shift
-      if [ $stderr = 4 ]; then
-         transout=`printf "$transout"$newline "$@"`
-      elif [ $stderr = 0 ]; then
-         printf "$transout"$newline "$@"
-      else
-         printf "$transout"$newline "$@" >&2
-      fi
-   else
-      transout="$1"
-      shift
-      if [ $stderr = 4 ]; then
-         transout=`printf "$transout" "$@"`
-      elif [ $stderr = 0 ]; then
-         printf "$transout"$newline "$@"    
-      else
-        printf "$transout"$newline "$@" >&2    
-      fi
-   fi
-}
-
-#-------------------------------------------------------------------------
-# WaitClear
-# Let user press the return key and print message
-#
-# USES: variables "$autoinst"
-#                 "$CLEAR"
-# $1 = clear  clear screen 
-# $1 =
-# $2 = no string - print default messages
-# $4 = arg       - print argument
-#
-WaitClear()
-{
-   do_clear=$1
-   text="$2"
-
-   if [ "$text" != "" ]; then
-      $ECHO "$text"
-   else
-      Translate 2 "Hit <RETURN> to continue >> "
-   fi
-
-   if [ "$autoinst" = true ]; then
-      echo
-   else
-      read INP_WaitClear
-
-      if [ $do_clear = clear ]; then
-         $CLEAR
-      fi
-   fi
-}
-
 #-------------------------------------------------------------------------
 # Enter: input is read and returned to stdout. If input is empty echo $1
 #
@@ -276,72 +189,6 @@ Enter()
 }
 
 #-------------------------------------------------------------------------
-# YesNo: print argument and get YES/NO answer
-# $1 = string to print
-# $2 = default value if user enters return. Values are y,n,x (for no default)
-#
-YesNo()
-{
-   text=$1
-   default=$2
-   if [ "$default" = "" ]; then
-      default=x
-      text="$text >> \c"
-   else
-      Translate 4 "(y/n)"
-      text="$text $transout [$default] >> \c"
-   fi
-
-   if [ "$autoinst" = true -a $default != x -a $default != X ]; then
-      $ECHO "$text"
-      $ECHO $default
-      if [ $default = y -o $default = Y ]; then
-         return 0
-      else
-         return 1
-      fi
-   fi
-
-   YesNo_done=false
-   while [ $YesNo_done = false ]; do
-      $ECHO "$text"
-      read YesNo_INP
-
-      if [ "$YesNo_INP" = "" ]; then
-         if [ "$default" = y -o "$default" = Y ]; then
-            YesNo_INP=y
-         elif [ "$default" = n -o "$default" = N ]; then
-            YesNo_INP=n
-         fi
-      fi
-
-      case "$YesNo_INP" in
-         y|y|j|J)
-            YesNo_done=true
-            ret=0
-            ;;
-         n|N)
-            YesNo_done=true
-            ret=1
-            ;;
-      esac
-   done
-   return $ret
-}
-
-#-------------------------------------------------------------------------
-# Fatal Error: print message and exit
-#
-FatalError()
-{
-   $ECHO $*                           >&2
-   $ECHO ""                           >&2
-   Translate 1 "Installation failed. Exit."
-   $ECHO ""                           >&2
-   exit 1
-}
-
-#-------------------------------------------------------------------------
 # Execute command and exit if exit status != 0
 #
 Execute()
@@ -351,12 +198,10 @@ Execute()
    fi
    $*
    if [ $? != 0 ]; then
-      $ECHO >&2
-      Translate 1 "Command failed: %s" "$*"
-      $ECHO "" >&2
-      Translate 1 "Probably a permission problem. Please check file access permissions."
-      Translate 1 "Check root read/write permission. Check if SGE daemons are running."
-      $ECHO "" >&2
+      $INFOTEXT -e "\nCommand failed: %s\n\n" \
+                   "Probably a permission problem. Please check file access permissions.\n" \
+                   "Check root read/write permission. Check if SGE daemons are running.\n\n" \
+                   "$*"
       exit 1
    fi
 }
@@ -384,12 +229,10 @@ ExecuteAsAdmin()
    fi
 
    if [ $? != 0 ]; then
-      $ECHO >&2
-      Translate 1 "Command failed: %s" "$*"
-      $ECHO >&2
-      Translate 1 "Probably a permission problem. Please check file access permissions."
-      Translate 1 "Check read/write permission. Check if SGE daemons are running."
-      $ECHO >&2
+      $INFOTEXT -e "\nCommand failed: %s\n\n" \
+                   "Probably a permission problem. Please check file access permissions.\n" \
+                   "Check root read/write permission. Check if SGE daemons are running.\n\n" \
+                   "$*"
       exit 1
    fi
    return 0
@@ -432,7 +275,7 @@ SetAdminUser()
    if [ -f $cfgname ]; then
       user=`env LC_ALL=C grep admin_user $cfgname | env LC_ALL=C awk '{ print $2 }'`
    else
-      Translate 1 "Global cluster configuration >%s< doesn't exist. Exit." $cfgname
+      $INFOTEXT -e "Global cluster configuration >%s< doesn't exist. Exit." $cfgname
       exit 1
    fi
  

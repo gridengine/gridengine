@@ -148,7 +148,7 @@ SelectHostNameResolving()
 {
    $CLEAR
    $INFOTEXT -u "\nSelect default Grid Engine hostname resolving method"
-   $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If thisis\n" \
+   $INFOTEXT "\nAre all hosts of your cluster in one DNS domain? If this is\n" \
              "the case the hostnames\n\n" \
              "   >hostA< and >hostA.foo.com<\n\n" \
              "would be treated as equal, because the DNS domain name >foo.com<\n" \
@@ -499,16 +499,12 @@ GetGidRange()
       $CLEAR
       $INFOTEXT -u "\nGrid Engine group id range"
       $INFOTEXT "\nWhen jobs are started under the control of Grid Engine an additional group id\n" \
-                "is set on platforms which do not support jobs. This is done to provide maximum\n" \
-                "control for Grid Engine jobs.\n\n" \
-                "This additional UNIX group id range must be unused group id's in your system.\n" \
-                "Each job will be assigned a unique id during the time it is running.\n" \
-                "Therefore you need to provide a range of id's which will be assigned\n" \
-                "dynamically for jobs.\n\n" \
+                "is set on platforms which do not support jobs.\n\n" \
+                "This additional UNIX group id range must be unused group id's in your system.\n\n" \
                 "The range must be big enough to provide enough numbers for the maximum number\n" \
                 "of Grid Engine jobs running at a single moment on a single host. E.g. a range\n" \
-                "like >20000-20100< means, that Grid Engine will use the group ids from\n" \
-                "20000-20100 and provides a range for 100 Grid Engine jobs at the same time\n" \
+                "like >20000-20100< means, that Grid Engine will use the group id's from\n" \
+                "20000-20100 and thus provides a range for 101 jobs running at the same time\n" \
                 "on a single host.\n\n" \
                 "You can change at any time the group id range in your cluster configuration.\n"
 
@@ -517,12 +513,57 @@ GetGidRange()
       CFG_GID_RANGE=`Enter ""`
 
       if [ "$CFG_GID_RANGE" != "" ]; then
-         $INFOTEXT -wait -auto $autoinst -n "\nUsing >%s< as gid range. Hit <RETURN> to continue >> " \
-                   "$CFG_GID_RANGE"
-         $CLEAR
-         done=true
+         CheckGidRange $CFG_GID_RANGE
+         ret=$?
+         if [ $ret != 0 ]; then
+            if [ $ret = 1 ]; then
+               $INFOTEXT -wait -auto $autoinst -n "\nThe minimum group id must be 100. Hit <RETURN> to continue >> "
+            elif [ $ret = 2 ]; then
+               $INFOTEXT -wait -auto $autoinst -n "\nFirst group id must be smaller than second id. Hit <RETURN> to continue >> "
+            else
+                $INFOTEXT -wait -auto $autoinst -n "\nInvalid group id range. Hit <RETURN> to continue >> "
+            fi
+         else   
+            $INFOTEXT -wait -auto $autoinst -n "\nUsing >%s< as gid range. Hit <RETURN> to continue >> " \
+                      "$CFG_GID_RANGE"
+            $CLEAR
+            done=true
+         fi
       fi
    done
+}
+
+#-------------------------------------------------------------------------
+# CheckGidRange
+#    Check for valid gid range
+#    return 0 if range is correct
+#           1 if minimum GID less then $MIN_ALLOWED_GID
+#           2 second gid > first gid
+#           3 if other violation
+#
+CheckGidRange()
+{
+   ck_gid_range=$1
+
+   MIN_ALLOWED_GID=100
+
+   len=`expr $ck_gid_range : ".*"`
+   matches=`expr $ck_gid_range : "[0-9][0-9]*-[0-9][0-9]*"`
+   if [ $len -eq 0 ]; then
+      return 3
+   elif [ $len -ne $matches ]; then
+      return 3
+   else
+      first_gid=`echo $ck_gid_range | cut -f1 -d-`
+      second_gid=`echo $ck_gid_range | cut -f2 -d-`
+      if [ $first_gid -lt $MIN_ALLOWED_GID ]; then
+          return 1
+      elif [ $first_gid -gt $second_gid ]; then
+          return 2
+      else
+          return 0
+      fi         
+   fi
 }
 
 #-------------------------------------------------------------------------
@@ -1085,20 +1126,22 @@ CheckWhoInstallsQsyst()
          $INFOTEXT -u "\nChoosing a Grid Engine admin user name"
          $INFOTEXT -n "\nPlease enter the user name (or >root<) >> "
          INP=`Enter ""`
-         $V5UTILBIN/checkuser -check "$INP"
-         if [ $? != 0 ]; then
-            $INFOTEXT "User >%s< does not exist - please correct the username" $INP
-            $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
-            $CLEAR
-         else
-            $INFOTEXT "\nInstalling Grid Engine as user >%s<\n" $INP
-            ADMINUSER=$INP
-            if [ $ADMINUSER = root ]; then
-               ADMINUSER=default
+         if [ "$INP" != "" ]; then
+            $V5UTILBIN/checkuser -check "$INP"
+            if [ $? != 0 ]; then
+               $INFOTEXT "User >%s< does not exist - please correct the username" $INP
+               $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+               $CLEAR
+            else
+               $INFOTEXT "\nInstalling Grid Engine as user >%s<\n" $INP
+               ADMINUSER=$INP
+               if [ $ADMINUSER = root ]; then
+                  ADMINUSER=default
+               fi
+               $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
+               $CLEAR
+               done=true
             fi
-            $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
-            $CLEAR
-            done=true
          fi
       done
    else
@@ -1347,6 +1390,18 @@ CheckQmasterInstallation()
       if [ `echo "$user" |tr "A-Z" "a-z"` = "none" ]; then
          user=default
       fi
+   else
+      $INFOTEXT "Can't read value for adminuser from cluster configuration.\n" \
+                "Installation failed. Exit.\n"
+      exit 1
+   fi
+
+   if [ $euid != 0 -a $user != default ]; then
+      $INFOTEXT "\nSince you are not installing as user >root< it is not supported\n" \
+                "to configure an admin user in your cluster configuration.\n\n" \
+                "Please login as user root and call this script again.\n\n" \
+                "Installation failed. Exit.\n"
+      exit 1
    fi
 
    if [ "$ADMINUSER" != "$user" ]; then
@@ -1357,7 +1412,7 @@ CheckQmasterInstallation()
          $INFOTEXT "The admin user >%s< doesn't match the admin username >%s<\n" \
                    "in the global cluster configuration.\n" $ADMINUSER $user
       fi
-      $INFOTEXT "Installation failed. Exit."
+      $INFOTEXT "Installation failed. Exit.\n"
       exit 1
    fi
 }
@@ -2076,11 +2131,11 @@ if [ "$SGE_ROOT" = "" ]; then
 fi
 
 # set infotext binary path
-INFOTXT_DUMMY=$V5UTILBIN/infotext
-INFOTEXT=$INFOTXT_DUMMY
-if [ ! -f $INFOTXT_DUMMY ]; then
-   $ECHO "can't find \"$INFOTXT_DUMMY\""
-   $ECHO "Installation failed."
+INFOTEXT=$V5UTILBIN/infotext
+if [ ! -x $INFOTEXT ]; then
+   $ECHO "can't find binary \"$INFOTEXT\""
+   echo
+   $ECHO "Installation failed. Exit."
    exit 1
 fi
 #---------------------------------------
@@ -2093,7 +2148,6 @@ if [ "$HOST" = "" ]; then
    $INFOTEXT -e "can't get hostname of this machine. Installation failed."
    exit 1
 fi
-
 
 #-----------------------------
 # commandline argument parsing

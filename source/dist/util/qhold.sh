@@ -33,66 +33,77 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+
+#----------------------------------------------------------------------------     
+# ErrUsage
 ErrUsage()
 {
-   Translate "Usage:"
-   echo 
-   echo "$transout $cmdname [-h {u|o|s},..] job_task_list|'all'|-u user_list|-uall"
-   echo "       job_task_list         job_tasks [,job_tasks, ...]"
-   echo "       job_tasks             job_id['.'task_id_range]"
-   echo "       task_id_range         task_id['-'task_id[':'step]]"
-   echo "       user_list             user['-'user, ...]"
-   echo
+   $INFOTEXT "Usage: %s [-h {u|o|s},..] job_task_list|'all'|-u user_list|-uall\n" \
+             "  job_task_list         job_tasks [,job_tasks, ...]\n" \
+             "  job_tasks             job_id['.'task_id_range]\n" \
+             "  task_id_range         task_id['-'task_id[':'step]]\n" \
+             "  user_list             user['-'user, ...]\n\n" $cmdname
    exit 1
 }
 
-
-Translate()
-{
-   if [ "$translation" = "1" ]; then
-      transout=`$TRANSLATE "$1"`
-      if [ "$transout" = "" ]; then
-         transout="$1"
-      fi
-   else
-      transout="$1"
-   fi
-}
+#----------------------------------------------------------------------------
+# MAIN MAIN MAIN MAIN MAIN MAIN 
+#----------------------------------------------------------------------------     
 
 cmdname=`basename $0`
 
 # ensure we can execute qalter binary 
-if [ "$SGE_ROOT" = "" ]; then
-   Translate ": Please set the environment variable SGE_ROOT."
-   echo "$cmdname $transout" 
-   exit 1 
-fi
-
-Translate ": cannot execute"
-
-if [ ! -x $SGE_ROOT/util/arch ]; then
-   echo "$cmdname $transout $SGE_ROOT/util/arch"
+if [ -z "$SGE_ROOT" -o ! -d "$SGE_ROOT" ]; then
+   echo
+   echo ERROR: Please set your \$SGE_ROOT environment variable first. Exit.
+   echo
    exit 1
 fi
+
+if [ ! -x "$SGE_ROOT/util/arch" ]; then
+   echo
+   echo ERROR: The shell script \"\$SGE_ROOT/util/arch\" does not exist.
+   echo Please verify your distribution and restart this script. Exit.
+   echo
+   exit 1
+fi
+
+if [ ! -f $SGE_ROOT/util/arch_variables ]; then
+   echo
+   echo ERROR: Missing shell script \"\$SGE_ROOT/util/arch_variables\".
+   echo Please verify your distribution and restart this script. Exit.
+   echo
+   exit 1
+fi
+
+. $SGE_ROOT/util/arch_variables
+
+
+#---------------------------------------
+# setup INFOTEXT begin
+#---------------------------------------
+
+V5BIN=$SGE_ROOT/bin/$ARCH
+V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
+INFOTEXT=$V5UTILBIN/infotext
+if [ ! -x "$INFOTEXT" ]; then
+   echo
+   echo "can't find binary \"$INFOTEXT\""
+   echo
+   exit 1         
+fi
+
+SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
+
+#---------------------------------------
+# setup INFOTEXT end
+#---------------------------------------
+
 QALTER=$SGE_ROOT/bin/`$SGE_ROOT/util/arch`/qalter
 if [ ! -x $QALTER ]; then
-   echo "$cmdname $transout $QALTER"
+   $INFOTEXT -e "%s: can't execute %s\n" $cmdname $QALTER
    exit 1
 fi
-
-
-# setup internationalization
-if [ "$TEXTDOMAINDIR" = "" ] ; then
-  TEXTDOMAINDIR="$SGE_ROOT/locale"
-  export TEXTDOMAINDIR
-fi
-GETTEXT=$SGE_ROOT/utilbin/`$SGE_ROOT/util/arch`/gettext
-TRANSLATE="$GETTEXT -n --domain=gridengine -s "
-translation=0
-#if [ ! -f $GETTEXT ] ; then
-#  echo "INFO: gettext binary not found turning localization off"
-#  translation=0
-#fi
 
 
 # parse command line
@@ -137,28 +148,24 @@ done
 
 # invalid parameter - do not start 
 if [ "$jobid_list" = "" -a "$user_list" = "" -a "$all_users" = "" ]; then
-   Translate ": list of usernames or jids expected"
-   echo "$cmdname $transout"
+   $INFOTEXT "%s: list of usernames or jids expected" $cmdname
    ErrUsage
 fi
 
 if [ "$user_list" != "" -a "$all_users" != "" ]; then
-   Translate ": selection of usernames and -uall switch are not allowed together"
-   echo "$cmdname $transout"
+   $INFOTEXT "%s: selection of usernames and -uall switch are not allowed together" $cmdname
    ErrUsage
 fi
 
 if [ \( "$user_list" != "" -o "$all_users" != "" \) -a "$jobid_list" != "" ]; then
-   Translate " : selection of usernames and jids not allowed together "
-   echo "$cmdname $transout"
+   $INFOTEXT "%s: selection of usernames and jids not allowed together" $cmdname
    ErrUsage
 fi
 
 # ensure valid hold types are given
 valid=`expr $hold_types : '[uso]*$'`
 if [ $valid = "0" ]; then
-   Translate ": invalid list of hold types"
-   "echo $cmdname $transout"
+   $INFOTEXT "invalid list of hold types" $cmdname
    ErrUsage
 fi
 

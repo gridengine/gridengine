@@ -119,7 +119,7 @@ V5BIN=$SGE_ROOT/bin/$ARCH
 V5UTILBIN=$SGE_ROOT/utilbin/$ARCH       
 INFOTEXT=$V5UTILBIN/infotext
 if [ ! -x $INFOTEXT ]; then
-   echo "can't find binary \"$INFOTXT\""
+   echo "can't find binary \"$INFOTEXT\""
    echo "Installation failed."
    exit 1
 fi

@@ -46,9 +46,10 @@ umask 022
 CLEAR=clear
 #CLEAR=:
 
-# set to false if you don't want this script uses the i18n functions
+
+# must be set to false in this script
 #
-SGE_I18N=true
+autoinst=false
 
 #-------------------------------------------------------------------------
 # USEFUL LOCAL SHELL PROCEDURES
@@ -63,7 +64,7 @@ CheckForOldJobs()
    for dir in jobs job_scripts zombies; do
       if [ -d $MSPOOLdir/$dir ]; then
          if [ `ls $MSPOOLdir/$dir | wc -l` -gt 0 ]; then
-            Translate 0 "Found old jobs in: %s" $MSPOOLdir/$dir
+            $INFOTEXT "Found old jobs in: %s" $MSPOOLdir/$dir
             doexit=true
          fi
       fi
@@ -71,20 +72,20 @@ CheckForOldJobs()
 
    if [ $doexit = true ]; then
       echo
-      Translate 0 "Please delete the files in the above directories"
-      Translate 0 "before restarting this update procedure."
+      $INFOTEXT "Please delete the files in the above directories"
+      $INFOTEXT "before restarting this update procedure."
       echo
-      Translate 0 "Please verify if the spool directories of your execution daemons"
-      Translate 0 "do not contain any old jobs."
+      $INFOTEXT "Please verify if the spool directories of your execution daemons"
+      $INFOTEXT "do not contain any old jobs."
       echo 
-      Translate 0 "You should also delete the following directories of your"
-      Translate 0 "execution host spool directories:"
+      $INFOTEXT "You should also delete the following directories of your"
+      $INFOTEXT "execution host spool directories:"
       echo
-      Translate 0 "   %s" active_jobs/
-      Translate 0 "   %s" jobs/
-      Translate 0 "   %s" job_scripts/
+      $INFOTEXT "   %s" active_jobs/
+      $INFOTEXT "   %s" jobs/
+      $INFOTEXT "   %s" job_scripts/
       echo
-      Translate 0 "Update failed. No changes where made."
+      $INFOTEXT "Update failed. No changes where made."
       echo
       exit 1
    fi
@@ -100,18 +101,18 @@ CheckWhoCalls()
    if [ "$ADMINUSER" != default -a "$ME" != $ADMINUSER ]; then
       $CLEAR
       $ECHO
-      Translate 0 "This is an adminuser installation"
+      $INFOTEXT "This is an adminuser installation"
       $ECHO "---------------------------------"
       $ECHO
-      Translate 0 "According to your global cluster configuration your Grid Engine"
-      Translate 0 "installation used the adminuser name"
+      $INFOTEXT "According to your global cluster configuration your Grid Engine"
+      $INFOTEXT "installation used the adminuser name"
       $ECHO
-      Translate 0 "   >%s<" $ADMINUSER
+      $INFOTEXT "   >%s<" $ADMINUSER
       $ECHO
-      Translate 0 "to create its spool files. Please login as user >%s<" $ADMINUSER
-      Translate 0 "and restart this update script."
+      $INFOTEXT "to create its spool files. Please login as user >%s<" $ADMINUSER
+      $INFOTEXT "and restart this update script."
       $ECHO
-      Translate 0 "Exiting update procedure. No changes were made."
+      $INFOTEXT "Exiting update procedure. No changes were made."
       $ECHO
       exit 1
    fi
@@ -124,35 +125,36 @@ WelcomeTheUser()
 {
 
    $CLEAR
-   Translate 0 "Updating Grid Engine configuration to version 5.3"
+   $INFOTEXT "Updating Grid Engine configuration to version 5.3"
    $ECHO "-------------------------------------------------"
    $ECHO
-   Translate 0 "The environment variables"
+   $INFOTEXT "The environment variables"
    $ECHO
-   Translate 0 "   SGE_ROOT"
-   Translate 0 "   SGE_CELL     (only if other than \"default\")"
-   Translate 0 "   COMMD_PORT   (only if service sge_commd/tcp is not used"
+   $INFOTEXT "   SGE_ROOT"
+   $INFOTEXT "   SGE_CELL     (only if other than \"default\")"
+   $INFOTEXT "   COMMD_PORT   (only if service sge_commd/tcp is not used"
    $ECHO
-   Translate 0 "must be set and point to the directory of your Grid Engine installation."
-   Translate 0 "You may not use this script unless you are upgrading from:"
+   $INFOTEXT "must be set and point to the directory of your Grid Engine installation."
+   $INFOTEXT "You may not use this script unless you are upgrading from:"
    $ECHO
-   Translate 0 "   CODINE versions 5.0.x and 5.1.x"
-   Translate 0 "   GRD versions 5.0.x and 5.1.x"
-   Translate 0 "   SGE 5.2.x"
-   Translate 0 "   SGE(EE) 5.3beta1"
+   $INFOTEXT "   CODINE versions 5.0.x and 5.1.x"
+   $INFOTEXT "   GRD versions 5.0.x and 5.1.x"
+   $INFOTEXT "   SGE 5.2.x"
+   $INFOTEXT "   SGE(EE) 5.3beta1"
    $ECHO
-   Translate 0 "Please read the update documentation file:"
+   $INFOTEXT "Please read the upgrade documentation"
    $ECHO
-   Translate 0 "   %s" \$SGE_ROOT/UPGRADE
+   $INFOTEXT "   %s" \$SGE_ROOT/UPGRADE
    $ECHO
-   Translate 0 "before starting this update procedure."
+   $INFOTEXT "before starting this update procedure."
 
-   Translate 4 "Do you want to proceed with the update proecdure"
-   YesNo "\n$transout" y
+
+   $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
+             "Do you want to proceed with the update proecdure (y/n) [n] >> "
 
    if [ $? = 1 ]; then
       $ECHO
-      Translate 0 "Exiting update procedure. No changes were made."
+      $INFOTEXT "Exiting update procedure. No changes were made."
       exit 1
    fi
 
@@ -162,23 +164,24 @@ WelcomeTheUser()
 
    $CLEAR
    $ECHO
-   Translate 0 "Using the following directories for this update procedure"
+   $INFOTEXT "Using the following directories for this update procedure"
    $ECHO "---------------------------------------------------------"      
    $ECHO
-   Translate 0 "The >common< directory in:"
+   $INFOTEXT "The >common< directory in:"
    $ECHO
-   Translate 0 "   %s" $C_DIR
+   $INFOTEXT "   %s" $C_DIR
    $ECHO
-   Translate 0 "The qmaster spool directory in:"
+   $INFOTEXT "The qmaster spool directory in:"
    $ECHO
-   Translate 0 "   %s" $MSPOOLdir
-   Translate 4 "Do you want to use the above directories for upgrading"
-   YesNo "\n$transout" y
+   $INFOTEXT "   %s" $MSPOOLdir
+
+   $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+             "Do you want to use the above directories for upgrading (y/n) [y] >> "
 
    if [ $? = 1 ]; then
       $ECHO
-      Translate 0 "Please set your environment variables and restart this script."
-      Translate 0 "No changes were made."
+      $INFOTEXT "Please set your environment variables and restart this script."
+      $INFOTEXT "No changes were made."
       $ECHO
       exit 1
    fi
@@ -207,27 +210,27 @@ CheckPrerequisites()
    if [ "$file1" = "" -a "$file2" = "" ]; then
       $CLEAR
       echo
-      Translate 0 "ERROR: startup script"
+      $INFOTEXT "ERROR: startup script"
       echo
-      Translate 0 "   %s or" $C_DIR/grd5
-      Translate 0 "   %s" $C_DIR/codine5
+      $INFOTEXT "   %s or" $C_DIR/grd5
+      $INFOTEXT "   %s" $C_DIR/codine5
       echo
-      Translate 0 "does not exist."
+      $INFOTEXT "does not exist."
       echo
-      Translate 0 "Update failed. No changes were made."
+      $INFOTEXT "Update failed. No changes were made."
       echo
       exit 1
    elif [ "$file1" != "" -a "$file2" != "" ]; then
       $CLEAR
       echo
-      Translate 0 "ERROR: There are both startup scripts"
+      $INFOTEXT "ERROR: There are both startup scripts"
       echo
-      Translate 0 "    %s and" $C_DIR/grd5
-      Translate 0 "    %s" $C_DIR/codine5
+      $INFOTEXT "    %s and" $C_DIR/grd5
+      $INFOTEXT "    %s" $C_DIR/codine5
       echo
-      Translate 0 "Please delete the obsolete script and restart this update script."
+      $INFOTEXT "Please delete the obsolete script and restart this update script."
       echo
-      Translate 0 "Update failed. No changes were made."
+      $INFOTEXT "Update failed. No changes were made."
       echo
       exit 1
    else
@@ -246,16 +249,16 @@ CheckPrerequisites()
       if [ $commd_port != "$COMMD_PORT" ]; then
          $CLEAR
          echo
-         Translate 0 "ERROR: The >%s< variable in your startup script" "\$COMMD_PORT"
+         $INFOTEXT "ERROR: The >%s< variable in your startup script" "\$COMMD_PORT"
          echo
-         Translate 0 "   %s" $file
+         $INFOTEXT "   %s" $file
          echo
-         Translate 0 "is set to >%s<, while your environment variable is set to >%s<" $commd_port $COMMD_PORT
+         $INFOTEXT "is set to >%s<, while your environment variable is set to >%s<" $commd_port $COMMD_PORT
          echo
-         Translate 0 "Please set your environment variable >%s< correctly and and" "\$COMMD_PORT"
-         Translate 0 "restart this update script."
+         $INFOTEXT "Please set your environment variable >%s< correctly and and" "\$COMMD_PORT"
+         $INFOTEXT "restart this update script."
          echo
-         Translate 0 "Update failed. No changes were made."
+         $INFOTEXT "Update failed. No changes were made."
          echo
          exit 1
       fi
@@ -266,12 +269,12 @@ CheckPrerequisites()
    if [ ! -d "$C_DIR" ]; then
       $CLEAR
       echo 
-      Translate 0 "ERROR: The directory"
+      $INFOTEXT "ERROR: The directory"
       echo
-      Translate 0 "   %s" $C_DIR
+      $INFOTEXT "   %s" $C_DIR
       echo
-      Translate 0 "does not exist. Please verify your environment variables and start"
-      Translate 0  "this update script again."
+      $INFOTEXT "does not exist. Please verify your environment variables and start"
+      $INFOTEXT  "this update script again."
       echo
       exit 1
    fi
@@ -279,12 +282,12 @@ CheckPrerequisites()
    if [ ! -f $C_DIR/configuration ]; then
       $CLEAR      
       echo
-      Translate 0 "ERROR: The cluster configuration file"
+      $INFOTEXT "ERROR: The cluster configuration file"
       echo ""
-      Translate 0 "   %s" $C_DIR/configuration
+      $INFOTEXT "   %s" $C_DIR/configuration
       echo ""
-      Translate 0  "does not exist. Please verify your environment variables and start"
-      Translate 0 "this update script again."
+      $INFOTEXT  "does not exist. Please verify your environment variables and start"
+      $INFOTEXT "this update script again."
       echo
       exit 1
    fi
@@ -292,12 +295,12 @@ CheckPrerequisites()
    if [ ! -f $SGE_ROOT/util/startup_template ]; then
       $CLEAR
       echo
-      Translate 0 "ERROR: The new Grid Engine startup template file"
+      $INFOTEXT "ERROR: The new Grid Engine startup template file"
       echo ""
-      Translate 0 "   %s" $SGE_ROOT/util/startup_template
+      $INFOTEXT "   %s" $SGE_ROOT/util/startup_template
       echo ""
-      Translate 0 "does not exist. Please verify your distribution"
-      Translate 0 "and start this update script again."
+      $INFOTEXT "does not exist. Please verify your distribution"
+      $INFOTEXT "and start this update script again."
       echo
       exit 1
    fi
@@ -305,16 +308,16 @@ CheckPrerequisites()
    if [ ! -d "$MSPOOLdir" ]; then
       $CLEAR
       echo
-      Translate 0 "ERROR: Apparently your qmaster spool directory"
+      $INFOTEXT "ERROR: Apparently your qmaster spool directory"
       echo ""
-      Translate 0 "   %s" $MSPOOLdir
+      $INFOTEXT "   %s" $MSPOOLdir
       echo ""
-      Translate 0 "which is defined in the file"
+      $INFOTEXT "which is defined in the file"
       echo ""
       echo "   %s" $C_DIR/configuration
       echo ""
-      Translate 0 "does not exist. Please verify your configuration and start"
-      Translate 0 "this update script again."
+      $INFOTEXT "does not exist. Please verify your configuration and start"
+      $INFOTEXT "this update script again."
       echo
       exit 1
    fi
@@ -329,32 +332,32 @@ GetGidRange()
    while [ $done = false ]; do
       $CLEAR
       $ECHO ""
-      Translate 0 "%s group id range" SGE
+      $INFOTEXT "%s group id range" SGE
       $ECHO "------------------"
       $ECHO ""
-      Translate 0 "When jobs are started under the control of %s an additional group id is set" SGE
-      Translate 0 "on platforms which do not support jobs. This is done to provide maximum control"
-      Translate 0 "for %s jobs." SGE
-      Translate 0 "This additional UNIX group id range MUST be unused group id's in your system."
-      Translate 0 "Each job will be assigned a unique id during the time it is running."
-      Translate 0 "Therefore you need to provide a range of id's which will be assigned"
-      Translate 0 "dynamically for jobs."
-      Translate 0 "The range must be big enough to provide enough numbers for the maximum number"
-      Translate 0 "of %s jobs running at a single moment on a single host. E.g. a range like" SGE
+      $INFOTEXT "When jobs are started under the control of %s an additional group id is set" SGE
+      $INFOTEXT "on platforms which do not support jobs. This is done to provide maximum control"
+      $INFOTEXT "for %s jobs." SGE
+      $INFOTEXT "This additional UNIX group id range MUST be unused group id's in your system."
+      $INFOTEXT "Each job will be assigned a unique id during the time it is running."
+      $INFOTEXT "Therefore you need to provide a range of id's which will be assigned"
+      $INFOTEXT "dynamically for jobs."
+      $INFOTEXT "The range must be big enough to provide enough numbers for the maximum number"
+      $INFOTEXT "of %s jobs running at a single moment on a single host. E.g. a range like" SGE
       $ECHO ""
-      Translate 0 "   20000-20050"
+      $INFOTEXT "   20000-20050"
       $ECHO ""
-      Translate 0 "means, that %s will use the group ids from 20000-20050 and provides a range" SGE
-      Translate 0 "for 50 %s jobs at the same time on a single host." SGE
-      Translate 0 "You can change at any time the group id range in your cluster configuration."
+      $INFOTEXT "means, that %s will use the group ids from 20000-20050 and provides a range" SGE
+      $INFOTEXT "for 50 %s jobs at the same time on a single host." SGE
+      $INFOTEXT "You can change at any time the group id range in your cluster configuration."
       $ECHO ""
-      Translate 2 "Please enter a range: "
+      $INFOTEXT -n "Please enter a range >> "
 
       GID_RANGE=`Enter ""`
 
       if [ "$GID_RANGE" != "" ]; then
-         Translate 4 "Do you want to use >%s< as gid range." "$GID_RANGE"
-         YesNo "\n$transout" y
+         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                   "Do you want to use >%s< as gid range (y/n) [y] >> " "$GID_RANGE"
          if [ $? = 0 ]; then
             done=true
          fi
@@ -371,60 +374,62 @@ GetCompatibilityMode()
    while [ $done = false ]; do
       $CLEAR
       $ECHO ""
-      Translate 0 "Compatibility mode for environment variables"
+      $INFOTEXT "Compatibility mode for environment variables"
       $ECHO       "--------------------------------------------"
       $ECHO ""
-      Translate 0 "Grid Engine version prior release 5.3 used environment variables" 
-      Translate 0 "with the prefix >CODINE_<, >COD_<, >GRD_<, e.g."
+      $INFOTEXT "Grid Engine version prior release 5.3 used environment variables" 
+      $INFOTEXT "with the prefix >CODINE_<, >COD_<, >GRD_<, e.g."
       $ECHO ""
-      Translate 0 "   \$CODINE_ROOT, \$GRD_ROOT, \$COD_O_HOME etc."
+      $INFOTEXT "   \$CODINE_ROOT, \$GRD_ROOT, \$COD_O_HOME etc."
       $ECHO ""
-      Translate 0 "Grid Engine 5.3 uses environment variables beginning with >SGE_<."
+      $INFOTEXT "Grid Engine 5.3 uses environment variables beginning with >SGE_<."
       $ECHO ""
-      Translate 0 "This version (but not version 6.0) supports a compatibility mode where for job"
-      Translate 0 "execution the old variables are set in addition to the new variables. It is not"
-      Translate 0 "recommended to use this compatibility mode. However if migration for your users"
-      Translate 0 "to the new variables is difficult you can enable the support."
+      $INFOTEXT "This version (but not version 6.0) supports a compatibility mode where for job"
+      $INFOTEXT "execution the old variables are set in addition to the new variables. It is not"
+      $INFOTEXT "recommended to use this compatibility mode. However if migration for your users"
+      $INFOTEXT "to the new variables is difficult you can enable the support."
       $ECHO ""
-      Translate 0 "Please enter now what compatibility mode you want to enable."
+      $INFOTEXT "Please enter now what compatibility mode you want to enable."
       $ECHO ""
-      Translate 0 "   0  - no compatibility mode  (default, use >SGE_< prefix only)"
-      Translate 0 "   1  - support COD_/CODINE_ variable prefix"
-      Translate 0 "   2  - support GRD_ variable prefix"
-      Translate 0 "   3  - support COD_/CODINE_/GRD variable prefix"
+      $INFOTEXT "   0  - no compatibility mode  (default, use >SGE_< prefix only)"
+      $INFOTEXT "   1  - support COD_/CODINE_ variable prefix"
+      $INFOTEXT "   2  - support GRD_ variable prefix"
+      $INFOTEXT "   3  - support COD_/CODINE_/GRD variable prefix"
       $ECHO ""
-      Translate 2 "Please enter [0-3] >> "
+      $INFOTEXT -n "Please enter [0-3] >> "
       select=`Enter 0`
 
       $CLEAR
       echo
       valid=true
       if [ $select = 0 ]; then
-         Translate 0 "We will not enable the variable compatibility mode"
+         $INFOTEXT "We will not enable the variable compatibility mode"
          SGE_COMPATIBILITY=none
       elif [ $select = 1 ]; then
-         Translate 0 "We will enable the variable compatibility mode for the COD_/CODINE_ prefix"
+         $INFOTEXT "We will enable the variable compatibility mode for the COD_/CODINE_ prefix"
          SGE_COMPATIBILITY="SET_COD_ENV=true"
       elif [ $select = 2 ]; then
-         Translate 0 "We will enable the variable compatibility mode for the GRD_ prefix"
+         $INFOTEXT "We will enable the variable compatibility mode for the GRD_ prefix"
          SGE_COMPATIBILITY="SET_GRD_ENV=true"
       elif [ $select = 3 ]; then
-         Translate 0 "We will enable the variable compatibility mode for the COD_/CODINE_/GRD prefix"
+         $INFOTEXT "We will enable the variable compatibility mode for the COD_/CODINE_/GRD prefix"
          SGE_COMPATIBILITY="SET_COD_ENV=true SET_GRD_ENV=true"
       else
-         Translate 0 "Invalid input."
+         $INFOTEXT "Invalid input."
          valid=false   
       fi
 
       if [ $valid = true ]; then
-         Translate 4 "Do you want to use the selected compatibility mode" y
-         YesNo "\n$transout" y
+         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+                   "Do you want to use the selected compatibility mode (y/n) [y] >> "
          if [ $? = 0 ]; then
             done=true
-            WaitClear clear
+            $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+            $CLEAR
          fi
       else
-         WaitClear clear
+         $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "
+         $CLEAR
       fi
    done
 }
@@ -452,40 +457,41 @@ CheckUpgradeType()
 
    if [ $chk_sgeee = false -a $chk_sge = false ]; then
       echo
-      Translate 0 "Can't read your product mode file:"
+      $INFOTEXT "Can't read your product mode file:"
       echo
-      Translate 0 "   %s" $C_DIR/product_mode 
+      $INFOTEXT "   %s" $C_DIR/product_mode 
       echo
-      Translate 0 "Can't read string >codine< or >grd< >sge< >sgeee< in >%s< file." product_mode
+      $INFOTEXT "Can't read string >codine< or >grd< >sge< >sgeee< in >%s< file." product_mode
       echo
-      Translate 0 "Update failed. Exit."
+      $INFOTEXT "Update failed. Exit."
       exit 1
     fi
 
    if [ $chk_sge = true ]; then
       OLD_SGE_MODE=sge
       echo
-      Translate 0 "You can upgrade to Grid Engine Enterprise Edition (%s)" SGEEE
+      $INFOTEXT "You can upgrade to Grid Engine Enterprise Edition (%s)" SGEEE
       echo        "---------------------------------------------------------"
       echo
-      Translate 0 "Your old Grid Engine installation is a %s or %s system." CODINE SGE
+      $INFOTEXT "Your old Grid Engine installation is a %s or %s system." CODINE SGE
       echo
-      Translate 0 "It is possible to upgrade your installation to a Grid Engine"
-      Translate 1 "Enterprise Edition (%s) system. You should only upgrade your installation" SGEEE
-      Translate 0 "to a >%s< system if you are familiar with the concepts of %s" SGEEE SGEEE
+      $INFOTEXT "It is possible to upgrade your installation to a Grid Engine"
+      $INFOTEXT "Enterprise Edition (%s) system. You should only upgrade your installation" SGEEE
+      $INFOTEXT "to a >%s< system if you are familiar with the concepts of %s" SGEEE SGEEE
       echo
-      Translate 0 "It will be neccessary to carry out a couple of further configuration"
-      Translate 0 "steps if you want to make use of the additional %s features." SGEEE
-      Translate 4 "Do you want to upgrade to %s" SGEEE
-      YesNo "\n$transout" n
+      $INFOTEXT "It will be neccessary to carry out a couple of further configuration"
+      $INFOTEXT "steps if you want to make use of the additional SGEEE features."
+
+      $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
+                "Do you want to upgrade to SGEEE (y/n) [n] >> "
       if [ $? = 0 ]; then
          SGE_MODE=sgeee
          echo
-         Translate 0 "We will upgrade your installation to %s." SGEEE
+         $INFOTEXT "We will upgrade your installation to %s." SGEEE
       else
          SGE_MODE=sge
          echo
-         Translate 0 "Your installation will be upgraded to SGE."
+         $INFOTEXT "Your installation will be upgraded to SGE."
       fi
       env LC_ALL=C grep '^gid_range' $C_DIR/configuration $2 2>&1 >/dev/null
       if [ $? != 0 ]; then
@@ -498,12 +504,13 @@ CheckUpgradeType()
       SGE_MODE=sgeee
       GID_RANGE=notused
       echo
-      Translate 0 "Your old Grid Engine installation is a GRD or SGEEE system."
+      $INFOTEXT "Your old Grid Engine installation is a GRD or SGEEE system."
       echo
-      Translate 0 "We will update your system to >%s<" "SGEEE 5.3beta2"
+      $INFOTEXT "We will update your system to >%s<" "SGEEE 5.3beta2"
    fi
-   echo
-   WaitClear clear
+
+   $INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "  
+   $CLEAR
 
    GetCompatibilityMode
 }
@@ -520,11 +527,11 @@ MakeBackupDirs()
 
    if [ "$backdirbase" = "" ]; then
       echo
-      Translate 0 "ERROR: cannot define a backup directory name with the command"
+      $INFOTEXT "ERROR: cannot define a backup directory name with the command"
       echo
-      Translate 0 "   >%s<" "env LC_ALL=C date \"+%Y%m%d-%H:%M:%S\""
+      $INFOTEXT "   >%s<" "env LC_ALL=C date \"+%Y%m%d-%H:%M:%S\""
       echo
-      Translate 0 "Update failed. No changes where made."
+      $INFOTEXT "Update failed. No changes where made."
       echo
       exit 1
    fi
@@ -584,26 +591,27 @@ if [ "$SGE_CELL" = "" ]; then
    SGE_CELL=default
 fi
 
-#-------------------------------------------------------------------------
-# setup i18n
+#---------------------------------------
+# setup INFOTEXT begin
+#---------------------------------------
 
-if [ "$GETTEXT" != "" -a "SGE_I18N" = true ]; then
-   unset TEXTDOMAINDIR TEXTDOMAIN
-   TEXTDOMAINDIR="`/bin/pwd/`locale"
-   TEXTDOMAIN=gridengine
-   translation=1
-else
-   translation=0
-   unset LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY
-   unset LC_NUMERIC LC_TIME LANGUAGE
+V5BIN=$SGE_ROOT/bin/$ARCH
+V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
+INFOTEXT=$V5UTILBIN/infotext
+if [ ! -x $INFOTEXT ]; then
+   echo "can't find binary \"$INFOTEXT\""
+   echo "Installation failed."
+   exit 1
 fi
+SGE_INFOTEXT_MAX_COLUMN=5000; export SGE_INFOTEXT_MAX_COLUMN
 
-# end of internationalization setup
-#-------------------------------------------------------------------------
+#---------------------------------------
+# setup INFOTEXT end
+#---------------------------------------
 
 ME=`whoami`
 if [ "$ME" = "" ]; then
-   Translate 0 "Can't determine your username with \"%s\" command. Exit." whoami
+   $INFOTEXT "Can't determine your username with \"%s\" command. Exit." whoami
    exit 1
 fi
 
@@ -619,11 +627,11 @@ CheckWhoCalls
 CheckPrerequisites
 CheckUpgradeType
 
-Translate 4 "Do you want to start the update procedure"
-YesNo "$transout" y
+$INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n " \
+          "Do you want to start the update procedure(y/n) [y] >> "
 if [ $? != 0 ]; then
    echo
-   Translate 0 "Exiting update procedure. No changes were made."
+   $INFOTEXT "Exiting update procedure. No changes were made."
    exit 1
 fi
 
@@ -631,7 +639,7 @@ CheckForOldJobs
 MakeBackupDirs
 
 echo
-Translate 0 "Deleting obsolete files..."
+$INFOTEXT "Deleting obsolete files..."
 
 #-----------------------------------------------------------------
 # DELETE: cleanup of 5.0, 5.1, 5.2 files
@@ -661,7 +669,7 @@ fi
 # DELETE: history directory tree
 #
 if [ -d $C_DIR/history ]; then
-   Translate 0 "Deleting history directory tree: %s" $C_DIR/history
+   $INFOTEXT "Deleting history directory tree: %s" $C_DIR/history
    Execute rm -rf $C_DIR/history
    Execute mkdir $C_DIR/history
 fi
@@ -670,7 +678,7 @@ fi
 # DELETE: qsi directory tree
 #
 if [ -d $C_DIR/qsi ]; then
-   Translate 0 "Deleting directory tree: %s" $C_DIR/qsi
+   $INFOTEXT "Deleting directory tree: %s" $C_DIR/qsi
    Execute rm -rf $C_DIR/qsi
 fi
 
@@ -678,7 +686,7 @@ fi
 # DELETE: statistics file
 #
 if [ -f $C_DIR/statistics ]; then
-   Translate 0 "Deleting file: %s" $C_DIR/statistics
+   $INFOTEXT "Deleting file: %s" $C_DIR/statistics
    Execute rm $C_DIR/statistics
 fi        
 
@@ -686,7 +694,7 @@ fi
 # DELETE: sched_runlog file
 #
 if [ -f $C_DIR/sched_runlog ]; then
-   Translate 0 "Deleting file: %s" $C_DIR/sched_runlog
+   $INFOTEXT "Deleting file: %s" $C_DIR/sched_runlog
    Execute rm $C_DIR/sched_runlog
 fi        
 
@@ -694,7 +702,7 @@ fi
 # DELETE: license file
 #
 if [ -f $C_DIR/license ]; then
-   Translate 0 "Deleting file: %s" $C_DIR/license
+   $INFOTEXT "Deleting file: %s" $C_DIR/license
    Execute rm $C_DIR/license
 fi        
 
@@ -702,7 +710,7 @@ fi
 # RENAME: codine_aliases file
 #
 if [ -f $C_DIR/codine_aliases ]; then
-   Translate 0 "Renaming file: %s" $C_DIR/codine_aliases
+   $INFOTEXT "Renaming file: %s" $C_DIR/codine_aliases
    Execute $MV $C_DIR/codine_aliases $C_DIR/sge_aliases
 fi
 
@@ -710,14 +718,14 @@ fi
 # RENAME: cod_request file
 #
 if [ -f $C_DIR/cod_request ]; then
-   Translate 0 "Renaming file: %s" $C_DIR/cod_request
+   $INFOTEXT "Renaming file: %s" $C_DIR/cod_request
    Execute $MV $C_DIR/cod_request $C_DIR/sge_request
 fi
 
 #-----------------------------------------------------------------
 # UPGRADE: global cluster configuration
 #
-Translate 0 "Updating global cluster configuration file"
+$INFOTEXT "Updating global cluster configuration file"
 
 Execute $CP $C_DIR/configuration $BACKUP_DIR_COMMON
 Execute $RM $C_DIR/configuration
@@ -725,13 +733,13 @@ Execute $TOUCH $C_DIR/configuration
 $CMD_DIR/configuration.sh $SGE_MODE $BACKUP_DIR_COMMON/configuration $C_DIR/configuration \
                           $GID_RANGE "$SGE_COMPATIBILITY"
 if [ $? != 0 ]; then
-   Translate 0 "Failed updating cluster config: %s" $C_DIR/configuration
+   $INFOTEXT "Failed updating cluster config: %s" $C_DIR/configuration
 fi
 
 #-----------------------------------------------------------------
 # CREATE: settings.[c]sh
 #
-Translate 0 "Create new settings.[c]sh files"
+$INFOTEXT "Create new settings.[c]sh files"
 Execute $CP $C_DIR/settings.sh $BACKUP_DIR_COMMON
 Execute $CP $C_DIR/settings.csh $BACKUP_DIR_COMMON
 $SGE_ROOT/util/create_settings.sh $C_DIR
@@ -741,7 +749,7 @@ $SGE_ROOT/util/create_settings.sh $C_DIR
 #    be careful about the "-" combinations in this file, do not
 #    destroy any additional settings in this file
 #
-Translate 0 "Creating new >%s< file" product_mode
+$INFOTEXT "Creating new >%s< file" product_mode
 Execute $CP $C_DIR/product_mode $BACKUP_DIR_COMMON
 Execute $RM $C_DIR/product_mode
 
@@ -767,7 +775,7 @@ elif [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
 elif [ $OLD_SGE_MODE = sge -a $SGE_MODE = sge ]; then
    sed -e 's/codine/sge/' $BACKUP_DIR_COMMON/product_mode > $C_DIR/product_mode
 else
-   Translate "Ooops, this should not happen - please check your product_mode file"
+   $INFOTEXT "Ooops, this should not happen - please check your product_mode file"
    Execute $CP $BACKUP_DIR_COMMON/product_mode $C_DIR/product_mode
 fi
 
@@ -775,12 +783,12 @@ fi
 # UPGRADE: accounting file
 #
 if [ -f $C_DIR/accounting ]; then
-   Translate 0 "Updating accounting file"
+   $INFOTEXT "Updating accounting file"
    Execute $CP $C_DIR/accounting $BACKUP_DIR_COMMON
    Execute $RM $C_DIR/accounting
    env LC_ALL=C $AWK -f $CMD_DIR/accounting.awk $BACKUP_DIR_COMMON/accounting > $C_DIR/accounting
    if [ $? != 0 ]; then
-      Translate 0 "Failed updating accounting file: %s" $C_DIR/accounting
+      $INFOTEXT "Failed updating accounting file: %s" $C_DIR/accounting
    fi
 fi
 
@@ -788,7 +796,7 @@ fi
 # UPGRADE: scheduler configuration
 #
 if [ -f $C_DIR/sched_configuration ]; then
-   Translate 0 "Updating scheduler configuration"
+   $INFOTEXT "Updating scheduler configuration"
    Execute $CP $C_DIR/sched_configuration $BACKUP_DIR_COMMON/sched_configuration
    Execute $RM $C_DIR/sched_configuration
    sed -e '/^maxgjobs/d' -e 's/grd_schedule_interval/sgeee_schedule_interval/' \
@@ -801,7 +809,7 @@ fi
 #-----------------------------------------------------------------
 # Create startup script "rcsge"
 #
-Translate 0 "Creating new startup script: %s" $C_DIR/rcsge
+$INFOTEXT "Creating new startup script: %s" $C_DIR/rcsge
 Execute $CP $RC_FILE_USED $BACKUP_DIR_COMMON
 Execute $RM $RC_FILE_USED
 
@@ -826,9 +834,9 @@ Execute chmod 755 $C_DIR/rcsge
 # UPGRADE: queues/
 #
 if [ ! -d $MSPOOLdir/queues ]; then
-   Translate 0 "No queue directory found: %s" $MSPOOLdir/queues
+   $INFOTEXT "No queue directory found: %s" $MSPOOLdir/queues
 else
-   Translate 0 "Updating queues"
+   $INFOTEXT "Updating queues"
 
    if [ "`ls $MSPOOLdir/queues`" != "" ]; then
       Execute $CP $MSPOOLdir/queues/* $BACKUP_DIR_QUEUES
@@ -837,12 +845,12 @@ else
       
       for i in `ls $BACKUP_DIR_QUEUES`; do
          if [ $i = template ]; then
-            Translate 0 "   Skipping pseudo queue \"template\""
+            $INFOTEXT "   Skipping pseudo queue \"template\""
          else   
-            Translate 0 "   updating queue: %s" $i
+            $INFOTEXT "   updating queue: %s" $i
             env LC_ALL=C grep "^max_migr_time" $BACKUP_DIR_QUEUES/$i 2>&1 > /dev/null
             if [ $? != 0 ]; then
-               Translate 0 "      queue is already updated - skipping"
+               $INFOTEXT "      queue is already updated - skipping"
                Execute cp $BACKUP_DIR_QUEUES/$i $MSPOOLdir/queues
             else
                if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
@@ -860,9 +868,9 @@ fi
 # UPGRADE: exec_hosts/
 #
 if [ ! -d $MSPOOLdir/exec_hosts ]; then
-   Translate 0 "No queue directory found: %s" $MSPOOLdir/exec_hosts
+   $INFOTEXT "No queue directory found: %s" $MSPOOLdir/exec_hosts
 else
-   Translate 0 "Updating exec_hosts"
+   $INFOTEXT "Updating exec_hosts"
 
    if [ "`ls $MSPOOLdir/exec_hosts`" != "" ]; then
       Execute cp $MSPOOLdir/exec_hosts/* $BACKUP_DIR_EXEC_HOSTS
@@ -870,10 +878,10 @@ else
       Execute $RM -f $MSPOOLdir/exec_hosts/*
       
       for i in `ls $BACKUP_DIR_EXEC_HOSTS`; do
-         Translate 0 "   updating exec host: %s" $i
+         $INFOTEXT "   updating exec host: %s" $i
          env LC_ALL=C grep "^real_host_name" $BACKUP_DIR_EXEC_HOSTS/$i 2>&1 > /dev/null
          if [ $? != 0 ]; then
-            Translate 0 "      exec host is already updated - skipping"
+            $INFOTEXT "      exec host is already updated - skipping"
             Execute cp $BACKUP_DIR_EXEC_HOSTS/$i $MSPOOLdir/exec_hosts
          else
             if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
@@ -890,9 +898,9 @@ fi
 # UPGRADE: "queue" complex
 #
 if [ ! -d $MSPOOLdir/complexes ]; then
-   Translate 0 "No complex directory found: %s" $MSPOOLdir/complexes
+   $INFOTEXT "No complex directory found: %s" $MSPOOLdir/complexes
 else
-   Translate 0 "Updating >%s< complex" queue
+   $INFOTEXT "Updating >%s< complex" queue
    Execute cp $MSPOOLdir/complexes/queue $BACKUP_DIR_COMPLEXES
    sed -e "/^priority */d" $BACKUP_DIR_COMPLEXES/queue > $MSPOOLdir/complexes/queue
 fi
@@ -901,7 +909,7 @@ fi
 # UPGRADE: usersets
 #
 if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
-   Translate 0 "Updating usersets"
+   $INFOTEXT "Updating usersets"
    if [ "`ls $MSPOOLdir/usersets" != "" ]; then
 
       Execute $CP $MSPOOLdir/usersets/* $BACKUP_DIR_USERSETS
@@ -909,10 +917,10 @@ if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
       Execute $RM -f $MSPOOLdir/usersets/.??*
 
       for i in `ls $BACKUP_DIR_USERSETS`; do
-         Translate 0 "   updating userset: %s" $i
+         $INFOTEXT "   updating userset: %s" $i
          env LC_ALL=C grep "^type" $BACKUP_DIR_USERSETS/$i 2>&1 > /dev/null
          if [ $? = 0 ]; then
-            Translate 0 "      userset is already updated - skipping"
+            $INFOTEXT "      userset is already updated - skipping"
             Execute cp $BACKUP_DIR_USERSETS/$i $MSPOOLdir/usersets
          else
             Execute sed -f $CMD_DIR/usersets.sed $BACKUP_DIR_USERSETS/$i > $MSPOOLdir/usersets/$i
@@ -921,67 +929,69 @@ if [ $OLD_SGE_MODE = sge -a $SGE_MODE = sgeee ]; then
    fi
 
    if [ ! -f $MSPOOLdir/usersets/defaultdepartment ]; then
-      Translate 0 "adding %s >%s< userset" SGEEE defaultdepartment
+      $INFOTEXT "adding %s >%s< userset" SGEEE defaultdepartment
       Execute $CP $SGE_ROOT/util/resources/usersets/defaultdepartment $MSPOOLdir/usersets
    fi
    if [ ! -f $MSPOOLdir/usersets/deadlineusers ]; then
-      Translate 0 "adding %s >%s< userset" SGEEE deadlineusers
+      $INFOTEXT "adding %s >%s< userset" SGEEE deadlineusers
       Execute $CP $SGE_ROOT/util/resources/usersets/deadlineusers $MSPOOLdir/usersets
    fi
 fi
 
-echo
-WaitClear clear
+$INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "  
+$CLEAR
 
 echo
-Translate 0 "A new Grid Engine startup script has been installed as"
+$INFOTEXT "A new Grid Engine startup script has been installed as"
 $ECHO ""
-Translate 0 "   %s" $C_DIR/rcsge
+$INFOTEXT "   %s" $C_DIR/rcsge
 $ECHO ""
-Translate 0 "This script may be used on all your hosts an all architectures for"
-Translate 0 "starting Grid Engine."
+$INFOTEXT "This script may be used on all your hosts an all architectures for"
+$INFOTEXT "starting Grid Engine."
 $ECHO
-Translate 0 "Please delete your old $QSYST startup files (not all of"
-Translate 0 "of these files will exist on your systems):"
+$INFOTEXT "Please delete your old $QSYST startup files (not all of"
+$INFOTEXT "of these files will exist on your systems):"
 $ECHO ""
-Translate 0 "     /etc/codine5_startup"        
-Translate 0 "     /etc/init.d/codine5_startup"
-Translate 0 "     /sbin/init.d/codine5_startup"
-Translate 0 "     /etc/rcX.d/S95codine5"
-Translate 0 "     /etc/grd_startup"
-Translate 0 "     /etc/init.d/grd_startup"
-Translate 0 "     /sbin/init.d/grd_startup"
-Translate 0 "     /etc/rcX.d/S95grd"
+$INFOTEXT "     /etc/codine5_startup"        
+$INFOTEXT "     /etc/init.d/codine5_startup"
+$INFOTEXT "     /sbin/init.d/codine5_startup"
+$INFOTEXT "     /etc/rcX.d/S95codine5"
+$INFOTEXT "     /etc/grd_startup"
+$INFOTEXT "     /etc/init.d/grd_startup"
+$INFOTEXT "     /sbin/init.d/grd_startup"
+$INFOTEXT "     /etc/rcX.d/S95grd"
 $ECHO ""
-Translate 0 "on all your hosts where Grid Engine is installed."
-echo
-WaitClear clear
+$INFOTEXT "on all your hosts where Grid Engine is installed."
+
+$INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "  
+$CLEAR
 
 
-Translate 0 "System wide installation of new Grid Engine startup script"
+$INFOTEXT "System wide installation of new Grid Engine startup script"
 $ECHO "----------------------------------------------------------"
 $ECHO
-Translate 0 "It is recommended to install the new startup script"
+$INFOTEXT "It is recommended to install the new startup script"
 $ECHO ""
-Translate 0 "     $C_DIR/rcsge"
+$INFOTEXT "     $C_DIR/rcsge"
 $ECHO ""
-Translate 0 "on all your $QSYST hosts as"
+$INFOTEXT "on all your $QSYST hosts as"
 $ECHO ""
-Translate 0 "     /{etc|sbin}/init.d/rcsge"
+$INFOTEXT "     /{etc|sbin}/init.d/rcsge"
 $ECHO ""
-Translate 0 "and create the necessary symbolic links in"
+$INFOTEXT "and create the necessary symbolic links in"
 $ECHO ""
-Translate 0 "     /{etc|sbin}/rcX.d/S95rcsge"
-$ECHO ""
-WaitClear clear
+$INFOTEXT "     /{etc|sbin}/rcX.d/S95rcsge"
 
-Translate 0 "The Grid Engine update procedure has completed"
+$INFOTEXT -wait -auto $autoinst -n "\nHit <RETURN> to continue >> "  
+$CLEAR
+
+$INFOTEXT "The Grid Engine update procedure has completed"
 $ECHO "----------------------------------------------"
 $ECHO "" 
-Translate 0 "Please make sure to carry out all other steps as outlined in the file:"
+$INFOTEXT "Please make sure to carry out all other steps as outlined in the file:"
 $ECHO ""
-Translate 0 "   %s" doc/UPGRADE
+$INFOTEXT "   %s" doc/UPGRADE
 $ECHO ""
-Translate 0 "of the Grid Engine distribution."
+$INFOTEXT "of the Grid Engine distribution."
 
 exit 0

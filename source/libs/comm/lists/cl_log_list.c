@@ -592,8 +592,8 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
       printf("%-76s|", elem->log_module_name);
       if (elem->log_parameter == NULL) {
          printf("%ld.%ld : %15s|%4d|%10s|%8s| %s\n",
-         now.tv_sec,
-         now.tv_usec,
+         (long)now.tv_sec,
+         (long)now.tv_usec,
          elem->log_thread_name,
          elem->log_thread_id, 
          cl_thread_convert_state_id(elem->log_thread_state),
@@ -601,8 +601,8 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
          elem->log_message);
       } else {
          printf("%ld.%ld : %15s|%4d|%10s|%8s| %s %s\n",
-         now.tv_sec,
-         now.tv_usec,
+         (long)now.tv_sec,
+         (long)now.tv_usec,
          elem->log_thread_name,
          elem->log_thread_id, 
          cl_thread_convert_state_id(elem->log_thread_state),

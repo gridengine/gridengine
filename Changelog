@@ -1,3 +1,5 @@
+AA-2004-04-16-1: Bugfix:    typecast for time values fix for broken build on darwin
+
 CR-2004-04-16-1: Bugfix:    Some performance fixes when max. file descriptor
                             limit is reached.
 

@@ -1648,7 +1648,7 @@ if ( "$GCC_NOERR_CFLAGS" == "" ) then
 endif
 
 # gcc-3.3
-if ( $CC == gcc ) then
+if ( $CC == gcc && `gcc --version` == "3.3") then
    set CFLAGS = "$CFLAGS -Wno-sign-compare -Wno-strict-aliasing"
 endif
 

@@ -196,7 +196,6 @@ sge_write_rusage(dstring *buffer,
    
    ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
          qname, delimiter,
-/*          lGetString(jr, JR_queue_name), delimiter,*/
           lGetHost(jr, JR_host_name), delimiter,
           lGetString(jr, JR_group), delimiter,
           lGetString(jr, JR_owner), delimiter,

@@ -92,6 +92,7 @@
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_qref.h"
+#include "sge_utility.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
@@ -801,11 +802,12 @@ int sub_command
       user_list_flag = 0;
 
    /* Did we get a valid jobid? */
-   if (/*(!user_list_flag) &&*/ (!all_users_flag) && (!all_jobs_flag))
+   if ((!user_list_flag) && (!all_users_flag) && (!all_jobs_flag))
       jid_flag = 1;
    else
       jid_flag = 0;
    jid_str = lGetString(idep, ID_str);
+
 
    if ((ret=verify_job_list_filter(alpp, all_users_flag, all_jobs_flag, 
          jid_flag, user_list_flag, ruser))) { 
@@ -1187,8 +1189,7 @@ char *ruser
       else
          where = lAndWhere(where, or_where);
    }
-   else {
-/*   if (all_jobs_flag) {*/
+   else if (!all_users_flag ) {
       DPRINTF(("Add current user to filter\n"));
       new_where = lWhere("%T(%I==%s)", JB_Type, JB_owner, ruser);
       if (!where)
@@ -2944,24 +2945,12 @@ static int job_verify_name(const lListElem *job, lList **alpp,
    DENTER(TOP_LAYER, "job_verify_name");
 
    if (isdigit(job_name[0])) {
-      ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_SS, job_name, job_descr));
+      ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_S, job_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       ret = STATUS_EUNKNOWN;
    }
-   else if (strchr(job_name, '|') != NULL){
-      ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_SS, job_name, job_descr));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      ret = STATUS_EUNKNOWN;
-   }
-   else if (strchr(job_name, '.') != NULL){
-      ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_SS, job_name, job_descr));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      ret = STATUS_EUNKNOWN;
-   }
-   else if (strchr(job_name, '$') != NULL){
-      ERROR((SGE_EVENT, MSG_JOB_MOD_NOJOBNAME_SS, job_name, job_descr));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-      ret = STATUS_EUNKNOWN;
+   else {
+      ret = verify_str_key(alpp, job_name, "job"); 
    }
 
    DEXIT;

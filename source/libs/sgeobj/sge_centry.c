@@ -201,6 +201,13 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
             DEXIT;
             return -1;
          }
+         /* normelize time values, so that the string value is based on seconds */
+         if (TYPE_TIM == type){
+            char str_value[11];
+            sprintf(str_value, "%-10.0f", dval);
+            lSetString(this_elem, CE_stringval, str_value);
+         }
+         
          break;
       case TYPE_HOST:
          /* resolve hostname and store it */

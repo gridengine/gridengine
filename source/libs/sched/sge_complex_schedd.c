@@ -776,18 +776,15 @@ static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *
    const char **filter=NULL; 
    lList *list=NULL;
 
-   int size = lGetNumberOfElem(centry_list); 
-
+   int size = lGetNumberOfElem(centry_list) + max_queue_resources ; 
+   
    DENTER(TOP_LAYER, "get_attribute_list");
    
-/*
-   int size = lGetNumberOfElem(centry_list) + max_queue_resources ; 
-
    if (global)
       size += lGetNumberOfElem(lGetList(global, EH_load_list));
    if (host)
       size +=  lGetNumberOfElem( lGetList(host, EH_load_list));
-*/
+
    filter = malloc(size * sizeof(char*)); 
    memset(filter, 0, size * sizeof(char*));
 

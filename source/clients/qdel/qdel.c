@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
          for_each(idep, ref_list) {
             lSetUlong(idep, ID_force, !no_forced_deletion);
          } 
-
+         
          /*
           * Send delete request to master. If the master is not able to
           * execute the whole request when the 'all' or '-uall' flag was
@@ -397,11 +397,6 @@ lListElem *ep;
       }
 
       if(parse_multi_jobtaskslist(ppcmdline, "jobs", &alp, ppreflist, true)) {
-         /*
-         if (lGetNumberOfElem(*ppreflist) == 1
-             && !strcmp(lGetString(lFirst(*ppreflist), ID_str), "all")) 
-            (*palljobs) = 1; 
-         */   
          continue;
       }
    }
@@ -451,7 +446,7 @@ char *what
       fprintf(fp, "  [-help]          %s",  MSG_QDEL_help_OPT_USAGE);
       fprintf(fp, "  [-verify]        %s",  MSG_QDEL_verify_OPT_USAGE);
       fprintf(fp, "  job_task_list|   %s",  MSG_QDEL_del_list_1_OPT_USAGE);
-      fprintf(fp, "  'all'|           %s",  MSG_QDEL_del_list_2_OPT_USAGE);
+      fprintf(fp, "  '\"*\"'|         %s",  MSG_QDEL_del_list_2_OPT_USAGE);
       fprintf(fp, "  -u user_list|    %s",  MSG_QDEL_del_list_3_OPT_USAGE);
       fprintf(fp, "  -uall            %s\n",  MSG_QDEL_del_list_4_OPT_USAGE);
       fprintf(fp, "job_task_list      job_tasks{job_tasks}\n");

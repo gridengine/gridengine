@@ -79,7 +79,9 @@
 /* messages */
 #include "msg_common.h"
 
-static const char REPORTING_DELIMITER = '\t';
+/* do not change, the ":" is hard coded into the qacct file
+   parsing routines. */
+static const char REPORTING_DELIMITER = ':';
 
 /* global dstring for accounting data */
 static dstring accounting_data = DSTRING_INIT;
@@ -454,7 +456,7 @@ reporting_create_acct_record(lList **answer_list,
    char category_buffer[MAX_STRING_SIZE];
    dstring category_dstring;
    dstring job_dstring = DSTRING_INIT;
-   const char *category_string = NULL, *job_string;
+   const char *category_string = NULL, *job_string = NULL;
 
    DENTER(TOP_LAYER, "reporting_create_acct_record");
 
@@ -466,10 +468,13 @@ reporting_create_acct_record(lList **answer_list,
                                           *(userset_list_get_master_list()));
    }
 
+   if (do_accounting || do_reporting){
+      job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
+                                    category_string, REPORTING_DELIMITER);
+   }
+
    /* create record for accounting file */
    if (do_accounting) {
-      job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
-                                    category_string, ':');
       if (job_string == NULL) {
          ret = false;
       } else {
@@ -481,9 +486,6 @@ reporting_create_acct_record(lList **answer_list,
    }
 
    if (ret && do_reporting) {
-      /* create record in reporting file */
-      job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
-                                    category_string, REPORTING_DELIMITER);
       if (job_string == NULL) {
          ret = false;
       } else {

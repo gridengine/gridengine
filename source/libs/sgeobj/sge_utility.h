@@ -1,5 +1,5 @@
-#ifndef __SGE_VAR_H
-#define __SGE_VAR_H
+#ifndef __SGE_UTILITY_H
+#define __SGE_UTILITY_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -52,4 +52,4 @@
 
 int verify_str_key(lList **alpp, const char *str, const char *name);
 
-#endif /* __SGE_VAR_H */
+#endif /* __SGE_UTILITY_H */

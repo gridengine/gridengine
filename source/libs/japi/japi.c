@@ -3606,12 +3606,14 @@ static void *japi_implementation_thread(void *p)
       NoName
    };
    lCondition *where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key );
-   lEnumeration *what = NULL;/* lWhat("%T(%I)", JB_Type, JB_job_number); */
+   lEnumeration *what = NULL;
+   lListElem *where_el = NULL;
+   lListElem *what_el = NULL;
 
    what =  lIntVector2What(JB_Type, job_nm); 
 
-   lListElem *where_el = lWhereToElem(where);
-   lListElem *what_el = lWhatToElem(what);
+   where_el = lWhereToElem(where);
+   what_el = lWhatToElem(what);
    
    ec_mod_subscription_where(sgeE_JOB_LIST, what_el, where_el); 
    

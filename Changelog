@@ -1,3 +1,6 @@
+CR-2005-02-03-0: Bugfix:    fixed broken build for hp11
+                 Review:    AA
+
 RD-2005-02-03-0: Enhance.:  - code cleanup
                             kvm dependency and code removed
                  Review:    MD

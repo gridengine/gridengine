@@ -85,14 +85,14 @@ uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 
 #---------------------------------------------------------------------
 gethostname:	gethostname.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gethostname.o $(LFLAGS) -luti -llck -lrmon -lcomm -lcommlists $(DLLIB) $(LIBS)
+		$(CC) -o $@ gethostname.o $(LFLAGS) -luti -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
 
 gethostname.o:	$(UTILBIN_DIR)/gethostname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostname.c
 
 #---------------------------------------------------------------------
 gethostbyname:	gethostbyname.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gethostbyname.o $(LFLAGS) -luti -llck -lrmon -lcomm -lcommlists $(DLLIB) $(LIBS)
+		$(CC) -o $@ gethostbyname.o $(LFLAGS) -luti -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
 
 gethostbyname.o:	$(UTILBIN_DIR)/gethostbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyname.c
@@ -107,7 +107,7 @@ qping.o:	$(UTILBIN_DIR)/qping.c
 
 #---------------------------------------------------------------------
 gethostbyaddr:	gethostbyaddr.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gethostbyaddr.o $(LFLAGS) -luti -llck -lrmon -lcomm -lcommlists $(DLLIB) $(LIBS)
+		$(CC) -o $@ gethostbyaddr.o $(LFLAGS) -luti -llck -lrmon $(SECLIB) -lcomm -lcommlists $(DLLIB) $(LIBS)
 
 gethostbyaddr.o:	$(UTILBIN_DIR)/gethostbyaddr.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyaddr.c

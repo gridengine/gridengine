@@ -922,7 +922,7 @@ set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD $SECFLAGS"
 
 #---------------------------------------------------------------------------
 
-if ($SEC == 1) then
+if ($KRB == 1) then
    switch ($BUILDARCH)
     case HP11:
       set KLIBS = "-lcrypto"
@@ -930,6 +930,18 @@ if ($SEC == 1) then
    default:
       set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
       set KLIBS = ""
+   endsw
+endif
+
+
+if ($SEC == 1) then
+   switch ($BUILDARCH)
+    case HP11:
+      set SECLIB = "-lssl -lcrypto"
+      breaksw
+   default:
+      set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
+      set SECLIB = ""
    endsw
 endif
 
@@ -2321,7 +2333,7 @@ if ( "$QTCSH" == 1) then
    endif
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
-         "SGE_LIBS=$SGE_LIBS $KRBLIB $LFLAGS $KLFLAGS $KLIBS $DLLIB" \
+         "SGE_LIBS=$LFLAGS $KLFLAGS $SGE_LIBS $SECLIB $KRBLIB $KLIBS $DLLIB" \
          "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" "DLLIB=$DLLIB" $argv
 
    if ( $status != 0 ) then

@@ -74,6 +74,7 @@
 #include <openssl/err.h> 
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
+#include <openssl/rand.h>
 
 #include "cl_errors.h"
 #include "cl_connection_list.h"
@@ -114,7 +115,7 @@ static void                 (*cl_com_ssl_func__CRYPTO_set_id_callback)          
 static void                 (*cl_com_ssl_func__CRYPTO_set_locking_callback)         (void (*locking_function)(int mode, int n, const char *file, int line));
 static int                  (*cl_com_ssl_func__CRYPTO_num_locks)                    (void);
 static unsigned long        (*cl_com_ssl_func__ERR_get_error)                       (void);
-static char*                (*cl_com_ssl_func__ERR_error_string_n)                  (unsigned long e, char *buf, size_t len);
+static void                 (*cl_com_ssl_func__ERR_error_string_n)                  (unsigned long e, char *buf, size_t len);
 static void                 (*cl_com_ssl_func__ERR_free_strings)                    (void);
 static int                  (*cl_com_ssl_func__BIO_free)                            (BIO *a);
 static BIO*                 (*cl_com_ssl_func__BIO_new_fp)                          (FILE *stream, int flags);
@@ -607,7 +608,7 @@ static void cl_com_ssl_locking_callback(int mode, int type, const char *file, in
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_get_thread_id()"
-unsigned long cl_com_ssl_get_thread_id(void) {
+static unsigned long cl_com_ssl_get_thread_id(void) {
    return (unsigned long) pthread_self();  
 }
 
@@ -775,7 +776,7 @@ static int cl_com_ssl_build_symbol_table(void) {
       }
 
       func_name = "ERR_error_string_n";
-      cl_com_ssl_func__ERR_error_string_n = (char* (*)(unsigned long e, char *buf, size_t len))dlsym(cl_com_ssl_crypto_handle, func_name);
+      cl_com_ssl_func__ERR_error_string_n = (void (*)(unsigned long e, char *buf, size_t len))dlsym(cl_com_ssl_crypto_handle, func_name);
       if (cl_com_ssl_func__ERR_error_string_n == NULL) {
          CL_LOG_STR(CL_LOG_ERROR,"dlsym error: can't get function address:", func_name);
          had_errors++;

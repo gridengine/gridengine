@@ -1,3 +1,9 @@
+EB-2003-04-04-0  Bugfix:    jobs suspended due to calendar were handled as
+                            running jobs within scheduler
+                            (see EB-2003-03-26-1)
+                 Changed:   sge_schedd
+                 Review:    AH
+
 RC-2003-04-03-0  Bugfix:    Can't compile Input.c on Linux
                  Issue:     507
                  Changed:   3rdparty/qmon/Xbae/Input.c                 

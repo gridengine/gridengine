@@ -194,15 +194,14 @@ proc usage_setup  {} {
 
    add_pe pe
 
-   assign_queues_with_pe_object "all.q" "" tight
-   assign_queues_with_pe_object "all.q" "" loose1
-   assign_queues_with_pe_object "all.q" "" loose2
-   
+   set queue_conf(load_thresholds) "np_load_avg=11"
+   set queue_conf(pe_list) "tight loose1 loose2"
+
    # set memory limits
    if {$reserved_usage} {
       set queue_conf(h_vmem) "100M"
-      set_queue "all.q" "" queue_conf
    }
+   add_queue "usage.q" "@allhosts" queue_conf
 
    set_error 0 "ok"
 }
@@ -219,16 +218,12 @@ proc usage_cleanup  {} {
    
    after 15000
 
+   del_queue usage.q "" 0 1
+
    # remove pe's
    del_pe tight
    del_pe loose1
    del_pe loose2
-
-   # reset memory limits
-   if {$reserved_usage} {
-      set queue_conf(h_vmem) "INFINITY"
-      set_queue "all.q" "" queue_conf
-   }
 
    set_error 0 "ok"
 }
@@ -429,12 +424,12 @@ proc usage_check {jobid qstat_j_info slots} {
       lappend result "online memory usage ($online_mem) differs more than 10% from expected usage ($expected_mem)"
    }
    # accounting cpu
-   if {[expr abs($acct_cpu - $expected_cpu)] > [expr $expected_cpu / 50]} {
-      lappend result "accounting cpu usage ($acct_cpu) differs more than 2% from expected usage ($expected_cpu)"
+   if {[expr abs($acct_cpu - $expected_cpu)] > [expr $expected_cpu / 20]} {
+      lappend result "accounting cpu usage ($acct_cpu) differs more than 5% from expected usage ($expected_cpu)"
    }
    # accounting mem
-   if {[expr abs($acct_mem - $expected_mem)] > [expr $expected_mem / 50]} {
-      lappend result "accounting memory usage ($acct_mem) differs more than 2% from expected usage ($expected_mem)"
+   if {[expr abs($acct_mem - $expected_mem)] > [expr $expected_mem / 20]} {
+      lappend result "accounting memory usage ($acct_mem) differs more than 5% from expected usage ($expected_mem)"
    }
 
    return $result
@@ -499,7 +494,7 @@ proc usage_single {} {
    global submit_command
    puts $CHECK_OUTPUT "usage: single cpu job submitted with $submit_command"
 
-   set queue [get_queue_instance "all.q" $ts_config(master_host)]
+   set queue [get_queue_instance "usage.q" $ts_config(master_host)]
    set id [submit_with_method $submit_command "-N usage -q $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
 
    usage_monitor_check $id "usage_single" 1
@@ -513,7 +508,7 @@ proc usage_tight {} {
    global submit_command
    puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command"
 
-   set queue [get_queue_instance "all.q" $ts_config(master_host)]
+   set queue [get_queue_instance "usage.q" $ts_config(master_host)]
    set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120"]
 
    usage_monitor_check $id "usage_tight" 5
@@ -527,7 +522,7 @@ proc usage_loose {pe expected_slots} {
    global submit_command
    puts $CHECK_OUTPUT "usage: parallel job in pe $pe submitted with $submit_command"
 
-   set queue [get_queue_instance "all.q" $ts_config(master_host)]
+   set queue [get_queue_instance "usage.q" $ts_config(master_host)]
    set id [submit_with_method $submit_command "-N usage -pe $pe 4 -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
 
    usage_monitor_check $id "usage_loose" $expected_slots

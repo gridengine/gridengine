@@ -130,7 +130,7 @@ proc install_qmaster {} {
  set INSTALL_GE_NOT_AS_ROOT       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_GE_NOT_AS_ROOT] ]
  set IF_NOT_OK_STOP_INSTALLATION  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_IF_NOT_OK_STOP_INSTALLATION] ]
  set DNS_DOMAIN_QUESTION          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DNS_DOMAIN_QUESTION] ] 
- set ENTER_SPOOL_DIR_OR_HIT_RET   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SPOOL_DIR_OR_HIT_RET] "*"]
+ set ENTER_SPOOL_DIR   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SPOOL_DIR] "*"]
  set USING_GID_RANGE_HIT_RETURN   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_USING_GID_RANGE_HIT_RETURN] "*"]
  set CREATING_ALL_QUEUE_HOSTGROUP [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ALL_QUEUE_HOSTGROUP] ]
  set EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER]]
@@ -453,12 +453,18 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $OTHER_SPOOL_DIR {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(5)"
+          set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
+          if { $spooldir != "" } {
+            set answer $ANSWER_YES
+          } else {
+            set answer $ANSWER_NO
+          }
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$answer<(5)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                set anykey [wait_for_enter 1]
           }
-          send -i $sp_id "$ANSWER_NO\n"
+          send -i $sp_id "$answer\n"
           continue;
        }
 
@@ -484,7 +490,7 @@ proc install_qmaster {} {
           continue;
        }
 
-       -i $sp_id $ENTER_SPOOL_DIR_OR_HIT_RET {
+       -i $sp_id $ENTER_SPOOL_DIR {
           puts $CHECK_OUTPUT "\n"
           set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
           if { $spooldir != "" } {
@@ -506,30 +512,8 @@ proc install_qmaster {} {
             send -i $sp_id "\n"
           }
           continue;
-       }       -i $sp_id $ENTER_SPOOL_DIR_OR_HIT_RET {
-          puts $CHECK_OUTPUT "\n"
-          set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
-          if { $spooldir != "" } {
-            # use local spool dir
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
-            if {$do_log_output == 1} {
-               puts "press RETURN"
-               set anykey [wait_for_enter 1]
-            }
-            send -i $sp_id "$spooldir\n"
-            set local_master_spool_set 1
-          } else {
-            # use default spool dir
-            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
-            if {$do_log_output == 1} {
-               puts "press RETURN"
-               set anykey [wait_for_enter 1]
-            }
-            send -i $sp_id "\n"
-          }
-          continue;
-       }
-
+       }       
+       
        -i $sp_id $EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER {
           puts $CHECK_OUTPUT "\n"
           set spooldir [get_spool_dir $CHECK_CORE_MASTER execd]

@@ -1,3 +1,8 @@
+JG-2004-04-27-1: Testsuite: Extended test bugs/issuezilla/126.
+                            Cleanup in several tests.
+                            Fixed setting of local qmaster spool directory in 
+                            SGE 6.0 installation check.
+
 EB-2004-04-27-0: Bugfix:    qstat -F short cut does not work 
                  Cleanup:   register variables
                  Issue:     204, 886

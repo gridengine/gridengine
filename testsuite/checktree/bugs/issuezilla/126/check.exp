@@ -43,6 +43,7 @@ global check_highest_level
 global check_init_level_procedure
 global check_root_access_needs
 global env
+global ts_config check_126_num_hosts
 
 # set check_root_access_needs "yes"
 
@@ -53,8 +54,16 @@ set check_init_level_procedure "issue_126_init_level"
 # define test's name and run level descriptions
 set check_name            "issue_126"
 set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
-set check_highest_level   0
-set check_description(0)  "qsub -t n-m:0 should not cause floating point exception in qmaster"
+set check_highest_level   499
+
+set check_126_num_hosts [llength $ts_config(execd_hosts)]
+for {set i 0} {$i < $check_126_num_hosts} {incr i} {
+   set check_description($i) "check iz 126 on exec host $i, 1 test loop"
+   set check_description([expr 100 + $i]) "check iz 126 on exec host $i, 100 test loops"
+   set check_description([expr 200 + $i]) "check iz 126 on exec host $i, 200 test loops"
+   set check_description([expr 300 + $i]) "check iz 126 on exec host $i, 300 test loops"
+   set check_description([expr 400 + $i]) "check iz 126 on exec host $i, 400 test loops"
+}
 
 # define test's dependencies
 set check_needs           "init_core_system" 
@@ -67,31 +76,83 @@ lappend check_functions "issue_126_check"
 lappend check_functions "issue_126_cleanup"
 
 proc issue_126_init_level {} {
-   global CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_TYPE
-   global test_array_jobs 
+   global ts_config 
+   global CHECK_OUTPUT CHECK_ACT_LEVEL CHECK_HOST
+   global check_126_host check_126_loops check_126_num_hosts
 
-  switch -- $CHECK_ACT_LEVEL {
-     "0" { 
-           return 0    
-     } 
-     "1" {
-           return -1
-     }
-  } 
-  return -1  ;# no other level else
+   set majorlevel [expr $CHECK_ACT_LEVEL / 100]
+   set minorlevel [expr $CHECK_ACT_LEVEL % 100]
+
+# JG: TODO: functions retrieving pid of job do not support remote hosts
+# in level 0, we should only use 1 host (functional test)
+#   if {$minorlevel < $check_126_num_hosts} {
+   if {$minorlevel == 0} {
+      set check_126_host [lindex $ts_config(execd_hosts) $minorlevel]
+      switch -exact $majorlevel {
+         0 {
+            set check_126_loops 10
+         }
+         1 {
+            set check_126_loops 50
+         }
+         2 {
+            set check_126_loops 100
+         }
+         3 {
+            set check_126_loops 500
+         }
+         4 {
+            set check_126_loops 1000
+         }
+         default {
+            return -1
+         }
+
+      }
+      return 0
+   }   
+#   }
+
+   return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------
 
 proc issue_126_setup  {} {
+   global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+   global check_126_host check_126_loops
+
+   puts $CHECK_OUTPUT "running $check_126_loops loops on host $check_126_host"
+
+   set q1 [get_requestable_queue "q1" $check_126_host]
+   set q2 [get_requestable_queue "q2" $check_126_host]
+   set queue1(slots) "1"
+   set queue1(seq_no) "1"
+   set queue1(load_thresholds)    "np_load_avg=7.00"
+   set queue1(suspend_thresholds) "np_load_avg=7"
+# JG: TODO: we should test it with and without prolog
+   set queue1(prolog) "${CHECK_ACTUAL_TEST_PATH}/sleep.sh"
+   set result [ add_queue "q1" $check_126_host queue1]
+   if { ($result != 0)  } {
+      add_proc_error "issue_126_setup" "-1" "Could not add queue q1"
+   }
+
+   set queue2(slots) "1"
+   set queue2(seq_no) "2"
+   set queue2(load_thresholds)    "np_load_avg=7.00"
+   set queue2(suspend_thresholds) "np_load_avg=7"
+   set queue2(subordinate_list) $q1
+   set result [ add_queue "q2" $check_126_host queue2 ]
+   if { ($result != 0)  } {
+      add_proc_error "issue_126_setup" "-1" "Could not add queue q2"
+   }
 
    set_error 0 "ok"
 }
 
 proc issue_126_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
-   global CHECK_HOST
+   global check_126_host check_126_loops
 
    # 
    # Scenario
@@ -121,104 +182,96 @@ proc issue_126_check {} {
    # 1
    #
 
-   puts $CHECK_OUTPUT "using host $CHECK_HOST"
+   set q1 [get_requestable_queue "q1" $check_126_host]
+   set q2 [get_requestable_queue "q2" $check_126_host]
 
-   set q1 [get_requestable_queue "q1" $CHECK_HOST]
-   set queue1(slots) "1"
-   set queue1(seq_no) "1"
-   set queue1(load_thresholds)    "np_load_avg=7.00"
-   set queue1(suspend_thresholds) "np_load_avg=7"
-   set queue1(prolog) "${CHECK_ACTUAL_TEST_PATH}/sleep.sh"
-   set result [ add_queue "q1" $CHECK_HOST queue1]
-   if { ($result != 0)  } {
-      add_proc_error "issue_126_setup" "-1" "Could not add queue q1"
-   }
+   set runs_failed 0
 
-   set q2 [get_requestable_queue "q2" $CHECK_HOST]
-   set queue2(slots) "1"
-   set queue2(seq_no) "2"
-   set queue2(load_thresholds)    "np_load_avg=7.00"
-   set queue2(suspend_thresholds) "np_load_avg=7"
-   set queue2(subordinate_list) $q1
-   set result [ add_queue "q2" $CHECK_HOST queue2 ]
-   if { ($result != 0)  } {
-      add_proc_error "issue_126_setup" "-1" "Could not add queue q2"
-   }
-
-   #
-   # 2
-   #
-   disable_queue $q1
-   disable_queue $q2
-
-   #
-   # 3
-   #
-   set job_name "Sleeper"
-   set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 360"
-
-   set job1_args "-l q=$q1 "
-   set job1_id [submit_job "$job1_args $job_script"]
-
-   set job2_args "-l q=$q2 "
-   set job2_id [submit_job "$job2_args $job_script"]
-
-   #
-   # 4
-   #
-   enable_queue $q1
-   enable_queue $q2
-
-   #
-   # 5
-   #
-   wait_for_jobstart $job1_id $job_name 300
-   wait_for_jobstart $job2_id $job_name 300
-   wait_for_end_of_transfer $job2_id 300
-  
-   # 
-   # 6 wait until prolog of j1 has finished (prolog sleeps 10s)
-   #
-   sleep 15 
-
-   set state1 [ get_suspend_state_of_job $job1_id "pid_list" 0 ]
-   puts $CHECK_OUTPUT "suspend state is \"$state1\""
-   if { [string compare $state1 "T" ] != 0 } {
+   for {set i 0} {$i < $check_126_loops} {incr i} {
       #
-      # Bug #126 is present
-      #   
-      add_proc_error "issue_126_check" "-1" "Bug #126 is present - suspend state is \"$state1\""
+      # 2
+      #
+      disable_queue $q1
+      disable_queue $q2
+
+      #
+      # 3
+      #
+      set job_name "Sleeper"
+      set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 360"
+
+      set job1_args "-l q=$q1 "
+      set job1_id [submit_job "$job1_args $job_script"]
+
+      set job2_args "-l q=$q2 "
+      set job2_id [submit_job "$job2_args $job_script"]
+
+      #
+      # 4
+      #
+      enable_queue $q1
+      enable_queue $q2
+
+      #
+      # 5
+      #
+      wait_for_jobstart $job1_id $job_name 300 1 1
+      wait_for_jobstart $job2_id $job_name 300
+      wait_for_end_of_transfer $job1_id 300
+      wait_for_end_of_transfer $job2_id 300
+     
+      # 
+      # 6 wait until prolog of j1 has finished (prolog sleeps 10s)
+      #
+      sleep 15 
+
+      set state1 [ get_suspend_state_of_job $job1_id "pid_list" 0 ]
+      puts $CHECK_OUTPUT "suspend state is \"$state1\""
+      if { [string compare $state1 "T" ] != 0 } {
+         #
+         # Bug #126 is present
+         #   
+         incr runs_failed
+      } 
+
+      #
+      # 7
+      #
+      set result [ delete_job $job1_id]
+      if { $result != 0 } {
+         add_proc_error "issue_126_check" "-1" "Could not delete job $job1_id"
+      }
+      set result [ delete_job $job2_id]
+      if { $result != 0 } {
+         add_proc_error "issue_126_check" "-1" "Could not delete job $job2_id"
+      }
+   
    }
 
-   #
-   # 7
-   #
-   set result [ delete_job $job1_id]
-   if { $result != 0 } {
-      add_proc_error "issue_126_check" "-1" "Could not delete job $job1_id"
+   if {$runs_failed > 0} {
+      add_proc_error "issue_126_check" "-1" "Bug #126 is present - processes wern't suspended in $runs_failed of $check_126_loops test runs"
    }
-   set result [ delete_job $job2_id]
-   if { $result != 0 } {
-      add_proc_error "issue_126_check" "-1" "Could not delete job $job2_id"
-   }
-   
+
    #
    # 8   
    #
    wait_for_end_of_all_jobs "10"
-   set result [ del_queue $q2 "" 1 1]
-   if { $result != 0 } {
-      add_proc_error "issue_126_cleanup" "-1" "Could not delete queue q2 $result"
-   }
-   set result [ del_queue $q1 "" 1 1]
-   if { $result != 0 } {
-      add_proc_error "issue_126_cleanup" "-1" "Could not delete queue q1"
-   }
-
    set_error 0 "ok"
 }
 
 proc issue_126_cleanup  {} {
+   global check_126_host
+
+   delete_all_jobs
+
+   foreach queue "q1 q2" {
+      set result [del_queue [get_requestable_queue $queue $check_126_host] \
+                  "" 1 1]
+      if { $result != 0 } {
+         add_proc_error "issue_126_cleanup" "-1" \
+                        "Could not delete queue $queue: $result"
+      }
+   }
 
    set_error 0 "ok"
 }

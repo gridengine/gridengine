@@ -4237,12 +4237,17 @@ proc get_submit_error { error_id } {
 #  SEE ALSO
 #     sge_procedures/get_suspend_state_of_job()
 #*******************************
-proc get_grppid_of_job { jobid } {
+proc get_grppid_of_job { jobid {host ""}} {
   global ts_config
    global CHECK_OUTPUT CHECK_HOST
 
-   get_config value $CHECK_HOST
- 
+   # default for host parameter, use localhost
+   if {$host == ""} {
+      set host $CHECK_HOST
+   }
+
+   get_config value $host
+    
    if {[info exists value(execd_spool_dir)]} {
       set spool_dir $value(execd_spool_dir)
       puts $CHECK_OUTPUT "using local exec spool dir"  
@@ -4254,6 +4259,7 @@ proc get_grppid_of_job { jobid } {
 
    puts $CHECK_OUTPUT "Exec Spool Dir is: $spool_dir"
 
+   # JG: TODO: we have to do a cat <pidfile> on remote host
    set pidfile "$spool_dir/$CHECK_HOST/active_jobs/$jobid.1/job_pid"
 
    sleep 5
@@ -4268,6 +4274,7 @@ proc get_grppid_of_job { jobid } {
       gets $fio real_pid
       close $fio
    }
+
    return $real_pid
 }
 

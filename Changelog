@@ -1,3 +1,10 @@
+CR-2002-04-24-0: Testsuite: - creating CHECK_PRODUCT_ROOT directory if it
+                              is not existing on setup()
+                            - procedure gethostname -> try to get hostname
+                              from a local installed hostname call or from
+                              user's HOST environment variable if GE's
+                              gethostname isn't available. (before compiling)
+
 CR-2002-04-23-0: Testsuite: merged compile procedure enhancments from
                             maintrunc
 

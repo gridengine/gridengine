@@ -6450,7 +6450,7 @@ global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM do_compile
 #     ???/???
 #*******************************
 proc gethostname {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT
+  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT env
 
   set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
   if { $catch_return == 0 } {
@@ -6461,6 +6461,27 @@ proc gethostname {} {
      puts $CHECK_OUTPUT "proc gethostname - gethostname error or binary not found"
      puts $CHECK_OUTPUT "error: $result"
      puts $CHECK_OUTPUT "error: $catch_return"
+     puts $CHECK_OUTPUT "trying local hostname call ..."
+     set catch_return [ catch { exec "hostname" } result ]
+     if { $catch_return == 0 } {
+        set result [split $result "."]
+        set newname [lindex $result 0]
+        puts $CHECK_OUTPUT "got hostname: \"$newname\""
+        return $newname
+     } else {
+        puts $CHECK_OUTPUT "local hostname error or binary not found"
+        puts $CHECK_OUTPUT "error: $result"
+        puts $CHECK_OUTPUT "error: $catch_return"
+        puts $CHECK_OUTPUT "trying local HOST environment variable ..."
+        if { [ info exists env(HOST) ] } {
+           set result [split $env(HOST) "."]
+           set newname [lindex $result 0]
+           if { [ string length $newname ] > 0 } {
+               puts $CHECK_OUTPUT "got hostname_ \"$newname\""
+               return $newname
+           } 
+        }
+     }
      return "unknown"
   }
 } 
@@ -6645,11 +6666,11 @@ proc resolve_host { name { long 0 } } {
 
   set remote_arch [ resolve_arch $name ]
 
-  set result [ start_remote_prog $name $CHECK_USER "$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname" "-name" ]
+  set result [ start_remote_prog $name $CHECK_USER "$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname" "-name" prg_exit_state 60 0 "" 0 ]
   set result [ lindex $result 0 ]  ;# removing /r /n
 
   if { $prg_exit_state != 0 } {
-     puts $CHECK_OUTPUT "proc reslove_host - gethostname error or file \"$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname\" not found"
+     puts $CHECK_OUTPUT "proc resolve_host - gethostname error or file \"$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname\" not found"
      return "unknown"
   }
 

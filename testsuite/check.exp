@@ -2292,7 +2292,7 @@ proc setup { {do_only_hostname_resolving 0} } {
   global CHECK_CHECKTREE_ROOT CHECK_PRODUCT_ROOT CHECK_PRODUCT_TYPE 
   global CHECK_PRODUCT_FEATURE env 
   global CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS argv 
-  global CHECK_SUBMIT_ONLY_HOSTS
+  global CHECK_SUBMIT_ONLY_HOSTS CHECK_PRODUCT_ROOT
   global CHECK_PRODUCT_VERSION_NUMBER CHECK_USER CHECK_ARCH CHECK_HOST CHECK_COMMD_PORT
   global CHECK_RESULT_DIR CHECK_BAD_RESULT_DIR CHECK_REPORT_FILE CHECK_GROUP
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
@@ -2505,6 +2505,11 @@ proc setup { {do_only_hostname_resolving 0} } {
      if {[file isdirectory "$CHECK_JOB_OUTPUT_DIR"] != 1} {
         file mkdir "$CHECK_JOB_OUTPUT_DIR"
      }
+
+     if {[file isdirectory "$CHECK_PRODUCT_ROOT"] != 1} {
+        file mkdir "$CHECK_PRODUCT_ROOT"
+     }
+
   } 
   get_version_info
 

@@ -1,3 +1,9 @@
+SG-2004-09-15-0: Bugfix:    fixed memory leak in the scheduler
+                 Changed:   scheduler
+                 Review:    DT
+                 Issue:     1274
+                 Bugtraq:   5102320
+
 AA-2004-09-06-1: Bugfix:     parsing of repeated job arguments fixed
                  Bugtraq:    5097479
                  Issue:      1263

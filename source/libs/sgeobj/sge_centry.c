@@ -1025,6 +1025,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
             case TYPE_HOST:
             case TYPE_STR:
             case TYPE_CSTR:
+            case TYPE_RESTR:
                if(!parse_ulong_val(&dval, NULL, TYPE_DOUBLE, temp, error_msg, 199)){
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                        MSG_INVALID_CENTRY_PARSE_URGENCY_SS, attrname, error_msg);
@@ -1155,6 +1156,7 @@ centry_urgency_contribution(int slots, const char *name, double value, const lLi
    case TYPE_STR:
    case TYPE_CSTR:
    case TYPE_HOST:
+   case TYPE_RESTR:
       contribution = weight;
       DPRINTF(("   %s: using weight as contrib ---> %7f\n", name, weight));
       break;

@@ -4739,7 +4739,7 @@ proc compile_source {} {
    append mail_body "\nSuccessfully compiled and pre-installed following architectures:"
    append mail_body "\n${compiled_mail_architectures}\n"
    
-   append mail_body "\nSuccessfully installed the $CHECK_PRODUCT_TYPE system at:"
+   append mail_body "\ninit_core_system check will install the $CHECK_PRODUCT_TYPE execd at:"
    foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
       append mail_body "\n$elem ($host_arch)"
@@ -5285,6 +5285,7 @@ set mail_body "$mail_body product root directory is \"$CHECK_PRODUCT_ROOT\"\n---
 
 if { $no_action == 1 } {
 
+#   shutdown_system_daemon sauron execd
   puts "No action flag is set -> exit 1"
   exit 1
 }

@@ -1,3 +1,8 @@
+CR-2001-08-31-0: Testsuite:
+                 - issue #10 shutdown_system_daemon does not work for some platforms
+                 - start_remote_prog procedure can now export user environment on
+                   remote host
+
 EB-2001-08-30-0: Removed help output from qconf concerning 'meattr' 
                  and 'Meattr' (Issue# 50)
 

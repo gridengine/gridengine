@@ -227,7 +227,7 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #     create_shell_script -- create a /bin/sh script file 
 #
 #  SYNOPSIS
-#     create_shell_script { scriptfile exec_command exec_arguments } 
+#     create_shell_script { scriptfile exec_command exec_arguments {envlist ""}} 
 #
 #  FUNCTION
 #     This procedure generates a script which will execute the given command. 
@@ -239,12 +239,14 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #     scriptfile     - full path and name of scriptfile to generate 
 #     exec_command   - command to execute 
 #     exec_arguments - command parameters 
+#     {envlist ""}   - array with environment settings to export
 #
 #  RESULT
 #     no results 
 #
 #  EXAMPLE
-#     ??? 
+#     set envlist(COLUMNS) 500
+#     create_shell_script "/tmp/script.sh" "ps" "-ef" "envlist" 
 #
 #  NOTES
 #     ??? 
@@ -255,13 +257,18 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #  SEE ALSO
 #     file_procedures/get_dir_names
 #*******************************
-proc create_shell_script { scriptfile exec_command exec_arguments } {
+proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} } {
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_COMMD_PORT CHECK_PRODUCT_ROOT
    global CHECK_DEBUG_LEVEL 
-
+ 
+   upvar $envlist users_env
+ 
+   
 
    set script [ open "$scriptfile" "w" ]
 
+
+   
 
    # script header
    puts $script "#!/bin/sh"
@@ -281,6 +288,15 @@ proc create_shell_script { scriptfile exec_command exec_arguments } {
    puts $script "   export COMMD_PORT"
    puts $script "   export SGE_ROOT"
    puts $script "fi"
+
+   foreach u_env [ array names users_env ] {
+      set u_val [set users_env($u_env)] 
+      debug_puts "setting $u_env to $u_val"
+      puts $script "${u_env}=${u_val}"
+      puts $script "export ${u_env}"
+   }
+
+
    puts $script "echo \"_start_mark_:(\$?)\""
    puts $script "$exec_command $exec_arguments"
    puts $script "exit_val=\"\$?\""

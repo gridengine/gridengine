@@ -1,13 +1,17 @@
+EB-2002-02-25-0: Bugfix:    - Error in qdel return message if task does not
+                              exist
+                 Issue:     #144 #161
+
 AA-2002-02-25-0: Testsuite: changes from maintrunc merged
 
 AA-2002-02-22-0: BUGFIX:    memleak fix in sec_lib.c 
 
-EB-2002-02-12-0: BUGFIX:    - STEP SIZE WILL BE IGNORED FROM QDEL COMMAND
 EB-2002-02-18-0: Bugfix:    Attempt to unlink directory + bogus error message
                             - finished jobs have no task instanced
                               => do not create a directory
                               => put whole zombie job into one file
-                                 $SGE_ROOT/default/spool/qmaster/zombies/ ...                                       ... xx/yyyy/zzzz (zzzz is a file)
+                                 $SGE_ROOT/default/spool/qmaster/zombies/ ... 
+                                 ... xx/yyyy/zzzz (zzzz is a file)
                  Issue:    #149  
 
 EB-2002-02-12-0: Bugfix:    - step size will be ignored from qdel command

@@ -852,8 +852,17 @@ int sub_command
       end = job_get_biggest_task_id(job);
       rn = lFirst(lGetList(idep, ID_ja_structure));
       if (rn) {
-         start = MAX(lGetUlong(rn, RN_min), start);
-         end = MIN(lGetUlong(rn, RN_max), end);
+         u_long32 tmp_start, tmp_end;
+
+         tmp_start = MAX(lGetUlong(rn, RN_min), start);
+         tmp_end = MIN(lGetUlong(rn, RN_max), end);
+         if (tmp_start <= tmp_end) {
+            start = tmp_start;
+            end = tmp_end;
+         } else {
+            start = lGetUlong(rn, RN_min);
+            end = lGetUlong(rn, RN_max);
+         }     
          step = lGetUlong(rn, RN_step);
          if (!step)
             step = 1;

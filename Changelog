@@ -1,3 +1,6 @@
+CR-2004-04-29-1: Bugfix:    fixed core dump of qmaster when setting a host
+                            to unheard.
+
 SG-2004-04-29-0: Bugfix:    qdel -u "*" jid deleted all jobs of all users.
                  Changed:   qmaster
                  Review:    JG

@@ -602,14 +602,11 @@ const char *target    /* prognames[QSTD|EXECD] */
 
    if (target) {
       if ( cl_com_remove_known_endpoint_from_name((char*)host,(char*)target,1) == CL_RETVAL_OK) {
-         DEBUG(( "set %s/%s/%d to unheard\n", host, target, 1 ));
+         DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host, target, 1 ));
       }
    } else {
       if ( cl_com_remove_known_endpoint_from_name((char*)host,(char*)prognames[EXECD],1) == CL_RETVAL_OK) {
-         DEBUG(( "set %s/%s/%d to unheard\n", host,(char*)prognames[EXECD], 1 ));
-      }
-      if ( cl_com_remove_known_endpoint_from_name((char*)host,(char*)prognames[QSTD],1) == CL_RETVAL_OK) {
-         DEBUG(( "set %s/%s/%d to unheard\n", host,(char*)prognames[QSTD], 1 ));
+         DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host,(char*)prognames[EXECD], 1 ));
       }
    }
 

@@ -1,3 +1,7 @@
+AS-2004-03-29-0  Enhancem.: qmon_help.ad does not need to be sed'ed anymore
+                            before it is installed
+                 Changed:   dist/qmon/qmon_help.ad
+
 MD-2004-03-26-0: Enhancem.: Renamed ARCH variable to SGE_ARCH
                             Fetch ADMINUSER from bootstrap during execd
                             install

@@ -1931,6 +1931,7 @@ JG-2004-01-29-1: Bugfix:    When queue instances were spooled as a result of a
 MD-2004-01-29-1: Bugfix:    command (eg. qstat) crashes, 
                             if -u -q option get an empty argument
                  Issue:     #600
+                 Bugtraq:   #5018733
                  Changed:   qstat, qalter, qhost, qmod, qsub
                  Review:    EB
 
@@ -1984,6 +1985,7 @@ EB-2004-01-28-0: Enhancem.: Changed some man-pages concerning CQs
 
 MD-2004-01-28-2: Bugfix:    qalter lacks option -dl              
                  Issue:     #599
+                 Bugtraq:   #5018726
                  Changed:   sge_qmaster, qstat, qalter
                  Review:    EB
 

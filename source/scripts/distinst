@@ -1147,16 +1147,25 @@ for i in $ARCH; do
          done
 
          for lib in $OPENSSL_SHARED_LIBRARIES; do
-            if [ $DSTARCH != tru64 ];  then
-               libname="$OPENSSLBASE/$DSTARCH/lib/$lib.${shlibext}.0.9.7"
-            else
+            if [ $DSTARCH = tru64 ]; then
                libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext"
+            elif [ $DSTARCH = darwin ];  then
+               libname="$OPENSSLBASE/$DSTARCH/lib/$lib.0.9.7.$shlibext"
+            else
+               libname="$OPENSSLBASE/$DSTARCH/lib/$lib.$shlibext.0.9.7"
             fi
             if [ -f $libname ]; then
                InstallProg $libname
-               if [ $DSTARCH != tru64 ]; then
+               if [ $DSTARCH = tru64 ]; then
+                  :
+               elif [ $DSTARCH = darwin ]; then
+                  (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; \
+                   ln -s $lib.$shlibext $lib.0.$shlibext; \
+                   ln -s $lib.$shlibext $libname $lib.$shlibext)
+               else
                   (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; ln -s $lib.${shlibext}.0.9.7 $lib.$shlibext)
                fi
+               
             elif [ $exit_on_error = true ]; then
                echo "\"$libname\" not found. Installation failed."
                exit 1

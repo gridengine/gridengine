@@ -100,7 +100,7 @@
 /* 
 ** schedd/sge_schedd_text.c
 */ 
-#define MSG_SGETEXT_UP_REFERENCED_TWICE_SS            _MESSAGE(47051, _("denied: share tree contains reference to unknown "SFN" "SFQ"\n") )   
+/* #define MSG_SGETEXT_UP_REFERENCED_TWICE_SS            _message(47051, _("denied: share tree contains reference to unknown "SFN" "SFQ"\n") )    __TS Removed automatically from testsuite!! TS__*/
 
 #define MSG_SCHEDD_INFO_CANNOTRUNATHOST_SSS           _MESSAGE(47054, _("(-l"SFN") cannot run at host "SFQ" because "SFN"" ) ) 
 #define MSG_SCHEDD_INFO_HASNOPERMISSION_SS            _MESSAGE(47055, _("has no permission for "SFN" "SFQ""))

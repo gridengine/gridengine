@@ -88,7 +88,7 @@
 #define MSG_COMMDCNTL_t_OPT_USAGE                     _MESSAGE(39040, _("trace\n"))
 #define MSG_COMMDCNTL_d_OPT_USAGE                     _MESSAGE(39041, _("dump structures to"))
 #define MSG_COMMDCNTL_p_OPT_USAGE                     _MESSAGE(39042, _("port commd is waiting on\n"))
-#define MSG_COMMDCNTL_S_OPT_USAGE                     _MESSAGE(39043, _("secure mode\n"))
+/* #define MSG_COMMDCNTL_S_OPT_USAGE                     _message(39043, _("secure mode\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_COMMDCNTL_U_OPT_USAGE                     _MESSAGE(39044, _("switch off secure mode\n"))
 #define MSG_COMMDCNTL_gid_OPT_USAGE                   _MESSAGE(39045, _("get id of commproc\n"))
 #define MSG_COMMDCNTL_unreg_OPT_USAGE                 _MESSAGE(39046, _("unregister commproc\n"))

@@ -1,3 +1,6 @@
+CR-2002-11-28-0  Cleanup:   un-commented message macros not used in source code
+                 L10N:
+
 EB-2002-11-25-2  Bugfix:    qstat -f output broken for pe jobs on same queue
                  IZ:        #430
                  Review:    CR

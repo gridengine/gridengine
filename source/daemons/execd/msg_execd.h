@@ -64,7 +64,7 @@
 */
 #define MSG_SLAVE    _MESSAGE(29007, _("slave "))
 #define MSG_COREDUMPED    _MESSAGE(29008, _("(core dumped) "))
-#define MSG_WAITPIDNOSIGNOEXIT_PI   _MESSAGE(29009, _("waitpid() returned for pid "U32CFormat" status %d unequal WIFSIGNALED/WIFEXITED\n"))
+/* #define MSG_WAITPIDNOSIGNOEXIT_PI   _message(29009, _("waitpid() returned for pid "U32CFormat" status %d unequal WIFSIGNALED/WIFEXITED\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SHEPHERD_VSHEPHERDOFJOBWXDIEDTHROUGHSIGNALYZ_SUUSI    _MESSAGE(29010, _("%sshepherd of job "U32CFormat"."U32CFormat" died through signal %s= %d"))
 #define MSG_SHEPHERD_WSHEPHERDOFJOBXYEXITEDWITHSTATUSZ_SUUI    _MESSAGE(29011, _("%sshepherd of job "U32CFormat"."U32CFormat" exited with exit status = %d\n"))
 #define MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU    _MESSAGE(29012, _("missing job "U32CFormat"."U32CFormat" in job report for exiting job - adding it"))

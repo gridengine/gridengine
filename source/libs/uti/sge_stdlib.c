@@ -147,7 +147,7 @@ char *sge_free(char *cp)
    return NULL;
 }  
 
-/****** sge_stdlib/sge_getenv() ***********************************************
+/****** uti/stdlib/sge_getenv() ***********************************************
 *  NAME
 *     sge_getenv() -- get an environment variable 
 *

@@ -30,7 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <unistd.h>  
 #include <pwd.h>
@@ -46,9 +45,9 @@
 #include "sge_me.h"
 #include "setup_path.h"
 #include "sge_stat.h" 
+#include "sge_unistd.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
-#include "sge_dir.h"
 #include "sge_feature.h"
 
 static char *def_files[3 + 1];

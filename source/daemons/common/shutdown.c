@@ -31,11 +31,11 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
+#include "sge_unistd.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_feature.h"
 #include "shutdown.h"
-#include "sge_exit.h"
 #include "setup_path.h"
 #include "sge_getme.h"
 #include "msg_daemons_common.h"

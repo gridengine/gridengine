@@ -37,7 +37,6 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdlib.h>
 
 
@@ -47,17 +46,16 @@
 #include "qidl_c_gdi.h"
 #endif
 
+#include "sge_unistd.h"
 #include "basis_types.h"
 #include "sge.h"
 #include "def.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_time.h"
 #include "sge_timestop.h"
 #include "sge_string.h"
 #include "sge_log_pid.h"
-#include "sge_mkdir.h"
 #include "sge_daemonize.h"
 #include "sge_me.h"
 #include "sge_conf.h"
@@ -248,7 +246,7 @@ char **argv
     */
    in_main_loop = 0;
    
-   install_exit_func(qmaster_exit_func);
+   sge_install_exit_func(qmaster_exit_func);
    sge_setup_sig_handlers(QMASTER);
    
    lInit(nmv);

@@ -34,24 +34,21 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <limits.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "sge_c_event.h"
-#include "sge_chdir.h"
 #include "sge_copy_append.h"
 #include "sge_daemonize.h"
-#include "sge_exit.h"
 #include "sge_job_schedd.h"
 #include "sge_log.h"
 #include "sge_log_pid.h"
 #include "sge_me.h"
-#include "sge_mkdir.h"
 #include "sge_orders.h"
 #include "sge_prognames.h"
 #include "sge_schedd.h"
@@ -137,7 +134,7 @@ char *argv[]
 
    /* exit func for SGE_EXIT() */
    in_main_loop = 0;
-   install_exit_func(schedd_exit_func);
+   sge_install_exit_func(schedd_exit_func);
    sge_setup_sig_handlers(SCHEDD);
 
    sge_setup(SCHEDD, NULL);

@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>  
 #include <fnmatch.h>
 
 #include "sgermon.h"
@@ -41,7 +40,6 @@
 #include "sge.h"
 #include "sge_timestop.h"
 #include "sge_time.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
@@ -76,6 +74,7 @@
 #include "sge_conf.h" 
 #include "sgeee.h" 
 #include "sge_support.h"
+#include "sge_unistd.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "

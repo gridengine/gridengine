@@ -31,14 +31,12 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <netdb.h>
 
 #include "sge_log.h"
 #include "sge.h"
 #include "sge_arch.h"
-#include "sge_exit.h"
 #include "sge_get_confval.h"
 #include "sge_me.h"
 #include "sge_pids.h"
@@ -53,6 +51,7 @@
 #include "msg_daemons_common.h"
 #include "sge_string.h"
 #include "sge_feature.h"
+#include "sge_unistd.h"
 
 #include "host.h"
 

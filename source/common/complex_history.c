@@ -47,10 +47,8 @@
 #endif
 
 #include <fcntl.h>    
-#include <unistd.h>
 #include <errno.h>    
 
-#include "msg_history.h"
 #include "def.h"
 #include "sge_all_listsL.h"
 #include "sge_complex.h"
@@ -63,13 +61,15 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "sge_mkdir.h"
 #include "read_write_host.h"
 #include "setup_path.h"
 #include "sge_language.h"
 #include "sge_stat.h" 
 #include "sge_dirent.h"
+#include "sge_unistd.h"
+
 #include "msg_common.h"
+#include "msg_history.h"
 
 extern lList *Master_Complex_List;
 

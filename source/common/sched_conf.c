@@ -49,7 +49,6 @@
 #include "read_object.h"
 #include "sge_feature.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "setup_path.h"
 #include "sge_stat.h" 
 #include "msg_common.h"

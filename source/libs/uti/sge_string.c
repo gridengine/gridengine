@@ -36,7 +36,6 @@
 
 #include "sgermon.h"
 #include "sge_string.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "def.h"
 #include "msg_utilib.h"
@@ -45,6 +44,7 @@
 
 /* compare hosts with FQDN or not */
 int fqdn_cmp = 0;
+
 char *default_domain = NULL;
 
 /****** uti/string/sge_basename() **********************************************
@@ -69,7 +69,6 @@ char *default_domain = NULL;
 *
 *  EXAMPLE
 *     sge_basename("/usr/local/bin/flex", '/'); returns "flex"
-*
 *******************************************************************************/
 const char *sge_basename(const char *name, int delim) 
 {
@@ -77,17 +76,18 @@ const char *sge_basename(const char *name, int delim)
 
    DENTER(BASIS_LAYER, "sge_basename");
 
-   if (!name)
+   if (!name) {
       return NULL;
-   if (name[0] == '\0')
+   }
+   if (name[0] == '\0') {
       return NULL;
+   }
 
    cp = strrchr(name, delim);
    if (!cp) {
       DEXIT;
       return name; 
-   }
-   else {
+   } else {
       cp++;
       if (*cp == '\0') {
          DEXIT;
@@ -100,21 +100,32 @@ const char *sge_basename(const char *name, int delim)
    }
 }
 
-/*-------------------------------------------------------------------
- * sge_dirname
- *
- * returns: pointer to a malloced string containing the first part
- *          of "name" up to, but not including delimiter
- *          NULL if "name" is NULL or zero length string or delimiter is
- *          first character in "name"
- *
- *          This routine is called "dirname" in opposite to "basename"
- *          but is mostly used to strip off the domainname of a FQDN
- *-------------------------------------------------------------------*/
-char *sge_dirname(
-const char *name,
-int delim 
-) {
+/****** uti/string/sge_dirname() **********************************************
+*  NAME
+*     sge_dirname() -- Return first part of string up to deliminator 
+*
+*  SYNOPSIS
+*     char* sge_dirname(const char *name, int delim) 
+*
+*  FUNCTION
+*     The function will return a malloced string containing the first part
+*     of 'name' up to, but not including deliminator. NULL will be returned
+*     if 'name' is NULL or a zero length string or if 'deliminitor' is
+*     the first character in 'name' 
+*
+*  INPUTS
+*     const char *name - string 
+*     int delim        - deliminator 
+*
+*  RESULT
+*     char* - malloced string
+*
+*  NOTES
+*     This routine is called "dirname" in opposite to "basename"
+*     but is mostly used to strip off the domainname of a FQDN     
+******************************************************************************/
+char *sge_dirname(const char *name, int delim) 
+{
    char *cp, * cp2;
 
    DENTER(BASIS_LAYER, "sge_dirname");
@@ -135,13 +146,11 @@ int delim
       cp2 = strdup(name);
       DEXIT;
       return cp2;
-   }
-   else {
+   } else {
       if ((cp2 = malloc((cp - name) + 1)) == NULL) {
          DEXIT;
          return 0;
-      }
-      else {
+      } else {
          strncpy(cp2, name, cp - name);
          cp2[cp - name] = '\0';
          DEXIT;

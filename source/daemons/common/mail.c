@@ -45,7 +45,7 @@
 #include "sig_handlers.h"
 #include "sge_pgrp.h"
 #include "sge_me.h"
-#include "sge_exit.h"
+#include "sge_daemonize.h"
 #include "msg_daemons_common.h"
 
 

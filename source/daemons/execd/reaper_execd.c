@@ -54,10 +54,7 @@
 #include "sge_pids.h"
 #include "sge_log.h"
 #include "sge_usageL.h"
-#include "sge_chdir.h"
-#include "sge_mkdir.h"
 #include "sge_getpwnam.h"
-#include "sge_dir.h"
 #include "sge_time.h"
 #include "slots_used.h"
 #include "sge_queueL.h"
@@ -98,6 +95,7 @@
 #include "sge_file_path.h"
 #include "read_write_job.h"
 #include "sge_job_jatask.h"
+#include "sge_unistd.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -905,7 +903,7 @@ lListElem *jr
          sprintf(jobdir, "%s/"u32"."u32"", ACTIVE_DIR, lGetUlong(job, JB_job_number),
             jataskid);
          DPRINTF(("removing active dir: %s\n", jobdir));
-         if (recursive_rmdir(jobdir, err_str)) {
+         if (sge_rmdir(jobdir, err_str)) {
             ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
                    jobdir, err_str));
          }
@@ -990,7 +988,7 @@ lListElem *jr
                   The pain with this case is, that we have not much information
                   to report this job to qmaster. */
 
-               if (recursive_rmdir(jobdir, err_str)) {
+               if (sge_rmdir(jobdir, err_str)) {
                   ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
                          jobdir, err_str));
                }
@@ -1024,7 +1022,7 @@ lListElem *jr
          /* active dir */
          if (!getenv("SGE_KEEP_ACTIVE")) {
             DPRINTF(("removing active dir: %s\n", jobdir));
-            if (recursive_rmdir(jobdir, err_str)) {
+            if (sge_rmdir(jobdir, err_str)) {
                ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
                       jobdir, err_str));
             }
@@ -1274,7 +1272,7 @@ int startup
          {
             char path[SGE_PATH_MAX];
             sprintf(path, ACTIVE_DIR"/%s", jobdir);
-            recursive_rmdir(path, SGE_EVENT);
+            sge_rmdir(path, SGE_EVENT);
          }
          continue;
       }

@@ -42,7 +42,7 @@
 #include "sge_prognames.h"
 #include "sge_me.h"
 #include "sge_options.h"
-#include "sge_exit.h"
+#include "sge_unistd.h"
 #include "msg_gdilib.h"
 
 static void print_marked(FILE *fp);

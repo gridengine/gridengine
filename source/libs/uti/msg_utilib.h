@@ -77,7 +77,7 @@
 
 
 /* 
-** utilib/sge_chdir.c
+** utilib/sge_unistd.c
 */ 
 #define MSG_FILE_NOCDTODIRECTORY_S           _("can't change to directory \"%s\"")
 
@@ -126,14 +126,6 @@
 #define MSG_LOG_ZEROLENGTH                   _("zero length")
 #define MSG_POINTER_NULL                     _("NULL")
 
-
-/* 
-** utilib/sge_mkdir.c
-*/ 
-#define MSG_VAR_PATHISNULLINSGEMKDIR            _("path == NULL in sge_mkdir()")
-#define MSG_FILE_CREATEDIRFAILED_SS             _("can't create directory \"%s\": %s\n")
-
-
 /* 
 ** utilib/sge_peopen.c
 */ 
@@ -165,19 +157,6 @@
 */ 
 #define MSG_PROC_SIGACTIONFAILED_IS             _("sigaction for signal %d failed: %s")
 
-
-/* 
-** utilib/sge_set_uid_gid.c
-*/ 
-#define MSG_SYSTEM_CHANGEUIDORGIDFAILED         _("tried to change uid/gid without being root")
-#define MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI       _("gid of user %s ("gid_t_fmt") less than minimum allowed in conf (%d)")
-#define MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI       _("uid of user %s ("uid_t_fmt") less than minimum allowed in conf (%d)")
-#define MSG_SYSTEM_SETGIDFAILED_U               _("setgid("gid_t_fmt") failed")
-#define MSG_SYSTEM_SETUIDFAILED_U               _("setuid("uid_t_fmt") failed")
-#define MSG_SYSTEM_SETEGIDFAILED_U              _("setegid("gid_t_fmt") failed")
-#define MSG_SYSTEM_SETEUIDFAILED_U              _("seteuid("uid_t_fmt") failed")
-#define MSG_SYSTEM_INITGROUPSFAILED_I           _("initgroups() failed with errno %d\n")
-#define MSG_SYSTEM_ADDGROUPIDFORSGEFAILED       _("can't set additional group id for job\n")
 
 /* 
 ** utilib/sge_signal.c
@@ -241,6 +220,16 @@
 */ 
 #define MSG_SYSTEM_GETPWUIDFAILED_US               _("getpwuid("pid_t_fmt") failed: %s\n")
 #define MSG_SYSTEM_GETGRGIDFAILED_US               _("getgrgid("pid_t_fmt") failed: %s\n")
+#define MSG_SYSTEM_GETPWNAMFAILED_S   _("can't get password entry for user "SFQ". Either the user does not exist or NIS error!") 
+#define MSG_SYSTEM_CHANGEUIDORGIDFAILED         _("tried to change uid/gid without being root")
+#define MSG_SYSTEM_GIDLESSTHANMINIMUM_SUI       _("gid of user %s ("gid_t_fmt") less than minimum allowed in conf (%d)")
+#define MSG_SYSTEM_UIDLESSTHANMINIMUM_SUI       _("uid of user %s ("uid_t_fmt") less than minimum allowed in conf (%d)")
+#define MSG_SYSTEM_SETGIDFAILED_U               _("setgid("gid_t_fmt") failed")
+#define MSG_SYSTEM_SETUIDFAILED_U               _("setuid("uid_t_fmt") failed")
+#define MSG_SYSTEM_SETEGIDFAILED_U              _("setegid("gid_t_fmt") failed")
+#define MSG_SYSTEM_SETEUIDFAILED_U              _("seteuid("uid_t_fmt") failed")
+#define MSG_SYSTEM_INITGROUPSFAILED_I           _("initgroups() failed with errno %d\n")
+#define MSG_SYSTEM_ADDGROUPIDFORSGEFAILED       _("can't set additional group id for job\n")
 
 /* 
 ** utilib/sge_stdlib.c
@@ -253,6 +242,8 @@
 ** utilib/sge_unistd.c
 */ 
 #define MSG_POINTER_SUFFIXISNULLINSGEUNLINK        _("suffix == NULL in sge_unlink()\n") 
+#define MSG_VAR_PATHISNULLINSGEMKDIR            _("path == NULL in sge_mkdir()")
+#define MSG_FILE_CREATEDIRFAILED_SS             _("can't create directory \"%s\": %s\n")
 
 #endif /* __MSG_UTILIB_H */
 

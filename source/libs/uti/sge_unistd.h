@@ -34,8 +34,24 @@
 
 #include <unistd.h>
 
+typedef void (*exit_func_type)(int);
+
 int sge_unlink(const char *prefix, const char *suffix); 
 
 void sge_sleep(int sec, int usec);
+
+int sge_chdir(const char *path, int exit_on_error);  
+
+void sge_exit(int i);
+
+int sge_mkdir(const char *path, int fmode, int exit_on_error);    
+ 
+exit_func_type sge_install_exit_func(exit_func_type);     
+
+int sge_rmdir(const char *cp, char *err_str);
+ 
+int sge_is_directory(const char *name);
+ 
+int sge_is_file(const char *name);
 
 #endif /* __SGE_UNISTD_H */

@@ -39,13 +39,10 @@ UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 UTILIB_SRC = sge_afsutil.c \
          sge_arch.c \
          sge_bitop.c \
-         sge_chdir.c \
          sge_copy_append.c \
          sge_crc.c \
          host.c \
          sge_daemonize.c \
-         sge_dir.c \
-         sge_exit.c \
          sge_filecmp.c \
          sge_get_confval.c \
          sge_getloadavg.c \
@@ -58,13 +55,11 @@ UTILIB_SRC = sge_afsutil.c \
          sge_loadmem.c \
          sge_log.c \
          sge_log_pid.c \
-         sge_mkdir.c \
          sge_nprocs.c \
          sge_peopen.c \
          sge_pids.c \
          sge_prognames.c \
          sge_set_def_sig_mask.c \
-         sge_set_uid_gid.c \
          sge_signal.c \
          sge_str_from_file.c \
          sge_string.c \
@@ -133,9 +128,6 @@ sge_afsutil.o: $(UTILIB_DIR)/sge_afsutil.c
 sge_copy_append.o:	$(UTILIB_DIR)/sge_copy_append.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_copy_append.c
 
-sge_set_uid_gid.o:	$(UTILIB_DIR)/sge_set_uid_gid.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_set_uid_gid.c
-
 sge_set_def_sig_mask.o:	$(UTILIB_DIR)/sge_set_def_sig_mask.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_set_def_sig_mask.c
 
@@ -147,9 +139,6 @@ sge_str_from_file.o:	$(UTILIB_DIR)/sge_str_from_file.c
 
 sge_string.o:	$(UTILIB_DIR)/sge_string.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_string.c
-
-sge_exit.o:	$(UTILIB_DIR)/sge_exit.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_exit.c
 
 sge_time.o:	$(UTILIB_DIR)/sge_time.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_time.c
@@ -174,9 +163,6 @@ sge_log_pid.o:	$(UTILIB_DIR)/sge_log_pid.c
 
 sge_isint.o:	$(UTILIB_DIR)/sge_isint.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_isint.c
-
-sge_dir.o: 	$(UTILIB_DIR)/sge_dir.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_dir.c
 
 sge_crc.o: 	$(UTILIB_DIR)/sge_crc.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_crc.c
@@ -238,14 +224,8 @@ sge_getme.o:	$(UTILIB_DIR)/sge_getme.c
 sge_log.o:	$(UTILIB_DIR)/sge_log.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_log.c
 
-sge_mkdir.o:	$(UTILIB_DIR)/sge_mkdir.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_mkdir.c
-
 sge_signal.o:	$(UTILIB_DIR)/sge_signal.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_signal.c
-
-sge_chdir.o:	$(UTILIB_DIR)/sge_chdir.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_chdir.c
 
 sge_hash.o:	$(UTILIB_DIR)/sge_hash.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hash.c

@@ -82,10 +82,10 @@ struct rusage {
 
 /* from utilib */
 #include "sge_getpwnam.h"
-#include "sge_set_uid_gid.h"
 #include "sge_set_def_sig_mask.h"
 #include "sge_switch_user.h"
 #include "sge_stat.h" 
+#include "sge_uidgid.h"
 
 /* static functions */
 static char **read_job_args(char **args, int extra_args);
@@ -284,11 +284,12 @@ int truncate_stderr_out
     }
                                                                       
    if(qlogin_starter) { 
-      ret = setuidgidaddgrp(target_user, intermediate_user, 0, 0, 
-                            add_grp_id, err_str, use_qsub_gid, gid);
+      ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, 0, 0, 
+                                   add_grp_id, err_str, use_qsub_gid, gid);
    } else {   
-      ret = setuidgidaddgrp(target_user, intermediate_user, min_gid, min_uid, 
-                            add_grp_id, err_str, use_qsub_gid, gid);
+      ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, min_gid, 
+                                   min_uid, add_grp_id, err_str, use_qsub_gid, 
+                                   gid);
    }   
    if (ret < 0) {
       shepherd_trace(err_str);
@@ -534,9 +535,11 @@ int truncate_stderr_out
 
    if (intermediate_user) {
       if(qlogin_starter) {
-         ret = setuidgidaddgrp(target_user, NULL, 0, 0, add_grp_id, err_str, use_qsub_gid, gid);
+         ret = sge_set_uid_gid_addgrp(target_user, NULL, 0, 0, add_grp_id, 
+                                      err_str, use_qsub_gid, gid);
       } else {
-         ret = setuidgidaddgrp(target_user, NULL, min_gid, min_uid, add_grp_id, err_str, use_qsub_gid, gid);
+         ret = sge_set_uid_gid_addgrp(target_user, NULL, min_gid, min_uid, 
+                                      add_grp_id, err_str, use_qsub_gid, gid);
       }
       if (ret < 0) {
          shepherd_trace(err_str);

@@ -29,11 +29,11 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+#include "sge_unistd.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "usage.h"
 #include "parse_qconf.h"
-#include "sge_exit.h"
 #include "sig_handlers.h"
 #include "commlib.h"
 #include "sge_prognames.h"

@@ -528,6 +528,7 @@ PrintConf()
    $ECHO "max_aj_instances       2000"
    $ECHO "max_aj_tasks           75000"
    $ECHO "max_u_jobs             0"
+   $ECHO "max_jobs               0"
 }
 
 #-------------------------------------------------------------------------

@@ -114,7 +114,6 @@ typedef unsigned long long sbv_t;
 #include "sge_signal.h"
 #include "sge_pgrp.h"
 #include "sge_time.h"
-#include "sge_set_uid_gid.h"
 #include "sge_getpwnam.h"
 #include "sge_parse_num_par.h"
 #include "sgedefs.h"
@@ -129,7 +128,7 @@ typedef unsigned long long sbv_t;
 #include "sge_max_nis_retries.h"
 #include "sge_stat.h" 
 #include "sge_feature.h"
-#include "sge_exit.h"
+#include "sge_daemonize.h"
 
 #if defined(__sgi) || defined(ALPHA)
 #include "sge_nprocs.h"
@@ -2490,7 +2489,8 @@ static int start_async_command(char *descr, char *cmd)
          use_qsub_gid = 0;       
          gid = 0;
       }
-      if (setuidgidaddgrp(get_conf_val("job_owner"), NULL, 0, 0, 0, err_str, use_qsub_gid, gid) > 0) {
+      if (sge_set_uid_gid_addgrp(get_conf_val("job_owner"), NULL, 0, 0, 0, 
+                                 err_str, use_qsub_gid, gid) > 0) {
          shepherd_trace(err_str);
          exit(1);
       }   

@@ -34,7 +34,6 @@
 
 #include "def.h"
 #include "sgermon.h"
-#include "sge_exit.h"
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_gdi_intern.h"

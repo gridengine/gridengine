@@ -41,8 +41,8 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "sge_exit.h"
 #include "msg_gdilib.h"
+#include "sge_unistd.h"
 
 #define SEPCHARS ","
 

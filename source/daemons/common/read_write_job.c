@@ -43,10 +43,8 @@
 #include "cull_file.h"
 #include "cull_list.h"
 #include "read_write_job.h"
-#include "sge_mkdir.h"
 #include "sge_file_path.h"
 #include "utility_daemon.h"
-#include "sge_dir.h"
 #include "sge_stringL.h"
 #include "sge_job.h"
 #include "sge_job_jatask.h"
@@ -59,6 +57,7 @@
 #include "sge_suser.h"
 #include "sge_conf.h"
 #include "sge_unistd.h"
+#include "sge_job.h"
 
 extern lList *Master_Job_List;
 
@@ -500,7 +499,7 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
             DTRACE;
          }
          DPRINTF(("removing "SFN"\n", spool_dir));
-         if (recursive_rmdir(spool_dir, error_string)) {
+         if (sge_rmdir(spool_dir, error_string)) {
             ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
                    MSG_JOB_JOB_SPOOL_DIRECTORY, spool_dir));
             DTRACE;
@@ -694,6 +693,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
             job_list_add_job(job_list, list_name, job, 0);
             
             if (!handle_as_zombie) {
+               job_list_register_new_job(Master_Job_List, conf.max_jobs, 1);
                suser_register_new_job(job, conf.max_u_jobs, 1);
             }
          }

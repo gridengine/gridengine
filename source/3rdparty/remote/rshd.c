@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.2 2002/01/09 07:23:48 joga Exp $	*/
+/*	$Id: rshd.c,v 1.3 2002/02/20 15:12:54 ernst Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -83,9 +83,9 @@
 
 #include <sge_pgrp.h>
 #include <setosjobid.h>
-#include <sge_set_uid_gid.h>
 #include <config_file.h>
 #include <sge_switch_user.h>
+#include <sge_uidgid.h>
 
 #if defined SOLARIS || SUN4 || HP11 || HP10 || NECSX5 || CRAY
 #define _PATH_NOLOGIN "/etc/nologin"
@@ -588,7 +588,7 @@ fail:
 #if (SOLARIS || ALPHA || LINUX)     
    /* add Additional group id to current list of groups */
    if (add_grp_id) {
-      if (add_group(add_grp_id) == -1) {
+      if (sge_add_group(add_grp_id) == -1) {
          /* sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED );
          return 1; */
       }

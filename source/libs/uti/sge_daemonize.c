@@ -60,11 +60,11 @@
 #include "sgermon.h"
 #include "sge_pgrp.h"
 #include "sge_daemonize.h"
-#include "sge_exit.h"
 #include "sge_me.h"
 #include "sge_log.h"
 #include "msg_utilib.h"
 #include "sge_stat.h" 
+#include "sge_unistd.h"
 
 /*-------------------------------------------------------------
  * sge_daemonize
@@ -194,3 +194,38 @@ int occupy_first_three()
    DEXIT;
    return -1;
 }
+
+/*---------------------------------------------------------------
+ * Name:  sge_close_all_fds
+ * Descr: close all file descriptors
+ *----------------------------------------------------------------*/
+void sge_close_all_fds(
+fd_set *keep_open
+) {
+/* JG: trying to close insights (insure) internal fd will be rejected */
+#ifdef __INSIGHT__
+_Insight_set_option("suppress", "USER_ERROR");
+#endif
+   int fd;
+   int maxfd;
+ 
+#ifndef WIN32NATIVE
+   maxfd = sysconf(_SC_OPEN_MAX);
+#else /* WIN32NATIVE */
+   maxfd = FD_SETSIZE;
+   /* detect maximal number of fds under NT/W2000 (env: Files)*/
+#endif /* WIN32NATIVE */
+ 
+   for (fd = 0; fd < maxfd; fd++)
+      if (!(keep_open && FD_ISSET(fd, keep_open)))
+#ifndef WIN32NATIVE
+         close(fd);
+#else /* WIN32NATIVE */
+        closesocket(fd);
+#endif /* WIN32NATIVE */
+   return;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "USER_ERROR");
+#endif
+}       
+

@@ -39,7 +39,6 @@
 #include "def.h"
 #include "sge_str_from_file.h"
 #include "sge_time.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "sge.h"
 #include "symbols.h"
@@ -201,11 +200,18 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    lSetUlong(jep, JB_uid, uid);
    lSetString(jep, JB_group, group);
    lSetUlong(jep, JB_gid, gid);
+
+   /* check conf.max_jobs */
+   if (job_list_register_new_job(Master_Job_List, conf.max_jobs, 0)) {
+      INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERCLUSTER, u32c(conf.max_jobs)));
+      sge_add_answer(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, 0);
+      DEXIT;
+      return STATUS_NOTOK_DOAGAIN;
+   }
    
-   /* check conf.max_u_user */
+   /* check conf.max_u_jobs */
    if (suser_register_new_job(jep, conf.max_u_jobs, 0)) {
-      INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER, 
-            u32c(conf.max_u_jobs)));
+      INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER, u32c(conf.max_u_jobs)));
       sge_add_answer(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, 0);
       DEXIT;
       return STATUS_NOTOK_DOAGAIN;

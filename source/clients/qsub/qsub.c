@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
@@ -39,7 +38,6 @@
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "read_defaults.h"
-#include "sge_exit.h"
 #include "show_job.h"
 #include "commlib.h"
 #include "sig_handlers.h"
@@ -47,14 +45,13 @@
 #include "sge_prognames.h"
 #include "sgermon.h"
 #include "sge_log.h"
-
 #include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_arch.h"
 #include "sge_afsutil.h"
 #include "setup_path.h"
 #include "qm_name.h"
-
+#include "sge_unistd.h"
 #include "jb_now.h"
 #include "sge_security.h"
 #include "msg_clients_common.h"

@@ -108,6 +108,7 @@ typedef struct _tCClEntry {
    int max_aj_instances;
    int max_aj_tasks;
    int max_u_jobs;
+   int max_jobs;
    lList *cluster_users;
    lList *cluster_xusers;
    lList *cluster_projects;
@@ -249,6 +250,10 @@ XtResource ccl_resources[] = {
       sizeof(int), XtOffsetOf(tCClEntry, max_u_jobs), 
       XtRImmediate, NULL },
 
+   { "max_jobs", "max_jobs", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, max_jobs), 
+      XtRImmediate, NULL },
+
    { "cluster_users", "cluster_users", QmonRUS_Type,
       sizeof(lList *), XtOffsetOf(tCClEntry, cluster_users),
       XtRImmediate, NULL },
@@ -352,6 +357,7 @@ static Widget cluster_min_gid = 0;
 static Widget cluster_max_aj_instances = 0;
 static Widget cluster_max_aj_tasks = 0;
 static Widget cluster_max_u_jobs = 0;
+static Widget cluster_max_jobs = 0;
 static Widget cluster_zombie_jobs = 0;
 static Widget cluster_load_report_time = 0;
 static Widget cluster_load_report_timePB = 0;
@@ -673,6 +679,7 @@ Widget parent
                            "cluster_max_aj_instances", &cluster_max_aj_instances,
                            "cluster_max_aj_tasks", &cluster_max_aj_tasks,
                            "cluster_max_u_jobs", &cluster_max_u_jobs,
+                           "cluster_max_jobs", &cluster_max_jobs,
                            "cluster_zombie_jobs", &cluster_zombie_jobs,
                            "cluster_load_report_time", &cluster_load_report_time,
                            "cluster_load_report_timePB", 
@@ -957,6 +964,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_max_aj_instances, mode);
    XtSetSensitive(cluster_max_aj_tasks, mode);
    XtSetSensitive(cluster_max_u_jobs, mode);
+   XtSetSensitive(cluster_max_jobs, mode);
    XtSetSensitive(cluster_zombie_jobs, mode);
    XtSetSensitive(cluster_stat_log_time, mode);
    XtSetSensitive(cluster_stat_log_timePB, mode);
@@ -1072,6 +1080,7 @@ int local
    char max_aj_instances[255];
    char max_aj_tasks[255];
    char max_u_jobs[255];
+   char max_jobs[255];
    char zombie_jobs[20];
    static char buf[4*BUFSIZ];
    Boolean first;
@@ -1480,6 +1489,10 @@ int local
       sprintf(max_u_jobs, "%d", clen->max_u_jobs);
       lSetString(ep, CF_value, max_u_jobs);
          
+      ep = lGetElemStr(confl, CF_name, "max_jobs");
+      sprintf(max_jobs, "%d", clen->max_jobs);
+      lSetString(ep, CF_value, max_jobs);
+
       ep = lGetElemStr(confl, CF_name, "finished_jobs");
       sprintf(zombie_jobs, "%d", clen->zombie_jobs);
       lSetString(ep, CF_value, zombie_jobs);
@@ -1892,6 +1905,7 @@ tCClEntry *clen
    StringConst max_aj_instances;
    StringConst max_aj_tasks;
    StringConst max_u_jobs;
+   StringConst max_jobs;
    StringConst zombie_jobs;
 
    DENTER(GUI_LAYER, "qmonCullToCClEntry");
@@ -1938,6 +1952,10 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "max_u_jobs"))) {
       max_u_jobs = lGetString(ep, CF_value);
       clen->max_u_jobs = max_u_jobs ? atoi(max_u_jobs) : 0;
+   }
+   if ((ep = lGetElemStr(confl, CF_name, "max_jobs"))) {
+      max_jobs = lGetString(ep, CF_value);
+      clen->max_jobs = max_jobs ? atoi(max_jobs) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "finished_jobs"))) {
       zombie_jobs = lGetString(ep, CF_value);
@@ -2205,6 +2223,7 @@ tCClEntry *clen
    clen->max_aj_instances = 0;
    clen->max_aj_tasks = 0;
    clen->max_u_jobs = 0;
+   clen->max_jobs = 0;
    if (clen->load_report_time) {
       XtFree((char*)clen->load_report_time);
       clen->load_report_time = NULL;

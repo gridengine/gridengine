@@ -51,7 +51,6 @@
 #include "def.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_time.h"
 #include "sge_me.h"
 #include "sge_max_nis_retries.h"

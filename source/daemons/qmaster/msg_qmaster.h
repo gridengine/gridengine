@@ -309,6 +309,7 @@
 #define MSG_JOB_UID2LOW_II            _("job rejected: your user id %d is lower than minimum user id %d of cluster configuration\n")
 #define MSG_JOB_GID2LOW_II            _("job rejected: your group id %d is lower than minimum group id %d of cluster configuration\n")
 #define MSG_JOB_ALLOWEDJOBSPERUSER    _("job rejected: Only "U32CFormat" jobs are allowed per user\n")
+#define MSG_JOB_ALLOWEDJOBSPERCLUSTER _("job rejected: Only "U32CFormat" jobs are allowed per cluster\n")
 #define MSG_JOB_QNOTREQUESTABLE       _("job was rejected because job requests a queue while queues are not configured as requestable\n")
 #define MSG_JOB_QUNKNOWN_S            _("job was rejected because job requests unknown queue "SFQ"\n")
 #define MSG_JOB_NOSCRIPT              _("job rejected: no script in your request\n")

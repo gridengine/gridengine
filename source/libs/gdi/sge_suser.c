@@ -257,6 +257,7 @@ u_long32 suser_get_job_counter(lListElem *suser)
 *  SEE ALSO
 *     gdi/suser/SU_Type
 *     gdi/suser/Master_SUser_List  
+*     qmaster/job_jatask/job_list_register_new_job()
 ******************************************************************************/
 int suser_register_new_job(const lListElem *job, u_long32 max_u_jobs,
                            int force_registration)

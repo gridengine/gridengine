@@ -111,4 +111,7 @@ u_long32 job_get_smallest_task_id(const lListElem *job);
 
 u_long32 job_get_biggest_task_id(const lListElem *job);
 
+int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
+                              int force_registration);   
+
 #endif /* __SGE_JOB_JATASK_H */    

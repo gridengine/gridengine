@@ -29,7 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <unistd.h>  
+
 #include <string.h>
 #include <pwd.h>
 #include <sys/types.h>
@@ -53,13 +53,11 @@
 #include "sge_jataskL.h"
 #include "sge_ckptL.h"
 #include "sge_complexL.h"
-#include "sge_exit.h"
 #include "sge_queueL.h"
 #include "sge_stringL.h"
 #include "sge_answerL.h"
 #include "sge_rangeL.h"
 #include "parse.h"
-#include "sge_dir.h"
 #include "get_path.h"
 #include "sge_arch.h"
 #include "sge_job.h"
@@ -88,13 +86,17 @@
 #include "setup_path.h"
 #include "qm_name.h"
 #include "sge_stat.h" 
-#include "msg_common.h"
-#include "msg_execd.h"
 #include "sge_string.h" 
 #include "jb_now.h"
 #include "sge_feature.h"
 #include "sge_job_jatask.h"
 #include "sge_stdlib.h"
+#include "sge_daemonize.h"
+#include "sge_unistd.h"
+
+#include "msg_common.h"
+#include "msg_execd.h"
+#include "msg_utilib.h"
 
 #define ENVIRONMENT_FILE "environment"
 #define CONFIG_FILE "config"
@@ -614,7 +616,7 @@ char *err_str
    if (mkdir(dir, 0755) == -1) {
       if (errno == EEXIST) {
          DPRINTF(("cleaning active job dir\n"));
-         if (recursive_rmdir(dir, SGE_EVENT)) {
+         if (sge_rmdir(dir, SGE_EVENT)) {
             sprintf(err_str, MSG_FILE_RMDIR_SS, dir, SGE_EVENT);
             DEXIT;
             return -2;

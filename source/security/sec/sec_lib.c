@@ -40,7 +40,7 @@
 #include <string.h>
 #include <pwd.h>
 
-
+#include "sge_unistd.h"
 #include "commlib.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -54,7 +54,6 @@
 #include "sge_secL.h"
 #include "sge_getpwnam.h"
 #include "sge_arch.h"
-#include "sge_exit.h"
 #include "sge_stdlib.h"
 #include "msg_sec.h"
 #include "msg_gdilib.h"

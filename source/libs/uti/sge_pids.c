@@ -41,24 +41,34 @@
 #include "sge_pids.h"
 #include "sge_peopen.h"
 
-/*-----------------------------------------------------------------------
- * Name:    get_pids
- * Descr:   return all "pids" of a running processes with given "name"
- *          only first 8 characters of "name" are significant
- *          check only basename of command after "/" 
- *          
- *
- * Return:  -1 if yes
- *          0 no program with given name found
- *          >0 number of processes with "name"
- *          "pids" array holds pid of found processes
- *-----------------------------------------------------------------------*/
-int get_pids(
-pid_t *pids,
-int max_pids,
-const char *name,
-const char *pscommand 
-) {
+/****** uti/sge/get_pids() ****************************************************
+*  NAME
+*     get_pids() -- Return all "pids" of a running processes 
+*
+*  SYNOPSIS
+*     int get_pids(pid_t *pids, int max_pids, const char *name, 
+*                  const char *pscommand) 
+*
+*  FUNCTION
+*     Return all "pids" of a running processes with given "name". Only
+*     first 8 characters of "name" are significant.
+*     Checks only basename of command after "/".
+*
+*  INPUTS
+*     pid_t *pids           - pid list 
+*     int max_pids          - size of pid list 
+*     const char *name      - name 
+*     const char *pscommand - ps commandline
+*
+*  RESULT
+*     int - Result 
+*         0 - No program with given name found
+*        >0 - Number of processes with "name" 
+*        -1 - Error
+******************************************************************************/
+int get_pids(pid_t *pids, int max_pids, const char *name, 
+             const char *pscommand) 
+{
    FILE *fp_in, *fp_out, *fp_err;
    char buf[10000], *ptr;
    int num_of_pids = 0, last, len;
@@ -66,7 +76,8 @@ const char *pscommand
 
    DENTER(TOP_LAYER, "get_pids");
    
-   command_pid = peopen("/bin/sh", 0, pscommand, NULL, NULL, &fp_in, &fp_out, &fp_err);
+   command_pid = peopen("/bin/sh", 0, pscommand, NULL, NULL, 
+                        &fp_in, &fp_out, &fp_err);
 
    if (command_pid == -1) {
       DEXIT;
@@ -113,45 +124,63 @@ const char *pscommand
    return num_of_pids;
 }
 
-
-/*--------------------------------------------------------------------
- * Name: contains_pid
- *       whether pid array contains pid
- *
- * Return: 1 if pid is found in array of pids
- *         0 if pid is not found
- *
- *--------------------------------------------------------------------*/
-int contains_pid(
-pid_t pid,
-pid_t *pids,
-int npids 
-) {
+/****** sge_pids/contains_pid() ***********************************************
+*  NAME
+*     contains_pid() -- Checks whether pid array contains pid 
+*
+*  SYNOPSIS
+*     int contains_pid(pid_t pid, pid_t *pids, int npids) 
+*
+*  FUNCTION
+*     whether pid array contains pid 
+*
+*  INPUTS
+*     pid_t pid   - process id 
+*     pid_t *pids - pid array 
+*     int npids   - number of pids in array 
+*
+*  RESULT
+*     int - result state
+*         0 - pid was not found
+*         1 - pid was found
+******************************************************************************/
+int contains_pid(pid_t pid, pid_t *pids, int npids) 
+{
    int i;
 
-   for (i = 0; i < npids; i++)
-      if (pids[i] == pid)
+   for (i = 0; i < npids; i++) {
+      if (pids[i] == pid) {
          return 1;
-
+      }
+   }
    return 0;
 }
 
-
-/*-----------------------------------------------------------------------
- * Name:    checkprog
- * Descr:   check if "pid" of a running process has given "name"
- *          only first 8 characters of "name" are significant
- *          check only basename of command after "/"
- *
- * Return:  0 if yes
- *          1 if not (no such pid or pid has other name)
- *          -1 error occurred (mostly peopen() failed)
- *-----------------------------------------------------------------------*/
-int checkprog(
-pid_t pid,
-const char *name,
-const char *pscommand 
-) {
+/****** uti/sge/checkprog() ***************************************************
+*  NAME
+*     checkprog() -- Check if "pid" of a running process has given "name" 
+*
+*  SYNOPSIS
+*     int checkprog(pid_t pid, const char *name, const char *pscommand) 
+*
+*  FUNCTION
+*     Check if "pid" of a running process has given "name".
+*     Only first 8 characters of "name" are significant.
+*     Check only basename of command after "/". 
+*
+*  INPUTS
+*     pid_t pid             - process id 
+*     const char *name      - process name 
+*     const char *pscommand - ps commandline 
+*
+*  RESULT
+*     int - result state
+*         0 - Process with "pid" has "name"
+*         1 - No such pid or pid has other name
+*        -1 - error occurred (mostly peopen() failed) 
+******************************************************************************/
+int checkprog(pid_t pid, const char *name, const char *pscommand) 
+{
    FILE *fp_in, *fp_out, *fp_err;
    char buf[1000], *ptr;
    pid_t command_pid, pidfound;
@@ -170,7 +199,8 @@ const char *pscommand
    }
 #endif
 
-   command_pid = peopen("/bin/sh", 0, pscommand, NULL, NULL, &fp_in, &fp_out, &fp_err);
+   command_pid = peopen("/bin/sh", 0, pscommand, NULL, NULL, 
+                        &fp_in, &fp_out, &fp_err);
 
    if (command_pid == -1) {
       DEXIT;

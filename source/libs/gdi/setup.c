@@ -41,7 +41,6 @@
 #include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_getme.h"
 #include "setup_path.h"
 #include "qm_name.h"
@@ -52,6 +51,7 @@
 #include "sge_switch_user.h"
 #include "msg_utilib.h"
 #include "sge_feature.h"
+#include "sge_unistd.h"
 
 extern long compression_level;
 extern long compression_threshold;

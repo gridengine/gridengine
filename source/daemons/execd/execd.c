@@ -33,14 +33,13 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <unistd.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h" 
 #include "sge_arch.h"
 #include "sge_daemonize.h"
-#include "sge_exit.h"
 #include "sge_host.h"
 #include "sge_load_sensor.h"
 #include "sge_log.h"
@@ -170,7 +169,7 @@ char **argv
 
    /* exit func for SGE_EXIT() */
    in_main_loop = 0;
-   install_exit_func(execd_exit_func);
+   sge_install_exit_func(execd_exit_func);
    sge_setup_sig_handlers(EXECD);
 
    memset(priority_tags, 0, sizeof(priority_tags));

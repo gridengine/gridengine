@@ -68,8 +68,8 @@
 #include "sge_stat.h" 
 #include "sge_feature.h"
 #include "setup_commd_path.h"
-#include "sge_exit.h"
 #include "sge_arch.h"
+#include "sge_unistd.h"
 
 void init_send(message *mp, int reserved_port, int commdport);
 static char *fdsetstr(fd_set *fds, char *);

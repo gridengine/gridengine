@@ -42,7 +42,6 @@
 #include "sge_answerL.h"
 #include "sge_me.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_string.h"
 #include "msg_utilib.h"
 #include "msg_gdilib.h"
@@ -51,6 +50,7 @@
 #include "setup_path.h"
 #include "sge_stat.h" 
 #include "sge_stdlib.h"
+#include "sge_unistd.h"
 
 sge_path_type path = { NULL };
 

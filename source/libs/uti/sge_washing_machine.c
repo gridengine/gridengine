@@ -37,11 +37,38 @@
 
 static washing_machine_t wtype;
 
+/****** uti/sge/washing_machine_set_type() ************************************
+*  NAME
+*     washing_machine_set_type() -- set display mod of 'wasching machine' 
+*
+*  SYNOPSIS
+*     void washing_machine_set_type(washing_machine_t type) 
+*
+*  FUNCTION
+*     With 'WASHING_MACHINE_ROTATING_BAR' each call of 
+*     washing_machine_next_turn() will show a rotating bar.
+*     In 'WASHING_MACHINE_DOTS'-mode each call will show more dots in a line.
+*
+*  INPUTS
+*     washing_machine_t type - display type
+*        WASHING_MACHINE_ROTATING_BAR
+*        WASHING_MACHINE_DOTS 
+******************************************************************************/
 void washing_machine_set_type(washing_machine_t type) 
 {
    wtype = type;
 }
 
+/****** uti/sge/washing_machine_next_turn() ***********************************
+*  NAME
+*     washing_machine_next_turn() -- show next turn 
+*
+*  SYNOPSIS
+*     void washing_machine_next_turn(void) 
+*
+*  FUNCTION
+*     Show next turn of rotating washing machine.
+******************************************************************************/
 void washing_machine_next_turn(void)
 {
    static int cnt = 0;
@@ -78,7 +105,16 @@ void washing_machine_next_turn(void)
    }
 }
 
-
+/****** uti/sge/washing_machine_end_turn() ************************************
+*  NAME
+*     washing_machine_end_turn() -- remove washing machine from display 
+*
+*  SYNOPSIS
+*     void washing_machine_end_turn(void) 
+*
+*  FUNCTION
+*     Last turn of washing machine.
+******************************************************************************/
 void washing_machine_end_turn(void)
 {
    switch (wtype) {

@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "basis_types.h"
+
 #ifdef  __cplusplus
 extern "C" {
 #endif

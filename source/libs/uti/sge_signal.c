@@ -96,64 +96,103 @@ sig_mapT sig_map[] =
    {0, 0}
 };
 
-/***************************************************************
-  unmap the 32bit sge signal to the system specific signal 
- ***************************************************************/
-int sge_unmap_signal(
-u_long32 sge_sig 
-) {
+/****** uti/sge/sge_unmap_signal() ********************************************
+*  NAME
+*     sge_unmap_signal() -- Unmap the 32bit SGE/EE signal to the system signal 
+*
+*  SYNOPSIS
+*     int sge_unmap_signal(u_long32 sge_sig) 
+*
+*  FUNCTION
+*     Unmap the 32bit SGE/EEsignal to the system specific signal 
+*
+*  INPUTS
+*     u_long32 sge_sig - SGE/EE signal 
+*
+*  RESULT
+*     int - system signal
+******************************************************************************/
+int sge_unmap_signal(u_long32 sge_sig) 
+{
    sig_mapT *mapptr=sig_map;
 
    while (mapptr->sge_sig) {
-      if (mapptr->sge_sig == sge_sig)
+      if (mapptr->sge_sig == sge_sig) {
          return mapptr->sig;
+      }
       mapptr++;
    }
    return -1;
 }
 
-
-/**************************************************************
-  map the system specific signal to the 32bit sge signal 
- ***************************************************************/
-u_long32 sge_map_signal(
-int sys_sig 
-) {
+/****** uti/sge/sge_map_signal() **********************************************
+*  NAME
+*     sge_map_signal() -- Map a system signal to the 32bit SGE/EE signal 
+*
+*  SYNOPSIS
+*     u_long32 sge_map_signal(int sys_sig) 
+*
+*  FUNCTION
+*     Map the system specific signal to the 32bit sge signal 
+*
+*  INPUTS
+*     int sys_sig - system signal 
+*
+*  RESULT
+*     u_long32 - SGE/EE Signal
+******************************************************************************/
+u_long32 sge_map_signal(int sys_sig) 
+{
    sig_mapT *mapptr=sig_map;
 
    while (mapptr->sge_sig) {
-      if (mapptr->sig == sys_sig)
+      if (mapptr->sig == sys_sig) {
          return mapptr->sge_sig;
+      }
       mapptr++;
    }
    return -1;
 }
 
-/**************************************************************
-   Make a sge signal out of a string.
-   string can be the signal name (caseinsensitive) without sig 
-   or the signal number (Take care numbers are system dependent).
- **************************************************************/
-u_long32 str2signal(
-const char *str 
-) {
+/****** uti/sge/str2signal() **************************************************
+*  NAME
+*     str2signal() -- Make a sge signal out of a string 
+*
+*  SYNOPSIS
+*     u_long32 str2signal(const char *str) 
+*
+*  FUNCTION
+*     Make a sge signal out of a string. 'str' can be the signal name 
+*     (caseinsensitive) without sig or the signal number (Take care 
+*     numbers are system dependent).
+*
+*  INPUTS
+*     const char *str - signal string 
+*
+*  RESULT
+*     u_long32 - SGE/EE signal 
+******************************************************************************/
+u_long32 str2signal(const char *str) 
+{
    sig_mapT *mapptr=sig_map;
    u_long32 signum;
 
    /* look for signal names in mapping table */
    while (mapptr->sge_sig) {
-      if (!strcasecmp(str, mapptr->signame))
+      if (!strcasecmp(str, mapptr->signame)) {
          return mapptr->sge_sig;
+      }
       mapptr++;
    }
 
    /* could not find per name -> look for signal numbers */
    if (isint(str)) {
       signum = strtol(str, NULL, 10);
-      mapptr=sig_map;
+      mapptr = sig_map;
       while (mapptr->sge_sig) {
-         if ((int) signum ==  mapptr->sig)
+         if ((int) signum ==  mapptr->sig) {
             return mapptr->sge_sig;
+         }
          mapptr++;
       }
    }
@@ -161,16 +200,32 @@ const char *str
    return -1;
 }
 
-u_long32 sys_str2signal(
-const char *str 
-) {
+/****** uti/sge/sys_str2signal() **********************************************
+*  NAME
+*     sys_str2signal() -- ??? 
+*
+*  SYNOPSIS
+*     u_long32 sys_str2signal(const char *str) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     const char *str - ??? 
+*
+*  RESULT
+*     u_long32 - 
+******************************************************************************/
+u_long32 sys_str2signal(const char *str) 
+{
    sig_mapT *mapptr=sig_map;
    u_long32 signum;
 
    /* look for signal names in mapping table */
    while (mapptr->sge_sig) {
-      if (!strcasecmp(str, mapptr->signame))
+      if (!strcasecmp(str, mapptr->signame)) {
          return mapptr->sig;
+      }
       mapptr++;
    }
 
@@ -183,32 +238,61 @@ const char *str
    return -1;
 }
 
-/**************************************************************
-   Make a string out of a sge signal.
- **************************************************************/
-const char *sge_sig2str(
-u_long32 sge_sig 
-) {
+/****** sge_signal/sge_sig2str() **********************************************
+*  NAME
+*     sge_sig2str() -- Make a string out of a SGE/EE signal 
+*
+*  SYNOPSIS
+*     const char* sge_sig2str(u_long32 sge_sig) 
+*
+*  FUNCTION
+*     Make a string out of a SGE/EE signal    
+*
+*  INPUTS
+*     u_long32 sge_sig - SGE/EE signal
+*
+*  RESULT
+*     const char* - signal string
+******************************************************************************/
+const char *sge_sig2str(u_long32 sge_sig) 
+{
    sig_mapT *mapptr;
 
    /* look for signal names in mapping table */
    for (mapptr=sig_map; mapptr->sge_sig; mapptr++) {
-      if (sge_sig == mapptr->sge_sig)
+      if (sge_sig == mapptr->sge_sig) {
          return mapptr->signame;
+      }
    }
 
    return MSG_PROC_UNKNOWNSIGNAL;
 }
 
-const char *sys_sig2str(
-u_long32 sys_sig 
-) {
+/****** uti/sge/sys_sig2str() *************************************************
+*  NAME
+*     sys_sig2str() -- Make a string out of a system signal 
+*
+*  SYNOPSIS
+*     const char* sys_sig2str(u_long32 sys_sig) 
+*
+*  FUNCTION
+*     Make a string out of a system signal 
+*
+*  INPUTS
+*     u_long32 sys_sig - system signal 
+*
+*  RESULT
+*     const char* - signal string
+******************************************************************************/
+const char *sys_sig2str(u_long32 sys_sig) 
+{
    sig_mapT *mapptr;
 
    /* look for signal names in mapping table */
    for (mapptr=sig_map; mapptr->sge_sig; mapptr++) {
-      if ((int) sys_sig == mapptr->sig)
+      if ((int) sys_sig == mapptr->sig) {
          return mapptr->signame;
+      }
    }
 
    return MSG_PROC_UNKNOWNSIGNAL;

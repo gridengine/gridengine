@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -40,13 +39,13 @@
 #include <netdb.h>
 #include <fcntl.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "sge_gdi_intern.h"
 #include "sge_prognames.h"
 #include "qm_name.h"
 #include "sge_copy_append.h"
 #include "sge_get_confval.h"
-#include "sge_exit.h"
 #include "sig_handlers.h"
 #include "qmaster_heartbeat.h"
 #include "lock.h"
@@ -233,7 +232,7 @@ char **argv
    priority_tags[1] = TAG_FINISH_REQUEST;
    prepare_enroll(prognames[SHADOWD], 1, priority_tags);
 
-   install_exit_func(shadowd_exit_func);
+   sge_install_exit_func(shadowd_exit_func);
    sge_setup_sig_handlers(SHADOWD);
 
    lInit(nmv);

@@ -50,7 +50,7 @@
 #include "sge_arch.h"
 #include "sge_gdi.h"
 #include "qm_name.h"
-#include "sge_exit.h"
+#include "sge_unistd.h"
 #include "msg_gdilib.h"
 #include "sge_feature.h"
 #include "sge_getpwnam.h"

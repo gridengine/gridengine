@@ -40,13 +40,14 @@
 #include "sge_confL.h"
 #include "rw_configuration.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "parse_range.h"
 #include "sge_rangeL.h"
 #include "sge_stdio.h"
-#include "msg_common.h"
 #include "sge_spoolmsg.h"
 #include "sge_feature.h" 
+#include "sge_unistd.h"
+
+#include "msg_common.h"
 
 /*-----------------------------------------------------------------------*
  * write_configuration

@@ -35,10 +35,7 @@
 #include <string.h>
 #include <strings.h>
 
-#ifndef WIN32NATIVE
-#	include <unistd.h>
-#endif
-
+#include "sge_unistd.h"
 #include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "sge_prognames.h"
@@ -51,7 +48,6 @@
 #include "sge_log.h"
 #include "sge_time.h"
 #include "msg_schedd.h"
-#include "sge_exit.h"
 
 /****** Eventclient/--Introduction **********************************
 *  NAME

@@ -31,9 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include "sgermon.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "usage.h"
@@ -44,9 +42,10 @@
 #include "sig_handlers.h"
 #include "parse.h"
 
-#include "msg_gdilib.h"
 #include "gdi_checkpermissions.h"
 #include "sge_feature.h"
+#include "sge_unistd.h"
+#include "msg_gdilib.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qdel.h"

@@ -34,6 +34,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "cull.h"
 #include "sge_gdi_intern.h"
@@ -47,7 +48,6 @@
 #include "sge_feature.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_stdio.h"
 #include "msg_common.h"
 #include "sge_spoolmsg.h"

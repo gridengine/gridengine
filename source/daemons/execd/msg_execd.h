@@ -210,7 +210,6 @@
 #define MSG_EXECD_NOFORK_S            _("fork failed: %s")
 #define MSG_EXECD_NOSTARTSHEPHERD     _("unable to start shepherd process")
 #define MSG_EXECD_NOWHERE4GDIL_S        _("cannot build where for %s\n")
-#define MSG_SYSTEM_GETPWNAMFAILED_S   _("can't get password entry for user "SFQ". Either the user does not exist or NIS error!")
 #define MSG_SYSTEM_CANTMAKETMPDIR     _("can't make tmpdir")
 #define MSG_SYSTEM_CANTGETTMPDIR      _("can't get tmpdir")
 #define MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS  _("unable to find script file %s: %s")

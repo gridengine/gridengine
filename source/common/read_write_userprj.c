@@ -43,6 +43,7 @@
 #include <errno.h>
 #include <limits.h>
 
+#include "sge_unistd.h"
 #include "sgermon.h"
 #include "sge_gdi_intern.h"
 #include "sge_answerL.h"
@@ -55,11 +56,11 @@
 #include "read_object.h"
 #include "read_write_userprj.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_stdio.h"
 #include "sge_language.h"
-#include "msg_common.h"
 #include "sge_spoolmsg.h"
+
+#include "msg_common.h"
 
 static intprt_type intprt_as_usage[] = { UA_name, UA_value, 0 };
 static intprt_type intprt_as_acl[] = { US_name, 0 };

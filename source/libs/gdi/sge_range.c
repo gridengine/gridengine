@@ -40,7 +40,6 @@
 #include "symbols.h"
 #include "sge.h"
 #include "sge_time.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"

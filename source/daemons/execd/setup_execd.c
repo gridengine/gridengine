@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>  
 #include <string.h>
 #include <stdlib.h>
 
@@ -39,8 +38,6 @@
 #include "sge.h"
 #include "sge_conf.h"
 #include "rw_configuration.h"
-#include "sge_chdir.h"
-#include "sge_mkdir.h"
 #include "sge_log.h"
 #include "sge_jobL.h"
 #include "sge_jataskL.h"
@@ -58,7 +55,6 @@
 #include "sge_prognames.h"
 #include "sge_getloadavg.h"
 #include "sge_switch_user.h"
-#include "sge_exit.h"
 #include "sge_string.h"
 #include "sge_stat.h"
 #include "reaper_execd.h"
@@ -68,6 +64,7 @@
 #include "msg_execd.h"
 #include "sge_feature.h"
 #include "read_write_job.h"
+#include "sge_unistd.h"
 
 extern char execd_spool_dir[];
 extern lList *execd_config_list;

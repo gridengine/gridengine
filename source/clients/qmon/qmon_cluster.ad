@@ -167,7 +167,8 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_epilog = epilog; \
    Spinbox        cluster_max_aj_instances = max_aj_instances, \
                   cluster_max_aj_tasks = max_aj_tasks, \
-                  cluster_max_u_jobs = max_u_jobs; \
+                  cluster_max_u_jobs = max_u_jobs, \
+                  cluster_max_jobs = max_jobs; \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
                   cluster_ignore_fqdn = ignore_fqdn, \
                   cluster_loglevel = loglevel , \
@@ -209,6 +210,10 @@ Qmon*cluster_global_layout.layout: \
          ## \
          Equal Row { \
             Caption "@{Maximal Jobs\nPer User}" <> cluster_max_u_jobs \
+         } \
+         ## \
+         Equal Row { \
+            Caption "@{Maximal Jobs\nIn Cluster}" <> cluster_max_jobs \
          } \
          ### \
          Equal Row { \
@@ -364,6 +369,12 @@ Qmon*cluster_global_layout.cluster_max_u_jobs.buttonSizeFixed: True
 Qmon*cluster_global_layout.cluster_max_u_jobs.columns: 5
 Qmon*cluster_global_layout.cluster_max_u_jobs.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_u_jobs.value: 0
+Qmon*cluster_global_layout.cluster_max_jobs.minimum: 0
+Qmon*cluster_global_layout.cluster_max_jobs.spinboxStyle: SPINBOX_STACKED_RIGHT
+Qmon*cluster_global_layout.cluster_max_jobs.buttonSizeFixed: True
+Qmon*cluster_global_layout.cluster_max_jobs.columns: 5
+Qmon*cluster_global_layout.cluster_max_jobs.spinboxUseClosestValue: True
+Qmon*cluster_global_layout.cluster_max_jobs.value: 0
 !! 
 !! TrimAndTrail callback, remove leading and trailing whitespace after input
 !!

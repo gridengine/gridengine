@@ -33,15 +33,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>  
 #include <fnmatch.h>
 
+#include "sge_unistd.h"
 #include "sgermon.h"
 #include "def.h"
 #include "symbols.h"
 #include "sge.h"
 #include "sge_time.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"

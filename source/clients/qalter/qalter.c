@@ -29,14 +29,13 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 
+#include "sge_unistd.h"
 #include "def.h"
 #include "symbols.h"
 #include "sge_gdi_intern.h"
-#include "sge_exit.h"
 #include "sge_all_listsL.h"
 #include "sig_handlers.h"
 #include "sge_resource.h"

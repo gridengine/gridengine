@@ -37,10 +37,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <errno.h>
 #include <limits.h>
 
+#include "sge_unistd.h"
 #include "sgermon.h"
 #include "sge_eventL.h"
 #include "sge_answerL.h"
@@ -51,7 +51,6 @@
 #include "cull_parse_util.h"
 #include "sge_m_event.h"
 #include "sge_log.h"
-#include "sge_exit.h"
 #include "sge_string_append.h"
 #include "scheduler.h"                                                                
 #include "sgeee.h"                                                                

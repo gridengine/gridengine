@@ -44,7 +44,6 @@
 #include "sge_gdi_intern.h"
 #include "sge_confL.h"
 #include "sge_eventL.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "sge_me.h"
 #include "sge_parse_num_par.h"

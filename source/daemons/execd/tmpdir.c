@@ -32,10 +32,9 @@
 #include "sgermon.h"
 #include "sge_queueL.h"
 #include "tmpdir.h"
-#include "sge_mkdir.h"
 #include "sge_log.h"
-#include "sge_dir.h"
 #include "sge_switch_user.h"
+#include "sge_unistd.h"
 #include "msg_execd.h"
 
 /*******************************************************/
@@ -91,7 +90,7 @@ const char *queue_name
 
    sprintf(tmpstr, "%s/"u32"."u32".%s", dir, jobid, jataskid, queue_name);
    DPRINTF(("recursively unlinking \"%s\"\n", tmpstr));
-   if (recursive_rmdir(tmpstr, err_str)) {
+   if (sge_rmdir(tmpstr, err_str)) {
       ERROR((SGE_EVENT, MSG_FILE_RECURSIVERMDIR_SS, 
              tmpstr, err_str));
       return -1;

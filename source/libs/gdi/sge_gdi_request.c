@@ -50,10 +50,11 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_string.h"
-#include "sge_exit.h"
 #include "sge_max_nis_retries.h"
 #include "sge_uidgid.h"
 #include "qm_name.h"
+#include "sge_unistd.h"
+#include "sge_security.h"
 #ifdef KERBEROS
 #  include "krb_lib.h"
 #endif
@@ -63,7 +64,6 @@
 #endif
 #include "msg_utilib.h"
 #include "msg_gdilib.h"
-#include "sge_security.h"
 
 static int sge_send_receive_gdi_request(char *rhost, char *commproc, 
                                         u_short id, sge_gdi_request *out, 

@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <errno.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -43,9 +42,9 @@
 #include <grp.h>
 #include <signal.h>
 
+#include "sge_unistd.h"
 #include "sgermon.h"
 #include "sge_peopen.h"
-#include "sge_exit.h"
 #include "basis_types.h"
 #include "msg_utilib.h"
 #include "sge_log.h"

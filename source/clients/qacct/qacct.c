@@ -29,20 +29,19 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <unistd.h>  
 #include <stdlib.h>
 #include <string.h>
 #include <grp.h>
 #include <sys/types.h>
 #include <time.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "def.h"
 #include "path_history.h"
 #include "sge_all_listsL.h"
 #include "sge_string.h"
 #include "sge_getme.h"
-#include "sge_exit.h"
 #include "setup_path.h"
 #include "sge_gdi.h"
 #include "sge_gdi_intern.h"

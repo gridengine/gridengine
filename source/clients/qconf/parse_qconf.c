@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/time.h>
@@ -40,6 +39,7 @@
 #include <limits.h>
 #include <ctype.h>
 
+#include "sge_unistd.h"
 #include "sge.h"
 #include "def.h"
 #include "sge_options.h"
@@ -49,7 +49,6 @@
 #include "sge_hostL.h"
 #include "sge_ckptL.h"
 #include "sge_confL.h"
-#include "sge_exit.h"
 #include "sge_string.h"
 #include "sge_eventL.h"
 #include "sge_queueL.h"

@@ -32,13 +32,33 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
 #if defined(AIX32) || defined(AIX41)
 #   include <sys/select.h>
 #endif    
+
+#if defined(AIX32) || defined(AIX4)
+#   include <sys/select.h>
+#endif
+ 
+#ifdef WIN32NATIVE
+ 
+typedef u_int           SOCKET;
+ 
+#ifndef FD_SETSIZE
+#define FD_SETSIZE      64
+ 
+typedef struct fd_set {
+        u_int fd_count;               /* how many are SET? */
+        SOCKET  fd_array[FD_SETSIZE];   /* an array of SOCKETs */
+} fd_set;
+ 
+#endif /* FD_SETSIZE */
+#endif /* WIN32NATIVE */
+ 
+void sge_close_all_fds(fd_set *keep_open);                    
   
 int sge_daemonize(fd_set *keep_open);
+
 int occupy_first_three(void);
 
 #endif /* __SGE_DAEMONIZE_H */

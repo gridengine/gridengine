@@ -44,14 +44,14 @@
 #include "sgermon.h"
 #include "msg_common.h"
 #include "msg_commd.h"
-#include "sge_exit.h"
+#include "sge_unistd.h"
 
 /****** uti/sge/sge_get_arch() ************************************************
 *  NAME
 *     sge_get_arch() -- Return the architecture of the appl. using this func.
 *
 *  SYNOPSIS
-*     const char* sge_get_arch() 
+*     const char* sge_get_arch(void) 
 *
 *  FUNCTION
 *     This function returns the architecture of the application which called 
@@ -60,9 +60,8 @@
 *  RESULT
 *     const char* - architecture string
 *******************************************************************************/
-const char *sge_get_arch()
+const char *sge_get_arch(void)
 {
-
 #if defined(AIX42)
 #   define ARCHBIN "aix42"
 #elif defined(AIX43)

@@ -65,7 +65,6 @@
 #include "qmon_appres.h"
 #include "qmon_globals.h"
 #include "qmon_util.h"
-#include "sge_exit.h"
 #include "sge_log.h"
 #include "msg_clients_common.h"
 #include "msg_gdilib.h"

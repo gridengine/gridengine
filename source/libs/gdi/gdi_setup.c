@@ -44,7 +44,7 @@
 #include "sge_all_listsL.h"
 #include "sig_handlers.h"
 #include "sgermon.h"
-#include "sge_exit.h"
+#include "sge_unistd.h"
 #include "qm_name.h"
 #include "sge_security.h"
 
@@ -100,7 +100,7 @@ int sge_gdi_setup(const char *programname)
       return AE_QMASTER_DOWN;
    }
    prepare_enroll(programname, 0, NULL);
-   install_exit_func(gdi_exit_func);
+   sge_install_exit_func(gdi_exit_func);
 
 
    /* check if master is alive */

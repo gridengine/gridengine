@@ -1,3 +1,8 @@
+EB-2002-02-20-0: Enhancem.: need means for limiting total number of 
+                            jobs in a cluster 
+                 Issue:     #136
+                 Cleanup:   utilib; added ADOC comments
+
 EB-2002-02-19-1: Cleanup:   Moved/deleted some functiones (part 2/2)
                             Added ADOC comments
                  Issue:     #152

@@ -29,12 +29,12 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "gdi_qmod.h"
 #include "sig_handlers.h"
-#include "sge_exit.h"
 #include "parse_qsub.h"
 #include "parse.h"
 #include "usage.h"
@@ -43,6 +43,7 @@
 #include "sge_log.h"
 #include "sge_feature.h"
 #include "sge_language.h"
+#include "sge_unistd.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qmod.h"

@@ -78,6 +78,7 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    max_aj_instances;     /* max. number of ja instances of a job */
     u_long32    max_aj_tasks;         /* max. size of an array job */
     u_long32    max_u_jobs;           /* max. number of jobs per user */
+    u_long32    max_jobs;             /* max. number of jobs in the system */
 };
 
 typedef struct confel sge_conf_type;

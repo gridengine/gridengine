@@ -40,7 +40,6 @@
 #define EXIT_FAILURE 1
 #endif
 
-#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>    /* need prototype for malloc */
 #include <errno.h>
@@ -58,7 +57,6 @@
 #include "parse_job_cull.h"
 #include "parse_job_qsh.h"
 #include "read_defaults.h"
-#include "sge_exit.h"
 #include "show_job.h"
 #include "commlib.h"
 #include "sig_handlers.h"
@@ -79,9 +77,10 @@
 #include "qm_name.h"
 #include "sge_pgrp.h"
 #include "sge_signal.h"
-
+#include "sge_unistd.h"
 #include "jb_now.h"
 #include "sge_security.h"
+
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
 #include "msg_common.h"

@@ -1192,3 +1192,48 @@ u_long32 job_get_biggest_task_id(const lListElem *job)
    } 
    return ret;
 }
+ 
+/****** gdi/job_jatask/job_list_register_new_job() ****************************
+*  NAME
+*     job_list_register_new_job() -- try to register a new job
+*
+*  SYNOPSIS
+*     int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
+*                                   int force_registration)
+*
+*  FUNCTION
+*     This function checks whether a new job would exceed the maximum
+*     of allowed jobs per cluster ("max_jobs"). If the limit would be
+*     exceeded than the function will return 1 otherwise 0. In some
+*     situations it may be necessary to force the registration
+*     of a new job (reading jobs from spool area). This may be done
+*     with "force_registration".
+*
+*
+*  INPUTS
+*     const lListElem *job   - JB_Type element
+*     u_long32 max_jobs      - maximum number of allowed jobs per user
+*     int force_registration - force job registration
+*
+*  RESULT
+*     int - 1 => limit would be exceeded
+*           0 => otherwise
+*
+*  SEE ALSO
+*     gdi/suser/suser_register_new_job()
+******************************************************************************/
+int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
+                              int force_registration)
+{
+   int ret = 1;
+ 
+   DENTER(TOP_LAYER, "job_list_register_new_job");
+   if (max_jobs > 0 && !force_registration &&
+       max_jobs <= lGetNumberOfElem(job_list)) {
+      ret = 1;
+   } else {
+      ret = 0;
+   }
+   DEXIT;
+   return ret;
+}                

@@ -56,6 +56,7 @@
 #include "sge_hostgroup_qmaster.h"
 #include "sge_user_mapping.h"
 #include "sge_answer.h"
+#include "sge_unistd.h"
 
 #ifndef __SGE_NO_USERMAPPING__
 

@@ -1,3 +1,6 @@
+EB-2002-06-24-0: Bugfix:    host group CLI contains "DO NOT MODIFY .." comment
+                 Issue:     #293
+
 EB-2002-06-23-0: Cleanup:   Moved/renamed functions
                             Moved messages into correct msg_* files
                             Added ADOC comments

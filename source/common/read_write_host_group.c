@@ -336,8 +336,8 @@ lListElem *ep
       return NULL;
    }
 
-   if (sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_SHORT_VERSION)) < 0) {
+   if (spool == 1 && sge_spoolmsg_write(fp, COMMENT_CHAR,
+                feature_get_product_name(FS_SHORT_VERSION)) < 0) {
       goto FPRINTF_ERROR;
    } 
 

@@ -53,6 +53,7 @@
 #include "sge_user_mapping.h"
 #include "sge_usermap_qmaster.h"
 #include "sge_answer.h"
+#include "sge_unistd.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

@@ -187,9 +187,11 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
 #                                 before starting program
 #     { do_file_check 1 }       - internal parameter for file existence check
 #                                 if 0: don't do a file existence check
-#     { source_settings_file 1 } - if 1 (default):
-#                                  source $SGE_ROOT/default/settings.csh
-#                                  if not 1: don't source settings file
+#     { source_settings_file 1 }- if 1 (default):
+#                                 source $SGE_ROOT/default/settings.csh
+#                                 if not 1: don't source settings file
+#     { set_shared_lib_path 1 } - if 1 (default): set shared lib path
+#                               - if not 1: don't set shared lib path 
 #
 #  RESULT
 #     program output
@@ -205,7 +207,18 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
 #
 #*******************************
 #
-proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg_exit_state} {mytimeout 60} {background 0} {envlist ""} { do_file_check 1 } { source_settings_file 1 } } {
+proc start_remote_prog { hostname
+                         user 
+                         exec_command 
+                         exec_arguments 
+                         {exit_var prg_exit_state} 
+                         {mytimeout 60} 
+                         {background 0} 
+                         {envlist ""} 
+                         { do_file_check 1 } 
+                         { source_settings_file 1 } 
+                         { set_shared_lib_path 1 } 
+                       } {
    global CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR CHECK_DEBUG_LEVEL 
    global open_spawn_buffer CHECK_HOST
    upvar $exit_var back_exit_state
@@ -235,7 +248,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
             set is_ok 1
             break;
          }
-         set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state $mytimeout 0 "" 0 0]
+         set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state $mytimeout 0 "" 0 0 0]
          if { $prg_exit_state == -255 } { 
             # no connection
             add_proc_error "start_remote_prog" -1 "no connection to host $hostname as user $user"
@@ -245,7 +258,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
             set is_ok 1
             break
          } else {
-            set output [ start_remote_prog $hostname $user "ls" "$exec_command" prg_exit_state $mytimeout 0 "" 0 0]
+            set output [ start_remote_prog $hostname $user "ls" "$exec_command" prg_exit_state $mytimeout 0 "" 0 0 0]
             if { $prg_exit_state == 0 } {
                set is_ok 1
                break
@@ -264,7 +277,7 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
    }
 
 #   puts [array names users_env]
-   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file [ expr ( $mytimeout / 2 ) ] ]
+   set id [open_remote_spawn_process "$hostname" "$user" "$exec_command" "$exec_arguments" $background users_env $source_settings_file [ expr ( $mytimeout / 2 ) ] $set_shared_lib_path ]
    if { [string compare $id ""] == 0 } {
       add_proc_error "start_remote_prog" -1 "got no spawn id"
       set back_exit_state -255
@@ -506,6 +519,7 @@ proc open_remote_spawn_process { hostname
                                  { envlist "" } 
                                  { source_settings_file 1 } 
                                  { nr_of_tries 15 } 
+                                 { set_shared_lib_path 1 }
                                } {
 
   global open_spawn_buffer CHECK_OUTPUT CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
@@ -539,7 +553,7 @@ proc open_remote_spawn_process { hostname
   }
   set type [ file tail $exec_command ]
   set script_name [get_tmp_file_name $hostname $type "sh" ]
-  create_shell_script "$script_name" $hostname "$exec_command" "$exec_arguments" users_env "/bin/sh" 0 $source_settings_file
+  create_shell_script "$script_name" $hostname "$exec_command" "$exec_arguments" users_env "/bin/sh" 0 $source_settings_file $set_shared_lib_path
   set open_spawn_buffer $script_name
   uplevel 1 { set open_remote_spawn__script_name $open_spawn_buffer }
  

@@ -156,7 +156,7 @@ proc issue_141_check {} {
       }
    }
 
-   wait_for_jobend $job_id "Sleeper" 60
+   wait_for_jobend $job_id "Sleeper" 120
 
    set_error 0 "ok"
 }
@@ -168,7 +168,7 @@ proc issue_141_cleanup  {} {
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
    puts $CHECK_OUTPUT $catch_result
  
-   wait_for_end_of_all_jobs 60 
+   wait_for_end_of_all_jobs 120
 
    set_error 0 "ok"
 }

@@ -122,7 +122,7 @@ proc error_states_prolog {} {
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    set q_state [wait_for_queue_state $error_states_check_queue "E" 60]
    
    set my_conf(prolog) "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit_01.sh"
@@ -135,7 +135,7 @@ proc error_states_prolog {} {
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    set q_state [wait_for_queue_state $error_states_check_queue "E" 60]
 
    set my_conf(prolog) "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit_99.sh"
@@ -148,7 +148,7 @@ proc error_states_prolog {} {
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
 
    wait_for_job_state $job_id "R" 60
 
@@ -158,7 +158,7 @@ proc error_states_prolog {} {
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_jobstart $job_id "leeper" 60
    wait_for_jobend $job_id "leeper" 60
 
@@ -180,7 +180,7 @@ proc error_states_epilog {} {
 
 
    set job_id [submit_job "-q $error_states_check_queue $jobargs 5" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_jobstart $job_id "leeper" 60
    wait_for_jobend $job_id "leeper" 60
    get_qacct $job_id
@@ -232,7 +232,7 @@ proc error_states_no_job_shell {} {
    set jobargs "-o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh" 
       
    set job_id [submit_job "-S /tmp/no_such_file.23 -q $error_states_check_queue $jobargs 10" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_job_state $job_id "E" 60
 
    delete_job $job_id
@@ -257,7 +257,7 @@ proc error_states_no_default_queue_shell {} {
 
    
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
-   wait_for_jobpending $job_id "exit" 60
+   wait_for_jobpending $job_id "exit" 60 1
    set q_state [wait_for_queue_state $error_states_check_queue "E" 60]
    
    set my_conf(shell) $org_conf(shell) 
@@ -298,13 +298,13 @@ proc error_states_no_unix_shell_script {} {
 
    set jobargs "-o /dev/null -e /dev/null $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit_00.sh"  
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
-   wait_for_jobpending $job_id "exit" 60
+   wait_for_jobpending $job_id "exit" 60 1
    wait_for_jobstart $job_id "exit" 60 
    wait_for_jobend $job_id "exit" 60 
    
    set jobargs "-o /dev/null -e /dev/null $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/no_unix_shell.sh"  
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
-   wait_for_jobpending $job_id "no_unix" 60
+   wait_for_jobpending $job_id "no_unix" 60 1
    wait_for_job_state $job_id "E" 60 
 
    delete_job $job_id
@@ -348,7 +348,7 @@ proc error_states_wrong_pe {} {
 
    set jobargs "-o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh" 
    set job_id [submit_job "-pe wrong_start_pe 1-4 $jobargs 5" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    set q_state [ wait_for_queue_state $error_states_check_queue "E" 60 ]
    
    puts $CHECK_OUTPUT "clearing error state $q_state of queue $error_states_check_queue"
@@ -362,7 +362,7 @@ proc error_states_wrong_pe {} {
 
 
    set job_id [submit_job "-pe wrong_stop_pe 1-4 $jobargs 5" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_jobstart $job_id "leeper" 60
    wait_for_jobend $job_id "leeper" 60
    get_qacct $job_id
@@ -381,7 +381,7 @@ proc error_states_wrong_pe {} {
  
    set jobargs "-o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh" 
    set job_id [submit_job "-pe error_start_pe 1-4 $jobargs 5" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    set q_state [ wait_for_queue_state $error_states_check_queue "E" 60 ]
    
    puts $CHECK_OUTPUT "clearing error state $q_state of queue $error_states_check_queue"
@@ -395,7 +395,7 @@ proc error_states_wrong_pe {} {
 
 
    set job_id [submit_job "-pe error_stop_pe 1-4 $jobargs 5" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_jobstart $job_id "leeper" 60
    wait_for_jobend $job_id "leeper" 60
    get_qacct $job_id
@@ -438,7 +438,7 @@ proc error_states_submit_error_script {} {
 
    set jobargs "-o /dev/null -e /dev/null $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/error.sh" 
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_jobstart $job_id "leeper" 60
    wait_for_jobend $job_id "leeper" 60
    get_qacct $job_id
@@ -499,27 +499,27 @@ proc error_states_job_output {} {
 
    set jobargs "-o $test_dir -e /dev/null $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/error.sh" 
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_job_state $job_id "E" 60  
    delete_job $job_id
 
    set jobargs "-o $test_file -e /dev/null $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/error.sh" 
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_job_state $job_id "E" 60  
    delete_job $job_id
 
 
    set jobargs "-o /dev/null -e $test_dir $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/error.sh" 
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_job_state $job_id "E" 60  
    delete_job $job_id
    
 
    set jobargs "-o /dev/null -e $test_file $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/error.sh" 
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
    wait_for_job_state $job_id "E" 60  
    delete_job $job_id
 
@@ -532,7 +532,7 @@ proc error_states_job_output {} {
       set result [ start_remote_prog $CHECK_HOST $CHECK_USER "cd" "$test_local_dir ; qsub -cwd -q $error_run_queue $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/error.sh" ]
       puts $CHECK_OUTPUT $result
       set job_id [lindex $result 2]
-      wait_for_jobpending $job_id "leeper" 60
+      wait_for_jobpending $job_id "leeper" 60 1
       wait_for_job_state $job_id "E" 60  
       delete_job $job_id
 
@@ -540,7 +540,7 @@ proc error_states_job_output {} {
       set result [ start_remote_prog $CHECK_HOST $CHECK_USER "cd" "$test_local_dir ; qsub -cwd -q $error_states_check_queue $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/error.sh" ]
       puts $CHECK_OUTPUT $result
       set job_id [lindex $result 2]
-      wait_for_jobpending $job_id "leeper" 60
+      wait_for_jobpending $job_id "leeper" 60 1
       wait_for_jobstart $job_id "leeper" 60
       wait_for_jobend $job_id "leeper" 60
       

@@ -132,7 +132,7 @@ proc submit_del_test { } {
       wait_for_jobend $elem "Sleeper" 60 0
    }
 
-   wait_for_end_of_all_jobs 100
+   wait_for_end_of_all_jobs 120
 
    if { $CHECK_L10N == 1 } {
          set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]

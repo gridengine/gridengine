@@ -4125,7 +4125,7 @@ proc wait_for_end_of_all_jobs { seconds } {
       if { $seconds > 0 } {
          set runtime [expr ( [timestamp] - $time) ]
          if { $runtime >= $seconds } {
-             add_proc_error "wait_for_end_of_all_jobs" -1 "timeout waiting for end of all jobs"
+             add_proc_error "wait_for_end_of_all_jobs" -1 "timeout waiting for end of all jobs:\n\"$result\""
              return -1
          }
       }
@@ -6131,7 +6131,7 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
     } 
     set runtime [expr ( [timestamp] - $time) ]
     if { $runtime >= $seconds } {
-       add_proc_error "wait_for_jobend" -1 "timeout waiting for job \"$jobid\" \"$jobname\""
+       add_proc_error "wait_for_jobend" -1 "timeout waiting for job \"$jobid\" \"$jobname\":\nis_job_running returned $run_result"
        return -1
     }
     sleep 1
@@ -7291,13 +7291,20 @@ proc resolve_arch { { host "none" } } {
      puts $CHECK_OUTPUT "user not set, aborting"
      return "unknown"
   }
+  
+  if { [ info exists CHECK_SOURCE_DIR ] == 0 } {
+     debug_puts "source directory not set, aborting"
+     return "unknown"
+  }
+
+ 
 
   if { [ string compare $host "none" ] == 0 || 
        [ string compare $host $CHECK_HOST ] == 0 } {
       set prg_exit_state [ catch { eval exec "$CHECK_SOURCE_DIR/dist/util/arch" } result ]
   } else {
-      puts $CHECK_OUTPUT "resolve_arch: resolving architecture for host $host"
-      set result [ start_remote_prog $host $CHECK_USER "$CHECK_SOURCE_DIR/dist/util/arch" "" prg_exit_state 60 0 "" 1 0]
+      debug_puts "resolve_arch: resolving architecture for host $host"
+      set result [ start_remote_prog $host $CHECK_USER "$CHECK_SOURCE_DIR/dist/util/arch" "" prg_exit_state 60 0 "" 1 0 0]
   }
   set result [string trim $result]
   set result2 [split $result "\n"]

@@ -2960,7 +2960,9 @@ proc set_users_environment { host {variable_name env} { show_variables 0 } } {
 
    upvar $variable_name environment
 
-   if { $CHECK_L10N == 0 && [llength $CHECK_REMOTE_ENVIRONMENT] == 0 } {
+   set remote_environment $CHECK_REMOTE_ENVIRONMENT
+
+   if { $CHECK_L10N == 0 && [llength $remote_environment] == 0 } {
       return 0
    }
 
@@ -3024,7 +3026,7 @@ proc set_users_environment { host {variable_name env} { show_variables 0 } } {
       }
    }
 
-   foreach u_env $CHECK_REMOTE_ENVIRONMENT {
+   foreach u_env $remote_environment {
       debug_puts "environment: $u_env"
       set help [split $u_env "="]
       set env_name  [lindex $help 0]
@@ -9339,6 +9341,7 @@ proc enhanced_setup {} {
       puts "   local host:   $CHECK_HOST";
       puts "starting enhanced setup ... ok"
    }
+
 #
 # uncomment the following line, if the unused macros should be removed from source code
 # ======================================================================================  
@@ -14228,11 +14231,25 @@ proc update_compile_html_output { content } {
    }
 }
 
-proc setup_shared_lib_path {} {
-   global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
-   global be_quiet
+proc get_shared_lib_path { host name path } {
 
-   switch -exact $CHECK_ARCH {
+   global CHECK_PRODUCT_ROOT
+   upvar $name var_name
+   upvar $path var_value
+
+   set host_arch [resolve_arch $host ]
+   set var_name [get_shared_lib_path_variable_name $host_arch]
+   if { [info exists CHECK_PRODUCT_ROOT ] } {
+      set var_value $CHECK_PRODUCT_ROOT/lib/$host_arch
+   } else {
+      set var_value ""
+   }
+}
+
+
+proc get_shared_lib_path_variable_name { arch } {
+   set name ""
+   switch -exact $arch {
       aix41 -
       aix42 -
       aix43 {
@@ -14246,7 +14263,14 @@ proc setup_shared_lib_path {} {
          set name LD_LIBRARY_PATH
       }
    }
+   return $name
+}
 
+proc setup_shared_lib_path {} {
+   global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT
+   global be_quiet
+
+   set name [get_shared_lib_path_variable_name $CHECK_ARCH]
    if { [info exists env($name)] } {
       set env($name) "$env($name):$CHECK_PRODUCT_ROOT/lib/$CHECK_ARCH"
    } else {

@@ -1,3 +1,6 @@
+CR-2002-12-06-0  Testsuite: - Setting shared library path in start_remote_prog()
+                            - Changed parameter settings for some tests
+
 JG-2002-12-05-0  Bugfix:    Script submission for qrsh broke tight integration.
 
 CR-2002-12-05-1  Testsuite: fixed errors in error_states check and complex

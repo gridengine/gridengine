@@ -1,3 +1,16 @@
+MD-2004-01-31-0: Bugfix:    - Change DB install procedure -> only standalone 
+                              installation, removed from autoinstallation
+                            - changed berkeley rc script, supports multible
+                              spooling homes now
+                            - added shutdown functionality to sgebdb
+                            - introduced bdbhomes file
+                            - additional module sge_config_berkeley.sh
+                            - autoinstall default configfile removed ->
+                              the -auto option requires a path to config file
+                            - pkgadd rights
+                            - typos and cleanups 
+                 Changed:   - sge_config
+
 SD-2004-01-30-2: Bugfix:    Fixed compile problem
                  Changed:   qmon
 

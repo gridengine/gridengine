@@ -100,15 +100,7 @@ export $shlib_path_name
 #
 Shutdown()
 {
-   name=$1
-   pidfile=$2
-   if [ -f $pidfile ]; then
-      pid=`cat $pidfile`
-      $utilbin_dir/checkprog $pid $name > /dev/null
-      if [ "$?" = 0 ]; then
-         kill -TERM $pid
-      fi
-   fi
+  kill -TERM `ps -efa | grep berkeley_db_svc | cut -d" " -f2 | head -1`
 }
 
 #---------------------------------------------------------------------------
@@ -260,6 +252,15 @@ CheckIfLocal()
 
 }
 
+GetSpoolingDir()
+{
+ for d in `cat SPOOLING_DIR/bdbhomes`; do
+   tmp_spool=" -h "$d
+   tmp_spool2=$tmp_spool2$tmp_spool
+
+ done
+ SPOOL_DIR=$tmp_spool2
+}
 #---------------------------------------------------------------------------
 usage()
 {
@@ -298,10 +299,12 @@ fi
 
 if [ "$startup" = true ]; then
 
-   CheckSpoolDir
-   CheckIfLocal SPOOLING_DIR
+   #CheckSpoolDir
+   #CheckIfLocal SPOOLING_DIR
    # TODO: should better run under admin_user account!
-   exec $utilbin_dir/berkeley_db_svc -h SPOOLING_DIR &
+   GetSpoolingDir
+   exec $utilbin_dir/berkeley_db_svc $SPOOL_DIR &
 else
-   echo "stop procedure not yet implemented"
+   echo Stopping Berkeley DB
+   Shutdown
 fi

@@ -199,7 +199,7 @@ SetPermissions()
       $INFOTEXT -wait -auto $AUTO -n "Please hit <RETURN> to continue once you set your file permissions >> "
       $CLEAR
       return 0
-   elif [ $fast = false ]; then
+   else
       $CLEAR
       $INFOTEXT -u "\nVerifying and setting file permissions"
       $INFOTEXT "\nWe may now verify and set the file permissions of your Grid Engine\n" \
@@ -214,13 +214,11 @@ SetPermissions()
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
                "Do you want to verify and set your file permissions (y/n) [y] >> "
       ret=$?
-   else
-      ret=0
    fi
 
    if [ $ret = 0 ]; then
 
-      if [ $resport = true ]; then
+      if [ $RESPORT = true ]; then
          resportarg="-resport"
       else
          resportarg="-noresport"
@@ -271,12 +269,33 @@ SetSpoolingOptions()
             SpoolingCheckParams
             params_ok=1
             #TODO: exec rcrpc script
-         fi 
-         while [ $params_ok -eq 0 ]; do
+         fi
+         if [ $QMASTER = "install" ]; then
+            $INFOTEXT "Please, log in to your berkeley db spooling host and execute < sge_config -db >\n"
+            $INFOTEXT -auto $AUTO -wait "After berkeley db installation, continue with < Enter >"
             SpoolingQueryChange
-            SpoolingCheckParams
-            params_ok=$?
-         done
+            CheckLocalFilesystem $SPOOLING_DIR
+         else
+            ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
+            if [ $ret -gt 1 ]; then
+               $INFOTEXT "We found a running berkeley db on this host!"
+               exit 1
+              # $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
+               if [ $? = 1 ]; then
+                  SpoolingQueryChange
+                  echo $SPOOLING_DIR >> $SPOOLING_DIR/bdbhomes
+               else
+                  exit 1
+               fi 
+            else
+               while [ $params_ok -eq 0 ]; do
+                  SpoolingQueryChange
+                  #echo $SPOOLING_DIR >> $SPOOLING_DIR/bdbhomes
+                  SpoolingCheckParams
+                  params_ok=$?
+               done
+            fi
+         fi
 
          if [ $SPOOLING_SERVER = "none" ]; then
             Makedir $SPOOLING_DIR
@@ -293,6 +312,8 @@ SetSpoolingOptions()
    esac
 }
 
+<<<<<<< sge_config_qmaster.sh
+=======
 SpoolingQueryChange()
 {
    $INFOTEXT -u "\nBerkeley Database spooling parameters"
@@ -388,6 +409,7 @@ CheckLocalFilesystem()
    return 0
 }
 
+>>>>>>> 1.7
 
 #-------------------------------------------------------------------------
 # Ask the installer for the hostname resolving method
@@ -454,7 +476,7 @@ SetProductMode()
    fi
 
    if [ $CSP = true ]; then
-      SEC_COUNT=`strings $V5BIN/sge_qmaster | grep sec_init | wc -l`
+      SEC_COUNT=`strings $SGE_BIN/sge_qmaster | grep sec_init | wc -l`
       if [ 5 -gt $SEC_COUNT ]; then
          $INFOTEXT "\n>sge_qmaster< binary is not compiled with >-secure< option!\n"
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to cancel the installation >> "
@@ -541,43 +563,6 @@ InitSpoolingDatabase()
 AddConfiguration()
 {
    useold=false
-#
-# JG: TODO: a maintenance command could dump the configuration to file
-#           we display it and decide whether to overwrite it.
-#           To Change: spoolinit has to check whether the database already
-#           exists and not overwrite it.
-#
-#   if [ -f $COMMONDIR/configuration ]; then
-#      $INFOTEXT -u "\nCreating global cluster configuration"
-#      $INFOTEXT "\nA global cluster configuration file already exists.\n"
-#      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to display the configuration >> "
-#
-#      cat $COMMONDIR/configuration |grep -v conf_version |more
-#
-#      QMDIR_IN_CFG=`grep qmaster_spool_dir $COMMONDIR/configuration | awk '{print $2}'`
-#      if [ "$QMDIR_IN_CFG" != $QMDIR ]; then
-#         $CLEAR
-#         $INFOTEXT -u "\nERROR - new qmaster spool directory"
-#         $INFOTEXT "\nThe qmaster spool directory in your existing configuration is set to\n\n" \
-#                   "   %s\n\n" \
-#                   "and differs from your previous selection during this installation where you\n" \
-#                   "set the qmaster spool directory to\n\n" \
-#                   "   %s\n\n" \
-#                   "Please either copy your old qmaster spool directory to the new directory and\n" \
-#                   "edit the existing cluster configuration file to reflect this change and\n" \
-#                   "restart the installation or delete the current cluster configuration file.\n" \
-#                   "$QMDIR_IN_CFG" "$QMDIR"
-#         $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to cancel the installation >> "
-#         exit 1
-#      else
-#         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
-#                   "Do you want to create a new configuration (y/n) [y] >> "
-#         if [ $? = 1 ]; then
-#            $INFOTEXT -wait -auto $autoinst -n "Using existing configuration. Hit <RETURN> to continue >> "
-#            useold=true
-#         fi
-#      fi
-#   fi
 
    if [ $useold = false ]; then
       GetConfiguration
@@ -665,24 +650,6 @@ AddLocalConfiguration()
 
    $CLEAR
    $INFOTEXT -u "\nCreating local configuration"
-   # JG: TODO: see comment regarding existing global configuration
-#   if [ -f $LCONFDIR/$HOST ]; then
-#      $INFOTEXT "\nA local configuration for this host already exists.\n"
-#
-#      $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to display configuration >> "
-#
-#      cat $LCONFDIR/$HOST |grep -v conf_version |more
-#
-#      $INFOTEXT -auto $autoinst -ask "y" "n" -def "n" -n \
-#                "\nDo you want to create a new configuration (y/n) [n] >> "
-#      if [ $? = 1 ]; then
-#         $INFOTEXT -wait -auto $autoinst -n "Keeping existing configuration. Hit <RETURN> to continue >> "
-#         useold=true
-#      else
-#         $INFOTEXT -wait -auto $autoinst -n "Creating new local configuration. Hit <RETURN> to continue >> "
-#      fi
-#      $CLEAR
-#   fi
 
    if [ $useold = false ]; then
 #      TruncCreateAndMakeWriteable $LCONFDIR/$HOST
@@ -823,19 +790,6 @@ AddActQmaster()
 AddDefaultComplexes()
 {
    $INFOTEXT "Adding default complex attributes"
-#   for c in arch h_rt mem_free num_proc  s_rt swap_total calendar h_stack mem_total qname s_stack swap_used cpu h_vmem mem_used rerun s_vmem tmpdir h_core hostname min_cpu_interval s_core seq_no virtual_free h_cpu load_avg np_load_avg s_cpu slots virtual_total h_data load_long np_load_long s_data swap_free virtual_used h_fsize load_medium np_load_medium s_fsize swap_rate h_rss load_short np_load_short s_rss swap_rsvd; do
-#      if [ -f $QMDIR/centry/$c -a -s $QMDIR/centry/$c ]; then
-#         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
-#                   "Complex attribute >%s< already exists - should Complex attribute be preserved (y/n) [y] >> " $c
-#         if [ $? = 1 ]; then
-#            $INFOTEXT "Overwriting existing complex attribute>%s<" $c
-#            ExecuteAsAdmin cp util/resources/centry/$c $QMDIR/centry
-#         fi
-#      else
-#         ExecuteAsAdmin cp util/resources/centry/$c $QMDIR/centry
-#      fi
-#   done
-#   ExecuteAsAdmin chmod $FILEPERM $QMDIR/centry/*
    ExecuteAsAdmin $SPOOLDEFAULTS complexes $SGE_ROOT_VAL/util/resources/centry
 
 }
@@ -870,19 +824,6 @@ AddPEFiles()
 {
    $INFOTEXT "Adding default parallel environments (PE)"
    $INFOTEXT -log "Adding default parallel environments (PE)"
-#   for c in make; do
-#      if [ -f $QMDIR/pe/$c -a -s $QMDIR/pe/$c ]; then
-#         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
-#                   "PE >%s< already exists - should PE be preserved (y/n) [y] >> " $c
-#         if [ $? = 1 ]; then
-#            $INFOTEXT "Overwriting existing PE >%s<" $c
-#            ExecuteAsAdmin cp util/resources/pe/$c $QMDIR/pe
-#         fi
-#      else
-#         ExecuteAsAdmin cp util/resources/pe/$c $QMDIR/pe
-#      fi
-#   done
-#   ExecuteAsAdmin chmod $FILEPERM $QMDIR/pe/*
    ExecuteAsAdmin $SPOOLDEFAULTS pes $SGE_ROOT_VAL/util/resources/pe
 }
 

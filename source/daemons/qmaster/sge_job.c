@@ -106,6 +106,7 @@
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
+#include "msg_execd.h"
 #include "msg_daemons_common.h"
 
 extern lList *Master_Queue_List;
@@ -140,6 +141,7 @@ static int verify_job_list_filter(lList **alpp, int all_users_flag, int all_jobs
 static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser, int is_array, u_long32 start, u_long32 end, u_long32 step);   
 static u_long32 sge_get_job_number(void);
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
+static int job_check_qsh_display(lListElem *job, lList **answer_list);
 /*-------------------------------------------------------------------------*/
 /* sge_gdi_add_job                                                       */
 /*    called in sge_c_gdi_add                                              */
@@ -194,6 +196,15 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
       DEXIT;
       return STATUS_EUNKNOWN;
+   }
+
+   /* check for qsh without DISPLAY set */
+   if(JB_NOW_IS_QSH(lGetUlong(jep, JB_now))) {
+      int ret = job_check_qsh_display(jep, alpp);
+      if(ret != STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
    }
 
    /* 
@@ -2852,6 +2863,16 @@ int *trigger
    /* ---- JB_env_list */
    if ((pos=lGetPosViaElem(jep, JB_env_list))>=0) {
       DPRINTF(("got new JB_env_list\n")); 
+
+      /* check for qsh without DISPLAY set */
+      if(JB_NOW_IS_QSH(lGetUlong(new_job, JB_now))) {
+         int ret = job_check_qsh_display(jep, alpp);
+         if(ret != STATUS_OK) {
+            DEXIT;
+            return ret;
+         }
+      }
+
       lSetList(new_job, JB_env_list, 
                lCopyList("", lGetList(jep, JB_env_list)));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_ENVLIST, u32c(jobid));
@@ -3523,3 +3544,34 @@ sge_gdi_request *request
    return ret;
 }
 
+static int job_check_qsh_display(lListElem *job, lList **answer_list)
+{
+   const lListElem *display_ep;
+
+   DENTER(TOP_LAYER, "job_check_qsh_display");
+
+   /* check for existence of DISPLAY and its contents */
+   display_ep = lGetElemStr(lGetList(job, JB_env_list), VA_variable, "DISPLAY");
+   if(display_ep == NULL) {
+      sge_add_answer(answer_list, MSG_EXECD_NODISPLAY, STATUS_EUNKNOWN, 0);
+      DEXIT;
+      return STATUS_EUNKNOWN;
+   } else {
+      /* check value of display variable, if it has the form :<id>
+       * or is an empty string,
+       * it is useless in a grid environment and will be deleted.
+       * Better would be to output an appropriate error message,
+       * but I cannot introduce a new error message for the next 
+       * patch release due to L10N restrictions.
+       */
+      const char *display = lGetString(display_ep, VA_value);
+      if(display == NULL || strlen(display) == 0 || *display == ':') {
+         sge_add_answer(answer_list, MSG_EXECD_EMPTYDISPLAY, STATUS_EUNKNOWN, 0);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   }
+
+   DEXIT;
+   return STATUS_OK;
+}      

@@ -315,7 +315,7 @@ int answer_error
             break;
  
          default:
-            ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
+            ERROR((SGE_EVENT, MSG_EXECD_COM_ACK_UNKNOWN));
             break;
       }
    }

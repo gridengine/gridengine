@@ -1,3 +1,6 @@
+EB-2003-05-05-0  Bugfix:    qhost -F broken
+                 Issue:     530
+
 EB-2003-05-02-0  Bugfix:    broken build
 
 CR-2003-04-30-0  Testsuite: modified scheduler test to create more queue 

@@ -473,6 +473,7 @@ u_long32 show
       }
 
       { 
+         sge_dstring_clear(&resource_string);
          u_long32 type = lGetUlong(rep, CE_valtype);
          switch (type) {
          case TYPE_HOST:   

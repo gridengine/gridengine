@@ -74,8 +74,8 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
    void *shlib_handle;
 
    /* get_method function pointer and result */
-   spooling_get_method_func get_spooling_method;
-   const char *spooling_name;
+   spooling_get_method_func get_spooling_method = NULL;
+   const char *spooling_name = NULL;
 
    DENTER(TOP_LAYER, "spool_dynamic_create_context");
 

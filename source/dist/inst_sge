@@ -1,0 +1,417 @@
+#!/bin/sh
+#
+# Grid Engine configuration script (Installation/Uninstallation/Upgrade/Downgrade)
+# Scriptname: inst_sge
+#
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+#
+# set -x
+
+#Reset PATH to a safe value
+#
+PATH=/bin:/usr/bin:/usr/sbin:/usr/bsd
+
+# Easy way to prevent clearing of screen
+#
+CLEAR=clear
+$CLEAR
+
+# The same as clear!
+#
+ECHO=echo
+
+# Sourcing common function module
+#
+PWD=`pwd`
+. ./util/arch_variables
+. ./util/inst_sgeee_modules/inst_sgeee_common.sh
+
+#---------------------------------------
+# commandline argument parsing
+#---------------------------------------
+
+UPGRADE=false
+DOWNGRADE=false
+BACKUP=false
+AUTO=false
+SGEEE=true
+RESCHEDULE=true
+RESPORT=false
+CSP=false
+AFS=false
+NOREMOTE=false
+START_RPC_SERVICE=false
+ADD_TO_RC=false
+
+QMASTER="undef"
+EXECD="undef"
+SHADOW="undef"
+BERKELEY="undef"
+TAR="undef"
+FILE="undef"
+HOST="undef"
+HOSTRANGE="undef"
+LOCAL_EXECD_SPOOL="undef"
+SHELL_NAME="ssh"
+EXEC_HOST_LIST="undef"
+CONFIG_FILE="undef"
+
+SGE_NOMSG="undef"
+
+BasicSettings
+SetUpInfoText
+CheckPath
+CheckBinaries
+
+
+ARGC=$#
+
+if [ $ARGC = 0 ]; then
+   ErrUsage
+   exit 1
+fi
+
+while [ $ARGC != 0 ]; do
+   case $1 in
+   -auto)
+     AUTO=true
+     FILE=$2
+     if [ ! -f $2 ]; then
+        ErrUsage
+     fi
+     shift
+     ARGC=`expr $ARGC - 1`
+     CLEAR=:
+     SGE_NOMSG=1
+     export SGE_NOMSG
+     CreateLog
+     exec 1>/tmp/$LOGNAME 2>&1
+     ;;
+   -m)
+     QMASTER="install"
+     . ./util/inst_sgeee_modules/inst_sgeee_qmaster.sh
+     . ./util/inst_sgeee_modules/inst_sgeee_berkeley.sh
+     ;;
+   -um)
+     QMASTER="uninstall"
+     . ./util/inst_sgeee_modules/inst_sgeee_qmaster_uninst.sh
+     ;; 
+   -x)
+     EXECD="install"
+     . ./util/inst_sgeee_modules/inst_sgeee_execd.sh
+     ;;
+   -ux)
+     EXECD="uninstall"
+     . ./util/inst_sgeee_modules/inst_sgeee_execd_uninst.sh
+     ;;
+   -sm)
+     SHADOW="install"
+     #echo Install Shadowhost
+     ;;
+   -db)
+     BERKELEY="install"
+     SPOOLING_SERVER=`hostname`
+     . ./util/inst_sgeee_modules/inst_sgeee_qmaster.sh
+     . ./util/inst_sgeee_modules/inst_sgeee_berkeley.sh
+     ;;
+   -host)
+     if [ $AUTO = "false" -a $QMASTER = "install" ]; then
+        EXEC_HOST_LIST=$2
+     else
+        HOST=$2
+     fi
+     #echo Un/install exechost $2
+     shift
+     ARGC=`expr $ARGC - 1`
+     ;;
+   -noremote)
+     NOREMOTE=true
+     #Disable remote installation
+     ;;
+   -nr)
+     RESCHEDULE=false
+     #echo set reschedule to false
+     ;;
+   -resport)
+     RESPORT=true
+     #echo set resport to true
+     ;;
+   -csp)
+     CSP=true
+     ;;
+   -afs)
+     AFS=true
+     ;;
+   -help)
+     ErrUsage
+     ;;
+   *)
+     ErrUsage
+     ;;
+   esac
+   shift
+   ARGC=`expr $ARGC - 1`
+done
+
+if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "install" ]; then
+   ErrUsage
+fi
+ 
+if [ $QMASTER = "install" ]; then
+
+ if [ $AUTO = true ]; then
+  {
+    $INFOTEXT -log "Starting qmaster installation!"
+    GetConfigFromFile
+    CheckPath
+  }
+ fi
+
+ WelcomeTheUser
+ CheckWhoInstallsSGE
+ ProcessSGERoot 
+ #CheckCommPorts qmaster
+ GetQmasterPort
+ GetExecdPort
+ #GetCellRoot
+ GetCell
+ GetQmasterSpoolDir $euid
+ SetCellDependentVariables
+ SetPermissions
+ #SetSpoolingOptions
+ SelectHostNameResolving
+ SetProductMode
+ MakeDirsMaster
+ SetSpoolingOptions
+ AddBootstrap
+ InitSpoolingDatabase
+ AddConfiguration
+ AddLocalConfiguration
+ AddActQmaster
+ AddDefaultComplexes
+ AddPEFiles
+ AddDefaultDepartement
+ AddCommonFiles
+ CreateSettingsFile
+ InitCA
+ AddSGEStartUpScript $euid true master
+ StartQmaster
+ AddHosts
+ SetScheddConfig
+ GiveHints
+
+ if [ $AUTO = true ]; then 
+    MoveLog
+ fi
+
+fi
+
+
+if [ $EXECD = "install" ]; then
+ if [ $AUTO = true ]; then
+    GetConfigFromFile
+    CheckPath
+
+    for h in $EXEC_HOST_LIST; do
+   
+      if [ $h = `hostname` ]; then
+  
+         WelcomeTheUserExecHost
+         CheckWhoInstallsSGE 
+         ProcessSGERoot
+         CheckQmasterInstallation
+         #CheckCommPorts execd
+         #GetExecdPort
+         CheckCellDirectory
+         CheckCSP
+         CheckHostNameResolving
+         GetLocalExecdSpoolDir
+         AddLocalConfiguration_With_Qconf
+         AddSGEStartUpScript $euid true execd
+         StartExecd
+         AddQueue
+         GiveHints
+
+         if [ $AUTO = "true" ]; then
+            MoveLog
+         fi
+
+      else
+         if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
+            $INFOTEXT -log "remote installation on host %s" $h
+            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $FILE -noremote" | rsh $h /bin/sh &
+         fi
+
+      fi
+
+    done
+ 
+ else
+      WelcomeTheUserExecHost
+      CheckWhoInstallsSGE 
+      ProcessSGERoot
+      CheckQmasterInstallation
+      #CheckCommPorts execd
+      #GetExecdPort
+      CheckCellDirectory
+      . $SGE_ROOT/$SGE_CELL/common/settings.sh
+      CheckCSP
+      CheckHostNameResolving
+      GetLocalExecdSpoolDir
+      AddLocalConfiguration_With_Qconf
+      AddSGEStartUpScript $euid true execd 
+      StartExecd
+      AddQueue
+      GiveHints
+      
+      if [ $AUTO = "true" ]; then
+         MoveLog
+      fi
+
+      if [ -f $EXEC_HOST_LIST ]; then
+         for h in `cat $EXEC_HOST_LIST`; do
+           if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
+               $INFOTEXT "Starting remote installation on host %s" $h
+               $INFOTEXT "This part runs in automatic mode," \
+                         "be sure to have a valid configuration file"
+               if [ $CONFIG_FILE = "undef" ]; then
+                  $INFOTEXT -n "Please enter the path to your autoinstall configuration file >> " 
+                  CONFIG_FILE=`Enter`
+                  export CONFIG_FILE
+               else               
+                  $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG_FILE
+                            CONFIG_FILE=`Enter $CONFIG_FILE`
+               fi
+
+               $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
+                         SHELL_NAME=`Enter $SHELL_NAME` 
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG_FILE -noremote" | $SHELL_NAME $h /bin/sh &
+           fi
+         done
+      else
+         if [ $EXEC_HOST_LIST != "undef" ]; then 
+            for h in $EXEC_HOST_LIST; do
+              if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
+                  $INFOTEXT "Starting remote installation on host %s" $h
+                  $INFOTEXT "This part runs in automatic mode," \
+                            "be sure to have a valid configuration file"
+                  if [ $CONFIG_FILE = "undef" ]; then
+                     $INFOTEXT -n "Please enter the path to your autoinstall configuration file >> " 
+                     CONFIG_FILE=`Enter`
+                     export CONFIG_FILE
+                  else               
+                     $INFOTEXT "Please enter the path to your autoinstall configuration file or hit <RETURN> to use >> [%s] >> " $CONFIG_FILE
+                               CONFIG_FILE=`Enter $CONFIG_FILE`
+                  fi
+                     $INFOTEXT "Please enter which shell you want to use for remote login (rsh/ssh) or hit <RETURN> to use >> [%s] >> " $SHELL_NAME
+                            SHELL_NAME=`Enter $SHELL_NAME`
+                  $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+                  echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
+              fi
+         done
+         fi
+      fi
+
+  fi
+
+ 
+fi
+
+if [ $BERKELEY = "install" ]; then
+ 
+   BasicSettings
+   CheckWhoInstallsSGE
+   ProcessSGERoot
+   GetCell
+   COMMONDIR=$SGE_CELL/common
+   Makedir $SGE_CELL
+   Makedir $COMMONDIR 
+   SetSpoolingOptions
+   InstallServerScript $euid
+
+fi
+
+if [ $QMASTER = "uninstall" ]; then
+   . $SGE_ROOT/$SGE_CELL/common/settings.sh
+   RemoveQmaster
+fi
+
+if [ $EXECD = "uninstall" ]; then
+ 
+   INFOTEXT=$SGE_ROOT/$INFOTEXT
+   . $SGE_ROOT/$SGE_CELL/common/settings.sh
+
+   if [ $AUTO = "true" ]; then
+      GetConfigFromFile
+   fi
+   FetchHostname
+   
+   if [ $AUTO = "true" ]; then
+      MoveLog
+   fi
+ 
+   exit 0
+fi
+
+if [ $SHADOW = "install" ]; then
+
+   if [ $AUTO = "false" ]; then   
+      $INFOTEXT -wait "Make sure, that the host, you wish to configure as" \
+                      "shadow host,\n has read/write permissions to the qmaster spool" \
+                      "and SGE_ROOT/<cell>/common directory!\n Hit <Enter> to continue >>"
+      $INFOTEXT "Please enter your SGE_ROOT directory or use the default\n[%s]!" $SGE_ROOT
+
+      INP=`Enter ""`
+      if [ "$INP" = "" ]; then
+         SGE_ROOT=$SGE_ROOT
+      else
+         SGE_ROOT=$INP
+      fi
+      
+      if [ $HOST = "" ]; then
+         SHADOW_HOST=`hostname`
+      else
+         SHADOW_HOST=$HOST
+      fi
+ 
+      echo $SHADOW_HOST > $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; $SGE_ROOT/bin/$ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+   else
+      $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST      
+      echo $SHADOW_HOST > $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; $SGE_ROOT/bin/$ARCH/sge_shadowd &" | rsh $SHADOW_HOST /bin/sh &
+   fi
+fi
+
+exit 0

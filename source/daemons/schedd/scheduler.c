@@ -647,6 +647,7 @@ lList **finished_jobs
       lListElem *ckpt;
       const char *ckpt_name;
       int dispatched_a_job;
+      lListElem *next_job;
 
       /* sort the hostlist */
       if(sort_hostlist) {
@@ -845,6 +846,35 @@ SKIP_THIS_JOB:
 
          } /* sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE */
       } /* !lGetNumberOfElem(lists->job_list)==0 */
+
+      /*------------------------------------------------------------------ 
+       * SGEEE mode - if we dispatch a job sub-task and the job has more
+       * sub-tasks, then the job is still first in the job list.
+       * We need to remove and reinsert the job back into the sorted job
+       * list in case another job is higher priority (i.e. has more tickets)
+       *------------------------------------------------------------------*/
+
+      if (sgeee_mode && dispatched_a_job &&
+          lGetNumberOfElem(lists->job_list)>1 &&
+          ((next_job = lFirst(lists->job_list))) &&
+          job_id == lGetUlong(next_job, JB_job_number)) {
+         
+         lListElem *jep, *insert_jep=NULL;
+         double ticket;
+
+         lDechainElem(lists->job_list, next_job);
+
+         ticket = lGetDouble(lFirst(lGetList(next_job, JB_ja_tasks)), JAT_ticket);
+         for_each(jep, lists->job_list) {
+            double ticket2 = lGetDouble(lFirst(lGetList(jep, JB_ja_tasks)), JAT_ticket);
+            if (ticket > ticket2 ||
+                (ticket == ticket2 && job_id < lGetUlong(jep, JB_job_number)))
+               break;
+            insert_jep = jep;
+         }
+
+         lInsertElem(lists->job_list, insert_jep, next_job);
+      }
 
    } /* end of while */
 

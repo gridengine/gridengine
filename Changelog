@@ -1,3 +1,11 @@
+CR-2001-09-26-0: Testsuite:
+                 - new setup file version 
+                 (new parameter "list_of_submit_only_hosts")
+                 - bugfixes in path_alias test
+                 - bugfix/enhancement in set_config procedure
+                 - Issue #12: New test: submit_hosts test
+                 
+
 AH-2001-09-21-0: Improved array-job performance in schedd
 
 CR-2001-09-21-0: Testsuite:

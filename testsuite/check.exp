@@ -92,6 +92,8 @@ global CHECK_USER                  ;# user who start test
 global CHECK_GROUP                 ;# group of user who start test
 global CHECK_HOST                  ;# hostname of this system (e.g. DWAIN)
 global CHECK_CORE_EXECD            ;# known execd hostnames
+global CHECK_SUBMIT_ONLY_HOSTS     ;# list of submithosts (no execd/commd running)
+set CHECK_SUBMIT_ONLY_HOSTS ""
 global CHECK_CORE_MASTER           ;# qmaster hostname
 global CHECK_CORE_PROCESSORS       ;# real number of processors (in order of CHECK_CORE_EXECD)
 global CHECK_ACT_LEVEL             ;# actual check level ( value from 0 up to xxx )
@@ -343,7 +345,7 @@ global CHECK_SETUP_NAMES
 
 
 global CHECK_CURRENT_SETTINGS_VERSION
-set CHECK_CURRENT_SETTINGS_VERSION "2"
+set CHECK_CURRENT_SETTINGS_VERSION "3"
 set CHECK_SETTINGS_VERSION $CHECK_CURRENT_SETTINGS_VERSION
 
 set CHECK_SETUP_NAMES(index) "settings_version"
@@ -369,6 +371,9 @@ set CHECK_SETUP_NAMES(list_of_execution_hosts) "CHECK_CORE_EXECD"
 
 lappend CHECK_SETUP_NAMES(index) "processors_on_each_execution_host"
 set CHECK_SETUP_NAMES(processors_on_each_execution_host) "CHECK_CORE_PROCESSORS"
+
+lappend CHECK_SETUP_NAMES(index) "list_of_submit_only_hosts"
+set CHECK_SETUP_NAMES(list_of_submit_only_hosts) "CHECK_SUBMIT_ONLY_HOSTS"
 
 lappend CHECK_SETUP_NAMES(index) "commd_portnumber"
 set CHECK_SETUP_NAMES(commd_portnumber) "CHECK_COMMD_PORT"
@@ -1065,7 +1070,9 @@ proc set_error {erno errtext} {
 #*******************************
 proc save_defaults {} {
   global CHECK_SETTINGS_VERSION
-  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
+  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD 
+  global CHECK_CORE_PROCESSORS CHECK_SUBMIT_ONLY_HOSTS 
+  global CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
   global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
@@ -1084,6 +1091,7 @@ proc save_defaults {} {
   lappend data $CHECK_CORE_MASTER
   lappend data $CHECK_CORE_EXECD
   lappend data $CHECK_CORE_PROCESSORS
+  lappend data $CHECK_SUBMIT_ONLY_HOSTS
   lappend data $CHECK_COMMD_PORT
   lappend data $CHECK_MAIN_RESULTS_DIR
   lappend data $CHECK_PRODUCT_TYPE
@@ -1268,7 +1276,7 @@ proc edit_defaults {} {
 proc read_edit_defaults_file { filename } {
    global CHECK_SETTINGS_VERSION CHECK_CURRENT_SETTINGS_VERSION
    global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS
-   global CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
+   global CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
    global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
    global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
@@ -1352,7 +1360,7 @@ proc read_edit_defaults_file { filename } {
          puts $CHECK_OUTPUT "length of \"list_of_execution_hosts\" doesn't match length of \"processors_on_each_execution_host\""
          return -1
    } 
- 
+
    if {[file isdirectory "$CHECK_MAIN_RESULTS_DIR"] != 1} {
          set catch_return [ catch {  file mkdir "$CHECK_MAIN_RESULTS_DIR" } ]
          if { $catch_return != 0 } {
@@ -1446,7 +1454,8 @@ proc calc_space {space name} {
 #*******************************
 proc write_edit_defaults_file { filename { unique_file def_edit_file } } {
   global CHECK_SETTINGS_VERSION
-  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
+  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS 
+  global CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT CHECK_TESTSUITE_ROOT
   global CHECK_MAIN_RESULTS_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
   global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS
@@ -1510,7 +1519,8 @@ proc write_edit_defaults_file { filename { unique_file def_edit_file } } {
 #*******************************
 proc load_defaults {} {
   global CHECK_SETTINGS_VERSION CHECK_CURRENT_SETTINGS_VERSION CHECK_OUTPUT
-  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS CHECK_COMMD_PORT
+  global CHECK_CHECKTREE_ROOT CHECK_CORE_MASTER CHECK_CORE_EXECD 
+  global CHECK_CORE_PROCESSORS CHECK_SUBMIT_ONLY_HOSTS CHECK_COMMD_PORT
   global CHECK_MAIN_RESULTS_DIR env CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_DEFAULTS_FILE CHECK_TESTSUITE_ROOT
   global CHECK_PROTOCOL_DIR CHECK_CURRENT_WORKING_DIR
   global CHECK_SOURCE_DIR CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
@@ -1534,6 +1544,7 @@ proc load_defaults {} {
   }
   set CHECK_CORE_EXECD      "$CHECK_CORE_MASTER"  
   set CHECK_CORE_PROCESSORS "1"
+  set CHECK_SUBMIT_ONLY_HOSTS ""
   set CHECK_COMMD_PORT "7776";
   set CHECK_USER "unknown";
   set CHECK_GROUP "unknown";
@@ -1672,6 +1683,52 @@ proc load_defaults {} {
             puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
             exit -1
         }
+        if { $CHECK_SETTINGS_VERSION == 2 } {
+            puts $CHECK_OUTPUT "this settings file has version number 2 -> upgrading to version 3"
+            set CHECK_SETTINGS_VERSION "3"
+            set CHECK_TESTSUITE_ROOT                   [lindex $data 1]
+            set CHECK_CHECKTREE_ROOT                   [lindex $data 2]
+            set CHECK_CORE_MASTER                      [lindex $data 3]
+            set CHECK_CORE_EXECD                       [lindex $data 4]
+            set CHECK_CORE_PROCESSORS                  [lindex $data 5]
+            set CHECK_COMMD_PORT                       [lindex $data 6]
+            set CHECK_MAIN_RESULTS_DIR                 [lindex $data 7]
+            set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols
+            set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
+           
+            set CHECK_PRODUCT_TYPE                     [lindex $data 8]
+            set CHECK_PRODUCT_ROOT                     [lindex $data 9]
+            set CHECK_SOURCE_DIR                       [lindex $data 10]
+            set CHECK_SOURCE_HOSTNAME                  [lindex $data 11]
+            set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 12]
+            set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 13]
+            set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 14]
+            set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 15]      ;# added for version 2
+            set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 16]      ;# added for version 2
+            set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 17]
+            set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 18]
+            set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 19]
+            set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 20]
+            set CHECK_DEFAULT_DOMAIN                   [lindex $data 21]
+            set CHECK_MAILX_HOST                       [lindex $data 22]
+            set CHECK_REPORT_EMAIL_TO                  [lindex $data 23]
+            set CHECK_REPORT_EMAIL_CC                  [lindex $data 24]
+            set CHECK_SEND_ERROR_MAILS                 [lindex $data 25]
+            set CHECK_MAX_ERROR_MAILS                  [lindex $data 26]
+            set CHECK_USE_SSH                          [lindex $data 27]
+            set CHECK_SOURCE_CVS_RELEASE               [lindex $data 28]
+            set CHECK_CONFIG_DIR                       [lindex $data 29]
+                        
+            set CHECK_SUBMIT_ONLY_HOSTS                ""
+            puts $CHECK_OUTPUT "added list_of_submit_only_hosts"
+            wait_for_enter
+            source_procedures
+            save_defaults 
+            set CHECK_DO_SETUP 1 
+            setup 
+            puts $CHECK_OUTPUT "defaults file updated, please restart the testsuite!"
+            exit -1
+        }
         exit -1
       } else {
         puts "could not copy defaults file"
@@ -1687,33 +1744,34 @@ proc load_defaults {} {
   set CHECK_CORE_MASTER                      [lindex $data 3]
   set CHECK_CORE_EXECD                       [lindex $data 4]
   set CHECK_CORE_PROCESSORS                  [lindex $data 5]
-  set CHECK_COMMD_PORT                       [lindex $data 6]
-  set CHECK_MAIN_RESULTS_DIR                 [lindex $data 7]
+  set CHECK_SUBMIT_ONLY_HOSTS                [lindex $data 6]      ;# added for version 3
+  set CHECK_COMMD_PORT                       [lindex $data 7]
+  set CHECK_MAIN_RESULTS_DIR                 [lindex $data 8]
   set CHECK_PROTOCOL_DIR $CHECK_MAIN_RESULTS_DIR/protocols
   set CHECK_JOB_OUTPUT_DIR "$CHECK_MAIN_RESULTS_DIR/testsuite_job_outputs"
 
-  set CHECK_PRODUCT_TYPE                     [lindex $data 8]
-  set CHECK_PRODUCT_ROOT                     [lindex $data 9]
-  set CHECK_SOURCE_DIR                       [lindex $data 10]
-  set CHECK_SOURCE_HOSTNAME                  [lindex $data 11]
-  set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 12]
-  set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 13]
-  set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 14]
-  set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 15]      ;# added for version 2
-  set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 16]      ;# added for version 2
-  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 17]
-  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 18]
-  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 19]
-  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 20]
-  set CHECK_DEFAULT_DOMAIN                   [lindex $data 21]
-  set CHECK_MAILX_HOST                       [lindex $data 22]
-  set CHECK_REPORT_EMAIL_TO                  [lindex $data 23]
-  set CHECK_REPORT_EMAIL_CC                  [lindex $data 24]
-  set CHECK_SEND_ERROR_MAILS                 [lindex $data 25]
-  set CHECK_MAX_ERROR_MAILS                  [lindex $data 26]
-  set CHECK_USE_SSH                          [lindex $data 27]
-  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 28]
-  set CHECK_CONFIG_DIR                       [lindex $data 29]
+  set CHECK_PRODUCT_TYPE                     [lindex $data 9]
+  set CHECK_PRODUCT_ROOT                     [lindex $data 10]
+  set CHECK_SOURCE_DIR                       [lindex $data 11]
+  set CHECK_SOURCE_HOSTNAME                  [lindex $data 12]
+  set CHECK_SOURCE_COMPILE_HOSTS             [lindex $data 13]
+  set CHECK_AIMK_COMPILE_OPTIONS             [lindex $data 14]
+  set CHECK_DIST_INSTALL_OPTIONS             [lindex $data 15]
+  set CHECK_QMASTER_INSTALL_OPTIONS          [lindex $data 16]      ;# added for version 2
+  set CHECK_EXECD_INSTALL_OPTIONS            [lindex $data 17]      ;# added for version 2
+  set CHECK_FIRST_FOREIGN_SYSTEM_USER        [lindex $data 18]
+  set CHECK_SECOND_FOREIGN_SYSTEM_USER       [lindex $data 19]
+  set CHECK_FIRST_FOREIGN_SYSTEM_GROUP       [lindex $data 20]
+  set CHECK_SECOND_FOREIGN_SYSTEM_GROUP      [lindex $data 21]
+  set CHECK_DEFAULT_DOMAIN                   [lindex $data 22]
+  set CHECK_MAILX_HOST                       [lindex $data 23]
+  set CHECK_REPORT_EMAIL_TO                  [lindex $data 24]
+  set CHECK_REPORT_EMAIL_CC                  [lindex $data 25]
+  set CHECK_SEND_ERROR_MAILS                 [lindex $data 26]
+  set CHECK_MAX_ERROR_MAILS                  [lindex $data 27]
+  set CHECK_USE_SSH                          [lindex $data 28]
+  set CHECK_SOURCE_CVS_RELEASE               [lindex $data 29]
+  set CHECK_CONFIG_DIR                       [lindex $data 30]
 
 
   source_procedures
@@ -1840,6 +1898,7 @@ proc setup { {do_only_hostname_resolving 0} } {
   global CHECK_SETTINGS_VERSION
   global CHECK_CHECKTREE_ROOT CHECK_PRODUCT_ROOT CHECK_PRODUCT_TYPE env 
   global CHECK_CORE_MASTER CHECK_CORE_EXECD CHECK_CORE_PROCESSORS argv 
+  global CHECK_SUBMIT_ONLY_HOSTS
   global CHECK_PRODUCT_VERSION_NUMBER CHECK_USER CHECK_ARCH CHECK_HOST CHECK_COMMD_PORT
   global CHECK_RESULT_DIR CHECK_BAD_RESULT_DIR CHECK_REPORT_FILE CHECK_GROUP
   global CHECK_CORE_RESULT_DIR CHECK_CORE_BAD_RESULT_DIR CHECK_MAIN_RESULTS_DIR 
@@ -2055,6 +2114,7 @@ proc setup { {do_only_hostname_resolving 0} } {
      puts "       master host:          $CHECK_CORE_MASTER";
      puts "       execution hosts:      $CHECK_CORE_EXECD";
      puts "       number of procs:      $CHECK_CORE_PROCESSORS";
+     puts "       submit_only_hosts:    $CHECK_SUBMIT_ONLY_HOSTS";
      puts "       username:             $CHECK_USER";
      puts "       user groupname:       $CHECK_GROUP";
      puts "       current working dir:  $CHECK_CURRENT_WORKING_DIR"

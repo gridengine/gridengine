@@ -898,7 +898,7 @@ proc get_config { change_array {host global}} {
 #     set_config -- change global or host specific configuration
 #
 #  SYNOPSIS
-#     set_config { change_array {host global} } 
+#     set_config { change_array {host global}{do_add 0} } 
 #
 #  FUNCTION
 #     Set the cluster global or exec host local configuration corresponding to 
@@ -908,6 +908,7 @@ proc get_config { change_array {host global}} {
 #     change_array  - name of an array variable that will be set by get_config
 #     {host global} - set configuration for a specific hostname (host) or set
 #                     the global configuration (global)
+#     {do_add 0}    - if 1: this is a new configuration, no old one exists)
 #
 #  RESULT
 #     -1 : timeout
@@ -967,12 +968,14 @@ proc get_config { change_array {host global}} {
 #  SEE ALSO
 #     sge_procedures/get_config()
 #*******************************
-proc set_config { change_array {host global} } {
+proc set_config { change_array {host global} {do_add 0}} {
   global env CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT open_spawn_buffer
   upvar $change_array chgar
   set values [array names chgar]
 
-  get_config old_values $host
+  if { $do_add == 0 } {
+     get_config old_values $host
+  }
 
   set vi_commands ""
   foreach elem $values {
@@ -992,9 +995,9 @@ proc set_config { change_array {host global} } {
         lappend vi_commands [format "%c" 27]
      }
   } 
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands "modified" "edit failed"]
-  if { $result != 0 } {
-     add_proc_error "set_config" -1 "could not modify configruation for host $host"
+  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mconf $host" $vi_commands "modified" "edit failed" "added" ]
+  if { ($result != 0) &&  ($result != -3) } {
+     add_proc_error "set_config" -1 "could not add or modify configruation for host $host ($result)"
   }
   return $result
 }

@@ -63,7 +63,7 @@ set check_needs           "init_core_system"
 # define test's procedure order
 set check_functions ""
 lappend check_functions "path_alias_setup"
-lappend check_functions "path_alias_test"
+lappend check_functions "path_alias_main"
 lappend check_functions "path_alias_cleanup"
 
 global PATH_ALIAS_OUTPUT1
@@ -77,7 +77,7 @@ proc init_level {} {
 
   switch -- $CHECK_ACT_LEVEL {
      "0" { set path_alias_test 1 ; return 0   } 
-     "1" { set path_alias_test 2 ; return -1   }
+     "1" { set path_alias_test 2 ; return 0   }
   } 
   return -1  ;# no other level else
 }
@@ -142,7 +142,7 @@ proc path_alias_setup {} {
    set_error 0 "ok"
 }
 
-proc path_alias_test {} {
+proc path_alias_main {} {
    global path_alias_test
    global PATH_ALIAS_OUTPUT1
    global PATH_ALIAS_OUTPUT2
@@ -156,14 +156,14 @@ proc path_alias_test {} {
    set files2_old [get_file_names $PATH_ALIAS_OUTPUT2]
 
 
-   set job_script "SGE_ROOT/examples/jobs/sleeper.sh 10"
+   set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 10"
    foreach elem $CHECK_CORE_EXECD {
       puts $CHECK_OUTPUT "submitting job(s) for host $elem"
 
       puts $CHECK_OUTPUT "qsub ..."
       set script_name "$PATH_ALIAS_OUTPUT1/global_qsub_alias_$elem.sh"
       set command     "qsub -cwd -q ${elem}.q"
-      create_shell_script $script_name "cd" "$PATH_ALIAS_OUTPUT1 ; $command \$${job_script}"
+      create_shell_script $script_name "cd" "$PATH_ALIAS_OUTPUT1 ; $command $job_script"
       start_remote_prog $elem $CHECK_USER $script_name "" 
 
       puts $CHECK_OUTPUT "qrsh ..."
@@ -173,12 +173,12 @@ proc path_alias_test {} {
       create_shell_script $script_name "cd" "$PATH_ALIAS_OUTPUT1 ; $command "
       set output [start_remote_prog $elem $CHECK_USER $script_name "" ]
       if { [ string first "$PATH_ALIAS_OUTPUT2" $output  ] < 0 } {
-         add_proc_error "path_alias_test" -1 "qrsh -cwd directory is $output instead of $PATH_ALIAS_OUTPUT2" 
+         add_proc_error "path_alias_main" -1 "qrsh -cwd directory is $output instead of $PATH_ALIAS_OUTPUT2" 
       }
 
       puts $CHECK_OUTPUT "qsh ..."
       set script_name "$PATH_ALIAS_OUTPUT1/global_pwdscript_$elem.sh"
-      set command     "> qsh_pwd_output_$elem.txt ; sleep 1"
+      set command     "> qsh_pwd_output_$elem.txt ; sleep 5"
       create_shell_script $script_name "pwd" "$command "
       set pwd_script $script_name
       
@@ -208,11 +208,11 @@ proc path_alias_test {} {
    set nr_hosts_x2 [ expr ( $nr_hosts * 4 ) ]
 
    if { $nr_new_files1 != $nr_hosts_x2 } {
-      add_proc_error "path_alias_test" -1 "there are $nr_new_files1 new files in directory $PATH_ALIAS_OUTPUT1, should be $nr_hosts"
+      add_proc_error "path_alias_main" -1 "there are $nr_new_files1 new files in directory $PATH_ALIAS_OUTPUT1, should be $nr_hosts"
    } 
    set nr_hosts_x2 [ expr ( $nr_hosts * 3 ) ]
    if { $nr_new_files2 != $nr_hosts_x2 } {
-      add_proc_error "path_alias_test" -1 "there are $nr_new_files2 new files in directory $PATH_ALIAS_OUTPUT2, should be $nr_hosts_x2"
+      add_proc_error "path_alias_main" -1 "there are $nr_new_files2 new files in directory $PATH_ALIAS_OUTPUT2, should be $nr_hosts_x2"
    } 
 
    foreach elem $files1 {

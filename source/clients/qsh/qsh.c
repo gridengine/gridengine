@@ -756,6 +756,7 @@ static int start_client_program(const char *client_name,
 
       if(is_rsh || is_rlogin) {
          sge_set_def_sig_mask(0, NULL);
+         sge_unblock_all_signals();
          
          if(is_rsh && nostdin) {
             args[i++] = "-n";

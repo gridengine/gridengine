@@ -53,7 +53,6 @@ err_func_t err_func
 ) {
    int i;
    struct sigaction sig_vec;
-   sigset_t sigmask;
    char err_str[256];
    
    errno = 0;
@@ -76,10 +75,26 @@ err_func_t err_func
          }
       }
    }  
+}
 
+/****** sge_set_def_sig_mask/sge_unblock_all_signals() *************************
+*  NAME
+*     sge_unblock_all_signals()
+*
+*  SYNOPSIS
+*     void sge_unblock_all_signals(void) 
+*
+*  FUNCTION
+*     Allow for all signals.
+*******************************************************************************/
+void sge_unblock_all_signals(void)
+{
+   sigset_t sigmask;
    /* unblock all signals */
    /* without this we depend on shell to unblock the signals */
    /* result is that SIGXCPU was not delivered with several shells */
    sigemptyset(&sigmask);
    sigprocmask(SIG_SETMASK, &sigmask, NULL);
 }
+
+

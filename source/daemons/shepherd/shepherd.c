@@ -489,7 +489,7 @@ int signal
 ) {
    char err_str[256];
 
-   sprintf(err_str, "received signal %d", signal);
+   sprintf(err_str, "received signal %s", sys_sig2str(signal));
    shepherd_trace(err_str);
 
    received_signal = signal;
@@ -526,10 +526,11 @@ char **argv
    if (argc >= 2 && !strcmp("-bg", argv[1]))
       foreground = 0;   /* no output to stderr */
 
+   /* make sure pending SIGPIPE signals logged in trace file */ 
    set_sig_handler(SIGPIPE);
    sge_set_def_sig_mask(SIGPIPE, NULL);
    set_shepherd_signal_mask();
-      
+
    config_errfunc = shepherd_error;
 
    /*
@@ -951,6 +952,7 @@ int ckpt_type
       /* there are signals to deliver. Give son() a chance to start job */
       if (get_n_sigs()>0)
          alarm(10);
+      }
    }
 
    if (ckpt_type)
@@ -2537,6 +2539,7 @@ static int start_async_command(char *descr, char *cmd)
       }   
 
       sge_set_def_sig_mask(0, NULL);
+      sge_unblock_all_signals();
       start_command(get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "");
       return 0;   
    }

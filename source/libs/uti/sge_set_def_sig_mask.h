@@ -35,5 +35,7 @@
 typedef void (*err_func_t)(char *s);
 
 void sge_set_def_sig_mask(int, err_func_t);
+void sge_unblock_all_signals(void);
+
 
 #endif /* __SGE_SET_DEF_SIG_MASK_H */

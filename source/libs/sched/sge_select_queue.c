@@ -414,9 +414,10 @@ static int sge_check_resource(lList *requested, lList *load_attr, lList *config_
             break;
          case 1 : /* the requested element does not exist */
                   if(tag == QUEUE_TAG){
-                     if( lGetUlong(attr, CE_tagged) == NO_TAG)
+                     if( lGetUlong(attr, CE_tagged) == NO_TAG) {
                         DEXIT;
                         return 0 ;
+                     }
                   }
             break;
          default: /* error */

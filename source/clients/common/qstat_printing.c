@@ -151,9 +151,12 @@ int longest_queue_length
 
    printf("----------------------------------------------------------------------------%s", 
       sge_ext?"------------------------------------------------------------------------------------------------------------":"");
-   for(int i=0; i< longest_queue_length - 20; i++)
-      printf("-");
-   printf("\n");
+   {
+      int i;
+      for(i=0; i< longest_queue_length - 20; i++)
+         printf("-");
+      printf("\n");
+   }
    {
       char temp[20];
       sprintf(temp, "%%-%d.%ds ", longest_queue_length, longest_queue_length);
@@ -948,8 +951,11 @@ int queue_name_length
 		   const char *part3 = ".";
 		   const char *part5 = "s %s  %s%s%s%s%s%s";
 		   char *part6 = malloc(strlen(part1) + strlen(part3) + strlen(part5) + 20);
-         for(int i=0; i<line_length; i++){
-            seperator[i] = '-';
+         {
+            int i;
+            for(i=0; i<line_length; i++){
+               seperator[i] = '-';
+            }
          }
          seperator[line_length-1] = '\0';
 		   sprintf(part6, "%s%d%s%d%s", part1, queue_name_length, part3, queue_name_length, part5);

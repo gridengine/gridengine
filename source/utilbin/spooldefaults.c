@@ -124,7 +124,7 @@ static int spool_manop(const char *name, sge_object_type type)
     */
    lpp = object_type_get_master_list(type);
       
-   if (lpp == NULL) {
+   if (*lpp == NULL) {
       *lpp = lCreateList("master list", object_type_get_descr(type));
    }
 

@@ -250,8 +250,12 @@ proc update_html_file { html_file data_file } {
          set table(14,1) "commd send vs TCP/IP send (%)"
          set table(15,1) "commd receive vs TCP/IP receive (%)"
    
-   
-         set table(1,2) "$test_date at $test_time"
+         if { [ info exists test_data(version) ] } {
+            set sge_version $test_data(version)
+         } else {
+            set sge_version "-"
+         }
+         set table(1,2) "$sge_version from $test_date at $test_time"
          set table(2,2) [format "%.2f" $avg_send ]
          set table(3,2) [format "%.2f" $avg_receive ]
    
@@ -388,7 +392,7 @@ proc communication_run { } {
    set drawing(output_file) [get_tmp_file_name]
    set drawing(xlabel)      "data size in byte"
    set drawing(ylabel)      "KBit/s"
-   set drawing(title)       "commd vs TCP/IP performance (2000 messages, [clock format [timestamp]])"
+   set drawing(title)       "[get_version_info] commd vs TCP/IP performance (2000 messages, [clock format [timestamp]])"
    
    # create Mbits/s table gif
    create_gnuplot_xy_gif drawing xydata
@@ -429,6 +433,7 @@ proc communication_run { } {
    set save_array(send_host) $remote_host2
    set save_array(receive_host) $remote_host1
    set save_array(master_host) $CHECK_HOST
+   set save_array(version) [get_version_info]
 
    spool_array_to_file $data_file $save_array(date) save_array 0
    
@@ -677,7 +682,7 @@ proc communication_run_message_count { } {
    set drawing(output_file) [get_tmp_file_name]
    set drawing(xlabel)      "message count"
    set drawing(ylabel)      "KBit/s"
-   set drawing(title)       "commd vs TCP/IP performance ( 2000 byte message length , [clock format [timestamp]])"
+   set drawing(title)       "[get_version_info] commd vs TCP/IP performance (2000 byte messages, [clock format [timestamp]])"
    
    # create Mbits/s table gif
    create_gnuplot_xy_gif drawing xydata
@@ -718,6 +723,8 @@ proc communication_run_message_count { } {
    set save_array(send_host) $remote_host2
    set save_array(receive_host) $remote_host1
    set save_array(master_host) $CHECK_HOST
+   set save_array(version) [get_version_info]
+
 
    spool_array_to_file $data_file $save_array(date) save_array 0
    

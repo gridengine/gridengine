@@ -1,3 +1,6 @@
+CR-2003-04-14-0  Testsuite: communication test:
+                            added version information to test report
+
 CR-2003-04-11-0  Testsuite: communication test:
                             added function communication_compare_data_files() to
                             compare test data files.

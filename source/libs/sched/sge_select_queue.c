@@ -1546,14 +1546,13 @@ lList **disabled         /* QU_Type */
    return ret;
 }
 
-/****** sge_select_queue/sge_replicate_queues_suitable4job() *******************
+/****** sched/select_queue/sge_replicate_queues_suitable4job() ****************
 *  NAME
 *     sge_replicate_queues_suitable4job() -- select resources for a certain job
 *
 *  RESULT
 *     A JG_Type list refering the selected resources (queues) for that job
-*
-*******************************************************************************/
+******************************************************************************/
 lList* sge_replicate_queues_suitable4job(
 lList *queues,       /* QU_Type */
 lListElem *job,      /* JB_Type */
@@ -2221,7 +2220,7 @@ int host_order_changed) {
 }
 
 
-/****** sge_select_queue/available_slots_at_queue() ****************************
+/****** sched/select_queue/available_slots_at_queue() *************************
 *  NAME
 *     available_slots_at_queue() -- return # of slots in queue for job
 *
@@ -2232,8 +2231,7 @@ int host_order_changed) {
 *
 *  RESULT
 *     int - the # of slots
-*
-*******************************************************************************/
+******************************************************************************/
 int available_slots_at_queue(host_resources, job, qep, pe, ckpt, host_list, 
 complex_list, acl_list, load_adjustments, host_slots, ccl, ndispatched, 
 global_hep, total_slots, hep)
@@ -2392,7 +2390,7 @@ lListElem *hep;
 }
 
 
-/****** sge_select_queue/available_slots_at_host() *****************************
+/****** sched/select_queue/available_slots_at_host() **************************
 *  NAME
 *     available_slots_at_host() -- return # of slots at host for job
 *
@@ -2403,8 +2401,7 @@ lListElem *hep;
 *
 *  RESULT
 *     int - the # of slots
-*
-*******************************************************************************/
+******************************************************************************/
 static int available_slots_at_host(lList *host_resources, lListElem *job,
                                    lListElem *ja_task, lListElem *host,
                                    int hslots, int minslots, 
@@ -2460,7 +2457,7 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
    return (hslots<minslots)?0:hslots;
 }
 
-/****** sge_select_queue/available_slots_global() ******************************
+/****** sched/select_queue/available_slots_global() ***************************
 *  NAME
 *     available_slots_global() -- return # of global slots for job
 *
@@ -2471,8 +2468,7 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
 *
 *  RESULT
 *     int - the # of slots
-*
-*******************************************************************************/
+******************************************************************************/
 static int available_slots_global(global_resources, job, ja_task, pe_object, host_list, complex_list, global_slots, ccl, acl_list)
 lList **global_resources;
 lListElem *job;

@@ -145,7 +145,7 @@ int name
    returns the string representation of a name id
 
  */
-/****** cull_multitype/lNm2Str() ***********************************************
+/****** cull/multitype/lNm2Str() ***********************************************
 *  NAME
 *     lNm2Str() -- returns the string representation of a name id
 *
@@ -752,7 +752,7 @@ int name
  */
 
 
-/****** cull_multitype/lGetHost() **********************************************
+/****** cull/multitype/lGetHost() **********************************************
 *  NAME
 *     lGetHost() -- ??? 
 *
@@ -1457,7 +1457,7 @@ const char *value
    (runtime type checking)
 
  */
-/****** cull_multitype/lSetHost() **********************************************
+/****** cull/multitype/lSetHost() **********************************************
 *  NAME
 *     lSetHost() -- Set hostname for field name in for list elem
 *
@@ -2149,7 +2149,7 @@ int refcmp(lRef c0, lRef c1)
    return c0 == c1 ? 0 : (c0 < c1 ? -1 : 1);
 }
 
-/****** cull_multitype/lAddSubStr() *******************************************
+/****** cull/multitype/lAddSubStr() *******************************************
 *  NAME
 *     lAddSubStr() -- adds a string to the string sublist of element ep 
 *
@@ -2211,7 +2211,7 @@ const lDescr *dp
    return ret;
 }
 
-/****** cull_multitype/lAddSubHost() *******************************************
+/****** cull/multitype/lAddSubHost() *******************************************
 *  NAME
 *     lAddSubHost() -- adds a string to the string sublist of element ep 
 *
@@ -2274,7 +2274,7 @@ const lDescr *dp
 }
 
 
-/****** cull_multitype/lAddElemStr() ******************************************
+/****** cull/multitype/lAddElemStr() ******************************************
 *  NAME
 *     lAddElemStr() -- adds a string to the string list  
 *
@@ -2396,7 +2396,7 @@ const lDescr *dp
 
 
 
-/****** cull_multitype/lDelSubStr() *******************************************
+/****** cull/multitype/lDelSubStr() *******************************************
 *  NAME
 *     lDelSubStr() -- removes an element from a sublist 
 *
@@ -2444,7 +2444,7 @@ int snm
    return ret;
 }
 
-/****** cull_multitype/lDelElemStr() ******************************************
+/****** cull/multitype/lDelElemStr() ******************************************
 *  NAME
 *     lDelElemStr() -- removes an element specified by a string field nm 
 *
@@ -2527,7 +2527,7 @@ const char *str
 
 
 
-/****** cull_multitype/lGetSubStr() *******************************************
+/****** cull/multitype/lGetSubStr() *******************************************
 *  NAME
 *     lGetSubStr() -- returns an element specified by a string field nm 
 *
@@ -2577,7 +2577,7 @@ int snm
    return ret;
 }
 
-/****** cull_multitype/lGetElemStr() *******************************************
+/****** cull/multitype/lGetElemStr() *******************************************
 *  NAME
 *     lGetElemStr() -- returns an element specified by a string field nm 
 *
@@ -2742,7 +2742,7 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str, const void 
    return NULL;
 }
 
-/****** cull_multitype/lGetElemStrLike() **************************************
+/****** cull/multitype/lGetElemStrLike() **************************************
 *  NAME
 *     lGetElemStrLike() -- returns an element specified by a wildcard string 
 *
@@ -2821,7 +2821,7 @@ const char *str
    return NULL;
 }
 
-/****** cull_multitype/lAddSubUlong() *****************************************
+/****** cull/multitype/lAddSubUlong() *****************************************
 *  NAME
 *     lAddSubUlong() -- adds a ulong to the ulong sublist of element ep 
 *
@@ -2882,7 +2882,7 @@ const lDescr *dp
    return ret;
 }
 
-/****** cull_multitype/lAddElemUlong() ****************************************
+/****** cull/multitype/lAddElemUlong() ****************************************
 *  NAME
 *     lAddElemUlong() -- adds a ulong to the ulong list 
 *
@@ -2947,7 +2947,7 @@ const lDescr *dp
    return sep;
 }
 
-/****** cull_multitype/lDelSubUlong() *****************************************
+/****** cull/multitype/lDelSubUlong() *****************************************
 *  NAME
 *     lDelSubUlong() -- removes an element from a sublist 
 *
@@ -2995,7 +2995,7 @@ int snm
    return ret;
 }
 
-/****** cull_multitype/lDelElemUlong() ****************************************
+/****** cull/multitype/lDelElemUlong() ****************************************
 *  NAME
 *     lDelElemUlong() -- removes an element specified by a ulong field nm 
 *
@@ -3062,7 +3062,7 @@ lUlong val
    return 1;
 }
 
-/****** cull_multitype/lGetSubUlong() *****************************************
+/****** cull/multitype/lGetSubUlong() *****************************************
 *  NAME
 *     lGetSubUlong() -- returns an element specified by a ulong field nm 
 *
@@ -3112,7 +3112,7 @@ int snm
    return ret;
 }
 
-/****** cull_multitype/lGetElemUlong() ****************************************
+/****** cull/multitype/lGetElemUlong() ****************************************
 *  NAME
 *     lGetElemUlong() -- returns an element specified by a ulong field nm 
 *
@@ -3231,7 +3231,7 @@ lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val, const void **i
    return NULL;
 }
 
-/****** cull_multitype/lDelSubCaseStr() ***************************************
+/****** cull/multitype/lDelSubCaseStr() ***************************************
 *  NAME
 *     lDelSubCaseStr() -- removes an element specified by a string field nm 
 *
@@ -3279,7 +3279,7 @@ int snm
    return ret;
 }
 
-/****** cull_multitype/lDelElemCaseStr() **************************************
+/****** cull/multitype/lDelElemCaseStr() **************************************
 *  NAME
 *     lDelElemCaseStr() -- removes an element specified by a string field nm 
 *
@@ -3355,7 +3355,7 @@ const char *str
    return 1;
 }
 
-/****** cull_multitype/lGetSubCaseStr() ***************************************
+/****** cull/multitype/lGetSubCaseStr() ***************************************
 *  NAME
 *     lGetSubCaseStr() -- returns an element specified by a string field nm 
 *
@@ -3406,7 +3406,7 @@ int snm
    return ret;
 }
 
-/****** cull_multitype/lGetElemCaseStr() **************************************
+/****** cull/multitype/lGetElemCaseStr() **************************************
 *  NAME
 *     lGetElemCaseStr() -- returns an element specified by a string field 
 *
@@ -3490,7 +3490,7 @@ const char *str
 
 
 
-/****** cull_multitype/lGetElemHost() *****************************************
+/****** cull/multitype/lGetElemHost() *****************************************
 *  NAME
 *     lGetElemHost() -- returns an element specified by a hostname 
 *
@@ -3648,7 +3648,7 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void
 }
 
 
-/****** cull_multitype/lGetSubHost() ******************************************
+/****** cull/multitype/lGetSubHost() ******************************************
 *  NAME
 *     lGetSubHost() -- returns an element specified by a string field nm 
 *
@@ -3698,7 +3698,7 @@ int snm
    return ret;
 }
 
-/****** cull_multitype/lDelElemHost() ****************************************
+/****** cull/multitype/lDelElemHost() ****************************************
 *  NAME
 *     lDelElemHost() -- removes an element specified by a lHostT field nm 
 *

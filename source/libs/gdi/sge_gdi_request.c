@@ -73,7 +73,7 @@ static int sge_get_gdi_request(char *rhost, char *commproc, u_short *id, sge_gdi
 static int sge_handle_local_gdi_request(sge_gdi_request *out, sge_gdi_request **in);
 #endif
 
-/****** sge_gdi_request/sge_gdi() **********************************************
+/****** gdi/request/sge_gdi() **********************************************
 *  NAME
 *     sge_gdi() -- request, change or delete data in the master daemon
 *
@@ -188,7 +188,7 @@ lEnumeration *enp
    return alp;
 }
 
-/****** sge_gdi_request/sge_gdi_multi() ****************************************
+/****** gdi/request/sge_gdi_multi() ****************************************
 *  NAME
 *     sge_gdi_multi() -- request, change or delete multiple lists in master 
 *
@@ -483,7 +483,7 @@ lList **malpp
       return -1;
 }
 
-/****** sge_gdi_request/sge_gdi_extract_answer() ******************************
+/****** gdi/request/sge_gdi_extract_answer() ******************************
 *  NAME
 *     sge_gdi_extract_answer() -- exctact answers of a multi request.
 *
@@ -569,8 +569,6 @@ lList **olpp
    return alp;
 }
   
-
-
 /*-----------------------------------------------------
  * sge_send_receive_gdi_request
  *

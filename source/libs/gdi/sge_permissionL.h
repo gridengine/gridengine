@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-/****** gdilib/PERM_LOWERBOUND **********************************
+/****** gdi/sge/PERM_LOWERBOUND **********************************
 *
 *  NAME
 *     PERM_LOWERBOUND -- Permission list 

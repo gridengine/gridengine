@@ -323,7 +323,7 @@ const lList *lp
    return lp->nelem;
 }
 
-/****** cull_list/lGetElemIndex() *********************************************
+/****** cull/list/lGetElemIndex() *********************************************
 *  NAME
 *     lGetElemIndex() -- returns the index of element in list lp 
 *
@@ -389,7 +389,7 @@ const lListElem *ep
    return i;
 }
 
-/****** cull_list/lGetElemDescr() **********************************************
+/****** cull/list/lGetElemDescr() **********************************************
 *  NAME
 *     lGetElemDescr() -- returns the descriptor of a list element 
 *

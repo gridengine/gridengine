@@ -74,7 +74,7 @@ const char *qexec_last_err(void)
    return lasterror;
 }
 
-/****** gdi/sge_qexecve() ************************************************
+/****** gdi/sge/sge_qexecve() ************************************************
 *  NAME
 *     sge_qexecve() -- start a task in a tightly integrated parallel job
 *

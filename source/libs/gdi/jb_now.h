@@ -31,7 +31,8 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-/****** gdilib/jb_now ***************************************
+
+/****** gdi/job_jatask/jb_now ***************************************
 *
 *  NAME
 *     jb_now -- macros to handle flag JB_now 
@@ -80,4 +81,5 @@
 #define JB_NOW_IS_QLOGIN(jb_now)          (jb_now & JB_NOW_QLOGIN)
 #define JB_NOW_IS_QRSH(jb_now)            (jb_now & JB_NOW_QRSH)
 #define JB_NOW_IS_QRLOGIN(jb_now)         (jb_now & JB_NOW_QRLOGIN)
+
 #endif /* __JB_NOW_H */

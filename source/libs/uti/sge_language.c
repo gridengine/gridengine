@@ -62,7 +62,7 @@ static language_functions_struct sge_language_functions;
 static int sge_are_language_functions_installed = FALSE;
 
 
-/****** utilib/sge_init_language() **********************************
+/****** uti/language/sge_init_language() **************************************
 *
 *  NAME
 *     sge_init_language() -- initialize language package for gettext() 
@@ -97,19 +97,11 @@ static int sge_are_language_functions_installed = FALSE;
 *  RESULT
 *     int state         -  TRUE for seccess, FALSE on error.
 *
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*     no bugs known
-*
 *  SEE ALSO
 *     utilib/sge_init_language()
 *     utilib/install_language_func()
 *     
-****************************************************************************
-*/
+******************************************************************************/
 int sge_init_languagefunc(
 char *package,
 char *localeDir 
@@ -238,7 +230,7 @@ char *localeDir
   return (success);
 }
 
-/****** utilib/install_language_func() **********************************
+/****** uti/language/install_language_func() **********************************
 *
 *  NAME
 *     sge_init_language() -- install language functions
@@ -248,10 +240,10 @@ char *localeDir
 *     #include "sge_language.h"
 *     #include <utillib/sge_language.h>
 * 
-*     void install_language_func(gettext_func_type        new_gettext, 
-*                                setlocale_func_type      new_setlocale, 
+*     void install_language_func(gettext_func_type new_gettext, 
+*                                setlocale_func_type new_setlocale, 
 *                                bindtextdomain_func_type new_bindtextdomain, 
-*                                textdomain_func_type     new_textdomain);
+*                                textdomain_func_type new_textdomain);
 *
 *  FUNCTION
 *     set the function pointer for the gettext(), setlocale(), bindtextdomain()
@@ -272,16 +264,11 @@ char *localeDir
 *                            (bindtextdomain_func_type) bindtextdomain,
 *                            (textdomain_func_type)     textdomain);    
 *
-*  NOTES
-*
-*  BUGS
-*
 *  SEE ALSO
 *     utilib/sge_init_language()
 *     utilib/sge_gettext()
 *     
-****************************************************************************
-*/
+******************************************************************************/
 void install_language_func(
 gettext_func_type new_gettext,
 setlocale_func_type new_setlocale,
@@ -315,7 +302,7 @@ textdomain_func_type new_textdomain
    } 
 }
 
-/****** utilib/sge_gettext() **********************************
+/****** uti/language/sge_gettext() ********************************************
 *
 *  NAME
 *     sge_gettext() -- get translated message from message file
@@ -348,8 +335,7 @@ textdomain_func_type new_textdomain
 *     utilib/sge_init_language()
 *     utilib/install_language_func()
 *     
-****************************************************************************
-*/
+*******************************************************************************/
 const char *sge_gettext(
 char *x 
 ) {

@@ -290,7 +290,7 @@ void cull_hash_create_hashtables(lList *lp)
    }
 }
 
-/****** cull_hash/cull_hash_insert() *******************************************
+/****** cull/hash/cull_hash_insert() *******************************************
 *  NAME
 *     cull_hash_insert() -- insert a new element in a hash table
 *
@@ -492,7 +492,7 @@ void cull_hash_elem(const lListElem *ep) {
    }
 }
 
-/****** cull_hash/cull_hash_first() ********************************************
+/****** cull/hash/cull_hash_first() ********************************************
 *  NAME
 *     cull_hash_first() -- find first object for a certain key
 *

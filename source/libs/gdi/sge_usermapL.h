@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-/****** gdilib/UME_LOWERBOUND **********************************
+/****** gdi/usermap/UME_LOWERBOUND **********************************
 *
 *  NAME
 *     UME_LOWERBOUND -- User Mapping Entry List 
@@ -127,7 +127,7 @@ NAMEEND
 
 #define UMES sizeof(UMEN)/sizeof(char*)
 
-/****** gdilib/UM_LOWERBOUND **********************************
+/****** gdi/usermap/UM_LOWERBOUND **********************************
 *
 *  NAME
 *     UM_LOWERBOUND -- User Mapping List 

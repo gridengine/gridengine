@@ -682,7 +682,7 @@ void job_add_as_zombie(lListElem *zombie, lList **answer_list,
    DEXIT;
 }
 
-/****** sge/job_jatask/job_has_job_pending_tasks() *****************************
+/****** gdi/job_jatask/job_has_job_pending_tasks() *****************************
 *  NAME
 *     job_has_job_pending_tasks() -- Has the job unenrolled pending tasks? 
 *

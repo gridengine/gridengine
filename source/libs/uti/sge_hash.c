@@ -396,7 +396,7 @@ void HashTableDelete(HashTable table, const void* key)
     }
 }
 
-/****** sge_hash/HashStatistics() **********************************************
+/****** uti/hash/HashStatistics() **********************************************
 *  NAME
 *     HashStatistics() -- deliver some statistics for a hash table
 *
@@ -422,7 +422,6 @@ void HashTableDelete(HashTable table, const void* key)
 *
 *  RESULT
 *     const char* - the string described above
-*
 *******************************************************************************/
 const char *HashStatistics(HashTable ht)
 {

@@ -727,7 +727,7 @@ const lEnumeration *ep1
    return ddp;
 }
 
-/****** cull/lString2List() ***************************************************
+/****** cull/list/lString2List() **********************************************
 *  NAME
 *     lString2List() -- convert char* string into cull list 
 *

@@ -70,7 +70,7 @@ static int sge_encrypt(char *intext, int inlen, char *outbuf, int outsize);
 static int sge_decrypt(char *intext, int inlen, char *outbuf, int *outsize);
 static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode);
 
-/****** sge_security/sge_security_initialize() ***************************
+/****** gdi/security/sge_security_initialize() ********************************
 *
 *  NAME
 *     sge_security_initialize -- initialize sge security
@@ -95,8 +95,7 @@ static int change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usi
 *  BUGS
 *
 *  SEE ALSO
-*
-**************************************************************************/
+******************************************************************************/
 int sge_security_initialize(const char *name)
 {
    static int initialized = 0;
@@ -125,8 +124,7 @@ int sge_security_initialize(const char *name)
    return 0;
 }
 
-/****** sge_security/sge_security_exit() ***************************
-*
+/****** gdi/security/sge_security_exit() **************************************
 *  NAME
 *     sge_security_exit -- exit sge security
 *
@@ -147,8 +145,7 @@ int sge_security_initialize(const char *name)
 *  BUGS
 *
 *  SEE ALSO
-*
-**************************************************************************/
+******************************************************************************/
 void sge_security_exit(int i)
 {
    DENTER(TOP_LAYER, "sge_security_exit");
@@ -266,8 +263,7 @@ u_short *compressed
 }
 
 
-/****** set_sec_cred() ***************************************
-*
+/****** gdi/security/set_sec_cred() *******************************************
 *  NAME
 *     set_sec_cred -- get credit for security system
 *
@@ -290,13 +286,7 @@ u_short *compressed
 *  NOTES
 *     Hope, the above description is correct - don't know the DCE/KERBEROS
 *     code.
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
+******************************************************************************/
 int set_sec_cred(lListElem *job)
 {
 

@@ -575,7 +575,7 @@ int range_is_id_within(const lListElem *range, u_long32 id)
    return ret;
 }
 
-/****** sge_range/range_list_remove_id() **************************************
+/****** gdi/range/range_list_remove_id() **************************************
 *  NAME
 *     range_list_remove_id() -- remove an id from a range list 
 *
@@ -872,7 +872,7 @@ void range_get_all_ids(const lListElem *range, u_long32 *min, u_long32 *max,
    }
 }
 
-/****** sge_range/range_set_all_ids() *****************************************
+/****** gdi/range/range_set_all_ids() *****************************************
 *  NAME
 *     range_set_all_ids() -- writes 'start', 'end' and 'step' 
 *
@@ -1205,7 +1205,7 @@ void get_taskrange_str(lList* task_list, StringBufferT *dyn_taskrange_str)
 #endif
 } 
 
-/****** sge_range/add_taskrange_str() *****************************************
+/****** gdi/range/add_taskrange_str() *****************************************
 *  NAME
 *     add_taskrange_str() -- Appends a range to a dynamic string 
 *

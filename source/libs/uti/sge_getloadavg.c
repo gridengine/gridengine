@@ -1092,7 +1092,7 @@ int nelem
 
 #ifdef SGE_LOADCPU
 
-/****** sge_getloadavg/sge_getcpuload() ****************************************
+/****** uti/sge/sge_getcpuload() ****************************************
 *  NAME
 *     sge_getcpuload() -- retrieve cpu utilization percentage 
 *

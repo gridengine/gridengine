@@ -38,7 +38,7 @@
 #include "sgermon.h"
 
 
-/****** gdilib/sge_gdi_get_mapping_name() **********************************
+/****** gdi/sge/sge_gdi_get_mapping_name() **********************************
 *
 *  NAME
 *     sge_gdi_get_mapping_name() -- get username for host 
@@ -141,7 +141,7 @@ int buflen
 
 
 
-/****** gdilib/sge_gdi_check_permission() **********************************
+/****** gdi/sge/sge_gdi_check_permission() **********************************
 *
 *  NAME
 *     sge_gdi_check_permission() -- check permissions of gdi request 

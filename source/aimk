@@ -1091,7 +1091,11 @@ case LINUX6:
    else
      set GLIBC20DEF = ""
    endif
-   set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   if ( "$ADOC" != 1 ) then
+      set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   else 
+      set CFLAGS   = "$OFLAG $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   endif
    set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes $GLIBC20DEF $DEBUG_FLAG $CXXFLAGS"
    set NOERR_CFLAG = "-Wno-error"
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"

@@ -46,7 +46,7 @@
 #include "msg_commd.h"
 #include "sge_exit.h"
 
-/****** libs/uti/sge_get_arch() ************************************************
+/****** uti/sge/sge_get_arch() ************************************************
 *  NAME
 *     sge_get_arch() -- Return the architecture of the appl. using this func.
 *
@@ -112,7 +112,7 @@ const char *sge_get_arch()
    return ARCHBIN;
 }
 
-/****** lib/uti/sge_get_root_dir() *********************************************
+/****** uti/sge/sge_get_root_dir() *********************************************
 *  NAME
 *     sge_get_root_dir() -- Returns the installation directory of SGE/SGEEE 
 *
@@ -241,7 +241,7 @@ error:
    return NULL;
 }
 
-/****** lib/uti/sge_get_default_cell() *****************************************
+/****** uti/sge/sge_get_default_cell() *****************************************
 *  NAME
 *     sge_get_default_cell() -- get cell name and remove trailing slash 
 *

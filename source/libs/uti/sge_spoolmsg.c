@@ -41,7 +41,7 @@ char *spoolmsg_message[] = {
    NULL
 };
 
-/****** sge_spoolmsg/sge_spoolmsg_write() *************************************
+/****** uti/spool/sge_spoolmsg_write() ****************************************
 *  NAME
 *     sge_spoolmsg_write() -- add a comment in a file 
 *

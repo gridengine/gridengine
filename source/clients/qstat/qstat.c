@@ -1961,7 +1961,7 @@ lList **ppljid
          continue;
 
       if (parse_multi_stringlist(ppcmdline, "-g", &alp, &plstringopt, ST_Type, ST_name)) {
-         *group_opt |= parse_group_options(plstringopt);
+         *group_opt |= parse_group_options(plstringopt, &alp);
          lFreeList(plstringopt);    
          continue;
       }

@@ -64,7 +64,7 @@ int sge_unparse_ma_list(lList *head, char *mail_str, unsigned int mail_str_len);
 
 int sge_parse_jobtasks(lList **lp, lListElem **idp, const char *str, lList **alpp, bool include_names);
 
-u_long32 parse_group_options(lList *string_list);
+u_long32 parse_group_options(lList *string_list, lList **anser_list);
 
 bool sge_parse_bitfield_str(const char *str, const char *set_specifier[],
                            u_long32 *value, const char *name, lList **alpp,  bool none_allowed);

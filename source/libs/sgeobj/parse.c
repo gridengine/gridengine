@@ -511,7 +511,8 @@ char **str
 }
 
 
-u_long32 parse_group_options(lList *string_list) 
+u_long32 
+parse_group_options(lList *string_list, lList **answer_list) 
 {
    u_long32 group_opt = GROUP_DEFAULT;
    lListElem *str_elem;
@@ -520,16 +521,23 @@ u_long32 parse_group_options(lList *string_list)
 
    for_each(str_elem, string_list) {
       const char *letter_string = lGetString(str_elem, ST_name);
-  
-      if (strchr(letter_string, (int)'d') != NULL) {
-         group_opt |= GROUP_NO_TASK_GROUPS;
-      } 
-      if (strchr(letter_string, (int)'c') != NULL) {
-         group_opt |= GROUP_CQ_SUMMARY;
-      } 
-      if (strchr(letter_string, (int)'t') != NULL) {
-         group_opt |= GROUP_NO_PETASK_GROUPS;
-      } 
+      int i;
+
+      for (i = 0; i < strlen(letter_string); i++) {
+         char letter = letter_string[i];
+
+         if (letter == 'd') {
+            group_opt |= GROUP_NO_TASK_GROUPS;
+         } else if (letter == 'c') {
+            group_opt |= GROUP_CQ_SUMMARY;
+         } else if (letter == 't') {
+            group_opt |= GROUP_NO_PETASK_GROUPS;
+         } else {
+            sprintf(SGE_EVENT, MSG_QSTAT_WRONGGCHAR_C, letter);
+            answer_list_add(answer_list, SGE_EVENT, 
+                            STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         }
+      }
    }
    DEXIT; 
    return (group_opt);

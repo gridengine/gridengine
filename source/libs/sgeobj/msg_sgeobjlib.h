@@ -272,7 +272,8 @@
 #define MSG_DOUBLE_INCORRECTSTRING     _MESSAGE(64272, _("error parsing double value from string "SFQ"\n"))
 #define MSG_FLOAT_INCORRECTSTRING      _MESSAGE(64273, _("error parsing float value from string "SFQ"\n"))
 #define MSG_QTYPE_INCORRECTSTRING      _MESSAGE(64274, _("error parsing queue type from string "SFQ"\n"))
-#define MSG_QSTATE_UNKNOWNCHAR       _MESSAGE(64275, _("unknwon queue state\n"))
+#define MSG_QSTATE_UNKNOWNCHAR         _MESSAGE(64275, _("unknwon queue state\n"))
+#define MSG_QSTAT_WRONGGCHAR_C         _MESSAGE(64276, _("wrong character \'%c\' for -g option\n"))
 
 /*
 ** sge_conf.c

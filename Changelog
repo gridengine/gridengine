@@ -1,3 +1,7 @@
+EB-2004-01-19-0: Bugfix:    qstat -g xxx did not show error message for
+                            characters which are not allowed
+                 Changed:   qstat
+
 AD-2004-01-18-0: Bugfix:    Accounting file has not been written, because
                             reporting trigger event handler was not registered.
                  Changed:   qmaster
@@ -5,7 +9,8 @@ AD-2004-01-18-0: Bugfix:    Accounting file has not been written, because
 RC-2004-01-17-1: Cleanup:   Removed dead code on MacOSX (already #if 0 out)
                  Changed:   sge_getloadavg.c
 
-RC-2004-01-17-0: Enhancem.: Turned on optimization flag, defined _REENTRANT on SUPER-UX (for John)
+RC-2004-01-17-0: Enhancem.: Turned on optimization flag, defined _REENTRANT on 
+                            SUPER-UX (for John)
                  Changed:   aimk
                  Review:    RC
 

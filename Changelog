@@ -1,3 +1,6 @@
+JG-2003-10-23-0: Bugfix:    An invalid time_event was generated, if the spooling
+                            method didn't provide a trigger function.
+
 JG-2003-10-23-0: Enhancem.: Write accounting file only in fixed intervals, 
                             buffer new accounting entries between intervals.
                             Call triggers (spooling and accounting) via the

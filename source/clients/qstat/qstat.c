@@ -179,11 +179,12 @@ char **argv
 
    {
       dstring file = DSTRING_INIT;
-
-      switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
-                                        get_root_qstat_file_path(&file));
-      switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
-                                        get_home_qstat_file_path(&file, &alp));
+      if (qselect_mode == 0) { /* the .sge_qstat file should only be used in the qstat mode */
+         switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
+                                           get_root_qstat_file_path(&file));
+         switch_list_qstat_parse_from_file(&pcmdline, &alp, qselect_mode, 
+                                           get_home_qstat_file_path(&file, &alp));
+      }                                  
       switch_list_qstat_parse_from_cmdline(&pcmdline, &alp, qselect_mode, argv);
       sge_dstring_free(&file);
    }

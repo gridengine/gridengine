@@ -1,3 +1,9 @@
+SG-2005-03-16-0: Bugfix:    qselect uses sge_qstat file
+                 Issue:     1505
+                 Bugtraq:   6229277
+                 Changed:   qstat
+                 Review:    EB
+
 JG-2005-03-15-2: Testsuite: Added zones parameter to the testsuite host config.
                  Issue:     1503
                             Fixed check bugs/issuezilla/1473/check.60.exp.
@@ -16,9 +22,9 @@ JG-2005-03-15-1: Bugfix:    qconf -Mc only outputs one line, even if multiple
 
 SG-2005-03-15-2: Bugfix:    qstat -U aborts
                  Issue:     1469
-                 Bugtraq:   pending
+                 Bugtraq:   6241376
                  Changed:   qstat
-                 Review:    pending
+                 Review:    EB
 
 SG-2005-03-15-1: Bugfix:    reprioritize parameter is NOT documented
                  Issue:     1501
@@ -28,9 +34,9 @@ SG-2005-03-15-1: Bugfix:    reprioritize parameter is NOT documented
 
 SG-2005-03-15-0: Bugfix:    Reservation of wrong hosts
                  Issue:     1484
-                 Bugtraq:   pending
+                 Bugtraq:   6241378
                  Changed:   scheduler
-                 Review:    pending
+                 Review:    EB
 
 JG-2005-03-15-0: Bugfix:    Huge cpu and memory overhead when adding, modifying 
                             and deleting complex attributes.

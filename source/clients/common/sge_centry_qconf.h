@@ -76,7 +76,7 @@ bool
 centry_list_show(lList **answer_list);
 
 bool
-centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
-                                lList *old_list);
+centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
+                                lList **old_list);
 
 #endif /* __SGE_CENTRY_QCONF */

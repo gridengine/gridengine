@@ -1464,7 +1464,6 @@ Widget w;
 XtPointer cld, cad;
 {
    XmTabCallbackStruct *cbs = (XmTabCallbackStruct *) cad;
-   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonHostFolderChange");
    
@@ -1782,11 +1781,7 @@ static void qmonHostgroupOk(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-   lList *hgl = NULL;
    lList *alp = NULL;
-   lEnumeration *what;
-   Boolean status = False;
-   XmString xhgname = NULL;
    StringConst hgname = NULL;
    lListElem *hg_ep = NULL;
    lList *href_list = NULL;
@@ -1919,11 +1914,6 @@ static void qmonHostgroupSelect(Widget w, XtPointer cld, XtPointer cad)
    XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
    char *hgname;
    lListElem *hgp;
-   lListElem *ep;
-   lList *lsl;
-   lList *usl;
-   static char buf[10*BUFSIZ];
-   XmTextPosition pos;
    
    DENTER(GUI_LAYER, "qmonHostgroupSelect");
 

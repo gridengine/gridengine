@@ -317,13 +317,22 @@ centry_list_get_via_gdi(lList **answer_list)
 }
 
 bool
-centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
-                                lList *old_list) 
+centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
+                                lList **old_list) 
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "centry_list_add_del_mod_via_gdi");
-   if (this_list != NULL) {
+   if (!this_list || !old_list) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
+      answer_list_add(answer_list, SGE_EVENT, 
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return false;
+   }
+
+   
+   if (*this_list != NULL) {
       lList *modify_list = NULL;
       lList *add_list = NULL;
       lListElem *centry_elem = NULL;
@@ -331,9 +340,9 @@ centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
       bool cont = true;
 
       /* check for duplicate names */
-      next_centry_elem = lFirst(this_list);
+      next_centry_elem = lFirst(*this_list);
       while ((centry_elem = next_centry_elem)) {
-         lListElem *cmp_elem = lFirst(this_list);
+         lListElem *cmp_elem = lFirst(*this_list);
             
          while(centry_elem != cmp_elem){
             bool duplicate_name=false;
@@ -373,23 +382,25 @@ centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
 
       modify_list = lCreateList("", CE_Type);
       add_list = lCreateList("", CE_Type);
-      next_centry_elem = lFirst(this_list);
+      next_centry_elem = lFirst(*this_list);
       while ((centry_elem = next_centry_elem)) {
          const char *name = lGetString(centry_elem, CE_name);
-         lListElem *tmp_elem = centry_list_locate(old_list, name);
+         lListElem *tmp_elem = centry_list_locate(*old_list, name);
 
          next_centry_elem = lNext(centry_elem);
          if (tmp_elem != NULL) {
-            lDechainElem(this_list, centry_elem);
+            lDechainElem(*this_list, centry_elem);
             if (object_has_differences(centry_elem, NULL, tmp_elem, false)) {
                lAppendElem(modify_list, centry_elem);
             }
-            lRemoveElem(old_list, tmp_elem);
+            lRemoveElem(*old_list, tmp_elem);
          } else {
-            lDechainElem(this_list, centry_elem);
+            lDechainElem(*this_list, centry_elem);
             lAppendElem(add_list, centry_elem);
          }
       }
+      *this_list = lFreeList(*this_list);
+      
       {
          lList *gdi_answer_list = NULL;
          lList *mal_answer_list = NULL;
@@ -405,7 +416,7 @@ centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
          /*
           * How many requests are summarized to one multi request? 
           */
-         if (lGetNumberOfElem(old_list) > 0) {
+         if (lGetNumberOfElem(*old_list) > 0) {
             number_req++;
             do_del = true;
          }
@@ -425,12 +436,13 @@ centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
 
             del_id = sge_gdi_multi(&gdi_answer_list, mode, 
-                                   SGE_CENTRY_LIST, SGE_GDI_DEL, old_list,
+                                   SGE_CENTRY_LIST, SGE_GDI_DEL, *old_list,
                                    NULL, NULL, &mal_answer_list, &state);
             if (answer_list_has_error(&gdi_answer_list)) {
                DTRACE;
                ret = false;
             }
+            *old_list = lFreeList(*old_list);
          }
          if (ret && do_mod) {
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
@@ -442,6 +454,7 @@ centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
                DTRACE;
                ret = false;
             }
+            modify_list = lFreeList(modify_list);
          }
          if (ret && do_add) {
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
@@ -453,6 +466,7 @@ centry_list_add_del_mod_via_gdi(lList *this_list, lList **answer_list,
                DTRACE;
                ret = false;
             }
+            add_list = lFreeList(add_list);
          }
 
          /*
@@ -503,7 +517,7 @@ centry_list_modify(lList **answer_list)
 
       ret &= centry_list_provide_modify_context(&centry_list, answer_list);
       if (ret) {
-         ret &= centry_list_add_del_mod_via_gdi(centry_list, answer_list, old_centry_list);  
+         ret &= centry_list_add_del_mod_via_gdi(&centry_list, answer_list, &old_centry_list);  
       }
    }
    DEXIT;
@@ -527,8 +541,8 @@ centry_list_modify_from_file(lList **answer_list, const char *filename)
          ret = false;
       } 
       if (ret) { 
-         ret &= centry_list_add_del_mod_via_gdi(centry_list, answer_list, 
-                                                old_centry_list);  
+         ret &= centry_list_add_del_mod_via_gdi(&centry_list, answer_list, 
+                                                &old_centry_list);  
       }
    }
    DEXIT;

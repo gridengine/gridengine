@@ -61,6 +61,7 @@ include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/uti/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
 include $(SDIR)/libs/spool/Makefile
+include $(SDIR)/security/sec/Makefile
 
 ###############################################################################
 # Variable definitions for targets to build
@@ -105,9 +106,9 @@ QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_calendar.ad \
             $(QMON_DIR)/qmon_loadmon.ad
 
-QMON_ADD_SRC = read_write_complex.c parse_job_cull.c unparse_job_cull.c \
-            parse_qsub.c read_defaults.c sge_userset.c \
-            read_object.c write_job_defaults.c sge_options.c usage.c \
+QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
+            parse_qsub.c read_defaults.c \
+            write_job_defaults.c sge_options.c usage.c \
             sge_centry_qconf.c sge_hgroup_qconf.c
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o

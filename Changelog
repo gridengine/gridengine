@@ -1,3 +1,9 @@
+AA-2003-10-21-0: Enhancem.: adaption of complex config dialog 
+                            - support of column sorting added by clicking
+                              the label button
+                 Changed:   qmon, qconf
+                 Review:    EB, SG
+                 
 JG-2003-10-20-0: Bugfix:    fixed installation started as non root user.
 
 SG-2003-10-17-2: Bugfix:    fixed the build

@@ -1,3 +1,12 @@
+SG-2004-01-18-3: Bugfix:    - fixed qmaster crash in case of "qhold all"
+                            - removed -uall switch from qalter
+                            - removed "all" flag from qalter. "all" is a job
+                              name now.
+                            - adjusted the qhost help output  
+                 Changed:   qmaster, qalter, qhost
+                 Review:    MD
+                 Issue:     670
+
 DT-2004-02-18-3: Bugfix:    Moved basic sharetree functionality out of libsched
                             into libsgeobj to try to eliminate odd dependencies.
                             Still a work in progress.

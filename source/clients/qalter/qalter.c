@@ -385,14 +385,14 @@ int *all_users
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-u"))) {
          lList *lp = NULL;
          lList *jid_list = NULL;
-
+/*
          if (lGetElemStr(cmdline, SPA_switch, "-uall")) {
             answer_list_add(&answer, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return answer;
          }
-
-         lAddElemStr(&jid_list, ID_str, "dummy", ID_Type);
+*/
+         lAddElemStr(&jid_list, ID_str, "*", ID_Type); 
          lSetList(job, JB_job_identifier_list, jid_list);
     
          lXchgList(ep, SPA_argval_lListT, &lp);
@@ -401,7 +401,7 @@ int *all_users
          nm_set(job_field, JB_user_list);
          users_flag = 1;
       }
-
+/*
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-uall"))) {
          lList *jid_list = NULL;
 
@@ -417,7 +417,8 @@ int *all_users
          (*all_users) = 1;
          lRemoveElem(cmdline, ep);
          users_flag = 1;
-      }                    
+      }   
+*/      
    }                    
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
@@ -699,7 +700,7 @@ int *all_users
    if (users_flag && !lGetList(job, JB_job_identifier_list)){   
       lList *jid_list = NULL;
 
-      lAddElemStr(&jid_list, ID_str, "dummy", ID_Type);
+      lAddElemStr(&jid_list, ID_str, "*", ID_Type);
       lSetList(job, JB_job_identifier_list, jid_list);
    }
 
@@ -714,12 +715,13 @@ int *all_users
       };
 
       jobid = atol(lGetString(ep, ID_str));
-
+/*
       if ((all_or_jidlist == NOTINIT) && !strcmp(lGetString(ep, ID_str), "all")) {
          all_or_jidlist = ALL;
          (*all_jobs) = 1;
          DPRINTF(("got \'all\' from parsing\n", jobid));
-      } else if (((all_or_jidlist == NOTINIT) || (all_or_jidlist == JOB)) /* && 
+      } else */
+      if (((all_or_jidlist == NOTINIT) || (all_or_jidlist == JOB)) /* && 
                   jobid != 0*/) { 
          all_or_jidlist = JOB;
          (*all_jobs) = 0; 

@@ -896,7 +896,7 @@
 #define MSG_GDI_USAGE_tsm_OPT                            "[-tsm]"
 #define MSG_GDI_UTEXT_tsm_OPT                            _MESSAGE(23456, _("trigger scheduler monitoring"))
 
-#define MSG_GDI_USAGE_u_OPT_USERLISTORUALL               "[-u user_list|-uall]"
+#define MSG_GDI_USAGE_u_OPT_USERLISTORUALL               "[-u user_list]"
 #define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL               _MESSAGE(23457, _("specify a list of users"))
 
 #define MSG_GDI_USAGE_us_OPT                             "[-us]"

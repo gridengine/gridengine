@@ -1635,12 +1635,16 @@ int sub_command
       user_list_flag = 0;
       
    job_name_pos = lGetPosViaElem(jep, JB_job_name); 
+   if (job_name_pos >= 0){
+      job_mod_name = lGetPosString(jep, job_name_pos);
+   }
    /* Did we get a job - with a jobid? */
+
    if (
        (((job_id_pos = lGetPosViaElem(jep, JB_job_number)) >= 0) && 
        lGetPosUlong(jep, job_id_pos) > 0) ||
-       ((job_name_pos >= 0) &&  
-        (job_name_flag = (lGetPosString(jep, job_name_pos)[0] == JOB_NAME_DEL)))
+       ((job_mod_name != NULL) && 
+        (job_name_flag = (job_mod_name[0] == JOB_NAME_DEL)))
        ) { 
       jid_flag = 1; 
    } else

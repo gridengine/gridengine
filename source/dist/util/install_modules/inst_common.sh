@@ -1074,6 +1074,7 @@ CheckRunningDaemon()
 BackupConfig()
 {
    DATE=`date '+%Y-%m-%d_%H:%M:%S'`
+   BUP_FILE_LIST="bootstrap sge_aliases" 
 
    $INFOTEXT -u "SGE Configuration Backup"
    $INFOTEXT -n "\nThis feature does a backup of all configuration you made\n" \

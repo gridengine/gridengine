@@ -1,3 +1,6 @@
+MD-2004-05-18-2: Bugfix:    - forgot sourcing of a module
+                 Changed:   inst_sge
+
 MD-2004-05-18-1: Bugfix:    -Help output
                             -changed recommended switches
                  Changed:   inst_update.sh

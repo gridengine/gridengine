@@ -177,6 +177,9 @@ while [ $ARGC != 0 ]; do
      ARGC=`expr $ARGC - 1`
      shift
      ARGC=`expr $ARGC - 1`
+     QMASTER="install"
+     . ./util/install_modules/inst_qmaster.sh
+     . ./util/install_modules/inst_berkeley.sh
      . ./util/install_modules/inst_update.sh
      #update from 5.3 to 6.0
      ;; 
@@ -455,9 +458,9 @@ if [ $SHADOW = "install" ]; then
    if [ $AUTO = "false" ]; then
       $INFOTEXT -u "\nShadow Master Host Setup"   
       $INFOTEXT -wait -n "\nMake sure, that the host, you wish to configure as a " \
-                      "shadow host,\n has read/write permissions to the qmaster spool" \
-                      "and SGE_ROOT/<cell>/common directory!\n For using a shadow master it " \
-                      "is recommended to set up a Berkeley DB Spooling Server\n\n Hit <RETURN> to continue >> "
+                      "shadow host,\n has read/write permissions to the qmaster spool " \
+                      "and SGE_ROOT/<cell>/common \ndirectory! For using a shadow master it " \
+                      "is recommended to set up a \nBerkeley DB Spooling Server\n\n Hit <RETURN> to continue >> "
       $INFOTEXT -n "Please enter your SGE_ROOT directory or use the default\n[%s] >> " $SGE_ROOT
 
       INP=`Enter ""`

@@ -53,16 +53,8 @@
 #  define  RLIM_INFINITY  0x7fffffffffffffffLL
 #elif defined(CRAY)
 #  define  RLIM_INFINITY  0
-#elif defined(ALPHA)
-#  define  RLIM_INFINITY  0x7fffffffffffffffL
-#elif defined(HPUX)
-#  define  RLIM_INFINITY  0x7fffffff
 #elif defined(WIN32NATIVE)
 #	define RLIM_INFINITY 0
-#elif defined(SOLARIS) && !defined(SOLARIS64)
-   /* Solaris 2.5 and 2.6 have different definition for RLIM_INFINITY */
-#  undef RLIM_INFINITY
-#  define  RLIM_INFINITY  0x7fffffff
 #endif
 
 #if !defined(CRAY) && !defined(SOLARIS64)
@@ -537,4 +529,3 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       return (u_long32)ldummy;
    }
 }
-

@@ -1796,7 +1796,7 @@ static Boolean long_get_value (
 {
 #ifdef CRAY
    errno = 0;
-#elif !defined(LINUX86) && !defined(SOLARIS) && !defined(ALINUX) && !defined(SLINUX) && !defined(DARWIN) && !defined(FREEBSD) && !defined(AIX51)
+#elif !defined(LINUX) && !defined(SOLARIS) && !defined(DARWIN) && !defined(FREEBSD) && !defined(AIX51)
    int errno = 0; 
 #endif
    *value = strtol ( buffer, NULL, 10 );

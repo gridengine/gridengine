@@ -34,6 +34,7 @@
 
 #include "cull.h"
 #include "sge_jobL.h"
+#include "sge_peL.h"
 #include "sge_job_reportL.h"
 #include "sge_usageL.h"
 #include "sge_gdi_intern.h"
@@ -321,4 +322,32 @@ int answer_error
    }
    DEXIT;
    return 0;
+}
+
+int
+execd_get_acct_multiplication_factor(const char *pe_task_id, 
+                                     const lListElem *pe, 
+                                     const int slots)
+{
+   int factor = 1;
+
+   /* task of tightly integrated job: default factor 1 is OK - skip it */
+   if (pe_task_id == NULL) {
+      /* only parallel jobs need factors != 0 */
+      if (pe != NULL) {
+         /* only loosely integrated job will get factor != 0 */
+         if (!lGetUlong(pe, PE_control_slaves)) {
+            /* if job is first task: factor = n, else n + 1 */
+            if (lGetUlong(pe, PE_job_is_first_task)) {
+               factor = slots;
+            } else {
+               factor = slots + 1;
+            }
+         }
+      }
+   }
+
+   DPRINTF(("reserved usage will be multiplied by %d\n", factor));
+
+   return factor;
 }

@@ -1,3 +1,8 @@
+JG-2003-07-03-0: Bugfix:    *_RESERVED_USAGE gives wrong values for PE jobs
+                 Issue:     580
+                 Review:    AS
+                 Changed:   sge_execd
+
 JG-2003-07-03-0: Bugfix:    failure of master task of a tightly integrated 
                             parallel job did not delete the job.
                  Bugtraq:   4885930

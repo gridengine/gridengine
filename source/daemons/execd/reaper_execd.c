@@ -105,12 +105,12 @@
 static void unregister_from_ptf(u_long32 jobid, u_long32 jataskid, lListElem *jr);
 #endif
 
-static int clean_up_job(lListElem *jr, int failed, int signal, int is_array);
+static int clean_up_job(lListElem *jr, int failed, int signal, int is_array, const lListElem *pe);
 static void convert_attribute(lList **cflpp, lListElem *jr, char *name, u_long32 udefau);
 
 static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, char *error_string, int general, int failed);
-static int read_dusage(lListElem *jr, char *jobdir, u_long32 jobid, u_long32 jataskid, int failed);
-static void build_derived_final_usage(lListElem *jr);
+static int read_dusage(lListElem *jr, char *jobdir, u_long32 jobid, u_long32 jataskid, int failed, int usage_mul_factor);
+static void build_derived_final_usage(lListElem *jr, int usage_mul_factor);
 
 static void examine_job_task_from_file(int startup, char *dir, lListElem *jep, lListElem *jatep, pid_t *pids, int npids);
 
@@ -265,7 +265,8 @@ void sge_reap_children_execd()
 
          lSetUlong(tep ? lFirst(lGetList(tep, JB_ja_tasks)):jatep, JAT_status, JEXITING);
 
-         clean_up_job(jr, failed, exit_status, is_array(jep));
+         clean_up_job(jr, failed, exit_status, is_array(jep), 
+                      lFirst(lGetList(jep, JB_pe_object)));
 
          flush_jr = 1; /* trigger direct sending of job reports */ 
 
@@ -368,7 +369,8 @@ static int clean_up_job(
 lListElem *jr,
 int failed,
 int shepherd_exit_status,
-int is_array 
+int is_array,
+const lListElem *pe
 ) {
    char jobdir[SGE_PATH_MAX], fname[SGE_PATH_MAX];
    SGE_STRUCT_STAT statbuf;
@@ -377,6 +379,7 @@ int is_array
    u_long32 jobid, job_pid, ckpt_arena, general_failure = 0, jataskid;
    const char *pe_task_id_str = NULL;
    lListElem *du;
+   int usage_mul_factor;
 
    DENTER(TOP_LAYER, "clean_up_job");
 
@@ -388,7 +391,6 @@ int is_array
 
    jobid = lGetUlong(jr, JR_job_number);
    jataskid = lGetUlong(jr, JR_ja_task_number);
-
    pe_task_id_str = lGetString(jr, JR_pe_task_id_str);
    DPRINTF(("cleanup for pe-task "u32"/"u32"/%s\n", jobid, jataskid,
       pe_task_id_str?pe_task_id_str:"master"));
@@ -551,8 +553,21 @@ int is_array
    ** to do with the job also goes in there, this should be changed
    ** read_dusage gets the failed parameter to decide what should be there
    */
-   
-   if (read_dusage(jr, jobdir, jobid, jataskid, failed)) {
+  
+   /* to report correct usage for loosly integrated parallel jobs,
+    * we have to compute a multiplication factor for acct_reserved_usage
+    */
+
+   {
+      const char *s;
+      int slots;
+
+      slots = (s=get_conf_val("pe_slots"))?atoi(s):1;
+      usage_mul_factor = execd_get_acct_multiplication_factor(pe_task_id_str, 
+                                                              pe, slots);
+   }
+
+   if (read_dusage(jr, jobdir, jobid, jataskid, failed, usage_mul_factor)) {
       if (!*error) {
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_UU, 
             u32c(jobid), u32c(jataskid));
@@ -1362,7 +1377,8 @@ int npids
             jr = add_job_report(jobid, jataskid, NULL);
          }
          lSetUlong(jr, JR_state, JEXITING);
-         clean_up_job(jr, ESSTATE_NO_PID, 0, is_array(jep));  /* failed before execution */
+         clean_up_job(jr, ESSTATE_NO_PID, 0, is_array(jep),
+                      lFirst(lGetList(jep, JB_pe_object)));  /* failed before execution */
       }
       DEXIT;
       return;
@@ -1432,7 +1448,8 @@ int npids
       return;
    }
 
-   clean_up_job(jr, 0, 0, is_array(jep));  
+   clean_up_job(jr, 0, 0, is_array(jep),
+                lFirst(lGetList(jep, JB_pe_object)));  
    lSetUlong(jr, JR_state, JEXITING);
    
    flush_jr = 1;  /* trigger direct sending of job reports */
@@ -1452,7 +1469,8 @@ lListElem *jr,
 char *jobdir,
 u_long32 jobid,
 u_long32 jataskid,
-int failed 
+int failed,
+int usage_mul_factor
 ) {
    char pid_file[SGE_PATH_MAX];
    FILE *fp;
@@ -1575,7 +1593,7 @@ int failed
 #endif
 #endif   
 
-         build_derived_final_usage(jr);
+         build_derived_final_usage(jr, usage_mul_factor);
          cflp = lFreeList(cflp);
       }
       else {
@@ -1621,7 +1639,8 @@ static double usage_list_get_double_usage(lList *usage_list, const char *name, d
 
 
 static void build_derived_final_usage(
-lListElem *jr 
+lListElem *jr, 
+int usage_mul_factor
 ) {
    lListElem *uep = NULL;
    double ru_cpu, pdc_cpu;
@@ -1629,13 +1648,9 @@ lListElem *jr
           mem, r_mem,
           io, iow, r_io, r_iow, maxvmem, r_maxvmem;
    double h_vmem = 0, s_vmem = 0;
-   int slots;
-   char *s;
 
    DENTER(TOP_LAYER, "build_derived_final_usage");
 
-   /* take # of slots from shepherds config file */
-   slots = (s=get_conf_val("pe_slots"))?atoi(s):1;
    parse_ulong_val(&h_vmem, NULL, TYPE_MEM, get_conf_val("h_vmem"), NULL, 0);
    parse_ulong_val(&s_vmem, NULL, TYPE_MEM, get_conf_val("s_vmem"), NULL, 0);
    h_vmem = MIN(s_vmem, h_vmem);
@@ -1645,9 +1660,11 @@ lListElem *jr
    pdc_cpu = (uep=lGetSubStr(jr, UA_name, USAGE_ATTR_CPU, JR_usage))?lGetDouble(uep, UA_value):0;
    cpu = MAX(ru_cpu, pdc_cpu);
 
-   /* r_cpu  = h_rt * slots */
+   /* r_cpu  = h_rt * usage_mul_factor 
+    * (see execd_get_acct_multiplication_factor) 
+    */
    r_cpu = (usage_list_get_double_usage(lGetList(jr, JR_usage), "end_time", 0) -
-           usage_list_get_double_usage(lGetList(jr, JR_usage), "start_time", 0))*slots;
+           usage_list_get_double_usage(lGetList(jr, JR_usage), "start_time", 0))* usage_mul_factor;
 
    /* mem    = PDC "mem" usage or zero */
    mem = ((uep=lGetSubStr(jr, UA_name, USAGE_ATTR_MEM, JR_usage))?lGetDouble(uep, UA_value):0);
@@ -1968,3 +1985,4 @@ lListElem *jr
    DEXIT;
    return ;
 }
+

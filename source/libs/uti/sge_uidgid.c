@@ -79,6 +79,8 @@ static void uidgid_state_init(struct uidgid_state_t* theState);
 static void set_admin_user(uid_t, gid_t);
 static int  get_admin_user(uid_t*, gid_t*);
 
+static int get_group_buffer_size(void);
+
 static uid_t       uidgid_state_get_last_uid(void);
 static const char* uidgid_state_get_last_username(void);
 static gid_t       uidgid_state_get_last_gid(void);
@@ -426,57 +428,6 @@ int sge_user2uid(const char *user, uid_t *uidp, int retries)
    return 0;
 } /* sge_user2uid() */
 
-/****** uti/uidgid/sge_group2gid() ********************************************
-*  NAME
-*     sge_group2gid() -- Resolve a group name to its gid 
-*
-*  SYNOPSIS
-*     int sge_group2gid(const char *gname, gid_t *gidp, int retries) 
-*
-*  FUNCTION
-*     Resolves a groupname ('gname') to its gid (stored in 'gidp').
-*     'retries' defines the number of (e.g. NIS/DNS) retries.
-*     If 'gidp' is NULL the group name is resolved without saving it.
-*
-*  INPUTS
-*     const char *gname - group name 
-*     gid_t *gidp       - gid pointer 
-*     int retries       - number of retries  
-*
-*  NOTES
-*     MT-NOTE: sge_group2gid() is MT safe.
-*
-*  RESULT
-*     int - exit state 
-*         0 - OK
-*         1 - Error
-******************************************************************************/
-int sge_group2gid(const char *gname, gid_t *gidp, int retries) 
-{
-   struct group *gr;
-   struct group grentry;
-   char buffer[2048];
-
-   DENTER(UIDGID_LAYER, "sge_group2gid");
-
-   do {
-      if (!retries--) {
-         DEXIT;
-         return 1;
-      }
-      if (getgrnam_r(gname, &grentry, buffer, sizeof(buffer), &gr) != 0) {
-         gr = NULL;
-      }
-   } while (gr == NULL);
-   
-   if (gidp) {
-      *gidp = gr->gr_gid;
-   }
-
-   DEXIT; 
-   return 0;
-} /* sge_group2gid() */
-
 /****** uti/uidgid/sge_uid2user() *********************************************
 *  NAME
 *     sge_uid2user() -- Resolves uid to user name. 
@@ -567,7 +518,6 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
 {
    struct group *gr;
    struct group grentry;
-   char buffer[2048];
    const char *last_groupname;
 
    DENTER(UIDGID_LAYER, "sge_gid2group");
@@ -576,27 +526,56 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
 
    if (!last_groupname[0] || uidgid_state_get_last_gid() != gid)
    {
-      /* max retries that are made resolving group name */
-      while (getgrgid_r(gid, &grentry, buffer, sizeof(buffer), &gr) != 0) {
-         if (!retries--) {
-            ERROR((SGE_EVENT, MSG_SYSTEM_GETGRGIDFAILED_US , 
-                  u32c(gid), strerror(errno)));
+      char *buf = NULL;
+      int size = 0;
+      
+      size = get_group_buffer_size();
+      buf = sge_malloc(size);
+      
+      while (getgrgid_r(gid, &grentry, buf, size, &gr) != 0)
+      {
+         if (!retries--)
+         {
+            ERROR((SGE_EVENT, MSG_SYSTEM_GETGRGIDFAILED_US , u32c(gid), strerror(errno)));
             DEXIT;
             return 1;
          }
          sleep(1);
       }
+      
       /* cache group name */
       uidgid_state_set_last_groupname(gr->gr_name);
       uidgid_state_set_last_gid(gid);
+      
+      sge_free(buf);
    }
-   if (dst) {
+   
+   if (dst)
+   {
       strncpy(dst, uidgid_state_get_last_groupname(), sz);
    }
 
    DEXIT; 
    return 0;
 } /* sge_gid2group() */
+
+
+static int get_group_buffer_size(void)
+{
+   enum { buf_size = 20480 };  /* default is 20 KB */
+   
+   int sz = buf_size;
+
+#ifdef _SC_GETGR_R_SIZE_MAX
+   if ((sz = (int)sysconf(_SC_GETGR_R_SIZE_MAX)) != 0)
+   {
+      sz = buf_size;
+   }
+#endif
+
+   return sz;
+}
+
 
 /****** uti/uidgid/sge_set_uid_gid_addgrp() ***********************************
 *  NAME
@@ -1239,3 +1218,4 @@ bool sge_is_start_user_root(void)
    return start_uid ? true : false;
    
 } /* sge_is_start_user_root() */ 
+

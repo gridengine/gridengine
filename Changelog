@@ -1,3 +1,9 @@
+AD-2004-05-21-0: Bugfix:    If possible use 'sysconf()' to determine group
+                            buffer size. If not use increased default value.
+                 Issue:     960
+                 Changed:   uti
+                 Review:    pending
+
 AA-2004-05-21-0: Bugfix:    halflife and compensation factor are not i
                             refrshed on qmon
                             compiler complaints

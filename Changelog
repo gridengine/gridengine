@@ -1,3 +1,6 @@
+AD-2004-01-20-0: Enhancem:  Did add 'sge_log_tee' script.
+                 Changed:   util
+
 JM-2004-01-20-0:            Adding entries JM-2004-01-19-[0-5] to Changelog
 
 SG-2004-01-20-0: Bugfix:    fixed qmod and removed lWriteListTo from the code

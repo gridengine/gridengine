@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/07/30 12:21:49 $     Revision: $Revision: 1.26 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/09/03 13:38:59 $     Revision: $Revision: 1.27 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2003/07/30 12:21:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2003/09/03 13:38:59 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1096,7 +1096,8 @@ crashes).
 If \fB\-r\fP is 'n', do not rerun the job under any circumstances.
 .br
 Interactive jobs submitted with
-.I qsh
+.I qsh,
+.I qrsh
 or
 .I qlogin
 are not re-runable.

@@ -1,0 +1,108 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta http-equiv="CONTENT-TYPE" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.76C-CCK-MCD Netscape [en] (X11; U; SunOS 5.8 sun4u) [Netscape]">
+   <meta name="CREATED" content="20011109;14423800">
+   <meta name="CHANGED" content="20011109;14552800">
+<style>
+	<!--
+		@page { margin-left: 1.25in; margin-right: 1.25in; margin-top: 1in; margin-bottom: 1in }
+	-->
+	</style>
+</head>
+<body>
+
+<center>
+<h1>
+Announcing Grid Engine version 5.3beta1</h1></center>
+
+<div STYLE="margin-bottom: 0in">Grid Engine 5.3beta1 as mentioned <a href="http://gridengine.sunsource.net/servlets/ReadMsg?msgId=1187&listName=dev">here</a>
+recently, is now ready. A corresponding source branch has been created
+and the binaries for all platforms we have access to have been compiled
+and are available from the <a href="http://gridengine.sunsource.net/project/gridengine/download.html">download
+page</a>.</div>
+
+<div STYLE="margin-bottom: 0in"></div>
+
+<div STYLE="margin-bottom: 0in">Among other enhancements, Grid Engine 5.3beta1
+provides the following improvements over the previous alpha1 version:</div>
+
+<ul>
+<li STYLE="margin-bottom: 0in">
+A new Enterprise Edition dispatch algorithm is available improving the
+old dispatching scheme towards more intuitive and entitlement oriented
+results. The old dispatch algorithm is still available via a compatibility
+option. See the sge_conf(5) on-line manual page for more information.<br>
+<BR></li>
+
+<li STYLE="margin-bottom: 0in">
+Various scalability enhancements have been made to enable the handling
+of larger numbers of jobs, hosts and queues. In particular, the performance
+of the scheduler component has been improved greatly.&nbsp;<br>
+<BR></li>
+
+<li STYLE="margin-bottom: 0in">
+The spooling of array jobs has been optimized to allow higher numbers of
+tasks in a single array job.&nbsp;<br>
+<BR></li>
+
+<li STYLE="margin-bottom: 0in">
+Several configuration parameters which formerly had to be set in the qmaster_params,
+schedd_params and execd_params lists are now an explicitly visible part
+of the cluster configuration (see sge_conf(5)). Examples are the FQDN parameter
+or the Reschedule Unknown field.&nbsp;<br>
+<BR></li>
+
+<li STYLE="margin-bottom: 0in">
+Reschedule buttons have been added to the job and queue qmon dialogs to
+initiate rescheduling of jobs.&nbsp;<br>
+<BR></li>
+
+<li STYLE="margin-bottom: 0in">
+Various bugs have been fixed. Among them:<br>
+<BR></li>
+
+<ul>
+<li STYLE="margin-bottom: 0in">
+Job submission via qsub with empty job arguments does not crash grd_qmaster
+anymore.</li>
+
+<li STYLE="margin-bottom: 0in">
+Enhanced qrsh to accept the -hold_jid and -h options.</li>
+
+<li STYLE="margin-bottom: 0in">
+Huge fragmented array jobs no longer cause a qstat segmentation fault.</li>
+
+<li STYLE="margin-bottom: 0in">
+Default limits are now in effect even if the corresponding complex attributes
+are not managed at a host or queue level.</li>
+
+<li STYLE="margin-bottom: 0in">
+Fixed cases in which weird characters appear in the qmon scheduler configuration
+dialog; avoid corresponding segmentation violation.</li>
+</ul>
+</ul>
+
+<div STYLE="margin-bottom: 0in">Please note, that the included documentation
+has not yet been brought up-to-speed. The man pages are probably the most
+accurate piece but still contain known defficiencies. You should also refer
+to the <a href="http://gridengine.sunsource.net/project/gridengine/howto/howto.html">HOWTOs</a>
+and the <a href="http://supportforum.sun.com/gridengine/appnotes.html">application
+notes</a> for further viable information.</div>
+
+
+<p STYLE="margin-bottom: 0in">Please help us improve the quality of Grid
+Engine and use the beta version as early as possible in your Grid Engine
+cluster.
+<h2>
+Still to come:</h2>
+
+<div STYLE="margin-bottom: 0in">A beta2 phase will be coming in the January
+time-frame after further enhancements have been finished, added and tested.
+The final 5.3 release is tentatively planned for March/April 2002. Stay
+tuned!</div>
+
+</body>
+</html>

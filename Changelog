@@ -1,3 +1,8 @@
+CR-2004-11-16-0: Bugfix:    replaced u32 format string with U32CFormat in
+                            scheduler message text
+                 Review:    RH
+                 Changed:   schedd
+
 DT-2004-11-15-0: Bugfix:    o Fixed typo in id_list_build_from_str_list()
                             o Fixed logic error in qmod
                             o Fixed typo in qmod man page

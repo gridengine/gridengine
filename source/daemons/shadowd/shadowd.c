@@ -107,12 +107,40 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster);
 #ifdef ENABLE_NGC
 static int shadowd_is_old_master_enrolled(char *oldqmaster)
 {
+   cl_com_handle_t* handle = NULL;
+   cl_com_SIRM_t* status = NULL;
+   int ret;
+   int is_up_and_running = 0;
+
    DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
-   CRITICAL((SGE_EVENT, "shadowd_is_old_master_enrolled() is not implemented"));
-   /* TODO: check if old qmaster is running OR build new shadowd with
-            SIM / SIRM messages */
+
+   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, 0, sge_get_qmaster_port() ,(char*)prognames[SHADOWD] , 0, 1,0 );
+   if (handle == NULL) {
+      CRITICAL((SGE_EVENT,"could not create communication handle\n"));
+      exit(1);
+   }
+
+   DPRINTF(("Try to send status information message to previous master host "SFQ" to port %ld\n", oldqmaster, sge_get_qmaster_port() ));
+   ret = cl_commlib_get_endpoint_status(handle,oldqmaster ,(char*)prognames[QMASTER] , 1, &status);
+   if (ret != CL_RETVAL_OK) {
+      DPRINTF(("cl_commlib_get_endpoint_status() returned "SFQ"\n", cl_get_error_text(ret)));
+      is_up_and_running = 0;
+      DPRINTF(("old qmaster not responding - No master found\n"));   
+   } else {
+      DPRINTF(("old qmaster is still running\n"));   
+      is_up_and_running = 1;
+   }
+
+
+   if (status != NULL) {
+      DPRINTF(("endpoint is up since %ld seconds and has status %ld\n", status->runtime, status->application_status));
+      cl_com_free_sirm_message(&status);
+   }
+ 
+   cl_commlib_shutdown_handle(handle,0);
+
    DEXIT;
-   return 1;
+   return is_up_and_running;
 }
 #else
 static int shadowd_is_old_master_enrolled(char *oldqmaster)

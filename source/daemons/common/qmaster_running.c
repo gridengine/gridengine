@@ -202,14 +202,6 @@ static int qmaster_running( char *err_str, bool *enrolled ) {
  *         0 we didn't check yet for a commd on local host
  *-----------------------------------------------------------------------*/
 #ifdef ENABLE_NGC
-bool check_for_running_qmaster()
-{
-   DENTER(TOP_LAYER, "check_for_running_qmaster");
-   CRITICAL((SGE_EVENT, "check_for_running_qmaster() not implemented"));
-
-   DEXIT;
-   return 1;          
-}
 #else
 bool check_for_running_qmaster()
 {

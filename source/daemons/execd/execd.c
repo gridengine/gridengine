@@ -194,7 +194,6 @@ char **argv
    parse_cmdline_execd(argv);   
 
 #ifdef ENABLE_NGC
-   INFO((SGE_EVENT,"enroll to commd not implemented!!!\n"));
 #else
    /* check for running execd - ignore $COMMD_HOST */
    if (start_commd) {
@@ -259,7 +258,7 @@ char **argv
       daemonize_execd();
 
 #ifdef ENABLE_NGC
-   CRITICAL((SGE_EVENT,"---> remove pending messages not implemented!!!\n"));
+   /* CR - remove pending messages and reset_last_heard() not necessary */
 #else
    /* don't wanna get old messages */
    remove_pending_messages(NULL, 0, 0, 0);

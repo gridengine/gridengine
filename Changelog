@@ -1,3 +1,7 @@
+CR-2004-01-31-0: Enhancem.: shadowd now supports new communication library
+                 Changed:   shadowd
+                 Review:    pending
+
 SG-2004-01-31-1: Bugfix:    fixed qconf -de. A exec host can be removed, even
                             so the host can not be resolved.
                  Changed:   qconf

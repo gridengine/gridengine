@@ -457,7 +457,6 @@ static void qmaster_init(char **anArgv)
 static void communication_setup(char **anArgv)
 {
    const char *msg_prio = NULL;
-   int enrolled = 0;
    cl_com_handle_t* com_handle = NULL;
 
    DENTER(TOP_LAYER, "communication_setup");
@@ -476,7 +475,8 @@ static void communication_setup(char **anArgv)
    } else {
       com_handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,sge_get_qmaster_port(), sge_get_execd_port() ,(char*)prognames[QMASTER], 1, 1 , 0 );
       if (com_handle == NULL) {
-         ERROR((SGE_EVENT, "could not create communication handle\n"));
+         ERROR((SGE_EVENT, "could not create qmaster communication handle\n"));
+         ERROR((SGE_EVENT, "check if port %d is used by another process\n", sge_get_qmaster_port()));
          SGE_EXIT(1);
       }
       /* CR - TODO: enable and test max connection close count */
@@ -485,10 +485,6 @@ static void communication_setup(char **anArgv)
    
    if (com_handle) {
       cl_com_add_allowed_host(com_handle,com_handle->local->comp_host);
-   }
-
-   if ((enrolled = check_for_running_qmaster())> 0) {
-      cl_commlib_remove_messages(com_handle);
    }
 
    cl_commlib_set_connection_param(cl_com_get_handle("qmaster",1), HEARD_FROM_TIMEOUT, conf.max_unheard);

@@ -43,6 +43,7 @@
 #include "sort_hosts.h"
 #include "config_file.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
 #include "sge_host.h"
 #include "sge_userset.h"
 

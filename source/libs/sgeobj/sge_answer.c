@@ -44,7 +44,7 @@
 
 #include "msg_sgeobjlib.h"
 
-#define ANSWER_LAYER CULL_LAYER
+#define ANSWER_LAYER TOP_LAYER
 
 /****** sgeobj/answer/-AnswerList *********************************************
 *  NAME
@@ -158,12 +158,11 @@ bool answer_is_recoverable(const lListElem *answer)
 
    DENTER(ANSWER_LAYER, "answer_is_recoverable");
    if (answer != NULL) {
-      const int max_non_recoverable = 4;
+      const int max_non_recoverable = 3;
       const u_long32 non_recoverable[] = {
          STATUS_NOQMASTER,
          STATUS_NOCOMMD,
-         STATUS_ENOKEY,
-         STATUS_NOCONFIG
+         STATUS_ENOKEY
       };
       u_long32 status = lGetUlong(answer, AN_status);
       int i;
@@ -205,7 +204,7 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
 {
    DENTER(ANSWER_LAYER, "answer_exit_if_not_recoverable");
    if (!answer_is_recoverable(answer)) {
-      fprintf(stderr, "%s: %s", answer_get_quality_text(answer),
+      fprintf(stderr, "%s %s", answer_get_quality_text(answer),
               lGetString(answer, AN_text));
       DEXIT;
       SGE_EXIT(1);
@@ -354,54 +353,9 @@ void answer_to_dstring(const lListElem *answer, dstring *diag)
          const char *s, *t;
          s = lGetString(answer, AN_text);
          if ((t=strchr(s, '\n')))
-            sge_dstring_sprintf_append(diag, "%.*s", t-s, s);
+            sge_dstring_sprintf(diag, "%.*s", t-s, s);
          else
-            sge_dstring_append(diag, s);
-      }
-   }
-}
-
-/****** sgeobj/answer/answer_list_to_dstring() *********************************
-*  NAME
-*     answer_list_to_dstring() -- Copy answer to dstring without newline
-*
-*  SYNOPSIS
-*     void answer_list_to_dstring(const lList *alp, dstring *diag) 
-*
-*  FUNCTION
-*     Copy answer list text into dstring with each element separated by a
-*     newline character.
-*
-*  INPUTS
-*     const lList *alp        - AN_Type list
-*     dstring *diag           - destination dstring
-*
-*  RESULT
-*     void - 
-*
-*  NOTES
-*     MT-NOTE: answer_list_to_dstring() is MT safe
-*******************************************************************************/
-void answer_list_to_dstring(const lList *alp, dstring *diag)
-{
-   if (diag) {
-      if (!alp || (lGetNumberOfElem (alp) == 0)) {
-         sge_dstring_copy_string(diag, MSG_ANSWERWITHOUTDIAG);
-      } else {
-         lListElem *aep = NULL;
-         
-         sge_dstring_clear (diag);
-         
-         for_each (aep, alp) {
-            const char *s;
-
-            s = lGetString(aep, AN_text);
-            sge_dstring_append (diag, s);
-
-            if (strchr(s, '\n') == NULL) {
-               sge_dstring_append_char (diag, '\n');
-            }
-         }
+            sge_dstring_copy_string(diag, s);
       }
    }
 }
@@ -620,11 +574,8 @@ int answer_list_print_err_warn(lList **answer_list,
             status = answer_get_status(answer);
             do_exit = 1;
          }
-      } else if (answer_has_quality (answer, ANSWER_QUALITY_WARNING)) {
+      } else {
          answer_print_text(answer, stdout, warn_prefix, NULL);
-      }
-      else {
-         answer_print_text(answer, stdout, NULL, NULL);
       }
    }
    *answer_list = lFreeList(*answer_list);
@@ -726,7 +677,6 @@ answer_list_add(lList **answer_list, const char *text,
    int ret = false;
 
    DENTER(ANSWER_LAYER, "answer_list_add");
-
    if (answer_list != NULL) {
       lListElem *answer = lCreateElem(AN_Type);
 
@@ -747,24 +697,6 @@ answer_list_add(lList **answer_list, const char *text,
 
       if (!ret) {
          answer = lFreeElem(answer);
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool answer_list_add_elem(lList **answer_list, lListElem *answer)
-{
-   int ret = false;
-
-   DENTER(ANSWER_LAYER, "answer_list_add_elem");
-   if (answer_list != NULL) {
-      if (*answer_list == NULL) {
-         *answer_list = lCreateList("", AN_Type);
-      }
-      if (*answer_list != NULL) {
-         lAppendElem(*answer_list, answer);
-         ret = true;
       }
    }
    DEXIT;

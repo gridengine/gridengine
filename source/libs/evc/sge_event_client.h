@@ -50,12 +50,10 @@ bool ec_unsubscribe(ev_event event);
 bool ec_unsubscribe_all(void);
 
 int ec_get_flush(ev_event event);
-bool ec_set_flush(ev_event event, bool flush, int interval);
+bool ec_set_flush(ev_event event, int flush);
 bool ec_unset_flush(ev_event event);
 
 bool ec_subscribe_flush(ev_event event, int flush);
-
-bool ec_mod_subscription_where(ev_event event, const lListElem *what, const lListElem *where);
 
 int ec_set_edtime(int intval);
 int ec_get_edtime(void);

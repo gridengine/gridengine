@@ -38,10 +38,6 @@ bool
 href_list_add(lList **this_list, lList **answer_list,
               const char *host_or_group);
 
-bool
-href_list_remove_existing(lList **this_list, lList **answer_list,
-                          lList *list);
-
 bool 
 href_list_has_member(const lList *this_list, const char *host_or_group);
 
@@ -60,10 +56,6 @@ href_list_find_diff(const lList *this_list, lList **answer_list,
                     lList **rem_hosts, lList **add_groups,
                     lList **rem_groups);
 
-bool
-href_list_find_effective_diff(lList **answer_list, const lList *add_groups, 
-                              const lList *rem_groups, const lList *master_list,
-                              lList **add_hosts, lList **rem_hosts);
 
 bool 
 href_list_find_references(const lList *this_list, lList **answer_list,
@@ -89,12 +81,6 @@ href_list_locate(const lList *this_list, const char *name);
 
 bool 
 href_list_resolve_hostnames(lList *this_list, lList **answer_list);
-
-void
-href_list_debug_print(const lList *this_list, const char *prefix);
-
-void
-href_list_make_uniq(lList *this_list, lList **answer_list);
 
 #endif /* __SGE_HREF_H__ */
 

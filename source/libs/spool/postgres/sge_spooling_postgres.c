@@ -41,7 +41,6 @@
 
 #include "sge_answer.h"
 #include "sge_dstring.h"
-#include "sge_profiling.h"
 
 #include "sge_object.h"
 #include "sge_job.h"
@@ -229,14 +228,11 @@ spool_postgres_create_context(lList **answer_list, const char *args)
                                        spool_postgres_default_startup_func,
                                        spool_postgres_default_shutdown_func,
                                        spool_postgres_default_maintenance_func,
-                                       NULL,
-                                       NULL,
                                        spool_postgres_default_list_func,
                                        spool_postgres_default_read_func,
                                        spool_postgres_default_write_func,
                                        spool_postgres_default_delete_func,
-                                       spool_default_validate_func,
-                                       spool_default_validate_list_func);
+                                       spool_postgres_default_verify_func);
 
       ret = spool_database_initialize(answer_list, rule);
       if (ret) {
@@ -299,9 +295,7 @@ spool_postgres_default_startup_func(lList **answer_list,
 
    /* connect to database */
    url = lGetString(rule, SPR_url);
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    connection = PQconnectdb(url);
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    if (PQstatus(connection) == CONNECTION_BAD) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
@@ -310,9 +304,7 @@ spool_postgres_default_startup_func(lList **answer_list,
       ret = false;
    } else {
 #ifndef POSTGRES_SYNCHRON
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       PQsetnonblocking(connection, 1);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
 #endif
       spool_database_set_handle(rule, connection);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -359,9 +351,7 @@ spool_postgres_default_startup_func(lList **answer_list,
 
    /* on error shutdown database connection */
    if (ret == false) {
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       PQfinish(connection);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       spool_database_set_handle(rule, NULL);
    }
 
@@ -416,9 +406,7 @@ spool_postgres_default_shutdown_func(lList **answer_list,
                               MSG_POSTGRES_NOCONNECTIONTOCLOSE_S, url);
       ret = false;
    } else {
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       PQfinish(connection);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       spool_database_set_handle(rule, NULL);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_INFO, 
@@ -731,16 +719,13 @@ spool_postgres_create_table(lList **answer_list, PGconn *connection,
    return ret;
 }
 
-#ifndef POSTGRES_SYNCHRON
 static PGresult *
 spool_postgres_wait_for_result(lList **answer_list, PGconn *connection)
 {
    PGresult *ret = NULL;
    PGresult *next = NULL;
 
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    next = PQgetResult(connection);
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    while (next != NULL) {
       if (ret != NULL) {
          PQclear(ret);
@@ -756,9 +741,7 @@ spool_postgres_wait_for_result(lList **answer_list, PGconn *connection)
          PQclear(ret);
          ret = NULL;
       }
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       next = PQgetResult(connection);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    }
 
    return ret;
@@ -768,8 +751,7 @@ static bool
 spool_postgres_consume_results(lList **answer_list, PGconn *connection)
 {
    bool ret = true;
-   /* JG: TODO: error handling */
-   /*PGresult *res = */spool_postgres_wait_for_result(answer_list, connection);
+   PGresult *res = spool_postgres_wait_for_result(answer_list, connection);
 
    return ret;
 }
@@ -795,7 +777,7 @@ spool_postgres_get_query(const char *new_query)
 
    return ret;
 }
-#endif
+
 static bool 
 spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
                         const char *sql, bool wait)
@@ -810,9 +792,7 @@ spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
    DPRINTF(("SQL: %s\n", sql));
 
 #ifdef POSTGRES_SYNCHRON
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    res = PQexec(connection, sql);
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
@@ -837,11 +817,7 @@ spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
    if (ret) {
       /* check if we can submit a new query */
       if (busy) {
-         int pqret;
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         pqret = PQconsumeInput(connection);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (pqret == 0) {
+         if (PQconsumeInput(connection) == 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_POSTGRES_COMMANDFAILED_S, 
@@ -858,13 +834,9 @@ spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
 
    if (ret) {
       if (!busy) {
-         int pqret;
          DPRINTF(("submitting query\n"));
          /* submit previously stored and the new query */
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         pqret = PQsendQuery(connection, sql);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (pqret == 0) {
+         if (PQsendQuery(connection, sql) == 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_POSTGRES_COMMANDFAILED_SS, 
@@ -896,9 +868,7 @@ spool_postgres_exec_query(lList **answer_list, PGconn *connection,
    DPRINTF(("SQL: %s\n", sql));
 
 #ifdef POSTGRES_SYNCHRON
-   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    res = PQexec(connection, sql);
-   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    if (res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
@@ -912,12 +882,7 @@ spool_postgres_exec_query(lList **answer_list, PGconn *connection,
    sql = spool_postgres_get_query(sql);
    /* before submitting query: consume previous results */
    if (spool_postgres_consume_results(answer_list, connection)) {
-      int pqret;
-      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-      pqret = PQsendQuery(connection, sql);
-      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-
-      if (pqret == 0) {
+      if (PQsendQuery(connection, sql) == 0) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_POSTGRES_COMMANDFAILED_SS, 
@@ -1238,7 +1203,7 @@ spool_postgres_read_object(lList **answer_list, PGconn *connection,
 *     spool_postgres_default_list_func(lList **answer_list, 
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, lList **list, 
-*                                      const sge_object_type object_type) 
+*                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Read a list of objects from database.
@@ -1248,7 +1213,7 @@ spool_postgres_read_object(lList **answer_list, PGconn *connection,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -1265,54 +1230,33 @@ bool
 spool_postgres_default_list_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, lList **list, 
-                                 const sge_object_type object_type)
+                                 const sge_object_type event_type)
 {
    bool ret = true;
    spooling_field *fields;
 
    DENTER(TOP_LAYER, "spool_postgres_default_list_func");
 
-   fields = spool_database_get_fields(rule, object_type);
+   fields = spool_database_get_fields(rule, event_type);
    if (fields == NULL) {
       ret = false;
    }
 
    if (ret) {
       const lDescr *descr;
+      lList **master_list;
       bool with_history;
       PGconn *connection;
 
-      descr       = object_type_get_descr(object_type);
+      descr       = object_type_get_descr(event_type);
+      master_list = object_type_get_master_list(event_type);
       with_history = spool_database_get_history(rule);
       connection   = spool_database_get_handle(rule);
 
       ret = spool_postgres_read_list(answer_list, connection,
                                      fields, with_history, 
-                                     list, descr,
+                                     master_list, descr,
                                      NULL, NULL);
-   }
-
-   if (ret) {
-      lListElem *ep;
-      spooling_validate_func validate = 
-         (spooling_validate_func)lGetRef(rule, SPR_validate_func);
-      spooling_validate_list_func validate_list = 
-         (spooling_validate_list_func)lGetRef(rule, SPR_validate_list_func);
-
-      /* validate each individual object */
-      /* JG: TODO: is it valid to validate after reading all objects? */
-      for_each(ep, *list) {
-         ret = validate(answer_list, type, rule, ep, object_type);
-         if (!ret) {
-            /* error message has been created in the validate func */
-            break;
-         }
-      }
-
-      if (ret) {
-         /* validate complete list */
-         ret = validate_list(answer_list, type, rule, object_type);
-      }
    }
 
    DEXIT;
@@ -1328,7 +1272,7 @@ spool_postgres_default_list_func(lList **answer_list,
 *     spool_postgres_default_read_func(lList **answer_list, 
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, const char *key, 
-*                                      const sge_object_type object_type) 
+*                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *
@@ -1337,7 +1281,7 @@ spool_postgres_default_list_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     lListElem* - the object, if it could be read, else NULL
@@ -1354,19 +1298,19 @@ lListElem *
 spool_postgres_default_read_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, const char *key, 
-                                 const sge_object_type object_type)
+                                 const sge_object_type event_type)
 {
    lListElem *ep = NULL;
 
    DENTER(TOP_LAYER, "spool_postgres_default_read_func");
 
-   switch (object_type) {
+   switch (event_type) {
       default:
 #if 0
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
 #endif
          break;
    }
@@ -2043,7 +1987,7 @@ spool_postgres_write_sublists(lList **answer_list, PGconn *connection,
 *                                       const lListElem *rule, 
 *                                       const lListElem *object, 
 *                                       const char *key, 
-*                                       const sge_object_type object_type) 
+*                                       const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate postgres spooling functions.
@@ -2072,7 +2016,7 @@ spool_postgres_write_sublists(lList **answer_list, PGconn *connection,
 *     const lListElem *rule            - rule to use
 *     const lListElem *object          - object to spool
 *     const char *key                  - unique key
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -2091,7 +2035,7 @@ spool_postgres_default_write_func(lList **answer_list,
                                   const lListElem *rule, 
                                   const lListElem *object, 
                                   const char *key, 
-                                  const sge_object_type object_type)
+                                  const sge_object_type event_type)
 {
    bool ret = true;
    spooling_field *fields;
@@ -2100,7 +2044,7 @@ spool_postgres_default_write_func(lList **answer_list,
 
    DENTER(TOP_LAYER, "spool_postgres_default_write_func");
 
-   switch (object_type) {
+   switch (event_type) {
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:
       case SGE_TYPE_PETASK:
@@ -2145,15 +2089,17 @@ spool_postgres_default_write_func(lList **answer_list,
          }
          break;
       default:
-         fields = spool_database_get_fields(rule, object_type);
+         fields = spool_database_get_fields(rule, event_type);
          break;
    }
 
    if (fields == NULL) {
-      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_WARNING, 
-                              MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                              object_type_get_name(object_type));
+#if 0
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+#endif
       ret = false;
    }
 
@@ -2507,7 +2453,7 @@ spool_postgres_delete_all_sublists(lList **answer_list, PGconn *connection,
 *                                        const lListElem *type, 
 *                                        const lListElem *rule, 
 *                                        const char *key, 
-*                                        const sge_object_type object_type) 
+*                                        const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Deletes an object in the postgres spooling.
@@ -2517,7 +2463,7 @@ spool_postgres_delete_all_sublists(lList **answer_list, PGconn *connection,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -2535,7 +2481,7 @@ spool_postgres_default_delete_func(lList **answer_list,
                                    const lListElem *type, 
                                    const lListElem *rule,
                                    const char *key, 
-                                   const sge_object_type object_type)
+                                   const sge_object_type event_type)
 {
    bool ret = true;
    spooling_field *fields;
@@ -2544,7 +2490,7 @@ spool_postgres_default_delete_func(lList **answer_list,
 
    DENTER(TOP_LAYER, "spool_postgres_default_delete_func");
 
-   switch (object_type) {
+   switch (event_type) {
       case SGE_TYPE_JOB:
       case SGE_TYPE_JATASK:
       case SGE_TYPE_PETASK:
@@ -2586,7 +2532,7 @@ spool_postgres_default_delete_func(lList **answer_list,
          }
          break;
       default:
-         fields = spool_database_get_fields(rule, object_type);
+         fields = spool_database_get_fields(rule, event_type);
          break;
    }
 
@@ -2595,7 +2541,7 @@ spool_postgres_default_delete_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
 #endif
       ret = false;
    }
@@ -2622,6 +2568,68 @@ spool_postgres_default_delete_func(lList **answer_list,
 
    if (parent_key != NULL) {
       free((char *)parent_key);
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** spool/postgres/spool_postgres_default_verify_func() ****************
+*  NAME
+*     spool_postgres_default_verify_func() -- verify objects
+*
+*  SYNOPSIS
+*     bool
+*     spool_postgres_default_verify_func(lList **answer_list, 
+*                                        const lListElem *type, 
+*                                        const lListElem *rule, 
+*                                        const lListElem *object, 
+*                                        const char *key, 
+*                                        const sge_object_type event_type) 
+*
+*  FUNCTION
+*     Verifies an object.
+*
+*  INPUTS
+*     lList **answer_list - to return error messages
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to use
+*     const lListElem *object         - object to verify
+*     const sge_object_type event_type - object type
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*     It should be moved to libs/spool/spooling_utilities or even to
+*     libs/sgeobj/sge_object
+*
+*  SEE ALSO
+*     spool/postgres/--Postgres-Spooling
+*******************************************************************************/
+bool
+spool_postgres_default_verify_func(lList **answer_list, 
+                                   const lListElem *type, 
+                                   const lListElem *rule,
+                                   lListElem *object,
+                                   const sge_object_type event_type)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_postgres_default_verify_func");
+
+   switch (event_type) {
+      default:
+#if 0
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
+         ret = false;
+#endif
+         break;
    }
 
    DEXIT;

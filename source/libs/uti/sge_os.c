@@ -55,7 +55,7 @@
 #   include <rpcsvc/ypclnt.h>
 #endif
  
-#if defined(AIX)
+#if defined(AIX32) || defined(AIX)
 #   include <sys/select.h>
 #endif    
 
@@ -107,7 +107,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
    DENTER(TOP_LAYER, "sge_get_pids");
    
    command_pid = sge_peopen("/bin/sh", 0, pscommand, NULL, NULL, 
-                        &fp_in, &fp_out, &fp_err, false);
+                        &fp_in, &fp_out, &fp_err);
 
    if (command_pid == -1) {
       DEXIT;
@@ -222,14 +222,28 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
    char buf[1000], *ptr;
    pid_t command_pid, pidfound;
    int len, last, notfound;
+#if defined(QIDL) && defined(SOLARIS64)
+   sigset_t sigset, osigset;
+#endif
 
    DENTER(TOP_LAYER, "sge_checkprog");
 
+#if defined(QIDL) && defined(SOLARIS64)
+   {
+      sigemptyset(&sigset);
+      sigaddset(&sigset, SIGCLD);
+      sigprocmask(SIG_BLOCK, &sigset, &osigset);
+   }
+#endif
+
    command_pid = sge_peopen("/bin/sh", 0, pscommand, NULL, NULL, 
-                        &fp_in, &fp_out, &fp_err, false);
+                        &fp_in, &fp_out, &fp_err);
 
    if (command_pid == -1) {
       DEXIT;
+#if defined(QIDL) && defined(SOLARIS64) 
+      sigprocmask(SIG_SETMASK, &osigset, NULL);
+#endif  
       return -1;
    }
 
@@ -275,6 +289,10 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 
    sge_peclose(command_pid, fp_in, fp_out, fp_err, NULL);
 
+#if defined(QIDL) && defined(SOLARIS64) 
+   sigprocmask(SIG_SETMASK, &osigset, NULL);
+#endif  
+   
    DEXIT;
    return notfound;
 }

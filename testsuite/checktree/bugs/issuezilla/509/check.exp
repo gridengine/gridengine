@@ -52,9 +52,9 @@ set check_init_level_procedure "issue_509_init_level"
 
 # define test's name and run level descriptions
 set check_name "issue_509"
-set check_category "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category "COMPATIBILITY SYSTEM L10N"
 set check_highest_level 0
-set check_description(0) "qsub -t with invalid range (<id>,<id>,<id>) has to fail"
+set check_description(0) "maxujobs does not count jobs with certain state"
 
 # define test's dependencies
 set check_needs "init_core_system" 

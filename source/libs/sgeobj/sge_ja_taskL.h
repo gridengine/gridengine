@@ -52,11 +52,10 @@ extern "C" {
 *        First part of the state (see also JAT_hold, JAT_state)
 *
 *     SGE_ULONG(JAT_start_time)
-*        Tasks start time. 
+*        Tasks start time.
 *
 *     SGE_ULONG(JAT_end_time)
-*        Tasks end time. 
-*        Only used in Execd to simulate job runs.
+*        Tasks end time.
 *
 *     SGE_ULONG(JAT_hold) 
 *        Second part of the state (user, operator, system hold) 
@@ -109,13 +108,17 @@ extern "C" {
 *        used bye SGEEE sge_schedd. Stored to qmaster for displaying.
 *        Not spooled.
 *
-*     SGE_DOUBLE(JAT_tix)
+*     SGE_DOUBLE(JAT_ticket)
 *        SGEEE - Total SGEEE tickets. Set by schedd, saved to qmaster.
 *        Sent to PTF. Not Spooled
 *
 *     SGE_DOUBLE(JAT_oticket)
 *        SGEEE - Override tickets set by schedd. Saved to qmaster and
 *        sent to PTF. Not spooled.
+*
+*     SGE_DOUBLE(JAT_dticket)
+*        SGEEE - Deadline tickets set bye schedd. Saved to qmaster and
+*        sent to PTF. Not spooled
 *
 *     SGE_DOUBLE(JAT_fticket)
 *        SGEEE - Functional tickets set bye schedd. Saved to qmaster and 
@@ -144,24 +147,6 @@ extern "C" {
 *
 *     SGE_ULONG(JAT_next_pe_task_id)         
 *        Used locally in execd to store next pe task id for this jatask on this execd.
-*
-*     SGE_DOUBLE(JAT_progress_in_former_runs)         
-*        The proportion of the total job run time earlier runs achieved and secured. 
-*        No where used.
-*
-*     SGE_ULONG(JAT_stop_initiate_time)         
-*        The time when the action to initiate a job finish (i.e. job termination,
-*        or checkpoint creation) was triggered or re-triggered.
-*
-*     SGE_DOUBLE(JAT_prio )         
-*        SGEEE. The GEEE priority derived from weighted normalized tickets and 
-*        weighted normalized static urgency. Changes with task due to GEEE ticket 
-*        dependency. Not spooled.
-*
-*     SGE_DOUBLE(JAT_ntix )         
-*        SGEEE. Relative importance due to JAT_tix amount in the range between
-*        0.0 and 1.0.
-*        Not spooled.
 *
 *  FUNCTION
 *     JAT_Type elements make only sense in conjunction with JB_Type 
@@ -218,10 +203,10 @@ enum {
    JAT_usage_list,
 
    JAT_scaled_usage_list,
-   JAT_reported_usage_list,
    JAT_fshare,
-   JAT_tix,
+   JAT_ticket,
    JAT_oticket,
+   JAT_dticket,
 
    JAT_fticket,
    JAT_sticket,
@@ -233,13 +218,7 @@ enum {
    JAT_previous_usage_list,
 
    JAT_pe_object,
-   JAT_next_pe_task_id,
-   /*JAT_progress_in_former_runs,*/
-   JAT_stop_initiate_time,
-   JAT_prio,
-   JAT_ntix,
-
-   JAT_message_list
+   JAT_next_pe_task_id
 };
 
 SLISTDEF(JAT_Type, Task)
@@ -263,10 +242,10 @@ SLISTDEF(JAT_Type, Task)
    SGE_LIST(JAT_usage_list, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
 
    SGE_LIST(JAT_scaled_usage_list, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
-   SGE_LIST(JAT_reported_usage_list, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(JAT_fshare, CULL_DEFAULT | CULL_SUBLIST)
-   SGE_DOUBLE(JAT_tix, CULL_DEFAULT | CULL_SUBLIST)
+   SGE_DOUBLE(JAT_ticket, CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(JAT_oticket, CULL_DEFAULT | CULL_SUBLIST)
+   SGE_DOUBLE(JAT_dticket, CULL_DEFAULT | CULL_SUBLIST)
 
    SGE_DOUBLE(JAT_fticket, CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(JAT_sticket, CULL_DEFAULT | CULL_SUBLIST)
@@ -279,12 +258,6 @@ SLISTDEF(JAT_Type, Task)
 
    SGE_OBJECT(JAT_pe_object, PE_Type, CULL_DEFAULT)   
    SGE_ULONG(JAT_next_pe_task_id, CULL_DEFAULT)
-/*   SGE_DOUBLE(JAT_progress_in_former_runs, CULL_DEFAULT | CULL_SUBLIST)         */
-   SGE_ULONG(JAT_stop_initiate_time, CULL_DEFAULT | CULL_SUBLIST)         
-   SGE_DOUBLE(JAT_prio, CULL_DEFAULT)         
-   SGE_DOUBLE(JAT_ntix, CULL_DEFAULT)         
-
-   SGE_LIST(JAT_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
 NAMEDEF(JATN)
@@ -305,11 +278,11 @@ NAMEDEF(JATN)
    NAME("JAT_osjobid")
    NAME("JAT_usage_list")
    NAME("JAT_scaled_usage_list")
-   NAME("JAT_reported_usage_list")
    NAME("JAT_fshare")
 
-   NAME("JAT_tix")
+   NAME("JAT_ticket")
    NAME("JAT_oticket")
+   NAME("JAT_dticket")
    NAME("JAT_fticket")
    NAME("JAT_sticket")
    NAME("JAT_share")
@@ -318,15 +291,10 @@ NAMEDEF(JATN)
    NAME("JAT_task_list")
    NAME("JAT_finished_task_list")
    NAME("JAT_previous_usage_list")
+/*    NAME("JAT_reference") */
 
    NAME("JAT_pe_object")
    NAME("JAT_next_pe_task_id")
-/*   NAME("JAT_progress_in_former_runs")*/
-   NAME("JAT_stop_initiate_time")
-   NAME("JAT_prio")
-   NAME("JAT_ntix")
-
-   NAME("JAT_message_list")
 NAMEEND
 
 /* *INDENT-ON* */

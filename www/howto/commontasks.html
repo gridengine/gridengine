@@ -1,90 +1,68 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
-	<META NAME="CREATED" CONTENT="20021028;15043100">
-	<META NAME="CHANGEDBY" CONTENT="Charu Chaubal">
-	<META NAME="CHANGED" CONTENT="20021028;15071800">
-</HEAD>
-<BODY LANG="en-US">
-<TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0 STYLE="page-break-before: always">
-	<TR>
-		<TD>
-			<H2><FONT COLOR="#336699">Common Administrative Tasks for Grid
-			Engine</FONT></H2>
-		</TD>
-	</TR>
-</TABLE>
-<TABLE WIDTH=100% BORDER=0 CELLPADDING=2 CELLSPACING=0>
-	<TR>
-		<TD>
-			<P><BR><BR>Qconf is the command used for most administrative
-			tasks. This HOWTO contains a selection of the most frequently used
-			options. See qconf(1) for more details. 
-			</P>
-			<P><B>Adding and removing administrative privileges from a host</B></P>
-			<UL>
-				<LI><P STYLE="margin-bottom: 0cm">qconf -ah # gives host
-				administrative privileges 
-				</P>
-				<LI><P>qconf -dh # removes administrative privileges from host</P>
-			</UL>
-			<P><B>Adding an execution host</B></P>
-			<UL>
-				<LI><P>Make the new host an administrative host<BR><BR>qconf -ah
-				&lt;hostname&gt;</P>
-				<LI><P>As root on this new host, run the following script from
-				$SGE_ROOT<BR><BR>install_execd</P>
-			</UL>
-			<P><B>Removing an execution host</B></P>
-			<UL>
-				<LI><P>First, delete the queues associated with this host<BR><BR>qconf
-				-dq &lt;queuenames...&gt;</P>
-				<LI><P>Delete the host<BR><BR>qconf -de &lt;hostname&gt;</P>
-				<LI><P>Finally, delete the configuration for the host<BR><BR>qconf
-				-dconf  &lt;hostname&gt;</P>
-			</UL>
-			<P><BR><BR>
-			</P>
-			<P><B>Adding and removing submit hosts</B></P>
-			<UL>
-				<LI><P STYLE="margin-bottom: 0cm">qconf -as &lt;hostname&gt; #
-				host is now a submit host 
-				</P>
-				<LI><P>qconf -ds &lt;hostname&gt; # jobs may not be submitted
-				from host</P>
-			</UL>
-			<P><B>Displaying current administrative/submit/execution hosts</B></P>
-			<UL>
-				<LI><P STYLE="margin-bottom: 0cm">qconf -sh # show current
-				administrative hosts 
-				</P>
-				<LI><P STYLE="margin-bottom: 0cm">qconf -ss # show current submit
-				hosts 
-				</P>
-				<LI><P>qconf -sel # show current execution host list 
-				</P>
-			</UL>
-			<P><B>Administering queues</B></P>
-			<UL>
-				<LI><P STYLE="margin-bottom: 0cm">qconf -aq &lt;queuename&gt; #
-				adding a queue</P>
-				<LI><P STYLE="margin-bottom: 0cm">qconf -dq &lt;queuename&gt; #
-				delete a queue 
-				</P>
-				<LI><P>qconf -mq &lt;queuename&gt; # modify a queue 
-				</P>
-				<LI><P STYLE="margin-bottom: 0cm">qconf -Aq &lt;filename&gt; #
-				adding a queue from file</P>
-				<LI><P>qconf -mattr queue ... # change single attributes of more
-				than one queue</P>
-			</UL>
-		</TD>
-	</TR>
-</TABLE>
-<P><BR><BR>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><H2><font color="#336699" class="PageHeader">Common Administrative Tasks for Grid Engine</font></H2></td>
+</tr>
+</table>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<br><br>
+Qconf is the command used for most administrative tasks. This
+HOWTO contains a selection of the most frequently used options. See 
+qconf(1) for more details. 
 </P>
-</BODY>
-</HTML>
+<P><B>Adding and removing administrative privileges from a host</B></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">qconf -ah # gives host
+	administrative privileges 
+	</P>
+	<LI><P>qconf -dh # removes administrative privileges from host</P>
+</UL>
+<P><B>Adding an execution host</B></P>
+<UL>
+	<LI><P>Make the new host an administrative host<BR><BR>qconf -ah 
+	</P>
+	<LI><P>As root on this new host, run the following script from
+	$SGE_ROOT<BR><BR>install_execd</P>
+</UL>
+<P><B>Removing an execution host</B></P>
+<UL>
+	<LI><P>First, delete the queues associated with this host<BR><BR>qconf
+	-dq 
+	</P>
+	<LI><P>Delete the host<BR><BR>qconf -de 
+	</P>
+</UL>
+<P><B>Adding and removing submit hosts</B></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">qconf -as # host is now a submit
+	host 
+	</P>
+	<LI><P>qconf -ds # jobs may not be submitted from host</P>
+</UL>
+<P><B>Displaying current administrative/submit/execution hosts</B></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">qconf -sh # show current
+	administrative hosts 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">qconf -ss # show current submit
+	hosts 
+	</P>
+	<LI><P>qconf -sel # show current execution host list 
+	</P>
+</UL>
+<P><B>Administering queues</B></P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">qconf -aq # adding a queue</P>
+	<LI><P STYLE="margin-bottom: 0in">qconf -dq # delete a queue 
+	</P>
+	<LI><P>qconf -mq # modify a queue 
+	</P>
+	<LI><P STYLE="margin-bottom: 0in">qconf -Aq # adding a queue from
+	file</P>
+	<LI><P STYLE="margin-bottom: 0in">qconf -mqattr # change single
+	attributes of more than one queue</P>
+</UL>
+
+</table>

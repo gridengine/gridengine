@@ -62,15 +62,10 @@ enum {
    SGE_GDI_ALL_USERS = (1<<10),
 
    /* for SGE_QUEUE_LIST, SGE_EXECHOST_LIST => SGE_GDI_MOD */
-   SGE_GDI_SET     = 0,        /* overwrite the sublist with given values */
-   SGE_GDI_CHANGE  = (1<<11),  /* change the given elements */
-   SGE_GDI_APPEND  = (1<<12),  /* add some elements into a sublist */
-   SGE_GDI_REMOVE  = (1<<13),  /* remove some elements from a sublist */
-   SGE_GDI_SET_ALL = (1<<14)   /* 
-                                * overwrite the sublist with given values
-                                * and erase all domain/host specific values
-                                * not given with the current request
-                                */
+   SGE_GDI_SET    = 0,        /* overwrite the sublist with given values */
+   SGE_GDI_CHANGE = (1<<11),  /* change the given elements */
+   SGE_GDI_APPEND = (1<<12),  /* add some elements into a sublist */
+   SGE_GDI_REMOVE = (1<<13)   /* remove some elements from a sublist */
 };
 
 #define SGE_GDI_OPERATION (0xFF)
@@ -85,6 +80,7 @@ enum {
    SGE_ADMINHOST_LIST = 1,
    SGE_SUBMITHOST_LIST,
    SGE_EXECHOST_LIST,
+   SGE_QUEUE_LIST,
    SGE_CQUEUE_LIST,
    SGE_JOB_LIST,
    SGE_EVENT_LIST,

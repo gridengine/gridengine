@@ -51,7 +51,6 @@
 
 /* sge object names */
 #define SGE_OBJ_QUEUE                  "queue"
-#define SGE_OBJ_CQUEUE                 "queue"
 #define SGE_OBJ_HGROUP                 "hostgroup"
 #define SGE_OBJ_EXECHOST               "exechost"
 #define SGE_OBJ_PE                     "pe"
@@ -61,7 +60,6 @@
 /* attribute names of sge objects */
 #define SGE_ATTR_LOAD_SCALING          "load_scaling"
 #define SGE_ATTR_PE_LIST               "pe_list"
-#define SGE_ATTR_HOST_LIST             "hostlist"
 #define SGE_ATTR_CKPT_LIST             "ckpt_list"
 #define SGE_ATTR_COMPLEX_VALUES        "complex_values"
 #define SGE_ATTR_LOAD_VALUES           "load_values"
@@ -119,28 +117,10 @@
 #define SGE_ATTR_CKPT_DIR              "ckpt_dir"
 #define SGE_ATTR_SIGNAL                "signal"
 #define SGE_ATTR_WHEN                  "when"
-#define SGE_ATTR_H_FSIZE               "h_fsize"
-#define SGE_ATTR_S_FSIZE               "s_fsize"
-#define SGE_ATTR_H_RT                  "h_rt"
-#define SGE_ATTR_S_RT                  "s_rt"
-#define SGE_ATTR_H_CPU                 "h_cpu"
-#define SGE_ATTR_S_CPU                 "s_cpu"
-#define SGE_ATTR_H_DATA                "h_data"
-#define SGE_ATTR_S_DATA                "s_data"
-#define SGE_ATTR_H_STACK               "h_stack"
-#define SGE_ATTR_S_STACK               "s_stack"
-#define SGE_ATTR_H_CORE                "h_core"
-#define SGE_ATTR_S_CORE                "s_core"
-#define SGE_ATTR_H_RSS                 "h_rss"
-#define SGE_ATTR_S_RSS                 "s_rss"
-#define SGE_ATTR_H_VMEM                "h_vmem"
-#define SGE_ATTR_S_VMEM                "s_vmem"
 
 /* attribute values for certain object attributes */
 #define SGE_ATTRVAL_ALL                "all"
-#define SGE_ATTRVAL_MIN                "min"
-#define SGE_ATTRVAL_MAX                "max"
-#define SGE_ATTRVAL_AVG                "avg"
+
 
 /* tmp filenames */
 #define TMP_ERR_FILE_SNBU         "/tmp/sge_messages"
@@ -177,7 +157,6 @@
 #define ACCESS_DIR                "access_lists"
 #define QUEUE_DIR                 "queues"
 #define CQUEUE_DIR                "cqueues"
-#define QINSTANCES_DIR            "qinstances"
 #define COMPLEX_DIR               "complexes"
 #define PE_DIR                    "pe"
 #define UME_DIR                   "usermapping"
@@ -192,8 +171,12 @@
 #define MAN_FILE                  "managers"
 #define OP_FILE                   "operators"
 #define SEQ_NUM_FILE              "jobseqnum"
+#ifdef PW
+#define LICENSE_FILE              "license"
+#endif
 #define ALIAS_FILE                "host_aliases"
 #define ACT_QMASTER_FILE          "act_qmaster"
+#define PRODUCT_MODE_FILE         "product_mode"
 
 /* These files exist in the qmaster and execd spool area */
 #define EXEC_DIR                  "job_scripts"

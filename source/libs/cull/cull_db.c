@@ -548,116 +548,6 @@ lList *lSelectDestroy(lList *slp, const lCondition *cp)
    return slp;
 }
 
-/****** cull/db/lSelectElem() *****************************************************
-*  NAME
-*     lSelectElem() -- Extracts some elements fulfilling a condition 
-*
-*  SYNOPSIS
-*     lListElem* lSelect(const lListElem *slp, 
-*                    const lCondition *cp, const lEnumeration *enp) 
-*
-*  FUNCTION
-*     Creates a new list from the list 'slp' extracting the elements
-*     fulfilling the condition 'cp'. 
-*
-*  INPUTS
-*     const lListElem *slp        - source list pointer 
-*     const lCondition *cp    - selects rows 
-*     const lEnumeration *enp - selects columns 
-*
-*  RESULT
-*     lListElem* - list containing the extracted elements
-******************************************************************************/
-lListElem *lSelectElem(const lListElem *slp, const lCondition *cp,
-               const lEnumeration *enp) 
-{
-   lListElem *new = NULL;
-   lDescr *dp;
-   int n, index = 0;
-   DENTER(CULL_LAYER, "lSelectElem");
-   if (!slp || !enp) {
-      DEXIT;
-      return NULL;
-   }
-   /* create new lList with partial descriptor */
-   if ((n = lCountWhat(enp, slp->descr)) <= 0) {
-      LERROR(LECOUNTWHAT);
-      DEXIT;
-      return NULL;
-   }
-   if (!(dp = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-      LERROR(LEMALLOC);
-      DEXIT;
-      return NULL;
-   }
-   /* INITIALIZE THE INDEX IF YOU BUILD A NEW DESCRIPTOR */
-   if (lPartialDescr(enp, slp->descr, dp, &index) < 0) {
-      LERROR(LEPARTIALDESCR);
-      free(dp);
-      DEXIT;
-      return NULL;
-   }
-   /* create reduced element */
-   new = lSelectElemD(slp, cp, dp, enp);
-   /* free the descriptor, it has been copied by lCreateList */
-   cull_hash_free_descr(dp);
-   free(dp);
-   DEXIT;
-   return new;
-}
-
-/****** cull/db/lSelectElemD() *****************************************************
-*  NAME
-*     lSelectElemD() -- Extracts some elements fulfilling a condition 
-*
-*  SYNOPSIS
-*     lListElem* lSelectElemD(const lListelem *slp, 
-*                    const lCondition *cp, const lEnumeration *enp) 
-*
-*  FUNCTION
-*     Creates a new list from the list 'slp' extracting the elements
-*     fulfilling the condition 'cp'. 
-*
-*  INPUTS
-*     const lListElem *slp     - source list pointer 
-*     const lCondition *cp     - selects rows 
-*     const lDescr *dp         - target descriptor for the element
-*
-*  RESULT
-*     lListElem* - list containing the extracted elements
-******************************************************************************/
-lListElem *lSelectElemD(const lListElem *slp, const lCondition *cp,
-               const lDescr *dp, const lEnumeration *enp) 
-{
-   lListElem *new = NULL;
-   int index = 0;
-   DENTER(CULL_LAYER, "lSelectElemD");
-
-   if (!slp || !dp) {
-      DEXIT;
-      return NULL;
-   }
-
-   /*
-      iterate through the source list call lCompare and add
-      depending on result of lCompare
-    */
-   if (lCompare(slp, cp)) {
-      if (!(new = lCreateElem(dp))) {
-         DEXIT;
-         return NULL;
-      }
-      
-      if (lCopyElemPartial(new, &index, slp, enp)) {
-         lFreeElem(new);
-         DEXIT;
-         return NULL;
-      }
-    }
-   DEXIT;
-   return new;
-}
-
 /****** cull/db/lSelect() *****************************************************
 *  NAME
 *     lSelect() -- Extracts some elements fulfilling a condition 
@@ -683,6 +573,7 @@ lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
                const lEnumeration *enp) 
 {
 
+   lListElem *ep, *new;
    lList *dlp = (lList *) NULL;
    lDescr *dp;
    int n, index;
@@ -715,65 +606,37 @@ lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
       DEXIT;
       return NULL;
    }
+   if (!(dlp = lCreateList(name, dp))) {
+      LERROR(LECREATELIST);
+      free(dp);
+      DEXIT;
+      return NULL;
+   }
 
-   dlp = lSelectD(name, slp, cp, dp, enp);
-   
    /* free the descriptor, it has been copied by lCreateList */
    cull_hash_free_descr(dp);
    free(dp);
-
-   DEXIT;
-   return dlp;
-}
-
-/****** cull_db/lSelectD() *****************************************************
-*  NAME
-*     lSelectD() --  Extracts some elements fulfilling a condition 
-*
-*  SYNOPSIS
-*     lList* lSelectD(const char *name, const lList *slp, const lCondition *cp, 
-*     const lDescr *dp) 
-*
-*
-*  FUNCTION
-*     Creates a new list from the list 'slp' extracting the elements
-*     fulfilling the condition 'cp'. 
-*
-*  INPUTS
-*     const char *name        - name for the new list 
-*     const lList *slp        - source list pointer 
-*     const lCondition *cp    - selects rows 
-*     const lDescr *dp        - descriptor for the new list
-*
-*  RESULT
-*     lList* - list containing the extracted elements
-*******************************************************************************/
-lList *lSelectD(const char *name, const lList *slp, const lCondition *cp,
-               const lDescr *dp, const lEnumeration *enp) 
-{
-
-   lListElem *ep, *new;
-   lList *dlp = (lList *) NULL;
-
-   DENTER(CULL_LAYER, "lSelectP");
-
-   if (!slp || !dp) {
-      DEXIT;
-      return NULL;
-   }
-
-   if (!(dlp = lCreateList(name, dp))) {
-      LERROR(LECREATELIST);
-      DEXIT;
-      return NULL;
-   }
 
    /*
       iterate through the source list call lCompare and add
       depending on result of lCompare
     */
    for (ep = slp->first; ep; ep = ep->next) {
-      if ((new = lSelectElemD(ep, cp, dlp->descr, enp))){
+      if (lCompare(ep, cp)) {
+         if (!(new = lCreateElem(dlp->descr))) {
+            LERROR(LEELEMNULL);
+            lFreeList(dlp);
+            DEXIT;
+            return NULL;
+         }
+         index = 0;
+         if (lCopyElemPartial(new, &index, ep, enp)) {
+            LERROR(LECOPYELEMPART);
+            lFreeElem(new);
+            lFreeList(dlp);
+            DEXIT;
+            return NULL;
+         }
          if (lAppendElem(dlp, new) == -1) {
             LERROR(LEAPPENDELEM);
             lFreeElem(new);
@@ -973,32 +836,6 @@ lDescr *lJoinDescr(const lDescr *sdp0, const lDescr *sdp1,
 
    DEXIT;
    return ddp;
-}
-
-lDescr *lGetReducedDescr(const lDescr *type, const lEnumeration *what) {
-
-   lDescr *new = NULL;
-   int index = 0;
-   int n = 0;
-   DENTER(CULL_LAYER, "lGetReducedDescr");
-  
-   if ((n = lCountWhat(what, type)) <= 0) {
-      DEXIT;
-      return NULL;
-   }
-   
-   if (!(new= (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-      DEXIT;
-      return NULL;
-   }
-   if (lPartialDescr(what, type, new, &index) != 0){
-      FREE(new);
-      DEXIT;
-      return NULL;      
-   }
-  
-   DEXIT;
-   return new;
 }
 
 /****** cull/db/lString2List() ************************************************

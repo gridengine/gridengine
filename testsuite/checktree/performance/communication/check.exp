@@ -76,7 +76,6 @@ proc init_level {} {
 
 
 proc communication_setup {} {
-   global ts_config
    global setup_ok
    global receive_remote_binary
    global send_remote_binary
@@ -96,8 +95,8 @@ proc communication_setup {} {
       return -3
    }
 
-   if { $ts_config(gridengine_version) == 53 } {
-       set_error -3 "test not supported for version 5.3"
+   if { [resolve_version] < 3 } {
+       set_error -3 "test not supported for version [get_version_info]"
        return -3
    }
    set remote_host2 $CHECK_CORE_MASTER

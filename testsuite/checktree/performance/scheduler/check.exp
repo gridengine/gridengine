@@ -105,10 +105,16 @@ proc init_level {} {
 
 
 proc scheduler_setup {} {
-   global ts_config
    global stored_configuration CHECK_OUTPUT scheduler_test_level
    global scheduler_queue_list CHECK_CORE_EXECD 
    global scheduler_complex_count
+
+   if { [resolve_version] < 2 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
+   }
+
+   
 
    if { [string match "analysis" $scheduler_test_level] == 0 } {
       puts $CHECK_OUTPUT "saving configuration ..."
@@ -139,22 +145,15 @@ proc scheduler_setup {} {
       puts $CHECK_OUTPUT "setup configuration ..."
 
       set myconfig(loglevel)         "log_warning"
-      if { $ts_config(gridengine_version) == 53 } {
-         set my_schedd_params "PROFILE=1"
-         if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
-            append my_schedd_params ",$stored_configuration(schedd_params)"
-         }
-         set myconfig(schedd_params)    "$my_schedd_params"
+      set my_schedd_params "PROFILE=1"
+      if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
+         append my_schedd_params ",$stored_configuration(schedd_params)"
       }
-      else{
-         get_schedd_config stored_schedd_config
-         if { [string compare "none" $stored_schedd_config(params)] != 0 } {
-            append my_schedd_params ",$stored_schedd_config(params)"
-         }
-         set my_schedd_config(params)      "$my_schedd_params"
-      } 
+      set myconfig(schedd_params)    "$my_schedd_params"
       set_config myconfig
-      
+   
+
+
       # scheduler configuration
       puts $CHECK_OUTPUT "setup scheduler configuration ..."
 
@@ -352,6 +351,11 @@ proc scheduler_test_run {} {
 
    global CHECK_OUTPUT CHECK_CORE_MASTER CHECK_PRODUCT_ROOT CHECK_ARCH
    global scheduler_test_level CHECK_PROTOCOL_DIR check_name
+
+   if { [resolve_version] < 2 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
+   }
 
    set sched_output_dir $CHECK_PROTOCOL_DIR/$check_name
    set sched_output_gif_dir $sched_output_dir/gif
@@ -600,7 +604,7 @@ proc scheduler_setup_test_conditions { nr_of_jobs } {
       }
       puts $CHECK_OUTPUT "pending jobs: $pending_jobs"
       if { $pending_jobs > $nr_of_jobs } {
-         set catch_result [delete_all_jobs]
+         catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
       }
       set submit_count [expr ( $nr_of_jobs - $pending_jobs ) ]
       puts $CHECK_OUTPUT "submitting $submit_count jobs ..."
@@ -636,10 +640,15 @@ proc scheduler_cleanup {} {
    global scheduler_test_level scheduler_queue_list
    global scheduler_complex_count CHECK_CORE_EXECD
 
+   if { [resolve_version] < 2 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
+   }
+
    if { [string match "analysis" $scheduler_test_level] == 0 } {
  
       puts $CHECK_OUTPUT "delete all jobs ..."
-      set catch_result [delete_all_jobs]
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
    
       puts $CHECK_OUTPUT "wait for end of all jobs ..."
       wait_for_end_of_all_jobs 120

@@ -29,32 +29,28 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 #include <string.h>
-#include <strings.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_pe.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 #include "parse_qsubL.h"
 #include "sge_job_refL.h"
 #include "usage.h"
 #include "sge_parse_num_par.h"
+#include "sge_resource.h"
 #include "parse.h"
 #include "sge_options.h"
-#include "sge_idL.h"
+#include "sge_identL.h"
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_job.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-
-#include "sgeobj/sge_ja_task.h"
 
 /*-------------------------------------------------------------------------*/
 /* use cstring_list_parse_from_string() if you need a parsing function */
@@ -71,6 +67,80 @@ static void sge_parse_string_list(lList **lp, const char *str, int field,
    }
 
    DEXIT;
+}
+
+/* EB: TODO Following function should be moved to the sge_jatask module */
+
+/*
+ * return   -1 no valid JobTask-Identifier
+ *          1  ok
+ */
+int sge_parse_jobtasks(
+lList **ipp,          /* ID_Type List */
+lListElem **idp,     /* New ID_Type-Elem parsed from str_jobtask */
+const char *str_jobtask,   
+lList **alpp 
+) {
+   char *token;
+   char *job_str, *str;
+   lList *task_id_range_list = NULL;
+   lListElem *range;
+
+/*
+   Digit = '0' | '1' | ... | '9' .
+   JobId = Digit { Digit } .
+   TaskIdRange = TaskId [ '-' TaskId [  ':' Digit ] ] .
+   JobTasks = JobId [ '.' TaskIdRange ] .
+*/
+
+   DENTER(TOP_LAYER, "sge_parse_jobtasks");
+
+   /*
+   ** dup the input string for tokenizing
+   */
+   str = strdup(str_jobtask);
+   if (str) {
+      token = strtok(str, " ."); 
+   }
+   job_str = str;
+
+   if ((token = strtok(NULL, ""))) {
+      range_list_parse_from_string(&task_id_range_list, alpp, token,
+                                   0, 1, INF_NOT_ALLOWED);
+      if (*alpp) {
+         /*
+         ** free the dupped string
+         */
+         free(str);
+         DEXIT;
+         return -1;
+      }
+      if (!task_id_range_list) {
+         range = lAddElemUlong(&task_id_range_list, RN_min, 1, RN_Type);
+         lSetUlong(range, RN_max, 1);
+         lSetUlong(range, RN_step, 1);
+      }
+   }
+
+   if (!atol(job_str) && strcmp(job_str, "all")) {
+      /*
+      ** free the dupped string
+      */
+      free(str);
+      DEXIT;
+      return -1;
+   }
+      
+   *idp = lAddElemStr(ipp, ID_str, job_str, ID_Type);
+   if (*idp)
+      lSetList(*idp, ID_ja_structure, task_id_range_list);
+  
+   /*
+   ** free the dupped string
+   */
+   free(str); 
+   DEXIT;
+   return 1;
 }
 
 /***************************************************************************/
@@ -203,7 +273,7 @@ lListElem *ep; /* SPA_Type */
            && !strncmp(shortopt, *sp, strlen(shortopt)-1)) 
         || (longopt && (longopt[strlen(longopt)-1] == '*')
            && !strncmp(longopt, *sp, strlen(longopt)-1)) ) {
-      if(!*(++rp) || (**rp == '-') || (!**rp)) {
+      if(!*(++rp) || (**rp == '-')) {
          sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, *sp);
          answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DEXIT;
@@ -386,34 +456,20 @@ bool parse_multi_jobtaskslist(
 lList **ppcmdline,
 const char *opt,
 lList **alpp,
-lList **ppdestlist,
-bool include_names,
-u_long32 action
+lList **ppdestlist 
 ) {
    lListElem *ep, *sep, *idp;
    char str[256];
    int ret = false;
-   bool is_run_once = false;
 
    DENTER(TOP_LAYER, "parse_multi_jobtaskslist");
    while ((ep = lGetElemStr(*ppcmdline, SPA_switch, opt))) {
-      lListElem *arrayDef = lNext(ep);
-      lList *arrayDefList = NULL;
-
       ret = true;
-      is_run_once = true;
-      if ((arrayDef != NULL) && lGetUlong(arrayDef, SPA_number) ==  t_OPT) {
-         arrayDefList = lGetList(arrayDef, SPA_argval_lListT);
-      }
       for_each(sep, lGetList(ep, SPA_argval_lListT)) {
          lList *tmp_alp = NULL;
-         lList *tempArrayList = NULL;
-     
-         if ((arrayDefList != NULL) && (lNext(sep) == NULL)) {
-            tempArrayList = arrayDefList;
-         }   
+      
          if (sge_parse_jobtasks(ppdestlist, &idp, 
-               lGetString(sep, ST_name), &tmp_alp, include_names, tempArrayList) == -1) {
+               lGetString(sep, ST_name), &tmp_alp) == -1) {
             sprintf(str,  MSG_JOB_XISINVALIDJOBTASKID_S, 
                lGetString(sep, ST_name));
             answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
@@ -422,27 +478,9 @@ u_long32 action
             DEXIT;
             return false;
          }
-         lSetUlong(idp, ID_action, action);
-      }
-      if (arrayDefList != NULL) {
-         lRemoveElem(*ppcmdline, arrayDef);
-         arrayDef = NULL;
-         arrayDefList = NULL;
       }
       lRemoveElem(*ppcmdline, ep);
    }
-   
-   if (is_run_once && (ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
-      sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(lFirst(lGetList(ep, SPA_argval_lListT)), ST_name));
-      answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-      while ((ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
-         lRemoveElem(*ppcmdline, ep);
-      }  
-      
-      DEXIT;
-      return false;
-   }
-   
    DEXIT;
    return ret;
 }
@@ -474,33 +512,16 @@ char **str
 }
 
 
-u_long32 
-parse_group_options(lList *string_list, lList **answer_list) 
-{
-   u_long32 group_opt = GROUP_DEFAULT;
+u_long32 parse_group_options(
+lList *string_list 
+) {
+   u_long32 group_opt = GROUP_TASK_GROUPS;
    lListElem *str_elem;
 
    DENTER(TOP_LAYER, "sge_parse_group_options");
-
    for_each(str_elem, string_list) {
-      const char *letter_string = lGetString(str_elem, ST_name);
-      int i;
-
-      for (i = 0; i < strlen(letter_string); i++) {
-         char letter = letter_string[i];
-
-         if (letter == 'd') {
-            group_opt |= GROUP_NO_TASK_GROUPS;
-         } else if (letter == 'c') {
-            group_opt |= GROUP_CQ_SUMMARY;
-         } else if (letter == 't') {
-            group_opt |= GROUP_NO_PETASK_GROUPS;
-         } else {
-            sprintf(SGE_EVENT, MSG_QSTAT_WRONGGCHAR_C, letter);
-            answer_list_add(answer_list, SGE_EVENT, 
-                            STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-         }
-      }
+      if ((char) lGetString(str_elem, ST_name)[0] == 'd')
+         group_opt = GROUP_NO_TASK_GROUPS;
    }
    DEXIT; 
    return (group_opt);

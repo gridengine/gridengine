@@ -45,7 +45,7 @@ Qmon*job_main_layout.xmtChildren: \
    XmPushButton   job_delete, job_submit, job_suspend, job_update, \
                   job_reschedule, job_tickets, job_unsuspend, job_qalter, \
                   job_customize, job_done, job_help, job_priority, job_hold, \
-                  job_error, job_schedd_info, job_select_all;
+                  job_error, job_schedd_info;
 
 Qmon*job_main_layout.layout: \
    Fixed Shadowed Out 4 2 LREvenSpaced Row jobcontrol_title { \
@@ -65,7 +65,6 @@ Qmon*job_main_layout.layout: \
             job_unsuspend \
             job_delete \
             job_reschedule \
-            job_select_all \
          } \
          job_schedd_info \
          job_hold \
@@ -97,7 +96,6 @@ Qmon*job_main_layout*job_reschedule.labelString: @{Reschedule}
 Qmon*job_main_layout*job_unsuspend.labelString: @{Resume}
 Qmon*job_main_layout*job_update.labelString:    @{Refresh}
 Qmon*job_main_layout*job_delete.labelString:    @{Delete}
-Qmon*job_main_layout*job_select_all.labelString: @{Select All}
 Qmon*job_main_layout*job_customize.labelString: @{Customize}
 Qmon*job_main_layout*job_qalter.labelString:    @{Qalter}
 Qmon*job_main_layout*job_priority.labelString:  @{Priority}

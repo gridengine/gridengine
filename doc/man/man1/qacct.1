@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2004/02/25 17:07:46 $     Revision: $Revision: 1.10 $
+.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2003/07/30 12:21:47 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QACCT 1 "$Date: 2004/02/25 17:07:46 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QACCT 1 "$Date: 2003/07/30 12:21:47 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qacct \- report and account for xxQS_NAMExx usage
 .SH SYNOPSIS
@@ -50,7 +50,7 @@ qacct \- report and account for xxQS_NAMExx usage
 ] [
 .B \-help
 ] [
-.B \-j [JobId|JobName|pattern]
+.B \-j [JobId|JobName]
 ] [
 .B \-l attr=val,...
 ] [
@@ -58,7 +58,7 @@ qacct \- report and account for xxQS_NAMExx usage
 ] [
 .B \-pe [PEname]
 ] [
-.B \-q [CQ_name|QI_name|Q_domain|pattern]
+.B \-q [Q_name]
 ] [
 .B \-slots [SlotNumber]
 ] [
@@ -96,8 +96,7 @@ The account for jobs to be summarized.
 .\"
 .IP "\fB\-b BeginTime\fP"
 The earliest start time for jobs to be summarized, in the format
-[[CC]YY]MMDDhhmm[.SS]. See also \fB\-d\fP option. If CC is not
-specified, a YY of < 70 means 20YY.
+[[CC]YY]MMDDhhmm[.SS]. See also \fB\-d\fP option.
 .\"
 .IP "\fB\-d Days\fP"
 The number of days to summarize and print accounting information on. If
@@ -108,8 +107,7 @@ option, count starts at \fBEndTime\fP - \fBDays\fP.
 .\"
 .IP "\fB\-e EndTime\fP"
 The latest start time for jobs to be summarized, in the format
-[[CC]YY]MMDDhhmm[.SS]. See also \fB\-d\fP option. If CC is not
-specified, a YY of < 70 means 20YY.
+[[CC]YY]MMDDhhmm[.SS]. See also \fB\-d\fP option.
 .\"
 .IP "[\fB\-f\fP \fBAcctFileName\fP]"
 The accounting file to be used. If omitted, the system
@@ -131,10 +129,9 @@ Display help information for the
 .I qacct
 command.
 .\"
-.IP "\fB\-j\fP [[\fBJobName\fP|\fBJobId\fP|\fBpattern\fP]]"
-The name, a pattern for matching names, or ID of the job during execution 
-for which accounting information is printed. If neither a name nor an ID 
-is given all jobs are enlisted.
+.IP "\fB\-j\fP [[\fBJobName\fP|\fBJobId\fP]]"
+The name or ID of the job during execution for which accounting information
+is printed. If neither a name nor an ID is given all jobs are enlisted.
 .br
 This option changes the output format of
 \fIqacct\fP. If activated, CPU times are no longer accumulated but the
@@ -160,11 +157,10 @@ The name of the parallel environment for which usage is summarized.
 If \fBPEname\fP is not given, accounting data is
 listed for each parallel environment separately.
 .\"
-.IP "\fB\-q\fP [\fBCQ_name|QI_name|Q_domain|pattern\fP]"
-A pattern for queues for which usage is summarized. All
-queue instances matching the pattern will be listed. If
-no pattern is specified, a cluster queue summary will be 
-given.
+.IP "\fB\-q\fP [\fBQ_name\fP]"
+The name of the queue for which usage is summarized.
+If \fBQ_name\fP is not given, accounting data is
+listed for each queue separately.
 .\"
 .IP "\fB\-slots\fP [\fBSlotNumber\fP]"
 The number of queue slots for which usage is summarized.

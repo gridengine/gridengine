@@ -43,6 +43,7 @@ QACCT_ADD_SRC = \
             read_write_complex.c \
             read_object.c \
             read_write_host.c \
+            read_write_queue.c \
             execution_states.c \
             sig_handlers.c
 
@@ -50,9 +51,9 @@ QACCT_OBJS = $(QACCT_SRC:.c=.o)
 
 QACCT_ADD_OBJS = $(QACCT_ADD_SRC:.c=.o)
 
-QACCT_ADD_LIBS = -lgdi -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+QACCT_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QACCT_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+QACCT_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

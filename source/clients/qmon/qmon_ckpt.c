@@ -130,7 +130,7 @@ XtPointer cld, cad;
    XSync(XtDisplay(qmon_ckpt), 0);
    XmUpdateDisplay(qmon_ckpt);
 
-   qmonMirrorMultiAnswer(CKPT_T, &alp);
+   qmonMirrorMultiAnswer(CKPT_T | QUEUE_T, &alp);
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
@@ -142,7 +142,7 @@ XtPointer cld, cad;
 
    
    qmonTimerAddUpdateProc(CKPT_T, "updateCkptList", updateCkptList);
-   qmonStartTimer(CKPT_T);
+   qmonStartTimer(CKPT_T | QUEUE_T);
    updateCkptList();
    XmListSelectPos(ckpt_names, 1, True);
 
@@ -178,7 +178,7 @@ XtPointer cld, cad;
    DENTER(GUI_LAYER, "qmonPopdownCkptConfig");
 
    XtUnmanageChild(qmon_ckpt);
-   qmonStopTimer(CKPT_T);
+   qmonStopTimer(CKPT_T | QUEUE_T);
    qmonTimerRmUpdateProc(CKPT_T, "updateCkptList");
 
    DEXIT;
@@ -447,7 +447,7 @@ XtPointer cld, cad;
    
    if (ckptl) {
       if (qmonCkptGetAsk(lFirst(ckptl))) {
-         ckpt_name = (StringConst)lGetString(lFirst(ckptl), CK_name);
+         ckpt_name = lGetString(lFirst(ckptl), CK_name);
          /*
          ** gdi call 
          */
@@ -567,11 +567,11 @@ lListElem *ckp
       return;
    }
 
-   ckpt_name = (StringConst)lGetString(ckp, CK_name);
+   ckpt_name = lGetString(ckp, CK_name);
    if (ckpt_name)
       XmtInputFieldSetString(ckpt_name_w, ckpt_name);
 
-   ckpt_interface = (StringConst)lGetString(ckp, CK_interface);
+   ckpt_interface = lGetString(ckp, CK_interface);
    if (ckpt_interface) {
       for (i=0; i<XtNumber(ckpt_interface_types); i++) {
          if (!strcasecmp(ckpt_interface, ckpt_interface_types[i])) {
@@ -583,27 +583,27 @@ lListElem *ckp
    else
       XmtChooserSetState(ckpt_interface_w, 0, False);
 
-   ckpt_ckpt_command = (StringConst)lGetString(ckp, CK_ckpt_command);
+   ckpt_ckpt_command = lGetString(ckp, CK_ckpt_command);
    if (ckpt_ckpt_command)
       XmtInputFieldSetString(ckpt_ckpt_command_w, ckpt_ckpt_command);
 
-   ckpt_migr_command = (StringConst)lGetString(ckp, CK_migr_command);
+   ckpt_migr_command = lGetString(ckp, CK_migr_command);
    if (ckpt_migr_command)
       XmtInputFieldSetString(ckpt_migr_command_w, ckpt_migr_command);
 
-   ckpt_rest_command = (StringConst)lGetString(ckp, CK_rest_command);
+   ckpt_rest_command = lGetString(ckp, CK_rest_command);
    if (ckpt_rest_command)
       XmtInputFieldSetString(ckpt_rest_command_w, ckpt_rest_command);
 
-   ckpt_clean_command = (StringConst)lGetString(ckp, CK_clean_command);
+   ckpt_clean_command = lGetString(ckp, CK_clean_command);
    if (ckpt_clean_command)
       XmtInputFieldSetString(ckpt_clean_command_w, ckpt_clean_command);
 
-   ckpt_ckpt_dir = (StringConst)lGetString(ckp, CK_ckpt_dir);
+   ckpt_ckpt_dir = lGetString(ckp, CK_ckpt_dir);
    if (ckpt_ckpt_dir)
       XmtInputFieldSetString(ckpt_ckpt_dir_w, ckpt_ckpt_dir);
 
-   ckpt_when = (StringConst)lGetString(ckp, CK_when);
+   ckpt_when = lGetString(ckp, CK_when);
    if (ckpt_when && strchr(ckpt_when, 's'))
       state |= 1;
    if (ckpt_when && strchr(ckpt_when, 'm'))
@@ -619,7 +619,7 @@ lListElem *ckp
    XmtChooserSetState(ckpt_when_w, state, False);
    XmtChooserSetState(ckpt_reschedule_w, reschedule, False);
    
-   ckpt_signal = (StringConst)lGetString(ckp, CK_signal);
+   ckpt_signal = lGetString(ckp, CK_signal);
    if (ckpt_signal)
       XmtInputFieldSetString(ckpt_signal_w, ckpt_signal);
 

@@ -36,25 +36,12 @@
 
 extern lList *Master_Calendar_List;
 
-/* */
+lListElem *calendar_list_locate(lList *calendar_list, const char *cal_name);
 
-bool 
-calendar_parse_year(lListElem *this_elem, lList **answer_list);
+int parse_year(lList **alpp, lListElem *cal);
 
-bool 
-calendar_parse_week(lListElem *this_elem, lList **answer_list);
+int parse_week(lList **alpp, lListElem *cal);
 
-u_long32 
-calendar_get_current_state_and_end(const lListElem *this_elem, time_t *then);
-
-bool 
-calendar_is_referenced(const lListElem *calendar, lList **answer_list,
-                       const lList *master_cqueue_list);
-/* */
-
-lListElem *
-calendar_list_locate(lList *this_list, const char *cal_name);
-
-lListElem* sge_generic_cal(char *cal_name);
+u_long32 act_cal_state(lListElem *cep, time_t *then);
 
 #endif /* __SGE_CALENDAR_H */

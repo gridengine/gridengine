@@ -53,16 +53,15 @@ SHEPHERD_ADD_SRC = \
            sge_parse_num_par.c \
            pdc.c \
            procfs.c \
-           sge_mt_init.c \
            sge_processes_irix.c
 
 SHEPHERD_OBJS = $(SHEPHERD_SRC:.c=.o)
 
 SHEPHERD_ADD_OBJS = $(SHEPHERD_ADD_SRC:.c=.o) 
 
-SHEPHERD_ADD_LIBS = -lgdi -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+SHEPHERD_ADD_LIBS = -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -luti -lrmon
 
-SHEPHERD_LIB_DEPENDS = $(GDILIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+SHEPHERD_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

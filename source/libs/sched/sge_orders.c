@@ -93,8 +93,6 @@ int get_seq_nr()
  returns updated order-list.
 
  The granted list contains granted queues.
-
- Appears to be MT safe
  *************************************************************/
 
 lList *sge_create_orders(
@@ -102,13 +100,8 @@ lList *or_list,
 u_long32 type,
 lListElem *job,
 lListElem *ja_task,
-lList *granted ,
-bool no_tickets, 
-bool update_execd
+lList *granted 
 ) {
-   static lEnumeration *tix_what = NULL;
-   static lEnumeration *tix2_what = NULL;
-   static lEnumeration *job_what = NULL;
    lList *ql = NULL;
    lListElem *gel, *ep, *ep2;
    u_long32 qslots;
@@ -125,141 +118,84 @@ bool update_execd
       or_list = lCreateList("orderlist", OR_Type);
 
    /* build sublist of granted */
-   if (update_execd) {
-      for_each(gel, granted) {
-         qslots = lGetUlong(gel, JG_slots);
-         if (qslots) { /* ignore Qs with slots==0 */
-            ep2=lCreateElem(OQ_Type);
+   for_each(gel, granted) {
+      qslots = lGetUlong(gel, JG_slots);
+      if (qslots) { /* ignore Qs with slots==0 */
+         ep2=lCreateElem(OQ_Type);
 
-            lSetUlong(ep2, OQ_slots, qslots);
-            lSetString(ep2, OQ_dest_queue, lGetString(gel, JG_qname));
-            lSetUlong(ep2, OQ_dest_version, lGetUlong(gel, JG_qversion));
-            lSetDouble(ep2, OQ_ticket, lGetDouble(gel, JG_ticket));
-            lSetDouble(ep2, OQ_oticket, lGetDouble(gel, JG_oticket));
-            lSetDouble(ep2, OQ_fticket, lGetDouble(gel, JG_fticket));
-            lSetDouble(ep2, OQ_sticket, lGetDouble(gel, JG_sticket));
-            if (!ql)
-               ql=lCreateList("orderlist",OQ_Type);
-            lAppendElem(ql, ep2);
-         }
+         lSetUlong(ep2, OQ_slots, qslots);
+         lSetString(ep2, OQ_dest_queue, lGetString(gel, JG_qname));
+         lSetUlong(ep2, OQ_dest_version, lGetUlong(gel, JG_qversion));
+         lSetDouble(ep2, OQ_ticket, lGetDouble(gel, JG_ticket));
+         lSetDouble(ep2, OQ_oticket, lGetDouble(gel, JG_oticket));
+         lSetDouble(ep2, OQ_fticket, lGetDouble(gel, JG_fticket));
+         lSetDouble(ep2, OQ_dticket, lGetDouble(gel, JG_dticket));
+         lSetDouble(ep2, OQ_sticket, lGetDouble(gel, JG_sticket));
+         
+         if (!ql)
+            ql=lCreateList("orderlist",OQ_Type);
+         lAppendElem(ql, ep2);
       }
    }
 
    /* build order */
    /* OR_force is set to zero */
    ep=lCreateElem(OR_Type);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      lSetDouble(ep, OR_ticket, lGetDouble(ja_task, JAT_ticket));
 
-   if(!no_tickets) {
-      lSetDouble(ep, OR_ticket,    lGetDouble(ja_task, JAT_tix));
-      lSetDouble(ep, OR_ntix,      lGetDouble(ja_task, JAT_ntix));
-      lSetDouble(ep, OR_prio,      lGetDouble(ja_task, JAT_prio));
-   }
-   else {
-      lSetDouble(ep, OR_ticket, 0.0);
-      lSetDouble(ep, OR_ntix, 0.0); 
-      lSetDouble(ep, OR_prio, 0.0);
-   }
-   if (type == ORT_tickets|| type == ORT_ptickets) {
-      lListElem *jep;
-      lList *jlist = lCreateList("", lGetElemDescr(job));
-      lList *tlist;
-      /* Create a reduced task list with only the required fields */
-      tlist = lCreateList("", lGetElemDescr(ja_task));
-      lAppendElem(tlist, lCopyElem(ja_task));
-      {             
-         lList *tmp_list;
-         if(!tix_what){
-            tix_what = lWhat("%T(%I %I %I %I %I %I %I %I %I %I )",
-            lGetElemDescr(ja_task), 
-            JAT_task_number, 
-            JAT_status, 
-            JAT_tix,
-            JAT_oticket, 
-            JAT_fticket, 
-            JAT_sticket, 
-            JAT_share,
-            JAT_prio,
-            JAT_ntix,
-            JAT_granted_destin_identifier_list);
+      if (type == ORT_tickets|| type == ORT_ptickets) {
+         lListElem *jep;
+         lList *jlist = lCreateList("", lGetElemDescr(job));
+         lList *tlist;
 
-            tix2_what = lWhat("%T(%I %I %I %I %I %I %I %I %I)",
-            lGetElemDescr(ja_task), 
-            JAT_task_number, 
-            JAT_status, 
-            JAT_tix,
-            JAT_oticket, 
-            JAT_fticket, 
-            JAT_sticket, 
-            JAT_share,
-            JAT_prio,
-            JAT_ntix);
-         }
+         /* Create a reduced task list with only the required fields */
 
-         if (!tix_what || !tix2_what) {
-            CRITICAL((SGE_EVENT, MSG_SCHEDD_CREATEORDERS_LWHEREFORJOBFAILED));
-            /* runtime type error */
-            abort();
-         }
-
-         if (update_execd){
-            tmp_list = lSelect("", tlist, NULL, tix_what);
-         }
-         else {
-            tmp_list = lSelect("", tlist, NULL, tix2_what);
-         }
-
-         if (tmp_list) {
-            lFreeList(tlist);
-            tlist = tmp_list;
-            if(no_tickets){
-               lListElem *tmp;
-               for_each(tmp, tlist){                 
-                  lSetDouble(tmp, JAT_tix, 0.0);
-                  lSetDouble(tmp, JAT_oticket, 0.0);
-                  lSetDouble(tmp, JAT_fticket, 0.0);
-                  lSetDouble(tmp, JAT_sticket, 0.0);
-                  lSetDouble(tmp, JAT_share, 0.0);
-                  lSetDouble(tmp, JAT_prio, 0.0);
-                  lSetDouble(tmp, JAT_ntix, 0.0);
-               }
+         tlist = lCreateList("", lGetElemDescr(ja_task));
+         lAppendElem(tlist, lCopyElem(ja_task));
+         { 
+            lEnumeration *what = lWhat("%T(%I %I %I %I %I %I %I %I %I)",
+                  lGetElemDescr(ja_task), 
+                  JAT_task_number, 
+                  JAT_status, 
+                  JAT_ticket,
+                  JAT_oticket, 
+                  JAT_dticket, 
+                  JAT_fticket, 
+                  JAT_sticket, 
+                  JAT_share,
+                  JAT_granted_destin_identifier_list);
+            lList *tmp_list;
+            if ((tmp_list = lSelect("", tlist, NULL, what))) {
+               lFreeList(tlist);
+               tlist = tmp_list;
             }
+            lFreeWhat(what);
          }
-      }
 
-      /* Create a reduced job list with only the required fields */
+         /* Create a reduced job list with only the required fields */
 
-      jep = lCreateElem(lGetElemDescr(job));
-      lSetUlong(jep, JB_job_number, lGetUlong(job, JB_job_number));
-      lSetDouble(jep, JB_nppri,   lGetDouble(job, JB_nppri));
-      lSetDouble(jep, JB_nurg,    lGetDouble(job, JB_nurg));
-      lSetDouble(jep, JB_urg,     lGetDouble(job, JB_urg));
-      lSetDouble(jep, JB_rrcontr, lGetDouble(job, JB_rrcontr));
-      lSetDouble(jep, JB_dlcontr, lGetDouble(job, JB_dlcontr));
-      lSetDouble(jep, JB_wtcontr, lGetDouble(job, JB_wtcontr));
-      lSetList(jep, JB_ja_tasks, tlist);
-      lAppendElem(jlist, jep);
-      {        
-         lList *tmp_list;
-         if(!job_what)
-            job_what = lWhat("%T(%I %I %I %I %I %I %I %I)", 
-               lGetElemDescr(job), 
-               JB_job_number, 
-               JB_nppri, 
-               JB_nurg, 
-               JB_urg, 
-               JB_rrcontr, 
-               JB_dlcontr, 
-               JB_wtcontr, 
-               JB_ja_tasks);
-         if ((tmp_list = lSelect("", jlist, NULL, job_what))) {
-            lFreeList(jlist);
-            jlist = tmp_list;
+         jep = lCreateElem(lGetElemDescr(job));
+         lSetUlong(jep, JB_job_number, lGetUlong(job, JB_job_number));
+         lSetList(jep, JB_ja_tasks, tlist);
+         lAppendElem(jlist, jep);
+         {
+            lEnumeration *what = lWhat("%T(%I %I)", 
+                  lGetElemDescr(job), 
+                  JB_job_number, 
+                  JB_ja_tasks);
+            lList *tmp_list;
+            if ((tmp_list = lSelect("", jlist, NULL, what))) {
+               lFreeList(jlist);
+               jlist = tmp_list;
+            }
+            lFreeWhat(what);
          }
-      }
 
-      lSetList(ep, OR_joker, jlist);
+         lSetList(ep, OR_joker, jlist);
+      }
    }
-
+   
    lSetUlong(ep, OR_seq_no, get_seq_nr());
    lSetUlong(ep, OR_type, type);
    lSetUlong(ep, OR_job_number, lGetUlong(job, JB_job_number));
@@ -349,18 +285,15 @@ lList *order_list
 ) {
    lListElem *job, *ja_task;
 
-   DENTER(TOP_LAYER, "create_delete_job_orders");
-
    for_each(job, finished_jobs) {
       for_each(ja_task, lGetList(job, JB_ja_tasks)) {
          DPRINTF(("DELETE JOB "u32"."u32"\n", lGetUlong(job, JB_job_number),
             lGetUlong(ja_task, JAT_task_number)));
          order_list = sge_create_orders(order_list, ORT_remove_job, job, 
-            ja_task, NULL, false, true);
+            ja_task, NULL);
       }
    }
 
-   DEXIT;
    return order_list;
 }
 

@@ -81,8 +81,7 @@ Qmon*qmon_host.host_layout.host_form.xmtChildren: \
 
 Qmon*qmon_host.host_layout.host_form.host_folder.xmtChildren: \
    XmtLayout      adminhost_layout, \
-                  submithost_layout, \
-                  hostgroup_layout;
+                  submithost_layout;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Admin Host Configuration
@@ -136,107 +135,6 @@ Qmon*submithost_layout*submithost_list.fontList:           $fixed_font
 Qmon*submithost_layout*submithost_list.selectionPolicy:    EXTENDED_SELECT
 Qmon*submithost_layout*submithost_list.visibleItemCount:   7
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! Hostgroup Configuration
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*hostgroup_layout.dialogTitle: @{QMON +++ Hostgroup Configuration}
-Qmon*hostgroup_layout.fontList:  $dialog_font
-
-Qmon*hostgroup_layout*XmtInputField.marginHeight:   2
-Qmon*hostgroup_layout*XmtInputField.marginWidth:    2
-
-Qmon*hostgroup_layout.tabLabel: @{@fBHost Groups}
-
-Qmon*hostgroup_layout.xmtChildren: \
-   XmScrolledList hostgroup_list; \
-   XmScrolledList hostgroup_memberlist; \
-
-Qmon*hostgroup_layout.layout: \
-   Row { \
-      Stretchable 3 in Caption tl "@{@fBHostgroup}" hostgroup_list \
-      Stretchable 3 in Caption tl "@{Members}" hostgroup_memberlist \
-   }
-
-Qmon*hostgroup_layout*scrollBarDisplayPolicy:    AS_NEEDED
-Qmon*hostgroup_layout*listSizePolicy:            CONSTANT
-
-Qmon*hostgroup_layout*hostgroup_list.fontList:           $fixed_font
-Qmon*hostgroup_layout*hostgroup_list.selectionPolicy:    BROWSE_SELECT
-Qmon*hostgroup_layout*hostgroup_list.visibleItemCount:   7
-
-Qmon*hostgroup_layout*hostgroup_memberlist.fontList:           $fixed_font
-Qmon*hostgroup_layout*hostgroup_memberlist.selectionPolicy:    EXTENDED_SELECT
-Qmon*hostgroup_layout*hostgroup_memberlist.visibleItemCount:   7
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! Add/ Modify Hostgroup
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*hg_ask_shell.xmtChildren: unmanaged XmtLayout hg_ask_layout;
-
-Qmon*hg_ask_shell.hg_ask_layout.autoUnmanage: False
-Qmon*hg_ask_shell.hg_ask_layout.resizePolicy:  RESIZE_NONE
-Qmon*hg_ask_shell.hg_ask_layout.XmtInputField.marginWidth:      2
-Qmon*hg_ask_shell.hg_ask_layout.XmtInputField.marginHeight:     2
-Qmon*hg_ask_shell.hg_ask_layout.fontList: $dialog_font
-Qmon*hg_ask_shell.hg_ask_layout.dialogTitle: @{Add/Modify Host Group}
-Qmon*hg_ask_shell.hg_ask_layout.dialogStyle: DIALOG_APPLICATION_MODAL
-
-Qmon*hg_ask_shell.hg_ask_layout.xmtChildren: \
-   InputField     hg_name; \
-   InputField     hg_member; \
-   XmScrolledList hg_memberlist; \
-   XmScrolledList hg_hglist; \
-   XmPushButton   hg_ok, hg_cancel, hg_add_hg, hg_add, hg_del_member;
-
-Qmon*hg_ask_layout.layout: \
-   Row { \
-      Etched Col { \
-         Fixed Centered Caption "@{@fBHostgroup} " hg_name \
-         # \
-         Row { \
-            Stretchable Caption tl "@{Members}" 2 in % 4 in hg_memberlist \
-            Col { \
-               ## \
-               Row { \
-                  Centered Fixed hg_add \
-                  Caption tl "@{Host}" hg_member \
-               } \
-               ## \
-               Row { \
-                  Centered Fixed hg_add_hg \
-                  Stretchable Caption tl "@{Defined Host Groups}" 2 in % 3 in hg_hglist \
-               } \
-               ## \
-               Centered Fixed hg_del_member \
-               <> \
-            } \
-         } \
-      } \
-      Fixed Shadowed Col { \
-         Fixed hg_ok \
-         Fixed hg_cancel \
-      } \
-   }
-
-
-Qmon*hg_ask_layout.hg_ok.labelString:     @{Ok}
-Qmon*hg_ask_layout.hg_cancel.labelString: @{Cancel}
-Qmon*hg_ask_layout.hg_name.columns: 40
-
-Qmon*hg_ask_layout.hg_add_hg.labelType:         PIXMAP
-Qmon*hg_ask_layout.hg_add_hg.labelPixmap:       leftarrow
-Qmon*hg_ask_layout.hg_add.labelType:            PIXMAP
-Qmon*hg_ask_layout.hg_add.labelPixmap:          leftarrow
-Qmon*hg_ask_layout.hg_del_member.labelType:     PIXMAP
-Qmon*hg_ask_layout.hg_del_member.labelPixmap:   trashcan
-
-Qmon*hg_ask_layout*hg_memberlist.fontList:           $fixed_font
-Qmon*hg_ask_layout*hg_memberlist.selectionPolicy:    EXTENDED_SELECT
-Qmon*hg_ask_layout*hg_memberlist.visibleItemCount:   7
-
-Qmon*hg_ask_layout*hg_hglist.fontList:           $fixed_font
-Qmon*hg_ask_layout*hg_hglist.selectionPolicy:    EXTENDED_SELECT
-Qmon*hg_ask_layout*hg_hglist.visibleItemCount:   7
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Execution Host Configuration
@@ -253,9 +151,9 @@ Qmon*exechost_layout.xmtChildren: \
       XmScrolledList exechost_list; \
       XmScrolledText exechost_load_scaling, \
                      exechost_consumables, \
-                     exechost_reporting_variables, \
                      exechost_access, \
-                     exechost_usage_scaling;
+                     exechost_usage_scaling; \
+      XmTextField    exechost_rcf;
 
 Qmon*exechost_layout.layout: \
    Row { \
@@ -264,8 +162,8 @@ Qmon*exechost_layout.layout: \
          Caption tl "@{@fBLoad Scaling}" exechost_load_scaling \
          Caption tl "@{@fBAccess Attributes}" exechost_access \
          Caption tl "@{@fBConsumables/Fixed Attributes}" exechost_consumables \
-         Caption tl "@{@fBReporting Variables}" exechost_reporting_variables \
          Caption tl "@{@fBUsage Scaling}" exechost_usage_scaling \
+         Caption tl "@{@fBResource Capability Factor}" exechost_rcf \
       } \
    }
 
@@ -282,6 +180,12 @@ Qmon*exechost_layout*scrollBarDisplayPolicy:   AS_NEEDED
 Qmon*exechost_layout*exechost_list.fontList:            $fixed_font
 Qmon*exechost_layout*exechost_list.selectionPolicy:     BROWSE_SELECT
 Qmon*exechost_layout*exechost_list.visibleItemCount:    7
+
+Qmon*exechost_layout.exechost_rcf.cursorPositionVisible:   False
+Qmon*exechost_layout.exechost_rcf.editable:                False
+Qmon*exechost_layout.exechost_rcf.columns:                 10
+Qmon*exechost_layout.exechost_rcf.shadowThickness:         0
+Qmon*exechost_layout.exechost_rcf.highlightThickness:      0
 
 Qmon*exechost_load_scaling.fontList:              $fixed_font
 Qmon*exechost_load_scaling.editable:              False
@@ -303,13 +207,6 @@ Qmon*exechost_access.editMode:              MULTI_LINE_EDIT
 Qmon*exechost_access.cursorPositionVisible: False
 Qmon*exechost_access.rows:                  5
 Qmon*exechost_access.columns:               25
-
-Qmon*exechost_reporting_variables.fontList:              $fixed_font
-Qmon*exechost_reporting_variables.editable:              False
-Qmon*exechost_reporting_variables.editMode:              MULTI_LINE_EDIT
-Qmon*exechost_reporting_variables.cursorPositionVisible: False
-Qmon*exechost_reporting_variables.rows:                  5
-Qmon*exechost_reporting_variables.columns:               25
 
 Qmon*exechost_usage_scaling.fontList:              $fixed_font
 Qmon*exechost_usage_scaling.editable:              False
@@ -360,18 +257,23 @@ Qmon*eh_ask_layout*eh_folder.xmtChildren: \
    XmtLayout   eh_scaling, \
                eh_complexes, \
                eh_access, \
-               eh_reporting_variables, \
-               eh_project;
+               eh_project; \
 
 Qmon*eh_ask_layout*eh_folder.eh_scaling.tabLabel: @{@fBScaling}
 Qmon*eh_ask_layout*eh_folder.eh_scaling.xmtChildren: \
+   InputField     eh_rcf = resource_capability_factor; \
    Matrix_2xN     eh_load_scaling = scaling_list; \
    Matrix_2xN     eh_usage_scaling = usage_scaling_list;
 
 Qmon*eh_ask_layout*eh_folder.eh_scaling.layout: \
    Row { \
       Caption tl "@{@fBLoad Scaling}" eh_load_scaling \
-      Caption tl "@{@fBUsage Scaling}" eh_usage_scaling \
+      Col { \
+         Caption tl "@{@fBUsage Scaling}" eh_usage_scaling \
+         # \
+         Fixed Caption tl "@{@fBResource Capability Factor}" eh_rcf \
+         <> \
+      } \
       <> \
    }
 
@@ -596,45 +498,3 @@ Qmon*eh_project*project_deny.scrollingPolicy:   AUTOMATIC
 Qmon*eh_project*project_deny.visualPolicy:      CONSTANT
 Qmon*eh_project*project_deny.visibleItemCount:  5
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!! reporting_variables
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*eh_reporting_variables.tabLabel: @{@fBReporting Variables}
-Qmon*eh_reporting_variables.xmtChildren: \
-   StringList     reporting_variables_list, \
-                  reporting_variables_chosen = reporting_variables; \
-   XmPushButton   reporting_variables_add, reporting_variables_remove;
-
-Qmon*eh_reporting_variables.layout: \
-   Row { \
-      15 em Wide Caption tl "@{@fBAvailable}" reporting_variables_list \
-      Fixed Col { \
-         <> \
-         Fixed Centered reporting_variables_add \
-         Fixed Centered reporting_variables_remove \
-         <> \
-      } \
-      15 em Wide Col { \
-         Caption tl "@{@fBSelected}" reporting_variables_chosen \
-      } \
-   }
-
-Qmon*eh_reporting_variables.reporting_variables_add.labelType:          PIXMAP
-Qmon*eh_reporting_variables.reporting_variables_add.labelPixmap:        rightarrow
-Qmon*eh_reporting_variables.reporting_variables_remove.labelType:       PIXMAP
-Qmon*eh_reporting_variables.reporting_variables_remove.labelPixmap:     leftarrow
-
-Qmon*eh_reporting_variables*scrollBarDisplayPolicy:  AS_NEEDED
-Qmon*eh_reporting_variables*listSizePolicy:          CONSTANT
-
-Qmon*eh_reporting_variables*reporting_variables_list.fontList:          $fixed_font
-Qmon*eh_reporting_variables*reporting_variables_list.selectionPolicy:   EXTENDED_SELECT
-Qmon*eh_reporting_variables*reporting_variables_list.scrollingPolicy:   AUTOMATIC
-Qmon*eh_reporting_variables*reporting_variables_list.visualPolicy:      CONSTANT
-Qmon*eh_reporting_variables*reporting_variables_list.visibleItemCount:  12
-
-Qmon*eh_reporting_variables*reporting_variables_chosen.fontList:         $fixed_font
-Qmon*eh_reporting_variables*reporting_variables_chosen.selectionPolicy:  EXTENDED_SELECT
-Qmon*eh_reporting_variables*reporting_variables_chosen.scrollingPolicy:  AUTOMATIC
-Qmon*eh_reporting_variables*reporting_variables_chosen.visualPolicy:     CONSTANT
-Qmon*eh_reporting_variables*reporting_variables_chosen.visibleItemCount: 5

@@ -191,48 +191,6 @@
 *     Eventclient/Client/ec_subscribe_flush()
 ****************************************************************************
 */
-
-/****** Eventclient/-List filtering***************************************
-*
-*  NAME
-*     List filtering -- Configuration of the list filtering 
-*
-*  FUNCTION
-*    The date send with an event can be filtered on the master side.
-*    Therefore one can set a where and what condition. If the
-*    all client date is removed via where condition, no event will
-*    be send.
-*
-*    The method expects a lListElem representation of the lCondition
-*    and lEnumeration. The two methods: "lWhatToElem" and 
-*    "lWhereToElem" will convert the structures.
-*
-*  NOTES
-*    One has to be carefull reducing the elements via what condition.
-*    One has to ensure, that all elements have a custom descriptor
-*    and that not elements with different descriptors are mixed in
-*    the same list.
-*
-*    The master and client can benifit (in speed and memory consumption)
-*    a lot by requesting only the data, the client needs.
-*
-*    All registered events for the same cull data structure needs to have
-*    the same what and where filter.
-*
-*    The JAT_Type list is handled special, because it is subscribable as
-*    an event, and it is also a sub-structure in the JB_Type list. When
-*    a JAT_Type filter is set, the JAT-Lists in the JB-List are filtered
-*    as well.
-*
-*  SEE ALSO
-*     Eventclient/Client/ec_mod_subscription_where()
-*     cull/cull_what/lWhatToElem()
-*     cull/cull_what/lWhatFromElem()
-*     cull/cull_where/lWhereToElem()
-*     cull/cull_where/lWhereFromElem()
-****************************************************************************
-*/
-
 /****** Eventclient/-Busy-state ***************************************
 *
 *  NAME
@@ -333,7 +291,7 @@
 *     SGE_ULONG(EV_d_time)
 *        event delivery time (interval used by qmaster to deliver events)
 *
-*     SGE_List(EV_subscribed)
+*     SGE_STRING(EV_subscription)
 *        information about subscription and flushing
 *        (see Eventclient/-Subscription and Eventclient/-Flushing)
 *
@@ -576,16 +534,10 @@ bool ck_event_number(lList *lp, u_long32 *waiting_for,
                      u_long32 *wrong_number);
 
 static bool 
-get_event_list(int sync, lList **lp, int* commlib_error);
+get_event_list(int sync, lList **lp);
 
-static void ec_add_subscriptionElement(lListElem *event_el, ev_event event, bool flush, int interval); 
-
-static void ec_remove_subscriptionElement(lListElem *event_el, ev_event event); 
-
-static void ec_mod_subscription_flush(lListElem *event_el, ev_event event, bool flush, 
-                                       int intervall);
-                                      
-static void ec_config_changed(void);
+static void 
+ec_config_changed(void);
 
 /****** Eventclient/Client/-Event_Client_Global_Variables *********************
 *  NAME
@@ -657,6 +609,8 @@ bool
 ec_prepare_registration(ev_registration_id id, const char *name)
 {
    bool ret = false;
+   char subscription[sgeE_EVENTSIZE + 1];
+   int i;
 
    DENTER(TOP_LAYER, "ec_prepare_registration");
 
@@ -676,6 +630,14 @@ ec_prepare_registration(ev_registration_id id, const char *name)
          lSetString(ec, EV_name, name);
          lSetUlong(ec, EV_d_time, DEFAULT_EVENT_DELIVERY_INTERVAL);
 
+         /* initialize subscription "bitfield" */
+         for (i = 0; i < sgeE_EVENTSIZE; i++) {
+            subscription[i] = EV_NOT_SUBSCRIBED;
+         }
+
+         subscription[sgeE_EVENTSIZE] = 0;
+
+         lSetString(ec, EV_subscription, subscription);
          ec_subscribe_flush(sgeE_QMASTER_GOES_DOWN, 0);
          ec_subscribe_flush(sgeE_SHUTDOWN, 0);
 
@@ -747,7 +709,6 @@ ec_mark4registration(void)
 {
    DENTER(TOP_LAYER, "ec_mark4registration");
    need_register = true;
-   lSetBool(ec, EV_changed, true);
    DEXIT;
 }
 
@@ -805,7 +766,8 @@ ec_need_new_registration(void)
 *  SEE ALSO
 *     Eventclient/Client/ec_get_edtime()
 *******************************************************************************/
-int ec_set_edtime(int interval) 
+int 
+ec_set_edtime(int interval) 
 {
    int ret = 0;
 
@@ -815,8 +777,9 @@ int ec_set_edtime(int interval)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       ret = (lGetUlong(ec, EV_d_time) != interval);
+
       if (ret > 0) {
-         lSetUlong(ec, EV_d_time, MIN(interval, CL_DEFINE_CLIENT_CONNECTION_LIFETIME-5));
+         lSetUlong(ec, EV_d_time, MIN(interval, COMMPROC_TIMEOUT-5));
          ec_config_changed();
       }
    }
@@ -1148,7 +1111,6 @@ bool
 ec_register(bool exit_on_qmaster_down, lList** alpp)
 {
    bool ret = false;
-   cl_com_handle_t* com_handle = NULL;
 
    DENTER(TOP_LAYER, "ec_register");
 
@@ -1180,25 +1142,11 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
       lp = lCreateList("registration", EV_Type);
       lAppendElem(lp, lCopyElem(ec));
 
+      /* remove possibly pending messages */
+      remove_pending_messages(NULL, 0, 0, TAG_REPORT_REQUEST);
+      /* commlib call to mark all commprocs as unknown */
+      reset_last_heard();
 
-      /* closing actual connection to qmaster and reopen new connection. This will delete all
-         buffered messages  - CR */
-      com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
-      if (com_handle != NULL) {
-         int ngc_error;
-         ngc_error = cl_commlib_close_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
-         if (ngc_error == CL_RETVAL_OK) {
-            DPRINTF(("closed old connection to qmaster\n"));
-         } else {
-            INFO((SGE_EVENT, "error closing old connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
-         }
-         ngc_error = cl_commlib_open_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1 );
-         if (ngc_error == CL_RETVAL_OK) {
-            DPRINTF(("opened new connection to qmaster\n"));
-         } else {
-            ERROR((SGE_EVENT, "error opening new connection to qmaster: "SFQ"\n", cl_get_error_text(ngc_error)));
-         }
-      }
 
       /*
        *  to add may also means to modify
@@ -1224,7 +1172,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
          if (new_id != 0) {
             lSetUlong(ec, EV_id, new_id);
             DPRINTF(("REGISTERED with id "U32CFormat"\n", new_id));
-            lSetBool(ec, EV_changed, false);
+
             config_changed = false;
             need_register = false;
             
@@ -1296,24 +1244,22 @@ ec_deregister(void)
       if (init_packbuffer(&pb, sizeof(u_long32), 0) == PACK_SUCCESS) {
          /* error message is output from init_packbuffer */
          int send_ret; 
-         lList *alp = NULL;
 
          packint(&pb, lGetUlong(ec, EV_id));
 
-         send_ret = sge_send_any_request(0, NULL, sge_get_master(0),
-                                         prognames[QMASTER], 1, &pb,
-                                         TAG_EVENT_CLIENT_EXIT, 0, &alp);
+         send_ret = sge_send_any_request(0, NULL, sge_get_master(0), 
+                                         prognames[QMASTER], 1, &pb, 
+                                         TAG_EVENT_CLIENT_EXIT);
          
          clear_packbuffer(&pb);
-         answer_list_output (&alp);
 
-         if (send_ret == CL_RETVAL_OK) {
+         if (send_ret == CL_OK) {
             /* error message is output from sge_send_any_request */
+
             /* clear state of this event client instance */
             ec = lFreeElem(ec);
             need_register = true;
             ec_reg_id = 0;
-            lSetBool(ec, EV_changed, false);
             config_changed = false;
             next_event = 1;
 
@@ -1363,6 +1309,7 @@ bool
 ec_subscribe(ev_event event)
 {
    bool ret = false;
+   char *subscription;
    
    DENTER(TOP_LAYER, "ec_subscribe");
 
@@ -1372,20 +1319,29 @@ ec_subscribe(ev_event event)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
          WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
-   }
-
-   if (event == sgeE_ALL_EVENTS) {
-      int i;
-      for(i = 0; i < sgeE_EVENTSIZE; i++) {
-         ec_add_subscriptionElement(ec, i, EV_NOT_FLUSHED, -1);
-      }
    } else {
-      ec_add_subscriptionElement(ec, event, EV_NOT_FLUSHED, -1);
-   }
-   
-   if (lGetBool(ec, EV_changed)) {
-      ec_config_changed();
-      ret = true;
+      subscription = strdup(lGetString(ec, EV_subscription));
+
+      if (subscription == NULL) {
+         ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      } else {
+         if (event == sgeE_ALL_EVENTS) {
+            int i;
+            for(i = 0; i < sgeE_EVENTSIZE; i++) {
+               subscription[i] = EV_SUBSCRIBED;
+            }
+         } else {
+            subscription[event] = EV_SUBSCRIBED;
+         }
+
+         if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+            lSetString(ec, EV_subscription, subscription);
+            ec_config_changed();
+            ret = true;
+         }
+      }
+
+      free(subscription);
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -1394,143 +1350,6 @@ ec_subscribe(ev_event event)
    return ret;
 }
 
-static void ec_add_subscriptionElement(lListElem *event_el, ev_event event, bool flush, int interval) {
-
-   lList *subscribed = NULL; 
-   lListElem *sub_el = NULL;
-
-   DENTER(TOP_LAYER, "ec_add_subscriptionElement");
-
-   subscribed = lGetList(ec, EV_subscribed);
-   
-   if (event != sgeE_ALL_EVENTS){
-      if (!subscribed) {
-         subscribed = lCreateList("subscrition list", EVS_Type);
-         lSetList(ec,EV_subscribed, subscribed);
-      }
-      else {
-         sub_el = lGetElemUlong(subscribed, EVS_id, event);
-      }
-      
-      if (!sub_el) {
-         sub_el =  lCreateElem(EVS_Type);
-         lAppendElem(subscribed, sub_el);
-         
-         lSetUlong(sub_el, EVS_id, event);
-         lSetBool(sub_el, EVS_flush, flush);
-         lSetUlong(sub_el, EVS_interval, interval);
-
-         lSetBool(ec, EV_changed, true);
-      }
-   }
-   DEXIT;
-}
-
-static void ec_mod_subscription_flush(lListElem *event_el, ev_event event, bool flush, 
-                                       int intervall) {
-   lList *subscribed = NULL;
-   lListElem *sub_el = NULL;
-
-   DENTER(TOP_LAYER, "ec_mod_subscription_flush");
-  
-   subscribed = lGetList(ec, EV_subscribed);
-  
-   if (event != sgeE_ALL_EVENTS){
-      if (subscribed) {
-
-         sub_el = lGetElemUlong(subscribed, EVS_id, event);
-      
-         if (sub_el) {
-            lSetBool(sub_el, EVS_flush, flush);
-            lSetUlong(sub_el, EVS_interval, intervall);
-            lSetBool(ec, EV_changed, true);
-         }
-      }
-   }
-
-   DEXIT;
-}
-
-/****** sge_event_client/ec_mod_subscription_where() ***************************
-*  NAME
-*     ec_mod_subscription_where() -- adds an element filter to the event 
-*
-*  SYNOPSIS
-*     bool ec_mod_subscription_where(ev_event event, const lListElem *what, 
-*     const lListElem *where) 
-*
-*  FUNCTION
-*     Allows to filter the event date on the master side to reduce the
-*     date, which is send to the clients.
-*
-*  INPUTS
-*     ev_event event         - event type 
-*     const lListElem *what  - what condition 
-*     const lListElem *where - where condition 
-*
-*  RESULT
-*     bool - true, if everything went fine 
-*
-*  SEE ALSO
-*     cull/cull_what/lWhatToElem()
-*     cull/cull_what/lWhatFromElem()
-*     cull/cull_where/lWhereToElem()
-*     cull/cull_where/lWhereFromElem()
-*******************************************************************************/
-bool ec_mod_subscription_where(ev_event event, const lListElem *what, const lListElem *where) {
-   lList *subscribed = NULL;
-   lListElem *sub_el = NULL;
-   bool ret = false;
-   DENTER(TOP_LAYER, "ec_mod_subscription_where");
- 
-   if (ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-   } else if (event <= sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
-         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
-   }
- 
-   subscribed = lGetList(ec, EV_subscribed);
-  
-   if (event != sgeE_ALL_EVENTS){
-      if (subscribed) {
-
-         sub_el = lGetElemUlong(subscribed, EVS_id, event);
-      
-         if (sub_el) {
-            lSetObject(sub_el, EVS_what, lCopyElem(what));
-            lSetObject(sub_el, EVS_where, lCopyElem(where));
-            lSetBool(ec, EV_changed, true);
-            ret = true;
-         }
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
-static void ec_remove_subscriptionElement(lListElem *event_el, ev_event event) {
-
-   lList *subscribed =NULL; 
-   lListElem *sub_el = NULL;
-   
-   DENTER(TOP_LAYER, "ec_remove_subscriptionElement");
-
-   subscribed = lGetList(ec, EV_subscribed);
-   
-   if (event != sgeE_ALL_EVENTS){
-      if (subscribed) {
-
-         sub_el = lGetElemUlong(subscribed, EVS_id, event);
-      
-         if (sub_el) {
-            if (lRemoveElem(subscribed, sub_el) == 0){
-               lSetBool(ec, EV_changed, true);
-            }
-         }
-      }
-   }
-   DEXIT;
-}
 /****** Eventclient/Client/ec_subscribe_all() *********************************
 *  NAME
 *     ec_subscribe_all() -- subscribe all events
@@ -1607,6 +1426,7 @@ bool
 ec_unsubscribe(ev_event event)
 {
    bool ret = false;
+   char *subscription;
    
    DENTER(TOP_LAYER, "ec_unsubscribe");
 
@@ -1616,27 +1436,35 @@ ec_unsubscribe(ev_event event)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
-   }
-
-   if (event == sgeE_ALL_EVENTS) {
-      int i;
-      for(i = 0; i < sgeE_EVENTSIZE; i++) {
-         ec_remove_subscriptionElement(ec, i);
-      }
-      ec_add_subscriptionElement(ec, sgeE_QMASTER_GOES_DOWN, EV_FLUSHED, 0);
-      ec_add_subscriptionElement(ec, sgeE_SHUTDOWN, EV_FLUSHED, 0);
-
    } else {
-      if (event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN) {
-         ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
-      } else {
-         ec_remove_subscriptionElement(ec, event);
-      }
-   }
+      subscription = strdup(lGetString(ec, EV_subscription));
 
-   if (lGetBool(ec, EV_changed)) {
-      ec_config_changed();
-      ret = true;
+      if (subscription == NULL) {
+         ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      } else {
+         if (event == sgeE_ALL_EVENTS) {
+            int i;
+            for(i = 0; i < sgeE_EVENTSIZE; i++) {
+               subscription[i] = EV_NOT_SUBSCRIBED;
+            }
+            subscription[sgeE_QMASTER_GOES_DOWN] = EV_FLUSHED;
+            subscription[sgeE_SHUTDOWN] = EV_FLUSHED;
+         } else {
+            if (event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN) {
+               ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
+            } else {
+               subscription[event] = EV_NOT_SUBSCRIBED;
+            }
+         }
+
+         if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+            lSetString(ec, EV_subscription, subscription);
+            ec_config_changed();
+            ret = true;
+         }
+      }
+
+      free(subscription);
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -1699,7 +1527,7 @@ ec_unsubscribe_all(void)
 *     ev_event event - the event id to query 
 *
 *  RESULT
-*     int - EV_NO_FLUSH or the number of seconds used for flushing
+*     int - EV_NO_FLUSH(-1) or the number of seconds used for flushing
 *
 *  NOTES
 *
@@ -1711,6 +1539,7 @@ int
 ec_get_flush(ev_event event)
 {
    int ret = EV_NO_FLUSH;
+   const char *subscription;
    
    DENTER(TOP_LAYER, "ec_get_flush");
 
@@ -1721,12 +1550,12 @@ ec_get_flush(ev_event event)
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
    } else {
-      lListElem *sub_event = lGetElemUlong(lGetList(ec, EV_subscribed), EVS_id, event);
+      subscription = lGetString(ec, EV_subscription);
 
-      if (sub_event == NULL) {
+      if (subscription == NULL) {
          ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-      } else if (lGetBool(sub_event, EVS_flush)) {
-         ret = lGetUlong(sub_event, EVS_interval);
+      } else if ((subscription[event] & EV_FLUSHED) == EV_FLUSHED) {
+         ret = subscription[event] >> 2;
       }
    }
 
@@ -1754,9 +1583,8 @@ ec_get_flush(ev_event event)
 *
 *  INPUTS
 *     ev_event event - id of the event to configure
-*     bool flush     - true for flushing
-*     int interval   - flush interval in sec.
-*                      
+*     int flush      - the number of seconds between creation of 
+*                      the event and flushing of the messages.
 *
 *  RESULT
 *     bool - true on success, else false
@@ -1770,9 +1598,10 @@ ec_get_flush(ev_event event)
 *     Eventclient/Client/ec_subscribe_flush()
 *******************************************************************************/
 bool 
-ec_set_flush(ev_event event, bool flush, int interval)
+ec_set_flush(ev_event event, int flush)
 {
    bool ret = false;
+   char *subscription;
    
    DENTER(TOP_LAYER, "ec_set_flush");
 
@@ -1783,26 +1612,28 @@ ec_set_flush(ev_event event, bool flush, int interval)
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
    } else {
-      if (!flush ) {
+      if (flush == EV_NO_FLUSH) {
          PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
          ret = ec_unset_flush(event);
-         ec_mod_subscription_flush(ec, event, EV_NOT_FLUSHED, EV_NO_FLUSH);
          PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
-/*      } else if (interval < 0 || interval > EV_MAX_FLUSH) {
-         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALFLUSHTIME_I, interval)); */
+      } else if (flush < 0 || flush > EV_MAX_FLUSH) {
+         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALFLUSHTIME_I, flush));
       } else {
-         lListElem *sub_event = lGetElemUlong(lGetList(ec, EV_subscribed), EVS_id, event);
+         subscription = strdup(lGetString(ec, EV_subscription));
 
-         if (sub_event == NULL) {
+         if (subscription == NULL) {
             ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-         } 
-         else { 
-            ec_mod_subscription_flush(ec, event, EV_FLUSHED, interval);
+         } else if (subscription[event] & EV_SUBSCRIBED) {
+            subscription[event] = (flush << 2) | EV_FLUSHED;
          }
-         if (lGetBool(ec, EV_changed)) {
+
+         if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+            lSetString(ec, EV_subscription, subscription);
             ec_config_changed();
             ret = true;
          }
+         
+         free(subscription);
       }
    }
 
@@ -1843,6 +1674,7 @@ bool
 ec_unset_flush(ev_event event)
 {
    bool ret = false;
+   char *subscription;
    
    DENTER(TOP_LAYER, "ec_unset_flush");
 
@@ -1853,19 +1685,23 @@ ec_unset_flush(ev_event event)
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
    } else {
-      lListElem *sub_event = lGetElemUlong(lGetList(ec, EV_subscribed), EVS_id, event);
+      subscription = strdup(lGetString(ec, EV_subscription));
 
-      if (sub_event == NULL) {
+      if (subscription == NULL) {
          ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-      } 
-      else { 
-         ec_mod_subscription_flush(ec, event, EV_NOT_FLUSHED, EV_NO_FLUSH);
-      } 
+      } else if (subscription[event] & EV_SUBSCRIBED) {
+         subscription[event] = EV_SUBSCRIBED;
+      } else {
+         subscription[event] = EV_NOT_SUBSCRIBED;
+      }
 
-      if (lGetBool(ec, EV_changed)) {
+      if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+         lSetString(ec, EV_subscription, subscription);
          ec_config_changed();
          ret = true;
       }
+      
+      free(subscription);
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -1910,10 +1746,7 @@ ec_subscribe_flush(ev_event event, int flush)
    
    ret = ec_subscribe(event);
    if (ret) {
-      if (flush >= 0)
-         ret = ec_set_flush(event, true, flush);
-      else
-         ret = ec_set_flush(event, false, flush);
+      ret = ec_set_flush(event, flush);
    }
 
    return ret;
@@ -2205,7 +2038,6 @@ ec_commit(void)
       
       if (ret) {
          config_changed = false;
-         lSetBool(ec, EV_changed, false);
       }
    }
 
@@ -2342,7 +2174,6 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
    bool ret = true;
    lList *report_list = NULL;
    u_long32 wrong_number;
-   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "ec_get");
 
@@ -2379,8 +2210,6 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
     */
    if (ret) {
       static time_t last_fetch_time = 0;
-      static time_t last_fetch_ok_time = 0;
-      int commlib_error = CL_RETVAL_UNKNOWN;
       time_t now;
 
       bool done = false;
@@ -2389,11 +2218,6 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
       int sync = 1;
 
       now = sge_get_gmt();
-
-      /* initialize last_fetch_ok_time */
-      if (last_fetch_ok_time == 0) {
-         last_fetch_ok_time = ec_get_edtime();
-      }
 
       /* initialize the maximum number of fetches */
       if (last_fetch_time == 0) {
@@ -2412,7 +2236,7 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
          DPRINTF(("doing %s fetch for messages, %d still to do\n", 
                   sync ? "sync" : "async", max_fetch));
 
-         if ((fetch_ok = get_event_list(sync, &report_list,&commlib_error))) {
+         if ((fetch_ok = get_event_list(sync, &report_list))) {
             lList *new_events = NULL;
             lXchgList(lFirst(report_list), REP_list, &new_events);
             report_list = lFreeList(report_list);
@@ -2455,44 +2279,12 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
 
       /* if first synchronous get_event_list failed, return error */
       if (sync && !fetch_ok) {
-         u_long32 timeout = ec_get_edtime() * 10;
-
          DPRINTF(("first syncronous get_event_list failed\n"));
-
-         /* we return false when we have reached a timeout or 
-            on communication error, otherwise we return true */
-         ret = true;
-
-         /* check timeout */
-         if ( last_fetch_ok_time + timeout < now ) {
-            /* we have a  SGE_EM_TIMEOUT */
-            DPRINTF(("SGE_EM_TIMEOUT reached\n"));
-            ret = false;
-         } else {
-            DPRINTF(("SGE_EM_TIMEOUT in "U32CFormat" seconds\n", u32c(last_fetch_ok_time + timeout - now) ));
-         }
-
-         /* check for communicaton error */
-         if (commlib_error != CL_RETVAL_OK) { 
-            switch (commlib_error) {
-               case CL_RETVAL_NO_MESSAGE:
-               case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
-                  break;
-               default:
-                  DPRINTF(("COMMUNICATION ERROR: %s\n", cl_get_error_text(commlib_error)));
-                  ret = false;
-                  break;
-            }
-         }
+         ret = false;
       } else {
-         /* set last_fetch_ok_time, because we had success */
-         last_fetch_ok_time = sge_get_gmt();
-
          /* send an ack to the qmaster for all received events */
-         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1,
-                                     lGetUlong(ec, EV_id), &alp)
-                                    != CL_RETVAL_OK) {
-            answer_list_output (&alp);
+         if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event - 1, 
+                                     lGetUlong(ec, EV_id))) {
             WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
          } else {
             DPRINTF(("Sent ack for all events lower or equal %d\n", 
@@ -2503,20 +2295,6 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
 
    if (*event_list != NULL) {
       DPRINTF(("ec_get - received %d events\n", lGetNumberOfElem(*event_list)));
-   }
-
-   /* check if we got a QMASTER_GOES_DOWN event. 
-    * if yes, reregister with next event fetch
-    */
-   if (lGetNumberOfElem(*event_list) > 0) {
-      const lListElem *event;
-
-      for_each(event, *event_list) {
-         if (lGetUlong(event, ET_type) == sgeE_QMASTER_GOES_DOWN) {
-            ec_mark4registration();
-            break;
-         }
-      }
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -2660,7 +2438,7 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 *
 *  SYNOPSIS
 *     static bool 
-*     get_event_list(int sync, lList **report_list, int *commlib_error) 
+*     get_event_list(int sync, lList **report_list) 
 *
 *  FUNCTION
 *     Tries to retrieve the event list.
@@ -2670,7 +2448,6 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 *  INPUTS
 *     int sync            - synchronous transfer
 *     lList **report_list - pointer to returned list
-*     int *commlib_error  - pointer to integer to return communication error
 *
 *  RESULT
 *     static bool - true on success, else false
@@ -2679,28 +2456,24 @@ ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
 *     Eventclient/Client/ec_get()
 ******************************************************************************/
 static bool 
-get_event_list(int sync, lList **report_list, int *commlib_error )
+get_event_list(int sync, lList **report_list)
 {
    int tag;
    bool ret = true;
    u_short id;
    sge_pack_buffer pb;
-   int help;
 
    DENTER(TOP_LAYER, "get_event_list");
 
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
+   id = 0;
    tag = TAG_REPORT_REQUEST;
-   id = 1;
-
-   DPRINTF(("try to get request from %s, id %d\n",(char*)prognames[QMASTER], id ));
-   if ( (help=sge_get_any_request((char*)sge_get_master(0), (char*)prognames[QMASTER], &id, &pb, &tag, sync,0,NULL)) != CL_RETVAL_OK) {
-      if (help == CL_RETVAL_NO_MESSAGE || help == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
-         DEBUG((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help)));
-      } else {
-         WARNING((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help))); 
-      }
+   /* FIX_CONST */
+   if (sge_get_any_request((char*)sge_get_master(0), 
+                           (char*)prognames[QMASTER], &id, &pb, &tag, sync) 
+                           != CL_OK) {
+      DPRINTF(("commlib returns %s (%d)\n", cl_errstr(ret), ret));
       ret = false;
    } else {
       if (cull_unpack_list(&pb, report_list)) {
@@ -2708,9 +2481,6 @@ get_event_list(int sync, lList **report_list, int *commlib_error )
          ret = false;
       }
       clear_packbuffer(&pb);
-   }
-   if ( commlib_error != NULL) {
-      *commlib_error = help;
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);

@@ -53,12 +53,12 @@
 #include "sge_host.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
-#include "sge_centry.h"
 #include "sge_conf.h"
 #include "sge_job.h"
 #include "sge_manop.h"
 #include "sge_sharetree.h"
 #include "sge_pe.h"
+#include "sge_queue.h"
 #include "sge_schedd_conf.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
@@ -106,15 +106,10 @@ static bool read_spooled_data(void)
    DPRINTF(("read %d entries to Master_Config_List\n", lGetNumberOfElem(Master_Config_List)));
 
    /* cluster configuration */
-   {
-      lList *schedd_config = NULL;
-      spool_read_list(&answer_list, context, &schedd_config, SGE_TYPE_SCHEDD_CONF);
-      if (schedd_config)
-         if (sconf_set_config(&schedd_config, &answer_list))
-            lListFree(schedd_config);
-      answer_list_output(&answer_list);
-      DPRINTF(("read %d entries to Master_Sched_Config_List\n", lGetNumberOfElem(sconf_get_config_list())));
-   }
+   spool_read_list(&answer_list, context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
+   answer_list_output(&answer_list);
+   DPRINTF(("read %d entries to Master_Sched_Config_List\n", lGetNumberOfElem(Master_Sched_Config_List)));
+
    /* complexes */
    spool_read_list(&answer_list, context, &Master_CEntry_List, SGE_TYPE_CENTRY);
    answer_list_output(&answer_list);
@@ -164,9 +159,9 @@ static bool read_spooled_data(void)
 #endif
 
    /* queues */
-   spool_read_list(&answer_list, context, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), SGE_TYPE_CQUEUE);
+   spool_read_list(&answer_list, context, &Master_Queue_List, SGE_TYPE_QUEUE);
    answer_list_output(&answer_list);
-   DPRINTF(("read %d entries to Master_CQueue_List\n", lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_CQUEUE)))));
+   DPRINTF(("read %d entries to Master_Queue_List\n", lGetNumberOfElem(Master_Queue_List)));
 
    /* pes */
    spool_read_list(&answer_list, context, &Master_Pe_List, SGE_TYPE_PE);
@@ -208,7 +203,6 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
    lListElem *context, *ep;
    lList **master_list, *new_list;
    int key_nm;
-   dstring buffer = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_event_before");
 
@@ -258,7 +252,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
          case SGE_TYPE_OPERATOR:
          case SGE_TYPE_PE:
          case SGE_TYPE_PROJECT:
-         case SGE_TYPE_CQUEUE:
+         case SGE_TYPE_QUEUE:
          case SGE_TYPE_USER:
          case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
@@ -299,7 +293,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                new_ep = lGetElemUlong(new_list, key_nm, lGetUlong(ep, key_nm));
                if(new_ep == NULL) {
                   const char *job_key;
-                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL, &buffer);
+                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL);
                   /* object not contained in new list, delete it */
                   spool_delete_object(&answer_list, context, type, job_key);
                   answer_list_output(&answer_list);
@@ -318,7 +312,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                if(old_ep == NULL || 
                   spool_compare_objects(&answer_list, context, type, ep, old_ep))  {
                   const char *job_key;
-                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL, &buffer);
+                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL);
                   spool_write_object(&answer_list, context, ep, job_key, type);
                   answer_list_output(&answer_list);
                }
@@ -357,7 +351,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                   ja_task_id = lGetUlong(event, ET_intkey2);
                   pe_task_id = lGetString(event, ET_strkey);
 
-                  job_key = job_get_key(job_id, ja_task_id, pe_task_id, &buffer);
+                  job_key = job_get_key(job_id, ja_task_id, pe_task_id);
                   spool_delete_object(&answer_list, context, type, job_key);
                   answer_list_output(&answer_list);
                }
@@ -369,7 +363,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
 
                   job_id = lGetUlong(event, ET_intkey);
 
-                  job_key = job_get_key(job_id, 0, NULL, &buffer);
+                  job_key = job_get_key(job_id, 0, NULL);
                   spool_delete_object(&answer_list, context, type, job_key);
                   answer_list_output(&answer_list);
                }
@@ -379,8 +373,6 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                break;
       }
    }
-
-   sge_dstring_free(&buffer);
    DEXIT;
    return true;
 }
@@ -388,13 +380,11 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
 bool spool_event_after(sge_object_type type, sge_event_action action, 
                       lListElem *event, void *clientdata)
 {
-   bool ret = true;
    lList *answer_list = NULL;
    lListElem *context, *ep;
    lList **master_list;
    int key_nm;
    const char *key;
-   dstring buffer = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_event_after");
 
@@ -420,7 +410,6 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                      answer_list_output(&answer_list);
                   }
                }   
-               break;
             case SGE_TYPE_SHARETREE:
                ep = lFirst(*master_list);
                if(ep != NULL) {
@@ -446,7 +435,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
             case SGE_TYPE_OPERATOR:
             case SGE_TYPE_PE:
             case SGE_TYPE_PROJECT:
-            case SGE_TYPE_CQUEUE:
+            case SGE_TYPE_QUEUE:
             case SGE_TYPE_USER:
             case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
@@ -474,12 +463,12 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                if(ep == NULL) {
                   ERROR((SGE_EVENT, "%s element with id "SFQ" not found\n",
                          object_type_get_name(type), key));
-                  ret = false;
+                  DEXIT;
+                  return false;
                }
-               if (ret) {
-                  spool_write_object(&answer_list, context, ep, key, type);
-                  answer_list_output(&answer_list);
-               }
+
+               spool_write_object(&answer_list, context, ep, key, type);
+               answer_list_output(&answer_list);
                break;
 
             case SGE_TYPE_CALENDAR:
@@ -488,7 +477,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
             case SGE_TYPE_OPERATOR:
             case SGE_TYPE_PE:
             case SGE_TYPE_PROJECT:
-            case SGE_TYPE_CQUEUE:
+            case SGE_TYPE_QUEUE:
             case SGE_TYPE_USER:
             case SGE_TYPE_USERSET:
 #ifndef __SGE_NO_USERMAPPING__
@@ -500,13 +489,12 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                if(ep == NULL) {
                   ERROR((SGE_EVENT, "%s element with id "SFQ" not found\n",
                          object_type_get_name(type), key));
-                  ret = false;
+                  DEXIT;
+                  return false;
                }
-               
-               if (ret) {
-                  spool_write_object(&answer_list, context, ep, key, type);
-                  answer_list_output(&answer_list);
-               }
+
+               spool_write_object(&answer_list, context, ep, key, type);
+               answer_list_output(&answer_list);
                break;
 
             case SGE_TYPE_SCHEDD_CONF:
@@ -514,12 +502,11 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                if(ep == NULL) {
                   ERROR((SGE_EVENT, "%s element not found\n",
                          object_type_get_name(type)));
-                  ret = false;
+                  DEXIT;
+                  return false;
                }
-               if (ret) {
-                  spool_write_object(&answer_list, context, ep, "default", type);
-                  answer_list_output(&answer_list);
-               }
+               spool_write_object(&answer_list, context, ep, "default", type);
+               answer_list_output(&answer_list);
                break;
             case SGE_TYPE_JATASK:
             case SGE_TYPE_PETASK:
@@ -534,7 +521,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                   pe_task_id = lGetString(event, ET_strkey);
 
                   ep = lGetElemUlong(Master_Job_List, JB_job_number, job_id);
-                  job_key = job_get_key(job_id, ja_task_id, pe_task_id, &buffer);
+                  job_key = job_get_key(job_id, ja_task_id, pe_task_id);
                   spool_write_object(&answer_list, context, ep, job_key, type);
                   answer_list_output(&answer_list);
                }
@@ -549,10 +536,8 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
          break;
    }
 
-   sge_dstring_free(&buffer);
-
    DEXIT;
-   return ret;
+   return true;
 }
 
 int main(int argc, char *argv[])
@@ -562,7 +547,7 @@ int main(int argc, char *argv[])
    time_t next_prof_output = 0;
    lList *answer_list = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "test_sge_spooling");
+   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
    /* parse commandline parameters */
    if(argc != 3) {
@@ -578,9 +563,9 @@ int main(int argc, char *argv[])
 
    sge_setup_sig_handlers(QEVENT);
 
-   if (reresolve_me_qualified_hostname() != CL_RETVAL_OK) {
+   if (reresolve_me_qualified_hostname() != CL_OK) {
       SGE_EXIT(1);
-   }
+   }   
 
 #define defstring(str) #str
 
@@ -604,7 +589,7 @@ int main(int argc, char *argv[])
    
    /* initialize mirroring */
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
-   sge_mirror_subscribe(SGE_TYPE_ALL, spool_event_before, spool_event_after, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_ALL, spool_event_before, spool_event_after, NULL);
    prof_start(NULL);
 
    while(!shut_me_down) {

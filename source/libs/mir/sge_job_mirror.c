@@ -137,7 +137,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
                            lListElem *event, void *clientdata)
 {
    lList **list;
-   const lDescr *list_descr;
+   lDescr *list_descr;
    u_long32 job_id;
    lListElem *job = NULL;
    lList *ja_tasks = NULL;
@@ -145,8 +145,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "job_update_master_list");
 
    list = &Master_Job_List;
-/*   list_descr = JB_Type;*/
-   list_descr = lGetListDescr(lGetList(event, ET_new_version)); 
+   list_descr = JB_Type;
    job_id = lGetUlong(event, ET_intkey);
    job = job_list_locate(*list, job_id);
 
@@ -180,7 +179,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
          /* this is the true modify event.
           * we may not update several fields:
           * - JB_ja_tasks is the task list - it is maintained by JATASK events
-          * - JB_host and JB_category are scheduler internal attributes
+          * - JB_jobclass, JB_host and JB_category are scheduler internal attributes
           *   they may not be overwritten.
           *   Better would be to move them from JB_Type to some scheduler specific
           *   object.
@@ -191,6 +190,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
           modified_job = lFirst(lGetList(event, ET_new_version));
           if(job != NULL && modified_job != NULL) {
             lXchgList(modified_job, JB_ja_tasks, &ja_tasks);
+            lSetString(modified_job, JB_jobclass, lGetString(job, JB_jobclass));
             lSetHost(modified_job, JB_host, lGetHost(job, JB_host));
             lSetRef(modified_job, JB_category, lGetRef(job, JB_category));
           }

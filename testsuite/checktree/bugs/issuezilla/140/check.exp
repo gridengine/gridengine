@@ -52,7 +52,7 @@ set check_init_level_procedure "issue_140_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_140"
-set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "do a qsub -t 1-3, qdel <jid>.1-4, qmaster should not core dump"
 
@@ -75,6 +75,9 @@ proc issue_140_init_level {} {
      "0" { 
            return 0    
      } 
+     "1" {
+           return -1
+     }
   } 
   return -1  ;# no other level else
 }
@@ -130,11 +133,12 @@ proc issue_140_check {} {
 }
 
 proc issue_140_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER ts_config 
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
 
+   puts $CHECK_OUTPUT "do qdel -uall"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+   puts $CHECK_OUTPUT $catch_result
  
-   delete_all_jobs
-
    wait_for_end_of_all_jobs 60 
 
    puts $CHECK_OUTPUT "check if master and scheduler are running ..."

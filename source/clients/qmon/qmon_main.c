@@ -62,7 +62,6 @@
 #include "qmon_preferences.h"
 #include "sge_feature.h"
 #include "sge_prog.h"
-#include "sge_mt_init.h"
 
 #ifdef REPLAY_XT
 #include "ReplayXt.h"
@@ -172,7 +171,6 @@ Pixel          WarningPixel, QueueSelectedPixel, JobSuspPixel, JobSosPixel,
                JobDelPixel, JobHoldPixel, JobErrPixel, TooltipForeground,
                TooltipBackground;
 int            nologo;
-int            qmon_debug;
 int            helpset;
 
 
@@ -194,8 +192,6 @@ char **argv
    XrmDatabase qmon_database;
 
    DENTER_MAIN(TOP_LAYER, "qmon_main");
-
-   sge_mt_init();
 
    /* INSTALL SIGNAL HANDLER */
    qmonInstSignalHandler();

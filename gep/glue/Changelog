@@ -1,22 +1,3 @@
-AA-2003-11-27-0:  - fixed install under S1PS61, structure of directory
-                    changed->leads to failure in adding channels
-                    meaning of IPS_DOMAIN has changed slightly:
-                    e.g. before IPS_DOMAIN="o=Germany.Sun.COM"
-                         now for 6.1
-                         IPS_DOMAIN="dc=Germany,dc=Sun,dc=COM"
-                         now for 6.0
-                         IPS_DOMAIN="o=Germany.Sun.COM,o=isp"
-                    
-                  - copy install.defaults.S1PS61 to install.defaults for S1PS61
-                    deployment
-                    
-AA-2003-08-22-0:  - SunTCP.java + AdminTCP.java -> GEPServlet.java
-                  - Makefile & install adjusted
-                  - renamings in the code
-                  - renaming of application files .suntcp* -> .gep*
-                  - renamings and additions in web.xml.template 
-                  - automatic adding of roles during install (!!!! not complete)
-
 AA-2002-12-17-0:  - documentation
                   - removal of obsolete files
 

@@ -1,12 +1,11 @@
-# Version: Grid Engine 6
+# Version: SGEEE pre6.0 (Maintrunk)
 # 
 # DO NOT MODIFY THIS FILE MANUALLY!
 # 
 name        tmpdir
 shortcut    tmp
-type        RESTRING
+type        STRING
 relop       ==
 requestable NO
 consumable  NO
 default     NONE
-urgency     0

@@ -1,4 +1,4 @@
-# Version: Grid Engine 6
+# Version: SGEEE pre6.0 (Maintrunk)
 # 
 # DO NOT MODIFY THIS FILE MANUALLY!
 # 
@@ -9,4 +9,3 @@ relop       <=
 requestable YES
 consumable  NO
 default     0:0:0
-urgency     0

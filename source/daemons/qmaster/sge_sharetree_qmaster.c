@@ -138,7 +138,7 @@ char *rhost
   
    /* write sharetree to file */
    if (!sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE,
-                        0, 0, NULL, NULL, NULL,
+                        0, 0, NULL, NULL,
                         ep, NULL, NULL, true, true)) {
 
       /* answer list gets filled in sge_event_spool() */
@@ -180,7 +180,7 @@ char *rhost
    }
 
    sge_event_spool(alpp, 0, sgeE_NEW_SHARETREE, 
-                   0, 0, NULL, NULL, NULL,
+                   0, 0, NULL, NULL, 
                    NULL, NULL, NULL, true, true);
 
    lFreeList(*lpp);
@@ -361,7 +361,6 @@ lList **found  /* tmp list that contains one entry for each found u/p */
 
          /* non project sub-tree leaf nodes must be a user or a project */
          if (!userprj_list_locate(user_list, name) &&
-             strcmp(name, "default") &&
              ((objname=MSG_JOB_PROJECT) &&
               !userprj_list_locate(project_list, name))) {
 

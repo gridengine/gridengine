@@ -43,7 +43,7 @@
 #include "cull_list.h"
 #include "sge_spool.h"
 #include "spool/sge_dirent.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 #include "sge_job_qmaster.h"
 #include "sge_job.h"
 #include "sge_answer.h"

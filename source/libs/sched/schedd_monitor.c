@@ -116,7 +116,7 @@ int schedd_log(const char *logstr) {
 #define NUM_ITEMS_ON_LINE 10
 
 int schedd_log_list(const char *logstr, lList *lp, int nm) {
-   int fields[] = { 0, 0 };
+   intprt_type fields[] = { 0, 0 };
    const char *delis[] = {NULL, " ", NULL};
    lList *lp_part = NULL;
    lListElem *ep = NULL;

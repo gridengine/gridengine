@@ -40,6 +40,7 @@
 #include "sge_suserL.h"
 #include "sge_job.h"
 #include "sge_suser.h"
+#include "sge_queue.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_todo.h"
@@ -54,6 +55,7 @@
 #include "sge_manop.h"
 #include "sge_host.h"
 #include "sge_sharetree.h"
+#include "sge_answer.h"
 #include "version.h"
 #include "sge_schedd_conf.h"
 #include "sge_conf.h"
@@ -103,7 +105,6 @@ int report_list_send(const lList *rlp, const char *rhost,
 {
    sge_pack_buffer pb;
    int ret, size;
-   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "report_list_send");
 
@@ -141,9 +142,9 @@ int report_list_send(const lList *rlp, const char *rhost,
       return -1;
    }
 
-   ret = sge_send_any_request(synchron, mid, rhost, commproc, id, &pb, TAG_REPORT_REQUEST, 0, &alp);
+   ret = sge_send_any_request(synchron, mid, rhost, commproc, id, &pb,
+                              TAG_REPORT_REQUEST);
    clear_packbuffer(&pb);
-   answer_list_output (&alp);
 
    DEXIT;
    return ret;

@@ -35,6 +35,46 @@
 #include <Xm/Xm.h>
 #include "qmon_proto.h"
 
+typedef struct _tSMEntry {
+   String   job_script;
+   String   job_tasks;
+   String   job_name;
+   String   project;
+   String   ckpt_obj;
+   String   directive_prefix;
+   String   cell;
+   String   account_string;
+   String   pe;
+   lList    *task_range;            /* RN_Type */
+   lList    *job_args;              /* ST_Type */
+   lList    *shell_list;            /* PN_Type */
+   lList    *mail_list;             /* MR_Type */
+   lList    *stdoutput_path_list;   /* PN_Type */
+   lList    *stdinput_path_list;    /* PN_Type */
+   lList    *stderror_path_list;    /* PN_Type */   
+   lList    *hard_resource_list;     
+   lList    *soft_resource_list;
+   lList    *hard_queue_list;       /* QR_Type */
+   lList    *soft_queue_list;       /* QR_Type */
+   lList    *master_queue_list;       /* QR_Type */
+   lList    *env_list;              /* Environment */
+   lList    *ctx_list;              /* Context */
+   lList    *hold_jid;              /* JB_jid_predecessor_list */
+   int      mail_options;
+   int      merge_output;
+   int      priority;
+   Cardinal execution_time;
+   Cardinal deadline;
+   int      hold;
+   int      now;
+   int      notify;
+   int      restart;
+   int      cwd;
+   int      checkpoint_attr;
+   int      checkpoint_interval;
+   int      verify_mode;
+} tSMEntry;
+
 typedef struct _tSubmitMode {
    int mode;
    int sub_mode;

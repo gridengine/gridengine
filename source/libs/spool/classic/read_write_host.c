@@ -35,6 +35,7 @@
 
 #include "sge.h"
 #include "cull.h"
+#include "read_write_queue.h"
 #include "read_write_host.h"
 #include "config.h"
 #include "read_object.h"
@@ -44,20 +45,20 @@
 #include "sge_string.h"
 #include "sge_stdio.h"
 #include "msg_common.h"
+#include "sge_feature.h"
 #include "sge_spool.h"
 #include "sge_io.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_host.h"
 #include "sge_centry.h"
-#include "sge_str.h"
-#include "sge_load.h"
-#include "sched/sge_resource_utilization.h"
 
-static int intprt_as_scaling[] = { HS_name, HS_value, 0 };
-static int intprt_as_load[] = { HL_name, HL_value, 0 };
-static int intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };
-static int intprt_as_reschedule[] = { RU_job_number, RU_task_number,
+#include "sge_static_load.h"
+
+static intprt_type intprt_as_scaling[] = { HS_name, HS_value, 0 };
+static intprt_type intprt_as_load[] = { HL_name, HL_value, 0 };
+static intprt_type intprt_as_load_thresholds[] = { CE_name, CE_stringval, 0 };
+static intprt_type intprt_as_reschedule[] = { RU_job_number, RU_task_number,
    RU_state, 0 };
 
 
@@ -125,24 +126,6 @@ _Insight_set_option("suppress", "PARM_NULL");
          }
       }
 
-      /* --------- EH_consumable_config_list */
-      if (getenv("MORE_INFO")) {
-         if (parsing_type == 0) {
-            if (!set_conf_deflist(alpp, clpp, fields?fields:opt, "complex_values_actual",
-                     ep, EH_resource_utilization,
-                  RUE_Type, intprt_as_load_thresholds)) {
-               DEXIT;
-               return -1;
-            }
-         } else {
-            if (!set_conf_list(alpp, clpp, fields?fields:opt, "complex_values_actual",
-                ep, EH_resource_utilization, RUE_Type, RUE_name)) {
-               DEXIT;
-               return -1;
-            }
-         }
-      }
-
       if ((type == CULL_READ_SPOOL) || (type == CULL_READ_HISTORY)) {
          /* --------- EH_load_list */
          if (!set_conf_deflist(alpp, clpp, fields, "load_values", ep, 
@@ -182,42 +165,43 @@ _Insight_set_option("suppress", "PARM_NULL");
          return -1;
       }
 
-      /* --------- EH_prj  */
-      if (!set_conf_list(alpp, clpp, fields?fields:opt, "projects", ep,
-               EH_prj, UP_Type, UP_name)) {
-         DEXIT;
-         return -1;
-      }
-
-      /* --------- EH_xprj  */
-      if (!set_conf_list(alpp, clpp, fields?fields:opt, "xprojects", ep,
-               EH_xprj, UP_Type, UP_name)) {
-         DEXIT;
-         return -1;
-      }
-
-      /* --------- EH_usage_scaling_list */
-      if (parsing_type == 0) {
-         if (!set_conf_deflist(alpp, clpp, fields, "usage_scaling", ep, 
-               EH_usage_scaling_list, HS_Type, intprt_as_scaling)) {
+      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+         /* --------- EH_prj  */
+         if (!set_conf_list(alpp, clpp, fields?fields:opt, "projects", ep,
+                  EH_prj, UP_Type, UP_name)) {
             DEXIT;
             return -1;
          }
-      } else {
-         if (!set_conf_list(alpp, clpp, fields, "usage_scaling", ep,
-               EH_usage_scaling_list, HS_Type, HS_name)) {
+
+         /* --------- EH_xprj  */
+         if (!set_conf_list(alpp, clpp, fields?fields:opt, "xprojects", ep,
+                  EH_xprj, UP_Type, UP_name)) {
             DEXIT;
             return -1;
-         }            
-      }
-
-      /* --------- EH_report_variables */
-      if (!set_conf_list(alpp, clpp, fields, "report_variables", ep, 
-               EH_report_variables, STU_Type, STU_name)) {
-         DEXIT;
-         return -1;
          }
-      
+
+         /* --------- EH_usage_scaling_list */
+         if (parsing_type == 0) {
+            if (!set_conf_deflist(alpp, clpp, fields, "usage_scaling", ep, 
+                  EH_usage_scaling_list, HS_Type, intprt_as_scaling)) {
+               DEXIT;
+               return -1;
+            }
+         } else {
+            if (!set_conf_list(alpp, clpp, fields, "usage_scaling", ep,
+                  EH_usage_scaling_list, HS_Type, HS_name)) {
+               DEXIT;
+               return -1;
+            }            
+         }
+
+         /* --------- EH_resource_capability_factor */
+         if (!set_conf_double(alpp, clpp, fields, "resource_capability_factor",
+                  ep, EH_resource_capability_factor, 0)) {
+            DEXIT;
+            return -1;
+         }
+      }
    }
 
    DEXIT;
@@ -406,10 +390,10 @@ char *file
       fprint_thresholds(fp, "complex_values             ", 
          lGetList(ep, EH_consumable_config_list), 1);
       if (getenv("MORE_INFO"))
-         fprint_resource_utilizations(fp, "complex_values_actual ", 
-            lGetList(ep, EH_resource_utilization), 1);
+         fprint_thresholds(fp, "complex_values_actual ", 
+            lGetList(ep, EH_consumable_actual_list), 1);
 
-      if ((!spool && how==0) || spool || (how==3)) {
+      if ((!spool && how==0) || (spool && how!=1) || (how==3)) {
          int printed = 0;
 
          /* 
@@ -474,8 +458,8 @@ char *file
       if (ret == -1) {
          goto FPRINTF_ERROR;
       } 
-      {
-         int print_elements[] = { HS_name, HS_value, 0 };
+      if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+         intprt_type print_elements[] = { HS_name, HS_value, 0 };
          const char *delis[] = {"=", ",", NULL};
 
          ret = fprint_cull_list(fp,  "projects                   ", 
@@ -497,12 +481,9 @@ char *file
          }
          FPRINTF((fp, "\n"));
 
-         /* print reporting variable list */
-         ret = fprint_cull_list(fp,  "report_variables           ", 
-            lGetList(ep, EH_report_variables), STU_name);
-         if (ret == -1) {
-            goto FPRINTF_ERROR;
-         } 
+         /* print resource capability factor */
+         FPRINTF((fp, "resource_capability_factor %f\n", 
+                  lGetDouble(ep, EH_resource_capability_factor)));
       }
    }    /* only exec host */
 

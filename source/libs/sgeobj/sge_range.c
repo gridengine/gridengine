@@ -50,6 +50,8 @@
 #include "sge_string.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
+#include "slots_used.h"
+#include "sge_resource.h"
 #include "sge_sched.h"
 #include "cull_sort.h"
 #include "usage.h"
@@ -318,7 +320,8 @@ void range_list_initialize(lList **this_list, lList **answer_list)
          lListElem *next_range;
 
          /* 
-          * EB: CLEANUP: implement a new CULL function lEmptyList(lList *list)
+          * EB: we might implement a new CULL function
+          * lEmptyList(lList *list)
           */
 
          next_range = lFirst(*this_list);
@@ -360,9 +363,6 @@ void range_list_initialize(lList **this_list, lList **answer_list)
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
-*
-*  NOTE
-*     MT-NOTE: range_list_get_number_of_ids() is MT safe
 *******************************************************************************/
 u_long32 range_list_get_number_of_ids(const lList *this_list)
 {
@@ -482,10 +482,6 @@ range_list_print_to_string(const lList *this_list,
 *  SEE ALSO
 *     sgeobj/range/RN_Type 
 *     sgeobj/range/range_list_get_last_id()
-*
-*  NOTES
-*     MT-NOTE: range_list_get_first_id() is MT safe
-
 ******************************************************************************/
 u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list)
 {
@@ -540,6 +536,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
    range = lLast(range_list);
    if (range) {
       u_long32 start, step;
+
       range_get_all_ids(range, &start, &end, &step);
    } else {
       answer_list_add(answer_list, "range_list containes no elements",
@@ -549,50 +546,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
    return end;
 }
 
-
-/****** sge_range/range_list_get_average() *************************************
-*  NAME
-*     range_list_get_average() -- Return average of all numbers in range.
-*
-*  SYNOPSIS
-*     double range_list_get_average(const lList *this_list) 
-*
-*  FUNCTION
-*     The average of all numbers in the range is returned. For an empty 
-*     range 0 is returned.
-*
-*  INPUTS
-*     const lList *this_list - RN_Type list  
-*     u_long32 upperbound    - This is used as range upperbound if non-0
-*
-*  RESULT
-*     double - the average
-*
-*  NOTES
-*     MT-NOTES: range_list_get_average() is MT safe
-*******************************************************************************/
-double range_list_get_average(const lList *this_list, u_long32 upperbound)
-{
-   lListElem *range;
-   double sum = 0;
-   u_long32 id, min, max, step;
-   int n = 0;
-
-   for_each (range, this_list) {
-      range_get_all_ids(range, &min, &max, &step);
-      if (upperbound != 0)
-         max = MIN(max, upperbound);
-      for (id=min; id<=max; id+= step) {
-         sum += id;
-         n++;
-      }
-   }
-
-   return (n>0)?(sum/n):0;
-}
-
-
-/******asgeobj/range/range_list_sort_uniq_compress() **************************
+/****** sgeobj/range/range_list_sort_uniq_compress() **************************
 *  NAME
 *     range_list_sort_uniq_compress() -- makes lists fit as a fiddle 
 *
@@ -1782,7 +1736,6 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
 
       first = false;
    }
-   
    DEXIT;
    return;
 }

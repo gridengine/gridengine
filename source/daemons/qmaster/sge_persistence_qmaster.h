@@ -32,24 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_eventL.h"
-#include "sge_qmaster_timed_event.h"
-
-
-bool
-sge_initialize_persistence(lList **answer_list);
-
-bool
-sge_shutdown_persistence(lList **answer_list);
-
-void
-spooling_trigger_handler(te_event_t anEvent);
-
 bool
 sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event type, 
                 u_long32 intkey1, u_long32 intkey2, const char *strkey, 
-                const char *strkey2, const char *session, lListElem *object, 
-                lListElem *sub_object1, lListElem *sub_object2, 
-                bool send_event, bool spool);
+                const char *session, lListElem *object, lListElem *sub_object1, 
+                lListElem *sub_object2, bool send_event, bool spool);
 
 #endif /* __SGE_PERSISTENCE_QMASTER_H */

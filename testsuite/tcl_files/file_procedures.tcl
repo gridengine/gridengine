@@ -1526,11 +1526,6 @@ proc create_shell_script { scriptfile
       if { [info exists CHECK_COMMD_PORT] } {
          puts $script "   COMMD_PORT=$CHECK_COMMD_PORT"
          puts $script "   export COMMD_PORT"
-         puts $script "   SGE_QMASTER_PORT=$CHECK_COMMD_PORT"
-         puts $script "   export SGE_QMASTER_PORT"
-         set my_execd_port [expr ($CHECK_COMMD_PORT + 1) ]
-         puts $script "   SGE_EXECD_PORT=$my_execd_port"
-         puts $script "   export SGE_EXECD_PORT"
       }
       if { [info exists CHECK_PRODUCT_ROOT] } {
          puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
@@ -1539,9 +1534,6 @@ proc create_shell_script { scriptfile
       if { $source_settings_file == 1 } {
          puts $script "fi"
       }
-
-      puts $script "SGE_SINGLE_LINE=1"
-      puts $script "export SGE_SINGLE_LINE"
    
       foreach u_env [ array names users_env ] {
          set u_val [set users_env($u_env)] 
@@ -1963,19 +1955,19 @@ proc remote_delete_directory { hostname path } {
 
       start_remote_prog $hostname "ts_def_con2" "mv" "$path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" prg_exit_state 60 0 "" 1 0 1
       if { $prg_exit_state != 0 } {
-         puts $CHECK_OUTPUT "delete_directory - mv error"
+         puts $CHECK_OUTPUT "delete_directory - mv error:\n$result"
          puts $CHECK_OUTPUT "delete_directory - try to copy the directory"
          start_remote_prog $hostname "ts_def_con2" "cp" "-r $path $CHECK_TESTSUITE_ROOT/testsuite_trash/$new_name.[timestamp]" prg_exit_state 60 0 "" 1 0 1
          if { $prg_exit_state != 0 } {
-            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder"
-            add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder"
+            puts $CHECK_OUTPUT "could not mv/cp directory \"$path\" to trash folder, $result"
+            add_proc_error "delete_directory" -1 "could not mv/cp directory \"$path\" to trash folder, $result"
             set return_value -1
          } else { 
             puts $CHECK_OUTPUT "copy ok -  removing directory"
             start_remote_prog $hostname "ts_def_con2" "rm" "-rf $path" prg_exit_state 60 0 "" 1 0 1
             if { $prg_exit_state != 0 } {
-               puts $CHECK_OUTPUT "could not remove directory \"$path\""
-               add_proc_error "delete_directory" -1 "could not remove directory \"$path\""
+               puts $CHECK_OUTPUT "could not remove directory \"$path\", $result"
+               add_proc_error "delete_directory" -1 "could not remove directory \"$path\", $result"
                set return_value -1
             } else {
                puts $CHECK_OUTPUT "done"
@@ -2075,7 +2067,7 @@ proc delete_file { filename } {
  
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT
 
-   wait_for_file "$filename" 60 0 0 ;# wait for file, no error reporting!
+   wait_for_file "$filename" 200 0 0 ;# wait for file, no error reporting!
 
    if {[file isdirectory "$CHECK_TESTSUITE_ROOT/testsuite_trash"] != 1} {
       file mkdir "$CHECK_TESTSUITE_ROOT/testsuite_trash"
@@ -2696,31 +2688,31 @@ proc create_path_aliasing_file { filename data elements} {
 }
 
 
-#if { [info exists argc ] != 0 } {
-#   set TS_ROOT ""
-#   set procedure ""
-#   for { set i 0 } { $i < $argc } { incr i } {
-#      if {$i == 0} { set TS_ROOT [lindex $argv $i] }
-#      if {$i == 1} { set procedure [lindex $argv $i] }
-#   }
-#   if { $argc == 0 } {
-#      puts "usage:\nfile_procedures.tcl <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
-#      puts "options:"
-#      puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
-#      puts "proc                 -  procedure from this file with parameters"
-#      puts "no_main              -  used to source testsuite file (check.exp)"
-#      puts "testsuite params     -  any testsuite command option (from file check.exp)"
-#      puts "                        testsuite params: file <path>/defaults.sav is needed"
-#   } else {
-#      source "$TS_ROOT/check.exp"
-#      if { $be_quiet == 0 } {
-#          puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
-#          puts $CHECK_OUTPUT "calling \"$procedure\" ..."
-#      }
-#      set result [ eval $procedure ]
-#      puts $result 
-#      flush $CHECK_OUTPUT
-#   }
-#} 
+if { [info exists argc ] != 0 } {
+   set TS_ROOT ""
+   set procedure ""
+   for { set i 0 } { $i < $argc } { incr i } {
+      if {$i == 0} { set TS_ROOT [lindex $argv $i] }
+      if {$i == 1} { set procedure [lindex $argv $i] }
+   }
+   if { $argc == 0 } {
+      puts "usage:\nfile_procedures.tcl <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
+      puts "options:"
+      puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
+      puts "proc                 -  procedure from this file with parameters"
+      puts "no_main              -  used to source testsuite file (check.exp)"
+      puts "testsuite params     -  any testsuite command option (from file check.exp)"
+      puts "                        testsuite params: file <path>/defaults.sav is needed"
+   } else {
+      source "$TS_ROOT/check.exp"
+      if { $be_quiet == 0 } {
+          puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
+          puts $CHECK_OUTPUT "calling \"$procedure\" ..."
+      }
+      set result [ eval $procedure ]
+      puts $result 
+      flush $CHECK_OUTPUT
+   }
+} 
 
 

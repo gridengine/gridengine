@@ -36,7 +36,7 @@ global check_name check_description check_needs check_functions check_errno chec
 global check_init_level_procedure check_category
 
 set check_init_level_procedure "init_level"
-set check_category            "PERFORMANCE VERIFIED"
+set check_category            "PERFORMANCE"
 set check_name                "throughput"
 set check_description(0)      "Functional test"
 set check_description(1)      "Functional test with sharetree (only sgeee)"
@@ -94,16 +94,16 @@ proc init_level {} {
   switch -- $CHECK_ACT_LEVEL {
      "0"  { 
         set end_job_count            100         ;# number of jobs
-        set FLUSH_SUBMIT_SEC         1             ;# -1 or 0,1,2,3 ...
-        set FLUSH_FINISH_SEC         1             ;# -1 or 0,1,2,3 ...
+        set FLUSH_SUBMIT_SEC         0             ;# -1 or 0,1,2,3 ...
+        set FLUSH_FINISH_SEC         0             ;# -1 or 0,1,2,3 ...
         set throughput_sharetree     0
         set throughput_subdir        "functional"
         return 0
      }
      "1"  { 
         set end_job_count            100         ;# number of jobs
-        set FLUSH_SUBMIT_SEC         1           ;# -1 or 0,1,2,3 ...
-        set FLUSH_FINISH_SEC         1           ;# -1 or 0,1,2,3 ...
+        set FLUSH_SUBMIT_SEC         0           ;# -1 or 0,1,2,3 ...
+        set FLUSH_FINISH_SEC         0           ;# -1 or 0,1,2,3 ...
         set throughput_sharetree     1
         set throughput_subdir        "functional_sharetree"
         if { $CHECK_PRODUCT_TYPE == "sge" } {
@@ -112,9 +112,9 @@ proc init_level {} {
         return 0  
      }
      "100"  { 
-        set end_job_count            3000          ;# number of jobs
-        set FLUSH_SUBMIT_SEC         1             ;# -1 or 0,1,2,3 ...
-        set FLUSH_FINISH_SEC         1             ;# -1 or 0,1,2,3 ...
+        set end_job_count            3000         ;# number of jobs
+        set FLUSH_SUBMIT_SEC         0             ;# -1 or 0,1,2,3 ...
+        set FLUSH_FINISH_SEC         0             ;# -1 or 0,1,2,3 ...
         set enable_queues_job_count  1500         ;# after witch job, enable queues
         set throughput_sharetree     0
         set throughput_subdir        "functional"
@@ -122,8 +122,8 @@ proc init_level {} {
      }
      "101"  { 
         set end_job_count            3000         ;# number of jobs
-        set FLUSH_SUBMIT_SEC         1           ;# -1 or 0,1,2,3 ...
-        set FLUSH_FINISH_SEC         1           ;# -1 or 0,1,2,3 ...
+        set FLUSH_SUBMIT_SEC         0           ;# -1 or 0,1,2,3 ...
+        set FLUSH_FINISH_SEC         0           ;# -1 or 0,1,2,3 ...
         set enable_queues_job_count  1500         ;# after witch job, enable queues
 
         set throughput_sharetree     1
@@ -247,7 +247,7 @@ proc throughput_cleanup_sharetree {} {
 }
 
 proc setup_queues {} {
-   global ts_config
+
    global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_OUTPUT
    global CHECK_HOST event_client_bin CHECK_SOURCE_DIR
    global nr_queues queue_list host_list  nr_slots
@@ -258,6 +258,11 @@ proc setup_queues {} {
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
       set_error -3 "need more than one host for this test"
       return -3
+   }
+
+   if { [resolve_version] < 2 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
    }
 
    # start event client (if compiled)
@@ -276,33 +281,16 @@ proc setup_queues {} {
       unset stored_configuration
    }
    get_config stored_configuration
-      set myconfig(loglevel)         "log_warning"
-
+   set myconfig(loglevel)         "log_warning"
    set my_schedd_params "PROFILE=1"
-
-   if { $ts_config(gridengine_version) == 53 } {
-      if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
-         append my_schedd_params ",$stored_configuration(schedd_params)"
-      }
-      if { $FLUSH_SUBMIT_SEC == -1 && $FLUSH_FINISH_SEC == -1 } {
-         set myconfig(schedd_params)    "$my_schedd_params"
-      } else {
-         set myconfig(schedd_params)    "$my_schedd_params,FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
-      }
+   if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
+      append my_schedd_params ",$stored_configuration(schedd_params)"
+   }
+   if { $FLUSH_SUBMIT_SEC == -1 && $FLUSH_FINISH_SEC == -1 } {
+      set myconfig(schedd_params)    "$my_schedd_params"
    } else {
-      get_schedd_config stored_schedd_config
-      if { [string compare "none" $stored_schedd_config(params)] != 0 } {
-         append my_schedd_params ",$stored_schedd_config(params)"
-      }
-      set my_schedd_config(params)      "$my_schedd_params"
-      if { $FLUSH_SUBMIT_SEC > 0} {
-         set my_schedd_config(flush_submit_sec) "$FLUSH_SUBMIT_SEC"
-      }
-      if { $FLUSH_FINISH_SEC > 0} {
-         set my_schedd_config(flush_finish_sec) "$FLUSH_FINISH_SEC"
-      }
-   } 
-   
+      set myconfig(schedd_params)    "$my_schedd_params,FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
+   }
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"
    if { [string compare "none" $stored_configuration(execd_params)] != 0 } {
       append my_execd_params ",$stored_configuration(execd_params)"
@@ -313,15 +301,16 @@ proc setup_queues {} {
  
    # disable all default queues and create host_list:
    set host_list ""
-   foreach host $CHECK_CORE_EXECD {
-      disable_queue [get_queue_instance "all.q" $host]
-      if { [string compare $host $CHECK_CORE_MASTER] == 0 } { 
+   foreach elem $CHECK_CORE_EXECD {
+      disable_queue $elem.q
+      if { [string compare $elem $CHECK_CORE_MASTER] == 0 } { 
          continue;
       }
-      lappend host_list $host
+      lappend host_list $elem
    }
 
    set max_u_jobs_parameter [expr ( [llength $host_list] * $nr_queues  * $nr_slots )]
+
 
    set my_schedd_config(schedule_interval)    "$run_throughput_test_SCHEDULE_INTERVAL"
    set my_schedd_config(job_load_adjustments) "none"
@@ -332,20 +321,17 @@ proc setup_queues {} {
 
    # now setup submit queues for hosts in host_list:
    # set queue_list:
-   set queue_list {}
-
-   # this is the queue configuration 
-   set change_array(slots) $nr_slots
-   set change_array(load_thresholds) "np_load_avg=11.75"
-
-   # create a certain number of queues
-   for {set i 0} {$i < $nr_queues} {incr i} {
-      set qname tp_${i}
-      add_queue $qname $host_list change_array 1
-
-      # build queue_list containing a list of all queue instances
-      foreach host $host_list {
-         lappend queue_list [get_queue_instance $qname $host]
+   set queue_list ""
+   puts $CHECK_OUTPUT "using following host for throughput test:"
+   foreach host $host_list {
+      puts $CHECK_OUTPUT "setup queues for host $host"
+      for {set i 0} { $i < $nr_queues } { incr i 1 } {
+         set change_array(qname) "${host}_m${i}"
+         set change_array(hostname) "$host"
+         set change_array(slots) $nr_slots
+         set change_array(load_thresholds) "np_load_avg=11.75"
+         add_queue change_array 1
+         lappend queue_list "${host}_m${i}"
       }
    }
    # show queue list:
@@ -361,21 +347,25 @@ proc setup_queues {} {
 
 proc cleanup_queues {} {
    global CHECK_CORE_EXECD  CHECK_OUTPUT
-   global host_list queue_list event_client_bin CHECK_ARCH  CHECK_PRODUCT_ROOT
-   global stored_configuration throughput_sharetree nr_queues
+   global queue_list event_client_bin CHECK_ARCH  CHECK_PRODUCT_ROOT
+   global stored_configuration throughput_sharetree
 
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
       set_error -3 "need more than one host for this test"
       return -3
    }
 
+   if { [resolve_version] < 2 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
+   }
+  
    if { [file isfile $event_client_bin] != 1 } {
       set_error -3 "could not open event client binary: $event_client_bin"
       return -3
    }
 
-   
-   set catch_result [delete_all_jobs]
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
 
 
    # after this we can cleanup the system (no jobs registered at qmaster)
@@ -392,15 +382,15 @@ proc cleanup_queues {} {
    set_config stored_configuration
 
    puts $CHECK_OUTPUT "deleting queues"
-   for {set i 0} {$i < $nr_queues} {incr i} {
-      set qname tp_${i}
-      del_queue $qname $host_list 0 1
+   foreach queue $queue_list {
+      puts $CHECK_OUTPUT $queue 
+      del_queue $queue
    }
 
    puts $CHECK_OUTPUT "enabling default queues"
-   foreach host $CHECK_CORE_EXECD {
-      puts $CHECK_OUTPUT $host
-      enable_queue [get_queue_instance "all.q" $host]
+   foreach elem $CHECK_CORE_EXECD {
+      puts $CHECK_OUTPUT $elem
+      enable_queue $elem.q     
    }
    
    set_error 0 "ok"
@@ -423,16 +413,23 @@ proc get_event_client_time { string  } {
 }
 
 proc run_throughput_test {} {
+
    global CHECK_OUTPUT CHECK_USER CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH
    global queue_list CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global enable_queues_job_count CHECK_SOURCE_DIR CHECK_CORE_EXECD
    global end_job_count host_list event_client_bin CHECK_FIRST_FOREIGN_SYSTEM_USER
-   global throughput_sharetree ts_config
+   global throughput_sharetree
 
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
       set_error -3 "need more than one host for this test"
       return -3
    }
+
+   if { [resolve_version] < 2 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
+   }
+
 
    if { [file isfile $event_client_bin] != 1 } {
       set_error -3 "could not open event client binary: $event_client_bin"
@@ -442,18 +439,10 @@ proc run_throughput_test {} {
 
 
    # translate jobs submit output string
-
-   #   old MSG_JOB_SUBMITJOB_USS, new MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS
-   if { $ts_config(gridengine_version) == 60 } {
-      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
-   } else {
-      set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-      set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-   }
+   set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+   set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
    set COULD_NOT_SUBMIT [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER]]
 
-#   puts $CHECK_OUTPUT "JOB_SUBMITTED=\"{$JOB_SUBMITTED}\""
 
    # start event client (if compiled) 
    set event_client_sid [ open_remote_spawn_process $CHECK_HOST "ts_def_con2" $event_client_bin ""]
@@ -633,23 +622,15 @@ proc run_throughput_test {} {
 
    set max_submit_output_lines 40
    set current_output_line 0
-
-   set my_submitted_jobs 0
-   set max_jobs_per_loop [llength $host_list]
-   foreach host $host_list {
-      set host_submit_count($host) 0
-   }
-
    # here the throughput test starts
    while { $result(jobs_done) < $end_job_count } {
-#       puts $CHECK_OUTPUT "submitted jobs: $my_submitted_jobs (of $max_jobs_per_loop)"
        # submit jobs (via expect chanels)
-       if { $sent_jobs < $end_job_count && $my_submitted_jobs < $max_jobs_per_loop } {
+       if { $sent_jobs < $end_job_count } {
            if { [llength $resend_buffer] == 0 } {
               # get first host in next_submit_list hand submit job on that host
               set sub_host   [lindex $next_submit_list 0 ]       
               set host_index [lsearch $host_list $sub_host]
-              if { $host_index >= 0 && $host_submit_count($sub_host) == 0 } {
+              if { $host_index >= 0 } {
                  set spawn_id [lindex $spawn_list $host_index]
                  set next_submit_list [lrange $next_submit_list 1 end]
 
@@ -660,9 +641,7 @@ proc run_throughput_test {} {
                  } else { 
                     set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)"
                  }
-#                 puts $CHECK_OUTPUT $my_job_command
                  send -i $spawn_id "$my_job_command ; echo \"_:>${my_job_command}<:_>>\"\$?\"<<\"\n"
-                 incr my_submitted_jobs 1
                  set job_data($sent_jobs,state) "submit"
    #              puts $CHECK_OUTPUT "setting job_data($sent_jobs,state) to submit"
                  set job_data($sent_jobs,job_id) "-"
@@ -671,7 +650,6 @@ proc run_throughput_test {} {
                  set job_data($sent_jobs,run_start_time) 0
                  set job_data($sent_jobs,run_end_time) 0
                  incr sent_jobs 1
-                 set host_submit_count($sub_host) 1
 #                 puts $CHECK_OUTPUT "submitted job from host $sub_host, expect id: $spawn_id"
               }
            } else {
@@ -725,7 +703,6 @@ proc run_throughput_test {} {
             set output [ split $output "\n" ]
             foreach help $output {
                set line [string trim $help]
-#               puts $CHECK_OUTPUT $line
                set output_lines($current_output_line) "$line"
                if { $current_output_line < $max_submit_output_lines } {
                   incr current_output_line 1
@@ -748,7 +725,8 @@ proc run_throughput_test {} {
                   if { $result(jobs_submitted) < 50 } {
                      # test evtl. L10N errors only the first 50 jobs
                      set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-                     if { $job_id_pos > $job_name_pos } {
+                     set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+                     if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
                          add_proc_error "run_throughput_test" "-1" "locale switches parameter for qsub string! This is not supported yet"
                      }
                   }
@@ -815,7 +793,7 @@ proc run_throughput_test {} {
                          set exit_state [string range $line $exit_state_start $exit_state_end]
                          if { [string first "?" $exit_state] < 0 } {
                             if { $exit_state != 0 } {
-                               puts $CHECK_OUTPUT "exit_state: >$exit_state<\nline: $line"
+                               puts $CHECK_OUTPUT "exit_state: >$exit_state< line: $line"
                                set command_start [string first "_:>" $line]
                                incr command_start 3
                                set command_end [string first "<:_" $line]
@@ -847,10 +825,6 @@ proc run_throughput_test {} {
                                   return -1
                                }
                             }
-                            set thost_nr [lsearch $spawn_list $expect_out(spawn_id)]
-                            set thost_name [lindex $host_list $thost_nr]
-                            set host_submit_count($thost_name) 0
-                            incr my_submitted_jobs -1
                          }
                      }
                   }
@@ -1044,8 +1018,7 @@ proc run_throughput_test {} {
    close_spawn_process $event_client_sid
    close_spawn_process $schedd_messages_sid
 
-   set catch_result [delete_all_jobs]
-
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
    puts $CHECK_OUTPUT "qdel -uall\n$catch_result"
    wait_for_jobend $last_job_id leeper 60 0 1
    set_error 0 "ok"

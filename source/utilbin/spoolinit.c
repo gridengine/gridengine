@@ -36,22 +36,25 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_bootstrap.h"
+
 #include "sge_feature.h"
+
 #include "sge_unistd.h"
 #include "sge_dstring.h"
 #include "sge_spool.h"
 #include "sge_uidgid.h"
 #include "setup_path.h"
 #include "sge_prog.h"
+
 #include "sge_answer.h"
+
 #include "sge_all_listsL.h"
 #include "sge_manop.h"
-#include "sge_mt_init.h"
+
 #include "spool/sge_spooling.h"
 #include "spool/dynamic/sge_spooling_loader.h"
-#include "msg_utilbin.h"
 
+#include "msg_utilbin.h"
 
 static void usage(const char *argv0)
 {
@@ -65,7 +68,6 @@ static void usage(const char *argv0)
    fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO6);
    fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO7);
    fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO8);
-   fprintf(stderr, "%s", MSG_SPOOLINIT_COMMANDINTRO9);
 }
 
 static int init_framework(const char *shlib, const char *libargs, 
@@ -104,29 +106,20 @@ static int init_framework(const char *shlib, const char *libargs,
 int main(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
-   lList *answer_list = NULL;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
-
-   sge_mt_init();
 
    lInit(nmv);
 
    sge_getme(SPOOLDEFAULTS);
 
-   if (argc == 2 && strcmp(argv[1], "method") == 0) {
-      printf("%s\n", get_spooling_method());
-   } else if (!sge_setup_paths(sge_get_default_cell(), NULL)) {
-      /* will never be reached, as sge_setup_paths exits on failure */
-      ret = EXIT_FAILURE;
-   } else if (!sge_bootstrap(NULL)) {
-      ret = EXIT_FAILURE;
-   } else if (feature_initialize_from_string(bootstrap_get_security_mode())) {
+   if (sge_setup_paths(sge_get_default_cell(), NULL)) {
       ret = EXIT_FAILURE;
    } else {
       spooling_maintenance_command cmd = SPM_info;
+      feature_initialize_from_file(path_state_get_product_mode_file(), NULL);
       /* parse commandline */
-     if (argc < 4) {
+      if (argc < 4) {
          usage(argv[0]);
          ret = EXIT_FAILURE;
       } else {
@@ -171,7 +164,7 @@ int main(int argc, char *argv[])
                }
             }
          }
-      
+       
          /* initialize spooling */
          if (ret == EXIT_SUCCESS) {
             ret = init_framework(shlib, libargs, check_framework);
@@ -179,6 +172,7 @@ int main(int argc, char *argv[])
 
          /* call maintenance command */
          if (ret == EXIT_SUCCESS) {
+            lList *answer_list = NULL;
             if (!spool_maintain_context(&answer_list, 
                                         spool_get_default_context(),
                                         cmd, args)) {
@@ -189,21 +183,6 @@ int main(int argc, char *argv[])
       }
    }
 
-   if (spool_get_default_context() != NULL) {
-      time_t next_trigger = 0;
-
-      if (!spool_trigger_context(&answer_list, spool_get_default_context(), 
-                                 0, &next_trigger)) {
-         ret = EXIT_FAILURE;
-      }
-      if (!spool_shutdown_context(&answer_list, spool_get_default_context())) {
-         ret = EXIT_FAILURE;
-      }
-   }
-
-   answer_list_output(&answer_list);
-
    SGE_EXIT(ret);
-   DEXIT;
    return ret;
 }

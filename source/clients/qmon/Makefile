@@ -34,9 +34,10 @@
 #___INFO__MARK_END__
 SHELL = /bin/sh
 RM    = rm -f 
+STRIP = strip
 DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLAGS)
 
-qmon_all: qmon
+all: qmon
 	
 ###############################################################################
 # Variable definitions for libraries to link
@@ -45,23 +46,19 @@ XBAELIB     = $(QMON_3RD)/libXbae$(LIBEXT)
 XSPINLIB    = $(QMON_3RD)/libXspin$(LIBEXT)
 XMTLIB      = $(QMON_3RD)/libXmt$(LIBEXT)
 XICONLIB    = $(QMON_3RD)/libXicon$(LIBEXT)
-XLTREELIB   = $(QMON_3RD)/libXltree$(SHAREDEXT)
+XLTREELIB   = $(QMON_3RD)/libXltree$(GLIBEXT)
 XTABLIB     = $(QMON_3RD)/libXtab$(LIBEXT)
 
-include $(SDIR)/security/sec/Makefile
 include $(SDIR)/common/Makefile   
 include $(SDIR)/clients/common/Makefile   
 include $(SDIR)/daemons/common/Makefile   
 include $(SDIR)/daemons/qmaster/Makefile   
-include $(SDIR)/libs/rmon/Makefile
-include $(SDIR)/libs/uti/Makefile
-include $(SDIR)/libs/cull/Makefile
-include $(SDIR)/libs/lck/Makefile
 include $(SDIR)/libs/comm/Makefile
-include $(SDIR)/libs/sgeobj/Makefile
+include $(SDIR)/libs/cull/Makefile
 include $(SDIR)/libs/gdi/Makefile
+include $(SDIR)/libs/rmon/Makefile
 include $(SDIR)/libs/sched/Makefile
-include $(SDIR)/libs/spool/Makefile
+include $(SDIR)/libs/uti/Makefile
 
 ###############################################################################
 # Variable definitions for targets to build
@@ -72,7 +69,7 @@ QMON_3RD  = $(SDIR)/3rdparty/qmon/$(COMPILE_ARCH)
 QMON_TARGETS = qmon
 
 QMON_SRC =   qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
-             qmon_signal.c qmon_timer.c qmon_comm.c \
+            qmon_queue.c qmon_signal.c qmon_timer.c qmon_comm.c \
             qmon_start.c qmon_browser.c qmon_jobcustom.c qmon_qaction.c \
             qmon_widgets.c qmon_appres.c qmon_init.c qmon_request.c \
             qmon_cplx.c qmon_host.c qmon_manop.c qmon_about.c \
@@ -80,8 +77,7 @@ QMON_SRC =   qmon_main.c qmon_job.c qmon_submit.c qmon_menus.c qmon_util.c\
             AskForItems.c qmon_cluster.c qmon_pe.c qmon_ticket.c qmon_share.c \
             qmon_fticket.c qmon_project.c qmon_ckpt.c \
             qmon_sconf.c qmon_file.c qmon_qcustom.c qmon_preferences.c \
-            qmon_matrix.c qmon_quarks.c qmon_load.c qmon_calendar.c \
-            qmon_cq.c
+            qmon_matrix.c qmon_quarks.c qmon_load.c qmon_calendar.c
 
 QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_browser.ad \
@@ -90,13 +86,13 @@ QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_jobcustom.ad \
             $(QMON_DIR)/qmon_manop.ad \
             $(QMON_DIR)/qmon_qaction.ad \
+            $(QMON_DIR)/qmon_queue.ad \
             $(QMON_DIR)/qmon_request.ad \
             $(QMON_DIR)/qmon_submit.ad \
             $(QMON_DIR)/qmon_cluster.ad \
             $(QMON_DIR)/qmon_pe.ad \
             $(QMON_DIR)/qmon_ticket.ad \
             $(QMON_DIR)/qmon_share.ad \
-            $(QMON_DIR)/qmon_cq.ad \
             $(QMON_DIR)/qmon_fticket.ad \
             $(QMON_DIR)/qmon_project.ad \
             $(QMON_DIR)/qmon_ckpt.ad \
@@ -107,25 +103,22 @@ QMON_AD   =  $(QMON_DIR)/qmon_main.ad \
             $(QMON_DIR)/qmon_calendar.ad \
             $(QMON_DIR)/qmon_loadmon.ad
 
-QMON_ADD_SRC = parse_job_cull.c unparse_job_cull.c \
-            parse_qsub.c read_defaults.c \
-            write_job_defaults.c sge_options.c usage.c \
-            sge_centry_qconf.c sge_hgroup_qconf.c \
-            sge_cqueue_qconf.c sge_mt_init.c \
-            sge_cqueue_qstat.c
+QMON_ADD_SRC = read_write_complex.c parse_job_cull.c unparse_job_cull.c \
+            parse_qsub.c read_defaults.c sge_userset.c \
+            read_object.c write_job_defaults.c sge_options.c usage.c \
+            sge_centry_qconf.c sge_hgroup_qconf.c
 
 QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
             
 QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o)
 
 QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
-                -L. -lspoolc -lspoolf -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
+                -L. -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
                 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
-                   $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SPOOLFLIB) \
-                   $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
+                   $(XLTREELIB) $(XTABLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
-                   $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
+                   $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -151,7 +144,7 @@ qmon:  $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_LIB_DEPENDS)
 # ListTree Demo prog
 ############################################################################
 ALLDEMOOBJS =  tree_demo.o $(GDILIB) $(KRBLIBS) $(CULLLIB) $(UTILIB) \
-               $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(XLTREELIB) $(XMTLIB)
+               $(RMONLIB) $(COMMLIB) $(XLTREELIB) $(XMTLIB)
 
 tree_demo:  tree_demo.o $(XLTREELIB)
 	$(LD_WRAPPER) $(CC) -o $@ $(ALLDEMOOBJS) $(LFLAGS) $(LIBS) $(XLFLAGS) $(XLIBS)
@@ -202,6 +195,9 @@ qmon_timer.o:     $(QMON_DIR)/qmon_timer.c
 
 qmon_comm.o:      $(QMON_DIR)/qmon_comm.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_comm.c
+
+qmon_queue.o:     $(QMON_DIR)/qmon_queue.c
+	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_queue.c
 
 qmon_start.o:   $(QMON_DIR)/qmon_start.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_start.c
@@ -263,9 +259,6 @@ qmon_fticket.o:    $(QMON_DIR)/qmon_fticket.c
 qmon_share.o:    $(QMON_DIR)/qmon_share.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_share.c
 
-qmon_cq.o:    $(QMON_DIR)/qmon_cq.c
-	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_cq.c
-
 qmon_project.o:    $(QMON_DIR)/qmon_project.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/qmon_project.c
 
@@ -297,3 +290,5 @@ qmon_preferences.o:    $(QMON_DIR)/qmon_preferences.c
 qmon_diares.o: $(QMON_AD) $(QMON_DIR)/Q
 	$(QMON_DIR)/util/develToCVS $(QMON_DIR)/Q
 	$(CC) $(CFLAGS) $(XCFLAGS) -c qmon_diares.c
+
+

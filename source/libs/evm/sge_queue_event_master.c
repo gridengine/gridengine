@@ -33,29 +33,22 @@
 #include "sge.h"
 #include "sgermon.h"
 
-#include "sge_cqueue.h"
 #include "sge_event.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
 
 void 
-qinstance_add_event(lListElem *this_elem, u_long32 type)
+sge_add_queue_event(u_long32 type, lListElem *qep)
 {
-   DENTER(TOP_LAYER, "qinstance_add_event");
-   sge_add_event(0, type, 0, 0, 
-                 lGetString(this_elem, QU_qname), 
-                 lGetHost(this_elem, QU_qhostname), NULL, this_elem);
+   DENTER(TOP_LAYER, "sge_add_queue_event");
+
+   sge_add_event(NULL, 0, type, 0, 0, lGetString(qep, QU_qname), NULL, qep);
+
    DEXIT;
+   return;
 }
 
-void 
-cqueue_add_event(lListElem *this_elem, u_long32 type)
-{
-   DENTER(TOP_LAYER, "cqueue_add_event");
-   sge_add_event( 0, type, 0, 0, 
-                 lGetString(this_elem, CQ_name), NULL,
-                 NULL, this_elem);
-   DEXIT;
-}
+
+

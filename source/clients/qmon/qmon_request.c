@@ -459,8 +459,6 @@ int type
       case TYPE_STR:
          pix = qmonGetIcon("str");
          break;
-      case TYPE_RESTR:
-         pix = qmonGetIcon("unknown");
       case TYPE_BOO:
          pix = qmonGetIcon("bool");
          break;
@@ -612,26 +610,23 @@ int maxlen
          if (stringval[0] == '\0')
             status = False;
          break;
-       case TYPE_RESTR:
-         status = XmtAskForString(w, NULL, "@{Enter a string value}", stringval, maxlen, NULL);
-         if (stringval[0] == '\0')
-            status = False;
-         break;
       case TYPE_HOST:
          status = XmtAskForString(w, NULL, "@{Enter a valid hostname}", stringval, maxlen, NULL);
          if (status && stringval[0] != '\0') {
             /* try to resolve hostname */
             ret=sge_resolve_hostname(stringval, unique, EH_name);
             switch ( ret ) {
-               case CL_RETVAL_GETHOSTNAME_ERROR:
-                  qmonMessageShow(w, True, "Can't resolve host '%s'", stringval);
+               case COMMD_NACK_UNKNOWN_HOST:
+                  qmonMessageShow(w, True, "Can't resolve host '%s'", 
+                                       stringval);
                   status = False;
                   break;
-               case CL_RETVAL_OK:
+               case CL_OK:
                   strcpy(stringval, unique);
                   break; 
                default:
-                  DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
+                  DPRINTF(("sge_resolve_hostname() failed resolving: %s\n",
+                  cl_errstr(ret)));
             }
          }
          else

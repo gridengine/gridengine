@@ -32,20 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_centryL.h"
+#include "sge_complexL.h"
 
 extern lList *Master_CEntry_List;
-
-/* Mapping list for generating a complex out of a queue */
-struct queue2cmplx {
-   char *name;    /* name of the centry element, not the shortcut */
-   int  field;    /* name of the element in the queue structure */
-   int type;      /* type of the element in the queue strcuture */
-};
-extern const int max_host_resources;
-extern const struct queue2cmplx host_resource[]; 
-extern const int max_queue_resources;
-extern const struct queue2cmplx queue_resource[];
 
 const char *
 map_op2str(u_long32 op);
@@ -61,8 +50,9 @@ centry_create(lList **answer_list,
               const char *name);
 
 bool
-centry_is_referenced(const lListElem *centry, lList **answer_list,
-                     const lList *master_cqueue_list,
+centry_is_referenced(const lListElem *this_elem, 
+                     lList **answer_list,
+                     const lList *master_queue_list,
                      const lList *master_exechost_list,
                      const lList *master_sconf_list);
 
@@ -78,10 +68,6 @@ centry_list_locate(const lList *this_list,
                    const char *name);
 
 bool
-centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_list);
-
-
-bool
 centry_list_sort(lList *this_list);
 
 bool
@@ -94,30 +80,6 @@ centry_list_fill_request(lList *centry_list, lList *master_centry_list,
 
 bool
 centry_list_are_queues_requestable(const lList *this_list);
-
-const char *
-centry_list_append_to_dstring(const lList *this_list, dstring *string); 
-
-int
-centry_list_append_to_string(lList *this_list, char *buff, u_long32 max_len);
-
-lList *
-centry_list_parse_from_string(lList *complex_attributes,
-                              const char *str, bool check_value);
-
-void
-centry_list_remove_duplicates(lList *this_list);
-
-double 
-centry_urgency_contribution(int slots, const char *name, double value, 
-                            const lListElem *centry);
-
-bool
-centry_list_do_all_exists(const lList *this_list, lList **answer_list,
-                          const lList *centry_list);
-
-bool
-centry_list_is_correct(lList *this_list, lList **answer_list);
 
 #endif /* __SGE_CENTRY_H */
 

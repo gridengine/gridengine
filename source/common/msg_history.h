@@ -41,17 +41,19 @@
 #define MSG_HISTORY_FAILEDRESOLVINGHOSTNAME_SS     _MESSAGE(25067, _("failed resolving hostname "SFQ": "SFN"\n"))
 #define MSG_HISTORY_TOPTIONMASTHAVELISTOFTASKIDRANGES  _MESSAGE(25068, _("ERROR! -t option must have a list of task id ranges\n"))
 #define MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S       _MESSAGE(25069, _("ERROR! invalid list of task id ranges: "SFN"\n"))
+#define MSG_HISTORY_QMASTERISNOTALIVE                 _MESSAGE(25070, _("qmaster is not alive"))
 #define MSG_HISTORY_ERRORUNABLETOOPENX_S     _MESSAGE(25074, _("error unable to open "SFN"\n"))
 #define MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST   _MESSAGE(25075, _("not enough memory to create list\n"))
 #define MSG_HISTORY_IGNORINGINVALIDENTRYINLINEX_U  _MESSAGE(25076, _("ignoring invalid entry in line " U32CFormat "\n"))
 #define MSG_HISTORY_IGNORINGJOBXFORACCOUNTINGMASTERQUEUEYNOTEXISTS_IS   _MESSAGE(25082, _("ignoring job %d for accounting: jobs master queue "SFN" does not longer exist\n"))
+#define MSG_HISTORY_COMPLEXTEMPLATESCANTBEFILLEDCORRECTLYFORJOBX_D   _MESSAGE(25083, _("complex templates can't be filled correctly for job " U32CFormat"\n"))
 #define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_DDDD   _MESSAGE(25084, _("Job-array tasks "U32CFormat"."U32CFormat"-"U32CFormat":"U32CFormat" not found\n" ))
 #define MSG_HISTORY_JOBIDXNOTFOUND_D          _MESSAGE(25085, _("job id " U32CFormat  " not found\n"  ))
 #define MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_SDDD    _MESSAGE(25086, _("Job-array tasks "SFQ"."U32CFormat"-"U32CFormat":"U32CFormat" not found\n"))
 #define MSG_HISTORY_JOBNAMEXNOTFOUND_S       _MESSAGE(25087, _("job name "SFN" not found\n"))
 #define MSG_HISTORY_TOPTIONREQUIRESJOPTION   _MESSAGE(25088, _("-t option requires -j option\n"))
 #define MSG_HISTORY_HOST            "HOST"
-#define MSG_HISTORY_QUEUE           "CLUSTER QUEUE"
+#define MSG_HISTORY_QUEUE           "QUEUE"
 #define MSG_HISTORY_GROUP           "GROUP"
 #define MSG_HISTORY_OWNER           "OWNER"
 #define MSG_HISTORY_PROJECT         "PROJECT"

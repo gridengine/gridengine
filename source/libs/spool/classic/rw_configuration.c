@@ -45,6 +45,7 @@
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_conf.h"
+
 #include "msg_common.h"
 
 /*-----------------------------------------------------------------------*
@@ -102,9 +103,6 @@ u_long32 flags
    cfl = lGetList(epc, CONF_entries);
 
    for_each(ep, cfl) {
-      if (strcmp( lGetString(ep, CF_name), REPRIORITIZE) == 0)
-         continue;
-
       FPRINTF((fp, "%-25s %s\n", lGetString(ep, CF_name), 
                lGetString(ep, CF_value)));
    }
@@ -119,6 +117,33 @@ u_long32 flags
 FPRINTF_ERROR:
    DEXIT;
    return -1;
+}
+
+
+const char *read_adminuser_from_configuration(
+const lListElem *el,
+const char *fname, 
+const char *conf_name,
+u_long32 flags 
+) {
+   lListElem *conf = NULL;
+   const char *ret = NULL;
+
+   DENTER(TOP_LAYER, "read_adminuser_from_configuration");
+
+   if (el == NULL) {
+      el = read_configuration(fname, conf_name, flags);
+   }
+
+   for_each(conf, lGetList(el, CONF_entries)) {
+      if (!strcmp(lGetString(conf, CF_name), "admin_user")) {
+         ret = lGetString(conf, CF_value); 
+         break;
+      } 
+   } 
+   DPRINTF(("admin_user: "SFN"\n", ret));
+   DEXIT;
+   return ret;
 }
 
 /*---------------------------------------------------------
@@ -204,8 +229,8 @@ u_long32 flags
                if (rlp == NULL) {
                   WARNING((SGE_EVENT, MSG_CONFIG_CONF_INCORRECTVALUEFORCONFIGATTRIB_SS, 
                            name, value));
-                  alp = lFreeList(alp);
-                  lp = lFreeList(lp);
+                  lFreeList(alp);
+                  lFreeList(lp);
                   fclose(fp);
                   DEXIT;
                   return NULL;
@@ -218,15 +243,15 @@ u_long32 flags
                      min = lGetUlong(rep, RN_min);
                      if (min < GID_RANGE_NOT_ALLOWED_ID) {
                         WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
-                        alp = lFreeList(alp);
-                        lp = lFreeList(lp);
+                        lFreeList(alp);
+                        lFreeList(lp);
                         fclose(fp);
                         DEXIT;
                         return (NULL);
                      }                  
                   }
-                  alp = lFreeList(alp);
-                  rlp = lFreeList(rlp);
+                  lFreeList(alp);
+                  lFreeList(rlp);
                   lSetString(ep, CF_value, value);
                }
             }
@@ -240,7 +265,7 @@ u_long32 flags
             lSetString(ep, CF_value, value);
          } else {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-            lp = lFreeList(lp);
+            lFreeList(lp);
             fclose(fp);
             DEXIT;
             return NULL;
@@ -258,7 +283,7 @@ u_long32 flags
          !strcmp(name, "terminate_method") || 
          !strcmp(name, "qmaster_params") || 
          !strcmp(name, "execd_params") || 
-         !strcmp(name, "reporting_params") || 
+         !strcmp(name, "schedd_params") ||
          !strcmp(name, "qlogin_command") ||
          !strcmp(name, "rlogin_command") ||
          !strcmp(name, "rsh_command") ||
@@ -268,7 +293,7 @@ u_long32 flags
          if (!(value = strtok(NULL, "\t\n"))) {
             /* return line if value is empty */
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-            lp = lFreeList(lp);
+            lFreeList(lp);
             fclose(fp);
             DEXIT;
             return NULL;
@@ -281,7 +306,7 @@ u_long32 flags
       } else {
          if (!(value = strtok(NULL, " \t\n"))) {
             WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
-            lp = lFreeList(lp);
+            lFreeList(lp);
             fclose(fp);
             DEXIT;
             return NULL;

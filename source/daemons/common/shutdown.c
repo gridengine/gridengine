@@ -37,7 +37,6 @@
 #include "sge_feature.h"
 #include "shutdown.h"
 #include "setup_path.h"
-
 #include "msg_daemons_common.h"
 
 void starting_up()
@@ -77,6 +76,15 @@ void sge_shutdown()
          feature_get_featureset_name(feature_get_active_featureset_id())));
    log_state_set_log_level(old_ll);
 
+#ifdef WIN32NATIVE 
+   /*
+   ** free previously allocated mem to make win compiler happy
+   */
+   sge_delete_paths();
+/*    sge_deleteme(); */
+#endif   
+
    DEXIT;
+
    SGE_EXIT(0); /* call sge_exit() */
 }

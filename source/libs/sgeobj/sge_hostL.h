@@ -51,8 +51,10 @@ enum {
                               * host only Used to scale host load values.
                               * Contains pairs of load value names and
                               * doubles. spooled */
-   EH_consumable_config_list, /* consumable resources of host
-                               * CE_Type */
+   EH_consumable_config_list,        /* consumable resources of host
+                                      * CE_Type */
+
+
    EH_usage_scaling_list,    /* HS_Type - directly user controlled exec
                               * host only SGEEE only scaling of usage
                               * spooled */
@@ -84,10 +86,17 @@ enum {
    EH_seq_no,                /* suitability of this host for a job only
                               * scheduler local not spooled */
    EH_real_name,             /* in case of pseudo host: real name spooled */
+   EH_sge_tickets,           /* SGEEE - total tickets associated with active 
+                              * jobs executing on this host scheduler
+                              * local */
+   EH_resource_capability_factor,
+   /* SGEEE - resource capability of host scheduler local */
    EH_sge_load,              /* SGEEE load calculated from load values
                               * scheduler local */
    EH_sge_ticket_pct,        /* percentage of total SGEEE tickets scheduler
                               * local */
+   EH_resource_capability_factor_pct,
+   /* percentage of total resource capability scheduler local */
    EH_sge_load_pct,          /* percentage of total SGEEE load scheduler
                               * local */
 
@@ -100,8 +109,8 @@ enum {
                               * sge_host_mon */
    EH_load_report_interval,  /* used for caching from global/local
                               * configuration */
-   EH_resource_utilization,  /* RUE_Type contains per consumable information 
-                              * about resource utilization for this host */
+   EH_consumable_actual_list,        /* CE_Type actually debited amout of
+                                      * consumable resources of host */
    EH_cached_complexes,      /* CE_Type used in scheduler for caching
                               * built attributes */
    EH_cache_version,         /* used to decide whether QU_cached_complexes 
@@ -115,13 +124,12 @@ enum {
                                       * EH_reschedule_unknown this list
                                       * contains all jobs which will be
                                       * rescheduled automatically */
-   EH_report_seqno,          /* sequence number of the last report
+   EH_report_seqno           /* sequence number of the last report
                               * (job/load/..) qmaster received from the
                               * execd. This seqno is used to detect old
                               * reports, because reports are send
                               * asynchronous and we have no guarantee that 
                               * they arrive in order at qmaster */
-   EH_report_variables       /* list of variables written to the report file */
 };
 
 ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
@@ -147,8 +155,11 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
 
    SGE_STRING(EH_real_name, CULL_DEFAULT)
 
+   SGE_DOUBLE(EH_sge_tickets, CULL_DEFAULT)
+   SGE_DOUBLE(EH_resource_capability_factor, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(EH_sge_load, CULL_DEFAULT)
    SGE_DOUBLE(EH_sge_ticket_pct, CULL_DEFAULT)
+   SGE_DOUBLE(EH_resource_capability_factor_pct, CULL_DEFAULT)
    SGE_DOUBLE(EH_sge_load_pct, CULL_DEFAULT)
 
    SGE_ULONG(EH_featureset_id, CULL_DEFAULT)
@@ -158,14 +169,13 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
    SGE_ULONG(EH_num_running_jobs, CULL_DEFAULT)
 
    SGE_ULONG(EH_load_report_interval, CULL_DEFAULT)
-   SGE_LIST(EH_resource_utilization, RUE_Type, CULL_DEFAULT)
+   SGE_LIST(EH_consumable_actual_list, CE_Type, CULL_DEFAULT)
    SGE_LIST(EH_cached_complexes, CE_Type, CULL_DEFAULT)
    SGE_ULONG(EH_cache_version, CULL_DEFAULT)
    SGE_ULONG(EH_master_host, CULL_DEFAULT)
    SGE_ULONG(EH_reschedule_unknown, CULL_DEFAULT)
    SGE_LIST(EH_reschedule_unknown_list, RU_Type, CULL_DEFAULT) /* JG: TODO: shall it be spooled? Problem: composed primary key */
    SGE_ULONG(EH_report_seqno, CULL_DEFAULT)
-   SGE_LIST(EH_report_variables, STU_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
 NAMEDEF(EHN)
@@ -191,8 +201,11 @@ NAMEDEF(EHN)
 
    NAME("EH_real_name")
 
+   NAME("EH_sge_tickets")
+   NAME("EH_resource_capability_factor")
    NAME("EH_sge_load")
    NAME("EH_sge_ticket_pct")
+   NAME("EH_resource_capability_factor_pct")
    NAME("EH_sge_load_pct")
 
    NAME("EH_featureset_id")
@@ -202,14 +215,13 @@ NAMEDEF(EHN)
    NAME("EH_num_running_jobs")
 
    NAME("EH_load_report_interval")
-   NAME("EH_resource_utilization")
+   NAME("EH_consumable_actual_list")
    NAME("EH_cached_complexes")
    NAME("EH_cache_version")
    NAME("EH_master_host")
    NAME("EH_reschedule_unknown")
    NAME("EH_reschedule_unknown_list")
    NAME("EH_report_seqno")
-   NAME("EH_report_variables")
 NAMEEND
 
 #define EHS sizeof(EHN)/sizeof(char*)

@@ -40,6 +40,7 @@
 
 #include "sge_all_listsL.h"
 #include "sge_object.h"
+#include "sge_queue.h"
 
 #include "spool/sge_spooling_utilities.h"
 

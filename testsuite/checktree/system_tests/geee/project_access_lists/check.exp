@@ -101,7 +101,6 @@ global project_access_lists_cluster_conf
 global project_access_lists_schedd_conf
 
 proc project_access_lists_setup  {} {
-   global ts_config
    global CHECK_GROUP
    global project_access_lists_queue
    global project_access_lists_host
@@ -129,9 +128,7 @@ proc project_access_lists_setup  {} {
    get_config                             project_access_lists_cluster_conf 
    get_schedd_config                      project_access_lists_schedd_conf
    set my_schedd_config(schedule_interval)       "0:0:01"
-   if { $ts_config(gridengine_version) == 53 } {
-      set my_schedd_config(sgeee_schedule_interval) "0:0:02"
-   }
+   set my_schedd_config(sgeee_schedule_interval) "0:0:02"
    set_schedd_config my_schedd_config
 
 

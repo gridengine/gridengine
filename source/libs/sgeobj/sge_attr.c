@@ -31,12 +31,11 @@
 /*___INFO__MARK_END__*/
 
 #include <math.h>
-#include <string.h>
 
 #include "basis_types.h"
 #include "sgermon.h" 
 #include "sge_string.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_hostname.h"
@@ -50,10 +49,9 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define HOSTATTR_LAYER BASIS_LAYER
+#define HOSTATTR_LAYER TOP_LAYER
 
-#define TEMPLATE_ATTR_IMPL(PREFIX, TYPE, INTERNAL_TYPE,                       \
-                           DESCRIPTOR, HREF_NM, VALUE_NM)                     \
+#define TEMPLATE_ATTR_IMPL(PREFIX, TYPE, DESCRIPTOR, HREF_NM, VALUE_NM)       \
                                                                               \
 lListElem *                                                                   \
 PREFIX##_create(lList **answer_list, const char *href, TYPE value)            \
@@ -78,34 +76,11 @@ PREFIX##_list_add(lList **this_list, lList **answer_list, lListElem **attr,   \
 }                                                                             \
                                                                               \
 bool                                                                          \
-PREFIX##_list_add_set_del(lList **this_list, lList **answer_list,             \
-                         const char *hostname, void *value, bool remove)      \
-{                                                                             \
-   return attr_list_add_set_del(this_list, answer_list, hostname,             \
-                        value, remove, DESCRIPTOR, HREF_NM, VALUE_NM);        \
-}                                                                             \
-                                                                              \
-bool                                                                          \
 PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
-                         const char *hostname, INTERNAL_TYPE *value,          \
-                         const char **mastching_host_or_group,                \
-                         const char **matching_group,                         \
-                         bool *is_ambiguous)                                  \
+                         const char *hostname, TYPE *value)                   \
 {                                                                             \
    return attr_list_find_value(this_list, answer_list, hostname,              \
-                               value, mastching_host_or_group,                \
-                               matching_group, is_ambiguous,                  \
-                               DESCRIPTOR, HREF_NM, VALUE_NM);                \
-}                                                                             \
-                                                                              \
-bool                                                                          \
-PREFIX##_list_find_value_href(const lList *this_list, lList **answer_list,    \
-                         const char *hostname, INTERNAL_TYPE *value,          \
-                         bool *found)                                         \
-{                                                                             \
-   return attr_list_find_value_href(this_list, answer_list, hostname,         \
-                               value, found, DESCRIPTOR, HREF_NM,             \
-                               VALUE_NM);                                     \
+                               value, DESCRIPTOR, HREF_NM, VALUE_NM);         \
 }                                                                             \
                                                                               \
 bool                                                                          \
@@ -127,8 +102,15 @@ lListElem *                                                                   \
 PREFIX##_list_locate(const lList *this_list, const char *host_or_group)       \
 {                                                                             \
    return attr_list_locate(this_list, host_or_group, HREF_NM);                \
+}                                                                             \
+                                                                              \
+bool                                                                          \
+PREFIX##_list_verify(const lList *this_list, lList **answer_list,             \
+                     bool *is_ambiguous)                                      \
+{                                                                             \
+   return attr_list_verify(this_list, answer_list, is_ambiguous, HREF_NM);    \
 }                                                                             
- 
+
 static lListElem *
 attr_create(lList **answer_list, const char *href, void *value,
             const lDescr *descriptor, int href_nm, int value_nm);
@@ -138,24 +120,15 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
               int flags, lList **ambiguous_href_list,
               const lDescr *descriptor, int href_nm, int value_nm);
 
-static bool 
-attr_list_add_set_del(lList **this_list, lList **answer_list, 
-              const char *hostname, void *value_buffer, bool remove,
-              const lDescr *descriptor, int href_nm, int value_nm);
-
 static bool
 attr_list_find_value(const lList *this_list, lList **answer_list, 
-                     const char *hostname, void *value_buffer, 
-                     const char **matching_host_or_group,
-                     const char **matching_group,
-                     bool *is_ambiguous, const lDescr *descriptor, 
-                     int href_nm, int value_nm);
+                     const char *hostname, void *value_buffer,
+                     const lDescr *descriptor, int href_nm, int value_nm);
 
 static bool
-attr_list_find_value_href(const lList *this_list, lList **answer_list, 
-                     const char *hostname, void *value_buffer, 
-                     bool *found, const lDescr *descriptor, 
-                     int href_nm, int value_nm);
+attr_list_append_to_dstring(const lList *this_list, dstring *string,
+                            const lDescr *descriptor, int href_nm, 
+                            int value_nm);
 
 static bool
 attr_list_parse_from_string(lList **this_list, lList **answer_list,
@@ -167,8 +140,9 @@ static lListElem *
 attr_list_locate(const lList *this_list, const char *host_or_group, 
                  int href_nm);
 
-
-/* EB: ADOC: add commets */
+static bool
+attr_list_verify(const lList *this_list, lList **answer_list,
+                 bool *is_ambiguous, int href_nm);
 
 /*
 descriptor        ASTR_Type
@@ -192,14 +166,10 @@ attr_create(lList **answer_list, const char *href, void *value,
          }
          ret = new_attr;
       } else {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NONEWATTRSETTING_S, href));
-         answer_list_add(answer_list, SGE_EVENT, 
-                         STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+         /* EB: TODO: error handling */
       }
    } else {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
-      answer_list_add(answer_list, SGE_EVENT, 
-                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+      /* EB: TODO: error handling */
    }
    DEXIT;
    return ret;
@@ -250,18 +220,16 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
             if (flags & HOSTATTR_OVERWRITE) {
                object_set_any_type(attr_elem, value_nm, &value);
                lFreeElem(*attr);
-/* FIXME ??? */               
                *attr = attr_elem;
                ret = true;
             } else {
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                              MSG_ATTR_VALUEMULDEFINED_S, href));
+               /* EB: TODO: move to msg file */
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "Attribute for "SFQ" is already defined\n", href));
                answer_list_add(answer_list, SGE_EVENT,
                                STATUS_ERROR1, ANSWER_QUALITY_ERROR);
             }
          } else {
             lAppendElem(*this_list, *attr);
-/* FIXME ????            *attr = NULL; */
             ret = true;
          }
       } else {
@@ -276,7 +244,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
           *  - if the the caller of this functions expects this
           *    function to return it
           */ 
-         if (!(flags & HOSTATTR_ALLOW_AMBIGUITY) && 
+         if (!(flags & HOSTATTR_ALLOW_AMBIGUITY) ||
              ambiguous_href_list != NULL) {
 
             /*
@@ -327,7 +295,9 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
          if (ambiguous_href_list != NULL &&
                lGetNumberOfElem(*ambiguous_href_list) >= 1 &&
                !(flags & HOSTATTR_ALLOW_AMBIGUITY)) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_RESULTUNAMBIGUOUS_S));
+
+            /* EB: TODO: move to msg file */
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "Modification would result in ambiguous configuration\n"));
             answer_list_add(answer_list, SGE_EVENT,
                             STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          } else {
@@ -344,32 +314,6 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
    return ret;
 }
 
-static bool 
-attr_list_add_set_del(lList **this_list, lList **answer_list, 
-              const char *hostname, void *value, bool remove,
-              const lDescr *descriptor, 
-              int href_nm, int value_nm)
-{
-   bool ret = True;
-   lListElem *attr = NULL;
-
-   if (remove && this_list && *this_list) {
-      attr = attr_list_locate(*this_list, hostname, href_nm);
-      lRemoveElem(*this_list, attr);
-      return ret;
-   }   
-      
-   attr = attr_create(answer_list, hostname, value, descriptor, 
-                         href_nm, value_nm);
-   ret = attr_list_add(this_list, answer_list,
-                        &attr, HOSTATTR_OVERWRITE, NULL,
-                        descriptor, href_nm, value_nm);
-/* FIXME ???   lFreeElem(attr); */
-
-   return ret;
-}
-
-
 /*
 descriptor        ASTR_Type
 href_nm           ASTR_href
@@ -378,15 +322,11 @@ value_nm          ASTR_value
 static bool
 attr_list_find_value(const lList *this_list, lList **answer_list, 
                      const char *hostname, void *value_buffer,
-                     const char **matching_host_or_group,
-                     const char **matching_group,
-                     bool *is_ambiguous, const lDescr *descriptor, 
-                     int href_nm, int value_nm)
+                     const lDescr *descriptor, int href_nm, int value_nm)
 {
    bool ret = false;
 
    DENTER(HOSTATTR_LAYER, "attr_list_find_value");
-
    if (this_list != NULL && hostname != NULL) {
       lListElem *href = NULL;
    
@@ -396,12 +336,11 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
       href = attr_list_locate(this_list, hostname, href_nm);
       if (href != NULL) {  
          object_get_any_type(href, value_nm, value_buffer);
-         DPRINTF(("Found value for host "SFQ"\n", hostname));
          ret = true;
       } else {
+         bool is_ambiguous = false;
          bool already_found = false;
 
-         *is_ambiguous = false;
          /*
           * Try to find a value for all hgroup definitions
           * if there was no host related value
@@ -429,15 +368,8 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                   if (already_found == false) {
                      already_found = true;
                      object_get_any_type(href, value_nm, value_buffer);
-                     *matching_host_or_group = href_name;
-                     DPRINTF(("Found value for domain "SFQ"\n", href_name));
-                     ret = true;
                   } else {
-                     *is_ambiguous = true;
-                     *matching_group = href_name;
-                     DPRINTF(("Found ambiguous value in domain "SFQ"\n", 
-                               href_name));
-                     ret = false;
+                     is_ambiguous = true;
                      break;
                   }
                }
@@ -445,7 +377,9 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                tmp_href_list = lFreeList(tmp_href_list);
             }
          }
-         if (ret == false) {
+         if (!is_ambiguous) {
+            ret = true;
+         } else {
             lListElem *tmp_href = NULL;
 
             /*
@@ -453,14 +387,14 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
              */
             tmp_href = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm);
             if (tmp_href != NULL) {
-               DPRINTF(("Using default value\n"));
                object_get_any_type(tmp_href, value_nm, value_buffer);
                ret = true;
             } else {
                /*
                 * Should never happen.
                 */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NOCONFVALUE));
+               /* EB: TODO: move to msg file */
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "No default/hostgroup/host value found\n"));
                answer_list_add(answer_list, SGE_EVENT,
                                STATUS_ERROR1, ANSWER_QUALITY_ERROR);            
             }
@@ -480,64 +414,6 @@ href_nm           ASTR_href
 value_nm          ASTR_value
 */
 static bool
-attr_list_find_value_href(const lList *this_list, lList **answer_list, 
-                     const char *hostname, void *value_buffer,
-                     bool *found, const lDescr *descriptor, 
-                     int href_nm, int value_nm)
-{
-   bool ret = false;
-
-   DENTER(HOSTATTR_LAYER, "attr_list_find_value");
-
-   if (this_list != NULL && hostname != NULL) {
-      lListElem *href = NULL;
-   
-      /*
-       * Try to find a value for the concerned host
-       */ 
-      href = attr_list_locate(this_list, hostname, href_nm);
-      if (href != NULL) {  
-         object_get_any_type(href, value_nm, value_buffer);
-         *found = True;
-         DTRACE;
-         ret = true;
-      } else {
-         if (ret == false) {
-            lListElem *tmp_href = NULL;
-
-            /*
-             * Use the default value
-             */
-            tmp_href = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm);
-            if (tmp_href != NULL) {
-               object_get_any_type(tmp_href, value_nm, value_buffer);
-               *found = False;
-               DTRACE;
-               ret = true;
-            } else {
-               /*
-                * Should never happen.
-                */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NOCONFVALUE));
-               answer_list_add(answer_list, SGE_EVENT,
-                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);            
-            }
-         }
-      }
-      if (ret) {
-         DTRACE;
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-/*
-descriptor        ASTR_Type
-href_nm           ASTR_href
-value_nm          ASTR_value
-*/
-bool
 attr_list_append_to_dstring(const lList *this_list, dstring *string,
                             const lDescr *descriptor, int href_nm, int value_nm)
 {
@@ -625,14 +501,9 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                             int value_nm)
 {
    bool ret = true;
-   DENTER(TOP_LAYER, "attr_list_parse_from_string");
+   DENTER(HOSTATTR_LAYER, "attr_list_parse_from_string");
   
    if (this_list != NULL && string != NULL) { 
-      struct saved_vars_s *strtok_context = NULL;
-      char *token = NULL;
-      char *next_token = NULL;
-      bool is_first_token = true;
-      bool is_last_token = false;
 
       /* 
        * start         := value {',' group_value} .
@@ -656,160 +527,166 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
        * 
        */
 
-      next_token = sge_strtok_r(string, "[", &strtok_context);
-      while (ret && (token = next_token)) {
-         size_t length; 
+      if (!strcasecmp(string, "NONE")) {
+         /* EB: TODO: Allow NONE only if it is a regular value */
+         ;
+      } else {
+         struct saved_vars_s *strtok_context = NULL;
+         char *token = NULL;
+         char *next_token = NULL;
+         bool is_first_token = true;
+         bool is_last_token = false;
 
-         next_token = sge_strtok_r(NULL, "[", &strtok_context);
-         if (next_token == NULL) {
-            is_last_token = true;
-         }
+         next_token = sge_strtok_r(string, "[", &strtok_context);
+         while (ret && (token = next_token)) {
+            size_t length; 
 
+            next_token = sge_strtok_r(NULL, "[", &strtok_context);
+            if (next_token == NULL) {
+               is_last_token = true;
+            }
 
-#if 0 
-         /* 
-          * It is not allowed to remove all white space because.
-          * The attribute value itself might use spaces as
-          * delimiter for string lists:
-          *
-          * Example: pe_list    pe1 pe2 pe3
-          */
-         sge_strip_blanks(token);
-#endif
-
-         length = strlen(token);
-         if (length >= 1) {
-            const char *href_name = NULL;
-            char *value = NULL;
-            bool first_is_default = true;
-  
-            /*
-             * There might be white space at the end of each token.
-             */
-            sge_strip_white_space_at_eol(token);
+            /* remove all blanks from token */
+            sge_strip_blanks(token);
             length = strlen(token);
-         
-            /* 
-             * All except the last token has to conatin a ',' as last
-             * character in the string. This ',' has to be removed.
-             */
-            if (ret && !is_last_token) {
-               if (token[length - 1] == ',') {
-                  token[length - 1] = '\0';
-                  length--;
-               } else {
-                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                         MSG_ATTR_MISSINGCHAR_S, ","));
-                  answer_list_add(answer_list, SGE_EVENT,
-                                  STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-                  ret = false;
-               }
-            }
-
-            /*
-             * There might be space after a closing brace ']'
-             */
-            sge_strip_white_space_at_eol(token);
-            length = strlen(token);
-
-            /* 
-             * All except the first token has to end with a ']'. Also
-             * this charcter has to be removed.
-             */
-            if (ret && !is_first_token) {
-               if (token[length - 1] == ']') {
-                  token[length - 1] = '\0';
-                  length--;
-               } else {
-                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                 MSG_ATTR_MISSINGCHAR_SS, "]", token));
-                  answer_list_add(answer_list, SGE_EVENT,
-                                  STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-                  ret = false;
-               }
-            }
-
-            /*
-             * If the first token containes a ']' as last charcter than
-             * a default value is missing! This is not a error but
-             * we have to parse a group or host additionally
-             */ 
-            if (ret && is_first_token) {
-               if (token[length - 1] == ']') {
-                  token[length - 1] = '\0';
-                  length--;
-                  first_is_default = false;
-               } 
-            }
-
-            /*
-             * All but the first token has to contain a hostgroup
-             * or a host reference in the beginning of the string 
-             */
-            if (ret) {
-               if (!is_first_token || !first_is_default) {
-                  value = strchr(token, '=');
-                  href_name = token;
-
-                  if (value != NULL) {
-                     value[0] = '\0';
-                     value++;
+            if (length >= 1) {
+               char *href_name = NULL;
+               char *value = NULL;
+               bool first_is_default = true;
+      
+               /* 
+                * All except the last token has to conatin a ',' as last
+                * character in the string. This ',' has to be removed.
+                */
+               if (ret && !is_last_token) {
+                  if (token[length - 1] == ',') {
+                     token[length - 1] = '\0';
+                     length--;
                   } else {
-                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                            MSG_ATTR_EQUALSIGNEXPRECTED));
+                     /* EB: TODO: error handling */
+                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "missing \',\' character\n"));
                      answer_list_add(answer_list, SGE_EVENT,
                                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
                      ret = false;
                   }
-               } else {
-                  href_name = HOSTREF_DEFAULT;
-                  value = token;
                }
-            }
 
-            /*
-             * Parsing the token was successfull. We can create a new 
-             * element.
-             */
-            if (ret) {
-               lListElem *attr_elem = NULL;
-     
-               attr_elem = attr_create(answer_list, href_name, NULL,
-                                       descriptor, href_nm, value_nm);
-               if (attr_elem != NULL) {
-                  ret &= object_parse_field_from_string(attr_elem, 
-                                                        answer_list,
-                                                        value_nm, value);
-                  if (ret) {
-                     ret &= attr_list_add(this_list, answer_list,
-                                          &attr_elem, flags, NULL,
-                                          descriptor, href_nm, value_nm);
+               /* 
+                * All except the first token has to end with a ']'. Also
+                * this charcter has to be removed.
+                */
+               if (ret && !is_first_token) {
+                  if (token[length - 1] == ']') {
+                     token[length - 1] = '\0';
+                     length--;
                   } else {
-                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
-                                    MSG_ATTR_PARSINGERROR_S, value));
+                     /* EB: TODO: error handling */
+                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "missing \']\' character in token %s\n", token));
                      answer_list_add(answer_list, SGE_EVENT,
                                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+                     ret = false;
                   }
-                  if (!ret) {
-                     attr_elem = lFreeElem(attr_elem);
-                  }
-               } else {
-                  ret = false;
                }
+  
+               /*
+                * If the first token containes a ']' as last charcter than
+                * a default value is missing! This is not a error but
+                * we have to parse a group or host additionally
+                */ 
+               if (ret && is_first_token) {
+                  if (token[length - 1] == ']') {
+                     token[length - 1] = '\0';
+                     length--;
+                     first_is_default = false;
+                  } 
+               }
+
+               /*
+                * All but the first token has to contain a hostgroup
+                * or a host reference in the beginning of the string 
+                */
+               if (ret) {
+                  if (!is_first_token || !first_is_default) {
+                     value = strchr(token, '=');
+                     href_name = token;
+
+                     if (value != NULL) {
+                        value[0] = '\0';
+                        value++;
+
+                        /* 
+                         * EB: TODO: additional checks might be done
+                         *    - is valid hostname/ hostgroupname
+                         *    - depending on type 'value' might be tested
+                         */
+                        if (1) {
+                           ;
+                        } else {
+                           /* EB: TODO: error handling */
+                           SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "Invalid name\n"));
+                           answer_list_add(answer_list, SGE_EVENT,
+                                           STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+                           ret = false;
+                        }
+                     } else {
+                        /* EB: TODO: error handling */
+                        SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "\'=\' has to sepatate host or group from value\n"));
+                        answer_list_add(answer_list, SGE_EVENT,
+                                        STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+                        ret = false;
+                     }
+                  } else {
+                     href_name = HOSTREF_DEFAULT;
+                     value = token;
+                  }
+               }
+
+               /*
+                * Parsing the token was successfull. We can create a new 
+                * element.
+                */
+               if (ret) {
+                  lListElem *attr_elem = NULL;
+        
+                  attr_elem = attr_create(answer_list, href_name, NULL,
+                                          descriptor, href_nm, value_nm);
+                  if (attr_elem != NULL) {
+                     ret &= object_parse_field_from_string(attr_elem, 
+                                                           answer_list,
+                                                           value_nm, value);
+                     if (ret) {
+                        ret &= attr_list_add(this_list, answer_list,
+                                             &attr_elem, flags, NULL,
+                                             descriptor, href_nm, value_nm);
+                     } else {
+                        /* EB: TODO: error handling */
+                        SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "Error during parsing\n"));
+                        answer_list_add(answer_list, SGE_EVENT,
+                                        STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+                     }
+                     if (!ret) {
+                        attr_elem = lFreeElem(attr_elem);
+                     }
+                  } else {
+                     ret = false;
+                  }
+               }
+            } else {
+               /* EB: TODO: error handling */
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "Token is less than one character\n"));
+               answer_list_add(answer_list, SGE_EVENT,
+                               STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+               ret = false;
             }
-         } else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NOVALUEGIVEN));
-            answer_list_add(answer_list, SGE_EVENT,
-                            STATUS_ERROR1, ANSWER_QUALITY_ERROR);
-            ret = false;
-         }
-         is_first_token = false;
-      } 
-      sge_free_saved_vars(strtok_context);
-      strtok_context = NULL;
+            is_first_token = false;
+         } 
+         sge_free_saved_vars(strtok_context);
+         strtok_context = NULL;
+      }
    } else {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
-      answer_list_add(answer_list, SGE_EVENT, 
+      /* EB: TODOD: error handling */
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "Invalid parameter\n"));
+      answer_list_add(answer_list, SGE_EVENT,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;
    } 
@@ -834,29 +711,103 @@ attr_list_locate(const lList *this_list, const char *host_or_group, int href_nm)
    return ret; 
 }
 
-TEMPLATE_ATTR_IMPL(str_attr, const char *, const char *, ASTR_Type, ASTR_href, ASTR_value) 
+/*
+href_nm           ASTR_href
+*/
+static bool
+attr_list_verify(const lList *this_list, lList **answer_list,
+                 bool *is_ambiguous, int href_nm)
+{
+   bool ret = true;
 
-TEMPLATE_ATTR_IMPL(ulng_attr, u_long32, u_long32, AULNG_Type, AULNG_href, AULNG_value) 
+   DENTER(HOSTATTR_LAYER, "attr_list_verify");
+   if (this_list != NULL) {
+      lList *href_list = NULL;
+      lListElem *attr;
+      size_t default_elements = 0;
+      bool do_section_c = (is_ambiguous != NULL) ? true : false;
 
-TEMPLATE_ATTR_IMPL(bool_attr, bool, bool, ABOOL_Type, ABOOL_href, ABOOL_value) 
+      /*
+       * Check all entries if they are correct
+       */
+      for_each(attr, this_list) {
+         const char *href = lGetHost(attr, href_nm);
+         
+         if (!strcmp(HOSTREF_DEFAULT, href)) {
+            default_elements++;
+         }         
 
-TEMPLATE_ATTR_IMPL(time_attr, const char *, const char *, ATIME_Type, ATIME_href, ATIME_value) 
+         /*
+          * a)
+          *
+          * NULL entries are not allowed
+          */
+         if (href == NULL) {
+            ret = false; 
 
-TEMPLATE_ATTR_IMPL(mem_attr, const char *, const char *, AMEM_Type, AMEM_href, AMEM_value) 
+            /* 
+             * For section c) we need a list of all hostgroup references 
+             * No break in this case!
+             */
+            if (!do_section_c) {
+               break;
+            }
+         }
 
-TEMPLATE_ATTR_IMPL(inter_attr, const char *, const char *, AINTER_Type, AINTER_href, AINTER_value) 
+         /* Needed for section c) */
+         if (do_section_c && href != NULL && 
+             sge_is_hgroup_ref(href) && 
+             strcmp(HOSTREF_DEFAULT, href)) {
+            ret &= href_list_add(&href_list, answer_list, href);
+         }   
+      }
 
-TEMPLATE_ATTR_IMPL(qtlist_attr, u_long32, u_long32, AQTLIST_Type, AQTLIST_href, AQTLIST_value) 
+      if (ret) {
+         /*
+          * b)
+          *
+          * Either the list has to be empty 
+          * or it has to contain only one default entry
+          */
+         if (lGetNumberOfElem(this_list) != 0 && default_elements != 1) {
+            ret = false;
+         }
+      }
 
+      if (ret && do_section_c) {
+         /*
+          * c)
+          *
+          * We have to check if the attribute list containes ambiguous 
+          * configurations for any host (hostgroup) it uses.
+          */ 
+         
+         /* 
+          * EB: TODO: implement 
+          * href_list has to be used
+          */   
+      }
+   } else {
+      /*
+       * d)
+       *
+       * NULL lists are valid - they represent NONE
+       */
+      ;
+   }
+   DEXIT;
+   return ret;
+}
 
-TEMPLATE_ATTR_IMPL(strlist_attr, const char *, lList *, ASTRLIST_Type, ASTRLIST_href, ASTRLIST_value) 
+TEMPLATE_ATTR_IMPL(str_attr, const char *, ASTR_Type, ASTR_href, ASTR_value) 
 
-TEMPLATE_ATTR_IMPL(usrlist_attr, const char *, lList *, AUSRLIST_Type, AUSRLIST_href, AUSRLIST_value) 
+TEMPLATE_ATTR_IMPL(ulng_attr, u_long32, AULNG_Type, AULNG_href, AULNG_value) 
 
-TEMPLATE_ATTR_IMPL(prjlist_attr, const char *, lList *, APRJLIST_Type, APRJLIST_href, APRJLIST_value) 
+TEMPLATE_ATTR_IMPL(bool_attr, bool, ABOOL_Type, ABOOL_href, ABOOL_value) 
 
-TEMPLATE_ATTR_IMPL(celist_attr, const char *, lList *, ACELIST_Type, ACELIST_href, ACELIST_value) 
+TEMPLATE_ATTR_IMPL(time_attr, const char *, ATIME_Type, ATIME_href, ATIME_value) 
 
-TEMPLATE_ATTR_IMPL(solist_attr, const char *, lList *, ASOLIST_Type, ASOLIST_href, ASOLIST_value) 
+TEMPLATE_ATTR_IMPL(mem_attr, const char *, AMEM_Type, AMEM_href, AMEM_value) 
 
+TEMPLATE_ATTR_IMPL(inter_attr, const char *, AINTER_Type, AINTER_href, AINTER_value) 
 

@@ -57,7 +57,6 @@ enum {
    STATUS_ENOOPR,            /* operation needs operator privileges */
    STATUS_NOQMASTER,         /* failed to reach sge_qmaster */
    STATUS_NOCOMMD,           /* failed to reach commd */
-   STATUS_NOCONFIG,          /* missing dir/conf (cell, common, bootstrap) */
    STATUS_EDISK,             /* disk operation failed */
    STATUS_ENOSUCHUSER,       /* can't resolve user */
    STATUS_NOSUCHGROUP,       /* can't resolve group */
@@ -99,8 +98,6 @@ void answer_print_text(const lListElem *answer,
 
 void answer_to_dstring(const lListElem *answer, dstring *diag);
 
-void answer_list_to_dstring(const lList *alp, dstring *diag);
-
 bool answer_list_add_sprintf(lList **answer_list, u_long32 status, 
                              answer_quality_t quality, const char *fmt, ...);
 
@@ -121,8 +118,6 @@ int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream);
 
 bool answer_list_add(lList **answer_list, const char *text,
                      u_long32 status, answer_quality_t quality);
-
-bool answer_list_add_elem(lList **answer_list, lListElem *answer);
 
 void answer_list_replace(lList **answer_list, lList **new_list);
 

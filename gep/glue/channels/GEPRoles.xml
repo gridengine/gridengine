@@ -4,107 +4,13 @@
     "jar://com/iplanet/am/admin/cli/amAdmin.dtd"
 >
 
+<!--  CREATE REQUESTS -->
+
 <Requests>
-
-<!--  Create GEPUser & GEPAdmin role -->
-<!--  Create desktop service templates for GEPUser role -->
-<!--  Create desktop service templates for GEPAdmin role -->
-<!--
-
-<OrganizationRequests DN="o=Germany.Sun.COM,o=isp">
-   <CreateRole createDN="GEPUserRole"/>
-   <CreateRole createDN="GEPAdminRole"/>
+<OrganizationRequests DN="o=isp">
+    <CreateRole createDN="GEPUserRole,o=Germany.Sun.COM"/>
+    <CreateRole createDN="GEPAdminRole,o=Germany.Sun.COM"/>
 </OrganizationRequests>
 
-<RoleRequests DN="cn=GEPUserRole,o=Germany.Sun.COM,o=isp">
-   <CreateServiceTemplate>
-      <Service_Name>SunPortalDesktopService</Service_Name>
-   </CreateServiceTemplate>
-</RoleRequests>
-
-<RoleRequests DN="cn=GEPAdminRole,o=Germany.Sun.COM,o=isp">
-   <CreateServiceTemplate>
-      <Service_Name>SunPortalDesktopService</Service_Name>
-   </CreateServiceTemplate>
-</RoleRequests>
-
--->
-
-<!--  Create Users for GEPUser role -->
-<PeopleContainerRequests DN="ou=people,o=Germany.Sun.COM,o=isp">
-   <CreateUser createDN="codine">
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>top</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>person</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>organizationalPerson</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>inetOrgPerson</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>inetUser</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>iplanet-am-managed-person</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>iPlanetPreferences</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>inetAdmin</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>sunPortalDesktopPerson</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="objectclass"/>
-         <Value>iplanet-am-user-service</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="uid"/>
-         <Value>codine</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="givenname"/>
-         <Value>Andre Alefeld</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="sn"/>
-         <Value>Germany.Sun.COM</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="cn"/>
-         <Value>codine</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="userpassword"/>
-         <Value>directory</Value>
-      </AttributeValuePair>
-      <AttributeValuePair>
-         <Attribute name="mail"/>
-         <Value>andre.alefeld@sun.com</Value>
-      </AttributeValuePair>
-   </CreateUser>
-</PeopleContainerRequests>
-
-<!-- Assign Users to roles -->
-<RoleRequests DN="cn=GEPUserRole,o=Germany.Sun.COM,o=isp">
-   <AddUsers>
-      <DN>uid=codine,ou=people,o=Germany.Sun.COM,o=isp</DN>
-   </AddUsers>
-</RoleRequests>
-
 </Requests>	
+

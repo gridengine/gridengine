@@ -41,17 +41,31 @@ extern "C" {
 
 /*
  *
+ *   lDescr
+ *
+ */
+int cull_unpack_descr(sge_pack_buffer *pb, lDescr **dpp);
+int cull_pack_descr(sge_pack_buffer *pb, const lDescr *dp);
+
+/*
+ *
+ *   lMultiType
+ *
+ */
+int cull_unpack_cont(sge_pack_buffer *pb, lMultiType **mpp, const lDescr *dp);
+int cull_pack_cont(sge_pack_buffer *pb, const lMultiType *mp, const lDescr *dp);
+
+/*
+ *
  *   lListElem
  *
  */
 int cull_unpack_elem(sge_pack_buffer *pb, lListElem **epp, const lDescr *dp);
 int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep);
 
-int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr *dp, int flags);
-int cull_pack_elem_partial(sge_pack_buffer *pb, const lListElem *ep, int flags);
+int cull_unpack_object(sge_pack_buffer *pb, lListElem **epp);
+int cull_pack_object(sge_pack_buffer *pb, const lListElem *ep);
 
-void setByteArray(const char *byteArray, int size, lListElem *elem, int name);
-int getByteArray(char **byte, const lListElem *elem, int name);
 /*
  *
  *   lList
@@ -59,9 +73,6 @@ int getByteArray(char **byte, const lListElem *elem, int name);
  */
 int cull_unpack_list(sge_pack_buffer *pb, lList **lpp);
 int cull_pack_list(sge_pack_buffer *pb, const lList *lp);
-
-int cull_unpack_list_partial(sge_pack_buffer *pb, lList **lpp, int flags);
-int cull_pack_list_partial(sge_pack_buffer *pb, const lList *lp, int flags);
 
 /*
  *

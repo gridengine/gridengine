@@ -35,7 +35,6 @@
 
 #include "sge_boundaries.h"
 #include "cull.h"
-#include "cull_packL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -52,14 +51,12 @@ typedef enum {
 
 
 /* documentation see libs/evc/sge_event_client.c */
-/* #define EV_NO_FLUSH -1*/
+#define EV_NO_FLUSH -1
 
-#define EV_NOT_SUBSCRIBED 0 
-#define EV_SUBSCRIBED 1 
-#define EV_FLUSHED 1 
-#define EV_NOT_FLUSHED 0
+#define EV_NOT_SUBSCRIBED 0x01
+#define EV_SUBSCRIBED 0x02
+#define EV_FLUSHED 0x03
 #define EV_MAX_FLUSH 0x3f
-#define EV_NO_FLUSH -1 
 
 /* documentation see libs/evc/sge_event_client.c */
 
@@ -90,9 +87,7 @@ enum {
    EV_flush_delay,           /* flush delay paramter */
    /* je kleiner EV_flush_delay eines Event client
       desto unmittelbarer das Drosseln des Event-flushens */
-   EV_subscribed,            /* a list of subscriped events */
-   
-   EV_changed,               /* identifies changes in the subscription list */
+   EV_subscription,          /* subscription information */
    EV_busy_handling,         /* how to handle busy-states */
    EV_session,               /* session key to be used for filtering subscribed events */
 
@@ -104,8 +99,6 @@ enum {
    EV_busy,                  /* is the client busy? */
    EV_events,                /* used to hold the events that */
                              /* are not acknowledged */
-   EV_sub_array,             /* contains an array of subscribed events, only used in qmaster */      
-   
    /* for free use */
    EV_clientdata             /* can be used by client or master for any purposes */
 };
@@ -122,8 +115,7 @@ LISTDEF(EV_Type)
    
    SGE_ULONG(EV_d_time, CULL_DEFAULT)
    SGE_ULONG(EV_flush_delay, CULL_DEFAULT)
-   SGE_LIST(EV_subscribed, EVS_Type, CULL_DEFAULT)
-   SGE_BOOL(EV_changed, CULL_DEFAULT)
+   SGE_STRING(EV_subscription, CULL_DEFAULT)
    SGE_ULONG(EV_busy_handling, CULL_DEFAULT)
    SGE_STRING(EV_session, CULL_DEFAULT)
    
@@ -133,7 +125,6 @@ LISTDEF(EV_Type)
    SGE_ULONG(EV_next_number, CULL_DEFAULT)
    SGE_ULONG(EV_busy, CULL_DEFAULT)
    SGE_LIST(EV_events, ET_Type, CULL_DEFAULT)
-   SGE_REF(EV_sub_array, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 
    SGE_ULONG(EV_clientdata, CULL_DEFAULT)
 LISTEND 
@@ -150,8 +141,7 @@ NAMEDEF(EVN)
 
    NAME("EV_d_time")
    NAME("EV_flush_delay")
-   NAME("EV_subscribed")
-   NAME("EV_changed")
+   NAME("EV_subscription")
    NAME("EV_busy_handling")
    NAME("EV_session")
 
@@ -161,7 +151,6 @@ NAMEDEF(EVN)
    NAME("EV_next_number")
    NAME("EV_busy")
    NAME("EV_events")
-   NAME("EV_sub_array")
 
    NAME("EV_clientdata")
 NAMEEND
@@ -254,18 +243,17 @@ typedef enum {
    sgeE_QMASTER_GOES_DOWN,          /* + qmaster notifies all event clients, before
                                          it exits */
 
-   /* EB: TODO: QI event */
+   sgeE_QUEUE_LIST,                 /* + send queue list at registration */
+   sgeE_QUEUE_ADD,                  /* + event queue add */
+   sgeE_QUEUE_DEL,                  /* + event queue delete */
+   sgeE_QUEUE_MOD,                  /* + event queue modify */
+   sgeE_QUEUE_SUSPEND_ON_SUB,       /* + queue is suspended by subordinate mechanism */
+   sgeE_QUEUE_UNSUSPEND_ON_SUB,     /* + queue is unsuspended by subordinate mechanism */
 
    sgeE_CQUEUE_LIST,                /* + send cluster queue list at registration */
    sgeE_CQUEUE_ADD,                 /* + event cluster queue add */
    sgeE_CQUEUE_DEL,                 /* + event cluster queue delete */
    sgeE_CQUEUE_MOD,                 /* + event cluster queue modify */
-
-   sgeE_QINSTANCE_ADD,              /* + event queue instance add */
-   sgeE_QINSTANCE_DEL,              /* + event queue instance delete */
-   sgeE_QINSTANCE_MOD,              /* + event queue instance mod */
-   sgeE_QINSTANCE_SOS,              /* + event queue instance sos */
-   sgeE_QINSTANCE_USOS,             /* + event queue instance usos */
 
    sgeE_SCHED_CONF,                 /* + replace existing (sge) scheduler configuration */
 
@@ -316,13 +304,11 @@ typedef enum {
   ((x)==sgeE_OPERATOR_LIST) || \
   ((x)==sgeE_PE_LIST) || \
   ((x)==sgeE_PROJECT_LIST) || \
-  ((x)==sgeE_CQUEUE_LIST) || \
+  ((x)==sgeE_QUEUE_LIST) || \
   ((x)==sgeE_SUBMITHOST_LIST) || \
   ((x)==sgeE_USER_LIST) || \
   ((x)==sgeE_USERSET_LIST) || \
-  ((x)==sgeE_HGROUP_LIST) || \
-  ((x)==sgeE_SHUTDOWN) || \
-  ((x)==sgeE_QMASTER_GOES_DOWN))
+  ((x)==sgeE_HGROUP_LIST))
 
 
 enum {
@@ -332,7 +318,6 @@ enum {
    ET_intkey,                /* a int key for use by a specific event type */
    ET_intkey2,               /* a int key for use by a specific event type */
    ET_strkey,                /* a str key for use by a specific event type */
-   ET_strkey2,               /* a str key for use by a specific event type */
    ET_new_version            /* new version of the changed object */
                              /* JG: TODO: we should have different fields for 
                               *           objects (SGE_OBJECT) and
@@ -348,7 +333,6 @@ LISTDEF(ET_Type)
    SGE_ULONG(ET_intkey, CULL_DEFAULT)
    SGE_ULONG(ET_intkey2, CULL_DEFAULT)
    SGE_STRING(ET_strkey, CULL_DEFAULT)
-   SGE_STRING(ET_strkey2, CULL_DEFAULT)
    SGE_LIST(ET_new_version, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 LISTEND 
 
@@ -359,38 +343,12 @@ NAMEDEF(ETN)
    NAME("ET_intkey")
    NAME("ET_intkey2")
    NAME("ET_strkey")
-   NAME("ET_strkey2")
    NAME("ET_new_version")
 NAMEEND
-#define ETS sizeof(ETN)/sizeof(char*)
-
-enum {
-   EVS_id = EVS_LOWERBOUND,
-   EVS_flush,
-   EVS_interval,
-   EVS_what,
-   EVS_where
-};
-
-LISTDEF(EVS_Type)
-   SGE_ULONG(EVS_id, CULL_DEFAULT)
-   SGE_BOOL(EVS_flush, CULL_DEFAULT)
-   SGE_ULONG(EVS_interval, CULL_DEFAULT)
-   SGE_OBJECT(EVS_what, PACK_Type, CULL_DEFAULT)
-   SGE_OBJECT(EVS_where, PACK_TYPE,CULL_DEFAULT)
-LISTEND
-
-NAMEDEF(EVSN)
-   NAME("EVS_id") 
-   NAME("EVS_flush")
-   NAME("EVS_interval")
-   NAME("EVS_what")
-   NAME("EVS_where")
-NAMEEND   
-#define EVSS sizeof(EVSN)/sizeof(char*)
 
 /* *INDENT-ON* */ 
 
+#define ETS sizeof(ETN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

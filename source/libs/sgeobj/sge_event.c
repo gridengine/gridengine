@@ -44,7 +44,7 @@ const char *event_text(const lListElem *event, dstring *buffer)
 {
    u_long32 type, intkey, number, intkey2;
    int n=0;
-   const char *strkey, *strkey2;
+   const char *strkey;
    lList *lp;
 
    number = lGetUlong(event, ET_number);
@@ -52,10 +52,9 @@ const char *event_text(const lListElem *event, dstring *buffer)
    intkey = lGetUlong(event, ET_intkey);
    intkey2 = lGetUlong(event, ET_intkey2);
    strkey = lGetString(event, ET_strkey);
-   strkey2 = lGetString(event, ET_strkey2);
-   if ((lp=lGetList(event, ET_new_version))) {
+   if ((lp=lGetList(event, ET_new_version)))
       n = lGetNumberOfElem(lp);
-   }
+
 
    switch (type) {
 
@@ -275,6 +274,26 @@ const char *event_text(const lListElem *event, dstring *buffer)
       break;
 
    /* -------------------- */
+   case sgeE_QUEUE_LIST:
+      sge_dstring_sprintf(buffer, MSG_EVENT_QUEUELISTXELEMENTS_II, (int)number, n);
+      break;
+   case sgeE_QUEUE_ADD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDQUEUEX_IS, (int)number, strkey);
+      break;
+   case sgeE_QUEUE_DEL:
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELQUEUEX_IS, (int)number, strkey);
+      break;
+   case sgeE_QUEUE_MOD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODQUEUEX_IS, (int)number, strkey);
+      break;
+   case sgeE_QUEUE_UNSUSPEND_ON_SUB:
+      sge_dstring_sprintf(buffer, MSG_EVENT_UNSUSPENDQUEUEXONSUBORDINATE_IS, (int)number, strkey);
+      break;
+   case sgeE_QUEUE_SUSPEND_ON_SUB:
+      sge_dstring_sprintf(buffer, MSG_EVENT_SUSPENDQUEUEXONSUBORDINATE_IS , (int)number, strkey);
+      break;
+
+   /* -------------------- */
    case sgeE_CQUEUE_LIST:
       sge_dstring_sprintf(buffer, MSG_EVENT_CQUEUELISTXELEMENTS_II, (int)number, n);
       break;
@@ -286,23 +305,6 @@ const char *event_text(const lListElem *event, dstring *buffer)
       break;
    case sgeE_CQUEUE_MOD:
       sge_dstring_sprintf(buffer, MSG_EVENT_MODCQUEUEX_IS, (int)number, strkey);
-      break;
-
-   /* -------------------- */
-   case sgeE_QINSTANCE_ADD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_ADDQINSTANCE_ISS, (int)number, strkey, strkey2);
-      break;
-   case sgeE_QINSTANCE_DEL:
-      sge_dstring_sprintf(buffer, MSG_EVENT_DELQINSTANCE_ISS, (int)number, strkey, strkey2);
-      break;
-   case sgeE_QINSTANCE_MOD:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MODQINSTANCE_ISS, (int)number, strkey, strkey2);
-      break;
-   case sgeE_QINSTANCE_USOS:
-      sge_dstring_sprintf(buffer, MSG_EVENT_UNSUSPENDQUEUEXONSUBORDINATE_IS, (int)number, strkey);
-      break;
-   case sgeE_QINSTANCE_SOS:
-      sge_dstring_sprintf(buffer, MSG_EVENT_SUSPENDQUEUEXONSUBORDINATE_IS , (int)number, strkey);
       break;
 
    /* -------------------- */

@@ -59,11 +59,9 @@
 #define MSG_GDI_COMMDUP                               _MESSAGE(43048, _("commd is up"))
 #define MSG_GDI_COMMDDOWN_S                           _MESSAGE(43049, _("commd is down: "SFN""))
 #define MSG_GDI_RHOSTISNULLFORSENDREQUEST             _MESSAGE(43050, _("parameter rhost = NULL for sge_send_any_request()"))
-#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN"\n"))
+#define MSG_GDI_SENDMESSAGETOCOMMPROCFAILED_SSISS     _MESSAGE(43051, _("can't send "SFN"synchronous message to commproc ("SFN":%d) on host "SFQ": "SFN""))
 #define MSG_GDI_RHOSTISNULLFORGETANYREQUEST           _MESSAGE(43052, _("parameter rhost = NULL for sge_get_any_request()"))
 #define MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS _MESSAGE(43053, _("can't receive message from commproc ("SFN":%d) on host "SFQ": "SFN""))
-#define MSG_GDI_NOCOMMHANDLE                          _MESSAGE(43054, _("can't get communication handle\n"))
-#define MSG_GDI_SENDINGMESSAGE_SIU                    _MESSAGE(43055, _("sending to id: "SFN",%d, size of message: " U32CFormat"\n" ))
 
 /* 
 ** gdilib/sge_qexec.c
@@ -110,6 +108,7 @@
 /* 
 ** gdilib/setup.c
 */
+#define MSG_GDI_HOSTCMPPOLICYNOTSETFORFILE_S             _MESSAGE(43108, _("can't read "SFQ" - host compare policy not set."))
 #define MSG_GDI_NOVALIDSGECOMPRESSIONLEVEL_S             _MESSAGE(43109, _(""SFN" is not a valid SGE_COMPRESSION_LEVEL\n"))
 #define MSG_GDI_SETCOMPRESSIONLEVEL_D                    _MESSAGE(43110, _("Setting compression level to "U32CFormat"\n"))
 #define MSG_GDI_NOVALIDSGECOMPRESSIONTHRESHOLD_S         _MESSAGE(43111, _(""SFN" is not a valid SGE_COMPRESSION_THRESHOLD\n"))
@@ -117,12 +116,17 @@
 
 
 /* 
+** gdilib/setup_path.c
+*/
+#define MSG_GDI_SGEROOTNOTADIRECTORY_S                   _MESSAGE(43113, _("$SGE_ROOT="SFN" is not a directory\n"))
+#define MSG_GDI_DIRECTORYNOTEXIST_S                      _MESSAGE(43114, _("directory doesn't exist: "SFN"\n"))
+#define MSG_SGETEXT_NOSGECELL_S                _MESSAGE(43115, _("cell directory "SFQ" doesn't exist\n"))
+
+/* 
 ** gdilib/sge_gdi_request.c
 */
 #define MSG_GDI_POINTER_NULLPOINTERPASSEDTOSGEGDIMULIT   _MESSAGE(43117, _("NULL pointer passed to sge_gdi_multi()"))
 #define MSG_GDI_CANTCREATEGDIREQUEST                     _MESSAGE(43118, _("can't create gdi request"))
-#define MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS   _MESSAGE(43121, _("unable to send message to "SFN" using port "U32CFormat" on host "SFQ": "SFN"\n"))
-#define MSG_GDI_UNABLE_TO_CONNECT_SUS                    _MESSAGE(43122, _("unable to contact "SFN" using port "U32CFormat" on host "SFQ"\n"))
 #define MSG_GDI_GETPWUIDXFAILEDERRORX_IS                 _MESSAGE(43123, _("failed to getpwuid(%d): "SFN"\n"))
 #define MSG_GDI_GETGRGIDXFAILEDERRORX_IS                 _MESSAGE(43124, _("failed to getgrgid(%d): "SFN"\n"))
 #define MSG_GDI_SENDINGGDIREQUESTFAILED                  _MESSAGE(43125, _("failed sending gdi request\n"))
@@ -138,18 +142,16 @@
 #define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
 #define MSG_GDI_CANTUNPACKGDIREQUEST                       _MESSAGE(43138, _("can't unpack gdi request"    ))
 
-/**
- * cull/cull_where.c
- */
-#define MSG_PACK_ERRORUNPACKING_S      _MESSAGE(43150, _("error unpacking: "SFN"\n"))
-#define MSG_PACK_INVALIDPACKDATA       _MESSAGE(43151, _("the pack string contained invalid characters\n"))
-#define MSG_PACK_WRONGPACKTYPE_UI      _MESSAGE(43152, _("wrong pack type (got: "U32CFormat" / expected %d\n"))
- 
 /*
  * common/usage.c
  */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
 
-#define MSG_GDI_GENERAL_COM_ERROR_S   _MESSAGE(43294, _("general communication error: "SFN"\n"))
+
+#define MSG_GDI_INVALIDACTION          _MESSAGE(43298, _("invalid action" ))
+#define MSG_GDI_INVALIDOPTIONFLAG      _MESSAGE(43299, _("invalid option flag"))
+#define MSG_GDI_INVALIDIDENCOUNTERED   _MESSAGE(43300, _("encountered invalid id"))
+
+
 #endif /* __MSG_GDILIB_H */
 

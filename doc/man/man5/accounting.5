@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2004/01/30 16:43:46 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2002/07/04 09:50:12 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCOUNTING 5 "$Date: 2004/01/30 16:43:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCOUNTING 5 "$Date: 2002/07/04 09:50:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 accounting \- xxQS_NAMExx accounting file format
@@ -49,7 +49,7 @@ Accounting record entries are
 separated by colon (':') signs. The entries denote in their order
 of appearance:
 .IP "\fBqname\fP"
-Name of the cluster queue in which the job has run.
+Name of the queue in which the job has run.
 .IP "\fBhostname\fP"
 Name of the execution host.
 .IP "\fBgroup\fP"
@@ -91,8 +91,7 @@ Difference between \fBend_time\fP and \fBstart_time\fP (see above).
 The remainder of the accounting entries follows the contents of the
 standard UNIX rusage structure as described in
 .M getrusage 2 .
-Depending on the operating system where the job was executed some of the
-fields may be 0.  The following entries are provided:
+The following entries are provided:
 .PP
 .nf
 .RS

@@ -69,10 +69,9 @@ enum {
    OR_job_version,
    OR_queuelist,
    OR_ticket,
+   OR_pticket,
    OR_joker,
-   OR_pe,
-   OR_ntix,
-   OR_prio
+   OR_pe
 };
 
 LISTDEF(OR_Type)
@@ -84,21 +83,16 @@ LISTDEF(OR_Type)
    SGE_ULONG(OR_job_version, CULL_DEFAULT)  /* which job version */
    SGE_LIST(OR_queuelist, OQ_Type, CULL_DEFAULT)     /* associated queue list */
    SGE_DOUBLE(OR_ticket, CULL_DEFAULT)      /* SGEEE job tickets */
-   SGE_LIST(OR_joker, CULL_ANY_SUBTYPE, CULL_DEFAULT)         
-      /* 
-       * Type of this sublist depends on OR_type!  
-       *    ORT_start_job                        empty 
-       *    ORT_remove_job                       empty  
-       *    ORT_tickets                          reduced job element JB_Type
-       *    ORT_update_*_usage                   reduced user/prj object UP_Type 
-       *    ORT_share_tree                       reduced share tree root node STN_Type 
-       *    ORT_remove_immediate_job             empty 
-       *    ORT_job_schedd_info                  SME_Type 
-       *    ORT_ptickets                         reduced job element JB_Type
-       */
+   SGE_DOUBLE(OR_pticket, CULL_DEFAULT)     /* SGEEE job tickets */
+   SGE_LIST(OR_joker, CULL_ANY_SUBTYPE, CULL_DEFAULT)         /* type of this sublist depends on OR_type:  
+                               * ORT_start_job empty ORT_remove_job empty  
+                               * ORT_tickets reduced job element JB_Type
+                               * ORT_update_*_usage reduced user/prj object
+                               * UP_Type ORT_share_tree reduced share tree
+                               * root node STN_Type *
+                               * ORT_remove_immediate_job empty *
+                               * ORT_job_schedd_info SME_Type */
    SGE_STRING(OR_pe, CULL_DEFAULT)          /* which pe */
-   SGE_DOUBLE(OR_ntix, CULL_DEFAULT)        /* normalized ticket amount sent with job start order */
-   SGE_DOUBLE(OR_prio, CULL_DEFAULT)        /* priority sent with job start order */
 LISTEND 
 
 NAMEDEF(ORN)
@@ -110,10 +104,9 @@ NAMEDEF(ORN)
      NAME("OR_job_version")
      NAME("OR_queuelist")
      NAME("OR_ticket")
+     NAME("OR_pticket")
      NAME("OR_joker")
      NAME("OR_pe")
-     NAME("OR_ntix")
-     NAME("OR_prio")
      NAMEEND
 #define ORS sizeof(ORN)/sizeof(char*)
 
@@ -125,6 +118,7 @@ enum {
    OQ_ticket,
    OQ_oticket,
    OQ_fticket,
+   OQ_dticket,
    OQ_sticket
 };
 
@@ -135,6 +129,7 @@ LISTDEF(OQ_Type)
    SGE_DOUBLE(OQ_ticket, CULL_DEFAULT)       /* total SGEEE tickets for slots */
    SGE_DOUBLE(OQ_oticket, CULL_DEFAULT)      /* total SGEEE override tickets */
    SGE_DOUBLE(OQ_fticket, CULL_DEFAULT)      /* total SGEEE functional tickets */
+   SGE_DOUBLE(OQ_dticket, CULL_DEFAULT)      /* total SGEEE deadline tickets */
    SGE_DOUBLE(OQ_sticket, CULL_DEFAULT)      /* total SGEEE sharetree tickets */
 LISTEND 
 
@@ -145,6 +140,7 @@ NAMEDEF(OQN)
    NAME("OQ_ticket")
    NAME("OQ_oticket")
    NAME("OQ_fticket")
+   NAME("OQ_dticket")
    NAME("OQ_sticket")
 NAMEEND
 

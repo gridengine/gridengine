@@ -77,7 +77,9 @@
 
 /*-------------------------------------------------------------------------*/
 typedef struct _tCClEntry {
+   String qmaster_spool_dir;
    String execd_spool_dir;
+   String binary_path;
    String mailer;
    String xterm;
    String load_sensor;
@@ -94,6 +96,7 @@ typedef struct _tCClEntry {
    String administrator_mail;
    int shell_start_mode;
    String login_shells;
+   String default_domain;
    int min_uid;
    int min_gid;
    String load_report_time;
@@ -101,6 +104,7 @@ typedef struct _tCClEntry {
    String max_unheard;
    String reschedule_unknown;
    int loglevel;
+   int ignore_fqdn;
    int logmail;
    int max_aj_instances;
    int max_aj_tasks;
@@ -113,7 +117,7 @@ typedef struct _tCClEntry {
    int enforce_project;
    int enforce_user;
    String qmaster_params;
-   String reporting_params;
+   String schedd_params;
    String execd_params;
    String shepherd_cmd;
    String rsh_daemon;
@@ -124,16 +128,21 @@ typedef struct _tCClEntry {
    String pag_cmd;
    String token_extend_time;
    String gid_range;
+   String admin_user;
    int zombie_jobs;
-   int auto_user_oticket;
-   int auto_user_fshare;
-   String auto_user_default_project;
-   String auto_user_delete_time;
 } tCClEntry;
 
 XtResource ccl_resources[] = {
+   { "qmaster_spool_dir", "qmaster_spool_dir", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, qmaster_spool_dir), 
+      XtRImmediate, NULL },
+
    { "execd_spool_dir", "execd_spool_dir", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, execd_spool_dir), 
+      XtRImmediate, NULL },
+
+   { "binary_path", "binary_path", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, binary_path), 
       XtRImmediate, NULL },
 
    { "mailer", "mailer", XtRString, 
@@ -186,6 +195,10 @@ XtResource ccl_resources[] = {
       sizeof(String), XtOffsetOf(tCClEntry, login_shells), 
       XtRImmediate, NULL },
 
+   { "default_domain", "default_domain", XtRString,
+      sizeof(String), XtOffsetOf(tCClEntry, default_domain),
+      XtRImmediate, NULL }, 
+
    { "administrator_mail", "administrator_mail", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, administrator_mail),
       XtRImmediate, NULL },
@@ -216,6 +229,10 @@ XtResource ccl_resources[] = {
       
    { "loglevel", "loglevel", XtRInt, 
       sizeof(int), XtOffsetOf(tCClEntry, loglevel), 
+      XtRImmediate, NULL },
+      
+   { "ignore_fqdn", "ignore_fqdn", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, ignore_fqdn), 
       XtRImmediate, NULL },
       
    { "logmail", "logmail", XtRInt, 
@@ -270,8 +287,8 @@ XtResource ccl_resources[] = {
       sizeof(String), XtOffsetOf(tCClEntry, qmaster_params), 
       XtRImmediate, NULL },
 
-   { "reporting_params", "reporting_params", XtRString, 
-      sizeof(String), XtOffsetOf(tCClEntry, reporting_params), 
+   { "schedd_params", "schedd_params", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, schedd_params), 
       XtRImmediate, NULL },
 
    { "execd_params", "execd_params", XtRString, 
@@ -314,26 +331,14 @@ XtResource ccl_resources[] = {
       sizeof(String), XtOffsetOf(tCClEntry, gid_range), 
       XtRImmediate, NULL },
       
+   { "admin_user", "admin_user", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, admin_user), 
+      XtRImmediate, NULL },
+      
    { "zombie_jobs", "zombie_jobs", XtRInt,
       sizeof(int), XtOffsetOf(tCClEntry, zombie_jobs),
       XtRImmediate, NULL },
 
-   { "auto_user_oticket", "auto_user_oticket", XtRInt,
-      sizeof(int), XtOffsetOf(tCClEntry, auto_user_oticket),
-      XtRImmediate, NULL },
-
-   { "auto_user_fshare", "auto_user_fshare", XtRInt,
-      sizeof(int), XtOffsetOf(tCClEntry, auto_user_fshare),
-      XtRImmediate, NULL },
-
-   { "auto_user_default_project", "auto_user_default_project", XtRString, 
-      sizeof(String), XtOffsetOf(tCClEntry, auto_user_default_project), 
-      XtRImmediate, NULL },
-      
-   { "auto_user_delete_time", "auto_user_delete_time", XtRString, 
-      sizeof(String), XtOffsetOf(tCClEntry, auto_user_delete_time), 
-      XtRImmediate, NULL },
-      
 };
 
 
@@ -343,12 +348,15 @@ static Widget cluster_conf_list = 0;
 static Widget cluster_global_layout = 0;
 static Widget cluster_host = 0;
 
+static Widget cluster_qmaster_spool_dir = 0;
+static Widget cluster_qmaster_spool_dir_label = 0;
 static Widget cluster_execd_spool_dir = 0;
 static Widget cluster_execd_spool_dir_label = 0;
 static Widget cluster_admin_mail = 0;
 static Widget cluster_admin_mail_label = 0;
 static Widget cluster_login_shells = 0;
 static Widget cluster_login_shells_label = 0;
+static Widget cluster_default_domain = 0;
 static Widget cluster_min_uid = 0;
 static Widget cluster_min_gid = 0;
 static Widget cluster_max_aj_instances = 0;
@@ -366,6 +374,7 @@ static Widget cluster_reschedule_unknown = 0;
 static Widget cluster_reschedule_unknownPB = 0;
 static Widget cluster_shell_start_mode = 0;
 static Widget cluster_loglevel = 0;
+static Widget cluster_ignore_fqdn = 0;
 static Widget cluster_enforce_project = 0;
 static Widget cluster_enforce_user = 0;
 
@@ -382,7 +391,7 @@ static Widget cluster_projectsPB = 0;
 static Widget cluster_xprojectsPB = 0;
 
 static Widget cluster_qmaster_params = 0;
-static Widget cluster_reporting_params = 0;
+static Widget cluster_schedd_params = 0;
 static Widget cluster_execd_params = 0;
 static Widget cluster_shepherd_cmd = 0;
 static Widget cluster_rsh_daemon = 0;
@@ -393,17 +402,14 @@ static Widget cluster_set_token_cmd = 0;
 static Widget cluster_pag_cmd = 0;
 static Widget cluster_token_extend_time = 0;
 static Widget cluster_gid_range = 0;
+static Widget cluster_admin_user = 0;
+static Widget cluster_admin_user_label = 0;
+static Widget cluster_default_domain_label = 0;
 static Widget cluster_qmaster_params_label = 0;
-static Widget cluster_reporting_params_label = 0;
+static Widget cluster_schedd_params_label = 0;
 static Widget cluster_set_token_cmd_label = 0;
 static Widget cluster_pag_cmd_label = 0;
 static Widget cluster_token_extend_time_label = 0;
-static Widget cluster_auto_user_defaults_label = 0;
-static Widget cluster_auto_user_oticket = 0;
-static Widget cluster_auto_user_fshare = 0;
-static Widget cluster_auto_user_default_project = 0;
-static Widget cluster_auto_user_delete_time = 0;
-static Widget cluster_auto_user_delete_timePB = 0;
 
 /*-------------------------------------------------------------------------*/
 static void qmonPopdownClusterConfig(Widget w, XtPointer cld, XtPointer cad);
@@ -675,6 +681,10 @@ Widget parent
                            "cluster_xprojectsPB", &cluster_xprojectsPB,
                            "cluster_projects", &cluster_projects,
                            "cluster_xprojects", &cluster_xprojects,
+                           "cluster_qmaster_spool_dir", 
+                                    &cluster_qmaster_spool_dir,
+                           "cluster_qmaster_spool_dir_label", 
+                                    &cluster_qmaster_spool_dir_label,
                            "cluster_execd_spool_dir", 
                                     &cluster_execd_spool_dir,
                            "cluster_execd_spool_dir_label", 
@@ -683,6 +693,8 @@ Widget parent
                            "cluster_admin_mail_label", &cluster_admin_mail_label,
                            "cluster_login_shells", &cluster_login_shells,
                            "cluster_login_shells_label", &cluster_login_shells_label,
+                           "cluster_default_domain", &cluster_default_domain,
+                           "cluster_default_domain_label", &cluster_default_domain_label,
                            "cluster_min_uid", &cluster_min_uid,
                            "cluster_min_gid", &cluster_min_gid,
                            "cluster_max_aj_instances", &cluster_max_aj_instances,
@@ -702,10 +714,11 @@ Widget parent
                            "cluster_shell_start_mode", 
                                     &cluster_shell_start_mode,
                            "cluster_loglevel", &cluster_loglevel,
+                           "cluster_ignore_fqdn", &cluster_ignore_fqdn,
                            "cluster_qmaster_params", &cluster_qmaster_params,
                            "cluster_qmaster_params_label", &cluster_qmaster_params_label,
-                           "cluster_reporting_params", &cluster_reporting_params,
-                           "cluster_reporting_params_label", &cluster_reporting_params_label,
+                           "cluster_schedd_params", &cluster_schedd_params,
+                           "cluster_schedd_params_label", &cluster_schedd_params_label,
                            "cluster_execd_params", &cluster_execd_params,
                            "cluster_shepherd_cmd", &cluster_shepherd_cmd,
                            "cluster_rsh_daemon", &cluster_rsh_daemon,
@@ -722,20 +735,24 @@ Widget parent
                                     &cluster_token_extend_time,
                            "cluster_gid_range", 
                                     &cluster_gid_range,
-                           "cluster_auto_user_defaults_label", 
-                                    &cluster_auto_user_defaults_label,
-                           "cluster_auto_user_fshare", 
-                                    &cluster_auto_user_fshare,
-                           "cluster_auto_user_oticket", 
-                                    &cluster_auto_user_oticket,
-                           "cluster_auto_user_default_project", 
-                                    &cluster_auto_user_default_project,
-                           "cluster_auto_user_delete_time", 
-                                    &cluster_auto_user_delete_time,
-                           "cluster_auto_user_delete_timePB", 
-                                    &cluster_auto_user_delete_timePB,
+                           "cluster_admin_user", 
+                                    &cluster_admin_user,
+                           "cluster_admin_user_label", 
+                                    &cluster_admin_user_label,
                            NULL);
 
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      XtUnmanageChild(cluster_enforce_project);
+      XtUnmanageChild(cluster_enforce_user);
+      XtVaGetValues( cluster_projectsPB,
+                     XmtNlayoutIn, &cluster_projects_col,
+                     NULL);
+      XtUnmanageChild(cluster_projects_col);
+      XtVaGetValues( cluster_xprojectsPB,
+                     XmtNlayoutIn, &cluster_xprojects_col,
+                     NULL);
+      XtUnmanageChild(cluster_xprojects_col);
+   }
 
    if (!feature_is_enabled(FEATURE_AFS_SECURITY)) {
       XtVaGetValues( cluster_set_token_cmd,
@@ -757,12 +774,12 @@ Widget parent
    XtAddCallback(cluster_xusersPB, XmNactivateCallback, 
                      qmonClusterAskForUsers, (XtPointer)cluster_xusers);
 
-   XtAddCallback(cluster_projectsPB, XmNactivateCallback, 
-                 qmonClusterAskForProjects, (XtPointer)cluster_projects);
-   XtAddCallback(cluster_xprojectsPB, XmNactivateCallback, 
-                 qmonClusterAskForProjects, (XtPointer)cluster_xprojects);
-   XtAddCallback(cluster_auto_user_delete_timePB, XmNactivateCallback, 
-                 qmonClusterTime, (XtPointer)cluster_auto_user_delete_time);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      XtAddCallback(cluster_projectsPB, XmNactivateCallback, 
+                    qmonClusterAskForProjects, (XtPointer)cluster_projects);
+      XtAddCallback(cluster_xprojectsPB, XmNactivateCallback, 
+                    qmonClusterAskForProjects, (XtPointer)cluster_xprojects);
+   }
 
    XtAddCallback(cluster_load_report_timePB, XmNactivateCallback, 
                      qmonClusterTime, (XtPointer)cluster_load_report_time);
@@ -961,9 +978,18 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 {
    DENTER(GUI_LAYER, "qmonClusterLayoutSetSensitive");
 
+   XtSetSensitive(cluster_qmaster_spool_dir, False);
+   XtSetSensitive(cluster_qmaster_spool_dir_label, False);
+
    XtSetSensitive(cluster_execd_spool_dir, False);
    XtSetSensitive(cluster_execd_spool_dir_label, False);
 
+   XtSetSensitive(cluster_ignore_fqdn, False);
+   XtSetSensitive(cluster_default_domain, False);
+   XtSetSensitive(cluster_default_domain_label, False);
+   XtSetSensitive(cluster_admin_user, False);
+   XtSetSensitive(cluster_admin_user_label, False);
+   
    XtSetSensitive(cluster_admin_mail, mode);
    XtSetSensitive(cluster_admin_mail_label, mode);
    XtSetSensitive(cluster_login_shells, mode);
@@ -991,22 +1017,17 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
 
    XtSetSensitive(cluster_qmaster_params, mode);
    XtSetSensitive(cluster_qmaster_params_label, mode);
+   XtSetSensitive(cluster_schedd_params, mode);
+   XtSetSensitive(cluster_schedd_params_label, mode);
   
-   XtSetSensitive(cluster_reporting_params, mode);
-   XtSetSensitive(cluster_reporting_params_label, mode);
-  
-   XtSetSensitive(cluster_enforce_project, mode);
-   XtSetSensitive(cluster_enforce_user, mode);
-   XtSetSensitive(cluster_projects, mode);
-   XtSetSensitive(cluster_projectsPB, mode);
-   XtSetSensitive(cluster_xprojects, mode);
-   XtSetSensitive(cluster_xprojectsPB, mode);
-   XtSetSensitive(cluster_auto_user_defaults_label, mode);
-   XtSetSensitive(cluster_auto_user_fshare, mode);
-   XtSetSensitive(cluster_auto_user_oticket, mode);
-   XtSetSensitive(cluster_auto_user_default_project, mode);
-   XtSetSensitive(cluster_auto_user_delete_time, mode);
-   XtSetSensitive(cluster_auto_user_delete_timePB, mode);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      XtSetSensitive(cluster_enforce_project, mode);
+      XtSetSensitive(cluster_enforce_user, mode);
+      XtSetSensitive(cluster_projects, mode);
+      XtSetSensitive(cluster_projectsPB, mode);
+      XtSetSensitive(cluster_xprojects, mode);
+      XtSetSensitive(cluster_xprojectsPB, mode);
+   }
 
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       XtSetSensitive(cluster_set_token_cmd, mode);
@@ -1091,7 +1112,8 @@ int local
    static String loglevel[] = { "log_info", "log_warning", "log_err" };
 /*    static String logmail[] = { "true", "false" }; */
    static String enforce_project[] = { "true", "false" };
-   static String enforce_user[] = { "true", "false", "auto" };
+   static String enforce_user[] = { "true", "false" };
+   static String ignore_fqdn[] = { "true", "false" };
    String str = NULL;
    char min_uid[20];
    char min_gid[20];
@@ -1140,6 +1162,18 @@ int local
          }
          new = lCopyElem(ep);
          lSetString(new, CF_value, clen->execd_spool_dir);
+         lAppendElem(lp, new);
+      }
+
+      ep = lGetElemStr(confl, CF_name, "binary_path");
+      if (clen->binary_path && clen->binary_path[0] != '\0' 
+       /* && strcmp(lGetString(ep, CF_value), clen->binary_path)*/) {
+         if (check_white(clen->binary_path)) {
+            strcpy(errstr, "No whitespace allowed in value for binary_path");
+            goto error;
+         }
+         new = lCopyElem(ep);
+         lSetString(new, CF_value, clen->binary_path);
          lAppendElem(lp, new);
       }
 
@@ -1273,6 +1307,22 @@ int local
          else
             new = lCopyElem(ep);
          lSetString(new, CF_value, clen->shepherd_cmd);
+         lAppendElem(lp, new);
+      }
+
+      if (clen->default_domain && clen->default_domain[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "default_domain");
+         if (check_white(clen->default_domain)) {
+            strcpy(errstr, "No whitespace allowed in value for default_domain");
+            goto error;
+         }
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "default_domain");
+         }
+         else
+            new = lCopyElem(ep);
+         lSetString(new, CF_value, clen->default_domain);
          lAppendElem(lp, new);
       }
 
@@ -1417,12 +1467,26 @@ int local
       /*
       ** global settings
       */
+      ep = lGetElemStr(confl, CF_name, "qmaster_spool_dir");
+      if (check_white(clen->qmaster_spool_dir)) {
+         strcpy(errstr, "No whitespace allowed in value for qmaster_spool_dir");
+         goto error;
+      }
+      lSetString(ep, CF_value, clen->qmaster_spool_dir);
+
       ep = lGetElemStr(confl, CF_name, "execd_spool_dir");
       if (check_white(clen->execd_spool_dir)) {
          strcpy(errstr, "No whitespace allowed in value for execd_spool_dir");
          goto error;
       }
       lSetString(ep, CF_value, clen->execd_spool_dir);
+
+      ep = lGetElemStr(confl, CF_name, "binary_path");
+      if (check_white(clen->binary_path)) {
+         strcpy(errstr, "No whitespace allowed in value for binary_path");
+         goto error;
+      }
+      lSetString(ep, CF_value, clen->binary_path);
 
       ep = lGetElemStr(confl, CF_name, "mailer");
       if (check_white(clen->mailer)) {
@@ -1587,6 +1651,11 @@ int local
       ep = lGetElemStr(confl, CF_name, "loglevel");
       lSetString(ep, CF_value, str);
 
+      if (clen->ignore_fqdn >= 0 && 
+            clen->ignore_fqdn < XtNumber(ignore_fqdn))
+         str = ignore_fqdn[clen->ignore_fqdn];
+      ep = lGetElemStr(confl, CF_name, "ignore_fqdn");
+      lSetString(ep, CF_value, str);
 
 /*       if (clen->logmail >= 0 &&  */
 /*             clen->logmail < XtNumber(logmail)) */
@@ -1656,73 +1725,52 @@ int local
          lDelElemStr(&confl, CF_name, "gid_range");
       }
 
-      if (clen->enforce_project >= 0 && 
-            clen->enforce_project < sizeof(enforce_project))
-         str = enforce_project[clen->enforce_project];
-      ep = lGetElemStr(confl, CF_name, "enforce_project");
-      lSetString(ep, CF_value, str);
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         if (clen->enforce_project >= 0 && 
+               clen->enforce_project < sizeof(enforce_project))
+            str = enforce_project[clen->enforce_project];
+         ep = lGetElemStr(confl, CF_name, "enforce_project");
+         lSetString(ep, CF_value, str);
 
-      if (clen->enforce_user >= 0 && 
-            clen->enforce_user < sizeof(enforce_user))
-         str = enforce_user[clen->enforce_user];
-      ep = lGetElemStr(confl, CF_name, "enforce_user");
-      lSetString(ep, CF_value, str);
+         if (clen->enforce_user >= 0 && 
+               clen->enforce_user < sizeof(enforce_user))
+            str = enforce_user[clen->enforce_user];
+         ep = lGetElemStr(confl, CF_name, "enforce_user");
+         lSetString(ep, CF_value, str);
 
-      /*
-      ** (x)projects
-      */
-      strcpy(buf, "none");
-      first = True;
-      for_each(uep, clen->cluster_projects) {
-         if (first) {
-            first = False;
-            strcpy(buf, lGetString(uep, UP_name));
+         /*
+         ** (x)projects
+         */
+         strcpy(buf, "none");
+         first = True;
+         for_each(uep, clen->cluster_projects) {
+            if (first) {
+               first = False;
+               strcpy(buf, lGetString(uep, UP_name));
+            }
+            else {
+               strcat(buf, " "); 
+               strcat(buf, lGetString(uep, UP_name));
+            }
          }
-         else {
-            strcat(buf, " "); 
-            strcat(buf, lGetString(uep, UP_name));
+         ep = lGetElemStr(confl, CF_name, "projects");
+         lSetString(ep, CF_value, buf);
+
+         strcpy(buf, "none");
+         first = True;
+         for_each(uep, clen->cluster_xprojects) {
+            if (first) {
+               first = False;
+               strcpy(buf, lGetString(uep, UP_name));
+            }
+            else {
+               strcat(buf, " "); 
+               strcat(buf, lGetString(uep, UP_name));
+            }
          }
+         ep = lGetElemStr(confl, CF_name, "xprojects");
+         lSetString(ep, CF_value, buf);
       }
-      ep = lGetElemStr(confl, CF_name, "projects");
-      lSetString(ep, CF_value, buf);
-
-      strcpy(buf, "none");
-      first = True;
-      for_each(uep, clen->cluster_xprojects) {
-         if (first) {
-            first = False;
-            strcpy(buf, lGetString(uep, UP_name));
-         }
-         else {
-            strcat(buf, " "); 
-            strcat(buf, lGetString(uep, UP_name));
-         }
-      }
-      ep = lGetElemStr(confl, CF_name, "xprojects");
-      lSetString(ep, CF_value, buf);
-
-      ep = lGetElemStr(confl, CF_name, "auto_user_fshare");
-      sprintf(buf, "%d", clen->auto_user_fshare);
-      lSetString(ep, CF_value, buf);
-
-      ep = lGetElemStr(confl, CF_name, "auto_user_oticket");
-      sprintf(buf, "%d", clen->auto_user_oticket);
-      lSetString(ep, CF_value, buf);
-      
-      ep = lGetElemStr(confl, CF_name, "auto_user_delete_time");
-      if (check_white(clen->auto_user_delete_time)) {
-         strcpy(errstr, "No whitespace allowed in value for auto_user_delete_time");
-         goto error;
-      }
-      lSetString(ep, CF_value, clen->auto_user_delete_time);
-
-      ep = lGetElemStr(confl, CF_name, "auto_user_default_project");
-      if (clen->auto_user_default_project && clen->auto_user_default_project[0] != '\0') {
-         lSetString(ep, CF_value, clen->auto_user_default_project);
-      }
-      else
-         lSetString(ep, CF_value, "none");
-      
 
       /*
       **  additional config parameters
@@ -1737,14 +1785,14 @@ int local
          lDelElemStr(&confl, CF_name, "qmaster_params");
       }
 
-      if (clen->reporting_params && clen->reporting_params[0] != '\0') {
-         ep = lGetElemStr(confl, CF_name, "reporting_params");
+      if (clen->schedd_params && clen->schedd_params[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "schedd_params");
          if (!ep)
-            ep = lAddElemStr(&confl, CF_name, "reporting_params", CF_Type);
-         lSetString(ep, CF_value, clen->reporting_params);
+            ep = lAddElemStr(&confl, CF_name, "schedd_params", CF_Type);
+         lSetString(ep, CF_value, clen->schedd_params);
       }
       else {
-         lDelElemStr(&confl, CF_name, "reporting_params");
+         lDelElemStr(&confl, CF_name, "schedd_params");
       }
 
       if (clen->execd_params && clen->execd_params[0] != '\0') {
@@ -1765,6 +1813,16 @@ int local
       }
       else {
          lDelElemStr(&confl, CF_name, "shepherd_cmd");
+      }
+
+      if (clen->default_domain && clen->default_domain[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "default_domain");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "default_domain", CF_Type);
+         lSetString(ep, CF_value, clen->default_domain);
+      }
+      else {
+         lDelElemStr(&confl, CF_name, "default_domain");
       }
 
       /*
@@ -1838,6 +1896,18 @@ int local
       }
 #endif
 
+      if (clen->admin_user && clen->admin_user[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "admin_user");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "admin_user", CF_Type);
+         lSetString(ep, CF_value, clen->admin_user);
+      }
+      else {
+         lDelElemStr(&confl, CF_name, "admin_user");
+      }
+
+
+
       if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
          if (clen->set_token_cmd && clen->set_token_cmd[0] != '\0') {
             ep = lGetElemStr(confl, CF_name, "set_token_cmd");
@@ -1908,15 +1978,19 @@ tCClEntry *clen
    StringConst max_u_jobs;
    StringConst max_jobs;
    StringConst zombie_jobs;
-   StringConst auto_user_fshare;
-   StringConst auto_user_oticket;
 
    DENTER(GUI_LAYER, "qmonCullToCClEntry");
 
    confl = lGetList(cep, CONF_entries);
 
+   if ((ep = lGetElemStr(confl, CF_name, "qmaster_spool_dir")))
+      clen->qmaster_spool_dir = XtNewString(lGetString(ep, CF_value));
+
    if ((ep = lGetElemStr(confl, CF_name, "execd_spool_dir")))
       clen->execd_spool_dir = XtNewString(lGetString(ep, CF_value));
+
+   if ((ep = lGetElemStr(confl, CF_name, "binary_path")))
+      clen->binary_path = XtNewString(lGetString(ep, CF_value));
 
    if ((ep = lGetElemStr(confl, CF_name, "mailer")))
       clen->mailer = XtNewString(lGetString(ep, CF_value));
@@ -1931,31 +2005,31 @@ tCClEntry *clen
       clen->administrator_mail = XtNewString(lGetString(ep, CF_value));
 
    if ((ep = lGetElemStr(confl, CF_name, "min_uid"))) {
-      min_uid = (StringConst)lGetString(ep, CF_value);
+      min_uid = lGetString(ep, CF_value);
       clen->min_uid = min_uid ? atoi(min_uid) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "min_gid"))) {
-      min_gid = (StringConst)lGetString(ep, CF_value);
+      min_gid = lGetString(ep, CF_value);
       clen->min_gid = min_gid ? atoi(min_gid) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "max_aj_instances"))) {
-      max_aj_instances = (StringConst)lGetString(ep, CF_value);
+      max_aj_instances = lGetString(ep, CF_value);
       clen->max_aj_instances = max_aj_instances ? atoi(max_aj_instances) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "max_aj_tasks"))) {
-      max_aj_tasks = (StringConst)lGetString(ep, CF_value);
+      max_aj_tasks = lGetString(ep, CF_value);
       clen->max_aj_tasks = max_aj_tasks ? atoi(max_aj_tasks) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "max_u_jobs"))) {
-      max_u_jobs = (StringConst)lGetString(ep, CF_value);
+      max_u_jobs = lGetString(ep, CF_value);
       clen->max_u_jobs = max_u_jobs ? atoi(max_u_jobs) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "max_jobs"))) {
-      max_jobs = (StringConst)lGetString(ep, CF_value);
+      max_jobs = lGetString(ep, CF_value);
       clen->max_jobs = max_jobs ? atoi(max_jobs) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "finished_jobs"))) {
-      zombie_jobs = (StringConst)lGetString(ep, CF_value);
+      zombie_jobs = lGetString(ep, CF_value);
       clen->zombie_jobs = zombie_jobs ? atoi(zombie_jobs) : 0;
    }
 
@@ -1988,6 +2062,9 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "login_shells")))
       clen->login_shells = XtNewString(lGetString(ep, CF_value));
 
+   if ((ep = lGetElemStr(confl, CF_name, "default_domain")))
+      clen->default_domain = XtNewString(lGetString(ep, CF_value)); 
+
    if ((ep = lGetElemStr(confl, CF_name, "load_report_time")))
       clen->load_report_time = XtNewString(lGetString(ep, CF_value));
 
@@ -2001,7 +2078,7 @@ tCClEntry *clen
       clen->reschedule_unknown = XtNewString(lGetString(ep, CF_value));
 
    if ((ep = lGetElemStr(confl, CF_name, "shell_start_mode")))
-      str = (StringConst)lGetString(ep, CF_value);
+      str = lGetString(ep, CF_value);
    if (str && !strcmp(str, "script_from_stdin"))
       clen->shell_start_mode = 1;
    else if (str && !strcmp(str, "unix_behavior"))
@@ -2011,7 +2088,7 @@ tCClEntry *clen
 
 
    if ((ep = lGetElemStr(confl, CF_name, "loglevel")))
-      str = (StringConst)lGetString(ep, CF_value);
+      str = lGetString(ep, CF_value);
    if (str && !strcmp(str, "log_info"))
       clen->loglevel = 0;
    if (str && !strcmp(str, "log_warning"))
@@ -2020,6 +2097,14 @@ tCClEntry *clen
       clen->loglevel = 2;
 
       
+   if ((ep = lGetElemStr(confl, CF_name, "ignore_fqdn")))
+      str = lGetString(ep, CF_value);
+      if (str && !strcasecmp(str, "true"))
+         clen->ignore_fqdn = 0;
+      else
+         clen->ignore_fqdn = 1;
+
+
 /*    if ((ep = lGetElemStr(confl, CF_name, "logmail"))) */
 /*       str = lGetString(ep, CF_value); */
 /*    if (str && !strcasecmp(str, "true")) */
@@ -2043,56 +2128,40 @@ tCClEntry *clen
       clen->gid_range = XtNewString(lGetString(ep, CF_value));
 
 
-   if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
-      str = (StringConst)lGetString(ep, CF_value);
-   if (str && !strcasecmp(str, "true"))
-      clen->enforce_project = 0;
-   else
-      clen->enforce_project = 1;
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
+         str = lGetString(ep, CF_value);
+      if (str && !strcasecmp(str, "true"))
+         clen->enforce_project = 0;
+      else
+         clen->enforce_project = 1;
 
-   if ((ep = lGetElemStr(confl, CF_name, "enforce_user")))
-      str = (StringConst)lGetString(ep, CF_value);
-   if (str && !strcasecmp(str, "true"))
-      clen->enforce_user = 0;
-   else if (str && !strcasecmp(str, "auto"))
-      clen->enforce_user = 2;
-   else
-      clen->enforce_user = 1;
+      if ((ep = lGetElemStr(confl, CF_name, "enforce_user")))
+         str = lGetString(ep, CF_value);
+      if (str && !strcasecmp(str, "true"))
+         clen->enforce_user = 0;
+      else
+         clen->enforce_user = 1;
 
-   if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
-      clen->cluster_projects = lFreeList(clen->cluster_projects);
-      lString2ListNone(lGetString(ep, CF_value), &clen->cluster_projects, 
-                           UP_Type, UP_name, NULL);
+      if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
+         clen->cluster_projects = lFreeList(clen->cluster_projects);
+         lString2ListNone(lGetString(ep, CF_value), &clen->cluster_projects, 
+                              UP_Type, UP_name, NULL);
+      }
+
+      if ((ep = lGetElemStr(confl, CF_name, "xprojects"))) {
+         clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
+         lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
+                              UP_Type, UP_name, NULL);
+      }
+
    }
-
-   if ((ep = lGetElemStr(confl, CF_name, "xprojects"))) {
-      clen->cluster_xprojects = lFreeList(clen->cluster_xprojects);
-      lString2ListNone(lGetString(ep, CF_value), &clen->cluster_xprojects, 
-                           UP_Type, UP_name, NULL);
-   }
-
-   if ((ep = lGetElemStr(confl, CF_name, "auto_user_oticket"))) {
-      auto_user_oticket = (StringConst)lGetString(ep, CF_value);
-      clen->auto_user_oticket = auto_user_oticket ? atoi(auto_user_oticket) : 0;
-   }
-
-   if ((ep = lGetElemStr(confl, CF_name, "auto_user_fshare"))) {
-      auto_user_fshare = (StringConst)lGetString(ep, CF_value);
-      clen->auto_user_fshare = auto_user_fshare ? atoi(auto_user_fshare) : 0;
-   }
-
-   if ((ep = lGetElemStr(confl, CF_name, "auto_user_default_project")))
-      clen->auto_user_default_project = XtNewString(lGetString(ep, CF_value));
-
-   if ((ep = lGetElemStr(confl, CF_name, "auto_user_delete_time")))
-      clen->auto_user_delete_time = XtNewString(lGetString(ep, CF_value));
-
 
    if ((ep = lGetElemStr(confl, CF_name, "qmaster_params")))
       clen->qmaster_params = XtNewString(lGetString(ep, CF_value));
 
-   if ((ep = lGetElemStr(confl, CF_name, "reporting_params")))
-      clen->reporting_params = XtNewString(lGetString(ep, CF_value));
+   if ((ep = lGetElemStr(confl, CF_name, "schedd_params")))
+      clen->schedd_params = XtNewString(lGetString(ep, CF_value));
 
    if ((ep = lGetElemStr(confl, CF_name, "execd_params")))
       clen->execd_params = XtNewString(lGetString(ep, CF_value));
@@ -2111,6 +2180,9 @@ tCClEntry *clen
 
    if ((ep = lGetElemStr(confl, CF_name, "rlogin_command")))
       clen->rlogin_command = XtNewString(lGetString(ep, CF_value));
+
+   if ((ep = lGetElemStr(confl, CF_name, "admin_user")))
+      clen->admin_user = XtNewString(lGetString(ep, CF_value));
 
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       if ((ep = lGetElemStr(confl, CF_name, "set_token_cmd")))
@@ -2143,9 +2215,17 @@ tCClEntry *clen
 ) {
    DENTER(GUI_LAYER, "qmonFreeCClEntry");
 
+   if (clen->qmaster_spool_dir) {
+      XtFree((char*)clen->qmaster_spool_dir);
+      clen->qmaster_spool_dir = NULL;
+   }
    if (clen->execd_spool_dir) {
       XtFree((char*)clen->execd_spool_dir);
       clen->execd_spool_dir = NULL;
+   }
+   if (clen->binary_path) {
+      XtFree((char*)clen->binary_path);
+      clen->binary_path = NULL;
    }
    if (clen->mailer) {
       XtFree((char*)clen->mailer);
@@ -2206,6 +2286,10 @@ tCClEntry *clen
       XtFree((char*)clen->login_shells);
       clen->login_shells = NULL;
    }
+   if (clen->default_domain) {
+      XtFree((char*)clen->default_domain);
+      clen->default_domain = NULL;
+   } 
    clen->min_uid = 0;
    clen->min_gid = 0;
    clen->max_aj_instances = 0;
@@ -2229,6 +2313,7 @@ tCClEntry *clen
       clen->reschedule_unknown = NULL;
    }
    clen->loglevel = 0; 
+   clen->ignore_fqdn = 0; 
    clen->logmail = 0;    
    clen->cluster_users = lFreeList(clen->cluster_users);
    clen->cluster_xusers = lFreeList(clen->cluster_xusers);
@@ -2241,9 +2326,9 @@ tCClEntry *clen
       XtFree((char*)clen->qmaster_params);
       clen->qmaster_params = NULL;
    }
-   if (clen->reporting_params) {
-      XtFree((char*)clen->reporting_params);
-      clen->reporting_params = NULL;
+   if (clen->schedd_params) {
+      XtFree((char*)clen->schedd_params);
+      clen->schedd_params = NULL;
    }
    if (clen->execd_params) {
       XtFree((char*)clen->execd_params);
@@ -2281,19 +2366,13 @@ tCClEntry *clen
       XtFree((char*)clen->token_extend_time);
       clen->token_extend_time = NULL;
    }
+   if (clen->admin_user) {
+      XtFree((char*)clen->admin_user);
+      clen->admin_user = NULL;
+   }
    if (clen->gid_range) {
       XtFree((char*)clen->gid_range);
       clen->gid_range = NULL;
-   }
-   clen->auto_user_oticket = 0;
-   clen->auto_user_fshare = 0;
-   if (clen->auto_user_default_project) {
-      XtFree((char*)clen->auto_user_default_project);
-      clen->auto_user_default_project = NULL;
-   }
-   if (clen->auto_user_delete_time) {
-      XtFree((char*)clen->auto_user_delete_time);
-      clen->auto_user_delete_time = NULL;
    }
    DEXIT;
 }
@@ -2404,15 +2483,16 @@ XtPointer cld, cad;
       ret=sge_resolve_hostname((const char*)cbs->input, unique, EH_name);
 
       switch ( ret ) {
-         case CL_RETVAL_GETHOSTNAME_ERROR:
+         case COMMD_NACK_UNKNOWN_HOST:
             qmonMessageShow(w, True, "can't resolve host '%s'\n", cbs->input);
             cbs->okay = False;
             break;
-         case CL_RETVAL_OK:
+         case CL_OK:
             cbs->input = unique;
             break;
          default:
-            DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
+            DPRINTF(("sge_resolve_hostname() failed resolving: %s\n",
+            cl_errstr(ret)));
             cbs->okay = False;
       }
    }

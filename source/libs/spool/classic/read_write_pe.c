@@ -50,9 +50,7 @@
 #include "sge_spool.h"
 #include "sge_io.h"
 #include "sge_userset.h"
-#include "sge_resource_utilization.h"
-#include "sge_qinstance.h"
-#include "sge_qref.h"
+#include "sge_queue.h"
 
 /****
  **** cull_read_in_pe
@@ -166,19 +164,8 @@ _Insight_set_option("suppress", "PARM_NULL");
    set_conf_bool(NULL, clpp, fields, "job_is_first_task", ep, 
                  PE_job_is_first_task);
 
-   /* --------- PE_urgency_slots */
-   if (!set_conf_string(alpp, clpp, fields, "urgency_slots", ep, 
-            PE_urgency_slots)) {
-      DEXIT;
-      return -1;
-   }
-
-   /* initialize number of used PE slots with 0 */
-   if (pe_set_slots_used(ep, 0)) {
-      answer_list_add(alpp, MSG_GDI_OUTOFMEMORY, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return -1;
-   }
+   /* PE_used_slots gets set to PE_slots */
+   lSetUlong(ep, PE_used_slots, 0);
 
    DEXIT;
    return 0;
@@ -307,13 +294,9 @@ const lListElem *ep
                "TRUE" : "FALSE"));
 
 
-   /* --------- PE_urgency_slots */
-   FPRINTF((fp, "urgency_slots     %s\n", lGetString(ep, PE_urgency_slots)));
-
-
    /* --------- internal fields ----------------------------------- */
 
-   /* --------- PE_resource_utilization */
+   /* --------- PE_used_slots */
    /* 
       the number of free slots is evaluated dynamically to 
       prevent useless disk spooling 
@@ -322,7 +305,7 @@ const lListElem *ep
    if (!spool && how == 0 && getenv("MORE_INFO")) {
       int n;
 
-      n = lGetUlong(ep, PE_slots) - pe_get_slots_used(ep);
+      n = lGetUlong(ep, PE_slots) - lGetUlong(ep, PE_used_slots);
       FPRINTF((fp, "free_slots       %d\n", n));
    }
 
@@ -344,4 +327,70 @@ const lListElem *ep
 FPRINTF_ERROR:
    DEXIT;
    return NULL;
+}
+
+/****** src/sge_generic_pe() **********************************************
+*
+*  NAME
+*     sge_generic_pe -- build up a generic pe object 
+*
+*  SYNOPSIS
+*     lListElem* sge_generic_pe (
+*        char *pe_name
+*     );
+*
+*  FUNCTION
+*     build up a generic pe object
+*
+*  INPUTS
+*     pe_name - name used for the PE_name attribute of the generic
+*               pe object. If NULL then "template" is the default name.
+*
+*  RESULT
+*     !NULL - Pointer to a new CULL object of type PE_Type
+*     NULL - Error
+*
+*  EXAMPLE
+*
+*  NOTES
+*
+*  BUGS
+*
+*  SEE ALSO
+*
+*******************************************************************************/
+lListElem* sge_generic_pe(char *pe_name)
+{
+   lListElem *pep;
+
+   DENTER(TOP_LAYER, "sge_generic_pe");
+
+   pep = lCreateElem(PE_Type);
+
+   if (pe_name) {
+      lSetString(pep, PE_name, pe_name);
+   } else {
+      lSetString(pep, PE_name, "template");
+   }
+
+   lSetString(pep, PE_allocation_rule, "$pe_slots");
+   lSetString(pep, PE_start_proc_args, "/bin/true");
+   lSetString(pep, PE_stop_proc_args, "/bin/true");
+
+   /* PE_control_slaves initialized implicitly to false */
+   lSetBool(pep, PE_job_is_first_task, TRUE);
+
+   {
+      lList *new_qr_list;
+      lListElem *new_qr;
+
+      new_qr_list = lCreateList("", QR_Type);
+      new_qr = lCreateElem(QR_Type);
+
+      lSetString(new_qr, QR_name, SGE_ATTRVAL_ALL);
+      lAppendElem(new_qr_list, new_qr);
+   }
+
+   DEXIT;
+   return pep;
 }

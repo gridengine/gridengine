@@ -37,100 +37,87 @@
 #  The original idea of "aimk" where this script is based on came from the
 #  PVM 3.x distribution, 22 Jul 1991 Robert Manchek manchek@CS.UTK.EDU. 
 #
-#  call:   arch       (print SGEEE architecture string)
+#  call:   arch       (print SGE architecture string)
 #          arch -m    (print default MANPATH of system)
 #          arch -mt   (print either "man" or "catman")
 #          arch -lib  (print name of variable to extend shared library path)
+#
 
-# On some architectures, it is necessary to run the manpath(1) command
+# On some architectures, it is necessicary to run the manpath(1) command
 # with the user's path instead of our "safe" one.  Thus we need to
 # save the old value of PATH for later restoration.
-#
 SAFE_PATH=/bin:/usr/bin:/usr/sbin
 OLD_PATH=$PATH
 PATH=$SAFE_PATH
 
 ARCH=UNKNOWN
 
-if [ -x /bin/uname ]; then
-   UNAME=/bin/uname
-elif [ -x /usr/bin/uname ]; then
-   UNAME=/usr/bin/uname
-else
-   echo ERROR: \"uname\" command not found
-   exit 1
+if [ -x /usr/bin/uname ]; then
+   os="`/usr/bin/uname -s`"
+   ht="`/usr/bin/uname -m`"
+   osht="$os,$ht"
+   case $osht in
+   Darwin,*)
+      ARCH=darwin
+      ;;
+   FreeBSD,*)
+      ARCH=fbsd-$ht
+      ;;
+   esac
 fi
 
-ossysname="`$UNAME -s`"
-osmachine="`$UNAME -m`"
-osrelease="`$UNAME -r`"
-
-case $ossysname in
-AIX)
-   osversion=`$UNAME -v`
-   case $osversion in
-   3)
-      ARCH=UNSUPPORTED-rs6000
+if [ -x /bin/uname ]; then
+   os="`/bin/uname -s`"
+   ht="`/bin/uname -m`"
+   osht="$os,$ht"
+   case $osht in
+   SUPER-UX,SX-4*)
+      ARCH=necsx4
       ;;
-   4)
-      case $osrelease in
-      1)
-         ARCH=UNSUPPORTED-aix41
-         ;;
-      2)
-         ARCH=UNSUPPORTED-aix42
-         ;;
+   SUPER-UX,SX-[56]*)
+      ARCH=sx
+      ;;
+   SunOS,sun4*)
+      ARCH=sun4
+      ;;
+   SunOS,i86*)
+      ARCH=solaris86
+      ;;
+   AIX,*)
+      rev=`/bin/uname -v`
+      case $rev in
       3)
-         ARCH=aix43
+         ARCH=UNSUPPORTED-rs6000
          ;;
+      4)
+         subrev=`/bin/uname -r`
+         case $subrev in
+         1)
+            ARCH=UNSUPPORTED-aix41
+            ;;
+         2)
+            ARCH=aix42
+            ;;
+         3)
+            ARCH=aix43
+            ;;
+         esac
+         ;;
+      5)
+         subrev=`/bin/uname -r`
+         case $subrev in
+         1)
+            ARCH=aix51
+            ;;
+         esac
       esac
       ;;
-   5)
-      case $osrelease in
-      1)
-         ARCH=aix51
-         ;;
-      *)
-         ARCH=UNSUPPORTED-aix-5-$osrelease
-         ;;
-      esac
+   HP-UX,ia64)
+      ARCH=hp11-64
       ;;
-   esac
-   ;;
-CRSOS)
-   if [ $osmachine = smp ]; then
-      ARCH=craysmp
-   fi
-   ;;
-Darwin)
-   ARCH=darwin
-   ;;
-FreeBSD)
-   ARCH=fbsd-$osmachine
-   ;;
-IRIX*)
-   case $osrelease in
-   4*)
-      ARCH=UNSUPPORTED-irix4
-      ;;
-   5*)
-      ARCH=UNSUPPORTED-irix5
-      ;;
-   6.5)
-      ARCH=irix65
-      ;;
-   6.*)
-      ARCH=UNSUPPORTED-irix-$osrelease
-      ;;
-   esac
-   ;;
-HP-UX)
-   case $osmachine in
-   ia64)
-      ARCH=hp11
-      ;;
-   9000/*)
-      case $osrelease in
+   *,9000/*)
+      rev=`/bin/uname -r`
+      case $rev in
       *.09.*)
          ARCH=UNSUPPORTED-hp
          ;;
@@ -141,117 +128,78 @@ HP-UX)
          ARCH=hp10
          ;;
       *.11.*)
-      if [ -x /usr/bin/getconf ]; then
-         bits="`/usr/bin/getconf KERNEL_BITS`"
+         bits=`/usr/bin/getconf KERNEL_BITS`
          if [ $bits -eq 64 ]; then
             ARCH=hp11-64
          else
             ARCH=hp11
          fi
-      else
-         ARCH=hp11
-       fi
-      ;;
+         ;;
       esac
-   esac
-   ;;
-Linux)
-   case $osmachine in
-   i*86)
-     lxmachine=x86
-     ;;
-   alpha)
-     lxmachine=alpha
-     ;;
-   sparc)
-     lxmachine=sparc
-     ;;
-   x86_64)
-     lxmachine=amd64
-     ;;
-   ia64)
-     lxmachine=ia64
-     ;;
-   *)
-     lxmachine=UNSUPPORTED-linux
-   esac
-
-   case $osrelease in
-   2.2.*)
-      lxrelease=22
       ;;
-   2.4.*)
-      strings /lib/libc.so.6 | grep "GNU C Library" | grep "2\.0" 2>&1 > /dev/null
-      if [ $? = 0 ]; then
-         lxrelease=UNSUPPORTED-linux2.2-glibc2.0
-      else
-         lxrelease=24
-      fi
+   Linux,alpha)
+      ARCH=alinux
       ;;
-   2.6.*)
-      lxrelease=26
+   Linux,sparc)
+      ARCH=slinux
       ;;
-   *)
-      lxrelease=-UNSUPPORTED-$osrelease
-   esac
-   ARCH=lx${lxrelease}-${lxmachine}
-   ;;
-OSF1)
-   case $osrelease in
-   V4*)
-      ARCH=osf4
-      ;;
-    V5*|T5*)
-       ARCH=tru64
-       ;;
-    *)
-       ARCH=UNSUPPORTED-osf1-$osrelease
-       ;;
-    esac
-    ;;
-SunOS)
-   case $osmachine in
-   sun4)
-      ARCH=UNSUPPORTED-sun4
-      ;;
-   i86*)
-      ARCH=sol-x86
-      ;;
-   *)
-      case $osrelease in
-      5.[7891]*)
-         if [ `isainfo -b` = 64 ]; then
-            ARCH=sol-sparc64
+   Linux,*)
+      rev="`/bin/uname -r`"
+      case $rev in
+      2.[24].*)
+         strings /lib/libc.so.6 | grep "GNU C Library" | grep 2.0 2>&1 > /dev/null
+         if [ $? = 0 ]; then
+            ARCH=UNSUPPORTED-glinux20
          else
-            ARCH=sol-sparc
+            ARCH=glinux
          fi
          ;;
-      5.6)
-         ARCH=sol-sparc
-         ;;
       *)
-         ARCH=UNSUPPORTED-sun4-$osrelease
+         ARCH=UNSUPPORTED-linux
          ;;
       esac
       ;;
+   *,alpha)
+      rev=`/usr/bin/uname -r`
+      case $rev in
+      V4*)
+         ARCH=osf4
+         ;;
+      V5*|T5*)
+         ARCH=tru64
+         ;;
+      *)
+         ARCH=UNSUPPORTED-osf
+         ;;
+      esac
+      ;;
+   CRSOS,smp)
+      ARCH=craysmp
+      ;;
    esac
-   ;;
-SUPER-UX)
-   case $osmachine in
-   SX-4*)
-      ARCH=UNSUPPORTED-necsx4
-      ;;
-   SX-[56]*)
-      ARCH=sx
-      ;;
-   *)
-      ARCH=UNSUPPORTED-SUPER-UX-$osmachine
-      ;;
-   esac
-   ;;
-*)
+
+   if [ $ARCH = UNKNOWN ]; then
+      os="`/bin/uname -s`"
+      rel="`/bin/uname -r`"
+      osrel="$os,$rel"
+
+      case $osrel in
+      IRIX,4*)
+         ARCH=UNSUPPORTED-irix4
+         ;;
+      IRIX,5*)
+         ARCH=UNSUPPORTED-irix5
+         ;;
+      IRIX*,6*)
+         ARCH=irix6
+         ;;
+      esac
+   fi
+fi
+
+if [ $ARCH = UNKNOWN ]; then
    if [ -f /unicos ]; then
-      if [ "`$UNAME -m`" = "CRAY TS" ]; then
+      if [ "`/bin/uname -m`" = "CRAY TS" ]; then
          if [ `/bin/target|/bin/grep ieee` = noieee ]; then
             ARCH=crayts
          else
@@ -260,50 +208,65 @@ SUPER-UX)
       else
          ARCH=cray
       fi
-   else
-      ARCH=UNSUPPORTED-${ossysname}-${osmachine}-${osrelease}
    fi
-   ;;
-esac
+fi
+
+if [ "$ARCH" = sun4 ]; then
+   REL=`/bin/uname -r`
+   case $REL in
+   5.[789]*)
+      if [ `isainfo -b` = 64 ]; then
+         ARCH=solaris64
+      else
+         ARCH=solaris
+      fi
+      ;;
+   5.[56]*)
+      ARCH=solaris
+      ;;
+   *)
+      ARCH=UNSUPPORTED-sun4-$REL
+      ;;
+   esac
+fi
 
 if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
    MANTYPE=man
    SHARED_LIBRARY_PATH="LD_LIBRARY_PATH"
-   DEFAULTMANPATH=/usr/man
    case $ARCH in
-   aix*)
-      DEFAULTMANPATH=/usr/man
-      SHARED_LIBRARY_PATH="LIBPATH"
+   solaris|solaris64)
+      DEFAULTMANPATH=/usr/share/man
       ;;
-   darwin)
-      DEFAULTMANPATH=`/usr/bin/manpath -q`
-      SHARED_LIBRARY_PATH="DYLD_LIBRARY_PATH"
-      ;;
-   fbsd-*)
-      PATH=$OLD_PATH
-      DEFAULTMANPATH=`/usr/bin/manpath -q`
-      PATH=$SAFE_PATH
-      ;;
-   hp*)
-      DEFAULTMANPATH=/usr/man:/usr/contrib/man:/usr/local/man
-      SHARED_LIBRARY_PATH="SHLIB_PATH"
-      ;;
-   irix65)
-      DEFAULTMANPATH=/usr/share/catman:/usr/share/man:/usr/catman:/usr/man
-      MANTYPE=catman
-      ;;
-   lx*)
+   alinux|glinux)
       if [ "`which manpath 2>/dev/null`" != "" ]; then
          DEFAULTMANPATH=`manpath 2>/dev/null`
       else
          DEFAULTMANPATH=/usr/local/man:/usr/share/man:/usr/man:/usr/X11R6/man
       fi
       ;;
-   sol-*)
-      DEFAULTMANPATH=/usr/share/man
-      ;;
-   tru64)
+   osf4|tru64)
       DEFAULTMANPATH=/usr/share/man:/usr/dt/share/man:/usr/local/man
+      ;;
+   irix6|irix65)
+      DEFAULTMANPATH=/usr/share/catman:/usr/share/man:/usr/catman:/usr/man
+      MANTYPE=catman
+      ;;
+   hp10|hp11|hp11-64)
+      DEFAULTMANPATH=/usr/man:/usr/contrib/man:/usr/local/man
+      SHARED_LIBRARY_PATH="SHLIB_PATH"
+      ;;
+   aix42|aix43|aix51)
+      DEFAULTMANPATH=/usr/man
+      SHARED_LIBRARY_PATH="LIBPATH"
+      ;;
+   fbsd-*)
+      PATH=$OLD_PATH
+      DEFAULTMANPATH=`/usr/bin/manpath -q`
+      PATH=$SAFE_PATH
+      ;;
+   darwin)
+      DEFAULTMANPATH=`/usr/bin/manpath -q`
+      SHARED_LIBRARY_PATH="DYLD_LIBRARY_PATH"
       ;;
    esac
 

@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <string.h>
-
 #include "sge.h"
 #include "cull.h"
 #include "sgermon.h"
@@ -46,7 +44,6 @@
 #include "sge_unistd.h"
 #include "commlib.h"
 #include "gdi_conf.h"
-#include "sge_any_request.h"
 
 #include "msg_gdilib.h"
 #include "msg_sgeobjlib.h"
@@ -123,21 +120,19 @@ lListElem **lepp
       lSetHost(hep, EH_name, config_name);
 
       ret = sge_resolve_host(hep, EH_name);
-
-      if ( sge_get_communication_error() == CL_RETVAL_ENDPOINT_NOT_UNIQUE) {
-         CRITICAL((SGE_EVENT, "endpoint not unique error"));
-         DEXIT;
-         return -6;
-      }
-
-      if (ret != CL_RETVAL_OK) {
-         DPRINTF(("get_configuration: error %d resolving host %s: %s\n", ret, config_name, cl_get_error_text(ret)));
+      if (ret) {
+         DPRINTF(("get_configuration: error %d resolving host %s: %s\n", 
+                  ret, config_name, cl_errstr(ret)));
          lFreeElem(hep);
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
-         DEXIT;
-         return -2;
+         if (ret==COMMD_NACK_CONFLICT) {
+            DEXIT;
+            return -6;
+         } else {
+            ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
+            DEXIT;
+            return -2;
+         }
       }
-
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
    }
 
@@ -264,17 +259,17 @@ lList **conf_list
       DPRINTF((
          "Error %d merging configuration \"%s\"\n", ret, uti_state_get_qualified_hostname()));
    }
-
    /*
     * we don't keep all information, just the name and the version
     * the entries are freed
-    */
+   */
    lSetList(global, CONF_entries, NULL);
    lSetList(local, CONF_entries, NULL);
    *conf_list = lFreeList(*conf_list);
    *conf_list = lCreateList("config list", CONF_Type);
    lAppendElem(*conf_list, global);
    lAppendElem(*conf_list, local);
+
    DEXIT;
    return 0;
 }

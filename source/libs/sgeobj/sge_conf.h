@@ -35,12 +35,10 @@
 #include "sge_confL.h"
 /* #include "sge_mirror.h" */
 
-/* The scheduler configuration changes this configuration element only. It is
-   not spooled and is not shown in qconf -mconf */
-#define REPRIORITIZE "reprioritize"
-
 struct confel {                       /* cluster configuration parameters */
+    char        *qmaster_spool_dir;   /* qmaster spool directory path */
     char        *execd_spool_dir;     /* sge_spool directory base path */
+    char        *binary_path;         /* path to the Sge binaries */
     char        *mailer;              /* path to e-mail delivery agent */
     char        *xterm;               /* xterm path for interactive jobs */
     char        *load_sensor;         /* path to a load sensor executable */    
@@ -51,6 +49,7 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    min_uid;              /* lower bound on UIDs that can qsub */
     u_long32    min_gid;              /* lower bound on GIDs that can qsub */
     u_long32    load_report_time;     /* how often to send in load */
+    u_long32    stat_log_time;        /* how often to log stats */
     u_long32    max_unheard;          /* how long before sge_execd considered dead */
     u_long32    loglevel;             /* qmaster event logging level */
     char        *enforce_project;     /* SGEEE attribute: "true" or "false" */
@@ -65,9 +64,10 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    token_extend_time;
     char        *shepherd_cmd;
     char        *qmaster_params;
+    char        *schedd_params;
     char        *execd_params;
-    char        *reporting_params;
     char        *gid_range;           /* Range of additional group ids */
+    char        *admin_user;
     u_long32    zombie_jobs;          /* jobs to save after execution */
     char        *qlogin_daemon;       /* eg /usr/sbin/in.telnetd */
     char        *qlogin_command;      /* eg telnet $HOST $PORT */
@@ -80,49 +80,78 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    max_aj_tasks;         /* max. size of an array job */
     u_long32    max_u_jobs;           /* max. number of jobs per user */
     u_long32    max_jobs;             /* max. number of jobs in the system */
-    u_long32    reprioritize;         /* reprioritize jobs based on the tickets or not */
-    u_long32    auto_user_fshare;     /* SGEEE automatic user fshare */
-    u_long32    auto_user_oticket;    /* SGEEE automatic user oticket */
-    char        *auto_user_default_project; /* SGEEE automatic user default project */
-    u_long32    auto_user_delete_time; /* SGEEE automatic user delete time */
 };
 
 typedef struct confel sge_conf_type;
 
 typedef int (*tDaemonizeFunc)(void);
 
+typedef enum {
+   FIRST_POLICY_VALUE,
+   INVALID_POLICY = FIRST_POLICY_VALUE,
+
+   OVERRIDE_POLICY,
+   FUNCTIONAL_POLICY,
+   SHARE_TREE_POLICY,
+   DEADLINE_POLICY,
+
+   LAST_POLICY_VALUE,
+   POLICY_VALUES = (LAST_POLICY_VALUE - FIRST_POLICY_VALUE)
+} policy_type_t;
+
+ 
+typedef struct {
+   policy_type_t policy;
+   int dependent;
+} policy_hierarchy_t;  
+
+extern const char *const policy_hierarchy_chars; 
+extern char policy_hierarchy_string[5];
+
+char policy_hierarchy_enum2char(policy_type_t value);
+
+policy_type_t policy_hierarchy_char2enum(char character);
+
+int policy_hierarchy_verify_value(const char* value);
+
+void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char* value);
+
+void policy_hierarchy_print_array(policy_hierarchy_t array[]);
+
 extern lList *Master_Config_List;
 
 extern sge_conf_type conf;
 
-extern bool use_qidle;
-extern bool forbid_reschedule;
-extern bool forbid_apperror;
-extern bool do_credentials;   
-extern bool do_authentication;  
-extern bool acct_reserved_usage;
-extern bool sharetree_reserved_usage;
-extern bool keep_active;
-extern bool simulate_hosts;
+extern int use_qidle;
+extern int forbid_reschedule;
+extern int do_credentials;   
+extern int do_authentication;  
+extern int acct_reserved_usage;
+extern int sharetree_reserved_usage;
+extern int flush_submit_sec; 
+extern int flush_finish_sec;
+extern int keep_active;
+extern int simulate_hosts;
 extern long ptf_max_priority;
 extern long ptf_min_priority;
-extern bool use_qsub_gid;
+extern int use_qsub_gid;
 extern int notify_susp_type;      
 extern char* notify_susp;       
 extern int notify_kill_type;      
 extern char* notify_kill;
-extern bool disable_reschedule;  
-extern bool set_sge_environment;
-extern bool set_grd_environment;
-extern bool set_cod_environment;
+extern int disable_reschedule;  
+extern int set_sge_environment;
+extern int set_grd_environment;
+extern int set_cod_environment;
+extern int classic_sgeee_scheduling;
+extern int share_override_tickets;                                         
+extern int share_functional_shares;                                        
+extern int share_deadline_tickets;                                         
+extern int max_functional_jobs_to_schedule;                                
+extern int max_pending_tasks_per_job;                                      
+extern lList* halflife_decay_list;                                         
 extern int scheduler_timeout;
 
-/* reporting params */
-extern bool do_accounting;
-extern bool do_reporting;
-extern bool do_joblog;
-extern int reporting_flush_time;
-extern int sharelog_time;
 
 /* simulation of large clusters: 
  *  - load values will not be trashed
@@ -134,5 +163,4 @@ lList *sge_set_defined_defaults(lList *lpCfg);
 int merge_configuration(lListElem *global, lListElem *local, sge_conf_type *pconf, lList **lpp);
 void sge_show_conf(void);
 
-bool sge_is_reprioritize(void);
 #endif /* __SGE_CONF_H */

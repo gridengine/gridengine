@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/03/01 16:28:47 $     Revision: $Revision: 1.15 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2003/07/30 12:21:48 $     Revision: $Revision: 1.11 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2004/03/01 16:28:47 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2003/07/30 12:21:48 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -45,16 +45,6 @@ host management, complex management and user management.
 .I Qconf
 also allows you to examine the current queue configuration
 for existing queues.
-.PP
-.I Qconf
-allows the use of the blackslash, '\', character at the end of a line to
-indicate that the next line is a continuation of the current line.  When
-displaying settings, such as the output of one of the -s* options,
-.I qconf
-will break up long lines (lines greater than 80 characters) into smaller lines
-using backslash line continuation where possible.  Lines will only be broken up
-at commas or whitespace.  This feature can be disabled by setting the
-SGE_SINGLE_LINE environment variable.
 .\"
 .\"
 .SH OPTIONS
@@ -76,6 +66,13 @@ in \fBfname\fP following the file format of the corresponding object (see
 for the queue, for example).
 .br
 Requires root/manager privileges.
+.\"
+.IP "\fB\-Ac complex_name fname\fP	\fI<add complex>\fP"
+Add the complex \fBcomplex_name\fP defined in \fBfname\fP
+to the xxQS_NAMExx cluster. The format of the complex
+specification is described in
+.M complex 5 .
+Requires root or manager privileges.
 .\"
 .IP "\fB\-Acal fname\fP	\fI<add calendar>\fP"
 Adds a new calendar definition to the xxQS_NAMExx environment. 
@@ -108,13 +105,14 @@ specification is described in
 .M host_conf 5 .
 Requires root or manager privileges.
 .\"
-.IP "\fB\-Ahgrp file\fP		\fI<add host group config>\fP"
-Add the host group configuration defined in \fBfile\fP. 
-The file format of \fBfile\fP must comply
-to the format specified in 
-.M hostgroup 5 .
-Requires root or manager privileges. 
-.\"
+.\" host group start
+.\" .IP "\fB\-Ahgrp file\fP   \fI<add host group configuration>\fP"
+.\" Add the host group configuration defined in \fBfile\fP. 
+.\" The file format of \fBfile\fP must comply
+.\" to the format specified in 
+.\" .M hostgroup 5 .
+.\" Requires root or manager privileges. 
+.\" host group end
 .IP "\fB\-Ap fname\fP	\fI<add PE configuration>\fP"
 Add the parallel environment (PE) defined in \fBfname\fP to the xxQS_NAMExx
 cluster. Requires root or manager privileges.
@@ -153,11 +151,11 @@ root/manager/operator privileges.
 	\fI<del. from object attribs>\fP
 .ta 3i
 .br
-Similar to \fB\-dattr\fP (see below) but the definition of the list
+Similar to \fB\-dattr\fB (see below) but the definition of the list
 attributes from which entries are to be deleted is contained in the
-file named \fBfname\fP. As opposed to \fB\-dattr\fP, multiple
+file named \fBfname\fB. As opposed to \fB\-dattr\fB, multiple
 attributes can be modified. Their specification has to be enlisted in
-\fBfname\fP following the file format of the corresponding object (see
+\fBfname\fB following the file format of the corresponding object (see
 .M queue_conf 5
 for the queue, for example).
 .br
@@ -179,9 +177,10 @@ for the queue, for example).
 .br
 Requires root/manager privileges.
 .\"
-.IP "\fB\-Mc complex_name\fP	\fI<modify complex>\fP"
-Overwrites the complex configuration by the contents of \fBfname\fP. 
-The argument file must comply to the format specified in
+.IP "\fB\-Mc complex_name fname\fP	\fI<modify complex>\fP"
+Overwrites the specified complex
+by the contents of \fBfname\fP. The argument file must
+comply to the format specified in
 .M complex 5 .
 Requires root or manager privilege.
 .\"
@@ -205,16 +204,17 @@ comply to the format defines in
 .M host_conf 5 .
 Requires root or manager privilege.
 .\"
-.IP "\fB\-Mhgrp file\fP		\fI<modify host group config.>\fP"
-Allows changing of host group configuration with a single command. 
-All host group configuration entries contained in
-.B file
-will be applied. Configuration entries not contained in
-.B file
-will be deleted. The file format of \fBfile\fP must comply
-to the format specified in 
-.M hostgroup 5 . Requires root or manager privilege.
-.\" 
+.\" host group start
+.\" .IP "\fB\-Mhgrp file\fP   \fI<modify host group configuration>\fP"
+.\" Allows changing of host group configuration with a single command. 
+.\" All host group configuration entries contained in
+.\" .B file
+.\" will be applied. Configuration entries not contained in
+.\" .B file
+.\" will be deleted. The file format of \fBfile\fP must comply
+.\" to the format specified in 
+.\" .M hostgroup 5 . Requires root or manager privilege.
+.\" host group end
 .IP "\fB\-Mp fname\fP	\fI<modify PE configuration>\fP"
 Same as \fB\-mp\fP (see below) but
 instead of invoking an editor to modify the
@@ -247,6 +247,23 @@ Refer to
 .M queue_conf 5
 for details on the queue configuration format.
 Requires root or manager privilege.
+.\"
+.IP "\fB\-Mqattr fname q_name,...\fP	\fI<modify queue attributes>\fP"
+DEPRECATED: Use -Rattr!
+.br
+Allows changing of selected queue configuration attributes in multiple 
+queues with a single command. In all queues contained in the comma 
+separated queue name list the queue attribute definitions contained in 
+.B fname
+will be applied. Queue attributes not contained in
+.B fname
+will be left unchanged.
+.sp 1
+All queue attributes can be modified except for \fIqname\fP and
+\fIqhostname\fP.  Refer to
+.M queue_conf 5
+for details on the queue configuration format. 
+Requires root or manager privilege. 
 .\"
 .IP "\fB\-Mu fname\fP	\fI<modify ACL>\fP"
 Takes the user access list (ACL) defined in
@@ -291,28 +308,16 @@ Requires root/manager privileges.
 Allows adding specifications to a single
 configuration list attribute in multiple instances
 of an object with a single command. Currently
-supported objects are the queue, the host, the host group, 
-the parallel environment
+supported objects are the queue, the host, the parallel environment
 and the checkpointing interface configuration being specified as
 .I queue
 ,
 .I exechost
 ,
-.I hostgroup
-,
 .I pe
 or
 .I ckpt
-in \fBobj_spec\fP. 
-For the obj_spec 
-.I queue
-the obj_instance can be a cluster queue name, a queue domain name or a queue
-instance name. Find more information concerning different queue names in 
-.M sge_types 1 .
-Depending on the type of the obj_instance this adds to the cluster queues
-attribute sublist the cluster queues implicit default configuration value or
-the queue domain configuration value or queue instance configuartion value.
-The queue
+in \fBobj_spec\fP. The queue
 .B load_thesholds
 parameter is an example of a list attribute. With the \fB\-aattr\fP option,
 entries can be added to such lists, while they can
@@ -337,6 +342,27 @@ attribute cannot be modified
 .M host_conf 5 ).
 .br
 Requires root or manager privileges.
+.\"
+.IP "\fB\-ac complex_name\fP	\fI<add complex>\fP"
+Adds a complex to the xxQS_NAMExx environment. Complex entries
+contain one or more resources which may be requested by
+jobs submitted to the system. The
+.M complex 5
+manual page contains detailed information about the
+format of a complex definition.
+.br
+When using the \fB\-ac\fP option the complex 
+name is given in the command option. 
+.I Qconf
+will then open a temporary file and start up the text
+editor indicated by the environment variable EDITOR (default
+editor is
+.M vi 1
+if EDITOR is not set). After
+entering the complex definition and closing the editor the
+new complex is checked and registered with
+.M xxqs_name_sxx_qmaster 8 .
+Requires root/manager privileges.
 .\"
 .IP "\fB\-acal calendar_name\fP	\fI<add calendar>\fP"
 Adds a new calendar definition to the xxQS_NAMExx environment. 
@@ -432,17 +458,18 @@ usually add all designated execution hosts
 to the xxQS_NAMExx trusted host list automatically.
 Requires root or manager privileges.
 .\"
-.IP "\fB\-ahgrp group\fP		\fI<add host group config.>\fP"
-Adds a new host group with the name specified in 
-.B group.
-This command invokes an editor (either
-.M vi 1
-or the editor indicated by the EDITOR environment variable). 
-The new host group entry is registered after 
-changing the entry and
-exiting the editor. 
-Requires root or manager privileges.
-.\" 
+.\" host group start
+.\" .IP "\fB\-ahgrp group\fP   \fI<add host group configuration>\fP"
+.\" Adds a new host group with the name specified in 
+.\" .B group.
+.\" This command invokes an editor (either
+.\" .M vi 1
+.\" or the editor indicated by the EDITOR environment variable). 
+.\" The new host group entry is registered after 
+.\" changing the entry and
+.\" exiting the editor. 
+.\" Requires root or manager privileges.
+.\" host group end
 .IP "\fB\-am user,...\fP	\fI<add managers>\fP"
 Adds the indicated users to the xxQS_NAMExx manager list. Requires
 root or manager privileges.
@@ -485,18 +512,20 @@ project. Upon exit from the editor, the template is registered with
 .M xxqs_name_sxx_qmaster 8 .
 Requires root or manager privileges.
 .\"
-.IP "\fB\-aq [queue_name]\fP	\fI<add new queue>\fP"
+.IP "\fB\-aq [q_template]\fP	\fI<add new queue>\fP"
 .I Qconf
-retrieves the default queue configuration (see
+retrieves either the default queue configuration (see
 .M queue_conf 5 )
-and executes
+or the configuration of
+the queue \fBq_template\fP (if the optional argument
+is present) and executes
 .M vi 1
 (or $EDITOR if the EDITOR environment variable is set) to
 allow you to customize the queue configuration. Upon exit
 from the editor, the queue is registered with
 .M xxqs_name_sxx_qmaster 8 .
 A minimal configuration requires only that the
-queue name and queue hostlist be set.
+queue name and queue hostname be set.
 Requires root or manager privileges.
 .\"
 .IP "\fB\-as hostname,...\fP	\fI<add submit hosts>\fP"
@@ -585,11 +614,9 @@ for xxQS_NAME_Cxx systems.
 Clears all user and project usage from the sharetree.  All usage will be initialized
 back to zero.
 .\"
-.IP "\fB\-cq wc_queue_list\fP	\fI<clean queue>\fP"
+.IP "\fB\-cq queue_name,...\fP	\fI<clean queue>\fP"
 Cleans queue from jobs which haven't been reaped. Primarily a
 development tool. Requires root/manager/operator privileges.
-Find a description of wc_queue_list in 
-.M sge_types 1 .
 .\"
 .IP "\fB\-dattr obj_spec attr_name val obj_instance,...\fP"
 .ta 2.3i
@@ -598,10 +625,43 @@ Find a description of wc_queue_list in
 .br
 Allows deleting specifications in a single
 configuration list attribute in multiple instances
-of an object with a single command. 
-Find more information concerning obj_spec and obj_instance
-in the description of 
-.B -aattr
+of an object with a single command. Currently
+supported objects are the queue, the host, the parallel environment
+and the checkpointing interface
+configuration being specified as
+.I queue
+,
+.I exechost
+,
+.I pe
+or
+.I ckpt
+in \fBobj_spec\fP. The queue
+.B load_thesholds
+parameter is an example of a list attribute. With the \fB\-dattr\fP option,
+entries can be deleted from such lists, while they
+can be added with \fB\-aattr\fP, modified with \fB\-mattr\fP, and
+replaced with \fB\-rattr\fP.
+.br
+The name of the configuration attribute to be
+modified is specified with
+.B attr_name
+followed by
+.B val
+defining the name of the attribute list entry to be deleted. The comma
+separated list of object instances (e.g., the list of queues) to which
+the changes have to be applied are specified at the end of the command.
+.br
+The following restriction applies: For the host
+object the load_values attribute cannot be modified
+(see
+.M host_conf 5 ).
+.br
+Requires root or manager privileges.
+.\"
+.IP "\fB\-dc complex_name,...\fP	\fI<delete complex>\fP"
+Deletes complexes from xxQS_NAMExx.
+Requires root/manager privileges.
 .\"
 .IP "\fB\-dcal calendar_name,...\fP	\fI<delete calendar>\fP"
 Deletes the specified calendar definition from xxQS_NAMExx. Requires 
@@ -740,13 +800,45 @@ Requires root or manager privilege.
 .br
 Allows changing a single configuration attribute in
 multiple instances of an object with a single
-command. 
-Find more information concerning obj_spec and obj_instance
-in the description of
-.B -aattr
+command. Currently supported objects are the
+queue, the host,
+the parallel environment and the checkpointing interface
+configuration being specified as
+.I queue
+,
+.I exechost
+,
+.I pe
+or
+.I ckpt
+in \fBobj_spec\fP.
+.br
+The name of the configuration attribute to be modified is specified with
+.B attr_name
+followed by the value to which the attribute is going to be
+set. If the attribute is a list, such as the queue
+\fBload_thresholds\fP, \fBval\fP can be a \fIname=value\fP pair, in
+which case only a corresponding entry in the list
+is changed. Refer to the \fB\-aattr\fP, \fB\-dattr\fP and \fB\-rattr\fP
+options for a description of further means to
+change specifically such list attributes.
+.br
+The comma separated list of object instances (e.g.,
+the list of queues) to which the changes have to be
+applied are specified at the end of the command.
+.br
+The following restrictions apply:
+For the \fIqueue\fP object the \fBqname\fP and \fBqhostname\fP
+attributes cannot be modified (see
+.M queue_conf 5 ).
+For the host object the \fBhostname\fP, \fBload_values\fP and
+\fBprocessors\fP attributes cannot be modified (see
+.M host_conf 5 ).
+.br
+Requires root or manager privilege. 
 .\"
-.IP "\fB\-mc\fP	\fI<modify complex>\fP"
-The complex configuration (see
+.IP "\fB\-mc complex_name\fP	\fI<modify complex>\fP"
+The specified complex configuration (see
 .M complex 5 )
 is retrieved, an editor is executed (either
 .M vi 1
@@ -858,6 +950,21 @@ Refer to
 for details on the queue configuration format.
 Requires root or manager privilege.
 .\"
+.IP "\fB\-mqattr attr_name q_name,...\fP	\fI<modify queue attributes>\fP"
+DEPRECATED: Use -rattr!
+.br
+Allows changing of a single queue configuration attribute in multiple 
+queues with a single command. In all queues contained in the comma 
+separated queue name list the value of the attribute
+.B attr_name
+will be overwritten with \fBval\fP. 
+.sp 1
+All queue attributes can be modified except for \fIqname\fP and
+\fIqhostname\fP.  Refer to
+.M queue_conf 5
+for details on the queue configuration format. 
+Requires root or manager privilege. 
+.\"
 .IP "\fB\-msconf\fP	\fI<modify scheduler configuration>\fP"
 The current scheduler configuration (see
 .M sched_conf 5 )
@@ -868,12 +975,6 @@ or the editor indicated by $EDITOR) and
 the changed configuration is registered with
 .M xxqs_name_sxx_qmaster 8
 upon exit of the editor.
-Requires root or manager privilege.
-.\"
-.IP  "\fB\-Msconf fname\fP	\fI<modify scheduler configuration from file>\fP"
-The current scheduler configuration (see
-.M sched_conf 5 )
-is overridden with the configuration specified in the file. 
 Requires root or manager privilege.
 .\"
 .IP "\fB\-mstnode node_path=shares,...\fP	\fI<modify share tree node>\fP"
@@ -937,10 +1038,41 @@ Requires root or manager privilege.
 .br
 Allows replacing a single configuration list
 attribute in multiple instances of an object with a
-single command. 
-Find more information concerning obj_spec and obj_instance
-in the description of
-.B -aattr .
+single command. Currently supported objects are the
+queue, the host, the parallel environment and the checkpointing
+interface configuration being specified as
+queue and the host configuration being specified as
+.I queue
+,
+.I exechost
+,
+.I pe
+or
+.I ckpt
+in \fBobj_spec\fP. The queue
+.B load_thesholds
+parameter is an example of a list attribute. With
+the \fB\-rattr\fP option, such lists can be replaced,
+while entries can be added to them with \fB\-aattr\fP,
+deleted with \fB\-dattr\fP, and modified with
+\fB\-mattr\fP.
+.br
+\fBNote\fP, that "\-rattr queue attr_name val q_name, ..." is
+equivalent to "\-mqattr attr_name val q_name,..."
+(see below). The latter is available for backward compatibility.
+.br
+The name of the configuration attribute to be modified is specified with
+.B attr_name
+followed by
+.B val
+defining the new setting of the attribute. The comma separated list of
+object instances (e.g., the list of queues) to which the changes have
+to be applied are specified at the end of the command.
+.br
+The following restriction applies: For the host object the
+.B load_values
+attribute cannot be modified (see
+.M host_conf 5 ).
 .br
 Requires root or manager privilege. 
 .\"
@@ -966,14 +1098,17 @@ or the editor indicated by the EDITOR environment variable) is invoked
 for modifying the user definition. Upon exiting the editor, the
 modified data is registered. Requires root or manager privileges.
 .\"
-.IP "\fB\-sc\fP	\fI<show complexes>\fP"
-Display the complex configuration.
+.IP "\fB\-sc complex_name,...\fP	\fI<show complexes>\fP"
+Display the configuration of one or more complexes.
 .\"
 .IP "\fB\-scal calendar_name\fP	\fI<show calendar>\fP"
 Display the configuration of the specified calendar. 
 .\"
 .IP "\fB\-scall\fP	\fI<show calendar list>\fP"
 Show a list of all calendars currently defined. 
+.\"
+.IP "\fB\-scl\fP	\fI<show complex list names>\fP"
+Show a list of all complexes currently configured.
 .\"
 .IP "\fB\-sckpt ckpt_name\fP	\fI<show ckpt. environment>\fP"
 Display the configuration of the specified checkpointing environment.
@@ -999,9 +1134,6 @@ Display a list of hosts for which configurations are
 available. The special host name "global" refers to the
 cell global configuration.
 .\"
-.IP "\fB\-sds\fP	\fI<show detached settings>\fP"
-Displays detached settings in the cluster configuration.
-.\"
 .IP "\fB\-se hostname\fP	\fI<show execution host>\fP"
 Displays the definition of the specified execution host.
 .\"
@@ -1018,44 +1150,20 @@ host and in total.
 .IP "\fB\-sh\fP	\fI<show administrative hosts>\fP"
 Displays the xxQS_NAMExx administrative host list.
 .\"
-.IP "\fB\-shgrp group\fP		\fI<show host group config.>\fP"
-Displays the host group entries for the group specified in
-.B group.
-.IP "\fB\-shgrpl\fP		\fI<show host group lists>\fP"
-Displays a name list of all currently defined host groups
-which have a valid host group configuration.
+.\" host group start
+.\" .IP "\fB\-shgrp group\fP  \fI<show host group configuration>\fP"
+.\" Displays the host group entries for the group specified in
+.\" .B group.
 .\" 
-.IP "\fB\-shgrp_tree group\fP     \fI<show host group tree>\fP"
-Shows a tree like structure of host group.
-.\" 
-.IP "\fB\-shgrp_resolved\fP       \fI<show host group hosts>\fP"
-Shows a list of all hosts which are part of the definition of
-host group. If the host group definition containes sub host groups
-than also these groups are resolved and the hostnames are printed.
-.\" 
+.\" .IP "\fB\-shgrpl\fP \fI<show host group lists>\fP"
+.\" Displays a name list of all currently defined host groups
+.\" which have a guilty host group configuration.
+.\" host group end
 .IP "\fB\-sm\fP	\fI<show managers>\fP"
 Displays the managers list.
 .\"
 .IP "\fB\-so\fP	\fI<show operators>\fP"
 Displays the operator list.
-.\"
-.IP "\fB\-sobjl obj_spec attr_name val\fP	\fI<show object list>\fP"
-Shows a list of all configuration objects for which val matches at least
-one configuration value of the attributes whose name matches with attr_name.
-.sp
-Obj_spec can be "queue" or "queue_domain" or "queue_instance" or "exechost".
-Note: When "queue_domain" or "queue_instance" is specified as obj_spec
-matching is only done with the attribute overridings concerning the host group
-or the execution host. In this case queue domain names resp. queue
-instances are returned.
-.sp
-Attr_name can be any of the configuration file keywords enlisted in
-.M queue_conf 5  
-or 
-.M host_conf 5 . 
-Also wildcards can be used to match multiple attributes.
-.sp
-Val can be an arbitrary string or a wildcard expression.
 .\"
 .IP "\fB\-sp pe_name\fP	\fI<show PE configuration>\fP"
 Show the definition of the
@@ -1079,13 +1187,11 @@ for xxQS_NAME_Cxx systems.
 .br
 Shows the list of all currently defined projects.
 .\"
-.IP "\fB\-sq wc_queue_list\fP	<show queues>"
-Displays one or multiple cluster queues or queue instances. A description
-of wc_queue_list can be found in
-.M sge_types 1 .
+.IP "\fB\-sq queue_name[,queue_name,...]\fP	<show queues>"
+Displays one or multiple queues.
 .\"
 .IP "\fB\-sql\fP	\fI<show queue list>\fP"
-Show a list of all currently defined cluster queues.
+Show a list of all currently defined queues.
 .\"
 .IP "\fB\-ss\fP	\fI<show submit hosts>\fP"
 Displays the xxQS_NAMExx submit host list.
@@ -1190,23 +1296,12 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
+.IP "\fBCOMMD_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_qmaster 8
+.M xxqs_name_sxx_commd 8
 is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.
-.\"
-.IP "\fBQS_NAME_Sxx_EXECD_PORT\fP" 1.5i
-If set, specifies the tcp port on which
-.M xxqs_name_sxx_execd 8
-is expected to listen for communication requests.
-Most installations will use a services map entry instead
-to define that port.
-.\"
-.IP "\fBSGE_SINGLE_LINE\fP" 1.5i
-If set, indicates that long lines should not be broken up using backslashes.
-This setting is useful for scripts which expect one entry per line.
 .\"
 .\"
 .SH RESTRICTIONS

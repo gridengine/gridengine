@@ -48,9 +48,7 @@
 #include "sge_unistd.h"
 
 /* compare hosts with FQDN or not */
-#ifndef MAXHOSTLEN
 #define MAXHOSTLEN 256
-#endif
 
 /* char introducing a hostgroup name */
 #define HOSTGROUP_INITIAL_CHAR '@'
@@ -71,14 +69,16 @@ extern unsigned long gethostbyname_sec;
 extern unsigned long gethostbyaddr_calls;
 extern unsigned long gethostbyaddr_sec;
 
+const char *uti_state_get_default_domain(void);
+int uti_state_get_fqdn_cmp(void);
 host *uti_state_get_localhost(void);
 
-#ifdef ENABLE_NGC
-#else
+void uti_state_set_default_domain(const char *);
+void uti_state_set_fqdn_cmp(int);
+
 host *sge_host_new_addr(const struct in_addr *addr);
+
 host *sge_host_new_name(const char *name, int *not_really_new);
-void sge_host_list_refresh(void);
-#endif
 
 host *sge_host_search(const char *name, char *addr);
 
@@ -86,38 +86,22 @@ void sge_host_print(host *, FILE *fp);
 
 void sge_host_list_print(FILE *fp);
 
-#ifdef ENABLE_NGC
-#else
 int sge_host_list_read_aliasfile(char *fname);
-#endif
 
+void sge_host_list_refresh(void);
 
 char *sge_host_get_mainname(host *h);
 
-#ifdef ENABLE_NGC
-#else
 const char *sge_host_get_aliased_name(const char *name);
+
 const char *sge_host_resolve_name_local(const char *unresolved);
+
 void sge_host_list_initialize(void);
-#endif
 
 int sge_hostcmp(const char *h1, const char *h2);
  
 void sge_hostcpy(char *dst, const char *raw);       
 
 bool sge_is_hgroup_ref(const char *string);
-
-
-/* resolver library wrappers */
-struct hostent *sge_gethostbyname_retry(const char *name);
-struct hostent *sge_gethostbyname(const char *name, int* system_error_retval);
-struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_retval);
-
-void sge_free_hostent( struct hostent** he );
-struct hostent *sge_copy_hostent (struct hostent *orig);
-
-
-int sge_get_qmaster_port(void);
-int sge_get_execd_port(void);
 
 #endif /* __HOST_H */

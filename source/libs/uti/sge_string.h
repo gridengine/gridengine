@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 
-#include "sge_dstring.h"
+#include <string.h>
 
 struct saved_vars_s {
    char *static_cp;
@@ -68,11 +68,7 @@ int sge_strnullcasecmp(const char *a, const char *b);
 
 int sge_strnullcmp(const char *a, const char *b);
 
-int sge_patternnullcmp(const char *str, const char *pattern); 
-
 void sge_strip_blanks(char *str);
-
-void sge_strip_white_space_at_eol(char *str);
 
 void sge_strtoupper(char *buffer, int max_len);
 
@@ -91,8 +87,6 @@ void sge_compress_slashes(char *str);
 void sge_strip_quotes(char **pstr);
 
 char **string_list(char *str, char *delis, char **pstr);
-
-const char *sge_strerror(int errnum, dstring *buffer);
 
 #ifndef WIN32NATIVE
 #define SGE_STRCASECMP(a, b) strcasecmp(a, b)

@@ -51,6 +51,9 @@ void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
 
 void job_suc_pre(lListElem *jep);
 
+/* searches by id or jobname */
+lListElem *locate_job_by_identifier(const char *s, const char *owner);
+
 void job_ja_task_send_abort_mail(const lListElem *job,
                                  const lListElem *ja_task,                                                       const char *ruser,
                                  const char *rhost,                                                              const char *err_str);

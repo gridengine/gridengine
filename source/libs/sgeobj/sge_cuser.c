@@ -37,13 +37,14 @@
 #include "sge_log.h"
 #include "cull_list.h"
 #include "sge_answer.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 #include "sge_hostname.h"
 #include "commlib.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
 #include "sge_attr.h"
 #include "sge_cuser.h"
+#include "sge_stringL.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -54,7 +55,7 @@
 
 lList *Master_Cuser_List = NULL;
 
-/* EB: ADOC: add comments */
+/* EB: TODO: add ADOC comments */
 
 lListElem *
 cuser_create(lList **answer_list, const char *cluster_user, lList *remote_user)
@@ -96,15 +97,8 @@ cuser_get_remote_user(const lListElem *this_elem, lList **answer_list,
    
       attr_list = lGetList(this_elem, CU_ruser_list);
       if (attr_list != NULL) {
-         bool is_ambiguous = false;
-         const char *matching_host_or_group = NULL;
-         const char *matching_group = NULL;
-
          ret &= str_attr_list_find_value(attr_list, answer_list,
-                                         hostname, remote_user, 
-                                         &matching_host_or_group,
-                                         &matching_group,
-                                         &is_ambiguous); 
+                                         hostname, remote_user); 
       } else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
                                 MSG_CUSER_NOREMOTE_USER_S, "remote_user"));
@@ -152,14 +146,13 @@ cuser_list_find_hgroup_references(const lList *this_list,
    lListElem *cuser;
 
    DENTER(CUSER_LAYER, "cuser_find_hgroup_references");
-   if (this_list != NULL && hgroup != NULL && string_list != NULL) {
-      for_each(cuser, this_list) {
-         if (cuser_is_hgroup_referenced(cuser, hgroup)) {
-            const char *name = lGetString(cuser, CU_name);
+   if (this_list != NULL && hgroup != NULL && string_list != NULL)
+   for_each(cuser, this_list) {
+      if (cuser_is_hgroup_referenced(cuser, hgroup)) {
+         const char *name = lGetString(cuser, CU_name);
 
-            lAddElemStr(string_list, ST_name, name, ST_Type);
-         } 
-      }
+         lAddElemStr(string_list, ST_name, name, ST_Type);
+      } 
    }
    DEXIT;
    return ret;
@@ -211,4 +204,5 @@ cuser_list_map_user(const lList *this_list, lList **answer_list,
    DEXIT;
    return ret;
 }
+
 #endif

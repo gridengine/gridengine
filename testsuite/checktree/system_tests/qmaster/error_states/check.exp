@@ -583,10 +583,10 @@ proc error_states_cleanup  {} {
    global error_states_qconfig error_states_check_queue
 
 
-   puts $CHECK_OUTPUT "do qdel -uall"
-   set catch_result [delete_all_jobs]
-   puts $CHECK_OUTPUT $catch_result
 
+   puts $CHECK_OUTPUT "do qdel -uall"
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
+   puts $CHECK_OUTPUT $catch_result
  
    puts $CHECK_OUTPUT "clearing pos. error state of queue $error_states_check_queue"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod" "-c $error_states_check_queue" } catch_result

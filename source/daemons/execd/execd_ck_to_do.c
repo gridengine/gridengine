@@ -44,7 +44,7 @@
 #include "sge_job.h"
 #include "sge_pe_task.h"
 #include "sge_pe.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 #include "sge_log.h"
 #include "sge_time.h"
 #include "sge_usageL.h"
@@ -80,7 +80,7 @@
 #  endif
 #endif
 
-#include "sge_str.h"
+#include "sge_stringL.h"
 
 #if COMPILE_DC
 static int reprioritization_enabled = 0;
@@ -171,11 +171,10 @@ static void notify_ptf()
          }
       }
 
-      if (waiting4osjid) {
+      if (waiting4osjid)
          DPRINTF(("still waiting for osjobids\n"));
-      } else {
+      else
          DPRINTF(("got all osjobids\n"));
-      }   
    }
 
    DEXIT;
@@ -266,7 +265,7 @@ void force_job_rlimit()
             cpu_exceeded = (h_cpu < cpu_val);
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDHLIM_USSFF, 
                      u32c(jobid), cpu_exceeded ? "h_cpu" : "h_vmem",
-                     q?lGetString(q, QU_full_name) : "-",
+                     q?lGetString(q, QU_qname) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
                      cpu_exceeded ? h_cpu : h_vmem));
             signal_job(jobid, jataskid, SGE_SIGKILL);
@@ -278,7 +277,7 @@ void force_job_rlimit()
             WARNING((SGE_EVENT, MSG_JOB_EXCEEDSLIM_USSFF,
                      u32c(jobid),
                      cpu_exceeded ? "s_cpu" : "s_vmem",
-                     q?lGetString(q, QU_full_name) : "-",
+                     q?lGetString(q, QU_qname) : "-",
                      cpu_exceeded ? cpu_val : vmem_val,
                      cpu_exceeded ? s_cpu : s_vmem));
             signal_job(jobid, jataskid, SGE_SIGXCPU);
@@ -360,6 +359,7 @@ int answer_error
    u_long32 now;
    static u_long then = 0;
    lListElem *jep, *jatep;
+   extern int deactivate_ptf;
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
@@ -376,11 +376,12 @@ int answer_error
    if (lGetNumberOfElem(Master_Job_List) > 0) {
       notify_ptf();
 
-      sge_switch2start_user();
-      ptf_update_job_usage();
-      sge_switch2admin_user();
-
-      if (sge_is_reprioritize()) {
+      if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+         sge_switch2start_user();
+         ptf_update_job_usage();
+         sge_switch2admin_user();
+      }
+      if (feature_is_enabled(FEATURE_REPRIORITIZATION) && !deactivate_ptf) {
          sge_switch2start_user();
          DPRINTF(("ADJUST PRIORITIES\n"));
          ptf_adjust_job_priorities();
@@ -408,7 +409,7 @@ int answer_error
                      " queue  %s to %d\n", 
                      lGetUlong(job, JB_job_number), 
                      lGetUlong(jatask, JAT_task_number),
-                     lGetString(master_queue, QU_full_name), priority));
+                     lGetString(master_queue, QU_qname), priority));
                   ptf_reinit_queue_priority(
                      lGetUlong(job, JB_job_number),
                      lGetUlong(jatask, JAT_task_number),
@@ -424,7 +425,7 @@ int answer_error
                         lGetUlong(job, JB_job_number), 
                         lGetUlong(jatask, JAT_task_number),
                         lGetString(petask, PET_id),
-                        lGetString(master_queue, QU_full_name), priority));
+                        lGetString(master_queue, QU_qname), priority));
                      ptf_reinit_queue_priority(
                         lGetUlong(job, JB_job_number),
                         lGetUlong(jatask, JAT_task_number),

@@ -42,7 +42,6 @@
 #include "sge_string.h"
 #include "sge_dstring.h"
 #include "sge_hostname.h"
-#include "sge_profiling.h"
 
 #include "sge.h"
 #include "sge_gdi.h"
@@ -56,6 +55,7 @@
 #include "sge_manop.h"
 #include "sge_sharetree.h"
 #include "sge_pe.h"
+#include "sge_queue.h"
 #include "sge_schedd_conf.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
@@ -70,8 +70,8 @@
 #include "rw_configuration.h"
 #include "read_write_job.h"
 #include "read_write_manop.h"
+#include "read_write_queue.h"
 #include "read_write_cqueue.h"
-#include "read_write_qinstance.h"
 #include "read_write_sharetree.h"
 #include "read_write_pe.h"
 #include "read_write_userprj.h"
@@ -79,7 +79,6 @@
 #include "read_write_ume.h"
 #include "read_write_host_group.h"
 #include "sched_conf.h"
-#include "read_write_centry.h"
 
 #include "msg_common.h"
 #include "spool/msg_spoollib.h"
@@ -169,7 +168,6 @@ spool_classic_create_context(lList **answer_list, const char *args)
 
    /* check parameters - both must be set and be absolute paths */
    if (args == NULL) {
-      DPRINTF(("spooling arguments are NULL\n"));
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR);
@@ -181,10 +179,6 @@ spool_classic_create_context(lList **answer_list, const char *args)
       
       if (common_dir == NULL || spool_dir == NULL ||
          *common_dir != '/' || *spool_dir != '/') {
-         DPRINTF(("common_dir: "SFN"\n", common_dir == NULL ? "<null>" : 
-                                                              common_dir));
-         DPRINTF(("spool_dir: "SFN"\n", spool_dir == NULL ? "<null>" : 
-                                                              spool_dir));
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_SPOOL_INCORRECTPATHSFORCOMMONANDSPOOLDIR);
@@ -200,14 +194,11 @@ spool_classic_create_context(lList **answer_list, const char *args)
                                           spool_dir,
                                           spool_classic_default_startup_func,
                                           NULL,
-                                          spool_classic_default_maintenance_func,
-                                          NULL,
                                           NULL,
                                           spool_classic_default_list_func,
                                           spool_classic_default_read_func,
                                           spool_classic_default_write_func,
                                           spool_classic_default_delete_func,
-                                          NULL,
                                           NULL);
          type = spool_context_create_type(answer_list, context, SGE_TYPE_ALL);
          spool_type_add_rule(answer_list, type, rule, true);
@@ -218,14 +209,11 @@ spool_classic_create_context(lList **answer_list, const char *args)
                                           common_dir,
                                           spool_classic_common_startup_func,
                                           NULL,
-                                          spool_classic_common_maintenance_func,
-                                          NULL,
                                           NULL,
                                           spool_classic_default_list_func,
                                           spool_classic_default_read_func,
                                           spool_classic_default_write_func,
                                           spool_classic_default_delete_func,
-                                          NULL,
                                           NULL);
          type = spool_context_create_type(answer_list, context, 
                                           SGE_TYPE_CONFIG);
@@ -310,10 +298,25 @@ spool_classic_default_startup_func(lList **answer_list,
       }
 
       if (ret) {
-         /* JG: TODO: if check, we could check for the existence of the
-          *           subdirectories.
-          */
          /* create spool sub directories */
+         sge_mkdir(JOB_DIR,  0755, true, false);
+         sge_mkdir(ZOMBIE_DIR, 0755, true, false);
+         sge_mkdir(QUEUE_DIR,  0755, true, false);
+         sge_mkdir(CQUEUE_DIR,  0755, true, false);
+         sge_mkdir(EXECHOST_DIR, 0755, true, false);
+         sge_mkdir(SUBMITHOST_DIR, 0755, true, false);
+         sge_mkdir(ADMINHOST_DIR, 0755, true, false);
+         sge_mkdir(COMPLEX_DIR, 0755, true, false);
+         sge_mkdir(CENTRY_DIR, 0755, true, false);
+         sge_mkdir(EXEC_DIR, 0755, true, false);
+         sge_mkdir(PE_DIR, 0755, true, false);
+         sge_mkdir(CKPTOBJ_DIR, 0755, true, false);
+         sge_mkdir(USERSET_DIR, 0755, true, false);
+         sge_mkdir(CAL_DIR, 0755, true, false);
+         sge_mkdir(HGROUP_DIR, 0755, true, false);
+         sge_mkdir(UME_DIR, 0755, true, false);
+         sge_mkdir(USER_DIR, 0755, true, false);
+         sge_mkdir(PROJECT_DIR, 0755, true, false);
       }
    }
 
@@ -367,168 +370,15 @@ spool_classic_common_startup_func(lList **answer_list,
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_SPOOL_COMMONDIRDOESNOTEXIST_S, url);
-   } /* JG: TODO: if check, we could check for subdirectories as well */
+   } else {
+      char local_dir_buf[SGE_PATH_MAX];
+      dstring local_dir;
 
-   DEXIT;
-   return ret;
-}
+      sge_dstring_init(&local_dir, local_dir_buf, SGE_PATH_MAX);
 
-/****** spool/classic/spool_classic_default_maintenance_func() ************
-*  NAME
-*     spool_classic_default_maintenance_func() -- maintain database
-*
-*  SYNOPSIS
-*     bool 
-*     spool_classic_default_maintenance_func(lList **answer_list, 
-*                                    lListElem *rule
-*                                    const spooling_maintenance_command cmd,
-*                                    const char *args);
-*
-*  FUNCTION
-*     Maintains the database:
-*        - initialization: create subdirectories of spool directory
-*        - ...
-*
-*  INPUTS
-*     lList **answer_list   - to return error messages
-*     const lListElem *rule - the rule containing data necessary for
-*                             the maintenance (e.g. path to the spool 
-*                             directory)
-*     const spooling_maintenance_command cmd - the command to execute
-*     const char *args      - arguments to the maintenance command
-*
-*  RESULT
-*     bool - true, if the maintenance succeeded, else false
-*
-*  NOTES
-*     This function should not be called directly, it is called by the
-*     spooling framework.
-*
-*  SEE ALSO
-*     spool/classic/--Spooling-BerkeleyDB
-*     spool/spool_maintain_context()
-*******************************************************************************/
-bool
-spool_classic_default_maintenance_func(lList **answer_list, 
-                                    const lListElem *rule, 
-                                    const spooling_maintenance_command cmd,
-                                    const char *args)
-{
-   bool ret = true;
-   const char *spool_dir;
-
-   DENTER(TOP_LAYER, "spool_classic_default_maintenance_func");
-
-   spool_dir = lGetString(rule, SPR_url);
-
-   switch (cmd) {
-      case SPM_init:
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         /* create spool sub directories */
-         sge_mkdir(JOB_DIR, 0755, true, false);
-         sge_mkdir(ZOMBIE_DIR, 0755, true, false);
-         sge_mkdir(QUEUE_DIR, 0755, true, false);
-         sge_mkdir(CQUEUE_DIR, 0755, true, false);
-         sge_mkdir(QINSTANCES_DIR, 0755, true, false);
-         sge_mkdir(EXECHOST_DIR, 0755, true, false);
-         sge_mkdir(SUBMITHOST_DIR, 0755, true, false);
-         sge_mkdir(ADMINHOST_DIR, 0755, true, false);
-         sge_mkdir(COMPLEX_DIR, 0755, true, false);
-         sge_mkdir(CENTRY_DIR, 0755, true, false);
-         sge_mkdir(EXEC_DIR, 0755, true, false);
-         sge_mkdir(PE_DIR, 0755, true, false);
-         sge_mkdir(CKPTOBJ_DIR, 0755, true, false);
-         sge_mkdir(USERSET_DIR, 0755, true, false);
-         sge_mkdir(CAL_DIR, 0755, true, false);
-         sge_mkdir(HGROUP_DIR, 0755, true, false);
-         sge_mkdir(UME_DIR, 0755, true, false);
-         sge_mkdir(USER_DIR, 0755, true, false);
-         sge_mkdir(PROJECT_DIR, 0755, true, false);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         break;
-      default:
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 "unknown maintenance command %d\n", cmd);
-         ret = false;
-         break;
-         
-   }
-
-   DEXIT;
-   return ret;
-}
-
-/****** spool/classic/spool_classic_common_maintenance_func() ************
-*  NAME
-*     spool_classic_common_maintenance_func() -- maintain database
-*
-*  SYNOPSIS
-*     bool 
-*     spool_classic_common_maintenance_func(lList **answer_list, 
-*                                    lListElem *rule
-*                                    const spooling_maintenance_command cmd,
-*                                    const char *args);
-*
-*  FUNCTION
-*     Maintains the database:
-*        - initialization: create subdirectories of common directory
-*        - ...
-*
-*  INPUTS
-*     lList **answer_list   - to return error messages
-*     const lListElem *rule - the rule containing data necessary for
-*                             the maintenance (e.g. path to the spool 
-*                             directory)
-*     const spooling_maintenance_command cmd - the command to execute
-*     const char *args      - arguments to the maintenance command
-*
-*  RESULT
-*     bool - true, if the maintenance succeeded, else false
-*
-*  NOTES
-*     This function should not be called directly, it is called by the
-*     spooling framework.
-*
-*  SEE ALSO
-*     spool/classic/--Spooling-BerkeleyDB
-*     spool/spool_maintain_context()
-*******************************************************************************/
-bool
-spool_classic_common_maintenance_func(lList **answer_list, 
-                                    const lListElem *rule, 
-                                    const spooling_maintenance_command cmd,
-                                    const char *args)
-{
-   bool ret = true;
-   const char *common_dir;
-
-   DENTER(TOP_LAYER, "spool_classic_common_maintenance_func");
-
-   common_dir = lGetString(rule, SPR_url);
-
-   switch (cmd) {
-      case SPM_init:
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         {
-            char local_dir_buf[SGE_PATH_MAX];
-            dstring local_dir;
-
-            sge_dstring_init(&local_dir, local_dir_buf, SGE_PATH_MAX);
-
-            /* create directory for local configurations */
-            sge_dstring_sprintf(&local_dir, "%s/%s", common_dir, LOCAL_CONF_DIR);
-            sge_mkdir(sge_dstring_get_string(&local_dir), 0755, true, false);
-         }
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         break;
-      default:
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 "unknown maintenance command %d\n", cmd);
-         ret = false;
-         break;
-         
+      /* create directory for local configurations */
+      sge_dstring_sprintf(&local_dir, "%s/%s", url, LOCAL_CONF_DIR);
+      sge_mkdir(sge_dstring_get_string(&local_dir), 0755, true, false);
    }
 
    DEXIT;
@@ -544,7 +394,7 @@ spool_classic_common_maintenance_func(lList **answer_list,
 *     spool_classic_default_list_func(lList **answer_list, 
 *                                     const lListElem *type, 
 *                                     const lListElem *rule, lList **list, 
-*                                     const sge_object_type object_type) 
+*                                     const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Depending on the object type given, calls the appropriate functions
@@ -556,7 +406,7 @@ spool_classic_common_maintenance_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -573,13 +423,13 @@ bool
 spool_classic_default_list_func(lList **answer_list, 
                                 const lListElem *type, 
                                 const lListElem *rule, lList **list, 
-                                const sge_object_type object_type)
+                                const sge_object_type event_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_classic_default_list_func");
 
-   switch (object_type) {
+   switch (event_type) {
       case SGE_TYPE_ADMINHOST:
          if (sge_read_adminhost_list_from_disk() != 0) {
             ret = false;
@@ -606,7 +456,7 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_CENTRY:
-         if (read_all_centries(CENTRY_DIR) != 0) {
+         if (read_all_centries() != 0) {
             ret = false;
          }
          break;
@@ -671,12 +521,17 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_PE:
-         if (sge_read_pe_list_from_disk(PE_DIR) != 0) {
+         if (sge_read_pe_list_from_disk() != 0) {
             ret = false;
          }
          break;
       case SGE_TYPE_PROJECT:
          if (sge_read_project_list_from_disk() != 0) {
+            ret = false;
+         }
+         break;
+      case SGE_TYPE_QUEUE:
+         if (sge_read_queue_list_from_disk() != 0) {
             ret = false;
          }
          break;
@@ -708,7 +563,7 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_USERSET:
-         if (sge_read_userset_list_from_disk(USERSET_DIR) != 0) {
+         if (sge_read_userset_list_from_disk() != 0) {
             ret = false;
          }
          break;
@@ -728,7 +583,7 @@ spool_classic_default_list_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
          ret = false;
          break;
    }
@@ -746,7 +601,7 @@ spool_classic_default_list_func(lList **answer_list,
 *     spool_classic_default_read_func(lList **answer_list, 
 *                                     const lListElem *type, 
 *                                     const lListElem *rule, const char *key, 
-*                                     const sge_object_type object_type) 
+*                                     const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Reads an individual object by calling the appropriate classic spooling 
@@ -757,7 +612,7 @@ spool_classic_default_list_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     lListElem* - the object, if it could be read, else NULL
@@ -774,13 +629,13 @@ lListElem *
 spool_classic_default_read_func(lList **answer_list, 
                                 const lListElem *type, 
                                 const lListElem *rule, const char *key, 
-                                const sge_object_type object_type)
+                                const sge_object_type event_type)
 {
    lListElem *ep = NULL;
 
    DENTER(TOP_LAYER, "spool_classic_default_read_func");
 
-   switch (object_type) {
+   switch (event_type) {
       case SGE_TYPE_ADMINHOST:
          ep = cull_read_in_host(ADMINHOST_DIR, key, CULL_READ_SPOOL, AH_name, 
                                 NULL, NULL);
@@ -800,7 +655,7 @@ spool_classic_default_read_func(lList **answer_list,
          ep = cull_read_in_ckpt(CKPTOBJ_DIR, key, 1, 0, NULL, NULL);
          break;
       case SGE_TYPE_CENTRY:
-         ep = cull_read_in_centry(CENTRY_DIR, key, 1, 0,/* NULL,*/ NULL);
+         ep = cull_read_in_centry(CENTRY_DIR, key, 1, 0, NULL, NULL);
          break;
       case SGE_TYPE_CONFIG:
          {
@@ -842,6 +697,9 @@ spool_classic_default_read_func(lList **answer_list,
       case SGE_TYPE_PROJECT:
          ep = cull_read_in_userprj(PROJECT_DIR, key, 1, 0, NULL);
          break;
+      case SGE_TYPE_QUEUE:
+         ep = cull_read_in_qconf(QUEUE_DIR, key, 1, 0, NULL, NULL);
+         break;
       case SGE_TYPE_CQUEUE:
          ep = cull_read_in_cqueue(CQUEUE_DIR, key, 1, 0, NULL, NULL);
          break;
@@ -876,7 +734,7 @@ spool_classic_default_read_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
          break;
    }
 
@@ -894,7 +752,7 @@ spool_classic_default_read_func(lList **answer_list,
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, 
 *                                      const lListElem *object, const char *key,
-*                                      const sge_object_type object_type) 
+*                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate classic spooling functions.
@@ -905,7 +763,7 @@ spool_classic_default_read_func(lList **answer_list,
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to spool
 *     const char *key                 - unique key
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -923,12 +781,12 @@ spool_classic_default_write_func(lList **answer_list,
                                  const lListElem *type, 
                                  const lListElem *rule, 
                                  const lListElem *object, const char *key, 
-                                 const sge_object_type object_type)
+                                 const sge_object_type event_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_classic_default_write_func");
-   switch (object_type) {
+   switch (event_type) {
       case SGE_TYPE_ADMINHOST:
          write_host(1, 2, object, AH_name, NULL);
          break;
@@ -996,18 +854,7 @@ spool_classic_default_write_func(lList **answer_list,
                   ret = false;
                }
             } else {
-               lListElem *job;
-
-               if (object_type == SGE_TYPE_JOB) {
-                  job = (lListElem *)object;
-               } else {
-                  /* job_write_spool_file takes a job, even if we only want
-                   * to spool a ja_task or pe_task
-                   */
-                  job = job_list_locate(Master_Job_List, job_id);
-               }
-
-               if (job_write_spool_file((lListElem *)job, ja_task_id, 
+               if (job_write_spool_file((lListElem *)object, ja_task_id, 
                                         pe_task_id, SPOOL_DEFAULT) != 0) {
                   ret = false;
                }
@@ -1068,11 +915,13 @@ spool_classic_default_write_func(lList **answer_list,
             }
          }
          break;
+      case SGE_TYPE_QUEUE:
+         if (cull_write_qconf(1, 0, QUEUE_DIR, key, NULL, object) != 0) {
+            ret = false;
+         }
+         break;
       case SGE_TYPE_CQUEUE:
          write_cqueue(1, 2, object);
-         break;
-      case SGE_TYPE_QINSTANCE:
-         write_qinstance(1, 2, object);
          break;
       case SGE_TYPE_SCHEDD_CONF:
          write_sched_configuration(1, 2, lGetString(rule, SPR_url), object);
@@ -1136,7 +985,7 @@ spool_classic_default_write_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
          ret = false;
          break;
    }
@@ -1155,7 +1004,7 @@ spool_classic_default_write_func(lList **answer_list,
 *                                       const lListElem *type, 
 *                                       const lListElem *rule, 
 *                                       const char *key, 
-*                                       const sge_object_type object_type) 
+*                                       const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Deletes an object in the classic spooling.
@@ -1167,7 +1016,7 @@ spool_classic_default_write_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -1185,13 +1034,13 @@ spool_classic_default_delete_func(lList **answer_list,
                                   const lListElem *type, 
                                   const lListElem *rule, 
                                   const char *key, 
-                                  const sge_object_type object_type)
+                                  const sge_object_type event_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_classic_default_delete_func");
 
-   switch (object_type) {
+   switch (event_type) {
       case SGE_TYPE_ADMINHOST:
          ret = sge_unlink(ADMINHOST_DIR, key) == 0;
          break;
@@ -1255,11 +1104,11 @@ spool_classic_default_delete_func(lList **answer_list,
       case SGE_TYPE_PROJECT:
          ret = sge_unlink(PROJECT_DIR, key) == 0;
          break;
+      case SGE_TYPE_QUEUE:
+         ret = sge_unlink(QUEUE_DIR, key) == 0;
+         break;
       case SGE_TYPE_CQUEUE:
          ret = sge_unlink(CQUEUE_DIR, key) == 0;
-         break;
-      case SGE_TYPE_QINSTANCE:
-         ret = sge_unlink(QINSTANCES_DIR, key) == 0;
          break;
       case SGE_TYPE_SCHEDD_CONF:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1288,7 +1137,7 @@ spool_classic_default_delete_func(lList **answer_list,
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
          ret = false;
          break;
    }

@@ -42,7 +42,6 @@ endif
 switch ($argv[1])
    case "0":
       unsetenv SGE_DEBUG_LEVEL
-      unsetenv SGE_ND
       breaksw
    case "1":
       set argv = (-); source $SGE_ROOT/util/dl2.csh
@@ -65,8 +64,7 @@ switch ($argv[1])
       set argv = (t g a = t i); source $SGE_ROOT/util/dl2.csh
       breaksw
    case "6":
-      set argv = (-); source $SGE_ROOT/util/dl2.csh
-      set argv = (t c b h a = X); source $SGE_ROOT/util/dl2.csh
+      goto unused
       breaksw
    case "7":
       set argv = (-); source $SGE_ROOT/util/dl2.csh

@@ -56,8 +56,7 @@ COMMON_SRC = \
             parse_job_cull.c \
             parse_qsub.c \
             sig_handlers.c \
-            usage.c \
-            sge_mt_init.c
+            usage.c
 
 COMMON_OBJS = $(COMMON_SRC:.c=.o)
 
@@ -70,16 +69,16 @@ include $(COMMON_DIR)/common_dependencies
 # rules to build object codes
 ###############################################################################
 sge_options.o:	$(COMMON_DIR)/sge_options.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMON_DIR)/sge_options.c
+		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_options.c
 
 execution_states.o: $(COMMON_DIR)/execution_states.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/execution_states.c
 
 parse_job_cull.o    : $(COMMON_DIR)/parse_job_cull.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMON_DIR)/parse_job_cull.c
+		$(CC) $(CFLAGS) -c $(COMMON_DIR)/parse_job_cull.c
 
 parse_qsub.o:	$(COMMON_DIR)/parse_qsub.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMON_DIR)/parse_qsub.c
+		$(CC) $(CFLAGS) -c $(COMMON_DIR)/parse_qsub.c
 
 sig_handlers.o   : $(COMMON_DIR)/sig_handlers.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sig_handlers.c
@@ -87,5 +86,3 @@ sig_handlers.o   : $(COMMON_DIR)/sig_handlers.c
 usage.o: 	$(COMMON_DIR)/usage.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/usage.c
 
-sge_mt_init.o: 	$(COMMON_DIR)/sge_mt_init.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/sge_mt_init.c

@@ -39,11 +39,13 @@
 
 #include "sge.h"
 #include "sge_log.h"
+#include "sge_parse_num_par.h"
 #include "sgermon.h"
 #include "commlib.h"
 #include "sge_conf.h"
 #include "configuration_qmaster.h"
 #include "cull.h"
+#include "sge_host.h"
 #include "config_file.h"
 #include "sge_userset_qmaster.h"
 #include "sge_utility.h"
@@ -55,13 +57,13 @@
 #include "reschedule.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
-#include "sge_host.h"
 #include "sge_prog.h"
 #include "sge_uidgid.h" 
 #include "sge_spool.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_host.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -70,7 +72,7 @@
 #include "msg_qmaster.h"
 
 static int check_config(lList **alpp, lListElem *conf);
-
+   
 /* make chached values from configuration invalid */
 int new_config = 1;
 
@@ -140,7 +142,7 @@ char *rhost
 #endif   
 
    sge_event_spool(alpp, 0, sgeE_CONFIG_DEL,
-                   0, 0, config_name, NULL,
+                   0, 0, config_name,
                    NULL, NULL, NULL, NULL, true, true);
     
    /* now remove it from our internal list*/
@@ -223,23 +225,17 @@ char *rhost
       int paramPos = 0;
       char  *deniedParams[] = { 
           "execd_spool_dir", 
+          "qmaster_spool_dir", 
+          "admin_user",
+          "default_domain",
+          "ignore_fqdn",
           NULL 
       };
 
       oldEntryList = lGetList(ep   , CONF_entries); 
       newEntryList = lGetList(confp, CONF_entries);
 
-      /* The element reprioritize is changed by the scheduler configuration and
-         not with the global configuration. Thus, if the element does not exist
-         in the new configuration , but in the old one, it has to be copied. 
-         
-         Since it is not a real global config elem, it is not spooled and cannot
-         be changed by qconf -mconf*/
-      oldEntryListElem = lGetElemStr(oldEntryList, CF_name, REPRIORITIZE);
-      newEntryListElem = lGetElemStr(newEntryList, CF_name, REPRIORITIZE);
-      if ((!newEntryListElem) && (oldEntryListElem)) {
-         lAppendElem(newEntryList, lCopyElem(oldEntryListElem));
-      }
+     
        
       while ( deniedParams[paramPos] != NULL ) {
          /* execd_spool_dir */
@@ -297,11 +293,11 @@ char *rhost
    }
 
    sge_event_spool(alpp, 0, added ? sgeE_CONFIG_ADD : sgeE_CONFIG_MOD, 
-                   0, 0, config_name, NULL, NULL,
+                   0, 0, config_name, NULL,
                    ep, NULL, NULL, true, true);
 
    if (!strcmp(SGE_GLOBAL_NAME, config_name)) {
-      sge_add_event( 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL, NULL, NULL);
+      sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL, NULL);
    }
 
    /*
@@ -327,7 +323,8 @@ char *rhost
       sge_show_conf();
 
       /* pass new max_unheard value to commlib */
-      cl_commlib_set_connection_param(cl_com_get_handle("qmaster",1), HEARD_FROM_TIMEOUT, conf.max_unheard);
+      set_commlib_param(CL_P_LT_HEARD_FROM_TIMEOUT, conf.max_unheard, 
+         NULL, NULL);
    }
  
    if (reschedule_unknown_changed) { 
@@ -412,6 +409,16 @@ lListElem *conf
          }
       }
 
+      if (!strcmp(name, "stat_log_time")) {
+         /* do not allow infinity entry */
+         if (strcasecmp(value,"infinity") == 0) {
+            ERROR((SGE_EVENT, MSG_CONF_INFNOTALLOWEDFORATTRXINCONFLISTOFY_SS, name, conf_name));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return STATUS_EEXIST;
+         }
+      }
+
       if (!strcmp(name, "max_unheard")) {
          /* do not allow infinity entry */
          if (strcasecmp(value,"infinity") == 0) {
@@ -445,7 +452,7 @@ lListElem *conf
          }
 
          /* .. checking userset names */
-         ok = (userset_list_validate_acl_list(tmp, alpp)==STATUS_OK);
+         ok = (userset_list_validate_acl_list(alpp, tmp, name, conf_name, "configuration")==STATUS_OK);
          lFreeList(tmp);
          if (!ok) {
             DEXIT;
@@ -557,8 +564,8 @@ lListElem **cepp
       lSetHost(hep, EH_name, config_name);
 
       ret = sge_resolve_host(hep, EH_name);
-      if (ret != CL_RETVAL_OK) {
-         DPRINTF(("get_configuration: error %s resolving host %s\n", cl_get_error_text(ret), config_name));
+      if (ret) {
+         DPRINTF(("get_configuration: error %s resolving host %s\n", cl_errstr(ret), config_name));
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, config_name));
          lFreeElem(hep);
          DEXIT;
@@ -651,6 +658,3 @@ lList *to_check_list
    DEXIT;
    return 1;
 }
-
-
-

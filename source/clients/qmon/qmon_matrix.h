@@ -37,7 +37,7 @@
 #define CE_TYPE_REDUCED       0
 #define CE_TYPE_FULL          1
 
-#define CE_MAX                8
+#define CE_MAX                7
 
 enum {
    CE_NAME,
@@ -46,8 +46,7 @@ enum {
    CE_RELOP,
    CE_REQUEST,
    CE_CONSUMABLE,
-   CE_DEFAULT,
-   CE_URGENCY
+   CE_DEFAULT
 };
 
 
@@ -55,8 +54,6 @@ void QmonRegisterMatrixWidgets(void);
 
 void qmonSetCE_Type(Widget w, lList *lp, int full);
 lList* qmonGetCE_Type(Widget w);
-void qmonSetNxN(Widget w, lList *lp, int num_fields, ...);
-lList* qmonGetNxN(Widget w, lDescr *dp, int num_fields, ...);
 void qmonSet2xN(Widget w, lList *lp, int field1, int field2);
 lList* qmonGet2xN(Widget w, lDescr *dp, int field1, int field2);
 void qmonMatrixSelect(Widget w, XtPointer cld, XtPointer cad);

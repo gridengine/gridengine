@@ -50,13 +50,4 @@ ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id);
 bool 
 ja_task_clear_finished_pe_tasks(lListElem *ja_task);
 
-int sge_parse_jobtasks(lList **lp, lListElem **idp, const char *str, 
-                       lList **alpp, bool include_names, lList *arrayDefList);
-
-bool
-ja_task_message_add(lListElem *this_elem, u_long32 type, const char *message);
-
-bool
-ja_task_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type);
-
 #endif /* __SGE_JA_TASK_H */

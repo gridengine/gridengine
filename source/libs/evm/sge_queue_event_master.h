@@ -32,10 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-void
-qinstance_add_event(lListElem *this_elem, u_long32 type);
+void sge_add_queue_event(u_long32 type, lListElem *qep);
 
-void
-cqueue_add_event(lListElem *this_elem, u_long32 type);
 
 #endif /* __SGE_QUEUE_EVENT_MASTER_H */

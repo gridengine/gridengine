@@ -37,18 +37,7 @@
 extern lList *Master_Project_List;
 extern lList *Master_User_List;
 
-lList **
-prj_list_get_master_list(void);
-
-lListElem *userprj_list_locate(const lList *userprj_list,
+lListElem *userprj_list_locate(lList *userprj_list,
                                const char *uerprj_name);
-
-const char *
-userprj_list_append_to_dstring(const lList *this_list, dstring *string);
-
-bool
-prj_list_do_all_exist(const lList *this_list, lList **answer_list,
-                      const lList *userprj_list);
-lListElem *getUserPrjTemplate(void);
 
 #endif /* __SGE_USERPRJ_H */

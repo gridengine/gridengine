@@ -174,33 +174,28 @@ int cuser_success(lListElem *cuser, lListElem *old_cuser,
                     gdi_object_t *object) 
 {
    DENTER(TOP_LAYER, "usermap_success");
-   sge_add_event( 0, old_cuser?sgeE_CUSER_MOD:sgeE_CUSER_ADD, 0, 0, 
-                 lGetString(cuser, CU_name), NULL, NULL, cuser);
+   sge_add_event(NULL, 0, old_cuser?sgeE_CUSER_MOD:sgeE_CUSER_ADD, 0, 
+                 0, lGetString(cuser, CU_name), NULL, cuser);
    lListElem_clear_changed_info(cuser);
    DEXIT;
    return 0;
 }
 
-int cuser_spool(lList **alpp, lListElem *upe, gdi_object_t *object) 
+int cuser_spool(lList **answer_list, lListElem *upe, gdi_object_t *object) 
 {  
-   lList *answer_list = NULL;
-   bool dbret;
-
    DENTER(TOP_LAYER, "usermap_spool");
  
-   dbret = spool_write_object(&answer_list, spool_get_default_context(), upe, 
-                              lGetString(upe, CU_name), SGE_TYPE_CUSER);
-   answer_list_output(&answer_list);
-
-   if (!dbret) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_WRITE_FAILED_S,
-                              lGetString(upe, CU_name));
+   if (!spool_write_object(NULL, spool_get_default_context(), upe, lGetString(upe, CU_name), SGE_TYPE_CUSER)) {
+      const char* clusterUser = NULL;
+      clusterUser = lGetString(upe, CU_name); 
+      ERROR((SGE_EVENT, MSG_UM_ERRORWRITESPOOLFORUSER_S, clusterUser ));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return 1;
    }
-
+ 
    DEXIT;
-   return dbret ? 0 : 1;
+   return 0;
 }
 
 int cuser_del(lListElem *this_elem, lList **answer_list, 
@@ -218,7 +213,7 @@ int cuser_del(lListElem *this_elem, lList **answer_list,
    
          if (cuser != NULL) {
             if (sge_event_spool(answer_list, 0, sgeE_CUSER_DEL,
-                                0, 0, name, NULL, NULL,
+                                0, 0, name, NULL,
                                 NULL, NULL, NULL, true, true)) {
                lRemoveElem(master_cuser_list, cuser);
 

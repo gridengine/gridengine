@@ -100,8 +100,6 @@ u_long32 range_list_get_first_id(const lList *this_list, lList **answer_list);
 
 u_long32 range_list_get_last_id(const lList *this_list, lList **answer_list);
 
-double range_list_get_average(const lList *this_list, u_long32 upperbound);
-
 void range_list_initialize(lList **this_list, lList **answer_list);
 
 u_long32 range_list_get_number_of_ids(const lList *this_list);

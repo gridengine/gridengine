@@ -35,127 +35,13 @@
 #include "sge_log.h"
 #include "cull.h"
 
-#include "sge_bootstrap.h"
-
-#include "sge_answer.h"
-#include "sge_event.h"
-#include "sge_object.h"
 #include "sge_job.h"
 
+#include "sge_event.h"
+#include "sge_object.h"
+
 #include "sge_event_master.h"
-
 #include "spool/sge_spooling.h"
-#include "spool/dynamic/sge_spooling_loader.h"
-
-
-#include "sge_persistence_qmaster.h"
-
-#include "msg_qmaster.h"
-
-bool
-sge_initialize_persistence(lList **answer_list)
-{
-   bool ret = true;
-
-   lListElem *spooling_context;
-
-   DENTER(TOP_LAYER, "sge_initialize_persistence");
-
-   /* create spooling context */
-   spooling_context = spool_create_dynamic_context(answer_list, 
-                           bootstrap_get_spooling_lib(), 
-                           bootstrap_get_spooling_params());
-   if (spooling_context == NULL) {
-      /* error message created in spool_create_dynamic_context */
-      ret = false;
-   } else {
-      /* startup spooling context */
-      if (!spool_startup_context(answer_list, spooling_context, true)) {
-         /* error message created in spool_startup_context */
-         ret = false;
-      } else {
-         time_t now = time(0);
-         te_event_t ev = NULL;
-
-         /* set this context as default */
-         spool_set_default_context(spooling_context);
-
-         /* initialize timer for spooling trigger function */
-         te_register_event_handler(spooling_trigger_handler, TYPE_SPOOLING_TRIGGER);
-         ev = te_new_event(now, TYPE_SPOOLING_TRIGGER, ONE_TIME_EVENT, 0, 0, NULL);
-         te_add_event(ev);
-         te_free_event(ev);
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
-
-bool
-sge_shutdown_persistence(lList **answer_list)
-{
-   bool ret = true;
-   time_t time = 0;
-   lList* alp = NULL;
-   lListElem *context;
-
-   DENTER(TOP_LAYER, "sge_shutdown_persistence");
-
-   /* trigger spooling actions (flush data) */
-   if (!spool_trigger_context(&alp, spool_get_default_context(), 0, &time)) {
-      answer_list_output(&alp);
-   }
-
-   /* shutdown spooling */
-   context = spool_get_default_context();
-   if (context != NULL) {
-      lList *local_answer = NULL;
-
-      if (answer_list != NULL) {
-         local_answer = *answer_list;
-      }
-
-      spool_shutdown_context(&local_answer, context);
-      if (answer_list == NULL) {
-         answer_list_output(&local_answer);
-      }
-   }
-
-   DEXIT;
-   return ret;
-}
-
-void
-spooling_trigger_handler(te_event_t anEvent)
-{
-   time_t next_trigger = 0;
-   time_t now;
-   lList *answer_list = NULL;
-   te_event_t ev = NULL;
-
-   DENTER(TOP_LAYER, "deliver_spooling_trigger");
-
-   /* trigger spooling regular actions */
-   if (!spool_trigger_context(&answer_list, spool_get_default_context(), 
-                              te_get_when(anEvent), &next_trigger)) {
-      answer_list_output(&answer_list);
-   }
-
-   /* validate next_trigger. If it is invalid, set it to one minute after now */
-   now = time(0);
-   if (next_trigger <= now) {
-      next_trigger = now + 60;
-   }
-
-   /* set timerevent for next trigger */
-   ev = te_new_event(next_trigger, te_get_type(anEvent), ONE_TIME_EVENT, 0, 0, NULL);
-   te_add_event(ev);
-   te_free_event(ev);
-
-   DEXIT;
-   return;
-}
 
 /****** sge_persistence_qmaster/sge_event_spool() ******************************
 *  NAME
@@ -165,7 +51,7 @@ spooling_trigger_handler(te_event_t anEvent)
 *     bool 
 *     sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event, 
 *                     u_long32 intkey1, u_long32 intkey2, const char *strkey, 
-*                     const char *strkey2, const char *session,
+*                     const char *session,
 *                     lListElem *object, lListElem *sub_object1, 
 *                     lListElem *sub_object2, bool send_event, bool spool) 
 *
@@ -183,7 +69,6 @@ spooling_trigger_handler(te_event_t anEvent)
 *     u_long32 intkey1       - an integer key (job_id)
 *     u_long32 intkey2       - a second integer key (ja_task_id)
 *     const char *strkey     - a string key (all other keys)
-*     const char *strkey2    - a string key (all other keys)
 *     const char *session    - events session key
 *     lListElem *object      - the object to spool and send
 *     lListElem *sub_object1 - optionally a sub object (ja_task)
@@ -207,17 +92,16 @@ spooling_trigger_handler(te_event_t anEvent)
 bool 
 sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event, 
                 u_long32 intkey1, u_long32 intkey2, const char *strkey, 
-                const char *strkey2, const char *session, 
+                const char *session, 
                 lListElem *object, lListElem *sub_object1, 
                 lListElem *sub_object2, bool send_event, bool spool)
 {
    bool ret = true;
-   dstring key_buffer = DSTRING_INIT; 
+  
    const char *key = NULL;
    sge_object_type object_type;
    lListElem *element = NULL;
    bool delete = false;
-   dstring buffer = DSTRING_INIT;
 
    switch (event) {
       case sgeE_ADMINHOST_LIST:
@@ -277,13 +161,13 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
       case sgeE_JATASK_ADD:
       case sgeE_JATASK_DEL:
       case sgeE_JATASK_MOD:
-         key = job_get_key(intkey1, intkey2, strkey, &buffer);
+         key = job_get_key(intkey1, intkey2, strkey);
          element = sub_object1;
          object_type = SGE_TYPE_JATASK;
          break;
       case sgeE_PETASK_ADD:
       case sgeE_PETASK_DEL:
-         key = job_get_key(intkey1, intkey2, strkey, &buffer);
+         key = job_get_key(intkey1, intkey2, strkey);
          element = sub_object2;
          object_type = SGE_TYPE_PETASK;
          break;
@@ -295,7 +179,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
       case sgeE_JOB_USAGE:
       case sgeE_JOB_FINAL_USAGE:
       case sgeE_JOB_FINISH:
-         key = job_get_key(intkey1, intkey2, strkey, &buffer);
+         key = job_get_key(intkey1, intkey2, strkey);
          element = object;
          object_type = SGE_TYPE_JOB;
          break;
@@ -303,7 +187,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
       case sgeE_JOB_SCHEDD_INFO_ADD:
       case sgeE_JOB_SCHEDD_INFO_DEL:
       case sgeE_JOB_SCHEDD_INFO_MOD:
-         key = job_get_key(intkey1, intkey2, strkey, &buffer);
+         key = job_get_key(intkey1, intkey2, strkey);
          element = object;
          object_type = SGE_TYPE_JOB_SCHEDD_INFO;
          break;
@@ -324,8 +208,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          object_type = SGE_TYPE_OPERATOR;
          break;
       case sgeE_NEW_SHARETREE:
-         /* we have only one sharetree - there is no key */
-         key = "sharetree";
+         key = strkey;
          element = object;
          object_type = SGE_TYPE_SHARETREE;
          break;
@@ -351,6 +234,16 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          /* nothing to spool for this event */
          object_type = SGE_TYPE_ALL;
          break;
+      case sgeE_QUEUE_LIST:
+      case sgeE_QUEUE_ADD:
+      case sgeE_QUEUE_DEL:
+      case sgeE_QUEUE_MOD:
+      case sgeE_QUEUE_SUSPEND_ON_SUB:
+      case sgeE_QUEUE_UNSUSPEND_ON_SUB:
+         key = strkey;
+         element = object;
+         object_type = SGE_TYPE_QUEUE;
+         break;
       case sgeE_CQUEUE_LIST:
       case sgeE_CQUEUE_ADD:
       case sgeE_CQUEUE_DEL:
@@ -358,16 +251,6 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          key = strkey;
          element = object;
          object_type = SGE_TYPE_CQUEUE;
-         break;
-      case sgeE_QINSTANCE_ADD:
-      case sgeE_QINSTANCE_DEL:
-      case sgeE_QINSTANCE_MOD:
-      case sgeE_QINSTANCE_SOS:
-      case sgeE_QINSTANCE_USOS:
-         sge_dstring_sprintf(&key_buffer, SFN"/"SFN, strkey, strkey2);
-         key = sge_dstring_get_string(&key_buffer);
-         element = object;
-         object_type = SGE_TYPE_QINSTANCE;
          break;
       case sgeE_SCHED_CONF:
          key = strkey;
@@ -453,8 +336,8 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          case sgeE_OPERATOR_DEL:
          case sgeE_PE_DEL:
          case sgeE_PROJECT_DEL:
+         case sgeE_QUEUE_DEL:
          case sgeE_CQUEUE_DEL:
-         case sgeE_QINSTANCE_DEL:
          case sgeE_SUBMITHOST_DEL:
          case sgeE_USER_DEL:
          case sgeE_USERSET_DEL:
@@ -476,29 +359,10 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
 
       /* if spooling was requested and we have an object type to spool */
       if (spool && object_type != SGE_TYPE_ALL) {
-         /* use an own answer list for the low level spooling operation. 
-          * in case of error, generate a high level error message.
-          */
-         lList *spool_answer_list = NULL;
          if (delete) {
-            ret = spool_delete_object(&spool_answer_list, spool_get_default_context(), 
-                                      object_type, key);
+            ret = spool_delete_object(answer_list, spool_get_default_context(), object_type, key);
          } else {
-            ret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
-                                     element, key, object_type);
-         }
-         /* output low level error messages */
-         answer_list_output(&spool_answer_list);
-
-         /* in case of error: generate error message for caller */
-         if (!ret) {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_ERROR, 
-                                    delete ? 
-                                    MSG_PERSISTENCE_DELETE_FAILED_S : 
-                                    MSG_PERSISTENCE_WRITE_FAILED_S,
-                                    key);
-            
+            ret = spool_write_object(answer_list, spool_get_default_context(), object, key, object_type);
          }
       }
    }
@@ -506,17 +370,13 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
    /* send event only, if spooling succeeded */
    if (ret) {
       if (send_event) {
-         sge_add_event( timestamp, event, 
-                       intkey1, intkey2, strkey, strkey2,
-                       session, element);
+         sge_add_event(NULL, timestamp, event, intkey1, intkey2, strkey, session, element);
       }
 
       /* clear the changed bits */
       lListElem_clear_changed_info(object);
    }
-   sge_dstring_free(&key_buffer);
 
-   sge_dstring_free(&buffer);
    return ret;
 }
 

@@ -43,7 +43,6 @@
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
-#include "sge_string.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_globals.h"
@@ -59,22 +58,14 @@
 #include "qmon_timer.h"
 
 typedef struct _TOVEntry {
-   Cardinal total_share_tree_tickets;
-   Cardinal total_functional_tickets;
-   Cardinal override_tickets;
-   Boolean  share_override_ticket;
-   Boolean  share_functional_ticket;
-   int max_pending_tasks_per_job;
-   int max_functional_jobs;
-   double weight_deadline;
-   double weight_waiting_time;
-   double weight_urgency;
-   double weight_priority;
-   double weight_ticket;
-   char *policy_hierarchy;
+   Cardinal      total_share_tree_tickets;
+   Cardinal      total_functional_tickets;
+   Cardinal      max_deadline_initiation_tickets;
+   Cardinal      deadline_initiation_tickets;
+   Cardinal      override_tickets;
 } tTOVEntry;
 
-static tTOVEntry cdata = {0, 0, 0, False, False, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, NULL};
+static tTOVEntry cdata = {0, 0, 0, 0, 0};
 static Boolean data_changed = False;
 
 static Widget qmon_tov = 0;
@@ -102,59 +93,19 @@ XtResource tov_resources[] = {
       XtOffsetOf(tTOVEntry, total_functional_tickets),
       XtRImmediate, (XtPointer) 0 },
 
+   { "max_deadline_initiation_tickets", "max_deadline_initiation_tickets", 
+      XtRInt, sizeof(Cardinal),
+      XtOffsetOf(tTOVEntry, max_deadline_initiation_tickets),
+      XtRImmediate, (XtPointer) 0 },
+
+   { "deadline_initiation_tickets", "deadline_initiation_tickets", XtRCardinal,
+      sizeof(Cardinal),
+      XtOffsetOf(tTOVEntry, deadline_initiation_tickets),
+      XtRImmediate, (XtPointer) 0 },
+
    { "override_tickets", "override_tickets", XtRCardinal,
       sizeof(Cardinal),
       XtOffsetOf(tTOVEntry, override_tickets),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "max_functional_jobs", "max_functional_jobs", XtRInt,
-      sizeof(int),
-      XtOffsetOf(tTOVEntry, max_functional_jobs),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "max_pending_tasks_per_job", "max_pending_tasks_per_job", XtRInt,
-      sizeof(int),
-      XtOffsetOf(tTOVEntry, max_pending_tasks_per_job),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "share_override_ticket", "share_override_ticket", XtRBoolean,
-      sizeof(Boolean),
-      XtOffsetOf(tTOVEntry, share_override_ticket),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "share_functional_ticket", "share_functional_ticket", XtRBoolean,
-      sizeof(Boolean),
-      XtOffsetOf(tTOVEntry, share_functional_ticket),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "weight_deadline", "weight_deadline", XmtRDouble,
-      sizeof(double),
-      XtOffsetOf(tTOVEntry, weight_deadline),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "weight_waiting_time", "weight_waiting_time", XmtRDouble,
-      sizeof(double),
-      XtOffsetOf(tTOVEntry, weight_waiting_time),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "weight_urgency", "weight_urgency", XmtRDouble,
-      sizeof(double),
-      XtOffsetOf(tTOVEntry, weight_urgency),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "weight_priority", "weight_priority", XmtRDouble,
-      sizeof(double),
-      XtOffsetOf(tTOVEntry, weight_priority),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "weight_ticket", "weight_ticket", XmtRDouble,
-      sizeof(double),
-      XtOffsetOf(tTOVEntry, weight_ticket),
-      XtRImmediate, (XtPointer) 0 },
-
-   { "policy_hierarchy", "policy_hierarchy", XtRString,
-      sizeof(String),
-      XtOffsetOf(tTOVEntry, policy_hierarchy),
       XtRImmediate, (XtPointer) 0 }
 
 };
@@ -165,7 +116,6 @@ static Widget qmonCreateTicketOverview(Widget parent);
 static void qmonTOVInput(Widget w, XtPointer cld, XtPointer cad);
 static void qmonTOVUpdate(Widget w, XtPointer cld, XtPointer cad);
 static void qmonTOVApply(Widget w, XtPointer cld, XtPointer cad);
-static Boolean qmonTOVEntryReset(tTOVEntry *tov_data);
 static Boolean qmonTOVEntryToCull(lListElem *scep, tTOVEntry *tov_data);
 static Boolean qmonCulltoTOVEntry(tTOVEntry *tov_data, lListElem *scep);
 static int qmonTOVUpdateFill(Widget w, lList **alpp);
@@ -190,7 +140,7 @@ XtPointer cld, cad;
       ** set the icon and iconName
       */
       XmtCreatePixmapIcon(qmon_tov, qmonGetIcon("toolbar_ticket"), None);
-      XtVaSetValues(qmon_tov, XtNiconName, "qmon:Policy Configuration", NULL);
+      XtVaSetValues(qmon_tov, XtNiconName, "qmon:Ticket Overview", NULL);
       XmtAddDeleteCallback(qmon_tov, XmDO_NOTHING, 
                               qmonPopdownTicketOverview, NULL);
       XtAddEventHandler(qmon_tov, StructureNotifyMask, False, 
@@ -233,7 +183,6 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonPopdownTicketOverview");
 
-   qmonTOVInput(w, cld, cad);
    if (data_changed) {
       status = XmtAskForBoolean(w, "xmtBooleanDialog", 
                      "@{ticket.asksave.Do you want to save your changes ?}", 
@@ -291,7 +240,7 @@ Widget parent
    Widget shell, tov_done, tov_edit, tov_users_for_deadline, 
             tov_share_tree_policy, tov_functional_policy, 
             tov_override_policy, share_tree_tickets_field,
-            functional_tickets_field,
+            functional_tickets_field, deadline_tickets_field,
             tov_update, tov_apply, tov_main_link;
    
    DENTER(GUI_LAYER, "qmonCreateTicketOverview");
@@ -314,6 +263,8 @@ Widget parent
                                  &share_tree_tickets_field,
                            "functional_tickets_field", 
                                  &functional_tickets_field,
+                           "deadline_tickets_field", 
+                                 &deadline_tickets_field,
                            "tov_users_for_deadline", &tov_users_for_deadline,
                            "tov_share_tree_policy", &tov_share_tree_policy,
                            "tov_functional_policy", &tov_functional_policy,
@@ -354,6 +305,13 @@ Widget parent
    XtAddCallback(tov_override_policy, XmNactivateCallback, 
                      qmonOTicketPopup, NULL);
 
+   XtAddCallback(functional_tickets_field, XmtNinputCallback,
+                     qmonTOVInput, NULL);
+   XtAddCallback(share_tree_tickets_field, XmtNinputCallback,
+                     qmonTOVInput, NULL);
+   XtAddCallback(deadline_tickets_field, XmtNinputCallback,
+                     qmonTOVInput, NULL);
+
    DEXIT;
    return shell;
 }
@@ -384,48 +342,13 @@ XtPointer cld, cad;
       cdata.total_functional_tickets = data.total_functional_tickets;
       data_changed = True;
    }
-   if (data.share_override_ticket != cdata.share_override_ticket) {
-      cdata.share_override_ticket = data.share_override_ticket;
+   if (data.max_deadline_initiation_tickets != 
+                           cdata.max_deadline_initiation_tickets) {
+      cdata.max_deadline_initiation_tickets = 
+                              data.max_deadline_initiation_tickets;
       data_changed = True;
    }
-   if (data.share_functional_ticket != cdata.share_functional_ticket) {
-      cdata.share_functional_ticket = data.share_functional_ticket;
-      data_changed = True;
-   }
-   if (data.max_pending_tasks_per_job != cdata.max_pending_tasks_per_job) {
-      cdata.max_pending_tasks_per_job = data.max_pending_tasks_per_job;
-      data_changed = True;
-   }
-   if (data.max_functional_jobs != cdata.max_functional_jobs) {
-      cdata.max_functional_jobs = data.max_functional_jobs;
-      data_changed = True;
-   }
-   if (data.weight_deadline != cdata.weight_deadline) {
-      cdata.weight_deadline = data.weight_deadline;
-      data_changed = True;
-   }
-   if (data.weight_waiting_time != cdata.weight_waiting_time) {
-      cdata.weight_waiting_time = data.weight_waiting_time;
-      data_changed = True;
-   }
-   if (data.weight_urgency != cdata.weight_urgency) {
-      cdata.weight_urgency = data.weight_urgency;
-      data_changed = True;
-   }
-   if (data.weight_priority != cdata.weight_priority) {
-      cdata.weight_priority = data.weight_priority;
-      data_changed = True;
-   }
-   if (data.weight_ticket != cdata.weight_ticket) {
-      cdata.weight_ticket = data.weight_ticket;
-      data_changed = True;
-   }
-
-   if (strcmp(data.policy_hierarchy, cdata.policy_hierarchy)) {
-      cdata.policy_hierarchy = data.policy_hierarchy;
-      data.policy_hierarchy = NULL;
-      data_changed = True;
-   }
+   
    XmtDialogSetDialogValues(tov_layout, &cdata);
 
    DEXIT;
@@ -494,8 +417,8 @@ XtPointer cld, cad;
    scl = qmonMirrorList(SGE_SC_LIST);
    sep = lFirst(scl);
    if (sep) {
-      qmonTOVInput(w, cld, cad);
       qmonTOVEntryToCull(sep, &cdata);
+
       what = lWhat("%T(ALL)", SC_Type);
       alp = qmonModList(SGE_SC_LIST, qmonMirrorListRef(SGE_SC_LIST),
                   SC_halftime, &scl, NULL, what); 
@@ -517,36 +440,6 @@ XtPointer cld, cad;
 }
 
 
-/*-------------------------------------------------------------------------*/
-static Boolean qmonTOVEntryReset(tTOVEntry *tov_data)
-{
-   DENTER(GUI_LAYER, "qmonTOVEntryReset");
-
-   if (!tov_data) {
-      DEXIT;
-      return False;
-   }
-   
-   tov_data->total_share_tree_tickets = 0;
-   tov_data->total_functional_tickets = 0;
-   tov_data->override_tickets = 0;
-   tov_data->share_override_ticket = False;
-   tov_data->share_functional_ticket = False;
-   tov_data->max_pending_tasks_per_job = 0;
-   tov_data->max_functional_jobs = 0;
-   tov_data->weight_deadline = 0.0;
-   tov_data->weight_waiting_time = 0.0;
-   tov_data->weight_urgency = 0.0;
-   tov_data->weight_priority = 0.0;
-   tov_data->weight_ticket = 0.0;
-   if (tov_data->policy_hierarchy)
-      free(tov_data->policy_hierarchy);
-   tov_data->policy_hierarchy = NULL;
-   
-   DEXIT;
-   return True;
-}
-
 
 /*-------------------------------------------------------------------------*/
 static Boolean qmonCulltoTOVEntry(
@@ -559,36 +452,23 @@ lListElem *scep
       DEXIT;
       return False;
    }
-   
-   qmonTOVEntryReset(tov_data);
 
    tov_data->total_share_tree_tickets = (Cardinal)lGetUlong(scep, 
                                                SC_weight_tickets_share);
    tov_data->total_functional_tickets = (Cardinal)lGetUlong(scep, 
                                                SC_weight_tickets_functional);
+   tov_data->max_deadline_initiation_tickets = (Cardinal)lGetUlong(scep, 
+                                               SC_weight_tickets_deadline);
 
    /*
    ** these values are no configuration values but calculated and
    ** made available for convenience
    */
+   tov_data->deadline_initiation_tickets = (Cardinal)lGetUlong(scep, 
+                                            SC_weight_tickets_deadline_active);
    tov_data->override_tickets = (Cardinal)lGetUlong(scep, 
                                             SC_weight_tickets_override);
-   tov_data->share_override_ticket = (Boolean)lGetBool(scep,
-                                            SC_share_override_tickets);
-   tov_data->share_functional_ticket = (Boolean)lGetBool(scep,
-                                            SC_share_functional_shares);
-   tov_data->max_pending_tasks_per_job = (int)lGetUlong(scep,
-                                            SC_max_pending_tasks_per_job);
-   tov_data->max_functional_jobs = (int)lGetUlong(scep,
-                                            SC_max_functional_jobs_to_schedule);
-   tov_data->weight_deadline = lGetDouble(scep, SC_weight_deadline);
-   tov_data->weight_waiting_time = lGetDouble(scep, SC_weight_waiting_time);
-   tov_data->weight_urgency = lGetDouble(scep, SC_weight_urgency);
-   tov_data->weight_priority = lGetDouble(scep, SC_weight_priority);
-   tov_data->weight_ticket = lGetDouble(scep, SC_weight_ticket);
-   tov_data->policy_hierarchy = sge_strdup(tov_data->policy_hierarchy,
-                                    lGetString(scep, SC_policy_hierarchy));
-   
+
    DEXIT;
    return True;
 }
@@ -605,28 +485,12 @@ tTOVEntry *tov_data
       return False;
    }
 
-
    lSetUlong(scep, SC_weight_tickets_share, 
                (u_long32)tov_data->total_share_tree_tickets);
    lSetUlong(scep, SC_weight_tickets_functional,
                (u_long32)tov_data->total_functional_tickets);
-
-   lSetBool(scep, SC_share_override_tickets, tov_data->share_override_ticket);
-   lSetBool(scep, SC_share_functional_shares, tov_data->share_functional_ticket);
-   lSetUlong(scep, SC_max_pending_tasks_per_job, 
-               (u_long32)tov_data->max_pending_tasks_per_job);
-   lSetUlong(scep, SC_max_functional_jobs_to_schedule, 
-               (u_long32)tov_data->max_functional_jobs);
-   lSetDouble(scep, SC_weight_deadline, tov_data->weight_deadline);
-   lSetDouble(scep, SC_weight_waiting_time, tov_data->weight_waiting_time);
-   lSetDouble(scep, SC_weight_urgency, tov_data->weight_urgency);
-   lSetDouble(scep, SC_weight_priority, tov_data->weight_priority);
-   lSetDouble(scep, SC_weight_ticket, tov_data->weight_ticket);
-   
-   if (tov_data->policy_hierarchy && tov_data->policy_hierarchy[0] !='\0')
-      lSetString(scep, SC_policy_hierarchy, tov_data->policy_hierarchy);
-   else   
-      lSetString(scep, SC_policy_hierarchy, "OFS");
+   lSetUlong(scep, SC_weight_tickets_deadline,
+               (u_long32)tov_data->max_deadline_initiation_tickets);
 
    DEXIT;
    return True;

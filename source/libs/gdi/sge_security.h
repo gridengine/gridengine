@@ -36,10 +36,6 @@
 #include "sge_gdiP.h"
 #include "dispatcher.h"
 #include "sec_lib.h"
-#include "sge_qmaster_timed_event.h"
-#include "cl_data_types.h"
-#include "cl_commlib.h"
-
 
 #ifdef KERBEROS
 #   include "krb_lib.h"
@@ -71,19 +67,6 @@ u_long32 *mid,
 int compressed 
 );
 
-int gdi_receive_sec_message(cl_com_handle_t* handle,
-                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                            int synchron, unsigned long response_mid, 
-                            cl_com_message_t** message, cl_com_endpoint_t** sender);
-
-int gdi_send_sec_message   (cl_com_handle_t* handle,
-                            char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                            cl_xml_ack_type_t ack_type, 
-                            cl_byte_t* data, unsigned long size , 
-                            unsigned long* mid, unsigned long response_mid, unsigned long tag ,
-                            int copy_data,
-                            int wait_for_ack);
-
 int set_sec_cred(lListElem *job);
 
 void delete_credentials(lListElem *jep);
@@ -99,18 +82,17 @@ int kerb_job(lListElem *jelem, struct dispatch_entry *de);
 #endif
 
 void tgt2cc(lListElem *jep, const char *rhost, const char* target);
-
 void tgtcclr(lListElem *jep, const char *rhost, const char* target);
+
 
 int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
                         gid_t gid, char *group);
-
 int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
                         gid_t *gid, char *group);
 
 int sge_security_verify_user(const char *host, const char *commproc, u_short id, const char *user); 
 
-void sge_security_event_handler(te_event_t anEvent);
+void sge_security_ck_to_do(void);
 
 #endif /* __SGE_SECURITY_H */
 

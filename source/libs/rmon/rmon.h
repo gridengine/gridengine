@@ -32,22 +32,50 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
 #include <stdarg.h>
 #include <sys/types.h>
 
 #include "rmon_monitoring_level.h"
 
-extern monitoring_level DEBUG_ON;
+#define RMON_NONE    0
+#define RMON_LOCAL   1
+#define RMON_REMOTE  2
 
-int  rmon_condition(int layer, int debug_class);
-int  rmon_is_enabled(void);
+extern int LAYER;
+extern monitoring_level DEBUG_ON;
+extern u_long MLEVEL;
+extern u_long MTYPE;
+extern u_long DEBUG_TRACEID;
+
+int rmon_condition(register int layer, register int debug_class);
 void rmon_mopen(int *argc, char *argv[], char *programname);
 void rmon_menter(const char *func);
 void rmon_mtrace(const char *func, const char *file, int line);
+void rmon_mjobtrace(u_long jobid, const char *fmt, ...);
 void rmon_mprintf(const char *fmt, ...);
 void rmon_mexit(const char *func, const char *file, int line);
+void rmon_mexite(const char *func, const char *file, int line);
+void rmon_mclose(void);
+void rmon_d_monlev(monitoring_level *ml);
+int rmon_mmayclose(int fd);
+int rmon_mexeclp(char *file, ...);
+int rmon_mexecvp(char *file, char *argv[]);
+int rmon_mfork(void);
+void rmon_mpush_layer(int new_layer);
+int rmon_mpop_layer(void);
 
-#define __CONDITION(x) rmon_condition(TOP_LAYER, x)
+int rmon_d_writenbytes(register int sfd, register char *ptr, register int n);
+
+#define __CONDITION(x) rmon_condition(LAYER, x)
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif /* __RMON_H */
 

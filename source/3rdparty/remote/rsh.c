@@ -32,19 +32,17 @@
  */
 
 #ifndef lint
-#if 0
 static const char copyright[] =
 "@(#) Copyright (c) 1983, 1990, 1993, 1994\n\
 	The Regents of the University of California.  All rights reserved.\n";
-#endif
 #endif /* not lint */
 
 #ifndef lint
 #if 0
 static char sccsid[] = "From: @(#)rsh.c	8.3 (Berkeley) 4/6/94";
+#endif
 static const char rcsid[] =
   "$FreeBSD: src/usr.bin/rsh/rsh.c,v 1.16.2.2 1999/08/29 15:32:23 peter Exp $";
-#endif
 #endif /* not lint */
 
 #include <sys/param.h>
@@ -74,6 +72,12 @@ static const char rcsid[] =
 
 #ifdef ALPHA4
 /* ALPHA4 has no prototype for rcmd */
+int rcmd(char **, u_short, char *, char *, char *, int *);
+#endif
+
+#ifdef SUN4
+extern char *optarg;
+extern int optind;
 int rcmd(char **, u_short, char *, char *, char *, int *);
 #endif
 
@@ -114,7 +118,11 @@ void	usage __P((void));
 int getNetworkPort(int port) {
    short port_short;
 
+#ifdef SUN4
+   if(port <= (256 * 256)) {
+#else   
    if(port <= (MAXSHORT)) {
+#endif   
       port_short = port % (256 * 256);
       return htons(port_short);
    } else {
@@ -375,8 +383,13 @@ try_connect:
 #endif
 #endif
 	{
+#ifdef SUN4
+		(void)ioctl(rfd2, FIONBIO, (caddr_t)&one);
+		(void)ioctl(rem, FIONBIO, (caddr_t)&one);
+#else
 		(void)ioctl(rfd2, FIONBIO, &one);
 		(void)ioctl(rem, FIONBIO, &one);
+#endif
    }
 
 	talk(nflag, omask, pid, rem, timeout);
@@ -393,7 +406,6 @@ talk(nflag, omask, pid, rem, timeout)
 	long omask;
 	pid_t pid;
 	int rem;
-   int timeout;
 {
 	int cc, wc;
 	fd_set readfrom, ready, rembits;

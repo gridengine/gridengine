@@ -36,11 +36,14 @@
 #include "basis_types.h"
 
 #define MSG_SGETEXT_CANTSPOOL_SS      _MESSAGE(33001, _("qmaster is unable to spool "SFN" "SFQ"\n"))
+#define MSG_OBJ_JOBS                  _MESSAGE(33002, _("jobs"))
 
 /*
 ** sge_ckptobj.c
 */
 #define MSG_OBJ_CKPT                  _MESSAGE(33005, _("checkpointing environment"))
+#define MSG_SGETEXT_NO_CKPT_LIC                       _MESSAGE(33010, _("no checkpoint license available\n") )  
+
 
 /*
 ** sge_follow.c
@@ -159,6 +162,7 @@
 /*
 ** ck_to_do_qmaster.c
 */
+#define MSG_FILE_OPEN_S              _MESSAGE(33102, _("can't open "SFQ" for appending system state info"))
 
 /*
 ** sge_c_ack.c
@@ -174,35 +178,36 @@
 #define MSG_COM_ACK_US               _MESSAGE(33111, _("ack event for job " U32CFormat  " can't find queue "SFN"\n"))
 #define MSG_COM_ACK_QUEUE_U          _MESSAGE(33112, _("ack event for unknown queue " U32CFormat "\n"))
 #define MSG_COM_ACK_UNKNOWN          _MESSAGE(33113, _("unknown ack event\n"))
+#define MSG_COM_NO_EVCLIENTWITHID_U  _MESSAGE(33114, _("no event client with id "U32CFormat" registered\n"))
 
 /*
 ** sge_c_gdi.c
 */
-#define MSG_GDI_WRONG_GDI_SSISS  _MESSAGE(33115, _("denied: client ("SFN"/"SFN"/%d) uses old GDI version "SFN" while qmaster uses newer version "SFN"\n"))
-#define MSG_GDI_WRONG_GDI_SSIUS  _MESSAGE(33116, _("denied: client ("SFN"/"SFN"/%d) uses newer GDI version "U32CFormat" while qmaster uses older version "SFN"\n"))
+#define MSG_GDI_WRONG_GDI_SSISS       _MESSAGE(33115, _("denied: client ("SFN"/"SFN"/%d) uses old GDI version "SFN" while qmaster uses newer version "SFN"\n"))
+#define MSG_GDI_WRONG_GDI_SSIUS       _MESSAGE(33116, _("denied: client ("SFN"/"SFN"/%d) uses newer GDI version "U32CFormat" while qmaster uses older version "SFN"\n"))
 
-#define MSG_GDI_NULL_IN_GDI_SSS  _MESSAGE(33117, _("denied: got NULL in "SFN"/"SFN" of gdi request from host "SFQ"\n"))
-#define MSG_GDI_OKNL             _MESSAGE(33118, _("ok\n"))
-#define MSG_MEM_MALLOC           _MESSAGE(33121, _("malloc failure\n"))
-#define MSG_SGETEXT_UNKNOWNOP    _MESSAGE(33122, _("unknown operation\n"))
 
-#define MSG_SGETEXT_OPNOIMPFORTARGET             _MESSAGE(33125, _("operation not implemented for target\n"))
-#define MSG_SGETEXT_NOADMINHOST_S                _MESSAGE(33126, _("denied: host "SFQ" is no admin host\n"))
-#define MSG_SGETEXT_NOSUBMITHOST_S               _MESSAGE(33127, _("denied: host "SFQ" is no submit host\n"))
-#define MSG_SGETEXT_NOSUBMITORADMINHOST_S        _MESSAGE(33128, _("denied: host "SFQ" is neither submit nor admin host\n"))
-#define MSG_SGETEXT_ALREADYEXISTS_SS             _MESSAGE(33129, _(""SFN" "SFQ" already exists\n"))
-
-#define MSG_GDI_SHUTDOWNEVCLIENTFAILED_US  _MESSAGE(33130, _("shutdown event client with id " U32CFormat " failed in %s\n"))
-#define MSG_GDI_EVENTCLIENTIDFORMAT_S      _MESSAGE(33131, _("invalid event client id format " SFQ "\n"))
-
+#define MSG_GDI_NULL_IN_GDI_SSS       _MESSAGE(33117, _("denied: got NULL in "SFN"/"SFN" of gdi request from host "SFQ"\n"))
+#define MSG_GDI_OKNL                  _MESSAGE(33118, _("ok\n"))
+#define MSG_OBJ_GENQ                  _MESSAGE(33119, _("internal error - can't get generic queue\n"))
+#define MSG_MEM_MALLOC                _MESSAGE(33121, _("malloc failure\n"))
+#define MSG_SGETEXT_UNKNOWNOP                   _MESSAGE(33122, _("unknown operation\n"))
+#define MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S _MESSAGE(33123, _("feature not available for "SFN" system\n"))
+#define MSG_SGETEXT_CANTGET_SS                  _MESSAGE(33124, _(""SFN" can't get "SFN"\n"))
+#define MSG_SGETEXT_OPNOIMPFORTARGET            _MESSAGE(33125, _("operation not implemented for target\n"))
+#define MSG_SGETEXT_NOADMINHOST_S               _MESSAGE(33126, _("denied: host "SFQ" is no admin host\n"))
+#define MSG_SGETEXT_NOSUBMITHOST_S              _MESSAGE(33127, _("denied: host "SFQ" is no submit host\n"))
+#define MSG_SGETEXT_NOSUBMITORADMINHOST_S       _MESSAGE(33128, _("denied: host "SFQ" is neither submit nor admin host\n"))
+#define MSG_SGETEXT_ALREADYEXISTS_SS            _MESSAGE(33129, _(""SFN" "SFQ" already exists\n"))
 
 /*
 ** sge_calendar_qmaster.c
 */
 #define MSG_OBJ_CALENDAR              _MESSAGE(33132, _("calendar"))
 #define MSG_EVE_TE4CAL_S              _MESSAGE(33133, _("got timer event for unknown calendar "SFQ"\n"))
+#define MSG_SGETEXT_CALENDARSTILLREFERENCEDINQUEUE_SS _MESSAGE(33134, _("denied: calendar "SFQ" is still referenced in queue "SFQ"\n") ) 
 #define MSG_SGETEXT_REMOVEDFROMLIST_SSSS        _MESSAGE(33135, _(""SFN"@"SFN" removed "SFQ" from "SFN" list\n"))
-#define MSG_INVALID_CENTRY_DEL_S                _MESSAGE(33136, _("The build-in complex "SFQ" cannot be deleted\n"))
+
 
 
 
@@ -224,8 +229,21 @@
 #define MSG_JOB_NOHOST4TJ_SUU         _MESSAGE(33146, _("execution host "SFQ" for transfering job "U32CFormat"."U32CFormat" doesn't exist. deleting task"))
 #define MSG_JOB_NOPE4TJ_SUU           _MESSAGE(33147, _("parallel environment "SFQ" for transfering job "U32CFormat"." U32CFormat" doesn't exist. deleting job"))
 #define MSG_JOB_DELIVER2Q_UUS         _MESSAGE(33148, _("failed to deliver job "U32CFormat"."U32CFormat" to queue "SFQ))
+/* EB: remove 
+#define MSG_SEC_STARTDELCREDCMD_SU    _MESSAGE(33149, _("can't start command "SFQ" for job " U32CFormat " to delete credentials\n"))
+#define MSG_SEC_DELCREDSTDERR_S       _MESSAGE(33150, _("delete_cred stderr: "SFN))
+#define MSG_SEC_DELCREDRETCODE_USI    _MESSAGE(33151, _("could not delete credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
+#define MSG_SEC_DELCREDNOBIN_US       _MESSAGE(33152, _("could not delete credentials for job "U32CFormat" - "SFN" binary does not exist\n"))
+*/
+#define MSG_LOG_SENT2EXECD            _MESSAGE(33153, _("sent to execd"))
+#define MSG_LOG_EXITED                _MESSAGE(33154, _("job exited"))
+#define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33155, _("job waits for schedds deletion"))
+#define MSG_LOG_DELSGE                _MESSAGE(33156, _("job deleted by schedd"))
+#define MSG_LOG_DELIMMEDIATE          _MESSAGE(33157, _("immediate job deleted by schedd"))
+#define MSG_LOG_JATASKEXIT            _MESSAGE(33158, _("ja task exited") )  
 #define MSG_JOB_RESCHEDULE_UU         _MESSAGE(33159, _("rescheduling job "U32CFormat"."U32CFormat) ) 
 #define MSG_RU_CANCELED_S             _MESSAGE(33160, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" was canceled."))
+#define MSG_RU_TRIGGER_SU             _MESSAGE(33161, _("Due to a modification of the reschedule_unknown timeout rescheduling for host "SFN" will be triggerd in "U32CFormat" seconds."))
 
 /* CR: don't localize mail subject, until we send it in Mime format!
  *  The message definition is not l10n'ed (no _() macro used)!!!     
@@ -259,7 +277,9 @@
 #define MSG_OBJ_SHUTDOWNPERMS         _MESSAGE(33180, _("shutting down execd requires manager privileges\n"))
 #define MSG_OBJ_NOEXECDONHOST_S       _MESSAGE(33181, _("no execd known on host "SFN"\n"))
 #define MSG_COM_NONOTIFICATION_SSS    _MESSAGE(33182, _("failed sending "SFN" notification to "SFN" execd host "SFN"\n"))
+/* #define MSG_COM_NONOTIFICATIONQ_SSSS   _message(33183, _("failed sending "SFN" notification to "SFN" "SFN" host "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_COM_NOTIFICATION_SSS      _MESSAGE(33184, _("sent "SFN" notification to "SFN" execd host "SFN"\n"))
+/* #define MSG_COM_NOTIFICATIONQ_SSSS     _message(33185, _("sent "SFN" notification to "SFN" "SFN" host "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_OBJ_UNKNOWN               _MESSAGE(33186, _("unknown"))
 #define MSG_NOTIFY_SHUTDOWNANDKILL    _MESSAGE(33187, _("shutdown and kill"))
 #define MSG_NOTIFY_SHUTDOWN           _MESSAGE(33188, _("shutdown"))
@@ -276,8 +296,10 @@
 #define MSG_OBJ_NOSCALING4HOST_SS     _MESSAGE(33193, _("denied: scaling attribute "SFQ" is not configured for host "SFQ"\n") )  
 #define MSG_SGETEXT_ISNOEXECHOST_S              _MESSAGE(33194, _(SFQ" is not an execution host\n"))
 #define MSG_SGETEXT_NOEXECHOSTS                 _MESSAGE(33195, _("there are no execution hosts to kill\n"))
+#define MSG_SGETEXT_CANTCOUNT_HOSTS_S                 _MESSAGE(33196, _("can't count adm./subm. host list in "SFN"\n"))
 #define MSG_SGETEXT_CANTDELADMINQMASTER_S       _MESSAGE(33197, _("denied: can't delete master host "SFQ" from admin host list\n") )   
 #define MSG_SGETEXT_CANTDELEXECACTIVQ_S         _MESSAGE(33198, _("denied: "SFQ" has an active queue - not deleted\n"))
+#define MSG_SGETEXT_TOOFEWSUBMHLIC_II                 _MESSAGE(33199, _("not enough submit host licenses; licensed=%d - requested=%d\n") ) 
 #define MSG_CANT_ASSOCIATE_LOAD_SS    _MESSAGE(33200, _("got load report from host "SFQ" - reports load value for host "SFQ"\n"))
 
 /*
@@ -291,6 +313,8 @@
 #define MSG_JOB_GID2LOW_II            _MESSAGE(33206, _("job rejected: your group id %d is lower than minimum group id %d of cluster configuration\n"))
 #define MSG_JOB_ALLOWEDJOBSPERUSER_UU  _MESSAGE(33207, _("job rejected: Only "U32CFormat" jobs are allowed per user (current job count: "U32CFormat")\n"))
 #define MSG_JOB_ALLOWEDJOBSPERCLUSTER _MESSAGE(33208, _("job rejected: Only "U32CFormat" jobs are allowed per cluster\n"))
+#define MSG_JOB_QNOTREQUESTABLE       _MESSAGE(33209, _("job was rejected because job requests a queue while queues are not configured as requestable\n"))
+#define MSG_JOB_QUNKNOWN_S            _MESSAGE(33210, _("job was rejected because job requests unknown queue "SFQ"\n"))
 #define MSG_JOB_NOSCRIPT              _MESSAGE(33211, _("job rejected: no script in your request\n"))
 #define MSG_JOB_PEUNKNOWN_S           _MESSAGE(33212, _("job rejected: the requested parallel environment "SFQ" does not exist\n"))
 #define MSG_JOB_CKPTUNKNOWN_S         _MESSAGE(33213, _("job rejected: the requested checkpointing environment "SFQ" does not exist\n"))
@@ -309,7 +333,13 @@
 #define MSG_JOB_NOJOBNAME_U           _MESSAGE(33226, _("job "U32CFormat" was rejected cause there is no job_name in the request\n"))
 #define MSG_JOB_NOWRITE_US            _MESSAGE(33227, _("job "U32CFormat" was rejected cause it can't be written: "SFN"\n"))
 #define MSG_JOB_NOWRITE_U             _MESSAGE(33228, _("job "U32CFormat" was rejected cause it couldn't be written\n"))
-#define MSG_JOB_DEPENDENCY_CYCLE_UU   _MESSAGE(33229, _("job "U32CFormat" dependency change would generate a dependency cycle with job "U32CFormat"\n"))
+/* EB: remove
+#define MSG_SEC_NOAUTH_U              _MESSAGE(33229, _("job "U32CFormat" rejected because authentication failed\n"))
+#define MSG_SEC_NOSTARTCMD4GETCRED_SU _MESSAGE(33230, _("can't start command "SFQ" for job " U32CFormat " to get credentials\n"))
+#define MSG_SEC_PUTCREDSTDERR_S       _MESSAGE(33231, _("put_cred stderr: "SFN))
+#define MSG_SEC_NOSTORECRED_USI       _MESSAGE(33232, _("could not store credentials for job " U32CFormat" - command "SFQ" failed with return code %d\n"))
+#define MSG_SEC_NOSTORECREDNOBIN_US   _MESSAGE(33233, _("could not store client credentials for job " U32CFormat" - "SFN" binary does not exist\n"))
+*/
 #define MSG_JOB_SUBMITJOB_USS         _MESSAGE(33234, _("your job "U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_JOB_SUBMITJOBARRAY_UUUUSS _MESSAGE(33235, _("your job-array "U32CFormat"."U32CFormat"-"U32CFormat":"U32CFormat" (\""SFN SFN"\") has been submitted\n"))
 #define MSG_LOG_NEWJOB                _MESSAGE(33236, _("new job"))
@@ -353,7 +383,7 @@
 #define MSG_JOB_CHANGEOVERRIDETICKS   _MESSAGE(33267, _("change amount of override tickets"))
 #define MSG_JOB_SETOVERRIDETICKS_SSUU _MESSAGE(33268, _(SFN"@"SFN" sets override tickets of job "U32CFormat" to "U32CFormat"\n"))
 #define MSG_JOB_PRIOINC               _MESSAGE(33269, _("increase job priority"))
-#define MSG_JOB_JOBSHARESET_SSUU      _MESSAGE(33270, _(SFN"@"SFN" sets job share of job "U32CFormat" to "U32CFormat"\n"))
+#define MSG_JOB_PRIOSET_SSUU          _MESSAGE(33270, _(SFN"@"SFN" sets scheduling priority of job "U32CFormat" to "U32CFormat"\n"))
 #define MSG_JOB_ACCOUNT               _MESSAGE(33271, _("account"))
 #define MSG_JOB_WD                    _MESSAGE(33272, _("working directory"))
 #define MSG_JOB_STARTTIME             _MESSAGE(33273, _("start time"))
@@ -361,7 +391,6 @@
 #define MSG_JOB_STDOUTPATHLIST        _MESSAGE(33275, _("stdout path list"))
 #define MSG_JOB_HOLDLISTMOD_USS       _MESSAGE(33276, _("modified job id hold list of job "U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN"\n"))
 #define MSG_JOB_MERGEOUTPUT           _MESSAGE(33277, _("output merge behaviour"))
-#define MSG_JOB_RESERVE               _MESSAGE(33699, _("reservation behaviour"))
 #define MSG_JOB_HARDRESOURCELIST      _MESSAGE(33278, _("hard resource list"))
 #define MSG_JOB_SOFTRESOURCELIST      _MESSAGE(33279, _("soft resource list"))
 #define MSG_JOB_MAILOPTIONS           _MESSAGE(33280, _("mail options"))
@@ -394,15 +423,18 @@
 #define MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S       _MESSAGE(33309, _("denied: resource request on consumable "SFQ" of running job was not contained former resource request\n"))
 #define MSG_JOB_MOD_CHANGEDRUNNINGJOBCONSUMABLE_S     _MESSAGE(33310, _("denied: can't change consumable resource request "SFQ" of running job\n"))
 #define MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_U      _MESSAGE(33311, _("denied: job \""U32CFormat"\" may not be it's own jobnet predecessor\n"))
-#define MSG_JOB_MOD_UNKOWNJOBTOWAITFOR_S              _MESSAGE(33312, _("denied: job "SFQ" not found\n"))
-#define MSG_JOB_MOD_NOJOBNAME_S                      _MESSAGE(33314, _("denied: "SFQ" is not a valid job name (job cannot start with a digit)\n"))
+#define MSG_JOB_MOD_GOTOWNJOBIDINHOLDJIDOPTION_S      _MESSAGE(33312, _("denied: job "SFQ" may not be it's own jobnet predecessor\n"))
+#define MSG_JOB_MOD_JOBNETPREDECESSAMBIGUOUS_SUU      _MESSAGE(33313, _("denied: non-ambiguous jobnet predecessor "SFQ" (found jobs "U32CFormat" and "U32CFormat")\n"))
+#define MSG_JOB_MOD_NOJOBNAME_SS                      _MESSAGE(33314, _("denied: "SFQ" is not a valid job name for "SFN"\n"))
+#define MSG_JOB_MOD_JOBNAMEVIOLATESJOBNET_SSUU        _MESSAGE(33315, _("denied: using job name "SFQ" for "SFN" violates reference unambiguousness in jobnet from job "U32CFormat" to "U32CFormat"\n"))
+#define MSG_JOB_MOD_CHGJOBNAMEDESTROYSREF_UU          _MESSAGE(33316, _("denied: changing job name of job "U32CFormat" destroys jobnet predecessor reference from job "U32CFormat"\n"))
 #define MSG_SGETEXT_NEEDONEELEMENT_SS                 _MESSAGE(33317, _("denied: request format error: need at least one element in sublist "SFQ" in "SFN"()\n"))
 #define MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U           _MESSAGE(33318, _("job "U32CFormat" can't modify running jobs\n") ) 
 #define MSG_SGETEXT_MUST_BE_OPR_TO_SS                 _MESSAGE(33319, _("denied: "SFQ" must be operator to "SFN"\n"))
 #define MSG_SGETEXT_MOD_JOBS_SU                       _MESSAGE(33320, _("modified "SFN" of job "U32CFormat"\n") )     
 #define MSG_SGETEXT_DOESNOTEXIST_SU                   _MESSAGE(33321, _(""SFN" \"" U32CFormat "\" does not exist\n"))
-#define MSG_SGETEXT_DOESNOTEXISTTASK_SUS               _MESSAGE(33322, _("job \""SFN"\" task \"" U32CFormat "\" does not exist for user(s) %s\n"))
-#define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUUS        _MESSAGE(33323, _("job \""SFN"\" task id range \"" U32CFormat "-" U32CFormat ":" U32CFormat "\" comprises no tasks under user(s) %s\n"))
+#define MSG_SGETEXT_DOESNOTEXISTTASK_UU               _MESSAGE(33322, _("job \"" U32CFormat "\" task \"" U32CFormat "\" does not exist\n"))
+#define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU        _MESSAGE(33323, _("job \"" U32CFormat "\" task id range \"" U32CFormat "-" U32CFormat ":" U32CFormat "\" comprises no tasks\n"))
 #define MSG_SGETEXT_NO_PROJECT                        _MESSAGE(33324, _("job rejected: no project assigned to job\n") )     
 #define MSG_SGETEXT_MOD_JATASK_SUU                    _MESSAGE(33325, _("modified "SFN" of job-array task "U32CFormat"."U32CFormat"\n") )  
 #define MSG_SGETEXT_MUST_BE_MGR_TO_SS                 _MESSAGE(33326, _("denied: "SFQ" must be manager to "SFN"\n"))
@@ -415,11 +447,10 @@
 #define MSG_SGETEXT_NO_ACCESS2PRJ4USER_SS             _MESSAGE(33334, _("job rejected: no access to project "SFQ" for user "SFQ"\n") ) 
 #define MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID        _MESSAGE(33335, _("it is not allowed to select users and job ids together\n"))
 #define MSG_SGETEXT_MODIFIEDINLIST_SSUS               _MESSAGE(33336, _(""SFN"@"SFN" modified \"" U32CFormat "\" in "SFN" list\n"))
-#define MSG_JOB_MOD_JOBDEPENDENCY_MEMORY              _MESSAGE(33337, _("could not create job dependency list\n"))
 
-#define MSG_SGETEXT_SPECIFYONEORALLUSER               _MESSAGE(33338, _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n"))
-#define MSG_SGETEXT_OPTIONONLEONJOBS_U                _MESSAGE(33339, _("The specified option works only on jobs ("U32CFormat")\n"))
-#define MSG_SGETEXT_DEL_JOB_SS                        _MESSAGE(33340, _("The job %s of user(s) %s does not exist\n"))
+
+#define MSG_SGETEXT_SPECIFYONEORALLUSER         _MESSAGE(33338, _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n"))
+
 /*
 ** sge_manop.c
 */
@@ -444,17 +475,39 @@
 /*
 ** sge_qmod_qmaster.c
 */
-#define MSG_LOG_JOBUNKNOWNQMODCMD_U   _MESSAGE(33373, _("unknown job command type\n" U32CFormat))
 #define MSG_QUEUE_INVALIDQ_S          _MESSAGE(33374, _("invalid queue "SFQ"\n"))
 #define MSG_QUEUE_INVALIDQORJOB_S     _MESSAGE(33375, _("invalid queue or job "SFQ"\n"))
 #define MSG_QUEUE_NOCHANGEQPERMS_SS   _MESSAGE(33376, _(SFN" - you have no permission to modify queue "SFQ"\n"))
-#define MSG_LOG_QUNKNOWNQMODCMD_U      _MESSAGE(33377, _("unknown queue command type\n" U32CFormat))
+#define MSG_LOG_UNKNOWNQMODCMD_U      _MESSAGE(33377, _("unknown command type\n" U32CFormat))
 #define MSG_JOB_NOMODJOBPERMS_SU      _MESSAGE(33378, _(SFN" - you have no permission to modify job \"" U32CFormat "\"\n"))
 #define MSG_JOB_CLEARERRORTASK_SSUU   _MESSAGE(33379, _(SFN"@"SFN" cleared error state of job-array task "U32CFormat"."U32CFormat"\n"))
 #define MSG_JOB_CLEARERRORJOB_SSU     _MESSAGE(33380, _(SFN"@"SFN" cleared error state of job "U32CFormat"\n"))
 #define MSG_JOB_NOERRORSTATETASK_UU   _MESSAGE(33381, _("Job-array task "U32CFormat"."U32CFormat" is not in error state\n"))
 #define MSG_JOB_NOERRORSTATEJOB_UU    _MESSAGE(33382, _("Job "U32CFormat" is not in error state\n"))
+#define MSG_QUEUE_NOCLEARERRORPERMS_SS   _MESSAGE(33383, _(SFN" - you have no permission to clear error state of queue "SFQ"\n") )   
+#define MSG_QUEUE_NOERRORSTATEQ_SS    _MESSAGE(33384, _(SFN" - queue "SFQ" is not in error state\n"))
+#define MSG_QUEUE_NOTMODIFIEDSPOOL_S  _MESSAGE(33385, _("Queue state of "SFQ" not modified: impossible to write spoolfile\n"))
+#define MSG_QUEUE_CLEARERRORSTATE_SSS _MESSAGE(33386, _("The error state of queue "SFQ" has been cleared by "SFN"@"SFN"\n"))
+#define MSG_QUEUE_NOENABLEQPERMS_SS   _MESSAGE(33387, _(SFN" - you have no permission to enable queue "SFQ"\n"))
+#define MSG_QUEUE_ALREADYENABLED_SS   _MESSAGE(33388, _(SFN" - queue "SFQ" is already enabled\n"))
+#define MSG_QUEUE_ENABLEQ_SSS         _MESSAGE(33389, _("Queue "SFQ" has been enabled by "SFN"@"SFN"\n"))
+#define MSG_QUEUE_NODISABLEQPERMS_SS  _MESSAGE(33390, _(SFN" - you have no permission to disable queue "SFQ"\n"))
 #define MSG_QUEUE_NORESCHEDULEQPERMS_SS  _MESSAGE(33391, _(SFN" - you have no permission to reschedule jobs of queue "SFQ"\n"))
+#define MSG_QUEUE_ALREADYDISABLED_SS  _MESSAGE(33392, _(SFN" - queue "SFQ" is already disabled\n"))
+#define MSG_QUEUE_DISABLEQ_SSS        _MESSAGE(33393, _("Queue "SFQ" has been disabled by "SFN"@"SFN"\n"))
+/* #define MSG_QUEUE_RESCHEDULEQ_SSS     _message(33394, _("Jobs in queue "SFQ" have been rescheduled by "SFN"@"SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_QUEUE_NOFORCESUSPENDQ_SS  _MESSAGE(33395, _(SFN" - can't force suspension of queue "SFQ"\n"))
+#define MSG_QUEUE_FORCESUSPENDQ_SS    _MESSAGE(33396, _(SFN" - forced suspension of queue "SFQ"\n"))
+#define MSG_QUEUE_ALREADYSUSPENDED_SS _MESSAGE(33397, _(SFN" - queue "SFQ" is already suspended\n"))
+#define MSG_QUEUE_NOSUSPENDQ_SS       _MESSAGE(33398, _(SFN" - can't suspend queue "SFQ"\n"))
+#define MSG_QUEUE_SUSPENDQ_SSS        _MESSAGE(33399, _("Queue "SFQ" was suspended by "SFN"@"SFN"\n"))
+#define MSG_QUEUE_NOFORCEENABLEQ_SS   _MESSAGE(33400, _(SFN" - can't force enabling of queue "SFQ"\n"))
+#define MSG_QUEUE_FORCEENABLEQ_SSS     _MESSAGE(33401, _(SFN"@"SFN" - forced enabling of queue "SFQ"\n"))
+#define MSG_QUEUE_NOUNSUSP4SOS_SS     _MESSAGE(33402, _(SFN" - can't unsuspend queue "SFQ" - queue is suspended because of suspend on subordinate\n"))
+#define MSG_QUEUE_NOUNSUSP4SOC_SS     _MESSAGE(33403, _(SFN" - can't unsuspend queue "SFQ" - queue is suspended on calendar\n"))
+#define MSG_QUEUE_ALREADYUNSUSP_SS    _MESSAGE(33404, _(SFN" - queue "SFQ" is already unsuspended\n"))
+#define MSG_QUEUE_NOUNSUSPQ_SS        _MESSAGE(33405, _(SFN" - can't unsuspend queue "SFQ"\n"))
+#define MSG_QUEUE_UNSUSPENDQ_SSS      _MESSAGE(33406, _(SFN"@"SFN" unsuspended queue "SFQ"\n"))
 #define MSG_QUEUE_NOCLEANQPERMS       _MESSAGE(33407, _("cleaning a queue requires manager privileges\n"))
 #define MSG_QUEUE_CLEANQ_SSS          _MESSAGE(33408, _(SFN"@"SFN" cleaned queue "SFQ"\n"))
 #define MSG_JOB_NOFORCESUSPENDTASK_SUU     _MESSAGE(33409, _(SFN" - can't force suspension job-array task "U32CFormat"."U32CFormat"\n"))
@@ -487,13 +540,36 @@
 #define MSG_EVE_RESENTSIGNALTASK_UU   _MESSAGE(33436, _("got resend signal timer event for unknown array task "U32CFormat"."U32CFormat"\n") ) 
 #define MSG_EVE_RESENTSIGNALQ_S       _MESSAGE(33437, _("got resend signal timer event for unknown queue "SFN"\n"))
 #define MSG_COM_NOUPDATEQSTATE_IS     _MESSAGE(33438, _("can't update remote queue state (%d) on queue "SFQ))
+#define MSG_QUEUE_ENABLEQCAL_S        _MESSAGE(33439, _("enable queue "SFQ" on calendar\n"))
+#define MSG_QUEUE_SOSNOUNSUSPCAL_S    _MESSAGE(33440, _("suspension on subordinate prevents unsuspension according to calendar for queue "SFQ"\n"))
+#define MSG_QUEUE_AMDSNOUNSUSPCAL_S   _MESSAGE(33441, _("administrator suspension prevents unsuspension according to calendar for queue "SFQ"\n"))
+#define MSG_QUEUE_SUSPENDQCAL_S       _MESSAGE(33442, _("suspend queue "SFQ" on calendar\n"))
+#define MSG_QUEUE_DISABLEQCAL_S       _MESSAGE(33443, _("disable queue "SFQ" on calendar\n"))
+#define MSG_QUEUE_UNSUSPENDQCAL_S     _MESSAGE(33444, _("unsuspend queue "SFQ" on calendar\n"))
+#define MSG_QUEUE_NOSUSP4SOS_S        _MESSAGE(33445, _("no need to suspend queue "SFQ" it's already suspended on subordinate\n"))
+#define MSG_QUEUE_NOSUSP4ADMS_S       _MESSAGE(33446, _("no need to suspend queue "SFQ" it's already suspended by administrator\n"))
+#define MSG_QUEUE_ADDENABLED_S        _MESSAGE(33447, _("adding queue "SFQ" it gets enabled according to initial_state\n"))
+#define MSG_QUEUE_ADDDISABLED_S       _MESSAGE(33448, _("adding queue "SFQ" it gets disabled according to initial_state\n"))
+#define MSG_QUEUE_EXECDRESTARTENABLEQ_SS    _MESSAGE(33449, _("execd restart at "SFQ" enables queue "SFQ" according to initial_state\n"))
+#define MSG_QUEUE_EXECDRESTARTDISABLEQ_SS   _MESSAGE(33450, _("execd restart at "SFQ" disables queue "SFQ" according to initial_state\n"))
 /*
 ** sge_queue_qmaster.c
 */
+#define MSG_QUEUE_PRIORITYRANGE                 _MESSAGE(33451, _("priority not in range -20 to +20\n"))
+#define MSG_QUEUE_CANTLOCATEQUEUEX_S            _MESSAGE(33452, _("can't locate queue "SFN"\n"))
+#define MSG_QUEUE_DELQUEUETEMPLATE              _MESSAGE(33453, _("deleting queue \"template\""))
+#define MSG_QUEUE_NULLPTRPASSEDTOSGE_DEL_QUEUE  _MESSAGE(33454, _("NULL ptr passed to sge_del_queue()\n"))
+#define MSG_CALENDAR_CALENDARXREFERENCEDINQUEUEYNOTEXISTS_SS _MESSAGE(33455, _("calendar "SFQ" referenced in queue "SFQ" does not exist\n"))
 #define MSG_OBJ_QUEUE                 _MESSAGE(33457, _("queue"))
+#define MSG_SGETEXT_NOTPOSSIBLETOMODHOSTNAME          _MESSAGE(33460, _("it is not possible to modify the hostname attribute\n"))
+/* #define MSG_SGETEXT_TOOFEWQSIQLIC_II                  _message(33461, _("not enough qsi queue licenses; licensed=%d - requested=%d\n") )   __TS Removed automatically from testsuite!! TS__*/
+#define MSG_SGETEXT_OPNOTALLOWED_S              _MESSAGE(33462, _("operation not allowed: "SFN"\n"))
+#define MSG_NOTALLOWEDTODELSUBORDINATE_SS              _MESSAGE(33463, _("deleting queue "SFQ" is not allowed because it is subordinate queue of "SFQ"\n"))
+#define MSG_SGETEXT_ACTIVEUNITS_SSIS            _MESSAGE(33464, _(""SFN" "SFQ" has %d active "SFN"\n"))
+/* #define MSG_SGETEXT_CANTCOUNT_QSIQ_S                  _message(33468, _("can't count qsi queues in "SFN"\n") )  __TS Removed automatically from testsuite!! TS__*/
 
 /*
-** sge_qmaster_main.c
+** qmaster.c
 */
 #define MSG_SETTING_PRIORITY_TAGS_S             _MESSAGE(33472, _("setting SGE_PRIORITY_TAGS to "SFN"\n"))
 #define MSG_TOO_MANY_PRIORITY_TAGS_S            _MESSAGE(33473, _("SGE_PRIORITY_TAGS "SFN" contains too many tags (max 9)\n"))
@@ -526,8 +602,10 @@
 #define MSG_USERPRJ_PRJXSTILLREFERENCEDINENTRYX_SS _MESSAGE(33490, _("project "SFQ" is still referenced by user "SFQ"\n"))
 #define MSG_UP_NOADDDEFAULT_S          _MESSAGE(33491, _("denied: not allowed add a "SFN" with name \"default\"\n") ) 
 #define MSG_UP_ALREADYEXISTS_SS        _MESSAGE(33492, _("denied: shared namespace between project and user: there is already a "SFN" which is named "SFQ"\n"))
-#define MSG_UM_CLUSTERUSERXNOTGUILTY_S _MESSAGE(33493, _("cluster user name "SFQ" is not valid\n"))
-#define MSG_HGRP_GROUPXNOTGUILTY_S     _MESSAGE(33494, _("host group name "SFQ" is not valid\n"))
+#define MSG_UM_CLUSTERUSERXNOTGUILTY_S _MESSAGE(33493, _("cluster user name "SFQ" is not guilty\n"))
+#define MSG_HGRP_GROUPXNOTGUILTY_S     _MESSAGE(33494, _("host group name "SFQ" is not guilty\n"))
+#define MSG_UM_ERRORWRITESPOOLFORUSER_S _MESSAGE(33507, _("error writing spoolfile for cluster user "SFQ))
+#define MSG_HGRP_ERRORWRITESPOOLFORGROUP_S  _MESSAGE(33508, _("error writing spoolfile for host group "SFQ))
 #define MSG_OBJ_PRJ                    _MESSAGE(33509, _("project"))
 #define MSG_OBJ_PRJS                  _MESSAGE(33510, _("projects"))
 #define MSG_OBJ_XPRJS                 _MESSAGE(33511, _("xprojects"))
@@ -551,8 +629,18 @@
 /*
 ** complex_qmaster.c
 */
+#define MSG_CPLX_ATTRIBISNULL_SS      _MESSAGE(33525, _("attribute name "SFQ" in complex "SFQ" contains invalid (null) values\n"))
+#define MSG_CPLX_ATTRIBALREADY_SS     _MESSAGE(33526, _("attribute name "SFQ" is already in use in complex "SFQ"\n"))
+#define MSG_CPLX_SHORTCUTALREADY_SS   _MESSAGE(33527, _("shortcut name "SFQ" is already in use in complex "SFQ"\n"))
+#define MSG_CPLX_ATTRIBNOCONSUM_S     _MESSAGE(33528, _("denied: attribute "SFQ" is a string type and thus may not be consumable\n"))
+#define MSG_CPLX_ATTRIBNOCONSUMEH_SS  _MESSAGE(33529, _("denied: attribute "SFQ" in 'complex_list' of exec host "SFQ" has a string value and thus it may not be consumable\n"))
+#define MSG_CPLX_ATTRIBNOCONSUMQ_SS   _MESSAGE(33530, _("denied: attribute "SFQ" in 'complex_list' of queue "SFQ" has a string value and thus it may not be consumable\n"))
 #define MSG_NONAME                    _MESSAGE(33533, _("<noname>"))
 #define MSG_OBJ_CPLX                  _MESSAGE(33534, _("complex"))
+#define MSG_ATTRSTILLREFINQUEUE_SS    _MESSAGE(33535, _("attribute "SFQ" still referenced in queue "SFQ" - complex not modified"))
+#define MSG_ATTRSTILLREFINHOST_SS     _MESSAGE(33536, _("attribute "SFQ" still referenced in host "SFQ" - complex not modified"))
+#define MSG_ATTRSTILLREFINSCHED_S     _MESSAGE(33537, _("attribute "SFQ" still referenced in scheduler configuration - complex not modified"))
+#define MSG_SGETEXT_CANTDELCMPLX_S              _MESSAGE(33538, _("can't delete complex "SFQ" from list\n"))
 
 /*
 ** configuration_qmaster.c
@@ -591,6 +679,8 @@
 #define MSG_LOG_JNORESRESCHEDULE      _MESSAGE(33569, _("job didn't get resources -> schedule it again"))
 #define MSG_LOG_QERRORBYJOB_SU        _MESSAGE(33570, _("queue "SFN" marked QERROR as result of job "U32CFormat"'s failure\n") ) 
 #define MSG_LOG_QERRORBYJOBHOST_SUS   _MESSAGE(33571, _("queue "SFN" marked QERROR as result of job "U32CFormat"'s failure at host "SFN"\n"))
+#define MSG_FILE_WRITE_S              _MESSAGE(33572, _("writing to "SFN"\n"))
+#define MSG_FILE_WRITEACCT            _MESSAGE(33573, _("can't write to acct_file\n"))
 
 
 /*
@@ -611,12 +701,16 @@
 
 
 /*
-** sge_qmaster_main.c
+** qmaster.c
 */
+#define MSG_STARTUP_PROGRAMCALLEDWITHINVALIDNAME_S        _MESSAGE(33586, _("program called with invalid name: "SFQ"\n"))
+#define MSG_STARTUP_PROGRAMDOESNOTMATCHPRODUCTMODE_S      _MESSAGE(33587, _("program name "SFQ" does not match product mode"))
 #define MSG_COMMD_CANTENROLLTOCOMMD_S              _MESSAGE(33588, _("can't enroll to commd: "SFN))
 #define MSG_COMMD_FOUNDRUNNINGCOMMDONLOCALHOST              _MESSAGE(33589, _("found running commd on local host"))
 #define MSG_STARTUP_BEGINWITHSTARTUP              _MESSAGE(33590, _("begin with start up"))
 #define MSG_STARTUP_SETUPFAILED              _MESSAGE(33591, _("setup failed"))
+#define MSG_QIDL_CANTINITIALIZEQIDL              _MESSAGE(33592, _("cannot initialze qidl"))
+#define MSG_QIDL_CANTSPAWNTHREADFORCORBASERVER              _MESSAGE(33593, _("cannot spawn thread for corba server"))
 #define MSG_GDI_FAILEDINSGEUNPACKGDIREQUEST_SSI           _MESSAGE(33594, _("Failed in sge_unpack_gdi_request ("SFN"/"SFN"/%d)\n"))
 #define MSG_CULL_FAILEDINCULLUNPACKLISTREPORT              _MESSAGE(33595, _("Failed in cull_unpack_list report\n"))
 #define MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES              _MESSAGE(33596, _("shutting down qmaster requires manager privileges\n"))
@@ -625,7 +719,6 @@
 #define MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S    _MESSAGE(33599, _("can't notify exec host "SFQ" of new conf\n"))
 #define MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I    _MESSAGE(33600, _("error %d updating license data\n"))
 #define MSG_HEARTBEAT_FAILEDTOINCREMENTHEARBEATFILEXINSPOOLDIR_S    _MESSAGE(33601, _("failed to increment heartbeat file "SFQ" in spool directory"))
-#define MSG_QMASTER_LOCKFILE_ALREADY_EXISTS  _MESSAGE(33602, _("Unable to create lock file. Found existing one."))
 
 /*
 ** qmaster_to_execd.c
@@ -643,18 +736,35 @@
 #define MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST    _MESSAGE(33620, _("adding host global to exechost_list\n"))
 #define MSG_CONFIG_CANTWRITEMANAGERLIST       _MESSAGE(33621, _("can't write manager list\n"))
 #define MSG_CONFIG_CANTWRITEOPERATORLIST      _MESSAGE(33622, _("can't write operator list\n"))
+/* #define MSG_CONFIG_CANTRESOLVEEXECHOSTNAMEX_S       _message(33636, _("cannot resolve exechost name "SFQ)) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU       _MESSAGE(33648, _("can't find queue "SFQ" referenced in job "U32CFormat))
+/* #define MSG_CONFIG_FAILEDREMOVINGBADJOBFILEREASONXPLEASEDELETEYMANUALY_SS       _message(33649, _("failed removing bad jobfile (reason: "SFN"): please delete "SFQ" manually\n")) __TS Removed automatically from testsuite!! TS__*/
+/* #define MSG_CONFIG_REMOVEDBADJOBFILEX_S       _message(33650, _("removed bad jobfile "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
+
 
 /*
-** sge_qmaster_timed_event.c
+** subordinate_qmaster.c
 */
-#define MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I       _MESSAGE(33663, _("system clock has been put back (%d seconds)\n"))
+#define MSG_JOB_SOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US       _MESSAGE(33657, _("sos_using_gdil for job "U32CFormat": can't find referenced queue "SFQ))
+#define MSG_JOB_USOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US       _MESSAGE(33658, _("usos_using_gdil for job "U32CFormat": can't find referenced queue "SFQ))
+#define MSG_SGETEXT_SUBITSELF_S                 _MESSAGE(33659, _("queue "SFQ" can't get subordinated by itself\n"))
+#define MSG_SGETEXT_UNKNOWNSUB_SS               _MESSAGE(33660, _("subordinated queue "SFQ" referenced in queue "SFQ" does not exist\n"))
+#define MSG_SGETEXT_SUBTHRESHOLD_EXCEEDS_SLOTS_SUSU   _MESSAGE(33661, _("queue "SFQ": threshold of "U32CFormat" for subordinated " "queue "SFQ" exceeds job slots of "U32CFormat"\n"))
+#define MSG_SGETEXT_SUBHOSTDIFF_SSS                   _MESSAGE(33662, _("queue "SFQ": subordinated queue "SFQ" resides on other host "SFQ"\n"))
+
+
+/*
+** time_event.c
+*/
+#define MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I       _MESSAGE(33663, _("system time has been modified (%d seconds)\n"))
 #define MSG_SYSTEM_RECEIVEDUNKNOWNEVENT       _MESSAGE(33664, _("received unkown event\n"))
 
 /*
  * misc
  */
 #define MSG_SEC_CRED_SSSI                          _MESSAGE(33673, _("denied: request for user "SFQ" does not match credentials for connection <"SFN","SFN",%d>\n") )  
+#define MSG_QMASTER_XNOVALIDSSM_S                  _MESSAGE(33674, _(SFQ" is not a valid shell_start_mode\n"))
+#define MSG_QMASTER_XNOVALIDIS_S                   _MESSAGE(33675, _(SFQ" is not a valid initial_state\n"))      
 #define MSG_JOB_STDINPATHLIST                      _MESSAGE(33676, _("stdin path list"))
 #define MSG_QMASTER_AUTODEFDEPARTMENT              _MESSAGE(33677, _("all users are assigned to the \"defaultdepartment\" automatically\n"))
 #define MSG_QMASTER_DEPTFORDEFDEPARTMENT           _MESSAGE(33678, _("the \"defaultdepartment\" has to be of type \"DEPT\"\n"))
@@ -672,58 +782,9 @@
 
 #define MSG_JOB_MASTERTASKFAILED_S       _MESSAGE(33686, _("master task of job "SFN" failed - killing job\n"))
 
-#define MSG_CQUEUE_NAMENOTGUILTY_S       _MESSAGE(33687, _("cluster queue name "SFQ" is not valid\n"))
-#define MSG_CQUEUE_NONAMECHANGE          _MESSAGE(33688, _("unable to change cluster queue name\n"))
-#define MSG_HGROUP_CYCLEINDEF_SS        _MESSAGE(33690, _("Hostgroup "SFQ" in specification of "SFQ" would create a cycle\n"))
-#define MSG_HGROUP_REFINHGOUP_SS        _MESSAGE(33691, _("denied: following hostgroups still reference "SFQ": "SFN"\n"))
-#define MSG_HGROUP_REFINCUSER_SS        _MESSAGE(33692, _("denied: following user mapping entries still reference "SFQ": "SFN"\n"))
+#define MSG_CQUEUE_NAMENOTGUILTY_S        _MESSAGE(33687, _("cluster queue name "SFQ" is not guilty\n"))
+#define MSG_CQUEUE_NONAMECHANGE           _MESSAGE(33688, _("unable to change cluster queue name\n"))
+#define MSG_CQUEUE_ERRORWRITESPOOLFILE_S  _MESSAGE(33689, _("error writing spoolfile for cluster queue "SFQ))
 
-#define MSG_QINSTANCE_NOSSOS_S          _MESSAGE(33694, _("Subordinate suspension prevents unsuspension due to calendar for queue "SFQ"\n"))
-#define MSG_QINSTANCE_NOSADM_S          _MESSAGE(33695, _("Administrator suspension prevents unsuspension due to calendar for queue "SFQ"\n"))
-#define MSG_QINSTANCE_NOUSSOS_S         _MESSAGE(33696, _("no need to suspend queue "SFQ" it's already suspended on subordinate\n"))
-#define MSG_QINSTANCE_NOUSADM_S         _MESSAGE(33697, _("no need to suspend queue "SFQ" it's already suspended by administrator\n"))
-#define MSG_QINSTANCE_STATENOTMOD_S     _MESSAGE(33720, _("Queue instance state of "SFQ" not modified: Spooling framework failed\n"))
-#define MSG_QINSTANCE_STATENOTMODPERM_S _MESSAGE(33721, _("Queue instance state of "SFQ" not modified: No permission\n") ) 
-#define MSG_QINSTANCE_HASSTATE_SS       _MESSAGE(33722, _("Queue instance "SFQ" has already this state ("SFN")\n"))
-#define MSG_QINSTANCE_FORCEDSTATE_SSSS  _MESSAGE(33723, _(SFN"@"SFN" forced state change of "SFQ" ("SFN")\n"))
-#define MSG_QINSTANCE_CHANGEDST_SSSS    _MESSAGE(33724, _(SFN"@"SFN" changed state of "SFQ" ("SFN")\n"))
-#define MSG_QINSTANCE_QIALREADYHERE_S   _MESSAGE(33725, _("Should create queue instance "SFQ" which is already here\n"))
-#define MSG_QINSTANCE_NQIFOUND_SS       _MESSAGE(33726, _("queue instance "SFQ" not found in "SFQ"\n"))
-#define MSG_JOB_WILD_RANGE_AMBIGUOUS    _MESSAGE(33727, _("job rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount\n"))
-#define MSG_ATTR_HASAMBVAL_SSS          _MESSAGE(33728, _("warning: "SFQ" has ambiguous value ("SFQ", "SFQ")\n"))
-#define MSG_CQUEUE_REFINHGOUP_SS        _MESSAGE(33729, _("denied: following cluster queues still reference "SFQ": "SFN"\n"))
-#define MSG_LOG_DELETED               _MESSAGE(33800, _("job deleted"))
-#define MSG_LOG_SENT2EXECD            _MESSAGE(33801, _("sent to execd"))
-#define MSG_LOG_DELIVERED             _MESSAGE(33802, _("job received by execd"))
-#define MSG_LOG_EXITED                _MESSAGE(33803, _("job exited"))
-#define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33804, _("job waits for schedds deletion"))
-#define MSG_LOG_DELSGE                _MESSAGE(33805, _("job deleted by schedd"))
-#define MSG_LOG_DELIMMEDIATE          _MESSAGE(33806, _("immediate job deleted by schedd"))
-#define MSG_LOG_JATASKEXIT            _MESSAGE(33807, _("ja task exited") )  
-#define MSG_QMASTER_UNEXPECTED_SIGNAL_I    _MESSAGE(33810, _("received unexpected signal %d\n"))
-#define MSG_JOB_DEADLINETIME               _MESSAGE(33811, _("deadline time"))
-#define MSG_COM_NOSCHEDMONPERMS   _MESSAGE(33815, _("starting scheduler monitoring requires manager privileges\n"))
-#define MSG_COM_NOSCHEDDREGMASTER _MESSAGE(33816, _("no scheduler registered at qmaster\n"))
-#define MSG_COM_SCHEDMON_SS       _MESSAGE(33817, _(SFN"@"SFN" triggers scheduler monitoring\n"))
-#define MSG_QINSTANCE_STILLJOBS   _MESSAGE(33818, _("There are still running jobs in the queue. Deletion denied.\n"))
-
-/*
- * sge_persistence_qmaster.c
- */
-
-#define MSG_PERSISTENCE_WRITE_FAILED_S _MESSAGE(33820, _("error writing object "SFQ" to spooling database\n"))
-#define MSG_PERSISTENCE_DELETE_FAILED_S _MESSAGE(33821, _("error deleting object "SFQ" from spooling database\n"))
-#define MSG_PERSISTENCE_OPENTRANSACTION_FAILED _MESSAGE(33822, _("error starting a transaction in the spooling database\n"))
-#define MSG_PERSISTENCE_CLOSINGTRANSACTION_FAILED _MESSAGE(33823, _("error closing a transaction in the spooling database\n"))
-
-
-/*
- * other
- */
-#define MSG_JOB_CHANGEJOBSHARE            _MESSAGE(33900, _("change job share"))
-#define MSG_JOB_PRIOSET_SSUU              _MESSAGE(33901, _(SFN"@"SFN" sets scheduling priority of job "U32CFormat" to "U32CFormat"\n"))
-
-#define MSG_JOB_PERANGE_ONLY_FOR_PARALLEL _MESSAGE(33902, _("rejected: change request for PE range supported only for parallel jobs\n"))
-
-#endif
+#endif /* __MSG_QMASTER_H */
 

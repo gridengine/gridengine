@@ -70,5 +70,10 @@
 #define MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S _MESSAGE(17032, _("cleaning up after abnormal exit of "SFN"\n"))
 #define MSG_QSH_READINGEXITCODEFROMSHEPHERD  _MESSAGE(17033, _("reading exit code from shepherd ... "))
 
+/* --- */
+#define MSG_QSH_INHERIT_BN_NOT_ALLOWED_S _MESSAGE(17034, _(SFQ" -inherit is not allowed in combination with -b \'n\'"))
+
+
+
 #endif /* __MSG_QSH_H */
 

@@ -38,7 +38,7 @@
 
 #include "sgermon.h"
 #include "sge.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 #include "read_write_host_group.h"
 #include "sge_string.h"
 #include "sge_log.h"
@@ -105,12 +105,6 @@ int parsing_type
       ret = (!set_conf_string(alpp, clpp, fields, "default", ep, CE_default)) ?-1:0;
    }
 
-   /* TODO: AH: only needed in EE mode */
-   /* --------- CE_urgency_weight */
-   if (ret == 0) {
-      ret = (!set_conf_string(alpp, clpp, fields, "urgency", ep, CE_urgency_weight)) ?-1:0;
-   }
-
    DEXIT;
    return ret;
 }
@@ -119,8 +113,9 @@ lListElem *cull_read_in_centry(
 const char *dirname,
 const char *filename,
 int spool,
+int flag,
 int *tag,
-lList *centry_list
+int fields[]
 ) {
    lListElem *ep;
    struct read_object_args args = { CE_Type, "", read_centry_work };
@@ -129,14 +124,6 @@ lList *centry_list
    DENTER(TOP_LAYER, "cull_read_in_centry");
 
    ep = read_object(dirname, filename, spool, 0,RCL_NO_VALUE, &args, tag?tag:&intern_tag, NULL);
-
-   if(ep){
-      lList *answer_list = NULL;
-      if (!centry_elem_validate(ep,  centry_list, &answer_list)){
-         answer_list_output(&answer_list);
-         ep = lFreeElem(ep);
-      }
-   }
 
    DEXIT;
    return ep;
@@ -210,10 +197,6 @@ char *write_centry(int spool, int how, const lListElem *ep)
 
    /* --------- CE_default */
    FPRINTF((fp, "default     %s\n", lGetString(ep, CE_default)));
-
-   /* --------- CE_urgency_weight */
-   /* TODO: AH: only needed in EE mode */
-   FPRINTF((fp, "urgency     %s\n", lGetString(ep, CE_urgency_weight)));
 
    if (how!=0) {
       fclose(fp);

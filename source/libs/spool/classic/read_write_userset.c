@@ -47,6 +47,7 @@
 #include "sge_log.h"
 #include "sge_stdio.h"
 #include "sge_spool.h"
+#include "sge_answer.h"
 #include "sge_userset.h"
 
 #include "msg_common.h"
@@ -110,22 +111,24 @@ _Insight_set_option("suppress", "PARM_NULL");
       return -1;
    }
    
-   /* --------- US_type */
-   if (!set_conf_enum(alpp, clpp, fields, "type", ep, US_type, userset_types)) {
-      DEXIT;
-      return -1;
-   }
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      /* --------- US_type */
+      if (!set_conf_enum(alpp, clpp, fields, "type", ep, US_type, userset_types)) {
+         DEXIT;
+         return -1;
+      }
 
-   /* --------- US_oticket */
-   if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, US_oticket)) {
-      DEXIT;
-      return -1;
-   }
+      /* --------- US_oticket */
+      if (!set_conf_ulong(alpp, clpp, fields, "oticket", ep, US_oticket)) {
+         DEXIT;
+         return -1;
+      }
 
-   /* --------- US_fshare */
-   if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, US_fshare)) {
-      DEXIT;
-      return -1;
+      /* --------- US_fshare */
+      if (!set_conf_ulong(alpp, clpp, fields, "fshare", ep, US_fshare)) {
+         DEXIT;
+         return -1;
+      }
    }
 
    /* --------- US_entries */
@@ -151,7 +154,7 @@ FILE *fpout,
 int spool 
 ) {
    FILE *fp;
-   int print_elements[] = { UE_name, 0 };
+   intprt_type print_elements[] = { UE_name, 0 };
    const char *delis[] = {":", ",", NULL};
    const char **ptr;
    u_long32 bitmask, type;
@@ -197,21 +200,22 @@ int spool
    } 
 
    FPRINTF((fp, "name       %s\n", lGetString(ep, US_name)));
+   if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
+      /* userset type field */
+      type = lGetUlong(ep, US_type);
+      FPRINTF((fp, "type       "));
+      bitmask = 1;
+      for (ptr = userset_types; **ptr != '\0'; ptr++) {
+         if (bitmask & type) {
+            FPRINTF((fp,"%s ",*ptr));
+         }
+         bitmask <<= 1;
+      };
+      FPRINTF((fp,"\n"));
 
-   /* userset type field */
-   type = lGetUlong(ep, US_type);
-   FPRINTF((fp, "type       "));
-   bitmask = 1;
-   for (ptr = userset_types; **ptr != '\0'; ptr++) {
-      if (bitmask & type) {
-         FPRINTF((fp,"%s ",*ptr));
-      }
-      bitmask <<= 1;
-   };
-   FPRINTF((fp,"\n"));
-
-   FPRINTF((fp, "oticket    " u32 "\n", lGetUlong(ep, US_oticket)));
-   FPRINTF((fp, "fshare     " u32 "\n", lGetUlong(ep, US_fshare)));
+      FPRINTF((fp, "oticket    " u32 "\n", lGetUlong(ep, US_oticket)));
+      FPRINTF((fp, "fshare     " u32 "\n", lGetUlong(ep, US_fshare)));
+   }
 
    FPRINTF((fp, "entries    "));
    ret = uni_print_list(fp, NULL, 0, lGetList(ep, US_entries), print_elements,

@@ -31,16 +31,16 @@
 /*___INFO__MARK_END__*/
 
 #include <ctype.h>
-#include <string.h>
 
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_list.h"
 #include "parse.h"
-#include "sge_str.h"
-#include "sge_idL.h"
+#include "sge_stringL.h"
+#include "sge_identL.h"
 #include "sge_string.h"
 #include "sge_answer.h"
+#include "sge_queue.h"
 #include "sge_utility.h"
 
 #include "msg_common.h"
@@ -52,9 +52,9 @@ int verify_str_key(lList **alpp, const char *str, const char *name)
    static char begin_chars[3] = { '.', '#', 0 };
    static const char *begin_strings[3];
 
-   static char mid_characters[18] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
-      '\"', '\\', '[', ']', '{', '}', '|', '(', ')', '@', 0 };
-   static const char *mid_strings[18];
+   static char mid_characters[17] = { '\n', '\t', '\r', ' ', '/', ':', '\'',
+      '\"', '\\', '[', ']', '{', '}', '(', ')', '@', 0 };
+   static const char *mid_strings[17];
 
    static const char* keyword[] = { "NONE", "ALL", "TEMPLATE", NULL };
    static const char* keyword_strings[4];

@@ -236,18 +236,10 @@
 #define MSG_PROF_RESETWHILEMEASUREMENT_S        _MESSAGE(49095, _(SFN": cannot reset profiling while a measurement is active\n"))
 
 /*
- * libs/uti/sge_bootstrap
+ *
  */
-#define MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE     _MESSAGE(49100, _("cannot resolve name of bootstrap file\n"))
-#define MSG_UTI_CANNOTBOOTSTRAP_S              _MESSAGE(49101, _("cannot bootstrap from file "SFN"\n"))
-#define MSG_UTI_CANNOTLOCATEATTRIBUTE_SS       _MESSAGE(49102, _("cannot read attribute <"SFN"> from bootstrap file "SFN"\n"))
-
-/* 
-** libs/uti/setup_path.c
-*/
-#define MSG_UTI_SGEROOTNOTADIRECTORY_S                   _MESSAGE(49110, _("$SGE_ROOT="SFN" is not a directory\n"))
-#define MSG_UTI_DIRECTORYNOTEXIST_S                      _MESSAGE(49111, _("directory doesn't exist: "SFN"\n"))
-#define MSG_SGETEXT_NOSGECELL_S                _MESSAGE(49112, _("cell directory "SFQ" doesn't exist\n"))
+#define MSG_UTI_INVALIDUSERNAME_S                  _MESSAGE(49096, _("invalid user name "SFQ"\n"))
+#define MSG_UTI_NOHOMEDIR_S                        _MESSAGE(49097, _("missing home directory for user "SFQ"\n"))
 
 #endif /* __MSG_UTILIB_H */
 

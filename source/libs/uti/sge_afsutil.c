@@ -151,7 +151,7 @@ int sge_afs_extend_token(const char *command, char *tokenbuf, const char *user,
    }
 
    command_pid = sge_peopen("/bin/sh", 0, cmdbuf, NULL, NULL, 
-                        &fp_in, &fp_out, &fp_err, false);
+                        &fp_in, &fp_out, &fp_err);
    if (command_pid == -1) {
       if (err_str) {
          sprintf(err_str, MSG_TOKEN_NOSTART_S , cmdbuf);

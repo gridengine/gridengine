@@ -1,8 +1,12 @@
 #!/vol2/TCL_TK/glinux/bin/expect
 # global variables ... (defined in main check routine, but you can use it)
 #
+# global CHECK_CHECKTREE_ROOT              ;# path where checktree lies
 # global CHECK_ACT_PATH          ;# actual checkpath
 # gloabl CHECK_ACTUAL_TEST_PATH  ;# this directory
+# global CHECK_PRODUCT_ROOT  ;# path to sge/sgeee system
+# global CHECK_PRODUCT_TYPE       ;# "sgeee" or "sge"         
+# global CHECK_COMMD_PORT        ;# commd port
 # global CHECK_USER              ;# user who start test
 # global CHECK_ARCH              ;# architecture of this system (e.g. irix6)
 # global CHECK_HOST              ;# hostname of this system (e.g. DWAIN)
@@ -38,12 +42,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-
-# source version dependent parts of the installation
-global CHECK_ACTUAL_TEST_PATH
-ts_source $CHECK_ACTUAL_TEST_PATH/qmaster
-ts_source $CHECK_ACTUAL_TEST_PATH/execd
-
 global check_name check_description check_needs check_functions check_errno check_errstr 
 global check_root_access_needs check_category      
 global check_use_installed_system
@@ -51,13 +49,12 @@ global check_use_installed_system
 # This file shows some check spezific things
 set check_root_access_needs  "yes"
 set check_name          "init_core_system"
-set check_category      "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category      "COMPATIBILITY SYSTEM L10N"
 set check_description(0)   "install a default system (master/execution daemon on local host and start them up)"
 set check_needs         ""                        ;# dependencies of this check (name of other check)
 set check_functions     ""                        ;# functions to call (in order)
 lappend check_functions "kill_running_system"
 lappend check_functions "install_qmaster"
-lappend check_functions "reread_bootstrap"
 lappend check_functions "make_user_cert"
 lappend check_functions "install_execd"
 lappend check_functions "cleanup_system"
@@ -74,6 +71,7 @@ lappend check_functions "setup_check_user_permissions"
 lappend check_functions "setup_check_messages_files"
 lappend check_functions "setup_inhouse_cluster"
 
+
 # ---------------------------------------------------------------------------------
 # here the tests begin ....
 
@@ -83,11 +81,14 @@ global CORE_INSTALLED_TIME
 global local_master_spool_set
 global local_execd_spool_set
 
+
 set local_master_spool_set 0
 set local_execd_spool_set 0
 
 set CORE_INSTALLED ""
 set CORE_INSTALLED_TIME ""
+
+
 
 # this is to setup the cluster
 #                                                             max. column:     |
@@ -120,13 +121,12 @@ set CORE_INSTALLED_TIME ""
 #     ???/???
 #*******************************
 proc write_install_list {} {
-   global ts_config
-   global CORE_INSTALLED CORE_INSTALLED_TIME
-   global CHECK_MAIN_RESULTS_DIR
+  global CORE_INSTALLED CORE_INSTALLED_TIME CHECK_CORE_MASTER
+  global CHECK_MAIN_RESULTS_DIR
  
-   set myfile [open "$CHECK_MAIN_RESULTS_DIR/cluster.$ts_config(master_host).inst" "w"]
-   puts $myfile $CORE_INSTALLED
-   close $myfile
+  set myfile [open "$CHECK_MAIN_RESULTS_DIR/cluster.$CHECK_CORE_MASTER.inst" "w"]
+  puts $myfile $CORE_INSTALLED
+  close $myfile
 }
 
 #                                                             max. column:     |
@@ -159,22 +159,22 @@ proc write_install_list {} {
 #     ???/???
 #*******************************
 proc read_install_list {} {
-   global ts_config
-   global CORE_INSTALLED CORE_INSTALLED_TIME
-   global CHECK_MAIN_RESULTS_DIR 
-
-   if { [file isfile "$CHECK_MAIN_RESULTS_DIR/cluster.$ts_config(master_host).inst"] == 1 } {
-      set myfile [open "$CHECK_MAIN_RESULTS_DIR/cluster.$ts_config(master_host).inst" "r"]
-      gets $myfile CORE_INSTALLED
-      close $myfile
-   }
+  global CORE_INSTALLED CORE_INSTALLED_TIME CHECK_CORE_MASTER
+  global CHECK_MAIN_RESULTS_DIR 
+  if { [file isfile "$CHECK_MAIN_RESULTS_DIR/cluster.$CHECK_CORE_MASTER.inst"] == 1 } {
+     set myfile [open "$CHECK_MAIN_RESULTS_DIR/cluster.$CHECK_CORE_MASTER.inst" "r"]
+     gets $myfile CORE_INSTALLED
+     close $myfile
+  }
 }
 
+
+# kill evtl. installed system
 #                                                             max. column:     |
 #****** install_core_system/kill_running_system() ******
 # 
 #  NAME
-#     kill_running_system -- shutdown an already running system
+#     kill_running_system -- ??? 
 #
 #  SYNOPSIS
 #     kill_running_system { } 
@@ -200,68 +200,1120 @@ proc read_install_list {} {
 #     ???/???
 #*******************************
 proc kill_running_system {} {
-   global ts_config
-   global CHECK_ARCH 
-   global CHECK_OUTPUT CORE_INSTALLED
+   global CHECK_ARCH CHECK_PRODUCT_ROOT CHECK_PRODUCT_TYPE 
+   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_CORE_MASTER CORE_INSTALLED
    global check_use_installed_system
  
    
    set CORE_INSTALLED ""
    write_install_list
 
+
    shutdown_core_system
 
-   set_error "0" "kill_running_system - this is not a 'real' test (only try to shutdown $ts_config(product_type) system)"
+
+   set_error "0" "kill_running_system - this is not a 'real' test (only try to shutdown $CHECK_PRODUCT_TYPE system)"
 
    if { $check_use_installed_system == 0 } { 
       # if this is master remove default dir (but not the licence file)
    
          set moved [timestamp]
    
-         catch { exec "mv" "$ts_config(product_root)/default" "$ts_config(product_root)/default.$moved"  } result
+         catch { exec "mv" "$CHECK_PRODUCT_ROOT/default" "$CHECK_PRODUCT_ROOT/default.$moved"  } result
          puts $result
    
-         puts "current default directory ($ts_config(product_root)/default) was moved to default.$moved"
+         puts "current default directory ($CHECK_PRODUCT_ROOT/default) was moved to default.$moved"
    
          sleep 2
    
-         catch { exec "mkdir" "$ts_config(product_root)/default"  } result
+         catch { exec "mkdir" "$CHECK_PRODUCT_ROOT/default"  } result
          puts $result
-         catch { exec "chmod" "755" "$ts_config(product_root)/default"  } result
+         catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT/default"  } result
          puts $result
 
    
          sleep 2
    
-         catch { exec "mkdir" "$ts_config(product_root)/default/common"  } result
+         catch { exec "mkdir" "$CHECK_PRODUCT_ROOT/default/common"  } result
          puts $result
 
-         catch { exec "chmod" "755" "$ts_config(product_root)/default/common"  } result
+         catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT/default/common"  } result
          puts $result
    
-         catch { exec "cp" "$ts_config(product_root)/default.$moved/common/host_aliases" "$ts_config(product_root)/default/common/host_aliases"  } result
+         catch { exec "cp" "$CHECK_PRODUCT_ROOT/default.$moved/common/host_aliases" "$CHECK_PRODUCT_ROOT/default/common/host_aliases"  } result
          puts $result
    
-         delete_directory "$ts_config(product_root)/default.$moved"
+         delete_directory "$CHECK_PRODUCT_ROOT/default.$moved"
    }
 }
 
-proc reread_bootstrap {} {
-  # install_qmaster has written the bootstrap or the configuration file
-  bootstrap_sge_config
-  set_error "0" "install_qmaster - no errors"
+
+
+# install qmaster check 
+#                                                             max. column:     |
+#****** install_core_system/install_qmaster() ******
+# 
+#  NAME
+#     install_qmaster -- ??? 
+#
+#  SYNOPSIS
+#     install_qmaster { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc install_qmaster {} {
+ global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_USER check_errstr 
+ global CHECK_CORE_EXECD CHECK_CORE_MASTER CORE_INSTALLED CORE_INSTALLED CHECK_OUTPUT 
+ global open_spawn_buffer CHECK_TESTSUITE_ROOT env CHECK_COMMD_PORT local_master_spool_set
+ global check_use_installed_system CHECK_ADMIN_USER_SYSTEM CHECK_DEFAULT_DOMAIN
+ global CHECK_DEBUG_LEVEL CHECK_QMASTER_INSTALL_OPTIONS CHECK_PRODUCT_FEATURE CHECK_COMMD_PORT
+ global CHECK_REPORT_EMAIL_TO CHECK_MAIN_RESULTS_DIR CHECK_FIRST_FOREIGN_SYSTEM_USER
+ global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO
+ global CHECK_PROTOCOL_DIR
+
+ puts $CHECK_OUTPUT "install qmaster ($CHECK_PRODUCT_TYPE system) on host $CHECK_CORE_MASTER ..."
+
+ if { $check_use_installed_system != 0 } {
+    set_error "0" "install_qmaster - no need to install qmaster on host $CHECK_CORE_MASTER - noinst parameter is set"
+    puts "no need to install qmaster on host $CHECK_CORE_MASTER, noinst parameter is set"
+    set CORE_INSTALLED "" 
+    if {[startup_qmaster] == 0} {
+      lappend CORE_INSTALLED $CHECK_CORE_MASTER
+      write_install_list
+    }
+    return
+ }
+
+ set CORE_INSTALLED ""
+ write_install_list
+
+ set_error "0" "install_qmaster - no errors"
+ if {[file isfile "$CHECK_PRODUCT_ROOT/install_qmaster"] != 1} {
+    set_error "-1" "install_qmaster - install_qmaster file not found"
+    return
+ }
+
+ #dump hostlist to file
+ set host_file_name "$CHECK_PROTOCOL_DIR/hostlist"
+ set f [open $host_file_name w]
+ foreach exechost $CHECK_CORE_EXECD {
+    puts $f "${exechost}"
+ }
+ close $f
+
+
+ set HIT_RETURN_TO_CONTINUE       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
+ set NOT_COMPILED_IN_SECURE_MODE  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_NOT_COMPILED_IN_SECURE_MODE] ] 
+ set ENTER_HOSTS                  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_HOSTS] ]
+ set MASTER_INSTALLATION_COMPLETE [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_MASTER_INSTALLATION_COMPLETE] ]
+ set ENTER_A_RANGE                [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_A_RANGE] ]
+ set PREVIOUS_SCREEN              [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_PREVIOUS_SCREEN] ]
+ set FILE_FOR_HOSTLIST            [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_FILE_FOR_HOSTLIST] ]
+ set FINISHED_ADDING_HOSTS        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_FINISHED_ADDING_HOSTS] ]
+ set FILENAME_FOR_HOSTLIST        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_FILENAME_FOR_HOSTLIST] ]
+ set CREATE_NEW_CONFIGURATION     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CREATE_NEW_CONFIGURATION] ]
+ set INSTALL_SCRIPT               [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_SCRIPT] ]
+ set ANSWER_YES                   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ANSWER_YES] ]
+ set ANSWER_NO                    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ANSWER_NO] ]
+ set ENTER_DEFAULT_DOMAIN         [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DEFAULT_DOMAIN] ]
+ set CONFIGURE_DEFAULT_DOMAIN     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CONFIGURE_DEFAULT_DOMAIN] ] 
+ set PKGADD_QUESTION              [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_PKGADD_QUESTION] ]
+ set MESSAGES_LOGGING             [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_MESSAGES_LOGGING] ]
+ set OTHER_SPOOL_DIR              [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_OTHER_SPOOL_DIR] ]
+ set OTHER_USER_ID_THAN_ROOT      [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_OTHER_USER_ID_THAN_ROOT] ]
+ set INSTALL_AS_ADMIN_USER        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_AS_ADMIN_USER] "$CHECK_USER" ]
+ set ADMIN_USER_ACCOUNT           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ADMIN_USER_ACCOUNT] "$CHECK_USER\r\n" ]
+ set USE_CONFIGURATION_PARAMS     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_USE_CONFIGURATION_PARAMS] ]
+ set INSTALL_GE_NOT_AS_ROOT       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_GE_NOT_AS_ROOT] ]
+ set IF_NOT_OK_STOP_INSTALLATION  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_IF_NOT_OK_STOP_INSTALLATION] ]
+ set DNS_DOMAIN_QUESTION          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DNS_DOMAIN_QUESTION] ] 
+ set ENTER_SPOOL_DIR_OR_HIT_RET   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SPOOL_DIR_OR_HIT_RET] "*"]
+ set USING_GID_RANGE_HIT_RETURN   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_USING_GID_RANGE_HIT_RETURN] "*"]
+
+
+
+ cd "$CHECK_PRODUCT_ROOT"
+
+ set prod_type_var "SGE_ROOT"
+
+ set feature_install_options ""
+ if { $CHECK_PRODUCT_FEATURE == "csp" } {
+    append feature_install_options "-csp"
+ }
+
+ if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "root"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
+ } else {
+    puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
+    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "$CHECK_USER"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
+ }
+ set sp_id [ lindex $id 1 ] 
+ 
+
+ log_user 1
+ puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
+
+ set hostcount 0
+
+ set do_log_output 0 ;# _LOG
+ if { $CHECK_DEBUG_LEVEL == 2 } {
+   set do_log_output  1 ;# 1
+ }
+
+ while {1} {
+ if {$do_log_output == 1} {
+   flush stdout
+   flush $CHECK_OUTPUT
+   puts "-->testsuite: press RETURN"
+   set anykey [wait_for_enter 1]
+ }
+    log_user 1
+#    puts "-->testsuite: expecting now ..."
+    set timeout 300
+    expect {
+       flush stdout
+       flush $CHECK_OUTPUT 
+       -i $sp_id full_buffer {
+          set_error "-1" "install_qmaster - buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+          close_spawn_process $id; 
+          return;
+       }   
+
+       -i $sp_id eof { 
+          set_error "-1" "install_qmaster - unexpected eof"; 
+          close_spawn_process $id;
+          return;  
+       }
+       -i $sp_id "coredump" {
+          set_error "-2" "install_qmaster - coredump";
+          close_spawn_process $id
+          return
+       }
+
+       -i $sp_id timeout { 
+          set_error "-1" "install_qmaster - timeout while waiting for output"; 
+          close_spawn_process $id;
+          return;  
+       }
+       -i $sp_id "orry" { 
+          set_error "-1" "install_qmaster - wrong root password"
+          close_spawn_process $id;
+          return;
+       }
+
+       -i $sp_id "issing" { 
+          set_error "-1" "install_qmaster - missing binary error"
+          close_spawn_process $id;
+          return;
+       }
+       -i $sp_id "xit." {
+          set_error "-1" "install_qmaster - installation failed"
+          close_spawn_process $id; 
+          return;
+       }
+       -i $sp_id "enter the file name with a valid license key" {
+          set_error "-1" "install_qmaster - not a licensed system"
+          close_spawn_process $id; 
+          return;
+       }
+
+       -i $sp_id "admin user account =*\n" {
+          set real_admin_user $expect_out(0,string)
+          set real_help [ split $real_admin_user "=" ]
+          set real_admin_user [ string trim [ lindex $real_help 1 ]]
+          
+          puts $CHECK_OUTPUT "\n -->testsuite: admin user is \"$real_admin_user\""
+          if { [string compare $real_admin_user $CHECK_USER] != 0 } {
+             set_error "-1" "install_qmaster - admin user \"$real_admin_user\" is different from CHECK_USER \"$CHECK_USER\"" 
+             close_spawn_process $id;
+             return;
+          }
+       }
+
+       -i $sp_id $ADMIN_USER_ACCOUNT {
+          set real_admin_user $expect_out(0,string)
+          set real_help [ split $real_admin_user "=" ]
+          set real_admin_user [ string trim [ lindex $real_help 1 ]]
+          
+          puts $CHECK_OUTPUT "\n -->testsuite: admin user is \"$real_admin_user\""
+          if { [string compare $real_admin_user $CHECK_USER] != 0 } {
+             set_error "-1" "install_qmaster - admin user \"$real_admin_user\" is different from CHECK_USER \"$CHECK_USER\"" 
+             close_spawn_process $id;
+             return;
+          }
+       }
+
+
+       
+       -i $sp_id "and contact * or your local distributor for getting a license" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >return<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
+          continue;
+       }
+
+       -i $sp_id "o you want to recreate your SGE CA infrastructure" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(1)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+
+
+       -i $sp_id "enter your two letter country code" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >DE<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "DE\n"
+          continue;
+       }
+
+       -i $sp_id "lease enter your state" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >Bavaria<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "Bavaria\n"
+          continue;
+       }
+ 
+       -i $sp_id "lease enter your location" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >Regensburg<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "Regensburg\n"
+          continue;
+       }
+
+       -i $sp_id "lease enter the name of your organization" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >Sun Microsystems<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "Sun Microsystems\n"
+          continue;
+       }
+
+       -i $sp_id "lease enter your organizational unit" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >Testsystem at port $CHECK_COMMD_PORT<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "Testsystem at port $CHECK_COMMD_PORT\n"
+          continue;
+       }
+
+       -i $sp_id "lease enter the email address of the CA administrator" { 
+          if { $CHECK_REPORT_EMAIL_TO == "none" } {
+             set CA_admin_mail "$CHECK_USER@sun.com"
+          } else {
+             set CA_admin_mail $CHECK_REPORT_EMAIL_TO
+          }
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$CA_admin_mail<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$CA_admin_mail\n"
+          continue;
+       }
+       -i $sp_id "o you want to use these data" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(2)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+
+
+       -i $sp_id -gl "You requested -resport" {
+         set_error "-1" "install_qmaster: Configuration error: System with reserved port security requested, but port is configured to $CHECK_COMMD_PORT"
+         close_spawn_process $id
+         return
+       }
+
+       -i $sp_id "Are all the hosts of your cluster in a single DNS domain" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(3)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+       -i $sp_id "Are all hosts of your cluster in a single DNS domain" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(4)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+        -i $sp_id $DNS_DOMAIN_QUESTION { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(4)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_YES\n"
+          continue;
+       }
+
+
+ 
+       -i $sp_id "Do you want to install Grid Engine as admin user" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(5)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+
+
+       
+       -i $sp_id $INSTALL_AS_ADMIN_USER { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(5)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_YES\n"
+          continue;
+       }
+
+       -i $sp_id "Do you want to * SGE as admin user" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(6)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+
+       -i $sp_id "Do you want to * SGEEE as admin user" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(7)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+
+       -i $sp_id "Do you want to use these configuration parameters" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(1)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "n\n"
+          continue;
+       }
+       
+#       -i $sp_id "\r\nVoulez-vous utiliser ces paramètres de configuration (o/n) \[o\] >> " {
+#          
+#          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(1)"
+#   puts "expect buffer:\n\"$expect_out(buffer)\""
+#   set stream [open /tmp/cr.txt "w"]
+#   puts -nonewline $stream $expect_out(buffer)
+#   close $stream
+#   puts $CHECK_OUTPUT [eval exec "/usr/bin/od -c /tmp/cr.txt"]
+#   wait_for_enter
+#
+#   set stream [open /tmp/cr1.txt "w"]
+#   puts "translatet:\n\"$USE_CONFIGURATION_PARAMS\""
+#   puts -nonewline $stream $USE_CONFIGURATION_PARAMS
+#   close $stream
+#   puts $CHECK_OUTPUT [eval exec "/usr/bin/od -c /tmp/cr1.txt"]
+#   wait_for_enter
+#
+#
+#          if {$do_log_output == 1} {
+#               puts "press RETURN"
+#               set anykey [wait_for_enter 1]
+#          }
+#          send -i $sp_id "$ANSWER_NO\n"
+#          continue;
+#       }
+
+       -i $sp_id $USE_CONFIGURATION_PARAMS {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(1)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+
+       
+
+       -i $sp_id "Do you want to set the file permissions" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >yes<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "yes\n"
+          continue;
+       }
+
+       -i $sp_id "Do you want to verify and set your file permissions" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(8)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+# JG: TODO: also check the localized message
+       -i $sp_id "Verifying and setting file permissions and owner in" {
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+#          puts $CHECK_OUTPUT "---> one directory done"
+          continue;
+       }
+
+       -i $sp_id "Please hit <RETURN> to continue once you set your file permissions" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >return<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
+          continue;
+       }
+
+       -i $sp_id "Do you want to use this configuration parameters" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(2)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "n\n"
+          continue;
+       }
+       -i $sp_id "if this is ok or stop the installation with" {
+          if { $CHECK_ADMIN_USER_SYSTEM != 0 } {
+             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+             if {$do_log_output == 1} {
+                  puts "press RETURN"
+                  set anykey [wait_for_enter 1]
+             }
+             send -i $sp_id "\n"
+             continue;
+          } else {
+             set_error "-1" "install_qmaster - tried to install not as root"
+             close_spawn_process $id; 
+             return;
+          }
+       }
+       -i $sp_id $IF_NOT_OK_STOP_INSTALLATION {
+          if { $CHECK_ADMIN_USER_SYSTEM != 0 } {
+             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+             if {$do_log_output == 1} {
+                  puts "press RETURN"
+                  set anykey [wait_for_enter 1]
+             }
+             send -i $sp_id "\n"
+             continue;
+          } else {
+             set_error "-1" "install_qmaster - tried to install not as root"
+             close_spawn_process $id; 
+             return;
+          }
+       }
+
+
+       -i $sp_id "Do you want to * the application as admin user" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(3)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "n\n"
+          continue;
+       }
+       -i $sp_id "under an user id other than" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(4)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "n\n"
+          continue;
+       }
+       -i $sp_id $INSTALL_GE_NOT_AS_ROOT {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(4)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+       
+       -i $sp_id $OTHER_USER_ID_THAN_ROOT {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(4)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+       -i $sp_id "you want to select another qmaster spool directory" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(5)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "n\n"
+          continue;
+       }
+
+       -i $sp_id $OTHER_SPOOL_DIR {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(5)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+
+       -i $sp_id "<RETURN> to see where" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "\n"
+          continue;
+       }
+       -i $sp_id $MESSAGES_LOGGING {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "\n"
+          continue;
+       }
+
+       -i $sp_id "Did you install this version with >pkgadd<" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(6)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "n\n"
+          continue;
+       }
+       -i $sp_id $PKGADD_QUESTION {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(6)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+       -i $sp_id "Enter spool directory or hit" {
+          puts $CHECK_OUTPUT "\n"
+          set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
+          if { $spooldir != "" } {
+            # use local spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "$spooldir\n"
+            set local_master_spool_set 1
+          } else {
+            # use default spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "\n"
+          }
+          continue;
+       }
+
+#       -i $sp_id "Entrez le répertoire spool ou appuyez sur <RETOUR> pour utiliser la valeur par défaut* >> " {
+#          puts $CHECK_OUTPUT "\n"
+#   puts "expect buffer:\n\"$expect_out(buffer)\""
+#   set stream [open /tmp/cr.txt "w"]
+#   puts -nonewline $stream $expect_out(buffer)
+#   close $stream
+#   puts $CHECK_OUTPUT [eval exec "/usr/bin/od -c /tmp/cr.txt"]
+#   wait_for_enter
+#
+#          set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
+#          if { $spooldir != "" } {
+#            # use local spool dir
+#            puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
+#            if {$do_log_output == 1} {
+#               puts "press RETURN"
+#               set anykey [wait_for_enter 1]
+#            }
+#            send -i $sp_id "$spooldir\n"
+#            set local_master_spool_set 1
+#          } else {
+#            # use default spool dir
+#            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+#            if {$do_log_output == 1} {
+#               puts "press RETURN"
+#               set anykey [wait_for_enter 1]
+#            }
+#            send -i $sp_id "\n"
+#          }
+#          continue;
+#       }
+       
+
+       -i $sp_id $ENTER_SPOOL_DIR_OR_HIT_RET {
+          puts $CHECK_OUTPUT "\n"
+          set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
+          if { $spooldir != "" } {
+            # use local spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "$spooldir\n"
+            set local_master_spool_set 1
+          } else {
+            # use default spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "\n"
+          }
+          continue;
+       }
+
+
+
+       -i $sp_id "configure a default domain" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(7)"
+          if {$do_log_output == 1} {
+               puts "(2)press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "n\n"
+          continue;
+       }
+
+       -i $sp_id $CONFIGURE_DEFAULT_DOMAIN {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(7)"
+          if {$do_log_output == 1} {
+               puts "(2)press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+       -i $sp_id "enter your default domain:" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$CHECK_DEFAULT_DOMAIN<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "$CHECK_DEFAULT_DOMAIN\n"
+
+          continue;
+       }
+
+
+       -i $sp_id $ENTER_DEFAULT_DOMAIN {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$CHECK_DEFAULT_DOMAIN<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$CHECK_DEFAULT_DOMAIN\n"
+          continue;
+       }
+
+
+       -i $sp_id "at system boot time" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(8)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+
+          send -i $sp_id "n\n"
+          continue;
+       }
+       
+       -i $sp_id "is started at machine boot" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(9)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "n\n"
+          continue;
+       }
+       -i $sp_id $INSTALL_SCRIPT {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(9)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+
+       -i $sp_id "Do you want to create a new configuration" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(9)"
+          if {$do_log_output == 1} {
+               puts "(3)press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "y\n"
+          continue;
+       }
+       -i $sp_id $CREATE_NEW_CONFIGURATION {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(9)"
+          if {$do_log_output == 1} {
+               puts "(3)press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_YES\n"
+          continue;
+       }
+
+
+       -i $sp_id "Please enter the file name which contains the host list" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >${host_file_name}<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "${host_file_name}\n"
+          continue;
+       }
+       -i $sp_id $FILENAME_FOR_HOSTLIST {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >${host_file_name}<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "${host_file_name}\n"
+          continue;
+       }
+   
+       -i $sp_id "Finished adding hosts" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "\n"
+          continue;
+       }
+
+       -i $sp_id $FINISHED_ADDING_HOSTS {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
+          continue;
+       }
+   
+       -i $sp_id "already exists" {
+          puts $CHECK_OUTPUT "\n --> testsuite: ignoring install script output"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+
+          continue;
+       }
+   
+       -i $sp_id "added to * host list" {
+          puts $CHECK_OUTPUT "\n --> testsuite: ignoring install script output"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+
+          continue;
+       }
+   
+       -i $sp_id $FILE_FOR_HOSTLIST {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(10)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "$ANSWER_YES\n"
+          continue;
+       }
+
+       -i $sp_id "Do you want to use a file which contains the list of hosts" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(10)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "y\n"
+          continue;
+       }
+   
+
+       -i $sp_id $PREVIOUS_SCREEN {
+          flush stdout
+          flush $CHECK_OUTPUT
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(10)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+  
+       -i $sp_id "Do you want to see previous screen about using" {
+          flush stdout
+          flush $CHECK_OUTPUT
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(10)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "n\n"
+          continue;
+       }
+       -i $sp_id $ENTER_A_RANGE {
+          set myrange [ get_gid_range $CHECK_USER $CHECK_COMMD_PORT]
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >${myrange}<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "${myrange}\n"
+          continue;
+       }
+       -i $sp_id "enter a range" {
+          set myrange [ get_gid_range $CHECK_USER $CHECK_COMMD_PORT]
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >${myrange}<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "${myrange}\n"
+          continue;
+       }
+       -i $sp_id $MASTER_INSTALLATION_COMPLETE {
+          read_install_list
+          lappend CORE_INSTALLED $CHECK_CORE_MASTER
+          write_install_list
+          set_error "0" "install_qmaster - no errors"
+          close_spawn_process $id;
+          return; 
+       }
+       -i $sp_id "installation is now completed" {
+          read_install_list
+          lappend CORE_INSTALLED $CHECK_CORE_MASTER
+          write_install_list
+          set_error "0" "install_qmaster - no errors"
+          close_spawn_process $id;
+          return; 
+       }
+       -i $sp_id $ENTER_HOSTS {
+          incr hostcount 1 
+          if {$hostcount == 1} {
+             foreach exechost $CHECK_CORE_EXECD {
+               send -i $sp_id " $exechost"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >${exechost}<"
+             } 
+             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+             send -i $sp_id "\n"
+          } else {
+             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+             send -i $sp_id "\n"
+          }
+          continue;
+       }
+       -i $sp_id "Host(s):" {
+          incr hostcount 1 
+          if {$hostcount == 1} {
+             foreach exechost $CHECK_CORE_EXECD {
+               send -i $sp_id " $exechost"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >${exechost}<"
+             } 
+             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+             send -i $sp_id "\n"
+          } else {
+             puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+             send -i $sp_id "\n"
+          }
+          continue;
+       }
+   
+       -i $sp_id "More" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >space<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+
+          send -i $sp_id " "
+          continue;
+       }
+       -i $sp_id "Error:" {
+          set_error "-1" "install_qmaster - $expect_out(0,string)"
+          close_spawn_process $id;
+          return;
+       }
+       -i $sp_id "sge_qmaster binary is not compiled with" {
+          set_error "-2" "install_qmaster - sge_qmaster binary is not compiled in secure mode"
+          close_spawn_process $id;
+          return;
+       }
+       -i $sp_id $NOT_COMPILED_IN_SECURE_MODE {
+          set_error "-2" "install_qmaster - sge_qmaster binary is not compiled in secure mode"
+          close_spawn_process $id;
+          return;
+       }
+       -i $sp_id "ommand failed*\n" {
+          set_error "-1" "install_qmaster - $expect_out(0,string)"
+          close_spawn_process $id;
+          return;
+       }
+       -i $sp_id "can't resolve hostname*\n" {
+          set_error "-1" "install_qmaster - $expect_out(0,string)"
+          close_spawn_process $id; 
+          return;
+       }     
+   
+       -i $sp_id "error:\n" {
+          set_error "-1" "install_qmaster - $expect_out(0,string)"
+          continue;
+       }
+   
+       -i $sp_id "Hit <RETURN> to continue" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "-->testsuite: press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
+          continue;
+       }
+   
+       -i $sp_id $USING_GID_RANGE_HIT_RETURN {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "-->testsuite: press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
+          continue;
+       }
+
+       -i $sp_id $HIT_RETURN_TO_CONTINUE {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "-->testsuite: press RETURN"
+#   puts "expect buffer:\n\"$expect_out(buffer)\""
+#   set stream [open /tmp/cr.txt "w"]
+#   puts -nonewline $stream $expect_out(buffer)
+#   close $stream
+#   puts $CHECK_OUTPUT [eval exec "/usr/bin/od -c /tmp/cr.txt"]
+#   wait_for_enter
+
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
+          continue;
+       }
+       -i $sp_id default {
+          set_error "-1" "install_qmaster - undefined behaviour: $expect_out(buffer)"
+          close_spawn_process $id; 
+          return;
+       }
+    }
+ }
 }
 
 # generating all testsuite cluster user keys and certificates
 proc make_user_cert {} {
-   global ts_config 
-  global CHECK_OUTPUT CHECK_MAIN_RESULTS_DIR
+  
+  global CHECK_PRODUCT_FEATURE CHECK_OUTPUT CHECK_CORE_MASTER CHECK_MAIN_RESULTS_DIR
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO
-  global CHECK_USER CHECK_DEBUG_LEVEL
+  global CHECK_PRODUCT_ROOT CHECK_USER CHECK_DEBUG_LEVEL
 
-  if { $ts_config(product_feature) == "csp" } {
+  if { $CHECK_PRODUCT_FEATURE == "csp" } {
      puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
-     set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
+     set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
      puts $CHECK_OUTPUT $result
  
      puts $CHECK_OUTPUT "creating file \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
@@ -271,16 +1323,572 @@ proc make_user_cert {} {
      flush $script
      close $script
      
-     set result [ start_remote_prog "$ts_config(master_host)" "root" "cd" "$ts_config(product_root) ; util/sgeCA/sge_ca -usercert $CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
+     set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cd" "$CHECK_PRODUCT_ROOT ; util/sgeCA/sge_ca -usercert $CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
      puts $CHECK_OUTPUT $result
  
      puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
-     set result [ start_remote_prog "$ts_config(master_host)" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
+     set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
      puts $CHECK_OUTPUT $result
   } else {
      puts $CHECK_OUTPUT "no csp feature enabled"
   }
   set_error 0 "ok"
+}
+
+
+#                                                             max. column:     |
+#****** install_core_system/install_execd() ******
+# 
+#  NAME
+#     install_execd -- ??? 
+#
+#  SYNOPSIS
+#     install_execd { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc install_execd {} {
+   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_PRODUCT_TYPE CORE_INSTALLED
+   global check_use_installed_system CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_COMMD_PORT CHECK_ADMIN_USER_SYSTEM CHECK_USER
+   global CHECK_DEBUG_LEVEL CHECK_EXECD_INSTALL_OPTIONS
+   global CHECK_PRODUCT_FEATURE CHECK_COMMD_PORT CHECK_CORE_MASTER
+   global CHECK_MAIN_RESULTS_DIR CHECK_SUBMIT_ONLY_HOSTS
+
+   set CORE_INSTALLED "" 
+   read_install_list
+
+   set_error "0" "install_execd - no errors"
+
+   set feature_install_options ""
+   if { $CHECK_PRODUCT_FEATURE == "csp" } {
+         set feature_install_options "-csp"
+         set my_csp_host_list $CHECK_CORE_EXECD
+         foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
+           lappend my_csp_host_list $elem
+         }
+         foreach exec_host $my_csp_host_list {
+         if { $exec_host == $CHECK_CORE_MASTER } {
+            continue;
+         }
+         set remote_arch [resolve_arch $exec_host]    
+         puts $CHECK_OUTPUT "installing CA keys"
+         puts $CHECK_OUTPUT "=================="
+         puts $CHECK_OUTPUT "host:         $exec_host"
+         puts $CHECK_OUTPUT "architecture: $remote_arch"
+         puts $CHECK_OUTPUT "port:         $CHECK_COMMD_PORT"
+         puts $CHECK_OUTPUT "source:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $CHECK_CORE_MASTER"
+         puts $CHECK_OUTPUT "target:       \"/var/sgeCA/port${CHECK_COMMD_PORT}/\" on host $exec_host"
+
+         if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+             puts $CHECK_OUTPUT "we have root access, fine !"
+             set CA_ROOT_DIR "/var/sgeCA/"
+
+             puts $CHECK_OUTPUT "removing evtl. existing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+             puts $CHECK_OUTPUT $result
+
+             puts $CHECK_OUTPUT "taring Certificate Authority (CA) directory into \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
+             set tar_bin [get_binary_path $CHECK_CORE_MASTER "tar"]
+             set remote_command_param "$CA_ROOT_DIR; ${tar_bin} -cvf port${CHECK_COMMD_PORT}.tar ./port${CHECK_COMMD_PORT}/*"
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cd" "$remote_command_param" ]
+             puts $CHECK_OUTPUT $result
+
+             if { $prg_exit_state != 0 } {
+                 add_proc_error "install_execd" -2 "could not tar Certificate Authority (CA) directory into \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
+             } else {
+                 puts $CHECK_OUTPUT "changing permissions for tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+                 set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "chmod" "700 $CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                 puts $CHECK_OUTPUT $result
+                 if { $prg_exit_state != 0 } {
+                    add_proc_error "install_execd" -2 "could not change file permissions for \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\""
+                 } else {
+                    puts $CHECK_OUTPUT "copy tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "cp" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar $CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+                    
+                    puts $CHECK_OUTPUT "copy tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\"\nto \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host ..."
+                    set result [ start_remote_prog "$exec_host" "root" "cp" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar $CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+
+                    set tar_bin [get_binary_path $exec_host "tar"]
+
+                    puts $CHECK_OUTPUT "untaring Certificate Authority (CA) directory in \"$CA_ROOT_DIR\""
+                    start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR" 
+                    if { $prg_exit_state != 0 } { 
+                       set result [ start_remote_prog "$exec_host" "root" "mkdir" "$CA_ROOT_DIR" ]
+                    }   
+                    set result [ start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+                    if { $prg_exit_state != 0 } {
+                       add_proc_error "install_execd" -2 "could not untar \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host;\ntar-bin:$tar_bin"
+                    } 
+
+                    puts $CHECK_OUTPUT "removing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" on host $exec_host ..."
+                    set result [ start_remote_prog "$exec_host" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+
+                    puts $CHECK_OUTPUT "removing tar file \"$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+                    set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CHECK_MAIN_RESULTS_DIR/port${CHECK_COMMD_PORT}.tar" ]
+                    puts $CHECK_OUTPUT $result
+
+                 }
+                  
+             }
+             
+             puts $CHECK_OUTPUT "removing existing tar file \"$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar\" ..."
+             set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CA_ROOT_DIR/port${CHECK_COMMD_PORT}.tar" ]
+             puts $CHECK_OUTPUT $result
+         } else {
+            puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
+            puts $CHECK_OUTPUT "installation error"
+            add_proc_error "install_execd" -2 "exec host: $exec_host"
+            continue
+         }
+      }
+   }
+
+ 
+   foreach exec_host $CHECK_CORE_EXECD {
+
+      puts $CHECK_OUTPUT "installing execd on host $exec_host ($CHECK_PRODUCT_TYPE system) ..."
+      if {[lsearch $CHECK_CORE_EXECD $exec_host] == -1 } {
+         set_error "-1" "install_execd - host $exec_host is not in execd list"
+         return 
+      }
+      wait_for_remote_file $exec_host $CHECK_USER "$CHECK_PRODUCT_ROOT/default/common/configuration"
+      if { $check_use_installed_system != 0 } {
+         set_error "0" "install_execd - no need to install execd on hosts \"$CHECK_CORE_EXECD\" - noinst parameter is set"
+         puts "no need to install execd on hosts \"$CHECK_CORE_EXECD\", noinst parameter is set"
+         if {[startup_execd $exec_host] == 0 } {
+            lappend CORE_INSTALLED $exec_host
+            write_install_list
+            continue
+         } else {
+            add_proc_error "install_execd" -2 "could not startup execd on host $exec_host"
+            return
+         }
+      }
+
+      if {[file isfile "$CHECK_PRODUCT_ROOT/install_execd"] != 1} {
+         set_error "-1" "install_execd - install_execd file not found"
+         return
+      }
+
+      set remote_arch [resolve_arch $exec_host]    
+      set sensor_file [ get_loadsensor_path $exec_host ]
+      if { [string compare $sensor_file ""] != 0  } {
+         puts $CHECK_OUTPUT "installing load sensor:"
+         puts $CHECK_OUTPUT "======================="
+         puts $CHECK_OUTPUT "architecture: $remote_arch"
+         puts $CHECK_OUTPUT "sensor file:  $sensor_file"
+         puts $CHECK_OUTPUT "target:       $CHECK_PRODUCT_ROOT/bin/$remote_arch/qloadsensor"
+         if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+            set arguments "$sensor_file $CHECK_PRODUCT_ROOT/bin/$remote_arch/qloadsensor"
+            set result [ start_remote_prog "$exec_host" "root" "cp" "$arguments" ] 
+            puts $CHECK_OUTPUT "result: $result"
+            puts $CHECK_OUTPUT "copy exit state: $prg_exit_state" 
+         } else {
+            puts $CHECK_OUTPUT "can not copy this file as user $CHECK_USER"
+            puts $CHECK_OUTPUT "please copy this file manually!!"
+            puts $CHECK_OUTPUT "if not, you will get no load values from this host (=$exec_host)"
+            puts $CHECK_OUTPUT "installation will continue in 15 seconds!!"
+            sleep 15
+         }
+      }
+
+      set HIT_RETURN_TO_CONTINUE       [translate $exec_host 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
+      set EXECD_INSTALL_COMPLETE       [translate $exec_host 0 1 0 [sge_macro DISTINST_EXECD_INSTALL_COMPLETE] ]
+      set PREVIOUS_SCREEN              [translate $exec_host 0 1 0 [sge_macro DISTINST_PREVIOUS_SCREEN ] ]
+      set ANSWER_YES                   [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_YES] ]
+      set ANSWER_NO                    [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_NO] ]
+      set ADD_DEFAULT_QUEUE            [translate $exec_host 0 1 0 [sge_macro DISTINST_ADD_DEFAULT_QUEUE] ]
+      set INSTALL_SCRIPT               [translate $exec_host 0 1 0 [sge_macro DISTINST_INSTALL_SCRIPT] ]
+      set IF_NOT_OK_STOP_INSTALLATION  [translate $exec_host 0 1 0 [sge_macro DISTINST_IF_NOT_OK_STOP_INSTALLATION] ]
+      set LOCAL_CONFIG_FOR_HOST        [translate $exec_host 0 1 0 [sge_macro DISTINST_LOCAL_CONFIG_FOR_HOST] "$exec_host"]
+      set MESSAGES_LOGGING             [translate $exec_host 0 1 0 [sge_macro DISTINST_MESSAGES_LOGGING] ]
+      set CELL_NAME_FOR_QMASTER        [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] ]
+      set USE_CONFIGURATION_PARAMS     [translate $exec_host 0 1 0 [sge_macro DISTINST_USE_CONFIGURATION_PARAMS] ]
+
+      cd "$CHECK_PRODUCT_ROOT"
+
+      set prod_type_var "SGE_ROOT"
+  
+      if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+         set id [open_remote_spawn_process "$exec_host" "root"  "cd $$prod_type_var;./install_execd" "$CHECK_EXECD_INSTALL_OPTIONS $feature_install_options" ]
+      } else {
+         puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
+         set id [open_remote_spawn_process "$exec_host" "$CHECK_USER"  "cd $$prod_type_var;./install_execd" "$CHECK_EXECD_INSTALL_OPTIONS $feature_install_options" ]
+      }
+
+
+      log_user 1
+      puts $CHECK_OUTPUT "cd $$prod_type_var;./install_execd $CHECK_EXECD_INSTALL_OPTIONS $feature_install_options"
+
+      set sp_id [ lindex $id 1 ] 
+
+
+      set timeout 300
+     
+      set do_log_output 0 ;# 1 _LOG
+      if { $CHECK_DEBUG_LEVEL == 2 } {
+         set do_log_output 1
+      }
+
+
+      set do_stop 0
+      while {$do_stop == 0} {
+         flush stdout
+         flush $CHECK_OUTPUT
+         if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+         }
+     
+         set timeout 300
+         log_user 1 
+         expect {
+            -i $sp_id full_buffer {
+               set_error "-1" "install_execd - buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+               close_spawn_process $id; 
+               return;
+            }
+            -i $sp_id eof {
+               set_error "-1" "install_execd - unexpeced eof";
+               close_spawn_process $id
+               set do_stop 1
+            }
+            -i $sp_id "coredump" {
+               set_error "-2" "install_execd - coredump on host $exec_host";
+               close_spawn_process $id
+               set do_stop 1
+            }
+
+            -i $sp_id timeout { 
+               set_error "-1" "install_execd - timeout while waiting for output"; 
+               close_spawn_process $id;
+               set do_stop 1
+            }
+            -i $sp_id "orry" { 
+               set_error "-1" "install_execd - wrong root password"
+               close_spawn_process $id; 
+               return;
+            }
+            -i $sp_id "The installation of the execution daemon will abort now" {
+               set_error "-1" "install_execd - installation error"
+               close_spawn_process $id; 
+               return;
+            }
+
+            -i $sp_id "Do you want to use these configuration parameters" { 
+     
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(11)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+               send -i $sp_id "y\n"
+               continue;
+            }
+            -i $sp_id $USE_CONFIGURATION_PARAMS { 
+     
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(11)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+               send -i $sp_id "$ANSWER_YES\n"
+               continue;
+            }
+
+
+            
+            -i $sp_id "Do you want to use this configuration parameters" { 
+     
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(12)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+               send -i $sp_id "y\n"
+               continue;
+            }
+            -i $sp_id "lease enter cell name which you used for" {
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+               if {$do_log_output == 1} {
+                   puts "press RETURN"
+                   set anykey [wait_for_enter 1]
+               }
+               send -i $sp_id "\n"
+               continue;
+            }
+            -i $sp_id $CELL_NAME_FOR_QMASTER {
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+               if {$do_log_output == 1} {
+                   puts "press RETURN"
+                   set anykey [wait_for_enter 1]
+               }
+               send -i $sp_id "\n"
+               continue;
+            }
+
+            -i $sp_id "<RETURN> to see where" {
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+               if {$do_log_output == 1} {
+                   puts "press RETURN"
+                   set anykey [wait_for_enter 1]
+               }
+               send -i $sp_id "\n"
+               continue;
+            }
+            -i $sp_id $MESSAGES_LOGGING {
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+               if {$do_log_output == 1} {
+                   puts "press RETURN"
+                   set anykey [wait_for_enter 1]
+               }
+               send -i $sp_id "\n"
+               continue;
+            }
+
+
+            -i $sp_id "Local configuration for host" {
+               puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
+               set spooldir [get_spool_dir $exec_host execd]
+               puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
+
+               if { $spooldir != "" } {
+                  set params(execd_spool_dir) $spooldir
+                  set_config params $exec_host
+                  set local_execd_spool_set 1 
+               }
+               log_user 1
+               continue; 
+            }
+            -i $sp_id $LOCAL_CONFIG_FOR_HOST {
+               puts $CHECK_OUTPUT "\n -->testsuite: reconfigure configuration for spool dir\n"
+               set spooldir [get_spool_dir $exec_host execd]
+               puts $CHECK_OUTPUT "spooldir on host $exec_host is $spooldir"
+
+               if { $spooldir != "" } {
+                  set params(execd_spool_dir) $spooldir
+                  set_config params $exec_host
+                  set local_execd_spool_set 1 
+               }
+               log_user 1
+               continue; 
+            }
+
+            -i $sp_id "if this is ok or stop the installation with" {
+               if { $CHECK_ADMIN_USER_SYSTEM != 0 } {
+                  puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+                  if {$do_log_output == 1} {
+                       puts "press RETURN"
+                       set anykey [wait_for_enter 1]
+                  }
+                  send -i $sp_id "\n"
+                  continue;
+               } else {
+                  set_error "-1" "install_execd - host $exec_host: tried to install not as root"
+                  close_spawn_process $id; 
+                  return;
+               }
+            }
+            -i $sp_id $IF_NOT_OK_STOP_INSTALLATION {
+               if { $CHECK_ADMIN_USER_SYSTEM != 0 } {
+                  puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+                  if {$do_log_output == 1} {
+                       puts "press RETURN"
+                       set anykey [wait_for_enter 1]
+                  }
+                  send -i $sp_id "\n"
+                  continue;
+               } else {
+                  set_error "-1" "install_execd - host $exec_host: tried to install not as root"
+                  close_spawn_process $id; 
+                  return;
+               }
+            }
+
+ 
+     
+            -i $sp_id "at system boot time" { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(11)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "n\n"
+               continue;
+            }
+
+            -i $sp_id "is started at machine boot" { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(12)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "n\n"
+               continue;
+            }
+            -i $sp_id $INSTALL_SCRIPT { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(12)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "$ANSWER_NO\n"
+               continue;
+            }
+
+            -i $sp_id "Do you want to add a default queue for this host" { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(13)"
+               if {$do_log_output == 1} {
+                    puts "(5)press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "y\n"
+               continue;
+            }
+            -i $sp_id $ADD_DEFAULT_QUEUE { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(13)"
+               if {$do_log_output == 1} {
+                    puts "(5)press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "$ANSWER_YES\n"
+               continue;
+            }
+
+            -i $sp_id "This host is unknown on the qmaster host" {
+               puts $CHECK_OUTPUT "\nHostname resolving problem"
+               puts $CHECK_OUTPUT "*********************************************************************"
+               puts $CHECK_OUTPUT "Hostname resolving problem - use a host alias file for host $exec_host" 
+               puts $CHECK_OUTPUT "**********************************************************************"
+               puts $CHECK_OUTPUT "installation will continue in 15 seconds ..."
+               sleep 15
+            }
+
+            -i $sp_id "There is still no service for" {
+               set_error "-1" "install_execd - no TCP/IP service available";
+               close_spawn_process $id
+               set do_stop 1
+            }
+
+            -i $sp_id "Check again" { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(13)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "n\n"
+               continue;
+            }
+            -i $sp_id "Do you want to see previous screen about using" { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(14)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "n\n"
+               continue;
+            }
+            -i $sp_id $PREVIOUS_SCREEN { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(14)"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "$ANSWER_NO\n"
+               continue;
+            }
+
+            -i $sp_id "Error:" {
+               set_error "-1" "install_execd - $expect_out(0,string)"
+               close_spawn_process $id; 
+               return;
+            }
+            -i $sp_id "can't resolve hostname*\n" {
+               set_error "-1" "install_execd - $expect_out(0,string)"
+               close_spawn_process $id; 
+               return;
+            }            
+  
+            -i $sp_id "error:\n" {
+               set_error "-1" "install_execd - $expect_out(0,string)"
+               close_spawn_process $id; 
+               return;
+            }
+            -i $sp_id "execution daemon installation is now completed" {
+               close_spawn_process $id
+               read_install_list
+               lappend CORE_INSTALLED $exec_host
+               write_install_list
+               set do_stop 1
+            }
+            -i $sp_id $EXECD_INSTALL_COMPLETE {
+               close_spawn_process $id
+               read_install_list
+               lappend CORE_INSTALLED $exec_host
+               write_install_list
+               set do_stop 1
+            }
+
+
+            -i $sp_id "Hit <RETURN> to continue" { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "\n"
+               continue;
+            }
+            -i $sp_id $HIT_RETURN_TO_CONTINUE { 
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+               if {$do_log_output == 1} {
+                    puts "press RETURN"
+                    set anykey [wait_for_enter 1]
+               }
+     
+               send -i $sp_id "\n"
+               continue;
+            }
+            -i $sp_id default {
+               set_error "-1" "install_execd - undefined behaiviour: $expect_out(buffer)"
+               close_spawn_process $id; 
+               return;
+            }
+         }
+      }  ;# while 1
+   }
 }
 
 
@@ -319,6 +1927,7 @@ proc get_spool_dir {host subdir {do_cleanup 1} } {
       puts $CHECK_OUTPUT "->host $host has spool toplevel directory $spooldir"
       if { $do_cleanup == 1 } {
          puts $CHECK_OUTPUT "cleanup spooldir!"
+#         set result [ start_remote_tcl_prog $host "ts_def_con" "file_procedures.tcl" "cleanup_spool_dir" "$spooldir $subdir" ]
          set result "cleanup spooldir"
          cleanup_spool_dir_for_host $host $spooldir $subdir
       } else {
@@ -334,29 +1943,22 @@ proc get_spool_dir {host subdir {do_cleanup 1} } {
 
 
 proc cleanup_system { } {
-   global ts_config
-   global CHECK_ARCH env check_errno CHECK_HOST
-   global CHECK_CORE_PROCESSORS
-   global check_use_installed_system CHECK_OUTPUT CHECK_USER
+  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno CHECK_HOST
+  global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_CORE_PROCESSORS
+  global check_use_installed_system CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_USER
 
-#puts "press RETURN"
-#set anykey [wait_for_enter 1]
-   # check if the system is running and qmaster accessable
-   set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result ]
-   if { $catch_return != 0 } {
-      add_proc_error "cleanup_system" -2 "error connecting qmaster: $result"
-      set_error -2 "error connecting qmaster"
-      return
-   }
+  set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" } result ]
+  if { $catch_return != 0 } {
+     add_proc_error "setup_queues" -2 "error connecting qmaster: $result"
+     set_error -2 "error connecting qmaster"
+     return
+  }
     
-   puts $CHECK_OUTPUT "\ncleaning up system"
+  puts $CHECK_OUTPUT "\ncleaning up system"
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } result
 
-   # delete all jobs
-   delete_all_jobs
-
-   # wait until cluster is empty
-   set my_time [ expr ( [timestamp] + 100 ) ]
-   while { [timestamp]< $my_time } {
+  set my_time [ expr ( [timestamp] + 100 ) ]
+  while { [timestamp]< $my_time } {
       set my_jobs [ get_standard_job_info 1 0 1 ]
       foreach job_elem $my_jobs {
          puts $CHECK_OUTPUT $job_elem
@@ -365,32 +1967,28 @@ proc cleanup_system { } {
          break
       }
       sleep 1
-   } 
+  } 
 
 
-   # SGEEE: remove sharetree
-   if { [ string compare $ts_config(product_type) "sgeee" ] == 0 } {
-      puts $CHECK_OUTPUT "\nremoving share tree ..."
-      set SHARETREE [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_OBJ_SHARETREE] ]
-      set DOES_NOT_EXISTS [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_S] $SHARETREE]
-      set REMOVED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDLIST_SSS] $CHECK_USER "*" $SHARETREE]
-      catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-dstree" } result
-      if { [string match "*$DOES_NOT_EXISTS" $result] } {
-         puts $CHECK_OUTPUT "sharetree does not exist"
-      } else {
-         if { [string match "*$REMOVED" $result] } {
-            puts $CHECK_OUTPUT "sharetree removed"
-         } else {
-            puts $CHECK_OUTPUT $result
-         }
-      }
-   }
+  puts $CHECK_OUTPUT "\nremoving share tree ..."
+  set SHARETREE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_OBJ_SHARETREE] ]
+  set DOES_NOT_EXISTS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_S] $SHARETREE]
+  set REMOVED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDLIST_SSS] $CHECK_USER "*" $SHARETREE]
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dstree" } result
+  if { [string match "*$DOES_NOT_EXISTS" $result] } {
+     puts $CHECK_OUTPUT "sharetree does not exist"
+  } else {
+     if { [string match "*$REMOVED" $result] } {
+        puts $CHECK_OUTPUT "sharetree removed"
+     } else {
+        puts $CHECK_OUTPUT $result
+     }
+  }
 
-   # remove all checkpoint environments
   puts $CHECK_OUTPUT "\nremoving ckpt objects ..."
-  set NO_CKPT_INTERFACE_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "ckpt interface definition"]
+  set NO_CKPT_INTERFACE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "ckpt interface definition"]
    
-  catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sckptl" } result
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sckptl" } result
   if { [string first $NO_CKPT_INTERFACE_DEFINED $result] >= 0 } {
      puts $CHECK_OUTPUT "no ckpt interface definition defined"
   } else {
@@ -400,10 +1998,9 @@ proc cleanup_system { } {
      }
   }
 
-   # remove all parallel environments
   puts $CHECK_OUTPUT "\nremoving PE objects ..."
-  set NO_PARALLEL_ENVIRONMENT_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "parallel environment"]
-  catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-spl" } result
+  set NO_PARALLEL_ENVIRONMENT_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "parallel environment"]
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-spl" } result
   if { [string first $NO_PARALLEL_ENVIRONMENT_DEFINED $result] >= 0 } {
      puts $CHECK_OUTPUT "no parallel environment defined"
   } else {
@@ -412,12 +2009,10 @@ proc cleanup_system { } {
         del_pe $elem 
      }
   }
- 
-   # remove all calendars
+  
   puts $CHECK_OUTPUT "\nremoving calendars ..."
-  # JG: TODO: calendars can be referenced in queues - first remove all references!
-  set NO_CALENDAR_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "calendar"]
-  catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-scall" } result
+  set NO_CALENDAR_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "calendar"]
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-scall" } result
   if { [string first $NO_CALENDAR_DEFINED $result] >= 0 } {
      puts $CHECK_OUTPUT "no calendar defined"
   } else {
@@ -427,11 +2022,13 @@ proc cleanup_system { } {
      }
   }
 
-   # remove all projects 
-  if { [ string compare $ts_config(product_type) "sgeee" ] == 0 } {
+
+  
+
+  if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] == 0 } {
      puts $CHECK_OUTPUT "\nremoving project objects ..."
-     set NO_PROJECT_LIST_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "project list"]
-     catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sprjl" } result
+     set NO_PROJECT_LIST_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "project list"]
+     catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sprjl" } result
      if { [string first $NO_PROJECT_LIST_DEFINED $result] >= 0 } {
         puts $CHECK_OUTPUT "no project list defined"
      } else {
@@ -442,14 +2039,9 @@ proc cleanup_system { } {
      }
   }
 
-   # JG: TODO: what about SGEEE users?
-  
-   # remove all access lists
-   # JG: TODO: accesslists are referenced in a variety of objects - first delete them
-   #           there!
   puts $CHECK_OUTPUT "\nremoving access lists ..."
-  set NO_ACCESS_LIST_DEFINED [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "userset list"]
-  catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-sul" } result
+  set NO_ACCESS_LIST_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "userset list"]
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sul" } result
   if { [string first $NO_ACCESS_LIST_DEFINED $result] >= 0 } {
      puts $CHECK_OUTPUT "no userset list defined"
   } else {
@@ -463,17 +2055,28 @@ proc cleanup_system { } {
      }
   }
 
-   # remove all queues
-   puts $CHECK_OUTPUT "\nremoving queues ..."
-   set queue_list [get_queue_list]
-   foreach elem $queue_list {
-      puts $CHECK_OUTPUT "removing queue $elem."
-      del_queue $elem "" 1 1
-   }
 
-   # add new testsuite queues
-  puts $CHECK_OUTPUT "\nadding testsuite queues ..."
-  add_queue "all.q" "@allhosts" q_param 1
+  if { $check_use_installed_system != 0 } {
+     puts $CHECK_OUTPUT "\nremoving queues ..."
+     set NO_QUEUE_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "queue"]
+
+     catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sql" } result
+     if { [string first $NO_QUEUE_DEFINED $result] >= 0 } {
+        puts $CHECK_OUTPUT "no queue defined"
+     } else {
+        foreach elem $result {
+           puts $CHECK_OUTPUT "removing queue $elem."
+           del_queue $elem 
+        }
+     }
+
+     puts $CHECK_OUTPUT "\nadding testsuite queues ..."
+     foreach hostname $CHECK_CORE_EXECD {
+        set q_param(qname)       "$hostname.q" 
+        set q_param(hostname)    "$hostname"
+        add_queue "q_param" 1
+     }
+  }
   set_error 0 "ok"
 
 }
@@ -509,71 +2112,59 @@ proc cleanup_system { } {
 #     ???/???
 #*******************************
 proc setup_queues {} {
-   global ts_config
-   global CHECK_ARCH env check_errno CHECK_HOST
-   global CHECK_CORE_PROCESSORS
-   global check_use_installed_system CHECK_OUTPUT CHECK_USER
+  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno CHECK_HOST
+  global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_CORE_PROCESSORS
+  global check_use_installed_system CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_USER
 
-   # check if qmaster can be accessed
-   set catch_return [ catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qstat" } result ]
-   if { $catch_return != 0 } {
-      add_proc_error "setup_queues" -2 "error connecting qmaster: $result"
-      set_error -2 "error connecting qmaster"
-      return
-   }
+  set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" } result ]
+  if { $catch_return != 0 } {
+     add_proc_error "setup_queues" -2 "error connecting qmaster: $result"
+     set_error -2 "error connecting qmaster"
+     return
+  }
 
-   # for all queues: set load_thresholds and queue type
-   set new_values(load_thresholds)       "np_load_avg=11.00"
-   set new_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
- 
-   set result [set_queue "all.q" "" new_values]
-   switch -- $result { 
-      -1 {
+  # for each execd - standard - queue do:
+  # set load_avg to 5.0
+  # set slots * 10
+  # --------------------------------------------------------------
+  foreach hostname $CHECK_CORE_EXECD {
+
+#     slots = 10 * cpu count (for qstat test)
+
+    
+
+     
+     set index [lsearch $CHECK_CORE_EXECD $hostname] 
+     set slots_tmp [lindex $CHECK_CORE_PROCESSORS $index]
+
+     if { $slots_tmp <= 0 } {
+        set_error -2 "no slots for execd $hostname"
+        return
+     }
+
+     set slots [ expr ( $slots_tmp * 10) ]
+     set new_values(load_thresholds)       "np_load_avg=11.00"
+     set new_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
+     set new_values(slots)                 "$slots"
+
+     set result [ set_queue "${hostname}.q" new_values ]
+     switch -- $result { 
+       -1 {
          set_error -1 "setup_queues - modify queue ${hostname}.q - got timeout"
-      }
-      0 {
+       }
+       0 {
          set_error 0 "setup_queues - no errors"
-      }
-      -100 {
+       }
+       -100 {
          set_error -1 "setup_queues - could not modify queue"
-      } 
-   }
-
-   if { $check_errno == 0} {
-      # for each individual queue set the slots attribute
-      foreach hostname $ts_config(execd_hosts) {
-         unset new_values
-         set index [lsearch $ts_config(execd_hosts) $hostname] 
-         set slots_tmp [lindex $CHECK_CORE_PROCESSORS $index]
-
-         if { $slots_tmp <= 0 } {
-            set_error -2 "no slots for execd $hostname"
-            return
-         }
-
-         set slots [ expr ( $slots_tmp * 10) ]
-         set new_values(slots) "$slots"
-
-         set result [set_queue "all.q" $hostname new_values]
-         switch -- $result { 
-            -1 {
-               set_error -1 "setup_queues - modify queue ${hostname}.q - got timeout"
-            }
-            0 {
-               set_error 0 "setup_queues - no errors"
-            }
-            -100 {
-               set_error -1 "setup_queues - could not modify queue"
-            } 
-         }
-      }
-   }
-
-   # wait until all hosts are up
-   if { $check_errno == 0 } {
-      wait_for_load_from_all_queues 300 
-      set_error 0 "ok"
-   }
+       } 
+     }
+     if {$check_errno != 0} {
+        return;
+     }
+  }
+  wait_for_load_from_all_queues 300 
+  set_error 0 "ok"
 }
 
 #                                                             max. column:     |
@@ -606,13 +2197,17 @@ proc setup_queues {} {
 #     ???/???
 #*******************************
 proc setup_testcheckpointobject {} {
-   global ts_config
+  global CHECK_PRODUCT_ROOT CHECK_ARCH check_errno  CHECK_CORE_EXECD CHECK_CORE_MASTER
 
-   set change(ckpt_name)  "testcheckpointobject"
-   add_checkpointobj change
-   assign_queues_with_ckpt_object "all.q" "" "testcheckpointobject"
+  set q_list ""
+  foreach elem $CHECK_CORE_EXECD {
+    append q_list "${elem}.q " 
+  }
+  set change(ckpt_name)  "testcheckpointobject"
+  add_checkpointobj change
+  assign_queues_with_ckpt_object $q_list "testcheckpointobject"
 
-   set_error 0 "ok"
+  set_error 0 "ok"
 }
 
 
@@ -646,12 +2241,8 @@ proc setup_testcheckpointobject {} {
 #     ???/???
 #*******************************
 proc setup_conf {} {
-   global ts_config
-  global CHECK_ARCH
-  global CHECK_DEFAULT_DOMAIN 
-  global CHECK_REPORT_EMAIL_TO 
-  global CHECK_USER 
-  global CHECK_DNS_DOMAINNAME
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_CORE_MASTER
+  global CHECK_DEFAULT_DOMAIN CHECK_PRODUCT_TYPE
 
   get_config old_config
   set params(reschedule_unknown) "00:00:00"
@@ -661,6 +2252,7 @@ proc setup_conf {} {
   # set finished_job in global config
   set params(finished_jobs) "0"  
   set params(load_report_time) "00:00:15"
+  set params(default_domain) "$CHECK_DEFAULT_DOMAIN"
   set params(reschedule_unknown) "00:00:00"
   set params(loglevel) "log_info"
   set params(load_sensor) "none"
@@ -673,38 +2265,20 @@ proc setup_conf {} {
   set params(user_lists) "none"
   set params(xuser_lists) "none"
   set params(max_unheard) "00:01:00"
-
-  if { $CHECK_REPORT_EMAIL_TO == "none" } {
-     set params(administrator_mail) "${CHECK_USER}@${CHECK_DNS_DOMAINNAME}"
-  } else {
-     set params(administrator_mail) $CHECK_REPORT_EMAIL_TO
-  }
-
+  set params(administrator_mail) "none"
   set params(set_token_cmd) "none"
   set params(pag_cmd) "none"
   set params(token_extend_time) "none"
   set params(shepherd_cmd) "none"
   set params(qmaster_params) "none"
-  if { $ts_config(gridengine_version) == 53 } {
-     set params(schedd_params) "none"
-  } else {
-     set params(reporting_params) "accounting=true reporting=false flush_time=00:00:05 joblog=true sharelog=00:10:00"
-  }
+  set params(schedd_params) "none"
   set params(execd_params) "none"
   set params(qlogin_command) "telnet"
+  set params(ignore_fqdn) "true"
   set params(max_aj_instances) "2000"
   set params(max_aj_tasks) "75000"
 
-  # default domain and ignore_fqdn have moved to the bootstrap file
-  # in SGE 6.0. Only check them in older systems.
-  if [info exists old_config(default_domain)] {
-    set params(default_domain) "$CHECK_DEFAULT_DOMAIN"
-  }
-  if [info exists old_config(ignore_fqdn)] {
-    set params(ignore_fqdn) "true"
-  }
-
-  if { $ts_config(product_type) == "sgeee" } {
+  if { $CHECK_PRODUCT_TYPE == "sgeee" } {
     set params(execd_params)    "PTF_MIN_PRIORITY=20,PTF_MAX_PRIORITY=0"
     set params(enforce_project) "false"
     set params(projects) "none"
@@ -715,9 +2289,9 @@ proc setup_conf {} {
 
   # for sgeee systems on irix: set execd params to
   # PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20
-  if { $ts_config(product_type) == "sgeee" } {
+  if { $CHECK_PRODUCT_TYPE == "sgeee" } {
   set ptf_param(execd_params) "PTF_MIN_PRIORITY=40,PTF_MAX_PRIORITY=20"
-    foreach i $ts_config(execd_hosts) {
+    foreach i $CHECK_CORE_EXECD {
       switch -exact [resolve_arch $i] {
         irix6 {
           set_config ptf_param $i
@@ -738,13 +2312,12 @@ proc setup_conf {} {
        set old  $old_config($param)
        set new  $new_config($param)
 
-       if { [ string compare -nocase $old $new ] != 0 } {
+       if { [ string compare $old $new ] != 0 } {
           if { [ string compare $param "load_report_time" ] == 0 } { continue }
           if { [ string compare $param "loglevel" ] == 0 } { continue }
           if { [ string compare $param "execd_params" ] == 0 } { continue }
           if { [ string compare $param "finished_jobs" ] == 0 } { continue }
           if { [ string compare $param "max_unheard" ] == 0 } { continue }
-          if { [ string compare $param "reporting_params" ] == 0 } { continue }
 #          if { [ string compare $param "" ] == 0 } { continue }
 #          if { [ string compare $param "" ] == 0 } { continue }
 #          if { [ string compare $param "" ] == 0 } { continue }
@@ -804,12 +2377,11 @@ proc setup_conf {} {
 #     ???/???
 #*******************************************************************************
 proc setup_execd_conf {} {
-   global ts_config
-  global CHECK_ARCH
-  global CHECK_DEFAULT_DOMAIN
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_CORE_MASTER
+  global CHECK_DEFAULT_DOMAIN CHECK_PRODUCT_TYPE CHECK_CORE_EXECD
   global CHECK_OUTPUT
 
-  foreach host $ts_config(execd_hosts) {
+  foreach host $CHECK_CORE_EXECD {
      puts $CHECK_OUTPUT "get configuration for host $host ..."
      if [info exists tmp_config] {
         unset tmp_config
@@ -911,12 +2483,11 @@ proc setup_execd_conf {} {
 #     ???/???
 #*******************************
 proc setup_mytestproject {} {
-   global ts_config
-  global CHECK_ARCH env check_errno
-  global open_spawn_buffer
+  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno  CHECK_CORE_EXECD 
+  global open_spawn_buffer CHECK_CORE_MASTER CHECK_PRODUCT_TYPE
  
 
-  if { [ string compare $ts_config(product_type) "sge" ] == 0 } {
+  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } {
      set_error 0 "setup_mytestproject - not possible for sge systems"
      return
   }
@@ -959,15 +2530,22 @@ proc setup_mytestproject {} {
 #     ???/???
 #*******************************
 proc setup_mytestpe {} {
-   global ts_config
+  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_CORE_MASTER
 
-   set change(pe_name) "mytestpe"
-   set change(slots) "5"
-   add_pe change
 
-   assign_queues_with_pe_object "all.q" "" "mytestpe"
+  set q_list ""
+  foreach elem $CHECK_CORE_EXECD {
+    append q_list "${elem}.q " 
+  }
 
-   set_error 0 "ok"
+  set change(pe_name) "mytestpe"
+#  set change(queue_list) $q_list
+  set change(slots) "5"
+  add_pe change
+
+  assign_queues_with_pe_object $q_list "mytestpe"
+
+  set_error 0 "ok"
 }
 
 
@@ -1002,8 +2580,8 @@ proc setup_mytestpe {} {
 #     ???/???
 #*******************************
 proc setup_deadlineuser {} {
-   global ts_config
-  global CHECK_ARCH CHECK_USER
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
+  global CHECK_PRODUCT_TYPE
 
   add_access_list $CHECK_USER deadlineusers
 
@@ -1041,33 +2619,22 @@ proc setup_deadlineuser {} {
 #     ???/???
 #*******************************
 proc setup_schedconf {} {
-   global ts_config
-  global CHECK_ARCH env check_errno CHECK_USER
-  global CHECK_OUTPUT
+  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
+  global CHECK_PRODUCT_TYPE CHECK_OUTPUT
 
   # always create global complex list if not existing
-  catch { exec "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-scl" } result
-
-  puts $CHECK_OUTPUT "result: $result"
-
-  if { [string first "Usage" $result] >= 0 } {
-     puts $CHECK_OUTPUT "WARNING: ignore complex setup !!!"
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-scl" } result
+  if { [string first "global" $result] >= 0 } {
+     puts $CHECK_OUTPUT "complex list global already exists"
   } else {
-     if { [string first "global" $result] >= 0 } {
-        puts $CHECK_OUTPUT "complex list global already exists"
-     } else {
-        if { [get_complex_version] == 0 } {
-           puts $CHECK_OUTPUT "creating global complex list"
-           set host_complex(complex1) "c1 DOUBLE 55.55 <= yes yes 0"
-           set_complex host_complex global 1
-           set host_complex(complex1) ""
-           set_complex host_complex global
-        }
+     if { [get_complex_version] == 0 } {
+        puts $CHECK_OUTPUT "creating global complex list"
+        set host_complex(complex1) "c1 DOUBLE 55.55 <= yes yes 0"
+        set_complex host_complex global 1
+        set host_complex(complex1) ""
+        set_complex host_complex global
      }
-
   }
-
-
   # reset_schedd_config has global error reporting
   get_schedd_config old_config
   reset_schedd_config 
@@ -1082,11 +2649,7 @@ proc setup_schedconf {} {
        set new  $new_config($param)
 
        if { [ string compare $old $new ] != 0 } {
-          if { $ts_config(gridengine_version) == 60 } {
-             if { [ string compare $param "reprioritize_interval" ] == 0 } { continue }
-          } else {
-             if { [ string compare $param "sgeee_schedule_interval" ] == 0 } { continue }
-          }             
+          if { [ string compare $param "sgeee_schedule_interval" ] == 0 } { continue }
           if { [ string compare $param "weight_tickets_deadline" ] == 0 } { continue }
           if { [ string compare $param "job_load_adjustments" ] == 0 } { continue }
           if { [ string compare $param "schedule_interval" ] == 0 } { continue }
@@ -1096,6 +2659,7 @@ proc setup_schedconf {} {
   } else {
      add_proc_error "setup_schedconf" -1 "parameter count new/old scheduler configuration error"
   }
+
   set_error 0 "ok"
 }
 
@@ -1130,8 +2694,8 @@ proc setup_schedconf {} {
 #     ???/???
 #*******************************
 proc setup_default_calendars {} {
-   global ts_config
-  global CHECK_ARCH env check_errno CHECK_USER
+  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
+  global CHECK_PRODUCT_TYPE 
 
 
   set calendar_param(calendar_name)          "always_suspend"              ;# always in calendar suspend
@@ -1187,10 +2751,9 @@ proc setup_default_calendars {} {
 #     ???/???
 #*******************************
 proc setup_check_user_permissions {} {
-   global ts_config
   global CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
-  global CHECK_OUTPUT
-  global CHECK_SCRIPT_FILE_DIR CHECK_ADMIN_USER_SYSTEM
+  global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_CORE_MASTER 
+  global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_ADMIN_USER_SYSTEM
 
 
   set time [timestamp]
@@ -1202,24 +2765,24 @@ proc setup_check_user_permissions {} {
   foreach user $user_list {
      puts $CHECK_OUTPUT "\n----mask-check----\nuser: $user"
      set my_command ""
-     foreach host $ts_config(execd_hosts) {
+     foreach host $CHECK_CORE_EXECD {
         set execd_spooldir [get_execd_spool_dir $host]
         puts $CHECK_OUTPUT "checking execd spool directory on $host: \"$execd_spooldir\""
-        set output [ start_remote_prog "$host" "$user" "cd" "$execd_spooldir ; cd $ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR" ]
+        set output [ start_remote_prog "$host" "$user" "cd" "$execd_spooldir ; cd $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR" ]
         if { $prg_exit_state != 0 } {
-           set_error -1 "user $user has no read//exec permission to \"$execd_spooldir\" and \"$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR\" on host $host"
+           set_error -1 "user $user has no read//exec permission to \"$execd_spooldir\" and \"$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR\" on host $host"
         }
      }
   }
 
   set master_spooldir [get_qmaster_spool_dir]
-  puts $CHECK_OUTPUT "master spool directory on host $ts_config(master_host): \"$master_spooldir\""
+  puts $CHECK_OUTPUT "master spool directory on host $CHECK_CORE_MASTER: \"$master_spooldir\""
   foreach user $user_list {
       puts $CHECK_OUTPUT "checking master spool directory for user: \"$user\""
-      set output [ start_remote_prog "$ts_config(master_host)" "$user" "cd" "$master_spooldir"  ]
+      set output [ start_remote_prog "$CHECK_CORE_MASTER" "$user" "cd" "$master_spooldir"  ]
       if { $prg_exit_state != 0 } {
-         puts $CHECK_OUTPUT "--> E R R O R - user $user has no read//exec permission to $master_spooldir on host $ts_config(master_host)"
-         set_error -1 "user $user has no read//exec permission to $master_spooldir on host $ts_config(master_host)"
+         puts $CHECK_OUTPUT "--> E R R O R - user $user has no read//exec permission to $master_spooldir on host $CHECK_CORE_MASTER"
+         set_error -1 "user $user has no read//exec permission to $master_spooldir on host $CHECK_CORE_MASTER"
       }
   }
   puts "runtime: [ expr ( [timestamp] - $time ) ]"
@@ -1229,13 +2792,12 @@ proc setup_check_user_permissions {} {
 
 
 proc setup_check_messages_files {} {
-   global ts_config
-   global CHECK_OUTPUT
+   global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_OUTPUT
    global CHECK_USER
 
    puts $CHECK_OUTPUT "scheduler ..."
    set messages [get_schedd_messages_file]
-   get_file_content $ts_config(master_host) $CHECK_USER $messages 
+   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages 
    if { $file_array(0) < 1 } {
       add_proc_error "setup_check_messages_files" -1 "no scheduler messages file:\n$messages"
    }
@@ -1245,7 +2807,7 @@ proc setup_check_messages_files {} {
 
    puts $CHECK_OUTPUT "qmaster ..."
    set messages [get_qmaster_messages_file]
-   get_file_content $ts_config(master_host) $CHECK_USER $messages 
+   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages 
    if { $file_array(0) < 1 } {
       add_proc_error "setup_check_messages_files" -1 "no qmaster messages file:\n$messages"
    }
@@ -1253,7 +2815,7 @@ proc setup_check_messages_files {} {
       puts $CHECK_OUTPUT $file_array($i)
    }
 
-   foreach execd $ts_config(execd_hosts) {
+   foreach execd $CHECK_CORE_EXECD {
       puts $CHECK_OUTPUT "execd $execd ..."
       set messages [ get_execd_messages_file $execd ]
       get_file_content $execd $CHECK_USER $messages 
@@ -1297,8 +2859,8 @@ proc setup_check_messages_files {} {
 #     ???/???
 #*******************************
 proc setup_inhouse_cluster {} {
-   global ts_config
-  global CHECK_ARCH env check_errno CHECK_USER
+  global CHECK_PRODUCT_ROOT CHECK_ARCH env check_errno  CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
+  global CHECK_PRODUCT_TYPE
   global CHECK_OUTPUT
 
   # reset_schedd_config has global error reporting

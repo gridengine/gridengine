@@ -35,18 +35,6 @@
 #include <Xm/Xm.h>
 #include "qmon_proto.h"
 
-enum {
-   QC_ADD,
-   QC_CLONE,
-   QC_MODIFY,
-   QC_DELETE
-};
-
-typedef struct _tQCAction {
-   int action;
-   const char *qname;
-} tQCAction;   
-
 /*-------------------------------------------------------------------------*/
 void qmonQCPopup(Widget w, XtPointer cld, XtPointer cad);
 void updateQCQ(void);

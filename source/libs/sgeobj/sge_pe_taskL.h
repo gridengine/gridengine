@@ -125,7 +125,6 @@ enum {
    PET_osjobid,
    PET_usage,
    PET_scaled_usage,
-   PET_reported_usage,
    PET_previous_usage,
 
    PET_submission_time,
@@ -151,7 +150,6 @@ ILISTDEF(PET_Type, Job, SGE_JOB_LIST)
    SGE_STRING(PET_osjobid, CULL_DEFAULT)
    SGE_LIST(PET_usage, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
    SGE_LIST(PET_scaled_usage, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
-   SGE_LIST(PET_reported_usage, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
    SGE_LIST(PET_previous_usage, UA_Type, CULL_DEFAULT)
 
    SGE_ULONG(PET_submission_time, CULL_DEFAULT | CULL_SUBLIST)
@@ -177,7 +175,6 @@ NAMEDEF(PETN)
    NAME("PET_osjobid")
    NAME("PET_usage")
    NAME("PET_scaled_usage")
-   NAME("PET_reported_usage")
    NAME("PET_previous_usage")
    
    NAME("PET_submission_time")

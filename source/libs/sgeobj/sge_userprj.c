@@ -34,10 +34,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_list.h"
-#include "sge_answer.h"
 #include "sge_userprj.h"
-
-#include "msg_sgeobjlib.h"
 
 lList *Master_Project_List = NULL;
 lList *Master_User_List = NULL;
@@ -61,90 +58,9 @@ lList *Master_User_List = NULL;
 *  RESULT
 *     lListElem* - pointer to user or project element
 ******************************************************************************/
-lListElem *
-userprj_list_locate(const lList *userprj_list, const char *uerprj_name) 
+lListElem *userprj_list_locate(lList *userprj_list, 
+                               const char *uerprj_name) 
 {
    return lGetElemStr(userprj_list, UP_name, uerprj_name);
-}
-
-const char *
-userprj_list_append_to_dstring(const lList *this_list, dstring *string)
-{
-   const char *ret = NULL;
-
-   DENTER(BASIS_LAYER, "userprj_list_append_to_dstring");
-   if (string != NULL) {
-      lListElem *elem = NULL;
-      bool printed = false;
-
-      for_each(elem, this_list) {
-         sge_dstring_sprintf_append(string, "%s", lGetString(elem, UP_name));
-         if (lNext(elem)) {
-            sge_dstring_sprintf_append(string, " ");
-         }
-         printed = true;
-      }
-      if (!printed) {
-         sge_dstring_sprintf_append(string, "NONE");
-      }
-      ret = sge_dstring_get_string(string);
-   }
-   DEXIT;
-   return ret;
-}
-
-bool
-prj_list_do_all_exist(const lList *this_list, lList **answer_list,
-                      const lList *prj_list)
-{
-   bool ret = true;
-   lListElem *prj = NULL;
-
-   DENTER(TOP_LAYER, "prj_list_do_all_exist");
-   for_each(prj, prj_list) {
-      const char *name = lGetString(prj, UP_name);
-
-      if (userprj_list_locate(this_list, name) == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EEXIST,
-                                 ANSWER_QUALITY_ERROR,
-                                 MSG_CQUEUE_UNKNOWNPROJECT_S, name);
-         DTRACE;
-         ret = false;
-         break;
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-lList **
-prj_list_get_master_list(void)
-{
-   return &Master_Project_List;
-}
-
-/***************************************************
- Generate a Template for a user or project
- ***************************************************/
-lListElem *getUserPrjTemplate()
-{
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "getUserPrjTemplate");
-
-   ep = lCreateElem(UP_Type);
-   lSetString(ep, UP_name, "template");
-   lSetString(ep, UP_default_project, NULL);
-   lSetUlong(ep, UP_oticket, 0);
-   lSetUlong(ep, UP_fshare, 0);
-   lSetUlong(ep, UP_job_cnt, 0);
-   lSetList(ep, UP_project, NULL);
-   lSetList(ep, UP_usage, NULL);
-   lSetList(ep, UP_long_term_usage, NULL);
-   lSetList(ep, UP_acl, NULL);
-   lSetList(ep, UP_xacl, NULL);
-
-   DEXIT;
-   return ep;
 }
 

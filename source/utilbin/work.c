@@ -44,6 +44,15 @@
 
 #include "sge_unistd.h"
 
+#ifdef SUN4
+extern char *sys_errlist[];
+char *strerror(
+int errno 
+) {
+   return (errno>=0)?sys_errlist[errno]:"unknown error";
+}
+#endif
+
 volatile int should_stop = 0;
 
 /* cpu load profile */

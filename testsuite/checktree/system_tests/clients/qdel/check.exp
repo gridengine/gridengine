@@ -117,7 +117,7 @@ global queue
 proc init_level {} {
   global CHECK_ACT_LEVEL CHECK_HOST hold_state pending_state queue
 
-  set queue "qdel.q"
+  set queue "$CHECK_HOST.q_del"
 
   
 
@@ -164,10 +164,12 @@ proc init_level {} {
 proc qdel_setup {} {
    global queue CHECK_HOST 
 
+   set q_param(qname)                 "$queue"
+   set q_param(hostname)              "$CHECK_HOST"
    set q_param(load_thresholds)       "np_load_avg=7.00"
    set q_param(slots)                 "50"
 
-   add_queue $queue $CHECK_HOST q_param
+   add_queue q_param
    set_error 0 "ok"
 }
 
@@ -205,14 +207,21 @@ proc qdel_cleanup {} {
    global CHECK_HOST CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER 
    global CHECK_SECOND_FOREIGN_SYSTEM_USER
 
-   delete_all_jobs
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_USER" "qdel" "-uall" 1 ]
+   puts $CHECK_OUTPUT "qdel_output = \n$result" 
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
+   puts $CHECK_OUTPUT "qdel_output = \n$result" 
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
+   puts $CHECK_OUTPUT "qdel_output = \n$result" 
+
    wait_for_end_of_all_jobs 120
 
-   del_queue $queue $CHECK_HOST 0 1
+   del_queue $queue
+
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
    foreach hostname $CHECK_CORE_EXECD {
-      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q $hostname]" } output ]
+      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c ${hostname}.q" } output ]
       puts $CHECK_OUTPUT $output
    }
 
@@ -224,20 +233,16 @@ proc qdel_submit_delete_when_transfered { } {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global submit_del_qconfig submit_del_check_queue CHECK_USER
    global CHECK_CORE_EXECD CHECK_HOST CHECK_PRODUCT_ROOT CHECK_DEBUG_LEVEL
-   global CHECK_ACT_LEVEL CHECK_L10N ts_config
+   global CHECK_ACT_LEVEL CHECK_L10N
  
    if { $CHECK_ACT_LEVEL == 0 } {
       if { $CHECK_L10N == 1 } {
-         if { $ts_config(gridengine_version) == 60 } {
-            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
-         } else {
-            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-         }
+         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
          set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
          set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-         if { $job_id_pos > $job_name_pos } {
+         set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+         if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
             add_proc_error "qdel_submit_delete_when_transfered" "-1" "locale switches parameter for qsub string! This is not supported yet"
          }
          incr job_id_pos -1
@@ -254,7 +259,7 @@ proc qdel_submit_delete_when_transfered { } {
       set runs 25
       while { $runs > 0 } { 
          foreach elem $CHECK_CORE_EXECD {
-            set arguments "-o /dev/null -e /dev/null -q [get_queue_instance all.q $elem]"
+            set arguments "-o /dev/null -e /dev/null -q $elem.q"
       #      start_remote_prog $CHECK_HOST $CHECK_USER "qdel" "`qsub $arguments $job_script | cut -d\" \" -f3`"
             set catch_return [ catch { eval exec "$qsub_program $arguments $job_script" } result ]
             puts $CHECK_OUTPUT $result
@@ -293,7 +298,7 @@ proc qdel_submit_delete_when_transfered { } {
 
    puts $CHECK_OUTPUT "do qmod -c for all queues"
    foreach hostname $CHECK_CORE_EXECD {
-      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c [get_queue_instance all.q ${hostname}]" } output ]
+      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -c ${hostname}.q" } output ]
       puts $CHECK_OUTPUT $output
    }
 
@@ -397,7 +402,7 @@ proc are_jobs_deleted { job_list } {
 #*******************************
 proc submit_testjobs { { user "" } { additional_job_args "" }} {
   global CHECK_PRODUCT_ROOT queue hold_state pending_state CHECK_TESTSUITE_ROOT 
-  global CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_L10N CHECK_HOST ts_config
+  global CHECK_OUTPUT CHECK_ARCH CHECK_HOST CHECK_L10N CHECK_HOST
 
   set joblist ""
   set year [exec date "+%Y"] 
@@ -413,7 +418,7 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
      }
   }
  
-  set jobargs "$additional_job_args $jobargs -q [get_queue_instance $queue $CHECK_HOST] $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3000"
+  set jobargs "$additional_job_args $jobargs -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3000"
 
   if { [string compare "" $user] == 0 } {
      # no user specified (using local user name (starter of testsuite))
@@ -428,16 +433,12 @@ proc submit_testjobs { { user "" } { additional_job_args "" }} {
      
      set result [ run_command_as_user "$CHECK_HOST" "$user" "qsub" "$jobargs" 4]
      if { $CHECK_L10N == 1 } {
-         if { $ts_config(gridengine_version) == 60 } {
-            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "__JOB_ID__" "__JOB_NAME__"]
-         } else {
-            set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
-            set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
-         }
+         set JOB_SUBMITTED       [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*"]
+         set JOB_SUBMITTED_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "__JOB_ID__" "__JOB_NAME__" "__JOB_ARG__"]
          set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
          set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-         if { $job_id_pos > $job_name_pos } {
+         set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+         if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
             add_proc_error "qdel_submit_delete_when_transfered" "-1" "locale switches parameter for qsub string! This is not supported yet"
          }
          incr job_id_pos -1
@@ -777,37 +778,39 @@ proc qdel_delete_unkown_jobid {} {
 
    qdel_delete_unknown_jobid_proc $job_list "$default_output"
 
-   # submit jobs to delete
-   set job_list [submit_testjobs]
+   if {[resolve_version] > 1} {
+      # submit jobs to delete
+      set job_list [submit_testjobs]
 
-   # add a unkown taskid
-   set last_jobid "[lindex $job_list end]"
-   set unknown_taskid 5
-   set job_list [lreplace $job_list end end "$last_jobid.$unknown_taskid"]
-   if { $CHECK_L10N == 0 } {
-      set default_output "job \"$last_jobid\" task \"$unknown_taskid\" does not exist"
-   } else {
-      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASK_UU] $last_jobid $unknown_taskid ] 
-   } 
-   qdel_delete_unknown_jobid_proc $job_list "$default_output"
-   delete_job $last_jobid
+      # add a unkown taskid
+      set last_jobid "[lindex $job_list end]"
+      set unknown_taskid 5
+      set job_list [lreplace $job_list end end "$last_jobid.$unknown_taskid"]
+      if { $CHECK_L10N == 0 } {
+         set default_output "job \"$last_jobid\" task \"$unknown_taskid\" does not exist"
+      } else {
+         set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASK_UU] $last_jobid $unknown_taskid ] 
+      } 
+      qdel_delete_unknown_jobid_proc $job_list "$default_output"
+      delete_job $last_jobid
 
-   # submit jobs to delete
-   set job_list [submit_testjobs]
+      # submit jobs to delete
+      set job_list [submit_testjobs]
 
-   # add a unkown taskid range
-   set last_jobid "[lindex $job_list end]"
-   set empty_taskrange "5-10:2"
-   set job_list [lreplace $job_list end end "$last_jobid.$empty_taskrange"]
-   if { $CHECK_L10N == 0 } {
-      set default_output "job \"$last_jobid\" task id range \"$empty_taskrange\" comprises no tasks"
-   } else {
-      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU] $last_jobid "5" "10" "2"]
-   }
-   qdel_delete_unknown_jobid_proc $job_list "$default_output"
-   delete_job $last_jobid 1
-   # wait for job to leave queue
+      # add a unkown taskid range
+      set last_jobid "[lindex $job_list end]"
+      set empty_taskrange "5-10:2"
+      set job_list [lreplace $job_list end end "$last_jobid.$empty_taskrange"]
+      if { $CHECK_L10N == 0 } {
+         set default_output "job \"$last_jobid\" task id range \"$empty_taskrange\" comprises no tasks"
+      } else {
+         set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU] $last_jobid "5" "10" "2"]
+      }
+      qdel_delete_unknown_jobid_proc $job_list "$default_output"
+      delete_job $last_jobid 1
+      # wait for job to leave queue
 #      sleep 5
+   }
 }
 
 proc qdel_delete_unknown_jobid_proc {job_list default_output} {
@@ -949,7 +952,7 @@ proc qdel_delete_negative_jobid {} {
 #     ???/???
 #*******************************
 proc qdel_all {} {
-   global ts_config
+
    global CHECK_OUTPUT CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST
 
@@ -957,12 +960,6 @@ proc qdel_all {} {
       set_error -3 "root access required"
       return
    } 
-
-   if {$ts_config(gridengine_version) == 53} {
-      set all_args "all"
-   } else {
-      set all_args "'*'"
-   }
 
    # submit jobs to delete
    set job_list_user1 [submit_testjobs] 
@@ -974,7 +971,7 @@ proc qdel_all {} {
  
    
    # now delete jobs of user 1
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $all_args" } qdel_output ] 
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel all" } qdel_output ] 
    puts $CHECK_OUTPUT "qdel_result = $result"
    puts $CHECK_OUTPUT "qdel_output = $qdel_output" 
    if { $result != 0 } {
@@ -1019,7 +1016,7 @@ proc qdel_all {} {
    puts $CHECK_OUTPUT "user 1 has jobs $job_list_user1"
 
    # now delete jobs of user 2
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" $all_args 1 ]
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "all" 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result" 
 
    set time [timestamp] 
@@ -1055,7 +1052,7 @@ proc qdel_all {} {
    } 
 
    # now delete jobs of user1
-   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $all_args" } qdel_output ] 
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel all" } qdel_output ] 
    puts $CHECK_OUTPUT "qdel_result = $result"
    puts $CHECK_OUTPUT "qdel_output = $qdel_output" 
    if { $result != 0 } {
@@ -1120,7 +1117,7 @@ proc qdel_all {} {
 #     ???/???
 #*******************************
 proc qdel_uall {} {
-   global ts_config
+
    global CHECK_OUTPUT CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER 
    global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST
@@ -1129,12 +1126,6 @@ proc qdel_uall {} {
       set_error -3 "root access required"
       return
    } 
-
-   if {$ts_config(gridengine_version) == 53} {
-      set uall_args "-uall"
-   } else {
-      set uall_args "-u '*' '*'"
-   }
 
    # submit jobs to delete
    set job_list_user1 [submit_testjobs]  
@@ -1148,11 +1139,11 @@ proc qdel_uall {} {
 
 
    # now delete all jobs as user 2 ( only submit user )
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" $uall_args 1 ]
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_FIRST_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result" 
 
    # now delete all jobs as user 3 ( only submit user )
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" "qdel" $uall_args 1 ]
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_SECOND_FOREIGN_SYSTEM_USER" "qdel" "-uall" 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result" 
 
    # test if all jobs are still there:
@@ -1166,7 +1157,7 @@ proc qdel_uall {} {
    } 
 
    # now delete all jobs as user 1 ( manager )
-   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_USER" "qdel" $uall_args 1 ]
+   set result [ run_command_as_user "$CHECK_HOST" "$CHECK_USER" "qdel" "-uall" 1 ]
    puts $CHECK_OUTPUT "qdel_output = \n$result" 
 
    # now check if all jobs are deleted
@@ -1227,6 +1218,7 @@ proc qdel_user_list {} {
 
    global CHECK_OUTPUT CHECK_USER CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_HOST
    global CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_PRODUCT_VERSION_NUMBER
    if { [have_root_passwd] == -1 } {
       set_error -3 "root access required"
       return
@@ -1291,7 +1283,12 @@ proc qdel_user_list {} {
 
    # now test if his jobs are deleted
    if { [ are_jobs_deleted $job_list_user2] != 0 } {
-      set_error -1 "(2) not all jobs of $CHECK_FIRST_FOREIGN_SYSTEM_USER deleted"
+      if { [ string first "5.1" $CHECK_PRODUCT_VERSION_NUMBER] >= 0 } {
+         set_error -1 "not all jobs of $CHECK_FIRST_FOREIGN_SYSTEM_USER deleted, this is ok for a X5.1.X system"
+        
+      } else {
+         set_error -1 "(2) not all jobs of $CHECK_FIRST_FOREIGN_SYSTEM_USER deleted"
+      }
    } 
    # now test if the jobs of user1 and user3 are still here
    set all_jobs "$job_list_user1 $job_list_user3"

@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <unistd.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #if defined(FREEBSD) || defined(DARWIN)
@@ -60,6 +59,7 @@
 #include "sge_event.h"
 #include "sge_event_client.h"
 #include "sge_time.h"
+#include "sge_unistd.h"
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "qevent.h"
@@ -130,8 +130,6 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
    dstring buffer_wrapper;
 
 
-   DENTER(TOP_LAYER, "print_jatask_event");
-
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    
    timestamp = sge_get_gmt();
@@ -156,7 +154,6 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
 /*         lWriteElemTo(event, stdout); 
          fflush(stdout); */
       }
-   
       if (type == sgeE_JOB_FINAL_USAGE) { 
          /* lList *jat = lGetList(event,ET_new_version); */
          u_long job_id = lGetUlong(event, ET_intkey);
@@ -185,16 +182,22 @@ bool print_jatask_event(sge_object_type type, sge_event_action action,
          fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
          Global_jobs_registered--;
          fflush(stdout);  
+         if (!feature_is_enabled(FEATURE_SGEEE)) {
+            /* sge has no sgeE_JOB_FINAL_USAGE event */
+            fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id, u32c(timestamp));
+            Global_jobs_running--;
+            fflush(stdout);  
+         }
       }
+
+
 
    }
    /* create a callback error to test error handling */
    if(type == SGE_TYPE_GLOBAL_CONFIG) {
-      DEXIT;
       return false;
    }
    
-   DEXIT;
    return true;
 }
 
@@ -283,7 +286,7 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
    event_name = qevent_get_event_name(qevent_event);
    
 
-   /* test if script is executable and valid file */
+   /* test if script is executable and guilty file */
    if (!sge_is_file(script_file)) {
       ERROR((SGE_EVENT, "no script file: "SFQ"\n", script_file));
       DEXIT;
@@ -308,7 +311,7 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       int pid2;
       int exit_status;
 
-      #if !defined(CRAY)
+      #if !(defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX))
          struct rusage rusage;
       #endif
 
@@ -317,7 +320,7 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
       #else
          int status;
       #endif
-      #if defined(CRAY)
+      #if defined(HPUX) || defined(HP10_01) || defined(HPCONVEX) || defined(CRAY) || defined(SINIX)
          pid2 = waitpid(pid, &status, 0);
       #else
          pid2 = wait3(&status, 0, &rusage);
@@ -477,8 +480,6 @@ int main(int argc, char *argv[])
    /* dump pid to file */
    qevent_dump_pid_file();
 
-   log_state_set_log_gui(1);
-
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
 
    gdi_setup = sge_gdi_setup(prognames[QEVENT], &alp);
@@ -516,10 +517,10 @@ int main(int argc, char *argv[])
 
    sge_setup_sig_handlers(QEVENT);
 
-   if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
       sge_dstring_free(enabled_options.error_message);
       SGE_EXIT(1);
-   }
+   }   
 
    /* ok, start over ... */
 
@@ -533,9 +534,7 @@ int main(int argc, char *argv[])
    }
 
    if (enabled_options.trigger_option_count > 0) {
-      lCondition *where =NULL;
-      lEnumeration *what = NULL;
-
+      
       sge_mirror_initialize(EV_ID_ANY, "sge_mirror -trigger");
 
       /* put out information about -trigger option */
@@ -545,56 +544,21 @@ int main(int argc, char *argv[])
                          (enabled_options.trigger_option_scripts)[i]));
          switch((enabled_options.trigger_option_events)[i]) {
             case QEVENT_JB_END:
-                  
-                  /* build mask for the job structure to contain only the needed elements */
-                  where = NULL; 
-                  what = lWhat("%T(%I)", JB_Type, JB_job_number);
-                  
-                  /* register for job events */ 
-                  sge_mirror_subscribe(SGE_TYPE_JOB, analyze_jatask_event, NULL, NULL, where, what);
-                  ec_set_flush(sgeE_JOB_DEL,true, 1);
+               sge_mirror_subscribe(SGE_TYPE_JOB, analyze_jatask_event, NULL, NULL);
+               ec_subscribe(sgeE_JOB_DEL);
+               ec_set_flush(sgeE_JOB_DEL,1);
 
-                  /* the mirror interface registers more events, than we need,
-                     thus we free the ones, we do not need */
-                  ec_unsubscribe(sgeE_JOB_LIST);
-                  ec_unsubscribe(sgeE_JOB_MOD);
-                  ec_unsubscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
-                  ec_unsubscribe(sgeE_JOB_USAGE);
-                  ec_unsubscribe(sgeE_JOB_FINAL_USAGE);
-                  ec_unsubscribe(sgeE_JOB_ADD);
-                  
-                  /* free the what and where mask */
-                  where = lFreeWhere(where);
-                  what = lFreeWhat(what);
                break;
             case QEVENT_JB_TASK_END:
-            
-                  /* build mask for the job structure to contain only the needed elements */
-                  where = NULL; 
-                  what = lWhat("%T(%I)", JAT_Type, JAT_status);
-                  
-                  /* register for JAT events */ 
-                  sge_mirror_subscribe(SGE_TYPE_JATASK, analyze_jatask_event, NULL, NULL, where, what);
-                  ec_set_flush(sgeE_JATASK_DEL,true, 1);
-                  
-                  /* the mirror interface registers more events, than we need,
-                     thus we free the ones, we do not need */ 
-                  ec_unsubscribe(sgeE_JATASK_ADD);
-                  ec_unsubscribe(sgeE_JATASK_MOD);
-
-                  /* free the what and where mask */
-                  where = lFreeWhere(where);
-                  what = lFreeWhat(what);
+               sge_mirror_subscribe(SGE_TYPE_JATASK, analyze_jatask_event, NULL, NULL);
+               ec_subscribe(sgeE_JATASK_DEL);
+               ec_set_flush(sgeE_JATASK_DEL,1);
                break;
          }        
       }
 
       while(!shut_me_down) {
-         sge_mirror_error error = sge_mirror_process_events();
-         if (error == SGE_EM_TIMEOUT && !shut_me_down ) {
-            sleep(10);
-            continue;
-         }
+         sge_mirror_process_events();
       }
 
       sge_mirror_shutdown();
@@ -609,7 +573,6 @@ int main(int argc, char *argv[])
    qevent_show_usage();
    sge_dstring_free(enabled_options.error_message);
    SGE_EXIT(1);
-   DEXIT;
    return 1;
 }
 
@@ -628,67 +591,28 @@ static char* qevent_get_event_name(int event) {
 
 void qevent_testsuite_mode(void) 
 {
-#if 0 /* EB: DEBUG */
+#if 0 /* EB: debug */
 #define QEVENT_SHOW_ALL
 #endif
    u_long32 timestamp;
-   lCondition *where =NULL;
-   lEnumeration *what = NULL;
- 
-      const int job_nm[] = {       
-            JB_job_number, 
-            JB_project, 
-            JB_ja_tasks,
-            JB_ja_structure,
-            JB_ja_n_h_ids,
-            JB_ja_u_h_ids,
-            JB_ja_s_h_ids,
-            JB_ja_o_h_ids,   
-            JB_ja_template,
-            NoName
-         };
-
-      const int jat_nm[] = {     
-         JAT_status, 
-         JAT_task_number,
-         NoName
-      };  
-
    DENTER(TOP_LAYER, "qevent_testsuite_mode");
 
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
 
 #ifdef QEVENT_SHOW_ALL
-   sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL); 
+   sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL); 
 #else
-   where = NULL; 
-    what =  lIntVector2What(JB_Type, job_nm); 
-
-   sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL, where, what);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
+   sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL);
    
-   where = NULL; 
-   what = lIntVector2What(JAT_Type, jat_nm); 
-
-   sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, where, what);
-   where = lFreeWhere(where);
-   what = lFreeWhat(what);
-   
-   ec_set_flush(sgeE_JATASK_MOD, true, 0);
-   ec_set_flush(sgeE_JOB_FINAL_USAGE, true, 0);
-   ec_set_flush(sgeE_JOB_ADD, true, 0);
-   ec_set_flush(sgeE_JOB_DEL, true, 0);
-
+   ec_set_flush(sgeE_JATASK_MOD,0);
+   ec_set_flush(sgeE_JOB_FINAL_USAGE,0);
+   ec_set_flush(sgeE_JOB_ADD,0);
+   ec_set_flush(sgeE_JOB_DEL,0);
 #endif
    
    while(!shut_me_down) {
-      sge_mirror_error error = sge_mirror_process_events();
-      if (error == SGE_EM_TIMEOUT && !shut_me_down) {
-         sleep(10);
-         continue;
-      }
-
+      sge_mirror_process_events();
       timestamp = sge_get_gmt();
 #ifndef QEVENT_SHOW_ALL
       fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="U32CFormat")\n",

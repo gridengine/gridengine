@@ -31,6 +31,7 @@
 #___INFO__MARK_END__
 SHELL       = /bin/sh
 RM          = rm -f
+STRIP       = strip
 SDIR        = ../src
 QIDLSDIR    = ../qidl/src
 DEPEND      = sge_depend -l -S -Y $(CFLAGS) 
@@ -206,7 +207,7 @@ QCMASTEROBJS= $(CORBASRC:.cpp=.o) $(QMASTERSRC:.c=.o) $(ALLLIBS)
 #              
 
 sge_qcmaster: $(QCMASTEROBJS)
-		$(CXX) -o $@ $(LFLAGS) $(QCMASTEROBJS) $(OBLIB) $(LIBS) $(PTHRDSLIB)
+		$(CXX) -o $@ $(LFLAGS) $(QCMASTEROBJS) $(OBLIB) $(ZLIB) $(LIBS) $(PTHRDSLIB)
 
 strip:
 	$(STRIP) $(ALLTARGETS)
@@ -327,10 +328,10 @@ client: client.o CosEventComm.o CosEventComm_skel.o \
                 CosEventChannelAdmin.o sge_io.o elem_codes.o \
                 basic_types.o $(OBJECTOBJ) \
                 Master.o $(OBLIB) \
-                $(CULLLIB) $(GDILIB) $(UTILIB) $(RMONLIB) $(LIBS) $(PTHRDSLIB)
+                $(CULLLIB) $(GDILIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(LIBS) $(PTHRDSLIB)
 
 registerClient: registerClient.o
-		$(CXX) -o $@ $(LFLAGS) registerClient.o $(OBLIB) $(LIBS)
+		$(CXX) -o $@ $(LFLAGS) registerClient.o $(OBLIB) $(ZLIB) $(LIBS)
 
 client.o: $(QIDLSDIR)/client.cpp $(OBJECTHDR) elem_codes.h Master.h
 		$(CXX) $(CXXFLAGS) $(NOERR_CFLAG) -c $(QIDLSDIR)/client.cpp

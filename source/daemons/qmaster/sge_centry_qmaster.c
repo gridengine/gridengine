@@ -36,13 +36,13 @@
 #include <string.h>
 #include <errno.h>
 
-#include "sge_c_gdi.h"
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_ja_task.h"
 #include "sge_schedd_conf.h"
 #include "commlib.h"
 #include "sge_parse_num_par.h"
+#include "sge_queue_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_log.h"
 #include "sge_complex_schedd.h"
@@ -53,16 +53,14 @@
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
-#include "sge_qinstance.h"
+#include "sge_schedd_conf.h"
+#include "sge_queue.h"
 #include "sge_job.h"
 #include "sge_centry.h"
-#include "sge_cqueue.h"
 #include "sge_utility.h"
-#include "sge_time.h"
 
 #include "spool/sge_spooling.h"
 #include "sge_persistence_qmaster.h"
-#include "sge_reporting_qmaster.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
@@ -100,6 +98,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          }
       } 
    }
+
 
    /*
     * Shortcut (CE_shortcut)
@@ -195,26 +194,9 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          if (is_slots_attr) {
             defaultval = "1";
          }
-         DPRINTF(("Got CE_default: "SFQ"\n", defaultval ? defaultval : "-NA-"));
+         DPRINTF(("Got CE_default: "SFQ"\n", defaultval));
          lSetString(centry, CE_default, defaultval);
       }
-   }
-
-   /*
-    * Default (CE_urgency_weight)
-    */
-   if (ret) {
-      pos = lGetPosViaElem(reduced_elem, CE_urgency_weight);
-
-      if (pos >= 0) {
-         const char *urgency_weight = lGetPosString(reduced_elem, pos);
-         DPRINTF(("Got CE_default: "SFQ"\n", urgency_weight ? urgency_weight : "-NA-"));
-         lSetString(centry, CE_urgency_weight, urgency_weight);
-      }
-   }
-
-   if (ret) {
-      ret = centry_elem_validate(centry, NULL, answer_list);
    }
 
    DEXIT;
@@ -228,26 +210,21 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
 /* ------------------------------------------------------------ */
 
 int 
-centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object) 
+centry_spool(lList **answer_list, lListElem *cep, gdi_object_t *object) 
 {
-   lList *answer_list = NULL;
-   bool dbret;
-
    DENTER(TOP_LAYER, "centry_spool");
 
-   dbret = spool_write_object(&answer_list, spool_get_default_context(), cep, 
-                              lGetString(cep, CE_name), SGE_TYPE_CENTRY);
-   answer_list_output(&answer_list);
-
-   if (!dbret) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_WRITE_FAILED_S,
-                              lGetString(cep, CE_name));
+   if (!spool_write_object(answer_list, spool_get_default_context(), cep, 
+                           lGetString(cep, CE_name), SGE_TYPE_CENTRY)) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
+             MSG_OBJ_CPLX, lGetString(cep, CE_name)));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
+      DEXIT;
+      return 1;
    } 
    
    DEXIT;
-   return dbret ? 0 : 1;
+   return 0;
 }
 
 /* ------------------------------------------------------------ */
@@ -256,34 +233,28 @@ int
 centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 
 {
    lListElem *jep, *gdil, *qep, *hep;
-   lListElem *cqueue;
    int slots, qslots;
 
    DENTER(TOP_LAYER, "centry_success");
 
    centry_list_sort(Master_CEntry_List);
 
-   sge_add_event( 0, old_ep?sgeE_CENTRY_MOD:sgeE_CENTRY_ADD, 0, 0, 
-                 lGetString(ep, CE_name), NULL, NULL, ep);
+   sge_add_event(NULL, 0, old_ep?sgeE_CENTRY_MOD:sgeE_CENTRY_ADD, 
+                 0, 0, lGetString(ep, CE_name), NULL, ep);
    lListElem_clear_changed_info(ep);
 
    /* throw away all old actual values lists and rebuild them from scratch */
-   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
-
-      for_each(qinstance, qinstance_list) {
-         lSetList(qinstance, QU_resource_utilization, NULL);
-         qinstance_debit_consumable(qinstance, NULL, Master_CEntry_List, 0);
-      }
+   for_each (qep, Master_Queue_List) {
+      lSetList(qep, QU_consumable_actual_list, NULL);
+      debit_queue_consumable(NULL, qep, Master_CEntry_List, 0);
    }
    for_each (hep, Master_Exechost_List) {
-      lSetList(hep, EH_resource_utilization, NULL);
+      lSetList(hep, EH_consumable_actual_list, NULL);
       debit_host_consumable(NULL, hep, Master_CEntry_List, 0);
    }
 
    /* 
-    * completely rebuild resource utilization of 
+    * completely rebuild consumable_actual_list of 
     * all queues and execution hosts
     * change versions of corresponding queues 
     */ 
@@ -295,15 +266,14 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
          slots = 0;
          for_each (gdil, lGetList(jatep, JAT_granted_destin_identifier_list)) {
 
-            if (!(qep = cqueue_list_locate_qinstance(
-                               *(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
-                               lGetString(gdil, JG_qname)))) 
+            if (!(qep = queue_list_locate(Master_Queue_List, 
+                                          lGetString(gdil, JG_qname)))) 
                continue;
 
             qslots = lGetUlong(gdil, JG_slots);
             debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
                   lGetHost(qep, QU_qhostname)), Master_CEntry_List, qslots);
-            qinstance_debit_consumable(qep, jep, Master_CEntry_List, qslots);
+            debit_queue_consumable(jep, qep, Master_CEntry_List, qslots);
             slots += qslots;
          }
          debit_host_consumable(jep, host_list_locate(Master_Exechost_List,
@@ -312,31 +282,7 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
    }
 
    sge_change_queue_version_centry(lGetString(ep, CE_name));
- 
-   /* changing complex attributes can change consumables.
-    * dump queue and host consumables to reporting file.
-    */
-   {
-      lList *answer_list = NULL;
-      u_long32 now = sge_get_gmt();
-      
-      /* dump all queue consumables */
-      for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance = NULL;
-
-         for_each(qinstance, qinstance_list) {
-            reporting_create_queue_consumable_record(&answer_list, hep, now);
-         }
-      }
-      answer_list_output(&answer_list);
-      /* dump all host consumables */
-      for_each (hep, Master_Exechost_List) {
-         reporting_create_host_consumable_record(&answer_list, hep, now);
-      }
-      answer_list_output(&answer_list);
-   }
-
+   
    DEXIT;
    return 0;
 }
@@ -356,67 +302,45 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
          lList *master_centry_list = *(centry_list_get_master_list());
          lListElem *tmp_centry = centry_list_locate(master_centry_list, name);
 
-         /* check if its a build in value*/
-         {
-            int i;
-            for ( i=0; i< max_queue_resources; i++){
-               if (strcmp(queue_resource[i].name, name) == 0 ){
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
-                                    MSG_INVALID_CENTRY_DEL_S, name);
-                  ret = false;
-                  break; 
-               }
-            }
+         if (tmp_centry != NULL) {
+            if (!centry_is_referenced(tmp_centry, &local_answer_list, 
+                                     Master_Queue_List, Master_Exechost_List, 
+                                     Master_Sched_Config_List)) {
+               if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
+                                   0, 0, name, NULL,
+                                   NULL, NULL, NULL, true, true)) {
 
-            for ( i=0; i< max_host_resources; i++){
-               if (strcmp(host_resource[i].name, name) == 0 ){
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
-                                          MSG_INVALID_CENTRY_DEL_S, name);
-                  ret = false;
-                  break; 
-               }
-            }
-         }      
-         if (ret) {
-            if (tmp_centry != NULL) {
-               if (!centry_is_referenced(tmp_centry, &local_answer_list, 
-                        *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-                        Master_Exechost_List, 
-                        *(object_type_get_master_list(SGE_TYPE_SCHEDD_CONF)))) {
-                  if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
-                                      0, 0, name, NULL, NULL,
-                                      NULL, NULL, NULL, true, true)) {
+                  sge_change_queue_version_centry(name);
 
-                     sge_change_queue_version_centry(name);
+                  lRemoveElem(master_centry_list, tmp_centry);
 
-                     lRemoveElem(master_centry_list, tmp_centry);
-                     INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
-                           remote_user, remote_host, name, MSG_OBJ_CPLX));
-                     answer_list_add(answer_list, SGE_EVENT, 
-                                     STATUS_OK, ANSWER_QUALITY_INFO);
-                  } else {
-                     ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS,
-                           "complex entry", name ));
-                     answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
-                                    ANSWER_QUALITY_ERROR);
-                     ret = false;
-                  }
+                  INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS, 
+                        remote_user, remote_host, name, MSG_OBJ_CPLX));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
+                                  ANSWER_QUALITY_INFO);
                } else {
-                  lListElem *answer = lFirst(local_answer_list);
-
-                  ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
-                  answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                                 ANSWER_QUALITY_ERROR);
-                  local_answer_list = lFreeList(local_answer_list);
+                  ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS,
+                         "complex entry", name ));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
+                                  ANSWER_QUALITY_ERROR);
                   ret = false;
                }
             } else {
-               ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
-                     MSG_OBJ_CPLX, name));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
+               lListElem *answer = lFirst(local_answer_list);
+
+               ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
+               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
+                               ANSWER_QUALITY_ERROR);
+               local_answer_list = lFreeList(local_answer_list);
                ret = false;
             }
+         } else {
+            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
+                   MSG_OBJ_CPLX, name));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
+            ret = false;
          }
+
       } else {
          CRITICAL((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
                    lNm2Str(CE_name), SGE_FUNC));
@@ -441,27 +365,23 @@ static void
 sge_change_queue_version_centry(const char *centry_name) 
 {
    lListElem *ep;
-   lListElem *cqueue;
    lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "sge_change_queue_version_centry");
 
-   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
+   for_each(ep, Master_Queue_List) {
 
-      for_each(qinstance, qinstance_list) {
-         qinstance_increase_qversion(qinstance);
+      sge_change_queue_version(ep, 0, 0);
       
-         sge_event_spool(&answer_list, 0, sgeE_QINSTANCE_MOD, 
-                         0, 0, lGetString(qinstance, QU_qname), 
-                         lGetHost(qinstance, QU_qhostname), NULL,
-                         qinstance, NULL, NULL, false, true);
-      }
+      /* event has already been sent in sge_change_queue_version */
+      sge_event_spool(&answer_list, 0, sgeE_QUEUE_MOD, 
+                      0, 0, lGetString(ep, QU_qname), NULL,
+                      ep, NULL, NULL, false, true);
    }
+
    for_each(ep, Master_Exechost_List) {
       sge_event_spool(&answer_list, 0, sgeE_EXECHOST_MOD, 
-                      0, 0, lGetHost(ep, EH_name), NULL, NULL,
+                      0, 0, lGetHost(ep, EH_name), NULL,
                       ep, NULL, NULL, true, false);
    }
    answer_list_output(&answer_list);

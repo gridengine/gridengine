@@ -438,7 +438,7 @@ proc job_state_handling_max_aj_tasks {} {
       set array_states [get_job_state $array1 0]
       set array_states [get_job_state $array1 1]
       set array_tasks_found [llength $array_states]
-      set valid_task_ids "1 3 5 7 9"
+      set guilty_task_ids "1 3 5 7 9"
       set task_ids ""
       for { set ia 0 } { $ia < $array_tasks_found } { incr ia 1 } {
           puts $CHECK_OUTPUT "task_id: $task_id($ia,task), state: $task_id($ia,state)"
@@ -447,7 +447,7 @@ proc job_state_handling_max_aj_tasks {} {
       set task_ids [lsort $task_ids]
       puts $CHECK_OUTPUT "task list: $task_ids"
       for { set ia 0 } { $ia < 5 } { incr ia 1 } {
-          if { [ lindex $valid_task_ids $ia ] !=  [ lindex $task_ids $ia ] } {
+          if { [ lindex $guilty_task_ids $ia ] !=  [ lindex $task_ids $ia ] } {
              add_proc_error "job_state_handling_max_aj_tasks" -1 "found wrong task id [ lindex $task_ids $ia ] in array job"
           } 
       } 
@@ -460,7 +460,7 @@ proc job_state_handling_max_aj_tasks {} {
       set array_states [get_job_state $array1 0]
       set array_states [get_job_state $array1 1]
       set array_tasks_found [llength $array_states]
-      set valid_task_ids "1 2 3 4 5"
+      set guilty_task_ids "1 2 3 4 5"
       set task_ids ""
       for { set ia 0 } { $ia < $array_tasks_found } { incr ia 1 } {
           puts $CHECK_OUTPUT "task_id: $task_id($ia,task), state: $task_id($ia,state)"
@@ -469,7 +469,7 @@ proc job_state_handling_max_aj_tasks {} {
       set task_ids [lsort $task_ids]
       puts $CHECK_OUTPUT "task list: $task_ids"
       for { set ia 0 } { $ia < 5 } { incr ia 1 } {
-          if { [ lindex $valid_task_ids $ia ] !=  [ lindex $task_ids $ia ] } {
+          if { [ lindex $guilty_task_ids $ia ] !=  [ lindex $task_ids $ia ] } {
              add_proc_error "job_state_handling_max_aj_tasks" -1 "found wrong task id [ lindex $task_ids $ia ] in array job"
           } 
       } 
@@ -517,9 +517,8 @@ proc job_state_handling_cleanup  {} {
    global CHECK_PRODUCT_ROOT
 
    puts $CHECK_OUTPUT "do qdel -uall"
-   set catch_result [delete_all_jobs]
+   catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result
    puts $CHECK_OUTPUT $catch_result
-
 
    set_error 0 "ok"
 }

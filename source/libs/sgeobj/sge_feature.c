@@ -29,12 +29,12 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
-#include "sge_feature.h"         
-
 #include <string.h>
 #include <errno.h>
+
+#ifdef SGE_MT
 #include <pthread.h>
+#endif
 
 #include "sge.h"
 #include "basis_types.h"
@@ -46,73 +46,45 @@
 #include "sge_log.h"
 #include "sge_utility.h"
 #include "sge_answer.h"
+#include "sge_feature.h"         
 #include "version.h"
+
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
+struct feature_state_t {
+    int        already_read_from_file;
+    lList     *Master_FeatureSet_List;
+};
 
-#define FEATURESET_DEFAULT FEATURESET_SGE
-
-#ifdef ADD_SUN_COPYRIGHT
-#  define GE_LONGNAME "N1 Grid Engine"
-#  define GE_SHORTNAME "N1GE"
+#if defined(SGE_MT)
+static pthread_key_t   feature_state_key;
 #else
-#  define GE_LONGNAME "Grid Engine"
-#  define GE_SHORTNAME "SGE"
+static struct feature_state_t feature_state_opaque = {
+  0, NULL };
+struct feature_state_t *feature_state = &feature_state_opaque;
 #endif
 
-struct feature_state_t {
-    int    already_read_from_file;
-    lList* Master_FeatureSet_List;
-};
-
-static const featureset_names_t featureset_list[] = {
-   {FEATURE_NO_SECURITY,            "none"},
-   {FEATURE_AFS_SECURITY,           "afs"},
-   {FEATURE_DCE_SECURITY,           "dce"},
-   {FEATURE_KERBEROS_SECURITY,      "kerberos"},
-   {FEATURE_CSP_SECURITY,           "csp"},
-   {0, NULL}
-};
-/* *INDENT-ON* */
-
-static pthread_once_t feature_once = PTHREAD_ONCE_INIT;
-static pthread_key_t feature_state_key;
-
-static void feature_once_init(void);
-static void feature_state_destroy(void* theState);
-static void feature_state_init(struct feature_state_t* theState);
-static feature_id_t feature_get_featureset_id(const char *name); 
-
-
-/****** sgeobj/sge_feature/feature_mt_init() ***********************************
-*  NAME
-*     feature_mt_init() -- Initialize feature code for multi threading use.
-*
-*  SYNOPSIS
-*     void feature_mt_init(void) 
-*
-*  FUNCTION
-*     Set up feature code. This function must be called at least once before
-*     any of the feature oriented functions can be used. This function is
-*     idempotent, i.e. it is safe to call it multiple times.
-*
-*     Thread local storage for the feature code state information is reserved. 
-*
-*  INPUTS
-*     void - NONE 
-*
-*  RESULT
-*     void - NONE
-*
-*  NOTES
-*     MT-NOTE: feature_mt_init() is MT safe 
-*
-*******************************************************************************/
-void feature_mt_init(void)
-{
-   pthread_once(&feature_once, feature_once_init);
+#if defined(SGE_MT)
+static void feature_state_init(struct feature_state_t* state) {
+   memset(state, 0, sizeof(struct feature_state_t));
 }
+
+static void feature_state_destroy(void* state) {
+   ((struct feature_state_t*)state)->Master_FeatureSet_List 
+      = lFreeList(((struct feature_state_t*)state)->Master_FeatureSet_List);
+   free(state);
+}
+
+static pthread_once_t feature_once_control = PTHREAD_ONCE_INIT;
+void feature_once_init(void) {
+   pthread_key_create(&feature_state_key, &feature_state_destroy);
+} 
+void feature_init_mt(void) {
+   pthread_once(&feature_once_control, feature_once_init);
+} 
+
+#endif
 
 /****** sge_feature/feature_set_already_read_from_file() ***********************
 *  NAME
@@ -146,6 +118,7 @@ int feature_get_already_read_from_file(void)
    return feature_state->already_read_from_file;
 }
 
+
 /****** sge_feature/feature_get_already_read_from_file() ***********************
 *  NAME
 *     feature_get_master_featureset_list()
@@ -161,6 +134,201 @@ lList **feature_get_master_featureset_list(void)
 {
    GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_get_already_read_from_file");
    return &(feature_state->Master_FeatureSet_List);
+}
+
+
+#define FEATURESET_DEFAULT FEATURESET_SGE
+
+#ifdef ADD_SUN_COPYRIGHT
+#  define GEEE_LONGNAME "Sun Grid Engine, Enterprise Edition"
+#  define GE_LONGNAME "Sun Grid Engine"
+#else
+#  define GEEE_LONGNAME "Grid Engine Enterprise Edition"
+#  define GE_LONGNAME "Grid Engine"
+#endif
+
+#define GEEE_SHORTNAME "SGEEE"
+#define GE_SHORTNAME "SGE"
+
+/* *INDENT-OFF* */
+
+static const int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = { 
+/*  FEATURE_UNINITIALIZED                                          */
+/*  |  FEATURE_REPRIORISATION                                   */
+/*  |  |  FEATURE_REPORT_USAGE                                  */
+/*  |  |  |  FEATURE_SPOOL_ADD_ATTR                             */
+/*  |  |  |  |  FEATURE_SGEEE                                   */
+/*  |  |  |  |  |                                               */
+/*  |  |  |  |  |    FEATURE_NO_SECURITY                        */
+/*  |  |  |  |  |    |  FEATURE_AFS_SECUIRITY                   */
+/*  |  |  |  |  |    |  |  FEATURE_DCE_SECURITY                 */
+/*  |  |  |  |  |    |  |  |  FEATURE_KERBEROS_SECURITY         */   
+/*  |  |  |  |  |    |  |  |  |  FEATURE_RESERVED_PORT_SECURITY */ 
+/*  |  |  |  |  |    |  |  |  |  |  FEATURE_CSP_SECURITY        */
+/*  v  v  v  v  v    v  v  v  v  v  v                           */
+                                       
+   {0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0},   /* FEATURESET_UNINITIALIZED       */
+   {0, 0, 1, 0, 0,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGE                 */
+   {0, 1, 1, 1, 1,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGEEE               */
+   {0, 0, 1, 0, 0,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGE_AFS             */
+   {0, 1, 1, 1, 1,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGEEE_AFS           */
+   {0, 0, 1, 0, 0,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGE_DCE             */
+   {0, 1, 1, 1, 1,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGEEE_DCE           */
+   {0, 0, 1, 0, 0,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGE_KERBEROS        */
+   {0, 1, 1, 1, 1,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGEEE_KERBEROS      */
+   {0, 0, 1, 0, 0,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGE_RESERVED_PORT   */
+   {0, 1, 1, 1, 1,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGEEE_RESERVED_PORT */
+   {0, 0, 1, 0, 0,   0, 0, 0, 0, 0, 1},   /* FEATURESET_SGE_CSP   */
+   {0, 1, 1, 1, 1,   0, 0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_CSP */
+};
+
+static const feature_names_t feature_list[] = {
+   {FEATURE_REPRIORITIZATION,       "reprioritization"},
+   {FEATURE_REPORT_USAGE,           "report_usage"},
+   {FEATURE_NO_SECURITY,            "no_security"},
+   {FEATURE_AFS_SECURITY,           "afs_security"},
+   {FEATURE_DCE_SECURITY,           "dce_security"},
+   {FEATURE_KERBEROS_SECURITY,      "kerberos_security"},
+   {FEATURE_RESERVED_PORT_SECURITY, "reserved_port_security"},
+   {FEATURE_CSP_SECURITY,           "csp_security"},
+   {0, NULL}
+};  
+
+static const featureset_names_t featureset_list[] = {
+   {FEATURESET_SGE,                 "sge"},
+   {FEATURESET_SGEEE,               "sgeee"},
+   {FEATURESET_SGE_AFS,             "sge-afs"},
+   {FEATURESET_SGEEE_AFS,           "sgeee-afs"},
+   {FEATURESET_SGE_DCE,             "sge-dce"},
+   {FEATURESET_SGEEE_DCE,           "sgeee-dce"},
+   {FEATURESET_SGE_KERBEROS,        "sge-kerberos"},
+   {FEATURESET_SGEEE_KERBEROS,      "sgeee-kerberos"},
+/*
+ * if changed, please update setup_commd_path.c 
+ * function use_reserved_port() 
+ */
+   {FEATURESET_SGE_RESERVED_PORT,   "sge-reserved_port"},  
+   {FEATURESET_SGEEE_RESERVED_PORT, "sgeee-reserved_port"},
+   {FEATURESET_SGE_CSP,             "sge-csp"},
+   {FEATURESET_SGEEE_CSP,           "sgeee-csp"},
+   {0, NULL}
+};
+
+/* *INDENT-ON* */
+
+/****** sgeobj/feature/feature_initialize() ***********************************
+*  NAME
+*     feature_initialize() -- initialize this module 
+*
+*  SYNOPSIS
+*     static void feature_initialize(void) 
+*
+*  FUNCTION
+*     build up the CULL list "Master_FeatureSet_List" (FES_Type) with 
+*     information found in the array "enabled_features_mask"
+*
+*  INPUTS
+*     static array enabled_features_mask[][] 
+*
+*  RESULT
+*     initialized Master_FeatureSet_List
+*
+*  NOTES
+*     MT-NOTE: feature_initialize() is MT safe
+******************************************************************************/
+void feature_initialize(void)
+{
+   if (!*feature_get_master_featureset_list()) {
+      lListElem *featureset;
+      lListElem *feature;
+      int featureset_id;
+      int feature_id;
+ 
+      for(featureset_id = 0;
+          featureset_id < FEATURESET_LAST_ENTRY;
+          featureset_id++) {
+         featureset = lAddElemUlong(feature_get_master_featureset_list(), FES_id,
+                                  featureset_id, FES_Type);
+         lSetUlong(featureset, FES_active, 0);
+         for(feature_id = 0;
+             feature_id < FEATURE_LAST_ENTRY;
+             feature_id++) {
+            feature = lAddSubUlong(featureset, FE_id,
+                                  feature_id, FES_features, FE_Type);
+            lSetUlong(feature, FE_enabled,
+                            enabled_features_mask[featureset_id][feature_id]);
+         }
+      }
+   }
+}                 
+
+/****** sgeobj/feature/feature_initialize_from_file() *************************
+*  NAME
+*     feature_initialize_from_file() -- tag one featureset as active 
+*
+*  SYNOPSIS
+*     int feature_initialize_from_file(char *filename) 
+*
+*  FUNCTION
+*     This function reads the product mode string from file and
+*     tags the corresponding featureset enty within the 
+*     Master_FeatureSet_List as active.
+*
+*  INPUTS
+*     char *filename - product mode filename 
+*
+*  OUTPUT
+*     lList** alpp - in case of error used to return answer list containg
+*                    diagnosis information
+*
+*  RESULT
+*        0 OK
+*       -1 invalid filename
+*       -2 file doesn't exist
+*       -3 unknown mode-string in file
+*
+*  NOTES
+*     MT-NOTE: feature_initialize_from_file() is MT safe
+******************************************************************************/
+int feature_initialize_from_file(const char *filename, lList** alpp) 
+{
+   int ret;
+
+   DENTER(TOP_LAYER, "featureset_initialize_from_file");
+
+   if (!feature_get_already_read_from_file()) {
+      FILE *fp;
+
+      if (!filename) {
+         answer_list_add(alpp, MSG_GDI_NULL_FEATURE, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = -1;
+      } else {
+         fp = fopen(filename, "r");
+         if (!fp) {
+            ERROR((SGE_EVENT, MSG_GDI_PRODUCTMODENOTSETFORFILE_S, filename));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            ret = -2;
+         } else {
+            char mode[128];
+            char buf[128];
+            fgets(buf, 127, fp);
+            fclose(fp); 
+            sscanf(buf,"%s", mode);
+            ret = feature_initialize_from_string(mode);
+
+            if (ret == -3) {
+               ERROR((SGE_EVENT, MSG_GDI_CORRUPTPRODMODFILE_S, filename));  
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            } else if (ret == 0) {
+               feature_set_already_read_from_file(1);
+            }
+         }
+      }
+   } else{
+      ret = 0;
+   }
+   DEXIT;
+   return ret;
 }
 
 /****** sgeobj/feature/feature_initialize_from_string() ***********************
@@ -188,14 +356,12 @@ lList **feature_get_master_featureset_list(void)
 ******************************************************************************/
 int feature_initialize_from_string(const char *mode) 
 {
-   feature_id_t id;
+   featureset_id_t id;
    int ret;
 
    DENTER(TOP_LAYER, "featureset_initialize_from_string");
-
    id = feature_get_featureset_id(mode);
-
-   if (id == FEATURE_UNINITIALIZED) {
+   if (id == FEATURESET_UNINITIALIZED) {
       ERROR((SGE_EVENT, MSG_GDI_INVALIDPRODUCTMODESTRING_S, mode));
       ret = -3;
    } else {
@@ -204,42 +370,6 @@ int feature_initialize_from_string(const char *mode)
    }
    DEXIT;
    return ret;
-}
-
-/****** sgeobj/feature/feature_initialize() ***********************************
-*  NAME
-*     feature_initialize() -- initialize this module
-*
-*  SYNOPSIS
-*     static void feature_initialize(void)
-*
-*  FUNCTION
-*     build up the CULL list "Master_FeatureSet_List" (FES_Type) with
-*     information found in the array "enabled_features_mask"
-*
-*  INPUTS
-*     static array enabled_features_mask[][]
-*
-*  RESULT
-*     initialized Master_FeatureSet_List
-*
-*  NOTES
-*     MT-NOTE: feature_initialize() is MT safe
-******************************************************************************/
-void feature_initialize(void)
-{
-   if (!*feature_get_master_featureset_list()) {
-      lListElem *featureset;
-      int featureset_id;
-
-      for(featureset_id = 0;
-          featureset_id < FEATURE_LAST_ENTRY;
-          featureset_id++) {
-         featureset = lAddElemUlong(feature_get_master_featureset_list(), FES_id,
-                                  featureset_id, FES_Type);
-         lSetUlong(featureset, FES_active, 0);
-      }
-   }
 }
 
 /****** sgeobj/feature/feature_activate() *************************************
@@ -264,20 +394,18 @@ void feature_initialize(void)
 *  NOTES
 *     MT-NOTE: feature_activate() is MT safe
 ******************************************************************************/
-void feature_activate(feature_id_t id) 
+void feature_activate(featureset_id_t id) 
 {
    lListElem *active_set;
    lListElem *inactive_set;
 
-   DENTER(TOP_LAYER, "feature_activate");  
-
+   DENTER(TOP_LAYER, "featureset_activate");  
    if (!*feature_get_master_featureset_list()) {
       feature_initialize();
    }
-   
+
    inactive_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_id, id);
    active_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_active, 1);
-
    if (inactive_set && active_set) {
       lSetUlong(active_set, FES_active, 0);
       lSetUlong(inactive_set, FES_active, 1);
@@ -291,30 +419,63 @@ void feature_activate(feature_id_t id)
    }
    DEXIT;
 }
+ 
+/****** sgeobj/feature/feature_is_active() ************************************
+*  NAME
+*     feature_is_active() -- is featureset active? 
+*
+*  SYNOPSIS
+*     bool feature_is_active(featureset_id_t id) 
+*
+*  FUNCTION
+*     returns true or false whether the given featureset whithin the 
+*     Master_FeatureSet_List is marked as active or not. 
+*
+*  INPUTS
+*     id - feature set constant 
+*
+*  RESULT
+*     true or false
+*
+*  NOTES
+*     MT-NOTE: feature_is_active() is MT safe
+******************************************************************************/
+bool feature_is_active(featureset_id_t id) 
+{
+   lListElem *feature;
+   int ret = false;
+
+   DENTER(TOP_LAYER, "featureset_is_active");
+   feature = lGetElemUlong(*feature_get_master_featureset_list(), FES_id, id);
+   if (feature) {
+      ret = lGetUlong(feature, FES_active) ? true : false;
+   }
+   DEXIT;
+   return ret;
+}
 
 /****** sgeobj/feature/feature_get_active_featureset_id() *********************
 *  NAME
 *     feature_get_active_featureset_id() -- current active featureset 
 *
 *  SYNOPSIS
-*     feature_id_t feature_get_active_featureset_id() 
+*     featureset_id_t feature_get_active_featureset_id() 
 *
 *  FUNCTION
 *     return an id of the current active featureset 
 *
 *  RESULT
-*     feature_id_t - (find the definition in the .h file)
+*     featureset_id_t - (find the definition in the .h file)
 *
 *  NOTES
 *     MT-NOTE: feature_get_active_featureset_id() is MT safe
 ******************************************************************************/
-feature_id_t feature_get_active_featureset_id(void) 
+featureset_id_t feature_get_active_featureset_id(void) 
 {
    lListElem *feature;
-   feature_id_t ret = FEATURE_UNINITIALIZED;
+   int ret = FEATURESET_UNINITIALIZED;
 
    DENTER(TOP_LAYER, "feature_get_active_featureset_id");
-
    for_each(feature, *feature_get_master_featureset_list()) {
       if (lGetUlong(feature, FES_active)) {
          ret = lGetUlong(feature, FES_id);
@@ -330,13 +491,13 @@ feature_id_t feature_get_active_featureset_id(void)
 *     feature_get_featureset_name() -- return the product mode string
 *
 *  SYNOPSIS
-*     char* feature_get_featureset_name(feature_id_t id) 
+*     char* feature_get_featureset_name(featureset_id_t id) 
 *
 *  FUNCTION
 *     returns the corresponding modestring for a featureset constant 
 *
 *  INPUTS
-*     feature_id_t id - constant
+*     featureset_id_t id - constant
 *
 *  RESULT
 *     mode string 
@@ -344,7 +505,7 @@ feature_id_t feature_get_active_featureset_id(void)
 *  NOTES
 *     MT-NOTE: feature_get_featureset_name() is MT safe
 ******************************************************************************/
-const char *feature_get_featureset_name(feature_id_t id) 
+const char *feature_get_featureset_name(featureset_id_t id) 
 {
    int i = 0;
    char *ret = "<<unknown>>";
@@ -365,7 +526,7 @@ const char *feature_get_featureset_name(feature_id_t id)
 *     feature_get_featureset_id() -- Value for a featureset string 
 *
 *  SYNOPSIS
-*     feature_id_t feature_get_featureset_id(char* name) 
+*     featureset_id_t feature_get_featureset_id(char* name) 
 *
 *  FUNCTION
 *     This function returns the corresponding enum value for
@@ -376,15 +537,15 @@ const char *feature_get_featureset_name(feature_id_t id)
 *                  mode string 
 *
 *  RESULT
-*     feature_id_t 
+*     featureset_id_t 
 *
 *  NOTES
 *     MT-NOTE: feature_get_featureset_id() is MT safe
 ******************************************************************************/
-static feature_id_t feature_get_featureset_id(const char *name) 
+featureset_id_t feature_get_featureset_id(const char *name) 
 {
    int i = 0;
-   feature_id_t ret = FEATURE_UNINITIALIZED;
+   featureset_id_t ret = FEATURESET_UNINITIALIZED;
 
    DENTER(TOP_LAYER, "featureset_get_id");
    if (!name) {
@@ -424,19 +585,93 @@ static feature_id_t feature_get_featureset_id(const char *name)
 bool feature_is_enabled(feature_id_t id) 
 {
    lListElem *active_set;
+   lListElem *feature = NULL;
    bool ret = false;
 
    DENTER(BASIS_LAYER, "feature_is_enabled");
    active_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_active, 1);
    if (active_set) {
-      if ( lGetUlong(active_set, FES_id) == id ) {
-         ret = true;
-      }
+      feature = lGetSubUlong(active_set, FE_id, id, FES_features);
+   }
+   if (feature) {
+      ret = lGetUlong(feature, FE_enabled) ? true : false;
    }
    DEXIT;
    return ret;
 }  
  
+/****** sgeobj/feature/feature_get_name() *************************************
+*  NAME
+*     feature_get_name() -- returns the feature as string 
+*
+*  SYNOPSIS
+*     char* feature_get_name(feature_id_t id) 
+*
+*  FUNCTION
+*     return the corresponding feature name 
+*
+*  INPUTS
+*     feature_ id 
+*
+*  RESULT
+*     char* - name of the given feature constant 
+*             (or "<<unknown>>" when the id isn't a valid 
+*              feature constant) 
+*
+*  NOTES
+*     MT-NOTE: feature_get_name() is MT safe
+******************************************************************************/
+const char *feature_get_name(feature_id_t id) 
+{
+   int i = 0;
+   const char *ret = "<<unknown>>";
+
+   DENTER(TOP_LAYER, "feature_get_name");
+   while (feature_list[i].name && feature_list[i].id != id) {
+      i++;
+   }
+   if (feature_list[i].name) {
+      ret = feature_list[i].name;
+   } 
+   DEXIT;
+   return ret; 
+}
+ 
+/****** sgeobj/feature/feature_get_id() ***************************************
+*  NAME
+*     feature_get_id() -- translates a feature string into the constant 
+*
+*  SYNOPSIS
+*     feature_id_t feature_get_id(char* name) 
+*
+*  FUNCTION
+*     returns the corresponding constant for a given feature string 
+*
+*  INPUTS
+*     char* name - valid strings are mentioned above (feature_list[]) 
+*
+*  RESULT
+*     feature_id_t 
+*
+*  NOTES
+*     MT-NOTE: feature_get_id() is MT safe
+******************************************************************************/
+feature_id_t feature_get_id(const char *name) 
+{
+   int i = 0;
+   feature_id_t ret = FEATURESET_UNINITIALIZED;
+
+   DENTER(TOP_LAYER, "feature_get_id");
+   while (feature_list[i].name && strcmp(feature_list[i].name, name)) {
+      i++;
+   }
+   if (feature_list[i].name) {
+      ret = feature_list[i].id;
+   }
+   DEXIT;
+   return ret;
+}
+
 /****** sgeobj/feature/feature_get_product_name() *****************************
 *  NAME
 *     feature_get_product_name() -- get product name string
@@ -474,9 +709,14 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
    const char *ret = NULL;
    DENTER(TOP_LAYER, "feature_get_product_name");
 
-   if (feature_get_active_featureset_id() != FEATURE_UNINITIALIZED ) {
-      short_name = GE_SHORTNAME;
-      long_name  = GE_LONGNAME;
+   if (feature_get_active_featureset_id() != FEATURESET_UNINITIALIZED ) {
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         short_name = GEEE_SHORTNAME;
+         long_name  = GEEE_LONGNAME;
+      } else {
+         short_name = GE_SHORTNAME;
+         long_name  = GE_LONGNAME;
+      }
    }
    version = GDI_VERSION; 
 
@@ -509,85 +749,5 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
    }
    DEXIT;
    return ret;
-}
-
-/****** sgeobj/sge_feature/feature_once_init() *********************************
-*  NAME
-*     feature_once_init() -- One-time feature code initialization.
-*
-*  SYNOPSIS
-*     static feature_once_init(void) 
-*
-*  FUNCTION
-*     Create access key for thread local storage. Register cleanup function.
-*
-*     This function must be called exactly once.
-*
-*  INPUTS
-*     void - none
-*
-*  RESULT
-*     void - none 
-*
-*  NOTES
-*     MT-NOTE: feature_once_init() is MT safe. 
-*
-*******************************************************************************/
-static void feature_once_init(void)
-{
-   pthread_key_create(&feature_state_key, feature_state_destroy);
-}
-
-/****** sgeobj/sge_feature/feature_state_destroy() *****************************
-*  NAME
-*     feature_state_destroy() -- Free thread local storage
-*
-*  SYNOPSIS
-*     static void feature_state_destroy(void* theState) 
-*
-*  FUNCTION
-*     Free thread local storage.
-*
-*  INPUTS
-*     void* theState - Pointer to memory which should be freed.
-*
-*  RESULT
-*     static void - none
-*
-*  NOTES
-*     MT-NOTE: feature_state_destroy() is MT safe.
-*
-*******************************************************************************/
-static void feature_state_destroy(void* theState)
-{
-   struct feature_state_t* state = (struct feature_state_t *)theState;
-
-   state->Master_FeatureSet_List = lFreeList(state->Master_FeatureSet_List);
-   free(state);
-}
-
-/****** sgeobj/sge_feature/feature_state_init() *******************************************
-*  NAME
-*     feature_state_init() -- Initialize feature code state.
-*
-*  SYNOPSIS
-*     static void feature_state_init(struct feature_state_t* theState) 
-*
-*  FUNCTION
-*     Initialize feature code state.
-*
-*  INPUTS
-*     struct feature_state_t* theState - Pointer to feature state structure.
-*
-*  RESULT
-*     static void - none
-*
-*  NOTES
-*     MT-NOTE: feature_state_init() is MT safe. 
-*
-*******************************************************************************/
-static void feature_state_init(struct feature_state_t* theState)
-{
-   memset(theState, 0, sizeof(struct feature_state_t));
 }
 

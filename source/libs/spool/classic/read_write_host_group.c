@@ -38,7 +38,7 @@
 
 #include "sgermon.h"
 #include "sge.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 #include "read_write_host_group.h"
 #include "sge_string.h"
 #include "sge_log.h"
@@ -111,7 +111,7 @@ char *write_host_group(int spool, int how, const lListElem *ep)
    char buffer[256];
 
    DENTER(TOP_LAYER, "write_host_group");
-
+  
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    strcpy(filename, lGetHost(ep, HGRP_name));
    switch (how) {

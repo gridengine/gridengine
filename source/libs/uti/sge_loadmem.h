@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#if defined(CRAY) || defined(SOLARIS) || defined(HPUX) || defined(ALPHA) || defined(LINUX) || defined(IRIX) || defined(NECSX4) || defined(NECSX5) || defined(DARWIN) || defined(FREEBSD)
+#if defined(CRAY) || defined(SOLARIS) || defined(HP10) || defined(HP11) || defined(ALPHA) || defined(LINUX) || defined(IRIX6) || defined(NECSX4) || defined(NECSX5) || defined(DARWIN) || defined(FREEBSD)
 
 #define SGE_LOADMEM
 
@@ -46,7 +46,7 @@
 *        double mem_free;  
 *        double swap_total; 
 *        double swap_free;   
-*     #ifdef IRIX
+*     #ifdef IRIX6
 *        double swap_rsvd;   
 *     #endif
 *     } sge_mem_info_t;
@@ -66,7 +66,7 @@ typedef struct {
    double mem_free;    
    double swap_total;  
    double swap_free; 
-#ifdef IRIX
+#ifdef IRIX6
    double swap_rsvd;  
 #endif
 } sge_mem_info_t;

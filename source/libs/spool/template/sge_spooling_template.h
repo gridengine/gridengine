@@ -65,35 +65,32 @@ spool_template_common_startup_func(lList **answer_list,
                                    const lListElem *rule);
 
 bool 
-spool_template_default_shutdown_func(lList **answer_list, 
-                                     const lListElem *rule);
-bool 
-spool_template_default_maintenance_func(lList **answer_list, 
-                                        const lListElem *rule,
-                                        const spooling_maintenance_command cmd,
-                                        const char *args);
-
-bool 
 spool_template_default_list_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, lList **list, 
-                                 const sge_object_type object_type);
+                                 const sge_object_type event_type);
 lListElem *
 spool_template_default_read_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, const char *key, 
-                                 const sge_object_type object_type);
+                                 const sge_object_type event_type);
 bool 
 spool_template_default_write_func(lList **answer_list, 
                                   const lListElem *type, 
                                   const lListElem *rule, 
                                   const lListElem *object, const char *key, 
-                                  const sge_object_type object_type);
+                                  const sge_object_type event_type);
 bool 
 spool_template_default_delete_func(lList **answer_list, 
                                    const lListElem *type, 
                                    const lListElem *rule, 
                                    const char *key, 
-                                   const sge_object_type object_type);
+                                   const sge_object_type event_type);
+bool
+spool_template_default_verify_func(lList **answer_list, 
+                                   const lListElem *type, 
+                                   const lListElem *rule,
+                                   lListElem *object,
+                                   const sge_object_type event_type);
 
 #endif /* __SGE_SPOOLING_TEMPLATE_H */    

@@ -33,20 +33,20 @@
 /*___INFO__MARK_END__*/
 
 #ifndef INSTCO_H
-#  ifdef IRIX
+#  ifdef IRIX6
 typedef long long uint64;
 #else
 typedef unsigned long uint64;   /* This should work on all current machines */
 #endif
 #endif /* INSTCO_H */
 
-#ifdef IRIX
+#ifdef IRIX6
 #define UINT64_FMT "%lld"
 #else
 #define UINT64_FMT "%ld"
 #endif
 
-#if !defined(LINUX) && !defined(ALINUX) && !defined(ALPHA) && !defined(SOLARIS) && !defined(DARWIN)
+#if !defined(LINUX) && !defined(ALINUX) && !defined(ALPHA) && !defined(SOLARIS)
 typedef uint64 JobID_t;
 #else
 typedef pid_t JobID_t;

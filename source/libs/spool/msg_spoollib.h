@@ -57,16 +57,12 @@
 #define MSG_SPOOL_STARTUPOFRULEFAILED_SS  _MESSAGE(59020, _("startup of rule "SFQ" in context "SFQ" failed\n"))
 #define MSG_SPOOL_SHUTDOWNOFRULEFAILED_SS  _MESSAGE(59021,_("shutdown of rule "SFQ" in context "SFQ" failed\n"))
 #define MSG_SPOOL_MAINTENANCEOFRULEFAILED_SS  _MESSAGE(59022,_("maintenance function of rule "SFQ" in context "SFQ" failed\n"))
-#define MSG_SPOOL_TRIGGEROFRULEFAILED_SS  _MESSAGE(59023,_("trigger function of rule "SFQ" in context "SFQ" failed\n"))
-#define MSG_SPOOL_TRANSACTIONOFRULEFAILED_SS  _MESSAGE(59024,_("transaction function of rule "SFQ" in context "SFQ" failed\n"))
 /* 
  * libs/spool/sge_spooling_utilities.c
  */
 #define MSG_DONTKNOWHOWTOSPOOLSUBLIST_SS _MESSAGE(59100, _("don't know how to spool list attribute "SFQ" in function "SFQ"\n"))
 #define MSG_UNKNOWNOBJECTTYPEFOR_SS _MESSAGE(59101, _("unknown object type for list attribute "SFQ" in function "SFQ"\n"))
 #define MSG_NONAMEFORATTRIBUTE_D _MESSAGE(59103, _("no or invalid name for attribute %d\n"))
-#define MSG_SPOOL_CANTRESOLVEHOSTNAME_SS _MESSAGE(59104, _("can't resolve host name "SFQ": "SFN"\n"))
-#define MSG_SPOOL_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(59105, _("can't creae queue "SFQ": host "SFQ" is not known\n"))
 
 /*
  * libs/spool/<method>/<code>

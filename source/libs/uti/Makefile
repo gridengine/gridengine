@@ -34,42 +34,39 @@
 #___INFO__MARK_END__
 UTILIB_DIR  = $(SDIR)/libs/uti
 
-UTILIB  = libuti$(LIBEXT)
+UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 
-UTILIB_DRMAA_SRC = \
+UTILIB_SRC = \
          config_file.c \
-         setup_path.c \
          sge_afsutil.c \
          sge_arch.c \
          sge_bitfield.c \
          sge_bitop.c \
-         sge_bootstrap.c \
          sge_crc.c \
-         sge_dstring.c \
-         sge_edit.c \
          sge_hostname.c \
+         sge_getloadavg.c \
          sge_htable.c \
          sge_io.c \
          sge_language.c \
+         sge_loadmem.c \
          sge_log.c \
          sge_nprocs.c \
          sge_os.c \
-         sge_parse_num_par.c \
          sge_profiling.c \
          sge_prog.c \
          sge_signal.c \
-         sge_spool.c \
-         sge_stdio.c \
-         sge_stdlib.c \
          sge_string.c \
+         sge_dstring.c \
          sge_time.c \
+         sge_stdio.c \
+         sge_spool.c \
+         sge_stdlib.c \
+         sge_unistd.c \
+         sge_parse_num_par.c \
          sge_tmpnam.c \
-         sge_uidgid.c \
-         sge_unistd.c
+         sge_edit.c \
+         sge_uidgid$(QIDLEXT).c 
 
-UTILIB_SRC = sge_loadmem.c sge_getloadavg.c $(UTILIB_DRMAA_SRC)
-
-UTILIB_DRMAA_OBJS = $(UTILIB_DRMAA_SRC:.c=.o)
 UTILIB_OBJS = $(UTILIB_SRC:.c=.o)
 
 UTILIB_ADD_OBJS = peopen_standalone.o pids_standalone.o
@@ -120,16 +117,13 @@ include $(UTILIB_DIR)/uti_dependencies
 config_file.o:  $(UTILIB_DIR)/config_file.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/config_file.c
 
-setup_path.o:  $(UTILIB_DIR)/setup_path.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/setup_path.c
-
 sge_hostname.o:	$(UTILIB_DIR)/sge_hostname.c
-		$(CC) $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c
 
 sge_parse_num_par.o:	$(UTILIB_DIR)/sge_parse_num_par.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_parse_num_par.c
 
-sge_uidgid.o:	$(UTILIB_DIR)/sge_uidgid.c
+sge_uidgid$(QIDLEXT).o:	$(UTILIB_DIR)/sge_uidgid.c
 		$(LD_WRAPPER) $(CC) -o $@ $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_uidgid.c
 
 sge_afsutil.o: $(UTILIB_DIR)/sge_afsutil.c
@@ -155,9 +149,6 @@ sge_crc.o: 	$(UTILIB_DIR)/sge_crc.c
 
 sge_bitop.o:	$(UTILIB_DIR)/sge_bitop.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bitop.c
-
-sge_bootstrap.o:	$(UTILIB_DIR)/sge_bootstrap.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_bootstrap.c
 
 sge_prog.o:	$(UTILIB_DIR)/sge_prog.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_prog.c
@@ -219,12 +210,6 @@ sge_edit.o:	$(UTILIB_DIR)/sge_edit.c
 ###############################################################################
 # test targets
 ###############################################################################
-test_sge_dstring: test_sge_dstring.o $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_dstring $(LFLAGS) test_sge_dstring.o $(UTILIB) $(RMONLIB) $(LIBS)
-
-test_sge_dstring.o: $(UTILIB_DIR)/test_sge_dstring.c
-	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_dstring.c
-
 test_sge_profiling: test_sge_profiling.o $(UTILIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(RMONLIB) $(LIBS)
 

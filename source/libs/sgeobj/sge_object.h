@@ -96,8 +96,7 @@
 *        SGE_TYPE_SHARETREE
 *        SGE_TYPE_PE
 *        SGE_TYPE_PROJECT
-*        SGE_TYPE_CQUEUE
-*        SGE_TYPE_QINSTANCE
+*        SGE_TYPE_QUEUE
 *        SGE_TYPE_SCHEDD_CONF
 *        SGE_TYPE_SCHEDD_MONITOR
 *        SGE_TYPE_SHUTDOWN
@@ -112,7 +111,8 @@
 *        SGE_TYPE_HGROUP
 *  
 *     The last value defined as obect type is SGE_TYPE_ALL. 
-*****************************************************************************/
+****************************************************************************
+*/
 typedef enum {
    SGE_TYPE_ADMINHOST = 0,
    SGE_TYPE_CALENDAR,
@@ -129,8 +129,8 @@ typedef enum {
    SGE_TYPE_SHARETREE,
    SGE_TYPE_PE,
    SGE_TYPE_PROJECT,
+   SGE_TYPE_QUEUE,
    SGE_TYPE_CQUEUE,
-   SGE_TYPE_QINSTANCE,
    SGE_TYPE_SCHEDD_CONF,
    SGE_TYPE_SCHEDD_MONITOR,
    SGE_TYPE_SHUTDOWN,
@@ -140,16 +140,6 @@ typedef enum {
    SGE_TYPE_USERSET,
    SGE_TYPE_HGROUP,
    SGE_TYPE_CENTRY,
-
-   /*
-    * Don't forget to edit
-    *
-    *    'mirror_base' in libs/mir/sge_mirror.c
-    *    'object_base' in libs/sgeobj/sge_object.c
-    *    'table_base' in libs/spool/sge_spooling_database.c
-    *
-    * if something is changed here!
-    */
 #ifndef __SGE_NO_USERMAPPING__
    SGE_TYPE_CUSER,
 #endif
@@ -160,24 +150,17 @@ typedef enum {
 lList **
 object_type_get_master_list(const sge_object_type type);
 
-bool 
-object_type_commit_master_list(const sge_object_type type, lList **answer_list); 
-
 bool
 object_type_free_master_list(const sge_object_type type);
 
 const char *
 object_type_get_name(const sge_object_type type);
 
-sge_object_type 
-object_name_get_type(const char *name);
-
 const lDescr *
 object_type_get_descr(const sge_object_type type);
 
 int
 object_type_get_key_nm(const sge_object_type type);
-
 
 /* JG: TODO: rename to object_has_descr, make function object_has_type 
              and call this function where possible */
@@ -263,43 +246,19 @@ object_parse_inter_from_string(lListElem *this_elem, lList **answer_list,
                                int name, const char *string);
 
 bool
-object_parse_list_from_string(lListElem *this_elem, lList **answer_list,
-                              int name, const char *string,
-                              const lDescr *descr, int nm);
-
-bool
-object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
-                                int name, const char *string);
-
-bool
-object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
-                                int name, const char *string);
-
-bool
-object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
-                                int name, const char *string);
-
-bool
 object_set_any_type(lListElem *this_elem, int name, void *value);
-
-bool
-object_replace_any_type(lListElem *this_elem, int name, lListElem *org_elem);
 
 void
 object_get_any_type(lListElem *this_elem, int name, void *value);
 
-bool 
+void 
 attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   int this_elem_primary_key, lListElem *delta_elem, 
-                  int sub_command, const char *sub_list_name, 
-                  const char *object_name, int no_info); 
+                  int sub_command, char *sub_list_name, char *object_name, 
+                  int no_info); 
 
 bool  
 object_has_differences(lListElem *this_elem, lList **answer_list,
                        lListElem *old_elem, bool modify_changed_flag);
-
-bool
-object_list_has_differences(lList *this_elem, lList **answer_list,
-                            lList *old_elem, bool modify_changed_flag);
 
 #endif /* __SGE_OBJECT_H */

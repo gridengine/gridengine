@@ -53,7 +53,6 @@
 #include "sge_time.h"
 #include "sge_mailrec.h"
 #include "sge_range.h"
-#include "sge_qinstance.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"
@@ -382,8 +381,7 @@ Cardinal size
     */
 
    if (type != QmonQUS_Type && type != QmonQMR_Type && 
-       type != QmonQUP_Type && type != QmonQSTR_Type && 
-       type != QmonQSTU_Type && type != QmonQHR_Type) {
+       type != QmonQUP_Type && type != QmonQSTR_Type ) {
       XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
          "Type Mismatch: Widget '%s':\n\tCan't set widget values"
          " from a resource of type '%s'",
@@ -412,10 +410,6 @@ Cardinal size
       UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, UP_name);
    }
    
-   if (type == QmonQHR_Type) {
-      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, HR_name);
-   }
-   
    if (type == QmonQMR_Type) {
       String *str_table = NULL;
       Cardinal itemCount;
@@ -441,8 +435,8 @@ Cardinal size
       }
 
       for (ep=lFirst(lp), i=0; ep; ep=lNext(ep), i++) {
-         str1 = (StringConst)lGetString(ep, MR_user);
-         str2 = (StringConst)lGetHost(ep, MR_host);
+         str1 = lGetString(ep, MR_user);
+         str2 = lGetHost(ep, MR_host);
          if (str1) {
             if (!str2)
                strncpy(buf, str1, BUFSIZ);
@@ -459,10 +453,6 @@ Cardinal size
    
    if (type == QmonQSTR_Type) {
       UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, ST_name);
-   }
-
-   if (type == QmonQSTU_Type) {
-      UpdateXmListFromCull(w, XmFONTLIST_DEFAULT_TAG, lp, STU_name);
    }
       
    XmtLayoutEnableLayout(parent);
@@ -483,8 +473,7 @@ Cardinal size
     */
 
    if (type != QmonQUS_Type && type != QmonQMR_Type && 
-       type != QmonQUP_Type && type != QmonQSTR_Type && 
-       type != QmonQSTU_Type && type != QmonQHR_Type) {
+       type != QmonQUP_Type && type != QmonQSTR_Type ) {
       XmtWarningMsg("XmtDialogSetDialogValues", "XbaeMatrix",
          "Type Mismatch: Widget '%s':\n\tCan't get widget values"
          " from a resource of type '%s'",
@@ -506,14 +495,6 @@ Cardinal size
 
    if (type == QmonQSTR_Type) {
       lp = XmStringToCull(w, ST_Type, ST_name, ALL_ITEMS);
-   }
-
-   if (type == QmonQSTU_Type) {
-      lp = XmStringToCull(w, STU_Type, STU_name, ALL_ITEMS);
-   }
-
-   if (type == QmonQHR_Type) {
-      lp = XmStringToCull(w, HR_Type, HR_name, ALL_ITEMS);
    }
 
    *(lList**)address = lp;
@@ -671,17 +652,10 @@ Cardinal size
          for_each(ep, list) {
             if (first_time) {
                first_time = 0;
-               if (lGetString(ep, JRE_job_name))
-                  sprintf(buf, "%s", lGetString(ep, JRE_job_name));
-               else
-                  sprintf(buf, u32, lGetUlong(ep, JRE_job_number));
+               sprintf(buf, "%s", lGetString(ep, JRE_job_name));
             }
-            else {
-               if (lGetString(ep, JRE_job_name))
-                  sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
-               else  
-                  sprintf(buf, "%s "u32, buf, lGetUlong(ep, JRE_job_number)); 
-            }   
+            else
+               sprintf(buf, "%s %s", buf, lGetString(ep, JRE_job_name));
          }
       }
       str = buf;
@@ -725,7 +699,7 @@ Cardinal size
          range_list_parse_from_string(&ret_list, &alp, str,
                                       0, 0, INF_ALLOWED);
          if (alp) {
-            qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
+            qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);
          }
       }
@@ -733,7 +707,7 @@ Cardinal size
          range_list_parse_from_string(&ret_list, &alp, str,
                                       0, 1, INF_NOT_ALLOWED);
          if (alp) {
-            qmonMessageShow(w, True, (StringConst)lGetString(lFirst(alp), AN_text));
+            qmonMessageShow(w, True, lGetString(lFirst(alp), AN_text));
             alp =lFreeList(alp);
          }
       }
@@ -814,15 +788,15 @@ int type
          strcat(pair_string, comma);
 
       if (nm1 == PN_host ) {
-         field1 = (StringConst)lGetHost(ep, nm1);
+         field1 = lGetHost(ep, nm1);
       } else {
-         field1 = (StringConst)lGetString(ep, nm1);
+         field1 = lGetString(ep, nm1);
       }
 
       if (nm2 == MR_host) {
-         field2 = (StringConst)lGetHost(ep, nm2);
+         field2 = lGetHost(ep, nm2);
       } else {
-         field2 = (StringConst)lGetString(ep, nm2);
+         field2 = lGetString(ep, nm2);
       }
       
       if (field1 && field1[0] != '\0') {

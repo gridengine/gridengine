@@ -39,20 +39,20 @@ QCONF_TARGETS = qconf
 QCONF_SRC = qconf.c \
             parse_qconf.c \
             sge_client_access.c \
-            sge_cuser_qconf.c
+            sge_cuser_qconf.c \
+            sge_cqueue_qconf.c
 
 QCONF_ADD_SRC = \
                usage.c sge_options.c sig_handlers.c \
-               sge_hgroup_qconf.c sge_centry_qconf.c \
-               sge_cqueue_qconf.c sge_mt_init.c
+               sge_hgroup_qconf.c sge_centry_qconf.c
 
 QCONF_OBJS = $(QCONF_SRC:.c=.o) 
 
-QCONF_ADD_OBJS = $(QCONF_ADD_SRC:.c=.o) libspoolf.a
+QCONF_ADD_OBJS = $(QCONF_ADD_SRC:.c=.o)
 
-QCONF_ADD_LIBS = -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+QCONF_ADD_LIBS = -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon $(DLLIB)
 
-QCONF_LIB_DEPENDS = $(SPOOLFLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+QCONF_LIB_DEPENDS = $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -89,6 +89,9 @@ sge_client_access.o: $(QCONF_DIR)/sge_client_access.c
 
 sge_cuser_qconf.o: $(QCONF_DIR)/sge_cuser_qconf.c
 		$(CC) $(CFLAGS) -c $(QCONF_DIR)/sge_cuser_qconf.c
+
+sge_cqueue_qconf.o: $(QCONF_DIR)/sge_cqueue_qconf.c
+		$(CC) $(CFLAGS) -c $(QCONF_DIR)/sge_cqueue_qconf.c
 
 parse_qconf.o:	$(QCONF_DIR)/parse_qconf.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) -c $(QCONF_DIR)/parse_qconf.c

@@ -29,10 +29,8 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 #include <stdlib.h>
 
 #include "cull.h"
@@ -40,12 +38,9 @@
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_centry.h"
-#include "sge_resource_utilization.h"
 #include "parse_qsubL.h"
 #include "sge_stdio.h"
 
-static int fprint_name_value_list(FILE *fp, char *name, lList *thresholds, int print_slots,
-     int nm_name, int nm_strval, int nm_doubleval);
 /*
 ** NAME
 **   cull_parse_string_list
@@ -74,12 +69,12 @@ int cull_parse_string_list(
 char **pstrlist,
 const char *listname,
 lDescr *descr,
-int *interpretation_rule,
+intprt_type *interpretation_rule,
 lList **pplist 
 ) {
    lList *list;
    lListElem *ep;
-   int *rule;
+   intprt_type *rule;
    int type;
 
    DENTER(BASIS_LAYER, "cull_parse_string_list");
@@ -280,7 +275,7 @@ char *str,
 lList **lpp,
 const char *name,
 lDescr *descr,
-int *interpretation_rule 
+intprt_type *interpretation_rule 
 ) {
    char **pstr;
    int ret;
@@ -646,7 +641,7 @@ char *str,
 lList **lpp,
 char *name,
 lDescr *descr,
-int *interpretation_rule 
+intprt_type *interpretation_rule 
 ) {
    char **pstr;
    int ret;
@@ -725,13 +720,13 @@ int uni_print_list(
 FILE *fp,
 char *buff,
 u_long32 max_len,
-const lList *lp,
-int *which_elements_rule,
+lList *lp,
+intprt_type *which_elements_rule,
 const char *pdelis[],
 unsigned long flags 
 ) {
    lListElem *ep;
-   int *rule;
+   intprt_type *rule;
    int type;
    const lDescr *descr;
    int begin = 1;
@@ -1025,119 +1020,11 @@ FPRINTF_ERROR:
    return -1;
 }                   
 
-
-/****** cull_parse_util/fprint_thresholds() ************************************
-*  NAME
-*     fprint_thresholds() -- Print a name=value list of type CE_Type
-*
-*  SYNOPSIS
-*     int fprint_thresholds(FILE *fp, char *name, lList *thresholds, int 
-*     print_slots) 
-*
-*  FUNCTION
-*     A CE_Type list is printed to 'fp' in a name=value,name=value,... 
-*     fashion. If print_slots is 0 an entry with name "slots" is skipped.
-*     The 'name' is printed prior the actual list to 'fp'.
-*
-*  INPUTS
-*     FILE *fp          - The file pointer 
-*     char *name        - The name printed before the list
-*     lList *thresholds - The CE_Type list.
-*     int print_slots   - Flag indicating whether "slots" is skipped or not.
-*
-*  RESULT
-*     int - 0 on success 
-*           -1 on fprintf() errors
-*
-*  NOTES
-*     MT-NOTE: fprint_thresholds() is MT safe
-*******************************************************************************/
 int fprint_thresholds(
 FILE *fp,
 char *name,
 lList *thresholds,
 int print_slots 
-) {
-   return fprint_name_value_list(fp, name, thresholds, print_slots, CE_name, CE_stringval, CE_doubleval);
-}
-
-/****** cull_parse_util/fprint_resource_utilizations() *************************
-*  NAME
-*     fprint_resource_utilizations() -- Print a name=value list of type RUE_Type
-*
-*  SYNOPSIS
-*     int fprint_resource_utilizations(FILE *fp, char *name, lList *thresholds, 
-*     int print_slots) 
-*
-*  FUNCTION
-*     A RUE_Type list is printed to 'fp' in a name=value,name=value,... 
-*     fashion. If print_slots is 0 an entry with name "slots" is skipped.
-*     The 'name' is printed prior the actual list to 'fp'.
-*
-*  INPUTS
-*     FILE *fp          - The file pointer 
-*     char *name        - The name printed before the list
-*     lList *thresholds - The RUE_Type list.
-*     int print_slots   - Flag indicating whether "slots" is skipped or not.
-*
-*  RESULT
-*     int - 0 on success 
-*           -1 on fprintf() errors
-*
-*  NOTES
-*     MT-NOTE: fprint_resource_utilizations() is MT safe
-*******************************************************************************/
-int fprint_resource_utilizations(
-FILE *fp,
-char *name,
-lList *thresholds,
-int print_slots 
-) {
-   return fprint_name_value_list(fp, name, thresholds, print_slots, RUE_name, -1, RUE_utilized_now);
-}
-
-/****** cull_parse_util/fprint_name_value_list() *******************************
-*  NAME
-*     fprint_name_value_list() -- Print name=value list of any type.
-*
-*  SYNOPSIS
-*     static int fprint_name_value_list(FILE *fp, char *name, lList 
-*     *thresholds, int print_slots, int nm_name, int nm_strval, int 
-*     nm_doubleval) 
-*
-*  FUNCTION
-*     A list with name (String) and value (Double) CULL fields is printed 
-*     to 'fp' in a name=value,name=value,... fashion. If print_slots is 0 
-*     an entry with name "slots" is skipped. The 'name' is printed prior 
-*     the actual list to 'fp'. In 'nm_name'/'nm_strval' the CULL names must
-*     be passed. Optionally a string representation of the value is printed 
-*     if non-NULL and if 'nm_strval' is not -1.
-*
-*  INPUTS
-*     FILE *fp          - The file pointer
-*     char *name        - The name printed before the list
-*     lList *thresholds - The list
-*     int print_slots   - Flag indicating whether "slots" is skipped or not.
-*     int nm_name       - The CULL nm for the name (String).
-*     int nm_strval     - The CULL nm for the value (Double).
-*     int nm_doubleval  - If existing in the list the CULL nm for a string 
-*                         representation of the value (String) or -1 otherwise.
-*
-*  RESULT
-*     int - 0 on success
-*           -1 on fprintf() errors
-*
-*  NOTES
-*     MT-NOTE: fprint_name_value_list() is MT safe
-*******************************************************************************/
-static int fprint_name_value_list(
-FILE *fp,
-char *name,
-lList *thresholds,
-int print_slots,
-int nm_name,
-int nm_strval,
-int nm_doubleval
 ) {
    lListElem *lep;
    int printed = 0;
@@ -1149,17 +1036,17 @@ int nm_doubleval
    FPRINTF((fp, "%s", name));
 
    for_each(lep, thresholds) {
-      if (print_slots || strcmp("slots", lGetString(lep, nm_name))) {
+      if (print_slots || strcmp("slots", lGetString(lep, CE_name))) {
          if (printed) {
             FPRINTF((fp, ","));
          }
 
-         if (nm_strval == -1 || !(s=lGetString(lep, nm_strval))) {
-            sprintf(buffer, "%f", lGetDouble(lep, nm_doubleval));
+         if (!(s=lGetString(lep, CE_stringval))) {
+            sprintf(buffer, "%f", lGetDouble(lep, CE_doubleval));
             s = buffer;
          }
 
-         FPRINTF((fp, "%s=%s", lGetString(lep, nm_name), s));
+         FPRINTF((fp, "%s=%s", lGetString(lep, CE_name), s));
          printed++;
       }
    }
@@ -1191,9 +1078,9 @@ int soft_field
 
    DENTER(TOP_LAYER, "parse_list_hardsoft");
 
-   hard_list = lCopyList("job_hard_sublist", lGetList(job, hard_field));
+   hard_list = lCopyList("job hard sublist", lGetList(job, hard_field));
    if (soft_field)
-      soft_list = lCopyList("job_soft_sublist", lGetList(job, soft_field));
+      soft_list = lCopyList("job soft sublist", lGetList(job, soft_field));
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, option))) {
       lp = NULL;
@@ -1237,13 +1124,12 @@ u_long32 flags
 
    DENTER(TOP_LAYER, "parse_list_simple");
 
-   destlist = lCopyList("job_sublist", lGetList(job, field));
+DPRINTF(("OPTION: %s\n", option));
+   destlist = lCopyList("job sublist", lGetList(job, field));
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, option))) {
-      DPRINTF(("OPTION: %s\n", option));
       lp = NULL;
       lXchgList(ep, SPA_argval_lListT, &lp);
-
       if (flags & FLG_LIST_APPEND || flags & FLG_LIST_MERGE_DOUBLE_KEY) {
          if (lp) {  
             if (!destlist) {
@@ -1275,7 +1161,6 @@ u_long32 flags
       } 
       lRemoveElem(cmdline, ep);
    } 
-
    lSetList(job, field, destlist);
 
    DEXIT;

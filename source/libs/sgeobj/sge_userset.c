@@ -53,11 +53,6 @@ static const char* userset_types[] = {
    ""
 };
 
-lList **userset_list_get_master_list(void)
-{
-   return &Master_Userset_List;
-}
-
 /****** sgeobj/userset/userset_is_deadline_user() ******************************
 *  NAME
 *     userset_is_deadline_user() -- may user sumbit deadline jobs. 
@@ -132,21 +127,32 @@ lListElem *userset_list_locate(lList *lp, const char *name)
 *
 *  SYNOPSIS
 *     int 
-*     userset_list_validate_acl_list(lList *acl_list, lList **alpp)
+*     userset_list_validate_acl_list(lList **alpp, lList *acl_list, 
+*                                    const char *attr_name, 
+*                                    const char *obj_descr, 
+*                                    const char *obj_name) 
 *
 *  FUNCTION
 *     Checks if all entries of an acl list (e.g. user list of a pe) 
 *     are contained in the master userset list.
 *
 *  INPUTS
-*     lList *acl_list       - the acl list to check
 *     lList **alpp          - answer list pointer
+*     lList *acl_list       - the acl list to check
+*     const char *attr_name - the attribute name in the referencing 
+*                             object (e.g. "user_lists")
+*     const char *obj_descr - the descriptor of the referencing 
+*                             object (e.g. "queue")
+*     const char *obj_name  - the name of the referencing object
+*                             (e.g. "fangorn.q")
 *
 *  RESULT
 *     int - STATUS_OK, if everything is OK
 *******************************************************************************/
 int 
-userset_list_validate_acl_list(lList *acl_list, lList **alpp)
+userset_list_validate_acl_list(lList **alpp, lList *acl_list, 
+                               const char *attr_name, const char *obj_descr, 
+                               const char *obj_name) 
 {
    lListElem *usp;
 
@@ -154,8 +160,8 @@ userset_list_validate_acl_list(lList *acl_list, lList **alpp)
 
    for_each (usp, acl_list) {
       if (!lGetElemStr(Master_Userset_List, US_name, lGetString(usp, US_name))) {
-         ERROR((SGE_EVENT, MSG_CQUEUE_UNKNOWNUSERSET_S, 
-                lGetString(usp, US_name)));
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNUSERSET_SSSS, lGetString(usp, US_name), 
+               attr_name, obj_descr, obj_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;
@@ -296,8 +302,7 @@ userset_get_type_string(const lListElem *userset, lList **answer_list,
 *     sgeobj/userset/userset_get_type_string()
 ******************************************************************************/
 bool 
-userset_set_type_string(lListElem *userset, lList **answer_list, 
-                        const char *value)
+userset_set_type_string(lListElem *userset, lList **answer_list, const char *value)
 {
    bool ret = true;
    u_long32 type = 0;
@@ -315,32 +320,6 @@ userset_set_type_string(lListElem *userset, lList **answer_list,
 
    lSetUlong(userset, US_type, type);
 
-   DEXIT;
-   return ret;
-}
-
-const char *
-userset_list_append_to_dstring(const lList *this_list, dstring *string)
-{
-   const char *ret = NULL;
-
-   DENTER(BASIS_LAYER, "userset_list_append_to_dstring");
-   if (string != NULL) {
-      lListElem *elem = NULL;
-      bool printed = false;
-
-      for_each(elem, this_list) {
-         sge_dstring_sprintf_append(string, "%s", lGetString(elem, US_name));
-         if (lNext(elem)) {
-            sge_dstring_sprintf_append(string, " ");
-         }
-         printed = true;
-      }
-      if (!printed) {
-         sge_dstring_sprintf_append(string, "NONE");
-      }
-      ret = sge_dstring_get_string(string);
-   }
    DEXIT;
    return ret;
 }

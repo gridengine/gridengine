@@ -33,8 +33,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <pthread.h>
-#include <fnmatch.h>
 
 #include "sgermon.h"
 #include "sge_stdlib.h"
@@ -460,31 +458,12 @@ void sge_strip_blanks(char *str)
 
    while (*str) {
       if (*str != ' ') {
-         if (cp != str)
-            *cp = *str;
-         cp++;
+         *cp++ = *str;
       }
       str++;
    };
    *cp = '\0';
 
-   DEXIT;
-   return;
-}
-
-/* EB: ADOC: add commets */
-
-void sge_strip_white_space_at_eol(char *str) 
-{
-   DENTER(BASIS_LAYER, "sge_strip_white_space_at_eol");
-   if (str != NULL) {
-      size_t length = strlen(str);
-
-      while (str[length - 1] == ' ' || str[length - 1] == '\t') {
-         str[length - 1] = '\0';
-         length--;
-      }
-   }
    DEXIT;
    return;
 }
@@ -595,47 +574,6 @@ int sge_strnullcmp(const char *a, const char *b)
    }
    return strcmp(a, b);
 }
-
-/****** sge_string/sge_patternnullcmp() ****************************************
-*  NAME
-*     sge_patternnullcmp() -- like fnmatch 
-*
-*  SYNOPSIS
-*     int sge_patternnullcmp(const char *str, const char *pattern) 
-*
-*  FUNCTION
-*     Like fnmatch() apart from the handling of NULL strings.
-*     These are treated as being less than any not-NULL strings.
-*     Important for sorting lists where NULL strings can occur. 
-*
-*  INPUTS
-*     const char *str     - string 
-*     const char *pattern - pattern to match 
-*
-*  RESULT
-*     int - result
-*         0 - strings are the same or both NULL 
-*        -1 - a < b or a is NULL
-*         1 - a > b or b is NULL
-*
-*
-*  NOTES
-*   MT-NOTE: fnmatch uses static variables, not MT safe
-*******************************************************************************/
-int sge_patternnullcmp(const char *str, const char *pattern) 
-{
-   if (!str && pattern) {
-      return -1;
-   }
-   if (str && !pattern) {
-      return 1;
-   }
-   if (!str && !pattern) {
-      return 0;
-   }
-   return fnmatch(pattern, str, 0);
-}
-
 
 /****** uti/string/sge_strnullcasecmp() ***************************************
 *  NAME
@@ -1140,41 +1078,3 @@ char **string_list(char *str, char *delis, char **pstr)
    return head;
 }
 
-/****** uti/string/sge_strerror() **********************************************
-*  NAME
-*     sge_strerror() -- replacement for strerror
-*
-*  SYNOPSIS
-*     const char* 
-*     sge_strerror(int errnum) 
-*
-*  FUNCTION
-*     Returns a string describing an error condition set by system 
-*     calls (errno).
-*
-*     Wrapper arround strerror. Access to strerrror is serialized by the
-*     use of a mutex variable to make strerror thread safe.
-*
-*  INPUTS
-*     int errnum        - the errno to explain
-*     dstring *buffer   - buffer into which the error message is written
-*
-*  RESULT
-*     const char* - pointer to a string explaining errnum
-*
-*  NOTES
-*     MT-NOTE: sge_strerror() is MT safe
-*******************************************************************************/
-const char *
-sge_strerror(int errnum, dstring *buffer)
-{
-   static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
-   const char *ret;
-
-   pthread_mutex_lock(&mtx);
-   ret = strerror(errnum);
-   ret = sge_dstring_copy_string(buffer, ret);
-   pthread_mutex_unlock(&mtx);
-
-   return ret;
-}

@@ -34,13 +34,13 @@
 #include "sge.h"
 #include "sge_object.h"
 #include "sge_host.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 #include "commlib.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_answer.h"
+#include "sge_host.h"
 #include "sge_centry.h"
-#include "sge_load.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -49,8 +49,7 @@ lList *Master_Exechost_List = NULL;
 lList *Master_Adminhost_List = NULL;
 lList *Master_Submithost_List = NULL;
 
-lListElem *
-host_list_locate(const lList *host_list, const char *hostname) 
+lListElem *host_list_locate(lList *host_list, const char *hostname) 
 {
    lListElem *ret = NULL;
    DENTER(TOP_LAYER, "host_list_locate");
@@ -172,7 +171,6 @@ const char *host_get_load_value(lListElem *host, const char *name)
    return value;
 }
 
-
 int sge_resolve_host(lListElem *ep, int nm) 
 {
    int pos, ret;
@@ -212,7 +210,7 @@ int sge_resolve_host(lListElem *ep, int nm)
    }
    ret = sge_resolve_hostname(hostname, unique, nm);
 
-   if (ret == CL_RETVAL_OK) {
+   if (ret == CL_OK) {
       switch (dataType) {
        case lStringT:
           lSetPosString(ep, pos, unique);
@@ -229,14 +227,9 @@ int sge_resolve_host(lListElem *ep, int nm)
 
 int sge_resolve_hostname(const char *hostname, char *unique, int nm) 
 {
-   int ret = CL_RETVAL_OK;
+   int ret = 0;
 
    DENTER(TOP_LAYER, "sge_resolve_hostname");
-
-   if (hostname == NULL) {
-      DEXIT;
-      return CL_RETVAL_PARAMS;
-   }
 
    if (hostname != NULL) {
       /* 
@@ -247,7 +240,7 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
       case CE_stringval:
          if (!strcmp(hostname, SGE_UNKNOWN_NAME)) {
             strcpy(unique, hostname);
-            ret = CL_RETVAL_OK;
+            ret = 0;
          } else {
             ret = getuniquehostname(hostname, unique, 0);
          }
@@ -256,7 +249,7 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
          if (!strcmp(hostname, SGE_GLOBAL_NAME) || 
              !strcmp(hostname, SGE_TEMPLATE_NAME)) {
             strcpy(unique, hostname);
-            ret = CL_RETVAL_OK;
+            ret = 0;
          } else {
             ret = getuniquehostname(hostname, unique, 0);
          }
@@ -265,7 +258,9 @@ int sge_resolve_hostname(const char *hostname, char *unique, int nm)
          ret = getuniquehostname(hostname, unique, 0);
          break;
       }
-   } 
+   } else {
+      ret = CL_RANGE;
+   }
 
    DEXIT;
    return ret;
@@ -302,39 +297,3 @@ host_is_centry_a_complex_value(const lListElem *this_elem,
    return ret;
 }
 
-bool
-host_trash_load_values(lListElem *host)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "host_trash_load_values");
-
-   if (host != NULL) {
-      lListElem *ep, *next;
-      lList *load_list = lGetList(host, EH_load_list);
-      const char *host_name = lGetHost(host, EH_name);
-
-      /* loop over load list */
-      ep = lFirst(load_list);
-      while (ep != NULL) {
-         const char *load_name;
-
-         next = lNext(ep);
-         load_name = lGetString(ep, HL_name);
-
-         /* we don't trash static load values like "arch" etc. */
-         if (!sge_is_static_load_value(load_name)) {
-            DPRINTF(("host "SFN": trashing load value "SFQ"\n",
-                     host_name,
-                     load_name));
-            lRemoveElem(load_list, ep);
-         }
-
-         /* assign next element */
-         ep = next;
-      }
-   }   
-
-   DEXIT;
-   return ret;
-}

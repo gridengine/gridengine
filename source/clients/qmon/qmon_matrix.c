@@ -48,8 +48,7 @@
 #include "sge_range.h"
 #include "sge_answer.h"
 #include "sge_job.h"
-#include "sge_qinstance.h"
-#include "sge_subordinate.h"
+#include "sge_queue.h"
 #include "sge_centry.h"
 #include "sge_var.h"
 #include "sge_host.h"
@@ -202,7 +201,6 @@ Cardinal argcount
    XmtVaRegisterCallbackProcedures(
          "DeleteLines", DeleteLines, XtRWidget,
          "ColumnZeroNoEdit", ColumnZeroNoEdit, NULL,
-         "ColumnNoEdit", ColumnNoEdit, NULL,
          NULL);
 
    return matrix;
@@ -451,7 +449,7 @@ Cardinal size
    else if ( type == QmonQAT_Type )
       qmonSet2xN(w, lp, AT_account, AT_cell);
    else if ( type == QmonQSO_Type )
-      qmonSet2xN(w, lp, SO_name, SO_threshold);
+      qmonSet2xN(w, lp, SO_qname, SO_threshold);
    else if ( type == QmonQUA_Type )
       qmonSet2xN(w, lp, UA_name, UA_value);
       
@@ -492,226 +490,13 @@ Cardinal size
    else if ( type == QmonQAT_Type )
       lp = qmonGet2xN(w, AT_Type, AT_account, AT_cell);
    else if ( type == QmonQSO_Type )
-      lp = qmonGet2xN(w, SO_Type, SO_name, SO_threshold);
+      lp = qmonGet2xN(w, SO_Type, SO_qname, SO_threshold);
    else if ( type == QmonQUA_Type )
       lp = qmonGet2xN(w, UA_Type, UA_name, UA_value);
 
    *(lList**)address = lp;
 }
 
-
-/*-------------------------------------------------------------------------*/
-void qmonSetNxN(
-Widget w,
-lList *lp,
-int num_fields,
-...
-) {
-   lListElem *ep;
-   int i, row;
-   int max_rows;
-   int val;
-   double dval;
-   char buf[128];
-   int *field;
-   const char **col;
-   va_list ap;
-   
-   DENTER(GUI_LAYER, "qmonSetNxN");
-   
-   /* clear the area */
-   XtVaSetValues(w, XmNcells, NULL, NULL);
-   
-   if (!lp) {
-      DEXIT;
-      return;
-   }
-
-   field = (int *)malloc(num_fields*sizeof(int));
-   col = (const char **)malloc(num_fields*sizeof(char *));
-   if (field == NULL || col == NULL) {
-      abort();
-   }
-
-#ifdef __INSIGHT__
-      _Insight_set_option("suppress", "READ_OVERFLOW");
-#endif
-
-   va_start(ap, num_fields);
-   for(i=0; i<num_fields; i++)
-      field[i] = va_arg(ap, int);
-
-#ifdef __INSIGHT__
-      _Insight_set_option("unsuppress", "READ_OVERFLOW");
-#endif
-      
-   XtVaGetValues(w, XmNrows, &max_rows, NULL);
-
-   for (ep = lFirst(lp), row = 0; ep; ep = lNext(ep), row++) {
-      if (row == max_rows) {
-         XbaeMatrixAddRows(w, 
-                           max_rows, 
-                           NULL,       /* empty rows  */
-                           NULL,       /* no lables   */
-                           NULL,       /* no different colors */
-                           1);         /* we add 1 rows      */
-         max_rows++;
-      }
-
-      memset(col, 0, num_fields*sizeof(char *));
-
-      /*
-       * get column values
-       */
-
-      for(i=0; i<num_fields; i++) {
-
-         switch (lGetType(lGetListDescr(lp), field[i])) {
-            case lStringT:
-               col[i] = (StringConst)lGetString(ep, field[i]);
-               break;
-            case lHostT:
-               col[i] = (StringConst)lGetHost(ep,field[i]);
-               break;
-            case lUlongT:
-               val = (int)lGetUlong(ep, field[i]);
-#if 0
-               if (val) {
-                  sprintf(buf, "%d", val);
-                  col[i] = buf;
-               }
-               else
-                  col[i] = NULL;
-#else
-               sprintf(buf, "%d", val);
-               col[i] = buf;
-#endif
-               break;
-            case lDoubleT:
-               dval = lGetDouble(ep, field[i]);
-               sprintf(buf, "%.2f", dval);
-               col[i] = buf;
-               break;
-         }
-      }
-
-      if (col[0]) {
-         /* FIX_CONST_GUI */
-         for(i=0; i<num_fields; i++)
-            XbaeMatrixSetCell(w, row, i, col[i] ? (String)col[i] : "");
-      }
-   }
-
-   free(field);
-   free(col);
-       
-   DEXIT;
-}
-
-/*-------------------------------------------------------------------------*/
-lList* qmonGetNxN(
-Widget w,
-lDescr *dp,
-int num_fields,
-...
-) {
-   lList *lp = NULL;
-   lListElem *ep;
-   int i, row;
-   int max_rows;
-   va_list ap;
-   char **col;
-   int *field;
-
-   DENTER(GUI_LAYER, "qmonGetNxN");
-
-   field = (int *)malloc(num_fields*sizeof(int));
-   col = (char **)malloc(num_fields*sizeof(char *));
-   if (field == NULL || col == NULL) {
-      abort();
-   }
-
-#ifdef __INSIGHT__
-   _Insight_set_option("suppress", "READ_OVERFLOW");
-#endif
-
-   va_start(ap, num_fields);
-   for(i=0; i<num_fields; i++)
-      field[i] = va_arg(ap, int);
-
-#ifdef __INSIGHT__
-   _Insight_set_option("unsuppress", "READ_OVERFLOW");
-#endif
-      
-   XtVaGetValues(w, XmNrows, &max_rows, NULL);
-   
-   for (row=0; row<max_rows; row++) {
-      memset(col, 0, num_fields*sizeof(char *));
-      for(i=0; i<num_fields; i++)
-         col[i] = XbaeMatrixGetCell(w, row, i);
-      if (col[0] && col[0][0] != '\0') {
-         if (!lp)
-            lp = lCreateList(XtName(w), dp);
-         ep = lCreateElem(dp);
-         lAppendElem(lp, ep);
-
-         /*
-          * retrieve values from columns
-          */
-
-         for(i=0; i<num_fields; i++) {
-            switch(lGetType(lGetListDescr(lp), field[i])) {
-               case lStringT: 
-                  lSetString(ep, field[i], col[i] ? col[i] : "" );
-                  break;
-               case lHostT:
-                  lSetHost(ep, field[i], col[i] ? col[i] : "");
-                  break;
-               case lUlongT:
-                  lSetUlong(ep, field[i], col[i] ? atoi(col[i]) : 0);
-                  break;
-               case lDoubleT:
-                  lSetDouble(ep, field[i], col[i] ? atof(col[i]) : 0.0);
-                  break;
-            }
-         }
-      }
-      else
-         continue;
-   }
-
-   free(field);
-   free(col);
-
-   DEXIT;
-   return lp;
-}
-
-   
-#if 1
-
-/*-------------------------------------------------------------------------*/
-void qmonSet2xN(
-Widget w,
-lList *lp,
-int field1,
-int field2 
-) {
-   qmonSetNxN(w, lp, 2, field1, field2);
-}
-
-
-/*-------------------------------------------------------------------------*/
-lList* qmonGet2xN(
-Widget w,
-lDescr *dp,
-int field1,
-int field2 
-) {
-   return qmonGetNxN(w, dp, 2, field1, field2);
-}
-
-#else
 
 /*-------------------------------------------------------------------------*/
 void qmonSet2xN(
@@ -756,10 +541,10 @@ int field2
       */
       switch (lGetType(lGetListDescr(lp), field1)) {
          case lStringT:
-            col1 = (StringConst)lGetString(ep, field1);
+            col1 = lGetString(ep, field1);
             break;
          case lHostT:
-            col1 = (StringConst)lGetHost(ep,field1);
+            col1 = lGetHost(ep,field1);
             break;
       }
       /*
@@ -767,10 +552,10 @@ int field2
       */
       switch (lGetType(lGetListDescr(lp), field2)) {
          case lStringT:
-            col2 = (StringConst)lGetString(ep, field2);
+            col2 = lGetString(ep, field2);
             break;
          case lHostT:
-            col2 = (StringConst)lGetHost(ep,field2);
+            col2 = lGetHost(ep,field2);
             break;
          case lUlongT:
             val = (int)lGetUlong(ep, field2);
@@ -863,8 +648,6 @@ int field2
    DEXIT;
    return lp;
 }
-
-#endif
 
    
 /*-------------------------------------------------------------------------*/
@@ -967,10 +750,36 @@ StringConst *ce_entry
    }
       
    /* name type relation value */ 
-   ce_entry[CE_NAME] = (StringConst)lGetString(ep, CE_name);
-   ce_entry[CE_SHORTCUT] = (StringConst)lGetString(ep, CE_shortcut);
-   ce_entry[CE_TYPE] = (StringConst)map_type2str(lGetUlong(ep, CE_valtype));
-
+   ce_entry[CE_NAME] = lGetString(ep, CE_name);
+   ce_entry[CE_SHORTCUT] = lGetString(ep, CE_shortcut);
+   switch (lGetUlong(ep, CE_valtype)) {
+   case TYPE_INT:
+      ce_entry[CE_TYPE] = "INT";
+      break;
+   case TYPE_STR:
+      ce_entry[CE_TYPE] = "STRING";
+      break;
+   case TYPE_TIM:
+      ce_entry[CE_TYPE] = "TIME";
+      break;
+   case TYPE_MEM:
+      ce_entry[CE_TYPE] = "MEMORY";
+      break;
+   case TYPE_BOO:
+      ce_entry[CE_TYPE] = "BOOL";
+      break;
+   case TYPE_HOST:
+      ce_entry[CE_TYPE] = "HOST";
+      break;
+   case TYPE_DOUBLE:
+      ce_entry[CE_TYPE] = "DOUBLE";
+      break;
+   case TYPE_CSTR:
+      ce_entry[CE_TYPE] = "CSTRING";
+      break;
+   default:
+      ce_entry[CE_TYPE] = "UNKNOWN";
+   }
    switch (lGetUlong(ep, CE_relop)) {
    case CMPLXLT_OP:
       ce_entry[CE_RELOP] = "<";
@@ -996,8 +805,7 @@ StringConst *ce_entry
    ce_entry[CE_REQUEST] = lGetUlong(ep, CE_requestable) == REQU_FORCED ? "FORCED" : 
                            (lGetUlong(ep, CE_requestable) == REQU_YES ? "YES" : "NO");
    ce_entry[CE_CONSUMABLE] = lGetBool(ep, CE_consumable) ? "YES" : "NO";
-   ce_entry[CE_DEFAULT] = (StringConst)lGetString(ep, CE_default);
-   ce_entry[CE_URGENCY] = (StringConst)lGetString(ep, CE_urgency_weight);
+   ce_entry[CE_DEFAULT] = lGetString(ep, CE_default);
       
    DEXIT;
    return True;
@@ -1009,6 +817,7 @@ lListElem *ep,
 String *ce_entry 
 ) {
    int i, type, relop; 
+   double tmp_double;
    u_long32 requestable = REQU_NO;
 
    DENTER(GUI_LAYER, "setCE_TypeValues");
@@ -1023,7 +832,7 @@ String *ce_entry
    lSetString(ep, CE_shortcut, ce_entry[CE_SHORTCUT] );
 
    type = 0;
-   for (i=TYPE_FIRST; !type && i<=TYPE_CE_LAST; i++) {
+   for (i=TYPE_FIRST; !type && i<=TYPE_DOUBLE; i++) {
       if (!strcasecmp(ce_entry[CE_TYPE], map_type2str(i)))
          type = i;
    }
@@ -1070,7 +879,6 @@ String *ce_entry
       lSetBool(ep, CE_consumable, false);
 
    lSetString(ep, CE_default, ce_entry[CE_DEFAULT] ? ce_entry[CE_DEFAULT]: "");
-   lSetString(ep, CE_urgency_weight, ce_entry[CE_URGENCY] ? ce_entry[CE_URGENCY]: "");
    
    DEXIT;
    return True;

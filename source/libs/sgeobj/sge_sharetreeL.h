@@ -102,9 +102,9 @@ enum {
                                       * set in schedd, stored to qmaster,
                                       * not spooled */
    STN_temp,                 /* this node is a temporary node created in
-                              * schedd/qmon and will not be sent to qmaster,
-                              * set in schedd/qmon, not stored to qmaster,
-                              * not spooled */
+                              * schedd and will not be sent to qmaster,
+                              * set in schedd, not stored to qmaster, not
+                              * spooled */
    STN_stt,                  /* short term targeted proportion of node 
                               * compared to sibling nodes,
                               * calculated during scheduling of pending
@@ -193,6 +193,12 @@ ILISTDEF(STN_Type, ShareTreeNode, SGE_SHARETREE_LIST)
    SGE_ULONG(STN_taskid, CULL_DEFAULT)                                                 
    SGE_LIST(STN_usage_list,UA_Type, CULL_DEFAULT)                                     
    SGE_ULONG(STN_version, CULL_DEFAULT)
+   /* IDL 
+     ShareTreeNode newNode(in string name, in unsigned long shares)
+     raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+     ShareTreeNode newLeaf(in string name, in unsigned long shares)
+     raises(ObjDestroyed, Authentication, Error) context("sge_auth");
+   XIDL */
 LISTEND 
 
 NAMEDEF(STNN)

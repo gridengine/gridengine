@@ -35,7 +35,7 @@
 global check_name check_description check_needs check_functions check_errno check_errstr row
 global check_category
 set check_name         "qmod_general"
-set check_category     "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category     "COMPATIBILITY SYSTEM L10N"
 set check_root_access_needs "yes"
 
 set check_description(0)  "checking all options, except rescheduling (-r)"
@@ -88,12 +88,14 @@ global test_queue
 proc addqueue {} {
   global CHECK_HOST test_queue
 
-  set test_queue [get_queue_instance "qmod" ${CHECK_HOST}]
+  set test_queue "${CHECK_HOST}_qmod.q"
 
+  set q_param(qname)                 "$test_queue" 
+  set q_param(hostname)              "$CHECK_HOST" 
   set q_param(slots)                 "2"
   set q_param(load_thresholds)       "np_load_avg=6.75"
  
-  add_queue "qmod" ${CHECK_HOST} q_param
+  add_queue q_param
 
   set_error 0 "ok"  
 }                                                                          
@@ -128,11 +130,11 @@ proc addqueue {} {
 #     ???/???
 #*******************************
 proc removequeue {} {
-   global CHECK_HOST
+  global test_queue
 
-   del_queue "qmod" $CHECK_HOST 0 1
+  del_queue $test_queue
 
-   set_error 0 "ok"
+  set_error 0 "ok"
 }
 
 
@@ -208,7 +210,6 @@ proc qmod_check_default_status {} {
 #     ???/???
 #*******************************
 proc qmod_help {} {
-   global ts_config
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_PRODUCT_VERSION_NUMBER
 
    set state [ catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod" "-help" } output ]
@@ -229,14 +230,8 @@ proc qmod_help {} {
 
    puts $CHECK_OUTPUT "Output has $nr_of_lines lines"
 
-   if { $ts_config(gridengine_version) == 53 } {
-      set expected_lines 15
-   } else {
-      set expected_lines 30
-   }
-
-   if { $nr_of_lines != $expected_lines } {
-      set_error -1 "help output has not $expected_lines lines"
+   if { $nr_of_lines != 15 } {
+      set_error -1 "help output has not $line_count lines"
    }
    set_error 0 "ok"
 }
@@ -477,7 +472,7 @@ proc qmod_clearerrorstate {} {
    
 
    # submit testjob to set the queue in error
-   set job_id [ submit_job "-o /dev/null -e /dev/null -q $test_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ] 
+   set job_id [ submit_job "-o /dev/null -e /dev/null -l q=$test_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" ] 
 
    # wait for queue to get in error state
    set time [timestamp]
@@ -564,22 +559,16 @@ proc qmod_clearerrorstate {} {
 #     ???/???
 #*******************************
 proc qmod_verify {} {
-   global ts_config
-   global CHECK_OUTPUT
    global CHECK_PRODUCT_ROOT CHECK_ARCH test_queue 
-  
-   if { $ts_config(gridengine_version) == 53 } { 
-      set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -verify -s $test_queue" } output ]
-      if {$result != 0} {
-        set_error -1 "exit state of \"qmod -verify -s $test_queue\" is not 0"
-      }            
-      
-      set state [ get_queue_state $test_queue ] 
-      if { [ string compare $state "" ] != 0  } {
-         set_error -1 "queue $test_queue is not in original state"
-      }
-   } else {
-      puts $CHECK_OUTPUT "the -verify switch has been removed in SGE 6.0"
+   
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -verify -s $test_queue" } output ]
+   if {$result != 0} {
+     set_error -1 "exit state of \"qmod -verify -s $test_queue\" is not 0"
+   }            
+   
+   set state [ get_queue_state $test_queue ] 
+   if { [ string compare $state "" ] != 0  } {
+      set_error -1 "queue $test_queue is not in original state"
    }
    set_error 0 "ok"
 }
@@ -628,7 +617,7 @@ proc qmod_forceaction {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH test_queue CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
 
    # submit testjob to set the queue in error
-   set job_id [ submit_job "-q $test_queue -o /dev/null -e /dev/null $CHECK_ACTUAL_TEST_PATH/qmod_job.sh 5 $CHECK_ACTUAL_TEST_PATH/qmod_job.sh" ] 
+   set job_id [ submit_job "-l q=$test_queue -o /dev/null -e /dev/null $CHECK_ACTUAL_TEST_PATH/qmod_job.sh 5 $CHECK_ACTUAL_TEST_PATH/qmod_job.sh" ] 
    # now wait for jobstart
    wait_for_jobstart $job_id "blocking" 300
    wait_for_end_of_transfer $job_id 300 

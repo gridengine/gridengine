@@ -40,10 +40,12 @@
 */
 #define MSG_EVE_REINITEVENTCLIENT_S   _MESSAGE(66000, _("reinitialization of "SFQ"\n"))
 #define MSG_EVE_UNKNOWNEVCLIENT_US    _MESSAGE(66001, _("no event client known with id "U32CFormat" to %s\n"))
-#define MSG_EVE_CLIENTREREGISTERED_SSSU _MESSAGE(66002, _("event client "SFQ" (%s/%s/"U32CFormat") reregistered - it will need a total update\n"))
+#define MSG_EVE_CLIENTREREGISTERED_SSSI _MESSAGE(66002, _("event client "SFQ" (%s/%s/%d) reregistered - it will need a total update\n"))
 #define MSG_EVE_REG_SUU               _MESSAGE(66003, _(SFQ" registers as event client with id "U32CFormat" event delivery interval "U32CFormat"\n"))
 #define MSG_EVE_UNREG_SU              _MESSAGE(66004, _("event client "SFQ" with id "U32CFormat" deregistered"))
 #define MSG_EVE_EVENTCLIENT           _MESSAGE(66005, _("event client"))
+
+#define MSG_EVE_ILLEGALEVENTCLIENTID_S _MESSAGE(66006, _("illegal event client id "SFQ"\n"))
 #define MSG_EVE_ILLEGALIDREGISTERED_U _MESSAGE(66007, _("illegal event client id "U32CFormat" for registration\n"))
 
 #define MSG_EVE_INVALIDSUBSCRIPTION   _MESSAGE(66008, _("invalid subscription information\n"))
@@ -51,9 +53,10 @@
 
 #define MSG_EVE_TOTALUPDATENOTHANDLINGEVENT_I _MESSAGE(66010, _("event number %d is not handled by sge_total_update_event\n"))
 
-#define MSG_COM_ACKTIMEOUT4EV_ISIS        _MESSAGE(66011, _("acknowledge timeout after %d seconds for event client ("SFN":%d) on host "SFQ))
-#define MSG_COM_NOSHUTDOWNPERMS           _MESSAGE(66012, _("shutdown requires manager privileges\n"))
-#define MSG_COM_SHUTDOWNNOTIFICATION_SUS  _MESSAGE(66013, _("sent shutdown notification to event client " SFN " with id " U32CFormat " on host " SFN "\n"))
-#define MSG_EVE_QMASTERISGOINGDOWN        _MESSAGE(66014, _("do not accept new event clients. Qmaster is going down\n"))
-#define MSG_COM_KILLED_SCHEDULER_S        _MESSAGE(66015, _("sent shutdown notification to scheduler on host "SFQ"\n"))
+#define MSG_COM_ACKTIMEOUT4EV_ISIS    _MESSAGE(66011, _("acknowledge timeout after %d seconds for event client ("SFN":%d) on host "SFQ))
+#define MSG_COM_NOSHUTDOWNPERMS       _MESSAGE(66012, _("shutdown requires manager privileges\n"))
+#define MSG_COM_NOSCHEDDREGMASTER     _MESSAGE(66013, _("no scheduler registered at qmaster\n"))
+#define MSG_COM_NOSCHEDMONPERMS       _MESSAGE(66014, _("starting scheduler monitoring requires manager privileges\n"))
+#define MSG_COM_SCHEDMON_SS           _MESSAGE(66015, _(SFN"@"SFN" triggers scheduler monitoring\n"))
+
 #endif /* __MSG_EVMLIB_H */

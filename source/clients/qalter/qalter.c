@@ -37,6 +37,7 @@
 #include "symbols.h"
 #include "sge_all_listsL.h"
 #include "sig_handlers.h"
+#include "sge_resource.h"
 #include "commlib.h"
 #include "usage.h"
 #include "parse_qsub.h"
@@ -51,18 +52,12 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 #include "read_defaults.h"
-#include "sge_centry.h"
+#include "sge_prog.h"
+#include "sge_answer.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qalter.h"
-
-/* when this character is modified, it has also be modified
-   the JOB_NAME_DEL in daemons/qmaster/sge_job_qmaster.c 
-   It is used, when a job name is modified via job name to
-   differ betwen the new job name and the old one.
-   */
-static const char *JOB_NAME_DEL = ":";
 
 static lList *qalter_parse_job_parameter(lList *cmdline, lList **pjob, int *all_jobs, int *all_users);
 
@@ -84,7 +79,7 @@ char **argv
    lListElem *aep;
    int all_jobs = 0;
    int all_users = 0;
-   u_long32 gdi_cmd = SGE_GDI_MOD; 
+   u_long32 gdi_cmd; 
    int cl_err = 0;
    int tmp_ret;
    int me_who;
@@ -97,21 +92,10 @@ char **argv
    if (!strcmp(sge_basename(argv[0], '/'), "qresub")) {
       DPRINTF(("QRESUB\n"));
       me_who = QRESUB;
-   }   
-   else if (!strcmp(sge_basename(argv[0], '/'), "qhold")) {
-      DPRINTF(("QHOLD\n"));
-      me_who = QHOLD;
-   }   
-   else if (!strcmp(sge_basename(argv[0], '/'), "qrls")) {
-      DPRINTF(("QRLS\n"));
-      me_who = QRLS;
-   } 
-   else {
+   } else {
       DPRINTF(("QALTER\n"));
       me_who = QALTER;
    } 
-
-   log_state_set_log_gui(1);
 
    sge_gdi_param(SET_MEWHO, me_who, NULL);
    if ((cl_err = sge_gdi_setup(prognames[uti_state_get_mewho()], &alp))) {
@@ -130,14 +114,14 @@ char **argv
       SGE_EXIT(tmp_ret);
    }
 
-   if ((lGetNumberOfElem (cmdline) == 0) || (opt_list_has_X(cmdline, "-help"))) {
+   if (opt_list_has_X(cmdline, "-help")) {
       sge_usage(stdout);
       SGE_EXIT(1);
    }
-
+  
    alp = qalter_parse_job_parameter(cmdline, &request_list, &all_jobs, 
                                     &all_users);
-   
+
    DPRINTF(("all_jobs = %d, all_user = %d\n", all_jobs, all_users));
 
    if (request_list && verify) {
@@ -159,19 +143,16 @@ char **argv
       SGE_EXIT(tmp_ret);
    }
 
-   if ((me_who == QALTER) ||
-       (me_who == QHOLD) ||
-       (me_who == QRLS) 
-      ) {
+   if (me_who == QALTER) {
       DPRINTF(("QALTER\n"));
       gdi_cmd = SGE_GDI_MOD;
-   } else if (me_who == QRESUB){
+   } else {
       DPRINTF(("QRESUB\n"));
       gdi_cmd = SGE_GDI_COPY;
-   } else {
-      printf("unknown binary name.\n");
-      SGE_EXIT(1);
    }
+
+   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
+   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL); 
 
    if (all_jobs)
       gdi_cmd |= SGE_GDI_ALL_JOBS;
@@ -198,7 +179,6 @@ char **argv
    }
 
    SGE_EXIT(ret);
-   DEXIT;
    return 0;
 }
 
@@ -244,7 +224,6 @@ int *all_users
 
    int job_field[100];
    int me_who;
-   bool is_hold_option = false;
 
    DENTER(TOP_LAYER, "qalter_parse_job_parameter"); 
 
@@ -275,12 +254,40 @@ int *all_users
    /* initialize job field set */
    job_field[0] = NoName;
    nm_set(job_field, JB_job_number);
-   nm_set(job_field, JB_job_name);
 
    /* don't do verification of schedulability per default */
    lSetUlong(job, JB_verify_suitable_queues, SKIP_VERIFY);
    nm_set(job_field, JB_verify_suitable_queues);
 
+
+   /*
+   ** -clear option is special, is sensitive to order
+   ** kills all options that come before
+   ** there might be more than one -clear
+   */
+   /*while ((ep = lGetElemStr(cmdline, SPA_switch, "-clear"))) {
+      lListElem *ep_run;
+      char *cp_switch;
+
+      for (ep_run = lFirst(cmdline); ep_run;) {
+         ** remove -clear itsself
+         if (ep_run == ep) {
+            lRemoveElem(cmdline, ep_run);
+            break;
+         }
+         ** lNext can never be NULL here, because the -clear
+         ** element is the last one to delete
+         ** in general, these two lines wont work!
+         ep_run = lNext(ep_run);
+         
+         ** remove switch only if it is not a pseudo-arg
+         cp_switch = lGetString(lPrev(ep_run), SPA_switch);
+         if (cp_switch && (*cp_switch == '-')) {
+            lRemoveElem(cmdline, lPrev(ep_run));
+         }
+      }
+   }
+   */
 
    /*
    ** -help now handled separately in main()
@@ -366,12 +373,6 @@ int *all_users
          nm_set(job_field, JB_checkpoint_name);
       }
 
-      while ((ep = lGetElemStr(cmdline, SPA_switch, "-dl"))) {
-         lSetUlong(job, JB_deadline, lGetUlong(ep, SPA_argval_lUlongT));
-         lRemoveElem(cmdline, ep);
-         nm_set(job_field, JB_deadline);
-      }
-
       parse_list_simple(cmdline, "-e", job, JB_stderr_path_list, 0, 0, 
                         FLG_LIST_APPEND);
       if (lGetList(job, JB_stderr_path_list))
@@ -386,7 +387,7 @@ int *all_users
    /* STR_PSEUDO_JOBID */
    if (lGetElemStr(cmdline, SPA_switch, STR_PSEUDO_JOBID)) {
       lList *jid_list = NULL;
-      if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list, true, 0)) {
+      if (!parse_multi_jobtaskslist(&cmdline, STR_PSEUDO_JOBID, &answer, &jid_list)) {
          DEXIT;
          return answer;
       }                                                 
@@ -398,7 +399,13 @@ int *all_users
          lList *lp = NULL;
          lList *jid_list = NULL;
 
-         lAddElemStr(&jid_list, ID_str, "*", ID_Type); 
+         if (lGetElemStr(cmdline, SPA_switch, "-uall")) {
+            answer_list_add(&answer, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+
+         lAddElemStr(&jid_list, ID_str, "dummy", ID_Type);
          lSetList(job, JB_job_identifier_list, jid_list);
     
          lXchgList(ep, SPA_argval_lListT, &lp);
@@ -407,12 +414,27 @@ int *all_users
          nm_set(job_field, JB_user_list);
          users_flag = 1;
       }
- 
+
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-uall"))) {
+         lList *jid_list = NULL;
+
+         if (lGetElemStr(cmdline, SPA_switch, "-u")) {
+            answer_list_add(&answer, MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+
+         lAddElemStr(&jid_list, ID_str, "dummy", ID_Type);
+         lSetList(job, JB_job_identifier_list, jid_list);
+
+         (*all_users) = 1;
+         lRemoveElem(cmdline, ep);
+         users_flag = 1;
+      }                    
    }                    
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-h"))) {
       lListElem *jid;
-      is_hold_option = true;
 
       for_each (jid, lGetList(job, JB_job_identifier_list)) {
          lSetUlong(jid, ID_force, (u_long32) lGetInt(ep, SPA_argval_lIntT));
@@ -434,15 +456,8 @@ int *all_users
             }
             lRemoveElem(cmdline, ep);
          }
-         lSetList(job, JB_jid_request_list , jref_list);
-         nm_set(job_field, JB_jid_request_list );
+         lSetList(job, JB_jid_predecessor_list, jref_list);
          nm_set(job_field, JB_jid_predecessor_list);
-      }
-
-      while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
-         lSetBool(job, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
-         lRemoveElem(cmdline, ep);
-         nm_set(job_field, JB_reserve);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
@@ -453,10 +468,10 @@ int *all_users
 
       parse_list_hardsoft(cmdline, "-l", job,
                            JB_hard_resource_list, JB_soft_resource_list);
-      centry_list_remove_duplicates(lGetList(job, JB_hard_resource_list));
+      sge_compress_resources(lGetList(job, JB_hard_resource_list));
       if (lGetList(job, JB_hard_resource_list))
          nm_set(job_field, JB_hard_resource_list);
-      centry_list_remove_duplicates(lGetList(job, JB_soft_resource_list));
+      sge_compress_resources(lGetList(job, JB_soft_resource_list));
       if (lGetList(job, JB_soft_resource_list))
          nm_set(job_field, JB_soft_resource_list);
 
@@ -485,7 +500,7 @@ int *all_users
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-N"))) {
          lSetString(job, JB_job_name, lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(cmdline, ep);
-/*         nm_set(job_field, JB_job_name); */
+         nm_set(job_field, JB_job_name);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
@@ -504,12 +519,6 @@ int *all_users
             BASE_PRIORITY + lGetInt(ep, SPA_argval_lIntT));
          lRemoveElem(cmdline, ep);
          nm_set(job_field, JB_priority);
-      }
-
-      while ((ep = lGetElemStr(cmdline, SPA_switch, "-js"))) {
-         lSetUlong(job, JB_jobshare, lGetUlong(ep, SPA_argval_lUlongT));
-         lRemoveElem(cmdline, ep);
-         nm_set(job_field, JB_jobshare);
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-P"))) {
@@ -690,7 +699,7 @@ int *all_users
    if (users_flag && !lGetList(job, JB_job_identifier_list)){   
       lList *jid_list = NULL;
 
-      lAddElemStr(&jid_list, ID_str, "*", ID_Type);
+      lAddElemStr(&jid_list, ID_str, "dummy", ID_Type);
       lSetList(job, JB_job_identifier_list, jid_list);
    }
 
@@ -705,14 +714,13 @@ int *all_users
       };
 
       jobid = atol(lGetString(ep, ID_str));
-/*
+
       if ((all_or_jidlist == NOTINIT) && !strcmp(lGetString(ep, ID_str), "all")) {
          all_or_jidlist = ALL;
          (*all_jobs) = 1;
          DPRINTF(("got \'all\' from parsing\n", jobid));
-      } else */
-      if (((all_or_jidlist == NOTINIT) || (all_or_jidlist == JOB)) /* && 
-                  jobid != 0*/) { 
+      } else if (((all_or_jidlist == NOTINIT) || (all_or_jidlist == JOB)) && 
+                  jobid != 0) { 
          all_or_jidlist = JOB;
          (*all_jobs) = 0; 
          DPRINTF(("got job " u32 " from parsing\n", jobid));
@@ -731,38 +739,21 @@ int *all_users
             return answer;
          }
       }
-      if ((jobid != 0) || ((*all_jobs) == 1)){
-         rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
-         lSetString(rep, JB_job_name, lGetString(job, JB_job_name));
-      }   
-      else{
-         char *name = NULL;
-         const char *job_name = lGetString(job, JB_job_name);
-         int size = strlen(lGetString(ep, ID_str));
-         if (job_name)
-            size += strlen(job_name); 
-         size += 3;
-          
-         name = malloc(size);
-         sprintf(name, "%s%s%s%s", JOB_NAME_DEL, lGetString(ep, ID_str), JOB_NAME_DEL, job_name?job_name:"");
-         rep = lAddElemStr(prequestlist, JB_job_name, name, rdp);
-         FREE(name);
-      }   
-
-      if (!rep) {   
+  
+      rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
+      if (!rep) { 
          sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
          answer_list_add(&answer, SGE_EVENT,
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return answer;
       }
-
+     
       /* build task list from ID_Type from JB_job_identifier */
-      
-      if (is_hold_option && !lGetList(ep, ID_ja_structure)) {
+      if (!lGetList(ep, ID_ja_structure)) {
          task = lAddElemUlong(&task_list, JAT_task_number, 0, task_descr);      
          lSetUlong(task, JAT_hold, lGetUlong(ep, ID_force));
-      } else if (lGetList(ep, ID_ja_structure)) {
+      } else {
          lListElem *range;
          for_each(range, lGetList(ep, ID_ja_structure)) {
             u_long32 start = lGetUlong(range, RN_min);
@@ -775,13 +766,7 @@ int *all_users
             } 
          }
       }
-      if ((lGetPosViaElem(rep, JB_ja_tasks) == -1) && (lGetNumberOfElem(task_list))){
-         sprintf(SGE_EVENT, MSG_OPTIONWORKSONLYONJOB);
-         answer_list_add(&answer, SGE_EVENT,
-                         STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return answer;
-      }
+            
       lSetList(job, JB_ja_tasks, task_list);
       lSetList(job, JB_ja_structure, 
                lCopyList("", lGetList(ep, ID_ja_structure)));
@@ -792,30 +777,28 @@ int *all_users
             JB_account,
             JB_cwd,
             JB_checkpoint_name,
+            JB_job_name,
             JB_project,
             JB_pe,
             NoName
          };
          static int ulong_nm[] = {
             JB_execution_time,
-            JB_deadline,
             JB_mail_options,
             JB_priority,
-            JB_jobshare,
             JB_override_tickets,
             JB_restart,
             JB_verify_suitable_queues,
             NoName
          };
          static int bool_nm[] = {
-            JB_reserve,
             JB_merge_stderr,
             JB_notify,
             NoName
          };
          static int list_nm[] = {
             JB_stderr_path_list,
-            JB_jid_request_list,
+            JB_jid_predecessor_list,
             JB_hard_resource_list,
             JB_soft_resource_list,
             JB_mail_list,
@@ -855,9 +838,9 @@ int *all_users
          for (i=0; list_nm[i]!=NoName; i++)
             if (lGetPosViaElem(job, list_nm[i]) != -1  && lGetPosViaElem(rep, list_nm[i]) != -1)
                lSetList(rep, list_nm[i], lCopyList("", lGetList(job, list_nm[i])));
-
       }
    }
+
    if (!*prequestlist) {
       /* got no target */
       answer_list_add(&answer, MSG_JOB_MISSINGJOBID, 

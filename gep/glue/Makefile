@@ -37,7 +37,7 @@ CODEBASE=classes
 OREILLY_SERVLETS=../lib/cos.jar
 S1PS_ROOT=/opt
 
-SRCS=GEPServlet.java
+SRCS=SunTCP.java AdminTCP.java
 CLASSPATH=${S1PS_ROOT}/SUNWam/lib/servlet.jar:${S1PS_ROOT}/SUNWam/lib/am_services.jar:${S1PS_ROOT}/SUNWam/lib/am_sdk.jar:${OREILLY_SERVLETS}:${CODEBASE}
 
 all:

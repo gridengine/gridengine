@@ -38,8 +38,6 @@ extern lList *Master_HGroup_List;
 
 void correct_hgroup_name(dstring *string, const char *name);
 
-bool is_hgroup_name(const char *name);
-
 /* --- */
 
 bool hgroup_correct_name(lListElem *this_elem);
@@ -54,27 +52,23 @@ hgroup_add_references(lListElem *this_elem, lList **answer_list,
 
 bool 
 hgroup_find_references(const lListElem *this_elem, lList **answer_list,
-                       const lList *master_list, lList **used_hosts,
+                       lList *master_list, lList **used_hosts,
                        lList **used_groups);
 
 bool 
 hgroup_find_all_references(const lListElem *this_elem, lList **answer_list,
-                           const lList *master_list, lList **used_hosts,
+                           lList *master_list, lList **used_hosts,
                            lList **used_groups);
+
+bool 
+hgroup_find_referencees(const lListElem *this_elem,
+                        lList **answer_list,
+                        lList *master_list, lList **occupants_groups);
 
 bool 
 hgroup_find_all_referencees(const lListElem *this_elem, 
                             lList **answer_list,
-                            const lList *master_list, lList **used_groups);
-
-bool
-hgroup_find_referencees(const lListElem *this_elem,
-                        lList **answer_list,
-                        const lList *master_hgroup_list,
-                        const lList *master_cqueue_list,
-                        lList **occupants_groups,
-                        lList **occupants_queues);
-
+                            lList *master_list, lList **used_groups);
 
 /* --- */
 
@@ -88,15 +82,6 @@ bool
 hgroup_list_exists(const lList *this_list, lList **answer_list,
                    const lList *href_list);
 
-bool
-hgroup_list_find_matching_and_resolve(const lList *this_list,
-                                      lList **answer_list,
-                                      const char *hgroup_pattern,
-                                      lList **used_hosts);
-
-bool
-hgroup_list_find_matching(const lList *this_list, lList **answer_list,
-                          const char *hgroup_pattern, lList **used_hosts);
 
 #endif /* __SGE_GROUPS_H__ */
 

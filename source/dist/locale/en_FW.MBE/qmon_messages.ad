@@ -130,6 +130,7 @@ _Messages_.en.FW.MBE.@fBRequested Resources: @fB„qRRƒ…eƒ‘qƒ•uƒ…eƒ“sƒ”tƒ…eƒ„dƒ@ „
 _Messages_.en.FW.MBE.@fBRerun Jobs: @fB„qRRƒ…eƒ’rƒ•uƒnƒ@ „iJJƒoƒ‚bƒ“s
 _Messages_.en.FW.MBE.@fBRerun\nJobs: @fB„qRRƒ…eƒ’rƒ•uƒn
 _Messages_.en.FW.MBE.„iJJƒoƒ‚bƒ“s
+_Messages_.en.FW.MBE.@fBResource Capability Factor: @fB„qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ@ „bCCƒaƒpƒaƒ‚bƒ‰iƒŒlƒ‰iƒ”tƒ™yƒ@ „eFFƒaƒƒcƒ”tƒoƒ’r
 _Messages_.en.FW.MBE.@fBResume Method: @fB„qRRƒ…eƒ“sƒ•uƒmƒ…eƒ@ „lMMƒ…eƒ”tƒˆhƒoƒ„d
 _Messages_.en.FW.MBE.@fBRunning Jobs: @fB„qRRƒ•uƒnƒnƒ‰iƒnƒ‡gƒ@ „iJJƒoƒ‚bƒ“s
 _Messages_.en.FW.MBE.@fBScaling: @fB„rSSƒƒcƒaƒŒlƒ‰iƒnƒ‡g
@@ -329,10 +330,6 @@ _Messages_.en.FW.MBE.Finished Jobs: „eFFƒ‰iƒnƒ‰iƒ“sƒˆhƒ…eƒ„dƒ@ „iJJƒoƒ‚bƒ“s
 _Messages_.en.FW.MBE.Force: „eFFƒoƒ’rƒƒcƒ…e
 _Messages_.en.FW.MBE.GByte (1024x1024x1024): „fGG„aBBƒ™yƒ”tƒ…eƒ@ ƒi(ƒP1ƒO0ƒQ2ƒS4ƒ˜xƒP1ƒO0ƒQ2ƒS4ƒ˜xƒP1ƒO0ƒQ2ƒS4ƒj)
 _Messages_.en.FW.MBE.GID Range for Job Monitoring: „fGG„hII„cDDƒ@ „qRRƒaƒnƒ‡gƒ…eƒ@ ƒ†fƒoƒ’rƒ@ „iJJƒoƒ‚bƒ@ „lMMƒoƒnƒ‰iƒ”tƒoƒ’rƒ‰iƒnƒ‡g
-_Messages_.en.FW.MBE.@fBAutomatic User Defaults: xxxxxxxxxxxxxxxxxxxxxx
-_Messages_.en.FW.MBE.Override Tickets: xxxxxxxxxxxxxxxxxxxxxx
-_Messages_.en.FW.MBE.Functional Shares: xxxxxxxxxxxxxxxxxxxxxx
-_Messages_.en.FW.MBE.Delete Time: xxxxxxxxxxxxxxxxxxxxxx
 _Messages_.en.FW.MBE.GRD Schedule Interval required!: „fGG„qRR„cDDƒ@ „rSSƒƒcƒˆhƒ…eƒ„dƒ•uƒŒlƒ…eƒ@ „hIIƒnƒ”tƒ…eƒ’rƒ–vƒaƒŒlƒ@ ƒ’rƒ…eƒ‘qƒ•uƒ‰iƒ’rƒ…eƒ„dƒI!
 _Messages_.en.FW.MBE.Get Environment: „fGGƒ…eƒ”tƒ@ „dEEƒnƒ–vƒ‰iƒ’rƒoƒnƒmƒ…eƒnƒ”t
 _Messages_.en.FW.MBE.Get Queue: „fGGƒ…eƒ”tƒ@ „pQQƒ•uƒ…eƒ•uƒ…e
@@ -563,6 +560,7 @@ _Messages_.en.FW.MBE.Soft Request: „rSSƒoƒ†fƒ”tƒ@ „qRRƒ…eƒ‘qƒ•uƒ…eƒ“sƒ”t
 _Messages_.en.FW.MBE.Soft Resources: „rSSƒoƒ†fƒ”tƒ@ „qRRƒ…eƒ“sƒoƒ•uƒ’rƒƒcƒ…eƒ“s
 _Messages_.en.FW.MBE.Sort by load: „rSSƒoƒ’rƒ”tƒ@ ƒ‚bƒ™yƒ@ ƒŒlƒoƒaƒ„d
 _Messages_.en.FW.MBE.Sort by sequence number: „rSSƒoƒ’rƒ”tƒ@ ƒ‚bƒ™yƒ@ ƒ“sƒ…eƒ‘qƒ•uƒ…eƒnƒƒcƒ…eƒ@ ƒnƒ•uƒmƒ‚bƒ…eƒ’r
+_Messages_.en.FW.MBE.Sort by share: „rSSƒoƒ’rƒ”tƒ@ ƒ‚bƒ™yƒ@ ƒ“sƒˆhƒaƒ’rƒ…e
 _Messages_.en.FW.MBE.Start At: „rSSƒ”tƒaƒ’rƒ”tƒ@ „`AAƒ”t
 _Messages_.en.FW.MBE.Start Job Immediately: „rSSƒ”tƒaƒ’rƒ”tƒ@ „iJJƒoƒ‚bƒ@ „hIIƒmƒmƒ…eƒ„dƒ‰iƒaƒ”tƒ…eƒŒlƒ™y
 _Messages_.en.FW.MBE.Start Proc Args: „rSSƒ”tƒaƒ’rƒ”tƒ@ „oPPƒ’rƒoƒƒcƒ@ „`AAƒ’rƒ‡gƒ“s
@@ -605,6 +603,7 @@ _Messages_.en.FW.MBE.User: „tUUƒ“sƒ…eƒ’r
 _Messages_.en.FW.MBE.User Configuration: „tUUƒ“sƒ…eƒ’rƒ@ „bCCƒoƒnƒ†fƒ‰iƒ‡gƒ•uƒ’rƒaƒ”tƒ‰iƒoƒn
 _Messages_.en.FW.MBE.User Lists: „tUUƒ“sƒ…eƒ’rƒ@ „kLLƒ‰iƒ“sƒ”tƒ“s
 _Messages_.en.FW.MBE.User Share Tree: „tUUƒ“sƒ…eƒ’rƒ@ „rSSƒˆhƒaƒ’rƒ…eƒ@ „sTTƒ’rƒ…eƒ…e
+_Messages_.en.FW.MBE.User Sort: „tUUƒ“sƒ…eƒ’rƒ@ „rSSƒoƒ’rƒ”t
 _Messages_.en.FW.MBE.User [%]: „tUUƒ“sƒ…eƒ’rƒ@ ƒm[ƒ“%ƒn]
 _Messages_.en.FW.MBE.User/Group: „tUUƒ“sƒ…eƒ’r¡¿„fGGƒ’rƒoƒ•uƒp
 _Messages_.en.FW.MBE.Users/Groups: „tUUƒ“sƒ…eƒ’rƒ“s¡¿„fGGƒ’rƒoƒ•uƒpƒ“s

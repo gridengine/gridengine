@@ -38,7 +38,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
-#include "sge_bootstrap.h"
 #include "sge_unistd.h"
 #include "sge.h"
 #include "setup.h"
@@ -77,18 +76,12 @@
 #include "sge_os.h"
 #include "sge_answer.h"
 #include "sge_profiling.h"
-#include "sge_serf.h"
-#include "sge_mt_init.h"
-
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
 int new_global_config = 0;
-
-static void schedd_serf_record_func(u_long32 job_id, u_long32 ja_taskid, 
-   const char *state, u_long32 start_time, u_long32 end_time, char level_char,
-   const char *object_name, const char *name, double utilization);
-static void schedd_serf_newline(u_long32 time);
+int start_on_master_host = 0;
+int sgeee_mode = 0;
 
 static int sge_ck_qmaster(const char *former_master_host);
 static int parse_cmdline_schedd(int argc, char **argv);
@@ -118,16 +111,12 @@ int argc,
 char *argv[] 
 ) {
    bool check_qmaster;
-   const char *master_host = NULL;
+   const char *master_host;
    int ret;
-   char* initial_qmaster_host = NULL;
-   char* local_host = NULL;
+   char initial_qmaster_host[1024];
    time_t next_prof_output = 0;
-   bool done = false;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
-
-   sge_mt_init();
 
    /* set profiling parameters */
    prof_set_level_name(SGE_PROF_EVENTMASTER, NULL, NULL);
@@ -141,8 +130,6 @@ char *argv[]
    prof_set_level_name(SGE_PROF_CUSTOM6, "scheduler event loop", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM7, "copy lists", NULL);
 
-   /* we wish these functions be used for schedule entry recording */
-   serf_init(schedd_serf_record_func, schedd_serf_newline);
 
    /* This needs a better solution */
    umask(022);
@@ -165,11 +152,7 @@ char *argv[]
    uti_state_set_exit_func(schedd_exit_func);
    sge_setup_sig_handlers(SCHEDD);
 
-   if (sge_setup(SCHEDD, NULL) != 0) {
-      /* sge_setup has already printed the error message */
-      SGE_EXIT(1);
-   }
-   
+   sge_setup(SCHEDD, NULL);
    prepare_enroll(prognames[SCHEDD], 1, NULL);
 
    if ((ret = sge_occupy_first_three()) >= 0) {
@@ -179,6 +162,8 @@ char *argv[]
 
    lInit(nmv);
 
+   feature_initialize_from_file(path_state_get_product_mode_file(), NULL);
+   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
    parse_cmdline_schedd(argc, argv);
 
    /* daemonizes if qmaster is unreachable */
@@ -188,42 +173,40 @@ char *argv[]
    sge_schedd_mirror_register();
 
    master_host = sge_get_master(0);
-   if ( (ret=cl_com_cached_gethostbyname((char*)master_host, &initial_qmaster_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
-      CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
-      SGE_EXIT(1);
-   }
-   if ( (ret=cl_com_gethostname(&local_host, NULL,NULL,NULL)) != CL_RETVAL_OK) {
-      FREE(initial_qmaster_host); 
-      CRITICAL((SGE_EVENT, cl_get_error_text(ret)));
-      SGE_EXIT(1);
-   }
-
-   if (cl_com_compare_hosts((char*)master_host,local_host) != CL_RETVAL_OK) {
+   if (sge_hostcmp(master_host, uti_state_get_qualified_hostname()) && start_on_master_host) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_STARTSCHEDONMASTERHOST_S , master_host));
-      FREE(initial_qmaster_host); 
       SGE_EXIT(1);
    }
-   FREE(local_host);
+   strncpy(initial_qmaster_host, master_host, sizeof(initial_qmaster_host)-1);
 
    if (!getenv("SGE_ND")) {
+      int fd;
       fd_set fds;
       FD_ZERO(&fds);
-      if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), &fds) == CL_RETVAL_OK) {
-         sge_daemonize(&fds);
-      } else {
-         sge_daemonize(NULL);
+      if ((fd=commlib_state_get_sfd())>=0) {
+         FD_SET(fd, &fds);
       }
+      sge_daemonize(commlib_state_get_closefd()?NULL:&fds);
    }
 
    starting_up();
    sge_write_pid(SCHEDD_PID_FILE);
 
+#if RAND_ERROR
+   rand_error = 1;
+#endif
+
    in_main_loop = 1;
 
-   while (!done) {
+   /* this is necessary if the master has to send LOTS of data
+    * to the schedd. would timout otherwise.
+   */
+   set_commlib_param(CL_P_TIMEOUT_SRCV, 4*60, NULL, NULL);
+   set_commlib_param(CL_P_TIMEOUT_SSND, 4*60, NULL, NULL);
+
+   while (1) {
       if (shut_me_down) {
          sge_mirror_shutdown();
-         FREE(initial_qmaster_host);
          sge_shutdown();
       }   
 
@@ -234,7 +217,6 @@ char *argv[]
       
       if (check_qmaster) {
          if ((ret = sge_ck_qmaster(initial_qmaster_host)) < 0) {
-            FREE(initial_qmaster_host);
             CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
             SGE_EXIT(1);
          } else if (ret > 0) {
@@ -270,9 +252,6 @@ char *argv[]
          }
       }
    }
-   FREE(initial_qmaster_host);
-   DEXIT;
-   return EXIT_SUCCESS;
 }
 
 /*************************************************************/
@@ -286,7 +265,6 @@ static void usage(FILE *fp)
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
    SGE_EXIT(1);
-   DEXIT;
 }
 
 /*************************************************************/
@@ -294,7 +272,6 @@ static void schedd_exit_func(int i)
 {
    DENTER(TOP_LAYER, "schedd_exit_func");
    sge_gdi_shutdown();
-   serf_exit();
    DEXIT;
 }
 
@@ -322,7 +299,7 @@ static int parse_cmdline_schedd(int argc, char *argv[])
 static int sge_ck_qmaster(const char *former_master_host)
 {
    lList *alp, *lp = NULL;
-   int success;
+   int success, old_timeout;
    lEnumeration *what;
    lCondition *where;
    const char *current_master;
@@ -337,7 +314,7 @@ static int sge_ck_qmaster(const char *former_master_host)
       return -1;
    }
 
-   if (check_isalive(current_master) != CL_RETVAL_OK) {
+   if (check_isalive(current_master)) {
       DPRINTF(("qmaster is not alive\n"));
       DEXIT;
       return 1;
@@ -351,8 +328,11 @@ static int sge_ck_qmaster(const char *former_master_host)
                   MO_Type,
                   MO_name, uti_state_get_user_name());
                   
+   old_timeout = commlib_state_get_timeout_ssnd();
+   set_commlib_param(CL_P_TIMEOUT_SRCV, 20, NULL, NULL);
                         
    alp = sge_gdi(SGE_MANAGER_LIST, SGE_GDI_GET, &lp, where, what);
+   set_commlib_param(CL_P_TIMEOUT_SRCV, old_timeout, NULL, NULL);
    
    where = lFreeWhere(where);
    what = lFreeWhat(what);
@@ -408,6 +388,42 @@ static int sge_ck_qmaster(const char *former_master_host)
       return -1;
    }
    lp = lFreeList(lp);
+
+/*---------------------------------------------------------------*/
+#if 0
+   /* JG: this is not necessary: SCHED_CONF is sent at 
+    * event client registration 
+    */
+   DPRINTF(("Requesting scheduler configuration from qmaster\n"));
+   what = lWhat("%T(ALL)", SC_Type);
+   alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
+   what = lFreeWhat(what);
+
+   success = (lGetUlong(lFirst(alp), AN_status) == STATUS_OK);
+   if (!success) {
+      ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
+      DEXIT;
+      return 1;
+   }
+
+   alp = lFreeList(alp);
+
+   if (success && !lp) {
+      INFO((SGE_EVENT, MSG_SCHEDD_GOTEMPTYCONFIGFROMMASTERUSINGDEFAULT ));
+      lp = lFreeList(lp);
+      DEXIT;
+      return 1;
+   }
+
+   alp = NULL;
+   if (sc_set(&alp, &scheddconf, lFirst(lp), NULL, NULL))
+      ERROR((SGE_EVENT, "%s", lGetString(lFirst(alp), AN_text)));
+
+   ec_set_edtime(scheddconf.schedule_interval);
+   use_alg(scheddconf.algorithm);
+
+   lp = lFreeList(lp);
+#endif
 
    DEXIT;
    return 0;
@@ -475,8 +491,6 @@ static int sge_setup_sge_schedd()
    int ret;
    u_long32 saved_logginglevel;
    char err_str[1024];
-   lList *schedd_config_list = NULL;
-
 
    DENTER(TOP_LAYER, "sge_setup_sge_schedd");
 
@@ -486,12 +500,10 @@ static int sge_setup_sge_schedd()
    }
    sge_show_conf();
 
-   schedd_config_list = lFreeList(schedd_config_list);
-   
    /*
    ** switch to admin user
    */
-   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str)) {
+   if (sge_set_admin_username(conf.admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
@@ -504,7 +516,7 @@ static int sge_setup_sge_schedd()
    /* get aliased hostname from commd */
    reresolve_me_qualified_hostname();
 
-   sge_chdir_exit(bootstrap_get_qmaster_spool_dir(), 1);
+   sge_chdir_exit(conf.qmaster_spool_dir, 1);
    sge_mkdir(SCHED_SPOOL_DIR, 0755, 1, 0);
    sge_chdir_exit(SCHED_SPOOL_DIR, 1);
 
@@ -532,17 +544,16 @@ static int sge_setup_sge_schedd()
 int daemonize_schedd()
 {
    fd_set keep_open;
-   int ret = 0;
+   int ret, fd;
 
    DENTER(TOP_LAYER, "daemonize_schedd");
 
    FD_ZERO(&keep_open);
-
-   if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0), &keep_open) == CL_RETVAL_OK) {
-      ret = sge_daemonize(&keep_open);
-   } else {
-      ret = sge_daemonize(NULL);
+   if ((fd = commlib_state_get_sfd()) >= 0) {
+      FD_SET(fd, &keep_open);
    }
+   sge_daemonize(commlib_state_get_closefd()?NULL:&keep_open);
+   ret = sge_daemonize(&keep_open);
 
    DEXIT;
    return ret;
@@ -558,7 +569,6 @@ int sge_before_dispatch(void)
    /* hostname resolving scheme in global config could have changed
       get it and use it if we got a notification about a new global config */
    if (new_global_config) {
-   
       lListElem *global = NULL, *local = NULL;
 
       if (get_configuration(SGE_GLOBAL_NAME, &global, &local) == 0)
@@ -568,26 +578,14 @@ int sge_before_dispatch(void)
       new_global_config = 0;
 
       /* flushing information might have changed */
-      /* SG: TODO: is this still needed? */
-      {
-         int interval = sconf_get_flush_finish_sec();
-         bool flush = interval> 0;
-         if (interval== 0)
-            interval= -1;
-         if(ec_get_flush(sgeE_JOB_DEL) != interval) {
-            ec_set_flush(sgeE_JOB_DEL,flush, interval);
-            ec_set_flush(sgeE_JOB_FINAL_USAGE,flush, interval);
-            ec_set_flush(sgeE_JATASK_MOD, flush, interval);
-            ec_set_flush(sgeE_JATASK_DEL, flush, interval);
-         }
-
-         interval= sconf_get_flush_submit_sec();
-         flush = interval> 0;
-         if (interval== 0)
-            interval= -1;
-         if(ec_get_flush(sgeE_JOB_ADD) != interval) {
-            ec_set_flush(sgeE_JOB_ADD, flush, interval);
-         }
+      if(ec_get_flush(sgeE_JOB_DEL) != flush_finish_sec) {
+         ec_set_flush(sgeE_JOB_DEL, flush_finish_sec);
+         ec_set_flush(sgeE_JOB_FINAL_USAGE, flush_finish_sec);
+         ec_set_flush(sgeE_JATASK_MOD, flush_finish_sec);
+         ec_set_flush(sgeE_JATASK_DEL, flush_finish_sec);
+      }
+      if(ec_get_flush(sgeE_JOB_ADD) != flush_submit_sec) {
+         ec_set_flush(sgeE_JOB_ADD, flush_submit_sec);
       }
       ec_commit();
    }
@@ -606,62 +604,3 @@ void sge_schedd_mirror_register()
    /* subscribe events */
    sched_funcs[current_scheduler].subscribe_func();
 }
-
-/* sge_schedd's current schedule entry recording facility (poor mans realization) */
-
-static char schedule_log_path[SGE_PATH_MAX + 1] = "";
-const char *schedule_log_file = "schedule";
-
-/* MT-NOTE: schedd_serf_record_func() is not MT safe */
-static void schedd_serf_record_func(
-u_long32 job_id,
-u_long32 ja_taskid,
-const char *state,
-u_long32 start_time,
-u_long32 end_time,
-char level_char,
-const char *object_name,
-const char *name,
-double utilization)
-{
-   FILE *fp;
-
-   DENTER(TOP_LAYER, "schedd_serf_record_func");
-
-   if (!*schedule_log_path) {
-      sprintf(schedule_log_path, "%s/%s/%s", path_state_get_cell_root(), "common", schedule_log_file);
-      DPRINTF(("schedule log path >>%s<<\n", schedule_log_path));
-   }
-
-   if (!(fp = fopen(schedule_log_path, "a"))) {
-      DEXIT;
-      return;
-   }
-
-   /* a new record */
-   fprintf(fp, U32CFormat":"U32CFormat":%s:"U32CFormat":"U32CFormat":%c:%s:%s:%f\n",
-      u32c(job_id), u32c(ja_taskid), state, u32c(start_time), u32c(end_time - start_time), 
-         level_char, object_name, name, utilization);
-   fclose(fp);
-
-   DEXIT;
-   return;
-}
-
-/* MT-NOTE: schedd_serf_newline() is not MT safe */
-static void schedd_serf_newline(u_long32 time)
-{
-   FILE *fp;
-
-   if (!*schedule_log_path) {
-      sprintf(schedule_log_path, "%s/%s/%s", path_state_get_cell_root(), "common", schedule_log_file);
-   }
-
-   fp = fopen(schedule_log_path, "a");
-   if (fp) {
-      /* well, some kind of new line indicating a new schedule run */
-      fprintf(fp, "::::::::\n");
-      fclose(fp);
-   }
-}
-

@@ -34,6 +34,5 @@
 
 void qmonLoadSelectEntry(Widget w, XtPointer cld, XtPointer cad);
 void ShowLoadNames(Widget w, lList *attributes);
-void qmonLoadNames(Widget w, XtPointer cld, XtPointer cad);
 
 #endif /* __QMON_LOAD_H */

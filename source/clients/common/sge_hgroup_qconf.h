@@ -38,13 +38,10 @@ lListElem *hgroup_get_via_gdi(lList **answer_list, const char *group);
 bool hgroup_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                                    u_long32 gdi_command);
 
-bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
-                                   bool ignore_unchanged_message);
+bool hgroup_provide_modify_context(lListElem **this_elem,
+                                      lList **answer_list);
 
 bool hgroup_show(lList **answer_list, const char *name);
-
-bool hgroup_show_structure(lList **answer_list, const char *name,
-                           bool show_tree);
 
 bool hgroup_add(lList **answer_list, const char *name);
 
@@ -55,5 +52,7 @@ bool hgroup_delete(lList **answer_list, const char *name);
 bool hgroup_add_from_file(lList **answer_list, const char *filename);
 
 bool hgroup_modify_from_file(lList **answer_list, const char *filename);
+
+
 
 #endif /* __SGE_HOSTGROUP_QCONF */

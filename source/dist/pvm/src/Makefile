@@ -39,6 +39,7 @@
 CC          = cc
 SHELL       = /bin/sh
 MAKE        = make
+STRIP       = strip
 RM          = rm -f
 PVM_CFLAGS  = -I$(PVM_ROOT)/include        
 PVM_LIB     = $(PVM_ROOT)/lib/$(PVM_ARCH)

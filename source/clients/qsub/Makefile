@@ -40,21 +40,18 @@ QSUB_SRC = qsub.c
 
 QSUB_ADD_SRC = parse_job_cull.c parse_qsub.c \
                sig_handlers.c read_defaults.c \
-               show_job.c usage.c sge_options.c \
-               sge_mt_init.c
+               show_job.c usage.c sge_options.c
 
 QSUB_OBJS = $(QSUB_SRC:.c=.o)
 
 QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) 
 
-QSUB_ADD_LIBS = -ljapi -levc -lgdi -lsgeobj -lsgeobjd  \
-                -lcull -lcomm -lcommlists -luti -llck -lrmon \
-                $(SECLIB) $(KRBLIB) $(DLLIB) 
+QSUB_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QSUB_LIB_DEPENDS = $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
+QSUB_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(SECLIBS) $(KRBLIBS) \
-                   $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) $(UTILIB) $(RMONLIB) \
-                   $(TPLIB) $(JAPILIB)
+                   $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) \
+                   $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -86,5 +83,5 @@ include $(QSUB_DIR)/qsub_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-qsub.o: 	$(QSUB_DIR)/qsub.c $(JAPILIB)
+qsub.o: 	$(QSUB_DIR)/qsub.c
 		$(CC) $(CFLAGS) -c $(QSUB_DIR)/qsub.c

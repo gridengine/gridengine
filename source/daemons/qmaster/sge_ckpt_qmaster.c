@@ -37,6 +37,8 @@
 #include "sge_pe.h"
 #include "sge_ja_task.h"
 #include "sge_ckpt_qmaster.h"
+#include "job_log.h"
+#include "sge_queue_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_event_master.h"
 #include "config_file.h"
@@ -50,7 +52,7 @@
 #include "sge_unistd.h"
 #include "sge_answer.h"
 #include "sge_ckpt.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 #include "sge_job.h"
 #include "sge_utility.h"
 #include "sge_todo.h"
@@ -225,25 +227,19 @@ ERROR:
 *     STATUS_EEXIST - an error occured
 ******************************************************************************/
 int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object) 
-{  
-   lList *answer_list = NULL;
-   bool dbret;
-
+{
    DENTER(TOP_LAYER, "ckpt_spool");
 
-   dbret = spool_write_object(&answer_list, spool_get_default_context(), ep, 
-                              lGetString(ep, CK_name), SGE_TYPE_CKPT);
-   answer_list_output(&answer_list);
-
-   if (!dbret) {
-      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
-                              ANSWER_QUALITY_ERROR, 
-                              MSG_PERSISTENCE_WRITE_FAILED_S,
-                              lGetString(ep, CK_name));
+   if (!spool_write_object(alpp, spool_get_default_context(), ep, 
+                           lGetString(ep, CK_name), SGE_TYPE_CKPT)) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
+            object->object_name, lGetString(ep, CK_name)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
    }
-
    DEXIT;
-   return dbret ? 0 : 1;
+   return 0;
 }
 
 /****** qmaster/ckpt/ckpt_success() *******************************************
@@ -282,8 +278,7 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
 
    ckpt_name = lGetString(ep, CK_name);
 
-   sge_add_event( 0, old_ep ? sgeE_CKPT_MOD : sgeE_CKPT_ADD, 0, 0, 
-                 ckpt_name, NULL, NULL, ep);
+   sge_add_event(NULL, 0, old_ep?sgeE_CKPT_MOD:sgeE_CKPT_ADD, 0, 0, ckpt_name, NULL, ep);
    lListElem_clear_changed_info(ep);
 
    DEXIT;
@@ -363,7 +358,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
       lList *local_answer_list = NULL;
 
       if (ckpt_is_referenced(found, &local_answer_list, Master_Job_List,
-                             *(object_type_get_master_list(SGE_TYPE_CQUEUE)))) {
+                             Master_Queue_List)) {
          lListElem *answer = lFirst(local_answer_list);
 
          ERROR((SGE_EVENT, "denied: %s", lGetString(answer, AN_text)));
@@ -376,8 +371,9 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
    }
 
    /* remove ckpt file 1st */
-   if (!sge_event_spool(alpp, 0, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL, NULL,
-                        NULL, NULL, NULL, true, true)) {
+   if (!sge_event_spool(alpp, 0, sgeE_CKPT_DEL,
+                            0, 0, ckpt_name, NULL,
+                            NULL, NULL, NULL, true, true)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, MSG_OBJ_CKPT, ckpt_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -426,8 +422,8 @@ int is_checkpoint_when_valid(int bitmask)
 {
    int ret = 0;
    int mask = 0;
-
    DENTER(TOP_LAYER, "is_checkpoint_when_valid");
+
    mask = CHECKPOINT_SUSPEND | CHECKPOINT_AT_SHUTDOWN
       | CHECKPOINT_AT_MINIMUM_INTERVAL | CHECKPOINT_AT_AUTO_RES;
 
@@ -435,6 +431,7 @@ int is_checkpoint_when_valid(int bitmask)
        || ((bitmask & mask) == bitmask)) {
       ret = 1;
    }
+
    DEXIT;
    return ret;
 }

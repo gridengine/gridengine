@@ -69,11 +69,7 @@ Qmon*browser_layout*browser_main_link.marginWidth:        0
 
 Qmon*browser_layout.browser_object.chooserType: CheckPalette
 Qmon*browser_layout.browser_object.strings: \
-   "@{stdout}", \
-   "@{stderr}", \
-   "@{Queue}", \
-   "@{Job}", \
-   "@{Messages}"
+   "@{stdout}", "@{stderr}", "@{Queue}", "@{Job}", "@{Messages}"
 
 Qmon*browser_layout.browser_close.labelString:       @{Done}
 Qmon*browser_layout.browser_clear.labelString:       @{Clear}

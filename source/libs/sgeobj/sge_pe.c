@@ -31,33 +31,23 @@
 /*___INFO__MARK_END__*/
 
 #include <fnmatch.h>
-#include <strings.h>
-#include <ctype.h>
-#include <string.h>
 
-#include "sge.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull_list.h"
 
 #include "config_file.h"
 
-#include "sge_object.h"
-#include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_job.h"
-#include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_range.h"
+#include "sge_queue.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
-#include "sge_resource_utilization.h"
 #include "sge_pe.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-#include "msg_qmaster.h"
 
 lList *Master_Pe_List = NULL;
 
@@ -94,20 +84,20 @@ bool pe_is_matching(const lListElem *pe, const char *wildcard)
 *     pe_list_find_matching() -- Find a PE matching  wildcard expr 
 *
 *  SYNOPSIS
-*     const lListElem* pe_list_find_matching(lList *pe_list, 
+*     lListElem* pe_list_find_matching(lList *pe_list, 
 *                                      const char *wildcard) 
 *
 *  FUNCTION
 *     Try to find a PE that matches the given "wildcard" expression.
 *
 *  INPUTS
-*     const lList *pe_list       - PE_Type list
+*     lList *pe_list       - PE_Type list
 *     const char *wildcard - Wildcard expression 
 *
 *  RESULT
 *     lListElem* - PE_Type object or NULL
 *******************************************************************************/
-lListElem *pe_list_find_matching(const lList *pe_list, const char *wildcard) 
+lListElem *pe_list_find_matching(lList *pe_list, const char *wildcard) 
 {
    lListElem *ret = NULL;
 
@@ -135,9 +125,6 @@ lListElem *pe_list_find_matching(const lList *pe_list, const char *wildcard)
 *
 *  RESULT
 *     lListElem* - PE_Type object or NULL
-* 
-*  NOTES
-*     MT-NOTE: pe_list_locate() is MT safe
 ******************************************************************************/
 lListElem *pe_list_locate(const lList *pe_list, const char *pe_name) 
 {
@@ -151,26 +138,26 @@ lListElem *pe_list_locate(const lList *pe_list, const char *pe_name)
 *  SYNOPSIS
 *     bool pe_is_referenced(const lListElem *pe, lList **answer_list, 
 *                           const lList *master_job_list,
-*                           const lList *master_cqueue_list) 
+*                           const lList *master_queue_list) 
 *
 *  FUNCTION
 *     This function returns true (1) if the given "pe" is referenced
 *     in at least one of the objects contained in "master_job_list"
-*     or "master_cqueue_list". If this is the case than
+*     or "master_queue_list". If this is the case than
 *     a corresponding message will be added to the "answer_list".
 *
 *  INPUTS
-*     const lListElem *pe             - PE_Type object 
-*     lList **answer_list             - AN_Type list 
-*     const lList *master_job_list    - JB_Type list 
-*     const lList *master_cqueue_list - CQ_Type list
+*     const lListElem *pe            - PE_Type object 
+*     lList **answer_list            - AN_Type list 
+*     const lList *master_job_list   - JB_Type list 
+*     const lList *master_queue_list - QU_Type list
 *
 *  RESULT
 *     bool - true or false  
 ******************************************************************************/
 bool pe_is_referenced(const lListElem *pe, lList **answer_list,
                       const lList *master_job_list,
-                      const lList *master_cqueue_list)
+                      const lList *master_queue_list)
 {
    bool ret = false;
 
@@ -191,24 +178,18 @@ bool pe_is_referenced(const lListElem *pe, lList **answer_list,
       } 
    }
    if (!ret) {
-      lListElem *cqueue = NULL;
+      lListElem *queue = NULL;
 
-      for_each(cqueue, master_cqueue_list) {
-         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-         lListElem *qinstance = NULL;
+      for_each(queue, master_queue_list) {
+         if (queue_is_pe_referenced(queue, pe)) {
+            const char *pe_name = lGetString(pe, PE_name);
+            const char *queue_name = lGetString(queue, QU_qname);
 
-         for_each(qinstance, qinstance_list) {
-            if (qinstance_is_pe_referenced(qinstance, pe)) {
-               const char *pe_name = lGetString(pe, PE_name);
-               const char *name = lGetString(qinstance, QU_qname);
-
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                       ANSWER_QUALITY_INFO, 
-                                       MSG_PEREFINQUEUE_SS, 
-                                       pe_name, name);
-               ret = true;
-               break;
-            }
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                    ANSWER_QUALITY_INFO, MSG_PEREFINQUEUE_SS, 
+                                    pe_name, queue_name);
+            ret = true;
+            break;
          }
       }
    }
@@ -263,7 +244,6 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    config_errfunc = set_error;
 
    /* -------- start_proc_args */
-   NULL_OUT_NONE(pep, PE_start_proc_args);
    s = lGetString(pep, PE_start_proc_args);
    if (s && replace_params(s, NULL, 0, pe_variables )) {
       ERROR((SGE_EVENT, MSG_PE_STARTPROCARGS_SS, pe_name, err_msg));
@@ -274,7 +254,6 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
 
 
    /* -------- stop_proc_args */
-   NULL_OUT_NONE(pep, PE_stop_proc_args);
    s = lGetString(pep, PE_stop_proc_args);
    if (s && replace_params(s, NULL, 0, pe_variables )) {
       ERROR((SGE_EVENT, MSG_PE_STOPPROCARGS_SS, pe_name, err_msg));
@@ -300,74 +279,26 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
       return STATUS_EEXIST;
    }
 
-   /* do this only in qmaster. we don't have the usersets in qconf */
-   if (startup) {
-      /* -------- PE_user_list */
-      if ((ret=userset_list_validate_acl_list(lGetList(pep, PE_user_list), alpp))!=STATUS_OK) {
-         DEXIT;
-         return ret;
-      }
-
-      /* -------- PE_xuser_list */
-      if ((ret=userset_list_validate_acl_list(lGetList(pep, PE_xuser_list), alpp))!=STATUS_OK) {
-         DEXIT;
-         return ret;
-      }
-   }
-
-   /* -------- PE_urgency_slots */
-   if ((ret=pe_validate_urgency_slots(alpp, lGetString(pep, PE_urgency_slots)))!=STATUS_OK) {
+   /* -------- PE_user_list */
+   if ((ret=userset_list_validate_acl_list(alpp, lGetList(pep, PE_user_list), MSG_OBJ_USERLIST,
+               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
       DEXIT;
       return ret;
    }
-   
-   DEXIT;
-   return STATUS_OK;
-}
 
-/****** sgeobj/pe/pe_validate_urgency_slots() *********************************
-*  NAME
-*     pe_validate_urgency_slots() -- Ensure urgency slot setting is valid.
-*
-*  SYNOPSIS
-*     int pe_validate_urgency_slots(lList **alpp, const char *s) 
-*
-*  FUNCTION
-*     Validates urgency slot setting.
-*
-*  INPUTS
-*     lList **alpp  - On error a context message is returned.
-*     const char *s - The urgency slot string to be validated.
-*
-*  RESULT
-*     int - values other than STATUS_OK indicate error condition 
-*
-*  NOTES
-*     MT-NOTE: pe_validate_urgency_slots() is MT safe
-*******************************************************************************/
-int pe_validate_urgency_slots(lList **alpp, const char *s)
-{
-   DENTER(TOP_LAYER, "pe_validate_urgency_slots");
-
-   if (strcasecmp(s, SGE_ATTRVAL_MIN) &&
-       strcasecmp(s, SGE_ATTRVAL_MAX) &&
-       strcasecmp(s, SGE_ATTRVAL_AVG) &&
-       !isdigit(s[0])) {
-      ERROR((SGE_EVENT, "rejecting invalid urgency_slots setting \"%s\"\n", 
-         s));
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR); 
+   /* -------- PE_xuser_list */
+   if ((ret=userset_list_validate_acl_list(alpp, lGetList(pep, PE_xuser_list), MSG_OBJ_XUSERLIST,
+               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
       DEXIT;
-      return STATUS_ESEMANTIC;
+      return ret;
    }
 
    DEXIT;
    return STATUS_OK;
 }
 
-/* EB: ADOC: add commets */
-
 bool pe_list_do_all_exist(const lList *pe_list, lList **answer_list,
-                          const lList *pe_ref_list, bool ignore_make_pe)
+                          const lList *pe_ref_list)
 {
    bool ret = true;
    lListElem *pe_ref_elem = NULL;
@@ -376,9 +307,6 @@ bool pe_list_do_all_exist(const lList *pe_list, lList **answer_list,
    for_each(pe_ref_elem, pe_ref_list) {
       const char *pe_ref_string = lGetString(pe_ref_elem, ST_name);
 
-      if (ignore_make_pe && !strcmp(pe_ref_string, "make")) { 
-         continue;
-      }
       if (pe_list_locate(pe_list, pe_ref_string) == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EEXIST, 
                                  ANSWER_QUALITY_ERROR, 
@@ -396,216 +324,4 @@ lList **pe_list_get_master_list(void)
    return &Master_Pe_List;
 }
 
-/****** sge_pe/pe_urgency_slots() **********************************************
-*  NAME
-*     pe_urgency_slots() -- Compute PEs urgency slot amount for a slot range
-*
-*  SYNOPSIS
-*     int pe_urgency_slots(const lListElem *pe, const char 
-*     *urgency_slot_setting, const lList* range_list) 
-*
-*  FUNCTION
-*     Compute PEs urgency slot amount for a slot range. The urgency slot
-*     amount is the amount that is assumed for a job with a slot range
-*     before an assignment.
-*
-*  INPUTS
-*     const lListElem *pe              - PE_Type object.
-*     const char *urgency_slot_setting - Ugency slot setting as in sge_pe(5)
-*     const lList* range_list          - RN_Type list.
-*
-*  RESULT
-*     int - The slot amount.
-*
-*  NOTES
-*     MT-NOTE: pe_urgency_slots() is MT safe
-*******************************************************************************/
-int 
-pe_urgency_slots(const lListElem *pe, const char *urgency_slot_setting, 
-                 const lList* range_list)
-{
-   int n;
 
-   DENTER(TOP_LAYER, "pe_urgency_slots");
-
-   if (!strcasecmp(urgency_slot_setting, SGE_ATTRVAL_MIN)) {
-      n = range_list_get_first_id(range_list, NULL);
-   } else if (!strcasecmp(urgency_slot_setting, SGE_ATTRVAL_MAX)) {
-      /* 
-       * in case of an infinity slot range we use the 
-       * maximum PE slot number instead 
-       */
-      n = range_list_get_last_id(range_list, NULL);
-      if (n == RANGE_INFINITY) {
-         n = lGetUlong(pe, PE_slots);
-      }
-   } else if (!strcasecmp(urgency_slot_setting, SGE_ATTRVAL_AVG)) {
-      /* 
-       * to handle infinity slot ranges we use the maximum PE 
-       * slot number as upper bound when determining the average 
-       */
-      n = range_list_get_average(range_list, lGetUlong(pe, PE_slots));
-   } else if (isdigit(urgency_slot_setting[0])) {
-      n = atoi(urgency_slot_setting);
-   } else {
-      CRITICAL((SGE_EVENT, "unknown urgency_slot_setting \"%s\" for PE "
-                "\"%s\"\n", urgency_slot_setting, lGetString(pe, PE_name)));
-      n = 1;
-   }
-   DEXIT;
-   return n;
-}
-
-/****** src/sge_generic_pe() **********************************************
-*
-*  NAME
-*     sge_generic_pe -- build up a generic pe object 
-*
-*  SYNOPSIS
-*     lListElem* sge_generic_pe (
-*        char *pe_name
-*     );
-*
-*  FUNCTION
-*     build up a generic pe object
-*
-*  INPUTS
-*     pe_name - name used for the PE_name attribute of the generic
-*               pe object. If NULL then "template" is the default name.
-*
-*  RESULT
-*     !NULL - Pointer to a new CULL object of type PE_Type
-*     NULL - Error
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
-*******************************************************************************/
-lListElem* sge_generic_pe(char *pe_name)
-{
-   lListElem *pep;
-
-   DENTER(TOP_LAYER, "sge_generic_pe");
-
-   pep = lCreateElem(PE_Type);
-
-   if (pe_name) {
-      lSetString(pep, PE_name, pe_name);
-   } else {
-      lSetString(pep, PE_name, "template");
-   }
-
-   lSetString(pep, PE_allocation_rule, "$pe_slots");
-   lSetString(pep, PE_start_proc_args, "/bin/true");
-   lSetString(pep, PE_stop_proc_args, "/bin/true");
-
-   /* PE_control_slaves initialized implicitly to false */
-   lSetBool(pep, PE_job_is_first_task, TRUE);
-
-   lSetString(pep, PE_urgency_slots, SGE_ATTRVAL_MIN);
-
-   DEXIT;
-   return pep;
-}
-
-/****** sge_pe/pe_slots_used() *************************************************
-*  NAME
-*     pe_get_slots_used() -- Returns used PE slots
-*
-*  SYNOPSIS
-*     int pe_get_slots_used(const lListElem *pe) 
-*
-*  FUNCTION
-*     Returns the number of currently used PE slots.
-*
-*  INPUTS
-*     const lListElem *pe - The PE object (PE_Type)
-*
-*  RESULT
-*     int - number of currently used PE slots or -1 on error
-*
-*  NOTES
-*     MT-NOTE: pe_get_slots_used() is MT safe 
-*******************************************************************************/
-int pe_get_slots_used(const lListElem *pe)
-{
-   const lListElem *actual = lGetSubStr(pe, RUE_name, SGE_ATTR_SLOTS, PE_resource_utilization);
-   if (!actual) 
-      return -1;
-   return lGetDouble(actual, RUE_utilized_now); 
-}
-
-/****** sge_pe/pe_set_slots_used() *********************************************
-*  NAME
-*     pe_set_slots_used() -- Set number of used PE slots
-*
-*  SYNOPSIS
-*     int pe_set_slots_used(lListElem *pe, int slots) 
-*
-*  FUNCTION
-*     Sets the number of used PE slots.
-*
-*  INPUTS
-*     lListElem *pe - The pe object (PE_Type) 
-*     int slots     - Number of slots.
-*
-*  RESULT
-*     int - 0 on success -1 on error
-*
-*  NOTES
-*     MT-NOTE: pe_set_slots_used() is MT safe 
-*******************************************************************************/
-int pe_set_slots_used(lListElem *pe, int slots)
-{
-   lListElem *actual = lGetSubStr(pe, RUE_name, SGE_ATTR_SLOTS, PE_resource_utilization);
-   if (!actual && (!(actual = 
-         lAddSubStr(pe, RUE_name, SGE_ATTR_SLOTS, PE_resource_utilization, RUE_Type))))
-      return -1;
-   lSetDouble(actual, RUE_utilized_now, slots); 
-   return 0;
-}
-
-
-/****** sge_pe/pe_debit_slots() ************************************************
-*  NAME
-*     pe_debit_slots() -- Debit pos/neg amount of slots from PE
-*
-*  SYNOPSIS
-*     void pe_debit_slots(lListElem *pep, int slots, u_long32 job_id) 
-*
-*  FUNCTION
-*     Increases or decreses the number of slots used with a PE.
-*
-*  INPUTS
-*     lListElem *pep  - The PE (PE_Type)
-*     int slots       - Pos/neg number of slots.
-*     u_long32 job_id - Job id for monitoring purposes.
-*
-*  NOTES
-*     MT-NOTE: pe_debit_slots() is MT safe 
-*******************************************************************************/
-void pe_debit_slots(
-lListElem *pep, 
-int slots,
-u_long32 job_id  /* needed for job logging */
-) {
-   int n;
-
-   DENTER(TOP_LAYER, "pe_debit_slots");
-
-   if (pep) {
-      n = pe_get_slots_used(pep);
-      n += slots;
-      if (n < 0) {
-         ERROR((SGE_EVENT, MSG_PE_USEDSLOTSTOOBIG_S, lGetString(pep, PE_name)));
-      }
-      pe_set_slots_used(pep, n);
-   }
-   DEXIT;
-   return;
-}

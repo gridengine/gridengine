@@ -33,7 +33,10 @@
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
+
+#if defined(SGE_MT)
 #include <pthread.h>
+#endif
 
 #ifdef WIN32NATIVE
 #	include "win32nativetypes.h"
@@ -58,10 +61,11 @@
 #include "sge_uidgid.h"
 #include "setup_path.h"
 #include "sge_feature.h"
-#include "sge_bootstrap.h"
 
 static void default_exit_func(int i);
+#if defined(SGE_MT)
 static void gdi_init_mt(void);
+#endif
 
 struct gdi_state_t {
    /* gdi request base */
@@ -75,11 +79,19 @@ struct gdi_state_t {
    int      isalive;
    int      reread_qmaster_file;
 
+   int      sec_initialized;
    char     cached_master_name[MAXHOSTLEN];
 };
 
+#if defined(SGE_MT)
 static pthread_key_t   gdi_state_key;
+#else
+static struct gdi_state_t gdi_state_opaque = {
+  0, 1, 1, COMMD_UNKNOWN, 0, 0, 0, 0, "" };
+struct gdi_state_t *gdi_state = &gdi_state_opaque;
+#endif
 
+#if defined(SGE_MT)
 static pthread_once_t gdi_once_control = PTHREAD_ONCE_INIT;
 
 static void gdi_state_destroy(void* state) {
@@ -92,19 +104,19 @@ static void gdi_init_mt(void) {
   
 void gdi_once_init(void) {
    /* uti */
-   uidgid_mt_init();
+   uti_init_mt();
+   log_init_mt();
+   uidgid_init_mt();
 
-   bootstrap_mt_init();
-   feature_mt_init();
+   /* cull */
+   cull_init_mt();
 
-   /* sec */
-#ifdef SECURE
-   sec_mt_init();
-#endif
+   /* commlib */
+   commlib_init_mt();
 
    /* gdi */
    gdi_init_mt();
-   path_mt_init();
+   path_init_mt();
 }
 
 static void gdi_state_init(struct gdi_state_t* state) {
@@ -116,37 +128,13 @@ static void gdi_state_init(struct gdi_state_t* state) {
    state->made_setup = 0;
    state->isalive = 0;
    state->reread_qmaster_file = 0;
+   state->sec_initialized = 0;
    strcpy(state->cached_master_name, "");
 }
+#endif
 
-/****** gid/gdi_setup/gdi_mt_init() ************************************************
-*  NAME
-*     gdi_mt_init() -- Initialize GDI state for multi threading use.
-*
-*  SYNOPSIS
-*     void gdi_mt_init(void) 
-*
-*  FUNCTION
-*     Set up GDI. This function must be called at least once before any of the
-*     GDI functions is used. This function is idempotent, i.e. it is safe to
-*     call it multiple times.
-*
-*     Thread local storage for the GDI state information is reserved. 
-*
-*  INPUTS
-*     void - NONE 
-*
-*  RESULT
-*     void - NONE
-*
-*  NOTES
-*     MT-NOTE: gdi_mt_init() is MT safe 
-*
-*******************************************************************************/
-void gdi_mt_init(void)
-{
-   pthread_once(&gdi_once_control, gdi_once_init);
-}
+
+
 
 /****** libs/gdi/gdi_state_get_????() ************************************
 *  NAME
@@ -201,11 +189,37 @@ int gdi_state_get_reread_qmaster_file(void)
    return gdi_state->reread_qmaster_file;
 }
 
+int gdi_state_get_sec_initialized(void)
+{
+   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_sec_initialized");
+   return gdi_state->sec_initialized;
+}
+
 char *gdi_state_get_cached_master_name(void)
 {
    GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_cached_master_name");
    return gdi_state->cached_master_name;
 }
+
+#if 0 
+int gdi_state_get_ec_need_register(void)
+{
+   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_ec_need_register");
+   return gdi_state->ec_need_register;
+}
+
+lListElem *gdi_state_get_ec(void)
+{
+   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_ec");
+   return gdi_state->ec;
+}
+
+u_long32 gdi_state_get_ec_reg_id(void)
+{
+   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_get_ec_reg_id");
+   return gdi_state->ec_reg_id;
+}
+#endif
 
 /****** libs/gdi/gdi_state_set_????() ************************************
 *  NAME
@@ -259,7 +273,38 @@ void gdi_state_set_reread_qmaster_file(int i)
    gdi_state->reread_qmaster_file = i;
 }
 
+void gdi_state_set_sec_initialized(int i)
+{
+   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_sec_initialized");
+   gdi_state->sec_initialized = i;
+}
 
+#if 0
+void gdi_state_set_ec_config_changed(int i)
+{
+   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_ec_config_changed");
+   gdi_state->ec_config_changed = i;
+}
+
+void gdi_state_set_ec_need_register(int i)
+{
+   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_ec_need_register");
+   gdi_state->ec_need_register = i;
+}
+
+void gdi_state_set_ec(lListElem *ec)
+{
+   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_ec");
+   lFreeElem(gdi_state->ec);
+   gdi_state->ec = ec;
+}
+
+void gdi_state_set_ec_reg_id(u_long32 id)
+{
+   GET_SPECIFIC(struct gdi_state_t, gdi_state, gdi_state_init, gdi_state_key, "gdi_state_set_ec_reg_id");
+   gdi_state->ec_reg_id = id;
+}
+#endif
 
 /****** gdi/setup/sge_gdi_setup() *********************************************
 *  NAME
@@ -296,7 +341,10 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    DENTER(TOP_LAYER, "sge_gdi_setup");
 
    /* initialize libraries */
+#if defined(SGE_MT)
    pthread_once(&gdi_once_control, gdi_once_init);
+#endif
+
    if (gdi_state_get_made_setup()) {
       answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING, "GDI already setup\n");
       DEXIT;
@@ -315,7 +363,6 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    lInit(nmv);
 
    if (sge_setup(uti_state_get_mewho(), alpp)) {
-      answer_list_output (alpp);
       DEXIT;
       return AE_QMASTER_DOWN;
    }
@@ -330,12 +377,8 @@ int sge_gdi_setup(const char *programname, lList **alpp)
 
    /* check if master is alive */
    if (gdi_state_get_isalive()) {
-      DEXIT;  /* TODO: shall we rework the gdi function return values ? CR */
-      if (check_isalive(sge_get_master(0)) != CL_RETVAL_OK) {
-         return AE_QMASTER_DOWN;
-      } else {
-         return AE_OK;
-      }
+      DEXIT;
+      return check_isalive(sge_get_master(0));
    }
 
    DEXIT;
@@ -383,7 +426,10 @@ int sge_gdi_param(int param, int intval, char *strval)
    DENTER(TOP_LAYER, "sge_gdi_param");
 
 /* initialize libraries */
+#if defined(SGE_MT)
    pthread_once(&gdi_once_control, gdi_once_init);
+#endif
+
    if (gdi_state_get_made_setup()) {
       DEXIT;
       return AE_ALREADY_SETUP;
@@ -414,7 +460,8 @@ int sge_gdi_param(int param, int intval, char *strval)
 static void default_exit_func(int i) 
 {
    sge_security_exit(i); 
-   cl_com_cleanup_commlib();
+
+   leave_commd();  /* tell commd we're going */
 }
 
 /****** gdi/setup/sge_gdi_shutdown() ******************************************
@@ -435,8 +482,11 @@ int sge_gdi_shutdown()
 {
    DENTER(TOP_LAYER, "sge_gdi_shutdown");
 
-   /* initialize libraries */
+/* initialize libraries */
+#if defined(SGE_MT)
    pthread_once(&gdi_once_control, gdi_once_init);
+#endif
+
    default_exit_func(0);
 
    DEXIT;

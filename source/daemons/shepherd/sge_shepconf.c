@@ -29,7 +29,6 @@
  *
  ************************************************************************/
 
-#include <string.h>
 #include <signal.h>
 
 #include "sge_shepconf.h"

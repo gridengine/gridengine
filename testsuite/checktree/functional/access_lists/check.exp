@@ -52,7 +52,7 @@ set check_init_level_procedure "access_lists_init_level"
 
 # define test's name and run level descriptions
 set check_name            "access_lists"
-set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "Test (x)user_lists access for queue/cluster/pe"
 
@@ -91,12 +91,22 @@ proc access_lists_init_level {} {
 global access_lists_queue
 global access_lists_host
 
+global access_lists_host_conf
+global access_lists_queue_conf
+global access_lists_global_host_conf
+global access_lists_cluster_conf
+global access_lists_schedd_conf
+
 proc access_lists_setup  {} {
    global ts_config
    global CHECK_GROUP
    global access_lists_queue
    global access_lists_host
 
+   global access_lists_host_conf
+   global access_lists_queue_conf
+   global access_lists_global_host_conf
+   global access_lists_cluster_conf
    global access_lists_schedd_conf
 
    global CHECK_CORE_EXECD CHECK_OUTPUT CHECK_CORE_MASTER
@@ -104,20 +114,22 @@ proc access_lists_setup  {} {
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_PRODUCT_ROOT
 
-   set access_lists_queue "all.q"
+   set access_lists_queue "[lindex $CHECK_CORE_EXECD 0].q"
    set access_lists_host  [lindex $CHECK_CORE_EXECD 0]
 
    puts $CHECK_OUTPUT "using queue $access_lists_queue"
    puts $CHECK_OUTPUT "using host $access_lists_host"
 
    #saving original configurations
+   get_exechost access_lists_host_conf $access_lists_host  
+   get_queue    $access_lists_queue       access_lists_queue_conf
+   get_exechost access_lists_global_host_conf "global"       
+   get_config                             access_lists_cluster_conf 
    get_schedd_config                      access_lists_schedd_conf
 
    set my_schedd_config(schedule_interval)       "0:0:01"
    if { [ string compare $ts_config(product_type) sgeee] == 0 } {
-      if { $ts_config(gridengine_version) == 53 } {
-         set my_schedd_config(sgeee_schedule_interval) "0:0:02"
-      }
+      set my_schedd_config(sgeee_schedule_interval) "0:0:02"
    }
   
    set_schedd_config my_schedd_config
@@ -167,7 +179,7 @@ proc test_job_run { id_string job_id } {
       puts $CHECK_OUTPUT $catch_result
       add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched:\n$catch_result"
    } 
-   delete_job $job_id 1 1
+   delete_job $job_id 1
 }
 
 proc run_user_denied_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
@@ -275,7 +287,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
             add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_C (C) should not run"
          }
          wait_for_jobpending $job_id_C "leeper" 30
-         delete_job $job_id_C 1 1
+         delete_job $job_id_C 1
       }
    }
 
@@ -284,7 +296,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_A (A) should not run"
       }
       wait_for_jobpending $job_id_A "leeper" 30
-      delete_job $job_id_A 1 1
+      delete_job $job_id_A 1
    }
  
    if { $B_ok == 0 } {
@@ -292,20 +304,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_B (B) should not run"
       }
       wait_for_jobpending $job_id_B "leeper" 30
-      delete_job $job_id_B 1 1
-   }
-
-   # wait until jobs are really gone - it might still reference objects, like
-   # parallel environments etc.
-   set job_ids "$job_id_A $job_id_B"
-   if {[info exists job_id_C]} {
-      lappend job_ids $job_id_C
-   }
-   foreach job_id $job_ids {
-      while { [get_qstat_j_info $job_id ] != 0 } {
-         puts $CHECK_OUTPUT "waiting for job $job_id to leave qmaster"
-         after 2000
-      }
+      delete_job $job_id_B 1
    }
 }
 
@@ -314,10 +313,9 @@ proc access_lists_global_host {} {
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP 
-   global access_lists_queue access_lists_host
+   global access_lists_queue
 
-   set submit_queue [get_queue_instance $access_lists_queue $access_lists_host]
-   set jobargs "-o /dev/null -e /dev/null -q $submit_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000" 
 
 
    # testing user and group
@@ -360,7 +358,7 @@ proc access_lists_global_host {} {
       run_user_jobs "case 5,$A_USER,$B_USER" "$jobargs" 1 1
    
       #case 6
-      set my_global_host(xuser_lists) "$A_USER $B_USER"
+      set my_global_host(xuser_lists) "$A_USER,$B_USER"
       set my_global_host(user_lists)  "NONE"
       set_exechost my_global_host "global"
       if { $group_test == 1 } {
@@ -383,7 +381,7 @@ proc access_lists_global_host {} {
    
       #case 7
       set my_global_host(xuser_lists) "NONE"
-      set my_global_host(user_lists)  "$A_USER $B_USER"
+      set my_global_host(user_lists)  "$A_USER,$B_USER"
       set_exechost my_global_host "global"
       if { $group_test == 1 } {
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
@@ -413,11 +411,11 @@ proc access_lists_global_host {} {
    run_user_jobs "group/user case 1" "$jobargs" 0 0
 
    set my_global_host(xuser_lists) "NONE"
-   set my_global_host(user_lists)  "userA_name userA_group"
+   set my_global_host(user_lists)  "userA_name,userA_group"
    set_exechost my_global_host "global"
    run_user_jobs "group/user case 2" "$jobargs" 1 0
 
-   set my_global_host(xuser_lists) "userA_name userA_group"
+   set my_global_host(xuser_lists) "userA_name,userA_group"
    set my_global_host(user_lists)  "NONE"
    set_exechost my_global_host "global"
    run_user_jobs "group/user case 3" "$jobargs" 0 1
@@ -440,10 +438,9 @@ proc access_lists_exec_host {} {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_host CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
-   global CHECK_GROUP access_lists_queue access_lists_host
+   global CHECK_GROUP access_lists_queue
 
-   set submit_queue [get_queue_instance $access_lists_queue $access_lists_host]
-   set jobargs "-o /dev/null -e /dev/null -q $submit_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
 
 
    # testing user and group
@@ -486,7 +483,7 @@ proc access_lists_exec_host {} {
       run_user_jobs "case 5,$A_USER,$B_USER" $jobargs 1 1
    
       #case 6
-      set my_exec_host(xuser_lists) "$A_USER $B_USER"
+      set my_exec_host(xuser_lists) "$A_USER,$B_USER"
       set my_exec_host(user_lists)  "NONE"
       set_exechost my_exec_host $access_lists_host
       if { $group_test == 1 } {
@@ -504,7 +501,7 @@ proc access_lists_exec_host {} {
    
       #case 7
       set my_exec_host(xuser_lists) "NONE"
-      set my_exec_host(user_lists)  "$A_USER $B_USER"
+      set my_exec_host(user_lists)  "$A_USER,$B_USER"
       set_exechost my_exec_host $access_lists_host
       if { $group_test == 1 } {
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
@@ -536,11 +533,11 @@ proc access_lists_exec_host {} {
    run_user_jobs "group/user case 1" $jobargs 0 0
 
    set my_exec_host(xuser_lists) "NONE"
-   set my_exec_host(user_lists)  "userA_name userA_group"
+   set my_exec_host(user_lists)  "userA_name,userA_group"
    set_exechost my_exec_host $access_lists_host
    run_user_jobs "group/user case 2" $jobargs 1 0
 
-   set my_exec_host(xuser_lists) "userA_name userA_group"
+   set my_exec_host(xuser_lists) "userA_name,userA_group"
    set my_exec_host(user_lists)  "NONE"
    set_exechost my_exec_host $access_lists_host
    run_user_jobs "group/user case 3" $jobargs 0 1
@@ -560,14 +557,12 @@ proc access_lists_exec_host {} {
 }
 
 proc access_lists_queue {} {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_USER
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_queue CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
-   global access_lists_queue access_lists_host
 
-   set submit_queue [get_queue_instance $access_lists_queue $access_lists_host]
-   set jobargs "-o /dev/null -e /dev/null -q $submit_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
 
    # testing user and group
    set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
@@ -581,37 +576,37 @@ proc access_lists_queue {} {
       # case 1
       set my_queue_conf(xuser_lists) "$A_USER"
       set my_queue_conf(user_lists)  "NONE"
-      set_queue $access_lists_queue $access_lists_host my_queue_conf
+      set_queue $access_lists_queue my_queue_conf
       run_user_jobs "case 1,$A_USER,$B_USER" $jobargs 0 1       ;# A = 0 (not running) B = 1 (should run)
    
       # case 2
       set my_queue_conf(xuser_lists) "NONE"
       set my_queue_conf(user_lists)  "$A_USER"
-      set_queue $access_lists_queue $access_lists_host my_queue_conf
+      set_queue $access_lists_queue my_queue_conf
       run_user_jobs "case 2,$A_USER,$B_USER" $jobargs 1 0
    
       # case 3
       set my_queue_conf(xuser_lists) "$B_USER"
       set my_queue_conf(user_lists)  "$A_USER"
-      set_queue $access_lists_queue $access_lists_host my_queue_conf
+      set_queue $access_lists_queue my_queue_conf
       run_user_jobs "case 3,$A_USER,$B_USER" $jobargs 1 0 
    
       #case 4
       set my_queue_conf(xuser_lists) "$A_USER"
       set my_queue_conf(user_lists)  "$B_USER"
-      set_queue  $access_lists_queue $access_lists_host my_queue_conf
+      set_queue  $access_lists_queue my_queue_conf
       run_user_jobs "case 4,$A_USER,$B_USER" $jobargs 0 1
    
       #case 5
       set my_queue_conf(xuser_lists) "NONE"
       set my_queue_conf(user_lists)  "NONE"
-      set_queue  $access_lists_queue $access_lists_host my_queue_conf
+      set_queue  $access_lists_queue my_queue_conf
       run_user_jobs "case 5,$A_USER,$B_USER" $jobargs 1 1
    
       #case 6
-      set my_queue_conf(xuser_lists) "$A_USER $B_USER"
+      set my_queue_conf(xuser_lists) "$A_USER,$B_USER"
       set my_queue_conf(user_lists)  "NONE"
-      set_queue  $access_lists_queue $access_lists_host my_queue_conf
+      set_queue  $access_lists_queue my_queue_conf
       if { $group_test == 1 } {
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
          if { [string first $CHECK_GROUP $group1] >= 0 ||
@@ -627,8 +622,8 @@ proc access_lists_queue {} {
    
       #case 7
       set my_queue_conf(xuser_lists) "NONE"
-      set my_queue_conf(user_lists)  "$A_USER $B_USER"
-      set_queue  $access_lists_queue $access_lists_host my_queue_conf
+      set my_queue_conf(user_lists)  "$A_USER,$B_USER"
+      set_queue  $access_lists_queue my_queue_conf
       if { $group_test == 1 } {
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
          if { [string first $CHECK_GROUP $group1] >= 0 ||
@@ -645,7 +640,7 @@ proc access_lists_queue {} {
       #restore
       set my_queue_conf(xuser_lists) "NONE"
       set my_queue_conf(user_lists)  "NONE"
-      set_queue  $access_lists_queue $access_lists_host my_queue_conf
+      set_queue  $access_lists_queue my_queue_conf
    }
 
 
@@ -654,28 +649,28 @@ proc access_lists_queue {} {
 
    set my_queue_conf(xuser_lists) "userA_group"
    set my_queue_conf(user_lists)  "userA_name"
-   set_queue  $access_lists_queue $access_lists_host my_queue_conf
+   set_queue  $access_lists_queue my_queue_conf
    run_user_jobs "group/user case 1" $jobargs 0 0
 
    set my_queue_conf(xuser_lists) "NONE"
-   set my_queue_conf(user_lists)  "userA_name userA_group"
-   set_queue  $access_lists_queue $access_lists_host my_queue_conf
+   set my_queue_conf(user_lists)  "userA_name,userA_group"
+   set_queue  $access_lists_queue my_queue_conf
    run_user_jobs "group/user case 2" $jobargs 1 0
 
-   set my_queue_conf(xuser_lists) "userA_name userA_group"
+   set my_queue_conf(xuser_lists) "userA_name,userA_group"
    set my_queue_conf(user_lists)  "NONE"
-   set_queue  $access_lists_queue $access_lists_host my_queue_conf
+   set_queue  $access_lists_queue my_queue_conf
    run_user_jobs "group/user case 3" $jobargs 0 1
 
    set my_queue_conf(xuser_lists) "userA_name"
    set my_queue_conf(user_lists)  "userA_group"
-   set_queue  $access_lists_queue $access_lists_host my_queue_conf
+   set_queue  $access_lists_queue my_queue_conf
    run_user_jobs "group/user case 4" $jobargs 0 0
 
    #restore
    set my_queue_conf(xuser_lists) "NONE"
    set my_queue_conf(user_lists)  "NONE"
-   set_queue  $access_lists_queue $access_lists_host my_queue_conf
+   set_queue  $access_lists_queue my_queue_conf
 
    set_error 0 "ok"
 }
@@ -684,10 +679,9 @@ proc access_lists_cluster_config {} {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_queue CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
-   global CHECK_GROUP access_lists_queue access_lists_host
+   global CHECK_GROUP access_lists_queue
   
-   set submit_queue [get_queue_instance $access_lists_queue $access_lists_host]
-   set jobargs "-o /dev/null -e /dev/null -q $submit_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"  
+   set jobargs "-o /dev/null -e /dev/null -q $access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"  
    
    # testing user and group
    set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
@@ -729,7 +723,7 @@ proc access_lists_cluster_config {} {
       run_user_denied_jobs "case 5,$A_USER,$B_USER" $jobargs 1 1
    
       #case 6
-      set my_cluster_conf(xuser_lists) "$A_USER $B_USER"
+      set my_cluster_conf(xuser_lists) "$A_USER,$B_USER"
       set my_cluster_conf(user_lists)  "NONE"
       set_config my_cluster_conf "global"
       if { $group_test == 1 } {
@@ -747,7 +741,7 @@ proc access_lists_cluster_config {} {
    
       #case 7
       set my_cluster_conf(xuser_lists) "NONE"
-      set my_cluster_conf(user_lists)  "$A_USER $B_USER"
+      set my_cluster_conf(user_lists)  "$A_USER,$B_USER"
       set_config my_cluster_conf "global"
       if { $group_test == 1 } {
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
@@ -778,11 +772,11 @@ proc access_lists_cluster_config {} {
    run_user_denied_jobs "group/user case 1" $jobargs 0 0
 
    set my_cluster_conf(xuser_lists) "NONE"
-   set my_cluster_conf(user_lists)  "userA_name userA_group"
+   set my_cluster_conf(user_lists)  "userA_name,userA_group"
    set_config my_cluster_conf "global"
    run_user_denied_jobs "group/user case 2" $jobargs 1 0
 
-   set my_cluster_conf(xuser_lists) "userA_name userA_group"
+   set my_cluster_conf(xuser_lists) "userA_name,userA_group"
    set my_cluster_conf(user_lists)  "NONE"
    set_config my_cluster_conf "global"
    run_user_denied_jobs "group/user case 3" $jobargs 0 1
@@ -803,18 +797,18 @@ proc access_lists_cluster_config {} {
 }
 
 proc access_lists_pe {} {
-   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_USER
+   global CHECK_PRODUCT_ROOT CHECK_OUTPUT access_lists_queue CHECK_USER
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
-   global access_lists_queue access_lists_host
 
    set jobargs "-o /dev/null -e /dev/null -pe access_test_pe 2 $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
-
+   
    set my_pe(pe_name)     "access_test_pe"
+#   set my_pe(queue_list)  $access_lists_queue
    set my_pe(slots)       "8"
    add_pe my_pe
-   assign_queues_with_pe_object "$access_lists_queue" "$access_lists_host" "access_test_pe"
+   assign_queues_with_pe_object "$access_lists_queue" "access_test_pe"
 
    # testing user and group
    set access_lists "{userA_name userB_name 0} {userA_group userB_group 1}"
@@ -826,7 +820,6 @@ proc access_lists_pe {} {
       puts $CHECK_OUTPUT "B_USER = $B_USER"
 
       # case 1
-      unset my_pe
       set my_pe(xuser_lists) "$A_USER"
       set my_pe(user_lists)  "NONE"
 
@@ -836,14 +829,12 @@ proc access_lists_pe {} {
       run_user_jobs "case 1,$A_USER,$B_USER" $jobargs 0 1       ;# A = 0 (not running) B = 1 (should run)
  
       # case 2
-      unset my_pe
       set my_pe(xuser_lists) "NONE"
       set my_pe(user_lists)  "$A_USER"
       set_pe "access_test_pe" my_pe
       run_user_jobs "case 2,$A_USER,$B_USER" $jobargs 1 0
 
       # case 3
-      unset my_pe
       set my_pe(xuser_lists) "$B_USER"
       set my_pe(user_lists)  "$A_USER"
       set_pe "access_test_pe" my_pe
@@ -851,7 +842,6 @@ proc access_lists_pe {} {
 
    
       #case 4
-      unset my_pe
       set my_pe(xuser_lists) "$A_USER"
       set my_pe(user_lists)  "$B_USER"
       set_pe "access_test_pe" my_pe
@@ -859,7 +849,6 @@ proc access_lists_pe {} {
 
    
       #case 5
-      unset my_pe
       set my_pe(xuser_lists) "NONE"
       set my_pe(user_lists)  "NONE"
       set_pe "access_test_pe" my_pe
@@ -867,8 +856,7 @@ proc access_lists_pe {} {
 
    
       #case 6
-      unset my_pe
-      set my_pe(xuser_lists) "$A_USER $B_USER"
+      set my_pe(xuser_lists) "$A_USER,$B_USER"
       set my_pe(user_lists)  "NONE"
       set_pe "access_test_pe" my_pe
       if { $group_test == 1 } {
@@ -886,9 +874,8 @@ proc access_lists_pe {} {
 
    
       #case 7
-      unset my_pe
       set my_pe(xuser_lists) "NONE"
-      set my_pe(user_lists)  "$A_USER $B_USER"
+      set my_pe(user_lists)  "$A_USER,$B_USER"
       set_pe "access_test_pe" my_pe
       if { $group_test == 1 } {
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
@@ -904,31 +891,29 @@ proc access_lists_pe {} {
       run_user_jobs "case 7,$A_USER,$B_USER" $jobargs 1 1 $C_run
    }
    
+
    # test group/user combinations
    # userA_name userB_name userA_group userB_group
-   unset my_pe
    set my_pe(xuser_lists) "userA_group"
    set my_pe(user_lists)  "userA_name"
    set_pe "access_test_pe" my_pe
    run_user_jobs "group/user case 1" "$jobargs" 0 0 
 
-   unset my_pe
    set my_pe(xuser_lists) "NONE"
-   set my_pe(user_lists)  "userA_name userA_group"
+   set my_pe(user_lists)  "userA_name,userA_group"
    set_pe "access_test_pe" my_pe
    run_user_jobs "group/user case 2" "$jobargs" 1 0
 
-   unset my_pe
-   set my_pe(xuser_lists) "userA_name userA_group"
+   set my_pe(xuser_lists) "userA_name,userA_group"
    set my_pe(user_lists)  "NONE"
    set_pe "access_test_pe" my_pe
    run_user_jobs "group/user case 3" "$jobargs" 0 1
 
-   unset my_pe
    set my_pe(xuser_lists) "userA_name"
    set my_pe(user_lists)  "userA_group"
    set_pe "access_test_pe" my_pe
    run_user_jobs "group/user case 4" "$jobargs" 0 0
+
 
    del_pe "access_test_pe"
 
@@ -937,15 +922,28 @@ proc access_lists_pe {} {
 
 
 proc access_lists_cleanup  {} {
-   global access_lists_schedd_conf
-   global CHECK_CORE_EXECD CHECK_OUTPUT
+   global access_lists_queue
+   global access_lists_host
 
-   set_schedd_config access_lists_schedd_conf
+   global access_lists_host_conf
+   global access_lists_queue_conf
+   global access_lists_global_host_conf
+   global access_lists_cluster_conf
+   global access_lists_schedd_conf
+
+   global CHECK_CORE_EXECD CHECK_OUTPUT
 
    del_access_list "userA_group"
    del_access_list "userB_group"
    del_access_list "userA_name"
    del_access_list "userB_name"
+
+
+   set_exechost  access_lists_host_conf $access_lists_host 
+   set_queue     $access_lists_queue access_lists_queue_conf
+   set_exechost  access_lists_global_host_conf "global"
+   set_config    access_lists_cluster_conf
+   set_schedd_config access_lists_schedd_conf
 
    set_error 0 "ok"
 }

@@ -38,6 +38,10 @@
 #include <netdb.h>
 #include <string.h>
 
+#ifdef SUN4
+extern int rresvport(int *port);
+#endif
+
 /****** testsuidroot ***************************************
 *
 *  NAME

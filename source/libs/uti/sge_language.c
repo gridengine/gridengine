@@ -34,16 +34,22 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <pthread.h>
 
+#ifdef SGE_MT
+#include <pthread.h>
 #include "sge_mtutil.h"
+#endif
+
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_htable.h"
 
+
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
+
+#ifdef SGE_MT
 
 /* MT-NOTE: language_mutex guards all language module function calls */
 static pthread_mutex_t language_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -54,6 +60,12 @@ static pthread_mutex_t message_id_view_mutex = PTHREAD_MUTEX_INITIALIZER;
 #   define LANGUAGE_UNLOCK()          sge_mutex_unlock("language_mutex", SGE_FUNC, __LINE__, &language_mutex)
 #   define MESSAGE_ID_VIEW_LOCK()     sge_mutex_lock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
 #   define MESSAGE_ID_VIEW_UNLOCK()   sge_mutex_unlock("message_id_view_mutex", SGE_FUNC, __LINE__, &message_id_view_mutex)
+#else
+#   define LANGUAGE_LOCK()            
+#   define LANGUAGE_UNLOCK()         
+#   define MESSAGE_ID_VIEW_LOCK()   
+#   define MESSAGE_ID_VIEW_UNLOCK()
+#endif
 
 /*
  *  environment variable "SGE_ENABLE_MSG_ID"
@@ -487,7 +499,7 @@ void sge_init_language_func(gettext_func_type new_gettext,
 *******************************************************************************/
 void sge_set_message_id_output(int flag) {
 
-   DENTER(CULL_LAYER, "sge_set_message_id_output");
+   DENTER(TOP_LAYER, "sge_set_message_id_output");
 
    MESSAGE_ID_VIEW_LOCK();
 
@@ -578,7 +590,7 @@ static int sge_get_message_id_output_implementation(void)
 {
    int ret;
 
-   DENTER(CULL_LAYER, "sge_get_message_id_output_implementation");
+   DENTER(TOP_LAYER, "sge_get_message_id_output_implementation");
 
    if (sge_enable_msg_id_to_every_message == 1) {
       DEXIT;
@@ -665,7 +677,7 @@ const char *sge_gettext_(int msg_id, const char *msg_str)
    sge_error_message_t* message_p = NULL;
    long key;
 
-   DENTER(CULL_LAYER, "sge_gettext_");
+   DENTER(TOP_LAYER, "sge_gettext_");
 
    if (msg_str == NULL) {
       DEXIT;
@@ -786,4 +798,5 @@ const char *sge_gettext__(char *x)
    DEXIT;
    return z;
 }
+  
 #endif

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/02/26 13:56:26 $     Revision: $Revision: 1.41 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/07/30 12:21:49 $     Revision: $Revision: 1.26 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/02/26 13:56:26 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2003/07/30 12:21:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -81,7 +81,7 @@ submit a copy of an existing xxQS_NAMExx job.
 [
 .B options
 ]
-.B wc_job_range_list 
+.B job/task_id_list
 [
 .B --
 [
@@ -348,7 +348,7 @@ ss	denotes the seconds in 2 digits (default 00).
 .fi
 .sp 1
 If any of the optional date fields is omitted, the corresponding value of
-the current date is assumed. If CC is not specified, a YY of < 70 means 20YY.
+the current date is assumed.
 .br
 Usage of this option may cause unexpected results if the clocks of the
 hosts in the xxQS_NAMExx pool are out of sync. Also, the proper behavior of
@@ -482,7 +482,7 @@ parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
 .IP "\fB\-C prefix_string\fP"
-Available for \fIqsub\fP, and qrsh with script submission (-b n).
+Available for \fIqsub\fP only.
 .sp 1
 .I Prefix_string
 defines the prefix that declares a directive to
@@ -622,7 +622,7 @@ options in effect act as "toggles" during the scan.
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP, \fIqalter\fP
 and \fIqresub\fP.
 .sp 1
-List of holds to place on a job, a task or some tasks of a job.
+List of holds to place on the job.
 .sp 1
 .nf
 .ta \w'|u|  'u
@@ -680,21 +680,15 @@ however.
 .IP "\fB\-help\fP"
 Prints  a listing of all options.
 .\"
-.IP "\fB\-hold_jid wc_job_list\fP"
-Available for \fIqsub\fP, \fIqrsh\fP, and \fIqalter\fP only.
+.IP "\fB\-hold_jid [job_id|job_name],...\fP"
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
+\fIqalter\fP only.
 .sp 1
 Defines or redefines the job dependency list of the submitted job. A 
-reference by job name or regular expression is only accepted if the 
-referenced job is owend by the same user as the refering job. The 
-submitted job is not eligible for execution unless all jobs 
-referenced in the coma separated job id and/or job name list have 
-completed successfully.
-With the help of job names or regular expressions one can specify
-a job dependency to multiple jobs satisfying the regular expression
-or to all jobs with the requested name. The name dependencies are
-resolved at submittion time and can only be changed via qalter. New
-jobs or name changes of other jobs will not be taken into account.
-
+reference by job name is only accepted if the referenced job is owend
+by the same user as the refering job. The submitted job is not eligible 
+for execution unless all jobs referenced in the coma separated job id 
+and/or job name list have completed successfully.
 .sp 1
 .I Qalter
 allows changing this option even while the job executes. The modified
@@ -786,43 +780,6 @@ allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
-.IP "\fB\-js job_share\fP"
-Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
-\fIqalter\fP only.
-This option is only
-supported in case of a xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx systems.
-.br
-.sp 1
-Defines or redefines the job share of the job relative to other jobs.
-Job share is an unsigned integer value.
-The default job share value for jobs is 0.
-.sp 1
-In xxQS_NAME_EExx, the job share influences the Share Tree Policy and the Functional
-Policy. It has no effect on the Urgency and Override Policies (see
-.M share_tree 5 ,
-.M sched_conf 5
-and the
-.I xxQS_NAME_EExx Installation and Administration Guide
-for further information on the resource management policies supported by xxQS_NAME_EExx).
-.sp 1
-In case of the Share Tree Policy, users can distribute the tickets to
-which they are currently entitled, among their jobs using different
-shares assigned via \fB\-js\fP. If all jobs have the same job share
-value, the tickets are distributed evenly. Otherwise, jobs receive tickets
-relative to the different job shares. Job shares are treated like
-an additional level in the share tree in the latter case.
-.sp 1
-In connection with the Functional Policy, the job share can be used to
-weight jobs within the functional job category.
-Tickets are distributed relative to any
-uneven job share distribution treated as a virtual share distribution level
-underneath the functional job category.
-.sp 1
-If both the Share Tree and the Functional Policy are active, the job
-shares will have an effect in both policies and the tickets
-independently derived in each of them are added up to the total number of
-tickets for each job.
-.\"
 .IP "\fB\-l resource=value\fP,..."
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
@@ -868,6 +825,13 @@ have the following meaning:
 .sp 1
 Currently no mail is sent when a job is suspended.
 .sp 1
+For
+.I qsh
+and
+.I qlogin
+mail at the beginning or end of the job is suppressed
+when it is encountered in a default request file.
+.sp 1
 .I Qalter
 allows changing the b, e, and a option arguments even while the job
 executes. The modification of the b option argument will only be in
@@ -884,17 +848,14 @@ Default is the job owner at the originating host.
 .I Qalter
 allows changing this option even while the job executes.
 .\"
-.IP "\fB\-masterq wc_queue_list\fP"
+.IP "\fB\-masterq queue,...\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
 Only meaningful for parallel jobs, i.e. together with the -pe option.
 .sp 1
-Defines or redefines a list of cluster queues, queue domains and queue 
-instances which may be used to become the so called
+Defines or redefines a list of queues which may be used to become the so
+called
 .I master queue
-of this parallel job. A more detailed description of \fIwc_queue_list\fP 
-can be found in
-.M sge_types 1 .
-The
+of this parallel job. The
 .I master queue
 is defined as
 the queue where the parallel job is started. The other queues to which the
@@ -910,7 +871,7 @@ modified parameter will only be in effect after a restart or migration of
 the job, however.
 .\"
 .IP "\fB\-notify\fP"
-Available for \fIqsub\fP, \fIqrsh\fP (with command) and
+Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
 This flag,
@@ -937,12 +898,10 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqlogin\fP and \fIqrsh\fP.
 \fB\-now y\fP
 tries to start the job immediately or 
 not at all. The command returns 0 on success, or 1 on failure (also if
-the job could not be scheduled immediately).  For array jobs submitted with the
-\fB-now\fP option, if all tasks cannot be immediately scheduled, no tasks are
-scheduled.
+the job could not be scheduled immediately).
 \fB\-now y\fP is default for \fIqsh\fP, \fIqlogin\fP and \fIqrsh\fP
 .br
-With option \fB\-now n\fP the job will be put into the pending queue if it
+With option \fB\-now n\fP the job will be put into the pending queue, if it
 cannot be executed immediately. \fB\-now n\fP is default for \fIqsub\fP.
 .\"
 .IP "\fB\-N name\fP"
@@ -950,7 +909,7 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
 .sp 1
 The name of the job. The name can be any printable set
-of characters except '|', '.', '$' and it has to start with an alphabetic character.
+of characters, starting with an alphabetic character.
 .br
 If the \fB\-N\fP option is not present xxQS_NAMExx assigns
 the name of the job script to the job after 
@@ -1045,14 +1004,39 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 .sp 1
 Defines or redefines the priority of the job relative to other jobs.
 Priority is an integer in the range -1023 to 1024.
-The default priority value for jobs is 0.
+The default priority value for the jobs is 0.
 .sp 1
-Users may only decrease the priority of their jobs.
+In a xxQS_NAME_Cxx system, users may only decrease the priority of their jobs.
 xxQS_NAME_Cxx managers and administrators may also increase the priority
 associated with jobs. If a pending job has higher priority, it is
 earlier eligible for being dispatched by the xxQS_NAME_Cxx scheduler. The job
 priority has no effect on running jobs in xxQS_NAME_Cxx.
 .sp 1
+In xxQS_NAME_EExx, the job priority influences the Share Tree Policy and the Functional
+Policy. It has no effect on the Deadline and Override Policies (see
+.M share_tree 5 ,
+.M sched_conf 5
+and the
+.I xxQS_NAME_EExx Installation and Administration Guide
+for further information on the resource management policies supported by xxQS_NAME_EExx).
+.sp 1
+In case of the Share Tree Policy, users can distribute the tickets, to
+which they are currently entitled, among their jobs using different
+priorities assigned via \fB\-p\fP. If all jobs have the same priority
+value, the tickets are distributed evenly. Jobs receive tickets
+relative to the different priorities otherwise. Priorities are treated like
+an additional level in the share tree in the latter case.
+.sp 1
+In connection with the Functional Policy, the priority can be used to
+weight jobs within the functional job category.
+Again tickets are distributed relative to any
+uneven priority distribution treated as a virtual share distribution level
+underneath the functional job category.
+.sp 1
+If both, the Share Tree and the Functional Policy are active, the job
+priorities will have an effect in both policies and the tickets
+independently derived in each of them are added up to the total number of
+tickets for each job.
 .\"
 .IP "\fB\-pe parallel_environment \fBn\fP[\fB-\fP[\fBm\fP]]|[\fB-\fP]\fBm\fP,...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
@@ -1068,8 +1052,7 @@ and about how to obtain a list of currently valid PEs.
 .br
 You can specify the PE name  by using the wildcard character "*", thus
 the request "pvm*" will match any parallel environment with a name
-starting with the string "pvm". In case multiple parallel environments
-match the largest parallel environment assignment is chosen.
+starting with the string "pvm".
 .br
 The range specification is a list of range expressions of the
 form n-m (n as well as m being positive non-zero integer
@@ -1089,14 +1072,11 @@ allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
-.IP "\fB\-q wc_queue_list\fP"
+.IP "\fB\-q queue,...\fP"
 Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
 .sp 1
-Defines or redefines a list of cluster queues, queue domains or queue
-instances which may be used to execute this job. Please find a description
-of \fIwc_queue_list\fP in
-.M sge_types 1 .
-This parameter has all the properties of a resource request and
+Defines or redefines a list of queues which may be used to execute this
+job. This parameter has all the properties of a resource request and
 will be merged with requirements derived from the \fB\-l\fP option
 described above.
 .sp 1
@@ -1104,18 +1084,6 @@ described above.
 allows changing this option even while the job executes. The modified
 parameter will only be in effect after a restart or migration of the job,
 however.
-.\"
-.IP "\fB\-R y|n\fP"
-Available for \fIqsub\fP, \fIqrsh\fP, \fIqsh\fP, \fIqlogin\fP and \fIqalter\fP.
-.sp 1
-Indicates whether a reservation for this job should be done. Reservation 
-is never done for immediate jobs submitted using 'yes' with 
-\fB\-now\fP option. Please note irrespective of the reservation request 
-job reservation might be disabled using max_reservation in 
-.M sched_conf 5
-and might be limited only to a certain number of high prior jobs.
-.sp 1
-By default jobs are submitted with \fB\-R n\fP option.
 .\"
 .IP "\fB\-r y|n\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
@@ -1128,8 +1096,7 @@ crashes).
 If \fB\-r\fP is 'n', do not rerun the job under any circumstances.
 .br
 Interactive jobs submitted with
-.I qsh,
-.I qrsh
+.I qsh
 or
 .I qlogin
 are not re-runable.
@@ -1137,8 +1104,6 @@ are not re-runable.
 .I Qalter
 allows changing this option even while the job executes.
 .\"
-
-
 .IP "\fB\-sc variable[=value],...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 \fIqalter\fP only.
@@ -1175,35 +1140,6 @@ essential". If the \fB\-hard\fP flag (see above) is encountered at a later
 stage of the scan, all resource requests following it once
 again become "essential". The \fB\-hard\fP and \fB\-soft\fP
 options in effect act as "toggles" during the scan.
-.\"
-.IP "\fB\-sync y[es]|n[o]\fP"
-Available for \fIqsub\fP.
-.sp 1
-\fB\-sync y\fP
-causes
-.I qsub.
-to wait for the job to complete before exiting.  If the job completes successfully,
-.I qsub's
-exit code will be that of the completed job.  If the job fails to complete
-successfully,
-.I qsub
-will print out a error message indicating why the job failed and will have an
-exit code of 1.  If
-.I qsub
-is interrupted, e.g. with CTRL-C, before the job completes, the job will be
-canceled.
-.br
-With option \fB\-sync n\fP
-.I qsub
-will exit with an exit code of 0 if as soon as the job is submitted successfully.
-\fB\-sync n\fP is default for \fIqsub\fP.
-.br
-If \fB\-sync y\fP is used in conjunction with \fB\-now y\fP,
-.I qsub
-will behave as though only \fB\-now y\fP were given until the job has been
-successfully scheduled, after which time
-.I qsub
-will behave as though only \fB\-sync y\fP were given.
 .\"
 .IP "\fB\-S [[hostname]:]pathname,...\fP"
 Available for \fIqsub\fP, \fIqsh\fP and \fIqalter\fP.
@@ -1291,9 +1227,6 @@ $USER, $JOB_ID, $JOB_NAME, $HOSTNAME, and $xxQS_NAME_Sxx_TASK_ID.
 Note, that you can use the output redirection to divert the output of all
 tasks into the same file, but the result of this is undefined.
 .\"
-.\" Empty .SH required below to fix man indentation bug
-.SH
-.\"
 .IP "\fB\-u username,... | -uall\fP"
 Available for \fIqalter\fP only. Changes are only made on those
 jobs which were submitted by users specified in the list
@@ -1302,7 +1235,7 @@ For managers it is possible to use the \fB\qalter -uall\fP command
 to modify all jobs of all users.
 .sp 1
 If you use the \fB\-u\fP or \fB\-uall\fP switch it is not permitted to
-specify an additional \fI\wc_job_range_list\fP.
+specify an additional \fI\job/task_id_list\fP.
 .\"
 .IP "\fB\-v variable[=value],...\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqalter\fP
@@ -1394,6 +1327,27 @@ the format as described for the
 \fBFull Format\fP in section \fBOUTPUT FORMATS\fP of the
 .M qstat 1
 manual page.
+.\"
+.IP "\fBjob/task_id_list\fP"
+Specified by the following form:
+.sp 1
+.ta 0.5i
+    \fIjob_id[.task_range][,job_id[.task_range],...]\fP
+.ta 0.0i
+.sp 1
+If present, the \fItask_range\fP restricts the effect of the 
+operation to the array job task range specified as suffix to the job id
+(see the \fB\-t\fP option to
+.M qsub 1
+for further details on array jobs).
+.sp 1
+The task range specifier has the
+form n[-m[:s]]. The range may be a single number, a  simple
+range  of the form n-m or a range with a step size.
+.sp 1
+Instead of job/task_id_list it is possible to
+use the keyword 'all' to modify all jobs of the
+current user.
 .\"       
 .IP "\fBcommand\fP"
 Available for \fIqsub\fP and \fIqrsh\fP only.
@@ -1597,7 +1551,7 @@ parameter in
 for details on the format of this file. The environment variable
 is only available for parallel jobs.
 .IP "QUEUE" 1.5i
-The name of the cluster queue in which the job is running.
+The name of the queue in which the job is running.
 .IP "REQUEST" 1.5i
 Available for batch jobs only.
 .sp 1

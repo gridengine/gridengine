@@ -45,6 +45,7 @@ typedef struct {
    lList *centry_list;      /* CE_Type */
    lList *acl_list;         /* US_Type */
    lList *pe_list;          /* PE_Type */
+   lList *config_list;      /* SC_Type */
    lList *user_list;        /* UP_Type */
    lList *dept_list;        /* US_Type */
    lList *project_list;     /* UP_Type */
@@ -63,7 +64,6 @@ int scheduler(sge_Sdescr_t *lists);
 #ifdef SCHEDULER_SAMPLES
 int my_scheduler(sge_Sdescr_t *lists);
 #endif
-
 
 u_long32 sgeee_get_scheduling_run_id(void);
 

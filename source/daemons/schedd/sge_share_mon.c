@@ -35,10 +35,9 @@
 #include <string.h>
 #include <time.h>
 
-#include "sge_dstring.h"
-
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
+#include "sge_schedd_conf.h"
 #include "sge_usageL.h"
 #include "sge_time.h"
 #include "msg_schedd.h"
@@ -48,9 +47,16 @@
 #include "sge_support.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
-#include "sge_schedd_conf.h"
 
-#include "sge_sharetree_printing.h"
+typedef struct {
+   int name_format;
+   int format_times;
+   char *delim;
+   char *line_delim;
+   char *rec_delim;
+   char *str_format;
+   char *field_names;
+} format_t;
 
 static int
 setup_lists(lList **sharetree, lList **users, lList **projects, lList **config)
@@ -135,8 +141,286 @@ free_lists(lList *sharetree, lList *users, lList *projects, lList *config)
 
 
 
+int
+calculate_share_percents(lListElem *node, double parent_percent, double sibling_shares)
+{
+   lListElem *child;
+   double sum_shares=0;
 
-static void
+   for_each(child, lGetList(node, STN_children)) {
+      sum_shares += lGetUlong(child, STN_shares);
+   }
+
+   if (sibling_shares > 0)
+      lSetDouble(node, STN_proportion,
+		 (double)lGetUlong(node, STN_shares) / (double)sibling_shares);
+   else
+      lSetDouble(node, STN_proportion, 0);
+
+   if (sibling_shares > 0)
+      lSetDouble(node, STN_adjusted_proportion,
+		 parent_percent *
+		 (double)lGetUlong(node, STN_shares) / (double)sibling_shares);
+   else
+      lSetDouble(node, STN_adjusted_proportion, 0);
+
+   for_each(child, lGetList(node, STN_children)) {
+      calculate_share_percents(child, lGetDouble(node, STN_adjusted_proportion),
+			       sum_shares);
+   }
+
+   return 0;
+}
+
+double
+get_usage_value(lList *usage, char *name)
+{
+   lListElem *ue;
+   double value = 0;
+   if ((ue = lGetElemStr(usage, UA_name, name)))
+      value = lGetDouble(ue, UA_value);
+   return value;
+}
+
+
+typedef enum {
+   ULONG_T=0,
+   DATE_T,
+   STRING_T,
+   DOUBLE_T
+} item_type_t;
+
+typedef struct {
+   char *name;
+   item_type_t type;
+   void *val;
+} item_t;
+
+
+static double mem, cpu, io, ltmem, ltcpu, ltio, level, total,
+       lt_share, st_share, actual_share, combined_usage;
+static lUlong current_time, time_stamp, shares, job_count;
+static const char *node_name, *user_name, *project_name;
+
+static item_t item[] = {
+    { "curr_time", DATE_T, &current_time },
+    { "usage_time", DATE_T, &time_stamp },
+    { "node_name", STRING_T, &node_name },
+    { "user_name", STRING_T, &user_name },
+    { "project_name", STRING_T, &project_name },
+    { "shares", ULONG_T, &shares },
+    { "job_count", ULONG_T, &job_count },
+    { "level%", DOUBLE_T, &level },
+    { "total%", DOUBLE_T, &total },
+    { "long_target_share", DOUBLE_T, &lt_share },
+    { "short_target_share", DOUBLE_T, &st_share },
+    { "actual_share", DOUBLE_T, &actual_share },
+    { "usage", DOUBLE_T, &combined_usage },
+    { "cpu", DOUBLE_T, &cpu },
+    { "mem", DOUBLE_T, &mem },
+    { "io", DOUBLE_T, &io },
+    { "ltcpu", DOUBLE_T, &ltcpu },
+    { "ltmem", DOUBLE_T, &ltmem },
+    { "ltio", DOUBLE_T, &ltio }
+};
+
+static int items = sizeof(item) / sizeof(item_t);
+
+int
+print_field(FILE *out, item_t *item, format_t *format)
+{
+   if (format->name_format)
+      fprintf(out, "%s=", item->name);
+
+   switch(item->type) {
+      case ULONG_T:
+        fprintf(out, u32, *(lUlong *)item->val);
+        break;
+      case DATE_T:
+        {
+           time_t t = *(lUlong *)item->val;
+           if (t && format->format_times) {
+              char *tc = strdup(ctime(&t));
+              if (tc && *tc)
+                 tc[strlen(tc)-1] = 0;
+              fprintf(out, format->str_format, tc);
+              if (tc) free(tc);
+           } else {
+              fprintf(out, "%d", (int) t);
+           }
+        }
+        break;
+      case DOUBLE_T:
+        fprintf(out, "%f", *(double *)item->val);
+        break;
+      case STRING_T:
+        fprintf(out, format->str_format, *(char **)item->val);
+        break;
+   }
+
+   fprintf(out, "%s", format->delim);
+   return 0;
+}
+
+
+int
+print_hdr(FILE *out, format_t *format)
+{
+   int i;
+   if (format->field_names) {
+      char *field;
+      char *fields = strdup(format->field_names);
+      field = strtok(fields, ",");
+      while (field) {
+         for (i=0; i<items; i++) {
+            if (strcmp(field, item[i].name)==0) {
+               fprintf(out, "%s%s", item[i].name, format->delim);
+               break;
+            }
+         }
+         field = strtok(NULL, ",");
+      }
+      free(fields);
+   } else {
+      for (i=0; i<items; i++)
+         fprintf(out, "%s%s", item[i].name, format->delim);
+   }
+   fprintf(out, "%s", format->line_delim);
+   fprintf(out, "%s", format->rec_delim);
+
+   return 0;
+}
+
+
+int
+print_node(FILE *out, lListElem *node, lListElem *parent, lListElem *user,
+	   lListElem *project, char **names, format_t *format)
+{
+   lList *usage=NULL, *ltusage=NULL;
+   int i, fields_printed=0;
+
+   if (!node)
+       return -1;
+
+   current_time = sge_get_gmt();
+   time_stamp = user?lGetUlong(user, UP_usage_time_stamp):0;
+   node_name = lGetString(node, STN_name);
+   user_name = user?lGetString(user, UP_name):"";
+   project_name = project?lGetString(project, UP_name):"";
+   shares = lGetUlong(node, STN_shares);
+   job_count = lGetUlong(node, STN_job_ref_count);
+   level = lGetDouble(node, STN_proportion);
+   total = lGetDouble(node, STN_adjusted_proportion);
+   lt_share = lGetDouble(node, STN_m_share);
+   st_share = lGetDouble(node, STN_adjusted_current_proportion);
+   actual_share = lGetDouble(node, STN_actual_proportion);
+   combined_usage = lGetDouble(node, STN_combined_usage);
+
+   if (lGetList(node, STN_children) == NULL && user && project) {
+      lList *projl = lGetList(user, UP_project);
+      lListElem *upp;
+      if (projl) {
+         if ((upp=lGetElemStr(projl, UPP_name,
+                              lGetString(project, UP_name)))) {
+            usage = lGetList(upp, UPP_usage);
+            ltusage = lGetList(upp, UPP_long_term_usage);
+         }
+      }
+   } else if (user &&
+         strcmp(lGetString(user, UP_name), lGetString(node, STN_name))==0) {
+      usage = lGetList(user, UP_usage);
+      ltusage = lGetList(user, UP_long_term_usage);
+   } else if (project &&
+         strcmp(lGetString(project, UP_name), lGetString(node, STN_name))==0) {
+      usage = lGetList(project, UP_usage);
+      ltusage = lGetList(project, UP_long_term_usage);
+   }
+
+   if (usage) {
+      cpu = get_usage_value(usage, USAGE_ATTR_CPU);
+      mem = get_usage_value(usage, USAGE_ATTR_MEM);
+      io  = get_usage_value(usage, USAGE_ATTR_IO);
+   } else {
+      cpu = mem = io = 0;
+   }
+
+   if (ltusage) {
+      ltcpu = get_usage_value(ltusage, USAGE_ATTR_CPU);
+      ltmem = get_usage_value(ltusage, USAGE_ATTR_MEM);
+      ltio  = get_usage_value(ltusage, USAGE_ATTR_IO);
+   } else {
+      ltcpu = ltmem = ltio = 0;
+   }
+
+   if (names) {
+      int found=0;
+      char **name = names;
+      while (*name) {
+         if (strcmp(*name, node_name)==0)
+            found = 1;
+         name++;
+      }
+      if (!found)
+         return 1;
+   }
+   
+   if (format->field_names) {
+      char *field;
+      char *fields = strdup(format->field_names);
+      field = strtok(fields, ",");
+      while (field) {
+         for (i=0; i<items; i++) {
+            if (strcmp(field, item[i].name)==0) {
+               print_field(out, &item[i], format);
+	       fields_printed++;
+               break;
+            }
+         }
+         field = strtok(NULL, ",");
+      }
+      free(fields);
+   } else {
+      for (i=0; i<items; i++)
+         print_field(out, &item[i], format);
+         fields_printed++;
+   }
+
+   if (fields_printed)
+      fprintf(out, "%s", format->line_delim);
+
+   return 0;
+}
+
+
+int
+print_nodes(FILE *out, lListElem *node, lListElem *parent,
+            lListElem *project, lList *users, lList *projects,
+	    int group_nodes, char **names, format_t *format)
+{
+   lListElem *user, *child;
+   lList *children = lGetList(node, STN_children);
+
+   if (!project)
+      project = userprj_list_locate(projects, lGetString(node, STN_name));
+
+   if (children == NULL)
+      user = userprj_list_locate(users, lGetString(node, STN_name));
+   else
+      user = NULL;
+
+   if (group_nodes || (children == NULL))
+      print_node(out, node, parent, user, project, names, format);
+
+   for_each(child, children) {
+       print_nodes(out, child, node, project, users, projects, 
+                   group_nodes, names, format);
+   }
+
+   return 0;
+}
+
+
+void
 usage(void)
 {
       fprintf(stderr, "%s sge_share_mon [-cdfhilmnorsux] [node_names ...]\n", MSG_USAGE); 
@@ -158,63 +442,35 @@ usage(void)
       fprintf(stderr,"\n");
 }
 
-static FILE *
-open_output(const char *file_name, const char *mode) 
-{
-   FILE *file = stdout;
-   
-   if (file_name != NULL) {
-      file = fopen(file_name, mode);
-      if (file == NULL) {
-         fprintf(stderr, MSG_FILE_COULDNOTOPENXFORY_SS , file_name, mode);
-         exit(1);
-      }
-   }
-
-   return file;
-}
-
-static FILE *
-close_output(FILE *file)
-{
-   if (file != stdout) {
-      fclose(file);
-      file = NULL;
-   }
-
-   return file;
-}
-
 
 int
 main(int argc, char **argv)
 {
    lList *sharetree, *users, *projects, *config;
+   lListElem *root;
    int interval=15;
    int err=0;
    int count=-1;
    int header=0;
    format_t format;
    char *ofile=NULL;
-   const char **names=NULL;
-   bool group_nodes=true;
-   bool decay_usage=false;
+   char **names=NULL;
+   int group_nodes=1;
+   int decay_usage=0;
    int c;
    extern char *optarg;
    extern int optind;
-   FILE *outfile = NULL;
-   char *output_mode = "a";
-
-   dstring output_dstring = DSTRING_INIT;
+   FILE *outfile = stdout;
+   char *output_mode = "w";
+   u_long curr_time=0;
    
-   format.name_format  = false;
-   format.delim        = "\t";
-   format.line_delim   = "\n";
-   format.rec_delim    = "\n";
-   format.str_format   = "%s";
-   format.field_names  = NULL;
-   format.format_times = false;
-   format.line_prefix  = NULL;
+   format.name_format=0;
+   format.delim="\t";
+   format.line_delim="\n";
+   format.rec_delim="\n";
+   format.str_format="%s";
+   format.field_names=NULL;
+   format.format_times=0;
 
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
@@ -257,7 +513,7 @@ main(int argc, char **argv)
 	    output_mode = strdup(optarg);
 	    break;
 	 case 'n':
-	    format.name_format = true;
+	    format.name_format = 1;
 	    break;
 	 case 'l':
 	    format.line_delim = strdup(optarg);
@@ -269,13 +525,13 @@ main(int argc, char **argv)
 	    format.str_format = strdup(optarg);
 	    break;
 	 case 't':
-	    format.format_times = true;
+	    format.format_times = 1;
 	    break;
 	 case 'u':
-	    decay_usage = true;
+	    decay_usage = 1;
 	    break;
 	 case 'x':
-	    group_nodes = false;
+	    group_nodes = 0;
 	    break;
 	 case '?':
 	    err++;
@@ -287,42 +543,56 @@ main(int argc, char **argv)
       exit(1);
    }
 
-   if ((argc - optind) > 0) {
-       names = (const char **)&argv[optind];
+   if (ofile) {
+      if ((outfile = fopen(ofile, output_mode)) == NULL) {
+	 fprintf(stderr, MSG_FILE_COULDNOTOPENXFORY_SS , ofile, output_mode);
+	 exit(1);
+      }
    }
+
+   if ((argc - optind) > 0)
+       names = &argv[optind];
 
    sge_gdi_setup("sge_share_mon", NULL);
 
-   if (header) {
-      print_hdr(&output_dstring, &format);
-   }
+   if (header)
+      print_hdr(outfile, &format);
 
    while(count == -1 || count-- > 0) {
+
       setup_lists(&sharetree, &users, &projects, &config);
-      sconf_set_config(&config, NULL);
 
-      sge_sharetree_print(&output_dstring, sharetree, users, projects, group_nodes, decay_usage, names, &format);
+      root = lFirst(sharetree);
 
-      if (count && strlen(format.rec_delim)) {
-	      sge_dstring_sprintf_append(&output_dstring, "%s", format.rec_delim);
-      }
+      calculate_share_percents(root, 1.0, lGetUlong(root, STN_shares));
 
-      outfile = open_output(ofile, output_mode);
-      fwrite(sge_dstring_get_string(&output_dstring), 
-             sge_dstring_strlen(&output_dstring), 1, outfile);
-      outfile = close_output(outfile);
+#ifdef notdef
+      lSetDouble(root, STN_m_share, 1.0);
+      calculate_m_shares(root);
+#endif
+ 
+      if (decay_usage)
+         curr_time = sge_get_gmt();
+
+      _sge_calc_share_tree_proportions(sharetree,
+		users, 
+		projects,
+		config, NULL, curr_time);
+
+      print_nodes(outfile, root, NULL, NULL, users, projects, group_nodes,
+                  names, &format);
 
       free_lists(sharetree, users, projects, config);
-      sge_dstring_clear(&output_dstring);
 
       if (count) {
+	 fprintf(outfile, "%s", format.rec_delim);
          sleep(interval);
       }
+
+      fflush(outfile);
    }
 
    sge_gdi_shutdown();
-
-   sge_dstring_free(&output_dstring);
 
    return 0;
 }

@@ -51,7 +51,7 @@
 #include "qmon_widgets.h"
 #include "qmon_manop.h"
 #include "qmon_job.h"
-#include "qmon_cq.h"
+#include "qmon_queue.h"
 #include "qmon_globals.h"
 #include "qmon_init.h"
 #include "qmon_project.h"
@@ -79,9 +79,10 @@ typedef struct _tFREntry {
    int fticket_userset;
    int fticket_project;
    int fticket_job;
+   int fticket_jobclass;
 } tFREntry;
 
-static tScaleWeight WeightData[4];
+static tScaleWeight WeightData[5];
 
 static tFREntry ratio_data;
 
@@ -116,6 +117,11 @@ static XtResource ratio_resources[] = {
       sizeof(int),
       XtOffsetOf(tFREntry, fticket_job),
       XtRImmediate, NULL },
+
+   { "fticket_jobclass", "fticket_jobclass", XtRInt,
+      sizeof(int),
+      XtOffsetOf(tFREntry, fticket_jobclass),
+      XtRImmediate, NULL }
 
 };
 
@@ -250,8 +256,8 @@ XtPointer cad
          qmonJobPopup(w, NULL, NULL); 
          break;
 
-      case SGE_CQUEUE_LIST:
-         qmonCQPopup(w, NULL, NULL); 
+      case SGE_QUEUE_LIST:
+         qmonQueuePopup(w, NULL, NULL); 
          break;
    }
   
@@ -267,6 +273,7 @@ XtPointer cld, cad;
    lList *alp = NULL;
    lListElem *sep = NULL;
    lEnumeration *what = NULL;
+   lCondition *where = NULL;
 
    DENTER(GUI_LAYER, "qmonFTOkay");
 
@@ -279,6 +286,17 @@ XtPointer cld, cad;
    }
    lp = qmonMirrorList(fticket_info.list_type);
 
+   /*
+   ** filter queues
+   */
+   if (fticket_info.list_type == SGE_QUEUE_LIST) {
+      where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
+      what = lWhat("%T(ALL)", QU_Type);
+      lp = lSelect("Queues without template", lp, where, what);
+      where = lFreeWhere(where);
+      what = lFreeWhat(what);
+   } 
+
    if (qmonFOTMatrixToCull(fticket_matrix, lp, fticket_info.field0, 
                         fticket_info.field1)) {
 
@@ -288,7 +306,7 @@ XtPointer cld, cad;
       if (fticket_info.dp == JB_Type) {
          lList *tlp = NULL;
          what = lWhat("%T(%I %I)", JB_Type, JB_job_number,
-                            JB_jobshare);
+                            JB_priority);
          tlp = lSelect("", lp, NULL, what);
          /*
          ** there is a weakness in the lEnumeration Definition which leads
@@ -296,13 +314,13 @@ XtPointer cld, cad;
          ** an lWhat build from the total descriptor of a special type
          ** e.g.
          ** what_from_whole_descr = lWhat("%T(%I %I)", JB_Type, 
-         **                               JB_job_number, JB_jobshare);
+         **                               JB_job_number, JB_priority);
          ** rl = lSelect("rl", l, null, what_from_whole_descr);
          ** rl2 = lSelect("rl", l, null, what_from_whole_descr);
          ** returns NULL which is probably not what we expect.
          ** The correct thing to do would be:
          ** what_from_reduced_descr = lWhat("%T(%I %I)", lGetListDescr(rl),
-         **                            JB_job_number, JB_jobshare);
+         **                            JB_job_number, JB_priority);
          ** rl2 = lSelect("rl", l, null, what_from_reduced_descr);
          ** 
          ** An alternative solution is to use what_all or NULL (==what_all)
@@ -391,15 +409,15 @@ static Widget qmonFTicketCreate(
 Widget parent 
 ) {
    Widget fticket_layout, fticket_cancel, fticket_update, 
-            fticket_more, fticket_ok, fticket_new, /* fticket_jcsc, */
+            fticket_more, fticket_ok, fticket_new, fticket_jcsc,
             fticket_usc, fticket_ussc, fticket_psc, fticket_jsc,
             fticket_usc_t, fticket_ussc_t, fticket_psc_t, fticket_jsc_t,
-            /* fticket_jcsc_t, */ fticket_main_link;
+            fticket_jcsc_t, fticket_main_link;
    static int usc_index = 0;
    static int ussc_index = 1;
    static int psc_index = 2;
    static int jsc_index = 3;
-   /* static int jcsc_index = 4; */
+   static int jcsc_index = 4;
 
    DENTER(GUI_LAYER, "qmonFTicketCreate");
    
@@ -425,12 +443,12 @@ Widget parent
                           "fticket_ussc", &fticket_ussc,
                           "fticket_psc", &fticket_psc,
                           "fticket_jsc", &fticket_jsc,
-                          /* "fticket_jcsc", &fticket_jcsc, */
+                          "fticket_jcsc", &fticket_jcsc,
                           "fticket_usc_t", &fticket_usc_t,
                           "fticket_ussc_t", &fticket_ussc_t,
                           "fticket_psc_t", &fticket_psc_t,
                           "fticket_jsc_t", &fticket_jsc_t,
-                          /* "fticket_jcsc_t", &fticket_jcsc_t, */
+                          "fticket_jcsc_t", &fticket_jcsc_t,
                           NULL);
 
    /*
@@ -467,13 +485,11 @@ Widget parent
    XtVaSetValues(fticket_jsc, XmNuserData, (XtPointer) &jsc_index, NULL); 
    XtVaSetValues(fticket_jsc_t, XmNuserData, (XtPointer) &jsc_index, NULL); 
 
-#if 0
    WeightData[4].lock = 0;
    WeightData[4].scale = fticket_jcsc;
    WeightData[4].toggle = fticket_jcsc_t;
    XtVaSetValues(fticket_jcsc, XmNuserData, (XtPointer) &jcsc_index, NULL); 
    XtVaSetValues(fticket_jcsc_t, XmNuserData, (XtPointer) &jcsc_index, NULL); 
-#endif
 
 
    /*
@@ -487,10 +503,8 @@ Widget parent
                      qmonScaleWeight, (XtPointer)WeightData);
    XtAddCallback(fticket_jsc, XmNvalueChangedCallback,
                      qmonScaleWeight, (XtPointer)WeightData);
-#if 0
    XtAddCallback(fticket_jcsc, XmNvalueChangedCallback,
                      qmonScaleWeight, (XtPointer)WeightData);
-#endif
 
    XtAddCallback(fticket_usc_t, XmNvalueChangedCallback,
                      qmonScaleWeightToggle, (XtPointer)WeightData);
@@ -500,10 +514,8 @@ Widget parent
                      qmonScaleWeightToggle, (XtPointer)WeightData);
    XtAddCallback(fticket_jsc_t, XmNvalueChangedCallback,
                      qmonScaleWeightToggle, (XtPointer)WeightData);
-#if 0
    XtAddCallback(fticket_jcsc_t, XmNvalueChangedCallback,
                      qmonScaleWeightToggle, (XtPointer)WeightData);
-#endif
                      
 
    XtAddCallback(fticket_main_link, XmNactivateCallback, 
@@ -746,11 +758,17 @@ XtPointer cad
 
       case FOT_JOB:
          fticket_info.field0 = JB_job_number;
-         fticket_info.field1 = JB_jobshare;
+         fticket_info.field1 = JB_priority;
          fticket_info.list_type = SGE_JOB_LIST;
          fticket_info.dp = JB_Type;
          break;
 
+      case FOT_JOBCLASS:
+         fticket_info.field0 = QU_qname;
+         fticket_info.field1 = QU_fshare;
+         fticket_info.list_type = SGE_QUEUE_LIST;
+         fticket_info.dp = QU_Type;
+         break;
    }
 
    /*
@@ -796,10 +814,18 @@ XtPointer cld, cad;
    /*
    ** filter queues
    */
+   if (fticket_info.list_type == SGE_QUEUE_LIST) {
+      where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
+      what = lWhat("%T(ALL)", QU_Type);
+      lp = lSelect("Queues without template", lp, where, what);
+      lFreeWhere(where);
+      lFreeWhat(what);
+   } 
    lPSortList(lp, "%I+", fticket_info.field0);
    qmonFOTCullToMatrix(fticket_info.matrix, lp, 
                         fticket_info.field0, fticket_info.field1);
-   if (fticket_info.list_type == SGE_USERSET_LIST)
+   if (fticket_info.list_type == SGE_USERSET_LIST || 
+         fticket_info.list_type == SGE_QUEUE_LIST)
       lp = lFreeList(lp);
 
    /*
@@ -834,8 +860,8 @@ XtPointer cld, cad;
       case SGE_USERSET_LIST:
          selector = USERSET_T;
          break;
-      case SGE_CQUEUE_LIST:
-         selector = CQUEUE_T;
+      case SGE_QUEUE_LIST:
+         selector = QUEUE_T;
          break;
          
       case SGE_JOB_LIST:
@@ -874,10 +900,18 @@ XtPointer cld, cad;
    /*
    ** filter queues
    */
+   if (oticket_info.list_type == SGE_QUEUE_LIST) {
+      where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
+      what = lWhat("%T(ALL)", QU_Type);
+      lp = lSelect("Queues without template", lp, where, what);
+      where = lFreeWhere(where);
+      what = lFreeWhat(what);
+   } 
    lPSortList(lp, "%I+", oticket_info.field0);
    qmonFOTCullToMatrix(oticket_info.matrix, lp, 
                         oticket_info.field0, oticket_info.field1);
-   if (oticket_info.list_type == SGE_USERSET_LIST)
+   if (oticket_info.list_type == SGE_USERSET_LIST || 
+         oticket_info.list_type == SGE_QUEUE_LIST)
       lp = lFreeList(lp);
 
    DEXIT;
@@ -892,6 +926,7 @@ XtPointer cld, cad;
    lList *lp = NULL;
    lList *alp = NULL;
    lEnumeration *what = NULL;
+   lCondition *where = NULL;
 
    DENTER(GUI_LAYER, "qmonOTOkay");
 
@@ -903,6 +938,16 @@ XtPointer cld, cad;
       return;
    }
    lp = qmonMirrorList(oticket_info.list_type);
+   /*
+   ** filter queues
+   */
+   if (oticket_info.list_type == SGE_QUEUE_LIST) {
+      where = lWhere("%T(%I != %s)", QU_Type, QU_qname, "template");
+      what = lWhat("%T(ALL)", QU_Type);
+      lp = lSelect("Queues without template", lp, where, what);
+      lFreeWhere(where);
+      lFreeWhat(what);
+   } 
 
    if (qmonFOTMatrixToCull(oticket_matrix, lp, oticket_info.field0, 
          oticket_info.field1)){
@@ -1037,6 +1082,12 @@ XtPointer cad
          oticket_info.dp = JB_Type;
          break;
 
+      case FOT_JOBCLASS:
+         oticket_info.field0 = QU_qname;
+         oticket_info.field1 = QU_oticket;
+         oticket_info.list_type = SGE_QUEUE_LIST;
+         oticket_info.dp = QU_Type;
+         break;
    }
 
    /*
@@ -1162,6 +1213,9 @@ tFREntry *data
    /* JOB */
    lSetDouble(sep, SC_weight_job, ((double)data->fticket_job)/1000);
 
+   /* JOBCLASS */
+   lSetDouble(sep, SC_weight_jobclass, ((double)data->fticket_jobclass)/1000);
+
    DEXIT;
 }
 
@@ -1184,13 +1238,19 @@ lListElem *sep
    
    /* JOB */
    data->fticket_job = (int)(lGetDouble(sep, SC_weight_job)*1000);
+   
+   /* JOBCLASS */
+   data->fticket_jobclass = (int)(lGetDouble(sep, SC_weight_jobclass)*1000);
+   
    if (data->fticket_user+data->fticket_userset+data->fticket_project+
-         data->fticket_job != 1000) {
-      data->fticket_user = 250;
-      data->fticket_userset = 250;
-      data->fticket_project = 250;
-      data->fticket_job = 250;
+         data->fticket_job + data->fticket_jobclass != 1000) {
+      data->fticket_user = 200;
+      data->fticket_userset = 200;
+      data->fticket_project = 200;
+      data->fticket_job = 200;
+      data->fticket_jobclass = 200;
    }
+
    /*
    ** set the UsageWeightData
    */
@@ -1198,6 +1258,8 @@ lListElem *sep
    WeightData[1].weight = data->fticket_userset;
    WeightData[2].weight = data->fticket_project;
    WeightData[3].weight = data->fticket_job;
+   WeightData[4].weight = data->fticket_jobclass;
+   
    DEXIT;
 }
 

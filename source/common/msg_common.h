@@ -48,6 +48,15 @@
 #define MSG_NULL                   _MESSAGE(23005, _("(NULL)"))
 #define MSG_SMALLNULL                       _MESSAGE(23006, _("(null)"))
 
+#define MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS   _MESSAGE(23007, _("unable to contact qmaster via "SFQ" commd - can't resolve service "SFQ"\n"))
+#define MSG_SGETEXT_NOQMASTER_PORT_ENV_SI           _MESSAGE(23008, _("unable to contact qmaster via "SFQ" commd using port %d\n"))
+#define MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SIS  _MESSAGE(23009, _("unable to contact qmaster via "SFQ" commd using port %d (service "SFQ")\n"))
+#define MSG_SGETEXT_NOQMASTER_REACHABLE             _MESSAGE(23010, _("unable to contact qmaster\n"))
+#define MSG_SGETEXT_NOQMASTER_REACHABLE_COMMLIB_SS  _MESSAGE(23011, _("unable to contact qmaster via "SFQ" commd - commlib error: "SFQ"\n"))
+#define MSG_SGETEXT_NOQMASTER_SUBSCR_AT_COMMD_S     _MESSAGE(23012, _("unable to contact qmaster via "SFQ" commd - qmaster not enrolled at commd\n"))
+#define MSG_SGETEXT_NOQMASTER_RESOLVING_ERROR_S     _MESSAGE(23013, _("unable to contact qmaster via "SFQ" commd - hostname resolving error\n"))
+
+
 #define MSG_FILE_CANTOPENDIRECTORYX_SS                         _MESSAGE(23014, _("can't open directory "SFQ": "SFN"\n"))
 #define MSG_SGETEXT_CANTRESOLVEHOST_S           _MESSAGE(23015, _("can't resolve hostname "SFQ"\n"))
 #define MSG_SGETEXT_CANTRESOLVEHOST_SS          _MESSAGE(23016, _("can't resolve hostname "SFQ": "SFN"\n"))
@@ -76,24 +85,23 @@
 #define MSG_FILE_ERROROPENINGXY_SS          _MESSAGE(23041, _("error opening "SFN": "SFN"\n"))
 #define MSG_ANSWER_ERRORREADINGFROMFILEX_S  _MESSAGE(23042, _("error reading from file "SFN"\n"))
 #define MSG_ANSWER_ERRORREADINGFROMSTDIN    _MESSAGE(23043, _("error reading from stdin\n"))
-#define MSG_ANSWER_NOINPUT                  _MESSAGE(23044, _("no input read from stdin\n"))
 #define MSG_FILE_ERROROPENFILEXFORWRITING_S _MESSAGE(23045, _("error opening file "SFQ" for writing\n"))
 #define MSG_FILE_ERRORWRITETOFILEX_S        _MESSAGE(23046, _("error writing to file "SFQ"\n"))
 #define MSG_ANSWER_ARGUMENTMISSINGFORX_S    _MESSAGE(23047, _("argument missing for "SFQ"\n"))
 #define MSG_USER_INVALIDNAMEX_S             _MESSAGE(23048, _("invalid user name "SFQ"\n"))
 #define MSG_USER_NOHOMEDIRFORUSERX_S        _MESSAGE(23049, _("missing home directory for user "SFQ"\n"))
 #define MSG_ANSWER_GETUNIQUEHNFAILEDRESX_S  _MESSAGE(23050, _("getuniquehostname() failed resolving: "SFN"\n"))
-#define MSG_QUEUE_UNABLE2FINDQ_S            _MESSAGE(23051, _("unable to find queue "SFQ"\n"))
-#define MSG_OBJ_USER                        _MESSAGE(23052, _("user"))
-#define MSG_OBJ_GROUP                       _MESSAGE(23053, _("group"))
-#define MSG_OBJ_USERPRJ                     _MESSAGE(23054, _("user/project"))
-#define MSG_OBJ_SHARETREE                   _MESSAGE(23055, _("sharetree"))
-#define MSG_OBJ_USERSET                     _MESSAGE(23056, _("userset"))
-#define MSG_JOB_PROJECT                     _MESSAGE(23057, _("project"))
-#define MSG_SGETEXT_DOESNOTEXIST_SS         _MESSAGE(23058, _("denied: "SFN" "SFQ" does not exist\n"))
-#define MSG_SGETEXT_MUSTBEMANAGER_S         _MESSAGE(23059, _("denied: "SFQ" must be manager for this operation\n"))
-#define MSG_SGETEXT_MUSTBEOPERATOR_S        _MESSAGE(23060, _("denied: "SFQ" must be operator for this operation\n"))
-#define MSG_OPTIONWORKSONLYONJOB            _MESSAGE(23061, _("denied: the selected option works only on jobs and not on tasks\n"))
+#define MSG_QUEUE_UNABLE2FINDQ_S        _MESSAGE(23051, _("unable to find queue "SFQ"\n"))
+#define MSG_OBJ_USER                  _MESSAGE(23052, _("user"))
+#define MSG_OBJ_GROUP                 _MESSAGE(23053, _("group"))
+#define MSG_OBJ_USERPRJ               _MESSAGE(23054, _("user/project"))
+#define MSG_OBJ_SHARETREE             _MESSAGE(23055, _("sharetree"))
+#define MSG_OBJ_USERSET               _MESSAGE(23056, _("userset"))
+#define MSG_JOB_PROJECT               _MESSAGE(23057, _("project"))
+#define MSG_SGETEXT_DOESNOTEXIST_SS             _MESSAGE(23058, _("denied: "SFN" "SFQ" does not exist\n"))
+#define MSG_SGETEXT_MUSTBEMANAGER_S             _MESSAGE(23059, _("denied: "SFQ" must be manager for this operation\n"))
+#define MSG_SGETEXT_MUSTBEOPERATOR_S            _MESSAGE(23060, _("denied: "SFQ" must be operator for this operation\n"))
+
 
 
 /*
@@ -126,7 +134,7 @@
 #define MSG_PARSE_WRONGPATHLISTFORMATXSPECTOEOPTION_S                 _MESSAGE(23077, _("ERROR! Wrong path list format "SFQ" specified to -e option\n"))
 #define MSG_PARSE_UNKNOWNHOLDLISTXSPECTOHOPTION_S              _MESSAGE(23078, _("ERROR! Unknown hold list "SFQ" specified to -h option\n"))
 #define MSG_PARSE_WRONGJIDHOLDLISTFORMATXSPECTOHOLDJIDOPTION_S              _MESSAGE(23079, _("ERROR! Wrong jid_hold list format "SFQ" specified to -hold_jid option\n"))
-#define MSG_PARSE_INVALIDOPTIONARGUMENT_SS              _MESSAGE(23080, _("invalid option argument \""SFN" "SFN"\"\n"))
+#define MSG_PARSE_INVALIDOPTIONARGUMENTJX_S              _MESSAGE(23080, _("invalid option argument \"-j "SFN"\"\n"))
 #define MSG_PARSE_WRONGRESOURCELISTFORMATXSPECTOLOPTION_S              _MESSAGE(23081, _("ERROR! Wrong resource list format "SFQ" specified to -l option\n"))
 #define MSG_PARSE_WRONGMAILOPTIONSLISTFORMATXSPECTOMOPTION_S              _MESSAGE(23082, _("ERROR! Wrong mail options list format "SFQ" specified to -m option\n"))
 #define MSG_PARSE_WRONGMAILLISTFORMATXSPECTOMOPTION_S              _MESSAGE(23083, _("ERROR! Wrong mail list format "SFQ" specified to -M option\n"))
@@ -136,8 +144,9 @@
 #define MSG_PARSE_WRONGSTDOUTPATHLISTFORMATXSPECTOOOPTION_S              _MESSAGE(23087, _("ERROR! Wrong stdout path list format "SFQ" specified to -o option\n"))
 #define MSG_PARSE_PEOPTIONMUSTHAVEPENAMEARGUMENT              _MESSAGE(23088, _("ERROR! -pe option must have pe_name argument\n"))
 #define MSG_PARSE_PEOPTIONMUSTHAVERANGEAS2NDARGUMENT              _MESSAGE(23089, _("ERROR! -pe option must have range as 2nd argument\n"))
-#define MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT              _MESSAGE(23090, _("ERROR! -q option must have queue list argument\n"))
-#define MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOQOPTION_S              _MESSAGE(23091, _("ERROR! Wrong queue list format "SFQ" specified to -q option\n"))
+#define MSG_PARSE_QOPTIONMUSTHAVEDESTIDLISTARGUMENT              _MESSAGE(23090, _("ERROR! -q option must have destination identifier list argument\n"))
+#define MSG_PARSE_WRONGDESTIDLISTFORMATXSPECTOQOPTION_S              _MESSAGE(23091, _("ERROR! Wrong destination identifier list format "SFQ" specified to -q option\n"))
+#define MSG_PARSE_QSARGSOPTIONMUSTBETERMINATEDWITHQSEND              _MESSAGE(23092, _("ERROR! -qs_args option must be terminated with -qs_end\n"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENTRX_S              _MESSAGE(23093, _("invalid option argument \"-r "SFN"\"\n"))
 #define MSG_PARSE_SCOPTIONMUSTHAVECONTEXTLISTARGUMENT              _MESSAGE(23094, _("ERROR! -sc option must have context list argument\n"))
 #define MSG_PARSE_WRONGCONTEXTLISTFORMATSCX_S              _MESSAGE(23095, _("ERROR! Wrong context list format -sc "SFQ"\n"))
@@ -155,12 +164,12 @@
 #define MSG_PARSE_OPTIONMUSTBEFOLLOWEDBYJOBARGUMENTS              _MESSAGE(23107, _("ERROR! -- option must be followed by job arguments\n"))
 #define MSG_PARSE_WRONGJOBIDLISTFORMATXSPECIFIED_S              _MESSAGE(23108, _("ERROR! Wrong job id list format "SFQ" specified\n"))
 #define MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024              _MESSAGE(23109, _("ERROR! invalid priority, must be an integer from -1023 to 1024\n"))
-#define MSG_PARSE_INVALIDJOBSHAREMUSTBEUINT              _MESSAGE(23110, _("ERROR! invalid jobshare, must be an unsigned integer\n"))
 /*#define MSG_PARSE_DUPLICATEHOSTINFILESPEC                _MESSAGE(23111,_("ERROR! two files are specified for the same host\n"))*/
 
 /*
 ** parse_qconf.c
 */
+#define MSG_QCONF_CANTCHANGEQUEUENAME_S           _MESSAGE(23110, _(SFN": cannot change queuename\n"))
 #define MSG_FILE_NOFILEARGUMENTGIVEN           _MESSAGE(23112, _("no file argument given\n"))
 #define MSG_PARSE_EDITFAILED                   _MESSAGE(23113, _("edit failed\n"))
 #define MSG_FILE_FILEUNCHANGED                 _MESSAGE(23114, _("file unchanged\n"))
@@ -168,6 +177,7 @@
 #define MSG_EXEC_XISNOEXECHOST_S               _MESSAGE(23116, _(SFN" is no exec host\n"))
 #define MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S    _MESSAGE(23117, _("added host "SFN" to exec host list\n"))
 #define MSG_ANSWER_INVALIDFORMAT               _MESSAGE(23118, _("invalid format\n"))
+#define MSG_QUEUE_UNABLETOWRITETEMPLATEQUEUE   _MESSAGE(23120, _("unable to write template queue"))
 #define MSG_TREE_CHANGEDSHARETREE              _MESSAGE(23121, _("changed sharetree\n"))
 #define MSG_TREE_NOSHARETREE                   _MESSAGE(23122, _("No sharetree\n"))
 #define MSG_TREE_CANTADDNODEXISNONUNIQUE_S     _MESSAGE(23123, _("Could not add node "SFN" to sharetree due to non-unique path\n"))
@@ -181,16 +191,23 @@
 #define MSG_TREE_CANTDELROOTNODE               _MESSAGE(23131, _("can't delete root node\n"))
 #define MSG_TREE_CANTDELNODESWITHCHILD         _MESSAGE(23132, _("can't delete nodes with children\n"))
 #define MSG_ANSWER_XISNOTAVALIDOPTIONY_SU      _MESSAGE(23133, _(SFQ" is not a valid option " U32CFormat "\n"))
+#define MSG_COMPLEX_NEEDACOMPLEXNAME           _MESSAGE(23134, _("Need a complex Name"))
 #define MSG_CALENDAR_XISNOTACALENDAR_S         _MESSAGE(23135, _(SFN" is not a calendar\n"))
 #define MSG_CKPT_XISNOTCHKPINTERFACEDEF_S      _MESSAGE(23136, _(SFN" is not a checkpointing interface definition\n"))
 #define MSG_EXEC_XISNOTANEXECUTIONHOST_S       _MESSAGE(23137, _(SFN" is not an execution host\n"))
 #define MSG_EXEC_HOSTENTRYOFXCHANGEDINEXECLIST_S     _MESSAGE(23138, _("changed entry of host "SFN" in execution host list\n"))
 #define MSG_PARALLEL_XNOTAPARALLELEVIRONMENT_S     _MESSAGE(23139, _(SFN" is not a parallel environment\n"))
+#define MSG_QUEUE_XISNOTAQUEUENAME_S           _MESSAGE(23140, _(SFN" is not a queuename\n"))
+#define MSG_QUEUE_UNABLETOWRITEOLDQUEUE        _MESSAGE(23141, _("unable to write old queue"))
 #define MSG_ANSWER_MISSINGFILENAMEASOPTIONARG_S   _MESSAGE(23142, _(SFN": missing filename as option argument\n"))
 #define MSG_QCONF_XISNOTAOBJECTATTRIB_SSS         _MESSAGE(23143, _(SFN": "SFQ" is not a "SFN" attribute\n"))
+#define MSG_QCONF_XISNOTAQUEUEATTRIB_SS           _MESSAGE(23144, _(SFN": "SFQ" is not a queue attribute\n"))
+/* #define MSG_QCONF_XISNOTAEXECHOSTATTRIB_SS           _message(23145, _(SFN": "SFQ" is not a exec host attribute\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_QCONF_CANTCHANGEOBJECTNAME_SS         _MESSAGE(23146, _(SFN": cannot change "SFN"\n"))
 #define MSG_QCONF_INTERNALFAILURE_S               _MESSAGE(23147, _(SFN": internal failure\n"))
 #define MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S       _MESSAGE(23148, _(SFN": missing object list\n"))
+#define MSG_QCONF_MQATTR_MISSINGQUEUELIST_S       _MESSAGE(23149, _(SFN": missing queue list\n"))
+/* #define MSG_QCONF_MQATTR_MISSINGHOSTLIST_S       _message(23150, _(SFN": missing host list\n") )         __TS Removed automatically from testsuite!! TS__*/
 #define MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION  _MESSAGE(23151, _("changed scheduler configuration\n"))
 #define MSG_USER_XISNOKNOWNUSER_S                 _MESSAGE(23152, _(SFN" is not known as user\n"))
 #define MSG_PROJECT_XISNOKNWOWNPROJECT_S          _MESSAGE(23153, _(SFN" is not known as project\n"))
@@ -216,10 +233,18 @@
 #define MSG_TABLE_EV_NAME                         "NAME"
 #define MSG_QCONF_NOEXECUTIONHOSTSDEFINED         _MESSAGE(23168, _("no execution hosts defined\n"))
 #define MSG_QCONF_NOEVENTCLIENTSREGISTERED        _MESSAGE(23169, _("no event clients registered\n"))
+#define MSG_QCONF_XISNOVALIDCOMPLEXNAME_S         _MESSAGE(23170, _(SFN" is no valid complex name\n"))
+#define MSG_ANSWER_MALFORMEDREQUEST               _MESSAGE(23171, _("malformed request\n"))
 #define MSG_ANSWER_COMPLEXXALREADYEXISTS_S        _MESSAGE(23172, _("complex "SFN" already exists\n"))
 #define MSG_ANSWER_IGNORINGMAPPINGFOR_S           _MESSAGE(23187, _("usermapping for "SFQ" not accepted\n"))
+#define MSG_ANSWER_COMPLEXXDOESNOTEXIST_S         _MESSAGE(23191, _("complex "SFN" does not exist.\n"))
+#define MSG_MULTIPLY_MODIFIEDIN                   _MESSAGE(23192, _("modified in"))
+#define MSG_MULTIPLY_ADDEDTO                      _MESSAGE(23193, _("added to"))
+#define MSG_MULTIPLY_DELETEDFROM                  _MESSAGE(23194, _("deleted from"))
+#define MSG_ANSWER_XYCOMPLEXLIST_SS               _MESSAGE(23195, _(SFN" "SFN" complex list\n"))
 #define MSG_FILE_ERRORWRITINGUSERSETTOFILE        _MESSAGE(23196, _("error writing userset to file\n"))
 #define MSG_FILE_ERRORREADINGUSERSETFROMFILE_S    _MESSAGE(23197, _("error reading userset from file "SFN"\n"))
+#define MSG_COMPLEX_COMPLEXXNOTDEFINED_S          _MESSAGE(23198, _("complex "SFN" not defined\n"))
 #define MSG_ANSWER_CONFIGXNOTDEFINED_S            _MESSAGE(23201, _("configuration "SFN" not defined\n"))
 #define MSG_ANSWER_CONFIGXALREADYEXISTS_S         _MESSAGE(23202, _("configuration "SFN" already exists\n"))
 #define MSG_ANSWER_CONFIGXDOESNOTEXIST_S          _MESSAGE(23203, _("configuration "SFN" does not exist\n"))
@@ -260,7 +285,7 @@
 #define MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION    _MESSAGE(23228, _("can't create scheduler configuration\n"))
 
 /* read_write_job.c */
-#define MSG_JOB_CANNOT_REMOVE_SS       _MESSAGE(23229, _("can not remove file "SFN": "SFN"\n"))
+#define MSG_JOB_CANNOT_REMOVE_SS       _MESSAGE(23229, _("can not remove "SFN": "SFN"\n"))
 #define MSG_JOB_PE_TASK_SPOOL_FILE     _MESSAGE(23230, _("pe task spool file"))
 #define MSG_JOB_TASK_SPOOL_FILE        _MESSAGE(23231, _("task spool file"))
 #define MSG_JOB_JOB_SPOOL_FILE         _MESSAGE(23232, _("job spool file"))
@@ -277,7 +302,7 @@
 #define MSG_PARSE_INVALIDCPLXCONSUM_SSS _MESSAGE(23251, _("error in file "SFN": attribute "SFN" may not be consumable because it is of type "SFN"\n"))
 #define MSG_PARSE_INVALIDCPLXENTRY_SSS  _MESSAGE(23252, _("parse error in file "SFN", invalid "SFN" entry "SFN"\n"))
 #define MSG_PARSE_INVALIDCPLXREQ_SS     _MESSAGE(23253, _("parse error in file "SFN", invalid requestable entry "SFN"\n"))
-#define MSG_INFRTREQ_INVALIDRESERVATION_S _MESSAGE(23254, _("denied: -l "SFN"=infinity not supported with resource reservation scheduling\n"))
+#define MSG_COM_COMMDLOCKED           _MESSAGE(23254, _("may be commd is locked:\n"))
 #define MSG_CPLX_VALUEMISSING_S       _MESSAGE(23255, _("denied: missing value for request "SFQ"\n"))
 #define MSG_CPLX_WRONGTYPE_SSS        _MESSAGE(23256, _("wrong type in \""SFN"="SFN"\" - "SFN" expected\n"))
 #define MSG_SGETEXT_INVALIDHOST_S               _MESSAGE(23257, _("invalid hostname "SFQ"\n"))
@@ -309,7 +334,6 @@
 /*
 ** read_write_queue.c
 */
-#define MSG_ERROR_CLASSIC_SPOOLING           _MESSAGE(23268, _("error: error message not spooled! (no classic spooling support)\n"))
 #define MSG_ANSWER_GETUNIQUEHNFAILEDRESX_SS  _MESSAGE(23269, _("getuniquehostname() failed resolving "SFN": "SFN"\n"))
 
 /*
@@ -342,8 +366,11 @@
 
 
 /*
-** sge_schedd_conf.c
+** sge_conf.c
 */
+#define MSG_GDI_USING_SS              _MESSAGE(23285, _("using "SFQ" for "SFN"\n"))
+#define MSG_GDI_NOCONFIGFROMMASTER    _MESSAGE(23286, _("could not get configuration from qmaster - using defaults\n"))
+#define MSG_GDI_NEITHERSGECODGRDSETTINGSGE _MESSAGE(23287, _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n"))
 #define MSG_GDI_INVALIDPOLICYSTRING   _MESSAGE(23288, _("Invalid policy hierachy string. Disabling policy hierachy.\n"))
 
 /*
@@ -355,11 +382,11 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_CKPT_SEL             "ckpt_selector           `n' `s' `m' `x' <interval> "
 #define MSG_GDI_ARGUMENTSYNTAX_OA_DATE_TIME            "date_time               [[CC]YY]MMDDhhmm[.SS]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST       "destin_id_list          queue[ queue ...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_DESTIN_ID_LIST2      "destin_id_list          queue[,queue,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST            "hold_list               `n' `u' `s' `o' `U' `S' `O'"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST_QHOLD      "hold_list               `u' `s' `o'" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST         "host_id_list            host[ host ...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST          "job_id_list             job_id[,job_id,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name|reg_exp}[,{job_id|job_name|reg_exp},...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name}[,{job_id|job_name},...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST       "job_queue_list          {job|queue}[{,| }{job|queue}{,| }...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_LISTNAME_LIST        "listname_list           listname[,listname,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_MAIL_ADDRESS         "mail_address            username[@host]"
@@ -379,26 +406,16 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_SLOT_RANGE           "slot_range              [n[-m]|[-]m] - n,m > 0"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_STATES               "states                  `e' `q' `r' `t' `h' `w' `m' `s'"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASK_LIST        "job_task_list           job_tasks[,job_tasks,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS            "job_tasks               [job_id['.'task_id_range]|job_name|pattern][' -t 'task_id_range]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS_RESUB      "job_tasks               [job_id['.'task_id_range]]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_TASKS            "job_tasks               job_id['.'task_id_range]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_TASK_ID_RANGE        "task_id_range           task_id['-'task_id[':'step]]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user|pattern[,user|pattern,...]"
+#define MSG_GDI_ARGUMENTSYNTAX_OA_USER_LIST            "user_list               user[,user,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_VARIABLE_LIST        "variable_list           variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_PROJECT_LIST         "project_list            project[,project,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME          "obj_nm                  \"queue\"|\"exechost\"|\"pe\"|\"ckpt\"|\"hostgroup\""
-#define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME2         "obj_nm2                 \"queue\"|\"queue_domain\"|\"queue_instance\"|\"exechost\""
 #define MSG_GDI_ARGUMENTSYNTAX_OA_ATTRIBUTE_NAME       "attr_nm                 (see man pages)"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_lst              objectname [ objectname ...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST     "evid_list               all | evid[,evid,...]" 
-#define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST            "host_list               all | hostname[,hostname,...]" 
-#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_CQUEUE            "wc_cqueue               wildcard expression matching a cluster queue"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOST              "wc_host                 wildcard expression matching a host"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOSTGROUP         "wc_hostgroup            wildcard expression matching a hostgroup"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QINSTANCE         "wc_qinstance            wc_cqueue@wc_host"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QDOMAIN           "wc_qdomain              wc_cqueue@wc_hostgroup"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE             "wc_queue                wc_cqueue|wc_qdomain|wc_qinstance"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST        "wc_queue_list           wc_queue[,wc_queue,...]"
-
+#define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST     "host_list               all | hostname[,hostname,...]" 
 
 #define MSG_GDI_USAGE_USAGESTRING                     _MESSAGE(23289, _("usage:"))
 
@@ -447,8 +464,8 @@
 #define MSG_GDI_USAGE_Ap_OPT_FNAME                       "[-Ap fname]"
 #define MSG_GDI_UTEXT_Ap_OPT_FNAME                       _MESSAGE(23306, _("add a new parallel environment from file"))
 
-#define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq ]"
-#define MSG_GDI_UTEXT_aq_OPT_Q_TEMPLATE                  _MESSAGE(23307, _("add a new cluster queue"))
+#define MSG_GDI_USAGE_aq_OPT_Q_TEMPLATE                  "[-aq [q_template]]"
+#define MSG_GDI_UTEXT_aq_OPT_Q_TEMPLATE                  _MESSAGE(23307, _("add a new queue using the given template"))
 
 #define MSG_GDI_USAGE_as_OPT_HOSTNAME                    "[-as hostname]"
 #define MSG_GDI_UTEXT_as_OPT_HOSTNAME                    _MESSAGE(23308, _("add a submit host"))
@@ -665,11 +682,17 @@
 #define MSG_GDI_USAGE_Mp_OPT_FNAME                       "[-Mp fname]"
 #define MSG_GDI_UTEXT_Mp_OPT_FNAME                       _MESSAGE(23379, _("modify a parallel environment from file"))
 
-#define MSG_GDI_USAGE_mq_OPT_QUEUE                       "[-mq queue]"
+#define MSG_GDI_USAGE_mq_OPT_QUEUE                       "[-mq [queue]]"
 #define MSG_GDI_UTEXT_mq_OPT_QUEUE                       _MESSAGE(23380, _("modify a queue"))
+
+#define MSG_GDI_USAGE_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   "[-mqattr attr_name value destin_id_list]"
+#define MSG_GDI_UTEXT_mqattr_OPT_ATTR_NAME_VALUE_DESTIN_ID_LIST   _MESSAGE(23381, _("modify particular queue attributes"))
 
 #define MSG_GDI_USAGE_Mq_OPT_FNAME                       "[-Mq fname]"
 #define MSG_GDI_UTEXT_Mq_OPT_FNAME                       _MESSAGE(23382, _("modify a queue from file"))
+
+#define MSG_GDI_USAGE_Mqattr_OPT_FNAME_DESTIN_ID_LIST    "[-Mqattr fname destin_id_list]"
+#define MSG_GDI_UTEXT_Mqattr_OPT_FNAME_DESTIN_ID_LIST    _MESSAGE(23383, _("modify particular queue attributes from file"))
 
 #define MSG_GDI_USAGE_mu_OPT_LISTNAME_LIST               "[-mu listname_list]"
 #define MSG_GDI_UTEXT_mu_OPT_LISTNAME_LIST               _MESSAGE(23384, _("modify the given userset list"))
@@ -724,11 +747,11 @@
 
 #define MSG_GDI_USAGE_passwd_OPT                         "[-passwd]"
                        
-#define MSG_GDI_USAGE_masterq_OPT_DESTIN_ID_LIST         "[-masterq wc_queue_list]"
+#define MSG_GDI_USAGE_masterq_OPT_DESTIN_ID_LIST         "[-masterq destin_id_list]"
 #define MSG_GDI_UTEXT_masterq_OPT_DESTIN_ID_LIST_BIND    _MESSAGE(23401, _("bind master task to queue(s)"))
 
 
-#define MSG_GDI_USAGE_q_OPT_DESTIN_ID_LIST               "[-q wc_queue_list]"
+#define MSG_GDI_USAGE_q_OPT_DESTIN_ID_LIST               "[-q destin_id_list]"
 #define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_BIND          _MESSAGE(23402, _("bind job to queue(s)"))
 #define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO          _MESSAGE(23403, _("print information on given queue"))
 
@@ -736,9 +759,7 @@
                         
 
 #define MSG_GDI_USAGE_qs_args_OPT_ARGS_QS_END            "[-qs_args [arg [...]] -qs_end]"
-
-#define MSG_GDI_USAGE_R_OPT_YN                           "[-R y|n]"
-#define MSG_GDI_UTEXT_R_OPT_YN                           _MESSAGE(23404, _("reservation desired"))
+#define MSG_GDI_UTEXT_qs_args_OPT_ARGS_QS_END            _MESSAGE(23404, _("deliver args to foreign qs"))
 
 #define MSG_GDI_USAGE_r_OPT_YN                           "[-r y|n]"
 #define MSG_GDI_UTEXT_r_OPT_YN                           _MESSAGE(23405, _("define job as (not) restartable" ))
@@ -900,7 +921,7 @@
 #define MSG_GDI_USAGE_tsm_OPT                            "[-tsm]"
 #define MSG_GDI_UTEXT_tsm_OPT                            _MESSAGE(23456, _("trigger scheduler monitoring"))
 
-#define MSG_GDI_USAGE_u_OPT_USERLISTORUALL               "[-u user_list]"
+#define MSG_GDI_USAGE_u_OPT_USERLISTORUALL               "[-u user_list|-uall]"
 #define MSG_GDI_UTEXT_u_OPT_USERLISTORUALL               _MESSAGE(23457, _("specify a list of users"))
 
 #define MSG_GDI_USAGE_us_OPT                             "[-us]"
@@ -932,6 +953,9 @@
 
 #define MSG_GDI_USAGE_nostart_schedd_OPT                 "[-nostart-schedd]"
 /* #define MSG_GDI_UTEXT_nostart_schedd_OPT                 _message(23468, _("do not start schedd")) __TS Removed automatically from testsuite!! TS__*/
+
+#define MSG_GDI_USAGE_nostart_commd_OPT                  "[-nostart-commd]"
+#define MSG_GDI_UTEXT_nostart_commd_OPT                  _MESSAGE(23469, _("do not start commd"))
 
 #define MSG_GDI_USAGE_verbose_OPT                        "[-verbose]"
 #define MSG_GDI_UTEXT_verbose_OPT                        _MESSAGE(23470, _("verbose information output"))
@@ -978,9 +1002,6 @@
 #define MSG_GDI_USAGE_show_license_OPT                   "[-show-license]"
 /* #define MSG_GDI_UTEXT_show_license_OPT                   _message(23484, _("show license information")) __TS Removed automatically from testsuite!! TS__*/
 
-#define MSG_GDI_USAGE_sync_OPT_YN                        "[-sync y[es]|n[o]]"
-#define MSG_GDI_UTEXT_sync_OPT_YN                        _MESSAGE(23484, _("wait for job to end and return exit code"))
-
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
 #define MSG_GDI_USAGE_MESSAGE_OPR                        "message"
@@ -1019,12 +1040,6 @@
 #define MSG_GDI_UTEXT_b_OPT_YN                           _MESSAGE(23500, _("handle command as binary"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENTBX_S              _MESSAGE(23501, _("invalid option argument \"-b "SFN"\"\n")) 
 
-#define MSG_GDI_USAGE_Msconf_OPT                         "[-Msconf fname]"
-#define MSG_GDI_UTEXT_Msconf_OPT                         _MESSAGE(23502, _("modify scheduler configuration from file"))
-
-#define MSG_GDI_USAGE_js_OPT_YN                          "[-js job_share]"
-#define MSG_GDI_UTEXT_js_OPT_YN                          _MESSAGE(23503, _("share tree or functional job share"))
-
 /* =================================================
  * global error messages 
  * messages that have general meaning in all modules
@@ -1047,8 +1062,7 @@
 #define MSG_ERROR_WRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN"\n"))
 #define MSG_ERRORREADINGCWD_S             _MESSAGE(60208, _("error reading current working directory: "SFN"\n"))
 #define MSG_ERRORCHANGINGCWD_SS            _MESSAGE(60209, _("error changing current working directory to "SFN": "SFN"\n"))
-#define MSG_ERRORRENAMING_SSS             _MESSAGE(60210, _("error renaming file "SFQ" to "SFQ": "SFN"\n"))
-#define MSG_ERRORDELETINGFILE_SS          _MESSAGE(60211, _("error deleting file "SFQ": "SFN"\n"))
+#define MSG_ERRORRENAMING_SSS             _MESSAGE(60210, _("error renaming "SFQ" to "SFQ": "SFN"\n"))
 
 /* parsing of parameters */
 #define MSG_NULLELEMENTPASSEDTO_S         _MESSAGE(60301, _("NULL object pointer passed to function "SFQ"\n"))
@@ -1058,6 +1072,7 @@
 #define MSG_INVALIDCULLDATATYPE_D         _MESSAGE(60402, _("invalid cull datatype %d\n"))
 #define MSG_ERRORCREATINGOBJECT           _MESSAGE(60403, _("error creating object\n"))
 #define MSG_ERRORCREATINGLIST           _MESSAGE(60404, _("error creating list\n"))
+#define MSG_NULLOREMPTYSTRINGFOR_S  _MESSAGE(60405, _("null or empty string for attribute "SFQ"\n"))
 
 #define MSG_SEC_NOCRED_USSI           _MESSAGE(60406, _("could not get credentials for job " U32CFormat " for execution host "SFN" - command "SFQ" failed with return code %d\n"))
 #define MSG_SEC_STARTDELCREDCMD_SU    _MESSAGE(60407, _("can't start command "SFQ" for job " U32CFormat " to delete credentials\n"))
@@ -1075,33 +1090,14 @@
 #define MSG_SGETEXT_ADDEDTOLIST_SSSS       _MESSAGE(60500, _(""SFN"@"SFN" added "SFQ" to "SFN" list\n"))
 #define MSG_SGETEXT_MODIFIEDINLIST_SSSS    _MESSAGE(60501, _(""SFN"@"SFN" modified "SFQ" in "SFN" list\n"))
 #define MSG_SGETEXT_KILL_SSS               _MESSAGE(60502, _(""SFN"@"SFN" kills "SFN"\n"))
-#define MSG_SGETEXT_KILL_FAILED_SSS        _MESSAGE(60503, _(""SFN"@"SFN" failed to kill "SFN"\n"))
 #define MSG_GDI_FAILEDTOEXTRACTAUTHINFO    _MESSAGE(60600, _("failed to extract authentication information"))
 #define MSG_INAVLID_PARAMETER_IN_S         _MESSAGE(60601, _("invalid parameter in "SFN"\n"))
+#define MSG_OBJ_QLIST                      _MESSAGE(60602, _("queue list"))
 #define MSG_OBJ_PE                         _MESSAGE(60603, _("parallel environment"))
 #define MSG_SGETEXT_MISSINGCULLFIELD_SS    _MESSAGE(60604, _("missing cull field "SFQ" in "SFN"()\n"))
 #define MSG_OBJ_USERLIST                   _MESSAGE(60605, _("user list"))
 #define MSG_OBJ_XUSERLIST                  _MESSAGE(60606, _("xuser list"))
 #define MSG_QCONF_ONLYONERANGE             _MESSAGE(60607, _("ERROR! -t option only allows one range specification\n"))
-#define MSG_FILE_NOTCHANGED                _MESSAGE(60608, _("Object has not been changed\n"))
-
-#define MSG_GDI_USAGE_sobjl_OPT            "[-sobjl obj_nm2 attr_nm val]"
-#define MSG_GDI_UTEXT_sobjl_OPT            _MESSAGE(60609, _("show objects which match the given value")) 
-
-#define MSG_GDI_USAGE_shgrp_tree_OPT       "[-shgrp_tree group]"
-#define MSG_GDI_UTEXT_shgrp_tree_OPT       _MESSAGE(60610, _("show host group and used hostgroups as tree")) 
-#define MSG_GDI_USAGE_shgrp_resolved_OPT   "[-shgrp_resolved group]"
-#define MSG_GDI_UTEXT_shgrp_resolved_OPT   _MESSAGE(60611, _("show host group with resolved hostlist"))  
-
-#define MSG_GDI_USAGE_sick_OPT             "[-sds]"
-#define MSG_GDI_UTEXT_sick_OPT             _MESSAGE(60612, _("show detached settings"))
-
-/*
- * Objects and components
- */
-#define MSG_QMASTER     _MESSAGE(60700, _("master"))
-#define MSG_EXECD       _MESSAGE(60701, _("execution daemon"))
-#define MSG_SCHEDD      _MESSAGE(60702, _("scheduler"))
 
 /* =================================================
  * please do not enter new messages after this point,

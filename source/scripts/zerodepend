@@ -46,6 +46,7 @@ files=" \
        clients/qsub/qsub_dependencies  \
        clients/qevent/qevent_dependencies  \
        common/common_dependencies  \
+       daemons/commd/commd_dependencies  \
        daemons/common/common_dependencies  \
        daemons/execd/execd_dependencies  \
        daemons/qmaster/qmaster_dependencies  \
@@ -59,18 +60,15 @@ files=" \
        libs/evm/evm_dependencies  \
        libs/mir/mir_dependencies  \
        libs/spool/spool_dependencies  \
-       libs/spool/berkeleydb/spoolb_dependencies  \
        libs/spool/classic/spoolc_dependencies  \
        libs/spool/dynamic/spoold_dependencies  \
        libs/spool/flatfile/spoolf_dependencies  \
        libs/spool/postgres/spoolp_dependencies  \
+       libs/comm/comm_dependencies  \
        libs/cull/cull_dependencies  \
        libs/sched/sched_dependencies  \
        libs/uti/uti_dependencies  \
        libs/rmon/rmon_dependencies  \
-       libs/comm/commlib_dependencies  \
-       libs/comm/lists/commlistslib_dependencies \
-       libs/lck/lck_dependencies  \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \
        security/sec/sec_dependencies \

@@ -39,7 +39,7 @@
 #include "sgermon.h"
 #include "sge.h"
 #include "sge_cuser.h"
-#include "sge_str.h"
+#include "sge_stringL.h"
 #include "sge_answer.h"
 #include "read_write_ume.h"
 #include "sge_string.h"

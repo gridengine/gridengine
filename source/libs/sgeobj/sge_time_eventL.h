@@ -42,33 +42,35 @@ extern "C" {
 
 /* *INDENT-OFF* */  
 
+/* valid values for ET_type */
 enum {
-   TE_when = TE_LOWERBOUND,  /* time when this event must be delivered       */
+   TYPE_CALENDAR_EVENT = 1,
+   TYPE_SIGNAL_RESEND_EVENT,
+   TYPE_JOB_RESEND_EVENT,
+   TYPE_RESCHEDULE_UNKNOWN_EVENT
+};
+
+enum {
+   TE_when = TE_LOWERBOUND,  /* time when this event must be delivered */
    TE_type,                  /* to differ between different event categories */
-   TE_mode,                  /* one-time or recurring event                  */
-   TE_interval,              /* event interval, if recurring event           */
-   TE_uval0,                 /* 1st ulong key                                */
-   TE_uval1,                 /* 2nd ulong key                                */
-   TE_sval,                  /* str key                                      */
+   TE_uval0,                 /* 1st ulong key */
+   TE_uval1,                 /* 2nd ulong key */
+   TE_sval,                  /* str key */
    TE_seqno
 };
 
 LISTDEF(TE_Type)
-   SGE_ULONG(TE_when,     CULL_DEFAULT)
-   SGE_ULONG(TE_type,     CULL_DEFAULT)
-   SGE_ULONG(TE_mode,     CULL_DEFAULT)
-   SGE_ULONG(TE_interval, CULL_DEFAULT)
-   SGE_ULONG(TE_uval0,    CULL_DEFAULT)
-   SGE_ULONG(TE_uval1,    CULL_DEFAULT)
-   SGE_STRING(TE_sval,    CULL_DEFAULT)
-   SGE_ULONG(TE_seqno,    CULL_DEFAULT)
+   SGE_ULONG(TE_when, CULL_DEFAULT)
+   SGE_ULONG(TE_type, CULL_DEFAULT)
+   SGE_ULONG(TE_uval0, CULL_DEFAULT)
+   SGE_ULONG(TE_uval1, CULL_DEFAULT)
+   SGE_STRING(TE_sval, CULL_DEFAULT)
+   SGE_ULONG(TE_seqno, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(TEN)
    NAME("TE_when")
    NAME("TE_type")
-   NAME("TE_mode")
-   NAME("TE_interval")
    NAME("TE_uval0")
    NAME("TE_uval1")
    NAME("TE_sval")

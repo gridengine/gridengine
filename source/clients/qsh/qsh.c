@@ -35,6 +35,11 @@
  *
  *--------------------------------------------------*/
 
+#ifdef SUN4
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
+#endif
+
 #include <string.h>
 #include <stdlib.h>    /* need prototype for malloc */
 #include <errno.h>
@@ -42,7 +47,6 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <sys/time.h>
-#include <netinet/in.h>
 
 #include "basis_types.h"
 #include "symbols.h"
@@ -55,6 +59,7 @@
 #include "show_job.h"
 #include "commlib.h"
 #include "sig_handlers.h"
+#include "sge_resource.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -71,12 +76,10 @@
 #include "sge_security.h"
 #include "sge_answer.h"
 #include "sge_var.h"
-#include "sge_gdi.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
 #include "msg_common.h"
-#include "sge_hostname.h"
 
 void write_client_name_cache(const char *cache_path, const char *client_name);
 static int open_qrsh_socket(int *port);
@@ -102,8 +105,7 @@ static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job);
 /* static char *get_master_host(lListElem *jep); */
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is_rsh, int is_rlogin);
 /* static lList *parse_script_options(lList *opts_cmdline); */
-static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error,
-                                int is_qlogin, int is_rsh, int is_qsh); 
+static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error); 
 static void delete_job(u_long32 job_id, lList *lp);
 
 int main(int argc, char **argv);
@@ -1218,8 +1220,6 @@ int main(int argc, char **argv)
       my_who = QSH;
    }
 
-   log_state_set_log_gui(1);
-
    sge_gdi_param(SET_MEWHO, my_who, NULL);
    if (sge_gdi_setup(prognames[my_who], &alp)!=AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));
@@ -1228,6 +1228,8 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(my_who);
 
+   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
+   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
 
    /*
    ** begin to work
@@ -1283,6 +1285,44 @@ int main(int argc, char **argv)
       }
    }
 
+   /*
+    * We will read commandline options from scripfile if the script
+    * itself should be handled as script not as binary
+    */
+   if (is_qsh || is_qlogin || (is_rsh && 
+       ((!opt_list_has_X(opts_cmdline, "-b") && 
+         !opt_list_has_X(opts_defaults, "-b")) ||
+        opt_list_is_X_true(opts_cmdline, "-b") || 
+        opt_list_is_X_true(opts_defaults, "-b")))) {
+      DPRINTF(("Ignoring script parameter\n"));
+   } else {
+      lListElem *inherit_ep = lGetElemStr(opts_cmdline, SPA_switch, "-inherit");
+
+      if (inherit_ep != NULL) {
+         ERROR((SGE_EVENT, MSG_QSH_INHERIT_BN_NOT_ALLOWED_S, "qrsh"));
+         SGE_EXIT(1);
+      } else {
+         opt_list_append_opts_from_script(&opts_scriptfile, &alp, 
+                                          opts_cmdline, environ);
+         do_exit = parse_result_list(alp, &alp_error);
+         lFreeList(alp);
+
+         if (alp_error) {
+            SGE_EXIT(1);
+         }
+
+         if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTLEN))) {
+            lSetUlong(job, JB_script_size, lGetUlong(ep, SPA_argval_lUlongT));
+            lRemoveElem(opts_scriptfile, ep);
+         }
+
+         if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTPTR))) {
+            lSetString(job, JB_script_ptr, lGetString(ep, SPA_argval_lStringT));
+            lRemoveElem(opts_scriptfile, ep);
+         }
+      }
+   }
+
    if (opt_list_has_X(opts_cmdline, "-help")) {
       sge_usage(stdout);
       SGE_EXIT(0);
@@ -1304,6 +1344,28 @@ int main(int argc, char **argv)
    ** if qrsh, parse command to call
    */
    if(is_rsh) {
+
+      {
+         int set_bin_bit = 1; /* default for qrsh is 'yes' */
+
+         while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-b"))) {
+            if (lGetInt(ep, SPA_argval_lIntT) == 1) {
+               set_bin_bit = 1;
+            } else {
+               set_bin_bit = 0;
+            }
+            lRemoveElem(opts_cmdline, ep);
+         }
+
+         if (set_bin_bit) {
+            u_long32 jb_type = lGetUlong(job, JB_type);
+
+            JOB_TYPE_SET_BINARY(jb_type);
+            lSetUlong(job, JB_type, jb_type);
+         }
+      }
+
+
       while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-nostdin"))) {
          lRemoveElem(opts_cmdline, ep);
          nostdin = 1;
@@ -1373,77 +1435,13 @@ int main(int argc, char **argv)
       }   
    }
 
-   /* handle binary vs. script submission */
-   if (is_rsh && !inherit_job) {
-      bool binary = true;
-
-      /* do we have -b in commandline? */
-      if (opt_list_has_X(opts_cmdline, "-b")) {
-         /* then commandline will determine over binary vs. script submiss. */
-         binary = opt_list_is_X_true(opts_cmdline, "-b");
-      } else if (opt_list_has_X(opts_defaults, "-b")) {
-         /* we have -b in defaults files, this one will decide */
-         binary = opt_list_is_X_true(opts_defaults, "-b");
-      }
-
-      /* remove the binary option from commandline before proceeding */
-      while ((ep = lGetElemStr(opts_defaults, SPA_switch, "-b"))) {
-         lRemoveElem(opts_defaults, ep);
-      }
-      while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-b"))) {
-         lRemoveElem(opts_cmdline, ep);
-      }
-
-      /* set binary bit or handle script submission */
-      if (binary) {
-         u_long32 jb_type = lGetUlong(job, JB_type);
-
-         JOB_TYPE_SET_BINARY(jb_type);
-         lSetUlong(job, JB_type, jb_type);
-      } else {
-         DPRINTF(("handling script submission\n"));
-     
-         /* move -C directives into opts_qrsh - we need them for parsing 
-          * the script 
-          */
-         while ((ep = lGetElemStr(opts_defaults, SPA_switch, "-C"))) {
-            lDechainElem(opts_defaults, ep);
-            lAppendElem(opts_qrsh, ep);
-         }
-         while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-C"))) {
-            lDechainElem(opts_cmdline, ep);
-            lAppendElem(opts_qrsh, ep);
-         }
-    
-         /* read scriptfile and parse script options */
-         opt_list_append_opts_from_script(&opts_scriptfile, &alp, 
-                                          opts_qrsh, environ);
-         do_exit = parse_result_list(alp, &alp_error);
-         lFreeList(alp);
-
-         if (alp_error) {
-            SGE_EXIT(1);
-         }
-
-         /* set length and script contents in job */
-         if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTLEN))) {
-            lSetUlong(job, JB_script_size, lGetUlong(ep, SPA_argval_lUlongT));
-            lRemoveElem(opts_scriptfile, ep);
-         }
-         if ((ep = lGetElemStr(opts_scriptfile, SPA_switch, STR_PSEUDO_SCRIPTPTR))) {
-            lSetString(job, JB_script_ptr, lGetString(ep, SPA_argval_lStringT));
-            lRemoveElem(opts_scriptfile, ep);
-         }
-      }   
-   }
-
    if(!existing_job) {
       set_job_info(job, name, is_qlogin, is_rsh, is_rlogin); 
    }
 
-   remove_unknown_opts(opts_cmdline, lGetUlong(job, JB_type), existing_job, true, is_qlogin, is_rsh, is_qsh);
-   remove_unknown_opts(opts_defaults, lGetUlong(job, JB_type), existing_job, false, is_qlogin, is_rsh, is_qsh);
-   remove_unknown_opts(opts_scriptfile, lGetUlong(job, JB_type), existing_job, false, is_qlogin, is_rsh, is_qsh);
+   remove_unknown_opts(opts_cmdline, lGetUlong(job, JB_type), existing_job, true);
+   remove_unknown_opts(opts_defaults, lGetUlong(job, JB_type), existing_job, false);
+   remove_unknown_opts(opts_scriptfile, lGetUlong(job, JB_type), existing_job, false);
 
    opt_list_merge_command_lines(&opts_all, &opts_defaults, &opts_scriptfile,
                                 &opts_cmdline);
@@ -1521,24 +1519,23 @@ int main(int argc, char **argv)
       }
    }
 
+#if 0 /* EB: debug */
+   lWriteElemTo(job, stderr); 
+#endif
+
    /* 
    ** add the job
    */
    if(existing_job) {
-#if 0
-      int execd_status = -1;
-#endif
       int msgsock   = -1;
       sge_tid_t tid;
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 
-      /* if we had a connection to qmaster commd (to get configuration), close it and reset commproc id */
-      /* leave_commd() for old commlib */
-      cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
-                                 (char*) sge_get_master(0),
-                                 (char*) prognames[QMASTER],
-                                 1);
+      /* if we had a connection to qmaster commd (to get configuration), 
+       * close it and reset commproc id */
+      leave_commd();
+      set_commlib_param(CL_P_ID, 0, NULL, NULL);
    
       tid = sge_qexecve(host, NULL, 
                         lGetString(job, JB_cwd), 
@@ -1566,18 +1563,6 @@ int main(int argc, char **argv)
 
       exit_status = start_client_program(client_name, opts_qrsh, host, port, job_dir, utilbin_dir,
                                          is_rsh, is_rlogin, nostdin, noshell, sock);
-      /* CR: TODO: This code is not active because there is no need to wait for an
-       *           task exit message. The exit_status is allready reported by 
-       *           start_client_program().
-       *
-       *           The code who sends the task exit message is located in the execd code
-       *           in file reaper_execd.c, function clean_up_job(). Activate this code
-       *           to enable task exit messages again and use sge_qwaittid() to wait for
-       *           task exit messages.
-       */
-#if 0
-      sge_qwaittid(tid,&execd_status,1);
-#endif
    } else {
       int polling_interval;
       
@@ -1654,12 +1639,10 @@ int main(int argc, char **argv)
 
          DPRINTF(("random polling set to %d\n", random_poll));
 
-         /* leave commd while waiting for connection / sleeping while polling (CR -> old commlib comment) */
-         /* next enroll will _not_ ask commd to get same client id as before (CR -> old commlib comment) */
-         cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
-                                     (char*) sge_get_master(0),
-                                     (char*) prognames[QMASTER],
-                                     1);
+         /* leave commd while waiting for connection / sleeping while polling */
+         leave_commd();
+         /* next enroll will _not_ ask commd to get same client id as before  */
+         set_commlib_param(CL_P_ID, 0, NULL, NULL);
    
          if(is_qlogin) {
             /* if qlogin_starter is used (qlogin, rsh, rlogin): wait for context */
@@ -1783,7 +1766,6 @@ int main(int argc, char **argv)
    }
 
    SGE_EXIT(exit_status);
-   DEXIT;
    return exit_status;
 }
 
@@ -1811,8 +1793,7 @@ static void delete_job(u_long32 job_id, lList *jlp)
    */
 }
 
-static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error,
-                                int is_qlogin, int is_rsh, int is_qsh)
+static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error)
 {
    lListElem *ep, *next;
 
@@ -1836,25 +1817,13 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
          /* these are the options allowed for all flavors of interactive jobs
           * all other will be deleted
           */
-         
-         /* -hold_jid and -h are only allowed in qrsh mode */
-         if (!is_rsh && (!strcmp(cp, "-hold_jid") || !strcmp(cp, "-h"))){
-            if(error) {
-               ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
-               SGE_EXIT(EXIT_FAILURE);
-            } else {
-               lRemoveElem(lp, ep);
-               continue;
-            }
-         }
-          
          if(strcmp(cp, "jobarg") && strcmp(cp, "script") &&
             strcmp(cp, "-A") && strcmp(cp, "-cell") && strcmp(cp, "-clear") && 
             strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
-            strcmp(cp, "-hold_jid") && strcmp(cp, "-h") && 
+            strcmp(cp, "-hold_jid") && strcmp(cp, "-h") &&
             strcmp(cp, "-l") && strcmp(cp, "-m") && strcmp(cp, "-masterq") &&
             strcmp(cp, "-N") && strcmp(cp, "-noshell") && strcmp(cp, "-now") &&
-            strcmp(cp, "-notify") && strcmp(cp, "-P") &&
+            strcmp(cp, "-P") &&
             strcmp(cp, "-p") && strcmp(cp, "-pe") && strcmp(cp, "-q") && strcmp(cp, "-v") &&
             strcmp(cp, "-V") && strcmp(cp, "-display") && strcmp(cp, "-verify") &&
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
@@ -1869,7 +1838,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                continue;
             }
          }
-         
+
          /* the login type interactive jobs do not allow some options - delete these ones */
          if(JOB_TYPE_IS_QLOGIN(jb_now) || JOB_TYPE_IS_QRLOGIN(jb_now)) {
             if(strcmp(cp, "-display") == 0 ||
@@ -1915,6 +1884,16 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
                   continue;
                }
             }
+         }
+         
+         /* set defaults for mail delivery */
+         if (strcmp(cp, "-m") == 0) {
+            int m;
+            
+            m = lGetInt(ep, SPA_argval_lIntT);
+            m &= ~MAIL_AT_BEGINNING;
+            m &= ~MAIL_AT_EXIT;
+            lSetInt(ep, SPA_argval_lIntT, m);
          }
       }
    }

@@ -1103,12 +1103,12 @@ proc rule_max { a b } {
 #***************************************************************************
 #
 proc parse_qstat {input output {jobid ""} {ext 0}} {
-   global ts_config
+   global CHECK_PRODUCT_VERSION_NUMBER
    upvar $input  in
    upvar $output out
 
-   if { $ext } {
-      if { $ts_config(gridengine_version) == 53 } {
+   if { $CHECK_PRODUCT_VERSION_NUMBER >= 2 } {
+      if { $ext } {
          set   position(0)  "0 6"               ; set    names(0)    id
          set   position(1)  "8 12"              ; set    names(1)    prior
          set   position(2)  "14 23"             ; set    names(2)    name
@@ -1123,70 +1123,28 @@ proc parse_qstat {input output {jobid ""} {ext 0}} {
          set  transform(8)  transform_date_time
          set   position(9)  "112 121"           ; set    names(9)    cpu
          set      rules(9)  rule_sum
-         set    replace(9,) 0:00:00:00          ; set    replace(9,NA) 0:00:00:00
+         set    replace(9,) 0:00:00:00          ; set  replace(9,NA) 0:00:00:00
          set  transform(9)  transform_cpu
-         set  position(10)  "123 129"           ; set    names(10)    mem
-         set   replace(10,) 0                   ; set    replace(10,NA) 0
+         set  position(10)  "123 129"           ; set   names(10)    mem
+         set   replace(10,) 0                   ; set replace(10,NA) 0
          set     rules(10)  rule_sum
-         set  position(11) "131 137"            ; set    names(11)    io
-         set   replace(11,) 0                   ; set    replace(11,NA) 0
+         set  position(11) "131 137"            ; set   names(11)    io
+         set   replace(11,) 0                   ; set replace(11,NA) 0
          set     rules(11)  rule_sum
-         set  position(12)  "139 143"           ; set    names(12)    tckts
-         set  position(13)  "145 149"           ; set    names(13)    ovrts
-         set  position(14)  "151 155"           ; set    names(14)    otckt
-         set  position(15)  "157 161"           ; set    names(15)    dtckt
-         set  position(16)  "163 167"           ; set    names(16)    ftckt
-         set  position(17)  "169 173"           ; set    names(17)    stckt
-         set  position(18)  "175 178"           ; set    names(18)    share
-         set  position(19)  "180 190"           ; set    names(19)    queue
+         set  position(12)  "139 143"           ; set   names(12)    tckts
+         set  position(13)  "145 149"           ; set   names(13)    ovrts
+         set  position(14)  "151 155"           ; set   names(14)    otckt
+         set  position(15)  "157 161"           ; set   names(15)    dtckt
+         set  position(16)  "163 167"           ; set   names(16)    ftckt
+         set  position(17)  "169 173"           ; set   names(17)    stckt
+         set  position(18)  "175 178"           ; set   names(18)    share
+         set  position(19)  "180 190"           ; set   names(19)    queue
          set     rules(19)  rule_list
-         set  position(20)  "192 198"           ; set    names(20)    master
+         set  position(20)  "192 198"           ; set   names(20)    master
          set     rules(20)  rule_list
-         set  position(21)  "200 end"           ; set    names(21)    jatask
+         set  position(21)  "200 end"           ; set   names(21)    jatask
          set     rules(21)  rule_list
-      }  else {
-         set   position(0)  "0 6"               ; set    names(0)    id
-         set   position(1)  "8 14"              ; set    names(1)    prior
-         set   position(2)  "16 22"             ; set    names(2)    ntckts 
-         set   position(3)  "24 33"             ; set    names(3)    name
-         set   position(4)  "35 46"             ; set    names(4)    user
-         set   position(5)  "48 63"             ; set    names(5)    project
-         set   position(6)  "65 74"             ; set    names(6)    department
-         set   position(7)  "76 80"             ; set    names(7)    state
-         set   position(8)  "82 91"             ; set    names(8)    cpu
-         set      rules(8)  rule_sum
-         set    replace(8,) 0:00:00:00          ; set    replace(8,NA) 0:00:00:00
-         set  transform(8)  transform_cpu
-         set  position(9)  "93 99"              ; set    names(9)    mem
-         set   replace(9,) 0                    ; set    replace(9,NA) 0
-         set     rules(9)  rule_sum
-         set  position(9) "101 107"             ; set   names(9)    io
-         set   replace(9,) 0                    ; set   replace(9,NA) 0
-         set     rules(9)  rule_sum
-         set  position(10)  "109 113"           ; set   names(10)    tckts
-         set  position(11)  "115 119"           ; set   names(11)    ovrts
-         set  position(12)  "121 125"           ; set   names(12)    otckt
-         set  position(13)  "127 131"           ; set   names(13)    ftckt
-         set  position(14)  "133 137"           ; set   names(14)    stckt
-         set  position(15)  "139 143"           ; set   names(15)    share
-         set  position(16)  "145 154"           ; set   names(16)    queue
-         set     rules(16)  rule_list
-
-         # if { $petask } {
-         #   set  position(17)  "192 198"           ; set   names(17)    master
-         #   set     rules(17)  rule_list
-         #    ...
-         #    ...
-         # } else {
-
-         set  position(17)  "156 161"           ; set   names(17)     slots
-         set  position(18)  "163 end"           ; set   names(18)    jatask
-         set     rules(18)  rule_list
-
-         # }
-      }
-   } else {
-      if { $ts_config(gridengine_version) == 53 } {
+      } else {
          set   position(0)  "0 6"               ; set    names(0)    id   
          set   position(1)  "8 12"              ; set    names(1)    prior
          set   position(2)  "14 23"             ; set    names(2)    name
@@ -1194,31 +1152,72 @@ proc parse_qstat {input output {jobid ""} {ext 0}} {
          set   position(4)  "38 42"             ; set    names(4)    state
          set   position(5)  "44 62"             ; set    names(5)    time
          set  transform(5)  transform_date_time
+         set      rules(7)  rule_min
          set   position(6)  "64 73"             ; set    names(6)    queue
          set      rules(6)  rule_list
          set   position(7)  "75 81"             ; set    names(7)    master
          set      rules(7)  rule_list
          set   position(8)  "83 end"            ; set    names(8)    jatask
          set      rules(8)  rule_list
+      }
+   } else {
+      if { $ext } {
+         set   position(0)  "0 5"               ; set    names(0)    id
+         set   position(1)  "7 11"              ; set    names(1)    prior
+         set   position(2)  "13 22"             ; set    names(2)    name
+         set   position(3)  "24 35"             ; set    names(3)    user
+         set   position(4)  "37 52"             ; set    names(4)    project
+         set   position(5)  "54 63"             ; set    names(5)    department
+         set   position(6)  "65 69"             ; set    names(6)    state
+         set   position(7)  "71 89"             ; set    names(7)    time
+         set  transform(7)  transform_date_time
+         set      rules(7)  rule_min
+         set   position(8)  "91 107"            ; set    names(8)    deadline
+         set  transform(8)  transform_date_time
+         set   position(9)  "109 118"           ; set    names(9)    cpu
+         set      rules(9)  rule_sum
+         set    replace(9,) 0:00:00:00          ; set  replace(9,NA) 0:00:00:00
+         set  transform(9)  transform_cpu
+         set  position(10)  "120 126"           ; set   names(10)    mem
+         set   replace(10,) 0                   ; set replace(10,NA) 0
+         set     rules(10)  rule_sum
+         set  position(11) "128 134"            ; set   names(11)    io
+         set   replace(11,) 0                   ; set replace(11,NA) 0
+         set     rules(11)  rule_sum
+         set  position(12)  "136 140"           ; set   names(12)    tckts
+         set  position(13)  "142 146"           ; set   names(13)    ovrts
+         set  position(14)  "148 152"           ; set   names(14)    otckt
+         set  position(15)  "154 158"           ; set   names(15)    dtckt
+         set  position(16)  "160 164"           ; set   names(16)    ftckt
+         set  position(17)  "166 170"           ; set   names(17)    stckt
+         set  position(18)  "172 175"           ; set   names(18)    share
+         set  position(19)  "178 187"           ; set   names(19)    queue
+         set     rules(19)  rule_list
+         set  position(20)  "189 195"           ; set   names(20)    master
+         set     rules(20)  rule_list
+         set  position(21)  "197 end"           ; set   names(21)    jatask
+         set     rules(21)  rule_list
       } else {
-         set   position(0)  "0 6"               ; set    names(0)    id   
-         set   position(1)  "8 14"              ; set    names(1)    prior
-         set   position(2)  "16 25"             ; set    names(2)    name
-         set   position(3)  "27 38"             ; set    names(3)    user
-         set   position(4)  "40 44"             ; set    names(4)    state
-         set   position(5)  "46 64"             ; set    names(5)    time
+         set   position(0)  "0 5"               ; set    names(0)    id   
+         set   position(1)  "7 11"              ; set    names(1)    prior
+         set   position(2)  "13 22"             ; set    names(2)    name
+         set   position(3)  "24 35"             ; set    names(3)    user
+         set   position(4)  "37 41"             ; set    names(4)    state
+         set   position(5)  "43 61"             ; set    names(5)    time
          set  transform(5)  transform_date_time
-         set   position(6)  "66 75"             ; set    names(6)    queue
+         set      rules(7)  rule_min
+         set   position(6)  "63 72"             ; set    names(6)    queue
          set      rules(6)  rule_list
-         set   position(7)  "77 82"             ; set    names(7)    master
+         set   position(7)  "74 80"             ; set    names(7)    master
          set      rules(7)  rule_list
-         set   position(8)  "84 end"            ; set    names(8)    jatask
+         set   position(8)  "82 end"            ; set    names(8)    jatask
          set      rules(8)  rule_list
       }
    }
 
    # split text output of qstat to Array (list of lists)
    parse_fixed_column_lines in tmp position 2 replace transform
+
 
    # insert job id for multiplied pe task lines
    repeat_column tmp

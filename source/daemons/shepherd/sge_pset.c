@@ -219,7 +219,47 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
       return ret;
 #endif
 
-#if defined(ALPHA)
+#if defined(__sgi) && !defined(IRIX_NOPSET)
+   /* create a unique processor set for the job
+    * 1st select a possible name space of 100 processor sets for the job
+    * Then iterate in the name space until processor set gets created
+    * or other error occurs.
+    */
+   proc_set_num *= SGE_MPSET_MULTIPLIER;
+   initial_proc_set_num = proc_set_num;
+   while(sysmp(MP_PSET, MPPS_CREATE, proc_set_num, &proc_vec) &&
+         proc_set_num < initial_proc_set_num+SGE_MPSET_MULTIPLIER) {
+      switch (errno) {
+      case EEXIST:
+         sprintf(err_str,
+            "MPPS_CREATE: processor set %d already exisits",proc_set_num);
+         shepherd_trace(err_str);
+         proc_set_num++;
+         break;
+      case EPERM:
+         shepherd_trace("MPPS_CREATE: must run as root to create processor sets");
+         return PROC_SET_WARNING;
+         break;
+      case EINVAL:
+         strcpy(err_str,
+            "MPPS_CREATE: processor set conflicts with reserved value");
+         shepherd_trace(err_str);
+         return PROC_SET_ERROR;
+         break;
+      default:
+         sprintf(err_str,"MPPS_CREATE: unexpected error - errno=%d", errno);
+         shepherd_trace(err_str);
+         return PROC_SET_ERROR;
+         break;
+      }
+   }
+   if (proc_set_num >= initial_proc_set_num+SGE_MPSET_MULTIPLIER) {
+      sprintf(err_str,"all feasible %d processor set numbers occupied",
+         SGE_MPSET_MULTIPLIER);
+      shepherd_trace(err_str);
+      return PROC_SET_ERROR;
+   }
+#elif defined(ALPHA)
    /* It is not possible to bind processor #0 to other psets than pset #0
     * So if we get a pset with #0 contained in the range we do nothing. 
     * The process gets not bound to a processor but it is guaranteed
@@ -272,7 +312,35 @@ static int set_processor_range(char *crange, int proc_set_num, char *err_str)
       return PROC_SET_ERROR;
    }
 
-#if defined(ALPHA)
+#if defined(__sgi) && !defined(IRIX_NOPSET)
+   /* free myself from any inherited processor set assignments
+    * No errors are supposed to occur.
+    */
+   if (sysmp(MP_SCHED, UNSETPSET, getpid())) {
+      sprintf(err_str,"UNSETPSET: unexpected error - errno=%d", errno);
+      shepherd_trace(err_str);
+      return PROC_SET_ERROR;
+   }
+
+   /* Now let's assign ourselves to the previously created processor set */
+   if (sysmp(MP_SCHED, SETPSET, 0, proc_set_num)) {
+      switch (errno) {
+      case EBUSY:
+         shepherd_trace("MP_SCHED: restricted processors in processor set");
+         return PROC_SET_ERROR;
+         break;
+      case EDEADLK:
+         shepherd_trace("MP_SCHED: invalid processor set");
+         return PROC_SET_ERROR;
+         break;
+      default:
+         sprintf(err_str,"MP_SCHED: unexpected error - errno=%d", errno);
+         shepherd_trace(err_str);
+         return PROC_SET_ERROR;
+         break;
+      }
+   }
+#elif defined(ALPHA)
    /* Now let's assign ourselves to the previously created processor set */
    if (proc_set_num) {
       pid_t pid_list[1];
@@ -361,7 +429,40 @@ static int free_processor_set(char *err_str)
       return PROC_SET_ERROR;
    }
 
-#if defined(ALPHA)
+#if defined(__sgi) && !defined(IRIX_NOPSET)
+   /* release shepherd from processor set. this should be the only
+    * process left associated with the job
+    * no errors are expected to occur.
+    */
+   if (sysmp(MP_SCHED, UNSETPSET, getpid())) {
+      sprintf(err_str,"UNSETPSET: unexpected error - errno=%d", errno);
+      shepherd_trace(err_str);
+      return PROC_SET_ERROR;
+   }
+
+   /* remove the processor set */
+   if (sysmp(MP_PSET, MPPS_DELETE, proc_set_num)) {
+      switch (errno) {
+      case EPERM:
+         shepherd_trace("MPPS_DELETE: must run as root to delete processor sets");
+         return PROC_SET_WARNING;
+         break;
+      case EBUSY:
+         /* we were unlucky - at least one process from the job's
+          * process hierarchy has not finished
+          */
+         strcpy(err_str,"MPPS_DELETE: processor set still in use");
+         shepherd_trace(err_str);
+         return PROC_SET_BUSY;
+         break;
+      default:
+         sprintf(err_str,"MPPS_DELETE: unexpected error - errno=%d", errno);
+         shepherd_trace(err_str);
+         return PROC_SET_ERROR;
+         break;
+      }
+   }
+#elif defined(ALPHA)
    if (proc_set_num) {
       int ret;
       pid_t pid_list[1];

@@ -75,6 +75,7 @@ int verydummyprocfs;
 
 #include "sge_log.h"
 #include "msg_sge.h"
+#include "sge_log.h"
 #include "sgermon.h"
 #include "basis_types.h"
 #include "sgedefs.h"
@@ -250,13 +251,9 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
    gid_t gids[4];
 #endif
 
-   DENTER(TOP_LAYER, "procfs_kill_addgrpid");
-
    /* quick return in case of invalid add. group id */
-   if (add_grp_id == 0) {
-      DEXIT;
+   if (add_grp_id == 0)
       return;
-   }
 
    max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0)
@@ -413,7 +410,6 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
    }
    pt_close();
    free(list);
-   DEXIT;
 }
 
 int pt_open(void)
@@ -516,9 +512,9 @@ int time_stamp
       /* 
        * Read the line and append a 0-Byte 
        */
-      if ((ret = read(fd, buffer, BIGLINE-1))<=0) {
+      if ((ret = read(fd, buffer, BIGLINE-1))>= BIGLINE-1) {
          close(fd);
-         if (ret == -1 && errno != ENOENT) {
+         if (errno != ENOENT) {
 #ifdef MONITOR_PDC
             INFO((SGE_EVENT, "could not read %s: %s\n", procnam, strerror(errno)));
 #endif
@@ -595,15 +591,14 @@ int time_stamp
       {
          char procnam[256];
          char buf[1024];
-         FILE* f = (FILE*) NULL;
+         FILE* fd = (FILE*) NULL;
    
          sprintf(procnam,  "%s/%s/status", PROC_DIR, dent->d_name);
-         if (!(f = fopen(procnam, "r"))) {
-            close(fd);
+         if (!(fd = fopen(procnam, "r"))) {
             continue;
          }
          groups = 0;
-         while (fgets(buf, sizeof(buf), f)) {
+         while (fgets(buf, sizeof(buf), fd)) {
             if (strcmp("Groups:", strtok(buf, "\t"))==0) {
                char *token;
                   
@@ -614,7 +609,7 @@ int time_stamp
                break;
             }
          }
-         fclose(f);
+         fclose(fd);
       } 
 #  elif defined(SOLARIS) || defined(ALPHA)
       

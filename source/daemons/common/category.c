@@ -49,10 +49,12 @@
 #include "cull_sort.h"
 #include "sge_event.h"
 #include "sge_feature.h"
+#include "schedd_conf.h"
 #include "schedd_monitor.h"
 #include "unparse_job_cull.h"
 #include "sge_dstring.h"
 #include "parse_qsubL.h"
+#include "sge_access_tree.h"
 #include "parse.h"
 #include "category.h"
 #include "sge_job.h"
@@ -67,10 +69,10 @@ dstring *category_str,
 lListElem *job,
 lList *acl_list 
 ) {
+   const char *cats = NULL;
    lList *cmdl = NULL;
    lListElem *ep;
    const char *owner, *group;
-   bool first;
 
    DENTER(TOP_LAYER, "sge_build_job_category");
    
@@ -80,6 +82,7 @@ lList *acl_list
    owner = lGetString(job, JB_owner);
    group = lGetString(job, JB_group);
    if (sge_unparse_acl(owner, group, "-U", acl_list, &cmdl, NULL) != 0) {
+      DEXIT;
       goto ERROR;
    }
 
@@ -88,6 +91,7 @@ lList *acl_list
    */
    if (sge_unparse_id_list(job, JB_hard_queue_list, "-q",  
                                     &cmdl, NULL) != 0) {
+      DEXIT;
       goto ERROR;
    }
 
@@ -96,6 +100,7 @@ lList *acl_list
    */
    if (sge_unparse_id_list(job, JB_master_hard_queue_list, "-masterq",  
                                     &cmdl, NULL) != 0) {
+      DEXIT;
       goto ERROR;
    }
 
@@ -104,6 +109,7 @@ lList *acl_list
    */
    if (sge_unparse_resource_list(job, JB_hard_resource_list, 
                                     &cmdl, NULL) != 0) {
+      DEXIT;
       goto ERROR;
    }
 
@@ -111,6 +117,7 @@ lList *acl_list
    ** -pe pe_name pe_range
    */
    if (sge_unparse_pe(job, &cmdl, NULL) != 0) {
+      DEXIT;
       goto ERROR;
    }
 
@@ -119,6 +126,7 @@ lList *acl_list
    */
    if (sge_unparse_string_option(job, JB_checkpoint_name, "-ckpt", 
             &cmdl, NULL) != 0) {
+      DEXIT;
       goto ERROR;
    }
 
@@ -127,44 +135,44 @@ lList *acl_list
    */
    if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) {
       ep = sge_add_arg(&cmdl, 0, lIntT, "-I", "y");
-      if (ep == NULL) {
+      if (!ep) {
+         DEXIT;
          goto ERROR;
       }
       lSetInt(ep, SPA_argval_lIntT, true);
    }
       
    /*
-   ** project
+   ** job type
    */
-   if (sge_unparse_string_option(job, JB_project, "-P", 
-            &cmdl, NULL) != 0) {
-      goto ERROR;
+
+   /*
+   ** SGE only
+   */
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      /*
+      ** project
+      */
+      if (sge_unparse_string_option(job, JB_project, "-P", 
+               &cmdl, NULL) != 0) {
+         DEXIT;
+         goto ERROR;
+      }
    }
 
    /*
    ** create the category string
    */
    lDelElemStr(&cmdl, SPA_switch, "-hard");
-   first = true;
    for_each (ep, cmdl) {
-      const char *args = lGetString(ep, SPA_switch_arg);
-
-      /* delimiter between multiple requests */
-      if (!first) {
-         sge_dstring_append(category_str, " ");
-      } else {
-         first = false;
-      }
-      
-      /* append switch, e.g. -l, -pe */
-      sge_dstring_append(category_str, lGetString(ep, SPA_switch));
-
-      /* if switch has arguments, append them, e.g. -l arch=solaris */
-      if (args != NULL) {
-         sge_dstring_sprintf_append(category_str, " %s", args);
-      }
+      char buf[20];
+      strcpy(buf, lGetString(ep, SPA_switch));
+      strcat(buf, " ");
+      cats = sge_dstring_append(category_str, buf);
+      if (lGetString(ep, SPA_switch_arg))
+         cats = sge_dstring_append(category_str, lGetString(ep, SPA_switch_arg));
+      cats = sge_dstring_append(category_str, " ");
    }
-
    lFreeList(cmdl);
        
    DEXIT;
@@ -174,6 +182,5 @@ ERROR:
    ERROR((SGE_EVENT, MSG_CATEGORY_BUILDINGCATEGORYFORJOBXFAILED_U,  
          u32c(lGetUlong(job, JB_job_number))));
    lFreeList(cmdl);
-   DEXIT;
    return NULL;
 }

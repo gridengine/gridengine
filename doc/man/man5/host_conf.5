@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2004/01/30 18:58:42 $     Revision: $Revision: 1.7 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2001/07/20 08:19:15 $     Revision: $Revision: 1.4 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2004/01/30 18:58:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2001/07/20 08:19:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -91,13 +91,31 @@ allowed in between the load_scaling value string.
 The parameter
 .B load_scaling
 is not meaningful for the definition of the "global" host.
+.IP "\fBcomplex_list\fP"
+The comma separated list of administrator defined complexes (see 
+.M complex 5
+for details) to be associated with the host. Only complex 
+attributes contained in the enlisted complexes and those from the "global" 
+and "host" complex, which are implicitly attached to each host, can be 
+used in the
+.B complex_values
+list below. In case of the "global" host, the 
+"host" complex is not attached and only "global" complex attributes are 
+allowed per default in the
+.B complex_values
+list of the "global" host.
+.sp 1
+The default value for this parameter is NONE, i.e. no administrator 
+defined complexes are associated with the host.
 .IP "\fBcomplex_values\fP"
 .B complex_values
 defines quotas for resource attributes managed via this 
 host. Each complex attribute is followed by an "=" sign and the value 
 specification compliant with the complex attribute type (see
 .M complex 5 ). 
-Quota specifications are separated by commas. 
+Quota specifications are separated by commas. Only attributes as defined in 
+.B complex_list
+(see above) may be used.
 .sp 1
 The quotas are related to the resource consumption of all jobs on a host in 
 the case of consumable resources (see
@@ -199,6 +217,50 @@ for Memory consumption aggregated over the life-time of jobs and
 .B io
 for data transferred via any I/O devices. The default NONE means
 "no scaling", i.e. all scaling factors are 1.
+.IP "\fBresource_capability_factor\fP"
+This entry is only present in a xxQS_NAME_EExx system. It is not available in xxQS_NAME_Cxx.
+.sp 1
+The resource capability factor is used by xxQS_NAME_EExx when assigning jobs to 
+execution hosts. The resource capability factor tells xxQS_NAME_EExx how the 
+resources (CPU, memory, I/O, etc.) of one execution host compare to the 
+resources of other execution hosts. This helps to ensure that a job 
+requiring a large percentage of resources (i.e. lots of tickets) gets placed 
+on an execution host containing a large percentage of the available 
+resources. The load situation on the execution hosts is taken into account 
+in addition, to guarantee that the selected host is both powerful enough and 
+lightly loaded.
+.sp 1
+For example, you might consider setting your resource capability factors 
+for each execution host based on the number of CPUs, the speed of the 
+CPUs and the installed main memory:
+.sp 1
+.nf
+.ta \w'xxx'u
+	#_of_CPUs * (MHz/200) + GB_of_memory
+.fi
+.sp 1
+This would give an execution host with 32 200 MHz CPUs and 10 
+gigabytes of memory a resource capability factor of 42, while an 
+execution host with 24 200 MHz CPUs and 40 gigabytes of memory 
+would get a resource capability factor of 64, i.e. memory has a significant 
+impact in this example.
+.sp 1
+Other factors that you might want to consider in setting the resource 
+capability factor are:
+.sp 1
+.nf
+.ta \w'xxx'u \w'available disk spacexxxx'u
+	job mix	- CPU or memory bound jobs
+	CPU benchmarks	- comparison by CPU vendor
+	megaflops (MFLOPS)	- for number crunching
+	I/O capabilities	- disk/network speed
+	available disk space	- at the execution host
+.fi
+.sp 1
+The resource capability factor is stored as a floating point double value. 
+The range of values used is not important. xxQS_NAME_EExx only looks at the relation 
+between values of different hosts.
+.\"
 .IP "\fBuser_lists\fP"
 The \fBuser_lists\fP parameter contains a comma separated list of so called
 user access lists as described in
@@ -234,11 +296,6 @@ projects are denied access other than those denied access based on the
 \fBprojects\fP and \fBxprojects\fP parameters, the project is denied
 access to the host.
 This parameter is only available in a xxQS_NAME_EExx system.
-.\"
-.IP "\fBreport_variables\fP"
-The \fBreport_variables\fP parameter contains list of variables that shall be
-written to the reporting file.
-The variables listed here will be written to the reporting file when a load report arrives from an execution host.
 .\"
 .\"
 .SH "SEE ALSO"

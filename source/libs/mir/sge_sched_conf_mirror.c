@@ -40,7 +40,6 @@
 
 #include "sge_mirror.h"
 #include "sge_sched_conf_mirror.h"
-#include "sge_answer.h"
 
 /****** Eventmirror/schedd_conf/schedd_conf_update_master_list() ***************
 *  NAME
@@ -79,8 +78,7 @@ schedd_conf_update_master_list(sge_object_type type,
                                sge_event_action action,
                                lListElem *event, void *clientdata)
 {
-   lList *list = NULL;
-   lList *answer_list = NULL;
+   lList **list;
    lDescr *list_descr;
 
    lList *data_list;
@@ -88,7 +86,13 @@ schedd_conf_update_master_list(sge_object_type type,
 
    DENTER(TOP_LAYER, "schedd_conf_update_master_list");
 
+   list = &Master_Sched_Config_List;
    list_descr = SC_Type;
+
+   /* We always update the whole list (consisting of one list element) */
+   if (*list != NULL) {
+      *list = lFreeList(*list);
+   }
 
    if ((data_list = lGetList(event, ET_new_version)) != NULL) {
       if ((ep = lFirst(data_list)) != NULL) {
@@ -98,13 +102,8 @@ schedd_conf_update_master_list(sge_object_type type,
 
    /* if neccessary, create list and copy schedd info */
    if (ep != NULL) {
-      list = lCreateList("schedd config", list_descr);
-      lAppendElem(list, ep);
-   }
-
-   if (sconf_set_config(&list, &answer_list)){
-      list = lFreeList(list);
-      answer_list_output(&answer_list);
+      *list = lCreateList("schedd config", list_descr);
+      lAppendElem(*list, ep);
    }
 
    DEXIT;

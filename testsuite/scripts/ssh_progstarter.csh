@@ -33,25 +33,20 @@
 #___INFO__MARK_END__
 echo "ssh_progstarter.csh:"
 echo "********************"
-echo "workdir:          =$1="
-echo "SGE_ROOT:         =$2="
-echo "COMMD_PORT:       =$3="
-echo "SGE_QMASTER_PORT: =$3="
-set execd_port=`expr ${3} + 1`
-echo "SGE_EXECD_PORT:   =${execd_port}="
-echo "run command:      =$4="
-echo "arg(5)            =$5="
-echo "arg(6)            =$6="
-echo "arg(7)            =$7="
-echo "arg(8)            =$8="
-echo "arg(9)            =$9="
+echo "workdir:         =$1="
+echo "SGE_ROOT:        =$2="
+echo "COMMD_PORT:      =$3="
+echo "run command:     =$4="
+echo "arg(5)           =$5="
+echo "arg(6)           =$6="
+echo "arg(7)           =$7="
+echo "arg(8)           =$8="
+echo "arg(9)           =$9="
 
 set mycom = $4
 cd $1
 setenv SGE_ROOT $2
 setenv COMMD_PORT $3
-setenv SGE_QMASTER_PORT $3
-setenv SGE_EXECD_PORT $execd_port
 
 set counter = 5
 set com_args = ""

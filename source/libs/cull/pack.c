@@ -29,29 +29,47 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
-#include "pack.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <netinet/in.h>
-#include <rpc/rpc.h>
-#include <rpc/types.h>
 
-#include "basis_types.h"
-#include "sgermon.h"
-#include "cull_listP.h"
-#include "sge_log.h"
-#include "msg_cull.h"
-#include "cull_state.h"
+#ifndef WIN32NATIVE
+#   include <netinet/in.h>
+#else
+#   include <winsock2.h>
+#endif
 
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
 #   define NO_SGE_COMPILE_DEBUG
 #endif
 
+#ifndef WIN32
+#   include <rpc/rpc.h>
+#   include <rpc/types.h>
+#endif
+
+#ifdef WIN32
+#   ifndef WIN32NATIVE
+#      include <netdb.h>
+#   endif
+#endif
+
+
+
+#ifndef __BASIS_TYPES_H
+#   include "basis_types.h"
+#endif
+
+#ifndef __SGERMON_H
+#   include "sgermon.h"
+#endif
+
+#include "cull_listP.h"
+#include "sge_log.h"
+#include "pack.h"
+#include "msg_cull.h"
 #if 0
 #   undef PACK_LAYER
 #   define PACK_LAYER BASIS_LAYER
@@ -226,9 +244,6 @@ size_t len
 *  SEE ALSO
 *     cull/pack/-Packing-typedefs
 *     cull/pack/pack_set_chunk()
-*  
-*  NOTES
-*     MT-NOTE: init_packbuffer() is MT safe (assumptions)
 *******************************************************************************/
 int init_packbuffer(
 sge_pack_buffer *pb,
@@ -434,7 +449,6 @@ sge_pack_buffer *pb
 }
 
 /**************************************************************/
-/* MT-NOTE: clear_packbuffer() is MT safe */
 void clear_packbuffer(
 sge_pack_buffer *pb 
 ) {

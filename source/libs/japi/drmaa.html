@@ -12,7 +12,7 @@
 <BODY>
 <H1><FONT SIZE=6 STYLE="font-size: 28pt">DRMAA C binding library for Grid Engine</FONT></H1>
 <H1>Overview</H1>
-<P>The purpose of this library is to provide an implementation of the DRMAA C binding 
+<P>The purpose of this library is to provide an implementation for the DRMAA C binding 
 standard based on Grid Engine DRM system. The best way to circumscribe DRMAA is to cite 
 the DRMAA-WG Charter:</P>
 <UL>
@@ -32,24 +32,18 @@ standards body working group refer to the page of the
 <H1>Documentation</H1>
 <P>The following DRMAA related documentation is recommended
 <A HREF="http://www.drmaa.org/docs/ggf-rec-drmaa-1_0.pdf">DRMAA 1.0 language independent specification</A>,
-<A HREF="https://forge.gridforum.org/tracker/?group_id=90&atid=608&aid=214">DRMAA C language binding specification</A>,
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/%7Echeckout%7E/gridengine/source/libs/japi/jobstates.html?content-type=text/html">Grid Engine/DRMAA job state mapping table</A> 
+<A HREF="https://forge.gridforum.org/tracker/?group_id=90&atid=608&aid=214">DRMAA C language binding specification</A> 
 and 
 <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/manuals.html?content-type=text/html">HTML version of Grid Engine DRMAA C binding man pages (only those in section 3 with drmaa_* prefixes)</A> 
 .</P>
 <H1>Availability</H1>
-<P>For the current 5.3 release DRMAA is and will not be available. For 6.0 it is planned to deliver 
-everything needed to integrate applications via DRMAA with Grid Engine including a DRMAA library that 
-can be linked dynamically. At this stage DRMAA is available as a source snapshot from the "maintrunk" 
-of the Grid Engine. To get this source snapshot you must use the cvs option "-r VMAIN_STABLE_3_TAG" when 
-you check out the sources as described under <A HREF="http://gridengine.sunsource.net/servlets/ProjectSource">Download Source</A>.</P>
-
-<P>In this source snapshot the following Grid Engine binary architectures are known to be working:</P>
+<P>At this stage DRMAA is only available as a source snapshot from the "maintrunk" of the Grid Engine.
+In the 5.3 release source branch DRMAA does not exist.</P> <P>At this point in time the following Grid Engine binary architectures are known to be working:</P>
 <UL>
    <LI><P>solaris (Sparc Solaris 2.6, 7, 8, 9  32-bit)</P>
-   ><P>solaris64 (Sparc Solaris 7, 8, 9  64-bit</P>
+   <LI><P>solaris64 (Sparc Solaris 7, 8, 9  64-bit</P>
    <LI><P>solaris86 (x86 Solaris 8)</P>
-   ><P>glinux (x86 Linux, kernel 2.4, glibc >= 2.2)</P>
+   <LI><P>glinux (x86 Linux, kernel 2.4, glibc >= 2.2)</P>
 </UL>
 <P>There are three build targets that are related to DRMAA:</P>
 <UL>
@@ -77,18 +71,17 @@ of DRMAA build targets for not yet ported binary architectures
 </UL>
 <P>can be used.</P>
 <P>Upon successful build the DRMAA targets are found in the "*_MT" 
-directories. Build targets in this directory are compiled in a way allowing them to be 
+directories. All build targets in this directory were compiled in a way allowing them to be 
 used in multi-threaded applications. Due to the JAPI service thread (see implementation of
 <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/%7Echeckout%7E/gridengine/source/libs/japi/japi.html?content-type=text/html">JAPI library</A>
 ) this is necessary for major parts of the code that implements DRMAA. For the same reason a 
 good amount of Grid Engine source code has been reworked to make it reentrant (where possible) 
-or at least thread safe. As result of this effort MT safe functions are marked with comments 
-such as
+or at least thread safe. In the source code MT safe functions are marked with comments such as
 </P>
 <UL>
    MT-NOTE: sge_gdi() is MT safe
 </UL>
-<P>it is important to understand that with all these comments major assumptions were 
+<P>it is important to understand that with all these comments major assumption is 
 made. The current major assumptions are</P>
 <UL>
    <LI><P>code was not compiled with aimk option -DCOMMCOMPRESS</P>
@@ -98,13 +91,14 @@ made. The current major assumptions are</P>
    <LI><P>if the code was compiled with aimk option -SECURE then 
          only non-secure may be used</P>
    <LI><P>neither AFS nor DCE/KERBEROS security may be used</P>
-   <LI><P>system is not used in I18N mode</P>
 </UL>
 <P>if these assumptions are not met DRMAA library can not be expected to be working
 properly and will crash most probably! To overcome those constraints it is necessary 
 firstly to link Grid Engine against the corresponding MT safe libraries (zlib, 
 openssl, ...). Secondly those parts of the Grid Engine source code that makes use of 
-those libraries must be reviewed and changed were necessary.</P>
+those libraries must be reviewed and if necessary changed.</P>
+<P>If you consider contributing to DRMAA doing a port or working on reducing these 
+constraints is a good idea.</P>
 <H1>Example application</H1>
 <P>The C test program 
 <A HREF="http://gridengine.sunsource.net/source/browse/gridengine/source/libs/japi/example.c">example.c</A>
@@ -143,7 +137,21 @@ of the qsub(1) job characteristics be influenced. Secondly by building an integr
 don't need to change your application code each time when a new Grid Engine version is released. When using JAPI 
 library interface you must be prepared to change your application code in this case. This is because JAPI directly 
 exports Grid Engine internal data structures that usually are subject of change with new releases.</P>
-<H1>Grid Engine DRMAA library QA</H1>
+<H1>TODO</H1>
+This list contains items that are not yet implemented but required for a DRMAA 1.0 compliant 
+implementation:
+<UL>
+   <LI><P>shared drmaa library (currently only static library linking can be used)</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_job_category"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_native_specification"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_v_env"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_v_email"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_block_email"</P>
+   <LI><P>implement DRMAA job template attribute "drmaa_start_time"</P>
+   <LI><P>implement drmaa_wait(3) output parameter rusage</P>
+   <LI><P>drmaa_wait(3) does not yet return DRMAA_ERRNO_NO_RUSAGE as foreseen by spec</P>
+</UL>
+<H1>Grid Engine DRMAA library QA effort</H1>
 <P>The DRMAA application "test_drmaa" is used by Grid Engine testsuite QA tool to ensure quality of DRMAA 
 library. It covers a growing number of tests. There are so-called standalone tests that can
 be accomplished autonomously by the test_drmaa application. To run all these tests standalone "test_drmaa" 

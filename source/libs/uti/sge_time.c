@@ -51,6 +51,10 @@
 int gettimeofday(struct timeval *tz, struct timezone *tzp);
 #endif
 
+#if defined(SUN4) || defined(AIX32)
+#  define TIMES_RETURNS_ZERO
+#endif
+ 
 #define NESTLEVEL 5
 
 /* MT-NOTE: stopwatch profiling used in qmaster, qstat and qmon only */
@@ -183,7 +187,7 @@ const char *sge_ctime(time_t i, dstring *buffer)
 #ifndef HAS_LOCALTIME_R
    tm = localtime(&i);
 #else
-   tm = (struct tm *)localtime_r(&i, &tm_buffer);
+   tm = localtime_r(&i, &tm_buffer);
 #endif
    sge_dstring_sprintf(buffer, "%02d/%02d/%04d %02d:%02d:%02d",
            tm->tm_mon + 1, tm->tm_mday, 1900 + tm->tm_year,
@@ -203,7 +207,7 @@ const char *sge_ctime(time_t i, dstring *buffer)
 *     Convert time value into string. This function is needed for 
 *     systems with a 64 bit time_t because the ctime function would
 *     otherwise try to interpret the u_long32 value as 
-*     a 64 bit value => $&&%$?$%!
+*     a 64 bit value => $&&%$§$%!
 *
 *  INPUTS
 *     u_long32 *i - 0 or time value 
@@ -233,7 +237,7 @@ const char *sge_ctime32(u_long32 *i, dstring *buffer)
    /* if ctime_r() does not exist a mutex must be used to guard *all* ctime() calls */
    s = ctime((time_t *)&temp);
 #else 
-   s = (const char *)ctime_r((time_t *)&temp, str);
+   s = ctime_r((time_t *)&temp, str);
 #endif
    if (!s)
       return NULL;
@@ -275,7 +279,7 @@ const char *sge_at_time(time_t i, dstring *buffer)
 #ifndef HAS_LOCALTIME_R
    tm = localtime(&i);
 #else
-   tm = (struct tm *)localtime_r(&i, &tm_buffer);
+   tm = localtime_r(&i, &tm_buffer);
 #endif
    return sge_dstring_sprintf(buffer, "%04d%02d%02d%02d%02d.%02d",
            tm->tm_year+1900, tm->tm_mon + 1, tm->tm_mday,
@@ -361,6 +365,9 @@ void sge_stopwatch_start(int i)
             time_log_interval[j] = -1;
          }
       }
+#if defined(SUN4) || defined(AIX32)
+      inittime = sge_get_gmt();
+#endif
       first = 0;
    }
  

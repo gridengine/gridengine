@@ -11,11 +11,8 @@ include ../tab/Makefile.aimk
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-
 all: $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
      $(XLTREELIB) $(XTABLIB)
-
-qmon: all
 
 qmon_help:
 	@echo .   

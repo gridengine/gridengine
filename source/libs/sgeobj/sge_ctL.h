@@ -42,89 +42,26 @@ extern "C" {
 
 /* *INDENT-OFF* */ 
 
-/* min number of jobs in a category to use
-   the skip host, queue and the soft violations */
-#define MIN_JOBS_IN_CATEGORY 1
-
-
 /* 
  * this data structures describes the category list 
  */
 enum {
    CT_str = CT_LOWERBOUND,   /* string of category */
    CT_refcount,              /* number of jobs referencing the string */
-   CT_rejected,              /* has this category been rejected as it can not be dispached now */
-   CT_ignore_queues,         /* stores all queues, which now cannot run this job category */ 
-   CT_ignore_hosts,          /* stores all hosts, which now cannot run this job category */
-   CT_queue_violations,      /* stores in a case of soft requests, for each queue the number of violations */
-   CT_job_messages,          /* stores the error messages, which a job got during its dispatching */ 
-   CT_resource_contribution, /* SGEEE: resource request dependent contribution on urgency 
-                                       this value is common with all jobs of a category */
-   CT_rc_valid               /* SGEEE: indicates whether cached CT_resource_contribution is valid */
+   CT_rejected               /* has this category been rejected */
 };
 
 ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
    SGE_STRING(CT_str, CULL_HASH | CULL_UNIQUE)
    SGE_ULONG(CT_refcount, CULL_DEFAULT)
    SGE_ULONG(CT_rejected, CULL_DEFAULT)
-   SGE_LIST(CT_ignore_queues, CTI_Type, CULL_DEFAULT)
-   SGE_LIST(CT_ignore_hosts, CTI_Type, CULL_DEFAULT)
-   SGE_LIST(CT_queue_violations, CTQV_Type, CULL_DEFAULT)
-   SGE_LIST(CT_job_messages, MES_Type, CULL_DEFAULT)
-   SGE_DOUBLE(CT_resource_contribution, CULL_DEFAULT)
-   SGE_BOOL(CT_rc_valid, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CTN)
    NAME("CT_str")
    NAME("CT_refcount")
    NAME("CT_rejected")
-   NAME("CT_ignore_queues")
-   NAME("CT_ignore_hosts")
-   NAME("CT_queue_violations")
-   NAME("CT_job_messages")
-   NAME("CT_resource_contribution")
-   NAME("CT_rc_valid")
 NAMEEND
-
-
-/**
- * the following data structures describe the ignore_* lists
- */
-enum {
-   CTI_name = CTI_LOWERBOUND
-};
-
-LISTDEF(CTI_Type)
-   SGE_STRING(CTI_name, CULL_HASH | CULL_UNIQUE )
-LISTEND
-
-NAMEDEF(CTIN)
-   NAME("CTI_name")
-NAMEEND
-
-#define CTIS sizeof(CTIN)/sizeof(char*)
-
-/**
- * the following data structures describe the violation cache list for queues 
- */
-enum {
-   CTQV_name = CTQV_LOWERBOUND,
-   CTQV_count
-};
-
-LISTDEF(CTQV_Type)
-   SGE_STRING(CTQV_name, CULL_HASH | CULL_UNIQUE)
-   SGE_ULONG(CTQV_count, CULL_DEFAULT)
-LISTEND
-
-NAMEDEF(CTQVN)
-   NAME("CTQV_name")
-   NAME("CTQV_count")
-NAMEEND
-
-#define CTQVS sizeof(CTQVN)/sizeof(char*)
-
 
 /* *INDENT-ON* */
 

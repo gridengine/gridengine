@@ -29,7 +29,7 @@
 #
 #___INFO__MARK_END__
 
-VNCDIR=vnc-3.3.7-sparc_solaris_2.5
+VNCDIR=vnc-3.3.5-sparc_solaris_2.5
 
 echo "Applying patches to Xvnc in directory $VNCDIR"
 

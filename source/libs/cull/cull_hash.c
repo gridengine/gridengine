@@ -263,7 +263,6 @@ void cull_hash_insert(const lListElem *ep, const int pos)
          sge_htable_store(descr->ht, key, ep);
       } else {
          non_unique_hash *nuh = NULL;
-
          /* do we already have a list of elements with this key? */
          if(sge_htable_lookup(descr->ht, key, (const void **)&nuh) == True) {
             if(nuh->data != ep) {

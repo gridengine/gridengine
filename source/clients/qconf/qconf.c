@@ -43,8 +43,6 @@
 #include "msg_clients_common.h"
 #include "msg_common.h"
 #include "sge_answer.h"
-#include "sge_mt_init.h"
-
 
 extern char **environ;
 
@@ -58,11 +56,7 @@ int main(int argc, char **argv)
    
    DENTER_MAIN(TOP_LAYER, "qconf");
 
-   sge_mt_init();
-
    lInit(nmv);
-
-   log_state_set_log_gui(1);
 
    sge_gdi_param(SET_MEWHO, QCONF, NULL);
    if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
@@ -72,15 +66,20 @@ int main(int argc, char **argv)
 
    sge_setup_sig_handlers(QCONF);
 
-   if ((ret = reresolve_me_qualified_hostname()) != CL_RETVAL_OK) {
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
+      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
+      fprintf(stderr, SGE_EVENT);
+      SGE_EXIT(1);
+   }   
+
+   if (argc == 1) {
+      sge_usage(stderr);
       SGE_EXIT(1);
    }
 
-   if (sge_parse_qconf(++argv)) {
+   if (sge_parse_qconf(++argv))
       SGE_EXIT(1);
-   } else {
+   else
       SGE_EXIT(0);
-   }
-   DEXIT;
    return 0;
 }

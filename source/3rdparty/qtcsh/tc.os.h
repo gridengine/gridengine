@@ -528,7 +528,9 @@ typedef struct timeval timeval_t;
 
 #if !defined(BSD4_4) && !defined(__linux__) && !defined(__hpux) && !defined(sgi)
 #ifndef NEEDgethostname
+# ifndef SUN4
 extern int gethostname __P((char *, int));
+# endif
 #endif /* NEEDgethostname */
 #endif /* !BDS4_4 && !__linux__ && !__hpux && !sgi */
 
@@ -693,7 +695,9 @@ extern void endgrent __P((void));
 # ifdef REMOTEHOST
 #  ifndef _SOCKLEN_T	/* Avoid Solaris 2.7 bogosity. */
 struct sockaddr;
+#   ifndef SUN4
 extern int getpeername __P((int, struct sockaddr *, int *));
+#   endif /* SUN4 */
 #  endif /* _SOCKLEN_T */
 # endif /* REMOTEHOST */
 #endif /* SUNOS4 && __GNUC__ == 2 */

@@ -38,15 +38,12 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog work \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
-                 testsuidroot infotext spooldefaults spoolinit \
-                 tst_pthread_signals
+                 testsuidroot infotext spooldefaults spoolinit
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
-               languagetest.c infotext.c \
-               spooldefaults.c spoolinit.c \
-               tst_pthread_signals.c
+               languagetest.c infotext.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
@@ -84,36 +81,36 @@ uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/uidgid.c
 
 #---------------------------------------------------------------------
-gethostname:	gethostname.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gethostname.o $(LFLAGS) -luti -llck -lrmon -lcomm -lcommlists $(LIBS)
+gethostname:	gethostname.o $(UTILIB) $(RMONLIB)
+		$(CC) -o $@  gethostname.o $(LFLAGS) -luti -lrmon $(LIBS) 
 
 gethostname.o:	$(UTILBIN_DIR)/gethostname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostname.c
 
 #---------------------------------------------------------------------
-gethostbyname:	gethostbyname.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gethostbyname.o $(LFLAGS) -luti -llck -lrmon -lcomm -lcommlists $(LIBS)
+gethostbyname:	gethostbyname.o $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ gethostbyname.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 gethostbyname.o:	$(UTILBIN_DIR)/gethostbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyname.c
 
 #---------------------------------------------------------------------
-gethostbyaddr:	gethostbyaddr.o $(UTILIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ gethostbyaddr.o $(LFLAGS) -luti -llck -lrmon -lcomm -lcommlists $(LIBS)
+gethostbyaddr:	gethostbyaddr.o $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ gethostbyaddr.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 gethostbyaddr.o:	$(UTILBIN_DIR)/gethostbyaddr.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/gethostbyaddr.c
 
 #---------------------------------------------------------------------
-getservbyname:	getservbyname.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) $(CFLAGS) -o $@ getservbyname.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+getservbyname:	getservbyname.o $(UTILIB) $(RMONLIB)
+		$(CC) $(CFLAGS) -o $@ getservbyname.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 getservbyname.o:	$(UTILBIN_DIR)/getservbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/getservbyname.c
 
 #---------------------------------------------------------------------
-filestat:	filestat.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) $(CFLAGS) -o $@ filestat.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+filestat:	filestat.o $(UTILIB) $(RMONLIB)
+		$(CC) $(CFLAGS) -o $@ filestat.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 filestat.o:	$(UTILBIN_DIR)/filestat.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/filestat.c
@@ -126,22 +123,22 @@ now.o:		$(UTILBIN_DIR)/now.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/now.c
 
 #---------------------------------------------------------------------
-checkprog:	checkprog.o peopen_standalone.o pids_standalone.o $(RMONLIB) $(UTILIB) $(LCKLIB)
-		$(CC) $(CFLAGS) -o $@ checkprog.o peopen_standalone.o pids_standalone.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+checkprog:	checkprog.o peopen_standalone.o pids_standalone.o $(RMONLIB) $(UTILIB)
+		$(CC) $(CFLAGS) -o $@ checkprog.o peopen_standalone.o pids_standalone.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 checkprog.o:	$(UTILBIN_DIR)/checkprog.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/checkprog.c
 
 #---------------------------------------------------------------------
-checkuser:     checkuser.o $(UTILIB) $(RMONLIB)  $(LCKLIB)
-		$(CC) $(CFLAGS) -o $@ checkuser.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+checkuser:     checkuser.o $(UTILIB) $(RMONLIB) 
+		$(CC) $(CFLAGS) -o $@ checkuser.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 checkuser.o:      $(UTILBIN_DIR)/checkuser.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/checkuser.c
 
 #---------------------------------------------------------------------
-adminrun:   adminrun.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) -o $@ adminrun.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+adminrun:   adminrun.o $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ adminrun.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 adminrun.o: $(UTILBIN_DIR)/adminrun.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/adminrun.c
@@ -161,35 +158,35 @@ signals.o:	$(UTILBIN_DIR)/signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/signals.c
 
 #---------------------------------------------------------------------
-loadcheck:	loadcheck.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) -o $@ loadcheck.o $(LFLAGS) -luti -llck -lrmon $(LOADAVGLIBS) $(LIBS)
+loadcheck:	loadcheck.o $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ loadcheck.o $(LFLAGS) -luti -lrmon $(LOADAVGLIBS) $(LIBS)
 
 loadcheck.o:	$(UTILBIN_DIR)/loadcheck.c 
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/loadcheck.c
 
 #---------------------------------------------------------------------
-languagetest:   languagetest.o  $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) -o $@ languagetest.o $(LFLAGS)  -luti -llck -lrmon $(LIBS)
+languagetest:   languagetest.o  $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ languagetest.o $(LFLAGS)  -luti -lrmon $(LIBS)
 
 languagetest.o: $(UTILBIN_DIR)/languagetest.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/languagetest.c
 #---------------------------------------------------------------------
-infotext:   infotext.o  version.o $(UTILIB) $(RMONLIB) $(LCKLIB)
-		$(CC) -o $@ infotext.o version.o $(LFLAGS) -luti -llck -lrmon $(LIBS)
+infotext:   infotext.o  version.o $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ infotext.o version.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 infotext.o: $(UTILBIN_DIR)/infotext.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/infotext.c
 
 #---------------------------------------------------------------------
-spooldefaults:   spooldefaults.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(LCKLIB) $(UTILIB) $(RMONLIB)
-		$(CC) -o $@ spooldefaults.o version.o sge_mt_init.o $(LFLAGS) -lspoolc $(SPOOLING_LIBS) -lgdi -lsgeobj -lsgeobjd -lsched $(SECLIB) $(KRBLIB) -lgdi -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
+spooldefaults:   spooldefaults.o  version.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ spooldefaults.o version.o $(LFLAGS) $(SPOOLING_LIBS) -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon $(LIBS)
 
 spooldefaults.o: $(UTILBIN_DIR)/spooldefaults.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spooldefaults.c
 
 #---------------------------------------------------------------------
-spoolinit:   spoolinit.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-		$(CC) -o $@ spoolinit.o version.o sge_mt_init.o $(LFLAGS) $(SPOOLING_LIBS) -lgdi -lsgeobj -lsgeobjd -lsched $(SECLIB) $(KRBLIB) -lgdi -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
+spoolinit:   spoolinit.o  version.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ spoolinit.o version.o $(LFLAGS) $(SPOOLING_LIBS) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 spoolinit.o: $(UTILBIN_DIR)/spoolinit.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spoolinit.c
@@ -207,17 +204,3 @@ work:	work.o
 
 work.o:	$(UTILBIN_DIR)/work.c
 	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/work.c
-
-#---------------------------------------------------------------------
-tst_pthread_signals: tst_pthread_signals.o
-		$(CC) -o $@ tst_pthread_signals.o $(LFLAGS) $(SLIBS) $(LIBS)
-
-tst_pthread_signals.o: $(UTILBIN_DIR)/tst_pthread_signals.c
-		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/tst_pthread_signals.c
-
-#---------------------------------------------------------------------
-dbstat: dbstat.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(SECLIBS) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-		$(CC) -o $@ dbstat.o version.o sge_mt_init.o $(LFLAGS) $(SPOOLING_LIBS) -lsched -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lgdi -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)
-
-dbstat.o: $(UTILBIN_DIR)/dbstat.c
-		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/dbstat.c

@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.15 2004/02/09 14:06:46 andy Exp $	*/
+/*	$Id: rshd.c,v 1.11 2003/04/22 11:48:44 joga Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -42,7 +42,7 @@
  *	data
  */
 
-#if defined(HP11) || defined(HP1164)
+#if defined HP11
 #define _XOPEN_SOURCE_EXTENDED
 #endif
 
@@ -87,7 +87,7 @@
 #include <config_file.h>
 #include <sge_uidgid.h>
 
-#if defined SOLARIS || HPUX || NECSX5 || CRAY
+#if defined SOLARIS || SUN4 || HP11 || HP10 || NECSX5 || CRAY
 #define _PATH_NOLOGIN "/etc/nologin"
 #define _PATH_BSHELL "/bin/sh"
 #define _PATH_DEFPATH "/usr/bin:/bin"
@@ -95,26 +95,34 @@
 #include <paths.h>
 #endif
 
-#if defined AIX || ALPHA || IRIX
+#if defined AIX || ALPHA || IRIX6
 #define _PATH_DEFPATH "/usr/bin:/bin"
 #endif
 
-#if defined ALPHA4 || HP10 || IRIX || (SOLARIS && !HAS_SOCKLEN_T) || NECSX5 || CRAY || DARWIN6
+#if defined ALPHA4 || HP10 || IRIX6 || LINUX5 || SUN4 || (SOLARIS && ! SOLARIS64 && !SOLARIS86) || NECSX5 || CRAY || DARWIN
 typedef int socklen_t;
 #endif
 
-#if defined HP10 || IRIX || LINUX || NECSX5 || CRAY 
+#if defined HP10 || IRIX6 || LINUX || SUN4 || (SOLARIS && !SOLARIS64 && !SOLARIS86) || NECSX5 || CRAY 
 #ifndef HAS_IN_PORT_T
 typedef unsigned short in_port_t;
 #endif
+#endif
+
+#if defined AIX42
+typedef unsigned long socklen_t;
 #endif
 
 #ifdef ALPHA4
 extern int ruserok(char *host, int root_user, char *remote_user, char *local_user);
 #endif 
 
-#ifdef IRIX
+#ifdef IRIX6
 #define NCARGS ARG_MAX
+#endif
+
+#ifdef LINUX5
+#include <bsd/bsd.h>
 #endif
 
 #if defined SOLARIS && ! SOLARIS64
@@ -124,6 +132,19 @@ extern int gethostname(char *name, int namelen);
 
 #if defined NECSX5
 #  define killpg(pgrp, sig) kill((-1)*pgrp, sig)
+#endif
+
+#ifdef SUN4
+extern char *optarg;
+extern int optind;
+extern int opterr;
+
+extern void openlog (char *ident, int option, int facility);
+extern void syslog (int pri, char *fmt, ...);
+extern int rresvport(int *port);
+extern int ruserok(char *rhost, int superuser, char *ruser, char *luser);
+extern void setpwent(void);
+extern int killpg(int pgrp, int sig);
 #endif
 
 int	keepalive = 1;
@@ -443,10 +464,17 @@ doit(fromp)
 		check_rhosts_file && ruserok(hostname, pwd->pw_uid == 0, remuser, locuser) < 0)) { 
           
 		if (errno != 0)
+#ifdef SUN4      
+			syslog(LOG_INFO|LOG_AUTH,
+			    "%s@%s as %s: permission denied. cmd='%.80s'",
+			    remuser, hostname, locuser, 
+			    cmdbuf);
+#else             
 			syslog(LOG_INFO|LOG_AUTH,
 			    "%s@%s as %s: permission denied (%s). cmd='%.80s'",
 			    remuser, hostname, locuser, strerror(errno),
 			    cmdbuf);
+#endif             
 		else
 			syslog(LOG_INFO|LOG_AUTH,
 			    "%s@%s as %s: permission denied. cmd='%.80s'",
@@ -622,7 +650,7 @@ error(const char *fmt, ...)
       len = 1;
    } else
       len = 0;
-#if defined ALPHA4 || HP10 || IRIX || (SOLARIS && ! SOLARIS64) 
+#if defined AIX42 || ALPHA4 || HP10 || IRIX6 || SUN4 || (SOLARIS && ! SOLARIS64) 
    vsprintf(bp, fmt, ap);
 #else   
    vsnprintf(bp, sizeof(buf) - 1, fmt, ap);

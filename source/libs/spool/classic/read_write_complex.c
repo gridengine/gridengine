@@ -84,7 +84,7 @@ static int parse_requestable(lList **alpp, const char *cp, lListElem *ep, const 
 
    CE_name,      Name of the complex element e.g. "queue_name"
    CE_shortcut,  Shortcut e.g. "q"
-   CE_valtype,   Type of this entry TYPE_INT| TYPE_STR| TYPE_TIM| TYPE_RESTR | 
+   CE_valtype,   Type of this entry TYPE_INT| TYPE_STR| TYPE_TIM| 
                                     TYPE_MEM, TYPE_BOO, TYPE_CSTR, TYPE_HOST
    CE_stringval, Value
    CE_doubleval,  
@@ -192,7 +192,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
          int i;
 
          type = 0;
-         for (i=TYPE_FIRST; !type && i<=TYPE_CE_LAST; i++) {
+         for (i=TYPE_FIRST; !type && i<=TYPE_DOUBLE; i++) {
             if (!strcasecmp(s, map_type2str(i)))  
                type = i;
          }
@@ -276,9 +276,8 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
       }
       /* do not allow string types being consumable */
       if (lGetBool(ep, CE_consumable) && 
-         (type==TYPE_HOST  || 
-          type==TYPE_STR   ||
-          type==TYPE_RESTR ||
+         (type==TYPE_HOST || 
+          type==TYPE_STR ||
           type==TYPE_CSTR)) {
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXCONSUM_SSS, fname, lGetString(ep, CE_name), map_type2str(type)));
          if (alpp) {
@@ -315,34 +314,7 @@ lList *read_cmplx(const char *fname, const char *cmplx_name, lList **alpp)
                   SGE_EXIT(1);
 
             }
-            break;
-         }
-      }
-
-      /* WEIGHT */
-      if (((s = sge_strtok(cp, " \t\n")) && (*s != '#'))) {
-
-         lSetString(ep, CE_urgency_weight, s);    /* save string representation */
-
-         switch (type) {
-         case TYPE_INT:
-         case TYPE_TIM:
-         case TYPE_MEM:
-         case TYPE_BOO:
-         case TYPE_DOUBLE:
-            if (!parse_ulong_val(&dval, NULL, type, s, SGE_EVENT, sizeof(SGE_EVENT)-1)) {
-               SGE_LOG(LOG_ERR, SGE_EVENT);
-               ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_S, fname));
-               if (alpp) {
-                  answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-                  lp = lFreeList(lp);
-                  DEXIT;
-                  return NULL;
-               }
-               else
-                  SGE_EXIT(1);
-
-            }
+/*             lSetDouble(ep, CE_defaultdouble, dval); */
             break;
          }
       }
@@ -500,14 +472,14 @@ lList **alpp
    }  
 
 
-   FPRINTF((fp, "%-16s %-10s %-8s %-5s %-11s %-10s %-7s %-6s\n", 
+   FPRINTF((fp, "%-16s %-10s %-6s %-5s %-11s %-10s %-5s\n", 
 	         "#name", "shortcut", "type",
-            "relop", "requestable", "consumable", "default", "urgency"));
+            "relop", "requestable", "consumable", "default"));
    FPRINTF((fp, "#-------------------------------------------------"
-            "----------------------------\n"));
+            "----------------------\n"));
    
    for_each(ep, lpc) {
-      FPRINTF((fp, "%-16s %-10s %-8s %-5s %-11s %-10s %-7s %-6s\n", 
+      FPRINTF((fp, "%-16s %-10s %-6s %-5s %-11s %-10s %-5s\n", 
 	      lGetString(ep, CE_name), 
          lGetString(ep, CE_shortcut), 
          map_type2str(lGetUlong(ep, CE_valtype)), 
@@ -515,8 +487,7 @@ lList **alpp
          (lGetUlong(ep, CE_requestable) == REQU_FORCED) ? "FORCED" : 
          (lGetUlong(ep, CE_requestable) == REQU_YES) ? "YES" : "NO",
          (lGetBool(ep, CE_consumable)) ? "YES" : "NO",
-         lGetString(ep, CE_default),
-         lGetString(ep, CE_urgency_weight)));
+         lGetString(ep, CE_default)));
    }
 
 

@@ -68,7 +68,7 @@
                         algorithm with all available host is used 
 */
 int sge_pe_slots_per_host(
-const lListElem *pep,
+lListElem *pep,
 int slots 
 ) {
    const char *alloc_rule;
@@ -125,62 +125,117 @@ int slots
 }
 
 
+/* ------------------------------------------------------------
+   get number of slots per host from alloc rule
+   a return value of 0 indicates an unknown allocation rule
+   -------------------------------------------------------------*/
+
+int or_sge_pe_slots_per_host(
+lListElem *pep,
+lList *hosts,
+lListElem *h_elem,
+int *sm 
+
+) {
+   lListElem *hep;
+   const char *alloc_rule;
+   int ret = 0;
+   int available;
+   DENTER(TOP_LAYER, "or_sge_pe_slots_per_host");
+
+   alloc_rule = lGetString(pep, PE_allocation_rule);
+
+   if (isdigit((int)alloc_rule[0])) {
+      ret = atoi(alloc_rule);
+      if (ret==0) {
+         ERROR((SGE_EVENT, MSG_PE_XFAILEDPARSINGALLOCATIONRULEY_SS ,
+            lGetString(pep, PE_name), alloc_rule));
+      }
+      DEXIT;
+      return ret;
+   }
+
+   if (!strcasecmp(alloc_rule, "$pe_slots")) {
+      if (!*sm) {
+         for_each (hep, hosts) {
+            available = lGetUlong (hep, EH_job_slots_free);
+				    ret = (ret > available) ? ret : available;
+         }
+         *sm = 1;
+      }
+      else 
+         ret = lGetUlong(h_elem, EH_job_slots_free);
+      DEXIT;
+      return ret;
+   }
+
+   ERROR((SGE_EVENT, MSG_PE_XFAILEDPARSINGALLOCATIONRULEY_SS ,
+      lGetString(pep, PE_name), alloc_rule));
+
+   DEXIT;
+   return 0;
+}
+
 
 
 int sge_debit_job_from_pe(lListElem *pep, lListElem *jep, int slots)
 {
    u_long n; 
   
-   n = pe_get_slots_used(pep);
+   n = lGetUlong(pep, PE_used_slots);
    n += slots;
-   pe_set_slots_used(pep, n);
+   lSetUlong(pep, PE_used_slots, n);
 
    return 0;
 }
 
 
-/****** sge_pe_schedd/pe_restricted() ******************************************
-*  NAME
-*     pe_match_static() -- Why not job to PE?
-*
-*  SYNOPSIS
-*     int pe_match_static(lListElem *job, lListElem *pe, lList *acl_list, bool 
-*     only_static_checks) 
-*
-*  FUNCTION
-*     Checks if PE is suited for the job.
-*
-*  INPUTS
-*     lListElem *job          - ??? 
-*     lListElem *pe           - ??? 
-*     lList *acl_list         - ??? 
-*     bool only_static_checks - ??? 
-*
-*  RESULT
-*     int - 0 ok 
-*          -1 assignment will never be possible for all jobs of that category
-*
-*  NOTES
-*     MT-NOTE: pe_restricted() is not MT safe 
-*******************************************************************************/
-int pe_match_static(
+/* pe_restricted returns
+      0 no restrictions to pe for this job 
+      1 not enough slots in pe  
+      2 no access permissions
+*/
+int pe_restricted(
 lListElem *job,
 lListElem *pe,
-lList *acl_list
+lList *acl_list 
 ) {
-   int total_slots;
+   int free_slots, total_slots;
 
-   DENTER(TOP_LAYER, "pe_match_static");
+   DENTER(TOP_LAYER, "pe_restricted");
 
    total_slots = (int)lGetUlong(pe, PE_slots);
-   if (total_slots == 0 /* || !num_in_range(total_slots, lGetList(job, JB_pe_range)) this is not relevant */  ) { 
+   if (total_slots == 0 ||
+      !num_in_range(total_slots, lGetList(job, JB_pe_range))) {
       /* because there are not enough PE slots in total */
-      DPRINTF(("total slots %d of PE \"%s\" not in range of job "u32"\n",
-            total_slots, lGetString(pe, PE_name), lGetUlong(job, JB_job_number)));
+      DPRINTF(("total slots of PE \"%s\" not in range of job %d\n",
+            lGetString(pe, PE_name), (int)lGetUlong(job, JB_job_number)));
          schedd_mes_add((lGetUlong(job, JB_job_number)), SCHEDD_INFO_TOTALPESLOTSNOTINRANGE_S,
             lGetString(pe, PE_name));
       DEXIT;
-      return -1;
+      return 1;
+   }
+
+   free_slots = (int)lGetUlong(pe, PE_slots) - 
+      (int)lGetUlong(pe, PE_used_slots);
+   if (!lGetUlong(pe, PE_slots)
+       || free_slots <= 0) {
+      DPRINTF(("no free slots in PE \"%s\" for job %d\n",
+            lGetString(pe, PE_name), (int)lGetUlong(job, JB_job_number)));
+         schedd_mes_add((lGetUlong(job, JB_job_number)), SCHEDD_INFO_PESLOTSNOTINRANGE_S,
+            lGetString(pe, PE_name));
+      DEXIT;
+      return 1; 
+   }
+
+   if (lGetUlong(pe, PE_slots) && 
+      !num_in_range(free_slots, lGetList(job, JB_pe_range))) {
+      DPRINTF(("free slots of PE \"%s\" not in range of job %d\n",
+            lGetString(pe, PE_name), (int)lGetUlong(job, JB_job_number)));
+         schedd_mes_add((lGetUlong(job, JB_job_number)), SCHEDD_INFO_PESLOTSNOTINRANGE_S, 
+            lGetString(pe, PE_name));
+      DEXIT;
+      return 1;
    }
 
    if (!sge_has_access_(lGetString(job, JB_owner), lGetString(job, JB_group),
@@ -190,7 +245,7 @@ lList *acl_list
       schedd_mes_add(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOACCESSTOPE_S, 
             lGetString(pe, PE_name));
       DEXIT;
-      return -1;
+      return 2;
    }
 
    DEXIT;

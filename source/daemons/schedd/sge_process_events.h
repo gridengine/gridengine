@@ -41,13 +41,8 @@ int subscribe_default_scheduler(void);
 
 /* callback functions for event processing */
 bool 
-sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action action, 
+sge_process_schedd_conf_event(sge_object_type type, sge_event_action action, 
                               lListElem *event, void *clientdata);
-
-bool 
-sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action action, 
-                              lListElem *event, void *clientdata);
-
 
 bool 
 sge_process_job_event_before(sge_object_type type, sge_event_action action, 
@@ -65,8 +60,6 @@ bool
 sge_process_ja_task_event_after(sge_object_type type, sge_event_action action, 
                                 lListElem *event, void *clientdata);
 
-bool sge_process_global_config_event(sge_object_type type, sge_event_action action, 
-                                lListElem *event, void *clientdata);
 bool 
 sge_process_userset_event_after(sge_object_type type, sge_event_action action, 
                                 lListElem *event, void *clientdata);
@@ -74,6 +67,10 @@ sge_process_userset_event_after(sge_object_type type, sge_event_action action,
 bool 
 sge_process_schedd_monitor_event(sge_object_type type, sge_event_action action, 
                                  lListElem *event, void *clientdata);
+
+bool
+sge_process_global_config_event(sge_object_type type, sge_event_action action, 
+                                lListElem *event, void *clientdata);
 
 /* event post processing */
 int event_handler_default_scheduler(void);

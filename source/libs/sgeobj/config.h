@@ -65,7 +65,7 @@ bool set_conf_ulong(lList **alpp, lList **clpp, int fields[], const char *key, l
 
 bool set_conf_double(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, int operation_nm);
 
-bool set_conf_deflist(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, int *interpretation_rule);
+bool set_conf_deflist(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, intprt_type *interpretation_rule);
 
 bool set_conf_timestr(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm);
 
@@ -102,30 +102,6 @@ bool set_conf_mem_attr_list(lList **alpp, lList **clpp, int fields[],
 bool set_conf_inter_attr_list(lList **alpp, lList **clpp, int fields[],
                               const char *key, lListElem *ep, int name_nm,
                               lDescr *descr, int sub_name_nm);
-
-bool set_conf_strlist_attr_list(lList **alpp, lList **clpp, int fields[],
-                                const char *key, lListElem *ep, int name_nm,
-                                lDescr *descr, int sub_name_nm);
-
-bool set_conf_usrlist_attr_list(lList **alpp, lList **clpp, int fields[],
-                                const char *key, lListElem *ep, int name_nm,
-                                lDescr *descr, int sub_name_nm);
-
-bool set_conf_prjlist_attr_list(lList **alpp, lList **clpp, int fields[],
-                                const char *key, lListElem *ep, int name_nm,
-                                lDescr *descr, int sub_name_nm);
-
-bool set_conf_celist_attr_list(lList **alpp, lList **clpp, int fields[],
-                               const char *key, lListElem *ep, int name_nm,
-                               lDescr *descr, int sub_name_nm);
-
-bool set_conf_solist_attr_list(lList **alpp, lList **clpp, int fields[],
-                               const char *key, lListElem *ep, int name_nm,
-                               lDescr *descr, int sub_name_nm);
-
-bool set_conf_qtlist_attr_list(lList **alpp, lList **clpp, int fields[],
-                               const char *key, lListElem *ep, int name_nm,
-                               lDescr *descr, int sub_name_nm);
 
 bool set_conf_centry_type(lList **alpp, lList **clpp, int fields[], 
                           const char *key, lListElem *ep, int name_nm);

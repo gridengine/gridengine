@@ -33,7 +33,6 @@
 #include <math.h>
 #include <float.h>
 #include <time.h>
-#include <string.h>
 
 #include "basis_types.h"
 #include "sgermon.h"
@@ -49,10 +48,6 @@
 
 #define ULONG_LAYER TOP_LAYER
 
-/*
-* NOTES
-*     MT-NOTE: double_print_infinity_to_dstring() is MT safe
-*/
 bool double_print_infinity_to_dstring(double value, dstring *string)
 {
    bool ret = true;
@@ -69,10 +64,6 @@ bool double_print_infinity_to_dstring(double value, dstring *string)
    return ret;
 }
 
-/*
-* NOTES
-*     MT-NOTE: double_print_time_to_dstring() is MT safe
-*/
 bool double_print_time_to_dstring(double value, dstring *string) 
 {
    bool ret = true;
@@ -106,10 +97,6 @@ bool double_print_time_to_dstring(double value, dstring *string)
    return ret; 
 }
 
-/*
-* NOTES
-*     MT-NOTE: double_print_memory_to_dstring() is MT safe
-*/
 bool double_print_memory_to_dstring(double value, dstring *string)
 {
    bool ret = true;
@@ -133,13 +120,10 @@ bool double_print_memory_to_dstring(double value, dstring *string)
             value /= kilo_byte;
             unit = 'K';
          }
-         else {
-            unit = 'B';
-         }
          if (unit != '\0') {
-            sge_dstring_sprintf_append(string, "%.3f%c", value, unit);
+            sge_dstring_sprintf_append(string, "%.2f%c", value, unit);
          } else {
-            sge_dstring_sprintf_append(string, "%.3f", absolute_value);
+            sge_dstring_sprintf_append(string, "%.2f", absolute_value);
          }
       } 
    }
@@ -147,10 +131,6 @@ bool double_print_memory_to_dstring(double value, dstring *string)
    return ret;
 }
 
-/*
-* NOTES
-*     MT-NOTE: double_print_to_dstring() is MT safe
-*/
 bool double_print_to_dstring(double value, dstring *string)
 {
    bool ret = true;
@@ -259,13 +239,6 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
       timeptr.tm_year=atoi(tmp_str);
       if (i==12) {
          timeptr.tm_year -= 1900;
-      }
-      else {
-         /* the date is before 1970, thus we assume, that
-            20XX is ment. This works only till 2069, but
-            that should be sufficent for now */
-         if (timeptr.tm_year < 70)
-            timeptr.tm_year += 100;
       }
       non_seconds+=year_fieldlen;
    } else {
@@ -402,7 +375,7 @@ ulong_parse_centry_type_from_string(u_long32 *this_ulong,
    DENTER(TOP_LAYER, "ulong_parse_centry_type_from_string");
 
    *this_ulong = 0;
-   for (i = TYPE_FIRST; i <= TYPE_CE_LAST; i++) {
+   for (i = TYPE_FIRST; i <= TYPE_DOUBLE; i++) {
       if (!strcasecmp(string, map_type2str(i))) {
          *this_ulong = i;
          break;

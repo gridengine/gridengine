@@ -1,4 +1,5 @@
 #!/bin/csh -fb
+#
 #  aimk
 #
 #___INFO__MARK_BEGIN__
@@ -32,19 +33,17 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-#
 # Credit should be given to Robert Manchek manchek@CS.UTK.EDU for creating
 # a similar aimk procedure for the PVM 3.x distribution, Jul 22 1991,
 # which inspired the Grid Engine aimk build scheme.
+#
 
 # Make sure to avoid confusion between shell variables and environment
 # variables
-#
-set noglob
-unsetenv buildarch BUILDARCH COMPILE_ARCH LD_LIBRARY_PATH
-set COMPILE_ARCH = ""
-set buildarch    = UNKNOWN
 
+unsetenv buildarch BUILDARCH COMPILE_ARCH
+
+set buildarch = UNKNOWN
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
 else
@@ -54,212 +53,102 @@ endif
 
 expr $buildarch : UNSUPPORTED > /dev/null
 if ( $status == 0 ) then
-   echo script dist/util/arch does not support \"$buildarch\"
+   echo script dist/util/arch currently does not support \"$buildarch\"
    exit 1
-else if ( $buildarch == UNKNOWN ) then
-   echo script dist/util/arch does not recognize your operating systems
+else if (  $buildarch == UNKNOWN ) then
+   echo script dist/util/arch currently does not recognize your OS
    exit 1
 endif
 
 # Map buildarch into uppercase BUILDARCH
 #
 switch ($buildarch)
+case "aix42":
+   set BUILDARCH = AIX42
+   breaksw
 case "aix43":
    set BUILDARCH = AIX43
-   set TARGET_BITS = TARGET_32BIT
    breaksw
-case "aix51":
-   set BUILDARCH = AIX51
-   set TARGET_BITS = TARGET_32BIT
+case "alinux":
+   set BUILDARCH = ALINUX
    breaksw
 case "cray":
    set BUILDARCH = UNICOS
-   set TARGET_BITS = TARGET_64BIT
    breaksw
 case "crayts":
    set BUILDARCH = UNICOS_TS
-   set TARGET_BITS = TARGET_32BIT
    breaksw
 case "craytsieee":
    set BUILDARCH = UNICOS_TS_IEEE
-   set TARGET_BITS = TARGET_32BIT
    breaksw
 case "darwin":
    set BUILDARCH = DARWIN
-   set TARGET_BITS = TARGET_32BIT
    breaksw
 case "fbsd-alpha"
    set BUILDARCH = FREEBSD_ALPHA
-   set TARGET_BITS = TARGET_64BIT
    breaksw
 case "fbsd-i386"
    set BUILDARCH = FREEBSD_I386
-   set TARGET_BITS = TARGET_32BIT
    breaksw
 case "fbsd-ia64"
    set BUILDARCH = FREEBSD_IA64
-   set TARGET_BITS = TARGET_64BIT
    breaksw
 case "fbsd-ppc"
    set BUILDARCH = FREEBSD_PPC
-   set TARGET_BITS = TARGET_32BIT
    breaksw
 case "fbsd-sparc64"
    set BUILDARCH = FREEBSD_SPARC64
    breaksw
+case "glinux":
+   set BUILDARCH = LINUX6
+   breaksw
 case "hp10":
    set BUILDARCH = HP10
-   set TARGET_BITS = TARGET_32BIT
    breaksw
 case "hp11":
    set BUILDARCH = HP11
-   set TARGET_BITS = TARGET_32BIT
    breaksw
 case "hp11-64":
    set BUILDARCH = HP1164
-   set TARGET_BITS = TARGET_64BIT
    breaksw
-case "irix65":
-   set BUILDARCH = IRIX65
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx22-alpha":
-   set BUILDARCH = ALINUX
-   set COMPILE_ARCH = ALINUX_22
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx24-alpha":
-   set BUILDARCH = ALINUX
-   set COMPILE_ARCH = ALINUX_24
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx26-alpha":
-   set BUILDARCH = ALINUX
-   set COMPILE_ARCH = ALINUX_26
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx24-amd64":
-   set BUILDARCH = LINUXAMD64
-   set COMPILE_ARCH = LINUXAMD64_24
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx26-amd64":
-   set BUILDARCH = LINUXAMD64
-   set COMPILE_ARCH = LINUXAMD64_26
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx24-ia64":
-   set BUILDARCH = LINUXIA64
-   set COMPILE_ARCH = LINUXIA64_24
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx26-ia64":               
-   set BUILDARCH = LINUXIA64
-   set COMPILE_ARCH = LINUXIA64_26
-   set TARGET_BITS = TARGET_64BIT
-   breaksw
-case "lx22-sparc":
-   set BUILDARCH = SLINUX
-   set COMPILE_ARCH = SLINUX_22
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx24-sparc":
-   set BUILDARCH = SLINUX
-   set COMPILE_ARCH = SLINUX_24
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx26-sparc":
-   set BUILDARCH = SLINUX 
-   set COMPILE_ARCH = SLINUX_26
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx22-x86":
-   set BUILDARCH = LINUX86
-   set COMPILE_ARCH = LINUX86_22
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx24-x86":
-   set BUILDARCH = LINUX86
-   set COMPILE_ARCH = LINUX86_24
-   set TARGET_BITS = TARGET_32BIT
-   breaksw
-case "lx26-x86":
-   set BUILDARCH = LINUX86
-   set COMPILE_ARCH = LINUX86_26
-   set TARGET_BITS = TARGET_32BIT
+case "irix6":
+   set BUILDARCH = IRIX6
    breaksw
 case "necsx4":
    set BUILDARCH = NECSX4
-   set TARGET_BITS = TARGET_64BIT
    breaksw
 case "necsx5":
 case "necsx6":
 case "sx":
    set BUILDARCH = NECSX5
-   set TARGET_BITS = TARGET_64BIT
    breaksw
-case "sol-sparc":
+case "osf4":
+   set BUILDARCH = ALPHA4
+   breaksw
+case "slinux":
+   set BUILDARCH = SLINUX
+   breaksw
+case "solaris":
    set BUILDARCH = SOLARIS
-   set TARGET_BITS = TARGET_32BIT
    breaksw
-case "sol-sparc64":
+case "solaris64":
    set BUILDARCH = SOLARIS64
-   set TARGET_BITS = TARGET_64BIT
    breaksw
-case "sol-x86":
+case "solaris86":
    set BUILDARCH = SOLARIS86
-   set TARGET_BITS = TARGET_32BIT
    breaksw
 case "tru64":
    set BUILDARCH = ALPHA5
-   set TARGET_BITS = TARGET_32BIT
+   breaksw
+case "aix51":
+   set BUILDARCH = AIX51
    breaksw
 default:
-   echo cannot compile - no mapping for architecture \"$buildarch\" defined yet
+   echo oops - no mapping for architecure \"$buildarch\" defined yet
    exit 1
    breaksw
 endsw
 
-#---------------------------------------------------------------------------
-# Preparsing for all args which change BUILDARCH or which exit
-# all args here must be read in the main parsing loop to ensure
-# they are eaten from the command line.
-# All variables which are set above in the switch-case must be reset here
-# e.g. BUILDARCH, TARGET_BITS, buildarch ...
-#
-set i = 1
-while ($i <= $#argv)
-   switch ("$argv[$i]")
-   case "-32":
-      set TARGET_BITS = TARGET_32BIT
-      if ($BUILDARCH == SOLARIS64) then
-         set BUILDARCH = SOLARIS  
-         set buildarch = sol-sparc
-      else if ($BUILDARCH == HP1164) then
-         set BUILDARCH = HP11
-         set buildarch = hp11
-      else
-         echo "32-bit switch not supported for $buildarch"
-         exit 1
-      endif
-      breaksw
-   case "-64":
-      set TARGET_BITS = TARGET_64BIT
-      if ($BUILDARCH == HP11) then
-         set BUILDARCH = HP1164
-         set buildarch = hp11-64
-      else
-         echo "64-bit switch not supported for $buildarch"
-         exit 1
-      endif
-      breaksw
-   case "-help":
-   case "--help":
-      goto usage
-      breaksw
-   endsw
-   set i = `expr $i + 1`
-end
 
 # Source variables for definition of site dependent paths of software here
 #
@@ -276,197 +165,203 @@ endif
 goto start
 
 usage:
-   echo "usage: aimk <OPTIONS>"
+   echo "usage: <OPTIONS>"
+
    echo "OPTIONS are: "
    echo ""
-   echo "-32               -> create 32 bit binaries (where supported)"
-   echo "-64               -> create 64 bit binaries (where supported)"
-   echo "-D*               -> include a macro definition in CFLAGS"
+   echo "-32               -> irix: create 32 bit binaries"
+   echo "-64               -> irix: create 64 bit binaries"
    echo "-add-copyright    -> insert a special copyright string in each binary"
    echo "-add-sun-copyright-> insert a Sun copyright string in each binary" 
    echo "-adoc             -> create source code documentation in adoc format"
+   echo "-D*               -> include a macro definition in CFLAGS"
    echo "-catman           -> generate man pages in catman format"
    echo "-cc               -> use cc/CC to compile c/c++ code"
+   echo "-compress         -> enable compression of commd communication"
    echo "-dce              -> enable dce security"
    echo "-debug            -> compile with debug information"
-   echo "-efence           -> compile in debug mode and detect memory leaks"
    echo "-f                -> specify other Makefile instead of common/Makefile"
-   echo "-gcc              -> use gcc instead of system compiler (where supported)"
+   echo "-gcc              -> use gcc instead of system compiler"
    echo "-gettext          -> build the gettext libraries"
    echo "-gprof            -> enable gprof profiling"
    echo "-gss              -> enable gss security"
    echo "-help             -> show this help"
    echo "-htmlman          -> generate man and html pages"
    echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
-   echo "-insure           -> compile in debug mode and detect memory leaks)"
+   echo "-insure           -> compile in debug mode and detect memory leaks (en ensure ; glinux, ..)"
    echo "-intl             -> compile with internationalization library (libintl)"
    echo "-kerberos         -> enable kerberos authentication"
    echo "-man              -> generate man pages"
-   echo "-mankv		   -> generate man pages checked out with '-kv' flag"
+   echo "-mankv		      -> generate man pages checked out with '-kv' flag"
+   echo "-pr-geee          -> generate man pages for 'Grid Engine Enterprise Edition'"
+   echo "-pr-sge           -> generate man pages for 'Sun Grid Engine'"
+   echo "-pr-sgeee         -> generate man pages for 'Sun Grid Engine, Enterprise Edition'"
    echo "-mo               -> generate the message catalogues (Solaris only)"
+   echo "-mt               -> compile make targets with multi threading"
+   echo "-n32              -> irix: generate n32 objects"
    echo "-no-core          -> don't compile the core system"
    echo "-no-intl          -> do not compile with internationalization library"
    echo "-no-mk            -> only return the specific architecture string"
-   echo "-no-opt           -> compile with low optimization"
+   echo "-no-mt            -> don't compile multithreaded componenets of the core system"
    echo "-no-qmake         -> don't compile qmake"
    echo "-no-qmon          -> don't compile qmon 3rdparty libs and qmon client"
    echo "-no-qtcsh         -> don't compile qtcsh"
    echo "-no-remote        -> don't compile 3rdparty remote module (rsh, rshd, rlogin)"
    echo "-no-rmon          -> disable rmon debug output"
-   echo "-no-secure        -> diable ssl security (enabled by default)"
+   echo "-no-commd-fifo    -> disable commd fifo bugfix"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
+   echo "-only-mt           -> build only mutlithreaded components of the core system"
    echo "-only-qmake       -> build only qmake"
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
    echo "-only-remote      -> build only 3rdparty remote module (rsh, rshd, rlogin)"
+   echo "-only-zlib        -> build only 3rdparty zlib"
+   echo "-opt              -> compile with high optimization"
    echo "-parallel n       -> spawn multiple make processes by passing option -j n to make"
    echo "-perlgui          -> build the experimental perlgui"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
    echo "-purify           -> instrument code with purify (implies -debug)"
    echo "-qmake            -> use qmake instead of make"
+   echo "-secure           -> enable ssl security"
+   echo "-shared           -> link shared (default)"
    echo "-shared-libs      -> create libraries as shared libs"
-   echo "-spool-classic    -> use classic flatfile spooling"
-   echo "-sunman           -> create man pages for Sun branded man pages (with -man[kv])"
+   echo "-spool-classic    -> use classic flatfile spooling (default)"
+#   echo "-spool-dynamic    -> allow loading of spooling method from shared lib"
+   echo "-spool-flatfile   -> use new flatfile spooling"
+   echo "-spool-postgres   -> use new spooling to PostgreSQL database"
+   echo "-static           -> link static"
+   echo "-static-libs      -> create libraries as static libs (default)"
    echo "-umap             -> compile with usermapping and hostgroup feature"
   exit
 }
 
 start:
 
-#-----------------------------------------------------------------------------------
-# Variables below define default behavior and default compiler and linker
-# flags which are passed to make
-#
+unsetenv LD_LIBRARY_PATH
 
-# Master settings
-set SOURCE           = `pwd`
-set SDIR             = ".."
-set MSDIR            = ""
-set MAKEFILE         = "${SDIR}/common/Makefile.global"
+set   noglob
 
-# SGE_INPUT_CFLAGS will be taken from environment and added to CFLAGS
+set   SOURCE           = `pwd`
+set   SDIR             = ".."
+set   MSDIR            = ""
+set   MAKEFILE         = "${SDIR}/common/Makefile.global"
+
 if ( $?SGE_INPUT_CFLAGS ) then
-   set INP_CFLAGS    = "$SGE_INPUT_CFLAGS"
+   set INP_CFLAGS = "$SGE_INPUT_CFLAGS"
 else
-   set INP_CFLAGS    = ""
+   set INP_CFLAGS = ""
 endif
 
-# Default build targets for which we have seperate make files
-set SGE_DEPEND       = 0
-set QMON             = 1
-set CORE             = 1
-set REMOTE           = 1
-set QMAKE            = 1
-set QTCSH            = 1
-set MAKESTRPTIME     = 0
-set MAKEFNMATCH      = 0
-set WITH_USERMAPPING = 0 # Compile without usermapping feature
-
-# Default Flags and Libraries 
-set OPTIMIZATION     = 1
-set GPROFFED         = 0
-set DEBUGGED         = 0
-set COMPILE_DC       = 0
-set CC               = cc
-set CXX              = CC
-set CFLAGS           = "-D$TARGET_BITS -DQCONF_FLATFILE $INP_CFLAGS"
-set CORE_INCLUDE     = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
-set DEBUG_FLAG       = ""
-set INSURE_FLAG      = ""
-set NOERR_CFLAG      = ""
-set NOERR_PROTO      = ""
-set MEMCFLAG         = ""
-
-set LFLAGS           = "-L."
-set XLFLAGS          = ""
-set XLIBS            = ""
-set LIBS             = "-lm -lpthread"
-set LD_WRAPPER       = ""
-set DLLIB            = "-ldl"
-set LOADAVGLIBS      = ""
-set TPLIB            = ""  # 3rdparty libs
-set SLIBS            = ""
-
-# Default settings for shared library creation
-set SHAREDLIBS       = 0
-set SHAREDEXT        = ".so"
-set SHAREDLD         = ""
-set SHARED_CFLAGS    = ""
-set SHARED_LFLAGS    = ""
-
-# Flags for man page creation, copyright stuff and adoc
-set BUILDMAN          = 0
-set BUILDCATMAN       = 0
-set BUILDGETTEXT      = 0
-set BUILDHTMLMAN      = 0
-set SGE_PRODUCT_MODE  = ge
-set ADD_COPYRIGHT     = 0
-set ADD_SUN_COPYRIGHT = 0
-set ADOC              = 0
-
-# Default name and command line flags for some build commands
-set MAKE              = make
-set MAKEOPT           = ""
-set STRIP             = strip
-set RANLIB            = echo
-set AR                = ar
-set ARFLAGS           = rscv
-set PARALLEL          = ""  
-set USE_QMAKE         = 0
-
-# I18N, L10N stuff
-set GETTEXTBASE       = "$SOURCE/3rdparty/gettext"
-set MESSAGES          = "../dist/locale/gridenginenotuniq.pot"
-set MESSAGES_BIN      = "gridengine.mo"
-set CREATE_MSG        = 0
-set CREATE_MSG_DIR    = ../dist/locale
-set CREATE_MSG_LANG   = "de en"
-
-# These targets are more difficult to port - not all platforms support these
-set INTERACTTARGETS   = "qmake qtcsh"
-
+set   CFLAGS       = "$INP_CFLAGS"
+set   CXXFLAGS     = "$CFLAGS"
+set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../daemons/common -I../daemons/commd -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
+set   ADD_COPYRIGHT     = 0
+set   ADD_SUN_COPYRIGHT = 0
+set   ADOC              = 0
+set   BUILDMAN          = 0
+set   SGE_PRODUCT_MODE  = ge
+set   BUILDCATMAN  = 0
+set   BUILDGETTEXT = 0
+set   BUILDHTMLMAN = 0 
+set   DEBUG_FLAG   = ""
+set   INSURE_FLAG  = ""
+set   STRIP        = strip
+set   TARGET       = ""
+set   SHAREDLIBS   = 0
+set   SHAREDEXT    = ".so"
+set   SHAREDLD     = ""
+set   SHARED_CFLAGS = ""
+set   SHARED_LFLAGS = ""
+set   DLLIB         = "-ldl"
+set   STATIC        = 0
+set   IRIX_ABI      = ""
+set   IRIX_ARCHDEF  = IRIX6
+set   OSREL         = ""
+set   CC_FORCED     = 0
+set   CC           = cc
+set   LD_WRAPPER   = ""
+set   CXX          = CC
+set   FC           = f77
+set   LFLAGS       = "-L."
+set   LIBS         = "-lm"
+set   OPTIMIZATION = 0
+set   GETTEXTBASE = "$SOURCE/3rdparty/gettext"
+set   MAKEZLIB    = 0
+set   TPLIB       = ""	# 3rdparty libs
+set   MAKESTRPTIME = 0
+set   MAKEFNMATCH = 0
+set   ZLIBBASE    = ""
+set   MTCFLAGS    = "-DSGE_MT"
+set   MTLFLAGS    = ""
+set   LOADAVGLIBS = ""
+set   XLFLAGS     = ""
+set   XLIBS       = ""
+set   RANLIB      = echo
+set   AR          = ar #suns: /usr/bin/ar (no s option)&/usr/5bin/ar (s option)
+set   ARFLAGS     = rscv
+set   MAKE        = make
+set   PARALLEL    = ""
+set   USE_QMAKE   = 0
+set   MT          = 0
+set   MESSAGES    = "../dist/locale/gridenginenotuniq.pot"
+set   MESSAGES_BIN = "gridengine.mo"
+set   SGE_DEPEND  = 0
+set   QMON        = 1
+set   CORE        = 1
+set   REMOTE      = 1
+set   QMAKE       = 1
+set   QTCSH       = 1
+set   MAKEOPT     = ""
+set   GPROFFED    = 0
+set   DEBUGGED    = 0
+set   NOERR_CFLAG = ""
+set   GCC_NOERR_CFLAGS = ""
+set   GCC_NOERR_CXXFLAGS = ""
+set   GCC_NOSP = ""
+set   MEMCFLAG=""
+set   COMPILE_ARCH = ""
+set   INTERACTTARGETS = "qmake qtcsh"
+set   SLIBS=""
 # SECURE
-set SEC               = 1
-set SECCLEAN          = sec_clean
-set SECDEPEND         = sec_depend
-set SECFLAGS          = "-DSECURE -I$OPENSSL_HOME/include"
-set SECLIB            = -lsec
-set SECLIBS           = libsec.a
-set SECLIBOBJS        = sec_lib.o
-set SECTARGETS        = sec_all
-set KLFLAGS           = "-L$OPENSSL_HOME/lib"
-
+set   SEC	  = 0
+set   SECTARGETS  = ""
+set   SECLIBS = ""
+set   SECLIB = ""
+set   SECLIB_OBJS = ""
+set   SECDEPEND   = ""
+set   SECCLEAN   = ""
+# end secure
 # GSS
-set GSSDEPEND         = ""
-set GSSCLEAN          = ""
-set GSSLIBS           = ""
-
+set GSSDEPEND = ""
+set GSSCLEAN = ""
+set GSSLIBS = ""
+# end gss
 # KERBEROS
-set KRB	              = 0
-set KRBTARGETS        = ""
-set KRBDEPEND         = ""
-set KRBCLEAN          = ""
-set KRBLIBS           = ""
-set KRBLIB            = ""
-set KLIBS             = ""
-
+set   KRB	  = 0
+set   KRBTARGETS  = ""
+set   KRBDEPEND   = ""
+set   KRBCLEAN   = ""
+set   KRBLIBS     = ""
+set   KRBLIB      = ""
+set   KLIBS       = ""
+set   KLFLAGS      = ""
+# end kerberos
 # PERLGUI
-set PERLGUI           = ""
-set PERLGUI_CLEAN     = ""
-
+set PERLGUI = ""
+set PERLGUI_CLEAN = ""
+# end PERLGUI
 # SPOOLING
-set SPOOLING_METHOD   = "berkeleydb"
-set SPOOLING_LIBS     = "-lspoold -lspoolb -lspool -ldb"
-set SPOOLING_DEPS     = "libspool libspoold libspoolb"
-set CFLAGS            = "-I$BERKELEYDB_HOME/include $CFLAGS"
-set LFLAGS            = "-L$BERKELEYDB_HOME/lib $LFLAGS"
+set SPOOLING_METHOD = "classic"
+set SPOOLING_LIBS   = "-lspoold -lspoolc -lspool"
+set SPOOLING_DEPS   = "libspoold libspoolc"
+#end SPOOLING
 
-# Compile with gettext and libintl - we have platform dependent defaults
+# Compile with gettext and libintl
+# we have platform dependent defaults
 switch ($BUILDARCH) 
-   case LINUX86:
-   case LINUXAMD64:
+   case LINUX6:
    case SOLARIS:
    case SOLARIS64:
    case SOLARIS86:
@@ -476,25 +371,51 @@ switch ($BUILDARCH)
       set WITH_GETTEXT = 0
       breaksw
 endsw      
+# end Compile with gettext and libintl
 
+# Compile with mutlithreading 
+# we have platform dependent defaults
+switch ($BUILDARCH) 
+   case LINUX6:
+   case SOLARIS:
+   case SOLARIS64:
+   case SOLARIS86:
+      set MT = 1
+      breaksw
+   default:
+      set MT = 0
+      breaksw
+endsw      
+# end Compile with mutlithreading
+
+# Compile with usermapping feature
+set WITH_USERMAPPING = 0
+# end Compile with usermapping feature
+
+# GETTEXT MESSAGES
+set   CREATE_MSG      = 0
+set   CREATE_MSG_DIR  = ../dist/locale
+set   CREATE_MSG_LANG = "de en"
+# end GETTEXT MESSAGES
+
+###########################################################################
 # X specific stuff (Xmt, Xbae ...)
-#
-# This stuff is for building the Xmt library
-# If possible (i.e. imake is installed correctly)
+###########################################################################
+# this stuff is for building the Xmt library
+# if possible (i.e. imake is installed correctly)
 # use the Imakefile (change Xmt.tmpl)
-#
-set XINCD                = "-I../3rdparty/qmon/Xbae -I../3rdparty/qmon/iconlist -I../3rdparty/qmon/ltree -I../3rdparty/qmon/outline -I../3rdparty/qmon/rowcol -I../3rdparty/qmon/spinbox -I../clients/qmon -I../3rdparty/qmon/tab"
+set   XINCD  = "-I../3rdparty/qmon/Xbae -I../3rdparty/qmon/iconlist -I../3rdparty/qmon/ltree -I../3rdparty/qmon/outline -I../3rdparty/qmon/rowcol -I../3rdparty/qmon/spinbox -I../clients/qmon -I../3rdparty/qmon/tab"
 if ( $?MY_XINCD ) then
-   set XINCD             = "-I${MY_XINCD} ${XINCD}"
+   set XINCD = "-I${MY_XINCD} ${XINCD}"
 endif
-set XMTINCD  = "-DHAVE_MEMMOVE -DXMT_HAS_STRERROR -I../3rdparty/qmon/Xmt310"
-set XmtFileRootDir       = ""
-set XmtFileSearchPath    = ""
-# set   REPLAYXT_SUPPORT = 0
-#
+set   XMTINCD  = "-DHAVE_MEMMOVE -DXMT_HAS_STRERROR -I../3rdparty/qmon/Xmt310"
+set   XmtFileRootDir = ""
+set   XmtFileSearchPath = ""
+#set   REPLAYXT_SUPPORT = 0
 # The following DEFINES are necessary in special cases
 # for more information see Xmt.tmpl
 # -DNO_EDITRES       if libXmu is not available (HP)
+# -DNO_MEMMOVE       if no memmove() define this (SUN4)
 # -DXMSTRING_TO_COMPOUND_TEXT_BUG  if tearoff menus dump core define this
 # -DBACKSPACEBUG     if BackSpace in a Cli widget dumps core define this
 # -DIBM_MANAGE_WORKAROUND     IBM/RS6000(AIX 3.2) if children of XmtLayout
@@ -503,17 +424,29 @@ set XmtFileSearchPath    = ""
 #                             (XmMenuProc not in XmP.h == old)
 # -DXMTDEFAULTCONFIGDIR=\"$(XmtFileRootDir)\"   normally the home directory
 # -DXMTFILESEARCHPATH=\"$(XmtFileSearchPath)\"  normally the home directory
+#
+###########################################################################
 
+setenv RMONINC     "../rmon/src/rmon.h ../src/sgermon.h"
+setenv RMONLIB     "librmon.a"
+
+set COMPILE_DC = 0
 unset nomk
+
+set commd_fifo_flag = 1
 
 set found
 while ($#argv >= 1 && $?found)
    switch ("$argv[1]")
-   # the following flags must be skipped
-   case -32:
-   case -64:
-   case -help:
-   case --help:
+   case "-32":
+      set IRIX_ABI = -mips1
+      set FORCE32  = true
+      set FORCE64  = false
+      breaksw
+   case "-64":
+      set IRIX_ABI = -64
+      set FORCE64  = true
+      set FORCE32  = false
       breaksw
    case "-add-copyright"
       set ADD_COPYRIGHT = 1
@@ -523,6 +456,8 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-adoc":
       set CORE   = 0
+      set MT     = 0
+      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -535,25 +470,22 @@ while ($#argv >= 1 && $?found)
    case "-cc"
       set CC       = cc
       set CXX      = CC
+      set CC_FORCED = 1
       breaksw
+   case "-compress"
+     set CFLAGS = "-DCOMMCOMPRESS $CFLAGS"
+     set CXXFLAGS = "-DCOMMCOMPRESS $CXXFLAGS"
+     set ZLIBBASE = "$SOURCE/3rdparty/zlib"
+     breaksw
    case "-crypto":
-      set CFLAGS  = "-DCRYPTO -I$OPENSSL_HOME/include $CFLAGS"
+      set CFLAGS  = " -DCRYPTO -I$OPENSSL_HOME/include  $CFLAGS"
+      set CXXFLAGS  = " -DCRYPTO -I$OPENSSL_HOME/include  $CXXFLAGS"
       set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
-
-      switch ($BUILDARCH)
-        case SOLARIS:
-        case SOLARIS64:
-        case SOLARIS86:
-        case LINUX86:
-           set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
-           set KLIBS = ""
-           breaksw
-        default:
-           set KLIBS = "-lcrypto"
-      endsw
+      set KLIBS = "-lcrypto"
       breaksw
    case "-D*":
       set CFLAGS = "$argv[1] $CFLAGS"
+      set CXXFLAGS = "$argv[1] $CXXFLAGS"
       breaksw
    case "-dce":
       set LIBS = " -ldce -threads $LIBS"
@@ -561,7 +493,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-debug":
       set DEBUG_FLAG = "$DEBUG_FLAG -g"
-      set DEBUGGED   = 1
+      set DEBUGGED = 1
       set STRIP      = "echo"
       breaksw
    case "-f":
@@ -598,6 +530,12 @@ while ($#argv >= 1 && $?found)
       set CFLAGS  = "-DKERBEROS -I../security/gss -I$KRB_HOME/include -I$KRB_HOME/include/gssapi $CFLAGS"
       set GSSLIBS = "-lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err"
       breaksw
+   case "-help"
+      goto usage
+      breaksw
+   case "--help"
+      goto usage
+      breaksw
    case "-htmlman":
       set BUILDMAN = "1"
       set BUILDHTMLMAN = "1"
@@ -618,40 +556,43 @@ while ($#argv >= 1 && $?found)
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
       breaksw
-   case "-efence"
-      set LFLAGS     = "-lefence $LFLAGS"
-      set DEBUGGED   = 1
-      breaksw
    case  "-intl"
       set WITH_GETTEXT = 1
       breaksw
+   case "-irix65":
+      set IRIX_ARCHDEF = IRIX65
+      set IRIX_ABI = -n32
+      breaksw
    case "-kerberos":
-      set KRB        = 1
+      set KRB    = 1
       set KRBTARGETS = ""
-      set KRBDEPEND  = "krb_depend"
-      set KRBCLEAN   = "krb_clean"
-      set KRBLIBS    = "libkrb.a"
-      set KRBLIB     = "-lkrb"
-      set CFLAGS     = "-DKERBEROS -I../security/krb -I$KRB_HOME/include -I$KRB_HOME/include/gssapi $CFLAGS"
-      set KLFLAGS    = "-L$KRB_HOME/lib"
-      set KLIBS      = "-lkrb5 -lk5crypto -lcom_err -lresolv"
+      set KRBDEPEND = "krb_depend"
+      set KRBCLEAN = "krb_clean"
+      set KRBLIBS = "libkrb.a"
+      set KRBLIB = "-lkrb"
+      set CFLAGS  = "-DKERBEROS -I../security/krb -I$KRB_HOME/include -I$KRB_HOME/include/gssapi $CFLAGS"
+      set CXXFLAGS  = "-DKERBEROS -I../security/krb -I$KRB_HOME/include $CXXFLAGS"
+      set KLFLAGS = "-L$KRB_HOME/lib"
+      set KLIBS = "-lkrb5 -lk5crypto -lcom_err -lresolv"
       breaksw
    case "-man":
-      set BUILDMAN   = 1
-      set KVMAN      = 0
+      set BUILDMAN = "1"
+      set KVMAN = 0
       breaksw
    case "-mankv":
-      set BUILDMAN   = 1
-      set KVMAN      = 1
+      set BUILDMAN = "1"
+      set KVMAN = 1
       breaksw
    case  "-mo"
       echo "BUILDARCH=$BUILDARCH"
-      if ( $BUILDARCH == sol-sparc || $BUILDARCH == sol-sparc64 ) then
+      if ( $BUILDARCH == solaris || $BUILDARCH == solaris64 ) then
          scripts/msgmerge.csh
       else
-         echo "Use a Solaris machine"
-      endif
+         echo "Use a solaris machine"                                                 endif
       exit 0
+      breaksw
+   case "-n32":
+      set IRIX_ABI = -n32
       breaksw
    case "-no-core":
       set CORE = 0
@@ -662,8 +603,8 @@ while ($#argv >= 1 && $?found)
    case "-no-mk":
       set nomk
       breaksw
-   case "-no-opt":
-      set OPTIMIZATION = 0
+   case "-no-mt":
+      set MT = 0
       breaksw
    case "-no-qmake":
       set QMAKE = 0
@@ -679,61 +620,89 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-no-rmon":
       set CFLAGS  = "-DNO_SGE_COMPILE_DEBUG $CFLAGS"
+      set CXXFLAGS  = "-DNO_SGE_COMPILE_DEBUG $CXXFLAGS"
+      setenv RMONINC  ""
       setenv RMONLIB  ""
       breaksw
-   case "-no-secure":
-      set SEC         = 0
-      set SECCLEAN    = ""  
-      set SECDEPEND   = ""
-      set SECFLAGS    = ""
-      set SECLIB      = ""
-      set SECLIBS     = ""
-      set SECLIBOBJS  = ""
-      set SECTARGETS  = ""
-      set KLFLAGS     = ""
+   case "-no-commd-fifo":
+      set commd_fifo_flag = 0
       breaksw
    case "-only-core":
       set CORE   = 1
+      set MAKEZLIB = 0
+      set QMAKE  = 0
+      set QMON   = 0
+      set QTCSH  = 0
+      set REMOTE = 0
+      set MT = 0
+      breaksw
+   case "-only-mt":
+      set MT = 1
+      set CORE   = 0
+      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
       breaksw
+      breaksw
    case "-only-depend":
       set CORE       = 0
+      set MAKEZLIB   = 0
       set QMAKE      = 0
       set QMON       = 0
       set QTCSH      = 0
       set REMOTE     = 0
       set SGE_DEPEND = 1
+      set MT = 0
       breaksw
    case "-only-qmake":
       set CORE   = 0
+      set MAKEZLIB = 0
       set QMAKE  = 1
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
+      set MT = 0
       breaksw
    case "-only-qmon":
       set CORE   = 0
+      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 1
       set QTCSH  = 0
       set REMOTE = 0
+      set MT = 0
       breaksw
    case "-only-qtcsh":
       set CORE   = 0
+      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 1
       set REMOTE = 0
+      set MT = 0
       breaksw
    case "-only-remote":
       set CORE   = 0
+      set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 1
+      set MT = 0
+      breaksw
+   case "-only-zlib":
+      set CORE   = 0
+      set MAKEZLIB = 1
+      set QMAKE  = 0
+      set QMON   = 0
+      set QTCSH  = 0
+      set REMOTE = 0
+      set MT = 0
+      breaksw
+   case "-opt":
+      set OPTIMIZATION = 1
       breaksw
    case "-parallel":
       set argv     = ($argv[2-])
@@ -744,20 +713,20 @@ while ($#argv >= 1 && $?found)
       set PERLGUI_CLEAN = "perlgui_clean"
       breaksw
    case  "-po"
-      if ( $buildarch == lx24-x86 ) then
+      if ( $buildarch == glinux ) then
          scripts/msgmerge.csh merge
          echo ""
          echo "==========READY FOR TRANSLATION========="
          echo ""
       else
-         echo "Must be done on Linux"
+         echo "Must be done on glinux"
          exit 1
       endif
       exit 0
       breaksw
    case  "-pot"
-      if ( $buildarch !=  ) then
-         echo "Must be done on lx24-86 architecture"
+      if ( $buildarch != glinux ) then
+         echo "Must be done on glinux architecture"
          exit 1
       endif   
       rm -f dist/locale/gridenginenotuniq.pot
@@ -777,6 +746,15 @@ while ($#argv >= 1 && $?found)
       scripts/msgmerge.csh merge
       exit 0
       breaksw
+   case "-pr-geee":  
+      set SGE_PRODUCT_MODE=geee
+      breaksw
+   case "-pr-sge":  
+      set SGE_PRODUCT_MODE=sge
+      breaksw
+   case "-pr-sgeee":
+      set SGE_PRODUCT_MODE=sgeee
+      breaksw
    case "-purify":
       set LD_WRAPPER = "purify"
       set DEBUGGED   = 1
@@ -786,13 +764,21 @@ while ($#argv >= 1 && $?found)
       set MAKE     = "qmake"
       set MAKEOPT = "-cwd -v PATH -pe make 2-100 -now n -- $MAKEOPT"
       breaksw
-   case "-secure"
-      echo "___________W_A_R_N_I_N_G_____________"
-      echo "The -secure option is no longer supported as security is now enabled"
-      echo "by default.  Please remove the -secure option from your aimk.site and"
-      echo "aimk.private files.  To disable security, you may use the -no-secure"
-      echo "option."
-      echo
+   case "-secure":
+      set SEC    = 1
+      set SECTARGETS = "sec_all"
+      set SECDEPEND = "sec_depend"
+      set SECCLEAN = "sec_clean"
+      set SECLIBS = "libsec.a"
+      set SECLIB = "-lsec"
+      set SECLIB_OBJS = "sec_lib.o"
+      set CFLAGS  = "-DSECURE -I$OPENSSL_HOME/include  $CFLAGS"
+      set CXXFLAGS  = "-DSECURE -I$OPENSSL_HOME/include  $CXXFLAGS"
+      set KLFLAGS  = "-L$OPENSSL_HOME/lib"
+      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a"
+      breaksw
+   case "-shared":
+      set STATIC = 0
       breaksw
    case "-shared-libs":
       set SHAREDLIBS = 1
@@ -800,10 +786,31 @@ while ($#argv >= 1 && $?found)
    case "-spool-classic":
       set SPOOLING_METHOD = "classic"
       set SPOOLING_LIBS   = "-lspoold -lspoolc -lspool"
-      set SPOOLING_DEPS   = "libspool libspoold libspoolc"
+      set SPOOLING_DEPS   = "libspoold libspoolc"
       breaksw
-   case "-sunman":
-      set SGE_PRODUCT_MODE=sge
+#   case "-spool-dynamic":
+#      set SPOOLING_METHOD = "dynamic"
+#      set SPOOLING_LIBS   = "libspoold"
+#      set SPOOLING_DEPS   = here we have to specify all existing libs
+#      breaksw
+   case "-spool-flatfile":
+      set SPOOLING_METHOD = "flatfile"
+      set SPOOLING_LIBS   = "-lspoold -lspoolf -lspool"
+      set SPOOLING_DEPS   = "libspoold libspoolf"
+      breaksw
+   case "-spool-postgres":
+      set SPOOLING_METHOD = "postgres"
+      set SPOOLING_LIBS   = "-lspoold -lspoolp -lspool -lpq"
+      set SPOOLING_DEPS   = "libspoold libspoolp"
+      set CFLAGS  = "-I$POSTGRES_HOME/include $CFLAGS"
+      set CXXFLAGS  = "-I$POSTGRES_HOME/include  $CXXFLAGS"
+      set LFLAGS  = "-L$POSTGRES_HOME/lib $LFLAGS"
+      breaksw
+   case "-static":
+      set STATIC = 1
+      breaksw
+   case "-static-libs":
+      set SHAREDLIBS = 0
       breaksw
    case  "-umap"
       set WITH_USERMAPPING = 1
@@ -813,33 +820,27 @@ while ($#argv >= 1 && $?found)
       continue
       breaksw
    endsw
+
    set argv     = ($argv[2-])
 end
+
 
 if ( $DEBUGGED && $USE_QMAKE ) then
    set MAKEOPT = "-verbose $MAKEOPT"
 endif
 
-set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD -DENABLE_NGC $SECFLAGS"
-
-#---------------------------------------------------------------------------
-
-if ($SEC == 1) then
-   switch ($BUILDARCH)
-   case SOLARIS:
-   case SOLARIS64:
-   case SOLARIS86:
-   case LINUX86:
-      set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
-      set KLIBS = ""
-      breaksw
-   default:
-      set KLIBS = "-lcrypto"
-   endsw
+# spooling
+if ( $SPOOLING_METHOD == "dynamic" && $SHAREDLIBS == 0 ) then
+   echo "dynamic spooling can only be used when building with shared libs"
+   exit 1
 endif
 
-#---------------------------------------------------------------------------
-if ("$COMPILE_ARCH" == "") then
+set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD"
+# end spooling
+
+#----------------------------------------------------------------------
+
+if ( "$COMPILE_ARCH" == "") then
    set COMPILE_ARCH = $BUILDARCH
 endif
 
@@ -848,23 +849,30 @@ if ($?nomk) then
    exit 0
 endif
 
-if (! -d $COMPILE_ARCH) then
+if ( ! -d $COMPILE_ARCH ) then
    echo " INFO: Architecture dir $COMPILE_ARCH not existing. Making"
    mkdir $COMPILE_ARCH
 endif
 
 switch ($BUILDARCH)
+case AIX41:
+case AIX42:
 case AIX43:
-case AIX51:
-   if ( $OPTIMIZATION == 1 ) then
-      set OFLAG = "-O3 -qstrict -qmaxmem=8192"
-   else
-      set OFLAG    = "-O -qmaxmem=8192"
+#   set INTERACTTARGETS = ""
+   if ( $BUILDARCH == AIX41 ) then
+      set INTERACTTARGETS = ""
    endif
-   set CC       = xlc_r
-   set CXX      = xlC_r
-   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DGETHOSTBYADDR_R5 -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS -bnoquiet"
+
+   set OFLAG    = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3 -qstrict"
+   endif   
+   
+   set CXX      = xlC
+   set MAKE     = make
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set CXXFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
    set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
@@ -873,61 +881,58 @@ case AIX51:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
 
-   set SHAREDLD = "xlc_r"
+   if ( $STATIC == 1 ) then
+      set CFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CFLAGS"
+      set CXXFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CXXFLAGS"
+   endif
+
+   set SHAREDLD = "$SOURCE/scripts/ldAix"
    set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "-brtl -bexpall -bhalt:4 -bM:SRE -H512 -T512 -bnoentry"
-#   set SHARED_LFLAGS = "-brtl -bexpall -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+   set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    breaksw
 
-case ALPHA5:
-   set COMPILE_DC = 1
-
+case AIX51:
+   set OFLAG    = "-O -qmaxmem=8192"
    if ( $OPTIMIZATION == 1 ) then
-      set OFLAG = "-O3"
-   else
-      set OFLAG = "-O"
+      set OFLAG = "-O3 -qstrict -qmaxmem=8192"
    endif
 
-   set CXX = "cxx"
-   set DLLIB = ""
-
-   # gprof option is superset of debug option
-   # -g3 produces better debugging information than -g1
-   if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-g2"
-      set OFLAG      = "-O"
-   endif
-
-   if ( $GPROFFED == 1) then
-      set DEBUG_FLAG = "-g1 -pg -gen_feedback -non_shared"
-   endif
-
-   set NOERR_CFLAG  = "-w"
-   set CFLAGS       = "$OFLAG -w2 -std1 -portable -pthread -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -DGETHOSTBYNAME_R3 -DGETHOSTBYADDR_R5"
+   set CXX      = xlC
+   set MAKE     = make
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-
-   set SHAREDLD      = $CC
-   set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "-L. -shared -pthread"
-
-   set LFLAGS   = "-pthread $DEBUG_FLAG $LFLAGS"
+   set CXXFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG $DEBUG_FLAG $CXXFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG -brtl $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
-   set XCFLAGS  = "-w -DFUNCPROTO=3 -DDEC -DSMT $XMTDEF $XINCD"
+   set XCFLAGS  = "-bnodelcsect -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
    set XLIBD    = ""
-   set XLFLAGS  = "-taso $XLIBD"
-   set XLIBS    = "-lXm -lXt -lXext -lX11 -lSM -lICE -lPW -ldnet_stub"
-   set LIBS     = "-lpset -lmach $LIBS"
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
+
+   if ( $STATIC == 1 ) then
+      set CFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CFLAGS"
+      set CXXFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CXXFLAGS"
+   endif
+
+   set SHAREDLD = "$SOURCE/scripts/ldAix"
+   set SHARED_CFLAGS = ""
+   set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    breaksw
 
-case DARWIN:
+case ALINUX:
    set COMPILE_DC = 1
-
+   if ( $USE_QMAKE == 0 ) then
+      set MAKE = make
+   endif
+   set OFLAG = "-O"
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
-   else
-      set OFLAG = "-O"
-   endif
+   endif   
 
    set CC = "gcc"
    set CXX = "g++"
@@ -939,26 +944,147 @@ case DARWIN:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   set REL = `/usr/bin/uname -r`
-   switch ($REL)
-   case "6.*":
-      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN -DDARWIN6 -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
-      breaksw
-   case "7.*":
-      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN -DDARWIN7 -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
-      breaksw
-   default:
-      echo DARWIN release \"$REL\" not supported!
-      exit 1
-      breaksw
-   endsw
-
+   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DALINUX $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DALINUX $DEBUG_FLAG $CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
-   set SHAREDLD = "$CC -dynamiclib -flat_namespace -undefined warning"
-   set SHARED_CFLAGS = "-dynamic"
-   set SHARED_LFLAGS = "-L."
+   set SHAREDLD = $CC
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-L. -shared"
+
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD"
+   set XCFLAGS  = "-DNeedFunctionPrototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBD    = "-L/usr/X11R6/lib"
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
+   set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   set GCC_NOSP = "-Wno-strict-prototypes"
+
+   set MTCFLAGS = "${MTCFLAGS} -pthread"
+   set MTLFLAGS = "-lpthread"
+
+   breaksw
+
+case ALPHA4:
+case ALPHA5:
+   set COMPILE_DC = 1
+   set CXX = "cxx"
+   set WFLAG   = "-w2"
+   # set WFLAG = ""
+
+   set DLLIB = ""
+
+   set OFLAG = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3"
+   endif   
+
+   # gprof option is superset of debug option
+   # -g3 produces better debugging information than -g1
+   if ( $DEBUGGED == 1) then
+      set DEBUG_FLAG = "-g3"
+      set OFLAG      = ""
+   endif
+
+   if ( $GPROFFED == 1) then
+      set DEBUG_FLAG = "-g1 -pg -gen_feedback -non_shared"
+   endif
+
+   if ( $CC == gcc ) then
+      set CFLAGS   = "$OFLAG -Wall -Wstrict-prototypes -Wno-error -O -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -Wstrict-prototypes -Werror -O -DALPHA -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   else
+      set CFLAGS   = "$OFLAG $WFLAG -std1 -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -Olimit 2000"
+      set CXXFLAGS   = "$OFLAG $WFLAG -DALPHA -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS -Olimit 2000"
+   endif
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+
+   set SHAREDLD = $CC
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = ""
+      set SHARED_LFLAGS = "-L. -shared"
+   endif
+
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD"
+   set XCFLAGS  = "-w -DFUNCPROTO=3 -DDEC -DSMT $XMTDEF $XINCD"
+   set XLIBD    = ""
+   set XLFLAGS  = "-taso $XLIBD"
+   set XLIBS    = "-lXm -lXt -lXext -lX11 -lSM -lICE -lPW -ldnet_stub"
+   set LIBS     = "-lmld -lpset -lmach $LIBS"
+
+   if ( $STATIC == 1 ) then
+      if ( $CC == gcc ) then
+         set LFLAGS = "-static $LFLAGS"
+      else
+         set LFLAGS = "-non_shared $LFLAGS"
+      endif
+   else
+      if ( $CC == cc ) then
+         set CFLAGS = "-call_shared $CFLAGS"
+         set CXXFLAGS = "-call_shared $CXXFLAGS"
+      endif
+   endif
+
+   if ( $CC == gcc ) then
+      set NOERR_CFLAG = "-Wno-error"
+      set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+      set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   else
+      set NOERR_CFLAG = "-w"
+      set GCC_NOERR_CFLAGS = "$CFLAGS"
+      set GCC_NOERR_CXXFLAGS = "$CXXFLAGS"
+   endif
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
+   set MTCFLAGS = "${MTCFLAGS}"
+   set MTLFLAGS = "-pthread"
+
+   breaksw
+
+case DARWIN:
+   set COMPILE_DC = 1
+   if ( $USE_QMAKE == 0 ) then
+      set MAKE = make
+   endif
+   set OFLAG = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3"
+   endif   
+
+   set CC = "gcc"
+   set CXX = "g++"
+
+   if ( $DEBUGGED == 1) then
+      set DEBUG_FLAG = "-g"
+   endif
+   if ( $GPROFFED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   endif
+
+   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
+
+   set CFLAGS   = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
+   # set LFLAGS   = "-bind_at_load $DEBUG_FLAG $LFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
+   set SHAREDLD = "$CC -dynamiclib"
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-dynamic -L."
    set SHAREDEXT = ".dylib"
    if ( $SHAREDLIBS == 1 ) then
       set libext = ".dylib"
@@ -972,29 +1098,26 @@ case DARWIN:
       set MOTIFHOME = /usr/local
    endif   
 
+
    set XMTDEF   = ""
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
    set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib -L$MOTIFHOME/lib"
+   set XLFLAGS  = "-bind_at_load $XLIBD"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lX11 -lSM -lICE"
 
-   switch ($REL)
-   case "6.*":
-      set XLFLAGS = "-bind_at_load $XLIBD"
-      breaksw
-   case "7.*":
-      set XLFLAGS = "$XLIBD"
-      breaksw
-   default:
-      echo DARWIN release \"$REL\" not supported!
-      exit 1
-      breaksw
-   endsw
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
    set NOERR_CFLAG = "-Wno-error"
-   set NOERR_PROTO = "-Wno-strict-prototypes"
-   unset REL
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   set GCC_NOSP = "-Wno-strict-prototypes"
+
+   # regarding cc(1) -pthread is to be used for pthread multithreaded applications
+   # however it is rejected ...
+   set MTCFLAGS = "${MTCFLAGS}"
+   set MTLFLAGS = "-pthread"
    breaksw
 
 case FREEBSD_*:
@@ -1007,39 +1130,71 @@ case FREEBSD_*:
    set DLLIB	= ""
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
-   set CFLAGS   = "$OFLAG -Wall -DFREEBSD -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS -I/usr/X11R6/include"
+   set CFLAGS   = "$OFLAG -Wall -DFREEBSD -D$BUILDARCH $DEBUG_FLAG $CFLAGS -I/usr/X11R6/include"
+   set CXXFLAGS   = "$OFLAG -Wstrict-prototypes -DFREEBSD -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS -lkvm"
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
    set SHARED_LFLAGS = "-L. -shared" 
    
+   if ( $STATIC == 1 ) then
+      echo "STATITCS"
+      set CFLAGS = "-static $CFLAGS"
+      set CXXFLAGS = "-static $CXXFLAGS"
+   endif
+
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = " -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set RM	= "rm -f"
    breaksw 
 
-case IRIX65:
-   if ( $OPTIMIZATION == 1 ) then
-      set OFLAG = "-O3"
-   else
-      set OFLAG = "-O"
-   endif
-
-   set DLLIB = ""
-
+case IRIX6*:
    set COMPILE_DC = 1
+   set ARCH = $IRIX_ARCHDEF
+   #if (`hostname` != DWAIN) then
+   #   set MAKE     = make
+   #endif
    set MAKE = gmake
 
-   set CFLAGS   = "$OFLAG -n32 -mips3 -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+   # IRIX >= 6.4 has no DEADLINE in sys/schedctl.h, so turn off these
+   # code passages
+   set hasdeadline = `grep DEADLINE /usr/include/sys/schedctl.h`
+   if ( "X$hasdeadline" == "X" ) then
+      set CFLAGS = "-DIRIX_NODEADLINE $CFLAGS"
+   endif
+
+   # IRIX >= 6.4 has no MP_PSET in sys/sysmp.h, so turn off these
+   # code passages
+   set haspset = `grep MP_PSET /usr/include/sys/sysmp.h`
+   if ( "X$haspset" == "X" ) then
+      set CFLAGS = "-DIRIX_NOPSET $CFLAGS"
+   endif
+
+   set OFLAG = "-O"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O2"
+   endif   
+
+   set CFLAGS   = "$OFLAG -D$IRIX_ARCHDEF $IRIX_ABI $DEBUG_FLAG $CFLAGS"
+   set CXXFLAGS   = "$OFLAG -D$IRIX_ARCHDEF $IRIX_ABI $DEBUG_FLAG $CXXFLAGS -DHAVE_STD"
+   if ( $CC == gcc ) then
+      set CFLAGS   = "-D$IRIX_ARCHDEF $DEBUG_FLAG $CFLAGS -Wall -Wstrict-prototypes -Werror"
+      set CXXFLAGS   = "-D$IRIX_ARCHDEF $DEBUG_FLAG $CXXFLAGS -Wstrict-prototypes -Werror"
+   endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set LFLAGS   = "-n32 -mips3 $DEBUG_FLAG $LFLAGS"
+   set LFLAGS   = "$IRIX_ABI $DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
+   set LOADAVGLIBS = "-lelf"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
    set XCFLAGS  = "$XMTDEF $XINCD"
@@ -1048,34 +1203,52 @@ case IRIX65:
    set XLIBS    = "-lXm -lXt -lXext -lX11 -lPW -lm"
    set RANLIB   = echo
 
+   if ( $STATIC == 1 ) then
+      echo Static linking not available for IRIX6
+      exit 1
+   endif
+
+   if ( $CC == gcc ) then
+      set NOERR_CFLAG = "-Wno-error"
+      set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+      set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   else
+      set GCC_NOERR_CFLAGS = "$CFLAGS"
+      set GCC_NOERR_CXXFLAGS = "$CXXFLAGS"
+   endif
+
    set SHAREDLD = $CC
-   set SHARED_CFLAGS = "-KPIC"
-   set SHARED_LFLAGS = "-L. -shared"
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = "-KPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   endif
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    breaksw
 
-case HP11:
-case HP1164:
+case HP10:
    set MAKE = gmake
-   set OFLAG = "+O2"
    set DLLIB = ""
-   if ($BUILDARCH == HP11) then
-      set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR"
-      set MEMFLAG = +DD32
-   else
-      set HOSTRESOLVEFLAGS = "-DGETHOSTBYNAME -DGETHOSTBYADDR_M"
-      set MEMFLAG = +DD64
-   endif
-   if ($CC == gcc) then
-      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
-   else
-      if ($OPTIMIZATION == 0) then
-         set OFLAG = "-O"
+   set OFLAG = "-O"
+   if ( $CC == gcc ) then
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
       endif
-      set CXX = "aCC"
-      set CFLAGS = "-Ae $MEMFLAG $OFLAG -DHPUX -D$BUILDARCH $HOSTRESOLVEFLAGS $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   else
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "+O3"
+      endif
+      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
-
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
    set SHAREDLD = ld
    if ( $CC == gcc ) then
@@ -1087,13 +1260,60 @@ case HP1164:
    endif
 
    set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
-   set LIBS     = "-lnsl $LIBS"
+   set CXXFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CXXFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
-   if ($BUILDARCH == HP11) then
-      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD32"
-   else
-      set LFLAGS   = "$DEBUG_FLAG $LFLAGS +DD64"
+   set XMTDEF   = "-DNO_EDITRES"
+   set XINCD    = "-I/usr/include/X11R6 -I/usr/include/Motif1.2 $XMTINCD $XINCD"
+   set XCFLAGS  = "$XMTDEF $XINCD"
+   set XLIBD    = "-L/usr/lib/X11R6 -L/usr/lib/Motif1.2_R6"
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm -lXt -lXext -lXhp11 -lX11 -lm"
+
+   if ( $STATIC == 1 ) then
+      set LFLAGS = "-Wl,-a,archive $LFLAGS"
    endif
+
+   set LFLAGS = "-Wl,+s $LFLAGS"
+
+   set SHAREDEXT = ".sl"
+   breaksw
+
+case HP11:
+   set MAKE = gmake
+   set OFLAG = "-O"
+   set DLLIB = ""
+   if ( $CC == gcc ) then
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      endif
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -Wall -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   else
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "+O3"
+      endif
+      set CXX = "aCC"
+      set CFLAGS = "-Ae $OFLAG -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
+   endif
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
+   set SHAREDLD = ld
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = "+z"
+      set SHARED_LFLAGS = "-L. -b +s"
+   endif
+
+   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
+   set CXXFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CXXFLAGS"
+   set LIBS     = "-lnsl $LIBS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
    set XMTDEF   = "-DNO_EDITRES"
    set XINCD    = "$XMTINCD $XINCD"
@@ -1102,82 +1322,139 @@ case HP1164:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lXhp11 -lX11 -lm"
 
+   if ( $STATIC == 1 ) then
+      set LFLAGS = "-Wl,-a,archive $LFLAGS"
+   endif
    set SHAREDEXT = ".sl"
+   set LFLAGS = "-Wl,+s $LFLAGS"
    breaksw
-case ALINUX:
-case LINUX86:
-case LINUXAMD64:
-case LINUXIA64:
 
-   set COMPILE_DC = 1
-
-   if ($OPTIMIZATION == 1) then
-      set OFLAG = "-O3"
+case HP1164:
+   set MAKE = gmake
+   set OFLAG = "-O"
+   set DLLIB = ""
+   if ( $CC == gcc ) then
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      endif
+      set CFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -Wall -Wstrict-prototypes -DHP11 -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    else
-      set OFLAG = "-O"
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "+O3"
+      endif
+      set CXX = "aCC"
+      set CFLAGS = "-Ae $OFLAG -DHP11 -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
+      set CXXFLAGS = "$OFLAG -DHP11 -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
    endif
 
-   if ($CC != insure) then
-      set CC  = gcc
-      set CXX = g++
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
+   set SHAREDLD = ld
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = "+z"
+      set SHARED_LFLAGS = "-L. -b +s"
+   endif
+
+   set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
+   set CXXFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CXXFLAGS"
+   set LIBS     = "-lnsl $LIBS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
+   set XMTDEF   = "-DNO_EDITRES"
+   set XINCD    = "$XMTINCD $XINCD"
+   set XCFLAGS  = "$XMTDEF $XINCD"
+   set XLIBD    = ""
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm -lXt -lXext -lXhp11 -lX11 -lm"
+
+   if ( $STATIC == 1 ) then
+      set LFLAGS = "-Wl,-a,archive $LFLAGS"
+   endif
+   set SHAREDEXT = ".sl"
+   set LFLAGS = "-Wl,+s $LFLAGS"
+   breaksw
+
+case LINUX5:
+case LINUX6:
+   strings /lib/libc.so.6 | grep "GNU C Library" | grep '2.[23]' >& /dev/null
+   if ( $status == 0 ) then
+      set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
+   endif
+
+   set COMPILE_DC = 1
+   if ( $USE_QMAKE == 0 ) then
+      set MAKE = make
+   endif
+   set OFLAG = "-O2"
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      endif
+   if ( "$CC" != insure ) then
+      set CC       = gcc
+      set CXX      = g++
    else
       set CFLAGS = "-Wno-error $CFLAGS"
-      set OFLAG = "-O2"
+      set CXXFLAGS = "-Wno-error $CXXFLAGS"
       set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
       set LIBS = "$LIBS"
    endif
 
-   if ($DEBUGGED == 1) then
-      set DEBUG_FLAG = "-g $INSURE_FLAG"
-      set OFLAG = ""
-   endif
-   if ($GPROFFED == 1) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   if ( $CC == "gcc" && `gcc --version` == "2.96") then
+      set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"
    endif
 
-   if ( -f /lib/libc.so.6 ) then
-      strings /lib/libc.so.6 | grep "GNU C Library" | grep '2.[234]' >& /dev/null
-      if ($status == 0) then
-         set CFLAGS = "-DHAS_IN_PORT_T $CFLAGS"
-      endif
-   endif
-
-   set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
-   if ("$ADOC" == 1) then
-      set CFLAGS = "$CFLAGS -Wno-error"
-   endif
-   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+   set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
+   set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
    set SHARED_LFLAGS = "-L. -shared"
 
+   if ( $DEBUGGED == 1) then
+      set DEBUG_FLAG = "-g $INSURE_FLAG"
+      set OFLAG = ""
+   endif
+   if ( $GPROFFED == 1) then
+      set DEBUG_FLAG = "$DEBUG_FLAG -pg"
+   endif
+
+   if ( $COMPILE_ARCH == "LINUX60" ) then
+      set GLIBC20DEF=-DLINUX60
+   else
+     set GLIBC20DEF = ""
+   endif
+   if ( "$ADOC" != 1 ) then
+      set CFLAGS   = "$OFLAG -Wall -Werror $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   else 
+      set CFLAGS   = "$OFLAG $GLIBC20DEF $DEBUG_FLAG $CFLAGS"
+   endif
+   set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes $GLIBC20DEF $DEBUG_FLAG $CXXFLAGS"
    set NOERR_CFLAG = "-Wno-error"
-   set NOERR_PROTO = "-Wno-strict-prototypes"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
-
    set XMTDEF   = ""
-
-   if ($TARGET_BITS == TARGET_32BIT || $BUILDARCH == ALINUX) then
-      set XLIBD    = "-L/usr/X11R6/lib"
-   else
-      set XLIBD    = "-L/usr/X11R6/lib64"
-   endif
-
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
+   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
+   set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
 
-   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set MTCFLAGS = "${MTCFLAGS} -pthread"
+   set MTLFLAGS = "-lpthread"
 
-   if ($BUILDARCH != ALINUX) then
-      set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
-      set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
-      set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
-   else
-      set XINCD    = "$XMTINCD $XINCD"
-      set XCFLAGS  = "-DNeedFunctionPrototypes -Wno-error $XMTDEF $XINCD"
-      set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
-   endif
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
    breaksw
+
 case NECSX4:
 #
 # we need the '-hfloat0'-flag for CFLAGS and LFLAGS because the
@@ -1188,8 +1465,9 @@ case NECSX4:
    set INTERACTTARGETS = ""
    set COMPILE_DC = 1
    set MAKE = make
-   set CFLAGS = "-DNECSX4 -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
+   set CFLAGS = "-DNECSX4 -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set LFLAGS   = "-hfloat0 $DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
    set XMTDEF   = ""
@@ -1213,10 +1491,9 @@ case NECSX5:
       set MAKEFNMATCH = 1
    endif
    set MAKE = make
-   set OFLAG = "-h1"
-   set CFLAGS_NOOPT = "-DNECSX5 -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -D_REENTRANT -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
-   set CFLAGS = "$CFLAGS_NOOPT $OFLAG"
+   set CFLAGS = "-DNECSX5 -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = ""
@@ -1226,11 +1503,13 @@ case NECSX5:
       echo creating shared libs not yet supported on $BUILDARCH
       exit 1
    endif
-   set DLLIB = ""
    breaksw
 
 case SLINUX:
    set COMPILE_DC = 0
+   if ( $USE_QMAKE == 0 ) then
+      set MAKE = make
+   endif
    set OFLAG = "-O"
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
@@ -1247,8 +1526,9 @@ case SLINUX:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
+   set CFLAGS   = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX $DEBUG_FLAG $CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
    set SHAREDLD = $CC
@@ -1261,36 +1541,46 @@ case SLINUX:
    set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
    set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    breaksw
 
 case SOLARIS:
 case SOLARIS64:
 case SOLARIS86:
-   set COMPILE_DC = 1
-   if ($OPTIMIZATION == 1) then 
-      if ( $CC == gcc ) then
-         set OFLAG = "-O3"
-      else
-         if ( $BUILDARCH == SOLARIS86 ) then
-            # Do not compile Grid Engine with -xO4 on SOLARIS86 platform
-            # unless WS8 compiler with patch 112756-01 or higher is installed
+   if ( $BUILDARCH == SOLARIS64 && $CC == gcc ) then
+      echo "Do not compile Grid Engine with gcc on the solaris64 platform"
+      echo "The resulting sge_execd would not be able to retrieve correct load values"
+      exit 1
+   endif
 
-            set compversion = `cc -V |& head -1 | cut -f4 -d" "`
-            set patchcnt = `/bin/sh -c 'ls -d /var/sadm/patch/112756-* 2> /dev/null' | wc -l`
-            set haspatch = `expr $patchcnt ">=" 1`
-            if ( $compversion == 5.5 && $haspatch == 1 ) then
-               set OFLAG = "-fast -xchip=pentium -xcache=generic"
-            else
-               echo using \"-xO3\" optimization due to compiler bug
-               set OFLAG = "-xO3"
-            endif
-         else
-            set OFLAG = "-fast -xchip=generic -xcache=generic"
-         endif
-      endif
+   set LOADAVGLIBS = "-lkvm -lkstat"
+   set DIVBYZERO = "-fns -ftrap=division"
+#  set PARALLEL = "-j 1"
+#  set MAKE=gmake
+   if ( $CC == gcc ) then
+      set OFLAG = "-O3"
    else
-       set OFLAG = "-O"
+      if ( $BUILDARCH == SOLARIS86 ) then
+         echo "Do not compile Grid Engine with -xO4 on SOLARIS86 platform"
+         set OFLAG = "-xO3"
+      else
+         set OFLAG = "-xO4"
+      endif
+      
+   endif
+
+   set MTCFLAGS = "${MTCFLAGS} -mt"
+   set MTLFLAGS = "-lpthread"
+
+   if ( $OPTIMIZATION == 1 ) then
+      if ( $BUILDARCH == SOLARIS || $BUILDARCH == SOLARIS64 ) then
+         set OFLAG = "$OFLAG -xchip=ultra2"
+      endif   
    endif
 
    if ( $DEBUGGED == 1 ) then
@@ -1308,29 +1598,36 @@ case SOLARIS86:
       endif
    endif
 
-   set rel = `uname -r | cut -f 2 -d .`
-   if ( $rel > 6 ) then
-      set CFLAGS = "-DHAS_SOCKLEN_T $CFLAGS"
-   endif
-
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"
 
-   set MEMFLAG = ""
    if ( $BUILDARCH == SOLARIS64 ) then
-      if ( $CC == cc ) then
-         set MEMFLAG = "-xarch=v9"
-         set LFLAGS = "-xarch=v9 -xildoff $LFLAGS"
+      if ( $CC == gcc ) then
+         set SOL64BITFLAG = "-D$BUILDARCH -DSOLARIS7"
+      else
+         set SOL64BITFLAG = "-D$BUILDARCH -xarch=v9 -DSOLARIS7"
+         set LFLAGS = "-xildoff -xarch=v9 $LFLAGS"
+         set CFLAGS = "-v $CFLAGS" 
       endif
    else
       set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
-      set MEMFLAG = "-xarch=generic"
-      if ( $CC == cc ) then
-         set MEMCFLAG = "-Xa"
-         set LFLAGS = "-xildoff $LFLAGS"
+      set CXXFLAGS = "-D_LARGEFILE64_SOURCE=1 $CXXFLAGS"
+      set SOL64BITFLAG = ""
+      if ( $CC == cc || $CC == insure ) then
+         set MEMCFLAG=-Xa
+         set LFLAGS = "$DIVBYZERO -xildoff $LFLAGS"
       endif
    endif
 
-   set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 $DEBUG_FLAG"
+   if ( $BUILDARCH == SOLARIS86 ) then
+      if ( $CC == cc ) then
+#        set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
+         set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes" 
+      endif
+      set CFLAGS = "$CFLAGS -D$BUILDARCH"
+   endif
+
+   set CFLAGS = "$OFLAG $CFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG $DIVBYZERO"
+   set CXXFLAGS = "$OFLAG $CXXFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG $DIVBYZERO -DHAVE_STD -mt"
 
    set SHAREDLD = $CC
    if ( $CC == gcc ) then
@@ -1345,10 +1642,10 @@ case SOLARIS86:
       endif
    endif
 
+   set COMPILE_DC = 1
+
    set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
    set LIBS     = "-lsocket -lnsl $LIBS"
-   set LOADAVGLIBS = "-lkvm -lkstat"
-
    set XMTDEF   = "-DXMT_CDE_BUG_FIX"
 
    set XINCD    = "-I/usr/dt/include -I/usr/openwin/include $XMTINCD $XINCD"
@@ -1358,6 +1655,23 @@ case SOLARIS86:
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 
    set RANLIB   = "echo"
+
+   if ( $STATIC == 1 ) then
+      echo Static linking not available for SOLARIS
+      exit 1
+   else
+      if ( $CC == cc ) then
+         # set CFLAGS = "-Xa $CFLAGS"
+         set CFLAGS = "-Xc -DNLIST_STRUCT $CFLAGS"
+         set CXXFLAGS = "$CXXFLAGS"
+      endif
+   endif
+
+   set GCC_NOERR_CFLAGS = "$CFLAGS -w"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -w"
+
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
+
    breaksw
 
 case UNICOS*:
@@ -1366,13 +1680,16 @@ case UNICOS*:
    set ARFLAGS = rcv
    switch ($BUILDARCH)
       case UNICOS_TS:
-         set CFLAGS   = "-DCRAY -DCRAYTS -DGETHOSTBYNAME_M $DEBUG_FLAG $CFLAGS"
+         set CFLAGS   = "-DCRAY -DCRAYTS $DEBUG_FLAG $CFLAGS"
+         set CXXFLAGS   = "-DCRAY -DCRAYTS $DEBUG_FLAG $CXXFLAGS"
          breaksw
       case UNICOS_TS_IEEE:
-         set CFLAGS   = "-DCRAY -DCRAYTS -DCRAYTSIEEE -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+         set CFLAGS   = "-DCRAY -DCRAYTS -DCRAYTSIEEE $DEBUG_FLAG $CFLAGS"
+         set CXXFLAGS   = "-DCRAY -DCRAYTS -DCRAYTSIEEE $DEBUG_FLAG $CXXFLAGS"
          breaksw
       default:
-         set CFLAGS   = "-DCRAY -DGETHOSTBYNAME_M $DEBUG_FLAG $CFLAGS"
+         set CFLAGS   = "-DCRAY $DEBUG_FLAG $CFLAGS"
+         set CXXFLAGS   = "-DCRAY $DEBUG_FLAG $CXXFLAGS"
    endsw
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = ""
@@ -1392,12 +1709,14 @@ case UNICOS*:
    endsw
    set XCFLAGS  = "$XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
+   set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set COMPILE_DC = 1
    if ( $SHAREDLIBS == 1 ) then
       echo creating shared libs not yet supported on $BUILDARCH
       exit 1
    endif
    breaksw
+
 default:
    echo "ERROR: Architecture $BUILDARCH not supported by aimk"
    exit 1
@@ -1405,41 +1724,48 @@ endsw
 
 set MAKEOPT = "$MAKEOPT $PARALLEL"
 
-# set gcc version dependent defines, suppress gcc 3.3.x warnings
-#
-if ($CC == gcc) then
-   expr `gcc -dumpversion` : 3.3 > /dev/null
-   if ($status == 0) then
-      set CFLAGS = "$CFLAGS -Wno-sign-compare -Wno-strict-aliasing"
-   endif
-   expr `gcc -dumpversion` : 2.96 > /dev/null
-   if ($status == 0) then
-      set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"
-   endif
+if ( "$GCC_NOERR_CFLAGS" == "" ) then
+   set GCC_NOERR_CFLAGS = "$CFLAGS"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS"
 endif
 
-# pass -DCOMPILE_DC define to compile where PTF and PDC are ported
-#
 if ( $COMPILE_DC == 1 ) then
    set CFLAGS = "$CFLAGS -DCOMPILE_DC"
+   set CXXFLAGS = "$CXXFLAGS -DCOMPILE_DC"
 endif
 
-# create only shared libraries if requested - this is not yet the default
-#
 if ( $SHAREDLIBS == 1 ) then
    set LIBEXT = "$SHAREDEXT"
 else
    set LIBEXT = ".a"
 endif
 
-# spooling library dependencies
-#
-set TMP_SPOOLING_DEPS = "$SPOOLING_DEPS"
-set SPOOLING_DEPS     = ""
+# SPOOLING LIBRARY DEPENDENCIES
+set TMP_SPOOLING_DEPS = "${SPOOLING_DEPS}"
+set SPOOLING_DEPS = ""
 foreach lib ( $TMP_SPOOLING_DEPS )
    set SPOOLING_DEPS = "${SPOOLING_DEPS} ${lib}${LIBEXT}"
 end
+# end SPOOLING LIBRARY DEPENDENCIES
 
+# link against zlib. use absolute path to avoid conflicts with
+# pre-installed (probable older version) zlib
+# can be turned off by -nocompress
+if ( "$ZLIBBASE" != "" ) then
+   set ZLIB = "$ZLIBBASE/$COMPILE_ARCH/libz$LIBEXT"
+   set LINK_ZLIB = "-L$ZLIBBASE/$COMPILE_ARCH -lz"
+   set CORE_INCLUDE = "$CORE_INCLUDE -I$ZLIBBASE"
+#   set LIBS = "$LIBS -lz"
+#   set LFLAGS = "-L$ZLIBBASE/$COMPILE_ARCH $LFLAGS"
+   if ( $SHAREDLIBS == 1 ) then
+      set SHARED_LFLAGS = "-L$ZLIBBASE/$COMPILE_ARCH $SHARED_LFLAGS"
+   endif
+else
+   set ZLIB = ""
+   set LINK_ZLIB = ""
+endif
+
+#
 # for gettext
 #
 if ( $WITH_GETTEXT == 1 ) then
@@ -1448,7 +1774,7 @@ if ( $WITH_GETTEXT == 1 ) then
       set LFLAGS = "-L $MYILIB"
       echo "Using $MYILIB path for i18n support"
    else
-      if ( $BUILDARCH == "SOLARIS" || $BUILDARCH == "SOLARIS64" || $BUILDARCH == "SOLARIS86" || $BUILDARCH == "LINUX86" || $BUILDARCH == LINUXIA64 || $BUILDARCH == LINUXAMD64) then
+      if ( $COMPILE_ARCH == "SOLARIS" || $COMPILE_ARCH == "SOLARIS64" || $COMPILE_ARCH == "SOLARIS86" || $COMPILE_ARCH == "LINUX6" ) then
          set LIBINTL = ""
          set HFLAGS = ""
       else
@@ -1459,28 +1785,39 @@ if ( $WITH_GETTEXT == 1 ) then
    endif
    set LIBS = "$LIBINTL $LIBS"
    set CFLAGS = "$CFLAGS -D__SGE_COMPILE_WITH_GETTEXT__ $HFLAGS"
+   set CXXFLAGS = "$CXXFLAGS"
 else
    set XGETTEXT = ""
 endif
 
+#
 # for usermapping
 #
 if ( $WITH_USERMAPPING == 0 ) then
    set CFLAGS = "$CFLAGS -D__SGE_NO_USERMAPPING__"
 endif
 
-# create shared lib from LGPL code  - use $SHAREDEXT for shared lib extension
-#
+if ( $commd_fifo_flag == 1 ) then
+   set CFLAGS = "$CFLAGS -DENABLE_COMMD_FIFO_BUGFIX"
+endif
+
+echo making in $COMPILE_ARCH/ for $COMPILE_ARCH
+
+# create shared lib from LGPL code
+set GLIBEXT        = "$SHAREDEXT"
 set GSHARED_CFLAGS = "$SHARED_CFLAGS"
 set GSHARED_LFLAGS = "$SHARED_LFLAGS"
 
-#---------------------------------------------------------------------------
-# Actual make targets begin here
-#
-echo making in $COMPILE_ARCH/ for $COMPILE_ARCH
+if ( $SHAREDLIBS == 1 ) then
+   set LIBEXT = "$SHAREDEXT"
+else
+   set LIBEXT = ".a"
+   set SHARED_CFLAGS = ""
+   set SHARED_LFLAGS = ""
+endif
 
 if ( "$BUILDMAN" == 1 ) then
-   echo _________M_A_N_P_A_G_E_S__________________
+   echo _________M_A_N_P_A_G_E_S_______
 
    if ( $?MAN2HTMLPATH ) then
       setenv PATH ${MAN2HTMLPATH}:${PATH}
@@ -1505,7 +1842,7 @@ if ( "$BUILDMAN" == 1 ) then
 endif
 
 if ( "$BUILDCATMAN" == 1 ) then
-   echo _________C_A_T_P_A_G_E_S__________________
+   echo _________C_A_T_P_A_G_E_S_______
 
    $SOURCE/scripts/mk_catman $SOURCE $SGE_PRODUCT_MODE
 
@@ -1520,7 +1857,7 @@ if ( "$BUILDCATMAN" == 1 ) then
 endif
 
 if ( "$BUILDGETTEXT" == 1 ) then
-   echo _________G_E_T_T_E_X_T____________________
+   echo ________G_E_T_T_E_X_T___________
 
    cd $SOURCE/3rdparty/gettext
    $SOURCE/scripts/install.gridware $COMPILE_ARCH
@@ -1535,8 +1872,9 @@ if ( "$BUILDGETTEXT" == 1 ) then
 
 endif   
 
+
 if ( "$SGE_DEPEND" == 1 ) then
-   echo _________S_G_E__D_E_P_E_N_D_______________
+   echo ________S_G_E__D_E_P_E_N_D_______
 
    cd $SOURCE/3rdparty/sge_depend
 
@@ -1546,7 +1884,8 @@ if ( "$SGE_DEPEND" == 1 ) then
    endif
 
    cd $COMPILE_ARCH
-   $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS -U_GNU_SOURCE" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
+   $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
+
    if ( $status != 0 ) then
       echo not done
       exit 1
@@ -1556,7 +1895,7 @@ if ( "$SGE_DEPEND" == 1 ) then
 endif
 
 if ( "$MAKESTRPTIME" == 1 ) then
-   echo _________3_r_d_p_a_r_t_y__S_T_R_P_T_I_M_E_
+   echo ______3_r_d_p_a_r_t_y__S_T_R_P_T_I_M_E___
 
    # Set TPLIB, LIBS, and CFLAGS for all compiles
 
@@ -1587,7 +1926,7 @@ if ( "$MAKESTRPTIME" == 1 ) then
 endif
 
 if ( "$MAKEFNMATCH" == 1 ) then
-   echo _________3_r_d_p_a_r_t_y__F_N_M_A_T_C_H___
+   echo ______3_r_d_p_a_r_t_y__F_N_M_A_T_C_H_____
 
    # Set TPLIB, LIBS, and CFLAGS for all compiles
 
@@ -1617,49 +1956,26 @@ if ( "$MAKEFNMATCH" == 1 ) then
    cd $SOURCE
 endif
 
-if ( "$ADD_COPYRIGHT" == 1 ) then
-   set CFLAGS = "-DADD_COPYRIGHT -I$COPYRIGHT_DIR $CFLAGS"
-else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
-   set CFLAGS = "-DADD_COPYRIGHT -DADD_SUN_COPYRIGHT -I$SUN_COPYRIGHT_DIR $CFLAGS"
-endif
+if ( "$ZLIBBASE" != "" || "$MAKEZLIB" == 1 ) then
+   echo ______3_r_d_p_a_r_t_y__Z_L_I_B_______
 
-if ( "$CORE" == 1 ) then
+   cd $SOURCE/3rdparty/zlib
+
+   if ( ! -d $COMPILE_ARCH ) then
+      echo " INFO: Architecture dir $COMPILE_ARCH not existing for 3rdparty zlib. Making"
+      mkdir $COMPILE_ARCH
+   endif
 
    cd $COMPILE_ARCH
 
-   # Really bad workaround to compile SGE 
-   # until we can build libdrmaa.so in AIX 4.3
-   if ($COMPILE_ARCH == AIX43) then
-      touch 12121212 libdrmaa.so example test_drmaa
-   endif
+  $MAKE $MAKEOPT -f ../Makefile.aimk "MAKE=$MAKE" "CC=$CC" \
+      "CFLAGS=$CFLAGS" "SOURCE=$SOURCE" \
+      "KRBLIBS=$KRBLIBS" \
+      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "AR=$AR" "ARFLAGS=$ARFLAGS" \
+      "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+      "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
 
-   echo _________C_O_R_E__S_Y_S_T_E_M_____________
-   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
-         "LD_WRAPPER=$LD_WRAPPER" \
-         "CFLAGS=$CFLAGS $CORE_INCLUDE" \
-         "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-         "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
-         "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
-         "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
-         "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
-         "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
-         "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
-         "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-         "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
-         "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
-         "NOERR_PROTO=$NOERR_PROTO" \
-         "NOERR_CFLAG=$NOERR_CFLAG" \
-         "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
-         "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
-         "INTERACTTARGETS=$INTERACTTARGETS" \
-         "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
-         "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
-         "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
-         "DLLIB=$DLLIB" \
-         "MEMCFLAG=$MEMCFLAG" \
-         "CORE_INCLUDE=$CORE_INCLUDE" \
-         "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
-         $argv
    if ( $status != 0 ) then
       echo not done
       exit 1
@@ -1668,29 +1984,106 @@ if ( "$CORE" == 1 ) then
    cd $SOURCE
 endif
 
-if ( "$QMON" == 1 ) then
-   echo _________Q_M_O_N__________________________
+if ( "$ADD_COPYRIGHT" == 1 ) then
+   set CFLAGS = "-DADD_COPYRIGHT -I$COPYRIGHT_DIR $CFLAGS"
+else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
+   set CFLAGS = "-DADD_COPYRIGHT -DADD_SUN_COPYRIGHT -I$SUN_COPYRIGHT_DIR $CFLAGS"
+endif
+
+if ( "$CORE" == 1 ) then
+   cd $COMPILE_ARCH
+
+   echo ________C_O_R_E__S_Y_S_T_E_M_________
+   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+       "SDIR=$SDIR" "SOURCE=$SOURCE" \
+       "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
+       "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
+       "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
+       "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS $LINK_ZLIB" \
+       "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
+       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
+       "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
+       "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
+       "GCC_NOSP=$GCC_NOSP" \
+       "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
+       "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" "COMPILE_ARCH=$COMPILE_ARCH" \
+       "INTERACTTARGETS=$INTERACTTARGETS" \
+       "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
+       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+       "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
+       "DLLIB=$DLLIB" \
+       "MEMCFLAG=$MEMCFLAG" \
+       "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" $argv $TARGET 
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
+
+if ( "$MT" == 1 ) then
+   
+   set COMPILE_ARCH_MT = "${COMPILE_ARCH}_MT"
+
+   echo making in $COMPILE_ARCH_MT/ for $COMPILE_ARCH
+
+   if ( ! -d $COMPILE_ARCH_MT ) then
+      echo " INFO: Architecture dir $COMPILE_ARCH_MT not existing. Making"
+      mkdir $COMPILE_ARCH_MT
+   endif
+
+   cd $COMPILE_ARCH_MT
+
+   echo ________C_O_R_E__S_Y_S_T_E_M___M_T________
+   $MAKE $MAKEOPT -f $SOURCE/libs/japi/Makefile "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $MTCFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+       "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
+       "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
+       "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
+       "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
+       "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS $LINK_ZLIB" \
+       "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
+       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" \
+       "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
+       "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
+       "GCC_NOSP=$GCC_NOSP" \
+       "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
+       "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
+       "INTERACTTARGETS=$INTERACTTARGETS" \
+       "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
+       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+       "DLLIB=$DLLIB" \
+       "MEMCFLAG=$MEMCFLAG" \
+       "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" "CORE_INCLUDE=$CORE_INCLUDE" $argv $TARGET 
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
+
+if ( "$QMON" == 1) then
+   echo __________Q_M_O_N____________
 
    cd $SOURCE/3rdparty/qmon
 
-   if (! -d $COMPILE_ARCH) then
+   if ( ! -d $COMPILE_ARCH ) then
       echo " INFO: Architecture dir $COMPILE_ARCH not existing for 3rdparty Qmon Libs. Making"
       mkdir $COMPILE_ARCH
    endif
 
    cd $COMPILE_ARCH
 
-   $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" \
-         "LD_WRAPPER=$LD_WRAPPER" \
-         "CFLAGS=$CFLAGS" "SDIR=$SDIR" "SOURCE=$SOURCE" \
-         "COMPILE_ARCH=$COMPILE_ARCH" \
-         "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" "KRBLIBS=$KRBLIBS" \
-         "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
-         "AR=$AR" "ARFLAGS=$ARFLAGS" "TPLIB=$TPLIB" \
-         "MEMCFLAG=$MEMCFLAG"  \
-         "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
-         "GSHARED_CFLAGS=$GSHARED_CFLAGS" "GSHARED_LFLAGS=$GSHARED_LFLAGS" \
-         "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
+   $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" \
+      "CFLAGS=$CFLAGS" "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
+      "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" "KRBLIBS=$KRBLIBS" \
+      "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "AR=$AR" "ARFLAGS=$ARFLAGS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
+      "MEMCFLAG=$MEMCFLAG" \
+      "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+      "GSHARED_CFLAGS=$GSHARED_CFLAGS" "GSHARED_LFLAGS=$GSHARED_LFLAGS" "GLIBEXT=$GLIBEXT" \
+      "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
 
    if ( $status != 0 ) then
       echo not done
@@ -1702,29 +2095,23 @@ if ( "$QMON" == 1 ) then
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f $SOURCE/clients/qmon/Makefile \
-         "LD_WRAPPER=$LD_WRAPPER" \
-         "CFLAGS=$CFLAGS $CORE_INCLUDE" \
-         "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-         "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
-         "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
-         "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
-         "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
-         "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
-         "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
-         "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-         "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
-         "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
-         "NOERR_PROTO=$NOERR_PROTO" \
-         "NOERR_CFLAG=$NOERR_CFLAG" \
-         "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
-         "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
-         "INTERACTTARGETS=$INTERACTTARGETS" \
-         "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
-         "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
-         "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
-         "DLLIB=$DLLIB" \
-         "MEMCFLAG=$MEMCFLAG" \
-         $argv
+       "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "SDIR=$SDIR" "SOURCE=$SOURCE"\
+       "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" \
+       "SECLIB=$SECLIB" "SECLIBS=$SECLIBS" \
+       "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" \
+       "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" \
+       "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+       "MSDIR=$MSDIR" "LIBS=$KLIBS $LIBS $LINK_ZLIB" \
+       "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
+       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
+       "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
+       "SGE_NPROCS_CFLAGS=$SGE_NPROCS_CFLAGS" "GCC_NOERR_CFLAGS=$GCC_NOERR_CFLAGS" \
+       "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "ZLIB=$ZLIB" "TPLIB=$TPLIB" \
+       "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" "COMPILE_ARCH=$COMPILE_ARCH" \
+       "INTERACTTARGETS=$INTERACTTARGETS" \
+       "LIBEXT=$LIBEXT" "GLIBEXT=$GLIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
+       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+       "MEMCFLAG=$MEMCFLAG" $argv $TARGET
    if ( $status != 0 ) then
       echo not done
       exit 1
@@ -1734,7 +2121,7 @@ if ( "$QMON" == 1 ) then
 endif
 
 if ( "$REMOTE" == 1) then
-   echo _________3_r_d_p_a_r_t_y__R_E_M_O_T_E_____
+   echo ____3_r_d_p_a_r_t_y__R_E_M_O_T_E_____
 
    cd $SOURCE/3rdparty/remote
 
@@ -1743,17 +2130,11 @@ if ( "$REMOTE" == 1) then
       mkdir $COMPILE_ARCH
    endif
 
-   if ( $COMPILE_ARCH == "NECSX5" ) then
-      set CFLAGS_REMOTE = "$CFLAGS_NOOPT"
-   else
-      set CFLAGS_REMOTE = "$CFLAGS"
-   endif
-
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" \
-      "CFLAGS=$CFLAGS_REMOTE" "LIBS=$LIBS" "SOURCE=$SOURCE" \
-      "KRBLIBS=$KRBLIBS" "DLLIB=$DLLIB" \
+      "CFLAGS=$CFLAGS" "LIBS=$LIBS" "SOURCE=$SOURCE" \
+      "KRBLIBS=$KRBLIBS" \
       "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "LIBEXT=$LIBEXT" \
       "MEMCFLAG=$MEMCFLAG" "COMPILE_ARCH=$COMPILE_ARCH" $argv
@@ -1767,11 +2148,11 @@ if ( "$REMOTE" == 1) then
 endif
 
 if ( "$QMAKE" == 1) then
-   echo _________3_r_d_p_a_r_t_y__Q_M_A_K_E_______
+   echo _____3_r_d_p_a_r_t_y__Q_M_A_K_E______
 
    cd $SOURCE/3rdparty/qmake/$COMPILE_ARCH
 
-   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
+   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" $argv
 
    if ( $status != 0 ) then
       echo not done
@@ -1783,7 +2164,7 @@ endif
 
 
 if ( "$QTCSH" == 1) then
-   echo _________3_r_d_p_a_r_t_y__Q_T_C_S_H_______
+   echo _____3_r_d_p_a_r_t_y__Q_T_C_S_H______
 
    # with shared libs: qtcsh requires finding libsge.so during build
    # for AIX, we have to pass special options to make
@@ -1794,30 +2175,32 @@ if ( "$QTCSH" == 1) then
    if ( $SHAREDLIBS == 1 ) then
       set SHARED_PATH_NAME = `dist/util/arch -lib`
 
-      switch ( $COMPILE_ARCH )
+      switch ( $BUILDARCH )
+         case AIX41:
+         case AIX42:
          case AIX43:
             set SGE_LOPTS = "-brtl"
             breaksw
       endsw
 
-      setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}
+      setenv $SHARED_PATH_NAME ${SOURCE}/${COMPILE_ARCH}:${ZLIBBASE}/${COMPILE_ARCH}
    endif
 
-   set SGE_LIBS = "-lsge -lcomm -lcommlists -lpthread"
+   set SGE_LIBS = "-lsge"
 
-   if ( "$COMPILE_ARCH" == "NECSX5" ) then
+   if ( "$BUILDARCH" == "NECSX5" ) then
       set SGE_LIBS = "$SGE_LIBS -lfnmatch"
    endif
 
    cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
 
-   if ( $CC == "insure" ) then
+   if ( "$CC" == "insure" ) then
       setenv CC insure
    endif
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
-         "SGE_LIBS=$SGE_LIBS $KRBLIB $LFLAGS $KLFLAGS $KLIBS $DLLIB" \
-         "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" "DLLIB=$DLLIB" $argv
+         "SGE_LIBS=$SGE_LIBS $KRBLIB $LINK_ZLIB $LFLAGS $KLFLAGS $KLIBS" \
+         "SGE_COPTS=$SGE_COPTS" "SGE_LOPTS=$SGE_LOPTS" $argv
 
    if ( $status != 0 ) then
       echo not done
@@ -1832,7 +2215,7 @@ if ( "$QTCSH" == 1) then
 endif
 
 if ( "$ADOC" == 1) then
-   echo _________3_r_d_p_a_r_t_y__A_D_O_C_________
+   echo _____3_r_d_p_a_r_t_y__A_D_O_C______
 
    cd $SOURCE/3rdparty/adoc
 

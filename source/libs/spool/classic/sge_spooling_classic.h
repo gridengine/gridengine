@@ -47,38 +47,26 @@ spool_classic_common_startup_func(lList **answer_list,
                                   const lListElem *rule, bool check);
 
 bool 
-spool_classic_default_maintenance_func(lList **answer_list, 
-                                       const lListElem *rule,
-                                       const spooling_maintenance_command cmd,
-                                       const char *args);
-
-bool 
-spool_classic_common_maintenance_func(lList **answer_list, 
-                                      const lListElem *rule,
-                                      const spooling_maintenance_command cmd,
-                                      const char *args);
-
-bool 
 spool_classic_default_list_func(lList **answer_list, 
                                 const lListElem *type, 
                                 const lListElem *rule, lList **list, 
-                                const sge_object_type object_type);
+                                const sge_object_type event_type);
 lListElem *
 spool_classic_default_read_func(lList **answer_list, 
                                 const lListElem *type, 
                                 const lListElem *rule, const char *key, 
-                                const sge_object_type object_type);
+                                const sge_object_type event_type);
 bool 
 spool_classic_default_write_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, 
                                  const lListElem *object, const char *key, 
-                                 const sge_object_type object_type);
+                                 const sge_object_type event_type);
 bool 
 spool_classic_default_delete_func(lList **answer_list, 
                                   const lListElem *type, 
                                   const lListElem *rule, 
                                   const char *key, 
-                                  const sge_object_type object_type);
+                                  const sge_object_type event_type);
 
 #endif /* __SGE_SPOOLING_CLASSIC_H */    

@@ -1,7 +1,0 @@
-OREILLY_SERVLET=/cod_home/andre/OPENSOURCE/gridengine/gep/lib/cos.jar
-IPS=/opt
-IPS_DOMAIN="dc=Germany,dc=Sun,dc=COM"
-IWS_HOST_INSTANCE=https-bilbo.Germany.Sun.COM
-IWS_HOST_VS=https-bilbo.Germany.Sun.COM
-VNC_ROOT=/gridware/Tools/GEP/vnc-3.3.7-sparc_solaris_2.5
-APP_HOME=/gridware/Tools/GEP/apps

@@ -47,7 +47,7 @@ static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell 
 extern char SFLN_ELN[];
 
 #ifdef ADD_SUN_COPYRIGHT
-static char mailto[] = "\nFor further information and feedback use: @fBn1ge6beta-support@@.sun.com@fR\n\n";
+static char mailto[] = "\nFor further information and feedback use: @fBsgebeta53-support@@.sun.com@fR\n\n";
 #else
 static char mailto[] = "\n";
 #endif
@@ -56,11 +56,14 @@ void qmonAboutMsg(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+   int sgeee_mode; 
    dstring ds;
    char buffer[256];
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    
+   sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
+
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    XmtDisplayMessage(w, "about_msg", "Help", header, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,

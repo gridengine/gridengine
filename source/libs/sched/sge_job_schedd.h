@@ -49,8 +49,6 @@ void sge_dec_jc(lList** jcpp, const char *name, int slots);
 
 int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so);
 
-int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret);
-
 /*
  * drop all running jobs into the running list 
  *
@@ -107,6 +105,8 @@ lList *filter_max_running_1step(lList *pending_jobs, lList *running_jobs, lList 
 lList *filter_max_running(lList *pending_jobs, lList *jct_list, int max_jobs, int elem);
 
 void trace_job_sort(lList *job_list);
+
+int get_job_contribution(double *dvalp, const char *name, lListElem *jep, lListElem *dcep);
 
 int nslots_granted(lList *granted, const char *qhostname);
 

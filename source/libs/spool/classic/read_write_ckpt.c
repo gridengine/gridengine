@@ -36,6 +36,7 @@
 
 #include "sge.h"
 #include "cull.h"
+#include "sge_queue.h"         
 #include "config.h"
 #include "sge_answer.h"
 #include "read_write_ckpt.h"
@@ -277,3 +278,60 @@ FPRINTF_ERROR:
    return NULL; 
 }
 
+/***f** src/sge_generic_ckpt() **********************************************
+*
+*  NAME
+*     sge_generic_ckpt -- build up a generic ckpt object
+*
+*  SYNOPSIS
+*     lListElem* sge_generic_ckpt(
+*        char *ckpt_name
+*     );
+*
+*  FUNCTION
+*     build up a generic ckpt object
+*
+*  INPUTS
+*     ckpt_name - name used for the CK_name attribute of the generic
+*               pe object. If NULL then "template" is the default name.
+*
+*  RESULT
+*     !NULL - Pointer to a new CULL object of type CK_Type
+*     NULL - Error
+*
+*  EXAMPLE
+*
+*  NOTES
+*
+*  BUGS
+*
+*  SEE ALSO
+*
+*****************************************************************************/   
+lListElem* sge_generic_ckpt(
+char *ckpt_name 
+) {
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "sge_generic_ckpt");
+
+   ep = lCreateElem(CK_Type);
+
+   if (ckpt_name)
+      lSetString(ep, CK_name, ckpt_name);
+   else
+      lSetString(ep, CK_name, "template");
+
+   lSetString(ep, CK_interface, "userdefined");
+   lSetString(ep, CK_ckpt_command, "none");
+   lSetString(ep, CK_migr_command, "none");
+   lSetString(ep, CK_rest_command, "none");
+   lSetString(ep, CK_clean_command, "none");
+   lSetString(ep, CK_ckpt_dir, "/tmp");
+   lSetString(ep, CK_when, "sx");
+   lSetString(ep, CK_signal, "none");
+   lSetUlong(ep, CK_job_pid, 0);
+
+   DEXIT;
+   return ep;
+}

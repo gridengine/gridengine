@@ -41,9 +41,26 @@
 
 #include <sys/types.h>
 
+#include "sgermon.h"
+#include "sge_time.h"
+#include "sge_log.h"
+#include "sge.h"
+#include "basis_types.h"
+#include "sge_language.h"
+#include "sge_conf.h"
+#include "msg_common.h"
+#include "msg_execd.h"
+#include "sgedefs.h"
+#include "exec_ifm.h"
+#include "pdc.h"
+#include "sge_feature.h"
+#include "sge_job.h"
+#include "sge_uidgid.h"
+#include "sge_pe_task.h"
+
 #if defined(COMPILE_DC) || defined(MODULE_TEST)
 
-#if defined(IRIX) || defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(NECSX4) || defined(NECSX5) || !defined(MODULE_TEST)
+#if defined(IRIX6) || defined(ALPHA) || defined(LINUX) || defined(SOLARIS) || defined(NECSX4) || defined(NECSX5) || !defined(MODULE_TEST)
 #   define USE_DC
 #endif
 
@@ -72,9 +89,9 @@
 #ifdef __sgi
 #  include <sys/resource.h>
 #  include <sys/systeminfo.h>
-#  include <sys/sched.h>
-#  include <sys/sysmp.h>
-#  include <sys/schedctl.h>
+#  ifdef IRIX64
+#     include <sys/sched.h>
+#  endif
 #endif
 
 #ifdef CRAY
@@ -93,7 +110,7 @@ int setpriority(int which, id_t who, int prio);
 #   include <sys/stat.h>
 #   include <fcntl.h>
 #   include <sys/signal.h>
-#   if ( IRIX || ALPHA || SOLARIS )
+#   if ( IRIX6 || IRIX64 || ALPHA || SOLARIS )
 #      include <sys/fault.h>
 #   endif
 #   include <sys/syscall.h>
@@ -103,24 +120,12 @@ int setpriority(int which, id_t who, int prio);
 #include "sge_all_listsL.h"
 #include "commlib.h"
 
-#include "ptf.h"
+#ifdef USE_DC
+#   include "sgedefs.h"
+#   include "exec_ifm.h"
+#endif
 
-#include "sgermon.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "sge.h"
-#include "basis_types.h"
-#include "sge_language.h"
-#include "sge_conf.h"
-#include "msg_common.h"
-#include "msg_execd.h"
-#include "sgedefs.h"
-#include "exec_ifm.h"
-#include "pdc.h"
-#include "sge_feature.h"
-#include "sge_job.h"
-#include "sge_uidgid.h"
-#include "sge_pe_task.h"
+#include "ptf.h"
 
 /*
  *
@@ -212,7 +217,7 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list);
 
 static lListElem *ptf_get_job(u_long job_id);
 
-#if defined(__sgi)
+#if defined(__sgi) && !defined(IRIX5)
 
 static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri);
 
@@ -338,8 +343,6 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
    lList *usage_list;
    lListElem *usage;
 
-   DENTER(TOP_LAYER, "ptf_build_usage_list");
-
    if (old_usage_list) {
       usage_list = lCopyList(name, old_usage_list);
       for_each(usage, usage_list) {
@@ -383,7 +386,6 @@ static lList *ptf_build_usage_list(char *name, lList *old_usage_list)
 #endif
    }
 
-   DEXIT;
    return usage_list;
 }
 
@@ -493,7 +495,7 @@ static void ptf_set_job_priority(lListElem *job)
 static void ptf_set_native_job_priority(lListElem *job, lListElem *osjob, 
                                         long pri)
 {
-#if defined(__sgi)
+#if defined(__sgi) && !defined(IRIX5)
    ptf_setpriority_ash(job, osjob, pri);
 #elif defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    ptf_setpriority_jobid(job, osjob, pri);
@@ -502,7 +504,7 @@ static void ptf_set_native_job_priority(lListElem *job, lListElem *osjob,
 #endif
 }
 
-#if defined(__sgi)
+#if defined(__sgi) && !defined(IRIX5)
 
 /****** execd/ptf/ptf_setpriority_ash() ***************************************
 *  NAME
@@ -513,7 +515,7 @@ static void ptf_set_native_job_priority(lListElem *job, lListElem *osjob,
 *        long *pri) 
 *
 *  FUNCTION
-*     This function is only available for the architecture IRIX.
+*     This function is only available for the architecture IRIX6.
 *     All processes belonging to "job" and "osjob" will get a new priority.
 *
 *  INPUTS
@@ -527,14 +529,14 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri)
    static int bg_flag;
    lListElem *pid;
 
-#  if defined(IRIX)
+#  if defined(IRIX6)
    int nprocs;
    static int first = 1;
 #  endif
 
    DENTER(TOP_LAYER, "ptf_setpriority_ash");
 
-#  if defined(IRIX)
+#  if defined(IRIX6)
    if (first) {
       nprocs = sysmp(MP_NPROCS);
       if (nprocs <= 0)
@@ -557,10 +559,114 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri)
       got_release = 1;
    }
 #  endif
-#  if defined(__sgi)
+#  if defined(__sgi) && !defined(IRIX5)
    for_each(pid, lGetList(osjob, JO_pid_list)) {
 #     ifdef PTF_NICE_BASED
-      /* IRIX 6.4 also has some scheduler bugs.  Namely, when you use
+#        if defined(IRIX6)
+
+      /* 
+       * IRIX 6.2 has several scheduler bugs which requires this complicated
+       * /workaround.  First, a nice value of 20 does not produce a
+       * "background" priority as documented.  Second, if you raise a low 
+       * non-degrading priority to a high priority, the process will still
+       * not move to the run queue.  We used the deadline schedule to
+       * force the process to run and therefore to move it up the run queue 
+       */
+#        ifndef IRIX_NODEADLINE
+      struct sched_deadline deadline;
+
+      /* 
+       * If IRIX 6.[23], turn off deadline scheduler 
+       */
+      if (strcmp(irix_release, "6.2") == 0 || 
+          strcmp(irix_release, "6.3") == 0) {
+         if (lGetUlong(pid, JP_background) == 2) {
+
+            SET_TIMESTRUC_FROM_MS(deadline.dl_period, 0);
+            SET_TIMESTRUC_FROM_MS(deadline.dl_alloc, 0);
+
+            if (schedctl(DEADLINE, lGetUlong(pid, JP_pid), &deadline) < 0
+                && errno != ESRCH) {
+               ERROR((SGE_EVENT, MSG_SCHEDD_JOBXPIDYSCHEDCTLFAILUREX_UUS,
+                      u32c(lGetUlong(job, JL_job_ID)),
+                      u32c(lGetUlong(pid, JP_pid)), strerror(errno)));
+            }
+
+            lSetUlong(pid, JP_background, 0);
+         }
+      }
+#        endif /* IRIX_NODEADLINE */
+
+      if (bg_flag && lGetUlong(job, JL_interactive) == 0 &&
+          lGetDouble(job, JL_adjusted_current_proportion) <
+          (PTF_BACKGROUND_JOB_PROPORTION / (double) nprocs)) {
+
+         /* set a low non-degrading priority */
+         if (schedctl(NDPRI, lGetUlong(pid, JP_pid),
+                      PTF_BACKGROUND_JOB_PRIORITY) < 0 && errno != ESRCH) {
+            ERROR((SGE_EVENT, MSG_SCHEDD_JOBXPIDYSCHEDCTLFAILUREX_UUS,
+                   u32c(lGetUlong(job, JL_job_ID)),
+                   u32c(lGetUlong(pid, JP_pid)), strerror(errno)));
+         }
+
+         lSetUlong(pid, JP_background, 1);
+      } else {
+
+         /* 
+          * if the process was previously "backgrounded", then
+          * bring it back to the foreground priority 
+          */
+         if (lGetUlong(pid, JP_background) == 1) {
+
+            /* 
+             * turn non-degrading priority off 
+             */
+            if (schedctl(NDPRI, lGetUlong(pid, JP_pid), 0) < 0 &&
+                errno != ESRCH) {
+               ERROR((SGE_EVENT, MSG_SCHEDD_JOBXPIDYSCHEDCTLFAILUREX_UUS,
+                      u32c(lGetUlong(job, JL_job_ID)),
+                      u32c(lGetUlong(pid, JP_pid)), strerror(errno)));
+            }
+#      ifndef IRIX_NODEADLINE
+
+            /* 
+             * use workaround for IRIX 6.[23] 
+             */
+            if (strcmp(irix_release, "6.2") == 0 ||
+                strcmp(irix_release, "6.3") == 0) {
+
+               /* 
+                * force process to run once during the next interval
+                * using deadline scheduler 
+                */
+               SET_TIMESTRUC_FROM_MS(deadline.dl_period,
+                                     MAX(PTF_SCHEDULE_TIME / 2, 1) * 1000);
+               SET_TIMESTRUC_FROM_MS(deadline.dl_alloc, 1);
+
+               if (schedctl(DEADLINE, lGetUlong(pid, JP_pid), &deadline) < 0
+                   && errno != ESRCH) {
+                  ERROR((SGE_EVENT, MSG_SCHEDD_JOBXPIDYSCHEDCTLFAILUREX_UUS,
+                         u32c(lGetUlong(job, JL_job_ID)),
+                         u32c(lGetUlong(pid, JP_pid)), strerror(errno)));
+               }
+               lSetUlong(pid, JP_background, 2);
+            }
+#      endif /* IRIX_NODEADLINE */
+
+         }
+
+         /* set nice value */
+         if (schedctl(RENICE, lGetUlong(pid, JP_pid), pri) < 0 && 
+             errno != ESRCH) {
+            ERROR((SGE_EVENT, MSG_SCHEDD_JOBXPIDYSCHEDCTLFAILUREX_UUS,
+                   u32c(lGetUlong(job, JL_job_ID)),
+                   u32c(lGetUlong(pid, JP_pid)), strerror(errno)));
+         }
+      }
+
+#       else
+      /* 
+       * IRIX 6.4 also has some scheduler bugs.  Namely, when you use
        * setpriority and assign a "weightless" priority of 20, setting
        * a new priority doesn't bring the process out of the "weightless"
        * class.  The only way to bring the process out is to force a
@@ -597,6 +703,8 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri)
 
          lSetUlong(pid, JP_background, 0);
       }
+
+#       endif /* IRIX6 */
 #     endif
 #     ifdef PTF_NDPRI_BASED
       if (schedctl(NDPRI, lGetUlong(pid, JP_pid), pri) < 0 && errno != ESRCH) {
@@ -890,7 +998,7 @@ static lListElem *ptf_process_job(osjobid_t os_job_id, const char *task_id_str,
    lList *job_list = ptf_jobs;
    u_long job_id = lGetUlong(new_job, JB_job_number);
    double job_tickets =
-      lGetDouble(lFirst(lGetList(new_job, JB_ja_tasks)), JAT_tix);
+      lGetDouble(lFirst(lGetList(new_job, JB_ja_tasks)), JAT_ticket);
    u_long interactive = (lGetString(new_job, JB_script_file) == NULL);
 
    DENTER(TOP_LAYER, "ptf_process_job");
@@ -1501,7 +1609,6 @@ static void ptf_set_OS_scheduling_parameters(lList *job_list, double min_share,
 int ptf_job_started(osjobid_t os_job_id, const char *task_id_str, 
                     lListElem *new_job, u_long32 jataskid)
 {
-
    lListElem *job;
 
    DENTER(TOP_LAYER, "ptf_job_started");
@@ -1709,113 +1816,119 @@ int ptf_adjust_job_priorities(void)
 
    job_list = ptf_jobs;
 
-   /*
-    * Do pass 0 of calculating job proportional share of resources
+   /* 
+    * just get jobs usage in SGE mode 
+    * this is necessary to force job resource limits 
     */
-   for_each(job, job_list) {
-      ptf_calc_job_proportion_pass0(job, &sum_of_job_tickets,
-                                    &sum_of_last_usage);
-   }
-   if (sum_of_job_tickets == 0) {
-      sum_of_job_tickets = 1;
-   }
+   if (feature_is_enabled(FEATURE_REPRIORITIZATION)) {
 
-   /*
-    * Do pass 1 of calculating job proportional share of resources
-    */
-   for_each(job, job_list) {
-      ptf_calc_job_proportion_pass1(job, sum_of_job_tickets,
-                                    sum_of_last_usage, &sum_proportion);
-   }
+      /*
+       * Do pass 0 of calculating job proportional share of resources
+       */
+      for_each(job, job_list) {
+         ptf_calc_job_proportion_pass0(job, &sum_of_job_tickets,
+                                       &sum_of_last_usage);
+      }
+      if (sum_of_job_tickets == 0) {
+         sum_of_job_tickets = 1;
+      }
 
-   /*
-    * Do pass 2 of calculating job proportional share of resources
-    */
-   for_each(job, job_list) {
-      ptf_calc_job_proportion_pass2(job, sum_of_job_tickets,
-                                    sum_proportion, 
-                                    &sum_adjusted_proportion,
-                                    &sum_interval_usage);
-   }
+      /*
+       * Do pass 1 of calculating job proportional share of resources
+       */
+      for_each(job, job_list) {
+         ptf_calc_job_proportion_pass1(job, sum_of_job_tickets,
+                                       sum_of_last_usage, &sum_proportion);
+      }
 
-   /*
-    * Do pass 3 of calculating job proportional share of resources
-    */
-   for_each(job, job_list) {
-      ptf_calc_job_proportion_pass3(job, sum_proportion,
-                                    sum_interval_usage, &min_share,
-                                    &max_share, &max_ticket_share);
-   }
+      /*
+       * Do pass 2 of calculating job proportional share of resources
+       */
+      for_each(job, job_list) {
+         ptf_calc_job_proportion_pass2(job, sum_of_job_tickets,
+                                       sum_proportion, 
+                                       &sum_adjusted_proportion,
+                                       &sum_interval_usage);
+      }
+
+      /*
+       * Do pass 3 of calculating job proportional share of resources
+       */
+      for_each(job, job_list) {
+         ptf_calc_job_proportion_pass3(job, sum_proportion,
+                                       sum_interval_usage, &min_share,
+                                       &max_share, &max_ticket_share);
+      }
 
 #ifdef PTF_NEW_ALGORITHM
 
-   max_share = 0;
-   min_share = -1;
+      max_share = 0;
+      min_share = -1;
 
-   for_each(job, job_list) {
-      double shr;
+      for_each(job, job_list) {
+         double shr;
 
 #ifdef PTF_DYNAMIC_PRIORITY_ADJUSTMENT
 
-   {
-      /*
-       * calculate share based on tickets and recent performance
-       * recent performanced is measure by keeping a decayed sum of
-       *     (targetted - actual)
-       */
-      double targetted = lGetDouble(job, JL_last_proportion);
-      double actual = sum_of_last_usage ?
-          (lGetDouble(job, JL_last_usage) / sum_of_last_usage) : 0;
+      {
+         /*
+          * calculate share based on tickets and recent performance
+          * recent performanced is measure by keeping a decayed sum of
+          *     (targetted - actual)
+          */
+         double targetted = lGetDouble(job, JL_last_proportion);
+         double actual = sum_of_last_usage ?
+             (lGetDouble(job, JL_last_usage) / sum_of_last_usage) : 0;
 
-      lSetDouble(job, JL_diff_proportion,
-                 (lGetDouble(job, JL_diff_proportion) *
-                  PTF_DIFF_DECAY_CONSTANT) + (targetted - actual));
+         lSetDouble(job, JL_diff_proportion,
+                    (lGetDouble(job, JL_diff_proportion) *
+                     PTF_DIFF_DECAY_CONSTANT) + (targetted - actual));
 
-      shr = MAX(((lGetUlong(job, JL_tickets) /
-                  (double) sum_of_job_tickets)) +
-                (lGetDouble(job, JL_diff_proportion) * 1.0),
-                0) * 1000.0 + 1.0;
-   }
+         shr = MAX(((lGetUlong(job, JL_tickets) /
+                     (double) sum_of_job_tickets)) +
+                   (lGetDouble(job, JL_diff_proportion) * 1.0),
+                   0) * 1000.0 + 1.0;
+      }
 #else
 
-      /*
-       * calculate share based on tickets only
-       */
-      shr = lGetDouble(job, JL_share);
+         /*
+          * calculate share based on tickets only
+          */
+         shr = lGetDouble(job, JL_share);
 
 #endif
 
-      num_procs = 0;
-      for_each(osjob, lGetList(job, JL_OS_job_list)) {
-         if ((pid_list = lGetList(osjob, JO_pid_list))) {
-            num_procs += lGetNumberOfElem(pid_list);
+         num_procs = 0;
+         for_each(osjob, lGetList(job, JL_OS_job_list)) {
+            if ((pid_list = lGetList(osjob, JO_pid_list))) {
+               num_procs += lGetNumberOfElem(pid_list);
+            }
          }
+         num_procs = MAX(1, num_procs);
+
+         /* 
+          * NOTE: share algo only adjusts priority when a process runs 
+          */
+         lSetDouble(job, JL_curr_pri, lGetDouble(job, JL_curr_pri) 
+                    + ((lGetDouble(job, JL_adjusted_usage) * num_procs) 
+                       / (shr * shr)));
+
+         max_share = MAX(max_share, lGetDouble(job, JL_curr_pri));
+         if (min_share < 0) {
+            min_share = lGetDouble(job, JL_curr_pri);
+         } else {
+            min_share = MIN(min_share, lGetDouble(job, JL_curr_pri));
+         } 
       }
-      num_procs = MAX(1, num_procs);
-
-      /* 
-       * NOTE: share algo only adjusts priority when a process runs 
-       */
-      lSetDouble(job, JL_curr_pri, lGetDouble(job, JL_curr_pri) 
-                 + ((lGetDouble(job, JL_adjusted_usage) * num_procs) 
-                    / (shr * shr)));
-
-      max_share = MAX(max_share, lGetDouble(job, JL_curr_pri));
-      if (min_share < 0) {
-         min_share = lGetDouble(job, JL_curr_pri);
-      } else {
-         min_share = MIN(min_share, lGetDouble(job, JL_curr_pri));
-      } 
-   }
 
 #endif
 
-   /*
-    * Set the O.S. scheduling parameters for the jobs
-    */
-   ptf_set_OS_scheduling_parameters(job_list, min_share, max_share,
-                                    max_ticket_share);
-   
+      /*
+       * Set the O.S. scheduling parameters for the jobs
+       */
+      ptf_set_OS_scheduling_parameters(job_list, min_share, max_share,
+                                       max_ticket_share);
+   }
    next = now + PTF_SCHEDULE_TIME;
 
    DEXIT;
@@ -1958,7 +2071,7 @@ int ptf_init(void)
       DEXIT;
       return -1;
    }
-#if defined(__sgi)
+#if defined(__sgi) && !defined(IRIX5)
    schedctl(RENICE, 0, 0);
 #elif defined(CRAY)
 
@@ -2080,7 +2193,6 @@ void ptf_unregister_registered_jobs(void)
    }
    ptf_jobs = lFreeList(ptf_jobs);
    DPRINTF(("PTF: All jobs unregistered from PTF\n"));
-   DEXIT;
 }
 
 int ptf_is_running(void)
@@ -2306,7 +2418,7 @@ int main(int argc, char **argv)
    for_each(jte, job_ticket_list) {
       pid_t pid;
 
-#if defined(IRIX)
+#if defined(IRIX6) || defined(IRIX64)
 
       if (newarraysess() < 0) {
          perror("newarraysess");
@@ -2341,7 +2453,7 @@ int main(int argc, char **argv)
       }
    }
 
-#if defined(IRIX)
+#if defined(IRIX6) || defined(IRIX64)
 
    if (newarraysess() < 0) {
       perror("newarraysess");

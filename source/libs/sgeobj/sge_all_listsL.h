@@ -38,7 +38,7 @@
 #include "sge_answerL.h"
 #include "sge_ckptL.h"
 #include "sge_eventL.h"
-#include "sge_idL.h"
+#include "sge_identL.h"
 #include "sge_jobL.h"
 #include "sge_job_refL.h"
 #include "sge_krbL.h"
@@ -49,7 +49,7 @@
 #include "sge_reportL.h"
 #include "sge_schedd_conf.h"
 #include "sge_sharetreeL.h"
-#include "sge_strL.h"
+#include "sge_stringL.h"
 #include "sge_usageL.h"
 #include "sge_usersetL.h"
 #include "parse_qsubL.h"
@@ -68,14 +68,14 @@
 #include "sge_loadsensorL.h"
 #include "sge_featureL.h"
 #include "sge_suserL.h"
-#include "sge_subordinateL.h"
 #include "sge_secL.h"
 #include "sge_pe_taskL.h"
 #include "sge_varL.h"
 #include "sge_rangeL.h"
+#include "sge_queueL.h"
 #include "sge_userprjL.h"
 #include "sge_hostL.h"
-#include "sge_centryL.h"
+#include "sge_complexL.h"
 #include "sge_manopL.h"
 #include "sge_calendarL.h"
 #include "sge_hgroupL.h"
@@ -87,13 +87,6 @@
 #include "sge_attrL.h"
 #include "sge_helperL.h"
 #include "sge_cqueueL.h"
-#include "sge_qinstanceL.h"
-#include "sge_mesobjL.h"
-#include "sge_qref.h"
-#include "cull_packL.h"
-#include "sge_resource_utilizationL.h"
-#include "sge_qetiL.h"
-#include "cull_xmlL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -116,7 +109,7 @@ extern "C" {
           1.        2.           3.
 */
       {JB_LOWERBOUND, JBS, JBN},        /* job */
-      {QU_LOWERBOUND, QUS, QUN},        /* Queue Instance list */
+      {QU_LOWERBOUND, QUS, QUN},        /* queue */
       {EH_LOWERBOUND, EHS, EHN},        /* exec host */
       {AH_LOWERBOUND, AHS, AHN},        /* admin host */
       {SH_LOWERBOUND, SHS, SHN},        /* submit host */
@@ -143,7 +136,6 @@ extern "C" {
       {CONF_LOWERBOUND, CONFS, CONFN},  /* config */
       {CF_LOWERBOUND, CFS, CFN},        /* config list */
       {ST_LOWERBOUND, STS, STN},        /* string list */
-      {STU_LOWERBOUND, STUS, STUN},     /* unique string list */
       {JG_LOWERBOUND, JGS, JGN},        /* jobs sublist of granted destinatin 
                                          * identifiers */
       {SO_LOWERBOUND, SOS, SON},        /* subordinate configuration list */
@@ -202,6 +194,8 @@ extern "C" {
       {CU_LOWERBOUND, CUS, CUN},        /* usermap entry list for
                                          * administrator mapping */
       {LS_LOWERBOUND, LSS, LSN},        /* load sensor list */
+      {FES_LOWERBOUND, FESS, FESN},     /* feature list */
+      {FE_LOWERBOUND, FES, FEN},        /* feature list */
       {SU_LOWERBOUND, SUS, SUN},        /* submit user */
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
 
@@ -213,37 +207,14 @@ extern "C" {
 
       {JJ_LOWERBOUND, JJS, JJN},        /* JAPI job */
       {JJAT_LOWERBOUND, JJATS, JJATN},  /* JAPI array task */
-
-      {ASTR_LOWERBOUND, ASTRS, ASTRN},          /* CQ string sublist */
-      {AULNG_LOWERBOUND, AULNGS, AULNGN},       /* CQ u_long32 sublist */
-      {ABOOL_LOWERBOUND, ABOOLS, ABOOLN},       /* CQ bool sublist */
-      {ATIME_LOWERBOUND, ATIMES, ATIMEN},       /* CQ time limit sublist */
-      {AMEM_LOWERBOUND, AMEMS, AMEMN},          /* CQ memory limit sublist */
-      {AINTER_LOWERBOUND, AINTERS, AINTERN},    /* CQ interval sublist */
-      {ASTRLIST_LOWERBOUND, ASTRLISTS, ASTRLISTN}, /* CQ ST_Type-list sublist */
-      {AUSRLIST_LOWERBOUND, AUSRLISTS, AUSRLISTN}, /* CQ US_Type-list sublist */
-      {APRJLIST_LOWERBOUND, APRJLISTS, APRJLISTN}, /* CQ UP_Type-list sublist */
-      {ACELIST_LOWERBOUND, ACELISTS, ACELISTN},    /* CQ CE_Type-list sublist */
-      {ASOLIST_LOWERBOUND, ASOLISTS, ASOLISTN},    /* CQ SO_Type-list sublist */
-      {AQTLIST_LOWERBOUND, AQTLISTS, AQTLISTN},    /* CQ qtype sublist */
-      {CQ_LOWERBOUND, CQS, CQN},                /* Cluster Queue list */
-      {QIM_LOWERBOUND, QIMS, QIMN},                /* Queue Instance Messege list */
-      {FCAT_LOWERBOUND, FCATS, FCATN},          /* Functional category */
-      {CTQV_LOWERBOUND, CTQVS,CTQVN},           /* cached queue soft request violations in a job category */
-      {CTI_LOWERBOUND, CTIS, CTIN},             /* ignore host/queue list in a job category */
-      {PARA_LOWERBOUND, PARAS, PARAN},          /* store the configuration "params" parameters in a list */
-      {ULNG_LOWERBOUND, ULNGS, ULNGN},          /* ???? info-messages ??? */
-      {EVS_LOWERBOUND, EVSS, EVSN},              /* subscribed event list */
-      {PACK_LOWERBOUND, PACKS, PACKN},          /* a cull version of the pack buffer */
-
-      {XMLA_LOWERBOUND, XMLAS, XMLAN},          /* ??? */
-      {XMLS_LOWERBOUND, XMLSS, XMLSN},          /* ??? */
-      {XMLH_LOWERBOUND, XMLHS, XMLHN},          /* ??? */
-      {XMLE_LOWERBOUND, XMLES, XMLEN},          /* ??? */
-
-      {RDE_LOWERBOUND, RDES, RDEN},             /* resource diagram */
-      {RUE_LOWERBOUND, RUES, RUEN},             /* resource utilization */
-      {QETI_LOWERBOUND, QETIS, QETIN},          /* queue end time iterator (scheduler) */
+      {ASTR_LOWERBOUND, ASTRS, ASTRN},       /* CQ string sublist */
+      {AULNG_LOWERBOUND, AULNGS, AULNGN},    /* CQ u_long32 sublist */
+      {ABOOL_LOWERBOUND, ABOOLS, ABOOLN},    /* CQ bool sublist */
+      {ATIME_LOWERBOUND, ATIMES, ATIMEN},    /* CQ time limit sublist */
+      {AMEM_LOWERBOUND, AMEMS, AMEMN},       /* CQ memory limit sublist */
+      {AINTER_LOWERBOUND, AINTERS, AINTERN}, /* CQ interval sublist */
+      {CQ_LOWERBOUND, CQS, CQN},             /* Cluster Queue list */
+      {FCAT_LOWERBOUND, FCATS, FCATN},       /* Functional category */
 
       {0, 0, NULL}
    };

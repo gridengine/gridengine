@@ -1,5 +1,5 @@
-#ifndef __SGE_QINSTANCE_MIRROR_H
-#define __SGE_QINSTANCE_MIRROR_H
+#ifndef __SGE_QUEUE_MIRROR_H
+#define __SGE_QUEUE_MIRROR_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -34,12 +34,7 @@
 
 #include "sge_object.h"
 
-bool
-cqueue_update_master_list(sge_object_type type, sge_event_action action,
-                          lListElem *event, void *clientdata);
+bool queue_update_master_list(sge_object_type type, sge_event_action action,
+                              lListElem *event, void *clientdata);
 
-bool
-qinstance_update_cqueue_list(sge_object_type type, sge_event_action action,
-                             lListElem *event, void *clientdata);
-
-#endif /* __SGE_QINSTANCE_MIRROR_H */
+#endif /* __SGE_QUEUE_MIRROR_H */

@@ -63,11 +63,10 @@ void trace_jr()
    for_each (jr, jr_list) {
       const char *s;
 
-      if ((s=lGetString(jr, JR_pe_task_id_str))) {
+      if ((s=lGetString(jr, JR_pe_task_id_str)))
          DPRINTF(("Jobtask "u32"."u32" task %s\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number), s));
-      } else {
+      else
          DPRINTF(("Jobtask "u32"."u32"\n", lGetUlong(jr, JR_job_number), lGetUlong(jr, JR_ja_task_number)));
-      }   
    }
    DEXIT;
 }
@@ -226,7 +225,7 @@ int add_usage(lListElem *jr, char *name, const char *val_as_str, double val)
       val = parsed;
    }
       
-   lSetDouble(usage, UA_value, val /*val>old_val?val:old_val*/); 
+   lSetDouble(usage, UA_value, val>old_val?val:old_val); 
 
    DEXIT;
    return 0;
@@ -345,8 +344,6 @@ execd_get_acct_multiplication_factor(const lListElem *pe,
 {
    int factor = 1;
 
-   DENTER(TOP_LAYER, "execd_get_acct_multiplication_factor");
-
    /* task of tightly integrated job: default factor 1 is OK - skip it */
    if (!task) {
       /* only parallel jobs need factors != 0 */
@@ -365,6 +362,5 @@ execd_get_acct_multiplication_factor(const lListElem *pe,
 
    DPRINTF(("reserved usage will be multiplied by %d\n", factor));
 
-   DEXIT;
    return factor;
 }

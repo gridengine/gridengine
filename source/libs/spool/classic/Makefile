@@ -34,7 +34,7 @@
 #___INFO__MARK_END__
 SPOOLCLIB_DIR = $(SDIR)/libs/spool/classic
 
-SPOOLCLIB = libspoolc$(LIBEXT)
+SPOOLCLIB = libspoolc$(QIDLEXT)$(LIBEXT)
 
 SPOOLCLIB_SRC = \
          sge_spooling_classic.c \
@@ -51,7 +51,7 @@ SPOOLCLIB_SRC = \
          read_write_job.c \
          read_write_manop.c \
          read_write_pe.c \
-         read_write_qinstance.c \
+         read_write_queue.c \
          read_write_ume.c \
          read_write_userprj.c \
          read_write_userset.c \
@@ -135,8 +135,8 @@ read_write_manop.o:	$(SPOOLCLIB_DIR)/read_write_manop.c
 read_write_pe.o:	$(SPOOLCLIB_DIR)/read_write_pe.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_pe.c
 
-read_write_qinstance.o:	$(SPOOLCLIB_DIR)/read_write_qinstance.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_qinstance.c
+read_write_queue.o:	$(SPOOLCLIB_DIR)/read_write_queue.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_queue.c
 
 read_write_ume.o:	$(SPOOLCLIB_DIR)/read_write_ume.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/read_write_ume.c

@@ -78,16 +78,7 @@ extern "C" {
  */
 #define JAPI_SESSION_SUBDIR ".sge/session"
 
-#define JAPI_JOB_FINISH 1
-#define JAPI_JOB_START 2
 
-enum japi_flags {
-   JAPI_EXIT_NO_FLAG,
-   JAPI_EXIT_KILL_ALL,
-   JAPI_EXIT_KILL_PENDING
-};
-   
-   
 /* ------------------- init/exit routines ------------------- */
 /*
  * Initialize DRMAA API library and create a new DRMAA Session. 'Contact'
@@ -97,18 +88,7 @@ enum japi_flags {
  * If 'contact' is NULL, the default DRM system will be used.
  */ 
 int japi_init(const char *contact, const char *session_key_in, 
-              dstring *session_key_out, int prog_number, bool enable_wait,
-              dstring *diag);
-
-/*
- * Starts the event client.  If japi_init() is called with the start_ec
- * parameter set to false, this method must be called before calling japi_wait()
- * or japi_synchronize().  This method is useful if, for example, one doesn't
- * know whether japi_wait() will be needed or not at the time that japi_init()
- * is called.
- */ 
-int japi_enable_job_wait (const char *session_key_in, 
-                          dstring *session_key_out, dstring *diag);
+      dstring *session_key_out, dstring *diag);
 
 
 /*
@@ -118,7 +98,7 @@ int japi_enable_job_wait (const char *session_key_in,
  * queued and running jobs remain queued and running).
  */
 
-int japi_exit(bool close_session, int flag, dstring *diag);
+int japi_exit(bool close_session, dstring *diag);
 
 
 /* ------------------- job submission routines ------------------- */
@@ -201,9 +181,8 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
  * unknown. Failing due to an elapsed timeout has an effect that it is possible to
  * issue drmaa_wait multiple times for the same job_id.
  */
-int japi_wait(const char *job_id, dstring *job_id_out, int *stat,
-              signed long timeout, int event_mask, int *event,
-              drmaa_attr_values_t **rusage, dstring *diag);
+int japi_wait(const char *job_id, dstring *job_id_out, int *stat, signed long timeout, 
+   drmaa_attr_values_t **rusage, dstring *diag);
 
 /* 
  * Evaluates into 'exited' a non-zero value if stat was returned for a

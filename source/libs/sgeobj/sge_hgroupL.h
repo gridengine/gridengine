@@ -64,11 +64,11 @@ extern "C" {
 *     
 *                       --------------                                 
 *                       |            |
-*                       V            | 0:x
-*                 ------------- -----| 
+*                       V            | 1:x
+*                 ------------- <----| 
 *                 | HGRP_Type |               ------------
-*                 ------------- ------------> | hostname |
-*                                    0:x      ------------
+*                 ------------- <-----------> | hostname |
+*                                    1:x      ------------
 *     
 *     Example
 *
@@ -76,9 +76,7 @@ extern "C" {
 *        D; E; G; H; I). Each of those groups references one host 
 *        (A -> a; B -> b; C -> c; ...). Additionally some of those 
 *        hostgroups refer to one (A -> C; B -> C; C -> E; ...) or two 
-*        hostgroups (E -> F,G; F -> H,I) The connections are all 
-*        uni-directional, you have to read the diagram from the left
-*        to the right.
+*        hostgroups (E -> F,G; F -> H,I)
 *
 *                 -----                           -----
 *                 | A | -- a                      | H | -- h
@@ -125,20 +123,17 @@ extern "C" {
 *******************************************************************************/
 enum {
    HGRP_name = HGRP_LOWERBOUND,
-   HGRP_host_list,
-   HGRP_cqueue_list
+   HGRP_host_list
 };
 
 LISTDEF(HGRP_Type)
    SGE_HOST(HGRP_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_LIST(HGRP_host_list, HR_Type, CULL_SPOOL) 
-   SGE_LIST(HGRP_cqueue_list, CQ_Type, CULL_DEFAULT) 
 LISTEND
 
 NAMEDEF(HGRPN)
    NAME("HGRP_name")
    NAME("HGRP_host_list")
-   NAME("HGRP_cqueue_list")
 NAMEEND
 
 #define HGRPS sizeof(HGRPN)/sizeof(char*)

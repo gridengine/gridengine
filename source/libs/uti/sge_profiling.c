@@ -34,7 +34,6 @@
 #include <time.h>
 #include <sys/times.h>
 #include <limits.h>
-#include <unistd.h>
 
 #include "basis_types.h"
 
@@ -189,12 +188,10 @@ typedef struct {
 static prof_info prof_base[SGE_PROF_ALL] = {
    { "other",           0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "communication",   0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { "packing",         0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "eventclient",     0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "eventmaster",     0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "mirror",          0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "spooling",        0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
-   { "spooling-io",        0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
    { "gdi",             0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
 /* SGE_PROF_CUSTOM levels */
    { NULL,              0, 0, 0, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, SGE_PROF_NONE, 0, 0, 0, 0, 0, 0 },
@@ -597,7 +594,7 @@ bool prof_reset(dstring *error)
 *
 *  FUNCTION
 *     Returns the wallclock of the last measurement in seconds.
-*     Resolution is clock ticks (_SC_CLK_TCK).
+*     Resolution is clock ticks (CLK_TCK).
 *
 *  INPUTS
 *     prof_level level - level to process
@@ -631,7 +628,7 @@ double prof_get_measurement_wallclock(prof_level level, bool with_sub, dstring *
       }
    }
 
-   return clock * 1.0 / sysconf(_SC_CLK_TCK);
+   return clock * 1.0 / CLK_TCK;
 }
 
 /****** uti/profiling/prof_get_measurement_utime() ************************
@@ -643,7 +640,7 @@ double prof_get_measurement_wallclock(prof_level level, bool with_sub, dstring *
 *
 *  FUNCTION
 *     Returns the user cpu time of the last measurement in seconds.
-*     Resolution is clock ticks (_SC_CLK_TCK).
+*     Resolution is clock ticks (CLK_TCK).
 *
 *  INPUTS
 *     prof_level level - level to process
@@ -674,7 +671,7 @@ double prof_get_measurement_utime(prof_level level, bool with_sub, dstring *erro
       }
    }
 
-   return clock * 1.0 / sysconf(_SC_CLK_TCK);
+   return clock * 1.0 / CLK_TCK;
 }
 
 /****** uti/profiling/prof_get_measurement_stime() ************************
@@ -686,7 +683,7 @@ double prof_get_measurement_utime(prof_level level, bool with_sub, dstring *erro
 *
 *  FUNCTION
 *     Returns the system cpu time of the last measurement in seconds.
-*     Resolution is clock ticks (_SC_CLK_TCK).
+*     Resolution is clock ticks (CLK_TCK).
 *
 *  INPUTS
 *     prof_level level - level to process
@@ -717,7 +714,7 @@ double prof_get_measurement_stime(prof_level level, bool with_sub, dstring *erro
       }
    }
 
-   return clock * 1.0 / sysconf(_SC_CLK_TCK);
+   return clock * 1.0 / CLK_TCK;
 }
 
 /****** uti/profiling/prof_get_total_wallclock() **************************
@@ -729,7 +726,7 @@ double prof_get_measurement_stime(prof_level level, bool with_sub, dstring *erro
 *
 *  FUNCTION
 *     Returns the wallclock time since profiling was enabled in seconds.
-*     Resolution is clock ticks (_SC_CLK_TCK).
+*     Resolution is clock ticks (CLK_TCK).
 *
 *  INPUTS
 *     dstring *error   - if != NULL, error messages will be put here
@@ -755,7 +752,7 @@ double prof_get_total_wallclock(dstring *error)
 
       now = times(&tms_buffer);
 
-      ret = (now - start_clock) * 1.0 / sysconf(_SC_CLK_TCK);
+      ret = (now - start_clock) * 1.0 / CLK_TCK;
    }
 
    return ret;
@@ -771,7 +768,7 @@ double prof_get_total_wallclock(dstring *error)
 *  FUNCTION
 *     Returns the total busy time since profiling was enabled in seconds.
 *     Busy time is the time between starting and stopping a measurement.
-*     Resolution is clock ticks (_SC_CLK_TCK).
+*     Resolution is clock ticks (CLK_TCK).
 *
 *  INPUTS
 *     prof_level level - level to process
@@ -800,7 +797,7 @@ static double _prof_get_total_busy(prof_level level, bool with_sub, dstring *err
       }
    }
 
-   return clock * 1.0 / sysconf(_SC_CLK_TCK);
+   return clock * 1.0 / CLK_TCK;
 }
 
 double prof_get_total_busy(prof_level level, bool with_sub, dstring *error)
@@ -829,7 +826,7 @@ double prof_get_total_busy(prof_level level, bool with_sub, dstring *error)
 *
 *  FUNCTION
 *     Returns the user cpu time since profiling was enabled in seconds.
-*     Resolution is clock ticks (_SC_CLK_TCK).
+*     Resolution is clock ticks (CLK_TCK).
 *
 *  INPUTS
 *     prof_level level - level to process
@@ -858,7 +855,7 @@ static double _prof_get_total_utime(prof_level level, bool with_sub, dstring *er
       }
    }
 
-   return clock * 1.0 / sysconf(_SC_CLK_TCK);
+   return clock * 1.0 / CLK_TCK;
 }
 
 double prof_get_total_utime(prof_level level, bool with_sub, dstring *error)
@@ -887,7 +884,7 @@ double prof_get_total_utime(prof_level level, bool with_sub, dstring *error)
 *
 *  FUNCTION
 *     Returns the total system cpu time since profiling was enabled in seconds.
-*     Resolution is clock ticks (_SC_CLK_TCK).
+*     Resolution is clock ticks (CLK_TCK).
 *
 *  INPUTS
 *     prof_level level - level to process
@@ -916,7 +913,7 @@ static double _prof_get_total_stime(prof_level level, bool with_sub, dstring *er
       }
    }
 
-   return clock * 1.0 / sysconf(_SC_CLK_TCK);
+   return clock * 1.0 / CLK_TCK;
 }
 
 double prof_get_total_stime(prof_level level, bool with_sub, dstring *error)

@@ -205,9 +205,13 @@ Widget parent
    userset_layout = qmonCreateUsersetConfig(manop_folder, NULL);
    XtManageChild(userset_layout);
 
-   user_layout = qmonCreateUserConfig(manop_folder, NULL);
-   XtAddCallback(manop_tickets, XmNactivateCallback, 
-                     qmonPopupTicketOverview, NULL);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      user_layout = qmonCreateUserConfig(manop_folder, NULL);
+      XtAddCallback(manop_tickets, XmNactivateCallback, 
+                        qmonPopupTicketOverview, NULL);
+   } else {
+      XtUnmanageChild(manop_tickets);
+   }
                                
    XtAddCallback(manop_main_link, XmNactivateCallback, 
                      qmonMainControlRaise, NULL);
@@ -251,6 +255,16 @@ XtPointer cld
                            "user_matrix", &user_matrix,
                            NULL);
 
+#if 0
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      XtUnmanageChild(user_tickets);
+   }
+   else {
+      XtAddCallback(user_tickets, XmNactivateCallback,
+                     qmonPopupTicketOverview, NULL);
+   }
+#endif
+                               
    XtAddCallback(user_name, XmtNinputCallback, 
                      qmonManopAdd, NULL);
    XtAddCallback(user_matrix, XmNlabelActivateCallback,
@@ -283,18 +297,21 @@ static void qmonManopFillList(void)
    updateUsersetList();
 
    /* user list */
-   lp = qmonMirrorList(SGE_USER_LIST);
-   lPSortList(lp, "%I+", UP_name);
-   /*
-   ** set UP_default_project to NONE
-   */
-   cl = lCopyList("cl", lp);
-   for_each (ep, cl) {
-      if (ep && !lGetString(ep, UP_default_project)) 
-         lSetString(ep, UP_default_project, "NONE");
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      lp = qmonMirrorList(SGE_USER_LIST);
+      lPSortList(lp, "%I+", UP_name);
+      /*
+      ** set UP_default_project to NONE
+      */
+      cl = lCopyList("cl", lp);
+      for_each (ep, cl) {
+         if (ep && !lGetString(ep, UP_default_project)) 
+            lSetString(ep, UP_default_project, "NONE");
+      }
+      qmonSet2xN(user_matrix, cl, UP_name, UP_default_project);
+      lFreeList(cl);
    }
-   qmonSetNxN(user_matrix, cl, 3, UP_name, UP_default_project, UP_delete_time);
-   lFreeList(cl);
+
 
    DEXIT;
 }
@@ -493,11 +510,8 @@ XtPointer cld, cad;
    /*
    ** set Modify button sensitivity
    */
-   if (dialog_mode==SGE_USERSET_LIST) {
-      XtSetSensitive(manop_modify, True);
-   } else {
-      XtSetSensitive(manop_modify, False);
-   }   
+   XtSetSensitive(manop_modify, (dialog_mode==SGE_USERSET_LIST) ? True:False);
+      
    DEXIT;
 }
 
@@ -588,8 +602,10 @@ lListElem *ep
       return;
    }
 
-   userset_type_state = (int)lGetUlong(ep, US_type);
-   XmtChooserSetState(userset_type, userset_type_state, False);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      userset_type_state = (int)lGetUlong(ep, US_type);
+      XmtChooserSetState(userset_type, userset_type_state, False);
+   }
    ul = lGetList(ep, US_entries);
    lPSortList(ul, "%I+", UE_name);
    UpdateXmListFromCull(userset_user_list, XmFONTLIST_DEFAULT_TAG, ul, UE_name);
@@ -663,9 +679,41 @@ XtPointer cld
 
    XtAddCallback(userset_names, XmNbrowseSelectionCallback, 
                      qmonSelectUserset, NULL);
-   XtAddCallback(userset_type, XmNvalueChangedCallback,
-                  qmonUsersetType, NULL);
+#if 0
+   XtAddCallback(userset_done, XmNactivateCallback, 
+                     qmonPopdownManopConfig, NULL);
+   XtAddCallback(userset_add, XmNactivateCallback, 
+                     qmonUsersetAdd, NULL); 
+   XtAddCallback(userset_delete, XmNactivateCallback, 
+                     qmonUsersetDelete, NULL); 
+   XtAddCallback(userset_modify, XmNactivateCallback, 
+                     qmonUsersetModify, NULL); 
+#endif
+
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      XmString xstr;
+      
+/*       XtUnmanageChild(userset_tickets); */
+      XtUnmanageChild(userset_type);
+      xstr = XmtCreateLocalizedXmString(shell, "@{Access Lists}");
+      XtVaSetValues( XtParent(userset_names),
+                     XmtNlayoutCaption, xstr,
+                     NULL);
+      XmStringFree(xstr);
+
+      xstr = XmtCreateLocalizedXmString(shell, "@{Access List}");
+      XtVaSetValues( uset_name,
+                     XmtNlayoutCaption, xstr,
+                     NULL);
+      XmStringFree(xstr);
+   }
+   else {
+/*       XtAddCallback(userset_tickets, XmNactivateCallback, */
+/*                      qmonPopupTicketOverview, NULL); */
+      XtAddCallback(userset_type, XmNvalueChangedCallback,
+                     qmonUsersetType, NULL);
                      
+   }
 
 
    DEXIT;
@@ -692,6 +740,10 @@ Widget parent
                            "uset_type", &uset_type,
                            NULL);
 
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      XtUnmanageChild(uset_type);
+   }
+
    XtAddCallback(uset_ok, XmNactivateCallback,
                   qmonUsersetOk, NULL);
    XtAddCallback(uset_cancel, XmNactivateCallback,
@@ -700,8 +752,10 @@ Widget parent
                   qmonUsersetUserAdd, NULL);
 
 #if 0
+   if (feature_is_enabled(FEATURE_SGEEE)) {
       XtAddCallback(uset_name, XmNinputCallback,
                   qmonUsersetName, NULL);
+   }
 #endif   
 
    XtAddEventHandler(XtParent(userset_ask_layout), StructureNotifyMask, False, 
@@ -720,7 +774,9 @@ XtPointer cld, cad;
 
    XmtInputFieldSetString(uset_name, "");
 
-   XmtChooserSetState(uset_type, US_ACL, False);
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      XmtChooserSetState(uset_type, US_ACL, False);
+   }
    XtVaSetValues( uset_name,
                   XmNeditable, True,
                   NULL);
@@ -774,7 +830,9 @@ XtPointer cld, cad;
                      XmNitemCount, usetusernum,
                      NULL);
 
-      XmtChooserSetState(uset_type, userset_type_state, False);
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         XmtChooserSetState(uset_type, userset_type_state, False);
+      }
 
       add_mode = 0;
 
@@ -858,7 +916,9 @@ XtPointer cld, cad;
    */
    usetname = XmtInputFieldGetString(uset_name);
 
-   usettype = XmtChooserGetState(uset_type); 
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+      usettype = XmtChooserGetState(uset_type); 
+   }
 
    /*
    ** usetname required, show warning dialog
@@ -879,7 +939,9 @@ XtPointer cld, cad;
       }
 
       lSetList(lFirst(lp), US_entries, ul);
-      lSetUlong(lFirst(lp), US_type, usettype); 
+      if (feature_is_enabled(FEATURE_SGEEE)) {
+         lSetUlong(lFirst(lp), US_type, usettype); 
+      }
 
       what = lWhat("%T(ALL)", US_Type);
 

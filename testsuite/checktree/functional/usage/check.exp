@@ -88,7 +88,7 @@ set check_init_level_procedure "usage_init_level"
 
 # define test's name and run level descriptions
 set check_name            "usage"
-set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM"
 set check_highest_level   1
 set check_description(0)  "check reserved usage of jobs submitted with qsub"
 set check_description(1)  "check reserved usage of jobs submitted with qrsh"
@@ -149,22 +149,13 @@ proc usage_setup  {} {
    if {[info exists saved_config]} {
       unset saved_config
    }
-   if { $ts_config(gridengine_version) == 53 } {
-      foreach attrib "load_report_time execd_params schedd_params" {
-         set saved_config($attrib) $config($attrib)
-      }
-      set new_config(schedd_params) "$config(schedd_params) flush_submit_secs=0"
-
-   } else {
-      foreach attrib "load_report_time execd_params" {
-         set saved_config($attrib) $config($attrib)
-      }
-      set my_schedd_conf(flush_submit_sec) "1"
-      set_schedd_config my_schedd_conf 
+   foreach attrib "load_report_time execd_params schedd_params" {
+      set saved_config($attrib) $config($attrib)
    }
 
    set new_config(load_report_time) "0:0:5"
-   
+   set new_config(schedd_params) "$config(schedd_params) flush_submit_secs=0"
+
    if {$reserved_usage} {
       set new_config(execd_params) "$config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
    }
@@ -194,14 +185,20 @@ proc usage_setup  {} {
 
    add_pe pe
 
-   assign_queues_with_pe_object "all.q" "" tight
-   assign_queues_with_pe_object "all.q" "" loose1
-   assign_queues_with_pe_object "all.q" "" loose2
+   set queue_list ""
+   foreach host $ts_config(execd_hosts) {
+      append queue_list "$host.q "
+   }
+   assign_queues_with_pe_object $queue_list tight
+   assign_queues_with_pe_object $queue_list loose1
+   assign_queues_with_pe_object $queue_list loose2
    
    # set memory limits
    if {$reserved_usage} {
       set queue_conf(h_vmem) "100M"
-      set_queue "all.q" "" queue_conf
+      foreach queue $queue_list {
+         set_queue $queue queue_conf
+      }
    }
 
    set_error 0 "ok"
@@ -213,10 +210,6 @@ proc usage_cleanup  {} {
 
    # reset config
    set_config saved_config
-   if {$ts_config(gridengine_version) != 53} {
-      reset_schedd_config;
-   }
-   
    after 15000
 
    # remove pe's
@@ -227,7 +220,9 @@ proc usage_cleanup  {} {
    # reset memory limits
    if {$reserved_usage} {
       set queue_conf(h_vmem) "INFINITY"
-      set_queue "all.q" "" queue_conf
+      foreach host $ts_config(execd_hosts) {
+         set_queue $host.q queue_conf
+      }
    }
 
    set_error 0 "ok"
@@ -384,8 +379,6 @@ proc usage_parse_cpu {s_cpu} {
 
    return $cpu
 }
-
-# JG: TODO: for online usage take the max of current qstat and former qstat - with tightly integrated jobs, the qstat -j usage can decline
 proc usage_check {jobid qstat_j_info slots} {
    global CHECK_OUTPUT
 
@@ -453,7 +446,7 @@ proc usage_monitor_check {id test_name slots} {
       unset qstat_j_info
    }
    set now [clock seconds]
-   set end [expr $now + 300]
+   set end [expr $now + 100]
    while {$job_finished == 0 && $now < $end} {
       set job_state [usage_monitor_job $id started finished jobid info $my_timeout $timeout_error]
       puts $CHECK_OUTPUT "job state: $job_state"
@@ -469,26 +462,19 @@ proc usage_monitor_check {id test_name slots} {
    }
 
    close_spawn_process $id
+   wait_for_jobend $jobid usage 60 0 1
 
-   if {$timeout_error} {
-      add_proc_error test_name -1 "job didn't run as expected"
-      delete_all_jobs
-   } else {   
-      wait_for_jobend $jobid usage 60 0 1
+   if {!$job_finished} {
+      add_proc_error test_name -1 "job terminated abnormally"
+   } else {
+      set error_list [usage_check $jobid qstat_j_info $slots]
 
-      # now wait for some time - accounting file might not be flushed yet
-      after 20000
-
-      if {!$job_finished} {
-         add_proc_error test_name -1 "job terminated abnormally"
-      } else {
-         set error_list [usage_check $jobid qstat_j_info $slots]
-
-         foreach error $error_list {
-            add_proc_error $test_name -1 $error
-         }
+      foreach error $error_list {
+         add_proc_error $test_name -1 $error
       }
    }
+
+   set_error 0 "ok"
 }
 
 # -------- local test procedures: tests ------------------------------
@@ -499,8 +485,7 @@ proc usage_single {} {
    global submit_command
    puts $CHECK_OUTPUT "usage: single cpu job submitted with $submit_command"
 
-   set queue [get_queue_instance "all.q" $ts_config(master_host)]
-   set id [submit_with_method $submit_command "-N usage -q $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
+   set id [submit_with_method $submit_command "-N usage -q $ts_config(master_host).q" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
 
    usage_monitor_check $id "usage_single" 1
    set_error 0 "ok"
@@ -513,8 +498,7 @@ proc usage_tight {} {
    global submit_command
    puts $CHECK_OUTPUT "usage: tightly integrated parallel job submitted with $submit_command"
 
-   set queue [get_queue_instance "all.q" $ts_config(master_host)]
-   set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 120"]
+   set id [submit_with_method $submit_command "-pe tight 4 -N usage -masterq $ts_config(master_host).q" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_job.sh" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/pe_task.sh 1 60"]
 
    usage_monitor_check $id "usage_tight" 5
    set_error 0 "ok"
@@ -527,8 +511,7 @@ proc usage_loose {pe expected_slots} {
    global submit_command
    puts $CHECK_OUTPUT "usage: parallel job in pe $pe submitted with $submit_command"
 
-   set queue [get_queue_instance "all.q" $ts_config(master_host)]
-   set id [submit_with_method $submit_command "-N usage -pe $pe 4 -masterq $queue" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
+   set id [submit_with_method $submit_command "-N usage -pe $pe 4 -masterq $ts_config(master_host).q" "$ts_config(testsuite_root_dir)/$CHECK_SCRIPT_FILE_DIR/usage.sh" "sleep 60"]
 
    usage_monitor_check $id "usage_loose" $expected_slots
    set_error 0 "ok"

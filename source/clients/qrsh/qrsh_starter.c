@@ -30,13 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
-#include <stdarg.h>
-#if defined(LINUX)
-#include <termios.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#endif
-
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -46,6 +39,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <stdarg.h>
 
 #include "basis_types.h"
 #include "sge_stdlib.h"
@@ -145,12 +139,8 @@ static void qrsh_error(const char *fmt, ...)
 *     Special handling for variable QRSH_WRAPPER: this is a wrapper to be called
 *     instead of a shell to execute the command.
 *     If this variable is contained in the environment, it will be returned in
-*     the parameter wrapper. Memory will be allocated to hold the variable, it 
-*     is in the responsibility of the caller to free this memory.
-*     Special handling for variable DISPLAY: if it is already set, do not 
-*     overwrite it. Usually  it is not set, but if ssh is used as transport
-*     mechanism for qrsh, the ssh -X option can be used to enable 
-*     X11 forwarding.
+*     the parameter wrapper. Memory will be allocated to hold the variable, it is
+*     in the responsibility of the caller to free this memory.
 *
 *  INPUTS
 *     jobdir - the jobs spool directory
@@ -174,14 +164,8 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    char *command   = NULL;
    SGE_STRUCT_STAT statbuf;
    int size;
-   bool set_display = true;
 
    *wrapper = NULL;
-
-   /* don't set DISPLAY, if it is already set (e.g. by ssh) */
-   if (getenv("DISPLAY") != NULL) {
-      set_display = false;
-   }
 
    /* build path of environmentfile */
    envFileName = (char *)malloc(strlen(jobdir) + strlen("environment") + 2);
@@ -226,11 +210,6 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          *c = 0;
       }
 
-      /* skip setting of display variable */
-      if (strncmp(line, "DISPLAY=", 8) == 0 && !set_display) {
-         continue;
-      }
-      
       if (strncmp(line, "QRSH_COMMAND=", 13) == 0) {
          if ((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
@@ -240,26 +219,28 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
             return NULL;
          }
          strcpy(command, line + 13);
-      } else if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
-         if (*(line + 13) == 0) {
-            fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
+      } else {  
+         if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
+            if (*(line + 13) == 0) {
+               fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
+            } else {
+               if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
+                  qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+                  fclose(envFile); 
+                  FREE(envFileName);
+                  FREE(line);
+                  return NULL;
+               }
+               strcpy(*wrapper, line + 13);
+            }
          } else {
-            if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
-               qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+            /* set variable */
+            if (!sge_putenv(line)) {
                fclose(envFile); 
                FREE(envFileName);
                FREE(line);
                return NULL;
             }
-            strcpy(*wrapper, line + 13);
-         }
-      } else {
-         /* set variable */
-         if (!sge_putenv(line)) {
-            fclose(envFile); 
-            FREE(envFileName);
-            FREE(line);
-            return NULL;
          }
       }
    }
@@ -636,23 +617,9 @@ static int startJob(char *command, char *wrapper, int noshell)
    if(child_pid) {
       /* parent */
       int status;
-
-#if defined(LINUX)
-      int ttyfd;
-#endif
-
       signal(SIGINT,  forward_signal);
       signal(SIGQUIT, forward_signal);
       signal(SIGTERM, forward_signal);
-
-      /* preserve pseudo terminal */
-#if defined(LINUX)
-      ttyfd = open("/dev/tty", O_RDWR);
-      if (ttyfd != -1) {
-         tcsetpgrp(ttyfd, child_pid);
-         close(ttyfd); 
-      }
-#endif
 
       while(waitpid(child_pid, &status, 0) != child_pid && errno == EINTR);
       return(status);
@@ -901,13 +868,6 @@ int main(int argc, char *argv[])
 
    /* start job */
    exitCode = startJob(command, wrapper, noshell);
-
-   /* JG: TODO: At this time, we could already pass the exitCode to qrsh.
-    *           Currently, this is done by shepherd, but only after 
-    *           qrsh_starter and rshd exited.
-    *           If we pass exitCode to qrsh, we also have to implement the
-    *           shepherd_about_to_exit mechanism here.
-    */
 
    /* write exit code and exit */
    return writeExitCode(EXIT_SUCCESS, exitCode);

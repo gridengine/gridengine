@@ -39,7 +39,6 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#include "sge_bootstrap.h"
 #include "sge_stdio.h"
 #include "sge_unistd.h"
 #include "sge.h"
@@ -50,7 +49,7 @@
 #include "qmaster_heartbeat.h"
 #include "lock.h"
 #include "startprog.h"
-#include "sge_hostname.h"
+#include "sge_gethostbyname.h"
 #include "sge_any_request.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -68,7 +67,7 @@
 #include "usage.h"
 #include "sge_io.h"
 #include "sge_spool.h"
-#include "sge_mt_init.h"
+#include "sge_hostname.h"
 
 #include "msg_common.h"
 #include "msg_daemons_common.h"
@@ -82,9 +81,15 @@
 #   define TRUE  1
 #endif
 
-#define CHECK_INTERVAL      60 
-#define GET_ACTIVE_INTERVAL 240
-#define DELAY_TIME          600 
+#if 0 /* EB: debug */
+#  define CHECK_INTERVAL      6 
+#  define GET_ACTIVE_INTERVAL 24
+#  define DELAY_TIME          60 
+#else
+#  define CHECK_INTERVAL      60 
+#  define GET_ACTIVE_INTERVAL 240
+#  define DELAY_TIME          600 
+#endif
 
 static int check_interval = CHECK_INTERVAL;
 static int get_active_interval = GET_ACTIVE_INTERVAL;
@@ -106,40 +111,67 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster);
 
 static int shadowd_is_old_master_enrolled(char *oldqmaster)
 {
-   cl_com_handle_t* handle = NULL;
-   cl_com_SIRM_t* status = NULL;
-   int ret;
-   int is_up_and_running = 0;
+   unsigned int alive = 0;
+   int enroll_ret;
+   int ret = 0;
 
    DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
 
-   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, 0, sge_get_qmaster_port() ,(char*)prognames[SHADOWD] , 0, 1,0 );
-   if (handle == NULL) {
-      CRITICAL((SGE_EVENT,"could not create communication handle\n"));
-      DEXIT;
-      return is_up_and_running;
-   }
+   DPRINTF(("Try to enroll to previous master commd on host "SFQ"\n",
+            oldqmaster));
+   set_commlib_param(CL_P_COMMDHOST, 0, oldqmaster, NULL);
+   set_commlib_param(CL_P_NAME, 0, prognames[SHADOWD], NULL);
+   set_commlib_param(CL_P_ID, 1, NULL, NULL);
 
-   DPRINTF(("Try to send status information message to previous master host "SFQ" to port %ld\n", oldqmaster, sge_get_qmaster_port() ));
-   ret = cl_commlib_get_endpoint_status(handle,oldqmaster ,(char*)prognames[QMASTER] , 1, &status);
-   if (ret != CL_RETVAL_OK) {
-      DPRINTF(("cl_commlib_get_endpoint_status() returned "SFQ"\n", cl_get_error_text(ret)));
-      is_up_and_running = 0;
-      DPRINTF(("old qmaster not responding - No master found\n"));   
-   } else {
-      DPRINTF(("old qmaster is still running\n"));   
-      is_up_and_running = 1;
-   }
-
-   if (status != NULL) {
-      DPRINTF(("endpoint is up since %ld seconds and has status %ld\n", status->runtime, status->application_status));
-      cl_com_free_sirm_message(&status);
+   if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
+      set_commlib_param(CL_P_RESERVED_PORT, 1, NULL, NULL);
    }
  
-   cl_commlib_shutdown_handle(handle,0);
+   enroll_ret = enroll();   
+
+   switch (enroll_ret) {
+   case 0:
+      DPRINTF(("Ask commd on host "SFQ" for qmaster comproc\n", oldqmaster));
+      alive = ask_commproc(oldqmaster, prognames[QMASTER], 0);
+      leave_commd();
+      if (alive == 0) {
+         DPRINTF(("-> found comproc entry\n"));
+         ret = 1; 
+      }
+      break;   
+   case COMMD_NACK_CONFLICT:
+      /* already registered on commd host, assume he is running */
+      ret = 1;
+      break;
+
+
+
+   case CL_CONNECT:
+      /* No commd on that host - let's hope there is also no qmaster */
+   case CL_ALREADYDONE:
+      /* We are already enrolled */
+   case CL_RESOLVE:
+      /* commlib couldn't resolve name if commd host */
+   case CL_SERVICE:
+      /* getservbyname() failed */
+   case COMMD_NACK_PERM:
+      /* we didn't use reserved port, but commd expects it */
+   case COMMD_NACK_UNKNOWN_HOST:
+      /* commd couldn't resolve our name */
+   default:
+      /* Something else went wrong, usually a reason to try again */
+      ret = 0;
+      break;
+   }
+
+   if (ret) {
+      DPRINTF(("Assume that old master is still running\n"));
+   } else {
+      DPRINTF(("No Master found\n"));
+   }
 
    DEXIT;
-   return is_up_and_running;
+   return ret;
 }
 
 /*----------------------------------------------------------------------------*/
@@ -150,8 +182,10 @@ char **argv
    int heartbeat, last_heartbeat, latest_heartbeat, ret, delay;
    int priority_tags[10];
    time_t now, last;
-   const char *cp;
+   char *cp;
    fd_set fds;
+   int fd;
+   const char *admin_user;
    char err_str[1024];
    char shadowd_pidfile[SGE_PATH_MAX];
    dstring ds;
@@ -159,8 +193,6 @@ char **argv
 
    DENTER_MAIN(TOP_LAYER, "sge_shadowd");
    
-   sge_mt_init();
-
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    /* initialize recovery control variables */
    {
@@ -196,10 +228,10 @@ char **argv
 
    /* is there a running shadowd on this host */
    {
-      const char *conf_string;
+      char *conf_string;
       pid_t shadowd_pid;
 
-      if ((conf_string = bootstrap_get_qmaster_spool_dir())) {
+      if ((conf_string = sge_get_confval("qmaster_spool_dir", path_state_get_conf_file()))) {
          sprintf(shadowd_pidfile, "%s/"SHADOWD_PID_FILE,
             conf_string, uti_state_get_unqualified_hostname());
          DPRINTF(("pidfilename: %s\n", shadowd_pidfile));
@@ -229,9 +261,9 @@ char **argv
 
    parse_cmdline_shadowd(argc, argv);
 
-   if (!(cp = bootstrap_get_qmaster_spool_dir())) {
+   if (!(cp = sge_get_confval("qmaster_spool_dir", path_state_get_conf_file()))) {
       CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTREADQMASTERSPOOLDIRFROMX_S, 
-         path_state_get_bootstrap_file()));
+         path_state_get_conf_file()));
       DEXIT;
       SGE_EXIT(1);
    }
@@ -242,7 +274,10 @@ char **argv
       SGE_EXIT(1);
    }
 
-   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str)) {
+   admin_user = read_adminuser_from_configuration(NULL, path_state_get_conf_file(), 
+      SGE_GLOBAL_NAME, FLG_CONF_SPOOL);
+
+   if (sge_set_admin_username(admin_user, err_str)) {
       CRITICAL((SGE_EVENT, err_str));
       SGE_EXIT(1);
    }
@@ -260,11 +295,10 @@ char **argv
    log_state_set_log_file(shadow_err_file);
 
    FD_ZERO(&fds);
-   if ( cl_com_set_handle_fds(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), &fds) == CL_RETVAL_OK) {
-      sge_daemonize(&fds);
-   } else {
-      sge_daemonize(NULL);
+   if ((fd=commlib_state_get_sfd())>=0) {
+      FD_SET(fd, &fds);
    }
+   sge_daemonize(commlib_state_get_closefd()?NULL:&fds);
    sge_write_pid(shadowd_pidfile);
 
    starting_up();
@@ -421,7 +455,7 @@ static int check_if_valid_shadow(
 const char *shadow_master_file 
 ) {
    struct hostent *hp;
-   const char *cp, *cp2;
+   char *cp, *cp2;
    char localconffile[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "check_if_valid_shadow");
@@ -440,7 +474,7 @@ const char *shadow_master_file
    }
 
    /* we can't resolve hostname of old qmaster */
-   hp = sge_gethostbyname_retry(oldqmaster);
+   hp = sge_gethostbyname(oldqmaster);
    if (hp == (struct hostent *) NULL) {
       WARNING((SGE_EVENT, MSG_SHADOWD_CANTRESOLVEHOSTNAMEFROMACTQMASTERFILE_SS, 
               path_state_get_act_qmaster_file(), oldqmaster));
@@ -450,14 +484,10 @@ const char *shadow_master_file
 
    /* we are on the same machine as old qmaster */
    if (!strcmp(hp->h_name, uti_state_get_qualified_hostname())) {
-      sge_free_hostent(&hp);
       DPRINTF(("qmaster was running on same machine\n"));
       DEXIT;
       return -2;
    }
-
-   sge_free_hostent(&hp);
-
 
    /* we are not in the shadow master file */
    if (host_in_file(uti_state_get_qualified_hostname(), shadow_master_file)) {
@@ -467,14 +497,14 @@ const char *shadow_master_file
    }
 
    /* we can't get binary path */
-   if (!(cp = bootstrap_get_binary_path())) {
-      WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADBINARYPATHFROMX_S, path_state_get_bootstrap_file()));
+   if (!(cp = sge_get_confval("binary_path", path_state_get_conf_file()))) {
+      WARNING((SGE_EVENT, MSG_SHADOWD_CANTREADBINARYPATHFROMX_S, path_state_get_conf_file()));
       DEXIT;
       return -1;
    } else {
       sprintf(binpath, cp); /* copy global configuration path */
       sprintf(localconffile, "%s/%s", path_state_get_local_conf_dir(), uti_state_get_qualified_hostname());
-      cp2 = bootstrap_get_binary_path();
+      cp2 = sge_get_confval("binary_path", localconffile);
       if (cp2) {
          strcpy(binpath, cp2); /* overwrite global configuration path */
          DPRINTF(("found local conf binary path:\n"));
@@ -504,7 +534,7 @@ const char *file
 ) {
    FILE *fp;
    char buf[512], *cp;
-   struct hostent *hp = NULL;
+   struct hostent *hp;
 
    DENTER(TOP_LAYER, "host_in_file");
 
@@ -516,16 +546,14 @@ const char *file
 
    while (fgets(buf, sizeof(buf), fp)) {
       for (cp = strtok(buf, " \t\n,"); cp; cp = strtok(NULL, " \t\n,")) {
-         hp = sge_gethostbyname_retry(cp);
+         hp = sge_gethostbyname(cp);
          if (hp && hp->h_name) {
             if (!sge_hostcmp(host, hp->h_name)) {
                fclose(fp);
-               sge_free_hostent(&hp);
                DEXIT;
                return 0;
             }
          }
-         sge_free_hostent(&hp);
       }      
    }
 

@@ -136,6 +136,7 @@ _Messages_.de.@fBQueue Configuration: @fBWarteschlangenkonfiguration
 _Messages_.de.@fBQueue Control: @fBWarteschlangenüberwachung
 _Messages_.de.@fBRequested Resources: @fBAngeforderte Betriebsmittel
 _Messages_.de.@fBRerun Jobs: @fBAuftragsneustart
+_Messages_.de.@fBResource Capability Factor: @fBBetriebsmittelverfügbarkeitsmaßzahl
 _Messages_.de.@fBResume Method: @fBWiederaufnahmemethode
 _Messages_.de.@fBRunning Jobs: @fBLaufende Aufträge
 _Messages_.de.@fBScaling: @fBSkalierung
@@ -267,6 +268,7 @@ _Messages_.de.DTicket: DTicket
 _Messages_.de.Day: Tag
 _Messages_.de.Days: Tage
 _Messages_.de.Deadline: Stichtermin
+_Messages_.de.Default Project: Standardprojekt
 _Messages_.de.Default: Standard
 _Messages_.de.Delete: Löschen
 _Messages_.de.Deny Access: Zugriffsverbot
@@ -316,11 +318,6 @@ _Messages_.de.Finished Jobs: Beendete Aufträge
 _Messages_.de.Force: Erzwingen
 _Messages_.de.GByte (1024x1024x1024): GByte (1024x1024x1024)
 _Messages_.de.GID Range for Job Monitoring: GID Bereich für Auftragsverfolgung
-_Messages_.de.@fBAutomatic User Defaults: xxxxxxxxxxxxxxxxxxxxxx
-_Messages_.de.Override Tickets: xxxxxxxxxxxxxxxxxxxxxx
-_Messages_.de.Functional Shares: xxxxxxxxxxxxxxxxxxxxxx
-_Messages_.de.Default Project: xxxxxxxxxxxxxxxxxxxxxx
-_Messages_.de.Delete Time: xxxxxxxxxxxxxxxxxxxxxx
 _Messages_.de.GRD Schedule Interval required!: GRD Zuordnungszeitraum erforderlich !
 _Messages_.de.Get Environment: Umgebung laden
 _Messages_.de.Get Queue Attributes from: Warteschlangeneigenschaften übernehmen von
@@ -553,6 +550,7 @@ _Messages_.de.Soft Request: Weiche Anforderung
 _Messages_.de.Soft Resources: Weiche Betriebsmittel
 _Messages_.de.Sort by load: Nach Last sortieren
 _Messages_.de.Sort by sequence number: Nach Folgenummer sortieren 
+_Messages_.de.Sort by share: Nach Anteilen sortieren
 _Messages_.de.Start At: Starten um
 _Messages_.de.Start Job Immediately: Auftrag sofort starten
 _Messages_.de.Start Proc Args: Startprozedurargumente
@@ -596,6 +594,7 @@ _Messages_.de.Usage: Verbrauch
 _Messages_.de.User Configuration: Benutzerkonfiguration
 _Messages_.de.User Lists: Benutzerliste
 _Messages_.de.User Share Tree: Benutzeranteilsscheinbaum
+_Messages_.de.User Sort: Benutzersortierung
 _Messages_.de.User [%]: Benutzer [%]
 _Messages_.de.User/Group: Benutzer/Gruppe
 _Messages_.de.User: Benutzer

@@ -52,7 +52,7 @@ set check_init_level_procedure "issue_478_init_level"
 
 # define test's name and run level descriptions
 set check_name            "issue_478"
-set check_category        "COMPATIBILITY SYSTEM L10N VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM L10N"
 set check_highest_level   0
 set check_description(0)  "check valid gid range parameters"
 
@@ -102,14 +102,7 @@ proc issue_478_check {} {
    set h_option "-h"
    set job_script "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 120"
    set qstat_command "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat"
-
-   if { $ts_config(gridengine_version) == 53} {
-      set grep_pattern "Predecessor Jobs:"
-      set formatstring "       Predecessor Jobs: %d, %s"
-   } else {
-      set grep_pattern "Predecessor Jobs (request):"
-      set formatstring "       Predecessor Jobs (request): %d, %s"
-   }
+   set formatstring "       Predecessor Jobs: %d, %s"
 
    # qsub -h $SGE_ROOT/examples/jobs/sleeper.sh 120
    set qsub_arguments "$h_option $job_script"
@@ -126,7 +119,7 @@ proc issue_478_check {} {
 
    # qstat -r output has to contain following output: 
    #    "Predecessor Jobs: <job_id1>,n1"
-   set qstatresult [ catch { eval exec "$qstat_command -r \| grep \"$grep_pattern\"" } qstatoutput ]
+   set qstatresult [ catch { eval exec "$qstat_command -r \| grep \"Predecessor Jobs\"" } qstatoutput ]
    scan $qstatoutput $formatstring out_id out_name
 
    if { ( [ string compare $job_id1 $out_id ] != 0 ) || \

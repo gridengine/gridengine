@@ -36,7 +36,6 @@ global check_name check_description check_needs check_functions check_errno chec
 global check_category
 global check_root_access_needs
 global check_highest_level
-global check_init_level_procedure
 
 set check_root_access_needs  "yes"
 set check_name         "qmaster-size"
@@ -368,11 +367,8 @@ proc init_ps {} {
       irix6 -
       osf4 -
       solaris -
-      sol-sparc -
       solaris64 -
-      sol-sparc64 -
       solaris86 -
-      sol-x86 -
       tru64 {
          set cmd_ps(master) "ps -p $qmaster_pid -o vsz | tail -1"
          set cmd_ps(schedd) "ps -p $schedd_pid -o vsz | tail -1"
@@ -380,18 +376,14 @@ proc init_ps {} {
          #set cmd_ps(schedd) "ps -eo 'pid vsz' | awk '{print \$1 \" \" \$2}' | grep '^$schedd_pid ' | awk '{print \$2}'"
          set size_unit kB
       }
-      "alinux" -
-      "lx24-alpha" {
+      alinux {
          set cmd_ps(master) "ps lhp $qmaster_pid | awk '{print \$7}'"
          set cmd_ps(schedd) "ps lhp $schedd_pid  | awk '{print \$7}'"
          set size_unit kB
       }
-      "lx24-x86" -
-      "lx26-x86" -
-      "lx24-amd64" -
-      "lx26-amd64" {
-         set cmd_ps(master) "ps -p $qmaster_pid --no-heading -o vsz"
-         set cmd_ps(schedd) "ps -p $schedd_pid --no-heading -o vsz"
+      glinux {
+         set cmd_ps(master) "ps -p $qmaster_pid -h -o vsz"
+         set cmd_ps(schedd) "ps -p $schedd_pid -h -o vsz"
          set size_unit kB
       }
       "hp10" - 

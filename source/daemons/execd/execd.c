@@ -74,7 +74,6 @@
 #include "basis_types.h"
 #include "sge_language.h"
 #include "sge_job.h"
-#include "sge_mt_init.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -94,6 +93,8 @@ volatile int waiting4osjid = 1;
  * avoid calling getcwd, cause this catches zombies on sun and is a !?GRML call!
  */
 char execd_spool_dir[SGE_PATH_MAX];
+
+lList *execd_config_list = NULL;
 
 static void execd_exit_func(int i);
 static void execd_register(void);
@@ -127,9 +128,12 @@ int main(
 int argc,
 char **argv 
 ) {
-   int i, dispatch_timeout;
+   int i, ret, suc, dispatch_timeout;
    char err_str[1024];
    int priority_tags[10];
+#ifdef PW   
+   int mode_guess;
+#endif
 
    DENTER_MAIN(TOP_LAYER, "execd");
 
@@ -143,13 +147,23 @@ char **argv
    sge_init_language(NULL,NULL);   
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
 
-   sge_mt_init();
+#ifdef PW
+   if ((mode_guess = product_mode_guess(argv[0])) == M_INVALID) {
+      fprintf(stderr, MSG_EXECD_PROGINVALIDNAME_S,
+              argv[0] ? argv[0] : MSG_NULL);
+      exit(1);
+   }  
+#endif
 
    /* This needs a better solution */
    umask(022);
       
    /* Initialize path for temporary logging until we chdir to spool */
    log_state_set_log_file(TMP_ERR_FILE_EXECD);
+
+#if RAND_ERROR
+   rand_error = 1;
+#endif
 
    /* exit func for SGE_EXIT() */
    in_main_loop = 0;
@@ -160,11 +174,7 @@ char **argv
    priority_tags[0] = TAG_ACK_REQUEST;
    priority_tags[1] = TAG_JOB_EXECUTION;
 
-   if (sge_setup(EXECD, NULL) != 0) {
-      /* sge_setup has already printed the error message */
-      SGE_EXIT(1);
-   }
-   
+   sge_setup(EXECD, NULL);   
    prepare_enroll(prognames[EXECD], 1, priority_tags);
 
    if ((i=sge_occupy_first_three())>=0) {
@@ -174,10 +184,15 @@ char **argv
 
    lInit(nmv);
 
+#ifdef PW
+   if (get_product_mode() != mode_guess) {
+      CRITICAL((SGE_EVENT, MSG_EXECD_NOPROGNAMEPROD_S, argv[0]));
+      SGE_EXIT(1);
+   }
+#endif
+
    parse_cmdline_execd(argv);   
 
-#ifdef ENABLE_NGC
-#else
    /* check for running execd - ignore $COMMD_HOST */
    if (start_commd) {
       set_commlib_param(CL_P_COMMDHOST, 0, uti_state_get_unqualified_hostname(), NULL);
@@ -196,7 +211,7 @@ char **argv
             CRITICAL((SGE_EVENT, MSG_COM_CANTSTARTCOMMD));
             SGE_EXIT(1);
          }
-         sleep(10);
+         sleep(3);
          ret = enroll();
          switch (ret) {
          case 0:
@@ -233,22 +248,17 @@ char **argv
       }            
    }
    
-#endif
    /* daemonizes if qmaster is unreachable */   
    sge_setup_sge_execd();
 
    if (!getenv("SGE_ND"))
       daemonize_execd();
 
-#ifdef ENABLE_NGC
-   /* CR - remove pending messages and reset_last_heard() not necessary */
-#else
    /* don't wanna get old messages */
    remove_pending_messages(NULL, 0, 0, 0);
 
    /* commlib call to mark all commprocs as unknown */
    reset_last_heard();
-#endif
 
    /* are we using qidle or not */
    sge_ls_qidle(use_qidle);
@@ -301,25 +311,11 @@ char **argv
 
       if (sigpipe_received) {
           sigpipe_received = 0;
-          INFO((SGE_EVENT, "SIGPIPE received\n"));
+          INFO((SGE_EVENT, "SIGPIPE received"));
       }
 
       if (i) {             
-#ifdef ENABLE_NGC
-         if ( strcmp(cl_get_error_text(i), CL_RETVAL_UNDEFINED_STR) != 0 ) {
-            if (i != CL_RETVAL_OK) {
-               WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, cl_get_error_text(i)));
-            }
-         } else {
-            WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str ));
-         }
-         if (i == CL_RETVAL_CONNECTION_NOT_FOUND) {
-            WARNING((SGE_EVENT, "reregister at qmaster\n"));
-            execd_register();
-         }
-#else
          WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, (i==CL_FIRST_FREE_EC) ? err_str : cl_errstr(i)));
-#endif
 
          if (shut_me_down == 1) {
             sge_shutdown();
@@ -332,11 +328,7 @@ char **argv
          DEXIT;
          return 0;
       }
-#ifdef ENABLE_NGC
-      cl_commlib_trigger(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0));
-#else
       sleep(1);	/* If there is an error dont kill the system */
-#endif
    }
 }
 
@@ -393,7 +385,7 @@ static void execd_register()
    lSetUlong(hep, EH_featureset_id, feature_get_active_featureset_id());
    lAppendElem(hlp, hep);
 
-   while (!shut_me_down) {
+   while (true) {
       lListElem *aep;
       DPRINTF(("*****Checking In With qmaster*****\n"));
 

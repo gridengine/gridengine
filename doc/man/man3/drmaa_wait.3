@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_wait.3,v $     Last Update: $Date: 2004/01/29 21:14:52 $     Revision: $Revision: 1.3 $
+.\" $RCSfile: drmaa_wait.3,v $     Last Update: $Date: 2003/07/30 12:21:51 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_wait 3 "$Date: 2004/01/29 21:14:52 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_wait 3 "$Date: 2003/07/30 12:21:51 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -149,29 +149,28 @@ drmaa_wifaborted \- Waiting for jobs to finish
 .\"
 .\"
 .SH DESCRIPTION
-The drmaa_synchronize() function blocks the calling thread until all jobs specified in \fIjob_ids\fP 
-have failed or finished execution. If \fIjob_ids\fP contains `DRMAA_JOB_IDS_SESSION_ALL', then this 
+The drmaa_synchronize() function delays its caller until all jobs specified in \fIjob_ids\fP 
+failed or finished execution. If \fIjob_ids\fP contains `DRMAA_JOB_IDS_SESSION_ALL', then this 
 function waits for all jobs submitted during this DRMAA session. The \fIjob_ids\fP pointer array
 must be \fINULL\fP terminated.  
 .PP
-To prevent blocking indefinitely in this call, the caller may use \fItimeout\fP, specifying 
-how many seconds to wait for this call to complete before timing out. The special value
-DRMAA_TIMEOUT_WAIT_FOREVER can be to wait indefinitely for a result. The special value
-DRMAA_TIMEOUT_NO_WAIT can be specified to return immediately. 
-If the call exits before \fItimeout\fP, all the specified jobs have completed or
-the calling thread received an interrupt.  In both cases, the return code is DRMAA_ERRNO_EXIT_TIMEOUT. 
+To prevent blocking indefinitely in this call, the caller could use \fItimeout\fP specifying 
+after how many seconds to time out in this call. The special value DRMAA_TIMEOUT_WAIT_FOREVER can be to wait 
+indefinitely for a result. The special value DRMAA_TIMEOUT_NO_WAIT can be specified to return immediately. 
+If the call exits before \fItimeout\fP, all the jobs have been waited on or there was an interrupt. 
+If the invocation exits on \fItimeout\fP, the return code is DRMAA_ERRNO_EXIT_TIMEOUT. 
 .PP
 The \fIdispose\fP parameter specifies how to treat reaping information. 
-If `0' is passed to this paramter, job finish information will still be available when 
+If `0' is passed to this paramter job finish information will still be available when 
 .M drmaa_wait 3
-is used. If `1' is passed, 
+is used. When `1' was passed 
 .M drmaa_wait 3
-will be unable to access this job's finish information.
+will not know this job anymore.
 .\" 
 .\" 
 .\" 
 .SS "drmaa_wait()"
-The drmaa_wait() function blocks the calling thread until a job fails or finishes execution.
+The drmaa_wait() function delays its caller until a job failed or finished execution.
 This routine is modeled on the 
 .M wait4 3 
 routine. 
@@ -179,19 +178,19 @@ If the special string `DRMAA_JOB_IDS_SESSION_ANY' is passed as \fIjob_id\fP, thi
 will wait for any job from the session. Otherwise the \fIjobi_id\fP must be the job identifier
 of a job or array job task that was submitted during the session.
 .PP
-To prevent blocking indefinitely in this call, the caller may use \fItimeout\fP, specifying 
-how many seconds to wait for this call to complete before timing out. The special value
-DRMAA_TIMEOUT_WAIT_FOREVER can be to wait indefinitely for a result. The special value
-DRMAA_TIMEOUT_NO_WAIT can be specified to return immediately. 
-If the call exits before \fItimeout\fP, all the specified jobs have completed or
-the calling thread received an interrupt.  In both cases, the return code is DRMAA_ERRNO_EXIT_TIMEOUT. 
+The \fItimeout\fP value is used to specify the desired behavior when a result is not 
+immediately available. The special value DRMAA_TIMEOUT_WAIT_FOREVER can be specified to wait indefinitely for 
+a result. The value DRMAA_TIMEOUT_NO_WAIT may be specified to return immediately if no result is available. 
+Alternatively, a number of seconds can be specified to indicate how long to wait for a 
+result to become available. If the call exits before \fItimeout\fP, either the job has 
+been waited on successfully or there was an interrupt. If the invocation exits on 
+\fItimeout\fP, the return code is DRMAA_ERRNO_EXIT_TIMEOUT.
 .PP
 The routine reaps jobs on a successful call, so any subsequent calls to 
 .M drmaa_wait 3 
-will fail returning a DRMAA_ERRNO_INVALID_JOB error meaning that the job has already been reaped. 
-This error is the same as if the job were unknown. Returning due to an elapsed timeout or an
-interrupt does not cause the job information to be reaped.  This means that,
-in this case, it is possible to issue 
+will fail returning an error DRMAA_ERRNO_INVALID_JOB meaning that the job has been already reaped. 
+This error is the same as if the job was unknown. Failing due to an elapsed timeout has an effect 
+that it is possible to issue 
 .M drmaa_wait 3
 multiple times for the same \fIjob_id\fP. 
 .PP
@@ -221,8 +220,8 @@ extracted using
 Each string returned by
 .M drmaa_get_next_attr_value 3
 complies with the format <name>=<value>. The string 
-portions <name> and <value> specify name and amount of the resources consumed by 
-the job, respectively.
+portions <name> and <value> specify name and amount of the resource consumed by 
+the job. The \fIrusage\fP output parameter is not yet implemented.
 .PP
 .\"
 .\" 
@@ -302,7 +301,7 @@ may be returned.
 .IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
 Specifies the location of the xxQS_NAMExx standard configuration files.
 .\"
-.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
+.IP "\fBSGE_CELL\fP" 1.5i
 If set, specifies the default xxQS_NAMExx cell to be used. To address a xxQS_NAMExx
 cell xxQS_NAMExx uses (in the order of precedence):
 .sp 1
@@ -321,9 +320,9 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
+.IP "\fBCOMMD_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_qmaster 8
+.M xxqs_name_sxx_commd 8
 is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.

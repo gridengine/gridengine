@@ -41,134 +41,75 @@
 #include "msg_utilbin.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
-#include "sge_arch.h"
 
-#include "cl_commlib.h"
+#ifndef h_errno
+extern int h_errno;
+#endif
 
 void usage(void)
 {
-  fprintf(stderr, "%s gethostbyname [-name|-aname|-all] <name>\n",MSG_UTILBIN_USAGE);
+  fprintf(stderr, "%s gethostbyname [-name|-aname] <name>\n",MSG_UTILBIN_USAGE);
   exit(1);
 }
 
-int main(int argc, char *argv[]) {
-   struct hostent *he = NULL;
-   char* resolved_name = NULL;
-   int retval = CL_RETVAL_OK;
-   char **tp,**tp2;
-   int name_only = 0;
-   int sge_aliasing = 0;
-   int all_option = 0;
-   char* unresolved_name = NULL;
-   int system_error = 0;
+int main(int argc, char *argv[])
+{
+  struct hostent *he;
+  char **tp,**tp2;
+  int name_only = 0;
+  int sge_aliasing = 0;
 
-   
-
-  
-   if (argc < 2 ) {
-      usage();
-   }
-
-   unresolved_name = argv[1];
+  if (argc < 2)
+    usage();
 
   if (!strcmp(argv[1], "-name")) {
-     if (argc != 3) {
+     if (argc != 3)
         usage(); 
-     }
      name_only = 1;
-     unresolved_name = argv[2];
   }   
   if (!strcmp(argv[1], "-aname")) {
-     if (argc != 3) {
+     if (argc != 3)
         usage(); 
-     }
      name_only = 1;
      sge_aliasing = 1;
-     unresolved_name = argv[2];
   }   
-  if (!strcmp(argv[1], "-all")) {
-     if (argc != 3) {
-        usage(); 
-     }
-     name_only = 0;
-     sge_aliasing = 1;
-     all_option = 1;
-     unresolved_name = argv[2];
-  }
      
-  retval = cl_com_setup_commlib(CL_NO_THREAD ,CL_LOG_OFF, NULL );
-  if (retval != CL_RETVAL_OK) {
-     fprintf(stderr,"%s\n",cl_get_error_text(retval));
-     exit(1);
-  }
+  he = gethostbyname(argv[1+name_only]);
 
-  if (sge_aliasing ) {
-     cl_com_set_alias_file(sge_get_alias_path());
-  }
-
-  retval = cl_com_cached_gethostbyname(unresolved_name, &resolved_name, NULL, &he, &system_error);
-
-  if (retval != CL_RETVAL_OK) {
-     char* err_text = cl_com_get_h_error_string(system_error);
-     if (err_text == NULL) {
-        err_text = strdup(strerror(system_error));
-        if (err_text == NULL) {
-           err_text = strdup("unexpected error");
-        }
-     }
-     if (unresolved_name == NULL) {
-        unresolved_name = "NULL";
-     }
-     fprintf(stderr,"error resolving host "SFQ": %s (%s)\n",unresolved_name,cl_get_error_text(retval),err_text );
-     free(err_text); 
-     err_text = NULL;
-     cl_com_cleanup_commlib();
-     exit(1);
+  if (!he) {
+    fprintf(stderr, "h_errno = %s\n", 
+	(h_errno == HOST_NOT_FOUND)?"HOST_NOT_FOUND":
+	(h_errno == TRY_AGAIN)?"TRY_AGAIN":
+	(h_errno == NO_RECOVERY)?"NO_RECOVERY":
+	(h_errno == NO_DATA)?"NO_DATA":
+	(h_errno == NO_ADDRESS)?"NO_ADDRESS":"<unknown error>");
+    perror(MSG_SYSTEM_GETHOSTBYNAMEFAILED );
+    exit(1);
   }
 
   if (name_only) {
-     if (sge_aliasing) {
-        if (resolved_name != NULL) {
-           printf("%s\n",resolved_name);
-        } else {
-           printf("%s\n","unexpected error");
-        }
-     } else {
-        if (he != NULL) {
-           printf("%s\n",he->h_name);
-        } else {
-           printf("%s\n","could not get hostent struct");
-        }
-     }
+      const char *s;
+      char tmpname[MAXHOSTLEN+1];
+
+      /* resolve_hostname_local() internally overwrites he->h_name */
+      strcpy(tmpname, he->h_name);
+      if (sge_aliasing && (s=sge_host_resolve_name_local(tmpname)))
+         printf("%s\n", s);
+      else /* no aliased name */
+         printf("%s\n", tmpname);
   } else {
-     if (he != NULL) {
-        printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
-        
-        if (resolved_name != NULL && all_option) {
-           printf("SGE name: %s\n",resolved_name);
-        }
+     printf(MSG_SYSTEM_HOSTNAMEIS_S , he->h_name);
+     printf(MSG_SYSTEM_ALIASES );
 
-        printf(MSG_SYSTEM_ALIASES );
-
-        for (tp = he->h_aliases; *tp; tp++)
-           printf("%s ", *tp);
-        printf("\n");
+     for (tp = he->h_aliases; *tp; tp++)
+       printf("%s ", *tp);
+     printf("\n");
   
-        printf(MSG_SYSTEM_ADDRESSES );
-        for (tp2 = he->h_addr_list; *tp2; tp2++)
-           printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));  /* inet_ntoa() is not MT save */
-        printf("\n");  
-     } else {   
-        fprintf(stderr,"%s\n","could not get hostent struct");
-     }
+     printf(MSG_SYSTEM_ADDRESSES );
+     for (tp2 = he->h_addr_list; *tp2; tp2++)
+        printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));
+     printf("\n");  
   }
-  free(resolved_name);
-  sge_free_hostent(&he);
-
-  retval = cl_com_cleanup_commlib();
-  if (retval != CL_RETVAL_OK) {
-     fprintf(stderr,"%s\n",cl_get_error_text(retval));
-     exit(1);
-  }
-  return 0;  
+  
+  return 0;
 }

@@ -81,14 +81,14 @@ int answer_error;
       if (job_ticket) {
          task_ticket = lAddElemUlong(&jatasks, JAT_task_number, jataskid, JAT_Type);
          if (task_ticket)
-            lSetDouble(task_ticket, JAT_tix, ticket);
+            lSetDouble(task_ticket, JAT_ticket, ticket);
          lSetList(job_ticket, JB_ja_tasks, jatasks);
       }
    }
   
    DPRINTF(("got new tickets for %d jobs\n", lGetNumberOfElem(ticket_modifier)));
 #ifdef COMPILE_DC
-   { 
+   if (feature_is_enabled(FEATURE_REPRIORITIZATION))  {
       int ptf_error;
       /* forward new tickets to ptf */
       if ((ptf_error=ptf_process_job_ticket_list(ticket_modifier))) {

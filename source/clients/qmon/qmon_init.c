@@ -67,13 +67,9 @@
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "qm_name.h"
-#include "sge_hostname.h"
-#include "sge_any_request.h"
-#include "sge_gdiP.h"
 
 #include "msg_clients_common.h"
 #include "msg_common.h"
-#include "msg_gdilib.h"
 
 static String icon_names[] = {
    "21cal",
@@ -224,39 +220,26 @@ String name
 void qmonInitSge( char *progname) 
 {
    int error = 0;
-   lList *alp = NULL;
-
    DENTER(GUI_LAYER, "qmonInitSge");
    
-   strcpy(SGE_EVENT,"");
    log_state_set_log_gui(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);
-   if ((error=sge_gdi_setup(prognames[QMON], &alp))) {
-      log_state_set_log_gui(False);
-      if ( sge_get_master(0) != NULL) {
-         error=check_isalive(sge_get_master(0));
-         
-         /* For the default case, just print a simple message */
-         if (error == CL_RETVAL_CONNECT_ERROR) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
-                                   prognames[QMASTER], 
-                                   u32c(sge_get_qmaster_port()), 
-                                   sge_get_master(0)));
-         }
-         /* For unusual errors, give more detail */
-         else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MESSAGE_TO_PORT_ON_HOST_SUSS,
-                                   prognames[QMASTER], 
-                                   u32c(sge_get_qmaster_port()), 
-                                   sge_get_master(0), cl_get_error_text(error)));
-         }
-         
-         fprintf(stderr, SGE_EVENT);
+   if ((error=sge_gdi_setup(prognames[QMON], NULL))) {
+
+      /* fills SGE_EVENT with diagnosis information */
+      if (error == AE_QMASTER_DOWN ||
+          error == CL_FIRST_FREE_EC+2 || 
+          error == CL_FIRST_FREE_EC+1 ) {
+         error = -1;  /* this error code is ambiguous, make 
+                         no suggestions in error message */ 
       }
+      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(error, SGE_EVENT));
+      fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }
    log_state_set_log_gui(False);
+
    DEXIT;
 }
 
@@ -268,7 +251,7 @@ void qmonExitFunc(
 int i 
 ) {
    DENTER(GUI_LAYER, "qmonExitFunc");
-   cl_com_cleanup_commlib();
+   leave_commd();  /* tell commd we're going */
    DCLOSE;
    exit(i);
 }
@@ -361,10 +344,6 @@ Cardinal num_args
       if (!strcmp(argv_in_out[i], "-nologo")) {
          nologo = 1;
          DPRINTF(("-nologo set\n"));
-      }
-      if (!strcmp(argv_in_out[i], "-qmon_debug")) {
-         qmon_debug = 1;
-         DPRINTF(("-qmon_debug set\n"));
       }
       if (!strcmp(argv_in_out[i], "-help")) {
          DPRINTF(("-help set\n"));

@@ -118,7 +118,6 @@ bool
 spool_template_default_startup_func(lList **answer_list, 
                                     const lListElem *rule, bool check)
 {
-   bool ret = true;
    const char *url;
 
    DENTER(TOP_LAYER, "spool_template_default_startup_func");
@@ -126,112 +125,7 @@ spool_template_default_startup_func(lList **answer_list,
    url = lGetString(rule, SPR_url);
 
    DEXIT;
-   return ret;
-}
-
-/****** spool/template/spool_template_default_shutdown_func() **************
-*  NAME
-*     spool_template_default_shutdown_func() -- shutdown spooling context
-*
-*  SYNOPSIS
-*     bool 
-*     spool_template_default_shutdown_func(lList **answer_list, 
-*                                          lListElem *rule);
-*
-*  FUNCTION
-*     Shuts down the context, e.g. the database connection.
-*
-*  INPUTS
-*     lList **answer_list - to return error messages
-*     const lListElem *rule - the rule containing data necessary for
-*                             the shutdown (e.g. path to the spool directory)
-*
-*  RESULT
-*     bool - true, if the shutdown succeeded, else false
-*
-*  NOTES
-*     This function should not be called directly, it is called by the
-*     spooling framework.
-*
-*  SEE ALSO
-*     spool/template/--Spooling-Template
-*     spool/spool_shutdown_context()
-*******************************************************************************/
-bool
-spool_template_default_shutdown_func(lList **answer_list, 
-                                    const lListElem *rule)
-{
-   bool ret = true;
-   const char *url;
-
-   DENTER(TOP_LAYER, "spool_template_default_shutdown_func");
-
-   url = lGetString(rule, SPR_url);
-
-
-   DEXIT;
-   return ret;
-}
-
-/****** spool/template/spool_template_default_maintenance_func() ************
-*  NAME
-*     spool_template_default_maintenance_func() -- maintain database
-*
-*  SYNOPSIS
-*     bool 
-*     spool_template_default_maintenance_func(lList **answer_list, 
-*                                    lListElem *rule
-*                                    const spooling_maintenance_command cmd,
-*                                    const char *args);
-*
-*  FUNCTION
-*     Maintains the database:
-*        - initialization
-*        - ...
-*
-*  INPUTS
-*     lList **answer_list   - to return error messages
-*     const lListElem *rule - the rule containing data necessary for
-*                             the maintenance (e.g. path to the spool 
-*                             directory)
-*     const spooling_maintenance_command cmd - the command to execute
-*     const char *args      - arguments to the maintenance command
-*
-*  RESULT
-*     bool - true, if the maintenance succeeded, else false
-*
-*  NOTES
-*     This function should not be called directly, it is called by the
-*     spooling framework.
-*
-*  SEE ALSO
-*     spool/template/--Spooling-Template
-*     spool/spool_maintain_context()
-*******************************************************************************/
-bool
-spool_template_default_maintenance_func(lList **answer_list, 
-                                    const lListElem *rule, 
-                                    const spooling_maintenance_command cmd,
-                                    const char *args)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "spool_template_default_maintenance_func");
-
-   switch (cmd) {
-      case SPM_init:
-         break;
-      default:
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 "unknown maintenance command %d\n", cmd);
-         ret = false;
-         break;
-         
-   }
-
-   DEXIT;
-   return ret;
+   return true;
 }
 
 /****** spool/template/spool_template_default_list_func() *****************
@@ -244,7 +138,7 @@ spool_template_default_maintenance_func(lList **answer_list,
 *                                      lList **answer_list, 
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, lList **list, 
-*                                      const sge_object_type object_type) 
+*                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *
@@ -253,7 +147,7 @@ spool_template_default_maintenance_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to be used 
 *     lList **list                    - target list
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true, on success, else false
@@ -270,23 +164,21 @@ bool
 spool_template_default_list_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, lList **list, 
-                                 const sge_object_type object_type)
+                                 const sge_object_type event_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_template_default_list_func");
 
-   switch (object_type) {
+   switch (event_type) {
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
          ret = false;
          break;
    }
-
-   ret = spool_default_validate_list_func(answer_list, type, rule, object_type);
 
    DEXIT;
    return ret;
@@ -301,7 +193,7 @@ spool_template_default_list_func(lList **answer_list,
 *     spool_template_default_read_func(lList **answer_list, 
 *                                      const lListElem *type, 
 *                                      const lListElem *rule, const char *key, 
-*                                      const sge_object_type object_type) 
+*                                      const sge_object_type event_type) 
 *
 *  FUNCTION
 *
@@ -310,7 +202,7 @@ spool_template_default_list_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key specifying the object
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     lListElem* - the object, if it could be read, else NULL
@@ -327,18 +219,18 @@ lListElem *
 spool_template_default_read_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, const char *key, 
-                                 const sge_object_type object_type)
+                                 const sge_object_type event_type)
 {
    lListElem *ep = NULL;
 
    DENTER(TOP_LAYER, "spool_template_default_read_func");
 
-   switch (object_type) {
+   switch (event_type) {
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
          break;
    }
 
@@ -357,7 +249,7 @@ spool_template_default_read_func(lList **answer_list,
 *                                       const lListElem *rule, 
 *                                       const lListElem *object, 
 *                                       const char *key, 
-*                                       const sge_object_type object_type) 
+*                                       const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Writes an object through the appropriate template spooling functions.
@@ -368,7 +260,7 @@ spool_template_default_read_func(lList **answer_list,
 *     const lListElem *rule           - rule to use
 *     const lListElem *object         - object to spool
 *     const char *key                 - unique key
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -387,18 +279,18 @@ spool_template_default_write_func(lList **answer_list,
                                   const lListElem *rule, 
                                   const lListElem *object, 
                                   const char *key, 
-                                  const sge_object_type object_type)
+                                  const sge_object_type event_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_template_default_write_func");
 
-   switch (object_type) {
+   switch (event_type) {
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
          ret = false;
          break;
    }
@@ -417,7 +309,7 @@ spool_template_default_write_func(lList **answer_list,
 *                                        const lListElem *type, 
 *                                        const lListElem *rule, 
 *                                        const char *key, 
-*                                        const sge_object_type object_type) 
+*                                        const sge_object_type event_type) 
 *
 *  FUNCTION
 *     Deletes an object in the template spooling.
@@ -427,7 +319,7 @@ spool_template_default_write_func(lList **answer_list,
 *     const lListElem *type           - object type description
 *     const lListElem *rule           - rule to use
 *     const char *key                 - unique key 
-*     const sge_object_type object_type - object type
+*     const sge_object_type event_type - object type
 *
 *  RESULT
 *     bool - true on success, else false
@@ -445,18 +337,78 @@ spool_template_default_delete_func(lList **answer_list,
                                    const lListElem *type, 
                                    const lListElem *rule,
                                    const char *key, 
-                                   const sge_object_type object_type)
+                                   const sge_object_type event_type)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "spool_template_default_delete_func");
 
-   switch (object_type) {
+   switch (event_type) {
       default:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_WARNING, 
                                  MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
+                                 object_type_get_name(event_type));
+         ret = false;
+         break;
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** spool/template/spool_template_default_verify_func() ****************
+*  NAME
+*     spool_template_default_verify_func() -- verify objects
+*
+*  SYNOPSIS
+*     bool
+*     spool_template_default_verify_func(lList **answer_list, 
+*                                        const lListElem *type, 
+*                                        const lListElem *rule, 
+*                                        const lListElem *object, 
+*                                        const char *key, 
+*                                        const sge_object_type event_type) 
+*
+*  FUNCTION
+*     Verifies an object.
+*
+*  INPUTS
+*     lList **answer_list - to return error messages
+*     const lListElem *type           - object type description
+*     const lListElem *rule           - rule to use
+*     const lListElem *object         - object to verify
+*     const sge_object_type event_type - object type
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*     It should be moved to libs/spool/spooling_utilities or even to
+*     libs/sgeobj/sge_object
+*
+*  SEE ALSO
+*     spool/template/--Template-Spooling
+*******************************************************************************/
+bool
+spool_template_default_verify_func(lList **answer_list, 
+                                   const lListElem *type, 
+                                   const lListElem *rule,
+                                   lListElem *object,
+                                   const sge_object_type event_type)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_template_default_verify_func");
+
+   switch (event_type) {
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                 object_type_get_name(event_type));
          ret = false;
          break;
    }

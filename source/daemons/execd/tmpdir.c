@@ -35,7 +35,7 @@
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
-#include "sge_qinstance.h"
+#include "sge_queue.h"
 
 #include "msg_execd.h"
 

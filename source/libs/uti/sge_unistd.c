@@ -88,9 +88,11 @@ static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_
    if (mkdir(path_, (mode_t) fmode)) {
       if (errno == EEXIST) {
          if (may_not_exist) {
+            DPRINTF(("directory \"%s\" already exists\n", path_));
             DEXIT;
             return -1;
          } else {
+            DPRINTF(("directory \"%s\" already exists\n", path_));
             DEXIT;
             return 0;
          }
@@ -195,7 +197,11 @@ void sge_sleep(int sec, int usec)
    timeout.tv_sec = sec;
    timeout.tv_usec = usec;
  
+#if !(defined(HPUX) || defined(HP10_01) || defined(HPCONVEX))
    select(0, (fd_set *) 0, (fd_set *) 0, (fd_set *) 0, &timeout);
+#else
+   select(0, (int *) 0, (int *) 0, (int *) 0, &timeout);
+#endif
 }       
 
 /****** uti/unistd/sge_chdir_exit() *******************************************
@@ -415,20 +421,16 @@ int sge_rmdir(const char *cp, dstring *error)
    SGE_STRUCT_DIRENT *dent;
    DIR *dir;
    char fname[SGE_PATH_MAX];
-
-   DENTER(TOP_LAYER, "sge_rmdir");
  
    if (!cp) {
       if (error) 
          sge_dstring_sprintf(error, MSG_POINTER_NULLPARAMETER);
-      DEXIT;
       return -1;
    }
  
    if (!(dir = opendir(cp))) {
       if (error) 
          sge_dstring_sprintf(error, MSG_FILE_OPENDIRFAILED_SS , cp, strerror(errno));
-      DEXIT;
       return -1;
    }
  
@@ -442,7 +444,6 @@ int sge_rmdir(const char *cp, dstring *error)
             if (error) 
                sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
             closedir(dir);
-            DEXIT;
             return -1;
          }
 #else
@@ -451,7 +452,6 @@ int sge_rmdir(const char *cp, dstring *error)
             if (error) 
                sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
             closedir(dir);
-            DEXIT;
             return -1;
          }
 #endif /* WIN32 */
@@ -466,7 +466,6 @@ int sge_rmdir(const char *cp, dstring *error)
                if (error) 
                   sge_dstring_sprintf(error, MSG_FILE_RECURSIVERMDIRFAILED );
                closedir(dir);
-               DEXIT;
                return -1;
             }
          }
@@ -479,7 +478,6 @@ int sge_rmdir(const char *cp, dstring *error)
                   sge_dstring_sprintf(error, MSG_FILE_UNLINKFAILED_SS,
                       fname, strerror(errno));
                closedir(dir);
-               DEXIT;
                return -1;
             }
 #endif
@@ -495,7 +493,6 @@ int sge_rmdir(const char *cp, dstring *error)
    if (rmdir(cp)) {
       if (error) 
          sge_dstring_sprintf(error, MSG_FILE_RMDIRFAILED_SS , cp, strerror(errno));
-      DEXIT;
       return -1;
    }
 #endif
@@ -587,7 +584,11 @@ u_long32 sge_sysconf(sge_sysconf_t id)
    DENTER(BASIS_LAYER, "sge_sysconf");
    switch (id) {
       case SGE_SYSCONF_NGROUPS_MAX:
+#if defined(AIX42)
+         ret = NGROUPS;
+#else
          ret = sysconf(_SC_NGROUPS_MAX);
+#endif
       break;
       default:
          CRITICAL((SGE_EVENT, MSG_SYSCONF_UNABLETORETRIEVE_I, (int) id));

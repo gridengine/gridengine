@@ -109,7 +109,6 @@ Qmon*pe_ask_shell.pe_ask_layout.xmtChildren: \
    InputField     pe_start_proc_args; \
    InputField     pe_stop_proc_args; \
    InputField     pe_allocation_rule; \
-   InputField     pe_urgency_slots; \
    XmToggleButton pe_control_slaves; \
    XmToggleButton pe_job_is_first_task; \
    XmPushButton   pe_ok, pe_cancel, pe_usersPB, pe_xusersPB;
@@ -134,7 +133,6 @@ Qmon*pe_ask_layout.layout: \
          Fixed Caption tl "@{Start Proc Args}" pe_start_proc_args \
          Fixed Caption tl "@{Stop Proc Args} " pe_stop_proc_args \
          Fixed Caption tl "@{Allocation Rule}" pe_allocation_rule \
-         Fixed Caption tl "@{Urgency Slots}" pe_urgency_slots \
          Row { \
             Fixed pe_control_slaves \
             Fixed pe_job_is_first_task \

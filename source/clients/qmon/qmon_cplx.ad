@@ -1,4 +1,4 @@
-
+!!___INFO__MARK_BEGIN__
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!
 !!  The Contents of this file are made available subject to the terms of
@@ -42,13 +42,12 @@ Qmon*qmon_cplx.cplx_layout.xmtChildren: \
    CX_TypeMatrix  attr_mx; \
    InputField     attr_aname, \
                   attr_ashort, \
-                  attr_aurgency, \
                   attr_adefault; \
    XmtChooser     attr_atype, \
                   attr_arel, \
                   attr_aconsumable, \
                   attr_areq; \
-   XmPushButton   attr_add, attr_mod, attr_del, attr_load, attr_save, \
+   XmPushButton   attr_add, attr_del, attr_load, attr_save, \
                   cplx_commit, cplx_reset, cplx_help;
 
 Qmon*qmon_cplx.cplx_layout.layout: \
@@ -68,23 +67,15 @@ Qmon*qmon_cplx.cplx_layout.layout: \
                Centered Caption tl "@{Requestable}" 7 em attr_areq \
                Centered Caption tl "@{Consumable}" 7 em attr_aconsumable \
                FlushTop Caption tl "@{Default}" 7 em attr_adefault \
-               FlushTop Caption tl "@{Urgency}" 7 em attr_aurgency \
             } \
             # \
             Etched Top Centered Row { \
                attr_mx \
                Fixed Even Equal Col { \
-                  <> \
                   attr_add \
-                  <> \
-                  attr_mod \
-                  <> \
                   attr_del \
-                  <> \
                   attr_load \
-                  <> \
                   attr_save \
-                  <> \
                } \
             } \
          } \
@@ -128,16 +119,14 @@ Qmon*cplx_layout.attr_load.navigationType:         TAB_GROUP
 Qmon*cplx_layout.attr_save.navigationType:         TAB_GROUP
 
 Qmon*cplx_layout.attr_add.labelString:    @{Add}
-Qmon*cplx_layout.attr_mod.labelString:    @{Modify}
 Qmon*cplx_layout.attr_del.labelString:    @{Delete}
 Qmon*cplx_layout.attr_load.labelString:   @{cplx.Load}
 Qmon*cplx_layout.attr_save.labelString:   @{Save}
 
-Qmon*cplx_layout.attr_add.activateCallback: ComplexAttributeAdd(*attr_mx, False);
-Qmon*cplx_layout.attr_mod.activateCallback: ComplexAttributeModify(*attr_mx, True);
+Qmon*cplx_layout.attr_add.activateCallback: ComplexAttributeAdd(*attr_mx);
 Qmon*cplx_layout.attr_del.activateCallback: ComplexAttributeDelete(*attr_mx); 
-Qmon*cplx_layout.attr_load.activateCallback: ComplexAttributeLoad(*attr_mx);
-Qmon*cplx_layout.attr_save.activateCallback: ComplexAttributesSave(*attr_mx);
+Qmon*cplx_layout.attr_load.activateCallback: ComplexAttributeLoad();
+Qmon*cplx_layout.attr_save.activateCallback: ComplexAttributesSave();
 
 
 Qmon*cplx_layout*attr_mx.xmtChildren: unmanaged XmtPopupMenu attr_menu;
@@ -149,14 +138,13 @@ Qmon*cplx_layout*attr_mx*attr_menu.items: \
    "@{_Delete}" [Ctrl-D] ComplexAttributeDelete(*attr_mx);
 
 
-Qmon*cplx_layout*attr_mx.rows:         15
-Qmon*cplx_layout*attr_mx.visibleRows:  15
-Qmon*cplx_layout*attr_mx.columns:      8
-Qmon*cplx_layout*attr_mx.columnWidths: 10,8,12,8,10,11,10,8
-Qmon*cplx_layout*attr_mx.maxLengths:   100,100,100,10,10,10,100,100
-Qmon*cplx_layout*attr_mx.columnLabels: @{Name}, @{Shortcut}, @{Type}, @{Relation}, @{Requestable}, @{Consumable}, @{Default}, @{Urgency}
+Qmon*cplx_layout*attr_mx.rows:         7
+Qmon*cplx_layout*attr_mx.visibleRows:  7
+Qmon*cplx_layout*attr_mx.columns:      7
+Qmon*cplx_layout*attr_mx.columnWidths: 10,8,12,8,10,11,10
+Qmon*cplx_layout*attr_mx.maxLengths:   100,100,100,10,10,10,100
+Qmon*cplx_layout*attr_mx.columnLabels: @{Name}, @{Shortcut}, @{Type}, @{Relation}, @{Requestable}, @{Consumable}, @{Default}
 Qmon*cplx_layout*attr_mx.boldLabels:          True
-Qmon*cplx_layout*attr_mx.columnButtonLabels:  True,True,True,True,True,True,True,True
 !Qmon*cplx_layout*attr_mx.evenRowBackground:   $matrix_even_bg
 !Qmon*cplx_layout*attr_mx.oddRowBackground:    $matrix_odd_bg
 Qmon*cplx_layout*attr_mx.gridType:            GRID_CELL_SHADOW
@@ -184,8 +172,7 @@ Qmon*cplx_layout.attr_atype.strings:  \
    "@{BOOL}", \
    "@{CSTRING}",\
    "@{HOST}", \
-   "@{DOUBLE}", \
-   "@{RESTRING}"
+   "@{DOUBLE}"
 
 Qmon*cplx_layout.attr_areq.ChooserType:        ChooserOption
 Qmon*cplx_layout.attr_areq.alignment:         ALIGNMENT_CENTER

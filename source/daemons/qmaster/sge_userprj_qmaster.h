@@ -35,8 +35,6 @@
 
 
 #include "sge_c_gdi.h"
-#include "sge_qmaster_timed_event.h"
-
 
 int userprj_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 
@@ -47,10 +45,6 @@ int userprj_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
 int sge_del_userprj(lListElem *ep, lList **alpp, lList **upl, char *ruser, char *rhost, int user);
 
 int verify_userprj_list(lList **alpp, lList *name_list, lList *userprj_list, const char *attr_name, const char *obj_descr, const char *obj_name);
-
-void sge_automatic_user_cleanup_handler(te_event_t anEvent);
-
-int sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp);
 
 #endif /* _SGE_USERPRJ_QMASTER_H_ */
 

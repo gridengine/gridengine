@@ -49,7 +49,7 @@ set check_init_level_procedure "init_level"
 
 # define test's name and run level descriptions
 set check_name            "qrsh"
-set check_category        "COMPATIBILITY SYSTEM VERIFIED"
+set check_category        "COMPATIBILITY SYSTEM"
 set check_highest_level   200
 set check_description(0)    "checking qrsh to one exec host (master)"
 set check_description(200)  "checking qrsh to all exec hosts"
@@ -60,9 +60,9 @@ set check_root_access_needs  "yes"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "qrsh_function"              ;# is a job executed?
 lappend check_functions "qrsh_h"                     ;# test -h option
 lappend check_functions "qrsh_hold_jid"              ;# test -hold_jid option
+lappend check_functions "qrsh_function"              ;# is a job executed?
 lappend check_functions "qrsh_alltoall"              ;# qrsh from all hosts to all hosts
 lappend check_functions "qrsh_starter_method"        ;# does the starter method work for qrsh?
 lappend check_functions "qrsh_accounting"            ;# accounting and online usage (sgeee)
@@ -477,8 +477,10 @@ proc qrsh_starter_method {} {
    puts $CHECK_OUTPUT "qrsh testing starter_method"
 
    # set starter method
-   set change_array(starter_method) "$CHECK_ACTUAL_TEST_PATH/starter.sh"
-   set_queue all.q "" change_array
+   foreach host $qrsh_hostlist {
+      set change_array(starter_method) "$CHECK_ACTUAL_TEST_PATH/starter.sh"
+      set_queue $host.q change_array
+   }
 
    foreach host $qrsh_hostlist {
       set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh \
@@ -521,8 +523,10 @@ proc qrsh_starter_method {} {
    }
 
    # unset starter method
-   set change_array(starter_method) "none"
-   set_queue "all.q" "" change_array
+   foreach host $qrsh_hostlist {
+      set change_array(starter_method) "none"
+      set_queue $host.q change_array
+   }
 
    set_error 0 "ok"
 }
@@ -672,7 +676,6 @@ proc qrsh_trap {} {
 #     ???/???
 #*******************************
 proc qrsh_accounting {} {
-   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_PRODUCT_TYPE
    global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer
@@ -684,7 +687,7 @@ proc qrsh_accounting {} {
    } 
 
    puts $CHECK_OUTPUT "qrsh accounting test"
-   if { $ts_config(gridengine_version) != 53 } {
+   if { [resolve_version] > 2 } {
       set INTERACTIVE_JOB [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "*"]
       set INTERACTIVE_JOB_DUMMY [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S] "__JOBID__"]
    } else {
@@ -766,8 +769,7 @@ proc qrsh_accounting {} {
          }
       }
 
-      # wait for accounting file to be flushed (esp. for 6.0)
-      sleep 30
+      sleep 5
 
       if { $job_id != "" } {
          if {[info exists qacct_info]} {
@@ -842,8 +844,7 @@ proc qrsh_suspend {} {
    foreach host $qrsh_hostlist {
       switch -exact [resolve_arch $host] {
          aix42 -
-         aix43 -
-         aix51 {
+         aix43 {
             set running_state AWI
             set suspended_state T
          }
@@ -1114,8 +1115,10 @@ proc qrsh_terminate {} {
    set terminate_out_file [get_tmp_file_name "" "qrsh" $CHECK_COMMD_PORT]
 
    # set terminate method
-   set change_array(terminate_method) "$CHECK_ACTUAL_TEST_PATH/terminate.sh \$job_id \$job_pid $terminate_out_file"
-   set_queue "all.q" "" change_array
+   foreach host $qrsh_hostlist {
+      set change_array(terminate_method) "$CHECK_ACTUAL_TEST_PATH/terminate.sh \$job_id \$job_pid $terminate_out_file"
+      set_queue $host.q change_array
+   }
 
    foreach host $qrsh_hostlist {
       # start qrsh job (shell script that outputs its pid)
@@ -1234,8 +1237,10 @@ proc qrsh_terminate {} {
    }
 
    # reset terminate method
-   set change_array(terminate_method) "NONE"
-   set_queue "all.q" "" change_array
+   foreach host $qrsh_hostlist {
+      set change_array(terminate_method) "NONE"
+      set_queue $host.q change_array
+   }
 
    set_error 0 "ok"
 }
@@ -1321,7 +1326,6 @@ proc check_qsub_gid_output {output check_group} {
 #     ???/???
 #*******************************
 proc qrsh_qsub_gid {} {
-   global ts_config
    global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_PROTOCOL_DIR
    global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST
    global QSUB_GID_USER QSUB_GID_GROUPS CHECK_SECOND_FOREIGN_SYSTEM_USER
@@ -1332,13 +1336,8 @@ proc qrsh_qsub_gid {} {
       return
    } 
 
-   if { $ts_config(gridengine_version) == 53 } {
-      set USING_FOR     [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_USING_SS] "*USE_QSUB_GID=true*" "*"]
-      set FINISHED_JOBS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_USING_SS] "*finished_jobs*" "*"]
-   } else {
-      set USING_FOR     [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CONF_USING_SS] "*USE_QSUB_GID=true*" "*"]
-      set FINISHED_JOBS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_CONF_USING_SS] "*finished_jobs*" "*"]
-   }
+   set USING_FOR     [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_USING_SS] "*USE_QSUB_GID=true*" "*"]
+   set FINISHED_JOBS [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_USING_SS] "*finished_jobs*" "*"]
 
    puts $CHECK_OUTPUT "check if qsub gid is propagated to qrsh job"
 
@@ -1528,7 +1527,6 @@ proc qrsh_qsub_gid {} {
 #     ???/???
 #*******************************
 proc qrsh_batch {} {
-   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer
@@ -1541,19 +1539,14 @@ proc qrsh_batch {} {
 
    puts $CHECK_OUTPUT "check qrsh in immediate and batch mode (-now yes / no)"
    set COULD_NOT_BE_STARED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSH_REQUESTCANTBESCHEDULEDTRYLATER_S] "*" ]
-   if { $ts_config(gridengine_version) == 60 } {
-      set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS] "*" "*"]
-   } else {
-      set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*" ]
-   }
+   set HAS_BEEN_SUBMITTED  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_JOB_SUBMITJOB_USS] "*" "*" "*" ]
 
 
    foreach host $qrsh_hostlist {
-      set queue [get_queue_instance "all.q" $host]
       # disable queue
-      disable_queue $queue
+      disable_queue $host.q
       # start qrsh - must be rejected
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-q $queue echo blahblah"]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-q $host.q echo blahblah"]
       set sp_id [ lindex $qrsh_id 1 ] 
 
       # evaluate pid and JOB_ID
@@ -1585,12 +1578,12 @@ proc qrsh_batch {} {
  
       if { $error } {
          set_error -1 "skipping test on host $host"
-         enable_queue [get_queue_instance "all.q" $host]
+         enable_queue $host.q
          continue
       }
  
       # start qrsh -now no
-      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -q $queue -now no echo blahblah"]
+      set qrsh_id [open_remote_spawn_process $CHECK_HOST "ts_def_con" $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh "-verbose -q $host.q -now no echo blahblah"]
       # must be in pending jobs
       set sp_id [ lindex $qrsh_id 1 ] 
 
@@ -1643,7 +1636,7 @@ proc qrsh_batch {} {
       }
       
       # enable queue, trigger scheduling
-      enable_queue $queue
+      enable_queue $host.q
       catch "exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -tsm" output
       
       # job must be scheduled

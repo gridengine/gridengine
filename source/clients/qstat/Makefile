@@ -40,30 +40,27 @@ QSTAT_SRC = qstat.c
 
 QSTAT_ADD_SRC = \
                qstat_printing.c \
-               sge_cqueue_qstat.c \
                read_write_complex.c \
                show_job.c \
                sig_handlers.c \
-               usage.c sge_options.c \
-               sge_mt_init.c \
-               qstat_xml.c
+               usage.c sge_options.c
 
 QSTAT_OBJS = $(QSTAT_SRC:.c=.o)
 
 QSTAT_ADD_OBJS = $(QSTAT_ADD_SRC:.c=.o)
 
-QSTAT_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+QSTAT_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
 QSTAT_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                     $(SECLIBS) $(KRBLIBS) \
-	                 $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
-                         $(TPLIB)
+	                 $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
+                         $(ZLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
 qstat_clean:
-	$(RM) $(QSTAT_TARGETS) $(QSTAT_OBJS) $(QSTAT_ADD_OBJS)
+	$(RM) $(QSTAT_TARGETS) $(QSTAT_OBJS)
 
 qstat_depend:
 	$(DEPEND) -f$(QSTAT_DIR)/qstat_dependencies $(QSTAT_DIR)/*.c
@@ -91,6 +88,3 @@ include $(QSTAT_DIR)/qstat_dependencies
 ###############################################################################
 qstat.o: 	$(QSTAT_DIR)/qstat.c
 		$(CC) $(CFLAGS) -c $(QSTAT_DIR)/qstat.c
-      
-qstat_xml.o: 	$(QSTAT_DIR)/qstat_xml.c
-		$(CC) $(CFLAGS) -c $(QSTAT_DIR)/qstat_xml.c

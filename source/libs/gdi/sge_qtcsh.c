@@ -48,6 +48,7 @@
 #include "setup_path.h"
 #include "sge_uidgid.h"
 #include "sge_prog.h"
+#include "sge_answer.h"
 #include "sge_conf.h"
 
 #include "msg_common.h"
@@ -256,7 +257,7 @@ char *expath,  /* this is how user typed in the command */
 int close_stdin /* use of qrsh's -nostdin option */
 ) {
    const char *value; 
-   char *taskname = NULL;
+   char *taskname = NULL, *s, *resreq;
    lListElem *task;
    int i, narg_resreq = 0, narg_argv = 0;
    char **argv_iter, 
@@ -278,12 +279,16 @@ int close_stdin /* use of qrsh's -nostdin option */
          !taskname ||
          !(task=lGetElemStr(task_config, CF_name, taskname))) {
       if (mode_verbose)
-         fprintf(stderr, "local execution of "SFQ"\n", expath);
+         fprintf(stderr, "local ecexution of "SFQ"\n", expath);
       return execv(path, argv);
    }
   
    if ((value = lGetString(task, CF_value))) {
-      narg_argv += sge_quick_count_num_args (value);
+      resreq = (char *)malloc(strlen(value)+1);
+      strcpy(resreq, value);
+      for (s=strtok(resreq, " \t"); s; s=strtok(NULL, " \t"))
+         narg_resreq++;
+      free(resreq);
    }
 
    for (argv_iter=argv; argv_iter[0]; argv_iter++) {
@@ -317,11 +322,44 @@ int close_stdin /* use of qrsh's -nostdin option */
       newargv[i++] = strdup("n");
    }
 
-   /* add optional qrsh arguments from qtask file */
+   /* add optionally qrsh arguments from qtask file */
    if (value) {
-      sge_parse_args (value, &newargv[i]);
+      const char *s; 
+      char *d;
+      char quote;
+      char *start;
+      int finished;
+      
+      resreq = malloc(strlen(value) + 1);
+      d = resreq;
+      s = value;
+      start = resreq;
+      finished = 0;
+      while(!finished) {
+         if(*s == '"' || *s == '\'') {      /* copy quoted arguments */
+            quote = *s++;                   /* without quotes */
+            while(*s && *s != quote) 
+              *d++ = *s++;
+            if(*s == quote) 
+               s++;
+         }
+
+         if(*s == 0) finished = 1;          /* line end ? */
+         
+         if(finished || isspace(*s)) {      /* found delimiter or line end */
+            *d++ = 0;                       /* terminate token */
+            newargv[i++] = strdup(start);   /* assign argument */
+            if(!finished) {
+               while(isspace(*(++s)));      /* skip any number whitespace */
+            }   
+            start = d;                      /* assign start of next token */
+         } else {
+            *d++ = *s++;                    /* copy one character */
+         }
+      } 
+      free(resreq);
    }
-	 
+
    /* add command's arguments */
    {
 /*       int n; */
@@ -346,134 +384,6 @@ int close_stdin /* use of qrsh's -nostdin option */
    return execvp(qrsh_path, newargv);
 }
 
-/* This method counts the number of arguments in the string using a quick and
- * dirty algorithm.  The algorithm may incorrectly report the number of arguments
- * to be too large because it does not parse quotations correctly. */
-int sge_quick_count_num_args (
-const char* args /* The argument string to count by whitespace tokens */
-) {
-   int num_args = 0;
-   char *resreq = (char *)malloc (strlen (args)+1);
-   char *s;
-   
-   DENTER (TOP_LAYER, "count_num_qtask_args");
-   
-   /* This function may return a larger number than required since it does not
-    * parse quotes.  This is ok, however, since it's current usage is for
-    * mallocing arrays, and a little too big is fine. */
-   strcpy (resreq, args);
-   for (s=strtok (resreq, " \t"); s; s=strtok(NULL, " \t"))
-      num_args++;
-   free(resreq);
-   
-   DEXIT;
-   return num_args;
-}
-
-/* This method should probably be moved out of this file into somewhere more
- * common so that other routines can use it. */
-void sge_parse_args (
-const char* args, /* The argument string to parse by whitespace and quotes */
-char** pargs /* The array to contain the parsed arguments */
-) {
-   const char *s; 
-   char *d;
-   char quote;
-   char *start;
-   char *resreq;
-   int finished, count = 0;
-
-   DENTER (TOP_LAYER, "sge_parse_args");
-   
-   resreq = malloc (strlen (args) + 1);
-   d = resreq;
-   s = args;
-   start = resreq;
-   finished = 0;
-   
-   while(!finished) {
-      if(*s == '"' || *s == '\'') {      /* copy quoted arguments */
-         quote = *s++;                   /* without quotes */
-         while(*s && *s != quote) 
-           *d++ = *s++;
-         if(*s == quote) 
-            s++;
-      }
-
-      if(*s == 0) finished = 1;          /* line end ? */
-
-      if(finished || isspace(*s)) {      /* found delimiter or line end */
-         *d++ = 0;                       /* terminate token */
-         pargs[count++] = strdup(start);   /* assign argument */
-         if(!finished) {
-            while(isspace(*(++s)));      /* skip any number whitespace */
-         }   
-         start = d;                      /* assign start of next token */
-      } else {
-         *d++ = *s++;                    /* copy one character */
-      }
-   } 
-   free(resreq);
-   
-   DEXIT;
-}
-
-/* This function was added to enable the DRMAA library to handle job
- * categories.  It is similar to sge_init() except that it doesn't do any
- * initialization. */
-char** sge_get_qtask_args (
-char *taskname, /* The name of the task to look for in the qtask files */
-lList *alp /* For returning error information */
-) {
-   const char *value; 
-   int num_args = 0;
-   lListElem *task;
-   char** args = NULL;
-   
-   DENTER (TOP_LAYER, "sge_get_qtask_args");
-   
-   if (mode_verbose) {
-      fprintf(stderr, "sge_get_qtask_args(taskname = %s)\n", taskname);
-   }
-
-   /* If the task_config has not been filled yet, fill it.  We call
-    * init_qtask_config() instead of sge_init() because we don't need to setup
-    * the GDI.  We just need the qtask arguments. */
-   if (!task_config) {
-      /* Just using printf here since we don't really have an exciting function
-       * like xprintf to pass in.  This was really meant for use with qtsch. */
-      if (init_qtask_config (&alp, (print_func_t)printf)) {
-         const char *s;
-         lListElem *aep;
-         
-         if (!alp || !(aep=lFirst(alp)) || !(s=lGetString(aep, AN_text))) {
-            s = "unknown reason";
-         }
-
-         DEXIT;
-         return args;
-      }
-   }
-
-   if (!(task=lGetElemStr(task_config, CF_name, taskname))) {
-      if (mode_verbose)
-         fprintf(stderr, "unknown qtask name: %s\n", taskname);
-      DEXIT;
-      return args;
-   }
-  
-   if ((value = lGetString(task, CF_value))) {
-      num_args = sge_quick_count_num_args (value);
-   }
-   
-   args = (char **)malloc (sizeof (char *) * (num_args + 1));   
-   
-   sge_parse_args (value, args);
-   args[num_args] = NULL;
-   
-   DEXIT;
-   return args;
-}
 
 void sge_init(
 print_func_t ostream 

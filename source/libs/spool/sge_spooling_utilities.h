@@ -32,14 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-/* uti */
-#include "sge_dstring.h"
-
-/* cull */
 #include "cull.h"
 
-/* sgeobj */
-#include "sge_object.h"
+#include "sge_dstring.h"
 
 /****** spool/utilities/--Spooling-Utilities************************************
 *
@@ -75,8 +70,6 @@
 *        int width;
 *        const char *name;
 *        const struct spooling_field *sub_fields;
-*        int (*read_func) (lListElem *ep, int nm, const char *buffer, lList **alp);
-*        int (*write_func) (const lListElem *ep, int nm, dstring *buffer, lList **alp);
 *     } spooling_field;
 *     
 *  FUNCTION
@@ -131,8 +124,6 @@ typedef struct spooling_field {
    const char *name;
    struct spooling_field *sub_fields;
    const void *clientdata;
-   int (*read_func) (lListElem *ep, int nm, const char *buffer, lList **alp);
-   int (*write_func) (const lListElem *ep, int nm, dstring *buffer, lList **alp);
 } spooling_field;
 
 spooling_field *
@@ -141,17 +132,5 @@ spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
 
 spooling_field *
 spool_free_spooling_fields(spooling_field *fields);
-
-bool
-spool_default_validate_func(lList **answer_list, 
-                          const lListElem *type, 
-                          const lListElem *rule,
-                          lListElem *object,
-                          const sge_object_type object_type);
-
-bool
-spool_default_validate_list_func(lList **answer_list, 
-                          const lListElem *type, const lListElem *rule,
-                          const sge_object_type object_type);
 
 #endif /* __SGE_SPOOLING_UTILITIES_H */

@@ -582,7 +582,10 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
    strcpy(host, rhost);
 
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+
+   /* trigger communication or wait for a new message (select timeout) */
    cl_commlib_trigger(handle);
+
    i = gdi_receive_sec_message( handle, rhost, commproc, usid, synchron, for_request_mid, &message, &sender);
 
    if ( i == CL_RETVAL_CONNECTION_NOT_FOUND ) {

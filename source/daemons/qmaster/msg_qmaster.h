@@ -45,8 +45,6 @@
 /*
 ** sge_follow.c
 */
-#define MSG_IGNORE_ORDER_RETRY_I      _MESSAGE(33012, _("ignoring retry of recent order #%d\n"))
-#define MSG_UNKNOWN_ERROR_NL          _MESSAGE(33013, _("unknown error\n"))
 #define MSG_JOB_NOJOBID               _MESSAGE(33014, _("can't get job id\n"))
 #define MSG_JOB_NOORDERTASK_US        _MESSAGE(33015, _("invalid task number 0 for job "U32CFormat" in "SFQ" order\n"))
 #define MSG_JOB_FINDJOB_U             _MESSAGE(33016, _("unable to find job "U32CFormat"\n"))

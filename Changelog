@@ -1,3 +1,8 @@
+CR-2004-09-22-0: Cleanup:   - removed unused messages
+                            - qmaster will now respond faster to qconf -km
+                            - added some comments to the source code
+                 Review:    JG
+
 EB-2004-09-21-0: Bugfix:    qmaster might fail if jobs are deleted which have 
                             multiple hold states applied 
                  Issue:     1280

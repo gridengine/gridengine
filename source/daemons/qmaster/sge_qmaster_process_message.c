@@ -99,7 +99,18 @@ void *sge_qmaster_process_message(void *anArg)
    
    memset((void*)&msg, 0, sizeof(struct_msg_t));
    
-   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 1, 0, &msg.request_mid);
+   /*
+    * INFO (CR)  
+    *
+    * The not syncron sge_get_any_request() call will not raise cpu usage to 100%
+    * because sge_get_any_request() is doing a cl_commlib_trigger() which will
+    * return after the timeout specified at cl_com_create_handle() call in prepare_enroll()
+    * which is set to 1 second. A syncron receive would result in a unnecessary qmaster shutdown
+    * timeout (syncron receive timeout) when no messages are there to read.
+    *
+    */
+   
+   res = sge_get_any_request(msg.snd_host, msg.snd_name, &msg.snd_id, &msg.buf, &msg.tag, 0, 0, &msg.request_mid);
 
    if (res != CL_RETVAL_OK) {
       DPRINTF(("%s returned: %s\n", SGE_FUNC, cl_get_error_text(res)));

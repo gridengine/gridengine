@@ -1,3 +1,5 @@
+JG-2003-11-21-0: Testsuite: Handling of SGE version dependencies.
+
 SG-2003-11-20-0: Enhancem.: - Added the posability to specify what and where
                             conditions for the event and the mirror 
                             interface. 

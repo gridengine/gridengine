@@ -1923,28 +1923,28 @@ proc run_command_as_user { hostname user command args counter } {
 
 
 # main
-if { [info exists argc ] != 0 } {
-   set TS_ROOT ""
-   set procedure ""
-   for { set i 0 } { $i < $argc } { incr i } {
-      if {$i == 0} { set TS_ROOT [lindex $argv $i] }
-      if {$i == 1} { set procedure [lindex $argv $i] }
-   }
-   if { $argc == 0 } {
-      puts "usage:\n$module_name <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
-      puts "options:"
-      puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
-      puts "proc                 -  procedure from this file with parameters"
-      puts "no_main              -  used to source testsuite file (check.exp)"
-      puts "testsuite params     -  any testsuite command option (from file check.exp)"
-      puts "                        testsuite params: file <path>/defaults.sav is needed"
-   } else {
-      source "$TS_ROOT/check.exp"
-      puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
-      puts $CHECK_OUTPUT "calling \"$procedure\" ..."
-      set result [ eval $procedure ]
-      puts $result 
-      flush $CHECK_OUTPUT
-   }
-}
+# if { [info exists argc ] != 0 } {
+#    set TS_ROOT ""
+#    set procedure ""
+#    for { set i 0 } { $i < $argc } { incr i } {
+#       if {$i == 0} { set TS_ROOT [lindex $argv $i] }
+#       if {$i == 1} { set procedure [lindex $argv $i] }
+#    }
+#    if { $argc == 0 } {
+#       puts "usage:\n$module_name <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
+#       puts "options:"
+#       puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
+#       puts "proc                 -  procedure from this file with parameters"
+#       puts "no_main              -  used to source testsuite file (check.exp)"
+#       puts "testsuite params     -  any testsuite command option (from file check.exp)"
+#       puts "                        testsuite params: file <path>/defaults.sav is needed"
+#    } else {
+#       source "$TS_ROOT/check.exp"
+#       puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
+#       puts $CHECK_OUTPUT "calling \"$procedure\" ..."
+#       set result [ eval $procedure ]
+#       puts $result 
+#       flush $CHECK_OUTPUT
+#    }
+# }
 

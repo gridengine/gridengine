@@ -988,33 +988,304 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
    }
 }
 
+#                                                             max. column:     |
+#****** control_procedures/gethostname() ******
+# 
+#  NAME
+#     gethostname -- ??? 
+#
+#  SYNOPSIS
+#     gethostname { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc gethostname {} {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT env
+
+  set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
+  if { $catch_return == 0 } {
+     set result [split $result "."]
+     set newname [lindex $result 0]
+     return $newname
+  } else {
+     debug_puts "proc gethostname - gethostname error or binary not found"
+     debug_puts "error: $result"
+     debug_puts "error: $catch_return"
+     debug_puts "trying local hostname call ..."
+     set catch_return [ catch { exec "hostname" } result ]
+     if { $catch_return == 0 } {
+        set result [split $result "."]
+        set newname [lindex $result 0]
+        debug_puts "got hostname: \"$newname\""
+        return $newname
+     } else {
+        debug_puts "local hostname error or binary not found"
+        debug_puts "error: $result"
+        debug_puts "error: $catch_return"
+        debug_puts "trying local HOST environment variable ..."
+        if { [ info exists env(HOST) ] } {
+           set result [split $env(HOST) "."]
+           set newname [lindex $result 0]
+           if { [ string length $newname ] > 0 } {
+               debug_puts "got hostname_ \"$newname\""
+               return $newname
+           } 
+        }
+     }
+     return "unknown"
+  }
+} 
+
+
+
+#                                                             max. column:     |
+#****** control_procedures/resolve_arch() ******
+# 
+#  NAME
+#     resolve_arch -- ??? 
+#
+#  SYNOPSIS
+#     resolve_arch { { host "none" } } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     { host "none" } - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc resolve_arch { { host "none" } } {
+  global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
+  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
+
+  if { [ info exists arch_cache($host) ] } {
+     return $arch_cache($host)
+  }
+
+  if { [ info exists CHECK_USER ] == 0 } {
+     puts $CHECK_OUTPUT "user not set, aborting"
+     return "unknown"
+  }
+  
+  if { [ info exists CHECK_SOURCE_DIR ] == 0 } {
+     debug_puts "source directory not set, aborting"
+     return "unknown"
+  }
+
+ 
+
+  if { [ string compare $host "none" ] == 0 || 
+       [ string compare $host $CHECK_HOST ] == 0 } {
+      set prg_exit_state [ catch { eval exec "$CHECK_SOURCE_DIR/dist/util/arch" } result ]
+  } else {
+      debug_puts "resolve_arch: resolving architecture for host $host"
+      set result [ start_remote_prog $host $CHECK_USER "$CHECK_SOURCE_DIR/dist/util/arch" "" prg_exit_state 60 0 "" 1 0 0]
+  }
+  set result [string trim $result]
+  set result2 [split $result "\n"]
+  if { [ llength $result2 ] > 1 } {
+     puts $CHECK_OUTPUT "util/arch script returns more than 1 line output ..."
+     foreach elem $result2  {
+        puts $CHECK_OUTPUT "\"$elem\""
+        if { [string first " " $elem ] < 0  } {
+           set result $elem
+           puts $CHECK_OUTPUT "using \"$result\" as architecture"
+           break
+        }
+     }
+  }
+  if { [ llength $result2 ] < 1 } {
+      puts $CHECK_OUTPUT "util/arch script returns no value ..."
+      return "unknown"
+  }
+  if { [string first ":" $result] >= 0 } {
+     puts $CHECK_OUTPUT "architecture or file \"$CHECK_SOURCE_DIR/dist/util/arch\" not found"
+     return "unknown"
+  }
+  set result [lindex $result 0]  ;# remove CR
+
+  if { [ string compare $result "" ] == 0 } {
+     puts $CHECK_OUTPUT "architecture or file \"$CHECK_SOURCE_DIR/dist/util/arch\" not found"
+     return "unknown"
+  } 
+
+  set arch_cache($host) [lindex $result 0]
+  
+  if { [info exists arch_cache($host) ] != 1 } {
+     return "unknown"
+  }
+
+  return $arch_cache($host)
+}
+
+#                                                             max. column:     |
+#****** control_procedures/resolve_upper_arch() ******
+# 
+#  NAME
+#     resolve_upper_arch -- ??? 
+#
+#  SYNOPSIS
+#     resolve_upper_arch { host } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     host - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc resolve_upper_arch { host } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_TESTSUITE_ROOT upper_arch_cache CHECK_SOURCE_DIR
+  global CHECK_USER
+  if { [info exists upper_arch_cache($host) ] } {
+     return $upper_arch_cache($host)
+  }
+
+  set result [ start_remote_prog $host $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -no-mk" prg_exit_state 60 0 "" 1 0]
+ 
+  set result [split $result "\n"]
+  set result [join $result ""]
+  set result [split $result "\r"]
+  set result [join $result ""]
+
+  if { $prg_exit_state != 0 } {
+     add_proc_error "resolve_upper_arch" "-1" "architecture not found or aimk not found in $CHECK_SOURCE_DIR"
+     return ""
+  }
+  set upper_arch_cache($host) $result
+  puts $CHECK_OUTPUT "upper arch is \"$result\""
+
+  return $upper_arch_cache($host)
+}
+
+
+#                                                             max. column:     |
+#****** control_procedures/resolve_host() ******
+# 
+#  NAME
+#     resolve_host -- ??? 
+#
+#  SYNOPSIS
+#     resolve_host { name { long 0 } } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     name       - ??? 
+#     { long 0 } - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc resolve_host { name { long 0 } } {
+
+  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_TESTSUITE_ROOT 
+  global CHECK_SCRIPT_FILE_DIR CHECK_USER
+
+  set remote_arch [ resolve_arch $name ]
+
+  set result [ start_remote_prog $name $CHECK_USER "$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname" "-name" prg_exit_state 60 0 "" 0 ]
+  set result [ lindex $result 0 ]  ;# removing /r /n
+
+  if { $prg_exit_state != 0 } {
+     puts $CHECK_OUTPUT "proc resolve_host - gethostname error or file \"$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname\" not found"
+     return "unknown"
+  }
+
+  set newname $result
+  if { $long == 0 } {
+     set result [split $result "."]
+     set newname [lindex $result 0]
+  }
+  puts $CHECK_OUTPUT "\"$name\" resolved to \"$newname\""
+  return $newname
+}
 
 
 
 
 # main
-if { [info exists argc ] != 0 } {
-   set TS_ROOT ""
-   set procedure ""
-   for { set i 0 } { $i < $argc } { incr i } {
-      if {$i == 0} { set TS_ROOT [lindex $argv $i] }
-      if {$i == 1} { set procedure [lindex $argv $i] }
-   }
-   if { $argc == 0 } {
-      puts "usage:\n$module_name <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
-      puts "options:"
-      puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
-      puts "proc                 -  procedure from this file with parameters"
-      puts "no_main              -  used to source testsuite file (check.exp)"
-      puts "testsuite params     -  any testsuite command option (from file check.exp)"
-      puts "                        testsuite params: file <path>/defaults.sav is needed"
-   } else {
-      source "$TS_ROOT/check.exp"
-      puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
-      puts $CHECK_OUTPUT "calling \"$procedure\" ..."
-      set result [ eval $procedure ]
-      puts $result 
-      flush $CHECK_OUTPUT
-   }
-}
+#if { [info exists argc ] != 0 } {
+#   set TS_ROOT ""
+#   set procedure ""
+#   for { set i 0 } { $i < $argc } { incr i } {
+#      if {$i == 0} { set TS_ROOT [lindex $argv $i] }
+#      if {$i == 1} { set procedure [lindex $argv $i] }
+#   }
+#   if { $argc == 0 } {
+#      puts "usage:\n$module_name <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
+#      puts "options:"
+#      puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
+#      puts "proc                 -  procedure from this file with parameters"
+#      puts "no_main              -  used to source testsuite file (check.exp)"
+#      puts "testsuite params     -  any testsuite command option (from file check.exp)"
+#      puts "                        testsuite params: file <path>/defaults.sav is needed"
+#   } else {
+#      source "$TS_ROOT/check.exp"
+#      puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
+#      puts $CHECK_OUTPUT "calling \"$procedure\" ..."
+#      set result [ eval $procedure ]
+#      puts $result 
+#      flush $CHECK_OUTPUT
+#   }
+#}
 

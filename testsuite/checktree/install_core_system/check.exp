@@ -1306,8 +1306,8 @@ proc install_qmaster {} {
 }
 
 proc reread_bootstrap {} {
-  # install_qmaster has written the bootstrap file - read it.
-  init_bootstrap
+  # install_qmaster has written the bootstrap or the configuration file
+  bootstrap_sge_config
   set_error "0" "install_qmaster - no errors"
 }
 

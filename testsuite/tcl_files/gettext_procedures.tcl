@@ -954,31 +954,77 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
    return $msg_text
 }
 
+#****** check/perform_simple_l10n_test() ***************************************
+#  NAME
+#     perform_simple_l10n_test() -- check minimal l10n settings
+#
+#  SYNOPSIS
+#     perform_simple_l10n_test { } 
+#
+#  FUNCTION
+#     This will try to get the translated version of an message string
+#
+#  SEE ALSO
+#     ???/???
+#*******************************************************************************
+proc perform_simple_l10n_test { } {
 
-if { [info exists argc ] != 0 } {
-   set TS_ROOT ""
-   set procedure ""
-   for { set i 0 } { $i < $argc } { incr i } {
-      if {$i == 0} { set TS_ROOT [lindex $argv $i] }
-      if {$i == 1} { set procedure [lindex $argv $i] }
+   global CHECK_CORE_MASTER CHECK_USER CHECK_L10N ts_host_config ts_config
+   global CHECK_OUTPUT CHECK_HOST CHECK_ARCH l10n_raw_cache
+   puts $CHECK_OUTPUT ""
+   flush $CHECK_OUTPUT
+
+   set mem_it $CHECK_L10N
+
+
+   set CHECK_L10N 0
+   if { [ info exists l10n_raw_cache] } {
+      unset l10n_raw_cache
    }
-   if { $argc == 0 } {
-      puts "usage:\ngettext_procedures.tcl <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
-      puts "options:"
-      puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
-      puts "proc                 -  procedure from this file with parameters"
-      puts "no_main              -  used to source testsuite file (check.exp)"
-      puts "testsuite params     -  any testsuite command option (from file check.exp)"
-      puts "                        testsuite params: file <path>/defaults.sav is needed"
-   } else {
-      source "$TS_ROOT/check.exp"
-      if { $be_quiet == 0 } {
-          puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
-          puts $CHECK_OUTPUT "calling \"$procedure\" ..."
-      }
-      set result [ eval $procedure ]
-      puts $result 
-      flush $CHECK_OUTPUT
-   }
+   set no_l10n  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro SGE_INFOTEXT_TESTSTRING_S_L10N ] " $CHECK_USER " ]
+   set CHECK_L10N 1
+   unset l10n_raw_cache
+   set with_l10n  [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro SGE_INFOTEXT_TESTSTRING_S_L10N ] " $CHECK_USER " ]
+
+#   puts $CHECK_OUTPUT [translate $CHECK_CORE_MASTER 0 0 0 [sge_macro MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER ]]
+
+   puts $CHECK_OUTPUT "\n------------------------------------------------------------------------\n"
+   puts $CHECK_OUTPUT $with_l10n
+   puts $CHECK_OUTPUT "------------------------------------------------------------------------"
+   set CHECK_L10N $mem_it
+
+   if { [ string compare $no_l10n $with_l10n ] == 0 } {
+      add_proc_error "perform_simple_l10n_test" -1 "localization (l10n) error:\nIs the locale directory available?"
+      return -1
+   } 
+   return 0
 }
+
+
+# if { [info exists argc ] != 0 } {
+#    set TS_ROOT ""
+#    set procedure ""
+#    for { set i 0 } { $i < $argc } { incr i } {
+#       if {$i == 0} { set TS_ROOT [lindex $argv $i] }
+#       if {$i == 1} { set procedure [lindex $argv $i] }
+#    }
+#    if { $argc == 0 } {
+#       puts "usage:\ngettext_procedures.tcl <CHECK_TESTSUITE_ROOT> <proc> no_main <testsuite params>"
+#       puts "options:"
+#       puts "CHECK_TESTSUITE_ROOT -  path to TESTSUITE directory"
+#       puts "proc                 -  procedure from this file with parameters"
+#       puts "no_main              -  used to source testsuite file (check.exp)"
+#       puts "testsuite params     -  any testsuite command option (from file check.exp)"
+#       puts "                        testsuite params: file <path>/defaults.sav is needed"
+#    } else {
+#       source "$TS_ROOT/check.exp"
+#       if { $be_quiet == 0 } {
+#           puts $CHECK_OUTPUT "master host is $CHECK_CORE_MASTER"
+#           puts $CHECK_OUTPUT "calling \"$procedure\" ..."
+#       }
+#       set result [ eval $procedure ]
+#       puts $result 
+#       flush $CHECK_OUTPUT
+#    }
+# }
 

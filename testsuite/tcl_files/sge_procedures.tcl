@@ -249,153 +249,6 @@ proc get_complex_version {} {
    return $version
 }
 
-
-#                                                             max. column:     |
-#
-#****** sge_procedures/resolve_version() ******
-#  NAME
-#     resolve_version() -- get testsuite internal version number for product 
-#
-#  SYNOPSIS
-#     resolve_version { { internal_number -100 } } 
-#
-#  FUNCTION
-#     This procedure will compare the product version string with known version
-#     numbers of the cluster software. A known version number will return a
-#     value > 0. The return value is an integer and the test procedures can
-#     enable or disable a check procedure by using this number.
-#     If an internal version number is given as parameter, a list of 
-#     SGE versions mapping to this internal number is returned.
-#
-#  INPUTS
-#     { internal_number -100 } - optional parameter
-#                                if set to a integer value > -3 the function
-#                                will return a list of corresponding product 
-#                                version strings.
-#
-#  RESULT
-#     when internal_number == -100 :
-#     ==============================
-#
-#     -4  - unsupported version
-#     -3  - system not running
-#     -2  - system not installed
-#     -1  - unknown error (testsuite error)
-#      0  - version number not set (testsuite error)
-#      1  - SGE 5.0.x
-#      2  - SGEEE 5.0.x
-#      3  - SGE(EE) 6.x
-#      ...
-#
-#     when internal_number != -100 :
-#     ==============================
-#      
-#      List of version strings of the cluster software that match the
-#      internal version number of the testsuite.
-#
-#  KNOWN BUGS
-#      A version string should not contain underscores (_); if an internal
-#      version number is given to resolve_version, all underscores are mapped
-#      to a space.
-#
-#  SEE ALSO
-#     sge_procedures/get_version_info()
-#*******************************
-#
-proc resolve_version { { internal_number -100 } } {
-
-   global CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_FEATURE CHECK_PRODUCT_ROOT
-   global CHECK_PRODUCT_TYPE
-   
-   if { [ string compare "system not running - run install test first" $CHECK_PRODUCT_VERSION_NUMBER] == 0 } {
-      get_version_info
-   }
-   if { [ string compare "system not installed - run compile option first" $CHECK_PRODUCT_VERSION_NUMBER] == 0 } {
-      get_version_info
-   }
-   if { [ string compare "unknown" $CHECK_PRODUCT_VERSION_NUMBER] == 0 } {
-      get_version_info
-   }
-
-   set versions(system_not_running_-_run_install_test_first)      -3
-   set versions(system_not_installed_-_run_compile_option_first)  -2
-   set versions(unknown)                                          -1
-
-   set versions(SGE_5.3)             1
-   set versions(SGE_5.3_alpha1)      1
-   set versions(SGEEE_5.3)           1
-   set versions(SGEEE_5.3_alpha1)    1
-   set versions(SGE_6.0_pre)         1
-   set versions(SGE_5.3_maintrunc)   2
-   set versions(SGEEE_5.3_maintrunc) 2
-   set versions(SGE_5.3beta1)        2
-   set versions(SGEEE_5.3beta1)      2
-   set versions(SGEEE_5.3beta2)      2
-   set versions(SGE_5.3beta2)        2
-   set versions(SGEEE_5.3beta2_1)    2
-   set versions(SGE_5.3beta2_1)      2
-   set versions(SGEEE_5.3beta2_2)    2
-   set versions(SGE_5.3beta2_2)      2
-   set versions(SGEEE_5.3.1beta1)    2
-   set versions(SGE_5.3.1beta1)      2
-   set versions(SGEEE_5.3.1beta2)    2
-   set versions(SGE_5.3.1beta2)      2
-   set versions(SGEEE_5.3.1beta3)    2
-   set versions(SGE_5.3.1beta3)      2
-   set versions(SGEEE_5.3.1beta4)    2
-   set versions(SGE_5.3.1beta4)      2
-   set versions(SGEEE_5.3.1beta5)    2
-   set versions(SGE_5.3.1beta5)      2
-   set versions(SGEEE_5.3.1beta6)    2
-   set versions(SGE_5.3.1beta6)      2
-   set versions(SGEEE_5.3.1beta7)    2
-   set versions(SGE_5.3.1beta7)      2
-   set versions(SGEEE_5.3.1beta8)    2
-   set versions(SGE_5.3.1beta8)      2
-   set versions(SGEEE_5.3.1beta9)    2
-   set versions(SGE_5.3.1beta9)      2
-   set versions(SGEEE_5.3p1)         2
-   set versions(SGE_5.3p1)           2
-   set versions(SGEEE_5.3p2)         2
-   set versions(SGE_5.3p2)           2
-   set versions(SGEEE_5.3p3)         2
-   set versions(SGE_5.3p3)           2
-   set versions(SGEEE_5.3prep4)      2
-   set versions(SGE_5.3prep4)        2
-   set versions(SGEEE_5.3p4)         2
-   set versions(SGE_5.3p4)           2
-   set versions(SGEEE_pre6.0_(Maintrunk))    3
-   set versions(SGE_pre6.0_(Maintrunk))      3
-
-   
-    
-
-   if { $internal_number == -100 } {
-      if { $CHECK_PRODUCT_VERSION_NUMBER == "" } {
-         return 0
-      }
-      set requested_version [string map {{ } {_}} $CHECK_PRODUCT_VERSION_NUMBER]
-      if {[info exists versions($requested_version)] } {
-         return $versions($requested_version)
-      }   
-      add_proc_error "resolve_version" "-1" "Product version \"$CHECK_PRODUCT_VERSION_NUMBER\" not supported"
-      return -4
-   } else {
-      set ret ""
-      foreach elem [array names versions] {
-         if { $internal_number == $versions($elem) } {
-            lappend ret [string map {{_} { }} $elem]
-         }
-      }
-      if { [llength $ret] > 0 } {
-         return $ret
-      }   
-      add_proc_error "resolve_version" "-1" "Internal version number \"$internal_number\" not supported"
-      return ""
-   }
-}
-
-
 #                                                             max. column:     |
 #****** sge_procedures/get_qmaster_spool_dir() ******
 # 
@@ -417,7 +270,7 @@ proc resolve_version { { internal_number -100 } } {
 #     sge_procedures/get_execd_spool_dir()
 #*******************************
 proc get_qmaster_spool_dir {} {
-   global bootstrap
+   global sge_config
 
    set version [resolve_version]
    if {$version < 1} {
@@ -434,9 +287,9 @@ proc get_qmaster_spool_dir {} {
          }
       } else {
          # SGE 6.x system
-         # dump_bootstrap
-         if {[info exists bootstrap(qmaster_spool_dir)]} {
-            return $bootstrap(qmaster_spool_dir)
+         # dump_sge_config
+         if {[info exists sge_config(qmaster_spool_dir)]} {
+            return $sge_config(qmaster_spool_dir)
          } else {
             return "unknown qmaster_spool_dir for SGE 6.x"
          }
@@ -465,9 +318,9 @@ proc get_qmaster_spool_dir {} {
 #     sge_procedures/get_qmaster_spool_dir()
 #*******************************
 proc set_qmaster_spool_dir {spool_dir} {
-  global bootstrap
+  global sge_config
 
-  set bootstrap(qmaster_spool_dir) $spool_dir
+  set sge_config(qmaster_spool_dir) $spool_dir
 }
 
 #                                                             max. column:     |
@@ -1236,6 +1089,7 @@ proc move_qmaster_spool_dir { new_spool_dir } {
 
   lappend vi_commands ":%s/^qmaster_spool_dir .*$/qmaster_spool_dir    $newVal/\n"
   set vi_binary [get_binary_path $CHECK_HOST "vim"]
+  # JG: TODO: this is version dependent! Use set_qmaster_spool_dir instead!
   set result [ handle_vi_edit "$vi_binary" "$CHECK_PRODUCT_ROOT/default/common/bootstrap" "$vi_commands" "" ] 
   puts $CHECK_OUTPUT "result: \"$result\""
   if { $result != 0 } {
@@ -1360,10 +1214,10 @@ proc reset_schedd_config {} {
          set default_array(halflife_decay_list)             "none"
          set default_array(policy_hierarchy)                "OFSD"
 
-         set default_array(weight_ticket)                   "0.5"
-         set default_array(weight_waiting_time)             "0.278"
-         set default_array(weight_deadline)                 "3600000"
-         set default_array(weight_urgency)                  "0.5"
+         set default_array(weight_ticket)                   "1"
+         set default_array(weight_waiting_time)             "1"
+         set default_array(weight_deadline)                 "1000000"
+         set default_array(weight_urgency)                  "0"
      } else {
          set default_array(weight_tickets_deadline)    "10000"
      }
@@ -2015,7 +1869,7 @@ proc get_schedd_config { change_array } {
 #     ....
 #     (every value that is set will be changed)
 #
-#     here is a list of all guilty array names (template queue):
+#     here is a list of all valid array names (template queue):
 #
 #     change_array(qname)                "template"
 #     change_array(hostname)             "unknown"
@@ -2523,7 +2377,7 @@ proc add_exechost { change_array {fast_add 0} } {
 #
 #  FUNCTION
 #     This procedure starts the get_qstat_j_info() procedure and returns
-#     the "scheduling info" value. The procedure returns ALLWAYS an guilty
+#     the "scheduling info" value. The procedure returns ALLWAYS a valid
 #     text string.
 #
 #  INPUTS
@@ -2752,7 +2606,7 @@ proc del_queue { q_name } {
 #     ....
 #     (every value that is set will be changed)
 #
-#     here is a list of all guilty array names (template queue):
+#     here is a list of all valid array names (template queue):
 #
 #     change_array(qname)                "template"
 #     change_array(hostname)             "unknown"
@@ -5096,7 +4950,7 @@ proc unsuspend_job { job } {
 #     is_job_id { job_id } 
 #
 #  FUNCTION
-#     This procedure returns 1 if the given job id is a guilty sge job id
+#     This procedure returns 1 if the given job id is a valid sge job id
 #
 #  INPUTS
 #     job_id - job id
@@ -6931,106 +6785,6 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
 
 
 #                                                             max. column:     |
-#****** sge_procedures/get_version_info() ******
-# 
-#  NAME
-#     get_version_info -- get version number of the cluster software
-#
-#  SYNOPSIS
-#     get_version_info { } 
-#
-#  FUNCTION
-#     This procedure will return the version string
-#
-#  RESULT
-#     returns the first line of "qconf -help" (this is the version number of 
-#     the SGEEE/SGE system).
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc get_version_info {} {
-   global bootstrap
-   global CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_ARCH
-   global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_TYPE CHECK_OUTPUT
-   global CHECK_CHECKTREE_ROOT
- 
-
-   if { [info exists CHECK_PRODUCT_ROOT] != 1 } {
-      set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
-      return $CHECK_PRODUCT_VERSION_NUMBER
-   }
-   
-   if { [file isfile "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"] == 1 } {
-      set qmaster_running [ catch { 
-         eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sh" 
-      } result ]
-
-      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-help" } result
-      set help [ split $result "\n" ] 
-      if { ([ string first "fopen" [ lindex $help 0] ] >= 0)        || 
-           ([ string first "error" [ lindex $help 0] ] >= 0)        || 
-           ([ string first "product_mode" [ lindex $help 0] ] >= 0) ||   
-           ($qmaster_running != 0) } {
-          set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
-          return $CHECK_PRODUCT_VERSION_NUMBER
-      }
-      set CHECK_PRODUCT_VERSION_NUMBER [ lindex $help 0]
-      if { [ string first "exit" $CHECK_PRODUCT_VERSION_NUMBER ] >= 0 } {
-         set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
-      } else {
-         set version [resolve_version]
-         if {$version < 3} {
-            # SGE(EE) 5.x: we have a product mode file
-            set product_mode "unknown"
-            if { [file isfile $CHECK_PRODUCT_ROOT/default/common/product_mode ] == 1 } {
-               set product_mode_file [ open $CHECK_PRODUCT_ROOT/default/common/product_mode "r" ]
-               gets $product_mode_file product_mode
-               close $product_mode_file
-            } else {
-               # SGE(EE) 6.x: product mode is in bootstrap file
-               set product_mode $bootstrap(product_mode)
-            }
-            if { $CHECK_PRODUCT_FEATURE == "csp" } {
-                if { [ string first "csp" $product_mode ] < 0 } {
-                    puts $CHECK_OUTPUT "get_version_info - product feature is not csp ( secure )"
-                    puts $CHECK_OUTPUT "testsuite setup error - stop"
-                    exit -1
-                } 
-            } else {
-                if { [ string first "csp" $product_mode ] >= 0 } {
-                    puts $CHECK_OUTPUT "resolve_version - product feature is csp ( secure )"
-                    puts $CHECK_OUTPUT "testsuite setup error - stop"
-                    exit -1
-                } 
-            }
-            if { $CHECK_PRODUCT_TYPE == "sgeee" } {
-                if { [ string first "sgeee" $product_mode ] < 0 } {
-                    puts $CHECK_OUTPUT "resolve_version - no sgeee system"
-                    puts $CHECK_OUTPUT "please remove the file"
-                    puts $CHECK_OUTPUT "\n$CHECK_PRODUCT_ROOT/default/common/product_mode"
-                    puts $CHECK_OUTPUT "\nif you want to install a new sge system"
-                    puts $CHECK_OUTPUT "testsuite setup error - stop"
-                    exit -1
-                } 
-            } else {
-                if { [ string first "sgeee" $product_mode ] >= 0 } {
-                    puts $CHECK_OUTPUT "resolve_version - this is a sgeee system"
-                    puts $CHECK_OUTPUT "testsuite setup error - stop"
-                    exit -1
-                } 
-            }
-         }
-      }  
-      return $CHECK_PRODUCT_VERSION_NUMBER
-   }
-   set CHECK_PRODUCT_VERSION_NUMBER "system not installed - run compile option first"
-   return $CHECK_PRODUCT_VERSION_NUMBER
-}
-
-
-
-#                                                             max. column:     |
 #****** sge_procedures/startup_qmaster() ******
 # 
 #  NAME
@@ -8019,277 +7773,6 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       }
    }
 }
-
-#                                                             max. column:     |
-#****** sge_procedures/gethostname() ******
-# 
-#  NAME
-#     gethostname -- ??? 
-#
-#  SYNOPSIS
-#     gethostname { } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc gethostname {} {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH  CHECK_OUTPUT env
-
-  set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/utilbin/$CHECK_ARCH/gethostname" "-name"} result ]
-  if { $catch_return == 0 } {
-     set result [split $result "."]
-     set newname [lindex $result 0]
-     return $newname
-  } else {
-     debug_puts "proc gethostname - gethostname error or binary not found"
-     debug_puts "error: $result"
-     debug_puts "error: $catch_return"
-     debug_puts "trying local hostname call ..."
-     set catch_return [ catch { exec "hostname" } result ]
-     if { $catch_return == 0 } {
-        set result [split $result "."]
-        set newname [lindex $result 0]
-        debug_puts "got hostname: \"$newname\""
-        return $newname
-     } else {
-        debug_puts "local hostname error or binary not found"
-        debug_puts "error: $result"
-        debug_puts "error: $catch_return"
-        debug_puts "trying local HOST environment variable ..."
-        if { [ info exists env(HOST) ] } {
-           set result [split $env(HOST) "."]
-           set newname [lindex $result 0]
-           if { [ string length $newname ] > 0 } {
-               debug_puts "got hostname_ \"$newname\""
-               return $newname
-           } 
-        }
-     }
-     return "unknown"
-  }
-} 
-
-#                                                             max. column:     |
-#****** sge_procedures/resolve_arch() ******
-# 
-#  NAME
-#     resolve_arch -- ??? 
-#
-#  SYNOPSIS
-#     resolve_arch { { host "none" } } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     { host "none" } - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc resolve_arch { { host "none" } } {
-  global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
-  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
-
-  if { [ info exists arch_cache($host) ] } {
-     return $arch_cache($host)
-  }
-
-  if { [ info exists CHECK_USER ] == 0 } {
-     puts $CHECK_OUTPUT "user not set, aborting"
-     return "unknown"
-  }
-  
-  if { [ info exists CHECK_SOURCE_DIR ] == 0 } {
-     debug_puts "source directory not set, aborting"
-     return "unknown"
-  }
-
- 
-
-  if { [ string compare $host "none" ] == 0 || 
-       [ string compare $host $CHECK_HOST ] == 0 } {
-      set prg_exit_state [ catch { eval exec "$CHECK_SOURCE_DIR/dist/util/arch" } result ]
-  } else {
-      debug_puts "resolve_arch: resolving architecture for host $host"
-      set result [ start_remote_prog $host $CHECK_USER "$CHECK_SOURCE_DIR/dist/util/arch" "" prg_exit_state 60 0 "" 1 0 0]
-  }
-  set result [string trim $result]
-  set result2 [split $result "\n"]
-  if { [ llength $result2 ] > 1 } {
-     puts $CHECK_OUTPUT "util/arch script returns more than 1 line output ..."
-     foreach elem $result2  {
-        puts $CHECK_OUTPUT "\"$elem\""
-        if { [string first " " $elem ] < 0  } {
-           set result $elem
-           puts $CHECK_OUTPUT "using \"$result\" as architecture"
-           break
-        }
-     }
-  }
-  if { [ llength $result2 ] < 1 } {
-      puts $CHECK_OUTPUT "util/arch script returns no value ..."
-      return "unknown"
-  }
-  if { [string first ":" $result] >= 0 } {
-     puts $CHECK_OUTPUT "architecture or file \"$CHECK_SOURCE_DIR/dist/util/arch\" not found"
-     return "unknown"
-  }
-  set result [lindex $result 0]  ;# remove CR
-
-  if { [ string compare $result "" ] == 0 } {
-     puts $CHECK_OUTPUT "architecture or file \"$CHECK_SOURCE_DIR/dist/util/arch\" not found"
-     return "unknown"
-  } 
-
-  set arch_cache($host) [lindex $result 0]
-  
-  if { [info exists arch_cache($host) ] != 1 } {
-     return "unknown"
-  }
-
-  return $arch_cache($host)
-}
-
-#                                                             max. column:     |
-#****** sge_procedures/resolve_upper_arch() ******
-# 
-#  NAME
-#     resolve_upper_arch -- ??? 
-#
-#  SYNOPSIS
-#     resolve_upper_arch { host } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     host - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc resolve_upper_arch { host } {
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_TESTSUITE_ROOT upper_arch_cache CHECK_SOURCE_DIR
-  global CHECK_USER
-  if { [info exists upper_arch_cache($host) ] } {
-     return $upper_arch_cache($host)
-  }
-
-  set result [ start_remote_prog $host $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk -no-mk" prg_exit_state 60 0 "" 1 0]
- 
-  set result [split $result "\n"]
-  set result [join $result ""]
-  set result [split $result "\r"]
-  set result [join $result ""]
-
-  if { $prg_exit_state != 0 } {
-     add_proc_error "resolve_upper_arch" "-1" "architecture not found or aimk not found in $CHECK_SOURCE_DIR"
-     return ""
-  }
-  set upper_arch_cache($host) $result
-  puts $CHECK_OUTPUT "upper arch is \"$result\""
-
-  return $upper_arch_cache($host)
-}
-
-
-#                                                             max. column:     |
-#****** sge_procedures/resolve_host() ******
-# 
-#  NAME
-#     resolve_host -- ??? 
-#
-#  SYNOPSIS
-#     resolve_host { name { long 0 } } 
-#
-#  FUNCTION
-#     ??? 
-#
-#  INPUTS
-#     name       - ??? 
-#     { long 0 } - ??? 
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
-#*******************************
-proc resolve_host { name { long 0 } } {
-
-  global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_TESTSUITE_ROOT 
-  global CHECK_SCRIPT_FILE_DIR CHECK_USER
-
-  set remote_arch [ resolve_arch $name ]
-
-  set result [ start_remote_prog $name $CHECK_USER "$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname" "-name" prg_exit_state 60 0 "" 0 ]
-  set result [ lindex $result 0 ]  ;# removing /r /n
-
-  if { $prg_exit_state != 0 } {
-     puts $CHECK_OUTPUT "proc resolve_host - gethostname error or file \"$CHECK_PRODUCT_ROOT/utilbin/$remote_arch/gethostname\" not found"
-     return "unknown"
-  }
-
-  set newname $result
-  if { $long == 0 } {
-     set result [split $result "."]
-     set newname [lindex $result 0]
-  }
-  puts $CHECK_OUTPUT "\"$name\" resolved to \"$newname\""
-  return $newname
-}
-
 #                                                             max. column:     |
 #****** sge_procedures/add_operator() ******
 # 

@@ -544,6 +544,7 @@ int sge_before_dispatch(void)
    /* hostname resolving scheme in global config could have changed
       get it and use it if we got a notification about a new global config */
    if (new_global_config) {
+/*   
       lListElem *global = NULL, *local = NULL;
 
       if (get_configuration(SGE_GLOBAL_NAME, &global, &local) == 0)
@@ -551,25 +552,27 @@ int sge_before_dispatch(void)
       lFreeElem(global);
       lFreeElem(local);
       new_global_config = 0;
-
+*/
       /* flushing information might have changed */
       /* SG: TODO: is this still needed? */
       {
-         int temp = sconf_get_flush_finish_sec();
-         if (temp == 0)
-            temp = -1;
-         if(ec_get_flush(sgeE_JOB_DEL) != temp) {
-            ec_set_flush(sgeE_JOB_DEL, temp);
-            ec_set_flush(sgeE_JOB_FINAL_USAGE, temp);
-            ec_set_flush(sgeE_JATASK_MOD, temp);
-            ec_set_flush(sgeE_JATASK_DEL, temp);
+         int interval = sconf_get_flush_finish_sec();
+         bool flush = interval> 0;
+         if (interval== 0)
+            interval= -1;
+         if(ec_get_flush(sgeE_JOB_DEL) != interval) {
+            ec_set_flush(sgeE_JOB_DEL,flush, interval);
+            ec_set_flush(sgeE_JOB_FINAL_USAGE,flush, interval);
+            ec_set_flush(sgeE_JATASK_MOD, flush, interval);
+            ec_set_flush(sgeE_JATASK_DEL, flush, interval);
          }
 
-         temp = sconf_get_flush_submit_sec();
-         if (temp == 0)
-            temp = -1;
-         if(ec_get_flush(sgeE_JOB_ADD) != temp) {
-            ec_set_flush(sgeE_JOB_ADD, temp);
+         interval= sconf_get_flush_submit_sec();
+         flush = interval> 0;
+         if (interval== 0)
+            interval= -1;
+         if(ec_get_flush(sgeE_JOB_ADD) != interval) {
+            ec_set_flush(sgeE_JOB_ADD, flush, interval);
          }
       }
       ec_commit();

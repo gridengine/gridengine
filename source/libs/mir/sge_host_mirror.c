@@ -77,28 +77,30 @@ host_update_master_list(sge_object_type type, sge_event_action action,
                         lListElem *event, void *clientdata)
 {
    lList **list;
-   lDescr *list_descr;
+   const lDescr *list_descr;
    int     key_nm;
 
    const char *key;
 
 
    DENTER(TOP_LAYER, "host_update_master_list");
-
+   
+   list_descr = lGetListDescr(lGetList(event, ET_new_version));
+   
    switch (type) {
       case SGE_TYPE_ADMINHOST:
          list = &Master_Adminhost_List;
-         list_descr = AH_Type;
+/*         list_descr = AH_Type;*/
          key_nm = AH_name;
          break;
       case SGE_TYPE_EXECHOST:
          list = &Master_Exechost_List;
-         list_descr = EH_Type;
+/*         list_descr = EH_Type; */
          key_nm = EH_name;
          break;
       case SGE_TYPE_SUBMITHOST:
          list = &Master_Submithost_List;
-         list_descr = SH_Type;
+/*         list_descr = SH_Type; */
          key_nm = SH_name;
          break;
       default:

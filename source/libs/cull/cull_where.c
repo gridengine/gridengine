@@ -44,12 +44,17 @@
 #include "msg_cull.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_log.h"
 
 #include "sgermon.h"
 #include "cull_listP.h"
 #include "cull_whereP.h"
 #include "cull_parse.h"
 #include "cull_lerrnoP.h"
+#include "pack.h"
+#include "cull_pack.h"
+#include "cull_packL.h"
+#include "msg_gdilib.h"
 
 static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app);
 static lCondition *factor(lDescr *dp, cull_parse_state *state, va_list *app);
@@ -416,6 +421,83 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
    DEXIT;
    return;
 }
+
+lListElem *lWhereToElem(const lCondition *where){
+   lListElem *whereElem = NULL;
+   sge_pack_buffer pb;
+   int size;
+   DENTER(CULL_LAYER, "lWhereToElem");
+   
+   /* 
+    * retrieve packbuffer size to avoid large realloc's while packing 
+    */
+   init_packbuffer(&pb, 0, 1);
+   if (cull_pack_cond(&pb, where) == PACK_SUCCESS) {
+      size = pb_used(&pb);
+      clear_packbuffer(&pb);
+
+      /*
+       * now we do the real packing
+       */
+      if (init_packbuffer(&pb, size, 0) == PACK_SUCCESS) {
+         if (cull_pack_cond(&pb, where) == PACK_SUCCESS) {
+            whereElem = lCreateElem(PACK_Type);
+            lSetUlong(whereElem, PACK_id, SGE_WHERE);
+#ifdef COMMCOMPRESS 
+            if(pb.mode == 0) {
+               if(flush_packbuffer(&pb) == PACK_SUCCESS){
+                  setByteArray( (char*)pb.head_ptr,  pb.cpr.total_out, whereElem, PACK_String);
+                  lSetBool(whereElem, PACK_compressed, true);
+                }
+                else
+                  whereElem = lFreeElem(whereElem);
+            }
+            else
+#endif
+            {
+               setByteArray( (char*)pb.head_ptr, pb.bytes_used, whereElem, PACK_string);
+               lSetBool(whereElem, PACK_compressed, false);
+            }
+         }
+      }
+      clear_packbuffer(&pb); 
+   }
+   DEXIT;
+   return whereElem;
+}
+
+lCondition *lWhereFromElem(const lListElem *where){
+   lCondition *cond = NULL;
+   sge_pack_buffer pb;
+   int size=0;
+   char *buffer;
+   bool compressed = false;
+   int ret=0;
+   DENTER(CULL_LAYER, "lWhereFromCull");
+
+   if (lGetUlong(where, PACK_id) == SGE_WHERE) {
+
+      compressed = lGetBool(where, PACK_compressed);
+      size = getByteArray(&buffer, where, PACK_string);
+      if (size <= 0){
+         ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));
+      }
+      else if ((ret = init_packbuffer_from_buffer(&pb, buffer, size, compressed)) == PACK_SUCCESS){
+         cull_unpack_cond(&pb, &cond);
+         clear_packbuffer(&pb); 
+      }
+      else {
+         FREE(buffer);
+         ERROR((SGE_EVENT, MSG_PACK_ERRORUNPACKING_S, cull_pack_strerror(ret)));
+      }
+   }
+   else {
+      ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_II, lGetUlong(where, PACK_id), SGE_WHERE));
+   }
+   DEXIT;
+   return cond;
+}
+
 
 /****** cull/where/lWhere() ***************************************************
 *  NAME

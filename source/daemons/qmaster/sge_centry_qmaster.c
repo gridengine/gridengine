@@ -99,7 +99,6 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
       } 
    }
 
-
    /*
     * Shortcut (CE_shortcut)
     */

@@ -54,7 +54,7 @@ struct _sge_gdi_request {
    lList            *lp;
    lList            *alp;
    lCondition       *cp;
-   lEnumeration     *enp;
+   lEnumeration     *enp; 
    char             *auth_info;     
    u_long32         sequence_id;
    u_long32         request_id;

@@ -144,7 +144,7 @@ ja_task_update_master_list(sge_object_type type, sge_event_action action,
    lListElem *job, *ja_task;
 
    lList *list;
-   lDescr *list_descr;
+   const lDescr *list_descr;
 
    lList *pe_tasks = NULL;
    lList *usage = NULL;
@@ -165,7 +165,7 @@ ja_task_update_master_list(sge_object_type type, sge_event_action action,
    ja_task = job_search_task(job, NULL, ja_task_id);
 
    list = lGetList(job, JB_ja_tasks);
-   list_descr = JAT_Type;
+   list_descr = lGetListDescr(lGetList(event, ET_new_version));
 
    if (action == SGE_EMA_MOD) {
       /* modify event for ja_task.

@@ -47,6 +47,9 @@ lCondition *lCopyWhere(const lCondition *cp);
 lCondition *lOrWhere(const lCondition *cp0, const lCondition *cp1);
 lCondition *lAndWhere(const lCondition *cp0, const lCondition *cp1);
 
+lCondition *lWhereFromElem(const lListElem *where);
+lListElem *lWhereToElem(const lCondition *where);
+
 #ifdef  __cplusplus
 }
 #endif

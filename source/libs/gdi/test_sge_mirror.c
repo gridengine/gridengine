@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
    }   
 
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
-   sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
    
    while(!shut_me_down) {
       sge_mirror_process_events();

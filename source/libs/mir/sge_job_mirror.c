@@ -137,7 +137,7 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
                            lListElem *event, void *clientdata)
 {
    lList **list;
-   lDescr *list_descr;
+   const lDescr *list_descr;
    u_long32 job_id;
    lListElem *job = NULL;
    lList *ja_tasks = NULL;
@@ -145,7 +145,8 @@ bool job_update_master_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "job_update_master_list");
 
    list = &Master_Job_List;
-   list_descr = JB_Type;
+/*   list_descr = JB_Type;*/
+   list_descr = lGetListDescr(lGetList(event, ET_new_version)); 
    job_id = lGetUlong(event, ET_intkey);
    job = job_list_locate(*list, job_id);
 

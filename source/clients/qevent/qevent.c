@@ -548,15 +548,15 @@ int main(int argc, char *argv[])
                          (enabled_options.trigger_option_scripts)[i]));
          switch((enabled_options.trigger_option_events)[i]) {
             case QEVENT_JB_END:
-               sge_mirror_subscribe(SGE_TYPE_JOB, analyze_jatask_event, NULL, NULL);
+               sge_mirror_subscribe(SGE_TYPE_JOB, analyze_jatask_event, NULL, NULL, NULL, NULL);
                ec_subscribe(sgeE_JOB_DEL);
-               ec_set_flush(sgeE_JOB_DEL,1);
+               ec_set_flush(sgeE_JOB_DEL,true, 1);
 
                break;
             case QEVENT_JB_TASK_END:
-               sge_mirror_subscribe(SGE_TYPE_JATASK, analyze_jatask_event, NULL, NULL);
+               sge_mirror_subscribe(SGE_TYPE_JATASK, analyze_jatask_event, NULL, NULL, NULL, NULL);
                ec_subscribe(sgeE_JATASK_DEL);
-               ec_set_flush(sgeE_JATASK_DEL,1);
+               ec_set_flush(sgeE_JATASK_DEL,true, 1);
                break;
          }        
       }
@@ -607,13 +607,13 @@ void qevent_testsuite_mode(void)
 #ifdef QEVENT_SHOW_ALL
    sge_mirror_subscribe(SGE_TYPE_ALL, print_event, NULL, NULL); 
 #else
-   sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_JOB, print_jatask_event, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_JATASK, print_jatask_event, NULL, NULL, NULL, NULL);
    
-   ec_set_flush(sgeE_JATASK_MOD,0);
-   ec_set_flush(sgeE_JOB_FINAL_USAGE,0);
-   ec_set_flush(sgeE_JOB_ADD,0);
-   ec_set_flush(sgeE_JOB_DEL,0);
+   ec_set_flush(sgeE_JATASK_MOD, true, 0);
+   ec_set_flush(sgeE_JOB_FINAL_USAGE, true, 0);
+   ec_set_flush(sgeE_JOB_ADD, true, 0);
+   ec_set_flush(sgeE_JOB_DEL, true, 0);
 #endif
    
    while(!shut_me_down) {

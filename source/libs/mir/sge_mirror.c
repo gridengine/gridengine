@@ -84,7 +84,8 @@ int num_events = 0;
 static sge_mirror_error _sge_mirror_subscribe(sge_object_type type, 
                                               sge_mirror_callback callback_before, 
                                               sge_mirror_callback callback_after, 
-                                              void *clientdata);
+                                              void *clientdata,
+                                              lCondition *where, lEnumeration *what);
 
 static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type);     
 
@@ -154,6 +155,7 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
 };
 
 /* Static functions for internal use */
+#if 0
 static sge_mirror_error _sge_mirror_subscribe(sge_object_type type, 
                                               sge_mirror_callback callback_before, 
                                               sge_mirror_callback callback_after, 
@@ -167,6 +169,7 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list);
 static sge_mirror_error sge_mirror_process_event(sge_object_type type, 
                                                  sge_event_action action, 
                                                  lListElem *event);
+#endif
 
 /****** Eventmirror/sge_mirror_initialize() *************************************
 *  NAME
@@ -212,8 +215,8 @@ sge_mirror_error sge_mirror_initialize(ev_registration_id id, const char *name)
    ec_prepare_registration(id, name);
 
    /* subscribe some events with default handling */
-   sge_mirror_subscribe(SGE_TYPE_SHUTDOWN, NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_QMASTER_GOES_DOWN, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_QMASTER_GOES_DOWN, NULL, NULL, NULL, NULL, NULL);
 
    /* register with qmaster */
    ec_commit();
@@ -294,7 +297,8 @@ sge_mirror_error sge_mirror_shutdown(void)
 sge_mirror_error sge_mirror_subscribe(sge_object_type type, 
                                       sge_mirror_callback callback_before, 
                                       sge_mirror_callback callback_after, 
-                                      void *clientdata)
+                                      void *clientdata,
+                                      lCondition *where, lEnumeration *what)
 {
    sge_mirror_error ret = SGE_EM_OK;
 
@@ -310,12 +314,12 @@ sge_mirror_error sge_mirror_subscribe(sge_object_type type,
       int i;
 
       for(i = 0; i < SGE_TYPE_ALL; i++) {
-         if((ret = _sge_mirror_subscribe(i, callback_before, callback_after, clientdata)) != SGE_EM_OK) {
+         if((ret = _sge_mirror_subscribe(i, callback_before, callback_after, clientdata, NULL, NULL)) != SGE_EM_OK) {
             break;
          }
       }
    } else {
-      ret = _sge_mirror_subscribe(type, callback_before, callback_after, clientdata);
+      ret = _sge_mirror_subscribe(type, callback_before, callback_after, clientdata, where, what);
    }
 
    DEXIT;
@@ -325,8 +329,12 @@ sge_mirror_error sge_mirror_subscribe(sge_object_type type,
 static sge_mirror_error _sge_mirror_subscribe(sge_object_type type, 
                                               sge_mirror_callback callback_before, 
                                               sge_mirror_callback callback_after, 
-                                              void *clientdata)
+                                              void *clientdata,
+                                              lCondition *where, lEnumeration *what)
 {
+lListElem *what_el = lWhatToElem(what);
+lListElem *where_el = lWhereToElem(where);
+
    /* type already has been checked before */
    switch(type) {
       case SGE_TYPE_ADMINHOST:
@@ -334,30 +342,60 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
          ec_subscribe(sgeE_ADMINHOST_ADD);
          ec_subscribe(sgeE_ADMINHOST_DEL);
          ec_subscribe(sgeE_ADMINHOST_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_ADMINHOST_MOD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_ADMINHOST_DEL, what_el, where_el);
+            ec_mod_subscription_where(sgeE_ADMINHOST_ADD, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_ADMINHOST_LIST, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_CALENDAR:
          ec_subscribe(sgeE_CALENDAR_LIST);
          ec_subscribe(sgeE_CALENDAR_ADD);
          ec_subscribe(sgeE_CALENDAR_DEL);
          ec_subscribe(sgeE_CALENDAR_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_CALENDAR_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CALENDAR_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CALENDAR_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_CALENDAR_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_CKPT:
          ec_subscribe(sgeE_CKPT_LIST);
          ec_subscribe(sgeE_CKPT_ADD);
          ec_subscribe(sgeE_CKPT_DEL);
          ec_subscribe(sgeE_CKPT_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_CKPT_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CKPT_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CKPT_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_CKPT_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_CENTRY:
          ec_subscribe(sgeE_CENTRY_LIST);
          ec_subscribe(sgeE_CENTRY_ADD);
          ec_subscribe(sgeE_CENTRY_DEL);
          ec_subscribe(sgeE_CENTRY_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_CENTRY_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CENTRY_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CENTRY_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_CENTRY_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_CONFIG:
          ec_subscribe(sgeE_CONFIG_LIST);
          ec_subscribe(sgeE_CONFIG_ADD);
          ec_subscribe(sgeE_CONFIG_DEL);
          ec_subscribe(sgeE_CONFIG_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_CONFIG_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CONFIG_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CONFIG_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_CONFIG_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_GLOBAL_CONFIG:
          ec_subscribe(sgeE_GLOBAL_CONFIG);
@@ -367,21 +405,39 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
                                           * it is sent before the CONFIG_MOD event, so
                                           * the receiver cannot even properly react to it!
                                           */
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_GLOBAL_CONFIG, what_el, where_el);
+         }                                          
          break;
       case SGE_TYPE_EXECHOST:
          ec_subscribe(sgeE_EXECHOST_LIST);
          ec_subscribe(sgeE_EXECHOST_ADD);
          ec_subscribe(sgeE_EXECHOST_DEL);
          ec_subscribe(sgeE_EXECHOST_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_EXECHOST_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_EXECHOST_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_EXECHOST_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_EXECHOST_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_JATASK:
          ec_subscribe(sgeE_JATASK_ADD);
          ec_subscribe(sgeE_JATASK_DEL);
          ec_subscribe(sgeE_JATASK_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_JATASK_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_JATASK_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_JATASK_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_PETASK:
          ec_subscribe(sgeE_PETASK_ADD);
          ec_subscribe(sgeE_PETASK_DEL);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_PETASK_ADD, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_PETASK_DEL, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_JOB:
          ec_subscribe(sgeE_JOB_LIST);
@@ -389,42 +445,82 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
          ec_subscribe(sgeE_JOB_DEL);
          ec_subscribe(sgeE_JOB_MOD);
          ec_subscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_JOB_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_JOB_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_JOB_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_JOB_MOD, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_JOB_MOD_SCHED_PRIORITY, what_el, where_el);
+         }
+         /* TODO: SG: what and where for usage */
          ec_subscribe(sgeE_JOB_USAGE);
          ec_subscribe(sgeE_JOB_FINAL_USAGE);
-/*          ec_subscribe(sgeE_JOB_FINISH); */
          break;
       case SGE_TYPE_JOB_SCHEDD_INFO:
          ec_subscribe(sgeE_JOB_SCHEDD_INFO_LIST);
          ec_subscribe(sgeE_JOB_SCHEDD_INFO_ADD);
          ec_subscribe(sgeE_JOB_SCHEDD_INFO_DEL);
          ec_subscribe(sgeE_JOB_SCHEDD_INFO_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_JOB_SCHEDD_INFO_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_JOB_SCHEDD_INFO_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_JOB_SCHEDD_INFO_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_JOB_SCHEDD_INFO_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_MANAGER:
          ec_subscribe(sgeE_MANAGER_LIST);
          ec_subscribe(sgeE_MANAGER_ADD);
          ec_subscribe(sgeE_MANAGER_DEL);
          ec_subscribe(sgeE_MANAGER_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_MANAGER_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_MANAGER_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_MANAGER_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_MANAGER_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_OPERATOR:
          ec_subscribe(sgeE_OPERATOR_LIST);
          ec_subscribe(sgeE_OPERATOR_ADD);
          ec_subscribe(sgeE_OPERATOR_DEL);
          ec_subscribe(sgeE_OPERATOR_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_OPERATOR_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_OPERATOR_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_OPERATOR_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_OPERATOR_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_SHARETREE:
          ec_subscribe(sgeE_NEW_SHARETREE);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_NEW_SHARETREE, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_PE:
          ec_subscribe(sgeE_PE_LIST);
          ec_subscribe(sgeE_PE_ADD);
          ec_subscribe(sgeE_PE_DEL);
          ec_subscribe(sgeE_PE_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_PE_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_PE_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_PE_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_PE_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_PROJECT:
          ec_subscribe(sgeE_PROJECT_LIST);
          ec_subscribe(sgeE_PROJECT_ADD);
          ec_subscribe(sgeE_PROJECT_DEL);
          ec_subscribe(sgeE_PROJECT_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_PROJECT_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_PROJECT_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_PROJECT_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_PROJECT_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_QUEUE:
          ec_subscribe(sgeE_QUEUE_LIST);
@@ -433,53 +529,108 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
          ec_subscribe(sgeE_QUEUE_MOD);
          ec_subscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
          ec_subscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_QUEUE_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_QUEUE_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_QUEUE_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_QUEUE_MOD, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_QUEUE_SUSPEND_ON_SUB, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_QUEUE_UNSUSPEND_ON_SUB, what_el, where_el);
+         }
          break;
       case SGE_TYPE_CQUEUE:
          ec_subscribe(sgeE_CQUEUE_LIST);
          ec_subscribe(sgeE_CQUEUE_ADD);
          ec_subscribe(sgeE_CQUEUE_DEL);
          ec_subscribe(sgeE_CQUEUE_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_CQUEUE_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CQUEUE_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CQUEUE_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_CQUEUE_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_QINSTANCE:
          ec_subscribe(sgeE_QINSTANCE_ADD);
          ec_subscribe(sgeE_QINSTANCE_DEL);
          ec_subscribe(sgeE_QINSTANCE_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_QINSTANCE_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_QINSTANCE_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_QINSTANCE_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_SCHEDD_CONF:
          ec_subscribe(sgeE_SCHED_CONF);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_SCHED_CONF, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_SCHEDD_MONITOR:
          ec_subscribe(sgeE_SCHEDDMONITOR);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_SCHEDDMONITOR, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_SHUTDOWN:
          ec_subscribe_flush(sgeE_SHUTDOWN, 0);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_SHUTDOWN, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_QMASTER_GOES_DOWN:
          ec_subscribe_flush(sgeE_QMASTER_GOES_DOWN, 0);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_QMASTER_GOES_DOWN, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_SUBMITHOST:
          ec_subscribe(sgeE_SUBMITHOST_LIST);
          ec_subscribe(sgeE_SUBMITHOST_ADD);
          ec_subscribe(sgeE_SUBMITHOST_DEL);
          ec_subscribe(sgeE_SUBMITHOST_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_SUBMITHOST_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_SUBMITHOST_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_SUBMITHOST_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_SUBMITHOST_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_USER:
          ec_subscribe(sgeE_USER_LIST);
          ec_subscribe(sgeE_USER_ADD);
          ec_subscribe(sgeE_USER_DEL);
          ec_subscribe(sgeE_USER_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_USER_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_USER_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_USER_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_USER_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_USERSET:
          ec_subscribe(sgeE_USERSET_LIST);
          ec_subscribe(sgeE_USERSET_ADD);
          ec_subscribe(sgeE_USERSET_DEL);
          ec_subscribe(sgeE_USERSET_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_USERSET_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_USERSET_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_USERSET_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_USERSET_MOD, what_el, where_el); 
+         }
          break;
       case SGE_TYPE_HGROUP:
          ec_subscribe(sgeE_HGROUP_LIST);
          ec_subscribe(sgeE_HGROUP_ADD);
          ec_subscribe(sgeE_HGROUP_DEL);
          ec_subscribe(sgeE_HGROUP_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_HGROUP_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_HGROUP_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_HGROUP_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_HGROUP_MOD, what_el, where_el); 
+         }
          break;
 #ifndef __SGE_NO_USERMAPPING__
       /* JG: TODO: usermapping and hostgroup not yet implemented */
@@ -488,6 +639,12 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
          ec_subscribe(sgeE_CUSER_ADD);
          ec_subscribe(sgeE_CUSER_DEL);
          ec_subscribe(sgeE_CUSER_MOD);
+         if (what_el && where_el){
+            ec_mod_subscription_where(sgeE_CUSER_LIST, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CUSER_ADD, what_el, where_el);
+            ec_mod_subscription_where(sgeE_CUSER_DEL, what_el, where_el); 
+            ec_mod_subscription_where(sgeE_CUSER_MOD, what_el, where_el); 
+         }
          break;
 #endif
 
@@ -501,6 +658,11 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
    mirror_base[type].callback_before = callback_before;
    mirror_base[type].callback_after  = callback_after;
    mirror_base[type].clientdata      = clientdata;
+
+   if (where_el)
+      where_el = lFreeElem(where_el);
+   if (what_el)
+      what_el = lFreeElem(what_el);
 
    return SGE_EM_OK;
 }   
@@ -1290,7 +1452,7 @@ generic_update_master_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "generic_update_master_list");
 
    list       = object_type_get_master_list(type);
-   list_descr = object_type_get_descr(type);
+   list_descr = lGetListDescr(lGetList(event, ET_new_version)); /*   object_type_get_descr(type); */
    key_nm     = object_type_get_key_nm(type);
 
    key = lGetString(event, ET_strkey);
@@ -1497,7 +1659,7 @@ sge_mirror_error sge_mirror_update_master_list(lList **list, const lDescr *list_
          return SGE_EM_BAD_ARG;
    }      
    
-
+   DEXIT;
    return SGE_EM_OK;
 }
 

@@ -1,3 +1,13 @@
+SG-2003-11-20-0: Enhancem.: - Added the posability to specify what and where
+                            conditions for the event and the mirror 
+                            interface. 
+                            - Added a lSelectElem method, which does the same
+                            as lSelect only that it is limited to one elemen
+                            - scheduler does not subscribe the global 
+                            configuration anymore
+                 Review:    JG
+                 Changed:   qmaster, scheduler, drama, qevent
+
 EB-2003-11-20-0: Bugfix:    Broken build 
 
 AH-2003-11-19-0: Bugfix:    The drmaa_run_job()/drmaa_run_bulk_jobs() 

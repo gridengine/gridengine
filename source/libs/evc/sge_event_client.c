@@ -291,7 +291,7 @@
 *     SGE_ULONG(EV_d_time)
 *        event delivery time (interval used by qmaster to deliver events)
 *
-*     SGE_STRING(EV_subscription)
+*     SGE_List(EV_subscribed)
 *        information about subscription and flushing
 *        (see Eventclient/-Subscription and Eventclient/-Flushing)
 *
@@ -536,8 +536,14 @@ bool ck_event_number(lList *lp, u_long32 *waiting_for,
 static bool 
 get_event_list(int sync, lList **lp);
 
-static void 
-ec_config_changed(void);
+static void ec_add_subscriptionElement(lListElem *event_el, ev_event event, bool flush, int interval); 
+
+static void ec_remove_subscriptionElement(lListElem *event_el, ev_event event); 
+
+static void ec_mod_subscription_flush(lListElem *event_el, ev_event event, bool flush, 
+                                       int intervall);
+                                      
+static void ec_config_changed(void);
 
 /****** Eventclient/Client/-Event_Client_Global_Variables *********************
 *  NAME
@@ -609,8 +615,6 @@ bool
 ec_prepare_registration(ev_registration_id id, const char *name)
 {
    bool ret = false;
-   char subscription[sgeE_EVENTSIZE + 1];
-   int i;
 
    DENTER(TOP_LAYER, "ec_prepare_registration");
 
@@ -630,14 +634,6 @@ ec_prepare_registration(ev_registration_id id, const char *name)
          lSetString(ec, EV_name, name);
          lSetUlong(ec, EV_d_time, DEFAULT_EVENT_DELIVERY_INTERVAL);
 
-         /* initialize subscription "bitfield" */
-         for (i = 0; i < sgeE_EVENTSIZE; i++) {
-            subscription[i] = EV_NOT_SUBSCRIBED;
-         }
-
-         subscription[sgeE_EVENTSIZE] = 0;
-
-         lSetString(ec, EV_subscription, subscription);
          ec_subscribe_flush(sgeE_QMASTER_GOES_DOWN, 0);
          ec_subscribe_flush(sgeE_SHUTDOWN, 0);
 
@@ -1172,7 +1168,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
          if (new_id != 0) {
             lSetUlong(ec, EV_id, new_id);
             DPRINTF(("REGISTERED with id "U32CFormat"\n", new_id));
-
+            lSetBool(ec, EV_changed, false);
             config_changed = false;
             need_register = false;
             
@@ -1260,6 +1256,7 @@ ec_deregister(void)
             ec = lFreeElem(ec);
             need_register = true;
             ec_reg_id = 0;
+            lSetBool(ec, EV_changed, false);
             config_changed = false;
             next_event = 1;
 
@@ -1309,7 +1306,6 @@ bool
 ec_subscribe(ev_event event)
 {
    bool ret = false;
-   char *subscription;
    
    DENTER(TOP_LAYER, "ec_subscribe");
 
@@ -1319,29 +1315,20 @@ ec_subscribe(ev_event event)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
          WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
-   } else {
-      subscription = strdup(lGetString(ec, EV_subscription));
+   }
 
-      if (subscription == NULL) {
-         ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-      } else {
-         if (event == sgeE_ALL_EVENTS) {
-            int i;
-            for(i = 0; i < sgeE_EVENTSIZE; i++) {
-               subscription[i] = EV_SUBSCRIBED;
-            }
-         } else {
-            subscription[event] = EV_SUBSCRIBED;
-         }
-
-         if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
-            lSetString(ec, EV_subscription, subscription);
-            ec_config_changed();
-            ret = true;
-         }
+   if (event == sgeE_ALL_EVENTS) {
+      int i;
+      for(i = 0; i < sgeE_EVENTSIZE; i++) {
+         ec_add_subscriptionElement(ec, i, EV_NOT_FLUSHED, -1);
       }
-
-      free(subscription);
+   } else {
+      ec_add_subscriptionElement(ec, event, EV_NOT_FLUSHED, -1);
+   }
+   
+   if (lGetBool(ec, EV_changed)) {
+      ec_config_changed();
+      ret = true;
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -1350,6 +1337,117 @@ ec_subscribe(ev_event event)
    return ret;
 }
 
+static void ec_add_subscriptionElement(lListElem *event_el, ev_event event, bool flush, int interval) {
+
+   lList *subscribed = NULL; 
+   lListElem *sub_el = NULL;
+
+   DENTER(TOP_LAYER, "ec_add_subscriptionElement");
+
+   subscribed = lGetList(ec, EV_subscribed);
+   
+   if (event != sgeE_ALL_EVENTS){
+      if (!subscribed) {
+         subscribed = lCreateList("subscrition list", EVS_Type);
+         lSetList(ec,EV_subscribed, subscribed);
+      }
+      else {
+         sub_el = lGetElemUlong(subscribed, EVS_id, event);
+      }
+      
+      if (!sub_el) {
+         sub_el =  lCreateElem(EVS_Type);
+         lAppendElem(subscribed, sub_el);
+         
+         lSetUlong(sub_el, EVS_id, event);
+         lSetBool(sub_el, EVS_flush, flush);
+         lSetUlong(sub_el, EVS_interval, interval);
+
+         lSetBool(ec, EV_changed, true);
+      }
+   }
+   DEXIT;
+}
+
+static void ec_mod_subscription_flush(lListElem *event_el, ev_event event, bool flush, 
+                                       int intervall) {
+   lList *subscribed = NULL;
+   lListElem *sub_el = NULL;
+
+   DENTER(TOP_LAYER, "ec_mod_subscription_flush");
+  
+   subscribed = lGetList(ec, EV_subscribed);
+  
+   if (event != sgeE_ALL_EVENTS){
+      if (subscribed) {
+
+         sub_el = lGetElemUlong(subscribed, EVS_id, event);
+      
+         if (sub_el) {
+            lSetBool(sub_el, EVS_flush, flush);
+            lSetUlong(sub_el, EVS_interval, intervall);
+            lSetBool(ec, EV_changed, true);
+         }
+      }
+   }
+
+   DEXIT;
+}
+
+bool ec_mod_subscription_where(ev_event event, lListElem *what, lListElem *where) {
+   lList *subscribed = NULL;
+   lListElem *sub_el = NULL;
+   bool ret = false;
+   DENTER(TOP_LAYER, "ec_mod_subscription_where");
+ 
+   if (ec == NULL) {
+      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+   } else if (event <= sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
+         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
+   }
+ 
+   subscribed = lGetList(ec, EV_subscribed);
+  
+   if (event != sgeE_ALL_EVENTS){
+      if (subscribed) {
+
+         sub_el = lGetElemUlong(subscribed, EVS_id, event);
+      
+         if (sub_el) {
+            lSetObject(sub_el, EVS_what, lCopyElem(what));
+            lSetObject(sub_el, EVS_where, lCopyElem(where));
+            lSetBool(ec, EV_changed, true);
+            ret = true;
+         }
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+static void ec_remove_subscriptionElement(lListElem *event_el, ev_event event) {
+
+   lList *subscribed =NULL; 
+   lListElem *sub_el = NULL;
+   
+   DENTER(TOP_LAYER, "ec_remove_subscriptionElement");
+
+   subscribed = lGetList(ec, EV_subscribed);
+   
+   if (event != sgeE_ALL_EVENTS){
+      if (subscribed) {
+
+         sub_el = lGetElemUlong(subscribed, EVS_id, event);
+      
+         if (sub_el) {
+            if (lRemoveElem(subscribed, sub_el) == 0){
+               lSetBool(ec, EV_changed, true);
+            }
+         }
+      }
+   }
+   DEXIT;
+}
 /****** Eventclient/Client/ec_subscribe_all() *********************************
 *  NAME
 *     ec_subscribe_all() -- subscribe all events
@@ -1426,7 +1524,6 @@ bool
 ec_unsubscribe(ev_event event)
 {
    bool ret = false;
-   char *subscription;
    
    DENTER(TOP_LAYER, "ec_unsubscribe");
 
@@ -1436,35 +1533,27 @@ ec_unsubscribe(ev_event event)
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
-   } else {
-      subscription = strdup(lGetString(ec, EV_subscription));
+   }
 
-      if (subscription == NULL) {
-         ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-      } else {
-         if (event == sgeE_ALL_EVENTS) {
-            int i;
-            for(i = 0; i < sgeE_EVENTSIZE; i++) {
-               subscription[i] = EV_NOT_SUBSCRIBED;
-            }
-            subscription[sgeE_QMASTER_GOES_DOWN] = EV_FLUSHED;
-            subscription[sgeE_SHUTDOWN] = EV_FLUSHED;
-         } else {
-            if (event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN) {
-               ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
-            } else {
-               subscription[event] = EV_NOT_SUBSCRIBED;
-            }
-         }
-
-         if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
-            lSetString(ec, EV_subscription, subscription);
-            ec_config_changed();
-            ret = true;
-         }
+   if (event == sgeE_ALL_EVENTS) {
+      int i;
+      for(i = 0; i < sgeE_EVENTSIZE; i++) {
+         ec_remove_subscriptionElement(ec, i);
       }
+      ec_add_subscriptionElement(ec, sgeE_QMASTER_GOES_DOWN, EV_FLUSHED, 0);
+      ec_add_subscriptionElement(ec, sgeE_SHUTDOWN, EV_FLUSHED, 0);
 
-      free(subscription);
+   } else {
+      if (event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN) {
+         ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
+      } else {
+         ec_remove_subscriptionElement(ec, event);
+      }
+   }
+
+   if (lGetBool(ec, EV_changed)) {
+      ec_config_changed();
+      ret = true;
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -1527,7 +1616,7 @@ ec_unsubscribe_all(void)
 *     ev_event event - the event id to query 
 *
 *  RESULT
-*     int - EV_NO_FLUSH(-1) or the number of seconds used for flushing
+*     int - EV_NO_FLUSH or the number of seconds used for flushing
 *
 *  NOTES
 *
@@ -1539,7 +1628,6 @@ int
 ec_get_flush(ev_event event)
 {
    int ret = EV_NO_FLUSH;
-   const char *subscription;
    
    DENTER(TOP_LAYER, "ec_get_flush");
 
@@ -1550,12 +1638,12 @@ ec_get_flush(ev_event event)
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
    } else {
-      subscription = lGetString(ec, EV_subscription);
+      lListElem *sub_event = lGetElemUlong(lGetList(ec, EV_subscribed), EVS_id, event);
 
-      if (subscription == NULL) {
+      if (sub_event == NULL) {
          ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-      } else if ((subscription[event] & EV_FLUSHED) == EV_FLUSHED) {
-         ret = subscription[event] >> 2;
+      } else if (lGetBool(sub_event, EVS_flush)) {
+         ret = lGetUlong(sub_event, EVS_interval);
       }
    }
 
@@ -1583,8 +1671,9 @@ ec_get_flush(ev_event event)
 *
 *  INPUTS
 *     ev_event event - id of the event to configure
-*     int flush      - the number of seconds between creation of 
-*                      the event and flushing of the messages.
+*     bool flush     - true for flushing
+*     int interval   - flush interval in sec.
+*                      
 *
 *  RESULT
 *     bool - true on success, else false
@@ -1598,10 +1687,9 @@ ec_get_flush(ev_event event)
 *     Eventclient/Client/ec_subscribe_flush()
 *******************************************************************************/
 bool 
-ec_set_flush(ev_event event, int flush)
+ec_set_flush(ev_event event, bool flush, int interval)
 {
    bool ret = false;
-   char *subscription;
    
    DENTER(TOP_LAYER, "ec_set_flush");
 
@@ -1612,28 +1700,26 @@ ec_set_flush(ev_event event, int flush)
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
    } else {
-      if (flush == EV_NO_FLUSH) {
+      if (!flush ) {
          PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
          ret = ec_unset_flush(event);
+         ec_mod_subscription_flush(ec, event, EV_NOT_FLUSHED, EV_NO_FLUSH);
          PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
-      } else if (flush < 0 || flush > EV_MAX_FLUSH) {
-         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALFLUSHTIME_I, flush));
+      } else if (interval < 0 || interval > EV_MAX_FLUSH) {
+         WARNING((SGE_EVENT, MSG_EVENT_ILLEGALFLUSHTIME_I, interval));
       } else {
-         subscription = strdup(lGetString(ec, EV_subscription));
+         lListElem *sub_event = lGetElemUlong(lGetList(ec, EV_subscribed), EVS_id, event);
 
-         if (subscription == NULL) {
+         if (sub_event == NULL) {
             ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-         } else if (subscription[event] & EV_SUBSCRIBED) {
-            subscription[event] = (flush << 2) | EV_FLUSHED;
+         } 
+         else { 
+            ec_mod_subscription_flush(ec, event, EV_FLUSHED, interval);
          }
-
-         if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
-            lSetString(ec, EV_subscription, subscription);
+         if (lGetBool(ec, EV_changed)) {
             ec_config_changed();
             ret = true;
          }
-         
-         free(subscription);
       }
    }
 
@@ -1674,7 +1760,6 @@ bool
 ec_unset_flush(ev_event event)
 {
    bool ret = false;
-   char *subscription;
    
    DENTER(TOP_LAYER, "ec_unset_flush");
 
@@ -1685,23 +1770,19 @@ ec_unset_flush(ev_event event)
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
    } else {
-      subscription = strdup(lGetString(ec, EV_subscription));
+      lListElem *sub_event = lGetElemUlong(lGetList(ec, EV_subscribed), EVS_id, event);
 
-      if (subscription == NULL) {
+      if (sub_event == NULL) {
          ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-      } else if (subscription[event] & EV_SUBSCRIBED) {
-         subscription[event] = EV_SUBSCRIBED;
-      } else {
-         subscription[event] = EV_NOT_SUBSCRIBED;
-      }
+      } 
+      else { 
+         ec_mod_subscription_flush(ec, event, EV_NOT_FLUSHED, EV_NO_FLUSH);
+      } 
 
-      if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
-         lSetString(ec, EV_subscription, subscription);
+      if (lGetBool(ec, EV_changed)) {
          ec_config_changed();
          ret = true;
       }
-      
-      free(subscription);
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
@@ -1746,7 +1827,10 @@ ec_subscribe_flush(ev_event event, int flush)
    
    ret = ec_subscribe(event);
    if (ret) {
-      ret = ec_set_flush(event, flush);
+      if (flush >= 0)
+         ret = ec_set_flush(event, true, flush);
+      else
+         ret = ec_set_flush(event, false, flush);
    }
 
    return ret;
@@ -2038,6 +2122,7 @@ ec_commit(void)
       
       if (ret) {
          config_changed = false;
+         lSetBool(ec, EV_changed, false);
       }
    }
 

@@ -829,6 +829,7 @@ lList **alpp
          answer_list_add(alpp, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          return ret;
       }
+
       ep_opt = sge_add_arg(pcmdline, q_OPT, lListT, option, str);
       lSetList(ep_opt, SPA_argval_lListT, lCopyList(option, lp));
    }

@@ -83,9 +83,6 @@ static void schedd_mes_find_others(lList *job_list,
          lList *jid_list = lGetList(message_elem, MES_job_number_list);
          u_long32 jid;
          lRef jid_category; 
-/* TODO: not needed */         
-/*         if (!lFirst(jid_list))
-            continue;*/
          jid = lGetUlong(lFirst(jid_list), ULNG);
          jid_category = schedd_mes_get_category(jid, job_list);
 

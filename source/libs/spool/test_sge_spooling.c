@@ -605,7 +605,7 @@ int main(int argc, char *argv[])
    
    /* initialize mirroring */
    sge_mirror_initialize(EV_ID_ANY, "test_sge_mirror");
-   sge_mirror_subscribe(SGE_TYPE_ALL, spool_event_before, spool_event_after, NULL);
+   sge_mirror_subscribe(SGE_TYPE_ALL, spool_event_before, spool_event_after, NULL, NULL, NULL);
    prof_start(NULL);
 
    while(!shut_me_down) {

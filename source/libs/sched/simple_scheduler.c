@@ -555,12 +555,12 @@ static bool register_scheduler()
 
    /* initialize mirroring interface */
    sge_mirror_initialize(EV_ID_SCHEDD, "simple_scheduler");
-   sge_mirror_subscribe(SGE_TYPE_ALL, NULL, NULL, NULL); 
+   sge_mirror_subscribe(SGE_TYPE_ALL, NULL, NULL, NULL, NULL, NULL); 
 
    /* in an sgeee system we have to explicitly remove finished jobs 
     * from qmaster 
     */
-   sge_mirror_subscribe(SGE_TYPE_JOB, remove_finished_job, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_JOB, remove_finished_job, NULL, NULL, NULL, NULL);
 
    return true;
 }

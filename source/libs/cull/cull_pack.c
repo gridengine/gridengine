@@ -1372,3 +1372,118 @@ lCondition **cpp
    DEXIT;
    return PACK_SUCCESS;
 }
+
+/****** cull_pack/setByteArray() ***********************************************
+*  NAME
+*     setByteArray() -- takes a byte array, transformes it into ASCII and sets
+*                       it as a string into an element
+*
+*  SYNOPSIS
+*     void setByteArray(const char *byteArray, int size, lListElem *elem, int 
+*     name) 
+*
+*  FUNCTION
+*     makes a string out of a byte array and sets that string into an element 
+*
+*  INPUTS
+*     const char *byteArray -  byte array
+*     int size              - size of the byte array 
+*     lListElem *elem       - target element 
+*     int name              - target attribute 
+*
+*  RESULT
+*     void - nothing 
+*
+*******************************************************************************/
+void setByteArray(const char *byteArray, int size, lListElem *elem, int name){
+   const char *numbers = {"0123456789ABCDEF"};
+   int lower_part;
+   int upper_part;
+   int target_size = size * 2 +1;
+   char * z_stream_str=NULL;
+   int i=0;
+   int y=0;
+
+   if (!byteArray || !elem)
+      return;
+      
+   z_stream_str = malloc(target_size);
+   memset(z_stream_str, 0, target_size);
+
+   for (i=0; i < size; i++){
+      lower_part = (byteArray[i] & 0x0F);
+      upper_part = (byteArray[i] & 0xF0) >> 4;
+      z_stream_str[y++] = numbers[lower_part];
+      z_stream_str[y++] = numbers[upper_part];
+   }
+   z_stream_str[y++] = '\0';
+   lSetString(elem, name, z_stream_str);
+   FREE(z_stream_str);    
+} 
+
+/****** cull_pack/getByteArray() ***********************************************
+*  NAME
+*     getByteArray() -- transforms a string into a byte array. 
+*
+*  SYNOPSIS
+*     int getByteArray(char **byte, const lListElem *elem, int name) 
+*
+*  FUNCTION
+*     extracts a string from an element and changes it into a byte array. The
+*     target has to be a pointer to NULL. The array will be created in the function
+*     and no memory is freed. The calling functions have to take care of that.
+*
+*  INPUTS
+*     char **byte           - target byte array, has to be a pointer to NULL  
+*     const lListElem *elem - the list element, which contains the string
+*     int name              - name of the attribute containing the string 
+*
+*  RESULT
+*     int - >= 0 the size of the byte array
+*           < 0 the position of the first none hex character
+*
+*******************************************************************************/
+int getByteArray(char **byte, const lListElem *elem, int name){
+   const char *numbers = {"0123456789ABCDEF"};
+   int lower_part = 0;
+   int upper_part = 0;
+   int i=0;
+   int size=0;
+   const char* string;
+   if (!byte || !elem){
+      return size;
+   }
+
+   string = lGetString(elem, name);
+   size = strlen(string) /2;
+   *byte = malloc(size);
+   memset(*byte, 0, size);
+
+   for (i=0; i < size; i++){
+      int a=0;
+      
+      for(a=0; a < 16; a++){
+         if (numbers[a] == string[i*2]) {
+            lower_part = a;
+            break;
+         }
+      }
+      if (a == 16) {
+         return (i * -2);
+      }
+      
+      for(a=0; a < 16; a++){
+         if (numbers[a] == string[i*2+1]) {
+            upper_part = a;
+            break;
+         }
+      }
+      if (a == 16) {
+         return ((i * -2) -1);
+      }
+      (*byte)[i] = (upper_part << 4) + lower_part;
+   }
+   
+   return size;
+}
+

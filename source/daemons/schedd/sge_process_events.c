@@ -100,6 +100,7 @@ static void sge_rebuild_access_tree(lList *job_list, int trace_running);
 
 lCondition 
       *where_queue = NULL,
+      *where_queue2 = NULL,
       *where_all_queue = NULL,
       *where_job = NULL,
       *where_host = NULL,
@@ -109,7 +110,9 @@ lCondition
 
 lEnumeration 
    *what_queue = NULL,
+   *what_queue2 = NULL,
    *what_job = NULL,
+   *what_job2 = NULL,
    *what_host = NULL,
    *what_acl = NULL,
    *what_centry = NULL,
@@ -194,20 +197,27 @@ int event_handler_default_scheduler()
 
    ensure_valid_what_and_where();
 
+   if (!what_job2){
+      what_job2 = lWhat("%T(ALL)", lGetListDescr(Master_Job_List));
+   }      
 
-   copy.job_list = lSelect("", Master_Job_List,
-                           where_job, what_job); 
-                           
+
+/*   copy.job_list = lSelect("", Master_Job_List,
+                           where_job, what_job2);i*/
+   copy.job_list = lCopyList("", Master_Job_List);                           
+
    /* the scheduler functions have to work with a reduced copy .. */
    copy.host_list = lSelect("", Master_Exechost_List,
                             where_host, what_host);
 
    copy.queue_list = lSelect("", Master_Queue_List,
-                             where_queue, what_queue);
+                             where_queue, what_queue2);
 
    /* name all queues not suitable for scheduling in tsm-logging */
-   copy.all_queue_list = lSelect("", Master_Queue_List,
-                                 where_all_queue, what_queue);
+/*   copy.all_queue_list = lSelect("", Master_Queue_List,
+                                 where_all_queue, what_queue2);*/
+
+   copy.all_queue_list = lCopyList("", Master_Queue_List);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
       copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
@@ -350,43 +360,6 @@ static void ensure_valid_what_and_where(void)
 
    called = 1;
 
-   if (where_queue == NULL) {
-      where_queue = lWhere("%T("
-     /*    "%I!=%s &&" */
-         " !(%I m= %u) &&" 
-         " !(%I m= %u) &&"
-         " !(%I m= %u) &&"
-         " !(%I m= %u) &&"
-         " !(%I m= %u))",
-         QU_Type,    
-/*         QU_qname, SGE_TEMPLATE_NAME,*/ /* do not select queue "template" */
-         QU_state, QSUSPENDED,        /* only not suspended queues      */
-         QU_state, QSUSPENDED_ON_SUBORDINATE, 
-         QU_state, QCAL_SUSPENDED, 
-         QU_state, QERROR,            /* no queues in error state       */
-         QU_state, QUNKNOWN);         /* only known queues              */
-   }
-
-   if (where_queue == NULL) {
-      CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED));
-   }
-
-   DTRACE;
-
-   /* ---------------------------------------- */
-
-   if (where_all_queue == NULL) {
-      where_all_queue = lWhere("%T(%I!=%s)", QU_Type,    
-            QU_qname, SGE_TEMPLATE_NAME); /* do not select queue "template" */
-   }
-
-   if (where_all_queue == NULL) {
-      CRITICAL((SGE_EVENT, 
-                MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED ));
-   }
-
-   DTRACE;
-
    /* ---------------------------------------- */
 
    if (where_host == NULL) {
@@ -433,8 +406,7 @@ DTRACE;
       #define NM5  "%I%I%I%I%I"
       #define NM3  "%I%I%I"
       #define NM1  "%I"
-    what_queue = lWhat("%T(ALL)", QU_Type); 
-#if 0
+/*    what_queue = lWhat("%T(ALL)", QU_Type); */
       what_queue = lWhat("%T(" NM10 NM10 NM10 NM10 NM5 NM3")", QU_Type,
             QU_qname,
             QU_qhostname,
@@ -515,7 +487,63 @@ DTRACE;
             QU_pe_list,
             QU_ckpt_list*/
             );
-#endif            
+
+         {
+            lDescr *queue_des = NULL;
+            int index = 0;
+            int n = 0;
+            
+               /* create new lList with partial descriptor */
+            if ((n = lCountWhat(what_queue, QU_Type)) <= 0) {
+               CRITICAL((SGE_EVENT, "empty descriptor\n"));
+            }
+
+            
+            if (!(queue_des = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
+               CRITICAL((SGE_EVENT, "error memory allocation\n")); 
+            }
+            if (lPartialDescr(what_queue, QU_Type, queue_des, &index) != 0){
+               CRITICAL((SGE_EVENT, "partial queue descriptor failed\n")); 
+            }
+            else {
+               what_queue2 = lWhat("%T(ALL)", queue_des );
+
+               where_queue = lWhere("%T("
+                  " !(%I m= %u) &&" 
+                  " !(%I m= %u) &&"
+                  " !(%I m= %u) &&"
+                  " !(%I m= %u) &&"
+                  " !(%I m= %u))",
+                  queue_des,    
+                  QU_state, QSUSPENDED,        /* only not suspended queues      */
+                  QU_state, QSUSPENDED_ON_SUBORDINATE, 
+                  QU_state, QCAL_SUSPENDED, 
+                  QU_state, QERROR,            /* no queues in error state       */
+                  QU_state, QUNKNOWN);         /* only known queues              */
+                  
+               if (where_queue == NULL) {
+                  CRITICAL((SGE_EVENT, MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORQUEUEFAILED));
+               }
+             
+               cull_hash_free_descr(queue_des);
+               free(queue_des);
+             
+               DTRACE;
+               
+              /* ---------------------------------------- */
+
+               where_all_queue = lWhere("%T(%I!=%s)", QU_Type,    
+                        QU_qname, SGE_TEMPLATE_NAME); /* do not select queue "template" */
+
+               if (where_all_queue == NULL) {
+                  CRITICAL((SGE_EVENT, 
+                            MSG_SCHEDD_ENSUREVALIDWHERE_LWHEREFORALLQUEUESFAILED ));
+               }
+
+               DTRACE;
+            }
+         }
+
    }
 
    /* ---------------------------------------- */
@@ -625,6 +653,7 @@ void cleanup_default_scheduler(void)
 bool sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action action, 
                                          lListElem *event, void *clientdata){
    sconf_print_config();
+   new_global_config = 1; 
    return true;
 }
 
@@ -714,8 +743,8 @@ bool
 sge_process_job_event_before(sge_object_type type, sge_event_action action, 
                              lListElem *event, void *clientdata)
 {
-   u_long32 job_id;
-   lListElem *job;
+   u_long32 job_id = 0;
+   lListElem *job = NULL;
 
    DENTER(TOP_LAYER, "sge_process_job_event_before");
    DPRINTF(("callback processing job event before default rule\n"));
@@ -733,7 +762,7 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
       DEXIT;
       return true;
    }
-
+   
    switch (action) {
       case SGE_EMA_DEL:
          {
@@ -819,7 +848,6 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
          return false;
       }   
    }
-
    switch (action) {
       case SGE_EMA_LIST:
          rebuild_categories = 1;
@@ -1060,17 +1088,6 @@ bool sge_process_schedd_monitor_event(sge_object_type type,
    return true;
 }   
 
-bool sge_process_global_config_event(sge_object_type type, 
-                                    sge_event_action action, 
-                                    lListElem *event, void *clientdata)
-{
-   DENTER(TOP_LAYER, "sge_process_global_config_event");
-   DPRINTF(("notification about new global configuration\n"));
-   new_global_config = 1;
-   DEXIT;
-   return true;
-}   
-
 static void sge_rebuild_access_tree(lList *job_list, int trace_running) 
 {
    lListElem *job, *ja_task;
@@ -1095,69 +1112,68 @@ static void sge_rebuild_access_tree(lList *job_list, int trace_running)
 
 int subscribe_default_scheduler(void)
 {
+   ensure_valid_what_and_where();
+   
    /* subscribe event types for the mirroring interface */
-   sge_mirror_subscribe(SGE_TYPE_CKPT,           NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_CENTRY,         NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_EXECHOST,       NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_SHARETREE,      NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_PROJECT,        NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_PE,             NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_QUEUE,          NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_CQUEUE,         NULL, NULL, NULL);
-   sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_CKPT,           NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_CENTRY,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_EXECHOST,       NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_SHARETREE,      NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_PROJECT,        NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_PE,             NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_QUEUE,          NULL, NULL, NULL, where_all_queue, what_queue);
+   sge_mirror_subscribe(SGE_TYPE_CQUEUE,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_TYPE_USER,           NULL, NULL, NULL, NULL, NULL);
   
    /* event types with callbacks */
 
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF,    
-                        sge_process_schedd_conf_event_before, NULL, NULL);
+                        sge_process_schedd_conf_event_before, NULL, NULL, NULL, NULL);
 
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF,    NULL, 
-                        sge_process_schedd_conf_event_after,      NULL);
+                        sge_process_schedd_conf_event_after,      NULL, NULL, NULL);
                                                 
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_MONITOR, NULL, 
-                        sge_process_schedd_monitor_event,   NULL);
-                                                
-   sge_mirror_subscribe(SGE_TYPE_GLOBAL_CONFIG,  NULL, 
-                        sge_process_global_config_event,    NULL);
+                        sge_process_schedd_monitor_event,   NULL, NULL, NULL);
                                                 
    sge_mirror_subscribe(SGE_TYPE_JOB,            sge_process_job_event_before, 
-                        sge_process_job_event_after,        NULL);
-
+                        sge_process_job_event_after,        NULL, where_job, what_job);
+                        
    sge_mirror_subscribe(SGE_TYPE_JATASK,         sge_process_ja_task_event_before, 
-                        sge_process_ja_task_event_after,    NULL);
+                        sge_process_ja_task_event_after,    NULL, NULL, NULL);
                                                 
    sge_mirror_subscribe(SGE_TYPE_USERSET,        NULL, 
-                        sge_process_userset_event_after,    NULL);
+                        sge_process_userset_event_after,    NULL, NULL, NULL);
 
    /* set flush parameters for job */
    {
       int temp = sconf_get_flush_submit_sec();
-      if (temp == 0)
-         ec_set_flush(sgeE_JOB_ADD, -1);        
+      if (temp <= 0)
+         ec_set_flush(sgeE_JOB_ADD, false, -1);        
       else
-         ec_set_flush(sgeE_JOB_ADD, temp);
+         ec_set_flush(sgeE_JOB_ADD, true, temp);
          
       temp = sconf_get_flush_finish_sec();
-      if (temp == 0){
-         ec_set_flush(sgeE_JOB_DEL,         -1);
-         ec_set_flush(sgeE_JOB_FINAL_USAGE, -1);
-         ec_set_flush(sgeE_JATASK_MOD, -1);
-         ec_set_flush(sgeE_JATASK_DEL, -1);
+      if (temp <= 0){
+         ec_set_flush(sgeE_JOB_DEL, false,        -1);
+         ec_set_flush(sgeE_JOB_FINAL_USAGE, false, -1);
+         ec_set_flush(sgeE_JATASK_MOD, false, -1);
+         ec_set_flush(sgeE_JATASK_DEL, false,-1);
       }
       else {
-         ec_set_flush(sgeE_JOB_DEL,         temp);
-         ec_set_flush(sgeE_JOB_FINAL_USAGE, temp);
-         ec_set_flush(sgeE_JATASK_MOD, temp);
-         ec_set_flush(sgeE_JATASK_DEL, temp);
+         ec_set_flush(sgeE_JOB_DEL, true,        temp);
+         ec_set_flush(sgeE_JOB_FINAL_USAGE, true, temp);
+         ec_set_flush(sgeE_JATASK_MOD, true, temp);
+         ec_set_flush(sgeE_JATASK_DEL, true, temp);
       }
    }
    /* for some reason we flush sharetree changes */
-   ec_set_flush(sgeE_NEW_SHARETREE,   0);
+   ec_set_flush(sgeE_NEW_SHARETREE, true,  0);
 
    /* configuration changes and trigger should have immediate effect */
-   ec_set_flush(sgeE_GLOBAL_CONFIG,   0);
-   ec_set_flush(sgeE_SCHED_CONF,      0);
-   ec_set_flush(sgeE_SCHEDDMONITOR,   0);
+   ec_set_flush(sgeE_GLOBAL_CONFIG, true,  0);
+   ec_set_flush(sgeE_SCHED_CONF, true,     0);
+   ec_set_flush(sgeE_SCHEDDMONITOR, true,  0);
 
    return true;
 }

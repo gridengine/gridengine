@@ -135,6 +135,13 @@
 #define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
 #define MSG_GDI_CANTUNPACKGDIREQUEST                       _MESSAGE(43138, _("can't unpack gdi request"    ))
 
+/**
+ * cull/cull_where.c
+ */
+#define MSG_PACK_ERRORUNPACKING_S      _MESSAGE(43150, _("error unpacking: "SFN"\n"))
+#define MSG_PACK_INVALIDPACKDATA       _MESSAGE(43151, _("the pack string contained invalid characters\n"))
+#define MSG_PACK_WRONGPACKTYPE_II      _MESSAGE(43152, _("wrong pack type (got: %d / expected %d\n"))
+ 
 /*
  * common/usage.c
  */

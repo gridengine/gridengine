@@ -50,6 +50,8 @@ int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep);
 int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr *dp, int flags);
 int cull_pack_elem_partial(sge_pack_buffer *pb, const lListElem *ep, int flags);
 
+void setByteArray(const char *byteArray, int size, lListElem *elem, int name);
+int getByteArray(char **byte, const lListElem *elem, int name);
 /*
  *
  *   lList

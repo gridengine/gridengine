@@ -54,9 +54,6 @@ void sge_event_client_exit(const char *host, const char *commproc,
 void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, 
                               sge_gdi_request *answer);
 
-int sge_eventclient_subscribed(const lListElem *event_client, ev_event event, 
-                               const char *session);
-
 int sge_ack_event(lListElem *er, ev_event event_number);
 
 void ck_4_deliver_events(u_long32 now);

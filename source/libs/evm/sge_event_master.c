@@ -70,6 +70,16 @@
 
 #include "sge_event_master.h"
 
+typedef struct {
+      bool         subscription;
+      bool         flush;
+      u_long32     flush_time;
+      lCondition   *where;
+      lDescr       *descr;
+      lEnumeration *what;
+}subscription_t;
+
+
 /****** Eventclient/Server/--Event_Client_Server ******************************
 *  NAME
 *     Event Client Interface -- Server Functionality
@@ -123,14 +133,19 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 static void 
 sge_flush_events_(lListElem *event_client, int interval, int now);
 
+static int 
+sge_eventclient_subscribed(const lListElem *event_client, ev_event event, 
+                               const char *session);
 void 
 sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, 
                           const char *user, uid_t uid, sge_gdi_request *answer);
 
 static void 
-check_send_new_subscribed_list(const char *old_subscription, 
-                               const char *new_subscription, 
+check_send_new_subscribed_list(const subscription_t *old_subscription, 
+                               const subscription_t *new_subscription, 
                                lListElem *event_client, ev_event event);
+
+static void sge_build_subscription(lListElem *event_el);
 
 static lListElem *
 eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long32 id);
@@ -235,7 +250,6 @@ sge_flush_events_(lListElem *event_client, int interval, int now)
    next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
 
    lSetUlong(event_client, EV_next_send_time, next_send);
-
    DPRINTF(("ev_client: %s %d\tNOW: %d NEXT FLUSH: %d (%s,%s,%d)\n", 
          lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
          now, next_send, 
@@ -462,7 +476,7 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    u_long32 id;
    u_long32 ed_time;
    const char *name;
-   const char *subscription;
+   lList *subscription;
    static u_long32 first_dynamic_id = EV_ID_FIRST_DYNAMIC;
    const char *host;
    const char *commproc;
@@ -472,7 +486,8 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
 
    id = lGetUlong(clio, EV_id);
    name = lGetString(clio, EV_name);
-   subscription = lGetString(clio, EV_subscription);
+/*   subscription = lGetString(clio, EV_subscription);*/
+   subscription = lGetList(clio, EV_subscribed);
    ed_time = lGetUlong(clio, EV_d_time);
    host = lGetHost(clio, EV_host);
    commproc = lGetString(clio, EV_commproc);
@@ -490,7 +505,8 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
       return STATUS_ESEMANTIC;
    }
 
-   if (subscription == NULL || strlen(subscription) != sgeE_EVENTSIZE) {
+/*   if (subscription == NULL || strlen(subscription) != sgeE_EVENTSIZE) {*/
+   if (subscription == NULL) {
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -534,6 +550,7 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    }
 
    ep=lCopyElem(clio);
+   lSetBool(clio, EV_changed, false);
    if (EV_Clients == NULL) {
       EV_Clients=lCreateList("EV_Clients", EV_Type); 
    }
@@ -549,12 +566,15 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
 
    /* return new event client object to event client */
    if (eclpp != NULL) {
+      lListElem *ret_el = lCopyElem(ep);
       if (*eclpp == NULL) {
          *eclpp = lCreateList("new event client", EV_Type);
       }
-
-      lAppendElem(*eclpp, lCopyElem(ep));
+      lSetBool(ret_el, EV_changed, false);
+      lAppendElem(*eclpp, ret_el);
    }
+
+   sge_build_subscription(ep);
 
    /* build events for total update */
    total_update(ep);
@@ -568,6 +588,87 @@ sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
 
    DEXIT; 
    return STATUS_OK;
+}
+
+/****** sge_event_master/sge_build_subscription() ******************************
+*  NAME
+*     sge_build_subscription() -- generates an array out of the cull registration
+*                                 structure
+*
+*  SYNOPSIS
+*     static void sge_build_subscription(lListElem *event_el) 
+*
+*  FUNCTION
+*      generates an array out of the cull registration
+*      structure. The array contains all event elements and each of them 
+*      has an identifier, if it is subscribed or not. Before that is done, it is
+*      tested, the EV_changed flag is set. If not, the function simply returns.
+*
+*
+*  INPUTS
+*     lListElem *event_el - the event element, which event structure will be transformed 
+*
+*******************************************************************************/
+static void sge_build_subscription(lListElem *event_el) {
+   lList *subscription = lGetList(event_el, EV_subscribed);
+   lListElem *sub_el = NULL;
+   subscription_t *sub_array = NULL; 
+
+   DENTER(TOP_LAYER, "sge_build_subscription");
+
+
+   if (!lGetBool(event_el, EV_changed)) {
+      DEXIT;
+      return;
+   }
+
+   DPRINTF(("rebuild event mask for a client\n"));
+
+   sub_array = (subscription_t *) malloc(sizeof(subscription_t) * sgeE_EVENTSIZE);
+   
+   memset(sub_array, 0, sizeof(subscription_t) * sgeE_EVENTSIZE); 
+   {
+      int i;
+      for (i=0; i<sgeE_EVENTSIZE; i++){
+         sub_array[i].subscription = EV_NOT_SUBSCRIBED;
+      }
+   } 
+   for_each(sub_el, subscription){
+      const lListElem *temp = NULL;
+      u_long32 event = lGetUlong(sub_el, EVS_id);   
+      
+      sub_array[event].subscription = EV_SUBSCRIBED; 
+      sub_array[event].flush = lGetBool(sub_el, EVS_flush);
+      sub_array[event].flush_time = lGetUlong(sub_el, EVS_interval);
+     
+      if ((temp = lGetObject(sub_el, EVS_where)))
+         sub_array[event].where = lWhereFromElem(temp);
+
+      if ((temp = lGetObject(sub_el, EVS_what))) {      
+         sub_array[event].what = lWhatFromElem(temp);
+      }   
+      
+   }
+   {
+      subscription_t *old_sub_array = lGetRef(event_el, EV_sub_array);
+      if (old_sub_array) {
+         int i;
+         for (i=0; i<sgeE_EVENTSIZE; i++){ 
+            if (old_sub_array[i].where)
+               lFreeWhere(old_sub_array[i].where);
+            if (old_sub_array[i].what)
+               lFreeWhat(old_sub_array[i].what);
+            if (old_sub_array[i].descr){
+               cull_hash_free_descr(old_sub_array[i].descr);
+               free(old_sub_array[i].descr);
+            }
+         }
+         free(old_sub_array);
+      }
+      lSetRef(event_el, EV_sub_array, sub_array);
+      lSetBool(event_el, EV_changed, false);
+   }
+   DEXIT;
 }
 
 /****** Eventclient/Server/sge_mod_event_client() ******************************
@@ -610,8 +711,7 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    u_long32 id;
    u_long32 busy;
    u_long32 ev_d_time;
-   const char *subscription;
-   const char *old_subscription;
+/*   const char *subscription;*/
 
    DENTER(TOP_LAYER,"sge_mod_event_client");
 
@@ -629,7 +729,7 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    /* these parameters can be changed */
    busy         = lGetUlong(clio, EV_busy);
    ev_d_time    = lGetUlong(clio, EV_d_time);
-   subscription = lGetString(clio, EV_subscription);
+/*   subscription = lGetString(clio, EV_subscription);*/
 
    /* check for validity */
    if (ev_d_time < 1) {
@@ -639,7 +739,8 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
       return STATUS_ESEMANTIC;
    }
 
-   if (subscription == NULL || strlen(subscription) != sgeE_EVENTSIZE) {
+   if (lGetList(clio, EV_subscribed) == NULL) {
+/*   if (subscription == NULL || strlen(subscription) != sgeE_EVENTSIZE) {*/
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -658,51 +759,77 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
    }
 
    /* subscription changed */
-   old_subscription = lGetString(event_client, EV_subscription);
-   if (strcmp(subscription, old_subscription) != 0) {
-      lSetString(event_client, EV_subscription, subscription);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+   /*old_subscription = lGetString(event_client, EV_subscription);*/
+   if (lGetBool(clio, EV_changed)) {
+/*   if (strcmp(subscription, old_subscription) != 0) {*/
+      subscription_t *new_sub = NULL; 
+      subscription_t *old_sub = NULL; 
+
+/*      lSetString(event_client, EV_subscription, subscription); */
+      sge_build_subscription(clio);
+      new_sub = lGetRef(clio, EV_sub_array);
+      old_sub = lGetRef(event_client, EV_sub_array);
+
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_ADMINHOST_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_CALENDAR_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_CKPT_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_CENTRY_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_CONFIG_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_EXECHOST_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_JOB_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_JOB_SCHEDD_INFO_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_MANAGER_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_OPERATOR_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_NEW_SHARETREE);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_PE_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_PROJECT_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_QUEUE_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_CQUEUE_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_SUBMITHOST_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_USER_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_USERSET_LIST);
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_HGROUP_LIST);
 #ifndef __SGE_NO_USERMAPPING__
-      check_send_new_subscribed_list(old_subscription, subscription, 
+      check_send_new_subscribed_list(old_sub, new_sub, 
                                      event_client, sgeE_CUSER_LIST);
 #endif      
+      lSetList(event_client, EV_subscribed, lCopyList("", lGetList(clio, EV_subscribed)));
+      lSetRef(event_client, EV_sub_array, new_sub);
+      lSetRef(clio, EV_sub_array, NULL);
+      if (old_sub){
+         int i;
+         for (i=0; i<sgeE_EVENTSIZE; i++){ 
+            if (old_sub[i].where)
+               lFreeWhere(old_sub[i].where);
+            if (old_sub[i].what)
+               lFreeWhat(old_sub[i].what);
+            if (old_sub[i].descr){
+               cull_hash_free_descr(old_sub[i].descr);
+               free(old_sub[i].descr);
+            }
+         } 
+         FREE(old_sub);
+
+      }
    }
 
    /* busy state changed */
@@ -733,8 +860,8 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
 *
 *  SYNOPSIS
 *     static void 
-*     check_send_new_subscribed_list(const char *old_subscription, 
-*                                    const char *new_subscription, 
+*     check_send_new_subscribed_list(const subscription_t *old_subscription, 
+*                                    const subscription_t *new_subscription, 
 *                                    lListElem *event_client, 
 *                                    ev_event event) 
 *
@@ -743,8 +870,8 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
 *     certain event client. If yes, send these lists to the event client.
 *
 *  INPUTS
-*     const char *old_subscription - former subscription
-*     const char *new_subscription - new subscription
+*     const subscription_t *old_subscription - former subscription
+*     const subscription_t *new_subscription - new subscription
 *     lListElem *event_client      - the event client object
 *     ev_event event               - the event to check
 *
@@ -753,12 +880,12 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
 *
 *******************************************************************************/
 static void 
-check_send_new_subscribed_list(const char *old_subscription, 
-                               const char *new_subscription, 
+check_send_new_subscribed_list(const subscription_t *old_subscription, 
+                               const subscription_t *new_subscription, 
                                lListElem *event_client, ev_event event)
 {
-   if ((new_subscription[event] & EV_SUBSCRIBED) && 
-       (old_subscription[event] == EV_NOT_SUBSCRIBED)) {
+   if ((new_subscription[event].subscription & EV_SUBSCRIBED) && 
+       (old_subscription[event].subscription == EV_NOT_SUBSCRIBED)) {
       sge_total_update_event(event_client, event);
    }   
 }
@@ -813,7 +940,24 @@ sge_event_client_exit(const char *host, const char *commproc,
 
    INFO((SGE_EVENT, MSG_EVE_UNREG_SU, lGetString(ec, EV_name), 
          u32c(lGetUlong(ec, EV_id))));
-
+   {        
+      int i;
+      subscription_t *old_sub = lGetRef(ec, EV_sub_array);
+      if (old_sub) {
+         for (i=0; i<sgeE_EVENTSIZE; i++){ 
+            if (old_sub[i].where)
+               lFreeWhere(old_sub[i].where);
+            if (old_sub[i].what)
+               lFreeWhat(old_sub[i].what);
+            if (old_sub[i].descr){
+               cull_hash_free_descr(old_sub[i].descr);
+               free(old_sub[i].descr);
+            }
+         } 
+         free(old_sub);
+         lSetRef(ec, EV_sub_array, NULL);
+      }
+   }
    lRemoveElem(EV_Clients, ec);
 
    DEXIT;
@@ -845,11 +989,11 @@ sge_event_client_exit(const char *host, const char *commproc,
 *  SEE ALSO
 *     Eventclient/-Session filtering
 *******************************************************************************/
-int 
+static int 
 sge_eventclient_subscribed(const lListElem *event_client, ev_event event, 
    const char *session)
 {
-   const char *subscription = NULL;
+   const subscription_t *subscription = NULL;
    const char *ec_session;
 
    DENTER(TOP_LAYER, "sge_eventclient_subscribed");
@@ -859,10 +1003,10 @@ sge_eventclient_subscribed(const lListElem *event_client, ev_event event,
       return 0;
    }
 
-   subscription = lGetString(event_client, EV_subscription);
+   subscription = lGetRef(event_client, EV_sub_array);
    ec_session = lGetString(event_client, EV_session);
 
-   if (subscription == NULL || *subscription == 0) {
+   if (subscription == NULL) {
       DEXIT;
       return 0;
    }
@@ -888,8 +1032,7 @@ sge_eventclient_subscribed(const lListElem *event_client, ev_event event,
          }
       }
    }
-
-   if (subscription[event] & EV_SUBSCRIBED) {
+   if (subscription[event].subscription == EV_SUBSCRIBED) {
       DEXIT;
       return 1;
    }
@@ -1188,13 +1331,13 @@ sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
    if (event_client != NULL) {
       if (sge_eventclient_subscribed(event_client, type, session)) {
          sge_add_list_event_(event_client, timestamp, type, 
-                             intkey, intkey2, strkey, strkey2, list, 1);
+                             intkey, intkey2, strkey, strkey2, list, true);
       }
    } else {
       for_each (event_client, EV_Clients) {
          if (sge_eventclient_subscribed(event_client, type, session)) {
             sge_add_list_event_(event_client, timestamp, type, 
-                                intkey, intkey2, strkey, strkey2, list, 1);
+                                intkey, intkey2, strkey, strkey2, list, true);
          }
       }
    }
@@ -1234,11 +1377,42 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
    lSetUlong(event, ET_intkey2, intkey2); 
    lSetString(event, ET_strkey, strkey);
    lSetString(event, ET_strkey2, strkey2);
-  
-   lSetList(event, ET_new_version, 
-            need_copy_list?lCopyList(lGetListName(list), list):list);
-   need_copy_list = 1;
-   consumed = 1;
+ 
+   { 
+      lList *cp_list;
+      if (list && need_copy_list) {
+         subscription_t *subscription = lGetRef(event_client, EV_sub_array);
+         const lCondition *selection = subscription[type].where;
+         const lEnumeration *fields = subscription[type].what;
+         lDescr *descr = subscription[type].descr;
+         
+         if (fields && !descr){
+             descr = subscription[type].descr = lGetReducedDescr(lGetListDescr(list), fields);
+         }
+
+         DPRINTF(("deliver event: %d with where filter=%d and what filter=%d\n", 
+         type, (selection!=NULL), (fields!=NULL)));
+
+         if (fields) {
+            cp_list = lSelectD("updating list", list, selection,descr, fields);  
+            
+         /* no elements in the event list, no need for an event */
+            if (lGetNumberOfElem(cp_list) == 0){
+               return 0;
+            }
+         }
+         else {
+            cp_list = lCopyList(lGetListName(list), list);
+         }
+         consumed = 0;
+      }   
+      else {
+         cp_list = list;
+         consumed = 1;
+      }   
+
+      lSetList(event, ET_new_version, cp_list );
+   }     
 
    /* build a new event list if not exists */
    lp = lGetList(event_client, EV_events); 
@@ -1255,14 +1429,13 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 
    /* check if event clients wants flushing */
    {
-      const char *subscription = lGetString(event_client, EV_subscription);
-/*       dump_subscription(subscription); */
-      if ((subscription[type] & EV_FLUSHED) == EV_FLUSHED) {
+      const subscription_t *subscription = lGetRef(event_client, EV_sub_array);
+
+      if (subscription[type].flush) {
          DPRINTF(("flushing event client\n"));
-         sge_flush_events(event_client, subscription[type] >> 2);
+         sge_flush_events(event_client, subscription[type].flush_time);
       }
    }
-
    DEXIT;
    return EV_Clients?consumed:1;
 }
@@ -1315,7 +1488,6 @@ sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
 {
 
    DENTER(TOP_LAYER, "sge_add_event"); 
-   
    if (timestamp == 0) {
       timestamp = sge_get_gmt();
    }
@@ -1342,21 +1514,43 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
                u_long32 intkey, u_long32 intkey2, const char *strkey, 
                const char *strkey2, lListElem *element) 
 {
-   const lDescr *dp;
+   const lDescr *dp = NULL;
    lList *lp = NULL;
 
    /* build a list from the element */
    if (element) {
-      dp = lGetElemDescr(element);
-      lp = lCreateList("changed element", dp);
-      lAppendElem(lp, lCopyElem(element));
-   }
+      lListElem *el = NULL; 
+      subscription_t *subscription = lGetRef(event_client, EV_sub_array);
+      const lCondition *selection = subscription[type].where;
+      const lEnumeration *fields = subscription[type].what;
+      dp = subscription[type].descr;
 
-   if (!sge_add_list_event_(event_client, timestamp, type, 
-                            intkey, intkey2, strkey, strkey2, lp, 0)) {
-      lp = lFreeList(lp); 
+      if (fields) {
+        
+         if (!dp){
+            subscription[type].descr = lGetReducedDescr(lGetElemDescr(element), fields);
+            dp = subscription[type].descr; 
+         }
+         
+         el = lSelectElemD(element, selection, dp, fields);
+         /* do not send empty elements */
+         if (!el)
+            return;
+      }
+      else {
+         el = lCopyElem(element);
+         dp = lGetElemDescr(element);
+      }
+      if (el) {
+         lp = lCreateList("changed element", dp);
+         lAppendElem(lp, el);
+      }       
    }
-
+  
+   sge_add_list_event_(event_client, timestamp, type, 
+                       intkey, intkey2, strkey, strkey2, lp, false);
+   
+ 
    return;
 }
 
@@ -1425,12 +1619,11 @@ sge_total_update_event(lListElem *event_client, ev_event type)
    char buffer[1024];
    dstring buffer_wrapper;
    const char *session;
-   bool do_select = false;
    lCondition *selection = NULL;
    lEnumeration *fields = NULL;
+   const lDescr *descr=NULL;
 
    DENTER(TOP_LAYER, "sge_total_update_event");
-
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
    session = lGetString(event_client, EV_session);
 
@@ -1456,13 +1649,6 @@ sge_total_update_event(lListElem *event_client, ev_event type)
             break;
          case sgeE_JOB_LIST:
             lp = Master_Job_List;
-            if (session) {
-               /* event client subscribed only for parts of the job list */
-               do_select = true;
-               selection = lWhere("%T(%I==%s)", lGetListDescr(lp), 
-                     JB_session, session);
-               fields = lWhat("%T(ALL)", lGetListDescr(lp));
-            }
             break;
          case sgeE_JOB_SCHEDD_INFO_LIST:
             lp = Master_Job_Schedd_Info_List;
@@ -1514,6 +1700,20 @@ sge_total_update_event(lListElem *event_client, ev_event type)
             return;
       }
 
+      {
+         subscription_t *subscription = lGetRef(event_client, EV_sub_array);
+         selection = subscription[type].where;
+         fields = subscription[type].what;
+         descr = subscription[type].descr;
+         
+         if (fields && !descr){
+             descr = subscription[type].descr = lGetReducedDescr(lGetListDescr(lp), fields);
+         }
+         
+         DPRINTF(("deliver event: %d with where filter=%s and what filter=%s\n", 
+                  type, selection?"true":"false", fields?"true":"false"));
+      }
+      
       event = lCreateElem(ET_Type); 
 
       /* fill in event number and increment EV_next_number of event recipient */
@@ -1523,11 +1723,11 @@ sge_total_update_event(lListElem *event_client, ev_event type)
       
       lSetUlong(event, ET_type, type); 
 
-      if (do_select) {
-         lList *reduced_lp = lSelect("updating list", lp, selection, fields);
+      if (fields) {
+         lList *reduced_lp = NULL;
+         
+         reduced_lp = lSelectD("updating list", lp, selection,descr, fields); 
          lSetList(event, ET_new_version, reduced_lp);
-         selection = lFreeWhere(selection);
-         fields = lFreeWhat(fields);
       } else
          lSetList(event, ET_new_version, lCopyList("updating list", lp));
 
@@ -1825,18 +2025,6 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
    answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 }
 
-
-/*
-static void 
-dump_subscription(const char *subscription)
-{
-   fprintf(stderr, "Subscription =");
-   while (*subscription) {
-      fprintf(stderr, " %03d", *subscription++);
-   }
-   fprintf(stderr, "\n");
-}
-*/
 
 /****** Eventclient/Server/set_event_client_busy() *****************************
 *  NAME

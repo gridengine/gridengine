@@ -35,6 +35,7 @@
 
 #include "sge_boundaries.h"
 #include "cull.h"
+#include "cull_packL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -51,12 +52,14 @@ typedef enum {
 
 
 /* documentation see libs/evc/sge_event_client.c */
-#define EV_NO_FLUSH -1
+/* #define EV_NO_FLUSH -1*/
 
-#define EV_NOT_SUBSCRIBED 0x01
-#define EV_SUBSCRIBED 0x02
-#define EV_FLUSHED 0x03
+#define EV_NOT_SUBSCRIBED 0 
+#define EV_SUBSCRIBED 1 
+#define EV_FLUSHED 1 
+#define EV_NOT_FLUSHED 0
 #define EV_MAX_FLUSH 0x3f
+#define EV_NO_FLUSH -1 
 
 /* documentation see libs/evc/sge_event_client.c */
 
@@ -87,7 +90,9 @@ enum {
    EV_flush_delay,           /* flush delay paramter */
    /* je kleiner EV_flush_delay eines Event client
       desto unmittelbarer das Drosseln des Event-flushens */
-   EV_subscription,          /* subscription information */
+   EV_subscribed,            /* a list of subscriped events */
+   
+   EV_changed,               /* identifies changes in the subscription list */
    EV_busy_handling,         /* how to handle busy-states */
    EV_session,               /* session key to be used for filtering subscribed events */
 
@@ -99,6 +104,8 @@ enum {
    EV_busy,                  /* is the client busy? */
    EV_events,                /* used to hold the events that */
                              /* are not acknowledged */
+   EV_sub_array,             /* contains an array of subscribed events, only used in qmaster */      
+   
    /* for free use */
    EV_clientdata             /* can be used by client or master for any purposes */
 };
@@ -115,7 +122,8 @@ LISTDEF(EV_Type)
    
    SGE_ULONG(EV_d_time, CULL_DEFAULT)
    SGE_ULONG(EV_flush_delay, CULL_DEFAULT)
-   SGE_STRING(EV_subscription, CULL_DEFAULT)
+   SGE_LIST(EV_subscribed, EVS_Type, CULL_DEFAULT)
+   SGE_BOOL(EV_changed, CULL_DEFAULT)
    SGE_ULONG(EV_busy_handling, CULL_DEFAULT)
    SGE_STRING(EV_session, CULL_DEFAULT)
    
@@ -125,6 +133,7 @@ LISTDEF(EV_Type)
    SGE_ULONG(EV_next_number, CULL_DEFAULT)
    SGE_ULONG(EV_busy, CULL_DEFAULT)
    SGE_LIST(EV_events, ET_Type, CULL_DEFAULT)
+   SGE_REF(EV_sub_array, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 
    SGE_ULONG(EV_clientdata, CULL_DEFAULT)
 LISTEND 
@@ -141,7 +150,8 @@ NAMEDEF(EVN)
 
    NAME("EV_d_time")
    NAME("EV_flush_delay")
-   NAME("EV_subscription")
+   NAME("EV_subscribed")
+   NAME("EV_changed")
    NAME("EV_busy_handling")
    NAME("EV_session")
 
@@ -151,6 +161,7 @@ NAMEDEF(EVN)
    NAME("EV_next_number")
    NAME("EV_busy")
    NAME("EV_events")
+   NAME("EV_sub_array")
 
    NAME("EV_clientdata")
 NAMEEND
@@ -352,10 +363,35 @@ NAMEDEF(ETN)
    NAME("ET_strkey2")
    NAME("ET_new_version")
 NAMEEND
+#define ETS sizeof(ETN)/sizeof(char*)
+
+enum {
+   EVS_id = EVS_LOWERBOUND,
+   EVS_flush,
+   EVS_interval,
+   EVS_what,
+   EVS_where
+};
+
+LISTDEF(EVS_Type)
+   SGE_ULONG(EVS_id, CULL_DEFAULT)
+   SGE_BOOL(EVS_flush, CULL_DEFAULT)
+   SGE_ULONG(EVS_interval, CULL_DEFAULT)
+   SGE_OBJECT(EVS_what, PACK_Type, CULL_DEFAULT)
+   SGE_OBJECT(EVS_where, PACK_TYPE,CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(EVSN)
+   NAME("EVS_id") 
+   NAME("EVS_flush")
+   NAME("EVS_interval")
+   NAME("EVS_what")
+   NAME("EVS_where")
+NAMEEND   
+#define EVSS sizeof(EVSN)/sizeof(char*)
 
 /* *INDENT-ON* */ 
 
-#define ETS sizeof(ETN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

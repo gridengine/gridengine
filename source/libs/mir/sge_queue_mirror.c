@@ -78,7 +78,7 @@ queue_update_master_list(sge_object_type type, sge_event_action action,
                          lListElem *event, void *clientdata)
 {
    lList **list;
-   lDescr *list_descr;
+   const lDescr *list_descr;
    lListElem *queue;
    int key_nm;
    const char *key;
@@ -86,7 +86,7 @@ queue_update_master_list(sge_object_type type, sge_event_action action,
    DENTER(TOP_LAYER, "queue_update_master_list");
 
    list = &Master_Queue_List;
-   list_descr = QU_Type;
+   list_descr = lGetListDescr(lGetList(event, ET_new_version)); 
    key_nm = QU_qname;
 
    key = lGetString(event, ET_strkey);

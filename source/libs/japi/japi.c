@@ -3363,13 +3363,28 @@ static void *japi_implementation_thread(void *p)
    ec_set_flush_delay(flush_delay_rate); 
    ec_set_session(japi_session_key); 
    ec_subscribe(sgeE_JOB_LIST);
-
-
+   
+{
+   lCondition *where = lWhere("%T(%I==%s)", JB_Type, JB_session, japi_session_key );
+   lEnumeration *what = lWhat("%T(ALL)", JB_Type);
+   /* TODO: SG: need what / where */
+   lListElem *where_el = lWhereToElem(where);
+   lListElem *what_el = lWhatToElem(what);
+   
+   ec_mod_subscription_where(sgeE_JOB_LIST, what_el, where_el);
+   
+   where = lFreeWhere(where);
+   what = lFreeWhat(what);
+   if (where_el)
+      where_el = lFreeElem(where_el);
+   if (what_el)
+      what_el = lFreeElem(what_el);
+}
    ec_subscribe(sgeE_JOB_FINISH);
-   ec_set_flush(sgeE_JOB_FINISH, 0);
+   ec_set_flush(sgeE_JOB_FINISH,true, 0);
 
    ec_subscribe(sgeE_SHUTDOWN);
-   ec_set_flush(sgeE_SHUTDOWN, 0);
+   ec_set_flush(sgeE_SHUTDOWN,true, 0);
 
 /*    sgeE_QMASTER_GOES_DOWN  ??? */
 

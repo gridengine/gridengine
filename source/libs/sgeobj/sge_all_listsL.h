@@ -88,6 +88,7 @@
 #include "sge_helperL.h"
 #include "sge_cqueueL.h"
 #include "sge_qinstanceL.h"
+#include "cull_packL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -227,6 +228,9 @@ extern "C" {
       {CTQV_LOWERBOUND, CTQVS,CTQVN},           /* cached queue soft request violations in a job category */
       {CTI_LOWERBOUND, CTIS, CTIN},             /* ignore host/queue list in a job category */
       {PARA_LOWERBOUND, PARAS, PARAN},          /* store the configuration "params" parameters in a list */
+      {ULNG_LOWERBOUND, ULNGS, ULNGN},          /* ???? info-messages ??? */
+      {EVS_LOWERBOUND, EVSS, EVSN},              /* subscribed event list */
+      {PACK_LOWERBOUND, PACKS, PACKN},          /* a cull version of the pack buffer */
       {0, 0, NULL}
    };
 

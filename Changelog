@@ -1,3 +1,7 @@
+CR-2002-04-18-0: Testsuite: 
+                 Bugfix:    testsuite only updates the c source code
+                 Issue:     #187
+
 EB-2002-04-17-2: Bugfix:    error in qmasters job deletion code
                  Issue:     #235 
 

@@ -57,6 +57,9 @@ lappend check_functions "kill_running_system"
 lappend check_functions "install_qmaster"
 lappend check_functions "make_user_cert"
 lappend check_functions "install_execd"
+# this procedure is not full implemented at this
+# time so it is disabled for later use.
+# lappend check_functions "setup_local_binary_path"
 lappend check_functions "setup_queues"
 lappend check_functions "setup_testcheckpointobject"
 lappend check_functions "setup_conf" 
@@ -66,6 +69,7 @@ lappend check_functions "setup_deadlineuser"
 lappend check_functions "setup_schedconf" 
 lappend check_functions "setup_default_calendars"
 lappend check_functions "setup_check_user_permissions"
+lappend check_functions "setup_check_messages_files"
 lappend check_functions "setup_inhouse_cluster"
 
 
@@ -1416,6 +1420,31 @@ proc get_spool_dir {host subdir} {
    return $spooldir
 }
 
+proc get_local_product_root_dir { host } {
+   global CHECK_OUTPUT CHECK_CONFIG_DIR CHECK_LOCAL_BINARY_DIR_CONFIG_FILE
+   
+   set binary_config $CHECK_CONFIG_DIR/$CHECK_LOCAL_BINARY_DIR_CONFIG_FILE
+   set binary_dir ""
+
+   puts "searching binary directory for host $host ..."
+   if {[file exists $binary_config ]} {
+      set f [open $binary_config r]
+      while { [gets $f line] >= 0 } {
+         if { [string first "#" $line ] == 0 } {
+            continue 
+         }  
+         set string_tmp [lindex $line 0]
+         if {[string compare -nocase $host $string_tmp] == 0} {
+            set binary_dir "[lindex $line 1]"
+            puts $CHECK_OUTPUT "->host $string_tmp has binary directory $binary_dir"
+         }
+      }
+      close $f
+   }
+   return $binary_dir
+}
+
+
 
 
 #                                                             max. column:     |
@@ -2103,6 +2132,139 @@ proc setup_check_user_permissions {} {
   puts "runtime: [ expr ( [timestamp] - $time ) ]"
   get_version_info
   set_error 0 "ok"
+}
+
+proc setup_local_binary_path { } {
+   global CHECK_OUTPUT CHECK_CONFIG_DIR CHECK_LOCAL_BINARY_DIR_CONFIG_FILE
+   global CHECK_CORE_EXECD CHECK_ADMIN_USER_SYSTEM CHECK_PRODUCT_ROOT
+   global CHECK_TESTSUITE_ROOT CHECK_CORE_MASTER CHECK_USER
+
+
+   if { $CHECK_ADMIN_USER_SYSTEM == 0 } {
+      set must_copy 0
+      foreach host $CHECK_CORE_EXECD {
+         set bin_dir [ get_local_product_root_dir $host ]
+         if { $bin_dir != "" } {
+            set must_copy 1
+         }
+      }
+      if { $must_copy == 1 } {
+         set tar_bin [get_binary_path $CHECK_CORE_MASTER "tar"]
+         set tar_command "$tar_bin cvf tarfile.tar *"
+         puts $CHECK_OUTPUT $tar_command
+         set result [ start_remote_prog $CHECK_CORE_MASTER "root" "cd" "$CHECK_PRODUCT_ROOT; ${tar_command}" ]
+         puts $CHECK_OUTPUT $result
+         if { $prg_exit_state != 0 } {
+            add_proc_error "setup_local_binary_path" -2 "$result"
+         } 
+
+
+         set gzip_bin [get_binary_path $CHECK_CORE_MASTER "gzip"]
+         set gzip_command "$gzip_bin -1 tarfile.tar"
+         puts $CHECK_OUTPUT $gzip_command
+         set result [ start_remote_prog $CHECK_CORE_MASTER "root" "cd" "$CHECK_PRODUCT_ROOT; ${gzip_command}" prg_exit_state 1000 ]
+         puts $CHECK_OUTPUT $result
+         if { $prg_exit_state != 0 } {
+            add_proc_error "setup_local_binary_path" -2 "$result"
+         } 
+
+
+         foreach host $CHECK_CORE_EXECD {
+            set bin_dir [ get_local_product_root_dir $host ]
+            if { $bin_dir != "" } {
+               puts $CHECK_OUTPUT "copying binaries for host $host"
+        
+               set result [ start_remote_prog $host $CHECK_USER "cd" "$bin_dir" ]
+               puts $CHECK_OUTPUT $result
+               if { $prg_exit_state != 0 } {
+                  set result [ start_remote_prog $host $CHECK_USER "mkdir" "-p $bin_dir" ]
+                  puts $CHECK_OUTPUT $result
+                  set result [ start_remote_prog $host $CHECK_USER "cd" "$bin_dir" ]
+                  puts $CHECK_OUTPUT $result
+                  if { $prg_exit_state != 0 } {
+                     add_proc_error "setup_local_binary_path" -2 "$result"
+                     return -2 "error"
+                  }
+
+               }
+
+               set result [ start_remote_prog $host $CHECK_USER "cp" "$CHECK_PRODUCT_ROOT/tarfile.tar.gz $bin_dir/tarfile.tar.gz" ]
+               puts $CHECK_OUTPUT $result
+               if { $prg_exit_state != 0 } {
+                   add_proc_error "setup_local_binary_path" -2 "$result"
+               } 
+
+
+               set gzip_bin [get_binary_path $host "gzip"]
+               set gzip_command "$gzip_bin -d tarfile.tar"
+               puts $CHECK_OUTPUT $gzip_command
+               set result [ start_remote_prog $host $CHECK_USER "cd" "$bin_dir; ${gzip_command}" prg_exit_state 1000 ]
+               puts $CHECK_OUTPUT $result
+               if { $prg_exit_state != 0 } {
+                   add_proc_error "setup_local_binary_path" -2 "$result"
+               } 
+
+
+               set tar_bin [get_binary_path $host "tar"]
+               set tar_command "$tar_bin xvf tarfile.tar"
+               puts $CHECK_OUTPUT $tar_command
+               set result [ start_remote_prog $host "root" "cd" "$bin_dir; ${tar_command}" ]
+               puts $CHECK_OUTPUT $result
+               if { $prg_exit_state != 0 } {
+                   add_proc_error "setup_local_binary_path" -2 "$result"
+               } 
+
+               puts $CHECK_OUTPUT "removing existing tar file ..."
+               set result [ start_remote_prog $host $CHECK_USER "rm" "$bin_dir/tarfile.tar" ]
+               puts $CHECK_OUTPUT $result
+            }
+         }
+      }
+      puts $CHECK_OUTPUT "removing existing tar file ..."
+      set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$CHECK_PRODUCT_ROOT/tarfile.tar.gz" ]
+      puts $CHECK_OUTPUT $result
+   } else {
+     add_proc_error "setup_local_binary_path" -3 "not supported for non root cluster"
+   }
+   set_error 0 "ok"
+}
+
+proc setup_check_messages_files {} {
+   global CHECK_CORE_EXECD CHECK_CORE_MASTER CHECK_OUTPUT
+   global CHECK_USER
+
+   puts $CHECK_OUTPUT "scheduler ..."
+   set messages [get_schedd_messages_file]
+   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages 
+   if { $file_array(0) < 1 } {
+      add_proc_error "setup_check_messages_files" -1 "no scheduler messages file:\n$messages"
+   }
+   for {set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+      puts $CHECK_OUTPUT $file_array($i)
+   }
+
+   puts $CHECK_OUTPUT "qmaster ..."
+   set messages [get_qmaster_messages_file]
+   get_file_content $CHECK_CORE_MASTER $CHECK_USER $messages 
+   if { $file_array(0) < 1 } {
+      add_proc_error "setup_check_messages_files" -1 "no qmaster messages file:\n$messages"
+   }
+   for {set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+      puts $CHECK_OUTPUT $file_array($i)
+   }
+
+   foreach execd $CHECK_CORE_EXECD {
+      puts $CHECK_OUTPUT "execd $execd ..."
+      set messages [ get_execd_messages_file $execd ]
+      get_file_content $execd $CHECK_USER $messages 
+      if { $file_array(0) < 1 } {
+         add_proc_error "setup_check_messages_files" -1 "no execd(host=$execd) messages file:\n$messages"
+      }
+      for {set i 1 } { $i <= $file_array(0) } { incr i 1 } {
+         puts $CHECK_OUTPUT $file_array($i)
+      }
+   }
+   set_error 0 "ok"
 }
 
 #                                                             max. column:     |

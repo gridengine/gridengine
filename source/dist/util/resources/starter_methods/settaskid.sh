@@ -32,4 +32,25 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#
+# Establishes a new task for the job and set users default project.
+#****** util/resources/ibm-loadsensor ***************************************
+#
+#  NAME
+#     settaskid.sh -- starter method doing settaskid(2) under Solaris
+#
+#  SYNOPSIS
+#     settaskid.sh <job-cmd> <args>
+#
+#  FUNCTION
+#     This script can be used as starter_method in sge_queue(5) to add 
+#     a settaskid(2) system call to the job setup. In the current version
+#     it establishes a new Solaris OS task for the job and sets the users 
+#     default project.
+# 
+#  NOTES
+#     The /usr/bin/newtask command is not available before Solaris 8.
+#
+#***************************************************************************
+
 exec /usr/bin/newtask $*

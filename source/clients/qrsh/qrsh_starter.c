@@ -207,8 +207,14 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    char *command   = NULL;
    SGE_STRUCT_STAT statbuf;
    int size; 
+   int set_display = 1;
 
    *wrapper = NULL;
+
+   /* don't set DISPLAY, if it is already set (e.g. by ssh) */
+   if (getenv("DISPLAY") != NULL) {
+      set_display = 0;
+   }
 
    /* build path of environmentfile */
    envFileName = (char *)malloc(strlen(jobdir) + strlen("environment") + 2);
@@ -253,6 +259,11 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          *c = 0;
       }
 
+      /* skip setting of display variable */
+      if (strncmp(line, "DISPLAY=", 8) == 0 && !set_display) {
+         continue;
+      }
+      
       if (strncmp(line, "QRSH_COMMAND=", 13) == 0) {
          if ((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
@@ -262,28 +273,26 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
             return NULL;
          }
          strcpy(command, line + 13);
-      } else {  
-         if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
-            if (*(line + 13) == 0) {
-               fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
-            } else {
-               if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
-                  qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-                  fclose(envFile); 
-                  FREE(envFileName);
-                  FREE(line);
-                  return NULL;
-               }
-               strcpy(*wrapper, line + 13);
-            }
+      } else if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
+         if (*(line + 13) == 0) {
+            fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
          } else {
-            /* set variable */
-            if (!sge_putenv(line)) {
+            if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
+               qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
                fclose(envFile); 
                FREE(envFileName);
                FREE(line);
                return NULL;
             }
+            strcpy(*wrapper, line + 13);
+         }
+      } else {
+         /* set variable */
+         if (!sge_putenv(line)) {
+            fclose(envFile); 
+            FREE(envFileName);
+            FREE(line);
+            return NULL;
          }
       }
    }

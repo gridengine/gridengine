@@ -1,3 +1,10 @@
+JG-2003-12-29-0: Enhancem.: qrsh_starter will no longer overwrite the DISPLAY
+                            variable if it is already set to enable ssh display 
+                            forwarding if ssh is used as transport mechanism for
+                            qrsh.
+                 Changed:   qrsh_starter
+                 Review:    TBD
+
 SG-2003-12-18-0: Bugfix:    qdel XXXX.YY- deleted the first task in an
                             array job. Qdel will generate an error message
                             now.

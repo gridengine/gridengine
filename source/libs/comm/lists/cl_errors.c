@@ -335,6 +335,9 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_NO_LOCAL_HOST_CONNECTION: {
          return MSG_CL_RETVAL_NO_LOCAL_HOST_CONNECTION;
       }
+      case CL_RETVAL_UNEXPECTED_CHARACTERS: {
+         return MSG_CL_RETVAL_UNEXPECTED_CHARACTERS;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

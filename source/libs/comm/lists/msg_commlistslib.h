@@ -127,6 +127,7 @@
 #define MSG_CL_RETVAL_CREATE_RESERVED_PORT_SOCKET _MESSAGE(80089, _("can't create reserved port socket"))
 #define MSG_CL_RETVAL_NO_RESERVED_PORT_CONNECTION _MESSAGE(80090, _("client did not use reserved port < 1024"))
 #define MSG_CL_RETVAL_NO_LOCAL_HOST_CONNECTION    _MESSAGE(80091, _("client is not connected from local host"))
+#define MSG_CL_RETVAL_UNEXPECTED_CHARACTERS       _MESSAGE(80092, _("got unexpected characters or values"))
 
 
 

@@ -43,9 +43,9 @@ int cl_util_get_double_number_length(double id);
 /* This functions convert ascii text into number variables */
 unsigned long cl_util_get_ulong_value(const char* text);
 
-int cl_util_get_ascii_hex_buffer(char* buffer, unsigned long buf_len, char** ascii_buffer, char* separator);
-int cl_util_get_binary_buffer(char* hex_buffer, char** buffer, unsigned long* buffer_lenght);
-char cl_util_get_ascii_hex_char(int value);
+int cl_util_get_ascii_hex_buffer(unsigned char* buffer, unsigned long buf_len, char** ascii_buffer, char* separator);
+int cl_util_get_binary_buffer(char* hex_buffer, unsigned char** buffer, unsigned long* buffer_lenght);
+char cl_util_get_ascii_hex_char(unsigned char value);
 int  cl_util_get_hex_value(char hex_char);
 
 #endif /* __CL_UTIL_H */

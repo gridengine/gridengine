@@ -125,9 +125,10 @@
 #define CL_RETVAL_CREATE_RESERVED_PORT_SOCKET (CL_RETVAL_START_ID + 89)
 #define CL_RETVAL_NO_RESERVED_PORT_CONNECTION (CL_RETVAL_START_ID + 90)
 #define CL_RETVAL_NO_LOCAL_HOST_CONNECTION    (CL_RETVAL_START_ID + 91)
+#define CL_RETVAL_UNEXPECTED_CHARACTERS       (CL_RETVAL_START_ID + 92)
 
 
-#define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 92)  /* this must be the last number + 1 */
+#define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 93)  /* this must be the last number + 1 */
 #define CL_RETVAL_UNDEFINED_STR "UNDEFINED"
 
 int         cl_is_commlib_error(int error_id);

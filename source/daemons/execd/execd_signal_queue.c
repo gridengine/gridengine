@@ -129,7 +129,7 @@ int answer_error;
                master_q = lGetObject(gdil_ep, JG_queue);
                if (master_q != NULL) {
                   qnm =  lGetString(master_q, QU_full_name);
-                  if (!strcmp(qname, qnm)) {
+                  if (strcmp(qname, qnm) == 0) {
                      char tmpstr[SGE_PATH_MAX];
 
                      /* job signaling triggerd by a queue signal */

@@ -235,7 +235,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
          break;
            
       case CL_MIH_DF_BIN: {
-            cl_util_get_ascii_hex_buffer((char*)ms->message, ms->message_length, &xml_msg_buffer, NULL);
+            cl_util_get_ascii_hex_buffer((unsigned char*)ms->message, ms->message_length, &xml_msg_buffer, NULL);
             if (xml_msg_buffer != NULL) {
                xml_data = xml_msg_buffer;
             }   

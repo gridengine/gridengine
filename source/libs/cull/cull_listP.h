@@ -90,7 +90,7 @@ struct _lList {
 };
 
 
-void cull_state_set_lerrno(int errno);
+void cull_state_set_lerrno(int i);
 void cull_state_set_noinit(char *s);
 void cull_state_set_global_sort_order(const lSortOrder *so);
 void cull_state_set_chunk_size(int chunk_size);

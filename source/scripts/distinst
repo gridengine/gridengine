@@ -35,7 +35,9 @@
 
 umask 022
 
-HASDIR="ckpt doc examples/jobs locale mpi mpi pvm qmon/PIXMAPS/big"
+TOPFILES="3rd_party bin catman ckpt doc examples include inst_sge \
+          install_execd install_qmaster lib man mpi pvm qmon util utilbin"
+
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
@@ -272,11 +274,40 @@ Execute()
 }
 
 #-------------------------------------------------------------------------
+# Create directory if it doesn't exist
+# and exit if $exit_on_error is set
+#
+MakeDir()
+{
+   if [ ! -d $DEST_SGE_ROOT/$1 ]; then
+      Execute mkdir $DEST_SGE_ROOT/$1
+   else
+      Execute chmod 755 $DEST_SGE_ROOT/$1
+   fi
+}
+
+#-------------------------------------------------------------------------
+# Delete CVS directories and backup files etc.
+#
+Cleanup()
+{
+   for i in $*; do
+      find $DEST_SGE_ROOT/$i -name CVS -type d -exec rm -rf {} \; 2>/dev/null
+      find $DEST_SGE_ROOT/$i \( -name "*~" -o -name "*.bak" -o \
+                                -name ".#*" -o -name "*.swp" \) \
+                              -type f -exec rm -f {} \;
+      if [ $IAMROOT = true ]; then
+         Execute chown -R 0:0 $DEST_SGE_ROOT/$i
+      fi
+   done
+}
+
+#-------------------------------------------------------------------------
 # Install user group permissions source destination
 Install()
 {
    Execute cp $3 $4
-   if [ "$UID" = 0 ]; then
+   if [ $IAMROOT = true ]; then
       target_uid=`echo $1 | cut -d. -f1`
       target_gid=`echo $1 | cut -d. -f2`
       Execute chown $target_uid $4
@@ -313,18 +344,18 @@ InstallLib()
 }
 
 #-------------------------------------------------------------------------
-#
-SetFilePerm()
-{
-   Execute chmod -R go+r $1
-   find $1 -perm -100 \( -type d -o -type f \) -exec chmod go+x {} \;
-   if [ "$UID" = 0 ]; then
-      Execute chown -R 0.0 $1
-   fi
-}
-
-#-------------------------------------------------------------------------
 # MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN MAIN
+
+# How else I can find out that I'm user root?
+# The code below worked everywhere
+#
+idout="`id`"
+five=`expr "$idout" : "uid=0"`
+if [ $five = 5 ]; then
+  IAMROOT=true
+else
+  IAMROOT=false
+fi
 
 # Main targets and target directories
 #
@@ -345,7 +376,6 @@ PROG=""
 #
 # verbose               -> echo commands called via Execute() function
 # exit_on_error         -> exit if command called via Execute() exits != 0
-# localinst             -> Use $SGE_ROOT for target directory
 # touchcommonchanged    -> create file .COMMON_CHANGED in target dir if 
 #                          "common" install target has changed
 verbose=false
@@ -357,7 +387,6 @@ touchcommonchanged=false
 instjobs=false
 instsharedlibs=false
 instckpt=false
-instdirectory=false
 instdrmaa=false
 instiscript=false
 instutiltree=false
@@ -518,38 +547,42 @@ done
 
 if [ $localinst = false ]; then
    if [ $BASEDIR = undefined ]; then
-      echo Set \$BASEDIR with -basedir switch."
+      echo "Set \$BASEDIR with -basedir switch."
       exit 1
    fi
 
    if [ $VERSIONDIR = undefined ]; then
-      echo Set \$VERSIONDIR with -vdir switch."
+      echo "Set \$VERSIONDIR with -vdir switch."
       exit 1
    fi   
-
-   DEST_SGE_ROOT=$BASEDIR/$VERSIONDIR
-   if [ -f $DEST_SGE_ROOT/LOCKED ]; then
-      echo "File \"$DEST_SGE_ROOT/LOCKED\" exits"
-      exit 1
-   fi
 
    if [ ! -d $BASEDIR ]; then
       echo "Directory \"$BASEDIR\" does not exist. Please create it first."
       exit 1
    fi
-   Execute mkdir -p $DEST_SGE_ROOT
+
+   DEST_SGE_ROOT=$BASEDIR/$VERSIONDIR
+
+   if [ ! -d $DEST_SGE_ROOT ]; then
+      Execute mkdir $DEST_SGE_ROOT
+   fi
+
    Execute chmod 755 $DEST_SGE_ROOT
+   
+   if [ -f $DEST_SGE_ROOT/LOCKED ]; then
+      echo "File \"$DEST_SGE_ROOT/LOCKED\" exits"
+      exit 1
+   fi
 else
    if [ "$BASEDIR" != undefined -o "$VERSIONDIR" != undefined ]; then
       echo
       echo Switch \""-local\" cannot be combined with \"-vdir\" and/or \"-basedir\" switch."
       echo
-      echo "Also check \"scripts/distinst.site\" and/or \"./distinst.private\" if these"
+      echo "Check \"scripts/distinst.site\" and/or \"./distinst.private\" if these"
       echo "scripts set the variables \"BASEDIR\" or \"VERSIONDIR\"".
       echo
       exit 1
    fi
-   
 fi
 
 whoseargs="archs"
@@ -613,7 +646,6 @@ echo
 for prog in $PROG; do
    case $prog in
       common|distcommon) 
-         instdirectory=true
          instdrmaa=true
          instcommon=true
          inst3rdparty=true
@@ -692,52 +724,87 @@ done
 
 # ------------------ Install common files ------------------
 #
-if [ "$ARCH" != "" ]; then
-   MakeArchDirs $ARCH
-fi
 
 if [ $instcommon = true ]; then
 
-   if [ $instdirectory = true ]; then
-      echo Making SGE_ROOT top directories in $DEST_SGE_ROOT
-      (cd $DEST_SGE_ROOT; mkdir -p $HASDIR )
-   fi
-
    if [ $inst3rdparty = true ]; then
       echo Installing \"3rd_party/\" directory tree
+      Execute rm -rf $DEST_SGE_ROOT/3rd_party
+      MakeDir 3rd_party
       Execute cp -r dist/3rd_party $DEST_SGE_ROOT
+      Cleanup 3rd_party
    fi
 
    if [ $instiscript = true ]; then
       rm -f $DEST_SGE_ROOT/inst_sge $DEST_SGE_ROOT/install_qmaster $DEST_SGE_ROOT/install_execd
-      echo "Installing \"inst_sge\", \"install_execd\" and \"install_execd\""
+      echo "Installing \"inst_sge\", \"install_qmaster\" and \"install_execd\""
       Execute cp dist/inst_sge dist/install_qmaster dist/install_execd $DEST_SGE_ROOT 
       Execute chmod 755 $DEST_SGE_ROOT/inst_sge $DEST_SGE_ROOT/install_execd $DEST_SGE_ROOT/install_qmaster
+      Cleanup inst_sge install_execd install_qmaster         
    fi
     
    if [ $instutiltree = true ]; then
       echo Installing \"util/\" directory tree
       Execute rm -rf $DEST_SGE_ROOT/util
+      MakeDir util
       Execute cp -r dist/util $DEST_SGE_ROOT
-      Execute rm $DEST_SGE_ROOT/util/resources/pe/make
-      Execute cp dist/util/resources/pe/make $DEST_SGE_ROOT/util/resources/pe/make
-      chmod 755 $DEST_SGE_ROOT/util/*.sh $DEST_SGE_ROOT/util/arch
-      chmod 755 $DEST_SGE_ROOT/util/resources/loadsensors/*
-      chmod 644 $DEST_SGE_ROOT/util/sgeCA/sge_ssl*
-      chmod 755 $DEST_SGE_ROOT/util/sgeCA/sge_ca
+      Cleanup util
+
+      # Not available in Beta
+      Execute rm -rf $DEST_SGE_ROOT/util/update_commands
+      Execute rm -f $DEST_SGE_ROOT/util/sge_update.sh
+
+      Execute chmod 755 $DEST_SGE_ROOT/util/install_modules \
+                        $DEST_SGE_ROOT/util/rctemplates \
+                        $DEST_SGE_ROOT/util/resources \
+                        $DEST_SGE_ROOT/util/sgeCA \
+                        $DEST_SGE_ROOT/util/resources/calendars \
+                        $DEST_SGE_ROOT/util/resources/centry \
+                        $DEST_SGE_ROOT/util/resources/loadsensors \
+                        $DEST_SGE_ROOT/util/resources/pe \
+                        $DEST_SGE_ROOT/util/resources/schemas \
+                        $DEST_SGE_ROOT/util/resources/schemas/qstat \
+                        $DEST_SGE_ROOT/util/resources/spooling \
+                        $DEST_SGE_ROOT/util/resources/starter_methods \
+                        $DEST_SGE_ROOT/util/resources/usersets
+      
+      Execute chmod 755 $DEST_SGE_ROOT/util/arch \
+                        $DEST_SGE_ROOT/util/*.sh \
+                        $DEST_SGE_ROOT/util/sge_log_tee \
+                        $DEST_SGE_ROOT/util/sgeremoterun \
+                        $DEST_SGE_ROOT/util/sgeCA/sge_ca \
+                        $DEST_SGE_ROOT/util/resources/loadsensors/* \
+                        $DEST_SGE_ROOT/util/resources/spooling/*.sh \
+                        $DEST_SGE_ROOT/util/resources/starter_methods/*
+
+      Execute chmod 644 $DEST_SGE_ROOT/util/install_modules/* \
+                        $DEST_SGE_ROOT/util/rctemplates/* \
+                        $DEST_SGE_ROOT/util/sgeCA/*.cnf \
+                        $DEST_SGE_ROOT/util/resources/calendars/* \
+                        $DEST_SGE_ROOT/util/resources/centry/* \
+                        $DEST_SGE_ROOT/util/resources/pe/* \
+                        $DEST_SGE_ROOT/util/resources/schemas/*/* \
+                        $DEST_SGE_ROOT/util/resources/spooling/*.sql \
+                        $DEST_SGE_ROOT/util/resources/usersets/*
    fi
    
    if [ $instexamples = true ]; then
       echo Installing \"examples/jobs\"
-      Execute rm -f $DEST_SGE_ROOT/examples/jobs/*
+      Execute rm -rf $DEST_SGE_ROOT/examples
+      MakeDir examples
+      MakeDir examples/jobs      
       Execute cp dist/examples/jobs/*.sh $DEST_SGE_ROOT/examples/jobs
+      Execute chmod 755 dist/examples/jobs/*.sh
+      Cleanup examples
    fi
 
    if [ $instqmon = true ]; then
       echo Copying Pixmaps and Qmon resource file
+      Execute rm -rf $DEST_SGE_ROOT/qmon
+      MakeDir qmon
+      MakeDir qmon/PIXMAPS
+      MakeDir qmon/PIXMAPS/big
 
-      Execute rm -f $DEST_SGE_ROOT/qmon/PIXMAPS/*.xpm
-      Execute rm -f $DEST_SGE_ROOT/qmon/PIXMAPS/big/*.xpm
       Execute cp dist/qmon/PIXMAPS/small/*.xpm $DEST_SGE_ROOT/qmon/PIXMAPS
       Execute cp dist/qmon/PIXMAPS/big/toolbar*.xpm $DEST_SGE_ROOT/qmon/PIXMAPS/big
 
@@ -757,12 +824,14 @@ if [ $instcommon = true ]; then
         echo ln -s logo-sge.xpm logo.xpm; \
         ln -s logo-sge.xpm logo.xpm \
       )
+      Cleanup qmon
    fi 
 
    if [ $instpvm = true ]; then
       echo Installing \"pvm\"
-      Execute rm -rf $DEST_SGE_ROOT/pvm/*
-      Execute mkdir $DEST_SGE_ROOT/pvm/src
+      Execute rm -rf $DEST_SGE_ROOT/pvm
+      MakeDir pvm
+      MakeDir pvm/src
            
       for f in $PVMSCRIPTS; do
          Execute cp dist/pvm/$f $DEST_SGE_ROOT/pvm
@@ -777,21 +846,24 @@ if [ $instcommon = true ]; then
          Execute cp dist/pvm/src/$f $DEST_SGE_ROOT/pvm/src
          chmod 755 $DEST_SGE_ROOT/pvm/src/$f
       done
+      Cleanup pvm
    fi
 
    if [ $instdrmaa = true ]; then
       echo Installing \"DRMAA\"
       Execute rm -rf $DEST_SGE_ROOT/include
-      Execute mkdir $DEST_SGE_ROOT/include
-           
+      MakeDir include
+
       for f in $DRMAA_HEADER_FILES; do
          Execute cp $f $DEST_SGE_ROOT/include
       done
+      Cleanup include
    fi
 
    if [ $instmpi = true ]; then
       echo Installing \"mpi/\"
-      rm -rf $DEST_SGE_ROOT/mpi/*
+      rm -rf $DEST_SGE_ROOT/mpi
+      MakeDir mpi
 
       for f in $MPI_FILES; do
          Execute cp dist/mpi/$f $DEST_SGE_ROOT/mpi
@@ -850,6 +922,8 @@ if [ $instcommon = true ]; then
          Execute cp dist/$HPCBASE_TIGHT/$f $DEST_SGE_ROOT/$HPCBASE_TIGHT
          Execute chmod 755 $DEST_SGE_ROOT/$HPCBASE_TIGHT/$f
       done
+
+      Cleanup mpi
    fi
 
    if [ $instman = true ]; then
@@ -859,13 +933,14 @@ if [ $instcommon = true ]; then
       Execute rm -rf $DEST_SGE_ROOT/man/man3
       Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/man $DEST_SGE_ROOT
       Execute cp -r MANSBUILD_$MANSRCDIR/ASCMAN/catman $DEST_SGE_ROOT
+      Cleanup man catman
    fi
 
    if [ $instdoc = true ]; then
       # currently no docs in CVS repository
       echo Installing \"doc/\"
       Execute rm -rf $DEST_SGE_ROOT/doc
-      Execute mkdir $DEST_SGE_ROOT/doc
+      MakeDir doc
    fi
 
    # this rule must come *after* the "instdoc" rule
@@ -874,20 +949,26 @@ if [ $instcommon = true ]; then
       echo "Installing README, INSTALL ... files"
       Execute cp ../doc/*.asc   $DEST_SGE_ROOT/doc
       Execute cp ../doc/INSTALL $DEST_SGE_ROOT/doc
-      Execute cp ../doc/UPGRADE-2-53 $DEST_SGE_ROOT/doc/UPGRADE
+      # No upgrade procedure in Beta
+#      Execute cp ../doc/UPGRADE-2-53 $DEST_SGE_ROOT/doc/UPGRADE
       Execute chmod 644 $DEST_SGE_ROOT/doc/*
+      Cleanup doc      
    fi
 
    if [ $instckpt = true ]; then
       echo Installing \"ckpt/\"
-      Execute rm -rf $DEST_SGE_ROOT/ckpt/*
-      cp dist/ckpt/* $DEST_SGE_ROOT/ckpt
-      chmod 755 $DEST_SGE_ROOT/ckpt/*_command
+      Execute rm -rf $DEST_SGE_ROOT/ckpt
+      MakeDir ckpt
+      Execute cp dist/ckpt/*_command $DEST_SGE_ROOT/ckpt
+      Execute chmod 755 $DEST_SGE_ROOT/ckpt/*_command
+      Execute cp dist/ckpt/README* $DEST_SGE_ROOT/ckpt
+      Execute chmod 644 $DEST_SGE_ROOT/ckpt/README*
+      Cleanup ckpt
    fi
 
    if [ $instsec = true ]; then
       echo Installing \"security\" modules
-      Execute mkdir -p $DEST_SGE_ROOT/security
+      MakeDir security
       for f in $SECFILES; do
          Execute cp $f $DEST_SGE_ROOT/security
          fb=`basename $f`
@@ -897,28 +978,26 @@ if [ $instcommon = true ]; then
             chmod 644 $DEST_SGE_ROOT/security/$fb
          fi
       done
-      Execute ln -s gss_customer.html $DEST_SGE_ROOT/security/README.html
+      ( echo changing to $DEST_SGE_ROOT/security; \
+        ln -s gss_customer.html README.html )
+      Cleanup security
    fi      
-
-   # Set file and directory permissions to 755/644 and owner to 0.0
-   echo Setting file permissions
-   SetFilePerm $DEST_SGE_ROOT
 
    if [ $touchcommonchanged = true ]; then
       touch $DEST_SGE_ROOT/.COMMON_CHANGED
    fi
 
-   # Remove CVS directories, ".#" files, backup files
-   echo Removing CVS and backup files and '.#*' files
-   find $DEST_SGE_ROOT -name CVS -type d -exec rm -rf {} \; 2>/dev/null
-   find $DEST_SGE_ROOT \( -name "*~" -o -name "*.bak" -o -name ".#*" \) \
-                          -type f -exec rm -f {} \;
    echo common part done
    echo
 fi
 
 # ------------------  Copy architecure dependent stuff ----------------------
 #
+
+if [ "$ARCH" != "" ]; then
+   MakeArchDirs $ARCH
+fi
+
 for i in $ARCH; do
    DSTARCH=$i
    SetArchBin $i
@@ -1095,7 +1174,7 @@ for i in $ARCH; do
          done
 
          for lib in $DRMAA_SHARED_LIBRARIES; do
-            libname="../${ARCHBIN}/$lib.$shlibext"
+            libname=$lib.$shlibext
             if [ -f $libname ]; then
                InstallProg $libname
             elif [ $exit_on_error = true ]; then

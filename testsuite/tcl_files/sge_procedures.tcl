@@ -6307,9 +6307,9 @@ proc wait_till_qmaster_is_down { host } {
    set process_names "sge_qmaster" 
    
    if { [string match "csp" $ts_config(product_feature)] } {
-      set my_timeout [ expr ( [timestamp] + 90 ) ] 
+      set my_timeout [ expr ( [timestamp] + 120 ) ] 
    } else {
-      set my_timeout [ expr ( [timestamp] + 45 ) ] 
+      set my_timeout [ expr ( [timestamp] + 90 ) ] 
    }
 
    while { 1 } {

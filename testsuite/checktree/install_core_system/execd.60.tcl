@@ -126,7 +126,7 @@ proc install_execd {} {
                     puts $CHECK_OUTPUT "untaring Certificate Authority (CA) directory in \"$CA_ROOT_DIR\""
                     start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR" 
                     if { $prg_exit_state != 0 } { 
-                       set result [ start_remote_prog "$exec_host" "root" "mkdir" "$CA_ROOT_DIR" ]
+                       set result [ start_remote_prog "$exec_host" "root" "mkdir" "-p $CA_ROOT_DIR" ]
                     }   
                     set result [ start_remote_prog "$exec_host" "root" "cd" "$CA_ROOT_DIR; ${tar_bin} -xvf $TAR_FILE" ]
                     puts $CHECK_OUTPUT $result

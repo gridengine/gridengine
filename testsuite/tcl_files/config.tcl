@@ -62,7 +62,7 @@ proc verify_config { config_array only_check parameter_error_list } {
    set errors 0
    set error_list ""
    
-   if { [ info exists config(version) ] != 1 } {
+   if { ! [ info exists config(version) ] } {
       puts $CHECK_OUTPUT "Could not find version info in configuration file"
       lappend error_list "no version info"
       incr errors 1
@@ -1159,11 +1159,16 @@ proc config_source_cvs_hostname { only_check name config_array } {
 proc config_source_cvs_release { only_check name config_array } {
    global CHECK_OUTPUT 
    global CHECK_USER 
-   global CHECK_SOURCE_DIR
    global CHECK_SOURCE_CVS_RELEASE
    global CHECK_SOURCE_HOSTNAME
 
    upvar $config_array config
+
+   if { ! [file isdirectory $config(source_dir)] } {
+      puts $CHECK_OUTPUT "source directory $config(source_dir) doesn't exist"
+      return -1
+   }
+   
    set actual_value  $config($name)
    set default_value $config($name,default)
    set description   $config($name,desc)
@@ -1171,7 +1176,7 @@ proc config_source_cvs_release { only_check name config_array } {
    if { $actual_value == "" } {
       set value $default_value
       if { $default_value == "" } {
-         set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$CHECK_SOURCE_DIR/CVS/Tag" prg_exit_state 60 0 "" 1 0]
+         set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$config(source_dir)/CVS/Tag" prg_exit_state 60 0 "" 1 0]
          set result [string trim $result]
          if { $prg_exit_state == 0 } {
             if { [ string first "T" $result ] == 0 } {
@@ -1197,7 +1202,7 @@ proc config_source_cvs_release { only_check name config_array } {
       }
    } 
 
-   set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$CHECK_SOURCE_DIR/CVS/Tag" prg_exit_state 60 0 "" 1 0]
+   set result [start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cat" "$config(source_dir)/CVS/Tag" prg_exit_state 60 0 "" 1 0]
    set result [string trim $result]
    if { $prg_exit_state == 0 } {
       if { [ string compare $result "T$value" ] != 0 && [string compare $result "N$value"] != 0 } {

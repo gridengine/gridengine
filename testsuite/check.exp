@@ -33,10 +33,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-
-
-
-
 global daemon_debug 
 set daemon_debug 0
 global master_debug
@@ -2026,7 +2022,7 @@ proc update_ts_config_version {} {
    global actual_ts_config_version 
    global ts_config
    global CHECK_OUTPUT
-   
+puts $CHECK_OUTPUT "entering update_ts_config_version"
    if { $ts_config(version) == "1.0" } {
       puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.0 to 1.1 ..."
       config_build_ts_config_1_1
@@ -2063,11 +2059,10 @@ proc update_ts_config_version {} {
    }
    
    if { $ts_config(version) == "1.5" } {
-      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.4 to 1.5 ..."
+      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.5 to 1.6 ..."
       config_build_ts_config_1_6
       show_config ts_config
       wait_for_enter
-      return 0
    }
   
    if { $ts_config(version) == "1.6" } {
@@ -2075,7 +2070,6 @@ proc update_ts_config_version {} {
       config_build_ts_config_1_7
       show_config ts_config
       wait_for_enter
-      return 0
    }
 
    if { $ts_config(version) == "1.7" } {
@@ -6291,8 +6285,9 @@ proc compile_source { { do_only_install 0 } } {
       add_proc_error "compile_source" -2 "could not delete $CHECK_PRODUCT_ROOT directory, critical error - stop"
       return -1
    }
-  
-   sleep 70
+ 
+   # wait for nfs updates
+   after 5000
 
    catch { exec "mkdir" "$CHECK_PRODUCT_ROOT"  } result
    puts $result
@@ -6305,7 +6300,6 @@ proc compile_source { { do_only_install 0 } } {
       puts $CHECK_OUTPUT "\ncreating link \"$link_name\""
       set return_state [ catch { eval exec ln -s $CHECK_SOURCE_DIR/scripts/distinst $CHECK_SOURCE_DIR/$link_name } output ]
    }
-
 
    set arch_list {}
    set compiled_mail_architectures ""
@@ -6431,7 +6425,7 @@ proc compile_source { { do_only_install 0 } } {
 
       if { $ts_config(gridengine_version) == 53 } {
          if { $ts_config(product_type) == "sgeee" } {
-            append_args " -sgeee"
+            append args " -sgeee"
          }
       }
 
@@ -7404,6 +7398,11 @@ if { $check_reinit_on_tcl_error == 1 } {
 }
 
 if { $do_compile } {
+   if { [have_root_passwd] == -1 } {
+         puts $CHECK_OUTPUT "need root access ..."
+         set_root_passwd
+   }
+
    if { [ compile_source ] != 0 } {
       exit -1
    } else {

@@ -1,3 +1,6 @@
+JG-2004-10-15-0: Testsuite: Fixed csp installation, installation of SGE(EE) 5.3, 
+                            package generation for SGEEE 5.3.
+
 JG-2004-10-14-0: Testsuite: Testsuite now can create tar packages after 
                             compiling by setting the package_type parameter to 
                             "create_tar".

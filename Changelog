@@ -1,3 +1,7 @@
+CR-2001-11-26-0: Testsuite:
+                    Conformation of the testsuite because of changes from
+                    AH-2001-11-23-1, Removed unused configuration parameters
+
 AH-2001-11-26-1: Fix 'minus_n=0' problem in dist/mpi/rsh wrapper script
                  Fix error in generating rmon lib dependencies
 

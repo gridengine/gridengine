@@ -1213,7 +1213,6 @@ proc setup_queues {} {
      }
 
      puts $CHECK_OUTPUT "\nadding testsuite queues ..."
-
      foreach hostname $CHECK_CORE_EXECD {
         set q_param(qname)       "$hostname.q" 
         set q_param(hostname)    "$hostname"
@@ -1242,7 +1241,6 @@ proc setup_queues {} {
 
      set slots [ expr ( $slots_tmp * 10) ]
      set new_values(load_thresholds)       "np_load_avg=7.00"
-     set new_values(migr_load_thresholds)  "np_load_avg=10.00"
      set new_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
      set new_values(slots)                 "$slots"
 

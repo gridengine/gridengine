@@ -93,7 +93,6 @@ proc addqueue {} {
   set q_param(hostname)              "$CHECK_HOST" 
   set q_param(slots)                 "2"
   set q_param(load_thresholds)       "np_load_avg=6.75"
-  set q_param(migr_load_thresholds)  "np_load_avg=7.75"
  
   add_queue q_param
 

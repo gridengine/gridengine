@@ -1177,7 +1177,6 @@ proc setup_queues {} {
   set q_param(qname)                 "$q1"
   set q_param(hostname)              "$host1"
   set q_param(load_thresholds)       "np_load_avg=7.00"
-  set q_param(migr_load_thresholds)  "np_load_avg=10.00"
   set q_param(qtype)                 "BATCH PARALLEL CHECKPOINTING"
   set q_param(suspend_thresholds)    "np_load_avg=7"            ;# migrate on suspend threshold
   set q_param(nsuspend)              "1"

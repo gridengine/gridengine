@@ -155,7 +155,6 @@ proc qconf_addqueues {} {
 
    set q_param(hostname)              "$CHECK_HOST"
    set q_param(load_thresholds)       "np_load_avg=7.00"
-   set q_param(migr_load_thresholds)  "np_load_avg=10.00"
  
    foreach queue $queue_names {
       set q_param(qname) "$queue"

@@ -164,7 +164,6 @@ proc qdel_setup {} {
    set q_param(qname)                 "$queue"
    set q_param(hostname)              "$CHECK_HOST"
    set q_param(load_thresholds)       "np_load_avg=7.00"
-   set q_param(migr_load_thresholds)  "np_load_avg=10.00"
    set q_param(slots)                 "50"
 
    add_queue q_param

@@ -473,7 +473,7 @@ char **argv
    DENTER_MAIN(TOP_LAYER, "sge_infotext");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
-   sge_init_language_func((gettext_func_type)        gettext,
+   install_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);

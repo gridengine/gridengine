@@ -68,6 +68,7 @@ UTILIB_SRC = sge_afsutil.c \
          sge_signal.c \
          sge_str_from_file.c \
          sge_string.c \
+         sge_dstring.c \
          sge_string_append.c \
          sge_switch_user.c \
          sge_sysconf.c \
@@ -239,6 +240,8 @@ sge_signal.o:	$(UTILIB_DIR)/sge_signal.c
 sge_chdir.o:	$(UTILIB_DIR)/sge_chdir.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_chdir.c
 
+sge_dstring.o:	$(UTILIB_DIR)/sge_dstring.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_dstring.c
 sge_hash.o:	$(UTILIB_DIR)/sge_hash.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hash.c
 

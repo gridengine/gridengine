@@ -605,7 +605,7 @@ enum {
    JB_nppri,
    JB_rrcontr,
    JB_dlcontr,
-   JB_wtcontr,
+   JB_wtcontr
 };
 
 /* 

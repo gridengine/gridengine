@@ -1,11 +1,22 @@
+AA-2002-07-25-0: I18N:      - qmon_about.c copyright under non C locales
+                              msg translation must be changed to work
+                            - mistranslation in qmon_calendar fixed
+                            - added fonts to Q -> no Qmon file in homedir 
+                              necessary
+                            - check for valid strings in lSetString as
+                              possible fix (commented out)
+                            - fix of msg_qmaster.h that caused segv of master
+                              when using localized q names
+                            - change of qmon_messages.ad template
+                              about_msg, removed obsolete calendar msgs
+                 Bugtraq:   #4719152
+
 CR-2002-07-24-0: Bugfix:    wrong port output in qstat error message when qmaster
                             (merged from maintrunc)
                  Issue:     #331
                  Bugtraq:   #4719755
                  Changed:   commdcntl infotext libcom.a libsec.a libsge.a qacct qalter qconf qdel qevent qhost qmod qmon qsh qstat qsub sge_commd sge_coshepherd sge_execd sge_qmaster sge_schedd sge_shadowd sge_share_mon sge_shepherd tstrcv tstsnd
                             
-
-
 CR-2002-07-23-1: Testsuite: (merged from maintrunc) 
                             new feature for delete_job: wait for jobend 
                  Bugfix:    project_access_lists and access_lists could not

@@ -33,6 +33,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
+#include <wctype.h>
 
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -1424,6 +1426,27 @@ const char *value
    /* strdup new string value */
    /* do so before freeing the old one - they could point to the same object! */
    if (value) {
+#if 0   
+      /*
+       *   FIXME
+       *   we could check if entered strings are in the valid locale 
+       *   with a similar routine
+       */
+         wchar_t *wbuf = NULL;
+         int wlen, i;
+         wlen = mbstowcs(NULL, value, 0);
+         wbuf = malloc(sizeof(wchar_t)*wlen + 1);
+         mbstowcs(wbuf, value, wlen);
+         for (i=0;i<wlen;i++) {
+            if (!iswascii(wbuf[i])) {
+               printf("---- NOT ALLOWED ----\n");
+               free((char*)wbuf); 
+               return -1;
+            }   
+         }
+         free((char*)wbuf); 
+#endif      
+      
       if (!(str = strdup(value))) {
          LERROR(LESTRDUP);
          DEXIT;

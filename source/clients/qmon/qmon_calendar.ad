@@ -113,8 +113,10 @@ Qmon*cal_ask_layout.layout: \
          Fixed Caption tl "@{@fBCalendar Name}" cal_name \
          #\
          "@{@fBExample}"\
-         "@{calendar.year_example.Year\n1.1.1997,30.3.1997-31.3.1997,26.12.1997[=suspended]}"\
-         "@{calendar.week_example.Week\nmon-fri=20-6[=suspended] sat-sun[=suspended]}"\
+         "@{Year}" \
+         "1.1.1997,30.3.1997-31.3.1997,26.12.1997[=suspended]"\
+         "@{Week}" \
+         "mon-fri=20-6[=suspended] sat-sun[=suspended]"\
          #\
          Fixed Caption tl "@{Year}" 4 in cal_year \
          Fixed Caption tl "@{Week}" 4 in cal_week \

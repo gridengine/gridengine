@@ -45,7 +45,7 @@
 #include "sge_me.h"
 #include "version.h"
 
-static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s";
+static char header[] = "@fBWelcome %s@@%s,@fR\n\nYou are using @fB%s@fR in cell @fB'%s'@fR.\n%s%s";
 extern char SFLN_ELN[];
 
 #ifdef ADD_SUN_COPYRIGHT
@@ -59,28 +59,17 @@ Widget w;
 XtPointer cld, cad;
 {
    int sge_mode; 
-   static char *message = NULL;
+   char *copyright = NULL;
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    
-   if (!message) {
-      int len = strlen(header) + strlen(SFLN_ELN);
-      message = XtMalloc(len);
-      if (!message) {
-         DEXIT;
-         return;
-      }
-      strcpy(message, header);
-      strcat(message, SFLN_ELN);
-   }    
-
    sge_mode = feature_is_enabled(FEATURE_SGEEE);
 
-   XmtDisplayMessage(w, "about_msg", "Help", message, 
+   XmtDisplayMessage(w, "about_msg", "Help", header, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,
                      XmDIALOG_INFORMATION, 
                      me.user_name, me.qualified_hostname, 
                      feature_get_product_name(FS_LONG_VERSION), 
-                     me.default_cell, mailto);
+                     me.default_cell, mailto, SFLN_ELN);
    DEXIT;
 }

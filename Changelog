@@ -1,3 +1,10 @@
+EB-2003-11-13-0  Bugfix:    qmon cores if it should show qtch jobs which
+                            where submitted with -h parameter (qtask-file)
+                 Review:    AA
+                 Issue:
+                 Bugtraq:   4949917
+                 Changed:   qsh, qrsh, qtcsh
+
 AH-2003-11-11-1: Testsuite: Apply changes AH-2003-11-11-0 to testuite 
                             'init_core_system' 
                             
@@ -19,7 +26,8 @@ JG-2003-11-11-0: Bugfix:    -M options didn't work for interactive commands
                  Changed:   qsh, submit.1
 
 SG-2003-11-12-0: Enhancem.: - Added reprioritize_interval to the man pages
-                            - Added share_deadline_tickets to the spool frame work
+                            - Added share_deadline_tickets to the spool frame 
+                              work
                  Changed:   scheduler, qmaster, man-pages
                             
 AH-2003-11-11-0: Enhancem.: Initial revision of of Enterprise Edition

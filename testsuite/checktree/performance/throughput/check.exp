@@ -135,15 +135,16 @@ set check_root_access_needs  "yes"
 set check_init_level_procedure "init_level"
 set check_category            "PERFORMANCE VERIFIED"
 set check_name                "throughput"
-set check_description(0)      "Functional test, submit 90 jobs with enabled queues"
-set check_description(1)      "Functional test, submit 90 jobs with disabled queues"
-set check_description(2)      "Functional test, submit 45 of 90 jobs with disabled queues"
-set check_description(3)      "Functional test, submit 45 of 90 jobs with disabled queues, no qstats"
-set check_description(4)      "Functional test, submit 45 of 90 jobs with disabled queues, requests"
-set check_description(5)      "Functional test, submit 45 of 90 jobs with disabled queues, requests and parallel jobs"
-set check_description(6)      "Functional test, submit 45 of 90 jobs with disabled queues, array jobs"
-set check_description(7)      "Functional test with sharetree, 90 jobs"
-set check_description(8)      "Functional test with functional policy, 90 jobs"
+set check_description(0)      "Functional test, submit 300 jobs with enabled queues"
+set check_description(1)      "Functional test, submit 300 jobs with disabled queues"
+set check_description(2)      "Functional test, submit 150 of 300 jobs with disabled queues"
+set check_description(3)      "Functional test, submit 150 of 300 jobs with disabled queues, no qstats"
+set check_description(4)      "Functional test, submit 150 of 300 jobs with disabled queues, requests"
+set check_description(5)      "Functional test, submit 150 of 300 jobs with disabled queues, requests and parallel jobs"
+set check_description(6)      "Functional test, submit 150 of 300 jobs with disabled queues, array jobs"
+set check_description(7)      "Functional test with sharetree, 300 jobs"
+set check_description(8)      "Functional test with functional policy, 300 jobs"
+set check_description(9)      "Functional test with reservation, 300 jobs"
 set check_description(100)    "submit 3000 jobs with enabled queues"
 set check_description(101)    "submit 3000 jobs with disabled queues"
 set check_description(102)    "submit 1500 of 3000 jobs with disabled queues"
@@ -153,6 +154,7 @@ set check_description(105)    "submit 1500 of 3000 jobs with disabled queues, re
 set check_description(106)    "submit 1500 of 3000 jobs with disabled queues, array jobs"
 set check_description(107)    "with sharetree, 3000 jobs"
 set check_description(108)    "with functional policy, 3000 jobs"
+set check_description(109)    "with reservation, 3000 jobs"
 set check_description(200)    "submit 30000 jobs with enabled queues"
 set check_description(201)    "submit 30000 jobs with disabled queues"
 set check_description(202)    "submit 15000 of 30000 jobs with disabled queues"
@@ -162,6 +164,7 @@ set check_description(205)    "submit 15000 of 30000 jobs with disabled queues, 
 set check_description(206)    "submit 15000 of 30000 jobs with disabled queues, array jobs"
 set check_description(207)    "with sharetree, 30000 jobs"
 set check_description(208)    "with functional policy, 30000 jobs"
+set check_description(209)    "with reservation, 30000 jobs"
 set check_description(300)    "submit 300000 jobs with enabled queues"
 set check_description(301)    "submit 300000 jobs with disabled queues"
 set check_description(302)    "submit 150000 of 300000 jobs with disabled queues"
@@ -171,6 +174,7 @@ set check_description(305)    "submit 150000 of 300000 jobs with disabled queues
 set check_description(306)    "submit 150000 of 300000 jobs with disabled queues, array jobs"
 set check_description(307)    "with sharetree, 300000 jobs"
 set check_description(308)    "with functional policy, 300000 jobs"
+set check_description(309)    "with reservation, 300000 jobs"
 
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 
@@ -180,7 +184,7 @@ lappend check_functions       "run_throughput_test"
 lappend check_functions       "cleanup_queues"
 #set check_functions          "compare_dump_data_file"
 
-set check_highest_level       308
+set check_highest_level       309
 
 global nr_queues  nr_slots
 global queue_list
@@ -218,6 +222,7 @@ proc init_level {} {
    global host_list
    global test_scenario
    global ps_interval qstat_interval array_size do_requests parallel_jobs
+   global reservation job_options
 
     # paramters for all tests
    set run_throughput_test_SCHEDULE_INTERVAL        00:00:15
@@ -232,7 +237,10 @@ proc init_level {} {
    set array_size               1   ;# default: no array jobs
    set do_requests              0   ;# default: do no resource requests
    set parallel_jobs            0   ;# default: no parallel jobs
-   set functional_policy        0   ;# defualt: no functional policy
+   set functional_policy        0   ;# default: no functional policy
+   set reservation              0   ;# default: no reservation
+
+   set job_options(count)       0   ;# default: no special job options
 
    # host_list for all levels
    set host_list {}
@@ -275,84 +283,127 @@ proc init_level {} {
          return -1
       }
    }
-#if { $minor_level != 2 } {
+#if { $minor_level != 9 } {
 #   return -1
 #}
    switch -- $minor_level {
       "0" {
          # enable queues after all jobs have been submitted
+         set throughput_subdir        "disabled"
+
          set end_job_count            $job_count
          set enable_queues_job_count  $job_count
-         set throughput_subdir        "disabled"
       }
       "1" {
          # have queues enabled during whole submit process
+         set throughput_subdir        "enabled"
+
          set end_job_count            $job_count
          set enable_queues_job_count  0
-         set throughput_subdir        "enabled"
       }
       "2" {
          # enable queues after half of the jobs have been submitted
+         set throughput_subdir        "mixed"
+
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
-         set throughput_subdir        "mixed"
       }
       "3" {
          # enable queues after half of the jobs have been submitted
          # do no qstat's
+         set throughput_subdir        "mixed_no_qstat"
+
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
-         set throughput_subdir        "mixed_no_qstat"
          set qstat_interval 0
       }
       "4" {
          # enable queues after half of the jobs have been submitted
+         set throughput_subdir        "mixed_requests"
+
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
-         set throughput_subdir        "mixed_requests"
          set do_requests              1
       }
       "5" {
+         # enable queues after half of the jobs have been submitted
+         set throughput_subdir        "mixed_requests_parallel"
+
          # we have problems attatching pe to queue in 5.3 systems
          # (too long line for the pe's queue_list)
          if { $ts_config(gridengine_version) == 53 } {
             return -1
          }
-         # enable queues after half of the jobs have been submitted
+
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
-         set throughput_subdir        "mixed_requests_parallel"
          set do_requests              1
          set nr_slots                 50 ;# speed up execution of parallel jobs
          set parallel_jobs            1
+         set job_options(count)       1
+         set job_options(0)           "-pe perfpe 2-16" 
       }
       "6" {
          # enable queues after half of the jobs have been submitted
+         set throughput_subdir        "mixed_array"
+
          set array_size $level_array_size
          set job_count                [expr $job_count / $array_size]
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
-         set throughput_subdir        "mixed_array"
       }
       "7" {
-         # test with sharetree, enable queues after all jobs have been submitted
+         # test with sharetree, enable queues half of the jobs have been submitted
+         set throughput_subdir        "mixed_sharetree"
+
+         # functional policy is only available in EE mode
          if { $CHECK_PRODUCT_TYPE == "sge" } {
             return -1
-         } 
+         }
+
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
          set throughput_sharetree     1
-         set throughput_subdir        "mixed_sharetree"
+         set job_options(count)       3
+         set job_options(0)           "-P project1"
+         set job_options(1)           "-P project2"
+         set job_options(2)           "-P project3"
       }
       "8" {
-         # test with sharetree, enable queues after all jobs have been submitted
+         # test with functional policy, enable queues after half of the have been submitted
+         set throughput_subdir        "mixed_functional"
+
+         # functional policy is only available in EE mode
          if { $CHECK_PRODUCT_TYPE == "sge" } {
             return -1
-         } 
+         }
+
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
          set functional_policy        1
-         set throughput_subdir        "mixed_functional"
+         set job_options(count)       3
+         set job_options(0)           "-P project1"
+         set job_options(1)           "-P project2"
+         set job_options(2)           "-P project3"
+      }
+      "9" {
+         # test with reservation, enable queues after half of the have been submitted
+         set throughput_subdir        "mixed_reservation"
+
+         # Resource reservation isn't available for SGE(EE) 5.3
+         if { $ts_config(gridengine_version) == 53 } {
+            return -1
+         }
+
+         set end_job_count            $job_count
+         set enable_queues_job_count  [expr $job_count / 2]
+         set reservation              1
+         set job_options(count)       5
+         set job_options(0)           "-R y -pe perfpe 1"
+         set job_options(1)           "-R y"
+         set job_options(2)           ""
+         set job_options(3)           ""
+         set job_options(4)           ""
       }
       default {
          return -1
@@ -534,9 +585,11 @@ proc setup_queues {} {
    global ts_config
    global CHECK_OUTPUT
    global CHECK_HOST CHECK_SOURCE_DIR
-   global nr_queues queue_list host_list  nr_slots
+   global nr_queues queue_list host_list nr_slots
    global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
+   global global_job_run_time
    global throughput_sharetree functional_policy parallel_jobs
+   global reservation
 
    if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -576,6 +629,13 @@ proc setup_queues {} {
       }
       set my_schedd_config(load_adjustment_decay_time) "0:0:0"
       set my_schedd_config(job_load_adjustments) "none"
+
+      if { $reservation } {
+         # allow reservation for 20% of the resources
+         set max_reservation [expr [llength $host_list] * $nr_queues * $nr_slots / 5]
+         set my_schedd_config(max_reservation) $max_reservation
+         set my_schedd_config(default_duration) $global_job_run_time
+      }
    } 
   
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"
@@ -601,7 +661,7 @@ proc setup_queues {} {
    set_schedd_config my_schedd_config
 
    # setup a pe 
-   if {$parallel_jobs} {
+   if {$parallel_jobs || $reservation} {
       set pe(pe_name) "perfpe"
       set pe(slots)   "99999"
       set pe(allocation_rule)   "\$fill_up"
@@ -620,7 +680,7 @@ proc setup_queues {} {
    for {set i 0} {$i < $nr_queues} {incr i} {
       set qname tp_${i}
       add_queue $qname $host_list change_array 1
-      if {$parallel_jobs} {
+      if {$parallel_jobs || $reservation} {
          assign_queues_with_pe_object "$qname" $host_list "perfpe"
       }
 
@@ -653,7 +713,7 @@ proc cleanup_queues {} {
    global ts_config
    global CHECK_OUTPUT
    global host_list queue_list CHECK_ARCH  CHECK_PRODUCT_ROOT
-   global stored_configuration throughput_sharetree functional_policy nr_queues parallel_jobs
+   global stored_configuration throughput_sharetree functional_policy nr_queues parallel_jobs reservation
 
    if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -680,7 +740,7 @@ proc cleanup_queues {} {
    set_config stored_configuration
 
    # remove pe
-   if {$parallel_jobs} {
+   if {$parallel_jobs || $reservation} {
       unassign_queues_with_pe_object "perfpe"
       del_pe "perfpe"
    }
@@ -731,7 +791,8 @@ proc run_throughput_test {} {
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
    global throughput_sharetree functional_policy
    global global_job_run_time
-   global ps_interval qstat_interval array_size do_requests parallel_jobs
+   global ps_interval qstat_interval array_size do_requests
+   global job_options
 
    if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -885,10 +946,6 @@ proc run_throughput_test {} {
    # TODO: we should create a consumable and request that one too
    if {$do_requests} {
       append submit_options " -l mem_total=100M -soft -l virtual_free=1G"
-   }
-
-   if {$parallel_jobs} {
-      append submit_options " -pe perfpe 2-16"
    }
 
    set submit_script "$ts_config(product_root)/examples/jobs/sleeper.sh $global_job_run_time"
@@ -1070,8 +1127,9 @@ proc run_throughput_test {} {
    log_user 0
    while { ! $error && $result(jobs_done) < $test_end_job_count } {
       set time_now [timestamp]
+
       # submit jobs as long as we have submitters ready and jobs to send
-      while { [llength $next_submitter_list] > 0 && \
+      while { [llength $next_submitter_list] > 0 &&
               ([llength $resend_list] > 0 || $sent_jobs < $end_job_count) } {
          # get first host in next_submitter_list and submit job on that host
          set sub_host   [lindex $next_submitter_list 0 ]       
@@ -1091,9 +1149,9 @@ proc run_throughput_test {} {
             set send_id [lindex $next_submit_command 0]
             set next_submit_command [lindex $next_submit_command 1 end]
          } else {
-            if { $throughput_sharetree == 1 || $functional_policy == 1} {
-               set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
-               set next_submit_command "SUBMIT 1 -P project${numb}"
+            if { $job_options(count) > 0 } {
+               set option_idx [expr $sent_jobs  % $job_options(count)]
+               set next_submit_command "SUBMIT 1 $job_options($option_idx)"
             } else { 
                set next_submit_command "SUBMIT 1"
             }
@@ -1107,15 +1165,6 @@ proc run_throughput_test {} {
          # send submit command
          set spawn_id $host_spawn_map($sub_host)
          send -i $spawn_id "$next_submit_command\n"
-
-         # store info about sent job
-         # set job_data($send_id,state) "submit"
-         # set job_data($send_id,job_id) "-"
-         # set job_data($send_id,submit_start_time) [timestamp]
-         # set job_data($send_id,submit_end_time) 0
-         # set job_data($send_id,run_start_time) 0
-         # set job_data($send_id,run_end_time) 0
-         # set job_data($send_id,submit_time) 0
 
          # some statistics
          incr host_submit_count($sub_host)
@@ -1651,7 +1700,7 @@ proc compare_dump_directory { dir } {
 proc compare_dump_data_file { file1 file2 } {
    global ts_config
    global CHECK_OUTPUT 
-   global array_size do_requests parallel_jobs
+   global array_size do_requests parallel_jobs reservation
    global throughput_num_data_sets
 
    if { [file isfile $file1] != 1 } {
@@ -1859,6 +1908,9 @@ proc compare_dump_data_file { file1 file2 } {
    append text "a sleep time of $test_config1(global_job_run_time) seconds."
    if {$do_requests} {
       append text "The jobs did a hard and a soft request."
+   }
+   if {$reservation} {
+      append text "Resource reservation was enabled"
    }
    append content [ create_html_text $text ]
    append content [ create_html_text "" ]
@@ -2291,7 +2343,7 @@ proc compare_dump_data_file { file1 file2 } {
 proc analyse_dump_data_file { file { force 0 } } {
    global ts_config
    global CHECK_OUTPUT
-   global throughput_sharetree functional_policy qstat_interval array_size do_requests parallel_jobs
+   global throughput_sharetree functional_policy qstat_interval array_size do_requests parallel_jobs reservation
    
    set sub_dir [file tail $file]
    set dir_name [file dirname $file] 
@@ -2387,6 +2439,9 @@ proc analyse_dump_data_file { file { force 0 } } {
    append text "a sleep time of $test_config(global_job_run_time) seconds."
    if {$do_requests} {
       append text "The jobs did a hard and a soft request."
+   }
+   if {$reservation} {
+      append text "Resource reservation was enabled"
    }
    append content [ create_html_text $text ]
    

@@ -160,7 +160,7 @@ proc qmake_cleanup  {} {
 
 proc qmake_submit {slots target {variables ""}} {
    global ts_config
-   global CHECK_OUTPUT CHECK_USER CHECK_ACT_PATH
+   global CHECK_OUTPUT CHECK_USER CHECK_ACTUAL_TEST_PATH
    global qmake_options pe_options
 
    if { $pe_options == "" } {
@@ -169,9 +169,8 @@ proc qmake_submit {slots target {variables ""}} {
       set arguments "$pe_options $slots $qmake_options $target $variables"
    }
 
-   puts $CHECK_OUTPUT $CHECK_ACT_PATH
    puts $CHECK_OUTPUT "submitting qmake $arguments"
-   set id [open_remote_spawn_process $ts_config(master_host) $CHECK_USER "cd" "$CHECK_ACT_PATH ; qmake $arguments"]
+   set id [open_remote_spawn_process $ts_config(master_host) $CHECK_USER "cd" "$CHECK_ACTUAL_TEST_PATH ; qmake $arguments"]
    set sp_id [lindex $id 1]
    set done 0
    while {!$done} {

@@ -949,7 +949,7 @@ proc reschedule_pe_jobs {} {
        puts $CHECK_OUTPUT "submitting job to pe $pe ..."
        set my_outputs "-o /dev/null -e /dev/null"
        set my_job "$CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5000"
-       set arguments "$my_outputs -pe $pe 2 -t 1 -masterq $rerun_queue $my_job"
+       set arguments "$my_outputs -pe $pe 2 -masterq $rerun_queue $my_job"
        set job [submit_job $arguments]
        puts $CHECK_OUTPUT "job $job submitted"
 

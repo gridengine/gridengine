@@ -1,0 +1,85 @@
+Review form
+
+Date:
+
+1 Identification
+1.1 Issue: 
+1.2 Bugtraq:
+1.3 Summary:
+1.4 Changelog ID:
+1.5 Developer(s):
+1.6 Reviewer(s):
+
+
+2 Conformance to specification
+[ ] yes
+[ ] no - comment:
+
+
+3 Documentation
+3.1 user/admin guide
+[ ] yes
+[ ] no - comment:
+
+3.2 man pages (user view)
+[ ] yes
+[ ] no - comment:
+
+3.3 -help output
+[ ] yes
+[ ] no - comment:
+
+3.4 documented interfaces (at least GDI, EVI, libs)
+[ ] yes
+[ ] no - comment:
+
+3.5 messages, output formats
+[ ] yes
+[ ] no - comment:
+
+
+4 Source review
+4.1 Style guide conformance
+[ ] yes
+[ ] no - comment:
+
+4.2 Memory leaks
+[ ] yes
+[ ] no - comment:
+
+4.3 Thread safe
+[ ] yes
+[ ] no
+
+5 Tests
+5.1 Manual tests
+Description:
+Successfull execution
+[ ] yes
+[ ] no - comment:
+
+5.1 Used memory leak debugger
+[ ] yes
+[ ] no - comment:
+
+5.2 Testsuite covers issue
+[ ] yes
+[ ] no - comment:
+
+5.3 If 5.2 = no: Issue created
+[ ] yes
+[ ] no - comment:
+
+5.4 Testsuite run successfull
+[ ] yes
+[ ] no - comment:
+
+
+6 Comments
+
+
+7 Accepted
+[ ] yes
+[ ] no - comment:
+
+

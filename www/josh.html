@@ -1,0 +1,152 @@
+<html>
+
+    <head>
+        <title>JOb Scheduling Hierarchically (JOSH) - Going Global with Globus V3 and Grid Engine</title>
+    </head>
+
+    <body>
+
+        <h1>JOb Scheduling Hierarchically (JOSH) - Going Global with Globus V3 and Grid Engine</h1>
+
+        <h2>Introduction</h2>
+
+	<p>
+        JOSH (JOb Scheduling Hierarchically) is a multi-site
+        job-management tool built on top of the <a
+        href="http://www.globus.org/">Globus Toolkit</a> and <a
+        href="http://gridengine.sunsource.net/">Grid Engine</a>. A
+        JOSH user interface (or client) allows the submission,
+        monitoring and termination of jobs running on Grid Engines at
+        remote compute sites (the servers). JOSH also handles the
+        transfer of data files and executables to and from jobs.
+	</p>
+
+	<p>
+        The JOSH software employs a hierarchical scheduler to match a
+        user's job requirements against Grid Engine instances at
+        available compute sites. It can then forward the job to the
+        chosen compute site for local scheduling and execution.
+	</p>
+
+	<p>
+        A middleware layer handles secure communications and data
+        transfer between the hierarchical scheduler and Grid Engine
+        and any remote data sources. The OGSA-compliant Globus Toolkit
+        version 3 forms this layer.
+	</p>
+
+
+	<p>
+        JOSH has been developed by the <a
+        href="http://www.epcc.ed.ac.uk/sungrid/">EPCC Sun Data and
+        Compute Grids project</a>. The project partners are the UK
+        National e-Science Centre, represented in this project by
+        EPCC, and Sun Microsystems. This project also developed the <a
+        href="http://gridengine.sunsource.net/project/gridengine/tog.html">Transfer-queue
+        Over Globus (TOG)</a>. TOG allows an enterprise to access
+        remote compute resources via their existing Grid Engine
+        installation.
+	</p>
+
+
+        <h2>Background</h2>
+
+	<p>
+	Grid Engine allows the efficient use of compute resources
+        within an organisation. However there is some desirable Grid
+        functionality that Grid Engine does not provide.  Grids can be
+        classified at three different levels.
+	</p>
+
+	<ul>
+	    <li>
+	    Cluster Grid - a single team or project and their associated resources.
+	    </li>
+
+	    <li>
+            Enterprise Grid - multiple teams and projects but within a
+            single organisation, facilitating collaboration of
+            resources across the enterprise.
+	    </li>
+
+	    <li>
+	    Global Grid - linked Enterprise and Cluster Grids,
+            providing collaboration amongst organisations.
+            </li>
+	</ul>
+
+	<p>
+	Grid Engine meets the first two levels by allowing a user to
+	transparently make use of any number of compute resources
+	within an organisation. However, Grid Engine, alone does not
+	yet meet the third level.
+        </p>
+
+
+	<p>
+	The Globus Toolkit is essentially a Grid API for connecting
+	distributed compute and instrument resources. Integration with
+	Globus allows Grid Engine to meet this third level.  That is,
+	it allows collaboration amongst enterprises. The JOSH software
+	integrates Grid Engine V5.3 and Globus Toolkit V3 to provide a
+	user with this access to remote resources.  This allows user
+	jobs to be scheduled across a global grid.
+	</p>
+
+
+	<h2>Download</h2>
+
+	<p>
+        The <a href="user-guide.pdf">JOSH User Guide</a> describes the
+        use of the JOSH 1.0 command-line client tool known as
+        hiersched. The <a href="client-install.pdf">JOSH Client Install Guide</a> and
+        the <a href="server-guide.pdf">JOSH Server Install Guide</a> describe the
+        installation of the JOSH client and server software
+        respectively.
+	</p>
+
+	<p>
+        Currently the JOSH software can only be downloaded as a binary
+        archive.
+	</p>
+
+	<ul>
+	    <li>JOSH 1.0 Client Binary Archive: <a href="josh-1.0-client-bin.tar.gz">josh-1.0-client-bin.tar.gz</a></li>
+	    <li>JOSH 1.0 Server Binary Archive: <a href="josh-1.0-server-bin.tar.gz">josh-1.0-server-bin.tar.gz</a></li>
+	</ul>
+
+	<p>
+        The client binary archive contains JOSH client binaries, the
+        User Guide and the Client Install Guide. The server binary
+        archive contains JOSH server binaries, the Server Install
+        Guide and the JOSH limitations document. The JOSH <a
+        href="http://www.epcc.ed.ac.uk/sungrid/PUB/D4_1-FunctionalSpecification.pdf">Functional
+        Specification</a> and <a
+        href="http://www.epcc.ed.ac.uk/sungrid/PUB/D4_2-JOSHSystemsDesign.pdf">System
+        Design</a> are available separately.
+	</p>
+
+
+	<h2>Future Developments</h2>
+
+	<p>
+        The EPCC Sun Data and Compute Grids team are currently working
+        on a future release of JOSH. In this next release the
+        hierarchical scheduler is expected to contain functionality
+        for identifying sites with best access to the required data
+        sources for a user's job.
+	</p>
+
+	<h2>Contacts</h2>
+
+	<p>
+        For more information on the project and its deliverables
+        please access the Sun Data and Compute Grids project <a
+        href="http://www.epcc.ed.ac.uk/sungrid/">home page</a> or
+        contact the <a href="mailto:sungrid@epcc.ed.ac.uk">SunDCG
+        project team</a>.
+	</p>
+
+    </body>
+
+</html>

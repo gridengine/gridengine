@@ -1,3 +1,7 @@
+CR-2002-04-29-0: Testsuite: added sleep in compile_source() procedure to
+                            give NFS time to update remote directories
+                            when creating dependencies
+
 CR-2002-04-26-1: Testsuite: depend was done on cvs checkout host, not at
                             first compile host
                  Bugfix:    

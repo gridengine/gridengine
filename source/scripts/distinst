@@ -332,11 +332,11 @@ elif [ $cmdname = myinst ]; then
    localinst=true
    setfileperm=false
 elif [ $cmdname = sgeinst ]; then 
-   # This special rule creates a distribution with Sun Microsystems copyrights
+   # This special rule creates a distribution which will be provided by Sun
    VERSIONDIR=SGE53beta1
    SGE_PRODUCT_MODE=sge
 elif [ $cmdname = sgeeeinst ]; then
-   # This special rule creates a distribution with Sun Microsystems copyrights
+   # This special rule creates a distribution which will be provided by Sun
    VERSIONDIR=SGEEE53beta1
    SGE_PRODUCT_MODE=sgeee
    sgeee=true
@@ -633,21 +633,6 @@ if [ $instcommon = true ]; then
       Execute rm -f $DEST_SGE_ROOT/qmon/PIXMAPS/big/*.xpm
       Execute cp dist/qmon/PIXMAPS/small/*.xpm $DEST_SGE_ROOT/qmon/PIXMAPS
       Execute cp dist/qmon/PIXMAPS/big/toolbar*.xpm $DEST_SGE_ROOT/qmon/PIXMAPS/big
-
-      # use special intro- and logo xpm's if Sun creates a distribution.
-      # courtesy binaries provided by Sun have a special intro logo
-      if [ $SGE_PRODUCT_MODE = sge ]; then
-         echo using SGE pixmaps for Sun distribution
-         cp /off_home/codine/sun-copyright/intro-sge.xpm $DEST_SGE_ROOT/qmon/PIXMAPS
-         cp /off_home/codine/sun-copyright/logo-sge.xpm  $DEST_SGE_ROOT/qmon/PIXMAPS
-      elif [ $SGE_PRODUCT_MODE = sgeee ]; then
-         echo using SGEEE pixmaps for Sun distribution
-         cp /off_home/codine/sun-copyright/intro-sgeee.xpm $DEST_SGE_ROOT/qmon/PIXMAPS/intro-sge.xpm
-         cp /off_home/codine/sun-copyright/logo-sgeee.xpm  $DEST_SGE_ROOT/qmon/PIXMAPS/logo-sge.xpm
-      elif [ -f /off_home/codine/copyright/intro-sge.xpm ]; then
-         echo using SGE pixmaps for Sun courtesy binary distribution
-         cp /off_home/codine/copyright/intro-sge.xpm $DEST_SGE_ROOT/qmon/PIXMAPS
-      fi
 
       Execute chmod 644 $DEST_SGE_ROOT/qmon/PIXMAPS/*.xpm
       Execute chmod 644 $DEST_SGE_ROOT/qmon/PIXMAPS/big/*.xpm

@@ -1,3 +1,6 @@
+AS-2004-02-20-1: Cleanup    aimk cleanup, makefile cleanup, porting
+                 Review:    AA (partial review and help)
+
 MD-2004-02-20-1: Bugfix:    - fixed wrong schedd default configuration
                  Changed:   schedd templatefiles (installation)
 

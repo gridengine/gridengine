@@ -1,5 +1,10 @@
-AA-2003-04-30-0  Bugfix:    qlogin/qlogind whitespace checking removed to allow ssh/sshd with 
-                            optional arguments
+EB-2003-05-08-0  Bugfix:    settings.[c]sh did not set LD_LIBRARY_PATH 
+                            correctly if multiple GE installations are present
+                 Review:    AS
+                 Changed:   dist/util/create_settings.sh
+
+AA-2003-04-30-0  Bugfix:    qlogin/qlogind whitespace checking removed to 
+                            allow ssh/sshd with optional arguments
                  IZ:        541
                  Review:    CR
                  Changed:   qmon

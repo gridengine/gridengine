@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "basis_types.h"
 #include "def.h"
 #include "symbols.h"
 #include "sge_gdi_intern.h"
@@ -748,17 +749,7 @@ int *all_users
             return answer;
          }
       }
-  
-      /* multiple request for job */
-      if (lGetElemUlong(*prequestlist, JB_job_number, jobid)) {
-         char str[1024];
-
-         sprintf(str, MSG_JOB_XMULTIPLEJOBID_U, u32c(jobid));
-         sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
-         DEXIT;
-         return answer;
-      }
-
+ 
       rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
       if (!rep) { 
          sge_add_answer(&answer, MSG_MEM_MEMORYALLOCFAILED, 

@@ -1,5 +1,12 @@
+EB-2003-04-09-0  Bugfix:    cannot qalter/qhold/qrls several tasks of same job
+                 Issue:     526
+                 Bugtraq:   4845505
+                 Changed:   qalter
+                 Review:    JG
+
 BD-2003-04-08-0  Bugfix:    Make qmake actually compile under FreeBSD.
                  Changed:   qmake
+
 CR-2003-04-08-0  Bugfix:    using -xO3 instead of -xO4 for SOLARIS86
                  Changed:   aimk for compiling SOLARIS86 binaries
 
@@ -30,8 +37,7 @@ CR-2003-04-04-0  Bugfix:    - commd ignored first message for commlib client
                             message was ignored when more than one message
                             with the same priority tag was ready to send.
                             - performance improvement in search_message()
-                              (test function parameter outside of search
-                               loop)
+                              (test function parameter outside of search loop)
                             - performance improvement in 
                               look4timeouts_messages()
                               (check message list for timeouts only once

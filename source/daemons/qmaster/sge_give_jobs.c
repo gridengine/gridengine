@@ -616,7 +616,7 @@ void sge_zombie_job_cleanup_handler(te_event_t anEvent)
    
    DENTER(TOP_LAYER, "sge_zombie_job_cleanup_handler");
 
-   SGE_LOCK(LOCK_MASTER_ZOMBIE_LST, LOCK_WRITE);
+   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    while (Master_Zombie_List &&
             (lGetNumberOfElem(Master_Zombie_List) > conf.zombie_jobs)) {
@@ -624,7 +624,7 @@ void sge_zombie_job_cleanup_handler(te_event_t anEvent)
       lRemoveElem(Master_Zombie_List, dep);
    }
 
-   SGE_UNLOCK(LOCK_MASTER_ZOMBIE_LST, LOCK_WRITE);
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    DEXIT;
 }

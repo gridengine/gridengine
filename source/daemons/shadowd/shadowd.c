@@ -289,6 +289,7 @@ char **argv
    sprintf(qmaster_out_file, "messages_qmaster.%s", me.unqualified_hostname);
    sge_copy_append(TMP_ERR_FILE_SHADOWD, shadow_err_file, SGE_APPEND);
    unlink(TMP_ERR_FILE_SHADOWD);
+   sge_log_as_admin_user();
    error_file = shadow_err_file;
 
    FD_ZERO(&fds);

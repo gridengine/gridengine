@@ -338,7 +338,6 @@ char *rhost
          return ret;
       }
 
-
       /*
       ** check for users defined in more than one userset if they
       ** are used as departments

@@ -229,6 +229,7 @@ int sge_setup_qmaster()
    switch2start_user();
    unlink(TMP_ERR_FILE_QMASTER);   
    switch2admin_user();
+   sge_log_as_admin_user();
    error_file = ERR_FILE;
 
    /* 

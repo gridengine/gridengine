@@ -152,7 +152,7 @@ case $ARCH in
    QLOGIN_DAEMON=/usr/sbin/in.telnetd
    RLOGIN_DAEMON=/usr/sbin/in.rlogind
    ;;
- freebsd-*)
+ fbsd-*)
    AWK=/usr/bin/awk
    ECHO="/bin/echo"
    RC_FILE=freebsd

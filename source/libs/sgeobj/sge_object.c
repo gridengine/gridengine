@@ -1059,6 +1059,7 @@ bool object_type_free_master_list(const sge_object_type type)
       *list = lFreeList(*list);
       ret = object_base[type].commitMasterList(NULL);
    }
+
    DEXIT;
    return ret;
 }

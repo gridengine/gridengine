@@ -427,7 +427,7 @@ lListElem *at_get_actual_job_array(lList *job_list)
    /* this is our cursor */
    static int current_min_jobs_per_user = -1;
 
-   DENTER(TOP_LAYER, "at_get_next_job_array");
+   DENTER(TOP_LAYER, "at_get_actual_job_array");
 
 
    /* initialize priority group curser */
@@ -456,7 +456,6 @@ lListElem *at_get_actual_job_array(lList *job_list)
       } else {
          lListElem *user;
          usl = lGetList(current_pgrp, PGR_subordinated_list);
-
          /* sort user list if neccessary */
          if (lGetUlong(current_pgrp, PGR_sort_me)) {
             DPRINTF(("AT: sorting users in priority group "u32" (curr_jpu = %d)\n", 

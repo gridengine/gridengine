@@ -1040,6 +1040,9 @@
 #define MSG_GDI_UTEXT_b_OPT_YN                           _MESSAGE(23500, _("handle command as binary"))
 #define MSG_PARSE_INVALIDOPTIONARGUMENTBX_S              _MESSAGE(23501, _("invalid option argument \"-b "SFN"\"\n")) 
 
+#define MSG_GDI_USAGE_Msconf_OPT                         "[-Msconf fname]"
+#define MSG_GDI_UTEXT_Msconf_OPT                         _MESSAGE(23502, _("modify scheduler configuration from file"))
+
 /* =================================================
  * global error messages 
  * messages that have general meaning in all modules
@@ -1099,6 +1102,11 @@
 #define MSG_OBJ_USERLIST                   _MESSAGE(60605, _("user list"))
 #define MSG_OBJ_XUSERLIST                  _MESSAGE(60606, _("xuser list"))
 #define MSG_QCONF_ONLYONERANGE             _MESSAGE(60607, _("ERROR! -t option only allows one range specification\n"))
+
+/*
+** sge_conf.c
+*/
+#define MSG_CONFIG_REPRIORITIZE_MISSING   _MESSAGE(60608, _("Global config element reprioritize is missing\n"))
 
 /* =================================================
  * please do not enter new messages after this point,

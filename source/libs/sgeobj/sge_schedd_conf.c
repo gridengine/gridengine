@@ -111,7 +111,7 @@ typedef struct{
    int flush_finish_sec;
    int params;
    
-   int sgeee_schedule_interval;  /* SGEEE settings */
+   int reprioritize_interval;  /* SGEEE settings */
    int halftime;
    int usage_weight_list;
    int compensation_factor;
@@ -174,13 +174,6 @@ lList *Master_Sched_Config_List = NULL;
 
 extern int do_profiling; 
 
-
-/*
- * Activate policy hierarchy in case of SGEEE if not NULL
- * and not "NONE"
- */
-char policy_hierarchy_string[5] = "";
-
 const char *const policy_hierarchy_chars = "OFSD";
 
 /* SG: TODO: should be const */
@@ -223,7 +216,7 @@ static void sconf_clear_pos(void){
          pos.flush_finish_sec =  -1;
          pos.params = -1;
          
-         pos.sgeee_schedule_interval = -1; 
+         pos.reprioritize_interval= -1; 
          pos.halftime = -1; 
          pos.usage_weight_list = -1; 
          pos.compensation_factor = -1; 
@@ -255,8 +248,6 @@ static void sconf_clear_pos(void){
 
          if (pos.c_params)
             pos.c_params = lFreeList(pos.c_params);
-
-         policy_hierarchy_string[0] = '\0';
 }
 
 static bool sconf_calc_pos(void){
@@ -282,7 +273,7 @@ static bool sconf_calc_pos(void){
          ret &= (pos.params = lGetPosViaElem(config, SC_params)) != -1;
 
 /* SGEEE */
-         ret &= (pos.sgeee_schedule_interval = lGetPosViaElem(config, SC_sgeee_schedule_interval)) != -1;
+         ret &= (pos.reprioritize_interval = lGetPosViaElem(config, SC_reprioritize_interval)) != -1;
          ret &= (pos.halftime = lGetPosViaElem(config, SC_halftime)) != -1;
          ret &= (pos.usage_weight_list = lGetPosViaElem(config, SC_usage_weight_list)) != -1;
 
@@ -548,7 +539,7 @@ lListElem *sconf_create_default()
     *
     */
    if (feature_is_enabled(FEATURE_SGEEE)) {
-      lSetString(ep, SC_sgeee_schedule_interval, SGEEE_SCHEDULE_TIME);
+      lSetString(ep, SC_reprioritize_interval, SGEEE_SCHEDULE_TIME);
       lSetUlong(ep, SC_halftime, 168);
 
       added = lAddSubStr(ep, UA_name, USAGE_ATTR_CPU, SC_usage_weight_list, UA_Type);
@@ -575,7 +566,7 @@ lListElem *sconf_create_default()
       lSetBool(ep, SC_report_pjob_tickets, true);
       lSetUlong(ep, SC_max_pending_tasks_per_job, 50);
       lSetString(ep, SC_halflife_decay_list, "none"); 
-      lSetString(ep, SC_policy_hierarchy, "OFSD");
+      lSetString(ep, SC_policy_hierarchy, policy_hierarchy_chars );
    }
 
    DEXIT;
@@ -877,12 +868,12 @@ u_long32 sconf_get_schedule_interval(void) {
 } 
 
 
-/****** sge_schedd_conf/sconf_sgeee_schedule_interval_str() ********************
+/****** sge_schedd_conf/sconf_reprioritize_interval_str() ********************
 *  NAME
-*     sconf_sgeee_schedule_interval_str() -- ??? 
+*     sconf_reprioritize_interval_str() -- ??? 
 *
 *  SYNOPSIS
-*     const char* sconf_sgeee_schedule_interval_str(void) 
+*     const char* sconf_reprioritize_interval_str(void) 
 *
 *  FUNCTION
 *     ??? 
@@ -894,21 +885,21 @@ u_long32 sconf_get_schedule_interval(void) {
 *     const char* - 
 *
 *******************************************************************************/
-const char *sconf_sgeee_schedule_interval_str(void){
+const char *sconf_reprioritize_interval_str(void){
    const lListElem *sc_ep =  sconf_get_config();
       
-   if (pos.sgeee_schedule_interval != -1) 
-      return lGetPosString(sc_ep, pos.sgeee_schedule_interval);
+   if (pos.reprioritize_interval!= -1) 
+      return lGetPosString(sc_ep, pos.reprioritize_interval);
    else
       return SGEEE_SCHEDULE_TIME;
 }
 
-/****** sge_schedd_conf/sconf_get_sgeee_schedule_interval() ********************
+/****** sge_schedd_conf/sconf_get_reprioritize_interval() ********************
 *  NAME
-*     sconf_get_sgeee_schedule_interval() -- ??? 
+*     sconf_get_reprioritize_interval() -- ??? 
 *
 *  SYNOPSIS
-*     u_long32 sconf_get_sgeee_schedule_interval(void) 
+*     u_long32 sconf_get_reprioritize_interval(void) 
 *
 *  FUNCTION
 *     ??? 
@@ -920,10 +911,10 @@ const char *sconf_sgeee_schedule_interval_str(void){
 *     u_long32 - 
 *
 *******************************************************************************/
-u_long32 sconf_get_sgeee_schedule_interval(void) {
+u_long32 sconf_get_reprioritize_interval(void) {
    u_long32 uval;
    const char *time;
-   time = sconf_sgeee_schedule_interval_str();
+   time = sconf_reprioritize_interval_str();
 
    if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM,time, NULL, 0 ,0)) {
       return _SGEEE_SCHEDULE_TIME;
@@ -1685,69 +1676,68 @@ const lListElem *sconf_get_config(void){
    return lFirst(Master_Sched_Config_List);
 }
 
-lList **sconf_get_config_list(void){
-   return &Master_Sched_Config_List;
-}
-
-/****** sge_schedd_conf/sconf_validate_config_() *******************************
+/****** sge_schedd_conf/sconf_get_config_list() ********************************
 *  NAME
-*     sconf_validate_config_() -- ??? 
+*     sconf_get_config_list() -- ??? 
 *
 *  SYNOPSIS
-*     bool sconf_validate_config_(lList **answer_list) 
+*     lList** sconf_get_config_list(void) 
 *
 *  FUNCTION
 *     ??? 
 *
 *  INPUTS
-*     lList **answer_list - ??? 
+*     void - ??? 
 *
 *  RESULT
-*     bool - 
+*     lList** - 
 *
 *******************************************************************************/
-bool sconf_validate_config_(lList **answer_list){
-   char tmp_buffer[1024], tmp_error[1024];
+lList **sconf_get_config_list(void){
+   return &Master_Sched_Config_List;
+}
+
+/****** sge_schedd_conf/sconf_print_config() ***********************************
+*  NAME
+*     sconf_print_config() -- ??? 
+*
+*  SYNOPSIS
+*     void sconf_print_config() 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*
+*******************************************************************************/
+void sconf_print_config(void){
+
+   char tmp_buffer[1024];
    u_long32 uval;
    const char *s;
    const lList *lval= NULL;
    double dval;
-   bool ret = true;
 
-   DENTER(TOP_LAYER, "sconf_validate_config_");
+   DENTER(TOP_LAYER, "sconf_print_config");
 
    sconf_clear_pos();
 
    if (!sconf_is()){
-      DPRINTF(("sconf_validate: no config to validate\n"));
-      return true;
+      ERROR((SGE_EVENT, "sconf_validate: no config to validate\n"));
+      return;
    }
 
-   if (!sconf_calc_pos()){
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INCOMPLETE_SCHEDD_CONFIG)); 
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      ret = false; 
+   if (pos.empty){
+      sconf_validate_config_(NULL);
    }
 
    /* --- SC_algorithm */
    s = sconf_get_algorithm();
-   if ( !s || (strcmp(s, "default") && strcmp(s, "simple_sched") && strncmp(s, "ext_", 4))) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_ALGORITHMNOVALIDNAME_S, s)); 
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      ret = false; 
-   }
-   else
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXASY_SS , s, "algorithm"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXASY_SS , s, "algorithm"));
      
    /* --- SC_schedule_interval */
    s = sconf_get_schedule_interval_str();
-   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0) ) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", tmp_error));    
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      ret =  false;
-   }
-   else
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS , s, "schedule_interval"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS , s, "schedule_interval"));
 
    /* --- SC_maxujobs */
    uval = sconf_get_maxujobs();
@@ -1771,114 +1761,38 @@ bool sconf_validate_config_(lList **answer_list){
 
    /* --- SC_job_load_adjustments */
    lval = sconf_get_job_load_adjustments();
-   if (uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), lval, load_adjustment_fields, delis, 0) < 0) {
-      ret = false;
-   }
+   uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), lval, load_adjustment_fields, delis, 0);
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, tmp_buffer, "job_load_adjustments"));
 
    /* --- SC_load_adjustment_decay_time */
    s = sconf_get_load_adjustment_decay_time_str();
-   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, "load_adjustment_decay_time", tmp_error));    
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      ret = false; 
-   }
-   else
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "load_adjustment_decay_time"));
+   INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "load_adjustment_decay_time"));
 
    /* --- SC_load_formula */
-   if (Master_CEntry_List != NULL && !sconf_is_valid_load_formula_(answer_list, Master_CEntry_List )) {
-      ret = false; 
-   }
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, sconf_get_load_formula(), "load_formula"));
 
    /* --- SC_schedd_job_info */
-   {
-      char buf[4096];
-      char* key;
-      int ikey = 0;
-      lList *rlp=NULL, *alp=NULL;
-
-      strcpy(buf, lGetString(lFirst(Master_Sched_Config_List), SC_schedd_job_info));
-      /* on/off or watch a set of jobs */
-      key = strtok(buf, " \t");
-      if (!strcmp("true", key)) 
-         ikey = SCHEDD_JOB_INFO_TRUE;
-      else if (!strcmp("false", key)) 
-         ikey = SCHEDD_JOB_INFO_FALSE;
-      else if (!strcmp("job_list", key)) 
-         ikey = SCHEDD_JOB_INFO_JOB_LIST;
-      else {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         ret = false; 
-      }
-      /* check list of groups */
-      if (ikey == SCHEDD_JOB_INFO_JOB_LIST) {
-         key = strtok(NULL, "\n");
-         range_list_parse_from_string(&rlp, &alp, key, 0, 0, INF_NOT_ALLOWED);
-         if (rlp == NULL) {
-            lFreeList(alp);
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
-            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-            ret = false; 
-         }   
-         else{
-            pos.c_is_schedd_job_info = ikey;
-            pos.c_schedd_job_info_range = rlp;
-         }
-      }
-      else{
-         pos.c_is_schedd_job_info = ikey;
-      }
-   }
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, lGetString(lFirst(Master_Sched_Config_List), SC_schedd_job_info), "schedd_job_info"));
 
    /* --- SC_params */
-   {
-      char *s = NULL;
-      for (s=sge_strtok(lGetString(lFirst(Master_Sched_Config_List), SC_params), ",; "); s; s=sge_strtok(NULL, ",; ")) {
-         int i = 0;
-         bool added = false;
-         for(i=0; params[i].name ;i++ ){
-            if (!strncasecmp(s, params[i].name, sizeof(params[i].name)-1)){
-               if (params[i].setParam && params[i].setParam(pos.c_params, answer_list, s)){
-                  INFO((SGE_EVENT, MSG_READ_PARAM_S, s)); 
-               }
-               added = true;
-            }               
-         }
-         if (!added){
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_UNKNOWN_PARAM_S, s));
-            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         }
-      }
-   }
+   s=lGetString(lFirst(Master_Sched_Config_List), SC_params);
+   INFO((SGE_EVENT, MSG_READ_PARAM_S, s)); 
 
    /**
     * check for SGEEE scheduler configurations
     */
    if (feature_is_enabled(FEATURE_SGEEE)) {
 
-      /* --- SC_sgeee_schedule_interval */
-      s = sconf_sgeee_schedule_interval_str();
-      if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "sgeee_schedule_interval", tmp_error));    
-         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-         ret = false; 
-      }
-      else
-         INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "sgeee_schedule_interval"));
+      /* --- SC_reprioritize_interval */
+      s = sconf_reprioritize_interval_str();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "reprioritize_interval"));
 
       /* --- SC_halftime */
       uval = sconf_get_halftime();
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US ,  u32c (uval), "halftime"));
 
       /* --- SC_usage_weight_list */
-      
-      if (uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0) < 0) {
-         ret = false; 
-      }
+      uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0);
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, tmp_buffer, "usage_weight_list"));
 
       /* --- SC_compensation_factor */
@@ -1942,6 +1856,177 @@ bool sconf_validate_config_(lList **answer_list){
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_pending_tasks_per_job"));
 
       /* --- SC_halflife_decay_list_str */
+      s = sconf_get_halflife_decay_list_str();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "halflife_decay_list"));
+     
+      /* --- SC_policy_hierarchy */
+      s = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "policy_hierarchy"));
+   }
+
+   DEXIT;
+   return;
+}
+
+/****** sge_schedd_conf/sconf_validate_config_() *******************************
+*  NAME
+*     sconf_validate_config_() -- ??? 
+*
+*  SYNOPSIS
+*     bool sconf_validate_config_(lList **answer_list) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **answer_list - ??? 
+*
+*  RESULT
+*     bool - 
+*
+*******************************************************************************/
+bool sconf_validate_config_(lList **answer_list){
+   char tmp_buffer[1024], tmp_error[1024];
+   u_long32 uval;
+   const char *s;
+   const lList *lval= NULL;
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "sconf_validate_config_");
+
+   sconf_clear_pos();
+
+   if (!sconf_is()){
+      DPRINTF(("sconf_validate: no config to validate\n"));
+      return true;
+   }
+
+   if (!sconf_calc_pos()){
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INCOMPLETE_SCHEDD_CONFIG)); 
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false; 
+   }
+
+   /* --- SC_algorithm */
+   s = sconf_get_algorithm();
+   if ( !s || (strcmp(s, "default") && strcmp(s, "simple_sched") && strncmp(s, "ext_", 4))) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_ALGORITHMNOVALIDNAME_S, s)); 
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false; 
+   }
+     
+   /* --- SC_schedule_interval */
+   s = sconf_get_schedule_interval_str();
+   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0) ) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "schedule_interval", tmp_error));    
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret =  false;
+   }
+
+   /* --- SC_job_load_adjustments */
+   lval = sconf_get_job_load_adjustments();
+   if (uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), lval, load_adjustment_fields, delis, 0) < 0) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDD_JOB_LOAD_ADJUSTMENTS_S, s)); 
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+
+   /* --- SC_load_adjustment_decay_time */
+   s = sconf_get_load_adjustment_decay_time_str();
+   if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS, "load_adjustment_decay_time", tmp_error));    
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false; 
+   }
+
+   /* --- SC_load_formula */
+   if (Master_CEntry_List != NULL && !sconf_is_valid_load_formula_(answer_list, Master_CEntry_List )) {
+      ret = false; 
+   }
+
+   /* --- SC_schedd_job_info */
+   {
+      char buf[4096];
+      char* key;
+      int ikey = 0;
+      lList *rlp=NULL, *alp=NULL;
+
+      strcpy(buf, lGetString(lFirst(Master_Sched_Config_List), SC_schedd_job_info));
+      /* on/off or watch a set of jobs */
+      key = strtok(buf, " \t");
+      if (!strcmp("true", key)) 
+         ikey = SCHEDD_JOB_INFO_TRUE;
+      else if (!strcmp("false", key)) 
+         ikey = SCHEDD_JOB_INFO_FALSE;
+      else if (!strcmp("job_list", key)) 
+         ikey = SCHEDD_JOB_INFO_JOB_LIST;
+      else {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         ret = false; 
+      }
+      /* check list of groups */
+      if (ikey == SCHEDD_JOB_INFO_JOB_LIST) {
+         key = strtok(NULL, "\n");
+         range_list_parse_from_string(&rlp, &alp, key, 0, 0, INF_NOT_ALLOWED);
+         if (rlp == NULL) {
+            lFreeList(alp);
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+            ret = false; 
+         }   
+         else{
+            pos.c_is_schedd_job_info = ikey;
+            pos.c_schedd_job_info_range = rlp;
+         }
+      }
+      else{
+         pos.c_is_schedd_job_info = ikey;
+      }
+   }
+
+   /* --- SC_params */
+   {
+      char *s = NULL;
+      for (s=sge_strtok(lGetString(lFirst(Master_Sched_Config_List), SC_params), ",; "); s; s=sge_strtok(NULL, ",; ")) {
+         int i = 0;
+         bool added = false;
+         for(i=0; params[i].name ;i++ ){
+            if (!strncasecmp(s, params[i].name, sizeof(params[i].name)-1)){
+               if (params[i].setParam) {
+                  params[i].setParam(pos.c_params, answer_list, s);
+               }
+               added = true;
+            }               
+         }
+         if (!added){
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_UNKNOWN_PARAM_S, s));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         }
+      }
+   }
+
+   /**
+    * check for SGEEE scheduler configurations
+    */
+   if (feature_is_enabled(FEATURE_SGEEE)) {
+
+      /* --- SC_reprioritize_interval */
+      s = sconf_reprioritize_interval_str();
+      if (!extended_parse_ulong_val(NULL, &uval, TYPE_TIM, s, tmp_error, sizeof(tmp_error),0)) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_XISNOTAY_SS , "reprioritize_interval", tmp_error));    
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         ret = false; 
+      }
+
+      /* --- SC_usage_weight_list */
+      if (uni_print_list(NULL, tmp_buffer, sizeof(tmp_buffer), sconf_get_usage_weight_list(), usage_fields, delis, 0) < 0) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SCHEDD_USAGE_WEIGHT_LIST_S, tmp_error));    
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
+         ret = false; 
+      }
+
+      /* --- SC_halflife_decay_list_str */
       {
          s = sconf_get_halflife_decay_list_str();
          if (!strcasecmp(s, "none")) {
@@ -1967,7 +2052,6 @@ bool sconf_validate_config_(lList **answer_list){
                free(sv1);
             pos.c_halflife_decay_list = halflife_decay_list;   
          } 
-         INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "halflife_decay_list"));
       }
      
       /* --- SC_policy_hierarchy */
@@ -1978,21 +2062,15 @@ bool sconf_validate_config_(lList **answer_list){
 
             if (policy_hierarchy_verify_value(value_string)) {
                WARNING((SGE_EVENT, MSG_GDI_INVALIDPOLICYSTRING)); 
-               strcpy(policy_hierarchy_string, "");
-            } else {
-               strcpy(policy_hierarchy_string, value_string);
+               lSetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy, policy_hierarchy_chars);
             }
-            policy_hierarchy_fill_array(hierarchy );
-            policy_hierarchy_print_array(hierarchy);
+            sconf_ph_fill_array(hierarchy);
          } 
-         INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, value_string, "policy_hierarchy"));
-
       }
    }
 
    DEXIT;
    return ret;
-
 }
 
 
@@ -2093,12 +2171,12 @@ static int policy_hierarchy_verify_value(const char* value)
    return ret;
 }
 
-/****** sgeobj/conf/policy_hierarchy_fill_array() *****************************
+/****** sgeobj/conf/sconf_ph_fill_array() *****************************
 *  NAME
-*     policy_hierarchy_fill_array() -- fill the policy array 
+*     sconf_ph_fill_array() -- fill the policy array 
 *
 *  SYNOPSIS
-*     void policy_hierarchy_fill_array(policy_hierarchy_t array[], 
+*     void sconf_ph_fill_array(policy_hierarchy_t array[], 
 *                                      const char *value) 
 *
 *  FUNCTION
@@ -2147,13 +2225,14 @@ static int policy_hierarchy_verify_value(const char* value)
 *  RESULT
 *     "array" will be modified 
 ******************************************************************************/
-void policy_hierarchy_fill_array(policy_hierarchy_t array[])
+void sconf_ph_fill_array(policy_hierarchy_t array[])
 {
    int is_contained[POLICY_VALUES];
    int index = 0;
    int i;
+   const char *policy_hierarchy_string = lGetPosString(lFirst(Master_Sched_Config_List), pos.policy_hierarchy);
 
-   DENTER(TOP_LAYER, "policy_hierarchy_fill_array");
+   DENTER(TOP_LAYER, "sconf_ph_fill_array");
 
    for (i = 0; i < POLICY_VALUES; i++) {
       is_contained[i] = 0;
@@ -2212,12 +2291,12 @@ static policy_type_t policy_hierarchy_char2enum(char character)
 }
 
 
-/****** sgeobj/conf/policy_hierarchy_print_array() ****************************
+/****** sgeobj/conf/sconf_ph_print_array() ****************************
 *  NAME
-*     policy_hierarchy_print_array() -- print hierarchy array 
+*     sconf_ph_print_array() -- print hierarchy array 
 *
 *  SYNOPSIS
-*     void policy_hierarchy_print_array(policy_hierarchy_t array[]) 
+*     void sconf_ph_print_array(policy_hierarchy_t array[]) 
 *
 *  FUNCTION
 *     Print hierarchy array in the debug output 
@@ -2226,11 +2305,11 @@ static policy_type_t policy_hierarchy_char2enum(char character)
 *     policy_hierarchy_t array[] - array with at least 
 *                                  POLICY_VALUES values 
 ******************************************************************************/
-void policy_hierarchy_print_array(policy_hierarchy_t array[])
+void sconf_ph_print_array(policy_hierarchy_t array[])
 {
    int i;
 
-   DENTER(TOP_LAYER, "policy_hierarchy_print_array");
+   DENTER(TOP_LAYER, "sconf_ph_print_array");
    
    for (i = INVALID_POLICY + 1; i < LAST_POLICY_VALUE; i++) {
       char character = policy_hierarchy_enum2char(array[i-1].policy);

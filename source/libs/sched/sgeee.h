@@ -124,7 +124,8 @@ lList *sge_build_sge_orders ( sge_Sdescr_t *lists,
                               lList *finished_jobs,
                               lList *order_list,
                               bool update_usage_and_configuration,
-                              int seqno , bool max_queued_ticket_orders);
+                              int seqno , bool max_queued_ticket_orders,
+                              bool update_execd);
 
 
 int sgeee_scheduler ( sge_Sdescr_t *lists,

@@ -41,8 +41,13 @@ int subscribe_default_scheduler(void);
 
 /* callback functions for event processing */
 bool 
-sge_process_schedd_conf_event(sge_object_type type, sge_event_action action, 
+sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action action, 
                               lListElem *event, void *clientdata);
+
+bool 
+sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action action, 
+                              lListElem *event, void *clientdata);
+
 
 bool 
 sge_process_job_event_before(sge_object_type type, sge_event_action action, 

@@ -440,7 +440,34 @@ int sge_setup_qmaster()
          lFreeList(sched_conf);
          DEXIT;
          return -1;
-      }      
+      } 
+
+      /* The REPRIORITIZE parameter of the master configuration is not spooled. It is generated
+       *  of out the reprioritze_interval flag in the scheduler. After reading in the scheduler
+       *  configuration, we have to update the master configuration.
+       */   
+       
+    {
+      lListElem *conf = NULL; 
+      lList *ep_list = NULL;
+      lListElem *ep = NULL; 
+      int reprioritize = (sconf_get_reprioritize_interval() != 0); 
+      char value[20];
+      conf = lGetElemHost(Master_Config_List, CONF_hname, "global");
+      ep_list = lGetList(conf, CONF_entries);
+
+      ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
+      if (!ep){
+         ep = lCreateElem(CF_Type);
+         lSetString(ep, CF_name, REPRIORITIZE);
+         lAppendElem(ep_list, ep);           
+      }
+      
+      sprintf(value, "%d", reprioritize);
+      lSetString(ep, CF_value, value);
+      lSetUlong(ep, CF_local, 0);    
+   }
+      
    }
    if (feature_is_enabled(FEATURE_SGEEE)) {
 

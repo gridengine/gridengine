@@ -103,39 +103,40 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep);
 static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request);
 
+static int schedd_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object); 
 
 /* ------------------------------ generic gdi objects --------------------- */
 /* *INDENT-OFF* */
 static gdi_object_t gdi_object[] = {
-   { SGE_CALENDAR_LIST,     CAL_name,         CAL_Type, "calendar",                &Master_Calendar_List,          NULL,         NULL,           calendar_mod, calendar_spool, calendar_update_queue_states },
-   { SGE_EVENT_LIST,        0,                NULL,     "event",                   &EV_Clients,                    NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_ADMINHOST_LIST,    AH_name,          AH_Type,  "adminhost",               &Master_Adminhost_List,         NULL,         NULL,           host_mod,     host_spool,     host_success },
-   { SGE_SUBMITHOST_LIST,   SH_name,          SH_Type,  "submithost",              &Master_Submithost_List,        NULL,         NULL,           host_mod,     host_spool,     host_success },
-   { SGE_EXECHOST_LIST,     EH_name,          EH_Type,  "exechost",                &Master_Exechost_List,          NULL,         NULL,           host_mod,     host_spool,     host_success },
-   { SGE_QUEUE_LIST,        0,                NULL,     "queue",                   &Master_Queue_List,             NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_CQUEUE_LIST,       CQ_name,          CQ_Type,  "cluster queue",           &Master_CQueue_List,            NULL,         NULL,           cqueue_mod,   cqueue_spool,   cqueue_success },
-   { SGE_JOB_LIST,          0,                NULL,     "job",                     &Master_Job_List,               NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_CENTRY_LIST,       CE_name,          CE_Type,  "complex entry",           &Master_CEntry_List,            NULL,         NULL,           centry_mod,   centry_spool,   centry_success },
-   { SGE_ORDER_LIST,        0,                NULL,     "order",                   NULL,                           NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_MASTER_EVENT,      0,                NULL,     "master event",            NULL,                           NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_MANAGER_LIST,      0,                NULL,     "manager",                 &Master_Manager_List,           NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_OPERATOR_LIST,     0,                NULL,     "operator",                &Master_Operator_List,          NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_PE_LIST,           PE_name,          PE_Type,  "parallel environment",    &Master_Pe_List,                NULL,         NULL,           pe_mod,       pe_spool,       pe_success },
-   { SGE_CONFIG_LIST,       0,                NULL,     "configuration",           &Master_Config_List,            NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_SC_LIST,           0,                NULL,     "scheduler configuration", NULL              , sconf_get_config_list, sconf_validate_config_,  NULL,         NULL,           NULL },
-   { SGE_USER_LIST,         UP_name,          UP_Type,  "user",                    &Master_User_List,              NULL,         NULL,           userprj_mod,  userprj_spool,  userprj_success },
-   { SGE_USERSET_LIST,      0,                NULL,     "userset",                 &Master_Userset_List,           NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_PROJECT_LIST,      UP_name,          UP_Type,  "project",                 &Master_Project_List,           NULL,         NULL,           userprj_mod,  userprj_spool,  userprj_success },
-   { SGE_SHARETREE_LIST,    0,                NULL,     "sharetree",               &Master_Sharetree_List,         NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_CKPT_LIST,         CK_name,          CK_Type,  "checkpoint interface",    &Master_Ckpt_List,              NULL,         NULL,           ckpt_mod,     ckpt_spool,     ckpt_success },
-   { SGE_JOB_SCHEDD_INFO,   0,                NULL,     "schedd info",             &Master_Job_Schedd_Info_List,   NULL,         NULL,           NULL,         NULL,           NULL },
-   { SGE_ZOMBIE_LIST,       0,                NULL,     "job zombie list",         &Master_Zombie_List,            NULL,         NULL,           NULL,         NULL,           NULL },
+   { SGE_CALENDAR_LIST,     CAL_name,         CAL_Type, "calendar",                &Master_Calendar_List,          NULL,         calendar_mod, calendar_spool, calendar_update_queue_states },
+   { SGE_EVENT_LIST,        0,                NULL,     "event",                   &EV_Clients,                    NULL,         NULL,         NULL,           NULL },
+   { SGE_ADMINHOST_LIST,    AH_name,          AH_Type,  "adminhost",               &Master_Adminhost_List,         NULL,         host_mod,     host_spool,     host_success },
+   { SGE_SUBMITHOST_LIST,   SH_name,          SH_Type,  "submithost",              &Master_Submithost_List,        NULL,         host_mod,     host_spool,     host_success },
+   { SGE_EXECHOST_LIST,     EH_name,          EH_Type,  "exechost",                &Master_Exechost_List,          NULL,         host_mod,     host_spool,     host_success },
+   { SGE_QUEUE_LIST,        0,                NULL,     "queue",                   &Master_Queue_List,             NULL,         NULL,         NULL,           NULL },
+   { SGE_CQUEUE_LIST,       CQ_name,          CQ_Type,  "cluster queue",           &Master_CQueue_List,            NULL,         cqueue_mod,   cqueue_spool,   cqueue_success },
+   { SGE_JOB_LIST,          0,                NULL,     "job",                     &Master_Job_List,               NULL,         NULL,         NULL,           NULL },
+   { SGE_CENTRY_LIST,       CE_name,          CE_Type,  "complex entry",           &Master_CEntry_List,            NULL,         centry_mod,   centry_spool,   centry_success },
+   { SGE_ORDER_LIST,        0,                NULL,     "order",                   NULL,                           NULL,         NULL,         NULL,           NULL },
+   { SGE_MASTER_EVENT,      0,                NULL,     "master event",            NULL,                           NULL,         NULL,         NULL,           NULL },
+   { SGE_MANAGER_LIST,      0,                NULL,     "manager",                 &Master_Manager_List,           NULL,         NULL,         NULL,           NULL },
+   { SGE_OPERATOR_LIST,     0,                NULL,     "operator",                &Master_Operator_List,          NULL,         NULL,         NULL,           NULL },
+   { SGE_PE_LIST,           PE_name,          PE_Type,  "parallel environment",    &Master_Pe_List,                NULL,         pe_mod,       pe_spool,       pe_success },
+   { SGE_CONFIG_LIST,       0,                NULL,     "configuration",           &Master_Config_List,            NULL,         NULL,         NULL,           NULL },
+   { SGE_SC_LIST,           0,                NULL,     "scheduler configuration", NULL,                  sconf_get_config_list, NULL,         NULL,           schedd_success },
+   { SGE_USER_LIST,         UP_name,          UP_Type,  "user",                    &Master_User_List,              NULL,         userprj_mod,  userprj_spool,  userprj_success },
+   { SGE_USERSET_LIST,      0,                NULL,     "userset",                 &Master_Userset_List,           NULL,         NULL,         NULL,           NULL },
+   { SGE_PROJECT_LIST,      UP_name,          UP_Type,  "project",                 &Master_Project_List,           NULL,         userprj_mod,  userprj_spool,  userprj_success },
+   { SGE_SHARETREE_LIST,    0,                NULL,     "sharetree",               &Master_Sharetree_List,         NULL,         NULL,         NULL,           NULL },
+   { SGE_CKPT_LIST,         CK_name,          CK_Type,  "checkpoint interface",    &Master_Ckpt_List,              NULL,         ckpt_mod,     ckpt_spool,     ckpt_success },
+   { SGE_JOB_SCHEDD_INFO,   0,                NULL,     "schedd info",             &Master_Job_Schedd_Info_List,   NULL,         NULL,         NULL,           NULL },
+   { SGE_ZOMBIE_LIST,       0,                NULL,     "job zombie list",         &Master_Zombie_List,            NULL,         NULL,         NULL,           NULL },
 #ifndef __SGE_NO_USERMAPPING__
-   { SGE_USER_MAPPING_LIST, CU_name,          CU_Type,  "user mapping entry",      &Master_Cuser_List,             NULL,         NULL,           cuser_mod,    cuser_spool,    cuser_success },
+   { SGE_USER_MAPPING_LIST, CU_name,          CU_Type,  "user mapping entry",      &Master_Cuser_List,             NULL,         cuser_mod,    cuser_spool,    cuser_success },
 #endif
-   { SGE_HGROUP_LIST,       HGRP_name,        HGRP_Type,"host group",              &Master_HGroup_List,            NULL,         NULL,           hgroup_mod,   hgroup_spool,   hgroup_success },
-   { SGE_DUMMY_LIST,        0,                NULL,     "general request",         NULL,                           NULL,         NULL,           NULL,         NULL,           NULL },
-   { 0,                     0,                NULL,     NULL,                      NULL,                           NULL,         NULL,           NULL,         NULL,           NULL }
+   { SGE_HGROUP_LIST,       HGRP_name,        HGRP_Type,"host group",              &Master_HGroup_List,            NULL,           hgroup_mod,   hgroup_spool,   hgroup_success },
+   { SGE_DUMMY_LIST,        0,                NULL,     "general request",         NULL,                           NULL,           NULL,         NULL,           NULL },
+   { 0,                     0,                NULL,     NULL,                      NULL,                           NULL,           NULL,         NULL,           NULL }
 };
 /* *INDENT-ON* */
 
@@ -518,7 +519,6 @@ int sub_command
    gid_t gid;
    char user[128];
    char group[128];
-   extern int deactivate_ptf;
    dstring ds;
    char buffer[256];
 
@@ -658,6 +658,10 @@ int sub_command
             user, host);
          break;
 
+      case SGE_SC_LIST:
+         sge_mod_sched_configuration(ep, &(answer->alp), user, host);
+         break;
+
       default:
          if (!ao) {
             SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
@@ -676,8 +680,7 @@ int sub_command
    }
 
    if (ticket_orders) {
-
-      if (!deactivate_ptf) {
+      if (sge_is_reprioritize()) {
          /* send all ticket orders to the exec hosts */
          distribute_ticket_orders(ticket_orders);
       } else {
@@ -1643,9 +1646,6 @@ int sub_command
 
       /* chain in new object */
       lAppendElem(*(master_list), new_obj);
-  
-      if(object->commitMasterList)
-         object->commitMasterList(alpp);
    }
 #ifdef QIDL
    if (add) /* this assumes that all generic object are identified by name */
@@ -1681,5 +1681,49 @@ u_long32 target
 
    DEXIT;
    return NULL;
+}
+
+/****** sge_c_gdi/schedd_success() *********************************************
+*  NAME
+*     schedd_success() --  calle, when the schedd config was modified. 
+*
+*  SYNOPSIS
+*     static int schedd_success(lListElem *ep, lListElem *old_ep, gdi_object_t 
+*     *object) 
+*
+*  FUNCTION
+*     validates and updates internal variables in the sched_conf module. 
+*
+*  INPUTS
+*     lListElem *ep        - new object 
+*     lListElem *old_ep    - old object 
+*     gdi_object_t *object - reference to the gdi object structure. 
+*
+*  RESULT
+*     static int - 0 = okay
+*
+*
+*  NOTES
+*     It does not really follow the function purpose. It is validating and
+*     updateing internal variables. The validation and updating should be
+*     devided into two functions. But than both functions would to very simillar
+*     thinks, only that one if them does not store the results.
+*
+*
+*  SEE ALSO
+*      on_succuss_func_t, host_successs, centry_succes 
+*******************************************************************************/
+static int schedd_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) {
+   lList *answer_list = NULL;
+   DENTER(TOP_LAYER, "centry_success");
+
+   sconf_validate_config_(&answer_list);
+   
+   if (answer_list != NULL){
+      answer_list_output(&answer_list);
+   }
+   
+   DEXIT;
+   return 0;
 }
 

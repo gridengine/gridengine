@@ -35,6 +35,10 @@
 #include "sge_confL.h"
 /* #include "sge_mirror.h" */
 
+/* The scheduler configuration changes this configuration element only. It is
+   not spooled and is not shown in qconf -mconf */
+#define REPRIORITIZE "reprioritize"
+
 struct confel {                       /* cluster configuration parameters */
     char        *execd_spool_dir;     /* sge_spool directory base path */
     char        *mailer;              /* path to e-mail delivery agent */
@@ -75,6 +79,7 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    max_aj_tasks;         /* max. size of an array job */
     u_long32    max_u_jobs;           /* max. number of jobs per user */
     u_long32    max_jobs;             /* max. number of jobs in the system */
+    u_long32    reprioritize;         /* reprioritize jobs based on the tickets or not */
 };
 
 typedef struct confel sge_conf_type;
@@ -117,4 +122,5 @@ lList *sge_set_defined_defaults(lList *lpCfg);
 int merge_configuration(lListElem *global, lListElem *local, sge_conf_type *pconf, lList **lpp);
 void sge_show_conf(void);
 
+bool sge_is_reprioritize(void);
 #endif /* __SGE_CONF_H */

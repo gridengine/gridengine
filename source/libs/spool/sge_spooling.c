@@ -621,7 +621,9 @@ spool_context_search_rule(const lListElem *context, const char *name)
 *     spooling_delete_func delete_func     - function deleting an individual 
 *                                            object
 *     spooling_validate_func validate_func     - function validateing an individual 
-*                                            object
+*                                                object
+*     spooling validate_list_func validate_list_func - function for validating 
+*                                                      the new list
 *
 *  RESULT
 *     lListElem* - the new rule, if it could be created, else NULL

@@ -60,9 +60,14 @@ typedef struct {
    int dependent;
 } policy_hierarchy_t;  
 
-void policy_hierarchy_fill_array(policy_hierarchy_t array[]);
 
-void policy_hierarchy_print_array(policy_hierarchy_t array[]);
+
+
+void sconf_ph_fill_array(policy_hierarchy_t array[]);
+
+void sconf_ph_print_array(policy_hierarchy_t array[]);
+
+void sconf_print_config(void);
 
 lListElem *sconf_create_default(void);
 
@@ -100,7 +105,7 @@ const char *sconf_get_load_formula(void);
 
 const char *sconf_get_load_adjustment_decay_time_str(void);
 
-const char *sconf_sgeee_schedule_interval_str(void);
+const char *sconf_reprioritize_interval_str(void);
 
 const char *sconf_get_param(const char *name);
 
@@ -110,7 +115,7 @@ u_long32 sconf_get_maxujobs(void);
 
 u_long32 sconf_get_schedule_interval(void);
 
-u_long32 sconf_get_sgeee_schedule_interval(void);
+u_long32 sconf_get_reprioritize_interval(void);
 
 u_long32 sconf_get_schedd_job_info(void);
 

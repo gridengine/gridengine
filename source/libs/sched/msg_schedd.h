@@ -367,11 +367,6 @@
 */ 
 #define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47270, _("can not create schedd_job_info for message "U32CFormat"\n"))
 
-
-
-
-
-
 /* 
 ** schedd/slots_used.c
 */ 
@@ -430,15 +425,14 @@
 #define MSG_GDI_NO_ATTRIBUTE_S                        _MESSAGE(47370, _("denied: attribute "SFQ" is no complex attribute\n"))
 
 /*
- *  
+ * sgeobj/sge_schedd_conf.c 
  */
-#define MSG_SCHEDD_NOVALUEFORATTR_S                       _MESSAGE(47380, _("no value for complex attribute "SFQ))
+#define MSG_SCHEDD_NOVALUEFORATTR_S                   _MESSAGE(47296, _("no value for complex attribute "SFQ))
+#define MSG_SCHEDD_JOB_LOAD_ADJUSTMENTS_S             _MESSAGE(47297, _("cannot parse job load adjustment list "SFQ))  
+#define MSG_SCHEDD_USAGE_WEIGHT_LIST_S                _MESSAGE(47298, _("cannot parse usage weight list "SFQ))
+#define MSG_INVALID_LOAD_FORMULA                      _MESSAGE(47399, _("invalid load formula "SFQ))
+#define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47400, _("The scheduler configuration is incomplete"))
+#define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47401, _("Using the scheduler default configuration"))
+#define MSG_INVALID_PARAM_SETTING_S                   _MESSAGE(47402, _("Invalid scheduler param setting: "SFQ)) 
 
-/*
- * daemons/sched/sge_process_events.c
- */
-#define MSG_INVALID_LOAD_FORMULA                      _MESSAGE(47390, _("invalid load formula "SFQ))
-#define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47391, _("The scheduler configuration is incomplete"))
-#define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47392, _("Using the scheduler default configuration"))
-#define MSG_INVALID_PARAM_SETTING_S                   _MESSAGE(47393, _("Invalid scheduler param setting: "SFQ)) 
 #endif /* __MSG_SCHEDD_H */

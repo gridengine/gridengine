@@ -1,4 +1,4 @@
-/*___INFO__MARK_BEGIN__*/
+#/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -178,7 +178,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
    
    /* conf values needed for SGEEE */
    if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      FPRINTF((fp, "sgeee_schedule_interval          %s\n", lGetString(ep, SC_sgeee_schedule_interval)));
+      FPRINTF((fp, "reprioritize_interval            %s\n", lGetString(ep, SC_reprioritize_interval)));
       FPRINTF((fp, "halftime                         " u32 "\n", lGetUlong(ep, SC_halftime)));
       FPRINTF((fp, "usage_weight_list                "));
       fret = uni_print_list(fp, NULL, 0, lGetList(ep, SC_usage_weight_list), intprt_as_usage, delis, 0);
@@ -397,9 +397,9 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
          return -1;
       }
 
-      /* --------- SC_sgeee_schedule_interval */
-      if (!set_conf_timestr(alpp, clpp, fields, "sgeee_schedule_interval", ep, 
-                              SC_sgeee_schedule_interval)) {
+      /* --------- SC_reprioritize_interval*/
+      if (!set_conf_timestr(alpp, clpp, fields, "reprioritize_interval", ep, 
+                              SC_reprioritize_interval)) {
          DEXIT;
          return -1;
       }
@@ -431,7 +431,6 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       DEXIT;
       return -1;
    }
-
 
    /* --------- SC_flush_submit_sec*/
    if (!set_conf_ulong(alpp, clpp, fields, "flush_submit_sec", ep, 

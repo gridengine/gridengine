@@ -359,7 +359,6 @@ int answer_error
    u_long32 now;
    static u_long then = 0;
    lListElem *jep, *jatep;
-   extern int deactivate_ptf;
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
@@ -381,7 +380,7 @@ int answer_error
          ptf_update_job_usage();
          sge_switch2admin_user();
       }
-      if (feature_is_enabled(FEATURE_REPRIORITIZATION) && !deactivate_ptf) {
+      if (feature_is_enabled(FEATURE_REPRIORITIZATION) && sge_is_reprioritize()) {
          sge_switch2start_user();
          DPRINTF(("ADJUST PRIORITIES\n"));
          ptf_adjust_job_priorities();

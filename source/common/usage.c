@@ -664,7 +664,11 @@ FILE *fp
    if (VALID_OPT(msconf_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_msconf_OPT, MSG_GDI_UTEXT_msconf_OPT);
    }
-
+   
+   if (VALID_OPT(Msconf_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_Msconf_OPT, MSG_GDI_UTEXT_Msconf_OPT);
+   }
+   
    if (VALID_OPT(me_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_me_OPT_SERVER, MSG_GDI_UTEXT_me_OPT_SERVER);
    }

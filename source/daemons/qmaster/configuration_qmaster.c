@@ -72,7 +72,7 @@
 #include "msg_qmaster.h"
 
 static int check_config(lList **alpp, lListElem *conf);
-   
+
 /* make chached values from configuration invalid */
 int new_config = 1;
 
@@ -231,7 +231,17 @@ char *rhost
       oldEntryList = lGetList(ep   , CONF_entries); 
       newEntryList = lGetList(confp, CONF_entries);
 
-     
+      /* The element reprioritize is changed by the scheduler configuration and
+         not with the global configuration. Thus, if the element does not exist
+         in the new configuration , but in the old one, it has to be copied. 
+         
+         Since it is not a real global config elem, it is not spooled and cannot
+         be changed by qconf -mconf*/
+      oldEntryListElem = lGetElemStr(oldEntryList, CF_name, REPRIORITIZE);
+      newEntryListElem = lGetElemStr(newEntryList, CF_name, REPRIORITIZE);
+      if ((!newEntryListElem) && (oldEntryListElem)) {
+         lAppendElem(newEntryList, lCopyElem(oldEntryListElem));
+      }
        
       while ( deniedParams[paramPos] != NULL ) {
          /* execd_spool_dir */

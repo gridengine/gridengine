@@ -67,7 +67,6 @@
 #include "msg_execd.h"
 
 extern char execd_spool_dir[SGE_PATH_MAX];
-extern lList *execd_config_list;
 extern lList *jr_list;
 
 char execd_messages_file[SGE_PATH_MAX];
@@ -79,7 +78,7 @@ void sge_setup_sge_execd()
 
    DENTER(TOP_LAYER, "sge_setup_sge_execd");
 
-   if (get_conf_and_daemonize(daemonize_execd, &execd_config_list)) {
+   if (get_conf_and_daemonize(daemonize_execd, &Master_Config_List)) {
       SGE_EXIT(1);
    }
    sge_show_conf();         

@@ -3231,8 +3231,8 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       policy_hierarchy_t hierarchy[4];
       int policy_ndx;
 
-      policy_hierarchy_fill_array(hierarchy);
-      policy_hierarchy_print_array(hierarchy);  
+      sconf_ph_fill_array(hierarchy);
+      sconf_ph_print_array(hierarchy);  
 
       for(policy_ndx = 0; 
           policy_ndx < sizeof(hierarchy) / sizeof(policy_hierarchy_t); 
@@ -4069,8 +4069,8 @@ get_mod_share_tree( lListElem *node,
 *     lList *order_list                  - existing order list (new orders will be added to it
 *     bool update_usage_and_configuration - if true, the update usage orders are generated
 *     int seqno                          - a seqno, changed with each scheduling run
-*     bool *max_queued_ticket_orders     - if true, pending tickets are submited to the qmaster 
-*                                         
+*     bool max_queued_ticket_orders      - if true, pending tickets are submited to the qmaster 
+*     bool updated_execd                 - if true, the queue information is send with the running job tickets
 *
 *  RESULT
 *     lList * -  new order list
@@ -4083,7 +4083,8 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
                       lList *order_list,
                       bool update_usage_and_configuration,
                       int seqno,
-                      bool max_queued_ticket_orders)
+                      bool max_queued_ticket_orders,
+                      bool update_execd)
 {
    static lEnumeration *usage_what = NULL;
    static lEnumeration *share_tree_what = NULL;
@@ -4102,7 +4103,6 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
    double prof_job_orders=0, prof_update_orders=0;
 
    DENTER(TOP_LAYER, "sge_build_sge_orders");
-
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
 
    if (!config_what)
@@ -4151,7 +4151,7 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
             else
                granted=NULL;
 
-            order_list = sge_create_orders(order_list, ORT_tickets, job, ja_task, granted, false);
+            order_list = sge_create_orders(order_list, ORT_tickets, job, ja_task, granted, false, update_execd);
          }
       }
       DPRINTF(("   added %d ticket orders for running jobs\n", 
@@ -4180,15 +4180,14 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
          for_each(ja_task, lGetList(job, JB_ja_tasks)) {
             if (++tasks > MIN(max_pending_tasks_per_job, free_qslots+1))
                break;
-            order_list = sge_create_orders(order_list, ORT_ptickets, job, ja_task, NULL, !max_queued_ticket_orders);
+            order_list = sge_create_orders(order_list, ORT_ptickets, job, ja_task, NULL, !max_queued_ticket_orders, false);
          }
          if (job_get_not_enrolled_ja_tasks(job) > 0) {
             lListElem *task_template = NULL;
 
             task_template = lFirst(lGetList(job, JB_ja_template));
             if (task_template) {
-               order_list = sge_create_orders(order_list, ORT_ptickets, job,
-                                              task_template, NULL, !max_queued_ticket_orders);
+               order_list = sge_create_orders(order_list, ORT_ptickets, job, task_template, NULL, !max_queued_ticket_orders, false);
             }
          }  
       }
@@ -4405,25 +4404,13 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
       past = now;
 
    {
-      u_long32 sgeee_schedule_interval = sconf_get_sgeee_schedule_interval();
-   if ( sgeee_schedule_interval == 0 || 
-      (now < (past + sgeee_schedule_interval))) { /* normal scheduling interval */
+      u_long32 reprioritize_interval = sconf_get_reprioritize_interval(); 
+      bool update_execd = ( reprioritize_interval == 0 || (now >= (past + reprioritize_interval))); 
+      if (update_execd)
+         past = now;
 
-      /* Only update qmaster with tickets of pending jobs - everything
-         else will be updated on the SGEEE scheduling interval. */
-      *orderlist = sge_build_sge_orders(lists, NULL, pending_jobs, finished_jobs,
-                                        *orderlist, 0, seqno, sconf_get_report_pjob_tickets());
-
-   } else {    /* sgeee scheduling interval */
-
-      DPRINTF(("=-=-=-=-=-=-=-=-=-=-=  SGEEE ORDER   =-=-=-=-=-=-=-=-=-=-=\n"));
- 
-      /* update qmaster with job tickets, usage, and finished jobs */
-      *orderlist = sge_build_sge_orders(lists, running_jobs, pending_jobs,
-                                        finished_jobs, *orderlist, 1, seqno, sconf_get_report_pjob_tickets());
-
-      past = now;
-   }
+      *orderlist = sge_build_sge_orders(lists, running_jobs, pending_jobs, finished_jobs,
+                                        *orderlist, 0, seqno, sconf_get_report_pjob_tickets(), update_execd);
    }
    if(!has_pending_jobs || !has_queues)
       return 0;

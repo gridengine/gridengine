@@ -674,6 +674,7 @@ lList **topp  /* ticket orders ptr ptr */
          }
 
          if (!skip_ticket_order) {
+            bool destribute_tickets = false;
             /* modify jobs ticket amount and spool job */
             lSetDouble(jatp, JAT_ticket, lGetDouble(ep, OR_ticket));
             DPRINTF(("TICKETS: "u32"."u32" "u32" tickets\n",
@@ -698,70 +699,75 @@ lList **topp  /* ticket orders ptr ptr */
                   lSetUlong(jatp, JAT_fshare, lGetPosUlong(joker_task, pos));
                if ((pos=lGetPosViaElem(joker_task, JAT_share))>=0)           
                   lSetDouble(jatp, JAT_share, lGetPosDouble(joker_task, pos));
+                  
+               destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list) >-1); 
             }
 
-            /* add a copy of this order to the ticket orders list */
-            if (!*topp) 
-               *topp = lCreateList("ticket orders", OR_Type);
+            /* tickets should only be further destributed in the scheduler reprioritize_interval. Only in
+               those intervales does the ticket order structure contain a JAT_granted_destin_identifier_list.
+               We use that as an identifier to go on, or not. */
+            if (destribute_tickets) {
+               /* add a copy of this order to the ticket orders list */
+               if (!*topp) 
+                  *topp = lCreateList("ticket orders", OR_Type);
 
-            /* If a ticket order has a queuelist, then this is a parallel job
-               with controlled sub-tasks. We generate a ticket order for
-               each host in the queuelist containing the total tickets for
-               all job slots being used on the host */
-
-            if ((oeql=lCopyList(NULL, lGetList(ep, OR_queuelist)))) {
-               const char *oep_qname=NULL, *oep_hname=NULL;
-               lListElem *oep_qep=NULL;
-
-               /* set granted slot tickets */
-               for_each(oep, oeql) {
-                  lListElem *gdil_ep;
-                  if ((gdil_ep=lGetSubStr(jatp, JG_qname, lGetString(oep, OQ_dest_queue),
-                       JAT_granted_destin_identifier_list))) {
-                     lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
-                     lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
-                     lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
-                     lSetDouble(gdil_ep, JG_dticket, lGetDouble(oep, OQ_dticket));
-                     lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
-                  }
-               }
-
-               while((oep=lFirst(oeql))) {          
-                  if (((oep_qname=lGetString(oep, OQ_dest_queue))) &&
-                      ((oep_qep = queue_list_locate(Master_Queue_List,
-                                                    oep_qname))) &&
-                      ((oep_hname=lGetHost(oep_qep, QU_qhostname)))) {
-
-                     const char *curr_oep_qname=NULL, *curr_oep_hname=NULL;
-                     lListElem *curr_oep, *next_oep, *curr_oep_qep=NULL;
-                     double job_tickets_on_host = lGetDouble(oep, OQ_ticket);
-                     lListElem *newep;
-
-                     for(curr_oep=lNext(oep); curr_oep; curr_oep=next_oep) {
-                        next_oep = lNext(curr_oep);
-                        if (((curr_oep_qname=lGetString(curr_oep, OQ_dest_queue))) &&
-                            ((curr_oep_qep = queue_list_locate(Master_Queue_List, curr_oep_qname))) &&
-                            ((curr_oep_hname=lGetHost(curr_oep_qep, QU_qhostname))) &&
-                            !sge_hostcmp(oep_hname, curr_oep_hname)) {     /* CR SPEEDUP CANDIDATE */
-                           job_tickets_on_host += lGetDouble(curr_oep, OQ_ticket);
-                           lRemoveElem(oeql, curr_oep);
-                        }
+               /* If a ticket order has a queuelist, then this is a parallel job
+                  with controlled sub-tasks. We generate a ticket order for
+                  each host in the queuelist containing the total tickets for
+                  all job slots being used on the host */
+               if ((oeql=lCopyList(NULL, lGetList(ep, OR_queuelist)))) {
+                  const char *oep_qname=NULL, *oep_hname=NULL;
+                  lListElem *oep_qep=NULL;
+                  /* set granted slot tickets */
+                  for_each(oep, oeql) {
+                     lListElem *gdil_ep;
+                     if ((gdil_ep=lGetSubStr(jatp, JG_qname, lGetString(oep, OQ_dest_queue),
+                          JAT_granted_destin_identifier_list))) {
+                        lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
+                        lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
+                        lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
+                        lSetDouble(gdil_ep, JG_dticket, lGetDouble(oep, OQ_dticket));
+                        lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
                      }
-                     newep = lCopyElem(ep);
-                     lSetDouble(newep, OR_ticket, job_tickets_on_host);
-                     lAppendElem(*topp, newep);
+                  }
 
-                  } else
-                     ERROR((SGE_EVENT, MSG_ORD_UNABLE2FINDHOST_S,
-                            oep_qname ? oep_qname : MSG_OBJ_UNKNOWN));
+                  while((oep=lFirst(oeql))) {          
+                     if (((oep_qname=lGetString(oep, OQ_dest_queue))) &&
+                         ((oep_qep = queue_list_locate(Master_Queue_List,
+                                                       oep_qname))) &&
+                         ((oep_hname=lGetHost(oep_qep, QU_qhostname)))) {
 
-                  lRemoveElem(oeql, oep);
-               }
+                        const char *curr_oep_qname=NULL, *curr_oep_hname=NULL;
+                        lListElem *curr_oep, *next_oep, *curr_oep_qep=NULL;
+                        double job_tickets_on_host = lGetDouble(oep, OQ_ticket);
+                        lListElem *newep;
 
-               lFreeList(oeql);
+                        for(curr_oep=lNext(oep); curr_oep; curr_oep=next_oep) {
+                           next_oep = lNext(curr_oep);
+                           if (((curr_oep_qname=lGetString(curr_oep, OQ_dest_queue))) &&
+                               ((curr_oep_qep = queue_list_locate(Master_Queue_List, curr_oep_qname))) &&
+                               ((curr_oep_hname=lGetHost(curr_oep_qep, QU_qhostname))) &&
+                               !sge_hostcmp(oep_hname, curr_oep_hname)) {     /* CR SPEEDUP CANDIDATE */
+                              job_tickets_on_host += lGetDouble(curr_oep, OQ_ticket);
+                              lRemoveElem(oeql, curr_oep);
+                           }
+                        }
+                        newep = lCopyElem(ep);
+                        lSetDouble(newep, OR_ticket, job_tickets_on_host);
+                        lAppendElem(*topp, newep);
 
-            } else
-               lAppendElem(*topp, lCopyElem(ep));
+                     } else
+                        ERROR((SGE_EVENT, MSG_ORD_UNABLE2FINDHOST_S, oep_qname ? oep_qname : MSG_OBJ_UNKNOWN));
+
+                     lRemoveElem(oeql, oep);
+                  }
+
+                  lFreeList(oeql);
+
+               } 
+               else if (lGetPosViaElem(jatp, JAT_granted_destin_identifier_list) !=-1 )
+                     lAppendElem(*topp, lCopyElem(ep));
+            }
          }
       } /* just ignore them being not in sge mode */
       break;

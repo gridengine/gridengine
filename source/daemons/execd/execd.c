@@ -95,8 +95,6 @@ volatile int waiting4osjid = 1;
  */
 char execd_spool_dir[SGE_PATH_MAX];
 
-lList *execd_config_list = NULL;
-
 static void execd_exit_func(int i);
 static void execd_register(void);
 static void dispatcher_errfunc(const char *err_str);

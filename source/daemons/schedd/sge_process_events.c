@@ -91,8 +91,8 @@ extern int shut_me_down;
 extern int start_on_master_host;
 extern int new_global_config;
 
-int rebuild_categories = 0;
-int rebuild_accesstree = 0;
+bool rebuild_categories = true;
+bool rebuild_accesstree = true;
 
 static void sge_rebuild_access_tree(lList *job_list, int trace_running);
 
@@ -527,14 +527,20 @@ void cleanup_default_scheduler(void)
    sge_free_job_category();
 }
 
+bool sge_process_schedd_conf_event_after(sge_object_type type, sge_event_action action, 
+                                         lListElem *event, void *clientdata){
+   sconf_print_config();
+   return true;
+}
+
 bool 
-sge_process_schedd_conf_event(sge_object_type type, sge_event_action action, 
-                              lListElem *event, void *clientdata)
+sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action action, 
+                                     lListElem *event, void *clientdata)
 {
    const lListElem *old;
    lListElem *new;
 
-   DENTER(TOP_LAYER, "sge_process_schedd_conf_event");
+   DENTER(TOP_LAYER, "sge_process_schedd_conf_event_before");
    DPRINTF(("callback processing schedd config event\n"));
 
    old = sconf_get_config(); 
@@ -1008,11 +1014,11 @@ int subscribe_default_scheduler(void)
    /* event types with callbacks */
 
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF,    
-                        sge_process_schedd_conf_event, NULL, NULL);
-/*
+                        sge_process_schedd_conf_event_before, NULL, NULL);
+
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_CONF,    NULL, 
-                        sge_process_schedd_conf_event,      NULL);
-*/                                                
+                        sge_process_schedd_conf_event_after,      NULL);
+                                                
    sge_mirror_subscribe(SGE_TYPE_SCHEDD_MONITOR, NULL, 
                         sge_process_schedd_monitor_event,   NULL);
                                                 

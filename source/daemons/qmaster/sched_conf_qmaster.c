@@ -37,6 +37,7 @@
 #include "sgermon.h"
 #include "sge_schedd_conf.h"
 #include "sge_usageL.h"
+#include "sge_confL.h"
 #include "sched_conf_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_sched.h"
@@ -44,6 +45,8 @@
 #include "setup_path.h"
 #include "sge_answer.h"
 #include "sge_centry.h"
+#include "sge_conf.h"
+#include "configuration_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
@@ -77,16 +80,16 @@ char *rhost
    config = sconf_get_config();
    temp_conf_list = lCreateList("sched config", SC_Type);
 
-   lSetUlong(confp, SC_weight_tickets_deadline_active, 
-      lGetUlong(config, SC_weight_tickets_deadline_active));
-   lSetUlong(confp, SC_weight_tickets_override, 
-      lGetUlong(config, SC_weight_tickets_override));
-     
+   if (config) {
+      lSetUlong(confp, SC_weight_tickets_deadline_active, 
+         lGetUlong(config, SC_weight_tickets_deadline_active));
+      lSetUlong(confp, SC_weight_tickets_override, 
+         lGetUlong(config, SC_weight_tickets_override));
+   }
    lAppendElem(temp_conf_list, lCopyElem(confp));
 
    /* just check and log */
    if (!sconf_set_config(&temp_conf_list, alpp)) {
-      answer_list_output(alpp);
       lFreeList(temp_conf_list);
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -98,6 +101,30 @@ char *rhost
       answer_list_add(alpp, MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
+   }
+
+   {
+      lListElem *conf = NULL; 
+      lList *ep_list = NULL;
+      lListElem *ep = NULL; 
+      int reprioritize = (sconf_get_reprioritize_interval() != 0); 
+      char value[20];
+      conf = lCopyElem(lGetElemHost(Master_Config_List, CONF_hname, "global"));
+      ep_list = lGetList(conf, CONF_entries);
+
+      ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
+      if (!ep){
+         ep = lCreateElem(CF_Type);
+         lSetString(ep, CF_name, REPRIORITIZE);
+         lAppendElem(ep_list, ep);           
+      }
+      
+      sprintf(value, "%d", reprioritize);
+      lSetString(ep, CF_value, value);
+      lSetUlong(ep, CF_local, 0);    
+      
+      sge_mod_configuration(conf, alpp, ruser, rhost);
+      conf = lFreeElem(conf);
    }
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 

@@ -1025,7 +1025,7 @@ int *sort_hostlist
    job_log(lGetUlong(job, JB_job_number), lGetUlong(ja_task, JAT_task_number), 
       "dispatched");
    *orders_list = sge_create_orders(*orders_list, ORT_start_job, 
-         job, ja_task, granted, false);
+         job, ja_task, granted, false, true);
    
    /*------------------------------------------------------------------
     * DEBIT JOBS RESOURCES IN DIFFERENT OBJECTS

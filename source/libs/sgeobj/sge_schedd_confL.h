@@ -68,7 +68,7 @@ enum {
    SC_flush_finish_sec, 
    SC_params,
    
-   SC_sgeee_schedule_interval,
+   SC_reprioritize_interval,
    SC_halftime,
    SC_usage_weight_list,
    SC_compensation_factor,
@@ -115,7 +115,7 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    /* 
     * SGEEE specific configuration values
     */
-   SGE_STRING(SC_sgeee_schedule_interval, CULL_DEFAULT | CULL_SPOOL)
+   SGE_STRING(SC_reprioritize_interval, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(SC_halftime, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(SC_usage_weight_list, UA_Type, CULL_DEFAULT | CULL_SPOOL)   /* SGEEE - UA_Type; gives    *
                                                                          * weights for building the  * 
@@ -169,7 +169,7 @@ NAMEDEF(SCN)
    NAME("SC_flush_finish_sec")
    NAME("SC_params")
    
-   NAME("SC_sgeee_schedule_interval")
+   NAME("SC_reprioritize_interval")
    NAME("SC_halftime")
    NAME("SC_usage_weight_list")
    NAME("SC_compensation_factor")

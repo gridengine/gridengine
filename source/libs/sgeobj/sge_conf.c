@@ -125,12 +125,6 @@ int set_sge_environment = 1;
 int set_cod_environment = 0;
 int set_grd_environment = 0;
 
-/* 
- * Set if admin explicitly deactivated SGEEE PTF component 
- * initual job priorities remain in effect also in SGEEE
- */
-int deactivate_ptf = 0;
-
 /*
  * notify_kill_default and notify_susp_default
  *       0  -> use the signal type stored in notify_kill and notify_susp
@@ -220,6 +214,7 @@ static tConfEntry conf_entries[] = {
  { "max_aj_tasks",      0, MAX_AJ_TASKS,        1, NULL },
  { "max_u_jobs",        0, MAX_U_JOBS,          1, NULL },
  { "max_jobs",          0, MAX_JOBS,            1, NULL },
+ { REPRIORITIZE,        0, "1",                 1, NULL },
  { NULL,                0, NULL,                0, 0,   }
 };
 
@@ -313,7 +308,7 @@ lList *lpCfg
    lListElem *ep;
 
    DENTER(TOP_LAYER, "setConfFromCull");
-   
+
    /* get following logging entries logged if log_info is selected */
    chg_conf_val(lpCfg, "loglevel", NULL, &mconf->loglevel, TYPE_LOG);
    log_state_set_log_level(mconf->loglevel);
@@ -388,6 +383,7 @@ lList *lpCfg
    chg_conf_val(lpCfg, "max_aj_tasks", NULL, &mconf->max_aj_tasks, TYPE_INT);
    chg_conf_val(lpCfg, "max_u_jobs", NULL, &mconf->max_u_jobs, TYPE_INT);
    chg_conf_val(lpCfg, "max_jobs", NULL, &mconf->max_jobs, TYPE_INT);
+   chg_conf_val(lpCfg, REPRIORITIZE, NULL, &mconf->reprioritize, TYPE_BOO );
 
    DEXIT;
 }
@@ -466,7 +462,9 @@ int merge_configuration(lListElem *global, lListElem *local,
          }
       }
    }
+  
    
+  
    if (first_time) {
       first_time = 0;
       memset(pconf, 0, sizeof(sge_conf_type));
@@ -555,7 +553,6 @@ int merge_configuration(lListElem *global, lListElem *local,
       set_sge_environment = 1;
       set_cod_environment = 0;
       set_grd_environment = 0; 
-      deactivate_ptf = 0; 
 
       for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; "))
          if (!strcasecmp(s, "USE_QIDLE")) {
@@ -642,12 +639,7 @@ int merge_configuration(lListElem *global, lListElem *local,
             } else {
                set_grd_environment = 0;                        
             }
-         } else if (!strncasecmp(s, "NO_REPRIORITIZATION", sizeof("NO_REPRIORITIZATION")-1)) {
-            if (!strcasecmp(s, "NO_REPRIORITIZATION=true") || !strcasecmp(s, "NO_REPRIORITIZATION=1")) {
-               deactivate_ptf = 1;                        
-            } else {
-               deactivate_ptf = 0;                        
-            }
+
          } else if (!strncasecmp(s, "PTF_MAX_PRIORITY", sizeof("PTF_MAX_PRIORITY")-1))
             ptf_max_priority=atoi(&s[sizeof("PTF_MAX_PRIORITY=")-1]);
          else if (!strncasecmp(s, "PTF_MIN_PRIORITY", sizeof("PTF_MIN_PRIORITY")-1))
@@ -719,7 +711,7 @@ void sge_show_conf()
    DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) conf.max_aj_tasks));
    DPRINTF(("conf.max_u_jobs             >%u<\n", (unsigned) conf.max_u_jobs));
    DPRINTF(("conf.max_jobs               >%u<\n", (unsigned) conf.max_jobs));
-   
+   DPRINTF(("conf. reprioritize          >%u<\n", conf.reprioritize));
 
    for_each (ep, conf.user_lists) {
       DPRINTF(("%s             >%s<\n", 
@@ -782,5 +774,31 @@ sge_conf_type *conf
    memset(conf, 0, sizeof(sge_conf_type));
 
    return;
+}
+
+bool sge_is_reprioritize(void){
+   lListElem *confl = NULL; 
+   lList *ep_list = NULL;
+   lListElem *ep = NULL; 
+   bool ret = true;
+   DENTER(TOP_LAYER, "sge_is_reprioritize");
+   confl = lCopyElem(lGetElemHost(Master_Config_List, CONF_hname, "global"));
+   if (confl)
+    ep_list = lGetList(confl, CONF_entries);
+    
+   if (ep_list)
+      ep = lGetElemStr(ep_list, CF_name, REPRIORITIZE);
+
+   if (ep){
+      const char* value;
+      value = lGetString(ep, CF_value);
+      ret = strncasecmp(value, "0", sizeof("0"));
+   }
+   else{
+      ret = conf.reprioritize;
+   }
+
+   DEXIT;
+   return ret;
 }
 

@@ -86,7 +86,6 @@ report_source execd_report_sources[] = {
 
 int report_seqno = 0;
 
-extern lList *execd_config_list;
 extern lList *jr_list;
 
 static int execd_add_load_report(lList *report_list) 
@@ -125,7 +124,7 @@ static int execd_add_conf_report(lList *report_list)
    lSetUlong(report, REP_seqno, report_seqno);
    lSetHost(report, REP_host, uti_state_get_qualified_hostname());
    lSetList(report, REP_list, 
-      lCopyList("execd config list copy", execd_config_list));
+      lCopyList("execd config list copy", Master_Config_List));
    lAppendElem(report_list, report);
 
    return 0;

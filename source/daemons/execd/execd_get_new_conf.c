@@ -39,8 +39,6 @@
 #include "admin_mail.h"
 #include "sge_string.h"
 
-extern lList *execd_config_list;
-
 /*
 ** DESCRIPTION
 **   retrieves new configuration from qmaster, very similar to what is
@@ -62,7 +60,7 @@ int answer_error;
 
    unpackint(pb, &dummy);
 
-   ret = get_merged_configuration(&execd_config_list);
+   ret = get_merged_configuration(&Master_Config_List);
 
    /*
    ** admin mail block is released on new conf

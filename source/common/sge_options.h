@@ -154,6 +154,7 @@ enum {
    Mp_OPT, /* mod pe object from file */
    tsm_OPT, 
    msconf_OPT,   /* modify SGE scheduler configuration */
+   Msconf_OPT,   /* mofify SGE scheduler configuration from file*/
    lj_OPT,
    aus_OPT,     /* SGE add user */
    Aus_OPT,     /* SGE add user from file */

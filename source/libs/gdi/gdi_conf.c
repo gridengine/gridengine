@@ -270,7 +270,6 @@ lList **conf_list
    *conf_list = lCreateList("config list", CONF_Type);
    lAppendElem(*conf_list, global);
    lAppendElem(*conf_list, local);
-   
    DEXIT;
    return 0;
 }

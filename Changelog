@@ -1,8 +1,19 @@
+SG-2003-10-31-1: Enhancem.: - Moved the reprioritized flag from the execd_param
+                              to the scheduler configuration.
+                            - Removed the sgeee_scheduling_interval
+                            - Improved the running ticket orders (reduced the 
+                              size)
+                            - ensured, that qmon is still working  
+                 Changed:   qmaster, execd, schedd, qmon
+
+SG-2003-10-31-0: Enhancem.: Introduced the "-Msconf fname" switch in qconf
+                            to read configuration from a file.
+                 Changed:   qconf
+                 
 JG-2003-11-03-0: Enhancem.: Check version of BerkeleyDB.
                             Some cleanup and improvement of the dstring 
                             implementation, test program for dstrings.
                  Issue:     265
-                              
 
 AD-2003-11-03-0: Bugfix.:   Using DENTER/DEXIT from within a signal handler
                             does lead to a deadlock.

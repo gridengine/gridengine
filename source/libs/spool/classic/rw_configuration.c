@@ -45,7 +45,6 @@
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_conf.h"
-
 #include "msg_common.h"
 
 /*-----------------------------------------------------------------------*
@@ -103,6 +102,9 @@ u_long32 flags
    cfl = lGetList(epc, CONF_entries);
 
    for_each(ep, cfl) {
+      if (strcmp( lGetString(ep, CF_name), REPRIORITIZE) == 0)
+         continue;
+
       FPRINTF((fp, "%-25s %s\n", lGetString(ep, CF_name), 
                lGetString(ep, CF_value)));
    }

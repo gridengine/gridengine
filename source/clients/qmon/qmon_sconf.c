@@ -91,7 +91,7 @@ typedef struct _tSCEntry {
    char *load_adjustment_decay_time;
    char *load_formula;
    lList *job_load_adjustments;
-   char *sgeee_schedule_interval;
+   char *reprioritize_interval;
 } tSCEntry;
 
 static XtResource sc_resources[] = {
@@ -127,8 +127,8 @@ static XtResource sc_resources[] = {
       sizeof(String), XtOffsetOf(tSCEntry, load_formula), 
       XtRImmediate, NULL },
 
-   { "sgeee_schedule_interval", "sgeee_schedule_interval", XtRString, 
-      sizeof(String), XtOffsetOf(tSCEntry, sgeee_schedule_interval), 
+   { "reprioritize_interval", "reprioritize_interval", XtRString, 
+      sizeof(String), XtOffsetOf(tSCEntry, reprioritize_interval), 
       XtRImmediate, NULL }
 };
 
@@ -143,7 +143,7 @@ static Widget sconf_maxujobs = 0;
 static Widget sconf_lad_time = 0;
 static Widget sconf_load_formula = 0;
 static Widget sconf_load_adjustments = 0;
-static Widget sconf_sgeee_schedule_interval = 0;
+static Widget sconf_reprioritize_interval = 0;
 static Widget sconf_queue_sort_method = 0;
 static Widget sconf_user_sort = 0;
 static Widget sconf_job_info = 0;
@@ -205,7 +205,7 @@ Widget parent
 ) {
    Widget sconf_layout, sconf_ok, sconf_cancel,
           sconf_main_link, sconf_lad_timePB,
-          sconf_schedule_intervalPB, sconf_sgeee_schedule_intervalPB,
+          sconf_schedule_intervalPB, sconf_reprioritize_intervalPB,
           sconf_load_name, sconf_load_value, sconf_load_namePB,
           sconf_load_add, sconf_load_delete;
 
@@ -227,23 +227,23 @@ Widget parent
                            "sconf_load_value", &sconf_load_value,
                            "sconf_load_add", &sconf_load_add,
                            "sconf_load_delete", &sconf_load_delete,
-                           "sconf_sgeee_schedule_interval", 
-                                 &sconf_sgeee_schedule_interval,
+                           "sconf_reprioritize_interval", 
+                                 &sconf_reprioritize_interval,
                            "sconf_queue_sort_method", &sconf_queue_sort_method,
                            "sconf_user_sort", &sconf_user_sort,
                            "sconf_lad_timePB", &sconf_lad_timePB,
                            "sconf_schedule_intervalPB", 
                                  &sconf_schedule_intervalPB,
-                           "sconf_sgeee_schedule_intervalPB",
-                                 &sconf_sgeee_schedule_intervalPB,
+                           "sconf_reprioritize_intervalPB",
+                                 &sconf_reprioritize_intervalPB,
                            "sconf_job_info", &sconf_job_info,
                            "sconf_job_range", &sconf_job_range,
                            NULL);
    if (!feature_is_enabled(FEATURE_SGEEE)) {
       Widget *items = NULL;
 
-      XtUnmanageChild(sconf_sgeee_schedule_interval);
-      XtUnmanageChild(sconf_sgeee_schedule_intervalPB);
+      XtUnmanageChild(sconf_reprioritize_interval);
+      XtUnmanageChild(sconf_reprioritize_intervalPB);
       XtVaGetValues( sconf_queue_sort_method,
                      XmtNitemWidgets, &items,
                      NULL);
@@ -266,8 +266,8 @@ Widget parent
                  qmonSchedTime, (XtPointer)sconf_lad_time); 
    XtAddCallback(sconf_schedule_intervalPB, XmNactivateCallback,
                  qmonSchedTime, (XtPointer)sconf_schedule_interval); 
-   XtAddCallback(sconf_sgeee_schedule_intervalPB, XmNactivateCallback,
-                 qmonSchedTime, (XtPointer)sconf_sgeee_schedule_interval); 
+   XtAddCallback(sconf_reprioritize_intervalPB, XmNactivateCallback,
+                 qmonSchedTime, (XtPointer)sconf_reprioritize_interval); 
 
    
    XtAddCallback(sconf_load_adjustments, XmNlabelActivateCallback,
@@ -431,8 +431,8 @@ lListElem *sep
                               lGetString(sep, SC_load_formula));
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
-      data.sgeee_schedule_interval = sge_strdup(data.sgeee_schedule_interval, 
-                              lGetString(sep, SC_sgeee_schedule_interval));
+      data.reprioritize_interval = sge_strdup(data.reprioritize_interval, 
+                              lGetString(sep, SC_reprioritize_interval));
    }
 
 /**
@@ -564,13 +564,13 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    lSetString(sep, SC_load_formula, data.load_formula);
   
    if (feature_is_enabled(FEATURE_SGEEE)) {
-      if (!data.sgeee_schedule_interval || 
-            data.sgeee_schedule_interval[0] == '\0') {
+      if (!data.reprioritize_interval|| 
+            data.reprioritize_interval[0] == '\0') {
          qmonMessageShow(qmon_sconf, True, "@{SGEEE Schedule Interval required!}");
          DEXIT;
          return False;
       }
-      lSetString(sep, SC_sgeee_schedule_interval, data.sgeee_schedule_interval);
+      lSetString(sep, SC_reprioritize_interval, data.reprioritize_interval);
    }
    /*
    ** schedd_job_info needs some extras

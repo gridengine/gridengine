@@ -2353,6 +2353,40 @@ DPRINTF(("ep: %s %s\n",
          spp++;
          continue;
       }
+/*----------------------------------------------------------------------------*/
+      /* "-Msconf" */
+      if (!strcmp("-Msconf", *spp)) {
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+         
+         spp = sge_parser_get_next(spp);
+
+         lp = read_sched_configuration(NULL, *spp, 0, &alp);
+
+         if (!lp)
+            if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
+               continue;
+
+         /* send it to qmaster */
+/*         lp = lCreateList("sconf to modify", SC_Type);
+         lAppendElem(lp, ep);*/
+
+         alp = sge_gdi(SGE_SC_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+
+         aep = lFirst(alp);
+         answer_exit_if_not_recoverable(aep);
+         if (answer_get_status(aep) == STATUS_OK)
+            fprintf(stderr, MSG_SCHEDD_CHANGEDSCHEDULERCONFIGURATION);
+         else
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+
+         alp = lFreeList(alp);
+         lp = lFreeList(lp);
+
+         spp++;
+         continue;
+         
+      }
 
 /*----------------------------------------------------------------------------*/
       /* "-msconf"  modify scheduler configuration */

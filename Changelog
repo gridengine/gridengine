@@ -1,3 +1,8 @@
+JG-2004-07-29-0: Bugfix:    qrsh starter didn't output reason (strerror), if it
+                            couldn't write its pid file.
+                 Changed:   qrsh_starter
+                 Review:    CR
+                            
 AA-2004-07-28-0: Bugfix:    Wallclock time limit in qmon
                  Bugtraq:   5078783
                  Issue:     1162

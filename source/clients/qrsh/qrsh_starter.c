@@ -415,7 +415,7 @@ static int write_pid_file(pid_t pid)
    }
    
    if((pid_file = fopen(pid_file_name, "w")) == NULL) {
-      qrsh_error(MSG_QRSH_STARTER_CANNOTWRITEPID_S, pid_file_name);
+      qrsh_error(MSG_QRSH_STARTER_CANNOTWRITEPID_SS, pid_file_name, strerror(errno));
       return 0;
    }
 
@@ -669,7 +669,6 @@ static int startJob(char *command, char *wrapper, int noshell)
       int i;
 
       if(!write_pid_file(getpid())) {
-         qrsh_error(MSG_QRSH_STARTER_CANNOTWRITEPID_S, "");
          exit(EXIT_FAILURE);
       }
 
@@ -694,7 +693,7 @@ static int startJob(char *command, char *wrapper, int noshell)
          shell = pw->pw_shell;
          
          if(shell == NULL) { 
-            qrsh_error(MSG_QRSH_STARTER_CANNOTDETERMSHELL_S,"/bin/sh");
+            qrsh_error(MSG_QRSH_STARTER_CANNOTDETERMSHELL_S, "/bin/sh");
             shell = "/bin/sh";
          } 
       }

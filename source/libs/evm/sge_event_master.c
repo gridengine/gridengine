@@ -735,6 +735,7 @@ lList* sge_select_event_clients(const char *aNewList, const lCondition *aCond, c
 *     u_long32 aClientID - event client ID 
 *     const char* anUser - user which did request this operation 
 *     uid_t anUID        - user id of request user
+*     lList **alpp       - answer list for info and errors
 *
 *  RESULT
 *     EPERM - operation not permitted  
@@ -745,30 +746,42 @@ lList* sge_select_event_clients(const char *aNewList, const lCondition *aCond, c
 *     MT-NOTE: sge_shutdown_event_client() is not MT safe. 
 *
 *******************************************************************************/
-int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUID)
+int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
+                              uid_t anUID, lList **alpp)
 {
    lListElem *client = NULL;
    int ret = 0;
    DENTER(TOP_LAYER, "sge_shutdown_event_client");
    
    if (!manop_is_manager(anUser) && (anUID != lGetUlong(client, EV_uid))) {
-
-      ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
+      answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
+                      ANSWER_QUALITY_ERROR);
       DEXIT;
       return EPERM;
    }
 
    ret = sge_add_event_for_client(aClientID, 0, sgeE_SHUTDOWN, 0,0,NULL,NULL,NULL,NULL);
 
-   if (ret == 0){
+   if (ret == 0) {
       lListElem *client;
       sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
       client = lGetElemUlong(Master_Control.clients, EV_id, aClientID);
       if (client != NULL) {
-         INFO((SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS, lGetString(client, EV_name), (unsigned long)lGetUlong(client, EV_id), lGetHost(client, EV_host))); 
+         if (aClientID == EV_ID_SCHEDD) {
+            SGE_ADD_MSG_ID(sprintf (SGE_EVENT, MSG_COM_KILLED_SCHEDULER_S,
+                                    lGetHost(client, EV_host)));
+         }
+         else {
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS,
+                           lGetString(client, EV_name),
+                           (unsigned long)lGetUlong(client, EV_id),
+                           lGetHost(client, EV_host)));
+         }
+         
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
+      
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
-
    }
 
    DEXIT;
@@ -794,6 +807,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUI
 *
 *  INPUTS
 *     const char *anUser - user which did request this operation 
+*     lList **alpp       - answer list for info and errors
 *
 *  RESULT
 *     EPERM - operation not permitted 
@@ -803,7 +817,7 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUI
 *     MT-NOTES: sge_shutdown_dynamic_event_clients() is NOT MT safe. 
 *
 *******************************************************************************/
-int sge_shutdown_dynamic_event_clients(const char *anUser)
+int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp)
 {
    lListElem *client;
 
@@ -811,7 +825,8 @@ int sge_shutdown_dynamic_event_clients(const char *anUser)
 
 
    if (!manop_is_manager(anUser)) {
-      ERROR((SGE_EVENT, MSG_COM_NOSHUTDOWNPERMS));
+      answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
+                      ANSWER_QUALITY_ERROR);
       DEXIT;
       return EPERM;
    }
@@ -825,7 +840,10 @@ int sge_shutdown_dynamic_event_clients(const char *anUser)
       
       add_event(client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, NULL);
       
-      INFO((SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS, lGetString(client, EV_name), (unsigned long)id, lGetHost(client, EV_host)));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS,
+                     lGetString(client, EV_name),
+                     (unsigned long)id, lGetHost(client, EV_host)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
 /*      sge_add_event_for_client(id, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, NULL, NULL); */
 
@@ -2680,7 +2698,7 @@ eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long
 *
 *  INPUTS
 *     subscription_t *subscription - subscription array 
-*     const lListElem‹* element    - source element (used to extract the descriptor) 
+*     const lListElem?* element    - source element (used to extract the descriptor) 
 *     int type                     - event type 
 *
 *  RESULT

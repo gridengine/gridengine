@@ -620,8 +620,11 @@ int answer_list_print_err_warn(lList **answer_list,
             status = answer_get_status(answer);
             do_exit = 1;
          }
-      } else {
+      } else if (answer_has_quality (answer, ANSWER_QUALITY_WARNING)) {
          answer_print_text(answer, stdout, warn_prefix, NULL);
+      }
+      else {
+         answer_print_text(answer, stdout, NULL, NULL);
       }
    }
    *answer_list = lFreeList(*answer_list);

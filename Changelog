@@ -1,3 +1,9 @@
+DT-2004-03-08-0: Bugfix:    Left over check-in from Friday
+                            o Fixed message for qconf -ks
+                            o Cleaned up some DRMAA output messages
+                 Changed:   evm, GDI, DMRAA, answer, qmaster
+                 Issue:     785
+
 JG-2004-03-08-0: Bugfix:    Fixed dependencies for sge_sub_object.c
                  Issue:     781
                  Review:    AS

@@ -94,7 +94,7 @@ static void sge_c_gdi_permcheck(char *host, sge_gdi_request *request, sge_gdi_re
 static void sge_gdi_do_permcheck(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 static void sge_c_gdi_trigger(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
-static void sge_gdi_shutdown_event_client(const char*, sge_gdi_request*, sge_gdi_request*);
+static void sge_gdi_shutdown_event_client(const char*, sge_gdi_request*, sge_gdi_request*, lList **alpp);
 static int  get_client_id(lListElem*, int*);
 static void trigger_scheduler_monitoring(char*, sge_gdi_request*, sge_gdi_request*); 
 
@@ -956,6 +956,8 @@ char *host,
 sge_gdi_request *request,
 sge_gdi_request *answer 
 ) {
+   lList *alp = NULL;
+   
    DENTER(GDI_LAYER, "sge_c_gdi_trigger");
 
    switch (request->target) {
@@ -988,7 +990,7 @@ sge_gdi_request *answer
       sge_gdi_kill_master(host, request, answer);
       break;
    case SGE_EVENT_LIST:
-      sge_gdi_shutdown_event_client(host, request, answer);
+      sge_gdi_shutdown_event_client(host, request, answer, &alp);
       break;
    case SGE_SC_LIST: /* trigger scheduler monitoring */
       trigger_scheduler_monitoring(host, request, answer);
@@ -1017,7 +1019,8 @@ sge_gdi_request *answer
 *  INPUTS
 *     const char *aHost         - sender 
 *     sge_gdi_request *aRequest - request 
-*     sge_gdi_request *anAnswer - answer 
+*     sge_gdi_request *anAnswer - answer
+*     lList **alpp              - answer list for info & errors
 *
 *  RESULT
 *     void - none 
@@ -1026,13 +1029,17 @@ sge_gdi_request *answer
 *     MT-NOTE: sge_gdi_shutdown_event_client() is NOT MT safe. 
 *
 *******************************************************************************/
-static void sge_gdi_shutdown_event_client(const char *aHost, sge_gdi_request *aRequest, sge_gdi_request *anAnswer)
+static void sge_gdi_shutdown_event_client(const char *aHost,
+                                          sge_gdi_request *aRequest,
+                                          sge_gdi_request *anAnswer,
+                                          lList **alpp)
 {
    uid_t uid = 0;
    gid_t gid = 0;
    char user[128]  = { '\0' };
    char group[128] = { '\0' };
    lListElem *elem = NULL; /* ID_Type */
+   lListElem *answer = NULL;
 
    DENTER(TOP_LAYER, "sge_gdi_shutdown_event_client");
 
@@ -1054,16 +1061,22 @@ static void sge_gdi_shutdown_event_client(const char *aHost, sge_gdi_request *aR
          continue;
       }
 
-      if (EV_ID_ANY == client_id) {
-         res = sge_shutdown_dynamic_event_clients(user);
+      if (client_id == EV_ID_ANY) {
+         res = sge_shutdown_dynamic_event_clients(user, alpp);
       } else {
-         res = sge_shutdown_event_client(client_id, user, uid);
+         res = sge_shutdown_event_client(client_id, user, uid, alpp);
       }
 
-      if (res != 0 ) {
-         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      } else {
-         answer_list_add(&(anAnswer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      
+      /* Process answer */
+      if (anAnswer->alp == NULL) {
+         anAnswer->alp = lCopyList ("Answer", *alpp);
+      }
+      else {
+         for_each (answer, *alpp) {
+            answer = lDechainElem (*alpp, answer);
+            lAppendElem (anAnswer->alp, answer);
+         }
       }
    }
 

@@ -2016,7 +2016,7 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
             path += 1;
          } else { /* path */
             /* DRMAA-Spec says: The path MUST begin with a colon! */
-            sge_dstring_sprintf(diag, "path must begin with a colon");
+            sge_dstring_sprintf(diag, MSG_DRMAA_PATH_NEEDS_COLON_S, attribute_key);
             DEXIT;
             return DRMAA_ERRNO_INVALID_ARGUMENT;
          }
@@ -2028,7 +2028,7 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
             lSetString( ep, PN_path, path );
          } else if( !strcmp( sw, "-i" ) && bFileStaging==true ) {
             /* No default stdin_path for file staging! */
-            sge_dstring_sprintf(diag, "stdin path required for input file staging ");
+            sge_dstring_sprintf(diag, MSG_DRMAA_NEEDS_INPUT_PATH);
             drmaa_errno = DRMAA_ERRNO_INVALID_ARGUMENT;
          }
 

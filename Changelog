@@ -248,6 +248,16 @@ AH-2001-10-02-0: Schedd: Moved code handling 'forced' attributes to a section
                  independently of consumables/load values and thus needs be done
                  less frequent
 
+SD-2001-10-01-0: Updated the SGEEE pending job algorithm.
+
+                 WARNING - WARNING - WARNING - WARNING - WARNING - WARNING
+
+                 This update changes the binary job structure spooled to disk.  
+                 This means that if you are already running with the open source 
+                 code, you will need to delete all pending and active jobs before 
+                 running with the new SGE binaries. This is true if you are running 
+                 either SGE or SGEEE.
+
 CR-2001-09-26-0: Testsuite:
                  - new setup file version 
                  (new parameter "list_of_submit_only_hosts")

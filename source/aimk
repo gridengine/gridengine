@@ -219,8 +219,8 @@ case "tru64":
    set BUILDARCH = ALPHA5
    set TARGET_BITS = TARGET_32BIT
    breaksw
-case "Interix-x86-3.5":
-   set BUILDARCH = INTERIX
+case "win32-x86":
+   set BUILDARCH = WIN32_X86
    set TARGET_BITS = TARGET_32BIT
    breaksw   
 default:
@@ -1288,7 +1288,20 @@ case LINUXIA64:
    set JAVA_ARCH = "linux"
    breaksw
    
-case INTERIX:
+case WIN32_X86:
+   set CC = gcc
+
+   # option -no-secure always on
+   set SEC         = 0
+   set SECCLEAN    = ""  
+   set SECDEPEND   = ""
+   set SECFLAGS    = ""
+   set SECLIB      = ""
+   set SECLIBS     = ""
+   set SECLIBOBJS  = ""
+   set SECTARGETS  = ""
+   set KLFLAGS     = ""
+
    set COMPILE_DC     = 1
    set MAKEWINGRIDLIB = 1
 
@@ -1304,12 +1317,12 @@ case INTERIX:
    if ($CC == gcc) then
       set CC  = gcc
       set CXX = gcc
-      #set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -D$BUILDARCH -D$COMPILE_ARCH -DGETHOSTBYNAME_M -I/dev/fs/C/Program\ Files/Microsoft\ Visual\ Studio\ .NET\ 2003/Vc7/PlatformSDK/Include -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
-      set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -D$BUILDARCH -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"      
+      #set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -I/dev/fs/C/Program\ Files/Microsoft\ Visual\ Studio\ .NET\ 2003/Vc7/PlatformSDK/Include -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-Wl,-EL,-b=pe-i386 -Wall -Werror -O0 -DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"      
    else
       set CC  = cc
       set CXX = cc
-      set CFLAGS = "-X /Wall -X /WX $OFLAG -D$BUILDARCH -D$COMPILE_ARCH $DEBUG_FLAG $CFLAGS"
+      set CFLAGS = "-X /Wall -X /WX $OFLAG -DINTERIX -D$COMPILE_ARCH $DEBUG_FLAG $CFLAGS"
    endif
 
    if ($DEBUGGED == 1) then
@@ -1337,19 +1350,10 @@ case INTERIX:
    set NOERR_PROTO = "-Wno-strict-prototypes"
 #   set LIBS     = "-lgcc -ldb -ll -lm -lpthread -lpsxdll -lc -lrpclib -lsocket -ly -lfrtbegin -litcl3.2 -litk3.2 -lg2c $LIBS"
    
-      
    set XMTDEF   = ""
-
-   if ($TARGET_BITS == TARGET_32BIT || $BUILDARCH == ALINUX) then
-      set XLIBD    = "-L/usr/X11R6/lib"
-   else
-      set XLIBD    = "-L/usr/X11R6/lib64"
-   endif
-
+   set XLIBD    = "-L/usr/X11R6/lib64"
    set XLFLAGS  = "$XLIBD"
-
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include -I/usr/local/include/bind"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"

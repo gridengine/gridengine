@@ -217,9 +217,9 @@ char **argv
    starting_up();
    
    /*
-   ** log a warning message if execd hasn't been started by root
+   ** log a warning message if execd hasn't been started by a superuser
    */
-   if (sge_is_start_user_root()) {
+   if (!sge_is_start_user_superuser()) {
       WARNING((SGE_EVENT, MSG_SWITCH_USER_NOT_ROOT));
    }   
 

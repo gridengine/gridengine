@@ -225,8 +225,8 @@ SetArchBin()
       ARCHBIN=FREEBSD_PPC
    elif [ $i = fbsd-sparc64 ]; then
       ARCHBIN=FREEBSD_SPARC64
-   elif [ $i = interix ]; then
-      ARCHBIN=INTERIX
+   elif [ $i = win32-x86 ]; then
+      ARCHBIN=WIN32_X86
    else
       echo No ARCHBIN name for \"$i\"
       if [ $exit_on_error = true ]; then
@@ -1008,7 +1008,7 @@ if [ $instcommon = true ]; then
    if [ $instjavadoc = true ]; then
       if [ -d ../doc/javadocs ]; then
          Execute rm -rf $DEST_SGE_ROOT/javadocs
-         Makedir javadocs
+         MakeDir javadocs
          Execute cp -R ../doc/javadocs $DEST_SGE_ROOT
          Execute chmod -R a+r $DEST_SGE_ROOT/javadocs
          Cleanup javadocs

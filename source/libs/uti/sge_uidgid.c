@@ -122,6 +122,54 @@ void uidgid_mt_init(void)
    pthread_once(&uidgid_once, uidgid_once_init);
 }
 
+/****** uti/uidgid/sge_is_start_user_superuser() ********************************
+*  NAME
+*     sge_is_real_user_superuser() -- Check the SGE/EE real user
+*
+*  SYNOPSIS
+*     int sge_is_real_user_superuser(void)
+*
+*  FUNCTION
+*     Check the real user id to determine if it is the superuser. If so, return
+*     1, else return 0. This function relies on getuid == 0 for UNIX.  On
+*     INTERIX, this function determines if the user is the built-in local admin 
+*     user or if the user is in the +Administrators group.
+*
+*  INPUTS
+*     NONE
+*
+*  RESULT
+*     int - 0 or 1 
+*         0 - Not running as superuser
+*         1 - Running as superuser
+*
+*  NOTES
+*     MT-NOTE: sge_is_start_user_superuser() is MT safe.
+* 
+*  SEE ALSO
+*     uti/uidgid/sge_switch2admin_user()
+*     uti/uidgid/sge_set_admin_username()
+*     uti/uidgid/sge_switch2start_user()
+*     uti/uidgid/sge_run_as_user()
+******************************************************************************/
+int sge_is_start_user_superuser(void)
+{
+   int ret = 0; 
+   DENTER(UIDGID_LAYER, "sge_is_real_user_superuser");
+
+#if defined(INTERIX) || defined(WIN32)
+   ret = wl_is_start_user_superuser(); 
+#else
+   if (getuid() == 0)
+     ret = 1;
+   else
+     ret = 0; 
+#endif
+
+   DEXIT;
+   return ret;
+} /* sge_is_start_user_superuser() */           
+
 /****** uti/uidgid/sge_set_admin_username() ***********************************
 *  NAME
 *     sge_set_admin_username() -- Set SGE/EE admin user
@@ -230,7 +278,7 @@ int sge_switch2admin_user(void)
       abort();
    }
  
-   if (getuid()) {
+   if (!sge_is_start_user_superuser()) {
       DPRINTF((MSG_SWITCH_USER_NOT_ROOT));
       ret = 0;
       goto exit;
@@ -428,6 +476,57 @@ int sge_user2uid(const char *user, uid_t *uidp, int retries)
    return 0;
 } /* sge_user2uid() */
 
+/****** uti/uidgid/sge_group2gid() ********************************************
+*  NAME
+*     sge_group2gid() -- Resolve a group name to its gid 
+*
+*  SYNOPSIS
+*     int sge_group2gid(const char *gname, gid_t *gidp, int retries) 
+*
+*  FUNCTION
+*     Resolves a groupname ('gname') to its gid (stored in 'gidp').
+*     'retries' defines the number of (e.g. NIS/DNS) retries.
+*     If 'gidp' is NULL the group name is resolved without saving it.
+*
+*  INPUTS
+*     const char *gname - group name 
+*     gid_t *gidp       - gid pointer 
+*     int retries       - number of retries  
+*
+*  NOTES
+*     MT-NOTE: sge_group2gid() is MT safe.
+*
+*  RESULT
+*     int - exit state 
+*         0 - OK
+*         1 - Error
+******************************************************************************/
+int sge_group2gid(const char *gname, gid_t *gidp, int retries) 
+{
+   struct group *gr;
+   struct group grentry;
+   char buffer[2048];
+
+   DENTER(UIDGID_LAYER, "sge_group2gid");
+
+   do {
+      if (!retries--) {
+         DEXIT;
+         return 1;
+      }
+      if (getgrnam_r(gname, &grentry, buffer, sizeof(buffer), &gr) != 0) {
+         gr = NULL;
+      }
+   } while (gr == NULL);
+   
+   if (gidp) {
+      *gidp = gr->gr_gid;
+   }
+
+   DEXIT; 
+   return 0;
+} /* sge_group2gid() */
+
 /****** uti/uidgid/sge_uid2user() *********************************************
 *  NAME
 *     sge_uid2user() -- Resolves uid to user name. 
@@ -531,12 +630,16 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
       
       size = get_group_buffer_size();
       buf = sge_malloc(size);
-      
+#if defined (INTERIX)
+     /* max retries that are made resolving group name */
+      while (getgrgid_nomembers_r(gid, &grentry, buf, size, &gr) != 0)
+#else
       while (getgrgid_r(gid, &grentry, buf, size, &gr) != 0)
+#endif
       {
          if (!retries--)
          {
-            ERROR((SGE_EVENT, MSG_SYSTEM_GETGRGIDFAILED_US , u32c(gid), strerror(errno)));
+            ERROR((SGE_EVENT, MSG_SYSTEM_GETGRGIDFAILED_US, u32c(gid), strerror(errno)));
             DEXIT;
             return 1;
          }
@@ -629,7 +732,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
  
    sge_switch2start_user();
  
-   if (getuid() != 0) {
+   if (!sge_is_start_user_superuser()) {
       sprintf(err_str, MSG_SYSTEM_CHANGEUIDORGIDFAILED );
       return -1;
    }

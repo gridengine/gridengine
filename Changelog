@@ -1,3 +1,6 @@
+HP-2004-08-26-0: Enhancem.: Changed build output path and binary path for
+                            Windows version, added 'Administrator' detection.
+
 JG-2004-10-12-0: Bugfix:    Fixed broken build on AIX.
 
 SG-2004-10-12-0: Bugfix:    The qmaster crashed every once in a while
@@ -58,6 +61,7 @@ CR-2004-10-08-0: Enhancem.: implemented application status callback
                  Issue:     1294
                  Bugtraq:   6176115
 
+>>>>>>> 1.2283
 CR-2004-10-07-1: Enhancem.: application status callback function now
                             supports status string (Part I)
                  Review:    AA

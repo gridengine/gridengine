@@ -73,6 +73,7 @@ struct rusage {
 #include "signal_queue.h"
 #include "execution_states.h"
 #include "sge_signal.h"
+#include "sge_uidgid.h"
 #include "sge_time.h"
 #include "sge_parse_num_par.h"
 #include "sgedefs.h"
@@ -635,8 +636,8 @@ int main(int argc, char **argv)
 
    uid = getuid();
 
-   if (uid) {
-      shepherd_trace_sprintf("warning: starting not as root (uid=%d)", uid);
+   if (!sge_is_start_user_superuser()) {
+      shepherd_trace_sprintf("warning: starting not as superuser (uid=%d)", uid);
    }
 
    /* Shepherd in own process group */

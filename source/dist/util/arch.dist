@@ -141,8 +141,17 @@ HP-UX)
          ARCH=hp10
          ;;
       *.11.*)
+      if [ -x /usr/bin/getconf ]; then
+         bits="`/usr/bin/getconf KERNEL_BITS`"
+         if [ $bits -eq 64 ]; then
+            ARCH=hp11-64
+         else
+            ARCH=hp11
+         fi
+      else
          ARCH=hp11
-         ;;
+       fi
+      ;;
       esac
    esac
    ;;
@@ -239,6 +248,9 @@ SUPER-UX)
       ARCH=UNSUPPORTED-SUPER-UX-$osmachine
       ;;
    esac
+   ;;
+Interix)
+   ARCH=win32-$osmachine
    ;;
 *)
    if [ -f /unicos ]; then

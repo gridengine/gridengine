@@ -1,8 +1,12 @@
+EB-2002-09-25-1  Bugfix:    Exiting sgeee jobs will be shown in qmons dialog
+                            for pending jobs.
+                 IZ:        has no id until now (IZ does not work)
+                 Changed:   qmon
+
 EB-2002-09-25-0  Bugfix:    qconf gets commd timeout
                  IZ:        #308
                  Review:    AH
                  Changed:   qconf
-
 
 CR-2002-09-25-0  Testsuite  error when comparing host architectures and
                             detecting duplicate compile hosts

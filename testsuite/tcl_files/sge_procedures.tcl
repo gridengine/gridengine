@@ -714,7 +714,7 @@ proc reset_schedd_config {} {
   set default_array(schedule_interval)          "0:0:15"
   set default_array(maxujobs)                   "0"
   set default_array(maxgjobs)                   "0"
-  set default_array(queue_sort_method)          "share"
+  set default_array(queue_sort_method)          "load"
   set default_array(user_sort)                  "false"
   set default_array(job_load_adjustments)       "np_load_avg=0.50"
   set default_array(load_adjustment_decay_time) "0:7:30"
@@ -723,6 +723,7 @@ proc reset_schedd_config {} {
 
 # this is sgeee
   if { [string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
+     set default_array(queue_sort_method)          "share"
      set default_array(sgeee_schedule_interval)      "00:01:00"
      set default_array(halftime)                   "0"
      set default_array(usage_weight_list)          "cpu=0.34,mem=0.33,io=0.33"

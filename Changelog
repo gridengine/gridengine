@@ -1,3 +1,12 @@
+AH-2003-07-30-1: Doc.:      Documented env vars affecting DRMAA library calls
+                            Improved formatting of DRMAA man pages
+                            Removed reference to COMMD_HOST from all man pages
+                            except for sge_execd and sgecommdcntl (#585)
+                 Issue:     585
+                 Review:    AA
+
+AH-2003-07-30-0: Enhancem.: Ensure drmaa_strerrno() returns NULL for unknown error 
+                            codes.
 EB-2003-07-30-0: Enhancem.: CQ APIBASE WP
                             - initial CQ CULL structure
                             - initial gdi-qmaster code
@@ -5,8 +14,6 @@ EB-2003-07-30-0: Enhancem.: CQ APIBASE WP
                             - event handling
                  Changed:   all
 
-AH-2003-07-30-0: Enhancem.: Ensure drmaa_strerrno() returns NULL for unknown 
-                            error codes.
                             Enable build rule for DRMAA example.
                  Doc.:      Finshed DRMAA ADOC headers.
 

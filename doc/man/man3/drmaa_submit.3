@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_submit.3,v $     Last Update: $Date: 2003/07/28 16:13:40 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: drmaa_submit.3,v $     Last Update: $Date: 2003/07/30 12:21:51 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_submit 3 "$Date: 2003/07/28 16:13:40 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_submit 3 "$Date: 2003/07/30 12:21:51 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -25,17 +25,61 @@ drmaa_run_job, drmaa_run_bulk_jobs, drmaa_get_next_job_id, drmaa_release_job_ids
 .SH SYNOPSIS
 .B #include """drmaa.h"""
 .PP
-\fBint drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len);\fB
-.PP
+.\"
+.\"
+.\"
 .nf
-\fBint drmaa_run_bulk_jobs( drmaa_job_ids_t **jobids, drmaa_job_template_t *jt, int start, int end, int incr, char
-*error_diagnosis, size_t error_diag_len);\fB
+\fBint drmaa_run_job(\fB
+.RS
+\fBchar *job_id,\fB
+\fBsize_t job_id_len,\fB
+\fBdrmaa_job_template_t *jt,\fB
+\fBchar *error_diagnosis,\fB 
+\fBsize_t error_diag_len\fB
+.RE
+.fi
+\fB);\fB
 .PP
+.\"
+.\"
+.\"
 .nf
-\fBint drmaa_get_next_job_id(drmaa_job_ids_t* values, char *value, int value_len);\fB
+\fBint drmaa_run_bulk_jobs(\fB
+.RS
+drmaa_job_ids_t **jobids,\fB
+drmaa_job_template_t *jt,\fB
+int start,\fB
+int end,\fB
+int incr,\fB
+char *error_diagnosis,\fB
+size_t error_diag_len\fB
+.RE
+.fi
+\fB);\fB
 .PP
+.\"
+.\"
+.\"
 .nf
-\fBvoid drmaa_release_job_ids(drmaa_job_ids_t* values);\fB
+\fBint drmaa_get_next_job_id(\fB
+.RS
+\fBdrmaa_job_ids_t* values,\fB
+\fBchar *value,\fB
+\fBint value_len\fB
+.RE
+.fi
+\fB);\fB
+.PP
+.\"
+.\"
+.\"
+.nf
+\fBvoid drmaa_release_job_ids(\fB
+.RS
+\fBdrmaa_job_ids_t* values\fB
+.RE
+.fi
+);\fB
 .PP
 .nf
 .\"
@@ -74,6 +118,39 @@ tasks.
 .\"
 .\"
 .\"
+.SH "ENVIRONMENTAL VARIABLES"
+.\"
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration files.
+.\"
+.IP "\fBSGE_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell to be used. To address a xxQS_NAMExx
+cell xxQS_NAMExx uses (in the order of precedence):
+.sp 1
+.RS
+.RS
+The name of the cell specified in the environment
+variable xxQS_NAME_Sxx_CELL, if it is set.
+.sp 1
+The name of the default cell, i.e. \fBdefault\fP.
+.sp 1
+.RE
+.RE
+.\"
+.IP "\fBxxQS_NAME_Sxx_DEBUG_LEVEL\fP" 1.5i
+If set, specifies that debug information
+should be written to stderr. In addition the level of
+detail in which debug information is generated is defined.
+.\"
+.IP "\fBCOMMD_PORT\fP" 1.5i
+If set, specifies the tcp port on which
+.M xxqs_name_sxx_commd 8
+is expected to listen for communication requests.
+Most installations will use a services map entry instead
+to define that port.
+.\"
+.\"
+.\"
 .SH "RETURN VALUES"
 Upon successful completion, drmaa_run_job(), drmaa_run_bulk_jobs(), and drmaa_get_next_job_id()
 return DRMAA_ERRNO_SUCCESS. Other values indicate an error.
@@ -87,7 +164,7 @@ information is then provided in the buffer \fIerror_diagnosis\fP.
 The drmaa_run_job(), drmaa_run_bulk_jobs(), and drmaa_get_next_job_id() will fail if:
 .\" 
 .SS "DRMAA_ERRNO_INTERNAL_ERROR"
-Unexpected or internal DRMAA error like memory allocation, system call failure, etc.
+Unexpected or internal DRMAA error like system call failure, etc.
 .\" 
 .SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
 Could not contact DRM system for this request.

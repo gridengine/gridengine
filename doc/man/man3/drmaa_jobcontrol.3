@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_jobcontrol.3,v $     Last Update: $Date: 2003/07/28 16:13:36 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: drmaa_jobcontrol.3,v $     Last Update: $Date: 2003/07/30 12:21:51 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_jobcontrol 3 "$Date: 2003/07/28 16:13:36 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_jobcontrol 3 "$Date: 2003/07/30 12:21:51 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -25,10 +25,30 @@ drmaa_job_ps, drmaa_control, \- Monitor and control jobs
 .SH SYNOPSIS
 .B #include """drmaa.h"""
 .PP
-\fBint drmaa_job_ps(const char *job_id, int *remote_ps, char *error_diagnosis, size_t error_diag_len);\fB
+.\"
+.\"
+.\"
+.nf
+\fBint drmaa_job_ps(\fB
+.RS
+\fBconst char *job_id,\fB
+\fBint *remote_ps,\fB
+\fBchar *error_diagnosis,\fB
+\fBsize_t error_diag_len\fB
+.RE
+.fi
+\fB);\fB
 .PP
 .nf
-\fBint drmaa_control(const char *jobid, int action, char *error_diagnosis, size_t error_diag_len);\fB
+\fBint drmaa_control(\fB
+.RS
+\fBconst char *jobid,\fB
+\fBint action,\fB
+\fBchar *error_diagnosis,\fB
+\fBsize_t error_diag_len\fB
+.RE
+.fi
+\fB);\fB
 .PP
 .nf
 .\"
@@ -97,6 +117,39 @@ xxQS_NAMExx interfaces must be used.
 .\"
 .\"
 .\"
+.SH "ENVIRONMENTAL VARIABLES"
+.\"
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration files.
+.\"
+.IP "\fBSGE_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell to be used. To address a xxQS_NAMExx
+cell xxQS_NAMExx uses (in the order of precedence):
+.sp 1
+.RS
+.RS
+The name of the cell specified in the environment
+variable xxQS_NAME_Sxx_CELL, if it is set.
+.sp 1
+The name of the default cell, i.e. \fBdefault\fP.
+.sp 1
+.RE
+.RE
+.\"
+.IP "\fBxxQS_NAME_Sxx_DEBUG_LEVEL\fP" 1.5i
+If set, specifies that debug information
+should be written to stderr. In addition the level of
+detail in which debug information is generated is defined.
+.\"
+.IP "\fBCOMMD_PORT\fP" 1.5i
+If set, specifies the tcp port on which
+.M xxqs_name_sxx_commd 8
+is expected to listen for communication requests.
+Most installations will use a services map entry instead
+to define that port.
+.\"
+.\"
+.\"
 .SH "RETURN VALUES"
 Upon successful completion, drmaa_job_ps(), and drmaa_control() return 
 DRMAA_ERRNO_SUCCESS. Other values indicate an error. Up to \fIerror_diag_len\fP characters of error related diagnosis 
@@ -109,7 +162,7 @@ information is then provided in the buffer \fIerror_diagnosis\fP.
 The drmaa_job_ps(), and drmaa_control() will fail if:
 .\" 
 .SS "DRMAA_ERRNO_INTERNAL_ERROR"
-Unexpected or internal DRMAA error like memory allocation, system call failure, etc.
+Unexpected or internal DRMAA error like system call failure, etc.
 .\" 
 .SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
 Could not contact DRM system for this request.

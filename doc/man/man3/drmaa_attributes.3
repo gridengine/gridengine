@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2003/07/28 16:13:32 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2003/07/30 12:21:51 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2003/07/28 16:13:32 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2003/07/30 12:21:51 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -26,16 +26,55 @@ drmaa_release_attr_names \- DRMAA job template attributes
 .SH SYNOPSIS
 .B #include """drmaa.h"""
 .PP
-\fBint drmaa_get_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis, size_t error_diag_len);\fB
-.PP
+.\"
+.\"
+.\"
 .nf
-\fBint drmaa_get_vector_attribute_names(drmaa_attr_names_t **values, char *error_diagnosis, size_t error_diag_len);\fB
+\fBint drmaa_get_attribute_names(\fB
+.RS
+\fBdrmaa_attr_names_t **values,\fB
+\fBchar *error_diagnosis,\fB
+\fBsize_t error_diag_len\fB
+.RE
+.fi
+);\fB
 .PP
+.\"
+.\"
+.\"
 .nf
-\fBint drmaa_get_next_attr_name(drmaa_attr_names_t* values, char *value, int value_len);\fB
+\fBint drmaa_get_vector_attribute_names(\fB
+.RS
+\fBdrmaa_attr_names_t **values,\fB
+\fBchar *error_diagnosis,\fB
+\fBsize_t error_diag_len\fB
+.RE
+.fi
+);\fB
 .PP
+.\"
+.\"
+.\"
 .nf
-\fBvoid drmaa_release_attr_names( drmaa_attr_names_t* values);\fB
+\fBint drmaa_get_next_attr_name(\fB
+.RS
+\fBdrmaa_attr_names_t* values,\fB
+\fBchar *value,\fB
+\fBint value_len\fB
+.RE
+.fi
+);\fB
+.PP
+.\"
+.\"
+.\"
+.nf
+\fBvoid drmaa_release_attr_names(\fB
+.RS
+\fBdrmaa_attr_names_t* values\fB
+.RE
+.fi
+);\fB
 .PP
 .nf
 .\"
@@ -224,8 +263,8 @@ Specifies the arguments to the job.
 .\" mandatory but not yet implemented
 .\"
 .SS "drmaa_job_category - ""<category>"""
-Specifies the DRMAA job category. The \fIcategory\fP string is used by xxQS_NAMExx as 
-reference into the 
+Specifies the DRMAA job category. The \fIcategory\fP string will presumably be used 
+by xxQS_NAMExx as reference into the 
 .M qtask 5
 file. Certain 
 .M qsub 1 
@@ -239,7 +278,7 @@ template settings. Not yet implemented.
 .\" 
 .\" 
 .SS "drmaa_native_specification - ""<native_specification>"""
-Specifies xxQS_NAMExx native specification. Certain 
+Specifies xxQS_NAMExx native specification. Presumably certain 
 .M qsub 1 
 options containedin the \fInative_specification\fP are applied to the job template 
 before job submission. Job settings resulting from native specification can be 
@@ -286,8 +325,9 @@ If the optional UTC-offset is not specified, the offset associated with the loca
 used. If the day (DD) is not specified, the current day will be used unless the 
 specified hour:mm:ss has already elapsed, in which case the next day will be used. 
 Similarly for month (MM), year (YY), and century-1 (CC). 
-Example: The time: Sep 3 4:47:27 PM PDT 2002, could be represented as: 2002/09/03 16:47:27 -07:00
-.PP
+Example: The time: Sep 3 4:47:27 PM PDT 2002, could be represented as: 2002/09/03 16:47:27 -07:00.
+Not yet implemented.
+ .PP
 .\" 
 .\" these are optional
 .\" 
@@ -314,6 +354,39 @@ Example: The time: Sep 3 4:47:27 PM PDT 2002, could be represented as: 2002/09/0
 .\" .SS "drmaa_durartion_slimit"
 .\" .PP
 .\" 
+.\"
+.\"
+.SH "ENVIRONMENTAL VARIABLES"
+.\"
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration files.
+.\"
+.IP "\fBSGE_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell to be used. To address a xxQS_NAMExx
+cell xxQS_NAMExx uses (in the order of precedence):
+.sp 1
+.RS
+.RS
+The name of the cell specified in the environment
+variable xxQS_NAME_Sxx_CELL, if it is set.
+.sp 1
+The name of the default cell, i.e. \fBdefault\fP.
+.sp 1
+.RE
+.RE
+.\"
+.IP "\fBxxQS_NAME_Sxx_DEBUG_LEVEL\fP" 1.5i
+If set, specifies that debug information
+should be written to stderr. In addition the level of
+detail in which debug information is generated is defined.
+.\"
+.IP "\fBCOMMD_PORT\fP" 1.5i
+If set, specifies the tcp port on which
+.M xxqs_name_sxx_commd 8
+is expected to listen for communication requests.
+Most installations will use a services map entry instead
+to define that port.
+.\"
 .\" 
 .\"
 .SH "RETURN VALUES"
@@ -331,7 +404,7 @@ The drmaa_get_attribute_names(), drmaa_get_vector_attribute_names(), and drmaa_g
 functions will fail if:
 .\" 
 .SS "DRMAA_ERRNO_INTERNAL_ERROR"
-Unexpected or internal DRMAA error like memory allocation, system call failure, etc.
+Unexpected or internal DRMAA error like system call failure, etc.
 .\" 
 .SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
 Could not contact DRM system for this request.

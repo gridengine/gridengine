@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/06/04 12:47:54 $     Revision: $Revision: 1.25 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2003/07/30 12:21:49 $     Revision: $Revision: 1.26 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2003/06/04 12:47:54 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2003/07/30 12:21:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -537,7 +537,7 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and
 This option is only supported in case of a 
 xxQS_NAME_EExx system. It is not available for xxQS_NAME_Cxx systems.
 .br
-Specifies the deadline initiation time in [[CC]YY]DDhhmm[.SS] format (see
+Specifies the deadline initiation time in [[CC]YY]MMDDhhmm[.SS] format (see
 \fB\-a\fP option above). The deadline initiation time is the time at
 which a deadline job has to reach top priority to be able to complete
 within a given deadline. Before the deadline initiation time the
@@ -1410,14 +1410,6 @@ If set, specifies the tcp port on which
 is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.
-.\"
-.IP "\fBCOMMD_HOST\fP" 1.5i
-If set, specifies the host on which the particular
-.M xxqs_name_sxx_commd 8
-to be used for xxQS_NAMExx communication of the
-\fIqsub\fP, \fIqsh\fP, \fIqlogin\fP or \fIqalter\fP
-client resides.
-Per default the local host is used.
 .\"
 .IP "DISPLAY" 1.5i
 For

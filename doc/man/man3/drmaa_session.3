@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2003/07/28 16:13:39 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2003/07/30 12:21:51 $     Revision: $Revision: 1.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_session 3 "$Date: 2003/07/28 16:13:39 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_session 3 "$Date: 2003/07/30 12:21:51 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -25,10 +25,27 @@ drmaa_init, drmaa_exit \- Start/finish xxQS_NAMExx DRMAA session
 .SH SYNOPSIS
 .B #include """drmaa.h"""
 .PP
-\fBint drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len);\fB
+.\"
+.\"
+.\"
+.nf
+\fBint drmaa_init(\fB
+.RS
+\fBconst char *contact,\fB
+\fBchar *error_diagnosis,\fB
+\fBsize_t error_diag_len\fB
+.RE
+.fi
+\fB);\fB
 .PP
 .nf
-\fBint drmaa_exit(char *error_diagnosis, size_t error_diag_len);\fB
+\fBint drmaa_exit(\fB
+.RS
+\fBchar *error_diagnosis,\fB
+\fBsize_t error_diag_len\fB
+.RE
+.fi
+\fB);\fB
 .PP
 .nf
 .\"
@@ -52,6 +69,38 @@ jobs are not effected.
 .PP
 .\"
 .\"
+.SH "ENVIRONMENTAL VARIABLES"
+.\"
+.IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
+Specifies the location of the xxQS_NAMExx standard configuration files.
+.\"
+.IP "\fBSGE_CELL\fP" 1.5i
+If set, specifies the default xxQS_NAMExx cell to be used. To address a xxQS_NAMExx
+cell xxQS_NAMExx uses (in the order of precedence):
+.sp 1
+.RS
+.RS
+The name of the cell specified in the environment
+variable xxQS_NAME_Sxx_CELL, if it is set.
+.sp 1
+The name of the default cell, i.e. \fBdefault\fP.
+.sp 1
+.RE
+.RE
+.\"
+.IP "\fBxxQS_NAME_Sxx_DEBUG_LEVEL\fP" 1.5i
+If set, specifies that debug information
+should be written to stderr. In addition the level of
+detail in which debug information is generated is defined.
+.\"
+.IP "\fBCOMMD_PORT\fP" 1.5i
+If set, specifies the tcp port on which
+.M xxqs_name_sxx_commd 8
+is expected to listen for communication requests.
+Most installations will use a services map entry instead
+to define that port.
+.\"
+.\"
 .\"
 .SH "RETURN VALUES"
 Upon successful completion, drmaa_init() and drmaa_exit() return DRMAA_ERRNO_SUCCESS.
@@ -66,7 +115,7 @@ information is then provided in the buffer \fIerror_diagnosis\fP.
 The drmaa_init() and drmaa_exit() functions will fail if:
 .\" 
 .SS "DRMAA_ERRNO_INTERNAL_ERROR"
-Unexpected or internal DRMAA error like memory allocation, system call failure, etc.
+Unexpected or internal DRMAA error like system call failure, etc.
 .\" 
 .SS "DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE"
 Could not contact DRM system for this request.
@@ -106,5 +155,4 @@ DRM system disengagement failed.
 .\" 
 .\" 
 .SH "SEE ALSO"
-.M xxqs_name_sxx_intro 1 ,
-.M list_intro 3 .
+.M drmaa_submit 3 .

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2003/05/20 12:58:15 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2003/07/30 12:21:47 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QACCT 1 "$Date: 2003/05/20 12:58:15 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QACCT 1 "$Date: 2003/07/30 12:21:47 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qacct \- report and account for xxQS_NAMExx usage
 .SH SYNOPSIS
@@ -223,14 +223,6 @@ If set, specifies the tcp port on which
 is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.
-.\"
-.IP "\fBCOMMD_HOST\fP" 1.5i
-If set, specifies the host on which the particular
-.M xxqs_name_sxx_commd 8
-to be used for xxQS_NAMExx communication of the
-.I qacct
-client resides.
-Per default the local host is used.
 .\"
 .\"
 .SH FILES

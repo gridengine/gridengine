@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qrls.1,v $     Last Update: $Date: 2002/07/04 09:50:11 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: qrls.1,v $     Last Update: $Date: 2003/07/30 12:21:49 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QRLS 1 "$Date: 2002/07/04 09:50:11 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QRLS 1 "$Date: 2003/07/30 12:21:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qrls \- release xxQS_NAMExx jobs from previous hold states
 .SH SYNTAX
@@ -156,14 +156,6 @@ If set, specifies the tcp port on which
 is expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.
-.\"
-.IP "\fBCOMMD_HOST\fP" 1.5i
-If set, specifies the host on which the particular
-.M xxqs_name_sxx_commd 8
-to be used for xxQS_NAMExx communication of the
-.I qrls
-client resides.
-Per default the local host is used.
 .\"
 .\"
 .SH "SEE ALSO"

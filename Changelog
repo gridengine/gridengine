@@ -1,3 +1,34 @@
+SG-2003-09-15-2: Bugfix:    The running ticket update did not work correctly when the
+                            sgeee_scheduling interval was set to a very very long time,
+                            a sge_scheduling run was done and the sgeee_scheduling 
+                            interval was set back to a normal amount of time. The
+                            scheduler had the very long sgeee_scheduling interval 
+                            stored. It got changed after its execution.
+     
+                            The new implementation stores the time of the last
+                            sgeee_scheduling interval execution and checks every
+                            scheduling interval, if the specified time has past.
+      
+                 Review:    AS
+                 Changed:   scheduler
+
+SG-2003-09-15-1: Bugfix:    When a pending job moved to running, it lost its 
+                            ticket details. It had only the total amount of tickets.
+                            This is changed now, the ftix, sharetree tix and others
+                            are included now.
+
+                 Review:    AS
+                 Changed:   scheduler
+
+SG-2003-09-15-0: Bugfix:    Fixed a bug in the pending ticket calculation. When
+                            two projects have the same amount of shares, they
+                            were combined in one functional category, which lead
+                            to a wrong job order. The fcategories are now defined
+                            by the references to the control structures.
+   
+                 Review:    AS
+                 Changed:   scheduler
+
 CR-2003-09-04-0: Bugfix:    infotext ignores parameters for HP10, HP11 systems
                  Changed:   infotext
                  Issue:     597

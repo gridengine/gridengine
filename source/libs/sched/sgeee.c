@@ -2015,13 +2015,19 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
          /* locate the right category */
          for_each (current, *fcategories) {
             if ((lGetUlong(current, FCAT_job_share) == job_shares) &&
-                (lGetUlong(current, FCAT_user_share) == user_shares) &&
-                (lGetUlong(current, FCAT_dept_share) == dept_shares) &&
-                (lGetUlong(current, FCAT_project_share) == project_shares) &&
+                (lGetRef(current, FCAT_user) == jref->user) &&
+                (lGetRef(current, FCAT_dept) == jref->dept) &&
+                (lGetRef(current, FCAT_project) == jref->project) &&
                 (lGetUlong(current, FCAT_jobclass_share) == jobclass_shares)) {
                break;
             }
          }
+
+/**
+ * the categories are defined via the share values of the job and job class, for the other it
+ * uses a reference to the controll object. When a two categories have the same shares and 
+ * controll objects, they are combined into one category. 
+ */
 
          if (current == NULL) {   /* create new category */
             if (!(current = lAddElemUlong(fcategories, FCAT_job_share, job_shares, FCAT_Type))) {
@@ -2031,8 +2037,11 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
                return;
             }
             lSetUlong(current, FCAT_user_share, user_shares);
+            lSetRef(current, FCAT_user, jref->user);
             lSetUlong(current, FCAT_dept_share, dept_shares);
+            lSetRef(current, FCAT_dept, jref->dept);
             lSetUlong(current, FCAT_project_share, project_shares);
+            lSetRef(current, FCAT_project, jref->project);
             lSetUlong(current, FCAT_jobclass_share, jobclass_shares);
          }
 
@@ -2053,13 +2062,6 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
             cur_ref_entry = lGetRef(current, FCAT_jobrelated_ticket_last);
 
             if(dependent)
-/*
-               while (cur_ref_entry != NULL) {
-                  if (cur_ref_entry->ref->tickets >= new_elem->ref->tickets)
-                     break;
-                  cur_ref_entry = cur_ref_entry->prev;
-               }
-*/
             while (cur_ref_entry != NULL) {
                sge_ref_t *ref = cur_ref_entry->ref;
                if (dependent){
@@ -2073,14 +2075,14 @@ static void build_functional_categories(sge_ref_t *job_ref, int num_jobs, lList 
                         break;
                   }
                }
-               else{
+/*               else{
                   if (lGetUlong(ref->job, JB_job_number) < lGetUlong(jref->job, JB_job_number))
                      break;
                   else if ((lGetUlong(ref->job, JB_job_number) == lGetUlong(jref->job, JB_job_number)) 
                         && (REF_GET_JA_TASK_NUMBER(ref) < REF_GET_JA_TASK_NUMBER(jref)))
                      break;
 
-               }
+               }*/
                cur_ref_entry = cur_ref_entry->prev;
             }
 
@@ -2155,6 +2157,9 @@ static void free_fcategories(lList **fcategories) {
       }
       lSetRef(fcategory, FCAT_jobrelated_ticket_last, NULL);
       lSetRef(fcategory, FCAT_jobrelated_ticket_first, NULL);
+      lSetRef(fcategory, FCAT_user, NULL);
+      lSetRef(fcategory, FCAT_dept, NULL);
+      lSetRef(fcategory, FCAT_project, NULL);
    }
    *fcategories= lFreeList(*fcategories);
 
@@ -2372,6 +2377,7 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
                                  total_functional_tickets /
                                  sum_of_project_functional_shares);
    }
+
    /*-------------------------------------------------------
     * calculate department functional tickets for this job
     *-------------------------------------------------------*/
@@ -2380,6 +2386,7 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
       department_functional_tickets = (ref->dept_fshare *
                                  total_functional_tickets /
                                  sum_of_department_functional_shares);
+
 
    /*-------------------------------------------------------
     * calculate job class functional tickets for this job
@@ -2847,7 +2854,7 @@ static void calc_intern_pending_job_functional_tickets(
       ref->user_fshare = lGetUlong(current, FCAT_user_share);
       if(share_functional_shares)
          ref->user_fshare /= lGetUlong(ref->user, UP_job_cnt) +1 ; 
-      else 
+      else  
          sum_of_user_functional_shares += ref->user_fshare;
    }
 
@@ -2859,11 +2866,9 @@ static void calc_intern_pending_job_functional_tickets(
       ref->project_fshare = lGetUlong(current, FCAT_project_share);
       if(share_functional_shares) 
          ref->project_fshare /= (lGetUlong(ref->project, UP_job_cnt) +1);
-
       else      
          sum_of_project_functional_shares += ref->project_fshare;
    }
-
    /*-------------------------------------------------------------
     * Sum department functional shares
     *-------------------------------------------------------------*/
@@ -3572,7 +3577,6 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                double dept_fshares = pending_dept_fshares + 0.001;
                double jobclass_fshares = pending_jobclass_fshares + 0.001;
                double job_fshares = pending_job_fshares + 0.001;
-
                /* calc the tickets */
                calc_intern_pending_job_functional_tickets(current,
                                                    user_fshares,
@@ -3612,6 +3616,10 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                free(tmp);
                if(lGetRef(max_current, FCAT_jobrelated_ticket_first) == NULL){
                   lSetRef(max_current, FCAT_jobrelated_ticket_last,  NULL);
+                  lSetRef(current, FCAT_user, NULL);
+                  lSetRef(current, FCAT_dept, NULL);
+                  lSetRef(current, FCAT_project, NULL);
+
                   lRemoveElem(fcategories, max_current);
                }
             }
@@ -4581,7 +4589,8 @@ sge_scheduler( sge_Sdescr_t *lists,
                lList *pending_jobs,
                lList **orderlist )
 {
-   static u_long32 next = 0;
+/*   static u_long32 next = 0; */
+   static u_long32 past = 0; 
    u_long32 now;
    u_long seqno;
    lListElem *job;
@@ -4620,7 +4629,14 @@ sge_scheduler( sge_Sdescr_t *lists,
 
    */
 
-   if ((now = sge_get_gmt())<next) {
+   /* somebody might have played with the system clock. */
+   if ((now = sge_get_gmt()) < past)
+      past = now;
+
+   if (now < (past + scheddconf.sgeee_schedule_interval)) { 
+/*   if ((now = sge_get_gmt())<next) { */
+
+
 
       if (classic_sgeee_scheduling) {
          seqno = sge_calc_tickets(lists, running_jobs, NULL, NULL, 0);
@@ -4660,7 +4676,8 @@ sge_scheduler( sge_Sdescr_t *lists,
                                            finished_jobs, *orderlist, 1, seqno);
       }
 
-      next = now + scheddconf.sgeee_schedule_interval;
+/*      next = now + scheddconf.sgeee_schedule_interval;*/
+        past = now;
    }
 
    DEXIT;

@@ -61,6 +61,7 @@
 #include "qmon_appres.h"
 #include "qmon_preferences.h"
 #include "sge_feature.h"
+#include "sge_arch.h"
 
 #ifdef REPLAY_XT
 #include "ReplayXt.h"
@@ -202,16 +203,12 @@ char **argv
       qmonInitSge(progname);
 
    SGE_ROOT = sge_get_root_dir(0);
+
    /*
    ** Attention !!! Change the XtMalloc() above if you add additional args
    */
    ac = 0;
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      XtSetArg(args[ac], XmtNconfigDir, SGE_ROOT); ac++;
-   }
-   else {
-      XtSetArg(args[ac], XmtNconfigDir, SGE_ROOT); ac++;
-   }                                                                          
+   XtSetArg(args[ac], XmtNconfigDir, SGE_ROOT); ac++;
    XtSetArg(args[ac], XmtNconfigPath, "%R/locale/%L/%N%S:%R/locale/%l/%N%S:%R/locale/%l_%t.%c/%N%S:%R/qmon/%N%S"); ac++;
 /*    XtSetArg(args[ac], XmtNpixmapFilePath, "%R/qmon/PIXMAPS/%N.xpm"); ac++; */
 /*    XtSetArg(args[ac], XmtNcontextHelpFile, "qmon_help"); ac++; */

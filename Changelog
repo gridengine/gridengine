@@ -1,3 +1,5 @@
+AA-2002-02-22-1: Bugfix:    missing header file, obsolete code removed
+
 EB-2002-02-24-0: Cleanup:   in 'libuti' and 'libgdi'
                             - moved functions from libgdi into libuti
                             - rearranged/modified/created modules

@@ -589,6 +589,20 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set time_pos    7
          set command_pos 8
       }
+      "slinux"    { 
+         set myenvironment(COLUMNS) "500"
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-weo \"pid pgid ppid uid s stime vsz time args\"" prg_exit_state 60 0 myenvironment]
+         set index_names "  PID  PGID  PPID   UID S STIME   VSZ     TIME COMMAND"
+         set pid_pos     0
+         set gid_pos     1
+         set ppid_pos    2
+         set uid_pos     3
+         set state_pos   4
+         set stime_pos   5
+         set vsz_pos     6
+         set time_pos    7
+         set command_pos 8
+      }
       "alinux" {
          if { $additional_run == 0 } {
             # this is the first ps without any size position

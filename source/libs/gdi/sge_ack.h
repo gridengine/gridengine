@@ -1,3 +1,5 @@
+#ifndef __SGE_ACK_H
+#define __SGE_ACK_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -29,55 +31,25 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "parse_qconf.h"
-#include "sge_gdi.h"
-#include "setup.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_clients_common.h"
-#include "msg_common.h"
-#include "sge_answer.h"
 
-extern char **environ;
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-int main(int argc, char *argv[]);
+enum {
+   ACK_JOB_DELIVERY,     /* sent back by execd, when master gave him a job    */
+   ACK_SIGNAL_DELIVERY,  /* sent back by execd, when master sends a queue     */
+   ACK_JOB_EXIT,         /* sent back by qmaster, when execd sends a job_exit */
+   ACK_SIGNAL_JOB,       /* sent back by qmaster, when execd reports a job as */
+                         /* running - that was not supposed to be there       */
+   ACK_EVENT_DELIVERY    /* sent back by schedd, when master sends events     */
+};
+int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, u_long32 ulong_val_2);
 
-/************************************************************************/
-int main(int argc, char **argv)
-{
-   int ret;
-   lList *alp = NULL;
-   
-   DENTER_MAIN(TOP_LAYER, "qconf");
 
-   sge_gdi_param(SET_MEWHO, QCONF, NULL);
-   if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
-      SGE_EXIT(1);
-   }
-
-   sge_setup_sig_handlers(QCONF);
-
-   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
-      fprintf(stderr, SGE_EVENT);
-      SGE_EXIT(1);
-   }   
-
-   if (argc == 1) {
-      sge_usage(stderr);
-      SGE_EXIT(1);
-   }
-
-   if (sge_parse_qconf(++argv))
-      SGE_EXIT(1);
-   else
-      SGE_EXIT(0);
-   return 0;
+#ifdef  __cplusplus
 }
+#endif
+
+#endif /* __SGE_ACK_H */
+

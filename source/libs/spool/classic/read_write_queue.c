@@ -36,7 +36,7 @@
 #include "sge.h"
 #include "sge_feature.h"
 #include "commlib.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi_request.h"
 #include "sge_answer.h"
 #include "read_write_queue.h"
 #include "read_object.h"
@@ -603,9 +603,12 @@ const lListElem *qep
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX]; 
    u_long32 bitmask;
    int ret;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "cull_write_qconf");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (write_2_stdout) {
       fp = stdout;
    } else {
@@ -636,7 +639,7 @@ const lListElem *qep
 
    if (spool) {
       if (sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION)) < 0) {
+             feature_get_product_name(FS_VERSION, &ds)) < 0) {
          goto FPRINTF_ERROR;
       }
    }

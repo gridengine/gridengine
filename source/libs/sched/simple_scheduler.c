@@ -36,7 +36,6 @@
 
 #include "sge_time.h"
 #include "sge_unistd.h"
-#include "sge_gdi_intern.h"
 #include "sig_handlers.h"
 #include "commlib.h"
 #include "sge_prog.h"

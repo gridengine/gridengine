@@ -52,6 +52,7 @@
 #include "sge_os.h"
 #include "sge_log.h"
 #include "sge_usage.h"
+#include "sge_any_request.h"
 #include "sge_time.h"
 #include "slots_used.h"
 #include "admin_mail.h"

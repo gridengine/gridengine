@@ -26,13 +26,14 @@
 
 /* GDI */
 #include "sge_gdi.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
 
 #include "sge_event.h"
 #include "sge_job.h"
 
 #include "sge_range.h"
 #include "sge_object.h"
+#include "sge_feature.h"
 
 /* OBJ */
 #include "sge_japiL.h"
@@ -138,6 +139,21 @@ static int drmaa_init_mt(void)
       lFreeList(alp);
       return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
    }
+
+   /* current major assumptions are
+
+      - code is not compiled -DCOMMCOMPRESS
+      - code is not compiled with -DCRYPTO
+      - code is not compiled with -DKERBEROS
+      - if code is compiled with -SECURE then
+        only non secure communication may be used 
+      - neither AFS nor DCE/KERBEROS security may be used
+   */
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      fprintf(stderr, "error: use non secure mode\n");
+      return DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
+   }
+
    return DRMAA_ERRNO_SUCCESS;
 }
 

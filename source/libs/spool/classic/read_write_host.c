@@ -303,9 +303,12 @@ char *file
    lListElem *sep = NULL;
    char real_filename[SGE_PATH_MAX], filename[SGE_PATH_MAX];
    int ret;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "write_host");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    switch (how) {
    case 0:
       fp = stdout;
@@ -363,7 +366,7 @@ char *file
    }
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION)) < 0) {    
+             feature_get_product_name(FS_VERSION, &ds)) < 0) {    
       goto FPRINTF_ERROR;
    }
 

@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
 #include "dispatcher.h"
 #include "sec_lib.h"
 

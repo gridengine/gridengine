@@ -35,7 +35,6 @@
 #include <Xmt/Dialogs.h>
 #include <Xmt/Pixmap.h>
 
-#include "sge_gdi_intern.h"
 #include "qmon_about.h"
 #include "qmon_appres.h"
 #include "sgermon.h"
@@ -59,16 +58,19 @@ XtPointer cld, cad;
 {
    int sgeee_mode; 
    static char *copyright = NULL;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "qmonAboutMsg");
    
    sgeee_mode = feature_is_enabled(FEATURE_SGEEE);
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    XmtDisplayMessage(w, "about_msg", "Help", header, 
                      "About Qmon", NULL, None, XmDIALOG_MODELESS,
                      XmDIALOG_INFORMATION, 
                      uti_state_get_user_name(), uti_state_get_qualified_hostname(), 
-                     feature_get_product_name(FS_LONG_VERSION), 
+                     feature_get_product_name(FS_LONG_VERSION, &ds), 
                      uti_state_get_default_cell(), 
                      XmtLocalize(w, mailto, "mailto_msg"), SFLN_ELN); 
 /*                      XmtLocalize(w, "copyright_msg", SFLN_ELN, NULL)); */

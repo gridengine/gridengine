@@ -1,3 +1,5 @@
+#ifndef __GDI_SETUP_H
+#define __GDI_SETUP_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -29,55 +31,34 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "parse_qconf.h"
-#include "sge_gdi.h"
-#include "setup.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_clients_common.h"
-#include "msg_common.h"
-#include "sge_answer.h"
 
-extern char **environ;
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-int main(int argc, char *argv[]);
+/* these values should be used to specify params in a sge_gdi_param call */
+enum {
+   SET_MEWHO,         /* intval */
+   SET_LEAVE,         /* strval contains exit_function */
+   SET_ISALIVE,       /* intval 1/0 */
+   SET_EXIT_ON_ERROR, /* 0/1 default is true */
+   LAST_VALUE
+};
 
-/************************************************************************/
-int main(int argc, char **argv)
-{
-   int ret;
-   lList *alp = NULL;
-   
-   DENTER_MAIN(TOP_LAYER, "qconf");
+/* these values are standarized gdi return values */
+enum {
+   AE_OK = 0,
+   AE_ALREADY_SETUP,
+   AE_UNKNOWN_PARAM,
+   AE_QMASTER_DOWN
+};
 
-   sge_gdi_param(SET_MEWHO, QCONF, NULL);
-   if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
-      SGE_EXIT(1);
-   }
+int sge_gdi_setup(const char *programname, lList **alpp);
+int sge_gdi_param(int, int, char *);
+int sge_gdi_shutdown(void);
 
-   sge_setup_sig_handlers(QCONF);
-
-   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
-      fprintf(stderr, SGE_EVENT);
-      SGE_EXIT(1);
-   }   
-
-   if (argc == 1) {
-      sge_usage(stderr);
-      SGE_EXIT(1);
-   }
-
-   if (sge_parse_qconf(++argv))
-      SGE_EXIT(1);
-   else
-      SGE_EXIT(0);
-   return 0;
+#ifdef  __cplusplus
 }
+#endif
+
+#endif /* __SGE_GDI_H */

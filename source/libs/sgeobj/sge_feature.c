@@ -30,6 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
+#include <errno.h>
+
+#ifdef SGE_MT
+#include <pthread.h>
+#endif
 
 #include "sge.h"
 #include "basis_types.h"
@@ -48,6 +53,86 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
+struct feature_state_t {
+    int        already_read_from_file;
+    lList     *Master_FeatureSet_List;
+};
+
+#if defined(SGE_MT)
+static pthread_key_t   feature_state_key;
+#else
+static struct feature_state_t feature_state_opaque = {
+  0, NULL };
+struct feature_state_t *feature_state = &feature_state_opaque;
+#endif
+
+#if defined(SGE_MT)
+static void feature_state_init(struct feature_state_t* state) {
+   memset(state, 0, sizeof(struct feature_state_t));
+}
+
+static void feature_state_destroy(void* state) {
+   ((struct feature_state_t*)state)->Master_FeatureSet_List 
+      = lFreeList(((struct feature_state_t*)state)->Master_FeatureSet_List);
+   free(state);
+}
+
+void feature_init_mt(void) {
+   pthread_key_create(&feature_state_key, &feature_state_destroy);
+}
+#endif
+
+/****** sge_feature/feature_set_already_read_from_file() ***********************
+*  NAME
+*     feature_set_already_read_from_file()
+*
+*  SYNOPSIS
+*     void feature_set_already_read_from_file(int i)
+*
+*  FUNCTION
+*     Set per thread global variable already_read_from_file.
+*******************************************************************************/
+void feature_set_already_read_from_file(int i)
+{
+   GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_set_already_read_from_file");
+   feature_state->already_read_from_file = i;
+}
+
+/****** sge_feature/feature_get_already_read_from_file() ***********************
+*  NAME
+*     feature_get_already_read_from_file()
+*
+*  SYNOPSIS
+*     void feature_get_already_read_from_file(int i)
+*
+*  RESULT
+*     Returns value of per thread global variable already_read_from_file.
+*******************************************************************************/
+int feature_get_already_read_from_file(void)
+{
+   GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_get_already_read_from_file");
+   return feature_state->already_read_from_file;
+}
+
+
+/****** sge_feature/feature_get_already_read_from_file() ***********************
+*  NAME
+*     feature_get_master_featureset_list()
+*
+*  SYNOPSIS
+*     lList **feature_get_master_featureset_list(void)
+*
+*  RESULT
+*     Returns pointer to location where per thread global list 
+*     Master_FeatureSet_List is stored.
+*******************************************************************************/
+lList **feature_get_master_featureset_list(void)
+{
+   GET_SPECIFIC(struct feature_state_t, feature_state, feature_state_init, feature_state_key, "feature_get_already_read_from_file");
+   return &(feature_state->Master_FeatureSet_List);
+}
+
+
 #define FEATURESET_DEFAULT FEATURESET_SGE
 
 #ifdef ADD_SUN_COPYRIGHT
@@ -61,11 +146,9 @@
 #define GEEE_SHORTNAME "SGEEE"
 #define GE_SHORTNAME "SGE"
 
-static char product_name_and_version[256] = "";
-
 /* *INDENT-OFF* */
 
-static int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = { 
+static const int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = { 
 /*  FEATURE_UNINITIALIZED                                          */
 /*  |  FEATURE_REPRIORISATION                                   */
 /*  |  |  FEATURE_REPORT_USAGE                                  */
@@ -95,7 +178,7 @@ static int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = {
    {0, 1, 1, 1, 1,   0, 0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_CSP */
 };
 
-static feature_names_t feature_list[] = {
+static const feature_names_t feature_list[] = {
    {FEATURE_REPRIORITIZATION,       "reprioritization"},
    {FEATURE_REPORT_USAGE,           "report_usage"},
    {FEATURE_NO_SECURITY,            "no_security"},
@@ -107,7 +190,7 @@ static feature_names_t feature_list[] = {
    {0, NULL}
 };  
 
-static feature_names_t featureset_list[] = {
+static const feature_names_t featureset_list[] = {
    {FEATURESET_SGE,                 "sge"},
    {FEATURESET_SGEEE,               "sgeee"},
    {FEATURESET_SGE_AFS,             "sge-afs"},
@@ -129,9 +212,6 @@ static feature_names_t featureset_list[] = {
 
 /* *INDENT-ON* */
 
-static int already_read_from_file = 0;
-lList *Master_FeatureSet_List = NULL;
-
 /****** sgeobj/feature/feature_initialize() ***********************************
 *  NAME
 *     feature_initialize() -- initialize this module 
@@ -148,10 +228,13 @@ lList *Master_FeatureSet_List = NULL;
 *
 *  RESULT
 *     initialized Master_FeatureSet_List
+*
+*  NOTES
+*     MT-NOTE: feature_initialize() is MT safe
 ******************************************************************************/
 void feature_initialize(void)
 {
-   if (!Master_FeatureSet_List) {
+   if (!*feature_get_master_featureset_list()) {
       lListElem *featureset;
       lListElem *feature;
       int featureset_id;
@@ -160,7 +243,7 @@ void feature_initialize(void)
       for(featureset_id = 0;
           featureset_id < FEATURESET_LAST_ENTRY;
           featureset_id++) {
-         featureset = lAddElemUlong(&Master_FeatureSet_List, FES_id,
+         featureset = lAddElemUlong(feature_get_master_featureset_list(), FES_id,
                                   featureset_id, FES_Type);
          lSetUlong(featureset, FES_active, 0);
          for(feature_id = 0;
@@ -199,6 +282,9 @@ void feature_initialize(void)
 *       -1 invalid filename
 *       -2 file doesn't exist
 *       -3 unknown mode-string in file
+*
+*  NOTES
+*     MT-NOTE: feature_initialize_from_file() is MT safe
 ******************************************************************************/
 int feature_initialize_from_file(const char *filename, lList** alpp) 
 {
@@ -206,7 +292,7 @@ int feature_initialize_from_file(const char *filename, lList** alpp)
 
    DENTER(TOP_LAYER, "featureset_initialize_from_file");
 
-   if (!already_read_from_file) {
+   if (!feature_get_already_read_from_file()) {
       FILE *fp;
 
       if (!filename) {
@@ -230,7 +316,7 @@ int feature_initialize_from_file(const char *filename, lList** alpp)
                ERROR((SGE_EVENT, MSG_GDI_CORRUPTPRODMODFILE_S, filename));  
                answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             } else if (ret == 0) {
-               already_read_from_file = 1;
+               feature_set_already_read_from_file(1);
             }
          }
       }
@@ -260,6 +346,9 @@ int feature_initialize_from_file(const char *filename, lList** alpp)
 *  RESULT
 *     0 OK
 *    -3 unknown mode-string
+*
+*  NOTES
+*     MT-NOTE: feature_initialize_from_string() is MT safe
 ******************************************************************************/
 int feature_initialize_from_string(const char *mode) 
 {
@@ -297,6 +386,9 @@ int feature_initialize_from_string(const char *mode)
 *
 *  RESULT
 *     modifies the Master_FeatureSet_List  
+*
+*  NOTES
+*     MT-NOTE: feature_activate() is MT safe
 ******************************************************************************/
 void feature_activate(featureset_id_t id) 
 {
@@ -304,12 +396,12 @@ void feature_activate(featureset_id_t id)
    lListElem *inactive_set;
 
    DENTER(TOP_LAYER, "featureset_activate");  
-   if (!Master_FeatureSet_List) {
+   if (!*feature_get_master_featureset_list()) {
       feature_initialize();
    }
 
-   inactive_set = lGetElemUlong(Master_FeatureSet_List, FES_id, id);
-   active_set = lGetElemUlong(Master_FeatureSet_List, FES_active, 1);
+   inactive_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_id, id);
+   active_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_active, 1);
    if (inactive_set && active_set) {
       lSetUlong(active_set, FES_active, 0);
       lSetUlong(inactive_set, FES_active, 1);
@@ -340,6 +432,9 @@ void feature_activate(featureset_id_t id)
 *
 *  RESULT
 *     true or false
+*
+*  NOTES
+*     MT-NOTE: feature_is_active() is MT safe
 ******************************************************************************/
 bool feature_is_active(featureset_id_t id) 
 {
@@ -347,7 +442,7 @@ bool feature_is_active(featureset_id_t id)
    int ret = false;
 
    DENTER(TOP_LAYER, "featureset_is_active");
-   feature = lGetElemUlong(Master_FeatureSet_List, FES_id, id);
+   feature = lGetElemUlong(*feature_get_master_featureset_list(), FES_id, id);
    if (feature) {
       ret = lGetUlong(feature, FES_active) ? true : false;
    }
@@ -367,6 +462,9 @@ bool feature_is_active(featureset_id_t id)
 *
 *  RESULT
 *     featureset_id_t - (find the definition in the .h file)
+*
+*  NOTES
+*     MT-NOTE: feature_get_active_featureset_id() is MT safe
 ******************************************************************************/
 featureset_id_t feature_get_active_featureset_id(void) 
 {
@@ -374,7 +472,7 @@ featureset_id_t feature_get_active_featureset_id(void)
    int ret = FEATURESET_UNINITIALIZED;
 
    DENTER(TOP_LAYER, "feature_get_active_featureset_id");
-   for_each(feature, Master_FeatureSet_List) {
+   for_each(feature, *feature_get_master_featureset_list()) {
       if (lGetUlong(feature, FES_active)) {
          ret = lGetUlong(feature, FES_id);
          break;
@@ -399,6 +497,9 @@ featureset_id_t feature_get_active_featureset_id(void)
 *
 *  RESULT
 *     mode string 
+*
+*  NOTES
+*     MT-NOTE: feature_get_featureset_name() is MT safe
 ******************************************************************************/
 const char *feature_get_featureset_name(featureset_id_t id) 
 {
@@ -433,6 +534,9 @@ const char *feature_get_featureset_name(featureset_id_t id)
 *
 *  RESULT
 *     featureset_id_t 
+*
+*  NOTES
+*     MT-NOTE: feature_get_featureset_id() is MT safe
 ******************************************************************************/
 featureset_id_t feature_get_featureset_id(const char *name) 
 {
@@ -470,6 +574,9 @@ featureset_id_t feature_get_featureset_id(const char *name)
 *
 *  RESULT
 *     true or false
+*
+*  NOTES
+*     MT-NOTE: feature_is_enabled() is MT safe
 ******************************************************************************/
 bool feature_is_enabled(feature_id_t id) 
 {
@@ -478,7 +585,7 @@ bool feature_is_enabled(feature_id_t id)
    bool ret = false;
 
    DENTER(BASIS_LAYER, "feature_is_enabled");
-   active_set = lGetElemUlong(Master_FeatureSet_List, FES_active, 1);
+   active_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_active, 1);
    if (active_set) {
       feature = lGetSubUlong(active_set, FE_id, id, FES_features);
    }
@@ -506,6 +613,9 @@ bool feature_is_enabled(feature_id_t id)
 *     char* - name of the given feature constant 
 *             (or "<<unknown>>" when the id isn't a valid 
 *              feature constant) 
+*
+*  NOTES
+*     MT-NOTE: feature_get_name() is MT safe
 ******************************************************************************/
 const char *feature_get_name(feature_id_t id) 
 {
@@ -538,6 +648,9 @@ const char *feature_get_name(feature_id_t id)
 *
 *  RESULT
 *     feature_id_t 
+*
+*  NOTES
+*     MT-NOTE: feature_get_id() is MT safe
 ******************************************************************************/
 feature_id_t feature_get_id(const char *name) 
 {
@@ -574,11 +687,17 @@ feature_id_t feature_get_id(const char *name)
 *                 FS_VERSION       = return version
 *                 FS_SHORT_VERSION = return short name and version
 *                 FS_LONG_VERSION  = return long name and version
+*     buffer    - buffer provided by caller 
+*                 the string returned by this function points to 
+*                 this buffer
 *
 *  RESULT
-*     char* - static string
+*     char* - string
+*
+*  NOTES
+*     MT-NOTE: feature_get_product_name() is MT safe
 ******************************************************************************/
-const char *feature_get_product_name(featureset_product_name_id_t style)
+const char *feature_get_product_name(featureset_product_name_id_t style, dstring *buffer)
 {
    const char *long_name  = "";
    const char *short_name = "";
@@ -611,13 +730,13 @@ const char *feature_get_product_name(featureset_product_name_id_t style)
          break;
 
       case FS_SHORT_VERSION:
-         sprintf(product_name_and_version, ""SFN" "SFN"", short_name, version);
-         ret = product_name_and_version;
+         sge_dstring_sprintf(buffer, ""SFN" "SFN"", short_name, version);
+         ret = sge_dstring_get_string(buffer);
          break;
 
       case FS_LONG_VERSION:
-         sprintf(product_name_and_version, ""SFN" "SFN"", long_name, version);
-         ret = product_name_and_version;
+         sge_dstring_sprintf(buffer, ""SFN" "SFN"", long_name, version);
+         ret = sge_dstring_get_string(buffer);
          break;
 
       default:

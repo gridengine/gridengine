@@ -35,7 +35,7 @@
 #include <strings.h>
 
 #include "cull.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi.h"
 #include "sgermon.h"
 #include "sge_log.h"
 

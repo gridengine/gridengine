@@ -45,7 +45,7 @@
 
 #include "sge_unistd.h"
 #include "sgermon.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi_request.h"
 #include "sge_usageL.h"
 #include "config.h"
 #include "sge_feature.h"
@@ -99,9 +99,12 @@ int user        /* =1 user, =0 project */
    lListElem *ju;
    char filename[SGE_PATH_MAX];
    int ret;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "write_userprj");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (!ep) {
       CRITICAL((SGE_EVENT, MSG_RWUSERPRJ_EPISNULLNOUSERORPROJECTELEMENT));
       if (!alpp) {
@@ -130,7 +133,7 @@ int user        /* =1 user, =0 project */
    }
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION)) < 0) {
+             feature_get_product_name(FS_VERSION, &ds)) < 0) {
       goto FPRINTF_ERROR;
    } 
 

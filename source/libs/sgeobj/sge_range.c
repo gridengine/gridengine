@@ -44,7 +44,6 @@
 #include "sge_dstring.h"
 #include "sge_prog.h"
 #include "sge_string.h"
-#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
 #include "slots_used.h"

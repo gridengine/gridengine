@@ -37,7 +37,7 @@
 #include "sge_unistd.h"
 #include "sge.h"
 #include "cull.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi_request.h"
 #include "config.h"
 #include "sge_answer.h"
 #include "read_write_userset.h"
@@ -160,9 +160,12 @@ int spool
    u_long32 bitmask, type;
    char filename[SGE_PATH_MAX];
    int ret;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "write_userset");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (!ep) {
       if (!alpp) {
          ERROR((SGE_EVENT, MSG_USERSET_NOUSERETELEMENT));
@@ -192,7 +195,7 @@ int spool
    }
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION)) < 0) {
+             feature_get_product_name(FS_VERSION, &ds)) < 0) {
       goto FPRINTF_ERROR;
    } 
 

@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi.h"
 #include "gdi_qmod.h"
 #include "sgermon.h"
 #include "parse.h"

@@ -31,12 +31,36 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
+#include "sge_any_request.h"
 #include "sge_prog.h"
 #include "pack.h"
 #include "commlib.h"
 #include "qm_name.h"
 
+/****** sge_ack/sge_send_ack_to_qmaster() **************************************
+*  NAME
+*     sge_send_ack_to_qmaster() -- ??? 
+*
+*  SYNOPSIS
+*     int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, 
+*     u_long32 ulong_val_2) 
+*
+*  FUNCTION
+*     Sends an acknowledge to qmaster.
+*
+*  INPUTS
+*     int sync             - ??? 
+*     u_long32 type        - ??? 
+*     u_long32 ulong_val   - ??? 
+*     u_long32 ulong_val_2 - ??? 
+*
+*  RESULT
+*     int - CL_OK on success
+*
+*  NOTES
+*     MT-NOTE: sge_send_ack_to_qmaster() is MT safe (assumptions)
+*******************************************************************************/
 int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, 
                             u_long32 ulong_val_2) 
 {

@@ -35,8 +35,9 @@
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_log.h"
+#include "sge_gdi.h"
 #include "gdi_utility.h"
-#include "sge_gdi_intern.h"
+#include "sge_any_request.h"
 #include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
 #include "sort_hosts.h"
@@ -50,6 +51,10 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+
+
+/* MT-NOTE: this module is not MT safe */
+/* MT-NOTE: this module is not needed for GDI client */
 
 char err_msg[1000];
 

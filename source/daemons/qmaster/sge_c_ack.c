@@ -33,6 +33,8 @@
 
 #include "sge.h"
 #include "sge_job_qmaster.h"
+#include "sge_any_request.h"
+#include "sge_ack.h"
 #include "sge_ja_task.h"
 #include "sge_give_jobs.h"
 #include "sge_event_master.h"

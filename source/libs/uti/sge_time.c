@@ -177,14 +177,14 @@ u_long32 sge_get_gmt()
 ******************************************************************************/
 const char *sge_ctime(time_t i, dstring *buffer) 
 {
-#if 1
+#ifdef HAS_LOCALTIME_R
    struct tm tm_buffer;
 #endif
    struct tm *tm;
 
    if (!i)
       i = sge_get_gmt();
-#if 0
+#ifndef HAS_LOCALTIME_R
    tm = localtime(&i);
 #else
    tm = localtime_r(&i, &tm_buffer);
@@ -225,13 +225,15 @@ const char *sge_ctime(time_t i, dstring *buffer)
 const char *sge_ctime32(u_long32 *i, dstring *buffer) 
 {
    const char *s;
+#ifdef HAS_CTIME_R
    char str[128]; 
+#endif
 #if SOLARIS64
    volatile
 #endif
    time_t temp = *i;
 
-#if defined(AIX42)
+#ifndef HAS_CTIME_R
    /* if ctime_r() does not exist a mutex must be used to guard *all* ctime() calls */
    s = ctime((time_t *)&temp);
 #else 

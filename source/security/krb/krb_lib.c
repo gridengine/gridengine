@@ -42,7 +42,6 @@
 #include <netdb.h>
 
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "sge_string.h"
 

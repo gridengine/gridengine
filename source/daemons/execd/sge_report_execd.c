@@ -33,6 +33,7 @@
 #include <strings.h>
 
 #include "sge.h"
+#include "sge_any_request.h"
 #include "sge_static_load.h"
 #include "sge_usageL.h"
 #include "commlib.h"
@@ -43,7 +44,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "qm_name.h"
-#include "sge_gdi_intern.h"
 #include "sge_report_execd.h"
 #include "sge_report.h"
 

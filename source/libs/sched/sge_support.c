@@ -43,7 +43,6 @@
 #endif
 
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "sgermon.h"
 #include "sge_prog.h"

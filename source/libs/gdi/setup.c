@@ -36,7 +36,7 @@
 #include <limits.h>
 
 #include "sge_prog.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "setup_path.h"
@@ -78,6 +78,8 @@ static int init_hostcpy_policy(lList **alpp);
 *  RESULT
 *     int - 0 on success
 *
+*  NOTES
+*     MT-NOTE: sge_setup() is MT safe
 *******************************************************************************/
 int sge_setup(
 u_long32 sge_formal_prog_name,
@@ -168,7 +170,25 @@ lList **alpp
    return 0;
 }
 
-int reresolve_me_qualified_hostname()
+/****** setup/reresolve_me_qualified_hostname() ********************************
+*  NAME
+*     reresolve_me_qualified_hostname() -- resolve the own hostname
+*
+*  SYNOPSIS
+*     int reresolve_me_qualified_hostname(void) 
+*
+*  FUNCTION
+*     Resolves hostname using commlib getuniquehostname(). This is usually
+*     done to get hostname resolving results that is in compliance with
+*     sge_hostalias file in common directory.
+*
+*  RESULT
+*     int - CR_OK on success
+*
+*  NOTES
+*     MT-NOTE: reresolve_me_qualified_hostname() is MT safe
+*******************************************************************************/
+int reresolve_me_qualified_hostname(void)
 {
    int ret;
    char unique_hostname[MAXHOSTLEN];
@@ -191,8 +211,26 @@ int reresolve_me_qualified_hostname()
    return CL_OK;
 }
 
-/* initialize policy used in hostcpy() consisting of
-   default_domain and ignore_fqdn settings */
+/****** setup/init_hostcpy_policy() ********************************************
+*  NAME
+*     init_hostcpy_policy() -- initialize sge_hostcmp() policy
+*
+*  SYNOPSIS
+*     static int init_hostcpy_policy(lList **alpp) 
+*
+*  FUNCTION
+*     The settings ignore_fqdn and default_domain are taken directly
+*     from the clusters configuration file in the common directory.
+*
+*  INPUTS
+*     lList **alpp - answer list
+*
+*  RESULT
+*     static int - 0 on success
+*
+*  NOTES
+*     MT-NOTE: init_hostcpy_policy() is MT safe
+*******************************************************************************/
 static int init_hostcpy_policy(lList **alpp)
 {
    const char *name[2] = { "ignore_fqdn", "default_domain" };

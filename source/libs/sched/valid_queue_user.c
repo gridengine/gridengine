@@ -40,7 +40,6 @@
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_userset.h"
-#include "sge_gdi_intern.h"
 
 #include "msg_schedd.h"
 

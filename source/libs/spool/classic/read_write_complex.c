@@ -34,7 +34,7 @@
 #include <string.h>
 
 #include "sge_unistd.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi_request.h"
 #include "sge_host.h"
 #include "sge_sched.h"
 #include "cull.h"
@@ -541,9 +541,12 @@ lList **alpp
 ) {
    FILE *fp;
    lListElem *ep=NULL;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "write_cmplx");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (fname) {
       if (!(fp = fopen(fname, "w"))) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
@@ -560,7 +563,7 @@ lList **alpp
       fp = fpout;
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
-       feature_get_product_name(FS_VERSION)) < 0) {
+       feature_get_product_name(FS_VERSION, &ds)) < 0) {
       goto FPRINTF_ERROR;
    }  
 

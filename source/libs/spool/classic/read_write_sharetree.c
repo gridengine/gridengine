@@ -94,8 +94,12 @@ int root_node
    const char *delis[] = {":", ",", NULL};
    lListElem *cep;
    int i;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "write_sharetree");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (!ep) {
       if (!alpp) {
@@ -126,7 +130,7 @@ int root_node
       fp = fpout;
 
    if (spool && root_node && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION)) < 0) {
+             feature_get_product_name(FS_VERSION, &ds)) < 0) {
       goto FPRINTF_ERROR;
    }  
 

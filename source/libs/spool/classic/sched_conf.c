@@ -37,7 +37,7 @@
 #include "sge_unistd.h"
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi_request.h"
 #include "sge_usageL.h"
 #include "sge_schedd_conf.h"
 #include "config.h"
@@ -127,9 +127,12 @@ _Insight_set_option("suppress", "READ_DANGLING");
    FILE *fp; 
    char fname[SGE_PATH_MAX], real_fname[SGE_PATH_MAX];
    int fret;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "write_sched_configuration");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    switch (how) {
    case 0:
       fp = stdout;
@@ -160,7 +163,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
    }  
 
    if (spool && (sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION)) < 0)) {
+             feature_get_product_name(FS_VERSION, &ds)) < 0)) {
       goto FPRINTF_ERROR;
    }  
 

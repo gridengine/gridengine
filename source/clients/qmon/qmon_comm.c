@@ -40,7 +40,6 @@
 #include "commlib.h"
 #include "sge_gdi.h"
 #include "sge_utility.h"
-#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
 #include "qmon_rmon.h"

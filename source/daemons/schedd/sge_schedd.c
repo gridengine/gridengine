@@ -40,9 +40,10 @@
 
 #include "sge_unistd.h"
 #include "sge.h"
+#include "setup.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
 #include "sge_event_client.h"
+#include "sge_any_request.h"
 #include "sge_job_schedd.h"
 #include "sge_log.h"
 #include "sge_orders.h"
@@ -231,9 +232,13 @@ char *argv[]
 /*************************************************************/
 static void usage(FILE *fp) 
 {
+   dstring ds;
+   char buffer[256];
+
    DENTER(TOP_LAYER, "usage");
 
-   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
    SGE_EXIT(1);
 }
 

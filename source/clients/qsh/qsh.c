@@ -50,7 +50,6 @@
 
 #include "basis_types.h"
 #include "symbols.h"
-#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "usage.h"
 #include "parse_qsub.h"

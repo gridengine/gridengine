@@ -35,7 +35,7 @@
 
 
 #ifndef __SGE_GDI_INTERN_H
-#   include "sge_gdi_intern.h"
+#   include "sge_gdiP.h"
 #endif
 
 #include "cull.h"

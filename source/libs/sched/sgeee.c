@@ -46,7 +46,6 @@
 
 #include "sge.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "sge_time.h"
 #include "sge_prog.h"

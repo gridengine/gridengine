@@ -35,8 +35,9 @@
 #include <string.h>
 #include <strings.h>
 
+#include "sge_any_request.h"
+#include "sge_ack.h"
 #include "sge_unistd.h"
-#include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "sge_prog.h"
 #include "sgermon.h"

@@ -78,6 +78,7 @@
 #include "sge_userset_qmaster.h"
 #include "sge_ckpt_qmaster.h"
 #include "gdi_utility.h"
+#include "setup.h"
 #include "setup_qmaster.h"
 #include "sge_prog.h"
 #include "sgermon.h"

@@ -44,6 +44,8 @@
 #include "sge_manop.h"
 #include "read_write_host.h"
 #include "sge_host_qmaster.h"
+#include "sge_gdi_request.h"
+#include "sge_host_qmaster.h"
 #include "sge_queue_qmaster.h"
 #include "gdi_utility.h"
 #include "sge_event_master.h"
@@ -1248,8 +1250,12 @@ char *rhost,
 u_long32 target) {
    lListElem *hep, *qep;
    const void *iterator = NULL;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "sge_execd_startedup");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if( !host || !ruser || !rhost) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
@@ -1292,7 +1298,7 @@ u_long32 target) {
    }
 
    DPRINTF(("=====>STARTING_UP: %s %s on >%s< is starting up\n", 
-      feature_get_product_name(FS_SHORT_VERSION), "execd", rhost));
+      feature_get_product_name(FS_SHORT_VERSION, &ds), "execd", rhost));
 
    /*
    ** loop over pseudo hosts and set EH_startup flag

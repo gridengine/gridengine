@@ -33,7 +33,6 @@
 #include <stdlib.h>
 
 #include "symbols.h"
-#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "parse_qsubL.h"
 #include "sge_resource.h"

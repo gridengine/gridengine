@@ -42,13 +42,16 @@
 void starting_up()
 {
    u_long32 old_ll = log_state_get_log_level();
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "starting_up");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    log_state_set_log_level(LOG_INFO);
 
    INFO((SGE_EVENT, MSG_STARTUP_STARTINGUP_SS, 
-         feature_get_product_name(FS_VERSION),
+         feature_get_product_name(FS_VERSION, &ds),
          feature_get_featureset_name(feature_get_active_featureset_id())));
 
    log_state_set_log_level(old_ll);
@@ -61,12 +64,15 @@ void starting_up()
 void sge_shutdown()
 {
    u_long32 old_ll = log_state_get_log_level();
-
+   dstring ds;
+   char buffer[256];
+   
    DENTER(TOP_LAYER, "sge_shutdown");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    log_state_set_log_level(LOG_INFO);
    INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS, 
-         feature_get_product_name(FS_VERSION),
+         feature_get_product_name(FS_VERSION, &ds),
          feature_get_featureset_name(feature_get_active_featureset_id())));
    log_state_set_log_level(old_ll);
 

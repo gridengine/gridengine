@@ -38,7 +38,7 @@
 
 #include "basis_types.h"
 #include "sge.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sig_handlers.h"
@@ -570,9 +570,14 @@ u_long32 type
 static void qhost_usage(
 FILE *fp 
 ) {
+   dstring ds;
+   char buffer[256];
+
    DENTER(TOP_LAYER, "qhost_usage");
 
-   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
 
    fprintf(fp,"%s qhost [options]\n", MSG_SRC_USAGE);
          

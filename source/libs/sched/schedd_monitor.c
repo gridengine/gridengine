@@ -41,7 +41,6 @@
 #include "cull_parse_util.h"
 #include "sge_time.h"
 #include "setup_path.h"
-#include "sge_gdi_intern.h"
 #include "sge_answer.h"
 
 int monitor_next_run = 0;

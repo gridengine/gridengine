@@ -37,12 +37,12 @@
 
 #include "sge_unistd.h"
 #include "sge.h"
+#include "sge_any_request.h"
 #include "path_history.h"
 #include "sge_all_listsL.h"
 #include "sge_string.h"
 #include "setup_path.h"
 #include "sge_gdi.h"
-#include "sge_gdi_intern.h"
 #include "sge_resource.h"
 #include "complex_history.h"
 #include "sge_sched.h"
@@ -1505,9 +1505,14 @@ static void calc_column_sizes(lListElem* ep, sge_qacct_columns* column_size_data
 static void show_the_way(
 FILE *fp 
 ) {
+   dstring ds;
+   char buffer[256];
+
    DENTER(TOP_LAYER, "show_the_way");
 
-   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
          
    fprintf(fp, "%s qacct [options]\n",MSG_HISTORY_USAGE );
    fprintf(fp, " [-A account_string]          %s", MSG_HISTORY_A_OPT_USAGE); 

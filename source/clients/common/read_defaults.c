@@ -36,7 +36,6 @@
 #include <sys/types.h>
 
 #include "sgermon.h"
-#include "sge_gdi_intern.h"
 #include "sge_answer.h"
 #include "parse_job_cull.h"
 #include "parse_qsubL.h"

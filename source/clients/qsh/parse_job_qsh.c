@@ -35,7 +35,6 @@
 #include <stdlib.h>
 
 #include "symbols.h"
-#include "sge_gdi_intern.h"
 #include "sge_string.h"
 #include "sge_time.h"
 #include "parse_qsubL.h"

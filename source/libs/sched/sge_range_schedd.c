@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sge_gdi_intern.h"
 #include "sge_range.h"
 #include "sge_range_schedd.h"
 #include "sgermon.h"

@@ -298,9 +298,12 @@ lListElem *jatep
    dstring category_str = DSTRING_INIT;
    SGE_STRUCT_STAT statbuf;
    int write_comment;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "sge_log_dusage");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    write_comment = 0;
    if (SGE_STAT(path_state_get_acct_file(), &statbuf)) {
       write_comment = 1;
@@ -314,7 +317,7 @@ lListElem *jatep
    }
 
    if (write_comment && (sge_spoolmsg_write(fp, COMMENT_CHAR, 
-         feature_get_product_name(FS_VERSION)) < 0)) {
+         feature_get_product_name(FS_VERSION, &ds)) < 0)) {
       ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path_state_get_acct_file())); 
       fclose(fp);
       DEXIT;

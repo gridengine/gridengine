@@ -38,7 +38,6 @@
 #include <pwd.h>
 
 #include "sge.h"
-#include "sge_gdi_intern.h"
 #include "sge_log.h"
 #include "sge_parse_num_par.h"
 #include "sgermon.h"

@@ -35,6 +35,7 @@
 #include "cull.h"
 #include "sge.h"
 #include "sge_follow.h"
+#include "sge_gdi_request.h"
 #include "sge_c_gdi.h"
 #include "sge_host.h"
 #include "sge_host_qmaster.h"
@@ -144,11 +145,13 @@ char *commproc,
 int id 
 ) {
    char *client_version = NULL;
-   
+   dstring ds;
+   char buffer[256];
+
    /* actual GDI version is defined in
-    *   libs/gdi/sge_gdi_intern.h
+    *   libs/gdi/sge_gdiP.h
     */   
-   struct vdict_t {
+   const struct vdict_t {
       u_long32 version;
       char *release;
    } *vp,vdict[] = {
@@ -166,6 +169,8 @@ int id
 
    DENTER(TOP_LAYER, "verify_request_version");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
    if (version == GRM_GDI_VERSION) {
       DEXIT;
       return 0;
@@ -177,10 +182,10 @@ int id
 
    if (client_version)
       WARNING((SGE_EVENT, MSG_GDI_WRONG_GDI_SSISS,
-         host, commproc, id, client_version, feature_get_product_name(FS_VERSION)));
+         host, commproc, id, client_version, feature_get_product_name(FS_VERSION, &ds)));
    else
       WARNING((SGE_EVENT, MSG_GDI_WRONG_GDI_SSIUS,
-         host, commproc, id, u32c(version), feature_get_product_name(FS_VERSION)));
+         host, commproc, id, u32c(version), feature_get_product_name(FS_VERSION, &ds)));
    answer_list_add(alpp, SGE_EVENT, STATUS_EVERSION, ANSWER_QUALITY_ERROR);
 
    DEXIT;
@@ -398,8 +403,12 @@ int *after
    gid_t gid;
    char user[128];
    char group[128];
+   dstring ds;
+   char buffer[256];
 
    DENTER(GDI_LAYER, "sge_c_gdi_get");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (sge_chck_get_perm_host(&(answer->alp), request )) {
       DEXIT;
@@ -420,7 +429,8 @@ int *after
    case SGE_PROJECT_LIST:
    case SGE_SHARETREE_LIST:
       if (!feature_is_enabled(FEATURE_SGEEE)) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT)));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
+         feature_get_product_name(FS_SHORT, &ds)));
          answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          DEXIT;
          return;
@@ -506,8 +516,12 @@ int sub_command
    char user[128];
    char group[128];
    extern int deactivate_ptf;
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "sge_c_gdi_add");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
@@ -537,7 +551,8 @@ int sub_command
       case SGE_PROJECT_LIST:
       case SGE_SHARETREE_LIST:
          if (!feature_is_enabled(FEATURE_SGEEE)) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) ));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT,MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
+            feature_get_product_name(FS_SHORT, &ds) ));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             DEXIT;
             return;
@@ -686,8 +701,12 @@ int sub_command
    gid_t gid;
    char user[128];
    char group[128];
+   dstring ds;
+   char buffer[256];
 
    DENTER(GDI_LAYER, "sge_c_gdi_del");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
@@ -734,7 +753,8 @@ int sub_command
          case SGE_PROJECT_LIST:
          case SGE_SHARETREE_LIST:
             if (!feature_is_enabled(FEATURE_SGEEE)) {
-               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT)));
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
+               feature_get_product_name(FS_SHORT, &ds)));
                answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                DEXIT;
                return;
@@ -1058,8 +1078,12 @@ int sub_command
    gid_t gid;
    char user[128];
    char group[128];
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "sge_c_gdi_mod");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    if (sge_get_auth_info(request, &uid, user, &gid, group) == -1) {
       ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
@@ -1085,7 +1109,8 @@ int sub_command
       case SGE_PROJECT_LIST:
       case SGE_SHARETREE_LIST:
          if (!feature_is_enabled(FEATURE_SGEEE)) {
-            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S , feature_get_product_name(FS_SHORT) ));
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S ,
+            feature_get_product_name(FS_SHORT, &ds) ));
             answer_list_add(&(answer->alp), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             DEXIT;
             return;
@@ -1190,7 +1215,6 @@ char *user
    case SGE_CALENDAR_LIST:
    case SGE_USER_MAPPING_LIST:
    case SGE_HOST_GROUP_LIST:
-   case SGE_FEATURESET_LIST:
       /* user must be a manager */
       if (!manop_is_manager(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEMANAGER_S, user));
@@ -1275,7 +1299,6 @@ lListElem *ep
    case SGE_CALENDAR_LIST:
    case SGE_USER_MAPPING_LIST:
    case SGE_HOST_GROUP_LIST:
-   case SGE_FEATURESET_LIST:
       
       /* host must be SGE_ADMINHOST_LIST */
       if (!host_list_locate(Master_Adminhost_List, host)) {
@@ -1391,7 +1414,6 @@ sge_gdi_request *request
    case SGE_CALENDAR_LIST:
    case SGE_USER_MAPPING_LIST:
    case SGE_HOST_GROUP_LIST:
-   case SGE_FEATURESET_LIST:
    case SGE_EXECHOST_LIST:
    case SGE_JOB_LIST:
    case SGE_ZOMBIE_LIST:

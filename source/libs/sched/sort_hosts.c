@@ -40,7 +40,6 @@
 
 #include "sgermon.h"
 #include "sge.h"
-#include "sge_gdi_intern.h"
 #include "cull.h"
 #include "sge_all_listsL.h"
 #include "sge_parse_num_par.h"

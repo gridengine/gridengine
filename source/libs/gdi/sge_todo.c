@@ -33,6 +33,7 @@
 #include "sge.h"
 #include "sgermon.h"
 #include "basis_types.h"
+#include "sge_any_request.h"
 #include "sge_ja_task.h"
 #include "sge_answer.h"
 #include "sge_log.h"
@@ -90,10 +91,13 @@
 *     [answer] - error messages will be added to this list
 *     STATUS_OK - success
 *     STATUS_EUNKNOWN or STATUS_EEXIST - error
+*
+*  NOTES
+*     MT-NOTE: validate_ckpt() is not MT safe
 ******************************************************************************/
 int validate_ckpt(lListElem *ep, lList **alpp)
 {
-   static char* ckpt_interfaces[] = {
+   static const char* ckpt_interfaces[] = {
       "USERDEFINED",
       "HIBERNATOR",
       "TRANSPARENT",
@@ -226,6 +230,9 @@ int validate_ckpt(lListElem *ep, lList **alpp)
 *  RESULT
 *     int - STATUS_OK, if everything is ok, else other status values,
 *           see libs/gdi/sge_answer.h
+*
+*  NOTES
+*     MT-NOTE: pe_validate() is not MT safe
 *******************************************************************************/
 int pe_validate(int startup, lListElem *pep, lList **alpp)
 {
@@ -334,6 +341,9 @@ int pe_validate(int startup, lListElem *pep, lList **alpp)
 *        -2 - No memory
 *        -3 - Format error
 *        other - see sge_send_any_request()
+*
+*  NOTES
+*     MT-NOTE: report_list_send() is not MT safe (assumptions)
 *******************************************************************************/
 int report_list_send(const lList *rlp, const char *rhost,
                      const char *commproc, int id,
@@ -385,6 +395,3 @@ int report_list_send(const lList *rlp, const char *rhost,
    DEXIT;
    return ret;
 }
-
-
-

@@ -501,8 +501,10 @@ int main(int argc, char **argv)
    int ckpt_type;
    int return_code = 0;
    int run_epilog, run_pe_stop;
- 
-      
+   dstring ds;
+   char buffer[256];
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    shepherd_trace_sprintf("shepherd called with uid = "uid_t_fmt", euid = "uid_t_fmt, 
                           getuid(), geteuid());
 
@@ -561,7 +563,7 @@ int main(int argc, char **argv)
       shepherd_error(err_str);
    }
 
-   sprintf(err_str, "starting up %s", feature_get_product_name(FS_VERSION));
+   sprintf(err_str, "starting up %s", feature_get_product_name(FS_VERSION, &ds));
    if (shepherd_trace(err_str)) {
       shepherd_error("can't write to \"trace\" file");
    }

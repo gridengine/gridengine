@@ -34,6 +34,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
+
 #if defined(SGE_MT)
 #include <pthread.h>
 #endif
@@ -41,7 +42,7 @@
 #include "sgermon.h"
 #include "basis_types.h"
 #include "sge_prog.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
 #include "sge_log.h"
 #include "sge_string.h"
 #include "setup_path.h"
@@ -237,6 +238,8 @@ void path_state_set_product_mode_file(const char *path)
 *  RESULT
 *     int - 0 on success 
 *
+*  NOTES
+*     MT-NOTE: sge_setup_paths() is MT safe
 *******************************************************************************/
 int sge_setup_paths(
 const char *sge_cell,

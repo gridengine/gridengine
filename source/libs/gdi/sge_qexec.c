@@ -43,7 +43,7 @@
 #include "commd_message_flags.h"
 #include "sge_prog.h"
 #include "sge_gdi.h"
-#include "sge_gdi_intern.h"
+#include "sge_any_request.h"
 #include "sge_uidgid.h"
 #include "sgermon.h"
 #include "pack_job_delivery.h"
@@ -101,6 +101,8 @@ const char *qexec_last_err(void)
 *     sge_tid_t - the task id, if the task can be executed,
 *                 a value <= 0 indicates an error.
 *
+*  NOTES
+*     MT-NOTE: sge_qexecve() is not MT safe
 ******************************************************************************/
 sge_tid_t sge_qexecve(const char *hostname, const char *queuename,
                       const char *cwd, const lList *environment,
@@ -240,6 +242,12 @@ const char *s;
    return tid;
 }
 
+/*
+ *
+ *  NOTES
+ *     MT-NOTE: sge_qwaittid() is not MT safe
+ *
+ */
 int sge_qwaittid(
 sge_tid_t tid,
 int *status,
@@ -258,7 +266,6 @@ int options
       DEXIT;
       return -1;
    }
-
 
    while ((rt && /* definite one searched */
             lGetUlong(rt, RT_state)!=RT_STATE_EXITED && /* not exited */
@@ -285,6 +292,10 @@ int options
    0  reaped a task cleanly  
    1  no message (asynchronuous mode)
    -1 got an error
+ 
+    NOTES
+       MT-NOTE: rcv_from_execd() is not MT safe
+
 */
 static int rcv_from_execd(
 int options,

@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
 #include "sge_eventL.h"
 
 extern lList *EV_Clients;

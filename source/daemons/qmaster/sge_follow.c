@@ -35,6 +35,7 @@
 #include "sge.h"
 #include "sge_pe.h"
 #include "sge_ja_task.h"
+#include "sge_any_request.h"
 #include "sge_queue.h"
 #include "sge_time.h"
 #include "sge_log.h"

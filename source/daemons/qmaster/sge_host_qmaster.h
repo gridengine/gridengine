@@ -34,7 +34,7 @@
 
 
 
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
 #include "sge_c_gdi.h"
 #include "sge_feature.h"
 

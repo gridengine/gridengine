@@ -37,7 +37,6 @@
 
 #include "sge_gdi.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
 #include "sge_schedd_conf.h"
 #include "sge_usageL.h"
 #include "sge_time.h"

@@ -46,7 +46,7 @@
 #include "sge_log.h"
 #include "sge_prog.h" 
 #include "basis_types.h"
-#include "sge_gdi_intern.h"
+#include "sge_any_request.h"
 #include "sge_secL.h"
 #include "sge_prog.h"
 #include "sge_stdlib.h"
@@ -633,7 +633,7 @@ int sec_receive_message(char *fromcommproc, u_short *fromid, char *fromhost,
 *     every new tag, which message is not to be encrypted, must
 *     occur within this switch. Tags who are not there are encrypted
 *     by default. 
-*     (definition of tags <gridengine>/source/libs/gdi/sge_gdi_intern.h)
+*     (definition of tags <gridengine>/source/libs/gdi/sge_any_request.h)
 *
 *  INPUTS
 *     int tag - message tag

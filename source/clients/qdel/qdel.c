@@ -37,7 +37,6 @@
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "usage.h"
-#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "commlib.h"
 #include "sge_prog.h"
@@ -434,7 +433,12 @@ static int qdel_usage(
 FILE *fp,
 char *what 
 ) {
-   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
+   dstring ds;
+   char buffer[256];
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
 
    if(!what) {
       /* display full usage */

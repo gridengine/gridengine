@@ -1,3 +1,6 @@
+#ifndef __SGE_ANY_REQUEST_H
+#define __SGE_ANY_REQUEST_H
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -29,55 +32,55 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "parse_qconf.h"
-#include "sge_gdi.h"
-#include "setup.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_clients_common.h"
-#include "msg_common.h"
-#include "sge_answer.h"
 
-extern char **environ;
+#include "cull.h"
 
-int main(int argc, char *argv[]);
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-/************************************************************************/
-int main(int argc, char **argv)
-{
-   int ret;
-   lList *alp = NULL;
-   
-   DENTER_MAIN(TOP_LAYER, "qconf");
+enum {
+   TAG_NONE            = 0,     /* usable e.g. as delimiter in a tag array */
+   TAG_OLD_REQUEST,
+   TAG_GDI_REQUEST,
+   TAG_ACK_REQUEST,
+   TAG_REPORT_REQUEST,
+   TAG_FINISH_REQUEST,
+   TAG_JOB_EXECUTION,
+   TAG_SLAVE_ALLOW,
+   TAG_CHANGE_TICKET,
+   TAG_SIGJOB,
+   TAG_SIGQUEUE,
+   TAG_KILL_EXECD,
+   TAG_NEW_FEATURES,
+   TAG_GET_NEW_CONF,
+   TAG_JOB_REPORT,              /* cull based job reports */
+   TAG_QSTD_QSTAT,
+   TAG_TASK_EXIT,
+   TAG_TASK_TID,
+   TAG_EVENT_CLIENT_EXIT,
+   TAG_SEC_ANNOUNCE,
+   TAG_SEC_RESPOND,
+   TAG_SEC_ERROR
 
-   sge_gdi_param(SET_MEWHO, QCONF, NULL);
-   if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
-      SGE_EXIT(1);
-   }
+#ifdef KERBEROS
+  ,TAG_AUTH_FAILURE
+#endif
 
-   sge_setup_sig_handlers(QCONF);
+};
 
-   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
-      fprintf(stderr, SGE_EVENT);
-      SGE_EXIT(1);
-   }   
+int check_isalive(const char *masterhost);
+void prepare_enroll(const char *name, u_short id, int *tag_priority_list);
+int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, const char *commproc, int id, sge_pack_buffer *pb, int tag);
+int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, int *tag, int synchron);
+int gdi_send_message_pb(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, sge_pack_buffer *pb, u_long32 *mid);
 
-   if (argc == 1) {
-      sge_usage(stderr);
-      SGE_EXIT(1);
-   }
+enum { COMMD_UNKNOWN = 0, COMMD_UP, COMMD_DOWN};
 
-   if (sge_parse_qconf(++argv))
-      SGE_EXIT(1);
-   else
-      SGE_EXIT(0);
-   return 0;
+#ifdef  __cplusplus
 }
+#endif
+
+#endif /* __SGE_ANY_REQUEST_H */
+
+

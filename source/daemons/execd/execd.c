@@ -36,8 +36,10 @@
 
 #include "sge_unistd.h"
 #include "sge.h"
+#include "sge_gdi.h"
+#include "setup.h"
+#include "sge_any_request.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h" 
 #include "sge_host.h"
 #include "sge_load_sensor.h"
 #include "sge_log.h"

@@ -40,7 +40,6 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sge_gdi_intern.h"
 #include "cull_list.h"
 #include "cull_lerrnoP.h"
 #include "cull_listP.h"

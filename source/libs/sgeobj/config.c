@@ -35,7 +35,6 @@
 #include <stdlib.h>
 
 #include "cull.h"
-#include "sge_gdi_intern.h"
 #include "sge_parse_num_par.h"
 #include "sgermon.h"
 #include "sge_log.h"

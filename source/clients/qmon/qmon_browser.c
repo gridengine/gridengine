@@ -48,7 +48,6 @@
 
 #include "sge.h"
 #include "sge_gdi.h"
-#include "sge_gdi_intern.h"
 #include "basis_types.h"
 #include "sge_prog.h"
 #include "qmon_util.h"

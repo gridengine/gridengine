@@ -1,3 +1,5 @@
+#ifndef __SGE_GDIP_H
+#define __SGE_GDIP_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -29,55 +31,54 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "parse_qconf.h"
+
+ 
+
+#ifdef WIN32NATIVE
+#	include "win32nativetypes.h"
+#endif
+
+#include "cull.h"
 #include "sge_gdi.h"
-#include "setup.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_clients_common.h"
-#include "msg_common.h"
-#include "sge_answer.h"
 
-extern char **environ;
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-int main(int argc, char *argv[]);
+/* v5.0:       0x10000000 */
+/* v5.1:       0x10000001 */
+/* v5.2:       0x10000002 */
+/* v5.2.3:     0x10000003 */
+/* v5.3 alpha1 0x100000F0 */
+/* before hash 0x100000F1 */
+/* v5.3beta1   0x100000F2 */
+/* v5.3beta2   0x100000F3 */
+/* v5.3        0x100000F4 */
+#define GRM_GDI_VERSION 0x10000FFF
 
-/************************************************************************/
-int main(int argc, char **argv)
-{
-   int ret;
-   lList *alp = NULL;
-   
-   DENTER_MAIN(TOP_LAYER, "qconf");
+u_long32 gdi_state_get_request_id(void);
+int gdi_state_get_daemon_first(void);
+int gdi_state_get_first_time(void);
+int gdi_state_get_commd_state(void);
+int gdi_state_get_program_id(void);
+int gdi_state_get_isalive(void);
+int gdi_state_get_reread_qmaster_file(void);
+int gdi_state_get_sec_initialized(void);
+char *gdi_state_get_cached_master_name(void);
 
-   sge_gdi_param(SET_MEWHO, QCONF, NULL);
-   if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
-      SGE_EXIT(1);
-   }
 
-   sge_setup_sig_handlers(QCONF);
+void gdi_state_set_request_id(u_long32 id);
+void gdi_state_set_daemon_first(int i);
+void gdi_state_set_first_time(int i);
+void gdi_state_set_commd_state(int i);
+void gdi_state_set_program_id(int i);
+void gdi_state_set_isalive(int i);
+void gdi_state_set_reread_qmaster_file(int i);
+void gdi_state_set_sec_initialized(int i);
 
-   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
-      fprintf(stderr, SGE_EVENT);
-      SGE_EXIT(1);
-   }   
-
-   if (argc == 1) {
-      sge_usage(stderr);
-      SGE_EXIT(1);
-   }
-
-   if (sge_parse_qconf(++argv))
-      SGE_EXIT(1);
-   else
-      SGE_EXIT(0);
-   return 0;
+#ifdef  __cplusplus
 }
+#endif
+
+#endif /* __SGE_GDI_INTERN_H */
+

@@ -42,14 +42,15 @@
 #include "sge_stdio.h"
 #include "sge_unistd.h"
 #include "sge.h"
-#include "sge_gdi_intern.h"
 #include "sge_prog.h"
+#include "setup.h"
 #include "qm_name.h"
 #include "sig_handlers.h"
 #include "qmaster_heartbeat.h"
 #include "lock.h"
 #include "startprog.h"
 #include "sge_gethostbyname.h"
+#include "sge_any_request.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
@@ -187,9 +188,12 @@ char **argv
    const char *admin_user;
    char err_str[1024];
    char shadowd_pidfile[SGE_PATH_MAX];
+   dstring ds;
+   char buffer[256];
 
    DENTER_MAIN(TOP_LAYER, "sge_shadowd");
    
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    /* initialize recovery control variables */
    {
       char *s;
@@ -312,7 +316,7 @@ char **argv
          u_long32 old_ll = log_state_get_log_level();
          log_state_set_log_level(LOG_INFO);
          INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS, 
-               feature_get_product_name(FS_VERSION),
+               feature_get_product_name(FS_VERSION, &ds),
                feature_get_featureset_name(feature_get_active_featureset_id())));
          log_state_set_log_level(old_ll);
          SGE_EXIT(0);
@@ -564,15 +568,19 @@ static void parse_cmdline_shadowd(
 int argc,
 char **argv 
 ) {
+   dstring ds;
+   char buffer[256];
+
    DENTER(TOP_LAYER, "parse_cmdline_shadowd");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    /*
    ** -help
    */
    if ((argc == 2) && !strcmp(argv[1],"-help")) {
 #define PRINTITD(o,d) print_option_syntax(stdout,o,d)
 
-      fprintf(stdout, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
+      fprintf(stdout, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
 
       fprintf(stdout, "%s sge_shadowd [options]\n", MSG_GDI_USAGE_USAGESTRING);
 

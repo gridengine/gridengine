@@ -49,7 +49,6 @@
 
 #include "commlib.h" 
 #include "sge_gdi.h" 
-#include "sge_gdi_intern.h" 
 #include "sge_prog.h"
 #include "sge_all_listsL.h" 
 #include "qmon_rmon.h"

@@ -34,27 +34,11 @@
 
 /* may be this should be included by the gdi user */
 #include "cull.h"
+#include "gdi_setup.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
-
-/* these values should be used to specify params in a sge_gdi_param call */
-enum {
-   SET_MEWHO,         /* intval */
-   SET_LEAVE,         /* strval contains exit_function */
-   SET_ISALIVE,       /* intval 1/0 */
-   SET_EXIT_ON_ERROR, /* 0/1 default is true */
-   LAST_VALUE
-};
-
-/* these values are standarized gdi return values */
-enum {
-   AE_OK = 0,
-   AE_ALREADY_SETUP,
-   AE_UNKNOWN_PARAM,
-   AE_QMASTER_DOWN
-};
 
 /* allowed values for op field of sge_gdi_request */
 enum { 
@@ -115,7 +99,6 @@ enum {
    SGE_CALENDAR_LIST,
    SGE_JOB_SCHEDD_INFO,
    SGE_ZOMBIE_LIST,
-   SGE_FEATURESET_LIST,
    SGE_USER_MAPPING_LIST,
    SGE_HOST_GROUP_LIST,
    SGE_DUMMY_LIST
@@ -150,15 +133,10 @@ typedef struct {
 /* to be used for initializing state_gdi_multi */
 #define STATE_GDI_MULTI_INIT { NULL, NULL, 0 }
 
-int sge_gdi_setup(const char *programname, lList **alpp);
-
-int sge_gdi_param(int, int, char *);
-
 lList *sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp, lEnumeration *enp);
 
 int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd, lList *lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state);
 
-int sge_gdi_shutdown(void);
 
 lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id, lList *mal, lList **olpp);
 

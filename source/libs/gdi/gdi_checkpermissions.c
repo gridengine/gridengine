@@ -32,7 +32,8 @@
 
 #include <string.h>
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi.h"
+#include "sge_any_request.h"
 #include "gdi_checkpermissions.h"
 #include "sge_answer.h"
 #include "sge_permissionL.h"

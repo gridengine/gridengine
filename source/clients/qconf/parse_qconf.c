@@ -41,8 +41,8 @@
 
 #include "sge_unistd.h"
 #include "sge.h"
+#include "sge_gdi.h"
 #include "sge_options.h"
-#include "sge_gdi_intern.h"
 #include "sge_pe.h"
 #include "sge_queue.h"
 #include "sge_string.h"
@@ -4266,23 +4266,6 @@ DPRINTF(("ep: %s %s\n",
          spp++;
          continue;
       } 
-
-/*----------------------------------------------------------------------------*/
- 
-      /* "-switch featuresetname" */
- 
-      if (!strcmp("-switch", *spp)) {
-         /* no adminhost/manager check needed here */
- 
-         spp = sge_parser_get_next(spp);
-
-         feature_activate(feature_get_featureset_id(*spp));
-
-         alp = sge_gdi(SGE_FEATURESET_LIST, SGE_GDI_MOD, &Master_FeatureSet_List, NULL, NULL);
- 
-         spp++;
-         continue;
-      }                  
 
 /*----------------------------------------------------------------------------*/
       /* "-huh?" */

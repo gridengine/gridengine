@@ -2547,9 +2547,12 @@ main(int argc, char **argv)
    double *curr_cpu=NULL, *prev_cpu=NULL, *diff_cpu=NULL;
    int jobid_count = 0;
    char *jobids[256];
+   dstring ds;
+   char buffer[256];
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    sprintf(sgeview_bar_title, "%-.250s", MSG_SGE_CPUUSAGE  );
-   sprintf(sgeview_window_title, "%-.100s %-.150s", feature_get_product_name(FS_SHORT) ,MSG_SGE_SGEJOBUSAGECOMPARSION );
+   sprintf(sgeview_window_title, "%-.100s %-.150s", feature_get_product_name(FS_SHORT, &ds) ,MSG_SGE_SGEJOBUSAGECOMPARSION );
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
    /* init language output for gettext() , it will use the right language */

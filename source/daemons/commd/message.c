@@ -48,7 +48,7 @@
 #include "rwfd.h"
 
 #ifdef KERBEROS
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
 #endif
 
 extern commproc* commprocs;

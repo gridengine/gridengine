@@ -35,7 +35,9 @@
 
 #include "cull.h"
 #include "sgermon.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
+#include "sge_any_request.h"
+#include "sge_gdi_request.h"
 #include "sge_log.h"
 #include "setup_path.h"
 #include "sge_string.h"
@@ -87,13 +89,15 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
 *
 *  RETURN
 *     0  in case of success, something different otherwise 
+*
+*  NOTES
+*     MT-NOTE: sge_security_initialize() is MT safe (assumptions)
 ******************************************************************************/
 int sge_security_initialize(const char *name)
 {
-   static int initialized = 0;
-
    DENTER(TOP_LAYER, "sge_security_initialize");
-   if (!initialized) {
+
+   if (!gdi_state_get_sec_initialized()) {
 #ifdef SECURE
       if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
          if (sec_init(name)) {
@@ -109,7 +113,7 @@ int sge_security_initialize(const char *name)
          return -1;
       }
 #endif   
-      initialized = 1; 
+      gdi_state_set_sec_initialized(1); 
    }
 
    DEXIT;
@@ -129,6 +133,9 @@ int sge_security_initialize(const char *name)
 *
 *  INPUTS
 *     status - exit status value
+*
+*  NOTES
+*     MT-NOTE: sge_security_exit() is MT safe (assumptions)
 ******************************************************************************/
 void sge_security_exit(int i)
 {
@@ -152,6 +159,9 @@ void sge_security_exit(int i)
 
    Test dlopen functionality, stub libs or check if openssl calls can be added 
    without infringing a copyright
+
+   NOTES
+      MT-NOTE: gdi_send_message() is MT safe (assumptions)
 *************************************************************/
 int gdi_send_message(
 int synchron,
@@ -198,9 +208,15 @@ int compressed
 
    DEXIT;
    return ret;
-}   
+}
 
 
+/* 
+ *
+ *  NOTES
+ *     MT-NOTE: gdi_receive_message() is MT safe (assumptions)
+ *
+ */
 int gdi_receive_message(
 char *fromcommproc,
 u_short *fromid,
@@ -270,6 +286,9 @@ u_short *compressed
 *  NOTES
 *     Hope, the above description is correct - don't know the 
 *     DCE/KERBEROS code.
+* 
+*  NOTES
+*     MT-NOTE: set_sec_cred() is MT safe (assumptions)
 ******************************************************************************/
 int set_sec_cred(lListElem *job)
 {
@@ -350,7 +369,7 @@ int set_sec_cred(lListElem *job)
    }
    DEXIT;
    return ret;
-}   
+} 
 
 #if 0
       
@@ -438,6 +457,11 @@ int set_sec_cred(lListElem *job)
 #endif
 
 
+/*
+ * 
+ *  NOTES
+ *     MT-NOTE: cache_sec_cred() is MT safe (assumptions)
+ */
 void cache_sec_cred(lListElem *jep, const char *rhost)
 {
    DENTER(TOP_LAYER, "cache_sec_cred");
@@ -504,6 +528,12 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
    DEXIT;
 }   
 
+/*
+ * 
+ *  NOTES
+ *     MT-NOTE: delete_credentials() is MT safe (assumptions)
+ * 
+ */
 void delete_credentials(lListElem *jep)
 {
 
@@ -582,6 +612,9 @@ void delete_credentials(lListElem *jep)
 /* 
  * Execute command to store the client's DCE or Kerberos credentials.
  * This also creates a forwardable credential for the user.
+ *
+ *  NOTES
+ *     MT-NOTE: store_sec_cred() is MT safe (assumptions)
  */
 int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authentication, lList** alpp)
 {
@@ -696,7 +729,11 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
 
 
 
-
+/*
+ *
+ *  NOTES
+ *     MT-NOTE: store_sec_cred2() is MT safe (assumptions)
+ */
 int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char* err_str)
 {
    int ret = 0;
@@ -779,6 +816,11 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
 }
 
 #ifdef KERBEROS
+/*
+ *
+ *  NOTES
+ *     MT-NOTE: kerb_job() is not MT safe
+ */
 int kerb_job(
 lListElem *jelem,
 struct dispatch_entry *de 
@@ -834,7 +876,13 @@ struct dispatch_entry *de
 #endif
 
 
-/* get TGT from job entry and store in client connection */
+/* 
+ *  FUNCTION
+ *     get TGT from job entry and store in client connection 
+ *
+ *  NOTES
+ *     MT-NOTE: tgt2cc() is not MT safe
+ */
 void tgt2cc(lListElem *jep, const char *rhost, const char* target)
 {
 
@@ -877,6 +925,11 @@ void tgt2cc(lListElem *jep, const char *rhost, const char* target)
 }
 
 
+/*
+ *
+ *  NOTES
+ *     MT-NOTE: tgtcclr() is not MT safe
+ */
 void tgtcclr(lListElem *jep, const char *rhost, const char* target)
 {
 #ifdef KERBEROS
@@ -891,6 +944,11 @@ void tgtcclr(lListElem *jep, const char *rhost, const char* target)
 
 /*
 ** authentication information
+**
+** NOTES
+**    MT-NOTE: sge_set_auth_info() is MT safe (assumptions)
+**    MT-NOTE: sge_set_auth_info() is not MT safe when -DCRYPTO is set
+**
 */
 int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user, 
                         gid_t gid, char *group)
@@ -912,6 +970,11 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
    return 0;
 }
 
+/*
+** NOTES
+**    MT-NOTE: sge_decrypt() is MT safe (assumptions)
+**    MT-NOTE: sge_decrypt() is not MT safe when -DCRYPTO is set
+*/
 int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
                         gid_t *gid, char *group)
 {
@@ -937,7 +1000,9 @@ int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user,
 
 #ifndef CRYPTO
 /*
-** dummy encrypt/decrypt functions
+** standard encrypt/decrypt functions
+**
+** MT-NOTE: standard sge_encrypt() is MT safe
 */
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
 {
@@ -959,6 +1024,9 @@ static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
    return true;
 }
 
+/*
+** MT-NOTE: standard sge_decrypt() is MT safe
+*/
 static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 {
    unsigned char decbuf[2*SGE_SEC_BUFSIZE];
@@ -981,6 +1049,9 @@ static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 
 #else
 
+/*
+** MT-NOTE: EVP based sge_encrypt() is not MT safe
+*/
 static bool sge_encrypt(char *intext, int inlen, char *outbuf, int outsize)
 {
 
@@ -1073,9 +1144,15 @@ static bool sge_decrypt(char *intext, int inlen, char *outbuf, int* outsize)
 #define HIQUAD(i) (((i)&0xF0)>>4)
 #define SETBYTE(hi, lo)  ((((hi)<<4)&0xF0) | (0x0F & (lo)))
 
+/*
+ *
+ * NOTES
+ *    MT-NOTE: change_encoding() is MT safe
+ *
+ */
 static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* usize, int mode)
 {
-   static char alphabet[16] = {"*b~de,gh&j§lrn=p"};
+   static const char alphabet[16] = {"*b~de,gh&j§lrn=p"};
 
    DENTER(TOP_LAYER, "change_encoding");
 
@@ -1127,8 +1204,9 @@ static bool change_encoding(char *cbuf, int* csize, unsigned char* ubuf, int* us
       
    DEXIT;   
    return true;
-}   
+}
 
+/* MT-NOTE: sge_security_verify_user() is MT safe (assumptions) */
 int sge_security_verify_user(const char *host, const char *commproc, u_short id, const char *user) 
 {
    DENTER(TOP_LAYER, "sge_security_verify_user");
@@ -1155,6 +1233,7 @@ int sge_security_verify_user(const char *host, const char *commproc, u_short id,
    return True;
 }   
 
+/* MT-NOTE: sge_security_ck_to_do() is MT safe (assumptions) */
 void sge_security_ck_to_do(void)
 {
 #ifdef SECURE

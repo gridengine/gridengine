@@ -32,7 +32,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sge_gdi_intern.h"
+#include "cull.h"
+#include "sge_gdi.h"
 #include "sge_client_access.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -42,6 +43,7 @@
 
 #include "msg_qconf.h"
 
+#define INIT_ALPP(alpp) (alpp && !*alpp)?((*alpp=lCreateList("answers", AN_Type))!=NULL):0
 
 static void report_and_free_answers(lList **alpp, lList *new_answers);
 

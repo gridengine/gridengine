@@ -32,7 +32,6 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_gdi_intern.h"
 #include "sge_usageL.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"

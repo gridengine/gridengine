@@ -38,7 +38,6 @@
 #include "sge_gdi.h"
 
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
 #include "sgermon.h"
 #include "sge_time.h"
 #include "sort_hosts.h"

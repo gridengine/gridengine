@@ -35,7 +35,7 @@
 #endif
 
 #if !(ADD_COPYRIGHT || ADD_SUN_COPYRIGHT)
-char SFLN_ELN[] = "\n\
+const char SFLN_ELN[] = "\n\
    Grid Engine is based on code donated by Sun Microsystems.\n\
    The copyright is owned by Sun Microsystems and other contributors.\n\
    It has been made available to the open source community under the SISSL license.\n\

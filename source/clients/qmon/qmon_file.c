@@ -38,7 +38,6 @@
 #include "qmon_browser.h"
 #include "qmon_file.h"
 #include "sge_unistd.h"
-#include "sge_gdi_intern.h"
 #include "sge_answer.h"
 
 lList* qmonReadFile(

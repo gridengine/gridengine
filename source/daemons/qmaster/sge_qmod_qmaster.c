@@ -44,6 +44,8 @@
 #include "sge_prog.h"
 #include "sge_queue_event_master.h"
 #include "sge_qmod_qmaster.h"
+#include "sge_gdi_request.h"
+#include "sge_any_request.h"
 #include "read_write_job.h"
 #include "read_write_queue.h"
 #include "sge_job_qmaster.h"

@@ -55,7 +55,6 @@
 #include "scheduler.h"
 #include "sgermon.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
 #include "sge_time.h"
 #include "sge_parse_num_par.h"
 #include "load_correction.h"

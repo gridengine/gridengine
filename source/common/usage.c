@@ -170,6 +170,8 @@ FILE *fp
 ) {
 
   char namebuf[128];
+  dstring ds;
+  char buffer[256];
   
 #define PRINTITD(o,d) print_option_syntax(fp,o,d)
 #define PRINTIT(o) print_option_syntax(fp,o,NULL)
@@ -177,7 +179,9 @@ FILE *fp
 
    DENTER(TOP_LAYER, "sge_usage");
 
-   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION));
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   fprintf(fp, "%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
    
    if (!strcmp(uti_state_get_sge_formal_prog_name(), "execd"))
       strcpy(namebuf, "sge_execd");

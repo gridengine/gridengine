@@ -36,7 +36,6 @@
 #include <sys/types.h>
        
 #include "sgermon.h"
-#include "sge_gdi_intern.h"
 #include "sge_path_alias.h"
 #include "sge_log.h"
 #include "sge_host.h"

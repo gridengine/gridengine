@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "sgermon.h"
-#include "sge_gdi_intern.h"
 #include "sge_requestL.h"
 #include "sge_resource.h"
 #include "cull_parse_util.h"
@@ -70,6 +69,9 @@ resources
    |- ....
    |
    ...
+
+   NOTES
+      MT-NOTE: sge_parse_resources() is not MT safe
  ***********************************************************************/
 lList *sge_parse_resources(
 lList *resources,
@@ -175,7 +177,9 @@ const char *hard_soft         /* for name of resources list */
 ** EXTERNAL
 **
 ** DESCRIPTION
-**   
+**
+** NOTES
+**    MT-NOTE: sge_parse_resources() is not MT safe
 */
 int unparse_resources(
 FILE *fp,
@@ -254,7 +258,11 @@ lList *rlp
    return 0;
 }
 
-/*************************************************************/
+/*
+**
+** NOTES
+**    MT-NOTE: sge_show_resource_list() is not MT safe
+*/
 void sge_show_resource_list(
 lList *reqlist  /* RQ_Type List */
 ) {
@@ -270,8 +278,11 @@ lList *reqlist  /* RQ_Type List */
    return;
 }
 
-/*************************************************************/
-
+/*
+**
+** NOTES
+**    MT-NOTE: sge_show_re_type_list() is not MT safe
+*/
 void sge_show_re_type_list(
 lList *rel  /* RE_Type List */
 ) {
@@ -296,8 +307,11 @@ lList *rel  /* RE_Type List */
    return;
 }
 
-/*************************************************************/
-
+/*
+**
+** NOTES
+**    MT-NOTE: sge_show_ce_type_list() is not MT safe
+*/
 static void sge_show_ce_type_list(
 lList *cel, /* CE_Type List */
 const char *indent,
@@ -330,7 +344,11 @@ const char *separator
    return;
 }
 
-/*************************************************************/
+/*
+**
+** NOTES
+**    MT-NOTE: sge_show_re_type_list_line_by_line() is not MT safe
+*/
 void sge_show_re_type_list_line_by_line(
 const char *label,
 const char *indent,
@@ -365,6 +383,11 @@ lList *rel  /* RE_Type List */
 }
 
 
+/*
+**
+** NOTES
+**    MT-NOTE: sge_compress_resources() is not MT safe
+*/
 void sge_compress_resources(
 lList *rlp  /* RE_Type */
 ) {

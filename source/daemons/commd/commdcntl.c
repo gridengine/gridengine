@@ -35,9 +35,9 @@
 #include <string.h>
 
 #include "commlib.h"
-#include "sge_gdi_intern.h"
 #include "msg_commd.h"
 #include "sge_prog.h"
+#include "sge_gdi.h"
 #include "sge_language.h"
 #include "sge_feature.h"
 
@@ -48,7 +48,11 @@ int main(int argc, char **argv);
 
 void usage()
 {
-   printf("%s\n", feature_get_product_name(FS_SHORT_VERSION));
+   dstring ds;
+   char buffer[256];
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   printf("%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
 
    printf("%s sgecommdcntl [-k | -t level | -d] [-p commdport] [-U] [-profile [on|off|reset]]\\\n", MSG_USAGE);
    printf("       [-host dst_host] [-gid commprocname] [-unreg commprocname id] \n");

@@ -48,6 +48,9 @@
 #include "sge_unistd.h"
 #include "basis_types.h"
 #include "sge.h"
+#include "setup.h"
+#include "sge_any_request.h"
+#include "sge_gdi_request.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_time.h"
@@ -222,7 +225,7 @@ reached qmaster:
 New behaviour:
    Priorities can be set via environment variable SGE_PRIORITY_TAGS.
    SGE_PRIORITY_TAGS can contain a blank separated list of tag id's (values
-   0-n, n = enum value of the TAG_* enum in libs/gdi/sge_gdi_intern.h
+   0-n, n = enum value of the TAG_* enum in libs/gdi/sge_gdi_request.h
 
    To restore the old behaviour, set 
    SGE_PRIORITY_TAGS="3 2"

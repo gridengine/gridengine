@@ -437,7 +437,6 @@ int sge_run_as_user(void)
 *         0 - OK
 *         1 - Error
 ******************************************************************************/
-#define HAS_GETPWNAM_R
 int sge_user2uid(const char *user, uid_t *uidp, int retries) 
 {
    struct passwd *pw;
@@ -497,7 +496,6 @@ int sge_user2uid(const char *user, uid_t *uidp, int retries)
 *         0 - OK
 *         1 - Error
 ******************************************************************************/
-#define HAS_GETGRNAM_R
 int sge_group2gid(const char *gname, gid_t *gidp, int retries) 
 {
    struct group *gr;
@@ -555,9 +553,6 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
 *         0 - OK
 *         1 - Error
 ******************************************************************************/
-#if !defined(AIX42)
-#define HAS_GETPWUID_R
-#endif
 int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
 {
    struct passwd *pw;
@@ -627,9 +622,6 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
 *         0 - OK
 *         1 - Error
 ******************************************************************************/
-#if !defined(AIX42)
-#define HAS_GETGRGID_R
-#endif
 int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
 {
    struct group *gr;

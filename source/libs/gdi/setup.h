@@ -1,3 +1,5 @@
+#ifndef __SETUP_H
+#define __SETUP_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -29,55 +31,19 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "parse_qconf.h"
-#include "sge_gdi.h"
-#include "setup.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_clients_common.h"
-#include "msg_common.h"
-#include "sge_answer.h"
 
-extern char **environ;
+#include "cull.h"
 
-int main(int argc, char *argv[]);
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-/************************************************************************/
-int main(int argc, char **argv)
-{
-   int ret;
-   lList *alp = NULL;
-   
-   DENTER_MAIN(TOP_LAYER, "qconf");
+int sge_setup(u_long32 sge_formal_prog_name, lList **alpp);
+int reresolve_me_qualified_hostname(void);
 
-   sge_gdi_param(SET_MEWHO, QCONF, NULL);
-   if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
-      SGE_EXIT(1);
-   }
-
-   sge_setup_sig_handlers(QCONF);
-
-   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
-      fprintf(stderr, SGE_EVENT);
-      SGE_EXIT(1);
-   }   
-
-   if (argc == 1) {
-      sge_usage(stderr);
-      SGE_EXIT(1);
-   }
-
-   if (sge_parse_qconf(++argv))
-      SGE_EXIT(1);
-   else
-      SGE_EXIT(0);
-   return 0;
+#ifdef  __cplusplus
 }
+#endif
+
+#endif /* __SETUP_H */
+

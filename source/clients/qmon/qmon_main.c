@@ -451,9 +451,14 @@ Cardinal *num_params
 /*-------------------------------------------------------------------------*/
 static void qmonUsage(Widget w)
 {
+   dstring ds;
+   char buffer[256];
+
    DENTER(GUI_LAYER, "qmonUsage");
 
-   printf("%s\n", feature_get_product_name(FS_SHORT_VERSION));
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+   printf("%s\n", feature_get_product_name(FS_SHORT_VERSION, &ds));
    printf(XmtLocalize2(w, "usage: qmon\n", "qmon_usage", "usageTitle"));
    printf("	[-cmap]                           ");
    printf(XmtLocalize2(w, "use own colormap\n", "qmon_usage", "cmapOption"));

@@ -57,7 +57,6 @@
 #include "rwfd.h"
 #include "debug_malloc.h"
 #include "sge_time.h"
-#include "sge_gdi_intern.h"
 #include "sge.h"
 #include "msg_common.h"
 #include "msg_commd.h"

@@ -1,3 +1,5 @@
+#ifndef __SGE_GDI_REQUEST_H
+#define __SGE_GDI_REQUEST_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -29,55 +31,44 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "parse_qconf.h"
+
+#include "cull.h"
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+#ifndef __SGE_GDI_H
 #include "sge_gdi.h"
-#include "setup.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_clients_common.h"
-#include "msg_common.h"
-#include "sge_answer.h"
+#endif
 
-extern char **environ;
+struct _sge_gdi_request {
+   u_long32         op;
+   u_long32         target;
 
-int main(int argc, char *argv[]);
+   char             *host;
+   char             *commproc;
+   u_short          id;
 
-/************************************************************************/
-int main(int argc, char **argv)
-{
-   int ret;
-   lList *alp = NULL;
-   
-   DENTER_MAIN(TOP_LAYER, "qconf");
+   u_long32         version;
+   lList            *lp;
+   lList            *alp;
+   lCondition       *cp;
+   lEnumeration     *enp;
+   char             *auth_info;     
+   u_long32         sequence_id;
+   u_long32         request_id;
+   sge_gdi_request  *next;   
+};
 
-   sge_gdi_param(SET_MEWHO, QCONF, NULL);
-   if (sge_gdi_setup(prognames[QCONF], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
-      SGE_EXIT(1);
-   }
+int sge_send_gdi_request(int sync, const char *rhost, const char *commproc, int id, sge_gdi_request *head);
+int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp);
+int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar);
+sge_gdi_request* free_gdi_request(sge_gdi_request *ar);
+sge_gdi_request* new_gdi_request(void);
 
-   sge_setup_sig_handlers(QCONF);
-
-   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
-      fprintf(stderr, SGE_EVENT);
-      SGE_EXIT(1);
-   }   
-
-   if (argc == 1) {
-      sge_usage(stderr);
-      SGE_EXIT(1);
-   }
-
-   if (sge_parse_qconf(++argv))
-      SGE_EXIT(1);
-   else
-      SGE_EXIT(0);
-   return 0;
+#ifdef  __cplusplus
 }
+#endif
+
+#endif /* __SGE_ANY_REQUEST_H */

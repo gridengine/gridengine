@@ -42,7 +42,6 @@
 #include "sge_dstring.h"
 #include "sge_time.h"
 #include "sge_log.h"
-#include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
 #include "slots_used.h"

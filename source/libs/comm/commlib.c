@@ -41,6 +41,10 @@
 #include <signal.h>
 #include <sys/types.h>
 
+#if defined(QIDL) || defined(SGE_MT)
+#include <pthread.h>
+#endif
+
 #ifndef WIN32NATIVE
 #	include <sys/socket.h>
 #	include <sys/errno.h>
@@ -92,7 +96,6 @@ int gethostname(char *name, int namelen);
 #endif
 
 #if defined(QIDL) || defined(SGE_MT)
-#include <pthread.h>
 static pthread_key_t  commlib_state_key; 
 #else
 static struct commlib_state_t commlib_state_opaque =
@@ -126,7 +129,7 @@ static struct commlib_state_t* commlib_state = &commlib_state_opaque;
 #endif
 
 #ifdef KERBEROS
-#   include "sge_gdi_intern.h"
+#   include "sge_gdiP.h"
 #endif
 
 #ifndef WIN32 
@@ -432,6 +435,8 @@ int *intval_array
    0  = OK
    !0 = CL_... errorcode
 
+  NOTES
+     MT-NOTE: send_message() is MT safe
  **********************************************************************/
 int send_message(
 int synchron,
@@ -1173,6 +1178,9 @@ int *tag_priority_list
  Remove messages we dont wanna hear anything about.
  This is e.g. for cleaning up at starttime
  return CL ERRORCODE
+
+  NOTES
+     MT-NOTE: remove_pending_messages() is MT safe
  **********************************************************************/
 int remove_pending_messages (char *fromcommproc, u_short fromid,
                              char *fromhost, int tag)
@@ -1373,6 +1381,9 @@ static int leave_()
     host
     commprocname "" = any
     commprocid (0=any)
+  
+    NOTES
+       MT-NOTE: ask_commproc() is MT safe
  **********************************************************************/
 unsigned int ask_commproc (const char *h, const char *commprocname, 
                            u_short commprocid)
@@ -1954,6 +1965,9 @@ int force
 *
 *  SEE ALSO
 *     src/sge_resolveMappingList()
+*
+*  NOTES
+*     MT-NOTE: getuniquehostname() is MT safe
 ******************************************************************************/
 int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) 
 {

@@ -50,6 +50,7 @@
 #include "sge_stdlib.h"
 #include "sge.h"
 #include "sge_conf.h"
+#include "sge_any_request.h"
 #include "time_event.h"
 #include "commlib.h"
 #include "job_log.h"

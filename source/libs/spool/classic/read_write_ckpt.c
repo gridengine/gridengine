@@ -200,8 +200,12 @@ const lListElem *ep
    FILE *fp;
    lListElem *sep;
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
+   dstring ds;
+   char buffer[256];
 
    DENTER(TOP_LAYER, "write_ckpt");
+
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
 
    switch (how) {
    case 0:
@@ -233,7 +237,7 @@ const lListElem *ep
    }
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION)) < 0) {
+             feature_get_product_name(FS_VERSION, &ds)) < 0) {
       goto FPRINTF_ERROR;
    } 
 

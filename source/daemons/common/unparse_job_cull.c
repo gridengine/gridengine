@@ -33,7 +33,6 @@
 
 #include "symbols.h"
 #include "sge_options.h"
-#include "sge_gdi_intern.h"
 #include "sge_ja_task.h"
 #include "sge_stringL.h"
 #include "sge_pe.h"

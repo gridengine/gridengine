@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "sgermon.h"
-#include "sge_gdi_intern.h"
 #include "sge_requestL.h"
 #include "sge_resource.h"
 #include "cull_parse_util.h"

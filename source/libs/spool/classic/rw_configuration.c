@@ -35,7 +35,7 @@
 #include <ctype.h>
 
 #include "sgermon.h"
-#include "sge_gdi_intern.h"
+#include "sge_gdi_request.h"
 #include "rw_configuration.h"
 #include "sge_log.h"
 #include "sge_stdio.h"
@@ -65,9 +65,12 @@ u_long32 flags
    FILE *fp;
    lListElem *ep = NULL;
    lList *cfl;
+   dstring ds;
+   char buffer[256];
    
    DENTER(TOP_LAYER, "write_configuration");
 
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    if (fname) {
       if (!(fp = fopen(fname, "w"))) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, 
@@ -86,7 +89,7 @@ u_long32 flags
       fp = fpout;
 
    if (spool && sge_spoolmsg_write(fp, COMMENT_CHAR,
-             feature_get_product_name(FS_VERSION)) < 0) {
+             feature_get_product_name(FS_VERSION, &ds)) < 0) {
       goto FPRINTF_ERROR;
    } 
 

@@ -40,8 +40,9 @@
 #include <stdlib.h>
 #include "sge_stdlib.h"
 #include "commlib.h"
-#include "sge_gdi_intern.h"
-#include "sge_c_gdi.h"
+#include "sge_gdiP.h"
+#include "sge_gdi_request.h"
+#include "sge_any_request.h"
 #include "sge_multiL.h"
 #include "sge_prog.h"
 #include "sgermon.h"
@@ -166,6 +167,8 @@ static int sge_handle_local_gdi_request(sge_gdi_request *out,
 *     More detailed examples can be found in the client applications 
 *     (qconf, qsub ...)
 *
+*  NOTES
+*     MT-NOTES: sge_gdi() is MT safe (assumptions)
 ******************************************************************************/
 lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
                lEnumeration *enp) 
@@ -298,6 +301,8 @@ lList* sge_gdi(u_long32 target, u_long32 cmd, lList **lpp, lCondition *cp,
 *     Please have a look into the qstat client application. This client
 *     demonstrates the use of this function very good. 
 *
+*  NOTES
+*     MT-NOTES: sge_gdi_multi() is MT safe (assumptions)
 ******************************************************************************/
 int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
                   lList *lp, lCondition *cp, lEnumeration *enp, lList **malpp, state_gdi_multi *state) 
@@ -308,7 +313,6 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    sge_gdi_request *an;
    int ret;
    int operation;
-   static int reread_qmaster_file = 0;
    uid_t uid;
    gid_t gid;
    char username[128];
@@ -415,7 +419,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
 #endif
          status = sge_send_receive_gdi_request(
             &commlib_error, 
-            sge_get_master(reread_qmaster_file), 
+            sge_get_master(gdi_state_get_reread_qmaster_file()), 
             prognames[QMASTER], 
             0, state->first, &answer);
 #ifdef QIDL
@@ -433,7 +437,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
 
       if (status != 0) {
 
-         reread_qmaster_file = 1;
+         gdi_state_set_reread_qmaster_file(1);
 
          /* failed to contact qmaster ? */
          /* So we build an answer structure */
@@ -458,7 +462,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
          goto error;
       }
       else
-         reread_qmaster_file = 0;
+         gdi_state_set_reread_qmaster_file(0);
     
       for (an = answer; an; an = an->next) { 
          int an_operation, an_sub_command;
@@ -534,6 +538,9 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
 *     sge_answerL.h. the second field (AN_text) in a response list 
 *     element is a string that describes the performed operation or 
 *     a description of an error.
+*
+*  NOTES
+*     MT-NOTE: sge_gdi_extract_answer() is MT safe
 ******************************************************************************/
 lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
                               lList *mal, lList **olpp) 
@@ -605,6 +612,9 @@ lList *sge_gdi_extract_answer(u_long32 cmd, u_long32 target, int id,
 *        -3 failed receiving gdi request
 *        -4 check_isalive() failed
 *        -5 failed due to a received signal  
+*
+*  NOTES
+*     MT-NOTE: sge_send_receive_gdi_request() is MT safe (assumptions)
 ******************************************************************************/
 static int sge_send_receive_gdi_request(int *commlib_error,
                                         const char *rhost, 
@@ -708,6 +718,9 @@ static int sge_send_receive_gdi_request(int *commlib_error,
 *        -3 format error while unpacking
 *        -4 no commd
 *        -5 no peer enrolled   
+*
+*  NOTES
+*     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
 *******************************************************************************/
 int sge_send_gdi_request(int sync, const char *rhost, const char *commproc,
                          int id, sge_gdi_request *ar) 
@@ -790,6 +803,9 @@ int sge_send_gdi_request(int sync, const char *rhost, const char *commproc,
 *        -3 format error while unpacking
 *        -4 no commd
 *        -5 no peer enrolled
+*
+*  NOTES
+*     MT-NOTE: sge_get_gdi_request() is MT safe (assumptions)
 *******************************************************************************/
 static int sge_get_gdi_request(int *commlib_error,
                                char *host,
@@ -860,6 +876,9 @@ static int sge_get_gdi_request(int *commlib_error,
 *         0 on success
 *        -1 not enough memory
 *        -2 format error 
+*
+*  NOTES
+*     MT-NOTE: sge_unpack_gdi_request() is MT safe
 ******************************************************************************/
 int sge_unpack_gdi_request(sge_pack_buffer *pb, sge_gdi_request **arp) 
 {
@@ -962,6 +981,9 @@ DTRACE;
 
 /*--------------------------------------------------------------
  * sge_pack_gdi_request
+ *
+ * NOTES
+ *    MT-NOTE: sge_pack_gdi_request() is MT safe
  *--------------------------------------------------------------*/
 int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar) 
 {
@@ -1039,8 +1061,17 @@ int sge_pack_gdi_request(sge_pack_buffer *pb, sge_gdi_request *ar)
 }
 
 
-/*----------------------------------------------------------*/
-sge_gdi_request *new_gdi_request()
+/****** sge_gdi_request/new_gdi_request() **************************************
+*  NAME
+*     new_gdi_request() -- allocates a gdi request structure
+*
+*  SYNOPSIS
+*     sge_gdi_request* new_gdi_request(void) 
+*
+*  NOTES
+*     MT-NOTE: new_gdi_request() is MT safe
+*******************************************************************************/
+sge_gdi_request *new_gdi_request(void)
 {
    sge_gdi_request *ar;
 
@@ -1055,7 +1086,16 @@ sge_gdi_request *new_gdi_request()
 }
 
 
-/*------------------------------------------------------------*/
+/****** sge_gdi_request/new_gdi_request() **************************************
+*  NAME
+*     new_gdi_request() -- free's a gdi request structure
+*
+*  SYNOPSIS
+*     sge_gdi_request *free_gdi_request(sge_gdi_request *ar)
+*
+*  NOTES
+*     MT-NOTE: free_gdi_request() is MT safe
+*******************************************************************************/
 sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
    sge_gdi_request *next;
 

@@ -40,9 +40,8 @@
 #include "qm_name.h"
 #include "setup_path.h"
 #include "commd.h"
+#include "sge_gdiP.h"
 #include "msg_gdilib.h"
-
-static char cached_master_name[MAXHOSTLEN] = "";
 
 /*------------------------------------------------------------
  * sge_get_master
@@ -51,14 +50,19 @@ static char cached_master_name[MAXHOSTLEN] = "";
  *
  * if read_master_file==0 we return the cached master_name
  *                   ==1 we look into the master_file
+ *
+ * NOTES
+ *    MT-NOTE: sge_get_master() is MT safe
  *------------------------------------------------------------*/
 const char *sge_get_master(
 int read_master_file 
 ) {
    char err_str[SGE_PATH_MAX+128];
+   char *cached_master_name;
 
    DENTER(GDI_LAYER, "sge_get_master");
 
+   cached_master_name = gdi_state_get_cached_master_name();
    if (!read_master_file && cached_master_name[0] != '\0') {
       DEXIT;
       return cached_master_name;
@@ -83,6 +87,9 @@ int read_master_file
  *           don't copy error to err_str if err_str = NULL
  *    master_file name of file which should point to act_qmaster file
  *    copy name of qmaster host to master_host
+ *
+ * NOTES
+ *    MT-NOTE: get_qm_name() is MT safe
  *-----------------------------------------------------------------------*/
 int get_qm_name(
 char *master_host,
@@ -160,6 +167,9 @@ char *err_str
  -> master_file and master_host
  <- return -1   error in err_str
             0   means OK
+  
+   NOTES
+      MT-NOTE: write_qm_name() is MT safe
  *********************************************************************/
 int write_qm_name(
 const char *master_host,

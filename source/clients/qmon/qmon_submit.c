@@ -57,7 +57,6 @@
 #include "sge_unistd.h"
 #include "sge_prog.h"
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
 #include "sge_parse_date_time.h"
 #include "sge_userset.h"
 #include "Matrix.h"

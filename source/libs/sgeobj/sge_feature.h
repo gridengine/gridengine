@@ -93,7 +93,9 @@ typedef struct {
    char *name;
 } feature_names_t;            
 
-extern lList *Master_FeatureSet_List;
+#if defined(SGE_MT)
+void feature_init_mt(void);
+#endif
 
 void feature_initialize(void);
  
@@ -117,7 +119,7 @@ const char *feature_get_name(feature_id_t id);
  
 feature_id_t feature_get_id(const char *name);
 
-const char *feature_get_product_name(featureset_product_name_id_t style);
+const char *feature_get_product_name(featureset_product_name_id_t style, dstring *buffer);
  
 #ifdef  __cplusplus
 }

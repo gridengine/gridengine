@@ -345,6 +345,9 @@ int just_count
  set read/write pointer to the beginning
  be sure to only call this function for unpacking when 
  compression is turned on.
+
+ NOTES
+    MT-NOTE: init_packbuffer_from_buffer() is MT safe (assumptions)
  **************************************************************/
 int init_packbuffer_from_buffer(
 sge_pack_buffer *pb,

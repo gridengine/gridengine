@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "sge_gdi_intern.h"
 #include "commlib.h"
 #include "cull.h"
 #include "sgermon.h"

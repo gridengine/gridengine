@@ -35,6 +35,7 @@
 
 #include "sge.h"
 #include "cull.h"
+#include "sge_gdi_request.h"
 #include "sge_feature.h"
 #include "sge_time.h"
 #include "sge_host.h"

@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifndef __SGE_GDI__INTERN_H
-#   include "sge_gdi_intern.h"
+#ifndef __SGE_GDIP_H
+#   include "sge_gdiP.h"
 #endif
 
 #include "sge_eventL.h"

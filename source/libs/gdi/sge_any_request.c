@@ -32,7 +32,8 @@
 #include <sys/types.h>
 #include <string.h>
 
-#include "sge_gdi_intern.h"
+#include "sge_gdiP.h"
+#include "sge_any_request.h"
 #include "commlib.h"
 #include "sge_prog.h"
 #include "sgermon.h"
@@ -51,6 +52,9 @@ static int commd_monitor(int cl_err);
 /*-----------------------------------------------------------------------
  * prepare_enroll
  * just store values for later enroll() of commlib
+ *
+ * NOTES
+ *    MT-NOTE: prepare_enroll() is MT safe
  *-----------------------------------------------------------------------*/
 void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 {
@@ -76,8 +80,8 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
       set_commlib_param(CL_P_TIMEOUT_SSND, 3600, NULL, NULL);
    }
 
-   if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD ||
-   uti_state_get_mewho() == COMMDCNTL)) {
+   if (!(uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == EXECD 
+      || uti_state_get_mewho() == SCHEDD || uti_state_get_mewho() == COMMDCNTL)) {
       const char *masterhost; 
 
       if ((masterhost = sge_get_master(0))) {
@@ -94,6 +98,9 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 
 /*----------------------------------------------------------
  * sge_log_commd_state_transition
+ *
+ * NOTES
+ *    MT-NOTE: sge_log_commd_state_transition() is MT safe
  *----------------------------------------------------------*/
 static void sge_log_commd_state_transition(int cl_err) 
 {
@@ -120,6 +127,9 @@ static void sge_log_commd_state_transition(int cl_err)
  *     0          commd did not change his state
  *     COMMD_UP   commd gone up
  *     COMMD_DOWN commd gone down
+ *
+ * NOTES
+ *    MT-NOTE: commd_monitor() is MT safe
  *----------------------------------------------------------*/
 static int commd_monitor(int cl_err) 
 {
@@ -151,6 +161,9 @@ static int commd_monitor(int cl_err)
  *  returns 0 if ok
  *          -4 if peer is not alive or rhost == NULL
  *          return value of gdi_send_message() for other errors
+ *
+ *  NOTES
+ *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
  *---------------------------------------------------------*/
 int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, 
                          const char *commproc, int id, sge_pack_buffer *pb, 
@@ -222,6 +235,9 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
  * returns 0               on success
  *         -1              rhost is NULL 
  *         commlib return values (always positive)
+ *
+ * NOTES
+ *    MT-NOTE: sge_get_any_request() is MT safe (assumptions)
  *----------------------------------------------------------*/
 int sge_get_any_request(char *rhost, char *commproc, u_short *id, 
                         sge_pack_buffer *pb, int *tag, int synchron) 
@@ -318,6 +334,9 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id,
   and passes the result on to send_message
   Always use this function instead of gdi_send_message directly, even
   if compression is turned off.
+  
+    NOTES
+       MT-NOTE: gdi_send_message_pb() is MT safe (assumptions)
 **********************************************************************/
 int gdi_send_message_pb(int synchron, const char *tocomproc, int toid, 
                         const char *tohost, int tag, sge_pack_buffer *pb, 
@@ -358,6 +377,9 @@ int gdi_send_message_pb(int synchron, const char *tocomproc, int toid,
  *    > 0                  commlib error number (always positve)
  *    CL_FIRST_FREE_EC+1   can't get masterhost
  *    CL_FIRST_FREE_EC+2   can't connect to commd
+ *
+ *  NOTES
+ *     MT-NOTE: check_isalive() is MT safe
  *-------------------------------------------------------------------------*/
 int check_isalive(const char *masterhost) 
 {

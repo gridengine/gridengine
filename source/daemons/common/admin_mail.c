@@ -161,6 +161,9 @@ int is_array
    
    if (failed) {
       const char *err_str;
+      dstring ds;
+      char buffer[256];
+      sge_dstring_init(&ds, buffer, sizeof(buffer));
 
       if (failed <= MAX_SSTATE) {
          /*
@@ -221,10 +224,10 @@ int is_array
       }
       if (is_array)
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SUU, 
-                 feature_get_product_name(FS_SHORT_VERSION), u32c(jobid), u32c(jataskid));
+                 feature_get_product_name(FS_SHORT_VERSION, &ds), u32c(jobid), u32c(jataskid));
       else
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SU, 
-                 feature_get_product_name(FS_SHORT_VERSION), u32c(jobid));
+                 feature_get_product_name(FS_SHORT_VERSION, &ds), u32c(jobid));
       sprintf(sge_mail_body,
               MSG_MAIL_BODY_USSSSSSSS,
               u32c(jobid),

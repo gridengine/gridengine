@@ -35,6 +35,10 @@
 #include <ctype.h>
 #include <errno.h>
 
+#if defined(SGE_MT)
+#include <pthread.h>
+#endif
+
 /* do not compile in monitoring code */
 #ifndef NO_SGE_COMPILE_DEBUG
 #define NO_SGE_COMPILE_DEBUG
@@ -66,7 +70,6 @@ struct cull_state_t {
 };
 
 #if defined(SGE_MT)
-#include <pthread.h>
 static pthread_key_t  cull_state_key;  
 #else
 static struct cull_state_t cull_state_opaque = { 

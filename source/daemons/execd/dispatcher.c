@@ -37,8 +37,8 @@
 
 #include "basis_types.h"
 #include "commlib.h"
-#include "sge_gdi_intern.h"
 #include "dispatcher.h"
+#include "sge_any_request.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_execd.h"

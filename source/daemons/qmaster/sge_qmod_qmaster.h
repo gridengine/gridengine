@@ -34,8 +34,8 @@
 
 
 
-#ifndef __SGE_GDI__INTERN_H
-#   include "sge_gdi_intern.h"
+#ifndef __SGE_GDIP_H
+#   include "sge_gdiP.h"
 #endif
 
 void resend_signal_event(u_long32 type, u_long32 when, u_long32 jobid, u_long32 jataskid, const char *queue);

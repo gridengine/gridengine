@@ -32,8 +32,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sge_gdi_intern.h"
 #include "sgermon.h"
+#include "cull.h"
 #include "sge_parse_date_time.h"
 #include "sge_string.h"
 #include "sge_log.h"

@@ -48,7 +48,6 @@
 #include "Tab.h"
 
 #include "sge_all_listsL.h"
-#include "sge_gdi_intern.h"
 #include "parse_qsub.h"
 #include "sge_time.h"
 #include "sge_mailrec.h"

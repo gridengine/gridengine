@@ -300,8 +300,12 @@ const lListElem *ep
    lList* memberList = NULL;
    lListElem* listElem = NULL;
    char filename[SGE_PATH_MAX], real_filename[SGE_PATH_MAX];
+   dstring ds;
+   char buffer[256];
+
    DENTER(TOP_LAYER, "write_host_group");
   
+   sge_dstring_init(&ds, buffer, sizeof(buffer));
    DPRINTF(("writeing user host group entry list\n"));
    strcpy(filename, lGetString(ep, GRP_group_name));
    switch (how) {
@@ -336,7 +340,7 @@ const lListElem *ep
    }
 
    if (spool == 1 && sge_spoolmsg_write(fp, COMMENT_CHAR,
-                feature_get_product_name(FS_SHORT_VERSION)) < 0) {
+                feature_get_product_name(FS_SHORT_VERSION, &ds)) < 0) {
       goto FPRINTF_ERROR;
    } 
 

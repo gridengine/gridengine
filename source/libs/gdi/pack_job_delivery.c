@@ -34,6 +34,30 @@
 #include "pack_job_delivery.h"
 #include "sge_feature.h"
 
+/****** pack_job_delivery/pack_job_delivery() **********************************
+*  NAME
+*     pack_job_delivery() -- pack a job to be sent to execd
+*
+*  SYNOPSIS
+*     int pack_job_delivery(sge_pack_buffer *pb, lListElem *jep, lList *qlp, 
+*     lListElem *pep) 
+*
+*  FUNCTION
+*     This function is used in qmaster and by qrsh -inherit to deliver
+*     jobs to execd's.
+*
+*  INPUTS
+*     sge_pack_buffer *pb - packing buffer
+*     lListElem *jep      - JB_Type
+*     lList *qlp          - QU_Type
+*     lListElem *pep      - PE_Type
+*
+*  RESULT
+*     int - PACK_SUCCESS on success
+*
+*  NOTES
+*     MT-NOTE: pack_job_delivery() is MT safe
+*******************************************************************************/
 int pack_job_delivery(
 sge_pack_buffer *pb,
 lListElem *jep, /* JB_Type */ 

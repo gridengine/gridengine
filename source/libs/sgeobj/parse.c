@@ -35,7 +35,6 @@
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_log.h"
-#include "sge_gdi_intern.h"
 #include "sge_pe.h"
 #include "sge_stringL.h"
 #include "parse_qsubL.h"

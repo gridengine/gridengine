@@ -34,7 +34,6 @@
 #include <string.h>
 #include <float.h>
 
-#include "sge_gdi_intern.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_usageL.h"
@@ -42,6 +41,7 @@
 #include "sge_prog.h"
 #include "commlib.h"
 
+#include "sge_gdiP.h"
 #include "job_report_execd.h"
 #include "sge_host.h"
 #include "sge_load_sensor.h"

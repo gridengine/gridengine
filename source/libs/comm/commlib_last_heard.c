@@ -306,6 +306,9 @@ static void new_entry(const char *commproc, u_short id, const char *host,
 /*************************************************************
  reset_last_heard() removes all entries in the last heard from list.
  Returns number of deleted entries.
+
+  NOTES
+     MT-NOTE: reset_last_heard() is MT safe
  *************************************************************/
 int reset_last_heard()
 {

@@ -235,7 +235,7 @@ main(int argc, char** argv)
   retval = cl_com_setup_commlib(CL_NO_THREAD , atoi(argv[1]), NULL );
   printf("%s\n\n",cl_get_error_text(retval));
 
-  handle = cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 4545 , "client", 1,1,0 );
+  handle = cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 4545 , "client", 1,1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -337,7 +337,7 @@ main(int argc, char** argv)
   retval = cl_com_setup_commlib(CL_ONE_THREAD , atoi(argv[1]), NULL );
   printf("%s\n\n",cl_get_error_text(retval));
 
-  handle = cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 4545 , "client", 1,1,0 );
+  handle = cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 4545 , "client", 1,1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);

@@ -92,6 +92,7 @@ int main(int argc, char *argv[]) {
    int   option_info       = 0;
    int   option_noalias    = 0;
    int   parameter_count   = 4;
+   int   commlib_error = CL_RETVAL_OK;
 
    
    /* setup signalhandling */
@@ -194,9 +195,9 @@ int main(int argc, char *argv[]) {
       }
    }
 
-   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, comp_port, "qping", 0, 1,0 );
+   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP,CL_CM_CT_MESSAGE , 0, comp_port, "qping", 0, 1,0 );
    if (handle == NULL) {
-      fprintf(stderr, "could not create communication handle\n");
+      fprintf(stderr, "could not create communication handle: %s\n", cl_get_error_text(commlib_error));
       cl_com_cleanup_commlib();
       exit(1);
    }

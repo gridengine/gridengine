@@ -45,7 +45,7 @@ extern "C" {
 #define MSG_JAPI_DISCONNECTED   _MESSAGE(45504, _("The qmaster has become unreachable.  Attempting to reconnect.\n"))
 #define MSG_JAPI_RECONNECTED    _MESSAGE(45505, _("Reconnected to qmaster.\n"))
 #define MSG_JAPI_QMASTER_DOWN   _MESSAGE(45506, _("The qmaster has gone down.  Waiting to reconnect.\n"))
-#define MSG_JAPI_NO_HANDLE      _MESSAGE(45507, _("Unable to open a connection to the qmaster"))
+#define MSG_JAPI_NO_HANDLE_S      _MESSAGE(45507, _("Unable to open a connection to the qmaster: "SFN"\n"))
 
 #ifdef	__cplusplus
 }

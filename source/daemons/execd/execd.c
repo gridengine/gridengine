@@ -327,6 +327,7 @@ static void execd_register()
    lList *hlp = NULL, *alp = NULL; 
    lListElem *hep;
    int had_problems = 0; /* to ensure single logging */
+   bool is_logged_communication_error = false;
 
    DENTER(TOP_LAYER, "execd_register");
 
@@ -341,24 +342,58 @@ static void execd_register()
 
       if (had_problems != 0) {
          int i;
+         cl_com_handle_t* handle = NULL;
+         int commlib_error = CL_RETVAL_OK;
          /*  trigger communication
           *  =====================
           *  cl_commlib_trigger() will block 1 second , when there are no messages to read/write 
           */
          for (i = 0; i< 10 ; i++) {
-            if ( cl_com_get_handle((char*)prognames[EXECD],1) == NULL) {
+            
+            handle = cl_com_get_handle((char*)prognames[EXECD],1);
+            if ( handle == NULL) {
                DPRINTF(("preparing reenroll"));
                prepare_enroll(prognames[EXECD]);
+               handle = cl_com_get_handle((char*)prognames[EXECD],1);
             }
-            if ( cl_commlib_trigger(cl_com_get_handle( "execd" ,1)) != CL_RETVAL_OK) {
+
+            if ( cl_commlib_trigger(handle) != CL_RETVAL_OK) {
                sleep(1);
+            }
+
+            if ( (commlib_error = sge_get_communication_error()) != CL_RETVAL_OK ) {
+               /*
+                * always log CL_RETVAL_ACCESS_DENIED error into messages file 
+                * otherwise log first error
+                */
+               if (commlib_error == CL_RETVAL_ACCESS_DENIED) {
+                  CRITICAL((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                            uti_state_get_qualified_hostname(),
+                            (char*) prognames[uti_state_get_mewho()],
+                            u32c(handle->local->comp_id), 
+                            u32c(handle->service_port),
+                            cl_get_error_text(commlib_error)));
+
+                  SGE_EXIT(1);
+               }
+
+               if ( is_logged_communication_error == false ) {
+                  is_logged_communication_error = true;
+                  ERROR((SGE_EVENT, MSG_GDI_CANT_GET_COM_HANDLE_SSUUS, 
+                            uti_state_get_qualified_hostname(),
+                            (char*) prognames[uti_state_get_mewho()],
+                            u32c(handle->local->comp_id), 
+                            u32c(handle->service_port),
+                            cl_get_error_text(commlib_error)));
+               }
+
             }
          }
       }
 
       alp = sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
       aep = lFirst(alp);
-      if (!alp || (lGetUlong(aep, AN_status)!=STATUS_OK)) {
+      if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
          if ( had_problems == 0) {
             WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_S, aep?lGetString(aep, AN_text):MSG_COM_ERROR));
             had_problems = 1;

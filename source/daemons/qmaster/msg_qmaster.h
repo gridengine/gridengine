@@ -736,6 +736,7 @@
 
 #define MSG_OBJ_MAXUNHEARDVALUE_SS    _MESSAGE(33904, _("host "SFQ": "SFQ" is not a valid time value for \"max_unheard\" - assuming 120 seconds\n") )  
 #define MSG_QMASTER_MAX_EVC_LIMIT_U              _MESSAGE(33905, _("qmaster will accept max. "U32CFormat" dynamic event clients\n"))
+#define MSG_QMASTER_COMMUNICATION_ERRORS  _MESSAGE(33906, _("abort qmaster startup due to communication errors\n"))
 
 
 #endif

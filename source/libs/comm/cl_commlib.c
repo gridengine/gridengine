@@ -434,7 +434,7 @@ int cl_commlib_get_connection_param(cl_com_handle_t* handle, int parameter, int*
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_create_handle()"
-cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int service_provider , int handle_port , char* component_name, unsigned long component_id, int select_sec_timeout, int select_usec_timeout) {
+cl_com_handle_t* cl_com_create_handle(int* commlib_error, int framework, int data_flow_type, int service_provider , int handle_port , char* component_name, unsigned long component_id, int select_sec_timeout, int select_usec_timeout) {
 
    int thread_start_error = 0;
    cl_com_handle_t* new_handle = NULL;
@@ -448,16 +448,25 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
 
    if (cl_com_handle_list  == NULL) {
       CL_LOG(CL_LOG_ERROR,"cl_com_setup_commlib() not called");
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
+      }
       return NULL;
    }
 
    if (component_name == NULL ) {
       CL_LOG(CL_LOG_ERROR,"component name is NULL");
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_PARAMS;
+      }
       return NULL;
    }
 
    if ( service_provider == 1 && component_id == 0) {
       CL_LOG(CL_LOG_ERROR,"service can't use component id 0");
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_PARAMS;
+      }
       return NULL;
    }
 
@@ -473,6 +482,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
             /* we have this handle allready in list */
             CL_LOG(CL_LOG_ERROR,"component not unique");
             cl_raw_list_unlock(cl_com_handle_list);
+            if (commlib_error) {
+               *commlib_error = CL_RETVAL_LOCAL_ENDPOINT_NOT_UNIQUE;
+            }
             return NULL;
          }
       }
@@ -483,6 +495,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = return_value;
+      }
       return NULL;
    }
    CL_LOG_STR(CL_LOG_INFO,"local host name is",local_hostname );
@@ -493,6 +508,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(local_hostname);
       CL_LOG(CL_LOG_ERROR,"malloc() error");
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_MALLOC;
+      }
       return NULL;
    }
 
@@ -548,6 +566,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_TO_LESS_FILEDESCRIPTORS;
+      }
       return NULL;
    }
    CL_LOG_INT(CL_LOG_INFO, "max file descriptors on this system    :", new_handle->max_open_connections);
@@ -570,6 +591,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_MALLOC;
+      }
       return NULL;
    }
    memset(new_handle->statistic, 0, sizeof(cl_com_handle_statistic_t));
@@ -584,6 +608,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_MALLOC;
+      }
       return NULL;
    }
 
@@ -594,6 +621,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_MALLOC;
+      }
       return NULL;
    }
 
@@ -608,6 +638,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_MUTEX_ERROR;
+      }
       return NULL;
    } 
 
@@ -625,6 +658,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_MUTEX_ERROR;
+      }
       return NULL;
    }
 
@@ -644,11 +680,14 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = CL_RETVAL_MALLOC;
+      }
       return NULL;
    }
 
 
-   if (cl_connection_list_setup(&(new_handle->connection_list), "connection list", 1) != CL_RETVAL_OK) {
+   if ((return_value=cl_connection_list_setup(&(new_handle->connection_list), "connection list", 1)) != CL_RETVAL_OK) {
       int mutex_ret_val;
       cl_connection_list_cleanup(&(new_handle->connection_list));
       cl_com_free_endpoint(&(new_handle->local));
@@ -664,10 +703,13 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = return_value;
+      }
       return NULL;
    } 
 
-   if (cl_string_list_setup(&(new_handle->allowed_host_list), "allowed host list") != CL_RETVAL_OK) {
+   if ((return_value=cl_string_list_setup(&(new_handle->allowed_host_list), "allowed host list")) != CL_RETVAL_OK) {
       int mutex_ret_val;
 
       cl_string_list_cleanup(&(new_handle->allowed_host_list));
@@ -685,6 +727,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = return_value;
+      }
       return NULL;
    }
  
@@ -704,7 +749,11 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       switch(new_handle->framework) {
          case CL_CT_TCP: {
             /* autoclose is not used for service connection */
-            if (cl_com_setup_tcp_connection(&new_con, new_handle->service_port, new_handle->connect_port,CL_CM_CT_STREAM, CL_CM_AC_UNDEFINED ) != CL_RETVAL_OK) {
+            if ((return_value=cl_com_setup_tcp_connection(&new_con,
+                                                           new_handle->service_port,
+                                                           new_handle->connect_port,
+                                                           CL_CM_CT_STREAM,
+                                                           CL_CM_AC_UNDEFINED )) != CL_RETVAL_OK) {
                int mutex_ret_val;
 
                cl_com_close_connection(&new_con);
@@ -722,10 +771,13 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                free(new_handle->statistic);
                free(new_handle);
                cl_raw_list_unlock(cl_com_handle_list);
+               if (commlib_error) {
+                  *commlib_error = return_value;
+               }
                return NULL;
             }
             new_con->handler = new_handle;
-            if (cl_com_connection_request_handler_setup(new_con, new_handle->local) != CL_RETVAL_OK) {
+            if ((return_value=cl_com_connection_request_handler_setup(new_con, new_handle->local)) != CL_RETVAL_OK) {
                int mutex_ret_val;
                cl_com_connection_request_handler_cleanup(new_con);
                cl_com_close_connection(&new_con);
@@ -743,6 +795,9 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                free(new_handle->statistic);
                free(new_handle);
                cl_raw_list_unlock(cl_com_handle_list);
+               if (commlib_error) {
+                  *commlib_error = return_value;
+               }
                return NULL;
             } 
             
@@ -772,12 +827,16 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
             free(new_handle->statistic);
             free(new_handle);
             cl_raw_list_unlock(cl_com_handle_list);
+            if (commlib_error) {
+               *commlib_error = CL_RETVAL_UNDEFINED_FRAMEWORK;
+            }
             return NULL;
          }
       }
    }
 
    /* create handle thread */
+   thread_start_error = 0;
    switch(cl_com_create_threads) {
       case CL_NO_THREAD:
          CL_LOG(CL_LOG_INFO,"no threads enabled");
@@ -845,6 +904,10 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
          }
          break;
    }
+   /*
+    * Do NOT touch return_value, it contains information about 
+    * thread start up errors !
+    */
    if (thread_start_error != 0) {
       int mutex_ret_val;
       if (new_handle->service_handler != NULL) {
@@ -865,11 +928,17 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       free(new_handle->statistic);
       free(new_handle);
       cl_raw_list_unlock(cl_com_handle_list);
+      if (commlib_error) {
+         *commlib_error = return_value;
+      }
       return NULL;
    }
    cl_handle_list_append_handle(cl_com_handle_list, new_handle,0);
    cl_raw_list_unlock(cl_com_handle_list);
    CL_LOG(CL_LOG_INFO, "new handle created");
+   if (commlib_error) {
+      *commlib_error = CL_RETVAL_OK;
+   }
    return new_handle;
 }
 

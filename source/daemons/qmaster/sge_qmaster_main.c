@@ -156,6 +156,7 @@ static void exit_func(int);
 int main(int argc, char* argv[])
 {
    sigset_t sig_set;
+   int max_enroll_tries;
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
@@ -189,7 +190,20 @@ int main(int argc, char* argv[])
    sge_qmaster_thread_init(false);
 
    /* this must be done as root user to be able to bind ports < 1024 */
-   prepare_enroll(prognames[QMASTER]); 
+   max_enroll_tries = 30;
+   while ( cl_com_get_handle((char*)prognames[QMASTER],1) == NULL) {
+      prepare_enroll(prognames[QMASTER]); 
+      max_enroll_tries--;
+      if ( max_enroll_tries <= 0 ) {
+         /* exit after 30 seconds */
+         CRITICAL((SGE_EVENT, MSG_QMASTER_COMMUNICATION_ERRORS ));
+         SGE_EXIT(1);
+      }
+      if (  cl_com_get_handle((char*)prognames[QMASTER],1) == NULL) {
+        /* sleep when prepare_enroll() failed */
+        sleep(1);
+      }
+   }
 
    /* now we become admin user */
    become_admin_user();

@@ -1,3 +1,10 @@
+JG-2004-02-02-0: Enhancem.: The event client layer handles shutdown of qmaster
+                            (event QMASTER_GOES_DOWN). In this case, the event
+                            client will try to reregister itself at the (new) 
+                            qmaster.
+                 Changed:   each eventclient (sge_schedd, qevent)
+                 Review:    SG
+
 AD-2004-02-02-0: Cleanup:   Did add function to initialize a qmaster thread.
                  Changed:   qmaster
 
@@ -33,7 +40,7 @@ SG-2004-02-01-0: Bugfix:    in case a job start failed, the queue is set
 
 JG-2004-02-01-1: Bugfix:    qconf -aprj was broken.
                  Changed:   qconf, sge_qmaster with classic spooling
-                 Review:    pending
+                 Review:    SG
 
 JG-2004-02-01-0: Testsuite: Fixed setting of scheduler configuration.
                             Shutdown qmaster separately, after execds and 
@@ -62,7 +69,7 @@ JG-2004-01-31-0: Enhancem.: qmake can either use a parallel environment for the
                             qrsh job for each make rule (dynamic allocation).
                  Issue:     338
                  Changed:   qmake, qmake.1
-                 Review:    pending
+                 Review:    SG
 
 MD-2004-01-31-1: Bugfix:    - Removed conflict
                  Changed:   - sge_config
@@ -176,7 +183,7 @@ JG-2004-01-29-1: Bugfix:    When queue instances were spooled as a result of a
                             instances after a qmaster shutdown and restart.
                  Enhancem.: Reduced number of attributes that are spooled for 
                             cluster queues and queue instances.
-                 Review:    pending
+                 Review:    SG
 
 MD-2004-01-29-1: Bugfix:    command (eg. qstat) crashes, 
                             if -u -q option get an empty argument

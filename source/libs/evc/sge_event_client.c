@@ -2480,6 +2480,20 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
       DPRINTF(("ec_get - received %d events\n", lGetNumberOfElem(*event_list)));
    }
 
+   /* check if we got a QMASTER_GOES_DOWN event. 
+    * if yes, reregister with next event fetch
+    */
+   if (lGetNumberOfElem(*event_list) > 0) {
+      const lListElem *event;
+
+      for_each(event, *event_list) {
+         if (lGetUlong(event, ET_type) == sgeE_QMASTER_GOES_DOWN) {
+            ec_mark4registration();
+            break;
+         }
+      }
+   }
+
    PROF_STOP_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    DEXIT;

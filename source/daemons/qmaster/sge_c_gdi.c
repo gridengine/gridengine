@@ -103,7 +103,8 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user);
 static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, char *commproc, int mod, lListElem *ep);
 static int sge_chck_get_perm_host(lList **alpp, sge_gdi_request *request);
 
-static int schedd_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object); 
+
+static int schedd_mod( lList **alpp, lListElem *modp, lListElem *ep, int add, const char *ruser, const char *rhost, gdi_object_t *object, int sub_command );
 
 /* ------------------------------ generic gdi objects --------------------- */
 /* *INDENT-OFF* */
@@ -123,7 +124,7 @@ static gdi_object_t gdi_object[] = {
    { SGE_OPERATOR_LIST,     0,                NULL,     "operator",                &Master_Operator_List,          NULL,         NULL,         NULL,           NULL },
    { SGE_PE_LIST,           PE_name,          PE_Type,  "parallel environment",    &Master_Pe_List,                NULL,         pe_mod,       pe_spool,       pe_success },
    { SGE_CONFIG_LIST,       0,                NULL,     "configuration",           &Master_Config_List,            NULL,         NULL,         NULL,           NULL },
-   { SGE_SC_LIST,           0,                NULL,     "scheduler configuration", NULL,                  sconf_get_config_list, NULL,         NULL,           schedd_success },
+   { SGE_SC_LIST,           0,                NULL,     "scheduler configuration", NULL,                  sconf_get_config_list, schedd_mod,   NULL,           NULL},
    { SGE_USER_LIST,         UP_name,          UP_Type,  "user",                    &Master_User_List,              NULL,         userprj_mod,  userprj_spool,  userprj_success },
    { SGE_USERSET_LIST,      0,                NULL,     "userset",                 &Master_Userset_List,           NULL,         NULL,         NULL,           NULL },
    { SGE_PROJECT_LIST,      UP_name,          UP_Type,  "project",                 &Master_Project_List,           NULL,         userprj_mod,  userprj_spool,  userprj_success },
@@ -1683,45 +1684,20 @@ u_long32 target
    return NULL;
 }
 
-/****** sge_c_gdi/schedd_success() *********************************************
-*  NAME
-*     schedd_success() --  calle, when the schedd config was modified. 
-*
-*  SYNOPSIS
-*     static int schedd_success(lListElem *ep, lListElem *old_ep, gdi_object_t 
-*     *object) 
-*
-*  FUNCTION
-*     validates and updates internal variables in the sched_conf module. 
-*
-*  INPUTS
-*     lListElem *ep        - new object 
-*     lListElem *old_ep    - old object 
-*     gdi_object_t *object - reference to the gdi object structure. 
-*
-*  RESULT
-*     static int - 0 = okay
-*
-*
-*  NOTES
-*     It does not really follow the function purpose. It is validating and
-*     updateing internal variables. The validation and updating should be
-*     devided into two functions. But than both functions would to very simillar
-*     thinks, only that one if them does not store the results.
-*
-*
-*  SEE ALSO
-*      on_succuss_func_t, host_successs, centry_succes 
-*******************************************************************************/
-static int schedd_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) {
-   lList *answer_list = NULL;
-   DENTER(TOP_LAYER, "centry_success");
+static int schedd_mod(
+lList **alpp,
+lListElem *modp,
+lListElem *ep,
+int add,
+const char *ruser,
+const char *rhost,
+gdi_object_t *object,
+int sub_command 
+) {
+   int ret;
+   DENTER(TOP_LAYER, "schedd_success");
 
-   sconf_validate_config_(&answer_list);
-   
-   if (answer_list != NULL){
-      answer_list_output(&answer_list);
-   }
+   ret = sconf_validate_config_(alpp)?0:1;
    
    DEXIT;
    return 0;

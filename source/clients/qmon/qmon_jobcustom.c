@@ -138,7 +138,7 @@ static htable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
 /* #define SGEEE_FIELDS    10 */
-#define SGEEE_FIELDS    17
+#define SGEEE_FIELDS    16
 
 static tJobField job_items[] = {
    { 1, JB_job_number, "@{Id}", 12, 20, PrintJobTaskId }, 
@@ -177,7 +177,6 @@ static tJobField job_items[] = {
    { 0, JAT_tix, "@{Ticket}", 10, 30, PrintDoubleAsUlong},
    { 0, JAT_ntix, "@{N Ticket}", 10, 30, PrintDouble},
    { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintDoubleAsUlong},
-   { 0, JAT_dticket, "@{DTicket}", 10, 30, PrintDoubleAsUlong },
    { 0, JAT_fticket, "@{FTicket}", 10, 30, PrintDoubleAsUlong },
    { 0, JAT_sticket, "@{STicket}", 10, 30, PrintDoubleAsUlong },
    { 0, JAT_share, "@{Share}", 10, 30, PrintDouble },

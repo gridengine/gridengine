@@ -117,10 +117,6 @@ extern "C" {
 *        SGEEE - Override tickets set by schedd. Saved to qmaster and
 *        sent to PTF. Not spooled.
 *
-*     SGE_DOUBLE(JAT_dticket)
-*        SGEEE - Deadline tickets set bye schedd. Saved to qmaster and
-*        sent to PTF. Not spooled
-*
 *     SGE_DOUBLE(JAT_fticket)
 *        SGEEE - Functional tickets set bye schedd. Saved to qmaster and 
 *        sent to PTF. Not spooled.
@@ -225,7 +221,6 @@ enum {
    JAT_fshare,
    JAT_tix,
    JAT_oticket,
-   JAT_dticket,
 
    JAT_fticket,
    JAT_sticket,
@@ -268,7 +263,6 @@ SLISTDEF(JAT_Type, Task)
    SGE_ULONG(JAT_fshare, CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(JAT_tix, CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(JAT_oticket, CULL_DEFAULT | CULL_SUBLIST)
-   SGE_DOUBLE(JAT_dticket, CULL_DEFAULT | CULL_SUBLIST)
 
    SGE_DOUBLE(JAT_fticket, CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(JAT_sticket, CULL_DEFAULT | CULL_SUBLIST)
@@ -309,7 +303,6 @@ NAMEDEF(JATN)
 
    NAME("JAT_tix")
    NAME("JAT_oticket")
-   NAME("JAT_dticket")
    NAME("JAT_fticket")
    NAME("JAT_sticket")
    NAME("JAT_share")

@@ -49,7 +49,7 @@ typedef enum {
    OVERRIDE_POLICY,
    FUNCTIONAL_POLICY,
    SHARE_TREE_POLICY,
-   DEADLINE_POLICY,
+/*removed   DEADLINE_POLICY,*/
 
    LAST_POLICY_VALUE,
    POLICY_VALUES = (LAST_POLICY_VALUE - FIRST_POLICY_VALUE)
@@ -121,8 +121,6 @@ u_long32 sconf_get_schedd_job_info(void);
 
 u_long32 sconf_get_weight_tickets_share(void);
 
-u_long32 sconf_get_weight_tickets_deadline(void);
-
 void sconf_disable_schedd_job_info(void);
 
 void sconf_enable_schedd_job_info(void);
@@ -147,11 +145,7 @@ u_long32 sconf_get_weight_tickets_share(void);
 
 u_long32 sconf_get_weight_tickets_functional(void);
 
-u_long32 sconf_get_weight_tickets_deadline(void);
-
 u_long32 sconf_get_halftime(void);
-
-void sconf_set_weight_tickets_deadline_active(u_long32 active);
 
 void sconf_set_weight_tickets_override(u_long32 active);
 
@@ -160,8 +154,6 @@ double sconf_get_compensation_factor(void);
 bool sconf_get_share_override_tickets(void);
 
 bool sconf_get_share_functional_shares(void);
-
-bool sconf_get_share_deadline_tickets(void);
 
 bool sconf_get_report_pjob_tickets(void);
 

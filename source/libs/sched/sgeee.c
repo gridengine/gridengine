@@ -84,7 +84,6 @@ typedef struct {
    u_long32 ja_task_number;   /* ja task id */
    double ja_task_fticket;    /* ftickets for task 'ja_task_id' */ 
    double ja_task_sticket;    /* stickets for task 'ja_task_id' */ 
-   double ja_task_dticket;    /* dtickets for task 'ja_task_id' */ 
    double ja_task_oticket;    /* otickets for task 'ja_task_id' */ 
    double ja_task_ticket;     /* tickets for task 'ja_task_id' */ 
    double ja_task_share;      /* share for task 'ja_task_id' */
@@ -459,10 +458,7 @@ static void task_ref_copy_to_ja_task(sge_task_ref_t *tref, lListElem *ja_task)
  
 #define REF_GET_OTICKET(ref) \
    __REF_GET_DOUBLE((ref), JAT_oticket, (ref)->tref->ja_task_oticket)
- 
-#define REF_GET_DTICKET(ref) \
-   __REF_GET_DOUBLE((ref), JAT_dticket, (ref)->tref->ja_task_dticket)
- 
+
 #define REF_GET_TICKET(ref) \
    __REF_GET_DOUBLE((ref), JAT_tix, (ref)->tref->ja_task_ticket)
  
@@ -481,10 +477,7 @@ static void task_ref_copy_to_ja_task(sge_task_ref_t *tref, lListElem *ja_task)
  
 #define REF_SET_OTICKET(ref, ticket) \
    __REF_SET_DOUBLE((ref), JAT_oticket, (ref)->tref->ja_task_oticket, (ticket))
- 
-#define REF_SET_DTICKET(ref, ticket) \
-   __REF_SET_DOUBLE((ref), JAT_dticket, (ref)->tref->ja_task_dticket, (ticket))
- 
+
 #define REF_SET_TICKET(ref, ticket) \
    __REF_SET_DOUBLE((ref), JAT_tix, (ref)->tref->ja_task_ticket, (ticket))
  
@@ -2525,96 +2518,6 @@ calc_job_functional_tickets_pass2( sge_ref_t *ref,
 
 
 /*--------------------------------------------------------------------
- * calc_deadline_tickets_pass1 - performs pass 1 of calculating
- *      the deadline tickets for the specified job
- *--------------------------------------------------------------------*/
-
-static double
-calc_job_deadline_tickets_pass1 ( sge_ref_t *ref,
-                                  double total_deadline_tickets,
-                                  u_long current_time )
-{
-   lListElem *job = ref->job;
-   double job_deadline_tickets;
-   u_long job_start_time,
-          job_deadline;        /* deadline initiation time */
-
-   /*-------------------------------------------------------
-    * If job has not started, set deadline tickets to zero
-    *-------------------------------------------------------*/
-
-   if ((job_start_time = lGetUlong(job, JB_execution_time)) == 0)
-       job_start_time = lGetUlong(job, JB_submission_time);
-   job_deadline = lGetUlong(job, JB_deadline);
-
-   if (job_deadline == 0 ||
-       job_start_time == 0 ||
-       current_time <= job_start_time)
-
-      job_deadline_tickets = 0;
-
-   /*-------------------------------------------------------
-    * If job has started and deadline is in future, set
-    * deadline tickets based on time left till deadline.
-    *-------------------------------------------------------*/
-
-   else if (current_time < job_deadline)
-
-      job_deadline_tickets = (double)(current_time - job_start_time) * 
-                             (double)total_deadline_tickets /
-                             (job_deadline - job_start_time);
-
-   /*-------------------------------------------------------
-    * If deadline is in past, set deadline tickets to
-    * maximum available deadline tickets.
-    *-------------------------------------------------------*/
-
-   else
-      job_deadline_tickets = total_deadline_tickets;
-
-
-   /*-------------------------------------------------------
-    * Set the number of deadline tickets in the job
-    *-------------------------------------------------------*/
-
-   REF_SET_DTICKET(ref, job_deadline_tickets);
-
-   return job_deadline_tickets;
-}
-
-
-/*--------------------------------------------------------------------
- * calc_deadline_tickets_pass2 - performs pass 2 of calculating
- *      the deadline tickets for the specified job.  Only called
- *      if sum_of_deadline_tickets for pass 1 is greater than
- *      total_deadline_tickets.
- *--------------------------------------------------------------------*/
-
-static double calc_job_deadline_tickets_pass2 ( sge_ref_t *ref,
-                                         double sum_of_deadline_tickets,
-                                         double total_deadline_tickets )
-{
-   double job_deadline_tickets;
-
-   job_deadline_tickets = REF_GET_DTICKET(ref);
-
-   /*-------------------------------------------------------------
-    * Scale deadline tickets based on total number of deadline
-    * tickets.
-    *-------------------------------------------------------------*/
-
-   if (job_deadline_tickets > 0 && sconf_get_share_deadline_tickets()) {
-      job_deadline_tickets = job_deadline_tickets *
-                             (total_deadline_tickets /
-                             sum_of_deadline_tickets);
-      REF_SET_DTICKET(ref, job_deadline_tickets);
-   }
-
-   return job_deadline_tickets;
-}
-
-
-/*--------------------------------------------------------------------
  * calc_override_tickets - calculates the number of override tickets for the
  * specified job
  *--------------------------------------------------------------------*/
@@ -2713,7 +2616,7 @@ calc_job_tickets ( sge_ref_t *ref )
     *-------------------------------------------------------------*/
 
    job_tickets = REF_GET_STICKET(ref) + REF_GET_FTICKET(ref) +
-                 REF_GET_DTICKET(ref) + REF_GET_OTICKET(ref);
+                 REF_GET_OTICKET(ref);
 
    REF_SET_TICKET(ref, job_tickets);
 
@@ -2724,7 +2627,7 @@ calc_job_tickets ( sge_ref_t *ref )
          && lGetBool(pe, PE_control_slaves)
          && (granted=lGetList(ja_task, JAT_granted_destin_identifier_list))) {
 
-      double job_tickets_per_slot, job_dtickets_per_slot, job_otickets_per_slot,
+      double job_tickets_per_slot, job_otickets_per_slot,
              job_ftickets_per_slot, job_stickets_per_slot, nslots, active_nslots;
 
       /* Here we get the total number of slots granted on all queues (nslots) and the
@@ -2741,10 +2644,8 @@ calc_job_tickets ( sge_ref_t *ref )
          nslots = active_nslots;
 
       if (nslots > 0) {
-         job_dtickets_per_slot = REF_GET_DTICKET(ref)/nslots;
          job_stickets_per_slot = REF_GET_STICKET(ref)/nslots;
       } else {
-         job_dtickets_per_slot = 0;
          job_stickets_per_slot = 0;
       }
 
@@ -2762,7 +2663,7 @@ calc_job_tickets ( sge_ref_t *ref )
          if (nslots > 0) {
             job_ftickets_per_slot = (double)(REF_GET_FTICKET(ref) - ref->total_jobclass_ftickets)/nslots;
             job_otickets_per_slot = (double)(REF_GET_OTICKET(ref) - ref->total_jobclass_otickets)/nslots;
-            job_tickets_per_slot = job_dtickets_per_slot + job_stickets_per_slot + job_ftickets_per_slot + job_otickets_per_slot;
+            job_tickets_per_slot = job_stickets_per_slot + job_ftickets_per_slot + job_otickets_per_slot;
          } else {
             job_ftickets_per_slot = 0;
             job_otickets_per_slot = 0;
@@ -2771,7 +2672,6 @@ calc_job_tickets ( sge_ref_t *ref )
 
          lSetDouble(granted_el, JG_fticket, job_ftickets_per_slot*slots + lGetDouble(granted_el, JG_jcfticket));
          lSetDouble(granted_el, JG_oticket, job_otickets_per_slot*slots + lGetDouble(granted_el, JG_jcoticket));
-         lSetDouble(granted_el, JG_dticket, job_dtickets_per_slot*slots);
          lSetDouble(granted_el, JG_sticket, job_stickets_per_slot*slots);
          lSetDouble(granted_el, JG_ticket, job_tickets_per_slot*slots +
                    lGetDouble(granted_el, JG_jcoticket) + lGetDouble(granted_el, JG_jcfticket));
@@ -2809,7 +2709,6 @@ sge_clear_ja_task( lListElem *ja_task )
    lSetDouble(ja_task, JAT_ntix, 0);
    lSetDouble(ja_task, JAT_tix, 0);
    lSetDouble(ja_task, JAT_oticket, 0);
-   lSetDouble(ja_task, JAT_dticket, 0);
    lSetDouble(ja_task, JAT_fticket, 0);
    lSetDouble(ja_task, JAT_sticket, 0);
    lSetDouble(ja_task, JAT_share, 0);
@@ -2817,7 +2716,6 @@ sge_clear_ja_task( lListElem *ja_task )
       lSetDouble(granted_el, JG_ticket, 0);
       lSetDouble(granted_el, JG_oticket, 0);
       lSetDouble(granted_el, JG_fticket, 0);
-      lSetDouble(granted_el, JG_dticket, 0);
       lSetDouble(granted_el, JG_sticket, 0);
       lSetDouble(granted_el, JG_jcoticket, 0);
       lSetDouble(granted_el, JG_jcfticket, 0);
@@ -2987,8 +2885,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                   lList *queued_jobs,
                   int do_usage )
 {
-   double sum_of_deadline_tickets = 0,
-          sum_of_user_functional_shares = 0,
+   double sum_of_user_functional_shares = 0,
           sum_of_project_functional_shares = 0,
           sum_of_department_functional_shares = 0,
           sum_of_jobclass_functional_shares = 0,
@@ -3013,7 +2910,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
 
    double total_share_tree_tickets = sconf_get_weight_tickets_share();
    double total_functional_tickets = sconf_get_weight_tickets_functional();
-   double total_deadline_tickets = sconf_get_weight_tickets_deadline();
+   
    bool share_functional_shares = sconf_get_share_functional_shares();
    u_long32 max_pending_tasks_per_job = sconf_get_max_pending_tasks_per_job();
    static int halflife = 0;
@@ -3336,13 +3233,6 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                                           &sum_of_jobclass_functional_shares,
                                           &sum_of_job_functional_shares,
                                           share_functional_shares, 1);
-
-      if (total_deadline_tickets > 0 && job_deadline_time > 0)
-         sum_of_deadline_tickets +=
-                  calc_job_deadline_tickets_pass1(&job_ref[job_ndx],
-                                                  total_deadline_tickets,
-                                                  curr_time);
-
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
@@ -3389,12 +3279,6 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                                            weight,
                                            share_functional_shares);
 
-         if (total_deadline_tickets > 0 && lGetUlong(job, JB_deadline) > 0 &&
-            sum_of_deadline_tickets > total_deadline_tickets)
-            calc_job_deadline_tickets_pass2(&job_ref[job_ndx],
-                                         sum_of_deadline_tickets,
-                                         total_deadline_tickets);
-
          sum_of_active_override_tickets +=
                   calc_job_override_tickets(&job_ref[job_ndx], share_override_tickets);
 
@@ -3404,10 +3288,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    }
 
    /* set scheduler configuration information to go back to GUI */
-
    if (sconf_is()) {
-      sconf_set_weight_tickets_deadline_active(
-         		   MIN(sum_of_deadline_tickets, total_deadline_tickets));
       sconf_set_weight_tickets_override(sum_of_active_override_tickets);
    }
 
@@ -3420,7 +3301,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
     *-----------------------------------------------------------------*/
    if (queued_jobs) {
       lList *sorted_job_node_list;
-      double sum_of_pending_deadline_tickets;
+
       policy_hierarchy_t hierarchy[4];
       int policy_ndx;
 
@@ -3681,42 +3562,6 @@ sge_calc_tickets( sge_Sdescr_t *lists,
          }
       }
       }
-            break;
-            
-         case DEADLINE_POLICY:
-
-      /*-----------------------------------------------------------------
-       * Calculate the pending deadline tickets
-       *-----------------------------------------------------------------*/
-
-      sum_of_pending_deadline_tickets = sum_of_deadline_tickets;
-
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
-         sge_ref_t *jref = &job_ref[job_ndx];
-         if (jref->queued) {
-
-            if (total_deadline_tickets > 0 && lGetUlong(jref->job, JB_deadline))
-               sum_of_pending_deadline_tickets +=
-                        calc_job_deadline_tickets_pass1(jref,
-                                                        total_deadline_tickets,
-                                                        curr_time);
-         }
-      }
-      
-      for(job_ndx=0; job_ndx<num_jobs; job_ndx++) {
-         sge_ref_t *jref = &job_ref[job_ndx];
-         if (jref->queued) {
-
-            if (total_deadline_tickets > 0 && lGetUlong(jref->job, JB_deadline) > 0 &&
-                  sum_of_pending_deadline_tickets > total_deadline_tickets)
-               calc_job_deadline_tickets_pass2(jref,
-                                               sum_of_pending_deadline_tickets,
-                                               total_deadline_tickets);
-               if (hierarchy[policy_ndx].dependent)
-                  jref->tickets += REF_GET_DTICKET(jref);
-         }
-      }
-
             break;
 
          default:
@@ -4298,11 +4143,9 @@ static lList *sge_build_sgeee_orders( sge_Sdescr_t *lists,
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
 
    if (!config_what)
-      config_what = lWhat("%T(%I %I)", SC_Type,
-                   SC_weight_tickets_deadline_active,
+      config_what = lWhat("%T(%I )", SC_Type,
                    SC_weight_tickets_override);
-
-
+                   
    if (!share_tree_what)
       share_tree_what = lWhat("%T(%I %I %I %I %I %I)", STN_Type,
                          STN_version, STN_name, STN_job_ref_count, STN_m_share,
@@ -5111,7 +4954,6 @@ main(int argc, char **argv)
    lSetDouble(config, SC_weight_department, 0.25);
    lSetUlong(config, SC_weight_tickets_functional, 10000);
    lSetUlong(config, SC_weight_tickets_share, 10000);
-   lSetUlong(config, SC_weight_tickets_deadline, 10000);
    lists->config_list = lCreateList("config_list", SC_Type);
    lAppendElem(lists->config_list, config);
 

@@ -1,3 +1,11 @@
+SG-2003-12-04-1: Bugfix:    The enhancement AH-2003-11-11-0 redirected all scheduler
+                            config changes to the qmaster messages file. This is
+                            changed. Qconf will display the error messages again.
+                 Changed:   scheduler, qmaster                            
+
+SG-2003-12-04-0: Enhancem.: Removed the deadline ticket computation.
+                 Changed:   scheduler, qmaster, qmon
+
 SG-2003-12-03-3: Bugfix:    The enhancement AH-2003-11-11-0 kept the old priority
                             when reporting pjob tickets is turned off in a running
                             system. The priority and mtix are set to 0, when the

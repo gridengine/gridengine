@@ -81,8 +81,6 @@ char *rhost
    temp_conf_list = lCreateList("sched config", SC_Type);
 
    if (config) {
-      lSetUlong(confp, SC_weight_tickets_deadline_active, 
-         lGetUlong(config, SC_weight_tickets_deadline_active));
       lSetUlong(confp, SC_weight_tickets_override, 
          lGetUlong(config, SC_weight_tickets_override));
    }

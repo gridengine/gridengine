@@ -978,14 +978,12 @@ int *sort_hostlist
       double job_tickets_per_slot, nslots;
       double job_ftickets_per_slot;
       double job_otickets_per_slot;
-      double job_dtickets_per_slot;
       double job_stickets_per_slot;
       nslots = nslots_granted(granted, NULL);
 
       job_tickets_per_slot =(double)lGetDouble(ja_task, JAT_tix)/nslots;
       job_ftickets_per_slot =(double)lGetDouble(ja_task, JAT_fticket)/nslots;
       job_otickets_per_slot =(double)lGetDouble(ja_task, JAT_oticket)/nslots;
-      job_dtickets_per_slot =(double)lGetDouble(ja_task, JAT_dticket)/nslots;
       job_stickets_per_slot =(double)lGetDouble(ja_task, JAT_sticket)/nslots;
 
 
@@ -1000,7 +998,6 @@ int *sort_hostlist
          lSetDouble(granted_el, JG_ticket, job_tickets_per_slot * granted_slots);
          lSetDouble(granted_el, JG_oticket ,job_otickets_per_slot  * granted_slots);
          lSetDouble(granted_el, JG_fticket ,job_ftickets_per_slot  * granted_slots);
-         lSetDouble(granted_el, JG_dticket ,job_dtickets_per_slot  * granted_slots);
          lSetDouble(granted_el, JG_sticket ,job_stickets_per_slot  * granted_slots);
 
       }

@@ -135,7 +135,6 @@ bool update_execd
             lSetDouble(ep2, OQ_ticket, lGetDouble(gel, JG_ticket));
             lSetDouble(ep2, OQ_oticket, lGetDouble(gel, JG_oticket));
             lSetDouble(ep2, OQ_fticket, lGetDouble(gel, JG_fticket));
-            lSetDouble(ep2, OQ_dticket, lGetDouble(gel, JG_dticket));
             lSetDouble(ep2, OQ_sticket, lGetDouble(gel, JG_sticket));
             if (!ql)
                ql=lCreateList("orderlist",OQ_Type);
@@ -168,13 +167,12 @@ bool update_execd
          {             
             lList *tmp_list;
             if(!tix_what){
-               tix_what = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I)",
+               tix_what = lWhat("%T(%I %I %I %I %I %I %I %I %I %I )",
                lGetElemDescr(ja_task), 
                JAT_task_number, 
                JAT_status, 
                JAT_tix,
                JAT_oticket, 
-               JAT_dticket, 
                JAT_fticket, 
                JAT_sticket, 
                JAT_share,
@@ -182,13 +180,12 @@ bool update_execd
                JAT_ntix,
                JAT_granted_destin_identifier_list);
 
-               tix2_what = lWhat("%T(%I %I %I %I %I %I %I %I %I %I)",
+               tix2_what = lWhat("%T(%I %I %I %I %I %I %I %I %I)",
                lGetElemDescr(ja_task), 
                JAT_task_number, 
                JAT_status, 
                JAT_tix,
                JAT_oticket, 
-               JAT_dticket, 
                JAT_fticket, 
                JAT_sticket, 
                JAT_share,

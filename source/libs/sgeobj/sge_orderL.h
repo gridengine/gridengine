@@ -125,7 +125,6 @@ enum {
    OQ_ticket,
    OQ_oticket,
    OQ_fticket,
-   OQ_dticket,
    OQ_sticket
 };
 
@@ -136,7 +135,6 @@ LISTDEF(OQ_Type)
    SGE_DOUBLE(OQ_ticket, CULL_DEFAULT)       /* total SGEEE tickets for slots */
    SGE_DOUBLE(OQ_oticket, CULL_DEFAULT)      /* total SGEEE override tickets */
    SGE_DOUBLE(OQ_fticket, CULL_DEFAULT)      /* total SGEEE functional tickets */
-   SGE_DOUBLE(OQ_dticket, CULL_DEFAULT)      /* total SGEEE deadline tickets */
    SGE_DOUBLE(OQ_sticket, CULL_DEFAULT)      /* total SGEEE sharetree tickets */
 LISTEND 
 
@@ -147,7 +145,6 @@ NAMEDEF(OQN)
    NAME("OQ_ticket")
    NAME("OQ_oticket")
    NAME("OQ_fticket")
-   NAME("OQ_dticket")
    NAME("OQ_sticket")
 NAMEEND
 

@@ -79,12 +79,9 @@ enum {
    SC_weight_job,
    SC_weight_tickets_functional,
    SC_weight_tickets_share,
-   SC_weight_tickets_deadline,
-   SC_weight_tickets_deadline_active,
    SC_weight_tickets_override,
    SC_share_override_tickets,  
    SC_share_functional_shares,  
-   SC_share_deadline_tickets,    
    SC_max_functional_jobs_to_schedule, 
    SC_report_pjob_tickets,    
    SC_max_pending_tasks_per_job,  
@@ -136,8 +133,6 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
 
    SGE_ULONG(SC_weight_tickets_functional, CULL_DEFAULT | CULL_SPOOL)      /* weight between different scheduling targets */
    SGE_ULONG(SC_weight_tickets_share, CULL_DEFAULT | CULL_SPOOL)
-   SGE_ULONG(SC_weight_tickets_deadline, CULL_DEFAULT | CULL_SPOOL)
-   SGE_ULONG(SC_weight_tickets_deadline_active, CULL_DEFAULT | CULL_SPOOL)              /* prepared for setting by a schedd order */
    SGE_ULONG(SC_weight_tickets_override, CULL_DEFAULT | CULL_SPOOL)
    SGE_BOOL(SC_share_override_tickets, CULL_DEFAULT | CULL_SPOOL)          /* Override tickets of any object instance *
                                                                             * are shared equally among all jobs       *
@@ -145,8 +140,6 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_BOOL(SC_share_functional_shares, CULL_DEFAULT | CULL_SPOOL)         /* Functional shares of any object instance*
                                                                             * are shared among all the jobs associated*
                                                                             * with the object.                        */
-   SGE_BOOL(SC_share_deadline_tickets, CULL_DEFAULT | CULL_SPOOL)          /* Deadline tickets are shared among all   *
-                                                                            * the deadline jobs.                      */
    SGE_ULONG(SC_max_functional_jobs_to_schedule, CULL_DEFAULT | CULL_SPOOL)/* The maximum number of functional pending* 
                                                                             * jobs to scheduling using the brute-force* 
                                                                             * method.                                 */
@@ -194,13 +187,10 @@ NAMEDEF(SCN)
 
    NAME("SC_weight_tickets_functional")
    NAME("SC_weight_tickets_share")
-   NAME("SC_weight_tickets_deadline")
-   NAME("SC_weight_tickets_deadline_active")
    NAME("SC_weight_tickets_override")
 
    NAME("SC_share_override_tickets")
    NAME("SC_share_functional_shares")
-   NAME("SC_share_deadline_tickets")
    NAME("SC_max_functional_jobs_to_schedule")
    NAME("SC_report_pjob_tickets")
    NAME("SC_max_pending_tasks_per_job")

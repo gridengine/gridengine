@@ -652,7 +652,6 @@ DTRACE;
          JAT_fshare,          
          JAT_tix,            
          JAT_oticket,       
-         JAT_dticket,      
 
          JAT_fticket,     
          JAT_sticket,    

@@ -171,13 +171,10 @@ typedef struct{
    int weight_job;
    int weight_tickets_functional;
    int weight_tickets_share;
-   int weight_tickets_deadline;
 
-   int weight_tickets_deadline_active;
    int weight_tickets_override;
    int share_override_tickets;
    int share_functional_shares;
-   int share_deadline_tickets;
    int max_functional_jobs_to_schedule;
    int report_pjob_tickets;
    int max_pending_tasks_per_job;
@@ -212,7 +209,7 @@ static int policy_hierarchy_verify_value(const char* value);
  */
 static config_pos_type pos = {true, 
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1,  
                        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
                        SCHEDD_JOB_INFO_UNDEF, NULL, NULL, NULL, 
                        -1, -1, -1, -1};
@@ -231,7 +228,7 @@ lList *Master_Sched_Config_List = NULL;
 
 extern int do_profiling; 
 
-const char *const policy_hierarchy_chars = "OFSD";
+const char *const policy_hierarchy_chars = "OFS";
 
 /* SG: TODO: should be const */
 int load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
@@ -279,12 +276,9 @@ static void sconf_clear_pos(void){
          pos.weight_job = -1; 
          pos.weight_tickets_functional = -1; 
          pos.weight_tickets_share = -1; 
-         pos.weight_tickets_deadline = -1; 
-         pos.weight_tickets_deadline_active = -1; 
          pos.weight_tickets_override = -1; 
          pos.share_override_tickets = -1; 
          pos.share_functional_shares = -1; 
-         pos.share_deadline_tickets = -1; 
          pos.max_functional_jobs_to_schedule = -1; 
          pos.report_pjob_tickets = -1; 
          pos.max_pending_tasks_per_job =  -1;
@@ -346,13 +340,10 @@ static bool sconf_calc_pos(void){
 
          ret &= (pos.weight_tickets_functional = lGetPosViaElem(config, SC_weight_tickets_functional)) != -1;
          ret &= (pos.weight_tickets_share = lGetPosViaElem(config, SC_weight_tickets_share)) != -1;
-         ret &= (pos.weight_tickets_deadline = lGetPosViaElem(config, SC_weight_tickets_deadline)) != -1;
-         ret &= (pos.weight_tickets_deadline_active = lGetPosViaElem(config, SC_weight_tickets_deadline_active)) != -1;
          ret &= (pos.weight_tickets_override = lGetPosViaElem(config, SC_weight_tickets_override)) != -1;
 
          ret &= (pos.share_override_tickets = lGetPosViaElem(config, SC_share_override_tickets)) != -1;
          ret &= (pos.share_functional_shares = lGetPosViaElem(config, SC_share_functional_shares)) != -1;
-         ret &= (pos.share_deadline_tickets = lGetPosViaElem(config, SC_share_deadline_tickets)) != -1;
          ret &= (pos.max_functional_jobs_to_schedule = lGetPosViaElem(config, SC_max_functional_jobs_to_schedule)) != -1;
          ret &= (pos.report_pjob_tickets = lGetPosViaElem(config, SC_report_pjob_tickets)) != -1;
          ret &= (pos.max_pending_tasks_per_job = lGetPosViaElem(config, SC_max_pending_tasks_per_job)) != -1;
@@ -408,7 +399,6 @@ bool sconf_set_config(lList **config, lList **answer_list){
          *config = NULL;
       }
       else{
-         answer_list_output(answer_list);
          Master_Sched_Config_List = store;
          if (!Master_Sched_Config_List){
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USE_DEFAULT_CONFIG)); 
@@ -418,11 +408,7 @@ bool sconf_set_config(lList **config, lList **answer_list){
             lAppendElem(Master_Sched_Config_List, sconf_create_default());
 
          }
-         {
-            lList *alp = NULL;
-            ret = sconf_validate_config_(&alp);
-            answer_list_output(&alp);
-         }
+         sconf_validate_config_(NULL);
       }   
    }
    else{
@@ -635,11 +621,9 @@ lListElem *sconf_create_default()
       lSetDouble(ep, SC_weight_job, 0.2);
       lSetUlong(ep, SC_weight_tickets_functional, 0);
       lSetUlong(ep, SC_weight_tickets_share, 0);
-      lSetUlong(ep, SC_weight_tickets_deadline, 0);
 
       lSetBool(ep, SC_share_override_tickets, true);  
       lSetBool(ep, SC_share_functional_shares, true);
-      lSetBool(ep, SC_share_deadline_tickets, true);
       lSetUlong(ep, SC_max_functional_jobs_to_schedule, 200);
       lSetBool(ep, SC_report_pjob_tickets, true);
       lSetUlong(ep, SC_max_pending_tasks_per_job, 50);
@@ -716,31 +700,6 @@ bool sconf_get_user_sort() {
    else {
       return USER_SORT;
    }
-}
-
-/****** sge_schedd_conf/sconf_weight_tickets_deadline() ************************
-*  NAME
-*     sconf_weight_tickets_deadline() -- ??? 
-*
-*  SYNOPSIS
-*     u_long32 sconf_weight_tickets_deadline(void) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     void - ??? 
-*
-*  RESULT
-*     u_long32 - 
-*******************************************************************************/
-u_long32 sconf_weight_tickets_deadline(void){
-   const lListElem *sc_ep =  sconf_get_config();
-      
-   if (pos.weight_tickets_deadline != -1) 
-      return lGetPosUlong(sc_ep, pos.weight_tickets_deadline);
-   else
-      return 0;
 }
 
 /****** sge_schedd_conf/sconf_get_load_adjustment_decay_time_str() *************
@@ -1333,32 +1292,6 @@ u_long32 sconf_get_weight_tickets_functional(void) {
       return 0;
 }
 
-/****** sge_schedd_conf/sconf_get_weight_tickets_deadline() ********************
-*  NAME
-*     sconf_get_weight_tickets_deadline() -- ??? 
-*
-*  SYNOPSIS
-*     u_long32 sconf_get_weight_tickets_deadline(void) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     void - ??? 
-*
-*  RESULT
-*     u_long32 - 
-*
-*******************************************************************************/
-u_long32 sconf_get_weight_tickets_deadline(void) {
-   const lListElem *sc_ep = sconf_get_config();
-
-   if (pos.weight_tickets_deadline != -1)
-      return lGetPosUlong(sc_ep, pos.weight_tickets_deadline);
-   else
-      return 0;
-}
-
 /****** sge_schedd_conf/sconf_get_halftime() ***********************************
 *  NAME
 *     sconf_get_halftime() -- ??? 
@@ -1385,29 +1318,6 @@ u_long32 sconf_get_halftime(void) {
       return 0;
 }
 
-/****** sge_schedd_conf/sconf_set_weight_tickets_deadline_active() *************
-*  NAME
-*     sconf_set_weight_tickets_deadline_active() -- ??? 
-*
-*  SYNOPSIS
-*     void sconf_set_weight_tickets_deadline_active(u_long32 active) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     u_long32 active - ??? 
-*
-*  RESULT
-*     void - 
-*
-*******************************************************************************/
-void sconf_set_weight_tickets_deadline_active(u_long32 active) {
-   const lListElem *sc_ep = sconf_get_config();
-
-   if (pos.weight_tickets_deadline_active != -1)
-      lSetPosUlong(sc_ep, pos.weight_tickets_deadline_active, active);
-}
 
 /****** sge_schedd_conf/sconf_set_weight_tickets_override() ********************
 *  NAME
@@ -1617,33 +1527,6 @@ bool sconf_get_share_functional_shares(void){
 
    if (pos.share_functional_shares != -1)
       return lGetPosBool(sc_ep, pos.share_functional_shares);
-   else
-      return true;
-
-
-}
-
-/****** sge_schedd_conf/sconf_get_share_deadline_tickets() *********************
-*  NAME
-*     sconf_get_share_deadline_tickets() -- ??? 
-*
-*  SYNOPSIS
-*     bool sconf_get_share_deadline_tickets(void) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     void - ??? 
-*
-*  RESULT
-*     bool - 
-*******************************************************************************/
-bool sconf_get_share_deadline_tickets(void){
-   const lListElem *sc_ep = sconf_get_config();
-
-   if (pos.share_deadline_tickets != -1)
-      return lGetPosBool(sc_ep, pos.share_deadline_tickets);
    else
       return true;
 
@@ -2014,10 +1897,6 @@ void sconf_print_config(void){
       uval = sconf_get_weight_tickets_share();
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_share"));
 
-      /* --- SC_weight_tickets_deadline */
-      uval = sconf_get_weight_tickets_deadline();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_deadline"));
-
       /* --- SC_share_override_tickets */
       uval = sconf_get_share_override_tickets();
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_override_tickets"));
@@ -2025,10 +1904,6 @@ void sconf_print_config(void){
       /* --- SC_share_functional_shares */
       uval = sconf_get_share_functional_shares();
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_functional_shares"));
-
-      /* --- SC_share_deadline_tickets */
-      uval = sconf_get_share_deadline_tickets();
-      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_deadline_tickets"));
 
       /* --- SC_max_functional_jobs_to_schedule */
       uval = sconf_get_max_functional_jobs_to_schedule();
@@ -2269,8 +2144,9 @@ bool sconf_validate_config_(lList **answer_list){
          if (value_string) {
             policy_hierarchy_t hierarchy[POLICY_VALUES];
 
-            if (policy_hierarchy_verify_value(value_string)) {
-               WARNING((SGE_EVENT, MSG_GDI_INVALIDPOLICYSTRING)); 
+            if (policy_hierarchy_verify_value(value_string) != 0) {
+               answer_list_add(answer_list, MSG_GDI_INVALIDPOLICYSTRING, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);  
+               ret = false;
                lSetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy, policy_hierarchy_chars);
             }
             sconf_ph_fill_array(hierarchy);

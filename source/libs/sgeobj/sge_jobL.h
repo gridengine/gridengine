@@ -882,7 +882,6 @@ enum {
    JG_ticket,
    JG_oticket,
    JG_fticket,
-   JG_dticket,
    JG_sticket,
    JG_jcoticket,
    JG_jcfticket,
@@ -903,7 +902,6 @@ SLISTDEF( JG_Type, GrantedQueue )
    SGE_DOUBLE(JG_ticket, CULL_DEFAULT)    /* SGEEE tickets assigned to slots              */
    SGE_DOUBLE(JG_oticket, CULL_DEFAULT)   /* SGEEE override tickets assigned to slots     */
    SGE_DOUBLE(JG_fticket, CULL_DEFAULT)   /* SGEEE functional tickets assigned to slots   */
-   SGE_DOUBLE(JG_dticket, CULL_DEFAULT)   /* SGEEE deadline tickets assigned to slots     */
    SGE_DOUBLE(JG_sticket, CULL_DEFAULT)   /* SGEEE sharetree tickets assigned to slots    */
    SGE_DOUBLE(JG_jcoticket, CULL_DEFAULT) /* SGEEE job class override tickets             */
    SGE_DOUBLE(JG_jcfticket, CULL_DEFAULT) /* SGEEE job class functional tickets           */
@@ -922,7 +920,6 @@ NAMEDEF( JGN )
    NAME( "JG_ticket" )
    NAME( "JG_oticket" )
    NAME( "JG_fticket" )
-   NAME( "JG_dticket" )
    NAME( "JG_sticket" )
    NAME( "JG_jcoticket" )
    NAME( "JG_jcfticket" )

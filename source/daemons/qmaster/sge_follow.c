@@ -253,7 +253,6 @@ lList **topp  /* ticket orders ptr ptr */
          if ((oep = lFirst(lGetList(ep, OR_queuelist)))) {
             lSetDouble(jatp, JAT_oticket, lGetDouble(oep, OQ_oticket));
             lSetDouble(jatp, JAT_fticket, lGetDouble(oep, OQ_fticket));
-            lSetDouble(jatp, JAT_dticket, lGetDouble(oep, OQ_dticket));
             lSetDouble(jatp, JAT_sticket, lGetDouble(oep, OQ_sticket));
          }
       }
@@ -426,7 +425,6 @@ lList **topp  /* ticket orders ptr ptr */
                lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
                lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
                lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
-               lSetDouble(gdil_ep, JG_dticket, lGetDouble(oep, OQ_dticket));
                lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
             }
      
@@ -577,8 +575,6 @@ lList **topp  /* ticket orders ptr ptr */
 
             if ((pos=lGetPosViaElem(joker_task, JAT_oticket))>=0) 
                lSetDouble(jatp, JAT_oticket, lGetPosDouble(joker_task, pos));
-            if ((pos=lGetPosViaElem(joker_task, JAT_dticket))>=0) 
-               lSetDouble(jatp, JAT_dticket, lGetPosDouble(joker_task, pos));
             if ((pos=lGetPosViaElem(joker_task, JAT_fticket))>=0) 
                lSetDouble(jatp, JAT_fticket, lGetPosDouble(joker_task, pos));
             if ((pos=lGetPosViaElem(joker_task, JAT_sticket))>=0) 
@@ -706,8 +702,6 @@ lList **topp  /* ticket orders ptr ptr */
                joker_task = lFirst(lGetList(joker, JB_ja_tasks));
                if ((pos=lGetPosViaElem(joker_task, JAT_oticket))>=0) 
                   lSetDouble(jatp, JAT_oticket, lGetPosDouble(joker_task, pos));
-               if ((pos=lGetPosViaElem(joker_task, JAT_dticket))>=0) 
-                  lSetDouble(jatp, JAT_dticket, lGetPosDouble(joker_task, pos));
                if ((pos=lGetPosViaElem(joker_task, JAT_fticket))>=0) 
                   lSetDouble(jatp, JAT_fticket, lGetPosDouble(joker_task, pos));
                if ((pos=lGetPosViaElem(joker_task, JAT_sticket))>=0) 
@@ -750,7 +744,6 @@ lList **topp  /* ticket orders ptr ptr */
                         lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
                         lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
                         lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
-                        lSetDouble(gdil_ep, JG_dticket, lGetDouble(oep, OQ_dticket));
                         lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
                      }
                   }
@@ -1064,9 +1057,6 @@ lList **topp  /* ticket orders ptr ptr */
          joker = lFirst(lGetList(ep, OR_joker));
 
          if (sconf_is() && joker) {
-            if ((pos=lGetPosViaElem(joker, SC_weight_tickets_deadline_active))>=0) 
-               sconf_set_weight_tickets_deadline_active(
-                  lGetPosUlong(joker, pos));
             if ((pos=lGetPosViaElem(joker, SC_weight_tickets_override))>=0) 
                sconf_set_weight_tickets_override(
                   lGetPosUlong(joker, pos));

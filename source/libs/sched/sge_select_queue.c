@@ -235,7 +235,7 @@ int sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host, l
    clear_resource_tags(requested_attr, MAX_TAG);
 
 /* global */
-   global = host_list_locate(exechost_list, "global");
+   global = host_list_locate(exechost_list, SGE_GLOBAL_NAME);
    load_attr = lGetList(global, EH_load_list); 
    config_attr = lGetList(global, EH_consumable_config_list);
    actual_attr = lGetList(global, EH_consumable_actual_list);

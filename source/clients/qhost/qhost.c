@@ -866,6 +866,12 @@ lWriteListTo(ehl, stdout);
       else
          where = lOrWhere(where, nw);
    }
+   /* the global host has to be retrieved as well */
+   if (where != NULL) {
+      nw = lWhere("%T(%I == %s)", EH_Type, EH_name, SGE_GLOBAL_NAME);
+      where = lOrWhere(where, nw);
+   }
+   
    nw = lWhere("%T(%I != %s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    if (where)
       where = lAndWhere(where, nw);

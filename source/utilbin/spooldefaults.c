@@ -305,8 +305,11 @@ static int spool_usersets(int argc, char *argv[])
    sge_read_userset_list_from_disk(argv[2]);
 
    userset_list = userset_list_get_master_list();
+
    for_each(userset, *userset_list) {
-      if (!spool_write_object(&answer_list, spool_get_default_context(), userset, lGetString(userset, US_name), SGE_TYPE_USERSET)) {
+      if (!spool_write_object(&answer_list, spool_get_default_context(), 
+                              userset, lGetString(userset, US_name), 
+                              SGE_TYPE_USERSET)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;
          answer_list_output(&answer_list);
@@ -321,6 +324,7 @@ static int spool_usersets(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
+   lList *answer_list = NULL;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
@@ -328,7 +332,12 @@ int main(int argc, char *argv[])
 
    sge_getme(SPOOLDEFAULTS);
 
-   if (sge_setup_paths(sge_get_default_cell(), NULL)) {
+   if (sge_setup_paths(sge_get_default_cell(), &answer_list)) {
+      answer_list_output(&answer_list);
+      ret = EXIT_FAILURE;
+   } else if (feature_initialize_from_file(path_state_get_product_mode_file(),
+                                           &answer_list)) {
+      answer_list_output(&answer_list);
       ret = EXIT_FAILURE;
    } else {
       /* parse commandline */

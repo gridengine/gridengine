@@ -1168,6 +1168,7 @@ lListElem *qep
 
    DENTER(TOP_LAYER, "signal_slave_jobs_in_queue");
 
+   qname = lGetString(qep, QU_full_name);
    /* test whether there are parallel jobs 
       with a slave slot in this queue 
       if so then signal this job */
@@ -1189,7 +1190,6 @@ lListElem *qep
              !lGetBool(pe, PE_control_slaves) */)
             continue;
 
-         qname = lGetString(qep, QU_full_name);
          for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
             if (!strcmp(lGetString(gdil_ep, JG_qname), qname)) {
 

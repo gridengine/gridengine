@@ -1,3 +1,8 @@
+JG-2004-03-10-1: Enhancem.: Added datastructures for the reporting of long 
+                            running jobs.
+                            Added an optimization for JG-2004-03-10-0.
+                 Changed:   all
+
 EB-2004-03-10-1: Bugfix:    Unsuspend on subordinate is broken
                  Issue:     807
                  Changed:   sge_qmaster

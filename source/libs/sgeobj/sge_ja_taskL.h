@@ -218,6 +218,7 @@ enum {
    JAT_usage_list,
 
    JAT_scaled_usage_list,
+   JAT_reported_usage_list,
    JAT_fshare,
    JAT_tix,
    JAT_oticket,
@@ -262,6 +263,7 @@ SLISTDEF(JAT_Type, Task)
    SGE_LIST(JAT_usage_list, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
 
    SGE_LIST(JAT_scaled_usage_list, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
+   SGE_LIST(JAT_reported_usage_list, UA_Type, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(JAT_fshare, CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(JAT_tix, CULL_DEFAULT | CULL_SUBLIST)
    SGE_DOUBLE(JAT_oticket, CULL_DEFAULT | CULL_SUBLIST)
@@ -303,6 +305,7 @@ NAMEDEF(JATN)
    NAME("JAT_osjobid")
    NAME("JAT_usage_list")
    NAME("JAT_scaled_usage_list")
+   NAME("JAT_reported_usage_list")
    NAME("JAT_fshare")
 
    NAME("JAT_tix")

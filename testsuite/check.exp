@@ -701,7 +701,7 @@ proc have_ssh_access {} {
            }
         }
         set log_user 0
-        close_spawn_process $id
+        close_spawn_process $id 1
         if { $have_access != 1 } {
             log_user 1
             set have_complete_access 0
@@ -4459,7 +4459,7 @@ proc compile_source {} {
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
-
+   global CHECK_CORE_EXECD
 
 
    set check_name "compile_source"
@@ -4647,8 +4647,7 @@ proc compile_source {} {
       }
    }
 
-
-   foreach elem $host_list {
+   foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
       if { ([string compare $host_arch ""] != 0) && ([string compare $host_arch "unknown" ] != 0) } {
          puts $CHECK_OUTPUT " arch on host $elem is $host_arch - successfully installed binaries"
@@ -4679,7 +4678,7 @@ proc compile_source {} {
  
    set mail_body "$mail_body \n Successfully compiled and installed the $CHECK_PRODUCT_TYPE system.\n"
    set mail_body "$mail_body Now it is [exec date], installed hosts and architectures:\n\n"
-   foreach elem $host_list {
+   foreach elem $CHECK_CORE_EXECD {
       set host_arch [ resolve_arch $elem ]
       set mail_body "$mail_body $elem\t\t($host_arch)\n"
    }

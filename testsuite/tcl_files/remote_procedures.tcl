@@ -539,6 +539,13 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments  { ba
                     send "\n"
                     debug_puts "sending new line"
                 }
+                -i $spawn_id -- "__ my id is ->*root*<-" { 
+                    debug_puts "shell response! - fine" 
+                    set ok 1
+                    send "\n"
+                    debug_puts "sending new line"
+                }
+
              }
           }
           set timeout 60

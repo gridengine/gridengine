@@ -285,10 +285,10 @@ proc scheduler_perf_setup_queues {} {
    global FLUSH_FINISH_SEC FLUSH_SUBMIT_SEC
 
   
-#   if {[llength $CHECK_CORE_EXECD] < 6 } {
-#      set_error -3 "need 6 execd hosts"
-#      return
-#   } 
+   if {[llength $CHECK_CORE_EXECD] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   } 
 
    if { [info exists stored_configuration] } {
       unset stored_configuration
@@ -376,10 +376,10 @@ proc scheduler_perf_cleanup_queues {} {
    global host_list
    global stored_configuration
 
-#   if {[llength $CHECK_CORE_EXECD] < 6 } {
-#      set_error -3 "need 6 execd hosts"
-#      return
-#   } 
+   if {[llength $CHECK_CORE_EXECD] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   } 
 
    set change_array(slots) "1"
    set i 0
@@ -452,10 +452,10 @@ proc scheduler_perf_make_analysis {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH nr_queues
    global CHECK_CORE_EXECD
 
-#   if {[llength $CHECK_CORE_EXECD] < 6 } {
-#      set_error -3 "need 6 execd hosts"
-#      return
-#   } 
+   if {[llength $CHECK_CORE_EXECD] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   } 
 
 
    set global_results ""
@@ -554,10 +554,10 @@ proc scheduler_perf_do_perform_test {} {
 
 
 
-#   if {[llength $CHECK_CORE_EXECD] < 6 } {
-#      set_error -3 "need 6 execd hosts"
-#      return
-#   } 
+   if {[llength $CHECK_CORE_EXECD] < 2 } {
+      set_error -3 "need 2 execd hosts"
+      return
+   } 
 
    set submit_results ""
    set schedule_results ""

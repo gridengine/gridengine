@@ -213,6 +213,7 @@ struct hostent *sge_gethostbyname(const char *name)
    gethostbyname_calls++;       /* profiling */
    
 #ifdef GETHOSTBYNAME_R6
+#define SGE_GETHOSTBYNAME_FOUND
    /* This is for Linux */
    DPRINTF (("Getting host by name - Linux\n"));
    {
@@ -232,6 +233,8 @@ struct hostent *sge_gethostbyname(const char *name)
    }
 #endif
 #ifdef GETHOSTBYNAME_R5
+#define SGE_GETHOSTBYNAME_FOUND
+
    /* This is for Solaris */
    DPRINTF (("Getting host by name - Solaris\n"));
    {
@@ -256,6 +259,8 @@ struct hostent *sge_gethostbyname(const char *name)
    }
 #endif
 #ifdef GETHOSTBYNAME_R3
+#define SGE_GETHOSTBYNAME_FOUND
+
    /* This is for AIX < 4.3, HPUX < 11, and Tru64 */
    DPRINTF (("Getting host by name - 3 arg\n"));
    
@@ -287,6 +292,8 @@ struct hostent *sge_gethostbyname(const char *name)
    }
 #endif
 #ifdef GETHOSTBYNAME
+#define SGE_GETHOSTBYNAME_FOUND
+
    /* This is for AIX >= 4.3, HPUX >= 11, and Mac OS X >= 10.2 */
    DPRINTF (("Getting host by name - Thread safe\n"));
    he = gethostbyname(name);
@@ -304,6 +311,8 @@ struct hostent *sge_gethostbyname(const char *name)
    }
 #endif
 #ifdef GETHOSTBYNAME_M
+#define SGE_GETHOSTBYNAME_FOUND
+
    /* This is for Mac OS < 10.2, IRIX, and everyone else
     *  - Actually, IRIX 6.5.17 supports a reentrant getaddrinfo(), but it's not
     *    worth the effort. */
@@ -321,6 +330,10 @@ struct hostent *sge_gethostbyname(const char *name)
    }
    sge_mutex_unlock("hostbyname", SGE_FUNC, __LINE__, &hostbyname_mutex);
 
+#endif
+
+#ifndef SGE_GETHOSTBYNAME_FOUND
+#error "no sge_gethostbyname() definition for this architecture."
 #endif
 
    time = sge_get_gmt() - now;
@@ -461,6 +474,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    now = sge_get_gmt();
 
 #ifdef GETHOSTBYADDR_R8
+#define SGE_GETHOSTBYADDR_FOUND
    /* This is for Linux */
    DPRINTF (("Getting host by addr - Linux\n"));
    {
@@ -480,6 +494,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    }
 #endif
 #ifdef GETHOSTBYADDR_R7
+#define SGE_GETHOSTBYADDR_FOUND
    /* This is for Solaris */
    DPRINTF (("Getting host by addr - Solaris\n"));
    {
@@ -502,7 +517,9 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
       }
    }
 #endif
+
 #ifdef GETHOSTBYADDR_R5
+#define SGE_GETHOSTBYADDR_FOUND
    /* This is for HPUX < 11 */
    DPRINTF (("Getting host by addr - 3 arg\n"));
    
@@ -534,6 +551,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    }
 #endif
 #ifdef GETHOSTBYADDR
+#define SGE_GETHOSTBYADDR_FOUND
    /* This is for HPUX >= 11 */
    DPRINTF (("Getting host by addr - Thread safe\n"));
    he = gethostbyaddr((const char *)addr, 4, AF_INET);
@@ -550,7 +568,10 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
       he = new_he;
    }
 #endif
+
+
 #ifdef GETHOSTBYADDR_M
+#define SGE_GETHOSTBYADDR_FOUND
    /* This is for everone else. */
    DPRINTF (("Getting host by addr - Mutex guarded\n"));
    
@@ -571,6 +592,9 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr)
    sge_mutex_unlock("hostbyaddr", SGE_FUNC, __LINE__, &hostbyaddr_mutex);
 #endif
 
+#ifndef SGE_GETHOSTBYADDR_FOUND
+#error "no sge_gethostbyaddr() definition for this architecture."
+#endif
    time = sge_get_gmt() - now;
    gethostbyaddr_sec += time;   /* profiling */
 

@@ -1,3 +1,8 @@
+CR-2004-01-27-0: Enhancem.: Produce compile error when there is no define in
+                            aimk for sge_gethostbyname() and 
+                            sge_gethostbyaddr().
+                 Review:    AA
+
 JG-2004-01-27-1: Bugfix:    Fixed aimk LFLAGS for HP11.
                             Do not recommend use of --enable-posixmutexes for 
                             the build of Berkeley DB.

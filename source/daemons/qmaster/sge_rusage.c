@@ -54,7 +54,7 @@
 #define ACTFILE_FPRINTF_FORMAT \
 "%s:%s:%s:%s:%s:"u32":%s:"u32":"u32":"u32":"u32":"u32":"u32":" \
 u32":"u32":"u32":%f:"u32":"u32":"u32":"u32":"u32":"u32":"u32":%f:" \
-u32":"u32":"u32":"u32":"u32":"u32":%s:%s:%s:%d:"u32":%f:%f:%f:%s:%f" \
+u32":"u32":"u32":"u32":"u32":"u32":%s:%s:%s:%d:"u32":%f:%f:%f:%s:%f:%s:%f" \
 ARCH_COLUMN \
 "\n"
 
@@ -230,8 +230,9 @@ char *category_str
           GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_MEM_ACCT, ep, 0),
           GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_IO_ACCT, ep, 0),
           category_str?category_str:"none",
-          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_IOW_ACCT, ep, 0)
-
+          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_IOW_ACCT, ep, 0),
+          "none", 
+          GET_DOUBLE_USAGE(usage_list, USAGE_ATTR_VMEM, ep, 0)
 #ifdef NEC_ACCOUNTING_ENTRIES
           ,arch_dep_usage_string
 #endif 
@@ -589,6 +590,12 @@ sge_rusage_type *d
    pc=strtok(NULL, ":");
 
    d->iow = ((pc=strtok(NULL, ":")))?atof(pc):0;
+
+   /* skip pe_taskid */
+   pc=strtok(NULL, ":");
+
+   /* skip vmem */
+   pc=strtok(NULL, ":");
 
    /* ... */ 
 

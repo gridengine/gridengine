@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2002/01/30 09:18:52 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2002/04/17 12:14:16 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2002/01/30 09:18:52 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2002/04/17 12:14:16 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -556,6 +556,15 @@ is registered with
 .M xxqs_name_sxx_qmaster 8 .
 Requires root or manager privileges.
 .\"
+.IP "\fB\-Astree fname\fP	\fI<add share tree>\fP"
+This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
+for xxQS_NAME_Cxx systems.
+.br
+Adds the definition of a share tree to the system (see
+.M share_tree 5 ) 
+from the file fname.
+Requires root or manager privileges.
+.\"
 .IP "\fB\-au user,... acl_name,...\fP	\fI<add users to ACLs>\fP"
 Adds users to xxQS_NAMExx user access lists (ACLs). User lists
 are used for queue usage authentication. Requires
@@ -981,6 +990,15 @@ or the editor indicated by $EDITOR) is invoked
 for modifying the share tree definition. Upon exiting the editor,
 the modified data is registered with
 .M xxqs_name_sxx_qmaster 8 .
+Requires root or manager privileges.
+.\"
+.IP "\fB\-Mstree fname\fP	\fI<modify share tree>\fP"
+This option is only supported in case of a xxQS_NAME_EExx system. It is not available 
+for xxQS_NAME_Cxx systems.
+.br
+Modifies the definition of the share tree (see
+.M share_tree 5 ). 
+The modified sharetree is read from file fname.
 Requires root or manager privileges.
 .\"
 .IP "\fB\-mu acl_name\fP	\fI<modify user access lists>\fP"

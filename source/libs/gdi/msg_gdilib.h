@@ -358,6 +358,9 @@
 #define MSG_GDI_USAGE_ASTREE                             "[-astree]"
 #define MSG_GDI_UTEXT_ASTREE                             _("create/modify the sharetree")
 
+#define MSG_GDI_USAGE_ASTREE_FNAME                       "[-Astree fname]"
+#define MSG_GDI_UTEXT_ASTREE_FNAME                       _("create/modify the sharetree from file")
+
 #define MSG_GDI_USAGE_au_OPT_USER_LIST_LISTNAME_LIST     "[-au user_list listname_list]"
 #define MSG_GDI_UTEXT_au_OPT_USER_LIST_LISTNAME_LIST     _("add user(s) to userset list(s)")
 
@@ -596,6 +599,9 @@
 
 #define MSG_GDI_USAGE_MSTREE                             "[-mstree]"
 #define MSG_GDI_UTEXT_MSTREE                             _("modify/create the sharetree")
+
+#define MSG_GDI_USAGE_MSTREE_FNAME                       "[-Mstree fname]"
+#define MSG_GDI_UTEXT_MSTREE_FNAME                       _("modify/create the sharetree from file")
 
 #define MSG_GDI_USAGE_notify_OPT                         "[-notify]"
 #define MSG_GDI_UTEXT_notify_OPT                         _("notify job before killing/suspending it")

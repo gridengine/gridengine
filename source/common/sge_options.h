@@ -172,7 +172,9 @@ enum {
    sprj_OPT,     /* SGE show project */
    sprjl_OPT,    /* SGE show project list */
    mstree_OPT,   /* SGE modify sharetree */
+   Mstree_OPT,   /* SGE modify sharetree from file*/
    astree_OPT,   /* SGE add sharetree */
+   Astree_OPT,   /* SGE add sharetree from file*/
    dstree_OPT,   /* SGE delete sharetree */
    sstree_OPT,   /* SGE show sharetree */
 

@@ -881,31 +881,44 @@ DPRINTF(("ep: %s %s\n",
       }
 
 /*----------------------------------------------------------------------------*/
-      /* "-astree" add sharetree */
+      /* "-astree", "-Astree file":  add sharetree */
 
-      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-astree", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+      if (feature_is_enabled(FEATURE_SGEEE) && 
+          (!strcmp("-astree", *spp) || !strcmp("-Astree", *spp))) {
+         if(!strcmp("-astree", *spp)) { 
+            sge_gdi_is_adminhost(me.qualified_hostname);
+            sge_gdi_is_manager(me.user_name);
 
-         /* get the sharetree .. */
-         what = lWhat("%T(ALL)", STN_Type);
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+            /* get the sharetree .. */
+            what = lWhat("%T(ALL)", STN_Type);
+            alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
+            what = lFreeWhat(what);
 
-         aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-            spp++;
-            continue;
+            aep = lFirst(alp);
+            if (sge_get_recoverable(aep) != STATUS_OK) {
+               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               spp++;
+               continue;
+            }
+            alp = lFreeList(alp);
+    
+            ep = lFirst(lp);
+            if (!(ep=edit_sharetree(ep)))
+               continue;
+
+            lp = lFreeList(lp);
+         } else {
+            char errstr[1024];
+            spp = sge_parser_get_next(spp);
+           
+            ep = read_sharetree(*spp, NULL, 0, errstr, 1, NULL);
+            if (!ep) {
+               fprintf(stderr, errstr);
+               if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
+                  continue;
+            }      
          }
-         alp = lFreeList(alp);
- 
-         ep = lFirst(lp);
-         if (!(ep=edit_sharetree(ep)))
-            continue;
-
-         lp = lFreeList(lp);
-
+         
          newlp = lCreateList("sharetree add", STN_Type);
          lAppendElem(newlp, ep);
 
@@ -2470,30 +2483,43 @@ DPRINTF(("ep: %s %s\n",
 
 /*----------------------------------------------------------------------------*/
 
-      /* "-mstree"  modify sharetree */
+      /* "-mstree", "-Mstree file": modify sharetree */
 
-      if (feature_is_enabled(FEATURE_SGEEE) && !strcmp("-mstree", *spp)) {
-         sge_gdi_is_adminhost(me.qualified_hostname);
-         sge_gdi_is_manager(me.user_name);
+      if (feature_is_enabled(FEATURE_SGEEE) && 
+          (!strcmp("-mstree", *spp) || !strcmp("-Mstree", *spp))) {
+         if(!strcmp("-mstree", *spp)) {
+            sge_gdi_is_adminhost(me.qualified_hostname);
+            sge_gdi_is_manager(me.user_name);
 
-         /* get the sharetree .. */
-         what = lWhat("%T(ALL)", STN_Type);
-         alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
-         what = lFreeWhat(what);
+            /* get the sharetree .. */
+            what = lWhat("%T(ALL)", STN_Type);
+            alp = sge_gdi(SGE_SHARETREE_LIST, SGE_GDI_GET, &lp, NULL, what);
+            what = lFreeWhat(what);
 
-         aep = lFirst(alp);
-         if (sge_get_recoverable(aep) != STATUS_OK) {
-            fprintf(stderr, "%s", lGetString(aep, AN_text));
-            spp++;
-            continue;
+            aep = lFirst(alp);
+            if (sge_get_recoverable(aep) != STATUS_OK) {
+               fprintf(stderr, "%s", lGetString(aep, AN_text));
+               spp++;
+               continue;
+            }
+            alp = lFreeList(alp);
+    
+            ep = lFirst(lp);
+            if (!(ep=edit_sharetree(ep)))
+               continue;
+
+            lp = lFreeList(lp);
+         } else {
+            char errstr[1024];
+            spp = sge_parser_get_next(spp);
+           
+            ep = read_sharetree(*spp, NULL, 0, errstr, 1, NULL);
+            if (!ep) {
+               fprintf(stderr, errstr);
+               if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
+                  continue;
+            }      
          }
-         alp = lFreeList(alp);
- 
-         ep = lFirst(lp);
-         if (!(ep=edit_sharetree(ep)))
-            continue;
-
-         lp = lFreeList(lp);
 
          newlp = lCreateList("sharetree modify", STN_Type);
          lAppendElem(newlp, ep);

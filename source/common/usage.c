@@ -316,7 +316,11 @@ FILE *fp
    }
 
    if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(astree_OPT, me.who)) {
-      PRINTITD(MSG_GDI_USAGE_ASTREE , MSG_GDI_UTEXT_ASTREE );
+      PRINTITD(MSG_GDI_USAGE_ASTREE , MSG_GDI_UTEXT_ASTREE);
+   }
+
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Astree_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_ASTREE_FNAME, MSG_GDI_UTEXT_ASTREE_FNAME);
    }
 
    if (VALID_OPT(au_OPT, me.who)) {
@@ -724,6 +728,10 @@ FILE *fp
          MSG_GDI_UTEXT_MSTNODE_NODE_SHARES_LIST );
       MARK(OA_NODE_SHARES_LIST);
       MARK(OA_NODE_PATH);
+   }
+
+   if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(Mstree_OPT, me.who)) {
+      PRINTITD(MSG_GDI_USAGE_MSTREE_FNAME, MSG_GDI_UTEXT_MSTREE_FNAME);
    }
 
    if (feature_is_enabled(FEATURE_SGEEE) && VALID_OPT(mstree_OPT, me.who)) {

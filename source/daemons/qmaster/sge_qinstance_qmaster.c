@@ -328,7 +328,6 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                lList *old_value = lGetList(this_elem, attribute_name);
                lList *new_value = NULL;
                lListElem *tmp_elem = lCopyElem(this_elem);
-               bool referenced_new_value = false;
 
                celist_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, 
@@ -337,16 +336,15 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
 
                centry_list_fill_request(new_value, Master_CEntry_List, 
                                         true, true, false);
-               /* if a consumable_config_list was delivered from celist_attr_list...
-                * this list is referenced in another object.
-                * In this case, we have to make a copy of new_value.
-                * If new_value is NULL, a new list will be create in 
-                * qinstance_reinit_consumable_actual_list - if we copy this list,
-                * we have a memory leak!
-                */
+
+               /* We make a copy of new_value here because it will ultimately
+                * end up in the qinstance.  If we didn't copy it, we would end
+                * up with the list linked into both the cluster queue and
+                * queue instance. */
                if (new_value != NULL) {
-                  referenced_new_value = true;
+                  new_value = lCopyList ("", new_value);
                }
+               
                lSetList(tmp_elem, attribute_name, new_value);
                new_value = NULL;
                
@@ -361,21 +359,18 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
                   /* the following lSetList will free old_value */
-                  lSetList(this_elem, attribute_name, 
-                           referenced_new_value ? lCopyList("", new_value) 
-                                                : new_value);
+                  lSetList(this_elem, attribute_name, new_value);
                   *has_changed_conf_attr = true;
                   if (attribute_name == QU_consumable_config_list) {
                      qinstance_reinit_consumable_actual_list(this_elem, 
                                                              answer_list);
                   }
                } else {
-                  /* if qinstance_reinit_consumable_actual_list created a new list,
-                   * we have to free it.
+                  /* Either new_value is a copy we made, or it was created by
+                   * qinstance_reinit_consumable_actual_list().  Either way, it
+                   * has to be freed.
                    */
-                  if (!referenced_new_value) {
-                     new_value = lFreeList(new_value);
-                  }
+                  new_value = lFreeList(new_value);
                }
             }
             break;

@@ -6989,9 +6989,13 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
    if ((sub_command == SGE_GDI_CHANGE) && (lGetType ((*epp)->descr, fields[0]) == lListT)) {
       lList *lp = lGetList (*epp, fields[0]);
       
-      /* NONE translates into a list with one entry.  That entry has the default
-       * href value and a NULL list.*/
-      if ((lp == NULL) || (lGetNumberOfElem (lp) == 1)) {
+      if ((lp == NULL) || (lGetNumberOfElem (lp) == 0)) {
+         SGE_ADD_MSG_ID (sprintf(SGE_EVENT, MSG_QCONF_CANT_MODIFY_NONE));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return 1;
+      }
+      else if (lGetNumberOfElem (lp) == 1) {
          lListElem *ep = lFirst (lp);
          int count = 1;
          int nm = 0;

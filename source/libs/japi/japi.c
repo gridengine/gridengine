@@ -3147,20 +3147,20 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
    }
 
    /*
-    * The reason for this job not longer be available at qmaster might 
+    * The reason for this job no longer being available at qmaster might 
     * be it is done or failed. The JAPI job list contains such information
     * if the job was not yet waited. For a job that is not found there either
     * we return DRMAA_ERRNO_INVALID_JOB.
     */
    if (task_finished) {
       lListElem *japi_job = NULL;
+      lListElem *japi_task = NULL;
 
       JAPI_LOCK_JOB_LIST();
       
       japi_job = lGetElemUlong(Master_japi_job_list, JJ_jobid, jobid);
 
       if (japi_job != NULL) {
-         lListElem *japi_task = NULL;
          u_long32 wait_status;
 
          /* 
@@ -3192,12 +3192,25 @@ japi_sge_state_to_drmaa_state(lListElem *job, lList *cqueue_list,
          JAPI_UNLOCK_JOB_LIST();
          DEXIT;
          return DRMAA_ERRNO_SUCCESS;
-      } else {
+      }
+      
+      if ((japi_job == NULL) || (japi_task == NULL)) {
          JAPI_UNLOCK_JOB_LIST();
          japi_standard_error(DRMAA_ERRNO_INVALID_JOB, diag);
          DEXIT;
          return DRMAA_ERRNO_INVALID_JOB;
       }
+
+      /* 
+       * JJAT_stat must indicate whether the job finished or failed 
+       * at this point we simply assume it finished successfully 
+       * when it is found in the finished tasks list
+       */
+
+      JAPI_UNLOCK_JOB_LIST();
+      *remote_ps = DRMAA_PS_DONE;
+      DEXIT;
+      return DRMAA_ERRNO_SUCCESS;
    }
 
    if (!is_array_task) {

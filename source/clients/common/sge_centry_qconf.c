@@ -533,11 +533,42 @@ centry_list_add_del_mod_via_gdi(lList **this_list, lList **answer_list,
             shortcut1 = lGetString(centry_elem, CE_shortcut);
             shortcut2 = lGetString(cmp_elem, CE_shortcut);
             
-            if (((name1 != NULL) && (name2 != NULL) && (strcmp(name1, name2) == 0)) ||
-                ((name1 != NULL) && (shortcut2 != NULL) && (strcmp(name1, shortcut2) == 0)) ||
-                ((shortcut1 != NULL) && (name2 != NULL) && (strcmp(shortcut1, name2) == 0)) ||
-                ((shortcut1 != NULL) && (shortcut2 != NULL) && (strcmp(shortcut1, shortcut2) == 0))) {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, MSG_ANSWER_COMPLEXXALREADYEXISTS_S, name1);
+            if (name1 == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_CENTRY_NULL_NAME_S,
+                                       name1);
+               cont = false;
+            }                  
+            else if (name2 == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_CENTRY_NULL_NAME_S,
+                                       name2);
+               cont = false;
+            }                  
+            else if (shortcut1 == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_CENTRY_NULL_SHORTCUT_S,
+                                       shortcut1);
+               cont = false;
+            }                  
+            else if (shortcut2 == NULL) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_CENTRY_NULL_SHORTCUT_S,
+                                       shortcut2);
+               cont = false;
+            }                  
+            else if ((strcmp (name1, name2) == 0) ||
+                     (strcmp(name1, shortcut2) == 0) ||
+                     (strcmp(shortcut1, name2) == 0) ||
+                     (strcmp(shortcut1, shortcut2) == 0)) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                       ANSWER_QUALITY_ERROR,
+                                       MSG_ANSWER_COMPLEXXALREADYEXISTS_S,
+                                       name1);
                cont = false;
             } 
             

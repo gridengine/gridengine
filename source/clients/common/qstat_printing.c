@@ -361,6 +361,22 @@ const char* sge_get_dominant_stringval(lListElem *rep, u_long32 *dominant_p, dst
          s = sge_dstring_get_string(resource_string_p);
       }
       break;
+   case TYPE_INT:   
+
+      if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+         double val = lGetDouble(rep, CE_pj_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_pj_dominant);
+         double_print_int_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      } else {
+         double val = lGetDouble(rep, CE_doubleval);
+
+         *dominant_p = lGetUlong(rep, CE_dominant);
+         double_print_int_to_dstring(val, resource_string_p);
+         s = sge_dstring_get_string(resource_string_p);
+      }
+      break;
    default:   
 
       if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {

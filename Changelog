@@ -1,3 +1,15 @@
+DT-2004-07-30-0: Bugfix:    o Fixed seg fault in qconf -mattr
+                            o Fixed CULL cross-linking in qconf -mattr queue
+                              complex_values
+                            o Fixed hostname aliasing issue in qconf -mattr
+                            o qhost now prints NCPU as an int
+                            o Changed qsub -r to accept 'yes' and 'no'
+                            o Cleaned up JAPI
+                 Issue:     1055, 1081, 1092, 1172
+                 Bugtraq:   5080836, 5080839, 5080833, 5080840
+                 Changed:   qconf, qhost, qsub, JAPI, doc
+                 Review:    SG
+
 SG-2004-07-30-1: Bugfix:    qconf -de did not check if the host ist still in use.
                  Issue:     1183, 1168
                  Bugtraq:   5080779, 5080784
@@ -167,7 +179,8 @@ DT-2004-07-21-1: Bugfix:    o Added "-w e" as default DRMAA option
                             o Fixed broken links on DRMAA-J howto page
                  Changed:   DRMAA, qmaster, testsuite, qconf, www
                  Issue:     1109, 1146, 1151, 1161, 1163
-                 Review:    pending
+                 Bugtraq:   
+                 Review:    SG
 
 CR-2004-07-21-0: Testsuite: modified /functional/tight_integration check to be 
                             more error tolerant

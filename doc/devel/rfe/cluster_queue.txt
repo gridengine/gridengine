@@ -723,7 +723,7 @@ FORMAT
         a command line:
 
         $queue
-           The master queue, i.e. the queue in which the  start-up
+           The master queue, i.e. the queue in which the start-up
            and stop procedures are started.
 
 ! contains the cluster queue name of the master queue instance
@@ -1011,7 +1011,7 @@ FILES
       possiblities with submitting jobs as described above under qsub(1).
       
    e) The "Queue Control" dialogue must be enhanced to reflect the new 
-      possiblities for suspend/sesume/disable/enable operation on queues 
+      possiblities for suspend/resume/disable/enable operation on queues 
       as described under qmod(1).
    
    f) The "Add/Modify PE" and the "Queue configuration" dialogue 

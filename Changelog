@@ -1,3 +1,9 @@
+SG-2004-07-20-0: Bugfix:    jobs on hold due to -a time cause qmaster/schedd get out of sync
+                 Issue:     1154
+                 Bugtraq:   5074788
+                 Changed:   scheduler
+                 Review:    DT
+
 MD-2004-07-19-0: Bugfix:    sched_conf(5) reprioritize_interval should default to 0
                  Issue:     1139
                  Bugtraq:   5075451

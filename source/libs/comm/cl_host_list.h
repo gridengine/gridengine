@@ -74,6 +74,8 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
                        unsigned long entry_reresolve_time);   /* time for reresolving if host is not resolvable */
 int cl_host_list_cleanup(cl_raw_list_t** list_p);
 
+int cl_host_list_copy(cl_raw_list_t* source, cl_raw_list_t** destination);  /* make a copy of this list (will lock source) */
+
 /* thread list functions that will lock the list */
 int cl_host_list_append_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, int lock_list);
 int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, int lock_list);

@@ -2986,6 +2986,10 @@ int cl_com_free_hostent(cl_com_hostent_t **hostent_p) {  /* CR check */
    }
 
    /* free hostent structure */
+   sge_free_hostent( &((*hostent_p)->he) );
+
+#if 0
+   /* free hostent structure */
    if ( (*hostent_p)->he_data_buffer == NULL ) {
       /* data buffer is null, we have to free the complete hostent structure */
       sge_free_hostent( &((*hostent_p)->he) );
@@ -2999,6 +3003,7 @@ int cl_com_free_hostent(cl_com_hostent_t **hostent_p) {  /* CR check */
          free((*hostent_p)->he_data_buffer);
       }
    }
+#endif
 
    /* finally free the struct */
    free(*hostent_p);
@@ -3065,6 +3070,51 @@ char* cl_com_get_h_error_string(int h_error) {
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_com_copy_in_addr()"
+struct in_addr* cl_com_copy_in_addr(struct in_addr *addr) {
+   struct in_addr* copy = NULL;    
+   
+   if ( addr == NULL) {
+      return NULL;
+   }
+
+   copy = (struct in_addr*) malloc (sizeof(struct in_addr));
+   if (copy != NULL) {
+      memcpy((char*) copy , addr, sizeof(struct in_addr));
+   }
+   return copy;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_copy_hostent()"
+cl_com_hostent_t* cl_com_copy_hostent(cl_com_hostent_t* hostent) {
+   cl_com_hostent_t* copy = NULL;
+
+   if ( hostent == NULL) {
+      return NULL;
+   }
+
+   copy = (cl_com_hostent_t*)malloc(sizeof(cl_com_hostent_t));
+   if ( copy != NULL) {
+      copy->he = NULL;
+
+      if ( hostent->he != NULL) {
+         copy->he = sge_copy_hostent(hostent->he);
+         if (copy->he == NULL ) {
+            CL_LOG(CL_LOG_ERROR,"could not copy hostent structure");
+            free( copy );
+            return NULL;
+         }
+      } 
+   }
+   return copy;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_com_gethostname()"
 int cl_com_gethostname(char **unique_hostname,struct in_addr *copy_addr,struct hostent **he_copy , int* system_error_value) {  /* CR check */
 
@@ -3115,7 +3165,9 @@ static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent, int* sys
       return CL_RETVAL_MALLOC;          /* could not get memory */ 
    }
    hostent_p->he = NULL;
+#if 0
    hostent_p->he_data_buffer = NULL;
+#endif
    
    /* use sge_gethostbyname() */
    he = sge_gethostbyname(host, system_error);
@@ -3166,7 +3218,9 @@ static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent
       return CL_RETVAL_MALLOC;          /* could not get memory */ 
    }
    hostent_p->he = NULL;
+#if 0
    hostent_p->he_data_buffer = NULL;
+#endif
 
    /* use sge_gethostbyaddr() */  
    he = sge_gethostbyaddr(addr, system_error_retval);

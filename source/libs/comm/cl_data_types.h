@@ -291,7 +291,16 @@ typedef struct cl_com_handle {
 
 typedef struct cl_com_hostent {
    struct hostent *he;              /* pointer of type struct hostent (defined in netdb.h) */
+
+#if 0
+   /* tried to store gethostbyname_r from unix return values into this struct, but
+      now sge_copy_hostent() and sge_gethostbyname() from utilib are used in order 
+      to create copies of struct hostent.
+
+      So it is not necessary to save this data anymore */
    char*  he_data_buffer;           /* all struct member pointers point to data in this buffer */
+#endif
+
 } cl_com_hostent_t;
 
 /*  the hostent struct should be defined in the following way (system header)
@@ -306,10 +315,10 @@ typedef struct cl_com_hostent {
 
 typedef struct cl_com_host_spec_type {
    cl_com_hostent_t* hostent;
-   int               resolve_error;     /* CL_RETVAL_XXX from  cl_com_gethostbyname() call */
+   struct in_addr*   in_addr;
    char*             unresolved_name;
    char*             resolved_name;
-   struct in_addr*   in_addr;
+   int               resolve_error;     /* CL_RETVAL_XXX from  cl_com_gethostbyname() call */
    long              last_resolve_time; 
    long              creation_time;
 

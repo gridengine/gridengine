@@ -197,6 +197,153 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_host_list_copy()"
+int cl_host_list_copy(cl_raw_list_t* source, cl_raw_list_t** destination) {
+   int ret_val = CL_RETVAL_OK;
+   cl_host_list_data_t* ldata_source = NULL;
+   cl_host_list_data_t* ldata_dest = NULL;
+   cl_host_alias_list_elem_t* alias_elem = NULL;
+   cl_host_list_elem_t*       host_elem = NULL;
+
+
+   if (  source == NULL ) {
+      return CL_RETVAL_PARAMS;
+   }  
+
+   ret_val = cl_raw_list_lock( source );
+   if (ret_val != CL_RETVAL_OK) {
+      return ret_val;
+   }
+
+   /* create a new host list */
+   ldata_source = (cl_host_list_data_t*) source->list_data;
+   if (ldata_source != NULL) {
+      ret_val = cl_host_list_setup(destination, 
+                                   source->list_name,
+                                   ldata_source->resolve_method,
+                                   ldata_source->host_alias_file,
+                                   ldata_source->local_domain_name,
+                                   ldata_source->entry_life_time,
+                                   ldata_source->entry_update_time,
+                                   ldata_source->entry_reresolve_time);
+   } else {
+      CL_LOG(CL_LOG_ERROR,"not list data specified");
+      ret_val = CL_RETVAL_UNKNOWN;
+   }
+
+   if (ret_val != CL_RETVAL_OK) {
+      cl_raw_list_unlock(source);
+      cl_host_list_cleanup(destination);
+      return ret_val;
+   }
+
+   /* list created, now get private data structures */ 
+   ldata_dest = (cl_host_list_data_t*) (*destination)->list_data;
+
+   ldata_dest->alias_file_changed = ldata_source->alias_file_changed;
+   ldata_dest->last_refresh_time  = ldata_source->last_refresh_time;
+
+
+   /* now copy alias list */
+   cl_raw_list_lock(ldata_source->host_alias_list);
+
+   alias_elem = cl_host_alias_list_get_first_elem(ldata_source->host_alias_list);
+   while(alias_elem) {
+      ret_val = cl_host_alias_list_append_host( ldata_dest->host_alias_list, 
+                                                alias_elem->local_resolved_hostname,
+                                                alias_elem->alias_name, 0  );
+      if (ret_val != CL_RETVAL_OK) {
+         cl_raw_list_unlock(ldata_source->host_alias_list);
+         cl_raw_list_unlock(source);
+         cl_host_list_cleanup(destination);
+         return ret_val;
+      }
+      alias_elem = cl_host_alias_list_get_next_elem(ldata_source->host_alias_list, alias_elem);
+   }
+   cl_raw_list_unlock(ldata_source->host_alias_list);
+
+
+
+   /* ok, now copy the entries */
+   host_elem = cl_host_list_get_first_elem(source);
+   while(host_elem) {
+      cl_com_host_spec_t* new_host_spec = NULL;
+      
+      new_host_spec = ( cl_com_host_spec_t*) malloc( sizeof(cl_com_host_spec_t) );
+      if (new_host_spec == NULL) {
+         cl_raw_list_unlock(source);
+         cl_host_list_cleanup(destination);
+         return CL_RETVAL_MALLOC;
+      }
+
+      /* copy host_spec_ type */
+      new_host_spec->resolve_error     = host_elem->host_spec->resolve_error;
+      new_host_spec->last_resolve_time = host_elem->host_spec->last_resolve_time;
+      new_host_spec->creation_time     = host_elem->host_spec->creation_time;
+       
+      if ( host_elem->host_spec->resolved_name ) {
+         new_host_spec->resolved_name = strdup(host_elem->host_spec->resolved_name);
+         if ( new_host_spec->resolved_name == NULL) {
+            cl_com_free_hostspec(&new_host_spec);
+            cl_raw_list_unlock(source);
+            cl_host_list_cleanup(destination);
+            return CL_RETVAL_MALLOC;
+         }
+      } else {
+         new_host_spec->resolved_name = NULL;
+      }
+
+      if ( host_elem->host_spec->unresolved_name ) {
+         new_host_spec->unresolved_name = strdup(host_elem->host_spec->unresolved_name);
+         if ( new_host_spec->unresolved_name == NULL) {
+            cl_com_free_hostspec(&new_host_spec);
+            cl_raw_list_unlock(source);
+            cl_host_list_cleanup(destination);
+            return CL_RETVAL_MALLOC;
+         }
+      } else {
+         new_host_spec->unresolved_name = NULL;
+      }
+
+      if ( host_elem->host_spec->in_addr) {
+         new_host_spec->in_addr = cl_com_copy_in_addr(host_elem->host_spec->in_addr);
+         if ( new_host_spec->in_addr == NULL) {
+            cl_com_free_hostspec(&new_host_spec);
+            cl_raw_list_unlock(source);
+            cl_host_list_cleanup(destination);
+            return CL_RETVAL_MALLOC;
+         }
+      } else {
+         new_host_spec->in_addr = NULL;
+      }
+ 
+      if ( host_elem->host_spec->hostent) {
+         new_host_spec->hostent = cl_com_copy_hostent(host_elem->host_spec->hostent);
+         if ( new_host_spec->hostent == NULL) {
+            cl_com_free_hostspec(&new_host_spec);
+            cl_raw_list_unlock(source);
+            cl_host_list_cleanup(destination);
+            return CL_RETVAL_MALLOC;
+         }
+      } else {
+         new_host_spec->hostent = NULL;
+      }
+
+
+      cl_host_list_append_host( (*destination) , new_host_spec, 0 );
+      host_elem = cl_host_list_get_next_elem(source, host_elem);
+   }
+   
+
+
+
+   ret_val = cl_raw_list_unlock( source );
+   return ret_val;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_host_list_get_data()"
 cl_host_list_data_t* cl_host_list_get_data(cl_raw_list_t* list_p) {
 

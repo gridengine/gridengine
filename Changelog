@@ -1,3 +1,12 @@
+CR-2004-04-29-2: Enhancm.:  - removed unused structure element in 
+                              cl_com_hostent_t structure
+                            - added new functions:
+                              cl_com_copy_in_addr();
+                              cl_com_copy_hostent();
+                              cl_host_list_copy();
+                 Changed:   communication
+                 Review:    SG
+
 SG-2004-04-29-1: Bugfix:    changed the locking in the com. connection list
                  Changed:   communication
                  Review:    CR

@@ -540,7 +540,7 @@ char *err_str
       u_long32 type = lGetUlong(jep, JB_type);
       const char *var_name = "QRSH_COMMAND";
 
-      if (!JOB_TYPE_IS_BINARY(type)) {
+      if (!JOB_TYPE_IS_BINARY(type) && petep == NULL) {
          const char *old_qrsh_command_s = NULL;
          dstring old_qrsh_command = DSTRING_INIT;
 

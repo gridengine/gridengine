@@ -1,3 +1,5 @@
+JG-2002-12-05-0  Bugfix:    Script submission for qrsh broke tight integration.
+
 CR-2002-12-05-1  Testsuite: fixed errors in error_states check and complex
                  Bugfix:    check
 

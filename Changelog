@@ -24,6 +24,7 @@ JG-2002-04-30-0: Bugfix:    Buffer for task_id of pe task was too small.
 
 EB-2002-04-29-1: Bugfix:    schedd bugs reported by Patrik Koch
                             on dev mailing list (Mon, 15 Apr 2002) 
+                            - Memory leak
                  Issues:    #243
                  Bugtraq:   #4676340 
                  Changed:   sge_schedd

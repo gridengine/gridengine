@@ -271,6 +271,8 @@ BD-2003-04-09-0  Bugfix:    Remove accidently comitted qmake binaries.
 CR-2003-04-08-7  Bugfix:    with CR-2003-04-08-4 was also changing SOLARIS
                             and SOLARIS64 - now it only switches to -xO3 for
                             SOLARIS86
+                 Bugtraq:   4847802
+                 Issue:     531
 
 CR-2003-04-08-6  Bugfix:    synchronized qmake Makefiles for all architectures
                             - disabled automatic Makefile generation through

@@ -1,3 +1,5 @@
+JG-2004-07-13-0: Testsuite: fixed test system_tests/geee/sharetree
+
 CR-2004-07-13-0: Testsuite: - modifications for 60 scheduler configuration in
                               throughput test
                  Changed:   throughput test

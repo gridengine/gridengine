@@ -104,7 +104,6 @@ proc share_tree_init_level {} {
 # -------- local test procedures -----------------------------------------------
 
 proc wait_for_job_tickes { job_id } {
-
    global CHECK_OUTPUT
 
    set my_timeout [timestamp]
@@ -120,7 +119,6 @@ proc wait_for_job_tickes { job_id } {
    if { [timestamp] >= $my_timeout } {
       add_proc_error "wait_for_job_tickes" -1 "timeout while waiting for job tickets"
    }
-
 }
 
 proc get_job_tickets { job_list_prj1 job_list_prj2 job_list_prj3 array_name } {
@@ -151,7 +149,6 @@ proc get_job_tickets { job_list_prj1 job_list_prj2 job_list_prj3 array_name } {
       incr nr_of_jobs -1
    }
    puts $CHECK_OUTPUT "                        "
-
 }
 
 proc get_ticket_sum { job_list ticket_array_name } {
@@ -255,7 +252,6 @@ proc get_normalized_ticket_order { job_list_prj1 job_list_prj2 job_list_prj3 mos
 
 
 proc set_share_tree {} {
-
    global CHECK_HOST CHECK_OUTPUT
 
    set s_tree ""  
@@ -300,7 +296,7 @@ proc share_tree_setup  {} {
    global CHECK_ARCH
    global CHECK_PRODUCT_ROOT
    global CHECK_HOST 
-   global shartree_stored_configuration
+   global shartree_stored_configuration test_queue test_host
 
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
@@ -318,15 +314,14 @@ proc share_tree_setup  {} {
 
 
    foreach elem $CHECK_CORE_EXECD {
-      disable_queue "${elem}.q"
+      disable_queue [get_queue_instance "all.q" "$elem"] 
    }  
   
-   set test_queue [lindex $CHECK_CORE_EXECD 0]
-   set change_array(qname) "share_test"
-   set change_array(hostname) $test_queue
+   set test_host [lindex $CHECK_CORE_EXECD 0]
+   set test_queue [get_queue_instance "test" "$test_host"]
    set change_array(slots) "1"
    set change_array(load_thresholds) "none"
-   add_queue change_array fast
+   add_queue "test" $test_host change_array 1
 
    set prj_setup(name) "project1"
    add_prj prj_setup
@@ -337,8 +332,6 @@ proc share_tree_setup  {} {
    set prj_setup(name) "project3"
    add_prj prj_setup
 
-
-
    set vi_commands "i" 
    set s_tree [set_share_tree]
    foreach elem $s_tree {
@@ -347,7 +340,6 @@ proc share_tree_setup  {} {
    lappend vi_commands [format "%c" 27]
    lappend  vi_commands "dddddddddddd"
    
-
    set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
    } result ] 
@@ -401,6 +393,7 @@ proc share_tree_test {} {
    global CHECK_SCRIPT_FILE_DIR
    global share_tree_percentage_variation
    global prj1_id_list prj2_id_list prj3_id_list
+   global test_queue
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
       set_error -3 "not available for sge system"
@@ -409,7 +402,7 @@ proc share_tree_test {} {
    
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } result
 
-   disable_queue share_test
+   disable_queue "$test_queue"
 
    set prj1_id_list ""
    set prj2_id_list ""
@@ -492,7 +485,7 @@ proc share_tree_test {} {
 
 #   set mod_config(schedule_interval)    "0:0:10"
 #   set_schedd_config mod_config
-   enable_queue share_test
+   enable_queue "$test_queue"
 
    set done 0
    set my_timeout [timestamp]
@@ -525,7 +518,7 @@ proc share_tree_test {} {
       }
       sleep 2
    }
-   disable_queue share_test
+   disable_queue "$test_queue"
    if { [timestamp] >= $my_timeout } {
       add_proc_error "share_tree_test" -1 "timeout while waiting for start of jobs"
    }
@@ -601,7 +594,7 @@ proc share_tree_cleanup  {} {
    global CHECK_ARCH 
    global CHECK_PRODUCT_ROOT
    global prj1_id_list prj2_id_list prj3_id_list
-   global shartree_stored_configuration
+   global shartree_stored_configuration test_host
 
    if { [ string compare $CHECK_PRODUCT_TYPE "sgeee" ] != 0 } {
       set_error -3 "not available for sge system"
@@ -630,10 +623,10 @@ proc share_tree_cleanup  {} {
    }
 
    foreach elem $CHECK_CORE_EXECD {
-      enable_queue "${elem}.q"
+      enable_queue [get_queue_instance "all.q" "$elem"]
    }  
 
-   del_queue "share_test"
+   del_queue test $test_host 0 1
 
    set catch_return [ catch {  
       eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 

@@ -672,7 +672,8 @@ proc disable_queue { queuelist } {
               } else {
                 set HAS_DISABLED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QINSTANCE_DISABLED]]
               }
-              if { [ string match "*${HAS_DISABLED}*" $result ] } {
+
+              if { [ string match "*${HAS_DISABLED}*" $elem ] } {
                  incr nr_disabled 1
                  break
               } 

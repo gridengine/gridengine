@@ -1061,7 +1061,7 @@ int local
    static String loglevel[] = { "log_info", "log_warning", "log_err" };
 /*    static String logmail[] = { "true", "false" }; */
    static String enforce_project[] = { "true", "false" };
-   static String enforce_user[] = { "true", "false" };
+   static String enforce_user[] = { "true", "false", "auto" };
    String str = NULL;
    char min_uid[20];
    char min_gid[20];

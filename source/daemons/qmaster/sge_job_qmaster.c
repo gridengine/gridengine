@@ -52,6 +52,7 @@
 #include "sge_pe.h"
 #include "sge_job_refL.h"
 #include "sge_host.h"
+#include "sge_hostL.h"
 #include "sge_job_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_give_jobs.h"
@@ -130,7 +131,7 @@ static int deny_soft_consumables(lList **alpp, lList *srl);
 static const char JOB_NAME_DEL = ':';
 
 /*-------------------------------------------------------------------------*/
-/* sge_gdi_add_job                                                       */
+/* sge_gdi_add_job                                                         */
 /*    called in sge_c_gdi_add                                              */
 /*-------------------------------------------------------------------------*/
 int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
@@ -435,6 +436,16 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
 
    /* check sge attributes */
    if (feature_is_enabled(FEATURE_SGEEE)) {
+
+      /* if enforce_user flag is "auto" and user doesn't exist, add the user */
+      if (conf.enforce_user && !strcasecmp(conf.enforce_user, "auto") && 
+          !userprj_list_locate(Master_User_List, ruser)) {
+         int status = sge_add_auto_user(ruser, rhost, request, alpp);
+         if (status != STATUS_OK) {
+            DEXIT;
+            return status;
+         }
+      }
 
       /* ensure user exists if enforce_user flag is set */
       if (conf.enforce_user && !strcasecmp(conf.enforce_user, "true") && 

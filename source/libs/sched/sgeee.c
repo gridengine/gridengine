@@ -898,6 +898,15 @@ sge_set_job_refs( lListElem *job,
                ref->user ? lGetString(ref->user, UP_name) : NULL,
                ref->project ? lGetString(ref->project, UP_name) : NULL,
                &pnode);
+
+         /*
+          * if the node was not found and there is a user but no project,
+          * then look for the default user node.
+          */
+
+         if (!ref->node && ref->user && !ref->project)
+            ref->node = search_userprj_node(root, "default", NULL, &pnode);
+
          /*
           * if the found node is the "default" node, then create a
           * temporary sibling node using the "default" node as a

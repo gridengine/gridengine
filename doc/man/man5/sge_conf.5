@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/01/25 20:02:35 $     Revision: $Revision: 1.24 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/01/28 22:15:01 $     Revision: $Revision: 1.25 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/01/25 20:02:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/01/28 22:15:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -669,12 +669,92 @@ xxQS_NAME_Cxx.
 .PP
 If set to \fItrue\fB, a xxQS_NAME_EExx
 .M user 5
-must exists to allow for job submission. Jobs are rejected if no corresponding user 
+must exist to allow for job submission. Jobs are rejected if no corresponding user 
 exists. 
+.PP
+If set to \fIauto\fB, a xxQS_NAME_EExx
+.M user 5
+object for the submitting user will automatically be created during
+job submission, if one does not already exist. The \fBauto_user_oticket\fP,
+\fBauto_user_fshare\fP, \fBauto_user_default_project\fP, and
+\fBauto_user_delete_time\fP configuration parameters will be used as
+default attributes of the new
+.M user 5
+object.
 .PP
 Changing \fBenforce_user\fP will take immediate effect.
 The default for \fBenforce_user\fP is \fIfalse\fP.
 .PP
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
+.SH "\fBauto_user_oticket\fP"
+The number of override tickets to assign to automatically created
+.M user 5
+objects. User objects are created automatically if the
+.B enforce_user
+attribute is set to \fIauto\fP.
+.
+.PP
+Changing
+.B auto_user_oticket
+will affect any newly created user objects, but will not change user
+objects created in the past.
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
+.SH "\fBauto_user_fshare\fP"
+The number of functional shares to assign to automatically created
+.M user 5
+objects. User objects are created automatically if the
+.B enforce_user
+attribute is set to \fIauto\fP.
+.
+.PP
+Changing
+.B auto_user_fshare
+will affect any newly created user objects, but will not change user
+objects created in the past.
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
+.SH "\fBauto_user_default_project\fP"
+The default project to assign to automatically created
+.M user 5
+objects. User objects are created automatically if the
+.B enforce_user
+attribute is set to \fIauto\fP.
+.
+.PP
+Changing
+.B auto_user_default_project
+will affect any newly created user objects, but will not change user
+objects created in the past.
+.PP
+This value is a global configuration parameter only. It cannot be
+overwritten by the execution host local configuration.
+.\"
+.\"
+.SH "\fBauto_user_delete_time\fP"
+The number of seconds of inactivity after which automatically created
+.M user 5
+objects will be deleted. User objects are created automatically if the
+.B enforce_user
+attribute is set to \fIauto\fP. If no jobs have been submitted by the
+automatically created user for the specified amount of time, the
+object will automatically be deleted.  A value of 0 can be used to
+indicate that the user object should not
+be automatically deleted.
+.PP
+Changing
+.B auto_user_delete_time
+will affect the deletion time for all users of newly submitted jobs.
 .PP
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.

@@ -45,7 +45,12 @@
 
 #include "sge.h"
 #include "sgermon.h"
+#include "sge_prog.h"
 #include "sge_conf.h"
+#include "sge_time.h"
+#include "sge_manop.h"
+#include "sge_gdi_request.h"
+#include "sge_gdi.h"
 #include "sge_usageL.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
@@ -87,6 +92,7 @@ int sub_command
    u_long32 up_new_version;
    lList *lp;
    const char *obj_name;
+   int make_auto_user_permanent = 0;
 
    DENTER(TOP_LAYER, "userprj_mod");
   
@@ -117,12 +123,20 @@ int sub_command
    if ((pos=lGetPosViaElem(ep, UP_oticket))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_oticket, uval);
+      make_auto_user_permanent = 1;
    }
 
    /* ---- UP_fshare */
    if ((pos=lGetPosViaElem(ep, UP_fshare))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_fshare, uval);
+      make_auto_user_permanent = 1;
+   }
+
+   /* ---- UP_delete_time */
+   if ((pos=lGetPosViaElem(ep, UP_delete_time))>=0) {
+      uval = lGetPosUlong(ep, pos);
+      lSetUlong(modp, UP_delete_time, uval);
    }
 
    up_new_version = lGetUlong(modp, UP_version)+1;
@@ -156,7 +170,14 @@ int sub_command
             }
          }
          lSetString(modp, UP_default_project, dproj);
+         make_auto_user_permanent = 1;
       }
+
+      /* if one of the attributes has been edited, make the user object permanent */
+      if (!add && make_auto_user_permanent) {
+         lSetUlong(modp, UP_delete_time, 0);
+      }
+
    }
    else {
       /* ---- UP_acl */
@@ -396,5 +417,140 @@ const char *obj_name   /* e.g. "fangorn"  */
 
    DEXIT;
    return STATUS_OK;
+}
+
+/*-------------------------------------------------------------------------*/
+/* sge_automatic_user_cleanup_handler - handles automatically deleting     */
+/* GEEE automatic user objects which have expired.                         */
+/*-------------------------------------------------------------------------*/
+void
+sge_automatic_user_cleanup_handler(te_event_t anEvent)
+{
+   lListElem *user, *next;
+   u_long32 now = sge_get_gmt();
+   char *root = "root";
+   const char *qmaster_host = uti_state_get_qualified_hostname();
+
+   DENTER(TOP_LAYER, "sge_automatic_user_cleanup_handler");
+
+   /*
+    * Check each user for deletion time. We don't use for_each()
+    * because we are deleting entries.
+    */
+   for (user=lFirst(Master_User_List); user; user=next) {
+      u_long32 delete_time = lGetUlong(user, UP_delete_time);
+      next = lNext(user);
+      if (delete_time > 0 && delete_time < now) {
+         if (sge_del_userprj(user, NULL, &Master_User_List, root,
+                             (char *)qmaster_host, 1)) {
+            /* only try to delete it once ... */
+            lSetUlong(user, UP_delete_time, 0);
+         }
+      }
+   }
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+/* sge_add_auto_user - handles automatically adding GEEE user objects      */
+/*    called in sge_gdi_add_job                                            */
+/*-------------------------------------------------------------------------*/
+int
+sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp)
+{
+   int manager_added = 0, admin_host_added = 0;
+   sge_gdi_request user_request, user_answer;
+   lList *lp;
+   lListElem *uep, *ep, *answer;
+   int status = STATUS_OK;
+
+   DENTER(TOP_LAYER, "sge_add_auto_user");
+
+   uep = userprj_list_locate(Master_User_List, user);
+
+   /* if permanent user already exists, we're done */
+   if (uep && lGetUlong(uep, UP_delete_time) == 0) {
+      DEXIT;
+      return STATUS_OK;
+   }
+
+   /*
+    * User object will be added or modifed by this user, so temporarily
+    * make the user a manager and the host an admin host.
+    */
+
+   if (!manop_is_manager(user)) {
+      lAddElemStr(&Master_Manager_List, MO_name, user, MO_Type);
+      manager_added = 1;
+   }
+
+   if (!host_list_locate(Master_Adminhost_List, host)) {
+      lAddElemStr(&Master_Adminhost_List, AH_name, host, AH_Type);
+      admin_host_added = 1;
+   }
+
+   /* create the user element to be added */
+   ep = lCreateElem(UP_Type);
+   if (uep) {
+      /* modify user element (extend life) */
+      lSetString(ep, UP_name, user);
+      if (conf.auto_user_delete_time > 0)
+         lSetUlong(ep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
+      else
+         lSetUlong(ep, UP_delete_time, 0);
+   } else {
+      /* add automatic user element */
+      lSetString(ep, UP_name, user);
+      lSetUlong(ep, UP_oticket, conf.auto_user_oticket);
+      lSetUlong(ep, UP_fshare, conf.auto_user_fshare);
+      if (!conf.auto_user_default_project ||
+          !strcasecmp(conf.auto_user_default_project, "none"))
+         lSetString(ep, UP_default_project, NULL);
+      else
+         lSetString(ep, UP_default_project, conf.auto_user_default_project);
+      if (conf.auto_user_delete_time > 0)
+         lSetUlong(ep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
+      else
+         lSetUlong(ep, UP_delete_time, 0);
+   }
+
+   lp = lCreateList("Automatic user", UP_Type);
+   lAppendElem(lp, ep);
+
+   /* set up the request structure */
+   memcpy(&user_request, request, sizeof(user_request));
+   user_request.op = uep ? SGE_GDI_MOD : SGE_GDI_ADD;
+   user_request.target = SGE_USER_LIST;
+   user_request.lp = lp;
+
+   /* set up the answer structure */
+   memset(&user_answer, 0, sizeof(user_answer));
+
+   /* add the automatic user object */
+   sge_c_gdi(host, &user_request, &user_answer);
+
+   /* report failure */
+   if (user_answer.alp && ((answer=lFirst(user_answer.alp))) &&
+       ((status=lGetUlong(answer, AN_status))) != STATUS_OK) {
+      answer_list_add(alpp, lGetString(answer, AN_text),
+                      status, lGetUlong(answer, AN_quality));
+   }
+
+   /* free the answer list */
+   if (user_answer.alp)
+      lFreeList(user_answer.alp);
+
+   /* clean up the manager and admin host */
+   if (manager_added) {
+      lDelElemStr(&Master_Manager_List, MO_name, user);
+   }
+
+   if (admin_host_added) {
+      lDelElemStr(&Master_Adminhost_List, AH_name, host);
+   }
+
+   DEXIT;
+   return status;
 }
 

@@ -906,6 +906,9 @@ lList **topp  /* ticket orders ptr ptr */
          int pos;
          const char *up_name;
          lList *tlp;
+#if 0  /* SVD040128 - commented out because we only extend auto_user life based on qsub */
+         u_long32 now = sge_get_gmt();
+#endif
 
          DPRINTF(("%sORDER #%d: update %d users/prjs\n", 
             force?"FORCE ":"", 
@@ -954,6 +957,13 @@ lList **topp  /* ticket orders ptr ptr */
                /* Note: Should we apply the debited job usage in this case? */
                continue;
             }
+
+#if 0  /* SVD040128 - commented out because we only extend auto_user life based on qsub */
+            /* Extend life of automatic users */
+            if (lGetUlong(up, UP_delete_time) > 0) {
+               lSetUlong(up, UP_delete_time, now + conf.auto_user_delete_time);
+            }
+#endif
 
             lSetUlong(up, UP_version, lGetUlong(up, UP_version)+1);
 

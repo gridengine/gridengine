@@ -224,6 +224,10 @@ static tConfEntry conf_entries[] = {
  { "max_u_jobs",        0, MAX_U_JOBS,          1, NULL },
  { "max_jobs",          0, MAX_JOBS,            1, NULL },
  { REPRIORITIZE,        0, "1",                 1, NULL },
+ { "auto_user_oticket", 0, "0",                 1, NULL },
+ { "auto_user_fshare",  0, "0",                 1, NULL },
+ { "auto_user_default_project", 0, "none",      1, NULL },
+ { "auto_user_delete_time", 0, "0",             1, NULL },
  { NULL,                0, NULL,                0, 0,   }
 };
 
@@ -394,7 +398,10 @@ lList *lpCfg
    chg_conf_val(lpCfg, "max_u_jobs", NULL, &mconf->max_u_jobs, TYPE_INT);
    chg_conf_val(lpCfg, "max_jobs", NULL, &mconf->max_jobs, TYPE_INT);
    chg_conf_val(lpCfg, REPRIORITIZE, NULL, &mconf->reprioritize, TYPE_BOO );
-
+   chg_conf_val(lpCfg, "auto_user_oticket", NULL, &mconf->auto_user_oticket, TYPE_INT);
+   chg_conf_val(lpCfg, "auto_user_fshare", NULL, &mconf->auto_user_fshare, TYPE_INT);
+   chg_conf_val(lpCfg, "auto_user_default_project", &mconf->auto_user_default_project, NULL, 0);
+   chg_conf_val(lpCfg, "auto_user_delete_time", NULL, &mconf->auto_user_delete_time, TYPE_TIM);
    DEXIT;
 }
 
@@ -742,7 +749,11 @@ void sge_show_conf()
    DPRINTF(("conf.max_aj_tasks           >%u<\n", (unsigned) conf.max_aj_tasks));
    DPRINTF(("conf.max_u_jobs             >%u<\n", (unsigned) conf.max_u_jobs));
    DPRINTF(("conf.max_jobs               >%u<\n", (unsigned) conf.max_jobs));
-   DPRINTF(("conf. reprioritize          >%u<\n", conf.reprioritize));
+   DPRINTF(("conf.reprioritize           >%u<\n", conf.reprioritize));
+   DPRINTF(("conf.auto_user_oticket      >%u<\n", conf.auto_user_oticket));
+   DPRINTF(("conf.auto_user_fshare       >%u<\n", conf.auto_user_fshare));
+   DPRINTF(("conf.auto_user_default_project >%s<\n", conf.auto_user_default_project));
+   DPRINTF(("conf.auto_user_delete_time  >%u<\n", conf.auto_user_delete_time));
 
    for_each (ep, conf.user_lists) {
       DPRINTF(("%s             >%s<\n", 

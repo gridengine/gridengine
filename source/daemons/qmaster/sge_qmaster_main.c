@@ -56,6 +56,7 @@
 #include "sge_reporting_qmaster.h"
 #include "sge_qmaster_timed_event.h"
 #include "sge_host_qmaster.h"
+#include "sge_userprj_qmaster.h"
 #include "sge_give_jobs.h"
 #include "sge_all_listsL.h"
 #include "lock.h"
@@ -630,6 +631,11 @@ static void start_periodic_tasks(void)
 
    te_register_event_handler(sge_zombie_job_cleanup_handler, TYPE_ZOMBIE_JOB_CLEANUP_EVENT);
    ev = te_new_event(30, TYPE_ZOMBIE_JOB_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "zombie-job-cleanup");
+   te_add_event(ev);
+   te_free_event(ev);
+
+   te_register_event_handler(sge_automatic_user_cleanup_handler, TYPE_AUTOMATIC_USER_CLEANUP_EVENT);
+   ev = te_new_event(60, TYPE_AUTOMATIC_USER_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "automatic-user-cleanup");
    te_add_event(ev);
    te_free_event(ev);
 

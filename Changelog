@@ -1,3 +1,19 @@
+SD-2004-01-28-1: Enhancem.: - Set default dynamic priority range 
+                              (ptf_min_priority, ptf_max_priority) for
+                              Linux to nice values 0-20
+                 Changed:   sge_execd
+
+SD-2004-01-28-0: Enhancem.: - Changes to allow user-based functional policy
+                              and user-based share tree policy to implement
+                              Grid Engine 5.3 user_sort capability
+                            - Added support for automatically creating
+                              GEEE user objects
+                            - Added support for "default" share tree node
+                              for users without projects
+                 Issue:     636             
+                 Changed:   sge_qmaster, inst_sge, sge_config, qmon,
+                            sge_conf(5), sge_pe(5)
+
 AD-2004-01-28-3: Bugfix:    'startup heartbeat' went into wrong directory.
                  Changed:   qmaster
 

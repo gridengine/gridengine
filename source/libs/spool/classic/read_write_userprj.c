@@ -62,6 +62,8 @@
 
 #include "msg_common.h"
 
+#define allow_delete_time_modification
+
 static int intprt_as_usage[] = { UA_name, UA_value, 0 };
 static int intprt_as_acl[] = { US_name, 0 };
 
@@ -144,8 +146,15 @@ int user        /* =1 user, =0 project */
 
       FPRINTF((fp, "oticket " u32 "\n", lGetUlong(ep, UP_oticket)));
       FPRINTF((fp, "fshare " u32 "\n", lGetUlong(ep, UP_fshare)));
+#if defined(allow_delete_time_modification)
+      FPRINTF((fp, "delete_time " u32 "\n", lGetUlong(ep, UP_delete_time)));
+#endif
 
       if (spool) {
+#if !defined(allow_delete_time_modification)
+         if (user)
+            FPRINTF((fp, "delete_time " u32 "\n", lGetUlong(ep, UP_delete_time)));
+#endif
          FPRINTF((fp, "usage "));
          ret = uni_print_list(fp, NULL, 0, lGetList(ep, UP_usage), 
             intprt_as_usage, delis,0);
@@ -291,18 +300,38 @@ _Insight_set_option("suppress", "PARM_NULL");
 
       /* --------- UP_default_project */
       if (user) {
+
          if (!set_conf_string(alpp, clpp, fields, "default_project", ep,
                 UP_default_project)) {
             DEXIT;
             return -1;
          }
          NULL_OUT_NONE(ep, UP_default_project);
+
+#if defined(allow_delete_time_modification)
+         if (!set_conf_ulong(alpp, clpp, fields, "delete_time", ep,
+                  UP_delete_time)) {
+            DEXIT;
+            return -1;
+         }
+#endif
       }
 
       if (spool) {
 
          lList *sclp = NULL, *ssclp = NULL;
          const char *val;
+
+#if !defined(allow_delete_time_modification)
+         /* --------- UP_delete_time */
+         if (user) {
+            if (!set_conf_ulong(alpp, clpp, fields, "delete_time", ep,
+                     UP_delete_time)) {
+               DEXIT;
+               return -1;
+            }
+         }
+#endif
 
          /* --------- UP_usage */
          if (!set_conf_deflist(alpp, clpp, fields, "usage", ep, 
@@ -388,6 +417,20 @@ _Insight_set_option("suppress", "PARM_NULL");
          }
 
          lDelElemStr(clpp, CF_name, "project");
+
+      } else {
+
+#if 0
+         /* NOTE: if we are reading in a manager-modified object, we want
+          * to clear the delete time, to make the object a permanent
+          * object.
+          */
+
+         /* --------- UP_delete_time */
+         if (user) {
+            lSetUlong(ep, UP_delete_time, 0);
+         }
+#endif
 
       }
    }

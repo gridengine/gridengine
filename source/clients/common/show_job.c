@@ -30,6 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <time.h>
+#include <string.h>
 
 #include "def.h"
 #include "sge_gdi_intern.h"

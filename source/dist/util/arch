@@ -63,6 +63,9 @@ if [ -x /usr/bin/uname ]; then
    FreeBSD,*)
       ARCH=fbsd-$ht
       ;;
+   NetBSD,*)
+      ARCH=nbsd-$ht
+      ;;
    esac
 fi
 
@@ -271,6 +274,11 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
    fbsd-*)
       PATH=$OLD_PATH
       DEFAULTMANPATH=`/usr/bin/manpath -q`
+      PATH=$SAFE_PATH
+      ;;
+   nbsd-*)
+      PATH=$OLD_PATH
+      DEFAULTMANPATH=/usr/local/man:/usr/share/man
       PATH=$SAFE_PATH
       ;;
    darwin)

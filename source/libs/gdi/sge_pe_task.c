@@ -393,6 +393,15 @@ int pe_task_update_master_list(sge_event_type type, sge_event_action action,
 
    /* restore pe_task list after modify event */
    if(action == SGE_EMA_MOD) {
+      pe_task = ja_task_search_pe_task(ja_task, pe_task_id);
+      if(pe_task == NULL) {
+         ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKFORUPDATEIN_SS, 
+                job_get_id_string(job_id, ja_task_id, pe_task_id), "pe_task_update_master_list"));
+         lFreeList(usage);       
+         DEXIT;
+         return FALSE;
+      }
+
       lXchgList(pe_task, PET_scaled_usage, &usage);
    }
 

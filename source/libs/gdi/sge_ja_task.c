@@ -318,6 +318,17 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
 
    /* restore pe_task list after modify event */
    if(action == SGE_EMA_MOD) {
+      /* we have to search the replaced ja_task */
+      ja_task = job_search_task(job, NULL, ja_task_id);
+      if(ja_task == NULL) {
+         ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS, 
+                job_get_id_string(job_id, ja_task_id, NULL), "ja_task_update_master_list"));
+         lFreeList(pe_tasks);
+         lFreeList(usage);
+         DEXIT;
+         return FALSE;
+      }
+
       lXchgList(ja_task, JAT_task_list, &pe_tasks);
       lXchgList(ja_task, JAT_scaled_usage_list, &usage);
    }

@@ -1,3 +1,6 @@
+JG-2002-10-08-1  Bugfix:    Fixed memory access problem in event mirror 
+                            interface.
+
 JG-2002-10-08-0  Bugfix:    Fixed memory leaks and uninitialized pointer 
                             problems.
 

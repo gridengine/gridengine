@@ -39,6 +39,32 @@
 extern "C" {
 #endif
 
+/****** cull/list/-Cull-List-defines ***************************************
+*
+*  NAME
+*     Cull-List-defines -- macros and constant definitions
+*
+*  SYNOPSIS
+*     #define FREE_ELEM             (1<<0)
+*     #define BOUND_ELEM            (1<<1)
+*     #define TRANS_BOUND_ELEM      (1<<2)
+*     #define OBJECT_ELEM           (1<<3)
+*
+*  FUNCTION
+*     The following definitions describe possible values for the status 
+*     a list element (lListElem):
+*     FREE_ELEM        - a list element not being part of a list or
+*                        being a sub object
+*     BOUND_ELEM       - a list element contained in a list.
+*     TRANS_BOUND_ELEM - temporary status while unpacking elements.
+*                        After unpacking, bound elements or sub objects
+*                        have this status to prevent errors from functions
+*                        like lAppendElem, that reject bound objects.
+*     OBJECT_ELEM      - a list element being subobject of another element
+*
+****************************************************************************
+*/
+
 #define FREE_ELEM             (1<<0)
 #define BOUND_ELEM            (1<<1)
 #define TRANS_BOUND_ELEM      (1<<2)

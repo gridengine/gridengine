@@ -2249,6 +2249,13 @@ int job_update_master_list(sge_event_type type, sge_event_action action,
    if(action == SGE_EMA_MOD) {
       u_long32 event_type = lGetUlong(event, ET_type);
 
+      if(job == NULL) {
+         ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS, 
+                job_get_id_string(job_id, 0, NULL), "job_update_master_list"));
+         DEXIT;
+         return FALSE;
+      }
+
       if(event_type == sgeE_JOB_USAGE || event_type == sgeE_JOB_FINAL_USAGE) {
          /* special handling needed for JOB_USAGE and JOB_FINAL_USAGE events.
          * they are sent for jobs, ja_tasks and pe_tasks and only contain
@@ -2289,6 +2296,16 @@ int job_update_master_list(sge_event_type type, sge_event_action action,
 
    /* restore ja_task list after modify event */
    if(action == SGE_EMA_MOD && ja_tasks != NULL) {
+      /* we have to search the replaced job */
+      job = job_list_locate(*list, job_id);
+      if(job == NULL) {
+         ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS, 
+                job_get_id_string(job_id, 0, NULL), "job_update_master_list"));
+         lFreeList(ja_tasks);
+         DEXIT;
+         return FALSE;
+      }
+
       lXchgList(job, JB_ja_tasks, &ja_tasks);
    }
 

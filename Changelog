@@ -1,3 +1,8 @@
+AD-2003-10-07-0: Bugfix.:   'UTILIB_DRMAA_OBJS' did contain 'config_file.o' two
+                            times. This caused link problems later on because
+                            of multiple symbol definitions. 
+                 Changed:   lib/uti/Makefile
+
 JG-2003-10-07-0: Enhancem.: Bootstrapping: Removed admin_user, ignore_fqdn and 
                             default_domain from global configuration. All core 
                             components (except shadowd) use the bootstrapping 

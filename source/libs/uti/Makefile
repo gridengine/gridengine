@@ -38,7 +38,6 @@ UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 
 UTILIB_DRMAA_SRC = \
          config_file.c \
-         config_file.c \
          setup_path.c \
          sge_afsutil.c \
          sge_arch.c \

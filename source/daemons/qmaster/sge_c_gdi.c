@@ -63,7 +63,7 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_qmaster_main.h"
+#include "sge_qmaster_threads.h"
 #include "sge_time.h"  
 #include "version.h"  
 #include "sge_security.h"  

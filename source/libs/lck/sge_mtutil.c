@@ -38,7 +38,11 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "msg_lcklib.h"
+#include "sge_time.h"
 
+
+/* enable or disable lock printing*/
+/*#define PRINT_LOCK*/
 
 /****** sge_mtutil/sge_mutex_lock() ********************************************
 *  NAME
@@ -77,15 +81,27 @@ void sge_mutex_lock(const char *mutex_name, const char *func, int line, pthread_
 
    DENTER(BASIS_LAYER, "sge_mutex_lock");
 
-   DLOCKPRINTF(("%s() line %d: about to lock mutex \"%s\"\n", func, line, mutex_name));
-
+/*   DLOCKPRINTF(("%s() line %d: about to lock mutex \"%s\" : %u\n", func, line, mutex_name, sge_get_gmt())); */
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
+   }   
+#endif  
    if (( res = pthread_mutex_lock(mutex)) != 0)
    {
       CRITICAL((SGE_EVENT, MSG_LCK_MUTEXLOCKFAILED_SSS, func, mutex_name, strerror(res)));
       abort();
    }
-
-   DLOCKPRINTF(("%s() line %d: locked mutex \"%s\"\n", func, line, mutex_name));
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld got lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
+   }   
+#endif  
+/*   DLOCKPRINTF(("%s() line %d: locked mutex \"%s\" : %u\n", func, line, mutex_name, sge_get_gmt())); */
 
    DEXIT;
    return;
@@ -133,7 +149,13 @@ void sge_mutex_unlock(const char *mutex_name, const char *func, int line, pthrea
       CRITICAL((SGE_EVENT, MSG_LCK_MUTEXUNLOCKFAILED_SSS, func, mutex_name, strerror(res)));
       abort();
    }
-
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld unlock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, mutex_name); 
+   }   
+#endif  
    DLOCKPRINTF(("%s() line %d: unlocked mutex \"%s\"\n", func, line, mutex_name));
 
    DEXIT;
@@ -175,13 +197,25 @@ void sge_rwlock_rdlock(const char *rwlock_name, const char *func, int line, pthr
    DENTER(BASIS_LAYER, "sge_rwlock_rdlock");
 
    DLOCKPRINTF(("%s() line %d: about to lock rwlock \"%s\" for reading\n", func, line, rwlock_name));
-
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
+   }   
+#endif  
    if (( res = pthread_rwlock_rdlock(rwlock)) != 0)
    {
       CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORREADINGFAILED_SSS, func, rwlock_name, strerror(res)));
       abort();
    }
-
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld got lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
+   }   
+#endif  
    DLOCKPRINTF(("%s() line %d: locked rwlock \"%s\" for reading\n", func, line, rwlock_name));
 
    DEXIT;
@@ -227,12 +261,26 @@ void sge_rwlock_wrlock(const char *rwlock_name, const char *func, int line, pthr
 
    DLOCKPRINTF(("%s() line %d: about to lock rwlock \"%s\" for writing\n", func, line, rwlock_name));
 
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
+   }   
+#endif   
    if (( res = pthread_rwlock_wrlock(rwlock)) != 0)
    {
       CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKFORWRITINGFAILED_SSS, func, rwlock_name, strerror(res)));
       abort();
    }
 
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld got lock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
+   }   
+#endif   
    DLOCKPRINTF(("%s() line %d: locked rwlock \"%s\" for writing\n", func, line, rwlock_name));
 
    DEXIT;
@@ -278,7 +326,13 @@ void sge_rwlock_unlock(const char *rwlock_name, const char *func, int line, pthr
       CRITICAL((SGE_EVENT, MSG_LCK_RWLOCKUNLOCKFAILED_SSS, func, rwlock_name, strerror(res)));
       abort();
    }
-
+#ifdef PRINT_LOCK
+   {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      printf("%ld unlock %lu:%lus %s\n", (long int) pthread_self(),now.tv_sec, now.tv_usec, rwlock_name); 
+   }   
+#endif
    DLOCKPRINTF(("%s() line %d: unlocked rwlock \"%s\"\n", func, line, rwlock_name));
 
    DEXIT;

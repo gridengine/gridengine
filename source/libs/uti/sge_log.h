@@ -179,13 +179,9 @@ int             log_state_get_log_as_admin_user(void);
 *     formatstring - printf formatstring
 *     ...
 ******************************************************************************/ 
-#   define NOTICE(x)  ((LOG_NOTICE <= MAX(log_state_get_log_level(), LOG_WARNING)) ? ( sprintf x, \
-                       sge_log(LOG_NOTICE, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)): 0  ,1) ? 1 : 0
-  
+#   define NOTICE(x)  (sprintf x,  \
+                       sge_log(LOG_NOTICE, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
 
-/*                     (sprintf x,  \
-                        sge_log(LOG_NOTICE, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
-*/
 /****** uti/log/INFO() ********************************************************
 *  NAME
 *     INFO() -- Log an info message
@@ -202,13 +198,8 @@ int             log_state_get_log_as_admin_user(void);
 *     formatstring - printf formatstring
 *     ...
 ******************************************************************************/ 
-#   define INFO(x)    ((LOG_INFO <= MAX(log_state_get_log_level(), LOG_WARNING)) ? ( sprintf x, \
-                       sge_log(LOG_INFO, SGE_EVENT,__FILE__,SGE_FUNC,__LINE__)): 0  ,1) ? 1 : 0
-  
-
-/*                     (sprintf x,  \
-                        sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
-*/                        
+#   define INFO(x)   (sprintf x,  \
+                      sge_log(LOG_INFO,   SGE_EVENT,__FILE__,SGE_FUNC,__LINE__) ,1) ? 1 : 0
 
 /****** uti/log/DEBUG() ******************************************************
 *  NAME

@@ -2197,7 +2197,7 @@ static void* send_thread(void *anArg)
        * we are delivering events now, though we can reset the flush.
        */
       Master_Control.is_flush = false;
-      sge_mutex_unlock("event_master_const_mutex", SGE_FUNC, __LINE__,
+      sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__,
                        &Master_Control.cond_mutex);
 
       /* If the client array has changed, rebuild the indices. */

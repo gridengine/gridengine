@@ -1,5 +1,5 @@
-#ifndef _SGE_QMASTER_MAIN_H_
-#define _SGE_QMASTER_MAIN_H_
+#ifndef _SGE_QMASTER_THREADS_H_
+#define _SGE_QMASTER_THREADS_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -34,7 +34,22 @@
 
 #include "sge_gdi_request.h"
 
-int main(int argc, char* argv[]);
+void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
-#endif /* _SGE_QMASTER_MAIN_H_ */
+/* lock_service_provider */
+void sge_setup_lock_service(void);
+void sge_teardown_lock_service(void);
+
+/* thread management */
+void sge_create_and_join_threads(void);
+
+/* misc functions */
+void sge_daemonize_qmaster(void);
+void sge_become_admin_user(void);
+void sge_exit_func(int);
+void sge_start_heartbeat(void);
+void sge_start_periodic_tasks(void);
+void sge_qmaster_shutdown(void);
+
+#endif /* _SGE_QMASTER_THREADS_H_ */
 

@@ -1,3 +1,9 @@
+CR-2002-07-09-1  Testsuite: - added new SGE/SGEEE version strings for
+                              5.3.1beta2 and SGE_5.3p1
+                 Enhancem.: - new check "functional/job_environment" testing
+                              job environment variables (e.g. JOB_NAME)
+                 Issue      #267     
+
 CR-2002-07-09-0  Bugfix:    removed double conf_version lines when creating
                             local configuration in install script inst_sge
 

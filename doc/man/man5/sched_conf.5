@@ -30,7 +30,7 @@
 .\" 
 .\" 
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2001/07/19 15:55:36 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2001/07/19 16:58:14 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -55,7 +55,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2001/07/19 15:55:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2001/07/19 16:58:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -229,11 +229,20 @@ commands for more information).
 The default for \fBuser_sort\fP is \fBFALSE\fP.
 .\"
 .SS "\fBqueue_sort_method\fP"
-If this parameter is set to \fBseqno\fP, xxQS_NAMExx will use the
+This parameter determines in which order several criteria are taken into
+account to product a sorted queue list. Currently, two settings are valid:
+\fBseqno\fP and \fBload\fP. However in both cases, xxQS_NAMExx attempts to
+maximize the number of soft requests (see
+.M qsub 1 
+\fB\-s\fP option) being fulfilled by the queues for a particular as the
+primary criterion.
+.br
+Then, if the \fBqueue_sort_method\fP parameter is set to \fBseqno\fP,
+xxQS_NAMExx will use the
 .B seq_no
 parameter as configured in the current queue configurations (see
 .M queue_conf 5 )
-as first criterion to produce a sorted queue list. The 
+as the next criterion to sort the queue list. The 
 .B load_formula
 (see above) has only a meaning if two queues have equal
 sequence numbers.
@@ -241,8 +250,8 @@ If
 .B queue_sort_method
 is set to \fBload\fP the load according the 
 .B load_formula
-is the first criterion and the sequence number is only used if two 
-hosts have the same load. 
+is the criterion after maximizing a job's soft requests and the sequence
+number is only used if two hosts have the same load.
 The sequence number sorting is most 
 useful if you want to define a fixed order in which queues are to be filled
 (e.g.   the cheapest resource first).

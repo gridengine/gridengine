@@ -30,7 +30,7 @@
 .\" 
 .\" 
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2001/07/19 15:55:38 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2001/07/19 16:58:15 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -55,7 +55,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2001/07/19 15:55:38 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2001/07/19 16:58:15 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_schedd \- xxQS_NAMExx job scheduling agent
 .\"
@@ -76,9 +76,8 @@ xxqs_name_sxx_schedd \- xxQS_NAMExx job scheduling agent
 computes the scheduling decision in a xxQS_NAMExx cluster. The information
 necessary for the decision is retrieved from
 .M xxqs_name_sxx_qmaster 8
-via the xxQS_NAMExx Database Interface (GDI - see
-.M xxqs_name_sxx_gdi 3
-for details). After applying the scheduling algorithm, 
+via an event interface.
+After applying the scheduling algorithm, 
 .I xxqs_name_sxx_schedd
 communicates the scheduling decision back to
 .M xxqs_name_sxx_qmaster 8

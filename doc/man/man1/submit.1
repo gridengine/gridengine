@@ -31,7 +31,7 @@
 .\" 
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2001/07/19 15:55:21 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2001/07/19 16:58:13 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -56,7 +56,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2001/07/19 15:55:21 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2001/07/19 16:58:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1033,7 +1033,8 @@ parameter will only be in effect after a restart or migration of the job,
 however.
 .\"
 .IP "\fB\-qs_args ... -qs_end\fP"
-Available for \fIqsub\fP and \fIqalter\fP only.
+Available for \fIqsub\fP and \fIqalter\fP only. Deprecated in the current
+version.
 .sp 1
 Valid with the Queuing System Interface (QSI) option only.
 Please ask your system administrator.
@@ -1326,7 +1327,7 @@ For details, refer to
 .\" 
 .IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
 Specifies the location of the xxQS_NAMExx standard configuration
-files. If not set a default of /usr/xxQS_NAMExx is used.
+files.
 .\"
 .IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
 If set, specifies the default xxQS_NAMExx cell. To address a xxQS_NAMExx
@@ -1392,11 +1393,7 @@ the absolute path of the current working directory of the
 submitting client.
 .PP
 Furthermore, xxQS_NAMExx sets additional variables into the
-job's environment, as listed below. \fBNote:\fP Several variables
-(as denoted below) are also set for
-jobs forwarded to another queuing system via the xxQS_NAMExx Queuing
-System Interface (the QSI needs to be licensed and installed as an
-add-on product \- ask your system administrator).
+job's environment, as listed below.
 .IP "ARC" 1.5i
 The xxQS_NAMExx architecture name of the node on which the job is
 running. The name is compiled-in into the
@@ -1434,7 +1431,6 @@ variable is not set for non-array jobs.
 .IP "ENVIRONMENT" 1.5i
 The ENVIRONMENT variable is set to BATCH to identify that the job is being
 executed under xxQS_NAMExx control.
-Also set for QSI jobs.
 .IP "HOME" 1.5i
 The user's home directory path from the
 .M passwd 5
@@ -1446,18 +1442,16 @@ A unique identifier assigned by the
 .M xxqs_name_sxx_qmaster 8
 when the job was
 submitted. The job ID is a decimal integer in the range 1 to 99999.
-Also set for QSI jobs.
 .IP "JOB_NAME" 1.5i
 The job name, either `INTERACT' for interactive jobs or
 built from the \fIqsub\fP
 script filename, a period, and the digits of the job ID.
 This default may be overwritten by the
 .I -N.
-option. Also set for QSI jobs.
+option.
 .IP "LAST_HOST" 1.5i
 The name of the preceding host in case of migration of a checkpointing
 job.
-Also set for QSI jobs.
 .IP "LOGNAME" 1.5i
 The user's login name from the
 .M passwd 5
@@ -1466,7 +1460,6 @@ file.
 The number of hosts in use by a parallel job.
 .IP "NQUEUES" 1.5i
 The number of queues allocated for the job (always 1 for serial jobs).
-Also set for QSI jobs.
 .IP "NSLOTS" 1.5i
 The number of queue slots in use by a parallel job.
 .IP "PATH" 1.5i
@@ -1488,14 +1481,12 @@ for details on the format of this file. The environment variable
 is only available for parallel jobs.
 .IP "QUEUE" 1.5i
 The name of the queue in which the job is running.
-Also set for QSI jobs.
 .IP "REQUEST" 1.5i
 Available for batch jobs only.
 .sp 1
 The request name of a job as specified with the
 \fB\-N\fP switch (see above) or taken as the name of the job
 script file.
-Also set for QSI jobs.
 .IP "RESTARTED" 1.5i
 This variable is set to 1 if a job was restarted either after a system
 crash or after a migration in case of a checkpointing job. The variable has

@@ -31,7 +31,7 @@
 .\" 
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2001/07/19 15:55:20 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2001/07/19 16:58:12 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -56,7 +56,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2001/07/19 15:55:20 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2001/07/19 16:58:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -338,7 +338,7 @@ supported objects are the queue and the host
 configuration being specified as
 .I queue
 or
-.I host
+.I exechost
 in \fBobj_spec\fP. The queue
 .B load_thesholds
 parameter is an example of a list attribute. With the \fB\-aattr\fP option,
@@ -356,7 +356,7 @@ which the changes have to be applied are specified
 at the end of the command.
 .br
 The following restriction applies: For the
-.I host
+.I exechost
 object the
 .B load_values
 attribute cannot be modified
@@ -1006,8 +1006,9 @@ Allows replacing a single configuration list
 attribute in multiple instances of an object with a
 single command. Currently supported objects are the
 queue and the host configuration being specified as
-.I queue or
-.I host
+.I queue 
+or
+.I exechost
 in \fBobj_spec\fP. The queue
 .B load_thesholds
 parameter is an example of a list attribute. With
@@ -1215,7 +1216,7 @@ manual page.
 .\" 
 .IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
 Specifies the location of the xxQS_NAMExx standard configuration
-files. If not set a default of /usr/xxQS_NAMExx is used.
+files.
 .\"
 .IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
 If set, specifies the default xxQS_NAMExx cell. To address a xxQS_NAMExx

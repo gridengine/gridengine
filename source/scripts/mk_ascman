@@ -82,7 +82,7 @@ if ( $MANMODE == "sge" ) then
    set xxQS_NAMExx = "Grid Engine" 
    set xxQS_NAME_Cxx = "Grid Engine" 
    set xxQS_NAME_EExx = "Grid Engine Enterprise Edition" 
-   set xxqs_namexx = "grid_engine" 
+   set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR" 
    set xxQS_NAME_Sxx = "SGE" 
    set xxqs_name_sxx = "sge" 
    set xxRELxx = "Grid Engine 5.3"
@@ -90,14 +90,14 @@ else
    set xxQS_NAMExx = "Grid Engine Enterprise Edition" 
    set xxQS_NAME_Cxx = "Grid Engine" 
    set xxQS_NAME_EExx = "Grid Engine Enterprise Edition" 
-   set xxqs_namexx = "Grid Engine Enterprise Edition" 
-   set xxQS_NAME_Sxx = "SGEEE" 
-   set xxqs_name_sxx = "sgeee" 
-   set xxRELxx = "Grid Engine Enterprise Edition x.y"
+   set xxqs_namexx = "SHOULD_NO_LONGER_OCCUR" 
+   set xxQS_NAME_Sxx = "SGE" 
+   set xxqs_name_sxx = "sge" 
+   set xxRELxx = "Grid Engine Enterprise Edition 5.3"
 endif
 
 echo "Building SEDMAN pages"
-foreach n ( 1 5 8 )
+foreach n ( 1 3 5 8 )
    echo xxxx $MANSRCDIR/man${n}
    if ( ! -d $MANSRCDIR/man${n} ) then
       echo "Error: No man${n} subdirectory."
@@ -129,7 +129,7 @@ end
 #
 if ( "$MANASC" == 1 ) then
    echo "Building ASCMAN from sedman pages"
-   foreach n ( 1 5 8 )
+   foreach n ( 1 3 5 8 )
       if ( ! -d $MANBUILDDIR/SEDMAN/man/man${n} ) then
          echo "Error: No SEDMAN/man/man${n} subdirectory."
          exit 1
@@ -154,7 +154,7 @@ endif
 #
 if ( "$MANHTML" == 1 ) then
    echo "Building HTML from sedman pages"
-   foreach n ( 1 5 8 )
+   foreach n ( 1 3 5 8 )
       mkdir -p $MANBUILDDIR/HTMLMAN/htmlman${n}
       foreach i ($MANBUILDDIR/SEDMAN/man/man${n}/*)
          echo Processing $i
@@ -167,7 +167,7 @@ if ( "$MANHTML" == 1 ) then
    # generate an index file 
    #
    cp $1/scripts/template.html $MANBUILDDIR/HTMLMAN/index.html 
-   foreach n ( 1 5 8 )
+   foreach n ( 1 3 5 8 )
       echo "<H3>Section $n</H3>" >> $MANBUILDDIR/HTMLMAN/index.html
       echo '<P><UL>' >> $MANBUILDDIR/HTMLMAN/index.html
       foreach f ($MANBUILDDIR/HTMLMAN/htmlman${n}/*)

@@ -30,7 +30,7 @@
 .\" 
 .\" 
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/07/19 15:55:36 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2001/07/19 16:58:14 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -55,7 +55,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/07/19 15:55:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2001/07/19 16:58:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -161,7 +161,7 @@ xxQS_NAMExx components to locate and startup other xxQS_NAMExx programs.
 .PP
 The path name given here is searched for binaries as well as any directory
 below with a directory name equal to the current operating system
-architecture. Therefore, /usr/xxQS_NAMExx/bin will work for all architectures,
+architecture. Therefore, /usr/xxQS_NAME_Sxx/bin will work for all architectures,
 if the corresponding binaries are located in subdirectories named aix43,
 cray, glinux, hp10, irix6, osf4, solaris, etc.
 .PP
@@ -229,7 +229,8 @@ may use a set of private
 programs or scripts. Changing
 .B load_sensor
 will take effect after two load report intervalls (see
-\fBload_report_time\fB).
+\fBload_report_time\fB). A load sensor will be restarted automatically if
+the file modification time of the load sensor executable changes.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -416,6 +417,8 @@ and a minimal default environment is set up by xxQS_NAMExx \- see
 .M qsub 1 ).
 The parameter \fBlogin_shells\fP contains a comma separated list of the
 executable names of the command interpreters to be started as login-shells.
+Shells in this list are only started as login shells if the parameter
+\fBshell_start_mode\fP (see above) is set to \fIposix_compliant\fP.
 .PP
 Changes to \fBlogin_shells\fP will take immediate effect.
 The default for \fBlogin_shells\fP is sh,csh,tcsh,ksh.
@@ -808,6 +811,12 @@ The default for \fBschedd_params\fP is none.
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
+.IP "\fIIGNORE_FQDN\fP"
+Ignore fully qualified domain names. It is switched on if set to either "true"
+or "1". Can be used if all hosts belonging to a xxQS_NAMExx cluster are
+part of a single DNS domain. Switching it on my solve problems with load
+reports due to different hostname resolutions across the cluster.
+.\"
 .\"
 .SH "\fBexecd_params\fP"
 This is foreseen for passing additional parameters 
@@ -817,6 +826,10 @@ to the xxQS_NAMExx execution daemon. The following values are recognized:
 If this parameter is set to true, for reserved usage is used for the
 accounting entries \fBcpu\fP, \fBmem\fP and \fBio\fP instead of the
 measured usage.
+.PP
+.IP "\fIDISABLE_AUTO_RESCHEDULING\fP"
+If set to "true" or "1", the \fBexecd_param\fP \fIRESCHEDULE_UNKNOWN\fP
+(see below) is not taken into account.
 .PP
 .IP "\fIKEEP_ACTIVE\fP"
 This value should only be set for debugging purposes. If set to true, the
@@ -863,6 +876,40 @@ no notification signal will be sent. If it is set to \fITSTP\fP, for
 instance, or another
 signal name then this signal will be sent as notification signal.
 .PP
+.IP "\fIRESCHEDULE_UNKNOWN\fP"
+Determines whether jobs on hosts in unknown state are rescheduled and thus
+sent to other hosts. Hosts are registered as unknown if
+.M xxqs_name_sxx_master 8
+cannot establish contact to the
+.M xxqs_name_sxx_execd 8
+on those hosts (see \fBmax_unheard\fP). Likely reasons are a breakdown of
+the host or a breakdown
+of the network connection in between, but also
+.M xxqs_name_sxx_execd 8
+may not be executing on such hosts.
+.br
+In any case, xxQS_NAMExx can reschedule jobs running on such hosts to
+another system. \fIRESCHEDULE_UNKNOWN\fP controls the time which
+xxQS_NAMExx will wait before jobs are rescheduled after a host became
+unknown. The time format
+specification is RESCHEDULE_UNKNOWN=hh:mm:ss. If the special value
+RESCHEDULE_UNKNOWN=00:00:00 is set, then jobs will not be rescheduled from
+this host.
+.br
+Rescheduling is only initiated for jobs which have actiated the rerun flag
+(see the \fB\-r y\fP option of
+.M qsub 1
+and the \fBrerun\fP option of
+.M queue_conf 5 ).
+Parallel jobs are only rescheduled if the host on which their master tasks
+executes is in unknown state. Interactive jobs (see
+.M qsh 1 ,
+.M qrsh 1 ,
+.M qtcsh 1 )
+are not rescheduled. Migrating checkpointing jobs (and starting from the
+last checkpoint) will be supported in
+a future release.
+.PP
 .IP "\fISHARETREE_RESERVED_USAGE\fP"
 If this parameter is set to true, reserved usage is taken for the xxQS_NAME_EExx share
 tree consumption instead of measured usage.
@@ -881,6 +928,22 @@ execution. If the parameter is not set, the primary group id as defined for
 the job owner in the execution host
 .M passwd 5
 file is used.
+.br
+The feature is only available for jobs submitted via
+.M qsub 1 ,
+.M qrsh 1 ,
+.M qmake 1
+and 
+.M qtcsh 1 .
+Also, it only works for
+.M qrsh 1
+jobs (and thus also for
+.M qtcsh 1
+and
+.M qmake 1 )
+if rsh and rshd components are used which are provided with xxQS_NAMExx
+(i.e., the \fBrsh_daemon\fP and \fBrsh_command\fP parameters may
+not be changed from the default).
 .\"
 .\"
 .SH "\fBadmin_user\fP"

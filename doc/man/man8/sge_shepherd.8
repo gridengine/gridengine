@@ -30,7 +30,7 @@
 .\" 
 .\" 
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2001/07/19 15:55:38 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: sge_shepherd.8,v $     Last Update: $Date: 2001/07/19 16:58:15 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -55,7 +55,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2001/07/19 15:55:38 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SHEPHERD 8 "$Date: 2001/07/19 16:58:15 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_shepherd \- xxQS_NAMExx single job controlling agent
 .\"
@@ -82,20 +82,22 @@ The
 .I xxqs_name_sxx_shepherd
 receives information about the job to start from the
 .M xxqs_name_sxx_execd 8 .
-During the execution of the job it actually starts up to 3 child
+During the execution of the job it actually starts up to 5 child
 processes. First a prolog script if this feature is enabled by
 the \fBprolog\fP parameter in the cluster configuration
 (see
 .M xxqs_name_sxx_conf 5 ).
-Second the job itself and third an epilog script if requested by
+Then a parallel environment startup script if the job is a parallel job (see
+.M sge_pe 5
+for more information).
+Afterwards the job itself followed by a parallel environment shutdown
+procedure for parallel jobs,
+and finally an epilog script if requested by
 the \fBepilog\fP parameter in the cluster configuration. The prolog
-and epilog scripts are to be provided by the xxQS_NAMExx administration
+and epilog scripts as well as the parallel environment startup and shutdown
+procedures are to be provided by the xxQS_NAMExx administration
 and are intended for site specific actions to be taken prior and
-after execution of the actual user job. See
-.M prolog 5
-or
-.M epilog 5
-for detailed information.
+after execution of the actual user job.
 .PP
 After the job has finished and the epilog script is processed,
 .I xxqs_name_sxx_shepherd

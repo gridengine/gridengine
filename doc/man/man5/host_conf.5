@@ -30,7 +30,7 @@
 .\" 
 .\" 
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2001/07/19 15:55:36 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2001/07/19 16:58:14 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -55,7 +55,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2001/07/19 15:55:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2001/07/19 16:58:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -287,11 +287,48 @@ The resource capability factor is stored as a floating point double value.
 The range of values used is not important. xxQS_NAME_EExx only looks at the relation 
 between values of different hosts.
 .\"
+.IP "\fBuser_lists\fP"
+The \fBuser_lists\fP parameter contains a comma separated list of so called
+user access lists as described in
+.M access_list 5 .
+Each user contained in at least one of the enlisted access lists has
+access to the host. If the \fBuser_lists\fP parameter is set to
+NONE (the default) any user has access being not explicitly excluded
+via the \fBxuser_lists\fP parameter described below.
+If a user is contained both in an access list enlisted in \fBxuser_lists\fP
+and \fBuser_lists\fP the user is denied access to the host.
+.IP "\fBxuser_lists\fP"
+The \fBxuser_lists\fP parameter contains a comma separated list of so called
+user access lists as described in
+.M access_list 5 .
+Each user contained in at least one of the enlisted access lists is not
+allowed to access the host. If the \fBxuser_lists\fP parameter is set to
+NONE (the default) any user has access.
+If a user is contained both in an access list enlisted in \fBxuser_lists\fP
+and \fBuser_lists\fP the user is denied access to the host.
+.IP "\fBprojects\fP"
+The \fBprojects\fP parameter contains a comma separated list of projects
+that have access to the host. Any projects not in this list are denied
+access to the host. If set to NONE (the default), any project
+has access that is not specifically excluded via the \fBxprojects\fP
+parameter described below. If a project is in both the \fBprojects\fP and
+\fBxprojects\fP parameters, the project is denied access to the host.
+This parameter is only available in a xxQS_NAME_EExx system.
+.IP "\fBxprojects\fP"
+The \fBxprojects\fP parameter contains a comma separated list of projects
+that are denied access to the host. If set to NONE (the default), no
+projects are denied access other than those denied access based on the
+\fBprojects\fP parameter described above.  If a project is in both the
+\fBprojects\fP and \fBxprojects\fP parameters, the project is denied
+access to the host.
+This parameter is only available in a xxQS_NAME_EExx system.
+.\"
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
 .M qconf 1 ,
 .M uptime 1 ,
+.M access_list 5 ,
 .M complex 5 ,
 .M xxqs_name_sxx_execd 8 ,
 .M xxqs_name_sxx_qmater 8 .

@@ -56,7 +56,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QHOST 1 "$Date: 2001/07/19 15:55:20 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QHOST 1 "$Date: 2001/07/19 16:58:12 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qhost \- show the status of xxQS_NAMExx hosts, queues, jobs
 .\"
@@ -282,7 +282,7 @@ the priority of the jobs.
 .\" 
 .IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
 Specifies the location of the xxQS_NAMExx standard configuration
-files. If not set a default of /usr/xxQS_NAMExx is used.
+files.
 .\"
 .IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
 If set, specifies the default xxQS_NAMExx cell. To address a xxQS_NAMExx
@@ -323,14 +323,14 @@ Per default the local host is used.
 .\"
 .SH FILES
 .nf
-.ta \w'<xxqs_namexx_root>/     'u
-\fI<xxqs_namexx_root>/<cell>/common/act_qmaster\fP
+.ta \w'<xxqs_name_sxx_root>/     'u
+\fI<xxqs_name_sxx_root>/<cell>/common/act_qmaster\fP
 	xxQS_NAMExx master host file
 .fi
 .\"
 .\"
 .SH "SEE ALSO"
-.M xxqs_namexx_intro 1 ,
+.M xxqs_name_sxx_intro 1 ,
 .M qalter 1 ,
 .M qconf 1 ,
 .M qhold 1 ,
@@ -346,5 +346,5 @@ Per default the local host is used.
 .\"
 .SH "COPYRIGHT"
 See
-.M xxqs_namexx_intro 1
+.M xxqs_name_sxx_intro 1
 for a full statement of rights and permissions.

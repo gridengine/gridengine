@@ -70,12 +70,10 @@ EXECD_ADD_SRC =  usage.c \
               read_write_queue.c \
               execution_states.c \
               sig_handlers.c \
-              sge_conf.c \
               job_log.c \
               startprog.c \
               utility_daemon.c \
-              shutdown.c \
-              opt_silent.c
+              shutdown.c
             
               
 EXECD_OBJS    = $(EXECD_SRC:.c=.o)

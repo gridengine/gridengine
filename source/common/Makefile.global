@@ -50,11 +50,11 @@ messages: common_messages clients_messages daemons_messages utilbin_messages cos
 # include sub Makefiles
 ###############################################################################
 include  $(SDIR)/common/Makefile
+include  $(SDIR)/libs/Makefile
 include  $(SDIR)/security/coshepherd/Makefile
 include  $(SDIR)/security/krb/Makefile
 include  $(SDIR)/security/sec/Makefile
 include  $(SDIR)/security/gss/Makefile
-include  $(SDIR)/libs/Makefile
 include  $(SDIR)/experimental/perlgui/Makefile
 include  $(SDIR)/daemons/Makefile
 include  $(SDIR)/clients/Makefile

@@ -36,7 +36,9 @@ UTILIB_DIR  = $(SDIR)/libs/uti
 
 UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
 
-UTILIB_SRC = sge_afsutil.c \
+UTILIB_SRC = \
+         opt_silent.c \
+         sge_afsutil.c \
          sge_arch.c \
          sge_bitop.c \
          sge_chdir.c \
@@ -122,6 +124,9 @@ include $(UTILIB_DIR)/uti_dependencies
 ###############################################################################
 host.o:	$(UTILIB_DIR)/host.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/host.c
+
+opt_silent.o: $(UTILIB_DIR)/opt_silent.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/opt_silent.c
 
 sge_uidgid$(QIDLEXT).o:	$(UTILIB_DIR)/sge_uidgid.c
 		$(CC) -o $@ $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_uidgid.c

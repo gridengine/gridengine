@@ -212,6 +212,13 @@
 #define MSG_NET_RESOLVINGLOCALHOSTFAILED           _MESSAGE(49079, _("failed resolving local host"))
 
 /*
+** libs/uti/host.c
+*/
+#define MSG_SYSTEM_BADMAINNAME_SS           _MESSAGE(49080, _("unresolvable mainname "SFQ" in alias file "SFN"\n"))
+#define MSG_SYSTEM_BADALIASNAME_SS          _MESSAGE(49081, _("unresolvable aliasname "SFQ" in alias file "SFN"\n"))
+
+
+/*
  * 
  */
 #define MSG_UNREC_ERROR                            _MESSAGE(49080, _("unrecoverable error - contact systems manager"))

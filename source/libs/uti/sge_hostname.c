@@ -564,13 +564,11 @@ _Insight_set_option("suppress", "LEAK_SCOPE");
       if (!mainname)
          continue;
 
-      h1 = sge_host_search(mainname, NULL);
-      if (!h1)
-         h1 = sge_host_new_name(mainname, NULL);
-      if (!h1) {
-         fclose(fp);
-         DEXIT;
-         return -1;             /* main hostname could not be resolved */
+      if (!(h1 = sge_host_search(mainname, NULL))) {
+         if (!(h1 = sge_host_new_name(mainname, NULL))) {
+            ERROR((SGE_EVENT, MSG_SYSTEM_BADMAINNAME_SS, mainname, fname));
+            continue; /* skip this line */
+         }
       }
 
       /* Insert main hostname */
@@ -579,11 +577,14 @@ _Insight_set_option("suppress", "LEAK_SCOPE");
       /* iterate on aliases */
       while ((name = strtok(NULL, ALIAS_DELIMITER))) {
 
-         h2 = sge_host_search(name, NULL);
-         if (!h2)
-            h2 = sge_host_new_name(name, NULL);
+         if (!(h2 = sge_host_search(name, NULL))) {
+            if (!(h2 = sge_host_new_name(name, NULL))) {
+               ERROR((SGE_EVENT, MSG_SYSTEM_BADALIASNAME_SS, name, fname));
+               continue; /* skip this alias name */
+            }
+         }
 
-         if (h2 && (h1 != h2)) {        /* be sure to not alias to itself 
+         if (h1 != h2) {                   /* be sure to not alias to itself 
                                            could happen if 2 aliases resolve to
                                            the same */
             sge_host_alias(h1, h2);
@@ -714,10 +715,15 @@ const char *sge_host_resolve_name_local(const char *unresolved)
 {  
    const char *s;
    char *apath;
+   static int read_file = 0;
 
-   apath = sge_get_alias_path();
-   sge_host_list_read_aliasfile(apath);
-   free(apath);
+   if (!read_file) {
+      apath = sge_get_alias_path();
+      sge_host_list_read_aliasfile(apath);
+      free(apath);
+      read_file = 1;
+   }
+
    s = sge_host_get_aliased_name(unresolved);
    if (s) {
       DPRINTF(("%s as aliased from %s\n", s, unresolved));

@@ -1,3 +1,8 @@
+AH-2002-10-07-1  Bugfix:    Fixed problem with non-resvolvable hosts in
+                            host_aliases file causing wrong resolving results.
+                 IZ:        392
+                 Bugtraq:   4756557
+
 CR-2002-10-02-1  Testsuite: added sleep 1 command in procedure "delete_job" and
                  Workaround increased wait timeout. Testsuite seems to have problems
                             with deleting jobs. This may be connected with IZ issue
@@ -246,6 +251,9 @@ AA-2002-08-22-0  I18N:      bunch of fixes for l10n
                  Bugtraq:   #4733802, #4733201, #4733089, #4733043,
                             #4731976, #4731990, #4731967, #4731958,
                             #4731944, #4731935, #4731273, #4729700
+                 Issue:     ????????, ????????, #375,     ????????,
+                            ????????, ????????, ????????, ????????,
+                            ????????, ????????, ????????, ????????
 
 EB-2002-08-22-0  Bugfix:    Userset "defaultdepartment" accepts users in CLI
                  Bugtraq:   #4733859

@@ -141,7 +141,6 @@ Content
 
    Useful options:
 
-      -no-mt  	         don't compile multi-threading targets
       -no-qmon  	      don't compile qmon
       -no-qmake         don't compile qmake
       -no-qtcsh         don't compile qtcsh

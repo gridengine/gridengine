@@ -1413,7 +1413,7 @@ sge_total_update_event(lListElem *event_client, ev_event type)
 {
    u_long32 i;
    lListElem *event;
-   lList *lp = NULL;
+   const lList *lp = NULL;
    char buffer[1024];
    dstring buffer_wrapper;
    const char *session;
@@ -1481,7 +1481,7 @@ sge_total_update_event(lListElem *event_client, ev_event type)
             lp = Master_CQueue_List;
             break;
          case sgeE_SCHED_CONF:
-            lp = Master_Sched_Config_List;
+            lp = *sconf_get_config_list();
             break;
          case sgeE_SUBMITHOST_LIST:
             lp = Master_Submithost_List;
@@ -1524,16 +1524,19 @@ sge_total_update_event(lListElem *event_client, ev_event type)
          lSetList(event, ET_new_version, lCopyList("updating list", lp));
 
       /* build a new event list if not exists */
-      lp = lGetList(event_client, EV_events); 
-      if (!lp) {
-         lp=lCreateList("", ET_Type);
-         lSetList(event_client, EV_events, lp);
+      {
+         lList *llp = NULL;
+         llp = lGetList(event_client, EV_events); 
+         if (!llp) {
+            llp=lCreateList("", ET_Type);
+            lSetList(event_client, EV_events, llp);
+         }
+   
+         DPRINTF(("%d %s\n", lGetUlong(event_client, EV_id), 
+                  event_text(event, &buffer_wrapper)));
+         /* chain in new event */
+         lAppendElem(llp, event);
       }
-
-      DPRINTF(("%d %s\n", lGetUlong(event_client, EV_id), 
-               event_text(event, &buffer_wrapper)));
-      /* chain in new event */
-      lAppendElem(lp, event);
    }
 
    DEXIT;

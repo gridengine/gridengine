@@ -1326,6 +1326,11 @@ proc reset_schedd_config {} {
   set default_array(load_adjustment_decay_time) "0:7:30"
   set default_array(load_formula)               "np_load_avg"
   set default_array(schedd_job_info)            "true"
+  if { [resolve_version] >= 3 } {
+     set default_array(flush_submit_sec)        "0"
+     set default_array(flush_finish_sec)        "0"
+     set default_array(params)                  "none"
+  }
 
 # this is sgeee
   if { [string compare $CHECK_PRODUCT_TYPE "sgeee"] == 0 } {
@@ -1342,6 +1347,17 @@ proc reset_schedd_config {} {
      set default_array(weight_tickets_functional)  "0"
      set default_array(weight_tickets_share)       "0"
      set default_array(weight_tickets_deadline)    "10000"
+     if { [resolve_version] >= 3 } {
+         set default_array(share_override_tickets)        "true"
+         set default_array(share_functional_shares)       "true"
+         set default_array(share_deadline_tickets)        "true"
+        
+         set default_array(max_functional_jobs_to_schedule) "200"
+         set default_array(report_pjob_tickets)             "true"
+         set default_array(max_pending_tasks_per_job)       "50"
+         set default_array(halflife_decay_list)             "none"
+         set default_array(policy_hierarchy)                "OFSD"
+      }
   }
 
   set ret_value [ set_schedd_config default_array ]
@@ -1462,7 +1478,6 @@ proc get_hosts { } {
 #     token_extend_time    none
 #     shepherd_cmd         none
 #     qmaster_params       none
-#     schedd_params        none
 #     execd_params         none
 #     finished_jobs        0
 #     gid_range            13001-13100
@@ -1650,7 +1665,6 @@ proc get_complex { change_array complex_list } {
 #     token_extend_time    none
 #     shepherd_cmd         none
 #     qmaster_params       none
-#     schedd_params        none
 #     execd_params         none
 #     finished_jobs        0
 #     gid_range            13001-13100

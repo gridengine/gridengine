@@ -225,6 +225,7 @@ extern "C" {
       {FCAT_LOWERBOUND, FCATS, FCATN},          /* Functional category */
       {CTQV_LOWERBOUND, CTQVS,CTQVN},           /* cached queue soft request violations in a job category */
       {CTI_LOWERBOUND, CTIS, CTIN},             /* ignore host/queue list in a job category */
+      {PARA_LOWERBOUND, PARAS, PARAN},          /* store the configuration "params" parameters in a list */
       {0, 0, NULL}
    };
 

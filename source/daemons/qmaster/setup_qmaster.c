@@ -415,25 +415,33 @@ int sge_setup_qmaster()
 
    /* scheduler configuration stuff */
    DPRINTF(("scheduler config -----------------------------------\n"));
-   spool_read_list(&answer_list, spooling_context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
-   /* JG: TODO: reading the schedd configuration may fail, 
-    * as it is not created at install time.
-    * The corresponding error message is confusing, so do not output the error.
-    * Better: Create config at install time (trough spooldefaults)
-   answer_list_output(&answer_list);
-    */
-   if (lGetNumberOfElem(Master_Sched_Config_List) == 0) {
-      lListElem *ep = schedd_conf_create_default();
+   {
+      lList *sched_conf=NULL;
+      spool_read_list(&answer_list, spooling_context, &sched_conf, SGE_TYPE_SCHEDD_CONF);
+      /* JG: TODO: reading the schedd configuration may fail, 
+      * as it is not created at install time.
+      * The corresponding error message is confusing, so do not output the error.
+      * Better: Create config at install time (trough spooldefaults)
+      * answer_list_output(&answer_list);
+      */
+      if (lGetNumberOfElem(sched_conf) == 0) {
+         lListElem *ep = sconf_create_default();
 
-      if (Master_Sched_Config_List == NULL) {
-         Master_Sched_Config_List = lCreateList("schedd config list", SC_Type);
+         if (sched_conf == NULL) {
+            sched_conf = lCreateList("schedd config list", SC_Type);
+         }
+      
+         lAppendElem(sched_conf, ep);
+         spool_write_object(&answer_list, spool_get_default_context(), ep, "schedd_conf", SGE_TYPE_SCHEDD_CONF);
+         answer_list_output(&answer_list);
       }
       
-      lAppendElem(Master_Sched_Config_List, ep);
-      spool_write_object(&answer_list, spool_get_default_context(), ep, "schedd_conf", SGE_TYPE_SCHEDD_CONF);
-      answer_list_output(&answer_list);
+      if (!sconf_set_config(&sched_conf, &answer_list)){
+         lFreeList(sched_conf);
+         DEXIT;
+         return -1;
+      }      
    }
-
    if (feature_is_enabled(FEATURE_SGEEE)) {
 
       /* SGEEE: read user list */

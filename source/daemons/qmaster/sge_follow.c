@@ -1027,19 +1027,18 @@ lList **topp  /* ticket orders ptr ptr */
    case ORT_sched_conf:
       DPRINTF(("ORDER: ORT_sched_conf\n"));
       if (feature_is_enabled(FEATURE_SGEEE)) {
-         lListElem *joker, *sc;      
+         lListElem *joker;
          int pos;
 
          DPRINTF(("%sORDER #%d: ORT_sched_conf\n", force?"FORCE ":"", seq_no));
          joker = lFirst(lGetList(ep, OR_joker));
-         sc = lFirst(Master_Sched_Config_List);
 
-         if (sc && joker) {
+         if (sconf_is() && joker) {
             if ((pos=lGetPosViaElem(joker, SC_weight_tickets_deadline_active))>=0) 
-               lSetUlong(sc, SC_weight_tickets_deadline_active, 
+               sconf_set_weight_tickets_deadline_active(
                   lGetPosUlong(joker, pos));
             if ((pos=lGetPosViaElem(joker, SC_weight_tickets_override))>=0) 
-               lSetUlong(sc, SC_weight_tickets_override, 
+               sconf_set_weight_tickets_override(
                   lGetPosUlong(joker, pos));
          }
          /* no need to spool sched conf */

@@ -545,14 +545,24 @@ int sge_before_dispatch(void)
       new_global_config = 0;
 
       /* flushing information might have changed */
-      if(ec_get_flush(sgeE_JOB_DEL) != flush_finish_sec) {
-         ec_set_flush(sgeE_JOB_DEL, flush_finish_sec);
-         ec_set_flush(sgeE_JOB_FINAL_USAGE, flush_finish_sec);
-         ec_set_flush(sgeE_JATASK_MOD, flush_finish_sec);
-         ec_set_flush(sgeE_JATASK_DEL, flush_finish_sec);
-      }
-      if(ec_get_flush(sgeE_JOB_ADD) != flush_submit_sec) {
-         ec_set_flush(sgeE_JOB_ADD, flush_submit_sec);
+      /* SG: TODO: is this still needed? */
+      {
+         int temp = sconf_get_flush_finish_sec();
+         if (temp == 0)
+            temp = -1;
+         if(ec_get_flush(sgeE_JOB_DEL) != temp) {
+            ec_set_flush(sgeE_JOB_DEL, temp);
+            ec_set_flush(sgeE_JOB_FINAL_USAGE, temp);
+            ec_set_flush(sgeE_JATASK_MOD, temp);
+            ec_set_flush(sgeE_JATASK_DEL, temp);
+         }
+
+         temp = sconf_get_flush_submit_sec();
+         if (temp == 0)
+            temp = -1;
+         if(ec_get_flush(sgeE_JOB_ADD) != temp) {
+            ec_set_flush(sgeE_JOB_ADD, temp);
+         }
       }
       ec_commit();
    }

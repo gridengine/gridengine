@@ -3579,16 +3579,26 @@ proc check_huge_script {} {
 proc check_setup_config {} {
    global stored_configuration
 
-   get_config stored_configuration
 
-   set my_config(schedd_params) "$stored_configuration(schedd_params),FLUSH_SUBMIT_SEC=0"
-   set_config my_config
+   if { [resolve_version] <= 2 } {
+      get_config stored_configuration
+      set my_config(schedd_params) "$stored_configuration(schedd_params),FLUSH_SUBMIT_SEC=0"
+      set_config my_config
+   }
+   else{
+      set my_schedd_conf(flush_submit_sec) "1"
+      set_schedd_config(my_schedd_conf);
+   }
    set_error 0 "ok"
 }
 
 proc check_cleanup_config {} {
    global stored_configuration
 
-   set_config stored_configuration
+   if {[resolve_version] >= 3} {
+      reset_schedd_config;
+   } else {
+      set_config stored_configuration
+   }
    set_error 0 "ok"
 }

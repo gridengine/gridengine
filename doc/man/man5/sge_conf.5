@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2003/10/13 09:39:12 $     Revision: $Revision: 1.21 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2003/10/24 14:09:15 $     Revision: $Revision: 1.22 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/10/13 09:39:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/10/24 14:09:15 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -842,101 +842,6 @@ The default for \fBqmaster_params\fP is none.
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.
 .\"
-.\"
-.SH "\fBschedd_params\fP"
-This is foreseen for passing additional parameters
-to the xxQS_NAMExx scheduler. The following values are recognized currently:
-.\"
-.IP "\fIFLUSH_SUBMIT_SEC\fP, \fIFLUSH_FINISH_SEC\fP"
-The parameters are provided for tuning the system's scheduling behavior.
-By default, a scheduler run is triggered in the scheduler interval which
-is defined in the scheduler configuration
-.M sched_conf 5 ,
-parameter \fBschedule_interval\fP.
-.br
-The parameters FLUSH_SUBMIT_SEC/FLUSH_FINISH_SEC define the time gaps
-between triggering a scheduler run and the submitting/finishing of a job.
-.br
-The most immediate scheduler reaction can be activated by setting both
-values to 0. The default scheduling behavior is enforced by either
-removing the parameters or setting them to a value of -1.
-.\"
-.IP "\fIREPORT_PJOB_TICKETS\fP"
-This parameter allows to tune the system's scheduling run time. It is used
-to enable / disable the reporting of pending job tickets to the qmaster , which 
-will be reported to the master and therefore displayed with qstat or qmon. 
-It does not influence the tickets calculation.  
-.br
-A system with a high throughput and a large number of pending jobs can disable
-the pending ticket reports be setting its value to 0 or false. 
- 
-.\"
-.IP "\fIPOLICY_HIERARCHY\fP"                                         
-This parameter sets up a dependency chain of
-policies. Each policy in the dependency chain is influenced by the
-previous policies and influences the following policies. A typical
-scenario is to assign precedence for the override policy over the
-share-based policy. The override policy determines in such a case how
-share-based tickets are assigned among jobs of the same user or project.
-Note that all policies contribute to the ticket amount assigned to a
-particular job regardless of the policy hierarchy definition. Yet the
-tickets calculated in each of the policies can be differend depending on
-"\fIPOLICY_HIERARCHY\fP".
-.sp 1
-The "\fIPOLICY_HIERARCHY\fP" parameter can be a up to 4 letter
-combination of the first letters of the 4 policies S(hare-based),
-F(unctional), D(eadline) and O(verride). So a value "OFSD" means that the
-override policy takes precedence over the functional policy, which
-influences the share-based policy and which finaly preceeds the deadline
-policy. Less than 4 letters mean that some of the policies do not influence
-other policies and also are not influenced by other policies. So a value of
-"FS" means that the functional policy influences the share-based policy and
-that there is no interference with the other policies.
-.sp 1
-The special value "NONE" switches off policy hierarchies.
-.\"                                                                        
-.IP "\fISHARE_OVERRIDE_TICKETS\fP"                                         
-If set to "true" or "1", override tickets of any override object instance  
-are shared equally among all jobs associated with the object. If set to    
-"false" or "0", each job gets the full value of the override tickets       
-associated with the object. The default value is "true".                   
-This parameter is only valid in a SGEEE system.                              
-.\"                                                                        
-.IP "\fISHARE_FUNCTIONAL_SHARES\fP"                                        
-If set to "true" or "1", functional shares of any functional object instance
-are shared among all the jobs associated with the object. If set to "false"
-or "0", each job associated with a functional object, gets the full        
-functional shares of that object. The default value is "true".            
-This parameter is only valid in a SGEEE system.                              
-.\"                                                                        
-.IP "\fISHARE_DEADLINE_TICKETS\fP"                                         
-If set to "true" or "1", the total deadline tickets are shared among all   
-deadline jobs. If set to "false" or "0", each deadline job will receive    
-the total deadline tickets once the job deadline has been reached. The     
-default value is "true".                                                   
-This parameter is only valid in a SGEEE system.                              
-.\"                                                                        
-.IP "\fIMAX_FUNCTIONAL_JOBS_TO_SCHEDULE\fP"                                
-The maximum number of pending jobs to schedule in the functional policy.   
-The default value is 200.                                                  
-This parameter is only valid in a SGEEE system.                              
-.\"                                                                        
-.IP "\fIMAX_PENDING_TASKS_PER_JOB\fP"                                      
-The maximum number of subtasks per pending array job to schedule. This     
-parameter exists in order to reduce scheduling overhead. The default value 
-is 50.
-This parameter is only valid in a SGEEE system.                              
-.\"
-.IP "\fIPROFILE\fP"
-If set, the scheduler logs profiling information summarizing each scheduling 
-run.
-.\"
-.PP
-Changing \fBschedd_params\fP will take immediate effect.
-The default for \fBschedd_params\fP is none.
-.PP
-This value is a global configuration parameter only. It cannot be
-overwritten by the execution host local configuration.
 .\"
 .SH "\fBexecd_params\fP"
 This is foreseen for passing additional parameters 

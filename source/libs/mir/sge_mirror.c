@@ -58,6 +58,7 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_answer.h"
+#include "cull_list.h"
 
 #include "sge_unistd.h"
 #include "sgermon.h"
@@ -102,7 +103,7 @@ static bool sge_mirror_process_qmaster_goes_down(sge_object_type type,
                                                 sge_event_action action, 
                                                 lListElem *event, 
                                                 void *clientdata);
-
+#
 static bool 
 generic_update_master_list(sge_object_type type, sge_event_action action,
                            lListElem *event, void *clientdata);
@@ -1281,7 +1282,7 @@ static bool
 generic_update_master_list(sge_object_type type, sge_event_action action,
                            lListElem *event, void *clientdata)
 {
-   lList **list;
+   lList **list = NULL;
    const lDescr *list_descr;
    int key_nm;
    const char *key;
@@ -1295,6 +1296,11 @@ generic_update_master_list(sge_object_type type, sge_event_action action,
    key = lGetString(event, ET_strkey);
 
    if(sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+      DEXIT;
+      return false;
+   }
+
+   if (!object_type_commit_master_list(type, NULL)){
       DEXIT;
       return false;
    }

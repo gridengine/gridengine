@@ -59,14 +59,13 @@
  ************************************************************/
 int sge_mod_sched_configuration(
 lListElem *confp,
-lList **confl,    /* list to change */
 lList **alpp,
 char *ruser,
 char *rhost 
 ) {
-   u_long32 old_SC_weight_tickets_deadline_active, old_SC_weight_tickets_override;
-  lList *temp_conf_list = NULL;
-
+   lList *temp_conf_list = NULL;
+   const lListElem *config = NULL;
+   
    DENTER(TOP_LAYER, "sge_mod_sched_configuration");
 
    if ( !confp || !ruser || !rhost ) {
@@ -75,34 +74,23 @@ char *rhost
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-
+   config = sconf_get_config();
    temp_conf_list = lCreateList("sched config", SC_Type);
+
+   lSetUlong(confp, SC_weight_tickets_deadline_active, 
+      lGetUlong(config, SC_weight_tickets_deadline_active));
+   lSetUlong(confp, SC_weight_tickets_override, 
+      lGetUlong(config, SC_weight_tickets_override));
+     
    lAppendElem(temp_conf_list, lCopyElem(confp));
 
    /* just check and log */
-   if (!sconf_validate_config(alpp, temp_conf_list)) {
+   if (!sconf_set_config(&temp_conf_list, alpp)) {
       answer_list_output(alpp);
-      lDechainElem(temp_conf_list, confp);
       lFreeList(temp_conf_list);
       DEXIT;
       return STATUS_EUNKNOWN;
    }
-
-   
-   /* save internal values */
-   old_SC_weight_tickets_deadline_active = 
-      lGetUlong(lFirst(*confl), SC_weight_tickets_deadline_active);
-   old_SC_weight_tickets_override = 
-      lGetUlong(lFirst(*confl), SC_weight_tickets_override);
-
-   lFreeList(*confl);
-   *confl = temp_conf_list;
-
-   lSetUlong(confp, SC_weight_tickets_deadline_active, 
-      old_SC_weight_tickets_deadline_active);
-   lSetUlong(confp, SC_weight_tickets_override, 
-      old_SC_weight_tickets_override);
-   lAppendElem(*confl, lCopyElem(confp));
 
    if (!sge_event_spool(alpp, 0, sgeE_SCHED_CONF, 
                         0, 0, "schedd_conf", NULL, NULL,

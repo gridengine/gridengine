@@ -204,22 +204,32 @@ char **argv
 
    sge_stopwatch_start(0);
 
-
-   get_all_lists(
-      &queue_list, 
-      qselect_mode?NULL:&job_list, 
-      &centry_list, 
-      &exechost_list,
-      &Master_Sched_Config_List, 
-      &pe_list,
-      &ckpt_list,
-      &acl_list,
-      &zombie_list, /**/
-      queueref_list,
-      peref_list,
-      user_list,
-      full_listing); /**/
-
+   {
+   lList *schedd_config = NULL;
+   lList *answer_list = NULL;
+   
+      get_all_lists(
+         &queue_list, 
+         qselect_mode?NULL:&job_list, 
+         &centry_list, 
+         &exechost_list,
+         &schedd_config,
+         &pe_list,
+         &ckpt_list,
+         &acl_list,
+         &zombie_list, /**/
+         queueref_list,
+         peref_list,
+         user_list,
+         full_listing); /**/
+   
+      if (!sconf_set_config(&schedd_config, &answer_list)){
+         answer_list_output(&answer_list);
+         schedd_config = lFreeList(schedd_config);
+         DEXIT;
+         SGE_EXIT(-1);
+      }
+   }
    centry_list_init_double(centry_list);
 
    sge_stopwatch_log(0, "Time for getting all lists");

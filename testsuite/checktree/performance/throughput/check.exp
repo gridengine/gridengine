@@ -281,16 +281,35 @@ proc setup_queues {} {
       unset stored_configuration
    }
    get_config stored_configuration
-   set myconfig(loglevel)         "log_warning"
+      set myconfig(loglevel)         "log_warning"
+
    set my_schedd_params "PROFILE=1"
-   if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
-      append my_schedd_params ",$stored_configuration(schedd_params)"
-   }
-   if { $FLUSH_SUBMIT_SEC == -1 && $FLUSH_FINISH_SEC == -1 } {
-      set myconfig(schedd_params)    "$my_schedd_params"
-   } else {
-      set myconfig(schedd_params)    "$my_schedd_params,FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
-   }
+
+   if { [resolve_version] <= 2 } {
+      if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
+         append my_schedd_params ",$stored_configuration(schedd_params)"
+      }
+      if { $FLUSH_SUBMIT_SEC == -1 && $FLUSH_FINISH_SEC == -1 } {
+         set myconfig(schedd_params)    "$my_schedd_params"
+      } else {
+         set myconfig(schedd_params)    "$my_schedd_params,FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
+      }
+   } 
+   else{
+      get_schedd_config stored_schedd_config
+      if { [string compare "none" $stored_schedd_config(params)] != 0 } {
+         append my_schedd_params ",$stored_schedd_config(params)"
+      }
+      set my_schedd_config(params)      "$my_schedd_params"
+      if { $FLUSH_SUBMIT_SEC > 0} {
+         set my_schedd_config(flush_submit_sec) "$FLUSH_SUBMIT_SEC"
+      }
+      if { $FLUSH_FINISH_SEC > 0} {
+         set my_schedd_config(flush_finish_sec) "$FLUSH_FINISH_SEC"
+      }
+
+   } 
+   
    set my_execd_params "SHARETREE_RESERVED_USAGE=true"
    if { [string compare "none" $stored_configuration(execd_params)] != 0 } {
       append my_execd_params ",$stored_configuration(execd_params)"
@@ -310,7 +329,6 @@ proc setup_queues {} {
    }
 
    set max_u_jobs_parameter [expr ( [llength $host_list] * $nr_queues  * $nr_slots )]
-
 
    set my_schedd_config(schedule_interval)    "$run_throughput_test_SCHEDULE_INTERVAL"
    set my_schedd_config(job_load_adjustments) "none"

@@ -1279,18 +1279,16 @@ spool_postgres_default_list_func(lList **answer_list,
 
    if (ret) {
       const lDescr *descr;
-      lList **master_list;
       bool with_history;
       PGconn *connection;
 
       descr       = object_type_get_descr(object_type);
-      master_list = object_type_get_master_list(object_type);
       with_history = spool_database_get_history(rule);
       connection   = spool_database_get_handle(rule);
 
       ret = spool_postgres_read_list(answer_list, connection,
                                      fields, with_history, 
-                                     master_list, descr,
+                                     list, descr,
                                      NULL, NULL);
    }
 

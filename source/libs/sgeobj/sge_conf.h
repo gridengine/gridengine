@@ -62,7 +62,6 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    token_extend_time;
     char        *shepherd_cmd;
     char        *qmaster_params;
-    char        *schedd_params;
     char        *execd_params;
     char        *gid_range;           /* Range of additional group ids */
     u_long32    zombie_jobs;          /* jobs to save after execution */
@@ -83,38 +82,6 @@ typedef struct confel sge_conf_type;
 
 typedef int (*tDaemonizeFunc)(void);
 
-typedef enum {
-   FIRST_POLICY_VALUE,
-   INVALID_POLICY = FIRST_POLICY_VALUE,
-
-   OVERRIDE_POLICY,
-   FUNCTIONAL_POLICY,
-   SHARE_TREE_POLICY,
-   DEADLINE_POLICY,
-
-   LAST_POLICY_VALUE,
-   POLICY_VALUES = (LAST_POLICY_VALUE - FIRST_POLICY_VALUE)
-} policy_type_t;
-
- 
-typedef struct {
-   policy_type_t policy;
-   int dependent;
-} policy_hierarchy_t;  
-
-extern const char *const policy_hierarchy_chars; 
-extern char policy_hierarchy_string[5];
-
-char policy_hierarchy_enum2char(policy_type_t value);
-
-policy_type_t policy_hierarchy_char2enum(char character);
-
-int policy_hierarchy_verify_value(const char* value);
-
-void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char* value);
-
-void policy_hierarchy_print_array(policy_hierarchy_t array[]);
-
 extern lList *Master_Config_List;
 
 extern sge_conf_type conf;
@@ -125,8 +92,6 @@ extern int do_credentials;
 extern int do_authentication;  
 extern int acct_reserved_usage;
 extern int sharetree_reserved_usage;
-extern int flush_submit_sec; 
-extern int flush_finish_sec;
 extern int keep_active;
 extern int simulate_hosts;
 extern long ptf_max_priority;
@@ -140,13 +105,6 @@ extern int disable_reschedule;
 extern int set_sge_environment;
 extern int set_grd_environment;
 extern int set_cod_environment;
-extern int share_override_tickets;                                         
-extern int share_functional_shares;                                        
-extern int share_deadline_tickets;                                         
-extern int max_functional_jobs_to_schedule;
-extern int max_report_job_tickets;                                
-extern int max_pending_tasks_per_job;                                      
-extern lList* halflife_decay_list;                                         
 extern int scheduler_timeout;
 
 

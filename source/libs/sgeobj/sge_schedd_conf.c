@@ -41,6 +41,7 @@
 #include "sge_feature.h"
 #include "sge_usage.h"
 #include "sge_range.h"
+#include "sge_profiling.h"
 
 #include "sge_schedd_conf.h"
 #include "msg_schedd.h"
@@ -50,6 +51,7 @@
 #include "sge_parse_num_par.h"
 
 #include "msg_sgeobjlib.h"
+#include "msg_common.h"
 
 /* default values for scheduler configuration */
 #define DEFAULT_LOAD_ADJUSTMENTS_DECAY_TIME "0:7:30"
@@ -64,11 +66,39 @@
 #define SCHEDD_JOB_INFO                     "true"
 #define USER_SORT                           false
 
-lList *Master_Sched_Config_List = NULL;
 
-struct config_pos{
-   bool empty;
-   int algorithm;
+/* 
+ * addes a parameter to the config_pos.params list and evaluates the settings
+ *
+ * Parameters:
+ * - lList *param_list : target list
+ * - lList ** answer_list : error messages
+ * - const char* param :  the character version of the paramter
+ *
+ * Return:
+ * - bool : true, when everything was fine, otherwise false
+ *
+ * See:
+ * - sconf_eval_set_profiling
+ */
+typedef bool (*setParam)(lList *param_list, lList **answer_list, const char* param);
+
+/**
+ * specifies an array of valid parameters and its validation functions
+ */
+typedef struct {
+      const char* name;
+      setParam setParam; 
+}parameters_t;
+
+/**
+ * stores the positions of all structure elemens and some
+ * precalculated settings.
+ */
+typedef struct{
+   bool empty;          /* marks this structure as empty or set */
+   
+   int algorithm;       /* SGE settings */
    int schedule_interval;
    int maxujobs;
    int queue_sort_method;
@@ -77,9 +107,11 @@ struct config_pos{
    int load_adjustment_decay_time;
    int load_formula;
    int schedd_job_info;
-   int is_schedd_job_info;
-   int schedd_job_info_range;
-   int sgeee_schedule_interval;
+   int flush_submit_sec;
+   int flush_finish_sec;
+   int params;
+   
+   int sgeee_schedule_interval;  /* SGEEE settings */
    int halftime;
    int usage_weight_list;
    int compensation_factor;
@@ -93,12 +125,61 @@ struct config_pos{
    int weight_tickets_deadline;
    int weight_tickets_deadline_active;
    int weight_tickets_override;
+   int share_override_tickets;
+   int share_functional_shares;
+   int share_deadline_tickets;
+   int max_functional_jobs_to_schedule;
+   int report_pjob_tickets;
+   int max_pending_tasks_per_job;
+   int halflife_decay_list; 
+   int policy_hierarchy;
+
+   int c_is_schedd_job_info;       /* cached configuration */
+   lList *c_schedd_job_info_range;
+   lList *c_halflife_decay_list;   
+   lList *c_params;
+}config_pos_type;
+
+
+static bool sconf_calc_pos(void);
+
+static void sconf_clear_pos(void);
+
+static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, const char* param); 
+
+static char policy_hierarchy_enum2char(policy_type_t value);
+
+static policy_type_t policy_hierarchy_char2enum(char character);
+
+static int policy_hierarchy_verify_value(const char* value);
+
+config_pos_type pos = {true, 
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  -1, -1, -1, -1, -1, -1, -1, -1,
+                       SCHEDD_JOB_INFO_UNDEF, NULL, NULL};
+
+/*
+ * a list of all valid "params" parameters
+ */
+const parameters_t params[] = {
+   {"PROFILE",  sconf_eval_set_profiling},
+   {"NONE",     NULL},
+   {NULL,       NULL}
 };
 
-typedef struct config_pos config_pos_type;
+/* stores the overall configuraion */
+lList *Master_Sched_Config_List = NULL;
 
-config_pos_type pos = {true, -1, -1,  -1,  -1,  -1,  -1, -1,  -1,  -1,  -1, -1,  -1,  
-                        -1,  -1, -1,  -1,  -1,  -1,  -1, -1,  -1,  -1,  -1, -1,  -1};
+extern int do_profiling; 
+
+
+/*
+ * Activate policy hierarchy in case of SGEEE if not NULL
+ * and not "NONE"
+ */
+char policy_hierarchy_string[5] = "";
+
+const char *const policy_hierarchy_chars = "OFSD";
 
 /* SG: TODO: should be const */
 int load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
@@ -106,15 +187,84 @@ int load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
 int usage_fields[] = { UA_name, UA_value, 0 };
 const char *delis[] = {"=", ",", ""};
 
-static bool calc_pos(void);
 
 
-bool calc_pos(void){
+/****** sge_schedd_conf/clear_pos() ********************************************
+*  NAME
+*     clear_pos() -- ??? 
+*
+*  SYNOPSIS
+*     static void clear_pos(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     static void - 
+*******************************************************************************/
+static void sconf_clear_pos(void){
+
+         pos.empty = true;
+
+         pos.algorithm = -1; 
+         pos.schedule_interval = -1; 
+         pos.maxujobs =  -1;
+         pos.queue_sort_method = -1; 
+         pos.user_sort =  -1;
+         pos.job_load_adjustments = -1; 
+         pos.load_formula =  -1;
+         pos.schedd_job_info = -1; 
+         pos.flush_submit_sec = -1; 
+         pos.flush_finish_sec =  -1;
+         pos.params = -1;
+         
+         pos.sgeee_schedule_interval = -1; 
+         pos.halftime = -1; 
+         pos.usage_weight_list = -1; 
+         pos.compensation_factor = -1; 
+         pos.weight_user = -1; 
+         pos.weight_project = -1; 
+         pos.weight_jobclass = -1; 
+         pos.weight_department = -1; 
+         pos.weight_job = -1; 
+         pos.weight_tickets_functional = -1; 
+         pos.weight_tickets_share = -1; 
+         pos.weight_tickets_deadline = -1; 
+         pos.weight_tickets_deadline_active = -1; 
+         pos.weight_tickets_override = -1; 
+         pos.share_override_tickets = -1; 
+         pos.share_functional_shares = -1; 
+         pos.share_deadline_tickets = -1; 
+         pos.max_functional_jobs_to_schedule = -1; 
+         pos.report_pjob_tickets = -1; 
+         pos.max_pending_tasks_per_job =  -1;
+         pos.halflife_decay_list = -1; 
+         pos.policy_hierarchy = -1;
+
+         pos.c_is_schedd_job_info = SCHEDD_JOB_INFO_UNDEF;
+         if (pos.c_schedd_job_info_range)
+            pos.c_schedd_job_info_range = lFreeList(pos.c_schedd_job_info_range);
+            
+         if (pos.c_halflife_decay_list)
+            pos.c_halflife_decay_list = lFreeList(pos.c_halflife_decay_list);
+
+         if (pos.c_params)
+            pos.c_params = lFreeList(pos.c_params);
+
+         policy_hierarchy_string[0] = '\0';
+}
+
+static bool sconf_calc_pos(void){
    bool ret = true;
    if (pos.empty) {
-      lListElem *config = lFirst(Master_Sched_Config_List);
+      const lListElem *config = sconf_get_config(); 
+
       if (config) {
          pos.empty = false;
+/* SGE */         
          ret &= (pos.algorithm = lGetPosViaElem(config, SC_algorithm )) != -1; 
          ret &= (pos.schedule_interval = lGetPosViaElem(config, SC_schedule_interval)) != -1; 
          ret &= (pos.maxujobs = lGetPosViaElem(config, SC_maxujobs)) != -1;
@@ -125,9 +275,11 @@ bool calc_pos(void){
          ret &= (pos.load_adjustment_decay_time = lGetPosViaElem(config, SC_load_adjustment_decay_time)) != -1;
          ret &= (pos.load_formula = lGetPosViaElem(config, SC_load_formula)) != -1;
          ret &= (pos.schedd_job_info = lGetPosViaElem(config, SC_schedd_job_info)) != -1;
+         ret &= (pos.flush_submit_sec = lGetPosViaElem(config, SC_flush_submit_sec)) != -1;
+         ret &= (pos.flush_finish_sec = lGetPosViaElem(config, SC_flush_finish_sec)) != -1;
+         ret != (pos.params = lGetPosViaElem(config, SC_params)) != -1;
 
-         ret &= (pos.is_schedd_job_info = lGetPosViaElem(config, SC_is_schedd_job_info)) != -1;
-         ret &= (pos.schedd_job_info_range = lGetPosViaElem(config, SC_schedd_job_info_range)) != -1;
+/* SGEEE */
          ret &= (pos.sgeee_schedule_interval = lGetPosViaElem(config, SC_sgeee_schedule_interval)) != -1;
          ret &= (pos.halftime = lGetPosViaElem(config, SC_halftime)) != -1;
          ret &= (pos.usage_weight_list = lGetPosViaElem(config, SC_usage_weight_list)) != -1;
@@ -144,6 +296,15 @@ bool calc_pos(void){
          ret &= (pos.weight_tickets_deadline = lGetPosViaElem(config, SC_weight_tickets_deadline)) != -1;
          ret &= (pos.weight_tickets_deadline_active = lGetPosViaElem(config, SC_weight_tickets_deadline_active)) != -1;
          ret &= (pos.weight_tickets_override = lGetPosViaElem(config, SC_weight_tickets_override)) != -1;
+
+         ret &= (pos.share_override_tickets = lGetPosViaElem(config, SC_share_override_tickets)) != -1;
+         ret &= (pos.share_functional_shares = lGetPosViaElem(config, SC_share_functional_shares)) != -1;
+         ret &= (pos.share_deadline_tickets = lGetPosViaElem(config, SC_share_deadline_tickets)) != -1;
+         ret &= (pos.max_functional_jobs_to_schedule = lGetPosViaElem(config, SC_max_functional_jobs_to_schedule)) != -1;
+         ret &= (pos.report_pjob_tickets = lGetPosViaElem(config, SC_report_pjob_tickets)) != -1;
+         ret &= (pos.max_pending_tasks_per_job = lGetPosViaElem(config, SC_max_pending_tasks_per_job)) != -1;
+         ret &= (pos.halflife_decay_list = lGetPosViaElem(config, SC_halflife_decay_list)) != -1;
+         ret &= (pos.policy_hierarchy = lGetPosViaElem(config, SC_policy_hierarchy)) != -1;
       }
       else
          ret = false;
@@ -151,12 +312,84 @@ bool calc_pos(void){
    return ret;
 }
 
-/****** sge_schedd_conf/schedd_conf_is_valid_load_formula_() *******************
+/****** sge_schedd_conf/schedd_conf_set_config() *******************************
 *  NAME
-*     schedd_conf_is_valid_load_formula_() -- ??? 
+*     schedd_conf_set_config() -- ??? 
 *
 *  SYNOPSIS
-*     bool schedd_conf_is_valid_load_formula_(lList **answer_list, lList 
+*     bool schedd_conf_set_config(lList **config, lList **answer_list) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList **config      - ??? 
+*     lList **answer_list - ??? 
+*
+*  RESULT
+*     bool - 
+*******************************************************************************/
+bool sconf_set_config(lList **config, lList **answer_list){
+   lList *store = Master_Sched_Config_List;
+   bool ret = true;
+
+   DENTER(TOP_LAYER,"sconf_set_config"); 
+  
+   if (config){
+      Master_Sched_Config_List = *config;
+      if ((ret = sconf_validate_config_(answer_list))){
+         lFreeList(store);
+         *config = NULL;
+      }
+      else{
+         Master_Sched_Config_List = store;
+         if (!Master_Sched_Config_List){
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USE_DEFAULT_CONFIG)); 
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING);
+ 
+            Master_Sched_Config_List = lCreateList("schedd config list", SC_Type);
+            lAppendElem(Master_Sched_Config_List, sconf_create_default());
+
+         }
+         sconf_validate_config_(NULL);
+      }   
+   }
+   else{
+      Master_Sched_Config_List = lFreeList(Master_Sched_Config_List);
+      sconf_clear_pos();
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** sge_schedd_conf/sconf_get_param() **************************************
+*  NAME
+*     sconf_get_param() -- ??? 
+*
+*  SYNOPSIS
+*     const char* sconf_get_param(const char *name) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     const char *name - ??? 
+*
+*  RESULT
+*     const char* - 
+*******************************************************************************/
+const char *sconf_get_param(const char *name){
+   lListElem *elem = lGetElemStr(pos.c_params, PARA_name, name); 
+   
+   return lGetString(elem, PARA_value);
+}
+
+/****** sge_schedd_conf/sconf_is_valid_load_formula_() *******************
+*  NAME
+*     sconf_is_valid_load_formula_() -- ??? 
+*
+*  SYNOPSIS
+*     bool sconf_is_valid_load_formula_(lList **answer_list, lList 
 *     *centry_list) 
 *
 *  INPUTS
@@ -169,19 +402,18 @@ bool calc_pos(void){
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-bool schedd_conf_is_valid_load_formula_(
-                                       lList **answer_list,
-                                       lList *centry_list)
+bool sconf_is_valid_load_formula_(lList **answer_list,
+                                  lList *centry_list)
 {
-   return schedd_conf_is_valid_load_formula(
-            lFirst(Master_Sched_Config_List), answer_list, centry_list);
+   return sconf_is_valid_load_formula( lFirst(Master_Sched_Config_List),
+                                    answer_list, centry_list);
 }
-/****** sge_schedd_conf/schedd_conf_is_valid_load_formula() ********************
+/****** sge_schedd_conf/sconf_is_valid_load_formula() ********************
 *  NAME
-*     schedd_conf_is_valid_load_formula() -- ??? 
+*     sconf_is_valid_load_formula() -- ??? 
 *
 *  SYNOPSIS
-*     bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf, lList 
+*     bool sconf_is_valid_load_formula(lListElem *schedd_conf, lList 
 *     **answer_list, lList *centry_list) 
 *
 *  FUNCTION
@@ -196,13 +428,13 @@ bool schedd_conf_is_valid_load_formula_(
 *     bool - 
 *
 *******************************************************************************/
-bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
+bool sconf_is_valid_load_formula(lListElem *schedd_conf,
                                        lList **answer_list,
                                        lList *centry_list)
 {
    const char *load_formula = NULL;
    bool ret = true;
-   DENTER(TOP_LAYER, "schedd_conf_is_valid_load_formula");
+   DENTER(TOP_LAYER, "sconf_is_valid_load_formula");
 
    /* Modify input */
    {
@@ -259,12 +491,12 @@ bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
 }
 
 
-/****** sge_schedd_conf/schedd_conf_create_default() ***************************
+/****** sge_schedd_conf/sconf_create_default() ***************************
 *  NAME
-*     schedd_conf_create_default() -- ??? 
+*     sconf_create_default() -- ??? 
 *
 *  SYNOPSIS
-*     lListElem* schedd_conf_create_default() 
+*     lListElem* sconf_create_default() 
 *
 *  FUNCTION
 *     ??? 
@@ -275,11 +507,11 @@ bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
 *     lListElem* - 
 *
 *******************************************************************************/
-lListElem *schedd_conf_create_default()
+lListElem *sconf_create_default()
 {
    lListElem *ep, *added;
 
-   DENTER(TOP_LAYER, "schedd_conf_create_default");
+   DENTER(TOP_LAYER, "sconf_create_default");
 
    ep = lCreateElem(SC_Type);
 
@@ -305,9 +537,9 @@ lListElem *schedd_conf_create_default()
    lSetString(ep, SC_load_formula, DEFAULT_LOAD_FORMULA);
    lSetString(ep, SC_schedd_job_info, SCHEDD_JOB_INFO);
    lSetBool(ep, SC_user_sort, USER_SORT);
-   lSetUlong(ep, SC_is_schedd_job_info, SCHEDD_JOB_INFO_UNDEF);
-   lSetList(ep, SC_schedd_job_info_range, NULL);
-
+   lSetUlong(ep, SC_flush_submit_sec, 0);
+   lSetUlong(ep, SC_flush_finish_sec, 0);
+   lSetString(ep, SC_params, "none");
    /* 
     * 
     * SGEEE
@@ -333,6 +565,15 @@ lListElem *schedd_conf_create_default()
       lSetUlong(ep, SC_weight_tickets_functional, 0);
       lSetUlong(ep, SC_weight_tickets_share, 0);
       lSetUlong(ep, SC_weight_tickets_deadline, 0);
+
+      lSetBool(ep, SC_share_override_tickets, true);  
+      lSetBool(ep, SC_share_functional_shares, true);
+      lSetBool(ep, SC_share_deadline_tickets, true);
+      lSetUlong(ep, SC_max_functional_jobs_to_schedule, 200);
+      lSetBool(ep, SC_report_pjob_tickets, true);
+      lSetUlong(ep, SC_max_pending_tasks_per_job, 50);
+      lSetString(ep, SC_halflife_decay_list, "none"); 
+      lSetString(ep, SC_policy_hierarchy, "OFSD");
    }
 
    DEXIT;
@@ -392,9 +633,7 @@ bool sconf_is_centry_referenced(const lListElem *this_elem, const lListElem *cen
 *
 *******************************************************************************/
 bool sconf_get_user_sort() {
-   const lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
-   if (pos.empty)
-      calc_pos();
+   const lListElem *sc_ep =  sconf_get_config();
    if (pos.user_sort != -1) { 
       return lGetPosBool(sc_ep, pos.user_sort);
    }
@@ -420,11 +659,8 @@ bool sconf_get_user_sort() {
 *     u_long32 - 
 *******************************************************************************/
 u_long32 sconf_weight_tickets_deadline(void){
-   const lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep =  sconf_get_config();
       
-   if (pos.empty)
-      calc_pos();
-
    if (pos.weight_tickets_deadline != -1) 
       return lGetPosUlong(sc_ep, pos.weight_tickets_deadline);
    else
@@ -447,11 +683,8 @@ u_long32 sconf_weight_tickets_deadline(void){
 *     const char * - 
 *******************************************************************************/
 const char * sconf_get_load_adjustment_decay_time_str(){
-   const lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
+   const lListElem *sc_ep = sconf_get_config(); 
       
-   if (pos.empty)
-      calc_pos();
-
    if (pos.load_adjustment_decay_time != -1) 
       return lGetPosString(sc_ep, pos.load_adjustment_decay_time );
    else
@@ -501,11 +734,8 @@ u_long32 sconf_get_load_adjustment_decay_time() {
 *
 *******************************************************************************/
 const lList *sconf_get_job_load_adjustments(void) {
-   const lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
+   const lListElem *sc_ep =  sconf_get_config();
       
-   if (pos.empty)
-      calc_pos();
-
    if (pos.job_load_adjustments!= -1) 
       return lGetPosList(sc_ep, pos.job_load_adjustments); 
    else
@@ -530,11 +760,8 @@ const lList *sconf_get_job_load_adjustments(void) {
 *
 *******************************************************************************/
 const char* sconf_get_load_formula(void) {
-   const lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
+   const lListElem *sc_ep =  sconf_get_config();
       
-   if (pos.empty)
-      calc_pos();
-
    if (pos.load_formula != -1) 
       return lGetPosString(sc_ep, pos.load_formula);
    else
@@ -559,12 +786,9 @@ const char* sconf_get_load_formula(void) {
 *
 *******************************************************************************/
 u_long32 sconf_get_queue_sort_method(void) {
-   const lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
+   const lListElem *sc_ep =  sconf_get_config();
       
-   if (pos.empty)
-      calc_pos();
-
-   if (pos.queue_sort_method!= -1) 
+   if (pos.queue_sort_method != -1) 
       return lGetPosUlong(sc_ep, pos.queue_sort_method);
    else
       return 0;
@@ -588,11 +812,8 @@ u_long32 sconf_get_queue_sort_method(void) {
 *
 *******************************************************************************/
 u_long32 sconf_get_maxujobs(void) {
-   const lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
+   const lListElem *sc_ep =  sconf_get_config();
       
-   if (pos.empty)
-      calc_pos();
-
    if (pos.maxujobs!= -1) 
       return lGetPosUlong(sc_ep, pos.maxujobs );
    else
@@ -617,11 +838,8 @@ u_long32 sconf_get_maxujobs(void) {
 *
 *******************************************************************************/
 const char *sconf_get_schedule_interval_str(void){
-   const lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
+   const lListElem *sc_ep =  sconf_get_config();
       
-   if (pos.empty)
-      calc_pos();
-
    if (pos.schedule_interval != -1) 
       return lGetPosString(sc_ep, pos.schedule_interval );
    else
@@ -675,11 +893,8 @@ u_long32 sconf_get_schedule_interval(void) {
 *
 *******************************************************************************/
 const char *sconf_sgeee_schedule_interval_str(void){
-   const lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
+   const lListElem *sc_ep =  sconf_get_config();
       
-   if (pos.empty)
-      calc_pos();
-
    if (pos.sgeee_schedule_interval != -1) 
       return lGetPosString(sc_ep, pos.sgeee_schedule_interval);
    else
@@ -732,13 +947,11 @@ u_long32 sconf_get_sgeee_schedule_interval(void) {
 *
 *******************************************************************************/
 void sconf_enable_schedd_job_info() {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);    
+/*   const lListElem *sc_ep =  sconf_get_config();
       
-   if (pos.empty)
-      calc_pos();
-
    if (pos.is_schedd_job_info != -1) 
-      lSetPosUlong(sc_ep, pos.is_schedd_job_info , SCHEDD_JOB_INFO_TRUE);
+      lSetPosUlong(sc_ep, pos.is_schedd_job_info , SCHEDD_JOB_INFO_TRUE);*/
+   pos.c_is_schedd_job_info = SCHEDD_JOB_INFO_TRUE;
 }
 
 /****** sge_schedd_conf/sconf_disable_schedd_job_info() ************************
@@ -758,13 +971,11 @@ void sconf_enable_schedd_job_info() {
 *
 *******************************************************************************/
 void sconf_disable_schedd_job_info() {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
+/*   const lListElem *sc_ep =  sconf_get_config();
    
-   if (pos.empty)
-      calc_pos();
-
    if (pos.is_schedd_job_info != -1) 
-      lSetPosUlong(sc_ep, pos.is_schedd_job_info , SCHEDD_JOB_INFO_FALSE);
+      lSetPosUlong(sc_ep, pos.is_schedd_job_info , SCHEDD_JOB_INFO_FALSE);*/
+   pos.c_is_schedd_job_info = SCHEDD_JOB_INFO_FALSE;  
 }
 
 /****** sge_schedd_conf/sconf_get_schedd_job_info() ****************************
@@ -785,42 +996,8 @@ void sconf_disable_schedd_job_info() {
 *
 *******************************************************************************/
 u_long32 sconf_get_schedd_job_info(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
-   u_long32 is_info = SCHEDD_JOB_INFO_UNDEF;
-   
-   if (pos.empty)
-      calc_pos();
 
-   if (pos.is_schedd_job_info != -1) 
-      is_info = lGetPosUlong(sc_ep, pos.is_schedd_job_info) ;
-
-   if (is_info == SCHEDD_JOB_INFO_UNDEF){
-      const char *range = lGetPosString(sc_ep, pos.schedd_job_info);
-      char *buf = malloc (strlen(range) +1);
-      char *key;
-      lList *rlp=NULL;
-
-      strcpy(buf, range);
-      key = strtok(buf, " \t");
-      if (!strcmp("true", key)) 
-         is_info = SCHEDD_JOB_INFO_TRUE;
-      else if (!strcmp("false", key)) 
-         is_info = SCHEDD_JOB_INFO_FALSE;
-      else if (!strcmp("job_list", key)) 
-         is_info = SCHEDD_JOB_INFO_JOB_LIST;
-
-      /* check list of groups */
-      if (is_info == SCHEDD_JOB_INFO_JOB_LIST) {
-         key = strtok(NULL, "\n");
-         range_list_parse_from_string(&rlp, NULL, key, 0, 0, INF_NOT_ALLOWED);
-      }
-      lSetPosUlong(sc_ep, pos.is_schedd_job_info, is_info);
-      lSetList(sc_ep, pos.schedd_job_info_range, NULL);
-
-      free(buf); 
-   }
-
-   return is_info;
+   return pos.c_is_schedd_job_info;
 }
 
 /****** sge_schedd_conf/sconf_get_schedd_job_info_range() **********************
@@ -841,15 +1018,8 @@ u_long32 sconf_get_schedd_job_info(void) {
 *
 *******************************************************************************/
 const lList *sconf_get_schedd_job_info_range(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
    
-   if (pos.empty)
-      calc_pos();
-   
-   if (pos.schedd_job_info_range != -1)
-      return lGetPosList(sc_ep, pos.schedd_job_info_range);
-   else
-      return NULL;
+   return  pos.c_schedd_job_info_range;
 }
 
 /****** sge_schedd_conf/sconf_get_algorithm() **********************************
@@ -870,10 +1040,7 @@ const lList *sconf_get_schedd_job_info_range(void) {
 *
 *******************************************************************************/
 const char *sconf_get_algorithm(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
-   
-   if (pos.empty)
-      calc_pos();
+   const lListElem *sc_ep =  sconf_get_config();
    
    if (pos.algorithm!= -1)
       return lGetPosString(sc_ep, pos.algorithm);
@@ -900,11 +1067,8 @@ const char *sconf_get_algorithm(void) {
 *
 *******************************************************************************/
 const lList *sconf_get_usage_weight_list(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List); 
+   const lListElem *sc_ep =  sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.usage_weight_list != -1)
       return lGetPosList(sc_ep, pos.usage_weight_list );
    else
@@ -929,11 +1093,8 @@ const lList *sconf_get_usage_weight_list(void) {
 *
 *******************************************************************************/
 double sconf_get_weight_user(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_user!= -1)
       return lGetPosDouble(sc_ep, pos.weight_user);
    else
@@ -958,11 +1119,8 @@ double sconf_get_weight_user(void) {
 *
 *******************************************************************************/
 double sconf_get_weight_department(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config(); 
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_department != -1)
       return lGetPosDouble(sc_ep, pos.weight_department);
    else  
@@ -987,11 +1145,8 @@ double sconf_get_weight_department(void) {
 *
 *******************************************************************************/
 double sconf_get_weight_project(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_project != -1)
       return lGetPosDouble(sc_ep, pos.weight_project);
    else
@@ -1016,11 +1171,8 @@ double sconf_get_weight_project(void) {
 *
 *******************************************************************************/
 double sconf_get_weight_jobclass(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_jobclass != -1)
       return lGetPosDouble(sc_ep, pos.weight_jobclass );
    else
@@ -1045,11 +1197,8 @@ double sconf_get_weight_jobclass(void) {
 *
 *******************************************************************************/
 double sconf_get_weight_job(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_job != -1)
       return lGetPosDouble(sc_ep, pos.weight_job);
    else
@@ -1074,11 +1223,8 @@ double sconf_get_weight_job(void) {
 *
 *******************************************************************************/
 u_long32 sconf_get_weight_tickets_share(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_tickets_share != -1)
       return lGetPosUlong(sc_ep, pos.weight_tickets_share );
    else
@@ -1103,11 +1249,8 @@ u_long32 sconf_get_weight_tickets_share(void) {
 *
 *******************************************************************************/
 u_long32 sconf_get_weight_tickets_functional(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_tickets_functional != -1)
       return lGetPosUlong(sc_ep, pos.weight_tickets_functional);
    else
@@ -1132,11 +1275,8 @@ u_long32 sconf_get_weight_tickets_functional(void) {
 *
 *******************************************************************************/
 u_long32 sconf_get_weight_tickets_deadline(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_tickets_deadline != -1)
       return lGetPosUlong(sc_ep, pos.weight_tickets_deadline);
    else
@@ -1161,11 +1301,8 @@ u_long32 sconf_get_weight_tickets_deadline(void) {
 *
 *******************************************************************************/
 u_long32 sconf_get_halftime(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep =  sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.halftime != -1)
       return lGetPosUlong(sc_ep, pos.halftime);
    else
@@ -1190,11 +1327,8 @@ u_long32 sconf_get_halftime(void) {
 *
 *******************************************************************************/
 void sconf_set_weight_tickets_deadline_active(u_long32 active) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_tickets_deadline_active != -1)
       lSetPosUlong(sc_ep, pos.weight_tickets_deadline_active, active);
 }
@@ -1217,11 +1351,8 @@ void sconf_set_weight_tickets_deadline_active(u_long32 active) {
 *
 *******************************************************************************/
 void sconf_set_weight_tickets_override(u_long32 active) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
    if (pos.weight_tickets_override!= -1)
       lSetPosUlong(sc_ep, pos.weight_tickets_override, active);
 }
@@ -1244,15 +1375,265 @@ void sconf_set_weight_tickets_override(u_long32 active) {
 *
 *******************************************************************************/
 double sconf_get_compensation_factor(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = sconf_get_config();
 
-   if (pos.empty)
-      calc_pos();
-   
-   if (pos.compensation_factor != -1)
+   if (pos.compensation_factor!= -1)
       return lGetPosDouble(sc_ep, pos.compensation_factor);
    else
-      return 0;
+      return true;
+}
+
+
+/****** sge_schedd_conf/sconf_get_share_override_tickets() *********************
+*  NAME
+*     sconf_get_share_override_tickets() -- ??? 
+*
+*  SYNOPSIS
+*     bool sconf_get_share_override_tickets(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     bool - 
+*
+*******************************************************************************/
+bool sconf_get_share_override_tickets(void) {
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.share_override_tickets != -1)
+      return lGetPosBool(sc_ep, pos.share_override_tickets);
+   else
+      return true;
+}
+/****** sge_schedd_conf/sconf_get_share_functional_shares() ********************
+*  NAME
+*     sconf_get_share_functional_shares() -- ??? 
+*
+*  SYNOPSIS
+*     bool sconf_get_share_functional_shares(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     bool - 
+*******************************************************************************/
+bool sconf_get_share_functional_shares(void){
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.share_functional_shares != -1)
+      return lGetPosBool(sc_ep, pos.share_functional_shares);
+   else
+      return true;
+
+
+}
+
+/****** sge_schedd_conf/sconf_get_share_deadline_tickets() *********************
+*  NAME
+*     sconf_get_share_deadline_tickets() -- ??? 
+*
+*  SYNOPSIS
+*     bool sconf_get_share_deadline_tickets(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     bool - 
+*******************************************************************************/
+bool sconf_get_share_deadline_tickets(void){
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.share_deadline_tickets != -1)
+      return lGetPosBool(sc_ep, pos.share_deadline_tickets);
+   else
+      return true;
+
+
+}
+
+/****** sge_schedd_conf/sconf_get_report_pjob_tickets() *************************
+*  NAME
+*     sconf_get_report_pjob_tickets() -- ??? 
+*
+*  SYNOPSIS
+*     bool sconf_get_report_pjob_tickets(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     bool - 
+*******************************************************************************/
+bool sconf_get_report_pjob_tickets(void){
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.report_pjob_tickets!= -1)
+      return lGetPosBool(sc_ep, pos.report_pjob_tickets);
+   else
+      return true;
+
+}
+
+/****** sge_schedd_conf/sconf_get_flush_submit_sec() ***************************
+*  NAME
+*     sconf_get_flush_submit_sec() -- ??? 
+*
+*  SYNOPSIS
+*     int sconf_get_flush_submit_sec(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     int - 
+*******************************************************************************/
+u_long32 sconf_get_flush_submit_sec(void){
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.flush_submit_sec!= -1)
+        return lGetPosUlong(sc_ep, pos.flush_submit_sec);
+   else
+      return -1;
+}
+   
+/****** sge_schedd_conf/sconf_get_flush_finish_sec() ***************************
+*  NAME
+*     sconf_get_flush_finish_sec() -- ??? 
+*
+*  SYNOPSIS
+*     int sconf_get_flush_finish_sec(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     int - 
+*******************************************************************************/
+u_long32 sconf_get_flush_finish_sec(void){
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.flush_finish_sec!= -1)
+      return lGetPosUlong(sc_ep, pos.flush_finish_sec);
+   else
+      return -1;
+}
+   
+/****** sge_schedd_conf/sconf_get_max_functional_jobs_to_schedule() ************
+*  NAME
+*     sconf_get_max_functional_jobs_to_schedule() -- ??? 
+*
+*  SYNOPSIS
+*     u_long32 sconf_get_max_functional_jobs_to_schedule(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     u_long32 - 
+*******************************************************************************/
+u_long32 sconf_get_max_functional_jobs_to_schedule(void){
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.max_functional_jobs_to_schedule != -1)
+      return lGetPosUlong(sc_ep, pos.max_functional_jobs_to_schedule);
+   else
+      return 200;
+}
+
+/****** sge_schedd_conf/sconf_get_max_pending_tasks_per_job() ******************
+*  NAME
+*     sconf_get_max_pending_tasks_per_job() -- ??? 
+*
+*  SYNOPSIS
+*     u_long32 sconf_get_max_pending_tasks_per_job(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     u_long32 - 
+*******************************************************************************/
+u_long32 sconf_get_max_pending_tasks_per_job(void){
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.max_pending_tasks_per_job != -1)
+      return lGetPosUlong(sc_ep, pos.max_pending_tasks_per_job);
+   else
+      return 50;
+}
+
+/****** sge_schedd_conf/sconf_get_halflife_decay_list_str() ********************
+*  NAME
+*     sconf_get_halflife_decay_list_str() -- ??? 
+*
+*  SYNOPSIS
+*     const char* sconf_get_halflife_decay_list_str(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     const char* - 
+*******************************************************************************/
+const char *sconf_get_halflife_decay_list_str(void){
+   const lListElem *sc_ep = sconf_get_config();
+
+   if (pos.halflife_decay_list != -1)
+      return lGetPosString(sc_ep, pos.halflife_decay_list);
+   else
+      return "none";
+
+}
+
+/****** sge_schedd_conf/sconf_get_halflife_decay_list() ************************
+*  NAME
+*     sconf_get_halflife_decay_list() -- ??? 
+*
+*  SYNOPSIS
+*     const lList* sconf_get_halflife_decay_list(void) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     void - ??? 
+*
+*  RESULT
+*     const lList* - 
+*******************************************************************************/
+const lList* sconf_get_halflife_decay_list(void){
+
+      return pos.c_halflife_decay_list;
 }
 
 /****** sge_schedd_conf/sconf_is() *********************************************
@@ -1273,7 +1654,11 @@ double sconf_get_compensation_factor(void) {
 *
 *******************************************************************************/
 bool sconf_is(void) {
-   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   const lListElem *sc_ep = NULL;
+   
+   if (Master_Sched_Config_List)
+      sc_ep = lFirst(Master_Sched_Config_List);
+
    return sc_ep != NULL;
 }
 
@@ -1296,6 +1681,10 @@ bool sconf_is(void) {
 *******************************************************************************/
 const lListElem *sconf_get_config(void){
    return lFirst(Master_Sched_Config_List);
+}
+
+lList **sconf_get_config_list(void){
+   return &Master_Sched_Config_List;
 }
 
 /****** sge_schedd_conf/sconf_validate_config_() *******************************
@@ -1325,10 +1714,14 @@ bool sconf_validate_config_(lList **answer_list){
 
    DENTER(TOP_LAYER, "sconf_validate_config_");
 
+   sconf_clear_pos();
 
-   pos.empty = true;
+   if (!sconf_is()){
+      DPRINTF(("sconf_validate: no config to validate\n"));
+      return true;
+   }
 
-   if (!calc_pos()){
+   if (!sconf_calc_pos()){
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INCOMPLETE_SCHEDD_CONFIG)); 
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret = false; 
@@ -1362,6 +1755,14 @@ bool sconf_validate_config_(lList **answer_list){
    uval = sconf_get_queue_sort_method();
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "queue_sort_method"));
 
+   /* --- SC_flush_submit_sec */
+   uval = sconf_get_flush_submit_sec();
+   INFO((SGE_EVENT,MSG_ATTRIB_USINGXFORY_US,  u32c (uval) , "flush_submit_sec"));
+
+   /* --- SC_flush_finish_sec */
+   uval = sconf_get_flush_finish_sec();
+   INFO((SGE_EVENT,MSG_ATTRIB_USINGXFORY_US,  u32c (uval) , "flush_finish_sec"));
+
    /* --- SC_user_sort */
    uval = sconf_get_user_sort();
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS , uval?MSG_TRUE:MSG_FALSE, "user_sort"));
@@ -1384,7 +1785,7 @@ bool sconf_validate_config_(lList **answer_list){
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "load_adjustment_decay_time"));
 
    /* --- SC_load_formula */
-   if (Master_CEntry_List != NULL && !schedd_conf_is_valid_load_formula_(answer_list, Master_CEntry_List )) {
+   if (Master_CEntry_List != NULL && !sconf_is_valid_load_formula_(answer_list, Master_CEntry_List )) {
       ret = false; 
    }
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, sconf_get_load_formula(), "load_formula"));
@@ -1420,11 +1821,38 @@ bool sconf_validate_config_(lList **answer_list){
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             ret = false; 
          }   
+         else{
+            pos.c_is_schedd_job_info = ikey;
+            pos.c_schedd_job_info_range = rlp;
+         }
       }
-      lFreeList(rlp);
+      else{
+         pos.c_is_schedd_job_info = ikey;
+      }
    }
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, lGetString(lFirst(Master_Sched_Config_List), SC_schedd_job_info), "schedd_job_info"));
- 
+
+   /* --- SC_params */
+   {
+      char *s = NULL;
+      for (s=sge_strtok(lGetString(lFirst(Master_Sched_Config_List), SC_params), ",; "); s; s=sge_strtok(NULL, ",; ")) {
+         int i = 0;
+         bool added = false;
+         for(i=0; params[i].name ;i++ ){
+            if (!strncasecmp(s, params[i].name, sizeof(params[i].name)-1)){
+               if (params[i].setParam && params[i].setParam(pos.c_params, answer_list, s)){
+                  INFO((SGE_EVENT, MSG_READ_PARAM_S, s)); 
+               }
+               added = true;
+            }               
+         }
+         if (!added){
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_UNKNOWN_PARAM_S, s));
+            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         }
+      }
+   }
+
    /**
     * check for SGEEE scheduler configurations
     */
@@ -1484,8 +1912,80 @@ bool sconf_validate_config_(lList **answer_list){
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_share"));
 
       /* --- SC_weight_tickets_deadline */
-      uval = sconf_weight_tickets_deadline();
+      uval = sconf_get_weight_tickets_deadline();
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "weight_tickets_deadline"));
+
+      /* --- SC_share_override_tickets */
+      uval = sconf_get_share_override_tickets();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_override_tickets"));
+      
+      /* --- SC_share_functional_shares */
+      uval = sconf_get_share_functional_shares();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_functional_shares"));
+
+      /* --- SC_share_deadline_tickets */
+      uval = sconf_get_share_deadline_tickets();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "share_deadline_tickets"));
+
+      /* --- SC_max_functional_jobs_to_schedule */
+      uval = sconf_get_max_functional_jobs_to_schedule();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_functional_jobs_to_schedule"));
+      
+      /* --- SC_report_job_tickets */
+      uval = sconf_get_report_pjob_tickets();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "report_pjob_tickets"));
+      
+      /* --- SC_max_pending_tasks_per_job */
+      uval = sconf_get_max_pending_tasks_per_job();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "max_pending_tasks_per_job"));
+
+      /* --- SC_halflife_decay_list_str */
+      {
+         s = sconf_get_halflife_decay_list_str();
+         if (!strcasecmp(s, "none")) {
+         } else {
+            lList *halflife_decay_list = NULL;
+            lListElem *ep;
+            const char *s0,*s1,*s2,*s3;
+            double value;
+            struct saved_vars_s *sv1=NULL, *sv2=NULL;
+            s0 = s; 
+            for(s1=sge_strtok_r(s0, ":", &sv1); s1;
+                s1=sge_strtok_r(NULL, ":", &sv1)) {
+               if ((s2=sge_strtok_r(s1, "=", &sv2)) &&
+                   (s3=sge_strtok_r(NULL, "=", &sv2)) &&
+                   (sscanf(s3, "%lf", &value)==1)) {
+                  ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
+                  lSetDouble(ep, UA_value, value);
+               }
+               if (sv2)
+                  free(sv2);
+            }
+            if (sv1)
+               free(sv1);
+            pos.c_halflife_decay_list = halflife_decay_list;   
+         } 
+         INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, s, "halflife_decay_list"));
+      }
+     
+      /* --- SC_policy_hierarchy */
+      {
+         const char *value_string = lGetString(lFirst(Master_Sched_Config_List), SC_policy_hierarchy);
+         if (value_string) {
+            policy_hierarchy_t hierarchy[POLICY_VALUES];
+
+            if (policy_hierarchy_verify_value(value_string)) {
+               WARNING((SGE_EVENT, MSG_GDI_INVALIDPOLICYSTRING)); 
+               strcpy(policy_hierarchy_string, "");
+            } else {
+               strcpy(policy_hierarchy_string, value_string);
+            }
+            policy_hierarchy_fill_array(hierarchy );
+            policy_hierarchy_print_array(hierarchy);
+         } 
+         INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS, value_string, "policy_hierarchy"));
+
+      }
    }
 
    DEXIT;
@@ -1514,10 +2014,308 @@ bool sconf_validate_config_(lList **answer_list){
 *******************************************************************************/
 bool sconf_validate_config(lList **answer_list, lList *config){
    lList *store = Master_Sched_Config_List;
-   bool ret;
-   Master_Sched_Config_List = config;
-   ret = sconf_validate_config_(answer_list);
-   Master_Sched_Config_List = store;
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "sconf_validate_config");
+   
+   if (config){
+      Master_Sched_Config_List = config;
+      ret = sconf_validate_config_(answer_list);
+      
+      Master_Sched_Config_List = store;
+      sconf_validate_config_(NULL);
+   }
+   DEXIT;
    return ret;
 }
 
+/****** sgeobj/conf/policy_hierarchy_verify_value() ***************************
+*  NAME
+*     policy_hierarchy_verify_value() -- verify a policy string 
+*
+*  SYNOPSIS
+*     int policy_hierarchy_verify_value(const char* value) 
+*
+*  FUNCTION
+*     The function tests whether the given policy string (value) is i
+*     valid. 
+*
+*  INPUTS
+*     const char* value - policy string 
+*
+*  RESULT
+*     int - 0 -> OK
+*           1 -> ERROR: one char is at least twice in "value"
+*           2 -> ERROR: invalid char in "value"
+*           3 -> ERROR: value == NULL
+******************************************************************************/
+static int policy_hierarchy_verify_value(const char* value) 
+{
+   int ret = 0;
+
+   DENTER(TOP_LAYER, "policy_hierarchy_verify_value");
+
+   if (value != NULL) {
+      if (strcmp(value, "") && strcasecmp(value, "NONE")) {
+         int is_contained[POLICY_VALUES]; 
+         int i;
+
+         for (i = 0; i < POLICY_VALUES; i++) {
+            is_contained[i] = 0;
+         }
+
+         for (i = 0; i < strlen(value); i++) {
+            char c = value[i];
+            int index = policy_hierarchy_char2enum(c);
+
+            if (is_contained[index]) {
+               DPRINTF(("character \'%c\' is contained at least twice\n", c));
+               ret = 1;
+               break;
+            } 
+
+            is_contained[index] = 1;
+
+            if (is_contained[INVALID_POLICY]) {
+               DPRINTF(("Invalid character \'%c\'\n", c));
+               ret = 2;
+               break;
+            }
+         }
+      }
+   } else {
+      ret = 3;
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/conf/policy_hierarchy_fill_array() *****************************
+*  NAME
+*     policy_hierarchy_fill_array() -- fill the policy array 
+*
+*  SYNOPSIS
+*     void policy_hierarchy_fill_array(policy_hierarchy_t array[], 
+*                                      const char *value) 
+*
+*  FUNCTION
+*     Fill the policy "array" according to the characters given by 
+*     "value".
+*
+*     value == "FODS":
+*        policy_hierarchy_t array[4] = {
+*            {FUNCTIONAL_POLICY, 1},
+*            {OVERRIDE_POLICY, 1},
+*            {DEADLINE_POLICY, 1},
+*            {SHARE_TREE_POLICY, 1}
+*        };
+*
+*     value == "FS":
+*        policy_hierarchy_t array[4] = {
+*            {FUNCTIONAL_POLICY, 1},
+*            {SHARE_TREE_POLICY, 1},
+*            {OVERRIDE_POLICY, 0},
+*            {DEADLINE_POLICY, 0}
+*        };
+*
+*     value == "OFS":
+*        policy_hierarchy_t hierarchy[4] = {
+*            {OVERRIDE_POLICY, 1},
+*            {FUNCTIONAL_POLICY, 1},
+*            {SHARE_TREE_POLICY, 1},
+*            {DEADLINE_POLICY, 0}
+*        }; 
+*
+*     value == "NONE":
+*        policy_hierarchy_t hierarchy[4] = {
+*            {OVERRIDE_POLICY, 0},
+*            {FUNCTIONAL_POLICY, 0},
+*            {SHARE_TREE_POLICY, 0},
+*            {DEADLINE_POLICY, 0}
+*        }; 
+*
+*  INPUTS
+*     policy_hierarchy_t array[] - array with at least POLICY_VALUES 
+*                                  values 
+*     const char* value          - "NONE" or any combination
+*                                  of the first letters of the policy 
+*                                  names (e.g. "OFSD")
+*
+*  RESULT
+*     "array" will be modified 
+******************************************************************************/
+void policy_hierarchy_fill_array(policy_hierarchy_t array[])
+{
+   int is_contained[POLICY_VALUES];
+   int index = 0;
+   int i;
+
+   DENTER(TOP_LAYER, "policy_hierarchy_fill_array");
+
+   for (i = 0; i < POLICY_VALUES; i++) {
+      is_contained[i] = 0;
+   }     
+   if (policy_hierarchy_string != NULL && strcmp(policy_hierarchy_string, "") && strcasecmp(policy_hierarchy_string, "NONE")) {
+      for (i = 0; i < strlen(policy_hierarchy_string); i++) {
+         char c = policy_hierarchy_string[i];
+         int enum_value = policy_hierarchy_char2enum(c); 
+
+         is_contained[enum_value] = 1;
+         array[index].policy = enum_value;
+         array[index].dependent = 1;
+         index++;
+      }
+   }
+   for (i = INVALID_POLICY + 1; i < LAST_POLICY_VALUE; i++) {
+      if (!is_contained[i])  {
+         array[index].policy = i;
+         array[index].dependent = 0;
+         index++;
+      }
+   }
+
+   DEXIT;
+}
+
+/****** sgeobj/conf/policy_hierarchy_char2enum() ******************************
+*  NAME
+*     policy_hierarchy_char2enum() -- Return value for a policy char
+*
+*  SYNOPSIS
+*     policy_type_t policy_hierarchy_char2enum(char character) 
+*
+*  FUNCTION
+*     This function returns a enum value for the first letter of a 
+*     policy name. 
+*
+*  INPUTS
+*     char character - "O", "F", "S" or "D" 
+*
+*  RESULT
+*     policy_type_t - enum value 
+******************************************************************************/
+static policy_type_t policy_hierarchy_char2enum(char character)
+{
+   const char *pointer;
+   policy_type_t ret;
+   
+   pointer = strchr(policy_hierarchy_chars, character);
+   if (pointer != NULL) {
+      ret = (pointer - policy_hierarchy_chars) + 1;
+   } else {
+      ret = INVALID_POLICY;
+   }
+   return ret;
+}
+
+
+/****** sgeobj/conf/policy_hierarchy_print_array() ****************************
+*  NAME
+*     policy_hierarchy_print_array() -- print hierarchy array 
+*
+*  SYNOPSIS
+*     void policy_hierarchy_print_array(policy_hierarchy_t array[]) 
+*
+*  FUNCTION
+*     Print hierarchy array in the debug output 
+*
+*  INPUTS
+*     policy_hierarchy_t array[] - array with at least 
+*                                  POLICY_VALUES values 
+******************************************************************************/
+void policy_hierarchy_print_array(policy_hierarchy_t array[])
+{
+   int i;
+
+   DENTER(TOP_LAYER, "policy_hierarchy_print_array");
+   
+   for (i = INVALID_POLICY + 1; i < LAST_POLICY_VALUE; i++) {
+      char character = policy_hierarchy_enum2char(array[i-1].policy);
+      
+      DPRINTF(("policy: %c; dependent: %d\n", character, array[i-1].dependent));
+   }   
+
+   DEXIT;
+}
+
+/****** sgeobj/conf/policy_hierarchy_enum2char() ******************************
+*  NAME
+*     policy_hierarchy_enum2char() -- Return policy char for a value 
+*
+*  SYNOPSIS
+*     char policy_hierarchy_enum2char(policy_type_t value) 
+*
+*  FUNCTION
+*     Returns the first letter of a policy name corresponding to the 
+*     enum "value".
+*
+*  INPUTS
+*     policy_type_t value - enum value 
+*
+*  RESULT
+*     char - "O", "F", "S", "D"
+******************************************************************************/
+static char policy_hierarchy_enum2char(policy_type_t value) 
+{
+   return policy_hierarchy_chars[value - 1];
+}
+
+/****** sge_schedd_conf/sconf_eval_set_profiling() *****************************
+*  NAME
+*     sconf_eval_set_profiling() -- ??? 
+*
+*  SYNOPSIS
+*     static bool sconf_eval_set_profiling(lList *param_list, lList 
+*     **answer_list, const char* param) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lList *param_list   - ??? 
+*     lList **answer_list - ??? 
+*     const char* param   - ??? 
+*
+*  RESULT
+*     static bool - 
+*******************************************************************************/
+static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, const char* param){
+   bool ret = true;
+   lListElem *elem = NULL;
+   DENTER(TOP_LAYER, "sconf_validate_config");
+
+   do_profiling = false;
+
+   if (!strncasecmp(param, "PROFILE=1", sizeof("PROFILE=1")-1) || 
+       !strncasecmp(param, "PROFILE=TRUE", sizeof("PROFILE=FALSE")-1) ) {
+      do_profiling = true;
+      elem = lCreateElem(PARA_Type);
+      lSetString(elem, PARA_name, "profile");
+      lSetString(elem, PARA_value, "true");
+   }      
+   else if (!strncasecmp(param, "PROFILE=0", sizeof("PROFILE=1")-1) ||
+            !strncasecmp(param, "PROFILE=FALSE", sizeof("PROFILE=FALSE")-1) ) {
+      elem = lCreateElem(PARA_Type);
+      lSetString(elem, PARA_name, "profile");
+      lSetString(elem, PARA_value, "false");
+   }
+   else {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INVALID_PARAM_SETTING_S, param)); 
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   if (elem){
+      lAppendElem(pos.c_params, elem);
+   }
+
+   if(do_profiling && !prof_is_active()) {
+         prof_start(NULL);
+      }
+   if(!do_profiling && prof_is_active()) {
+      prof_stop(NULL);
+   }
+   
+   DEXIT;
+   return ret;
+}

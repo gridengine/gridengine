@@ -1,4 +1,23 @@
-JG-2003-10-23-0: Bugfix:    An invalid time_event was generated, if the spooling
+SG-2003-10-24-2: Enhancem.: updated the testsuite to deal with the new 
+                            configuration settings
+                 Changed:   testsuite    
+                 Review     CR
+
+SG-2003-10-24-1: Bugfix:    The error message was wrong, when a resource was 
+                            removed, which was referenced in a pending job.
+                 Changed:   scheduler, qmaster
+                 Review:    JG
+
+SG-2003-10-24-0: Enhancem.: Second part of the scheduler configuration cleanup.
+                            The scheduler configuration is only accessable via
+                            access functions. The Maser list is only visiable
+                            within the sge_schedd_conf module. 
+                            Qmon, and the function documentation needs to be 
+                            updated.
+                 Changed:   all, man-pages
+                 Review:    JG 
+
+JG-2003-10-24-0: Bugfix:    An invalid time_event was generated, if the spooling
                             method didn't provide a trigger function.
 
 JG-2003-10-23-0: Enhancem.: Write accounting file only in fixed intervals, 

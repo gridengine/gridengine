@@ -64,8 +64,7 @@ bool
 centry_is_referenced(const lListElem *this_elem, 
                      lList **answer_list,
                      const lList *master_queue_list,
-                     const lList *master_exechost_list,
-                     const lList *master_sconf_list);
+                     const lList *master_exechost_list);
 
 bool
 centry_print_resource_to_dstring(const lListElem *this_elem, 

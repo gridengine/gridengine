@@ -232,7 +232,7 @@ int scheduler(sge_Sdescr_t *lists) {
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
 
       log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e),  %d J(x),%d J(all),  %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
+      INFO((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e),  %d J(x),%d J(all),  %d C, %d ACL, %d PE, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
@@ -254,7 +254,6 @@ int scheduler(sge_Sdescr_t *lists) {
          lGetNumberOfElem(lists->centry_list),
          lGetNumberOfElem(lists->acl_list),
          lGetNumberOfElem(lists->pe_list),
-         lGetNumberOfElem(Master_Sched_Config_List),
          lGetNumberOfElem(lists->user_list),
          lGetNumberOfElem(lists->dept_list),
          lGetNumberOfElem(lists->project_list),

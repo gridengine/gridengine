@@ -415,6 +415,11 @@ static int sge_check_resource(lList *requested, lList *load_attr, lList *config_
          case 1 : /* the requested element does not exist */
                   if (tag == QUEUE_TAG) {
                      if (lGetUlong(attr, CE_tagged) == NO_TAG) {
+                        char tmp_reason[2048];
+                        tmp_reason[0] = '\0';
+
+                        strncpy(reason, MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE, reason_size-1);
+                        strncat(reason, tmp_reason, reason_size-1);
                         DEXIT;
                         return 0 ;
                      }

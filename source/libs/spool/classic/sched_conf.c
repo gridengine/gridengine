@@ -159,38 +159,50 @@ _Insight_set_option("suppress", "READ_DANGLING");
    }  
 
    /* conf values needed for both SGE & SGEEE */
-   FPRINTF((fp, "algorithm                  %s\n", lGetString(ep, SC_algorithm)));
-   FPRINTF((fp, "schedule_interval          %s\n", lGetString(ep, SC_schedule_interval)));
-   FPRINTF((fp, "maxujobs                   " u32 "\n", lGetUlong(ep, SC_maxujobs)));
-   FPRINTF((fp, "queue_sort_method          %s\n", qsm2str(lGetUlong(ep, SC_queue_sort_method))));
-   FPRINTF((fp, "user_sort                  %s\n", lGetBool(ep, SC_user_sort)?"true":"false"));
-   FPRINTF((fp, "job_load_adjustments       "));
+   FPRINTF((fp, "algorithm                        %s\n", lGetString(ep, SC_algorithm)));
+   FPRINTF((fp, "schedule_interval                %s\n", lGetString(ep, SC_schedule_interval)));
+   FPRINTF((fp, "maxujobs                         " u32 "\n", lGetUlong(ep, SC_maxujobs)));
+   FPRINTF((fp, "queue_sort_method                %s\n", qsm2str(lGetUlong(ep, SC_queue_sort_method))));
+   FPRINTF((fp, "user_sort                        %s\n", lGetBool(ep, SC_user_sort)?"true":"false"));
+   FPRINTF((fp, "job_load_adjustments             "));
    fret = uni_print_list(fp, NULL, 0, lGetList(ep, SC_job_load_adjustments), intprt_as_load_adjustment, delis, 0);
    if (fret < 0) {
       goto FPRINTF_ERROR;
    }
-   FPRINTF((fp, "load_adjustment_decay_time %s\n", lGetString(ep, SC_load_adjustment_decay_time)));
-   FPRINTF((fp, "load_formula               %s\n", lGetString(ep, SC_load_formula)));
-   FPRINTF((fp, "schedd_job_info            %s\n", lGetString(ep, SC_schedd_job_info)));
-
+   FPRINTF((fp, "load_adjustment_decay_time       %s\n", lGetString(ep, SC_load_adjustment_decay_time)));
+   FPRINTF((fp, "load_formula                     %s\n", lGetString(ep, SC_load_formula)));
+   FPRINTF((fp, "schedd_job_info                  %s\n", lGetString(ep, SC_schedd_job_info)));
+   FPRINTF((fp, "flush_submit_sec                 " u32 "\n", lGetUlong(ep, SC_flush_submit_sec)));
+   FPRINTF((fp, "flush_finish_sec                 " u32 "\n", lGetUlong(ep, SC_flush_finish_sec)));
+   FPRINTF((fp, "params                           %s\n", lGetString(ep, SC_params)));
+   
    /* conf values needed for SGEEE */
    if (feature_is_enabled(FEATURE_SPOOL_ADD_ATTR)) {
-      FPRINTF((fp, "sgeee_schedule_interval    %s\n", lGetString(ep, SC_sgeee_schedule_interval)));
-      FPRINTF((fp, "halftime                   " u32 "\n", lGetUlong(ep, SC_halftime)));
-      FPRINTF((fp, "usage_weight_list          "));
+      FPRINTF((fp, "sgeee_schedule_interval          %s\n", lGetString(ep, SC_sgeee_schedule_interval)));
+      FPRINTF((fp, "halftime                         " u32 "\n", lGetUlong(ep, SC_halftime)));
+      FPRINTF((fp, "usage_weight_list                "));
       fret = uni_print_list(fp, NULL, 0, lGetList(ep, SC_usage_weight_list), intprt_as_usage, delis, 0);
       if (fret < 0) {
          goto FPRINTF_ERROR;
       }
-      FPRINTF((fp, "compensation_factor        %.10g\n", lGetDouble(ep, SC_compensation_factor)));
-      FPRINTF((fp, "weight_user                %.10g\n", lGetDouble(ep, SC_weight_user)));
-      FPRINTF((fp, "weight_project             %.10g\n", lGetDouble(ep, SC_weight_project)));
-      FPRINTF((fp, "weight_jobclass            %.10g\n", lGetDouble(ep, SC_weight_jobclass)));
-      FPRINTF((fp, "weight_department          %.10g\n", lGetDouble(ep, SC_weight_department)));
-      FPRINTF((fp, "weight_job                 %.10g\n", lGetDouble(ep, SC_weight_job)));
-      FPRINTF((fp, "weight_tickets_functional  " u32 "\n", lGetUlong(ep, SC_weight_tickets_functional)));
-      FPRINTF((fp, "weight_tickets_share       " u32 "\n", lGetUlong(ep, SC_weight_tickets_share)));
-      FPRINTF((fp, "weight_tickets_deadline    " u32 "\n", lGetUlong(ep, SC_weight_tickets_deadline)));
+      FPRINTF((fp, "compensation_factor              %.10g\n", lGetDouble(ep, SC_compensation_factor)));
+      FPRINTF((fp, "weight_user                      %.10g\n", lGetDouble(ep, SC_weight_user)));
+      FPRINTF((fp, "weight_project                   %.10g\n", lGetDouble(ep, SC_weight_project)));
+      FPRINTF((fp, "weight_jobclass                  %.10g\n", lGetDouble(ep, SC_weight_jobclass)));
+      FPRINTF((fp, "weight_department                %.10g\n", lGetDouble(ep, SC_weight_department)));
+      FPRINTF((fp, "weight_job                       %.10g\n", lGetDouble(ep, SC_weight_job)));
+      FPRINTF((fp, "weight_tickets_functional        " u32 "\n", lGetUlong(ep, SC_weight_tickets_functional)));
+      FPRINTF((fp, "weight_tickets_share             " u32 "\n", lGetUlong(ep, SC_weight_tickets_share)));
+      FPRINTF((fp, "weight_tickets_deadline          " u32 "\n", lGetUlong(ep, SC_weight_tickets_deadline)));
+
+      FPRINTF((fp, "share_override_tickets           %s\n", lGetBool(ep, SC_share_override_tickets)?"true":"false"));
+      FPRINTF((fp, "share_functional_shares          %s\n", lGetBool(ep, SC_share_functional_shares)?"true":"false"));
+      FPRINTF((fp, "share_deadline_tickets           %s\n", lGetBool(ep, SC_share_deadline_tickets)?"true":"false"));
+      FPRINTF((fp, "max_functional_jobs_to_schedule  " u32 "\n", lGetUlong(ep, SC_max_functional_jobs_to_schedule)));
+      FPRINTF((fp, "report_pjob_tickets              %s\n", lGetBool(ep, SC_report_pjob_tickets)?"true":"false"));
+      FPRINTF((fp, "max_pending_tasks_per_job        " u32 "\n", lGetUlong(ep, SC_max_pending_tasks_per_job)));
+      FPRINTF((fp, "halflife_decay_list              %s\n", lGetString(ep, SC_halflife_decay_list)));
+      FPRINTF((fp, "policy_hierarchy                 %s\n", lGetString(ep, SC_policy_hierarchy)));
    }
 
    if (how != 0) {
@@ -280,6 +292,26 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
          return -1;
       }
 
+      /* --------- SC_flush_submit_sec*/
+      if (!set_conf_ulong(alpp, clpp, fields, "flush_submit_sec", ep, 
+               SC_flush_submit_sec)) {
+         DEXIT;
+         return -1;
+      }    
+     
+      if (!set_conf_string(alpp, clpp, fields, "params", ep,
+               SC_params)) {
+         DEXIT;
+         return -1;
+      }
+     
+      /* --------- SC_flush_finish_sec*/
+      if (!set_conf_ulong(alpp, clpp, fields, "flush_finish_sec", ep, 
+               SC_flush_finish_sec)) {
+         DEXIT;
+         return -1;
+      }   
+      
       /* --------- SC_weight_user */
       if (!set_conf_double(alpp, clpp, fields, "weight_user", ep, 
                SC_weight_user, 0)) {
@@ -294,6 +326,55 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
          return -1;
       }
 
+      /* --------- SC_share_override_tickets */
+      if (!set_conf_bool(alpp, clpp, fields, "share_override_tickets", ep, 
+               SC_share_override_tickets)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_share_functional_shares */
+      if (!set_conf_bool(alpp, clpp, fields, "share_functional_shares", ep, 
+               SC_share_functional_shares)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_share_deadline_tickets*/
+      if (!set_conf_bool(alpp, clpp, fields, "share_deadline_tickets", ep, 
+               SC_share_deadline_tickets)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_report_pjob_tickets*/
+      if (!set_conf_bool(alpp, clpp, fields, "report_pjob_tickets", ep, 
+               SC_report_pjob_tickets)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_max_functional_jobs_to_schedule*/
+      if (!set_conf_ulong(alpp, clpp, fields, "max_functional_jobs_to_schedule", ep, 
+               SC_max_functional_jobs_to_schedule)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_max_pending_tasks_per_job */
+      if (!set_conf_ulong(alpp, clpp, fields, "max_pending_tasks_per_job", ep, 
+               SC_max_pending_tasks_per_job)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_halflife_decay_list */
+      if (!set_conf_string(alpp, clpp, fields, "halflife_decay_list", ep, 
+               SC_halflife_decay_list)) {
+         DEXIT;
+         return -1;
+      }
+
       /* --------- SC_weight_jobclass */
       if (!set_conf_double(alpp, clpp, fields, "weight_jobclass", ep, 
                SC_weight_jobclass, 0)) {
@@ -303,14 +384,14 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
 
       /* --------- SC_weight_department */
       if (!set_conf_double(alpp, clpp, fields, "weight_department", ep, 
-               SC_weight_department, 0)) {
+               SC_weight_department,0)) {
          DEXIT;
          return -1;
       }
 
       /* --------- SC_weight_job */
       if (!set_conf_double(alpp, clpp, fields, "weight_job", ep, 
-               SC_weight_job, 0)) {
+               SC_weight_job, 045)) {
          DEXIT;
          return -1;
       }
@@ -339,6 +420,13 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       /* --------- SC_sgeee_schedule_interval */
       if (!set_conf_timestr(alpp, clpp, fields, "sgeee_schedule_interval", ep, 
                               SC_sgeee_schedule_interval)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* --------- SC_policy_hierarchy */
+      if (!set_conf_string(alpp, clpp, fields, "policy_hierarchy", ep,
+                           SC_policy_hierarchy)) {
          DEXIT;
          return -1;
       }
@@ -470,7 +558,7 @@ lList *read_sched_configuration(const char *common_dir, const char *fname, int s
       ep = cull_read_in_schedd_conf(NULL, fname, spool, NULL);
    } else {
       write_default_config = 1;
-      ep = schedd_conf_create_default();
+      ep = sconf_create_default();
    }
 
    if (ep) {

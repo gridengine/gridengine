@@ -94,10 +94,14 @@ proc submit_del_setup  {} {
    global submit_del_check_queue
 
 
-   get_config submit_del_qconfig
-   set my_config(schedd_params) "FLUSH_SUBMIT_SEC=0,FLUSH_FINISH_SEC=0"
-#   set my_config(execd_params) "KEEP_ACTIVE=1"
-   set_config my_config
+   if { [resolve_version] <= 2 } {
+      get_config submit_del_qconfig
+      set my_config(schedd_params) "FLUSH_SUBMIT_SEC=0,FLUSH_FINISH_SEC=0"
+      set_config my_config
+   } else {
+      set my_schedd_conf(flush_submit_sec) "1"
+      set_schedd_config(my_schedd_conf);
+   }   
 
    
    wait_for_end_of_all_jobs 100
@@ -204,8 +208,14 @@ proc submit_del_cleanup  {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD
    global submit_del_qconfig submit_del_check_queue CHECK_HOST
 
-   set_config submit_del_qconfig
-   
+
+   if {[resolve_version] >= 3} {
+      reset_schedd_config
+   } else {
+      set_config submit_del_qconfig
+   }
+
+
 
    puts $CHECK_OUTPUT "do qdel -uall"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" "-uall" } catch_result

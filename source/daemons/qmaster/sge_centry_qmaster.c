@@ -331,8 +331,7 @@ int sge_del_centry(lListElem *centry, lList **answer_list,
             if (tmp_centry != NULL) {
 
                if (!centry_is_referenced(tmp_centry, &local_answer_list, 
-                                       Master_Queue_List, Master_Exechost_List, 
-                                       Master_Sched_Config_List)) {
+                                       Master_Queue_List, Master_Exechost_List)) {
                   if (sge_event_spool(answer_list, 0, sgeE_CENTRY_DEL, 
                                     0, 0, name, NULL, NULL,
                                     NULL, NULL, NULL, true, true)) {

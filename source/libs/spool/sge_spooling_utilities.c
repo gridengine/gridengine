@@ -47,6 +47,7 @@
 #include "sge_ckpt.h"
 #include "sge_centry.h"
 #include "sge_conf.h"
+#include "sge_schedd_conf.h"
 #include "sge_host.h"
 #include "sge_pe.h"
 #include "sge_queue.h"
@@ -587,6 +588,7 @@ spool_default_validate_list_func(lList **answer_list,
       case SGE_TYPE_USER:
       case SGE_TYPE_SHARETREE:
       case SGE_TYPE_SCHEDD_CONF:
+            sconf_validate_config_(answer_list);
       case SGE_TYPE_JOB:
       default:
          break;

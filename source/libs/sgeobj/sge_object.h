@@ -162,6 +162,9 @@ typedef enum {
 lList **
 object_type_get_master_list(const sge_object_type type);
 
+bool 
+object_type_commit_master_list(const sge_object_type type, lList **answer_list); 
+
 bool
 object_type_free_master_list(const sge_object_type type);
 

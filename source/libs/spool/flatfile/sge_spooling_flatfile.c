@@ -744,141 +744,147 @@ spool_flatfile_default_list_func(lList **answer_list,
 
    DENTER(TOP_LAYER, "spool_flatfile_default_list_func");
 
-   url = lGetString(rule, SPR_url);
-   master_list = object_type_get_master_list(object_type);
-   descr = object_type_get_descr(object_type);
+   if (!list){
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                     ANSWER_QUALITY_WARNING, 
+                     "Cannot read in configuration because target list is missing\n"); 
+      ret = false;
+   } 
+   else {
+      url = lGetString(rule, SPR_url);
+      descr = object_type_get_descr(object_type);
 
-   if (master_list != NULL && descr != NULL && *master_list == NULL) {
-      *master_list = lCreateList("master list", descr);
-   }
+      if (*list!= NULL && descr != NULL) {
+         *master_list = lCreateList("master list", descr);
+      }
 
-   switch(object_type) {
-      case SGE_TYPE_ADMINHOST:
-         directory = ADMINHOST_DIR;
-         break;
-      case SGE_TYPE_CALENDAR:
-         directory = CAL_DIR;
-         break;
-      case SGE_TYPE_CKPT:
-         directory = CKPTOBJ_DIR;
-         break;
-      case SGE_TYPE_CONFIG:
-         key_nm    = CONF_hname;
-         filename  = "global";
-         directory = LOCAL_CONF_DIR;
-         break;
-      case SGE_TYPE_EXECHOST:
-         directory = EXECHOST_DIR;
-         break;
-      case SGE_TYPE_MANAGER:
-         directory = MAN_DIR;
-         break;
-      case SGE_TYPE_OPERATOR:
-         directory = OP_DIR;
-         break;
-      case SGE_TYPE_PE:
-         directory = PE_DIR;
-         break;
-      case SGE_TYPE_QUEUE:
-         directory = QUEUE_DIR;
-         /* JG: TODO: we'll have to quicksort the queue list, see
-          * function queue_list_add_queue
-          */
-         break;
-      case SGE_TYPE_CQUEUE:
-         directory = CQUEUE_DIR;
-         /* JG: TODO: we'll have to quicksort the queue list, see
-          * function cqueue_list_add_cqueue
-          */
-         break;
-      case SGE_TYPE_SUBMITHOST:
-         directory = SUBMITHOST_DIR;
-         break;
-      case SGE_TYPE_USERSET:
-         directory = USERSET_DIR;
-         break;
-      case SGE_TYPE_HGROUP:
-         directory = HGROUP_DIR;
-         break;
-#ifndef __SGE_NO_USERMAPPING__
-      case SGE_TYPE_CUSER:
-         directory = UME_DIR;
-         break;
-#endif
-      case SGE_TYPE_PROJECT:
-         directory = PROJECT_DIR;
-         break;
-      case SGE_TYPE_USER:
-         directory = USER_DIR;
-         break;
-      case SGE_TYPE_SHARETREE:
-         filename = SHARETREE_FILE;
-         break;
-      case SGE_TYPE_SCHEDD_CONF:
-         filename = SCHED_CONF_FILE;
-         break;
-      case SGE_TYPE_JOB:
-         job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 0,
-                                 SPOOL_DEFAULT, NULL);
-         job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List", 0,
-                                 SPOOL_HANDLE_AS_ZOMBIE, NULL);
-         break;
-      default:
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(object_type));
-         ret = false;
-         break;
-   }
+      switch(object_type) {
+         case SGE_TYPE_ADMINHOST:
+            directory = ADMINHOST_DIR;
+            break;
+         case SGE_TYPE_CALENDAR:
+            directory = CAL_DIR;
+            break;
+         case SGE_TYPE_CKPT:
+            directory = CKPTOBJ_DIR;
+            break;
+         case SGE_TYPE_CONFIG:
+            key_nm    = CONF_hname;
+            filename  = "global";
+            directory = LOCAL_CONF_DIR;
+            break;
+         case SGE_TYPE_EXECHOST:
+            directory = EXECHOST_DIR;
+            break;
+         case SGE_TYPE_MANAGER:
+            directory = MAN_DIR;
+            break;
+         case SGE_TYPE_OPERATOR:
+            directory = OP_DIR;
+            break;
+         case SGE_TYPE_PE:
+            directory = PE_DIR;
+            break;
+         case SGE_TYPE_QUEUE:
+            directory = QUEUE_DIR;
+            /* JG: TODO: we'll have to quicksort the queue list, see
+             * function queue_list_add_queue
+             */
+            break;
+         case SGE_TYPE_CQUEUE:
+            directory = CQUEUE_DIR;
+            /* JG: TODO: we'll have to quicksort the queue list, see
+             * function cqueue_list_add_cqueue
+             */
+            break;
+         case SGE_TYPE_SUBMITHOST:
+            directory = SUBMITHOST_DIR;
+            break;
+         case SGE_TYPE_USERSET:
+            directory = USERSET_DIR;
+            break;
+         case SGE_TYPE_HGROUP:
+            directory = HGROUP_DIR;
+            break;
+   #ifndef __SGE_NO_USERMAPPING__
+         case SGE_TYPE_CUSER:
+            directory = UME_DIR;
+            break;
+   #endif
+         case SGE_TYPE_PROJECT:
+            directory = PROJECT_DIR;
+            break;
+         case SGE_TYPE_USER:
+            directory = USER_DIR;
+            break;
+         case SGE_TYPE_SHARETREE:
+            filename = SHARETREE_FILE;
+            break;
+         case SGE_TYPE_SCHEDD_CONF:
+            filename = SCHED_CONF_FILE;
+            break;
+         case SGE_TYPE_JOB:
+            job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 0,
+                                    SPOOL_DEFAULT, NULL);
+            job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List", 0,
+                                    SPOOL_HANDLE_AS_ZOMBIE, NULL);
+            break;
+         default:
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_WARNING, 
+                                    MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                                    object_type_get_name(object_type));
+            ret = false;
+            break;
+      }
 
-   /* if all necessary data has been initialized */
-   if (url != NULL && master_list != NULL && descr != NULL) {
-      /* if we have a directory (= multiple files) to parse */ 
-      if (directory != NULL) { 
-         lList *direntries;
-         lListElem *direntry;
-         char abs_dir_buf[SGE_PATH_MAX];
-         dstring abs_dir_dstring;
-         const char *abs_dir;
+      /* if all necessary data has been initialized */
+      if (url != NULL && master_list != NULL && descr != NULL) {
+         /* if we have a directory (= multiple files) to parse */ 
+         if (directory != NULL) { 
+            lList *direntries;
+            lListElem *direntry;
+            char abs_dir_buf[SGE_PATH_MAX];
+            dstring abs_dir_dstring;
+            const char *abs_dir;
 
-         sge_dstring_init(&abs_dir_dstring, abs_dir_buf, SGE_PATH_MAX);
-         abs_dir = sge_dstring_sprintf(&abs_dir_dstring, "%s/%s", url, 
-                                       directory);
+            sge_dstring_init(&abs_dir_dstring, abs_dir_buf, SGE_PATH_MAX);
+            abs_dir = sge_dstring_sprintf(&abs_dir_dstring, "%s/%s", url, 
+                                          directory);
 
-         direntries = sge_get_dirents(abs_dir);
+            direntries = sge_get_dirents(abs_dir);
 
-         for_each (direntry, direntries) {
-            const char *key = lGetString(direntry, ST_name);
+            for_each (direntry, direntries) {
+               const char *key = lGetString(direntry, ST_name);
 
-            if (key[0] != '.') {
-               ret = read_validate_object(answer_list, type, rule, key, key_nm, 
-                                        object_type, master_list);
+               if (key[0] != '.') {
+                  ret = read_validate_object(answer_list, type, rule, key, key_nm, 
+                                           object_type, master_list);
+               }
             }
+         } 
+         
+         /* single file to parse (SHARETREE, global config, schedd config */
+         if (filename != NULL) {
+            ret = read_validate_object(answer_list, type, rule, filename, key_nm, 
+                                     object_type, master_list);
          }
-      } 
-      
-      /* single file to parse (SHARETREE, global config, schedd config */
-      if (filename != NULL) {
-         ret = read_validate_object(answer_list, type, rule, filename, key_nm, 
-                                  object_type, master_list);
+      }
+
+   #ifdef DEBUG_FLATFILE
+      if (master_list != NULL && *master_list != NULL) {
+         lWriteListTo(*master_list, stderr);
+      }
+   #endif
+
+      /* validate complete list */
+      if (ret) {
+         spooling_validate_list_func validate_list = 
+            (spooling_validate_list_func)lGetRef(rule, SPR_validate_list_func);
+         
+         ret = validate_list(answer_list, type, rule, object_type);
       }
    }
-
-#ifdef DEBUG_FLATFILE
-   if (master_list != NULL && *master_list != NULL) {
-      lWriteListTo(*master_list, stderr);
-   }
-#endif
-
-   /* validate complete list */
-   if (ret) {
-      spooling_validate_list_func validate_list = 
-         (spooling_validate_list_func)lGetRef(rule, SPR_validate_list_func);
-      
-      ret = validate_list(answer_list, type, rule, object_type);
-   }
-
    DEXIT;
    return ret;
 }

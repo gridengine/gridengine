@@ -110,31 +110,36 @@ static int init_framework(void)
 
 static int spool_manop(const char *name, sge_object_type type)
 {
+   /* nod master list */
    int ret = EXIT_SUCCESS;
-   lList **lpp;
+   lList **lpp = NULL;
    lListElem *ep;
    lList *answer_list = NULL;
 
-   DENTER(TOP_LAYER, "spool_manager");
+   DENTER(TOP_LAYER, "spool_manop");
 
    /* We have to store the objects in a master list, as classic spooling
     * writes one file with all managers / operators instead of spooling
     * individual objects.
     */
    lpp = object_type_get_master_list(type);
-
-   if (*lpp == NULL) {
+      
+   if (lpp == NULL) {
       *lpp = lCreateList("master list", object_type_get_descr(type));
    }
 
+   /* only classic spooling */
    ep = lCreateElem(MO_Type);
    lSetString(ep, MO_name, name);
    lAppendElem(*lpp, ep);
-
+   
+   object_type_commit_master_list(type, &answer_list);
+      
    if (!spool_write_object(&answer_list, spool_get_default_context(), ep, name, type)) {
       /* error output has been done in spooling function */
       ret = EXIT_FAILURE;
    }
+   
    answer_list_output(&answer_list);
 
    DEXIT;

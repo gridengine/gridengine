@@ -73,9 +73,17 @@
 
 #define OBJECT_LAYER BASIS_LAYER
 
+/* allows to retrieve a master list */
+typedef lList ** (*getMasterList)(void);
+
+/* allows to change the mater list */
+typedef bool (*commitMasterList)(lList **answer_list);
+
 /* Datastructure for internal storage of object/message related information */
 typedef struct {
    lList **list;                          /* master list                    */
+   getMasterList getMasterList;           /* master list retrieve method    */
+   commitMasterList commitMasterList;     /* commit master list set changes */
    const char *type_name;                 /* type name, e.g. "JOB"          */
    lDescr *descr;                         /* descriptor, e.g. JB_Type       */
    const int key_nm;                      /* nm of key attribute            */
@@ -83,36 +91,36 @@ typedef struct {
 
 /* One entry per event type */
 static object_description object_base[SGE_TYPE_ALL] = {
-   /* master list                    name                 descr      key               */
-   { &Master_Adminhost_List,         "ADMINHOST",         AH_Type,   AH_name           },
-   { &Master_Calendar_List,          "CALENDAR",          CAL_Type,  CAL_name          },
-   { &Master_Ckpt_List,              "CKPT",              CK_Type,   CK_name           },
-   { &Master_Config_List,            "CONFIG",            CONF_Type, CONF_hname        },
-   { NULL,                           "GLOBAL_CONFIG",     NULL,      NoName            },
-   { &Master_Exechost_List,          "EXECHOST",          EH_Type,   EH_name           },
-   { NULL,                           "JATASK",            JAT_Type,  JAT_task_number   },
-   { NULL,                           "PETASK",            PET_Type,  PET_id            },
-   { &Master_Job_List,               "JOB",               JB_Type,   JB_job_number     },
-   { &Master_Job_Schedd_Info_List,   "JOB_SCHEDD_INFO",   SME_Type,  NoName            },
-   { &Master_Manager_List,           "MANAGER",           MO_Type,   MO_name           },
-   { &Master_Operator_List,          "OPERATOR",          MO_Type,   MO_name           },
-   { &Master_Sharetree_List,         "SHARETREE",         STN_Type,  STN_name          },
-   { &Master_Pe_List,                "PE",                PE_Type,   PE_name           },
-   { &Master_Project_List,           "PROJECT",           UP_Type,   UP_name           },
-   { &Master_Queue_List,             "QUEUE",             QU_Type,   QU_qname          },
-   { &Master_CQueue_List,            "CQUEUE",            CQ_Type,   CQ_name           },
-   { NULL,                           "QINSTANCE",         QI_Type,   QI_name           },
-   { &Master_Sched_Config_List,      "SCHEDD_CONF",       SC_Type,   NoName            },
-   { NULL,                           "SCHEDD_MONITOR",    NULL,      NoName            },
-   { NULL,                           "SHUTDOWN",          NULL,      NoName            },
-   { NULL,                           "QMASTER_GOES_DOWN", NULL,      NoName            },
-   { &Master_Submithost_List,        "SUBMITHOST",        SH_Type,   SH_name           },
-   { &Master_User_List,              "USER",              UP_Type,   UP_name           },
-   { &Master_Userset_List,           "USERSET",           US_Type,   US_name           },
-   { &Master_HGroup_List,            "HOSTGROUP",         HGRP_Type,  HGRP_name        },
-   { &Master_CEntry_List,            "COMPLEX_ENTRY",     CE_Type,    CE_name          },
+   /* master list                  get function    set function      name                 descr      key               */
+   { &Master_Adminhost_List,       NULL,           NULL,                 "ADMINHOST",         AH_Type,   AH_name           },
+   { &Master_Calendar_List,        NULL,           NULL,                 "CALENDAR",          CAL_Type,  CAL_name          },
+   { &Master_Ckpt_List,            NULL,           NULL,                 "CKPT",              CK_Type,   CK_name           },
+   { &Master_Config_List,          NULL,           NULL,                 "CONFIG",            CONF_Type, CONF_hname        },
+   { NULL,                         NULL,           NULL,                 "GLOBAL_CONFIG",     NULL,      NoName            },
+   { &Master_Exechost_List,        NULL,           NULL,                 "EXECHOST",          EH_Type,   EH_name           },
+   { NULL,                         NULL,           NULL,                 "JATASK",            JAT_Type,  JAT_task_number   },
+   { NULL,                         NULL,           NULL,                 "PETASK",            PET_Type,  PET_id            },
+   { &Master_Job_List,             NULL,           NULL,                 "JOB",               JB_Type,   JB_job_number     },
+   { &Master_Job_Schedd_Info_List, NULL,           NULL,                 "JOB_SCHEDD_INFO",   SME_Type,  NoName            },
+   { &Master_Manager_List,         NULL,           NULL,                 "MANAGER",           MO_Type,   MO_name           },
+   { &Master_Operator_List,        NULL,           NULL,                 "OPERATOR",          MO_Type,   MO_name           },
+   { &Master_Sharetree_List,       NULL,           NULL,                 "SHARETREE",         STN_Type,  STN_name          },
+   { &Master_Pe_List,              NULL,           NULL,                 "PE",                PE_Type,   PE_name           },
+   { &Master_Project_List,         NULL,           NULL,                 "PROJECT",           UP_Type,   UP_name           },
+   { &Master_Queue_List,           NULL,           NULL,                 "QUEUE",             QU_Type,   QU_qname          },
+   { &Master_CQueue_List,          NULL,           NULL,                 "CQUEUE",            CQ_Type,   CQ_name           },
+   { NULL,                         NULL,           NULL,                 "QINSTANCE",         QI_Type,   QI_name           },
+   { NULL,                 sconf_get_config_list, sconf_validate_config_, "SCHEDD_CONF",      SC_Type,   NoName            },
+   { NULL,                         NULL,           NULL,                 "SCHEDD_MONITOR",    NULL,      NoName            },
+   { NULL,                         NULL,           NULL,                 "SHUTDOWN",          NULL,      NoName            },
+   { NULL,                         NULL,           NULL,                 "QMASTER_GOES_DOWN", NULL,      NoName            },
+   { &Master_Submithost_List,      NULL,           NULL,                 "SUBMITHOST",        SH_Type,   SH_name           },
+   { &Master_User_List,            NULL,           NULL,                 "USER",              UP_Type,   UP_name           },
+   { &Master_Userset_List,         NULL,           NULL,                 "USERSET",           US_Type,   US_name           },
+   { &Master_HGroup_List,          NULL,           NULL,                 "HOSTGROUP",         HGRP_Type,  HGRP_name        },
+   { &Master_CEntry_List,          NULL,           NULL,                 "COMPLEX_ENTRY",     CE_Type,    CE_name          },
 #ifndef __SGE_NO_USERMAPPING__
-   { &Master_Cuser_List,             "USERMAPPING",       CU_Type,  CU_name  }
+   { &Master_Cuser_List,           NULL,           NULL,                 "USERMAPPING",       CU_Type,  CU_name  }
 #endif
 };
 
@@ -983,12 +991,35 @@ lList **object_type_get_master_list(const sge_object_type type)
    DENTER(OBJECT_LAYER, "object_type_get_master_list");
    if(type < 0 || type >= SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
-   } else {
+   } else if (object_base[type].list){
       ret = object_base[type].list;
    }
+   else if (object_base[type].getMasterList){
+      ret = object_base[type].getMasterList();
+   }
+   else {
+      ERROR((SGE_EVENT, MSG_OBJECT_NO_LIST_TO_MOD_TYPE_SI, SGE_FUNC, type));
+   } 
    DEXIT;
    return ret;
 }
+
+bool object_type_commit_master_list(const sge_object_type type, lList **answer_list) {
+   bool ret = true;
+   
+   DENTER(OBJECT_LAYER, "object_type_set_master_list");
+   if(type < 0 || type >= SGE_TYPE_ALL) {
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+      ret = false;
+   } 
+   else if (object_base[type].commitMasterList){
+      ret = object_base[type].commitMasterList(answer_list);
+   }
+   DEXIT;
+   return ret;
+  
+}
+
 
 /****** sgeobj/object/object_type_free_master_list() ***************************
 *  NAME
@@ -1014,15 +1045,22 @@ lList **object_type_get_master_list(const sge_object_type type)
 *******************************************************************************/
 bool object_type_free_master_list(const sge_object_type type)
 {
-   lList **list;
    bool ret = false;
 
    DENTER(OBJECT_LAYER, "object_type_free_master_list");
-   list = object_type_get_master_list(type);
-   if (list != NULL) {
-      lFreeList(*list);
-      *list = NULL;
-      ret = true;
+   if(type < 0 || type >= SGE_TYPE_ALL) {
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+      ret = false;
+   } else if (object_base[type].list){
+       *object_base[type].list = lFreeList(*object_base[type].list);
+   } else if (object_base[type].getMasterList){
+      lList ** list = object_base[type].getMasterList();
+      *list = lFreeList(*list);
+      ret = object_base[type].commitMasterList(NULL);
+   }
+   else {
+      ERROR((SGE_EVENT, MSG_OBJECT_NO_LIST_TO_MOD_TYPE_SI, SGE_FUNC, type));
+      ret = false;
    }
    DEXIT;
    return ret;

@@ -145,15 +145,22 @@ proc scheduler_setup {} {
       puts $CHECK_OUTPUT "setup configuration ..."
 
       set myconfig(loglevel)         "log_warning"
-      set my_schedd_params "PROFILE=1"
-      if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
-         append my_schedd_params ",$stored_configuration(schedd_params)"
+      if { [resolve_version] <= 2 } {
+         set my_schedd_params "PROFILE=1"
+         if { [string compare "none" $stored_configuration(schedd_params)] != 0 } {
+            append my_schedd_params ",$stored_configuration(schedd_params)"
+         }
+         set myconfig(schedd_params)    "$my_schedd_params"
       }
-      set myconfig(schedd_params)    "$my_schedd_params"
+      else{
+         get_schedd_config stored_schedd_config
+         if { [string compare "none" $stored_schedd_config(params)] != 0 } {
+            append my_schedd_params ",$stored_schedd_config(params)"
+         }
+         set my_schedd_config(params)      "$my_schedd_params"
+      } 
       set_config myconfig
-   
-
-
+      
       # scheduler configuration
       puts $CHECK_OUTPUT "setup scheduler configuration ..."
 

@@ -39,6 +39,7 @@
 #endif
 
 #include "cull.h"
+
 typedef struct _gdi_object_t gdi_object_t;
 
 typedef int (*modifier_func_t)(
@@ -58,6 +59,11 @@ typedef int (*writer_func_t)(
    gdi_object_t *this   /* some kind of "this" */
 );
 
+/* allows to retrieve a master list */
+typedef lList ** (*getMasterList)(void);
+
+typedef bool (*commitMasterList)(lList **answer_list);
+
 typedef int (*on_succuss_func_t)(
    lListElem *ep,       /* new modified and already spooled element */
    lListElem *old_ep,   /* old element is NULL in add case */
@@ -65,15 +71,18 @@ typedef int (*on_succuss_func_t)(
 );
 
 struct _gdi_object_t {
-   u_long32             target;      /* SGE_QUEUE_LIST */
-   int                  key_nm;      /* QU_qname */
-   lDescr              *type;        /* QU_Type */
-   char                *object_name; /* "queue" */
-   lList              **master_list; /* &Master_Calendar_List */
-   modifier_func_t      modifier;    /* responsible for validating each our attribute modifier */
-   writer_func_t        writer;      /* function that spools our object */
-   on_succuss_func_t    on_success;  /* do everything what has to be done on successful writing */
+   u_long32           target;          /* SGE_QUEUE_LIST */
+   int                key_nm;          /* QU_qname */
+   lDescr             *type;           /* QU_Type */
+   char               *object_name;    /* "queue" */
+   lList              **master_list;   /* &Master_Calendar_List */
+   getMasterList      getMasterList;   /* master list retrieve method    */
+   commitMasterList   commitMasterList; /* master list commit method     */   
+   modifier_func_t    modifier;        /* responsible for validating each our attribute modifier */
+   writer_func_t      writer;          /* function that spools our object */
+   on_succuss_func_t  on_success;      /* do everything what has to be done on successful writing */
 };
+
 
 gdi_object_t *get_gdi_object(u_long32);
 

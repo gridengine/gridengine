@@ -289,8 +289,8 @@
 ** schedd/sge_select_queue.c
 */ 
 #define MSG_SCHEDD_FORDEFAULTREQUEST                        _MESSAGE(47210, _("for default request "  ))
-#define MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE                _MESSAGE(47211, _("job requests unknown resource \""))
-#define MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE        _MESSAGE(47212, _("job requests non requestable resource \""))
+#define MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE                _MESSAGE(47211, _("job requests unknown resource"))
+#define MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE        _MESSAGE(47212, _("job requests non requestable resource "))
 #define MSG_SCHEDD_ITOFFERSONLY                             _MESSAGE(47213, _("it offers only "))
 #define MSG_SCHEDD_LOGLIST_QUEUESFULLANDDROPPED             _MESSAGE(47214, _("queues dropped because they are full: "))
 #define MSG_SCHEDD_LOGLIST_QUEUESSUSPENDEDANDDROPPED        _MESSAGE(47215, _("queues dropped because they are suspended: "))
@@ -360,12 +360,12 @@
 #define MSG_ATTRIB_USINGXFORY_6FS               _MESSAGE(47257, _("using %.6g for "SFN"\n"))
 #define MSG_TRUE                                _MESSAGE(47258, _("true"))
 #define MSG_FALSE                               _MESSAGE(47259, _("false"))
-
-
+#define MSG_READ_PARAM_S                        _MESSAGE(47260, _("using param: "SFQ"\n"))
+#define MSG_UNKNOWN_PARAM_S                     _MESSAGE(47261, _("found unknown param: "SFQ"\n"))
 /* 
 ** schedd/schedd_message.c
 */ 
-#define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47260, _("can not create schedd_job_info for message "U32CFormat"\n"))
+#define MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U      _MESSAGE(47262, _("can not create schedd_job_info for message "U32CFormat"\n"))
 
 
 
@@ -392,15 +392,15 @@
 /* 
 ** schedd/sge_select_queue.c
 */
-#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47265, _("invalid load value "SFQ" for theshold "SFN))
-#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS       _MESSAGE(47266, _("invalid threshold value "SFN"="SFN))
-#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS      _MESSAGE(47267, _("invalid load adjustment value "SFN"="SFN))
-#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS           _MESSAGE(47268, _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN))
-#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS          _MESSAGE(47269, _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOAD_SS            _MESSAGE(47265, _("invalid load value "SFQ" for theshold "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDTHRESHOLD_SS       _MESSAGE(47266, _("invalid threshold value "SFN"="SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDINVALIDLOADADJUST_SS      _MESSAGE(47267, _("invalid load adjustment value "SFN"="SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS           _MESSAGE(47268, _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS          _MESSAGE(47269, _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN"\n"))
 #define MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS          _MESSAGE(47270, _(SFN"="SFN" "SFN" "SFN))
-#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47271, _("unknown complex attribute type for threshold "SFN))
-#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47272, _("no such host "SFN" for that queue"))
-#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47273, _("no such complex attribute for threshold "SFQ))
+#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47271, _("unknown complex attribute type for threshold "SFN"\n"))
+#define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47272, _("no such host "SFN" for that queue\n"))
+#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47273, _("no such complex attribute for threshold "SFQ"\n"))
 
 #define MSG_SCHEDD_LCDIAGHOSTNP_SFI                   _MESSAGE(47274, _(SFN" * %f with nproc=%d"))
 #define MSG_SCHEDD_LCDIAGHOST_SF                      _MESSAGE(47275, _(SFN" * %f"))
@@ -439,5 +439,6 @@
  */
 #define MSG_INVALID_LOAD_FORMULA                      _MESSAGE(47291, _("invalid load formula "SFQ))
 #define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47292, _("The scheduler configuration is incomplete"))
-
+#define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47293, _("Using the scheduler default configuration"))
+#define MSG_INVALID_PARAM_SETTING_S                     _MESSAGE(47294, _("Invalid scheduler param setting: "SFQ)) 
 #endif /* __MSG_SCHEDD_H */

@@ -41,15 +41,37 @@ enum schedd_job_info_key {
    SCHEDD_JOB_INFO_UNDEF
 };
 
+typedef enum {
 
-extern lList *Master_Sched_Config_List;
+   FIRST_POLICY_VALUE,
+   INVALID_POLICY = FIRST_POLICY_VALUE,
 
-lListElem *schedd_conf_create_default(void);
+   OVERRIDE_POLICY,
+   FUNCTIONAL_POLICY,
+   SHARE_TREE_POLICY,
+   DEADLINE_POLICY,
 
-bool schedd_conf_is_valid_load_formula_( lList **answer_list,
+   LAST_POLICY_VALUE,
+   POLICY_VALUES = (LAST_POLICY_VALUE - FIRST_POLICY_VALUE)
+} policy_type_t;
+
+typedef struct {
+   policy_type_t policy;
+   int dependent;
+} policy_hierarchy_t;  
+
+void policy_hierarchy_fill_array(policy_hierarchy_t array[]);
+
+void policy_hierarchy_print_array(policy_hierarchy_t array[]);
+
+lListElem *sconf_create_default(void);
+
+bool sconf_set_config(lList **config, lList **answer_list);
+
+bool sconf_is_valid_load_formula_( lList **answer_list,
                                        lList *cmplx_list);
 
-bool schedd_conf_is_valid_load_formula( lListElem *sc_ep,
+bool sconf_is_valid_load_formula(lListElem *sc_ep,
                                        lList **answer_list,
                                        lList *cmplx_list);
 
@@ -61,6 +83,8 @@ bool sconf_validate_config(lList **answer_list, lList *config);
 bool sconf_validate_config_(lList **answer_list);
 
 const lListElem *sconf_get_config(void);
+
+lList **sconf_get_config_list(void);
 
 bool sconf_is(void);
 
@@ -78,6 +102,8 @@ const char *sconf_get_load_adjustment_decay_time_str(void);
 
 const char *sconf_sgeee_schedule_interval_str(void);
 
+const char *sconf_get_param(const char *name);
+
 u_long32 sconf_get_queue_sort_method(void);
 
 u_long32 sconf_get_maxujobs(void);
@@ -88,9 +114,9 @@ u_long32 sconf_get_sgeee_schedule_interval(void);
 
 u_long32 sconf_get_schedd_job_info(void);
 
-u_long32 sconf_weight_tickets_share(void);
+u_long32 sconf_get_weight_tickets_share(void);
 
-u_long32 sconf_weight_tickets_deadline(void);
+u_long32 sconf_get_weight_tickets_deadline(void);
 
 void sconf_disable_schedd_job_info(void);
 
@@ -125,4 +151,25 @@ void sconf_set_weight_tickets_deadline_active(u_long32 active);
 void sconf_set_weight_tickets_override(u_long32 active);
 
 double sconf_get_compensation_factor(void);
+
+bool sconf_get_share_override_tickets(void);
+
+bool sconf_get_share_functional_shares(void);
+
+bool sconf_get_share_deadline_tickets(void);
+
+bool sconf_get_report_pjob_tickets(void);
+
+u_long32 sconf_get_flush_submit_sec(void);
+   
+u_long32 sconf_get_flush_finish_sec(void);
+   
+u_long32 sconf_get_max_functional_jobs_to_schedule(void);
+
+u_long32 sconf_get_max_pending_tasks_per_job(void);
+
+const char *sconf_get_halflife_decay_list_str(void);
+
+const lList* sconf_get_halflife_decay_list(void);
+
 #endif /* __SGE_SCHEDD_CONF_H */

@@ -221,7 +221,6 @@ int event_handler_default_scheduler()
    copy.centry_list = lCopyList("", Master_CEntry_List);
    copy.pe_list = lCopyList("", Master_Pe_List);
    copy.share_tree = lCopyList("", Master_Sharetree_List);
-/*   copy.config_list = lCopyList("", Master_Sched_Config_List); */
    copy.user_list = lCopyList("", Master_User_List);
    copy.project_list = lCopyList("", Master_Project_List);
    copy.ckpt_list = lCopyList("", Master_Ckpt_List);
@@ -451,25 +450,25 @@ DTRACE;
 #define NM2  "%I%I"
 #define NM1  "%I"
 
-      what_job = lWhat("%T(" NM10 NM10 NM10 NM10 NM2")", JB_Type,
-            JB_job_number, 
+      what_job = lWhat("%T(" NM2 NM10 NM10 NM10 NM2")", JB_Type,
+/*SGE*/     JB_job_number, 
             JB_script_file,
             JB_submission_time,
             JB_owner,
-            JB_uid,      /* x*/
+/*            JB_uid,     */ /* x*/
             JB_group,
-            JB_gid,        /* x*/
+/*            JB_gid,     */   /* x*/
             JB_nrunning,
             JB_execution_time,
-            JB_checkpoint_attr,     /* x*/
+/*            JB_checkpoint_attr,  */   /* x*/
 
-            JB_checkpoint_interval, /* x*/
+/*            JB_checkpoint_interval, */ /* x*/
             JB_checkpoint_name,   
             JB_hard_resource_list,
             JB_soft_resource_list,
-            JB_mail_options, /* may be we want to send mail */ /* x*/
-            JB_mail_list,  /* x*/
-            JB_job_name,   /* x*/
+/*            JB_mail_options,   */ /* may be we want to send mail */ /* x*/
+/*            JB_mail_list,  */ /* x*/
+/*            JB_job_name,   */ /* x*/
             JB_priority,
             JB_hard_queue_list,
             JB_soft_queue_list,
@@ -483,9 +482,9 @@ DTRACE;
             JB_version,
             JB_type,
             JB_project,
-  /* SGE */ JB_department,
-
-            JB_jobclass, /*x*/
+            JB_department,
+/* SGEEE */
+/*            JB_jobclass, */   /*x*/
             JB_deadline,
             JB_host,
             JB_override_tickets,
@@ -496,7 +495,7 @@ DTRACE;
             JB_ja_o_h_ids,   
 	         JB_ja_tasks,
 
-            JB_ja_template,
+/*SGE*/     JB_ja_template,
             JB_category);
    }
 
@@ -532,13 +531,13 @@ bool
 sge_process_schedd_conf_event(sge_object_type type, sge_event_action action, 
                               lListElem *event, void *clientdata)
 {
-   lListElem *old;
+   const lListElem *old;
    lListElem *new;
 
    DENTER(TOP_LAYER, "sge_process_schedd_conf_event");
    DPRINTF(("callback processing schedd config event\n"));
 
-   old = lFirst(Master_Sched_Config_List);
+   old = sconf_get_config(); 
    new = lFirst(lGetList(event, ET_new_version));
 
    if (new == NULL) {
@@ -558,7 +557,7 @@ sge_process_schedd_conf_event(sge_object_type type, sge_event_action action,
       lList *alpp = NULL;
 
       if (Master_CEntry_List != NULL &&
-          !schedd_conf_is_valid_load_formula(new, &alpp, Master_CEntry_List)) {
+          !sconf_is_valid_load_formula(new, &alpp, Master_CEntry_List)) {
             ERROR((SGE_EVENT,MSG_INVALID_LOAD_FORMULA, new_load_formula ));
             answer_list_output(&alpp);
             if (old)
@@ -585,18 +584,6 @@ sge_process_schedd_conf_event(sge_object_type type, sge_event_action action,
       }
    }
 
-   /* clear the scheduler info parameter in the new configuration*/
-   lSetUlong(new, SC_is_schedd_job_info, SCHEDD_JOB_INFO_UNDEF);
-   lSetList(new, SC_schedd_job_info_range, NULL);
-
-   /* remember scheduler config in global data structure */
-   /* SG: TODO: do we need this? */
-   {
-      lList *alpp = NULL;
-      if (!sconf_validate_config(&alpp, lGetList(event, ET_new_version))){
-         answer_list_output(&alpp);
-      }
-   }
    /* check event client settings */
    {
       const char *time = lGetString(new, SC_schedule_interval); 
@@ -1042,10 +1029,27 @@ int subscribe_default_scheduler(void)
                         sge_process_userset_event_after,    NULL);
 
    /* set flush parameters for job */
-   ec_set_flush(sgeE_JOB_ADD,         flush_submit_sec);
-   ec_set_flush(sgeE_JOB_DEL,         flush_finish_sec);
-   ec_set_flush(sgeE_JOB_FINAL_USAGE, flush_finish_sec);
-
+   {
+      int temp = sconf_get_flush_submit_sec();
+      if (temp == 0)
+         ec_set_flush(sgeE_JOB_ADD, -1);        
+      else
+         ec_set_flush(sgeE_JOB_ADD, temp);
+         
+      temp = sconf_get_flush_finish_sec();
+      if (temp == 0){
+         ec_set_flush(sgeE_JOB_DEL,         -1);
+         ec_set_flush(sgeE_JOB_FINAL_USAGE, -1);
+         ec_set_flush(sgeE_JATASK_MOD, -1);
+         ec_set_flush(sgeE_JATASK_DEL, -1);
+      }
+      else {
+         ec_set_flush(sgeE_JOB_DEL,         temp);
+         ec_set_flush(sgeE_JOB_FINAL_USAGE, temp);
+         ec_set_flush(sgeE_JATASK_MOD, temp);
+         ec_set_flush(sgeE_JATASK_DEL, temp);
+      }
+   }
    /* for some reason we flush sharetree changes */
    ec_set_flush(sgeE_NEW_SHARETREE,   0);
 

@@ -2277,7 +2277,9 @@ proc setup_conf {} {
   set params(token_extend_time) "none"
   set params(shepherd_cmd) "none"
   set params(qmaster_params) "none"
-  set params(schedd_params) "none"
+  if { [resolve_version] <= 2 } {
+     set params(schedd_params) "none"
+  }
   set params(execd_params) "none"
   set params(qlogin_command) "telnet"
   set params(max_aj_instances) "2000"

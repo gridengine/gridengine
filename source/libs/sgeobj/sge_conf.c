@@ -64,8 +64,6 @@
 
 #define SGE_BIN "bin"
 
-const char *const policy_hierarchy_chars = "OFSD";
-
 extern u_long32 loggingfacility;
 lList *Master_Config_List = NULL; 
 
@@ -79,8 +77,6 @@ int use_qidle = 0;
 int disable_reschedule = 0;
 
 int do_profiling = false;
-int flush_submit_sec = -1;
-int flush_finish_sec = -1;
  
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
@@ -89,35 +85,6 @@ int keep_active = 0;
 
 /* allow the simulation of (non existent) hosts */
 int simulate_hosts = 0;
-
-
-/*
- * SGEEE pending job scheduling algorithm parameters:
- *
- *      share_override_tickets - Override tickets of any object instance
- *              are shared equally among all jobs associated with the object.
- *      share_functional_shares - Functional shares of any object instance
- *              are shared among all the jobs associated with the object.
- *      share_deadline_tickets - Deadline tickets are shared among all the
- *              deadline jobs.
- *              are shared among all the jobs associated with the object.
- *      max_functional_jobs_to_schedule - The maximum number of functional
- *              pending jobs to scheduling using the brute-force method.
- *      max_pending_tasks_per_job - The number of subtasks per pending job to
- *              schedule. This parameter exists in order to reduce overhead.
- *      halflife_decay_list - A list of halflife decay values (UA_Type)
- *      max_report_job_tickets - The number of pending job ticket orders send
- *             to the qmaster. Range between 0 and 7FFFFFFF.
- *
- */
-
-int share_override_tickets = 1;
-int share_functional_shares = 1;
-int share_deadline_tickets = 1;
-int max_functional_jobs_to_schedule = 200;
-int max_report_job_tickets = 0x7fffffff;
-int max_pending_tasks_per_job = 50;
-lList *halflife_decay_list = NULL;
 
 /*
  * This value overrides the default scheduler timeout (10 minutes)
@@ -163,12 +130,6 @@ int set_grd_environment = 0;
  * initual job priorities remain in effect also in SGEEE
  */
 int deactivate_ptf = 0;
-
-/*
- * Activate policy hierarchy in case of SGEEE if not NULL
- * and not "NONE"
- */
-char policy_hierarchy_string[5] = "";
 
 /*
  * notify_kill_default and notify_susp_default
@@ -246,7 +207,6 @@ static tConfEntry conf_entries[] = {
  { "token_extend_time", 1, "24:0:0",            1, NULL },
  { "shepherd_cmd",      1, "none",              1, NULL },
  { "qmaster_params",    0, "none",              1, NULL }, 
- { "schedd_params",     0, "none",              1, NULL }, 
  { "execd_params",      1, "none",              1, NULL }, 
  { "gid_range",         1, "none",              1, NULL },
  { "finished_jobs",     0, FINISHED_JOBS,       1, NULL },
@@ -415,7 +375,6 @@ lList *lpCfg
    chg_conf_val(lpCfg, "token_extend_time", NULL, &mconf->token_extend_time, TYPE_TIM);
    chg_conf_val(lpCfg, "shepherd_cmd", &mconf->shepherd_cmd, NULL, 0);
    chg_conf_val(lpCfg, "qmaster_params", &mconf->qmaster_params, NULL, 0);
-   chg_conf_val(lpCfg, "schedd_params", &mconf->schedd_params, NULL, 0);
    chg_conf_val(lpCfg, "execd_params",  &mconf->execd_params, NULL, 0);
    chg_conf_val(lpCfg, "finished_jobs", NULL, &mconf->zombie_jobs, TYPE_INT);
    chg_conf_val(lpCfg, "qlogin_daemon", &mconf->qlogin_daemon, NULL, 0);
@@ -599,7 +558,6 @@ int merge_configuration(lListElem *global, lListElem *local,
       set_cod_environment = 0;
       set_grd_environment = 0; 
       deactivate_ptf = 0; 
-      policy_hierarchy_string[0] = '\0';
 
       for (s=sge_strtok(pconf->execd_params, ",; "); s; s=sge_strtok(NULL, ",; "))
          if (!strcasecmp(s, "USE_QIDLE")) {
@@ -698,112 +656,6 @@ int merge_configuration(lListElem *global, lListElem *local,
             ptf_min_priority=atoi(&s[sizeof("PTF_MIN_PRIORITY=")-1]);
          else if (!strncasecmp(s, "EXECD_PRIORITY", sizeof("EXECD_PRIORITY")-1))
             execd_priority=atoi(&s[sizeof("EXECD_PRIORITY=")-1]);
-
-      do_profiling = false;
-      flush_submit_sec = -1;
-      flush_finish_sec = -1;
-      share_override_tickets = 1;
-      share_functional_shares = 1;
-      share_deadline_tickets = 1;
-      max_report_job_tickets = 0x7fffffff;
-      max_functional_jobs_to_schedule = 200;
-      max_pending_tasks_per_job = 50;
-      halflife_decay_list = NULL;
-      
-      for (s=sge_strtok(pconf->schedd_params, ",; "); s; s=sge_strtok(NULL, ",; ")) {
-         if (!strncasecmp(s, "FLUSH_SUBMIT_SEC", sizeof("FLUSH_SUBMIT_SEC")-1)) {
-            flush_submit_sec = atoi(&s[sizeof("FLUSH_SUBMIT_SEC=")-1]);
-            if (flush_submit_sec < 0)
-               flush_submit_sec=-1;  
-         } else if (!strncasecmp(s, "FLUSH_FINISH_SEC", sizeof("FLUSH_FINISH_SEC")-1)) {
-            flush_finish_sec = atoi(&s[sizeof("FLUSH_FINISH_SEC=")-1]);
-            if (flush_finish_sec < 0)
-               flush_finish_sec=-1;  
-         } else if (!strcasecmp(s, "REPORT_PJOB_TICKETS=false") ||
-                    !strcasecmp(s, "REPORT_PJOB_TICKETS=0")) {
-            max_report_job_tickets = 0;
-         } else if (!strcasecmp(s, "SHARE_OVERRIDE_TICKETS=true") ||
-                    !strcasecmp(s, "SHARE_OVERRIDE_TICKETS=1")) {
-            share_override_tickets = 1;
-         } else if (!strcasecmp(s, "SHARE_OVERRIDE_TICKETS=false") ||
-                    !strcasecmp(s, "SHARE_OVERRIDE_TICKETS=0")) {
-            share_override_tickets = 0;
-         } else if (!strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=false") ||
-                    !strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=0")) {
-            share_functional_shares = 0;
-         } else if (!strcasecmp(s, "SHARE_DEADLINE_TICKETS=true") ||
-                    !strcasecmp(s, "SHARE_DEADLINE_TICKETS=1")) {
-            share_deadline_tickets = 1;
-         } else if (!strcasecmp(s, "SHARE_DEADLINE_TICKETS=false") ||
-                    !strcasecmp(s, "SHARE_DEADLINE_TICKETS=0")) {
-            share_deadline_tickets = 0;
-         } else if (!strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=false") ||
-                    !strcasecmp(s, "SHARE_FUNCTIONAL_SHARES=0")) {
-            share_functional_shares = 0;
-         } else if (!strncasecmp(s, "MAX_FUNCTIONAL_JOBS_TO_SCHEDULE",
-                    sizeof("MAX_FUNCTIONAL_JOBS_TO_SCHEDULE")-1)) {
-            max_functional_jobs_to_schedule=atoi(&s[sizeof("MAX_FUNCTIONAL_JOBS_TO_SCHEDULE=")-1]);
-         } else if (!strncasecmp(s, "MAX_PENDING_TASKS_PER_JOB",
-                    sizeof("MAX_PENDING_TASKS_PER_JOB")-1)) {
-            max_pending_tasks_per_job=atoi(&s[sizeof("MAX_PENDING_TASKS_PER_JOB=")-1]);
-         } else if (!strcasecmp(s, "HALFLIFE_DECAY_LIST=none")) {
-            if (halflife_decay_list)
-               lFreeList(halflife_decay_list);
-            halflife_decay_list = NULL;
-         } else if (!strncasecmp(s, "HALFLIFE_DECAY_LIST=",
-                    sizeof("HALFLIFE_DECAY_LIST=")-1)) {
-            lListElem *ep;
-            const char *s0,*s1,*s2,*s3;
-            double value;
-            struct saved_vars_s *sv1=NULL, *sv2=NULL;
-            if (halflife_decay_list) {
-               lFreeList(halflife_decay_list);
-               halflife_decay_list = NULL;
-            }
-            s0 = &s[sizeof("HALFLIFE_DECAY_LIST=")-1];
-            for(s1=sge_strtok_r(s0, ":", &sv1); s1;
-                s1=sge_strtok_r(NULL, ":", &sv1)) {
-               if ((s2=sge_strtok_r(s1, "=", &sv2)) &&
-                   (s3=sge_strtok_r(NULL, "=", &sv2)) &&
-                   (sscanf(s3, "%lf", &value)==1)) {
-                  ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
-                  lSetDouble(ep, UA_value, value);
-               }
-               if (sv2)
-                  free(sv2);
-            }
-            if (sv1)
-               free(sv1);
-         } else if (!strncasecmp(s, "PROFILE=1", sizeof("PROFILE=1")-1)) {
-            do_profiling = true;
-         } else if (!strncasecmp(s, "POLICY_HIERARCHY=", 
-                                 sizeof("POLICY_HIERARCHY=")-1)) {
-            const char *value_string;
-
-            value_string = &s[sizeof("POLICY_HIERARCHY=")-1];
-            if (value_string) {
-               policy_hierarchy_t hierarchy[POLICY_VALUES];
-
-               if (policy_hierarchy_verify_value(value_string)) {
-                  WARNING((SGE_EVENT, MSG_GDI_INVALIDPOLICYSTRING)); 
-                  strcpy(policy_hierarchy_string, "");
-               } else {
-                  strcpy(policy_hierarchy_string, value_string);
-               }
-               policy_hierarchy_fill_array(hierarchy, policy_hierarchy_string);
-               policy_hierarchy_print_array(hierarchy);
-            } 
-         }
-      }
-
-      /* post process schedd config: profiling */
-      if(do_profiling && !prof_is_active()) {
-         prof_start(NULL);
-      }
-      if(!do_profiling && prof_is_active()) {
-         prof_stop(NULL);
-      }
-      
    }
 
    if (mlist) {
@@ -856,7 +708,6 @@ void sge_show_conf()
    DPRINTF(("conf.token_extend_time      >%u<\n", (unsigned) conf.token_extend_time));
    DPRINTF(("conf.shepherd_cmd           >%s<\n", conf.shepherd_cmd?conf.pag_cmd:"none"));
    DPRINTF(("conf.qmaster_params         >%s<\n", conf.qmaster_params?conf.qmaster_params:"none"));
-   DPRINTF(("conf.schedd_params          >%s<\n", conf.schedd_params?conf.schedd_params:"none"));
    DPRINTF(("conf.execd_params           >%s<\n", conf.execd_params?conf.execd_params:"none"));
    DPRINTF(("conf.gid_range              >%s<\n", conf.gid_range?conf.gid_range:"none")); 
    DPRINTF(("conf.zombie_jobs            >%u<\n", (unsigned) conf.zombie_jobs));
@@ -922,7 +773,6 @@ sge_conf_type *conf
    FREE(conf->pag_cmd);
    FREE(conf->shepherd_cmd);
    FREE(conf->qmaster_params);
-   FREE(conf->schedd_params);
    FREE(conf->execd_params);
    FREE(conf->gid_range);
    FREE(conf->qlogin_daemon);
@@ -935,236 +785,5 @@ sge_conf_type *conf
    memset(conf, 0, sizeof(sge_conf_type));
 
    return;
-}
-
-/****** sgeobj/conf/policy_hierarchy_enum2char() ******************************
-*  NAME
-*     policy_hierarchy_enum2char() -- Return policy char for a value 
-*
-*  SYNOPSIS
-*     char policy_hierarchy_enum2char(policy_type_t value) 
-*
-*  FUNCTION
-*     Returns the first letter of a policy name corresponding to the 
-*     enum "value".
-*
-*  INPUTS
-*     policy_type_t value - enum value 
-*
-*  RESULT
-*     char - "O", "F", "S", "D"
-******************************************************************************/
-char policy_hierarchy_enum2char(policy_type_t value) 
-{
-   return policy_hierarchy_chars[value - 1];
-}
- 
-/****** sgeobj/conf/policy_hierarchy_char2enum() ******************************
-*  NAME
-*     policy_hierarchy_char2enum() -- Return value for a policy char
-*
-*  SYNOPSIS
-*     policy_type_t policy_hierarchy_char2enum(char character) 
-*
-*  FUNCTION
-*     This function returns a enum value for the first letter of a 
-*     policy name. 
-*
-*  INPUTS
-*     char character - "O", "F", "S" or "D" 
-*
-*  RESULT
-*     policy_type_t - enum value 
-******************************************************************************/
-policy_type_t policy_hierarchy_char2enum(char character)
-{
-   const char *pointer;
-   policy_type_t ret;
-   
-   pointer = strchr(policy_hierarchy_chars, character);
-   if (pointer != NULL) {
-      ret = (pointer - policy_hierarchy_chars) + 1;
-   } else {
-      ret = INVALID_POLICY;
-   }
-   return ret;
-}
-
-/****** sgeobj/conf/policy_hierarchy_verify_value() ***************************
-*  NAME
-*     policy_hierarchy_verify_value() -- verify a policy string 
-*
-*  SYNOPSIS
-*     int policy_hierarchy_verify_value(const char* value) 
-*
-*  FUNCTION
-*     The function tests whether the given policy string (value) is i
-*     valid. 
-*
-*  INPUTS
-*     const char* value - policy string 
-*
-*  RESULT
-*     int - 0 -> OK
-*           1 -> ERROR: one char is at least twice in "value"
-*           2 -> ERROR: invalid char in "value"
-*           3 -> ERROR: value == NULL
-******************************************************************************/
-int policy_hierarchy_verify_value(const char* value) 
-{
-   int ret = 0;
-
-   DENTER(TOP_LAYER, "policy_hierarchy_verify_value");
-
-   if (value != NULL) {
-      if (strcmp(value, "") && strcasecmp(value, "NONE")) {
-         int is_contained[POLICY_VALUES]; 
-         int i;
-
-         for (i = 0; i < POLICY_VALUES; i++) {
-            is_contained[i] = 0;
-         }
-
-         for (i = 0; i < strlen(value); i++) {
-            char c = value[i];
-            int index = policy_hierarchy_char2enum(c);
-
-            if (is_contained[index]) {
-               DPRINTF(("character \'%c\' is contained at least twice\n", c));
-               ret = 1;
-               break;
-            } 
-
-            is_contained[index] = 1;
-
-            if (is_contained[INVALID_POLICY]) {
-               DPRINTF(("Invalid character \'%c\'\n", c));
-               ret = 2;
-               break;
-            }
-         }
-      }
-   } else {
-      ret = 3;
-   }
-
-   DEXIT;
-   return ret;
-}
-
-/****** sgeobj/conf/policy_hierarchy_fill_array() *****************************
-*  NAME
-*     policy_hierarchy_fill_array() -- fill the policy array 
-*
-*  SYNOPSIS
-*     void policy_hierarchy_fill_array(policy_hierarchy_t array[], 
-*                                      const char *value) 
-*
-*  FUNCTION
-*     Fill the policy "array" according to the characters given by 
-*     "value".
-*
-*     value == "FODS":
-*        policy_hierarchy_t array[4] = {
-*            {FUNCTIONAL_POLICY, 1},
-*            {OVERRIDE_POLICY, 1},
-*            {DEADLINE_POLICY, 1},
-*            {SHARE_TREE_POLICY, 1}
-*        };
-*
-*     value == "FS":
-*        policy_hierarchy_t array[4] = {
-*            {FUNCTIONAL_POLICY, 1},
-*            {SHARE_TREE_POLICY, 1},
-*            {OVERRIDE_POLICY, 0},
-*            {DEADLINE_POLICY, 0}
-*        };
-*
-*     value == "OFS":
-*        policy_hierarchy_t hierarchy[4] = {
-*            {OVERRIDE_POLICY, 1},
-*            {FUNCTIONAL_POLICY, 1},
-*            {SHARE_TREE_POLICY, 1},
-*            {DEADLINE_POLICY, 0}
-*        }; 
-*
-*     value == "NONE":
-*        policy_hierarchy_t hierarchy[4] = {
-*            {OVERRIDE_POLICY, 0},
-*            {FUNCTIONAL_POLICY, 0},
-*            {SHARE_TREE_POLICY, 0},
-*            {DEADLINE_POLICY, 0}
-*        }; 
-*
-*  INPUTS
-*     policy_hierarchy_t array[] - array with at least POLICY_VALUES 
-*                                  values 
-*     const char* value          - "NONE" or any combination
-*                                  of the first letters of the policy 
-*                                  names (e.g. "OFSD")
-*
-*  RESULT
-*     "array" will be modified 
-******************************************************************************/
-void policy_hierarchy_fill_array(policy_hierarchy_t array[], const char *value)
-{
-   int is_contained[POLICY_VALUES];
-   int index = 0;
-   int i;
-
-   DENTER(TOP_LAYER, "policy_hierarchy_fill_array");
-
-   for (i = 0; i < POLICY_VALUES; i++) {
-      is_contained[i] = 0;
-   }     
-   if (value != NULL && strcmp(value, "") && strcasecmp(value, "NONE")) {
-      for (i = 0; i < strlen(value); i++) {
-         char c = value[i];
-         int enum_value = policy_hierarchy_char2enum(c); 
-
-         is_contained[enum_value] = 1;
-         array[index].policy = enum_value;
-         array[index].dependent = 1;
-         index++;
-      }
-   }
-   for (i = INVALID_POLICY + 1; i < LAST_POLICY_VALUE; i++) {
-      if (!is_contained[i])  {
-         array[index].policy = i;
-         array[index].dependent = 0;
-         index++;
-      }
-   }
-
-   DEXIT;
-}
-
-/****** sgeobj/conf/policy_hierarchy_print_array() ****************************
-*  NAME
-*     policy_hierarchy_print_array() -- print hierarchy array 
-*
-*  SYNOPSIS
-*     void policy_hierarchy_print_array(policy_hierarchy_t array[]) 
-*
-*  FUNCTION
-*     Print hierarchy array in the debug output 
-*
-*  INPUTS
-*     policy_hierarchy_t array[] - array with at least 
-*                                  POLICY_VALUES values 
-******************************************************************************/
-void policy_hierarchy_print_array(policy_hierarchy_t array[])
-{
-   int i;
-
-   DENTER(TOP_LAYER, "policy_hierarchy_print_array");
-   
-   for (i = INVALID_POLICY + 1; i < LAST_POLICY_VALUE; i++) {
-      char character = policy_hierarchy_enum2char(array[i-1].policy);
-      
-      DPRINTF(("policy: %c; dependent: %d\n", character, array[i-1].dependent));
-   }   
-
-   DEXIT;
 }
 

@@ -149,13 +149,22 @@ proc usage_setup  {} {
    if {[info exists saved_config]} {
       unset saved_config
    }
-   foreach attrib "load_report_time execd_params schedd_params" {
-      set saved_config($attrib) $config($attrib)
+   if { [resolve_version] <= 2 } {
+      foreach attrib "load_report_time execd_params schedd_params" {
+         set saved_config($attrib) $config($attrib)
+      }
+      set new_config(schedd_params) "$config(schedd_params) flush_submit_secs=0"
+
+   } else {
+      foreach attrib "load_report_time execd_params" {
+         set saved_config($attrib) $config($attrib)
+      }
+      set my_schedd_conf(flush_submit_sec) "1"
+      set_schedd_config(my_schedd_conf);
    }
 
    set new_config(load_report_time) "0:0:5"
-   set new_config(schedd_params) "$config(schedd_params) flush_submit_secs=0"
-
+   
    if {$reserved_usage} {
       set new_config(execd_params) "$config(execd_params) acct_reserved_usage=1 sharetree_reserved_usage=1"
    }
@@ -210,6 +219,12 @@ proc usage_cleanup  {} {
 
    # reset config
    set_config saved_config
+   if {[resolve_version] >= 3} {
+      reset_schedd_config;
+   }
+
+
+   
    after 15000
 
    # remove pe's

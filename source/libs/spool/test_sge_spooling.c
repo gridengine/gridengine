@@ -107,10 +107,15 @@ static bool read_spooled_data(void)
    DPRINTF(("read %d entries to Master_Config_List\n", lGetNumberOfElem(Master_Config_List)));
 
    /* cluster configuration */
-   spool_read_list(&answer_list, context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
-   answer_list_output(&answer_list);
-   DPRINTF(("read %d entries to Master_Sched_Config_List\n", lGetNumberOfElem(Master_Sched_Config_List)));
-
+   {
+      lList *schedd_config = NULL;
+      spool_read_list(&answer_list, context, &schedd_config, SGE_TYPE_SCHEDD_CONF);
+      if (schedd_config)
+         if (sconf_set_config(&schedd_config, &answer_list))
+            lListFree(schedd_config);
+      answer_list_output(&answer_list);
+      DPRINTF(("read %d entries to Master_Sched_Config_List\n", lGetNumberOfElem(sconf_get_config_list())));
+   }
    /* complexes */
    spool_read_list(&answer_list, context, &Master_CEntry_List, SGE_TYPE_CENTRY);
    answer_list_output(&answer_list);

@@ -94,9 +94,10 @@ proc issue_1251_run  {} {
 
    if {$catch_result != 0} {
       add_proc_error "issue_1251_run" "-1" "qconf failed to display share tree: $result"
+      set_error -1 "Issue 1251: qconf -sstree unable to display large share tree"
+   } else {
+      set_error 0 "ok"
    }
-
-   set_error 0 "ok"
 }
 
 proc build_share_tree { depth } {

@@ -1,0 +1,110 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+global check_root_access_needs
+
+set check_init_level_procedure "init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1198"
+set check_description(0)      "qconf -sq queue@host shows slots in complex values"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "no"
+set check_functions           ""
+lappend check_functions       "issue_1198_run"   ;# functions to call (in order)
+set check_highest_level       0
+
+proc init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   if { $ts_config(gridengine_version) == 53 } {       
+      return -1
+   }
+
+   # TODO setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+
+   return -1
+}
+
+proc issue_1198_run  {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_HOST
+
+   # Setup
+   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sql" } result
+   if { [string first "no queue defined" $result] >= 0 } {
+      add_proc_error "issue_1198_run" "-1" "no queue defined"
+      return
+   } else {
+      set queue [lindex $result 0]
+   }
+
+   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-shgrpl" } result
+   if { [string first "no hostgroup defined" $result] >= 0 } {
+      add_proc_error "issue_1198_run" "-1" "no hostgroup defined"
+      return
+   } else {
+      set hostgroup [lindex $result 0]
+   }
+
+   # Test
+   puts $CHECK_OUTPUT "Looking for slots in ${queue}@${CHECK_HOST} complex values list"
+
+   set catch_result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sq ${queue}@${CHECK_HOST} | grep complex_values | grep -v slots" } result ]
+
+   if {$catch_result != 0} {
+      add_proc_error "issue_1198_run" "-1" "qconf failed to hide slots for queue ${queue}@${CHECK_HOST}: $result"
+      set_error -1 "Issue 1198: qconf displays slots in complex values list"
+      return
+   } else {
+      set_error 0 "ok"
+   }
+
+   puts $CHECK_OUTPUT "Looking for slots in ${queue}@${hostgroup} complex values list"
+
+   set catch_result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sq ${queue}@${hostgroup} | grep complex_values | grep -v slots" } result ]
+
+   if {$catch_result != 0} {
+      add_proc_error "issue_1198_run" "-1" "qconf failed to hide slots for queue ${queue}@${hostgroup}: $result"
+      set_error -1 "Issue 1198: qconf displays slots in complex values list"
+   } else {
+      set_error 0 "ok"
+   }
+}

@@ -1,0 +1,94 @@
+Simple Job Category Implementation
+Sun N1 Grid Engine 6.0 update 1
+Daniel Templeton
+7 October 2004
+
+0. Abstract
+
+It is desirable for an administrator to be able to group together clusters of
+submit options and assign each group a name, so that end users need only know
+the name of the appropriate group instead of all the relevant command line
+switches.  For example, the user, instead having to knowing that, in order to
+submit a RNA spread spectrum analysis job to one of the Solaris machines in the
+DNA Research Grid he must use a series of 6 qsub switches, including
+"-l arch=SPARC", "-ckpt rna_ckpt", and "-r no", using job categories he would
+instead only have to know the category name, e.g. "rna_spread_spec_solaris".
+This provides two large wins.  The first is that life is easier for end users,
+as they only have to remeber one switch instead of several.  The second is that
+administrators maintain control.  If in the above example, the checkpoint name
+changed, without job categories the administrator would have to communicate to
+all the end users that the -ckpt option now should take a different parameter.
+With job categories, however, the administrator need only make the change in the
+job category.  The users need never know that the change happened.
+There are also cases where users regularly submit the same types of jobs with
+possibly complex lists of command line switches.  Currently users deal with this
+situation by writing custom scripts.  Allowing user-defined job categories would
+provide a native mechanism for Grid Engine to support these users' needs.
+
+1. Definition
+
+This document presents the notion of simple job categories.  For the purpose of
+this document, job category will be defined as "a named grouping of command line
+switches which can be used as an argument to a submission utility in place of
+the switches it represents."  This definition has several implications:
+
+o Job categories exist only at submission time.  After submission they dissolve
+  into their component command line switches.
+o A job category has no effect on job scheduling outside of the effect its
+  component switches have.
+o Job categories need only be understood by submission utilites, i.e. qsub, qsh,
+  qlogin, qrsh, and qtcsh.
+o Job categories are closely related to qtcsh qtask files.
+o The submission utilities will be required to support a new command line
+  switch, e.g. -cat <job_category>
+
+2. Implementation
+
+Because job categories are so closely related to the qtcsh qtask files, it makes
+sense to leverage this pre-existing functionality as much as possible.  qtcsh
+defines a "char **sge_get_qtask_args(const char *cmd, lList **alp)" function
+which searches for the command name in the heirarchy of qtask files and returns
+an array of the command line switches that the qtask command represents.  This
+functionality is easily repurposed to fill the role of job category.
+In order to implement job categories by reusing the qtask infrastructure, the
+following must be done:
+
+1) Add a job category switch, e.g. -cat <job_category>, to cull_parse_cmdline()
+   so that qsub, qrsh, qlogin, and qsh can parse the swtich.
+2) Add a job category switch, e.g. -cat <job_category>, to qtcsh so that it can
+   parse the switch.
+3) Modify qsub, qrsh, qlogin, qsh, and qtcsh to call sge_get_qtask_args() with
+   the job category switch parameter and pass the results to
+   opt_list_append_opts_from_qsub_cmdline() to arrive at a set of attributes to
+   be applied to any job that may be submitted.
+4) Put into place a job category naming scheme which prevents collisions with
+   qtcsh qtask command names.  For example, all job categories names may be
+   internally prepended with the "jobcat." prefix.
+5) Add the job category switch to the usage and sge_options modules.
+6) Update the man pages for qsub, qrsh, qlogin, qsh, and qtcsh to describe the
+   usage of the job category switch.
+7) Write testsuite tests for qsub, qrsh, qlogin, qsh, and qtcsh to ensure that
+   the job category switch functions properly.
+
+2.1 DRMAA
+
+The DRMAA library already makes use of the job category concept as described in
+this document.  Because DRMAA makes use of the same internal utilities for
+option parsing as qsub, step 1 of the above list has already been done and is
+included in the Grid Engine 6.0 release.  The drmaajob2sgejob() function also
+serves as an example of step 3 above.  The current DRMAA implementation does
+not, however, enforce a job category naming pattern.  It is left to the user to
+choose a name which will not conflict with a qtcsh qtask command name.  The
+DRMAA man pages merely suggest that the job category names should start with
+"cat." to avoid conflict.  As part of implementing the DRMAA library, the second
+part of step 5 above, adding the job category switch to the sge_options module,
+has also already been done and is included in the Grid Engine 6.0 release.
+
+3 Summary
+
+Using functionality that is already in Grid Engine 6.0 and has been proven to
+work, one could implement job categories as defined in this document.  The
+resulting increase in usability and administerability would be large in
+comparison to the amount of effort required.  It would not be the full
+functionality of job classes as previously discussed, but unlike true job
+classes it is a very attainable, short term goal.

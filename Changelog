@@ -1,3 +1,14 @@
+DT-2004-10-07-0: Bugfix:    o Removed slots from complex values list of
+                              queue instances in qconf
+                            o Enabled qsub/qrsh -v VAR again
+                            o Fix job exit error message
+                            o Added missing (not spec'ed) BUFFER to drmaa.h
+                            o Added job category spec
+                 Review:    CR
+                 Changed:   qconf, flatfile spooling, qmaster, qsub/qrsh
+                 Issue:     1198, 1255, 1287
+                 Bugtraq:   6174326, 6174331, 5086108
+
 CR-2004-10-07-0: Cleanup:   qping -help now shows short Grid Engine Version
                             name 
                  Changed:   qping

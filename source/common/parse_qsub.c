@@ -2404,7 +2404,6 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
                                int check_environment)
 {
    char *variable;
-   char *value;
    char *val_str;
    int var_len;
    stringT str;
@@ -2451,22 +2450,27 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
 
       variable = sge_strtok(*pstr, "=");
       SGE_ASSERT((variable));
-      memset(str, 0, sizeof(str));
-      sprintf(str, "%s=", variable);
       var_len=strlen(variable);
       lSetString(ep, VA_variable, variable);
+      memset(str, 0, sizeof(str));
+      sprintf(str, "%s=", variable);
       val_str=*pstr;
-      if (val_str[var_len] == '\0')
-         value="";
-      else
-         value=&val_str[var_len+1];
 
-      if (value)
-         lSetString(ep, VA_value, value);
-      else if(check_environment)
+      /* The character at the end of the first token must be either '=' or '\0'.
+       * If it's a '=' then we treat the following string as the value */
+      if (val_str[var_len] == '=') {
+          lSetString(ep, VA_value, &val_str[var_len+1]);
+      }
+      /* If it's a '\0' and check_environment is set, then we get the value from
+       * the environment variable value. */
+      else if(check_environment) {
          lSetString(ep, VA_value, sge_getenv(variable));
-      else
+      }
+      /* If it's a '\0' and check_environment is not set, then we set the value
+       * to NULL. */
+      else {
          lSetString(ep, VA_value, NULL);
+      }
    }
 
    FREE(va_string);

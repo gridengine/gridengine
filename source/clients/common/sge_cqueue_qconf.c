@@ -56,10 +56,6 @@
 #include "msg_common.h"
 #include "msg_clients_common.h"
 
-#ifndef QCONF_FLATFILE
-#include "spool/classic/read_write_cqueue.h"
-#include "spool/classic/read_write_qinstance.h"
-#else
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "sgeobj/sge_centry.h"
@@ -68,6 +64,18 @@
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_subordinate.h"
 
+static void insert_custom_complex_values_writer(spooling_field *fields);
+static int write_QU_consumable_config_list(const lListElem *ep, int nm,
+                                           dstring *buffer, lList **alp);
+
+/* Bugfix: Issuezilla #1198
+ * In order to remove slots from the complex values list, we use a custom writer
+ * for the QU_consumable_config_list field.  This writer is defined in
+ * write_QU_consumable_config_list() and tries to mimic the format specified by
+ * the cqqconf_sfi spooling instruction.  If either the
+ * cqqconf_sub_name_value_space_sfi spooling instruction or the cqqconf_sfi
+ * subinstruction field changes, the write_QU_consumable_config_list() function
+ * will have to be changed to match. */
 static const spool_flatfile_instr cqqconf_sub_name_value_space_sfi = 
 {
    NULL,
@@ -101,8 +109,6 @@ static const spool_flatfile_instr cqqconf_sfi =
    &cqqconf_sub_name_value_space_sfi,
    { NoName, NoName, NoName }
 };
-
-#endif
 
 bool
 cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
@@ -342,15 +348,12 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
 {
    bool ret = false;
    int status = 0;
-#ifdef QCONF_FLATFILE
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-#endif
    
    DENTER(TOP_LAYER, "cqueue_provide_modify_context");
    if (this_elem != NULL && *this_elem) {
       char *filename = NULL;      
-#ifdef QCONF_FLATFILE
       filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
                                                      false, CQ_fields,
                                                      &cqqconf_sfi, SP_DEST_TMP,
@@ -361,16 +364,11 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
          DEXIT;
          SGE_EXIT(1);
       }
-#else
-
-      filename = write_cqueue(2, 1, *this_elem);
-#endif
  
       status = sge_edit(filename);
       if (status >= 0) {
          lListElem *cqueue;
 
-#ifdef QCONF_FLATFILE
          fields_out[0] = NoName;
          cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
                                              CQ_fields, fields_out, false, &cqqconf_sfi,
@@ -388,9 +386,6 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
             cqueue = lFreeElem (cqueue);
             answer_list_output (answer_list);
          }
-#else
-         cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
-#endif
 
          if (cqueue != NULL) {
             if (object_has_differences(*this_elem, answer_list, 
@@ -450,16 +445,13 @@ bool
 cqueue_add_from_file(lList **answer_list, const char *filename) 
 {
    bool ret = true;
-#ifdef QCONF_FLATFILE
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-#endif
 
    DENTER(TOP_LAYER, "cqueue_add_from_file");
    if (filename != NULL) {
       lListElem *cqueue;
 
-#ifdef QCONF_FLATFILE
       fields_out[0] = NoName;
       cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
                                           CQ_fields, fields_out, false, &cqqconf_sfi,
@@ -477,9 +469,6 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
          cqueue = lFreeElem(cqueue);
          answer_list_output(answer_list);
       }
-#else
-      cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
-#endif
 
       if (cqueue == NULL) {
          ret = false;
@@ -529,16 +518,13 @@ bool
 cqueue_modify_from_file(lList **answer_list, const char *filename)
 {
    bool ret = true;
-#ifdef QCONF_FLATFILE
    int fields_out[MAX_NUM_FIELDS];
    int missing_field = NoName;
-#endif
 
    DENTER(TOP_LAYER, "cqueue_modify_from_file");
    if (filename != NULL) {
       lListElem *cqueue;
 
-#ifdef QCONF_FLATFILE
       fields_out[0] = NoName;
       cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
                                           CQ_fields, fields_out, false, &cqqconf_sfi,
@@ -556,9 +542,7 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
          cqueue = lFreeElem(cqueue);
          answer_list_output(answer_list);
       }      
-#else
-      cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
-#endif
+
       if (cqueue == NULL) {
          sprintf(SGE_EVENT, MSG_CQUEUE_FILENOTCORRECT_S, filename);
          answer_list_add(answer_list, SGE_EVENT,
@@ -653,16 +637,22 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                  QU_qhostname, hostname);
 
                         if (qinstance != NULL) {
-#ifdef QCONF_FLATFILE
                            spooling_field *fields = sge_build_QU_field_list
-                                                                  (true, false);                          
-#endif
+                                                                  (true, false);
+
+                           /* Bugfix: Issuezilla #1198
+                            * In order to prevent the slots from being printed
+                            * in the complex values list, we have to insert a
+                            * custom writer for the complex_values field.  We do
+                            * that with this function. */
+                           insert_custom_complex_values_writer (fields);
+
                            if (is_first) {
                               is_first = false; 
                            } else {
                               fprintf(stdout, "\n");
                            }
-#ifdef QCONF_FLATFILE
+                           
                            spool_flatfile_write_object(answer_list, qinstance,
                                                        false, fields,
                                                        &cqqconf_sfi,
@@ -675,9 +665,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                               DEXIT;
                               SGE_EXIT(1);
                            }
-#else
-                           write_qinstance(0, 0, qinstance);
-#endif
+
                            found_something = true;
                         }
                      }
@@ -707,16 +695,22 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         hostname = lGetHost(qinstance, QU_qhostname);
                         if (!fnmatch(h_pattern, hostname, 0) ||
                             !sge_hostcmp(h_pattern, hostname)) {
-#ifdef QCONF_FLATFILE
                            spooling_field *fields = sge_build_QU_field_list
                                                                   (true, false);                          
-#endif
+
+                           /* Bugfix: Issuezilla #1198
+                            * In order to prevent the slots from being printed
+                            * in the complex values list, we have to insert a
+                            * custom writer for the complex_values field.  We do
+                            * that with this function. */
+                           insert_custom_complex_values_writer (fields);
+
                            if (is_first) {
                               is_first = false; 
                            } else {
                               fprintf(stdout, "\n");
                            }
-#ifdef QCONF_FLATFILE
+
                            spool_flatfile_write_object(answer_list, qinstance,
                                                        false, fields,
                                                        &cqqconf_sfi,
@@ -729,9 +723,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                               DEXIT;
                               SGE_EXIT(1);
                            }
-#else
-                           write_qinstance(0, 0, qinstance);
-#endif
+
                            found_something = true;
                         }
                      }
@@ -751,7 +743,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                      } else {
                         fprintf(stdout, "\n");
                      }
-#ifdef QCONF_FLATFILE
+
                      spool_flatfile_write_object(answer_list, cqueue, false,
                                                  CQ_fields, &cqqconf_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
@@ -761,9 +753,7 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         DEXIT;
                         SGE_EXIT(1);
                      }
-#else
-                     write_cqueue(0, 0, cqueue);
-#endif
+
                      found_something = true;
                   }
                }
@@ -783,7 +773,6 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
 
       DTRACE;
       ret &= cqueue_set_template_attributes(cqueue, answer_list);
-#ifdef QCONF_FLATFILE
       spool_flatfile_write_object(answer_list, cqueue, false, CQ_fields,
                                   &cqqconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
                                   NULL, false);
@@ -792,9 +781,6 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
          DEXIT;
          SGE_EXIT(1);
       }
-#else
-      write_cqueue(0, 0, cqueue);
-#endif
    }
    DEXIT;
    return ret;
@@ -936,4 +922,107 @@ cqueue_sick(lListElem *cqueue, lList **answer_list,
    
    DEXIT;
    return ret;
+}
+
+/****** insert_custom_complex_values_writer() **********************************
+*  NAME
+*     insert_custom_complex_values_writer() -- Inserts a custom writer for the
+*                                              complex_values field
+*
+*  SYNOPSIS
+*     static void insert_custom_complex_values_writer (spooling_field *fields)
+*
+*  FUNCTION
+*     Inserts a custom writer for the complex_values field of a QU field list
+*     which does not write out the "slots" complex value.
+*
+*  INPUT
+*     spooling_field *fields - The QU fields list to be used for spooling
+*
+*  NOTES
+*     MT-NOTES: insert_custom_complex_values_writer() is MT safe
+*******************************************************************************/
+static void insert_custom_complex_values_writer(spooling_field *fields)
+{
+   /* First, find the complex_values field. */
+   int count = 0;
+   
+   while ((fields[count].nm != NoName) && (fields[count].nm != QU_consumable_config_list)) {
+      count++;
+   }
+   
+   if (fields[count].nm == QU_consumable_config_list) {
+      /* Next, insert the custom writer. */
+      fields[count].write_func = write_QU_consumable_config_list;
+   }
+   
+   return;
+}
+
+/****** write_QU_consumable_config_list() **************************************
+*  NAME
+*     write_QU_consumable_config_list() -- Writes the complex_values field
+*                                          without including slots
+*
+*  SYNOPSIS
+*     static int write_QU_consumable_config_list(const lListElem *ep, int nm,
+*                                                dstring *buffer, lList **alp)
+*
+*  FUNCTION
+*     Writes the complex_values field to the buffer, but leaves out the slots
+*     entry.
+*
+*  INPUT
+*     const lListElem *ep - The QU element containing the complex_values
+*     int              nm - The nm of the field := QU_consumable_config_list
+*     dstring     *buffer - The dstring into which to print the field
+*     lList         **alp - Answer list for errors
+*******************************************************************************/
+static int write_QU_consumable_config_list(const lListElem *ep, int nm,
+                                           dstring *buffer, lList **alp)
+{
+   lList *lp = lGetList (ep, nm);
+   lListElem *vep = NULL;
+   bool first = true;
+   
+   /* Look through the complex_values list and print everything but slots */
+   /* The format we're using to print is intended to replicate what is set forth
+    * in the cqqconf_sub_name_value_space_sfi spooling instruction.  If this
+    * instruction changes, or if the cqqconf_sfi spooling instruction changes to
+    * use a new sub-instruction, this function will have to be changed to
+    * to reflect this.  Otherwise, the complex values will be printed in a
+    * different format from the other attributes. */
+   for_each (vep, lp) {
+      const char *name = lGetString (vep, CE_name);
+
+      if (strcmp (name, "slots") != 0) {
+         const char *strval = NULL;
+         
+         /* Print a separating space for all elements after the first */
+         if (first) {
+            first = false;
+         }
+         else {
+            sge_dstring_append (buffer, " ");
+         }
+         
+         /* Append name=value, where value could be a string of a number */
+         sge_dstring_append (buffer, name);
+         sge_dstring_append (buffer, "=");
+         
+         strval = lGetString(vep, CE_stringval);
+
+         if (strval != NULL) {
+            sge_dstring_append (buffer, strval);
+         }
+         else {
+            char tmp[MAX_STRING_SIZE];
+            
+            snprintf(tmp, MAX_STRING_SIZE, "%f", lGetDouble(ep, CE_doubleval));
+            sge_dstring_append (buffer, strdup (tmp));
+         }
+      }
+   }
+   
+   return 1;
 }

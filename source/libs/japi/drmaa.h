@@ -96,6 +96,9 @@ extern "C" {
 /* drmaa_get_DRM_system() */
 #define DRMAA_DRM_SYSTEM_BUFFER 1024
 
+/* drmaa_get_DRM_system() */
+#define DRMAA_DRMAA_IMPLEMENTATION_BUFFER 1024
+
 /* 
  * Agreed buffer length constants 
  * these are recommended minimum values 

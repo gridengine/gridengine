@@ -269,7 +269,7 @@ lListElem *jatep
       sge_commit_job(jep, jatep, jr, COMMIT_ST_FINISHED_FAILED_EE, COMMIT_DEFAULT);
    }
 
-   if (queueep) {
+   if (queueep != NULL) {
       bool spool_queueep = false;
       lList *answer_list = NULL;
       /*
@@ -279,15 +279,15 @@ lListElem *jatep
       if (general_failure && general_failure != GFSTATE_JOB) {  
          dstring error = DSTRING_INIT; 
 
-         sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOB_SU, lGetString(queueep, QU_qname), u32c(jobid));
+         sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS,
+                             lGetString(queueep, QU_qname), u32c(jobid),
+                             hostname);
          
          /* general error -> this queue cant run any job */
          qinstance_state_set_error(queueep, true);
          reporting_create_queue_record(NULL, queueep, timestamp);
          qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
          spool_queueep = true;
-         /*ERROR((SGE_EVENT, MSG_LOG_QERRORBYJOB_SU, 
-                lGetString(queueep, QU_qname), u32c(jobid)));  */
          ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      
          sge_dstring_free(&error);
       }

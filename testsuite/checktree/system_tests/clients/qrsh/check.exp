@@ -72,6 +72,7 @@ lappend check_functions "qrsh_terminate"             ;# test terminate method
 lappend check_functions "qrsh_qsub_gid"              ;# qsub gid set correctly?
 lappend check_functions "qrsh_batch"                 ;# run qrsh in batch mode
 lappend check_functions "qrsh_limits"                ;# limits (e.g. cpu) passed correctly
+lappend check_functions "qrsh_env"                   ;# test the -v VAR=val and -v VAR options
 
 
 # test specific global variables
@@ -1637,4 +1638,32 @@ proc qrsh_limits {} {
    set_error 0 "ok"
 }
 
+proc qrsh_env {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env
 
+   puts $CHECK_OUTPUT "check if environment variables are set correctly"
+
+   # Set a dummy env var
+   set inherited_value "ThIsIsAtEsT"
+   set explicit_value "tHiSiSoNlYaTeSt"
+   set env(QRSH_ENV_TEST_DUMMY) $inherited_value
+
+   # Test
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -v QRSH_ENV_TEST_DUMMY echo \\\$QRSH_ENV_TEST_DUMMY" "2>/dev/null"} result1
+   
+   if { [ string compare $result1 "$inherited_value" ] != 0 } {
+      add_proc_error "qrsh_env" "-1" "qrsh did not inherit test environment variable: $inherited_value != $result1"
+      set_error -1 "Bug 1255: qrsh does not properly pass along environment variables"
+      return
+   }
+
+   catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qrsh -v QRSH_ENV_TEST_DUMMY=$explicit_value echo \\\$QRSH_ENV_TEST_DUMMY" "2>/dev/null" } result2
+   
+   if { [ string compare $result2 "$explicit_value" ] != 0 } {
+      add_proc_error "qrsh_env" "-1" "qrsh did not inherit test environment variable: $explicit_value != $result2"
+      set_error -1 "Bug 1255: qrsh does not properly pass along environment variables"
+      return
+   }
+
+   set_error 0 "ok"
+}

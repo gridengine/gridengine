@@ -16,9 +16,10 @@ EB-2005-03-15-0: Bugfix:    qstat -s hu shows pending jobs only
 
 JG-2005-03-15-1: Bugfix:    qconf -Mc only outputs one line, even if multiple 
                             complex attributes are added/deleted/modified.
+                 Issue:     1506
                  Bugtraq:   6178843
                  Changed:   qconf
-                 Review:    pending
+                 Review:    SG
 
 SG-2005-03-15-2: Bugfix:    qstat -U aborts
                  Issue:     1469

@@ -330,8 +330,6 @@ static int japi_parse_jobid(const char *jobid_str, u_long32 *jobid, u_long32 *ta
 static int japi_send_job(lListElem *job, u_long32 *jobid, dstring *diag);
 static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 incr, 
       bool is_array, dstring *diag);
-static int japi_synchronize_retry(bool sync_all, const char *job_ids[], bool dispose);
-static int japi_synchronize_all_retry(bool dispose);
 static int japi_synchronize_jobids_retry(const char *jobids[], bool dispose);
 static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
                            u_long32 taskid, bool is_array_task, int event_mask,
@@ -2358,7 +2356,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
             /* The largest number representable by 64 unsigned bits is 19
              * characters long. */
             char_id = (char *)malloc (sizeof (char) * 20);
-            sprintf (char_id, "%ld", id);
+            sprintf (char_id, u32, id);
             
             DPRINTF (("Synchronize All: adding %s to id list\n", char_id));
             

@@ -1082,7 +1082,7 @@ int ckpt_type
 
       if (!strcmp("job", childname)) {
          /* remove indication of checkpoints */
-#if 1 /* EB: review with AS; #174 */
+#if 0 /* EB: review with AS; #174 */
          if (WEXITSTATUS(status) < 128) {
 #endif
             if (!signalled_ckpt_job && ckpt_type) {
@@ -1093,7 +1093,7 @@ int ckpt_type
                   start_clean_command(clean_command);
                }
             }
-#if 1
+#if 0
          }
 #endif
       }

@@ -353,7 +353,6 @@ sge_pack_buffer *pb
                         lSetList(task_task, JAT_granted_destin_identifier_list, NULL);
                         if ((ep=lAddSubHost(task_task, JG_qhostname, rhost, JAT_granted_destin_identifier_list, JG_Type)))
                            lSetString(ep, JG_qname, queue_name);
-                        job_write_spool_file(jep, 0, SPOOL_DEFAULT);
                     }
 
                     /* store unscaled usage directly in sub-task */

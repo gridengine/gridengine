@@ -2803,6 +2803,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
 {
    lListElem *job = NULL; 
    lListElem *task = NULL; 
+   int actual_event = 0;
    int return_value = JAPI_WAIT_UNFINISHED;
    
    DENTER(TOP_LAYER, "japi_wait_retry");
@@ -2861,6 +2862,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
    
    if (return_value != JAPI_WAIT_UNFINISHED) {
       *wevent = JAPI_JOB_FINISH;
+      actual_event = JAPI_JOB_FINISH;
    }
    else if (event_mask & JAPI_JOB_START) {
       if (wait4any) {
@@ -2888,6 +2890,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
          if (failed) {
             return_value = JAPI_WAIT_FINISHED;
             *wevent = JAPI_JOB_FINISH;
+            actual_event = JAPI_JOB_START;
          }
          else if ((job == NULL) && still_running) {
             return_value = JAPI_WAIT_UNFINISHED;
@@ -2895,10 +2898,12 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
          else if (job == NULL) {
             return_value = JAPI_WAIT_ALLFINISHED;
             *wevent = JAPI_JOB_START;
+            actual_event = JAPI_JOB_START;
          }
          else {
             return_value = JAPI_WAIT_FINISHED;
             *wevent = JAPI_JOB_START;
+            actual_event = JAPI_JOB_START;
          }
       }
       else {
@@ -2907,6 +2912,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
          if (!job) {
             return_value = JAPI_WAIT_ALLFINISHED;
             *wevent = JAPI_JOB_START;
+            actual_event = JAPI_JOB_START;
          }
          else {
             /* for non-array jobs no task id may have been specified */
@@ -2917,6 +2923,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
                if (range_list_is_id_within(lGetList(job, JJ_started_task_ids), taskid)) {
                   return_value = JAPI_WAIT_FINISHED;
                   *wevent = JAPI_JOB_START;
+                  actual_event = JAPI_JOB_START;
                }
                else if (!range_list_is_id_within (lGetList (job, JJ_not_yet_finished_ids), taskid)) {
                   task = lGetSubUlong(job, JJAT_task_id, taskid, JJ_finished_tasks);
@@ -2924,6 +2931,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
                   if (task == NULL) {
                      return_value = JAPI_WAIT_ALLFINISHED;
                      *wevent = JAPI_JOB_START;
+                     actual_event = JAPI_JOB_START;
                   }
                   else {
                      /* This is a special case.  If the task makes it into the
@@ -2935,6 +2943,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
                       * event that caused the wait to end. */
                      return_value = JAPI_WAIT_FINISHED;
                      *wevent = JAPI_JOB_FINISH;
+                     actual_event = JAPI_JOB_START;
                   }
                }
                else {
@@ -2956,7 +2965,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
       *wis_task_arrayp = true;
       
       /* For the job start event, the task is NULL at this point */
-      if (*wevent == JAPI_JOB_START) {
+      if (actual_event == JAPI_JOB_START) {
          *wtaskidp = 1;
       }
       else {
@@ -2966,7 +2975,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
       *wis_task_arrayp = false;
    }   
 
-   if (*wevent == JAPI_JOB_FINISH) {
+   if (actual_event == JAPI_JOB_FINISH) {
       if (wait_status) {
          *wait_status = lGetUlong(task, JJAT_stat);
       }
@@ -2985,7 +2994,9 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
             }
          }
       }
+   }
 
+   if (*wevent == JAPI_JOB_FINISH) {
       /* remove reaped jobs from library session data */
       lRemoveElem(lGetList(job, JJ_finished_tasks), task);
       if (range_list_is_empty(lGetList(job, JJ_not_yet_finished_ids)) 

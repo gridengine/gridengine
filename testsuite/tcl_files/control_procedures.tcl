@@ -149,7 +149,9 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       }
 
       # wait 1 second for new file date!!! 
-      while { [ timestamp ] == $start_time } { 
+      sleep 1
+      while { [ timestamp ] <= $start_time } { 
+         sleep 1
       }
       send -i $sp_id ":wq\n"
       log_user 1

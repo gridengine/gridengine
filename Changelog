@@ -1,3 +1,7 @@
+JG-2002-01-07-1: Testsuite: handle_vi_edit sometimes "worked too fast" 
+                            (modified file had same timestamp as original).
+                            Added a sleep of one second.
+
 JG-2002-01-07-0: Bugfix:    Fixed a memory leak in execd.
                             Added code to suppress warnings from the Insure++
                             debugger for some correct code sections.

@@ -99,6 +99,7 @@ static char* sge_infotext_make_line_break(dstring* buffer, char* text) {
    strcpy(hbuf,"a");
 
    sge_dstring_copy_string(buffer,"");
+
    sge_dstring_append(buffer,"\"");
 
    line = 0;
@@ -481,7 +482,10 @@ char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
     char* h1 = NULL;
     char buf[10];
 
+
+
     sge_dstring_copy_string(string_buffer,"");
+    strcpy(buf,"a");
     h1 = string;
     while (*h1 != 0) {
 /*       if (*h1 == '\\') {
@@ -504,13 +508,14 @@ char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
        sge_dstring_append(string_buffer, buf);
        h1++; 
     }
+
     return (char*)sge_dstring_get_string(string_buffer);
 }
 
 
 
 char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
-   int i,o;
+   int i;
    char* p1;
    char* p2;
 
@@ -873,6 +878,7 @@ char **argv
    if (do_message == 1) {
       dstring help_buf = DSTRING_INIT;
       dstring help_buf2 = DSTRING_INIT;
+
       if (strlen(options.D) > 0) {
          printf("#\n# This is a (dash) sign, used for enumerations\n");
          printf("msgid \"\"\n%s\n", sge_infotext_make_line_break(&help_buf2,options.D));

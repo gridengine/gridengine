@@ -1,3 +1,5 @@
+CR-2002-05-22-3: Bugfix:    - infotext message output on linux
+
 CR-2002-05-22-2: Bugfix:    - infotext binary
 
 CR-2002-05-22-1: Enhancem.: New script for i18n: Extract messages from install

@@ -1,3 +1,8 @@
+RH-2004-03-17-0: Bugfix:    improvements for bug 799 
+                 Changed:   all
+                 Issue:     799
+                 Review:    SG
+
 AA-2004-03-16-0: Bugfix:    - default_duration sconf param added
                             - unused var compile warnings
                  Changed:   qmon

@@ -1683,14 +1683,24 @@ void range_parse_from_string(lListElem **range,
                         return;
                      }
                   }
+                  else if (dptr == rstr) {
+                     sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S,
+                             rstr);
+                     answer_list_add(answer_list, msg, STATUS_ESYNTAX,
+                                     ANSWER_QUALITY_ERROR);
+                     lFreeElem(r);
+                     DEXIT;
+                     *range = NULL;
+                     return;
+                  }
                   else {
-                      sprintf( msg, MSG_GDI_NEGATIVSTEP );
-                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
-                                      ANSWER_QUALITY_ERROR);
-                      lFreeElem(r);
-                      DEXIT;
-                      *range = NULL;
-                      return;
+                     sprintf( msg, MSG_GDI_NEGATIVSTEP );
+                     answer_list_add(answer_list, msg, STATUS_ESYNTAX,
+                                     ANSWER_QUALITY_ERROR);
+                     lFreeElem(r);
+                     DEXIT;
+                     *range = NULL;
+                     return;
                   }
                    
                   if (*dptr != '\0') {

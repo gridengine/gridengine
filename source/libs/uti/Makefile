@@ -114,7 +114,7 @@ sge_parse_num_par.o:	$(UTILIB_DIR)/sge_parse_num_par.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_parse_num_par.c
 
 sge_uidgid$(QIDLEXT).o:	$(UTILIB_DIR)/sge_uidgid.c
-		$(CC) -o $@ $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_uidgid.c
+		$(LD_WRAPPER) $(CC) -o $@ $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_uidgid.c
 
 sge_afsutil.o: $(UTILIB_DIR)/sge_afsutil.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_afsutil.c
@@ -193,7 +193,7 @@ sge_language.o:	$(UTILIB_DIR)/sge_language.c
 #---------------------------------------------------------------------
 # test programs
 test_sge_profiling: test_sge_profiling.o $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_profiling.o: $(UTILIB_DIR)/test_sge_profiling.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_profiling.c

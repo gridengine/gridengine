@@ -140,7 +140,7 @@ pack.o:		$(CULLLIB_DIR)/pack.c
 EXAMPLE1_OBJS = example1.o $(CULLLIB) $(UTILIB) $(RMONLIB)
 
 example1: $(EXAMPLE1_OBJS)
-	$(CC) $(CFLAGS) -o example1 $(EXAMPLE1_OBJS) $(LFLAGS) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example1 $(EXAMPLE1_OBJS) $(LFLAGS) $(LIBS)
 
 example1.o: $(CULLLIB_DIR)/example1.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/example1.c
@@ -151,7 +151,7 @@ example1.o: $(CULLLIB_DIR)/example1.c
 EXAMPLE2_OBJS = example2.o $(CULLLIB) $(UTILIB) $(RMONLIB)
 
 example2: $(EXAMPLE2_OBJS)
-	$(CC) $(CFLAGS) -o example2 $(EXAMPLE2_OBJS) $(LFLAGS) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example2 $(EXAMPLE2_OBJS) $(LFLAGS) $(LIBS)
 
 example2.o: $(CULLLIB_DIR)/example2.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/example2.c
@@ -159,21 +159,21 @@ example2.o: $(CULLLIB_DIR)/example2.c
 #---------------------------------------------------------------------
 # test programs
 test_cull_list: test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_cull_list $(LFLAGS) test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_list $(LFLAGS) test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_cull_list.o: $(CULLLIB_DIR)/test_cull_list.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_list.c
 
 #---
 test_cull_pack: test_cull_pack.o $(CULLLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_cull_pack $(LFLAGS) test_cull_pack.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_pack $(LFLAGS) test_cull_pack.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_cull_pack.o: $(CULLLIB_DIR)/test_cull_pack.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_pack.c
 
 #---
 test_cull_hash: test_cull_hash.o $(CULLLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) -lcull -lrmon -luti $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_cull_hash test_cull_hash.o $(LFLAGS) -lcull -lrmon -luti $(LIBS)
 
 test_cull_hash.o: $(CULLLIB_DIR)/test_cull_hash.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_hash.c

@@ -110,7 +110,7 @@ sge_sched_conf_mirror.o:	$(MIRLIB_DIR)/sge_sched_conf_mirror.c
 #---------------------------------------------------------------------
 # test programs
 test_sge_mirror: test_sge_mirror.o sig_handlers.o $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_sge_mirror $(LFLAGS) test_sge_mirror.o sig_handlers.o $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_mirror $(LFLAGS) test_sge_mirror.o sig_handlers.o $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_mirror.o: $(GDILIB_DIR)/test_sge_mirror.c
 	$(CC) $(CFLAGS) -c $(GDILIB_DIR)/test_sge_mirror.c

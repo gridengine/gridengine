@@ -249,16 +249,16 @@ sge_feature.o: $(SGEOBJLIB_DIR)/sge_feature.c
 ###############################################################################
 
 test_sge_object: test_sge_object.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_sge_object $(LFLAGS) test_sge_object.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_object $(LFLAGS) test_sge_object.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_range: test_sge_range.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_sge_range $(LFLAGS) test_sge_range.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_range $(LFLAGS) test_sge_range.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_hgroup: test_sge_hgroup.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_sge_hgroup $(LFLAGS) test_sge_hgroup.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_hgroup $(LFLAGS) test_sge_hgroup.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_attr: test_sge_tattr.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_sge_attr $(LFLAGS) test_sge_attr.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_attr $(LFLAGS) test_sge_attr.o sig_handlers.o $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_sge_object.o: $(SGEOBJLIB_DIR)/test_sge_object.c
 	$(CC) $(CFLAGS) -c $(SGEOBJLIB_DIR)/test_sge_object.c

@@ -1,3 +1,6 @@
+JG-2003-03-24-0  Enhancem.: Added aimk switch -purify to instrument code for
+                            memory debugging with purify.
+
 AA-2002-03-21-0  Bugfix.:   corrections for DARWIN port, see 5.3 branch
 
 EB-2002-03-20-0  Enhancem.: Review of EB-2002-03-11-0 and EB-2002-03-14-0

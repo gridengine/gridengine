@@ -114,7 +114,7 @@ TEST_JAPI_OBJS = test_drmaa.o $(DRMAALIB)
 # TEST_JAPI_OBJS = test_drmaa.o $(DRMAALIB) 
 
 test_drmaa: $(TEST_JAPI_OBJS)
-	$(CC) $(CFLAGS) -o test_drmaa $(TEST_JAPI_OBJS) $(LFLAGS) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_drmaa $(TEST_JAPI_OBJS) $(LFLAGS) $(LIBS)
 
 test_drmaa.o: $(JAPILIB_DIR)/test_drmaa.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c

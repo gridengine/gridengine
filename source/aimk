@@ -221,6 +221,7 @@ usage:
    echo "-perlgui          -> build the experimental perlgui"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
+   echo "-purify           -> instrument code with purify (implies -debug)"
    echo "-qmake            -> use qmake instead of make"
    echo "-secure           -> enable ssl security"
    echo "-shared           -> link shared (default)"
@@ -278,6 +279,7 @@ set   IRIX_ARCHDEF  = IRIX6
 set   OSREL         = ""
 set   CC_FORCED     = 0
 set   CC           = cc
+set   LD_WRAPPER   = ""
 set   CXX          = CC
 set   FC           = f77
 set   LFLAGS       = "-L."
@@ -744,6 +746,10 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-pr-sgeee":
       set SGE_PRODUCT_MODE=sgeee
+      breaksw
+   case "-purify":
+      set LD_WRAPPER = "purify"
+      set DEBUGGED   = 1
       breaksw
    case "-qmake"
       set USE_QMAKE    = 1
@@ -1940,7 +1946,7 @@ if ( "$CORE" == 1 ) then
    cd $COMPILE_ARCH
 
    echo ________C_O_R_E__S_Y_S_T_E_M_________
-   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+   $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
        "SDIR=$SDIR" "SOURCE=$SOURCE" \
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
        "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
@@ -1982,7 +1988,7 @@ if ( "$MT" == 1 ) then
    cd $COMPILE_ARCH_MT
 
    echo ________C_O_R_E__S_Y_S_T_E_M___M_T________
-   $MAKE $MAKEOPT -f $SOURCE/libs/japi/Makefile "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $MTCFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+   $MAKE $MAKEOPT -f $SOURCE/libs/japi/Makefile "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" "CFLAGS=$CFLAGS $MTCFLAGS $CORE_INCLUDE" "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
        "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
        "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
        "SECLIB_OBJS=$SECLIB_OBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
@@ -2021,7 +2027,7 @@ if ( "$QMON" == 1) then
 
    cd $COMPILE_ARCH
 
-   $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" \
+   $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" "LD_WRAPPER=$LD_WRAPPER" \
       "CFLAGS=$CFLAGS" "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
       "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" "KRBLIBS=$KRBLIBS" \
       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \

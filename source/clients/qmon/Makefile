@@ -137,7 +137,7 @@ qmon_help: ../dist/qmon/qmon_help.ad
 # rules to build binaries
 ###############################################################################
 qmon:  $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_LIB_DEPENDS)
-	$(CC) $(LFLAGS) $(XLFLAGS) -o $@ $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_ADD_LIBS) $(XLIBS) $(SLIBS) $(LIBS) 
+	$(LD_WRAPPER) $(CC) $(LFLAGS) $(XLFLAGS) -o $@ $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_ADD_LIBS) $(XLIBS) $(SLIBS) $(LIBS) 
 
 ############################################################################
 # ListTree Demo prog
@@ -146,7 +146,7 @@ ALLDEMOOBJS =  tree_demo.o $(GDILIB) $(KRBLIBS) $(CULLLIB) $(UTILIB) \
                $(RMONLIB) $(COMMLIB) $(XLTREELIB) $(XMTLIB)
 
 tree_demo:  tree_demo.o $(XLTREELIB)
-	$(CC) -o $@ $(ALLDEMOOBJS) $(LFLAGS) $(LIBS) $(XLFLAGS) $(XLIBS)
+	$(LD_WRAPPER) $(CC) -o $@ $(ALLDEMOOBJS) $(LFLAGS) $(LIBS) $(XLFLAGS) $(XLIBS)
 
 tree_demo.o:  $(QMON_DIR)/tree_demo.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/tree_demo.c
@@ -155,7 +155,7 @@ tree_demo.o:  $(QMON_DIR)/tree_demo.c
 # locale demo
 ############################################################################
 xmlocale:  xmlocale.o 
-	$(CC) -o $@ xmlocale.o $(LFLAGS) $(LIBS) $(XLFLAGS) $(XLIBS)
+	$(LD_WRAPPER) $(CC) -o $@ xmlocale.o $(LFLAGS) $(LIBS) $(XLFLAGS) $(XLIBS)
 
 xmlocale.o:  $(QMON_DIR)/xmlocale.c
 	$(CC) $(CFLAGS) $(XCFLAGS) -c $(QMON_DIR)/xmlocale.c

@@ -171,7 +171,7 @@ sge_ssi.o: $(SCHEDLIB_DIR)/sge_ssi.c
 #---------------------------------------------------------------------
 # test programs
 simple_scheduler: simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o simple_scheduler $(LFLAGS) simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o simple_scheduler $(LFLAGS) simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 simple_scheduler.o: $(SCHEDLIB_DIR)/simple_scheduler.c
 	$(CC) $(CFLAGS) -c $(SCHEDLIB_DIR)/simple_scheduler.c

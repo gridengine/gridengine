@@ -87,7 +87,7 @@ enum {
 };
 
 SLISTDEF(SO_Type, SubordinateQueue)
-   SGE_STRING(SO_qname, CULL_DEFAULT | CULL_SUBLIST) /* no hashing, we will not have too many subordinated queues for one queue */
+   SGE_STRING(SO_qname, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST) /* no hashing, we will not have too many subordinated queues for one queue */
    SGE_ULONG(SO_threshold, CULL_DEFAULT)
 LISTEND 
 
@@ -407,7 +407,7 @@ enum {
 };
 
 ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
-   SGE_STRING(QU_qname, CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_CONFIGURE)
+   SGE_STRING(QU_qname, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_CONFIGURE)
    SGE_HOST(QU_qhostname, CULL_HASH | CULL_SPOOL | CULL_CONFIGURE)
    SGE_STRING(QU_tmpdir, CULL_SPOOL | CULL_CONFIGURE)
    SGE_STRING(QU_shell, CULL_SPOOL | CULL_CONFIGURE)
@@ -590,7 +590,7 @@ enum {
 };
 
 LISTDEF(QR_Type)
-   SGE_STRING(QR_name, CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
+   SGE_STRING(QR_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
 LISTEND 
 
 NAMEDEF(QRN)

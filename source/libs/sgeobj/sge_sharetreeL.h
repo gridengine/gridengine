@@ -158,7 +158,7 @@ enum {
 
 
 ILISTDEF(STN_Type, ShareTreeNode, SGE_SHARETREE_LIST)
-   SGE_STRING(STN_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
+   SGE_STRING(STN_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL)
    SGE_ULONG(STN_type, CULL_DEFAULT | CULL_SPOOL)        /* 960624 svd - changed to STN_type */
    SGE_ULONG(STN_id, CULL_DEFAULT)         /* Unique node id for storing to disk */
    SGE_ULONG(STN_shares, CULL_DEFAULT | CULL_SPOOL)

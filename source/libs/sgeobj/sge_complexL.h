@@ -83,7 +83,7 @@ enum {
 };
 
 ILISTDEF(CX_Type, Complex, SGE_COMPLEX_LIST)
-   SGE_STRING(CX_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)
+   SGE_STRING(CX_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)
    SGE_LIST(CX_entries, CE_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
@@ -112,7 +112,7 @@ enum {
 };
 
 SLISTDEF(CE_Type, ComplexEntry)
-   SGE_STRING(CE_name, CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)          /* full name of attribute */
+   SGE_STRING(CE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST)          /* full name of attribute */
    SGE_STRING(CE_shortcut, CULL_HASH | CULL_UNIQUE | CULL_SPOOL)      /* shortcut name of attribute */
    SGE_ULONG(CE_valtype, CULL_DEFAULT | CULL_SPOOL)        /* type */
    SGE_STRING(CE_stringval, CULL_DEFAULT | CULL_SPOOL | CULL_SUBLIST)     /* non overwritten value */

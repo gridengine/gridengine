@@ -134,6 +134,32 @@ enum _enum_lMultiType {
 #define NAMEEND    };
 
 #else
+#ifdef __SGE_GDI_LIBRARY_SUBLIST_FILE__
+
+#define LISTDEF( name )
+#define XLISTDEF( name, idlname ) 
+#define ILISTDEF( name, idlname, listname ) 
+#define SLISTDEF( name, idlname ) 
+#define LISTEND
+
+#define SGE_INT(name,flags)
+#define SGE_HOST(name,flags)
+#define SGE_STRING(name,flags)
+#define SGE_FLOAT(name,flags)
+#define SGE_DOUBLE(name,flags)
+#define SGE_CHAR(name,flags)
+#define SGE_LONG(name,flags)
+#define SGE_ULONG(name,flags)
+#define SGE_BOOL(name,flags)
+#define SGE_LIST(name,type,flags) __SUBTYPE_MAPPING__ name type
+#define SGE_OBJECT(name,type,flags)
+#define SGE_REF(name,type,flags)
+
+#define NAMEDEF( name ) 
+#define NAME( name )
+#define NAMEEND
+
+#else
 
 #define LISTDEF( name ) extern lDescr name[];
 #define XLISTDEF( name, idlname ) extern lDescr name[];
@@ -158,6 +184,7 @@ enum _enum_lMultiType {
 #define NAME( name )
 #define NAMEEND
 
+#endif
 #endif
 
 struct _lNameSpace {

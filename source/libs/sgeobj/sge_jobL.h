@@ -550,7 +550,7 @@ enum {
  */
    
 ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
-   SGE_ULONG(JB_job_number, CULL_HASH | CULL_SPOOL)             
+   SGE_ULONG(JB_job_number, CULL_PRIMARY_KEY | CULL_HASH | CULL_SPOOL) 
    SGE_STRING(JB_job_name, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_version, CULL_DEFAULT | CULL_SPOOL)
    SGE_LIST(JB_jid_predecessor_list, JRE_Type, CULL_DEFAULT | CULL_SPOOL) 
@@ -787,7 +787,7 @@ enum {
 };
 
 SLISTDEF(PN_Type, PathName)
-   SGE_STRING(PN_path, CULL_DEFAULT | CULL_SUBLIST)
+   SGE_STRING(PN_path, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)
    SGE_HOST(PN_host, CULL_DEFAULT | CULL_SUBLIST)                    /* CR - hostname change */
 LISTEND
 
@@ -844,7 +844,7 @@ enum {
 };
 
 SLISTDEF( JG_Type, GrantedQueue )
-   SGE_STRING(JG_qname, CULL_DEFAULT | CULL_SUBLIST)    /* the queue's name                           */
+   SGE_STRING(JG_qname, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)    /* the queue's name                           */
    SGE_ULONG(JG_qversion, CULL_DEFAULT)  /* it's version                               */
    SGE_HOST(JG_qhostname, CULL_DEFAULT)/* redundant qualified host name for caching  */  /* CR - hostname change */
    SGE_ULONG(JG_slots, CULL_DEFAULT | CULL_SUBLIST)     /* from orders list                           */

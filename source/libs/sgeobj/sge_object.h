@@ -170,7 +170,6 @@ object_has_type(const lListElem *object, const lDescr *descr);
 const lDescr *
 object_get_type(const lListElem *object);
 
-/* JG: TODO: rename to object_get_subtype_descr */
 const lDescr *
 object_get_subtype(int nm);
 

@@ -1099,7 +1099,6 @@
 #define MSG_SEC_PUTCREDSTDERR_S       _MESSAGE(60414, _("put_cred stderr: "SFN""))                                                                              
 #define MSG_SEC_NOSTARTCMD4GETCRED_SU _MESSAGE(60415, _("can't start command "SFQ" for job " U32CFormat " to get credentials\n"))
 #define MSG_PE_ALLOCRULE_SS           _MESSAGE(60416, _("parameter allocation_rule of pe "SFQ": "SFN"\n"))
-#define MSG_OBJ_CKPTI                 _MESSAGE(60417, _("checkpoint interface"))
 #define MSG_GDI_OUTOFMEMORY           _MESSAGE(60418, _("out of memory"))
 #define MSG_COM_UNPACKINT_I          _MESSAGE(60419, _("unpacking integer %d failed\n"))
 #define MSG_SGETEXT_ADDEDTOLIST_SSSS       _MESSAGE(60500, _(""SFN"@"SFN" added "SFQ" to "SFN" list\n"))

@@ -71,6 +71,7 @@ SGEOBJLIB_SRC = \
          sge_report.c \
          sge_schedd_conf.c \
          sge_sharetree.c \
+         sge_sub_object.c \
          sge_suser.c \
          sge_usage.c \
          sge_cuser.c \
@@ -206,6 +207,12 @@ sge_schedd_conf.o: $(SGEOBJLIB_DIR)/sge_schedd_conf.c
 
 sge_sharetree.o: $(SGEOBJLIB_DIR)/sge_sharetree.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_sharetree.c
+
+sge_sub_object.c: $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c ../scripts/gen_subtype_info.sh
+		$(CC) $(CFLAGS) -E -c $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c | grep __SUBTYPE_MAPPING__ | ../scripts/gen_subtype_info.sh sge_sub_object.c
+
+sge_sub_object.o: sge_sub_object.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c sge_sub_object.c
 
 sge_suser.o: $(SGEOBJLIB_DIR)/sge_suser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_suser.c

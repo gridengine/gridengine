@@ -85,7 +85,7 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    /*
     * configuration values used by both SGE and SGEEE
     */
-   SGE_STRING(SC_algorithm, CULL_DEFAULT | CULL_SPOOL)
+   SGE_STRING(SC_algorithm, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SPOOL)
    SGE_STRING(SC_schedule_interval, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(SC_maxujobs, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(SC_queue_sort_method, CULL_DEFAULT | CULL_SPOOL)    /* see at top of file for valid values */

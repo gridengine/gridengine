@@ -1,15 +1,26 @@
-SG-2003-05-26-0  Bugfix    the queue name was truncated to 10 chars
-                           - added a queue name line to the qstat -r option, which
-                           displays the full name
-                IZ:        #555
-                Changed:   qstat
-                Review:    AH
+JG-2003-06-05-0: Enhancem.: The function returning the CULL object type of 
+                            sublists now is generated from the CULL SGE_LIST 
+                            definitions.
+                            Removed some unused I18N messages.
+                 Review:    EB
 
-SG-2003-05-26-0: Bugfix    qstat crashed, when used with the options -r -s z
-                           - added the required information to the list
-                IZ:        #545
-                Changed:   qstat
-                Review:    AH
+JG-2003-06-04-1: Enhancem.: Primary keys for CULL object types are determined 
+                            from CULL definition, instead of hard coding 
+                            (function object_get_primary_key).
+                 Review:    EB
+
+SG-2003-05-26-0  Bugfix     the queue name was truncated to 10 chars
+                            - added a queue name line to the qstat -r option, which
+                            displays the full name
+                IZ:         #555
+                Changed:    qstat
+                Review:     AH
+
+SG-2003-05-26-0: Bugfix     qstat crashed, when used with the options -r -s z
+                            - added the required information to the list
+                IZ:         #545
+                Changed:    qstat
+                Review:     AH
 
 SG-2003-05-22-0: Bugfix:    enabled output file names to have a ":" inside for qsub
                             - changed the hostname file definition for the c

@@ -40,7 +40,6 @@
 #define MSG_POSTGRES_OPENSUCCEEDED_S  _MESSAGE(69002, _("connected to PostgreSQL Database ("SFN")\n"))
 #define MSG_POSTGRES_NOCONNECTIONTOCLOSE_S  _MESSAGE(69003, _("no database connection to close ("SFN")\n"))
 #define MSG_POSTGRES_CLOSEDCONNECTION_S   _MESSAGE(69004, _("closed database connection ("SFN"\n"))
-#define MSG_POSTGRES_CANNOTREADDBINFO_S   _MESSAGE(69005, _("cannot read initial data from database: "SFN"\n"))
 
 #define MSG_POSTGRES_HISTORYDISABLED      _MESSAGE(69007, _("spooling without historical data\n"))
 #define MSG_POSTGRES_HISTORYENABLED       _MESSAGE(69008, _("spooling with historical data\n"))

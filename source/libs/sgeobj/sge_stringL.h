@@ -48,7 +48,11 @@ enum {
 
 LISTDEF(ST_Type)
    /* misc setup variables */
-   SGE_STRING(ST_name, CULL_HASH | CULL_SUBLIST)
+   /* JG: TODO: ST_name is not really a primary key! 
+    * we have to check all uses of ST_Type and replace it by a new
+    * STU_Type with primary key and unique hashing 
+    */
+   SGE_STRING(ST_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_SUBLIST)
 LISTEND 
 
 NAMEDEF(STN)

@@ -1,6 +1,3 @@
-#ifndef __SGE_HOSTGRPL_H
-#define __SGE_HOSTGRPL_H
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -33,34 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_boundaries.h"
-#include "cull.h"
+#define __SGE_GDI_LIBRARY_SUBLIST_FILE__
+#include "cull_list.h"
+#include "sge_all_listsL.h"
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+/* this is not an empty module - even if it appeares to be empty.
+ * The define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__ makes all list descriptors 
+ * being defined here.
+ */
 
-/* *INDENT-OFF* */
-
-enum {
-   HR_name = HR_LOWERBOUND
-};
-
-LISTDEF(HR_Type)
-   SGE_HOST(HR_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
-LISTEND
-
-NAMEDEF(HRN)
-   NAME("HR_name")
-NAMEEND
-
-#define HRS sizeof(HRN)/sizeof(char*)
-
-
-/* *INDENT-ON* */
-
-#ifdef  __cplusplus
-}
-#endif
-
-#endif /* __SGE_HOSTREFL_H */

@@ -1666,7 +1666,7 @@ int lRemoveElem(lList *lp, lListElem *ep)
    }
 
    if (lp->descr != ep->descr) {
-      DPRINTF(("Dechaining element from other list !!!\n"));
+      CRITICAL((SGE_EVENT, "Dechaining element from other list !!!\n"));
       abort();
    }
 
@@ -1720,6 +1720,8 @@ int lRemoveElem(lList *lp, lListElem *ep)
 void 
 lDechainList(lList *source, lList **target, lListElem *ep)
 {
+   lListElem *target_last;
+
    DENTER(CULL_LAYER, "lDechainList");
 
    if (source == NULL || target == NULL) {
@@ -1734,35 +1736,60 @@ lDechainList(lList *source, lList **target, lListElem *ep)
    }
 
    if (source->descr != ep->descr) {
-      DPRINTF(("Dechaining element from other list !!!\n"));
+      CRITICAL((SGE_EVENT,"Dechaining element from other list !!!\n"));
       DEXIT;
       abort();
    }
-   
-   if (*target != NULL) {
-      if (source->descr != (*target)->descr) {
-         DPRINTF(("Dechaining into another list")); 
-         DEXIT;
-         abort();
-      }
-   }
-   else {
+  
+   if (*target == NULL) {
       *target = lCreateList(lGetListName(source), source->descr);
    }
+   else {
+      
+      if (lCompListDescr(source->descr, (*target)->descr) != 0) {
+         CRITICAL((SGE_EVENT,"Dechaining element into a different list !!!\n"));
+         DEXIT;
+         abort();
+         
+      }
+   }
    
+   cull_hash_free_descr(source->descr);
+   cull_hash_free_descr((*target)->descr);
+
+   target_last = source->last;
+ 
    if (ep->prev != NULL) {
       ep->prev->next = NULL;
+      source->last = ep->prev;
    }
    else {
       source->first = NULL;
+      source->last = NULL;
    }
 
-   (*target)->first = ep;
-  
-   cull_hash_free_descr(source->descr);
-   cull_hash_free_descr((*target)->descr);
+   if ((*target)->first != NULL) {
+      (*target)->last->next = ep;
+      ep->prev = (*target)->last; 
+   }
+   else {
+      ep->prev = NULL;
+      (*target)->first = ep;
+   }
+   (*target)->last = target_last;
+
+   for (;ep != NULL; ep = ep->next) {
+      ep->descr = (*target)->descr;
+      (*target)->nelem++;
+      source->nelem--;
+   }
+ 
+   source->changed = true;
+   (*target)->changed = true;
+ 
    cull_hash_create_hashtables(source);
    cull_hash_create_hashtables(*target);
+   
    
    DEXIT; 
 }

@@ -471,6 +471,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
          lAppendList(lists->queue_list, lists->dis_queue_list);
       }
       
+      
       prepare_resource_schedules(*(splitted_job_lists[SPLIT_RUNNING]),
                               *(splitted_job_lists[SPLIT_SUSPENDED]),
                               lists->pe_list, lists->host_list, lists->queue_list, 
@@ -481,7 +482,6 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       }
       
    }
-
    /*---------------------------------------------------------------------
     * CAPACITY CORRECTION
     *---------------------------------------------------------------------*/
@@ -524,19 +524,37 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
       return -1;
    }
 
+
    /* trash disabled queues - needed them for implementing suspend thresholds */
-   if (sge_split_disabled(&(lists->queue_list), &(lists->dis_queue_list))) {
+   if (sge_split_disabled(&(lists->queue_list), &none_avail_queues)) {
       DPRINTF(("couldn't split queue list concerning disabled state\n"));
       DEXIT;
       return -1;
    }
+   if (lists->dis_queue_list != NULL) {
+      lAddList(lists->dis_queue_list, none_avail_queues);
+      none_avail_queues = NULL;
+   }
+   else {
+      lists->dis_queue_list = none_avail_queues;
+      none_avail_queues = NULL;
+   }
 
    /* tag queue instances with less than one free slot */
-   if (sge_split_queue_slots_free(&(lists->queue_list), &(lists->dis_queue_list))) {
+   if (sge_split_queue_slots_free(&(lists->queue_list), &none_avail_queues)) {
       DPRINTF(("couldn't split queue list concerning free slots\n"));
       DEXIT;
       return -1;
    }
+   if (lists->dis_queue_list != NULL) {
+      lAddList(lists->dis_queue_list, none_avail_queues);
+      none_avail_queues = NULL;
+   }
+   else {
+      lists->dis_queue_list = none_avail_queues;
+      none_avail_queues = NULL;
+   }
+   
 
    /*---------------------------------------------------------------------
     * FILTER JOBS

@@ -1910,7 +1910,7 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
       if (elem->connection->connection_state == CL_COM_CONNECTING) {
          int return_value;
          if (elem->connection->data_read_flag == CL_COM_DATA_READY || elem->connection->fd_ready_for_write == CL_COM_DATA_READY ) {
-            return_value = cl_com_tcp_connection_complete_request(elem->connection,handle->open_connection_timeout,1);
+            return_value = cl_com_tcp_connection_complete_request(elem->connection,handle->open_connection_timeout,1, CL_RW_SELECT);
             if (return_value != CL_RETVAL_OK && 
                 return_value != CL_RETVAL_UNCOMPLETE_READ && 
                 return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
@@ -3400,6 +3400,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
        
       if (synchron != 0) {
          int return_value;
+
          switch(cl_com_create_threads) {
             case CL_NO_THREAD:
                CL_LOG(CL_LOG_INFO,"no threads enabled");
@@ -3442,6 +3443,138 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
    return leave_reason;
 }
 
+
+
+/*
+ *   o search for endpoint with matching hostname, component name or component id
+ *   o un_resolved_hostname, component_name and component_id can be NULL or 0 
+ *   o caller must free returned endpoint list with cl_endpoint_list_cleanup()
+ *
+ */
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_search_endpoint()"
+int cl_commlib_search_endpoint(cl_com_handle_t* handle,
+                               char* un_resolved_hostname, char* component_name, unsigned long component_id, 
+                               cl_bool_t only_connected,
+                               cl_raw_list_t** endpoint_list ) {
+
+   cl_com_connection_t* connection = NULL;
+   cl_connection_list_elem_t* elem = NULL;
+   char* resolved_hostname = NULL;
+   int retval = CL_RETVAL_OK;
+
+
+   if ( handle == NULL || endpoint_list == NULL ) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (*endpoint_list != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (un_resolved_hostname != NULL) {
+      retval = cl_com_cached_gethostbyname(un_resolved_hostname, &resolved_hostname, NULL, NULL, NULL );
+      if (retval != CL_RETVAL_OK) {
+         CL_LOG_STR(CL_LOG_ERROR,"could not resolve host",un_resolved_hostname);
+         return retval;
+      }
+   } 
+
+   retval = cl_endpoint_list_setup(endpoint_list, "matching endpoints", 0, 0); 
+   if (retval != CL_RETVAL_OK) {
+      free(resolved_hostname);
+      resolved_hostname = NULL;
+      cl_endpoint_list_cleanup(endpoint_list);
+      return retval;
+   }
+
+   cl_raw_list_lock(handle->connection_list);
+   elem = cl_connection_list_get_first_elem(handle->connection_list);     
+   while(elem) {
+      connection = elem->connection;
+      elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
+
+      if ( connection->remote != NULL ) {
+         if ( component_id > 0 ) {
+            if ( connection->remote->comp_id == component_id ) {
+               cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, 0 );
+               continue;
+            } 
+         }
+         if ( component_name != NULL && connection->remote->comp_name != NULL  ) {
+            if ( strcmp(connection->remote->comp_name, component_name) == 0 ) {
+               cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, 0 );
+               continue;
+            }
+         }
+         if ( resolved_hostname != NULL) {
+            if ( cl_com_compare_hosts( resolved_hostname, connection->remote->comp_host ) == CL_RETVAL_OK ) {
+               cl_endpoint_list_define_endpoint(*endpoint_list, connection->remote, 0, connection->auto_close_type, 0 );
+               continue;
+            }
+         }     
+      }
+   }   
+   cl_raw_list_unlock(handle->connection_list);
+
+   if ( only_connected == CL_FALSE ) {
+      /* also search in known endpoint list for matching connections */
+      cl_raw_list_t* global_endpoint_list = cl_com_get_endpoint_list();
+      
+      if ( global_endpoint_list != NULL ) {
+         cl_endpoint_list_elem_t* endpoint_elem = NULL;
+         cl_endpoint_list_elem_t* act_endpoint_elem = NULL;
+         
+         cl_raw_list_lock(global_endpoint_list);
+         endpoint_elem = cl_endpoint_list_get_first_elem(global_endpoint_list);
+         while(endpoint_elem) {
+            act_endpoint_elem = endpoint_elem;
+            endpoint_elem = cl_endpoint_list_get_next_elem(global_endpoint_list, endpoint_elem);
+
+            if (act_endpoint_elem->endpoint) {
+               if ( component_id > 0 ) {
+                  if ( act_endpoint_elem->endpoint->comp_id == component_id ) {
+                     cl_endpoint_list_define_endpoint(*endpoint_list, 
+                                                      act_endpoint_elem->endpoint, 
+                                                      act_endpoint_elem->service_port, 
+                                                      act_endpoint_elem->autoclose, 
+                                                      act_endpoint_elem->is_static );
+                     continue;
+                  } 
+               }
+               if ( component_name != NULL && act_endpoint_elem->endpoint->comp_name != NULL  ) {
+                  if ( strcmp(act_endpoint_elem->endpoint->comp_name, component_name) == 0 ) {
+                     cl_endpoint_list_define_endpoint(*endpoint_list, 
+                                                      act_endpoint_elem->endpoint, 
+                                                      act_endpoint_elem->service_port, 
+                                                      act_endpoint_elem->autoclose, 
+                                                      act_endpoint_elem->is_static );
+                     continue;
+                  }
+               }
+               if ( resolved_hostname != NULL) {
+                  if ( cl_com_compare_hosts( resolved_hostname, act_endpoint_elem->endpoint->comp_host ) == CL_RETVAL_OK ) {
+                     cl_endpoint_list_define_endpoint(*endpoint_list, 
+                                                      act_endpoint_elem->endpoint, 
+                                                      act_endpoint_elem->service_port, 
+                                                      act_endpoint_elem->autoclose, 
+                                                      act_endpoint_elem->is_static );
+                     continue;
+                  }
+               }
+    
+            }
+         }
+         cl_raw_list_unlock(global_endpoint_list);
+      }
+   }
+   free(resolved_hostname); 
+   resolved_hostname = NULL;
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -5066,7 +5199,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
 
             if (elem->connection->connection_state == CL_COM_CONNECTING) {
                if ( elem->connection->data_read_flag == CL_COM_DATA_READY  ) {
-                  return_value = cl_com_tcp_connection_complete_request(elem->connection,handle->open_connection_timeout,1);
+                  return_value = cl_com_tcp_connection_complete_request(elem->connection,handle->open_connection_timeout,1,CL_R_SELECT );
 
                   if (return_value != CL_RETVAL_OK && 
                       return_value != CL_RETVAL_UNCOMPLETE_READ && 
@@ -5303,7 +5436,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                while(elem) {
                   if (elem->connection->connection_state == CL_COM_CONNECTING) {
                      if ( elem->connection->fd_ready_for_write == CL_COM_DATA_READY ) {
-                        return_value = cl_com_tcp_connection_complete_request(elem->connection,handle->open_connection_timeout,1);
+                        return_value = cl_com_tcp_connection_complete_request(elem->connection,handle->open_connection_timeout,1,CL_W_SELECT );
                         if (return_value != CL_RETVAL_OK && 
                             return_value != CL_RETVAL_UNCOMPLETE_READ && 
                             return_value != CL_RETVAL_UNCOMPLETE_WRITE && 

@@ -68,6 +68,10 @@ struct rusage {
 #  define NEC_UNDEF_VALUE (-999)
 #endif 
 
+#if defined(INTERIX)
+#  include "misc.h"
+#endif
+
 #include "builtin_starter.h"
 #include "err_trace.h"
 #include "setrlimits.h"
@@ -197,7 +201,8 @@ int truncate_stderr_out
 #ifndef INTERIX
       target_user = "root";
 #else
-      target_user = "Administrator";
+/* HP: TODO: Handling for Interix */
+      target_user = wl_get_superuser_name();
 #endif
    }
 

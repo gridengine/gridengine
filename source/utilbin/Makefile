@@ -189,8 +189,8 @@ infotext.o: $(UTILBIN_DIR)/infotext.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/infotext.c
 
 #---------------------------------------------------------------------
-fstype:   fstype.o  version.o
-		$(CC) -o $@ fstype.o version.o $(LFLAGS) $(LIBS)
+fstype:   fstype.o  version.o $(RMONLIB)
+		$(CC) -o $@ fstype.o version.o $(LFLAGS) $(LIBS) -lrmon
 
 fstype.o: $(UTILBIN_DIR)/fstype.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/fstype.c

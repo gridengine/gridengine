@@ -164,14 +164,12 @@ int sge_is_start_user_superuser(void)
       uid_t uid = getuid();
 
       if(!sge_uid2user(uid, user_name, sizeof(user_name)-1, MAX_NIS_RETRIES)) {
-         ret = wl_is_start_user_superuser(user_name); 
+         ret = wl_is_user_superuser(user_name); 
       }
    }
 #else
    if (getuid() == 0) {
      ret = 1;
-   } else {
-     ret = 0; 
    }
 #endif
 

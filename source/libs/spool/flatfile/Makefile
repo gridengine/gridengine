@@ -37,6 +37,7 @@ SPOOLFLIB_DIR = $(SDIR)/libs/spool/flatfile
 SPOOLFLIB = libspoolf$(QIDLEXT)$(LIBEXT)
 
 SPOOLFLIB_SRC = \
+         sge_flatfile.c \
          sge_spooling_flatfile.c \
          sge_spooling_flatfile_scanner.c
 
@@ -84,6 +85,9 @@ include $(SPOOLFLIB_DIR)/spoolf_dependencies
 ###############################################################################
 sge_spooling_flatfile.o: $(SPOOLFLIB_DIR)/sge_spooling_flatfile.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLFLIB_DIR)/sge_spooling_flatfile.c
+
+sge_flatfile.o: $(SPOOLFLIB_DIR)/sge_flatfile.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLFLIB_DIR)/sge_flatfile.c
 
 # do not automatically rebuild the scanner c code
 $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c: $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.l $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.h

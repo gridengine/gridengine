@@ -41,6 +41,7 @@
 
 #include "config_file.h"
 
+#include "sge_object.h"
 #include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_job.h"
@@ -259,6 +260,7 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
    config_errfunc = set_error;
 
    /* -------- start_proc_args */
+   NULL_OUT_NONE(pep, PE_start_proc_args);
    s = lGetString(pep, PE_start_proc_args);
    if (s && replace_params(s, NULL, 0, pe_variables )) {
       ERROR((SGE_EVENT, MSG_PE_STARTPROCARGS_SS, pe_name, err_msg));
@@ -269,6 +271,7 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
 
 
    /* -------- stop_proc_args */
+   NULL_OUT_NONE(pep, PE_stop_proc_args);
    s = lGetString(pep, PE_stop_proc_args);
    if (s && replace_params(s, NULL, 0, pe_variables )) {
       ERROR((SGE_EVENT, MSG_PE_STOPPROCARGS_SS, pe_name, err_msg));
@@ -294,16 +297,19 @@ int pe_validate(lListElem *pep, lList **alpp, int startup)
       return STATUS_EEXIST;
    }
 
-   /* -------- PE_user_list */
-   if ((ret=userset_list_validate_acl_list(lGetList(pep, PE_user_list), alpp))!=STATUS_OK) {
-      DEXIT;
-      return ret;
-   }
+   /* do this only in qmaster. we don't have the usersets in qconf */
+   if (startup) {
+      /* -------- PE_user_list */
+      if ((ret=userset_list_validate_acl_list(lGetList(pep, PE_user_list), alpp))!=STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
 
-   /* -------- PE_xuser_list */
-   if ((ret=userset_list_validate_acl_list(lGetList(pep, PE_xuser_list), alpp))!=STATUS_OK) {
-      DEXIT;
-      return ret;
+      /* -------- PE_xuser_list */
+      if ((ret=userset_list_validate_acl_list(lGetList(pep, PE_xuser_list), alpp))!=STATUS_OK) {
+         DEXIT;
+         return ret;
+      }
    }
 
    /* -------- PE_urgency_slots */

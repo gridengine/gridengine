@@ -106,6 +106,10 @@
 #include "sge_attr.h"
 #include "sge_qinstance_state.h"
 
+#ifdef QCONF_FLATFILE
+#include "spool/flatfile/sge_flatfile.h"
+#endif
+
 #include "msg_common.h"
 #include "msg_qconf.h"
 
@@ -142,7 +146,57 @@ static char **sge_parser_get_next(char **head);
 static int sge_gdi_is_manager(const char *user);
 static int sge_gdi_is_adminhost(const char *host);
 /************************************************************************/
+#ifdef QCONF_FLATFILE
+spooling_field US_sub_fields[] = {
+   {  US_name,             0, NULL,                NULL},
+   {  NoName,              0, NULL,                NULL},
+};
 
+spooling_field PE_fields[] = {
+   {  PE_name,            20, "pe_name",           NULL},
+   {  PE_slots,           20, "slots",             NULL},
+   {  PE_user_list,       20, "user_lists",        US_sub_fields},
+   {  PE_xuser_list,      20, "xuser_lists",       US_sub_fields},
+   {  PE_start_proc_args, 20, "start_proc_args",   NULL},
+   {  PE_stop_proc_args,  20, "stop_proc_args",    NULL},
+   {  PE_allocation_rule, 20, "allocation_rule",   NULL},
+   {  PE_control_slaves,  20, "control_slaves",    NULL},
+   {  PE_job_is_first_task,   20, "job_is_first_task", NULL},
+   {  PE_urgency_slots,   20, "urgency_slots",     NULL},
+   {  NoName,             20, NULL,                NULL}
+};
+
+const spool_flatfile_instr qconf_sub_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   NULL
+};
+
+const spool_flatfile_instr qconf_sfi = 
+{
+   NULL,
+   true,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &qconf_sub_sfi
+};
+
+#endif
 /***************************************************************************/
 static char **sge_parser_get_next(char **arg) 
 {
@@ -1916,7 +1970,20 @@ DPRINTF(("ep: %s %s\n",
             }
 
             ep = lFirst(lp);
+
+            /* write pe to temp file */
+#ifdef QCONF_FLATFILE
+            filename = (char *)spool_flatfile_write_object(&alp, ep, 
+                                                 PE_fields, &qconf_sfi,
+                                                 SP_DEST_TMP, SP_FORM_ASCII,
+                                                 NULL);
+            answer_list_output(&alp);
+            if (filename == NULL) {
+               sge_error_and_exit(NULL);
+            }
+#else
             filename = write_pe(0, 1, ep);
+#endif
             lFreeElem(ep);
             
             /* edit this file */
@@ -1933,17 +2000,45 @@ DPRINTF(("ep: %s %s\n",
                   continue;
             }
 
+#ifdef QCONF_FLATFILE
+            ep = spool_flatfile_read_object(&alp, PE_Type,
+                                            PE_fields, NULL, &qconf_sfi,
+                                            SP_FORM_ASCII, NULL, filename);
+            answer_list_output(&alp);
+            if (ep != NULL) {
+               if (pe_validate(ep, &alp, 0) != STATUS_OK) {
+                  answer_list_output(&alp);
+                  ep = lFreeElem(ep);
+               }
+            }
+#else
             /* read it in again */
             ep = cull_read_in_pe(NULL, filename, 0, 0, NULL, NULL); 
+#endif
             unlink(filename);
             if (!ep) {
                if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
                   continue;
             }
+
+            FREE(filename);
          } else {
             spp = sge_parser_get_next(spp);
 
+#ifdef QCONF_FLATFILE
+            ep = spool_flatfile_read_object(&alp, PE_Type,
+                                            PE_fields, NULL, &qconf_sfi,
+                                            SP_FORM_ASCII, NULL, *spp);
+            answer_list_output(&alp);
+            if (ep != NULL) {
+               if (pe_validate(ep, &alp, 0) != STATUS_OK) {
+                  answer_list_output(&alp);
+                  ep = lFreeElem(ep);
+               }
+            }
+#else
             ep = cull_read_in_pe(NULL, *spp, 0, 0, NULL, NULL); 
+#endif
             if (!ep) 
                if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
                   continue;

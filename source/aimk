@@ -254,7 +254,7 @@ else
    set INP_CFLAGS = ""
 endif
 
-set   CFLAGS       = "$INP_CFLAGS"
+set   CFLAGS       = "-DQCONF_FLATFILE $INP_CFLAGS"
 set   CORE_INCLUDE = "-I../security/sec -I../common -I../libs -I../libs/uti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/commlib_v1.0 -I../libs/commlib_v1.0/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set   ADD_COPYRIGHT     = 0
 set   ADD_SUN_COPYRIGHT = 0

@@ -1,3 +1,10 @@
+JG_2004-01-15-0: Enhancem.: Separated flatfile spooling base functions from 
+                            framework implementation.
+                            Use flatfile spooling for qconf -mp/-Mp as 
+                            preparation for a complete switch to flatfile 
+                            spooling in qconf.
+                 Review:    SG
+
 DT-2004-01-15-0: Bugfix:    Fixed build on HP11
                  Changed:   aimk
 

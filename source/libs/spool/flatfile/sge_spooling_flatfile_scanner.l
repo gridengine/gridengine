@@ -21,12 +21,12 @@
 #define YY_NO_UNPUT
 
 int spool_line;
-bool spool_return_whitespace;
+int spool_return_whitespace;
 
 int spool_scanner_initialize(FILE *input)
 {
    spool_line = 1;
-   spool_return_whitespace = false;
+   spool_return_whitespace = 0;
    spool_restart(input);
 
    return spool_lex();
@@ -82,7 +82,7 @@ NL       \r?\n
 
 %%
 
-#if 0
+#ifdef BUILD_FLATFILE_SCANNER_MAIN 
 int main(int argc, char *argv[])
 {
    int ret;

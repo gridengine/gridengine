@@ -34,8 +34,6 @@
 
 #include <stdio.h>
 
-#include "basis_types.h"
-
 typedef enum {
    SPFT_INT = 1,
    SPFT_FLOAT,
@@ -50,7 +48,7 @@ typedef enum {
 } spool_flatfile_token;
 
 extern int spool_line;
-extern bool spool_return_whitespace;
+extern int spool_return_whitespace;
 extern char *spool_text;
 
 int spool_lex(void);

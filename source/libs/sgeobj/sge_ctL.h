@@ -97,7 +97,7 @@ enum {
    CCT_ignore_queues,         /* stores all queues, which now cannot run this job category */ 
    CCT_ignore_hosts,          /* stores all hosts, which now cannot run this job category */
    CCT_queue_violations,      /* stores in a case of soft requests, for each queue the number of violations */
-   CCT_job_messages,          /* stores the error messages, which a job got during its dispatching */ 
+   CCT_job_messages           /* stores the error messages, which a job got during its dispatching */ 
 };
 
 ILISTDEF(CCT_Type, Categories, SGE_CT_LIST)

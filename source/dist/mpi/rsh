@@ -57,7 +57,7 @@ fi
 rhost=$1
 shift
 ruser=
-minus_n=
+minus_n=0
 
 # parse other rsh options
 while [ "$1" != "" ]; do

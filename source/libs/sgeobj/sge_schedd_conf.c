@@ -304,6 +304,13 @@ static void sconf_clear_pos(void){
          if (pos.c_params)
             pos.c_params = lFreeList(pos.c_params);
 
+         /* exception for the profiling, the profiling will not be turned of, if
+            it was active and the params are set to none*/
+         do_profiling = false;
+         if(!do_profiling && prof_is_active()) {
+            prof_stop(NULL);
+         }
+
          pos.weight_ticket = -1;
          pos.weight_waiting_time = -1;
          pos.weight_deadline = -1;
@@ -2538,7 +2545,8 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
 
    if(do_profiling && !prof_is_active()) {
          prof_start(NULL);
-      }
+   }
+
    if(!do_profiling && prof_is_active()) {
       prof_stop(NULL);
    }

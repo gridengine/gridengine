@@ -311,7 +311,7 @@
 #define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S             _MESSAGE(47316, _("unknown complex attribute type for threshold "SFN"\n"))
 #define MSG_SCHEDD_WHYEXCEEDNOHOST_S                  _MESSAGE(47317, _("no such host "SFN" for that queue\n"))
 #define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S               _MESSAGE(47318, _("no such complex attribute for threshold "SFQ"\n"))
-#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_SS               _MESSAGE(47318, _("no such complex attribute for threshold "SFQ" in queue ""SFQ\n"))
+#define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_SS               _MESSAGE(47319, _("no such complex attribute for threshold "SFQ" in queue "SFQ"\n"))
 
 #define MSG_SCHEDD_LCDIAGHOSTNP_SFI                   _MESSAGE(47330, _(SFN" * %f with nproc=%d"))
 #define MSG_SCHEDD_LCDIAGHOST_SF                      _MESSAGE(47331, _(SFN" * %f"))

@@ -3012,7 +3012,7 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
                      
                      cl_com_setup_message(&message,
                                           connection,
-                                          message_text,
+                                          (cl_byte_t*) message_text,
                                           strlen(message_text),
                                           CL_MIH_MAT_NAK,
                                           0,

@@ -1,3 +1,5 @@
+AS-2003-02-10-0  Changed:   set version to 5.3p3
+
 CR-2003-02-07-1  Bugfix:    Compile warnings for ALINUX fixed
 
 CR-2003-02-07-0  Enhancem.: Modified qevent client for testsuite throughput

@@ -42,7 +42,12 @@
 
 
 #define CL_DEFINE_DATA_BUFFER_SIZE                   1024 * 4           /* 4 KB buffer for reading/writing messages */
+#if 0
+/* TODO: enable this when application code is not using u_short with client ids !!! */
 #define CL_DEFINE_MAX_MESSAGE_ID                     4294967295UL       /* max unsigned long value for a 32 bit system */
+#else
+#define CL_DEFINE_MAX_MESSAGE_ID                     65535              /* max unsigned short value */
+#endif
 #define CL_DEFINE_MAX_MESSAGE_LENGTH                 1024 * 1024 * 1024 /* 1GB max message length */
 
 #ifdef MAXHOSTNAMELEN

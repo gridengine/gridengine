@@ -1,3 +1,9 @@
+CR-2004-05-05-1: Bugfix:    o qmaster not responding (no client will receive a 
+                              gdi response) 
+                            o setting max possible component id to 65535
+                 Changed:   commlib
+                 Issue:     1022
+
 SG-2004-05-05-0: Enhancem.: disabled hashing for cull list which are prepared
                             for sending em to a client.
                  Changed:   sge_qmaster

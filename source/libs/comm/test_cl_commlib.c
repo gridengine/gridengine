@@ -117,7 +117,7 @@ extern int main(int argc, char** argv)
 
   cl_com_add_allowed_host(handle, handle->local->comp_host);
 
-  cl_com_set_max_connections(handle,4);
+/*  cl_com_set_max_connections(handle,4); */
   cl_com_get_max_connections(handle,&i);
   printf("max open connections is set to %d\n", i);
   cl_com_set_max_connection_close_mode(handle,CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS );

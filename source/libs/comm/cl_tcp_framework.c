@@ -1567,6 +1567,7 @@ int cl_com_tcp_connection_complete_request( cl_com_connection_t* connection, uns
                   }
                }
                if (is_double == 1) {
+                  /* this id is not unique, increment client id */
                   if (handle->next_free_client_id >= CL_DEFINE_MAX_MESSAGE_ID ) {
                      handle->next_free_client_id = 1;
                   } else {

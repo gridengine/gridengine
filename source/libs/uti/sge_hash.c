@@ -33,10 +33,16 @@
  * Based on David Flanagan's Xmt libary's Hash.c
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <time.h>
+#include <sys/times.h>
+#include <limits.h>
 
 #include "sge_hash.h"
+#include "sgermon.h"
+#include "sge_log.h"
 
 /****** uti/hash/--Introduction *************************************************
 *  NAME
@@ -78,6 +84,8 @@ typedef struct _HashTableRec {
     int (*compare_func)(const void *, const void *);   /* pointer to compare function */
 } HashTableRec;
 
+
+
 /****** uti/hash/ResizeTable() *************************************************
 *  NAME
 *     ResizeTable() -- Resize the hash table
@@ -103,32 +111,57 @@ typedef struct _HashTableRec {
 *                             false = shrink table to half the size
 *
 *******************************************************************************/
+
+extern u_long32 logginglevel;
+
 static void ResizeTable(register HashTable ht, bool grow)    
 {
-    Bucket **otable;
-    int otablesize;
-    register Bucket *bucket, *next, **head;
-    register int i;
+   Bucket **otable;
+   int otablesize;
+   register Bucket *bucket, *next, **head;
+   register int i;
+   clock_t start = 0;
 
-    otable = ht->table;
-    otablesize =  1 << ht->size;
+   DENTER(TOP_LAYER, "ResizeTable");
 
-    if (grow) ht->size++;
-    else if (ht->size > 2) ht->size--;
-    else return;
+   if(logginglevel >= LOG_DEBUG) {
+      struct tms t_buf;
+      DEBUG((SGE_EVENT, "hash stats before resizing: %s\n", HashStatistics(ht)));
+      start = times(&t_buf);
+   } 
+
+   otable = ht->table;
+   otablesize =  1 << ht->size;
+
+   if (grow) {
+      ht->size++;
+   } else if (ht->size > 2) {
+      ht->size--;
+   } else {
+      DEXIT;
+      return;
+   }   
     
-    ht->table = (Bucket **) calloc(1<<ht->size, sizeof(Bucket *));
-    ht->mask = (1<<ht->size) - 1;
+   ht->table = (Bucket **) calloc(1<<ht->size, sizeof(Bucket *));
+   ht->mask = (1<<ht->size) - 1;
 
-    for(i=0; i < otablesize; i++) {
-        for(bucket = otable[i]; bucket; bucket = next) {
-            next = bucket->next;
-            head = &(ht->table[ht->hash_func(bucket->key) & ht->mask]);
-            bucket->next = *head;
-            *head = bucket;
-        }
-    }
-    free((char *) otable);
+   for(i=0; i < otablesize; i++) {
+      for(bucket = otable[i]; bucket; bucket = next) {
+         next = bucket->next;
+         head = &(ht->table[ht->hash_func(bucket->key) & ht->mask]);
+         bucket->next = *head;
+         *head = bucket;
+      }
+   }
+   free((char *) otable);
+
+   if(logginglevel >= LOG_DEBUG) {
+      struct tms t_buf;
+      DEBUG((SGE_EVENT, "resizing of hash table took %.3fs\n", (times(&t_buf) - start) * 1.0 / CLK_TCK));
+      DEBUG((SGE_EVENT, "hash stats after resizing: %s\n", HashStatistics(ht)));
+   }
+   
+   DEXIT;
 }
 
 /****** uti/hash/HashTableCreate() *********************************************
@@ -342,6 +375,42 @@ void HashTableDelete(HashTable table, const void* key)
             return;
         }
     }
+}
+
+const char *HashStatistics(HashTable ht)
+{
+   static char statistic_buffer[1024];
+   long size  = 0;
+   long empty = 0;
+   long max   = 0;
+   long i;
+ 
+   /* count empty hash chains and maximum chain length */
+   size = 1 << ht->size;
+   
+   for(i = 0; i < size; i++) {
+      long count = 0;
+      if(ht->table[i] == NULL) {
+         empty++;
+      } else {
+         Bucket *b = ht->table[i];
+         do {
+            count++;
+         } while((b = b->next) != NULL);
+
+         if(count > max) {
+            max = count;
+         }
+      }
+   }
+
+   sprintf(statistic_buffer, 
+           "size: %ld, %ld entries, chains: %ld empty, %ld max, %.1f avg", 
+           size, ht->numentries,
+           empty, max, 
+           (size - empty) > 0 ? ht->numentries * 1.0 / (size - empty) : 0);
+
+   return statistic_buffer;
 }
 
 /****** uti/hash/-Hash-Functions() *******************************************

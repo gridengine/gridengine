@@ -1,3 +1,12 @@
+JG-2001-10-09-0: Added statistics for our hashtable implementation that gives
+                 following info:
+                  - size of hashtable and number of elements stored
+                  - number of empty hash chains
+                  - maximum and average chain length
+                 When a hashtable is resized and log_level is set to log_debug,
+                 statistics and profiling information is output to messages 
+                 files.
+
 JG-2001-10-08-0: Enabled options -h and -hold_jid for qrsh
 
 AH-2001-10-05-0: Removed warning message in execd 

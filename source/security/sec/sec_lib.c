@@ -841,14 +841,15 @@ static void sec_state_set_key_mat(u_char *key_mat)
 
 static u_char *sec_state_get_key_mat(void)
 {
+   u_char * ret_val = NULL;
+   
    DENTER(GDI_LAYER, "sec_state_get_key_mat");
 
    if (uti_state_get_mewho() != QMASTER) {
-      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat");
-      DEXIT;
-      return sec_state->key_mat;
+      GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, 
+                     sec_state_key, "sec_state_get_key_mat");
+      ret_val = sec_state->key_mat;
    } else { 
-      u_char * ret_val = NULL;
       /* copy global data to thread specific data */
       SEC_LOCK_GLOBAL_SD();
       {
@@ -857,10 +858,9 @@ static u_char *sec_state_get_key_mat(void)
          ret_val = sec_state->key_mat;
       }
       SEC_UNLOCK_GLOBAL_SD();
-      DEXIT;
-      return ret_val;
    }
-   return 0;
+   DEXIT;
+   return ret_val;
 }
 
 static void sec_state_set_key_mat_len(u_long32 key_mat_len)
@@ -881,15 +881,14 @@ static void sec_state_set_key_mat_len(u_long32 key_mat_len)
 
 static u_long32 sec_state_get_key_mat_len(void)
 {
+   u_long32 ret_val = 0;
    DENTER(GDI_LAYER, "sec_state_get_key_mat_len");
 
    if (uti_state_get_mewho() != QMASTER) {
       GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat_len");
-      DEXIT;
-      return sec_state->key_mat_len;
+      ret_val = sec_state->key_mat_len;
    } else { 
       /* copy global data to thread specific data */
-      u_long32 ret_val;
       SEC_LOCK_GLOBAL_SD();
       {
          GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_key_mat_len");
@@ -897,10 +896,9 @@ static u_long32 sec_state_get_key_mat_len(void)
          ret_val = sec_state->key_mat_len;
       }
       SEC_UNLOCK_GLOBAL_SD();
-      DEXIT;
-      return ret_val;
    }
-   return 0;
+   DEXIT;
+   return ret_val;
 }
 
 static void sec_state_set_connid(u_long32 connid)
@@ -921,14 +919,14 @@ static void sec_state_set_connid(u_long32 connid)
 
 static u_long32 sec_state_get_connid(void)
 { 
+   u_long32 ret_val = 0;
+
    DENTER(GDI_LAYER, "sec_state_get_connid");
 
    if (uti_state_get_mewho() != QMASTER) {
       GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connid");
-      DEXIT;
-      return sec_state->connid;
+      ret_val = sec_state->connid;
    } else {
-      u_long32 ret_val;
       /* copy global data to thread specific data */
       SEC_LOCK_GLOBAL_SD();
       {
@@ -937,10 +935,9 @@ static u_long32 sec_state_get_connid(void)
          ret_val = sec_state->connid;
       }
       SEC_UNLOCK_GLOBAL_SD();
-      DEXIT;
-      return ret_val;
    }
-   return 0;
+   DEXIT;
+   return ret_val;
 }
 
 static void sec_state_set_connect(int connect)
@@ -960,15 +957,14 @@ static void sec_state_set_connect(int connect)
 
 static int sec_state_get_connect(void)
 { 
+   int ret_val = 0;
+
    DENTER(GDI_LAYER, "sec_state_get_connect");
 
    if (uti_state_get_mewho() != QMASTER) {
       GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_connect");
-      DEXIT;
-
-      return sec_state->connect;
+      ret_val = sec_state->connect;
    } else {
-      int ret_val;
       /* copy global data to thread specific data */
       SEC_LOCK_GLOBAL_SD();
       {
@@ -977,10 +973,9 @@ static int sec_state_get_connect(void)
          ret_val = sec_state->connect;
       }
       SEC_UNLOCK_GLOBAL_SD();
-      DEXIT;
-      return ret_val;
    }
-   return 0;
+   DEXIT;
+   return ret_val;
 }
 
 static void sec_state_set_seq_receive(u_long32 seq_receive)
@@ -1001,14 +996,14 @@ static void sec_state_set_seq_receive(u_long32 seq_receive)
 
 static u_long32 sec_state_get_seq_receive(void)
 { 
+   u_long32 ret_val = 0;
+
    DENTER(GDI_LAYER, "sec_state_get_seq_receive");
 
    if (uti_state_get_mewho() != QMASTER) {
       GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_receive");
-      DEXIT;
-      return sec_state->seq_receive;
+      ret_val = sec_state->seq_receive;
    } else {
-      u_long32 ret_val;
       /* copy global data to thread specific data */
       SEC_LOCK_GLOBAL_SD();
       {
@@ -1017,10 +1012,9 @@ static u_long32 sec_state_get_seq_receive(void)
          ret_val = sec_state->seq_receive;
       }
       SEC_UNLOCK_GLOBAL_SD();
-      DEXIT;
-      return ret_val;
    }
-   return 0;
+   DEXIT;
+   return ret_val;
 }
 
 static void sec_state_set_seq_send(u_long32 seq_send)
@@ -1040,14 +1034,14 @@ static void sec_state_set_seq_send(u_long32 seq_send)
 
 static u_long32 sec_state_get_seq_send(void)
 {
+   u_long32 ret_val = 0;
+
    DENTER(GDI_LAYER, "sec_state_get_seq_send");
 
    if (uti_state_get_mewho() != QMASTER) {
       GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_seq_send");
-      DEXIT;
-      return sec_state->seq_send;
+      ret_val = sec_state->seq_send;
    } else {
-      u_long32 ret_val;
       /* copy global data to thread specific data */
       SEC_LOCK_GLOBAL_SD();
       {
@@ -1056,10 +1050,9 @@ static u_long32 sec_state_get_seq_send(void)
          ret_val = sec_state->seq_send;
       }
       SEC_UNLOCK_GLOBAL_SD();
-      DEXIT;
-      return ret_val;
    }
-   return 0;
+   DEXIT;
+   return ret_val;
 }
 
 static void sec_state_set_refresh_time(ASN1_UTCTIME *refresh_time)
@@ -1103,15 +1096,16 @@ static ASN1_UTCTIME *sec_state_get_refresh_time(void)
 
 static char *sec_state_get_unique_identifier(void)
 {
+   char *ret_val = NULL;
+
    DENTER(GDI_LAYER, "sec_state_get_unique_identifier");
 
    if (uti_state_get_mewho() != QMASTER) {
       GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_unique_identifier");
       DEXIT;
-      return sec_state->unique_identifier;
+      ret_val = sec_state->unique_identifier;
    } else {
       /* copy global data to thread specific data */
-      char* ret_val;
       SEC_LOCK_GLOBAL_SD();
       {
          GET_SPECIFIC(struct sec_state_t, sec_state, sec_state_init, sec_state_key, "sec_state_get_unique_identifier");
@@ -1119,10 +1113,9 @@ static char *sec_state_get_unique_identifier(void)
          ret_val = sec_state->unique_identifier;
       }
       SEC_UNLOCK_GLOBAL_SD();
-      DEXIT;
-      return ret_val;
    }
-   return "";
+   DEXIT;
+   return ret_val;
 }
 
 static void sec_state_set_unique_identifier(const char *unique_identifier)

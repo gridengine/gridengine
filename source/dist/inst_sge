@@ -582,6 +582,9 @@ if [ $SHADOW = "uninstall" ]; then
 fi
 
 if [ $BACKUP = "true" ]; then
+   if [ $AUTO = "true" ]; then
+      GetConfigFromFile
+   fi
    BackupConfig
 fi
 

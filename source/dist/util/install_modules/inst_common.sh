@@ -1125,55 +1125,95 @@ BackupConfig()
    BUP_COMMON_FILE_LIST="accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd" 
    BUP_SPOOL_FILE_LIST="jobseqnum"
 
+
    $INFOTEXT -u "SGE Configuration Backup"
    $INFOTEXT -n "\nThis feature does a backup of all configuration you made\n" \
                 "within your cluster."
-                SGE_ROOT=`pwd`
+                if [ $AUTO != "true" ]; then
+                   SGE_ROOT=`pwd`
+                fi
    $INFOTEXT -n "\nPlease enter your SGE_ROOT directory. Default: [%s]" $SGE_ROOT 
                 SGE_ROOT=`Enter $SGE_ROOT`
    $INFOTEXT -n "\nPlease enter your SGE_CELL name. Default: [default]"
-                SGE_CELL=`Enter default`
+                if [ $AUTO != "true" ]; then
+                   SGE_CELL=`Enter default`
+                fi
 
    db_home=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
    master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
+   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
 
    $INFOTEXT -n "\nWhere do you want to save the backupfiles? \nDefault: [%s]" $SGE_ROOT/$SGE_CELL/spool/backup
-                backup_dir=`Enter $SGE_ROOT/$SGE_CELL/spool/backup`
-                Makedir $backup_dir
+                if [ $AUTO != "true" ]; then
+                   backup_dir=`Enter $SGE_ROOT/$SGE_CELL/spool/backup`
+                   MKDIR="mkdir -p"
+                   ExecuteAsAdmin $MKDIR $backup_dir
+                else
+                   MYTEMP=`echo $BACKUP_DIR | sed 's/\/$//'`
+                   BACKUP_DIR=$MYTEMP
+                   backup_dir="$BACKUP_DIR"_"$DATE"
+                   MKDIR="mkdir -p"
+                   ExecuteAsAdmin $MKDIR $backup_dir
+                fi
    $INFOTEXT  -auto $AUTO -ask "y" "n" -def "y" -n "\nShall the backup function create a tar/gz package with your files? (y/n) [y]"
 
-   if [ $? = 0 ]; then
+   if [ $? = 0 -a $AUTO != "true" ]; then
       TAR=true
+   else
+      TAR=$TAR
    fi
  
    $INFOTEXT -n "\n... starting with backup\n"    
-   $SGE_UTILBIN/db_dump -f $backup_dir/$DATE.dump -h $db_home sge
+
+   DUMPIT="$SGE_UTILBIN/db_dump -f"
+   ExecuteAsAdmin $DUMPIT $backup_dir/$DATE.dump -h $db_home sge
+
+   CPF="cp -f"
 
    for f in $BUP_COMMON_FILE_LIST; do
       if [ -f $SGE_ROOT/$SGE_CELL/common/$f ]; then
-         cp -f $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
+         ExecuteAsAdmin $CPF $SGE_ROOT/$SGE_CELL/common/$f $backup_dir
       fi
    done
 
    for f in $BUP_SPOOL_FILE_LIST; do
       if [ -f $master_spool/$f ]; then
-         cp -f $master_spool/$f $backup_dir
+         ExecuteAsAdmin $CPF $master_spool/$f $backup_dir
       fi
    done
 
    if [ $TAR = "true" ]; then
-      $INFOTEXT "\nPlease enter a filename for your backupfile. Default: [backup.tar]"
-      bup_file=`Enter backup.tar`
+      if [ $AUTO != "true" ]; then
+         $INFOTEXT -n "\nPlease enter a filename for your backupfile. Default: [backup.tar] >>"
+         bup_file=`Enter backup.tar`
+      else
+         bup_file=$BACKUP_FILE
+      fi
       cd $backup_dir
-      tar -cvf $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
-      gzip -9 $bup_file 
+      #TAR="tar -cvf"
+      #ZIP="gzip -9"
+
+         tar -cvf $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+         gzip -9 $bup_file  
+
+      #ExecuteAsAdmin $TAR $bup_file $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+      #ExecuteAsAdmin $ZIP $bup_file 
 
       cd $SGE_ROOT
       $INFOTEXT -n "\n... backup completed"
       $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir/$bup_file".gz"
 
-      cd $backup_dir      
+      cd $backup_dir     
+      #RMF="rm -f" 
       rm -f $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+      #ExecuteAsAdmin $RMF $DATE.dump.tar $DATE.dump $BUP_COMMON_FILE_LIST $BUP_SPOOL_FILE_LIST
+
+      cd $SGE_ROOT
+
+      if [ $AUTO = "true" ]; then
+         MV="mv"
+         ExecuteAsAdmin $MV /tmp/$LOGSNAME $backup_dir
+      fi 
 
       exit 0
    fi
@@ -1181,6 +1221,10 @@ BackupConfig()
    $INFOTEXT -n "\n... backup completed"
    $INFOTEXT -n "\nAll information is saved in \n[%s]\n\n" $backup_dir
 
+   if [ $AUTO = "true" ]; then
+      MV="mv"
+      ExecuteAsAdmin $MV /tmp/$LOGSNAME $backup_dir
+   fi  
 }
 
 

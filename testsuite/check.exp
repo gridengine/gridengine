@@ -5188,7 +5188,7 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "help         show this"
       puts "install      just install core system and exit"
       puts "kill         shutdown cluster"
-      puts "setup        remove defaults file and run setup"
+      puts "setup        run setup"
       puts "file FILE    use FILE as defaults file"
       puts "re_init      use allready installed system (will only shutdown/reconfigure the cluster!)"
       puts "             when test install_core_system is called or install option is set"

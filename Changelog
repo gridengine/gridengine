@@ -1,3 +1,8 @@
+CR-2001-09-21-0: Testsuite:
+                 - New procedure in file_procedures module:
+                   create_path_aliasing_file()
+                 - Issue #54 : New test: sge_aliases file  
+
 CR-2001-09-18-0: Testsuite:
                  - sending CR (carriage return) before starting remote command
                    (to stop eventually switched on correct questions) on rlogin

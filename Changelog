@@ -1,3 +1,6 @@
+DT-2004-02-18-1: Bugfix:    Added missing -sconf param in qconf
+                 Changed:   flatfile spooling
+
 SG-2004-02-18-1: Bugfix:    the total update events were delivered with
                             the next regular event.
                  Changed:   master

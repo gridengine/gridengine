@@ -436,6 +436,7 @@ spooling_field SC_fields[] = {
    {  SC_weight_waiting_time,             33, "weight_waiting_time",             NULL,          NULL, NULL,                      NULL},
    {  SC_weight_deadline,                 33, "weight_deadline",                 NULL,          NULL, NULL,                      NULL},
    {  SC_weight_urgency,                  33, "weight_urgency",                  NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_priority,                 33, "weight_priority",                 NULL,          NULL, NULL,                      NULL},
    {  SC_max_reservation,                 33, "max_reservation",                 NULL,          NULL, NULL,                      NULL},
    {  NoName,                             33, NULL,                              NULL,          NULL, NULL,                      NULL}
 };

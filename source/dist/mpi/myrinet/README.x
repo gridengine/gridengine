@@ -1,4 +1,8 @@
 
+This file has been replaced by the file README. This file applies only
+to MPICH-GM versions prior to the 1.2.4..8a release.
+
+
                                  MPI/Myrinet
                                  -----------
                  Grid Engine Parallel Support for MPI/Myrinet
@@ -31,9 +35,7 @@ Content
 This directory contains the following files and directories:
 
    README           this file 
-   README.x         the README for MPI/Myrinet (pre MPICH-GM 1.2.4..8a release)
    startmpi.sh      startup script for MPI/Myrinet
-   startmpi.sh.x    startup script for MPI/Myrinet (pre MPICH-GM 1.2.4..8a release)
    stopmpi.sh       shutdown script for MPI/Myrinet
    mpi.template     a MPICH/Myrinet PE template configuration for Grid Engine
                     (loose integration)
@@ -42,7 +44,6 @@ This directory contains the following files and directories:
    gmps             utility program for reporting Myrinet port usage
    hostname         a wrapper for the hostname command
    sge_mpirun       MPIRUN command replacement
-   sge_mpirun.x     MPIRUN command replacement (pre MPICH-GM 1.2.4..8a release)
 
 Please refer to the "Installation and Administration Guide" Chapter "Support
 of Parallel Environments" for a general introduction to the Parallel
@@ -146,10 +147,23 @@ Environment Interface of Grid Engine.
 8) Queue Configuration
 ----------------------
 
-   Earlier versions of this integration required a queue per processor
-   with the "processors" queue attribute containing a unique Myrinet port
-   number for each queue.  This is no longer necessary.
-
+   A queue must be setup for each processor rather than each host.
+   The "processors" queue attribute should contain a unique Myrinet port
+   number for each queue.  This allows Grid Engine to schedule MPI tasks to a
+   particular processor rather than simply scheduling a certain number of
+   MPI tasks to a host. The Myrinet MPICH software requires that each MPI task
+   use a unique Myrinet port number. By default, the Myrinet MPICH software
+   supports 8 ports on each Myrinet card, 6 of which can be used for MPI
+   communication (ports 2,3,4,5,6,7). Grid Engine must decide which port
+   should be used for each MPI task. This is implemented by using
+   the "processors" queue attribute to identify the Myrinet port
+   number for each queue. Therefore, the first queue should use Myrinet port
+   number 2 and the second queue should use Myrinet port number 3, etc.
+   If you need to add more queues, you can use the other port numbers
+   (4,5,6,7). If you need more than 6 queues on each host, the Myrinet
+   documentation says that you may be able to build a 16-port
+   configuration. (see Notes below)
+   
    The tmpdir queue attribute on all the parallel queues should be set
    to a shared file system. The integration stores some files in the
    user's TMPDIR, which must be readable on all the hosts. For instance,
@@ -175,14 +189,28 @@ Environment Interface of Grid Engine.
 
    The 'gmps' command is a utility program to report and/or cleanup 
    processes which are using Myrinet ports. For usage information,
-   type 'gmps -h'. This command uses a command called gm_board_info
-   which is part of the GM distribution from Myrinet.
+   type 'gmps -h'.
 
 10) Notes
 ---------
 
-   The startmpi.sh, sge_mpirun, and gmps scripts use /bin/ksh (the
-   Korn shell).  Make sure it is installed.
+   The main reason for implementing the a queue-per-processor method is
+   the simplicity and built-in fault tolerance of this design versus
+   maintaining a port database which tracks which ports are in use.
+   Since the port numbers are allocated and cleaned up by Grid Engine
+   itself rather than in the startmpi.sh/stopmpi.sh scripts, the design
+   is less likely to have port cleanup problems due to the stopmpi.sh
+   not running or when a host goes down.  Dealing with additional queues
+   can be a pain, but hopefully the benefits of a simple, clean,
+   fault-tolerant design will outweigh the hassle of multiple queues.
+   The Grid Engine developers have discussed an enhancement to consumable
+   resources which would allow Grid Engine to schedule and track particular
+   resources (e.g. ports 1 and 2) rather than just tracking the amount of
+   resources consumed. This would obviate the need for a queue per CPU,
+   and is probably the best long term solution.
+
+   The startmpi.sh, sge_mpirun, and gmps scripts use /bin/ksh.  Make
+   sure it is installed.
 
    In a Kerberos environment, if you want the MPI tasks to have Kerberos
    credentials, then it is critical that the user have valid forwardable
@@ -194,14 +222,7 @@ Environment Interface of Grid Engine.
    or a specific path to rsh or ssh.  We recommend that you configure
    MPICH/GM using the default rsh.  This makes it easy for the integration
    to override rsh and use Grid Engine's qrsh command to run the MPI tasks
-   under Grid Engine's control (tight integration).  If your MPICH/GM
-   software is configured to use a hard-coded path to rsh (search for the
-   string "rexec" in the file mpirun.ch_gm.pl), then you will either need
-   to change the script or copy the mpirun.ch_gm and mpirun.ch_gm.pl
-   scripts to a new location (e.g. $SGE_ROOT/mpi/myrinet), modify the
-   mpirun.ch_gm.pl command to use $SGE_ROOT/mpi/rsh, and update the
-   start_proc_args attribute in your PE configuration to point to the
-   path of the updated mpirun.ch_gm command.
+   under Grid Engine's control.
 
 11) Copyright
 -------------

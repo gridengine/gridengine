@@ -1,5 +1,10 @@
 #!/bin/ksh
 #
+# *********
+# ATTENTION
+# *********
+# This file has been replaced by sge_mpirun. This file applies only to
+# MPICH-GM versions prior to the 1.2.4..8a release.
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -46,8 +51,6 @@ SGE_CELL=${SGE_CELL:-default}
 SGE_CELL=${SGE_CELL:-default}
 
 host=`hostname`
-arch=$($SGE_ROOT/util/arch)
-qconf=$SGE_ROOT/bin/$arch/qconf
 
 if [ "$PE" = "" ]; then
    print -u2 PE is not set, sge_mpirun must be issued from a Grid Engine parallel job
@@ -59,10 +62,10 @@ if [ "$NSLOTS" = "" ]; then
    exit 3
 fi
 
-mpirun=$($qconf -sp $PE | grep "^start_proc_args" | awk '{ print $NF; }')
+mpirun=$(qconf -sp $PE | grep "^start_proc_args" | awk '{ print $NF; }')
 
-if [ ! -f "$mpirun" ]; then
-   print -u2 The mpirun command \"$mpirun\" does not exist
+if [ ! -f $mpirun ]; then
+   print -u2 $mpirun does not exist
    print -u2 There must be a problem with the $PE parallel environment
    exit 4
 fi
@@ -77,9 +80,9 @@ fi
 export PATH=$TMPDIR:$PATH
 
 #print ===========DEBUG============
-#print exec $mpirun -machinefile $TMPDIR/machines --gm-kill 15 -np $NSLOTS -r "$@"
+#print exec $mpirun --gm-f $TMPDIR/machines --gm-kill 15 -np $NSLOTS "$@"
 #print ===========DEBUG============
-exec $mpirun -machinefile $TMPDIR/machines --gm-kill 15 -np $NSLOTS -r "$@"
+exec $mpirun --gm-f $TMPDIR/machines --gm-kill 15 -np $NSLOTS "$@"
 print -u2 exec of $mpirun failed
 exit 6
 

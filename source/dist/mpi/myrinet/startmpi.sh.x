@@ -1,5 +1,10 @@
 #!/bin/ksh
 #
+# *********
+# ATTENTION
+# *********
+# This file has been replaced by sge_mpirun. This file applies only to
+# MPICH-GM versions prior to the 1.2.4..8a release.
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -50,42 +55,38 @@
 #                      mpi application
 #
 
-set +u
-
 PeHostfile2MachineFile()
 {
-   #
-   # PeHostfile2MachineFile converts the Grid Engine hostfile to an
-   # MPICH-GM machine file.
-   #
-
    make_unique=0
    if [ "$1" = "-unique" ]; then
       shift 1
       make_unique=1
    fi
+   host_list=
    prev_host=
-   host_slots=0
-   hostfile=$1
-   set -- `cat $hostfile | sort`
-   while [ "$1" != "" ]; do
-      host=$1
-      nslots=$2
-      if [ "$prev_host" != "" -a "$prev_host" != "$host" ]; then
-         print $prev_host:$host_slots
-         host_slots=0
-      fi
-      if [ $make_unique = 1 ]; then
-         host_slots=1
-      else
-         host_slots=`expr $host_slots + $nslots`
+   mpi_tasks=0
+   cat $1 |&
+   while read -p line; do
+      host=`echo $line|cut -f1 -d" "|cut -f1 -d"."`
+      nslots=`echo $line|cut -f2 -d" "`
+      port=`echo $line|cut -f4 -d" "`
+      if [ $make_unique = 0 ] || [ "$host" != "$prev_host" ]; then
+         if [ $make_unique = 1 ]; then
+            nslots=1
+         fi
+	 i=1
+	 while [ $i -le $nslots ]; do
+	    # add code here to map regular hostnames into ATM hostnames
+            host_list="${host_list}$host $port
+"
+	    i=`expr $i + 1`
+            mpi_tasks=`expr $mpi_tasks + 1`
+	 done
       fi
       prev_host=$host
-      shift 4
    done
-   if [ "$prev_host" != "" ]; then
-      print $prev_host:$host_slots
-   fi
+   echo $mpi_tasks
+   echo "$host_list"
 }
 
 

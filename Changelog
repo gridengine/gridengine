@@ -1,3 +1,6 @@
+JG-2003-01-02-0  Enhancem.  Prevent lex scanner to be generated after each 
+                            checkout. Instead, the checked in scanner is used.
+
 SD-2002-12-19-2  Enhancem.  A new qmaster_params attribute called
                             SCHEDULER_TIMEOUT will allow the scheduler GDI event
                             acknowledge timeout (default is 10 minutes) to be

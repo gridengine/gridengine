@@ -1,4 +1,10 @@
-/* scanner for Grid Engine ascii spool format */
+/* scanner for Grid Engine ascii spool format
+ *
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * !! when you change this file, remove sge_spooling_flatfile_scanner.c !!
+ * !! before building Grid Engine                                       !!
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ */
 
 %option noyywrap
 

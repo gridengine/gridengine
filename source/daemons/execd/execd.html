@@ -120,9 +120,8 @@ function that processes the request.
 <b><i>Execute a job <tt>(TAG_JOB_EXECUTION)</tt></i></b></li>
 
 <br>If a request to execute a job is received from the qmaster, the job
-is spooled to disk and started via a shepherd process (see &lt;link to
-shepherd documentation> <i><font color="#CC0000">insert link to work after
-checkout and when browsing via cvsweb as well - Andreas knows how</font></i>).
+is spooled to disk and started via a shepherd process&nbsp; - see the <a href="../shepherd/shepherd.html">shepherd
+documentation</a>.
 <br>During the job's runtime, the processes of the job can be monitored
 and controlled by the PDC and PTF modules of the execd.
 <br>After the job finished, all relevant information about the job is gathered
@@ -214,8 +213,8 @@ contain
 <b><i>Load values</i></b></li>
 
 <br>All load values collected by the load sensor(s) of an execd in a load
-report interval are sent to the qmaster in one report message (see also
-man page <font color="#FF0000">sge_conf(5)</font>).
+report interval are sent to the qmaster in one report message - see also
+man page <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a></font>.
 <li>
 <b><i>Job reports</i></b></li>
 
@@ -242,15 +241,15 @@ function <tt>get_load_avg</tt> and <tt>get_cpu_load</tt> in the file <tt>source/
 <p><font color="#000000">Memory load values are retrieved by the (platform
 dependent) function <tt>load_mem</tt> in file <tt>source/libs/uti/sge_loadmem.c</tt>.</font>
 <p>In addition, there exists an interface to integrate one or multiple
-external load sensors into the execd (see man page sge_conf(5)).
+external load sensors into the execd - see man page <a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a>.
 <p>This is for example done to integrate license counters from licensing
 systems into Grid Engine or to provide additional host characteristics
 to Grid Engine that are not handled by the built-in load sensor.
 <p>An external load sensor can be any executable like a binary, a shell
 script, a perl script ...
 <p>It can be configured in the (host specific) cluster configuration by
-setting the parameter <tt>load_sensor</tt> (see man page sge_conf(5)) and
-is started by the execd as a child process (see function <tt>sge_ls_start_ls</tt>
+setting the parameter <tt>load_sensor</tt> - see man page <a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a>
+- and is started by the execd as a child process (see function <tt>sge_ls_start_ls</tt>
 in file <tt>source/daemons/execd/sge_load_sensor.c</tt>).
 <br>Multiple load sensors can be started by one execd.
 <p>A load sensor gets commands from execd on stdin and has to report the
@@ -294,8 +293,6 @@ The format for a load value is
 <tt>$SGE_ROOT/util/resources/loadsensors</tt>
 <br>Further information on setting up loadsensors can be found at
 <tt>http://supportforum.sun.com/gridengine/appnote_loadsensor.html</tt>
-<p><i><font face="Courier, monospace"><font color="#CC0000">It would be
-nice to have a picture which shows qmaster+commd+execd+shepherd+load_sensor
-and which also mentions that execd stores data to its spool directory.</font></font></i>
+<br><i><font face="Courier, monospace"><font color="#CC0000"></font></font></i>&nbsp;
 </body>
 </html>

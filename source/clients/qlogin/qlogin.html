@@ -15,8 +15,7 @@
 QLOGIN - queue login</h1>
 The qlogin client command submits an interactive job into Grid Engine that
 provides the user with a queued login session.
-<p>Qlogin uses the same startup mechanism as qrsh <font color="#FF0000">&lt;link
-to qrsh docu></font>:
+<p>Qlogin uses the same startup mechanism as <a href="../qrsh/qrsh.html">qrsh</a>:
 <br>On the execution host, the shepherd starts a telnetd on a free socket
 port.
 <br>The qlogin client command spawns a telnet to that socket port.
@@ -27,7 +26,7 @@ be configured in the cluster configuration.
 <p>The parameter <tt>qlogin_daemon</tt> parameter defines, which daemon
 shall be started by the Grid Engine shepherd,
 <br>the parameter <tt>qlogin_command</tt> which telnet client command shall
-be spawned by qlogin (see also the manpage <font color="#FF0000">sge_conf.5</font>).
+be spawned by qlogin - see also the manpage <font color="#000000"><a href="../../MANSBUILD/HTMLMAN/htmlman5/sge_conf.html">sge_conf(5)</a></font>.
 <br>&nbsp;
 <br>&nbsp;
 <br>&nbsp;

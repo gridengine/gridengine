@@ -900,8 +900,6 @@
 ** gdilib/utility.c
 */
 #define MSG_GDI_STRING_STRINGTOINTFAILED_S               _("unable to convert string \"%s\" to integer\n")
-#define MSG_GDI_MEMORY_MALLOCFAILED                      _("malloc() failure\n")
-#define MSG_GDI_MEMORY_REALLOCFAILED                     _("realloc() failure\n")
 #define MSG_GDI_POINTER_SUFFIXISNULLINSGEUNLINK          _("suffix == NULL in sge_unlink()\n")
 #define MSG_GDI_STRING_LENGTHEXCEEDSMAXSTRINGSIZE_SI     _("strlen($%s) exceeds MAX_STRING_SIZE %d\n")
 

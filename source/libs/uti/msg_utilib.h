@@ -242,5 +242,11 @@
 #define MSG_SYSTEM_GETPWUIDFAILED_US               _("getpwuid("pid_t_fmt") failed: %s\n")
 #define MSG_SYSTEM_GETGRGIDFAILED_US               _("getgrgid("pid_t_fmt") failed: %s\n")
 
+/* 
+** utilib/sge_stdlib.c
+*/ 
+#define MSG_MEMORY_MALLOCFAILED                    _("malloc() failure\n")
+#define MSG_MEMORY_REALLOCFAILED                   _("realloc() failure\n") 
+
 #endif /* __MSG_UTILIB_H */
 

@@ -1,3 +1,6 @@
+EB-2002-02-19-0: Cleanup:   Moved/deleted some functiones (part 1)
+                 Issue:     #152 
+
 EB-2002-02-18-1: Cleanup:   Integarte common/job.c functions into 
                             libs/gdi/sge_job_jatask.c
                  Issue:     #142

@@ -51,6 +51,7 @@
 #include "sge_arch.h"
 #include "setup_path.h"
 #include "sge_stat.h" 
+#include "sge_stdlib.h"
 
 sge_path_type path = { NULL };
 

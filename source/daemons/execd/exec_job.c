@@ -91,10 +91,10 @@
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "sge_string.h" 
-#include "utility.h"
 #include "jb_now.h"
 #include "sge_feature.h"
 #include "sge_job_jatask.h"
+#include "sge_stdlib.h"
 
 #define ENVIRONMENT_FILE "environment"
 #define CONFIG_FILE "config"

@@ -32,13 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdio.h>
+
 #ifndef WIN32NATIVE
 #	include <syslog.h>
 #else 
 #	include "win32nativetypes.h"
 #endif 
-
-
 
 #ifndef __BASIS_TYPES_H
 #   include "basis_types.h"

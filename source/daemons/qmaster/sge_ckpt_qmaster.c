@@ -59,16 +59,16 @@
 #include "sge_log.h"
 #include "sge_job_schedd.h"
 #include "gdi_utility_qmaster.h"
+#include "sge_stdlib.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
 #include "msg_qmaster.h"
+
 /* #include "pw_def.h" */
 /* #include "pw_proto.h"  */
 #include "sge_parse_num_par.h"
 
 extern lList *Master_Ckpt_List;
-
-static int sge_count_ckpts(void); 
 
 /****** qmaster/ckpt/ckpt_mod() ***********************************************
 *  NAME
@@ -610,47 +610,3 @@ int validate_ckpt(lListElem *ep, lList **alpp)
    DEXIT;
    return STATUS_OK;
 }              
-
-/****** qmaster/ckpt/sge_count_ckpts() ****************************************
-*  NAME
-*     sge_count_ckpts -- count the number of ckpt objects 
-*
-*  SYNOPSIS
-*     int sge_count_ckpts(
-*        void
-*     );
-*
-*  FUNCTION
-*     Count the number of currently configured ckpt objects 
-*
-*  RESULT
-*     positive int or 0 - number of ckpt objects
-******************************************************************************/ 
-static int sge_count_ckpts()
-{
-   int number_of_ckpts = 0;
-   lList *cl = NULL;
-   static lCondition *have_to_be_licensed = NULL;
-   static lEnumeration *what_all;
-
-   DENTER(TOP_LAYER, "sge_count_ckpts");
-
-   if (Master_Ckpt_List) {
-      if (!have_to_be_licensed) {
-         have_to_be_licensed = lWhere("%T(%I c= %s || %I c= %s || %I c= %s)",
-                                       CK_Type, CK_interface, "HIBERNATOR",
-                                       CK_interface, "CPR",
-                                       CK_interface, "CRAY-CKPT");
-
-         what_all = lWhat("%T(ALL)", CK_Type);
-      }
-
-      cl = lSelect("ckpt_licensed", Master_Ckpt_List, have_to_be_licensed, 
-         what_all);
-      number_of_ckpts = lGetNumberOfElem(cl);
-      lFreeList(cl);
-   }
-
-   DEXIT;
-   return number_of_ckpts;
-}         

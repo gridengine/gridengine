@@ -682,8 +682,8 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
 
       lXchgList(job, attribute[i], &range_list);
       range_list_remove_id(&range_list, answer_list, ja_task_number);
-      lXchgList(job, attribute[i], &range_list);
       range_list_compress(range_list);
+      lXchgList(job, attribute[i], &range_list);
    }
    DEXIT;
 } 

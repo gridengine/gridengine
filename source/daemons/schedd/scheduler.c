@@ -108,7 +108,6 @@ static int select_assign_debit(lList **queue_list, lList **job_list, lListElem *
 *  RESULT
 *     0 success  
 *    -1 error  
-*
 *******************************************************************************/
 #ifdef SCHEDULER_SAMPLES
 int my_scheduler(sge_Sdescr_t *lists)

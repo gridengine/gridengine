@@ -71,6 +71,26 @@ static int user_sort = 0;
 #	define strncasecmp( a, b, n) strnicmp( a, b, n)
 #endif
 
+/****** sched/sge_job_schedd/get_name_of_split_value() ************************
+*  NAME
+*     get_name_of_split_value() -- Constant to name transformation 
+*
+*  SYNOPSIS
+*     const char* get_name_of_split_value(int value) 
+*
+*  FUNCTION
+*     This function transforms a constant value in its internal
+*     name. (Used for debug output) 
+*
+*  INPUTS
+*     int value - SPLIT_-Constant 
+*
+*  RESULT
+*     const char* - string representation of 'value' 
+*
+*  SEE ALSO
+*     sched/sge_job_schedd/SPLIT_-Constants 
+*******************************************************************************/
 const char *get_name_of_split_value(int value) 
 {
    const char *name;
@@ -112,6 +132,28 @@ const char *get_name_of_split_value(int value)
    return name;
 }
 
+/****** sched/sge_job_schedd/job_move_first_pending_to_running() **************
+*  NAME
+*     job_move_first_pending_to_running() -- Move a job 
+*
+*  SYNOPSIS
+*     void job_move_first_pending_to_running(lListElem **pending_job, 
+*                                            lList **splitted_jobs[]) 
+*
+*  FUNCTION
+*     Move the 'pending_job' from 'splitted_jobs[SPLIT_PENDING]'
+*     into 'splitted_jobs[SPLIT_RUNNING]'. If 'pending_job' is an 
+*     array job, than the first task (task id) will be moved into 
+*     'pending_job[SPLIT_RUNNING]' 
+*
+*  INPUTS
+*     lListElem **pending_job - Pointer to a pending job (JB_Type) 
+*     lList **splitted_jobs[] - (JB_Type) array of job lists 
+*
+*  SEE ALSO
+*     sched/sge_job_schedd/SPLIT_-Constants 
+*     sched/sge_job_schedd/split_jobs()
+*******************************************************************************/
 void job_move_first_pending_to_running(lListElem **pending_job,
                                        lList **splitted_jobs[]) 
 {
@@ -127,7 +169,8 @@ void job_move_first_pending_to_running(lListElem **pending_job,
       lListElem *running_job = NULL;   /* JAT_Type */
       lListElem *new_ja_task = NULL;   /* JAT_Type */
 
-      new_ja_task = lCopyElem(job_get_ja_task_template_pending(*pending_job, ja_task_id));
+      new_ja_task = lCopyElem(job_get_ja_task_template_pending(*pending_job, 
+                                                               ja_task_id));
       running_job = lGetElemUlong(*(splitted_jobs[SPLIT_RUNNING]), 
                                   JB_job_number, job_id);
       if (running_job) {
@@ -171,9 +214,31 @@ void job_move_first_pending_to_running(lListElem **pending_job,
    DEXIT;
 }
 
-/* user_list: JC_Type */
-/* max_jobs_per_user: conf.maxujobs */
-/* owner_or_group: either JB_owner or JB_group */
+/****** sched/sge_job_schedd/job_lists_split_with_reference_to_max_running() **
+*  NAME
+*     job_lists_split_with_reference_to_max_running() -- split jobs 
+*
+*  SYNOPSIS
+*     void job_lists_split_with_reference_to_max_running(
+*              lList **job_lists[], 
+*              lList **user_list, 
+*              int max_jobs_per_user) 
+*
+*  FUNCTION
+*     Move those jobs which would exceed the configured 'max_u_jobs'
+*     limit (schedd configuration) from job_lists[SPLIT_PENDING] into 
+*     job_lists[SPLIT_PENDING_EXCLUDED]. 
+*      
+*
+*  INPUTS
+*     lList **job_lists[]   - Array of JB_Type lists 
+*     lList **user_list     - User list of Type JC_Type 
+*     int max_jobs_per_user - "max_u_jobs" 
+*
+*  SEE ALSO
+*     sched/sge_job_schedd/SPLIT_-Constants
+*     sched/sge_job_schedd/split_jobs()     
+*******************************************************************************/
 void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                                                    lList **user_list,
                                                    int max_jobs_per_user)
@@ -243,6 +308,59 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
    DEXIT;
 }      
 
+/****** sched/sge_job_schedd/split_jobs() *************************************
+*  NAME
+*     split_jobs() -- Split list of jobs according to their state
+*
+*  SYNOPSIS
+*     void split_jobs(lList **job_list, lList **answer_list, 
+*                     lList *queue_list, u_long32 max_aj_instances, 
+*                     lList **result_list[]) 
+*
+*  FUNCTION
+*     Split a list of jobs according to their state. 
+*     'job_list' is the input list of jobs. The jobs in this list 
+*     have different job states. For the dispatch algorithm only
+*     those jobs are of interest which are really pending. Jobs
+*     which are pending and in error state or jobs which have a
+*     hold applied (start time in future, administrator hold, ...)
+*     are not necessary for the dispatch algorithm. 
+*     After a call to this function the jobs of 'job_list' may
+*     have been moved into one of the 'result_list's. 
+*     Each of those lists containes jobs which have a certain state.
+*     (e.g. result_list[SPLIT_WAITING_DUE_TO_TIME] will contain
+*     all jobs which have to wait according to their start time. 
+*     'queue_list' is the whole list of configured queues.
+*     'max_aj_instances' are the maximum number of tasks of an 
+*     array job which may be instantiated at the same time.
+*     'queue_list' and 'max_aj_instances' are used for the
+*     split decitions. 
+*     In case of any error the 'answer_list' will be used to report
+*     errors (It is not used in the moment)
+*
+*  INPUTS
+*     lList **job_list          - JB_Type input list 
+*     lList **answer_list       - AN_Type answer list 
+*     lList *queue_list         - QU_Type list 
+*     u_long32 max_aj_instances - max. num. of task instances 
+*     lList **result_list[]     - Array of result list (JB_Type)
+*
+*  NOTES
+*     In former versions of SGE/EE we had 8 split functions.
+*     Each of those functions walked twice over the job list.
+*     This was time consuming in case of x thousand of jobs. 
+*
+*     We tried to improve this:
+*        - loop over all jobs only once
+*        - minimize copy operations where possible
+*
+*     Unfortunately this function id heavy to understand now. Sorry! 
+*
+*  SEE ALSO
+*     sched/sge_job_schedd/SPLIT_-Constants 
+*     sched/sge_job_schedd/trash_splitted_jobs()
+*     sched/sge_job_schedd/job_lists_split_with_reference_to_max_running()
+*******************************************************************************/
 void split_jobs(lList **job_list, lList **answer_list,
                 lList *queue_list, u_long32 max_aj_instances, 
                 lList **result_list[])
@@ -589,6 +707,34 @@ void split_jobs(lList **job_list, lList **answer_list,
    return;
 } 
 
+/****** sched/sge_job_schedd/trash_splitted_jobs() ****************************
+*  NAME
+*     trash_splitted_jobs() -- Trash all not needed job lists
+*
+*  SYNOPSIS
+*     void trash_splitted_jobs(lList **splitted_job_lists[]) 
+*
+*  FUNCTION
+*     Trash all job lists which are not needed for scheduling decisions.
+*     Before jobs and lists are trashed, scheduling messages will
+*     be generated. 
+*
+*     Following lists will be trashed:
+*        splitted_job_lists[SPLIT_ERROR]
+*        splitted_job_lists[SPLIT_HOLD]
+*        splitted_job_lists[SPLIT_WAITING_DUE_TO_TIME]
+*        splitted_job_lists[SPLIT_WAITING_DUE_TO_PREDECESSOR]
+*        splitted_job_lists[SPLIT_PENDING_EXCLUDED_INSTANCES]
+*        splitted_job_lists[SPLIT_PENDING_EXCLUDED]
+*
+*  INPUTS
+*     lList **splitted_job_lists[] - list of job lists 
+*
+*  SEE ALSO
+*     sched/sge_job_schedd/SPLIT_-Constants 
+*     sched/sge_job_schedd/split_jobs() 
+*     sched/sge_job_schedd/job_lists_split_with_reference_to_max_running()
+*******************************************************************************/
 void trash_splitted_jobs(lList **splitted_job_lists[]) 
 {
    int split_id_a[] = {
@@ -806,12 +952,8 @@ lList *job_list
    owner    - name of owner whose number of running jobs has changed
 
 */
-int resort_jobs(
-lList *jc,
-lList *job_list,
-const char *owner,
-lSortOrder *so 
-) {
+int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so) 
+{
    lListElem *job, *jc_owner;
    int njobs;
 

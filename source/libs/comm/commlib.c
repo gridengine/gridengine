@@ -1817,7 +1817,7 @@ int force
 
 
 
-/****** lib/commd/getuniquehostname() *****************************************
+/****** commd/commlib/getuniquehostname() *************************************
 *
 *  NAME
 *     getuniquehostname() -- resolve hostname to get his primary name 

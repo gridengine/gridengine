@@ -124,64 +124,50 @@ int sge_granted_slots(lList *gdil);
 
 const char *get_name_of_split_value(int value);
 
+/****** sched/sge_job_schedd/SPLIT_-Constants *********************************
+*  NAME
+*     SPLIT_-Constants -- Constants used for split_jobs() 
+*
+*  SYNOPSIS
+
+*
+*  FUNCTION
+*     SPLIT_PENDING     - Pending jobs/tasks which may be dispatched 
+*     SPLIT_PENDING_EXCLUDED     - Pending jobs/tasks which won't 
+*                         be dispatched because this whould exceed 
+*                         'max_u_jobs'
+*     SPLIT_PENDING_EXCLUDED_INSTANCES    - Pending jobs/tasks which 
+*                         won't be dispatched because this whould 
+*                         exceed 'max_aj_instances' 
+*     SPLIT_SUSPENDED   - Suspended jobs/tasks 
+*     SPLIT_WAITING_DUE_TO_PREDECESSOR    - Jobs/Tasks waiting for 
+*                         others to finish
+*     SPLIT_HOLD        - Jobs/Tasks in user/operator/system hold
+*     SPLIT_ERROR       - Jobs/Tasks which are in error state
+*     SPLIT_WAITING_DUE_TO_TIME  - These jobs/tasks are not 
+*                         dispatched because start time is in future
+*     SPLIT_RUNNING     - These Jobs/Tasks won't be dispatched 
+*                         because they are already running
+*     SPLIT_FINISHED    - Already finished jobs/tasks   
+*
+*  SEE ALSO
+*     sched/sge_job_schedd/split_jobs() 
+*     sched/sge_job_schedd/trash_splitted_jobs()
+*******************************************************************************/
 enum {
    SPLIT_FIRST,
 
-   /*
-    * Pending jobs/tasks which may be dispatched
-    */
    SPLIT_PENDING = SPLIT_FIRST,
-
-   /* 
-    * Pending jobs/tasks which won't be dispatched because this would
-    * exceed 'maxujobs'
-    */
    SPLIT_PENDING_EXCLUDED,
-
-   /*
-    * Pending jobs/tasks which won't be dispatched because this whould
-    * exceed 'max_aj_instances'
-    */
    SPLIT_PENDING_EXCLUDED_INSTANCES,
-   
-   /*
-    * Suspended jobs/tasks
-    */
    SPLIT_SUSPENDED,
-
-   /* 
-    * Jobs/Tasks waiting for others to finish
-    */
    SPLIT_WAITING_DUE_TO_PREDECESSOR,
-
-   /*
-    * Jobs/Tasks in user/operator/system hold
-    */
    SPLIT_HOLD,
-
-   /*
-    * Jobs/Tasks which are in error state
-    */
    SPLIT_ERROR,
-   
-   /*
-    * These jobs/tasks are not dispatched because start time is in future
-    */
    SPLIT_WAITING_DUE_TO_TIME,
-
-   /*
-    * These Jobs/Tasks won't be dispatched because they are already running
-    */
    SPLIT_RUNNING,
-
-   /*
-    * Already finished jobs/tasks
-    */
    SPLIT_FINISHED,
 
-   /*
-    * This id is used in loops
-    */
    SPLIT_LAST
 };
 

@@ -746,6 +746,16 @@ proc open_remote_spawn_process { hostname
                       add_proc_error "open_remote_spawn_process" -1 "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
                       break
                    }
+                   -i $spawn_id "The authenticity of host*" {
+                      after 100
+                      send -i $spawn_id "yes\n"
+                   }
+                   -i $spawn_id "Are you sure you want to continue connecting (yes/no)?*" {
+                      send -i $spawn_id "yes\n"
+                   }
+                   -i $spawn_id "Please type 'yes' or 'no'*" {
+                      send -i $spawn_id "yes\n"
+                   }
                    -i $spawn_id "*" {
                        debug_puts "startup ..."
                        break;
@@ -781,6 +791,16 @@ proc open_remote_spawn_process { hostname
                       send -i $spawn_id "echo \"hello\"\n"
                       incr open_remote_spawn__tries -1
                   }  
+                   -i $spawn_id "The authenticity of host*" {
+                      after 100
+                      send -i $spawn_id "yes\n"
+                   }
+                   -i $spawn_id "Are you sure you want to continue connecting (yes/no)?*" {
+                      send -i $spawn_id "yes\n"
+                   }
+                   -i $spawn_id "Please type 'yes' or 'no'*" {
+                      send -i $spawn_id "yes\n"
+                   }
                   -i $spawn_id "hello*\n" {
                      break
                   }
@@ -835,6 +855,16 @@ proc open_remote_spawn_process { hostname
                           puts $CHECK_OUTPUT "closed buffer: $open_spawn_buffer"
                           return ""
                       }
+                   }
+                   -i $spawn_id "The authenticity of host*" {
+                      after 100
+                      send -i $spawn_id "yes\n"
+                   }
+                   -i $spawn_id "Are you sure you want to continue connecting (yes/no)?*" {
+                      send -i $spawn_id "yes\n"
+                   }
+                   -i $spawn_id "Please type 'yes' or 'no'*" {
+                      send -i $spawn_id "yes\n"
                    }
                    -i $spawn_id -- "Terminal type?" {
                       send -i $spawn_id -- "vt100\n"

@@ -414,6 +414,6 @@
 #define MSG_SCHEDD_LCDIAGPOSITIVE_SS                  _MESSAGE(47277, _("= "SFN" + "SFN))
 #define MSG_SCHEDD_LCDIAGNEGATIVE_SS                  _MESSAGE(47278, _("= "SFN" - "SFN))
 #define MSG_SCHEDD_LCDIAGNONE                         _MESSAGE(47279, _("no load adjustment"))
-#define MSG_SCHEDD_LCDIAGNOLOAD                       _MESSAGE(47279, _("no load value"))
+#define MSG_SCHEDD_LCDIAGNOLOAD                       _MESSAGE(47280, _("no load value"))
 
 #endif /* __MSG_SCHEDD_H */

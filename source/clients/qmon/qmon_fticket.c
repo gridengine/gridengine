@@ -366,6 +366,12 @@ XtPointer cld, cad;
                         0, &lp, NULL, what);
 
       qmonMessageBox(w, alp, 0);
+
+      if (alp && lGetUlong(lFirst(alp), AN_status) != STATUS_OK)
+         XmtMsgLinePrintf(fticket_message, "Failure");
+      else
+         XmtMsgLinePrintf(fticket_message, "Success");
+      XmtMsgLineClear(fticket_message, DISPLAY_MESSAGE_DURATION); 
    
       if (rmon_mlgetl(&DEBUG_ON, GUI_LAYER) & INFOPRINT) {
          printf("---Functional Ratios-------------------\n");

@@ -1,3 +1,9 @@
+MD-2004-03-17-1  Bugfix:    fixed broken fs check on not solaris and linux
+                            archs
+                 Changed:   inst_sge, distinst
+                 Issue:     846
+                 Review:    CR
+
 CR-2004-03-17-0: Bugfix:    CSP install failed on irix architecture
                  Issue:     851
                  Review:    MD

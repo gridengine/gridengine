@@ -48,7 +48,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
                  adminrun qrsh_starter testsuidroot \
                  sge_share_mon openssl infotext \
-                 spooldefaults spoolinit berkeley_db_svc"
+                 spooldefaults spoolinit berkeley_db_svc fstype"
 
 REMOTEBINARIES="rsh rshd rlogin"
 

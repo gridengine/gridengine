@@ -144,48 +144,12 @@ CheckLocalFilesystem()
       fi
    done
 
-   case $ARCH in
-      sol*)
-         df -l $FS >/dev/null 2>&1
-         if [ $? -eq 0 ]; then
-            return 1
-         else
-            return 0
-         fi
-         ;;
-lx24-amd64)
-         df -T $FS | grep "nfs" >/dev/null 2>&1
-         if [ $? -eq 0 ]; then
-            return 0
-         else
-            return 1
-         fi
-         ;;
-       lx*)
-         df -l $FS >/dev/null 2>&1
-         if [ $? -eq 0 ]; then
-            return 1
-         else
-            return 0
-         fi
-         ;;
-    irix65)
-         df -t $FS | grep "nfs" >/dev/null 2>&1
-                  if [ $? -eq 0 ]; then
-            return 0
-         else
-            return 1
-         fi
-         ;;
-      *)
-         $INFOTEXT -e "\nDon't know how to test for local filesystem. Exit."
-         $INFOTEXT -wait -n "\nPlease make sure that the directory %s is on a local filesystem!\n\n" \
-                            "Hit <RETURN> to continue >> " $FS
-         return 1
-         ;;
-   esac
+   if [ `$SGE_UTILBIN/fstype $FS | grep "nfs" | wc -l` -gt 0 ]; then
+      return 0
+   else
+      return 1
+   fi
 
-   return 0
 }
 
 

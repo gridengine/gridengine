@@ -100,8 +100,8 @@ int cl_com_get_known_endpoint_port(cl_com_endpoint_t* endpoint, int* service_por
 int cl_com_get_known_endpoint_autoclose_mode(cl_com_endpoint_t* endpoint, cl_xml_connection_autoclose_t* auto_close_mode );
 
 
-int cl_com_set_max_connections (cl_com_handle_t* handle, int value);
-int cl_com_get_max_connections (cl_com_handle_t* handle, int* value);
+int cl_com_set_max_connections (cl_com_handle_t* handle, unsigned long value);
+int cl_com_get_max_connections (cl_com_handle_t* handle, unsigned long* value);
 int cl_com_set_auto_close_mode(cl_com_handle_t* handle, cl_xml_connection_autoclose_t  mode );
 int cl_com_get_auto_close_mode(cl_com_handle_t* handle, cl_xml_connection_autoclose_t* mode );
 int cl_com_set_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t mode);

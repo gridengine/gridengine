@@ -942,10 +942,10 @@ u_long32 sge_set_max_dynamic_event_clients(u_long32 new_value){
       /* check max. file descriptors of qmaster communication handle */
       handle = cl_com_get_handle("qmaster",1);
       if (handle != NULL) {
-         int max_file_handles = 0;
+         unsigned long max_file_handles = 0;
          cl_com_get_max_connections(handle,&max_file_handles);
          if ( max_file_handles >= 19 ) {
-            max_allowed_value = max_file_handles - 19;
+            max_allowed_value = (u_long32)max_file_handles - 19;
          } else {
             max_allowed_value = 1;
          }

@@ -35,6 +35,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/resource.h>
 
 #ifdef SOLARISAMD64
 #  include <sys/stream.h>
@@ -84,10 +85,9 @@
 #include "sge_profiling.h"
 
 #if !defined(INTERIX)
-
 static void init_sig_action_and_mask(void);
-
 #endif
+static void set_file_descriptor_limit(void);
 
 
 /****** qmaster/sge_qmaster_main/sge_qmaster_application_status() ************
@@ -250,6 +250,63 @@ unsigned long sge_qmaster_application_status(char** info_message) {
    return status;
 }
 
+
+/****** qmaster/sge_qmaster_main/set_file_descriptor_limit() ********************
+*  NAME
+*     set_file_descriptor_limit() -- check and set file descriptor limit
+*
+*  SYNOPSIS
+*     static void set_file_descriptor_limit(void) 
+*
+*  FUNCTION
+*     This function will check the file descriptor limit for the qmaster. If
+*     soft limit < hard limit the soft limit will set to the hard limit, but
+*     max. to 4096 file descriptors, even when the hard limit is higher.
+*
+*  NOTES
+*     MT-NOTE: set_file_descriptor_limit() is not MT safe because the limit
+*              is a process specific parameter. This function should only be
+*              called before starting up the threads.
+*
+*******************************************************************************/
+static void set_file_descriptor_limit(void) {
+
+   /* define the max qmaster file descriptor limit */
+#define SGE_MAX_QMASTER_SOFT_FD_LIMIT 4096
+
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   struct rlimit64 qmaster_rlimits;
+#else
+   struct rlimit qmaster_rlimits;
+#endif
+
+
+   /* 
+    * check file descriptor limits for qmaster 
+    */
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
+#else
+   getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
+#endif
+
+   if (qmaster_rlimits.rlim_cur < qmaster_rlimits.rlim_max) {
+      if ( qmaster_rlimits.rlim_max > SGE_MAX_QMASTER_SOFT_FD_LIMIT ) {
+         /* setting soft limit to SGE_MAX_QMASTER_SOFT_FD_LIMIT */
+         qmaster_rlimits.rlim_cur = SGE_MAX_QMASTER_SOFT_FD_LIMIT;
+      } else {
+         /* setting soft limit to hard limit */
+         qmaster_rlimits.rlim_cur = qmaster_rlimits.rlim_max;
+      }
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+      setrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
+#else
+      setrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
+#endif
+   }
+}
+
+
 /****** qmaster/sge_qmaster_main/main() ****************************************
 *  NAME
 *     main() -- qmaster entry point 
@@ -284,7 +341,6 @@ int main(int argc, char* argv[])
 {
    int max_enroll_tries;
    int ret_val;
-
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
    sge_prof_setup();
@@ -301,7 +357,6 @@ int main(int argc, char* argv[])
    if (argc != 1)
    {
       sigset_t sig_set;
-      
       sge_mt_init();
       sigfillset(&sig_set);
       pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
@@ -311,6 +366,8 @@ int main(int argc, char* argv[])
    }
 
    sge_daemonize_qmaster();
+
+   set_file_descriptor_limit();
 
    sge_mt_init();
 

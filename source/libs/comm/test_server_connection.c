@@ -81,6 +81,7 @@ extern int main(int argc, char** argv)
 #endif
   int connected_clients = 0;
   int i;
+  unsigned long max_connections;
   
   if (argc != 4) {
       printf("please enter  debug level, port and nr. of max connections\n");
@@ -115,8 +116,8 @@ extern int main(int argc, char** argv)
          handle->local->comp_id);
 
   cl_com_set_max_connections(handle,atoi(argv[3]));
-  cl_com_get_max_connections(handle,&i);
-  printf("max open connections is set to %d\n", i);
+  cl_com_get_max_connections(handle,&max_connections);
+  printf("max open connections is set to %lu\n", max_connections);
 
   printf("enable max connection close\n");
   cl_com_set_max_connection_close_mode(handle, CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS);

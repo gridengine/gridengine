@@ -35,6 +35,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/time.h>
+#include <sys/resource.h>
 #include <errno.h>
 #include "sge_arch.h"
 
@@ -609,6 +610,12 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    char help_buffer[80];
    char* local_hostname = NULL;
    cl_handle_list_elem_t* elem = NULL;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   struct rlimit64 application_rlimits;
+#else
+   struct rlimit application_rlimits;
+#endif
+
 
    cl_commlib_check_callback_functions();
 
@@ -729,8 +736,15 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->allowed_host_list = NULL;
    
    new_handle->auto_close_mode = CL_CM_AC_DISABLED;
-   new_handle->max_open_connections = sysconf(_SC_OPEN_MAX);
-   if ( new_handle->max_open_connections < 23 ) {
+   
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_NOFILE, &application_rlimits);
+#else
+   getrlimit(RLIMIT_NOFILE, &application_rlimits);
+#endif
+
+   new_handle->max_open_connections = (unsigned long) application_rlimits.rlim_cur;
+   if ( new_handle->max_open_connections < 32 ) {
       CL_LOG_INT(CL_LOG_ERROR, "to less file descriptors:", (int)new_handle->max_open_connections );
       free(new_handle);
       free(local_hostname);
@@ -1529,7 +1543,7 @@ int cl_com_get_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_set_max_connections()"
-int cl_com_set_max_connections(cl_com_handle_t* handle, int value) {
+int cl_com_set_max_connections(cl_com_handle_t* handle, unsigned long value) {
    if (handle == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -1544,7 +1558,7 @@ int cl_com_set_max_connections(cl_com_handle_t* handle, int value) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_get_max_connections()"
-int cl_com_get_max_connections(cl_com_handle_t* handle, int* value) {
+int cl_com_get_max_connections(cl_com_handle_t* handle, unsigned long* value) {
    if (handle == NULL) {
       return CL_RETVAL_PARAMS;
    }  

@@ -616,17 +616,14 @@ static void communication_setup(void)
    }
 
    if (com_handle) {
-      int max_connections = 0;
+      unsigned long max_connections = 0;
 
       /* save old debug log level and set log level to INFO */
       u_long32 old_ll = log_state_get_log_level();
 
       /* enable max connection close mode */
       cl_com_set_max_connection_close_mode(com_handle, CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS);
-#if 0
-      /* Enable this to check max. connection count behaviour of qmaster */
-      cl_com_set_max_connections(com_handle, 3); 
-#endif
+
       cl_com_get_max_connections(com_handle, &max_connections);
 
       /* add local host to allowed host list */

@@ -1,3 +1,12 @@
+CR-2004-12-23-0: Bugfix:    qmaster running out of file descriptors
+                            - Part II of CR-2004-12-03-2
+                              (added additional file desriptor soft 
+                               limit check at qmaster startup)
+                 Issue:     1400
+                 Bugtraq:   6211309
+                 Changed:   qmaster, commlib
+                 Review:    MD
+
 JG-2004-12-23-0: Testsuite: Do not check directory permissions and messages 
                             files at install re_init.
 
@@ -126,6 +135,9 @@ CR-2004-12-03-2: Cleanup:   commlib:
                             - test_virtual_qmaster now gets correct nr. of 
                               buffered read/write messages
                             - optimizations in TCP framework
+                            - qmaster running out of file descriptors (Part I)
+                 Issue:     1400
+                 Bugtraq:   6211309
                  Changed:   commlib
                  Review:    AA
 

@@ -703,6 +703,9 @@ lList **lpp
          } else if (!strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=true") ||
                     !strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=1")) {
             classic_sgeee_scheduling = 1;
+            share_override_tickets = 1;
+            share_functional_shares = 0;
+            share_deadline_tickets = 1;
          } else if (!strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=false") ||
                     !strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=0")) {
             classic_sgeee_scheduling = 0;

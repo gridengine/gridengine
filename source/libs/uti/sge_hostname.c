@@ -1024,7 +1024,7 @@ void sge_host_print(host *h, FILE *fp)
    fprintf(fp, "h_length: %d\n", he->h_length);
    fprintf(fp, "h_addr_list:\n");
    for (cpp = he->h_addr_list; *cpp; cpp++) {
-      fprintf(fp, "  %s\n", inet_ntoa(*(struct in_addr *) *cpp));
+      fprintf(fp, "  %s\n", inet_ntoa(*(struct in_addr *) *cpp)); /* inet_ntoa() is not MT save */
    }
    if (h->alias) {
       fprintf(fp, "aliased to %s\n", h->alias->he.h_name);

@@ -2645,7 +2645,11 @@ get_event_list(int sync, lList **report_list)
    id = 1;
    DPRINTF(("try to get request form %s, id %d\n",(char*)prognames[QMASTER], id ));
    if ( (help=sge_get_any_request((char*)sge_get_master(0), (char*)prognames[QMASTER], &id, &pb, &tag, sync,0,0)) != CL_RETVAL_OK) {
-      WARNING((SGE_EVENT, "commlib returns %s (%d)\n", cl_get_error_text(help), help )); 
+      if (help == CL_RETVAL_NO_MESSAGE) {
+         DEBUG((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help)));
+      } else {
+         WARNING((SGE_EVENT, "commlib returns %s\n", cl_get_error_text(help))); 
+      }
       ret = false;
 #else
    if (sge_get_any_request((char*)sge_get_master(0), 

@@ -447,10 +447,9 @@ static void communication_setup(char **anArgv)
 
    DENTER(TOP_LAYER, "communication_setup");
 
-   WARNING((SGE_EVENT,"starting up ngc in NO THREADS mode\n"));
-   ERROR((SGE_EVENT,"problem for sge_daemonize() when threads are running?"));
+   INFO   ((SGE_EVENT,"starting up multi thread communication\n"));
 
-   ret_val = cl_com_setup_commlib(CL_ONE_THREAD, CL_LOG_DEBUG, qmaster_log_flush_func );
+   ret_val = cl_com_setup_commlib(CL_ONE_THREAD, CL_LOG_OFF, qmaster_log_flush_func );
 
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, "cl_com_setup_commlib: %s\n",cl_get_error_text(ret_val)));
@@ -623,16 +622,32 @@ static int qmaster_log_flush_func(cl_raw_list_t* list_p)
       }
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
-            ERROR((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            if ( log_state_get_log_level() >= LOG_ERR) {
+               ERROR((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
             break;
          case CL_LOG_WARNING:
-            WARNING((SGE_EVENT,"%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            if ( log_state_get_log_level() >= LOG_WARNING) {
+               WARNING((SGE_EVENT,"%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
             break;
          case CL_LOG_INFO:
-            INFO((SGE_EVENT,   "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            if ( log_state_get_log_level() >= LOG_INFO) {
+               INFO((SGE_EVENT,   "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
             break;
          case CL_LOG_DEBUG:
-            DEBUG((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            if ( log_state_get_log_level() >= LOG_DEBUG) { 
+               DEBUG((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
             break;
       }
       cl_log_list_del_log(list_p);

@@ -316,7 +316,7 @@ int event_handler_default_scheduler()
 #endif
    
    if (getenv("SGE_ND")) {
-      printf("--------------STOP-SCHEDULER-RUN-------------");
+      printf("--------------STOP-SCHEDULER-RUN-------------\n");
    } else {
       SCHED_MON((log_string, "--------------STOP-SCHEDULER-RUN-------------"));
    }

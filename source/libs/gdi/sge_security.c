@@ -292,6 +292,7 @@ u_short *compressed
       }
 
       if (sender != NULL) {
+         INFO((SGE_EVENT,"received from: %s,%d\n",sender->comp_host, sender->comp_id));
          if (fromcommproc != NULL) {
             strcpy(fromcommproc, sender->comp_name);
          }

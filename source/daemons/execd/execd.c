@@ -325,7 +325,9 @@ char **argv
       if (i) {             
 #ifdef ENABLE_NGC
          if ( strcmp(cl_get_error_text(i), CL_RETVAL_UNDEFINED_STR) != 0 ) {
-            WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, cl_get_error_text(i)));
+            if (i != CL_RETVAL_OK) {
+               WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, cl_get_error_text(i)));
+            }
          } else {
             WARNING((SGE_EVENT, MSG_COM_RECEIVEREQUEST_S, err_str ));
          }

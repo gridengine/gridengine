@@ -129,6 +129,7 @@ int dispatch( dispatch_entry*   table,
               void              (*errfunc)(const char *), 
               int               wait4commd)
 {
+   /* CR - TODO: rework complete dispatch function(s) for NGC */
    dispatch_entry de,   /* filled with receive mask */
                   *te;
    int i, j, terminate, errorcode, ntab;
@@ -173,16 +174,13 @@ int dispatch( dispatch_entry*   table,
 
 
       /* svd 971202 - changed min timeout to 2 instead of 5 */
-      cl_commlib_trigger(cl_com_get_handle( "execd" ,1));
+      cl_commlib_trigger(cl_com_get_handle( "execd" ,1)); /* this will block 1 second , when there are no messages to read/write */
 
       i = receive_message_cach_n_ack(&de, &pb, tagarray, RECEIVE_CACHESIZE, errfunc); 
 
       DPRINTF(("receive_message_cach_n_ack() returns: %s (%s/%s/%d)\n", cl_get_error_text(i), de.host, de.commproc, de.id)); 
-      if (i != CL_RETVAL_OK) {
-         errfunc(cl_get_error_text(i));
-      }
-
       switch (i) {
+      case CL_RETVAL_NO_MESSAGE:
       case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
          /* de.tag = -1;  */
          /* no break; */
@@ -473,9 +471,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
       deliver to the caller. Else we get all we can get and then return
       what we already have. ++ TODO use this pointers later too */
    cacheptr = cache;
-   receive_blocking = 1;
-
-
+   receive_blocking = 0;
 
    while (cacheptr) {
       if (match_dpe(cacheptr->de, de)) { 
@@ -538,7 +534,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
                DPRINTF(("(1) sending acknowledge to (%s,%s,%d)\n",
                         lastde.host, lastde.commproc, lastde.id));
                if ((i = sendAckPb(&apb, lastde.host, lastde.commproc, 
-                                  lastde.id, errfunc))) {
+                                  lastde.id, errfunc)) != CL_RETVAL_OK) {
                   /* We cant send acknowledges, so we have to delete all 
                      newly received pbs with an acknowledgable tag */
                   DPRINTF(("can't send acknowledge, removing messages (1)\n"));
@@ -578,7 +574,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
    if (apb.head_ptr) {  /* only if there is an acknowlege */
       DPRINTF(("(2) sending acknowledge to (%s,%s,%d)\n", lastde.host, lastde.commproc, lastde.id));
       if ((i = sendAckPb(&apb, lastde.host, lastde.commproc, lastde.id,
-                         errfunc))) {
+                         errfunc)) != CL_RETVAL_OK) {
          /* we have to delete all newly received pbs with an 
             acknowledgable tag */
          DPRINTF(("can't send acknowledge, removing messages (2)\n"));
@@ -592,7 +588,7 @@ static int receive_message_cach_n_ack( dispatch_entry*    de,
       remove element from cache 
       set callers dispatch table entry to indicate the sender of the message
       set the error state to OK (true also if last read gives an error */
-  *pb = NULL; /* may be there is none */
+   *pb = NULL; /* may be there is none */
    if (cache) {
       cacheptr = cache;
       cacheptrlast = NULL;

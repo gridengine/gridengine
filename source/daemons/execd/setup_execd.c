@@ -140,6 +140,9 @@ int daemonize_execd()
 
    DENTER(TOP_LAYER, "daemonize_execd");
 
+   if (uti_state_get_daemonized()) {
+      return 1;
+   }
    FD_ZERO(&keep_open); 
 
    /* ask load sensor to fill in it's fd's */

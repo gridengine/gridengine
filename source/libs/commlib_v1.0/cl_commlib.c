@@ -1641,7 +1641,11 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
                return return_value;
             }
          }
-         CL_LOG_STR(CL_LOG_INFO,"received message from:", connection->receiver->comp_host);
+             CL_LOG(CL_LOG_WARNING,"******** received message ********");
+         CL_LOG_STR(CL_LOG_WARNING,"received message from host:", connection->receiver->comp_host);
+         CL_LOG_STR(CL_LOG_WARNING,"which has name:            ", connection->receiver->comp_name);
+         CL_LOG_INT(CL_LOG_WARNING,"and id:                    ", connection->receiver->comp_id);
+
          CL_LOG_INT(CL_LOG_INFO,"message size:         ", message->message_length);
          gettimeofday(&message->message_receive_time,NULL);
          /* set last transfer time of connection */
@@ -2300,7 +2304,11 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
        }
 
        if (message->message_state == CL_MS_READY) {
-          CL_LOG_STR(CL_LOG_INFO,"message sent to:", connection->receiver->comp_host);
+          CL_LOG(CL_LOG_WARNING,"******** sent message ********");
+          CL_LOG_STR(CL_LOG_WARNING,"message sent to host:", connection->receiver->comp_host);
+          CL_LOG_STR(CL_LOG_WARNING,"which has name:      ", connection->receiver->comp_name);
+          CL_LOG_INT(CL_LOG_WARNING,"and id:              ", connection->receiver->comp_id);
+
           connection->statistic->bytes_sent = connection->statistic->bytes_sent + message->message_length;
           connection->statistic->real_bytes_sent = connection->statistic->real_bytes_sent + message->message_length  ;
 
@@ -2511,7 +2519,7 @@ int cl_commlib_receive_message(cl_com_handle_t* handle,char* un_resolved_hostnam
                                                    handle->select_sec_timeout,
                                                    handle->select_usec_timeout);
                if (return_value == CL_RETVAL_CONDITION_WAIT_TIMEOUT) {
-                  CL_LOG(CL_LOG_ERROR,"APPLICATION GOT CONDITION WAIT TIMEOUT");
+                  CL_LOG(CL_LOG_INFO,"APPLICATION GOT CONDITION WAIT TIMEOUT");
                }
                break;
          }
@@ -3447,7 +3455,6 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
             }
    
             CL_LOG_STR(CL_LOG_INFO,"sending to:", connection->receiver->comp_host); 
-            cl_dump_connection(connection);
             if (copy_data == 1) {
                help_data = (cl_byte_t*) malloc(sizeof(cl_byte_t)*size);
                if (help_data == NULL) {
@@ -3556,7 +3563,7 @@ int cl_commlib_send_message(cl_com_handle_t* handle,
 #define __CL_FUNCTION__ "cl_commlib_remove_messages()"
 int cl_commlib_remove_messages(cl_com_handle_t* handle) {
    /* resets all communication data */
-   CL_LOG(CL_LOG_ERROR,"not implemented");
+   CL_LOG(CL_LOG_ERROR,"cl_commlib_remove_messages() not implemented !");
    return CL_RETVAL_PARAMS;
 }
 
@@ -3572,7 +3579,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle, char* un_resolved_
       gettimeofday(&now,NULL);
       *time = now.tv_sec;
    }
-   CL_LOG(CL_LOG_ERROR,"not implemented");
+   CL_LOG(CL_LOG_ERROR,"cl_commlib_get_last_message_time() not implemented");
    return CL_RETVAL_PARAMS;
 }
 
@@ -4048,7 +4055,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          if ((ret_val = cl_thread_wait_for_event(thread_config,select_sec_timeout,select_usec_timeout )) != CL_RETVAL_OK) {
             switch(ret_val) {
                case CL_RETVAL_CONDITION_WAIT_TIMEOUT:
-                  CL_LOG(CL_LOG_ERROR,"READ THREAD GOT CONDITION WAIT TIMEOUT");
+                  CL_LOG(CL_LOG_INFO,"READ THREAD GOT CONDITION WAIT TIMEOUT");
                   break;
                default:
                   CL_LOG_STR( CL_LOG_INFO, ">got error<: ", cl_get_error_text(ret_val));

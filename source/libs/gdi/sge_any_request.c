@@ -82,19 +82,34 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
       } else {
          module = elem->log_module_name;
       }
-      /* TODO: all communication errors are only INFO's ???  CR */
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
-            ERROR((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            if ( log_state_get_log_level() >= LOG_ERR) {
+               ERROR((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
             break;
          case CL_LOG_WARNING:
-            WARNING((SGE_EVENT,"%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            if ( log_state_get_log_level() >= LOG_WARNING) {
+               WARNING((SGE_EVENT,"%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
             break;
          case CL_LOG_INFO:
-            INFO((SGE_EVENT,   "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            if ( log_state_get_log_level() >= LOG_INFO) {
+               INFO((SGE_EVENT,   "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
             break;
          case CL_LOG_DEBUG:
-            DEBUG((SGE_EVENT,  "%-15s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            if ( log_state_get_log_level() >= LOG_DEBUG) { 
+               DEBUG((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+            } else {
+               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+            }
             break;
       }
       cl_log_list_del_log(list_p);
@@ -136,10 +151,16 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
       SGE_EXIT(1);
    }
 
-   /* TODO: call to cleanup commlib */
-   INFO((SGE_EVENT,"starting up ngc in NO THREADS mode\n"));
-   INFO((SGE_EVENT,"problem for sge_daemonize() when threads are running?"));
-   ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_WARNING,gdi_log_flush_func);
+   /* TODO: activate mutlithreaded communication for SCHEDD and EXECD !!!
+            This can only by done when the daemonize functions of SCHEDD and EXECD
+            are thread save */
+   if ( /* uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ 0 ) {
+      INFO((SGE_EVENT,"starting up multi thread communication\n"));
+      ret_val = cl_com_setup_commlib(CL_ONE_THREAD,CL_LOG_OFF,gdi_log_flush_func);
+   } else {
+      INFO((SGE_EVENT,"starting up communication without threads\n"));
+      ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_OFF,gdi_log_flush_func);
+   }
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, "cl_com_setup_commlib(): %s\n",cl_get_error_text(ret_val)));
    }
@@ -512,6 +533,7 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
       } 
 
       if (sender != NULL ) {
+         INFO((SGE_EVENT,"received from: %s,"U32CFormat"\n",sender->comp_host, u32c(sender->comp_id) ));
          if (rhost[0] == '\0') {
             strcpy(rhost, sender->comp_host); /* If we receive from anybody return the sender */
          }

@@ -35,6 +35,7 @@
 #include <string.h>
 #include <sys/times.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "def.h"
 #include "sgermon.h"
@@ -200,7 +201,7 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 
 /****** sched/sge_job_schedd/user_list_init_jc() ******************************
 *  NAME
-*     user_list_init_jc() -- inc. the # of jobs a user has running
+*     user_list_init_jc() -- inc. the # of jobs a user has "active"
 *
 *  SYNOPSIS
 *     void user_list_init_jc(lList **user_list,
@@ -208,20 +209,23 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 *
 *  FUNCTION
 *     Initialize "user_list" and JC_jobs attribute for each user according
-*     to the list of running jobs.
+*     to the list of running, suspended and running+hold jobs.
 *
 *  INPUTS
-*     lList **user_list          - JC_Type list
-*     const lList *running_list - JB_Type list
+*     lList **user_list                  - JC_Type list
+*     const lList **splitted_job_lists[] - JB_Type lists
 *
 *  RESULT
 *     void - None
 *******************************************************************************/
-void user_list_init_jc(lList **user_list, const lList *running_list)
+void user_list_init_jc(lList **user_list, lList **splitted_job_lists[])
 {
    lListElem *job;   /* JB_Type */
 
-   for_each(job, running_list) {
+   for_each(job, *(splitted_job_lists[SPLIT_RUNNING])) {
+      sge_inc_jc(user_list, lGetString(job, JB_owner), job_get_ja_tasks(job));
+   }
+   for_each(job, *(splitted_job_lists[SPLIT_SUSPENDED])) {
       sge_inc_jc(user_list, lGetString(job, JB_owner), job_get_ja_tasks(job));
    }
 }
@@ -435,13 +439,17 @@ void split_jobs(lList **job_list, lList **answer_list,
 #endif
             target = &(target_tasks[SPLIT_FINISHED]);
          } 
-         if (target == NULL && result_list[SPLIT_HOLD] &&
-             (ja_task_hold & MINUS_H_TGT_ALL)) {
-#ifdef JOB_SPLIT_DEBUG
-            DPRINTF(("Task "u32" is in hold state\n", ja_task_id));
+
+#if 0 
+      /*    
+       * EB: "hold" section has been moved downwards!!!!
+       *
+       *      Running or suspended jobs which have a hold applied
+       *      have to be handled as running or suspended jobs within schedd
+       *      We cannot trash them because of the hold state! 
+       */
 #endif
-            target = &(target_tasks[SPLIT_HOLD]);
-         } 
+
          if (target == NULL && result_list[SPLIT_ERROR] && 
              (ja_task_state & JERROR)) {
 #ifdef JOB_SPLIT_DEBUG
@@ -464,7 +472,8 @@ void split_jobs(lList **job_list, lList **answer_list,
             target = &(target_tasks[SPLIT_WAITING_DUE_TO_PREDECESSOR]);
          }
          if (target == NULL && result_list[SPLIT_PENDING] && 
-             (ja_task_status == JIDLE)) {
+             (ja_task_status == JIDLE) && 
+             !(ja_task_hold & MINUS_H_TGT_ALL)) {
 #ifdef JOB_SPLIT_DEBUG
             DPRINTF(("Task "u32" is in pending state\n", ja_task_id));
 #endif
@@ -513,6 +522,13 @@ void split_jobs(lList **job_list, lList **answer_list,
 #endif
             target = &(target_tasks[SPLIT_RUNNING]);
          } 
+         if (target == NULL && result_list[SPLIT_HOLD] &&
+             (ja_task_hold & MINUS_H_TGT_ALL)) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "u32" is in hold state\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_HOLD]);
+         }
 #ifdef JOB_SPLIT_DEBUG
          if (target == NULL) {
             ERROR((SGE_EVENT, "Task "u32" has no known state: "

@@ -464,7 +464,7 @@ lList **splitted_job_lists[]
       return 0;
    }
 
-   user_list_init_jc(&user_list, *(splitted_job_lists[SPLIT_RUNNING]));
+   user_list_init_jc(&user_list, splitted_job_lists);
    job_lists_split_with_reference_to_max_running(splitted_job_lists,
                                                  &user_list,
                                                  NULL,

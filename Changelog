@@ -1,3 +1,10 @@
+EB-2003-03-26-1  Bugfix:    maxujobs does not count suspended jobs
+                            or running/suspended jobs which have an hold 
+                            applied
+                 Issue:     #511
+                 Changed:   sge_schedd
+                 Review:    STILL HAS TO BE DONE
+
 JG-2003-03-26-3  Bugfix:    spooling integrity improvement was missing for 
                             sharetree, projects and users
                  Issue:     #501
@@ -5,7 +12,8 @@ JG-2003-03-26-3  Bugfix:    spooling integrity improvement was missing for
                  Changed:   sge_qmaster
                  Review:    EB
 
-AH-2003-03-26-1  Bugfix:    NOTIFY_SUSP signal only sent for first suspension of job
+AH-2003-03-26-1  Bugfix:    NOTIFY_SUSP signal only sent for first suspension 
+                            of job
                  Isssue:    #510
                  Bugtraq:   #4835832
                  Changed:   sge_shepherd

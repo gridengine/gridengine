@@ -1,0 +1,11 @@
+SRCS=SunTCP.java AdminTCP.java
+CODEBASE=classes
+OREILLY_SERVLETS=lib/cos.jar
+CLASSPATH=/opt/SUNWips/lib/servlet.jar:/opt/SUNWips/lib/ips_sdk.jar:${OREILLY_SERVLETS}:${CODEBASE}
+
+all:
+	@mkdir -p ${CODEBASE}
+	@javac -deprecation -d ${CODEBASE} -classpath ${CLASSPATH} $(SRCS)
+	@(cd ${CODEBASE}; jar cf suntcp.jar com)
+	@cp ${CODEBASE}/suntcp.jar lib
+   

@@ -715,6 +715,9 @@ public class AdminTCP extends HttpServlet {
         Vector user = new Vector();
         Vector time = new Vector();
         while ((line = acct.readLine()) != null) {
+          if (line.startsWith("#")) {
+             continue;
+          }   
           st = new StringTokenizer(line, ":");
           st.nextToken(); st.nextToken(); st.nextToken();
           token = st.nextToken();

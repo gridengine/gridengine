@@ -1,3 +1,8 @@
+CR-2004-08-26-0: Cleanup:    - code cleanup
+                             - added debug code for issue #1197
+                             - code is not active (#if 0 /#endif)
+                             - added comments
+
 CR-2004-08-25-1: Cleanup:    - removed all #ifndef ENABLE_NGC code and removed
                                makro definition in aimk
 

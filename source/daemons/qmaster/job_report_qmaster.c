@@ -216,6 +216,66 @@ sge_pack_buffer *pb
          status = lGetUlong(jatep, JAT_status);
       }
 
+#if 0
+
+      /* This is only for debugging */
+
+      if (status & JIDLE) {
+         DPRINTF(("job status is JIDLE\n"));
+      }
+      if (status & JIDLE) {
+            DPRINTF(("job status is JIDLE\n"));
+      }
+      if (status & JHELD) {
+            DPRINTF(("job status is JHELD\n"));
+      }
+      if (status & JMIGRATING) {
+            DPRINTF(("job status is JMIGRATING\n"));
+      }
+      if (status & JQUEUED) {
+            DPRINTF(("job status is JQUEUED\n"));
+      }
+      if (status & JRUNNING) {
+            DPRINTF(("job status is JRUNNING\n"));
+      }
+      if (status & JSUSPENDED) {
+            DPRINTF(("job status is JSUSPENDED\n"));
+      }
+      if (status & JTRANSFERING) {
+            DPRINTF(("job status is JTRANSFERING\n"));
+      }
+      if (status & JDELETED) {
+            DPRINTF(("job status is JDELETED\n"));
+      }
+      if (status & JWAITING) {
+            DPRINTF(("job status is JWAITING\n"));
+      }
+      if (status & JEXITING) {
+            DPRINTF(("job status is JEXITING\n"));
+      }
+      if (status & JWRITTEN) {
+            DPRINTF(("job status is JWRITTEN\n"));
+      }
+      if (status & JWAITING4OSJID) {
+            DPRINTF(("job status is JWAITING4OSJID\n"));
+      }
+      if (status & JERROR) {
+            DPRINTF(("job status is JERROR\n"));
+      }
+      if (status & JFINISHED) {
+            DPRINTF(("job status is JFINISHED\n"));
+      }
+      if (status & JSUSPENDED_ON_THRESHOLD) {
+            DPRINTF(("job status is JSUSPENDED_ON_THRESHOLD\n"));
+      }
+      
+      if (status & JSLAVE) {
+            DPRINTF(("job status is JSLAVE\n"));
+      }
+      if (status & JSIMULATED) {
+            DPRINTF(("job status is JSIMULATED\n"));
+      }
+#endif 
       queue_name = (s=lGetString(jr, JR_queue_name))?s:(char*)MSG_OBJ_UNKNOWNQ;
       if ((pe_task_id_str = lGetString(jr, JR_pe_task_id_str)) && jep && jatep)
          petask = lGetSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list); 
@@ -494,6 +554,69 @@ sge_pack_buffer *pb
                /* skip sge_job_exit() and pack_job_exit() in case there 
                   are still running tasks, since execd resends job exit */
                for_each (petask, lGetList(jatep, JAT_task_list)) {
+#if 0
+                  /* This is only for debugging */
+
+                  u_long32 tmp_PET_status = lGetUlong(petask, PET_status);
+                  DPRINTF(("tmp_PET_status = "U32CFormat"\n", u32c(tmp_PET_status)));
+                  {
+                     if (tmp_PET_status & JIDLE) {
+                        DPRINTF(("job tmp_PET_status is JIDLE\n"));
+                     }
+                     if (tmp_PET_status & JIDLE) {
+                           DPRINTF(("job tmp_PET_status is JIDLE\n"));
+                     }
+                     if (tmp_PET_status & JHELD) {
+                           DPRINTF(("job tmp_PET_status is JHELD\n"));
+                     }
+                     if (tmp_PET_status & JMIGRATING) {
+                           DPRINTF(("job tmp_PET_status is JMIGRATING\n"));
+                     }
+                     if (tmp_PET_status & JQUEUED) {
+                           DPRINTF(("job tmp_PET_status is JQUEUED\n"));
+                     }
+                     if (tmp_PET_status & JRUNNING) {
+                           DPRINTF(("job tmp_PET_status is JRUNNING\n"));
+                     }
+                     if (tmp_PET_status & JSUSPENDED) {
+                           DPRINTF(("job tmp_PET_status is JSUSPENDED\n"));
+                     }
+                     if (tmp_PET_status & JTRANSFERING) {
+                           DPRINTF(("job tmp_PET_status is JTRANSFERING\n"));
+                     }
+                     if (tmp_PET_status & JDELETED) {
+                           DPRINTF(("job tmp_PET_status is JDELETED\n"));
+                     }
+                     if (tmp_PET_status & JWAITING) {
+                           DPRINTF(("job tmp_PET_status is JWAITING\n"));
+                     }
+                     if (tmp_PET_status & JEXITING) {
+                           DPRINTF(("job tmp_PET_status is JEXITING\n"));
+                     }
+                     if (tmp_PET_status & JWRITTEN) {
+                           DPRINTF(("job tmp_PET_status is JWRITTEN\n"));
+                     }
+                     if (tmp_PET_status & JWAITING4OSJID) {
+                           DPRINTF(("job tmp_PET_status is JWAITING4OSJID\n"));
+                     }
+                     if (tmp_PET_status & JERROR) {
+                           DPRINTF(("job tmp_PET_status is JERROR\n"));
+                     }
+                     if (tmp_PET_status & JFINISHED) {
+                           DPRINTF(("job tmp_PET_status is JFINISHED\n"));
+                     }
+                     if (tmp_PET_status & JSUSPENDED_ON_THRESHOLD) {
+                           DPRINTF(("job tmp_PET_status is JSUSPENDED_ON_THRESHOLD\n"));
+                     }
+                     
+                     if (tmp_PET_status & JSLAVE) {
+                           DPRINTF(("job tmp_PET_status is JSLAVE\n"));
+                     }
+                     if (tmp_PET_status & JSIMULATED) {
+                           DPRINTF(("job tmp_PET_status is JSIMULATED\n"));
+                     }
+                  }
+#endif
                   if (lGetUlong(petask, PET_status)==JRUNNING) {
                      DPRINTF(("job exit for job "u32": still waiting for task %s\n", 
                         jobid, lGetString(petask, PET_id)));
@@ -672,6 +795,91 @@ sge_pack_buffer *pb
                            }
                         }
                      }
+#if 0 
+               /*
+                * CR TODO: (Issue Bug #1197) 
+                * This partly solves some problems when slave tasks of a tight integrated
+                * job, running on more than one execd, are killed and qmaster has to kill and
+                * delete all tasks.
+                * 
+                * There seems to be a problem when the slave task on one host is killed and
+                * the other host has not reported the job start yet.
+                *
+                */
+
+               /* skip sge_job_exit() and pack_job_exit() in case there 
+                  are still running tasks, since execd resends job exit */
+
+               for_each (petask, lGetList(jatep, JAT_task_list)) {
+                  u_long32 tmp_PET_status = lGetUlong(petask, PET_status);
+                  DPRINTF(("tmp_PET_status = "U32CFormat"\n", u32c(tmp_PET_status)));
+
+                   {
+                     if (tmp_PET_status & JIDLE) {
+                        DPRINTF(("job tmp_PET_status is JIDLE\n"));
+                     }
+                     if (tmp_PET_status & JIDLE) {
+                           DPRINTF(("job tmp_PET_status is JIDLE\n"));
+                     }
+                     if (tmp_PET_status & JHELD) {
+                           DPRINTF(("job tmp_PET_status is JHELD\n"));
+                     }
+                     if (tmp_PET_status & JMIGRATING) {
+                           DPRINTF(("job tmp_PET_status is JMIGRATING\n"));
+                     }
+                     if (tmp_PET_status & JQUEUED) {
+                           DPRINTF(("job tmp_PET_status is JQUEUED\n"));
+                     }
+                     if (tmp_PET_status & JRUNNING) {
+                           DPRINTF(("job tmp_PET_status is JRUNNING\n"));
+                     }
+                     if (tmp_PET_status & JSUSPENDED) {
+                           DPRINTF(("job tmp_PET_status is JSUSPENDED\n"));
+                     }
+                     if (tmp_PET_status & JTRANSFERING) {
+                           DPRINTF(("job tmp_PET_status is JTRANSFERING\n"));
+                     }
+                     if (tmp_PET_status & JDELETED) {
+                           DPRINTF(("job tmp_PET_status is JDELETED\n"));
+                     }
+                     if (tmp_PET_status & JWAITING) {
+                           DPRINTF(("job tmp_PET_status is JWAITING\n"));
+                     }
+                     if (tmp_PET_status & JEXITING) {
+                           DPRINTF(("job tmp_PET_status is JEXITING\n"));
+                     }
+                     if (tmp_PET_status & JWRITTEN) {
+                           DPRINTF(("job tmp_PET_status is JWRITTEN\n"));
+                     }
+                     if (tmp_PET_status & JWAITING4OSJID) {
+                           DPRINTF(("job tmp_PET_status is JWAITING4OSJID\n"));
+                     }
+                     if (tmp_PET_status & JERROR) {
+                           DPRINTF(("job tmp_PET_status is JERROR\n"));
+                     }
+                     if (tmp_PET_status & JFINISHED) {
+                           DPRINTF(("job tmp_PET_status is JFINISHED\n"));
+                     }
+                     if (tmp_PET_status & JSUSPENDED_ON_THRESHOLD) {
+                           DPRINTF(("job tmp_PET_status is JSUSPENDED_ON_THRESHOLD\n"));
+                     }
+                     
+                     if (tmp_PET_status & JSLAVE) {
+                           DPRINTF(("job tmp_PET_status is JSLAVE\n"));
+                     }
+                     if (tmp_PET_status & JSIMULATED) {
+                           DPRINTF(("job tmp_PET_status is JSIMULATED\n"));
+                     }
+                   }
+                   if (lGetUlong(petask, PET_status)==JRUNNING) {
+                     DPRINTF(("(REISI) job exit for job "u32": still waiting for task %s\n", 
+                        jobid, lGetString(petask, PET_id)));
+                     skip_job_exit = 1;
+                   } else {
+                     DPRINTF(("(REISI) SKIP check for other tasks, PET_status is not JRUNNING\n"));
+                   }
+               }
+#endif
                   }
                } else {
                   lListElem *jg;

@@ -264,17 +264,16 @@ void sge_reap_children_execd()
 
          flush_jr = 1; /* trigger direct sending of job reports */ 
 
-      } 
-      else  if (sge_ls_stop_if_pid(pid, 1)) {
-         if (child_signal)
+      } else  if (sge_ls_stop_if_pid(pid, 1)) {
+         if (child_signal) {
             ERROR((SGE_EVENT, MSG_STATUS_LOADSENSORDIEDWITHSIGNALXY_SI,
                   core_dumped ? MSG_COREDUMPED: "",
                   child_signal));
-         else
+         } else {
             WARNING((SGE_EVENT, MSG_STATUS_LOADSENSOREXITEDWITHEXITSTATUS_I,
                     exit_status));
-      } 
-      else {
+         }
+      } else {
          if (child_signal)
             ERROR((SGE_EVENT, MSG_STATUS_MAILERDIEDTHROUGHSIGNALXY_SI,
                   core_dumped ? MSG_COREDUMPED: "",

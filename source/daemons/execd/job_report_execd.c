@@ -150,7 +150,7 @@ u_long32 jataskid
 ) {
    lListElem *nxt, *jr;
 
-   DENTER(TOP_LAYER, "clean_job_report");
+   DENTER(TOP_LAYER, "cleanup_job_report");
 
    /* get rid of job reports for all slave tasks */
    nxt = lFirst(jr_list);

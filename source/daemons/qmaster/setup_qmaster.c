@@ -100,6 +100,8 @@
 #include "sge_os.h"
 #include "lock.h"
 #include "sge_persistence_qmaster.h"
+#include "sge_spool.h"
+#include "setup.h"
 #include "msg_common.h"
 #include "spool/sge_spooling.h"
 
@@ -398,8 +400,6 @@ static void qmaster_init(char **anArgv)
    }
 
    uti_state_set_exit_func(qmaster_lock_and_shutdown); /* CWD is spool directory */
-
-   sge_write_pid(QMASTER_PID_FILE);
 
    host_list_notify_about_featureset(Master_Exechost_List, feature_get_active_featureset_id());
 

@@ -1,3 +1,6 @@
+AD-2004-01-16-1: Bugfix:    Did fix build on glinux
+                 Changed:   qmaster
+
 AD-2004-01-16-0: Bugfix:    Did fix initialization issues
                  Changed:   qmaster
 

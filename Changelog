@@ -1,3 +1,8 @@
+JG-2002-06-28-0: Testsuite: Test case for tightly integrated parallel jobs, 
+                            basic version testing pure functionality and 
+                            behaviour in massive parallel environments.
+                 Issue:     #13
+
 JG-2002-06-27-0: Bugfix:    qrsh -inherit failed with error 
                             "COMMPROC ALREADY REGISTERED"
                  Issue:     #303           

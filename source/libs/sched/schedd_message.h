@@ -54,6 +54,8 @@ void schedd_log_schedd_info(int bval);
 
 void schedd_mes_commit(lList *job_list, int ignore_category);
 
+void schedd_mes_rollback_job(u_long32 jobid);
+
 void schedd_mes_rollback(void);
 
 #ifdef  __cplusplus

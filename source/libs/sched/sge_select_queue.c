@@ -2628,9 +2628,11 @@ lList *acl_list;
       global_slots = num_in_range(global_slots, lGetList(job, JB_pe_range));
 
       if (!global_slots) {
-            /* resources requested are not available for parallel job 
-               it's hard to be more specific in this case */
-            schedd_add_message(lGetUlong(job, JB_job_number) , SCHEDD_INFO_NORESOURCESPE_);
+         u_long32 jobid = lGetUlong(job, JB_job_number);
+         /* resources requested are not available for parallel job 
+            it's hard to be more specific in this case */
+         schedd_mes_rollback_job(jobid);
+         schedd_add_message(jobid, SCHEDD_INFO_NORESOURCESPE_);
          DEXIT;
          return 0;
       }

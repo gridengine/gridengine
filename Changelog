@@ -1,3 +1,8 @@
+AH-2004-01-26-0: Bugfix:    schedd_job_info=true causes large delays scheduling 
+                            parallel jobs
+                 Changed:   sge_schedd
+                 Issue:     648
+
 RC-2004-01-22-1: Enhancem:  recognize HP-UX on IA64 as hp11-64
                  Changed:   dist/util/arch
 

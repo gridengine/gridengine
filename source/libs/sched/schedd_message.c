@@ -203,6 +203,35 @@ void schedd_mes_commit(lList *job_list, int ignore_category)
    }
 }
 
+/*--------------------------------------------------------------
+ * rollback all not yet committed messages of a particular job
+ *------------------------------------------------------------*/
+void schedd_mes_rollback_job(u_long32 jobid)
+{
+   lListElem *mes, *nxt;
+  
+   DENTER(TOP_LAYER, "schedd_mes_rollback_job");
+
+   DPRINTF(("schedd_mes_rollback_job("u32")\n", jobid));
+
+   nxt = lFirst(lGetList(tmp_sme, SME_message_list)); 
+   while ((mes=nxt)) {
+      nxt = lNext(mes);
+      lDelSubUlong(mes, ULNG, jobid, MES_job_number_list);
+      if (lGetNumberOfElem(lGetList(mes, MES_job_number_list))==0) {
+         DPRINTF(("removed message element\n"));
+         lRemoveElem(lGetList(tmp_sme, SME_message_list), mes);
+      } else {
+         DPRINTF(("removed no message element\n"));
+      }
+   }
+
+   DEXIT;
+}
+
+/*--------------------------------------------------------------
+ * rollback all not yet committed messages
+ *------------------------------------------------------------*/
 void schedd_mes_rollback(void)
 {
    if (tmp_sme) {

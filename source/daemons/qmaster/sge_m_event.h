@@ -39,9 +39,6 @@ extern lList *EV_Clients;
 extern u_long32 qidl_event_count;
 #endif
 
-extern int scheduler_busy;
-extern int last_seq_no;
-
 void reinit_schedd(void);
 
 int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser, char *rhost);
@@ -55,14 +52,7 @@ int sge_eventclient_subscribed(const lListElem *event_client, int event);
 int sge_ack_event(lListElem *er, u_long32 event_number);
 void ck_4_deliver_events(u_long32 now);
 
-enum { 
-   FLUSH_EVENTS_SET = 0,
-   FLUSH_EVENTS_ASK,
-   FLUSH_EVENTS_JOB_FINISHED,
-   FLUSH_EVENTS_JOB_SUBMITTED
-};
-
-void sge_flush_events(lListElem *event_client, int);
+void sge_flush_events(lListElem *event_client, int interval);
 int sge_next_flush(int);
 
 void sge_add_list_event(lListElem *event_client,
@@ -78,5 +68,7 @@ u_long32 sge_get_next_event_number(u_long32 client_id);
 void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer);
 
 lListElem* sge_locate_scheduler(void);
+
+void set_event_client_busy(lListElem *event_client, int busy);
 
 #endif /* __SGE_M_EVENT_H */

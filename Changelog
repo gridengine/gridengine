@@ -1,3 +1,14 @@
+JG-2002-04-05-0: Enhancem.  Further cleanup and enhancement of the
+                            event client interface:
+                            - general implementation for flushing of events 
+                              replaces special handling for scheduler in 
+                              qmaster
+                            - a new "busy policy" replaces special handling for
+                              scheduler with global variables in qmaster
+                            - a clientdata field in the event client object is
+                              used for checking of orders sequence numbers 
+                              instead of using a global variable
+                            - lots of additional documentation
 
 SD-2002-04-04-1: Feature:   Merges from V53_beta2_sx6_BRANCH
                             SX architecture updates

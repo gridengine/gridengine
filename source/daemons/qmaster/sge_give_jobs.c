@@ -682,11 +682,8 @@ sge_commit_flags_t commit_flags
    int unenrolled_task = (commit_flags & COMMIT_UNENROLLED_TASK);
    int handle_zombies = (conf.zombie_jobs > 0);
    time_t now = 0;
-   lListElem *schedd;
 
    DENTER(TOP_LAYER, "sge_commit_job");
-
-   schedd = sge_locate_scheduler();
 
    jid = lGetUlong(jep, JB_job_number);
    ja_task_id = jatep?lGetUlong(jatep, JAT_task_number):0;
@@ -834,9 +831,6 @@ sge_commit_flags_t commit_flags
       job_enroll(jep, NULL, ja_task_id);
       job_write_spool_file(jep, ja_task_id, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-      if(schedd != NULL) {
-         sge_flush_events(schedd, FLUSH_EVENTS_JOB_FINISHED);
-      }
       break;
 
    case 3:
@@ -848,9 +842,6 @@ sge_commit_flags_t commit_flags
          sge_clear_granted_resources(jep, jatep, 1);
       }
       sge_bury_job(jep, jid, jatep, spool_job, no_events);
-      if(schedd != NULL && !no_events) {
-         sge_flush_events(schedd, FLUSH_EVENTS_JOB_FINISHED);
-      }
       break;
    case 4:
       jid = lGetUlong(jep, JB_job_number);
@@ -877,10 +868,6 @@ sge_commit_flags_t commit_flags
          lGetUlong(jatep, JAT_task_number),
          NULL, lGetList(jatep, JAT_scaled_usage_list));
 
-      if(schedd != NULL) {   
-         sge_flush_events(schedd, FLUSH_EVENTS_JOB_FINISHED);
-      }
-         
       /* finished all ja-tasks => remove job script */
       for_each(tmp_ja_task, lGetList(jep, JB_ja_tasks)) {
          if (lGetUlong(tmp_ja_task, JAT_status) != JFINISHED)
@@ -914,10 +901,6 @@ sge_commit_flags_t commit_flags
       job_enroll(jep, NULL, ja_task_id);
       job_write_spool_file(jep, ja_task_id, SPOOL_DEFAULT);
       sge_add_jatask_event(sgeE_JATASK_MOD, jep, jatep);
-
-      if(schedd != NULL) {
-         sge_flush_events(schedd, FLUSH_EVENTS_JOB_FINISHED);
-      }
       break;
    }
 

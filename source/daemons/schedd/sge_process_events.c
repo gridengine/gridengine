@@ -84,6 +84,7 @@
 #include "scheduler.h"
 #include "job_log.h"
 #include "sge_job_jatask.h"
+#include "sge_conf.h"
 
 /* defined in sge_schedd.c */
 extern int shut_me_down;
@@ -551,13 +552,17 @@ int sge_process_all_events(lList *event_list)
                ep = lDechainElem(src, lFirst(src));
                sc_set(NULL, &scheddconf, ep, NULL);
 
-               if (ec_set_edtime(scheddconf.schedule_interval) ||
-                   (ret=use_alg(lGetString(ep, SC_algorithm)))==2) {
+               /* check event client settings */
+               if(ec_get_edtime() != scheddconf.schedule_interval) {
+                  ec_set_edtime(scheddconf.schedule_interval);
+               }
+               if ((ret=use_alg(lGetString(ep, SC_algorithm)))==2) {
                   /* changings on event handler or schedule interval can take effect 
                      only after a new registration of schedd at qmaster */
                   DEXIT;
                   goto ReregisterSchedd;
                }
+
                new_user_sort = lGetUlong(ep, SC_user_sort);
                if (user_sort != new_user_sort) {
                   set_user_sort(new_user_sort);

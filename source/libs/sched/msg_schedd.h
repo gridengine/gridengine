@@ -66,6 +66,7 @@
 #define MSG_EVENT_ILLEGAL_ID_OR_NAME_US               _("Illegal id "U32CFormat" or name "SFQ" in event client registration\n")
 #define MSG_EVENT_UNINITIALIZED_EC                    _("event client not properly initialized (ec_prepare_registration)\n")
 #define MSG_EVENT_ILLEGALEVENTID_I                    _("illegal event id %d\n")
+#define MSG_EVENT_ILLEGALFLUSHTIME_I                  _("illegal flush time %d - must be in the range [0:63]\n")
 #define MSG_EVENT_NOTREGISTERED                       _("event client not registered\n")
 #define MSG_EVENT_HAVETOHANDLEEVENTS                  _("you have to handle the events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN\n")
 

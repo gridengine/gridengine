@@ -66,7 +66,7 @@ char *ruser,
 char *rhost 
 ) {
    u_long32 si;
-   lListElem *schedd = NULL;
+/*    lListElem *schedd = NULL; */
    u_long32 old_SC_weight_tickets_deadline_active, old_SC_weight_tickets_override;
 
    DENTER(TOP_LAYER, "sge_mod_sched_configuration");
@@ -111,9 +111,9 @@ char *rhost
 
    sge_add_event(NULL, sgeE_SCHED_CONF, 0, 0, NULL, confp);
 
-   if ((schedd=sge_locate_scheduler())) {
-      sge_flush_events(schedd, FLUSH_EVENTS_SET);
-   }
+/*    if ((schedd=sge_locate_scheduler())) { */
+      /* sge_flush_events(schedd, 0); !!!! not really necessary */
+/*    } */
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
         "scheduler configuration"));

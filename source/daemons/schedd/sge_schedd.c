@@ -151,10 +151,14 @@ char *argv[]
 
    /* prepare event client mechanism */
    ec_prepare_registration(EV_ID_SCHEDD, "scheduler");
-   sge_subscribe_schedd();
+   ec_set_busy_handling(EV_BUSY_UNTIL_RELEASED);
+   ec_set_clientdata(-1);
 
    /* daemonizes if qmaster is unreachable */
    check_qmaster = sge_setup_sge_schedd();
+
+   /* subscribe events */
+   sge_subscribe_schedd();
 
    master_host = sge_get_master(0);
    if (sge_hostcmp(master_host, me.qualified_hostname) && start_on_master_host) {
@@ -570,6 +574,18 @@ int sge_before_dispatch(void)
       lFreeElem(global);
       lFreeElem(local);
       new_global_config = 0;
+
+      /* flushing information might have changed */
+      if(ec_get_flush(sgeE_JOB_DEL) != flush_finish_sec) {
+         ec_set_flush(sgeE_JOB_DEL, flush_finish_sec);
+         ec_set_flush(sgeE_JOB_FINAL_USAGE, flush_finish_sec);
+         ec_set_flush(sgeE_JATASK_MOD, flush_finish_sec);
+         ec_set_flush(sgeE_JATASK_DEL, flush_finish_sec);
+      }
+      if(ec_get_flush(sgeE_JOB_ADD) != flush_submit_sec) {
+         ec_set_flush(sgeE_JOB_ADD, flush_submit_sec);
+      }
+      ec_commit();
    }
 
    DEXIT;
@@ -633,6 +649,7 @@ int handle_administrative_events(u_long32 type, lListElem *event)
 
    case sgeE_GLOBAL_CONFIG:
       DPRINTF(("notification about new global configuration\n"));
+
       new_global_config = 1;
       break;
 
@@ -664,20 +681,20 @@ static void sge_subscribe_schedd(void)
    ec_subscribe(sgeE_EXECHOST_DEL);
    ec_subscribe(sgeE_EXECHOST_MOD);
 
-   ec_subscribe(sgeE_GLOBAL_CONFIG);
+   ec_subscribe_flush(sgeE_GLOBAL_CONFIG, 0);
 
-   ec_subscribe(sgeE_JATASK_DEL);
-   ec_subscribe(sgeE_JATASK_MOD);
+   ec_subscribe_flush(sgeE_JATASK_DEL, flush_finish_sec);
+   ec_subscribe_flush(sgeE_JATASK_MOD, flush_finish_sec);
 
    ec_subscribe(sgeE_JOB_LIST);
-   ec_subscribe(sgeE_JOB_ADD);
-   ec_subscribe(sgeE_JOB_DEL);
+   ec_subscribe_flush(sgeE_JOB_ADD, flush_submit_sec);
+   ec_subscribe_flush(sgeE_JOB_DEL, flush_finish_sec);
    ec_subscribe(sgeE_JOB_MOD);
    ec_subscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
-   ec_subscribe(sgeE_JOB_FINAL_USAGE);
+   ec_subscribe_flush(sgeE_JOB_FINAL_USAGE, flush_finish_sec);
    ec_subscribe(sgeE_JOB_USAGE);
 
-   ec_subscribe(sgeE_NEW_SHARETREE);
+   ec_subscribe_flush(sgeE_NEW_SHARETREE, 0); /* !!!! why is it flushed? */
 
    ec_subscribe(sgeE_PROJECT_LIST);
    ec_subscribe(sgeE_PROJECT_DEL);
@@ -689,7 +706,7 @@ static void sge_subscribe_schedd(void)
    ec_subscribe(sgeE_PE_DEL);
    ec_subscribe(sgeE_PE_MOD);
 
-   ec_subscribe(sgeE_QMASTER_GOES_DOWN);
+   ec_subscribe_flush(sgeE_QMASTER_GOES_DOWN, 0);
 
    ec_subscribe(sgeE_QUEUE_LIST);
    ec_subscribe(sgeE_QUEUE_ADD);
@@ -698,9 +715,9 @@ static void sge_subscribe_schedd(void)
    ec_subscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
    ec_subscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
 
-   ec_subscribe(sgeE_SCHED_CONF);
-   ec_subscribe(sgeE_SCHEDDMONITOR);
-   ec_subscribe(sgeE_SHUTDOWN);
+   ec_subscribe_flush(sgeE_SCHED_CONF, 0);
+   ec_subscribe_flush(sgeE_SCHEDDMONITOR, 0);
+   ec_subscribe_flush(sgeE_SHUTDOWN, 0);
 
    ec_subscribe(sgeE_USER_LIST);
    ec_subscribe(sgeE_USER_ADD);

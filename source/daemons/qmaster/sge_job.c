@@ -678,9 +678,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
       lListElem *schedd = sge_locate_scheduler();
       if(schedd != NULL) {
          if (JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
-            sge_flush_events(schedd, FLUSH_EVENTS_SET);
-         } else {
-            sge_flush_events(schedd, FLUSH_EVENTS_JOB_SUBMITTED);
+            sge_flush_events(schedd, 0);
          }
       }
    }
@@ -942,7 +940,6 @@ int sub_command
             increment_heartbeat(sge_get_gmt());
          }
          if (deleted_unenrolled_tasks) {
-            lListElem *schedd;
 
             if (conf.zombie_jobs > 0) {
                lListElem *zombie;
@@ -958,9 +955,6 @@ int sub_command
             } else {
                sge_add_event(NULL, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
             }
-            schedd = sge_locate_scheduler();
-            if(schedd != NULL) {
-               sge_flush_events(schedd, FLUSH_EVENTS_JOB_FINISHED);                         } 
          }
 
          /*

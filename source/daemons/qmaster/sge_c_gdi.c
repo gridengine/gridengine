@@ -580,9 +580,12 @@ int sub_command
          {
             u_long32 event_number, now;
             static u_long32 last_order_arrived = 0;
-
-            scheduler_busy = 0;
-
+            lListElem *schedd = sge_locate_scheduler();
+            
+            if(schedd != NULL) {
+               set_event_client_busy(schedd, 0);
+            }
+            
             /* statistics */
             if (lFirst(request->lp) == ep) {
                now = sge_get_gmt();
@@ -607,9 +610,8 @@ int sub_command
              * but only if events available
              */
             if (event_number != sge_get_next_event_number(EV_ID_SCHEDD)) {
-               lListElem *schedd = sge_locate_scheduler();
                if(schedd != NULL) {
-                  sge_flush_events(schedd, FLUSH_EVENTS_SET);
+                  sge_flush_events(schedd, 0);
                }
             }   
          }

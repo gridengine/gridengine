@@ -45,8 +45,20 @@ int ec_subscribe_all(void);
 int ec_unsubscribe(int event);
 int ec_unsubscribe_all(void);
 
+int ec_get_flush(int event);
+int ec_set_flush(int event, int flush);
+int ec_unset_flush(int event);
+
+int ec_subscribe_flush(int event, int flush);
+
 int ec_set_edtime(int intval);
 int ec_get_edtime(void);
+
+int ec_set_busy_handling(int handling);
+int ec_get_busy_handling(void);
+
+void ec_set_clientdata(u_long32 data);
+u_long32 ec_get_clientdata(void);
 
 int ec_commit(void);
 

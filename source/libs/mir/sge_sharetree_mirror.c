@@ -36,20 +36,19 @@
 
 #include "sge_sharetree.h"
 
-#include "msg_gdilib.h"
-#include "msg_sgeobjlib.h"
+#include "msg_mirlib.h"
 
 #include "sge_mirror.h"
 #include "sge_sharetree_mirror.h"
 
-/****** gdi/sharetree/sharetree_update_master_list() *****************************
+/****** Eventmirror/sharetree/sharetree_update_master_list() *******************
 *  NAME
 *     sharetree_update_master_list() -- update the master sharetree list
 *
 *  SYNOPSIS
-*     int sharetree_update_master_list(sge_event_type type,
-*                                      sge_event_action action,
-*                                      lListElem *event, void *clientdata)
+*     int 
+*     sharetree_update_master_list(sge_event_type type, sge_event_action action,
+*                                  lListElem *event, void *clientdata)
 *
 *  FUNCTION
 *     Update the global master list for the sharetree
@@ -73,8 +72,9 @@
 *  SEE ALSO
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
-int sharetree_update_master_list(sge_event_type type, sge_event_action action,
-                                 lListElem *event, void *clientdata)
+int 
+sharetree_update_master_list(sge_event_type type, sge_event_action action,
+                             lListElem *event, void *clientdata)
 {
    lList *src;
 

@@ -37,7 +37,7 @@
 #include "sge_sharetree.h"
 #include "sge_event.h"
 
-#include "msg_gdilib.h"
+#include "msg_sgeobjlib.h"
 
 /****** Eventclient/event_text() **********************************************
 *  NAME

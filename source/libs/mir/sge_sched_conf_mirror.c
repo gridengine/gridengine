@@ -36,20 +36,20 @@
 
 #include "sge_schedd_conf.h"
 
-#include "msg_gdilib.h"
-#include "msg_sgeobjlib.h"
+#include "msg_mirlib.h"
 
 #include "sge_mirror.h"
 #include "sge_sched_conf_mirror.h"
 
-/****** gdi/schedd_conf/schedd_conf_update_master_list() *****************************
+/****** Eventmirror/schedd_conf/schedd_conf_update_master_list() ***************
 *  NAME
-*     schedd_conf_update_master_list() -- update the master list of scheduler configurations
+*     schedd_conf_update_master_list() -- update the scheduler configuration
 *
 *  SYNOPSIS
-*     int schedd_conf_update_master_list(sge_event_type type,
-*                                        sge_event_action action,
-*                                        lListElem *event, void *clientdata)
+*     int 
+*     schedd_conf_update_master_list(sge_event_type type, 
+*                                    sge_event_action action,
+*                                    lListElem *event, void *clientdata)
 *
 *  FUNCTION
 *     Update the global master list of scheduler configurations
@@ -73,8 +73,10 @@
 *  SEE ALSO
 *     Eventmirror/--Eventmirror
 *******************************************************************************/
-int schedd_conf_update_master_list(sge_event_type type, sge_event_action action,
-                                       lListElem *event, void *clientdata)
+int 
+schedd_conf_update_master_list(sge_event_type type, 
+                               sge_event_action action,
+                               lListElem *event, void *clientdata)
 {
    lList **list;
    lDescr *list_descr;
@@ -88,18 +90,18 @@ int schedd_conf_update_master_list(sge_event_type type, sge_event_action action,
    list_descr = SC_Type;
 
    /* We always update the whole list (consisting of one list element) */
-   if(*list != NULL) {
+   if (*list != NULL) {
       *list = lFreeList(*list);
    }
 
-   if((data_list = lGetList(event, ET_new_version)) != NULL) {
-      if((ep = lFirst(data_list)) != NULL) {
+   if ((data_list = lGetList(event, ET_new_version)) != NULL) {
+      if ((ep = lFirst(data_list)) != NULL) {
          ep = lDechainElem(data_list, ep);
       }
    }
 
    /* if neccessary, create list and copy schedd info */
-   if(ep != NULL) {
+   if (ep != NULL) {
       *list = lCreateList("schedd config", list_descr);
       lAppendElem(*list, ep);
    }

@@ -174,7 +174,6 @@
 ** sge_c_ack.c
 */
 #define MSG_COM_NOQUEUE              _MESSAGE(33103, _("<no queue>"))
-#define MSG_COM_UNPACKINT_I          _MESSAGE(33104, _("unpacking integer %d failed\n"))
 #define MSG_COM_ACK_S                _MESSAGE(33105, _("ack event from "SFN"\n") )     
 #define MSG_COM_ACKEVENTFORUNKOWNJOB_U _MESSAGE(33106, _("ack event for unknown job "U32CFormat"\n"))
 #define MSG_COM_ACKEVENTFORUNKNOWNTASKOFJOB_UU _MESSAGE(33107, _("ack event for unknown task " U32CFormat  " of job " U32CFormat " \n"))
@@ -207,8 +206,6 @@
 #define MSG_SGETEXT_NOSUBMITHOST_S              _MESSAGE(33127, _("denied: host "SFQ" is no submit host\n"))
 #define MSG_SGETEXT_NOSUBMITORADMINHOST_S       _MESSAGE(33128, _("denied: host "SFQ" is neither submit nor admin host\n"))
 #define MSG_SGETEXT_ALREADYEXISTS_SS            _MESSAGE(33129, _(""SFN" "SFQ" already exists\n"))
-#define MSG_SGETEXT_ADDEDTOLIST_SSSS            _MESSAGE(33130, _(""SFN"@"SFN" added "SFQ" to "SFN" list\n"))
-#define MSG_SGETEXT_MODIFIEDINLIST_SSSS         _MESSAGE(33131, _(""SFN"@"SFN" modified "SFQ" in "SFN" list\n"))
 
 /*
 ** sge_calendar_qmaster.c
@@ -463,30 +460,6 @@
 #define MSG_SGETEXT_SPECIFYONEORALLUSER         _MESSAGE(33338, _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n"))
 
 /*
-** sge_event_master.c
-*/
-/* #define MSG_EVE_UNKNOWNDUMMYREQUEST   _message(33342, _("unknown dummy request\n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_EVE_REINITEVENTCLIENT_S   _MESSAGE(33343, _("reinitialization of "SFQ"\n"))
-#define MSG_EVE_UNKNOWNEVCLIENT_U     _MESSAGE(33344, _("no event client known with id "U32CFormat"\n"))
-#define MSG_EVE_CLIENTREREGISTERED_S  _MESSAGE(33345, _("event client "SFQ" reregistered - it will need a total update\n"))
-#define MSG_EVE_REG_SU                _MESSAGE(33346, _(SFQ" registers as event client with id "U32CFormat"\n"))
-#define MSG_EVE_UNREG_SU              _MESSAGE(33347, _("event client "SFQ" with id "U32CFormat" deregistered"))
-#define MSG_EVE_EVENTCLIENT           _MESSAGE(33348, _("event client"))
-
-#define MSG_EVE_ILLEGALEVENTCLIENTID_S _MESSAGE(33349, _("illegal event client id "SFQ"\n"))
-#define MSG_EVE_ILLEGALIDREGISTERED_U _MESSAGE(33350, _("illegal event client id "U32CFormat" for registration\n"))
-
-#define MSG_EVE_INVALIDSUBSCRIPTION   _MESSAGE(33351, _("invalid subscription information\n"))
-#define MSG_EVE_INVALIDINTERVAL_U     _MESSAGE(33352, _("invalid event interval "U32CFormat"\n"))
-
-#define MSG_EVE_TOTALUPDATENOTHANDLINGEVENT_I _MESSAGE(33353, _("event number %d is not handled by sge_total_update_event\n"))
-
-#define MSG_COM_ACKTIMEOUT4EV_ISIS    _MESSAGE(33354, _("acknowledge timeout after %d seconds for event client ("SFN":%d) on host "SFQ))
-#define MSG_COM_NOSHUTDOWNPERMS       _MESSAGE(33355, _("shutdown requires manager privileges\n"))
-#define MSG_COM_NOSCHEDDREGMASTER     _MESSAGE(33356, _("no scheduler registered at qmaster\n"))
-#define MSG_COM_NOSCHEDMONPERMS       _MESSAGE(33357, _("starting scheduler monitoring requires manager privileges\n"))
-#define MSG_COM_SCHEDMON_SS           _MESSAGE(33358, _(SFN"@"SFN" triggers scheduler monitoring\n"))
-/*
 ** sge_manop.c
 */
 #define MSG_OBJ_MANAGER               _MESSAGE(33359, _("manager"))
@@ -614,7 +587,6 @@
 /*
 ** qmaster.c
 */
-#define MSG_SGETEXT_KILL_SSS                    _MESSAGE(33471, _(""SFN"@"SFN" kills "SFN"\n"))
 #define MSG_SETTING_PRIORITY_TAGS_S             _MESSAGE(33472, _("setting SGE_PRIORITY_TAGS to "SFN"\n"))
 #define MSG_TOO_MANY_PRIORITY_TAGS_S            _MESSAGE(33473, _("SGE_PRIORITY_TAGS "SFN" contains too many tags (max 9)\n"))
 
@@ -785,7 +757,6 @@
 #define MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S    _MESSAGE(33599, _("can't notify exec host "SFQ" of new conf\n"))
 #define MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I    _MESSAGE(33600, _("error %d updating license data\n"))
 #define MSG_HEARTBEAT_FAILEDTOINCREMENTHEARBEATFILEXINSPOOLDIR_S    _MESSAGE(33601, _("failed to increment heartbeat file "SFQ" in spool directory"))
-#define MSG_GDI_FAILEDTOEXTRACTAUTHINFO    _MESSAGE(33602, _("failed to extract authentication information"))
 
 /*
 ** qmaster_to_execd.c

@@ -81,6 +81,7 @@
 #include "sge_todo.h"
 
 #include "msg_common.h"
+#include "msg_evmlib.h"
 #include "msg_qmaster.h"
 
 /* static double get_usage_value(lList *usage, char *name); */

@@ -36,19 +36,17 @@
 
 #include "sge_host.h"
 
-#include "msg_sgeobjlib.h"
-
 #include "sge_mirror.h"
 #include "sge_host_mirror.h"
 
-/****** gdi/host/host_update_master_list() *****************************
+/****** Eventmirror/host/host_update_master_list() *****************************
 *  NAME
 *     host_update_master_list() -- update the master hostlists
 *
 *  SYNOPSIS
-*     int host_update_master_list(sge_event_type type,
-*                                 sge_event_action action,
-*                                 lListElem *event, void *clientdata)
+*     int 
+*     host_update_master_list(sge_event_type type, sge_event_action action,
+*                             lListElem *event, void *clientdata)
 *
 *  FUNCTION
 *     Update the global master lists of hosts
@@ -74,8 +72,9 @@
 *     Eventmirror/sge_mirror_update_master_list()
 *     Eventmirror/sge_mirror_update_master_list_host_key()
 *******************************************************************************/
-int host_update_master_list(sge_event_type type, sge_event_action action,
-                            lListElem *event, void *clientdata)
+int 
+host_update_master_list(sge_event_type type, sge_event_action action,
+                        lListElem *event, void *clientdata)
 {
    lList **list;
    lDescr *list_descr;
@@ -86,7 +85,7 @@ int host_update_master_list(sge_event_type type, sge_event_action action,
 
    DENTER(TOP_LAYER, "host_update_master_list");
 
-   switch(type) {
+   switch (type) {
       case SGE_EMT_ADMINHOST:
          list = &Master_Adminhost_List;
          list_descr = AH_Type;
@@ -108,7 +107,8 @@ int host_update_master_list(sge_event_type type, sge_event_action action,
  
    key = lGetString(event, ET_strkey);
 
-   if(sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+   if (sge_mirror_update_master_list_host_key(list, list_descr, key_nm, key, 
+                                              action, event) != SGE_EM_OK) {
       DEXIT;
       return FALSE;
    }

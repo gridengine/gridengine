@@ -48,7 +48,7 @@
 #include "sge_answer.h"
 #include "sge_report.h"
 
-#include "msg_gdilib.h"
+#include "msg_evclib.h"
 
 /****** Eventclient/--Event_Client_Interface **********************************
 *  NAME
@@ -132,12 +132,15 @@
 *     Eventclient/Client/ec_need_new_registration()
 *******************************************************************************/
 
-static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, 
-                                u_long32 *wrong_number);
+static 
+u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, 
+                         u_long32 *wrong_number);
 
-static int get_event_list(int sync, lList **lp);
+static int 
+get_event_list(int sync, lList **lp);
 
-static void ec_config_changed(void);
+static void 
+ec_config_changed(void);
 
 /****** Eventclient/Client/-Event_Client_Global_Variables *********************
 *  NAME
@@ -150,7 +153,8 @@ static void ec_config_changed(void);
 *     static u_long32 ec_reg_id = 0;
 *
 *  FUNCTION
-*     config_changed - the configuration changed (subscription or event interval)
+*     config_changed - the configuration changed (subscription or event 
+*                      interval)
 *     need_register  - the client is not registered at the server
 *     ec             - event client object holding configuration data
 *     ec_reg_id      - the id used to register at the qmaster
@@ -173,7 +177,8 @@ static u_long32 ec_reg_id = 0;
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_prepare_registration(ev_registration_id id, const char *name) 
+*     int 
+*     ec_prepare_registration(ev_registration_id id, const char *name) 
 *
 *  FUNCTION
 *     Initializes necessary data structures and sets the data needed for
@@ -191,7 +196,7 @@ static u_long32 ec_reg_id = 0;
 *     const char *name       - name of the event client
 *
 *  RESULT
-*     int - 1,if the function succeeded, else 0 
+*     int - 1, if the function succeeded, else 0 
 *
 *  SEE ALSO
 *     Eventclient/--EV_Type
@@ -200,22 +205,24 @@ static u_long32 ec_reg_id = 0;
 *     qconf manpage
 *     list of events
 *******************************************************************************/
-int ec_prepare_registration(ev_registration_id id, const char *name)
+int 
+ec_prepare_registration(ev_registration_id id, const char *name)
 {
    char subscription[sgeE_EVENTSIZE + 1];
    int i;
 
    DENTER(TOP_LAYER, "ec_prepare_registration");
 
-   if(id >= EV_ID_FIRST_DYNAMIC || name == NULL || *name == 0) {
-      WARNING((SGE_EVENT, MSG_EVENT_ILLEGAL_ID_OR_NAME_US, u32c(id), name != NULL ? name : "NULL" ));
+   if (id >= EV_ID_FIRST_DYNAMIC || name == NULL || *name == 0) {
+      WARNING((SGE_EVENT, MSG_EVENT_ILLEGAL_ID_OR_NAME_US, 
+               u32c(id), name != NULL ? name : "NULL" ));
       DEXIT;
       return 0;
    }
 
    ec = lCreateElem(EV_Type);
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       DEXIT; /* error message already comes from lCreateElem */
       return 0;
    }
@@ -228,7 +235,7 @@ int ec_prepare_registration(ev_registration_id id, const char *name)
    lSetUlong(ec, EV_d_time, DEFAULT_EVENT_DELIVERY_INTERVAL);
 
    /* initialize subscription "bitfield" */
-   for(i = 0; i < sgeE_EVENTSIZE; i++) {
+   for (i = 0; i < sgeE_EVENTSIZE; i++) {
       subscription[i] = EV_NOT_SUBSCRIBED;
    }
 
@@ -250,7 +257,8 @@ int ec_prepare_registration(ev_registration_id id, const char *name)
 *     ec_is_initialized() -- has the client been initialized
 *
 *  SYNOPSIS
-*     int ec_is_initialized(void) 
+*     int 
+*     ec_is_initialized(void) 
 *
 *  FUNCTION
 *     Checks if the event client mechanism has been initialized
@@ -263,9 +271,10 @@ int ec_prepare_registration(ev_registration_id id, const char *name)
 *  SEE ALSO
 *     Eventclient/Client/ec_prepare_registration()
 *******************************************************************************/
-int ec_is_initialized(void) 
+int 
+ec_is_initialized(void) 
 {
-   if(ec == NULL) {
+   if (ec == NULL) {
       return FALSE;
    } else {
       return TRUE;
@@ -279,7 +288,8 @@ int ec_is_initialized(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     void ec_mark4registration(void) 
+*     void 
+*     ec_mark4registration(void) 
 *
 *  FUNCTION
 *     Tells the event client mechanism, that the connection to the server
@@ -292,7 +302,8 @@ int ec_is_initialized(void)
 *  SEE ALSO
 *     Eventclient/Client/ec_need_new_registration()
 *******************************************************************************/
-void ec_mark4registration(void)
+void 
+ec_mark4registration(void)
 {
    DENTER(TOP_LAYER, "ec_mark4registration");
    need_register = 1;
@@ -315,7 +326,8 @@ void ec_mark4registration(void)
 *     int - 1, if the client has to (re)register, else 0 
 *
 *******************************************************************************/
-int ec_need_new_registration(void)
+int 
+ec_need_new_registration(void)
 {
    return need_register;
 }
@@ -327,7 +339,8 @@ int ec_need_new_registration(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_set_edtime(int interval) 
+*     int 
+*     ec_set_edtime(int interval) 
 *
 *  FUNCTION
 *     Set the interval qmaster will use to send events to the client.
@@ -346,12 +359,14 @@ int ec_need_new_registration(void)
 *  SEE ALSO
 *     Eventclient/Client/ec_get_edtime()
 *******************************************************************************/
-int ec_set_edtime(int interval) {
+int 
+ec_set_edtime(int interval) 
+{
    int ret;
 
    DENTER(TOP_LAYER, "ec_set_edtime");
    
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
@@ -359,7 +374,7 @@ int ec_set_edtime(int interval) {
 
    ret = (lGetUlong(ec, EV_d_time) != interval);
 
-   if(ret) {
+   if (ret) {
       lSetUlong(ec, EV_d_time, interval);
       ec_config_changed();
    }
@@ -375,7 +390,8 @@ int ec_set_edtime(int interval) {
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_get_edtime(void) 
+*     int 
+*     ec_get_edtime(void) 
 *
 *  FUNCTION
 *     Get the interval qmaster will use to send events to the client.
@@ -386,12 +402,14 @@ int ec_set_edtime(int interval) {
 *  SEE ALSO
 *     Eventclient/Client/ec_set_edtime()
 *******************************************************************************/
-int ec_get_edtime(void) {
+int 
+ec_get_edtime(void) 
+{
    int interval;
 
    DENTER(TOP_LAYER, "ec_get_edtime");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
@@ -409,7 +427,8 @@ int ec_get_edtime(void) {
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_set_busy_handling(ev_busy_handling handling) 
+*     int 
+*     ec_set_busy_handling(ev_busy_handling handling) 
 *
 *  FUNCTION
 *     The event client interface has a mechanism to handle situations in which
@@ -433,12 +452,14 @@ int ec_get_edtime(void) {
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_set_busy_handling(ev_busy_handling handling) {
+int 
+ec_set_busy_handling(ev_busy_handling handling) 
+{
    int ret;
 
    DENTER(TOP_LAYER, "ec_set_busy_handling");
    
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
@@ -446,7 +467,7 @@ int ec_set_busy_handling(ev_busy_handling handling) {
 
    ret = (lGetUlong(ec, EV_busy_handling) != handling);
 
-   if(ret) {
+   if (ret) {
       lSetUlong(ec, EV_busy_handling, handling);
       ec_config_changed();
    }
@@ -462,7 +483,8 @@ int ec_set_busy_handling(ev_busy_handling handling) {
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     ev_busy_handling ec_get_busy_handling(void) 
+*     ev_busy_handling 
+*     ec_get_busy_handling(void) 
 *
 *  FUNCTION
 *     Returns the policy currently configured.
@@ -474,12 +496,14 @@ int ec_set_busy_handling(ev_busy_handling handling) {
 *     Eventclient/Client/ec_set_edtime()
 *     Eventclient/-Busy-state
 *******************************************************************************/
-ev_busy_handling ec_get_busy_handling(void) {
+ev_busy_handling 
+ec_get_busy_handling(void) 
+{
    ev_busy_handling handling;
 
    DENTER(TOP_LAYER, "ec_get_busy_handling");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
@@ -497,7 +521,8 @@ ev_busy_handling ec_get_busy_handling(void) {
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     void ec_set_clientdata(u_long32 data) 
+*     void 
+*     ec_set_clientdata(u_long32 data) 
 *
 *  FUNCTION
 *     An event client (the event client object) has a field EV_clientdata.
@@ -517,11 +542,12 @@ ev_busy_handling ec_get_busy_handling(void) {
 *     Eventclient/--EV_Type
 *     documentation of scheduler <-> qmaster mechanisms
 *******************************************************************************/
-void ec_set_clientdata(u_long32 data)
+void 
+ec_set_clientdata(u_long32 data)
 {
    DENTER(TOP_LAYER, "ec_set_clientdata");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return;
@@ -538,7 +564,8 @@ void ec_set_clientdata(u_long32 data)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     u_long32 ec_get_clientdata() 
+*     u_long32 
+*     ec_get_clientdata() 
 *
 *  FUNCTION
 *     Get the current value of the clientdata for the event client.
@@ -552,13 +579,14 @@ void ec_set_clientdata(u_long32 data)
 *     Eventclient/Client/ec_get_clientdata()
 *     Eventclient/EV_Type
 *******************************************************************************/
-u_long32 ec_get_clientdata(void)
+u_long32 
+ec_get_clientdata(void)
 {
    u_long32 clientdata;
 
    DENTER(TOP_LAYER, "ec_get_clientdata");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
@@ -577,7 +605,8 @@ u_long32 ec_get_clientdata(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_register(void) 
+*     int 
+*     ec_register(void) 
 *
 *  FUNCTION
 *     Registers the event client at the event server (usually the qmaster). 
@@ -594,7 +623,8 @@ u_long32 ec_get_clientdata(void)
 *     Eventclient/Client/ec_deregister()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_register(void)
+int 
+ec_register(void)
 {
    int success = 0;
    lList *lp, *alp;
@@ -602,7 +632,7 @@ int ec_register(void)
 
    DENTER(TOP_LAYER, "ec_register");
 
-   if(ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
+   if (ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
       WARNING((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       return 0;
    }
@@ -654,7 +684,7 @@ int ec_register(void)
          new_id = lGetUlong(new_ec, EV_id);
       }
 
-      if(new_id != 0) {
+      if (new_id != 0) {
          lSetUlong(ec, EV_id, new_id);
          DPRINTF(("REGISTERED with id "U32CFormat"\n", new_id));
          lFreeList(lp); 
@@ -690,7 +720,8 @@ int ec_register(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_deregister(void) 
+*     int 
+*     ec_deregister(void) 
 *
 *  FUNCTION
 *     Deregister from the event server (usually the qmaster).
@@ -706,7 +737,8 @@ int ec_register(void)
 *  SEE ALSO
 *     Eventclient/Client/ec_register()
 *******************************************************************************/
-int ec_deregister(void)
+int 
+ec_deregister(void)
 {
    int ret;
    sge_pack_buffer pb;
@@ -714,12 +746,12 @@ int ec_deregister(void)
    DENTER(TOP_LAYER, "ec_deregister");
 
    /* not yet initialized? Nothing to shutdown */
-   if(ec == NULL) {
+   if (ec == NULL) {
       DEXIT;
       return TRUE;
    }
 
-   if(init_packbuffer(&pb, sizeof(u_long32), 0) != PACK_SUCCESS) {
+   if (init_packbuffer(&pb, sizeof(u_long32), 0) != PACK_SUCCESS) {
       /* error message is output from init_packbuffer */
       DEXIT;
       return FALSE;
@@ -732,7 +764,7 @@ int ec_deregister(void)
    
    clear_packbuffer(&pb);
 
-   if(ret != CL_OK) {
+   if (ret != CL_OK) {
       /* error message is output from sge_send_any_request */
       DEXIT;
       return FALSE;
@@ -749,7 +781,8 @@ int ec_deregister(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_subscribe(ev_event event) 
+*     int 
+*     ec_subscribe(ev_event event) 
 *
 *  FUNCTION
 *     Subscribe a certain event.
@@ -772,19 +805,20 @@ int ec_deregister(void)
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_subscribe(ev_event event)
+int 
+ec_subscribe(ev_event event)
 {
    char *subscription;
    
    DENTER(TOP_LAYER, "ec_subscribe");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
 
-   if(event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
+   if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
       DEXIT;
       return 0;
@@ -792,13 +826,13 @@ int ec_subscribe(ev_event event)
 
    subscription = strdup(lGetString(ec, EV_subscription));
 
-   if(subscription == NULL) {
+   if (subscription == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
 
-   if(event == sgeE_ALL_EVENTS) {
+   if (event == sgeE_ALL_EVENTS) {
       int i;
       for(i = 0; i < sgeE_EVENTSIZE; i++) {
          subscription[i] = EV_SUBSCRIBED;
@@ -807,7 +841,7 @@ int ec_subscribe(ev_event event)
       subscription[event] = EV_SUBSCRIBED;
    }
 
-   if(strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+   if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
       lSetString(ec, EV_subscription, subscription);
       ec_config_changed();
    }
@@ -825,7 +859,8 @@ int ec_subscribe(ev_event event)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_subscribe_all(void) 
+*     int 
+*     ec_subscribe_all(void) 
 *
 *  FUNCTION
 *     Subscribe all possible event.
@@ -846,7 +881,8 @@ int ec_subscribe(ev_event event)
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_subscribe_all(void)
+int 
+ec_subscribe_all(void)
 {
    return ec_subscribe(sgeE_ALL_EVENTS);
 }
@@ -858,7 +894,8 @@ int ec_subscribe_all(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_unsubscribe(ev_event event) 
+*     int 
+*     ec_unsubscribe(ev_event event) 
 *
 *  FUNCTION
 *     Unsubscribe a certain event.
@@ -887,19 +924,20 @@ int ec_subscribe_all(void)
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_unsubscribe(ev_event event)
+int 
+ec_unsubscribe(ev_event event)
 {
    char *subscription;
    
    DENTER(TOP_LAYER, "ec_unsubscribe");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
 
-   if(event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
+   if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
       DEXIT;
       return 0;
@@ -907,13 +945,13 @@ int ec_unsubscribe(ev_event event)
 
    subscription = strdup(lGetString(ec, EV_subscription));
 
-   if(subscription == NULL) {
+   if (subscription == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
 
-   if(event == sgeE_ALL_EVENTS) {
+   if (event == sgeE_ALL_EVENTS) {
       int i;
       for(i = 0; i < sgeE_EVENTSIZE; i++) {
          subscription[i] = EV_NOT_SUBSCRIBED;
@@ -921,7 +959,7 @@ int ec_unsubscribe(ev_event event)
       subscription[sgeE_QMASTER_GOES_DOWN] = EV_FLUSHED;
       subscription[sgeE_SHUTDOWN] = EV_FLUSHED;
    } else {
-      if(event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN) {
+      if (event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN) {
          ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
          free(subscription);
          DEXIT;
@@ -931,7 +969,7 @@ int ec_unsubscribe(ev_event event)
       }
    }
 
-   if(strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+   if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
       lSetString(ec, EV_subscription, subscription);
       ec_config_changed();
    }
@@ -949,7 +987,8 @@ int ec_unsubscribe(ev_event event)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_unsubscribe_all(void) 
+*     int 
+*     ec_unsubscribe_all(void) 
 *
 *  FUNCTION
 *     Unsubscribe all possible event.
@@ -969,7 +1008,8 @@ int ec_unsubscribe(ev_event event)
 *     Eventclient/Client/ec_commit()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_unsubscribe_all(void)
+int 
+ec_unsubscribe_all(void)
 {
    return ec_unsubscribe(sgeE_ALL_EVENTS);
 }
@@ -981,7 +1021,8 @@ int ec_unsubscribe_all(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_get_flush(ev_event event) 
+*     int 
+*     ec_get_flush(ev_event event) 
 *
 *  FUNCTION
 *     An event client can request flushing of events from qmaster 
@@ -1001,19 +1042,20 @@ int ec_unsubscribe_all(void)
 *     Eventclient/-Flushing
 *     Eventclient/Client/ec_set_flush()
 *******************************************************************************/
-int ec_get_flush(ev_event event)
+int 
+ec_get_flush(ev_event event)
 {
    const char *subscription;
    
    DENTER(TOP_LAYER, "ec_get_flush");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
 
-   if(event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
+   if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
       DEXIT;
       return EV_NO_FLUSH;
@@ -1021,13 +1063,13 @@ int ec_get_flush(ev_event event)
 
    subscription = lGetString(ec, EV_subscription);
 
-   if(subscription == NULL) {
+   if (subscription == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return EV_NO_FLUSH;
    }
 
-   if((subscription[event] & EV_FLUSHED) == EV_FLUSHED) {
+   if ((subscription[event] & EV_FLUSHED) == EV_FLUSHED) {
       DEXIT;
       return subscription[event] >> 2;
    }
@@ -1043,7 +1085,8 @@ int ec_get_flush(ev_event event)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_set_flush(ev_event event, int flush) 
+*     int 
+*     ec_set_flush(ev_event event, int flush) 
 *
 *  FUNCTION
 *     An event client can request flushing of events from qmaster 
@@ -1067,30 +1110,31 @@ int ec_get_flush(ev_event event)
 *     Eventclient/Client/ec_unset_flush()
 *     Eventclient/Client/ec_subscribe_flush()
 *******************************************************************************/
-int ec_set_flush(ev_event event, int flush)
+int 
+ec_set_flush(ev_event event, int flush)
 {
    char *subscription;
    
    DENTER(TOP_LAYER, "ec_set_flush");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
 
-   if(event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
+   if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
       DEXIT;
       return 0;
    }
 
-   if(flush == EV_NO_FLUSH) {
+   if (flush == EV_NO_FLUSH) {
       DEXIT;
       return ec_unset_flush(event);
    }
 
-   if(flush < 0 || flush > EV_MAX_FLUSH) {
+   if (flush < 0 || flush > EV_MAX_FLUSH) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALFLUSHTIME_I, flush));
       DEXIT;
       return 0;
@@ -1098,17 +1142,17 @@ int ec_set_flush(ev_event event, int flush)
 
    subscription = strdup(lGetString(ec, EV_subscription));
 
-   if(subscription == NULL) {
+   if (subscription == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
    
-   if(subscription[event] & EV_SUBSCRIBED) {
+   if (subscription[event] & EV_SUBSCRIBED) {
       subscription[event] = (flush << 2) | EV_FLUSHED;
    }
 
-   if(strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+   if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
       lSetString(ec, EV_subscription, subscription);
       ec_config_changed();
    }
@@ -1126,7 +1170,8 @@ int ec_set_flush(ev_event event, int flush)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_unset_flush(ev_event event) 
+*     int 
+*     ec_unset_flush(ev_event event) 
 *
 *  FUNCTION
 *     Switch of flushing of an individual event.
@@ -1145,19 +1190,20 @@ int ec_set_flush(ev_event event, int flush)
 *     Eventclient/Client/ec_get_flush()
 *     Eventclient/Client/ec_subscribe_flush()
 ******************************************************************************/
-int ec_unset_flush(ev_event event)
+int 
+ec_unset_flush(ev_event event)
 {
    char *subscription;
    
    DENTER(TOP_LAYER, "ec_unset_flush");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
 
-   if(event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
+   if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
       DEXIT;
       return 0;
@@ -1165,19 +1211,19 @@ int ec_unset_flush(ev_event event)
 
    subscription = strdup(lGetString(ec, EV_subscription));
 
-   if(subscription == NULL) {
+   if (subscription == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
    
-   if(subscription[event] & EV_SUBSCRIBED) {
+   if (subscription[event] & EV_SUBSCRIBED) {
       subscription[event] = EV_SUBSCRIBED;
    } else {
       subscription[event] = EV_NOT_SUBSCRIBED;
    }
 
-   if(strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
+   if (strcmp(subscription, lGetString(ec, EV_subscription)) != 0) {
       lSetString(ec, EV_subscription, subscription);
       ec_config_changed();
    }
@@ -1195,7 +1241,8 @@ int ec_unset_flush(ev_event event)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_subscribe_flush(ev_event event, int flush) 
+*     int 
+*     ec_subscribe_flush(ev_event event, int flush) 
 *
 *  FUNCTION
 *     Subscribes and event and configures flushing for this event.
@@ -1216,12 +1263,13 @@ int ec_unset_flush(ev_event event)
 *     Eventclient/Client/ec_subscribe()
 *     Eventclient/Client/ec_set_flush()
 ******************************************************************************/
-int ec_subscribe_flush(ev_event event, int flush) 
+int 
+ec_subscribe_flush(ev_event event, int flush) 
 {
    int ret;
    
    ret = ec_subscribe(event);
-   if(ret) {
+   if (ret) {
       ret = ec_set_flush(event, flush);
    }
 
@@ -1233,7 +1281,8 @@ int ec_subscribe_flush(ev_event event, int flush)
 *     ec_set_busy() -- set the busy state
 *
 *  SYNOPSIS
-*     int ec_set_busy(int busy) 
+*     int 
+*     ec_set_busy(int busy) 
 *
 *  FUNCTION
 *     Sets the busy state of the client. This has to be done if 
@@ -1258,11 +1307,12 @@ int ec_subscribe_flush(ev_event event, int flush)
 *     Eventclient/Client/ec_set_busy_handling()
 *     Eventclient/Client/ec_get_busy()
 *******************************************************************************/
-int ec_set_busy(int busy)
+int 
+ec_set_busy(int busy)
 {
    DENTER(TOP_LAYER, "ec_set_busy");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
@@ -1282,7 +1332,8 @@ int ec_set_busy(int busy)
 *     ec_get_busy() -- get the busy state
 *
 *  SYNOPSIS
-*     int ec_get_busy(void) 
+*     int 
+*     ec_get_busy(void) 
 *
 *  FUNCTION
 *     Reads the busy state of the event client.
@@ -1301,13 +1352,14 @@ int ec_set_busy(int busy)
 *     Eventclient/Client/ec_set_busy_handling()
 *     Eventclient/Client/ec_set_busy()
 *******************************************************************************/
-int ec_get_busy(void)
+int 
+ec_get_busy(void)
 {
    int ret;
 
    DENTER(TOP_LAYER, "ec_get_busy");
 
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
@@ -1325,7 +1377,8 @@ int ec_get_busy(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     static void ec_config_changed(void) 
+*     static void 
+*     ec_config_changed(void) 
 *
 *  FUNCTION
 *     Checkes whether the configuration has changes.
@@ -1339,7 +1392,8 @@ int ec_get_busy(void)
 *     Eventclient/Client/ec_unsubscribe_all()
 *     Eventclient/Client/ec_set_edtime()
 ******************************************************************************/
-static void ec_config_changed(void) 
+static void 
+ec_config_changed(void) 
 {
    config_changed = 1;
 }
@@ -1351,7 +1405,8 @@ static void ec_config_changed(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_commit(void) 
+*     int 
+*     ec_commit(void) 
 *
 *  FUNCTION
 *     Configuration changes (subscription and/or event delivery 
@@ -1370,7 +1425,8 @@ static void ec_config_changed(void)
 *     Eventclient/Client/ec_config_changed()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_commit(void) 
+int 
+ec_commit(void) 
 {
    int success;
    lList *lp, *alp;
@@ -1378,20 +1434,20 @@ int ec_commit(void)
    DENTER(TOP_LAYER, "ec_commit");
 
    /* not yet initialized? Cannot send modification to qmaster! */
-   if(ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
+   if (ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
       DPRINTF((MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return 0;
    }
 
    /* not (yet) registered? Cannot send modification to qmaster! */
-   if(ec_need_new_registration()) {
+   if (ec_need_new_registration()) {
       DPRINTF((MSG_EVENT_NOTREGISTERED));
       DEXIT;
       return 0;
    }
 
-   if(!config_changed) {
+   if (!config_changed) {
       DPRINTF(("no changes to commit\n"));
       DEXIT;
       return 0;
@@ -1428,7 +1484,8 @@ int ec_commit(void)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_commit_multi(lList **malpp) 
+*     int 
+*     ec_commit_multi(lList **malpp) 
 *
 *  FUNCTION
 *     Similar to ec_commit configuration changes will be sent to qmaster.
@@ -1449,7 +1506,8 @@ int ec_commit(void)
 *     Eventclient/Client/ec_config_changed()
 *     Eventclient/Client/ec_get()
 *******************************************************************************/
-int ec_commit_multi(lList **malpp, state_gdi_multi *state) 
+int 
+ec_commit_multi(lList **malpp, state_gdi_multi *state) 
 {
    int commit_id, ret;
    lList *lp, *alp = NULL;
@@ -1457,14 +1515,14 @@ int ec_commit_multi(lList **malpp, state_gdi_multi *state)
    DENTER(TOP_LAYER, "ec_commit_multi");
 
    /* not yet initialized? Cannot send modification to qmaster! */
-   if(ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
+   if (ec_reg_id >= EV_ID_FIRST_DYNAMIC || ec == NULL) {
       DPRINTF((MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return FALSE;
    }
 
    /* not (yet) registered? Cannot send modification to qmaster! */
-   if(ec_need_new_registration()) {
+   if (ec_need_new_registration()) {
       DPRINTF((MSG_EVENT_NOTREGISTERED));
       DEXIT;
       return FALSE;
@@ -1492,7 +1550,8 @@ int ec_commit_multi(lList **malpp, state_gdi_multi *state)
       return FALSE;
    }
 
-   alp = sge_gdi_extract_answer(SGE_GDI_ADD, SGE_ORDER_LIST, commit_id, *malpp, NULL);
+   alp = sge_gdi_extract_answer(SGE_GDI_ADD, SGE_ORDER_LIST, commit_id, 
+                                *malpp, NULL);
 
    ret = answer_list_handle_request_answer_list(&alp, stderr);
 
@@ -1514,7 +1573,8 @@ int ec_commit_multi(lList **malpp, state_gdi_multi *state)
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     int ec_get(lList **event_list) 
+*     int 
+*     ec_get(lList **event_list) 
 *
 *  FUNCTION
 *     ec_get looks for new events. 
@@ -1544,9 +1604,9 @@ int ec_commit_multi(lList **malpp, state_gdi_multi *state)
 *     Eventclient/Client/ec_register()
 *     Eventclient/Client/ec_commit()
 *******************************************************************************/
-int ec_get(
-lList **event_list
-) {  
+int 
+ec_get(lList **event_list) 
+{  
    int ret = -1;
    lList *report_list = NULL;
    static u_long32 next_event = 1;
@@ -1554,7 +1614,7 @@ lList **event_list
 
    DENTER(TOP_LAYER, "ec_get");
  
-   if(ec == NULL) {
+   if (ec == NULL) {
       ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
       DEXIT;
       return -1;
@@ -1565,9 +1625,9 @@ lList **event_list
       if (!ec_register()) {
          DEXIT;
          return -1;
-      }
-      else
+      } else {
          need_register = 0;
+      }
    }
       
    if (config_changed) {
@@ -1688,7 +1748,8 @@ lList **event_list
 *  SYNOPSIS
 *     #include "sge_event_client.h"
 *
-*     static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, 
+*     static u_long32 
+*     ck_event_number(lList *lp, u_long32 *waiting_for, 
 *                                     u_long32 *wrong_number) 
 *
 *  FUNCTION
@@ -1715,11 +1776,9 @@ lList **event_list
 *     static u_long32 - 0 on success, else -1
 *
 *******************************************************************************/
-static u_long32 ck_event_number(
-lList *lp,
-u_long32 *waiting_for,
-u_long32 *wrong_number 
-) {
+static u_long32 
+ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_number)
+{
    lListElem *ep, *tmp;
    u_long32 i, j;
    int skipped;
@@ -1777,7 +1836,8 @@ u_long32 *wrong_number
       skipped++;
    }
    if (skipped)
-      DPRINTF(("Skipped %d events, still %d in list\n", skipped, lGetNumberOfElem(lp)));
+      DPRINTF(("Skipped %d events, still %d in list\n", skipped, 
+               lGetNumberOfElem(lp)));
 
    /* ensure number of events increase */
    for_each (ep, lp) {
@@ -1796,7 +1856,7 @@ u_long32 *wrong_number
  
    /* that's the new number we wait for */
    *waiting_for = i;
-DPRINTF(("check complete, %d events in list\n", lGetNumberOfElem(lp)));
+   DPRINTF(("check complete, %d events in list\n", lGetNumberOfElem(lp)));
    DEXIT;
    return 0;
 }
@@ -1823,10 +1883,9 @@ DPRINTF(("check complete, %d events in list\n", lGetNumberOfElem(lp)));
 *  SEE ALSO
 *     Eventclient/Client/ec_get()
 ******************************************************************************/
-static int get_event_list(
-int sync,
-lList **report_list 
-) {
+static int 
+get_event_list(int sync, lList **report_list)
+{
    int tag, ret;
    u_short id;
    sge_pack_buffer pb;

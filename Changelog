@@ -1,3 +1,7 @@
+JG-2003-02-18-0  Cleanup:   Created separate messages files for the new libs
+                            libevc, libevm and libmir.
+                            Updated ADOC docs for these libs.
+
 EB-2003-02-18-0  Testsuite: Added new test for issue #314
                  Review:    CR
 

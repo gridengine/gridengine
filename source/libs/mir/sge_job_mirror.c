@@ -36,8 +36,7 @@
 
 #include "sge_job.h"
 
-#include "msg_gdilib.h"
-#include "msg_sgeobjlib.h"
+#include "msg_mirlib.h"
 
 #include "sge_mirror.h"
 #include "sge_job_mirror.h"
@@ -46,7 +45,7 @@
 
 static int job_update_master_list_usage(lListElem *event);
 
-/****** gdi/job/job_update_master_list_usage() *********************************
+/****** Eventmirror/job/job_update_master_list_usage() *************************
 *  NAME
 *     job_update_master_list_usage() -- update usage for a jobs tasks
 *
@@ -68,8 +67,8 @@ static int job_update_master_list_usage(lListElem *event);
 *     int - TRUE, if the operation succeeds, else FALSE
 *
 *  SEE ALSO
-*     gdi/ja_task/pe_task_update_master_list_usage()
-*     gdi/pe_task/pe_task_update_master_list_usage()
+*     Eventmirror/ja_task/pe_task_update_master_list_usage()
+*     Eventmirror/pe_task/pe_task_update_master_list_usage()
 *******************************************************************************/
 static int job_update_master_list_usage(lListElem *event)
 {
@@ -98,7 +97,7 @@ static int job_update_master_list_usage(lListElem *event)
    return ret;
 }
 
-/****** gdi/job/job_update_master_list() *****************************
+/****** Eventmirror/job/job_update_master_list() *****************************
 *  NAME
 *     job_update_master_list() -- update the master list of jobs
 *
@@ -132,7 +131,7 @@ static int job_update_master_list_usage(lListElem *event)
 *  SEE ALSO
 *     Eventmirror/--Eventmirror
 *     Eventmirror/sge_mirror_update_master_list()
-*     gdi/job/job_update_master_list_usage()
+*     Eventmirror/job/job_update_master_list_usage()
 *******************************************************************************/
 int job_update_master_list(sge_event_type type, sge_event_action action,
                            lListElem *event, void *clientdata)

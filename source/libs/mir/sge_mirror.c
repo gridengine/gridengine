@@ -62,7 +62,8 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
-#include "msg_gdilib.h"
+#include "msg_evclib.h"
+#include "msg_mirlib.h"
 
 #include "sge_host_mirror.h"
 #include "sge_queue_mirror.h"

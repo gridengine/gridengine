@@ -36,20 +36,19 @@
 
 #include "sge_queue.h"
 
-#include "msg_gdilib.h"
-#include "msg_sgeobjlib.h"
+#include "msg_mirlib.h"
 
 #include "sge_mirror.h"
 #include "sge_queue_mirror.h"
 
-/****** gdi/queue/queue_update_master_list() *****************************
+/****** Eventmirror/queue/queue_update_master_list() ***************************
 *  NAME
 *     queue_update_master_list() -- update the master list of queues
 *
 *  SYNOPSIS
-*     int queue_update_master_list(sge_event_type type,
-*                                  sge_event_action action,
-*                                  lListElem *event, void *clientdata)
+*     int 
+*     queue_update_master_list(sge_event_type type, sge_event_action action,
+*                              lListElem *event, void *clientdata)
 *
 *  FUNCTION
 *     Update the global master list of queues
@@ -73,8 +72,9 @@
 *     Eventmirror/sge_mirror_update_master_list()
 *     Eventmirror/sge_mirror_update_master_list_str_key()
 *******************************************************************************/
-int queue_update_master_list(sge_event_type type, sge_event_action action,
-                             lListElem *event, void *clientdata)
+int 
+queue_update_master_list(sge_event_type type, sge_event_action action,
+                         lListElem *event, void *clientdata)
 {
    lList **list;
    lDescr *list_descr;
@@ -94,14 +94,16 @@ int queue_update_master_list(sge_event_type type, sge_event_action action,
 
    queue = queue_list_locate(*list, key);
 
-   if(action == SGE_EMA_MOD) {
+   if (action == SGE_EMA_MOD) {
       u_long32 type = lGetUlong(event, ET_type);
 
-      if(type == sgeE_QUEUE_SUSPEND_ON_SUB || type == sgeE_QUEUE_UNSUSPEND_ON_SUB) {
+      if (type == sgeE_QUEUE_SUSPEND_ON_SUB || 
+          type == sgeE_QUEUE_UNSUSPEND_ON_SUB) {
          u_long32 state;
 
-         if(queue == NULL) {
-            ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEFORUPDATEIN_SS, key, "queue_update_master_list"));
+         if (queue == NULL) {
+            ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEFORUPDATEIN_SS, key, 
+                   SGE_FUNC));
             DEXIT;
             return FALSE;
          }
@@ -120,7 +122,8 @@ int queue_update_master_list(sge_event_type type, sge_event_action action,
       }
    }
 
-   if(sge_mirror_update_master_list(list, list_descr, queue, key, action, event) != SGE_EM_OK) {
+   if (sge_mirror_update_master_list(list, list_descr, queue, key, action, 
+                                     event) != SGE_EM_OK) {
       DEXIT;
       return FALSE;
    }

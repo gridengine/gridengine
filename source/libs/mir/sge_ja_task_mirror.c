@@ -40,16 +40,17 @@
 
 #include "sge_mirror.h"
 
-#include "msg_sgeobjlib.h"
+#include "msg_mirlib.h"
 
 #include "sge_ja_task_mirror.h"
 
-/****** gdi/ja_task/ja_task_update_master_list_usage() *************************
+/****** Eventmirror/ja_task/ja_task_update_master_list_usage() *****************
 *  NAME
 *     ja_task_update_master_list_usage() -- update an array tasks usage
 *
 *  SYNOPSIS
-*     int ja_task_update_master_list_usage(lListElem *event)
+*     int 
+*     ja_task_update_master_list_usage(lListElem *event)
 *
 *  FUNCTION
 *     Updates the scaled usage of an array task (also task data structure
@@ -62,10 +63,11 @@
 *     int - TRUE, if the operation succeeds, else FALSE
 *
 *  SEE ALSO
-*     gdi/job/job_update_master_list_usage()
-*     gdi/ja_task/pe_task_update_master_list_usage()
+*     Eventmirror/job/job_update_master_list_usage()
+*     Eventmirror/ja_task/pe_task_update_master_list_usage()
 *******************************************************************************/
-int ja_task_update_master_list_usage(lListElem *event)
+int 
+ja_task_update_master_list_usage(lListElem *event)
 {
    lList *tmp = NULL;
    u_long32 job_id, ja_task_id;
@@ -77,17 +79,17 @@ int ja_task_update_master_list_usage(lListElem *event)
    ja_task_id = lGetUlong(event, ET_intkey2);
 
    job = job_list_locate(Master_Job_List, job_id);
-   if(job == NULL) {
+   if (job == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
-             job_get_id_string(job_id, 0, NULL), "ja_task_update_master_list_usage"));
+             job_get_id_string(job_id, 0, NULL), SGE_FUNC));
       DEXIT;
       return FALSE;
    }
 
    ja_task = job_search_task(job, NULL, ja_task_id);
-   if(ja_task == NULL) {
+   if (ja_task == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS,
-             job_get_id_string(job_id, ja_task_id, NULL), "ja_task_update_master_list_usage"));
+             job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
       DEXIT;
       return FALSE;
    }
@@ -100,14 +102,14 @@ int ja_task_update_master_list_usage(lListElem *event)
    return TRUE;
 }
 
-/****** gdi/ja_task/ja_task_update_master_list() *****************************
+/****** Eventmirror/ja_task/ja_task_update_master_list() ***********************
 *  NAME
 *     ja_task_update_master_list() -- update array tasks of a job
 *
 *  SYNOPSIS
-*     int ja_task_update_master_list(sge_event_type type,
-*                                    sge_event_action action,
-*                                    lListElem *event, void *clientdata)
+*     int 
+*     ja_task_update_master_list(sge_event_type type, sge_event_action action,
+*                                lListElem *event, void *clientdata)
 *
 *  FUNCTION
 *     Update the list of array tasks of a job
@@ -134,8 +136,9 @@ int ja_task_update_master_list_usage(lListElem *event)
 *     Eventmirror/--Eventmirror
 *     Eventmirror/sge_mirror_update_master_list()
 *******************************************************************************/
-int ja_task_update_master_list(sge_event_type type, sge_event_action action,
-                               lListElem *event, void *clientdata)
+int 
+ja_task_update_master_list(sge_event_type type, sge_event_action action,
+                           lListElem *event, void *clientdata)
 {
    u_long32 job_id, ja_task_id;
    lListElem *job, *ja_task;
@@ -152,9 +155,9 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
    ja_task_id = lGetUlong(event, ET_intkey2);
 
    job = job_list_locate(Master_Job_List, job_id);
-   if(job == NULL) {
+   if (job == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBFORUPDATEIN_SS,
-             job_get_id_string(job_id, 0, NULL), "ja_task_update_master_list"));
+             job_get_id_string(job_id, 0, NULL), SGE_FUNC));
       DEXIT;
       return FALSE;
    }
@@ -164,15 +167,15 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
    list = lGetList(job, JB_ja_tasks);
    list_descr = JAT_Type;
 
-   if(action == SGE_EMA_MOD) {
+   if (action == SGE_EMA_MOD) {
       /* modify event for ja_task.
        * we may not update
        * - JAT_task_list - it is maintained by PETASK events
        * - JAT_scaled_usage - it is maintained by JOB_USAGE events
        */
-      if(ja_task == NULL) {
+      if (ja_task == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS,
-                job_get_id_string(job_id, ja_task_id, NULL), "ja_task_update_master_list"));
+                job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
          DEXIT;
          return FALSE;
       }
@@ -187,18 +190,21 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
     * If it is not enrolled, but in the range list
     * for pending tasks, remove it from ranges.
     */
-   if(action == SGE_EMA_DEL) {
-      if(ja_task == NULL &&
-         job_is_ja_task_defined(job, ja_task_id) &&
-         (!job_is_enrolled(job, ja_task_id))
-        ) {
+   if (action == SGE_EMA_DEL) {
+      if (ja_task == NULL &&
+          job_is_ja_task_defined(job, ja_task_id) &&
+          (!job_is_enrolled(job, ja_task_id))
+         ) {
          job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
          DEXIT;
          return TRUE;
       }
    }
 
-   if(sge_mirror_update_master_list(&list, list_descr, ja_task, job_get_id_string(job_id, ja_task_id, NULL), action, event) != SGE_EM_OK) {
+   if (sge_mirror_update_master_list(&list, list_descr, ja_task, 
+                                     job_get_id_string(job_id, ja_task_id, 
+                                                       NULL), 
+                                     action, event) != SGE_EM_OK) {
       lFreeList(pe_tasks);
       lFreeList(usage);
       DEXIT;
@@ -206,12 +212,12 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
    }
 
    /* restore pe_task list after modify event */
-   if(action == SGE_EMA_MOD) {
+   if (action == SGE_EMA_MOD) {
       /* we have to search the replaced ja_task */
       ja_task = job_search_task(job, NULL, ja_task_id);
-      if(ja_task == NULL) {
+      if (ja_task == NULL) {
          ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKFORUPDATEIN_SS,
-                job_get_id_string(job_id, ja_task_id, NULL), "ja_task_update_master_list"));
+                job_get_id_string(job_id, ja_task_id, NULL), SGE_FUNC));
          lFreeList(pe_tasks);
          lFreeList(usage);
          DEXIT;
@@ -224,9 +230,9 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
       usage = lFreeList(usage);
    }
 
-   if(action == SGE_EMA_ADD) {
+   if (action == SGE_EMA_ADD) {
       /* first jatask add event could have created new ja_task list for job */
-      if(lGetList(job, JB_ja_tasks) == NULL && list != NULL) {
+      if (lGetList(job, JB_ja_tasks) == NULL && list != NULL) {
          lSetList(job, JB_ja_tasks, list);
       }
       /* we must enroll the task to have it removed in the pending range list */

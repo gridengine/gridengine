@@ -1149,7 +1149,15 @@
 #define MSG_PE_ALLOCRULE_SS           _MESSAGE(60416, _("parameter allocation_rule of pe "SFQ": "SFN"\n"))
 #define MSG_OBJ_CKPTI                 _MESSAGE(60417, _("checkpoint interface"))
 #define MSG_GDI_OUTOFMEMORY           _MESSAGE(60418, _("out of memory"))
+#define MSG_COM_UNPACKINT_I          _MESSAGE(60419, _("unpacking integer %d failed\n"))
 
+/* generic messages */
+#define MSG_SGETEXT_ADDEDTOLIST_SSSS            _MESSAGE(60500, _(""SFN"@"SFN" added "SFQ" to "SFN" list\n"))
+#define MSG_SGETEXT_MODIFIEDINLIST_SSSS         _MESSAGE(60501, _(""SFN"@"SFN" modified "SFQ" in "SFN" list\n"))
+#define MSG_SGETEXT_KILL_SSS                    _MESSAGE(60502, _(""SFN"@"SFN" kills "SFN"\n"))
+
+/* authentication */
+#define MSG_GDI_FAILEDTOEXTRACTAUTHINFO    _MESSAGE(60600, _("failed to extract authentication information"))
 /* =================================================
  * please do not enter new messages after this point,
  * if they are global messages (meaningfull for all modules)

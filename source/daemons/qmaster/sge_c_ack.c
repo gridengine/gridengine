@@ -43,6 +43,7 @@
 #include "sge_log.h"
 #include "sge_time_eventL.h"
 #include "time_event.h"
+#include "msg_common.h"
 #include "msg_qmaster.h"
 #include "sge_job.h"
 #include "sge_queue.h"

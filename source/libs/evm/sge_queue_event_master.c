@@ -39,11 +39,13 @@
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
 
-/* JG: TODO: is it really needed? */
-void sge_add_queue_event(u_long32 type, lListElem *qep)
+void 
+sge_add_queue_event(u_long32 type, lListElem *qep)
 {
    DENTER(TOP_LAYER, "sge_add_queue_event");
+
    sge_add_event(NULL, 0, type, 0, 0, lGetString(qep, QU_qname), qep);
+
    DEXIT;
    return;
 }

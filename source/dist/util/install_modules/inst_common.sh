@@ -805,6 +805,9 @@ PrintLocalConf()
    if [ $LOCAL_EXECD_SPOOL != "undef" ]; then
       $ECHO "execd_spool_dir        $LOCAL_EXECD_SPOOL"
    fi
+   if [ $RSH_DAEMON != "undef" ]; then
+      $ECHO "rsh_daemon             $RSH_DAEMON"
+   fi
 }
 
 

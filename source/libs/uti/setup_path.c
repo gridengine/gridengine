@@ -60,7 +60,6 @@ struct path_state_t {
     char* sched_conf_file;
     char* act_qmaster_file;
     char* acct_file;
-    char* stat_file;
     char* local_conf_dir;
     char* shadow_masters_file;
 };
@@ -151,13 +150,6 @@ const char *path_state_get_acct_file(void)
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_acct_file");
    return path_state->acct_file;
 }
-
-const char *path_state_get_stat_file(void)
-{
-   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_stat_file");
-   return path_state->stat_file;
-}
-
 const char *path_state_get_local_conf_dir(void)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_get_local_conf_dir");
@@ -220,13 +212,6 @@ void path_state_set_acct_file(const char *path)
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_acct_file");
    path_state->acct_file = sge_strdup(path_state->acct_file, path);
 }
-
-void path_state_set_stat_file(const char *path)
-{
-   GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_stat_file");
-   path_state->stat_file = sge_strdup(path_state->stat_file, path);
-}
-
 void path_state_set_local_conf_dir(const char *path)
 {
    GET_SPECIFIC(struct path_state_t, path_state, path_state_init, path_state_key, "path_state_set_local_conf_dir");
@@ -380,9 +365,6 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
    sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, ACCT_FILE);
    path_state_set_acct_file(sge_dstring_get_string(&bw));
 
-   sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, STAT_FILE);
-   path_state_set_stat_file(sge_dstring_get_string(&bw));
-   
    sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, LOCAL_CONF_DIR);
    path_state_set_local_conf_dir(sge_dstring_get_string(&bw));
 
@@ -397,7 +379,6 @@ bool sge_setup_paths(const char *sge_cell, dstring *error_dstring)
    DPRINTF(("bootstrap_file      >%s<\n", path_state_get_conf_file()));
    DPRINTF(("act_qmaster_file    >%s<\n", path_state_get_act_qmaster_file()));
    DPRINTF(("acct_file           >%s<\n", path_state_get_acct_file()));
-   DPRINTF(("stat_file           >%s<\n", path_state_get_stat_file()));
    DPRINTF(("local_conf_dir      >%s<\n", path_state_get_local_conf_dir()));
    DPRINTF(("shadow_masters_file >%s<\n", path_state_get_shadow_masters_file()));
    
@@ -461,7 +442,6 @@ static void path_state_destroy(void* theState)
    FREE(((struct path_state_t*)theState)->sched_conf_file);
    FREE(((struct path_state_t*)theState)->act_qmaster_file);
    FREE(((struct path_state_t*)theState)->acct_file);
-   FREE(((struct path_state_t*)theState)->stat_file);
    FREE(((struct path_state_t*)theState)->local_conf_dir);
    FREE(((struct path_state_t*)theState)->shadow_masters_file);
    free(theState);

@@ -62,10 +62,6 @@
 
 extern lList *Master_Job_List;
 
-
-static void log_consumables(FILE *fp, lList *actual, lList *total); 
-static void log_stat_file(u_long32 now);
-
 /******************************************************************************/
 void sge_ck_to_do_qmaster(
 int had_free_epoch 
@@ -101,7 +97,6 @@ int had_free_epoch
    te_deliver(now, te_tab);
 }
 
-   log_stat_file(now);
    sge_load_value_garbage_collector(now);
 
    ck_4_zombie_jobs(now);
@@ -120,95 +115,3 @@ int had_free_epoch
    return;
 }
 
-static void log_stat_file(
-u_long32 now 
-) {
-   stringT str;
-   FILE *fp;
-   static u_long32 last_stat_log_time = 0;
-   double load_avg = 0.0, vmem = 0.0;
-   SGE_STRUCT_STAT statbuf;
-   lListElem *hep, *ep, *qep;
-
-   DENTER(TOP_LAYER, "log_stat_file");
-
-   if (!last_stat_log_time || now > (last_stat_log_time + conf.stat_log_time)) {
-      if (SGE_STAT(path_state_get_stat_file(), &statbuf)) {
-         close(creat(path_state_get_stat_file(), 0644));
-      }
-      fp = fopen(path_state_get_stat_file(), "a");
-      if (fp) {
-         for_each(qep, Master_Queue_List) {
-            memset(str, 0, sizeof(str));
-
-            if (( hep = host_list_locate(Master_Exechost_List, lGetHost(qep, QU_qhostname)))) {
-                /* use load avg */
-                if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_LOAD_AVG, EH_load_list)))
-                   load_avg = strtod(lGetString(ep, HL_value), NULL);
-                /* use vmem */
-                if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_VIRTUAL_USED, EH_load_list)))
-                   vmem = strtod(lGetString(ep, HL_value), NULL);
-            }
-
-            fprintf(fp, "%u:%s:%s:%.2f:%.2f:", 
-                     (unsigned) now,
-                     lGetHost(qep, QU_qhostname), 
-                     lGetString(qep, QU_qname),
-                     load_avg, 
-                     vmem);
-                     /* ,(int) lGetUlong(qep, QU_job_slots),
-                     (int) qslots_used(qep) */
-
-            /* states */
-            queue_get_state_string(str, lGetUlong(qep, QU_state));
-            fprintf(fp, "%s:", str);
-
-            /* queue consumables */
-            log_consumables(fp, lGetList(qep, QU_consumable_actual_list), lGetList(qep, QU_consumable_config_list));
-            fprintf(fp, ":");
-
-            /* host consumables */
-            log_consumables(fp, lGetList(hep, EH_consumable_actual_list), lGetList(hep, EH_consumable_config_list));
-            fprintf(fp, ":");
-
-            /* global consumables */
-            if ((hep = host_list_locate(Master_Exechost_List, "global")))
-               log_consumables(fp, lGetList(hep, EH_consumable_actual_list), lGetList(hep, EH_consumable_config_list));
-            fprintf(fp, "\n");
-
-         }
-         fclose(fp);
-      }
-      else {
-         ERROR((SGE_EVENT, MSG_FILE_OPEN_S, path_state_get_stat_file()));
-      }
-      last_stat_log_time = now;
-   }
-
-   DEXIT;
-   return;
-}
-
-static void log_consumables(FILE *fp, lList *actual, lList *total) 
-{
-   lListElem *cep; 
-
-   for_each (cep, actual) {
-      lListElem *tep = lGetElemStr(total, CE_name, lGetString(cep, CE_name));
-      if (tep != NULL) {
-         dstring act_string = DSTRING_INIT;
-         dstring tot_dstring = DSTRING_INIT;
-
-         centry_print_resource_to_dstring(cep, &act_string);
-         centry_print_resource_to_dstring(tep, &tot_dstring);
-         fprintf(fp, "%s=%s=%s", lGetString(cep, CE_name), 
-                 sge_dstring_get_string(&tot_dstring),
-                 sge_dstring_get_string(&act_string)); 
-         sge_dstring_free(&act_string);
-         sge_dstring_free(&tot_dstring);
-         if (lNext(cep)) {
-            fprintf(fp, ","); 
-         }
-      }
-   }
-}

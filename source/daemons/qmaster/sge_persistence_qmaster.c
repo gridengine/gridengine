@@ -123,6 +123,7 @@ deliver_spooling_trigger(u_long32 type, u_long32 when,
                          u_long32 uval0, u_long32 uval1, const char *key)
 {
    time_t next_trigger = 0;
+   time_t now;
    lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "deliver_spooling_trigger");
@@ -134,8 +135,8 @@ deliver_spooling_trigger(u_long32 type, u_long32 when,
    }
 
    /* validate next_trigger. If it is invalid, set it to one minute after now */
-   if (next_trigger <= when) {
-      time_t now = time(0);
+   now = time(0);
+   if (next_trigger <= now) {
       next_trigger = now + 60;
    }
 

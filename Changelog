@@ -1,3 +1,5 @@
+JG-2003-10-27-0: Cleanup:   Removed code writing the statistics file.
+
 AD-2003-10-27-1: Bugfix:    Fixed build for AIX51
 
 AD-2003-10-27-0: Bugfix:    Fixed 'commd' Makefile. 'libsec' was required,

@@ -162,7 +162,6 @@
 /*
 ** ck_to_do_qmaster.c
 */
-#define MSG_FILE_OPEN_S              _MESSAGE(33102, _("can't open "SFQ" for appending system state info"))
 
 /*
 ** sge_c_ack.c

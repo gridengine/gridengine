@@ -102,7 +102,8 @@ void
 deliver_reporting_trigger(u_long32 type, u_long32 when, 
                           u_long32 uval0, u_long32 uval1, const char *key)
 {
-   time_t next_flush;
+   time_t next_flush = 0;
+   time_t now;
    lList *answer_list = NULL;
 
    DENTER(TOP_LAYER, "deliver_reporting_trigger");
@@ -110,6 +111,13 @@ deliver_reporting_trigger(u_long32 type, u_long32 when,
    /* flush the reporting data */
    if (!sge_flush_reporting(&answer_list, when, &next_flush)) {
       answer_list_output(&answer_list);
+   }
+
+
+   /* validate next_trigger. If it is invalid, set it to one minute after now */
+   now = time(0);
+   if (next_flush <= now) {
+      next_flush = now + 60;
    }
 
    /* set timerevent for next flush */

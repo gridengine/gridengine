@@ -405,16 +405,6 @@ lListElem *conf
          }
       }
 
-      if (!strcmp(name, "stat_log_time")) {
-         /* do not allow infinity entry */
-         if (strcasecmp(value,"infinity") == 0) {
-            ERROR((SGE_EVENT, MSG_CONF_INFNOTALLOWEDFORATTRXINCONFLISTOFY_SS, name, conf_name));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return STATUS_EEXIST;
-         }
-      }
-
       if (!strcmp(name, "max_unheard")) {
          /* do not allow infinity entry */
          if (strcasecmp(value,"infinity") == 0) {

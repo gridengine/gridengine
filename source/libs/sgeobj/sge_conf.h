@@ -47,7 +47,6 @@ struct confel {                       /* cluster configuration parameters */
     u_long32    min_uid;              /* lower bound on UIDs that can qsub */
     u_long32    min_gid;              /* lower bound on GIDs that can qsub */
     u_long32    load_report_time;     /* how often to send in load */
-    u_long32    stat_log_time;        /* how often to log stats */
     u_long32    max_unheard;          /* how long before sge_execd considered dead */
     u_long32    loglevel;             /* qmaster event logging level */
     char        *enforce_project;     /* SGEEE attribute: "true" or "false" */

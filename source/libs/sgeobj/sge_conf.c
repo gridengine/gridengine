@@ -196,7 +196,6 @@ static tConfEntry conf_entries[] = {
  { "projects",          0, "none",              1, NULL },
  { "xprojects",         0, "none",              1, NULL },
  { "load_report_time",  1, LOAD_LOG_TIME,       1, NULL },
- { "stat_log_time",     0, STAT_LOG_TIME,       1, NULL },
  { "max_unheard",       0, MAX_UNHEARD,         1, NULL },
  { "loglevel",          0, LOGLEVEL,            1, NULL },
  { "enforce_project",   0, "false",             1, NULL },
@@ -366,7 +365,6 @@ lList *lpCfg
    chg_conf_val(lpCfg, "load_report_time", NULL, &mconf->load_report_time, TYPE_INT);
    chg_conf_val(lpCfg, "enforce_project", &mconf->enforce_project, NULL, 0);
    chg_conf_val(lpCfg, "enforce_user", &mconf->enforce_user, NULL, 0);
-   chg_conf_val(lpCfg, "stat_log_time", NULL, &mconf->stat_log_time, TYPE_TIM);
    chg_conf_val(lpCfg, "max_unheard", NULL, &mconf->max_unheard, TYPE_TIM);
    chg_conf_val(lpCfg, "loglevel", NULL, &mconf->loglevel, TYPE_LOG);
    chg_conf_val(lpCfg, "administrator_mail", &mconf->administrator_mail, NULL, 0);
@@ -696,7 +694,6 @@ void sge_show_conf()
    DPRINTF(("conf.min_gid                >%u<\n", (unsigned) conf.min_gid));
    DPRINTF(("conf.min_uid                >%u<\n", (unsigned) conf.min_uid));
    DPRINTF(("conf.load_report_time       >%u<\n", (unsigned) conf.load_report_time));
-   DPRINTF(("conf.stat_log_time          >%u<\n", (unsigned) conf.stat_log_time));
    DPRINTF(("conf.max_unheard            >%u<\n", (unsigned) conf.max_unheard));
    DPRINTF(("conf.loglevel               >%u<\n", (unsigned) conf.loglevel));     
    DPRINTF(("conf.xterm                  >%s<\n", conf.xterm?conf.xterm:"none"));

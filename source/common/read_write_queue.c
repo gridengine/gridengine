@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <errno.h>
 
 #include "sge.h"
@@ -676,7 +677,7 @@ lListElem *qep
          strcpy(real_filename, file_name);
       }
 
-      fp = fopen(filename, "w");
+      SGE_FOPEN(fp, filename, "w");
       if (!fp) {
          CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, 
                filename, strerror(errno)));
@@ -858,7 +859,7 @@ lListElem *qep
       } 
    }
    if (!write_2_stdout) {
-      fclose(fp);
+      FCLOSE(fp);
       if (rfile)
          strcpy(rfile, filename);
    }
@@ -874,6 +875,11 @@ lListElem *qep
    return 0;
 
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+   if(!write_2_stdout) {
+      FCLEANUP(fp, filename);
+   }   
    DEXIT;
    return -1; 
 }

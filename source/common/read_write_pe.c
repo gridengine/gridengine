@@ -225,9 +225,9 @@ lListElem *ep
          sprintf(real_filename, "%s/%s", PE_DIR, lGetString(ep, PE_name));
       }
 
-      fp = fopen(filename, "w");
+      SGE_FOPEN(fp, filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_S, filename));
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
          DEXIT;
          return NULL;
       }
@@ -329,7 +329,7 @@ lListElem *ep
    }
 
    if (how!=0) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    if (how == 2) {
@@ -344,6 +344,11 @@ lListElem *ep
    return how==1?sge_strdup(NULL, filename):filename;
 
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+   if(how != 0) {
+      FCLEANUP(fp, filename);
+   }   
    DEXIT;
    return NULL;
 }

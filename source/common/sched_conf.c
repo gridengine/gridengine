@@ -155,9 +155,9 @@ _Insight_set_option("suppress", "READ_DANGLING");
                  COMMON_DIR, SCHED_CONF_FILE);
       }
  
-      fp = fopen(fname, "w");
+      SGE_FOPEN(fp, fname, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_S, fname));
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, fname, strerror(errno)));
          DEXIT;
          return NULL;
       }
@@ -208,7 +208,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
    }
 
    if (how != 0) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    if (how == 2) {
@@ -222,6 +222,11 @@ _Insight_set_option("suppress", "READ_DANGLING");
    DEXIT;
    return how==1?sge_strdup(NULL, fname):fname;
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, fname, strerror(errno)));
+   if(how != 0) {
+      FCLEANUP(fp, fname);
+   }   
    DEXIT;
    return NULL;
 #ifdef __INSIGHT__

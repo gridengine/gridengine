@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <errno.h>
+#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -69,7 +70,8 @@ u_long32 flags
    DENTER(TOP_LAYER, "write_configuration");
 
    if (fname) {
-      if (!(fp = fopen(fname, "w"))) {
+      SGE_FOPEN(fp, fname, "w");
+      if (fp == NULL) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, 
                 strerror(errno)));
          if (!alpp) {
@@ -104,13 +106,18 @@ u_long32 flags
    }
 
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
 
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, fname, strerror(errno)));
+   if(fname != NULL) {
+      FCLEANUP(fp, fname);
+   }   
    DEXIT;
    return -1;
 }

@@ -31,3 +31,4 @@
 /*___INFO__MARK_END__*/                                        
 
 int __fprintf_ret; 
+int __fclose_done;

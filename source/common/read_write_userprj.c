@@ -114,7 +114,8 @@ int user        /* =1 user, =0 project */
 
    if (fname) {
       strcpy(filename, fname);
-      if (!(fp = fopen(filename, "w"))) {
+      SGE_FOPEN(fp, filename, "w");
+      if (fp == NULL) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
          if (!alpp) {
             SGE_EXIT(1);
@@ -227,7 +228,7 @@ int user        /* =1 user, =0 project */
    }
 
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
@@ -235,6 +236,11 @@ int user        /* =1 user, =0 project */
 
 FPRINTF_ERROR:
    sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0); 
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+   if(fname != NULL) {
+      FCLEANUP(fp, fname);
+   }   
    DEXIT;
    return -1;   
 }

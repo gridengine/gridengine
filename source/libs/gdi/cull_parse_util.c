@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "cull.h"
 #include "cull_parse_util.h"
@@ -842,6 +843,11 @@ unsigned long flags
    const char *cp;
 
    DENTER(BASIS_LAYER, "uni_print_list");
+
+   /* set errno to 0: if we return a non system error, the
+   ** caller can suppress output of strerror 
+   */
+   errno = 0;
 
    /*
    ** problem: one might allow NULL deli as no deli

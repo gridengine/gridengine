@@ -163,7 +163,7 @@ int target
       return 1;
    }
 
-   fp = fopen(filename, "w");
+   SGE_FOPEN(fp, filename, "w");
    if (!fp) {
       ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
       DEXIT;
@@ -179,7 +179,11 @@ int target
       FPRINTF((fp, "%s\n", lGetString(ep, MO_name)));
    }
 
-   fclose(fp);
+   FCLOSE(fp);
+   if(__fprintf_ret < 0) {
+      DEXIT;
+      return 1;
+   }
 
    if (rename(filename, real_filename) == -1) {
       DEXIT;
@@ -192,6 +196,9 @@ int target
    return 0;
 
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+   FCLEANUP(fp, filename);
    DEXIT;
    return 1;  
 }

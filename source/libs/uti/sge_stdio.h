@@ -36,10 +36,28 @@
 
 #define FPRINTF(x) \
    __fprintf_ret = fprintf x; \
-   if (__fprintf_ret == -1) { \
+   if (__fprintf_ret < 0) { \
       goto FPRINTF_ERROR; \
    }
 
+#define SGE_FOPEN(fp, filename, mode) \
+   fp = fopen(filename, mode); \
+   __fclose_done = 0;
+
+#define FCLOSE(x) \
+   if(fclose(x) != 0) { \
+      __fclose_done = 1; \
+      goto FPRINTF_ERROR; \
+   }
+
+#define FCLEANUP(fp, filename) \
+   if(__fclose_done == 0) { \
+      fclose(fp); \
+   } \
+   unlink(filename);
+
+
 extern int __fprintf_ret;
+extern int __fclose_done;
 
 #endif /* __SGE_STDIO_H */

@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -324,9 +325,9 @@ lListElem *ep
             lGetString(ep, GRP_group_name));
       }
 
-      fp = fopen(filename, "w");
+      SGE_FOPEN(fp, filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_S, filename));
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
          DEXIT;
          return NULL;
       }
@@ -381,7 +382,7 @@ lListElem *ep
    } 
 
    if (how!=0) {
-      fclose(fp);
+      FCLOSE(fp);
    }
    if (how == 2) {
       if (rename(filename, real_filename) == -1) {
@@ -395,6 +396,11 @@ lListElem *ep
    DEXIT;
    return how==1?sge_strdup(NULL, filename):filename;
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+   if(how != 0) {
+      FCLEANUP(fp, filename);
+   }   
    DEXIT;
    return NULL; 
 }

@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include "sge.h"
 #include "sge_calendarL.h"
@@ -174,9 +175,10 @@ lListElem *ep
          sprintf(real_filename, "%s/%s", CAL_DIR, lGetString(ep, CAL_name));
       }
 
-      fp = fopen(filename, "w");
+      SGE_FOPEN(fp, filename, "w")
+
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_S, filename));
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
          DEXIT;
          return NULL;
       }
@@ -197,9 +199,9 @@ lListElem *ep
    FPRINTF((fp, "week             %s\n", 
            (s=lGetString(ep, CAL_week_calendar))?s:"NONE"));
 
-   if (how != 0) {
-      fclose(fp);
-   }
+   if (how != 0)
+      FCLOSE(fp);
+
    if (how == 2) {
       if (rename(filename, real_filename) == -1) {
          DEXIT;
@@ -213,6 +215,11 @@ lListElem *ep
    return how==1?sge_strdup(NULL, filename):filename;
 
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+   if(how != 0) {
+      FCLEANUP(fp, filename);
+   }   
    DEXIT;
    return NULL;  
 }

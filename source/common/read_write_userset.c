@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 
@@ -175,7 +176,8 @@ int spool
    }
    if (fname) {
       strcpy(filename, fname);
-      if (!(fp = fopen(filename, "w"))) {
+      SGE_FOPEN(fp, filename, "w");
+      if (fp == NULL) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
          if (!alpp) {
             SGE_EXIT(1);
@@ -221,13 +223,18 @@ int spool
    FPRINTF((fp, "\n"));
 
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
 
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+   if(fname != NULL) {
+      FCLEANUP(fp, fname);
+   }   
    DEXIT;
    return -1;
 }

@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <errno.h>
 
 #include "sge.h"
@@ -337,7 +338,7 @@ char *file
          DPRINTF(("writing to %s\n", filename));
       }
 
-      fp = fopen(filename, "w");
+      SGE_FOPEN(fp, filename, "w");
       if (!fp) {
          CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, 
             strerror(errno)));
@@ -346,9 +347,10 @@ char *file
       }
       break;
    case 3:
-      fp = fopen(file, "w");
+      strcpy(filename, file);
+      SGE_FOPEN(fp, filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, file, 
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, 
             strerror(errno)));
          DEXIT;
          return NULL;
@@ -500,7 +502,7 @@ char *file
    }    /* only exec host */
 
    if (how != 0) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    if (how == 2) {
@@ -517,6 +519,11 @@ char *file
    return (how==1)?sge_strdup(NULL, filename):filename; 
 
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+   if (how != 0) {
+      FCLEANUP(fp, filename);
+   }   
    DEXIT;
    return NULL; 
 }

@@ -115,7 +115,8 @@ int root_node
    }
 
    if (fname) {
-      if (!(fp = fopen(fname, "w"))) {
+      SGE_FOPEN(fp, fname, "w");
+      if (fp == NULL) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
          if (!alpp) {
             SGE_EXIT(1);
@@ -171,14 +172,18 @@ int root_node
       }
    }
 
-   if (fname)
-      fclose(fp);
+   if (fname) {
+      FCLOSE(fp);
+   }   
 
    DEXIT;
    return 0;
 FPRINTF_ERROR:
-   if (fname)
-      fclose(fp); 
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, fname, strerror(errno)));
+   if (fname) {
+      FCLEANUP(fp, fname); 
+   }   
    sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
    DEXIT;
    return -1;

@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 
@@ -221,9 +222,9 @@ lListElem *ep
          sprintf(real_filename, "%s/%s", CKPTOBJ_DIR, lGetString(ep, CK_name));
       }
 
-      fp = fopen(filename, "w");
+      SGE_FOPEN(fp, filename, "w");
       if (!fp) {
-         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_S, filename));
+         CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
          DEXIT;
          return NULL;
       }
@@ -279,7 +280,7 @@ lListElem *ep
 
    FPRINTF((fp, "when               %s\n", lGetString(ep, CK_when)));
    if (how!=0)
-      fclose(fp);
+      FCLOSE(fp);
 
    if (how == 2) {
       if (rename(filename, real_filename) == -1) {
@@ -294,6 +295,11 @@ lListElem *ep
    return how==1?sge_strdup(NULL, filename):filename;
 
 FPRINTF_ERROR:
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, filename, strerror(errno)));
+   if (how!=0) {
+      FCLEANUP(fp, filename);
+   }   
    DEXIT;
    return NULL; 
 }

@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <errno.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "sge_gdi_intern.h"
@@ -545,7 +546,8 @@ lList **alpp
    DENTER(TOP_LAYER, "write_cmplx");
 
    if (fname) {
-      if (!(fp = fopen(fname, "w"))) {
+      SGE_FOPEN(fp, fname, "w");
+      if (fp == NULL) {
          ERROR((SGE_EVENT, MSG_FILE_NOOPEN_SS, fname, strerror(errno)));
          if (alpp) {
             sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0); 
@@ -586,14 +588,18 @@ lList **alpp
    FPRINTF((fp, MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
    
    if (fname) {
-      fclose(fp);
+      FCLOSE(fp);
    }
 
    DEXIT;
    return 0;
 
 FPRINTF_ERROR:
-   ERROR((SGE_EVENT, MSG_FILE_NOWRITE_S, fname));
+   if(errno != 0)
+      CRITICAL((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, fname, strerror(errno)));
+   if(fname != NULL) {
+      FCLEANUP(fp, fname);
+   }   
    if (alpp) 
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0); 
    DEXIT;

@@ -902,9 +902,9 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
       create_spooling_field (&fields[count++], QU_seq_no, 21, "seq_no", NULL,
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_load_thresholds, 21,
-                             "load_thresholds", NULL, NULL, NULL, NULL);
+                             "load_thresholds", CE_sub_fields, NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_suspend_thresholds, 21,
-                             "suspend_thresholds", NULL, NULL, NULL, NULL);
+                             "suspend_thresholds", CE_sub_fields, NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_nsuspend, 21, "nsuspend",
                              NULL, NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_suspend_interval, 21,
@@ -918,9 +918,9 @@ spooling_field *sge_build_QU_field_list(bool to_stdout, bool to_file)
       create_spooling_field (&fields[count++], QU_qtype, 21, "qtype", NULL,
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_ckpt_list, 21, "ckpt_list",
-                             NULL, NULL, NULL, NULL);
-      create_spooling_field (&fields[count++], QU_pe_list, 21, "pe_list", NULL,
-                             NULL, NULL, NULL);
+                             ST_sub_fields, NULL, NULL, NULL);
+      create_spooling_field (&fields[count++], QU_pe_list, 21, "pe_list",
+                             ST_sub_fields, NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_rerun, 21, "rerun", NULL,
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], QU_job_slots, 21, "slots", NULL,

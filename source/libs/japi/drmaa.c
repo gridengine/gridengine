@@ -1999,10 +1999,10 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
          char *path = NULL;
    
          /* We must accept an empty path. This must be set to the default
-            path later.
-            A empty path means that the drmaa attribute is not set, so it
-            obviously doesn't  have to start with a colon.
-         */
+          * path later.
+          * A empty path means that the drmaa attribute is not set, so it
+          * obviously doesn't  have to start with a colon.
+          */
          if( strlen( new_path )==0 ) {
             path = "";
          } else if (new_path[0] == ':') {  /* :path */
@@ -2107,15 +2107,27 @@ static int japi_drmaa_path2sge_path(const lList *attrs, int is_bulk,
 
    if ((ep=lGetElemStr(attrs, VA_variable, attribute_key ))) {
       dstring ds = DSTRING_INIT;
-      const char *p, *value = lGetString(ep, VA_value);
+      const char *p = NULL;
+      const char *value = lGetString(ep, VA_value);
+      
       /* substitute DRMAA placeholder with grid engine counterparts */
-
+      p = strchr (value, ':');
+      
+      /* If there is a colon, skip past it */
+      if (p != NULL) {
+         sge_dstring_append_char (&ds, ':');
+         value = p + 1;
+      }
+      /* If there is no colon, we assume that the calling function will deal
+       * with the problem since we can't know who's doing the calling and
+       * whether there has to be a colon or not. */
+      
       /* home directory and working directory placeholder only recognized at the begin */
       if (!strncmp(value, DRMAA_PLACEHOLDER_HD, strlen(DRMAA_PLACEHOLDER_HD))) {
-         sge_dstring_copy_string(&ds, "$HOME");
+         sge_dstring_append(&ds, "$HOME");
          value += strlen(DRMAA_PLACEHOLDER_HD);
       } else if (do_wd && (!strncmp(value, DRMAA_PLACEHOLDER_WD, strlen(DRMAA_PLACEHOLDER_WD)))) {
-         sge_dstring_copy_string(&ds, "$CWD"); /* not yet supported by Grid Engine */
+         sge_dstring_append(&ds, "$CWD"); /* not yet supported by Grid Engine */
          value += strlen(DRMAA_PLACEHOLDER_WD);
       }
 
@@ -2303,7 +2315,19 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
       DPRINTF(("Skipping options from script due to -b option\n"));
    } else {
       const char *path = NULL;
-         
+
+/* This doesn't function until cull_parse_job_parameter() understands the
+ * -noshell option. */
+#if 0
+      /* BUGFIX: #658
+       * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
+       * If another option level disables binary mode, I have to remove this
+       * option.  This means that "-b n" trumps both the default "-b y" and the
+       * default "-noshell". */
+      ep = lGetElemStr(opts_default, SPA_switch, "-noshell");
+      lRemoveElem(opts_default, ep);
+#endif
+
       /* If the scriptfile is to be parsed for options, we have to set the
        * cwd.  In DRMAA, the script path is assumed to be relative to the
        * working directory.  Therefore, if a DRMAA_WD is given, we must
@@ -2848,8 +2872,7 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
    ep_opt = sge_add_arg (opts, p_OPT, lIntT, "-p", "0");
    lSetInt (ep_opt, SPA_argval_lIntT, 0);
    
-   /* 
-    * We always use binary submission mode by default. A native spec, job
+   /* We always use binary submission mode by default. A native spec, job
     * category, or default file attribute can use -b n to reenable script
     * attributes.
     */
@@ -2857,6 +2880,17 @@ static void opt_list_append_default_drmaa_opts(lList **opts)
    ep_opt = sge_add_arg (opts, b_OPT, lIntT, "-b", "y");
    lSetInt (ep_opt, SPA_argval_lIntT, 1);
    
+/* This doesn't function until cull_parse_job_parameter() understands the
+ * -noshell option. */
+#if 0
+   /* BUGFIX: #658
+    * In order to work around Bug #476, I set DRMAA to not spawn an exec shell.
+    * Later in drmaa_job2sge_job if binary mode is disabled, I also have to
+    * remove this option. */
+   DPRINTF (("disabling execution shell\n"));
+   ep_opt = sge_add_noarg(opts, noshell_OPT, "-noshell", NULL);
+#endif
+
    DEXIT;
 }
 

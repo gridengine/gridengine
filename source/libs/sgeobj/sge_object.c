@@ -423,7 +423,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          break;
       case QU_qtype:
          qinstance_print_qtype_to_dstring(object, &string, false);
-         ret = sge_dstring_get_string(buffer); 
+         ret = sge_dstring_get_string(&string); 
          quote_special_case = true;
          break;
       case US_type:

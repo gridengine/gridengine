@@ -1,3 +1,8 @@
+DT-2004-02-25-0: Bugfix:    o Fixed qconf -sq queue@hostname output.
+                            o Fixed DRMAA example program
+                 Issue:     701, 704
+                 Changed:   DRMAA, qconf
+
 SG-2004-02-25-0: Bugfix:    extended the scheduler check for invalid configurations.
                  Issue:     695
 

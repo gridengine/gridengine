@@ -309,25 +309,31 @@ void *server_thread(void *t_conf) {
       CL_LOG_INT( CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
 
       new_con = NULL;
-      retval = cl_com_connection_request_handler(con, &new_con , 0, 001 * 1000);
+      if (con->data_read_flag == CL_COM_DATA_READY) {
+         retval = cl_com_connection_request_handler(con, &new_con);
+      }
       CL_LOG_STR(CL_LOG_INFO, "cl_com_connection_request_handler() returned ",cl_get_error_text(retval) );
 
       if (retval == CL_RETVAL_OK && new_con != NULL) {
          CL_LOG(CL_LOG_INFO,"new connection!!!");
-
-         retval= cl_com_connection_complete_request(new_con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT );
+         while( (retval=cl_com_connection_complete_request(new_con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT)) != CL_RETVAL_OK) {
+            if (retval != CL_RETVAL_UNCOMPLETE_WRITE && retval != CL_RETVAL_UNCOMPLETE_READ) {
+               break;
+            }
+         }
          if (retval != CL_RETVAL_OK) {
             cl_com_tcp_close_connection(&new_con);
             CL_LOG(CL_LOG_ERROR,"error receiving connection data");
          } else {
             cl_connection_list_append_connection(connection_list, new_con,1);
          }
+         
          new_con = NULL;
       }
       
       CL_LOG(CL_LOG_INFO, "checking open connections ...");
       
-      retval = cl_com_open_connection_request_handler(CL_CT_TCP,connection_list, NULL  ,1,0, CL_RW_SELECT);
+      retval = cl_com_open_connection_request_handler(CL_CT_TCP,connection_list, con  ,1,0, CL_RW_SELECT);
       CL_LOG_STR( CL_LOG_INFO, "cl_com_open_connection_request_handler() returned ", cl_get_error_text(retval) );
 
       if (retval == CL_RETVAL_OK) {
@@ -363,7 +369,6 @@ void *server_thread(void *t_conf) {
       }
 
       CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
-      CL_LOG( CL_LOG_INFO, "removing connection from list");
       cl_connection_list_destroy_connections_to_close(connection_list,1);
       CL_LOG_INT(CL_LOG_INFO, "--> nr of connections: ", cl_raw_list_get_elem_count(connection_list) );
 
@@ -447,14 +452,21 @@ void *client_thread(void *t_conf) {
 
       if (con == NULL) {
          cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED, CL_CT_TCP, CL_CM_DF_BIN, CL_TCP_DEFAULT );
-         retval = cl_com_open_connection(con, 5, remote_host, local_host, receiver_host, sender_host);
+         while( (retval = cl_com_open_connection(con, 5, remote_host, local_host, receiver_host, sender_host)) == CL_RETVAL_UNCOMPLETE_WRITE) {
+            sleep(1);
+         }
          CL_LOG_STR( CL_LOG_INFO, "cl_com_open_connection() returned ", cl_get_error_text(retval) );
          if (retval != CL_RETVAL_OK) {
             retval = cl_com_close_connection(&con);
             CL_LOG_STR(CL_LOG_INFO, "cl_com_close_connection() returned ", cl_get_error_text(retval) );
          } 
 
-         retval= cl_com_connection_complete_request(con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT );
+         while( ( retval= cl_com_connection_complete_request(con, CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT, 0, CL_RW_SELECT )) != CL_RETVAL_OK) {
+            if (retval != CL_RETVAL_UNCOMPLETE_WRITE && retval != CL_RETVAL_UNCOMPLETE_READ) {
+               break;
+            }
+            sleep(1);
+         }
          if (retval != CL_RETVAL_OK) {
             cl_com_tcp_close_connection(&con);
             CL_LOG(CL_LOG_ERROR,"error receiving connection data");
@@ -472,6 +484,8 @@ void *client_thread(void *t_conf) {
                retval = cl_com_close_connection(&con);
                CL_LOG_STR(CL_LOG_INFO, "cl_com_close_connection() returned ", cl_get_error_text(retval) );
             }
+            
+
 #endif
          }
       }

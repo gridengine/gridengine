@@ -2927,34 +2927,21 @@ int cl_com_connection_request_handler_setup(cl_com_connection_t* connection,cl_c
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_connection_request_handler()"
-int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection, int timeout_val_sec, int timeout_val_usec ) { /* CR check */
-
-
-   int usec_rest = 0;
-   int full_usec_seconds = 0;
-   int sec_param = 0;
+int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection) {
    int retval = CL_RETVAL_OK;
 
-
-
-   usec_rest = timeout_val_usec % 1000000;           /* usec parameter for select should not be > 1000000 !!!*/
-   full_usec_seconds = timeout_val_usec / 1000000;   /* full seconds from timeout_val_usec parameter */
-   sec_param = timeout_val_sec + full_usec_seconds;  /* add full seconds from usec parameter to timeout_val_sec parameter */
-
    if (connection != NULL) {
-
       if (connection->service_handler_flag != CL_COM_SERVICE_HANDLER) {
          CL_LOG(CL_LOG_ERROR,"connection service handler flag not set");
          return CL_RETVAL_NOT_SERVICE_HANDLER;
       }
-
       switch(connection->framework_type) {
          case CL_CT_TCP: {
-            retval = cl_com_tcp_connection_request_handler(connection,new_connection, sec_param, usec_rest );
+            retval = cl_com_tcp_connection_request_handler(connection,new_connection);
             break;
          }
          case CL_CT_SSL: {
-            retval = cl_com_ssl_connection_request_handler(connection,new_connection, sec_param, usec_rest );
+            retval = cl_com_ssl_connection_request_handler(connection,new_connection);
             break;
          }
          case CL_CT_UNDEFINED: {
@@ -2962,6 +2949,7 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_con
             break;
          }
       }
+      connection->data_read_flag = CL_COM_DATA_NOT_READY;
       if (*new_connection != NULL && retval == CL_RETVAL_OK) {
          /* setup new cl_com_connection_t */
          (*new_connection)->service_handler_flag = CL_COM_CONNECTION;

@@ -87,6 +87,7 @@ extern int main(int argc, char** argv)
   unsigned long total_bytes_sent = 0;
   unsigned long total_bytes_received = 0;
   unsigned long total_connections = 0;
+  unsigned long total_connection_sum = 0;
 #if 1
   char* welcome_text = "Welcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\nWelcome to the tcp framework module!Welcome to the tcp framework module!Welcome to the tcp framework module!\n";
 #else
@@ -95,6 +96,7 @@ extern int main(int argc, char** argv)
 
   struct timeval now;
   long start_time;
+  long appl_start_time;
   long end_time;
   int retval = CL_RETVAL_PARAMS;
   int welcome_text_size;
@@ -191,7 +193,7 @@ extern int main(int argc, char** argv)
 
   gettimeofday(&now,NULL);
   start_time =    now.tv_sec;
-
+  appl_start_time = start_time;
   welcome_text_size = strlen(welcome_text) + 1;
   while(do_shutdown != 1) {
      unsigned long mid;
@@ -211,6 +213,7 @@ extern int main(int argc, char** argv)
 
      if (last_mid >= mid || mid == 1) {
         total_connections++;
+        total_connection_sum++;
      }
      last_mid = mid;
 
@@ -354,6 +357,7 @@ extern int main(int argc, char** argv)
         printf("Kbit/s read: %.2f   ", ((total_bytes_received * 8.0)/1024.0) /  (double)(end_time - start_time)); */
         printf("KBit/s     : %.2f   ", (((total_bytes_received + total_bytes_sent) * 8.0)/1024.0) /  (double)(end_time - start_time));
         printf("connections/s: %.2f ", (double) total_connections / (double)(end_time - start_time));
+        printf("avg. connections/s: %.2f", (double) total_connection_sum / (double)(end_time - appl_start_time));
         cl_raw_list_lock(handle->connection_list);
         elem = cl_connection_list_get_first_elem(handle->connection_list);
         if (elem != NULL) {

@@ -66,7 +66,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
 
 
 int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection);
-int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection ,int timeout_val_sec, int timeout_val_usec );  /* CR check */
+int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection);
 int cl_com_tcp_connection_request_handler_cleanup(cl_com_connection_t* connection); /* CR check */
 
 /* connection establish help functions */

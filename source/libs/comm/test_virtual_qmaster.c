@@ -164,6 +164,10 @@ extern int main(int argc, char** argv)
      double snd_m_sec = 0.0;
      double nr_evc_sec = 0.0;
      double snd_ev_sec = 0.0;
+     cl_com_handle_statistic_t* statistic_data = NULL;
+     int unread_msg = 0;
+     int unsend_msg = 0;
+     int nr_of_connections = 0;
 
      gettimeofday(&now,NULL);
      usec_now  = (now.tv_sec  * 1000000.0) + now.tv_usec;
@@ -176,16 +180,22 @@ extern int main(int argc, char** argv)
      nr_evc_sec = evc_count    / interval;
      snd_ev_sec = events_sent  / interval;
 
-     printf("|%.5f|[s] received|%d|%.3f|[nr.|1/s] sent|%d|%.3f|[nr.|1/s] event clients|%d|%.3f|[nr.|1/s] events sent|%d|%.3f|[nr.|1/s] rcv_buf|%d|snd_buf|%d|\n", 
+     cl_com_get_actual_statistic_data(handle, &statistic_data);
+     if (statistic_data != NULL) {
+        unread_msg = statistic_data->unread_message_count;
+        unsend_msg = statistic_data->unsend_message_count;
+        nr_of_connections = statistic_data->nr_of_connections;
+        cl_com_free_handle_statistic(&statistic_data);
+     }
+     printf("|%.5f|[s] received|%d|%.3f|[nr.|1/s] sent|%d|%.3f|[nr.|1/s] event clients|%d|%.3f|[nr.|1/s] events sent|%d|%.3f|[nr.|1/s] rcv_buf|%d|snd_buf|%d| nr_connections|%d|\n", 
             interval,
             rcv_messages, rcv_m_sec, 
             snd_messages, snd_m_sec,
             evc_count,    nr_evc_sec,
             events_sent,  snd_ev_sec,
-            /* we do this without locking, because the strucure will always
-               exist when handle is active (but data is only updated every second) */
-            (int)handle->statistic->unread_message_count,
-            (int)handle->statistic->unsend_message_count );
+            unread_msg,
+            unsend_msg,
+            nr_of_connections);
      fflush(stdout);
 
      cl_thread_wait_for_event(cl_thread_get_thread_config(),1,0);
@@ -193,9 +203,9 @@ extern int main(int argc, char** argv)
         break;
      }
   }
+  printf("shutdown threads ...\n");
   cl_com_ignore_timeouts(CL_TRUE);
 
-  printf("shutdown threads ...\n");
   /* delete all threads */
   while ( (thread_p=cl_thread_list_get_first_thread(thread_list)) != NULL ) {
      cl_thread_list_delete_thread(thread_list, thread_p);

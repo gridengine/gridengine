@@ -444,65 +444,69 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT) {
       int my_error;
       int i;
+      cl_bool_t connect_state = CL_FALSE;
 
       CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT");
 
       errno = 0;
       i = connect(private->sockfd, (struct sockaddr *) &(private->client_addr), sizeof(struct sockaddr_in));
       my_error = errno;
-      if (i != 0) {
-         if (my_error == EISCONN) {
-            /* socket is allready connected */
-            CL_LOG(CL_LOG_INFO,"allready connected");
-         }
-
-         if (my_error == ECONNREFUSED  ) {
-            /* can't open connection */
-            CL_LOG_INT(CL_LOG_ERROR,"connection refused to port ",private->connect_port);
-            shutdown(private->sockfd, 2);
-            close(private->sockfd);
-            private->sockfd = -1;
-            cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CONNECTION_REFUSED );
-            return CL_RETVAL_CONNECT_ERROR;
-         }
-
-         if (my_error == EADDRNOTAVAIL ) {
-            /* can't open connection */
-            CL_LOG_INT(CL_LOG_ERROR,"address not available for port ",private->connect_port);
-            shutdown(private->sockfd, 2);
-            close(private->sockfd);
-            private->sockfd = -1;
-            cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CANT_ASSIGN_ADDRESS );
-            return CL_RETVAL_CONNECT_ERROR;
-         }
-
-
-         if (my_error == EINPROGRESS || my_error == EALREADY) {
-            connection->connection_sub_state = CL_COM_OPEN_CONNECT_IN_PROGRESS;
-         } else {
-            /* we have an connect error */
-            CL_LOG_INT(CL_LOG_ERROR,"connect error errno:", my_error);
-            shutdown(private->sockfd, 2);
-            close(private->sockfd);
-            private->sockfd = -1;
-            snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CONNECT_ERROR_U, u32c(my_error));
-            cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
-            return CL_RETVAL_CONNECT_ERROR;
-         }
-      } else {
+      if (i == 0) {
          /* we are connected */
-         CL_LOG(CL_LOG_INFO,"connected");
-      }
-   
-      if (connection->connection_sub_state != CL_COM_OPEN_CONNECT_IN_PROGRESS) {
+         connect_state = CL_TRUE;
+      } else {
+         switch(my_error) {
+            case EISCONN: {
+               CL_LOG(CL_LOG_INFO,"allready connected");
+               connect_state = CL_TRUE;
+               break;
+            }
+            case ECONNREFUSED: {
+               /* can't open connection */
+               CL_LOG_INT(CL_LOG_ERROR,"connection refused to port ",private->connect_port);
+               shutdown(private->sockfd, 2);
+               close(private->sockfd);
+               private->sockfd = -1;
+               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CONNECTION_REFUSED );
+               return CL_RETVAL_CONNECT_ERROR;
+            }
+            case EADDRNOTAVAIL: {
+               /* can't open connection */
+               CL_LOG_INT(CL_LOG_ERROR,"address not available for port ",private->connect_port);
+               shutdown(private->sockfd, 2);
+               close(private->sockfd);
+               private->sockfd = -1;
+               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CANT_ASSIGN_ADDRESS );
+               return CL_RETVAL_CONNECT_ERROR;
+            }
+            case EINPROGRESS:
+            case EALREADY: {
+               connection->connection_sub_state = CL_COM_OPEN_CONNECT_IN_PROGRESS;
+               if (only_once != 0) {
+                  return CL_RETVAL_UNCOMPLETE_WRITE;
+               }
+               break;
+            }
+            default: {
+               /* we have an connect error */
+               CL_LOG_INT(CL_LOG_ERROR,"connect error errno:", my_error);
+               shutdown(private->sockfd, 2);
+               close(private->sockfd);
+               private->sockfd = -1;
+               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CONNECT_ERROR_U, u32c(my_error));
+               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+               return CL_RETVAL_CONNECT_ERROR;
+            }
+         }
+      } 
+      if (connect_state == CL_TRUE) {
          connection->write_buffer_timeout_time = 0;
          connection->connection_sub_state = CL_COM_OPEN_CONNECTED;
       }
    }
 
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT_IN_PROGRESS ) {
-      int timeout_flag = 0;
-      int do_stop      = 0;
+      int do_stop = 0;
       fd_set writefds;
       CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
 
@@ -510,74 +514,65 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
          int select_back = 0;
          struct timeval now;
          struct timeval stimeout;
+         int socket_error = 0;
+         int socklen = sizeof(socket_error);
 
-         gettimeofday(&now,NULL);
-         if (connection->write_buffer_timeout_time <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
-            timeout_flag = 1;
-            break;
-         }
-   
-         FD_ZERO(&writefds);
-         FD_SET(private->sockfd, &writefds);
          if (only_once == 0) {
+            FD_ZERO(&writefds);
+            FD_SET(private->sockfd, &writefds);
             stimeout.tv_sec = 0; 
             stimeout.tv_usec = 250*1000;   /* 1/4 sec */
-         } else {
-            stimeout.tv_sec = 0; 
-            stimeout.tv_usec = 0;   /* don't waste time */
-         }
+         
+            select_back = select(private->sockfd + 1, NULL, &writefds, NULL, &stimeout);
 
-         select_back = select(private->sockfd + 1, NULL, &writefds, NULL, &stimeout);
-         if (select_back > 0) {
-            int socket_error = 0;
-            int socklen = sizeof(socket_error);
-
-#if defined(SOLARIS) && !defined(SOLARIS64) 
-            getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
-#else
-            getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
-#endif
-            if (socket_error == 0 || socket_error == EISCONN) {
-               CL_LOG(CL_LOG_INFO,"connected");
-               break; /* we are connected */
-            } else {
-               if (socket_error != EINPROGRESS && socket_error != EALREADY) {
-                  CL_LOG_INT(CL_LOG_ERROR,"socket error errno:", socket_error);
-                  shutdown(private->sockfd, 2);
-                  close(private->sockfd);
-                  private->sockfd = -1;
-                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_SOCKET_ERROR_U, u32c(socket_error));
-                  cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
-                  return CL_RETVAL_CONNECT_ERROR;
-               }
-               if (only_once != 0) {
-                  return CL_RETVAL_UNCOMPLETE_WRITE;
-               }
-            }
-         } else {
             if (select_back < 0) {
                CL_LOG(CL_LOG_ERROR,"select error");
                cl_com_push_application_error(CL_RETVAL_SELECT_ERROR, MSG_CL_TCP_FW_SELECT_ERROR);
                return CL_RETVAL_SELECT_ERROR;
             }
-            if (only_once != 0) {
-               return CL_RETVAL_UNCOMPLETE_WRITE;
+         }
+
+#if defined(SOLARIS) && !defined(SOLARIS64) 
+         getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
+#else
+         getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
+#endif
+         if (socket_error == 0 || socket_error == EISCONN) {
+            CL_LOG(CL_LOG_INFO,"connected");
+            connection->write_buffer_timeout_time = 0;
+            connection->connection_sub_state = CL_COM_OPEN_CONNECTED;
+            break; /* we are connected */
+         } else {
+            if (socket_error != EINPROGRESS && socket_error != EALREADY) {
+               CL_LOG_INT(CL_LOG_ERROR,"socket error errno:", socket_error);
+               shutdown(private->sockfd, 2);
+               close(private->sockfd);
+               private->sockfd = -1;
+               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_SOCKET_ERROR_U, u32c(socket_error));
+               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+               return CL_RETVAL_CONNECT_ERROR;
             }
-         } 
-      }
-   
-      if (timeout_flag == 1) {
-         /* we had an timeout */
-         CL_LOG(CL_LOG_ERROR,"connect timeout error");
-         connection->write_buffer_timeout_time = 0;
-         shutdown(private->sockfd, 2);
-         close(private->sockfd);
-         private->sockfd = -1;
-         cl_com_push_application_error(CL_RETVAL_CONNECT_TIMEOUT, MSG_CL_TCP_FW_CONNECT_TIMEOUT );
-         return CL_RETVAL_CONNECT_TIMEOUT;
-      }
-      connection->write_buffer_timeout_time = 0;
-      connection->connection_sub_state = CL_COM_OPEN_CONNECTED;
+         }
+
+         gettimeofday(&now,NULL);
+         if (connection->write_buffer_timeout_time <= now.tv_sec || 
+             cl_com_get_ignore_timeouts_flag()     == CL_TRUE       ) {
+
+            /* we had an timeout */
+            CL_LOG(CL_LOG_ERROR,"connect timeout error");
+            connection->write_buffer_timeout_time = 0;
+            shutdown(private->sockfd, 2);
+            close(private->sockfd);
+            private->sockfd = -1;
+            cl_com_push_application_error(CL_RETVAL_CONNECT_TIMEOUT, MSG_CL_TCP_FW_CONNECT_TIMEOUT );
+            return CL_RETVAL_CONNECT_TIMEOUT;
+         }
+
+
+         if (only_once != 0) {
+            return CL_RETVAL_UNCOMPLETE_WRITE;
+         }
+      }  /* while do_stop */
    }
 
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECTED) {
@@ -831,11 +826,8 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection)
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_connection_request_handler()"
-int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection ,int timeout_val_sec, int timeout_val_usec ) {
-   int select_back = 0;
+int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection) {
    cl_com_connection_t* tmp_connection = NULL;
-   fd_set readfds;
-   struct timeval timeout;
    struct sockaddr_in cli_addr;
    int new_sfd = 0;
    int sso;
@@ -870,77 +862,64 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
    }
    server_fd = private->sockfd;
 
-   FD_ZERO(&readfds);
-   FD_SET(server_fd, &readfds);
+   /* got new connect */
+   fromlen = sizeof(cli_addr);
+   memset((char *) &cli_addr, 0, sizeof(cli_addr));
+   new_sfd = accept(server_fd, (struct sockaddr *) &cli_addr, &fromlen);
+   if (new_sfd > -1) {
+       char* resolved_host_name = NULL;
+       cl_com_ssl_private_t* tmp_private = NULL;
 
-   timeout.tv_sec = timeout_val_sec; 
-   timeout.tv_usec = timeout_val_usec;
-   select_back = select(server_fd + 1, &readfds, NULL, NULL, &timeout);
-   if (select_back == -1) {
-      return CL_RETVAL_SELECT_ERROR;
-   }
+       cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
+       if (resolved_host_name != NULL) {
+          CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name  );
+       } else {
+          CL_LOG(CL_LOG_WARNING,"could not resolve incoming hostname");
+       }
 
-   if (FD_ISSET(server_fd, &readfds)) {
-      /* got new connect */
-      fromlen = sizeof(cli_addr);
-      memset((char *) &cli_addr, 0, sizeof(cli_addr));
-      new_sfd = accept(server_fd, (struct sockaddr *) &cli_addr, &fromlen);
-      if (new_sfd > -1) {
-          char* resolved_host_name = NULL;
-          cl_com_ssl_private_t* tmp_private = NULL;
-
-          cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
-          if (resolved_host_name != NULL) {
-             CL_LOG_STR(CL_LOG_INFO,"new connection from host", resolved_host_name  );
-          } else {
-             CL_LOG(CL_LOG_WARNING,"could not resolve incoming hostname");
-          }
-
-          fcntl(new_sfd, F_SETFL, O_NONBLOCK);         /* HP needs O_NONBLOCK, was O_NDELAY */
-          sso = 1;
+       fcntl(new_sfd, F_SETFL, O_NONBLOCK);         /* HP needs O_NONBLOCK, was O_NDELAY */
+       sso = 1;
 #if defined(SOLARIS) && !defined(SOLARIS64)
-          if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &sso, sizeof(int)) == -1) {
-             CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
-          }
+       if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, (const char *) &sso, sizeof(int)) == -1) {
+          CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
+       }
 #else
-          if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, &sso, sizeof(int))== -1) { 
-             CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
-          }
+       if (setsockopt(new_sfd, IPPROTO_TCP, TCP_NODELAY, &sso, sizeof(int))== -1) { 
+          CL_LOG(CL_LOG_ERROR,"could not set TCP_NODELAY");
+       }
 #endif
-          /* here we can investigate more information about the client */
-          /* ntohs(cli_addr.sin_port) ... */
+       /* here we can investigate more information about the client */
+       /* ntohs(cli_addr.sin_port) ... */
 
-          tmp_connection = NULL;
-          /* setup a ssl connection where autoclose is still undefined */
-          if ( (retval=cl_com_ssl_setup_connection(&tmp_connection, 
-                                                   private->server_port,
-                                                   private->connect_port,
-                                                   connection->data_flow_type,
-                                                   CL_CM_AC_UNDEFINED,
-                                                   connection->framework_type,
-                                                   connection->data_format_type,
-                                                   connection->tcp_connect_mode)) != CL_RETVAL_OK) {
-             cl_com_ssl_close_connection(&tmp_connection); 
-             if (resolved_host_name != NULL) {
-                free(resolved_host_name);
-             }
-             shutdown(new_sfd, 2);
-             close(new_sfd);
-             return retval;
+       tmp_connection = NULL;
+       /* setup a ssl connection where autoclose is still undefined */
+       if ( (retval=cl_com_ssl_setup_connection(&tmp_connection, 
+                                                private->server_port,
+                                                private->connect_port,
+                                                connection->data_flow_type,
+                                                CL_CM_AC_UNDEFINED,
+                                                connection->framework_type,
+                                                connection->data_format_type,
+                                                connection->tcp_connect_mode)) != CL_RETVAL_OK) {
+          cl_com_ssl_close_connection(&tmp_connection); 
+          if (resolved_host_name != NULL) {
+             free(resolved_host_name);
           }
+          shutdown(new_sfd, 2);
+          close(new_sfd);
+          return retval;
+       }
 
-          tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
+       tmp_connection->client_host_name = resolved_host_name; /* set resolved hostname of client */
 
-          /* setup cl_com_ssl_private_t */
-          tmp_private = cl_com_ssl_get_private(tmp_connection);
-          if (tmp_private != NULL) {
-             tmp_private->sockfd = new_sfd;   /* fd from accept() call */
-             tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
-             CL_LOG_INT(CL_LOG_WARNING,"client uses port=", tmp_private->connect_in_port );
-          }
-          *new_connection = tmp_connection;
-          return CL_RETVAL_OK;
-      }
+       /* setup cl_com_ssl_private_t */
+       tmp_private = cl_com_ssl_get_private(tmp_connection);
+       if (tmp_private != NULL) {
+          tmp_private->sockfd = new_sfd;   /* fd from accept() call */
+          tmp_private->connect_in_port = ntohs(cli_addr.sin_port);
+       }
+       *new_connection = tmp_connection;
+       return CL_RETVAL_OK;
    }
    return CL_RETVAL_OK;
 }
@@ -1287,63 +1266,76 @@ int cl_com_ssl_write(long timeout_time, int fd, cl_byte_t* message, unsigned lon
       CL_LOG(CL_LOG_ERROR,"no file descriptor");
       return CL_RETVAL_PARAMS;
    }
-   /* TODO: this is a boddle neck if only_one_write is not set,
-            because if the message can't be read
-            complete, we must try it later !!!!!!!!!!!!!!! */
+
+   /*
+    * INFO: this can be a boddle neck if only_one_write is not set,
+    * because if the message can't be read complete, we must try it later 
+    */
 
    while ( data_complete != size ) {
-      gettimeofday(&now,NULL);
-      if ( now.tv_sec >= timeout_time ) {
-         CL_LOG(CL_LOG_ERROR,"send timeout error");
-         return CL_RETVAL_SEND_TIMEOUT;
-      }
-      FD_ZERO(&writefds);
-      FD_SET(fd, &writefds);
-      timeout.tv_sec = 1; 
-      timeout.tv_usec = 0;  /* 0 ms */
-      /* do select */
-      select_back = select(fd + 1, NULL, &writefds, NULL , &timeout);
-
-      if (select_back == -1) {
-         CL_LOG(CL_LOG_INFO,"select error");
-         return CL_RETVAL_SELECT_ERROR;
-      }
-
-      if (FD_ISSET(fd, &writefds)) {
-         errno = 0;
-         data_written =  write(fd, &message[data_complete], size - data_complete );   
-         my_errno = errno;
-         if (data_written < 0) {
-            if (my_errno == EWOULDBLOCK || my_errno == EAGAIN || my_errno == EINTR) {
-               if (only_one_write != NULL) {
-                  *only_one_write = data_complete;
-                  if (data_complete != size) {
-                     return CL_RETVAL_UNCOMPLETE_WRITE;
-                  }
-                  return CL_RETVAL_OK;
+      if (only_one_write == NULL) {
+         FD_ZERO(&writefds);
+         FD_SET(fd, &writefds);
+         timeout.tv_sec = 1; 
+         timeout.tv_usec = 0;  /* 0 ms */
+         /* do select */
+         select_back = select(fd + 1, NULL, &writefds, NULL , &timeout);
+   
+         if (select_back == -1) {
+            CL_LOG(CL_LOG_INFO,"select error");
+            return CL_RETVAL_SELECT_ERROR;
+         }
+   
+         if (FD_ISSET(fd, &writefds)) {
+            errno = 0;
+            data_written = write(fd, &message[data_complete], size - data_complete );   
+            my_errno = errno;
+            if (data_written < 0) {
+               if (my_errno == EPIPE) {
+                  CL_LOG(CL_LOG_ERROR,"pipe error");
+                  return CL_RETVAL_PIPE_ERROR;
                }
-            }
-            if (my_errno == EPIPE) {
-               CL_LOG(CL_LOG_ERROR,"pipe error");
-               return CL_RETVAL_PIPE_ERROR;
-            }
-            CL_LOG(CL_LOG_ERROR,"send error");
-            return CL_RETVAL_SEND_ERROR;
-         } else {
-            data_complete = data_complete + data_written;
-            data_written = 0;
-            if (only_one_write != NULL) {
-               *only_one_write = data_complete;
-               if (data_complete != size) {
-                  return CL_RETVAL_UNCOMPLETE_WRITE;
-               }
-               return CL_RETVAL_OK;
+               CL_LOG(CL_LOG_ERROR,"send error");
+               return CL_RETVAL_SEND_ERROR;
+            } else {
+               data_complete = data_complete + data_written;
             }
          }
-      }
-      if (only_one_write != NULL) {
-         *only_one_write = 0;
-         return CL_RETVAL_UNCOMPLETE_WRITE;
+         if (data_complete != size) {
+            gettimeofday(&now,NULL);
+            if ( now.tv_sec >= timeout_time ) {
+               CL_LOG(CL_LOG_ERROR,"send timeout error");
+               return CL_RETVAL_SEND_TIMEOUT;
+            }
+         } else {
+            break;
+         }
+      } else {
+         errno = 0;
+         data_written = write(fd, &message[data_complete], size - data_complete );   
+         my_errno = errno;
+         if (data_written < 0) {
+            if (my_errno != EWOULDBLOCK && my_errno != EAGAIN && my_errno != EINTR) {
+               if (my_errno == EPIPE) {
+                  CL_LOG(CL_LOG_ERROR,"pipe error");
+                  return CL_RETVAL_PIPE_ERROR;
+               }
+               CL_LOG(CL_LOG_ERROR,"send error");
+               return CL_RETVAL_SEND_ERROR;
+            }
+         } else {
+            data_complete = data_complete + data_written;
+         }
+         *only_one_write = data_complete;
+         if (data_complete != size) {
+            gettimeofday(&now,NULL);
+            if ( now.tv_sec >= timeout_time ) {
+               CL_LOG(CL_LOG_ERROR,"send timeout error");
+               return CL_RETVAL_SEND_TIMEOUT;
+            }
+            return CL_RETVAL_UNCOMPLETE_WRITE;
+         }
+         return CL_RETVAL_OK;
       }
    }
    return CL_RETVAL_OK;
@@ -1389,65 +1381,77 @@ int cl_com_ssl_read(long timeout_time, int fd, cl_byte_t* message, unsigned long
 
 
    while ( data_complete != size ) {
-      gettimeofday(&now,NULL);
-      if ( now.tv_sec >= timeout_time ) {
-         return CL_RETVAL_READ_TIMEOUT;
-      }
-      FD_ZERO(&readfds);
-      FD_SET(fd, &readfds);
-
-      timeout.tv_sec = 1; 
-      timeout.tv_usec = 0;  /* 0 ms */
-
-      /* do select */
-      select_back = select(fd + 1, &readfds,NULL , NULL , &timeout);
-      if (select_back == -1) {
-         CL_LOG(CL_LOG_INFO,"select error");
-         return CL_RETVAL_SELECT_ERROR;
-      }
-      
-      if (FD_ISSET(fd, &readfds)) {
-         errno = 0;
-         data_read =  read(fd, &message[data_complete], size - data_complete );
-         my_errno = errno;
-         if (data_read < 0) {
-            if (my_errno == EWOULDBLOCK || my_errno == EAGAIN || my_errno == EINTR) {
-               if (only_one_read != NULL) {
-                  *only_one_read = data_complete;
-                  if (data_complete != size) {
-                     return CL_RETVAL_UNCOMPLETE_READ;
-                  }
-                  return CL_RETVAL_OK;
+      if (only_one_read == NULL) {
+         FD_ZERO(&readfds);
+         FD_SET(fd, &readfds);
+         timeout.tv_sec = 1; 
+         timeout.tv_usec = 0;  /* 0 ms */
+   
+         /* do select */
+         select_back = select(fd + 1, &readfds,NULL , NULL , &timeout);
+         if (select_back == -1) {
+            CL_LOG(CL_LOG_INFO,"select error");
+            return CL_RETVAL_SELECT_ERROR;
+         }
+         
+         if (FD_ISSET(fd, &readfds)) {
+            errno = 0;
+            data_read = read(fd, &message[data_complete], size - data_complete );
+            my_errno = errno;
+            if (data_read <= 0) {
+               if (data_read == 0) {
+                  /* this should only happen if the connection is down */
+                  CL_LOG(CL_LOG_WARNING,"client connection disconnected");
+                  return CL_RETVAL_READ_ERROR;
                }
+               if (my_errno == EPIPE) {
+                  CL_LOG_INT(CL_LOG_ERROR,"pipe error errno:", my_errno );
+                  return CL_RETVAL_PIPE_ERROR;
+               }
+               CL_LOG_INT(CL_LOG_ERROR,"receive error errno:", my_errno);
+               return CL_RETVAL_RECEIVE_ERROR;
+            } else {
+               data_complete = data_complete + data_read;
             }
-            if (my_errno == EPIPE) {
-               CL_LOG_INT(CL_LOG_ERROR,"pipe error errno:", my_errno );
-               return CL_RETVAL_PIPE_ERROR;
+         }
+         if (data_complete != size) {
+            gettimeofday(&now,NULL);
+            if ( now.tv_sec >= timeout_time ) {
+               return CL_RETVAL_READ_TIMEOUT;
             }
-            CL_LOG_INT(CL_LOG_ERROR,"receive error errno:", my_errno);
-            return CL_RETVAL_RECEIVE_ERROR;
          } else {
+            break;
+         }
+      } else {
+         errno = 0;
+         data_read = read(fd, &message[data_complete], size - data_complete );
+         my_errno = errno;
+         if (data_read <= 0) {
             if (data_read == 0) {
                /* this should only happen if the connection is down */
                CL_LOG(CL_LOG_WARNING,"client connection disconnected");
                return CL_RETVAL_READ_ERROR;
-            } 
-            data_complete = data_complete + data_read;
-            data_read = 0;
-            if (only_one_read != NULL) {
-               *only_one_read = data_complete;
-               if (data_complete != size) {
-                  return CL_RETVAL_UNCOMPLETE_READ;
-               }
-               return CL_RETVAL_OK;
             }
+            if (my_errno != EWOULDBLOCK && my_errno != EAGAIN && my_errno != EINTR) {
+               if (my_errno == EPIPE) {
+                  CL_LOG_INT(CL_LOG_ERROR,"pipe error errno:", my_errno );
+                  return CL_RETVAL_PIPE_ERROR;
+               }
+               CL_LOG_INT(CL_LOG_ERROR,"receive error errno:", my_errno);
+               return CL_RETVAL_RECEIVE_ERROR;
+            }
+         } else {
+            data_complete = data_complete + data_read;
          }
-      } else {
-        CL_LOG(CL_LOG_WARNING,"ssl read without selected file descriptor!");
-      }
-      if (only_one_read != NULL) {
-         *only_one_read = 0;
-         return CL_RETVAL_UNCOMPLETE_READ;
+         *only_one_read = data_complete;
+         if (data_complete != size) {
+            gettimeofday(&now,NULL);
+            if ( now.tv_sec >= timeout_time ) {
+               return CL_RETVAL_READ_TIMEOUT;
+            }
+            return CL_RETVAL_UNCOMPLETE_READ;
+         }
+         return CL_RETVAL_OK;
       }
    }
    return CL_RETVAL_OK;

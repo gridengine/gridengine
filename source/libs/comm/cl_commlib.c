@@ -1156,6 +1156,8 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
             }
             CL_LOG_STR(CL_LOG_INFO,"wait for connection removal, current state is", 
                        cl_com_get_connection_state(elem->connection));
+            CL_LOG_STR(CL_LOG_INFO,"wait for connection removal, current sub state is", 
+                       cl_com_get_connection_sub_state(elem->connection));
             if ( ignore_timeout == CL_TRUE ) {
                CL_LOG(CL_LOG_INFO,"we are connected, don't ignore timeouts");
                ignore_timeout = CL_FALSE;
@@ -1299,6 +1301,13 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
    CL_LOG(CL_LOG_INFO,"shutdown of handle");
 
    /* remove handle from list */
+   cl_raw_list_lock(handle->connection_list);
+   elem = cl_connection_list_get_first_elem(handle->connection_list);
+   if (elem != NULL) {
+      CL_LOG(CL_LOG_ERROR,"->>>>>>>>>>>>>>>>>> connection list is not empty <<<<<<<<<<<<");
+   }
+   cl_raw_list_unlock(handle->connection_list);
+
    ret_val = cl_handle_list_remove_handle(cl_com_handle_list, handle, 0);
    cl_raw_list_unlock(cl_com_handle_list);
 
@@ -2284,10 +2293,7 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
 
       /* new connection requests */
       cl_com_connection_t* new_con = NULL;
-
-
-      /* check without timeout */
-      cl_com_connection_request_handler(handle->service_handler, &new_con, 0, 0 );
+      cl_com_connection_request_handler(handle->service_handler, &new_con);
 
       if (new_con != NULL) {
          handle->statistic->new_connections = handle->statistic->new_connections + 1;
@@ -3076,6 +3082,45 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
       }
    }
    return CL_RETVAL_OK;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_get_actual_statistic_data()"
+int cl_com_get_actual_statistic_data(cl_com_handle_t* handle, cl_com_handle_statistic_t** statistics) {
+   int ret_val = CL_RETVAL_OK;
+   if (handle == NULL || statistics == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (*statistics != NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   *statistics = (cl_com_handle_statistic_t*)malloc(sizeof(cl_com_handle_statistic_t));
+   if (*statistics == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+   
+
+   cl_raw_list_lock(handle->connection_list);
+   if ( (ret_val=cl_commlib_calculate_statistic(handle, CL_TRUE, 0)) == CL_RETVAL_OK) {
+      memcpy(*statistics, handle->statistic, sizeof(cl_com_handle_statistic_t));
+      (*statistics)->application_info = NULL;
+      if (handle->statistic->application_info != NULL) {
+         (*statistics)->application_info = strdup(handle->statistic->application_info);
+      } else {
+         (*statistics)->application_info = strdup("not available");
+      }
+   }
+   cl_raw_list_unlock(handle->connection_list);
+   
+   if ((*statistics)->application_info == NULL) {
+      cl_com_free_handle_statistic(statistics);
+      return CL_RETVAL_MALLOC;
+   }
+
+   return ret_val;
 }
 
 #ifdef __CL_FUNCTION__
@@ -5774,8 +5819,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
 
             /* we have a new connection request */
             cl_com_connection_t* new_con = NULL;
-
-            cl_com_connection_request_handler(handle->service_handler, &new_con, 0,0 );
+            cl_com_connection_request_handler(handle->service_handler, &new_con);
             if (new_con != NULL) {
                /* got new connection request */
                new_con->handler = handle->service_handler->handler;

@@ -72,7 +72,7 @@ int cl_com_ssl_receive_message(cl_com_connection_t* connection, int timeout_time
 
 /* create service, accept new connections */
 int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection);
-int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection ,int timeout_val_sec, int timeout_val_usec );
+int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection);
 int cl_com_ssl_connection_request_handler_cleanup(cl_com_connection_t* connection);
 
 /* select mechanism */

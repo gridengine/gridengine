@@ -1,3 +1,9 @@
+MD-2005-03-17-3: Bugfix:   install_execd does not pick up $SGE_CELL
+                 Changed:  inst_execd.sh
+                 Issue:    1493
+                 Bugtraq:  6197109
+                 Review:   HP
+
 MD-2005-03-17-2: Bugfix:   install script should create execd spooldir
                  Changed:  inst_execd.sh
                  Issue:    1492

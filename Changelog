@@ -1,3 +1,6 @@
+CR-2004-02-13-0: Testsuite: fixed bug when setting up user portlist in
+                            user configuration
+
 SG-2004-02-13-0: Cleanup:   first part of removing sge from sgeee
                  Changed:   all
                  Review:    AA

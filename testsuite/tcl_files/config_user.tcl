@@ -773,6 +773,7 @@ proc user_config_userlist_set_portlist { array_name user value } {
 
    upvar $array_name config
 
+   set had_error 0 
 
    set ok_value ""
    set value [ lsort $value ]
@@ -805,9 +806,12 @@ proc user_config_userlist_set_portlist { array_name user value } {
          unset config($port,$user) 
       }
    }
+   set tmp_port_list ""
    foreach port $ok_value {
       set config($port) $user
       set config($port,$user) [user_config_userlist_create_gid_port config $port $user]
+      set tmp_port_list "$tmp_port_list $port"
+      set config($user,portlist) $tmp_port_list
    }
    set config($user,portlist) $ok_value
    return $had_error

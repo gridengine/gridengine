@@ -108,6 +108,7 @@ void shepherd_trace_exit( void )
 {
 	if( shepherd_trace_fp ) {
 		fclose( shepherd_trace_fp );
+		shepherd_trace_fp=NULL;
 	}
 	shepherd_error_exit();
 }
@@ -165,16 +166,18 @@ void shepherd_error_exit( void )
 {
 	if( shepherd_error_fp ) {
 		fclose( shepherd_error_fp );
+		shepherd_error_fp=NULL;
 	}
 	if( shepherd_exit_status_fp ) {
 		fclose( shepherd_exit_status_fp );
+		shepherd_exit_status_fp=NULL;
 	}	
 }
 
 void shepherd_error_chown( char* job_owner )
 {
-	shepherd_trace_chown_intern( g_job_owner, shepherd_error_fp );
-	shepherd_trace_chown_intern( g_job_owner, shepherd_exit_status_fp );
+	shepherd_trace_chown_intern( job_owner, shepherd_error_fp );
+	shepherd_trace_chown_intern( job_owner, shepherd_exit_status_fp );
 }
 
 /*-----------------------------------------------------------------*/
@@ -309,9 +312,9 @@ void shepherd_write_exit_status( char *exit_status )
 
 int is_shepherd_trace_fd( int fd )
 {
-	if(    fd == fileno( shepherd_trace_fp )
-	    || fd == fileno( shepherd_error_fp )
-		 || fd == fileno( shepherd_exit_status_fp )) {
+	if(   (shepherd_trace_fp && fd==fileno( shepherd_trace_fp ))
+	   || (shepherd_error_fp && fd==fileno( shepherd_error_fp ))
+		|| (shepherd_exit_status_fp && fd==fileno( shepherd_exit_status_fp ))) {
 		return 1;
 	} else {
 		return 0;
@@ -433,6 +436,7 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
    FILE        *fp = NULL;
    SGE_STRUCT_STAT statbuf;
 	int  			do_chown=0;
+	int         old_euid=-1;
 
   	/* 
   	 *  after changing into the jobs cwd we need an 
@@ -455,9 +459,36 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
 			do_chown = 0;
 		}
 	} else {
-		/* The file does already exist. Just open it. */
-		/* We get here only when a exec() has failed. */
+		/* The file already exists. We get here when
+		 * a) a exec() failed or
+		 * b) after the execution of prolog/job, when the job/epilog
+		 * tries to init the error/exit status files.
+		 *
+		 * In a root system we can just open the file, because we are either
+		 * root or the job user who owns the file.
+		 * In a admin user system we must set our euid to root to open it, then
+		 * it is the same as the root system.
+		 * In a test user system we are the owner of the file and can open it.
+		 *
+		 * When we are root (masked or not), we gave this file to the
+		 * prolog user/job user right after its creation. But we can have
+		 * 3 different users for prolog, job and epilog, so we must give
+		 * the file here to the next user.
+		 * This must be done via shepherd_?????_chown() in the shepherd
+		 * before we switch to this user there.
+		 * It can't be done here because we don't know if we are in 
+		 * case a) (exec failed) or case b) (after execution of prolog/job).
+		 */
+		if( getuid()==0 ) {
+			old_euid = geteuid();
+			seteuid(0);
+		}
+
 		fd = open( tmppath, O_RDWR );
+
+		if( old_euid>0 ) {
+			seteuid( old_euid );
+		}
 		do_chown = 0;
 	}
 
@@ -512,17 +543,18 @@ static void shepherd_trace_chown_intern( char* job_owner, FILE* fp )
 			strcpy( g_job_owner, job_owner );
 			if( sge_user2uid( job_owner, &jobuser_id, 1 )==0 )
       	{
-				/* Now try to give the file to the job user. root (and later the admin user)
- 		 	 	 * will still be able to write to it through the open file descriptor.
+				/* Now try to give the file to the job user. root (and later
+				 * the admin user) will still be able to write to it through
+				 * the open file descriptor.
  	 	 	 	 */
 				old_euid = geteuid();
 				seteuid( 0 );
 
 				if( fchown( fd, jobuser_id, -1 )) {
 					seteuid( old_euid );
-			 		/* Chown failed. This means that user root is a normal user for the file
-	    	 	 	 * system (due to NFS rights). So we have no other chance than open the 
-	    	 	 	 * file for writing for everyone. 
+			 		/* Chown failed. This means that user root is a normal user 
+					 * for the file system (due to NFS rights). So we have no 
+					 * other chance than open the file for writing for everyone. 
 	    	 	 	 */
 	   			if( fchmod( fd, 0666 )==-1) {
 					}

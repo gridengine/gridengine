@@ -270,6 +270,9 @@ int truncate_stderr_out
     */
    shepherd_error_init( );
 
+	shepherd_trace_chown( target_user );
+	shepherd_error_chown( target_user );
+
    min_gid = atoi(get_conf_val("min_gid"));
    min_uid = atoi(get_conf_val("min_uid"));
 

@@ -1120,14 +1120,18 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
    cl_raw_list_lock(cl_com_handle_list);
 
    CL_LOG(CL_LOG_INFO,"shutting down handle ...");
-   if ( handle->do_shutdown != 1) {
+   if ( handle->do_shutdown == 0) {
       /* wait for connection close response message from heach connection */
       /* get current timeout time */
       gettimeofday(&now,NULL);
       handle->shutdown_timeout = now.tv_sec + handle->acknowledge_timeout + handle->close_connection_timeout;
    }
 
-   handle->do_shutdown = 1; /* stop accepting new connections */
+   if (return_for_messages == CL_TRUE) {
+      handle->do_shutdown = 1; /* stop accepting new connections , don't delete any messages */
+   } else {
+      handle->do_shutdown = 2; /* stop accepting new connections , return not handled response messages in cl_commlib_receive_message() */
+   }
 
    /* wait for empty connection list */
    while( connection_list_empty == CL_FALSE) {
@@ -2275,9 +2279,7 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
 
    /* when threads enabled: this is done by cl_com_handle_service_thread() */
    if (handle->service_provider                == CL_TRUE && 
-       handle->do_shutdown                     == 0 && 
-       handle->service_handler->data_read_flag == CL_COM_DATA_READY &&
-       handle->max_connection_count_reached    == CL_FALSE ) {
+       handle->service_handler->data_read_flag == CL_COM_DATA_READY) {
 
       /* new connection requests */
       cl_com_connection_t* new_con = NULL;
@@ -3718,10 +3720,13 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
                      } else {
                         /* never return a message with response id  when response_mid is 0 */
                         if (message_elem->message->message_response_id != 0) {
-                           CL_LOG_INT(CL_LOG_ERROR,"message response id is set for this message:", (int)message_elem->message->message_response_id);
-                           if ( handle->do_shutdown == 0 ) {
-                              CL_LOG(CL_LOG_ERROR,"return message without request, because handle goes down:");
+                           if (handle->do_shutdown != 2) {
+                              CL_LOG_INT(CL_LOG_WARNING,"message response id is set for this message:", (int)message_elem->message->message_response_id);
                               match = 0;
+                           } else {
+                              /* this is handle shutdown mode without returning any message to application */
+                              /* cl_commlib_shutdown_handle() has to delete this message */
+                              CL_LOG_INT(CL_LOG_WARNING,"returning response message without request:", (int)message_elem->message->message_response_id);
                            }
                         }
                      }
@@ -5764,9 +5769,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
 
          /* check for new connections */
          if (handle->service_provider                == CL_TRUE           && 
-             handle->do_shutdown                     == 0                 && 
-             handle->service_handler->data_read_flag == CL_COM_DATA_READY &&
-             handle->max_connection_count_reached    == CL_FALSE) {
+             handle->service_handler->data_read_flag == CL_COM_DATA_READY) {
 
             /* we have a new connection request */
             cl_com_connection_t* new_con = NULL;

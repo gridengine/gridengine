@@ -442,20 +442,74 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
    }
    
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT) {
-      int timeout_flag = 0;
-      int do_stop      = 0;
-      fd_set writefds;
+      int my_error;
+      int i;
 
       CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT");
 
-      while (do_stop == 0) {
-         int my_error;
-         int i;
-         int select_back = 0;
+      errno = 0;
+      i = connect(private->sockfd, (struct sockaddr *) &(private->client_addr), sizeof(struct sockaddr_in));
+      my_error = errno;
+      if (i != 0) {
+         if (my_error == EISCONN) {
+            /* socket is allready connected */
+            CL_LOG(CL_LOG_INFO,"allready connected");
+         }
 
+         if (my_error == ECONNREFUSED  ) {
+            /* can't open connection */
+            CL_LOG_INT(CL_LOG_ERROR,"connection refused to port ",private->connect_port);
+            shutdown(private->sockfd, 2);
+            close(private->sockfd);
+            private->sockfd = -1;
+            cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CONNECTION_REFUSED );
+            return CL_RETVAL_CONNECT_ERROR;
+         }
+
+         if (my_error == EADDRNOTAVAIL ) {
+            /* can't open connection */
+            CL_LOG_INT(CL_LOG_ERROR,"address not available for port ",private->connect_port);
+            shutdown(private->sockfd, 2);
+            close(private->sockfd);
+            private->sockfd = -1;
+            cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CANT_ASSIGN_ADDRESS );
+            return CL_RETVAL_CONNECT_ERROR;
+         }
+
+
+         if (my_error == EINPROGRESS || my_error == EALREADY) {
+            connection->connection_sub_state = CL_COM_OPEN_CONNECT_IN_PROGRESS;
+         } else {
+            /* we have an connect error */
+            CL_LOG_INT(CL_LOG_ERROR,"connect error errno:", my_error);
+            shutdown(private->sockfd, 2);
+            close(private->sockfd);
+            private->sockfd = -1;
+            snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CONNECT_ERROR_U, u32c(my_error));
+            cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+            return CL_RETVAL_CONNECT_ERROR;
+         }
+      } else {
+         /* we are connected */
+         CL_LOG(CL_LOG_INFO,"connected");
+      }
+   
+      if (connection->connection_sub_state != CL_COM_OPEN_CONNECT_IN_PROGRESS) {
+         connection->write_buffer_timeout_time = 0;
+         connection->connection_sub_state = CL_COM_OPEN_CONNECTED;
+      }
+   }
+
+   if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT_IN_PROGRESS ) {
+      int timeout_flag = 0;
+      int do_stop      = 0;
+      fd_set writefds;
+      CL_LOG(CL_LOG_DEBUG,"state is CL_COM_OPEN_CONNECT_IN_PROGRESS");
+
+      while (do_stop == 0) {
+         int select_back = 0;
          struct timeval now;
          struct timeval stimeout;
-
 
          gettimeofday(&now,NULL);
          if (connection->write_buffer_timeout_time <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE ) {
@@ -463,103 +517,53 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             break;
          }
    
-         errno = 0;
-         i = connect(private->sockfd, (struct sockaddr *) &(private->client_addr), sizeof(struct sockaddr_in));
-         my_error = errno;
-         if (i != 0) {
-            if (my_error == EISCONN) {
-               /* socket is allready connected */
-               CL_LOG(CL_LOG_INFO,"allready connected");
-               break;
-            }
-   
-            if (my_error == ECONNREFUSED  ) {
-               /* can't open connection */
-               CL_LOG_INT(CL_LOG_ERROR,"connection refused to port ",private->connect_port);
-               shutdown(private->sockfd, 2);
-               close(private->sockfd);
-               private->sockfd = -1;
-               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CONNECTION_REFUSED );
-               return CL_RETVAL_CONNECT_ERROR;
-            }
+         FD_ZERO(&writefds);
+         FD_SET(private->sockfd, &writefds);
+         if (only_once == 0) {
+            stimeout.tv_sec = 0; 
+            stimeout.tv_usec = 250*1000;   /* 1/4 sec */
+         } else {
+            stimeout.tv_sec = 0; 
+            stimeout.tv_usec = 0;   /* don't waste time */
+         }
 
-            if (my_error == EADDRNOTAVAIL ) {
-               /* can't open connection */
-               CL_LOG_INT(CL_LOG_ERROR,"address not available for port ",private->connect_port);
-               shutdown(private->sockfd, 2);
-               close(private->sockfd);
-               private->sockfd = -1;
-               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, MSG_CL_TCP_FW_CANT_ASSIGN_ADDRESS );
-               return CL_RETVAL_CONNECT_ERROR;
-            }
-
-            if (my_error == EINPROGRESS || my_error == EALREADY) {
-               /* wait for select to indicate that write is enabled 
-                  this is done with timeout in order to not stress 
-                  the cpu */
-               FD_ZERO(&writefds);
-
-               FD_SET(private->sockfd, &writefds);
-               if (only_once == 0) {
-                  stimeout.tv_sec = 0; 
-                  stimeout.tv_usec = 250*1000;   /* 1/4 sec */
-               } else {
-                  stimeout.tv_sec = 0; 
-                  stimeout.tv_usec = 0;   /* don't waste time */
-               }
-               select_back = select(private->sockfd + 1, NULL, &writefds, NULL, &stimeout);
-               if (select_back > 0) {
-                  int socket_error = 0;
-                  int socklen = sizeof(socket_error);
+         select_back = select(private->sockfd + 1, NULL, &writefds, NULL, &stimeout);
+         if (select_back > 0) {
+            int socket_error = 0;
+            int socklen = sizeof(socket_error);
 
 #if defined(SOLARIS) && !defined(SOLARIS64) 
-                  getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
+            getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
 #else
-                  getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
+            getsockopt(private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
 #endif
-                  if (socket_error == 0) {
-                     CL_LOG(CL_LOG_INFO,"connected");
-                     break; /* we are connected */
-                  } else {
-                     if (socket_error != EINPROGRESS && socket_error != EALREADY && socket_error != EISCONN) {
-                        CL_LOG_INT(CL_LOG_ERROR,"socket error errno:", socket_error);
-                        shutdown(private->sockfd, 2);
-                        close(private->sockfd);
-                        private->sockfd = -1;
-                        snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_SOCKET_ERROR_U, u32c(socket_error));
-                        cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
-                        return CL_RETVAL_CONNECT_ERROR;
-                     }
-                     if (only_once != 0) {
-                        return CL_RETVAL_UNCOMPLETE_WRITE;
-                     }
-                  }
-               } else {
-                  if (only_once != 0) {
-                     if (select_back == -1) {
-                        CL_LOG(CL_LOG_ERROR,"select error");
-                        cl_com_push_application_error(CL_RETVAL_SELECT_ERROR, MSG_CL_TCP_FW_SELECT_ERROR);
-                        
-                        return CL_RETVAL_SELECT_ERROR;
-                     }
-                     return CL_RETVAL_UNCOMPLETE_WRITE;
-                  }
-               } 
+            if (socket_error == 0 || socket_error == EISCONN) {
+               CL_LOG(CL_LOG_INFO,"connected");
+               break; /* we are connected */
             } else {
-               /* we have an connect error */
-               CL_LOG_INT(CL_LOG_ERROR,"connect error errno:", my_error);
-               shutdown(private->sockfd, 2);
-               close(private->sockfd);
-               private->sockfd = -1;
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CONNECT_ERROR_U, u32c(my_error));
-               cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
-               return CL_RETVAL_CONNECT_ERROR;
+               if (socket_error != EINPROGRESS && socket_error != EALREADY) {
+                  CL_LOG_INT(CL_LOG_ERROR,"socket error errno:", socket_error);
+                  shutdown(private->sockfd, 2);
+                  close(private->sockfd);
+                  private->sockfd = -1;
+                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_SOCKET_ERROR_U, u32c(socket_error));
+                  cl_com_push_application_error(CL_RETVAL_CONNECT_ERROR, tmp_buffer);
+                  return CL_RETVAL_CONNECT_ERROR;
+               }
+               if (only_once != 0) {
+                  return CL_RETVAL_UNCOMPLETE_WRITE;
+               }
             }
          } else {
-            /* we are connected */
-            CL_LOG(CL_LOG_INFO,"connected");
-            break;
-         }
+            if (select_back < 0) {
+               CL_LOG(CL_LOG_ERROR,"select error");
+               cl_com_push_application_error(CL_RETVAL_SELECT_ERROR, MSG_CL_TCP_FW_SELECT_ERROR);
+               return CL_RETVAL_SELECT_ERROR;
+            }
+            if (only_once != 0) {
+               return CL_RETVAL_UNCOMPLETE_WRITE;
+            }
+         } 
       }
    
       if (timeout_flag == 1) {
@@ -1083,12 +1087,19 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
                   break;
                case CL_OPENING:
                   /* this is to come out of select when connection socket is ready to connect */
-                  if (connection->connection_sub_state == CL_COM_OPEN_CONNECT) { 
-                     if ( con_private->sockfd > 0 && do_read_select != 0) {
-                        max_fd = MAX(max_fd, con_private->sockfd);
-                        FD_SET(con_private->sockfd,&my_write_fds);
+                  switch(connection->connection_sub_state) {
+                     case CL_COM_OPEN_CONNECTED:
+                     case CL_COM_OPEN_CONNECT_IN_PROGRESS:
+                     case CL_COM_OPEN_CONNECT: {
+                        if ( con_private->sockfd > 0 && do_read_select != 0) {
+                           max_fd = MAX(max_fd, con_private->sockfd);
+                           FD_SET(con_private->sockfd,&my_write_fds);
+                        } 
+                        break;
                      }
-                  } 
+                     default:
+                        break;
+                  }
                   break;
                case CL_DISCONNECTED:
                case CL_CLOSING:

@@ -129,6 +129,7 @@ typedef enum cl_connection_sub_state_type {
    /* when CL_COM_OPENING */
    CL_COM_OPEN_INIT = 1,
    CL_COM_OPEN_CONNECT,
+   CL_COM_OPEN_CONNECT_IN_PROGRESS,
    CL_COM_OPEN_CONNECTED,
 
    /* when CL_COM_CONNECTING */

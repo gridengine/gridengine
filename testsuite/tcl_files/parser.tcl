@@ -1112,28 +1112,28 @@ proc parse_qstat {input output {jobid ""} {ext 0}} {
          set      rules(7)  rule_min
          set   position(8)  "92 108"            ; set    names(8)    deadline
          set  transform(8)  transform_date_time
-         set   position(9)  "110 119"           ; set    names(9)    cpu
+         set   position(9)  "112 121"           ; set    names(9)    cpu
          set      rules(9)  rule_sum
          set    replace(9,) 0:00:00:00          ; set  replace(9,NA) 0:00:00:00
          set  transform(9)  transform_cpu
-         set  position(10)  "121 127"           ; set   names(10)    mem
+         set  position(10)  "123 129"           ; set   names(10)    mem
          set   replace(10,) 0                   ; set replace(10,NA) 0
          set     rules(10)  rule_sum
-         set  position(11) "129 135"            ; set   names(11)    io
+         set  position(11) "131 137"            ; set   names(11)    io
          set   replace(11,) 0                   ; set replace(11,NA) 0
          set     rules(11)  rule_sum
-         set  position(12)  "137 141"           ; set   names(12)    tckts
-         set  position(13)  "143 147"           ; set   names(13)    ovrts
-         set  position(14)  "149 153"           ; set   names(14)    otckt
-         set  position(15)  "155 159"           ; set   names(15)    dtckt
-         set  position(16)  "161 165"           ; set   names(16)    ftckt
-         set  position(17)  "167 171"           ; set   names(17)    stckt
-         set  position(18)  "173 176"           ; set   names(18)    share
-         set  position(19)  "179 188"           ; set   names(19)    queue
+         set  position(12)  "139 143"           ; set   names(12)    tckts
+         set  position(13)  "145 149"           ; set   names(13)    ovrts
+         set  position(14)  "151 155"           ; set   names(14)    otckt
+         set  position(15)  "157 161"           ; set   names(15)    dtckt
+         set  position(16)  "163 167"           ; set   names(16)    ftckt
+         set  position(17)  "169 173"           ; set   names(17)    stckt
+         set  position(18)  "175 178"           ; set   names(18)    share
+         set  position(19)  "180 190"           ; set   names(19)    queue
          set     rules(19)  rule_list
-         set  position(20)  "190 196"           ; set   names(20)    master
+         set  position(20)  "192 198"           ; set   names(20)    master
          set     rules(20)  rule_list
-         set  position(21)  "198 end"           ; set   names(21)    jatask
+         set  position(21)  "200 end"           ; set   names(21)    jatask
          set     rules(21)  rule_list
       } else {
          set   position(0)  "0 6"               ; set    names(0)    id   

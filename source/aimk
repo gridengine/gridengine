@@ -252,7 +252,7 @@ set   FC           = f77
 set   LFLAGS       = "-L."
 set   LIBS         = "-lm"
 set   OPTIMIZATION = 0
-set   GETTEXTBASE = "$SOURCE/3rdparty/gettext-0.10.40"
+set   GETTEXTBASE = "$SOURCE/3rdparty/gettext-0.11"
 set   MAKEZLIB    = 0
 set   TPLIB       = ""	# 3rdparty libs
 set   MAKESTRPTIME = 0
@@ -524,7 +524,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case  "-mo"
       if ( $BUILDARCH == solaris || $BUILDARCH == solaris64 ) then
-         util/msgmerge.csh
+         scripts/msgmerge.csh
       else
          echo "Use a solaris machine"                                                 endif
       exit 0
@@ -629,7 +629,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case  "-po"
       if ( $BUILDARCH == glinux ) then
-         util/msgmerge.csh merge
+         scripts/msgmerge.csh merge
          echo ""
          echo "==========READY FOR TRANSLATION========="
          echo ""
@@ -637,7 +637,7 @@ while ($#argv >= 1 && $?found)
       exit 0
       breaksw
    case  "-pot"
-      $0 -intl -noqmon messages
+      $0 -intl -only-core messages
       exit 0
       breaksw
    case "-pr-geee":  
@@ -1066,6 +1066,7 @@ case LINUX6:
    else
       set CFLAGS = "-Wno-error $CFLAGS"
       set CXXFLAGS = "-Wno-error $CXXFLAGS"
+      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
       set LIBS = "$LIBS"
    endif
 
@@ -1104,7 +1105,7 @@ case LINUX6:
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
    set XMTDEF   = ""
-   set XINCD    = "$XMTINCD $XINCD -I/usr/X11/include"
+   set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
@@ -1494,7 +1495,7 @@ endif
 if ( "$BUILDGETTEXT" == 1 ) then
    echo ________G_E_T_T_E_X_T___________
 
-   cd $SOURCE/3rdparty/gettext-0.10.40
+   cd $SOURCE/3rdparty/gettext-0.11
    $SOURCE/scripts/install.gridware $COMPILE_ARCH
    if ( $status != 0 ) then
       echo not done
@@ -1786,6 +1787,10 @@ if ( "$QTCSH" == 1) then
    endif
 
    cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
+
+   if ( "$CC" == "insure" ) then
+      setenv CC insure
+   endif
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
          "SGE_LIBS=$SGE_LIBS $KRBLIB $LINK_ZLIB $LFLAGS $KLFLAGS $KLIBS" \

@@ -1,3 +1,5 @@
+AA-2002-03-19-4  Bugfix:   - scripts for I18N, gettext-1.11
+
 AA-2002-03-19-3  Bugfix:   - qmon cluster_token_extend_time was lost
 
 AA-2002-03-19-2  Feature:  - install doc for CSP

@@ -1,3 +1,8 @@
+CR-2003-01-22-0  Testsuite: - throughput test enhancment:
+                              test sharetree with projects
+                            - procedure spool_array_to_file():
+                              new parameter to switch of comment lines
+
 JG-2003-01-22-0  Enhancem.: Added timestamp to events.
                  IZ:        #457
 

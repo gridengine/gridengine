@@ -468,6 +468,7 @@ proc convert_spool_file_to_html { spoolfile htmlfile { just_return_content 0 }} 
 #     filename   - file for data spooling
 #     obj_name   - file object name of error
 #     array_name - array to spool
+#     { write_comment 1 } - if 1: write comment line into file
 #
 #  RESULT
 #     number of changed values 
@@ -475,7 +476,7 @@ proc convert_spool_file_to_html { spoolfile htmlfile { just_return_content 0 }} 
 #  SEE ALSO
 #     file_procedures/read_array_from_file()
 #*******************************************************************************
-proc spool_array_to_file { filename obj_name array_name } {
+proc spool_array_to_file { filename obj_name array_name { write_comment 1 } } {
 
    global CHECK_OUTPUT 
    upvar $array_name data
@@ -533,8 +534,10 @@ proc spool_array_to_file { filename obj_name array_name } {
       set data_specs [lsort $data_specs]
       foreach spec $data_specs {
          # puts $CHECK_OUTPUT "saving \"$obj_name->$spec\" ..."
-         set new_file_dat($act_line) "####### $spec #######"
-         incr act_line 1
+         if { $write_comment == 1 } {
+            set new_file_dat($act_line) "####### $spec #######"
+            incr act_line 1
+         }
          set new_file_dat($act_line) [pack_data_line $spec]
          incr act_line 1
          set new_file_dat($act_line) [pack_data_line $data($spec)]
@@ -909,7 +912,9 @@ proc read_array_from_file { filename obj_name array_name { enable_washing_machin
   set wcount 0
   set time 0
   for { set i $obj_start } { $i <= $obj_end  } { incr i 1 } {
-     incr i 1
+     if { [string first "#" $file_dat($i) ] == 0 } {
+        incr i 1
+     }
      set spec [unpack_data_line $file_dat($i)]
      incr i 1
      set spec_data [unpack_data_line $file_dat($i)]

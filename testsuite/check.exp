@@ -10333,6 +10333,7 @@ proc print_results {ckpath where} {
    set filenames [get_file_names $ckpath]
    set catch_return [ catch {
       foreach elem $filenames {
+         clear_screen
          set data [get_test_result "$ckpath/$elem"]
    
          set path [lindex $data 0]

@@ -38,8 +38,11 @@ global check_init_level_procedure check_category
 set check_init_level_procedure "init_level"
 set check_category            "PERFORMANCE"
 set check_name                "throughput"
-set check_description(0)      "Test with 500 jobs, job sleep time 5"
-set check_description(100)    "Test with 15000 jobs, job sleep time 15"
+set check_description(0)      "Functional test"
+set check_description(1)      "Functional test with sharetree (only sgeee)"
+set check_description(100)    "test"
+set check_description(101)    "with sharetree (only sgeee)"
+
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 
 set check_functions           ""
@@ -48,7 +51,7 @@ lappend check_functions       "run_throughput_test"
 lappend check_functions       "cleanup_queues"
 #set check_functions          "compare_dump_data_file"
 
-set check_highest_level       100
+set check_highest_level       101
 
 global nr_queues  nr_slots
 global queue_list
@@ -58,15 +61,16 @@ global end_job_count
 global event_client_bin
 global global_job_run_time
 global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC SCHEDULE_INTERVAL
-
-
+global throughput_subdir
+global throughput_sharetree
 
 set queue_list ""
 set host_list ""
 set event_client_bin ""
+set throughput_subdir ""
 
 proc init_level {} {
-    global CHECK_ACT_LEVEL
+    global CHECK_ACT_LEVEL CHECK_PRODUCT_TYPE
     global end_job_count                      ;# number of jobs
     global enable_queues_job_count             ;# after with job, enable queues
     global nr_queues                            ;# nr of queues on each host
@@ -75,33 +79,167 @@ proc init_level {} {
     global FLUSH_SUBMIT_SEC                    ;# -1 or 0,1,2,3 ...
     global FLUSH_FINISH_SEC                    ;# -1 or 0,1,2,3 ...
     global SCHEDULE_INTERVAL             ;# 00:00:30 ...
+    global throughput_subdir             ;# subdirectory in protocols/throughput/
+    global throughput_sharetree
 
+    # paramters for all tests
+    set SCHEDULE_INTERVAL        00:00:15
+    set global_job_run_time      5            ;# job sleep parameter
+    set nr_queues                10            ;# nr of queues on each host
+    set nr_slots                 5           ;# nr of slots on each queue
+    set enable_queues_job_count  0         ;# after witch job, enable queues
+
+    # TODO setup levels 
   switch -- $CHECK_ACT_LEVEL {
      "0"  { 
-        set end_job_count            50         ;# number of jobs
-        set enable_queues_job_count  0         ;# after with job, enable queues
-        set nr_queues                10            ;# nr of queues on each host
-        set nr_slots                 5            ;# nr of slots on each queue
-        set global_job_run_time      5            ;# job sleep parameter
+        set end_job_count            100         ;# number of jobs
         set FLUSH_SUBMIT_SEC         0             ;# -1 or 0,1,2,3 ...
         set FLUSH_FINISH_SEC         0             ;# -1 or 0,1,2,3 ...
-        set SCHEDULE_INTERVAL        00:00:30      ;# 00:00:30 ...
-
+        set throughput_sharetree     0
+        set throughput_subdir        "functional"
+        return 0
+     }
+     "1"  { 
+        set end_job_count            100         ;# number of jobs
+        set FLUSH_SUBMIT_SEC         0           ;# -1 or 0,1,2,3 ...
+        set FLUSH_FINISH_SEC         0           ;# -1 or 0,1,2,3 ...
+        set throughput_sharetree     1
+        set throughput_subdir        "functional_sharetree"
+        if { $CHECK_PRODUCT_TYPE == "sge" } {
+           return -1
+        } 
         return 0  
      }
-     "100" {
+     "100"  { 
         set end_job_count            10000         ;# number of jobs
-        set enable_queues_job_count  5000         ;# after with job, enable queues
-        set nr_queues                10            ;# nr of queues on each host
-        set nr_slots                 5            ;# nr of slots on each queue
-        set global_job_run_time      15            ;# job sleep parameter
-        set FLUSH_SUBMIT_SEC         5             ;# -1 or 0,1,2,3 ...
-        set FLUSH_FINISH_SEC         5             ;# -1 or 0,1,2,3 ...
-        set SCHEDULE_INTERVAL        00:00:30      ;# 00:00:30 ...
-        return 0
+        set FLUSH_SUBMIT_SEC         0             ;# -1 or 0,1,2,3 ...
+        set FLUSH_FINISH_SEC         0             ;# -1 or 0,1,2,3 ...
+        set enable_queues_job_count  5000         ;# after witch job, enable queues
+        set throughput_sharetree     0
+        set throughput_subdir        "functional"
+        return 0  
+     }
+     "101"  { 
+        set end_job_count            10000         ;# number of jobs
+        set FLUSH_SUBMIT_SEC         0           ;# -1 or 0,1,2,3 ...
+        set FLUSH_FINISH_SEC         0           ;# -1 or 0,1,2,3 ...
+        set enable_queues_job_count  5000         ;# after witch job, enable queues
+
+        set throughput_sharetree     1
+        set throughput_subdir        "functional_sharetree"
+        if { $CHECK_PRODUCT_TYPE == "sge" } {
+           return -1
+        } 
+        return 0  
      }
   }
   return -1
+}
+
+proc throughput_set_share_tree {} {
+
+   global CHECK_HOST CHECK_OUTPUT
+
+   set s_tree ""  
+   lappend s_tree "id=0"
+   lappend s_tree "name=Root"
+   lappend s_tree "type=0"
+   lappend s_tree "shares=1"
+   lappend s_tree "childnodes=1,4"
+   lappend s_tree "id=1"
+   lappend s_tree "name=node1"
+   lappend s_tree "type=0"
+   lappend s_tree "shares=8000"
+   lappend s_tree "childnodes=2,3"
+   lappend s_tree "id=2"
+   lappend s_tree "name=project1"
+   lappend s_tree "type=0"
+   lappend s_tree "shares=4000"
+   lappend s_tree "childnodes=NONE"
+   lappend s_tree "id=3"
+   lappend s_tree "name=project2"
+   lappend s_tree "type=0"
+   lappend s_tree "shares=6000"
+   lappend s_tree "childnodes=NONE"
+   lappend s_tree "id=4"
+   lappend s_tree "name=node2"
+   lappend s_tree "type=0"
+   lappend s_tree "shares=2000"
+   lappend s_tree "childnodes=5"
+   lappend s_tree "id=5"
+   lappend s_tree "name=project3"
+   lappend s_tree "type=0"
+   lappend s_tree "shares=10000"
+   lappend s_tree "childnodes=NONE"
+   return $s_tree
+}
+
+proc throughput_setup_sharetree {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_HOST
+
+   puts $CHECK_OUTPUT "setup sharetree ..."
+
+   puts $CHECK_OUTPUT "   adding projects ..."
+   set prj_setup(name) "project1"
+   add_prj prj_setup
+
+   set prj_setup(name) "project2"
+   add_prj prj_setup
+
+   set prj_setup(name) "project3"
+   add_prj prj_setup
+
+   # setup sharetree
+   
+   set vi_commands "i" 
+   set s_tree [throughput_set_share_tree]
+   foreach elem $s_tree {
+      lappend vi_commands "${elem}\n"
+   } 
+   lappend vi_commands [format "%c" 27]
+   lappend  vi_commands "dddddddddddd"
+   
+
+   set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
+   } result ] 
+ 
+   set CHANGED_SHARETREE [translate $CHECK_HOST 1 0 0 [sge_macro MSG_TREE_CHANGEDSHARETREE]]
+   set CAN_T_READ [translate $CHECK_HOST 1 0 0 [sge_macro MSG_QCONF_CANTREADSHARETREEX_S] "*"]
+
+   set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-astree" $vi_commands $CHANGED_SHARETREE $CAN_T_READ ]  
+   if { $result != 0 } {
+      add_proc_error "throughput_setup_sharetree" -1 "could not add sharetree (error: $result)"
+   }
+
+   get_schedd_config my_config 
+   set my_config(weight_tickets_share) "10000"
+   set my_config(usage_weight_list)    "cpu=1,mem=0,io=0"
+   set my_config(job_load_adjustments) "np_load_avg=0.0"
+   set_schedd_config my_config
+
+}
+proc throughput_cleanup_sharetree {} {
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+
+   puts $CHECK_OUTPUT "cleanup sharetree ..."
+   reset_schedd_config
+
+   set catch_return [ catch {  
+      eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -dstree" 
+   } result ]
+
+   puts "qconf -dstree result: $result"
+   puts "qconf -dstree exit value: $catch_return "
+
+
+   puts $CHECK_OUTPUT "   removing projects ..."
+   del_prj "project1"
+   del_prj "project2"
+   del_prj "project3"
+
+
 }
 
 proc setup_queues {} {
@@ -110,11 +248,13 @@ proc setup_queues {} {
    global CHECK_HOST event_client_bin CHECK_SOURCE_DIR
    global nr_queues queue_list host_list  nr_slots
    global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC SCHEDULE_INTERVAL
+   global throughput_sharetree
 
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
       set_error -3 "need more than one host for this test"
       return -3
    }
+   
 
    # start event client (if compiled)
    set up_arch [resolve_upper_arch $CHECK_HOST]
@@ -125,6 +265,7 @@ proc setup_queues {} {
    }
    puts $CHECK_OUTPUT "using event client: $event_client_bin"
 
+   
 
    # setup scheduler configuration
    if { [info exists stored_configuration] } {
@@ -177,13 +318,18 @@ proc setup_queues {} {
    # show queue list:
 
    puts $CHECK_OUTPUT "using [llength $queue_list] queues to submit jobs"
+
+   if { $throughput_sharetree == 1 } {
+      throughput_setup_sharetree
+   }
+
    set_error 0 "ok"
 }
 
 proc cleanup_queues {} {
    global CHECK_CORE_EXECD  CHECK_OUTPUT
    global queue_list event_client_bin
-   global stored_configuration
+   global stored_configuration throughput_sharetree
 
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -194,6 +340,12 @@ proc cleanup_queues {} {
       set_error -3 "could not open event client binary: $event_client_bin"
       return -3
    }
+
+
+   if { $throughput_sharetree == 1 } {
+      throughput_cleanup_sharetree
+   }
+
 
    # reset scheduler configurations
    reset_schedd_config
@@ -210,7 +362,7 @@ proc cleanup_queues {} {
       puts $CHECK_OUTPUT $elem
       enable_queue $elem.q     
    }
-
+   
    set_error 0 "ok"
 }
 
@@ -221,7 +373,7 @@ proc run_throughput_test {} {
    global queue_list CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
    global enable_queues_job_count CHECK_SOURCE_DIR CHECK_CORE_EXECD
    global end_job_count host_list event_client_bin CHECK_FIRST_FOREIGN_SYSTEM_USER
-
+   global throughput_sharetree
 
    if { [llength $CHECK_CORE_EXECD] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -263,6 +415,7 @@ proc run_throughput_test {} {
 
    # prepare job arguments 
    set my_job "\$SGE_ROOT/examples/jobs/sleeper.sh"
+
    set my_job_command "qsub -o /dev/null -e /dev/null $my_job $result(job_run_time)\n"
 
    
@@ -311,6 +464,16 @@ proc run_throughput_test {} {
        }
    }
 
+   # variables set not in main loop for speed reasons
+   set event_and_msg_id_list $event_client_id
+   lappend event_and_msg_id_list $schedd_messages_id
+   set timeout 120
+
+
+   # job list where job start event was faster than submit
+   set job_buffer_data_index 0
+   set job_buffer_data ""
+
 
    # here the throughput test starts
    while { $result(jobs_done) < $end_job_count } {
@@ -323,8 +486,16 @@ proc run_throughput_test {} {
            if { $host_index >= 0 } {
               set spawn_id [lindex $spawn_list $host_index]
               set next_submit_list [lrange $next_submit_list 1 end]
+              if { $throughput_sharetree == 1 } {
+                 set act_project "project"
+                 set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
+                 append act_project $numb
+                 set my_job_command "qsub -o /dev/null -e /dev/null -P $act_project $my_job $result(job_run_time)\n"
+                 set job_data($sent_jobs,project) $numb
+              } 
               send -i $spawn_id $my_job_command
               set job_data($sent_jobs,state) "submit"
+#              puts $CHECK_OUTPUT "setting job_data($sent_jobs,state) to submit"
               set job_data($sent_jobs,job_id) "-"
               set job_data($sent_jobs,submit_start_time) [timestamp]
               set job_data($sent_jobs,submit_end_time) 0
@@ -333,11 +504,9 @@ proc run_throughput_test {} {
               incr sent_jobs 1
            }
        }
-     
        # enable queues when $enable_queues_job_count is reached
        if { $are_enabled != 1 } {
           if { $result(jobs_submitted) >= $enable_queues_job_count } {
-             puts $CHECK_OUTPUT "enable queues              "
              set are_enabled 1
              foreach queue $queue_list {
                 enable_queue $queue
@@ -345,102 +514,108 @@ proc run_throughput_test {} {
           }
        }
 
-       # wait for job submit success for all execd hosts
-       if { $result(jobs_submitted) < $end_job_count } {
-          set timeout 120
-          expect {
-            -i $spawn_list full_buffer {
-               add_proc_error "run_throughput_test" -1 "expect full_buffer error (2)"
-               return -1
-            }
-            -i $spawn_list timeout {
-               puts $CHECK_OUTPUT "---->>>>>>>>> got timeout while waiting for submitted jobs"
-               add_proc_error "run_throughput_test" -1 "got timeout while waiting for submitted jobs"
-               # not all jobs are submitted ????
-               return -1
-            }
-            -i $spawn_list eof {
-               set spawn_id $expect_out(spawn_id)
-               set host_nr [lsearch $spawn_list $spawn_id]
-               set host_name [lindex $host_list $host_nr]
-               add_proc_error "run_throughput_test" -1 "$host_name EOF : $expect_out(buffer)"
-            }
-            -i $spawn_list -- "$JOB_SUBMITTED\r\n" {
-               set output $expect_out(0,string) 
-               set output [ split $output "\n" ]
-               foreach help $output {
-                  set line [string trim $help]
-                  # removing additional characters before string
-                  set match_start [lindex $JOB_SUBMITTED 0]
-                  set match_pos [string first $match_start $line]
-                  if { $match_pos >= 1 } {
-                     set line [ string range $line $match_pos end ] 
+       # wait for job submit success for all execd hosts and event client reports
+       expect {
+         -i $spawn_list full_buffer {
+            add_proc_error "run_throughput_test" -1 "expect full_buffer error (2)"
+            return -1
+         }
+         -i $spawn_list timeout {
+            puts $CHECK_OUTPUT "---->>>>>>>>> got timeout while waiting for submitted jobs"
+            add_proc_error "run_throughput_test" -1 "got timeout while waiting for submitted jobs"
+            # not all jobs are submitted ????
+            return -1
+         }
+         -i $spawn_list eof {
+            set spawn_id $expect_out(spawn_id)
+            set host_nr [lsearch $spawn_list $spawn_id]
+            set host_name [lindex $host_list $host_nr]
+            add_proc_error "run_throughput_test" -1 "$host_name EOF : $expect_out(buffer)"
+         }
+         -i $spawn_list -- "$JOB_SUBMITTED\r\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach help $output {
+               set line [string trim $help]
+               # removing additional characters before string
+               set match_start [lindex $JOB_SUBMITTED 0]
+               set match_pos [string first $match_start $line]
+               if { $match_pos >= 1 } {
+                  set line [ string range $line $match_pos end ] 
+               }
+               if { [ string match $JOB_SUBMITTED $line ] } {
+#                  puts $CHECK_OUTPUT "line : >$line<"
+#                  puts $CHECK_OUTPUT "match: >$JOB_SUBMITTED<"
+                  set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
+                  set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
+                  set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
+                  if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
+                      add_proc_error "run_throughput_test" "-1" "locale switches parameter for qsub string! This is not supported yet"
                   }
-                  if { [ string match $JOB_SUBMITTED $line ] } {
-#                     puts $CHECK_OUTPUT "line : >$line<"
-#                     puts $CHECK_OUTPUT "match: >$JOB_SUBMITTED<"
-                     set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
-                     set job_name_pos [ string first "__JOB_NAME__" $JOB_SUBMITTED_DUMMY ]
-                     set job_arg_pos [ string first "__JOB_ARG__" $JOB_SUBMITTED_DUMMY ]
-                     if { $job_id_pos > $job_name_pos || $job_id_pos > $job_arg_pos } {
-                         add_proc_error "run_throughput_test" "-1" "locale switches parameter for qsub string! This is not supported yet"
+                  incr job_id_pos -1
+                  set job_id_prefix [ string range $JOB_SUBMITTED_DUMMY 0 $job_id_pos ]
+                  set job_id_prefix_length [ string length $job_id_prefix]
+                  set outtext $line 
+                  set id_pos [ string first $job_id_prefix $outtext]
+                  incr id_pos $job_id_prefix_length
+                  set submitjob_jobid [string range $outtext $id_pos end]
+                  set space_pos [ string first " " $submitjob_jobid ]
+                  set submitjob_jobid [string range $submitjob_jobid 0 $space_pos ]
+                  set submitjob_jobid [string trim $submitjob_jobid]
+                  
+                  set job_data($result(jobs_submitted),job_id) $submitjob_jobid
+#                  puts $CHECK_OUTPUT "job $submitjob_jobid submitted"    
+                  set job_data($submitjob_jobid) $result(jobs_submitted)   ;# pointer from job id to submit id
+                  set job_data($result(jobs_submitted),state) "pending" 
+                  set job_data($result(jobs_submitted),submit_end_time) [timestamp] 
+
+
+                  # do the rest
+                  set spawn_id $expect_out(spawn_id)
+                  set host_nr 0
+                  set host_nr [lsearch $spawn_list $spawn_id]
+                  set host_name [lindex $host_list $host_nr]
+                  incr result(jobs_submitted) 1
+                  # here a job is definitely submitted
+                  lappend next_submit_list $host_name
+                  lappend sent_job_ids $submitjob_jobid
+
+                  # show for buffered job starts
+                  while { $job_buffer_data_index > 0 } {
+                     set buf_time  [lindex $job_buffer_data 0]
+                     set buf_state [lindex $job_buffer_data 1]
+                     set buf_jobid [lindex $job_buffer_data 2]
+
+                     set sub_id [get_submit_id_from_job_id job_data $buf_jobid]
+                     if { $sub_id >= 0 } {
+                         set job_data($sub_id,run_start_time) $buf_time
+                         set job_data($sub_id,state) $buf_state
+                         set tmp_list [lrange $job_buffer_data 3 end]
+                         set job_buffer_data $tmp_list
+                         incr result(jobs_running) 1
+                         incr job_buffer_data_index -1
+#                         puts $CHECK_OUTPUT "removed job $buf_jobid from buffer"
+                     } else {
+                         # job submit message not available till now
+                         break
                      }
-                     incr job_id_pos -1
-                     set job_id_prefix [ string range $JOB_SUBMITTED_DUMMY 0 $job_id_pos ]
-                     set job_id_prefix_length [ string length $job_id_prefix]
-                     set outtext $line 
-                     set id_pos [ string first $job_id_prefix $outtext]
-                     incr id_pos $job_id_prefix_length
-                     set submitjob_jobid [string range $outtext $id_pos end]
-                     set space_pos [ string first " " $submitjob_jobid ]
-                     set submitjob_jobid [string range $submitjob_jobid 0 $space_pos ]
-                     set submitjob_jobid [string trim $submitjob_jobid]
-                     
-                     set job_data($result(jobs_submitted),job_id) $submitjob_jobid
-                     set job_data($submitjob_jobid) $result(jobs_submitted)   ;# pointer from job id to submit id
-                     set job_data($result(jobs_submitted),job_state) "pending" 
-                     set job_data($result(jobs_submitted),submit_end_time) [timestamp] 
-
-#                     puts $CHECK_OUTPUT "submit job id: $submitjob_jobid"      
-
-                     # do the rest
-                     set spawn_id $expect_out(spawn_id)
-                     set host_nr 0
-                     set host_nr [lsearch $spawn_list $spawn_id]
-                     set host_name [lindex $host_list $host_nr]
-                     incr result(jobs_submitted) 1
-                     # here a job is definitely submitted
-                     lappend next_submit_list $host_name
-                     lappend sent_job_ids $submitjob_jobid
-                  } else {
-#                     puts $CHECK_OUTPUT "no match: >$line<"
                   }
+
+               } else {
+#                  puts $CHECK_OUTPUT "no match: >$line<"
                }
             }
-          }
-       }
-
-       # get infos from event client
-       if { $result(jobs_submitted) < $end_job_count } {
-          set timeout 0
-       } else {
-          set timeout 1
-       }
-       set event_and_msg_id_list $event_client_id
-       lappend event_and_msg_id_list $schedd_messages_id
-       expect {
+         }
+         # here we expect event client
          -i $event_and_msg_id_list -- full_buffer {
-             add_proc_error "run_throughput_test" -1 "expect full_buffer error (3)"
-             return -1
+            add_proc_error "run_throughput_test" -1 "expect full_buffer error (3)"
+            return -1
          }
          -i $event_and_msg_id_list eof {
             add_proc_error "run_throughput_test" "-1" "unexpected EOF"
          }
          -i $event_and_msg_id_list -- "_exit_status_" {
             add_proc_error "run_throughput_test" "-1" "unexpected _exit_status_"
-         }
-         -i $event_and_msg_id_list timeout {
-            # no action
          }
          -i $event_and_msg_id_list -- "*\n" {
              set output $expect_out(0,string) 
@@ -460,6 +635,11 @@ proc run_throughput_test {} {
                       incr result(jobs_done) 1
                       set sent_job_ids [lreplace $sent_job_ids $pos $pos]
                       incr result(jobs_running) -1
+
+                      set id_position [lsearch $result(job_ids_running) $job_id]
+                      set new_running_job_ids_list [lreplace $result(job_ids_running) $id_position $id_position ]
+                      set result(job_ids_running) $new_running_job_ids_list
+                   
                       set sub_id [get_submit_id_from_job_id job_data $job_id]
                       if { $sub_id >= 0 } {
                          set job_data($sub_id,run_end_time) [timestamp]
@@ -476,10 +656,21 @@ proc run_throughput_test {} {
                    set job_id [string range $help $job_s_pos $job_e_pos]
 #                   puts $CHECK_OUTPUT "Job $job_id started"
                    incr result(jobs_running) 1
+                   lappend result(job_ids_running) $job_id
+
                    set sub_id [get_submit_id_from_job_id job_data $job_id]
                    if { $sub_id >= 0 } {
                       set job_data($sub_id,run_start_time) [timestamp]
                       set job_data($sub_id,state) "running"
+                   } else {
+                      # puts $CHECK_OUTPUT "assuming job submit before start!"
+                      # add the job start to job_buffer_data (when submit command
+                      # returns, the job data is actualized)
+                      lappend job_buffer_data [timestamp]
+                      lappend job_buffer_data "running"
+                      lappend job_buffer_data $job_id
+                      incr job_buffer_data_index 1
+                      incr result(jobs_running) -1
                    }
                 }
                 if { [string match "*scheduled in*" $help] } {
@@ -507,19 +698,21 @@ proc run_throughput_test {} {
                 }
              }
          }
-         -i $event_and_msg_id_list default {
-            # no action
-         }
        }
 
-       
        # update system status
        # we have one slot per queue !
+       set jobs_running $result(jobs_running)
        set jobs_run_pend         [ expr ( $result(jobs_submitted) - $result(jobs_done)    ) ]
-       set result(jobs_pending)  [ expr ( $jobs_run_pend          - $result(jobs_running) ) ]
-       set result(free_slots)    [ expr ( $result(total_slots)    - $result(jobs_running) ) ]
-       set result(test_run_time) [timestamp]
-       show_current_system_status result job_data schedd_data
+       set result(jobs_pending)  [ expr ( $jobs_run_pend          - $jobs_running ) ]
+       set result(free_slots)    [ expr ( $result(total_slots)    - $jobs_running ) ]
+       
+       set time_now [timestamp]
+       if { $result(test_run_time) != $time_now } {
+           show_current_system_status result job_data schedd_data
+           flush $CHECK_OUTPUT
+       }
+       set result(test_run_time) $time_now
        save_current_system_status results_list result
    }
 
@@ -545,8 +738,14 @@ proc run_throughput_test {} {
 }
 
 proc get_submit_id_from_job_id { job_array_name job_id } {
+   global CHECK_OUTPUT
    upvar $job_array_name jobs
    
+   if { [info exists jobs($job_id)] == 0 } {
+#      puts $CHECK_OUTPUT "job $job_id not existing"
+      return -1
+   }
+
    return $jobs($job_id)
 }
 
@@ -662,7 +861,7 @@ proc compare_dump_directory { dir } {
 
 proc compare_dump_data_file { file1 file2 } {
 
-   global CHECK_OUTPUT
+   global CHECK_OUTPUT throughput_sharetree
 
    # first analyse the files (if not existent)
    analyse_dump_data_file $file1 
@@ -1356,6 +1555,7 @@ proc compare_dump_data_file { file1 file2 } {
 proc analyse_dump_data_file { file { force 0 } } {
 
    global CHECK_OUTPUT
+   global throughput_sharetree
    
    set sub_dir [file tail $file]
    set dir_name [file dirname $file] 
@@ -1554,7 +1754,13 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content [ create_html_text "" ]
    append content [create_html_link "   (6) Scheduler job order analysis" "schedd_orders.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   (7) All charts in one html document" "all_charts.html"]
+   if { $throughput_sharetree == 1 }  {
+      append content [create_html_link "   (7) Running project job analysis" "project_jobs.html"]
+      append content [ create_html_text "" ]
+      append content [create_html_link "   (8) All charts in one html document" "all_charts.html"]
+   } else {
+      append content [create_html_link "   (7) All charts in one html document" "all_charts.html"]
+   }
 
    # links to data
    append content [ create_html_text "" ]
@@ -1677,6 +1883,13 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content ""
    append content [create_html_image "Running jobs" "running_jobs.gif"]
    generate_html_file $output_dir/running_jobs.html "$test_config(gridengine_version) from $test_config(test_date)" $content
+
+   if { $throughput_sharetree == 1 }  {
+      set content ""
+      append content ""
+      append content [create_html_image "Running project jobs" "project_jobs.gif"]
+      generate_html_file $output_dir/project_jobs.html "$test_config(gridengine_version) from $test_config(test_date)" $content
+   }
    
    set content ""
    append content ""
@@ -1712,6 +1925,9 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content [create_html_image "Pending jobs" "pending_jobs.gif"]
    append content [create_html_image "Scheduler times" "schedd_calc_time.gif"]
    append content [create_html_image "Scheduler orders" "schedd_orders.gif"]
+   if { $throughput_sharetree == 1 }  {
+      append content [create_html_image "Running project jobs" "project_jobs.gif"]
+   }
    generate_html_file $output_dir/all_charts.html "$test_config(gridengine_version) from $test_config(test_date)" $content
 
 
@@ -1724,6 +1940,11 @@ proc analyse_dump_data_file { file { force 0 } } {
        calculate_schedd_run_xy_rows schedd xy_rows $test_start 0
        # 3) job submit times and job run times
        calculate_submit_run_xy_rows jobs xy_rows $test_start 0
+
+       # 4) optional: calculate project times 
+       if { $throughput_sharetree == 1 }  {
+          calculate_project_run_xy_rows results jobs xy_rows 0
+       }
 
        set plot_data(xlabel) "time\[s\]"
        set plot_data(ylabel) "values"
@@ -1741,7 +1962,12 @@ proc analyse_dump_data_file { file { force 0 } } {
        set xy_rows(8,show)  0     ;# job submit time
        set xy_rows(9,show)  0     ;# job run time
        set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(11,show) 0     ;# running jobs project 1
+       set xy_rows(12,show) 0     ;# running jobs project 2
+       set xy_rows(13,show) 0     ;# running jobs project 3
        create_gnuplot_xy_gif plot_data xy_rows
+        
+
 
        set plot_data(title) "Throughput test results - pending jobs"
        set plot_data(output_file) "$output_dir/pending_jobs.gif"
@@ -1755,7 +1981,10 @@ proc analyse_dump_data_file { file { force 0 } } {
        set xy_rows(7,show) 0     ;# schedd orders
        set xy_rows(8,show) 0     ;# job submit time
        set xy_rows(9,show) 0     ;# job run time
-       set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(10,show) 0    ;# job distribution
+       set xy_rows(11,show) 0    ;# running jobs project 1
+       set xy_rows(12,show) 0    ;# running jobs project 2
+       set xy_rows(13,show) 0    ;# running jobs project 3
        create_gnuplot_xy_gif plot_data xy_rows
 
        set plot_data(title) "Throughput test results - schedd calculation time"
@@ -1771,6 +2000,9 @@ proc analyse_dump_data_file { file { force 0 } } {
        set xy_rows(8,show) 0     ;# job submit time
        set xy_rows(9,show) 0     ;# job run time
        set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(11,show) 0    ;# running jobs project 1
+       set xy_rows(12,show) 0    ;# running jobs project 2
+       set xy_rows(13,show) 0    ;# running jobs project 3
        create_gnuplot_xy_gif plot_data xy_rows
 
        set plot_data(title) "Throughput test results - schedd orders"
@@ -1786,6 +2018,9 @@ proc analyse_dump_data_file { file { force 0 } } {
        set xy_rows(8,show) 0     ;# job submit time
        set xy_rows(9,show) 0     ;# job run time
        set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(11,show) 0    ;# running jobs project 1
+       set xy_rows(12,show) 0    ;# running jobs project 2
+       set xy_rows(13,show) 0    ;# running jobs project 3
        create_gnuplot_xy_gif plot_data xy_rows
 
        set plot_data(title) "Throughput test results - job times"
@@ -1801,6 +2036,9 @@ proc analyse_dump_data_file { file { force 0 } } {
        set xy_rows(8,show) 1     ;# job submit time
        set xy_rows(9,show) 1     ;# job run time
        set xy_rows(10,show) 0     ;# job distribution
+       set xy_rows(11,show) 0    ;# running jobs project 1
+       set xy_rows(12,show) 0    ;# running jobs project 2
+       set xy_rows(13,show) 0    ;# running jobs project 3
        create_gnuplot_xy_gif plot_data xy_rows
 
        set plot_data(title) "Throughput test results - job distribution"
@@ -1818,9 +2056,33 @@ proc analyse_dump_data_file { file { force 0 } } {
        set xy_rows(8,show) 0     ;# job submit time
        set xy_rows(9,show) 0     ;# job run time
        set xy_rows(10,show) 1    ;# job distribution
+       set xy_rows(11,show) 0    ;# running jobs project 1
+       set xy_rows(12,show) 0    ;# running jobs project 2
+       set xy_rows(13,show) 0    ;# running jobs project 3
        create_gnuplot_xy_gif plot_data xy_rows
 
 
+       if { $throughput_sharetree == 1 }  {
+         set plot_data(xlabel) "time\[s\]"
+         set plot_data(ylabel) "jobs done\[%\]"
+         set plot_data(title) "Throughput test results - project jobs"
+         set plot_data(output_file) "$output_dir/project_jobs.gif"
+         set xy_rows(0,show)  0     ;# running jobs
+         set xy_rows(1,show)  0     ;# pending jobs
+         set xy_rows(2,show)  0     ;# jobs done
+         set xy_rows(3,show)  0     ;# jobs subitted
+         set xy_rows(4,show)  0     ;# total system slots
+         set xy_rows(5,show)  0     ;# free system slots
+         set xy_rows(6,show)  0     ;# schedduler calculation time
+         set xy_rows(7,show)  0     ;# schedd orders
+         set xy_rows(8,show)  0     ;# job submit time
+         set xy_rows(9,show)  0     ;# job run time
+         set xy_rows(10,show) 0     ;# job distribution
+         set xy_rows(11,show) 1     ;# running jobs project 1
+         set xy_rows(12,show) 1     ;# running jobs project 2
+         set xy_rows(13,show) 1     ;# running jobs project 3
+         create_gnuplot_xy_gif plot_data xy_rows
+       }
 }
 
 
@@ -1884,7 +2146,7 @@ proc calculate_submit_run_xy_rows { results_array_name row_array_name test_start
        set xy_rows($pos2,drawmode) "points"
        set xy_rows($pos2,title) "job run time $add_info"
  
-       set xy_rows($pos3,drawmode) "points"
+       set xy_rows($pos3,drawmode) "linespoints" ;#"points"
        set xy_rows($pos3,title) "job run time distribution $add_info"
 
 
@@ -1934,6 +2196,159 @@ proc calculate_submit_run_xy_rows { results_array_name row_array_name test_start
           }
        }
 }
+
+
+proc calculate_project_run_xy_rows { results_array_name job_array_name row_array_name start_numb } {
+   global CHECK_OUTPUT
+   upvar $results_array_name results
+   upvar $job_array_name jobs
+   upvar $row_array_name xy_rows
+
+   set pos1 [ expr ( $start_numb + 11 ) ]
+   set pos2 [ expr ( $start_numb + 12 ) ]
+   set pos3 [ expr ( $start_numb + 13 ) ]
+
+   set add_info " A"
+   if { $start_numb != 0 } {
+      set add_info " B"
+   }
+
+
+       if { $results(count) > 0 } {
+          set xy_rows($pos1,drawmode) "lines"
+          set xy_rows($pos1,title) "running jobs project1 (32 %) $add_info"
+
+          set xy_rows($pos2,drawmode) "lines"
+          set xy_rows($pos2,title) "running jobs project2 (48 %) $add_info"
+
+          set xy_rows($pos3,drawmode) "lines"
+          set xy_rows($pos3,title) "running jobs project3 (20 %) $add_info"
+
+          set last $results(count)
+          incr last -1
+
+          set test_start $results(0,test_run_time)
+
+          set job 0
+          set jobs_p1 0
+          set jobs_p2 0
+          set jobs_p3 0
+          set help_list ""
+          while { [info exists jobs($job,job_id) ] } {
+
+             set normalized_run_end_time    [ expr ( $jobs($job,run_end_time) - $test_start ) ]
+             set job_project $jobs($job,project)
+
+             if { [info exists help($normalized_run_end_time,p1)] == 0 } {
+                set help($normalized_run_end_time,p1) 0
+             }
+             if { [info exists help($normalized_run_end_time,p2)] == 0 } {
+                set help($normalized_run_end_time,p2) 0
+             }
+             if { [info exists help($normalized_run_end_time,p3)] == 0 } {
+                set help($normalized_run_end_time,p3) 0
+             }
+
+             if { $job_project == 1 } {
+                
+                incr help($normalized_run_end_time,p1) 1
+             }
+             if { $job_project == 2 } {
+                incr help($normalized_run_end_time,p2) 1
+
+             }
+             if { $job_project == 3 } {
+                incr help($normalized_run_end_time,p3) 1
+             }
+             if { [lsearch $help_list $normalized_run_end_time] < 0  } {
+                lappend help_list $normalized_run_end_time
+             }
+             incr job 1
+          }
+          set all_jobs $job
+
+          set job 0
+          set help_sort [lsort -integer $help_list]
+          set jobs_p1 0
+          set jobs_p2 0
+          set jobs_p3 0
+
+          foreach elem $help_sort {
+             incr jobs_p1 $help($elem,p1)
+             incr jobs_p2 $help($elem,p2)
+             incr jobs_p3 $help($elem,p3)
+             set current_job_count [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]
+
+             set one_percent [ expr ( $current_job_count / 100.00 ) ]
+             set p1_p [ expr ( $jobs_p1 / $one_percent ) ]
+             set p2_p [ expr ( $jobs_p2 / $one_percent ) ]
+             set p3_p [ expr ( $jobs_p3 / $one_percent ) ]
+
+             puts $CHECK_OUTPUT $elem
+             # project 1
+             set xy_rows($pos1,$job,x) $elem
+             set xy_rows($pos1,$job,y) $p1_p
+             # project 2
+             set xy_rows($pos2,$job,x) $elem 
+             set xy_rows($pos2,$job,y) $p2_p
+             # project 3
+             set xy_rows($pos3,$job,x) $elem 
+             set xy_rows($pos3,$job,y) $p3_p
+             incr job 1
+          }
+          puts $CHECK_OUTPUT "all_jobs=$all_jobs, [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
+          if { [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ] != $all_jobs } {
+             add_proc_error "calculate_project_run_xy_rows" -1 "error job count all_jobs=$all_jobs, not [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
+          }
+
+# ---          for { set i 0 } { $i <= $last } { incr i 1 } {
+# ---             set x_time        [ expr ( $results($i,test_run_time) - $test_start) ]  ;# test run time in seconds
+# ---            
+# ---             set running_job_ids $results($i,job_ids_running)
+# ---             set jobs_p1 0
+# ---             set jobs_p2 0
+# ---             set jobs_p3 0
+# ---             foreach jb $running_job_ids {
+# ---                set sub_id [get_submit_id_from_job_id jobs $jb]
+# ---                set job_project $jobs($sub_id,project)
+# ---                if { $job_project == 1 } {
+# ---                   incr jobs_p1 1
+# ---                }
+# ---                if { $job_project == 2 } {
+# ---                   incr jobs_p2 1
+# ---                }
+# ---                if { $job_project == 3 } {
+# ---                   incr jobs_p3 1
+# ---                }
+# ---             }
+# ---
+# ---             if { [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3  ) ] != $results($i,jobs_running)  } {
+# ---                add_proc_error "calculate_project_run_xy_rows" -1 "error: number of running jobs sum error"
+# ---             }
+# ---             set one_percent [ expr ( (0.000 + $results($i,jobs_running)) / 100 ) ]
+# ---             set p1_p [ expr ( $jobs_p1 *  $one_percent  ) ]
+# ---             set p2_p [ expr ( $jobs_p2 *  $one_percent  ) ]
+# ---             set p3_p [ expr ( $jobs_p3 *  $one_percent  ) ]
+# ---
+# ---
+# ---             # project 1
+# ---             set xy_rows($pos1,$pro_pos_1,x) $x_time
+# ---             set xy_rows($pos1,$pro_pos_1,y) $p1_p ;# $results($i,jobs_running)
+# ---             incr pro_pos_1 1
+# ---
+# ---             # project 2
+# ---             set xy_rows($pos2,$pro_pos_2,x) $x_time
+# ---             set xy_rows($pos2,$pro_pos_2,y) $p2_p ;# $results($i,jobs_running)
+# ---             incr pro_pos_2 1
+# ---
+# ---             # project 3
+# ---             set xy_rows($pos3,$pro_pos_3,x) $x_time
+# ---             set xy_rows($pos3,$pro_pos_3,y) $p3_p ;# $results($i,jobs_running)
+# ---             incr pro_pos_3 1
+# ---          }
+       }
+}
+
 
 
 proc calculate_test_run_xy_rows { results_array_name row_array_name start_numb } {
@@ -2011,7 +2426,7 @@ proc calculate_test_run_xy_rows { results_array_name row_array_name start_numb }
 }
 
 proc create_reports { results_array job_array_name schedd_array_name} {
-   global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name
+   global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name throughput_subdir
    global CHECK_CORE_EXECD 
    global end_job_count                 ;# number of jobs
    global enable_queues_job_count         ;# after with job, enable queues
@@ -2026,7 +2441,10 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    upvar $results_array results
    upvar $schedd_array_name schedd
 
-   set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name"
+   set nr_of_execd_hosts [llength $CHECK_CORE_EXECD]
+   incr nr_of_execd_hosts -1
+
+   set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/_${nr_of_execd_hosts}_execds/_${end_job_count}_jobs"
    puts $CHECK_OUTPUT "saving report in directory:"
    puts $CHECK_OUTPUT $prot_output_dir
    file mkdir $prot_output_dir
@@ -2050,11 +2468,6 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    puts $CHECK_OUTPUT "using filename:"
    puts $CHECK_OUTPUT $prot_output_file
 
-
-   # spool everything to file
-   spool_array_to_file $prot_output_file "online data"    results
-   spool_array_to_file $prot_output_file "job data"       jobs
-   spool_array_to_file $prot_output_file "scheduler data" schedd
 
    # execd configuration for each host
    set host_list $CHECK_CORE_EXECD
@@ -2093,6 +2506,14 @@ proc create_reports { results_array job_array_name schedd_array_name} {
    set test_config(test_date)               [exec date]
    
    spool_array_to_file $prot_output_file "test configuration" test_config
+
+   # spool everything to file (without comment line)
+   spool_array_to_file $prot_output_file "online data"    results 0
+   spool_array_to_file $prot_output_file "job data"       jobs    0
+   spool_array_to_file $prot_output_file "scheduler data" schedd  0
+
+   
+
 
    # job results
    calculate_average_cluster_times results cluster_results
@@ -2346,6 +2767,7 @@ proc show_current_system_status { array_name job_array_name schedd_array_name } 
    clear_screen
    puts $CHECK_OUTPUT "jobs_done        : $data(jobs_done)" 
    puts $CHECK_OUTPUT "jobs_running     : $data(jobs_running)"
+#   puts $CHECK_OUTPUT "job ids running  : $data(job_ids_running)"
    puts $CHECK_OUTPUT "jobs_pending     : $data(jobs_pending)"
    puts $CHECK_OUTPUT "jobs_submitted   : $data(jobs_submitted)"
    puts $CHECK_OUTPUT "total slots      : $data(total_slots)"
@@ -2373,6 +2795,7 @@ proc clean_current_system_status { results_array array_name job_array_name sched
    set data(jobs_done) 0
    set data(jobs_pending) 0
    set data(jobs_running) 0
+   set data(job_ids_running) ""
    set data(jobs_submitted) 0
    set data(total_slots) [ expr ( [llength $queue_list] * $nr_slots ) ]
    set data(free_slots)  $data(total_slots)

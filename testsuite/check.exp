@@ -6171,7 +6171,7 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "all RUNLEVEL          run every test automatically up to runlevel RUNLEVEL"
       puts "                      (RUNLEVEL is a value from 0=short tests, up to 4=week tests)"
       puts ""
-      puts "category CAT_LIST     set users category list (COMPATIBILITY SYSTEM [...])"
+      puts "category CAT_LIST     set users category list (COMPATIBILITY SYSTEM \[...\])"
       puts "                      (CAT_LIST must be 1 single parameter, must be quoted"
       puts "                       when using more than one category)"
       puts "" 

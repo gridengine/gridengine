@@ -1,3 +1,6 @@
+CR-2002-04-17-0: Testsuite: fixed tcl error on using help command line parameter
+                 Bugfix:    
+
 JG-2002-04-16-0: Enhancem.: In simulation mode (qmaster_param simulate_hosts=1)
                             one qsub call can submit any number of identical 
                             jobs by setting the job context variable 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/04/22 09:36:02 $     Revision: $Revision: 1.21 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/05/12 10:08:32 $     Revision: $Revision: 1.22 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/04/22 09:36:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/05/12 10:08:32 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -722,7 +722,11 @@ Most installations will use a services map entry for the
 service "sge_qmaster" instead to define that port.
 .\"
 .IP "\fBSGE_LONG_QNAMES\fP" 1.5i
-If set, all queue names will be displayed in full length.
+Qstat does display queue names up to 30 characters. If that is
+to much or not enough, one can set a custom length with this
+variable. The minimum display length is 10 characters. If one does
+not know the best display length, one can set SGE_LONG_QNAMES to
+-1 and qstat will figure out the best length.
 .\"
 .\"
 .SH FILES

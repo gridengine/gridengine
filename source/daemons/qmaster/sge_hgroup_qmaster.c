@@ -89,14 +89,14 @@ bool hgroup_verify_hostlist_modification(lListElem *hgroup, lList **answer_list,
             /*
              * If there are additional hosts -> try to resolve them
              */
-            if (*add_hosts != NULL) {
+            if (ret && *add_hosts != NULL) {
                ret &= href_list_resolve_hostnames(*add_hosts, answer_list);
             } 
 
             /*
              * Make sure all hgroup references are valid.
              */
-            if (*add_groups != NULL) {
+            if (ret && *add_groups != NULL) {
                ret &= hgroup_list_exists(master_list, answer_list, *add_groups);
             }
 

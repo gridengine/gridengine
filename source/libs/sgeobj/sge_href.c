@@ -439,8 +439,15 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
 {
    bool ret = true;
 
-   DENTER(HOSTREF_LAYER, "href_list_find_all_references");
+   DENTER(TOP_LAYER, "href_list_find_all_references");
    if (this_list != NULL && master_list != NULL) {
+      lList *tmp_used_groups = NULL;
+      bool free_tmp_list = false;
+
+      if (used_groups == NULL) {
+         used_groups = &tmp_used_groups;
+         free_tmp_list = true;
+      }
 
       /*
        * Find all direct referenced hgroups and hosts
@@ -461,15 +468,28 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
          ret &= href_list_find_all_references(*used_groups, answer_list,
                                               master_list, &used_sub_hosts,
                                               &used_sub_groups);
-
          if (ret) {
             if (used_hosts != NULL && used_sub_hosts != NULL) {
-               lAddList(*used_hosts, used_sub_hosts);
+               if (*used_hosts != NULL) {
+                  lAddList(*used_hosts, used_sub_hosts);
+               } else {
+                  *used_hosts = used_sub_hosts;
+                  used_sub_hosts = NULL;
+               }
             }
             if (used_groups != NULL && used_sub_groups != NULL) {
-               lAddList(*used_groups, used_sub_groups);
+               if (*used_groups != NULL) {
+                  lAddList(*used_groups, used_sub_groups);
+               } else {
+                  *used_groups = used_sub_groups;
+                  used_sub_groups = NULL;
+               }
             }
          } 
+      }
+
+      if (free_tmp_list) {
+         tmp_used_groups = lFreeList(tmp_used_groups);
       }
    } else {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));

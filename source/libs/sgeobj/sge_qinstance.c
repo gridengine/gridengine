@@ -168,7 +168,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
 #ifdef QINSTANCE_MODIFY_DEBUG 
    DENTER(TOP_LAYER, "qinstance_modify_attribute");
 #else
-   DENTER(QINSTANCE_LAYER, "qinstance_modify");
+   DENTER(QINSTANCE_LAYER, "qinstance_modify_attribute");
 #endif
 
    if (this_elem != NULL && cqueue != NULL && 
@@ -213,7 +213,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
          case CQ_h_vmem:
             {
                const char *old_value = lGetString(this_elem, attribute_name);
-               const char *new_value;
+               const char *new_value = NULL;
 
                mem_attr_list_find_value(attr_list, answer_list, 
                                         hostname, &new_value, is_ambiguous);
@@ -236,7 +236,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
          case CQ_h_cpu:
             {
                const char *old_value = lGetString(this_elem, attribute_name);
-               const char *new_value;
+               const char *new_value = NULL;
 
                time_attr_list_find_value(attr_list, answer_list, 
                                          hostname, &new_value, is_ambiguous);
@@ -258,7 +258,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
          case CQ_notify:
             {
                const char *old_value = lGetString(this_elem, attribute_name);
-               const char *new_value;
+               const char *new_value = NULL;
 
                inter_attr_list_find_value(attr_list, answer_list, 
                                           hostname, &new_value, is_ambiguous);
@@ -279,7 +279,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
          case CQ_pe_list:
             {
                lList *old_value = lGetList(this_elem, attribute_name);
-               lList *new_value;
+               lList *new_value = NULL;
 
                strlist_attr_list_find_value(attr_list, answer_list,
                                             hostname, &new_value, is_ambiguous);
@@ -298,8 +298,8 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
          case CQ_xacl:
             {
                lList *old_value = lGetList(this_elem, attribute_name);
-               lList *new_value;
-
+               lList *new_value = NULL;
+   
                usrlist_attr_list_find_value(attr_list, answer_list,
                                             hostname, &new_value, is_ambiguous);
                if (object_list_has_differences(old_value, answer_list,
@@ -316,7 +316,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
          case CQ_xprojects:
             {
                lList *old_value = lGetList(this_elem, attribute_name);
-               lList *new_value;
+               lList *new_value = NULL;
 
                prjlist_attr_list_find_value(attr_list, answer_list,
                                             hostname, &new_value, is_ambiguous);
@@ -335,7 +335,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
          case CQ_suspend_thresholds:
             {
                lList *old_value = lGetList(this_elem, attribute_name);
-               lList *new_value;
+               lList *new_value = NULL;
 
                celist_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, is_ambiguous);
@@ -352,7 +352,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
          case CQ_subordinate_list:
             {
                lList *old_value = lGetList(this_elem, attribute_name);
-               lList *new_value;
+               lList *new_value = NULL;
 
                solist_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, is_ambiguous);
@@ -376,7 +376,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
             case lStringT:
                {
                   const char *old_value = lGetString(this_elem, attribute_name);
-                  const char *new_value;
+                  const char *new_value = NULL;
 
                   str_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, is_ambiguous);

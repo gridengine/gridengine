@@ -1,6 +1,8 @@
+EB-2003-09-30-0: Enhancem.: Bugfixes of enhancements: EB-2003-09-28-0,
+                            EB-2003-09-24-1, EB-2003-09-24-0
+
 JG-2003-09-30-0: Enhancem.  Implementation of the spooling method berkeleydb.
                             
-
 JG-2003-09-29-0: Bugfix:    statistics file hostload twice instead of load and
                             virtual memory used.
                  Enhancem.: sge_share_mon option -o now appends to an existing

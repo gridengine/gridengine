@@ -630,6 +630,7 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
                     lListElem *reduced_elem, lList **add_hosts,
                     lList **rem_hosts)
 {
+#define CQUEUE_MOD_DEBUG
    bool ret = true;
 
    DENTER(CQUEUE_LAYER, "cqueue_mod_hostlist");
@@ -651,11 +652,11 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
          if (ret) {
             lList *master_list = *(hgroup_list_get_master_list());
 
-            if (add_hosts != NULL) {
+            if (ret && add_hosts != NULL) {
                ret &= href_list_resolve_hostnames(*add_hosts, answer_list);
             }
 
-            if (add_groups != NULL) {
+            if (ret && add_groups != NULL) {
                ret &= hgroup_list_exists(master_list, answer_list, add_groups);
             }
          }
@@ -663,17 +664,39 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
             lSetList(cqueue, CQ_hostlist, lCopyList("", list));
          }
          if (ret) {
-            href_list_find_all_references(add_groups, answer_list, master_list,
-                                          add_hosts, NULL);
-            href_list_find_all_references(rem_groups, answer_list, master_list,
-                                          rem_hosts, NULL);
+            if (ret && add_groups != NULL) {
+               ret &= href_list_find_all_references(add_groups, answer_list, 
+                                                    master_list, add_hosts, 
+                                                    NULL);
+            }
+            if (ret && rem_groups != NULL) {
+               ret &= href_list_find_all_references(rem_groups, answer_list, 
+                                                    master_list, rem_hosts, 
+                                                    NULL);
+            }
+            if (ret && add_hosts != NULL && *add_hosts != NULL &&
+                rem_hosts != NULL && *rem_hosts != NULL) {
+               lList *tmp_rem_hosts = NULL;
+               lList *tmp_add_hosts = NULL;
+
+               ret &= href_list_find_diff(*add_hosts, answer_list,
+                                          *rem_hosts, &tmp_add_hosts,
+                                          &tmp_rem_hosts, NULL, NULL);
+               *add_hosts = lFreeList(*add_hosts);
+               *rem_hosts = lFreeList(*rem_hosts);
+               *add_hosts = tmp_add_hosts;
+               *rem_hosts = tmp_rem_hosts;
+               tmp_add_hosts = NULL;
+               tmp_rem_hosts = NULL;
+            }
+
 #ifdef CQUEUE_MOD_DEBUG
             {
                lListElem *href = NULL;
                dstring message = DSTRING_INIT;
                bool is_first_hostname = true;
 
-               for_each(href, add_hosts) {
+               for_each(href, *add_hosts) {
                   const char *hostname = lGetHost(href, HR_name);
 
                   if (is_first_hostname) {
@@ -695,7 +718,7 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
                dstring message = DSTRING_INIT;
                bool is_first_hostname = true;
 
-               for_each(href, rem_hosts) {
+               for_each(href, *rem_hosts) {
                   const char *hostname = lGetHost(href, HR_name);
 
                   if (is_first_hostname) {
@@ -808,6 +831,9 @@ cqueue_mark_qinstances(lListElem *cqueue, lList **answer_list, lList *del_hosts)
              *    - delete events for QI objects
              */
             lSetUlong(qinstance, QI_tag, SGE_QI_TAG_DEL);
+            DPRINTF(("qinstance "SFN" tagged for deletion\n", hostname));
+         } else {
+            DPRINTF(("qinstance "SFN" not found for deletion\n", hostname));
          }
       }
    }

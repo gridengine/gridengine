@@ -229,8 +229,9 @@ enum {
 *     SGE_BOOL(JB_notify)                  
 *        Notify job of impending kill/stop signal. ("qsub -notify")
 *
-*     SGE_BOOL(JB_now) 
+*     SGE_ULONG(JB_now) 
 *        Start job immediately or not at all. ("qsub -now")
+*        JG: TODO: it is no boolean, but misused for other information!
 *
 *     SGE_ULONG(JB_priority) 
 *        Priority ("qsub/qalter -p priority")     
@@ -257,17 +258,18 @@ enum {
 *     SGE_ULONG(JB_checkpoint_attr)  ----> merge all checkpointing stuff to one object?
 *        Checkpoint attributes ("qsub/qalter -c interval_flags")   
 *
-*     SGE_STRING(JB_checkpoint_object)    
+*     SGE_STRING(JB_checkpoint_name)    
 *        Name of ckpt object ("qsub/qalter -ckpt ckpt_name")
 *
-*     SGE_LIST(JB_checkpoint_object_list, CK_Type)
+*     SGE_OBJECT(JB_checkpoint_object, CK_Type)
 *        Ckpt object which will be sent from qmaster to execd.
 *
 *     SGE_ULONG(JB_checkpoint_interval)    
 *        Checkpoint frequency ("qsub/qalter -c seconds")
 *
-*     SGE_BOOL(JB_restart)                 
+*     SGE_ULONG(JB_restart)                 
 *        Is job rerunable? ("qsub/qalter -r y/n")
+*        JG: TODO: it is no boolean, but misused for other information!
 *
 *     Job I/O
 *     =======
@@ -477,8 +479,8 @@ enum {
    JB_job_args,
   
    JB_checkpoint_attr,
+   JB_checkpoint_name,
    JB_checkpoint_object,
-   JB_checkpoint_object_list,
    JB_checkpoint_interval, 
    JB_restart,      
 
@@ -559,7 +561,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
 
    SGE_STRING(JB_cwd, CULL_DEFAULT)     
    SGE_BOOL(JB_notify, CULL_DEFAULT)  
-   SGE_BOOL(JB_now, CULL_DEFAULT)     
+   SGE_ULONG(JB_now, CULL_DEFAULT)     
    SGE_ULONG(JB_priority, CULL_DEFAULT)       
    SGE_LIST(JB_shell_list, PN_Type, CULL_DEFAULT) 
    SGE_ULONG(JB_verify, CULL_DEFAULT) 
@@ -568,10 +570,10 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_LIST(JB_job_args, ST_Type, CULL_DEFAULT)  
 
    SGE_ULONG(JB_checkpoint_attr, CULL_DEFAULT)     
-   SGE_STRING(JB_checkpoint_object, CULL_DEFAULT)   
-   SGE_OBJECT(JB_checkpoint_object_list, CK_Type, CULL_DEFAULT)
+   SGE_STRING(JB_checkpoint_name, CULL_DEFAULT)   
+   SGE_OBJECT(JB_checkpoint_object, CK_Type, CULL_DEFAULT)
    SGE_ULONG(JB_checkpoint_interval, CULL_DEFAULT)   
-   SGE_BOOL(JB_restart, CULL_DEFAULT)  
+   SGE_ULONG(JB_restart, CULL_DEFAULT)  
 
    SGE_LIST(JB_stdout_path_list, PN_Type, CULL_DEFAULT) 
    SGE_LIST(JB_stderr_path_list, PN_Type, CULL_DEFAULT) 
@@ -705,8 +707,8 @@ NAMEDEF(JBN)
    NAME("JB_job_args")
 
    NAME("JB_checkpoint_attr")
+   NAME("JB_checkpoint_name")
    NAME("JB_checkpoint_object")
-   NAME("JB_checkpoint_object_list")
    NAME("JB_checkpoint_interval")
    NAME("JB_restart")
 

@@ -691,7 +691,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
        * in case of ckpt jobs 
        *------------------------------------------------------------------*/
       ckpt = NULL;
-      if ((ckpt_name = lGetString(job, JB_checkpoint_object))) {
+      if ((ckpt_name = lGetString(job, JB_checkpoint_name))) {
          ckpt = ckpt_list_locate(lists->ckpt_list, ckpt_name);
          if (!ckpt) {
             schedd_add_message(lGetUlong(job, JB_job_number), 

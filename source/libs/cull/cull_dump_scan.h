@@ -40,10 +40,12 @@ extern "C" {
 
 int lDumpElemFp(FILE *fp, const lListElem *ep, int indent);
 int lDumpElem(const char *fname, const lListElem *ep, int indent);
+int lDumpObject(FILE *fp, const lListElem *ep, int indent);
 int lDumpList(FILE *fp, const lList *lp, int indent);
 int lDumpDescr(FILE *fp, const lDescr *dp, int indent);
 
 lListElem *lUndumpElem(FILE *fp, const lDescr *dp);
+lListElem *lUndumpObject(FILE *fp);
 lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp);
 lDescr *lUndumpDescr(FILE *fp);
 

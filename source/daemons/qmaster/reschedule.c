@@ -410,11 +410,11 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
        * ckpt-jobs will only be rescheduled when the "when" attribute
        * contains an appropriate flag or when the forced flag is set
        */
-      if (!force && lGetString(jep, JB_checkpoint_object)) {
+      if (!force && lGetString(jep, JB_checkpoint_name)) {
          lListElem *ckpt_ep; /* CK_Type */
     
          ckpt_ep = ckpt_list_locate(Master_Ckpt_List, 
-                                    lGetString(jep, JB_checkpoint_object));
+                                    lGetString(jep, JB_checkpoint_name));
          if (ckpt_ep) {
             u_long32 flags;
     
@@ -463,7 +463,7 @@ int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep,
             queue = queue_list_locate(Master_Queue_List,
                                      lGetString(first_granted_queue, JG_qname));
          }
-         if (!lGetUlong(queue, QU_rerun)) {
+         if (!lGetBool(queue, QU_rerun)) {
             INFO((SGE_EVENT, MSG_RU_NORERUNQUEUE_SSS, mail_type, mail_ids, 
                lGetString(queue, QU_qname)));
             answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 

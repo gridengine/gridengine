@@ -1234,7 +1234,7 @@ DTRACE;
       else
          data->priority = 0;
       data->job_slots   = lGetUlong(qep, QU_job_slots);
-      data->rerun       = lGetUlong(qep, QU_rerun);
+      data->rerun       = lGetBool(qep, QU_rerun);
       data->seq_no      = lGetUlong(qep, QU_seq_no);
 
       strncpy(data->tmpdir, lGetString(qep, QU_tmpdir) ? 
@@ -1440,7 +1440,7 @@ lListElem *qep
    lSetUlong(qep, QU_job_slots, data->job_slots);
    /* initialize QU_job_slots_used */
    set_qslots_used(qep, 0);
-   lSetUlong(qep, QU_rerun, data->rerun);
+   lSetBool(qep, QU_rerun, data->rerun);
    lSetUlong(qep, QU_seq_no, data->seq_no);
 
    lSetString(qep, QU_tmpdir, data->tmpdir);

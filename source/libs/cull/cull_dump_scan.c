@@ -64,7 +64,9 @@ static int fGetFloat(FILE *fp, lFloat *value);
 static int fGetDouble(FILE *fp, lDouble *value);
 static int fGetLong(FILE *fp, lLong *value);
 static int fGetChar(FILE *fp, lChar *value);
+static int fGetBool(FILE *fp, lBool *value);
 static int fGetList(FILE *fp, lList **value);
+static int fGetObject(FILE *fp, lListElem **value);
 
 /****** cull/dump_scan/lDumpDescr() ****************************************
 *  NAME
@@ -259,7 +261,9 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
 {
    int i, ret = ~EOF;
    lList *tlp;
+   lListElem *tep;
    char space[256];
+   const char *str;
 
    DENTER(CULL_LAYER, "lDumpElemFp");
 
@@ -291,12 +295,14 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
                    space, lNm2Str(ep->descr[i].nm), lGetPosUlong(ep, i));
          break;
       case lStringT:
+         str = lGetPosString(ep, i);
          ret = fprintf(fp, "%s/* %-20.20s */ \"%s\"\n",
-                  space, lNm2Str(ep->descr[i].nm), lGetPosString(ep, i));
+                  space, lNm2Str(ep->descr[i].nm), str != NULL ? str : "");
          break;
       case lHostT:
+         str = lGetPosHost(ep, i);
          ret = fprintf(fp, "%s/* %-20.20s */ \"%s\"\n",
-                  space, lNm2Str(ep->descr[i].nm), lGetPosHost(ep, i));
+                  space, lNm2Str(ep->descr[i].nm), str != NULL ? str : "");
          break;
       case lFloatT:
          ret = fprintf(fp, "%s/* %-20.20s */ %f\n",
@@ -314,12 +320,27 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
          ret = fprintf(fp, "%s/* %-20.20s */ %c\n",
                     space, lNm2Str(ep->descr[i].nm), lGetPosChar(ep, i));
          break;
+      case lBoolT:
+         ret = fprintf(fp, "%s/* %-20.20s */ %d\n",
+                    space, lNm2Str(ep->descr[i].nm), lGetPosBool(ep, i));
+         break;
       case lRefT:
          ret = fprintf(fp, "%s/* %-20.20s */ %p\n",
                     space, lNm2Str(ep->descr[i].nm), lGetPosRef(ep, i));
          break;
+      case lObjectT:
+         if ((tep = lGetPosObject(ep, i)) == NULL)
+            ret = fprintf(fp, "%s/* %-20.20s */ none\n",
+                          space, lNm2Str(ep->descr[i].nm));
+         else {
+            ret = fprintf(fp, "%s/* %-20.20s */ object\n",
+                          space, lNm2Str(ep->descr[i].nm));
+            if (ret != EOF)
+               ret = lDumpObject(fp, tep, indent + 1);
+         }
+         break;
       case lListT:
-         if (!(tlp = lGetPosList(ep, i)))
+         if ((tlp = lGetPosList(ep, i)) == NULL)
             ret = fprintf(fp, "%s/* %-20.20s */ empty\n",
                           space, lNm2Str(ep->descr[i].nm));
          else {
@@ -338,6 +359,61 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
    return (ret == EOF) ? -1 : 0;
 }
 
+/****** cull/dump_scan/lDumpObject() ********************************************
+*  NAME
+*     lDumpObject() -- Writes an object to a FILE stream
+*
+*  SYNOPSIS
+*     int lDumpObject(FILE *fp, const lListElem *ep, int indent) 
+*
+*  FUNCTION
+*     Writes an object to a FILE stream. 
+*
+*  INPUTS
+*     FILE *fp             - file stream 
+*     const lListElem *ep  - object 
+*     int indent           - 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lDumpObject(FILE *fp, const lListElem *ep, int indent) 
+{
+   int i, ret = ~EOF;
+
+   char space[256];
+
+   DENTER(CULL_LAYER, "lDumpObject");
+
+   space[0] = '\0';
+   for (i = 0; i < indent; i++)
+      strcat(space, INDENT_STRING);
+
+   if (!fp) {
+      LERROR(LEFILENULL);
+      DEXIT;
+      return -1;
+   }
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   ret = fprintf(fp, "%s{ /* OBJECT BEGIN */\n", space);
+
+   ret = lDumpDescr(fp, ep->descr, indent);
+
+   ret = lDumpElemFp(fp, ep, indent);
+
+   ret = fprintf(fp, "%s} /* OBJECT END */\n", space);
+
+   DEXIT;
+   return (ret == EOF) ? -1 : 0;
+
+}
 /****** cull/dump_scan/lDumpList() ********************************************
 *  NAME
 *     lDumpList() -- Writes a list to a FILE stream
@@ -424,6 +500,7 @@ lListElem *lUndumpElem(FILE *fp, const lDescr *dp)
    int n, i;
    int ret = 0;
    char *str;
+   u_long32 dummy;
 
    DENTER(CULL_LAYER, "lUndumpElem");
 
@@ -491,9 +568,16 @@ lListElem *lUndumpElem(FILE *fp, const lDescr *dp)
       case lCharT:
          ret = fGetChar(fp, &(ep->cont[i].c));
          break;
+      case lBoolT:
+         ret = fGetBool(fp, &(ep->cont[i].b));
+         break;
       case lRefT:
-         ret = 0;
+         /* we will not undump references! But we have to skip the line! */
+         ret = fGetUlong(fp, &dummy);
          ep->cont[i].ref = NULL;
+         break;
+      case lObjectT:
+         ret = fGetObject(fp, &(ep->cont[i].obj));
          break;
       case lListT:
          ret = fGetList(fp, &(ep->cont[i].glp));
@@ -508,6 +592,79 @@ lListElem *lUndumpElem(FILE *fp, const lDescr *dp)
    if (ret != 0) {
       lFreeElem(ep);
       LERROR(LEFIELDREAD);
+      DEXIT;
+      return NULL;
+   }
+
+   /* read ket */
+   if (fGetKet(fp)) {
+      lFreeElem(ep);
+      printf("ket is missing\n");
+      LERROR(LESYNTAX);
+      DEXIT;
+      return NULL;
+   }
+
+   DEXIT;
+   return ep;
+}
+
+/****** cull/dump_scan/lUndumpObject() ******************************************
+*  NAME
+*     lUndumpObject() -- Reads a by lDumpList dumped dump 
+*
+*  SYNOPSIS
+*     lListElem* lUndumpObject(FILE *fp) 
+*
+*  FUNCTION
+*     Reads a by lDumpList dumped dump into the memory. 
+*
+*  INPUTS
+*     FILE *fp         - file pointer 
+*
+*  RESULT
+*     lListElem* - Read list element
+*
+*  NOTES
+*
+******************************************************************************/
+lListElem *lUndumpObject(FILE *fp) 
+{
+   lListElem *ep;
+   lDescr *dp = NULL;
+
+   DENTER(CULL_LAYER, "lUndumpObject");
+
+   if (!fp) {
+      LERROR(LEFILENULL);
+      DEXIT;
+      return NULL;
+   }
+
+   /* read bra */
+   if (fGetBra(fp)) {
+      printf("bra is missing\n");
+      LERROR(LESYNTAX);
+      DEXIT;
+      return NULL;
+   }
+
+   /* read Descriptor from file */
+   if ((dp = lUndumpDescr(fp)) == NULL) {
+      LERROR(LEFGETDESCR);
+      DEXIT;
+      return NULL;
+   }
+
+   if (lCountDescr(dp) <= 0) {
+      LERROR(LECOUNTDESCR);
+      free(dp);
+      DEXIT;
+      return NULL;
+   }
+
+   if ((ep = lUndumpElem(fp, dp)) == NULL) {
+      LERROR(LEUNDUMPELEM);
       DEXIT;
       return NULL;
    }
@@ -1098,11 +1255,12 @@ static int fGetChar(FILE *fp, lChar *cp)
    return 0;
 }
 
-int fGetList(FILE *fp, lList **lpp) 
+static int fGetBool(FILE *fp, lBool *cp) 
 {
    char s[READ_LINE_LENGHT + 1];
+   int i = 0;
 
-   DENTER(CULL_LAYER, "fGetList");
+   DENTER(CULL_LAYER, "fGetBool");
 
    if (!fp) {
       LERROR(LEFILENULL);
@@ -1116,20 +1274,89 @@ int fGetList(FILE *fp, lList **lpp)
       return -1;
    }
 
-   if (strstr(s, "empty"))
+   if (sscanf(s, "%d", &i) != 1) {
+      LERROR(LESSCANF);
+      DEXIT;
+      return -1;
+   }
+
+   *cp = i;
+
+   DEXIT;
+   return 0;
+}
+
+int fGetList(FILE *fp, lList **lpp) 
+{
+   char s[READ_LINE_LENGHT + 1];
+
+   DENTER(CULL_LAYER, "fGetList");
+
+   if (fp == NULL) {
+      LERROR(LEFILENULL);
+      DEXIT;
+      return -1;
+   }
+
+   if (fGetLine(fp, s, READ_LINE_LENGHT)) {
+      LERROR(LEFGETLINE);
+      DEXIT;
+      return -1;
+   }
+
+   if (strstr(s, "empty") != NULL)
       *lpp = NULL;              /* empty sublist */
    else {
-      if (!strstr(s, "full")) {
+      if (strstr(s, "full") == 0) {
          LERROR(LESYNTAX);
          DEXIT;
          return -1;
       }
 
-      if (!(*lpp = lUndumpList(fp, NULL, NULL))) {
+      if ((*lpp = lUndumpList(fp, NULL, NULL)) == NULL) {
          LERROR(LEUNDUMPLIST);
          DEXIT;
          return -1;
       }
+   }
+
+   DEXIT;
+   return 0;
+}
+
+int fGetObject(FILE *fp, lListElem **epp) 
+{
+   char s[READ_LINE_LENGHT + 1];
+
+   DENTER(CULL_LAYER, "fGetObject");
+
+   if (fp == NULL) {
+      LERROR(LEFILENULL);
+      DEXIT;
+      return -1;
+   }
+
+   if (fGetLine(fp, s, READ_LINE_LENGHT)) {
+      LERROR(LEFGETLINE);
+      DEXIT;
+      return -1;
+   }
+
+   if (strstr(s, "none") != NULL)
+      *epp = NULL;              /* no object stored */
+   else {
+      if (strstr(s, "object") == 0) {
+         LERROR(LESYNTAX);
+         DEXIT;
+         return -1;
+      }
+
+      if ((*epp = lUndumpObject(fp)) == NULL) {
+         LERROR(LEUNDUMPELEM);
+         DEXIT;
+         return -1;
+      }
+      (*epp)->status = OBJECT_ELEM;
    }
 
    DEXIT;

@@ -220,7 +220,7 @@ int slave
    u_long32 jobid, jataskid;
    int mail_on_error = 0, general = GFSTATE_QUEUE;
    lListElem *qep, *gdil_ep;
-   lList *tmp_qlp, *qlp = NULL;
+   lList *qlp = NULL;
    const char *qnm;
    int slots;
    int fd;
@@ -290,7 +290,6 @@ int slave
          goto Error;
       }
 
-      tmp_qlp = lCreateList("", lGetListDescr(qlp));
       qep = lDechainElem(qlp, qep);
       /* clear any queue state that might be set from qmaster */
       lSetUlong(qep, QU_state, 0);
@@ -299,8 +298,7 @@ int slave
       slots = lGetUlong(gdil_ep, JG_slots);
       lSetUlong(qep, QU_job_slots, slots);
       set_qslots_used(qep, 0);
-      lAppendElem(tmp_qlp, qep);
-      lSetList(gdil_ep, JG_queue, tmp_qlp);
+      lSetObject(gdil_ep, JG_queue, qep);
       DPRINTF(("Q: %s %d\n", qnm, slots));
    }
    /* trash envelope */
@@ -309,14 +307,13 @@ int slave
    /* ------- optionally pe */
    if (lGetString(jatep, JAT_granted_pe)) {
       cull_unpack_elem(pb, &pelem, NULL); /* pelem will be freed with jelem */
-      lSetList(jatep, JAT_pe_object, lCreateList("pe list", PE_Type));
-      lAppendElem(lGetList(jatep, JAT_pe_object), pelem);
+      lSetObject(jatep, JAT_pe_object, pelem);
 
-      if (lGetUlong(pelem, PE_control_slaves)) {
-         if (!lGetUlong(pelem, PE_job_is_first_task)) {
+      if (lGetBool(pelem, PE_control_slaves)) {
+         if (!lGetBool(pelem, PE_job_is_first_task)) {
             int slots;
-            lListElem *mq = lFirst(lGetList(lFirst(lGetList(jatep,
-                        JAT_granted_destin_identifier_list)), JG_queue));
+            lListElem *mq = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
+                                       JG_queue);
             slots = lGetUlong(mq, QU_job_slots) + 1;
             DPRINTF(("Increasing job slots in master queue \"%s\" "
                "to %d because job is not first task\n",
@@ -567,7 +564,7 @@ static lList *job_get_queue_for_task(lListElem *jatep, lListElem *petep, const c
          continue;
       } 
 
-      this_q = lFirst(lGetList(gdil_ep, JG_queue));
+      this_q = lGetObject(gdil_ep, JG_queue);
 
       /* Queue must exist and be on this host */
       if(this_q != NULL && 
@@ -643,7 +640,7 @@ int *synchron
    }
 
    /* do not accept the task if job is not parallel or 'control_slaves' is not active */
-   if (!(pe=lFirst(lGetList(jatep, JAT_pe_object))) || !lGetUlong(pe, PE_control_slaves)) {
+   if (!(pe=lGetObject(jatep, JAT_pe_object)) || !lGetBool(pe, PE_control_slaves)) {
       ERROR((SGE_EVENT, MSG_JOB_TASKNOSUITABLEJOB_U, u32c(jobid)));
       goto Error;
    }

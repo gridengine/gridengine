@@ -415,7 +415,7 @@ lListElem *sep
    data.queue_sort_method = lGetUlong(sep, SC_queue_sort_method);
 
    if (!feature_is_enabled(FEATURE_SGEEE)) {
-      data.user_sort = lGetUlong(sep, SC_user_sort) ? 1 : 0;
+      data.user_sort = lGetBool(sep, SC_user_sort);
    }
 
    /*
@@ -538,7 +538,7 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    lSetUlong(sep, SC_queue_sort_method, (u_long32) data.queue_sort_method);
 
    if (!feature_is_enabled(FEATURE_SGEEE)) {
-      lSetUlong(sep, SC_user_sort, (u_long32) data.user_sort);
+      lSetBool(sep, SC_user_sort, (u_long32) data.user_sort);
    }
 
    /*

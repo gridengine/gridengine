@@ -264,7 +264,7 @@ static int sge_select_resource(lList *complex_attributes, lList *resources,
             continue;
 
          /* consumable && used in this global/host/queue && not requested */
-         if (lGetUlong(attr, CE_consumable) &&  !is_requested(resources, name)) {   
+         if (lGetBool(attr, CE_consumable) &&  !is_requested(resources, name)) {   
             lListElem *default_request;
             char tmp_reason[2048];
 
@@ -465,7 +465,7 @@ static int fulfilled(lListElem *rep, lList *given_attr, char *reason,
    }
 
    /* check whether attrib is requestable */
-   if (!allow_non_requestable && !lGetUlong(cplx_el, CE_request)) {
+   if (!allow_non_requestable && !lGetBool(cplx_el, CE_request)) {
       if (reason) {
          strncpy(reason, MSG_SCHEDD_JOBREQUESTSNONREQUESTABLERESOURCE , reason_size);
          strncat(reason, attrname, reason_size);
@@ -476,7 +476,7 @@ static int fulfilled(lListElem *rep, lList *given_attr, char *reason,
    }
 
    /* search for responsible (global, host, queue) maximum utilization */
-   if (ccl && lGetUlong(cplx_el, CE_consumable))
+   if (ccl && lGetBool(cplx_el, CE_consumable))
       util_max_ep = get_util_max(cplx_el, ccl);
 
 #if 0
@@ -772,7 +772,7 @@ static int requested_forced_attr(lListElem *job, lListElem *cplx,
    DENTER(TOP_LAYER, "requested_forced_attr");
 
    for_each (attr, lGetList(cplx, CX_entries)) {
-      if (lGetUlong(attr, CE_forced) &&
+      if (lGetBool(attr, CE_forced) &&
          !is_requested(lGetList(job, JB_hard_resource_list), lGetString(attr, CE_name))) {
          DPRINTF(("job "u32" does not request 'forced' resource \"%s\" of %s %s\n",
                   lGetUlong(job, JB_job_number), lGetString(attr, CE_name), obj_name, obj_key));
@@ -2846,7 +2846,7 @@ lList *complex_list
 
    if (     !(cxep=lGetElemStr(complex_list, CX_name, SGE_QUEUE_NAME))
         ||  !(ceep=lGetElemStr(lGetList(cxep, CX_entries), CE_name, "qname"))
-        ||  !lGetUlong(ceep, CE_request)) 
+        ||  !lGetBool(ceep, CE_request)) 
       return 0;  
    else 
       return 1;  

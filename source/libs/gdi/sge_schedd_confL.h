@@ -89,7 +89,7 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_STRING(SC_schedule_interval, CULL_DEFAULT)
    SGE_ULONG(SC_maxujobs, CULL_DEFAULT)
    SGE_ULONG(SC_queue_sort_method, CULL_DEFAULT)    /* see at top of file for valid values */
-   SGE_ULONG(SC_user_sort, CULL_DEFAULT)
+   SGE_BOOL(SC_user_sort, CULL_DEFAULT)
    SGE_LIST(SC_job_load_adjustments, CE_Type, CULL_DEFAULT)        /* CE_Type */
    SGE_STRING(SC_load_adjustment_decay_time, CULL_DEFAULT)
    SGE_STRING(SC_load_formula, CULL_DEFAULT)

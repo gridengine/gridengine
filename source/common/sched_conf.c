@@ -172,7 +172,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
    FPRINTF((fp, "schedule_interval          %s\n", lGetString(ep, SC_schedule_interval)));
    FPRINTF((fp, "maxujobs                   " u32 "\n", lGetUlong(ep, SC_maxujobs)));
    FPRINTF((fp, "queue_sort_method          %s\n", qsm2str(lGetUlong(ep, SC_queue_sort_method))));
-   FPRINTF((fp, "user_sort                  %s\n", lGetUlong(ep, SC_user_sort)?"true":"false"));
+   FPRINTF((fp, "user_sort                  %s\n", lGetBool(ep, SC_user_sort)?"true":"false"));
    FPRINTF((fp, "job_load_adjustments       "));
    fret = uni_print_list(fp, NULL, 0, lGetList(ep, SC_job_load_adjustments), intprt_as_load_adjustment, delis, 0);
    if (fret < 0) {

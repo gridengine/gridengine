@@ -1319,7 +1319,7 @@ XtPointer cld, cad;
          JB_restart,
          JB_account,
          JB_project,
-         JB_checkpoint_object,
+         JB_checkpoint_name,
          JB_pe_range,
          JB_pe,
          JB_hard_queue_list,
@@ -1760,7 +1760,7 @@ char *prefix
    else
       data->project = NULL;
 
-   if ((ckpt_obj = lGetString(jep, JB_checkpoint_object)))
+   if ((ckpt_obj = lGetString(jep, JB_checkpoint_name)))
       data->ckpt_obj = XtNewString(ckpt_obj);
    else
       data->ckpt_obj = NULL;
@@ -1801,7 +1801,7 @@ char *prefix
                                        lGetList(jep, JB_stdin_path_list));
    data->stderror_path_list = lCopyList("JB_stderr_path_list", 
                                        lGetList(jep, JB_stderr_path_list));
-   data->merge_output = lGetUlong(jep, JB_merge_stderr);
+   data->merge_output = lGetBool(jep, JB_merge_stderr);
    data->priority = lGetUlong(jep, JB_priority) - BASE_PRIORITY;
    data->execution_time = lGetUlong(jep, JB_execution_time);
    data->deadline = lGetUlong(jep, JB_deadline);
@@ -1861,7 +1861,7 @@ char *prefix
 
    data->now = JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now));
 
-   data->notify = lGetUlong(jep, JB_notify);
+   data->notify = lGetBool(jep, JB_notify);
 
    data->verify_mode = lGetUlong(jep, JB_verify_suitable_queues);
 
@@ -1972,7 +1972,7 @@ int save
       lSetString(jep, JB_job_name, data->job_name);
    
    lSetString(jep, JB_project, data->project);
-   lSetString(jep, JB_checkpoint_object, data->ckpt_obj);
+   lSetString(jep, JB_checkpoint_name, data->ckpt_obj);
 
    /* 
     * Here would be the building of script filled job elem, these
@@ -2007,8 +2007,8 @@ int save
     */ 
    lSetUlong(jep, JB_priority, data->priority + (u_long32)BASE_PRIORITY);
    lSetUlong(jep, JB_execution_time, data->execution_time);
-   lSetUlong(jep, JB_merge_stderr, data->merge_output);
-   lSetUlong(jep, JB_notify, data->notify);
+   lSetBool(jep, JB_merge_stderr, data->merge_output);
+   lSetBool(jep, JB_notify, data->notify);
    lSetUlong(jep, JB_restart, data->restart);
    lSetUlong(jep, JB_deadline, data->deadline);
    {

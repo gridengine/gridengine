@@ -270,7 +270,7 @@ lListElem *ep
 
    /* --------- PREF_job_filter_compact */
    fprintf(fp, "job_filter_compact     %s\n", 
-           lGetUlong(ep, PREF_job_filter_compact) ?  "TRUE" : "FALSE");
+           lGetBool(ep, PREF_job_filter_compact) ?  "TRUE" : "FALSE");
 
    if (fp != stdout)
       fclose(fp);

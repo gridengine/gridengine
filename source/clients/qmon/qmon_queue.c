@@ -959,7 +959,7 @@ lListElem *qep
    sprintf(info, "%s\n", info); 
 
    sprintf(info, WIDTH"%s\n", info, "Rerun Job:", 
-                     lGetUlong(qep, QU_rerun) ? "True" : "False");
+                     lGetBool(qep, QU_rerun) ? "True" : "False");
 
    str = lGetString(qep, QU_notify);
    sprintf(info, WIDTH"%s\n", info, "Notify Job Interval:",  str ? str : ""); 

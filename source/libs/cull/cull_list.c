@@ -43,6 +43,7 @@
 #include <stdarg.h>
 
 #include "sgermon.h"
+#include "sge_log.h"
 #include "cull_sortP.h"
 #include "cull_where.h"
 #include "cull_listP.h"
@@ -296,6 +297,7 @@ int lCopySwitch(const lListElem *sep, lListElem *dep,
                 int src_idx, int dst_idx) 
 {
    lList *tlp;
+   lListElem *tep;
 
    DENTER(CULL_LAYER, "lCopySwitch");
 
@@ -307,56 +309,55 @@ int lCopySwitch(const lListElem *sep, lListElem *dep,
    switch (mt_get_type(dep->descr[dst_idx].mt)) {
    case lUlongT:
       dep->cont[dst_idx].ul = sep->cont[src_idx].ul;
-      /* lSetPosUlong(dep, dst_idx, lGetPosUlong(sep, src_idx)); */
       break;
    case lStringT:
       if (!sep->cont[src_idx].str)
          dep->cont[dst_idx].str = NULL;
       else
          dep->cont[dst_idx].str = strdup(sep->cont[src_idx].str);
-      /* lSetPosString(dep, dst_idx, lGetPosString(sep, src_idx)); */
       break;
    case lHostT:
       if (!sep->cont[src_idx].host)
          dep->cont[dst_idx].host = NULL;
       else
          dep->cont[dst_idx].host = strdup(sep->cont[src_idx].host);
-      /* lSetPosString(dep, dst_idx, lGetPosString(sep, src_idx)); */
       break;
 
    case lDoubleT:
       dep->cont[dst_idx].db = sep->cont[src_idx].db;
-      /* lSetPosDouble(dep, dst_idx, lGetPosDouble(sep, src_idx)); */
       break;
    case lListT:
-      /* if (!(tlp = lGetPosList(sep, src_idx))) 
-       *    lSetPosList(dep, dst_idx, (lList *) NULL);
-       */
-      
-      if (!(tlp = sep->cont[src_idx].glp)) 
+      if ((tlp = sep->cont[src_idx].glp) == NULL) 
          dep->cont[dst_idx].glp = NULL;
       else  
          dep->cont[dst_idx].glp = lCopyList(NULL, tlp);
       break;
+   case lObjectT:
+      if ((tep = sep->cont[src_idx].obj) == NULL) {
+         dep->cont[dst_idx].obj = NULL;
+      } else {
+         lListElem *new = lCopyElem(tep);
+         new->status = OBJECT_ELEM;
+         dep->cont[dst_idx].obj = new;
+      }   
+      break;
    case lIntT:
       dep->cont[dst_idx].i = sep->cont[src_idx].i;            
-      /* lSetPosUlong(dep, dst_idx, lGetPosUlong(sep, src_idx)); */
       break;
    case lFloatT:
       dep->cont[dst_idx].fl = sep->cont[src_idx].fl;
-      /* lSetPosFloat(dep, dst_idx, lGetPosFloat(sep, src_idx)); */
       break;
    case lLongT:
       dep->cont[dst_idx].l = sep->cont[src_idx].l;
-      /* lSetPosLong(dep, dst_idx, lGetPosLong(sep, src_idx)); */
       break;
    case lCharT:
       dep->cont[dst_idx].c = sep->cont[src_idx].c;
-      /* lSetPosChar(dep, dst_idx, lGetPosChar(sep, src_idx)); */
+      break;
+   case lBoolT:
+      dep->cont[dst_idx].b = sep->cont[src_idx].b;
       break;
    case lRefT:
       dep->cont[dst_idx].ref = sep->cont[src_idx].ref;
-      /* lSetPosRef(dep, dst_idx, lGetPosChar(sep, src_idx)); */
       break;
    default:
       DEXIT;
@@ -617,6 +618,7 @@ static void lWriteElem_(const lListElem *ep, FILE *fp)
    static int nesting_level = 0;
    char space[128];
    lList *tlp;
+   lListElem *tep;
    const char *str;
 
    DENTER(CULL_LAYER, "lWriteElem");
@@ -693,6 +695,25 @@ static void lWriteElem_(const lListElem *ep, FILE *fp)
             nesting_level--;
          }
          break;
+
+      case lObjectT:
+         tep = lGetPosObject(ep, i);
+         if (!fp)
+            DPRINTF(("%s%-20.20s (Object)  %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none"));
+         else
+            fprintf(fp, "%s%-20.20s (Object)  %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none");
+         if (tep) {
+            nesting_level++;
+            lWriteElem_(tep, fp);
+            if (!fp)
+               DPRINTF(("%s}\n", space));
+            else
+               fprintf(fp, "%s}\n", space);
+            nesting_level--;
+         }
+         break;
       case lFloatT:
          if (!fp)
             DPRINTF(("%s%-20.20s (Float)   %c = %f\n", space,
@@ -716,6 +737,14 @@ static void lWriteElem_(const lListElem *ep, FILE *fp)
          else
             fprintf(fp, "%s%-20.20s (Long)    %c = %ld\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosLong(ep, i));
+         break;
+      case lBoolT:
+         if (!fp)
+            DPRINTF(("%s%-20.20s (Bool)    %c = %s\n", space,
+                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false"));
+         else
+            fprintf(fp, "%s%-20.20s (Bool)    %c = %s\n", space,
+                    lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', lGetPosBool(ep, i) ? "true" : "false");
          break;
       case lCharT:
          if (!fp)
@@ -1078,22 +1107,28 @@ lListElem *lFreeElem(lListElem *ep)
       case lDoubleT:
       case lLongT:
       case lCharT:
+      case lBoolT:
       case lRefT:
          break;
 
       case lStringT:
-         if (ep->cont[i].str)
+         if (ep->cont[i].str != NULL)
             free(ep->cont[i].str);
          break;
 
       case lHostT:
-         if (ep->cont[i].host)
+         if (ep->cont[i].host != NULL)
             free(ep->cont[i].host);
          break;
 
       case lListT:
-         if (ep->cont[i].glp)
+         if (ep->cont[i].glp != NULL)
             lFreeList(ep->cont[i].glp);
+         break;
+
+      case lObjectT:
+         if (ep->cont[i].obj != NULL)
+            lFreeElem(ep->cont[i].obj);
          break;
 
       default:
@@ -1102,8 +1137,8 @@ lListElem *lFreeElem(lListElem *ep)
       }
    }
 
-   /* lFreeElem is not responsible for descriptor array */
-   if(ep->status == FREE_ELEM) {
+   /* lFreeElem is not responsible for list descriptor array */
+   if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
       cull_hash_free_descr(ep->descr); 
       free(ep->descr);
    }   
@@ -1385,11 +1420,21 @@ int lInsertElem(lList *lp, lListElem *ep, lListElem *new)
       DEXIT;
       return -1;
    }
+   
    if (!new) {
       LERROR(LEELEMNULL);
       DEXIT;
       return -1;
    }
+   
+   /* is the element new still chained in an other list, this is not allowed ? */
+   if (new->status == BOUND_ELEM || new->status == OBJECT_ELEM) {
+      DPRINTF(("WARNING: tried to insert chained element\n"));
+      lWriteElem(new);
+      DEXIT;
+      abort();
+   }
+
    if (ep) {
       new->prev = ep;
       new->next = ep->next;
@@ -1464,7 +1509,7 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
    }
 
    /* is the element ep still chained in an other list, this is not allowed ? */
-   if (ep->status == BOUND_ELEM) {
+   if (ep->status == BOUND_ELEM || ep->status == OBJECT_ELEM) {
       DPRINTF(("WARNING: tried to append chained element\n"));
       lWriteElem(ep);
       DEXIT;
@@ -1623,6 +1668,66 @@ lListElem *lDechainElem(lList *lp, lListElem *ep)
 
    DEXIT;
    return ep;
+}
+
+/****** cull/list/lDechainObject() **********************************************
+*  NAME
+*     lDechainObject() -- Remove a element from a list 
+*
+*  SYNOPSIS
+*     lListElem* lDechainObject(lList *lp, int name) 
+*
+*  FUNCTION
+*     Remove element 'ep' from list 'lp'. 'ep' gets not deleted. 
+*
+*  INPUTS
+*     lList *lp     - list 
+*     int name      - attribute name 
+*
+*  RESULT
+*     lListElem* - dechained element or NULL
+******************************************************************************/
+lListElem *lDechainObject(lListElem *parent, int name) 
+{
+   int pos;
+   lListElem *dep;
+
+   DENTER(CULL_LAYER, "lDechainObject");
+
+   if (parent == NULL) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return NULL;
+   }
+
+   pos = lGetPosViaElem(parent, name);
+   if (pos < 0) {
+      /* someone has called lDechainObject() with an invalid name */
+      CRITICAL((SGE_EVENT, MSG_CULL_DECHAINOBJECT_XNOTFOUNDINELEMENT_S ,
+               lNm2Str(name)));
+      DEXIT;
+      abort();
+   }
+
+   if(mt_get_type(parent->descr[pos].mt) != lObjectT) {
+      incompatibleType2(MSG_CULL_DECHAINOBJECT_WRONGTYPEFORFIELDXY_S,
+                        lNm2Str(name));
+      DEXIT;
+      abort();
+   }
+  
+   dep = (lListElem *) parent->cont[pos].obj;
+
+   if(dep != NULL) {
+      dep->status = FREE_ELEM;
+      parent->cont[pos].obj = NULL;
+
+      /* remember that field changed */
+      sge_bitfield_set(parent->changed, pos);
+   }
+
+   DEXIT;
+   return dep;
 }
 
 /****** cull/list/lFirst() ****************************************************
@@ -1865,93 +1970,6 @@ lListElem *lFindPrev(const lListElem *ep, const lCondition *cp)
 
    DEXIT;
    return (lListElem *) ep;
-}
-
-/****** cull/list/lSortList2() ************************************************
-*  NAME
-*     lSortList2() -- Sort a given list 
-*
-*  SYNOPSIS
-*     int lSortList2(lList * lp, const char *fmt, ...) 
-*
-*  FUNCTION
-*     Sort a given list. The sorting order is given by the format 
-*     string and additional arguments. 
-*
-*  INPUTS
-*     lList * lp      - list 
-*     const char *fmt - format string (see lParseSortOrder()) 
-*     ...             - additional arguments (see lParseSortOrder()) 
-*
-*  RESULT
-*     int - error state
-*         0 - OK
-*        -1 - Error
-*
-*  SEE ALSO
-*     cull/list/lParseSortOrder() 
-******************************************************************************/
-int lSortList2(lList * lp, const char *fmt, ...)
-{
-   va_list ap;
-   lListElem *temp;
-   lListElem *ep, *cep, *tep;
-
-   lSortOrder *sp;
-
-   DENTER(CULL_LAYER, "lSortList2");
-
-   va_start(ap, fmt);
-   if (!lp) {
-      LERROR(LELISTNULL);
-      va_end(ap);
-      DEXIT;
-      return -1;
-   }
-   if (!fmt) {
-      LERROR(LENOFORMATSTR);
-      DEXIT;
-      va_end(ap);
-      return -1;
-   }
-   if (!(sp = lParseSortOrder(lp->descr, fmt, ap))) {
-      LERROR(LEPARSESORTORD);
-      va_end(ap);
-      DEXIT;
-      return -1;
-   }
-
-   temp = lp->first;
-
-   /* lp->descr must not be NULL'ed, it is used in lInsertElem */
-   lp->first = NULL;
-   lp->last = NULL;
-   lp->nelem = 0;
-
-   while (temp) {
-      tep = NULL;
-      /* lInsertElem resets ep->next, ep->prev */
-      ep = temp;
-      temp = ep->next;
-      /* 
-       * insertion sort:
-       * go through lp until new element < current element in dlp
-       */
-      for_each(cep, lp) {
-         if (lSortCompare(ep, cep, sp) < 0)
-            break;
-         tep = cep;
-      }
-      /* insert in lp at the right position */
-      lInsertElem(lp, tep, ep);
-   }
-
-   sp = lFreeSortOrder(sp);
-
-   va_end(ap);
-
-   DEXIT;
-   return 0;
 }
 
 /****** cull/list/lPSortList() ************************************************

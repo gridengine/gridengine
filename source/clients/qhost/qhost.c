@@ -919,7 +919,7 @@ lWriteListTo(ehl, stdout);
                      JB_group,
                      JB_now,
                      JB_pe,
-                     JB_checkpoint_object,
+                     JB_checkpoint_name,
                      JB_jid_predecessor_list,
                      JB_env_list,
                      JB_priority,

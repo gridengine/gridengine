@@ -443,7 +443,7 @@ char *indent
                   lListElem *pe;
                   if (((pe_name=lGetString(jatep, JAT_granted_pe))) &&
                       ((pe=pe_list_locate(pe_list, pe_name))) &&
-                      !lGetUlong(pe, PE_job_is_first_task))
+                      !lGetBool(pe, PE_job_is_first_task))
 
                       slot_adjust = 1;
                }
@@ -541,7 +541,6 @@ u_long32 group_opt
    nxt = lFirst(job_list);
    while ((jep=nxt)) {
       nxt = lNext(jep);
-
       sge_dstring_free(&dyn_task_str);
       nxt_jatep = lFirst(lGetList(jep, JB_ja_tasks));
       FoundTasks = 0;
@@ -550,7 +549,6 @@ u_long32 group_opt
             SGE_EXIT(1);
          }   
          nxt_jatep = lNext(jatep);
-
          if (!(((full_listing & QSTAT_DISPLAY_OPERATORHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_OPERATOR))  
                ||
              ((full_listing & QSTAT_DISPLAY_USERHOLD) && (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_USER)) 
@@ -660,7 +658,6 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
    dstring ja_task_id_string = DSTRING_INIT;
  
    DENTER(TOP_LAYER, "sge_print_jobs_not_enrolled");
- 
    job_create_hold_id_lists(job, range_list, hold_state); 
    for (i = 0; i <= 7; i++) {
       lList *answer_list = NULL;
@@ -676,7 +673,6 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
          ) {
          show = 1;
       }
-
       if (range_list[i] != NULL && show) { 
          if (group_opt == GROUP_TASK_GROUPS) {
             range_list_print_to_string(range_list[i], &ja_task_id_string, 0);
@@ -708,12 +704,10 @@ static int sge_print_jobs_not_enrolled(lListElem *job, lListElem *qep,
             
             for_each(range, range_list[i]) {
                u_long32 start, end, step;
-
                range_get_all_ids(range, &start, &end, &step);
                for (; start <= end; start += step) { 
                   lListElem *ja_task = job_get_ja_task_template_hold(job,
                                                           start, hold_state[i]);
-
                   sge_dstring_sprintf(&ja_task_id_string, u32, start);
                   sge_print_job(job, ja_task, NULL, 1, NULL,
                                 &ja_task_id_string, full_listing, 0, 0, 
@@ -903,7 +897,6 @@ char *indent
    int is_zombie_job;
 
    DENTER(TOP_LAYER, "sge_print_job");
-
    is_zombie_job = job_is_zombie_job(job);
 
    queue_name = qep ? lGetString(qep, QU_qname) : NULL;
@@ -1080,7 +1073,7 @@ char *indent
       /* braces needed to suppress compiler warnings */
       if ((pe_name=lGetString(jatep, JAT_granted_pe)) &&
            (pe=pe_list_locate(pe_list, pe_name)) &&
-           lGetUlong(pe, PE_control_slaves)
+           lGetBool(pe, PE_control_slaves)
          && slots && (gdil_ep=lGetSubStr(jatep, JG_qname, queue_name,
                JAT_granted_destin_identifier_list))) {
          if (slot == 0) {
@@ -1218,9 +1211,9 @@ char *indent
             printf(QSTAT_INDENT "Granted PE:       %s "u32"\n", 
                lGetString(jatep, JAT_granted_pe), pe_slots); 
          }
-         if (lGetString(job, JB_checkpoint_object)) 
+         if (lGetString(job, JB_checkpoint_name)) 
             printf(QSTAT_INDENT "Checkpoint Env.:  %s\n", 
-               lGetString(job, JB_checkpoint_object)); 
+               lGetString(job, JB_checkpoint_name)); 
 
          sge_show_re_type_list_line_by_line(QSTAT_INDENT "Hard Resources:   ",
                QSTAT_INDENT2, lGetList(job, JB_hard_resource_list)); 
@@ -1237,7 +1230,7 @@ char *indent
                double dval;
 
                name = lGetString(ce, CE_name);
-               if (!lGetUlong(ce, CE_consumable) || !strcmp(name, "slots") || explicit_job_request(job, name))
+               if (!lGetBool(ce, CE_consumable) || !strcmp(name, "slots") || explicit_job_request(job, name))
                   continue;
 
                parse_ulong_val(&dval, NULL, lGetUlong(ce, CE_valtype), lGetString(ce, CE_default), NULL, 0); 

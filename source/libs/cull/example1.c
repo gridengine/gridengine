@@ -415,7 +415,6 @@ int main(int argc, char *argv[])
          The following ones are weighted from left to right.
        */
       lPSortList(hostlist, "%I+%I-", H_hostname, H_memsize);
-      lSortList2(hostlist, "%I+%I-", H_hostname, H_memsize);
 
       printf("\n\nHOSTLIST SORTED ASCENDING BY %s, DESCENDING BY %s\n\n",
              lNm2Str(H_hostname), lNm2Str(H_memsize));

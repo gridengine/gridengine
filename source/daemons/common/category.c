@@ -127,7 +127,7 @@ lList *acl_list
    /*
    ** -ckpt ckpt_name 
    */
-   if (sge_unparse_string_option(job, JB_checkpoint_object, "-ckpt", 
+   if (sge_unparse_string_option(job, JB_checkpoint_name, "-ckpt", 
             &cmdl, NULL) != 0) {
       DEXIT;
       goto ERROR;

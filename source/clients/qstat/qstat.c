@@ -415,9 +415,9 @@ char **argv
          pe = lGetString(jep, JB_pe)?
                   pe_list_locate(pe_list, lGetString(jep, JB_pe)):
                   NULL; /* aargh ! wildcard pe */
-         ckpt = lGetString(jep, JB_checkpoint_object)?
+         ckpt = lGetString(jep, JB_checkpoint_name)?
                            ckpt_list_locate(ckpt_list, 
-                           lGetString(jep, JB_checkpoint_object)): NULL;
+                           lGetString(jep, JB_checkpoint_name)): NULL;
          show_job = 0;
 
          for_each(qep, queue_list) {
@@ -666,7 +666,7 @@ u_long32 show
                      JB_group,
                      JB_now,
                      JB_pe,
-                     JB_checkpoint_object,
+                     JB_checkpoint_name,
                      JB_jid_predecessor_list,
                      JB_env_list,
                      JB_priority,
@@ -720,7 +720,7 @@ u_long32 show
                      JB_group,
                      JB_now,
                      JB_pe,
-                     JB_checkpoint_object,
+                     JB_checkpoint_name,
                      JB_jid_predecessor_list,
                      JB_env_list,
                      JB_priority,
@@ -984,7 +984,7 @@ u_long32 show
       SGE_EXIT(1);
    }
    if (sc_config) {
-      if (lGetUlong(lFirst(*sc_l), SC_user_sort)) {
+      if (lGetBool(lFirst(*sc_l), SC_user_sort)) {
          set_user_sort(1);
       }
    }

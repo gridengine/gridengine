@@ -609,7 +609,7 @@ sge_set_job_refs( lListElem *job,
 
    if (is_enrolled_ja_task && (pe_str=lGetString(ja_task, JAT_granted_pe)) && 
        (pe=pe_list_locate(all_lists->pe_list, pe_str)) &&
-       lGetUlong(pe, PE_control_slaves) &&
+       lGetBool(pe, PE_control_slaves) &&
        (granted=lGetList(ja_task, JAT_granted_destin_identifier_list))) {
 
       ref->num_task_jobclasses = lGetNumberOfElem(granted);
@@ -2320,7 +2320,7 @@ calc_job_tickets ( sge_ref_t *ref )
 
    if (ja_task && (pe_str=lGetString(ja_task, JAT_granted_pe))
          && (pe=pe_list_locate(all_lists->pe_list, pe_str))
-         && lGetUlong(pe, PE_control_slaves)
+         && lGetBool(pe, PE_control_slaves)
          && (granted=lGetList(ja_task, JAT_granted_destin_identifier_list))) {
 
       double job_tickets_per_slot, job_dtickets_per_slot, job_otickets_per_slot,
@@ -3752,7 +3752,7 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
          for_each(ja_task, lGetList(job, JB_ja_tasks)) {
             if ((pe_str=lGetString(ja_task, JAT_granted_pe))
                   && (pe=pe_list_locate(all_lists->pe_list, pe_str))
-                  && lGetUlong(pe, PE_control_slaves))
+                  && lGetBool(pe, PE_control_slaves))
 
                granted=lGetList(ja_task, JAT_granted_destin_identifier_list);
             else

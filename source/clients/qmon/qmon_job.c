@@ -1461,8 +1461,8 @@ lListElem *jep
 #endif
 
    sprintf(info, WIDTH"%s\n", info, "Checkpoint Object:", 
-         lGetString(jep, JB_checkpoint_object) ? 
-            lGetString(jep, JB_checkpoint_object) : "");
+         lGetString(jep, JB_checkpoint_name) ? 
+            lGetString(jep, JB_checkpoint_name) : "");
 
    if (lGetString(jep, JB_pe)) {
       dstring range_string = DSTRING_INIT;

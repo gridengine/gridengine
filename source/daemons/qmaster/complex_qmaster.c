@@ -220,9 +220,9 @@ int sub_command
             lSetUlong(cep, CE_valtype, TYPE_INT);
             lSetString(cep, CE_stringval, "0");
             lSetUlong(cep, CE_relop, CMPLXLE_OP);
-            lSetUlong(cep, CE_request, 1);
-            lSetUlong(cep, CE_forced, 0);
-            lSetUlong(cep, CE_consumable, 1);
+            lSetBool(cep, CE_request, TRUE);
+            lSetBool(cep, CE_forced, FALSE);
+            lSetBool(cep, CE_consumable, TRUE);
             lSetString(cep, CE_default, "1");
          }
 
@@ -273,7 +273,7 @@ int sub_command
          }
 
          /* ensure consumables are numeric types */
-         if (lGetUlong(cep, CE_consumable)) {
+         if (lGetBool(cep, CE_consumable)) {
             u_long32 type = lGetUlong(cep, CE_valtype);
             if (type==TYPE_STR||type==TYPE_CSTR||type==TYPE_HOST) {
                ERROR((SGE_EVENT, MSG_CPLX_ATTRIBNOCONSUM_S, name));

@@ -42,6 +42,7 @@ extern "C" {
 #define FREE_ELEM             (1<<0)
 #define BOUND_ELEM            (1<<1)
 #define TRANS_BOUND_ELEM      (1<<2)
+#define OBJECT_ELEM           (1<<3)
 
 struct _lListElem {
    lListElem *next;             /* next lList element                        */

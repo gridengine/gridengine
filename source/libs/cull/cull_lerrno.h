@@ -93,6 +93,7 @@ extern "C" {
 #define  LEPARSECOND    53      /* parsing condition failed               */
 #define  LEFORMAT       54      /* wrong packing format                   */
 #define  LEOPEN         55      /* wrong packing format                   */
+#define  LEBOUNDELEM    55      /* lListElem is already bound             */
 /* prototypes */
 
 int lerror(void);

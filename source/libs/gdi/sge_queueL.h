@@ -138,7 +138,7 @@ NAMEEND
 *     SGE_STRING(QU_priority)     
 *        job priority 
 *
-*     SGE_ULONG(QU_rerun)       
+*     SGE_BOOL(QU_rerun)       
 *        restart a job
 * 
 *     SGE_ULONG(QU_qtype)        
@@ -419,7 +419,7 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_ULONG(QU_nsuspend, CULL_DEFAULT)
    SGE_STRING(QU_suspend_interval, CULL_DEFAULT)
    SGE_STRING(QU_priority, CULL_DEFAULT)
-   SGE_ULONG(QU_rerun, CULL_DEFAULT)  
+   SGE_BOOL(QU_rerun, CULL_DEFAULT)  
    SGE_ULONG(QU_qtype, CULL_DEFAULT)  
    SGE_STRING(QU_processors, CULL_DEFAULT)
    SGE_ULONG(QU_job_slots, CULL_DEFAULT)

@@ -157,10 +157,17 @@ example2.o: $(CULLLIB_DIR)/example2.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/example2.c
 
 #---------------------------------------------------------------------
-# test program
+# test programs
 test_cull_list: test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(CC) $(CFLAGS) -o test_cull_list $(LFLAGS) test_cull_list.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 test_cull_list.o: $(CULLLIB_DIR)/test_cull_list.c
 	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_list.c
+
+#---
+test_cull_pack: test_cull_pack.o $(CULLLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o test_cull_pack $(LFLAGS) test_cull_pack.o $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+test_cull_pack.o: $(CULLLIB_DIR)/test_cull_pack.c
+	$(CC) $(CFLAGS) -c $(CULLLIB_DIR)/test_cull_pack.c
 

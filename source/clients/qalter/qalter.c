@@ -387,9 +387,9 @@ int *all_users
 
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-ckpt"))) {
-         lSetString(job, JB_checkpoint_object, lGetString(ep, SPA_argval_lStringT));
+         lSetString(job, JB_checkpoint_name, lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(cmdline, ep);
-         nm_set(job_field, JB_checkpoint_object);
+         nm_set(job_field, JB_checkpoint_name);
       }
 
       parse_list_simple(cmdline, "-e", job, JB_stderr_path_list, 0, 0, 
@@ -480,7 +480,7 @@ int *all_users
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
-         lSetUlong(job, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
+         lSetBool(job, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
          lRemoveElem(cmdline, ep);
          nm_set(job_field, JB_merge_stderr);
       }
@@ -523,7 +523,7 @@ int *all_users
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
-         lSetUlong(job, JB_notify, TRUE);
+         lSetBool(job, JB_notify, TRUE);
          lRemoveElem(cmdline, ep);
          nm_set(job_field, JB_notify);
       }
@@ -804,7 +804,7 @@ int *all_users
          static int str_nm[] = {
             JB_account,
             JB_cwd,
-            JB_checkpoint_object,
+            JB_checkpoint_name,
             JB_job_name,
             JB_project,
             JB_pe,
@@ -812,13 +812,16 @@ int *all_users
          };
          static int ulong_nm[] = {
             JB_execution_time,
-            JB_merge_stderr,
             JB_mail_options,
-            JB_notify,
             JB_priority,
             JB_override_tickets,
             JB_restart,
             JB_verify_suitable_queues,
+            NoName
+         };
+         static int bool_nm[] = {
+            JB_merge_stderr,
+            JB_notify,
             NoName
          };
          static int list_nm[] = {
@@ -853,6 +856,11 @@ int *all_users
          for (i=0; ulong_nm[i]!=NoName; i++)
             if (lGetPosViaElem(job, ulong_nm[i]) != -1 && lGetPosViaElem(rep, ulong_nm[i]) != -1)
                lSetUlong(rep, ulong_nm[i], lGetUlong(job, ulong_nm[i]));
+
+         /* copy all bools */
+         for (i=0; bool_nm[i]!=NoName; i++)
+            if (lGetPosViaElem(job, bool_nm[i]) != -1 && lGetPosViaElem(rep, bool_nm[i]) != -1)
+               lSetBool(rep, bool_nm[i], lGetBool(job, bool_nm[i]));
 
          /* copy all lists */
          for (i=0; list_nm[i]!=NoName; i++)

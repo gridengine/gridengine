@@ -732,7 +732,7 @@ static void get_reserved_usage(lList **job_usage_list)
 
             if (sge_hostcmp(me.qualified_hostname,
                   lGetHost(gdil_ep, JG_qhostname)) ||
-                  !(q = lFirst(lGetList(gdil_ep, JG_queue))))
+                  !(q = lGetObject(gdil_ep, JG_queue)))
                continue;
 
             nslots = lGetUlong(gdil_ep, JG_slots);

@@ -376,9 +376,9 @@ XtPointer cld, cad;
             map_type2str(lGetUlong(attr, CE_valtype)), 
             lGetString(attr, CE_stringval), 
             map_op2str(lGetUlong(attr, CE_relop)),
-            lGetUlong(attr, CE_forced) ? "FORCED" : 
-               (lGetUlong(attr, CE_request) ? "YES" : "NO"),
-            lGetUlong(attr, CE_consumable) ? "YES" : "NO",
+            lGetBool(attr, CE_forced) ? "FORCED" : 
+               (lGetBool(attr, CE_request) ? "YES" : "NO"),
+            lGetBool(attr, CE_consumable) ? "YES" : "NO",
             lGetString(attr, CE_default) ? lGetString(attr, CE_default) : "");
             XmTextInsert(text_field, pos, buf);
             pos += strlen(buf);

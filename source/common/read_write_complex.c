@@ -340,7 +340,7 @@ lList **alpp
             SGE_EXIT(1);
       }
       /* do not allow string types being consumable */
-      if (lGetUlong(ep, CE_consumable) && 
+      if (lGetBool(ep, CE_consumable) && 
          (type==TYPE_HOST || 
           type==TYPE_STR ||
           type==TYPE_CSTR)) {
@@ -457,9 +457,9 @@ int line
 
    if (((s = sge_strtok(cp, " \t\n"))) && (*s != '#')) {
       if (!strcasecmp(s, "y") || !strcasecmp(s, "yes"))
-         flag = 1;
+         flag = TRUE;
       else if (!strcasecmp(s, "n") || !strcasecmp(s, "no"))
-         flag = 0;
+         flag = FALSE;
       else {
          ERROR((SGE_EVENT, MSG_PARSE_INVALIDCPLXENTRY_SSS, fname, name, s));
          if (alpp)
@@ -467,7 +467,7 @@ int line
          DEXIT;
          return 1;
       }
-      lSetUlong(ep, nm, flag);
+      lSetBool(ep, nm, flag);
    }
    else {
       ERROR((SGE_EVENT, MSG_PARSE_CANTPARSECPLX_SI, fname, line));
@@ -509,11 +509,11 @@ int line
       }
 
       if (flag == 2) {
-         lSetUlong(ep, CE_forced, 1);
-         lSetUlong(ep, CE_request, 1);
+         lSetBool(ep, CE_forced, TRUE);
+         lSetBool(ep, CE_request, TRUE);
       } else {
-         lSetUlong(ep, CE_forced, 0);
-         lSetUlong(ep, CE_request, flag);
+         lSetBool(ep, CE_forced, FALSE);
+         lSetBool(ep, CE_request, flag);
       }
    }
    else {
@@ -577,9 +577,9 @@ lList **alpp
          map_type2str(lGetUlong(ep, CE_valtype)), 
          lGetString(ep, CE_stringval), 
          map_op2str(lGetUlong(ep, CE_relop)), 
-         (lGetUlong(ep, CE_forced)) ? "FORCED" : 
-                           (lGetUlong(ep, CE_request)) ? "YES" : "NO",
-         (lGetUlong(ep, CE_consumable)) ? "YES" : "NO",
+         (lGetBool(ep, CE_forced)) ? "FORCED" : 
+                           (lGetBool(ep, CE_request)) ? "YES" : "NO",
+         (lGetBool(ep, CE_consumable)) ? "YES" : "NO",
          lGetString(ep, CE_default)));
    }
 

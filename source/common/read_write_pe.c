@@ -304,11 +304,11 @@ lListElem *ep
    FPRINTF((fp, "allocation_rule   %s\n", lGetString(ep, PE_allocation_rule)));
 
    /* --------- PE_control_slaves */
-   FPRINTF((fp, "control_slaves    %s\n", lGetUlong(ep, PE_control_slaves) ? 
+   FPRINTF((fp, "control_slaves    %s\n", lGetBool(ep, PE_control_slaves) ? 
                "TRUE" : "FALSE"));
 
    /* --------- PE_job_is_first_task */
-   FPRINTF((fp, "job_is_first_task %s\n", lGetUlong(ep, PE_job_is_first_task) ? 
+   FPRINTF((fp, "job_is_first_task %s\n", lGetBool(ep, PE_job_is_first_task) ? 
                "TRUE" : "FALSE"));
 
 
@@ -396,7 +396,7 @@ lListElem* sge_generic_pe(char *pe_name)
    lSetString(pep, PE_stop_proc_args, "/bin/true");
 
    /* PE_control_slaves initialized implicitly to false */
-   lSetUlong(pep, PE_job_is_first_task, 1);
+   lSetBool(pep, PE_job_is_first_task, TRUE);
 
    {
       lList *new_qr_list;

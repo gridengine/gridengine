@@ -125,13 +125,13 @@ lListElem *petep
    DENTER(TOP_LAYER, "responsible_queue");
 
    if (petep == NULL) {
-      master_q = lFirst(lGetList(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_queue));
+      master_q = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_queue);
    } else {
       lListElem *pe_queue = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
-      master_q = lFirst(lGetList(lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list),
-                                             JG_qname,
-                                             lGetString(pe_queue, JG_qname)),
-                        JG_queue));
+      master_q = lGetObject(lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list),
+                                        JG_qname,
+                                        lGetString(pe_queue, JG_qname)),
+                            JG_queue);
       
    }
 
@@ -377,7 +377,7 @@ char *err_str
          const char *q_set;
 
          slots = (int)lGetUlong(gdil_ep, JG_slots);
-         qep = lFirst(lGetList(gdil_ep, JG_queue)); 
+         qep = lGetObject(gdil_ep, JG_queue); 
          q_set = lGetString(qep, QU_processors);
          pe_slots += slots;
          fprintf(fp, "%s %d %s %s\n", 
@@ -623,7 +623,7 @@ char *err_str
    }   
 
    /* forward name of ckpt env to job */
-   if ((ep = lFirst(lGetList(jep, JB_checkpoint_object_list)))) {
+   if ((ep = lGetObject(jep, JB_checkpoint_object))) {
       var_list_set_string(&environmentList, VAR_PREFIX "CKPT_ENV", lGetString(ep, CK_name));
       if (lGetString(ep, CK_ckpt_dir))
          var_list_set_string(&environmentList, VAR_PREFIX "CKPT_DIR", lGetString(ep, CK_ckpt_dir));
@@ -765,10 +765,10 @@ char *err_str
    fprintf(fp, "stdout_path=%s\n", stdout_path);
    fprintf(fp, "stderr_path=%s\n", stderr_path);
    fprintf(fp, "stdin_path=%s\n", stdin_path);
-   fprintf(fp, "merge_stderr=%d\n", (int)lGetUlong(jep, JB_merge_stderr));
+   fprintf(fp, "merge_stderr=%d\n", (int)lGetBool(jep, JB_merge_stderr));
 
    if (lGetUlong(jep, JB_checkpoint_attr) && 
-       (ep = lFirst(lGetList(jep, JB_checkpoint_object_list)))) {
+       (ep = lGetObject(jep, JB_checkpoint_object))) {
       fprintf(fp, "ckpt_job=1\n");
       fprintf(fp, "ckpt_restarted=%d\n", petep != NULL ? 0 : (int) lGetUlong(jatep, JAT_job_restarted));
       fprintf(fp, "ckpt_pid=%d\n", (int) lGetUlong(jatep, JAT_pvm_ckpt_pid));
@@ -857,7 +857,7 @@ char *err_str
       lListElem *pep = NULL;
       /* no pe start/stop for petasks */
       if(petep == NULL) {
-         pep = lFirst(lGetList(jatep, JAT_pe_object));
+         pep = lGetObject(jatep, JAT_pe_object);
       }
       fprintf(fp, "pe_hostfile=%s/%s/%s\n", execd_spool_dir, active_dir, PE_HOSTFILE);
       fprintf(fp, "pe_start=%s\n",  pep != NULL && lGetString(pep, PE_start_proc_args)?
@@ -933,7 +933,7 @@ char *err_str
 
    {
       u_long32 notify = 0;
-      if (lGetUlong(jep, JB_notify))
+      if (lGetBool(jep, JB_notify))
          parse_ulong_val(NULL, &notify, TYPE_TIM, lGetString(master_q, QU_notify), NULL, 0);
       fprintf(fp, "notify=" u32 "\n", notify);
    }

@@ -263,24 +263,21 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
       case lIntT:
          if (!fp) {
             DPRINTF(("%s %d\n", out, cp->operand.cmp.val.i));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %d\n", out, cp->operand.cmp.val.i);
          }
          break;
       case lUlongT:
          if (!fp) {
             DPRINTF(("%s "u32"\n", out, cp->operand.cmp.val.ul));
-         }
-         else {
+         } else {
             fprintf(fp, "%s "u32"\n", out, cp->operand.cmp.val.ul);
          }
          break;
       case lStringT:
          if (!fp) {
             DPRINTF(("%s \"%s\"\n", out, cp->operand.cmp.val.str));
-         }
-         else {
+         } else {
             fprintf(fp, "%s \"%s\"\n", out, cp->operand.cmp.val.str);
          }
          break;
@@ -288,8 +285,7 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
       case lHostT:
          if (!fp) {
             DPRINTF(("%s \"%s\"\n", out, cp->operand.cmp.val.host));
-         }
-         else {
+         } else {
             fprintf(fp, "%s \"%s\"\n", out, cp->operand.cmp.val.host);
          }
          break;
@@ -300,40 +296,42 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
       case lFloatT:
          if (!fp) {
             DPRINTF(("%s %f\n", out, cp->operand.cmp.val.fl));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %f\n", out, cp->operand.cmp.val.fl);
          }
          break;
       case lDoubleT:
          if (!fp) {
             DPRINTF(("%s %f\n", out, cp->operand.cmp.val.db));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %f\n", out, cp->operand.cmp.val.db);
          }
          break;
       case lLongT:
          if (!fp) {
             DPRINTF(("%s %ld\n", out, cp->operand.cmp.val.l));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %ld\n", out, cp->operand.cmp.val.l);
+         }
+         break;
+      case lBoolT:
+         if (!fp) {
+            DPRINTF(("%s %s\n", out, cp->operand.cmp.val.b ? "true" : "false"));
+         } else {
+            fprintf(fp, "%s %s\n", out, cp->operand.cmp.val.b ? "true" : "false");
          }
          break;
       case lCharT:
          if (!fp) {
             DPRINTF(("%s %c\n", out, cp->operand.cmp.val.c));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %c\n", out, cp->operand.cmp.val.c);
          }
          break;
       case lRefT:
          if (!fp) {
             DPRINTF(("%s %p\n", out, cp->operand.cmp.val.ref));
-         }
-         else {
+         } else {
             fprintf(fp, "%s %p\n", out, cp->operand.cmp.val.ref);
          }
          break;
@@ -762,6 +760,16 @@ static lCondition *read_val(lDescr *dp, va_list *app)
 #endif
       break;
 
+   case BOOL:
+      if (mt_get_type(cp->operand.cmp.mt) != lBoolT)
+         incompatibleType(MSG_CULL_WHERE_SHOULDBEBOOL);
+#if USING_GCC_2_96
+      cp->operand.cmp.val.b = va_arg(*app, int);
+#else
+      cp->operand.cmp.val.b = va_arg(*app, lBool);
+#endif
+      break;
+
    case REF:
       if (mt_get_type(cp->operand.cmp.mt) != lRefT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEREFT );
@@ -1136,6 +1144,13 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
       cp->operand.cmp.val.c = (*wapp)++->value.c;
       break;
 
+   case BOOL:
+      if (mt_get_type(cp->operand.cmp.mt) != lBoolT)
+         incompatibleType(MSG_CULL_WHERE_SHOULDBEBOOL);
+/*       DPRINTF(("(*wapp)->value.b = %c\n", (*wapp)->value.b)); */
+      cp->operand.cmp.val.b = (*wapp)++->value.b;
+      break;
+
    case REF:
       if (mt_get_type(cp->operand.cmp.mt) != lRefT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEREFT);
@@ -1347,6 +1362,10 @@ int lCompare(const lListElem *ep, const lCondition *cp)
          result = charcmp(lGetPosChar(ep, cp->operand.cmp.pos), 
                           cp->operand.cmp.val.c);
          break;
+      case lBoolT:
+         result = boolcmp(lGetPosBool(ep, cp->operand.cmp.pos), 
+                          cp->operand.cmp.val.b);
+         break;
       case lRefT:
          result = refcmp(lGetPosRef(ep, cp->operand.cmp.pos), 
                          cp->operand.cmp.val.ref);
@@ -1537,6 +1556,8 @@ lCondition *lCopyWhere(const lCondition *cp)
          break;
       case lListT:
          break;
+      case lObjectT:
+         break;
       case lFloatT:
          new->operand.cmp.val.fl = cp->operand.cmp.val.fl;
          break;
@@ -1545,6 +1566,9 @@ lCondition *lCopyWhere(const lCondition *cp)
          break;
       case lLongT:
          new->operand.cmp.val.l = cp->operand.cmp.val.l;
+         break;
+      case lBoolT:
+         new->operand.cmp.val.b = cp->operand.cmp.val.b;
          break;
       case lCharT:
          new->operand.cmp.val.c = cp->operand.cmp.val.c;

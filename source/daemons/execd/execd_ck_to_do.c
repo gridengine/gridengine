@@ -214,7 +214,7 @@ void force_job_rlimit()
 
             if (sge_hostcmp(me.qualified_hostname, 
                  lGetHost(gdil_ep, JG_qhostname)) 
-                || !(q = lFirst(lGetList(gdil_ep, JG_queue))))
+                || !(q = lGetObject(gdil_ep, JG_queue)))
                continue;
 
             nslots = lGetUlong(gdil_ep, JG_slots);
@@ -404,8 +404,8 @@ int answer_error
       lListElem *master_q;
 
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         master_q = lFirst(lGetList(lFirst(
-                           lGetList(jatep, JAT_granted_destin_identifier_list)), JG_queue));
+         master_q = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
+                               JG_queue);
 
          if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {       /* initialize everything */
             if (strcasecmp(lGetString(master_q, QU_s_rt), "infinity")) {

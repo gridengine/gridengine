@@ -400,6 +400,9 @@ lList *lJoin(const char *name, int nm0, const lList *lp0,
             case lCharT:
                needed = (ep0->cont[lp0_pos].c == ep1->cont[lp1_pos].c);
                break;
+            case lBoolT:
+               needed = (ep0->cont[lp0_pos].b == ep1->cont[lp1_pos].b);
+               break;
             case lRefT:
                needed = (ep0->cont[lp0_pos].ref == ep1->cont[lp1_pos].ref);
                break;

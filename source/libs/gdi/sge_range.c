@@ -552,11 +552,10 @@ void range_sort_uniq_compress(lList *range_list, lList **answer_list)
       lListElem *range1, *next_range1;
       lListElem *range2, *next_range2;
       lList *tmp_list;
-
       /*
        * Sort the incomming stuff
        */
-      lSortList2(range_list, "%I+", RN_min);
+      lPSortList(range_list, "%I+", RN_min);
 
       /* 
        * Remove overlapping ranges
@@ -937,7 +936,7 @@ void range_list_insert_id(lList **range_list, lList **answer_list, u_long32 id)
    int inserted = 0;
    DENTER(CULL_LAYER, "range_insert_id");
 
-   lSortList2(*range_list, "%I+", RN_min);
+   lPSortList(*range_list, "%I+", RN_min);
 
    range = NULL;
    if (*range_list == NULL) {

@@ -61,6 +61,7 @@ enum {
    DOUBLE,
    LONG,
    CHAR,
+   BOOL,
    REF,
 
    CULL_ALL,

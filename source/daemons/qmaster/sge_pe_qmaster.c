@@ -93,10 +93,10 @@ int sub_command
    attr_mod_ulong(pe, new_pe, PE_slots, "slots");
 
    /* ---- PE_control_slaves */
-   attr_mod_ulong(pe, new_pe, PE_control_slaves, "control_slaves");
+   attr_mod_bool(pe, new_pe, PE_control_slaves, "control_slaves");
 
    /* ---- PE_job_is_first_task */
-   attr_mod_ulong(pe, new_pe, PE_job_is_first_task, "job_is_first_task");
+   attr_mod_bool(pe, new_pe, PE_job_is_first_task, "job_is_first_task");
 
    /* ---- PE_queue_list */
    if (lGetPosViaElem(pe, PE_queue_list)>=0) {

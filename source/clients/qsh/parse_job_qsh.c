@@ -138,7 +138,7 @@ lList *cull_parse_qsh_parameter(lList *cmdline, lListElem **pjob) {
 
    while (JB_NOW_IS_QRSH(job_now)
           && (ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
-      lSetUlong(*pjob, JB_notify, TRUE);
+      lSetBool(*pjob, JB_notify, TRUE);
       lRemoveElem(cmdline, ep);
    }  
 

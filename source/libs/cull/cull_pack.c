@@ -76,6 +76,11 @@ int type
 
    switch (type) {
 
+   case lBoolT:
+      ret = unpackint(pb, &i);
+      dst->b = i;
+      break;
+
    case lUlongT:
       ret = unpackint(pb, &i);
       dst->ul = i;
@@ -91,6 +96,10 @@ int type
 
    case lListT:
       ret = cull_unpack_list(pb, &(dst->glp));
+      break;
+
+   case lObjectT:
+      ret = cull_unpack_object(pb, &(dst->obj));
       break;
 
    case lDoubleT:
@@ -140,6 +149,10 @@ int type
 
    switch (type) {
 
+   case lBoolT:
+      ret = packint(pb, src->b);
+      break;
+
    case lUlongT:
       ret = packint(pb, src->ul);
       break;
@@ -154,6 +167,10 @@ int type
 
    case lListT:
       ret = cull_pack_list(pb, src->glp);
+      break;
+
+   case lObjectT:
+      ret = cull_pack_object(pb, src->obj);
       break;
 
    case lDoubleT:
@@ -396,7 +413,7 @@ int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep)
       return ret;
    }
 
-   if(ep->status == FREE_ELEM) {
+   if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
       if((ret = cull_pack_descr(pb, ep->descr)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
@@ -448,7 +465,7 @@ const lDescr *dp                  /* has to be NULL in case of free elements
       return ret;
    }
 
-   if(ep->status == FREE_ELEM) {
+   if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
       if((ret = cull_unpack_descr(pb, &(ep->descr))) != PACK_SUCCESS) {
          free(ep);
          DEXIT;
@@ -467,7 +484,7 @@ const lDescr *dp                  /* has to be NULL in case of free elements
    }
 
    /* This is a hack, to avoid aborts in lAppendElem */
-   if(ep->status == BOUND_ELEM)
+   if(ep->status == BOUND_ELEM || ep->status == OBJECT_ELEM)
       ep->status = TRANS_BOUND_ELEM;
 
    /* 
@@ -477,7 +494,7 @@ const lDescr *dp                  /* has to be NULL in case of free elements
     */
 
    if((ret = unpackbitfield(pb, &(ep->changed))) != PACK_SUCCESS) {
-      if(ep->status == FREE_ELEM) {
+      if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
          free(ep->descr);
       }
       free(ep);
@@ -486,7 +503,7 @@ const lDescr *dp                  /* has to be NULL in case of free elements
    }
     
    if((ret = cull_unpack_cont(pb, &(ep->cont), ep->descr))) {
-      if(ep->status == FREE_ELEM) {
+      if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
          free(ep->descr);
       }   
       free(ep);
@@ -501,6 +518,47 @@ const lDescr *dp                  /* has to be NULL in case of free elements
 }
 
 /* ================================================================ */
+
+/* ------------------------------------------------------------
+
+   cull_pack_object() - packs a sub object
+
+   return values:
+   PACK_SUCCESS
+   PACK_ENOMEM
+   PACK_FORMAT
+
+ */
+int cull_pack_object(
+sge_pack_buffer *pb,
+const lListElem *ep 
+) {
+   int ret;
+
+   DENTER(CULL_LAYER, "cull_pack_object");
+
+   if((ret = packint(pb, ep != NULL)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   if(ep != NULL) {
+      /* pack descriptor */
+      if((ret = cull_pack_descr(pb, ep->descr)) != PACK_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+
+      /* pack list element */
+      if((ret = cull_pack_elem(pb, ep)) != PACK_SUCCESS) {
+         DEXIT;
+         return ret;
+      }
+   }
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
 
 /* ------------------------------------------------------------
 
@@ -643,6 +701,60 @@ lList **lpp
    }
 
    *lpp = lp;
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
+
+/* ------------------------------------------------------------
+
+   cull_unpack_object() - unpacks a sub object 
+
+   return values:
+   PACK_SUCCESS
+   PACK_ENOMEM
+   PACK_FORMAT
+
+ */
+
+int cull_unpack_object(
+sge_pack_buffer *pb,
+lListElem **epp 
+) {
+   int ret;
+   lDescr *descr;
+   lListElem *ep;
+   u_long32 i=0;
+
+   DENTER(CULL_LAYER, "cull_unpack_object");
+
+   *epp = NULL;
+
+   if((ret = unpackint(pb, &i))) {
+      DEXIT;
+      return ret;
+   }
+
+   /* do we have an empty object (NULL) ? */
+   if(!i) {
+      DEXIT;
+      return PACK_SUCCESS;
+   }
+
+   /* unpack descriptor */
+   if((ret = cull_unpack_descr(pb, &descr)) != PACK_SUCCESS) {
+      DEXIT;
+      return ret;
+   }
+
+   /* unpack each element */
+   if((ret = cull_unpack_elem(pb, &ep, descr)) != PACK_SUCCESS) {
+      free(descr);
+      DEXIT;
+      return ret;
+   }
+
+   *epp = ep;
 
    DEXIT;
    return PACK_SUCCESS;
@@ -887,8 +999,7 @@ const lCondition *cp
             DEXIT;
             return ret;
          }
-      }
-      else {
+      } else {
          if ((ret = cull_pack_cond(pb, cp->operand.cmp.val.cp))) {
             DEXIT;
             return ret;
@@ -1005,8 +1116,7 @@ lCondition **cpp
             DEXIT;
             return ret;
          }
-      }
-      else {
+      } else {
          if ((ret = cull_unpack_cond(pb, &(cp->operand.cmp.val.cp)))) {
             lFreeWhere(cp);
             DEXIT;

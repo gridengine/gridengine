@@ -360,7 +360,7 @@ int how
    lUniqStr(lp, CE_name);
 
    if (how == REQUESTABLE_RESOURCES) { 
-      where = lWhere("%T(%I != %u)", CE_Type, CE_request, 0);
+      where = lWhere("%T(%I != %b)", CE_Type, CE_request, 0);
       if (where)
          lp = lSelectDestroy(lp, where); 
    }

@@ -132,7 +132,7 @@ lList *cmplx_list
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_US,  u32c (uval), "queue_sort_method"));
 
    /* --- SC_user_sort */
-   uval = lGetUlong(sc_ep, SC_user_sort);
+   uval = lGetBool(sc_ep, SC_user_sort);
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS , uval?MSG_TRUE:MSG_FALSE, "user_sort"));
 
    /* --- SC_job_load_adjustments */

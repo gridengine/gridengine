@@ -277,12 +277,12 @@ lListElem *ep
 
    /* control slaves */
    sprintf(buf, "%-20.20s %s", "Control Slaves", 
-            (int)lGetUlong(ep, PE_control_slaves) ? "true" : "false");
+            (int)lGetBool(ep, PE_control_slaves) ? "true" : "false");
    items[i++] = XmStringCreateLocalized(buf);
 
    /* job_is_first_task */
    sprintf(buf, "%-20.20s %s", "Job is first task", 
-            (int)lGetUlong(ep, PE_job_is_first_task) ? "true" : "false");
+            (int)lGetBool(ep, PE_job_is_first_task) ? "true" : "false");
    items[i++] = XmStringCreateLocalized(buf);
 
    
@@ -752,10 +752,10 @@ lListElem *pep
       XmtInputFieldSetString(pe_alloc_w, alloc_rule);
 
    XmToggleButtonSetState(pe_control_slaves_w, 
-               lGetUlong(pep, PE_control_slaves), False);
+               lGetBool(pep, PE_control_slaves), False);
 
    XmToggleButtonSetState(pe_job_is_first_task_w, 
-               lGetUlong(pep, PE_job_is_first_task), False);
+               lGetBool(pep, PE_job_is_first_task), False);
 
    DEXIT;
 }
@@ -855,10 +855,10 @@ lListElem *pep
    lSetString(pep, PE_allocation_rule, alloc_rule);
 
    pe_control_slaves = XmToggleButtonGetState(pe_control_slaves_w); 
-   lSetUlong(pep, PE_control_slaves, pe_control_slaves);
+   lSetBool(pep, PE_control_slaves, pe_control_slaves);
 
    pe_job_is_first_task = XmToggleButtonGetState(pe_job_is_first_task_w); 
-   lSetUlong(pep, PE_job_is_first_task, pe_job_is_first_task);
+   lSetBool(pep, PE_job_is_first_task, pe_job_is_first_task);
 
    DEXIT;
    return True;

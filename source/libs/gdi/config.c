@@ -356,9 +356,9 @@ _Insight_set_option("suppress", "PARM_NULL");
       return fields?TRUE:FALSE;
    }
    if (!strcasecmp(str, "true"))
-      lSetUlong(ep, name_nm, TRUE);
+      lSetBool(ep, name_nm, TRUE);
    else
-      lSetUlong(ep, name_nm, FALSE);
+      lSetBool(ep, name_nm, FALSE);
       
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);

@@ -392,7 +392,7 @@ int nm
 
    DENTER(GUI_LAYER, "PrintBool");
 
-   if (lGetUlong(ep, nm))
+   if (lGetBool(ep, nm))
       str = XtNewString("True");
    else
       str = XtNewString("False");
@@ -1343,7 +1343,7 @@ XtPointer cld, cad;
                      lCopyList("", jobfilter_resources));
    lSetList(qmon_preferences, PREF_job_filter_owners, 
                      lCopyList("", jobfilter_owners));
-   lSetUlong(qmon_preferences, PREF_job_filter_compact, jobfilter_compact);
+   lSetBool(qmon_preferences, PREF_job_filter_compact, jobfilter_compact);
    for (j=FIRST_FIELD; j<XtNumber(job_items); j++) {           
       if (job_items[j].show)
          lAddElemStr(&lp, STR, job_items[j].name, ST_Type); 
@@ -1668,7 +1668,7 @@ XtPointer cld
                                           PREF_job_filter_resources));
       jobfilter_owners = lCopyList("", lGetList(qmon_preferences, 
                                           PREF_job_filter_owners));
-      jobfilter_compact = lGetUlong(qmon_preferences, PREF_job_filter_compact);
+      jobfilter_compact = lGetBool(qmon_preferences, PREF_job_filter_compact);
       jobfilter_fields = lCopyList("", lGetList(qmon_preferences,
                                           PREF_job_filter_fields));
 

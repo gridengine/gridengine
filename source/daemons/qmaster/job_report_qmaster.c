@@ -248,7 +248,7 @@ sge_pack_buffer *pb
                   /* do we expect a pe task report from this host? */
                   if (lGetString(jatep, JAT_granted_pe)
                         && (pe=pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe)))
-                        && lGetUlong(pe, PE_control_slaves)
+                        && lGetBool(pe, PE_control_slaves)
                         && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
                     
                     /* is the task already known (object was created earlier)? */
@@ -440,7 +440,7 @@ sge_pack_buffer *pb
                lListElem *pe;
                if ( lGetString(jatep, JAT_granted_pe)
                   && (pe=pe_list_locate(Master_Pe_List, lGetString(jatep, JAT_granted_pe)))
-                  && lGetUlong(pe, PE_control_slaves)
+                  && lGetBool(pe, PE_control_slaves)
                   && lGetElemHost(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qhostname, rhost)) {
                   /* here we get usage of tasks that ran on slave/master execd's 
                      we store a job element for each job in the task list of the job
@@ -533,7 +533,7 @@ sge_pack_buffer *pb
                         }
                      }
                      if (failed == SSTATE_FAILURE_AFTER_JOB && 
-                           !lGetString(jep, JB_checkpoint_object)) {
+                           !lGetString(jep, JB_checkpoint_name)) {
                         get_rid_of_job(NULL, jep, jatep, 0, pb, rhost, me.user_name, 
                               me.qualified_hostname, lGetString(jr, JR_err_str), commproc);
                         pack_job_kill(pb, jobid, jataskid);

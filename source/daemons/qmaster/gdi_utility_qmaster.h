@@ -47,6 +47,8 @@ int attr_mod_str(lList **alpp, lListElem *qep, lListElem *new_queue, int nm, cha
 
 int attr_mod_double(lListElem *qep, lListElem *new_queue, int nm, char *attr_name);
 
+int attr_mod_bool(lListElem *qep, lListElem *new_queue, int nm, char *attr_name);
+
 int attr_mod_ulong(lListElem *qep, lListElem *new_queue, int nm, char *attr_name);
 
 int attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, int nm, int primary_key, int sub_command, char *attr_name, char *object_name);

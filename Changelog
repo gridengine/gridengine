@@ -1,3 +1,12 @@
+JG-2002-07-29-0: Enhancem.  Complete implementation and use of boolean and 
+                            object CULL data types.
+                            Added module tests for CULL list functionality
+                            and CULL packing.
+                 Issue:     #324
+                 Cleanup:   Removed unused function lSortLlist2.
+                 Bugfix:    Fixed Bug in lDumpElem.
+                            Fixed memory access bug.
+
 CR-2002-07-31-0  Bugfix:    addend missing #ifdef __SGE_NO_USERMAPPING__ 
                             lines to preserve sge_options[] array
 

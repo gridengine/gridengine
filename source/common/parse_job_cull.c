@@ -276,7 +276,7 @@ lListElem **pjob
 #endif
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-ckpt"))) {
-      lSetString(*pjob, JB_checkpoint_object, lGetString(ep, SPA_argval_lStringT));
+      lSetString(*pjob, JB_checkpoint_name, lGetString(ep, SPA_argval_lStringT));
       lRemoveElem(cmdline, ep);
    }
 
@@ -387,7 +387,7 @@ lListElem **pjob
    }
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
-      lSetUlong(*pjob, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
+      lSetBool(*pjob, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
       lRemoveElem(cmdline, ep);
    }
 
@@ -430,7 +430,7 @@ lListElem **pjob
    }
    
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
-      lSetUlong(*pjob, JB_notify, TRUE);
+      lSetBool(*pjob, JB_notify, TRUE);
       lRemoveElem(cmdline, ep);
    }
 

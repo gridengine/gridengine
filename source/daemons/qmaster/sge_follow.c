@@ -407,7 +407,7 @@ lList **topp  /* ticket orders ptr ptr */
           *  this triggers our retry for delivery of slave jobs
           *  and gets untagged when ack has arrived 
           */
-         if (pe && lGetUlong(pe, PE_control_slaves)) {
+         if (pe && lGetBool(pe, PE_control_slaves)) {
 
             if (feature_is_enabled(FEATURE_SGEEE)) {
                lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));

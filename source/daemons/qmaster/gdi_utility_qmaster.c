@@ -235,6 +235,25 @@ char *attr_name
    return 0;
 }
 
+/* raw booleans without any verification */       
+int attr_mod_bool(
+lListElem *qep,
+lListElem *new_ep,
+int nm,
+char *attr_name 
+) {
+   DENTER(TOP_LAYER, "attr_mod_ulong");
+
+   /* ---- attribute nm */
+   if (lGetPosViaElem(qep, nm)>=0) {
+      DPRINTF(("got new %s\n", attr_name));
+      lSetBool(new_ep, nm, lGetBool(qep, nm));
+   }
+
+   DEXIT;
+   return 0;
+}
+
 /* raw ulongs without any verification */       
 int attr_mod_ulong(
 lListElem *qep,

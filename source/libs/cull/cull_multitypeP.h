@@ -41,9 +41,11 @@ union _lMultiType {
    lUlong ul;
    lLong l;
    lChar c;
+   lBool b;
    lInt i;
    lString str;
    lList *glp;
+   lListElem *obj;
    lRef  ref;
    lHost host;
    lCondition *cp;

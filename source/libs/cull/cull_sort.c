@@ -185,6 +185,9 @@ const lSortOrder *sp
       case lLongT:
          result = longcmp(lGetPosLong(ep0, sp[i].pos), lGetPosLong(ep1, sp[i].pos));
          break;
+      case lBoolT:
+         result = boolcmp(lGetPosBool(ep0, sp[i].pos), lGetPosBool(ep1, sp[i].pos));
+         break;
       case lCharT:
          result = charcmp(lGetPosChar(ep0, sp[i].pos), lGetPosChar(ep1, sp[i].pos));
          break;

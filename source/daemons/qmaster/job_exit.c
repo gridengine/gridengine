@@ -196,7 +196,7 @@ lListElem *jatep
               failed == ESSTATE_DIED_THRU_SIGNAL) &&
             ((lGetUlong(jep, JB_restart) == 1 || 
              (lGetUlong(jep, JB_checkpoint_attr) & ~NO_CHECKPOINT)) ||
-             (!lGetUlong(jep, JB_restart) && lGetUlong(queueep, QU_rerun)))) {
+             (!lGetUlong(jep, JB_restart) && lGetBool(queueep, QU_rerun)))) {
       DTRACE;
       job_log(jobid, jataskid, MSG_LOG_JRERUNRESCHEDULE);
       lSetUlong(jatep, JAT_job_restarted, 

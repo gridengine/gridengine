@@ -413,7 +413,7 @@ int sub_command
    }
 
    /* ---- QU_rerun */
-   attr_mod_ulong(qep, new_queue, QU_rerun, "rerun");
+   attr_mod_bool(qep, new_queue, QU_rerun, "rerun");
 
    /* ---- QU_job_slots */
    if (lGetPosViaElem(qep, QU_job_slots)>=0) {

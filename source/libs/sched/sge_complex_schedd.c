@@ -164,10 +164,10 @@ int recompute_debitation_dependent
       if (recompute_debitation_dependent) {
          /* touch only debitation dependent attributes */
 #ifndef WIN32NATIVE
-         if (!lGetUlong(ep, CE_consumable) && 
+         if (!lGetBool(ep, CE_consumable) && 
 			 !lGetElemStr(scheddconf.job_load_adjustments, CE_name, name)) {
 #else
-         if (!lGetUlong(ep, CE_consumable)) {
+         if (!lGetBool(ep, CE_consumable)) {
 #endif
             continue;
          }
@@ -175,7 +175,7 @@ int recompute_debitation_dependent
       }
 
       /* treat also consumables as fixed attributes when assuming an empty queuing system */
-      if (get_qs_state()==QS_STATE_FULL && lGetUlong(ep, CE_consumable)) {
+      if (get_qs_state()==QS_STATE_FULL && lGetBool(ep, CE_consumable)) {
 
          if (!(act_ep = lGetElemStr(actual, CE_name, name))) {
             ERROR((SGE_EVENT, MSG_ATTRIB_ACTUALELEMENTTOATTRIBXMISSING_S , name));
@@ -211,7 +211,7 @@ int recompute_debitation_dependent
       } else {
          /* fixed value */
 
-         u_long32 type = lGetUlong(ep, CE_consumable)?
+         u_long32 type = lGetBool(ep, CE_consumable)?
                DOMINANT_TYPE_CONSUMABLE:
                DOMINANT_TYPE_FIXED;
 
@@ -344,9 +344,9 @@ int recompute_debitation_dependent
          /* only reinit debitation dependent attributes */
 #ifndef WIN32NATIVE
          if (!lGetElemStr(scheddconf.job_load_adjustments, CE_name, name) &&
-                  !lGetUlong(ep, CE_consumable))
+                  !lGetBool(ep, CE_consumable))
 #else
-         if (!lGetUlong(ep, CE_consumable))
+         if (!lGetBool(ep, CE_consumable))
 #endif
             continue; 
       
@@ -599,7 +599,7 @@ double lc_factor
 #endif
       if (recompute_debitation_dependent) {
          /* touch only debitation dependent attributes */
-         if (!job_load && !lGetUlong(ep, CE_consumable)) {
+         if (!job_load && !lGetBool(ep, CE_consumable)) {
             continue;
          }
 /*          DPRINTF(("%s\tfillComplexFromHost()\n", name)); */
@@ -730,7 +730,7 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
       {"slots",            "s",   QU_job_slots,        TYPE_INT, CMPLXLT_OP},
       {"tmpdir",           "tmp", QU_tmpdir,           TYPE_STR, CMPLXEQ_OP},
       {"seq_no",           "seq", QU_seq_no,           TYPE_INT, CMPLXEQ_OP},
-      {"rerun",            "re",  QU_rerun,            TYPE_INT, CMPLXEQ_OP},
+      {"rerun",            "re",  QU_rerun,            TYPE_BOO, CMPLXEQ_OP},
       {"calendar",         "cal", QU_calendar,         TYPE_STR, CMPLXEQ_OP},
       {"s_rt",             "srt", QU_s_rt,             TYPE_TIM, CMPLXLT_OP},
       {"h_rt",             "hrt", QU_h_rt,             TYPE_TIM, CMPLXLT_OP},
@@ -785,9 +785,9 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
          /* touch only debitation dependent attributes */ 
 #ifndef WIN32NATIVE
          if (!lGetElemStr(scheddconf.job_load_adjustments, CE_name, q2cptr->attrname) &&
-                  !lGetUlong(complexel, CE_consumable)) {
+                  !lGetBool(complexel, CE_consumable)) {
 #else
-         if (!lGetUlong(complexel, CE_consumable)) {
+         if (!lGetBool(complexel, CE_consumable)) {
 #endif
             continue;
          }
@@ -805,13 +805,19 @@ int recompute_debitation_dependent; /* recompute only attribute types which  */
 
       case TYPE_TIM:
       case TYPE_MEM:
-      case TYPE_BOO:
       case TYPE_DOUBLE:
          /* read from queue and write into complex */
          if ((value = lGetString(queue, q2cptr->field))) {
             parse_ulong_val(&dval, NULL, q2cptr->type, value, NULL, 0); 
             decide_dominance(complexel, dval, value, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
          } 
+         break;
+
+      case TYPE_BOO:
+         /* read from queue and write into complex */
+         dval = (double)lGetBool(queue, q2cptr->field);
+         sprintf(as_str, "%d", (int)lGetBool(queue, q2cptr->field));
+         decide_dominance(complexel, dval, as_str, DOMINANT_LAYER_QUEUE|DOMINANT_TYPE_FIXED);
          break;
 
       case TYPE_STR:
@@ -1133,7 +1139,7 @@ int debit_consumable(lListElem *jep, lListElem *ep, lList *complex_list,
          return -1;
       } 
 
-      if (!lGetUlong(dcep, CE_consumable)) {
+      if (!lGetBool(dcep, CE_consumable)) {
          /* no error */
          continue;
       }

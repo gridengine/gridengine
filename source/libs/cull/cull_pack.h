@@ -63,6 +63,9 @@ int cull_pack_cont(sge_pack_buffer *pb, const lMultiType *mp, const lDescr *dp);
 int cull_unpack_elem(sge_pack_buffer *pb, lListElem **epp, const lDescr *dp);
 int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep);
 
+int cull_unpack_object(sge_pack_buffer *pb, lListElem **epp);
+int cull_pack_object(sge_pack_buffer *pb, const lListElem *ep);
+
 /*
  *
  *   lList

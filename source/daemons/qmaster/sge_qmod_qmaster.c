@@ -1329,7 +1329,7 @@ lListElem *qep
              !(pe=pe_list_locate(Master_Pe_List, pe_name)) /* ||
              ** signal also jobs, that are not slave controlled
              ** master task must be signaled in every case (JG)
-             !lGetUlong(pe, PE_control_slaves) */)
+             !lGetBool(pe, PE_control_slaves) */)
             continue;
 
          qname = lGetString(qep, QU_qname);
@@ -1377,7 +1377,7 @@ lListElem *jatep
    if ( !((lGetNumberOfElem(gdil_lp=lGetList(jatep, JAT_granted_destin_identifier_list)))<=1 || 
          !(pe_name=lGetString(jatep, JAT_granted_pe)) ||
          !(pe=pe_list_locate(Master_Pe_List, pe_name)) ||
-         !lGetUlong(pe, PE_control_slaves)))
+         !lGetBool(pe, PE_control_slaves)))
       for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
          if ((mq = queue_list_locate(Master_Queue_List, qname = lGetString(gdil_ep, JG_qname)))) {
             DPRINTF(("found slave job "u32" in queue %s\n", 

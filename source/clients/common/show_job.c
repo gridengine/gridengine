@@ -144,9 +144,9 @@ void cull_show_job(lListElem *job, int flags)
       if (lGetString(job, JB_account))
          printf("account:                    %s\n", lGetString(job, JB_account));
 
-   if (lGetPosViaElem(job, JB_checkpoint_object)>=0)
-      if (lGetString(job, JB_checkpoint_object))
-         printf("checkpoint_object:          %s\n", lGetString(job, JB_checkpoint_object));
+   if (lGetPosViaElem(job, JB_checkpoint_name)>=0)
+      if (lGetString(job, JB_checkpoint_name))
+         printf("checkpoint_object:          %s\n", lGetString(job, JB_checkpoint_name));
 
    if (lGetPosViaElem(job, JB_checkpoint_attr)>=0)
       if (lGetUlong(job, JB_checkpoint_attr)) {
@@ -191,9 +191,9 @@ void cull_show_job(lListElem *job, int flags)
       }
 
    if (lGetPosViaElem(job, JB_merge_stderr)>=0)
-      if (lGetUlong(job, JB_merge_stderr)) {
+      if (lGetBool(job, JB_merge_stderr)) {
          printf("merge:                      ");
-         sge_show_y_n(lGetUlong(job, JB_merge_stderr), SGE_STDOUT);
+         sge_show_y_n(lGetBool(job, JB_merge_stderr), SGE_STDOUT);
          printf("\n");
       }
 
@@ -229,7 +229,7 @@ void cull_show_job(lListElem *job, int flags)
       }
 
    if (lGetPosViaElem(job, JB_notify)>=0)
-      printf("notify:                     %s\n", (lGetUlong(job, JB_notify) ? "TRUE" : "FALSE"));
+      printf("notify:                     %s\n", (lGetBool(job, JB_notify) ? "TRUE" : "FALSE"));
 
    if (lGetPosViaElem(job, JB_job_name)>=0) {
       if (lGetString(job, JB_job_name))

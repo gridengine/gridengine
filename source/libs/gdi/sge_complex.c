@@ -108,7 +108,7 @@ int sge_fill_requests(lList *re_entries, lList *complex_list,
          return -1;
       }
 
-      if (!allow_non_requestable && !lGetUlong(cep, CE_request)) {
+      if (!allow_non_requestable && !lGetBool(cep, CE_request)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_RESOURCE_NOT_REQUESTABLE_S, name));
          DEXIT;
          return -1;
@@ -123,7 +123,7 @@ int sge_fill_requests(lList *re_entries, lList *complex_list,
       lSetUlong(entry, CE_valtype, lGetUlong(cep, CE_valtype));
 
       /* we also know wether it is a consumable attribute */
-      lSetUlong(entry, CE_consumable, lGetUlong(cep, CE_consumable)); 
+      lSetBool(entry, CE_consumable, lGetBool(cep, CE_consumable)); 
 
       if (fill_and_check_attribute(entry, allow_empty_boolean, allow_neg_consumable)) {
          /* no error msg here - fill_and_check_attribute() makes it */
@@ -214,7 +214,7 @@ int fill_and_check_attribute(lListElem *cep, int allow_empty_boolean,
          }
 
          /* negative values are not allowed for consumable attributes */
-         if (!allow_neg_consumable && lGetUlong(cep, CE_consumable)
+         if (!allow_neg_consumable && lGetBool(cep, CE_consumable)
              && lGetDouble(cep, CE_doubleval) < (double)0.0) {
             ERROR((SGE_EVENT, MSG_CPLX_ATTRIBISNEG_S, name));
 
@@ -271,8 +271,7 @@ void complex_list_init_double_attr(lList *cl)
    if (cl) {
       for_each(cle, cl) {
          for_each(cattr, lGetList(cle,CX_entries)) {
-            double new_val;
-
+            double new_val = 0.0; /* parse_ulong_val will not set it for all data types! */
             parse_ulong_val(&new_val, NULL, lGetUlong(cattr, CE_valtype),
                lGetString(cattr, CE_stringval), NULL, 0);
             lSetDouble(cattr, CE_doubleval, new_val);

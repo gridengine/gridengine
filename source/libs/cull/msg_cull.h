@@ -117,7 +117,7 @@
 #define MSG_CULL_GETELEMCASEHOSTERRORXRUNTIMETYPE_S      _MESSAGE(41075, _("error: lGetElemCaseHost("SFN"): run time type error\n"))
 #define MSG_CULL_GETELEMHOSTERRORXRUNTIMETYPE_S          _MESSAGE(41076, _("error: lGetElemHost("SFN"): run time type error\n"))
 #define MSG_CULL_GETPOSULONG_GOTINVALIDPOSITION          _MESSAGE(41077, _("!!!!!!!!!! lGetPosUlong() got an invalid pos !!!!!!!!!!!!\n"))
-#define MSG_CULL_GETPOSLIST_GOTANINVALIDPOS              _MESSAGE(41078, _("!!!!!!!!!!!11 lGetPosUlong() got an invalid pos !!!!!!!!\n"))
+#define MSG_CULL_GETPOSLIST_GOTANINVALIDPOS              _MESSAGE(41078, _("!!!!!!!!!!!11 lGetPosList() got an invalid pos !!!!!!!!\n"))
 
 /* 
 ** cull/src/cull_where.c
@@ -224,5 +224,15 @@
 #define MSG_CULL_PACK_VERSION             _MESSAGE(41157, _("wrong cull version"))
 
 
+#define MSG_CULL_GETPOSOBJECT_GOTANINVALIDPOS              _MESSAGE(41158, _("!!!!!!!!!!!11 lGetPosObject() got an invalid pos !!!!!!!!\n"))
+#define MSG_CULL_POINTER_GETOBJECT_NULLELEMENTFORX_S       _MESSAGE(41159, _("!!!!!!!!!! lGetObject(): got NULL element for "SFN" !!!!!!!!!!\n"))
+#define MSG_CULL_GETOBJECT_XNOTFOUNDINELEMENT_S            _MESSAGE(41160, _("!!!!!!!!!! lGetObject(): "SFN" not found in element !!!!!!!!!!\n"))
+#define MSG_CULL_GETOBJECT_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41161, _("lGetObject: wrong type for field "SFN" ("SFN")\n"))
+#define MSG_CULL_DECHAINOBJECT_XNOTFOUNDINELEMENT_S        _MESSAGE(41162, _("!!!!!!!!!! lDechainObject(): "SFN" not found in element !!!!!!!!!!\n"))
+#define MSG_CULL_DECHAINOBJECT_WRONGTYPEFORFIELDXY_S       _MESSAGE(41163, _("lDechainObject: wrong type for field "SFN" ("SFN")\n"))
+#define MSG_CULL_DECHAINOBJECT_INCONSISTENTCONTENT_S       _MESSAGE(41164, _("lDechainObject: element to dechain from field "SFQ" is not the requested element\n"))
+#define MSG_CULL_GETBOOL_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41165, _("lGetBool: wrong type for field "SFN" ("SFN")\n"))
+#define MSG_CULL_SETBOOL_WRONGTYPEFORFIELDXY_SS          _MESSAGE(41166, _("lSetBool: wrong type for field "SFN" ("SFN")\n"))
+#define MSG_CULL_WHERE_SHOULDBEBOOL                     _MESSAGE(41167, _("lWhere (should be a lBoolT)\n"))
 #endif /* __MSG_CULL_H */ 
 

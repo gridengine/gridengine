@@ -384,7 +384,7 @@ DTRACE;
             JB_checkpoint_attr,     /* x*/
 
             JB_checkpoint_interval, /* x*/
-            JB_checkpoint_object,   
+            JB_checkpoint_name,   
             JB_hard_resource_list,
             JB_soft_resource_list,
             JB_mail_options, /* may be we want to send mail */ /* x*/
@@ -557,7 +557,7 @@ int sge_process_all_events(lList *event_list)
                   goto ReregisterSchedd;
                }
 
-               new_user_sort = lGetUlong(ep, SC_user_sort);
+               new_user_sort = lGetBool(ep, SC_user_sort);
                if (user_sort != new_user_sort) {
                   set_user_sort(new_user_sort);
                   /* state has changed */
@@ -651,7 +651,7 @@ int sge_process_all_events(lList *event_list)
             {
                JB_owner,
                JB_group,
-               JB_checkpoint_object,
+               JB_checkpoint_name,
                JB_job_name,
                JB_pe,
             /* SGE */

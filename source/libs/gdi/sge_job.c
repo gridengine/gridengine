@@ -1132,7 +1132,7 @@ int job_is_tight_parallel(const lListElem *job, const lList *pe_list)
       for_each(pe, pe_list) {
          if (pe_is_matching(pe, pe_name)) {
             found_pe = 1;
-            all_are_tight &= lGetUlong(pe, PE_control_slaves);
+            all_are_tight &= lGetBool(pe, PE_control_slaves);
          }
       }
    
@@ -1189,7 +1189,7 @@ int job_might_be_tight_parallel(const lListElem *job, const lList *pe_list)
       for_each(pe, pe_list) {
          if (pe_is_matching(pe, pe_name)) {
             found_pe = 1;
-            one_is_tight |= lGetUlong(pe, PE_control_slaves);
+            one_is_tight |= lGetBool(pe, PE_control_slaves);
             DTRACE;
          }
       }
@@ -1916,7 +1916,7 @@ int job_is_pe_referenced(const lListElem *job, const lListElem *pe)
 int job_is_ckpt_referenced(const lListElem *job, const lListElem *ckpt)
 {
    const char *ckpt_name = lGetString(ckpt, CK_name);
-   const char *ref_ckpt_name = lGetString(job, JB_checkpoint_object);
+   const char *ref_ckpt_name = lGetString(job, JB_checkpoint_name);
    int ret = 0;
 
    if(ckpt_name != NULL && ref_ckpt_name != NULL) {

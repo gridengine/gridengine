@@ -180,7 +180,7 @@ lList *entries
            ** build the strings to display 
            */
            StringConst name = lGetString(ep, CE_name);
-/*            String type = lGetUlong(ep, CE_consumable) ? "C" : "F"; */
+/*            String type = lGetBool(ep, CE_consumable) ? "C" : "F"; */
 /*            sprintf(stringval, "%s: %s", type, name ? name : "");  */
            strcpy(stringval, name ? name : ""); 
            strs[i] = XtNewString(stringval);

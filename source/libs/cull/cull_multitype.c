@@ -67,9 +67,11 @@ static char *multitypes[] =
    "lUlongT",
    "lLongT",
    "lCharT",
+   "lBoolT",
    "lIntT",
    "lStringT",
    "lListT",
+   "lObjectT",
    "lRefT",
    "lHostT" 
 };
@@ -907,6 +909,43 @@ const char *lGetHost(const lListElem *ep, int name)
    return (lHost) ep->cont[pos].host;
 }
 
+/****** cull/multitype/lGetPosObject() ******************************************
+*  NAME
+*     lGetPosObject() -- Returns the CULL object at position pos (no copy) 
+*
+*  SYNOPSIS
+*     lList* lGetPosObject(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the CULL object (list element) at position pos (no copy) 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - pos value 
+*
+*  RESULT
+*     lListElem* - CULL list element pointer
+******************************************************************************/
+lListElem *lGetPosObject(const lListElem *ep, int pos) 
+{
+   DENTER(CULL_BASIS_LAYER, "lGetPosObject");
+
+   if (pos < 0) {
+      /* someone has called lGetPosUlong() */
+      /* makro with an invalid nm        */
+      CRITICAL((SGE_EVENT, MSG_CULL_GETPOSOBJECT_GOTANINVALIDPOS ));
+      DEXIT;
+      abort();
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lObjectT)
+      incompatibleType("lGetPosObject");
+
+   DEXIT;
+
+   return (lListElem *) ep->cont[pos].obj;
+}
+
 /****** cull/multitype/lGetPosList() ******************************************
 *  NAME
 *     lGetPosList() -- Returns the CULL list at position pos (no copy) 
@@ -942,6 +981,59 @@ lList *lGetPosList(const lListElem *ep, int pos)
    DEXIT;
 
    return (lList *) ep->cont[pos].glp;
+}
+
+/****** cull/multitype/lGetObject() *********************************************
+*  NAME
+*     lGetObject() -- Returns the CULL object for a field name 
+*
+*  SYNOPSIS
+*     lListElem* lGetObject(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Returns the CULL object for a field name 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int name            - field name value 
+*
+*  RESULT
+*     lListElem* - CULL list element pointer 
+******************************************************************************/
+lListElem *lGetObject(const lListElem *ep, int name) 
+{
+#ifdef __INSIGHT__
+/* JG: this code is thorougly tested and really should be ok, but insure complains */
+_Insight_set_option("suppress", "LEAK_ASSIGN");
+#endif
+   int pos;
+   DENTER(CULL_BASIS_LAYER, "lGetObject");
+
+   if (!ep) {
+      CRITICAL((SGE_EVENT,  MSG_CULL_POINTER_GETOBJECT_NULLELEMENTFORX_S ,
+               lNm2Str(name)));
+      DEXIT;   /* CHANGE BACK */
+      abort();
+   }
+   pos = lGetPosViaElem(ep, name);
+
+   if (pos < 0) {
+      /* someone has called lGetPosObject() */
+      /* makro with an invalid nm        */
+      CRITICAL((SGE_EVENT, MSG_CULL_GETOBJECT_XNOTFOUNDINELEMENT_S ,
+               lNm2Str(name)));
+      DEXIT;
+      abort();
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lObjectT)
+      incompatibleType2(MSG_CULL_GETOBJECT_WRONGTYPEFORFIELDXY_SS ,
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+   DEXIT;
+   return (lListElem *) ep->cont[pos].obj;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "LEAK_ASSIGN");
+#endif
 }
 
 /****** cull/multitype/lGetList() *********************************************
@@ -1163,6 +1255,61 @@ lLong lGetLong(const lListElem *ep, int name)
                         multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return ep->cont[pos].l;
+}
+
+/****** cull/multitype/lGetPosBool() ******************************************
+*  NAME
+*     lGetPosBool() -- Returns the boolean value at position pos 
+*
+*  SYNOPSIS
+*     lChar lGetPosBool(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the boolean value at position pos 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*
+*  RESULT
+*     lBool - boolean 
+******************************************************************************/
+lBool lGetPosBool(const lListElem *ep, int pos) 
+{
+   DENTER(CULL_BASIS_LAYER, "lGetPosBool");
+   if (mt_get_type(ep->descr[pos].mt) != lBoolT)
+      incompatibleType("lGetPosChar");
+   DEXIT;
+   return ep->cont[pos].b;
+}
+
+/****** cull/multitype/lGetBool() *********************************************
+*  NAME
+*     lGetBool() -- Returns the boolean value for a field name 
+*
+*  SYNOPSIS
+*     lBool lGetBool(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Returns the boolean value for a field name 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int name            - field name 
+*
+*  RESULT
+*     lBool - boolean
+******************************************************************************/
+lBool lGetBool(const lListElem *ep, int name) 
+{
+   int pos;
+   DENTER(CULL_BASIS_LAYER, "lGetBool");
+   pos = lGetPosViaElem(ep, name);
+
+   if (mt_get_type(ep->descr[pos].mt) != lBoolT)
+      incompatibleType2(MSG_CULL_GETBOOL_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+   DEXIT;
+   return ep->cont[pos].b;
 }
 
 /****** cull/multitype/lGetPosChar() ******************************************
@@ -1924,6 +2071,75 @@ int lSetHost(lListElem *ep, int name, const char *value)
    return 0;
 }
 
+/****** cull/multitype/lSetPosObject() ****************************************
+*  NAME
+*     lSetPosObject() -- Set list element at position pos 
+*
+*  SYNOPSIS
+*     int lSetPosObject(const lListElem *ep, int pos, lListElem *value) 
+*
+*  FUNCTION
+*     Sets in the element 'ep' at position 'pos' the list element 'value'.
+*     Doesn't copy the object. Does runtime type checking. 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     lListElem *value    - value 
+*
+*  RESULT
+*     int - error state 
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lSetPosObject(const lListElem *ep, int pos, lListElem *value) 
+{
+   DENTER(CULL_BASIS_LAYER, "lSetPosObject");
+
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+   
+   if (pos < 0) {
+      LERROR(LENEGPOS);
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lObjectT) {
+      incompatibleType("lSetPosObject");
+      DEXIT;
+      return -1;
+   }
+   
+   if(value != NULL && value->status != FREE_ELEM && value->status != TRANS_BOUND_ELEM) {
+      LERROR(LEBOUNDELEM);
+      DEXIT;
+      return -1;
+   }
+   
+   if(value != ep->cont[pos].obj) {
+      /* free old element */
+      if (ep->cont[pos].obj != NULL) {
+         lFreeElem(ep->cont[pos].obj);
+      }
+
+      /* set new list */
+      ep->cont[pos].obj = value;
+
+      /* mark lListElem as bound */
+      value->status = OBJECT_ELEM;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
+
+   DEXIT;
+   return 0;
+}
+
 /****** cull/multitype/lSetPosList() ****************************************
 *  NAME
 *     lSetPosList() -- Set list at position pos 
@@ -2081,6 +2297,78 @@ int lSwapList(lListElem *to, int nm_to, lListElem *from, int nm_from)
    if (lXchgList(from, nm_from, &tmp) == -1) {
       DEXIT;
       return -1;
+   }
+
+   DEXIT;
+   return 0;
+}
+
+/****** cull/multitype/lSetObject() *********************************************
+*  NAME
+*     lSetObject() -- Sets a list at the given field name id 
+*
+*  SYNOPSIS
+*     int lSetObject(lListElem *ep, int name, lList *value) 
+*
+*  FUNCTION
+*     Sets a list at the given field name id. List will not be copyed.
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int name      - field name id 
+*     lList *value  - new list pointer 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lSetObject(lListElem *ep, int name, lListElem *value) 
+{
+   int pos;
+
+   DENTER(CULL_BASIS_LAYER, "lSetObject");
+
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   pos = lGetPosViaElem(ep, name);
+   if (pos < 0) {
+      DPRINTF(("!!!!!!!!!! lSetObject(): %s not found in element !!!!!!!!!!\n",
+               lNm2Str(name)));
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lObjectT) {
+      incompatibleType2(MSG_CULL_SETLIST_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+      DEXIT;
+      return -1;
+   }
+
+   if(value != NULL && value->status != FREE_ELEM && value->status != TRANS_BOUND_ELEM) {
+      LERROR(LEBOUNDELEM);
+      DEXIT;
+      return -1;
+   }
+   
+   if(value != ep->cont[pos].obj) {
+      /* free old element */
+      if (ep->cont[pos].obj) {
+         lFreeElem(ep->cont[pos].obj);
+      }
+
+      /* set new list */
+      ep->cont[pos].obj = value;
+
+      /* mark lListElem as bound */
+      value->status = OBJECT_ELEM;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
    }
 
    DEXIT;
@@ -2470,6 +2758,113 @@ int lSetLong(lListElem *ep, int name, lLong value)
    return 0;
 }
 
+/****** cull/multitype/lSetPosBool() ******************************************
+*  NAME
+*     lSetPosBool() -- Sets the character a the given position 
+*
+*  SYNOPSIS
+*     int lSetPosBool(const lListElem *ep, int pos, lBool value) 
+*
+*  FUNCTION
+*     Sets the character a the given position. 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - position 
+*     lBool value         - value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lSetPosBool(const lListElem *ep, int pos, lBool value)
+{
+   DENTER(CULL_BASIS_LAYER, "lSetPosBool");
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   if (pos < 0) {
+      LERROR(LENEGPOS);
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lBoolT) {
+      incompatibleType("lSetPosBool");
+      DEXIT;
+      return -1;
+   }
+
+   if(value != ep->cont[pos].b) {
+      ep->cont[pos].b = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
+
+   DEXIT;
+   return 0;
+}
+
+/****** cull/multitype/lSetBool() *********************************************
+*  NAME
+*     lSetBool() -- Sets character with the given field name id 
+*
+*  SYNOPSIS
+*     int lSetBool(lListElem * ep, int name, lBool value) 
+*
+*  FUNCTION
+*     Sets character with the given field name id 
+*
+*  INPUTS
+*     lListElem * ep - element 
+*     int name       - field name id 
+*     lBool value    - new character 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+******************************************************************************/
+int lSetBool(lListElem * ep, int name, lBool value)
+{
+   int pos;
+
+   DENTER(CULL_BASIS_LAYER, "lSetBool");
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   pos = lGetPosViaElem(ep, name);
+   if (pos < 0) {
+      LERROR(LENEGPOS);
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lBoolT) {
+      incompatibleType2(MSG_CULL_SETBOOL_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+      DEXIT;
+      return -1;
+   }
+
+   if(value != ep->cont[pos].b) {
+      ep->cont[pos].b = value;
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
+
+   DEXIT;
+   return 0;
+}
+
 /****** cull/multitype/lSetPosChar() ******************************************
 *  NAME
 *     lSetPosChar() -- Sets the character a the given position 
@@ -2546,7 +2941,7 @@ int lSetChar(lListElem * ep, int name, lChar value)
 {
    int pos;
 
-   DENTER(CULL_BASIS_LAYER, "lSetPosChar");
+   DENTER(CULL_BASIS_LAYER, "lSetChar");
    if (!ep) {
       LERROR(LEELEMNULL);
       DEXIT;
@@ -2653,7 +3048,7 @@ int lSetRef(lListElem * ep, int name, lRef value)
 {
    int pos;
 
-   DENTER(CULL_BASIS_LAYER, "lSetPosRef");
+   DENTER(CULL_BASIS_LAYER, "lSetRef");
    if (!ep) {
       LERROR(LEELEMNULL);
       DEXIT;
@@ -2732,6 +3127,15 @@ int doublecmp(lDouble d0, lDouble d1)
 int longcmp(lLong l0, lLong l1) 
 {
    return l0 == l1 ? 0 : (l0 < l1 ? -1 : 1);
+}
+
+/* ------------------------------------------------------------ 
+   compares two bool values c0 and c1 
+   return values like strcmp
+ */
+int boolcmp(lBool b0, lBool b1)
+{
+   return b0 == b1 ? 0 : (b0 < b1 ? -1 : 1);
 }
 
 /* ------------------------------------------------------------ 

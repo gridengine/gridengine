@@ -234,7 +234,7 @@ int master
    u_long32 dummymid;
    lListElem *tmpjep, *qep, *tmpjatep, *next_tmpjatep;
    lListElem *ckpt = NULL, *tmp_ckpt;
-   lList *ckpt_lp, *qlp;
+   lList *qlp;
    const char *ckpt_name;
    static u_short number_one = 1;
    lListElem *gdil_ep;
@@ -321,7 +321,7 @@ int master
    ** needed in the execd and we have no need to keep it
    ** in qmaster's permanent job list
    */
-   if ((ckpt_name=lGetString(tmpjep, JB_checkpoint_object))) {
+   if ((ckpt_name=lGetString(tmpjep, JB_checkpoint_name))) {
       ckpt = ckpt_list_locate(Master_Ckpt_List, ckpt_name);
       if (!ckpt) {
          ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDCKPT_S, ckpt_name));
@@ -330,16 +330,14 @@ int master
       }
 
       /* get the necessary memory */
-      if (!(ckpt_lp=lCreateList("jobs ckpt definition", CK_Type)) ||
-          !(tmp_ckpt=lCopyElem(ckpt))) {
+      if (!(tmp_ckpt=lCopyElem(ckpt))) {
          ERROR((SGE_EVENT, MSG_OBJ_UNABLE2CREATECKPT_SU, 
                 ckpt_name, u32c(lGetUlong(tmpjep, JB_job_number))));
          DEXIT;
          return -1;
       }
       /* everything's in place. stuff it in */
-      lAppendElem(ckpt_lp, tmp_ckpt);
-      lSetList(tmpjep, JB_checkpoint_object_list, ckpt_lp);
+      lSetObject(tmpjep, JB_checkpoint_object, tmp_ckpt);
    }
    
    qlp = lCreateList("qlist", QU_Type);
@@ -739,7 +737,7 @@ sge_commit_flags_t commit_flags
          pe_name = lGetString(jep, JB_pe);
          if (pe_name) {
             pe = pe_list_locate(Master_Pe_List, pe_name);
-            if (pe && lGetUlong(pe, PE_control_slaves)) { 
+            if (pe && lGetBool(pe, PE_control_slaves)) { 
                for_each(granted_queue, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
                   lListElem *host;
                   const char *granted_queue_JG_qhostname;
@@ -1067,7 +1065,7 @@ char *rlimit_name
    if (!found) {
       lListElem *dcep;
       if ((dcep=complex_list_locate_attr(Master_Complex_List, rlimit_name))
-               && lGetUlong(dcep, CE_consumable))
+               && lGetBool(dcep, CE_consumable))
          if ( lGetSubStr(qep, CE_name, rlimit_name, QU_consumable_config_list) ||
               lGetSubStr(host_list_locate(Master_Exechost_List, lGetHost(qep, QU_qhostname)),
                      CE_name, rlimit_name, EH_consumable_config_list) ||

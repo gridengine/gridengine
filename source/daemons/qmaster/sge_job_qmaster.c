@@ -368,7 +368,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    ckpt_inter = lGetUlong(jep, JB_checkpoint_interval);
 
    /* request for non existing ckpt object will be refused */
-   if ((ckpt_name = lGetString(jep, JB_checkpoint_object))) {
+   if ((ckpt_name = lGetString(jep, JB_checkpoint_name))) {
       if (!(ckpt_ep = ckpt_list_locate(Master_Ckpt_List, ckpt_name)))
          ckpt_err = 1;
       else if (!ckpt_attr) {
@@ -1946,7 +1946,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
          }
 
          /* ignore non-consumables */
-         if (!lGetUlong(dcep, CE_consumable))
+         if (!lGetBool(dcep, CE_consumable))
             continue;
  
          /* search it in new hard resource list */
@@ -1983,7 +1983,7 @@ static int changes_consumables(lList **alpp, lList* new, lList* old)
          }
 
          /* ignore non-consumables */
-         if (!lGetUlong(dcep, CE_consumable))
+         if (!lGetBool(dcep, CE_consumable))
             continue;
 
          /* search it in old hard resource list */
@@ -2060,7 +2060,7 @@ static int deny_soft_consumables(lList **alpp, lList *srl)
          }
 
          /* ignore non-consumables */
-         if (lGetUlong(dcep, CE_consumable)) {
+         if (lGetBool(dcep, CE_consumable)) {
             ERROR((SGE_EVENT, MSG_JOB_MOD_SOFTREQCONSUMABLE_S, name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
             DEXIT;
@@ -2296,12 +2296,12 @@ int *trigger
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
-   /* ---- JB_checkpoint_object */
-   if ((pos=lGetPosViaElem(jep, JB_checkpoint_object))>=0) {
+   /* ---- JB_checkpoint_name */
+   if ((pos=lGetPosViaElem(jep, JB_checkpoint_name))>=0) {
       const char *ckpt_name;
 
-      DPRINTF(("got new JB_checkpoint_object\n")); 
-      ckpt_name = lGetString(jep, JB_checkpoint_object);
+      DPRINTF(("got new JB_checkpoint_name\n")); 
+      ckpt_name = lGetString(jep, JB_checkpoint_name);
       if (ckpt_name && !ckpt_list_locate(Master_Ckpt_List, ckpt_name)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
             MSG_OBJ_CKPT, ckpt_name));
@@ -2309,7 +2309,7 @@ int *trigger
          DEXIT;
          return STATUS_EUNKNOWN;
       }
-      lSetString(new_job, JB_checkpoint_object, ckpt_name);
+      lSetString(new_job, JB_checkpoint_name, ckpt_name);
       *trigger |= MOD_EVENT;
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_OBJ_CKPT, u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -2337,7 +2337,7 @@ int *trigger
    /* ---- JB_merge_stderr */
    if ((pos=lGetPosViaElem(jep, JB_merge_stderr))>=0) {
       DPRINTF(("got new JB_merge_stderr\n")); 
-      lSetUlong(new_job, JB_merge_stderr, lGetUlong(jep, JB_merge_stderr));
+      lSetBool(new_job, JB_merge_stderr, lGetBool(jep, JB_merge_stderr));
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_MERGEOUTPUT, u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
@@ -2538,7 +2538,7 @@ int *trigger
    /* ---- JB_notify */
    if ((pos=lGetPosViaElem(jep, JB_notify))>=0) {
       DPRINTF(("got new JB_notify\n")); 
-      lSetUlong(new_job, JB_notify, lGetUlong(jep, JB_notify));
+      lSetBool(new_job, JB_notify, lGetBool(jep, JB_notify));
       *trigger |= MOD_EVENT;
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_NOTIFYBEHAVIOUR, u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
@@ -3179,7 +3179,7 @@ int *trigger
          }
 
          /* checkpointing */
-         if (try_it && (ckpt_name=lGetString(jep, JB_checkpoint_object)))
+         if (try_it && (ckpt_name=lGetString(jep, JB_checkpoint_name)))
             if (!(ckpt_ep = ckpt_list_locate(Master_Ckpt_List, ckpt_name)))
                try_it = 0;
 

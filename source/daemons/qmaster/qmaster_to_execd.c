@@ -29,6 +29,8 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+#include <string.h>
+
 #include "sge_all_listsL.h"
 #include "sge_gdi_intern.h"
 #include "qmaster_to_execd.h"

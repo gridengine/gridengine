@@ -64,8 +64,9 @@ extern "C" {
 *     SGE_STRING(JAT_granted_pe)
 *        Name of a granted parallel environment
 *        
-*     SGE_BOOL(JAT_job_restarted)
+*     SGE_ULONG(JAT_job_restarted)
 *        Was the task restarted (due to reschedule/migrate)?
+*        JG: TODO: it is no boolean, but misused for other information!
 *
 *     SGE_LIST(JAT_granted_destin_identifier_list)
 *        Granted destination identifier list (JG_Type)
@@ -225,7 +226,7 @@ SLISTDEF(JAT_Type, Task)
    SGE_ULONG(JAT_hold, CULL_DEFAULT)
    SGE_STRING(JAT_granted_pe, CULL_DEFAULT)
 
-   SGE_BOOL(JAT_job_restarted, CULL_DEFAULT)
+   SGE_ULONG(JAT_job_restarted, CULL_DEFAULT)
    SGE_LIST(JAT_granted_destin_identifier_list, JG_Type, CULL_DEFAULT)
    SGE_STRING(JAT_master_queue, CULL_DEFAULT)
    SGE_ULONG(JAT_state, CULL_DEFAULT)

@@ -203,7 +203,7 @@ lList *complex_list
             lSetString(ep, HL_value, sval);
          }
 
-         if (!lGetUlong(cep, CE_consumable))
+         if (!lGetBool(cep, CE_consumable))
             continue;
          if (!(total=lGetSubStr(hep, CE_name, attr_name, EH_consumable_config_list)))
             continue;

@@ -120,7 +120,7 @@ int answer_error;
                this is done to ensure that signal delivery is also
                forwarded to the job in case the master queue keeps still active */
             for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-               master_q = lFirst(lGetList(gdil_ep, JG_queue));
+               master_q = lGetObject(gdil_ep, JG_queue);
                qnm =  lGetString(master_q, QU_qname);
                if (!strcmp(qname, qnm)) {
                   char tmpstr[SGE_PATH_MAX];
@@ -634,8 +634,8 @@ u_long32 signal
       return 1;
    }
 
-   master_q = lFirst(lGetList(lFirst(lGetList(jatep, 
-      JAT_granted_destin_identifier_list)), JG_queue));
+   master_q = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
+                         JG_queue);
 
    DPRINTF(("sending %s to job "u32"."u32"\n", 
          sge_sig2str(signal), jobid, jataskid));

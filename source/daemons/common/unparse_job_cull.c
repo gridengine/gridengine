@@ -125,7 +125,7 @@ int flags
    /*
     * -ckpt 
     */
-   if (sge_unparse_string_option(job, JB_checkpoint_object, "-ckpt", 
+   if (sge_unparse_string_option(job, JB_checkpoint_name, "-ckpt", 
             pcmdline, &answer) != 0) {
       DEXIT;
       return answer;
@@ -196,7 +196,7 @@ int flags
    /*
    ** -j
    */
-   if ((ul = lGetUlong(job, JB_merge_stderr))) {
+   if ((ul = lGetBool(job, JB_merge_stderr))) {
       ep_opt = sge_add_arg(pcmdline, j_OPT, lIntT, "-j", "y");
       lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
    }
@@ -314,7 +314,7 @@ int flags
    /*
    ** -notify
    */
-   if  ((ul = lGetUlong(job, JB_notify))) {
+   if  ((ul = lGetBool(job, JB_notify))) {
       ep_opt = sge_add_noarg(pcmdline, notify_OPT, "-notify", NULL);
    }
 

@@ -731,7 +731,7 @@ lListElem *qep
    };
    FPRINTF((fp,"\n"));
    FPRINTF((fp, "rerun                %s\n", 
-      true_false[lGetUlong(qep, QU_rerun)]));
+      true_false[(int)lGetBool(qep, QU_rerun)]));
    FPRINTF((fp, "slots                %d\n", 
       (int) lGetUlong(qep, QU_job_slots)));
    FPRINTF((fp, "tmpdir               %s\n", lGetString(qep, QU_tmpdir)));

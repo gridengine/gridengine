@@ -334,7 +334,7 @@ static lListElem *sge_ls_create_ls(char *name, const char *scriptfile)
       lSetRef(new_ls, LS_in, NULL);
       lSetRef(new_ls, LS_out, NULL);
       lSetRef(new_ls, LS_err, NULL);
-      lSetUlong(new_ls, LS_has_to_restart, 0);
+      lSetBool(new_ls, LS_has_to_restart, FALSE);
       lSetUlong(new_ls, LS_tag, 0);
       lSetList(new_ls, LS_incomplete, lCreateList("", LR_Type));
       lSetList(new_ls, LS_complete, lCreateList("", LR_Type));
@@ -822,7 +822,7 @@ void trigger_ls_restart(void)
    sge_ls_initialize();
 
    for_each(ls, ls_list) {
-      lSetUlong(ls, LS_has_to_restart, 1);
+      lSetBool(ls, LS_has_to_restart, TRUE);
    }
    DEXIT;
    return;
@@ -914,7 +914,7 @@ int sge_ls_get(lList **lpp)
       ls_name = lGetString(ls_elem, LS_name);
 
       /* someone triggered the restart */
-      if (lGetUlong(ls_elem, LS_has_to_restart)) {
+      if (lGetBool(ls_elem, LS_has_to_restart)) {
          restart = 1;
       }
 
@@ -937,7 +937,7 @@ int sge_ls_get(lList **lpp)
          INFO((SGE_EVENT, MSG_LS_RESTARTLS_S, ls_command ? ls_command : ""));
          sge_ls_stop_ls(ls_elem, 0);
          sge_ls_start_ls(ls_elem);
-         lSetUlong(ls_elem, LS_has_to_restart, 0);
+         lSetBool(ls_elem, LS_has_to_restart, FALSE);
       }
    }
 

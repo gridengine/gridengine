@@ -611,7 +611,7 @@ char **argv
    script_timeout = atoi(get_conf_val("script_timeout"));
    notify = atoi(get_conf_val("notify"));
 
-#if defined(__sgi) || defined(ALPHA) 
+#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
    /* SGI IRIX processor set stuff */
    if (strcasecmp("UNDEFINED",get_conf_val("processors"))) {
       int ret;
@@ -751,7 +751,7 @@ char **argv
    if (run_epilog)
       do_epilog(script_timeout, ckpt_type);
 
-#if defined(__sgi) || defined(ALPHA) 
+#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64)
    /* SGI IRIX processor set stuff */
    if (strcasecmp("UNDEFINED",get_conf_val("processors"))) {
       int ret;
@@ -974,6 +974,8 @@ int ckpt_type
 
    /* make us the owner of the error/trace/exit_status file again */
    err_trace_chown_files(geteuid());
+
+#if 0 /* EB: review with AS */
    if (ckpt_type) {
       /* empty file is a hint to reschedule that job. If we already have a
        * checkpoint in the arena there is a dummy string in the file
@@ -983,10 +985,26 @@ int ckpt_type
             fclose(fp);
       }
    }
+#else
+   if (!strcmp("job", childname) && ckpt_type) {
+      if (signalled_ckpt_job) {
+         if ((fp = fopen("checkpointed", "w"))) {
+            fclose(fp);
+         }
+      } else {
+         if (ckpt_type & CKPT_KERNEL) {
+            start_clean_command(clean_command);
+         }
+      }
+   }
+
+#endif
 
    if (WIFSIGNALED(status)) {
       sprintf(err_str, "job exited due to uncaught signal");
       shepherd_trace(err_str);
+
+#if 0 /* EB: review with AS */
       if (ckpt_type && !signalled_ckpt_job) {
          unlink("checkpointed");
          shepherd_trace("job exited due to signal but not due to checkpoint");
@@ -994,7 +1012,8 @@ int ckpt_type
             shepherd_trace("starting ckpt clean command");
             start_clean_command(clean_command);
          }   
-      }   
+      }  
+#endif 
          
       child_signal = WTERMSIG(status);
 #ifdef WCOREDUMP
@@ -1013,6 +1032,8 @@ int ckpt_type
    } else {
       sprintf(err_str, "job exited NOT due to uncaught signal");
       shepherd_trace(err_str);
+
+#if 0 /* EB: review with AS */
       if (!strcmp("job", childname)) {
          /* remove indication of checkpoints */
          if (WEXITSTATUS(status) < 128) {
@@ -1026,6 +1047,7 @@ int ckpt_type
             }
          }
       }
+#endif
 
       if (WIFEXITED(status)) {
          exit_status = WEXITSTATUS(status);

@@ -1,3 +1,12 @@
+SD-2002-02-23-0: Feature:   SX architecture updates
+                            - Set execd to high priority to prevent swapping
+                            - Only set # of processes limit for job (not process)
+                            - Updated SX checkpoint scripts
+                            - Renamed "necsx5" architecture to "sx"
+
+SD-2002-02-22-0: Feature:   Added support to control restart timeout
+                            delays using environment variables.
+
 SD-2002-02-18-0: Bugfix:    - Set resource limits after setting the OS
                               job id in builtin_starter.c so that job
                               resource limits will work on the SX-6.

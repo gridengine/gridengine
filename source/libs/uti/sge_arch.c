@@ -102,7 +102,7 @@ const char *sge_get_arch()
 #elif defined(NECSX4)
 #   define ARCHBIN "necsx4"
 #elif defined(NECSX5)
-#   define ARCHBIN "necsx5"   
+#   define ARCHBIN "sx"   
 #elif defined(WIN32)
 #   define ARCHBIN "m$win"   
 #else

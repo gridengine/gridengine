@@ -2047,6 +2047,14 @@ int ptf_init(void)
          }
       }
    }
+#elif defined(NECSX5) || defined(NECSX6)
+
+   if (getuid() == 0) {
+      if (nicex(0, -10) == -1) {
+	 ERROR((SGE_EVENT, MSG_PRIO_NICEMFAILED_S, strerror(errno)));
+      }
+   }
+
 #elif defined(ALPHA) || defined(SOLARIS) || defined(LINUX)
    if (getuid() == 0) {
       if (setpriority(PRIO_PROCESS, getpid(), PTF_MAX_PRIORITY) < 0) {

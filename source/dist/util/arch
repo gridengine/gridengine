@@ -56,7 +56,7 @@ if [ -x /bin/uname ]; then
       ARCH=necsx4
       ;;
    SUPER-UX,SX-[56]*)
-      ARCH=necsx5
+      ARCH=sx
       ;;
    SunOS,sun4*)
       ARCH=sun4

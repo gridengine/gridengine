@@ -1,3 +1,7 @@
+JG-2002-07-04-0: Bugfix:    non immediate interactive jobs (-now no) failed,
+                            for immediate qsub jobs (-now yes) the job script
+                            was not checked.
+
 AA-2002-07-04-0: Bugfix:    Job dependency display in qmon
                  Issue:     #275 affects only qmon
                  Bugtraq:   #4706929

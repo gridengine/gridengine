@@ -1154,16 +1154,20 @@ char *err_str
 
    /* test whether we can access scriptfile */
    /*
-   ** interactive jobs dont need to access script file
+   ** tightly integrated (qrsh) and interactive jobs dont need to access script file
    */
-   if(petep == NULL && !JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
-      if (SGE_STAT(script_file, &buf)) {
-         sprintf(err_str, MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS,
-                 script_file, strerror(errno));
-         sge_dstring_free(&active_dir_buffer);
-         DEXIT;
-         return -2;
-      }
+   if(petep == NULL) {
+      u_long32 jb_now = lGetUlong(jep, JB_now);
+      JB_NOW_CLEAR_IMMEDIATE(jb_now);            /* batch jobs can also be immediate */
+      if(jb_now == 0) {                          /* it is a batch job */
+         if (SGE_STAT(script_file, &buf)) {
+            sprintf(err_str, MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS,
+                    script_file, strerror(errno));
+            sge_dstring_free(&active_dir_buffer);
+            DEXIT;
+            return -2;
+         }
+      }   
    }
 
    shepherd_name = SGE_SHEPHERD;

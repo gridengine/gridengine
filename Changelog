@@ -1,3 +1,7 @@
+AS-2004-04-19-2  Bugfix:    use /bin/csh for script path
+                 Changed:   util/sge_log_tee
+                 Issue:     956
+
 SG-2004-04-19-1: Bugfix:    fixed another sec fault in qsub.
                  Changed:   qsub
                  Review:    DT, HP

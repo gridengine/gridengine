@@ -386,8 +386,8 @@ public abstract interface Session {
     */	
 	public abstract String getContact ();
 	
-	/** Returns a Version object containing the major and minor version numbers of the
-    * DRMAA library.  For DRMAA 1.0, major is 1 and minor is 0.
+   /** Returns a Version object containing the major and minor version numbers of the
+    * DRMAA library.  For DRMAA 0.5, major is 0 and minor is 5.
     * @return the version number as a Version object
     * @see Version
     */	

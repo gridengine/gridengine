@@ -239,14 +239,15 @@ public class SessionImpl implements Session {
       nativeDeleteJobTemplate (((JobTemplateImpl)jt).getId ());
    }
 
-	/** The getVersion() method returns a Version object containing
-    * the major and minor version numbers of the DRMAA library. For a DRMAA 1.0
-    * compliant implementation (e.g. this binding) `1' and `0' will be the major
-    * and minor numbers, respectively.
+   /** The getVersion() method returns a Version object containing
+    * the major and minor version numbers of the DRMAA library. For a DRMAA
+    * Java language binding specification 0.5 compliant implementation (e.g.
+    * this binding) '0' and '5' will be the major and minor numbers,
+    * respectively.
     * @return the version number as a Version object
     */	
 	public Version getVersion () {
-		return new Version (1, 0);
+		return new Version (0, 5);
 	}
 	
    /** <p>The init() method initializes the Grid Engine DRMAA API library for

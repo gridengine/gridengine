@@ -61,7 +61,7 @@ if [ "$1" = "-debug" ]; then
    echo using $trace to trace system calls
 fi
 
-if [ x$COD_CKPT_ENV = x ]; then
+if [ x$SGE_CKPT_ENV = x ]; then
    /bin/echo Running without checkpoint environment
    bin_name=master
 else

@@ -35,11 +35,6 @@
 
 JAPILIB_DIR   = $(SDIR)/libs/japi
 
-###############################################################################
-# include examples from the howto
-###############################################################################
-include $(JAPILIB_DIR)/howto/Makefile
-
 CLASSES_DIR   = $(SDIR)/classes
 
 JAPILIB 	    = libjapi$(LIBEXT)
@@ -57,9 +52,6 @@ JDRMAALIB     = $(DRMAALIB)
 JDRMAALIB_SRC = com_sun_grid_drmaa_SGESession.c
 JDRMAALIB_OBJS = $(JDRMAALIB_SRC:.c=.o) $(DRMAALIB_OBJS)
 
-JAPI_ALL      = japilib drmaalib test_drmaa example howto1 howto2 howto2_1 \
-								howto3 howto3_1 howto3_2 howto4 howto5 howto6
-
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c
 
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
@@ -72,6 +64,14 @@ JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
 JAPI_DEPEND_LIBS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
                    $(UTILIB) $(RMONLIB) $(LCKLIB)
+
+###############################################################################
+# include examples from the howto
+###############################################################################
+include $(JAPILIB_DIR)/howto/Makefile
+
+JAPI_ALL      = japilib drmaalib test_drmaa example howto1 howto2 howto2_1 \
+								howto3 howto3_1 howto3_2 howto4 howto5 howto6
 
 japi_all: $(JAPI_ALL)
 

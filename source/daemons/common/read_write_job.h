@@ -42,7 +42,6 @@ int job_remove_spool_file(u_long32 job_id, u_long32 ja_taskid,
                           sge_spool_flags_t flags);
 
 int job_list_read_from_disk(lList **job_list, char *list_name, int check,
-                            int hash, HashTable* Job_Hash_Table,
                             sge_spool_flags_t flags,
                             int (*init_function)(lListElem*)); 
 

@@ -56,7 +56,6 @@
 #include "opt_silent.h"
 #include "sge_washing_machine.h"
 #include "sge_stat.h"
-#include "sge_hash.h"
 #include "job.h"
 #include "msg_common.h"
 
@@ -542,7 +541,6 @@ int job_remove_script_file(u_long32 job_id)
 }
 
 int job_list_read_from_disk(lList **job_list, char *list_name, int check,
-                                int hash, HashTable* Job_Hash_Table,
                                 sge_spool_flags_t flags, 
                                 int (*init_function)(lListElem*)) 
 {
@@ -676,7 +674,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
             }
 
             lSetList(job, JB_jid_sucessor_list, NULL); 
-            job_list_add_job(job_list, list_name, job, 0, hash, Job_Hash_Table);
+            job_list_add_job(job_list, list_name, job, 0);
          }
          third_direnties = lFreeList(third_direnties);
       }

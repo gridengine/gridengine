@@ -105,7 +105,6 @@
 #include "msg_qmaster.h"
 #include "reschedule.h"
 #include "sge_washing_machine.h"
-#include "sge_hash.h"
 #include "sge_job_jatask.h"
 #include "sge_file_path.h"
 
@@ -127,9 +126,6 @@ extern lList *Master_Operator_List;
 extern lList *Master_Calendar_List;
 extern lList *Master_Complex_List;
 extern lList *Master_Zombie_List;
-extern HashTable Master_Job_Hash_Table;
-
-
 
 #ifndef __SGE_NO_USERMAPPING__
 extern lList *Master_Usermapping_Entry_List;
@@ -568,7 +564,7 @@ int sge_setup_qmaster()
 
    DPRINTF(("job_list-----------------------------------\n"));
    if (job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 
-                               1, 1, &Master_Job_Hash_Table, 
+                               1,
                                SPOOL_DEFAULT, NULL)) {
       DEXIT;
       return -1;
@@ -577,7 +573,7 @@ int sge_setup_qmaster()
    if (conf.zombie_jobs > 0) {
       DPRINTF(("zombie_list--------------------------------------\n"));
       if (job_list_read_from_disk(&Master_Zombie_List, 
-                                      "Master_Zombie_List", 0, 0, NULL, 
+                                      "Master_Zombie_List", 0,
                                       SPOOL_HANDLE_AS_ZOMBIE, NULL)) {
          DEXIT;
          return -1;

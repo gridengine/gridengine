@@ -86,7 +86,6 @@
 #include "sge_rangeL.h"
 #include "sge_identL.h"
 #include "job.h"
-#include "sge_hash.h"
 #include "sge_peopen.h"
 #include "sge_copy_append.h"
 #include "sge_arch.h"
@@ -114,8 +113,6 @@ extern lList *Master_Job_List;
 extern lList *Master_Job_Schedd_Info_List;
 extern lList *Master_Zombie_List;
 extern lList *Master_Pe_List;
-
-extern HashTable Master_Job_Hash_Table;
 
 extern int enable_forced_qdel;
 
@@ -624,7 +621,7 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    
    /* add into job list */
    if (job_list_add_job(&Master_Job_List, "Master_Job_List", lCopyElem(jep), 
-                        1, 1, &Master_Job_Hash_Table)) {
+                        1)) {
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
       DEXIT;
       return STATUS_EUNKNOWN;
@@ -1437,12 +1434,8 @@ int sub_command
          /* write data back into job list  */
          {
             lListElem *prev = lPrev(jobep);
-            u_long32 jid =  lGetUlong(jobep, JB_job_number);
             lRemoveElem(Master_Job_List, jobep);
-            HashTableDelete(Master_Job_Hash_Table, &jid);
             lInsertElem(Master_Job_List, prev, new_job);
-            HashTableStore(Master_Job_Hash_Table, &jid, 
-               (void *) new_job);
          }   
          /* no need to spool these mods */
          if (trigger & RECHAIN_JID_HOLD) 
@@ -2662,12 +2655,7 @@ u_long32 jobid
 
    DENTER(BASIS_LAYER, "sge_locate_job");
    
-   if (Master_Job_Hash_Table && HashTableLookup(Master_Job_Hash_Table, 
-                                  &jobid, (const void **) &jep)) { 
-   }
-   else {
-      jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid);
-   } 
+   jep = lGetElemUlong(Master_Job_List, JB_job_number, jobid);
 
    DEXIT;
    return jep;

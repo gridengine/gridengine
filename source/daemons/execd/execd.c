@@ -291,7 +291,7 @@ char **argv
 
    Master_Job_List = lCreateList("Master_Job_List", JB_Type);
    job_list_read_from_disk(&Master_Job_List, "Master_Job_List",
-                           0, 0, NULL, SPOOL_WITHIN_EXECD, 
+                           0, SPOOL_WITHIN_EXECD, 
                           job_initialize_job);
    
    /* clean up jobs hanging around (look in active_dir) */

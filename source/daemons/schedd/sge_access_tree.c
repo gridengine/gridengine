@@ -36,7 +36,6 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_schedd.h"
-#include "sge_hash.h"
 #include "sge_category.h"
 #include "sge_access_tree.h"
 #include "sge_job_schedd.h"
@@ -50,16 +49,13 @@
 /* the access tree */
 static lList *priority_group_list = NULL;
 
-/* hash table used for quick access of jobs arrays from access tree */
-static HashTable runnable_job_arrays = NULL;
-
 static lSortOrder *so_pgr = NULL, 
            *so_usr = NULL, 
            *so_jrl = NULL;
 static lListElem *current_pgrp = NULL;
 
 static void at_job_counter_impl(u_long32 priority, const char *owner, int slots);
-static lListElem *at_first_in_jrl(lListElem *jrl_container, int nm_jrl, int nm_sort, int nm_curr);
+static lListElem *at_first_in_jrl(lListElem *jrl_container, int nm_jrl, int nm_sort, int nm_curr, lList *job_list);
 static void at_trace(void);
 
 /*
@@ -100,11 +96,6 @@ void at_finish(void)
    if (so_jrl) 
       so_pgr = lFreeSortOrder(so_pgr);
 
-   if (runnable_job_arrays) {
-      HashTableDestroy(runnable_job_arrays);
-      runnable_job_arrays = NULL;
-   }
-   
    priority_group_list = lFreeList(priority_group_list);
 
    return;
@@ -357,22 +348,9 @@ int slots
 void at_notice_runnable_job_arrays(
 lList *job_list 
 ) {
-   lListElem *job, *pgrp;
+   lListElem *pgrp;
 
    DENTER(TOP_LAYER, "at_notice_runnable_job_arrays");
-
-   /* build new hash table for all jobs in the job list ...  */
-   if (runnable_job_arrays) {
-      HashTableDestroy(runnable_job_arrays);
-      runnable_job_arrays = NULL;
-   }
-   /* ... and register all runnable jobs in the hash table */ 
-   runnable_job_arrays = HashTableCreate(14, DupFunc_u_long32, HashFunc_u_long32, HashCompare_u_long32); /* 2^14 entries */
-   for_each (job, job_list) {
-      u_long32 temp = lGetUlong(job, JB_job_number);
-      HashTableStore(runnable_job_arrays, 
-            &temp, (void *)job);
-   }
 
    /* reinitialize the iterator in our access tree */
    current_pgrp = NULL;
@@ -394,22 +372,6 @@ lList *job_list
    at_trace();
    DEXIT;
    return;
-}
-
-/* 
-** 
-** A job array has been dispatched completely in this scheduling 
-** run. Thus next call to at_get_next_job_array() may not return
-** this job array.
-**
-*/
-void at_finished_array_dispatching(
-lListElem *job 
-) {
-   u_long32 jobid = lGetUlong(job, JB_job_number);
-   /* remove this job from our hash table */
-   HashTableDelete(runnable_job_arrays, &jobid);
-   DPRINTF(("remove "u32" from hashtable\n", jobid));
 }
 
 /* 
@@ -452,7 +414,7 @@ int slots
 ** are actually not schedulable.
 **
 */
-lListElem *at_get_actual_job_array()
+lListElem *at_get_actual_job_array(lList *job_list)
 {
    lListElem *job_array = NULL;
    lList *usl;
@@ -480,7 +442,7 @@ lListElem *at_get_actual_job_array()
                    our directory of runnable jobs 
                    else take the next job array */
          job_array = at_first_in_jrl(current_pgrp, PGR_subordinated_list, 
-            PGR_sort_me, PGR_current);
+            PGR_sort_me, PGR_current, job_list);
          if (job_array)
             DPRINTF(("FCFS: "u32"\n", lGetUlong(job_array, JB_job_number)));
          else
@@ -521,7 +483,7 @@ lListElem *at_get_actual_job_array()
             lListElem *t_job_array;
 
             while (user && lGetUlong(user, USR_nrunning_dl) == current_min_jobs_per_user) {
-               t_job_array = at_first_in_jrl(user, USR_job_references, USR_sort_me, USR_current);
+               t_job_array = at_first_in_jrl(user, USR_job_references, USR_sort_me, USR_current, job_list);
 
                if (t_job_array)
                   DPRINTF(("USERSORT: %s "u32"\n", lGetString(user, USR_name),
@@ -566,7 +528,8 @@ static lListElem *at_first_in_jrl(
 lListElem *jrl_container,
 int nm_jrl,
 int nm_sort,
-int nm_curr 
+int nm_curr,
+lList *job_list
 ) {
    lList *jrl;
    lListElem *current_jr, *job_array = NULL;
@@ -595,9 +558,7 @@ int nm_curr
                   lGetUlong(current_jr, JRL_jobid)));
       } else {
          u_long32 temp = lGetUlong(current_jr, JRL_jobid);
-         HashTableLookup(runnable_job_arrays,  &temp, 
-                  (const void**)&job_array);
-         DPRINTF(("AT: job "u32" is %scontained in hash list: %p\n", temp, job_array?"":"NOT ", job_array));
+         job_array = lGetElemUlong(job_list, JB_job_number, temp);
       }
    } while (!job_array && (current_jr=lNext(current_jr)));
       

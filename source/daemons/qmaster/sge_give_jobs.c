@@ -81,7 +81,6 @@
 #include "slots_used.h"
 #include "sge_select_queue.h"
 #include "sort_hosts.h"
-#include "sge_hash.h"
 #include "sge_afsutil.h"
 #include "sge_peopen.h"
 #include "sge_copy_append.h"
@@ -116,8 +115,6 @@ extern lList *Master_Exechost_List;
 extern lList *Master_Usermapping_Entry_List;
 extern lList *Master_Host_Group_List;
 #endif
-
-extern HashTable Master_Job_Hash_Table;
 
 static void sge_clear_granted_resources(lListElem *jep, lListElem *jatep, int incslots);
 
@@ -650,13 +647,13 @@ u_long now
       This is the same as mode=2 except we delete the job from disk and
       generate a delete event 
 
-   SGE
+   SGEEE
       If we get a job exit that leads to a deletion of the job we have 
       to free the resources for further usage (mode==4)
       Here we remove the job script but not the job file itself. 
 
-      Getting the permission from SGE schedd to remove the job (mode==5)
-      we may delete the job itself from internal lists (hash/joblist)
+      Getting the permission from SGEEE schedd to remove the job (mode==5)
+      we may delete the job itself from internal lists (joblist)
       and we may remove it the job file.
 
    Input:
@@ -1122,7 +1119,6 @@ int spool_job
       ** remove the job
       */
       lRemoveElem(Master_Job_List, jep);
-      HashTableDelete(Master_Job_Hash_Table, &jid); 
    }
 
    DEXIT;

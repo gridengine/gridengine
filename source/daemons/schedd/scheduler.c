@@ -628,8 +628,7 @@ lList **finished_jobs
 
    if (!sgeee_mode) {
       /* 
-      ** establish hash table for all job arrays containing runnable tasks 
-      ** whether a job is runnable 
+      ** establish the access tree for all job arrays containing runnable tasks 
       */
       at_notice_runnable_job_arrays(lists->job_list);
    }
@@ -639,7 +638,7 @@ lList **finished_jobs
    ** loop over the jobs that are left in priority order
    */
    while ( (job = lCopyElem(
-   orig_job=(sgeee_mode? lFirst(lists->job_list) :at_get_actual_job_array())
+   orig_job=(sgeee_mode? lFirst(lists->job_list) :at_get_actual_job_array(lists->job_list))
    ))) {
       u_long32 job_id; 
       u_long32 ja_task_id; 
@@ -784,9 +783,7 @@ SKIP_THIS_JOB:
       }
 
       /* prevent that we get the same job next time again */
-      if (!dispatched_a_job || !lGetElemUlong(lists->job_list, JB_job_number, job_id)) {
-         if (!sgeee_mode) 
-            at_finished_array_dispatching(job);
+      if (!dispatched_a_job) {
          lDelElemUlong(&lists->job_list, JB_job_number, job_id); 
       }
 

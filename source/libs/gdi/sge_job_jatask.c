@@ -10,8 +10,6 @@
 #include "msg_gdilib.h"
 #include "sge_hash.h"
 
-extern HashTable Master_Job_Hash_Table;
-
 static int job_initialize_task(lListElem *job, u_long32 task_id,
                                u_long32 hold_state);
 
@@ -166,7 +164,7 @@ void job_set_hold_state(lListElem *job, lListElem *ja_task,
 }
 
 int job_list_add_job(lList **job_list, const char *name, lListElem *job, 
-                     int check, int hash, HashTable* Job_Hash_Table) {
+                     int check) {
    DENTER(TOP_LAYER, "job_list_add_job");
 
    if (!job_list) {
@@ -194,16 +192,6 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
 
    lAppendElem(*job_list, job);
 
-   if (hash && Job_Hash_Table) {
-      u_long32 temp = lGetUlong(job, JB_job_number);
-      if (!*Job_Hash_Table)
-         *Job_Hash_Table = HashTableCreate(14, DupFunc_u_long32, HashFunc_u_long32, 
-                                 HashCompare_u_long32); /* 2^14 entries */
-
-      HashTableStore(*Job_Hash_Table,
-                     &temp,
-                     (void *) job);
-   }
    DEXIT;
    return 0;
 }               

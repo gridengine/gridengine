@@ -1416,18 +1416,11 @@ char *err_str
 
    /* config for interactive jobs */
    {
-      lListElem *tmp_elem;
-      const char *tmp_string;
-      u_long32 qrsh_task_id = 0;
       u_long32 jb_now = lGetUlong(jep, JB_now); 
+      const char *qrsh_task_id = lGetString(jep, JB_pe_task_id_str);
 
-      tmp_elem = lGetSubStr(jep, VA_variable, "TASK_ID", JB_env_list);
-      if (tmp_elem) {
-         tmp_string = lGetString(tmp_elem, VA_value);
-         if (tmp_string) {
-            qrsh_task_id = atol(tmp_string);
-            fprintf(fp, "qrsh_task_id="u32"\n", qrsh_task_id);
-         }
+      if (qrsh_task_id != NULL) {
+         fprintf(fp, "qrsh_task_id=%s\n", qrsh_task_id);
       }
 
       if(JB_NOW_IS_QLOGIN(jb_now) || JB_NOW_IS_QRSH(jb_now) 
@@ -1462,8 +1455,8 @@ char *err_str
 
                fprintf(fp, "qrsh_tmpdir=%s\n", tmpdir);
 
-               if(tmp_elem) {
-                  fprintf(fp, "qrsh_pid_file=%s/pid."u32"\n", tmpdir, qrsh_task_id);
+               if(qrsh_task_id != NULL) {
+                  fprintf(fp, "qrsh_pid_file=%s/pid.%s\n", tmpdir, qrsh_task_id);
                } else {
                   fprintf(fp, "qrsh_pid_file=%s/pid\n", tmpdir);
                }

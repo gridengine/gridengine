@@ -343,11 +343,10 @@ static int write_pid_file(pid_t pid)
       return 0;
    }
 
-   task_id_str = getenv("TASK_ID");
+   task_id_str = get_conf_val("qrsh_task_id");
 
-   if(task_id_str) {
-      long task_id = atol(task_id_str);
-      sprintf(pid_file_name, "%s/pid.%ld", tmpdir, task_id);
+   if(task_id_str != NULL) {
+      sprintf(pid_file_name, "%s/pid.%s", tmpdir, task_id_str);
    } else {
       sprintf(pid_file_name, "%s/pid", tmpdir);
    }
@@ -728,7 +727,7 @@ static int writeExitCode(int myExitCode, int programExitCode)
       return EXIT_FAILURE;
    }
   
-   taskid = getenv("TASK_ID");
+   taskid = get_conf_val("qrsh_task_id");
    
    if(taskid != NULL) {
       sprintf(fileName, "%s/qrsh_exit_code.%s", tmpdir, taskid);

@@ -1967,14 +1967,6 @@ int start_remote_job (char **argv, char **envp,
       } else {
          /* remote execution possible */
          hostname = next_host();
-
-         if(hostcmp(hostname, localhost) == 0) {
-            /* remote exec on localhost? No! */
-            if(be_verbose) {
-               fprintf(stderr, "local start on host %s\n", hostname);
-            }
-            exec_remote = 0;
-         }   
       }
    }
  

@@ -1,3 +1,11 @@
+JG-2002-04-22-0: JG-2002-04-18-0: Bugfix:    If more then 1 task of a parallel job was started
+                            in a queue, retrieving exit code of a task and
+                            signaling a task was unreliable as the TASK_ID
+                            variable was no longer exported to the tasks
+                            environment. Replaced the TASK_ID mechanism by
+                            an entry in the jobs config.
+                 Issue:     #236
+
 JG-2002-04-19-0: Bugfix:    Interactive jobs of any user failed if root had 
                             already the maximum number of group id's.
                  Enhancem.: More detailed description in error output

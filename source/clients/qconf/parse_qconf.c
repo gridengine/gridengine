@@ -6238,14 +6238,12 @@ char *host
    where = lFreeWhere(where);
 
    if (!alp) {
-      DEXIT;
-      return -1;
+      SGE_EXIT(1);
    }
    if (lGetUlong(aep = lFirst(alp), AN_status) != STATUS_OK) {
       fprintf(stderr, "%s", lGetString(aep, AN_text));
       lFreeList(alp);
-      DEXIT;
-      return -1;
+      SGE_EXIT(1);
    }
    lFreeList(alp);
 

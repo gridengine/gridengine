@@ -1,3 +1,6 @@
+AH-2002-03-15-5  Bugfix:    Ensure after execd installation the host needs to be 
+                            only exec host but not admin host or submit host
+
 EB-2002-03-15-0: Bugfix:    qmaster code accepted qsub -t task specification
                             which included the id 0 => loop in schedd
                  Issue:     #192

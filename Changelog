@@ -1,3 +1,7 @@
+SG-2004-01-16-1: Enhancem.: A manager can delete specific jobs from other users
+                            or all jobs.
+                 Changed:   qmaster, qdel, man pages                            
+
 AD-2004-01-16-1: Bugfix:    Did fix build on glinux
                  Changed:   qmaster
 

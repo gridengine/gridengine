@@ -801,13 +801,13 @@ int sub_command
    else
       user_list_flag = 0;
 
+   jid_str = lGetString(idep, ID_str);
+
    /* Did we get a valid jobid? */
-   if ((!user_list_flag) && (!all_users_flag) && (!all_jobs_flag))
+   if ((!all_users_flag) && (!all_jobs_flag && (strcmp(jid_str, "0") != 0)))
       jid_flag = 1;
    else
       jid_flag = 0;
-   jid_str = lGetString(idep, ID_str);
-
 
    if ((ret=verify_job_list_filter(alpp, all_users_flag, all_jobs_flag, 
          jid_flag, user_list_flag, ruser))) { 
@@ -1174,7 +1174,8 @@ char *ruser
       DPRINTF(("Add all users given in userlist to filter\n"));
       for_each(user, user_list) {
 
-         new_where = lWhere("%T(%I==%s)", JB_Type, JB_owner,
+/*         new_where = lWhere("%T(%I==%s)", JB_Type, JB_owner, */
+         new_where = lWhere("%T(%I p= %s)", JB_Type, JB_owner, 
                lGetString(user, ST_name));
          if (!or_where)
             or_where = new_where;

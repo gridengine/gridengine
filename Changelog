@@ -1,3 +1,10 @@
+EB-2003-02-17-0  Bugfix:    qhost -q -l arch=xx crashes if a grid execution 
+                            host is down
+                 Issue:     #492
+                 Bugtraq:   #4819479
+                 Review:    JG
+                 Changed:   qhost
+
 JG-2003-02-14-0  Bugfix:    Second migration of tightly integrated jobs failed
                             if any host was used in both the first and second
                             run of the job.

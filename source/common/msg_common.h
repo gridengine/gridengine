@@ -1124,7 +1124,6 @@
 #define MSG_ERROROPENINGFILEFORREADING_SS _MESSAGE(60203, _("error opening file "SFQ" for reading: "SFN"\n")) 
 #define MSG_ERROROPENINGFILEFORWRITING_SS _MESSAGE(60204, _("error opening file "SFQ" for writing: "SFN"\n"))
 #define MSG_ERRORCLOSINGFILE_SS           _MESSAGE(60205, _("error closing file "SFQ": "SFN"\n"))
-#define MSG_ERROR_READINGFILE_SS          _MESSAGE(60206, _("error reading from file "SFQ": "SFN"\n"))
 #define MSG_ERROR_WRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN"\n"))
 
 /* parsing of parameters */

@@ -38,7 +38,6 @@
 #define MSG_QRSH_STARTER_CANNOTREADCONFIGFROMFILE_S _MESSAGE(15001, _("qrsh_starter: cannot read job configuration from file "SFN"\n"))
 #define MSG_QRSH_STARTER_CANNOTCHANGEDIR_SS  _MESSAGE(15002, _("qrsh_starter: cannot change to directory "SFN": "SFN"\n"))
 #define MSG_QRSH_STARTER_MALLOCFAILED_S      _MESSAGE(15003, _("qrsh_starter: malloc failed: "SFN"\n"))
-#define MSG_QRSH_STARTER_CANNOTREADENV_S     _MESSAGE(15004, _("qrsh_starter: cannot read environment variable "SFN"\n"))
 #define MSG_QRSH_STARTER_CANNOTWRITEPID_S    _MESSAGE(15005, _("qrsh_starter: cannot write pid file "SFN":\n"))
 #define MSG_QRSH_STARTER_CANNOTFORKCHILD_S   _MESSAGE(15006, _("qrsh_starter: cannot fork child process: "SFN"\n"))
 #define MSG_QRSH_STARTER_CANNOTGETLOGIN_S    _MESSAGE(15007, _("qrsh_starter: cannot get login name: "SFN"\n"))

@@ -215,6 +215,11 @@ proc start_remote_prog { hostname user exec_command exec_arguments {exit_var prg
       puts $CHECK_OUTPUT "----> REMOTE connection, checking file availability ..."
 
       while { $is_ok == 0 } {
+         if { $exec_command == "cd" } {
+            set output "shell build-in command"
+            set is_ok 1
+            break;
+         }
          set output [ start_remote_prog $hostname $user "which" "$exec_command" prg_exit_state 60 0 "" 0]
          if { $prg_exit_state == 0 } {
             set is_ok 1

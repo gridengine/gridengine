@@ -43,6 +43,7 @@
 
 #include "sge.h"
 #include "sgermon.h"
+#include "utility.h"
 #include "sge_eventL.h"
 #include "sge_answerL.h"
 #include "sge_confL.h"
@@ -193,6 +194,9 @@ char *rhost
 
    lFreeList(*lpp);
    *lpp = NULL;
+
+   sge_unlink(NULL, SHARETREE_FILE);
+   
    sge_add_event(NULL, sgeE_NEW_SHARETREE, 0, 0, NULL, NULL);
    {
       lListElem *schedd = sge_locate_scheduler();

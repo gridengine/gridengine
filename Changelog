@@ -1,3 +1,10 @@
+JG-2003-03-26-2  Bugfix:    deleted sharetree showed up again after qmaster 
+                            restart, as the spool file was not deleted.
+                 Changed:   sge_qmaster
+                 Review:    EB
+                 Issue:     499
+                 Bugtraq:   4822742
+
 JG-2003-03-26-1  Bugfix:    Some Makefiles passed CFLAGS to linker.
 
 JG-2003-03-26-0  Bugfix:    Reject tightly integrated array jobs.

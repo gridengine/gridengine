@@ -1,10 +1,18 @@
+CR-2002-03-18-1  Bugfix:    Mail on suspend wasn't working
+                 Issue:     #86
+ 
+                 Bugfix:    Wrong error message when service sge_commd 
+                            is not available    
+                 Issue:     #158
+
+
 AA-2002-03-18-3  Legal:     Xmt copyrights
 
 AA-2002-03-18-2  Bugfix.:   cluster config sensitivity grey labels
 
 EB-2002-03-18-0  Enhancem.: Modifications for redhat 7.2 (gcc 2.96) 
 
-CR-2002-03-18-0: Testsuite: - qdel check:
+CR-2002-03-18-0  Testsuite: - qdel check:
                               1) clear all error states on test cleanup
                               2) leave test loop on job submission error
                             - new version numbers: SGEEE_5.3beta2_2 and

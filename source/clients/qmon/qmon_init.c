@@ -69,6 +69,7 @@
 #include "sge_log.h"
 #include "msg_clients_common.h"
 #include "msg_gdilib.h"
+#include "msg_common.h"
 #include "utility.h"
 #include "qm_name.h"
 
@@ -220,18 +221,15 @@ String name
 /*-------------------------------------------------------------------------*/
 void qmonInitSge( char *progname) 
 {
-   int cl_err = 0;
-   
    DENTER(GUI_LAYER, "qmonInitSge");
    
    sge_qmon_log(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);
-   if ((cl_err = sge_gdi_setup(prognames[QMON]))) {
-      if (cl_err == CL_FIRST_FREE_EC+2 || cl_err == AE_QMASTER_DOWN)
-         fprintf(stderr, MSG_SGETEXT_NOQMASTER);
-      else   
-         ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
+   if (sge_gdi_setup(prognames[QMON])) {
+      /* fills SGE_EVENT with diagnosis information */
+      generate_commd_port_and_service_status_message(SGE_EVENT);
+      fprintf(stderr, SGE_EVENT);
       SGE_EXIT(1);
    }
    sge_qmon_log(False);

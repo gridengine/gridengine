@@ -906,7 +906,6 @@
 #define MSG_GDI_STRING_LENGTHEXCEEDSMAXSTRINGSIZE_SI     _("strlen($%s) exceeds MAX_STRING_SIZE %d\n")
 
 
-
 /* 
 ** gdilib/sge_gdi_request.c
 */
@@ -932,7 +931,6 @@
 #define MSG_GDI_UNEXPECTEDERRORWHILEUNPACKINGGDIREQUEST _("unexpected error while unpacking gdi request\n")
 #define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _("invalid value ("U32CFormat") for ar->op\n")
 #define MSG_GDI_CANTUNPACKGDIREQUEST                       _("can't unpack gdi request"    )
-#define MSG_SGETEXT_NOQMASTER                   _("unable to contact qmaster\n")
 
 
 /* sge_job_jatask.c */

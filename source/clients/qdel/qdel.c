@@ -152,7 +152,11 @@ int main(int argc, char **argv) {
    if (force == 1) {
       have_master_privileges = sge_gdi_check_permission(MANAGER_CHECK);
       if (have_master_privileges == -10) {
-         fprintf(stderr, MSG_SGETEXT_NOQMASTER);
+         /* -10 indicates no connection to qmaster */
+
+         /* fills SGE_EVENT with diagnosis information */
+         generate_commd_port_and_service_status_message(SGE_EVENT);
+         fprintf(stderr, SGE_EVENT);
          goto error_exit;
       }  
    }

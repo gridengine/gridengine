@@ -6353,9 +6353,11 @@ char *user
    ** user is no manager
    */
    if (perm_return == -10 ) {
-     fprintf(stderr, MSG_SGETEXT_NOQMASTER );
+      /* fills SGE_EVENT with diagnosis information */
+      generate_commd_port_and_service_status_message(SGE_EVENT);
+      fprintf(stderr, SGE_EVENT );
    } else {
-     fprintf(stderr, MSG_SGETEXT_MUSTBEMANAGER_S , user);
+      fprintf(stderr, MSG_SGETEXT_MUSTBEMANAGER_S , user);
    }
    SGE_EXIT(1);
    return 0;

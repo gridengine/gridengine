@@ -64,6 +64,7 @@
 #include "msg_utilib.h"
 #include "msg_gdilib.h"
 #include "sge_security.h"
+#include "msg_common.h"
 
 static int sge_send_receive_gdi_request(char *rhost, char *commproc, u_short id, sge_gdi_request *out, sge_gdi_request **in);
 
@@ -349,7 +350,6 @@ lList **malpp
       request->cp =  NULL;
       request->enp = NULL; 
    }
-   
 
    /* 
    ** user info
@@ -421,6 +421,7 @@ lList **malpp
 #endif
 
       if (status != 0) {
+
          reread_qmaster_file = 1;
 
          /* failed to contact qmaster ? */
@@ -433,7 +434,8 @@ lList **malpp
                sprintf(SGE_EVENT, MSG_GDI_RECEIVEGDIREQUESTFAILED );
                break;
             case -4:
-               sprintf(SGE_EVENT, MSG_SGETEXT_NOQMASTER);
+               /* fills SGE_EVENT with diagnosis information */
+               generate_commd_port_and_service_status_message(SGE_EVENT);
                break;
             case -5:
                sprintf(SGE_EVENT, MSG_GDI_SIGNALED );
@@ -614,8 +616,7 @@ static int sge_send_receive_gdi_request(char *rhost,
       } else if (check_isalive(rhost)) {
          DEXIT;
          return -4;
-      }
-      else {
+      } else {
          DEXIT;
          return -2;
       }   

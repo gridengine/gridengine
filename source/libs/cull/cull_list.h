@@ -91,22 +91,47 @@ enum _enum_lMultiType {
 #define SGE_IRINT(name)
 #define SGE_XINT(name) { name, lIntT, NULL },
 #define SGE_HOST(name) { name, lHostT, NULL },                    /* CR - hostname change */
+#ifdef CULL_NO_HASH
+#define SGE_HOSTH(name) { name, lHostT, NULL },                   /* CR - hostname change */
+#define SGE_HOSTHU(name) { name, lHostT, NULL },                  /* CR - hostname change */
+#else
 #define SGE_HOSTH(name) { name, lHostT, &template_hash },         /* CR - hostname change */
 #define SGE_HOSTHU(name) { name, lHostT, &template_hash_unique }, /* CR - hostname change */
+#endif
 #define SGE_STRING(name) { name, lStringT, NULL },
+#ifdef CULL_NO_HASH
+#define SGE_STRINGH(name) { name, lStringT, NULL },
+#define SGE_STRINGHU(name) { name, lStringT, NULL },
+#else
 #define SGE_STRINGH(name) { name, lStringT, &template_hash },
 #define SGE_STRINGHU(name) { name, lStringT, &template_hash_unique },
+#endif
 #define SGE_KSTRING(name) { name, lStringT, NULL },
+#ifdef CULL_NO_HASH
+#define SGE_KSTRINGH(name) { name, lStringT, NULL },
+#define SGE_KSTRINGHU(name) { name, lStringT, NULL },
+#else
 #define SGE_KSTRINGH(name) { name, lStringT, &template_hash },
 #define SGE_KSTRINGHU(name) { name, lStringT, &template_hash_unique },
+#endif
 #define SGE_RSTRING(name) { name, lStringT, NULL },
+#ifdef CULL_NO_HASH
+#define SGE_RSTRINGH(name) { name, lStringT, NULL },
+#define SGE_RSTRINGHU(name) { name, lStringT, NULL },
+#else
 #define SGE_RSTRINGH(name) { name, lStringT, &template_hash },
 #define SGE_RSTRINGHU(name) { name, lStringT, &template_hash_unique },
+#endif
 #define SGE_ISTRING(name)
 #define SGE_IRSTRING(name)
 #define SGE_XSTRING(name) { name, lStringT, NULL },
+#ifdef CULL_NO_HASH
+#define SGE_XSTRINGH(name) { name, lStringT, NULL },
+#define SGE_XSTRINGHU(name) { name, lStringT, NULL },
+#else
 #define SGE_XSTRINGH(name) { name, lStringT, &template_hash },
 #define SGE_XSTRINGHU(name) { name, lStringT, &template_hash_unique },
+#endif
 #define SGE_FLOAT(name) { name, lFloatT, NULL },
 #define SGE_IFLOAT(name)
 #define SGE_RFLOAT(name) { name, lFloatT, NULL },
@@ -128,17 +153,32 @@ enum _enum_lMultiType {
 #define SGE_IRLONG(name)
 #define SGE_XLONG(name) { name, lLongT, NULL },
 #define SGE_ULONG(name) { name, lUlongT, NULL },
+#ifdef CULL_NO_HASH
+#define SGE_ULONGH(name) { name, lUlongT, NULL },
+#define SGE_ULONGHU(name) { name, lUlongT, NULL },
+#else
 #define SGE_ULONGH(name) { name, lUlongT, &template_hash },
 #define SGE_ULONGHU(name) { name, lUlongT, &template_hash_unique },
+#endif
 #define SGE_KULONG(name) { name, lUlongT, NULL },
+#ifdef CULL_NO_HASH
+#define SGE_KULONGH(name) { name, lUlongT, NULL },
+#define SGE_KULONGHU(name) { name, lUlongT, NULL },
+#else
 #define SGE_KULONGH(name) { name, lUlongT, &template_hash },
 #define SGE_KULONGHU(name) { name, lUlongT, &template_hash_unique },
+#endif
 #define SGE_IULONG(name)
 #define SGE_RULONG(name) { name, lUlongT, NULL },
 #define SGE_IRULONG(name)
 #define SGE_XULONG(name) { name, lUlongT, NULL },
+#ifdef CULL_NO_HASH
+#define SGE_XULONGH(name) { name, lUlongT, NULL },
+#define SGE_XULONGHU(name) { name, lUlongT, NULL },
+#else
 #define SGE_XULONGH(name) { name, lUlongT, &template_hash },
 #define SGE_XULONGHU(name) { name, lUlongT, &template_hash_unique },
+#endif
 #define SGE_BOOL(name) { name, lUlongT, NULL },
 #define SGE_IBOOL(name)
 #define SGE_RBOOL(name) { name, lUlongT, NULL },

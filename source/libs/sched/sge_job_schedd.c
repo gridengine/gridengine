@@ -278,6 +278,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
       lListElem *job = NULL;                           
       lListElem *user = NULL;
 
+#ifndef CULL_NO_HASH
       /* create a hash table on JB_owner to speedup 
        * searching for jobs of a specific owner
        */
@@ -291,6 +292,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
             }
          }
       }
+#endif      
 
       /* inc. the # of jobs a user is running */
       for_each(job, *(job_lists[SPLIT_RUNNING])) {

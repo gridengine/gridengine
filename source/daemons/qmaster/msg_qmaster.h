@@ -629,7 +629,7 @@
 #define MSG_CONFIG_CANTWRITEMANAGERLIST               _MESSAGE(33621, _("can't write manager list\n"))
 #define MSG_CONFIG_CANTWRITEOPERATORLIST              _MESSAGE(33622, _("can't write operator list\n"))
 #define MSG_CONFIG_NOLOCAL_S                          _MESSAGE(33623, _("local configuration "SFN" not defined - using global configuration"))
-#define MSG_CONFIG_NOGLOBAL                           _MESSAGE(33623, _("global configuration not defined"))
+#define MSG_CONFIG_NOGLOBAL                           _MESSAGE(33624, _("global configuration not defined"))
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU  _MESSAGE(33648, _("can't find queue "SFQ" referenced in job "U32CFormat))
 
 /*

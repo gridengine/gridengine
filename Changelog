@@ -1,3 +1,5 @@
+AS-2002-01-28-0: Change:    removed SECURE defined from CULL headers"
+
 SD-2002-01-25-2: Bugfix:    Changed aimk variable name GCC_NO_STRICT_PROTO to
                              GCC_NO_STRICT_PROT variable because /bin/csh on the SX-6
                              only allows 18 character variable names.

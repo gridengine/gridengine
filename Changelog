@@ -1,3 +1,7 @@
+RC-2004-01-17-0: Enhancem.: Turned on optimization flag, defined _REENTRANT on SUPER-UX (for John)
+                 Changed:   aimk
+                 Review:    RC
+
 SG-2004-01-17-3: Bugfix     qsub -l BOOL_NAME=VALUE needed the value. 
                  Changed:   qsub
                  Issue:     618

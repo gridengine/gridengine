@@ -1503,7 +1503,9 @@ case NECSX5:
       set MAKEFNMATCH = 1
    endif
    set MAKE = make
-   set CFLAGS = "-DNECSX5 -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
+   set OFLAG = "-h1"
+   set CFLAGS_NOOPT = "-DNECSX5 -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M -D_REENTRANT -dir,novec,nopar,nopthr -hfloat0 $DEBUG_FLAG $CFLAGS"
+   set CFLAGS = "$CFLAGS_NOOPT $OFLAG"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
@@ -1515,6 +1517,9 @@ case NECSX5:
       echo creating shared libs not yet supported on $BUILDARCH
       exit 1
    endif
+   set DLLIB = ""
+   set MTCFLAGS = "${MTCFLAGS}"
+   set MTLFLAGS = "-lpthread"
    breaksw
 
 case SLINUX:
@@ -2110,10 +2115,16 @@ if ( "$REMOTE" == 1) then
       mkdir $COMPILE_ARCH
    endif
 
+   if ( $COMPILE_ARCH == "NECSX5" ) then
+      set CFLAGS_REMOTE = "$CFLAGS_NOOPT"
+   else
+      set CFLAGS_REMOTE = "$CFLAGS"
+   endif
+
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" \
-      "CFLAGS=$CFLAGS" "LIBS=$LIBS" "SOURCE=$SOURCE" \
+      "CFLAGS=$CFLAGS_REMOTE" "LIBS=$LIBS" "SOURCE=$SOURCE" \
       "KRBLIBS=$KRBLIBS" "DLLIB=$DLLIB" \
       "LFLAGS=$LFLAGS $MTLFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "LIBEXT=$LIBEXT" \

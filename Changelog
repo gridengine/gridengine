@@ -1,3 +1,7 @@
+EB-2004-10-13-0: Enhancem.: qstat requests only necessary jobs (qstat -s -u)
+                 Changed:   qstat, qhost, libuti, sge_qstat(5), qstat(1)
+                 Review:    SG
+
 HP-2004-10-13-0: Bugfix:    Checked in wrong sources yesterday
                  Changed:   sge_uidgid, windows library
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/08/03 09:50:51 $     Revision: $Revision: 1.24 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/10/13 11:59:48 $     Revision: $Revision: 1.25 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/08/03 09:50:51 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/10/13 11:59:48 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -61,7 +61,7 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 ] [
 .B -r
 ] [
-.B -s {r|p|s|z|hu|ho|hs|hj|ha|h}[+]
+.B -s {r|p|s|z|hu|ho|hs|hj|ha|h|a}[+]
 ] [
 .B -t
 ] [
@@ -83,6 +83,17 @@ Without any option
 .I qstat
 will display only a list of jobs with no queue status
 information.
+.PP
+The administrator and the user may define files (see
+.M sge_qstat 5 ),
+which can contain any of the options described below. A cluster-wide sge_qstat
+file may be  placed under
+$xxQS_NAME_Sxx_ROOT/$xxQS_NAME_Sxx_CELL/common/sge_qstat
+The user private  file is searched at the location
+$HOME/.sge_qstat.
+The home directory request file has the highest precedence over
+the cluster global file.
+Command line can be used to override the flags contained in the files.
 .\"
 .SH OPTIONS
 .IP "\fB\-explain a|A|c|E\fP"
@@ -183,7 +194,7 @@ Prints extended information about the resource requirements
 of the displayed jobs. Please refer to the \fBOUTPUT FORMATS\fP
 sub-section \fBExpanded Format\fP below for detailed information.
 .\"
-.IP "\fB\-s {p|r|s|z|hu|ho|hs|hj|ha|h}[+]\fP"
+.IP "\fB\-s {p|r|s|z|hu|ho|hs|hj|ha|h|a}[+]\fP"
 
 Prints only jobs in the specified state, any combination of states is
 possible. \fB\-s prs\fP corresponds to the regular
@@ -200,7 +211,18 @@ submitted with the
 .I qstat 
 \fB\-s hj\fP 
 displays all jobs which are not eligible for execution unless the job
-has entries in the job dependency list. (see \fB\-a\fP
+has entries in the job dependency list.
+.I qstat 
+\fB\-s h\fP
+is an abbreviation for
+.I qstat 
+\fB\-s huhohshjha\fP
+and 
+.I qstat 
+\fB\-s a\fP is an abbreviation for
+.I qstat 
+\fB\-s psr\fP
+(see \fB\-a\fP
 and \fB\-hold_jid\fP option to
 .M qsub 1 ).
 .\"
@@ -224,7 +246,10 @@ being associated with the users from the given user list.
 Queue status information is displayed if the \fB\-f\fP or \fB\-F\fP
 options are specified additionally and if the user runs
 jobs in those queues.
-.\"
+The string
+\fB\ $user\fP
+is a placeholder for the current username.
+\"
 .IP "\fB\-urg\fP"
 Displays additional information for each job related to the job urgency policy scheme
 (see OUTPUT FORMATS below).

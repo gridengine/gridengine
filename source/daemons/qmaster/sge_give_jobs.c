@@ -1179,7 +1179,6 @@ static int sge_to_zombies(lListElem *job, lListElem *ja_task, int spool_job)
 
    is_defined = job_is_ja_task_defined(job, ja_task_id); 
    if (is_defined) {
-      int is_enrolled = job_is_enrolled(job, ja_task_id);     
       lListElem *zombie = lGetElemUlong(Master_Zombie_List, JB_job_number, 
                                         job_id);
 

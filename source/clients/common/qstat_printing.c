@@ -812,7 +812,7 @@ lList *cl,
 u_long32 full_listing 
 ) {
    int sge_ext;
-   lListElem *jep, *jatep;
+   lListElem *jep;
    StringBufferT dyn_task_str = {NULL, 0}; 
 
    DENTER(TOP_LAYER, "sge_print_jobs_zombie");

@@ -1,3 +1,6 @@
+CR-2001-10-10-1: Testsuite:
+                 - closed issue # 9 (Create a new test for file parsing)
+
 CR-2001-10-10-0: Testsuite:
                  - new command line option: mfile FILE
                    (don't mail messages, write it to file)

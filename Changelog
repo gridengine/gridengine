@@ -1,3 +1,5 @@
+SD-2002-01-18-2: Enhancem.  Minor PTF fix for setting nice values on NEC SX-6
+
 EB-2002-01-18-1: Bugfix:    - qalter of job name caused core of master
 
 JG-2002-01-18-0: Enhancem.  Simulation mode for large clusters.

@@ -736,9 +736,7 @@ static void ptf_setpriority_ash(lListElem *job, lListElem *osjob, long pri)
 ******************************************************************************/
 static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 {
-#  ifdef CRAY
    int nice;
-#  endif
    DENTER(TOP_LAYER, "ptf_setpriority_jobid");
 
 #  ifdef CRAY
@@ -760,15 +758,31 @@ static void ptf_setpriority_jobid(lListElem *job, lListElem *osjob, long pri)
 #  endif
 
 #  if defined(NECSX4) || defined(NECSX5)
-   if (nicej(ptf_get_osjobid(osjob), pri) == -1) {
-      if (errno != ESRCH) {
-         ERROR((SGE_EVENT, "job " u32 " setpriority failure: %s\n",
-                lGetUlong(job, JL_job_ID), strerror(errno)));
+
+   /*
+    * NEC nice values range from 0 to 39.
+    * According to the nicej(2) man page, nicej returns the new
+    * nice value minus 20, so -1 is a valid return code. Errno
+    * is not set upon a successful call, so we can't tell the
+    * difference between success and failure if we are setting
+    * the nice value to 19. We don't generate an error message
+    * if the nicej(2) call fails and we are trying to set the
+    * nice value to 19 (no big deal).
+    */ 
+
+   nice = nicej(ptf_get_osjobid(osjob), 0);
+   if (nice != -1 || pri == 19) {
+      if (nicej(ptf_get_osjobid(osjob), pri - (nice+20)) == -1 && pri != 19) {
+	 if (errno != ESRCH) {
+	    ERROR((SGE_EVENT, MSG_PRIO_JOBXNICEJFAILURE_S,
+		   u32c(lGetUlong(job, JL_job_ID)), strerror(errno)));
+	 }
+      } else {
+	 DPRINTF(("NICEJ(" u32 ", " u32 ")\n",
+		  (u_long32) ptf_get_osjobid(osjob), (u_long32) pri));
       }
-   } else {
-      DPRINTF(("NICEJ(" u32 ", " u32 ")\n",
-               (u_long32) ptf_get_osjobid(osjob), (u_long32) pri));
    }
+
 #  endif
    DEXIT;
 }

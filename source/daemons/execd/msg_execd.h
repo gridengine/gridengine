@@ -135,6 +135,7 @@
 #define MSG_PRIO_JOBXPIDYSETPRIORITYFAILURE_UUS            _("job "U32CFormat" pid "U32CFormat" setpriority failure: %s\n")
 #define MSG_SCHEDD_JOBXPIDYSCHEDSETSCHEDULERFAILURE_UUS    _("job "U32CFormat" pid "U32CFormat" sched_setscheduler failure: %s\n")
 #define MSG_PRIO_JOBXNICEMFAILURE_S                        _("job "U32CFormat" nicem failure: %s\n")
+#define MSG_PRIO_JOBXNICEJFAILURE_S                        _("job "U32CFormat" nicej failure: %s\n")
 #define MSG_PRIO_JOBXSETPRIORITYFAILURE_US                 _("job "U32CFormat" setpriority failure: %s\n")
 #define MSG_WHERE_FAILEDTOBUILDWHERECONDITION              _("failed to build where-condition")
 #define MSG_PRIO_PTFMINMAX_II                              _("PTF_MAX_PRIORITY=%d, PTF_MIN_PRIORITY=%d\n")

@@ -1,9 +1,17 @@
+SG-2005-03-16-3: Bugfix:   qstat -F dies in case of a infinit integer setting
+                           for a complex attribute
+                 Issue:    1508
+                 Bugtraq:  6241544
+                 Review:   JG
+                 Changed:  qstat, qmaster, scheduler, ...
+
 RD-2005-03-16-0: Bugfix:   Spooledit fails during database upgrade
                            RD-2005-03-11-0 had problems with string
                            which includes quotations. 
                  Issue:    1425
                  Bugtraq:  6239394
                  Review:   JG
+                 Changed:  spooledit
 
 SG-2005-03-16-2: Bugfix:    error message "no execd known on host"
                  Issue:     1431

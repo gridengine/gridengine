@@ -172,13 +172,15 @@ bool double_print_int_to_dstring(double value, dstring *string)
 
    DENTER(ULONG_LAYER, "double_print_int_to_dstring");
    
-   if ((value > (double)MAX_INT) || (value < (double)MIN_INT)) {
-      DEXIT;
-      return false;
-   }
-   
    if (string != NULL) {
       if (!double_print_infinity_to_dstring(value, string)) {
+
+         if ((value > (double)MAX_INT) || (value < (double)MIN_INT)) {
+            sge_dstring_sprintf_append(string, "integer_overflow");
+            DEXIT;
+            return false;
+         }
+     
          sge_dstring_sprintf_append(string, "%d", (int)value);
       } 
    }

@@ -35,6 +35,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/resource.h>
+#include <sys/wait.h>
 
 #include "basis_types.h"
 #include "sge_string.h"
@@ -155,13 +157,8 @@ static void dump_eventlist(lList *event_list)
 static void analyze_eventlist(lList *event_list, qevent_options *option_struct)
 {
    lListElem *event =NULL;
-   lList *jat = NULL;
    u_long job_id;
    u_long task_id;
-   lListElem *ep = NULL;
-   u_long job_status;
-   int task_running;
-   const char* job_project = NULL;
 
    for_each(event, event_list) {
       switch(lGetUlong(event, ET_type)) {

@@ -1,3 +1,12 @@
+CR-2003-03-04-0  Bugfix:    Fixed compiler warnings for glinux systems in
+                            qevent.c module
+
+CR-2003-03-03-1  Bugfix:    - qevent -help worked only for running GE system
+
+CR-2003-03-03-0  Enhancem.  - new function in sge_dir.h: sge_is_executable()
+                            - qevent client: client can now trigger script
+                                execution on job end events.
+
 AH-2003-02-27-0    Bugfix:    overriding queue limits with job request limits 
                               is incomplete for OS architecture dependent 
                                resource limits (NEC)
@@ -12,7 +21,7 @@ EB-2003-02-17-0    Bugfix:    qhost -q -l arch=xx crashes if a grid execution
                    Review:    JG
                    Changed:   qhost
 
-AS-2002-10-07-0: CVS        Created V53p3_TAG --> SGE 5.3p3
+AS-2003-02-17-0: CVS        Created V53p3_TAG --> SGE 5.3p3
 -----------------------------------------------------------
 
 EB-2003-02-14-1  Enhancem.: Enabled qmaster profiles code

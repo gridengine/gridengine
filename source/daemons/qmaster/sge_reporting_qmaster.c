@@ -911,9 +911,7 @@ reporting_create_sharelog_record(lList **answer_list)
          format.line_prefix  = sge_dstring_get_string(&prefix_dstring);
 
          /* dump the sharetree data */
-         SGE_LOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
-         SGE_LOCK(LOCK_MASTER_USER_LST, LOCK_READ);
-         SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
+         SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
 
          sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
                              Master_User_List,
@@ -922,9 +920,8 @@ reporting_create_sharelog_record(lList **answer_list)
                              false,
                              NULL,
                              &format);
-         SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
-         SGE_UNLOCK(LOCK_MASTER_USER_LST, LOCK_READ);
-         SGE_UNLOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
+
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
 
          /* write data to reporting buffer */
          buf = &reporting_buffer[REPORTING_BUFFER];

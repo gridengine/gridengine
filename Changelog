@@ -1,3 +1,6 @@
+AD-2004-02-05-2: Bugfix:    Use lock 'LOCK_GLOBAL'.
+                 Changed:   qmaster
+
 AD-2004-02-05-1: Bugfix:    All extern functions now lock 'LOCK_GLOBAL'.
                  Changed:   evm
 

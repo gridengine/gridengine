@@ -1,3 +1,6 @@
+AS-2004-03-03-0: Bugfix:    Fix DT-2004-03-03-0 did not compile on all
+                            machines
+
 DT-2004-03-03-0: Bugfix:    o Flatfile spooling now checks for duplicate
                               attributes.
                  Changed:   Flatfile spooling

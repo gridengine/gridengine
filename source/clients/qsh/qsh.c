@@ -789,7 +789,7 @@ static int start_client_program(const char *client_name,
       fflush(stdout); fflush(stderr);
       }
 #endif
-      SETPGRP;
+     
       execvp(args[0], args);
       ERROR((SGE_EVENT, MSG_EXEC_CANTEXECXYZ_SS, args[0], strerror(errno)));
       DEXIT;

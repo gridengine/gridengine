@@ -1,3 +1,7 @@
+JG-2001-12-11-0: Bugfix:    qrsh can not really ignore CTRL-Z (as intended by
+                            JG-2001-12-10-0). Pressing CTRL-Z in a 
+                            qrsh <command> session will suspend the rsh client.
+
 EB-2001-12-10-1: Enhancem.: Memory optimization for zombie jobs
 
                             THE SPOOL FILE FORMAT FOR JOBS (CULL JOB STRUCTURE)

@@ -1,3 +1,6 @@
+JG-2002-09-26-0  Testsuite: Introduce architectures aix51 and hp11-64 for
+                            control_procedures and qmaster size test.
+
 EB-2002-09-25-0  Bugfix:    Exiting sgeee jobs will be shown in qmons dialog 
                             for pending jobs.
                  IZ:        has no id until now (IZ does not work)

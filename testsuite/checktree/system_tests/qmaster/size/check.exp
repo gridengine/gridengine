@@ -363,6 +363,7 @@ proc init_ps {} {
    switch -exact $CHECK_ARCH {
       aix42 -
       aix43 -
+      aix51 -
       irix6 -
       osf4 -
       solaris -

@@ -513,7 +513,8 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       }
 
  
-      "aix43"   {
+      "aix43" -
+      "aix51" {
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid pgid=BIG_AIX_PGID ppid=BIG_AIX_PPID uid=BIG_AIX_UID stat=AIXSTATE started vsz=BIG_AIX_VSZ time args\"" prg_exit_state 60 0 myenvironment]
          set index_names "  PID BIG_AIX_PGID BIG_AIX_PPID BIG_AIX_UID AIXSTATE  STARTED BIG_AIX_VSZ        TIME COMMAND"
@@ -549,8 +550,7 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
       
 
       "hp10" -
-      "hp11" -
-      "hp11-64" {
+      "hp11" {
          set myenvironment(COLUMNS) "500"
          set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-efl" prg_exit_state 60 0 myenvironment]
          set index_names "  F S      UID   PID  PPID  C PRI NI     ADDR   SZ    WCHAN    STIME {TTY   }    TIME COMD"
@@ -563,6 +563,23 @@ proc get_ps_info { { pid 0 } { host "local"} { variable ps_info } {additional_ru
          set vsz_pos     -1
          set time_pos    13
          set command_pos 14
+      }
+ 
+      "hp11-64" {
+         set myenvironment(COLUMNS) "500"
+         set myenvironment(UNIX95)  ""
+         set result [start_remote_prog "$host" "$CHECK_USER" "ps" "-eo \"pid gid ppid uid state stime vsz time args\"" prg_exit_state 60 0 myenvironment]
+         #set index_names "  F S      UID   PID  PPID  C PRI NI     ADDR   SZ    WCHAN    STIME {TTY   }    TIME COMD"
+         set index_names "  PID        GID  PPID        UID S    STIME     VSZ     TIME COMMAND"
+         set pid_pos     0
+         set gid_pos     1
+         set ppid_pos    2
+         set uid_pos     3
+         set state_pos   4
+         set stime_pos   5
+         set vsz_pos     6
+         set time_pos    7
+         set command_pos 8
       }
  
       

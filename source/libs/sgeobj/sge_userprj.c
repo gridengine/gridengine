@@ -123,4 +123,28 @@ prj_list_get_master_list(void)
    return &Master_Project_List;
 }
 
+/***************************************************
+ Generate a Template for a user or project
+ ***************************************************/
+lListElem *getUserPrjTemplate()
+{
+   lListElem *ep;
+
+   DENTER(TOP_LAYER, "getUserPrjTemplate");
+
+   ep = lCreateElem(UP_Type);
+   lSetString(ep, UP_name, "template");
+   lSetString(ep, UP_default_project, NULL);
+   lSetUlong(ep, UP_oticket, 0);
+   lSetUlong(ep, UP_fshare, 0);
+   lSetUlong(ep, UP_job_cnt, 0);
+   lSetList(ep, UP_project, NULL);
+   lSetList(ep, UP_usage, NULL);
+   lSetList(ep, UP_long_term_usage, NULL);
+   lSetList(ep, UP_acl, NULL);
+   lSetList(ep, UP_xacl, NULL);
+
+   DEXIT;
+   return ep;
+}
 

@@ -36,4 +36,13 @@
 
 extern lList *Master_Sharetree_List;
 
+
+/************************************************************************
+   id_sharetree - set the sharetree node id
+************************************************************************/
+int id_sharetree(lListElem *ep, int id);
+int show_sharetree_path(lListElem *root, const char *path);
+int show_sharetree(lListElem *ep, char *indent);
+lListElem *getSNTemplate(void);
+
 #endif /* __SGE_SHARETREE_H */

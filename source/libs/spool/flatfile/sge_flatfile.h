@@ -92,6 +92,13 @@ typedef enum {
  * parsing of such spooled data will accept any whitespaces between tokens
  */
 
+typedef struct recursion_info {
+   int recursion_field; /* The field that holds the recursive elements */
+   int id_field; /* The field that is used to id recursive elements for building
+                  * a tree structure */
+   int supress_field; /* The field to only print for the root element */
+} recursion_info;
+
 /* JG: TODO: we need a check function:
  * - delimiters may not contain whitespace, exception \n
  */
@@ -99,6 +106,7 @@ typedef struct spool_flatfile_instr {
    const spool_instr *spool_instr;
    bool show_field_names;
    bool show_field_header;
+   bool show_footer;
    bool align_names;
    bool align_data;
    const char name_value_delimiter;
@@ -107,6 +115,7 @@ typedef struct spool_flatfile_instr {
    const char record_start;
    const char record_end;
    const struct spool_flatfile_instr *sub_instr;
+   const recursion_info recursion_info;
 } spool_flatfile_instr;
 
 typedef struct flatfile_info {
@@ -116,11 +125,11 @@ typedef struct flatfile_info {
 
 const char *
 spool_flatfile_write_object(lList **answer_list, const lListElem *object,
-                            const spooling_field *fields,
+                            bool is_root, const spooling_field *fields,
                             const spool_flatfile_instr *instr,
                             const spool_flatfile_destination destination,
                             const spool_flatfile_format format, 
-                            const char *filepath);
+                            const char *filepath, bool print_header);
 
 const char *
 spool_flatfile_write_list(lList **answer_list,
@@ -129,19 +138,19 @@ spool_flatfile_write_list(lList **answer_list,
                           const spool_flatfile_instr *instr,
                           const spool_flatfile_destination destination,
                           const spool_flatfile_format format,
-                          const char *filepath);
+                          const char *filepath, bool print_header);
 
 lListElem *
-spool_flatfile_read_object(lList **answer_list, const lDescr *descr, 
+spool_flatfile_read_object(lList **answer_list, const lDescr *descr, lListElem *root,
                            const spooling_field *fields_in, int fields_out[],
-                           const spool_flatfile_instr *instr,
+                           bool parse_values, const spool_flatfile_instr *instr,
                            const spool_flatfile_format format,
                            FILE *file,
                            const char *filepath);
 lList *
 spool_flatfile_read_list(lList **answer_list, const lDescr *descr, 
                          const spooling_field *fields_in, int fields_out[],
-                         const spool_flatfile_instr *instr,
+                         bool parse_values, const spool_flatfile_instr *instr,
                          const spool_flatfile_format format,
                          FILE *file,
                          const char *filepath);
@@ -152,6 +161,20 @@ spool_flatfile_align_object(lList **answer_list,
 
 bool
 spool_flatfile_align_list(lList **answer_list, const lList *list, 
-                          spooling_field *fields);
+                          spooling_field *fields, int padding);
+
+void create_spooling_field (
+   spooling_field *field,
+   int nm, 
+   int width, 
+   const char *name, 
+   struct spooling_field *sub_fields, 
+   const void *clientdata, 
+   int (*read_func) (lListElem *ep, int nm, const char *buffer, lList **alp), 
+   int (*write_func) (const lListElem *ep, int nm, dstring *buffer, lList **alp)
+);
+
+int get_unprocessed_field(spooling_field in[], int out[]);
+int get_number_of_fields(spooling_field fields[]);
 
 #endif /* __SGE_FLATFILE_H */

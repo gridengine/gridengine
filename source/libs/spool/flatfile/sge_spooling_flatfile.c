@@ -837,9 +837,9 @@ spool_flatfile_default_read_func(lList **answer_list,
                                      url, directory, filename);
      
       /* spool */
-      ep = spool_flatfile_read_object(answer_list, descr, 
+      ep = spool_flatfile_read_object(answer_list, descr, NULL,
                                       field_info->fields, NULL, 
-                                      field_info->instr, SP_FORM_ASCII, 
+                                      true, field_info->instr, SP_FORM_ASCII, 
                                       NULL, filepath);
    }
 
@@ -1031,11 +1031,11 @@ spool_flatfile_default_write_func(lList **answer_list,
                                         url, directory, filename);
 
       /* spool */
-      tmpfilepath = spool_flatfile_write_object(answer_list, object, 
+      tmpfilepath = spool_flatfile_write_object(answer_list, object, false,
                                                 field_info->fields, 
                                                 field_info->instr, 
                                                 SP_DEST_SPOOL, SP_FORM_ASCII,
-                                                tmpfilepath);
+                                                tmpfilepath, false);
 
       if(tmpfilepath == NULL) {
          ret = false;

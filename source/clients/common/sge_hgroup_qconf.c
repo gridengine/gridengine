@@ -32,7 +32,6 @@
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_conf.h"
-#include "spool/classic/read_write_host_group.h"
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "sge_unistd.h"
@@ -46,6 +45,48 @@
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
+
+#ifndef QCONF_FLATFILE
+#include "spool/classic/read_write_host_group.h"
+#else
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
+#include "sgeobj/sge_hgroupL.h"
+
+static const spool_flatfile_instr hgqconf_sub_name_value_space_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &hgqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr hgqconf_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &hgqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+#endif
 
 static void 
 hgroup_list_show_elem(lList *hgroup_list, const char *name, int indent);
@@ -139,13 +180,31 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
    
    DENTER(TOP_LAYER, "hgroup_provide_modify_context");
    if (this_elem != NULL && *this_elem) {
-      char *filename = write_host_group(2, 1, *this_elem); 
- 
+      char *filename = NULL;
+#ifdef QCONF_FLATFILE
+      filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
+                                                     false, HGRP_fields,
+                                                     &hgqconf_sfi,
+                                                     SP_DEST_TMP, SP_FORM_ASCII,
+                                                     filename, false);
+      answer_list_output(answer_list);
+#else
+      filename = write_host_group(2, 1, *this_elem);
+#endif 
       status = sge_edit(filename);
+      
       if (status >= 0) {
          lListElem *hgroup;
 
+#ifdef QCONF_FLATFILE
+         hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
+                                         HGRP_fields, NULL, true, &hgqconf_sfi,
+                                         SP_FORM_ASCII, NULL, filename);
+         answer_list_output(answer_list);
+#else
          hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL);
+#endif
+
          if (hgroup != NULL) {
             if (object_has_differences(*this_elem, answer_list,
                                        hgroup, false) || 
@@ -203,7 +262,16 @@ bool hgroup_add_from_file(lList **answer_list, const char *filename)
    if (filename != NULL) {
       lListElem *hgroup;
 
-      hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL); 
+#ifdef QCONF_FLATFILE
+      spooling_field *test = HGRP_fields;
+      
+      hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
+                                      test, NULL, true, &hgqconf_sfi,
+                                      SP_FORM_ASCII, NULL, filename);
+      answer_list_output(answer_list);
+#else
+      hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL);
+#endif
       if (hgroup == NULL) {
          ret = false;
       }
@@ -253,7 +321,14 @@ bool hgroup_modify_from_file(lList **answer_list, const char *filename)
    if (filename != NULL) {
       lListElem *hgroup;
 
-      hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL); 
+#ifdef QCONF_FLATFILE
+      hgroup = spool_flatfile_read_object(answer_list, HGRP_Type, NULL,
+                                      HGRP_fields, NULL, true, &hgqconf_sfi,
+                                      SP_FORM_ASCII, NULL, filename);
+      answer_list_output(answer_list);
+#else
+      hgroup = cull_read_in_host_group(NULL, filename, 1, 0, 0, NULL);
+#endif
       if (hgroup == NULL) {
          sprintf(SGE_EVENT, MSG_HGROUP_FILEINCORRECT_S, filename);
          answer_list_add(answer_list, SGE_EVENT,
@@ -297,7 +372,14 @@ bool hgroup_show(lList **answer_list, const char *name)
       lListElem *hgroup = hgroup_get_via_gdi(answer_list, name); 
    
       if (hgroup != NULL) {
+#ifdef QCONF_FLATFILE
+         spool_flatfile_write_object(answer_list, hgroup, false, HGRP_fields,
+                                     &hgqconf_sfi, SP_DEST_STDOUT,
+                                     SP_FORM_ASCII, NULL, false);
+         answer_list_output(answer_list);
+#else
          write_host_group(0, 0, hgroup);
+#endif 
          hgroup = lFreeElem(hgroup);
       } else {
          sprintf(SGE_EVENT, MSG_HGROUP_NOTEXIST_S, name);

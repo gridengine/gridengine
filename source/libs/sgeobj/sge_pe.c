@@ -456,6 +456,63 @@ pe_urgency_slots(const lListElem *pe, const char *urgency_slot_setting,
    return n;
 }
 
+/****** src/sge_generic_pe() **********************************************
+*
+*  NAME
+*     sge_generic_pe -- build up a generic pe object 
+*
+*  SYNOPSIS
+*     lListElem* sge_generic_pe (
+*        char *pe_name
+*     );
+*
+*  FUNCTION
+*     build up a generic pe object
+*
+*  INPUTS
+*     pe_name - name used for the PE_name attribute of the generic
+*               pe object. If NULL then "template" is the default name.
+*
+*  RESULT
+*     !NULL - Pointer to a new CULL object of type PE_Type
+*     NULL - Error
+*
+*  EXAMPLE
+*
+*  NOTES
+*
+*  BUGS
+*
+*  SEE ALSO
+*
+*******************************************************************************/
+lListElem* sge_generic_pe(char *pe_name)
+{
+   lListElem *pep;
+
+   DENTER(TOP_LAYER, "sge_generic_pe");
+
+   pep = lCreateElem(PE_Type);
+
+   if (pe_name) {
+      lSetString(pep, PE_name, pe_name);
+   } else {
+      lSetString(pep, PE_name, "template");
+   }
+
+   lSetString(pep, PE_allocation_rule, "$pe_slots");
+   lSetString(pep, PE_start_proc_args, "/bin/true");
+   lSetString(pep, PE_stop_proc_args, "/bin/true");
+
+   /* PE_control_slaves initialized implicitly to false */
+   lSetBool(pep, PE_job_is_first_task, TRUE);
+
+   lSetString(pep, PE_urgency_slots, SGE_ATTRVAL_MIN);
+
+   DEXIT;
+   return pep;
+}
+
 /****** sge_pe/pe_slots_used() *************************************************
 *  NAME
 *     pe_get_slots_used() -- Returns used PE slots
@@ -552,4 +609,3 @@ u_long32 job_id  /* needed for job logging */
    DEXIT;
    return;
 }
-

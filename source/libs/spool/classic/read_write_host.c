@@ -52,6 +52,7 @@
 #include "sge_centry.h"
 #include "sge_str.h"
 #include "sge_load.h"
+#include "sched/sge_resource_utilization.h"
 
 static int intprt_as_scaling[] = { HS_name, HS_value, 0 };
 static int intprt_as_load[] = { HL_name, HL_value, 0 };
@@ -121,6 +122,24 @@ _Insight_set_option("suppress", "PARM_NULL");
              ep, EH_consumable_config_list, CE_Type, CE_name)) {
             DEXIT;
             return -1;
+         }
+      }
+
+      /* --------- EH_consumable_config_list */
+      if (getenv("MORE_INFO")) {
+         if (parsing_type == 0) {
+            if (!set_conf_deflist(alpp, clpp, fields?fields:opt, "complex_values_actual",
+                     ep, EH_resource_utilization,
+                  RUE_Type, intprt_as_load_thresholds)) {
+               DEXIT;
+               return -1;
+            }
+         } else {
+            if (!set_conf_list(alpp, clpp, fields?fields:opt, "complex_values_actual",
+                ep, EH_resource_utilization, RUE_Type, RUE_name)) {
+               DEXIT;
+               return -1;
+            }
          }
       }
 
@@ -391,7 +410,7 @@ char *file
          fprint_resource_utilizations(fp, "complex_values_actual ", 
             lGetList(ep, EH_resource_utilization), 1);
 
-      if ((!spool && how==0) || (spool && how!=1) || (how==3)) {
+      if ((!spool && how==0) || spool || (how==3)) {
          int printed = 0;
 
          /* 

@@ -757,7 +757,7 @@ centry_list_append_to_dstring(const lList *this_list, dstring *string)
                                        lGetString(elem, CE_stringval));
          } else {
             sge_dstring_sprintf_append(string, "%f", 
-                                       lGetString(elem, CE_doubleval));
+                                       lGetDouble(elem, CE_doubleval));
          }
          printed = true;
       }

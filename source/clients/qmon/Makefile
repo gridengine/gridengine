@@ -119,7 +119,7 @@ QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
 QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o)
 
 QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
-                -L. -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
+                -L. -lspoolc -lspoolf -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
                 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
                    $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) \

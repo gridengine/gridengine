@@ -52,11 +52,91 @@
 #include "sge_qref.h"
 #include "sge_edit.h"
 #include "sge_cqueue_qconf.h"
-#include "spool/classic/read_write_cqueue.h"
-#include "spool/classic/read_write_qinstance.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
+
+#ifndef QCONF_FLATFILE
+#include "spool/classic/read_write_cqueue.h"
+#include "spool/classic/read_write_qinstance.h"
+#else
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_subordinate.h"
+
+static const spool_flatfile_instr cqqconf_sub_name_value_space_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &cqqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr cqqconf_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &cqqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr cqqconf_sub_name_value_comma_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ',',
+   '\0',
+   '\0',
+   NULL,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr cqqconf_sub_name_value_comma_braced_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ',',
+   '[',
+   ']',
+   &cqqconf_sub_name_value_comma_sfi,
+   { NoName, NoName, NoName }
+};
+
+#endif
 
 bool
 cqueue_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
@@ -285,13 +365,33 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
    
    DENTER(TOP_LAYER, "cqueue_provide_modify_context");
    if (this_elem != NULL && *this_elem) {
-      char *filename = write_cqueue(2, 1, *this_elem); 
+      char *filename = NULL;      
+#ifdef QCONF_FLATFILE
+      spooling_field *fields = sge_build_CQ_field_list ();
+      
+      filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
+                                                     false, fields,
+                                                     &cqqconf_sfi, SP_DEST_TMP,
+                                                     SP_FORM_ASCII, filename,
+                                                     false);
+      answer_list_output(answer_list);
+#else
+
+      filename = write_cqueue(2, 1, *this_elem);
+#endif
  
       status = sge_edit(filename);
       if (status >= 0) {
          lListElem *cqueue;
 
+#ifdef QCONF_FLATFILE
+         cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
+                                             fields, NULL, false, &cqqconf_sfi,
+                                             SP_FORM_ASCII, NULL, filename);
+         answer_list_output(answer_list);
+#else
          cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
+#endif
          if (cqueue != NULL) {
             if (object_has_differences(*this_elem, answer_list, 
                                        cqueue, false) ||
@@ -311,6 +411,11 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
          answer_list_add(answer_list, MSG_PARSE_EDITFAILED,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       }
+
+#ifdef QCONF_FLATFILE
+      FREE (fields);
+#endif
+
       unlink(filename);
    } 
    DEXIT;
@@ -354,7 +459,17 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
    if (filename != NULL) {
       lListElem *cqueue;
 
-      cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL); 
+#ifdef QCONF_FLATFILE
+      spooling_field *fields = sge_build_CQ_field_list ();
+      cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
+                                          fields, NULL, false, &cqqconf_sfi,
+                                          SP_FORM_ASCII, NULL, filename);
+      answer_list_output(answer_list);
+      FREE (fields);
+#else
+      cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
+#endif
+
       if (cqueue == NULL) {
          ret = false;
       }
@@ -408,7 +523,16 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
    if (filename != NULL) {
       lListElem *cqueue;
 
-      cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL); 
+#ifdef QCONF_FLATFILE
+      spooling_field *fields = sge_build_CQ_field_list ();
+      cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
+                                          fields, NULL, false, &cqqconf_sfi,
+                                          SP_FORM_ASCII, NULL, filename);
+      answer_list_output(answer_list);
+      FREE (fields);
+#else
+      cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
+#endif
       if (cqueue == NULL) {
          sprintf(SGE_EVENT, MSG_CQUEUE_FILENOTCORRECT_S, filename);
          answer_list_add(answer_list, SGE_EVENT,
@@ -503,12 +627,27 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                                                  QU_qhostname, hostname);
 
                         if (qinstance != NULL) {
+#ifdef QCONF_FLATFILE
+                           spooling_field *fields = sge_build_QU_field_list
+                                                                  (true, false);                          
+#endif
                            if (is_first) {
                               is_first = false; 
                            } else {
                               fprintf(stdout, "\n");
                            }
+#ifdef QCONF_FLATFILE
+                           spool_flatfile_write_object(answer_list, qinstance,
+                                                       false, fields,
+                                                       &cqqconf_sfi,
+                                                       SP_DEST_STDOUT,
+                                                       SP_FORM_ASCII, NULL,
+                                                       false);
+                           answer_list_output(answer_list);
+                           FREE (fields);
+#else
                            write_qinstance(0, 0, qinstance);
+#endif
                            found_something = true;
                         }
                      }
@@ -538,12 +677,27 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                         hostname = lGetHost(qinstance, QU_qhostname);
                         if (!fnmatch(h_pattern, hostname, 0) ||
                             !sge_hostcmp(h_pattern, hostname)) {
+#ifdef QCONF_FLATFILE
+                           spooling_field *fields = sge_build_QU_field_list
+                                                                  (true, false);                          
+#endif
                            if (is_first) {
                               is_first = false; 
                            } else {
                               fprintf(stdout, "\n");
                            }
+#ifdef QCONF_FLATFILE
+                           spool_flatfile_write_object(answer_list, qinstance,
+                                                       false, fields,
+                                                       &cqqconf_sfi,
+                                                       SP_DEST_STDOUT,
+                                                       SP_FORM_ASCII, NULL,
+                                                       false);
+                           answer_list_output(answer_list);
+                           FREE (fields);
+#else
                            write_qinstance(0, 0, qinstance);
+#endif
                            found_something = true;
                         }
                      }
@@ -558,12 +712,24 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
 
                   cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
                   if (cqueue != NULL) {
+#ifdef QCONF_FLATFILE
+                     spooling_field *fields = sge_build_CQ_field_list ();
+#endif
                      if (is_first) {
                         is_first = false; 
                      } else {
                         fprintf(stdout, "\n");
                      }
+#ifdef QCONF_FLATFILE
+                     spool_flatfile_write_object(answer_list, cqueue, false,
+                                                 fields, &cqqconf_sfi,
+                                                 SP_DEST_STDOUT, SP_FORM_ASCII, 
+                                                 NULL, false);
+                     answer_list_output(answer_list);
+                     FREE (fields);
+#else
                      write_cqueue(0, 0, cqueue);
+#endif
                      found_something = true;
                   }
                }
@@ -580,10 +746,21 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       } 
    } else {
       lListElem *cqueue = cqueue_create(answer_list, "template");
+#ifdef QCONF_FLATFILE
+      spooling_field *fields = sge_build_CQ_field_list ();
+#endif      
 
       DTRACE;
       ret &= cqueue_set_template_attributes(cqueue, answer_list);
+#ifdef QCONF_FLATFILE
+      spool_flatfile_write_object(answer_list, cqueue, false, fields,
+                                  &cqqconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
+                                  NULL, false);
+      answer_list_output(answer_list);
+      FREE (fields);
+#else
       write_cqueue(0, 0, cqueue);
+#endif
    }
    DEXIT;
    return ret;
@@ -719,4 +896,3 @@ cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list, d
    DEXIT;
    return ret;
 }
-

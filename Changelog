@@ -1,3 +1,12 @@
+DT-2004-02-13-0: Enhancem:  qconf now uses flatfile spooling instead of classic
+                            spooling.  Might be broken for EH and PE because of
+                            the new RUE type.  Not yet fully cleaned and
+                            commented.
+                 Bugfix:    Fixed a variety of classic spooling, qconf, and
+                            other bugs.
+                 Changed:   Flatfile spooling, classic spooling, qconf, sgeobj
+                 Review:    Pending
+
 CR-2004-02-13-1: Testsuite: throughput test: don't send job start command
                             to a remote shell when a former job start is
                             not yet executed.

@@ -115,6 +115,7 @@ extern "C" {
           1.        2.           3.
 */
       {JB_LOWERBOUND, JBS, JBN},        /* job */
+      {QU_LOWERBOUND, QUS, QUN},        /* Queue Instance list */
       {EH_LOWERBOUND, EHS, EHN},        /* exec host */
       {AH_LOWERBOUND, AHS, AHN},        /* admin host */
       {SH_LOWERBOUND, SHS, SHN},        /* submit host */
@@ -227,7 +228,7 @@ extern "C" {
       {ASOLIST_LOWERBOUND, ASOLISTS, ASOLISTN},    /* CQ SO_Type-list sublist */
       {AQTLIST_LOWERBOUND, AQTLISTS, AQTLISTN},    /* CQ qtype sublist */
       {CQ_LOWERBOUND, CQS, CQN},                /* Cluster Queue list */
-      {QU_LOWERBOUND, QUS, QUN},                /* Queue Instance list */
+      {QIM_LOWERBOUND, QIMS, QIMN},                /* Queue Instance Messege list */
       {FCAT_LOWERBOUND, FCATS, FCATN},          /* Functional category */
       {CTQV_LOWERBOUND, CTQVS,CTQVN},           /* cached queue soft request violations in a job category */
       {CTI_LOWERBOUND, CTIS, CTIN},             /* ignore host/queue list in a job category */

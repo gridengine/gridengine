@@ -698,7 +698,7 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
                ret = false;
             }
             if (ret) {
-               lSetBool(object, nm, requestable);
+               lSetUlong(object, nm, requestable);
             }
          }
          break;

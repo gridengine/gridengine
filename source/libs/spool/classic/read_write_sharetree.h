@@ -33,9 +33,6 @@
 /*___INFO__MARK_END__*/
 
 int write_sharetree(lList **alpp, const lListElem *ep, char *fname, FILE *fpout, int spool, int recurse, int root_node);
-int show_sharetree(lListElem *ep, char *intend);
-int show_sharetree_path(lListElem *ep, const char *path);
 lListElem *read_sharetree(char *fname, FILE *fp, int spool, char *errstr, int recurse, lListElem *rootelem);
-lListElem *getSNTemplate(void);
 
 #endif /* __SGE_READ_WRITE_SHARETREE_H */

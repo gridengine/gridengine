@@ -55,5 +55,6 @@ calendar_is_referenced(const lListElem *calendar, lList **answer_list,
 lListElem *
 calendar_list_locate(lList *this_list, const char *cal_name);
 
+lListElem* sge_generic_cal(char *cal_name);
 
 #endif /* __SGE_CALENDAR_H */

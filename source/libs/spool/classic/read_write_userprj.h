@@ -34,6 +34,5 @@
 
 int write_userprj(lList **alpp, const lListElem *ep, const char *fname, FILE *fpout, int spool, int user);
 lListElem *cull_read_in_userprj(const char *dname, const char *fname, int spool, int project, int *tag);
-lListElem *getUserPrjTemplate(void);
 
 #endif /* __READ_WRITE_USERPRJ_H */

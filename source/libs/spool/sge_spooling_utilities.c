@@ -210,6 +210,8 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
       fields[i].name       = NULL;
       fields[i].sub_fields = NULL;
       fields[i].clientdata = NULL;
+      fields[i].read_func  = NULL;
+      fields[i].write_func = NULL;
    }
 
    /* do we have to strip field prefixes, e.g. "QU_" from field names? */

@@ -34,9 +34,6 @@
 #include "sge.h"
 #include "sgermon.h"
 #include "sge_conf.h"
-#include "spool/classic/read_write_host_group.h"
-#include "spool/classic/read_write_complex.h"
-#include "spool/classic/read_write_centry.h"
 #include "sge_log.h"
 #include "sge_gdi.h"
 #include "sge_unistd.h"
@@ -50,6 +47,77 @@
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
+
+#ifndef QCONF_FLATFILE
+#include "spool/classic/read_write_host_group.h"
+#include "spool/classic/read_write_complex.h"
+#include "spool/classic/read_write_centry.h"
+#else
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
+
+#if 0 /* Not actually needed */
+static int read_CE_consumable (lListElem *ep, int nm, const char *buffer,
+                               lList **alp);
+static int read_CE_requestable (lListElem *ep, int nm, const char *buffer,
+                                lList **alp);
+static int read_CE_relop (lListElem *ep, int nm, const char *buffer,
+                          lList **alp);
+static int read_CE_valtype (lListElem *ep, int nm, const char *buffer,
+                            lList **alp);
+#endif
+
+static const spool_flatfile_instr ceqconf_ce_sfi = 
+{
+   NULL,
+   false,
+   true,
+   true,
+   false,
+   true,
+   '\0',
+   ' ',
+   '\0',
+   '\0',
+   '\n',
+   NULL,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr ceqconf_sub_name_value_space_sfi = 
+{
+   NULL,
+   false,
+   false,
+   false,
+   false,
+   false,
+   '\0',
+   '=',
+   ' ',
+   '\0',
+   '\0',
+   &ceqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+
+static const spool_flatfile_instr ceqconf_sfi = 
+{
+   NULL,
+   true,
+   false,
+   false,
+   true,
+   false,
+   ' ',
+   '\n',
+   '\0',
+   '\0',
+   '\0',
+   &ceqconf_sub_name_value_space_sfi,
+   { NoName, NoName, NoName }
+};
+#endif
 
 bool 
 centry_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
@@ -106,16 +174,33 @@ centry_provide_modify_context(lListElem **this_elem, lList **answer_list)
 {
    bool ret = false;
    int status = 0;
+   lList *alp;
    
    DENTER(TOP_LAYER, "centry_provide_modify_context");
    if (this_elem != NULL && *this_elem) {
-      char *filename = write_centry(2, 1, *this_elem); 
+      char *filename = NULL;
+
+#ifdef QCONF_FLATFILE
+      filename = (char *)spool_flatfile_write_object(&alp, *this_elem, false,
+                                             CE_fields, &ceqconf_sfi, SP_DEST_TMP,
+                                             SP_FORM_ASCII, filename, false);
+      answer_list_output(&alp);
+#else
+      filename = write_centry(2, 1, *this_elem); 
+#endif
  
       status = sge_edit(filename);
       if (status >= 0) {
          lListElem *centry;
 
+#ifdef QCONF_FLATFILE
+         centry = spool_flatfile_read_object(&alp, CE_Type, NULL,
+                                             CE_fields, NULL, true, &ceqconf_sfi,
+                                             SP_FORM_ASCII, NULL, filename);
+         answer_list_output(&alp);
+#else
          centry = cull_read_in_centry(NULL, filename, 1, 0, NULL);
+#endif
          if (centry != NULL) {
             *this_elem = lFreeElem(*this_elem);
             *this_elem = centry; 
@@ -130,6 +215,8 @@ centry_provide_modify_context(lListElem **this_elem, lList **answer_list)
       }
       unlink(filename);
    } 
+   
+   alp = lFreeList (alp);
    DEXIT;
    return ret;
 }
@@ -167,7 +254,15 @@ centry_add_from_file(lList **answer_list, const char *filename)
    if (filename != NULL) {
       lListElem *centry;
 
-      centry = cull_read_in_centry(NULL, filename, 1, 0,NULL); 
+#ifdef QCONF_FLATFILE
+      centry = spool_flatfile_read_object(answer_list, CE_Type, NULL,
+                                          CE_fields, NULL, true, &ceqconf_sfi,
+                                          SP_FORM_ASCII, NULL, filename);
+      answer_list_output(answer_list);
+#else
+      centry = cull_read_in_centry(NULL, filename, 1, 0, NULL); 
+#endif
+
       if (centry == NULL) {
          ret = false;
       }
@@ -175,7 +270,7 @@ centry_add_from_file(lList **answer_list, const char *filename)
          ret &= centry_add_del_mod_via_gdi(centry, answer_list, SGE_GDI_ADD); 
       } 
    }  
-  
+   
    DEXIT;
    return ret; 
 }
@@ -219,7 +314,15 @@ centry_modify_from_file(lList **answer_list, const char *filename)
    if (filename != NULL) {
       lListElem *centry;
 
-      centry = cull_read_in_centry(NULL, filename, 1, 0,NULL); 
+#ifdef QCONF_FLATFILE
+      centry = spool_flatfile_read_object(answer_list, CE_Type, NULL,
+                                          CE_fields, NULL, true, &ceqconf_sfi,
+                                          SP_FORM_ASCII, NULL, filename);
+      answer_list_output(answer_list);
+#else
+      centry = cull_read_in_centry(NULL, filename, 1, 0, NULL); 
+#endif
+
       if (centry == NULL) {
          sprintf(SGE_EVENT, MSG_CENTRY_FILENOTCORRECT_S, filename);
          answer_list_add(answer_list, SGE_EVENT,
@@ -233,7 +336,7 @@ centry_modify_from_file(lList **answer_list, const char *filename)
          centry = lFreeElem(centry);
       }
    }
-
+   
    DEXIT;
    return ret;
 }
@@ -262,10 +365,17 @@ centry_show(lList **answer_list, const char *name)
 
    DENTER(TOP_LAYER, "centry_show");
    if (name != NULL) {
-      lListElem *centry = centry_get_via_gdi(answer_list, name); 
+      lListElem *centry = centry_get_via_gdi(answer_list, name);
    
       if (centry != NULL) {
+#ifdef QCONF_FLATFILE
+         spool_flatfile_write_object(answer_list, centry, false, CE_fields,
+                                     &ceqconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
+                                     NULL, false);
+         answer_list_output(answer_list);
+#else
          write_centry(0, 0, centry);
+#endif
          centry = lFreeElem(centry);
       } else {
          sprintf(SGE_EVENT, MSG_CENTRY_DOESNOTEXIST_S, name);
@@ -287,7 +397,16 @@ centry_list_show(lList **answer_list)
    DENTER(TOP_LAYER, "centry_list_show");
    centry_list = centry_list_get_via_gdi(answer_list);
    if (centry_list != NULL) {
+#ifdef QCONF_FLATFILE
+      spool_flatfile_align_list(answer_list, (const lList *)centry_list,
+                                CE_fields, 3);
+      spool_flatfile_write_list(answer_list, centry_list, CE_fields,
+                                &ceqconf_ce_sfi, SP_DEST_STDOUT, SP_FORM_ASCII, 
+                                NULL, false);
+      answer_list_output(answer_list);
+#else
       write_cmplx(0, NULL, centry_list, stdout, NULL);
+#endif
    }
    DEXIT;
    return ret;
@@ -531,8 +650,19 @@ centry_list_modify_from_file(lList **answer_list, const char *filename)
 
    DENTER(TOP_LAYER, "centry_list_modify_from_file");
    if (ret) {
+      lList *old_centry_list = NULL; 
+#ifdef QCONF_FLATFILE
+      lList *centry_list = NULL; 
+      
+      centry_list = spool_flatfile_read_list(answer_list, CE_Type, CE_fields,
+                                             NULL, true, &ceqconf_ce_sfi,
+                                             SP_FORM_ASCII, NULL, filename);
+      answer_list_output(answer_list);
+#else
       lList *centry_list = read_cmplx(filename, "", answer_list); 
-      lList *old_centry_list = centry_list_get_via_gdi(answer_list); 
+#endif
+
+      old_centry_list = centry_list_get_via_gdi(answer_list); 
 
       if (centry_list == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_ERROR1, 
@@ -561,12 +691,28 @@ centry_list_provide_modify_context(lList **this_list,
       char filename[SGE_PATH_MAX] = "complex";
 
       sge_tmpnam(filename);
+#ifdef QCONF_FLATFILE
+      spool_flatfile_align_list(answer_list, (const lList *)*this_list,
+                                CE_fields, 3);
+      spool_flatfile_write_list(answer_list, *this_list, CE_fields,
+                                &ceqconf_ce_sfi, SP_DEST_SPOOL,
+                                SP_FORM_ASCII, filename, false);
+      answer_list_output(answer_list);
+#else
       write_cmplx(0, filename, *this_list, NULL, NULL); 
+#endif
       status = sge_edit(filename);
       if (status >= 0) {
          lList *centry_list;
 
+#ifdef QCONF_FLATFILE
+         centry_list = spool_flatfile_read_list(answer_list, CE_Type, CE_fields,
+                                                NULL, true, &ceqconf_ce_sfi,
+                                                SP_FORM_ASCII, NULL, filename);
+         answer_list_output(answer_list);
+#else
          centry_list = read_cmplx(filename, "", answer_list);
+#endif
          if (centry_list != NULL) {
             *this_list = lFreeList(*this_list);
             *this_list = centry_list; 
@@ -584,4 +730,3 @@ centry_list_provide_modify_context(lList **this_list,
    DEXIT;
    return ret;
 }
-

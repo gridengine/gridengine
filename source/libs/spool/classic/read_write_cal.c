@@ -219,26 +219,3 @@ FPRINTF_ERROR:
    DEXIT;
    return NULL;  
 }
-
-
-/* -----------------------------
-   
-   build up a generic cal object
-
-   returns 
-      NULL on error
-
-*/
-lListElem* sge_generic_cal(char *cal_name)
-{
-   lListElem *calp;
-
-   DENTER(TOP_LAYER, "sge_generic_cal");
-
-   calp = lCreateElem(CAL_Type);
-
-   lSetString(calp, CAL_name, cal_name?cal_name:"template");
-
-   DEXIT;
-   return calp;
-}

@@ -38,6 +38,7 @@ SPOOLFLIB = libspoolf$(QIDLEXT)$(LIBEXT)
 
 SPOOLFLIB_SRC = \
          sge_flatfile.c \
+         sge_flatfile_obj.c \
          sge_spooling_flatfile.c \
          sge_spooling_flatfile_scanner.c
 
@@ -89,6 +90,9 @@ sge_spooling_flatfile.o: $(SPOOLFLIB_DIR)/sge_spooling_flatfile.c
 sge_flatfile.o: $(SPOOLFLIB_DIR)/sge_flatfile.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLFLIB_DIR)/sge_flatfile.c
 
+sge_flatfile_obj.o: $(SPOOLFLIB_DIR)/sge_flatfile_obj.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLFLIB_DIR)/sge_flatfile_obj.c
+
 # do not automatically rebuild the scanner c code
 $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c: $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.l $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.h
 		echo "to rebuild the scanner c file call ./aimk -only-core flatfile_scanner" ;\
@@ -108,3 +112,8 @@ test_sge_spooling_flatfile: test_sge_spooling_flatfile.o $(SPOOLFLIB) $(SPOOLLIB
 test_sge_spooling_flatfile.o: $(SPOOLFLIB_DIR)/test_sge_spooling_flatfile.c
 	$(CC) $(CFLAGS) -c $(SPOOLFLIB_DIR)/test_sge_spooling_flatfile.c
 
+test_ff_cl: test_ff_cl.o $(SPOOLFLIB) $(SPOOLLIB) $(CULLLIB) $(RMONLIB) $(UTILIB)
+	$(CC) $(CFLAGS) -o test_ff_cl $(LFLAGS) test_ff_cl.o sge_mt_init.o sig_handlers.o $(SPOOLFLIB) $(SPOOLLIB) -lgdi -lsec -ldl -lspoolc -lcull -lsgeobjd -lsgeobj $(RMONLIB) $(UTILIB) $(LIBS) -llck -lsched -lngc -lngclists
+
+test_ff_cl.o: $(SPOOLFLIB_DIR)/test_ff_cl.c $(SPOOLFLIB) $(SPOOLLIB) $(CULLLIB) $(RMONLIB) $(UTILIB)
+	$(CC) $(CFLAGS) -c $(SPOOLFLIB_DIR)/test_ff_cl.c

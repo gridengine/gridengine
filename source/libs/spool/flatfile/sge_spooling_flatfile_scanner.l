@@ -10,7 +10,7 @@
 
 
 %{
-/* need this for the call to atof() below */
+/* need this for the system calls below */
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -22,11 +22,13 @@
 
 int spool_line;
 int spool_return_whitespace;
+int spool_finish_line;
 
 int spool_scanner_initialize(FILE *input)
 {
    spool_line = 1;
    spool_return_whitespace = 0;
+   spool_finish_line = 0;
    spool_restart(input);
 
    return spool_lex();
@@ -38,10 +40,10 @@ void spool_scanner_shutdown(void)
 
 %}
 
-DIGIT    [0-9]
-ID       [a-z/\$][a-z0-9_/\.\-\$]*
+DIGIT    "-"?[0-9]
+ID       [a-zA-Z_/$\-][a-zA-Z0-9_/.#$\-]*
 COLON    :
-DELIMITER [,;:|=\{\}]
+DELIMITER [,;:|={}[\]]
 COMPOP   [=<>!]
 NL       \r?\n
 
@@ -61,7 +63,9 @@ NL       \r?\n
 
 {ID}        return SPFT_WORD;
 
-#[^\n]*{NL}   spool_line++; break;       /* eat up comments */
+#[^\n]*{NL}   spool_line++; break;        /* eat up comments */
+
+[\\][ \t\r]*{NL}  spool_line++; break;    /* Ignore newlines preceeded by \ */
 
 {NL}          { 
                   /* JG: TODO: has to be initialized for each scan run */
@@ -77,6 +81,9 @@ NL       \r?\n
 
                   break;
                } 
+
+[^ \t\r\n][^\r\n]*   if (!spool_finish_line) { REJECT; } /* For parsing conf */
+                     else { return SPFT_WORD; }          /* files */
 
 .           return SPFT_UNKNOWN;
 

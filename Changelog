@@ -1,3 +1,11 @@
+SG-2004-08-03-1: Bugfix:    fixed qconf -ahgrp to work with a given
+                            name. It will generate a templet, that
+                            has to be modifed by the user.
+                 Issue:     1186
+                 Bugtraq:   5081839
+                 Changed:   qconf, qmaster
+                 Review:    DT
+
 EB-2004-08-02-0: Bugfix:    Deleting a queue instance slots value actually 
                             adds it
                  Issue:     1175

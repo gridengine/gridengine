@@ -678,6 +678,7 @@ u_long32 flags
    FILE *fp;
    char *filestrptr;
    int script_len;
+   int parsed_chars = 0;
    char **str_table;
    lList *alp, *answer = NULL; 
    lListElem *aep;
@@ -760,6 +761,7 @@ u_long32 flags
       while(*s != 0 && *s != '\n' && length < MAX_STRING_SIZE - 1) {
          *d++ = *s++;
          length++;
+         parsed_chars++;
       }
 
       /* terminate target string */
@@ -768,6 +770,7 @@ u_long32 flags
       /* skip linefeed */
       if(*s == '\n') {
          s++;
+         parsed_chars++;
       }
       
       parameters = buffer;
@@ -865,6 +868,13 @@ u_long32 flags
             }
          }
       }
+   }
+
+   if(parsed_chars != script_len) {
+      answer_list_add(&answer, MSG_ANSWER_SUBMITBINARIESDENIED,
+                      STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return answer;
    }
    
    if (!(flags & FLG_USE_NO_PSEUDOS)) {

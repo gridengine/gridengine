@@ -42,14 +42,14 @@
    static const int xaybzc = layer;        \
                                            \
    rmon_mopen(&argc,argv,program);         \
-   if (rmon_condition(layer, TRACE))       \
+   if (rmon_condition(xaybzc, TRACE))       \
       rmon_menter (SGE_FUNC)
  
 #define DENTER(layer, function)             \
    static const char SGE_FUNC[] = function; \
-   static int xaybzc = layer;               \
+   static const int xaybzc = layer;               \
                                             \
-   if (rmon_condition(layer, TRACE))        \
+   if (rmon_condition(xaybzc, TRACE))        \
       rmon_menter (SGE_FUNC)
 
 #define DEXIT                                   \

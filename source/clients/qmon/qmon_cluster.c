@@ -736,7 +736,6 @@ Widget parent
    if (!feature_is_enabled(FEATURE_SGEEE)) {
       XtUnmanageChild(cluster_enforce_project);
       XtUnmanageChild(cluster_enforce_user);
-      XtUnmanageChild(cluster_gid_range);
       XtVaGetValues( cluster_projectsPB,
                      XmtNlayoutIn, &cluster_projects_col,
                      NULL);
@@ -1419,24 +1418,22 @@ int local
       }
 #endif
 
-      if (feature_is_enabled(FEATURE_SGEEE)) {
-         if (clen->gid_range && clen->gid_range[0] != '\0') {
-            if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
-               strcpy(errstr, "Cannot parse GID Range !");
-               alp = lFreeList(alp);
-               goto error;
-            }
-
-            ep = lGetElemStr(confl, CF_name, "gid_range");
-            if (!ep) {
-               new = lCreateElem(CF_Type);
-               lSetString(new, CF_name, "gid_range");
-            }
-            else
-               new = lCopyElem(ep);
-            lSetString(new, CF_value, clen->gid_range);
-            lAppendElem(lp, new);
+      if (clen->gid_range && clen->gid_range[0] != '\0') {
+         if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
+            strcpy(errstr, "Cannot parse GID Range !");
+            alp = lFreeList(alp);
+            goto error;
          }
+
+         ep = lGetElemStr(confl, CF_name, "gid_range");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "gid_range");
+         }
+         else
+            new = lCopyElem(ep);
+         lSetString(new, CF_value, clen->gid_range);
+         lAppendElem(lp, new);
       }
    }
    else {
@@ -1665,6 +1662,21 @@ int local
       lSetString(ep, CF_value, buf);
 
         
+      if (clen->gid_range && clen->gid_range[0] != '\0') {
+         if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
+            strcpy(errstr, "Cannot parse GID Range !");
+            alp = lFreeList(alp);
+            goto error;
+         }
+
+         ep = lGetElemStr(confl, CF_name, "gid_range");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "gid_range", CF_Type);
+         lSetString(ep, CF_value, clen->gid_range);
+      }
+      else {
+         lDelElemStr(&confl, CF_name, "gid_range");
+      }
 
       if (feature_is_enabled(FEATURE_SGEEE)) {
          if (clen->enforce_project >= 0 && 
@@ -1679,21 +1691,6 @@ int local
          ep = lGetElemStr(confl, CF_name, "enforce_user");
          lSetString(ep, CF_value, str);
 
-         if (clen->gid_range && clen->gid_range[0] != '\0') {
-            if (!parse_ranges(clen->gid_range, 0, 0, &alp, NULL, INF_NOT_ALLOWED)){ 
-               strcpy(errstr, "Cannot parse GID Range !");
-               alp = lFreeList(alp);
-               goto error;
-            }
-   
-            ep = lGetElemStr(confl, CF_name, "gid_range");
-            if (!ep)
-               ep = lAddElemStr(&confl, CF_name, "gid_range", CF_Type);
-            lSetString(ep, CF_value, clen->gid_range);
-         }
-         else {
-            lDelElemStr(&confl, CF_name, "gid_range");
-         }
          /*
          ** (x)projects
          */
@@ -2075,6 +2072,10 @@ tCClEntry *clen
                            US_Type, US_name, NULL);
    }
 
+   if ((ep = lGetElemStr(confl, CF_name, "gid_range")))
+      clen->gid_range = XtNewString(lGetString(ep, CF_value));
+
+
    if (feature_is_enabled(FEATURE_SGEEE)) {
       if ((ep = lGetElemStr(confl, CF_name, "enforce_project")))
          str = lGetString(ep, CF_value);
@@ -2089,9 +2090,6 @@ tCClEntry *clen
          clen->enforce_user = 0;
       else
          clen->enforce_user = 1;
-
-      if ((ep = lGetElemStr(confl, CF_name, "gid_range")))
-         clen->gid_range = XtNewString(lGetString(ep, CF_value));
 
       if ((ep = lGetElemStr(confl, CF_name, "projects"))) {
          clen->cluster_projects = lFreeList(clen->cluster_projects);

@@ -148,7 +148,7 @@ case "tru64":
 case "ia64linux":					      
    set BUILDARCH = IA64LINUX				     
    breaksw
-case "linuxamd64"
+case "linuxamd64":
    set BUILDARCH = LINUXAMD64
    breaksw
 default:

@@ -260,7 +260,7 @@ proc setup_queues {} {
       return -3
    }
 
-   if { [resolve_version] < 3 } {
+   if { [resolve_version] < 2 } {
        set_error -3 "test not supported for version [get_version_info]"
        return -3
    }
@@ -354,7 +354,7 @@ proc cleanup_queues {} {
       return -3
    }
 
-   if { [resolve_version] < 3 } {
+   if { [resolve_version] < 2 } {
        set_error -3 "test not supported for version [get_version_info]"
        return -3
    }
@@ -402,7 +402,7 @@ proc run_throughput_test {} {
       return -3
    }
 
-   if { [resolve_version] < 3 } {
+   if { [resolve_version] < 2 } {
        set_error -3 "test not supported for version [get_version_info]"
        return -3
    }

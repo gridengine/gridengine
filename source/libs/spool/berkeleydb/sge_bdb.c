@@ -1671,10 +1671,13 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
                                     cull_pack_strerror(cull_ret));
             ret = false;
          }
-         /* we may not free the packbuffer: it references the buffer
-          * delivered from the database
-          * clear_packbuffer(&pb);
+
+         /* We specified DB_DBT_MALLOC - BDB will malloc memory for each
+          * object found and we have to free it.
           */
+          if (data_dbt.data != NULL) {
+            FREE(data_dbt.data);
+          }
       }
    }
 

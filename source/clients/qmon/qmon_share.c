@@ -520,7 +520,13 @@ XtPointer cld, cad;
    */
    XmtDialogGetDialogValues(st_ratio, &ratio_data);
 
-   qmonMirrorMulti(SC_T);
+   qmonMirrorMultiAnswer(SC_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    lp = qmonMirrorList(SGE_SC_LIST);
    sep = lFirst(lp);
    if (sep) {
@@ -958,6 +964,7 @@ XtPointer cld, cad;
    ListTreeItem *root_node = NULL;
    Boolean answer = False;
    Boolean status = False;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonShareTreeUpdate");
 
@@ -988,7 +995,14 @@ XtPointer cld, cad;
    /*
    ** set and get several lists
    */
-   qmonMirrorMulti(SHARETREE_T | USER_T | PROJECT_T | SC_T);
+   qmonMirrorMultiAnswer(SHARETREE_T | USER_T | PROJECT_T | SC_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
    share_tree = qmonMirrorList(SGE_SHARETREE_LIST);
    ul = qmonMirrorList(SGE_USER_LIST);
    pl = qmonMirrorList(SGE_PROJECT_LIST);
@@ -1163,6 +1177,7 @@ XtPointer cld, cad;
    ListTreeMultiReturnStruct ret;
    lListElem *ep = NULL;
    lList *shl = NULL;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonShareTreeModifyNode");
 
@@ -1187,7 +1202,13 @@ XtPointer cld, cad;
       ** this is not correctly handled and the modify of the shares
       ** should be done by the master without affecting the usage
       */
-      qmonMirrorMulti(SHARETREE_T);
+      qmonMirrorMultiAnswer(SHARETREE_T, &alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+         DEXIT;
+         return;
+      }
       shl = qmonMirrorList(SGE_SHARETREE_LIST);  
       ep = lGetElemStr(shl, STN_name, name);
 

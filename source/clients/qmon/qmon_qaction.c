@@ -760,9 +760,16 @@ static void qmonQCUpdate(w, cld, cad)
 Widget w;
 XtPointer cld, cad; 
 {
+   lList *alp = NULL;
    DENTER(GUI_LAYER, "qmonQCUpdate");
    
-   qmonMirrorMulti(COMPLEX_T | USERSET_T | PROJECT_T);
+   qmonMirrorMultiAnswer(COMPLEX_T | USERSET_T | PROJECT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    updateQCC();
    updateQCA();
    updateQCP();
@@ -849,10 +856,18 @@ XtPointer cld, cad;
    int n, i;
    StringConst *strs = NULL;
    static char buf[BUFSIZ];
+   lList *alp = NULL;
    
    DENTER(GUI_LAYER, "qmonQCClone");
    
-   qmonMirrorMulti(QUEUE_T);
+   qmonMirrorMultiAnswer(QUEUE_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
    ql = qmonMirrorList(SGE_QUEUE_LIST);
    n = lGetNumberOfElem(ql);
    if (n>0) {

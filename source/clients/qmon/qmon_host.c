@@ -936,7 +936,6 @@ String name
    
    DENTER(GUI_LAYER, "qmonExecHostSetAsk");
 
-   qmonMirrorMulti(COMPLEX_T | EXECHOST_T | USERSET_T | PROJECT_T);
    cl = qmonMirrorList(SGE_COMPLEX_LIST);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
    acls = qmonMirrorList(SGE_USERSET_LIST);
@@ -1317,8 +1316,18 @@ XtPointer cld, cad;
    Cardinal ehnum;
    XmString *ehnames;
    String ehstr;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonExecHostChange");
+
+   qmonMirrorMultiAnswer(COMPLEX_T | EXECHOST_T | USERSET_T | PROJECT_T, 
+                           &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
 
    if (mode) {
       XtVaSetValues( eh_name_w,
@@ -1434,6 +1443,7 @@ Widget w;
 XtPointer cld, cad;
 {
    XmTabCallbackStruct *cbs = (XmTabCallbackStruct *) cad;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonHostFolderChange");
    
@@ -1452,7 +1462,14 @@ XtPointer cld, cad;
    /*
    ** fetch changed lists and update dialogues
    */
-   qmonMirrorMulti(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T);
+   qmonMirrorMultiAnswer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
    updateHostList();
 
 

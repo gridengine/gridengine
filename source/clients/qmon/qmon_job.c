@@ -150,14 +150,22 @@ void qmonJobPopup(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-   
+   lList *alp = NULL;
+
    DENTER(GUI_LAYER, "qmonJobPopup");
 
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
    if (!qmon_job) {
-      qmonMirrorMulti(JOB_T | QUEUE_T | COMPLEX_T | EXECHOST_T | ZOMBIE_T);
+      qmonMirrorMultiAnswer(JOB_T | QUEUE_T | COMPLEX_T | EXECHOST_T | ZOMBIE_T,&alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+         DEXIT;
+         return;
+      }
+         
       qmonCreateJobControl(AppShell);
       /*
       ** create the job customize dialog
@@ -207,11 +215,21 @@ void updateJobListCB(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+   lList *alp = NULL;
+
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   if (qmonMirrorMulti(JOB_T|QUEUE_T|COMPLEX_T|EXECHOST_T|ZOMBIE_T|USERSET_T|PROJECT_T) != -1)
-      updateJobList();
+   qmonMirrorMultiAnswer(JOB_T|QUEUE_T|COMPLEX_T|EXECHOST_T|ZOMBIE_T|USERSET_T|PROJECT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      /* set busy cursor */
+      XmtDisplayDefaultCursor(w);
+      return;
+   }
+
+   updateJobList();
 
    /* set busy cursor */
    XmtDisplayDefaultCursor(w);

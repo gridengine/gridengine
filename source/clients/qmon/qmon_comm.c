@@ -578,7 +578,7 @@ int action
    
    alp = gdi_qmod(lp, force, action);
 
-   qmonMirrorMulti(l2s(type));
+   qmonMirrorMultiAnswer(l2s(type), &alp);
    
    log_time(0, "CHANGE_STATE:");
    

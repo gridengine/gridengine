@@ -165,6 +165,8 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_gid_range = gid_range, \
                   cluster_prolog = prolog, \
                   cluster_epilog = epilog; \
+   Spinbox        cluster_max_aj_instances = max_aj_instances, \
+                  cluster_max_aj_tasks = max_aj_tasks; \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
                   cluster_ignore_fqdn = ignore_fqdn, \
                   cluster_loglevel = loglevel , \
@@ -195,13 +197,22 @@ Qmon*cluster_global_layout.layout: \
          Row { "@{Prolog}          " <> Fixed 25 em cluster_prolog }\
          Row { "@{Epilog}          " <> Fixed 25 em cluster_epilog }\
          Row { "@{Login Shells}    " <> Fixed 25 em cluster_login_shells }\
-         <> \
+         ### \
+         Equal Row { \
+            Caption "@{Maximal Array\nJob Instances}" <> cluster_max_aj_instances \
+         } \
+         ## \
+         Equal Row { \
+            Caption "@{Maximal Array\nJob Tasks}" <> cluster_max_aj_tasks \
+         } \
+         ### \
          Equal Row { \
             Caption tl "@{Shell Start Mode}" cluster_shell_start_mode \
             Caption tl "@{Log Level}" cluster_loglevel \
          } \
          <> \
       } \
+      ## \
       Col { \
          Fixed Equal Row { \
             Caption tl "@{Min UID}" 5 em cluster_min_uid \
@@ -327,6 +338,20 @@ Qmon*cluster_global_layout.cluster_max_unheardPB.labelInsensitivePixmap:   time
 Qmon*cluster_global_layout.cluster_reschedule_unknownPB.labelType:    PIXMAP
 Qmon*cluster_global_layout.cluster_reschedule_unknownPB.labelPixmap:  time
 Qmon*cluster_global_layout.cluster_reschedule_unknownPB.labelInsensitivePixmap: time
+
+Qmon*cluster_global_layout.cluster_max_aj_instances.minimum: 0
+Qmon*cluster_global_layout.cluster_max_aj_instances.spinboxStyle: SPINBOX_STACKED_RIGHT
+Qmon*cluster_global_layout.cluster_max_aj_instances.buttonSizeFixed: True
+Qmon*cluster_global_layout.cluster_max_aj_instances.columns: 5
+Qmon*cluster_global_layout.cluster_max_aj_instances.spinboxUseClosestValue: True
+Qmon*cluster_global_layout.cluster_max_aj_instances.value: 0
+
+Qmon*cluster_global_layout.cluster_max_aj_tasks.minimum: 0
+Qmon*cluster_global_layout.cluster_max_aj_tasks.spinboxStyle: SPINBOX_STACKED_RIGHT
+Qmon*cluster_global_layout.cluster_max_aj_tasks.buttonSizeFixed: True
+Qmon*cluster_global_layout.cluster_max_aj_tasks.columns: 5
+Qmon*cluster_global_layout.cluster_max_aj_tasks.spinboxUseClosestValue: True
+Qmon*cluster_global_layout.cluster_max_aj_tasks.value: 0
 !! 
 !! TrimAndTrail callback, remove leading and trailing whitespace after input
 !!

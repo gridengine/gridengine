@@ -395,7 +395,7 @@ Widget w;
 XtPointer cld, cad;
 {
    lList *scl;
-   lList *alp;
+   lList *alp = NULL;
    lListElem *sep;
    lEnumeration *what;
 
@@ -405,7 +405,13 @@ XtPointer cld, cad;
    ** set the entries in the cdata element into the cull
    ** element
    */
-   qmonMirrorMulti(SC_T);
+   qmonMirrorMultiAnswer(SC_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    scl = qmonMirrorList(SGE_SC_LIST);
    sep = lFirst(scl);
    if (sep) {

@@ -276,7 +276,13 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonFTOkay");
 
-   qmonMirrorMulti(l2s(fticket_info.list_type));
+   qmonMirrorMultiAnswer(l2s(fticket_info.list_type), &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    lp = qmonMirrorList(fticket_info.list_type);
    /*
    ** filter queues
@@ -354,7 +360,14 @@ XtPointer cld, cad;
    */
    XmtDialogGetDialogValues(fticket_ratio, &ratio_data);
 
-   qmonMirrorMulti(SC_T);
+   qmonMirrorMultiAnswer(SC_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+      
    lp = qmonMirrorList(SGE_SC_LIST);
    sep = lFirst(lp);
    if (sep) {
@@ -770,12 +783,19 @@ Widget w;
 XtPointer cld, cad;
 {
    lList *lp = NULL;
+   lList *alp = NULL;
    lCondition *where = NULL;
    lEnumeration *what = NULL;
 
    DENTER(GUI_LAYER, "qmonFTUpdate");
    
-   qmonMirrorMulti(SC_T | l2s(fticket_info.list_type));
+   qmonMirrorMultiAnswer(SC_T | l2s(fticket_info.list_type), &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    lp = qmonMirrorList(fticket_info.list_type);
 
    /*
@@ -826,6 +846,7 @@ Widget w;
 XtPointer cld, cad;
 {
    lList *lp = NULL;
+   lList *alp = NULL;
    lCondition *where = NULL;
    lEnumeration *what = NULL;
    u_long32 selector = 0;
@@ -852,7 +873,14 @@ XtPointer cld, cad;
          selector = PROJECT_T;
          break;
    }        
-   qmonMirrorMulti(selector);
+   qmonMirrorMultiAnswer(selector, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+      
    lp = qmonMirrorList(oticket_info.list_type);
 
    /*
@@ -898,7 +926,13 @@ XtPointer cld, cad;
 
    DENTER(GUI_LAYER, "qmonOTOkay");
 
-   qmonMirrorMulti(oticket_info.list_type);
+   qmonMirrorMultiAnswer(oticket_info.list_type, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    lp = qmonMirrorList(oticket_info.list_type);
    /*
    ** filter queues

@@ -678,6 +678,8 @@ PrintConf()
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
    $ECHO "default_domain         $CFG_DEFAULT_DOMAIN"
    $ECHO "ignore_fqdn            true"
+   $ECHO "max_aj_instances       2000"
+   $ECHO "max_aj_tasks           75000"
 }
 
 #-------------------------------------------------------------------------

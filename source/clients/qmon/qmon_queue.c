@@ -143,13 +143,20 @@ void qmonQueuePopup(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+   lList *alp = NULL;
    
    DENTER(GUI_LAYER, "qmonQueuePopup");
 
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   qmonMirrorMulti(QUEUE_T | EXECHOST_T | COMPLEX_T);
+   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | COMPLEX_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
 
    if (!qmon_queue) {
 
@@ -278,7 +285,13 @@ void updateQueueListCB(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
-   qmonMirrorMulti(QUEUE_T | EXECHOST_T | COMPLEX_T);
+   lList *alp = NULL;
+   qmonMirrorMultiAnswer(QUEUE_T | EXECHOST_T | COMPLEX_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      return;
+   }
    updateQueueList();
 }
 

@@ -304,9 +304,16 @@ static void qmonCplxUpdate(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+   lList *alp = NULL;
    DENTER(TOP_LAYER, "qmonCplxUpdate");
 
-   qmonMirrorMulti(COMPLEX_T);
+   qmonMirrorMultiAnswer(COMPLEX_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    updateCplxList();
    
    DEXIT;

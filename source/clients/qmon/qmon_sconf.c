@@ -159,6 +159,7 @@ XtPointer cld, cad;
    Widget shell;
    lList *scl = NULL;
    lListElem *sep = NULL;
+   lList *alp = NULL;
 
    DENTER(TOP_LAYER, "qmonPopupSchedConfig");
 
@@ -171,7 +172,14 @@ XtPointer cld, cad;
       XmtAddDeleteCallback(shell, XmDO_NOTHING, 
                               qmonSchedCancel, NULL);
    } 
-   qmonMirrorMulti(SC_T);
+   qmonMirrorMultiAnswer(SC_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
    scl = qmonMirrorList(SGE_SC_LIST);
    sep = lFirst(scl);
    qmonSchedSet(sep);
@@ -291,7 +299,15 @@ XtPointer cld, cad;
    ** get the contents of the dialog fields here,
    ** build the cull list and send gdi request
    */
-   qmonMirrorMulti(SC_T);
+   qmonMirrorMultiAnswer(SC_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
+
    scl = qmonMirrorList(SGE_SC_LIST);
    sep = lFirst(scl); 
 
@@ -606,10 +622,17 @@ XtPointer cad
    lList *entries = NULL;
    lListElem *hep = NULL;
    static lCondition *where = NULL;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonLoadNamesSC");
 
-   qmonMirrorMulti(COMPLEX_T | EXECHOST_T);
+   qmonMirrorMultiAnswer(COMPLEX_T | EXECHOST_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    cl = qmonMirrorList(SGE_COMPLEX_LIST);
    ehl = qmonMirrorList(SGE_EXECHOST_LIST);
 

@@ -225,7 +225,7 @@ void qmonInitSge( char *progname)
    
    sge_qmon_log(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
-   sge_gdi_param(SET_ISALIVE, 1, NULL);
+/*    sge_gdi_param(SET_ISALIVE, 1, NULL); */
    if ((cl_err = sge_gdi_setup(prognames[QMON]))) {
       ERROR((SGE_EVENT, MSG_GDI_SGE_SETUP_FAILED_S, cl_errstr(cl_err)));
       SGE_EXIT(1);

@@ -422,13 +422,20 @@ XtPointer cld, cad;
    tSubmitMode *data = (tSubmitMode *)cld;
    XmString xtitle = NULL;
    char buf[128];
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonSubmitPopup");
    
    /* set busy cursor */
    XmtDisplayBusyCursor(w);
 
-   qmonMirrorMulti(JOB_T | USERSET_T | PROJECT_T | PE_T | CKPT_T);
+   qmonMirrorMultiAnswer(JOB_T | USERSET_T | PROJECT_T | PE_T | CKPT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    
    if (!qmon_submit) {
       /*
@@ -500,7 +507,13 @@ XtPointer cld, cad;
    if (submit_mode_data.mode == SUBMIT_QALTER_PENDING) {
       lListElem *job_to_set;
 
-      qmonMirrorMulti(JOB_T);
+      qmonMirrorMultiAnswer(JOB_T, &alp);
+      if (alp) {
+         qmonMessageBox(w, alp, 0);
+         alp = lFreeList(alp);
+         DEXIT;
+         return;
+      }
       job_to_set = lGetElemUlong(qmonMirrorList(SGE_JOB_LIST), JB_job_number,
                                     submit_mode_data.job_id);
       /*
@@ -1311,7 +1324,14 @@ XtPointer cld, cad;
       /* in case of SGEEE the deadline initiation time 
          can be modified if the user is a deadline user */
       if (feature_is_enabled(FEATURE_SGEEE)) {
-         qmonMirrorMulti(USERSET_T);
+         qmonMirrorMultiAnswer(USERSET_T, &alp);
+         if (alp) {
+            qmonMessageBox(w, alp, 0);
+            alp = lFreeList(alp);
+            DEXIT;
+            return;
+         }
+
          if (is_deadline_user(me.user_name, 
                qmonMirrorList(SGE_USERSET_LIST))) 
             nm_set((int*)qalter_fields, JB_deadline);
@@ -2544,10 +2564,17 @@ XtPointer cld, cad;
    int n, i;
    StringConst *strs = NULL;
    static char buf[BUFSIZ];
+   lList *alp = NULL;
    
    DENTER(GUI_LAYER, "qmonSubmitAskForCkpt");
    
-   qmonMirrorMulti(CKPT_T);
+   qmonMirrorMultiAnswer(CKPT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    ckptl = qmonMirrorList(SGE_CKPT_LIST);
    n = lGetNumberOfElem(ckptl);
    if (n>0) {
@@ -2591,10 +2618,17 @@ XtPointer cld, cad;
    int n, i;
    StringConst *strs = NULL;
    static char buf[BUFSIZ];
+   lList *alp = NULL;
    
    DENTER(GUI_LAYER, "qmonSubmitAskForProject");
    
-   qmonMirrorMulti(PROJECT_T);
+   qmonMirrorMultiAnswer(PROJECT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    pl = qmonMirrorList(SGE_PROJECT_LIST);
    n = lGetNumberOfElem(pl);
    if (n>0) {

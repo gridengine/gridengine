@@ -479,7 +479,14 @@ XtPointer cld, cad;
             ** the information inside it; due to a weakness of the
             ** current GDI a selective modify is impossible
             */
-            qmonMirrorMulti(PROJECT_T);
+            qmonMirrorMultiAnswer(PROJECT_T, &alp);
+            if (alp) {
+               qmonMessageBox(w, alp, 0);
+               alp = lFreeList(alp);
+               DEXIT;
+               return;
+            }
+               
             new_prep = lCopyElem(lGetElemStr(qmonMirrorList(SGE_PROJECT_LIST), 
                                     UP_name, prjname));
             lSwapList(new_prep, UP_acl, prep, UP_acl); 

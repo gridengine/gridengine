@@ -105,6 +105,8 @@ typedef struct _tCClEntry {
    int loglevel;
    int ignore_fqdn;
    int logmail;
+   int max_aj_instances;
+   int max_aj_tasks;
    lList *cluster_users;
    lList *cluster_xusers;
    lList *cluster_projects;
@@ -234,6 +236,14 @@ XtResource ccl_resources[] = {
       sizeof(int), XtOffsetOf(tCClEntry, logmail), 
       XtRImmediate, NULL },
 
+   { "max_aj_instances", "max_aj_instances", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, max_aj_instances), 
+      XtRImmediate, NULL },
+
+   { "max_aj_tasks", "max_aj_tasks", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, max_aj_tasks), 
+      XtRImmediate, NULL },
+
    { "cluster_users", "cluster_users", QmonRUS_Type,
       sizeof(lList *), XtOffsetOf(tCClEntry, cluster_users),
       XtRImmediate, NULL },
@@ -334,6 +344,8 @@ static Widget cluster_login_shells = 0;
 static Widget cluster_default_domain = 0;
 static Widget cluster_min_uid = 0;
 static Widget cluster_min_gid = 0;
+static Widget cluster_max_aj_instances = 0;
+static Widget cluster_max_aj_tasks = 0;
 static Widget cluster_zombie_jobs = 0;
 static Widget cluster_load_report_time = 0;
 static Widget cluster_load_report_timePB = 0;
@@ -507,7 +519,7 @@ lListElem *ep
       return;
    }
    confl = lGetList(ep, CONF_entries);
-   
+
 #if 0   
    UpdateXmListFromCull(cluster_conf_list, XmFONTLIST_DEFAULT_TAG, confl, CF_name);
 #else
@@ -642,6 +654,8 @@ Widget parent
                            "cluster_default_domain", &cluster_default_domain,
                            "cluster_min_uid", &cluster_min_uid,
                            "cluster_min_gid", &cluster_min_gid,
+                           "cluster_max_aj_instances", &cluster_max_aj_instances,
+                           "cluster_max_aj_tasks", &cluster_max_aj_tasks,
                            "cluster_zombie_jobs", &cluster_zombie_jobs,
                            "cluster_load_report_time", &cluster_load_report_time,
                            "cluster_load_report_timePB", 
@@ -923,6 +937,8 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_login_shells, mode);
    XtSetSensitive(cluster_min_uid, mode);
    XtSetSensitive(cluster_min_gid, mode);
+   XtSetSensitive(cluster_max_aj_instances, mode);
+   XtSetSensitive(cluster_max_aj_tasks, mode);
    XtSetSensitive(cluster_zombie_jobs, mode);
    XtSetSensitive(cluster_stat_log_time, mode);
    XtSetSensitive(cluster_stat_log_timePB, mode);
@@ -1035,6 +1051,8 @@ int local
    String str = NULL;
    char min_uid[20];
    char min_gid[20];
+   char max_aj_instances[255];
+   char max_aj_tasks[255];
    char zombie_jobs[20];
    static char buf[4*BUFSIZ];
    Boolean first;
@@ -1430,6 +1448,14 @@ int local
       ep = lGetElemStr(confl, CF_name, "min_gid");
       sprintf(min_gid, "%d", clen->min_gid);
       lSetString(ep, CF_value, min_gid);
+         
+      ep = lGetElemStr(confl, CF_name, "max_aj_instances");
+      sprintf(max_aj_instances, "%d", clen->max_aj_instances);
+      lSetString(ep, CF_value, max_aj_instances);
+         
+      ep = lGetElemStr(confl, CF_name, "max_aj_tasks");
+      sprintf(max_aj_tasks, "%d", clen->max_aj_tasks);
+      lSetString(ep, CF_value, max_aj_tasks);
          
       ep = lGetElemStr(confl, CF_name, "finished_jobs");
       sprintf(zombie_jobs, "%d", clen->zombie_jobs);
@@ -1840,6 +1866,8 @@ tCClEntry *clen
    StringConst str = NULL;
    StringConst min_uid;
    StringConst min_gid;
+   StringConst max_aj_instances;
+   StringConst max_aj_tasks;
    StringConst zombie_jobs;
 
    DENTER(GUI_LAYER, "qmonCullToCClEntry");
@@ -1877,6 +1905,15 @@ tCClEntry *clen
       clen->min_gid = min_gid ? atoi(min_gid) : 0;
    }
 
+   if ((ep = lGetElemStr(confl, CF_name, "max_aj_instances"))) {
+      max_aj_instances = lGetString(ep, CF_value);
+      clen->max_aj_instances = max_aj_instances ? atoi(max_aj_instances) : 0;
+   }
+
+   if ((ep = lGetElemStr(confl, CF_name, "max_aj_tasks"))) {
+      max_aj_tasks = lGetString(ep, CF_value);
+      clen->max_aj_tasks = max_aj_tasks ? atoi(max_aj_tasks) : 0;
+   }
    if ((ep = lGetElemStr(confl, CF_name, "finished_jobs"))) {
       zombie_jobs = lGetString(ep, CF_value);
       clen->zombie_jobs = zombie_jobs ? atoi(zombie_jobs) : 0;
@@ -2140,6 +2177,8 @@ tCClEntry *clen
    } 
    clen->min_uid = 0;
    clen->min_gid = 0;
+   clen->max_aj_instances = 0;
+   clen->max_aj_tasks = 0;
    if (clen->load_report_time) {
       XtFree((char*)clen->load_report_time);
       clen->load_report_time = NULL;
@@ -2243,10 +2282,17 @@ XtPointer cld, cad;
    lList *ql_in = NULL;
    int status;
    Widget list = (Widget) cld;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonClusterAskForUsers");
    
-   qmonMirrorMulti(USERSET_T);
+   qmonMirrorMultiAnswer(USERSET_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    ql_in = qmonMirrorList(SGE_USERSET_LIST);
    ql_out = XmStringToCull(list, US_Type, US_name, ALL_ITEMS);
 
@@ -2272,10 +2318,17 @@ XtPointer cld, cad;
    lList *ql_in = NULL;
    int status;
    Widget list = (Widget) cld;
+   lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonClusterAskForProjects");
    
-   qmonMirrorMulti(PROJECT_T);
+   qmonMirrorMultiAnswer(PROJECT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    ql_in = qmonMirrorList(SGE_PROJECT_LIST);
    ql_out = XmStringToCull(list, UP_Type, UP_name, ALL_ITEMS);
 

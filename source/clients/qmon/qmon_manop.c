@@ -464,6 +464,7 @@ static void qmonManopFolderChange(w, cld, cad)
 Widget w;
 XtPointer cld, cad;
 {
+   lList *alp = NULL;
    XmTabCallbackStruct *cbs = (XmTabCallbackStruct *) cad;
 
    DENTER(GUI_LAYER, "qmonManopFolderChange");
@@ -485,7 +486,13 @@ XtPointer cld, cad;
    /*
    ** fetch changed lists and update dialogues
    */
-   qmonMirrorMulti(MANAGER_T | OPERATOR_T | USERSET_T | USER_T);
+   qmonMirrorMultiAnswer(MANAGER_T | OPERATOR_T | USERSET_T | USER_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    updateManopList();
 
    /*
@@ -1045,7 +1052,13 @@ XtPointer cld, cad;
         return;
    }
    
-   qmonMirrorMulti(PROJECT_T);
+   qmonMirrorMultiAnswer(PROJECT_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
    pl = qmonMirrorList(SGE_PROJECT_LIST);
    n = lGetNumberOfElem(pl);
    if (n>0) {

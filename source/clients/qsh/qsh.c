@@ -1537,7 +1537,7 @@ int main(int argc, char **argv)
       cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
                                  (char*) sge_get_master(0),
                                  (char*) prognames[QMASTER],
-                                 1);
+                                 1, CL_FALSE);
    
       tid = sge_qexecve(host, NULL, 
                         lGetString(job, JB_cwd), 
@@ -1658,7 +1658,7 @@ int main(int argc, char **argv)
          cl_commlib_close_connection(cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(),0),
                                      (char*) sge_get_master(0),
                                      (char*) prognames[QMASTER],
-                                     1);
+                                     1, CL_FALSE);
    
          if(is_qlogin) {
             /* if qlogin_starter is used (qlogin, rsh, rlogin): wait for context */

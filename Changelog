@@ -1,3 +1,10 @@
+CR-2004-07-24-1: Bugfix:    schedd and qmaster get out of sync - no scheduling
+                            for long time
+                 Changed:   communication lib
+                 Issue:     1141
+                 Bugtraq:   5077589
+                 Review:    JG
+
 MD-2004-07-22-2  Bugfix:    reprioritize_interval descr in sched_conf(5) needs improvement
                  Changed:   man5/sched_conf.5
                  Issue:     1040

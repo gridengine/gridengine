@@ -126,7 +126,8 @@ int cl_commlib_trigger           (cl_com_handle_t* handle);
 
 
 int cl_commlib_close_connection  (cl_com_handle_t* handle, 
-                                  char* un_resolved_hostname, char* component_name, unsigned long component_id);
+                                  char* un_resolved_hostname, char* component_name, unsigned long component_id,
+                                  cl_bool_t return_for_messages );
 int cl_commlib_open_connection   (cl_com_handle_t* handle,
                                   char* un_resolved_hostname, char* component_name, unsigned long component_id);
 

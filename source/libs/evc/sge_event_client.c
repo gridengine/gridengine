@@ -1182,7 +1182,7 @@ ec_register(bool exit_on_qmaster_down, lList** alpp)
       com_handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name(), 0);
       if (com_handle != NULL) {
          int ngc_error;
-         ngc_error = cl_commlib_close_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1);
+         ngc_error = cl_commlib_close_connection(com_handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1, CL_FALSE);
          if (ngc_error == CL_RETVAL_OK) {
             DPRINTF(("closed old connection to qmaster\n"));
          } else {

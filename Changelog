@@ -1,3 +1,5 @@
+AA-2003-01-15-0  Bugfix:    crash of qmon fixed: Cluster Config -> global -> Modify (Boingg)
+
 CR-2003-01-15-1  Testsuite: new performance test: throughput
 
 CR-2003-01-15-0  Testsuite: new procedure: create_gnuplot_xy_gif()

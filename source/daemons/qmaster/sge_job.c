@@ -848,20 +848,20 @@ int sub_command
        * if ID_ja_structure not empty delete specified tasks
        * otherwise delete whole job
        */
+      start = job_get_smallest_task_id(job);
+      end = job_get_biggest_task_id(job);
       rn = lFirst(lGetList(idep, ID_ja_structure));
       if (rn) {
-         start = lGetUlong(rn, RN_min);
-         end = lGetUlong(rn, RN_max);
+         start = MAX(lGetUlong(rn, RN_min), start);
+         end = MIN(lGetUlong(rn, RN_max), end);
          step = lGetUlong(rn, RN_step);
          if (!step)
             step = 1;
          alltasks = 0;
       } else {
-         start = range_list_get_first_id(lGetList(job, JB_ja_structure), NULL);
-         end = range_list_get_last_id(lGetList(job, JB_ja_structure), NULL);
          step = 1;
          alltasks = 1;
-      }
+      }       
 
       DPRINTF(("----> alltasks = %d, start = %d, end = %d, step = %d\n", 
                alltasks, start, end, step));
@@ -884,7 +884,7 @@ int sub_command
       deleted_unenrolled_tasks = 0;
       deleted_tasks = 0;
       existing_tasks = job_get_ja_tasks(job);
-      for (task_number = start; task_number <= end; task_number++) {
+      for (task_number = start; task_number <= end; task_number += step) {
          int is_defined = job_is_ja_task_defined(job, task_number); 
 
          if (is_defined) {
@@ -937,7 +937,7 @@ int sub_command
        * Delete enrolled ja tasks
        */
       if (existing_tasks > deleted_tasks) { 
-         for (task_number = start; task_number <= end; task_number++) {
+         for (task_number = start; task_number <= end; task_number += step) {
             int spool_job = 1;
             int is_defined = job_is_ja_task_defined(job, task_number);
            

@@ -967,3 +967,75 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
    DEXIT;
    return 0;
 }     
+
+/****** gdi/job_jatask/job_get_smallest_task_id() *******************************  NAME
+*     job_get_smallest_task_id() -- return the smallest un/enrolled task id
+*
+*  SYNOPSIS
+*     u_long32 job_get_smallest_task_id(lListElem *job)
+*
+*  FUNCTION
+*     returns the smallest task id currently existing in a job independent
+*     whether it is enrolled or unenrolled
+*
+*  INPUTS
+*     lListElem *job - JB_Type element
+*
+*  RESULT
+*     u_long32 - task id
+*******************************************************************************/u_long32 job_get_smallest_task_id(lListElem *job)
+{
+   lListElem *first;
+   u_long32 n_h_id, u_h_id, o_h_id, s_h_id;
+   u_long32 ret;
+ 
+   n_h_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids), NULL);
+   u_h_id = range_list_get_first_id(lGetList(job, JB_ja_u_h_ids), NULL);
+   o_h_id = range_list_get_first_id(lGetList(job, JB_ja_o_h_ids), NULL);
+   s_h_id = range_list_get_first_id(lGetList(job, JB_ja_s_h_ids), NULL);
+   first = lFirst(lGetList(job, JB_ja_tasks));
+   ret = n_h_id;
+   ret = MIN(ret, u_h_id);
+   ret = MIN(ret, o_h_id);
+   ret = MIN(ret, s_h_id);
+   if (first != NULL) {
+      ret = MIN(ret, lGetUlong(first, JAT_task_number));
+   }
+   return ret;
+}                                                                               
+
+/****** gdi/job_jatask/job_get_biggest_task_id() ********************************  NAME
+*     job_get_biggest_task_id() -- return the biggest un/enrolled task id
+*
+*  SYNOPSIS
+*     u_long32 job_get_biggest_task_id(lListElem *job)
+*
+*  FUNCTION
+*     returns the biggest task id currently existing in a job independent
+*     whether it is enrolled or unenrolled
+*
+*  INPUTS
+*     lListElem *job - JB_Type element
+*
+*  RESULT
+*     u_long32 - task id
+*******************************************************************************/u_long32 job_get_biggest_task_id(lListElem *job)
+{
+   lListElem *last;
+   u_long32 n_h_id, u_h_id, o_h_id, s_h_id;
+   u_long32 ret = 0;
+ 
+   n_h_id = range_list_get_last_id(lGetList(job, JB_ja_n_h_ids), NULL);
+   u_h_id = range_list_get_last_id(lGetList(job, JB_ja_u_h_ids), NULL);
+   o_h_id = range_list_get_last_id(lGetList(job, JB_ja_o_h_ids), NULL);
+   s_h_id = range_list_get_last_id(lGetList(job, JB_ja_s_h_ids), NULL);
+   last = lLast(lGetList(job, JB_ja_tasks));
+   ret = n_h_id;
+   ret = MAX(ret, u_h_id);
+   ret = MAX(ret, o_h_id);
+   ret = MAX(ret, s_h_id);
+   if (last != NULL) {
+      ret = MAX(ret, lGetUlong(last, JAT_task_number));
+   }
+   return ret;
+}  

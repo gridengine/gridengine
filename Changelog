@@ -1,3 +1,5 @@
+AA-2002-03-18-0  Bugfix:    sge_ca script, check /dev/random 1st
+
 AH-2002-03-15-4  Bugfix:    Ensure after execd installation the host needs to be 
                             only exec host but not admin host or submit host
 

@@ -1,3 +1,6 @@
+AS-2002-10-07-0: CVS        Created V53p3_TAG --> SGE 5.3p3
+-----------------------------------------------------------
+
 EB-2003-02-14-1  Enhancem.: Enabled qmaster profiles code
 
 JG-2003-02-14-0  Bugfix:    Second migration of tightly integrated jobs failed
@@ -7,7 +10,7 @@ JG-2003-02-14-0  Bugfix:    Second migration of tightly integrated jobs failed
                  Changed:   sge_qmaster
 
 EB-2003-02-14-0  Testsuite: new test which will find #226 
-                 Issue:     #364
+                 IZ:        #364
 
 JG-2003-02-13-1  Enhancem.: Disabled use of non unique hashtable in scheduler.
                             It has negative performance impact on job sorting.
@@ -96,21 +99,22 @@ JG-2003-01-31-0  Bugfix:    For tightly integrated parallel jobs, the
                             times resulting in too much accounting entries,
                             probably wrong scheduling decisions and
                             unnecessary spooling overhead.
-                 IZ:        438
-                 Bugtraq:   4791238
+                 IZ:        #438
+                 Bugtraq:   #4791238
                  Review:    AH
                  Changed:   sge_qmaster
 
 JG-2003-01-28-1  Bugfix:    qrsh crashed when job arguments exceeded 4k in
                             size.
-                 IZ:        472
-                 Bugtraq:   4807677
+                 IZ:        #472
+                 Bugtraq:   #4807677
                  Review:    CR
                  Changed:   qsh
 
 JG-2003-01-28-0  Bugfix:    startup failure of qrsh was reported as regular
                             job exit.
                  IZ:        #380
+                 Bugtraq:   #4818741
                  Review:    AH
                  Changed:   qrsh_starter, sge_shepherd, qsh
 
@@ -118,6 +122,8 @@ AA-2003-01-24-0  Bugfix:    qsub -C option analogue was missing in qmon
                             remove #$ in submit dialogue's Prefix field to
                             achieve same functionality as qsub -C before
                             loading job with the file dialogue
+                 IZ:        #449
+                 Bugtraq:   #4802831
                  Review:    JG
                  Changed:   qmon
 
@@ -299,20 +305,20 @@ CR-2002-11-19-0  L10N:      Code cleanup/enhancements for testsuite l10n
 
 AH-2002-11-18-0  Bugfix:    Complex values for user defined complexes  
                             are rejected with global host.
-                 IZ:        418
-                 Bugtraq:   4776754
+                 IZ:        #418
+                 Bugtraq:   #4776754
                  Review:    AS
 
 EB-2002-11-18-0  Testsuite: Test for issue #423 and #402
-                 IZ:        425, 426
+                 IZ:        #425, #426
 
 EB-2002-11-14-0  Bugfix:    - memopy leak in execd
                             - stepsize 0 in array job specification
                               results in qmaster exception
                             - job env variables SGE_TASK_* might be
                               overwritten by qsub -v
-                 IZ:        423, 424, 402, 264
-                 Bugtraq:   4778757, 4778758, 4778762
+                 IZ:        #423, #424, #402, #264
+                 Bugtraq:   #4778757, #4778758, #4778762
                  Review:    JG
 
 AA-2002-11-14-0  Kerberos:  changes to fix build problems with krb5
@@ -333,7 +339,8 @@ SD-2002-10-15-0  Bugfix:    Fix no newline problem with path alias file If
                             the last line in the path aliases file
                             (sge_aliases) did not have a new line, qsub
                             would core.
-                 IZ:        398
+                 IZ:        #398
+                 Bugtraq:   #4816541
                  Changed:   qsub, qsh, qmon, ...
 
 AH-2002-10-10-0  Bugfix:    Fix problem with user .cshrc error causing
@@ -360,8 +367,8 @@ AH-2002-10-08-0  Bugfix:    Commd read the host alias file each time when
 AH-2002-10-07-0  Bugfix:    Fixed problem with non-resvolvable hosts in
                             host_aliases file causing wrong resolving
                             results.
-                 IZ:        392
-                 Bugtraq:   4756557
+                 IZ:        #392
+                 Bugtraq:   #4756557
                  L10N:      added two new messages 
                  Review:    AS
                  Changed:   sge_qmaster, gethostbyname, gethostname

@@ -384,13 +384,13 @@ elif [ $cmdname = myinst ]; then
 elif [ $cmdname = sgeinst ]; then 
    # This special rule creates a distribution which will be provided by Sun
    BASEDIR=/dist/SGEDIST
-   VERSIONDIR=SGE53p3
+   VERSIONDIR=SGE53p6
    SGE_PRODUCT_MODE=sge
    sundist=true
 elif [ $cmdname = sgeeeinst ]; then
    # This special rule creates a distribution which will be provided by Sun
    BASEDIR=/dist/SGEDIST
-   VERSIONDIR=SGEEE53p3
+   VERSIONDIR=SGEEE53p6
    SGE_PRODUCT_MODE=sgeee
    sgeee=true
    sundist=true

@@ -1,3 +1,8 @@
+MD-2004-05-28-0: Bugfix:    - some file creation/deletion
+                            - hints
+                            - logging
+                 Changed:   inst_sge
+
 JG-2004-05-28-1: Bugfix:    Fixed install_execd and berkeley db rpc server 
                             installation.
                  Review:    MD

@@ -86,6 +86,7 @@ ShutdownMaster()
 
    spool_dir_master=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
    master_pid=`cat $spool_dir_master/qmaster.pid`
+   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
 
    `qconf -ks`
    `qconf -km`
@@ -93,26 +94,32 @@ ShutdownMaster()
    ret=0
    while [ $ret -eq 0 ]; do 
       sleep 5
-      $SGE_UTILBIN/checkprog $master_pid sge_qmaster > /dev/null
-      ret=$?
+      if [ -f $master_pid ]; then
+         $SGE_UTILBIN/checkprog $master_pid sge_qmaster > /dev/null
+         ret=$?
+      else
+         ret=1
+      fi
       $INFOTEXT "sge_qmaster is going down ...., please wait!"
    done
 
       $INFOTEXT "sge_qmaster is down!"
 
    master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
+
    
    $INFOTEXT "Removing qmaster spool directory!"
    $INFOTEXT -log "Removing qmaster spool directory!"
-   ExecuteAsAdmin rm -fR $master_spool
+   RM="rm -fR"
+   ExecuteAsAdmin $RM $master_spool
 
    berkeley_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }'`
 
    $INFOTEXT "Removing berkeley spool directory!"
    $INFOTEXT -log "Removing berkeley spool directory!"
-   ExecuteAsAdmin rm -fR $berkeley_spool
+   ExecuteAsAdmin $RM $berkeley_spool
 
    $INFOTEXT "Removing %s directory!" $SGE_CELL
    $INFOTEXT -log "Removing %s directory!" $SGE_CELL
-   ExecuteAsAdmin rm -fR $SGE_CELL
+   ExecuteAsAdmin $RM $SGE_CELL
 }

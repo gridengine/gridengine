@@ -1601,12 +1601,12 @@ SetScheddConfig()
 
 GiveBerkelyHints()
 {
-  $INFOTEXT "If you are using a Berkely DB Server, please bdb_checkpoint.sh\n" \
-            "scripts to your crontab. This scripts is used for transaction\n" \
+  $INFOTEXT "If you are using a Berkely DB Server, please add the bdb_checkpoint.sh\n" \
+            "script to your crontab. This script is used for transaction\n" \
             "checkpointing and cleanup in SGE installations with a\n" \
             "Berkeley DB RPC Server. You will find this script in:\n" \
             "$SGE_ROOT/util/\n\n" \
-            "It must be added to the crontab of the user, who runs the\n" \
+            "It must be added to the crontab of the user (%s), who runs the\n" \
             "berkeley_db_svc on the server host. \n\n" \
-            "e.g. * * * * * <full path to scripts> <sge-root dir> <sge-cell> <bdb-dir>\n"
+            "e.g. * * * * * <full path to scripts> <sge-root dir> <sge-cell> <bdb-dir>\n" $ADMINUSER
 }

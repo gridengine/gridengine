@@ -240,6 +240,9 @@ GetOldComplexes()
 
          rm -f /tmp/centry/$ce_name"_tmp3"
 
+         TOUCH=touch
+         UPDATE_LOG=/tmp/update.$pid
+         ExecuteAsAdmin $TOUCH $UPDATE_LOG 
          if [ $CE_TYPE = "INT" -o $CE_TYPE = "DOUBLE" -o $CE_TYPE = "MEMORY" -o $CE_TYPE = "TIME" ]; then
             if [ $CE_CONSUMABLE = "YES" -a $CE_REQUESTABLE = "NO" ]; then
                if [ $CE_TYPE = "INT" -o $CE_TYPE = "MEMORY" -o $CE_TYPE = "DOUBLE" ]; then
@@ -247,96 +250,96 @@ GetOldComplexes()
                      :
                   else
                      CE_DEFAULT=1
-                     echo "Changed complex:  " >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Name:       $CE_NAME" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Shortcut:   $CE_SHORTCUT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Type:       $CE_TYPE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Relop:      $CE_RELOP" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Requestable:$CE_REQUESTABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Consumable: $CE_CONSUMABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Changed entry:" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
-                     echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
+                     echo "Changed complex:  " >> $UPDATE_LOG 
+                     echo "Name:       $CE_NAME" >> $UPDATE_LOG 
+                     echo "Shortcut:   $CE_SHORTCUT" >> $UPDATE_LOG
+                     echo "Type:       $CE_TYPE" >> $UPDATE_LOG
+                     echo "Relop:      $CE_RELOP" >> $UPDATE_LOG
+                     echo "Requestable:$CE_REQUESTABLE" >> $UPDATE_LOG
+                     echo "Consumable: $CE_CONSUMABLE" >> $UPDATE_LOG
+                     echo "Changed entry:" >> $UPDATE_LOG
+                     echo "Default:    $CE_DEFAULT" >> $UPDATE_LOG
+                     echo "Urgency:    $CE_URGENCY" >> $UPDATE_LOG 
+                     echo "----------------------------" >> $UPDATE_LOG
+                     echo >> $UPDATE_LOG
                   fi
                elif [ $CE_TYPE = "TIME" ]; then
                     if [ $CE_DEFAULT != "0:0:0" ]; then
                        :
                     else
                        CE_DEFAULT="0:0:1"
-                     echo "Changed complex:  " >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Name:       $CE_NAME" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Shortcut:   $CE_SHORTCUT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Type:       $CE_TYPE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Relop:      $CE_RELOP" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Requestable:$CE_REQUESTABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Consumable: $CE_CONSUMABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Changed entry:" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
-                     echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                     echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
+                     echo "Changed complex:  " >> $UPDATE_LOG
+                     echo "Name:       $CE_NAME" >> $UPDATE_LOG
+                     echo "Shortcut:   $CE_SHORTCUT" >> $UPDATE_LOG
+                     echo "Type:       $CE_TYPE" >> $UPDATE_LOG
+                     echo "Relop:      $CE_RELOP" >> $UPDATE_LOG
+                     echo "Requestable:$CE_REQUESTABLE" >> $UPDATE_LOG
+                     echo "Consumable: $CE_CONSUMABLE" >> $UPDATE_LOG
+                     echo "Changed entry:" >> $UPDATE_LOG
+                     echo "Default:    $CE_DEFAULT" >> $UPDATE_LOG
+                     echo "Urgency:    $CE_URGENCY" >> $UPDATE_LOG 
+                     echo "----------------------------" >> $UPDATE_LOG
+                     echo >> $UPDATE_LOG
 
                     fi
                fi
                CE_RELOP="<="
-               echo "Changed complex:  " >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Name:       $CE_NAME" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Shortcut:   $CE_SHORTCUT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Type:       $CE_TYPE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Changed entry:" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Relop:      $CE_RELOP" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Requestable:$CE_REQUESTABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Consumable: $CE_CONSUMABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
-               echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
+               echo "Changed complex:  " >> $UPDATE_LOG
+               echo "Name:       $CE_NAME" >> $UPDATE_LOG
+               echo "Shortcut:   $CE_SHORTCUT" >> $UPDATE_LOG
+               echo "Type:       $CE_TYPE" >> $UPDATE_LOG
+               echo "Changed entry:" >> $UPDATE_LOG
+               echo "Relop:      $CE_RELOP" >> $UPDATE_LOG
+               echo "Requestable:$CE_REQUESTABLE" >> $UPDATE_LOG
+               echo "Consumable: $CE_CONSUMABLE" >> $UPDATE_LOG
+               echo "Default:    $CE_DEFAULT" >> $UPDATE_LOG
+               echo "Urgency:    $CE_URGENCY" >> $UPDATE_LOG 
+               echo "----------------------------" >> $UPDATE_LOG
+               echo >> $UPDATE_LOG
             fi
          else
             CE_CONSUMABLE="NO"
-            echo "Changed complex:  " >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo "Name:       $CE_NAME" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo "Shortcut:   $CE_SHORTCUT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo "Type:       $CE_TYPE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo "Relop:      $CE_RELOP" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo "Requestable:$CE_REQUESTABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo "Changed entry:" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo "Consumable: $CE_CONSUMABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
-            echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-            echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
+            echo "Changed complex:  " >> $UPDATE_LOG
+            echo "Name:       $CE_NAME" >> $UPDATE_LOG
+            echo "Shortcut:   $CE_SHORTCUT" >> $UPDATE_LOG
+            echo "Type:       $CE_TYPE" >> $UPDATE_LOG
+            echo "Relop:      $CE_RELOP" >> $UPDATE_LOG
+            echo "Requestable:$CE_REQUESTABLE" >> $UPDATE_LOG
+            echo "Changed entry:" >> $UPDATE_LOG
+            echo "Consumable: $CE_CONSUMABLE" >> $UPDATE_LOG
+            echo "Default:    $CE_DEFAULT" >> $UPDATE_LOG
+            echo "Urgency:    $CE_URGENCY" >> $UPDATE_LOG 
+            echo "----------------------------" >> $UPDATE_LOG
+            echo >> $UPDATE_LOG
 
             if [ $CE_TYPE = "BOOL" ]; then
                CE_DEFAULT="0"
-               echo "Changed complex:  " >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Name:       $CE_NAME" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Shortcut:   $CE_SHORTCUT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Type:       $CE_TYPE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Relop:      $CE_RELOP" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Requestable:$CE_REQUESTABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Consumable: $CE_CONSUMABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Changed entry:" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
-               echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
+               echo "Changed complex:  " >> $UPDATE_LOG
+               echo "Name:       $CE_NAME" >> $UPDATE_LOG
+               echo "Shortcut:   $CE_SHORTCUT" >> $UPDATE_LOG
+               echo "Type:       $CE_TYPE" >> $UPDATE_LOG
+               echo "Relop:      $CE_RELOP" >> $UPDATE_LOG
+               echo "Requestable:$CE_REQUESTABLE" >> $UPDATE_LOG
+               echo "Consumable: $CE_CONSUMABLE" >> $UPDATE_LOG
+               echo "Changed entry:" >> $UPDATE_LOG
+               echo "Default:    $CE_DEFAULT" >> $UPDATE_LOG
+               echo "Urgency:    $CE_URGENCY" >> $UPDATE_LOG 
+               echo "----------------------------" >> $UPDATE_LOG
+               echo >> $UPDATE_LOG
             elif [ $CE_TYPE = "STRING" -o $CE_TYPE = "CSTRING" -o $CE_TYPE = "RESTRING" -o $CE_TYPE = "HOST" ]; then
                CE_DEFAULT="NONE"
-               echo "Changed complex:  " >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Name:       $CE_NAME" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Shortcut:   $CE_SHORTCUT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Type:       $CE_TYPE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Relop:      $CE_RELOP" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Requestable:$CE_REQUESTABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Consumable: $CE_CONSUMABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Changed entry:" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
-               echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
+               echo "Changed complex:  " >> $UPDATE_LOG
+               echo "Name:       $CE_NAME" >> $UPDATE_LOG
+               echo "Shortcut:   $CE_SHORTCUT" >> $UPDATE_LOG
+               echo "Type:       $CE_TYPE" >> $UPDATE_LOG
+               echo "Relop:      $CE_RELOP" >> $UPDATE_LOG
+               echo "Requestable:$CE_REQUESTABLE" >> $UPDATE_LOG
+               echo "Consumable: $CE_CONSUMABLE" >> $UPDATE_LOG
+               echo "Changed entry:" >> $UPDATE_LOG
+               echo "Default:    $CE_DEFAULT" >> $UPDATE_LOG
+               echo "Urgency:    $CE_URGENCY" >> $UPDATE_LOG 
+               echo "----------------------------" >> $UPDATE_LOG
+               echo >> $UPDATE_LOG
             fi
          fi 
          
@@ -346,18 +349,18 @@ GetOldComplexes()
                   :
                else
                   CE_RELOP="=="
-                  echo "Changed complex:  " >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo "Name:       $CE_NAME" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo "Shortcut:   $CE_SHORTCUT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo "Type:       $CE_TYPE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo "Changed entry:" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo "Relop:      $CE_RELOP" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo "Requestable:$CE_REQUESTABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo "Consumable: $CE_CONSUMABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
-                  echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-                  echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
+                  echo "Changed complex:  " >> $UPDATE_LOG
+                  echo "Name:       $CE_NAME" >> $UPDATE_LOG
+                  echo "Shortcut:   $CE_SHORTCUT" >> $UPDATE_LOG
+                  echo "Type:       $CE_TYPE" >> $UPDATE_LOG
+                  echo "Changed entry:" >> $UPDATE_LOG
+                  echo "Relop:      $CE_RELOP" >> $UPDATE_LOG
+                  echo "Requestable:$CE_REQUESTABLE" >> $UPDATE_LOG
+                  echo "Consumable: $CE_CONSUMABLE" >> $UPDATE_LOG
+                  echo "Default:    $CE_DEFAULT" >> $UPDATE_LOG
+                  echo "Urgency:    $CE_URGENCY" >> $UPDATE_LOG 
+                  echo "----------------------------" >> $UPDATE_LOG
+                  echo >> $UPDATE_LOG
                fi
             fi
 
@@ -365,18 +368,18 @@ GetOldComplexes()
                :
             else
                CE_RELOP="=="
-               echo "Changed complex:  " >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Name:       $CE_NAME" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Shortcut:   $CE_SHORTCUT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Type:       $CE_TYPE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Changed entry:" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Relop:      $CE_RELOP" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Requestable:$CE_REQUESTABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Consumable: $CE_CONSUMABLE" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Default:    $CE_DEFAULT" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo "Urgency:    $CE_URGENCY" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid 
-               echo "----------------------------" >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
-               echo >> $SGE_ROOT/$SGE_CELL/spool/update.$pid
+               echo "Changed complex:  " >> $UPDATE_LOG
+               echo "Name:       $CE_NAME" >> $UPDATE_LOG
+               echo "Shortcut:   $CE_SHORTCUT" >> $UPDATE_LOG
+               echo "Type:       $CE_TYPE" >> $UPDATE_LOG
+               echo "Changed entry:" >> $UPDATE_LOG
+               echo "Relop:      $CE_RELOP" >> $UPDATE_LOG
+               echo "Requestable:$CE_REQUESTABLE" >> $UPDATE_LOG
+               echo "Consumable: $CE_CONSUMABLE" >> $UPDATE_LOG
+               echo "Default:    $CE_DEFAULT" >> $UPDATE_LOG
+               echo "Urgency:    $CE_URGENCY" >> $UPDATE_LOG 
+               echo "----------------------------" >> $UPDATE_LOG
+               echo >> $UPDATE_LOG
 
             fi   
          fi
@@ -397,8 +400,10 @@ GetOldComplexes()
 #   export SGE_CELL
    CPR="cp -fR"
    RM="rm -fR"
+   MV="mv"
    ExecuteAsAdmin $CPR $SGE_ROOT/util/resources/centry/* /tmp/centry
    ExecuteAsAdmin $SPOOLDEFAULTS complexes /tmp/centry
+   ExecuteAsAdmin $MV $UPDATE_LOG $QMDIR
    ExecuteAsAdmin $RM /tmp/centry/*
    ExecuteAsAdmin $RM /tmp/centry
     
@@ -574,16 +579,17 @@ GetOldShareTree()
 
 GetOldFiles()
 {
+   CP="cp -fR"
    if [ -f $OLD_COMMON_DIR/accounting ]; then
-      cp -fR $OLD_COMMON_DIR/accounting $SGE_ROOT/$SGE_CELL/common
+      ExecuteAsAdmin $CP $OLD_COMMON_DIR/accounting $SGE_ROOT/$SGE_CELL/common
    fi
 
    if [ -f $OLD_COMMON_DIR/qtask ]; then
-      cp -fR $OLD_COMMON_DIR/qtask $SGE_ROOT/$SGE_CELL/common
+      ExecuteAsAdmin $CP $OLD_COMMON_DIR/qtask $SGE_ROOT/$SGE_CELL/common
    fi
 
    if [ -f $OLD_COMMON_DIR/host_aliases ]; then
-      cp -fR $OLD_COMMON_DIR/host_aliases $SGE_ROOT/$SGE_CELL/common
+      ExecuteAsAdmin $CP $OLD_COMMON_DIR/host_aliases $SGE_ROOT/$SGE_CELL/common
    fi
 }
 

@@ -183,15 +183,15 @@ RemoveQueues()
      $INFOTEXT -log "Deleting queue %s!" $q
      
      for hgrp in `qconf -shgrpl`; do
-       `qconf -shgrp $hgrp >> hgrp.tmp`
+       `qconf -shgrp $hgrp >> /tmp/hgrp.tmp`
        if [ `qconf -shgrp $hgrp | grep $exechost | wc -w` = 2 ]; then
-          `cat hgrp.tmp | sed s/$exechost/NONE/ >> hgrp2.tmp`
+          `cat /tmp/hgrp.tmp | sed s/$exechost/NONE/ >> /tmp/hgrp2.tmp`
        else
-          `cat hgrp.tmp | sed s/$exechost// >> hgrp2.tmp`
+          `cat /tmp/hgrp.tmp | sed s/$exechost// >> /tmp/hgrp2.tmp`
        fi
-       `qconf -Mhgrp hgrp2.tmp`
-       `rm hgrp.tmp`
-       `rm hgrp2.tmp`
+       `qconf -Mhgrp /tmp/hgrp2.tmp`
+       `rm /tmp/hgrp.tmp`
+       `rm /tmp/hgrp2.tmp`
      done
 
    done

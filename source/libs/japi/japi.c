@@ -34,6 +34,7 @@
 #include "sge_uidgid.h"
 #include "sge_unistd.h"
 #include "sge_string.h"
+#include "sge_bootstrap.h"
 
 /* COMMLIB */
 #include "commlib.h"
@@ -330,6 +331,7 @@ int japi_init_mt(dstring *diag)
    log_mt_init();
    log_state_set_log_gui(0);
 
+   bootstrap_mt_init();
    feature_mt_init();
 
    sge_gdi_param(SET_EXIT_ON_ERROR, 0, NULL);

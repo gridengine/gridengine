@@ -60,6 +60,8 @@
 #include "sge_feature.h"
 #include "sge_bootstrap.h"
 
+#include "gdi/msg_gdilib.h"
+
 static void default_exit_func(int i);
 static void gdi_init_mt(void);
 
@@ -278,7 +280,8 @@ void gdi_state_set_reread_qmaster_file(int i)
 *  OUTPUT
 *     lList **alpp - If the GDI setup fails and alpp is non-NULL an answer 
 *                    list is returned containing diagnosis information about
-*                    the problem during setup.
+*                    the problem during setup.  If NULL, all errors are printed
+*                    to stdout.
 *
 *  RESULT
 *     AE_OK            - everything is fine
@@ -292,13 +295,21 @@ void gdi_state_set_reread_qmaster_file(int i)
 ******************************************************************************/
 int sge_gdi_setup(const char *programname, lList **alpp)
 {
-
+   bool alpp_was_null = (*alpp == NULL);
+   
    DENTER(TOP_LAYER, "sge_gdi_setup");
 
    /* initialize libraries */
    pthread_once(&gdi_once_control, gdi_once_init);
    if (gdi_state_get_made_setup()) {
-      answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING, "GDI already setup\n");
+      if (alpp_was_null) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
+      }
+      else {
+         answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
+                                 MSG_GDI_GDI_ALREADY_SETUP);
+      }
+      
       DEXIT;
       return AE_ALREADY_SETUP;
    }
@@ -315,7 +326,11 @@ int sge_gdi_setup(const char *programname, lList **alpp)
    lInit(nmv);
 
    if (sge_setup(uti_state_get_mewho(), alpp)) {
-      answer_list_output (alpp);
+      if (alpp_was_null) {
+         /* This frees the list, so no worries. */
+         answer_list_output (alpp);
+      }
+      
       DEXIT;
       return AE_QMASTER_DOWN;
    }

@@ -2563,7 +2563,7 @@ static void send_events(lListElem *report, lList *report_list) {
    int ret, id; 
    int deliver_interval;
    time_t now = time(NULL);
-   int ec_id = 0;
+   u_long32 ec_id = 0;
    int count = 0;
 /* See comments on USE_REDO_LIST define at top. */
 #ifdef USE_REDO_LIST
@@ -2607,22 +2607,15 @@ static void send_events(lListElem *report, lList *report_list) {
       }
 #endif
 
-      event_client = get_event_client ((u_long32)ec_id);
-
-      /* Keep looking for a non-NULL client. */
-      if (event_client == NULL) {
-         continue; /* while */
-      }
-      
 /* See comments on USE_REDO_LIST define at top. */
 #ifndef USE_REDO_LIST
-      if (!lock_client ((u_long32)ec_id, false)) {
+      if (!lock_client (ec_id, false)) {
 #else
       /* This if uses short-circuiting to lock the client hard if it's a redo
        * or soft if it's not, and if it's not and the client is already locked,
        * to add the event to the redo list. */
-      if ((handling_redos && !lock_client ((u_long32)ec_id, true)) ||
-          (!lock_client ((u_long32)ec_id, false))) {
+      if ((handling_redos && !lock_client (ec_id, true)) ||
+          (!lock_client (ec_id, false))) {
 #endif
          /* If we can't get access to this client right now, just leave it to
           * be handled in the next run. */
@@ -2655,7 +2648,7 @@ static void send_events(lListElem *report, lList *report_list) {
              * this loop should never repeat. */
             while (true) {
                if (lock_client ((u_long32)redo[count], false)) {
-                  int temp_id = 0;
+                  u_long32 temp_id = 0;
          
                   DPRINTF (("Client %d is now free.\n", redo[count]));
                   
@@ -2675,6 +2668,13 @@ static void send_events(lListElem *report, lList *report_list) {
          } /* else */
 #endif
       } /* if */
+      
+      event_client = get_event_client (ec_id);
+
+      /* Keep looking for a non-NULL client. */
+      if (event_client == NULL) {
+         continue; /* while */
+      }
       
       /* extract address of event client */
       host = lGetHost(event_client, EV_host);
@@ -2716,8 +2716,8 @@ static void send_events(lListElem *report, lList *report_list) {
          lRemoveElem(Master_Control.clients, event_client);
          Master_Control.indices_dirty = true;
          sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
-         set_event_client ((u_long32)ec_id, NULL);               
-         unlock_client ((u_long32)ec_id);
+         set_event_client (ec_id, NULL);               
+         unlock_client (ec_id);
          
          continue; /* while */
       }
@@ -2728,44 +2728,71 @@ static void send_events(lListElem *report, lList *report_list) {
                || !lGetUlong(event_client, EV_busy))
          ) {
          lList *lp = NULL;
+         
          /* put only pointer in report - dont copy */
          lXchgList(event_client, EV_events, &lp);
          lXchgList(report, REP_list, &lp);
 
+         unlock_client (ec_id);
+         
          ret = report_list_send(report_list, host, commproc, id, 0, NULL);
+         
+         lock_client (ec_id, true);      
 
-         /* on failure retry is triggered automatically */
-         if (ret == CL_RETVAL_OK) {
-            now = sge_get_gmt();
-            
-            /*printf("send events %d to host: %s id: %d: now: %d\n", numevents, host, id, sge_get_gmt()); */           
-            switch (busy_handling) {
-            case EV_THROTTLE_FLUSH:
-               /* increase busy counter */
-               lSetUlong(event_client, EV_busy, lGetUlong(event_client, EV_busy)+1); 
-               break;
-            case EV_BUSY_UNTIL_RELEASED:
-            case EV_BUSY_UNTIL_ACK:
-               lSetUlong(event_client, EV_busy, 1);
-               break;
-            default: 
-               /* EV_BUSY_NO_HANDLING */
-               break;
+         event_client = get_event_client (ec_id);
+
+         /* Keep looking for a non-NULL client. */
+         if (event_client != NULL) {
+            /* on failure retry is triggered automatically */
+            if (ret == CL_RETVAL_OK) {
+               now = sge_get_gmt();
+
+               /*printf("send events %d to host: %s id: %d: now: %d\n", numevents, host, id, sge_get_gmt()); */           
+               switch (busy_handling) {
+               case EV_THROTTLE_FLUSH:
+                  /* increase busy counter */
+                  lSetUlong(event_client, EV_busy, lGetUlong(event_client, EV_busy)+1); 
+                  break;
+               case EV_BUSY_UNTIL_RELEASED:
+               case EV_BUSY_UNTIL_ACK:
+                  lSetUlong(event_client, EV_busy, 1);
+                  break;
+               default: 
+                  /* EV_BUSY_NO_HANDLING */
+                  break;
+               }
+
+               lSetUlong(event_client, EV_last_send_time, now);
             }
-            
-            lSetUlong(event_client, EV_last_send_time, now);
+
+            /* We reset this time even if the report list send failed because we
+             * want to give failed clients a break before trying them again. */
+            lSetUlong (event_client, EV_next_send_time, now + deliver_interval);
+
+            /* don't delete sent events - deletion is triggerd by ack's */
+            lXchgList(report, REP_list, &lp);
+            lXchgList(event_client, EV_events, &lp);
+
+            /* Because we let go of the lock while we were sending the report, we
+             * have to make certain that no one added events to this client while
+             * we were busy.  If there are events, just add them to the end of our
+             * previous list if it exists.  If not, we just keep the new list. */
+            if (lp != NULL) {
+               lList *olp = lGetList (event_client, EV_events);
+
+               if (olp != NULL) {
+                  /* This frees lp. */
+                  lAddList (olp, lp);
+                  lp = NULL;
+               }
+               else {
+                  lSetList (event_client, EV_events, lp);
+               }
+            }
          }
-
-         /* We reset this time even if the report list send failed because we
-          * want to give failed clients a break before trying them again. */
-         lSetUlong (event_client, EV_next_send_time, now + deliver_interval);
-
-         /* don't delete sent events - deletion is triggerd by ack's */
-         lXchgList(report, REP_list, &lp);
-         lXchgList(event_client, EV_events, &lp);
       } /* if */
       
-      unlock_client ((u_long32)ec_id);      
+      unlock_client (ec_id);      
    } /* while */
    
    DEXIT;

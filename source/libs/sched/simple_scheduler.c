@@ -539,7 +539,7 @@ static bool register_scheduler()
    /* register at commd */
    sge_gdi_param(SET_MEWHO, QSCHED, NULL);
    if (sge_gdi_setup(prognames[QSCHED], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+      answer_list_output(&alp);
       DEXIT;
       return false;
    }

@@ -201,8 +201,10 @@ proc drmaa_check {} {
             }
 
             # -- tests with a <exit_arg_job> argument
-            puts "starting single threaded test ST_EXIT_STATUS"
-            drmaa_test $host $binary_path ST_EXIT_STATUS $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit.sh
+            foreach ste_test "ST_EXIT_STATUS ST_USAGE_CHECK" {
+               puts "starting single threaded test $ste_test"
+               drmaa_test $host $binary_path $ste_test $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit.sh
+            }
 
 
             # -- tests with <exit_arg_job> and <email_addr> arguments

@@ -161,7 +161,7 @@ char **argv
 
    sge_gdi_param(SET_MEWHO, QSTAT, NULL);
    if (sge_gdi_setup(prognames[QSTAT], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+      answer_list_output(&alp);
       SGE_EXIT(1);
    }
 

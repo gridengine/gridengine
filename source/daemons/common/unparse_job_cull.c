@@ -296,6 +296,7 @@ int flags
          host = lGetHost(ep, MR_host);
          if (sge_strnullcmp(user, uti_state_get_user_name()) || 
              sge_hostcmp(host, uti_state_get_qualified_hostname())) {
+            lp_new = lCreateList("mail list", MR_Type);
             ep_new = lAddElemStr(&lp_new, MR_user, user, MR_Type);
             lSetHost(ep_new, MR_host, host);
          }
@@ -313,7 +314,7 @@ int flags
             return answer;
          }
          ep_opt = sge_add_arg(pcmdline, M_OPT, lListT, "-M", str);
-         lSetList(ep_opt, SPA_argval_lListT, lCopyList("mail list", lp_new));      
+         lSetList(ep_opt, SPA_argval_lListT, lp_new);
  
       }
    }
@@ -890,6 +891,8 @@ lList **alpp
       if (sge_contained_in_access_list(owner, group, ap, alpp)) 
          lAddElemStr(&lp, ST_name, lGetString(ap, US_name), ST_Type);
 
+   /* We know that if lp was created, it was through lAddElemStr, so the only
+    * way the number of elements can be 0 is if it's NULL. */
    if (lGetNumberOfElem(lp) > 0) {
       int fields[] = { ST_name, 0 };
       const char *delis[] = {":", ",", NULL};
@@ -904,7 +907,7 @@ lList **alpp
          return ret;
       }
       ep_opt = sge_add_arg(pcmdline, q_OPT, lListT, option, str);
-   }      
+   }
 
    DEXIT;
    return 0;

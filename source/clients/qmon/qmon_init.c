@@ -70,6 +70,7 @@
 #include "sge_hostname.h"
 #include "sge_any_request.h"
 #include "sge_gdiP.h"
+#include "sgeobj/sge_answer.h"
 
 #include "msg_clients_common.h"
 #include "msg_common.h"
@@ -233,6 +234,8 @@ void qmonInitSge( char *progname)
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);
    if ((error=sge_gdi_setup(prognames[QMON], &alp))) {
+      answer_list_output(&alp);
+      
       log_state_set_log_gui(False);
       if ( sge_get_master(0) != NULL) {
          error=check_isalive(sge_get_master(0));

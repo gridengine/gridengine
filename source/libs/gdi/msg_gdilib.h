@@ -129,14 +129,15 @@
 #define MSG_GDI_RECEIVEGDIREQUESTFAILED                  _MESSAGE(43126, _("failed receiving gdi request\n"))
 #define MSG_GDI_SIGNALED                                 _MESSAGE(43127, _("signaled\n"))
 #define MSG_GDI_GENERALERRORXSENDRECEIVEGDIREQUEST_I     _MESSAGE(43128, _("general error (%d) sending and receiving gdi request\n"))
-#define MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST  _MESSAGE(43129, _("NULL list passed to sge_send_receive_gdi_request()"))
-#define MSG_GDI_POINTER_NULLRHOSTPASSEDTOSGESENDRECEIVEGDIREQUEST   _MESSAGE(43130, _("NULL rhost passed to sge_send_receive_gdi_request()"))
-#define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST  _MESSAGE(43131, _("not enough memory for packing gdi request\n"))
-#define MSG_GDI_REQUESTFORMATERROR                          _MESSAGE(43132, _("format error while packing gdi request\n"))
-#define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST       _MESSAGE(43133, _("unexpected error while packing gdi request\n"))
-#define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S                  _MESSAGE(43134, _("error unpacking gdi request: "SFN"\n"))
-#define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
-#define MSG_GDI_CANTUNPACKGDIREQUEST                       _MESSAGE(43138, _("can't unpack gdi request"    ))
+#define MSG_GDI_POINTER_NULLLISTPASSEDTOSGESENDRECEIVGDIREQUEST   _MESSAGE(43129, _("NULL list passed to sge_send_receive_gdi_request()"))
+#define MSG_GDI_POINTER_NULLRHOSTPASSEDTOSGESENDRECEIVEGDIREQUEST _MESSAGE(43130, _("NULL rhost passed to sge_send_receive_gdi_request()"))
+#define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST        _MESSAGE(43131, _("not enough memory for packing gdi request\n"))
+#define MSG_GDI_REQUESTFORMATERROR                       _MESSAGE(43132, _("format error while packing gdi request\n"))
+#define MSG_GDI_UNEXPECTEDERRORWHILEPACKINGGDIREQUEST    _MESSAGE(43133, _("unexpected error while packing gdi request\n"))
+#define MSG_GDI_ERRORUNPACKINGGDIREQUEST_S               _MESSAGE(43134, _("error unpacking gdi request: "SFN"\n"))
+#define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D           _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
+#define MSG_GDI_CANTUNPACKGDIREQUEST                     _MESSAGE(43138, _("can't unpack gdi request"))
+#define MSG_GDI_GDI_ALREADY_SETUP                        _MESSAGE(43139, _("GDI already setup\n"))
 
 /**
  * cull/cull_where.c

@@ -510,7 +510,7 @@ int main(int argc, char *argv[])
    /* setup event client */
    if ( gdi_setup != AE_OK) {
       sge_dstring_free(enabled_options.error_message);
-      answer_exit_if_not_recoverable(lFirst(alp));
+      answer_list_output(&alp);
       SGE_EXIT(1);
    }
 

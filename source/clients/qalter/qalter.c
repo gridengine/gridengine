@@ -115,7 +115,7 @@ char **argv
 
    sge_gdi_param(SET_MEWHO, me_who, NULL);
    if ((cl_err = sge_gdi_setup(prognames[uti_state_get_mewho()], &alp))) {
-      answer_exit_if_not_recoverable(lFirst(alp));
+      answer_list_output(&alp);
       SGE_EXIT(1);
    }
 

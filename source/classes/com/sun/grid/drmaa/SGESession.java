@@ -155,10 +155,6 @@ public class SGESession extends DRMAASession {
    public JobInfo wait (String jobId, long timeout) throws DRMAAException {
       SGEJobInfo jobInfo = this.nativeWait (jobId, timeout);
       
-      if (jobInfo.hasExited() && jobInfo.hasSignaled ()) {
-         jobInfo.setTerminatingSignal (this.nativeGetSignalName (jobInfo.getSignalNumber ()));
-      }
-      
       return jobInfo;
    }
    
@@ -195,35 +191,29 @@ public class SGESession extends DRMAASession {
 //      return 0;
 //   }
    
-   native void nativeSetAttributeValue (String name, String value);
+   native void nativeSetAttributeValue (int jtId, String name, String value);
 //   void nativeSetAttributeValue (String name, String value) {
 //      System.out.println("Call to drmaa_set_attribute");
 //   }
    
-   native void nativeSetAttributeValues (String name, String[] values);
+   native void nativeSetAttributeValues (int jtId, String name, String[] values);
 //   void nativeSetAttributeValues (String name, String[] values) {
 //      System.out.println("Call to drmaa_set_vector_attribute");
 //   }
       
-   native String nativeGetSignalName (int signalNumber);
-//   String nativeGetSignalName (int signalNumber) {
-//      System.out.println("Call to sge_sig2str");
-//      return "SIGINT";
-//   }
-   
-   native String[] nativeGetAttributeNames ();
+   native String[] nativeGetAttributeNames (int jtId);
 //   String[] nativeGetAttributeNames () {
 //      System.out.println("Call to drmaa_get_attribute_names");
 //      return new String[] {"DRMAA_WD", "DRMAA_REMOTE_COMMAND"};
 //   }
    
-   native String[] nativeGetAttribute (String name);
+   native String[] nativeGetAttribute (int jtId, String name);
 //   String[] nativeGetAttribute (String name) {
 //      System.out.println("Call to drmaa_get_attribute & drmaa_get_vector_attribute");
 //      return new String[] {"/tmp", "/var/tmp"};
 //   }
 
-   native void nativeDeleteJobTemplate (JobTemplate jt);
+   native void nativeDeleteJobTemplate (int jtId);
 //   void nativeDeleteJobTemplate (JobTemplate jt) {
 //      System.out.println("Call to drmaa_delete_job_template");
 //   }

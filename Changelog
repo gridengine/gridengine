@@ -1,3 +1,28 @@
+DT-2004-04-26-0: Bugfix:    o Added missing SGE_ROOT error message in
+                              japi_init()
+                            o Broke up job deletes into 500 job chunks in
+                              japi_control() and japi_exit()
+                            o Added check for valid attribute in
+                              drmaa_set_attribute()
+                            o Fixed handling of $drmaa_wd_ph$ in DRMAA
+                            o Fixed handling of rusage parameter in drmaa_wait()
+                            o Fixed memory leak in qsub
+                            o Further progress on DRMAA Java binding
+                            o Fixed locking bug in EVM
+                            o Optimized locking in EVM send_events
+                            o Fixed handling of gdi_setup error messages in
+                              clients
+                            o All DRMAA cals now check to be sure the session
+                              exists before continuing, either via
+                              japi_init_was_called() or the regular JAPI calls.
+                            - test_drmaa currently fails due to a commlib issue
+                            - test_drmaa needs to be updated to check return
+                              codes for drmaa_allocate_job_template() and
+                              drmaa_set_attribute()
+                 Issue:     661, 774, 872, 909, 986, 988, 990
+                 Changed:   JAPI, DRMAA, GDI, all clients, EVM
+                 Review:    AH, SG
+
 JG-2004-04-27-1: Testsuite: Extended test bugs/issuezilla/126.
                             Cleanup in several tests.
                             Fixed setting of local qmaster spool directory in 

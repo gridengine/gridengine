@@ -1,3 +1,7 @@
+DT-2004-06-01-3: Bugfix:    o Fixing DT-2004-06-01-2
+                 Changed:   qsub
+                 Issue:     Related to 1075
+
 JG-2004-06-01-1: Bugfix:    Fixed memory leaks in japi and drmaa libs.
                  Review:    pending
 

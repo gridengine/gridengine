@@ -356,7 +356,7 @@ char **argv
             if ((tmp_ret = japi_wait(DRMAA_JOB_IDS_SESSION_ANY, &jobid, &stat,
                           DRMAA_TIMEOUT_WAIT_FOREVER, JAPI_JOB_FINISH, &event,
                           NULL, &diag)) != DRMAA_ERRNO_SUCCESS) {
-               if ((tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) {
+               if ((tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) &&
                    (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION)) {
                   fprintf(stderr, MSG_QSUB_COULDNOTWAITFORJOB_S, sge_dstring_get_string (&diag));
                }

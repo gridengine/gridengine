@@ -46,7 +46,7 @@
 void add_parent_uplink(lListElem *job);
 
 lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob);
-lList *parse_script_file(char *script_file, const char *directive_prefix, lList **option_list_ref, char **envp, u_long32 flags);
+lList *parse_script_file(const char *script_file, const char *directive_prefix, lList **option_list_ref, char **envp, u_long32 flags);
 
 #endif /* __PARSE_JOB_CULL_H */
 

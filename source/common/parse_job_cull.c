@@ -673,7 +673,7 @@ lListElem **pjob
 *     cod_request(5)
 *******************************************************************************/
 lList *parse_script_file(
-char *script_file,
+const char *script_file,
 const char *directive_prefix,
 lList **lpp_options, 
 char **envp,

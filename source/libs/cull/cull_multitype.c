@@ -557,7 +557,7 @@ int name
    (runtime type checking)
 
  */
-lString lGetPosString(
+char *lGetPosString(
 const lListElem *ep,
 int pos 
 ) {
@@ -604,7 +604,7 @@ int nm
    (runtime type checking)
 
  */
-lString lGetString(
+char *lGetString(
 const lListElem *ep,
 int name 
 ) {
@@ -1046,7 +1046,7 @@ lUlong value
 int lSetPosString(
 const lListElem *ep,
 int pos,
-lString value 
+const char *value 
 ) {
    char *str;
 
@@ -1101,7 +1101,7 @@ lString value
 int lSetString(
 lListElem *ep,
 int name,
-lString value 
+const char *value 
 ) {
    char *str;
    int pos;

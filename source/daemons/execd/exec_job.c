@@ -222,7 +222,7 @@ long add_grp_id
 *     add_or_replace_env -- add or change an environment variable
 *
 *  SYNOPSIS
-*     void add_or_replace_env(lList *envl, char *name, char *value);
+*     void add_or_replace_env(lList *envl, const char *name, const char *value);
 *
 *  FUNCTION
 *     If the environment variable <name> does not already exist in <envl>, 
@@ -249,7 +249,7 @@ long add_grp_id
 *
 ****************************************************************************
 */
-static void add_or_replace_env(lList *envl, char *name, char *value) 
+static void add_or_replace_env(lList *envl, const char *name, const char *value) 
 {
    lListElem *elem;
    
@@ -270,7 +270,7 @@ static void add_or_replace_env(lList *envl, char *name, char *value)
 *     add_or_replace_env_int -- add or change an environment variable
 *
 *  SYNOPSIS
-*     void add_or_replace_env_int(lList *envl, char *name, int value);
+*     void add_or_replace_env_int(lList *envl, const char *name, int value);
 *
 *  FUNCTION
 *     If the environment variable <name> does not already exist in <envl>, 
@@ -297,7 +297,7 @@ static void add_or_replace_env(lList *envl, char *name, char *value)
 *
 ****************************************************************************
 */
-static void add_or_replace_env_int(lList *envl, char *name, int value)
+static void add_or_replace_env_int(lList *envl, const char *name, int value)
 {
    char buffer[2048];
 
@@ -311,7 +311,8 @@ static void add_or_replace_env_int(lList *envl, char *name, int value)
 *     add_or_replace_env_u32 -- add or change an environment variable
 *
 *  SYNOPSIS
-*     void add_or_replace_env_u32(lList *envl, char *name, u_long32 value);
+*     void add_or_replace_env_u32(lList *envl, const char *name, 
+*                                 u_long32 value);
 *
 *  FUNCTION
 *     If the environment variable <name> does not already exist in <envl>, 
@@ -338,7 +339,7 @@ static void add_or_replace_env_int(lList *envl, char *name, int value)
 *
 ****************************************************************************
 */
-static void add_or_replace_env_u32(lList *envl, char *name, u_long32 value)
+static void add_or_replace_env_u32(lList *envl, const char *name, u_long32 value)
 {
    char buffer[2048];
 
@@ -397,7 +398,7 @@ static void dump_env(lList *envl, FILE *file)
 *     get_sharedlib_path_name -- return name of sharedlib path
 *
 *  SYNOPSIS
-*     static char *get_sharedlib_path_name(void);
+*     static const char *get_sharedlib_path_name(void);
 *
 *  FUNCTION
 *     Returns the operating dependent name of the shared library path
@@ -431,7 +432,7 @@ static void dump_env(lList *envl, FILE *file)
 *
 ****************************************************************************
 */
-static char *get_sharedlib_path_name(void) {
+static const char *get_sharedlib_path_name(void) {
 #if defined(AIX4)
    return "LIBPATH";
 #elif defined(HP10) || defined(HP11)
@@ -480,7 +481,7 @@ static char *get_sharedlib_path_name(void) {
 static void set_sharedlib_path(lList *environmentList) {
    char *sharedlib_path;
    char *sge_sharedlib_path;
-   char *sharedlib_path_name = get_sharedlib_path_name();
+   const char *sharedlib_path_name = get_sharedlib_path_name();
    lListElem *sharedlib_elem = NULL;
 
    DENTER(TOP_LAYER, "set_sharedlib_path");

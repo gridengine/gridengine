@@ -40,7 +40,7 @@
 extern "C" {
 #endif
 
-char *str_from_file(char *fname, int *len);
+char *str_from_file(const char *fname, int *len);
 char *str_from_stream(FILE *fp, int *len); 
 int str2file(char *str, int len, char *fname);
 

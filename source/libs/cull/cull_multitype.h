@@ -63,7 +63,7 @@ int lSwapList(lListElem *to, int to_nm, lListElem *from, int from_nm);
 
 lInt lGetPosInt(const lListElem *ep, int id);
 lUlong lGetPosUlong(const lListElem *ep, int id);
-lString lGetPosString(const lListElem *ep, int id);
+char *lGetPosString(const lListElem *ep, int id);
 lList *lGetPosList(const lListElem *ep, int id);
 lFloat lGetPosFloat(const lListElem *ep, int id);
 lDouble lGetPosDouble(const lListElem *ep, int id);
@@ -73,7 +73,7 @@ lRef lGetPosRef(const lListElem *ep, int id);
 
 int lSetPosInt(const lListElem *ep, int pos, int value);
 int lSetPosUlong(const lListElem *ep, int pos, lUlong value);
-int lSetPosString(const lListElem *ep, int pos, lString value);
+int lSetPosString(const lListElem *ep, int pos, const char *value);
 int lSetPosList(const lListElem *ep, int pos, lList *value);
 int lSetPosFloat(const lListElem *ep, int pos, lFloat value);
 int lSetPosDouble(const lListElem *ep, int pos, lDouble value);
@@ -83,7 +83,7 @@ int lSetPosRef(const lListElem *ep, int pos, lRef value);
 
 lInt lGetInt(const lListElem *ep, int name);
 lUlong lGetUlong(const lListElem *ep, int name);
-lString lGetString(const lListElem *ep, int name);
+char * lGetString(const lListElem *ep, int name);
 lList *lGetList(const lListElem *ep, int name);
 lFloat lGetFloat(const lListElem *ep, int name);
 lDouble lGetDouble(const lListElem *ep, int name);
@@ -93,7 +93,7 @@ lRef lGetRef(const lListElem *ep, int name);
 
 int lSetInt(lListElem *ep, int name, int value);
 int lSetUlong(lListElem *ep, int name, lUlong value);
-int lSetString(lListElem *ep, int name, lString value);
+int lSetString(lListElem *ep, int name, const char *value);
 int lSetList(lListElem *ep, int name, lList *value);
 int lSetFloat(lListElem *ep, int name, lFloat value);
 int lSetDouble(lListElem *ep, int name, lDouble value);

@@ -45,7 +45,7 @@
 
 /* read a file into a string */
 char *str_from_file(
-char *fname,
+const char *fname,
 int *len 
 ) {
    FILE *fp;

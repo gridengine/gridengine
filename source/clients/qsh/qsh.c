@@ -84,20 +84,20 @@
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
 
-void write_client_name_cache(char *cache_path, char *client_name);
-static void add2env(lList **envlpp, char *name, char *value);
+void write_client_name_cache(const char *cache_path, const char *client_name);
+static void add2env(lList **envlpp, const char *name, const char *value);
 static int open_qrsh_socket(int *port);
 static int wait_for_qrsh_socket(int sock, int timeout);
 static char *read_from_qrsh_socket(int msgsock);
 static int get_remote_exit_code(int sock);
-static char *quote_argument(char *arg);
+static const char *quote_argument(const char *arg);
 static int parse_result_list(lList *alp, int *alp_error);
-static int start_client_program(char *client_name, 
+static int start_client_program(const char *client_name, 
                                 lList *opts_qrsh,
-                                char *host,
-                                char *port,
-                                char *job_dir,
-                                char *utilbin_dir,
+                                const char *host,
+                                const char *port,
+                                const char *job_dir,
+                                const char *utilbin_dir,
                                 int is_rsh,
                                 int is_rlogin,
                                 int nostdin,
@@ -107,7 +107,7 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 /* static char *get_rshd_name(char *hostname); */
 static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job);
 /* static char *get_master_host(lListElem *jep); */
-static void set_job_info(lListElem *job, char *name, int is_qlogin, int is_rsh, int is_rlogin);
+static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is_rsh, int is_rlogin);
 /* static lList *parse_script_options(lList *opts_cmdline); */
 static lList *parse_qrsh_command(lList *opts_cmdline, char *name, char **hostname, int existing_job);
 static lList *merge_and_order_options(lList **opts_defaults, lList **opts_scriptfile, lList **opts_cmdline);
@@ -117,14 +117,9 @@ static void delete_job(u_long32 job_id, lList *lp);
 
 int main(int argc, char **argv);
 
-#ifdef METACOMPUTING
-static void show_hosts_and_slots(lListElem *job, FILE *fp);
-static int print_hosts(lList *gdil_orig, FILE *fp); 
-#endif
-
 #define VERBOSE_LOG(x) if(sge_is_verbose()) { fprintf x; fflush(stderr); }
 
-/****** qsh/--Introduction-qsh ***************************************
+/****** Interactive/qsh/--Introduction-qsh-- ***************************************
 *
 *  NAME
 *     qsh -- qsh, qlogin, qrsh, qrlogin, qrexec
@@ -169,13 +164,13 @@ static int print_hosts(lList *gdil_orig, FILE *fp);
 *  BUGS
 *
 *  SEE ALSO
-*     qrsh_starter/--Introduction-qrsh_starter
+*     qrsh_starter/--Introduction--
 *
 ****************************************************************************
 *
 */
 
-/****** qsh/-Global_Definitions-qsh ***************************************
+/****** Interactive/qsh/--Global_Definitions-qsh-- ***************************************
 *
 *  NAME
 *     Global Definitions -- defines and global variables
@@ -243,13 +238,13 @@ static void forward_signal(int sig)
    DEXIT;
 }
 
-/****** qsh/add2env() ***************************************
+/****** Interactive/qsh/add2env() ***************************************
 *
 *  NAME
 *     add2env -- add entry to environment list
 *
 *  SYNOPSIS
-*     static void add2env(lList **envlpp, char *name, char *value);
+*     static void add2env(lList **envlpp, const char *name, const char *value);
 *
 *  FUNCTION
 *     Adds an entry to an environment list.
@@ -257,28 +252,23 @@ static void forward_signal(int sig)
 *     a new list is created and passed back to caller.
 *
 *  INPUTS
-*     envlpp - reference to pointer to list
+*     envlpp - reference to pointer to environment list, the list will be
+*              modified by add2env
 *     name   - name of the environment variable
 *     value  - value of the environment variable
 *
 *  RESULT
-*     [envlpp] - eventually a new list will be passed back
-*
-*  EXAMPLE
+*     no return value, function changes contents of list envlpp
 *
 *  NOTES
 *     Function should be moved to some library - the same code is contained
 *     in other modules.
 *
-*  BUGS
-*
-*  SEE ALSO
-*
 ****************************************************************************
 *
 */
 static void
-add2env(lList **envlpp, char *name, char *value)
+add2env(lList **envlpp, const char *name, const char *value)
 {
    lListElem      *vep;
 
@@ -289,10 +279,10 @@ add2env(lList **envlpp, char *name, char *value)
    return;
 }
 
-/****** qsh/open_qrsh_socket() ***************************************
+/****** Interactive/qsh/open_qrsh_socket() ***************************************
 *
 *  NAME
-*     open_qrsh_socket -- quote an argument
+*     open_qrsh_socket -- create socket for messages to qrsh
 *
 *  SYNOPSIS
 *     static int open_qrsh_socket(int *port)
@@ -367,7 +357,7 @@ static int open_qrsh_socket(int *port) {
    return sock;
 }   
 
-/****** qsh/wait_for_qrsh_socket() ***************************************
+/****** Interactive/qsh/wait_for_qrsh_socket() ***************************************
 *
 *  NAME
 *     wait_for_qrsh_socket -- wait for client connecting to socket
@@ -394,7 +384,7 @@ static int open_qrsh_socket(int *port) {
 *  BUGS
 *
 *  SEE ALSO
-*     qsh/open_qrsh_socket()
+*     Interactive/qsh/open_qrsh_socket()
 *
 ****************************************************************************
 *
@@ -435,7 +425,7 @@ static int wait_for_qrsh_socket(int sock, int timeout)
    return msgsock;
 }               
 
-/****** qsh/read_from_qrsh_socket() ***************************************
+/****** Interactive/qsh/read_from_qrsh_socket() ***************************************
 *
 *  NAME
 *     read_from_qrsh_socket -- read a message from socket
@@ -495,7 +485,7 @@ static char *read_from_qrsh_socket(int msgsock)
    return buffer;
 }
 
-/****** qsh/get_remote_exit() ***************************************
+/****** Interactive/qsh/get_remote_exit() ***************************************
 *
 *  NAME
 *     get_remote_exit -- read returncode from socket
@@ -527,9 +517,9 @@ static char *read_from_qrsh_socket(int msgsock)
 *  BUGS
 *
 *  SEE ALSO
-*     qsh/-Global_Definitions-
-*     qsh/wait_for_qrsh_socket
-*     qsh/read_from_qrsh_socket
+*     Interactive/qsh/-Global_Definitions-
+*     Interactive/qsh/wait_for_qrsh_socket
+*     Interactive/qsh/read_from_qrsh_socket
 *
 ****************************************************************************
 *
@@ -559,13 +549,13 @@ static int get_remote_exit_code(int sock)
    return 1;
 }
 
-/****** qsh/quote_argument() ***************************************
+/****** Interactive/qsh/quote_argument() ***************************************
 *
 *  NAME
 *     quote_argument -- quote an argument
 *
 *  SYNOPSIS
-*     static char *quote_argument(char *arg)
+*     static const char *quote_argument(const char *arg)
 *
 *  FUNCTION
 *     Encloses the contents of string arg into  quotes ('').
@@ -579,7 +569,7 @@ static int get_remote_exit_code(int sock)
 *     the quoted string
 *
 *  EXAMPLE
-*     char *quoted = quote_argument("test");
+*     const char *quoted = quote_argument("test");
 *     printf("%s\n", quoted);
 *     free(quoted);
 *
@@ -587,15 +577,11 @@ static int get_remote_exit_code(int sock)
 *     Function might be moved to some library, same code is used in other 
 *     modules.
 *
-*  BUGS
-*
-*  SEE ALSO
-*
 ****************************************************************************
 *
 */
 
-static char *quote_argument(char *arg) {
+static const char *quote_argument(const char *arg) {
    char *new_arg = NULL;
 
    DENTER(TOP_LAYER, "quote_argument");
@@ -617,7 +603,7 @@ static char *quote_argument(char *arg) {
    return new_arg;
 }
 
-/****** qsh/parse_result_list() ***************************************
+/****** Interactive/qsh/parse_result_list() ***************************************
 *
 *  NAME
 *     parse_result_list -- parse result list from sge function calls
@@ -688,18 +674,18 @@ static int parse_result_list(lList *alp, int *alp_error)
 }
 
 
-/****** qsh/start_client_program() ***************************************
+/****** Interactive/qsh/start_client_program() ***************************************
 *
 *  NAME
 *     start_client_program -- start a telnet/rsh/rlogin/... client
 *
 *  SYNOPSIS
-*     static void start_client_program(char *client_name,
+*     static void start_client_program(const char *client_name,
 *                                      lList *opts_qrsh,
-*                                      char *host,
-*                                      char *port,
-*                                      char *job_dir,
-*                                      char *utilbin_dir,
+*                                      const char *host,
+*                                      const char *port,
+*                                      const char *job_dir,
+*                                      const char *utilbin_dir,
 *                                      int is_rsh,
 *                                      int is_rlogin
 *                                      int nostdin,
@@ -741,12 +727,12 @@ static int parse_result_list(lList *alp, int *alp_error)
 ****************************************************************************
 *
 */
-static int start_client_program(char *client_name, 
+static int start_client_program(const char *client_name, 
                                 lList *opts_qrsh,
-                                char *host,
-                                char *port,
-                                char *job_dir,
-                                char *utilbin_dir,
+                                const char *host,
+                                const char *port,
+                                const char *job_dir,
+                                const char *utilbin_dir,
                                 int is_rsh,
                                 int is_rlogin,
                                 int nostdin,
@@ -795,7 +781,7 @@ static int start_client_program(char *client_name,
       char shellpath[SGE_PATH_MAX];
       char envpath[SGE_PATH_MAX];
 
-      args[i++] = client_name;
+      args[i++] = (char *)client_name;
 
       if(is_rsh || is_rlogin) {
          sge_set_def_sig_mask(0, NULL);
@@ -805,21 +791,21 @@ static int start_client_program(char *client_name,
          }   
 
          args[i++] = "-p";
-         args[i++] = port;
-         args[i++] = host;
+         args[i++] = (char *)port;
+         args[i++] = (char *)host;
          if(is_rsh) {
             sprintf(shellpath, "%s/qrsh_starter", utilbin_dir);
             sprintf(envpath, "%s/environment", job_dir);
             args[i++] = "exec";
-            args[i++] = quote_argument(shellpath);
-            args[i++] = quote_argument(envpath);
+            args[i++] = (char *)quote_argument(shellpath);
+            args[i++] = (char *)quote_argument(envpath);
             if(noshell) {
                args[i++] = "noshell";
             }   
          }   
       } else {
-         args[i++] = host;
-         args[i++] = port;
+         args[i++] = (char *)host;
+         args[i++] = (char *)port;
       }
    
       args[i] = NULL;
@@ -841,7 +827,7 @@ static int start_client_program(char *client_name,
    }
 }
 
-/****** qsh/get_client_server_context() ***************************************
+/****** Interactive/qsh/get_client_server_context() ***************************************
 *
 *  NAME
 *     get_client_server_context -- get parameters for client/server connection
@@ -891,7 +877,7 @@ static int start_client_program(char *client_name,
 *  BUGS
 *
 *  SEE ALSO
-*     qsh/read_from_qrsh_socket()
+*     Interactive/qsh/read_from_qrsh_socket()
 *
 ****************************************************************************
 *
@@ -943,7 +929,7 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
    return 0;
 }
 
-/****** qsh/get_client_name() ***************************************
+/****** Interactive/qsh/get_client_name() ***************************************
 *
 *  NAME
 *     get_client_name -- get path and name of client program to start
@@ -1068,7 +1054,38 @@ static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
    return client_name;
 }
 
-void write_client_name_cache(char *cache_path, char *client_name) 
+/****** Interactive/qsh/write_client_name_cache() ******************************
+*  NAME
+*     write_client_name_cache() -- cache name of qrsh client command
+*
+*  SYNOPSIS
+*     void write_client_name_cache(const char *cache_path, 
+*                                  const char *client_name) 
+*
+*  FUNCTION
+*     Name and path of the remote client command started by qrsh is configured
+*     in the cluster configuration, parameter rsh_client/rlogin_client.
+*     This configuration is retrieved from qmaster before qrsh can start the
+*     client command.
+*     In case of multiple calls to qrsh -inherit, e.g. from a qmake application, 
+*     this would meen a lot of communication to qmaster to retrieve the same
+*     parameter over and over again.
+*     To avoid this unneccessary communication overhead, the name of the client
+*     command is cached in a file in the jobs temporary directory (TMPDIR) when
+*     it is retrieved for the first time.
+*     Following calls to qrsh -inherit can then just read the cache file.
+*
+*  INPUTS
+*     const char *cache_path  - name and path of the cache file 
+*     const char *client_name - name of the client command 
+*
+*  RESULT
+*     void - no error handling
+*
+*  SEE ALSO
+*     Interactive/qsh/get_client_name()
+*******************************************************************************/
+void write_client_name_cache(const char *cache_path, const char *client_name) 
 {
    if(cache_path && *cache_path && client_name && *client_name) {
       FILE *cache = NULL;
@@ -1082,7 +1099,7 @@ void write_client_name_cache(char *cache_path, char *client_name)
    }
 }
 
-/****** qsh/get_master_host() ***************************************
+/****** Interactive/qsh/get_master_host() ***************************************
 *
 *  NAME
 *     get_master_host -- get hostname of master host
@@ -1148,13 +1165,13 @@ void write_client_name_cache(char *cache_path, char *client_name)
    /* please don't free qlp because result will get invalid then */
 /* } */
 
-/****** qsh/set_job_info() ***************************************
+/****** Interactive/qsh/set_job_info() ***************************************
 *
 *  NAME
 *     set_job_info -- info about interactive job for execd/shepherd
 *
 *  SYNOPSIS
-*     static void set_job_info(lListElem *job, char *name,
+*     static void set_job_info(lListElem *job, const char *name,
 *                              int is_qlogin, int is_rsh, 
 *                              int is_rlogin);
 *
@@ -1184,10 +1201,10 @@ void write_client_name_cache(char *cache_path, char *client_name)
 ****************************************************************************
 *
 */
-static void set_job_info(lListElem *job, char *name, int is_qlogin, int is_rsh, int is_rlogin)
+static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is_rsh, int is_rlogin)
 {
    u_long32 jb_now = lGetUlong(job, JB_now);
-   char *job_name  = lGetString(job, JB_job_name);
+   const char *job_name  = lGetString(job, JB_job_name);
    
    if(is_rlogin) {
       JB_NOW_SET_QRLOGIN(jb_now);
@@ -1219,7 +1236,7 @@ static void set_job_info(lListElem *job, char *name, int is_qlogin, int is_rsh, 
    lSetString(job, JB_job_name, job_name);
 }
 
-/****** qsh/parse_script_options() ***************************************
+/****** Interactive/qsh/parse_script_options() ***************************************
 *
 *  NAME
 *     parse_script_options -- read options from scriptfile
@@ -1286,7 +1303,7 @@ static void set_job_info(lListElem *job, char *name, int is_qlogin, int is_rsh, 
    return opts_scriptfile;
 } */
 
-/****** qsh/parse_qrsh_command() ***************************************
+/****** Interactive/qsh/parse_qrsh_command() ***************************************
 *
 *  NAME
 *     parse_qrsh_command -- separate qsh and command options
@@ -1372,7 +1389,7 @@ static lList *parse_qrsh_command(lList *opts_cmdline, char *name, char **hostnam
    return opts_qrsh;
 }
 
-/****** qsh/merge_and_order_options() ***************************************
+/****** Interactive/qsh/merge_and_order_options() ***************************************
 *
 *  NAME
 *     merge_and_order_options -- merge options from different sources
@@ -1447,7 +1464,7 @@ static lList *merge_and_order_options(lList **opts_defaults,
 }   
 
 
-/****** qsh/set_command_to_env() ***************************************
+/****** Interactive/qsh/set_command_to_env() ***************************************
 *
 *  NAME
 *     set_command_to_env() -- set command to execute in environment variable

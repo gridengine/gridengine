@@ -1,3 +1,5 @@
+JG-2003-03-20-0  Bugfix:    fix aimk -gcc for solaris86
+
 AA-2003-03-19-1  Bugfix:    Darwin and Freebsd merge from maintrunc
                  Changed:   all
 

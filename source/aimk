@@ -1513,8 +1513,10 @@ case SOLARIS86:
    endif
 
    if ( $BUILDARCH == SOLARIS86 ) then
-#     set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
-      set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes" 
+      if ( $CC == cc ) then
+#        set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE -errtags=yes" 
+         set CFLAGS = "-v $CFLAGS -errwarn=%all,no%E_NONPORTABLE_BIT_FIELD_TYPE,no%E_STATEMENT_NOT_REACHED,no%E_IMPLICIT_DECL_FUNC_RETURN_INT,no%E_OLD_STYLE_DECL_HIDES_PROTO,no%E_CONST_PROMOTED_UNSIGNED_LONG -errtags=yes" 
+      endif
       set CFLAGS = "$CFLAGS -D$BUILDARCH"
    endif
 

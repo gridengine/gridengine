@@ -2,7 +2,7 @@
 <HTML>
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE>JGrid: RMI-based Java interface for SGE</TITLE>
+	<TITLE>JGrid 0.2: RMI-based Java interface for SGE</TITLE>
 	<META NAME="GENERATOR" CONTENT="StarOffice 6.0  (Solaris Sparc)">
 	<META NAME="CREATED" CONTENT="20030131;9290500">
 	<META NAME="CHANGED" CONTENT="20030131;10055300">
@@ -14,7 +14,7 @@
 	</STYLE>
 </HEAD>
 <BODY LANG="en-US">
-<H1>JGrid: an RMI-based Java interface for Grid Engine</H1>
+<H1>JGrid 0.2: an RMI-based Java interface for Grid Engine</H1>
 <H2>Overview</H2>
 <P>This document will attempt to explain what the JGrid package is
 and does, how to install it, how to configure it and how to develop
@@ -41,14 +41,14 @@ the execution hosts is always running.</P>
 </OL>
 <P STYLE="margin-bottom: 0cm"><BR>
 </P>
-<P>The JGrid package can be downloaded here: <A HREF="JGrid-1.0.tar.gz">JGrid-1.0.tar.gz</A>.</P>
+<P>The JGrid package can be downladed here: <A HREF="JGrid-0.2.tar.gz">JGrid-0.2.tar.gz</A>.</P>
 <HR>
 <H2><A NAME="Introduction|outline"></A>Introduction</H2>
 <P>To begin with, this document will explain the concepts behind how
 JGrid works.</P>
 <H3>The Architecture</H3>
 <P>The JGrid package has three major components, the proxy, the
-skeleton, and the compute engine.</P>
+native peer, and the agent.</P>
 <H4>The Proxy</H4>
 <P>The Proxy is a Java server which pretends to be an RMI registry
 and an RMI server in order to intercept RMI calls and feed them
@@ -58,19 +58,18 @@ responds with a stub that's been modified to point back to the proxy
 server. The proxy can then read incoming RMI calls and write them to
 disk. Once the call data has been written to disk, the proxy submits
 a job to the grid engine to process the data.</P>
-<H4>The Skeleton</H4>
-<P>The job the proxy submits to the grid is to run the skeleton on
-the execution host. The skeleton is a native binary that reads the
-serialized RMI call and rebroadcasts it to the compute engine.
-Because the skeleton is a native binary, it lacks the startup
-overhead that a Java process would have. It also has some limitation
-due to the fact that it's a C program trying to read serialized Java
-objects.</P>
-<H4>The Compute Engine</H4>
-<P>The compute engine is a Java server that runs on each execution
-host. The skeleton contacts the compute engine via RMI and sends the
-original client request. The compute engine then executes that
-requests and returns the results to the proxy via RMI. The proxy can
+<H4>The Native Peer</H4>
+<P>The job the proxy submits to the grid is to run the native peer on
+the execution host. The native peer is a native binary that connects to
+the agent and requests the job be run.  The native peer remains running
+as long as the job runs so that SGE has a handle to use for dealing with
+the job.</P>
+<H4>The Agent</H4>
+<P>The agent is a Java server that runs on each execution
+host. The native peer contacts the agent via a custom protocol
+(JCEP: Java Compute Engine Protocol) and sends the
+job request. The agent then executes the
+requested job and returns the results to the proxy via RMI. The proxy can
 then return those results to the client.</P>
 <H4>Advantages</H4>
 <P>This architecture has several advantages. The first and foremost
@@ -81,7 +80,7 @@ the client's behalf does not have to be known the server. As long as
 the class files are posted in an accessible location, the server can
 dynamically retrieve the binaries need to execute the client's
 request. The proxy allows clients to submit both synchronous and
-asynchronous jobs. The native skeleton saves the time and memory
+asynchronous jobs. The native peer saves the time and memory
 overhead associated with starting a new VM for every request. Because
 the compute client is always running, each execution host only has to
 start the VM once.</P>
@@ -95,20 +94,14 @@ server. The proxy host is the only host through which Java clients
 will be able to submit jobs. On the proxy host run the proxy by
 typing: 
 </P>
-<PRE STYLE="margin-bottom: 0.5cm">java -cp proxy.jar com.sun.grid.proxy.ComputeProxy</PRE><P>
-Next, make sure each execution host has access to the skeleton file
-(found in proxy.jar under com/sun/grid/skel/skeleton). On each
-execution host run the compute engine by typing:</P>
-<PRE>java -cp proxy.jar -Djava.rmi.server.codebase=url \
-     com.sun.grid.server.ComputeEngineImpl proxy_host</PRE><P>
-The replace url with the URL for where the proxy.jar can be accessed
-via http. Making proxy.jar accessible via http is not necessary for
-the current build, but due to a (soon to be fixed) glitch, you have
-to include the java.rmi.server.codebase property even if proxy.jar is
-not accessible. (In that can, it can be set to anything.) This, of
-course, won't work. In<SPAN LANG="en-US"> order </SPAN>for JGrid to
+<PRE STYLE="margin-bottom: 0.5cm">java -cp proxy.jar com.sun.grid.jgrid.proxy.ComputeProxy</PRE><P>
+Next, make sure each execution host has access to the native peer
+(found in proxy.jar under com/sun/grid/skel/JCEPskeleton) and the skel.sh
+script. On each execution host run the agent by typing:</P>
+<PRE>java -cp proxy.jar com.sun.grid.jgrid.server.JCEPHandler -reghost hostname</PRE><P>
+This, of course, won't work. In order for JGrid to
 function, read the next section on configuring the system.</P>
-<P>Note that the compute engines must be started <B>after</B> the
+<P>Note that the agents must be started <B>after</B> the
 proxy.</P>
 <HR>
 <H2><A NAME="Configuration|outline"></A>Configuration</H2>
@@ -118,31 +111,56 @@ behavior. The most useful are: -sub, -skel, and -d.</P>
 <H4>-sub</H4>
 <P>The -sub switch allows the command used to submit a job to the
 queue to be set. In not used, the submission command defaults to
-&quot;qsub&quot;. If path information needs to be included or another
+&quot;qsub -notify&quot;. If path information needs to be included or another
 command must be used, use -sub. For example:</P>
-<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.proxy.ComputeProxy -sub /sge/bin/solaris64/qsub</PRE><H4>
--skel</H4>
+<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.jgrid.proxy.ComputeProxy -sub &quot;/sge/bin/solaris64/qsub -notify&quot;</PRE>
+<H4>-skel</H4>
 <P>The -skel switch allows the command to be executed on the
 execution host to be set. If not used, the command defaults to
-&quot;skel&quot;. If path information needs to be included or another
+&quot;skel.sh&quot;. If path information needs to be included or another
 command must be used, use -skel. For example:</P>
-<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.proxy.ComputeProxy -skel /sge/jgrid/skel.sh</PRE><H4>
--d</H4>
+<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.jgrid.proxy.ComputeProxy -skel /sge/jgrid/skel.sh</PRE>
+<H4>-d</H4>
 <P>The -d switch allows the job file directory to be set. If not
 used, the job directory defaults to &quot;ser&quot;. If another
 directory is desired, use -d. For example:</P>
-<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.proxy.ComputeProxy -d /sge/jgrid/jobs</PRE><H4>
-Other Switches</H4>
-<P>For more information about command lines switches for the proxy
-type:</P>
-<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.proxy.ComputeProxy -help</PRE><H3>
-Configuring the Skeleton</H3>
-<P>The skeleton binary cannot be run directly by SGE, so a script,
+<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.jgrid.proxy.ComputeProxy -d /sge/jgrid/jobs</PRE>
+<H4>Other Switches</H4>
+<P>For more information about command lines switches for the proxy type:</P>
+<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.jgrid.proxy.ComputeProxy -help</PRE>
+<H3>Configuring the Native Peer</H3>
+<P>The native peer binary cannot be run directly by SGE, so a script,
 skel.sh, has been included which starts up the skeleton. To change
 the job file directory used by the skeleton, edit the script and
 change the WORK_DIR variable.</P>
-<H3>Configuring the Compute Engine</H3>
-<P>The compute engine comes as is for now.</P>
+<P>The native peer can also be used independent of SGE for testing purposes
+mostly.  For more information, run JCEPskeleton (or skel.sh) with no parameters.</P>
+<H3>Configuring the Agent</H3>
+<P>The agent has a variety of command line switches to control its
+behavior. The most useful are: -reghost and -grace.</P>
+<H4>-reghost</H4>
+<P>The -reghost switch tells the agent on which host to find the RMI registry
+containing the result channel.  For example:</P>
+<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.jgrid.server.JCEPHandler -reghost master.germany.sun.com</PRE>
+<H4>-grace</H4>
+<P>Since JGrid allows the submission of arbitrary jobs, it must be assumed that
+not all jobs will be well behaved.  Since Java does not provide (anymore) a
+facility for killing an executing thread without killing the whole VM, canceling
+a job consists of asking the job nicely to stop executing.  If it refuses,
+there's nothing that can be done about it short of stopping the VM. 
+Additionally, the Job class is written such that a call to cancel() only
+&quot;guarantees&quot; that the job will stop &quot;as soon as possible&quot;.
+Unfortunately, there really is no way to tell a job that is slow to stop from a
+job that has gone rogue and will never stop.  To deal with this problem, the
+JCEPHandler uses a grace period when shutting down.  The JCEPHandler will ask
+each running job to stop and then wait for a set amount of time before
+explicitly calling System.exit() to stop the VM.  The amount of time to wait is
+set with the -grace switch.  For example, to set the grace period to 30 seconds
+one would use:</P>
+<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.jgrid.server.JCEPHandler -grace 30</PRE>
+<H4>Other Switches</H4>
+<P>For more information about command lines switches for the proxy type:</P>
+<PRE STYLE="margin-bottom: 0.5cm">java com.sun.grid.jgrid.server.JCEPHandler -help</PRE>
 <H3>Configuring the VM</H3>
 <P>The proxy takes advantage of some classes that are generally
 restricted to user program. It also requires access to several
@@ -153,64 +171,48 @@ included in the tar file. If the SGE install and the job file
 directory are somewhere other than in /sge, the policy file will need
 to be modified. To set the security file, type: 
 </P>
-<PRE STYLE="margin-bottom: 0.5cm">java -Djava.security.policy=java.policy com.sun.grid.proxy.ComputeProxy</PRE>
+<PRE STYLE="margin-bottom: 0.5cm">java -Djava.security.policy=/sge/java.policy com.sun.grid.jgrid.proxy.ComputeProxy</PRE>
 <HR>
 <H2><A NAME="Testing|outline"></A>Testing</H2>
-<P>To make sure the proxy is working, do the following:</P>
+<P>To test if the system is working, do the following:</P>
 <P>On the proxy host type:</P>
-<PRE>java -Djava.security.policy=java.policy -cp JGrid.jar:client.jar \
-     com.sun.grid.proxy.ComputeProxy -sub /usr/bin/cp -skel /etc/hosts \
-     -d /var/tmp</PRE><P>
-When the server indicates it's ready, in another window on the proxy
-host type:</P>
-<PRE>java -Djava.security.policy=java.policy -cp JGrid.jar:client.jar \
-     dant.test.ComputeClient localhost 1099</PRE><P>
-The client will hang waiting for a response from the proxy, and the
-proxy will hang waiting for results from a non-<SPAN LANG="en-US">existent</SPAN>
-compute engine. Stop both processes with CTRL-C after about 10
-seconds. If the proxy is working, a copy of the /etc/hosts file in a
-file called 8000000000000000 will be placed in the directory where
-the proxy was started.</P>
-<P>To test if the entire system is working, do the following:</P>
-<P>On the proxy host type:</P>
-<PRE>java -Djava.security.policy=java.policy -cp JGrid.jar:client.jar \
-     com.sun.grid.proxy.ComputeProxy -sub /sge/bin/solaris64/qsub \
-     -skel /sge/jgrid/skel.sh -d /sge/jgrid/jobs</PRE><P>
+<PRE>java -Djava.security.policy=/sge/jgrid/java.policy -cp JGrid.jar:client.jar \
+     com.sun.grid.jgrid.proxy.ComputeProxy -sub /sge/bin/solaris64/qsub \
+     -skel &quot;/sge/jgrid/skel.sh submit&quot; -d /sge/jgrid/jobs</PRE><P>
 Replace the path information with information that is correct for
 grid. When the server indicates it's ready, on the execution host
 type:</P>
-<PRE>java -Djava.security.policy=java.policy -Djava.rmi.server.codebase=http://blah
-     -cp JGrid.jar:client.jar com.sun.grid.server.ComputeEngineImpl proxy_host</PRE><P>
-Replace proxy_host with the name of the server on which the proxy in
-running. Ignore the<SPAN LANG="en-US"> exception. </SPAN>It merely
-indicates that an existing RMI registry was not found. The compute
-engine creates its own is that case. When the server indicates it's
-ready, on a client type:</P>
-<PRE>java -Djava.security.policy=java.policy -cp JGrid.jar:client.jar \
-     dant.test.ComputeClient proxy_host 1099</PRE><P>
-Replace proxy_host with the name of the server on which the proxy in
-running. If<SPAN LANG="en-US"> everything is </SPAN>working, the
-execution host should print &quot;This is a test&quot; and the client
-should indicate that it received the value &quot;TEST&quot; from the
-server. 
-</P>
-<P>To test if the code mobility is working, do the following:</P>
-<P>Make the client.jar available via http. On the proxy host type:</P>
-<PRE>java -Djava.security.policy=java.policy -cp JGrid.jar \
-     com.sun.grid.proxy.ComputeProxy -sub /sge/bin/solaris64/qsub \
-     -skel /sge/jgrid/skel.sh -d /sge/jgrid/jobs</PRE><P>
-Replace the path information with information that is correct for
-grid. When the server indicates it's ready, on the execution host
-type:</P>
-<PRE>java -Djava.security.policy=java.policy -Djava.rmi.server.codebase=http://blah
-     -cp JGrid.jar com.sun.grid.server.ComputeEngineImpl proxy_host</PRE><P>
+<PRE>java -Djava.security.policy=/sge/jgrid/java.policy -cp JGrid.jar:client.jar \
+     com.sun.grid.jgrid.server.JCEPHandler -reghost proxy_host</PRE><P>
 Replace proxy_host with the name of the server on which the proxy in
 running. When the server indicates it's ready, on a client type:</P>
-<PRE>java -Djava.security.policy=java.policy -Djava.rmi.server.codebase=url \
+<PRE>java -Djava.security.policy=/sge/jgrid/java.policy -cp JGrid.jar:client.jar \
+     dant.test.ComputeClient proxy_host 1099</PRE><P>
+Replace proxy_host with the name of the server on which the proxy in
+running. If everything is working, the
+execution host should print &quot;This is a test&quot; in the job output file
+(skel.sh.o[0-9]+) along with some lifecycle messages and the client
+should indicate that it received the value &quot;TEST&quot; from the
+server. If everything isn't working, try rerunning the above commands with the
+-debug switch to see copious amounts of debug output that will hopefully tell
+you something useful.</P>
+<P>To test if the code mobility is working, do the following:</P>
+<P>Make the client.jar available via http. On the proxy host type:</P>
+<PRE>java -Djava.security.policy=/sge/jgrid/java.policy -cp JGrid.jar \
+     com.sun.grid.jgrid.proxy.ComputeProxy -sub /sge/bin/solaris64/qsub \
+     -skel &quot;/sge/jgrid/skel.sh submit&quot; -d /sge/jgrid/jobs</PRE><P>
+Replace the path information with information that is correct for
+grid. When the server indicates it's ready, on the execution host
+type:</P>
+<PRE>java -Djava.security.policy=/sge/jgrid/java.policy -cp JGrid.jar
+     com.sun.grid.jgrid.server.JCEPHandler -reghost proxy_host</PRE><P>
+Replace proxy_host with the name of the server on which the proxy in
+running. When the server indicates it's ready, on a client type:</P>
+<PRE>java -Djava.security.policy=/sge/jgrid/java.policy -Djava.rmi.server.codebase=url \
      -cp JGrid.jar:client.jar dant.test.ComputeClient proxy_host 1099</PRE><P>
 Replace proxy_host with the name of the server on which the proxy in
 running. Replace url with the fully qualified URL where the
-client.jar is stored. If<SPAN LANG="en-US"> everything is </SPAN>working,
+client.jar is stored. If everything is working,
 the execution host should print &quot;This is a test&quot; and the
 client should indicate that it received the value &quot;TEST&quot;
 from the server. The difference between this test and the previous
@@ -220,19 +222,45 @@ including client.jar in the classpath, client.jar was made available
 via http and exported by the client via the codebase property. The
 ComputeTest object that the compute engine executed came from code
 that was moved dynamically over the network.</P>
+<P>Note that whenever you explicitly set the submission command with -sub, if
+you want your jobs to be suspendable and cancelable, you have to give the
+command as &quot;/path/qsub -notify&quot;.  This is required because the native
+peer needs time to relay the command to the job before itself being suspended
+or killed.  Similarly, whenever setting the native peer via the -skel switch,
+you must always give it a parameter, normally &quot;submit&quot;.</P>
 <HR>
 <H2><A NAME="Development|outline"></A>Development</H2>
 <P>Developing with the JGrid is easy. A developer only needs to know
-two interfaces: com.sun.grid.Computable and
-com.sun.grid.ComputeEngine. A complete API doc is included in the
+two interfaces: com.sun.grid.jgrid.Computable and
+com.sun.grid.jgrid.ComputeEngine. A complete API doc is included in the
 tar.</P>
 <P>The Computable interface must be implemented by any object passed
 to JGrid for execution. Computable inherits from Serializable, so any
 Computable class must also be Serializable. The Computable interface
-has one method, compute(), which returns a Serializable results
-object. The compute() method is called by the compute engine when the
+has five methods: compute(), checkpint(), cancel(), suspend(), and resume
+().</P>
+<P>The compute() method is called by the compute engine when the
 job is assigned to an execution host. If a problem occurs during
-execution, the Computable class can throw a ComputeException.</P>
+execution, the Computable class can throw a ComputeException.  If everything
+goes to plan, the compute() method returns a Serializable results object.</P>
+<P>The cancel() method is used to stop the job.  The job does not have to be
+stopped when the cancel() method returns.  It only has to be in the process of
+stopping.  This is currently to prevent the job from having to implement
+complicated synchronizations.  This will change soon.</P>
+<P>The checkpoint() method forces the job to make sure it's serializable
+attributes are up to date.  The assumption is that a job that is checkpointable
+will do it's work in transient variables and store it's state in non-transient
+variables, preferably only after a checkpoint() call.  In this way, the job's
+state can be keep consistent.  The downside is that any work that gets done
+between the serialization of the job and the cancelation of the job gets
+lost.</P>
+<P>The suspend() and resume() methods are used to suspend and resume jobs,
+respectively.  The suspend() method, like cancel(), is not required to leave
+the job in a suspended state, only in a suspending state.  Like with cancel(),
+this will also change soon.<P>
+<P>cancel(), suspend(), and checkpoint() can all throw a NotInterruptableException
+is the job does not implement that facility.  A job that cannot be canceled
+can only be killed by stopping the VM.</P>
 <P>The ComputeEngine interface is &quot;implemented&quot; by the
 proxy. In reality the proxy is only pretending to implement the
 interface, but the clients can't tell. The ComputeEngine interface
@@ -243,7 +271,7 @@ results object. To submit a job asynchronously, the client calls the
 computeAsynch() method, passing a Computable object. The method
 returns the job id. The client can then call isComplete(), passing
 the job id, to find out if the job has completed. The client can also
-call getResults(), passing the job id,<SPAN LANG="en-US"> or </SPAN>get
+call getResults(), passing the job id, or get
 the Serializable results object if the job has completed.</P>
 <P>To get a reference to the ComputeEngine, the client must connect
 to the RMI registry on the proxy host and do a lookup for
@@ -251,25 +279,29 @@ to the RMI registry on the proxy host and do a lookup for
 <P>See the API docs for more info.</P>
 <HR>
 <H2><A NAME="Futures|outline"></A>Futures</H2>
-<P>When version 1.0 is finalized, it will have all of its current
-functionality, minus a few glitches, and plus a few more command line
-switches for more control over the proxy and compute engines. The 1.0
-release will also include better docs and better examples. The 1.1
-release will include the ability to checkpoint jobs and to migrate
-jobs across execution hosts. Version 1.1 may also include an event
-model for notification of completed asynchronous jobs. In the distant
-future, JGrid will probably include a Jini-based programming model
-for job-to-job communications, similar to what Globus allows. 
-</P>
+<P>I finally have a pretty clear idea of where I'm going with JGrid.  The
+following are the major things on my to-do list, in order of execution:</P>
+<UL>
+<LI>Replace handwritten JRMP code in ComputeProxy with custom RMI classes</LI>
+<LI>Replace spooling jobs to disk with spooling jobs to a JavaSpace</LI>
+<LI>Replace ResultChannel with an update to the spooled job in the
+JavaSpace</LI>
+<LI>Make the agents themselves be SGE jobs for better control and visibility</LI>
+<LI>Add user authentication and authorization</LI>
+<LI>Replace fork & exec of qsub, et al with DRMAA calls</LI>
+<LI>Provide an interface for controling job parameters and agents from the
+client</LI>
+</UL>
 <HR>
 <H2><A NAME="disclaimer"></A><A NAME="Disclaimer|outline"></A>Disclaimer</H2>
 <P>JGrid is a product of my creation. Sun in no way supports,<SPAN LANG="en-US">
 acknowledges </SPAN>or lends legitimacy to JGrid. I take no
 responsibility for any losses resulting from the use of Jgrid. Please
 direct any questions or comments to me at:</P>
-<P>Daniel Templeton<BR><A HREF="mailto:dan.templeton@sun.com">dan.templeton@sun.com</A><BR>1.770.360.6447<BR>3655
-North Point Parkway<BR>Suite 600</P>
-<P STYLE="margin-top: 0.42cm; page-break-after: avoid"><BR><BR>
+<P>Daniel Templeton<BR><A
+HREF="mailto:dan.templeton@sun.com">dan.templeton@sun.com</A><BR>
++49 941/3075 220<BR>
+Dr-Leo-Ritter-Strasse 7, D-93049 Regensburg</P>
 </P>
 </BODY>
 </HTML>

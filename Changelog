@@ -1,4 +1,7 @@
-JG-2002-04-22-1: Enhancem.  Improved verbose output in qmake.
+JG-2002-04-22-2: Cleanup:   Function hostcmp no longer needed in qmake
+                            integration (remote-sge.c).
+
+JG-2002-04-22-1: Enhancem.: Improved verbose output in qmake.
                             Start tasks on localhost also per qrsh - slower,
                             but tasks are identifiable in accounting.
 

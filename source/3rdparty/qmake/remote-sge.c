@@ -299,8 +299,6 @@ struct finished_job *saved_status = NULL;
 static int read_remote_status(int *exit_code_ptr, int *signal_ptr, int *coredump_ptr, int block);
 static void read_and_save_remote_status();
 
-static int hostcmp(const char *h1, const char *h2);
-
 /****** Interactive/qmake/remote_exit() ***************************************
 *
 *  NAME
@@ -2434,55 +2432,6 @@ int remote_kill (int id, int sig)
    }
    
    return kill(id, sig);
-}
-
-
-/****** qmake/hostcmp() ***************************************
-*
-*  NAME
-*     hostcmp - compare two hostnames
-*
-*  SYNOPSIS
-*     static int hostcmp(const char *h1, const char *h2);
-*
-*  FUNCTION
-*     compare two hostnames
-*
-*  INPUTS
-*     h1 
-*     h2
-*
-*  RESULT
-*     return values like strcmp()
-*
-*  EXAMPLE
-*
-*  NOTES
-*
-*  BUGS
-*     Comparing is done always by ignoring FQDN. This is appropriate for
-*     almost any site but not for certain multidomain installations.
-*
-*  SEE ALSO
-*
-****************************************************************************
-*/
-static int hostcmp(const char *h1, const char *h2)
-{
-   char h1_cpy[MAXHOSTNAMELEN], h2_cpy[MAXHOSTNAMELEN];
-   char *s;
-
-   if ((s = strchr(h1, '.')))
-      strncpy(h1_cpy, h1, s - h1);
-   else
-      strcpy(h1_cpy, h1);
-
-   if ((s = strchr(h2, '.')))
-      strncpy(h2_cpy, h2, s - h2);
-   else
-      strcpy(h2_cpy, h2);
-
-   return strcasecmp(h1_cpy, h2_cpy);
 }
 
 /****** qmake/main() ***************************************

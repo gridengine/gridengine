@@ -22,7 +22,8 @@ one of them:</font>
 <li>
 <font color="#000000">master host</font></li>
 
-<br><font color="#000000">Here runs the Grid Engine master daemon sge_qmaster.</font>
+<br><font color="#000000">Here run the Grid Engine master daemon sge_qmaster
+and the scheduler sge_schedd.</font>
 <li>
 <font color="#000000">execution hosts</font></li>
 
@@ -32,7 +33,7 @@ These nodes are allowed to execute Grid Engine jobs.</font>
 <font color="#000000">administrative hosts</font></li>
 
 <br><font color="#000000">Administrative tasks like the granting of permissions
-and the maintanence of resources are only allowed from these hosts.</font>
+and the maintenance of resources are only allowed from these hosts.</font>
 <li>
 <font color="#000000">submit hosts</font></li>
 
@@ -91,7 +92,7 @@ between Grid Engine components over reserved ports. So any client who is
 not communicating</font>
 <br><font color="#000000">from a priviledged port number is rejected. The
 mechanism used is very similar to the authentication mechanism known from
-rsh/rlogin command suite.</font>
+the rsh/rlogin command suite.</font>
 <br><font color="#000000">To make use of this security mechanism the following
 steps are necessary:</font>
 <ul>
@@ -102,8 +103,8 @@ be exported setuid root</font></li>
 
 <ul>
 <li>
-<font color="#000000">the installation is performed as root with './inst_sge
--m -resport' for qmaster and './inst_sge -x -resport' for execd</font></li>
+<font color="#000000">the installation is performed as root with './install_qmaster
+-resport' for qmaster and './install_execd -resport' for execd</font></li>
 
 <br><font color="#000000">The client binaries are installed setuid root
 to be able to connect to Grid Engine from reserved ports.</font>
@@ -151,7 +152,7 @@ command as qsub using reserved ports:</font>
 after starting</font></li>
 
 <li>
-<font color="#000000">client specific processing is executed a message
+<font color="#000000">client specific processing is executed and a message
 for qmaster is prepared</font></li>
 
 <li>
@@ -164,8 +165,8 @@ id</font></li>
 in the priviledged port space</font></li>
 
 <li>
-<font color="#000000">qmaster receives the message if it has not been send
-from the priviledged port space it will be rejected</font></li>
+<font color="#000000">qmaster receives the message, if it has not been
+send from the priviledged port space it will be rejected</font></li>
 
 <li>
 <font color="#000000">check the standard Grid Engine host and user permissions
@@ -178,7 +179,9 @@ answers</font></li>
 <font color="#000000">This applies to any other client command.</font>
 <p><a NAME="Enhanced Security Using Kerberos/DCE Authentication"></a><font color="#990000">Enhanced
 Security Using Kerberos/DCE Authentication</font>
-<p><font color="#000000">Grid Engine can be run in a Kerberos/DCE environment
+<p>Before you start digging into this, make sure how Kerberos/DCE functions
+in general. There are many good sites out there in Netland.
+<br><font color="#000000">Grid Engine can be run in a Kerberos/DCE environment
 using the corresponding authentication mechanisms. A detailed description
 how to integrate Grid Engine in such an enviroment can be found <a href="gss/doc/gss.html">here</a>.</font>
 <p><a NAME="Enhanced Security Using Kerberos"></a><font color="#990000">Enhanced
@@ -197,7 +200,7 @@ and a setup example can be found in the following documents:
 <a href="krb/doc/Implementation.html">Implementation</a></li>
 </ul>
 
-<p><br><a NAME="Enhanced Security Using OpenSSL"></a><font color="#990000">Enhanced
+<p><a NAME="Enhanced Security Using OpenSSL"></a><font color="#990000">Enhanced
 Security Using SSL</font>
 <p><font color="#000000">A prototype of Grid Engine supporting SSL has
 been developed in the context of a diploma thesis. Although the original

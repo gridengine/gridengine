@@ -201,7 +201,7 @@ key.
 <br>&nbsp;
 <h2>
 <font color="#990000">Grid Engine Kerberization Level of Effort Scope</font></h2>
-There are at two levels of effort in Kerberizing Grid Engine. The first
+There are two levels of effort in Kerberizing Grid Engine. The first
 level of effort is the authentication of Grid Engine clients and servers.
 It turns out that the authentication of Grid Engine clients and the authentication
 between the Grid Engine servers are both actually accomplished with the
@@ -251,11 +251,11 @@ sec_krb_init
 <br>&nbsp;&nbsp;&nbsp; call krb5_init
 <br>&nbsp;&nbsp;&nbsp; if we are a grid engine daemon
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setup connection lists
-<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set internal is_sge_deamon
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; set internal is_sge_daemon
 flag
 <br>&nbsp;&nbsp;&nbsp; endif
 <br>&nbsp;&nbsp;&nbsp; set connection ID to 0
-<br>&nbsp;&nbsp;&nbsp; if (is_sge_deamon)
+<br>&nbsp;&nbsp;&nbsp; if (is_sge_daemon)
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; get TGT from keytab file
 <br>&nbsp;&nbsp;&nbsp; endif
 <br>&nbsp;&nbsp;&nbsp; if (!qmaster)
@@ -341,7 +341,7 @@ connection list
 <br>commd host triple &lt;host, commproc,ID>
 <br>auth_context
 <p>global client/server data
-<br>is_sge_deamon flag
+<br>is_sge_daemon flag
 <br>auth_context (client)
 <br>&nbsp;
 <h4>
@@ -394,7 +394,7 @@ handle cases where messages destined for the qmaster are spooled in the
 commd while the qmaster is down. Since each message would include authentication
 info, the messages would not have to be thrown away when the qmaster comes
 back up.
-<p>Q. What happens when other Grid Engine deamons are cycled?
+<p>Q. What happens when other Grid Engine daemons are cycled?
 <p>A. When a Grid Engine daemon other than the qmaster is cycled and comes
 back up, it will initially attempt to contact the qmaster. Any initial
 message sent to the qmaster will include the authentication info (AP_REQ).
@@ -402,7 +402,7 @@ Any messages queued in the commd will be lost because they will have been
 encrypted with an old session key. (Is this a problem?)
 <p>Q. What happens when a client is cycled?
 <p>A. Same as Grid Engine daemon.
-<p>Q. Can the other Grid Engine deamons serve as server? This may be needed
+<p>Q. Can the other Grid Engine daemons serve as server? This may be needed
 for the plans that GENIAS has for enhanced parallel job support.
 <p>A. We will look into this further during implementation. If possible,
 we will construct the code such that any Grid Engine daemon can act as
@@ -437,7 +437,7 @@ compare to the passed user ID, and return true or false.
 <font color="#990000">Grid Engine Kerberization - Second Level of Effort</font></h2>
 Second level Grid Engine kerberization will affect a number of different
 pieces of code. It will probably involve changes in the job submittal client
-modules (qsub, qmon4), the queue master (sge_qmaster), the execution daemon
+modules (qsub, qmon), the queue master (sge_qmaster), the execution daemon
 (sge_execd), and possibly the job shepherd process (sge_shepherd). It will
 also mean changes to, at a minimum, the job structure and the message data
 structures used to pass job information between the various modules.
@@ -451,7 +451,7 @@ services the job requires.
 <p>A number of steps are involved in order to get a valid TGT on the execution
 host of the job. In general, a TGT is valid on a particular host or set
 of hosts. (It is possible to get a TGT that is valid on any host in the
-Kerberos domain, but this is not recommended.) First, the qsub or qmon4
+Kerberos domain, but this is not recommended.) First, the qsub or qmon
 client program gets a forwardable TGT for the host where the qmaster is
 executing. This TGT is passed along with the job request to the qmaster.
 The qmaster stores this TGT in the job entry. After the decision to run
@@ -473,7 +473,7 @@ the code due to handling the asynchronous request and having an additional
 job state (i.e. WAITING_FOR_TGT) for each outstanding job. We would also
 have to investigate if this is even possible using the Kerberos API C library.
 A more attractive solution to this performance problem is to get a TGT
-in the client (qsub or qmon4) which is valid for any host but to prevent
+in the client (qsub or qmon) which is valid for any host but to prevent
 this TGT from being written to the user's credentials cache (Hopefully,
 not making this TGT available in the user's credential cache would address
 any security concerns of a wildcard TGT). Then the wild-card TGT could
@@ -504,7 +504,7 @@ for a reasonably long period of time.
 <p>Q. How can we prevent a job's tickets from expiring while the job is
 executing?
 <p>A. The sge_shepherd could continually renew the TGT of the client on
-a regular basis. The cod_shepherd could do this directly or spawn a separate
+a regular basis. The sge_shepherd could do this directly or spawn a separate
 process to do it. When the TGT is renewed the new TGT would be placed in
 the user's credential cache making it available to processes executing
 as part of the user's job. (Thanks to Fritz for this suggestion.)

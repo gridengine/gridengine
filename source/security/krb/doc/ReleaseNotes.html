@@ -64,7 +64,7 @@ portion of the principal.</li>
 <br>$
 <br>&nbsp;
 <li>
-For each execution host, add a cod_execd principal for the cod_execd daemon
+For each execution host, add a sge_execd principal for the sge_execd daemon
 which will be executing on the host. Specify the execution host as the
 host portion of the principal.</li>
 
@@ -78,7 +78,7 @@ host portion of the principal.</li>
 <br>$
 <br>&nbsp;
 <li>
-Add the GRD, cod_qmaster, and cod_schedd principals to the default keytab
+Add the Grid Engine, sge_qmaster, and sge_schedd principals to the default keytab
 on the qmaster host and any shadow hosts. (You need to be root to write
 to the default keytab.)</li>
 
@@ -102,7 +102,7 @@ type DES-CBC-CRC added to keytab WRFILE:/etc/krb5.keytab.
 <br>#
 <br>&nbsp;
 <li>
-For each execution host, add the cod_execd principal to the default keytab
+For each execution host, add the sge_execd principal to the default keytab
 on the execution host. (You need to be root to write to the default keytab.)</li>
 
 <br>&nbsp;

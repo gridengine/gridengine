@@ -66,7 +66,7 @@ DCE credentials and then executes the sge_shepherd. These programs can
 be executed standalone in the following fashion.
 <br>$ setenv KRB5CCNAME FILE:/tmp/krb5cc_test_sge
 <br>$ get_cred sge > cred.out
-<br>$ put_cred -s sge -u davidson -b davidson &lt; cred.out
+<br>$ put_cred -s sge -u joe -b joe &lt; cred.out
 <br>$ delete_cred</ul>
 
 <h2>
@@ -226,10 +226,10 @@ be OK:</li>
 
 <h2>
 <font color="#660000">Grid Engine Configuration</font></h2>
-To use the security sub-programs with Grid Engine, you must obtain a CODINE/GRD
-license with the Kerberos or DCE option activated. Contact Gridware for
-additional information.
-<br>&nbsp;
+To use the security sub-programs with Grid Engine, you must switch on Kerberos
+or DCE in $SGE_ROOT/{$SGE_CELL|default}/product_mode.
+<br>The string that must be in the product_mode file is either sge-dce
+or sgeee-dce. If one of this entries are present, the Kerberos/DCE is active.
 <h2>
 <font color="#660000">Instructions for Grid Engine spool directories in
 DFS</font></h2>
@@ -324,7 +324,7 @@ off security</a> above.</li>
 </ul>
 </ul>
 
-<center>
-<p>Copyright 2001 Sun Microsystems, Inc. All rights reserved.</center>
+<center>Copyright 2001 Sun Microsystems, Inc. All rights reserved.</center>
+
 </body>
 </html>

@@ -86,7 +86,6 @@
 #include "sge_hostname.h"
 #include "sge_os.h"
 #include "sge_var.h"
-#include "sge_range.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"
 

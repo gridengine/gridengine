@@ -75,7 +75,6 @@ int verydummyprocfs;
 
 #include "sge_log.h"
 #include "msg_sge.h"
-#include "sge_log.h"
 #include "sgermon.h"
 #include "basis_types.h"
 #include "sgedefs.h"

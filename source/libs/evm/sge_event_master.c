@@ -54,7 +54,6 @@
 #include "sge_pe.h"
 #include "sge_userprj.h"
 #include "sge_job.h"
-#include "sge_host.h"
 #include "sge_hostname.h"
 #include "sge_userset.h"
 #include "sge_manop.h"

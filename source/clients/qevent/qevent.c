@@ -60,7 +60,6 @@
 #include "sge_event.h"
 #include "sge_event_client.h"
 #include "sge_time.h"
-#include "sge_unistd.h"
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "qevent.h"

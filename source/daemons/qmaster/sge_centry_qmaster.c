@@ -53,7 +53,6 @@
 #include "sge_unistd.h"
 #include "sge_spool.h"
 #include "sge_answer.h"
-#include "sge_schedd_conf.h"
 #include "sge_qinstance.h"
 #include "sge_job.h"
 #include "sge_centry.h"

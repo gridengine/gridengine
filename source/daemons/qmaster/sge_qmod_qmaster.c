@@ -62,7 +62,6 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 #include "sge_conf.h"
-#include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_manop.h"
 #include "sge_qinstance.h"

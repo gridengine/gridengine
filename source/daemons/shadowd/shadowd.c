@@ -68,7 +68,6 @@
 #include "usage.h"
 #include "sge_io.h"
 #include "sge_spool.h"
-#include "sge_hostname.h"
 #include "sge_mt_init.h"
 
 #include "msg_common.h"

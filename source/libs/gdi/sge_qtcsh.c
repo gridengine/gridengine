@@ -48,7 +48,6 @@
 #include "setup_path.h"
 #include "sge_uidgid.h"
 #include "sge_prog.h"
-#include "sge_answer.h"
 #include "sge_conf.h"
 
 #include "msg_common.h"

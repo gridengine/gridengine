@@ -73,7 +73,6 @@
 #include "sge_string.h"
 #include "sge_afsutil.h"
 #include "sge_parse_num_par.h"
-#include "sge_conf.h"
 #include "setup_path.h"
 #include "get_path.h"
 #include "msg_common.h"

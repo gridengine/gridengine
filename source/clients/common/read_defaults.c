@@ -37,10 +37,6 @@
 
 #include "sgermon.h"
 #include "sge_answer.h"
-#include "parse_job_cull.h"
-#include "parse_qsubL.h"
-#include "parse_qsub.h"
-#include "read_defaults.h"
 #include "setup_path.h"
 #include "sge_unistd.h"
 #include "msg_common.h"
@@ -49,7 +45,11 @@
 #include "sge_uidgid.h"
 #include "sge_io.h"
 #include "sge_prog.h"
-#include "sge_answer.h"
+#include "parse_job_cull.h"
+#include "parse_qsubL.h"
+#include "parse_qsub.h"
+#include "read_defaults.h"
+
 
 static char *get_root_defaults_file_path (void);
 static char *get_user_home_defaults_file_path (lList **answer_list);

@@ -48,7 +48,6 @@
 #include "sge_stdlib.h"
 #include "sge_var.h"
 #include "sge_path_alias.h"
-#include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_object.h"
 #include "sge_prog.h"

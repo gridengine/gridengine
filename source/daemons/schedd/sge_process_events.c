@@ -53,7 +53,6 @@
 #include "sge_job_schedd.h"
 #include "sge_log.h"
 #include "sge_pe.h"
-#include "sge_qinstance.h"
 #include "sge_schedd.h"
 #include "sge_process_events.h"
 #include "sge_prog.h"

@@ -293,7 +293,7 @@ static void communication_setup(char **anArgv)
    WARNING((SGE_EVENT,"starting up ngc in NO THREADS mode\n"));
    ERROR((SGE_EVENT,"problem for sge_daemonize() when threads are running?"));
 
-   ret_val = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_DEBUG, qmaster_log_flush_func );
+   ret_val = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_WARNING, qmaster_log_flush_func );
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, "cl_com_setup_commlib: %s\n",cl_get_error_text(ret_val)));
    }

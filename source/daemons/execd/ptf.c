@@ -120,11 +120,6 @@ int setpriority(int which, id_t who, int prio);
 #include "sge_all_listsL.h"
 #include "commlib.h"
 
-#ifdef USE_DC
-#   include "sgedefs.h"
-#   include "exec_ifm.h"
-#endif
-
 #include "ptf.h"
 
 /*

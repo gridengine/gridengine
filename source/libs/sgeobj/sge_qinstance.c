@@ -47,7 +47,6 @@
 #include "sge_manop.h"
 
 #include "parse.h"
-#include "sge_hostname.h"
 #include "sge_dstring.h"
 #include "sge_answer.h"
 #include "sge_attr.h"

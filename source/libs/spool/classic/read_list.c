@@ -62,7 +62,6 @@
 #include "sge_ckpt.h"
 #include "sge_centry.h"
 #include "sge_conf.h"
-#include "sge_host.h"
 #include "sge_pe.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"

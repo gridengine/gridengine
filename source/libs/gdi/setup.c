@@ -47,7 +47,6 @@
 #include "sge_feature.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
-#include "sge_prog.h"
 #include "sge_parse_num_par.h"
 #include "sge_hostname.h"
 #include "sge_spool.h"

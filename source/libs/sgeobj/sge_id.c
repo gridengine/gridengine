@@ -40,7 +40,6 @@
 #include "sge_id.h"
 #include "sge_str.h"
 #include "sge_qinstance_state.h"
-#include "sge_str.h"
 
 #include "msg_sgeobjlib.h"
 

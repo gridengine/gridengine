@@ -53,12 +53,10 @@
 #include "sge_gdi.h"
 #include "sge_time.h"
 #include "sge_host.h"
-#include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_host.h"
 
 #include "config_file.h"
 

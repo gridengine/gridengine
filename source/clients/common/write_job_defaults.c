@@ -43,7 +43,6 @@
 #include "sge_idL.h"
 #include "sge_job_refL.h"
 #include "sgermon.h"                       
-#include "sge_answer.h"
 #include "unparse_job_cull.h"
 #include "write_job_defaults.h"
 #include "msg_common.h"

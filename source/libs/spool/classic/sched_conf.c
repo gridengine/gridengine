@@ -47,7 +47,6 @@
 #include "sge_log.h"
 #include "setup_path.h"
 #include "msg_common.h"
-#include "sge_feature.h"
 #include "sge_stdio.h"
 #include "sge_schedd.h"
 #include "sge_spool.h"

@@ -73,7 +73,6 @@ static void *handle = NULL;
 #include "basis_types.h"
 #include "sge_any_request.h"
 #include "sge_secL.h"
-#include "sge_prog.h"
 #include "sge_stdlib.h"
 #include "sge_uidgid.h"
 #include "sge_unistd.h"

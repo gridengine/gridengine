@@ -56,7 +56,6 @@
 #include "sge_string.h"
 #include "sge_log.h"
 #include "sge_time.h"
-#include "sge_host.h"
 #include "sge_qmod_qmaster.h"
 #include "config_file.h"
 #include "sge_userprj_qmaster.h"

@@ -59,7 +59,6 @@
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
 #include "sge_string.h"
-#include "sge_feature.h"
 #include "sge_unistd.h"
 #include "sge_time.h"
 #include "sge_spool.h"

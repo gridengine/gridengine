@@ -44,7 +44,6 @@
 #include "sge_string.h"
 #include "sge_stdio.h"
 #include "msg_common.h"
-#include "sge_feature.h"
 #include "sge_spool.h"
 #include "sge_io.h"
 #include "sge_userprj.h"

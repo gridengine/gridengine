@@ -82,6 +82,7 @@ static void *cl_com_handle_read_thread(void *t_conf);
 static void cl_com_handle_read_thread_cleanup(void* none);
 
 
+
 /* global lists */
 
 /* cl_com_handle_list
@@ -2233,18 +2234,19 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
        }
 
        if (message->message_state == CL_MS_READY) {
-          CL_LOG_STR(CL_LOG_WARNING,"sent a message sent to:", connection->receiver->comp_host);
+          CL_LOG_STR(CL_LOG_INFO,"message sent to:", connection->receiver->comp_host);
           connection->statistic->bytes_sent = connection->statistic->bytes_sent + message->message_length;
           connection->statistic->real_bytes_sent = connection->statistic->real_bytes_sent + message->message_length  ;
 
           if (connection->connection_state == CL_COM_CONNECTED) {
              if (message->message_df == CL_MIH_DF_CCM) {
-                CL_LOG(CL_LOG_ERROR,"sent connection close message");
+                CL_LOG(CL_LOG_INFO,"sent connection close message");
+
                 connection->connection_sub_state = CL_COM_WAIT_FOR_CCRM;
                 connection->ccm_sent = 1;
              }
              if (message->message_df == CL_MIH_DF_CCRM) {
-                CL_LOG(CL_LOG_WARNING,"sent connection close response message");
+                CL_LOG(CL_LOG_INFO,"sent connection close response message");
                 connection->connection_sub_state = CL_COM_DONE;   /* CLOSE message */
 /*                connection->data_read_flag = CL_COM_DATA_NOT_READY;  REISI TEST */
                 connection->data_write_flag = CL_COM_DATA_NOT_READY;

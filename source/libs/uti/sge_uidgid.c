@@ -43,7 +43,6 @@
 #include "basis_types.h"
 #include "sgermon.h"
 #include "sge_unistd.h"
-#include "sge_unistd.h"
 #include "sge_log.h"
 #include "sge_mtutil.h"
 #include "msg_common.h"

@@ -54,7 +54,6 @@
 #include "sge_manop.h"
 #include "sge_host.h"
 #include "sge_sharetree.h"
-#include "sge_answer.h"
 #include "version.h"
 #include "sge_schedd_conf.h"
 #include "sge_conf.h"

@@ -42,7 +42,6 @@
 #include "sge_signal.h"
 #include "sge_unistd.h"
 #include "setosjobid.h"
-#include "sge_unistd.h"
 
 #if defined(CRAY)
 #   if !defined(SIGXCPU)
@@ -75,7 +74,6 @@ struct rusage {
 #include "basis_types.h"
 #include "execution_states.h"
 #include "qlogin_starter.h"
-#include "sge_unistd.h"
 #include "config_file.h"
 #include "sge_uidgid.h"
 

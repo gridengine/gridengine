@@ -47,7 +47,6 @@
 #include "sge_string.h"
 #include "sge_prog.h"
 #include "sge_job.h"
-#include "sge_host.h"
 #include "sge_centry.h"
 
 /* scheduling library */

@@ -71,6 +71,9 @@ NGCLIB_TEST_OBJS = $(NGCLIB_TEST_SRC:.c=.o)
 include $(SOURCE)/libs/commlib_v1.0/lists/Makefile
 
 ###############################################################################
+COMMLIB = $(NGCLIB) $(NGCLISTSLIB)
+
+###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
 all: test_dummy test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \

@@ -57,7 +57,6 @@
 #include "sge_centry.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_str.h"
 
 #include "msg_common.h"
 

@@ -51,8 +51,6 @@
 #include "sge_job.h"
 #include "sge_answer.h"
 #include "read_defaults.h"
-#include "sge_prog.h"
-#include "sge_answer.h"
 #include "sge_centry.h"
 
 #include "msg_common.h"

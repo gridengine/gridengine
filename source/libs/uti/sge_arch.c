@@ -40,7 +40,6 @@
 #include "sge_log.h"
 #include "sge.h"
 #include "msg_utilib.h"
-#include "sgermon.h"
 #include "msg_common.h"
 #include "sge_unistd.h"
 #include "sge_arch.h"

@@ -47,7 +47,6 @@
 #include "sge_log.h"
 #include "sge_stdio.h"
 #include "sge_spool.h"
-#include "sge_answer.h"
 #include "sge_userset.h"
 
 #include "msg_common.h"

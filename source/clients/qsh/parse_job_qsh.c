@@ -56,7 +56,6 @@
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_range.h"
-#include "sge_host.h"
 #include "sge_mailrec.h"
 #include "sge_centry.h"
 

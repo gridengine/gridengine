@@ -46,7 +46,6 @@
 #include "sge_stdio.h"
 #include "sge_spool.h"
 #include "sge_io.h"
-#include "sge_answer.h"
 #include "sched_conf.h"
 #include "sge_range.h"
 #include "sge_qinstance.h"

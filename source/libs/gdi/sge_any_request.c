@@ -139,7 +139,7 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    /* TODO: call to cleanup commlib */
    INFO((SGE_EVENT,"starting up ngc in NO THREADS mode\n"));
    INFO((SGE_EVENT,"problem for sge_daemonize() when threads are running?"));
-   ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_DEBUG,gdi_log_flush_func);
+   ret_val = cl_com_setup_commlib(CL_NO_THREAD,CL_LOG_WARNING,gdi_log_flush_func);
    if (ret_val != CL_RETVAL_OK) {
       ERROR((SGE_EVENT, "cl_com_setup_commlib(): %s\n",cl_get_error_text(ret_val)));
    }

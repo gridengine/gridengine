@@ -124,11 +124,9 @@ static void qmaster_exit_func(int i);
 static void sge_c_report(char *, char *, int, lList *);
 static void makedirs(void);
 
-static lList *sge_parse_cmdline_qmaster(char **argv, char **envp, lList **ppcmdline);
+static lList *sge_parse_cmdline_qmaster(char **argv, lList **ppcmdline);
 static lList *sge_parse_qmaster(lList **ppcmdline, lList **ppreflist, u_long32 *help);
 static int update_license_data(lListElem *hep, lList *lp_lic); 
-
-extern char **environ;
 
 #define TIMELEVEL 0
 
@@ -364,7 +362,7 @@ New behaviour:
    }      
 #endif
 
-   alp = sge_parse_cmdline_qmaster(&argv[1], environ, &pcmdline);
+   alp = sge_parse_cmdline_qmaster(&argv[1], &pcmdline);
    if(alp) {
       /*
       ** high level parsing error! show answer list
@@ -964,7 +962,7 @@ static void makedirs()
    DENTER(TOP_LAYER, "makedirs");
    
    /* Implicitely creats cell_root and common dir */
-   sge_mkdir(path_state_get_local_conf_dir(), 0755, 1);
+   sge_mkdir(path_state_get_local_conf_dir(), 0755, 1, 0);
    
    DEXIT;
 }
@@ -1001,7 +999,6 @@ void increment_heartbeat(time_t now)
  ****/
 static lList *sge_parse_cmdline_qmaster(
 char **argv,
-char **envp,
 lList **ppcmdline 
 ) {
 char **sp;

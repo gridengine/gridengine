@@ -58,7 +58,7 @@ int sge_next_flush(int);
 
 void sge_add_list_event(lListElem *event_client, u_long32 timestamp,
                         ev_event type, u_long32 intkey, u_long32 intkey2, 
-                        const char *strkey, lList *list); 
+                        const char *strkey, const char *session, lList *list); 
 
 void sge_add_event(lListElem *event_client, u_long32 timestamp,
                    ev_event type, u_long32 intkey, u_long32 intkey2, 

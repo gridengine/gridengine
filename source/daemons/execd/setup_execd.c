@@ -101,10 +101,10 @@ void sge_setup_sge_execd()
    DPRINTF(("chdir(\"/\")----------------------------\n"));
    sge_chdir_exit("/",1);
    DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(conf.execd_spool_dir, 0755, 1);
+   sge_mkdir(conf.execd_spool_dir, 0755, 1, 0);
    DPRINTF(("chdir(\"%s\")----------------------------\n", conf.execd_spool_dir));
    sge_chdir_exit(conf.execd_spool_dir,1);
-   sge_mkdir(uti_state_get_unqualified_hostname(), 0755, 1);
+   sge_mkdir(uti_state_get_unqualified_hostname(), 0755, 1, 0);
    DPRINTF(("chdir(\"%s\",me.unqualified_hostname)--------------------------\n",
             uti_state_get_unqualified_hostname()));
    sge_chdir_exit(uti_state_get_unqualified_hostname(), 1); 
@@ -123,9 +123,9 @@ void sge_setup_sge_execd()
            uti_state_get_unqualified_hostname());
    
    DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(EXEC_DIR, 0775, 1);
-   sge_mkdir(JOB_DIR, 0775, 1);
-   sge_mkdir(ACTIVE_DIR,  0775, 1);
+   sge_mkdir(EXEC_DIR, 0775, 1, 0);
+   sge_mkdir(JOB_DIR, 0775, 1, 0);
+   sge_mkdir(ACTIVE_DIR,  0775, 1, 0);
 
    DEXIT;
    return;

@@ -2247,9 +2247,6 @@ if ( "$ADOC" == 1) then
    echo "Creating documentation for libs: libgdi.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine GDI Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/gdi/*.h libs/gdi/*.c -o $COMPILE_ARCH/libgdi.texi
 
-   echo "Creating documentation for libs: libjapi.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine JAPI Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/*.h libs/japi/*.c -o $COMPILE_ARCH/libjapi.texi
-
    echo "Creating documentation for libs: libmir.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Mirror Interface" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/mir/*.h libs/mir/*.c -o $COMPILE_ARCH/libmir.texi
 
@@ -2261,6 +2258,12 @@ if ( "$ADOC" == 1) then
 
    echo "Creating documentation for libs: libsgeobj.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine SGEOBJ Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/sgeobj/*.h libs/sgeobj/*.c -o $COMPILE_ARCH/libsgeobj.texi
+
+   echo "Creating documentation for libs: libjapi.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Job API Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/japi.h libs/japi/japi.c -o $COMPILE_ARCH/libjapi.texi
+
+   echo "Creating documentation for libs: libdrmaa.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine DRMAA Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/drmaa.h libs/japi/drmaa.c -o $COMPILE_ARCH/libdrmaa.texi
 
    echo "Creating documentation for libs: libspool.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Spooling Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/spool/*.h libs/spool/*.c libs/spool/*/*.h libs/spool/*/*.c -o $COMPILE_ARCH/libspool.texi

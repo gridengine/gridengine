@@ -1,5 +1,7 @@
 #ifndef __JAPIP_H
 
+#include "cull.h"
+
 struct drmaa_job_template_s {
    lList *strings;        /* VA_Type  */
    lList *string_vectors; /* NSV_Type */

@@ -36,10 +36,48 @@
 #include "drmaa.h"
 #include "sge_dstring.h"
 #include "basis_types.h"
+#include "cull.h"
 
+/****** JAPI/-JAPI_Interface *******************************************************
+*  NAME
+*     JAPI_Interface -- The enlisted functions are the interface of the JAPI library
+* 
+*  SEE ALSO
+*     JAPI/japi_init()
+*     JAPI/japi_exit()
+*     JAPI/japi_run_job()
+*     JAPI/japi_run_bulk_jobs()
+*     JAPI/japi_control()
+*     JAPI/japi_synchronize()
+*     JAPI/japi_wait()
+*     JAPI/japi_wifexited()
+*     JAPI/japi_wexitstatus()
+*     JAPI/japi_wifsignaled()
+*     JAPI/japi_wtermsig()
+*     JAPI/japi_wifcoredump()
+*     JAPI/japi_wifaborted()
+*     JAPI/japi_job_ps()
+*     JAPI/japi_strerror()
+*     JAPI/japi_get_contact()
+*     JAPI/japi_version()
+*     JAPI/japi_get_drm_system()
+*     JAPI/japi_allocate_string_vector()
+*     JAPI/japi_string_vector_get_next()
+*     JAPI/japi_delete_string_vector()
+*     JAPI/japi_standard_error()
+*     JAPI/japi_init_mt()
+*******************************************************************************/
 #ifdef  __cplusplus
 extern "C" {
 #endif
+
+/*
+ * persistent JAPI sessions store their state information under
+ * 
+ * $HOME/.sge/session/<unique_id> 
+ */
+#define JAPI_SESSION_SUBDIR ".sge/session"
+
 
 /* ------------------- init/exit routines ------------------- */
 /*
@@ -49,7 +87,8 @@ extern "C" {
  * other DRMAA calls, except for japi_version().
  * If 'contact' is NULL, the default DRM system will be used.
  */ 
-int japi_init(const char *contact, dstring *diag);
+int japi_init(const char *contact, const char *session_key_in, 
+      dstring *session_key_out, dstring *diag);
 
 
 /*
@@ -58,60 +97,9 @@ int japi_init(const char *contact, dstring *diag);
  * This routine ends this DRMAA Session, but does not effect any jobs (e.g.,
  * queued and running jobs remain queued and running).
  */
-int japi_exit(dstring *diag);
 
-/* ------------------- job template routines ------------------- */
+int japi_exit(bool close_session, dstring *diag);
 
-/* 
- * Allocate a new job template. 
- */
-int japi_allocate_job_template(drmaa_job_template_t **jt, dstring *diag);
-
-/* 
- * Deallocate a job template. This routine has no effect on jobs.
- */
-int japi_delete_job_template(drmaa_job_template_t *jt, dstring *diag);
-
-
-/* 
- * Adds ('name', 'value') pair to list of attributes in job template 'jt'.
- * Only non-vector attributes may be passed.
- */
-int japi_set_attribute(drmaa_job_template_t *jt, const char *name, const char *value, dstring *diag);
-
-
-/* 
- * If 'name' is an existing non-vector attribute name in the job 
- * template 'jt', then the value of 'name' is returned; otherwise, 
- * NULL is returned.
- */ 
-int japi_get_attribute(drmaa_job_template_t *jt, const char *name, dstring *val, dstring *diag);
-
-/* Adds ('name', 'values') pair to list of vector attributes in job template 'jt'.
- * Only vector attributes may be passed.
- */
-int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name, const char *value[], dstring *diag);
-
-
-/* 
- * If 'name' is an existing vector attribute name in the job template 'jt',
- * then the values of 'name' are returned; otherwise, NULL is returned.
- */
-int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_attr_values_t **values, dstring *diag);
-
-
-/* 
- * Returns the set of supported attribute names whose associated   
- * value type is String. This set will include supported DRMAA reserved 
- * attribute names and native attribute names. 
- */
-int japi_get_attribute_names(drmaa_attr_names_t **values, dstring *diag);
-
-/*
- * Returns the set of supported attribute names whose associated 
- * value type is String Vector.  This set will include supported DRMAA reserved 
- * attribute names and native attribute names. */
-int japi_get_vector_attribute_names(drmaa_attr_names_t **values, dstring *diag);
 
 /* ------------------- job submission routines ------------------- */
 
@@ -120,7 +108,7 @@ int japi_get_vector_attribute_names(drmaa_attr_names_t **values, dstring *diag);
  * The job identifier 'job_id' is a printable, NULL terminated string,
  * identical to that returned by the underlying DRM system.
  */
-int japi_run_job(dstring *jobid, drmaa_job_template_t *jt, dstring *diag);
+int japi_run_job(dstring *jobid, lListElem *sge_job_template, dstring *diag);
 
 /* 
  * Submit a set of parametric jobs, dependent on the implied loop index, each
@@ -135,7 +123,8 @@ int japi_run_job(dstring *jobid, drmaa_job_template_t *jt, dstring *diag);
  * For example:
  * drmaa_set_attribute(pjt, "stderr", drmaa_incr_ph + ".err" ); (C++/java string syntax used)
  */
-int japi_run_bulk_jobs(drmaa_attr_values_t **values, drmaa_job_template_t *jt, int start, int end, int incr, dstring *diag);
+
+int japi_run_bulk_jobs(drmaa_attr_values_t **values, lListElem *sge_job_template, int start, int end, int incr, dstring *diag);
 
 /* ------------------- job control routines ------------------- */
 
@@ -238,7 +227,7 @@ int japi_wtermsig(dstring *signal, int stat, dstring *diag);
  * non-zero, this function evaluates into 'core_dumped' a non-zero value
  * if a core image of the terminated job was created. 
  */
-int japi_wcoredump(int *core_dumped, int stat, dstring *diag);
+int japi_wifcoredump(int *core_dumped, int stat, dstring *diag);
 
 /* 
  * Evaluates into 'aborted' a non-zero value if 'stat'
@@ -291,7 +280,7 @@ void japi_version(unsigned int *major, unsigned int *minor);
  * Output (string) is implementation dependent and could contain the DRM system and the
  * implementation vendor as its parts.
  */
-void japi_get_DRM_system(char *drm_system, size_t drm_system_len);
+int japi_get_drm_system(dstring *drm, dstring *diag);
 
 /* get next string attribute from iterator 
 DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no such exists */
@@ -299,6 +288,14 @@ int japi_string_vector_get_next(drmaa_attr_values_t* values, dstring *val);
 
 /* release opaque iterator */
 void japi_delete_string_vector(drmaa_attr_values_t* values);
+
+
+void japi_standard_error(int drmaa_errno, dstring *ds);
+drmaa_attr_values_t *japi_allocate_string_vector(int type); 
+int japi_init_mt(dstring *diag);
+
+void japi_lock_mutex(const char *mutex_name, const char *func, pthread_mutex_t *mutex);
+void japi_unlock_mutex(const char *mutex_name, const char *func, pthread_mutex_t *mutex);
 
 #ifdef  __cplusplus
 }

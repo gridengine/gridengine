@@ -98,6 +98,7 @@ static void unregister_from_ptf(u_long32 jobid, u_long32 jataskid, const char *p
 
 static int clean_up_job(lListElem *jr, int failed, int signal, int is_array);
 static void convert_attribute(lList **cflpp, lListElem *jr, char *name, u_long32 udefau);
+static int extract_ulong_attribute(lList **cflpp, char *name, u_long32 *valuep); 
 
 static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, lListElem *petep, const char *error_string, int general, int failed);
 static int read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid, int failed);
@@ -540,6 +541,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       DTRACE;
    }
 
+   
+
    /* map system signals into sge signals to make signo's exchangable */
    du=lGetSubStr(jr, UA_name, "signal", JR_usage);
    if (du) {
@@ -810,7 +813,8 @@ lListElem *jr
    char *exec_file, *script_file, *tmpdir, *job_owner, *qname; 
    dstring jobdir = DSTRING_INIT;
    char fname[SGE_PATH_MAX];
-   char err_str[1024];
+   char err_str_buffer[1024];
+   dstring err_str;
    SGE_STRUCT_STAT statbuf;
    lListElem *jep, *petep = NULL, *jatep = NULL;
    lListElem *master_q;
@@ -818,6 +822,8 @@ lListElem *jr
    const void *iterator;
 
    DENTER(TOP_LAYER, "remove_acked_job_exit");
+
+   sge_dstring_init(&err_str, err_str_buffer, sizeof(err_str_buffer));
 
    if (ja_task_id == 0) {
       ERROR((SGE_EVENT, MSG_SHEPHERD_REMOVEACKEDJOBEXITCALLEDWITHX_U, u32c(job_id)));
@@ -894,9 +900,9 @@ lListElem *jr
                                       job_id, ja_task_id, pe_task_id,
                                       NULL);
          DPRINTF(("removing active dir: %s\n", sge_dstring_get_string(&jobdir)));
-         if (sge_rmdir(sge_dstring_get_string(&jobdir), err_str)) {
+         if (sge_rmdir(sge_dstring_get_string(&jobdir), &err_str)) {
             ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
-                   sge_dstring_get_string(&jobdir), err_str));
+                   sge_dstring_get_string(&jobdir), err_str_buffer));
          }
       }
 
@@ -980,9 +986,9 @@ lListElem *jr
                   The pain with this case is, that we have not much information
                   to report this job to qmaster. */
 
-               if (sge_rmdir(sge_dstring_get_string(&jobdir), err_str)) {
+               if (sge_rmdir(sge_dstring_get_string(&jobdir), &err_str)) {
                   ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
-                         sge_dstring_get_string(&jobdir), err_str));
+                         sge_dstring_get_string(&jobdir), err_str_buffer));
                }
             }
 
@@ -1014,9 +1020,9 @@ lListElem *jr
          /* active dir */
          if (!keep_active && !getenv("SGE_KEEP_ACTIVE")) {
             DPRINTF(("removing active dir: %s\n", sge_dstring_get_string(&jobdir)));
-            if (sge_rmdir(sge_dstring_get_string(&jobdir), err_str)) {
+            if (sge_rmdir(sge_dstring_get_string(&jobdir), &err_str)) {
                ERROR((SGE_EVENT, MSG_FILE_CANTREMOVEDIRECTORY_SS,
-                      sge_dstring_get_string(&jobdir), err_str));
+                      sge_dstring_get_string(&jobdir), err_str_buffer));
             }
          }
       }
@@ -1279,7 +1285,7 @@ int startup
          {
             char path[SGE_PATH_MAX];
             sprintf(path, ACTIVE_DIR"/%s", jobdir);
-            sge_rmdir(path, SGE_EVENT);
+            sge_rmdir(path, NULL);
          }
          continue;
       }
@@ -1525,9 +1531,13 @@ int failed
       if (fp) {
          char buf[10000];
          lList *cflp = NULL;
+         u_long32 wait_status;
 
          read_config_list(fp, &cflp, NULL, CF_Type, CF_name, CF_value, 0, "=", 0, buf, sizeof(buf));
          fclose(fp);
+
+         if (extract_ulong_attribute(&cflp, "wait_status", &wait_status)==0)
+            lSetUlong(jr, JR_wait_status, wait_status);
 
          convert_attribute(&cflp, jr, "exit_status",   1);
          convert_attribute(&cflp, jr, "signal",        0);
@@ -1553,6 +1563,7 @@ int failed
          convert_attribute(&cflp, jr, "ru_nsignals",   0);
          convert_attribute(&cflp, jr, "ru_nvcsw",      0);
          convert_attribute(&cflp, jr, "ru_nivcsw",     0);
+
 
 #ifdef NEC_ACCOUNTING_ENTRIES
          /* Additional accounting information for NEC SX-4 SX-5 */
@@ -1727,6 +1738,24 @@ u_long32 udefault
    s = get_conf_value(NULL, *cflpp, CF_name, CF_value, name);
    add_usage(jr, name, s, (double)udefault);
    lDelElemStr(cflpp, CF_name, name);
+}
+
+
+/*****************************************************************/
+
+static int extract_ulong_attribute(
+lList **cflpp,
+char *name,
+u_long32 *valuep
+) {
+   const char *s;
+   int ret;
+
+   if (!(s = get_conf_value(NULL, *cflpp, CF_name, CF_value, name)))
+      return -1;
+   ret = sscanf(s, u32, valuep);
+   lDelElemStr(cflpp, CF_name, name);
+   return (ret == 1)?0:-1;
 }
 
 

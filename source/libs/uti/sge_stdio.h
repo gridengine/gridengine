@@ -59,20 +59,45 @@
 *
 *  NOTES
 *     Don't forget to define the 'FPRINTF_ERROR'-label
-*     MT-NOTE: FPRINTF() macro is not MT safe
 ******************************************************************************/
-
 #include <stdio.h>
 
 #include "basis_types.h"
 
 #define FPRINTF(x) \
-   __fprintf_ret = fprintf x; \
-   if (__fprintf_ret == -1) { \
+   if (fprintf x == -1) { \
       goto FPRINTF_ERROR; \
    }
 
-extern int __fprintf_ret;
+/****** uti/stdio/FPRINTF_ASSIGN() *******************************************
+*  NAME
+*     FPRINTF_ASSIGN() -- fprintf() macro with return value assignment 
+*
+*  SYNOPSIS
+*     #define FPRINTF_ASSIGN(var, arguments)
+*     void fprintf(FILE *stream, const char *format, ...)
+*
+*  FUNCTION
+*     This FPRINTF macro has to be used similar to the fprintf 
+*     function. It is not necessary to check the return value. 
+*     In case of an error the macro will jump to a defined label.
+*     The label name is 'FPRINTF_ERROR'. This is a variarion of 
+*     FPRINTF() that allows assigning the fprintf() return value to
+*     the variable passed as first makro argument.
+*
+*  INPUTS
+*     FILE *stream       - output stream
+*     const char *format - format string
+*     ...
+*
+*  NOTES
+*     Don't forget to define the 'FPRINTF_ERROR'-label
+******************************************************************************/
+
+#define FPRINTF_ASSIGN(var, x) \
+   if ((var = fprintf x)== -1) { \
+      goto FPRINTF_ERROR; \
+   }
 
 pid_t sge_peopen(const char *shell, int login_shell, const char *command, 
                  const char *user, char **env, FILE **fp_in, FILE **fp_out, 

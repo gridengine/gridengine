@@ -763,7 +763,8 @@ unsigned long flags
          return -1;
       }
       if (fp) {
-         cb = FPRINTF((fp, "NONE"));
+/*          cb = FPRINTF((fp, "NONE")); */
+         FPRINTF_ASSIGN(cb, (fp, "NONE"));
       }
       else {
          cb = sizeof("NONE") - 1;
@@ -812,7 +813,8 @@ unsigned long flags
             return -1;
          }
          if (fp) {
-            cb = FPRINTF((fp, "%s", pdelis[1]));
+/*             cb = FPRINTF((fp, "%s", pdelis[1])); */
+            FPRINTF_ASSIGN(cb, (fp, "%s", pdelis[1]));
          }
          else {
             cb = strlen(pdelis[1]);
@@ -908,7 +910,8 @@ unsigned long flags
                return -1;
             }
             if (fp) {
-               cb = FPRINTF((fp, "%s", pdelis[0]));
+/*                cb = FPRINTF((fp, "%s", pdelis[0])); */
+               FPRINTF_ASSIGN(cb, (fp, "%s", pdelis[0]));
             }
             else {
                cb = strlen(pdelis[0]);
@@ -930,7 +933,7 @@ unsigned long flags
          }
          if (*cp) {
             if (fp) {
-               cb = FPRINTF((fp, "%s", cp));
+               FPRINTF_ASSIGN(cb, (fp, "%s", cp));
             }
             else {
                cb = strlen(cp);
@@ -956,7 +959,7 @@ unsigned long flags
          return -1;
       }
       if (fp) {
-         cb = FPRINTF((fp, "%s", pdelis[2]));
+         FPRINTF_ASSIGN(cb, (fp, "%s", pdelis[2]));
       }
       else {
          cb = strlen(pdelis[2]);

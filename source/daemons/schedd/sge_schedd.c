@@ -513,7 +513,7 @@ static int sge_setup_sge_schedd()
    reresolve_me_qualified_hostname();
 
    sge_chdir_exit(conf.qmaster_spool_dir, 1);
-   sge_mkdir(SCHED_SPOOL_DIR, 0755, 1);
+   sge_mkdir(SCHED_SPOOL_DIR, 0755, 1, 0);
    sge_chdir_exit(SCHED_SPOOL_DIR, 1);
 
    /* having passed this statement we may log messages into the ERR_FILE */

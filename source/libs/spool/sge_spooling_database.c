@@ -62,6 +62,10 @@
 
 #include "spool/sge_spooling_database.h"
 
+#ifndef __SGE_NO_USERMAPPING__
+#include "sge_cuserL.h"
+#endif
+
 /****** spool/database/--Database-Spooling *************************************
 *
 *  NAME

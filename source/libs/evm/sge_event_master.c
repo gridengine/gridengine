@@ -270,6 +270,17 @@ sge_flush_events_(lListElem *event_client, int interval, int now)
 *     int - the timestamp of the next flush or
 *           0, if no event client is connected and up.
 *
+*  NOTES
+*     Qmaster calls sge_next_flush() in main loop. With a raising number of 
+*     event clients registered at Qmaster the performance impact of this 
+*     operation could become a severe problem. A better approach to handle 
+*     those future events ahead would be the use of the time event manager 
+*     module (find description under daemons/qmaster/time_event.c). If the
+*     time event manager were used sge_next_flush() would effectively become
+*     a new time event manager function.
+*
+*  SEE ALSO
+*     Timeeventmanager/--Concept
 *******************************************************************************/
 int 
 sge_next_flush(int now) 
@@ -867,7 +878,7 @@ sge_eventclient_subscribed(const lListElem *event_client, ev_event event,
             The only exception are list events, because list events do not 
             belong to a specific session. These events require filtering on 
             a more fine grained level */
-         if (!IS_LIST_EVENT(event)) {
+         if (!IS_TOTAL_UPDATE_EVENT(event)) {
             DEXIT;
             return 0;
          }
@@ -1103,9 +1114,9 @@ ck_4_deliver_events(u_long32 now)
                lSetUlong(event_client, EV_last_send_time, now);
                lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
 
-DPRINTF(("delivered events: %s/"u32" now/next "u32"/"u32"\n", 
-   lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
-   now, now + deliver_interval));
+               DPRINTF(("delivered events: %s/"u32" now/next "u32"/"u32"\n", 
+                  lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
+                  now, now + deliver_interval));
             }
 
 
@@ -1136,7 +1147,7 @@ DPRINTF(("delivered events: %s/"u32" now/next "u32"/"u32"\n",
 *     sge_add_list_event(lListElem *event_client, u_long32 timestamp,
 *                        ev_event type, 
 *                        u_long32 intkey, u_long32 intkey2, const char *strkey,
-*                        lList *list) 
+*                        const char *session, lList *list) 
 *
 *  FUNCTION
 *     Adds a list of objects to the list of events to deliver, e.g. the 
@@ -1151,6 +1162,7 @@ DPRINTF(("delivered events: %s/"u32" now/next "u32"/"u32"\n",
 *     u_long32 intkey         - additional data
 *     u_long32 intkey2        - additional data
 *     const char *strkey      - additional data
+*     const char *session     - events session key
 *     lList *list             - the list to deliver as event
 *
 *  NOTES
@@ -1163,20 +1175,20 @@ DPRINTF(("delivered events: %s/"u32" now/next "u32"/"u32"\n",
 void 
 sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type, 
                    u_long32 intkey, u_long32 intkey2, const char *strkey, 
-                   lList *list) 
+                   const char *session, lList *list) 
 {
    if (timestamp == 0) {
       timestamp = sge_get_gmt();
    }
 
    if (event_client != NULL) {
-      if (sge_eventclient_subscribed(event_client, type, NULL)) {
+      if (sge_eventclient_subscribed(event_client, type, session)) {
          sge_add_list_event_(event_client, timestamp, type, 
                              intkey, intkey2, strkey, list, 1);
       }
    } else {
       for_each (event_client, EV_Clients) {
-         if (sge_eventclient_subscribed(event_client, type, NULL)) {
+         if (sge_eventclient_subscribed(event_client, type, session)) {
             sge_add_list_event_(event_client, timestamp, type, 
                                 intkey, intkey2, strkey, list, 1);
          }

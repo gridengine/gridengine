@@ -101,6 +101,8 @@ struct rusage {
 #include "sge_dstring.h"
 #include "sge_shepconf.h"
 
+#include "sge_reportL.h"
+
 #if defined(IRIX6)
 #include "sge_processes_irix.h"
 #endif
@@ -161,8 +163,6 @@ int notify; /* 0 if no notify or # of seconds to delay signal */
 static void signal_handler(int signal);
 static void set_shepherd_signal_mask(void);
 static void change_shepherd_signal_mask(void);
-
-extern char **environ;
 
 static int exit_status_for_qrsh = 0;
 
@@ -801,6 +801,7 @@ int ckpt_type
    int pid;
    struct rusage rusage;
    int  status, child_signal=0, exit_status;
+   u_long32 wait_status = 0;
    FILE *fp;
    int core_dumped, ckpt_interval, ckpt_pid;
 
@@ -960,6 +961,10 @@ int ckpt_type
       }
 
       exit_status = 128 + child_signal;
+
+      wait_status = SGE_SET_WSIGNALED(wait_status, 1);
+      wait_status = SGE_SET_WCOREDUMP(wait_status, core_dumped);
+      wait_status = SGE_SET_WSIGNAL(wait_status, sge_map_signal(child_signal));
    } else {
       shepherd_trace_sprintf("%s exited not due to signal", childname);
 
@@ -968,6 +973,10 @@ int ckpt_type
          shepherd_trace_sprintf("%s exited with status %d%s", childname, 
                                 exit_status, 
             (exit_status==RESCHEDULE_EXIT_STATUS)?" -> rescheduling":"");
+
+         wait_status = SGE_SET_WEXITED(wait_status, 1);
+         wait_status = SGE_SET_WEXITSTATUS(wait_status, exit_status);
+
       } else {
          /* should be virtually impossible, see wait_my_child() why */
          exit_status = -1;
@@ -1032,7 +1041,7 @@ int ckpt_type
             shepherd_trace_sprintf("job exited on signal %d, exit code is "
                                    "%d\n", child_signal, exit_status);
          }
-      }  
+      }
    
       /******* write usage to file "usage" ************/
       fp = fopen("usage", "w");
@@ -1042,6 +1051,10 @@ int ckpt_type
       } 
       
       shepherd_trace("writing usage file to \"usage\"");
+
+      /* the wait status is returned by japi_wait()
+         see sge_reportL.h for bitmask and makro definition */
+      fprintf(fp, "wait_status="u32"\n", wait_status);
 
       fprintf(fp, "exit_status=%d\n", exit_status);
       fprintf(fp, "signal=%d\n", child_signal);

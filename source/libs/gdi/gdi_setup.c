@@ -114,7 +114,6 @@ void gdi_once_init(void) {
    /* gdi */
    gdi_init_mt();
    path_init_mt();
-   feature_init_mt();
 }
 
 static void gdi_state_init(struct gdi_state_t* state) {

@@ -56,7 +56,7 @@ typedef enum {
 
 /* MT-NOTE: This module is MT safe */
 
-static int sge_domkdir(const char *, int, int);
+static int sge_domkdir(const char *, int, int, int);
 
 static file_type_t sge_get_file_type(const char *name);  
 
@@ -79,17 +79,23 @@ static file_type_t sge_get_file_type(const char *name)
    return ret;
 }             
 
-static int sge_domkdir(const char *path_, int fmode, int exit_on_error) 
+static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_not_exist) 
 {
    SGE_STRUCT_STAT statbuf;
  
-   DENTER(BASIS_LAYER, "sge_domkdir");
+   DENTER(TOP_LAYER, "sge_domkdir");
  
    if (mkdir(path_, (mode_t) fmode)) {
       if (errno == EEXIST) {
-         DPRINTF(("directory \"%s\" already exists\n", path_));
-         DEXIT;
-         return 0;
+         if (may_not_exist) {
+            DPRINTF(("directory \"%s\" already exists\n", path_));
+            DEXIT;
+            return -1;
+         } else {
+            DPRINTF(("directory \"%s\" already exists\n", path_));
+            DEXIT;
+            return 0;
+         }
       }
  
       if (!SGE_STAT(path_, &statbuf) && S_ISDIR(statbuf.st_mode)) {
@@ -304,7 +310,7 @@ void sge_exit(int i)
 *     sge_mkdir() -- Create a directory (and subdirectorys)  
 *
 *  SYNOPSIS
-*     int sge_mkdir(const char *path, int fmode, int exit_on_error) 
+*     int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist) 
 *
 *  FUNCTION
 *     Create a directory 
@@ -313,13 +319,15 @@ void sge_exit(int i)
 *     const char *path  - path 
 *     int fmode         - file mode 
 *     int exit_on_error - as it says 
+*     int may_not_exist - if true an error is returned if the last component
+*                         of the path exists
 *
 *  RESULT
 *     int - error state
 *         0 - OK
 *        -1 - Error (The function may never return)
 ******************************************************************************/
-int sge_mkdir(const char *path, int fmode, int exit_on_error) 
+int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist) 
 {
    int i = 0, res=0;
    stringT path_;
@@ -342,7 +350,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error)
       path_[i] = path[i];
       if ((path[i] == '/') && (i != 0)) {
          path_[i] = (unsigned char) 0;
-         res = sge_domkdir(path_, fmode, exit_on_error);
+         res = sge_domkdir(path_, fmode, exit_on_error, 0);
          if (res) {
             DEXIT;
             return res;
@@ -352,7 +360,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error)
       i++;
    }
  
-   i = sge_domkdir(path_, fmode, exit_on_error);
+   i = sge_domkdir(path_, fmode, exit_on_error, may_not_exist);
  
    DEXIT;
    return i;
@@ -380,7 +388,7 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
   
    sge_dstring_sprintf(&path, "%s/%s", base_dir, name);
 
-   ret = sge_mkdir(sge_dstring_get_string(&path), fmode, exit_on_error); 
+   ret = sge_mkdir(sge_dstring_get_string(&path), fmode, exit_on_error, 0); 
    sge_dstring_free(&path);
 
    DEXIT;
@@ -392,22 +400,22 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
 *     sge_rmdir() -- Recursive rmdir
 *
 *  SYNOPSIS
-*     int sge_rmdir(const char *cp, char *err_str)  
+*     int sge_rmdir(const char *cp, dstring *error)  
 *
 *  FUNCTION
 *     Remove a directory tree. In case of errors a message may be found
-*     in 'err_str' afterwards.
+*     in 'error' afterwards.
 *
 *  INPUTS
 *     const char *cp  - path 
-*     char *cp        - err_str 
+*     dstring *error  - destination for error message if non-NULL
 *
 *  RESULT
 *     int - error state
 *         0 - OK
 *        -1 - Error 
 ******************************************************************************/
-int sge_rmdir(const char *cp, char *err_str) 
+int sge_rmdir(const char *cp, dstring *error) 
 {
    SGE_STRUCT_STAT statbuf;
    SGE_STRUCT_DIRENT *dent;
@@ -415,12 +423,14 @@ int sge_rmdir(const char *cp, char *err_str)
    char fname[SGE_PATH_MAX];
  
    if (!cp) {
-      sprintf(err_str, MSG_POINTER_NULLPARAMETER);
+      if (error) 
+         sge_dstring_sprintf(error, MSG_POINTER_NULLPARAMETER);
       return -1;
    }
  
    if (!(dir = opendir(cp))) {
-      sprintf(err_str, MSG_FILE_OPENDIRFAILED_SS , cp, strerror(errno));
+      if (error) 
+         sge_dstring_sprintf(error, MSG_FILE_OPENDIRFAILED_SS , cp, strerror(errno));
       return -1;
    }
  
@@ -431,28 +441,30 @@ int sge_rmdir(const char *cp, char *err_str)
  
 #ifndef WIN32 /* lstat not called */
          if (SGE_LSTAT(fname, &statbuf)) {
-            sprintf(err_str,MSG_FILE_STATFAILED_SS , fname,
-                    strerror(errno));
+            if (error) 
+               sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
             closedir(dir);
             return -1;
          }
 #else
          /* so symbolic links under Windows */
          if (SGE_STAT(fname, &statbuf)) {
-            sprintf(err_str, MSG_FILE_STATFAILED_SS , fname,
-                    strerror(errno));
+            if (error) 
+               sge_dstring_sprintf(error, MSG_FILE_STATFAILED_SS , fname, strerror(errno));
             closedir(dir);
             return -1;
          }
 #endif /* WIN32 */
  
 #if defined(NECSX4) || defined(NECSX5)
-    if (S_ISDIR(statbuf.st_mode)) {
+    if (S_ISDIR(statbuf.st_mode)) 
 #else
-    if (S_ISDIR(statbuf.st_mode) && !S_ISLNK(statbuf.st_mode)) {
+    if (S_ISDIR(statbuf.st_mode) && !S_ISLNK(statbuf.st_mode)) 
 #endif
-            if (sge_rmdir(fname, err_str)) {
-               fprintf(stderr, MSG_FILE_RECURSIVERMDIRFAILED );
+    {
+    if (sge_rmdir(fname, error)) {
+               if (error) 
+                  sge_dstring_sprintf(error, MSG_FILE_RECURSIVERMDIRFAILED );
                closedir(dir);
                return -1;
             }
@@ -462,7 +474,8 @@ int sge_rmdir(const char *cp, char *err_str)
             printf("unlink %s\n", fname);
 #else
             if (unlink(fname)) {
-               sprintf(err_str, MSG_FILE_UNLINKFAILED_SS ,
+               if (error) 
+                  sge_dstring_sprintf(error, MSG_FILE_UNLINKFAILED_SS,
                       fname, strerror(errno));
                closedir(dir);
                return -1;
@@ -478,7 +491,8 @@ int sge_rmdir(const char *cp, char *err_str)
    printf("rmdir %s\n", cp);
 #else
    if (rmdir(cp)) {
-      sprintf(err_str, MSG_FILE_RMDIRFAILED_SS , cp, strerror(errno));
+      if (error) 
+         sge_dstring_sprintf(error, MSG_FILE_RMDIRFAILED_SS , cp, strerror(errno));
       return -1;
    }
 #endif

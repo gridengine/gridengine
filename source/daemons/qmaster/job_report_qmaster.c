@@ -239,7 +239,7 @@ sge_pack_buffer *pb
                  
                   if (status==JTRANSFERING) { /* got async ack for this job */ 
                      DPRINTF(("--- transfering job "u32" is running\n", jobid));
-                     sge_commit_job(jep, jatep, 1, COMMIT_DEFAULT); /* implicitly sending usage to schedd in sgeee_mode */
+                     sge_commit_job(jep, jatep, jr, COMMIT_ST_ARRIVED, COMMIT_DEFAULT); /* implicitly sending usage to schedd in sgeee_mode */
                      cancel_job_resend(jobid, jataskid);
                   } else if (feature_is_enabled(FEATURE_SGEEE)) {
                      /* need to generate a job event for new usage 
@@ -247,7 +247,7 @@ sge_pack_buffer *pb
                       */
                      /* jatask usage is not spooled (?) */
                      sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
-                                        jobid, jataskid, NULL, 
+                                        jobid, jataskid, NULL, lGetString(jep, JB_session),
                                         lGetList(jatep, JAT_scaled_usage_list));
                      lList_clear_changed_info(lGetList(jatep, JAT_scaled_usage_list));
                   }
@@ -318,7 +318,7 @@ sge_pack_buffer *pb
                        } else {
                           /* do not spool usage of pe task (?) */
                           sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
-                                             jobid, jataskid, pe_task_id_str,
+                                             jobid, jataskid, pe_task_id_str, lGetString(jep, JB_session),
                                              lGetList(petask, PET_scaled_usage));
                            lList_clear_changed_info(lGetList(petask, PET_scaled_usage));
                        }                            
@@ -540,7 +540,8 @@ sge_pack_buffer *pb
                               pe_task_sum_past_usage(container, petask);
                               /* usage container will not be spooled (?) */
                               sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
-                                                 jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER,
+                                                 jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
+                                                 lGetString(jep, JB_session),
                                                  lGetList(container, PET_scaled_usage));
                               lList_clear_changed_info(lGetList(container, PET_scaled_usage));
                            }

@@ -48,8 +48,6 @@
 #include "msg_utilib.h"
 #include "sge_log.h"     
 
-int __fprintf_ret; 
-
 #ifdef NO_SGE_COMPILE_DEBUG
 #   undef SGE_EXIT
 #   define SGE_EXIT(x)     exit(x)

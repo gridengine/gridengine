@@ -246,15 +246,18 @@
 *     For JAPI event clients event subscription is not sufficient to
 *     track only those events that are related to a JAPI session.
 *     
-*     When session filtering is used The following rules are applied 
+*     When session filtering is used the following rules are applied 
 *     to decide whether subscribed events are sent or not:
 *
 *     - Events that are associated with a specific session are not
 *       sent when session filtering is used but the session does not 
 *       match. 
 *     - Events that are not associated with a specific session are 
-*       not sent. The only exception are list events, these events are
-*       always sent but a more fine grained filtering is applied.
+*       not sent. The only exception are total update events. If subscribed
+*       these events are always sent and a more fine grained filtering is 
+*       applied.
+*
+*  NOTES
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_set_session()

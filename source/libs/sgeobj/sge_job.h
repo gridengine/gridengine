@@ -42,6 +42,17 @@
 *     jb_now -- macros to handle flag JB_type 
 *
 *  SYNOPSIS
+*
+*     JOB_TYPE_IMMEDIATE
+*     JOB_TYPE_QSH
+*     JOB_TYPE_QLOGIN
+*     JOB_TYPE_QRSH
+*     JOB_TYPE_QRLOGIN
+*        
+*     JOB_TYPE_NO_ERROR
+*        When a job of this type fails and the error condition usually
+*        would result in the job error state the job is finished. Thus
+*        no qmod -c "*" is supported.
 *******************************************************************************/
 
 #define JOB_TYPE_IMMEDIATE  0x01L
@@ -49,6 +60,7 @@
 #define JOB_TYPE_QLOGIN     0x04L
 #define JOB_TYPE_QRSH       0x08L
 #define JOB_TYPE_QRLOGIN    0x10L
+#define JOB_TYPE_NO_ERROR   0x20L
 
 /* submitted via "qsub -b y" or "qrsh [-b y]" */ 
 #define JOB_TYPE_BINARY     0x20L
@@ -57,13 +69,14 @@
 #define JOB_TYPE_ARRAY      0x40L
 
 #define JOB_TYPE_QXXX_MASK \
-   (JOB_TYPE_QSH | JOB_TYPE_QLOGIN | JOB_TYPE_QRSH | JOB_TYPE_QRLOGIN)
+   (JOB_TYPE_QSH | JOB_TYPE_QLOGIN | JOB_TYPE_QRSH | JOB_TYPE_QRLOGIN | JOB_TYPE_NO_ERROR)
 
 #define JOB_TYPE_STR_IMMEDIATE  "IMMEDIATE"
 #define JOB_TYPE_STR_QSH        "INTERACTIVE"
 #define JOB_TYPE_STR_QLOGIN     "QLOGIN"
 #define JOB_TYPE_STR_QRSH       "QRSH"
 #define JOB_TYPE_STR_QRLOGIN    "QRLOGIN"
+#define JOB_TYPE_STR_NO_ERROR   "NO_ERROR"
 
 #define JOB_TYPE_CLEAR_IMMEDIATE(jb_now) \
    jb_now = jb_now & 0xFEL 
@@ -89,6 +102,12 @@
 #define JOB_TYPE_SET_ARRAY(jb_now) \
    jb_now = jb_now | JOB_TYPE_ARRAY
 
+#define JOB_TYPE_CLEAR_NO_ERROR(jb_now) \
+   jb_now = jb_now & ~JOB_TYPE_NO_ERROR
+
+#define JOB_TYPE_SET_NO_ERROR(jb_now) \
+   jb_now =  jb_now | JOB_TYPE_NO_ERROR
+
 #define JOB_TYPE_IS_IMMEDIATE(jb_now)      (jb_now & JOB_TYPE_IMMEDIATE)
 #define JOB_TYPE_IS_QSH(jb_now)            (jb_now & JOB_TYPE_QSH)
 #define JOB_TYPE_IS_QLOGIN(jb_now)         (jb_now & JOB_TYPE_QLOGIN)
@@ -96,7 +115,7 @@
 #define JOB_TYPE_IS_QRLOGIN(jb_now)        (jb_now & JOB_TYPE_QRLOGIN)
 #define JOB_TYPE_IS_BINARY(jb_now)         (jb_now & JOB_TYPE_BINARY)
 #define JOB_TYPE_IS_ARRAY(jb_now)          (jb_now & JOB_TYPE_ARRAY)
-
+#define JOB_TYPE_IS_NO_ERROR(jb_now)       (jb_now & JOB_TYPE_NO_ERROR)
 
 extern lList *Master_Job_List;
 extern lList *Master_Zombie_List;

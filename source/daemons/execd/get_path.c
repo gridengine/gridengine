@@ -315,6 +315,7 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
    const char *path;
    int result;
 
+
    DENTER(TOP_LAYER, "sge_make_ja_task_active_dir");
    
    if(err_str != NULL) {
@@ -354,11 +355,17 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
          
          /* if it couldn't be renamed: try to remove it */
          if(success == 0) {
+            dstring error_string;
+            char error_string_buffer[MAX_STRING_SIZE];
+
+            sge_dstring_init(&error_string, error_string_buffer, sizeof(error_string_buffer));
+
             DPRINTF(("could not rename old active job dir "SFN" - removing it\n", path));
 
-            if(sge_rmdir(path, SGE_EVENT)) {
+            if(sge_rmdir(path, &error_string)) {
                if(err_str != NULL) {
-                  SGE_ADD_MSG_ID(sge_dstring_sprintf(err_str, MSG_FILE_RMDIR_SS, path, SGE_EVENT));
+                  SGE_ADD_MSG_ID(sge_dstring_sprintf(err_str, MSG_FILE_RMDIR_SS, path, 
+                        sge_dstring_get_string(&error_string)));
                } else {
                   ERROR((SGE_EVENT, MSG_FILE_RMDIR_SS, path, SGE_EVENT));
                   DEXIT;

@@ -226,8 +226,7 @@ typedef char stringT[MAX_STRING_SIZE];
       variable = (type *)malloc(sizeof(type)); \
       init_func(variable); \
       if (pthread_setspecific(key, (void*)variable)) { \
-         sprintf(SGE_EVENT, "pthread_set_specific(%s) failed: %s\n", func_name, strerror(errno)); \
-         sge_log(LOG_CRIT, SGE_EVENT,__FILE__,func_name,__LINE__); \
+         fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", func_name, strerror(errno)); \
          abort(); \
       } \
    } \

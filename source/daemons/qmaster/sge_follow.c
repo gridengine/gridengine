@@ -456,8 +456,8 @@ lList **topp  /* ticket orders ptr ptr */
       if (sge_give_job(jep, jatp, master_qep, pe, master_host)) {
 
          /* setting of queues in state unheard is done by sge_give_job() */
-         sge_commit_job(jep, jatp, 7, COMMIT_DEFAULT);
-         /* CB - This was sge_commit_job(jep, 2). It raised problems if a job
+         sge_commit_job(jep, jatp, NULL, COMMIT_ST_DELIVERY_FAILED, COMMIT_DEFAULT);
+         /* This was sge_commit_job(jep, COMMIT_ST_RESCHEDULED). It raised problems if a job
             could not be delivered. The jobslotsfree had been increased even if
             they where not decreased bevore. */
 
@@ -467,7 +467,7 @@ lList **topp  /* ticket orders ptr ptr */
          DEXIT;
          return -3;
       }
-      sge_commit_job(jep, jatp, 0, COMMIT_DEFAULT);   /* mode==0 -> really accept when execd acks */
+      sge_commit_job(jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT);   /* mode==0 -> really accept when execd acks */
       trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number);
 
       if (pe) {
@@ -833,7 +833,7 @@ lList **topp  /* ticket orders ptr ptr */
          }
     
          /* remove it */
-         sge_commit_job(jep, jatp, 5, COMMIT_DEFAULT);
+         sge_commit_job(jep, jatp, NULL, COMMIT_ST_DEBITED_EE, COMMIT_DEFAULT);
       } else {
          if (!JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
             if(lGetString(jep, JB_script_file))
@@ -853,7 +853,7 @@ lList **topp  /* ticket orders ptr ptr */
          INFO((SGE_EVENT, MSG_JOB_NOFREERESOURCEIA_U, u32c(lGetUlong(jep, JB_job_number))));
 
          /* remove it */
-         sge_commit_job(jep, jatp, 6, COMMIT_DEFAULT);
+         sge_commit_job(jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
       }
       break;
 

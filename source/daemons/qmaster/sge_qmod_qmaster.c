@@ -817,9 +817,8 @@ int isowner
       return -1;
    }
 
-   /* using sge_commit_job(j, 3) q->job_list
-      should get modified so we have to be careful */
-
+   /* using sge_commit_job(j, COMMIT_ST_FINISHED_FAILED) q->job_list
+      could get modified so we have to be careful when iterating through the job list */
    nextjep = lFirst(Master_Job_List);
    while ((jep=nextjep)) {
       lListElem* jatep;
@@ -831,7 +830,8 @@ int isowner
 
          for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
             if (!strcmp(lGetString(qep, QU_qname), lGetString(gdil_ep, JG_qname))) {
-               sge_commit_job(jep, jatep, 3, COMMIT_DEFAULT);
+               /* 3: JOB_FINISH reports aborted */
+               sge_commit_job(jep, jatep, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
                break;
             }
          }

@@ -291,3 +291,58 @@ int sge_setenv(const char *name, const char *value)
    }
    return ret;
 }
+
+/****** sge_stdlib/sge_clrenv() ************************************************
+*  NAME
+*     sge_clrenv() -- Remove variable from environment
+*
+*  SYNOPSIS
+*     int sge_clrenv(const char *name) 
+*
+*  FUNCTION
+*     Remove variable from environment.
+*
+*  INPUTS
+*     const char *name - the env var to be removed
+*
+*  RESULT
+*     int - error state
+*         1 - success
+*         0 - error 
+*
+*  NOTES
+*     MT-NOTE: sge_setenv() is MT safe
+*******************************************************************************/
+int sge_clrenv(const char *name)
+{
+   extern char **environ;
+   char **p;
+   int namelen = strlen(name);
+
+   /* search for the env var */
+   for (p=environ; p[0]; p++) {
+      if (strncmp(p[0], name, namelen)==0 && p[0][namelen] == '=')
+         break;
+   }
+
+   /* not found */
+   if (!*p)
+      return 0;
+
+   do {
+      p[0] = p[1];
+   } while (*++p);
+
+   return 1;
+}
+
+#if 0
+void trace_environ()
+{
+   extern char **environ;
+   char **p;
+   for (p=environ; *p; p++) {
+      printf("%s\n", *p);
+   }
+}
+#endif

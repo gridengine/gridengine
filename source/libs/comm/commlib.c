@@ -2399,39 +2399,39 @@ static void commlib_state_init(struct commlib_state_t* state) {
 
 
 int commlib_state_get_enrolled() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_enrolled");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_enrolled");
    return commlib_state->enrolled;
 }
 
 int commlib_state_get_ever_enrolled() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_ever_enrolled");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_ever_enrolled");
    return commlib_state->ever_enrolled;
 }
 
 int* commlib_state_get_addr_stored_tag_priority_list() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_stored_tag_priority_list");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_stored_tag_priority_list");
    return commlib_state->stored_tag_priority_list;
 }
 
 int commlib_state_get_stored_tag_priority_list_i(
 int i 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_stored_tag_priority_list_i");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_stored_tag_priority_list_i");
    return commlib_state->stored_tag_priority_list[i];
 }
 
 char* commlib_state_get_componentname() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_componentname");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_componentname");
    return commlib_state->componentname;
 }
 
 u_short commlib_state_get_componentid() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_componentid");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_componentid");
    return commlib_state->componentid;
 }
 
 u_short* commlib_state_get_addr_componentid() { 
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_addr_componentid");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_addr_componentid");
    return &(commlib_state->componentid);
 }
 
@@ -2464,113 +2464,113 @@ u_short* commlib_state_get_addr_componentid() {
 *     ???/???
 *******************************************************************************/
 int commlib_state_get_commdport() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_commdport");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_commdport");
    return commlib_state->commdport;
 }
 
 char* commlib_state_get_commdservice() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_commdservice");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_commdservice");
    return commlib_state->commdservice ;
 }
       
 int commlib_state_get_commdaddr_length() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_commdaddr_length");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_commdaddr_length");
    return commlib_state->commdaddr_length;
 }
 
 struct in_addr* commlib_state_get_addr_commdaddr() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_addr_commdaddr");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_addr_commdaddr");
    return &(commlib_state->commdaddr);
 }
 
 int commlib_state_get_sfd() { 
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_sfd");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_sfd");
    return commlib_state->sfd;
 }
 
 u_long commlib_state_get_lastmid() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_lastmid");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_lastmid");
    return commlib_state->lastmid;
 }
 
 u_long commlib_state_get_lastgc() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_lastgc");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_lastgc");
    return commlib_state->lastgc;
 }
 
 int commlib_state_get_reserved_port() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_reserved_port");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_reserved_port");
    return commlib_state->reserved_port;
 }
 
 char* commlib_state_get_commdhost() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_commdhost");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_commdhost");
    return commlib_state->commdhost;
 }
 
 int commlib_state_get_timeout() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_timeout");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_timeout");
    return commlib_state->timeout;
 }
 
 int commlib_state_get_timeout_srcv() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_timeout_srcv");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_timeout_srcv");
    return commlib_state->timeout_srcv;
 }
 
 int commlib_state_get_timeout_ssnd() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_timeout_ssnd");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_timeout_ssnd");
    return commlib_state->timeout_ssnd;
 }
 
 int commlib_state_get_offline_receive() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_offline_receive");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_offline_receive");
    return commlib_state->offline_receive;
 }
 
 int commlib_state_get_lt_heard_from_timeout() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_lt_heard_from_timeout");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_lt_heard_from_timeout");
    return commlib_state->lt_heard_from_timeout;
 }
 
 int commlib_state_get_closefd() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_closefd");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_closefd");
    return commlib_state->closefd;
 }
 
 entry* commlib_state_get_list() {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_list");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_list");
    return commlib_state->list;
 }
 
 sge_log_ftype commlib_state_get_logging_function () {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_logging_function");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_logging_function");
    return commlib_state->sge_log;      
 }
 
 int commlib_state_get_changed_flag(void) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_changed_flag");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "get_changed_flag");
    return commlib_state->changed_flag;
 } 
 
 void commlib_state_set_enrolled(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_enrolled");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_enrolled");
    commlib_state->enrolled = state;
 }
 
 void commlib_state_set_ever_enrolled(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_ever_enrolled");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_ever_enrolled");
    commlib_state->ever_enrolled = state;
 }
 
 void commlib_state_set_stored_tag_priority_list(
 int *state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_stored_tag_priority_list");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_stored_tag_priority_list");
    memcpy(commlib_state->stored_tag_priority_list, state, sizeof(commlib_state->stored_tag_priority_list));
    commlib_state->changed_flag = 1;
 }
@@ -2578,14 +2578,14 @@ int *state
 void commlib_state_set_componentname(
 const char *state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_componentname");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_componentname");
    strcpy(commlib_state->componentname, state);
    commlib_state->changed_flag = 1; 
 }
 
 void commlib_state_set_componentid(u_short state)
 {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_componentid");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_componentid");
    commlib_state->componentid = (u_short)state;
    commlib_state->changed_flag = 1; 
 }
@@ -2593,7 +2593,7 @@ void commlib_state_set_componentid(u_short state)
 void commlib_state_set_commdport(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_commdport");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_commdport");
    commlib_state->commdport = state;
    commlib_state->changed_flag = 1; 
 }
@@ -2601,49 +2601,49 @@ int state
 void commlib_state_set_commdservice(
 const char *state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_commdservice");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_commdservice");
    strcpy(commlib_state->commdservice, state);
 }
 
 void commlib_state_set_commdaddr_length(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_commdaddr_length");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_commdaddr_length");
    commlib_state->commdaddr_length = state;
 }
 
 void commlib_state_set_sfd(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_sfd");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_sfd");
    commlib_state->sfd= state;
 }
 
 void commlib_state_set_lastmid(
 u_long state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_lastmid");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_lastmid");
    commlib_state->lastmid= state;
 }
 
 void commlib_state_set_lastgc(
 u_long state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_lastgc");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_lastgc");
    commlib_state->lastgc= state;
 }
 
 void commlib_state_set_reserved_port(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_reserved_port");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_reserved_port");
    commlib_state->reserved_port= state;
 }
 
 void commlib_state_set_commdhost(
 const char *state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_commdhost");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_commdhost");
    strcpy(commlib_state->commdhost, state);
    commlib_state->changed_flag = 1; 
 }
@@ -2651,42 +2651,42 @@ const char *state
 void commlib_state_set_timeout(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_timeout");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_timeout");
    commlib_state->timeout= state;
 }
 
 void commlib_state_set_timeout_srcv(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_timeout_srcv");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_timeout_srcv");
    commlib_state->timeout_srcv= state;
 }
 
 void commlib_state_set_timeout_ssnd(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_timeout_ssnd");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_timeout_ssnd");
    commlib_state->timeout_ssnd= state;
 }
 
 void commlib_state_set_offline_receive(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_offline_receive");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_offline_receive");
    commlib_state->offline_receive= state;
 }
 
 void commlib_state_set_lt_heard_from_timeout(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_lt_heard_from_timeout");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_lt_heard_from_timeout");
    commlib_state->lt_heard_from_timeout= state;
 }
 
 void commlib_state_set_closefd(
 int state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_closefd");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_closefd");
    if(!commlib_state_get_enrolled())
       commlib_state->closefd= state;
 }
@@ -2694,33 +2694,33 @@ int state
 void commlib_state_set_list(
 entry *state 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_list");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_list");
    commlib_state->list= state;
 }
 
 void commlib_state_set_logging_function(
 sge_log_ftype sge_log_function 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_logging_function");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_logging_function");
    commlib_state->sge_log = sge_log_function;
 }
 
 void commlib_state_set_changed_flag(
 int flag 
 ) {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_changed_flag");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "set_changed_flag");
    commlib_state->changed_flag = flag;
 }
 
 void inc_commlib_state_lastmid()
 {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "inc_lastmid");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "inc_lastmid");
    commlib_state->lastmid++;
 }
 
 void clear_commlib_state_stored_tag_priority_list()
 {
-   COMMLIB_GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "clear_stored_tag_priority_list");
+   GET_SPECIFIC(struct commlib_state_t, commlib_state, commlib_state_init, commlib_state_key, "clear_stored_tag_priority_list");
    memset(commlib_state->stored_tag_priority_list, 0, sizeof(commlib_state->stored_tag_priority_list));
 }
 

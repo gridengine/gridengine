@@ -38,9 +38,8 @@
 
 #include "sge.h"
 #include "basis_types.h"
+#include "cull.h"
 #include "job_log.h"
-#include "sge_queue_qmaster.h"  /* JG: TODO: libgdi depends from qmaster! */
-#include "sge_host_qmaster.h"   /*           this has to be resolved!     */ 
 #include "config_file.h"
 #include "sge_prog.h"
 #include "sgermon.h"

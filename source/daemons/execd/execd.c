@@ -99,8 +99,8 @@ lList *execd_config_list = NULL;
 static void execd_exit_func(int i);
 static void execd_register(void);
 static void dispatcher_errfunc(const char *err_str);
-static void parse_cmdline_execd(char **argv, char **environ);
-static lList *sge_parse_cmdline_execd(char **argv, char **envp, lList **ppcmdline);
+static void parse_cmdline_execd(char **argv);
+static lList *sge_parse_cmdline_execd(char **argv, lList **ppcmdline);
 static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist, u_long32 *help);
 
 /* DISPATCHER TABLE FOR EXECD */
@@ -120,8 +120,6 @@ dispatch_entry execd_dispatcher_table[] = {
 
 /* time execd maximal waits in the dispatch routine */
 #define DISPATCH_TIMEOUT_SGE     2
-
-extern char **environ;
 
 int main(int argc, char *argv[]);
 
@@ -193,7 +191,7 @@ char **argv
    }
 #endif
 
-   parse_cmdline_execd(argv, environ);   
+   parse_cmdline_execd(argv);   
 
    /* check for running execd - ignore $COMMD_HOST */
    if (start_commd) {
@@ -422,8 +420,7 @@ static void execd_register()
  * parse_cmdline_execd
  *---------------------------------------------------------------------*/
 static void parse_cmdline_execd(
-char **argv,
-char **environ 
+char **argv
 ) {
    lList *ref_list = NULL, *alp = NULL, *pcmdline = NULL;
    lListElem *aep;
@@ -431,7 +428,7 @@ char **environ
 
    DENTER(TOP_LAYER, "parse_cmdline_execd");
             
-   alp = sge_parse_cmdline_execd(argv+1, environ, &pcmdline);
+   alp = sge_parse_cmdline_execd(argv+1, &pcmdline);
    if(alp) {
       /* 
       ** high level parsing error! show answer list
@@ -476,7 +473,6 @@ char **environ
  *-------------------------------------------------------------*/ 
 static lList *sge_parse_cmdline_execd(
 char **argv,
-char **envp,
 lList **ppcmdline 
 ) {
 char **sp;

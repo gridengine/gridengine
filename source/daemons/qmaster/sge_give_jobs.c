@@ -41,6 +41,7 @@
 #include "sge_usageL.h"
 #include "sge_job_refL.h"
 #include "sge_requestL.h"
+#include "sge_report.h"
 #include "sge_time_eventL.h"
 
 #include "basis_types.h"
@@ -115,6 +116,7 @@ static int send_job(const char *rhost, const char *target, lListElem *jep, lList
 static int sge_bury_job(lListElem *jep, u_long32 jid, lListElem *ja_task, int spool_job, int no_events);
 
 static int sge_to_zombies(lListElem *jep, lListElem *ja_task, int spool_job);
+static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr, sge_commit_flags_t commit_flags, const char *diagnosis);
 
 /************************************************************************
  Master function to give job to the execd.
@@ -603,32 +605,9 @@ u_long now
 
    sge_commit_job - commits that a job has been started
 
-   First call (with mode == 0):
-     We sent the job to the execd. But we dont want to wait for the 
-     acknowledge now. So we have to reserve the resources for the meantime.
-
-   If the execd sends a positive Ack we make the commit permanent 
-   (sge_commit_job() with mode==1).
-
-   If we got no response or a failed job from the execd we have to free the
-   resources for further usage. (mode==2) 
 
    Hearing about a jobs exit from execd there are two cases:
 
-   SGE
-      If we get a job exit that leads to a deletion of the job we have 
-      to free the resources for further usage and . (mode==3)
-      This is the same as mode=2 except we delete the job from disk and
-      generate a delete event 
-
-   SGEEE
-      If we get a job exit that leads to a deletion of the job we have 
-      to free the resources for further usage (mode==4)
-      Here we remove the job script but not the job file itself. 
-
-      Getting the permission from SGEEE schedd to remove the job (mode==5)
-      we may delete the job itself from internal lists (joblist)
-      and we may remove it the job file.
 
    Input:
    job we want to commit
@@ -636,16 +615,57 @@ u_long now
       (queue->tagged = number of job nodes to run in this queue)
 
    Output:
-   Master_Queue_List queue->job_list of the concerned queues are filled with the
-   job nodes. entry: int0=jobid; int1=MASTER|SLAVE
-   The tags are removed from the queues.
-   job->start_time is set to the actual time.
-   Changes of queues/jobs are spooled to disk.
  ***********************************************************************/
+
+
+
+
+
+
+/****** sge_give_jobs/sge_commit_job() *****************************************
+*  NAME
+*     sge_commit_job() -- Do job state transitions
+*
+*  SYNOPSIS
+*     void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr, 
+*     sge_commit_mode_t mode, sge_commit_flags_t commit_flags) 
+*
+*  FUNCTION
+*     sge_commit_job() implements job state transitons. When a dispatch
+*     order arrives from schedd the job is sent asynchonously to execd and 
+*     sge_commit_job() is called with mode==COMMIT_ST_SENT. When a job report 
+*     arrives from the execd mode is COMMIT_ST_ARRIVED. When the job failed
+*     or finished mode is COMMIT_ST_FINISHED_FAILED or COMMIT_ST_FINISHED_FAILED_EE
+*     depending on product mode:
+* 
+*     A SGE job can be removed immediately when it is finished 
+*     (mode==COMMIT_ST_FINISHED_FAILED). A SGEEE job may not be deleted 
+*     (mode==COMMIT_ST_FINISHED_FAILED_EE) before the SGEEE scheduler has debited 
+*     the jobs resource consumption in the corresponding objects (project/user/..). 
+*     Only the job script may be deleted at this stage. When an order arrives at 
+*     qmaster telling that debitation was done (mode==COMMIT_ST_DEBITED_EE) the 
+*     job can be deleted.
+*     
+*     sge_commit_job() releases resources when a job is no longer running.
+*     Also state changes jobs are spooled and finally spooling files are 
+*     deleted. Also jobs start time is set to the actual time when job is sent.
+*
+*  INPUTS
+*     lListElem *jep                  - the job 
+*     lListElem *jatep                - the array task
+*     lListElem *jr                   - the job report (may be NULL)
+*     sge_commit_mode_t mode          - the 'mode' - actually the state transition
+*     sge_commit_flags_t commit_flags - additional flags for parametrizing 
+*
+*  SEE ALSO
+*     See sge_commit_mode_t typedef for documentation on mode.
+*     See sge_commit_flags_t typedef for documentation on commit_flags.
+*******************************************************************************/
 void sge_commit_job(
 lListElem *jep,
 lListElem *jatep,
-int mode,
+lListElem *jr,
+sge_commit_mode_t mode,
 sge_commit_flags_t commit_flags
 ) {
    lListElem *qep, *hep, *petask, *tmp_ja_task;
@@ -667,7 +687,7 @@ sge_commit_flags_t commit_flags
    session = lGetString(jep, JB_session);
 
    switch (mode) {
-   case 0:
+   case COMMIT_ST_SENT:
       lSetUlong(jatep, JAT_state, JRUNNING);
       lSetUlong(jatep, JAT_status, JTRANSFERING);
 
@@ -718,7 +738,7 @@ sge_commit_flags_t commit_flags
       }
       break;
 
-   case 1:
+   case COMMIT_ST_ARRIVED:
       lSetUlong(jatep, JAT_status, JRUNNING);
       job_log(jobid, jataskid, "job received by execd");
       job_enroll(jep, NULL, jataskid);
@@ -732,8 +752,8 @@ sge_commit_flags_t commit_flags
       }
       break;
 
-   case 2:
-   case 8:
+   case COMMIT_ST_RESCHEDULED:
+   case COMMIT_ST_FAILED_AND_ERROR:
       WARNING((SGE_EVENT, MSG_JOB_RESCHEDULE_UU,
                u32c(lGetUlong(jep, JB_job_number)), 
                u32c(lGetUlong(jatep, JAT_task_number))));
@@ -789,7 +809,7 @@ sge_commit_flags_t commit_flags
       }
 
       lSetUlong(jatep, JAT_status, JIDLE);
-      lSetUlong(jatep, JAT_state, (mode==2) ?(JQUEUED|JWAITING): (JQUEUED|JWAITING|JERROR));
+      lSetUlong(jatep, JAT_state, (mode==COMMIT_ST_RESCHEDULED) ?(JQUEUED|JWAITING): (JQUEUED|JWAITING|JERROR));
 
       lSetList(jatep, JAT_previous_usage_list, lCopyList("name", lGetList(jatep, JAT_scaled_usage_list)));
       lSetList(jatep, JAT_scaled_usage_list, NULL);
@@ -824,8 +844,8 @@ sge_commit_flags_t commit_flags
                lListElem_clear_changed_info(container);
             } else {
                /* the usage container is not spooled */
-               sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER,
-                                  lGetList(container, PET_scaled_usage));
+               sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
+                                 lGetString(jep, JB_session), lGetList(container, PET_scaled_usage));
                lList_clear_changed_info(lGetList(container, PET_scaled_usage));
             }
 
@@ -849,7 +869,7 @@ sge_commit_flags_t commit_flags
       }
       break;
 
-   case 3:
+   case COMMIT_ST_FINISHED_FAILED:
       job_log(jobid, jataskid, MSG_LOG_EXITED);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep, spool_job);
@@ -857,13 +877,17 @@ sge_commit_flags_t commit_flags
       if (!unenrolled_task) { 
          sge_clear_granted_resources(jep, jatep, 1);
       }
+      sge_job_finish_event(jep, jatep, jr, commit_flags, NULL); 
       sge_bury_job(jep, jobid, jatep, spool_job, no_events);
       break;
-   case 4:
+   case COMMIT_ST_FINISHED_FAILED_EE:
       jobid = lGetUlong(jep, JB_job_number);
       job_log(jobid, jataskid, MSG_LOG_WAIT4SGEDEL);
 
       lSetUlong(jatep, JAT_status, JFINISHED);
+
+      sge_job_finish_event(jep, jatep, jr, commit_flags, NULL); 
+
       if (handle_zombies) {
          sge_to_zombies(jep, jatep, spool_job);
       }
@@ -878,18 +902,13 @@ sge_commit_flags_t commit_flags
       for_each(petask, lGetList(jatep, JAT_task_list)) {
          sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid,
             lGetUlong(jatep, JAT_task_number),
-            lGetString(petask, PET_id),
+            lGetString(petask, PET_id), lGetString(jep, JB_session),
             lGetList(petask, PET_scaled_usage));
       }
       /* job usage is not spooled */
       sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid,
          lGetUlong(jatep, JAT_task_number),
-         NULL, lGetList(jatep, JAT_scaled_usage_list));
-#if 0
-      /* SGEEE job finished */
-      sge_add_event(NULL, sgeE_JOB_FINISH, jobid, lGetUlong(jatep, JAT_task_number), 
-            NULL, session, NULL);
-#endif
+         NULL, lGetString(jep, JB_session), lGetList(jatep, JAT_scaled_usage_list));
 
       /* finished all ja-tasks => remove job script */
       for_each(tmp_ja_task, lGetList(jep, JB_ja_tasks)) {
@@ -905,15 +924,19 @@ sge_commit_flags_t commit_flags
       }
       break;
 
-   case 5: /* triggered by ORT_remove_job */
-   case 6: /* triggered by ORT_remove_immediate_job */
-      job_log(jobid, jataskid, (mode==5) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
+   case COMMIT_ST_DEBITED_EE: /* triggered by ORT_remove_job */
+   case COMMIT_ST_NO_RESOURCES: /* triggered by ORT_remove_immediate_job */
+      job_log(jobid, jataskid, (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
       jobid = lGetUlong(jep, JB_job_number);
+
+      if (mode == COMMIT_ST_NO_RESOURCES)
+         sge_job_finish_event(jep, jatep, jr, commit_flags, NULL); 
       sge_bury_job(jep, jobid, jatep, spool_job, no_events);
       break;
    
-   case 7: /*  this is really case 2.5! The same as case 2 except 
-               sge_clear_granted_resources is told not to increase free slots. */
+   case COMMIT_ST_DELIVERY_FAILED: 
+             /*  The same as case COMMIT_ST_RESCHEDULED except 
+                 sge_clear_granted_resources() may not increase free slots. */
       WARNING((SGE_EVENT, 
                MSG_JOB_RESCHEDULE_UU, 
                u32c(lGetUlong(jep, JB_job_number)), 
@@ -931,6 +954,61 @@ sge_commit_flags_t commit_flags
       }
       break;
    }
+
+   DEXIT;
+   return;
+}
+
+   /* 
+    * Job finish information required by DRMAA
+    * u_long32 jobid
+    * u_long32 taskid
+    * u_long32 status
+    *    SGE_WEXITED   flag
+    *    SGE_WSIGNALED flag
+    *    SGE_WCOREDUMP flag
+    *    SGE_WABORTED  flag (= COMMIT_NEVER_RAN)
+    *    exit status  (8 bit)
+    *    signal       (8 bit)
+    * lList *rusage;
+    *
+    * Additional job finish information provided by JAPI
+    * char *failed_reason
+    */
+static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr, 
+                  sge_commit_flags_t commit_flags, const char *diagnosis)
+{
+   bool release_jr = false;
+
+   DENTER(TOP_LAYER, "sge_job_finish_event");
+
+   if (!jr) {
+      jr = lCreateElem(JR_Type);
+      lSetUlong(jr, JR_job_number, lGetUlong(jep, JB_job_number));
+      lSetUlong(jr, JR_ja_task_number, lGetUlong(jatep, JAT_task_number));
+      lSetUlong(jr, JR_wait_status, SGE_NEVERRAN_BIT);
+      release_jr = true;   
+   } else {
+     if (commit_flags & COMMIT_NEVER_RAN)
+        lSetUlong(jr, JR_wait_status, SGE_NEVERRAN_BIT);
+   } 
+
+   if (diagnosis)
+      lSetString(jr, JR_err_str, diagnosis);
+   else {
+      if (!lGetString(jr, JR_err_str)) {
+         if (SGE_GET_NEVERRAN(lGetUlong(jr, JR_wait_status)))
+            lSetString(jr, JR_err_str, "Job never ran");
+         else
+            lSetString(jr, JR_err_str, "Unknown job finish condition");
+      }
+   }
+
+   sge_add_event(NULL, 0, sgeE_JOB_FINISH, lGetUlong(jep, JB_job_number), 
+         lGetUlong(jatep, JAT_task_number), NULL, lGetString(jep, JB_session), jr);
+
+   if (release_jr)
+      lFreeElem(jr);
 
    DEXIT;
    return;
@@ -1130,7 +1208,7 @@ char *rlimit_name
 /*-------------------------------------------------------------------------*/
 /* unlink/rename the job specific files on disk, send event to scheduler   */
 /*-------------------------------------------------------------------------*/
-static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
+static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task, 
                         int spool_job, int no_events) 
 {
    u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number);
@@ -1140,6 +1218,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
 
    job = job_list_locate(Master_Job_List, job_id);
    te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, job_id, ja_task_id);
+
 
    /*
     * Remove the job with the last task
@@ -1172,11 +1251,6 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
        * remove the job
        */
       suser_unregister_job(job);
-#if 0
-      /* SGE job finished */
-      sge_add_event(NULL, 0, sgeE_JOB_FINISH, job_id, ja_task_id, NULL, 
-            lGetString(job, JB_session), NULL);
-#endif
       if (!no_events) {
          sge_add_event(NULL, 0, sgeE_JOB_DEL, job_id, ja_task_id, NULL, 
                lGetString(job, JB_session), NULL);
@@ -1187,11 +1261,6 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
 
       job_log(job_id, ja_task_id, MSG_LOG_JATASKEXIT);
 
-#if 0
-      /* SGE task finished */
-      sge_add_event(NULL, 0, sgeE_JOB_FINISH, job_id, ja_task_id, NULL, 
-            lGetString(job, JB_session), NULL);
-#endif
       if (!no_events) {
          sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_id, ja_task_id, NULL, 
                lGetString(job, JB_session), NULL);

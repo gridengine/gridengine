@@ -90,6 +90,40 @@ NAMEEND
 
 #define REPS sizeof(REPN)/sizeof(char*)
 
+#define SGE_WEXITED_BIT      0x00000001
+#define SGE_WSIGNALED_BIT    0x00000002
+#define SGE_WCOREDUMP_BIT    0x00000004
+#define SGE_NEVERRAN_BIT     0x00000008
+/* POSIX exit status has only 8 bit */
+#define SGE_EXIT_STATUS_BITS 0x00000FF0
+/* SGE signal numbers are high numbers so we use 16 bit */
+#define SGE_SIGNAL_BITS      0x0FFFF000
+
+/* these makros shall be used for read access on JR_wait_status */
+#define SGE_GET_WEXITED(status)   ((status)&SGE_WEXITED_BIT)
+#define SGE_GET_WSIGNALED(status) ((status)&SGE_WSIGNALED_BIT)
+#define SGE_GET_WCOREDUMP(status)   ((status)&SGE_WCOREDUMP_BIT)
+#define SGE_GET_NEVERRAN(status)    ((status)&SGE_NEVERRAN_BIT)
+#define SGE_GET_WEXITSTATUS(status) (((status)&SGE_EXIT_STATUS_BITS)>>4)
+#define SGE_GET_WSIGNAL(status)     (((status)&SGE_SIGNAL_BITS)>>12)
+
+/* these makros shall be used for write access on JR_wait_status */
+#define SGE_SET_WEXITED(status, flag) \
+   ((status) & ~SGE_WEXITED_BIT)   | ((flag)?SGE_WEXITED_BIT:0)
+#define SGE_SET_WSIGNALED(status, flag) \
+   ((status) & ~SGE_WSIGNALED_BIT) | ((flag)?SGE_WSIGNALED_BIT:0)
+#define SGE_SET_WCOREDUMP(status, flag) \
+   ((status) & ~SGE_WCOREDUMP_BIT) | ((flag)?SGE_WCOREDUMP_BIT:0)
+#define SGE_SET_NEVERRAN(status, flag) \
+   ((status) & ~SGE_NEVERRAN_BIT)  | ((flag)?SGE_NEVERRAN_BIT:0)
+#define SGE_SET_WEXITSTATUS(status, exit_status) \
+   ((status) & ~SGE_EXIT_STATUS_BITS)  |(((exit_status)<<4) & SGE_EXIT_STATUS_BITS)
+#define SGE_SET_WSIGNAL(status, signal) \
+   ((status) & ~SGE_SIGNAL_BITS)       |(((signal)<<12) & SGE_SIGNAL_BITS)
+
+/*
+ * definition for job report
+ */
 enum {
    JR_job_number = JR_LOWERBOUND,
    JR_ja_task_number,
@@ -105,7 +139,8 @@ enum {
    JR_job_pid,
    JR_ckpt_arena,
    JR_pe_task_id_str,
-   JR_osjobid
+   JR_osjobid,
+   JR_wait_status
 };
 
 LISTDEF(JR_Type)
@@ -127,6 +162,7 @@ LISTDEF(JR_Type)
    /* string describing task from sight of PE
     * if this is non null this is a PE task */
    SGE_STRING(JR_osjobid, CULL_DEFAULT)     /* string containing osjobid for ckpt jobs */
+   SGE_ULONG(JR_wait_status, CULL_DEFAULT)  /* japi_wait() 'status' information  */
 LISTEND
 
 NAMEDEF(JRN)
@@ -145,6 +181,7 @@ NAMEDEF(JRN)
    NAME("JR_ckpt_arena")
    NAME("JR_pe_task_id_str")
    NAME("JR_osjobid")
+   NAME("JR_wait_status")
 NAMEEND
 
 #define JRS sizeof(JRN)/sizeof(char*)

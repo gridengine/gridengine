@@ -286,7 +286,7 @@ typedef enum {
    sgeE_EVENTSIZE 
 }ev_event;
 
-#define IS_LIST_EVENT(x) \
+#define IS_TOTAL_UPDATE_EVENT(x) \
   (((x)==sgeE_ADMINHOST_LIST) || \
   ((x)==sgeE_CALENDAR_LIST) || \
   ((x)==sgeE_CKPT_LIST) || \

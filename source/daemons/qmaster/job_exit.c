@@ -158,13 +158,16 @@ lListElem *jatep
     * case 1: job being trashed because 
     *    --> failed starting interactive job
     *    --> job was deleted
+    *    --> a failed batch job that explicitely shall not enter error state
     */
    if (((lGetUlong(jatep, JAT_state) & JDELETED) == JDELETED) ||
-         (failed && !lGetString(jep, JB_exec_file))) {
+         (failed && !lGetString(jep, JB_exec_file)) ||
+         (failed && general_failure==GFSTATE_JOB && JOB_TYPE_IS_NO_ERROR(lGetUlong(jep, JB_type)))) {
       job_log(jobid, jataskid, MSG_LOG_JREMOVED);
       sge_log_dusage(jr, jep, jatep);
 
-      sge_commit_job(jep, jatep, (enhanced_product_mode ? 4 : 3), COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, (enhanced_product_mode ? COMMIT_ST_FINISHED_FAILED_EE : COMMIT_ST_FINISHED_FAILED), COMMIT_DEFAULT |
+      COMMIT_NEVER_RAN);
    } 
      /*
       * case 2: set job in error state
@@ -178,7 +181,7 @@ lListElem *jatep
          jataskid));
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, 8, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT);
    }
       /*
        * case 3: job being rescheduled because it wasnt even started
@@ -188,7 +191,7 @@ lListElem *jatep
         general_failure)) {
       DTRACE;
       job_log(jobid, jataskid, MSG_LOG_JNOSTARTRESCHEDULE);
-      sge_commit_job(jep, jatep, 2, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
    }
@@ -208,7 +211,7 @@ lListElem *jatep
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, 2, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
    else if (failed == SSTATE_MIGRATE) {
       DTRACE;
@@ -220,7 +223,7 @@ lListElem *jatep
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, 2, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
    else if (failed == SSTATE_AGAIN) {
       job_log(jobid, jataskid, MSG_LOG_JNORESRESCHEDULE);
@@ -230,12 +233,12 @@ lListElem *jatep
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
       sge_log_dusage(jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
-      sge_commit_job(jep, jatep, 2, COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
    else {
       job_log(jobid, jataskid, MSG_LOG_EXITED);
       sge_log_dusage(jr, jep, jatep);
-      sge_commit_job(jep, jatep, (enhanced_product_mode ? 4 : 3), COMMIT_DEFAULT);
+      sge_commit_job(jep, jatep, jr, (enhanced_product_mode ? COMMIT_ST_FINISHED_FAILED_EE : COMMIT_ST_FINISHED_FAILED), COMMIT_DEFAULT);
    }
 
    if (queueep) {

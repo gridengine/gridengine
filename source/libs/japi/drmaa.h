@@ -37,13 +37,49 @@
 extern "C" {
 #endif
 
-/* 
- * these hooks are not part of the DRMAA interface 
- * see www.drmaa.org for the DRMAA specification 
- */ 
-#ifdef DRMAA_HOOKS
-extern int delay_after_submit;
-#endif
+/* see www.drmaa.org for more details on the DRMAA specification */ 
+/****** DRMAA/-DRMAA_Interface *******************************************************
+*  NAME
+*     DRMAA_Interface -- DRMAA interface
+*
+*  FUNCTION
+*     The enlisted functions specify the C/C++ binding of the DRMAA interface 
+*     specification.
+* 
+*  SEE ALSO
+*     DRMAA/drmaa_get_next_attr_name()
+*     DRMAA/drmaa_get_next_attr_value()
+*     DRMAA/drmaa_get_next_job_id()
+*     DRMAA/drmaa_release_attr_names()
+*     DRMAA/drmaa_release_attr_values()
+*     DRMAA/drmaa_release_job_ids()
+*     DRMAA/drmaa_init()
+*     DRMAA/drmaa_exit()
+*     DRMAA/drmaa_allocate_job_template()
+*     DRMAA/drmaa_delete_job_template()
+*     DRMAA/drmaa_set_attribute()
+*     DRMAA/drmaa_get_attribute()
+*     DRMAA/drmaa_set_vector_attribute()
+*     DRMAA/drmaa_get_vector_attribute()
+*     DRMAA/drmaa_get_attribute_names()
+*     DRMAA/drmaa_get_vector_attribute_names()
+*     DRMAA/drmaa_run_job()
+*     DRMAA/drmaa_run_bulk_jobs()
+*     DRMAA/drmaa_control()
+*     DRMAA/drmaa_synchronize()
+*     DRMAA/drmaa_wait()
+*     DRMAA/drmaa_wifexited()
+*     DRMAA/drmaa_wexitstatus()
+*     DRMAA/drmaa_wifsignaled()
+*     DRMAA/drmaa_wtermsig()
+*     DRMAA/drmaa_wcoredump()
+*     DRMAA/drmaa_wifaborted()
+*     DRMAA/drmaa_job_ps()
+*     DRMAA/drmaa_strerror()
+*     DRMAA/drmaa_get_contact()
+*     DRMAA/drmaa_version()
+*     DRMAA/drmaa_get_DRM_system()
+*******************************************************************************/
 
 /* ------------------- Constants ------------------- */
 /* 
@@ -266,6 +302,7 @@ int drmaa_get_attribute(drmaa_job_template_t *jt, const char *name, char *value,
 
 /* Adds ('name', 'values') pair to list of vector attributes in job template 'jt'.
  * Only vector attributes may be passed.
+ * A 'value' string vector containing n elements must consist of n+1 char * elements with value[n] = NULL as delimitor
  */
 int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name, const char *value[], char *error_diagnosis, size_t error_diag_len);
 
@@ -347,6 +384,7 @@ int drmaa_control(const char *jobid, int action, char *error_diagnosis, size_t e
  * Dispose parameter specifies how to treat reaping information:
  * True=1 "fake reap", i.e. dispose of the rusage data
  * False=0 do not reap
+ * A 'job_ids' string vector containing n elements must consist of n+1 char * elements with value[n] = NULL as delimitor
  */ 
 int drmaa_synchronize(const char *job_ids[], signed long timeout, int dispose, char *error_diagnosis, size_t error_diag_len);
 

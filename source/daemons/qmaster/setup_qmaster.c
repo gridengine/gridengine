@@ -221,7 +221,7 @@ int sge_setup_qmaster()
    sge_chdir_exit("/", 1);
 
    DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(conf.qmaster_spool_dir, 0755, 1);
+   sge_mkdir(conf.qmaster_spool_dir, 0755, 1, 0);
 
    DPRINTF(("chdir("SFQ")----------------------------\n", conf.qmaster_spool_dir));
    sge_chdir_exit(conf.qmaster_spool_dir, 1);

@@ -38,6 +38,8 @@
 
 #include "basis_types.h"  
 
+#include "sge_dstring.h"
+
 #ifdef IRIX6
 #  define SGE_STAT(filename, buffer) stat64(filename, buffer)
 #  define SGE_LSTAT(filename, buffer) lstat64(filename, buffer)
@@ -96,11 +98,11 @@ int sge_chdir_exit(const char *path, int exit_on_error);
 
 int sge_chdir(const char *dir);
 
-int sge_mkdir(const char *path, int fmode, int exit_on_error);    
+int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist);    
 int sge_mkdir2(const char *base_dir, const char *name, int fmode, 
                int exit_on_error);    
 
-int sge_rmdir(const char *cp, char *err_str);
+int sge_rmdir(const char *cp, dstring *err_str);
 
 int sge_unlink(const char *prefix, const char *suffix); 
  

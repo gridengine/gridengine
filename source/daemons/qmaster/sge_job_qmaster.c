@@ -938,8 +938,8 @@ int sub_command
                   deleted_tasks++;
                   sge_add_event(NULL, start_time, sgeE_JATASK_DEL, job_number, task_number,
                                 NULL, lGetString(job, JB_session), NULL);
-                  sge_commit_job(job, tmp_task, 3, COMMIT_NO_SPOOLING |
-                     COMMIT_NO_EVENTS | COMMIT_UNENROLLED_TASK);
+                  sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_NO_SPOOLING |
+                     COMMIT_NO_EVENTS | COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN);
                   deleted_unenrolled_tasks = 1;
                   showmessage = 1;
                   if (!alltasks) {
@@ -1017,7 +1017,7 @@ int sub_command
                                                 alpp, ruser,
                                                 lGetUlong(idep, ID_force));
                   } else {
-                     sge_commit_job(job, tmp_task, 3, spool_job);
+                     sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED, spool_job | COMMIT_NEVER_RAN);
                      showmessage = 1;
                      if (!alltasks) {
                         range_list_insert_id(&range_list, NULL, task_number);
@@ -1413,7 +1413,8 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELJOB_SU,
                    ruser, u32c(job_number)));
          }
-         sge_commit_job(j, t, 3, COMMIT_DEFAULT);
+         /* 3: JOB_FINISH reports aborted */
+         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
          cancel_job_resend(job_number, task_number);
          j = NULL;
          answer_list_add(answer_list, SGE_EVENT, STATUS_OK, 
@@ -1433,7 +1434,8 @@ void get_rid_of_job_due_to_qdel(lListElem *j,
             ERROR((SGE_EVENT, MSG_JOB_FORCEDDELJOB_SU,
                    ruser, u32c(job_number)));
          }
-         sge_commit_job(j, t, 3, COMMIT_DEFAULT);
+         /* 3: JOB_FINISH reports aborted */
+         sge_commit_job(j, t, NULL, COMMIT_ST_FINISHED_FAILED, COMMIT_DEFAULT | COMMIT_NEVER_RAN);
          cancel_job_resend(job_number, task_number);
          j = NULL;
       } else {

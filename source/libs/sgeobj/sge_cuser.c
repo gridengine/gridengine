@@ -151,7 +151,7 @@ cuser_list_find_hgroup_references(const lList *this_list,
       if (cuser_is_hgroup_referenced(cuser, hgroup)) {
          const char *name = lGetString(cuser, CU_name);
 
-         lAddElemStr(string_list, STR, name, ST_Type);
+         lAddElemStr(string_list, ST_name, name, ST_Type);
       } 
    }
    DEXIT;

@@ -299,22 +299,22 @@ spool_classic_default_startup_func(lList **answer_list,
 
       if (ret) {
          /* create spool sub directories */
-         sge_mkdir(JOB_DIR,  0755, true);
-         sge_mkdir(ZOMBIE_DIR, 0755, true);
-         sge_mkdir(QUEUE_DIR,  0755, true);
-         sge_mkdir(EXECHOST_DIR, 0755, true);
-         sge_mkdir(SUBMITHOST_DIR, 0755, true);
-         sge_mkdir(ADMINHOST_DIR, 0755, true);
-         sge_mkdir(COMPLEX_DIR, 0755, true);
-         sge_mkdir(EXEC_DIR, 0755, true);
-         sge_mkdir(PE_DIR, 0755, true);
-         sge_mkdir(CKPTOBJ_DIR, 0755, true);
-         sge_mkdir(USERSET_DIR, 0755, true);
-         sge_mkdir(CAL_DIR, 0755, true);
-         sge_mkdir(HGROUP_DIR, 0755, true);
-         sge_mkdir(UME_DIR, 0755, true);
-         sge_mkdir(USER_DIR, 0755, true);
-         sge_mkdir(PROJECT_DIR, 0755, true);
+         sge_mkdir(JOB_DIR,  0755, true, false);
+         sge_mkdir(ZOMBIE_DIR, 0755, true, false);
+         sge_mkdir(QUEUE_DIR,  0755, true, false);
+         sge_mkdir(EXECHOST_DIR, 0755, true, false);
+         sge_mkdir(SUBMITHOST_DIR, 0755, true, false);
+         sge_mkdir(ADMINHOST_DIR, 0755, true, false);
+         sge_mkdir(COMPLEX_DIR, 0755, true, false);
+         sge_mkdir(EXEC_DIR, 0755, true, false);
+         sge_mkdir(PE_DIR, 0755, true, false);
+         sge_mkdir(CKPTOBJ_DIR, 0755, true, false);
+         sge_mkdir(USERSET_DIR, 0755, true, false);
+         sge_mkdir(CAL_DIR, 0755, true, false);
+         sge_mkdir(HGROUP_DIR, 0755, true, false);
+         sge_mkdir(UME_DIR, 0755, true, false);
+         sge_mkdir(USER_DIR, 0755, true, false);
+         sge_mkdir(PROJECT_DIR, 0755, true, false);
       }
    }
 
@@ -376,7 +376,7 @@ spool_classic_common_startup_func(lList **answer_list,
 
       /* create directory for local configurations */
       sge_dstring_sprintf(&local_dir, "%s/%s", url, LOCAL_CONF_DIR);
-      sge_mkdir(sge_dstring_get_string(&local_dir), 0755, true);
+      sge_mkdir(sge_dstring_get_string(&local_dir), 0755, true, false);
    }
 
    DEXIT;

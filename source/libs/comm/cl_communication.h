@@ -39,6 +39,7 @@
 #define CL_DEFINE_WRITE_TIMEOUT                      15
 #define CL_DEFINE_ACK_TIMEOUT                        60
 #define CL_DEFINE_GET_CLIENT_CONNECTION_DATA_TIMEOUT 60   /* default timeout for accepting a connection */
+#define CL_DEFINE_DELETE_MESSAGES_TIMEOUT_AFTER_CCRM 60   /* default timeout for unread message deletion after connection shutdown */
 #define CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT           60   /* default timeout for synchron send messages */
 #define CL_DEFINE_CLIENT_CONNECTION_LIFETIME         600   /* Cut off connection when client is not active for this time */
 
@@ -93,6 +94,7 @@ const char* cl_com_get_service_handler_flag(cl_com_connection_t* connection); /*
 const char* cl_com_get_data_write_flag(cl_com_connection_t* connection);      /* CR check */
 const char* cl_com_get_data_read_flag(cl_com_connection_t* connection);       /* CR check */
 const char* cl_com_get_connection_state(cl_com_connection_t* connection); /* CR check */
+const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection);
 const char* cl_com_get_data_flow_type(cl_com_connection_t* connection);       /* CR check */
 
 /* This can be called by an signal handler to trigger abort of communications */

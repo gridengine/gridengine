@@ -192,7 +192,7 @@ extern int main(int argc, char** argv)
         if (strstr((char*)message->message,"exit") != NULL) {
            printf("received \"exit\" message from host %s, component %s, id %ld\n",
                   sender->comp_host,sender->comp_name,sender->comp_id );
-           cl_commlib_close_connection(handle, sender->comp_host,sender->comp_name,sender->comp_id );
+           cl_commlib_close_connection(handle, sender->comp_host,sender->comp_name,sender->comp_id, CL_FALSE );
            
         } else {
            int ret_val = CL_RETVAL_OK;

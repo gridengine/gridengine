@@ -222,13 +222,34 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
       if (connection->data_flow_type == CL_CM_CT_MESSAGE ) {
          if (connection->connection_state == CL_COM_CONNECTED &&
              connection->connection_sub_state == CL_COM_DONE) {
+
+            if (connection->connection_close_time.tv_sec == 0) {
+               /* there is no timeout set, set connection close time for this connection */
+               gettimeofday(&(connection->connection_close_time),NULL);
+               if (connection->handler != NULL) {
+                  connection->connection_close_time.tv_sec += connection->handler->close_connection_timeout;
+               } else {
+                  connection->connection_close_time.tv_sec += CL_DEFINE_DELETE_MESSAGES_TIMEOUT_AFTER_CCRM;
+               }
+            }
+
             if( cl_raw_list_get_elem_count(connection->received_message_list) == 0 &&
                 cl_raw_list_get_elem_count(connection->send_message_list) == 0) {
                  connection->connection_state = CL_COM_CLOSING;   
                  connection->connection_sub_state = CL_COM_DONE_FLUSHED;
                  CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
             } else {
-               CL_LOG(CL_LOG_ERROR,"wait for empty message buffers");
+               struct timeval now;
+               gettimeofday(&now,NULL);
+               if ( connection->connection_close_time.tv_sec <= now.tv_sec || cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
+                  CL_LOG(CL_LOG_ERROR,"close connection timeout - shutdown of connection");
+                  connection->connection_state = CL_COM_CLOSING;   
+                  connection->connection_sub_state = CL_COM_DONE_FLUSHED;
+                  CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
+               } else {
+                  CL_LOG(CL_LOG_WARNING,"wait for empty message buffers");
+               }
+               
 #if 0  
                {
                cl_message_list_elem_t* melem;

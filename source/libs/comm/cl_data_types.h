@@ -217,6 +217,7 @@ typedef struct cl_com_handle {
    int select_sec_timeout;
    int select_usec_timeout;
    int connection_timeout;   /* timeout to shutdown connected clients when no messages arive */ 
+   int close_connection_timeout; /* timeout for connection to delete unread messages after connection shutdown */
    int read_timeout;
    int write_timeout;
    int open_connection_timeout; 
@@ -358,6 +359,7 @@ struct cl_com_connection_type {
    unsigned long data_read_buffer_processed;   /* actual position in data read buffer which is processed */
  
    struct timeval last_transfer_time;           /* time when last message arived/was sent */
+   struct timeval connection_close_time;        /* time when connection was closed ( received CCRM ) */
    long           shutdown_timeout;             /* used for shutdown of connection */
  
    /* connection specific */

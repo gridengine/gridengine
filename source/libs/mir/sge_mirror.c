@@ -80,6 +80,12 @@
 int num_events = 0;
 
 /* Static functions for internal use */
+static bool produce_qmaster_alive_timeout = false; /* 
+                                                    * used to produce qmaster alive timeout when 
+                                                    * SGE_PRODUCE_ALIVE_TIMEOUT_ERROR environment
+                                                    * variable is set.
+                                                    */
+
 static sge_mirror_error _sge_mirror_subscribe(sge_object_type type, 
                                               sge_mirror_callback callback_before, 
                                               sge_mirror_callback callback_after, 
@@ -201,6 +207,14 @@ sge_mirror_error sge_mirror_initialize(ev_registration_id id, const char *name)
    int i;
 
    DENTER(TOP_LAYER, "sge_mirror_initialize");
+
+   /* if environment varialbe SGE_PRODUCE_ALIVE_TIMEOUT_ERROR
+      is defined, the mirror event client will produce qmaster
+      alive timeout errors and reconnect to qmaster */
+   if ( getenv("SGE_PRODUCE_ALIVE_TIMEOUT_ERROR") ) {
+      produce_qmaster_alive_timeout = true;
+   }
+
 
    /* initialize mirroring data structures - only changeable fields */
    for(i = 0; i < SGE_TYPE_ALL; i++) {
@@ -911,6 +925,7 @@ sge_mirror_error sge_mirror_process_events(void)
    u_long32 now;
    lList *event_list = NULL;
    sge_mirror_error ret = SGE_EM_OK;
+   static int test_debug = 0;
 
    DENTER(TOP_LAYER, "sge_mirror_process_events");
 
@@ -929,6 +944,16 @@ sge_mirror_error sge_mirror_process_events(void)
       WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
       ec_mark4registration();
       ret = SGE_EM_TIMEOUT;
+   }
+
+   if ( produce_qmaster_alive_timeout == true ) {
+      test_debug++;
+      if ( test_debug > 3 ) {
+         test_debug = 0;
+         WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
+         ec_mark4registration();
+         ret = SGE_EM_TIMEOUT;
+      }
    }
 
    if(prof_is_active()) {

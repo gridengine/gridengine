@@ -2364,7 +2364,7 @@ int cl_com_tcp_open_connection_request_handler(cl_raw_list_t* connection_list, c
             return to application as far as possible, don't wait for a new connect */
          ldata->last_nr_of_descriptors = nr_of_descriptors;
          cl_raw_list_unlock(connection_list); 
-         CL_LOG(CL_LOG_WARNING,"last connection is gone");
+         CL_LOG(CL_LOG_INFO,"last connection closed");
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
    }

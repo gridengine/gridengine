@@ -1,8 +1,16 @@
-CR-2004-07-23-0: Testsuite: modified /functional/tight_integration check to be more
-                            error tolerant
+CR-2004-07-24-1: Bugfix:    schedd and qmaster get out of sync - no scheduling
+                            for long time
+                 Changed:   communication lib
+                 Issue:     1041
+                 Bugtraq:   5077589
+                 Review:    JG
+
+CR-2004-07-23-0: Testsuite: modified /functional/tight_integration check to be 
+                            more error tolerant
                  Review:    AA
 
-MD-2004-07-22-2: Bugfix:    reprioritize_interval descr in sched_conf(5) needs improvement
+MD-2004-07-22-2: Bugfix:    reprioritize_interval descr in sched_conf(5) needs 
+                            improvement
                  Changed:   man5/sched_conf.5
                  Issue:     1040
                  Bugtraq:   5077165
@@ -14,7 +22,8 @@ MD-2004-07-22-1: Bugfix:    NO_REPRIORITATION should be removed from man pages
                  Bugtraq:   507167
                  Review:    JG
 
-MD-2004-07-22-0: Bugfix:    uninstall procedure doesn't remove rc-script of execd!
+MD-2004-07-22-0: Bugfix:    uninstall procedure doesn't remove rc-script of 
+                            execd!
                  Changed:   inst-sge, autoinstall template
                  Issue:     1130
                  Bugtraq:   5071868
@@ -33,8 +42,8 @@ DT-2004-07-21-1: Bugfix:    o Added "-w e" as default DRMAA option
                  Issue:     1109, 1146, 1151, 1161, 1163
                  Review:    pending
 
-CR-2004-07-21-0: Testsuite: modified /functional/tight_integration check to be more
-                            error tolerant
+CR-2004-07-21-0: Testsuite: modified /functional/tight_integration check to be 
+                            more error tolerant
                  Review:    JG
 
 JG-2004-07-21-0: Bugfix:    Fixed a bug in aimk -shared-libs.

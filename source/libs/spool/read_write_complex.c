@@ -583,7 +583,7 @@ lList **alpp
          lGetString(ep, CE_default)));
    }
 
-   FPRINTF((fp, "# "SFQ"",MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
+   FPRINTF((fp, "# "SFN"",MSG_COMPLEX_STARTSCOMMENTBUTNOSAVE));
    
    if (fname) {
       fclose(fp);

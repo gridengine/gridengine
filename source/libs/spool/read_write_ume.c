@@ -350,20 +350,20 @@ const lListElem *ep
    }
 
    if (spool == 2) { 
-     FPRINTF((fp,"# "SFQ"",MSG_UM_CONFIGTEXT1));
-     FPRINTF((fp,"# "SFQ"",MSG_UM_CONFIGTEXT2));
-     FPRINTF((fp,"# "SFQ"",MSG_UM_CONFIGTEXT3));
+     FPRINTF((fp,"# "SFN"",MSG_UM_CONFIGTEXT1));
+     FPRINTF((fp,"# "SFN"",MSG_UM_CONFIGTEXT2));
+     FPRINTF((fp,"# "SFN"",MSG_UM_CONFIGTEXT3));
    }
 
    FPRINTF((fp, "cluster_user        %s\n\n", 
       lGetString(ep, UME_cluster_user))); 
 
    if (spool == 2) {
-     FPRINTF((fp,"# "SFQ"",MSG_UM_CONFIGTEXT2));
-     FPRINTF((fp,"# "SFQ"",MSG_UM_CONFIGTEXT4));
-     FPRINTF((fp,"# "SFQ"",MSG_UM_CONFIGTEXT5));
-     FPRINTF((fp,"# "SFQ"",MSG_UM_CONFIGTEXT2));
-     FPRINTF((fp,"# "SFQ"",MSG_UM_CONFIGTEXT6));
+     FPRINTF((fp,"# "SFN"",MSG_UM_CONFIGTEXT2));
+     FPRINTF((fp,"# "SFN"",MSG_UM_CONFIGTEXT4));
+     FPRINTF((fp,"# "SFN"",MSG_UM_CONFIGTEXT5));
+     FPRINTF((fp,"# "SFN"",MSG_UM_CONFIGTEXT2));
+     FPRINTF((fp,"# "SFN"",MSG_UM_CONFIGTEXT6));
    }    
 
    mapList = lGetList(ep, UME_mapping_list);

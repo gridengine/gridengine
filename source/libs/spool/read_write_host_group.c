@@ -341,19 +341,19 @@ const lListElem *ep
    } 
 
    if (spool == 2) { 
-     FPRINTF((fp,"# "SFQ"",MSG_HOSTGROUP_CONFIGTEXT1));
-     FPRINTF((fp,"# "SFQ"",MSG_HOSTGROUP_CONFIGTEXT2));
-     FPRINTF((fp,"# "SFQ"",MSG_HOSTGROUP_CONFIGTEXT3));
+     FPRINTF((fp,"# "SFN"",MSG_HOSTGROUP_CONFIGTEXT1));
+     FPRINTF((fp,"# "SFN"",MSG_HOSTGROUP_CONFIGTEXT2));
+     FPRINTF((fp,"# "SFN"",MSG_HOSTGROUP_CONFIGTEXT3));
    }
 
    FPRINTF((fp, "group_name        %s\n\n", lGetString(ep, GRP_group_name))); 
 
    if (spool == 2) {
-     FPRINTF((fp,"# "SFQ"",MSG_HOSTGROUP_CONFIGTEXT2));
-     FPRINTF((fp,"# "SFQ"",MSG_HOSTGROUP_CONFIGTEXT4));
-     FPRINTF((fp,"# "SFQ"",MSG_HOSTGROUP_CONFIGTEXT5));
-     FPRINTF((fp,"# "SFQ"",MSG_HOSTGROUP_CONFIGTEXT6));
-     FPRINTF((fp,"# "SFQ"",MSG_HOSTGROUP_CONFIGTEXT2));
+     FPRINTF((fp,"# "SFN"",MSG_HOSTGROUP_CONFIGTEXT2));
+     FPRINTF((fp,"# "SFN"",MSG_HOSTGROUP_CONFIGTEXT4));
+     FPRINTF((fp,"# "SFN"",MSG_HOSTGROUP_CONFIGTEXT5));
+     FPRINTF((fp,"# "SFN"",MSG_HOSTGROUP_CONFIGTEXT6));
+     FPRINTF((fp,"# "SFN"",MSG_HOSTGROUP_CONFIGTEXT2));
    }    
   
    subGroupList = lGetList(ep, GRP_subgroup_list ); 

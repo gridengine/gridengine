@@ -1,3 +1,6 @@
+CR-2002-12-05-0  Bugfix:    Used wrong macro (SFQ) for fixing messages macros 
+                            in commit CR-2002-12-03-1
+
 CR-2002-12-04-0  Testsuite: Running more than one testsuite on the same host
                  Bugfix:    causes problems, because both testsuites will use
                             same files in local /tmp directory

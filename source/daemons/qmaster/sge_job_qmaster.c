@@ -1612,7 +1612,7 @@ int sub_command
    int all_jobs_flag;
    int all_users_flag;
    bool job_name_flag = false;
-   char *job_mod_name = NULL;
+   const char *job_mod_name = NULL;
  
    DENTER(TOP_LAYER, "sge_gdi_mod_job");
 

@@ -106,7 +106,9 @@ export $shlib_path_name
 #
 Shutdown()
 {
-  kill -TERM `ps -efa | grep berkeley_db_svc | cut -d" " -f2 | head -1`
+  #kill -TERM `cat $SGE_ROOT/$SGE_CELL/spool/act_db`
+  db_pid=`ps -efa | grep berkeley_db_svc | grep -v "grep" | awk '{ print $2 }'`
+  kill -TERM $db_pid 
 }
 
 #---------------------------------------------------------------------------
@@ -300,7 +302,7 @@ if [ "$startup" = true ]; then
    #CheckSpoolDir
    #CheckIfLocal SPOOLING_DIR
    # TODO: should better run under admin_user account!
-   ExecuteAsAdmin $utilbin_dir/berkeley_db_svc $BDBHOMES &
+   $utilbin_dir/berkeley_db_svc $BDBHOMES &
 else
    echo Stopping Berkeley DB
    Shutdown

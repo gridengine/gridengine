@@ -1,3 +1,9 @@
+MD-2004-03-05-0: Bugfix:    - shadowhost installation was broken
+                            - sgebdb stop didn't stop the db
+                            - typo
+                 Issue:     777
+                 Changed:     rc script templates, inst_sge
+
 DT-2004-03-05-5: Bugfix:    o Changed error messages from DT-2004-03-05-4 to
                               start with lower case letters.
                  Changed:   GDI

@@ -1171,7 +1171,7 @@ GetQmasterPort()
                   $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
                else
                   #ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
-                  `cat /etc/services | grep -v "^#" | grep ${INP}`
+                  cat /etc/services | grep -v "^#" | grep ${INP}
 
                   if [ $? = 0 ]; then
                      $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
@@ -1325,7 +1325,7 @@ GetExecdPort()
                   $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
                else
                   #ser=`awk '{ print $2 }' /etc/services | grep "^${INP}/tcp"`
-                  `cat /etc/services | grep -v "^#" | grep ${INP}`
+                  cat /etc/services | grep -v "^#" | grep ${INP}
                   if [ $? = 0 ]; then
                      $INFOTEXT "\nFound service with port number >%s< in >/etc/services<. Choose again." "$INP"
                   else

@@ -3027,7 +3027,6 @@ static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent ) {
 #define __CL_FUNCTION__ "cl_com_gethostbyname()"
 static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent ) {
 
-   int he_error = 0;
    struct hostent* he = NULL;
    cl_com_hostent_t *hostent_p = NULL;   
 
@@ -3168,8 +3167,6 @@ static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent
 #define __CL_FUNCTION__ "cl_com_gethostbyaddr()"
 static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent ) {
 
-
-   int he_error = 0;
    struct hostent *he = NULL; 
    cl_com_hostent_t *hostent_p = NULL;   
 

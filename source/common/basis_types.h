@@ -59,10 +59,12 @@
 #endif
 #endif
 
+#ifndef  __cplusplus
 typedef enum {
   false = 0,
   true
 } bool;
+#endif
 
 #define FALSE_STR "FALSE"
 #define TRUE_STR  "TRUE"

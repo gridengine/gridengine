@@ -1024,53 +1024,46 @@ case DARWIN:
       set MAKE = make
    endif
    set OFLAG = "-O"
-   if ( "$CC" != insure ) then
-      set CC       = cc
-      set CXX      = c++
-   else
-      set CFLAGS = "-Wno-error $CFLAGS"
-      set CXXFLAGS = "-Wno-error $CXXFLAGS"
-      set LIBS = "$LIBS"
-   endif
-   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   if ( $OPTIMIZATION == 1 ) then
+      set OFLAG = "-O3"
+   endif   
 
-   set LD_LIBRARY_PATH = "/usr/lib"
-
-  if ( $SHAREDLIBS == 1 ) then
-      set LIBEXT = ".dylib"
-   else
-      set LIBEXT = ".a"
-   endif
-
-   set   DLLIB = ""
-
-   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
+   set CC = "gcc"
+   set CXX = "g++"
 
    if ( $DEBUGGED == 1) then
-      set DEBUG_FLAG = "-ggdb $INSURE_FLAG"
+      set DEBUG_FLAG = "-g"
    endif
    if ( $GPROFFED == 1) then
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   set ARFLAGS     = rcv
-   set CFLAGS   = "$OFLAG -Wall -Werror -D$BUILDARCH $DEBUG_FLAG $CFLAGS"
-   set CXXFLAGS   = "$OFLAG -Werror -Wstrict-prototypes -D$BUILDARCH $DEBUG_FLAG $CXXFLAGS"
-   set NOERR_CFLAG = "-Wno-error"
-   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
-   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
+
+   set CFLAGS   = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DDARWIN $DEBUG_FLAG $CFLAGS"
+   # set LFLAGS   = "-bind_at_load $DEBUG_FLAG $LFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
-   set LIBS     = "$LIBS"
-   set RANLIB   = "ranlib"
+
+   set SHAREDLD = "$CC -dynamiclib"
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-dynamic -L."
+   set SHAREDEXT = ".dylib"
+
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
-   set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
+   set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib"
-   set XLFLAGS  = "$XLIBD"
+   set XLFLAGS  = "-bind_at_load $XLIBD"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
+   set NOERR_CFLAG = "-Wno-error"
+   set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
+   set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
+   set GCC_NOSP = "-Wno-strict-prototypes"
    breaksw
 
 case FREEBSD_*:

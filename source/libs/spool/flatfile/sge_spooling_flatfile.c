@@ -32,7 +32,7 @@
 
 #include <stdio.h>
 
-#if defined(ALPHA)|| defined(DARWIN)
+#if defined(ALPHA) || defined(DARWIN)
    extern void flockfile(FILE *);
    extern void funlockfile(FILE *);
 #endif

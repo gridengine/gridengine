@@ -954,6 +954,9 @@ for i in $ARCH; do
       hp10|hp11|hp11-64)
          shlibext="sl"
          ;;
+      darwin)
+         shlibext="dylib"
+         ;;
       *)
          shlibext="so"
          ;;

@@ -59,6 +59,13 @@
 #include "sec_crypto.h"          /* lib protos      */
 #include "sec_lib.h"             /* lib protos      */
 
+#if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
+#define OPENSSL_CONST
+#define NID_userId NID_uniqueIdentifier
+#else
+#define OPENSSL_CONST const
+#endif
+
 #define CHALL_LEN       16
 #define ValidMinutes    10          /* expiry of connection        */
 #define SGESecPath      ".sge"
@@ -75,8 +82,8 @@
 #define INC32(a)        (((a) == 0xffffffff)? 0:(a)+1)
 
 typedef struct gsd_str {
-   EVP_CIPHER *cipher;
-   EVP_MD *digest;
+   OPENSSL_CONST EVP_CIPHER *cipher;
+   OPENSSL_CONST EVP_MD *digest;
    int crypt_space;
    int block_len;
    u_char *key_mat;
@@ -86,6 +93,7 @@ typedef struct gsd_str {
    char uniqueIdentifier[BUFSIZ];
    u_long32 connid;
    int is_daemon;
+   int is_master;
    int connect;
    u_long32 seq_send;
    u_long32 seq_receive;
@@ -115,6 +123,7 @@ typedef struct gsd_str {
 static int sec_set_encrypt(int tag);
 static int sec_files(void);
 static int sec_is_daemon(const char *progname);
+static int sec_is_master(const char *progname);
 
 static int sec_announce_connection(GlobalSecureData *gsd, const char *tocomproc, const char *tohost);
 static int sec_respond_announce(char *commproc, u_short id, char *host, char *buffer, u_long32 buflen);
@@ -160,7 +169,7 @@ static int sec_insert_conn2list(u_long32 connid, char *host, char *commproc, int
 static void sec_keymat2list(lListElem *element);
 static void sec_list2keymat(lListElem *element);
 static int sec_verify_callback(int ok, X509_STORE_CTX *ctx);
-static void sec_setup_path(int is_daemon);
+static void sec_setup_path(int is_daemon, int is_master);
 
 static sec_exit_func_type install_sec_exit_func(sec_exit_func_type);
 
@@ -276,7 +285,8 @@ static void debug_print_buffer(char *title, unsigned char *buf, int buflen)
 /*
 ** FIXME
 */
-#define PREDEFINED_PW         "troet"
+/* #define PREDEFINED_PW         "troet" */
+#define PREDEFINED_PW         NULL
 
 /* #define SECRET_KEY_ERROR    */
 
@@ -346,21 +356,29 @@ int sec_init(const char *progname)
    ** load all algorithms and digests
    */
 /*    OpenSSL_add_all_algorithms(); */
+#ifdef CITIGROUP
+   OpenSSL_add_all_algorithms();
+/*    EVP_add_cipher(EVP_rc4()); */
+/*    EVP_add_digest(EVP_sha1()); */
+/*    EVP_add_digest_alias(SN_sha1,"ssl3-sha1"); */
+/*    EVP_add_digest_alias(SN_sha1WithRSAEncryption,SN_sha1WithRSA); */
+#else
    EVP_add_cipher(EVP_rc4());
    EVP_add_digest(EVP_md5());
    EVP_add_digest_alias(SN_md5,"ssl2-md5");
    EVP_add_digest_alias(SN_md5,"ssl3-md5");
-
+#endif
 
    /* 
    ** FIXME: am I a sge daemon? -> is_daemon() should be implemented
    */
    gsd.is_daemon = sec_is_daemon(progname);
+   gsd.is_master = sec_is_master(progname);
 
    /* 
    ** setup the filenames of randfile, certificates, keys, etc.
    */
-   sec_setup_path(gsd.is_daemon);
+   sec_setup_path(gsd.is_daemon, gsd.is_master);
 
    /* 
    ** seed PRNG, /dev/random is used if possible
@@ -383,10 +401,15 @@ int sec_init(const char *progname)
    /* 
    ** FIXME: init all the other stuff
    */
+#ifdef CITIGROUP   
+   gsd.digest = EVP_sha1();
+   gsd.cipher = EVP_rc4();
+#else   
    gsd.digest = EVP_md5();
    gsd.cipher = EVP_rc4();
 /*    gsd.cipher = EVP_des_cbc(); */
 /*    gsd.cipher = EVP_enc_null(); */
+#endif   
 
    gsd.key_mat_len = GSD_KEY_MAT_32;
    gsd.key_mat = (u_char *) malloc(gsd.key_mat_len);
@@ -1279,7 +1302,7 @@ static int sec_respond_announce(char *commproc, u_short id, char *host,
    */
    memset(uniqueIdentifier, '\0', BUFSIZ);
    if (X509_NAME_get_text_by_OBJ(X509_get_subject_name(x509), 
-      OBJ_nid2obj(NID_uniqueIdentifier), uniqueIdentifier, 
+      OBJ_nid2obj(NID_userId), uniqueIdentifier, 
                   sizeof(uniqueIdentifier))) {
       DPRINTF(("UID: %s\n", uniqueIdentifier));
    }   
@@ -1621,7 +1644,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
 {
    int i;
    u_long32 mid;
-   struct stat file_info;
+   SGE_STRUCT_STAT file_info;
    int compressed = 0;
 
    DENTER(GDI_LAYER, "sec_handle_announce");
@@ -1654,7 +1677,7 @@ static int sec_handle_announce(char *commproc, u_short id, char *host, char *buf
    else {
       printf("You should reconnect - please try command again!\n");
       gsd.connect = 0;
-      if (stat(reconnect_file,&file_info) < 0) {
+      if (SGE_STAT(reconnect_file,&file_info) < 0) {
          i = 0;
          goto error;
       }
@@ -2508,7 +2531,8 @@ static void sec_list2keymat(lListElem *element)
 ** is wrong
 */
 static void sec_setup_path(
-int is_daemon 
+int is_daemon,
+int is_master
 ) {
    SGE_STRUCT_STAT sbuf;
 	char *userdir = NULL;
@@ -2568,7 +2592,7 @@ int is_daemon
       sprintf(ca_key_file, "%s/private/%s", ca_local_root, CaKey);
    }
 
-   if (is_daemon && SGE_STAT(ca_key_file, &sbuf)) { 
+   if (is_master && SGE_STAT(ca_key_file, &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_CAKEYFILENOTFOUND_S, ca_key_file));
       SGE_EXIT(1);
    }
@@ -2945,6 +2969,14 @@ static int sec_is_daemon(const char *progname)
    if (!strcmp(prognames[QMASTER],progname) ||
       !strcmp(prognames[EXECD],progname) ||
       !strcmp(prognames[SCHEDD],progname))
+      return True;
+   else
+      return False;
+}      
+
+static int sec_is_master(const char *progname)
+{
+   if (!strcmp(prognames[QMASTER],progname))
       return True;
    else
       return False;

@@ -32,14 +32,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include 	<stdio.h>
+#include <stdio.h>
 
-#include        "openssl/err.h"
-#include        "openssl/bn.h"
-#include        "openssl/des.h"
-#include        "openssl/md5.h"
-#include        "openssl/x509.h"
-#include        "openssl/pem.h"
-#include        "openssl/rand.h"
+#include "openssl/stack.h"
+#include "openssl/crypto.h"
+#include "openssl/err.h"
+#include "openssl/bn.h"
+#include "openssl/des.h"
+#include "openssl/md5.h"
+#include "openssl/x509.h"
+#include "openssl/pem.h"
+#include "openssl/rand.h"
 
 #endif /*__SEC_CRYPTO_H*/

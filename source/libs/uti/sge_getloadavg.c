@@ -192,13 +192,15 @@ typedef kvm_t* kernel_fd_type;
 typedef int kernel_fd_type;
 #endif
 
+#ifdef SGE_LOADCPU
 static long percentages(int cnt, double *out, long *new, long *old, long *diffs);   
-
-static double get_cpu_load(void); 
+#endif
 
 #if defined(ALPHA4) || defined(ALPHA5) || defined(HP10) || defined(HP11) || defined(SOLARIS) || defined(SOLARIS64) || defined(IRIX6) || defined(LINUX) || defined(DARWIN)
 
+#ifndef DARWIN
 static int get_load_avg(double loadv[], int nelem);    
+#endif
 
 static double get_cpu_load(void);    
 
@@ -1102,7 +1104,8 @@ int nelem
    return 0;
 }
 
-#elif defined(DARWIN)
+#if 0
+/* #elif defined(DARWIN) */
 
  static int get_load_avg(
  double loadavg[],
@@ -1126,6 +1129,8 @@ int nelem
 
 #endif 
 
+#endif 
+
 
 int get_channel_fd()
 {
@@ -1146,9 +1151,9 @@ int nelem
 ) {
    int elem = 0;   
 
-#if defined(SOLARIS64) || defined(FREEBSD)
+#if defined(SOLARIS64) || defined(FREEBSD) || defined(DARWIN)
    elem = getloadavg(loadavg, nelem); /* <== library function */
-#elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || defined(HP11) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(DARWIN)
+#elif (defined(SOLARIS) && !defined(SOLARIS64)) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX6) || defined(HP10) || defined(HP11) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX)
    elem = get_load_avg(loadavg, nelem); 
 #else
    elem = -1;    

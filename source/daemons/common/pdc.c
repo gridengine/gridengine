@@ -2053,7 +2053,7 @@ static time_t start_time;
 int psStartCollector(void)
 {
    static int initialized = 0;
-   int ncpus;
+   int ncpus = 0;
 
 #if defined(ALPHA)
    int start=0;

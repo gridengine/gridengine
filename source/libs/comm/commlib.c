@@ -67,6 +67,10 @@
 int gethostname(char *name, int namelen);
 #endif
 
+#if DARWIN
+#   define SIGCLD SIGCHLD
+#endif
+
 #ifdef WIN32
 /*
  * copied from mywinsock.h

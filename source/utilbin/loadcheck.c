@@ -40,7 +40,6 @@
 #include "msg_utilbin.h"
 #include "sge_language.h"
 #include "sge_prog.h"
-#include "sge_os.h"
 #include "sge_host.h"
 
 void usage(void);
@@ -56,9 +55,9 @@ int main(int argc, char *argv[])
 {
    double avg[3];
    int loads;
-	char *name;
 
 #ifdef SGE_LOADMEM
+	char *name;
    sge_mem_info_t mem_info;
 #endif
 

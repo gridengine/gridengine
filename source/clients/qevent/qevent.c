@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#if defined(FREEBSD)
+#if defined(FREEBSD) || defined(DARWIN)
 #include <sys/time.h>
 #endif
 #include <sys/resource.h>

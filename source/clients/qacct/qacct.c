@@ -31,8 +31,8 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <string.h>
-#include <grp.h>
 #include <sys/types.h>
+#include <grp.h>
 #include <time.h>
 
 #include "sge_unistd.h"

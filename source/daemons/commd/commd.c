@@ -30,22 +30,22 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef DARWIN
-#   include <sys/time.h>
-#endif
-
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <sys/types.h>
 #include <signal.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h> 
 #include <netdb.h>
+
+#if defined(DARWIN)
+#include <sys/time.h>
+#endif
+
 #include <sys/resource.h>
 
 #if defined(AIX32) || defined(AIX41)

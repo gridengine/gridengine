@@ -347,15 +347,15 @@ main(argc, argv)
 
 		if (len + len2 < sizeof(term)) {
 /*			(void)snprintf(term + len, len2 + 1, "/%d", ospeed); */
-                        char Buffer[32];
-#ifdef DARWIN
-                        sprintf(Buffer, "/%ld", ospeed);
-#else
-                        sprintf(Buffer, "/%d", ospeed);
+         char Buffer[32];
+#ifndef DARWIN         
+         sprintf(Buffer, "/%d", ospeed);
+#else         
+         sprintf(Buffer, "/%ld", ospeed);
 #endif
-                        strncpy(term + len, Buffer, len2 + 1);
-	        }
-        }
+         strncpy(term + len, Buffer, len2 + 1);
+	   }
+   }
 
 	(void)get_window_size(0, &winsize);
 

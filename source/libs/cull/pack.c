@@ -403,7 +403,7 @@ int compressed
       }
 
       if(pad != 0 || version != CULL_VERSION) {
-         ERROR((SGE_EVENT, MSG_CULL_PACK_WRONG_VERSION_XX, version, CULL_VERSION));
+         ERROR((SGE_EVENT, MSG_CULL_PACK_WRONG_VERSION_XX, (unsigned int) version, CULL_VERSION));
          DEXIT;
          return PACK_VERSION;
       }

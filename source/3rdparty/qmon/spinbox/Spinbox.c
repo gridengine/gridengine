@@ -1796,7 +1796,7 @@ static Boolean long_get_value (
 {
 #ifdef CRAY
    errno = 0;
-#elif !defined(LINUX6) && !defined(SOLARIS) && !defined(ALINUX) && !defined(SLINUX) && !defined(FREEBSD)
+#elif !defined(LINUX6) && !defined(SOLARIS) && !defined(ALINUX) && !defined(SLINUX) && !defined(DARWIN) && !defined(FREEBSD)
    int errno = 0; 
 #endif
    *value = strtol ( buffer, NULL, 10 );
@@ -1865,11 +1865,17 @@ static Boolean clock_dhms_get_value (
    if ( errno ) return ( False );
 
    /* get minute */
-   if ( *pchar ) min = strtol ( ++pchar, &pchar, 10 );
+   if ( *pchar ) {
+      pchar++;
+      min = strtol ( pchar, &pchar, 10 );
+   }
    if ( errno ) return ( False );
 
    /* get seconds */
-   if ( *pchar ) sec = strtol ( ++pchar, &pchar, 10 );
+   if ( *pchar ) {
+      pchar++;
+      sec = strtol ( pchar, &pchar, 10 );
+   }
    if ( errno ) return ( False );
 
    *value = day*24 + hr*3600 + min*60 + sec;
@@ -1893,11 +1899,17 @@ static Boolean clock_hms_get_value (
    if ( errno ) return ( False );
 
    /* get minute */
-   if ( *pchar ) min = strtol ( ++pchar, &pchar, 10 );
+   if ( *pchar ) {
+      pchar++;
+      min = strtol ( pchar, &pchar, 10 );
+   }
    if ( errno ) return ( False );
 
    /* get seconds */
-   if ( *pchar ) sec = strtol ( ++pchar, &pchar, 10 );
+   if ( *pchar ) {
+      pchar++;
+      sec = strtol ( pchar, &pchar, 10 );
+   }
    if ( errno ) return ( False );
 
    *value = hr*3600 + min*60 + sec;
@@ -1920,7 +1932,10 @@ static Boolean clock_hm_get_value (
    if ( errno ) return ( False );
 
    /* get minute */
-   if ( *pchar ) min = strtol ( ++pchar, &pchar, 10 );
+   if ( *pchar ) {
+      pchar++;
+      min = strtol ( pchar, &pchar, 10 );
+   }
    if ( errno ) return ( False );
 
    /* set value */

@@ -240,7 +240,7 @@ char **argv
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
    run_time = prof_get_measurement_wallclock(SGE_PROF_CUSTOM0,true,NULL);
 
-   printf("COMMD: %ld bytes send in %.3f seconds\n", nr_bytes,run_time);
+   printf("COMMD: %d bytes send in %.3f seconds\n", nr_bytes,run_time);
    if ( run_time > 0.0) {
       bytes_per_second = (double)nr_bytes / run_time / 1024.0 * 8.0;
       printf("COMMD: %.3f KBit/s\n",bytes_per_second);
@@ -426,7 +426,7 @@ int run_client_test(char* host, int port, int repeat) {
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
    run_time = prof_get_measurement_wallclock(SGE_PROF_CUSTOM0,true,NULL);
 
-   printf("TCP/IP: %ld bytes send in %.3f seconds\n", nr_bytes,run_time);
+   printf("TCP/IP: %d bytes send in %.3f seconds\n", nr_bytes,run_time);
    if ( run_time > 0) {
       bytes_per_second = (double)nr_bytes / (double)run_time / 1024.0 * 8.0;
       printf("TCP/IP: %.3f KBit/s\n",bytes_per_second);
@@ -535,7 +535,7 @@ void start_server_handling(int sockfd) {
                   close_open_connection(i,open_connections);
                   end_time = sge_get_gmt();
                   run_time = end_time - start_time;
-                  printf("%ld bytes received in %ld seconds\n", nr_bytes,run_time);
+                  printf("%d bytes received in %d seconds\n", nr_bytes,run_time);
                   if ( run_time > 0) {
                      bytes_per_second = (double)nr_bytes / (double)run_time / 1024.0 * 8.0;
                      printf("%.3f KBit/s\n",bytes_per_second);

@@ -39,6 +39,7 @@
 
 #include "commlib.h"
 #include "sge_gdi.h"
+#include "sge_any_request.h"
 #include "sge_utility.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"

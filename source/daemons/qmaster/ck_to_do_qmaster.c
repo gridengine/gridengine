@@ -54,6 +54,8 @@
 #include "msg_qmaster.h"
 #include "sge_security.h"
 #include "sge_qinstance.h"
+#include "sge_object.h"
+#include "sge_cqueue.h"
 #include "sge_centry.h"
 #include "sge_qinstance_state.h"
 
@@ -123,7 +125,7 @@ u_long32 now
    static u_long32 last_stat_log_time = 0;
    double load_avg = 0.0, vmem = 0.0;
    SGE_STRUCT_STAT statbuf;
-   lListElem *hep, *ep, *qep;
+   lListElem *hep, *ep;
 
    DENTER(TOP_LAYER, "log_stat_file");
 
@@ -133,47 +135,54 @@ u_long32 now
       }
       fp = fopen(path_state_get_stat_file(), "a");
       if (fp) {
-         for_each(qep, Master_Queue_List) {
-            memset(str, 0, sizeof(str));
+         lListElem *cqueue;
 
-            if (( hep = host_list_locate(Master_Exechost_List, lGetHost(qep, QU_qhostname)))) {
-                /* use load avg */
-                if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_LOAD_AVG, EH_load_list)))
-                   load_avg = strtod(lGetString(ep, HL_value), NULL);
-                /* use vmem */
-                if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_VIRTUAL_USED, EH_load_list)))
-                   vmem = strtod(lGetString(ep, HL_value), NULL);
-            }
+         for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+            lListElem *qinstance;
 
-            fprintf(fp, "%u:%s:%s:%.2f:%.2f:", 
-                     (unsigned) now,
-                     lGetHost(qep, QU_qhostname), 
-                     lGetString(qep, QU_qname),
-                     load_avg, 
-                     vmem);
+            for_each(qinstance, qinstance_list) {
+               memset(str, 0, sizeof(str));
 
-            /* states */
-            {
-               dstring state_string_buffer = DSTRING_INIT;
+               if (( hep = host_list_locate(Master_Exechost_List, 
+                                        lGetHost(qinstance, QU_qhostname)))) {
+                   /* use load avg */
+                   if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_LOAD_AVG, EH_load_list)))
+                      load_avg = strtod(lGetString(ep, HL_value), NULL);
+                   /* use vmem */
+                   if (( ep = lGetSubStr(hep, HL_name, LOAD_ATTR_VIRTUAL_USED, EH_load_list)))
+                      vmem = strtod(lGetString(ep, HL_value), NULL);
+               }
 
-               qinstance_state_append_to_dstring(qep, &state_string_buffer);
-               fprintf(fp, "%s:", sge_dstring_get_string(&state_string_buffer));
-               sge_dstring_free(&state_string_buffer);
-            }
+               fprintf(fp, "%u:%s:%s:%.2f:%.2f:", 
+                        (unsigned) now,
+                        lGetHost(qinstance, QU_qhostname), 
+                        lGetString(qinstance, QU_qname),
+                        load_avg, 
+                        vmem);
 
-            /* queue consumables */
-            log_consumables(fp, lGetList(qep, QU_consumable_actual_list), lGetList(qep, QU_consumable_config_list));
-            fprintf(fp, ":");
+               /* states */
+               {
+                  dstring state_string_buffer = DSTRING_INIT;
 
-            /* host consumables */
-            log_consumables(fp, lGetList(hep, EH_consumable_actual_list), lGetList(hep, EH_consumable_config_list));
-            fprintf(fp, ":");
+                  qinstance_state_append_to_dstring(qinstance, &state_string_buffer);
+                  fprintf(fp, "%s:", sge_dstring_get_string(&state_string_buffer));
+                  sge_dstring_free(&state_string_buffer);
+               }
 
-            /* global consumables */
-            if ((hep = host_list_locate(Master_Exechost_List, "global")))
+               /* queue consumables */
+               log_consumables(fp, lGetList(qinstance, QU_consumable_actual_list), lGetList(qinstance, QU_consumable_config_list));
+               fprintf(fp, ":");
+
+               /* host consumables */
                log_consumables(fp, lGetList(hep, EH_consumable_actual_list), lGetList(hep, EH_consumable_config_list));
-            fprintf(fp, "\n");
+               fprintf(fp, ":");
 
+               /* global consumables */
+               if ((hep = host_list_locate(Master_Exechost_List, "global")))
+                  log_consumables(fp, lGetList(hep, EH_consumable_actual_list), lGetList(hep, EH_consumable_config_list));
+               fprintf(fp, "\n");
+            }
          }
          fclose(fp);
       }

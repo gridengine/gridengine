@@ -47,6 +47,7 @@
 #include "sge_qinstance_state.h"
 #include "sge_job.h"
 #include "sge_cqueue.h"
+#include "sge_object.h"
 
 /* ------------------------------------------------
 
@@ -74,7 +75,7 @@ u_long32 jobid  /* just for logging in case of errors */
    for_each(ep, gdil) {
 
       qname = lGetString(ep, JG_qname);
-      if (!(qep = cqueue_list_locate_qinstance(Master_CQueue_List, qname))) {
+      if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname))) {
          ERROR((SGE_EVENT, MSG_JOB_SOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US, u32c(jobid), qname));
          ret = -1;
          continue; /* should never happen */
@@ -95,7 +96,7 @@ u_long32 jobid  /* just for logging in case of errors */
 
          /* suspend it */
          /* EB: TODO: qname might be CQ QD or QI */
-         if (!(subqep = cqueue_list_locate_qinstance(Master_CQueue_List, lGetString(so, SO_name)))) {
+         if (!(subqep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), lGetString(so, SO_name)))) {
             DPRINTF(("WARNING: sos_using_gdil for job "u32": can't "
                   "find subordinated queue "SFQ, 
                   lGetString(qep, QU_qname), lGetString(so, SO_name)));
@@ -180,7 +181,7 @@ u_long32 jobid  /* just for logging in case of errors */
    for_each(ep, gdil) {
 
       qname = lGetString(ep, JG_qname);
-      if (!(qep = cqueue_list_locate_qinstance(Master_CQueue_List, qname))) {
+      if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname))) {
          /* inconsistent data */
          ERROR((SGE_EVENT, MSG_JOB_USOSUSINGGDILFORJOBXCANTFINDREFERENCEQUEUEY_US, u32c(jobid), qname));
          ret = -1;
@@ -201,7 +202,7 @@ u_long32 jobid  /* just for logging in case of errors */
             continue;
 
          /* EB: TODO: might be CQ QD or QI */
-         subqep = cqueue_list_locate_qinstance(Master_CQueue_List, lGetString(so, SO_name));
+         subqep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), lGetString(so, SO_name));
          if (!subqep) {
             DPRINTF(("queue "SFQ": can't find "
                   "subordinated queue "SFQ".\n", 
@@ -290,7 +291,7 @@ int how
 
       /* try to find a referenced queue which does not exist */
       /* EB: TODO: might be CQ QD or QI */
-      if (!(refqep=cqueue_list_locate_qinstance(Master_CQueue_List, so_qname))) {
+      if (!(refqep=cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), so_qname))) {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWNSUB_SS, so_qname, qname));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          if (how!=CHECK4SETUP) {
@@ -334,18 +335,25 @@ int count_suspended_on_subordinate(
 lListElem *queueep 
 ) {
    int n = 0;
-   lListElem *so, *qep;
+   lListElem *so, *cqueue;
 
    DENTER(TOP_LAYER, "count_suspended_on_subordinate");
 
-   for_each(qep, Master_Queue_List) {
-      for_each(so, lGetList(qep, QU_subordinate_list)) {
-         if (!strcmp(lGetString(so, SO_name), lGetString(queueep, QU_qname))) {
-            /* suspend the queue if neccessary */
-            if (tst_sos(qinstance_slots_used(qep), lGetUlong(qep, QU_job_slots),
-                  lGetUlong(qep, QU_suspended_on_subordinate), so))
-               sos(queueep, 0);
-               n++;
+   for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+      lListElem *qinstance;
+  
+      for_each(qinstance, qinstance_list) { 
+         for_each(so, lGetList(qinstance, QU_subordinate_list)) {
+            if (!strcmp(lGetString(so, SO_name), 
+                        lGetString(queueep, QU_qname))) {
+               /* suspend the queue if neccessary */
+               if (tst_sos(qinstance_slots_used(qinstance), 
+                           lGetUlong(qinstance, QU_job_slots),
+                     lGetUlong(qinstance, QU_suspended_on_subordinate), so))
+                  sos(queueep, 0);
+                  n++;
+            }
          }
       }
    }
@@ -405,7 +413,7 @@ int recompute_caches
    for_each(so, sol) {
       qnm = lGetString(so, SO_name);
       /* EB: TODO: might be CQ QD or QI */
-      qep = cqueue_list_locate_qinstance(Master_CQueue_List, qnm);
+      qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qnm);
       if (qep)
          ret |=sos(qep, recompute_caches);
    }
@@ -426,7 +434,8 @@ int recompute_caches
 
    for_each(so, sol) {
       qnm = lGetString(so, SO_name);
-      qep = lGetElemStr(Master_Queue_List, QU_qname, qnm);
+      /* EB: TODO: might be CQ QD or QI */
+      qep = lGetElemStr(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), QU_qname, qnm);
       if (qep)
          ret |=usos(qep, recompute_caches);
    }

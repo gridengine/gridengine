@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/01/30 17:04:04 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2004/02/20 13:02:56 $     Revision: $Revision: 1.14 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2004/01/30 17:04:04 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2004/02/20 13:02:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -989,6 +989,9 @@ Display a list of hosts for which configurations are
 available. The special host name "global" refers to the
 cell global configuration.
 .\"
+.IP "\fB\-sds\fP	\fI<show detached settings>\fP"
+Displays detached settings in the cluster configuration.
+.\"
 .IP "\fB\-se hostname\fP	\fI<show execution host>\fP"
 Displays the definition of the specified execution host.
 .\"
@@ -1011,6 +1014,14 @@ Displays the host group entries for the group specified in
 .IP "\fB\-shgrpl\fP		\fI<show host group lists>\fP"
 Displays a name list of all currently defined host groups
 which have a valid host group configuration.
+.\" 
+.IP "\fB\-shgrp_tree group\fP     \fI<show host group tree>\fP"
+Shows a tree like structure of host group.
+.\" 
+.IP "\fB\-shgrp_resolved\fP       \fI<show host group hosts>\fP"
+Shows a list of all hosts which are part of the definition of
+host group. If the host group definition containes sub host groups
+than also these groups are resolved and the hostnames are printed.
 .\" 
 .IP "\fB\-sm\fP	\fI<show managers>\fP"
 Displays the managers list.

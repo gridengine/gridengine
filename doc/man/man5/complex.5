@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2004/02/06 12:32:10 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2004/02/20 13:02:56 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2004/02/06 12:32:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2004/02/20 13:02:56 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -80,7 +80,7 @@ Before a user can request a resource attribute it has to be attached to the glob
 or cqueue object. The resource attribute exists only for the objects, it got attached to(
 if it is attached to the global object(qconf -me global), it exits sytem wide, host object: 
 only on that host (qconf -me NAME): cqueue object: only on that cqueue (qconf -mq NAME).
-.sp1
+.sp 1
 When the user attached a resource attribute to an object, one also has to assign a value
 to it; the resource limit. Another way to get a resource attribute value is done by 
 configuring a load sensor for that attribute. 

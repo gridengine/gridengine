@@ -1,3 +1,6 @@
+EB-2004-02-20-0: Bugfix:    Added missing documentation
+                 Issue:     691
+
 SG-2004-02-20-0: Bugfix:    - evaluated 53patches
                             - fixed test 540 for the testsuite
                  Changed:   testsuite

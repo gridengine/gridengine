@@ -202,6 +202,7 @@ Cardinal argcount
    XmtVaRegisterCallbackProcedures(
          "DeleteLines", DeleteLines, XtRWidget,
          "ColumnZeroNoEdit", ColumnZeroNoEdit, NULL,
+         "ColumnNoEdit", ColumnNoEdit, NULL,
          NULL);
 
    return matrix;

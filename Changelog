@@ -1,3 +1,8 @@
+AA-2004-03-03-1: Bugfix:    - qi editability
+                 Isssue:    727
+                 Changed:   qmon
+                 Review:    Pending
+
 SG-2004-03-03-5: Bugfix:    fixed error message for wrong security mode string.
                  Changed:   all
 

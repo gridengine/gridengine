@@ -157,6 +157,8 @@ Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout.xmtChildren: \
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout.layout: \
    cluster_queue_settings
 
+Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.traversalOn: False
+
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.rows: 30
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.visibleRows: 30
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.fixedColumns: 1
@@ -196,10 +198,9 @@ Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout.xmtChildren: \
    Matrix_2xN      qinstance_settings;
 
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout.layout: \
-   Row { \
-      qinstance_settings \
-      <> \
-   }   
+    qinstance_settings
+
+Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.traversalOn: False
 
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.rows: 30
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.visibleRows: 30
@@ -211,15 +212,13 @@ Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.gridType:     GR
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.cellShadowType: SHADOW_IN
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.cellShadowThickness: 1
 
-Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.translations: \
-#override\n\
+Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.translations: #override\n\
          Shift<Btn1Down>:  SelectCell(end)\n\
          Ctrl<Btn1Down>:   SelectCell(toggle)\n\
          <Btn1Down>:       SelectCell(begin)\n\
          Ctrl<Btn2Down>:   ResizeColumns()
 
-Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.clip.translations: \
-#override\n\
+Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.clip.translations: #override\n\
          Shift<Btn1Down>:  SelectCell(end)\n\
          Ctrl<Btn1Down>:   SelectCell(toggle)\n\
          <Btn1Down>:       SelectCell(begin)\n\

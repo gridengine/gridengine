@@ -164,7 +164,7 @@ int sge_print_queue(lListElem *q, lList *exechost_list, lList *centry_list,
    {
       char temp[20];
       sprintf(temp, "%%-%d.%ds ", longest_queue_length, longest_queue_length);
-      printf(temp, lGetString(q, QU_qname));
+      printf(temp, queue_name);
    }
       
    {

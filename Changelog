@@ -1,3 +1,13 @@
+JG-2004-03-17-0: Bugfix:    fixed race condition in sge_shepherd (qlogin_starter
+                            for qlogin/qrsh jobs).
+                 Changed:   sge_shepherd
+                 Issue:     871
+                 Review:    CR
+                 Bugfix:    qstat -f output cluster queue name instead of queue
+                            instance name.
+                 Changed:   qstat
+                 Review:    SG
+
 EB-2004-03-16-0: Bugfix:    Host aliases not supported with -q 
                             wc_qinstance/-masterq wc_qinstance
                  Issue:     819

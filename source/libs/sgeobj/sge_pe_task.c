@@ -52,8 +52,9 @@
 *                                       const lListElem *pe_task) 
 *
 *  FUNCTION
-*     The pe task list of a ja task can contain one container element to hold
-*     the usage of finished pe tasks no longer stored in the task list.
+*     The pe task list of a ja task can contain one container 
+*     element to hold the usage of finished pe tasks no longer 
+*     stored in the task list.
 *
 *     This function adds the usage of pe_task to the usage of container.
 *
@@ -65,15 +66,14 @@
 *     lListElem* - the container object
 *
 *  NOTES
-*     JG: TODO: The code summing up usage should better be in a module
-*               libs/gdi/sge_usage.* containing all usage related functions
-*               as the same or similar functionality is needed in many places
-*               in Grid Engine.
+*     JG: TODO: The code summing up usage should better be in a 
+*               module libs/gdi/sge_usage.* containing all usage 
+*               related functions the same or similar functionality 
+*               is needed in many places in Grid Engine.
 *
 *  SEE ALSO
 *     sgeobj/pe_task/pe_task_sum_past_usage_all()
 *     sgeobj/pe_task/pe_task_sum_past_usage_list()
-*
 *******************************************************************************/
 lListElem *
 pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
@@ -141,8 +141,8 @@ pe_task_sum_past_usage(lListElem *container, const lListElem *pe_task)
 *     lListElem* pe_task_sum_past_usage_all(lList *pe_task_list)
 *
 *  FUNCTION
-*     Similar to pe_task_sum_past_usage, but will sum up the usage of all
-*     pe tasks in a task list to the container object in this list.
+*     Similar to pe_task_sum_past_usage, but will sum up the usage of 
+*     all pe tasks in a task list to the container object in this list.
 *
 *     If the container object does not yet exist, it will be created.
 *
@@ -187,13 +187,15 @@ lListElem *pe_task_sum_past_usage_all(lList *pe_task_list)
 *     pe_task_sum_past_usage_list() -- sum up pe tasks past usage
 *
 *  SYNOPSIS
-*     lListElem* pe_task_sum_past_usage_list(lList *pe_task_list, 
-*                                            const lListElem *pe_task) 
+*     lListElem* 
+*     pe_task_sum_past_usage_list(lList *pe_task_list, 
+*                                 const lListElem *pe_task) 
 *
 *  FUNCTION
 *     Similar to pe_task_sum_past_usage.
-*     The container is retrieved from pe_task_list, if it does not yet
-*     exist it is created and inserted into pe_task_list as first element.
+*     The container is retrieved from pe_task_list, if it does not 
+*     yet exist it is created and inserted into pe_task_list as 
+*     first element.
 *
 *  INPUTS
 *     lList *pe_task_list      - list containing the container object

@@ -51,7 +51,6 @@
 #include "parse_qsub.h"
 #include "sge_time.h"
 #include "sge_mailrec.h"
-#include "sge_parse_date_time.h"
 #include "sge_range.h"
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
@@ -356,8 +355,12 @@ Cardinal size
    }
    str = XmtInputFieldGetString(w);
 
-   if (str && str[0] != '\0')
-      value = (Cardinal)sge_parse_date_time(str, NULL, NULL);
+   if (str && str[0] != '\0') {
+      u_long32 tmp_date_time;
+
+      ulong_parse_date_time_from_string(&tmp_date_time, NULL, str);
+      value = (Cardinal)tmp_date_time;
+   }
 
    *(Cardinal*)address = value;
 }

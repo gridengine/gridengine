@@ -101,7 +101,6 @@ lChar       lGetChar(const lListElem *ep, int name);
 lBool       lGetBool(const lListElem *ep, int name);
 lObject     lGetObject(const lListElem *ep, int name);
 lRef        lGetRef(const lListElem *ep, int name);
-void        lGetAnyType(lListElem *ep, int name, void *value);
 
 int lSetInt(lListElem *ep, int name, int value);
 int lSetUlong(lListElem *ep, int name, lUlong value);
@@ -115,7 +114,6 @@ int lSetChar(lListElem *ep, int name, lChar value);
 int lSetBool(lListElem *ep, int name, lBool value);
 int lSetObject(lListElem *ep, int name, lListElem *value);
 int lSetRef(lListElem *ep, int name, lRef value);
-int lSetAnyType(lListElem *ep, int name, void *value);
 
 int intcmp(lInt i0, lInt i1);
 int ulongcmp(lUlong u0, lUlong u1);
@@ -208,7 +206,6 @@ lListElem *lGetSubHost(const lListElem *ep, int nm, const char *str, int snm);
 lListElem *lGetElemHost(const lList *lp, int nm, const char *str);
 lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str, const void **iterator);
 lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str, const void **iterator);
-
 
 #ifdef  __cplusplus
 }

@@ -205,12 +205,13 @@ hgroup_create(lList **answer_list, const char *name, lList *href_or_groupref)
          lSetList(ret, HGRP_host_list, href_or_groupref);
          hgroup_correct_name(ret);         
       } else {
-         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
+                                MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC));
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       }
    } else {
-      sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
    }
@@ -262,7 +263,7 @@ hgroup_add_used(lListElem *this_elem, lList **answer_list,
       } 
       lXchgList(this_elem, HGRP_host_list, &href_list);
    } else {
-      sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;

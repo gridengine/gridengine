@@ -550,7 +550,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
 
 /****** sgeobj/range/range_list_sort_uniq_compress() **************************
 *  NAME
-*     range_list_sort_uniq_compress() -- makes range lists fit as a fiddle 
+*     range_list_sort_uniq_compress() -- makes lists fit as a fiddle 
 *
 *  SYNOPSIS
 *     void range_list_sort_uniq_compress(lList *range_list, 
@@ -561,7 +561,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
 *     following conditions:
 *        (1) all ids are in ascending order
 *        (2) each id is contained in the list only once
-*        (3) ids are grouped so that a minimum of range elements exist 
+*        (3) ids are grouped so that a min of range elements exist 
 *
 *  INPUTS
 *     lList *range_list   - RN_Type list 
@@ -721,7 +721,8 @@ void range_list_compress(lList *range_list)
 *     range_list_is_id_within() -- Is id contained in range list? 
 *
 *  SYNOPSIS
-*     bool range_list_is_id_within(const lList *range_list, u_long32 id) 
+*     bool 
+*     range_list_is_id_within(const lList *range_list, u_long32 id) 
 *
 *  FUNCTION
 *     True is returned by this function if 'id' is part of at least
@@ -755,7 +756,7 @@ bool range_list_is_id_within(const lList *range_list, u_long32 id)
 
 /****** sgeobj/range/range_list_containes_id_less_than() **********************
 *  NAME
-*     range_list_containes_id_less_than() -- is one id less than the given id
+*     range_list_containes_id_less_than() -- has id less than x 
 *
 *  SYNOPSIS
 *     bool range_list_containes_id_less_than(const lList *range_list, 
@@ -813,13 +814,15 @@ bool range_list_is_empty(const lList *range_list)
 
 /****** sgeobj/range/range_containes_id_less_than() ***************************
 *  NAME
-*     range_containes_id_less_than() -- at least one id less than given id 
+*     range_containes_id_less_than() -- is one id less than given id 
 *
 *  SYNOPSIS
-*     bool range_containes_id_less_than(const lListElem *range, u_long32 id) 
+*     bool 
+*     range_containes_id_less_than(const lListElem *range, u_long32 id) 
 *
 *  FUNCTION
-*     This function tests if at least one id in "range" is less than "id" 
+*     This function tests if at least one id in "range" is less 
+*     than "id" 
 *
 *  INPUTS
 *     const lListElem *range - RN_Type element 
@@ -887,8 +890,9 @@ bool range_is_id_within(const lListElem *range, u_long32 id)
 *     range_list_remove_id() -- remove an id from a range list 
 *
 *  SYNOPSIS
-*     void range_list_remove_id(lList **range_list, lList **answer_list, 
-*                               u_long32 id) 
+*     void 
+*     range_list_remove_id(lList **range_list, lList **answer_list, 
+*                          u_long32 id) 
 *
 *  FUNCTION
 *     'id' will be removed from 'range_list'. 

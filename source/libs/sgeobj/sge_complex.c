@@ -41,6 +41,7 @@
 #include "sge_schedd_conf.h"
 #include "sge_parse_num_par.h"
 #include "sge_host.h"
+#include "sge_ulong.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -377,4 +378,30 @@ int complex_list_verify(lList *complex_list, lList **alpp,
    DEXIT;
    return ret;
 }       
+
+bool 
+centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "centry_print_resource_to_dstring");
+   if (this_elem != NULL && string != NULL) {
+      u_long32 type = lGetUlong(this_elem, CE_valtype);
+      double val = lGetDouble(this_elem, CE_doubleval);
+
+      switch (type) {
+      case TYPE_TIM:
+         double_print_time_to_dstring(val, string);
+         break;
+      case TYPE_MEM:
+         double_print_memory_to_dstring(val, string);
+         break;
+      default:
+         double_print_to_dstring(val, string);
+         break;
+      }
+   }
+   DEXIT;
+   return ret;
+}
 

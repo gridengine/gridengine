@@ -623,15 +623,15 @@ const char *field
                   lGetUlong(jat, JAT_status)==JTRANSFERING;
 
       /* scaled mem usage */
-      if (!(up = lGetSubStr(jat, UA_name, field,
-         JAT_scaled_usage_list)))
+      if (!(up = lGetSubStr(jat, UA_name, field, JAT_scaled_usage_list))) {
          sprintf(buf, "%-7.7s", running?"NA":"");
-      else
-#if 0
-         sprintf(buf, "%-5.5f", lGetDouble(up, UA_value));
-#else
-         sprintf(buf, "%s", resource_descr(lGetDouble(up, UA_value), TYPE_MEM, mem_usage));
-#endif
+      } else {
+         dstring mem_string = DSTRING_INIT;
+
+         double_print_memory_to_dstring(lGetDouble(up, UA_value), &mem_string);
+         sprintf(buf, "%s", sge_dstring_get_string(&mem_string));
+         sge_dstring_free(&mem_string);
+      }
 
       str = XtNewString(buf);
    }

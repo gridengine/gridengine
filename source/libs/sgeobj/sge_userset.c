@@ -45,7 +45,7 @@ lList *Master_Userset_List = NULL;
 
 /****** sgeobj/userset/userset_is_deadline_user() ******************************
 *  NAME
-*     userset_is_deadline_user() -- Ask if user may sumbit deadline jobs. 
+*     userset_is_deadline_user() -- may user sumbit deadline jobs. 
 *
 *  SYNOPSIS
 *     bool userset_is_deadline_user(lList *lp, const char *username) 
@@ -116,22 +116,23 @@ lListElem *userset_list_locate(lList *lp, const char *name)
 *     userset_list_validate_acl_list() -- validate an acl list 
 *
 *  SYNOPSIS
-*     int userset_list_validate_acl_list(lList **alpp, lList *acl_list, 
-*                                        const char *attr_name, 
-*                                        const char *obj_descr, 
-*                                        const char *obj_name) 
+*     int 
+*     userset_list_validate_acl_list(lList **alpp, lList *acl_list, 
+*                                    const char *attr_name, 
+*                                    const char *obj_descr, 
+*                                    const char *obj_name) 
 *
 *  FUNCTION
-*     Checks if all entries of an acl list (e.g. user list of a pe) are
-*     contained in the master userset list.
+*     Checks if all entries of an acl list (e.g. user list of a pe) 
+*     are contained in the master userset list.
 *
 *  INPUTS
 *     lList **alpp          - answer list pointer
 *     lList *acl_list       - the acl list to check
-*     const char *attr_name - the attribute name in the referencing object
-*                             (e.g. "user_lists")
-*     const char *obj_descr - the descriptor of the referencing object
-*                             (e.g. "queue")
+*     const char *attr_name - the attribute name in the referencing 
+*                             object (e.g. "user_lists")
+*     const char *obj_descr - the descriptor of the referencing 
+*                             object (e.g. "queue")
 *     const char *obj_name  - the name of the referencing object
 *                             (e.g. "fangorn.q")
 *
@@ -174,8 +175,9 @@ userset_list_validate_acl_list(lList **alpp, lList *acl_list,
 *
 *  INPUTS
 *     lListElem *userset - the userset to check
-*     lList **alpp       - answer list pointer, if answer is expected. In any
-*                          case, errors are output using the ERROR macro.
+*     lList **alpp       - answer list pointer, if answer is expected. 
+*                          In any case, errors are output using the 
+*                          ERROR macro.
 *     int start_up       - are we in the qmaster startup phase?
 *
 *  RESULT

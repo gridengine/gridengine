@@ -66,6 +66,7 @@
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_pe.h"
+#include "sge_ulong.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, dstring *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
 
@@ -107,7 +108,6 @@ lList *qresource_list
    char state_string[8];
    char to_print[80];
    char arch_string[80];
-   char resource_text[100];
    u_long32 state;
    double load_avg;
    static int first_time = 1;
@@ -193,6 +193,7 @@ lList *qresource_list
 
    /* view (selected) resources of queue in case of -F [attr,attr,..] */ 
    if ((full_listing & QSTAT_DISPLAY_QRESOURCES)) {
+      dstring resource_string = DSTRING_INIT;
       lList *rlp;
       lListElem *rep;
       char dom[5];
@@ -228,13 +229,49 @@ lList *qresource_list
                   s = lGetString(rep, CE_stringval);
                }
                break;
+            case TYPE_TIM:
+               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+                  double val = lGetDouble(rep, CE_pj_doubleval);
+
+                  dominant = lGetUlong(rep, CE_pj_dominant);
+                  double_print_time_to_dstring(val, &resource_string);
+                  s = sge_dstring_get_string(&resource_string);
+               } else {
+                  double val = lGetDouble(rep, CE_doubleval);
+
+                  dominant = lGetUlong(rep, CE_dominant);
+                  double_print_time_to_dstring(val, &resource_string);
+                  s = sge_dstring_get_string(&resource_string);
+               }
+               break;
+            case TYPE_MEM:
+               if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+                  double val = lGetDouble(rep, CE_pj_doubleval);
+
+                  dominant = lGetUlong(rep, CE_pj_dominant);
+                  double_print_memory_to_dstring(val, &resource_string);
+                  s = sge_dstring_get_string(&resource_string);
+               } else {
+                  double val = lGetDouble(rep, CE_doubleval);
+
+                  dominant = lGetUlong(rep, CE_dominant);
+                  double_print_memory_to_dstring(val, &resource_string);
+                  s = sge_dstring_get_string(&resource_string);
+               }
+               break;
             default:   
                if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+                  double val = lGetDouble(rep, CE_pj_doubleval);
+
                   dominant = lGetUlong(rep, CE_pj_dominant);
-                  s = resource_descr(lGetDouble(rep, CE_pj_doubleval), lGetUlong(rep, CE_valtype), resource_text);
+                  double_print_to_dstring(val, &resource_string);
+                  s = sge_dstring_get_string(&resource_string);
                } else {
+                  double val = lGetDouble(rep, CE_doubleval);
+
                   dominant = lGetUlong(rep, CE_dominant);
-                  s = resource_descr(lGetDouble(rep, CE_doubleval), lGetUlong(rep, CE_valtype), resource_text);
+                  double_print_to_dstring(val, &resource_string);
+                  s = sge_dstring_get_string(&resource_string);
                }
                break;
             }
@@ -252,6 +289,7 @@ lList *qresource_list
          }
       }
       lFreeList(rlp);
+      sge_dstring_free(&resource_string);
    }
 
    DEXIT;
@@ -267,7 +305,6 @@ int print_hdr,
 int indent 
 ) {
    char task_state_string[8];
-   char resource_text[100];
    u_long32 tstate, tstatus;
    int task_running;
    const char *str;
@@ -338,10 +375,16 @@ int indent
       lListElem *up;
 
       /* scaled cpu usage */
-      if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_CPU))) 
+      if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_CPU))) {
          printf("%-10.10s ", task_running?"NA":""); 
-      else 
-         printf("%s ", resource_descr(lGetDouble(up, UA_value), TYPE_TIM, resource_text));
+      } else {
+         dstring resource_string = DSTRING_INIT;
+
+         double_print_time_to_dstring(lGetDouble(up, UA_value), 
+                                      &resource_string);
+         printf("%s ", sge_dstring_get_string(&resource_string));
+         sge_dstring_free(&resource_string);
+      }
 
       /* scaled mem usage */
       if (!(up = lGetElemStr(scaled_usage_list, UA_name, USAGE_ATTR_MEM))) 

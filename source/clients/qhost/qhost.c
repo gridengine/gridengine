@@ -68,6 +68,7 @@
 #include "sge_answer.h"
 #include "sge_queue.h"
 #include "sge_complex.h"
+#include "sge_ulong.h"
 
 #define QHOST_DISPLAY_QUEUES     (1<<0)
 #define QHOST_DISPLAY_JOBS       (1<<1)
@@ -438,7 +439,7 @@ u_long32 show
    lList *rlp = NULL;
    lListElem *rep;
    char dom[5];
-   char resource_text[100];
+   dstring resource_string = DSTRING_INIT;
    const char *s;
    u_long32 dominant;
    int first = 1;
@@ -485,13 +486,47 @@ u_long32 show
                s = lGetString(rep, CE_stringval);
             }
             break;
+         case TYPE_TIM:
+            if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+               double val = lGetDouble(rep, CE_pj_doubleval);
+
+               dominant = lGetUlong(rep, CE_pj_dominant);
+               double_print_time_to_dstring(val, &resource_string);
+               s = sge_dstring_get_string(&resource_string);
+            } else {
+               double val = lGetDouble(rep, CE_doubleval);
+
+               dominant = lGetUlong(rep, CE_dominant);
+               double_print_time_to_dstring(val, &resource_string);
+               s = sge_dstring_get_string(&resource_string);
+            }
+         case TYPE_MEM:
+            if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+               double val = lGetDouble(rep, CE_pj_doubleval);
+
+               dominant = lGetUlong(rep, CE_pj_dominant);
+               double_print_memory_to_dstring(val, &resource_string);
+               s = sge_dstring_get_string(&resource_string);
+            } else {
+               double val = lGetDouble(rep, CE_doubleval);
+
+               dominant = lGetUlong(rep, CE_dominant);
+               double_print_memory_to_dstring(val, &resource_string);
+               s = sge_dstring_get_string(&resource_string);
+            }
          default:   
             if (!(lGetUlong(rep, CE_pj_dominant)&DOMINANT_TYPE_VALUE)) {
+               double val = lGetDouble(rep, CE_pj_doubleval);
+
                dominant = lGetUlong(rep, CE_pj_dominant);
-               s = resource_descr(lGetDouble(rep, CE_pj_doubleval), lGetUlong(rep, CE_valtype), resource_text);
+               double_print_to_dstring(val, &resource_string);
+               s = sge_dstring_get_string(&resource_string);
             } else {
+               double val = lGetDouble(rep, CE_doubleval);
+
                dominant = lGetUlong(rep, CE_dominant);
-               s = resource_descr(lGetDouble(rep, CE_doubleval), lGetUlong(rep, CE_valtype), resource_text);
+               double_print_to_dstring(val, &resource_string);
+               s = sge_dstring_get_string(&resource_string);
             }
             break;
          }
@@ -510,6 +545,7 @@ u_long32 show
       }
    }
    lFreeList(rlp);
+   sge_dstring_free(&resource_string);
    DEXIT;
 }
 

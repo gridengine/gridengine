@@ -63,6 +63,9 @@ cuser_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
                                 &cuser_list, NULL, NULL);
       answer_list_replace(answer_list, &gdi_answer_list);
    }
+#if 1 /* EB: TODO: remove */
+lWriteElemTo(this_elem, stderr);
+#endif
    DEXIT;
    return ret;
 }
@@ -95,8 +98,7 @@ lListElem *cuser_get_via_gdi(lList **answer_list, const char *name)
    return ret;
 }
 
-bool cuser_provide_modify_context(lListElem **this_elem, 
-                                      lList **answer_list)
+bool cuser_provide_modify_context(lListElem **this_elem, lList **answer_list)
 {
    bool ret = false;
    int status = 0;

@@ -90,7 +90,7 @@ href_list_add(lList **this_list, lList **answer_list, const char *host_or_group)
          }
       }
    } else {
-      sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT, 
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;
@@ -105,7 +105,8 @@ href_list_add(lList **this_list, lList **answer_list, const char *host_or_group)
 *
 *  SYNOPSIS
 *     bool 
-*     href_list_has_member(const lList *this_list, const char *host_or_group) 
+*     href_list_has_member(const lList *this_list, 
+*                          const char *host_or_group) 
 *
 *  FUNCTION
 *     Is the given host or hostgroup ('host_or_group') already
@@ -388,7 +389,7 @@ bool href_list_find_used(const lList *this_list, lList **answer_list,
          }
       } 
    } else {
-      sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;
@@ -403,8 +404,10 @@ bool href_list_find_used(const lList *this_list, lList **answer_list,
 *
 *  SYNOPSIS
 *     bool 
-*     href_list_find_all_used(const lList *this_list, lList **answer_list, 
-*                             const lList *master_list, lList **used_hosts, 
+*     href_list_find_all_used(const lList *this_list, 
+*                             lList **answer_list, 
+*                             const lList *master_list, 
+*                             lList **used_hosts, 
 *                             lList **used_groups) 
 *
 *  FUNCTION
@@ -465,7 +468,7 @@ bool href_list_find_all_used(const lList *this_list, lList **answer_list,
          } 
       }
    } else {
-      sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;
@@ -480,7 +483,8 @@ bool href_list_find_all_used(const lList *this_list, lList **answer_list,
 *
 *  SYNOPSIS
 *     bool 
-*     href_list_find_occupants(const lList *this_list, lList **answer_list, 
+*     href_list_find_occupants(const lList *this_list, 
+*                              lList **answer_list, 
 *                              const lList *master_list, 
 *                              lList **occupant_groups) 
 *
@@ -531,7 +535,7 @@ href_list_find_occupants(const lList *this_list, lList **answer_list,
          } 
       }
    } else {
-      sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;
@@ -601,7 +605,7 @@ href_list_find_all_occupants(const lList *this_list, lList **answer_list,
          } 
       }
    } else {
-      sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;
@@ -616,7 +620,8 @@ href_list_find_all_occupants(const lList *this_list, lList **answer_list,
 *
 *  SYNOPSIS
 *     bool 
-*     href_list_append_to_string(const lList *this_list, dstring *string) 
+*     href_list_append_to_string(const lList *this_list, 
+*                                dstring *string) 
 *
 *  FUNCTION
 *     Append all host and hostgroup references contained in 'this_list'
@@ -656,7 +661,8 @@ bool href_list_append_to_string(const lList *this_list, dstring *string)
 *     href_list_resolve_hostnames() -- resolve hostnames 
 *
 *  SYNOPSIS
-*     bool href_list_resolve_hostnames(lList *this_list, lList **answer_list) 
+*     bool 
+*     href_list_resolve_hostnames(lList *this_list, lList **answer_list) 
 *
 *  FUNCTION
 *     Resolve hostnames contained in 'this_list'. 

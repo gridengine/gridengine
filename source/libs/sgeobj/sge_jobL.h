@@ -187,13 +187,16 @@ enum {
 *        Command prefix for jobscript ("qsub -C prefix") for parsing 
 *        special comments in the script file.
 *
-*     SGE_XSTRING(JB_exec_file) ---> what is exec_file, what script_file?
+*     SGE_XSTRING(JB_exec_file) 
+*     ---> what is exec_file, what script_file?
 *
 *     SGE_STRING(JB_script_file)
 *
-*     SGE_ULONG(JB_script_size) ---> really needed?
+*     SGE_ULONG(JB_script_size) 
+*     ---> really needed?
 *
-*     SGE_STRING(JB_script_ptr) ---> what is it?
+*     SGE_STRING(JB_script_ptr) 
+*     ---> what is it?
 *
 *     Time information
 *     ================
@@ -255,7 +258,8 @@ enum {
 *
 *     Checkpointing/Restart
 *     =====================
-*     SGE_ULONG(JB_checkpoint_attr)  ----> merge all checkpointing stuff to one object?
+*     SGE_ULONG(JB_checkpoint_attr)  ----> merge all checkpointing 
+*                                          stuff to one object?
 *        Checkpoint attributes ("qsub/qalter -c interval_flags")   
 *
 *     SGE_STRING(JB_checkpoint_name)    
@@ -297,10 +301,12 @@ enum {
 *        Soft resource requirements/limits/restrictions (RE_Type).
 *        ("qsub -l resource_list")
 *
-*     SGE_LIST(JB_hard_queue_list) ----> why separated from other requests?
+*     SGE_LIST(JB_hard_queue_list) 
+*        ----> why separated from other requests?
 *        Hard queue list (QR_Type). ("qsub -q dest_identifier")
 *
-*     SGE_LIST(JB_soft_queue_list) ----> why separated from other requests?
+*     SGE_LIST(JB_soft_queue_list) 
+*        ----> why separated from other requests?
 *        Soft queue list (QR_Type). ("qsub/qselect -q dest_identifier")
 *
 *     Mail options
@@ -387,13 +393,19 @@ I        ("qsub -t tid_range")
 *     ====
 *
 *     SGE_LIST(JB_user_list)               
-*        List of usernames (qsub/qalter -u username_list). ---> qsub -u does not exist. Not part of a job, but only userd for qalter request as where condition. Could most probably be passed via lCondition.
+*        List of usernames (qsub/qalter -u username_list). 
+*        ---> qsub -u does not exist. Not part of a job, but only 
+*             userd for qalter request as where condition. Could most 
+*             probably be passed via lCondition.
 *
-*     SGE_LIST(JB_job_identifier_list) ---> condition for qalter? Then it should better be passed via condition. 
+*     SGE_LIST(JB_job_identifier_list) 
+*        ---> condition for qalter? Then it should better be passed 
+*             via condition. 
 *        (ID_Type)
 *
 *     SGE_STRING(JB_job_source)
-*        Submitter (host:commproc:id) of a pe task. Only needed in execd.
+*        Submitter (host:commproc:id) of a pe task. Only needed 
+*        in execd.
 *        ---> probably no longer needed here, but in PET_Type.
 *
 *     SGE_XULONG(JB_verify_suitable_queues)   ---> qalter?

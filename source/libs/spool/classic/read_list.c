@@ -439,7 +439,7 @@ int sge_read_pe_list_from_disk()
                break;
             }
 
-            if (pe_validate(1, ep, NULL)!=STATUS_OK) {
+            if (pe_validate(ep, NULL, 1)!=STATUS_OK) {
                ret = -1;
                break;
             }
@@ -541,7 +541,7 @@ int sge_read_ckpt_list_from_disk()
                return -1;
             }
 
-            if (validate_ckpt(ep, NULL)!=STATUS_OK) {
+            if (ckpt_validate(ep, NULL)!=STATUS_OK) {
                DEXIT;
                return -1;
             }

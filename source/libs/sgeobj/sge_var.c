@@ -45,7 +45,7 @@
 #include "sge_string.h"
 #include "sge_complex.h"
 
-/****** sgeobj/var/-VariableList ***********************************************
+/****** sgeobj/var/-VariableList **********************************************
 *  NAME
 *     VariableList - Object to store variable name/value pairs
 *
@@ -76,7 +76,7 @@
 
 static const char *var_get_sharedlib_path_name(void);
 
-/****** sgeobj/var/var_get_sharedlib_path_name() *********************************
+/****** sgeobj/var/var_get_sharedlib_path_name() ******************************
 *  NAME
 *     var_get_sharedlib_path_name -- name of sharedlib path variable
 *
@@ -418,15 +418,16 @@ void var_list_copy_prefix_vars(lList **varl,
    DEXIT;
 }
 
-/****** sgeobj/var/var_list_copy_prefix_vars() ********************************
+/****** sgeobj/var/var_list_copy_prefix_vars_undef() **************************
 *  NAME
-*     var_list_copy_prefix_vars() -- copy vars with certain prefix 
+*     var_list_copy_prefix_vars_undef() -- copy vars with certain prefix 
 *
 *  SYNOPSIS
-*     void var_list_copy_prefix_vars(lList **varl, 
-*                                    const lList *src_varl,
-*                                    const char *prefix, 
-*                                    const char *new_prefix) 
+*     void 
+*     var_list_copy_prefix_vars_undef(lList **varl, 
+*                                     const lList *src_varl,
+*                                     const char *prefix, 
+*                                     const char *new_prefix) 
 *
 *  FUNCTION
 *     Make a copy of all entries in "src_varl" 
@@ -484,9 +485,10 @@ void var_list_copy_prefix_vars_undef(lList **varl,
 *     var_list_copy_complex_vars_and_value() -- copy certain vars 
 *
 *  SYNOPSIS
-*     void var_list_copy_complex_vars_and_value(lList **varl, 
-*                                               const lList *src_varl, 
-*                                               const lList *cplx_list) 
+*     void 
+*     var_list_copy_complex_vars_and_value(lList **varl, 
+*                                          const lList *src_varl, 
+*                                          const lList *cplx_list) 
 *
 *  FUNCTION
 *     Copy all variables from "src_varl" into
@@ -537,9 +539,10 @@ void var_list_copy_complex_vars_and_value(lList **varl,
 *     var_list_copy_env_vars_and_value() -- Copy env. vars 
 *
 *  SYNOPSIS
-*     void var_list_copy_env_vars_and_value(lList **varl, 
-*                                           const lList *src_varl, 
-*                                           const char *ignore_prefix) 
+*     void 
+*     var_list_copy_env_vars_and_value(lList **varl, 
+*                                      const lList *src_varl, 
+*                                      const char *ignore_prefix) 
 *
 *  FUNCTION
 *     Copy all variables from "src_varl" into "varl". Ignore

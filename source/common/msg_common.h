@@ -1150,13 +1150,17 @@
 #define MSG_OBJ_CKPTI                 _MESSAGE(60417, _("checkpoint interface"))
 #define MSG_GDI_OUTOFMEMORY           _MESSAGE(60418, _("out of memory"))
 #define MSG_COM_UNPACKINT_I          _MESSAGE(60419, _("unpacking integer %d failed\n"))
-
-/* generic messages */
-#define MSG_SGETEXT_ADDEDTOLIST_SSSS            _MESSAGE(60500, _(""SFN"@"SFN" added "SFQ" to "SFN" list\n"))
-#define MSG_SGETEXT_MODIFIEDINLIST_SSSS         _MESSAGE(60501, _(""SFN"@"SFN" modified "SFQ" in "SFN" list\n"))
-#define MSG_SGETEXT_KILL_SSS                    _MESSAGE(60502, _(""SFN"@"SFN" kills "SFN"\n"))
+#define MSG_SGETEXT_ADDEDTOLIST_SSSS       _MESSAGE(60500, _(""SFN"@"SFN" added "SFQ" to "SFN" list\n"))
+#define MSG_SGETEXT_MODIFIEDINLIST_SSSS    _MESSAGE(60501, _(""SFN"@"SFN" modified "SFQ" in "SFN" list\n"))
+#define MSG_SGETEXT_KILL_SSS               _MESSAGE(60502, _(""SFN"@"SFN" kills "SFN"\n"))
 #define MSG_GDI_FAILEDTOEXTRACTAUTHINFO    _MESSAGE(60600, _("failed to extract authentication information"))
 #define MSG_INAVLID_PARAMETER_IN_S         _MESSAGE(60601, _("invalid parameter in "SFN"\n"))
+#define MSG_OBJ_QLIST                      _MESSAGE(60602, _("queue list"))
+#define MSG_OBJ_PE                         _MESSAGE(60603, _("parallel environment"))
+#define MSG_SGETEXT_MISSINGCULLFIELD_SS    _MESSAGE(60604, _("missing cull field "SFQ" in "SFN"()\n"))
+#define MSG_OBJ_USERLIST                   _MESSAGE(60605, _("user list"))
+#define MSG_OBJ_XUSERLIST                  _MESSAGE(60606, _("xuser list"))
+
 /* =================================================
  * please do not enter new messages after this point,
  * if they are global messages (meaningfull for all modules)

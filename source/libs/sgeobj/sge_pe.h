@@ -45,5 +45,6 @@ bool pe_is_referenced(const lListElem *pe, lList **answer_list,
 
 bool pe_is_matching(const lListElem *pe, const char *wildcard);
 
-int pe_validate(int startup, lListElem *pep, lList **alpp);
+int pe_validate(lListElem *pep, lList **alpp, int startup);
+
 #endif /* __SGE_PE_H */

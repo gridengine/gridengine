@@ -51,6 +51,7 @@
 #include "sge_host.h"
 #include "sge_complex.h"
 #include "sge_object.h"
+#include "sge_ulong.h"
 
 #include "msg_common.h"
 #include "msg_schedd.h"
@@ -957,9 +958,10 @@ int force_existence
    const char *s;
    const char *name;
    const char *offer;
-   char dom_str[5], resource_text[100];  /* , r1str[100], r2str[100] */
+   char dom_str[5];
    char availability_text1[2048];
    char availability_text2[2048]; 
+   dstring resource_string = DSTRING_INIT;
 
    DENTER(TOP_LAYER,"compare_complexes");
 
@@ -1053,22 +1055,54 @@ int force_existence
 
          monitor_dominance(dom_str, lGetUlong(src_cplx, CE_pj_dominant));
 
-         if (type==TYPE_BOO)
+         switch (type) {
+         case TYPE_BOO:
             sprintf(availability_text1, "%s:%s=%s", dom_str, name, src_dl?"true":"false");
-         else  
-            sprintf(availability_text1, "%s:%s=%s", dom_str, name, resource_descr(src_dl, type, resource_text));
-
 #if 0
-         if (type==TYPE_BOO) {
             DPRINTF(("-l %s=%f, Q: %s:%s%s%f, Comparison: %s\n",
-                  name, req_dl?"true":"false", dom_str, name, map_op2str(used_relop),
-                  src_dl?"true":"false", m1?"ok":"no match"));
-         } else {
-            DPRINTF(("%d times of -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
-                  slots, name, resource_descr(req_dl, type, r1str), dom_str, name, map_op2str(used_relop),
-                  resource_descr(src_dl, type, r2str), m1?"ok":"no match"));
-         }
+                     name, req_dl?"true":"false", dom_str, name,
+                     map_op2str(used_relop),
+                     src_dl?"true":"false", m1?"ok":"no match"));
 #endif
+            break;
+         case TYPE_MEM:
+            double_print_memory_to_dstring(src_dl, &resource_string);
+#if 0
+            { 
+               dstring request_string = DSTRING_INIT;
+
+               double_print_memory_to_dstring(req_dl, &request_string);
+               DPRINTF(("%d times of -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
+                        slots, name, sge_dstring_get_string(&request_string),
+                        dom_str, name, map_op2str(used_relop),
+                        sge_dstring_get_string(&resource_string), 
+                        m1?"ok":"no match"));
+               sge_dstring_free(&request_string);
+            }
+#endif
+            break;
+         case TYPE_TIM:
+            double_print_time_to_dstring(src_dl, &resource_string);
+#if 0
+            {
+               dstring request_string = DSTRING_INIT;
+
+               double_print_time_to_dstring(req_dl, &request_string);
+               DPRINTF(("%d times of -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
+                        slots, name, sge_dstring_get_string(&request_string),
+                        dom_str, name, map_op2str(used_relop),
+                        sge_dstring_get_string(&resource_string), 
+                        m1?"ok":"no match"));
+               sge_dstring_free(&request_string);
+            }
+#endif
+            break;
+         default:
+            double_print_to_dstring(src_dl, &resource_string);
+            break;
+         } 
+         sprintf(availability_text1, "%s:%s=%s", dom_str, name, sge_dstring_get_string(&resource_string));
+
       }
 
       /* is there a per slot limit */
@@ -1082,23 +1116,55 @@ int force_existence
          m2 = resource_cmp(used_relop, req_all_slots, src_dl);
          monitor_dominance(dom_str, lGetUlong(src_cplx, CE_dominant));
 
-         if (type==TYPE_BOO)
+         switch (type) {
+         case TYPE_BOO:
             sprintf(availability_text2, "%s:%s=%s", dom_str, name, src_dl?"true":"false");
-         else
-            sprintf(availability_text2, "%s:%s=%s", dom_str, name, resource_descr(src_dl, type, resource_text));
-
 #if 0
-         if (type==TYPE_BOO) {
             DPRINTF(("-l %s=%f, Q: %s:%s%s%f, Comparison: %s\n",
-                  name, req_dl?"true":"false", dom_str, name, map_op2str(used_relop),
-                  src_dl?"true":"false", m2?"ok":"no match"));
-         } else {
-            DPRINTF(("per slot -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
-                  name, resource_descr(req_dl, type, r1str), dom_str, name, map_op2str(used_relop),
-                  resource_descr(src_dl, type, r2str), m2?"ok":"no match"));
-         }
+                     name, req_dl?"true":"false", dom_str, name, 
+                     map_op2str(used_relop),
+                     src_dl?"true":"false", m2?"ok":"no match"));
 #endif
+            break;
+         case TYPE_MEM:
+            double_print_memory_to_dstring(src_dl, &resource_string);
+#if 0
+            {
+               dstring request_string = DSTRING_INIT;
+
+               double_print_time_to_dstring(req_dl, &request_string);
+               DPRINTF(("per slot -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
+                        name, sge_dstring_get_string(&request_string),
+                        dom_str, name, map_op2str(used_relop),
+                        sge_dstring_get_string(&resource_string), 
+                        m2?"ok":"no match"));
+               sge_dstring_free(&request_string);
+            }
+#endif
+            break;
+         case TYPE_TIM:
+            double_print_time_to_dstring(src_dl, &resource_string);
+#if 0
+            {
+               dstring request_string = DSTRING_INIT;
+
+               double_print_time_to_dstring(req_dl, &request_string);
+               DPRINTF(("per slot -l %s=%s, Q: %s:%s%s%s, Comparison: %s\n",
+                        name, sge_dstring_get_string(&request_string),
+                        dom_str, name, map_op2str(used_relop),
+                        sge_dstring_get_string(&resource_string), 
+                        m2?"ok":"no match"));
+               sge_dstring_free(&request_string);
+            }
+#endif
+            break;
+         default:
+            double_print_to_dstring(src_dl, &resource_string);
+            break;
+         } 
+         sprintf(availability_text2, "%s:%s=%s", dom_str, name, sge_dstring_get_string(&resource_string));
       }
+      sge_dstring_free(&resource_string);
 
       if (is_threshold)
          match = m1 || m2;

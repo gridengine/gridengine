@@ -1,3 +1,10 @@
+EB-2002-03-14-0  Enhancem.: Added code for CQ attribute lists
+                            - added new objects (ABOOL_Type, AULNG_Type) which
+                              will hold host and hostgroup concerned attribute
+                              values in an CQ. (Other list will follow soon)
+                            - Summarized parsing code
+                            - Changed several ADOC comments
+                            
 EB-2002-03-13-0  Bugfix:    Core of master if usermapping is diabled
 
 CR-2002-03-12-1  Cleanup:   new version of gmake Makefile

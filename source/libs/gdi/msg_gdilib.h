@@ -142,25 +142,12 @@
 #define MSG_GDI_ERROR_INVALIDVALUEXFORARTOOP_D             _MESSAGE(43137, _("invalid value ("U32CFormat") for ar->op\n"))
 #define MSG_GDI_CANTUNPACKGDIREQUEST                       _MESSAGE(43138, _("can't unpack gdi request"    ))
 
-/* libs/gdi/sge_pe.c
- *
- */
-#define MSG_PE_STARTPROCARGS_SS       _MESSAGE(43280, _("parameter start_proc_args of pe "SFQ": "SFN"\n"))
-#define MSG_PE_STOPPROCARGS_SS        _MESSAGE(43281, _("parameter stop_proc_args of pe "SFQ": "SFN"\n"))
-
-/* libs/gdi/sge_ckpt.c
- *
- */
-#define MSG_OBJ_CKPTENV_SSS           _MESSAGE(43284, _("parameter "SFN" of ckpt environment "SFQ": "SFN"\n"))
-#define MSG_CKPT_XISNOTASIGNALSTRING_S  _MESSAGE(43286, _(SFQ" is not a signal string (like HUP, INT, " "WINCH, ..)\n"))
-
 /*
  * common/usage.c
  */
 #define MSG_GDI_USAGE_SILENT          _MESSAGE(43293, _("startup silently"))
 
 
-#define MSG_SGETEXT_NO_INTERFACE_S    _MESSAGE(43295, _("no valid checkpoint interface "SFN"\n") )   
 #define MSG_GDI_INVALIDACTION          _MESSAGE(43298, _("invalid action" ))
 #define MSG_GDI_INVALIDOPTIONFLAG      _MESSAGE(43299, _("invalid option flag"))
 #define MSG_GDI_INVALIDIDENCOUNTERED   _MESSAGE(43300, _("encountered invalid id"))

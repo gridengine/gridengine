@@ -194,11 +194,31 @@ int
 object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
                             u_long32 step);
 
+bool
+object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
+                              int name, const char *string);
+
+bool
+object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
+                                 int name, const char *string);
+
+bool
+object_print_to_dstring(lListElem *this_elem, int name, dstring *string);
+
+bool
+object_parse_from_string(lListElem *this_elem, lList **answer_list, int name,
+                         const char *string);
+
+bool
+object_set_any_type(lListElem *this_elem, int name, void *value);
+
+void
+object_get_any_type(lListElem *this_elem, int name, void *value);
+
 void 
 attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   int this_elem_primary_key, lListElem *delta_elem, 
                   int sub_command, char *sub_list_name, char *object_name, 
                   int no_info); 
-
 
 #endif /* __SGE_OBJECT_H */

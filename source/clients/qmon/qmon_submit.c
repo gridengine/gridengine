@@ -57,7 +57,6 @@
 #include "sge_unistd.h"
 #include "sge_prog.h"
 #include "sge_all_listsL.h"
-#include "sge_parse_date_time.h"
 #include "sge_userset.h"
 #include "Matrix.h"
 #include "symbols.h"
@@ -93,6 +92,7 @@
 #include "sge_io.h"
 #include "sge_var.h"
 #include "sge_answer.h"
+#include "sge_ulong.h"
 
 extern char **environ;
 
@@ -1176,7 +1176,10 @@ XtPointer cld, cad;
    ** validate exec_time and show warning msgbox
    */
    if (status) {
-      SMData.execution_time = sge_parse_date_time(exec_time, NULL, &alp);
+      u_long32 tmp_date_time;
+
+      ulong_parse_date_time_from_string(&tmp_date_time, &alp, exec_time);
+      SMData.execution_time = tmp_date_time;
       if (alp) {
          qmonMessageBox(w, alp, 0);
          alp = lFreeList(alp);
@@ -1223,7 +1226,10 @@ XtPointer cld, cad;
    ** validate deadline_time and show warning msgbox
    */
    if (status) {
-      SMData.deadline = sge_parse_date_time(deadline_time, NULL, &alp);
+      u_long32 tmp_date_time;
+
+      ulong_parse_date_time_from_string(&tmp_date_time, &alp, deadline_time);
+      SMData.deadline = tmp_date_time;
       if (alp) {
          qmonMessageBox(w, alp, 0);
          alp = lFreeList(alp);

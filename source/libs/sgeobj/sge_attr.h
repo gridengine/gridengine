@@ -1,5 +1,5 @@
-#ifndef __SGE_HOSTATTR_H__
-#define __SGE_HOSTATTR_H__
+#ifndef __SGE_ATTR_H__
+#define __SGE_ATTR_H__
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -46,38 +46,44 @@
  */ 
 #define HOSTREF_DEFAULT             "@/default_name"
 
-lListElem *
-attr_str_create(lList **answer_list, const char *href, const char *value);
+#define TEMPLATE_ATTR_PROTO(PREFIX, TYPE)                                     \
+                                                                              \
+lListElem *                                                                   \
+PREFIX##_create(lList **answer_list, const char *href, TYPE value);           \
+                                                                              \
+bool                                                                          \
+PREFIX##_list_add(lList **this_list, lList **answer_list,                     \
+                  lListElem **attr, int flags, lList **href_list);            \
+lListElem *                                                                   \
+PREFIX##_list_find(const lList *this_list, const char *href);                 \
+                                                                              \
+bool                                                                          \
+PREFIX##_list_find_value(const lList *this_list, lList **answer_list,         \
+                         const char *hostname, TYPE *value);                  \
+bool                                                                          \
+PREFIX##_list_verify(const lList *this_list, lList **answer_list,             \
+                     bool *is_ambiguous);                                     \
+bool                                                                          \
+PREFIX##_list_append_to_dstring(const lList *this_list, dstring *string);     \
+                                                                              \
+bool                                                                          \
+PREFIX##_list_parse_from_string(lList **this_list, lList **answer_list,       \
+                                const char *string, int flags);               \
+bool                                                                          \
+PREFIX##_has_hgroup_reference(const lList *this_list,                         \
+                              const char *host_or_group);                     \
+                                                                              \
+lListElem *                                                                   \
+PREFIX##_list_locate(const lList *this_list, const char *host_or_group);      
+                                                                              
+TEMPLATE_ATTR_PROTO(str_attr, const char *)                    
 
-bool
-attr_str_list_add(lList **this_list, lList **answer_list,
-                  lListElem **attr, int flags, lList **href_list);
+TEMPLATE_ATTR_PROTO(ulng_attr, u_long32)                    
 
-lListElem *
-attr_str_list_find(const lList *this_list, const char *href);
+TEMPLATE_ATTR_PROTO(bool_attr, bool)                    
 
-bool
-attr_str_list_find_value(const lList *this_list, lList **answer_list,
-                         const char *hostname, const char **value);
+#undef ATTR_TYPE_PROTOTYPES 
 
-bool
-attr_str_list_verify(const lList *this_list, lList **answer_list,
-                     bool *is_ambiguous);
-
-bool
-attr_str_list_append_to_dstring(const lList *this_list, dstring *string);
-
-bool
-attr_str_list_parse_from_string(lList **this_list, lList **answer_list,
-                                const char *string, int flags);
-
-bool
-attr_str_has_hgroup_reference(const lList *this_list,
-                              const char *host_or_group);
-
-lListElem *
-attr_str_list_locate(const lList *this_list, const char *host_or_group);
-
-#endif /* __SGE_HOSTATTR_H__ */
+#endif /* __SGE_ATTR_H__ */
 
 

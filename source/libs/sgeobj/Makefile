@@ -62,7 +62,6 @@ SGEOBJLIB_SRC = \
          sge_mailrec.c \
          sge_manop.c \
          sge_object.c \
-         sge_parse_date_time.c \
          sge_path_alias.c \
          sge_pe.c \
          sge_pe_task.c \
@@ -75,6 +74,7 @@ SGEOBJLIB_SRC = \
          sge_suser.c \
          sge_usage.c \
          sge_cuser.c \
+         sge_ulong.c \
          sge_userprj.c \
          sge_userset.c \
          sge_utility.c \
@@ -180,9 +180,6 @@ sge_manop.o: $(SGEOBJLIB_DIR)/sge_manop.c
 sge_object.o: $(SGEOBJLIB_DIR)/sge_object.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_object.c
 
-sge_parse_date_time.o: $(SGEOBJLIB_DIR)/sge_parse_date_time.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_parse_date_time.c
-
 sge_path_alias.o: $(SGEOBJLIB_DIR)/sge_path_alias.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_path_alias.c
 
@@ -215,6 +212,9 @@ sge_suser.o: $(SGEOBJLIB_DIR)/sge_suser.c
 
 sge_cuser.o: $(SGEOBJLIB_DIR)/sge_cuser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cuser.c
+
+sge_ulong.o: $(SGEOBJLIB_DIR)/sge_ulong.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ulong.c
 
 sge_userprj.o: $(SGEOBJLIB_DIR)/sge_userprj.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_userprj.c

@@ -55,6 +55,7 @@
 #include "msg_qmaster.h"
 #include "sge_security.h"
 #include "sge_queue.h"
+#include "sge_complex.h"
 
 extern lList *Master_Job_List;
 
@@ -184,25 +185,24 @@ u_long32 now
    return;
 }
 
-static void log_consumables(
-FILE *fp,
-lList *actual, 
-lList *total  
-) {
-   char *act, *tot;
-   char resource_text[100];
+static void log_consumables(FILE *fp, lList *actual, lList *total) 
+{
+   lListElem *cep; 
 
-   lListElem *cep, *total_ep; 
    for_each (cep, actual) {
-      total_ep = lGetElemStr(total, CE_name, lGetString(cep, CE_name));
-      act = strdup(resource_descr(lGetDouble(cep, CE_doubleval), lGetUlong(cep, CE_valtype), resource_text));
-      tot = strdup(resource_descr(lGetDouble(total_ep, CE_doubleval), lGetUlong(total_ep, CE_valtype), resource_text));
-      fprintf(fp, "%s=%s=%s", lGetString(cep, CE_name), tot?tot:"", act?act:""); 
-      if (tot)
-         free(tot);
-      if (act)
-         free(act);
-      if (lNext(cep))
+      lListElem *tep = lGetElemStr(total, CE_name, lGetString(cep, CE_name));
+      dstring act_string = DSTRING_INIT;
+      dstring tot_dstring = DSTRING_INIT;
+
+      centry_print_resource_to_dstring(cep, &act_string);
+      centry_print_resource_to_dstring(tep, &tot_dstring);
+      fprintf(fp, "%s=%s=%s", lGetString(cep, CE_name), 
+              sge_dstring_get_string(&tot_dstring),
+              sge_dstring_get_string(&act_string)); 
+      sge_dstring_free(&act_string);
+      sge_dstring_free(&tot_dstring);
+      if (lNext(cep)) {
          fprintf(fp, ","); 
+      }
    }
 }

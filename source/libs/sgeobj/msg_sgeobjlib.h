@@ -190,5 +190,10 @@
 #define MSG_EVENT_DELHGROUPX_IS                    _MESSAGE(64171, _("%d. EVENT DEL HOST GROUP "SFN""))
 #define MSG_EVENT_ADDHGROUPX_IS                    _MESSAGE(64172, _("%d. EVENT ADD HOST GROUP "SFN""))
 #define MSG_EVENT_MODHGROUPX_IS                    _MESSAGE(64173, _("%d. EVENT MOD HOST GROUP "SFN""))
+#define MSG_SGETEXT_NO_INTERFACE_S                 _MESSAGE(64174, _("no valid checkpoint interface "SFN"\n"))
+#define MSG_OBJ_CKPTENV_SSS                        _MESSAGE(64175, _("parameter "SFN" of ckpt environment "SFQ": "SFN"\n"))
+#define MSG_CKPT_XISNOTASIGNALSTRING_S             _MESSAGE(64176, _(SFQ" is not a signal string (like HUP, INT, " "WINCH, ..)\n"))
+#define MSG_PE_STARTPROCARGS_SS                    _MESSAGE(64177, _("parameter start_proc_args of pe "SFQ": "SFN"\n"))
+#define MSG_PE_STOPPROCARGS_SS                     _MESSAGE(64178, _("parameter stop_proc_args of pe "SFQ": "SFN"\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

@@ -44,17 +44,23 @@ extern "C" {
 
 enum {
    CU_name = CU_LOWERBOUND,       
-   CU_ruser_list          
+   CU_ruser_list,
+   CU_ulong32,
+   CU_bool
 };
 
 LISTDEF(CU_Type)
    SGE_STRING(CU_name, CULL_HASH | CULL_UNIQUE)
    SGE_LIST(CU_ruser_list, ASTR_Type, CULL_DEFAULT)
+   SGE_LIST(CU_ulong32, AULNG_Type, CULL_DEFAULT)
+   SGE_LIST(CU_bool, ABOOL_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CUN)
    NAME("CU_name")
    NAME("CU_ruser_list")
+   NAME("CU_ulong32")
+   NAME("CU_bool")
 NAMEEND
 
 #define CUS sizeof(CUN)/sizeof(char*)

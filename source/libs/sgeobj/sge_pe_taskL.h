@@ -84,8 +84,8 @@ extern "C" {
 *     Submission information
 *     ======================
 *     SGE_STRING(PET_cwd)
-*        Current working directory of the pe task. If not set, the cwd from 
-*        the ja task is inherited.
+*        Current working directory of the pe task. If not set, the 
+*        cwd from the ja task is inherited.
 *
 *     SGE_LIST(PET_path_aliases)
 *        Path alias list for the pe task.
@@ -102,8 +102,8 @@ extern "C" {
 *     PET_Type objects are used to store information about tasks of
 *     tightly integrated parallel jobs (started with qrsh -inherit).
 *     
-*     Parallel tasks are sub objects of array tasks (even for non array jobs
-*     one pseudo array task is created).
+*     Parallel tasks are sub objects of array tasks (even for non 
+*     array jobs one pseudo array task is created).
 *
 *         +---------+   1:x   +----------+   1:x   +----------+
 *         | JB_Type |<------->| JAT_Type |<------->| PET_Type |

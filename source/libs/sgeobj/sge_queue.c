@@ -146,7 +146,7 @@ void queue_or_job_get_states(int nm, char *str, u_long32 op)
 
 /****** sgeobj/queue/queue_get_state_string() *********************************
 *  NAME
-*     queue_get_state_string() -- write queue state flags into a string 
+*     queue_get_state_string() -- write queue state flags to a string 
 *
 *  SYNOPSIS
 *     void queue_get_state_string(char *str, u_long32 op) 
@@ -173,7 +173,8 @@ void queue_get_state_string(char *str, u_long32 op)
 *                                  const char *queue_name) 
 *
 *  FUNCTION
-*     Finds and returnis the queue with name "queue_name" in "queue_list".
+*     Finds and returnis the queue with name "queue_name" in 
+*     "queue_list".
 *
 *  INPUTS
 *     lList *queue_list      - QU_Type list 
@@ -197,9 +198,9 @@ lListElem *queue_list_locate(lList *queue_list, const char *queue_name)
 *                             u_long32 tag_value) 
 *
 *  FUNCTION
-*     Change the value of the QU_tagged attribute for all queues contained 
-*     in "queue_list" to the value "tag_value". "flags" might be specified 
-*     to ignore certain queues.
+*     Change the value of the QU_tagged attribute for all queues 
+*     contained in "queue_list" to the value "tag_value". "flags" 
+*     might be specified to ignore certain queues.
 *
 *  INPUTS
 *     lList *queue_list  - QU_Type list 
@@ -253,20 +254,22 @@ void queue_list_clear_tags(lList *queue_list)
 *     queue_reference_list_validate() -- verify a queue reference list
 *
 *  SYNOPSIS
-*     int queue_reference_list_validate(lList **alpp, lList *qr_list, 
-*                                       const char *attr_name, 
-*                                       const char *obj_descr, 
-*                                       const char *obj_name) 
+*     int 
+*     queue_reference_list_validate(lList **alpp, lList *qr_list, 
+*                                   const char *attr_name, 
+*                                   const char *obj_descr, 
+*                                   const char *obj_name) 
 *
 *  FUNCTION
-*     verify that all queue names in a QR_Type list refer to existing queues
+*     Verify that all queue names in a QR_Type list refer to existing 
+*     queues.
 *
 *  INPUTS
-*     lList **alpp          - pointer to an answer list
-*     lList *qr_list        - the queue reference list
-*     const char *attr_name - the attribute name in the referencing object
+*     lList **alpp          - AN_Type 
+*     lList *qr_list        - the queue ref. list
+*     const char *attr_name - the attribute name in the ref. object
 *     const char *obj_descr - the descriptor of the referencing object
-*                             (e.g. "parallel environment", "ckpt interface")
+*                             (e.g. "parallel environment")
 *     const char *obj_name  - the name of the referencing object
 *
 *  RESULT
@@ -318,8 +321,8 @@ queue_reference_list_validate(lList **alpp, lList *qr_list,
 *     bool queue_list_add_queue(lListElem *qep) 
 *
 *  FUNCTION
-*     Adds the queue to the queue masterlist.
-*     The queue is inserted in the sort order of the queue (by queue name).
+*     Adds the queue to the queue masterlist. The queue is inserted 
+*     in the sort order of the queue (by queue name).
 *
 *  INPUTS
 *     lListElem *qep - the queue to insert
@@ -328,9 +331,8 @@ queue_reference_list_validate(lList **alpp, lList *qr_list,
 *     bool - true, if the queue could be inserted, else false
 *
 *  NOTES
-*     Appending the queue and quick sorting the queue list would probably
-*     be much faster in systems with many queues.
-*
+*     Appending the queue and quick sorting the queue list would 
+*     probably be much faster in systems with many queues.
 ******************************************************************************/
 bool queue_list_add_queue(lListElem *queue) 
 {
@@ -365,7 +367,8 @@ bool queue_list_add_queue(lListElem *queue)
 *     queue_check_owner() -- check if a user is queue owner
 *
 *  SYNOPSIS
-*     bool queue_check_owner(const lListElem *queue, const char *user_name) 
+*     bool 
+*     queue_check_owner(const lListElem *queue, const char *user_name) 
 *
 *  FUNCTION
 *     Checks if the given user is an owner of the given queue.
@@ -415,10 +418,11 @@ bool queue_check_owner(const lListElem *queue, const char *user_name)
 *                           dstring *buffer) 
 *
 *  FUNCTION
-*     Returns a readable string representation of the queue type bitfield.
+*     Returns a readable string of the queue type bitfield.
 *
 *  INPUTS
-*     const lListElem *queue - the queue containing the requested information
+*     const lListElem *queue - the queue containing the requested 
+*                              information
 *     dstring *buffer        - string buffer to hold the result string
 *
 *  RESULT
@@ -462,7 +466,7 @@ queue_get_type_string(const lListElem *queue, lList **answer_list,
 
 /****** sgeobj/queue/queue_set_type_string() **********************************
 *  NAME
-*     queue_set_type_string() -- set queue type from string representation
+*     queue_set_type_string() -- set queue type from string 
 *
 *  SYNOPSIS
 *     bool 
@@ -470,9 +474,9 @@ queue_get_type_string(const lListElem *queue, lList **answer_list,
 *                           const char *value) 
 *
 *  FUNCTION
-*     Takes a string representation for the queue type, e.g. "BATCH PARALLEL"
-*     and sets the queue type bitfield (attribute QU_qtype) of the given
-*     queue.
+*     Takes a string representation for the queue type, e.g.
+*     "BATCH PARALLEL" and sets the queue type bitfield 
+*     (attribute QU_qtype) of the given queue.
 *
 *  INPUTS
 *     lListElem *queue    - the queue to change

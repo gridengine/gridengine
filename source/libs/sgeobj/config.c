@@ -44,6 +44,7 @@
 #include "sge_conf.h"
 #include "parse.h"
 #include "sge_attr.h"
+#include "sge_object.h"
 
 #include "msg_sgeobjlib.h"
 
@@ -354,10 +355,10 @@ _Insight_set_option("suppress", "PARM_NULL");
       DEXIT;
       return fields?true:false;
    }
-   if (!strcasecmp(str, "true"))
-      lSetBool(ep, name_nm, true);
-   else
-      lSetBool(ep, name_nm, false);
+   if (!object_parse_bool_from_string(ep, NULL, name_nm, str)) {
+      DEXIT;
+      return false;
+   }
       
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);
@@ -396,7 +397,6 @@ int name_nm
 _Insight_set_option("suppress", "PARM_NULL");
 #endif
    const char *str;
-   u_long32 uval;
 
    DENTER(CULL_LAYER, "set_conf_ulong");
 
@@ -404,14 +404,10 @@ _Insight_set_option("suppress", "PARM_NULL");
       DEXIT;
       return fields?true:false;
    }
-   if (sscanf(str, u32, &uval)!=1) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGARGUMENTNOTINTEGER_SS ,
-               key, str)); 
-      answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR); 
+   if (!object_parse_ulong32_from_string(ep, alpp, name_nm, str)) {
       DEXIT;
       return false;
    }
-   lSetUlong(ep, name_nm, uval);
    lDelElemStr(clpp, CF_name, key);
    add_nm_to_set(fields, name_nm);
 
@@ -799,9 +795,9 @@ _Insight_set_option("unsuppress", "PARM_NULL");
 #endif
 }
 
-bool set_conf_hostattr_str_list(lList **alpp, lList **clpp, int fields[], 
-                                const char *key, lListElem *ep, int name_nm, 
-                                lDescr *descr, int sub_name_nm) 
+bool set_conf_str_attr_list(lList **alpp, lList **clpp, int fields[], 
+                            const char *key, lListElem *ep, int name_nm, 
+                            lDescr *descr, int sub_name_nm) 
 {
 #ifdef __INSIGHT__
 /* JG: NULL is OK for fields */
@@ -818,7 +814,95 @@ _Insight_set_option("suppress", "PARM_NULL");
       DEXIT;
       return fields?true:false;
    }
-   ret = attr_str_list_parse_from_string(&tmplp, &lanswer_list, str,
+   ret = str_attr_list_parse_from_string(&tmplp, &lanswer_list, str,
+            HOSTATTR_ALLOW_AMBIGUITY | HOSTATTR_OWRITE_DEF_HOST);
+   if (!ret) {
+      const char *text = lGetString(lFirst(lanswer_list), AN_text);
+
+      sprintf(SGE_EVENT, "%s - %s", key, text); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      return ret;
+   }
+   lDelElemStr(clpp, CF_name, key);
+   add_nm_to_set(fields, name_nm);
+
+   if (tmplp != NULL) {
+      lSetList(ep, name_nm, tmplp);
+      DEXIT;
+      return true;
+   }
+
+   DEXIT;
+   return true;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
+}
+
+bool set_conf_ulng_attr_list(lList **alpp, lList **clpp, int fields[], 
+                             const char *key, lListElem *ep, int name_nm, 
+                             lDescr *descr, int sub_name_nm) 
+{
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
+   bool ret;
+   lList *tmplp = NULL;
+   const char *str;
+   lList *lanswer_list = NULL;
+
+   DENTER(TOP_LAYER, "set_conf_list");
+
+   if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
+      DEXIT;
+      return fields?true:false;
+   }
+   ret = ulng_attr_list_parse_from_string(&tmplp, &lanswer_list, str,
+            HOSTATTR_ALLOW_AMBIGUITY | HOSTATTR_OWRITE_DEF_HOST);
+   if (!ret) {
+      const char *text = lGetString(lFirst(lanswer_list), AN_text);
+
+      sprintf(SGE_EVENT, "%s - %s", key, text); 
+      answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      return ret;
+   }
+   lDelElemStr(clpp, CF_name, key);
+   add_nm_to_set(fields, name_nm);
+
+   if (tmplp != NULL) {
+      lSetList(ep, name_nm, tmplp);
+      DEXIT;
+      return true;
+   }
+
+   DEXIT;
+   return true;
+#ifdef __INSIGHT__
+_Insight_set_option("unsuppress", "PARM_NULL");
+#endif
+}
+
+bool set_conf_bool_attr_list(lList **alpp, lList **clpp, int fields[], 
+                             const char *key, lListElem *ep, int name_nm, 
+                             lDescr *descr, int sub_name_nm) 
+{
+#ifdef __INSIGHT__
+/* JG: NULL is OK for fields */
+_Insight_set_option("suppress", "PARM_NULL");
+#endif
+   bool ret;
+   lList *tmplp = NULL;
+   const char *str;
+   lList *lanswer_list = NULL;
+
+   DENTER(TOP_LAYER, "set_conf_list");
+
+   if(!(str=get_conf_value(fields?NULL:alpp, *clpp, CF_name, CF_value, key))) {
+      DEXIT;
+      return fields?true:false;
+   }
+   ret = bool_attr_list_parse_from_string(&tmplp, &lanswer_list, str,
             HOSTATTR_ALLOW_AMBIGUITY | HOSTATTR_OWRITE_DEF_HOST);
    if (!ret) {
       const char *text = lGetString(lFirst(lanswer_list), AN_text);

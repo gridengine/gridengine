@@ -65,8 +65,6 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
                              const char *s, char *err_str, int err_len, 
                              int enable_infinity);
 
-int sge_parse_checkpoint_attr(const char *attr_str);
-
 char *resource_descr(double dval, u_long32 type, char *buffer);
 
 int is_checkpoint_when_valid(int bitmask);

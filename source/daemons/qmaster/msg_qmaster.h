@@ -35,7 +35,6 @@
 
 #include "basis_types.h"
 
-#define MSG_SGETEXT_MISSINGCULLFIELD_SS         _MESSAGE(33000, _("missing cull field "SFQ" in "SFN"()\n"))
 #define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(33001, _("qmaster is unable to spool "SFN" "SFQ"\n"))
 #define MSG_OBJ_JOBS    _MESSAGE(33002, _("jobs"))
 
@@ -191,7 +190,6 @@
 #define MSG_GDI_NULL_IN_GDI_SSS       _MESSAGE(33117, _("denied: got NULL in "SFN"/"SFN" of gdi request from host "SFQ"\n"))
 #define MSG_GDI_OKNL                  _MESSAGE(33118, _("ok\n"))
 #define MSG_OBJ_GENQ                  _MESSAGE(33119, _("internal error - can't get generic queue\n"))
-#define MSG_OBJ_QLIST                 _MESSAGE(33120, _("queue list"))
 #define MSG_MEM_MALLOC                _MESSAGE(33121, _("malloc failure\n"))
 #define MSG_SGETEXT_UNKNOWNOP                   _MESSAGE(33122, _("unknown operation\n"))
 #define MSG_SGETEXT_FEATURE_NOT_AVAILABLE_FORX_S _MESSAGE(33123, _("feature not available for "SFN" system\n"))
@@ -420,7 +418,6 @@
 #define MSG_JOB_VERIFYVERIFY          _MESSAGE(33302, _("verification"))
 #define MSG_JOB_VERIFYFOUNDQ          _MESSAGE(33303, _("verification: found suitable queue(s)\n"))
 #define MSG_JOB_VERIFYFOUNDSLOTS_I    _MESSAGE(33304, _("verification: found possible assignment with %d slots\n"))
-#define MSG_OBJ_PE                    _MESSAGE(33305, _("parallel environment"))
 #define MSG_JOB_MOD_SOFTREQCONSUMABLE_S  _MESSAGE(33307, _("denied: soft requests on consumables like "SFQ" are not supported\n"))
 #define MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S     _MESSAGE(33308, _("denied: former resource request on consumable "SFQ" of running job lacks in new resource request\n"))
 #define MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S       _MESSAGE(33309, _("denied: resource request on consumable "SFQ" of running job was not contained former resource request\n"))
@@ -465,11 +462,6 @@
 ** sge_pe_qmaster.c
 */
 /* #define MSG_PE_SLOTSTOOLOW_I          _message(33362, _("new number of slots may not be less than %d that are in use\n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_OBJ_USERLIST              _MESSAGE(33363, _("user list"))
-#define MSG_OBJ_XUSERLIST             _MESSAGE(33364, _("xuser list"))
-/* EB: remove 
-#define MSG_PE_ALLOCRULE_SS           _MESSAGE(33365, _("parameter allocation_rule of pe "SFQ": "SFN"\n"))
-*/
 /* #define MSG_PE_DEBITSLOTS_IS          _message(33366, _("debiting %d slots on pe "SFN)) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_PE_USEDSLOTSBELOWZERO_S   _message(33367, _("PE_used_slots of pe "SFN" sunk under 0!\n")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_PE_REVERSESLOTS_IS        _message(33368, _("reversing %d slots on pe "SFN)) __TS Removed automatically from testsuite!! TS__*/

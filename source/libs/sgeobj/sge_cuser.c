@@ -70,7 +70,8 @@ cuser_create(lList **answer_list, const char *cluster_user, lList *remote_user)
          lSetString(ret, CU_name, cluster_user);
          lSetList(ret, CU_ruser_list, remote_user);
       } else {
-         sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
+                                MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC));
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
       }
@@ -96,16 +97,17 @@ cuser_get_remote_user(const lListElem *this_elem, lList **answer_list,
    
       attr_list = lGetList(this_elem, CU_ruser_list);
       if (attr_list != NULL) {
-         ret &= attr_str_list_find_value(attr_list, answer_list,
+         ret &= str_attr_list_find_value(attr_list, answer_list,
                                          hostname, remote_user); 
       } else {
-         sprintf(SGE_EVENT, MSG_CUSER_NOREMOTE_USER_S, "remote_user");
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
+                                MSG_CUSER_NOREMOTE_USER_S, "remote_user"));
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          ret = false;
       }
    } else {
-      sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;
@@ -124,7 +126,7 @@ cuser_is_hgroup_referenced(const lListElem *this_elem,
    if (this_elem != NULL && hgroup != NULL) {
       const char *name = lGetHost(hgroup, HGRP_name);
       lList *attr_list = lGetList(this_elem, CU_ruser_list);
-      lListElem *attr = attr_str_list_locate(attr_list, name);
+      lListElem *attr = str_attr_list_locate(attr_list, name);
 
       if (attr != NULL) {
          ret = true;
@@ -194,7 +196,7 @@ cuser_list_map_user(const lList *this_list, lList **answer_list,
          *remote_user = cluster_user;
       }
    } else {
-      sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC);
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INAVLID_PARAMETER_IN_S, SGE_FUNC));
       answer_list_add(answer_list, SGE_EVENT,
                       STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       ret = false;

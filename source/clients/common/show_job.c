@@ -47,6 +47,7 @@
 #include "symbols.h"
 #include "sge_var.h"
 #include "sge_range.h"
+#include "sge_ulong.h"
 
 static void sge_show_checkpoint(int how, int op);
 static void sge_show_y_n(int op, int how);
@@ -478,7 +479,6 @@ void cull_show_job(lListElem *job, int flags)
       lListElem *uep, *jatep, *pe_task_ep;
       for_each (jatep, lGetList(job, JB_ja_tasks)) {
          double cpu, mem, io, vmem, maxvmem;
-         static char cpu_usage[100], vmem_usage[100], maxvmem_usage[100];
          int first_task = 1;
 
          /* jobs whose job start orders were not processed to the end
@@ -512,11 +512,23 @@ void cull_show_job(lListElem *job, int flags)
             SUM_UP_PETASK_USAGE(pe_task_ep, io, USAGE_ATTR_MAXVMEM);
          }
 
+         {
+            dstring cpu_string = DSTRING_INIT;
+            dstring vmem_string = DSTRING_INIT;
+            dstring maxvmem_string = DSTRING_INIT;
+
+            double_print_time_to_dstring(cpu, &cpu_string);
+            double_print_memory_to_dstring(vmem, &vmem_string);
+            double_print_memory_to_dstring(maxvmem, &maxvmem_string);
          printf("cpu=%s, mem=%-5.5f GBs, io=%-5.5f, vmem=%s, maxvmem=%s\n",
-            resource_descr(cpu, TYPE_TIM, cpu_usage),
+            sge_dstring_get_string(&cpu_string),
             mem, io,
-            (vmem == 0.0) ? "N/A": resource_descr(vmem, TYPE_MEM, vmem_usage),
-            (maxvmem == 0.0) ? "N/A": resource_descr(maxvmem, TYPE_MEM, maxvmem_usage));
+            (vmem == 0.0) ? "N/A": sge_dstring_get_string(&vmem_string),
+            (maxvmem == 0.0) ? "N/A": sge_dstring_get_string(&maxvmem_string));
+            sge_dstring_free(&cpu_string);
+            sge_dstring_free(&vmem_string);
+            sge_dstring_free(&maxvmem_string);
+         }
       }
    }
 

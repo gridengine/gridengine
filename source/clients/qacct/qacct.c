@@ -49,7 +49,6 @@
 #include "commlib.h"
 #include "sig_handlers.h"
 #include "execution_states.h"
-#include "sge_parse_date_time.h"
 #include "sge_feature.h"
 #include "sge_rusage.h"
 #include "sge_prog.h"
@@ -67,6 +66,7 @@
 #include "sge_range.h"
 #include "sge_queue.h"
 #include "sge_stdlib.h"
+#include "sge_ulong.h"
 
 typedef struct {
    int host;
@@ -353,8 +353,7 @@ char **argv
       */
       else if (!strcmp("-b", argv[ii])) {
          if (argv[ii+1]) {
-            begin_time = sge_parse_date_time(argv[++ii], NULL, NULL);
-            if  (begin_time == -1) {
+            if  (!ulong_parse_date_time_from_string(&begin_time, NULL, argv[++ii])) {
                /*
                ** problem: insufficient error reporting
                */
@@ -372,8 +371,7 @@ char **argv
       */
       else if (!strcmp("-e", argv[ii])) {
          if (argv[ii+1]) {
-            end_time = sge_parse_date_time(argv[++ii], NULL, NULL);
-            if  (end_time == -1) {
+            if  (!ulong_parse_date_time_from_string(&end_time, NULL, argv[++ii])) {
                /*
                ** problem: insufficient error reporting
                */
@@ -1559,12 +1557,10 @@ FILE *fp
 static void showjob(
 sge_rusage_type *dusage 
 ) {
-   dstring ds;
-   char buffer[128];
+   dstring maxvmem_string = DSTRING_INIT;
+   dstring string = DSTRING_INIT;
 
-   char maxvmem_usage[1000];
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
+   double_print_memory_to_dstring(dusage->maxvmem, &maxvmem_string);
    printf("==============================================================\n");
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_QNAME, (dusage->qname ? dusage->qname : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_HOSTNAME, (dusage->hostname ? dusage->hostname : MSG_HISTORY_SHOWJOB_NULL));
@@ -1587,15 +1583,15 @@ sge_rusage_type *dusage
 
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_ACCOUNT, (dusage->account ? dusage->account : MSG_HISTORY_SHOWJOB_NULL ));
    printf("%-13.12s%-20"fu32"\n",MSG_HISTORY_SHOWJOB_PRIORITY, dusage->priority);
-   printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_QSUBTIME,    sge_ctime32(&dusage->submission_time, &ds));
+   printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_QSUBTIME,    sge_ctime32(&dusage->submission_time, &string));
 
    if (dusage->start_time)
-      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_STARTTIME, sge_ctime32(&dusage->start_time, &ds));
+      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_STARTTIME, sge_ctime32(&dusage->start_time, &string));
    else
       printf("%-13.12s-/-\n",MSG_HISTORY_SHOWJOB_STARTTIME);
 
    if (dusage->end_time)
-      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_ENDTIME, sge_ctime32(&dusage->end_time, &ds));
+      printf("%-13.12s%-20s",MSG_HISTORY_SHOWJOB_ENDTIME, sge_ctime32(&dusage->end_time, &string));
    else
       printf("%-13.12s-/-\n",MSG_HISTORY_SHOWJOB_ENDTIME);
 
@@ -1628,7 +1624,9 @@ sge_rusage_type *dusage
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_MEM,          dusage->mem);
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IO,           dusage->io);
    printf("%-13.12s%-18.3f\n",   MSG_HISTORY_SHOWJOB_IOW,          dusage->iow);
-   printf("%-13.12s%s\n",  MSG_HISTORY_SHOWJOB_MAXVMEM,      resource_descr(dusage->maxvmem, TYPE_MEM, maxvmem_usage));
+   printf("%-13.12s%s\n",        MSG_HISTORY_SHOWJOB_MAXVMEM,      sge_dstring_get_string(&maxvmem_string));
+   sge_dstring_free(&maxvmem_string);
+   sge_dstring_free(&string);
 }
 
 /*

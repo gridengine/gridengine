@@ -38,13 +38,14 @@
 *     usage_list_get_ulong_usage() -- return ulong usage value
 *
 *  SYNOPSIS
-*     u_long32 usage_list_get_ulong_usage(lList *usage_list, const char *name, 
-*                                         u_long32 def) 
+*     u_long32 
+*     usage_list_get_ulong_usage(lList *usage_list, const char *name, 
+*                                u_long32 def) 
 *
 *  FUNCTION
-*     Searches a usage object with the given name in the given usage list.
-*     If such an element is found, returns the value of the usage object
-*     as u_long32 value.
+*     Searches a usage object with the given name in the given usage 
+*     list. If such an element is found, returns the value of the 
+*     usage object as u_long32 value.
 *     If no such element is found, return the given default value.
 *
 *  INPUTS
@@ -75,13 +76,14 @@ u_long32 usage_list_get_ulong_usage (lList *usage_list,
 *     usage_list_get_double_usage() -- return double usage value
 *
 *  SYNOPSIS
-*     u_long32 usage_list_get_double_usage(lList *usage_list, const char *name, 
-*                                          double def) 
+*     u_long32 
+*     usage_list_get_double_usage(lList *usage_list, const char *name, 
+*                                 double def) 
 *
 *  FUNCTION
-*     Searches a usage object with the given name in the given usage list.
-*     If such an element is found, returns the value of the usage object
-*     as double value.
+*     Searches a usage object with the given name in the given usage 
+*     list. If such an element is found, returns the value of the 
+*     usage object as double value.
 *     If no such element is found, return the given default value.
 *
 *  INPUTS

@@ -161,27 +161,29 @@ lList* ja_task_list_split_group(lList **ja_task_list)
 *
 *  SYNOPSIS
 *     bool 
-*     ja_task_add_finished_pe_task(lListElem *ja_task, const char *pe_task_id) 
+*     ja_task_add_finished_pe_task(lListElem *ja_task, 
+*                                  const char *pe_task_id) 
 *
 *  FUNCTION
-*     To avoid duplicate handling of finished parallel tasks (which could be
-*     triggered by sge_execd sending task end reports multiple times until
-*     it receives an ack from qmaster), the ja_task object (JAT_Type) contains
-*     a list of finished parallel tasks.
+*     To avoid duplicate handling of finished parallel tasks (which 
+*     could be triggered by sge_execd sending task end reports multiple 
+*     times until it receives an ack from qmaster), the ja_task object 
+*     (JAT_Type) contains a list of finished parallel tasks.
 *    
-*     ja_task_add_finished_pe_task tries to add a new parallel task to this
-*     list.
+*     ja_task_add_finished_pe_task tries to add a new parallel task to 
+*     this list.
 *
-*     If an entry with the given pe_task_id already exists, the function returns
-*     false, else true.
+*     If an entry with the given pe_task_id already exists, the function 
+*     returns false, else true.
 *
 *  INPUTS
 *     lListElem *ja_task     - the ja_task to check/modify
 *     const char *pe_task_id - the pe_task_id to check/insert
 *
 *  RESULT
-*     bool - true, if the pe_task_id did not yet exist and could be inserted,
-*            false, if the pe_task_id already existed.
+*     bool - error state
+*        true  - if the pe_task_id did not yet exist and could be inserted,
+*        false - if the pe_task_id already existed.
 *
 *  SEE ALSO
 *     sgeobj/ja_task/ja_task_clear_finished_pe_tasks()

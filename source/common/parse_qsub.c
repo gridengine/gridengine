@@ -36,7 +36,6 @@
 #include "sge_all_listsL.h"
 #include "parse_qsubL.h"
 #include "sge_resource.h"
-#include "sge_parse_date_time.h"
 #include "parse_job_cull.h"
 #include "sge_mailrec.h"
 #include "parse_qsub.h"
@@ -53,6 +52,8 @@
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_cstring.h"
+#include "sge_ckpt.h"
+#include "sge_ulong.h"
 
 #include "msg_common.h"
 
@@ -176,8 +177,7 @@ u_long32 flags
             return answer;
          }
 
-         timeval = sge_parse_date_time(*sp, NULL, NULL);
-         if (timeval == (u_long32) -1)
+         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp))
          {
             sprintf(str,
                MSG_ANSWER_WRONGTIMEFORMATEXSPECIFIEDTOAOPTION_S,
@@ -557,8 +557,7 @@ u_long32 flags
             return answer;
          }
 
-         timeval = sge_parse_date_time(*sp, NULL, NULL);
-         if (timeval == (u_long32) -1)
+         if (!ulong_parse_date_time_from_string(&timeval, NULL, *sp))
          {
             sprintf(str, MSG_PARSE_WRONGTIMEFORMATXSPECTODLOPTION_S ,
             *sp);

@@ -47,4 +47,7 @@ lListElem* complex_list_locate_attr(lList *complex_list, const char *name);
 int complex_list_verify(lList *complex_list, lList **alpp,
                         const char *obj_name, const char *qname); 
 
+bool
+centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string);
+
 #endif /* __SGE_COMPLEX_H */

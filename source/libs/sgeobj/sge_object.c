@@ -37,7 +37,6 @@
 
 #include "sge_stdlib.h"
 #include "sge_string.h"
-
 #include "sge_all_listsL.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
@@ -68,6 +67,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
+#define OBJECT_LAYER TOP_LAYER
 
 /* Datastructure for internal storage of object/message related information */
 typedef struct {
@@ -232,8 +232,8 @@ object_get_type(const lListElem *object)
 *  NOTES
 *     Only partially implemented.
 *     The function has to be extended as needed.
-*     Better would be to have some global data structure containing this
-*     information.
+*     Better would be to have some global data structure containing 
+*     this information.
 *
 *******************************************************************************/
 const lDescr * 
@@ -291,8 +291,8 @@ object_get_subtype(int nm)
 *
 *  NOTES
 *     Only implemented for selected object types.
-*     It would be better to have the necessary data in the object description,
-*     e.g. via a field property CULL_PRIMARY_KEY.
+*     It would be better to have the necessary data in the object 
+*     description, e.g. via a field property CULL_PRIMARY_KEY.
 *
 *     Function interface breaks style guide - either we would have to 
 *     pass an object, or call it descr_get_primary_key.
@@ -338,11 +338,12 @@ object_get_primary_key(const lDescr *descr)
 *     object_get_name_prefix() -- get prefix of cull attribute name
 *
 *  SYNOPSIS
-*     const char * object_get_name_prefix(const lDescr *descr, dstring *buffer) 
+*     const char *
+*     object_get_name_prefix(const lDescr *descr, dstring *buffer) 
 *
 *  FUNCTION
-*     Returns the prefix that is used in attribute names characterizing the 
-*     object type (e.g. "QU_" for the QU_Type).
+*     Returns the prefix that is used in attribute names characterizing 
+*     the object type (e.g. "QU_" for the QU_Type).
 *
 *  INPUTS
 *     const lDescr *descr - object type to use
@@ -359,7 +360,8 @@ object_get_primary_key(const lDescr *descr)
 *  NOTES
 *     The function relies on object_get_primary_key. This function only
 *     is implemented for some object types.
-*     For types not handled in object_get_primary_key, NULL will be returned.
+*     For types not handled in object_get_primary_key, NULL will be 
+*     returned.
 *
 *  SEE ALSO
 *     sgeobj/object/object_get_primary_key()
@@ -397,7 +399,8 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
 *
 *  SYNOPSIS
 *     const char *
-*     object_get_field_contents(const lListElem *object, lList **answer_list, 
+*     object_get_field_contents(const lListElem *object, 
+*                               lList **answer_list, 
 *                               dstring *buffer, const int nm) 
 *
 *  FUNCTION
@@ -412,9 +415,9 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
 *     const int nm            - attribute to output
 *
 *  RESULT
-*     const char * - string representation of the attribute value (pointer
-*                    to the string in the dynamic string buffer, or
-*                    NULL if an error occured.
+*     const char * - string representation of the attribute value 
+*                    (pointer to the string in the dynamic string 
+*                    buffer, or NULL if an error occured.
 *
 *  NOTES
 *     For sublists, subobjects and references NULL is returned.
@@ -432,7 +435,7 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
    const lDescr *descr;
    int pos, type;
 
-   DENTER(TOP_LAYER, "object_get_field_contents");
+   DENTER(OBJECT_LAYER, "object_get_field_contents");
 
    SGE_CHECK_POINTER_NULL(object);
 
@@ -526,7 +529,7 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
 
 /****** sgeobj/object/object_set_field_contents() *****************************
 *  NAME
-*     object_set_field_contents() -- set object attribute contents from string
+*     object_set_field_contents() -- set object attr. contents from str
 *
 *  SYNOPSIS
 *     bool 
@@ -548,7 +551,8 @@ object_get_field_contents(const lListElem *object, lList **answer_list,
 *            false, on error, error description in answer_list 
 *
 *  NOTES
-*     Sublists, subobjects and references cannot be set with this function.
+*     Sublists, subobjects and references cannot be set with this 
+*     function.
 *
 *  SEE ALSO
 *     sgeobj/object/--GDI-object-Handling
@@ -562,7 +566,7 @@ object_set_field_contents(lListElem *object, lList **answer_list, const int nm,
    const lDescr *descr;
    int pos, type;
 
-   DENTER(TOP_LAYER, "object_set_field_contents");
+   DENTER(OBJECT_LAYER, "object_set_field_contents");
 
    SGE_CHECK_POINTER_FALSE(object);
 
@@ -715,7 +719,7 @@ object_set_field_contents(lListElem *object, lList **answer_list, const int nm,
 
 /****** sgeobj/object/object_delete_range_id() ********************************
 *  NAME
-*     object_delete_range_id() -- deletes a certain id from an objects range_list
+*     object_delete_range_id() -- del certain id from an range_list
 *
 *  SYNOPSIS
 *     void 
@@ -768,8 +772,9 @@ object_delete_range_id(lListElem *object, lList **answer_list,
 *     int - 0 -> OK
 *           1 -> no memory
 ******************************************************************************/
-int object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
-                            u_long32 step)
+int 
+object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end,
+                    u_long32 step)
 {
    lListElem *range_elem;  /* RN_Type */
    int ret = 0;
@@ -802,24 +807,25 @@ int object_set_range_id(lListElem *object, int rnm, u_long32 start, u_long32 end
 
 /****** sgeobj/object/object_type_get_master_list() **************************
 *  NAME
-*     object_type_get_master_list() -- get master list for an object type
+*     object_type_get_master_list() -- get master list for object type
 *
 *  SYNOPSIS
 *     lList** object_type_get_master_list(const sge_object_type type) 
 *
 *  FUNCTION
-*     Returns a pointer to the master list holding objects of the given type.
+*     Returns a pointer to the master list holding objects of the 
+*     given type.
 *
 *  INPUTS
 *     const sge_object_type type - the object type 
 *
 *  RESULT
-*     lList** - the corresponding master list, or NULL, if the object type has 
-*               no associated master list
+*     lList** - the corresponding master list, or NULL, if the object 
+*               type has no associated master list
 *
 *  EXAMPLE
-*     object_type_get_master_list(SGE_TYPE_JOB) will return a pointer to the 
-*     Master_Job_List.
+*     object_type_get_master_list(SGE_TYPE_JOB) will return a pointer 
+*     to the Master_Job_List.
 *
 *     object_type_get_master_list(SGE_TYPE_SHUTDOWN) will return NULL,
 *     as this object type has no associated master list.
@@ -836,20 +842,19 @@ lList **object_type_get_master_list(const sge_object_type type)
 {
    lList **ret = NULL;
 
-   DENTER(TOP_LAYER, "object_type_get_master_list");
-
+   DENTER(OBJECT_LAYER, "object_type_get_master_list");
    if(type < 0 || type >= SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    } else {
       ret = object_base[type].list;
    }
-
+   DEXIT;
    return ret;
 }
 
 /****** sgeobj/object/object_type_free_master_list() ***************************
 *  NAME
-*     object_type_free_master_list() -- free the master list for a certain type
+*     object_type_free_master_list() -- free the master list 
 *
 *  SYNOPSIS
 *     bool 
@@ -874,15 +879,13 @@ bool object_type_free_master_list(const sge_object_type type)
    lList **list;
    bool ret = false;
 
-   DENTER(TOP_LAYER, "object_type_free_master_list");
-   
+   DENTER(OBJECT_LAYER, "object_type_free_master_list");
    list = object_type_get_master_list(type);
    if (list != NULL) {
       lFreeList(*list);
       *list = NULL;
       ret = true;
    }
-
    DEXIT;
    return ret;
 }
@@ -890,7 +893,7 @@ bool object_type_free_master_list(const sge_object_type type)
 
 /****** sgeobj/object/object_type_get_name() *********************************
 *  NAME
-*     object_type_get_name() -- get a printable name for an event type
+*     object_type_get_name() -- get a printable name for event type
 *
 *  SYNOPSIS
 *     const char* object_type_get_name(const sge_object_type type) 
@@ -916,8 +919,7 @@ const char    *object_type_get_name(const sge_object_type type)
 {
    const char *ret = "unknown";
 
-   DENTER(TOP_LAYER, "object_type_get_name");
-
+   DENTER(OBJECT_LAYER, "object_type_get_name");
    if(type < 0 || type > SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    } else if(type == SGE_TYPE_ALL) {
@@ -925,7 +927,6 @@ const char    *object_type_get_name(const sge_object_type type)
    } else {
       ret = object_base[type].type_name;
    }
-
    DEXIT;
    return ret;
 }
@@ -938,18 +939,19 @@ const char    *object_type_get_name(const sge_object_type type)
 *     const lDescr* object_type_get_descr(const sge_object_type type) 
 *
 *  FUNCTION
-*     Returns the CULL element descriptor for the object type associated with
-*     the given event.
+*     Returns the CULL element descriptor for the object type 
+*     associated with the given event.
 *
 *  INPUTS
 *     const sge_object_type type - the event type
 *
 *  RESULT
-*     const lDescr* - the descriptor, or NULL, if no descriptor is associated
-*                     with the type
+*     const lDescr* - the descriptor, or NULL, if no descriptor is 
+*                     associated with the type
 *
 *  EXAMPLE
-*     object_type_get_descr(SGE_TYPE_JOB) will return the descriptor JB_Type,
+*     object_type_get_descr(SGE_TYPE_JOB) will return the descriptor 
+*        JB_Type,
 *     object_type_get_descr(SGE_TYPE_SHUTDOWN) will return NULL
 *
 *  SEE ALSO
@@ -975,14 +977,14 @@ const lDescr *object_type_get_descr(const sge_object_type type)
 
 /****** sgeobj/object/object_type_get_key_nm() *******************************
 *  NAME
-*     object_type_get_key_nm() -- get the primary key attribute for a type
+*     object_type_get_key_nm() -- get the primary key attribute for type
 *
 *  SYNOPSIS
 *     int object_type_get_key_nm(const sge_object_type type) 
 *
 *  FUNCTION
-*     Returns the primary key attribute for the object type associated with
-*     the given event type.
+*     Returns the primary key attribute for the object type associated 
+*     with the given event type.
 *
 *  INPUTS
 *     const sge_object_type type - event type
@@ -1004,16 +1006,214 @@ int object_type_get_key_nm(const sge_object_type type)
 {
    int ret = NoName;
 
-   DENTER(TOP_LAYER, "object_type_get_key_nm");
-
+   DENTER(OBJECT_LAYER, "object_type_get_key_nm");
    if(type < 0 || type >= SGE_TYPE_ALL) {
       ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    } else {
       ret = object_base[type].key_nm;
    }
-
    DEXIT;
    return ret;
+}
+
+bool
+object_parse_bool_from_string(lListElem *this_elem, lList **answer_list,
+                              int name, const char *string)
+{
+   bool ret = true;
+
+   DENTER(OBJECT_LAYER, "object_parse_bool_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+
+      if (!strcasecmp(string, "true") || !strcasecmp(string, "t") || 
+          !strcmp(string, "1")) {
+         lSetPosBool(this_elem, pos, true);
+      } else if (!strcasecmp(string, "false") || !strcasecmp(string, "f") ||
+                 !strcmp(string, "0")) {
+         lSetPosBool(this_elem, pos, false);
+      } else {
+         /* EB: TODO: error handling */
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFQ" is not a boolean value\n", 
+                        string));
+         answer_list_add(answer_list, SGE_EVENT,
+                         STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+         ret = false;
+      }
+   } else {
+      /* EB: TODO: error handling */
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
+                                 int name, const char *string)
+{
+   bool ret = true;
+   
+   DENTER(OBJECT_LAYER, "object_parse_ulong32_from_string");
+   if (this_elem != NULL && string != NULL) {
+      int pos = lGetPosViaElem(this_elem, name);
+      u_long32 value;
+
+      if (sscanf(string, u32, &value) == 1) {
+         lSetPosUlong(this_elem, pos, value);
+      } else {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFQ" is not an integer value\n", 
+                        string));
+         answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
+                         ANSWER_QUALITY_ERROR);
+         ret = false;
+      }
+   } else {
+      /* EB: TODO: error handling */
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_print_to_dstring(lListElem *this_elem, int name, dstring *string)
+{
+   bool ret = true;
+   int pos = lGetPosViaElem(this_elem, name);
+   int type = lGetPosType(lGetElemDescr(this_elem), pos);
+
+   DENTER(OBJECT_LAYER, "object_print_to_dstring");
+   if (type == lStringT) {
+      sge_dstring_sprintf_append(string, SFN, lGetPosString(this_elem, pos));
+   } else if (type == lHostT) {
+      sge_dstring_sprintf_append(string, SFN, lGetPosHost(this_elem, pos));
+   } else if (type == lUlongT) {
+      sge_dstring_sprintf_append(string, u32, lGetPosUlong(this_elem, pos));
+   } else if (type == lDoubleT) {
+      sge_dstring_sprintf_append(string, "%f", lGetPosDouble(this_elem, pos));
+   } else if (type == lFloatT) {
+      sge_dstring_sprintf_append(string, "%f", lGetPosFloat(this_elem, pos));
+   } else if (type == lLongT) {
+      sge_dstring_sprintf_append(string, "%ld", lGetPosLong(this_elem, pos));
+   } else if (type == lCharT) {
+      sge_dstring_sprintf_append(string, "%c", lGetPosChar(this_elem, pos));
+   } else if (type == lBoolT) {
+      if (lGetPosBool(this_elem, pos)) {
+         sge_dstring_sprintf_append(string, "%s", "TRUE");
+      } else {
+         sge_dstring_sprintf_append(string, "%s", "FALSE");
+      }
+   } else if (type == lIntT) {
+      sge_dstring_sprintf_append(string, "%d", lGetPosInt(this_elem, pos));
+   } else if (type == lObjectT) {
+      sge_dstring_sprintf_append(string, "%p", lGetPosObject(this_elem, pos));
+   } else if (type == lRefT) {
+      sge_dstring_sprintf_append(string, "%p", lGetPosRef(this_elem, pos));
+   } else {
+      /* not possible */
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_parse_from_string(lListElem *this_elem, lList **answer_list, int name,
+                         const char *string)
+{
+   bool ret = true;
+   int pos = lGetPosViaElem(this_elem, name);
+   int type = lGetPosType(lGetElemDescr(this_elem), pos);
+
+   DENTER(OBJECT_LAYER, "object_parse_from_string");
+   if (type == lStringT) {
+      lSetPosString(this_elem, pos, string);
+   } else if (type == lHostT) {
+      lSetPosHost(this_elem, pos, string);
+   } else if (type == lBoolT) {
+      object_parse_bool_from_string(this_elem, answer_list, name, string);
+   } else if (type == lUlongT) {
+      object_parse_ulong32_from_string(this_elem, answer_list, name, string);
+   } else {
+      /* EB: TODO: other types have to be implemented */
+   }
+   DEXIT;
+   return ret;
+}
+
+bool
+object_set_any_type(lListElem *this_elem, int name, void *value)
+{
+   int ret = true;
+   int pos = lGetPosViaElem(this_elem, name);
+   int type = lGetPosType(lGetElemDescr(this_elem), pos);
+
+   DENTER(OBJECT_LAYER, "object_set_any_type");
+   if (type == lStringT) {
+      ret = lSetPosString(this_elem, pos, *((const char **)value));
+   } else if (type == lHostT) {
+      ret = lSetPosHost(this_elem, pos, *((const char **)value));
+   } else if (type == lUlongT) {
+      ret = lSetPosUlong(this_elem, pos, *((lUlong*)value));
+   } else if (type == lDoubleT) {
+      ret = lSetPosDouble(this_elem, pos, *((lDouble*)value));
+   } else if (type == lFloatT) {
+      ret = lSetPosFloat(this_elem, pos, *((lFloat*)value));
+   } else if (type == lLongT) {
+      ret = lSetPosLong(this_elem, pos, *((lLong*)value));
+   } else if (type == lCharT) {
+      ret = lSetPosChar(this_elem, pos, *((lChar*)value));
+   } else if (type == lBoolT) {
+      ret = lSetPosBool(this_elem, pos, *((lBool*)value));
+   } else if (type == lIntT) {
+      ret = lSetPosInt(this_elem, pos, *((int*)value));
+   } else if (type == lObjectT) {
+      ret = lSetPosObject(this_elem, pos, *((lListElem **)value));
+   } else if (type == lRefT) {
+      ret = lSetPosRef(this_elem, pos, *((lRef*)value));
+   } else {
+      /* not possible */
+      ret = false;
+   }
+   DEXIT;
+   return ret;
+}
+
+void 
+object_get_any_type(lListElem *this_elem, int name, void *value)
+{
+   int pos = lGetPosViaElem(this_elem, name);
+   int type = lGetPosType(lGetElemDescr(this_elem), pos);
+
+   DENTER(OBJECT_LAYER, "object_get_any_type");
+   if (value != NULL) {
+      if (type == lStringT) {
+         *((const char **)value) = lGetPosString(this_elem, pos);
+      } else if (type == lHostT) {
+         *((const char **)value) = lGetPosHost(this_elem, pos);
+      } else if (type == lUlongT) {
+         *((lUlong*)value) = lGetPosUlong(this_elem, pos);
+      } else if (type == lDoubleT) {
+         *((lDouble*)value) = lGetPosDouble(this_elem, pos);
+      } else if (type == lFloatT) {
+         *((lFloat*)value) = lGetPosFloat(this_elem, pos);
+      } else if (type == lLongT) {
+         *((lLong*)value) = lGetPosLong(this_elem, pos);
+      } else if (type == lCharT) {
+         *((lChar*)value) = lGetPosChar(this_elem, pos);
+      } else if (type == lBoolT) {
+         *((lBool*)value) = lGetPosBool(this_elem, pos);
+      } else if (type == lIntT) {
+         *((int*)value) = lGetPosInt(this_elem, pos);
+      } else if (type == lObjectT) {
+         *((lListElem **)value) = lGetPosObject(this_elem, pos);
+      } else if (type == lRefT) {
+         *((lRef *)value) = lGetPosRef(this_elem, pos);
+      } else {
+         /* not possible */
+      }
+   }
+   DEXIT;
 }
 
 void attr_mod_sub_list(
@@ -1027,7 +1227,7 @@ char *sub_list_name,
 char *object_name,
 int no_info
 ) {
-   DENTER(TOP_LAYER, "attr_mod_sub_list");
+   DENTER(OBJECT_LAYER, "attr_mod_sub_list");
 
    if (lGetPosViaElem(delta_elem, this_elem_name) < 0) {
       return;

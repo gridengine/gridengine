@@ -77,8 +77,16 @@ bool set_conf_list(lList **alpp, lList **clpp, int fields[], const char *key, lL
 
 bool set_conf_subordlist(lList **alpp, lList **clpp, int fields[], const char *key, lListElem *ep, int name_nm, lDescr *descr, int subname_nm, int subval_nm);
 
-bool set_conf_hostattr_str_list(lList **alpp, lList **clpp, int fields[],
-                                const char *key, lListElem *ep, int name_nm,
-                                lDescr *descr, int sub_name_nm);
+bool set_conf_str_attr_list(lList **alpp, lList **clpp, int fields[],
+                            const char *key, lListElem *ep, int name_nm,
+                            lDescr *descr, int sub_name_nm);
+
+bool set_conf_ulng_attr_list(lList **alpp, lList **clpp, int fields[],
+                             const char *key, lListElem *ep, int name_nm,
+                             lDescr *descr, int sub_name_nm);
+
+bool set_conf_bool_attr_list(lList **alpp, lList **clpp, int fields[],
+                             const char *key, lListElem *ep, int name_nm,
+                             lDescr *descr, int sub_name_nm);
 
 #endif /* _CONFIG_H_ */

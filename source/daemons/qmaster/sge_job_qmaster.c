@@ -2636,8 +2636,7 @@ int *trigger
       DPRINTF(("got new JB_pe\n")); 
       pe_name = lGetString(jep, JB_pe);
       if (pe_name && !pe_list_find_matching(Master_Pe_List, pe_name)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, 
-               MSG_OBJ_PE, pe_name));
+         ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, MSG_OBJ_PE, pe_name));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EUNKNOWN;

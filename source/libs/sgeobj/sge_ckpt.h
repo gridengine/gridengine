@@ -40,6 +40,12 @@ bool
 ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,
                    const lList *master_job_list);
 
-lListElem *ckpt_list_locate(lList *ckpt_list, const char *ckpt_name);
+lListElem *
+ckpt_list_locate(lList *ckpt_list, const char *ckpt_name);
+
+int 
+sge_parse_checkpoint_attr(const char *attr_str);
+
+int ckpt_validate(lListElem *this_elem, lList **alpp);
 
 #endif /* __SGE_CKPT_H */

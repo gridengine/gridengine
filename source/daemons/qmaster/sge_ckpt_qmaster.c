@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "sge.h"
 #include "sge_pe.h"
@@ -191,7 +192,7 @@ int ckpt_mod(lList **alpp, lListElem *new_ckpt, lListElem *ckpt, int add,
       QR_name, ckpt, sub_command, SGE_ATTR_QUEUE_LIST, SGE_OBJ_CKPT, 0);  
 
    /* validate ckpt data */
-   if (validate_ckpt(new_ckpt, alpp) != STATUS_OK) {
+   if (ckpt_validate(new_ckpt, alpp) != STATUS_OK) {
       goto ERROR;
    }
 

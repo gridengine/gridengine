@@ -89,6 +89,7 @@
 #include "sge_uidgid.h"
 #include "sge_var.h"
 #include "sge_report.h"
+#include "sge_ulong.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -1740,10 +1741,6 @@ lListElem *jr
    char sge_mail_body[10*2048];
    char sge_mail_start[128];
    char sge_mail_end[128];
-   char wallclock[128];
-   char utime[128];
-   char stime[128];
-   char buf0[100], buf1[100];
    u_long32 jobid, taskid, failed, ru_utime, ru_stime, ru_wallclock;
    double ru_cpu = 0.0, ru_maxvmem = 0.0;
    int exit_status = -1, signo = -1;
@@ -1752,6 +1749,8 @@ lListElem *jr
    const char *pe_task_id_str;
    dstring ds;
    char buffer[128];
+   dstring cpu_string = DSTRING_INIT;
+   dstring maxvmem_string = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "reaper_sendmail");
 
@@ -1811,12 +1810,19 @@ lListElem *jr
    if ((ep=lGetSubStr(jr, UA_name, "exit_status", JR_usage)))
       exit_status = (int)lGetDouble(ep, UA_value);
    
+   double_print_time_to_dstring(ru_cpu, &cpu_string);
+   double_print_memory_to_dstring(ru_maxvmem, &maxvmem_string);
+
 	/* send job exit mail only for master task */ 
    if ((VALID(MAIL_AT_EXIT, mail_options)) && !failed && !pe_task_id_str) {
+      dstring utime_string = DSTRING_INIT;
+      dstring stime_string = DSTRING_INIT;
+      dstring wtime_string = DSTRING_INIT;
+
       DPRINTF(("mail VALID at EXIT\n"));
-      resource_descr(ru_utime, TYPE_TIM, utime);
-      resource_descr(ru_stime, TYPE_TIM, stime);
-      resource_descr(ru_wallclock, TYPE_TIM, wallclock);
+      double_print_time_to_dstring(ru_utime, &utime_string);
+      double_print_time_to_dstring(ru_stime, &stime_string);
+      double_print_time_to_dstring(ru_wallclock, &wtime_string);
       if (job_is_array(jep)) {
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_JA_TASK_COMP_UUS, 
                  u32c(jobid), u32c(taskid), lGetString(jep, JB_job_name));
@@ -1828,11 +1834,11 @@ lListElem *jr
                  h,
                  sge_mail_start, 
                  sge_mail_end,
-                 utime,
-                 stime,
-                 wallclock,
-                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
-                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
+                 sge_dstring_get_string(&utime_string),
+                 sge_dstring_get_string(&stime_string),
+                 sge_dstring_get_string(&wtime_string),
+                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
+                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
                  exit_status);
       } else {
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_JOB_COMP_US,
@@ -1845,15 +1851,18 @@ lListElem *jr
                  h,
                  sge_mail_start, 
                  sge_mail_end,
-                 utime,
-                 stime,
-                 wallclock,
-                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
-                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
+                 sge_dstring_get_string(&utime_string),
+                 sge_dstring_get_string(&stime_string),
+                 sge_dstring_get_string(&wtime_string),
+                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
+                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
                  exit_status);
       }
 
       cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_COMP);
+      sge_dstring_free(&utime_string);
+      sge_dstring_free(&stime_string);
+      sge_dstring_free(&wtime_string);
    }
 
    if (((VALID(MAIL_AT_ABORT, mail_options)) 
@@ -1905,8 +1914,8 @@ lListElem *jr
                  exitstr, 
                  sge_sig2str(signo),
                  u, q, h, sge_mail_start, sge_mail_end,
-                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
-                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
+                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
+                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
                  get_sstate_description(failed), 
                  err_str, 
                  comment);
@@ -1931,8 +1940,8 @@ lListElem *jr
                  exitstr, 
                  sge_sig2str(signo),
                  u, q, h, sge_mail_start, sge_mail_end,
-                 (ru_cpu     == 0.0) ? "NA":resource_descr(ru_cpu,   TYPE_TIM, buf0),
-                 (ru_maxvmem == 0.0) ? "NA":resource_descr(ru_maxvmem, TYPE_MEM, buf1),
+                 (ru_cpu     == 0.0) ? "NA":sge_dstring_get_string(&cpu_string),
+                 (ru_maxvmem == 0.0) ? "NA":sge_dstring_get_string(&maxvmem_string),
                  get_sstate_description(failed), 
                  err_str, 
                  comment);
@@ -1941,6 +1950,8 @@ lListElem *jr
       cull_mail(mail_users, sge_mail_subj, sge_mail_body, MSG_MAIL_TYPE_STATE);
    }
 
+   sge_dstring_free(&cpu_string);
+   sge_dstring_free(&maxvmem_string);
    DEXIT;
    return ;
 }

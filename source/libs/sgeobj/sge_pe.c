@@ -45,6 +45,7 @@
 #include "sge_utility.h"
 #include "sge_pe.h"
 
+#include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
 lList *Master_Pe_List = NULL;
@@ -74,7 +75,7 @@ bool pe_is_matching(const lListElem *pe, const char *wildcard)
 
 /****** sgeobj/pe/pe_list_find_matching() *************************************
 *  NAME
-*     pe_list_find_matching() -- Find a PE matching a wildcard expression 
+*     pe_list_find_matching() -- Find a PE matching  wildcard expr 
 *
 *  SYNOPSIS
 *     lListElem* pe_list_find_matching(lList *pe_list, 
@@ -165,4 +166,111 @@ bool pe_is_referenced(const lListElem *pe, lList **answer_list,
    return ret;
 }
 
+/****** gdi/pe/pe_validate() ***************************************************
+*  NAME
+*     pe_validate() -- validate a parallel environment
+*
+*  SYNOPSIS
+*     int pe_validate(int startup, lListElem *pep, lList **alpp)
+*
+*  FUNCTION
+*     Ensures that a new pe is not a duplicate of an already existing one
+*     and checks consistency of the parallel environment:
+*        - pseudo parameters in start and stop proc
+*        - validity of the allocation rule
+*        - correctness of the queue list, the user list and the xuser list
+*
+*
+*  INPUTS
+*     lListElem *pep - the pe to check
+*     lList **alpp   - answer list pointer, if an answer shall be created, else
+*                      NULL - errors will in any case be output using the
+*                      Grid Engine error logging macros.
+*     int startup    - are we in qmaster startup phase?
+*
+*  RESULT
+*     int - STATUS_OK, if everything is ok, else other status values,
+*           see libs/gdi/sge_answer.h
+*
+*  NOTES
+*     MT-NOTE: pe_validate() is not MT safe
+*******************************************************************************/
+int pe_validate(lListElem *pep, lList **alpp, int startup)
+{
+   const char *s;
+   const char *pe_name;
+   int ret;
+
+   DENTER(TOP_LAYER, "pe_validate");
+   pe_name = lGetString(pep, PE_name);
+   if (pe_name && verify_str_key(alpp, pe_name, MSG_OBJ_PE)) {
+      ERROR((SGE_EVENT, "Invalid character in pe name of pe "SFQ, pe_name));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   /* register our error function for use in replace_params() */
+   config_errfunc = set_error;
+
+   /* -------- start_proc_args */
+   s = lGetString(pep, PE_start_proc_args);
+   if (s && replace_params(s, NULL, 0, pe_variables )) {
+      ERROR((SGE_EVENT, MSG_PE_STARTPROCARGS_SS, pe_name, err_msg));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+
+   /* -------- stop_proc_args */
+   s = lGetString(pep, PE_stop_proc_args);
+   if (s && replace_params(s, NULL, 0, pe_variables )) {
+      ERROR((SGE_EVENT, MSG_PE_STOPPROCARGS_SS, pe_name, err_msg));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   /* -------- allocation_rule */
+   s = lGetString(pep, PE_allocation_rule);
+   if (!s)  {
+      ERROR((SGE_EVENT, MSG_SGETEXT_MISSINGCULLFIELD_SS,
+            lNm2Str(PE_allocation_rule), "validate_pe"));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   if (replace_params(s, NULL, 0, pe_alloc_rule_variables )) {
+      ERROR((SGE_EVENT, MSG_PE_ALLOCRULE_SS, pe_name, err_msg));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return STATUS_EEXIST;
+   }
+
+   /* -------- PE_queue_list */
+   if ((ret=queue_reference_list_validate(alpp, lGetList(pep, PE_queue_list), MSG_OBJ_QLIST,
+               MSG_OBJ_PE, pe_name))!=STATUS_OK && !startup) {
+      DEXIT;
+      return ret;
+   }
+
+   /* -------- PE_user_list */
+   if ((ret=userset_list_validate_acl_list(alpp, lGetList(pep, PE_user_list), MSG_OBJ_USERLIST,
+               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
+      DEXIT;
+      return ret;
+   }
+
+   /* -------- PE_xuser_list */
+   if ((ret=userset_list_validate_acl_list(alpp, lGetList(pep, PE_xuser_list), MSG_OBJ_XUSERLIST,
+               MSG_OBJ_PE, pe_name))!=STATUS_OK) {
+      DEXIT;
+      return ret;
+   }
+
+   DEXIT;
+   return STATUS_OK;
+}
 

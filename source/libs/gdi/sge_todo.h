@@ -36,10 +36,6 @@
 #include "sge_feature.h"
 #include "sge_mirror.h"
 
-int validate_ckpt(lListElem *ep, lList **alpp);
-
-int pe_validate(int startup, lListElem *pep, lList **alpp);
-
 int report_list_send(const lList *rlp, const char *rhost,
                      const char *commproc, int id,
                      int synchron, u_long32 *mid);

@@ -1,7 +1,7 @@
-AH-2003-08-18-0: Enhancem.  Update on tight integration with Sun HPC
+AH-2003-08-18-0: Enhancem.: Update on tight integration with Sun HPC
                             ClusterTools 5
 
-AH-2003-08-01-0: Enhancem.  Added integration package for tight integration
+AH-2003-08-01-0: Enhancem.: Added integration package for tight integration
                             with Sun HPC ClusterTools 5
                             Enhanced distinst to install tight integration
                  Review:    AA
@@ -12,18 +12,19 @@ SG-2003-07-31-0: Bugfix:    global load value not working as load_threshold
                  Issue:     589
                  Review:    AH
 
-SG-2003-07-29-0: Bugfix     - Corrected the order of pending jobs in case of
-                            functional tickets.
+SG-2003-07-29-0: Bugfix:    - Corrected the order of pending jobs in case of
+                              functional tickets.
                             - added error handling to lGetRef
-                            - Implemented a new algorithm the fticket calculation.
-                              Depending on the ratio of fcategories and jobs, it
-                              can be a lot faster than the previous allgorithm
+                            - Implemented a new algorithm the fticket
+                              calculation.  Depending on the ratio of
+                              fcategories and jobs, it can be a lot faster
+                              than the previous allgorithm
                             - added a "\n" to a qmaster error message
-                Issue:     585
-                Review:    AH, EB
-                Changed:   sge_schedd, qmaster 
+                 Issue:     585
+                 Review:    AH, EB
+                 Changed:   sge_schedd, qmaster 
 
-JG-2003-07-22-0: Bugfix     "*_RESERVED_USAGE gives wrong values for PE jobs" 
+JG-2003-07-22-0: Bugfix:    "*_RESERVED_USAGE gives wrong values for PE jobs" 
                             was fixed for 5.3p4, but the value for vmem in case 
                             of loosely integrated parallel jobs with the pe 
                             parameter job_is_first_task = FALSE still was 
@@ -32,11 +33,11 @@ JG-2003-07-22-0: Bugfix     "*_RESERVED_USAGE gives wrong values for PE jobs"
                  Review:    EB
                  Changed:   sge_execd
 
-MD-2003-07-21-0: Bugfix	    fixed datatype IA64 Port
+MD-2003-07-21-0: Bugfix:    fixed datatype IA64 Port
 
-SG-2003-07-17-1: Bugfix     fixed the build (removed printf statements)
+SG-2003-07-17-1: Bugfix:    fixed the build (removed printf statements)
 
-SG-2003-07-17-0: optim.     - Optimized function ticket computation. Decreased
+SG-2003-07-17-0: Optim.:    - Optimized function ticket computation. Decreased
                             the amount of cull accesses when the pending jobs
                             are set active and inactive for calculation its
                             tickets.
@@ -54,7 +55,7 @@ AS-2003-07-16-0  Bugfix:    fix to enable checkout of current sticky tag
                             version 
                  Changed:   scripts/mk_ascman
 
-SG-2003-07-16-0  optim.     - Optimized functional ticket computation with
+SG-2003-07-16-0  Optim.:    - Optimized functional ticket computation with
                               share_functional_shares on.
                             - Compute fshare weighting factors only when needed.
                               This can be done because the configuration will 
@@ -76,8 +77,9 @@ MD-2003-07-15-1  Bugfix:    Fixed some script errors (IA64 Linux port)
                             + Makefile
                             + config.h
 
-MD-2003-07-15-0: Enhancem.  IA64 Linux port
+MD-2003-07-15-0: Enhancem.: IA64 Linux port
                  Review:    EB
+
 
 AS-2003-07-14-0: CVS        Created V53p4_TAG --> SGE 5.3p4
 -----------------------------------------------------------
@@ -873,7 +875,7 @@ AH-2002-11-18-0  Bugfix:    Complex values for user defined complexes
                  Bugtraq:   4776754
                  Review:    AS
 
-EB-2002-11-18-0  Testsuite: Test for issue #423 and #402
+EB-2002-11-18-0  Testsuite: Test for issues 423 and 402
                  Issue:     425, 426
 
 EB-2002-11-14-0  Bugfix:    - memopy leak in execd
@@ -1486,7 +1488,7 @@ CR-2002-06-17-1: Bugfix:    Don't produce infotext error message "Binary not
 AA-2002-06-14-0: Bugfix:    Job dependency display in qmon (not displayed)
                  Issue:     275
                  Bugtraq:   4706929
-		 Changes:   qmon
+                 Changes:   qmon
 
 CR-2002-06-13-5: Testsuite: testing issue 140 also for pending jobs
                  Enhancem.: 
@@ -1564,10 +1566,10 @@ JG-2002-06-05-0: Bugfix:    Load values on HP-UX 11 multiprocessor machines
 
 SD-2002-06-04-0: Bugfix:    Removed max_jobs reference from 5.3 branch
                  Issue:     273
-	         Bugtraq:   4696766
+                 Bugtraq:   4696766
 
 SD-2002-06-03-0: Bugfix:    Fixed GRD 5.1.9 to SGEEE 5.3 upgrade
-		 Issue:	    273
+                 Issue:     273
                  Bugtraq:   4696766
 
 JG-2002-05-31-0: Enhancem.  rshd: new switch -i: ignore /etc/nologin
@@ -3006,14 +3008,14 @@ AH-2001-11-28-1: Feature:   Enhanced accounting(5) file format for max vmem.
 AS-2001-11-28-0: Bugfix:    remove unused and obsolete command line  
                             parameters in qmaster,scheduler"
                                 -noread-argfile
-				-nostart-schedd
-				-nowrite-argfile
-				-truncate-argfile
+                                -nostart-schedd
+                                -nowrite-argfile
+                                -truncate-argfile
                             and scheduler:
                                 -k
                                 -salg
                  Bugtraq:   4532233
-		 Doc:       updated man pages sge_qmaster.8, sge_schedd.8
+                 Doc:       updated man pages sge_qmaster.8, sge_schedd.8
                             accordingly
 
 AH-2001-11-28-0: Feature:   added enforce_project switch to cluster
@@ -3024,11 +3026,11 @@ AH-2001-11-28-0: Feature:   added enforce_project switch to cluster
 CR-2001-11-28-1: Testsuite: Conformation of the testsuite because of changes from
                             CR-2001-11-28-0, 
                  Issue:     79, 
-		 Bugtrag:   4531719
+                 Bugtrag:   4531719
 
 CR-2001-11-28-0: Bugfix:    Reject changing of qmaster_spool_dir, execd_spool_dir
                             admin_user, default_domain and ignore_fqdn in running cluster.
- 		 Issue:     79
+                 Issue:     79
                  Bugtraq    4531719          
 
 AS-2001-11-26-0: Bugfix:    execd now exits on SIGTERM also when commd is down

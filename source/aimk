@@ -92,6 +92,10 @@ case "fbsd-alpha"
    set BUILDARCH = FREEBSD_ALPHA
    set TARGET_BITS = TARGET_64BIT
    breaksw
+case "fbsd-amd64"
+   set BUILDARCH = FREEBSD_AMD64
+   set TARGET_BITS = TARGET_64BIT
+   breaksw
 case "fbsd-i386"
    set BUILDARCH = FREEBSD_I386
    set TARGET_BITS = TARGET_32BIT

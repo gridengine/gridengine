@@ -218,6 +218,8 @@ SetArchBin()
       ARCHBIN=DARWIN
    elif [ $i = fbsd-alpha ]; then
       ARCHBIN=FREEBSD_ALPHA
+   elif [ $i = fbsd-amd64 ]; then
+      ARCHBIN=FREEBSD_AMD64
    elif [ $i = fbsd-i386 ]; then
       ARCHBIN=FREEBSD_I386
    elif [ $i = fbsd-ia64 ]; then

@@ -131,6 +131,8 @@ const char *sge_get_arch(void)
 #elif defined(FREEBSD)
 #   if defined(FREEBSD_ALPHA)
 #      define ARCHBIN "fbsd-alpha"
+#   elif defined(FREEBSD_AMD64)
+#      define ARCHBIN "fbsd-amd64"
 #   elif defined(FREEBSD_I386)
 #      define ARCHBIN "fbsd-i386"
 #   elif defined(FREEBSD_IA64)

@@ -703,7 +703,7 @@ void rmon_mprintf(const char *fmt,...)
          va_list ap
       );
       on some systems (linux, ..? ) to prevent overflow of msgbuf */
-#if defined(AIX42) || defined(ALPHA4) || defined(IRIX6)
+#if defined(AIX42) || defined(ALPHA4) || defined(HP10) || defined(IRIX6)
    vsprintf(&msgbuf[4], fmt, args); 
 #else
    vsnprintf(&msgbuf[4], (10 * STRINGSIZE) - 10 ,  fmt, args);

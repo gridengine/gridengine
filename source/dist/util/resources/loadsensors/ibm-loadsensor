@@ -73,6 +73,9 @@
 #***************************************************************************
 #
 
+#parsing of 'uptime' output does not work in foreign language mode
+unset LANG
+
 ARCH=`$SGE_ROOT/util/arch`
 HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 

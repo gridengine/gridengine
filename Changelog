@@ -1,3 +1,5 @@
+EB-2002-09-10-0  Enhancem.: Initial Part of AIX 5.1 port
+
 CR-2002-09-10-0  Bugfix:    L10N - (setlocale() returns e.g. fr_FR on LINUX)
                             cutting of characters after "_" for building message
                             file directory path.

@@ -67,6 +67,8 @@ const char *sge_get_arch()
 #   define ARCHBIN "aix42"
 #elif defined(AIX43)
 #   define ARCHBIN "aix43"
+#elif defined(AIX51)
+#   define ARCHBIN "aix51"
 #elif defined(ALPHA4)
 #   define ARCHBIN "osf4"
 #elif defined(ALPHA5)

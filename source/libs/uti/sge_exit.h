@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 
-#if defined(AIX32) || defined(AIX4)
+#if defined(AIX32) || defined(AIX)
 #   include <sys/select.h>      
 #endif
 

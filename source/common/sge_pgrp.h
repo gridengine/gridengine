@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 /* SETPGRP - set process group */
-#if defined(_UNICOS) || defined(SOLARIS) || defined(__hpux) || defined(LINUX) || defined(AIX4) || defined(SINIX) || defined(NECSX4) || defined(NECSX5)
+#if defined(_UNICOS) || defined(SOLARIS) || defined(__hpux) || defined(LINUX) || defined(AIX) || defined(SINIX) || defined(NECSX4) || defined(NECSX5)
 #   define SETPGRP setpgrp()
 #elif defined(__sgi)
 #   define SETPGRP BSDsetpgrp(getpid(),getpid())

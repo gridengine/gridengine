@@ -443,7 +443,7 @@ static void dump_env(lList *envl, FILE *file)
 ****************************************************************************
 */
 static const char *get_sharedlib_path_name(void) {
-#if defined(AIX4)
+#if defined(AIX)
    return "LIBPATH";
 #elif defined(HP10) || defined(HP11)
    return "SHLIB_PATH";

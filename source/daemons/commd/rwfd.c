@@ -627,7 +627,7 @@ int sockfd
    struct sockaddr_in cli_addr;
    int new_sfd, sso;
    message *mp;
-#ifdef AIX43
+#if defined(AIX43) || defined(AIX51)
    size_t fromlen = 0;
 #else
    int fromlen = 0;

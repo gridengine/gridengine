@@ -82,7 +82,16 @@ if [ -x /bin/uname ]; then
          3)
             ARCH=aix43
             ;;
+         esac  
+         ;;
+      5)
+         subrev=`/bin/uname -r`
+         case $subrev in
+         1)
+            ARCH=aix51
+            ;;
          esac
+         ;;
       esac
       ;;
    *,9000/*)

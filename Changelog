@@ -1,3 +1,8 @@
+CR-2002-11-19-1  L10N       removed message definition macro only used in
+                            ptf module for IRIX6 / IRIX64 architecture. The
+                            message should not be l10n-ed.
+                 Changed    execd (on IRIX6/IRIX64 )
+
 CR-2002-11-19-0  L10N       Code cleanup/enhancements for testsuite l10n
                             modulation.
                             - removed unused message definitions from msg_xxx.h files

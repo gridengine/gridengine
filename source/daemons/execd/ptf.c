@@ -2506,7 +2506,7 @@ int main(int argc, char **argv)
       exit(2);
    }
 
-   printf(MSG_JOB_MYASHIS_X, u64c(getash()));
+   printf("My ash is "u64"\n", u64c(getash()));
 
 #endif
 

@@ -1,3 +1,8 @@
+JG-2004-09-01-0: Enhancem.: Cleanup and performance improvement for bitfields.
+                            Enhanced the bitfield module test.
+                 Review:    SG
+                 Issue:     1260
+
 HP-2004-08-31-0: Bugfix:    Fixed some minor bugs: wrong format specifier, 
                             Typo in man page, ...
                  Changed:   man-page, commlib-testprogram

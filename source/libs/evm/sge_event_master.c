@@ -3782,7 +3782,7 @@ if (id < 1) {
     * turns into spinlocks when lock_all is set. */
    while (Master_Control.lock_all ||
           (wait &&
-           (sge_bitfield_get (Master_Control.lockfield, (int)id - 1) == 1))) {
+           sge_bitfield_get (Master_Control.lockfield, (int)id - 1) )) {
       if (Master_Control.lock_all) {
          /* This uses the lockfield cond var because it will be much less trafficy
           * than the waitfield cond var in this case. */
@@ -3800,7 +3800,7 @@ if (id < 1) {
 
    /* If wait is true, this client is guaranteed to be unlocked at thi
     * point. */
-   if (sge_bitfield_get (Master_Control.lockfield, (int)id - 1) == 1) {
+   if (sge_bitfield_get (Master_Control.lockfield, (int)id - 1)) {
 /* DEBUG */
 #if 0 
 DPRINTF (("value: 0\n"));

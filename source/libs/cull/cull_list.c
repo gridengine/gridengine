@@ -676,7 +676,7 @@ static void lWriteElem_(const lListElem *ep, int nesting_level, FILE *fp)
 
    for (i = 0; ep->descr[i].mt != lEndT; i++)
    {
-      int changed = sge_bitfield_get(ep->changed, i);
+      bool changed = sge_bitfield_get(ep->changed, i);
 
       switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
@@ -2408,7 +2408,7 @@ int lUniqHost(lList *lp, int keyfield)
 bool 
 lListElem_is_pos_changed(const lListElem *ep, int pos)
 {
-   return (sge_bitfield_get(ep->changed, pos) > 0); 
+   return sge_bitfield_get(ep->changed, pos);
 }
 
 /****** cull_list/lList_clear_changed_info() ***********************************

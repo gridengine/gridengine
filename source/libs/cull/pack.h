@@ -128,7 +128,7 @@ int pack_get_chunk(void);
 int packint(register sge_pack_buffer *, register u_long32);
 int packdouble(register sge_pack_buffer *, double);
 int packstr(register sge_pack_buffer *, register const char *);
-int packbuf(sge_pack_buffer *, char *, u_long32);
+int packbuf(sge_pack_buffer *, const char *, u_long32);
 int packbitfield(sge_pack_buffer *, bitfield);
 
 int unpackint(register sge_pack_buffer *, register u_long32 *);

@@ -119,20 +119,26 @@ proc issue_1489_setup {} {
 proc issue_1489_cleanup  {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
    global issue_1489_log_file issue_1489_lck_file del_queue
-   
+  
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
+  
    puts $CHECK_OUTPUT "delete test queue"
-   
    del_queue "iz_1489" "@allhosts" 0 1
-   
+  
+   puts $CHECK_OUTPUT "cleaning up log and lck files"
    # delete the lck file   
-   file delete $issue_1489_lck_file
-   file detete $issue_1489_log_file
-   
+   if {[file exists $issue_1489_lck_file]} {
+      file delete $issue_1489_lck_file
+   }
+   if {[file exists $issue_1489_log_file]} {
+      file delete $issue_1489_log_file
+   }
+
    set_error 0 "ok"
 }
 
 proc issue_1489_run {} {
-
    global CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH CHECK_PROTOCOL_DIR 
    global submitresult delete_job
    global issue_1489_log_file issue_1489_lck_file

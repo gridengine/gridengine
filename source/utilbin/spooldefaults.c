@@ -174,6 +174,9 @@ static int spool_configuration(int argc, char *argv[])
       ERROR((SGE_EVENT, "couldn't read local config file "SFN"\n", argv[2]));
       ret = EXIT_FAILURE;
    } else {
+      /* put config into a list - we can't spool free objects */
+      lList *list = lCreateList("list", CONF_Type);
+      lAppendElem(list, conf);
       if (!spool_write_object(&answer_list, spool_get_default_context(), conf, SGE_GLOBAL_NAME, SGE_TYPE_CONFIG)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;
@@ -198,13 +201,15 @@ static int spool_local_conf(int argc, char *argv[])
       usage(argv[0]);
       ret = EXIT_FAILURE;
    } else {
-
       conf = read_configuration(argv[2], argv[3], FLG_CONF_SPOOL);
 
       if (conf == NULL) {
          ERROR((SGE_EVENT, "couldn't read local config file "SFN"\n", argv[2]));
          ret = EXIT_FAILURE;
       } else {
+         /* put config into a list - we can't spool free objects */
+         lList *list = lCreateList("list", CONF_Type);
+         lAppendElem(list, conf);
          if (!spool_write_object(&answer_list, spool_get_default_context(), 
                                  conf, argv[3], SGE_TYPE_CONFIG)) {
             /* error output has been done in spooling function */

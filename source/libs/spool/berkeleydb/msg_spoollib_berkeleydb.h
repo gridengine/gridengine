@@ -65,5 +65,5 @@
 #define MSG_BERKELEY_PACKINITERROR_SS _MESSAGE(70028, _("error initializing packing buffer for object with key "SFQ": "SFN"\n"))
 #define MSG_BERKELEY_UNPACKERROR_SS _MESSAGE(70029, _("error unpacking object with key "SFQ": "SFN"\n"))
 #define MSG_BERKELEY_UNPACKINITERROR_SS _MESSAGE(70030, _("error initializing packing buffer while unpacking object with key "SFQ": "SFN"\n"))
-
+#define MSG_BERKELEY_CANTSPOOLFREEELEM_S _MESSAGE(70031, _("can't spool free element with key "SFQ"\n"))
 #endif /* __MSG_SPOOLLIB_BERKELEYDB_H */

@@ -1,3 +1,6 @@
+JG-2003-12-08-0: Bugfix:    Fixed a bug in BerkeleyDB spooling for ja_tasks.
+                 Review:    EB
+
 SG-2003-12-08-0: Bugfix:    Storing a job template in qmon set -hold_jid to
                             the wrong value (always 0)
                  Review:    AA

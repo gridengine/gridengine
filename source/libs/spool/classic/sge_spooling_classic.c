@@ -1005,7 +1005,18 @@ spool_classic_default_write_func(lList **answer_list,
                   ret = false;
                }
             } else {
-               if (job_write_spool_file((lListElem *)object, ja_task_id, 
+               lListElem *job;
+
+               if (object_type == SGE_TYPE_JOB) {
+                  job = (lListElem *)object;
+               } else {
+                  /* job_write_spool_file takes a job, even if we only want
+                   * to spool a ja_task or pe_task
+                   */
+                  job = job_list_locate(Master_Job_List, job_id);
+               }
+
+               if (job_write_spool_file((lListElem *)job, ja_task_id, 
                                         pe_task_id, SPOOL_DEFAULT) != 0) {
                   ret = false;
                }

@@ -475,7 +475,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
             ret = spool_delete_object(answer_list, spool_get_default_context(), object_type, key);
          } else {
             ret = spool_write_object(answer_list, spool_get_default_context(), 
-                                     object, key, object_type);
+                                     element, key, object_type);
          }
       }
    }

@@ -767,7 +767,6 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info *db,
    bool ret = true;
    int dbret;
 
-   sge_pack_buffer pb;
    DBT key_dbt, data_dbt;
    DBC *dbc;
 
@@ -806,12 +805,14 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info *db,
          DPRINTF(("last record of this object type reached\n"));
          break;
       } else {
-         lListElem *object;
+         sge_pack_buffer pb;
+         lListElem *object = NULL;
          int cull_ret;
 
          DPRINTF(("read object with key "SFQ", size %d\n", 
                   key_dbt.data, data_dbt.size));
-         cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, data_dbt.size, 0);
+         cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, 
+                                                data_dbt.size, 0);
          if (cull_ret != PACK_SUCCESS) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
@@ -1118,55 +1119,67 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info *db,
                               const lListElem *object, const char *key)
 {
    bool ret = true;
-   sge_pack_buffer pb;
-   DBT key_dbt, data_dbt;
-   int dbret;
-   int cull_ret;
 
    DENTER(TOP_LAYER, "spool_berkeleydb_write_object");
 
-   cull_ret = init_packbuffer(&pb, 8192, 0);
-   if (cull_ret != PACK_SUCCESS) {
+#if 0
+   /* JG: TODO: we shouldn't spool free elements */
+   if (object->status == FREE_ELEM) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_PACKINITERROR_SS,
-                              key,
-                              cull_pack_strerror(cull_ret));
+                              MSG_BERKELEY_CANTSPOOLFREEELEM_S,
+                              key);
       ret = false;
-   } else {
-      cull_ret = cull_pack_elem_partial(&pb, object, pack_part);
+   } else 
+#endif
+   {
+      sge_pack_buffer pb;
+      DBT key_dbt, data_dbt;
+      int dbret;
+      int cull_ret;
+      cull_ret = init_packbuffer(&pb, 8192, 0);
       if (cull_ret != PACK_SUCCESS) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_BERKELEY_PACKERROR_SS,
+                                 MSG_BERKELEY_PACKINITERROR_SS,
                                  key,
                                  cull_pack_strerror(cull_ret));
          ret = false;
-      } else { 
-         memset(&key_dbt, 0, sizeof(key_dbt));
-         memset(&data_dbt, 0, sizeof(data_dbt));
-         key_dbt.data = (void *)key;
-         key_dbt.size = strlen(key) + 1;
-         data_dbt.data = pb.head_ptr;
-         data_dbt.size = pb.bytes_used;
-
-         /* Store a key/data pair. */
-         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = db->db->put(db->db, db->txn, &key_dbt, &data_dbt, 0);
-         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         if (dbret != 0) {
+      } else {
+         cull_ret = cull_pack_elem_partial(&pb, object, pack_part);
+         if (cull_ret != PACK_SUCCESS) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_PUTERROR_SS,
-                                    key, db_strerror(dbret));
+                                    MSG_BERKELEY_PACKERROR_SS,
+                                    key,
+                                    cull_pack_strerror(cull_ret));
             ret = false;
-         } else {
-            DPRINTF(("stored object with key "SFQ", size = %d\n", key, 
-                     data_dbt.size));
-         }
-      }
+         } else { 
+            memset(&key_dbt, 0, sizeof(key_dbt));
+            memset(&data_dbt, 0, sizeof(data_dbt));
+            key_dbt.data = (void *)key;
+            key_dbt.size = strlen(key) + 1;
+            data_dbt.data = pb.head_ptr;
+            data_dbt.size = pb.bytes_used;
 
-      clear_packbuffer(&pb);
+            /* Store a key/data pair. */
+            PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            dbret = db->db->put(db->db, db->txn, &key_dbt, &data_dbt, 0);
+            PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            if (dbret != 0) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_BERKELEY_PUTERROR_SS,
+                                       key, db_strerror(dbret));
+               ret = false;
+            } else {
+               DPRINTF(("stored object with key "SFQ", size = %d\n", key, 
+                        data_dbt.size));
+            }
+         }
+
+         clear_packbuffer(&pb);
+      }
    }
    DEXIT;
    return ret;
@@ -1215,10 +1228,8 @@ spool_berkeleydb_write_ja_task(lList **answer_list, bdb_info *db,
                                job_id, ja_task_id);
 
    lXchgList((lListElem *)object, JAT_task_list, &tmp_list);
-
    ret = spool_berkeleydb_write_object(answer_list, db, 
                                        object, dbkey);
-
    lXchgList((lListElem *)object, JAT_task_list, &tmp_list);
 
    /* JG: TODO: do we have to spool all petasks?
@@ -1318,6 +1329,9 @@ spool_berkeleydb_default_write_func(lList **answer_list,
 
    DENTER(TOP_LAYER, "spool_berkeleydb_default_write_func");
 
+   DPRINTF(("spool_berkeleydb_default_write_func called for %s with key %s\n",
+            object_type_get_name(object_type), key != NULL ? key : "<null>"));
+
    db = (bdb_info *)lGetRef(rule, SPR_clientdata);
    if (db == NULL || db->env == NULL || db->db == NULL) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -1353,12 +1367,12 @@ spool_berkeleydb_default_write_func(lList **answer_list,
 
                   job_parse_key(dup, &job_id, &ja_task_id, &pe_task_id, &only_job);
 
-                  if (pe_task_id != NULL) {
+                  if (object_type == SGE_TYPE_PETASK) {
                      ret = spool_berkeleydb_write_pe_task(answer_list, db,
                                                           object,
                                                           job_id, ja_task_id,
                                                           pe_task_id);
-                  } else if (ja_task_id != 0) {
+                  } else if (object_type == SGE_TYPE_JATASK) {
                      ret = spool_berkeleydb_write_ja_task(answer_list, db,
                                                           object,
                                                           job_id, ja_task_id);

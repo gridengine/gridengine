@@ -86,7 +86,7 @@
  */
 #define REPORTING_WRITE_ACCOUNTING_FILE true
 
-const char REPORTING_DELIMITER = '\t';
+static const char REPORTING_DELIMITER = '\t';
 
 /* global dstring for accounting data */
 static dstring accounting_data = DSTRING_INIT;
@@ -583,7 +583,6 @@ reporting_create_sharelog_record(lList **answer_list)
       dstring prefix_dstring = DSTRING_INIT;
       dstring data_dstring   = DSTRING_INIT;
       format_t format;
-/*       char delim[2] = { REPORTING_DELIMITER, '\0' }; doesn't work on HP11 */
       char delim[2];
       delim[0] = REPORTING_DELIMITER;
       delim[1] = '\0';

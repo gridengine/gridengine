@@ -383,7 +383,6 @@ const lDescr *dp
       DEXIT;
       return ret;
    }
-
    /* pack the lDescr fields */
    for (i = 0; dp[i].nm != NoName && dp[i].mt != lEndT; i++) {
       if ((ret = packint(pb, dp[i].nm))) {

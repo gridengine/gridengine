@@ -972,7 +972,7 @@ case DARWIN:
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L."
    set SHAREDEXT = ".dylib"
    if ( $SHAREDLIBS == 1 ) then
-      set libext = ".dylib"
+      set libext = $(SHAREDEXT)
    else
       set libext = ".a"
    endif   
@@ -1176,6 +1176,10 @@ case LINUXIA64:
    set SHAREDLD = $CC
    set SHARED_CFLAGS = "-fPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
+
+   if ( $SHAREDLIBS == 1 || $SPOOLING_METHOD == dynamic ) then
+      set LFLAGS = "$LFLAGS -rdynamic"
+   fi
 
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"

@@ -1,3 +1,7 @@
+JG-2004-04-20-1: Bugfix:    fixed linking of binaries doing dynamic loading on 
+                            LINUX architectures.
+                 Review:    AA
+
 AA-2004-04-20-1: Bugfix:    qmon fixes:
                  - interactive jobs,
                  - blanks in complex attributes

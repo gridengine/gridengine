@@ -117,7 +117,7 @@ int main(int argc,char *argv[])
 #include "sge_stat.h"
 #endif
 
-#if defined(LINUX) || defined(ALPHA) || defined(IRIX6) || defined(SOLARIS) || defined(FREEBSD) || defined(DARWIN)
+#if defined(LINUX) || defined(ALPHA) || defined(IRIX6) || defined(SOLARIS) || defined(FREEBSD) || defined(DARWIN) || defined(NETBSD)
 #include "sge_nprocs.h"
 #endif
 

@@ -55,6 +55,7 @@ ARCH=UNKNOWN
 if [ -x /usr/bin/uname ]; then
    os="`/usr/bin/uname -s`"
    ht="`/usr/bin/uname -m`"
+   ha="`/usr/bin/uname -p`"
    osht="$os,$ht"
    case $osht in
    Darwin,*)
@@ -64,7 +65,7 @@ if [ -x /usr/bin/uname ]; then
       ARCH=fbsd-$ht
       ;;
    NetBSD,*)
-      ARCH=nbsd-$ht
+      ARCH=nbsd-$ha
       ;;
    esac
 fi

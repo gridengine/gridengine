@@ -4714,11 +4714,13 @@ static int ri_slots_by_time(u_long32 start, u_long32 duration, int *slots, int *
 
       ret = match_static(1, request, cplx_el, reason, false, false, allow_non_requestable);
       if (ret != 0) {
+         lFreeElem(cplx_el);
          DEXIT;
          return ret;
       }
 
       if (ret == 0 && !lGetBool(cplx_el, CE_consumable)) {
+         lFreeElem(cplx_el);
          *slots      = INT_MAX;
          *slots_qend = INT_MAX;
          DEXIT;

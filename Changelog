@@ -1,3 +1,9 @@
+SG-2004-09-15-0: Bugfix:    fixed memory leak in the scheduler
+                 Changed:   scheduler
+                 Review:    DT
+                 Issue:     1274
+                 Bugtraq:   5102320
+
 DT-2004-09-14-0: Bugfix:    o Fixed DRMAA-J README
                             o Fixed JavaDoc error in aimk
                             o Updated DRMAA-J JavaDocs
@@ -12,6 +18,7 @@ JG-2004-09-14-0: Testsuite: Improved test performance/throughput:
                               - array jobs
                               - functional policy
 
+DT-2004-09-13-1: Bugfix:    o Fixed DRMAA-J on Irix 6.5
 DT-2004-09-13-1: Bugfix:    o Added libjdrmaa to LD_LIBRARYN32_PATH in
                               settings.sh|csh for Irix 6.5
                  Changed:   create_settings.sh

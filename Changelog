@@ -1,3 +1,7 @@
+AA-2003-05-27-0  Bugfix:    sge_ca script -usercert needs RANDFILE env var
+                 Bugtraq:   4749151
+                 Changed:   util/sgeCA/sge_ca
+
 AS-2003-05-27-0  Bugfix:    aimk changes for Insure, non-gcc availability
                             removed unused variables
 

@@ -465,6 +465,8 @@ MakeCert()
 
    # create rand.seed file
    MakeRandFile $RSFILE
+   RANDFILE=$RSFILE; export RANDFILE
+
 
    # create a certificate request
    ExecuteAsAdmin $REQ -config $TMPFILE1 -new -keyout $KEYFILE -out $REQFILE $DAYS

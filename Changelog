@@ -1,3 +1,7 @@
+SD-2004-02-27-0: Bugfix:    Fixed checking of read return code
+                 Changed:   execd
+                 Issue:     713
+
 SD-2004-02-25-0: Bugfix:    Fixed file descriptor leak which caused
                             execd to run out of file descriptors
                  Changed:   execd

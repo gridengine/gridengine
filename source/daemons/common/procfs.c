@@ -511,9 +511,9 @@ int time_stamp
       /* 
        * Read the line and append a 0-Byte 
        */
-      if ((ret = read(fd, buffer, BIGLINE-1))>= BIGLINE-1) {
+      if ((ret = read(fd, buffer, BIGLINE-1)) <= 0) {
          close(fd);
-         if (errno != ENOENT) {
+         if (ret == -1 && errno != ENOENT) {
 #ifdef MONITOR_PDC
             INFO((SGE_EVENT, "could not read %s: %s\n", procnam, strerror(errno)));
 #endif

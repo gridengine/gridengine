@@ -1,14 +1,15 @@
 SG-2003-07-31-0: Bugfix:    global load value not working as load_threshold
-:w
                  Changed:   sge_schedd, qstat, qmon, qhost
                  Issue:     589
                  Review:    AH
+
+AH-2003-07-31-0  CVS:       Created VMAIN_STABLE_3_TAG
 
 AA-2003-07-30-0: Bugfix:    qmon_cplx: selectAttributes callback was missing,
                             CQ_Type list added
                             libs/sgeobj/Makefile delete generated sge_sub_obj.c
 
-SG-2003-07-30-1: Bugfix:    QMON ödisplayed all queues in alarm state and displayed
+SG-2003-07-30-1: Bugfix:    QMON displayed all queues in alarm state and displayed
                             an error message, when the load threshold were modified.
                  Review:    AA   
 
@@ -21,6 +22,7 @@ AH-2003-07-30-1: Doc.:      Documented env vars affecting DRMAA library calls
 
 AH-2003-07-30-0: Enhancem.: Ensure drmaa_strerrno() returns NULL for unknown error 
                             codes.
+
 EB-2003-07-30-0: Enhancem.: CQ APIBASE WP
                             - initial CQ CULL structure
                             - initial gdi-qmaster code

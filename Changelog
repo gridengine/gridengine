@@ -1,3 +1,7 @@
+EB-2002-11-25-2  Bugfix:    qstat -f output broken for pe jobs on same queue
+                 IZ:        #430
+                 Review:    CR
+
 EB-2002-11-25-1  Testsuite: Added new tests which will find bug #126
                  IZ:        #427
 

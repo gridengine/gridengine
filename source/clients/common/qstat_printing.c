@@ -960,7 +960,7 @@ char *indent
    if (print_jobid)
       printf("%7d ", (int)lGetUlong(job, JB_job_number)); 
    else 
-      printf("       "); 
+      printf("        "); 
 
    /* job priority */
    printf("%5d ", ((int)lGetUlong(job, JB_priority))-BASE_PRIORITY); 

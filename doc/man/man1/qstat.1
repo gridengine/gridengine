@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/10/13 11:59:48 $     Revision: $Revision: 1.25 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/10/19 15:34:56 $     Revision: $Revision: 1.26 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/10/13 11:59:48 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/10/19 15:34:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -150,10 +150,22 @@ parallel task is displayed rather than the jobs slot amount (see section
 Prints a listing of all options.
 .\"
 .IP "\fB\-j [job_list]\fP"
-Prints either for all pending jobs or the jobs contained in job_list the
-reason for not being scheduled. The job_list can contain job_ids, job_names,
-or patterns.
-
+Prints either for all pending jobs or the jobs contained in job_list 
+various information. The job_list can contain job_ids, job_names, or 
+patterns. 
+.sp
+For jobs in error state the error reason is displayed. For jobs that
+could not be dispatched during in the last scheduling interval the 
+obstacles are shown, if 'schedd_job_info' in 
+.M sched_conf 5 
+is configured accordingly.
+.sp
+For running jobs available information on resource utilization is shown
+about consumed cpu time in seconds, integral memory usage in Gbytes 
+seconds, amount of data transferred in io operations, current virtual 
+memory utilization in Mbytes, and maximum virtual memory utilization in 
+Mbytes. This information is not available if resource utilization 
+retrieval is not supported for the OS platform where the job is hosted.
 .\"
 .IP "\fB\-l resource\fP[\fB=value\fP],..."
 Defines the resources required by the jobs or granted by the 

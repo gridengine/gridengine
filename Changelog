@@ -1,3 +1,7 @@
+SG-2004-03-04-1: Bugfix:    - another qstat -xml fix
+                            - fixed the build under glinux
+                 Changed:   qstat, qconf
+
 SG-2004-03-04-0: Bugfix:    was to quick checking in the qstat -xml fixes. When
                             an element has no attribute it would print "(NULL)"
                             instead of nothing.

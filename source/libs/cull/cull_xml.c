@@ -58,7 +58,7 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp);
 static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp); 
 static bool lAttributesToString_(const lList *attr_list, dstring *attr);
 static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp);
-static void escape_string(const char *string, dstring *target);
+static bool escape_string(const char *string, dstring *target);
 static lListElem *append_Attr_S(lList *attributeList, const char *name, const char *value);
 
 lListElem* xml_getHead(const char *name, lList *list, lList *attributes) {
@@ -101,14 +101,14 @@ void xml_addAttribute(lListElem *xml_elem, const char *name, const char *value){
    lListElem *attr_elem = lCreateElem(XMLA_Type);
    lList *attr_list = NULL;
    dstring mod_value = DSTRING_INIT;
-   
+   bool is_mod_value; 
    DENTER(CULL_LAYER, "xml_addAttribute");
 
-   escape_string(value, &mod_value); 
+   is_mod_value = escape_string(value, &mod_value); 
    
    if (attr_elem) {
       lSetString(attr_elem, XMLA_Name, name);
-      lSetString(attr_elem, XMLA_Value, sge_dstring_get_string(&mod_value));
+      lSetString(attr_elem, XMLA_Value, (is_mod_value?sge_dstring_get_string(&mod_value):""));
       if (lGetPosViaElem(xml_elem, XMLH_Attribute ) != -1) {   
          attr_list = lGetList(xml_elem, XMLH_Attribute);
          if (!attr_list)
@@ -388,13 +388,15 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
             {
                dstring string = DSTRING_INIT;
                str = lGetPosString(ep, i);
-               escape_string(str, &string);
-               if (!fp) {
-                  DPRINTF(("%s", str ? sge_dstring_get_string(&string) : "(null)"));
-               } else {
-                  fprintf(fp, "%s", str ? sge_dstring_get_string(&string) : "(null)");
+               if (escape_string(str, &string)) {
+                  if (!fp) {
+                     DPRINTF(("%s", sge_dstring_get_string(&string) ));
+                  } else {
+                     fprintf(fp, "%s", sge_dstring_get_string(&string) );
+                  }
+                  
+                  sge_dstring_free(&string);
                }
-               sge_dstring_free(&string);
             }
             break;
 
@@ -402,13 +404,14 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
             {
                dstring string = DSTRING_INIT;
                str = lGetPosHost(ep, i);
-               escape_string(str, &string);
-               if (!fp) {
-                  DPRINTF(("%s", str ? sge_dstring_get_string(&string) : "(null)"));
-               } else {
-                  fprintf(fp, "%s", str ? sge_dstring_get_string(&string) : "(null)");
+               if (escape_string(str, &string)) {
+                  if (!fp) {
+                     DPRINTF(("%s", sge_dstring_get_string(&string) ));
+                  } else {
+                     fprintf(fp, "%s", sge_dstring_get_string(&string) );
+                  }
+                  sge_dstring_free(&string);
                }
-               sge_dstring_free(&string);
             }
             break;
 
@@ -522,9 +525,12 @@ lListElem *xml_append_Attr_S(lList *attributeList, const char *name, const char 
    dstring string = DSTRING_INIT;
    lListElem *xml_Elem = NULL;
    
-   escape_string(value, &string);
-   xml_Elem = append_Attr_S(attributeList, name, sge_dstring_get_string(&string));
-   sge_dstring_free(&string);
+   if (escape_string(value, &string)) {
+      xml_Elem = append_Attr_S(attributeList, name, sge_dstring_get_string(&string));
+      sge_dstring_free(&string);
+   }
+   else
+      xml_Elem = append_Attr_S(attributeList, name, "");
          
    return xml_Elem;         
 }
@@ -630,23 +636,23 @@ static lListElem *append_Attr_S(lList *attributeList, const char *name, const ch
    return parent;
 }
 
-static void escape_string(const char *string, dstring *target){
+static bool escape_string(const char *string, dstring *target){
    int size;
    int i;
  
    DENTER(CULL_LAYER, "escape_string");
    
-   if (string == NULL){
-      DEXIT;
-      return;
-   }
-     
    if (target == NULL) {
       DPRINTF(("no target string in excape_string()\n"));
       DEXIT;
       abort();
+   } 
+ 
+   if (string == NULL){
+      DEXIT;
+      return false;
    }
-   
+     
    size = strlen(string);
 
    for(i = 0; i<size; i++){
@@ -666,6 +672,6 @@ static void escape_string(const char *string, dstring *target){
       }
    }
    DEXIT;
-   return;
+   return true;
 }
 

@@ -79,7 +79,7 @@ int main(int argc, char **argv)
       sge_usage(stderr);
       SGE_EXIT(1);
    }
-
+#endif
    if (sge_parse_qconf(++argv)) {
       SGE_EXIT(1);
    } else {

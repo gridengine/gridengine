@@ -52,7 +52,7 @@
          <Properties merge="fuse" lock="false" propagate="true" advanced="false" name="_properties">
             <String name="title" value="Job Accounting" advanced="false" merge="replace" lock="false" propagate="true"/>
             <String name="description" value="Job Accounting" advanced="false" merge="replace" lock="false" propagate="true"/>
-            <String name="url" value="/gridportal/AdminTCP?action=jobAccounting" advanced="false" merge="replace" lock="false" propagate="true"/>
+            <String name="url" value="/gridportal/AdminTCP?action=jobList" advanced="false" merge="replace" lock="false" propagate="true"/>
          </Properties>
       </Channel>
       <Channel name="GEPDebug" provider="URLScraperProvider" merge="replace" lock="false" advanced="false">

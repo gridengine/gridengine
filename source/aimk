@@ -343,6 +343,7 @@ usage:
    echo "-perlgui          -> build the experimental perlgui"
    echo "-po               -> merge gridengine .pot with translations (Linux)"
    echo "-pot              -> extract message template to gridengine .pot file (Linux)"
+   echo "-protected        -> create complete class file documentation"
    echo "-purify           -> instrument code with purify (implies -debug)"
    echo "-qmake            -> use qmake instead of make"
    echo "-shared-libs      -> create libraries as shared libs"
@@ -409,6 +410,7 @@ set JAVA_INCL        = "include"
 set JAVA_SHAREDEXT   = ""
 set JNI              = 1
 set DRMAA_TARGET     = "ALL"
+set PROTECTED        = 0
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -848,6 +850,9 @@ while ($#argv >= 1 && $?found)
       echo "Uniqing pot file"
       scripts/msgmerge.csh merge
       exit 0
+      breaksw
+   case "-protected":
+      set PROTECTED = 1
       breaksw
    case "-purify":
       set LD_WRAPPER = "purify"
@@ -1847,7 +1852,13 @@ if ( "$BUILDJAVADOC" == 1 ) then
 
    cd $SOURCE/classes
 
-   ant -f build.xml javadoc
+   set target = "javadoc"
+
+   if ( "$PROTECTED" == 1 ) then
+      set target = "${target}.all"
+   endif
+
+   ant -f build.xml $target
 
    if ( $status != 0 ) then
       echo not done

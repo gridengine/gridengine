@@ -63,13 +63,25 @@
 
    <target depends="init,javadoc.clean" description="Javadoc tool docs for DRMAA" name="javadoc">
       <mkdir dir="${javadoc.dir}"/>
-      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html">
-          <fileset dir="${src.dir}">
-             <include name="**/drmaa/**/*.java"/>
-             <exclude name="**/*Test.java"/>
-             <exclude name="**/*Suite.java"/>
-             <exclude name="**/howto/**"/>
-          </fileset>
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="public">
+         <fileset dir="${src.dir}">
+            <include name="**/drmaa/**/*.java"/>
+            <exclude name="**/*Test.java"/>
+            <exclude name="**/*Suite.java"/>
+            <exclude name="**/howto/**"/>
+         </fileset>
+      </javadoc>
+   </target>
+
+   <target depends="init,javadoc.clean" description="Javadoc tool docs for DRMAA" name="javadoc.all">
+      <mkdir dir="${javadoc.dir}"/>
+      <javadoc destdir="${javadoc.dir}" packagenames="*" Overview="${src.dir}/overview.html" access="protected">
+         <fileset dir="${src.dir}">
+            <include name="**/drmaa/**/*.java"/>
+            <exclude name="**/*Test.java"/>
+            <exclude name="**/*Suite.java"/>
+            <exclude name="**/howto/**"/>
+         </fileset>
       </javadoc>
    </target>
 

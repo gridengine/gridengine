@@ -1,3 +1,9 @@
+DT-2005-01-16-0: Enhancem.: o aimk now can build javadocs with or without
+                              protected fields and methods.
+                 Bugfix:    o Changed Session.getVersion() to return the binding
+                              spec version.
+                 Changed:   DRMAA, aimk
+
 HP-2005-01-15-0: Enhancem.: Changed aimk in WIN32_X86 section
                  Changed:   aimk
 

@@ -146,6 +146,10 @@ Content
    better.  Also note that as there is no JDK 1.4 or better available for AIX
    4.3, the -no-jni (and -no-java) must always be used on AIX 4.3 platforms.
 
+   Also note that there does not appear to be a JDK 1.4 or better available for
+   AIX 4.3.  In order to compile on AIX 4.3, -no-jni (and -no-java) must be
+   used.
+
    4.4 'cc' or 'gcc'
    -----------------
 
@@ -198,7 +202,6 @@ Content
       % aimk -mankv     dto. but check out from CVS with "-kv flag"
       % aimk -htmlman   create man pages in nroff and html format
       % aimk -catman    create man pages in catman format (e.g. for SGI)
-      % aimk -javadoc   create JavaDoc[TM] tool format docs
 
    To build man pages in nroff format you need to define the variable
    GROFFPATH in 'aimk.site'. This is where 'groff' is installed. For html
@@ -207,6 +210,22 @@ Content
    format you need to first create the nroff man pages and then on a SGI
    system the catman pages (only on SGI the 'pack -f' command forces
    compression of all pages regardless of their size).
+
+   4.8 Creating JavaDoc documentation
+   ----------------------------------
+
+   The JavaDocs in CVS contain information that is not useful to the average
+   end user.  To create JavaDocs appropriate for the end user, enter
+
+      % aimk -javadoc
+
+   This creates documentation of only the public fields and methods.
+
+   To create the full documentation, such as what is checked into CVS, enter
+
+      % aimk -javadoc -protected
+
+   This create documentation of all protected and public fields and methods.
 
 
 5) Copyright

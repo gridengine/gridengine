@@ -1066,6 +1066,7 @@ case LINUX6:
    else
       set CFLAGS = "-Wno-error $CFLAGS"
       set CXXFLAGS = "-Wno-error $CXXFLAGS"
+      set KLIBS = "$OPENSSL_HOME/lib/libcrypto.a.insure"
       set LIBS = "$LIBS"
    endif
    set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
@@ -1264,6 +1265,7 @@ case SOLARIS86:
       set SOL64BITFLAG = ""
       if ( $CC == cc || $CC == insure ) then
          set MEMCFLAG=-Xa
+         set LFLAGS = "-xildoff $LFLAGS"
       endif
    endif
 
@@ -1784,6 +1786,10 @@ if ( "$QTCSH" == 1) then
    endif
 
    cd $SOURCE/3rdparty/qtcsh/$COMPILE_ARCH
+
+   if ( "$CC" == "insure" ) then
+      setenv CC insure
+   endif
 
    $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" \
          "SGE_LIBS=$SGE_LIBS $KRBLIB $LINK_ZLIB $LFLAGS $KLFLAGS $KLIBS" \

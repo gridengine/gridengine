@@ -1,3 +1,6 @@
+AA-2002-02-22-0: Cleanup:   insure compile for tcsh
+                            LINUX6 crypto lib as libcrypto.a.insure
+
 CR-2002-02-21-0: Testsuite: added scripts/qlogin.sh (used for qmod
                             reschedule test)
 

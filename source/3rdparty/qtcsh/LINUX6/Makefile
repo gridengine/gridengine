@@ -1,5 +1,5 @@
 # Generated automatically from Makefile.in by configure.
-# $Id: Makefile,v 1.2 2001/11/30 10:33:39 andre Exp $
+# $Id: Makefile,v 1.3 2002/02/22 13:23:59 andre Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -241,7 +241,7 @@ EXTRALIBS =  $(AFSLIB) -L../../../LINUX6 $(SGE_LIBS) -lm
 CPP = gcc -E # This is set by autoconf.
 # The -B tells gcc to use /bin/ld. This is to avoid using the gnu ld, which
 # on the suns does not know how to make dynamically linked binaries.
-CC = gcc # This is set by autoconf.
+#CC = gcc # This is set by autoconf.
 #CC=	gcc -Wall -pipe -B/bin/	# -ansi -pedantic
 #CC=	gcc -m486 -pipe -Wall # Generate code for Intel 486 (linux)
 #CC=	shlicc 	# BSDI2.1 w/ shared libraries

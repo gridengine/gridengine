@@ -1,3 +1,10 @@
+JG-2003-10-17-0: Enhancem.: Berkeley DB spooling:
+                            Added trigger function that checkpoints the 
+                            transaction subsystem in regular intervals and 
+                            clears the transaction log in regular intervals.
+                            Make qmaster call the spooling framework trigger 
+                            function.
+
 EB-2003-10-16-0: Bugfix:    qconf -mattr ? produced core
 
 AA-2003-10-16-0: Bugfix:    In case that a deletion of a resource attribute 

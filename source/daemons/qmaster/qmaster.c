@@ -105,6 +105,8 @@ int main(int argc, char **argv)
 {
    enum { TIMELEVEL = 0 };
 
+   lList *answer_list = NULL;
+
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
@@ -166,6 +168,14 @@ int main(int argc, char **argv)
 
       sge_stopwatch_start(TIMELEVEL);
       sge_qmaster_process_message(NULL);
+
+      /* trigger regular spooling actions */
+      /* JG: TODO: when we have multithreading, this should be done in a
+       *           maintenance thread, that also writes heartbeat, 
+       *           reporting data etc.
+       */
+      spool_trigger_context(&answer_list, spool_get_default_context());
+      answer_list_output(&answer_list);
    }
 
    DEXIT;

@@ -43,7 +43,7 @@
 #define MSG_BERKELEY_CLOSEDDB_S _MESSAGE(70004, _("closed berkeley database "SFQ"\n"))
 #define MSG_BERKELEY_COULDNTCREATEDB_SS _MESSAGE(70005, _("couldn't open berkeley database "SFQ": "SFN"\n"))
 #define MSG_BERKELEY_PUTERROR_SS _MESSAGE(70006, _("error writing object with key "SFQ" into berkeley database: "SFN"\n"))
-#define MSG_BERKELEY_QUERYERROR_S _MESSAGE(70007, _("error retrieving data from berkeley database: "SFN"\n"))
+#define MSG_BERKELEY_QUERYERROR_SS _MESSAGE(70007, _("error retrieving data ("SFQ") from berkeley database: "SFN"\n"))
 #define MSG_BERKELEY_DELETEERROR_SS _MESSAGE(70008, _("error deleting record with key "SFQ" from berkeley database: "SFN"\n"))
 #define MSG_BERKELEY_COULDNTSETCACHE_SS _MESSAGE(70009, _("couldn't set cache size in berkeley database "SFN": "SFN"\n"))
 #define MSG_BERKELEY_NULLVALUEASKEY _MESSAGE(70010, _("null value given as object primary key\n"))
@@ -58,5 +58,7 @@
 #define MSG_BERKELEY_TXNNOTOPEN _MESSAGE(70019, _("cannot close transaction: There is no open transaction\n"))
 #define MSG_BERKELEY_ABORTINGTRANSACTION _MESSAGE(70020, _("aborting transaction (rollback)\n"))
 #define MSG_BERKELEY_ERRORENDINGTRANSACTION_S _MESSAGE(70021, _("error ending a transaction: "SFN"\n"))
+#define MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_S _MESSAGE(70022, _("error retrieving berkeley db log archive: "SFN"\n"))
+#define MSG_BERKELEY_CANNOTCHECKPOINT_S _MESSAGE(70023, _("error checkpointing berkeley db: "SFN"\n"))
 
 #endif /* __MSG_SPOOLLIB_BERKELEYDB_H */

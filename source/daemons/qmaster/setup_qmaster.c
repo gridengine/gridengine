@@ -33,6 +33,7 @@
 #include <string.h>
 #include <unistd.h>  
 #include <errno.h>
+#include <time.h>
 
 #include "sge_bootstrap.h"
 #include "sge.h"
@@ -117,6 +118,7 @@ int sge_setup_qmaster()
    extern int new_config;
    lListElem *spooling_context = NULL;
    lList *answer_list = NULL;
+   time_t time_start, time_end;
 
    DENTER(TOP_LAYER, "sge_setup_qmaster");
 
@@ -351,8 +353,13 @@ int sge_setup_qmaster()
    answer_list_output(&answer_list);
 
    DPRINTF(("job_list-----------------------------------\n"));
+   /* measure time needed to read job database */
+   time_start = time(0);
    spool_read_list(&answer_list, spooling_context, &Master_Job_List, SGE_TYPE_JOB);
+   time_end = time(0);
    answer_list_output(&answer_list);
+
+   INFO((SGE_EVENT, "read job database in %ld seconds\n", time_end - time_start));
 
    for_each(jep, Master_Job_List) {
       DPRINTF(("JOB "u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 

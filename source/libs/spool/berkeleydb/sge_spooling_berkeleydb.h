@@ -73,6 +73,10 @@ spool_berkeleydb_default_maintenance_func(lList **answer_list,
                                         const spooling_maintenance_command cmd,
                                         const char *args);
 
+bool
+spool_berkeleydb_default_trigger_func(lList **answer_list, 
+                                      const lListElem *rule);
+
 bool 
 spool_berkeleydb_default_list_func(lList **answer_list, 
                                  const lListElem *type, 

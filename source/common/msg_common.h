@@ -285,7 +285,7 @@
 #define MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION    _MESSAGE(23228, _("can't create scheduler configuration\n"))
 
 /* read_write_job.c */
-#define MSG_JOB_CANNOT_REMOVE_SS       _MESSAGE(23229, _("can not remove "SFN": "SFN"\n"))
+#define MSG_JOB_CANNOT_REMOVE_SS       _MESSAGE(23229, _("can not remove file "SFN": "SFN"\n"))
 #define MSG_JOB_PE_TASK_SPOOL_FILE     _MESSAGE(23230, _("pe task spool file"))
 #define MSG_JOB_TASK_SPOOL_FILE        _MESSAGE(23231, _("task spool file"))
 #define MSG_JOB_JOB_SPOOL_FILE         _MESSAGE(23232, _("job spool file"))
@@ -1062,7 +1062,8 @@
 #define MSG_ERROR_WRITINGFILE_SS          _MESSAGE(60207, _("error writing to file "SFQ": "SFN"\n"))
 #define MSG_ERRORREADINGCWD_S             _MESSAGE(60208, _("error reading current working directory: "SFN"\n"))
 #define MSG_ERRORCHANGINGCWD_SS            _MESSAGE(60209, _("error changing current working directory to "SFN": "SFN"\n"))
-#define MSG_ERRORRENAMING_SSS             _MESSAGE(60210, _("error renaming "SFQ" to "SFQ": "SFN"\n"))
+#define MSG_ERRORRENAMING_SSS             _MESSAGE(60210, _("error renaming file "SFQ" to "SFQ": "SFN"\n"))
+#define MSG_ERRORDELETINGFILE_SS          _MESSAGE(60211, _("error deleting file "SFQ": "SFN"\n"))
 
 /* parsing of parameters */
 #define MSG_NULLELEMENTPASSEDTO_S         _MESSAGE(60301, _("NULL object pointer passed to function "SFQ"\n"))

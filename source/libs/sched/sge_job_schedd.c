@@ -31,10 +31,12 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/times.h>
 #include <time.h>
 
+#include "def.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_peL.h"
@@ -257,7 +259,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
        * JG: Disabled hashing - it seems to have negative impact
        *     on performance - further analysis has to follow.
        */
-if(0)      {
+if(1)      {
          const lDescr *descr = lGetListDescr(*(job_lists[SPLIT_PENDING]));
          int pos = lGetPosInDescr(descr, JB_owner);
         
@@ -273,6 +275,7 @@ if(0)      {
       ERROR((SGE_EVENT, "cull_hash_new section %.3f s %3f s\n",
             (now - start) * 1.0 / CLK_TCK, 
             (tms_now.tms_utime - tms_start.tms_utime) * 1.0 / CLK_TCK));
+
       start = times(&tms_start);
 #endif
 
@@ -312,8 +315,17 @@ if(0)      {
 
                lDechainElem(*(job_lists[SPLIT_PENDING]), user_job);
                if (*(job_lists[SPLIT_PENDING_EXCLUDED]) == NULL) {
+                  lDescr *descr = user_job->descr;
+                  int pos = lGetPosInDescr(descr, JB_owner);
+        
+                  if (pos >= 0) {
+                     if (descr[pos].hash != NULL)  {
+                        FREE(descr[pos].hash);
+                     }
+                  }
+
                   *(job_lists[SPLIT_PENDING_EXCLUDED]) =
-                                      lCreateList("", lGetElemDescr(user_job));
+                                      lCreateList("", descr);
                }
 
                lAppendElem(*(job_lists[SPLIT_PENDING_EXCLUDED]), user_job);

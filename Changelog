@@ -1,3 +1,9 @@
+JG-2003-02-13-0  Bugfix:    Fixed improper use of hashtable in scheduler.
+                 Enhancem.: Improved test program for the cull hash 
+                            implementation.
+                 Review:    EB
+                 Changed:   sge_schedd
+
 EB-2003-02-13-0  Enhancem.: Added PROFILE parameter to qmaster_params.
                             Addtional logging concerning spooling in qmaster.
                  Changed:   sge_qmaster 

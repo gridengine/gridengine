@@ -1361,7 +1361,7 @@ case SOLARIS86:
          set DEBUG_FLAG = "-g -pg"
          set LIBS = "$LIBS -ldl"
       else
-         set DEBUG_FLAG = "-g -xpg"
+         set DEBUG_FLAG = "-g -xpg -xprofile=tcov"
       endif
    endif
 

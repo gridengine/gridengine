@@ -87,7 +87,13 @@
          low              lw         BOOL     ==    YES         NO         0       0     
          medium           md         BOOL     ==    YES         NO         0       100  
          high             hg         BOOL     ==    YES         NO         0       10000
+      * don't consider slots with urgency computation
+         slots            s          INT      <=    YES         YES        1       0
+      * configure these three complex attributes in the global host
+        qconf -rattr exechost complex_values low=true,medium=true,high=true global
       * use 'weight_urgency' of '1' and 'weight_ticket' of '0'
+         weight_ticket                    0.0001
+         weight_urgency                   1.0
 
       -->  -l high jobs always must be dispatched before -l medium and -l low jobs
       -->  -l medium jobs always must be dispatched before -l low jobs

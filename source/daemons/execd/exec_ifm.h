@@ -116,7 +116,7 @@ struct psJob_s
 	double	jd_rwtime_c;		/* total time waiting for raw I/O used */
 	double	jd_srtime_c;		/* total srun-wait time used */
 
-	uint64	jd_mem;			/* memory used (integral) */
+	uint64	jd_mem;			/* memory used (integral) in KB seconds */
 	uint64	jd_chars;		/* characters moved */
 
 	uint64	jd_vmem;		   /* virtual memory size */

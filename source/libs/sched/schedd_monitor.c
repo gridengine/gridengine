@@ -43,24 +43,41 @@
 #include "setup_path.h"
 #include "sge_gdi_intern.h"
 
-int monitor_next_run = 0;
+static int monitor_next_run = 0;
 char log_string[2048 + 1] = "invalid log_string";
 
 
 /* if set we do not log into schedd log file but we fill up this answer list */
 static lList **monitor_alpp = NULL;
 
-void clean_monitor_alp()
+void monitor_set_next_run(int i) 
 {
-   if (monitor_alpp)
-      *monitor_alpp = lFreeList(*monitor_alpp);
+   DENTER(TOP_LAYER, "monitor_set_next_run");
+   DPRINTF(("monitor_next_run = %d\n", i));
+   monitor_next_run = i;
+   DEXIT;
 }
 
-void set_monitor_alpp(
-lList **alpp 
-) {
+int monitor_get_next_run(void)
+{
+   return monitor_next_run;
+}
+
+void clean_monitor_alp()
+{
+   DENTER(TOP_LAYER, "schedd_log");
+   if (monitor_alpp) {
+      *monitor_alpp = lFreeList(*monitor_alpp);
+   }
+   DEXIT; 
+}
+
+void set_monitor_alpp(lList **alpp) 
+{
+   DENTER(TOP_LAYER, "schedd_log");
    monitor_alpp = alpp;
    monitor_next_run = (alpp!=NULL);
+   DEXIT;
 }
 
 int schedd_log(const char *logstr) {
@@ -72,6 +89,7 @@ int schedd_log(const char *logstr) {
    DENTER(TOP_LAYER, "schedd_log");
 
    if (!monitor_next_run) {
+      DPRINTF(("monitor_next_run is 0\n"));
       DEXIT;
       return 0;
    }

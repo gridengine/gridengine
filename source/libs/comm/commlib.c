@@ -87,6 +87,10 @@ int gethostname(char *name, int namelen);
 #include "msg_common.h"
 #include "sge_language.h"
 
+#ifdef COMMLIB_ENABLE_DEBUG
+#include "sge_log.h"
+#endif
+
 #ifdef QIDL
 #include <pthread.h>
 static pthread_key_t  commlib_state_key; 
@@ -178,8 +182,21 @@ int firsterr2 = 0xf5;
 
 
 /* communication */
-int send2commd(unsigned char *buffer, int buflen);
-int recvfromcommd(unsigned char **buffer, unsigned char *header, int n, u_long32 *flags, u_short *headerlen, u_long32 *buflen);
+int send2commd(unsigned char *buffer, int buflen
+#ifdef COMMLIB_ENABLE_DEBUG
+               , const char *context_string
+#endif
+               );
+
+int recvfromcommd(unsigned char **buffer, 
+                  unsigned char *header, 
+                  int n, u_long32 *flags, 
+                  u_short *headerlen, 
+                  u_long32 *buflen
+#ifdef COMMLIB_ENABLE_DEBUG
+               , const char *context_string
+#endif
+                 );
 void closeconnection(int force);
 
 
@@ -581,7 +598,11 @@ u_short compressed
 
       /* write prolog and header */
       DPRINTF(("send_message: sending message prolog and header\n"));
-      i = send2commd(prolog_header, PROLOGLEN+headerlen);
+      i = send2commd(prolog_header, PROLOGLEN+headerlen
+#ifdef COMMLIB_ENABLE_DEBUG
+                     , "send_message_(#01)"
+#endif
+                     );
       if (i == COMMD_NACK_ENROLL) {
          if (retry <= max_retrys) {
             force_reenroll();
@@ -603,7 +624,11 @@ u_short compressed
       /* write buffer */
       DPRINTF(("send_message: sending message buffer\n"));
       if (buflen) {
-         i = send2commd(buffer, buflen);
+         i = send2commd(buffer, buflen
+#ifdef COMMLIB_ENABLE_DEBUG
+                        , "send_message_(#02)"
+#endif
+                        );
          if (i == COMMD_NACK_ENROLL) {
             if (retry <= max_retrys) {
                force_reenroll();
@@ -630,7 +655,12 @@ u_short compressed
       if (synchron && buflen)   /* buflen = 0 gets passed by ask_commproc() */
          set_commlib_state_timeout(get_commlib_state_timeout_ssnd());
 
-      i = recvfromcommd((unsigned char **) &ackcharptr, NULL, 1, NULL, NULL, NULL);
+      i = recvfromcommd((unsigned char **) &ackcharptr, NULL, 1, NULL, NULL, 
+                        NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                        , "send_message_(#1)"
+#endif
+                        );
       set_commlib_state_timeout(old_param_timeout);
 
       DPRINTF(("send_message: acknowledge recvfromcommd returned %d\n", i));
@@ -841,7 +871,12 @@ u_short *compressed
 
    while (1) {
       /* write prolog and header */
-      if ((i = send2commd(prolog_header, PROLOGLEN+headerlen))) {
+      i = send2commd(prolog_header, PROLOGLEN+headerlen
+#ifdef COMMLIB_ENABLE_DEBUG
+                     , "receive_message_(#01)"
+#endif
+                    );
+      if (i) {
 #ifndef WIN32NATIVE
          sigprocmask(SIG_SETMASK, &omask, NULL);
 #endif
@@ -857,7 +892,13 @@ u_short *compressed
       if (synchron)
          set_commlib_state_timeout(get_commlib_state_timeout_srcv());
 
-      if ((i = recvfromcommd(&ackcharptr, NULL, 1, NULL, NULL, NULL))) {
+      i = recvfromcommd(&ackcharptr, NULL, 1, NULL, NULL, NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                        , "receive_message_(#1)"
+#endif
+                        );
+
+      if (i) {
 #ifndef WIN32NATIVE
          sigprocmask(SIG_SETMASK, &omask, NULL);
 #endif
@@ -898,8 +939,13 @@ u_short *compressed
    
    /* acknowledge says everything is fine -> receive message */
 
-   if ((i = recvfromcommd((unsigned char **) buffer, header, 0, &flags,
-                          &headerlen, buflen))) {
+   i = recvfromcommd((unsigned char **) buffer, header, 0, &flags,
+                     &headerlen, buflen
+#ifdef COMMLIB_ENABLE_DEBUG
+                      , "receive_message_(#2)"
+#endif
+                    );
+   if (i) {
 #ifndef WIN32NATIVE
       sigprocmask(SIG_SETMASK, &omask, NULL);
 #endif
@@ -908,7 +954,11 @@ u_short *compressed
    }
 
    /* acknowledge receive - should we use a cookie instaed of a zero byte ? */
-   i = send2commd(ackcharptr, 1);
+   i = send2commd(ackcharptr, 1
+#ifdef COMMLIB_ENABLE_DEBUG
+                  , "receive_message_(#01)"
+#endif
+                  );
    closeconnection(0);
 #ifndef WIN32NATIVE
    sigprocmask(SIG_SETMASK, &omask, NULL);
@@ -1064,9 +1114,18 @@ int *tag_priority_list
    omask = build_n_set_mask();
 #endif
 
-   i = send2commd(buffer, cp - buffer);
+   i = send2commd(buffer, cp - buffer
+#ifdef COMMLIB_ENABLE_DEBUG
+                     , "enroll_(#01)"
+#endif
+                  );
    if (!i) {
-      i = recvfromcommd(&bufptr, NULL, 1, NULL, NULL, NULL);
+      i = recvfromcommd(&bufptr, NULL, 1, NULL, NULL, NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                        , "enroll_(#1)"
+#endif
+                        );
+
       if (i) {
 #ifndef WIN32NATIVE
          sigprocmask(SIG_SETMASK, &omask, NULL);
@@ -1082,7 +1141,11 @@ int *tag_priority_list
          DEXIT;
          return buffer[0];
       }
-      i = recvfromcommd(&bufptr, NULL, 2, NULL, NULL, NULL);
+      i = recvfromcommd(&bufptr, NULL, 2, NULL, NULL, NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                        , "enroll_(#2)"
+#endif
+                        );
    }
 
    if (i) {
@@ -1267,7 +1330,12 @@ static int leave_()
    omask = build_n_set_mask();
 #endif
 
-   if ((i = send2commd(prolog_header, PROLOGLEN+headerlen))) {
+   i = send2commd(prolog_header, PROLOGLEN+headerlen
+#ifdef COMMLIB_ENABLE_DEBUG
+                  , "leave_commd (#01)"
+#endif
+                  );
+   if (i) {
 #ifndef WIN32NATIVE
       sigprocmask(SIG_SETMASK, &omask, NULL);
 #endif
@@ -1275,7 +1343,13 @@ static int leave_()
       return i;
    }
 
-   if ((i = recvfromcommd(&ackcharptr, NULL, 1, NULL, NULL, NULL))) {
+   i = recvfromcommd(&ackcharptr, NULL, 1, NULL, NULL, NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                     , "leave_commd (#1)"
+#endif
+                     );
+
+   if (i) {
 #ifndef WIN32NATIVE
 	  sigprocmask(SIG_SETMASK, &omask, NULL);
 #endif
@@ -1384,9 +1458,13 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
    unsigned char buffer[256], *bufptr = buffer;
    int i, headerlen;
    unsigned char *cp;
+   DENTER(COMMD_LAYER, "cntl_");
 
-   if ((i = get_environments()))        /* look for port and host of commd */
+   if ((i = get_environments())) {        
+      /* look for port and host of commd */
+      DEXIT;
       return i;
+   }
 
    /* prolog */
    headerlen = pack_string_len(carg ? carg : "") + 6;
@@ -1404,17 +1482,27 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
    cp = pack_ulong(*arg, cp);
    cp = pack_string(carg ? carg : "", cp);
 
-   i = send2commd(buffer, cp - buffer);
+   i = send2commd(buffer, cp - buffer
+#ifdef COMMLIB_ENABLE_DEBUG
+                  , "cntl_ (#01)"
+#endif
+                  );
    if (!i) {
-      i = recvfromcommd(&bufptr, NULL, 1, NULL, NULL, NULL);
+      i = recvfromcommd(&bufptr, NULL, 1, NULL, NULL, NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                        , "cntl_ (#1)"
+#endif
+                        );
    }
 
    if (i) {
       closeconnection(0);
+      DEXIT;
       return i;
    }
    if (buffer[0]) {
       closeconnection(0);
+      DEXIT;
       return (unsigned char) buffer[0];
    }
 
@@ -1430,26 +1518,38 @@ static int cntl_(u_short cntl_operation, u_long32 *arg, char *carg)
       closeconnection(0);
       if (!i) {
          fprintf(stderr, MSG_COMMLIB_LOST_CONNECTION );
+#ifdef COMMLIB_ENABLE_DEBUG
+         INFO((SGE_EVENT, "cntl_ returns CL_READ #1: %s\n",
+                  strerror(stored_errno)));
+#endif
+         DEXIT;
          return CL_READ;
       }
+      DEXIT;
       return 0;
    }
 
    if (cntl_operation == O_GETID) {
 
-      i = recvfromcommd(&bufptr, NULL, 4, NULL, NULL, NULL);
+      i = recvfromcommd(&bufptr, NULL, 4, NULL, NULL, NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                        , "cntl_ (#2)"
+#endif
+                        );
       if (i) {
          closeconnection(0);
+         DEXIT;
          return i;
       }
 
       cp = unpack_ulong(arg, buffer);
       closeconnection(0);
+      DEXIT;
       return 0;
    }
 
    closeconnection(0);
-
+   DEXIT;
    return buffer[0];
 }
 
@@ -1478,9 +1578,10 @@ static u_long mid_new()
    This is the version trying to avoid hanging around too long in connect().
    This was noticed on LINUX and caused us to hang for a minute.
  */
-int send2commd(
-unsigned char *buffer,
-int buflen 
+int send2commd(unsigned char *buffer, int buflen 
+#ifdef COMMLIB_ENABLE_DEBUG
+               , const char *context_string
+#endif
 ) {
 #ifndef WIN32                   /* var not needed */
    int port = IPPORT_RESERVED - 1;
@@ -1682,6 +1783,10 @@ int buflen
          DEXIT;
          return CL_WRITE_TIMEOUT;
       }
+#ifdef COMMLIB_ENABLE_DEBUG
+         INFO((SGE_EVENT, "send2commd returns CL_WRITE #1 (%s): %s\n",
+                  context_string, strerror(stored_errno)));
+#endif
       DEXIT;
       return CL_WRITE;
    }
@@ -1696,14 +1801,12 @@ int buflen
    if n==0 receive message format PROLOG+HEADER+BUFFER (buffer has to be freed
    by caller, header is given by caller) and return pointers to buffer
  **********************************************************************/
-int recvfromcommd(
-unsigned char **buffer,
-unsigned char *header,
-int n,
-u_long32 *flags,
-u_short *headerlen,
-u_long32 *buflen 
-) {
+int recvfromcommd(unsigned char **buffer, unsigned char *header, int n,
+                  u_long32 *flags, u_short *headerlen, u_long32 *buflen 
+#ifdef COMMLIB_ENABLE_DEBUG
+                  , const char *context_string
+#endif
+                  ) {
    unsigned char prolog[PROLOGLEN], *cp;
    char *bptr = NULL;
    int i;
@@ -1733,6 +1836,10 @@ u_long32 *buflen
             return CL_INTR;
          }
          closeconnection(1);
+#ifdef COMMLIB_ENABLE_DEBUG
+         INFO((SGE_EVENT, "recvfromcommd returns CL_READ #1 (%s): %s\n",
+               context_string, strerror(stored_errno)));
+#endif
          DEXIT;
          return CL_READ;
       } 
@@ -1741,7 +1848,11 @@ u_long32 *buflen
    }
 
    if (readnbytes_nb(get_commlib_state_sfd(), (char *) prolog, PROLOGLEN, 60)) {
-      closeconnection(0);
+      closeconnection(1);
+#ifdef COMMLIB_ENABLE_DEBUG
+         INFO((SGE_EVENT, "recvfromcommd returns CL_READ #2 (%s): %s\n",
+                  context_string, strerror(stored_errno)));
+#endif
       DEXIT;
       return CL_READ;
    }
@@ -1766,12 +1877,17 @@ u_long32 *buflen
    }
    if ((i = readnbytes_nb(get_commlib_state_sfd(), (char *) header, *headerlen, 60)) ||
        (i = readnbytes_nb(get_commlib_state_sfd(), bptr, *buflen, 60))) {
-      closeconnection(0);
       free(bptr);
       if (i == -2) {
+         closeconnection(0);
          DEXIT;
          return CL_READ_TIMEOUT;
       }
+      closeconnection(1);
+#ifdef COMMLIB_ENABLE_DEBUG
+      INFO((SGE_EVENT, "recvfromcommd returns CL_READ #3 (%s): %s\n",
+               context_string, strerror(stored_errno)));
+#endif
       DEXIT;
       return CL_READ;
    }
@@ -1936,13 +2052,23 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
    cp = pack_ulong(cksum((char*)prolog, PROLOGLEN-4), cp);
 
    /* write prolog */
-   if ((i = send2commd(prolog, PROLOGLEN))) {
+   i = send2commd(prolog, PROLOGLEN
+#ifdef COMMLIB_ENABLE_DEBUG
+                  , "getuniquehostname (#01)"
+#endif
+                  );
+   if (i) {
       DEXIT;
       return i;
    }
 
    /* write header */
-   if ((i = send2commd(header, headerlen))) {
+   i = send2commd(header, headerlen
+#ifdef COMMLIB_ENABLE_DEBUG
+                  , "getuniquehostname (#02)"
+#endif 
+                );
+   if (i) {
       DEXIT;
       return i;
    }
@@ -1952,8 +2078,13 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
 
    while(1) {
       /* wait for an acknowledge */
-      if ((i = recvfromcommd((unsigned char **) &ackcharptr, NULL, 1, 
-            NULL, NULL, NULL))) {
+      i = recvfromcommd((unsigned char **) &ackcharptr, NULL, 1,
+            NULL, NULL, NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                        , "getuniquehostname (#1)"
+#endif
+                        );
+      if (i) {
          closeconnection(0);
          DEXIT;
          return i;
@@ -1981,7 +2112,12 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
       break;
    }
 
-   if ((i = recvfromcommd((unsigned char **) &headerptr, NULL, 2, NULL, NULL, NULL))) {
+   i = recvfromcommd((unsigned char **) &headerptr, NULL, 2, NULL, NULL, NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                     , "getuniquehostname (#2)"
+#endif
+                     );
+   if (i) {
       closeconnection(0);
       DEXIT;
       return i;
@@ -1994,7 +2130,13 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases)
       return CL_RANGE;
    }
 
-   if ((i = recvfromcommd((unsigned char **) &headerptr, NULL, hostnamelen, NULL, NULL, NULL))) {
+   i = recvfromcommd((unsigned char **) &headerptr, NULL, hostnamelen, NULL, 
+                     NULL, NULL
+#ifdef COMMLIB_ENABLE_DEBUG
+                     , "getuniquehostname (#3)"
+#endif
+                     );
+   if (i) {
       closeconnection(0);
       DEXIT;
       return i;

@@ -1,3 +1,14 @@
+EB-2002-03-20-1  Bugfix:   can't receive request: READ ERROR
+                           - replaced closeconnection(0) calls within 
+                             recvfromcommd() through closeconnection(1) calls 
+                             in case of read error
+                           - improved logging; additional messages may be 
+                             found in the messages files of the daemons which 
+                             might help if these errors occure again
+                 Issue:    #176 (partially)
+
+EB-2002-03-20-0  Cleanup:  removed global variable monitor_next_run
+
 JG-2002-03-20-1  Bugfix:   Check return code of fclose in spooling functions
                            and handle error situations:
                            - log critical error

@@ -578,32 +578,29 @@ int sge_before_dispatch(void)
    return 0;
 }
 
-/* handling administrative events is independent of the scheduler algorithm */
-/*
-*                                                             max. column:     |
-*/
-/****** sge_schedd/handle_administrative_events() ******
+/****** sge_schedd/handle_administrative_events() *****************************
 *  NAME
-*     handle_administrative_events() -- ??? 
+*     handle_administrative_events() -- handling administrative event 
 *
 *  SYNOPSIS
 *     int handle_administrative_events(u_long32 type, lListElem *event) 
 *
 *  FUNCTION
-*     ??? 
+*     handling administrative events is independent of the scheduler 
+*     algorithm 
 *
 *  INPUTS
-*     u_long32 type    - ??? 
-*     lListElem *event - ??? 
+*     u_long32 type    - event type 
+*     lListElem *event - event 
 *
 *  RESULT
-*    0 this event was not an administrative event
-*   -1 reregister at qmaster
-*    1 handled administrative event
-*    2 got a shutdown event: do not schedule, finish immediately instead
-*
-********************************
-*/
+*     int - return state
+*         0 - this event was not an administrative event
+*        -1 - reregister at qmaster
+*         1 - handled administrative event
+*         2 - got a shutdown event: do not schedule, finish immediately 
+*             instead
+******************************************************************************/
 int handle_administrative_events(u_long32 type, lListElem *event)
 {
    int ret = 1;
@@ -634,7 +631,7 @@ int handle_administrative_events(u_long32 type, lListElem *event)
       break;
 
    case sgeE_SCHEDDMONITOR:
-      monitor_next_run = 1;
+      monitor_set_next_run(1);
       DPRINTF(("monitoring next scheduler run"));
       break;
 

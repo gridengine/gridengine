@@ -54,4 +54,8 @@ int readnbytes_nb(int sfd, char *ptr, int n, int timeout);
 
 int writenbytes_nb(int sfd, const char *ptr, int n, int timeout);
 
+#ifdef COMMLIB_ENABLE_DEBUG
+extern int stored_errno;
+#endif
+
 #endif /* __COMMD_IO_H */

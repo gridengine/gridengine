@@ -251,7 +251,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                next_user_job = lGetElemStrNext(*(job_lists[SPLIT_PENDING]), 
                                                JB_owner, user_name, 
                                                &user_iterator);
-               if (monitor_next_run) {
+               if (monitor_get_next_run()) {
                   schedd_add_message(lGetUlong(user_job, JB_job_number),
                                      SCHEDD_INFO_USRGRPLIMIT_);
                }
@@ -639,28 +639,28 @@ void trash_splitted_jobs(lList **splitted_job_lists[])
          switch (split_id_a[i]) {
          case SPLIT_ERROR:
             schedd_add_message(job_id, SCHEDD_INFO_JOBINERROR_);
-            if (monitor_next_run) {
+            if (monitor_get_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDERRORSTATEREACHED, 
                                *job_list, JB_job_number);
             }
             break;
          case SPLIT_HOLD:
             schedd_add_message(job_id, SCHEDD_INFO_JOBHOLD_);
-            if (monitor_next_run) {
+            if (monitor_get_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEOFXHOLD, 
                                *job_list, JB_job_number);
             }
             break;
          case SPLIT_WAITING_DUE_TO_TIME:
             schedd_add_message(job_id, SCHEDD_INFO_EXECTIME_);
-            if (monitor_next_run) {
+            if (monitor_get_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDEXECUTIONTIMENOTREACHED, 
                                *job_list, JB_job_number);
             }
             break;
          case SPLIT_WAITING_DUE_TO_PREDECESSOR:
             schedd_add_message(job_id, SCHEDD_INFO_JOBDEPEND_);
-            if (monitor_next_run) {
+            if (monitor_get_next_run()) {
                schedd_log_list(MSG_LOG_JOBSDROPPEDBECAUSEDEPENDENCIES, 
                                *job_list, JB_job_number);
             }

@@ -264,7 +264,7 @@ int event_handler_default_scheduler(lList *event_list)
    else
       SCHED_MON((log_string, "--------------STOP-SCHEDULER-RUN-------------"));
 
-   monitor_next_run = 0;
+   monitor_set_next_run(0);
 
    /* .. which gets deleted after using */
    copy.host_list = lFreeList(copy.host_list);
@@ -659,7 +659,9 @@ int sge_process_all_events(lList *event_list) {
                lAppendElem(lists.job_list, ep);
             
                /* add job category */
+#if 0
                sge_add_job_category(ep, lists.acl_list);
+#endif
                if (!sge_mode)
                   at_register_job_array(ep);
 

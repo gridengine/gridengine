@@ -32,8 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-extern int monitor_next_run;
-
 extern char log_string[];
 
 #define SCHED_LOG_NAME "schedd_runlog"
@@ -47,6 +45,10 @@ const char *job_descr(u_long32 jobid);
 int schedd_log(const char *logstr);
 
 int schedd_log_list(const char *logstr, lList *lp, int nm);
+
+void monitor_set_next_run(int i);
+
+int monitor_get_next_run(void);
 
 #define SCHED_MON(x) (sprintf x,schedd_log(log_string))
 

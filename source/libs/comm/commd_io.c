@@ -52,6 +52,10 @@
 #include "commd_io.h"
 #include "sgermon.h"
 
+#ifdef COMMLIB_ENABLE_DEBUG
+int stored_errno = 0;
+#endif
+
 #ifndef MIN
 #   define MIN(a,b) (((a)<(b))?(a):(b))       
 #endif
@@ -176,6 +180,9 @@ int readnbytes_nb(int sfd, char *ptr, int n, int timeout)
 
    DENTER(COMMD_LAYER, "readnbytes_nb");
 
+#ifdef COMMLIB_ENABLE_DEBUG
+   stored_errno = 0;
+#endif
 
    FD_ZERO(&readfds);
 #ifndef WIN32NATIVE
@@ -208,6 +215,10 @@ int readnbytes_nb(int sfd, char *ptr, int n, int timeout)
 #else 
 	  errorcode = WSAGetLastError();
 #endif 
+
+#ifdef COMMLIB_ENABLE_DEBUG
+      stored_errno = errno;
+#endif
 
       DPRINTF(("select returned %d errno=%s\n", res, strerror(errno)));
 
@@ -251,6 +262,10 @@ int readnbytes_nb(int sfd, char *ptr, int n, int timeout)
       	
       DPRINTF(("recv returned %d\n", j));
 #endif /* WIN32NATIVE */
+
+#ifdef COMMLIB_ENABLE_DEBUG
+      stored_errno = errno;
+#endif
 
       if (n == -1) {         /* caller wants to get chunk immediately */
          DEXIT;
@@ -341,6 +356,10 @@ int writenbytes_nb(int sfd, const char *ptr, int n, int timeout)
       errorcode=WSAGetLastError();
 #endif 
 
+#ifdef COMMLIB_ENABLE_DEBUG
+      stored_errno = errno;
+#endif
+
       DPRINTF(("select returned %d errno=%s\n", res, strerror(errno)));
 
       if (res == -1) {
@@ -374,6 +393,10 @@ int writenbytes_nb(int sfd, const char *ptr, int n, int timeout)
 
       DPRINTF(("send returned %d\n", j));
 #endif 
+
+#ifdef COMMLIB_ENABLE_DEBUG
+      stored_errno = errno;
+#endif
 
       if (j == 0) {          /* EOF on pipe */
          DEXIT;

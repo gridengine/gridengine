@@ -1040,6 +1040,7 @@ int subscribe_default_scheduler(void)
          a job is removed from its hold state */
       }   
       else {
+         temp--;
          ec_set_flush(sgeE_JOB_ADD, true, temp);
          /* SG: we might want to have sgeE_JOB_MOD in here to be notified, when
          a job is removed from its hold state */
@@ -1047,14 +1048,15 @@ int subscribe_default_scheduler(void)
          
       temp = sconf_get_flush_finish_sec();
       if (temp <= 0){
-         ec_set_flush(sgeE_JOB_DEL, false,        -1);
+         ec_set_flush(sgeE_JOB_DEL, false,         -1);
          ec_set_flush(sgeE_JOB_FINAL_USAGE, false, -1);
-         ec_set_flush(sgeE_JATASK_DEL, false,-1);
+         ec_set_flush(sgeE_JATASK_DEL, false,      -1);
       }
       else {
-         ec_set_flush(sgeE_JOB_DEL, true,        temp);
+         temp--;
+         ec_set_flush(sgeE_JOB_DEL, true,         temp);
          ec_set_flush(sgeE_JOB_FINAL_USAGE, true, temp);
-         ec_set_flush(sgeE_JATASK_DEL, true, temp);
+         ec_set_flush(sgeE_JATASK_DEL, true,      temp);
       }
    }
    /* for some reason we flush sharetree changes */

@@ -1,3 +1,11 @@
+SG-2004-10-29-1: Bugfix:    second try on the profiling.
+                 Review:    JG
+                 Changed:   scheduler
+
+SG-2004-10-29-0: Bugfix:    fixed the flush implementation in the event master
+                 Review:    JG
+                 Changed:   qmaster
+
 CR-2004-10-28-1: Testsuite: commlib throughput test now uses binary_starter.sh
                             to startup more virtual_event/gdi_client binaries 
                             parallel

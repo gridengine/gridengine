@@ -158,7 +158,7 @@ typedef struct {
    
    bool             delivery_signaled;     /* signals that an event delivery has been signaled          */
                                            /* protected by cond_mutex.                                  */
-   bool             is_flush;              /* ensures that events are delivered right away. protected   */     
+/*   bool             is_flush;  */            /* ensures that events are delivered right away. protected   */     
                                            /* cond_mutex.                                               */
    
    bool             is_prepare_shutdown;   /* is set, when the qmaster is going down. Do not accept     */
@@ -405,7 +405,7 @@ static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER,
                                                 PTHREAD_MUTEX_INITIALIZER,
                                                 PTHREAD_MUTEX_INITIALIZER,
                                                 PTHREAD_MUTEX_INITIALIZER, 0,
-                                                0, false, false, false, false,
+                                                0, false, false, /*false,*/ false,
                                                 false, NULL, NULL, NULL, NULL,
                                                 NULL, NULL, false};
 static pthread_once_t         Event_Master_Once = PTHREAD_ONCE_INIT;
@@ -813,6 +813,8 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    }
 
    lSetUlong(event_client, EV_state, EV_connected);
+
+   set_flush();
 
    DEBUG((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS,
          ruser, rhost, lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
@@ -1617,9 +1619,11 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
                res = false;
             }
             /* Otherwise, flush the client if required. */
+#if 0
             else if (should_flush_event_client (aClientID, type, true)) {
                set_flush ();
             }
+#endif            
 
             /* If we had to aquire the lock, release it now. */
             if (!has_lock) {
@@ -1627,6 +1631,7 @@ static bool add_list_event_for_client(u_long32 aClientID, u_long32 timestamp,
             }
          }
       }
+      set_flush();
    }
    
    DEXIT;
@@ -1801,7 +1806,9 @@ void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
    lAppendElem (Master_Control.ack_events, evp);
    
    sge_mutex_unlock("event_master_ack_mutex", SGE_FUNC, __LINE__, &Master_Control.ack_mutex);
-   
+  
+   set_flush();
+  
    DEXIT;
 }
 
@@ -1906,7 +1913,7 @@ void sge_deliver_events_immediately(u_long32 aClientID)
    else {
       flush_events(client, 0);
       sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
-      Master_Control.is_flush = true;
+/*      Master_Control.is_flush = true;*/
       Master_Control.delivery_signaled = true;
       pthread_cond_signal(&Master_Control.cond_var);
       sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
@@ -2186,7 +2193,7 @@ static void* event_deliver_thread(void *anArg)
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
-      if (!Master_Control.is_flush) {
+      if (!Master_Control.delivery_signaled) {
          u_long32 current_time = sge_get_gmt();
   
          /*
@@ -2213,10 +2220,6 @@ static void* event_deliver_thread(void *anArg)
 
          Master_Control.delivery_signaled = false;
       }
-      /* 
-       * we are delivering events now, though we can reset the flush.
-       */
-      Master_Control.is_flush = false;
 
       sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
 
@@ -3993,14 +3996,18 @@ bool sge_commit (void)
    sge_mutex_lock("event_master_t_add_event_mutex", SGE_FUNC, __LINE__, &Master_Control.t_add_event_mutex);
    
    if (Master_Control.is_transaction) {
-      bool flush = false;
-     
+   
+   /* we do not need to evaluate the flushing, we just trigger, when ever there is one event. */
+#if 0   
+      bool flush = false; 
+#endif     
       Master_Control.is_transaction = false;
       
       /* We don't have to worry about holding a lock while we work on this list
        * because the list is thread specific. */
 
       if (Master_Control.transaction_events != NULL) {
+#if 0      
          lListElem *ep = lFirst (Master_Control.transaction_events);
 
          /* Do this math here before we destroy qlp, and while we're not holding
@@ -4018,14 +4025,17 @@ bool sge_commit (void)
             
             ep = lNext(ep);
          }
-
+#endif
          sge_mutex_lock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
          lAppendList (Master_Control.send_events, Master_Control.transaction_events);
          sge_mutex_unlock("event_master_send_mutex", SGE_FUNC, __LINE__, &Master_Control.send_mutex);
-         
+#if 0         
          if (flush) {
             set_flush();
          }
+#endif         
+
+         set_flush();
       }
       ret = true;
    }
@@ -4108,9 +4118,10 @@ static void set_flush (void)
    DENTER (TOP_LAYER, "set_flush");
    
    sge_mutex_lock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
-   Master_Control.is_flush = true;
-   Master_Control.delivery_signaled = true;
-   pthread_cond_signal(&Master_Control.cond_var);
+   if (!Master_Control.delivery_signaled) { 
+      Master_Control.delivery_signaled = true;
+      pthread_cond_signal(&Master_Control.cond_var);
+   }
    sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
    
    DEXIT;

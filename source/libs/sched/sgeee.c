@@ -2982,7 +2982,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    }     
    
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   prof_init = prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL);
+   prof_init = prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4, false, NULL);
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4); 
 
    /*-----------------------------------------------------------------
@@ -3010,7 +3010,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
                                  curr_time, sge_scheduling_run);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   prof_pass0 = prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL);
+   prof_pass0 = prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4,false, NULL);
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4); 
 
    /*-----------------------------------------------------------------
@@ -3044,7 +3044,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   prof_pass1= prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL);
+   prof_pass1= prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4,false, NULL);
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4); 
 
    /*-----------------------------------------------------------------
@@ -3105,7 +3105,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   prof_pass2 = prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL);
+   prof_pass2 = prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4,false, NULL);
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4); 
 
    /*-----------------------------------------------------------------
@@ -3544,7 +3544,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
       lFreeList(decay_list);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   prof_calc = prof_get_measurement_utime(SGE_PROF_SCHEDLIB4, false, NULL);
+   prof_calc = prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4, false, NULL);
       
    if(prof_is_active(SGE_PROF_SCHEDLIB4)){
       u_long32 saved_logginglevel = log_state_get_log_level();
@@ -4415,7 +4415,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
       log_state_set_log_level(LOG_INFO); 
 
       INFO((SGE_EVENT, "PROF: create active job orders: %.3f s\n",
-               prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL)));
+               prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4,false, NULL)));
 
       log_state_set_log_level(saved_logginglevel);
    }  

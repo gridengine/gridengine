@@ -485,7 +485,7 @@ bool prof_start_measurement(prof_level level, dstring *error)
          prof_add_error_sprintf(error, MSG_PROF_CYCLICNOTALLOWED_SD, "prof_start_measurement", level);
          prof_stop(level, error);
       } else {
-         theInfo[thread_num][level].pre = theInfo[thread_num][level].akt_level;
+         theInfo[thread_num][level].pre = theInfo[thread_num][SGE_PROF_ALL].akt_level;
          theInfo[thread_num][SGE_PROF_ALL].akt_level = level;
 
          theInfo[thread_num][level].start = times(&(theInfo[thread_num][level].tms_start));
@@ -562,14 +562,15 @@ bool prof_stop_measurement(prof_level level, dstring *error)
 
 
          if (theInfo[thread_num][level].pre != SGE_PROF_NONE) {
+            prof_level pre = theInfo[thread_num][level].pre;
 
-            theInfo[thread_num][level].sub += time;
-            theInfo[thread_num][level].sub_utime += utime;
-            theInfo[thread_num][level].sub_stime += stime;
+            theInfo[thread_num][pre].sub += time;
+            theInfo[thread_num][pre].sub_utime += utime;
+            theInfo[thread_num][pre].sub_stime += stime;
 
-            theInfo[thread_num][level].sub_total += time;
-            theInfo[thread_num][level].sub_total_utime += utime;
-            theInfo[thread_num][level].sub_total_stime += stime;
+            theInfo[thread_num][pre].sub_total += time;
+            theInfo[thread_num][pre].sub_total_utime += utime;
+            theInfo[thread_num][pre].sub_total_stime += stime;
             
             theInfo[thread_num][SGE_PROF_ALL].akt_level = theInfo[thread_num][level].pre;
             theInfo[thread_num][level].pre = SGE_PROF_NONE;
@@ -1352,7 +1353,7 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
              theInfo[thread_num][i].name = "all";
              break;
            default:
-             theInfo[thread_num][i].name = NULL/* "custom"*/;  
+             theInfo[thread_num][i].name = NULL; /* "custom"*/  
              break;
          }
 
@@ -1431,7 +1432,7 @@ static void prof_info_init(prof_level level, pthread_t thread_id)
              theInfo[thread_num][level].name = "all";
              break;
            default:
-             theInfo[thread_num][level].name = "custom";  
+             theInfo[thread_num][level].name = NULL; /*"custom"*/;  
              break;
          }
 

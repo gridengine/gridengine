@@ -12,7 +12,7 @@ JG-2002-03-21-0  Bugfix:   prioritization of messages to qmaster could block
                            be changed via env variable SGE_PRIORITY_TAGS.
 
 EB-2002-03-21-0  Bugfix:   local config not written as admin user at startup
-                 Issue:    #199
+                 Issue:    #198
 
 CR-2002-03-21-0  Testsuite: merge from maintrunc
                             sending "vt100" when client host is using tset

@@ -524,6 +524,7 @@ while ($#argv >= 1 && $?found)
       set KVMAN = 1
       breaksw
    case  "-mo"
+      echo "BUILDARCH=$BUILDARCH"
       if ( $BUILDARCH == solaris || $BUILDARCH == solaris64 ) then
          scripts/msgmerge.csh
       else
@@ -1079,7 +1080,7 @@ case LINUX6:
 
    if ( $CC == "gcc" && `gcc --version` == "2.96") then
       set CFLAGS = "-DUSING_GCC_2_96 $CFLAGS"
-   endif 
+   endif
 
    set CFLAGS = "-DLINUX -D$BUILDARCH $CFLAGS"
    set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"

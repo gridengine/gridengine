@@ -2084,8 +2084,9 @@ FILEPERM=644
 # setup INFOTEXT
 #-----------------------------
 INFOTEXT=$V5UTILBIN/infotext
-if [ ! -f $INFOTEXT ]; then
-   $ECHO "can't find \"$INFOTEXT\""
+INFOTXT_DUMMY=$V5UTILBIN/infotext
+if [ ! -f $INFOTXT_DUMMY ]; then
+   $ECHO "can't find \"$INFOTXT_DUMMY\""
    $ECHO "Installation failed."
    exit 1
 fi

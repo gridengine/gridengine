@@ -460,7 +460,7 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
                break;
             case -4:
                /* fills SGE_EVENT with diagnosis information */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "general gdi error"));
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "general gdi error\n"));
                break;
             case -5:
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SIGNALED ));

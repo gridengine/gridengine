@@ -408,8 +408,8 @@
 #define MSG_SGETEXT_MUST_BE_OPR_TO_SS                 _MESSAGE(33319, _("denied: "SFQ" must be operator to "SFN"\n"))
 #define MSG_SGETEXT_MOD_JOBS_SU                       _MESSAGE(33320, _("modified "SFN" of job "U32CFormat"\n") )     
 #define MSG_SGETEXT_DOESNOTEXIST_SU                   _MESSAGE(33321, _(""SFN" \"" U32CFormat "\" does not exist\n"))
-#define MSG_SGETEXT_DOESNOTEXISTTASK_SU               _MESSAGE(33322, _("job \""SFN"\" task \"" U32CFormat "\" does not exist\n"))
-#define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUU        _MESSAGE(33323, _("job \""SFN"\" task id range \"" U32CFormat "-" U32CFormat ":" U32CFormat "\" comprises no tasks\n"))
+#define MSG_SGETEXT_DOESNOTEXISTTASK_SUS               _MESSAGE(33322, _("job \""SFN"\" task \"" U32CFormat "\" does not exist for user(s) %s\n"))
+#define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUUS        _MESSAGE(33323, _("job \""SFN"\" task id range \"" U32CFormat "-" U32CFormat ":" U32CFormat "\" comprises no tasks under user(s) %s\n"))
 #define MSG_SGETEXT_NO_PROJECT                        _MESSAGE(33324, _("job rejected: no project assigned to job\n") )     
 #define MSG_SGETEXT_MOD_JATASK_SUU                    _MESSAGE(33325, _("modified "SFN" of job-array task "U32CFormat"."U32CFormat"\n") )  
 #define MSG_SGETEXT_MUST_BE_MGR_TO_SS                 _MESSAGE(33326, _("denied: "SFQ" must be manager to "SFN"\n"))
@@ -424,9 +424,9 @@
 #define MSG_SGETEXT_MODIFIEDINLIST_SSUS               _MESSAGE(33336, _(""SFN"@"SFN" modified \"" U32CFormat "\" in "SFN" list\n"))
 #define MSG_JOB_MOD_JOBDEPENDENCY_MEMORY              _MESSAGE(33337, _("could not create job dependency list\n"))
 
-#define MSG_SGETEXT_SPECIFYONEORALLUSER         _MESSAGE(33338, _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n"))
+#define MSG_SGETEXT_SPECIFYONEORALLUSER               _MESSAGE(33338, _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n"))
 #define MSG_SGETEXT_OPTIONONLEONJOBS_U                _MESSAGE(33339, _("The specified option works only on jobs ("U32CFormat")\n"))
-
+#define MSG_SGETEXT_DEL_JOB_SS                        _MESSAGE(33340, _("The job %s of user(s) %s does not exist\n"))
 /*
 ** sge_manop.c
 */

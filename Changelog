@@ -1,7 +1,12 @@
-CR-2004-02-03-1  Bugfix:    Fixed build for tru64 
+SG-2004-02-03-0: Bugfix:    - added the user id to the qdel error messages.
+                            - some code cleanup
+                 Changed:   qmaster
+                 Review:    JG
+
+CR-2004-02-03-1: Bugfix:    Fixed build for tru64 
                             (no prototype for "sge_get_execd_port()")
 
-CR-2004-02-03-0  Testsuite: HTML compile output links of compile output HTML file
+CR-2004-02-03-0: Testsuite: HTML compile output links of compile output HTML file
                             are now relative to HTML-directory.
 
 MD-2004-02-02-2: Bugfix:    - Text 

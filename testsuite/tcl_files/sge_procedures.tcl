@@ -4500,7 +4500,7 @@ proc delete_job { jobid { wait_for_end 0 }} {
 #     sge_procedures/delete_job()
 #     check/add_proc_error()
 #*******************************
-proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""} { cd_dir ""} } {
+proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""} { cd_dir ""} } {
   global CHECK_PRODUCT_ROOT CHECK_HOST CHECK_ARCH CHECK_OUTPUT CHECK_USER
   global open_spawn_buffer
 
@@ -4568,7 +4568,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
           }
           -i $sp_id timeout {
              puts $CHECK_OUTPUT "submit_job - timeout(1)"
-             add_proc_error "submit_job" "-1" "got timeout(1) error"
+             add_proc_error "submit_job" "-1" "got timeout(1) error\nexpect_out(buffer):\n\"$expect_out(buffer)\""
              set return_value -1 
           }
           -i $sp_id eof {
@@ -6112,61 +6112,73 @@ proc wait_for_jobend { jobid jobname seconds {runcheck 1} { wait_for_end 0 } } {
 proc get_version_info {} {
    global CHECK_PRODUCT_VERSION_NUMBER CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_PRODUCT_FEATURE CHECK_PRODUCT_TYPE CHECK_OUTPUT
+   global CHECK_CHECKTREE_ROOT
  
+
    if { [info exists CHECK_PRODUCT_ROOT] != 1 } {
       set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
+      delete_tests $CHECK_CHECKTREE_ROOT/install_core_system
       return $CHECK_PRODUCT_VERSION_NUMBER
    }
    
    if { [file isfile "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf"] == 1 } {
-      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-help" } result
+      set qmaster_running [ catch { 
+         eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -sh" 
+      } result ]
+
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-help" } result
       set help [ split $result "\n" ] 
-      if { ([ string first "fopen" [ lindex $help 0] ] >= 0) || 
-           ([ string first "error" [ lindex $help 0] ] >= 0) || 
-           ([ string first "product_mode" [ lindex $help 0] ] >= 0) } {
+      if { ([ string first "fopen" [ lindex $help 0] ] >= 0)        || 
+           ([ string first "error" [ lindex $help 0] ] >= 0)        || 
+           ([ string first "product_mode" [ lindex $help 0] ] >= 0) ||   
+           ($qmaster_running != 0) } {
           set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
+          delete_tests $CHECK_CHECKTREE_ROOT/install_core_system
           return $CHECK_PRODUCT_VERSION_NUMBER
       }
       set CHECK_PRODUCT_VERSION_NUMBER [ lindex $help 0]
       if { [ string first "exit" $CHECK_PRODUCT_VERSION_NUMBER ] >= 0 } {
          set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
       } else {
-         set product_mode_file [ open "$CHECK_PRODUCT_ROOT/default/common/product_mode" "r" ]
-         gets $product_mode_file line
-         if { $CHECK_PRODUCT_FEATURE == "csp" } {
-             if { [ string first "csp" $line ] < 0 } {
-                 puts $CHECK_OUTPUT "get_version_info - product feature is not csp ( secure )"
-                 puts $CHECK_OUTPUT "testsuite setup error - stop"
-                 exit -1
-             } 
-         } else {
-             if { [ string first "csp" $line ] >= 0 } {
-                 puts $CHECK_OUTPUT "resolve_version - product feature is csp ( secure )"
-                 puts $CHECK_OUTPUT "testsuite setup error - stop"
-                 exit -1
-             } 
+         if { [file isfile $CHECK_PRODUCT_ROOT/default/common/product_mode ] == 1 } {
+            set product_mode_file [ open $CHECK_PRODUCT_ROOT/default/common/product_mode "r" ]
+            gets $product_mode_file line
+            if { $CHECK_PRODUCT_FEATURE == "csp" } {
+                if { [ string first "csp" $line ] < 0 } {
+                    puts $CHECK_OUTPUT "get_version_info - product feature is not csp ( secure )"
+                    puts $CHECK_OUTPUT "testsuite setup error - stop"
+                    exit -1
+                } 
+            } else {
+                if { [ string first "csp" $line ] >= 0 } {
+                    puts $CHECK_OUTPUT "resolve_version - product feature is csp ( secure )"
+                    puts $CHECK_OUTPUT "testsuite setup error - stop"
+                    exit -1
+                } 
+            }
+            if { $CHECK_PRODUCT_TYPE == "sgeee" } {
+                if { [ string first "sgeee" $line ] < 0 } {
+                    puts $CHECK_OUTPUT "resolve_version - no sgeee system"
+                    puts $CHECK_OUTPUT "please remove the file"
+                    puts $CHECK_OUTPUT "\n$CHECK_PRODUCT_ROOT/default/common/product_mode"
+                    puts $CHECK_OUTPUT "\nif you want to install a new sge system"
+                    puts $CHECK_OUTPUT "testsuite setup error - stop"
+                    exit -1
+                } 
+            } else {
+                if { [ string first "sgeee" $line ] >= 0 } {
+                    puts $CHECK_OUTPUT "resolve_version - this is a sgeee system"
+                    puts $CHECK_OUTPUT "testsuite setup error - stop"
+                    exit -1
+                } 
+            }
+            close $product_mode_file
          }
-         if { $CHECK_PRODUCT_TYPE == "sgeee" } {
-             if { [ string first "sgeee" $line ] < 0 } {
-                 puts $CHECK_OUTPUT "resolve_version - no sgeee system"
-                 puts $CHECK_OUTPUT "please remove the file"
-                 puts $CHECK_OUTPUT "\n$CHECK_PRODUCT_ROOT/default/common/product_mode"
-                 puts $CHECK_OUTPUT "\nif you want to install a new sge system"
-                 puts $CHECK_OUTPUT "testsuite setup error - stop"
-                 exit -1
-             } 
-         } else {
-             if { [ string first "sgeee" $line ] >= 0 } {
-                 puts $CHECK_OUTPUT "resolve_version - this is a sgeee system"
-                 puts $CHECK_OUTPUT "testsuite setup error - stop"
-                 exit -1
-             } 
-         }
-         close $product_mode_file
       }  
       return $CHECK_PRODUCT_VERSION_NUMBER
    }
    set CHECK_PRODUCT_VERSION_NUMBER "system not installed - run compile option first"
+   delete_tests $CHECK_CHECKTREE_ROOT/install_core_system
    return $CHECK_PRODUCT_VERSION_NUMBER
 }
 

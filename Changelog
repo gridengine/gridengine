@@ -1,3 +1,9 @@
+CR-2002-11-27-0  Testsuite: a) get_version_info() must test if product mode file
+                 Bugfix:       exists, before opening the file. If file wasn't
+                               available a TCL error occured.
+                            b) increased default timeout for submit_job() and
+                               added more debug output for timeout errors.
+
 CR-2002-11-26-0  Testsuite: increased timeouts in qmaster complex check. Old
                             timeout was too short to let the execd load values
                             timeout at qmaster.

@@ -2667,7 +2667,7 @@ proc setup_schedconf {} {
        if { [ string compare $old $new ] != 0 } {
           if { [resolve_version] >= 3 } {
              if { [ string compare $param "reprioritize_interval" ] == 0 } { continue }
-          else {
+          } else {
              if { [ string compare $param "sgeee_schedule_interval" ] == 0 } { continue }
           }             
           if { [ string compare $param "weight_tickets_deadline" ] == 0 } { continue }

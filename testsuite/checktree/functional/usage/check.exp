@@ -160,7 +160,7 @@ proc usage_setup  {} {
          set saved_config($attrib) $config($attrib)
       }
       set my_schedd_conf(flush_submit_sec) "1"
-      set_schedd_config(my_schedd_conf);
+      set_schedd_config my_schedd_conf 
    }
 
    set new_config(load_report_time) "0:0:5"

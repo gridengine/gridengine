@@ -1956,7 +1956,7 @@ proc cleanup_system { } {
 
   set catch_return [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" } result ]
   if { $catch_return != 0 } {
-     add_proc_error "setup_queues" -2 "error connecting qmaster: $result"
+     add_proc_error "cleanup_system" -2 "error connecting qmaster: $result"
      set_error -2 "error connecting qmaster"
      return
   }

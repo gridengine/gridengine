@@ -394,6 +394,11 @@ static void become_admin_user(void)
 *  FUNCTION
 *     Add heartbeat event and register according event handler. 
 *
+*     NOTE: Before registering the heartbeat event, we do increment the
+*     heartbeat manually once. This is the 'startup heartbeat'. The first time
+*     the hearbeat will be incremented through the heartbeat event handler is
+*     after HEARTBEAT_INTERVAL seconds. 
+*
 *  INPUTS
 *     void - none 
 *
@@ -411,6 +416,8 @@ static void start_heartbeat(void)
    te_event_t ev = NULL;
 
    DENTER(TOP_LAYER, "start_heartbeat");
+
+   inc_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE);
 
    te_register_event_handler(increment_heartbeat, TYPE_HEARTBEAT_EVENT);
 

@@ -1,3 +1,6 @@
+AD-2004-01-28-2: Bugfix:    Did add 'startup heartbeat'.
+                 Changed:   qmaster
+
 JG-2004-01-28-1: Enhancem.: Added queue state and consumable information to the
                             reporting file.
                  Review:    pending

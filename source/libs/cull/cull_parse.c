@@ -39,14 +39,13 @@
 #endif
 
 #include "sgermon.h"
+#include "cull_listP.h"
 #include "cull_parse.h"
 #include "cull_lerrnoP.h"
 
 /* ---------- static funcs --------------------------------- */
 static const char *eatws(const char *s);
 /* ---------- global variable --------------------------------- */
-
-static int token_is_valid = 0;
 
 /* =========== implementation ================================= */
 
@@ -72,8 +71,8 @@ const char *s
    is proceed
 
  */
-void eat_token(void) {
-   token_is_valid = 0;
+void eat_token(cull_parse_state *state) {
+   state->token_is_valid = 0;
 }
 
 /* ------------------------------------------------------------ 
@@ -88,11 +87,9 @@ void eat_token(void) {
 
  */
 int scan(
-const char *s 
+const char *s,
+cull_parse_state *state
 ) {
-   static const char *t;
-   static int token;
-
    static char *opv[] =
    {
       "%T",                     /* DESCRIPTOR TYPE OF LIST */
@@ -139,20 +136,21 @@ const char *s
    DENTER(CULL_LAYER, "scan");
 
    if (s) {                     /* initialize scan() with a new string to parse */
-      t = s;
-      token_is_valid = 0;
+      state->t = s;
+      state->token_is_valid = 0;
    }
 
-   if (token_is_valid) {        /* no need for a new token to parse */
+   if (state->token_is_valid) {        /* no need for a new token to parse */
       DEXIT;
-      return token;
+      return state->token;
    }
 
-   if (!(t = eatws(t))) {       /* end of the string to parse */
-      token_is_valid = 1;
-      token = NO_TOKEN;
+   state->t = eatws(state->t);
+   if (state->t == NULL) {       /* end of the string to parse */
+      state->token_is_valid = 1;
+      state->token = NO_TOKEN;
       DEXIT;
-      return token;
+      return state->token;
    }
 
    /* try every possible token */
@@ -160,20 +158,23 @@ const char *s
       found = 1;
       len = strlen(opv[i]);
       for (j = 0; j < len; j++)
-         if (t[j] == '\0' || t[j] != opv[i][j]) {
+         if (state->t[j] == '\0' || state->t[j] != opv[i][j]) {
             found = 0;
             break;
          }
       if (found) {
-         t += len;
-         token_is_valid = 1;
+         state->t += len;
+         state->token_is_valid = 1;
+         state->token = i + 1;
+
          DEXIT;
-         return (token = i + 1);
+         return (state->token);
       }
    }
 
-   token_is_valid = 1;
-   token = NO_TOKEN;
+   state->token_is_valid = 1;
+   state->token = NO_TOKEN;
+
    DEXIT;
-   return token;
+   return state->token;
 }

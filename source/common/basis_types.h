@@ -219,4 +219,18 @@ typedef char stringTlong[4*MAX_STRING_SIZE];
 #  define FALSE !TRUE
 #endif
 
+#if defined(SGE_MT)
+#define GET_SPECIFIC(type, variable, init_func, key) \
+   type * variable; \
+   if(!pthread_getspecific(key)) { \
+      variable = (type *)malloc (sizeof(type)); \
+      init_func(variable); \
+      pthread_setspecific(key, (void*)variable); \
+   } \
+   else \
+      variable = pthread_getspecific(key)
+#else
+#define GET_SPECIFIC(type, variable, init_func, key)
+#endif
+
 #endif /* __BASIS_TYPES_H */

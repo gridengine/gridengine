@@ -89,6 +89,19 @@ struct _lList {
    lListElem *last;             /* pointer to the last element of the list   */
 };
 
+
+void set_cull_state_lerrno(int errno);
+void set_cull_state_noinit(char *s);
+void set_cull_state_global_sort_order(const lSortOrder *so);
+void set_cull_state_chunk_size(int chunk_size);
+void set_cull_state_name_space(const lNameSpace *ns);
+
+int get_cull_state_lerrno(void);
+const char *get_cull_state_noinit(void);
+const lSortOrder *get_cull_state_global_sort_order(void);
+int get_cull_state_chunk_size(void);
+const lNameSpace *get_cull_state_name_space(void);
+
 #ifdef  __cplusplus
 }
 #endif

@@ -51,11 +51,130 @@
 #include "cull_whatP.h"
 #include "cull_lerrnoP.h"
 #include "cull_hash.h"
+#include "pack.h"
 
 #define CULL_BASIS_LAYER CULL_LAYER
 
+/* struct to store ALL state information of cull lib */
+struct cull_state_t {
+   int               lerrno;               /* cull errno                    */
+   char              noinit[50];           /* cull error buffer             */
+   const lSortOrder  *global_sort_order;   /* qsort() by-pass argument      */
+   int               chunk_size;           /* chunk size if packing         */
+   const lNameSpace  *name_space;          /* name vector                   */
+};
+
+#if defined(SGE_MT)
+#include <pthread.h>
+static pthread_key_t  cull_state_key;  
+#else
+static struct cull_state_t cull_state_opaque = { 
+  0,  "", NULL, CHUNK, NULL }; 
+struct cull_state_t *cull_state = &cull_state_opaque;
+#endif
+
+
 static void lWriteList_(const lList *lp, int nesting_level, FILE *fp);
-static void lWriteElem_(const lListElem *lp, FILE *fp);
+static void lWriteElem_(const lListElem *lp, int nesting_level, FILE *fp);
+
+#if defined(SGE_MT)
+static void cull_state_destroy(void* state) {
+   free(state);
+}
+   
+void cull_init_mt() {
+   pthread_key_create(&cull_state_key, &cull_state_destroy);
+}  
+   
+static void cull_state_init(struct cull_state_t* state) {
+   state->lerrno = 0;
+   state->noinit[0] = '\0';
+   state->global_sort_order = NULL;
+   state->chunk_size = CHUNK;
+   state->name_space = NULL;
+}
+#endif
+
+
+
+/****** cull/list/get_cull_state_????() ************************************
+*  NAME
+*     get_cull_state_????() - read access to cull global variables
+*
+*  FUNCTION
+*     Provides access to either global variable or per thread global variable.
+*
+******************************************************************************/
+int get_cull_state_lerrno(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->lerrno;
+}
+
+const char *get_cull_state_noinit(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->noinit;
+}
+
+const lSortOrder *get_cull_state_global_sort_order(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->global_sort_order;
+}
+
+int get_cull_state_chunk_size(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->chunk_size;
+}
+
+const lNameSpace *get_cull_state_name_space(void) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   return cull_state->name_space;
+}
+
+/****** cull/list/set_cull_state_????() ************************************
+*  NAME
+*     set_cull_state_????() - write access to cull global variables
+*
+*  FUNCTION
+*     Provides access to either global variable or per thread global variable.
+*
+******************************************************************************/
+
+void set_cull_state_lerrno(
+int errno
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   cull_state->lerrno = errno;
+}
+
+void set_cull_state_noinit(
+char *s
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   strcpy(cull_state->noinit, s);
+}
+
+void set_cull_state_global_sort_order(
+const lSortOrder *so
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   cull_state->global_sort_order = so;
+}
+
+void set_cull_state_chunk_size(
+int chunk_size
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   cull_state->chunk_size = chunk_size;
+}
+
+void set_cull_state_name_space(
+const lNameSpace  *ns
+) {
+   GET_SPECIFIC(struct cull_state_t, cull_state, cull_state_init, cull_state_key);
+   cull_state->name_space = ns;
+}
+
+
 
 /****** cull/list/-Field_Attributes *************************************************
 *  NAME
@@ -583,7 +702,7 @@ void lWriteElem(const lListElem *ep)
 {
    DENTER(CULL_LAYER, "lWriteElem");
 
-   lWriteElem_(ep, NULL);
+   lWriteElem_(ep, 0, NULL);
 
    DEXIT;
 }
@@ -607,15 +726,14 @@ void lWriteElemTo(const lListElem *ep, FILE *fp)
 {
    DENTER(CULL_LAYER, "lWriteElemTo");
 
-   lWriteElem_(ep, fp);
+   lWriteElem_(ep, 0, fp);
 
    DEXIT;
 }
 
-static void lWriteElem_(const lListElem *ep, FILE *fp) 
+static void lWriteElem_(const lListElem *ep, int nesting_level, FILE *fp) 
 {
    int i;
-   static int nesting_level = 0;
    char space[128];
    lList *tlp;
    lListElem *tep;
@@ -686,13 +804,11 @@ static void lWriteElem_(const lListElem *ep, FILE *fp)
             fprintf(fp, "%s%-20.20s (List)    %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tlp ? "full {" : "empty");
          if (tlp) {
-            nesting_level++;
-            lWriteList_(tlp, nesting_level, fp);
+            lWriteList_(tlp, nesting_level + 1, fp);
             if (!fp)
                DPRINTF(("%s}\n", space));
             else
                fprintf(fp, "%s}\n", space);
-            nesting_level--;
          }
          break;
 
@@ -705,13 +821,11 @@ static void lWriteElem_(const lListElem *ep, FILE *fp)
             fprintf(fp, "%s%-20.20s (Object)  %c = %s\n", space,
                     lNm2Str(ep->descr[i].nm), changed ? '*' : ' ', tep ? "object {" : "none");
          if (tep) {
-            nesting_level++;
-            lWriteElem_(tep, fp);
+            lWriteElem_(tep, nesting_level + 1, fp);
             if (!fp)
                DPRINTF(("%s}\n", space));
             else
                fprintf(fp, "%s}\n", space);
-            nesting_level--;
          }
          break;
       case lFloatT:
@@ -853,9 +967,9 @@ static void lWriteList_(const lList *lp, int nesting_level, FILE *fp)
 
    for_each(ep, lp) {
       if (!fp)
-         lWriteElem(ep);
+         lWriteElem_(ep, nesting_level, NULL);
       else
-         lWriteElemTo(ep, fp);
+         lWriteElem_(ep, nesting_level, fp);
    }
    DEXIT;
 }
@@ -2092,7 +2206,7 @@ int lSortList(lList *lp, const lSortOrder *sp)
    /* 
     * step 2: sort the pointer array using parsed sort order 
     */
-   lSetGlobalSortOrder(sp);     
+   set_cull_state_global_sort_order(sp);
    /* this is done to pass the sort order */
    /* to the lSortCompare function called */
    /* by lSortCompareUsingGlobal          */

@@ -40,6 +40,7 @@
 #endif
 
 #include "sgermon.h"
+#include "cull_listP.h"
 #include "cull_list.h"
 #include "cull_db.h"
 #include "cull_parse.h"
@@ -141,6 +142,7 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
    lEnumeration *ep = NULL;
    lEnumeration *ep2 = NULL;
    int error_status;
+   cull_parse_state state;
 
    DENTER(CULL_LAYER, "_lWhat");
 
@@ -159,18 +161,19 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       goto error;
    }
 
-   if (scan(fmt) != TYPE) {
+   memset(&state, 0, sizeof(state));
+   if (scan(fmt, &state) != TYPE) {
       /* %T expected */
       error_status = LESYNTAX;
       goto error;
    }
-   eat_token();                 /* eat %T */
-   if (scan(NULL) != BRA) {
+   eat_token(&state);                 /* eat %T */
+   if (scan(NULL, &state) != BRA) {
       /* ( expected */
       error_status = LESYNTAX;
       goto error;
    }
-   eat_token();                 /* eat ( */
+   eat_token(&state);                 /* eat ( */
 
    /* Nr of fields to malloc */
    /* for CULL_ALL and NONE we need one lEnumeration struct */
@@ -183,13 +186,13 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
 
    /* Special cases CULL_ALL fields are selected or NONE is selected */
    /* Normally the arguments nm_list and nr_nm should be NULL(0)     */
-   switch (scan(NULL)) {
+   switch (scan(NULL, &state)) {
 
    case CULL_ALL:
       ep[0].pos = WHAT_ALL;
       ep[0].nm = -99;
       ep[0].mt = -99;
-      eat_token();
+      eat_token(&state);
       ep[1].pos = 0;
       ep[1].nm = NoName;
       ep[1].mt = lEndT;
@@ -200,7 +203,7 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       ep[0].pos = WHAT_NONE;
       ep[0].nm = -99;
       ep[0].mt = -99;
-      eat_token();
+      eat_token(&state);
       ep[1].pos = 0;
       ep[1].nm = NoName;
       ep[1].mt = lEndT;
@@ -211,7 +214,7 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       break;
    }
 
-   if (scan(NULL) == NEG) {
+   if (scan(NULL, &state) == NEG) {
       neg = 1;
       if ((size = lCountDescr(dp)) == -1) {
          error_status = LECOUNTDESCR;
@@ -219,14 +222,14 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       }
       /* subtract the fields that shall not be enumerated */
       size -= n;
-      eat_token();              /* eat ! */
-      if (scan(NULL) != BRA) {
+      eat_token(&state);              /* eat ! */
+      if (scan(NULL, &state) != BRA) {
          /* ( expected */
          error_status = LESYNTAX;
          goto error;
       }
       else
-         eat_token();           /* eat_token BRA, if it was a BRA */
+         eat_token(&state);           /* eat_token BRA, if it was a BRA */
    }
 
    for (i = 0; i < n; i++) {
@@ -238,11 +241,11 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       }
       ep[i].mt = dp[ep[i].pos].mt;
 
-      if (scan(NULL) != FIELD) {
+      if (scan(NULL, &state) != FIELD) {
          error_status = LESYNTAX;
          goto error;
       }
-      eat_token();
+      eat_token(&state);
 
    }
 
@@ -251,11 +254,11 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
    ep[n].mt = lEndT;
 
    if (neg) {
-      if (scan(NULL) != KET) {
+      if (scan(NULL, &state) != KET) {
          error_status = LESYNTAX;
          goto error;
       }
-      eat_token();
+      eat_token(&state);
 
       if (!(ep2 = (lEnumeration *) malloc(sizeof(lEnumeration) * (size + 1)))) {
          error_status = LEMALLOC;
@@ -280,11 +283,11 @@ lEnumeration *_lWhat(const char *fmt, const lDescr *dp,
       ep = ep2;
    }
 
-   if (scan(NULL) != KET) {
+   if (scan(NULL, &state) != KET) {
       error_status = LESYNTAX;
       goto error;
    }
-   eat_token();                 /* eat ) */
+   eat_token(&state);                 /* eat ) */
 
    DEXIT;
    return ep;

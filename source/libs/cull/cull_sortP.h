@@ -41,8 +41,7 @@ struct _lSortOrder {
    int ad;                      /* ascending (+1), descending (-1)     */
 };
 
-
-void lSetGlobalSortOrder(const lSortOrder *sp);
 int lSortCompareUsingGlobal(const void *ep0, const void *ep1);
+
 #endif /* __CULL_SORTP_H */
 

@@ -42,6 +42,8 @@
 #include "sgermon.h"
 #include "cull_lerrnoP.h"
 
+
+
 /* global lerrno */
 int lerrno;
 const char* get_lerror_string(int nr);

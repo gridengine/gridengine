@@ -868,6 +868,7 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
 {
    int pos;
    int dataType;
+   struct saved_vars_s *context = NULL;
 
    DENTER(TOP_LAYER, "lString2List");
 
@@ -881,12 +882,13 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
    switch (dataType) {
       case lStringT:
          DPRINTF(("lString2List: got lStringT data type\n"));
-         for (s = sge_strtok(s, dlmt); s; s = sge_strtok(NULL, dlmt)) {
+         for (s = sge_strtok_r(s, dlmt, &context); s; s = sge_strtok_r(NULL, dlmt, &context)) {
             if (lGetElemStr(*lpp, nm, s)) {
                /* silently ignore multiple occurencies */
                continue;
             }
             if (!lAddElemStr(lpp, nm, s, dp)) {
+               sge_free_saved_vars(context);
                lFreeList(*lpp);
                *lpp = NULL;
                DEXIT;
@@ -897,12 +899,13 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
          break;
       case lHostT:
          DPRINTF(("lString2List: got lHostT data type\n"));
-         for (s = sge_strtok(s, dlmt); s; s = sge_strtok(NULL, dlmt)) {
+         for (s = sge_strtok_r(s, dlmt, &context); s; s = sge_strtok_r(NULL, dlmt, &context)) {
             if (lGetElemHost(*lpp, nm, s)) {
                /* silently ignore multiple occurencies */
                continue;
             }
             if (!lAddElemHost(lpp, nm, s, dp)) {
+               sge_free_saved_vars(context);
                lFreeList(*lpp);
                *lpp = NULL;
                DEXIT;
@@ -915,6 +918,9 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm,
          DPRINTF(("lString2List: unexpected data type\n"));
          break;
    }
+
+   if (context)   
+      sge_free_saved_vars(context);
 
    DEXIT;
    return 0;

@@ -51,7 +51,7 @@ lDescr* lCopyDescr(const lDescr *dp);
 int lGetPosViaElem(const lListElem *element, int nm);
 
 void lInit(const lNameSpace *namev);
-char *lNm2Str(int nm);
+const char *lNm2Str(int nm);
 int lStr2Nm(const char *str);
 
 char **lGetPosStringRef(const lListElem *ep, int id);

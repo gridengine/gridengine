@@ -57,7 +57,6 @@
 static char *_lNm2Str(const lNameSpace *nsp, int nm);
 static int _lStr2Nm(const lNameSpace *nsp, const char *str);
 
-static const lNameSpace *lNameStr = NULL;
 
 static char *multitypes[] =
 {
@@ -175,32 +174,33 @@ int lGetPosViaElem(const lListElem *element, int name)
 *               Could be improved by using a hash table that will be 
 *               dynamically built as names are looked up.
 ******************************************************************************/
-char *lNm2Str(int nm) 
+const char *lNm2Str(int nm) 
 {
    const lNameSpace *nsp;
-   static char noinit[50];
+   char stack_noinit[50];
    char *cp;
+   const lNameSpace *ns;
 
    DENTER(CULL_BASIS_LAYER, "lNm2Str");
 
-   /* JG: TODO: the sprintf(noinit) only has to be done on error */
-   sprintf(noinit, "Nameindex = %d", nm);
-   if (!lNameStr) {
+   if (!(ns = get_cull_state_name_space())) {
       DPRINTF(("name vector uninitialized !!\n"));
-      DEXIT;
-      return noinit;
+      goto Error;
    }
 
-   for (nsp = lNameStr; nsp->lower; nsp++) {
+   for (nsp = ns; nsp->lower; nsp++) {
       if ((cp = _lNm2Str(nsp, nm))) {
          DEXIT;
          return cp;
       }
    }
 
+Error:
+   sprintf(stack_noinit, "Nameindex = %d", nm);
+   set_cull_state_noinit(stack_noinit);
    LERROR(LENAMENOT);
    DEXIT;
-   return noinit;
+   return get_cull_state_noinit();
 }
 
 static char *_lNm2Str(const lNameSpace *nsp, int nm) 
@@ -245,18 +245,18 @@ static char *_lNm2Str(const lNameSpace *nsp, int nm)
 ******************************************************************************/
 int lStr2Nm(const char *str) 
 {
-   const lNameSpace *nsp;
+   const lNameSpace *nsp, *ns;
    int ret;
 
    DENTER(CULL_BASIS_LAYER, "lStr2Nm");
 
-   if (!lNameStr) {
+   if (!(ns = get_cull_state_name_space())) {
       DPRINTF(("name vector uninitialized !!\n"));
       DEXIT;
       return NoName;
    }
 
-   for (nsp = lNameStr; nsp->lower; nsp++) {
+   for (nsp = ns; nsp->lower; nsp++) {
       if ((ret = _lStr2Nm(nsp, str)) != NoName) {
          DPRINTF(("Name: %s Id: %d\n", str, ret));
          DEXIT;
@@ -313,7 +313,7 @@ void lInit(const lNameSpace *namev)
 {
    DENTER(CULL_LAYER, "lInit");
 
-   lNameStr = namev;
+   set_cull_state_name_space(namev);
 
    DEXIT;
 }

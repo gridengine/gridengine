@@ -46,9 +46,6 @@
 #include "cull_lerrnoP.h"
 #include "sge_string.h"
 
-/* =========== implementation ================================= */
-static const lSortOrder *global_sort_order = NULL;
-
 /* ------------------------------------------------------------ 
 
    insert ep into sorted list lp using so as sort order
@@ -118,18 +115,6 @@ const lSortOrder *sp
 
 /* ----------------------------------------
 
-   these functions are useful for using 
-   c library function qsort() which only
-   supplys two void * in the call to cmp func
-
- */
-void lSetGlobalSortOrder(const lSortOrder * sp)
-{
-   global_sort_order = sp;
-}
-
-/* ----------------------------------------
-
    wrapper function adding global_sort_order
    to the passed parameters and calls
    lSortCompare()
@@ -137,7 +122,7 @@ void lSetGlobalSortOrder(const lSortOrder * sp)
  */
 int lSortCompareUsingGlobal(const void *ep0, const void *ep1)
 {
-   return lSortCompare(*(lListElem **) ep0, *(lListElem **) ep1, global_sort_order);
+   return lSortCompare(*(lListElem **) ep0, *(lListElem **) ep1, get_cull_state_global_sort_order());
 }
 
 /* ------------------------------------------------------------ 
@@ -247,6 +232,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
    const char *s;
    lSortOrder *sp;
    int i, n;
+   cull_parse_state state;
 
    DENTER(CULL_LAYER, "lParseSortOrder");
 
@@ -264,7 +250,8 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
       return NULL;
    }
 
-   scan(fmt);                   /* Initialize scan */
+   memset(&state, 0, sizeof(state));
+   scan(fmt, &state);                   /* Initialize scan */
    for (i = 0; i < n; i++) {
 /* JG: va_arg produces a READ_OVERFLOW with insure.
  * nothing we can do about it (except not using c variable argument lists)
@@ -285,14 +272,14 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
       sp[i].mt = dp[sp[i].pos].mt;
 
       /* next token */
-      if (scan(NULL) != FIELD) {
+      if (scan(NULL, &state) != FIELD) {
          free(sp);
          LERROR(LESYNTAX);
          return NULL;
       }
       /* THIS IS FOR TYPE CHECKING */
       /* COMMENTED OUT
-         switch( scan(NULL) ) {
+         switch( scan(NULL, &state) ) {
          case INT:
          if (mt_get_type(sp[i].mt) != lIntT )
          incompatibleType("lSortList (should be a lIntT)\n");
@@ -334,8 +321,8 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
          unknownType("lSortList");
          } 
        */
-      eat_token();              /* eat %I */
-      switch (scan(NULL)) {
+      eat_token(&state);              /* eat %I */
+      switch (scan(NULL, &state)) {
       case PLUS:
          sp[i].ad = 1;
          break;
@@ -348,7 +335,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
          LERROR(LESYNTAX);
          return NULL;
       }
-      eat_token();
+      eat_token(&state);
    }
    sp[n].nm = NoName;
    sp[n].mt = lEndT;

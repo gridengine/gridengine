@@ -34,8 +34,7 @@
 
 #include "cull_lerrno.h"
 
-#define LERROR(x) lerrno = (x);
+#define LERROR(x) set_cull_state_lerrno(x);
 
-extern int lerrno;
 
 #endif /* __CULL_LERRNOP_H */

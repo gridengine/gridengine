@@ -46,27 +46,26 @@
 #include "sge_hostname.h"
 
 #include "sgermon.h"
+#include "cull_listP.h"
 #include "cull_whereP.h"
 #include "cull_parse.h"
 #include "cull_lerrnoP.h"
 
-static lCondition *read_val(lDescr *dp, va_list *app);
-static lCondition *factor(lDescr *dp, va_list *app);
-static lCondition *product(lDescr *dp, va_list *app);
-static lCondition *negfactor(lDescr *dp, va_list *app);
-static lCondition *sum(lDescr *dp, va_list *app);
-static lCondition *subscope(va_list *app);
+static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app);
+static lCondition *factor(lDescr *dp, cull_parse_state *state, va_list *app);
+static lCondition *product(lDescr *dp, cull_parse_state *state, va_list *app);
+static lCondition *negfactor(lDescr *dp, cull_parse_state *state, va_list *app);
+static lCondition *sum(lDescr *dp, cull_parse_state *state, va_list *app);
+static lCondition *subscope(cull_parse_state *state, va_list *app);
 
-static lCondition *_read_val(lDescr *dp, WhereArgList *wapp);
-static lCondition *_factor(lDescr *dp, WhereArgList *wapp);
-static lCondition *_product(lDescr *dp, WhereArgList *wapp);
-static lCondition *_negfactor(lDescr *dp, WhereArgList *wapp);
-static lCondition *_sum(lDescr *dp, WhereArgList *wapp);
-static lCondition *_subscope(WhereArgList *wapp);
+static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *wapp);
+static lCondition *_factor(lDescr *dp, cull_parse_state *state, WhereArgList *wapp);
+static lCondition *_product(lDescr *dp, cull_parse_state *state, WhereArgList *wapp);
+static lCondition *_negfactor(lDescr *dp, cull_parse_state *state, WhereArgList *wapp);
+static lCondition *_sum(lDescr *dp, cull_parse_state *state, WhereArgList *wapp);
+static lCondition *_subscope(cull_parse_state *state, WhereArgList *wapp);
 
-#if 0 /* EB: not used */
-static lCondition *_lWhere(const char *fmt, WhereArgList wap);
-#endif
+static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp);
 
 /****** cull/where/lOrWhere() *************************************************
 *  NAME
@@ -170,10 +169,13 @@ lCondition *lAndWhere(const lCondition *cp0, const lCondition *cp1)
 ******************************************************************************/
 void lWriteWhereTo(const lCondition *cp, FILE *fp) 
 {
+   lWriteWhereTo_(cp, 0, fp);
+}
+static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp) 
+{
    int i;
-   static int depth = -1;
    char space[80];
-   static char out[256];
+   char out[256];
 
    DENTER(CULL_LAYER, "lWriteWhere");
 
@@ -182,7 +184,6 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
       DEXIT;
       return;
    }
-   depth++;
 
    out[0] = '\0';
 
@@ -250,7 +251,7 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
          else {
             fprintf(fp, "%s ->\n", out);
          }
-         lWriteWhereTo(cp->operand.cmp.val.cp, fp);
+         lWriteWhereTo_(cp->operand.cmp.val.cp, depth+1, fp);
          break;
 
       default:
@@ -349,14 +350,14 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
       else {
          fprintf(fp,"%s(\n", space);
       }
-      lWriteWhereTo(cp->operand.log.first, fp);
+      lWriteWhereTo_(cp->operand.log.first, depth+1, fp);
       if (!fp) {
          DPRINTF(("%s&&\n", space));
       }
       else {
          fprintf(fp, "%s&&\n", space);
       }
-      lWriteWhereTo(cp->operand.log.second, fp);
+      lWriteWhereTo_(cp->operand.log.second, depth+1, fp);
       if (!fp) {
          DPRINTF(("%s)\n", space));
       }
@@ -372,14 +373,14 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
       else {
          fprintf(fp, "%s(\n", space);
       }
-      lWriteWhereTo(cp->operand.log.first, fp);
+      lWriteWhereTo_(cp->operand.log.first, depth+1, fp);
       if (!fp) {
          DPRINTF(("%s||\n", space));
       }
       else {
          fprintf(fp, "%s||\n", space);
       }
-      lWriteWhereTo(cp->operand.log.second, fp);
+      lWriteWhereTo_(cp->operand.log.second, depth+1, fp);
       if (!fp) {
          DPRINTF(("%s)\n", space));
       }
@@ -395,7 +396,7 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
       else {
          fprintf(fp, "%s!(\n", space);
       }
-      lWriteWhereTo(cp->operand.log.first, fp);
+      lWriteWhereTo_(cp->operand.log.first, depth+1, fp);
       if (!fp) {
          DPRINTF(("%s)\n", space));
       }
@@ -412,7 +413,6 @@ void lWriteWhereTo(const lCondition *cp, FILE *fp)
       return;
    }
 
-   depth--;
    DEXIT;
    return;
 }
@@ -445,6 +445,7 @@ lCondition *lWhere(const char *fmt,...)
 {
    lCondition *cond;
    va_list ap;
+   cull_parse_state state;
 
    DENTER(CULL_LAYER, "lWhere");
    va_start(ap, fmt);
@@ -458,10 +459,11 @@ lCondition *lWhere(const char *fmt,...)
       initialize scan function, the actual token is scanned again
       in the subscope fuction. There we call eat_token to go ahead
     */
-   scan(fmt);
+   memset(&state, 0, sizeof(state));
+   scan(fmt, &state);
 
    /* parse */
-   cond = subscope(&ap);
+   cond = subscope(&state, &ap);
 
    if (!cond) {
       LERROR(LEPARSECOND);
@@ -473,60 +475,60 @@ lCondition *lWhere(const char *fmt,...)
    return cond;
 }
 
-static lCondition *subscope(va_list *app) 
+static lCondition *subscope(cull_parse_state* state, va_list *app) 
 {
    lDescr *dp = NULL;
    lCondition *cp = NULL;
 
    DENTER(CULL_LAYER, "subscope");
 
-   if (scan(NULL) != TYPE) {
+   if (scan(NULL, state) != TYPE) {
       LERROR(LESYNTAX);
       DEXIT;
       return NULL;
    }
-   eat_token();                 /* eat %T */
+   eat_token(state);                 /* eat %T */
    if (!(dp = va_arg(*app, lDescr *))) {
       LERROR(LEDESCRNULL);
       DEXIT;
       return NULL;
    }
 
-   if (scan(NULL) != BRA) {
+   if (scan(NULL, state) != BRA) {
       LERROR(LESYNTAX);
       DEXIT;
       return NULL;
    }
-   eat_token();                 /* eat ( */
+   eat_token(state);                 /* eat ( */
 
-   if (!(cp = sum(dp, app))) {
+   if (!(cp = sum(dp, state, app))) {
       LERROR(LESUM);
       DEXIT;
       return NULL;
    }
 
-   if (scan(NULL) != KET) {
+   if (scan(NULL, state) != KET) {
       LERROR(LESYNTAX);
       lFreeWhere(cp);
       DEXIT;
       return NULL;
    }
-   eat_token();                 /* eat ) */
+   eat_token(state);                 /* eat ) */
 
    DEXIT;
    return cp;
 }
 
-static lCondition *sum(lDescr *dp, va_list *app) 
+static lCondition *sum(lDescr *dp, cull_parse_state *state, va_list *app) 
 {
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "sum");
 
-   cp = product(dp, app);
+   cp = product(dp, state, app);
 
-   while (scan(NULL) == OR) {
-      eat_token();              /* eat || */
+   while (scan(NULL, state) == OR) {
+      eat_token(state);              /* eat || */
 
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          LERROR(LEMALLOC);
@@ -536,7 +538,7 @@ static lCondition *sum(lDescr *dp, va_list *app)
       }
       newcp->op = OR;
       newcp->operand.log.first = cp;
-      newcp->operand.log.second = product(dp, app);
+      newcp->operand.log.second = product(dp, state, app);
       cp = newcp;
    }
 
@@ -544,16 +546,16 @@ static lCondition *sum(lDescr *dp, va_list *app)
    return cp;
 }
 
-static lCondition *product(lDescr *dp, va_list *app) 
+static lCondition *product(lDescr *dp, cull_parse_state *state, va_list *app) 
 {
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "product");
 
-   cp = factor(dp, app);
+   cp = factor(dp, state, app);
 
-   while (scan(NULL) == AND) {
-      eat_token();
+   while (scan(NULL, state) == AND) {
+      eat_token(state);
 
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          lFreeWhere(cp);
@@ -563,7 +565,7 @@ static lCondition *product(lDescr *dp, va_list *app)
       }
       newcp->op = AND;
       newcp->operand.log.first = cp;
-      newcp->operand.log.second = factor(dp, app);
+      newcp->operand.log.second = factor(dp, state, app);
       cp = newcp;
    }
 
@@ -571,14 +573,14 @@ static lCondition *product(lDescr *dp, va_list *app)
    return cp;
 }
 
-static lCondition *factor(lDescr *dp, va_list *app) 
+static lCondition *factor(lDescr *dp, cull_parse_state *state, va_list *app) 
 {
    lCondition *cp;
 
    DENTER(CULL_LAYER, "factor");
 
-   if (scan(NULL) == NEG) {
-      eat_token();
+   if (scan(NULL, state) == NEG) {
+      eat_token(state);
 
       if (!(cp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          lFreeWhere(cp);
@@ -586,12 +588,12 @@ static lCondition *factor(lDescr *dp, va_list *app)
          DEXIT;
          return NULL;
       }
-      cp->operand.log.first = negfactor(dp, app);
+      cp->operand.log.first = negfactor(dp, state, app);
       cp->operand.log.second = NULL;
       cp->op = NEG;
    }
    else
-      cp = negfactor(dp, app);
+      cp = negfactor(dp, state, app);
 
    DEXIT;
    return cp;
@@ -599,34 +601,35 @@ static lCondition *factor(lDescr *dp, va_list *app)
 
 static lCondition *negfactor(
 lDescr *dp,
+cull_parse_state *state, 
 va_list *app 
 ) {
    lCondition *cp;
 
    DENTER(CULL_LAYER, "negfactor");
 
-   if (scan(NULL) == BRA) {
-      eat_token();
+   if (scan(NULL, state) == BRA) {
+      eat_token(state);
 
-      cp = sum(dp, app);
+      cp = sum(dp, state, app);
 
-      if (scan(NULL) != KET) {
+      if (scan(NULL, state) != KET) {
          LERROR(LESYNTAX);
          DEXIT;
          return NULL;
       }
-      eat_token();
+      eat_token(state);
 
       DEXIT;
       return cp;
    }
 
    DEXIT;
-   return read_val(dp, app);
+   return read_val(dp, state, app);
 
 }
 
-static lCondition *read_val(lDescr *dp, va_list *app) 
+static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app) 
 {
    /*       
       without the usage of s insight throws
@@ -651,13 +654,13 @@ static lCondition *read_val(lDescr *dp, va_list *app)
       return NULL;
    }
 
-   if ((token = scan(NULL)) != FIELD) {
+   if ((token = scan(NULL, state)) != FIELD) {
       cp = lFreeWhere(cp);
       LERROR(LESYNTAX);
       DEXIT;
       return 0;
    }
-   eat_token();
+   eat_token(state);
 
    cp->operand.cmp.nm = va_arg(*app, int);
    if ((cp->operand.cmp.pos = lGetPosInDescr(dp, cp->operand.cmp.nm)) < 0) {
@@ -668,7 +671,7 @@ static lCondition *read_val(lDescr *dp, va_list *app)
    }
    cp->operand.cmp.mt = dp[cp->operand.cmp.pos].mt;
 
-   switch (token = scan(NULL)) {
+   switch (token = scan(NULL, state)) {
    case EQUAL:
    case NOT_EQUAL:
    case LOWER_EQUAL:
@@ -680,19 +683,19 @@ static lCondition *read_val(lDescr *dp, va_list *app)
    case PATTERNCMP:
    case HOSTNAMECMP:
       cp->op = token;
-      eat_token();
+      eat_token(state);
       break;
 
    case SUBSCOPE:
       cp->op = token;
-      eat_token();
+      eat_token(state);
       if (mt_get_type(cp->operand.cmp.mt) != lListT) {
          cp = lFreeWhere(cp);
          LERROR(LEINCTYPE);
          DEXIT;
          return NULL;
       }
-      cp->operand.cmp.val.cp = subscope(app);
+      cp->operand.cmp.val.cp = subscope(state, app);
       DEXIT;
       return cp;
 
@@ -703,7 +706,7 @@ static lCondition *read_val(lDescr *dp, va_list *app)
       return NULL;
    }
 
-   switch (scan(NULL)) {
+   switch (scan(NULL, state)) {
    case INT:
       if (mt_get_type(cp->operand.cmp.mt) != lIntT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEINTT );
@@ -782,94 +785,26 @@ static lCondition *read_val(lDescr *dp, va_list *app)
       DEXIT;
       return NULL;
    }
-   eat_token();
+   eat_token(state);
 
    DEXIT;
    return cp;
 }
 
-#if 0 /* EB: not used */
 
-/****** cull/where/_lWhere() **************************************************
-*  NAME
-*     _lWhere() -- Builds a condition tree 
-*
-*  SYNOPSIS
-*     static lCondition* _lWhere(const char *fmt, WhereArgList wap) 
-*
-*  FUNCTION
-*     Builds a condition tree. Information for the condition tree
-*     has to be given by a format string and a argument list. 
-*
-*  INPUTS
-*     const char *fmt  - format string 
-*     WhereArgList wap - argument array 
-*
-*  RESULT
-*     lCondition* - condition 
-*
-*  EXAMPLE
-*     where0 and where1 condition are equivalent:
-*        where0 = lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", 
-*                        QueueT, Q_hostname, "durin.q", 
-*                        Q_ownerlist, OwnerT, O_ownerage, 22);
-*
-*        WhereArg whereargs[20];
-*        whereargs[0].descriptor = QueueT;
-*        whereargs[1].field      = Q_hostname;
-*        whereargs[1].value.str  = "durin.q";
-*        whereargs[2].field      = Q_ownerlist;
-*        whereargs[2].descriptor = OwnerT;
-*        whereargs[3].field      = O_ownerage;
-*        whereargs[3].value.i    = 22;
-*        where1 = _lWhere("%T( %I == %s && %I -> %T ( %I < %d ) )", 
-*                         whereargs);
-*******************************************************************************/
-static lCondition *_lWhere(const char *fmt, WhereArgList wap) 
-{
-   lCondition *cond;
-
-   DENTER(CULL_LAYER, "_lWhere");
-
-   if (!fmt) {
-      LERROR(LENOFORMATSTR);
-      DEXIT;
-      return NULL;
-   }
-   /* 
-      initialize scan function, the actual token is scanned again
-      in the subscope fuction. There we call eat_token to go ahead
-    */
-   scan(fmt);
-
-   /* parse */
-   cond = _subscope(&wap);
-
-   if (!cond) {
-      LERROR(LEPARSECOND);
-      DEXIT;
-      return NULL;
-   }
-
-   DEXIT;
-   return cond;
-}
-
-#endif
-
-static lCondition *_subscope(WhereArgList *wapp) 
+static lCondition *_subscope(cull_parse_state *state, WhereArgList *wapp) 
 {
    lDescr *dp = NULL;
    lCondition *cp = NULL;
 
    DENTER(CULL_LAYER, "_subscope");
 
-   if (scan(NULL) != TYPE) {
+   if (scan(NULL, state) != TYPE) {
       LERROR(LESYNTAX);
       DEXIT;
       return NULL;
    }
-   eat_token();                 /* eat %T */
+   eat_token(state);                 /* eat %T */
    /* 
     * Deliver descriptor & increment the WhereArgList to 
     * the next element 
@@ -882,41 +817,41 @@ static lCondition *_subscope(WhereArgList *wapp)
       return NULL;
    }
 
-   if (scan(NULL) != BRA) {
+   if (scan(NULL, state) != BRA) {
       LERROR(LESYNTAX);
       DEXIT;
       return NULL;
    }
-   eat_token();                 /* eat ( */
+   eat_token(state);                 /* eat ( */
 
-   if (!(cp = _sum(dp, wapp))) {
+   if (!(cp = _sum(dp, state, wapp))) {
       LERROR(LESUM);
       DEXIT;
       return NULL;
    }
 
-   if (scan(NULL) != KET) {
+   if (scan(NULL, state) != KET) {
       LERROR(LESYNTAX);
       lFreeWhere(cp);
       DEXIT;
       return NULL;
    }
-   eat_token();                 /* eat ) */
+   eat_token(state);                 /* eat ) */
 
    DEXIT;
    return cp;
 }
 
-static lCondition *_sum(lDescr *dp, WhereArgList *wapp) 
+static lCondition *_sum(lDescr *dp, cull_parse_state *state, WhereArgList *wapp) 
 {
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "_sum");
 
-   cp = _product(dp, wapp);
+   cp = _product(dp, state, wapp);
 
-   while (scan(NULL) == OR) {
-      eat_token();              /* eat || */
+   while (scan(NULL, state) == OR) {
+      eat_token(state);              /* eat || */
 
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          LERROR(LEMALLOC);
@@ -926,7 +861,7 @@ static lCondition *_sum(lDescr *dp, WhereArgList *wapp)
       }
       newcp->op = OR;
       newcp->operand.log.first = cp;
-      newcp->operand.log.second = _product(dp, wapp);
+      newcp->operand.log.second = _product(dp, state, wapp);
       cp = newcp;
    }
 
@@ -934,16 +869,16 @@ static lCondition *_sum(lDescr *dp, WhereArgList *wapp)
    return cp;
 }
 
-static lCondition *_product(lDescr *dp, WhereArgList *wapp) 
+static lCondition *_product(lDescr *dp, cull_parse_state *state, WhereArgList *wapp) 
 {
    lCondition *cp, *newcp;
 
    DENTER(CULL_LAYER, "_product");
 
-   cp = _factor(dp, wapp);
+   cp = _factor(dp, state, wapp);
 
-   while (scan(NULL) == AND) {
-      eat_token();
+   while (scan(NULL, state) == AND) {
+      eat_token(state);
 
       if (!(newcp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          lFreeWhere(cp);
@@ -953,7 +888,7 @@ static lCondition *_product(lDescr *dp, WhereArgList *wapp)
       }
       newcp->op = AND;
       newcp->operand.log.first = cp;
-      newcp->operand.log.second = _factor(dp, wapp);
+      newcp->operand.log.second = _factor(dp, state, wapp);
       cp = newcp;
    }
 
@@ -961,14 +896,14 @@ static lCondition *_product(lDescr *dp, WhereArgList *wapp)
    return cp;
 }
 
-static lCondition *_factor(lDescr *dp, WhereArgList *wapp) 
+static lCondition *_factor(lDescr *dp, cull_parse_state *state, WhereArgList *wapp) 
 {
    lCondition *cp;
 
    DENTER(CULL_LAYER, "_factor");
 
-   if (scan(NULL) == NEG) {
-      eat_token();
+   if (scan(NULL, state) == NEG) {
+      eat_token(state);
 
       if (!(cp = (lCondition *) calloc(1, sizeof(lCondition)))) {
          lFreeWhere(cp);
@@ -976,45 +911,45 @@ static lCondition *_factor(lDescr *dp, WhereArgList *wapp)
          DEXIT;
          return NULL;
       }
-      cp->operand.log.first = _negfactor(dp, wapp);
+      cp->operand.log.first = _negfactor(dp, state, wapp);
       cp->operand.log.second = NULL;
       cp->op = NEG;
    }
    else
-      cp = _negfactor(dp, wapp);
+      cp = _negfactor(dp, state, wapp);
 
    DEXIT;
    return cp;
 }
 
-static lCondition *_negfactor(lDescr *dp, WhereArgList *wapp) 
+static lCondition *_negfactor(lDescr *dp, cull_parse_state *state, WhereArgList *wapp) 
 {
    lCondition *cp;
 
    DENTER(CULL_LAYER, "_negfactor");
 
-   if (scan(NULL) == BRA) {
-      eat_token();
+   if (scan(NULL, state) == BRA) {
+      eat_token(state);
 
-      cp = _sum(dp, wapp);
+      cp = _sum(dp, state, wapp);
 
-      if (scan(NULL) != KET) {
+      if (scan(NULL, state) != KET) {
          LERROR(LESYNTAX);
          DEXIT;
          return NULL;
       }
-      eat_token();
+      eat_token(state);
 
       DEXIT;
       return cp;
    }
 
    DEXIT;
-   return _read_val(dp, wapp);
+   return _read_val(dp, state, wapp);
 
 }
 
-static lCondition *_read_val(lDescr *dp, WhereArgList *wapp) 
+static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *wapp) 
 {
    lCondition *cp;
    int token;
@@ -1033,13 +968,13 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
       return NULL;
    }
 
-   if ((token = scan(NULL)) != FIELD) {
+   if ((token = scan(NULL, state)) != FIELD) {
       lFreeWhere(cp);
       LERROR(LESYNTAX);
       DEXIT;
       return 0;
    }
-   eat_token();
+   eat_token(state);
 
 /*    DPRINTF(("(*wapp) = %p\n", *wapp)); */
 /*    DPRINTF(("(*wapp)->field = %d\n", (*wapp)->field)); */
@@ -1052,7 +987,7 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
    }
    cp->operand.cmp.mt = dp[cp->operand.cmp.pos].mt;
 
-   switch (token = scan(NULL)) {
+   switch (token = scan(NULL, state)) {
    case EQUAL:
    case NOT_EQUAL:
    case LOWER_EQUAL:
@@ -1064,18 +999,18 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
    case PATTERNCMP:
    case HOSTNAMECMP:
       cp->op = token;
-      eat_token();
+      eat_token(state);
       break;
 
    case SUBSCOPE:
       cp->op = token;
-      eat_token();
+      eat_token(state);
       if (mt_get_type(cp->operand.cmp.mt) != lListT) {
          LERROR(LEINCTYPE);
          DEXIT;
          return NULL;
       }
-      cp->operand.cmp.val.cp = _subscope(wapp);
+      cp->operand.cmp.val.cp = _subscope(state, wapp);
       DEXIT;
       return cp;
 
@@ -1086,7 +1021,7 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
       return NULL;
    }
 
-   switch (scan(NULL)) {
+   switch (scan(NULL, state)) {
    case INT:
       if (mt_get_type(cp->operand.cmp.mt) != lIntT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEINTT);
@@ -1176,7 +1111,7 @@ static lCondition *_read_val(lDescr *dp, WhereArgList *wapp)
        ( (cp->op == PATTERNCMP && mt_get_type(cp->operand.cmp.mt)  != lStringT) && (cp->op == PATTERNCMP && mt_get_type(cp->operand.cmp.mt)  != lHostT) ))
       incompatibleType(MSG_CULL_WHERE_OPERANDHITNOTOPERATORERROR );
 
-   eat_token();
+   eat_token(state);
 
    DEXIT;
    return cp;

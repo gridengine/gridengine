@@ -960,16 +960,33 @@ int *sort_hostlist
       account for job tickets on hosts due to parallel jobs */
    if (granted && sgeee_mode) {
       double job_tickets_per_slot, nslots;
+      double job_ftickets_per_slot;
+      double job_otickets_per_slot;
+      double job_dtickets_per_slot;
+      double job_stickets_per_slot;
       nslots = nslots_granted(granted, NULL);
 
       job_tickets_per_slot =(double)lGetDouble(ja_task, JAT_ticket)/nslots;
+      job_ftickets_per_slot =(double)lGetDouble(ja_task, JAT_fticket)/nslots;
+      job_otickets_per_slot =(double)lGetDouble(ja_task, JAT_oticket)/nslots;
+      job_dtickets_per_slot =(double)lGetDouble(ja_task, JAT_dticket)/nslots;
+      job_stickets_per_slot =(double)lGetDouble(ja_task, JAT_sticket)/nslots;
+
 
       for_each(granted_el, granted) {
+         u_long32 granted_slots = lGetUlong(granted_el, JG_slots);
          hep = host_list_locate(host_list, lGetHost(granted_el, JG_qhostname));
          old_host_tickets = lGetDouble(hep, EH_sge_tickets);
+
          lSetDouble(hep, EH_sge_tickets, (old_host_tickets + 
-               job_tickets_per_slot*lGetUlong(granted_el, JG_slots)));
-         lSetDouble(granted_el, JG_ticket, job_tickets_per_slot*lGetUlong(granted_el, JG_slots));
+               job_tickets_per_slot * granted_slots));
+
+         lSetDouble(granted_el, JG_ticket, job_tickets_per_slot * granted_slots);
+         lSetDouble(granted_el, JG_oticket ,job_otickets_per_slot  * granted_slots);
+         lSetDouble(granted_el, JG_fticket ,job_ftickets_per_slot  * granted_slots);
+         lSetDouble(granted_el, JG_dticket ,job_dtickets_per_slot  * granted_slots);
+         lSetDouble(granted_el, JG_sticket ,job_stickets_per_slot  * granted_slots);
+
       }
       *total_running_job_tickets += lGetDouble(ja_task, JAT_ticket);
    }

@@ -1,6 +1,52 @@
+SG-2003-09-15-6: Bugfix:    The running ticket update did not work correctly when the
+                            sgeee_scheduling interval was set to a very very long time,
+                            a sge_scheduling run was done and the sgeee_scheduling 
+                            interval was set back to a normal amount of time. The
+                            scheduler had the very long sgeee_scheduling interval 
+                            stored. It got changed after its execution.
+      
+                 Review:    AS
+                 Changed:   scheduler
+
+SG-2003-09-15-5: Enhancem.: The sending of running job tickets can be disabled with
+                            setting "sgeee_schedule_interval" to "0:0:0". The
+                            man pages reflect the new configuration posebility.
+
+                 Review:    AS
+                 Changed:   scheduler, man page
+
+SG-2003-09-15-4: Enhancem.: Removed CLASSIC_SGEEE_SCHEDULING functionality and its 
+                            documentation from the man pages
+      
+                 Review:    AS
+                 Changed:   scheduler, man page
+
+SG-2003-09-15-3: Bugfix:    lGetString was used in two places to retrieve a host name
+                            This resulted in a termination of the scheduler.
+      
+                 Review:    AS
+                 Changed:   scheduler, and other...
+
+SG-2003-09-15-2: Bugfix:    When a pending job moved to running, it lost its 
+                            ticket details. It had only the total amount of tickets.
+                            This is changed now, the ftix, sharetree tix and others
+                            are included now.
+
+                 Review:    AS
+                 Changed:   scheduler
+
+SG-2003-09-15-1: Bugfix:    Fixed a bug in the pending ticket calculation. When
+                            two projects have the same amount of shares, they
+                            were combined in one functional category, which lead
+                            to a wrong job order. The fcategories are now defined
+                            by the references to the control structures.
+   
+                 Review:    AS
+                 Changed:   scheduler
+
 EB-2003-09-15-0: Enhancem.: Base implementation for qconf -sq switch for CQ's
 
-AA-2003-09-11-0: Bugfix:    fixed sge_ca scripts, conf files, added some
+AA-2003-09-15-0: Bugfix:    fixed sge_ca scripts, conf files, added some
                             additional cl switches for extending, printing and
                             verifying certs
                  Changed:   sge_ca script

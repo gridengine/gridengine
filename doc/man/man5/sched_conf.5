@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2002/04/29 12:12:53 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2003/09/15 15:09:05 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2002/04/29 12:12:53 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2003/09/15 15:09:05 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -233,6 +233,9 @@ The time period between job priority adjustments by the xxQS_NAME_EExx global
 dynamic scheduler (GDS). Valid values are specified of type time as
 specified in
 .M queue_conf 5 .
+.PP
+When this parameter is set to 0:0:0 it disables the submition of running job tickets to
+the qmaster and the job priority adjustments on the clients.
 .\"
 .SS "\fBhalftime\fP"
 This parameter is only available in a xxQS_NAME_EExx system. xxQS_NAME_Cxx does not support

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2003/08/26 13:13:18 $     Revision: $Revision: 1.19 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2003/09/15 15:09:05 $     Revision: $Revision: 1.20 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/08/26 13:13:18 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/09/15 15:09:05 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -917,15 +917,6 @@ A system with a high throughput and a large number of pending jobs can disable
 the pending ticket reports be setting its value to 0 or false. 
  
 .\"
-.IP "\fICLASSIC_SGEEE_SCHEDULING\fP"                                         
-If set to "true" or "1", use the original SGEEE pending job scheduling       
-algorithm. The original SGEEE pending job scheduling algorithm calculates    
-the tickets for pending jobs by dividing up the tickets in each            
-scheduling policy among all the active and pending jobs. The pending       
-job list is then ordered based on the tickets assigned to the pending      
-jobs. The default value is "false".                                        
-This parameter is only valid in a SGEEE system.                              
-.\"                                                                        
 .IP "\fIPOLICY_HIERARCHY\fP"                                         
 This parameter sets up a dependency chain of
 policies. Each policy in the dependency chain is influenced by the

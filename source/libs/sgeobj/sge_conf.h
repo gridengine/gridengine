@@ -143,7 +143,6 @@ extern int disable_reschedule;
 extern int set_sge_environment;
 extern int set_grd_environment;
 extern int set_cod_environment;
-extern int classic_sgeee_scheduling;
 extern int share_override_tickets;                                         
 extern int share_functional_shares;                                        
 extern int share_deadline_tickets;                                         

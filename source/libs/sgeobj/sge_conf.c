@@ -94,8 +94,6 @@ int simulate_hosts = 0;
 /*
  * SGEEE pending job scheduling algorithm parameters:
  *
- *      classic_sgeee_scheduling - Use the original SGEEE pending job scheduling
- *              algorithm.
  *      share_override_tickets - Override tickets of any object instance
  *              are shared equally among all jobs associated with the object.
  *      share_functional_shares - Functional shares of any object instance
@@ -113,7 +111,6 @@ int simulate_hosts = 0;
  *
  */
 
-int classic_sgeee_scheduling = 0;
 int share_override_tickets = 1;
 int share_functional_shares = 1;
 int share_deadline_tickets = 1;
@@ -732,7 +729,6 @@ int merge_configuration(lListElem *global, lListElem *local,
       do_profiling = false;
       flush_submit_sec = -1;
       flush_finish_sec = -1;
-      classic_sgeee_scheduling = 0;
       share_override_tickets = 1;
       share_functional_shares = 1;
       share_deadline_tickets = 1;
@@ -750,18 +746,9 @@ int merge_configuration(lListElem *global, lListElem *local,
             flush_finish_sec = atoi(&s[sizeof("FLUSH_FINISH_SEC=")-1]);
             if (flush_finish_sec < 0)
                flush_finish_sec=-1;  
-         } else if (!strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=true") ||
-                    !strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=1")) {
-            classic_sgeee_scheduling = 1;
-            share_override_tickets = 1;
-            share_functional_shares = 0;
-            share_deadline_tickets = 1;
          } else if (!strcasecmp(s, "REPORT_PJOB_TICKETS=false") ||
                     !strcasecmp(s, "REPORT_PJOB_TICKETS=0")) {
             max_report_job_tickets = 0;
-         } else if (!strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=false") ||
-                    !strcasecmp(s, "CLASSIC_SGEEE_SCHEDULING=0")) {
-            classic_sgeee_scheduling = 0;
          } else if (!strcasecmp(s, "SHARE_OVERRIDE_TICKETS=true") ||
                     !strcasecmp(s, "SHARE_OVERRIDE_TICKETS=1")) {
             share_override_tickets = 1;

@@ -336,7 +336,7 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
 
          for_each(host, master_exechost_list) {
             if (host_is_centry_referenced(host, centry)) {
-               const char *host_name = lGetString(host, EH_name);
+               const char *host_name = lGetHost(host, EH_name);
 
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                        ANSWER_QUALITY_INFO, 

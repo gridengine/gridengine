@@ -76,9 +76,7 @@ enum {
 };
 
 /* prototypes */
-/*static double scaled_mixed_load(lList *tcl, const char* source_name);*/
 static double scaled_mixed_load( lListElem *global, lListElem *host, lList *centry_list);
-/*static int get_load_value(double *dval, lList *tcl, char *name, const char* source_name);*/
 static int get_load_value(double *dvalp, lListElem *global, lListElem *host, lList *centry_list, const char *attrname);
 
 /*************************************************************************
@@ -120,11 +118,6 @@ lList *centry_list   /* CE_Type */
       host = lGetHost(hlp,EH_name);
       if (strcmp(host,"global")) { /* don't treat global */
          /* build complexes for that host */
-         /*
-         host_complexes2scheduler(&tcl, hlp, hl, centry_list);
-         lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(tcl, host));
-         tcl = lFreeList(tcl); 
-         */
          lSetDouble(hlp, EH_sort_value, load = scaled_mixed_load(global, hlp, centry_list));
          DPRINTF(("%s: %f\n", lGetHost(hlp, EH_name), load));
       }
@@ -163,9 +156,6 @@ lList *centry_list   /* CE_Type */
                        0 means no load correction, 
                        n load correction for n new jobs
 *************************************************************************/
-/*static double scaled_mixed_load(
-lList *tcl,
-const char* source_name*/ 
 static double scaled_mixed_load( lListElem *global, lListElem *host, lList *centry_list)
 {
    char *cp, *tf, *ptr, *ptr2, *par_name, *op_ptr=NULL;
@@ -223,7 +213,6 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, lList *cent
          if (!(val2 = (double)strtol(ptr,&ptr2,0)) && ptr2 == ptr) {
             /* it is not an integer ==> it's got to be a load value */
             if (!(par_name = sge_delim_str(ptr,NULL,load_ops)) ||
-/*               get_load_value(&val2, tcl, par_name, source_name)) {*/
                get_load_value(&val2, global, host, centry_list, par_name)) {
                if (par_name)
                   free(par_name);
@@ -305,7 +294,6 @@ static double scaled_mixed_load( lListElem *global, lListElem *host, lList *cent
    get_load_value
 
  ***********************************************************************/
-/*static int get_load_value(double *dvalp, lList *tcl, const char *attrname, const char* source_name)*/
 static int get_load_value(double *dvalp, lListElem *global, lListElem *host, lList *centry_list, const char *attrname) 
 {
    lListElem *cep;
@@ -322,7 +310,7 @@ static int get_load_value(double *dvalp, lListElem *global, lListElem *host, lLi
        * load value in load formula 
        */
 
-      ERROR((SGE_EVENT, MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS , attrname, lGetString(host, EH_name) ));
+      ERROR((SGE_EVENT, MSG_ATTRIB_NOATTRIBXINCOMPLEXLIST_SS , attrname, lGetHost(host, EH_name) ));
       DEXIT;
       return 1;
    }

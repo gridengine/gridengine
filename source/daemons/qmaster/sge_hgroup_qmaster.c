@@ -352,7 +352,6 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
        */
       if (name != NULL) {
          lList *master_hgroup_list = *(hgroup_list_get_master_list());
-         lList *master_cqueue_list = *(cqueue_list_get_master_list());
 #ifndef __SGE_NO_USERMAPPING__
          lList *master_cuser_list = *(cuser_list_get_master_list());
 #endif
@@ -412,28 +411,6 @@ hgroup_del(lListElem *this_elem, lList **answer_list,
             }
             string_list = lFreeList(string_list);
 #endif
-                                                        
-            /*
-             * Is it still referenced in a cluster queue object 
-             */ 
-            ret &= cqueue_list_find_hgroup_references(master_cqueue_list,
-                                                      answer_list, hgroup,
-                                                      &string_list);
-            if (ret) {
-               if (string_list != NULL) {
-                  dstring string = DSTRING_INIT;
-
-                  str_list_append_to_dstring(string_list, &string, ','); 
-                  ERROR((SGE_EVENT, MSG_HGROUP_REFINCQUEUE_SS, name,
-                         sge_dstring_get_string(&string)));
-                  answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
-                                  ANSWER_QUALITY_ERROR);
-                  sge_dstring_free(&string);
-                  ret = false;
-               }
-            }
-            string_list = lFreeList(string_list);
-            
             /*
              * Try to unlink the concerned spoolfile
              */

@@ -158,7 +158,8 @@ enum {
    QU_soft_violation,
    QU_host_seq_no,
    QU_resource_utilization,
-   QU_message_list
+   QU_message_list,
+   QU_gdi_do_laster
 };
 
 SLISTDEF(QU_Type, QInstance)
@@ -243,6 +244,7 @@ SLISTDEF(QU_Type, QInstance)
    SGE_ULONG(QU_host_seq_no, CULL_DEFAULT)
    SGE_LIST(QU_resource_utilization, RUE_Type, CULL_DEFAULT)
    SGE_LIST(QU_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
+   SGE_ULONG(QU_gdi_do_laster, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(QUN)
@@ -327,6 +329,7 @@ NAMEDEF(QUN)
    NAME("QU_host_seq_no")
    NAME("QU_resource_utilization")
    NAME("QU_message_list")
+   NAME("QU_gdi_do_laster")
 NAMEEND
 
 #define QUS sizeof(QUN)/sizeof(char*)

@@ -66,10 +66,10 @@
 #include "sge_cqueue_qmaster.h"
 #include "sge_qinstance_qmaster.h"
 #include "sge_host_qmaster.h"
-
+#include "sge_qmod_qmaster.h"
 #include "sge_select_queue.h"
 #include "sge_queue_event_master.h"
-
+#include "sge_signal.h"
 
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
@@ -664,6 +664,8 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 int cqueue_success(lListElem *cqueue, lListElem *old_cqueue, 
                    gdi_object_t *object) 
 {
+   lList *qinstances;
+   lListElem *qinstance; 
    DENTER(TOP_LAYER, "cqueue_success");
    
    /*
@@ -676,6 +678,47 @@ int cqueue_success(lListElem *cqueue, lListElem *old_cqueue,
     * QI modify, add or delete event. Finalize operation.
     */
    cqueue_commit(cqueue);
+
+   /*
+    * Handle jobs which were supended due to suspend threshold
+    */
+   qinstances = lGetList(cqueue, CQ_qinstances);
+   for_each(qinstance, qinstances) {
+      if (lGetUlong(qinstance, QU_gdi_do_laster) == 1) {
+         lList *master_job_list = *(object_type_get_master_list(SGE_TYPE_JOB));
+         lListElem *job;
+
+         for_each(job, master_job_list) {
+            lList *ja_tasks = lGetList(job, JB_ja_tasks);
+            lListElem *ja_task;
+
+            for_each(ja_task, ja_tasks) {
+               u_long32 state = lGetUlong(ja_task, JAT_state);
+
+               if (ISSET(state, JSUSPENDED_ON_THRESHOLD)) {
+                  const char *queue_name = lGetString(lFirst(lGetList(ja_task,
+                              JAT_granted_destin_identifier_list)), JG_qname);
+                  const char *hostname = lGetHost(qinstance, QU_qhostname);
+                  const char *cqueue_name = lGetString(qinstance, QU_qname);
+                  const char *full_name = lGetString(qinstance, QU_full_name);
+
+                  if (!strcmp(queue_name, full_name)) {
+                     if (!ISSET(state, JSUSPENDED)) {
+                        sge_signal_queue(SGE_SIGCONT, qinstance, job, ja_task);
+                        SETBIT(JRUNNING, state);
+                     }
+
+                     CLEARBIT(JSUSPENDED_ON_THRESHOLD, state);
+                     lSetUlong(ja_task, JAT_state, state);
+                     sge_event_spool(NULL, 0, sgeE_QINSTANCE_MOD,
+                                     0, 0, cqueue_name, hostname, NULL,
+                                     qinstance, NULL, NULL, true, true);
+                  }
+               }
+            }
+         }
+      }
+   }
 
    DEXIT;
    return 0;

@@ -929,7 +929,7 @@ proc run_throughput_test {} {
 #  Mon Dec 16 15:01:05 2002|schedd|es-ergb01-01|I|scheduled in 0.000 s: 0 fast, 0 complex, 0 orders, 4 H, 4 Q, 13 QA, 0 J, 2 C, 1 ACL, 1 PE, 1 CONF, 0 U, 1 D, 1 PRJ, 0 ST, 1 CKPT, 0 RU
 
 
-#new
+#new                                                  0      1   2    3   4   5 6 7     8  9
 #  Wed Feb 12 10:53:06 2003|schedd|es-ergb01-01|I|scheduled in 0.010 (u 0.010 + s 0.000 = 0.010): 0 fast, 0 complex, 0 orders, 5 H, 30 Q, 34 QA, 0 J(qw), 0 J(r), 0 J(x), 2 C, 1 ACL, 1 PE, 1 CONF, 0 U, 1 D, 1 PRJ, 0 ST, 1 CKPT, 0 RU
                    set st_pos [string first "|I|" $help ]
                    incr st_pos 3
@@ -944,7 +944,13 @@ proc run_throughput_test {} {
                       set_error -1 "format error for orders (1)"
                       return -1
                    }
-                   set schedd_time [ lindex $schedd_string 2 ]
+                   set schedd_time [ lindex $schedd_string 2 ]   ;# this is wall clock time
+                   set schedd_time [ lindex $schedd_string 9 ]  ;# this is system + user time (plus "):" )
+                   set schedd_time_length [string length $schedd_time]
+                   incr schedd_time_length -3
+                   set schedd_time [ string range $schedd_time 0 $schedd_time_length ]
+
+                   
                    for { set s_index 0 } { $s_index < [llength $schedd_string] } { incr s_index 1 } {
                       if { [string compare [lindex $schedd_string $s_index] "orders," ] == 0  } {
                          break

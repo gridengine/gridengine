@@ -1,3 +1,6 @@
+CR-2003-05-09-1  Testsuite: throughput test: use scheduler system + user time
+                            instead of wallclock time for measurement.
+
 CR-2003-05-09-0  Testsuite: finalized scheduler performance test
 
 JG-2003-05-09-0  Bugfix:    Broken build

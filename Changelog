@@ -1,3 +1,5 @@
+JG-2001-12-19-0: Bugfix:    Limits did not work on glinux platform
+
 JG-2001-12-18-1: Testsuite: - Fixed qsub check_submit - now it submits jobs from
                               any host to any host in the cluster as expected.
                             - extended tcl library function "submit_job" by 

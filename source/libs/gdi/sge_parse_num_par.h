@@ -41,12 +41,13 @@
 #include "cull_list.h"
 
 /* type wrapper */
-#if defined(CRAY) || defined(LINUX)
+#if defined(CRAY)
    typedef long sge_rlim_t;
 #elif defined(NECSX4) || defined(NECSX5)
    typedef long long sge_rlim_t;
 #elif IRIX6
    typedef rlim64_t sge_rlim_t;
+/* #elif SUN4 || AIX41 */
 #elif SUN4 || HPUX || HP10 || AIX41
    typedef int sge_rlim_t;
 #elif WIN32NATIVE

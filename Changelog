@@ -1,3 +1,12 @@
+JG-2002-06-14-0: Bugfix:    The job environment variable JOB_NAME was set 
+                            incorrectly.
+                 Doc:       Updated man page - it contained false information 
+                            concerning JOB_NAME.           
+                 Cleanup:   Cleaned up the way how execd detects and handles 
+                            interactive jobs.           
+                 Issue:     #255           
+                 Issue:     #266           
+
 CR-2002-06-13-6: Testsuite: testing issue #140 also for pending jobs
                  Enhancem.: (merged from V53_beta2_BRANCH)
 

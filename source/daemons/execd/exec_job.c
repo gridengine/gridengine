@@ -500,50 +500,64 @@ char *err_str
    var_list_set_string(&environmentList, "LOGNAME", pw->pw_name);
 
    /*
-   ** set JOB_NAME variable
-   ** for interactive jobs a fixed name is set,
-   ** for batch jobs the script name is used.
-   ** JG: TODO (265): shouldn't JOB_NAME be the name specified with -N option?
+   ** Handling of script_file and JOB_NAME:
+   ** script_file: For batch jobs, it is the path to the spooled script file,
+   **              for interactive jobs, a fixed string (macro), e.g. JB_NOW_STR_QSH
+   ** JOB_NAME:    If a name is passed in JB_job_name or PET_name, this name is used.
+   **              Otherwise basename(script_file) is used.
    */
    {
       u_long32 jb_now;
+      const char *job_name;
+      
       if(petep != NULL) {
          jb_now = JB_NOW_QRSH;
+         job_name = lGetString(petep, PET_name);
       } else {
          jb_now = lGetUlong(jep, JB_now);
+         job_name = lGetString(jep, JB_job_name);
       }
 
+      /* set script_file */
       JB_NOW_CLEAR_IMMEDIATE(jb_now);
       switch(jb_now) {
          case JB_NOW_QSH:
-            var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QSH); 
+            strcpy(script_file, JB_NOW_STR_QSH);
             break;
          case JB_NOW_QLOGIN:
-            var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QLOGIN);
+            strcpy(script_file, JB_NOW_STR_QLOGIN);
             break;
          case JB_NOW_QRSH:
-            var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QRSH);
+            strcpy(script_file, JB_NOW_STR_QRSH);
             break;
          case JB_NOW_QRLOGIN:
-            var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QRLOGIN);
+            strcpy(script_file, JB_NOW_STR_QRLOGIN);
             break;
          default:
-            if (lGetString(jep, JB_script_file)) {
-               const char *s;
-
-               /* build basename */ 
-               s=strrchr(lGetString(jep, JB_script_file), '/');
-               if (s) 
-                  s++;
-               else 
-                  s = lGetString(jep, JB_script_file);
-
-               var_list_set_string(&environmentList, "JOB_NAME", s);
+            if (lGetString(jep, JB_script_file) != NULL) {
+               /* JG: TODO: use some function to create path */
+               sprintf(script_file, "%s/%s/" u32, execd_spool_dir, EXEC_DIR, 
+                       job_id);
+            } else {
+               /* This is an error that will be handled in shepherd.
+               ** When we implement binary submission (Issue #25), this case
+               ** might become valid and the binary to execute might be the
+               ** first argument to execute.
+               */
+               sprintf(script_file, "none");
             }
             break;
       }
+
+      /* set JOB_NAME */
+      if(job_name == NULL) {
+         job_name = sge_basename(script_file, PATH_SEPARATOR_CHAR);
+      }
+      
+      var_list_set_string(&environmentList, "JOB_NAME", job_name);
    }
 
+   var_list_set_string(&environmentList, "JOB_SCRIPT", script_file);
    /* JG: TODO (ENV): do we need REQNAME and REQUEST? */
    var_list_set_string(&environmentList, "REQUEST", petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name));
    var_list_set_string(&environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
@@ -578,25 +592,6 @@ char *err_str
 
    var_list_set_int(&environmentList, "RESTARTED", (int) lGetUlong(jatep, JAT_job_restarted));
 
-   /*
-   ** interactive and login jobs have no script file
-   */
-
-   if(petep != NULL) {
-      /* JG: TODO (255): passing information if it is an interactive job and which type, should not be
-       *           be done in scriptfile - find a better solution, e.g. a config variable 
-       */
-      strcpy(script_file, "QRSH");
-   } else {
-      if (lGetString(jep, JB_script_file) != NULL) {
-         sprintf(script_file, "%s/%s/" u32, execd_spool_dir, EXEC_DIR, 
-                 job_id);
-      } else { 
-         strcpy(script_file, lGetString(lGetElemStr(environmentList, VA_variable, "JOB_NAME"), VA_value));
-      }
-   }
-
-   var_list_set_string(&environmentList, "JOB_SCRIPT", script_file);
 
    var_list_set_string(&environmentList, "TMPDIR", tmpdir);
    var_list_set_string(&environmentList, "TMP", tmpdir);
@@ -1156,8 +1151,7 @@ char *err_str
    /*
    ** interactive jobs dont need to access script file
    */
-   /* JG: TODO (255): find better way to identify interactive jobs */
-   if (!lGetString(jep, JB_job_source) && petep == NULL && lGetString(jep, JB_script_file)) {
+   if(petep == NULL && !JB_NOW_IS_IMMEDIATE(lGetUlong(jep, JB_now))) {
       if (SGE_STAT(script_file, &buf)) {
          sprintf(err_str, MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS,
                  script_file, strerror(errno));

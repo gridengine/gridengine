@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/05/22 06:45:05 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2002/06/14 12:00:35 $     Revision: $Revision: 1.14 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2002/05/22 06:45:05 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2002/06/14 12:00:35 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1432,9 +1432,10 @@ A unique identifier assigned by the
 when the job was
 submitted. The job ID is a decimal integer in the range 1 to 99999.
 .IP "JOB_NAME" 1.5i
-The job name, either `INTERACT' for interactive jobs or
-built from the \fIqsub\fP
-script filename, a period, and the digits of the job ID.
+The job name. 
+For batch jobs or jobs submitted by \fIqrsh\fP with a command, the job name is built as basename of the \fIqsub\fP script filename resp. the \fIqrsh\fP command.
+For interactive jobs it is set to `INTERACTIVE' for \fIqsh\fP jobs, `QLOGIN' for \fIqlogin\fP jobs and `QRLOGIN' for \fIqrsh\fP jobs without a command.
+
 This default may be overwritten by the
 .I -N.
 option.

@@ -129,8 +129,10 @@ int truncate_stderr_out
    foreground = 0; /* VX sends SIGTTOU if trace messages go to foreground */
 
    /* From here only the son --------------------------------------*/
-   if (!script_file)
+   if (!script_file) {
+      /* output error and exit */
       shepherd_error("received NULL als script file");
+   }   
 
    /*
    ** interactive jobs have script_file name interactive and

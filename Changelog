@@ -1,3 +1,8 @@
+JG-2001-10-29-0: Removed explicit hash tables on job lists in 
+                 qmaster and scheduler - they are no longer needed, 
+                 as cull hashing functionality was enabled for job
+                 lists.
+
 AH-2001-10-29-0: Qmaster:
                  - cancel resend of jobs to execd on forced job deletion
 

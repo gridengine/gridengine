@@ -307,24 +307,28 @@ void range_list_print_to_string(const lList *range_list, dstring *string)
 *
 *  FUNCTION
 *     The first id of the first range element of the list will 
-*     be returned. 
+*     be returned. If 'range_list' is NULL or empty 0 will be
+*     returned and 'answer_list' will be filled with an error 
+*     message.
 *
 *  INPUTS
 *     const lList *range_list - RN_Type list  
-*     lList **answer_list     - pointer to an AN_Type list 
+*     lList **answer_list     - Pointer to an AN_Type list 
 *
 *  RESULT
-*     u_long32 - first id
+*     u_long32 - First id or 0
 *
 *  SEE ALSO
 *     gdi/range/RN_Type 
+*     gdi/range/range_list_get_last_id()
 ******************************************************************************/
 u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list) 
 {
    u_long32 start = 0;
-   lListElem *range = lFirst(range_list);
+   lListElem *range = NULL;
 
    DENTER(BASIS_LAYER, "range_list_get_first_id");
+   range = lFirst(range_list);
    if (range) {
       u_long32 end, step;
 
@@ -347,23 +351,28 @@ u_long32 range_list_get_first_id(const lList *range_list, lList **answer_list)
 *
 *  FUNCTION
 *     The last id of the last range element of the list will be 
-*     returned. 
+*     returned. If 'range_list' is NULL or empty 0 will be
+*     returned and 'answer_list' will be filled with an error
+*     message. 
 *
 *  INPUTS
 *     const lList *range_list - RN_Type list  
-*     lList **answer_list     - pointer to an AN_Type list 
+*     lList **answer_list     - Pointer to an AN_Type list 
 *
 *  RESULT
-*     u_long32 - last id
+*     u_long32 - Last id or 0
 *
 *  SEE ALSO
 *     gdi/range/RN_Type 
+*     gdi/range/range_list_get_first_id()
 ******************************************************************************/
 u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list) 
 {
    u_long32 end = 0;
-   lListElem *range = lLast(range_list);
-
+   lListElem *range = NULL;
+   
+   DENTER(BASIS_LAYER, "range_list_get_last_id");
+   range = lLast(range_list);
    if (range) {
       u_long32 start, step;
 
@@ -372,6 +381,7 @@ u_long32 range_list_get_last_id(const lList *range_list, lList **answer_list)
       sge_add_answer(answer_list, "range_list containes no elements",
                      STATUS_ERROR1, NUM_AN_ERROR);
    }
+   DEXIT;
    return end;
 }
 

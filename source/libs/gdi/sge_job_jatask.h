@@ -107,9 +107,13 @@ void job_get_submit_task_ids(const lListElem *job, u_long32 *start,
 int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
                             u_long32 step);
 
-u_long32 job_get_smallest_task_id(const lListElem *job);
+u_long32 job_get_smallest_unenrolled_task_id(const lListElem *job);
 
-u_long32 job_get_biggest_task_id(const lListElem *job);
+u_long32 job_get_smallest_enrolled_task_id(const lListElem *job);
+
+u_long32 job_get_biggest_unenrolled_task_id(const lListElem *job);
+
+u_long32 job_get_biggest_enrolled_task_id(const lListElem *job);
 
 int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
                               int force_registration);   

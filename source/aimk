@@ -1625,7 +1625,12 @@ else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
 endif
 
 if ( "$CORE" == 1 ) then
+
    cd $COMPILE_ARCH
+
+   # ugly workaround to recreate $COMPILE_ARCH/sge_sub_object.c
+   # to to unsolved dependency problem
+   rm -f  sge_sub_object.c
 
    echo _________C_O_R_E__S_Y_S_T_E_M_____________
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \

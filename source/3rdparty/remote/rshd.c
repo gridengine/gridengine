@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.2 2002/01/09 07:23:48 joga Exp $	*/
+/*	$Id: rshd.c,v 1.2.2.1 2002/04/19 11:57:07 joga Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -260,6 +260,7 @@ doit(fromp)
 	char hostnamebuf[2 * MAXHOSTNAMELEN + 1];
    /* char active_jobs_dir[SGE_PATH_MAX]; */
    char *s_qsub_gid = NULL;
+   char err_str[1024];
 
 
 	(void) signal(SIGINT, SIG_DFL);
@@ -422,7 +423,6 @@ doit(fromp)
    ** and initialize admin user
    */
    {
-      static char err_str[1024];
       read_config("config");
       if(set_admin_username(get_conf_val("admin_user"), err_str)) {
          errorstr = err_str;
@@ -588,9 +588,8 @@ fail:
 #if (SOLARIS || ALPHA || LINUX)     
    /* add Additional group id to current list of groups */
    if (add_grp_id) {
-      if (add_group(add_grp_id) == -1) {
-         /* sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED );
-         return 1; */
+      if (add_group(add_grp_id, err_str) == -1) {
+		   error(err_str);
       }
    }
 #endif

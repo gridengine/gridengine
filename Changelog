@@ -1,3 +1,10 @@
+JG-2002-04-19-0: Bugfix:    Interactive jobs of any user failed if root had 
+                            already the maximum number of group id's.
+                 Enhancem.: More detailed description in error output
+                 Issue:     #237
+                 Bugtraq:   #4670669
+                 Changed:   sge_shepherd qsh rshd
+
 JG-2002-04-18-1: Enhancem.  Improved verbose output in qmake.
                             Start tasks on localhost also per qrsh - slower, 
                             but tasks are identifiable in accounting

@@ -785,8 +785,6 @@
 /*
 ** setup_qmaster.c
 */
-#define MSG_SETUP_MAPPINGETRIES_S                  _MESSAGE(33609, _("\tMapping entries for "SFQ".\n"))
-#define MSG_SETUP_HOSTGROUPENTRIES_S               _MESSAGE(33610, _("\tHost group entries for group "SFQ".\n"))
 #define MSG_SETUP_SETUPMAYBECALLEDONLYATSTARTUP    _MESSAGE(33615, _("setup may be called only at startup"))
 #define MSG_CONFIG_FOUNDNOLOCALCONFIGFORQMASTERHOST_S    _MESSAGE(33616, _("found no local configuration for qmaster host "SFQ))
 #define MSG_CONFIG_ERRORXSELECTINGCONFIGY_IS    _MESSAGE(33617, _("Error %d selecting configuration "SFQ"\n"))
@@ -799,8 +797,6 @@
 #define MSG_CONFIG_READINGINSCHEDULERCONFIG       _MESSAGE(33631, _("Reading in scheduler configuration\n"))
 #define MSG_CONFIG_CANTLOADSHARETREEXSTARTINGUPWITHEMPTYSHARETREE_S       _MESSAGE(33634, _("cant load sharetree ("SFN"), starting up with empty sharetree"))
 #define MSG_CONFIG_CANTRESOLVEEXECHOSTNAMEX_S       _MESSAGE(33636, _("cannot resolve exechost name "SFQ))
-#define MSG_CONFIG_READINGUSERMAPPINGENTRY _MESSAGE(33641, _("Reading in user mapping entries:\n"))
-#define MSG_CONFIG_READINGHOSTGROUPENTRYS  _MESSAGE(33642, _("Reading in host group entries:\n"))
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU       _MESSAGE(33648, _("can't find queue "SFQ" referenced in job "U32CFormat))
 #define MSG_CONFIG_FAILEDREMOVINGBADJOBFILEREASONXPLEASEDELETEYMANUALY_SS       _MESSAGE(33649, _("failed removing bad jobfile (reason: "SFN"): please delete "SFQ" manually\n"))
 #define MSG_CONFIG_REMOVEDBADJOBFILEX_S       _MESSAGE(33650, _("removed bad jobfile "SFQ"\n"))

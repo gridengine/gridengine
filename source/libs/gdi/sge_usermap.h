@@ -36,6 +36,15 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 extern lList *Master_Usermapping_Entry_List;
+
+int   sge_resolveMappingList(lList **alpp, lList *hostGroupList, lList *mapList);
+
+int sge_verifyMappingEntry(lList **alpp, lList *hostGroupList, lListElem *mapEntry, const char *filename, lList *userMappingEntryList);
+
+lList* sge_getHostListForMappedUser(lList *userMappingList, const char *mapName);
+int   sge_isHostInHostList(lList *hostGroupList, lList *hostList, const char *hostName);
+int   sge_isNameInMappingList(lList *mapList, const char *mappedName);
+int   sge_isHostInMappingListForUser(lList *hostGroupList, lList *mapList, const char *mappedName, const char *host);
 #endif
 
 #endif /* __SGE_USERMAP_H */

@@ -78,6 +78,11 @@
 #include "read_write_userset.h"
 #include "sched_conf.h"
 
+#ifndef __SGE_NO_USERMAPPING__
+#include "read_write_ume.h"
+#include "read_write_host_group.h"
+#endif
+
 #include "msg_spoollib_classic.h"
 
 #include "sge_spooling_classic.h"

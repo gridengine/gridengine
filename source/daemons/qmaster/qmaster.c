@@ -100,6 +100,10 @@
 #include "sge_hostgroup.h"
 #include "sge_manop.h"
 
+#ifndef __SGE_NO_USERMAPPING__
+#include "sge_usermap.h"
+#endif
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -115,10 +119,6 @@ static pthread_t        corba_thread;
 #endif
 
 int in_spool_dir = 0;                 /* to prevent lock file writing */
-
-#ifndef __SGE_NO_USERMAPPING__
-lList *Master_Usermapping_Entry_List   = NULL;
-#endif
 
 void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
 static void qmaster_exit_func(int i);

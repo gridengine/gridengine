@@ -97,4 +97,13 @@
 #define MSG_SPOOL_NOTSUPPORTEDREADINGOPERATOR _MESSAGE(61044, _("reading a single operator from disk not supported in classic spooling context\n"))
 #define MSG_SPOOL_GLOBALCONFIGNOTDELETED _MESSAGE(61045, _("the global configuration must not be deleted\n"))
 #define MSG_SPOOL_SCHEDDCONFIGNOTDELETED _MESSAGE(61045, _("the scheduler configuration must not be deleted\n"))
+
+/* 
+ * libs/spool/read_list.c continued
+ */
+#define MSG_CONFIG_READINGHOSTGROUPENTRYS  _MESSAGE(33642, _("Reading in host group entries:\n"))
+#define MSG_SETUP_HOSTGROUPENTRIES_S               _MESSAGE(33610, _("\tHost group entries for group "SFQ".\n"))
+#define MSG_CONFIG_READINGUSERMAPPINGENTRY _MESSAGE(33641, _("Reading in user mapping entries:\n"))
+#define MSG_SETUP_MAPPINGETRIES_S                  _MESSAGE(33609, _("\tMapping entries for "SFQ".\n"))
+
 #endif /* __MSG_SPOOLLIB_CLASSIC_H */

@@ -120,8 +120,8 @@ static int read_spooled_data(void)
 
 #ifndef __SGE_NO_USERMAPPING__
    /* host groups */
-   spool_read_list(context, &Master_Hostgroup_List, SGE_EMT_HOSTGROUP);
-   DPRINTF(("read %d entries to Master_Hostgroup_List\n", lGetNumberOfElem(Master_Hostgroup_List)));
+   spool_read_list(context, &Master_Host_Group_List, SGE_EMT_HOSTGROUP);
+   DPRINTF(("read %d entries to Master_Hostgroup_List\n", lGetNumberOfElem(Master_Host_Group_List)));
 #endif
 
    /* operators */
@@ -138,8 +138,8 @@ static int read_spooled_data(void)
 
 #ifndef __SGE_NO_USERMAPPING__
    /* user mapping */
-   spool_read_list(context, &Master_Usermapping_List, SGE_EMT_USERMAPPING);
-   DPRINTF(("read %d entries to Master_Usermapping_List\n", lGetNumberOfElem(Master_Usermapping_List)));
+   spool_read_list(context, &Master_Usermapping_Entry_List, SGE_EMT_USERMAPPING);
+   DPRINTF(("read %d entries to Master_Usermapping_List\n", lGetNumberOfElem(Master_Usermapping_Entry_List)));
 #endif
 
    /* queues */

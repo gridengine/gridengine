@@ -113,11 +113,6 @@
 
 #include "msg_common.h"
 
-#ifndef __SGE_NO_USERMAPPING__
-static int sge_read_user_mapping_entries_from_disk(void);
-static int sge_read_host_group_entries_from_disk(void);
-#endif
-
 static int remove_invalid_job_references(int user);
 
 static int debit_all_jobs_from_qs(void);

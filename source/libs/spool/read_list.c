@@ -83,6 +83,15 @@
 #include "read_write_userprj.h"
 #include "read_write_userset.h"
 
+#ifndef __SGE_NO_USERMAPPING__
+#include "sge_usermap.h"
+#include "read_write_ume.h"
+
+#include "sge_hostgroup.h"
+#include "read_write_host_group.h"
+#endif
+
+
 #include "setup_path.h"
 #include "sge_uidgid.h"
 

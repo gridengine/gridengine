@@ -321,8 +321,9 @@ usage:
    echo "-mankv            -> generate man pages checked out with '-kv' flag"
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-no-core          -> don't compile the core system"
+   echo "-no-java          -> don't compile Java[TM] class files"
+   echo "-no-jni           -> don't compile JNI library"
    echo "-no-intl          -> do not compile with internationalization library"
-   echo "-no-java          -> do not compile Java[TM] class files"
    echo "-no-mk            -> only return the specific architecture string"
    echo "-no-opt           -> compile with low optimization"
    echo "-no-qmake         -> don't compile qmake"
@@ -333,6 +334,7 @@ usage:
    echo "-no-secure        -> diable ssl security (enabled by default)"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
+   echo "-only-java        -> only compile Java[TM] class files"
    echo "-only-qmake       -> build only qmake"
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
@@ -405,6 +407,8 @@ set JAVA             = 0
 set JAVA_BINDIR      = "bin"
 set JAVA_INCL        = "include"
 set JAVA_SHAREDEXT   = ""
+set JNI              = 1
+set DRMAA_TARGET     = "ALL"
 
 set LFLAGS           = "-L."
 set XLFLAGS          = ""
@@ -694,11 +698,14 @@ while ($#argv >= 1 && $?found)
    case "-no-core":
       set CORE = 0
       breaksw
-   case  "-no-intl"
-      set WITH_GETTEXT = 0
-      breaksw
    case  "-no-java"
       set JAVA = 0
+      breaksw
+   case  "-no-jni"
+      set JNI = 0
+      breaksw
+   case  "-no-intl"
+      set WITH_GETTEXT = 0
       breaksw
    case "-no-mk":
       set nomk
@@ -751,6 +758,9 @@ while ($#argv >= 1 && $?found)
       set SGE_DEPEND = 1
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
+      breaksw
+   case  "-only-java"
+      set JAVA = 2
       breaksw
    case "-only-qmake":
       set CORE   = 0
@@ -903,7 +913,7 @@ if ( $DEBUGGED && $USE_QMAKE ) then
    set MAKEOPT = "-verbose $MAKEOPT"
 endif
 
-if ( $JAVA == 1 || $BUILDJAVADOC == 1 ) then
+if ( $JAVA > 0 || $BUILDJAVADOC == 1 || $JNI == 1 ) then
    # Make sure we can find JAVA_HOME
    if ( ${?JAVA_HOME} == 0 ) then
       echo "Please set JAVA_HOME"
@@ -1709,11 +1719,14 @@ default:
    exit 1
 endsw
 
-if ($JAVA == 1) then
+if ($JNI == 1) then
    set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}"
+
    if ("$JAVA_ARCH" != "") then
       set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}/${JAVA_ARCH}"
    endif
+else
+   set DRMAA_TARGET = "NJ"
 endif
 
 if ($JAVA_SHAREDEXT == "") then
@@ -1866,6 +1879,9 @@ if ( "$BUILDJAVADOC" == 1 ) then
    if ( $status != 0 ) then
       echo not done
       exit 1
+   else
+      echo done
+      exit 0
    endif
 
    cd $SOURCE
@@ -2091,14 +2107,6 @@ if ( "$CORE" == 1 ) then
    end
    set SPOOLING_DEPS = "$new_deps"
 
-   set target = "$argv"
-
-   if ( $JAVA == 0 && "$target" == "" ) then
-      set target=common_all_nj
-   else if ( $JAVA == 0 && "$target" == "clean" ) then
-      set target=clean_nj
-   endif
-
    echo _________C_O_R_E__S_Y_S_T_E_M_____________
    $MAKE $MAKEOPT -f $MAKEFILE "MAKE=$MAKE" "CC=$CC" \
          "LD_WRAPPER=$LD_WRAPPER" \
@@ -2129,10 +2137,29 @@ if ( "$CORE" == 1 ) then
          "JNI_INCLUDES=$JNI_INCLUDES" \
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
-         $target
+         "DRMAA_TARGET=$DRMAA_TARGET" \
+         $argv
    if ( $status != 0 ) then
       echo not done
       exit 1
+   endif
+
+   cd $SOURCE
+endif
+
+if ( "$JAVA" > 0 ) then
+   echo _________J_A_V_A__C_L_A_S_S__F_I_L_E_S____
+
+   cd CLASSES
+
+   ant -f $SOURCE/classes/build.xml $argv
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   else if ( $JAVA == 2 ) then
+      echo done
+      exit 0
    endif
 
    cd $SOURCE

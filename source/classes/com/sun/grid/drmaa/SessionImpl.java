@@ -39,7 +39,7 @@ import org.ggf.drmaa.*;
  * is built on top of the DRMAA C binding using JNI.  In order to keep the
  * native code as localized as possible, this class also provides native DRMAA
  * services to other classes, such as the JobTemplateImpl.</p>
- * <p>This class relies on the <i>jdrmaa</i> shared library, which in turn
+ * <p>This class relies on the <i>drmaa</i> shared library, which in turn
  * requires the <i>drmaa</i> shared library.</p>
  * @see org.ggf.drmaa.Session
  * @see com.sun.grid.drmaa.JobTemplateImpl
@@ -53,7 +53,7 @@ public class SessionImpl implements Session {
    private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java Binding 0.5 -- SGE 6.0";
 	
 	static {
-		System.loadLibrary ("jdrmaa");
+		System.loadLibrary ("drmaa");
 	}
 		
 	/** Creates a new instance of SessionImpl */

@@ -39,13 +39,9 @@ LEX    = flex
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-common_all: common_all_nj classes_all
+common_all: $(SECTARGETS) common libs daemons clients utilbin coshepherd $(PERLGUI)
 
-common_all_nj: $(SECTARGETS) common libs daemons clients utilbin coshepherd $(PERLGUI)
-
-clean: clean_nj classes_clean
-
-clean_nj:  common_clean libs_clean clients_clean daemons_clean utilbin_clean coshepherd_clean $(SECCLEAN) $(KRBCLEAN) $(GSSCLEAN) $(PERLGUI_CLEAN)
+clean:  common_clean libs_clean clients_clean daemons_clean utilbin_clean coshepherd_clean $(SECCLEAN) $(KRBCLEAN) $(GSSCLEAN) $(PERLGUI_CLEAN)
 
 depend: common_depend libs_depend clients_depend daemons_depend utilbin_depend $(SECDEPEND) $(KRBDEPEND) $(GSSDEPEND)
 
@@ -62,4 +58,3 @@ include  $(SDIR)/security/coshepherd/Makefile
 include  $(SDIR)/daemons/Makefile
 include  $(SDIR)/clients/Makefile
 include  $(SDIR)/utilbin/Makefile
-include  $(SDIR)/classes/Makefile

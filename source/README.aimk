@@ -101,6 +101,7 @@ Content
    Common options are (the -only-* options are mutually exclusive):
 
       % aimk -only-core   compile core system only
+      % aimk -only-java   compile Java[TM] class files only
       % aimk -only-qmon   compile qmon only
       % aimk -only-qmake  compile qmake only
       % aimk -only-qtcsh  compile qtcsh only
@@ -108,6 +109,8 @@ Content
    To compile Grid Engine without one or more default targets use the flags:
 
       -no-core
+      -no-java
+      -no-jni
       -no-qmake 
       -no-qmon
       -no-qtcsh
@@ -116,6 +119,31 @@ Content
    For creating the SGE qmaster daemon you only would enter:
 
       % aimk -only-core sge_qmaster
+
+   By default, the JNI library for the DRMAA Java language binding will be
+   built, but the classes files will not.  To compile SGE without the DRMAA
+   Java language binding, use:
+
+      % aimk -no-jni -no-java
+
+   The -no-java is not strictly necessary in most cases, but it ensures that
+   no class files are compiled, even if the aimk.private contains the -java
+   switch.  Note that without or without the -no-jni switch, the libdrmaa
+   shared library will be created.  The difference will be in whether the
+   shared library contains the JNI components.
+
+   To compile only the Java class files, use:
+
+      % aimk -only-java
+
+   To compile the complete SGE system, including the DRMAA Java language
+   binding, use:
+
+      % aimk -java
+
+   Note that in order to compile the DRMAA Java language binding, ant 1.5 or
+   better must be in the classpath, and JAVA_HOME must point to JDK 1.4 or
+   better.
 
    4.4 'cc' or 'gcc'
    -----------------
@@ -169,6 +197,7 @@ Content
       % aimk -mankv     dto. but check out from CVS with "-kv flag"
       % aimk -htmlman   create man pages in nroff and html format
       % aimk -catman    create man pages in catman format (e.g. for SGI)
+      % aimk -javadoc   create JavaDoc[TM] tool format docs
 
    To build man pages in nroff format you need to define the variable
    GROFFPATH in 'aimk.site'. This is where 'groff' is installed. For html

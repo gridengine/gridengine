@@ -70,6 +70,10 @@ sub parselog {
          #Propogate CVS messages to stderr
          print stderr;
       }
+      elsif (/^cvs log:/ && !$quiet) {
+         #Propogate CVS messages to stderr
+         print stderr;
+      }
    }
 }
 

@@ -1,3 +1,6 @@
+CR-2003-05-08-0  Testsuite: - optimized start_remote_tcl_prog() and execute_func 
+                              parameter
+
 JG-2003-05-08-0  Bugfix:    qmake dumped core when starting recursive make calls
                  IZ:        #547
                  Bugtraq:   #4860391

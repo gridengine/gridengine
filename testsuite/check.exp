@@ -14687,7 +14687,7 @@ if { $do_prog_start == 1 } {
 
    set exit_value [ eval $exec_args  ]
 
-   if { $exit_value == "" } {
+   if { $exit_value == "" || [string is integer $exit_value] != 1 } {
       exit 0
    } else {
       exit [ eval $exec_args  ]

@@ -147,7 +147,8 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
    debug_puts "prog: $tcl_prog"
    debug_puts "remote_args: $remote_args"
    log_user 1
-   set result [ start_remote_prog "$host" "$user" "$tcl_prog" "$remote_args" prg_exit_state 300 ]
+
+   set result [ start_remote_prog "$host" "$user" "$tcl_prog" "$remote_args" prg_exit_state 600 0 "" 1 0 1]
    if { [string first "Error in procedure" $result] >= 0 } {
       add_proc_error "start_remote_tcl_prog" -2 "error in $tcl_file, proc $tcl_procedure $tcl_procargs"
    }

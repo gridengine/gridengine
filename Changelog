@@ -1,3 +1,7 @@
+AA-2002-07-04-0: Bugfix:    Job dependency display in qmon
+                 Issue:     #275 affects only qmon
+                 Bugtraq:   #4706929
+
 JG-2002-07-03-0: Bugfix:    Deleting ckpt objects and pe objects could
                             make qmaster dump core.
 

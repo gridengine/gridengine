@@ -1,3 +1,9 @@
+DT-2004-09-15-0: Bugfix:    o Fixed drmaa_synchronize() problem
+                 Changed:   JAPI
+                 Review:    SG
+                 Issue:     1270
+                 Buqtraq:   5102340
+
 SG-2004-09-15-0: Bugfix:    fixed memory leak in the scheduler
                  Changed:   scheduler
                  Review:    DT

@@ -1,3 +1,8 @@
+CR-2003-02-10-1  Testsuite: - new SGE/EE version string for 5.3p3
+                            - fixed bug for tar/zip package testing
+                              (could not enter package directory without
+                               zipped pgkadd files)
+
 CR-2003-02-10-0  Testsuite: - fixed tcl error for undefined warnings (caused
                               from evtl. failed test)
                             - increased timeout values for install_core_system

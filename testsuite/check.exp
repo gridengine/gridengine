@@ -4545,7 +4545,7 @@ proc config_execd_install_options { only_check name config_array } {
 #*******************************************************************************
 proc config_package_directory { only_check name config_array } {
    global CHECK_OUTPUT 
-   global CHECK_PACKAGE_DIRECTORY 
+   global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
 
    upvar $config_array config
    set actual_value  $config($name)
@@ -4576,9 +4576,24 @@ proc config_package_directory { only_check name config_array } {
          puts $CHECK_OUTPUT "Directory \"$value\" not found"
          return -1
       }
-      if { [check_packages_directory $value] != 0 } {
-         puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
-         return -1
+      if { [info exists CHECK_PACKAGE_TYPE] } {
+         if { [string compare $CHECK_PACKAGE_TYPE "tar"] == 0 }    {
+            if { [check_packages_directory $value check_tar] != 0 } {
+               puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
+               return -1
+            }
+         } else {
+            if { [check_packages_directory $value check_zip] != 0 } {
+               puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
+               return -1
+            }
+         }
+
+      } else {
+         if { [check_packages_directory $value] != 0 } {
+            puts $CHECK_OUTPUT "error checking package_directory! are all package file installed?"
+            return -1
+         }
       }
    }
 

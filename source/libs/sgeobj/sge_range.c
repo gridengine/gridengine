@@ -1661,19 +1661,38 @@ void range_parse_from_string(lListElem **range,
                }
                /* finally, we got the max-value in ldummy */
                rmax = ldummy;
+
                if (step_allowed && *dptr && *dptr == ':') {
+                  const double epsilon = 1.0E-12;
+                  double       dbldummy;
+ 
                   rstr = dptr + 1;
-                  ldummy = strtol(rstr, &dptr, 10);
-                  if ((ldummy == 0) && (rstr == dptr)) {
-                     sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S,
-                             rstr);
-                     answer_list_add(answer_list, msg, STATUS_ESYNTAX,
-                                     ANSWER_QUALITY_ERROR);
-                     lFreeElem(r);
-                     DEXIT;
-                     *range = NULL;
-                     return;
+                  dbldummy = strtod(rstr, &dptr);
+                  ldummy = dbldummy;
+                  
+                  if (dbldummy > 0) {
+                     if (( dbldummy - ldummy > epsilon) ||
+                        ((ldummy == 0) && (rstr == dptr))) {
+                        sprintf(msg, MSG_GDI_INITIALPORTIONSTRINGNODECIMAL_S,
+                                rstr);
+                        answer_list_add(answer_list, msg, STATUS_ESYNTAX,
+                                        ANSWER_QUALITY_ERROR);
+                        lFreeElem(r);
+                        DEXIT;
+                        *range = NULL;
+                        return;
+                     }
                   }
+                  else {
+                      sprintf( msg, MSG_GDI_NEGATIVSTEP );
+                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
+                                      ANSWER_QUALITY_ERROR);
+                      lFreeElem(r);
+                      DEXIT;
+                      *range = NULL;
+                      return;
+                  }
+                   
                   if (*dptr != '\0') {
                      sprintf(msg, MSG_GDI_RANGESPECIFIERWITHUNKNOWNTRAILER_SS,
                              rstr, dptr);
@@ -1686,6 +1705,7 @@ void range_parse_from_string(lListElem **range,
                   }
                   /* finally, we got the max-value in ldummy */
                   step = ldummy;
+
                }
             }   /* if (*rstr == '\0') -- else clause */
          }      /* if (*dptr != '-') -- else clause */

@@ -1,3 +1,9 @@
+RH-2004-03-15-0: Bugfix:    Negative numbers for step in range parsing are
+                            not allowed.
+                 Changed:   all
+                 Issue:     799
+                 Review:    SG
+
 AH-2004-03-15-1: Bugfix:    Fix resource reservation problem for sequential
                             jobs
 

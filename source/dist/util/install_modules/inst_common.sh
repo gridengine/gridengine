@@ -413,7 +413,8 @@ CheckWhoInstallsSGE()
                   "This will allow you to run Grid Engine only under your user id for testing\n" \
                   "a limited functionality of Grid Engine.\n"
 
-      ADMINUSER=`whoami`
+      #ADMINUSER=`whoami`
+      ADMINUSER="none"
       $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >> "
       $CLEAR
       return 0

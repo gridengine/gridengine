@@ -1,3 +1,8 @@
+MD-2004-04-27-0: Bugfix:    installation failed, if root installs, without 
+                            configuring a adminuser.
+                 Changed:   inst_execd.sh, inst_common.sh
+                 Review:    AH
+
 JG-2004-04-27-0: Bugfix:    Disable dynamic loading of spooling libs on IRIX65,
                             AIX43 and AIX51: The classic spooling references
                             global variables (Master_*_List) and reverse 

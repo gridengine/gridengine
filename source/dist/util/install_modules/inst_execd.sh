@@ -72,6 +72,10 @@ GetAdminUser()
 {
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
    euid=`$SGE_UTILBIN/uidgid -euid`
+
+   if [ `echo "$ADMINUSER" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
+      ADMINUSER=default
+   fi
 }
 #-------------------------------------------------------------------------
 # CheckQmasterInstallation
@@ -115,7 +119,7 @@ CheckQmasterInstallation()
    user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
 
    if [ "$user" != "" ]; then
-      if [ `echo "$user" |tr "A-Z" "a-z"` = "none" ]; then
+      if [ `echo "$user" |tr "A-Z" "a-z"` = "none" -a $euid = 0 ]; then
          user=default
       fi
    fi

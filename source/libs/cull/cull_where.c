@@ -1089,6 +1089,7 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
       cp->op = token;
       eat_token(state);
       if (mt_get_type(cp->operand.cmp.mt) != lListT) {
+         cp = lFreeWhere(cp);
          LERROR(LEINCTYPE);
          DEXIT;
          return NULL;

@@ -1,3 +1,7 @@
+AH-2003-01-23-1: Bugfix:    qtcsh can't be used as normal tcsh
+                 Bugtraq:   #4776821
+                 IZ:        #417
+
 JG-2003-01-23-0  Bugfix:    Set commlib timeouts in qsh analogous to qsub.
                  Bugtraq:   #4654993
 

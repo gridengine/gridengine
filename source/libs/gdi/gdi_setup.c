@@ -115,7 +115,7 @@ int sge_gdi_setup(const char *programname)
    made_setup = 1;
 
    DEXIT;
-   return CL_OK;
+   return AE_OK;
 }
 
 

@@ -2529,10 +2529,10 @@ int is_daemon
    ** malloc ca_root string and check if directory has been created during
    ** install otherwise exit
    */
-   len = strlen(sge_get_root_dir(1)) + strlen(sge_get_default_cell()) +
+   len = strlen(sge_get_root_dir(1, NULL, 0)) + strlen(sge_get_default_cell()) +
          strlen(CA_DIR) + 3;
    ca_root = sge_malloc(len);
-   sprintf(ca_root, "%s/%s/%s", sge_get_root_dir(1), 
+   sprintf(ca_root, "%s/%s/%s", sge_get_root_dir(1, NULL, 0), 
                      sge_get_default_cell(), CA_DIR);
    if (SGE_STAT(ca_root, &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_CAROOTNOTFOUND_S, ca_root));

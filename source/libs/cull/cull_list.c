@@ -1589,10 +1589,6 @@ int lInsertElem(lList *lp, lListElem *ep, lListElem *new)
 ******************************************************************************/
 int lAppendElem(lList *lp, lListElem *ep) 
 {
-#ifdef __INSIGHT__
-/* JG: this code is thorougly tested and really should be ok, but insure complains */
-_Insight_set_option("suppress", "LEAK_ASSIGN");
-#endif
    DENTER(CULL_LAYER, "lAppendElem");
 
    if (!lp) {
@@ -1638,9 +1634,6 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
 
    DEXIT;
    return 0;
-#ifdef __INSIGHT__
-_Insight_set_option("unsuppress", "LEAK_ASSIGN");
-#endif
 }
 
 /****** cull/list/lRemoveElem() ***********************************************

@@ -1,3 +1,9 @@
+JG-2004-05-24-2: Bugfix:    qdel of non existing job/array task/task range as 
+                            admin user produced an incorrect error message.
+                 Review:    SG
+                 Cleanup:   Removed outdated Insure instrumentation.
+                 Testsuite: Adapted testsuite to changed qdel error messages.
+
 JG-2004-05-24-1: Cleanup:   Removed unused I18N messages.
 
 JG-2004-05-24-0: Testsuite: Add $SGE_CELL to testsuite mails.

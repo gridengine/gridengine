@@ -677,7 +677,7 @@ proc qdel_delete_unknown_jobid {} {
    if {$ts_config(gridengine_version) == 53} {
       set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_SU] "job" $unknown_jobid ]  
    } else {
-      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DEL_JOB_SS] $unknown_jobid $CHECK_USER]  
+      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXIST_SS] "job" $unknown_jobid]  
    }
 
    qdel_delete_unknown_jobid_proc $job_list "$default_output"
@@ -692,7 +692,7 @@ proc qdel_delete_unknown_jobid {} {
    if {$ts_config(gridengine_version) == 53} {
       set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASK_UU] $last_jobid $unknown_taskid] 
    } else {
-      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASK_SUS] $last_jobid $unknown_taskid $CHECK_USER] 
+      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASK_SU] $last_jobid $unknown_taskid] 
    }
    qdel_delete_unknown_jobid_proc $job_list "$default_output"
    delete_job $last_jobid
@@ -707,7 +707,7 @@ proc qdel_delete_unknown_jobid {} {
    if {$ts_config(gridengine_version) == 53} {
       set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_UUUU] $last_jobid "5" "10" "2"]
    } else {
-      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUUS] $last_jobid "5" "9" "2" $CHECK_USER]
+      set default_output [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUU] $last_jobid "5" "9" "2"]
    }
    qdel_delete_unknown_jobid_proc $job_list "$default_output"
    delete_job $last_jobid 1

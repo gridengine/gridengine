@@ -626,7 +626,7 @@ while ($#argv >= 1 && $?found)
       #set DEBUG_FLAG = "$DEBUG_FLAG -g -Zsl -Zvm -Zvm -Zkt"
       #set DEBUG_FLAG = "$DEBUG_FLAG -g -Zsl"
       #set DEBUG_FLAG = "$DEBUG_FLAG -Zsl"
-      set INSURE_FLAG = "-D__SGE_INSURE__ -Zsl -Zvm"
+      set INSURE_FLAG = "-Zsl -Zvm"
       set LFLAGS     = "-Zsl $LFLAGS"
       set DEBUGGED   = 1
       breaksw

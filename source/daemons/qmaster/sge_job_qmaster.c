@@ -1229,11 +1229,11 @@ u_long32 step
       /* should not be possible */
       if(is_array) {
          if(start == end) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASK_SUS, 
-                   jobid, u32c(start), ""));
+            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASK_SU, 
+                   jobid, u32c(start)));
          } else {
-            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUUS, 
-                   jobid, u32c(start), u32c(end), u32c(step), ""));
+            ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUU, 
+                   jobid, u32c(start), u32c(end), u32c(step)));
          }
       } else {
          ERROR((SGE_EVENT,MSG_SGETEXT_DOESNOTEXIST_SS, "job", jobid));

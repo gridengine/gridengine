@@ -380,23 +380,13 @@ proc usage_parse_cpu {s_cpu} {
    return $cpu
 }
 
-# JG: TODO: for online usage take the max of current qstat and former qstat - with tightly integrated jobs, the qstat -j usage can decline
 proc usage_check {jobid qstat_j_info slots} {
    global CHECK_OUTPUT
 
    upvar $qstat_j_info online_info
 
-   # get online usage
-   foreach name [array names online_info] {
-      if {[string compare [lindex $name 0] "usage"] == 0} {
-         set usage_list [split $online_info($name) ","]
-         set value_list [split [lindex $usage_list 0] "="]
-         set online_cpu [usage_parse_cpu [lindex $value_list 1]]
-         set value_list [split [lindex $usage_list 1] "="]
-         set online_mem [lindex [lindex $value_list 1] 0]
-         puts $CHECK_OUTPUT "online_cpu = $online_cpu, online_mem = $online_mem"
-      }
-   }
+   set online_cpu $online_info(cpu)
+   set online_mem $online_info(mem)
 
    # get accounting record
    get_qacct $jobid
@@ -435,6 +425,14 @@ proc usage_check {jobid qstat_j_info slots} {
    return $result
 }
 
+proc max {a b} {
+   if {$a >= $b} {
+      return $a
+   } else {
+      return $b
+   }
+}
+
 proc usage_monitor_check {id test_name slots} {
    global CHECK_OUTPUT
 
@@ -447,6 +445,8 @@ proc usage_monitor_check {id test_name slots} {
    if [info exists qstat_j_info] {
       unset qstat_j_info
    }
+   set online_info(cpu) 0
+   set online_info(mem) 0
    set now [clock seconds]
    set end [expr $now + 300]
    while {$job_finished == 0 && $now < $end} {
@@ -458,6 +458,18 @@ proc usage_monitor_check {id test_name slots} {
          set my_timeout 1
          set timeout_error 0
          get_qstat_j_info $jobid
+         # get online usage
+         foreach name [array names qstat_j_info] {
+            if {[string compare [lindex $name 0] "usage"] == 0} {
+               set usage_list [split $qstat_j_info($name) ","]
+               set value_list [split [lindex $usage_list 0] "="]
+               set online_cpu [usage_parse_cpu [lindex $value_list 1]]
+               set value_list [split [lindex $usage_list 1] "="]
+               set online_mem [lindex [lindex $value_list 1] 0]
+               set online_info(cpu) [max $online_info(cpu) $online_cpu]
+               set online_info(mem) [max $online_info(mem) $online_mem]
+            }
+         }
       }
 
       set now [clock seconds]
@@ -477,7 +489,7 @@ proc usage_monitor_check {id test_name slots} {
       if {!$job_finished} {
          add_proc_error test_name -1 "job terminated abnormally"
       } else {
-         set error_list [usage_check $jobid qstat_j_info $slots]
+         set error_list [usage_check $jobid online_info $slots]
 
          foreach error $error_list {
             add_proc_error $test_name -1 $error

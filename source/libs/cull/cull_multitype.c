@@ -1016,10 +1016,6 @@ lList *lGetPosList(const lListElem *ep, int pos)
 ******************************************************************************/
 lListElem *lGetObject(const lListElem *ep, int name) 
 {
-#ifdef __INSIGHT__
-/* JG: this code is thorougly tested and really should be ok, but insure complains */
-_Insight_set_option("suppress", "LEAK_ASSIGN");
-#endif
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetObject");
 
@@ -1045,9 +1041,6 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
                         lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return (lListElem *) ep->cont[pos].obj;
-#ifdef __INSIGHT__
-_Insight_set_option("unsuppress", "LEAK_ASSIGN");
-#endif
 }
 
 /****** cull/multitype/lGetList() *********************************************
@@ -1069,10 +1062,6 @@ _Insight_set_option("unsuppress", "LEAK_ASSIGN");
 ******************************************************************************/
 lList *lGetList(const lListElem *ep, int name) 
 {
-#ifdef __INSIGHT__
-/* JG: this code is thorougly tested and really should be ok, but insure complains */
-_Insight_set_option("suppress", "LEAK_ASSIGN");
-#endif
    int pos;
    DENTER(CULL_BASIS_LAYER, "lGetList");
 
@@ -1098,9 +1087,6 @@ _Insight_set_option("suppress", "LEAK_ASSIGN");
                         lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
    DEXIT;
    return (lList *) ep->cont[pos].glp;
-#ifdef __INSIGHT__
-_Insight_set_option("unsuppress", "LEAK_ASSIGN");
-#endif
 }
 
 /****** cull/multitype/lGetPosFloat() *****************************************

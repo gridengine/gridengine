@@ -268,10 +268,6 @@ int user,
 int *tag,
 int parsing_type 
 ) {
-#ifdef __INSIGHT__
-/* JG: NULL is OK for fields */
-_Insight_set_option("suppress", "PARM_NULL");
-#endif
    char *rest;
    const char *name;
    u_long32 job_number;
@@ -482,9 +478,6 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    DEXIT;
    return 0;
-#ifdef __INSIGHT__
-_Insight_set_option("unsuppress", "PARM_NULL");
-#endif
 }
 
 /****

@@ -534,18 +534,10 @@ int num_fields,
       abort();
    }
 
-#ifdef __INSIGHT__
-      _Insight_set_option("suppress", "READ_OVERFLOW");
-#endif
-
    va_start(ap, num_fields);
    for(i=0; i<num_fields; i++)
       field[i] = va_arg(ap, int);
 
-#ifdef __INSIGHT__
-      _Insight_set_option("unsuppress", "READ_OVERFLOW");
-#endif
-      
    XtVaGetValues(w, XmNrows, &max_rows, NULL);
 
    for (ep = lFirst(lp), row = 0; ep; ep = lNext(ep), row++) {
@@ -632,18 +624,10 @@ int num_fields,
       abort();
    }
 
-#ifdef __INSIGHT__
-   _Insight_set_option("suppress", "READ_OVERFLOW");
-#endif
-
    va_start(ap, num_fields);
    for(i=0; i<num_fields; i++)
       field[i] = va_arg(ap, int);
 
-#ifdef __INSIGHT__
-   _Insight_set_option("unsuppress", "READ_OVERFLOW");
-#endif
-      
    XtVaGetValues(w, XmNrows, &max_rows, NULL);
    
    for (row=0; row<max_rows; row++) {

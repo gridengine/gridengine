@@ -515,7 +515,7 @@ proc install_qmaster {} {
        
        -i $sp_id $EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER {
           puts $CHECK_OUTPUT "\n"
-          set spooldir [get_spool_dir $CHECK_CORE_MASTER execd]
+          set spooldir [get_spool_dir $CHECK_CORE_MASTER execd 0]
           if { $spooldir != "" } {
             # use local spool dir
             puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
@@ -539,7 +539,7 @@ proc install_qmaster {} {
 
        -i $sp_id $EXECD_SPOOLING_DIR_NOROOT {
           puts $CHECK_OUTPUT "\n"
-          set spooldir [get_spool_dir $CHECK_CORE_MASTER execd]
+          set spooldir [get_spool_dir $CHECK_CORE_MASTER execd 0]
           if { $spooldir != "" } {
             # use local spool dir
             puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"

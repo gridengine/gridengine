@@ -322,13 +322,6 @@ const char *sge_get_default_cell(void)
 ******************************************************************************/
 char *sge_get_alias_path(void) 
 {
-/* JG: suppress READ_DANGLING. sge_root comes from a getenv() call.
- *     this should be handled properly in underlying function, e.g. by
- *     strdupping the value returned by getenv().
- */
-#ifdef __INSIGHT__
-_Insight_set_option("suppress", "READ_DANGLING");
-#endif
    const char *sge_root, *sge_cell;
    char *cp;
    int len;
@@ -353,7 +346,4 @@ _Insight_set_option("suppress", "READ_DANGLING");
    sprintf(cp, "%s/%s/%s/%s", sge_root, sge_cell, COMMON_DIR, ALIAS_FILE);
    DEXIT;
    return cp;
-#ifdef __INSIGHT__
-_Insight_set_option("unsuppress", "READ_DANGLING");
-#endif
 }

@@ -62,10 +62,6 @@ int flag,
 int *tag,
 int fields[] 
 ) {
-#ifdef __INSIGHT__
-/* JG: NULL is OK for fields */
-_Insight_set_option("suppress", "PARM_NULL");
-#endif
    lListElem *ep;
    struct read_object_args args = { CAL_Type, "calendar", read_cal_work };
    int intern_tag = 0;
@@ -76,9 +72,6 @@ _Insight_set_option("suppress", "PARM_NULL");
   
    DEXIT;
    return ep;
-#ifdef __INSIGHT__
-_Insight_set_option("unsuppress", "PARM_NULL");
-#endif
 }
 
 
@@ -101,10 +94,6 @@ int flag,
 int *tag,
 int parsing_type 
 ) {
-#ifdef __INSIGHT__
-/* JG: NULL is OK for fields */
-_Insight_set_option("suppress", "PARM_NULL");
-#endif
    DENTER(TOP_LAYER, "read_cal_work");
 
    /* --------- CAL_name */
@@ -127,9 +116,6 @@ _Insight_set_option("suppress", "PARM_NULL");
 
    DEXIT;
    return 0;
-#ifdef __INSIGHT__
-_Insight_set_option("unsuppress", "PARM_NULL");
-#endif
 }
 
 

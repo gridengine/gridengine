@@ -126,7 +126,10 @@
 !     -g c                               
 !     Specifies a "cluster" format display of information. The
 !     -g c option causes summary information on all cluster queus
-!     to be displayed along with the queued job list. 
+!     to be displayed along with the queued job list. The -q option
+!     can be used to specify a list of cluster queues, a queue domains
+!     and queue instances that will be considererd in the "cluster"
+!     format display.
 !
 !     Cluster Format (with -g c)
 !     Following the header line a section for each cluster queue 
@@ -316,6 +319,35 @@
 !     The name of the cluster queue or queue instance for which 
 !     usage is summarized. If queue is not specified accounting
 !     data is listed for each queue instance separately.
+
+     -history HistoryPath
+          The directory path where the historical queue and  com-
+          plexes configuration data is located, which is used for
+          resource requirement matching in conjunction  with  the
+          -l  switch.   If  the latter is not set, this option is
+          ignored.
+! This option is removed. Information retrieved via GDI will be
+! always used by qacct to interpret -l switches.
+
+     -nohist
+          Only useful together with  the  -l  option.  It  forces
+          qacct  not to use historical queue and complexes confi-
+          guration data for  resource  requirement  matching  but
+          instead  retrieve actual queue and complexes configura-
+          tion from sge_qmaster(8).  Note, that this may lead  to
+          confusing statistical results, as the current queue and
+          complexes configuration may differ  significantly  from
+          the  situation  being  valid for past jobs.  Note also,
+          that all hosts being referenced in the accounting  file
+          have to be up and running in order to get results.
+! This option is removed. Information retrieved via GDI will be
+! always used by qacct to interpret -l switches.
+
+FILES
+     <sge_root>/<cell>/common/history
+                     Sun Grid Engine default history database
+! This file dependency is removed. Information retrieved via GDI will 
+! be always used to interpret -l switches.
 
    Sun Grid Engine GDI
 
@@ -521,6 +553,24 @@
 
 !     Name of the queue instance in which the job has run.
 
+sge_qmaster(8)
+
+     -nohist
+          During usual operation sge_qmaster dumps a  history  of
+          queue, complex and host configuration changes to a his-
+          tory database. This database is primarily used with the
+          qacct(1)  command to allow for qsub(1) like -l resource
+          requests in  the  qacct(1)  command-line.  This  switch
+          suppresses writing to this database.
+! This option is removed. Information retrieved via GDI will be
+! always used by qacct to interpret -l switches.
+
+FILES
+     <sge_root>/<cell>/common/history
+                     History database
+! The history database will no longer be written by qmaster.
+
+
 4. Changes with the graphical user interface
 
    The cluster queue development project will also affect Grid Engines
@@ -652,7 +702,7 @@
 
       SGE_LIST(CQ_qhostname)
 
-   consisting of SGE_HOST()-type elements. All remaining attributes 
+   consisting of SGE_STRING()-type elements. All remaining attributes 
    specifying the Grid Engine queue configuration (see Appendix List 1) 
    and the Enterprise Edition configuration attributes (see Appendix 
    List 2) will become a list equivalent containing tuples of 

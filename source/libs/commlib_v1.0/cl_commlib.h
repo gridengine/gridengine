@@ -62,6 +62,7 @@ cl_com_handle_t* cl_com_create_handle(int           framework,
                                       int           select_sec_timeout, 
                                       int           select_usec_timeout);   /* CR check */
 
+int cl_commlib_shutdown_handle   (cl_com_handle_t* handle, int return_for_messages );
 
 cl_com_handle_t* cl_com_get_handle(char*         component_name, 
                                    unsigned long component_id);  /* CR check */
@@ -84,6 +85,7 @@ int cl_com_get_max_connections (cl_com_handle_t* handle, int* value);
 int cl_com_enable_max_connection_close(cl_com_handle_t* handle);
 int cl_com_disable_max_connection_close(cl_com_handle_t* handle);
 
+  /* application can set application status for SIRM messages */
 int cl_com_set_status_func(cl_app_status_func_t status_func);
 
 
@@ -105,8 +107,6 @@ TODO: ADOC Header !!!
 
 int cl_commlib_trigger           (cl_com_handle_t* handle);
 
-int cl_commlib_shutdown_handle   (cl_com_handle_t* handle, 
-                                  int return_for_messages );
 
 int cl_commlib_close_connection  (cl_com_handle_t* handle, 
                                   char* un_resolved_hostname, char* component_name, unsigned long component_id);

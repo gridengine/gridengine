@@ -262,9 +262,20 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, int debug_level , cl_log_func
 int cl_com_cleanup_commlib(void) {
    int ret_val = CL_RETVAL_OK;
    cl_thread_settings_t* thread_p = NULL;
+   cl_handle_list_elem_t* elem = NULL;
 
    CL_LOG(CL_LOG_INFO,"clenup commlib ...");
 
+
+   if (cl_com_handle_list  == NULL) {
+      CL_LOG(CL_LOG_ERROR,"cl_com_setup_commlib() not called");
+      return CL_RETVAL_PARAMS;
+   }
+ 
+   /* shutdown all connection handle objects */  
+   while ( (elem = cl_handle_list_get_first_elem(cl_com_handle_list)) != NULL) {
+      cl_commlib_shutdown_handle(elem->handle,0);
+   }
 
    CL_LOG(CL_LOG_INFO,"cleanup thread list ...");
    /* cleanup global thread list */
@@ -360,6 +371,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    int sec_param = 0;
    char help_buffer[80];
    char* local_hostname = NULL;
+   cl_handle_list_elem_t* elem = NULL;
 
    if (cl_com_handle_list  == NULL) {
       CL_LOG(CL_LOG_ERROR,"cl_com_setup_commlib() not called");
@@ -371,10 +383,29 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       return NULL;
    }
 
-   /* TODO: get local hostname and check if handle for this endpoint is allready in handle list */
+
+   /* first lock handle list */   
+   cl_raw_list_lock(cl_com_handle_list);
+
+   elem = cl_handle_list_get_first_elem(cl_com_handle_list);
+   while ( elem != NULL) {
+      cl_com_endpoint_t* local_endpoint = elem->handle->local;
+       
+      if (local_endpoint->comp_id == component_id) {
+         if (strcmp(local_endpoint->comp_name, component_name) == 0) {
+            /* we have this handle allready in list */
+            CL_LOG(CL_LOG_ERROR,"component not unique");
+            cl_raw_list_unlock(cl_com_handle_list);
+            return NULL;
+         }
+      }
+      elem = cl_handle_list_get_next_elem(cl_com_handle_list, elem);
+   }
+
    return_value = cl_com_gethostname(&local_hostname, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
+      cl_raw_list_unlock(cl_com_handle_list);
       return NULL;
    }
    CL_LOG_STR(CL_LOG_INFO,"local host name is",local_hostname );
@@ -384,6 +415,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
    if (new_handle == NULL) {
       free(local_hostname);
       CL_LOG(CL_LOG_ERROR,"malloc() error");
+      cl_raw_list_unlock(cl_com_handle_list);
       return NULL;
    }
 
@@ -429,10 +461,11 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       cl_commlib_shutdown_handle(new_handle,0);
       free(new_handle);
       free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
       return NULL;
    }
    memset(new_handle->statistic, 0, sizeof(cl_com_handle_statistic_t));
-   
+
 
    gettimeofday(&(new_handle->statistic->last_update),NULL);
    gettimeofday(&(new_handle->start_time),NULL);
@@ -442,6 +475,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       cl_commlib_shutdown_handle(new_handle,0);
       free(new_handle);
       free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
       return NULL;
    }
 
@@ -450,6 +484,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       cl_commlib_shutdown_handle(new_handle,0);
       free(new_handle);
       free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
       return NULL;
    }
 
@@ -458,6 +493,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       cl_commlib_shutdown_handle(new_handle,0);
       free(new_handle);
       free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
       return NULL;
    } 
 
@@ -465,6 +501,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       cl_commlib_shutdown_handle(new_handle,0);
       free(new_handle);
       free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
       return NULL;
    }
 
@@ -474,6 +511,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       cl_commlib_shutdown_handle(new_handle,0);
       free(new_handle);
       free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
       return NULL;
    }
 
@@ -484,6 +522,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       cl_commlib_shutdown_handle(new_handle,0);
       free(new_handle);
       free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
       return NULL;
    } 
 
@@ -493,9 +532,11 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
       cl_commlib_shutdown_handle(new_handle,0);
       free(new_handle);
       free(local_hostname);
+      cl_raw_list_unlock(cl_com_handle_list);
+      return NULL;
    }
  
-   
+ 
 
 
    /* local host name not needed anymore */
@@ -517,6 +558,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                cl_com_free_endpoint(&(new_handle->local));
                cl_commlib_shutdown_handle(new_handle,0);
                free(new_handle);
+               cl_raw_list_unlock(cl_com_handle_list);
                return NULL;
             }
             new_con->handler = new_handle;
@@ -529,6 +571,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                new_handle->local = NULL;
                cl_commlib_shutdown_handle(new_handle,0);
                free(new_handle);
+               cl_raw_list_unlock(cl_com_handle_list);
                return NULL;
             } 
             
@@ -541,12 +584,12 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
             cl_com_free_endpoint(&(new_handle->local));
             cl_commlib_shutdown_handle(new_handle,0);
             free(new_handle);
+            cl_raw_list_unlock(cl_com_handle_list);
             return NULL;
          }
       }
    }
 
-   cl_raw_list_lock(cl_com_handle_list);
    /* create handle thread */
    switch(cl_com_create_threads) {
       case CL_NO_THREAD:
@@ -558,6 +601,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
          return_value = cl_thread_create_thread_condition(&(new_handle->read_condition));
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not setup read condition");
+            cl_raw_list_unlock(cl_com_handle_list);
             return NULL;
          }
 
@@ -565,6 +609,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
          return_value = cl_thread_create_thread_condition(&(new_handle->write_condition));
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not setup write condition");
+            cl_raw_list_unlock(cl_com_handle_list);
             return NULL;
          }
 
@@ -577,6 +622,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                                                      help_buffer, 2, cl_com_handle_service_thread );
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle service thread");
+            cl_raw_list_unlock(cl_com_handle_list);
             return NULL;
          }
 
@@ -588,6 +634,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                                                      help_buffer, 3, cl_com_handle_read_thread );
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle read thread");
+            cl_raw_list_unlock(cl_com_handle_list);
             return NULL;
          }
 
@@ -599,6 +646,7 @@ cl_com_handle_t* cl_com_create_handle(int framework, int data_flow_type, int ser
                                                      help_buffer, 2, cl_com_handle_write_thread );
          if (return_value != CL_RETVAL_OK) {
             CL_LOG(CL_LOG_ERROR,"could not start handle write thread");
+            cl_raw_list_unlock(cl_com_handle_list);
             return NULL;
          }
          break;
@@ -625,6 +673,13 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
    if (handle == NULL) {
       return CL_RETVAL_PARAMS;
    }
+
+   if (cl_com_handle_list  == NULL) {
+      CL_LOG(CL_LOG_ERROR,"cl_com_setup_commlib() not called");
+      return CL_RETVAL_PARAMS;
+   }
+
+   cl_raw_list_lock(cl_com_handle_list);
 
    CL_LOG(CL_LOG_INFO,"shutting down handle ...");
    if ( handle->do_shutdown != 1) {
@@ -675,6 +730,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
                pthread_mutex_lock(handle->messages_ready_mutex);
                if (handle->messages_ready_for_read > 0 && return_for_messages != 0) {
                   pthread_mutex_unlock(handle->messages_ready_mutex);
+                  cl_raw_list_unlock(cl_com_handle_list);
                   CL_LOG(CL_LOG_INFO,"delivering MESSAGES");
                   return CL_RETVAL_MESSAGE_IN_BUFFER;
                }
@@ -688,6 +744,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
                pthread_mutex_lock(handle->messages_ready_mutex);
                if (handle->messages_ready_for_read > 0 && return_for_messages != 0) {
                   pthread_mutex_unlock(handle->messages_ready_mutex);
+                  cl_raw_list_unlock(cl_com_handle_list);
                   CL_LOG(CL_LOG_ERROR,"delivering MESSAGES");
                   return CL_RETVAL_MESSAGE_IN_BUFFER;
                }
@@ -714,108 +771,112 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, int return_for_messages)
    CL_LOG(CL_LOG_INFO,"shutdown of handle");
 
    /* remove handle from list */
-   cl_handle_list_remove_handle(cl_com_handle_list, handle);
+   ret_val = cl_handle_list_remove_handle(cl_com_handle_list, handle, 0);
+   cl_raw_list_unlock(cl_com_handle_list);
 
-   /* delete handle thread */
-   switch(cl_com_create_threads) {
-      case CL_NO_THREAD:
-         CL_LOG(CL_LOG_INFO,"no threads enabled");
-         break;
-      case CL_ONE_THREAD:
 
-         CL_LOG(CL_LOG_INFO,"shutdown handle write thread ...");
-         thread_settings = handle->write_thread;
-         handle->write_thread = NULL; /* set thread pointer to NULL because other threads use this pointer */
-         ret_val = cl_thread_list_delete_thread(cl_com_thread_list, thread_settings);
-         if (ret_val != CL_RETVAL_OK) {
-            CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle write thread", cl_get_error_text(ret_val));
-         } else {
-            CL_LOG(CL_LOG_INFO,"shutdown handle write thread OK");
-         }
-
-         CL_LOG(CL_LOG_INFO,"shutdown handle read thread ...");
-         thread_settings = handle->read_thread;
-         handle->read_thread = NULL; /* set thread pointer to NULL because other threads use this pointer */
-         ret_val = cl_thread_list_delete_thread(cl_com_thread_list, thread_settings);
-         if (ret_val != CL_RETVAL_OK) {
-            CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle read thread", cl_get_error_text(ret_val));
-         } else {
-            CL_LOG(CL_LOG_INFO,"shutdown handle read thread OK");
-         }
-
-         CL_LOG(CL_LOG_INFO,"shutdown handle service thread ...");
-         thread_settings = handle->service_thread;
-         handle->service_thread = NULL; /* set thread pointer to NULL because other threads use this pointer */
-         ret_val = cl_thread_list_delete_thread(cl_com_thread_list,thread_settings );
-         if (ret_val != CL_RETVAL_OK) {
-            CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle service thread", cl_get_error_text(ret_val));
-         } else {
-            CL_LOG(CL_LOG_INFO,"shutdown handle service thread OK");
-         }
-
-         /* all threads are down, deleteing condition variables */
-         CL_LOG(CL_LOG_INFO,"shutdown handle write condition ...");
-         ret_val = cl_thread_delete_thread_condition(&(handle->write_condition));
-         if (ret_val != CL_RETVAL_OK) {
-            CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle write condition", cl_get_error_text(ret_val));
-         } else {
-            CL_LOG(CL_LOG_INFO,"shutdown handle write condition OK");
-         }
-
-         CL_LOG(CL_LOG_INFO,"shutdown handle read condition ...");
-         ret_val = cl_thread_delete_thread_condition(&(handle->read_condition));
-         if (ret_val != CL_RETVAL_OK) {
-            CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle read condition", cl_get_error_text(ret_val));
-         } else {
-            CL_LOG(CL_LOG_INFO,"shutdown handle read condition OK");
-         }
-         break;
-   }
-
-   /* cleanup all connection list entries */
-   cl_raw_list_lock(handle->connection_list);
-
-   /* mark each connection to close */
-   elem = cl_connection_list_get_first_elem(handle->connection_list);
-   while(elem) {
-      elem->connection->connection_state = CL_COM_CLOSING;
-      elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
-   }
-   cl_raw_list_unlock(handle->connection_list);
-
-   cl_connection_list_destroy_connections_to_close(handle->connection_list,1); /* OK */
+   /* only shutdown handle if handle was removed from list */
+   if (ret_val == CL_RETVAL_OK) {
+      /* delete handle thread */
+      switch(cl_com_create_threads) {
+         case CL_NO_THREAD:
+            CL_LOG(CL_LOG_INFO,"no threads enabled");
+            break;
+         case CL_ONE_THREAD:
    
-   /* shutdown of service */
-   if (handle->service_provider != 0) {
-      cl_com_connection_request_handler_cleanup(handle->service_handler);
-      cl_com_close_connection(&(handle->service_handler));
-   }
-
-   cl_connection_list_cleanup(&(handle->connection_list));
-   cl_com_free_endpoint(&(handle->local));
-
-   cl_string_list_cleanup(&(handle->allowed_host_list));
- 
-   if (handle->messages_ready_mutex != NULL) {
-      ret_val = pthread_mutex_destroy(handle->messages_ready_mutex);
-      if (ret_val != EBUSY) {
-         free(handle->messages_ready_mutex); 
-         handle->messages_ready_mutex = NULL;
+            CL_LOG(CL_LOG_INFO,"shutdown handle write thread ...");
+            thread_settings = handle->write_thread;
+            handle->write_thread = NULL; /* set thread pointer to NULL because other threads use this pointer */
+            ret_val = cl_thread_list_delete_thread(cl_com_thread_list, thread_settings);
+            if (ret_val != CL_RETVAL_OK) {
+               CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle write thread", cl_get_error_text(ret_val));
+            } else {
+               CL_LOG(CL_LOG_INFO,"shutdown handle write thread OK");
+            }
+   
+            CL_LOG(CL_LOG_INFO,"shutdown handle read thread ...");
+            thread_settings = handle->read_thread;
+            handle->read_thread = NULL; /* set thread pointer to NULL because other threads use this pointer */
+            ret_val = cl_thread_list_delete_thread(cl_com_thread_list, thread_settings);
+            if (ret_val != CL_RETVAL_OK) {
+               CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle read thread", cl_get_error_text(ret_val));
+            } else {
+               CL_LOG(CL_LOG_INFO,"shutdown handle read thread OK");
+            }
+   
+            CL_LOG(CL_LOG_INFO,"shutdown handle service thread ...");
+            thread_settings = handle->service_thread;
+            handle->service_thread = NULL; /* set thread pointer to NULL because other threads use this pointer */
+            ret_val = cl_thread_list_delete_thread(cl_com_thread_list,thread_settings );
+            if (ret_val != CL_RETVAL_OK) {
+               CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle service thread", cl_get_error_text(ret_val));
+            } else {
+               CL_LOG(CL_LOG_INFO,"shutdown handle service thread OK");
+            }
+   
+            /* all threads are down, deleteing condition variables */
+            CL_LOG(CL_LOG_INFO,"shutdown handle write condition ...");
+            ret_val = cl_thread_delete_thread_condition(&(handle->write_condition));
+            if (ret_val != CL_RETVAL_OK) {
+               CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle write condition", cl_get_error_text(ret_val));
+            } else {
+               CL_LOG(CL_LOG_INFO,"shutdown handle write condition OK");
+            }
+   
+            CL_LOG(CL_LOG_INFO,"shutdown handle read condition ...");
+            ret_val = cl_thread_delete_thread_condition(&(handle->read_condition));
+            if (ret_val != CL_RETVAL_OK) {
+               CL_LOG_STR(CL_LOG_ERROR,"error shutting down handle read condition", cl_get_error_text(ret_val));
+            } else {
+               CL_LOG(CL_LOG_INFO,"shutdown handle read condition OK");
+            }
+            break;
       }
-   }
-   if (handle->connection_list_mutex != NULL) {
-      ret_val = pthread_mutex_destroy(handle->connection_list_mutex);
-      if (ret_val != EBUSY) {
-         free(handle->connection_list_mutex); 
-         handle->connection_list_mutex = NULL;
+   
+      /* cleanup all connection list entries */
+      cl_raw_list_lock(handle->connection_list);
+   
+      /* mark each connection to close */
+      elem = cl_connection_list_get_first_elem(handle->connection_list);
+      while(elem) {
+         elem->connection->connection_state = CL_COM_CLOSING;
+         elem = cl_connection_list_get_next_elem(handle->connection_list, elem);
       }
-   }
-   free(handle->statistic);
-   handle->statistic = NULL;
-
-
-   free(handle);
-   return CL_RETVAL_OK;
+      cl_raw_list_unlock(handle->connection_list);
+   
+      cl_connection_list_destroy_connections_to_close(handle->connection_list,1); /* OK */
+      
+      /* shutdown of service */
+      if (handle->service_provider != 0) {
+         cl_com_connection_request_handler_cleanup(handle->service_handler);
+         cl_com_close_connection(&(handle->service_handler));
+      }
+   
+      cl_connection_list_cleanup(&(handle->connection_list));
+      cl_com_free_endpoint(&(handle->local));
+   
+      cl_string_list_cleanup(&(handle->allowed_host_list));
+    
+      if (handle->messages_ready_mutex != NULL) {
+         ret_val = pthread_mutex_destroy(handle->messages_ready_mutex);
+         if (ret_val != EBUSY) {
+            free(handle->messages_ready_mutex); 
+            handle->messages_ready_mutex = NULL;
+         }
+      }
+      if (handle->connection_list_mutex != NULL) {
+         ret_val = pthread_mutex_destroy(handle->connection_list_mutex);
+         if (ret_val != EBUSY) {
+            free(handle->connection_list_mutex); 
+            handle->connection_list_mutex = NULL;
+         }
+      }
+      free(handle->statistic);
+      handle->statistic = NULL;
+      free(handle);
+      return CL_RETVAL_OK;
+   } 
+   return ret_val;
 }
 
 #ifdef __CL_FUNCTION__

@@ -1,3 +1,8 @@
+CR-2004-01-25-1: Bugfix:    - fixed possible deadlock of communication lib
+                            in startup/cleanup phase
+                            - cl_com_cleanup_commlib() did not correctly 
+                            shutdown connected clients
+
 CR-2004-01-25-0: Bugfix:    - Fixed "failed gdi request" error message when
                             connection timed out. (e.g. editing configuration
                             file for longer than 1 minute)

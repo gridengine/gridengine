@@ -52,7 +52,7 @@ int cl_handle_list_cleanup(cl_raw_list_t** list_p);   /* CR check */
 
 /* thread list functions that will lock the list */
 int cl_handle_list_append_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle, int do_lock);  /* CR check */
-int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle);  /* CR check */
+int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle, int do_lock);  /* CR check */
 
 /* thread functions that will not lock the list */
 cl_handle_list_elem_t* cl_handle_list_get_first_elem(cl_raw_list_t* list_p);  /* CR check */

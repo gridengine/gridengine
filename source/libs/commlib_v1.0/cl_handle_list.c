@@ -91,7 +91,7 @@ int cl_handle_list_append_handle(cl_raw_list_t* list_p,cl_com_handle_t* handle, 
 }
 
 
-int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle ) {  /* CR check */
+int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle, int do_lock ) {  /* CR check */
    int ret_val = CL_RETVAL_OK;
    int ret_val2 = CL_RETVAL_HANDLE_NOT_FOUND;
    cl_handle_list_elem_t* elem = NULL;
@@ -101,8 +101,10 @@ int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle 
    }
 
    /* lock list */
-   if ( (ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
-      return ret_val;
+   if (do_lock != 0) {
+      if ( (ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
+         return ret_val;
+      }
    }
 
    elem = cl_handle_list_get_first_elem(list_p);
@@ -110,7 +112,9 @@ int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle 
       if (elem->handle == handle) {
          /* found matching element */
          if ( cl_raw_list_remove_elem(list_p, elem->raw_elem) == NULL) {
-            cl_raw_list_unlock(list_p);
+            if (do_lock != 0) {
+               cl_raw_list_unlock(list_p);
+            }
             return CL_RETVAL_HANDLE_NOT_FOUND;
          }
          free(elem);
@@ -122,8 +126,10 @@ int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle 
    } 
 
    /* unlock list */
-   if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
-      return ret_val;
+   if (do_lock != 0) {
+      if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
+         return ret_val;
+      }
    }
 
    return ret_val2;

@@ -788,6 +788,14 @@ lList **lpp
       DEXIT;
       return -2;
    }
+
+   if (set_sge_environment == 0 && 
+       set_cod_environment == 0 && 
+       set_grd_environment == 0) {
+      WARNING((SGE_EVENT, MSG_GDI_NEITHERSGECODGRDSETTINGSGE));
+      set_sge_environment = 1;
+   }
+   
    DEXIT;
    return 0;
 }

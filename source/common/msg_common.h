@@ -418,7 +418,7 @@
 */
 #define MSG_GDI_USING_SS              _("using \"%s\" for %s\n")
 #define MSG_GDI_NOCONFIGFROMMASTER    _("could not get configuration from qmaster - using defaults\n")
-
+#define MSG_GDI_NEITHERSGECODGRDSETTINGSGE _("neither SGE nor COD nor GRD environment for jobs configured, setting SGE environment\n")
 
 
 #endif /* __MSG_COMMON_H */

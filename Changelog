@@ -1,3 +1,7 @@
+JG-2002-01-14-0: Enhancem.: execd_param SET_[SGE|COD|GRD]_ENV: If all types of
+                            job environments are configured to be off, the 
+                            default SGE is used.
+
 CR-2002-01-11-0: Testsuite: wrong parsing for submit_job() produced error
                  Bugfix:    in qsub test. 
 

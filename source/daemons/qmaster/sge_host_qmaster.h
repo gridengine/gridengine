@@ -67,8 +67,6 @@ void sge_change_queue_version_exechost(const char *exechost_name);
 
 lListElem *get_local_conf_val(const char *host, const char *name);  
 
-void master_notify_execds(void);
-
 int host_notify_about_X(lListElem *host,
                         u_long32 x,
                         int tag,

@@ -32,6 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_eventL.h"
+
+
 bool
 sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event type, 
                 u_long32 intkey1, u_long32 intkey2, const char *strkey, 

@@ -1,5 +1,6 @@
-#ifndef _QMASTER_H_
-#define _QMASTER_H_
+#ifndef _SGE_QMASTER_PROCESS_MESSAGE_H_
+#define _SGE_QMASTER_PROCESS_MESSAGE_H_
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,17 +26,13 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2003 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_gdiP.h"
+void *sge_qmaster_process_message(void *anArg);
 
-int main(int argc, char *argv[]);
-void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
-void increment_heartbeat(time_t now);
-
-#endif /* _QMASTER_H_ */
+#endif /* _SGE_QMASTER_PROCESS_MESSAGE_H_ */

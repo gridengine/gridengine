@@ -719,6 +719,7 @@
 #define MSG_CONF_CANTNOTIFYEXECHOSTXOFNEWCONF_S    _MESSAGE(33599, _("can't notify exec host "SFQ" of new conf\n"))
 #define MSG_LICENCE_ERRORXUPDATINGLICENSEDATA_I    _MESSAGE(33600, _("error %d updating license data\n"))
 #define MSG_HEARTBEAT_FAILEDTOINCREMENTHEARBEATFILEXINSPOOLDIR_S    _MESSAGE(33601, _("failed to increment heartbeat file "SFQ" in spool directory"))
+#define MSG_QMASTER_LOCKFILE_ALREADY_EXISTS  _MESSAGE(33602, _("Unable to create lock file. Found existing one."))
 
 /*
 ** qmaster_to_execd.c

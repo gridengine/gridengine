@@ -29,8 +29,10 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include <string.h>
 
+#include "sge_c_ack.h"
+
+#include <string.h>
 #include "sge.h"
 #include "sge_job_qmaster.h"
 #include "sge_any_request.h"
@@ -51,7 +53,7 @@
 
 #include "spool/sge_spooling.h"
 
-void sge_c_ack(char *host, char *commproc, sge_pack_buffer *pb);
+
 static void sge_c_job_ack(char *, char *, u_long32, u_long32, u_long32);
 static void sge_c_event_ack(char *, char *, u_long32, u_long32, u_long32);
 

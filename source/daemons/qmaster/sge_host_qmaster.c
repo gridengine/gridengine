@@ -1214,11 +1214,6 @@ int force
    return;
 }
 
-void master_notify_execds(void)
-{
-   host_list_notify_about_featureset(Master_Exechost_List,
-                                     feature_get_active_featureset_id());
-}
 
 /****
  **** sge_execd_startedup

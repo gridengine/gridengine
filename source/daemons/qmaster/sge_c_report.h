@@ -1,5 +1,6 @@
-#ifndef _QMASTER_H_
-#define _QMASTER_H_
+#ifndef _SGE_C_REPORT_H_
+#define _SGE_C_REPORT_H_
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,17 +26,16 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2003 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_gdiP.h"
+#include "cull.h"
 
-int main(int argc, char *argv[]);
-void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *answer);
-void increment_heartbeat(time_t now);
 
-#endif /* _QMASTER_H_ */
+void sge_c_report(char *aHost, char *aCommproc, int anId, lList *aReport);
+
+#endif /* _SGE_C_REPORT_H_ */

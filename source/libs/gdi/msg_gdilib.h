@@ -625,10 +625,6 @@
 #define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_BIND          _MESSAGE(43228, _("bind job to queue(s)"))
 #define MSG_GDI_UTEXT_q_OPT_DESTIN_ID_LIST_INFO          _MESSAGE(43229, _("print information on given queue"))
 
-
-#define MSG_GDI_USAGE_qmon_OPT                           "[-qmon]"
-                        
-
 #define MSG_GDI_USAGE_qs_args_OPT_ARGS_QS_END            "[-qs_args [arg [...]] -qs_end]"
 #define MSG_GDI_UTEXT_qs_args_OPT_ARGS_QS_END            _MESSAGE(43230, _("deliver args to foreign qs"))
 

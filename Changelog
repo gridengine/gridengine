@@ -1,3 +1,6 @@
+JG-2004-11-23-0: Testsuite: Verified tests system_tests/geee/sharetree/check.exp
+                            and system_tests/utilbin/loadcheck/check.exp.
+
 CR-2004-11-23-1: Testsuite: test for issue 1096 does not work with csp system
 
 CR-2004-11-23-0: Testsuite: wait 5 seconds after restarting qmaster. It

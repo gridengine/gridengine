@@ -350,7 +350,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       } 
       else if (Master_Control.current_event_clients >= Master_Control.max_event_clients) {
          sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
-         ERROR((SGE_EVENT, MSG_TO_MANY_DYNAMIC_EC_U, Master_Control.max_event_clients));
+         ERROR((SGE_EVENT, MSG_TO_MANY_DYNAMIC_EC_U, u32c( Master_Control.max_event_clients)));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
          DEXIT;

@@ -59,13 +59,13 @@ set check_description(0)  "test all qconf options (test not complete)"
 set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
 
 set check_functions     ""
-#lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
-#lappend check_functions "qconf_removequeues"
-#lappend check_functions "qconf_auser"
-#lappend check_functions "qconf_duser"
-#lappend check_functions "qconf_Auser"
-#lappend check_functions "qconf_muser"
-#lappend check_functions "qconf_Muser"
+lappend check_functions "qconf_addqueues"             ;# functions to call (in order)
+lappend check_functions "qconf_removequeues"
+lappend check_functions "qconf_auser"
+lappend check_functions "qconf_duser"
+lappend check_functions "qconf_Auser"
+lappend check_functions "qconf_muser"
+lappend check_functions "qconf_Muser"
 lappend check_functions "qconf_de_check"
 
 # TODO: check all options

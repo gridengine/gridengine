@@ -1,3 +1,8 @@
+JG-2004-09-17-0: Enhancem.: Performance improvement of the bitfield 
+                            implementation.
+                 Review:    SG
+                 Issue:     1260
+
 DT-2004-09-15-1: Bugfix:    o Fixed qmaster crash
                             o Added leftover files from DT-2004-09-15-0
                             - Testsuite test for 1269 not yet working

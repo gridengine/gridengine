@@ -536,7 +536,7 @@ int cull_pack_elem_partial(sge_pack_buffer *pb, const lListElem *ep, int flags)
       }
    }
 
-   if((ret = packbitfield(pb, ep->changed)) != PACK_SUCCESS) {
+   if((ret = packbitfield(pb, &(ep->changed))) != PACK_SUCCESS) {
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;

@@ -129,7 +129,7 @@ int packint(register sge_pack_buffer *, register u_long32);
 int packdouble(register sge_pack_buffer *, double);
 int packstr(register sge_pack_buffer *, register const char *);
 int packbuf(sge_pack_buffer *, const char *, u_long32);
-int packbitfield(sge_pack_buffer *, bitfield);
+int packbitfield(sge_pack_buffer *, const bitfield *);
 
 int unpackint(register sge_pack_buffer *, register u_long32 *);
 int unpackdouble(register sge_pack_buffer *, register double *);

@@ -174,7 +174,7 @@ typedef struct {
    /* A client locked via the lockfield is only locked for content.  Any changes
     * to the clients list, such as adding and removing clients, requires the
     * locking of the mutex. */
-   bitfield         lockfield;             /* bitfield of locks for event clients                       */     
+   bitfield         *lockfield;            /* bitfield of locks for event clients                       */     
                                            /* protected by mutex                                        */
    /* In order to allow the locking of individual clients, I have added an array
     * of pointers to the client entries in the clients list.  This was needed
@@ -961,7 +961,7 @@ u_long32 sge_set_max_dynamic_event_clients(u_long32 new_value){
       if (max > Master_Control.len_event_clients - (EV_ID_FIRST_DYNAMIC - 1)) {
          lListElem **newp = NULL;
          int *newi = NULL;
-         bitfield newb = NULL;
+         bitfield *newb = NULL;
          int old_length = 0;
 
          old_length = Master_Control.len_event_clients;

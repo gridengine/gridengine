@@ -176,7 +176,7 @@ lListElem *lCopyElemHash(const lListElem *ep, bool isHash)
          return NULL;
       }
    }
-   if (!sge_bitfield_copy(ep->changed, new->changed)) {
+   if (!sge_bitfield_copy(&(ep->changed), &(new->changed))) {
       lFreeElem(new);
 
       LERROR(LECOPYSWITCH);
@@ -272,8 +272,8 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
             return -1;
          }
          /* copy changed field information */
-         if(sge_bitfield_get(src->changed, i)) {
-            sge_bitfield_set(dst->changed, *jp);
+         if(sge_bitfield_get(&(src->changed), i)) {
+            sge_bitfield_set(&(dst->changed), *jp);
          }
       }
       break;
@@ -289,8 +289,8 @@ int lCopyElemPartial(lListElem *dst, int *jp, const lListElem *src,
             return -1;
          }
          /* copy changed field information */
-         if(sge_bitfield_get(src->changed, enp[i].pos)) {
-            sge_bitfield_set(dst->changed, *jp);
+         if(sge_bitfield_get(&(src->changed), enp[i].pos)) {
+            sge_bitfield_set(&(dst->changed), *jp);
          }
       }
    }
@@ -679,7 +679,7 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
 
    for (i = 0; ep->descr[i].mt != lEndT; i++)
    {
-      bool changed = sge_bitfield_get(ep->changed, i);
+      bool changed = sge_bitfield_get(&(ep->changed), i);
 
       switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
@@ -877,7 +877,7 @@ lListElem *lCreateElem(const lDescr *dp)
       return NULL;
    }
 
-   if((ep->changed = sge_bitfield_new(n)) == NULL) {
+   if(!sge_bitfield_init(&(ep->changed), n)) {
       LERROR(LEMALLOC);
       free(ep->cont);
       free(ep->descr);
@@ -1136,9 +1136,7 @@ lListElem *lFreeElem(lListElem *ep)
       free(ep->cont);
    }   
 
-   if(ep->changed != NULL) {
-      ep->changed = sge_bitfield_free(ep->changed);
-   }
+   sge_bitfield_free_data(&(ep->changed));
 
    free(ep);
 
@@ -1820,7 +1818,7 @@ lListElem *lDechainObject(lListElem *parent, int name)
       parent->cont[pos].obj = NULL;
 
       /* remember that field changed */
-      sge_bitfield_set(parent->changed, pos);
+      sge_bitfield_set(&(parent->changed), pos);
    }
 
    DEXIT;
@@ -2408,14 +2406,14 @@ int lUniqHost(lList *lp, int keyfield)
 bool 
 lListElem_is_pos_changed(const lListElem *ep, int pos)
 {
-   return sge_bitfield_get(ep->changed, pos);
+   return sge_bitfield_get(&(ep->changed), pos);
 }
 
 
 bool
 lListElem_is_changed(const lListElem *ep)
 {
-   return sge_bitfield_changed(ep->changed);
+   return sge_bitfield_changed(&(ep->changed));
 }
 
 /****** cull_list/lList_clear_changed_info() ***********************************
@@ -2511,7 +2509,7 @@ lListElem_clear_changed_info(lListElem *ep)
       }
 
       /* clear bitfield of this object */
-      sge_bitfield_reset(ep->changed);
+      sge_bitfield_reset(&(ep->changed));
    }
 
    return ret;

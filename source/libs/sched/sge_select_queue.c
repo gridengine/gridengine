@@ -5033,13 +5033,13 @@ void sge_create_load_list(const lList *queue_list, const lList *host_list,
 
             /* reset the changed bit in the consumables */
             if (global_consumable != NULL){
-               sge_bitfield_reset(global_consumable->changed);
+               sge_bitfield_reset(&(global_consumable->changed));
             }
             if (host_consumable != NULL){
-               sge_bitfield_reset(host_consumable->changed);
+               sge_bitfield_reset(&(host_consumable->changed));
             }
             if (queue_consumable != NULL){
-               sge_bitfield_reset(queue_consumable->changed);
+               sge_bitfield_reset(&(queue_consumable->changed));
             }
 
          }
@@ -5161,25 +5161,25 @@ bool sge_load_list_alarm(lList *load_list, const lList *host_list,
 
       elem = lGetPosRef(load, LDR_global_pos);
       if (elem != NULL) {
-         if ( sge_bitfield_changed(elem->changed)) {
+         if ( sge_bitfield_changed(&(elem->changed))) {
             is_recalc = true;
-            sge_bitfield_reset(elem->changed); 
+            sge_bitfield_reset(&(elem->changed)); 
          }
       }
       
       elem = lGetPosRef(load, LDR_host_pos);
       if (elem != NULL) {
-         if ( sge_bitfield_changed(elem->changed)) {
+         if ( sge_bitfield_changed(&(elem->changed))) {
             is_recalc = true;
-            sge_bitfield_reset(elem->changed); 
+            sge_bitfield_reset(&(elem->changed)); 
          }
       }
       
       elem = lGetPosRef(load, LDR_queue_pos);
       if (elem != NULL) {
-         if ( sge_bitfield_changed(elem->changed)) {
+         if ( sge_bitfield_changed(&(elem->changed))) {
             is_recalc = true;
-            sge_bitfield_reset(elem->changed); 
+            sge_bitfield_reset(&(elem->changed)); 
          }
       }
      

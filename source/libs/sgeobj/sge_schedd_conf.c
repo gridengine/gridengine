@@ -1363,10 +1363,11 @@ u_long32 sconf_get_halftime(void) {
 *
 *******************************************************************************/
 void sconf_set_weight_tickets_override(u_long32 active) {
-   const lListElem *sc_ep = sconf_get_config();
+   lListElem *sc_ep = (lListElem *)sconf_get_config();
 
-   if (pos.weight_tickets_override!= -1)
+   if (pos.weight_tickets_override!= -1) {
       lSetPosUlong(sc_ep, pos.weight_tickets_override, active);
+   }
 }
 
 /****** sge_schedd_conf/sconf_get_compensation_factor() ************************

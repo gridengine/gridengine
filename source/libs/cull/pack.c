@@ -751,7 +751,7 @@ int packstr(sge_pack_buffer *pb, const char *str)
 *     packbitfield() -- pack a bitfield 
 *
 *  SYNOPSIS
-*     int packbitfield(sge_pack_buffer *pb, bitfield bitfield) 
+*     int packbitfield(sge_pack_buffer *pb, const bitfield *bitfield) 
 *
 *  FUNCTION
 *     Writes the bitfield into the given packbuffer.
@@ -761,7 +761,7 @@ int packstr(sge_pack_buffer *pb, const char *str)
 *
 *  INPUTS
 *     sge_pack_buffer *pb - the target packbuffer
-*     bitfield bitfield   - the bitfield to pack
+*     const bitfield *bitfield   - the bitfield to pack
 *
 *  RESULT
 *     int - PACK_SUCCESS on success,
@@ -771,7 +771,7 @@ int packstr(sge_pack_buffer *pb, const char *str)
 *     uti/bitfield/--Bitfield
 *     cull/pack/unpackbitfield()
 *******************************************************************************/
-int packbitfield(sge_pack_buffer *pb, bitfield bitfield)
+int packbitfield(sge_pack_buffer *pb, const bitfield *bitfield)
 {
    int ret;
    u_long32 size;
@@ -1205,8 +1205,7 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield, int descr_size)
    DENTER(PACK_LAYER, "unpackbitfield");
 
    /* create new bitfield */
-   *bitfield = sge_bitfield_new(descr_size);
-   if(*bitfield == NULL) {
+   if (!sge_bitfield_init(bitfield, descr_size)) {
       DEXIT;
       return PACK_ENOMEM;
    }
@@ -1220,14 +1219,14 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield, int descr_size)
    /* unpack contents of the bitfield */
    char_size = sge_bitfield_get_size_bytes(size);
    if((ret = unpackbuf(pb, &buffer, char_size)) != PACK_SUCCESS) {
-      *bitfield = sge_bitfield_free(*bitfield);
+      sge_bitfield_free_data(bitfield);
       DEXIT;
       return ret;
    }
    
    /* if bitfield matches descr, copy bitfield */
    if (size == descr_size) {
-      memcpy(sge_bitfield_get_buffer(*bitfield), buffer, char_size);
+      memcpy(sge_bitfield_get_buffer(bitfield), buffer, char_size);
    }
 
    /* free unpacked bitfield buffer */

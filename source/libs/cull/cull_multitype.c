@@ -1442,13 +1442,13 @@ lRef lGetRef(const lListElem *ep, int name)
 *     lSetPosInt() -- Sets the int value 
 *
 *  SYNOPSIS
-*     int lSetPosInt(const lListElem *ep, int pos, int value) 
+*     int lSetPosInt(lListElem *ep, int pos, int value) 
 *
 *  FUNCTION
 *     Sets in the element 'ep' at position 'pos' the int 'value' 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     int value           - value 
 *
@@ -1457,7 +1457,7 @@ lRef lGetRef(const lListElem *ep, int name)
 *         0 - OK
 *        -1 - Error
 ******************************************************************************/
-int lSetPosInt(const lListElem *ep, int pos, int value) 
+int lSetPosInt(lListElem *ep, int pos, int value) 
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosInt");
 
@@ -1483,7 +1483,7 @@ int lSetPosInt(const lListElem *ep, int pos, int value)
       ep->cont[pos].i = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -1539,7 +1539,7 @@ int lSetInt(lListElem *ep, int name, int value)
       ep->cont[pos].i = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }   
 
    DEXIT;
@@ -1551,13 +1551,13 @@ int lSetInt(lListElem *ep, int name, int value)
 *     lSetPosUlong() -- Get ulong at a certain position 
 *
 *  SYNOPSIS
-*     int lSetPosUlong(const lListElem *ep, int pos, lUlong value) 
+*     int lSetPosUlong(lListElem *ep, int pos, lUlong value) 
 *
 *  FUNCTION
 *     Get ulong at a certain position 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     lUlong value        - new value 
 *
@@ -1566,7 +1566,7 @@ int lSetInt(lListElem *ep, int name, int value)
 *         0 - OK
 *        -1 - Error
 *******************************************************************************/
-int lSetPosUlong(const lListElem *ep, int pos, lUlong value) 
+int lSetPosUlong(lListElem *ep, int pos, lUlong value) 
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosUlong");
    if (!ep) {
@@ -1602,7 +1602,7 @@ int lSetPosUlong(const lListElem *ep, int pos, lUlong value)
       }
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }   
 
    DEXIT;
@@ -1670,7 +1670,7 @@ int lSetUlong(lListElem *ep, int name, lUlong value)
       }
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -1764,7 +1764,7 @@ int lAddUlong(lListElem *ep, int name, lUlong offset)
       }
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -1776,13 +1776,13 @@ int lAddUlong(lListElem *ep, int name, lUlong offset)
 *     lSetPosString() -- Sets the string at a certain position 
 *
 *  SYNOPSIS
-*     int lSetPosString(const lListElem *ep, int pos, const char *value) 
+*     int lSetPosString(lListElem *ep, int pos, const char *value) 
 *
 *  FUNCTION
 *     Sets the string at a certain position. 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     const char *value   - string value 
 *
@@ -1791,7 +1791,7 @@ int lAddUlong(lListElem *ep, int name, lUlong offset)
 *         0 - OK
 *        -1 - Error 
 ******************************************************************************/
-int lSetPosString(const lListElem *ep, int pos, const char *value) 
+int lSetPosString(lListElem *ep, int pos, const char *value) 
 {
    char *str = NULL;
    int changed;
@@ -1864,7 +1864,7 @@ int lSetPosString(const lListElem *ep, int pos, const char *value)
       }
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }   
    
    DEXIT;
@@ -1876,13 +1876,13 @@ int lSetPosString(const lListElem *ep, int pos, const char *value)
 *     lSetPosHost() -- Sets the hostname at a certain position
 *
 *  SYNOPSIS
-*     int lSetPosHost(const lListElem *ep, int pos, const char *value) 
+*     int lSetPosHost(lListElem *ep, int pos, const char *value) 
 *
 *  FUNCTION
 *     Sets the hostname at a certain position 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     const char *value   - new hostname 
 *
@@ -1891,7 +1891,7 @@ int lSetPosString(const lListElem *ep, int pos, const char *value)
 *         0 - OK
 *        -1 - Error
 *******************************************************************************/
-int lSetPosHost(const lListElem *ep, int pos, const char *value) 
+int lSetPosHost(lListElem *ep, int pos, const char *value) 
 {
    char *str = NULL;
    int changed;
@@ -1966,7 +1966,7 @@ int lSetPosHost(const lListElem *ep, int pos, const char *value)
       }
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }   
    
    DEXIT;
@@ -2070,7 +2070,7 @@ int lSetString(lListElem *ep, int name, const char *value)
       }
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2174,7 +2174,7 @@ int lSetHost(lListElem *ep, int name, const char *value)
                           ep->descr[pos].ht, mt_is_unique(ep->descr[pos].mt));
       }
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
    DEXIT;
    return 0;
@@ -2185,14 +2185,14 @@ int lSetHost(lListElem *ep, int name, const char *value)
 *     lSetPosObject() -- Set list element at position pos 
 *
 *  SYNOPSIS
-*     int lSetPosObject(const lListElem *ep, int pos, lListElem *value) 
+*     int lSetPosObject(lListElem *ep, int pos, lListElem *value) 
 *
 *  FUNCTION
 *     Sets in the element 'ep' at position 'pos' the list element 'value'.
 *     Doesn't copy the object. Does runtime type checking. 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     lListElem *value    - value 
 *
@@ -2201,7 +2201,7 @@ int lSetHost(lListElem *ep, int name, const char *value)
 *         0 - OK
 *        -1 - Error
 *******************************************************************************/
-int lSetPosObject(const lListElem *ep, int pos, lListElem *value) 
+int lSetPosObject(lListElem *ep, int pos, lListElem *value) 
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosObject");
 
@@ -2242,7 +2242,7 @@ int lSetPosObject(const lListElem *ep, int pos, lListElem *value)
       value->status = OBJECT_ELEM;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2254,14 +2254,14 @@ int lSetPosObject(const lListElem *ep, int pos, lListElem *value)
 *     lSetPosList() -- Set list at position pos 
 *
 *  SYNOPSIS
-*     int lSetPosList(const lListElem *ep, int pos, lList *value) 
+*     int lSetPosList(lListElem *ep, int pos, lList *value) 
 *
 *  FUNCTION
 *     Sets in the element 'ep' at position 'pos' the lists 'value'.
 *     Doesn't copy the list. Does runtime type checking. 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     lList *value        - value 
 *
@@ -2270,7 +2270,7 @@ int lSetPosObject(const lListElem *ep, int pos, lListElem *value)
 *         0 - OK
 *        -1 - Error
 *******************************************************************************/
-int lSetPosList(const lListElem *ep, int pos, lList *value) 
+int lSetPosList(lListElem *ep, int pos, lList *value) 
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosList");
 
@@ -2301,7 +2301,7 @@ int lSetPosList(const lListElem *ep, int pos, lList *value)
       ep->cont[pos].glp = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2360,7 +2360,7 @@ int lXchgList(lListElem *ep, int name, lList **lpp)
       *lpp = tmp;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2477,7 +2477,7 @@ int lSetObject(lListElem *ep, int name, lListElem *value)
       value->status = OBJECT_ELEM;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2542,7 +2542,7 @@ int lSetList(lListElem *ep, int name, lList *value)
       ep->cont[pos].glp = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2554,13 +2554,13 @@ int lSetList(lListElem *ep, int name, lList *value)
 *     lSetPosFloat() -- Set float value at given position 
 *
 *  SYNOPSIS
-*     int lSetPosFloat(const lListElem * ep, int pos, lFloat value) 
+*     int lSetPosFloat(lListElem * ep, int pos, lFloat value) 
 *
 *  FUNCTION
 *     Set float value at given position. 
 *
 *  INPUTS
-*     const lListElem * ep - element 
+*     lListElem * ep - element 
 *     int pos              - position 
 *     lFloat value         - new float value 
 *
@@ -2569,7 +2569,7 @@ int lSetList(lListElem *ep, int name, lList *value)
 *         0 - OK
 *        -1 - Error 
 ******************************************************************************/
-int lSetPosFloat(const lListElem * ep, int pos, lFloat value)
+int lSetPosFloat(lListElem * ep, int pos, lFloat value)
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosFloat");
    if (!ep) {
@@ -2594,7 +2594,7 @@ int lSetPosFloat(const lListElem * ep, int pos, lFloat value)
       ep->cont[pos].fl = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2625,7 +2625,7 @@ int lSetFloat(lListElem * ep, int name, lFloat value)
 {
    int pos;
 
-   DENTER(CULL_BASIS_LAYER, "lSetPosFloat");
+   DENTER(CULL_BASIS_LAYER, "lSetFloat");
    if (!ep) {
       LERROR(LEELEMNULL);
       DEXIT;
@@ -2649,7 +2649,7 @@ int lSetFloat(lListElem * ep, int name, lFloat value)
       ep->cont[pos].fl = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2661,13 +2661,13 @@ int lSetFloat(lListElem * ep, int name, lFloat value)
 *     lSetPosDouble() -- Set double value at given position 
 *
 *  SYNOPSIS
-*     int lSetPosDouble(const lListElem *ep, int pos, lDouble value) 
+*     int lSetPosDouble(lListElem *ep, int pos, lDouble value) 
 *
 *  FUNCTION
 *     Set double value at given position. 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     lDouble value       - new double value 
 *
@@ -2676,7 +2676,7 @@ int lSetFloat(lListElem * ep, int name, lFloat value)
 *         0 - OK
 *        -1 - Error 
 ******************************************************************************/
-int lSetPosDouble(const lListElem *ep, int pos, lDouble value) 
+int lSetPosDouble(lListElem *ep, int pos, lDouble value) 
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosDouble");
    if (!ep) {
@@ -2701,7 +2701,7 @@ int lSetPosDouble(const lListElem *ep, int pos, lDouble value)
       ep->cont[pos].db = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2733,7 +2733,7 @@ int lSetDouble(lListElem *ep, int name, lDouble value)
 {
    int pos;
 
-   DENTER(CULL_BASIS_LAYER, "lSetPosDouble");
+   DENTER(CULL_BASIS_LAYER, "lSetDouble");
    if (!ep) {
       LERROR(LEELEMNULL);
       DEXIT;
@@ -2757,7 +2757,7 @@ int lSetDouble(lListElem *ep, int name, lDouble value)
       ep->cont[pos].db = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2789,7 +2789,7 @@ int lAddDouble(lListElem *ep, int name, lDouble value)
 {
    int pos;
 
-   DENTER(CULL_BASIS_LAYER, "lSetPosDouble");
+   DENTER(CULL_BASIS_LAYER, "lAddDouble");
    if (!ep) {
       LERROR(LEELEMNULL);
       DEXIT;
@@ -2812,7 +2812,7 @@ int lAddDouble(lListElem *ep, int name, lDouble value)
    if (value != 0.0) {
       ep->cont[pos].db += value;
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2825,13 +2825,13 @@ int lAddDouble(lListElem *ep, int name, lDouble value)
 *     lSetPosLong() -- Set long value at given position 
 *
 *  SYNOPSIS
-*     int lSetPosLong(const lListElem *ep, int pos, lLong value) 
+*     int lSetPosLong(lListElem *ep, int pos, lLong value) 
 *
 *  FUNCTION
 *     Set long value at given position. 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     lLong value         - new long value 
 *
@@ -2840,7 +2840,7 @@ int lAddDouble(lListElem *ep, int name, lDouble value)
 *         0 - OK
 *        -1 - Error 
 ******************************************************************************/
-int lSetPosLong(const lListElem *ep, int pos, lLong value) 
+int lSetPosLong(lListElem *ep, int pos, lLong value) 
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosLong");
    if (!ep) {
@@ -2865,7 +2865,7 @@ int lSetPosLong(const lListElem *ep, int pos, lLong value)
       ep->cont[pos].l = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2896,7 +2896,7 @@ int lSetLong(lListElem *ep, int name, lLong value)
 {
    int pos;
 
-   DENTER(CULL_BASIS_LAYER, "lSetPosLong");
+   DENTER(CULL_BASIS_LAYER, "lSetLong");
    if (!ep) {
       LERROR(LEELEMNULL);
       DEXIT;
@@ -2920,7 +2920,7 @@ int lSetLong(lListElem *ep, int name, lLong value)
       ep->cont[pos].l = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -2932,13 +2932,13 @@ int lSetLong(lListElem *ep, int name, lLong value)
 *     lSetPosBool() -- Sets the character a the given position 
 *
 *  SYNOPSIS
-*     int lSetPosBool(const lListElem *ep, int pos, lBool value) 
+*     int lSetPosBool(lListElem *ep, int pos, lBool value) 
 *
 *  FUNCTION
 *     Sets the character a the given position. 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     lBool value         - value 
 *
@@ -2947,7 +2947,7 @@ int lSetLong(lListElem *ep, int name, lLong value)
 *         0 - OK
 *        -1 - Error 
 ******************************************************************************/
-int lSetPosBool(const lListElem *ep, int pos, lBool value)
+int lSetPosBool(lListElem *ep, int pos, lBool value)
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosBool");
    if (!ep) {
@@ -2972,7 +2972,7 @@ int lSetPosBool(const lListElem *ep, int pos, lBool value)
       ep->cont[pos].b = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -3027,7 +3027,7 @@ int lSetBool(lListElem * ep, int name, lBool value)
       ep->cont[pos].b = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -3039,13 +3039,13 @@ int lSetBool(lListElem * ep, int name, lBool value)
 *     lSetPosChar() -- Sets the character a the given position 
 *
 *  SYNOPSIS
-*     int lSetPosChar(const lListElem *ep, int pos, lChar value) 
+*     int lSetPosChar(lListElem *ep, int pos, lChar value) 
 *
 *  FUNCTION
 *     Sets the character a the given position. 
 *
 *  INPUTS
-*     const lListElem *ep - element 
+*     lListElem *ep - element 
 *     int pos             - position 
 *     lChar value         - value 
 *
@@ -3054,7 +3054,7 @@ int lSetBool(lListElem * ep, int name, lBool value)
 *         0 - OK
 *        -1 - Error 
 ******************************************************************************/
-int lSetPosChar(const lListElem *ep, int pos, lChar value)
+int lSetPosChar(lListElem *ep, int pos, lChar value)
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosChar");
    if (!ep) {
@@ -3079,7 +3079,7 @@ int lSetPosChar(const lListElem *ep, int pos, lChar value)
       ep->cont[pos].c = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -3134,7 +3134,7 @@ int lSetChar(lListElem * ep, int name, lChar value)
       ep->cont[pos].c = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -3146,13 +3146,13 @@ int lSetChar(lListElem * ep, int name, lChar value)
 *     lSetPosRef() -- Set pointer at given position 
 *
 *  SYNOPSIS
-*     int lSetPosRef(const lListElem * ep, int pos, lRef value) 
+*     int lSetPosRef(lListElem * ep, int pos, lRef value) 
 *
 *  FUNCTION
 *     Set pointer at given position 
 *
 *  INPUTS
-*     const lListElem * ep - element 
+*     lListElem * ep - element 
 *     int pos              - position 
 *     lRef value           - pointer 
 *
@@ -3161,7 +3161,7 @@ int lSetChar(lListElem * ep, int name, lChar value)
 *         0 - OK
 *        -1 - Error
 ******************************************************************************/
-int lSetPosRef(const lListElem * ep, int pos, lRef value)
+int lSetPosRef(lListElem * ep, int pos, lRef value)
 {
    DENTER(CULL_BASIS_LAYER, "lSetPosRef");
    if (!ep) {
@@ -3186,7 +3186,7 @@ int lSetPosRef(const lListElem * ep, int pos, lRef value)
       ep->cont[pos].ref = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -3241,7 +3241,7 @@ int lSetRef(lListElem * ep, int name, lRef value)
       ep->cont[pos].ref = value;
 
       /* remember that field changed */
-      sge_bitfield_set(ep->changed, pos);
+      sge_bitfield_set(&(ep->changed), pos);
    }
 
    DEXIT;
@@ -3381,7 +3381,7 @@ lListElem *lAddSubStr(lListElem *ep, int nm, const char *str, int snm,
 
    /* remember that field changed */
    if (ret != NULL) {
-      sge_bitfield_set(ep->changed, sublist_pos);
+      sge_bitfield_set(&(ep->changed), sublist_pos);
    }
 
    DEXIT;
@@ -3444,7 +3444,7 @@ lListElem *lAddSubHost(lListElem *ep, int nm, const char *str, int snm,
 
    /* remember that field changed */
    if (ret != NULL) {
-      sge_bitfield_set(ep->changed, sublist_pos);
+      sge_bitfield_set(&(ep->changed), sublist_pos);
    }
 
    DEXIT;
@@ -3624,7 +3624,7 @@ int lDelSubStr(lListElem *ep, int nm, const char *str, int snm)
 
    /* remember that field changed */
    if (ret == 1) {
-      sge_bitfield_set(ep->changed, sublist_pos);
+      sge_bitfield_set(&(ep->changed), sublist_pos);
    }
 
    DEXIT;
@@ -4101,7 +4101,7 @@ lListElem *lAddSubUlong(lListElem *ep, int nm, lUlong val, int snm,
 
    /* remember that field changed */
    if (ret != NULL) {
-      sge_bitfield_set(ep->changed, sublist_pos);
+      sge_bitfield_set(&(ep->changed), sublist_pos);
    }
 
    DEXIT;
@@ -4211,7 +4211,7 @@ int lDelSubUlong(lListElem *ep, int nm, lUlong val, int snm)
 
    /* remember that field changed */
    if (ret == 1) {
-      sge_bitfield_set(ep->changed, sublist_pos);
+      sge_bitfield_set(&(ep->changed), sublist_pos);
    }
 
    DEXIT;
@@ -4540,7 +4540,7 @@ int lDelSubCaseStr(lListElem *ep, int nm, const char *str, int snm)
 
    /* remember that field changed */
    if (ret == 1) {
-      sge_bitfield_set(ep->changed, sublist_pos);
+      sge_bitfield_set(&(ep->changed), sublist_pos);
    }
 
    DEXIT;

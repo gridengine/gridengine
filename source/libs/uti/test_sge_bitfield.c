@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#define MALLINFO
+#define XMALLINFO
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,13 +45,13 @@
 
 #include "uti/sge_bitfield.h"
 
-const int test_bf_max_size = 100;
-int test_bf_loops    = 1000;
+const unsigned int test_bf_max_size = 100;
+unsigned int test_bf_loops    = 1000;
 
 static void 
 test_nullpointer_actions(void)
 {
-   bitfield b1;
+   bitfield *b1;
 
    /* bitfields of size 0 */
    b1 = sge_bitfield_new(0);
@@ -61,6 +61,7 @@ test_nullpointer_actions(void)
 
    /* pass nullpointer */
    sge_bitfield_free(NULL);
+   sge_bitfield_free_data(NULL);
 
    sge_bitfield_copy(b1, NULL);
    sge_bitfield_copy(NULL, b1);
@@ -83,28 +84,28 @@ test_nullpointer_actions(void)
    b1 = sge_bitfield_free(b1);
 }
 
-static void test_bitop_set(bitfield bf, int bit)
+static void test_bitop_set(bitfield *bf, unsigned int bit)
 {
    sge_bitfield_set(bf, bit);
    if (!sge_bitfield_get(bf, bit)) {
-      printf("bit %d should be set\n");
+      printf("bit %d should be set\n", bit);
    }
 }
 
-static void test_bitop_not_set(const bitfield bf, int bit)
+static void test_bitop_not_set(const bitfield *bf, unsigned int bit)
 {
    if (sge_bitfield_get(bf, bit)) {
-      printf("bit %d should not be set\n");
+      printf("bit %d should not be set\n", bit);
    }
 }
 
-static void test_bitop_clear(bitfield bf, int bit)
+static void test_bitop_clear(bitfield *bf, unsigned int bit)
 {
    sge_bitfield_clear(bf, bit);
    test_bitop_not_set(bf, bit);
 }
 
-static void test_bitfield_changed(const bitfield bf, bool expected)
+static void test_bitfield_changed(const bitfield *bf, bool expected)
 {
    if (sge_bitfield_changed(bf) != expected) {
       printf("sge_bitfield_changed reported invalid result: %s\n", 
@@ -113,9 +114,9 @@ static void test_bitfield_changed(const bitfield bf, bool expected)
    }
 }
 
-static void test_bitfield_copy(const bitfield bf)
+static void test_bitfield_copy(const bitfield *bf)
 {
-   bitfield copy;
+   bitfield *copy;
 
    /* copy to field with differing size must fail */
    copy = sge_bitfield_new(30);
@@ -132,9 +133,9 @@ static void test_bitfield_copy(const bitfield bf)
    copy = sge_bitfield_free(copy);
 }
 
-static void test_bitfield_bitwise_copy(const bitfield bf)
+static void test_bitfield_bitwise_copy(const bitfield *bf)
 {
-   bitfield copy;
+   bitfield *copy;
 
    /* output original bitfield */
    sge_bitfield_print(bf, stdout); printf("\n");
@@ -158,11 +159,11 @@ static void test_bitfield_bitwise_copy(const bitfield bf)
    copy = sge_bitfield_free(copy);
 }
 
-static void test_bitops()
+static void test_bitops(void)
 {
    /* we need a fixed size and a dynamic bitfield */
-   bitfield fixed;
-   bitfield dynamic;
+   bitfield *fixed;
+   bitfield *dynamic;
 
    fixed = sge_bitfield_new(20);
    dynamic = sge_bitfield_new(70);
@@ -240,7 +241,7 @@ static void test_bitops()
 int 
 main(int argc, char *argv[])
 {
-   int i;
+   unsigned int i;
    bitfield *b1, *b2;
 
 #ifdef MALLINFO
@@ -248,9 +249,9 @@ main(int argc, char *argv[])
 #endif
 
    long clk_tck = 0;
-   const char *header_format = "%5s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n";
-   const char *data_format =   "%5d %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f"
-                               " %8.3f %8.3f %8d\n";
+   const char * header_format = "%5s %8s %8s %8s %8s %8s %8s %8s %8s %8s %8s\n";
+   const char * data_format   = "%5d %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f"
+                                " %8.3f %8.3f %8d\n";
 
    /* evaluate commandline args */
    if (argc > 1) {
@@ -290,15 +291,15 @@ main(int argc, char *argv[])
       double prof_reset = 0.0;
       double prof_changed = 0.0;
 
-      int loops, index;
+      unsigned int loops, index;
 
       srand(time(0));
 
       /* creation of bitfields */
       start = times(&tms_buffer);
       for (loops = 0; loops < test_bf_loops; loops++) {
-         b1[loops] = sge_bitfield_new(i);
-         b2[loops] = sge_bitfield_new(i);
+         sge_bitfield_init(&b1[loops], i);
+         sge_bitfield_init(&b2[loops], i);
       }
       now = times(&tms_buffer);
       prof_create = (now - start) * 1.0 / clk_tck;
@@ -306,7 +307,7 @@ main(int argc, char *argv[])
       /* copy */
       start = times(&tms_buffer);
       for (loops = 0; loops < test_bf_loops; loops++) {
-         sge_bitfield_copy(b1[loops], b2[loops]);
+         sge_bitfield_copy(&b1[loops], &b2[loops]);
       }
       now = times(&tms_buffer);
       prof_copy = (now - start) * 1.0 / clk_tck;
@@ -314,7 +315,7 @@ main(int argc, char *argv[])
       /* bitwise copy */
       start = times(&tms_buffer);
       for (loops = 0; loops < test_bf_loops; loops++) {
-         sge_bitfield_bitwise_copy(b2[loops], b2[loops]);
+         sge_bitfield_bitwise_copy(&b2[loops], &b2[loops]);
       }
       now = times(&tms_buffer);
       prof_bwcopy = (now - start) * 1.0 / clk_tck;
@@ -323,7 +324,7 @@ main(int argc, char *argv[])
       index = rand() % (i + 1) - 1;
       start = times(&tms_buffer);
       for (loops = 0; loops < test_bf_loops; loops++) {
-         sge_bitfield_set(b1[loops], index);
+         sge_bitfield_set(&b1[loops], index);
       }
       now = times(&tms_buffer);
       prof_set = (now - start) * 1.0 / clk_tck;
@@ -331,7 +332,7 @@ main(int argc, char *argv[])
       index = rand() % (i + 1) - 1;
       start = times(&tms_buffer);
       for (loops = 0; loops < test_bf_loops; loops++) {
-         sge_bitfield_get(b1[loops], index);
+         sge_bitfield_get(&b1[loops], index);
       }
       now = times(&tms_buffer);
       prof_get = (now - start) * 1.0 / clk_tck;
@@ -339,7 +340,7 @@ main(int argc, char *argv[])
       index = rand() % (i + 1) - 1;
       start = times(&tms_buffer);
       for (loops = 0; loops < test_bf_loops; loops++) {
-         sge_bitfield_clear(b1[loops], index);
+         sge_bitfield_clear(&b1[loops], index);
       }
       now = times(&tms_buffer);
       prof_clear = (now - start) * 1.0 / clk_tck;
@@ -347,7 +348,7 @@ main(int argc, char *argv[])
       /* reset */
       start = times(&tms_buffer);
       for (loops = 0; loops < test_bf_loops; loops++) {
-         sge_bitfield_reset(b1[loops]);
+         sge_bitfield_reset(&b1[loops]);
       }
       now = times(&tms_buffer);
       prof_reset = (now - start) * 1.0 / clk_tck;
@@ -355,7 +356,7 @@ main(int argc, char *argv[])
       /* changed */
       start = times(&tms_buffer);
       for (loops = 0; loops < test_bf_loops; loops++) {
-         sge_bitfield_changed(b1[loops]);
+         sge_bitfield_changed(&b1[loops]);
       }
       now = times(&tms_buffer);
       prof_changed = (now - start) * 1.0 / clk_tck;
@@ -368,8 +369,8 @@ main(int argc, char *argv[])
       /* freeing of bitfields */
       start = times(&tms_buffer);
       for (loops = 0; loops < test_bf_loops; loops++) {
-         b1[loops] = sge_bitfield_free(b1[loops]);
-         b2[loops] = sge_bitfield_free(b2[loops]);
+         sge_bitfield_free_data(&b1[loops]);
+         sge_bitfield_free_data(&b2[loops]);
       }
       now = times(&tms_buffer);
       prof_free = (now - start) * 1.0 / clk_tck;

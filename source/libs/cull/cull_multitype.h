@@ -79,19 +79,19 @@ lBool       lGetPosBool(const lListElem *ep, int id);
 lObject     lGetPosObject(const lListElem *ep, int id);
 lRef        lGetPosRef(const lListElem *ep, int id);
 
-int lSetPosInt(const lListElem *ep, int pos, int value);
-int lSetPosUlong(const lListElem *ep, int pos, lUlong value);
-int lSetPosString(const lListElem *ep, int pos, const char *value);
-int lSetPosHost(const lListElem *ep, int pos, const char *value);
+int lSetPosInt(lListElem *ep, int pos, int value);
+int lSetPosUlong(lListElem *ep, int pos, lUlong value);
+int lSetPosString(lListElem *ep, int pos, const char *value);
+int lSetPosHost(lListElem *ep, int pos, const char *value);
 
-int lSetPosList(const lListElem *ep, int pos, lList *value);
-int lSetPosFloat(const lListElem *ep, int pos, lFloat value);
-int lSetPosDouble(const lListElem *ep, int pos, lDouble value);
-int lSetPosLong(const lListElem *ep, int pos, lLong value);
-int lSetPosChar(const lListElem *ep, int pos, lChar value);
-int lSetPosBool(const lListElem *ep, int pos, lBool value);
-int lSetPosObject(const lListElem *ep, int pos, lListElem *value);
-int lSetPosRef(const lListElem *ep, int pos, lRef value);
+int lSetPosList(lListElem *ep, int pos, lList *value);
+int lSetPosFloat(lListElem *ep, int pos, lFloat value);
+int lSetPosDouble(lListElem *ep, int pos, lDouble value);
+int lSetPosLong(lListElem *ep, int pos, lLong value);
+int lSetPosChar(lListElem *ep, int pos, lChar value);
+int lSetPosBool(lListElem *ep, int pos, lBool value);
+int lSetPosObject(lListElem *ep, int pos, lListElem *value);
+int lSetPosRef(lListElem *ep, int pos, lRef value);
 
 lInt        lGetInt(const lListElem *ep, int name);
 lUlong      lGetUlong(const lListElem *ep, int name);

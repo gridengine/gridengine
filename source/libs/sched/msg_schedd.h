@@ -323,18 +323,17 @@
 #define MSG_SCHEDD_WHYEXCEEDBOOLVALUE_SSSSS                 _(SFN"="SFN" ("SN_UNLIMITED") "SFN" "SFN)
 #define MSG_SCHEDD_WHYEXCEEDFLOATVALUE_SFSSS                _(SFN"=%f ("SN_UNLIMITED") "SFN" "SFN)
 #define MSG_SCHEDD_WHYEXCEEDSTRINGVALUE_SSSS                _(SFN"="SFN" "SFN" "SFN)
-#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S                   _("unknown complex attribute type for theshold "SFN)
+#define MSG_SCHEDD_WHYEXCEEDCOMPLEXTYPE_S                   _("unknown complex attribute type for threshold "SFN)
 #define MSG_SCHEDD_WHYEXCEEDNOHOST_S                        _("no such host "SFN" for that queue")
 #define MSG_SCHEDD_WHYEXCEEDNOCOMPLEX_S                     _("no such complex attribute for threshold "SFQ)
 
-#define MSG_SCHEDD_LCDIAGHOSTNP_SFI                         _("%s * %f with nproc=%d")
-#define MSG_SCHEDD_LCDIAGHOST_SF                            _("%s * %f")
-#define MSG_SCHEDD_LCDIAGGLOBAL_SF                          _("%s * %f global")
+#define MSG_SCHEDD_LCDIAGHOSTNP_SFI                         _(SFN" * %f with nproc=%d")
+#define MSG_SCHEDD_LCDIAGHOST_SF                            _(SFN" * %f")
+#define MSG_SCHEDD_LCDIAGGLOBAL_SF                          _(SFN" * %f global")
 #define MSG_SCHEDD_LCDIAGPOSITIVE_SS                        _("= "SFN" + "SFN)
 #define MSG_SCHEDD_LCDIAGNEGATIVE_SS                        _("= "SFN" - "SFN)
 #define MSG_SCHEDD_LCDIAGNONE                               _("no load adjustment")
-
-
+#define MSG_SCHEDD_LCDIAGNOLOAD                             _("no load value")
 
 
 /* 

@@ -125,7 +125,8 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                                 const char *limit_value, u_long32 relop,
                                 u_long32 type, lListElem *hep,
                                 lListElem *hlep, double lc_host,
-                                double lc_global, lList *load_adjustments); 
+                                double lc_global, lList *load_adjustments, 
+                                int load_is_value); 
 
 char* trace_resource(lListElem *ep) 
 {
@@ -947,12 +948,12 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
                                 const char *limit_value, u_long32 relop, 
                                 u_long32 type, lListElem *hep, 
                                 lListElem *hlep, double lc_host, 
-                                double lc_global, lList *load_adjustments) 
+                                double lc_global, lList *load_adjustments, int load_is_value) 
 {
    lListElem *job_load;
    double limit, load;
    int match;
-   char lc_diagnosis1[256], lc_diagnosis2[256];
+   char lc_diagnosis1[1024], lc_diagnosis2[1024];
    
    DENTER(TOP_LAYER, "sge_check_load_alarm");
 
@@ -974,9 +975,10 @@ static int sge_check_load_alarm(char *reason, const char *name, const char *load
             DEXIT;
             return 1;
          }
-         /* load correction */
-         if (((hlep && lc_host) || lc_global) &&
-            (job_load = lGetElemStr(load_adjustments, CE_name, name))) {  
+         if (load_is_value) { /* we got no load - this is just the complex value */
+            strcpy(lc_diagnosis2, MSG_SCHEDD_LCDIAGNOLOAD);
+         } else if (((hlep && lc_host) || lc_global) && 
+            (job_load = lGetElemStr(load_adjustments, CE_name, name))) { /* load correction */
             const char *load_correction_str;
             double load_correction;
 
@@ -1134,6 +1136,7 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
    const char *load_value; 
    const char *limit_value;
    double lc_host = 0, lc_global = 0;
+   int load_is_value;
    
    DENTER(TOP_LAYER, "sge_load_alarm");
 
@@ -1186,10 +1189,13 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
          (glep = lGetSubStr(global_hep, HL_name, name, EH_load_list)) == NULL) {
          /* use complex default as value */
          load_value = lGetString(cep, CE_stringval);
+         load_is_value = 1;
       } else if (hlep) {
          load_value = lGetString(hlep, HL_value);
+         load_is_value = 0;
       } else {
          load_value = lGetString(glep, HL_value);
+         load_is_value = 0;
       }
 
       limit_value = lGetString(tep, CE_stringval);
@@ -1197,7 +1203,7 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
 
       if (sge_check_load_alarm(reason, name, load_value, limit_value, relop, type,
                               hep, hlep, lc_host, lc_global, 
-                              load_adjustments)) {
+                              load_adjustments, load_is_value)) {
          DEXIT;
          return 1;
       }   
@@ -1287,7 +1293,7 @@ char *sge_load_alarm_reason(lListElem *qep, lList *threshold,
 
       if(sge_check_load_alarm(NULL, name, load_value, limit_value, relop, type,
                               hep, hlep, 0, 0,
-                              NULL)) {
+                              NULL, 0)) {
          char dom_str[5];    /* dominance as string */
          u_long32 dom_val;   /* dominance as u_long */
 

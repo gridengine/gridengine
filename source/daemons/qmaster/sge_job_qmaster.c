@@ -1000,12 +1000,15 @@ int sub_command
                }
             }
             if (existing_tasks > deleted_tasks) {
+               dstring buffer = DSTRING_INIT;
                /* write only the common part - pass only the jobid, no jatask or petask id */
                lList *answer_list = NULL;
                spool_write_object(&answer_list, spool_get_default_context(), 
-                                  job, job_get_job_key(job_number), SGE_TYPE_JOB);
+                                  job, job_get_job_key(job_number, &buffer), 
+                                  SGE_TYPE_JOB);
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(job);
+               sge_dstring_free(&buffer);
             } else {
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, 
                              NULL, NULL, dupped_session, NULL);
@@ -1480,16 +1483,19 @@ void job_mark_job_as_deleted(lListElem *j,
    DENTER(TOP_LAYER, "job_mark_job_as_deleted");
    if (j && t) {
       lList *answer_list = NULL;
+      dstring buffer = DSTRING_INIT;
       u_long32 state = lGetUlong(t, JAT_state);
 
       SETBIT(JDELETED, state);
       lSetUlong(t, JAT_state, state);
       spool_write_object(&answer_list, spool_get_default_context(), j,
                          job_get_key(lGetUlong(j, JB_job_number),
-                                     lGetUlong(t, JAT_task_number), NULL),
+                                     lGetUlong(t, JAT_task_number), NULL,
+                                     &buffer),
                          SGE_TYPE_JOB);
       lListElem_clear_changed_info(t);
       answer_list_output(&answer_list);
+      sge_dstring_free(&buffer);
    }
    DEXIT;
 }
@@ -1624,21 +1630,26 @@ int sub_command
       }
 
       if (!(trigger & VERIFY_EVENT)) {
+         dstring buffer = DSTRING_INIT;
 
          if (trigger & MOD_EVENT)
             lSetUlong(new_job, JB_version, lGetUlong(new_job, JB_version)+1);
 
          /* all job modifications to be saved on disk must be made in new_job */
          if (!spool_write_object(alpp, spool_get_default_context(), new_job, 
-                                job_get_key(jobid, 0, NULL), SGE_TYPE_JOB)) {
+                                 job_get_key(jobid, 0, NULL, &buffer), 
+                                 SGE_TYPE_JOB)) {
             ERROR((SGE_EVENT, MSG_JOB_NOALTERNOWRITE_U, u32c(jobid)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            sge_dstring_free(&buffer);
             lFreeList(tmp_alp);
             lFreeElem(new_job);
             lFreeWhere(where); 
             DEXIT;
             return STATUS_EDISK;
          }
+
+         sge_dstring_free(&buffer);
 
          /* all elems in tmp_alp need to be appended to alpp */
          if (!*alpp)

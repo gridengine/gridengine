@@ -47,7 +47,10 @@
 
 #include "sge_answer.h"
 #include "sge_feature.h"
+#include "sge_object.h"
 #include "sge_userset.h"
+
+#include "sge_lock.h"
 
 #include "sge_rusage.h"
 #include "time_event.h"
@@ -57,12 +60,19 @@
 
 /* flush time in seconds 
  * JG: TODO: this should be a reporting config parameter.
- *           additional parameter: write accounting at all
  */
 #define REPORTING_FLUSH_TIME 60
 
+/* do we need to write an accounting file?
+ * JG: TODO: this should be a reporting config parameter
+ */
+#define REPORTING_WRITE_ACCOUNTING_FILE false
+
 /* global dstring for accounting data */
 static dstring accounting_data = DSTRING_INIT;
+
+/* global dstring for reporting data */
+static dstring reporting_data = DSTRING_INIT;
 
 bool
 sge_initialize_reporting(lList **answer_list)
@@ -92,7 +102,13 @@ sge_shutdown_reporting(lList **answer_list)
    deliver_reporting_trigger(TYPE_REPORTING_TRIGGER, 0, 0, 0, NULL);
 
    /* free memory of buffers */
+   SGE_LOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
    sge_dstring_free(&accounting_data);
+   SGE_UNLOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
+
+   SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+   sge_dstring_free(&reporting_data);
+   SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
    
    DEXIT;
    return ret;
@@ -113,7 +129,6 @@ deliver_reporting_trigger(u_long32 type, u_long32 when,
       answer_list_output(&answer_list);
    }
 
-
    /* validate next_trigger. If it is invalid, set it to one minute after now */
    now = time(0);
    if (next_flush <= now) {
@@ -127,8 +142,6 @@ deliver_reporting_trigger(u_long32 type, u_long32 when,
    return;
 }
 
-
-
 bool
 sge_create_acct_record(lList **answer_list, 
                        lListElem *job_report, 
@@ -136,48 +149,105 @@ sge_create_acct_record(lList **answer_list,
 {
    bool ret = true;
 
-   char category_buffer[SGE_PATH_MAX];
-   dstring category_dstring;
-   const char *category_string;
+   char category_buffer[MAX_STRING_SIZE], job_buffer[MAX_STRING_SIZE];
+   dstring category_dstring, job_dstring;
+   const char *category_string, *job_string;
 
    DENTER(TOP_LAYER, "sge_create_acct_record");
 
    sge_dstring_init(&category_dstring, category_buffer, 
                     sizeof(category_dstring));
+   sge_dstring_init(&job_dstring, job_buffer, 
+                    sizeof(job_dstring));
    category_string = sge_build_job_category(&category_dstring, job, 
                                             *(userset_list_get_master_list()));
-   /* JG: TODO: lock accounting buffer */
-   ret = sge_write_rusage(&accounting_data, job_report, job, ja_task, 
-                          category_string);
-   /* JG: TODO: unlock accounting buffer */
+   job_string = sge_write_rusage(&job_dstring, job_report, job, ja_task, 
+                                 category_string);
+   if (job_string == NULL) {
+      ret = false;
+   } else {
+      if (REPORTING_WRITE_ACCOUNTING_FILE) {
+         /* write accounting file */
+         SGE_LOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
+         sge_dstring_append(&accounting_data, job_string);
+         SGE_UNLOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
+      }
+
+      /* write reporting file */
+      ret = sge_create_reporting_record(answer_list, SGE_TYPE_JOB, job_string);
+   }
 
    DEXIT;
    return ret;
 }
 
 bool 
-sge_flush_accounting(lList **answer_list)
+sge_create_reporting_record(lList **answer_list, 
+                            sge_object_type object_type,
+                            const char *data)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "sge_create_reporting_record");
+
+   SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+   sge_dstring_sprintf_append(&reporting_data, "%ld:%s:%s",
+                              time(0),
+                              object_type_get_name(object_type),
+                              data);
+   SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+
+   DEXIT;
+   return ret;
+}
+
+bool 
+sge_flush_accounting_data(lList **answer_list)
 {
    bool ret = true;
 
    DENTER(TOP_LAYER, "sge_flush_accounting");
 
-   /* JG: TODO: lock accounting buffer */
-   /* write accounting data */
-   ret = sge_flush_report_file(answer_list, accounting_data, 
-                               path_state_get_acct_file());
-   /* clear accounting buffer */
-   if (ret) {
+   if (REPORTING_WRITE_ACCOUNTING_FILE) {
+      SGE_LOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
+      /* write accounting data */
+      ret = sge_flush_report_file(answer_list, &accounting_data, 
+                                  path_state_get_acct_file());
+      /* clear accounting buffer. We do this regardless of the result of
+       * the writing command. Otherwise, if writing the report file failed
+       * over a longer time period, the reporting buffer could grow endlessly.
+       */
       sge_dstring_clear(&accounting_data);
+      SGE_UNLOCK(LOCK_MASTER_ACCOUNTING_BUFFER, LOCK_WRITE);
    }
-   /* JG: TODO: unlock accounting buffer */
+   DEXIT;
+   return ret;
+}
+
+bool 
+sge_flush_reporting_data(lList **answer_list)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "sge_flush_accounting");
+
+   SGE_LOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
+   /* write accounting data */
+   ret = sge_flush_report_file(answer_list, &reporting_data, 
+                               path_state_get_reporting_file());
+   /* clear accounting buffer. We do this regardless of the result of
+    * the writing command. Otherwise, if writing the report file failed
+    * over a longer time period, the reporting buffer could grow endlessly.
+    */
+   sge_dstring_clear(&reporting_data);
+   SGE_UNLOCK(LOCK_MASTER_REPORTING_BUFFER, LOCK_WRITE);
 
    DEXIT;
    return ret;
 }
 
 bool 
-sge_flush_report_file(lList **answer_list, dstring contents, 
+sge_flush_report_file(lList **answer_list, dstring *contents, 
                       const char *filename)
 {
    bool ret = true;
@@ -186,7 +256,7 @@ sge_flush_report_file(lList **answer_list, dstring contents,
 
    DENTER(TOP_LAYER, "sge_create_acct_record");
 
-   size = sge_dstring_strlen(&contents);
+   size = sge_dstring_strlen(contents);
 
    /* do we have anything to write? */ 
    if (size > 0) {
@@ -245,7 +315,7 @@ sge_flush_report_file(lList **answer_list, dstring contents,
 
       /* write data */
       if (ret) {
-         if (fwrite(sge_dstring_get_string(&contents), size, 1, fp) != 1) {
+         if (fwrite(sge_dstring_get_string(contents), size, 1, fp) != 1) {
             if (answer_list == NULL) {
                ERROR((SGE_EVENT, MSG_ERROR_WRITINGFILE_SS, filename, 
                       strerror(errno)));
@@ -283,13 +353,19 @@ bool
 sge_flush_reporting(lList **answer_list, time_t flush, time_t *next_flush)
 {
    bool ret = true;
-   bool acct_ret;
+   bool reporting_ret;
 
    DENTER(TOP_LAYER, "sge_flush_reporting");
 
    /* flush accounting data */
-   acct_ret = sge_flush_accounting(answer_list);
-   if (!acct_ret /* || !rep_ret */) {
+   reporting_ret = sge_flush_accounting_data(answer_list);
+   if (!reporting_ret) {
+      ret = false;
+   }
+     
+   /* flush accounting data */
+   reporting_ret = sge_flush_reporting_data(answer_list);
+   if (!reporting_ret) {
       ret = false;
    }
      

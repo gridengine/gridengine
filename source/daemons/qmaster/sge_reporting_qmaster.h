@@ -35,7 +35,10 @@
 #include <time.h>
 
 #include "cull.h"
+
 #include "sge_dstring.h"
+
+#include "sge_object.h"
 
 bool
 sge_initialize_reporting(lList **answer_list);
@@ -53,10 +56,18 @@ sge_create_acct_record(lList **answer_list,
                        lListElem *job, lListElem *ja_task);
 
 bool 
-sge_flush_accounting(lList **answer_list);
+sge_create_reporting_record(lList **answer_list, 
+                            sge_object_type object_type,
+                            const char *data);
 
 bool 
-sge_flush_report_file(lList **answer_list, dstring contents, 
+sge_flush_accounting_data(lList **answer_list);
+
+bool 
+sge_flush_reporting_data(lList **answer_list);
+
+bool 
+sge_flush_report_file(lList **answer_list, dstring *contents, 
                       const char *filename);
 
 bool 

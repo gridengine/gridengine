@@ -1,3 +1,9 @@
+JG-2003-11-05-0: Enhancem.: Made functions job_get_job_key, job_get_key and 
+                            job_parse_key MT safe.
+                            Reporting: Made reporting functions (accounting and 
+                            new report file) MT safe
+                            Switched to Berkeley DB 4.1.25
+
 AD-2003-11-04-0: Bugfix.:   'sge_qmaster -help' did crash.
                  Changed:   sge_qmaster
 

@@ -77,13 +77,11 @@ u32","u32","u32","u32","u32","u32","u32","u32","u32","u32"\n"
             true on success
 
 */
-bool sge_write_rusage(
-dstring *buffer,
-lListElem *jr,
-lListElem *jep,
-lListElem *jatp,
-const char *category_str 
-) {
+const char *
+sge_write_rusage(dstring *buffer, 
+                 lListElem *jr, lListElem *jep, lListElem *jatp, 
+                 const char *category_str)
+{
    lList *usage_list;
    const char *s, *pe_task_id_str;
 #ifdef NEC_ACCOUNTING_ENTRIES
@@ -91,13 +89,14 @@ const char *category_str
    dstring arch_dep_usage_dstring;
    char *arch_dep_usage_string;
 #endif
+   const char *ret = NULL;
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
    /* invalid input data */
    if (buffer == NULL) {
       DEXIT;   
-      return false;
+      return ret;
    } 
 
 #ifdef NEC_ACCOUNTING_ENTRIES
@@ -183,7 +182,7 @@ const char *category_str
    }
 #endif         
 
-   sge_dstring_sprintf_append(buffer, ACTFILE_FPRINTF_FORMAT, 
+   ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
           lGetString(jr, JR_queue_name),
           lGetHost(jr, JR_host_name),
           lGetString(jr, JR_group),
@@ -234,13 +233,11 @@ const char *category_str
      
 
    DEXIT;   
-   return true;
+   return ret;
 }
 
-int sge_read_rusage(
-FILE *f,
-sge_rusage_type *d 
-) {
+int sge_read_rusage(FILE *f, sge_rusage_type *d) 
+{
    static char szLine[4092] = "";
    char  *pc;
    int len;

@@ -740,12 +740,15 @@ sge_commit_flags_t commit_flags
       job_log(jobid, jataskid, "job received by execd");
       job_enroll(jep, NULL, jataskid);
       {
+         dstring buffer = DSTRING_INIT;
          /* JG: TODO: why don't we generate an event? */
          lList *answer_list = NULL;
          spool_write_object(&answer_list, spool_get_default_context(), jep, 
-                            job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+                            job_get_key(jobid, jataskid, NULL, &buffer), 
+                            SGE_TYPE_JOB);
          answer_list_output(&answer_list);
          lListElem_clear_changed_info(jatep);
+         sge_dstring_free(&buffer);
       }
       break;
 
@@ -895,9 +898,12 @@ sge_commit_flags_t commit_flags
       job_enroll(jep, NULL, jataskid);
       {
          lList *answer_list = NULL;
+         dstring buffer = DSTRING_INIT;
          spool_write_object(&answer_list, spool_get_default_context(), jep, 
-                            job_get_key(jobid, jataskid, NULL), SGE_TYPE_JOB);
+                            job_get_key(jobid, jataskid, NULL, &buffer), 
+                            SGE_TYPE_JOB);
          answer_list_output(&answer_list);
+         sge_dstring_free(&buffer);
       }
       for_each(petask, lGetList(jatep, JAT_task_list)) {
          sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid,
@@ -1242,10 +1248,12 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       }
       {
          lList *answer_list = NULL;
+         dstring buffer = DSTRING_INIT;
          spool_delete_object(&answer_list, spool_get_default_context(), 
                              SGE_TYPE_JOB, 
-                             job_get_key(job_id, 0, NULL));
+                             job_get_key(job_id, 0, NULL, &buffer));
          answer_list_output(&answer_list);
+         sge_dstring_free(&buffer);
       }
       /*
        * remove the job
@@ -1271,19 +1279,23 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
        */
       if (is_enrolled) {
          lList *answer_list = NULL;
+         dstring buffer = DSTRING_INIT;
          spool_delete_object(&answer_list, spool_get_default_context(), 
                              SGE_TYPE_JOB, 
-                             job_get_key(job_id, ja_task_id, NULL));
+                             job_get_key(job_id, ja_task_id, NULL, &buffer));
          answer_list_output(&answer_list);
+         sge_dstring_free(&buffer);
          lRemoveElem(lGetList(job, JB_ja_tasks), ja_task);
       } else {
          job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
          if (spool_job) {
             lList *answer_list = NULL;
+            dstring buffer = DSTRING_INIT;
             spool_write_object(&answer_list, spool_get_default_context(), job, 
-                               job_get_key(job_id, ja_task_id, NULL), 
+                               job_get_key(job_id, ja_task_id, NULL, &buffer), 
                                SGE_TYPE_JOB);
             answer_list_output(&answer_list);
+            sge_dstring_free(&buffer);
          }
       }
    }

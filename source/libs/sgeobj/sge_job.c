@@ -2190,15 +2190,22 @@ int job_check_owner(const char *user_name, u_long32 job_id)
 *                   The result is only valid until the next call of the 
 *                   function.
 *
+*  NOTES
+*     MT-NOTE: job_get_job_key() is MT safe
+*
 *  SEE ALSO
 *     sgeobj/job/job_get_key()
 *     sgeobj/job/job_parse_key()
 ******************************************************************************/
-const char *job_get_job_key(u_long32 job_id)
+const char *job_get_job_key(u_long32 job_id, dstring *buffer)
 {
-   static dstring key = DSTRING_INIT;
-   sge_dstring_sprintf(&key, "%d", job_id);
-   return sge_dstring_get_string(&key);
+   const char *ret = NULL;
+
+   if (buffer != NULL) {
+      ret = sge_dstring_sprintf(buffer, "%d", job_id);
+   }
+
+   return ret;
 }
 
 /****** sgeobj/job/job_get_key() **********************************************
@@ -2224,17 +2231,28 @@ const char *job_get_job_key(u_long32 job_id)
 *                   The result is only valid until the next call of the 
 *                   function.
 *
+*  NOTES
+*     MT-NOTE: job_get_key() is MT safe
+*
 *  SEE ALSO
 *     sgeobj/job/job_parse_key()
 ******************************************************************************/
 const char *job_get_key(u_long32 job_id, u_long32 ja_task_id, 
-                        const char *pe_task_id)
+                        const char *pe_task_id, dstring *buffer)
 {
-   static dstring key = DSTRING_INIT;
-   sge_dstring_sprintf(&key, "%d.%d %s", 
-                       job_id, ja_task_id, 
-                       pe_task_id != NULL ? pe_task_id : "");
-   return sge_dstring_get_string(&key);
+   const char *ret = NULL;
+
+   if (buffer != NULL) {
+      if (pe_task_id != NULL) {
+         ret = sge_dstring_sprintf(buffer, "%d.%d %s", 
+                                   job_id, ja_task_id, pe_task_id);
+      } else {
+         ret = sge_dstring_sprintf(buffer, "%d.%d", 
+                                   job_id, ja_task_id);
+      }
+   }
+
+   return ret;
 }
 
 /****** sgeobj/job/job_parse_key() ********************************************
@@ -2262,6 +2280,8 @@ const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
 *     bool - true, if the key could be parsed, else false
 *
 *  NOTES
+*     MT-NOTE: job_get_key() is MT safe
+*
 *     The pe_task_id is only valid until the passed key is deleted!
 *
 *  SEE ALSO
@@ -2271,16 +2291,17 @@ bool job_parse_key(char *key, u_long32 *job_id, u_long32 *ja_task_id,
                    char **pe_task_id, bool *only_job)
 {
    const char *ja_task_id_str;
+   char *lasts = NULL;
 
-   *job_id = atoi(strtok(key, "."));
-   ja_task_id_str = strtok(NULL, " ");
+   *job_id = atoi(strtok_r(key, ".", &lasts));
+   ja_task_id_str = strtok_r(NULL, " ", &lasts);
    if (ja_task_id_str == NULL) {
       *ja_task_id = 0;
       *pe_task_id = NULL;
       *only_job  = true;
    } else {
       *ja_task_id = atoi(ja_task_id_str);
-      *pe_task_id = strtok(NULL, " ");
+      *pe_task_id = strtok_r(NULL, " ", &lasts);
       *only_job = false;
    }
 

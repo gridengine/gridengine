@@ -1190,15 +1190,17 @@ int force
                   /* spool job */
                   {
                      lList *answer_list = NULL;
+                     dstring buffer = DSTRING_INIT;
                      spool_write_object(&answer_list, 
                                         spool_get_default_context(), jep,
                                         job_get_key(lGetUlong(jep, JB_job_number), 
                                             lGetUlong(jatep, JAT_task_number), 
-                                            NULL), 
+                                            NULL, &buffer), 
                                         SGE_TYPE_JOB);
                      lListElem_clear_changed_info(jatep);
                      /* JG: TODO: don't we have to send an event? */
                      answer_list_output(&answer_list);
+                     sge_dstring_free(&buffer);
                   }
                }
             }

@@ -193,9 +193,14 @@ u_long32 ack_ulong2
       DPRINTF(("JOB "u32": SIGNAL ACK\n", lGetUlong(jep, JB_job_number)));
       lSetUlong(jatep, JAT_pending_signal, 0);
       te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, ack_ulong, ack_ulong2);
-      spool_write_object(&answer_list, spool_get_default_context(), jep, 
-                         job_get_key(lGetUlong(jep, JB_job_number), ack_ulong2, 
-                                     NULL), SGE_TYPE_JOB);
+      {
+         dstring buffer = DSTRING_INIT;
+         spool_write_object(&answer_list, spool_get_default_context(), jep, 
+                            job_get_key(lGetUlong(jep, JB_job_number), 
+                                        ack_ulong2, NULL, &buffer), 
+                            SGE_TYPE_JOB);
+         sge_dstring_free(&buffer);
+      }
       answer_list_output(&answer_list);
       break;
    }

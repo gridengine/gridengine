@@ -140,6 +140,10 @@ struct drusage {
 
 typedef struct drusage sge_rusage_type;
 
-bool sge_write_rusage(dstring *buffer, lListElem *jr, lListElem *jep, lListElem *jatp, const char *category_str);
+const char *
+sge_write_rusage(dstring *buffer, 
+                 lListElem *jr, lListElem *jep, lListElem *jatp, 
+                 const char *category_str);
+
 int sge_read_rusage(FILE *fp, sge_rusage_type *d);
 #endif /* __SGE_RUSAGE_H */

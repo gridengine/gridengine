@@ -60,12 +60,6 @@
 
 #include "spool/berkeleydb/sge_spooling_berkeleydb.h"
 
-/*
- * Berkeley DB version: we require a specific version
- */
-#define BDB_MAJOR_VERSION 4
-#define BDB_MINOR_VERSION 0
-
 /* JG: TODO: the following defines should better be parameters to
  *           the berkeley db spooling
  */
@@ -102,6 +96,13 @@ bdb_info *bdb_create(void) {
 
    return info;
 }
+
+static bool
+spool_berkeleydb_start_transaction(lList **answer_list, bdb_info *db);
+
+static bool
+spool_berkeleydb_end_transaction(lList **answer_list, bdb_info *db, 
+                                 bool commit);
 
 /****** spool/berkeleydb/spool_berkeleydb_create_context() ********************
 *  NAME
@@ -248,11 +249,11 @@ spool_berkeleydb_check_version(lList **answer_list)
                            MSG_BERKELEY_USINGBDBVERSION_S,
                            version);
 
-   if (major != BDB_MAJOR_VERSION || minor < BDB_MINOR_VERSION) {
+   if (major != DB_VERSION_MAJOR || minor != DB_VERSION_MINOR) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
                               MSG_BERKELEY_WRONGBDBVERSIONEXPECTING_SDD,
-                              version, BDB_MAJOR_VERSION, BDB_MINOR_VERSION);
+                              version, DB_VERSION_MAJOR, DB_VERSION_MINOR);
       ret = false;
    }
   
@@ -344,15 +345,19 @@ spool_berkeleydb_default_startup_func(lList **answer_list,
             } else {
 #endif
                PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-               dbret = db->db->open(db->db, "sge", NULL, DB_BTREE, DB_THREAD, 0);
+               if (spool_berkeleydb_start_transaction(answer_list, db)) {
+                  dbret = db->db->open(db->db, db->txn, "sge", NULL, 
+                                       DB_BTREE, DB_THREAD, 0);
+                  if (dbret != 0) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_ERROR, 
+                                             MSG_BERKELEY_COULDNTOPENDB_SS,
+                                             url, db_strerror(dbret));
+                     ret = false;
+                  }
+                  spool_berkeleydb_end_transaction(answer_list, db, true);
+               }   
                PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-               if (dbret != 0) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_BERKELEY_COULDNTOPENDB_SS,
-                                          url, db_strerror(dbret));
-                  ret = false;
-               }
 #if 0
             }
 #endif
@@ -507,7 +512,8 @@ spool_berkeleydb_default_maintenance_func(lList **answer_list,
    switch (cmd) {
       case SPM_init:
          PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
-         dbret = db->db->open(db->db, "sge", NULL, DB_BTREE, 
+         /* JG: TODO: we should have an open function */
+         dbret = db->db->open(db->db, NULL, "sge", NULL, DB_BTREE, 
                                     DB_CREATE | DB_THREAD, S_IRUSR | S_IWUSR);
          PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          if (dbret != 0) {
@@ -1409,6 +1415,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info *db,
 
             /* delete record with stored key */
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+            /* JG: TODO: use db->c_del instead? */
             delete_ret = db->db->del(db->db, db->txn, &delete_dbt, 0);
             PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
             if (delete_ret != 0) {

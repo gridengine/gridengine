@@ -65,7 +65,9 @@ typedef enum {
    LOCK_MASTER_SUBMIT_USER_LST = 24,     /* master submit user list lock */
    LOCK_MASTER_USER_SET_LST = 25,        /* master user set list lock */
    LOCK_MASTER_PROJECT_LST = 26,         /* master project list lock */
-   NUM_OF_TYPES = 27
+   LOCK_MASTER_ACCOUNTING_BUFFER = 27,   /* accounting record buffer */
+   LOCK_MASTER_REPORTING_BUFFER = 28,    /* reporting record buffer */
+   NUM_OF_TYPES = 29
 } sge_locktype_t;
 
 typedef enum {

@@ -207,6 +207,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
    sge_object_type object_type;
    lListElem *element = NULL;
    bool delete = false;
+   dstring buffer = DSTRING_INIT;
 
    switch (event) {
       case sgeE_ADMINHOST_LIST:
@@ -266,13 +267,13 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
       case sgeE_JATASK_ADD:
       case sgeE_JATASK_DEL:
       case sgeE_JATASK_MOD:
-         key = job_get_key(intkey1, intkey2, strkey);
+         key = job_get_key(intkey1, intkey2, strkey, &buffer);
          element = sub_object1;
          object_type = SGE_TYPE_JATASK;
          break;
       case sgeE_PETASK_ADD:
       case sgeE_PETASK_DEL:
-         key = job_get_key(intkey1, intkey2, strkey);
+         key = job_get_key(intkey1, intkey2, strkey, &buffer);
          element = sub_object2;
          object_type = SGE_TYPE_PETASK;
          break;
@@ -284,7 +285,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
       case sgeE_JOB_USAGE:
       case sgeE_JOB_FINAL_USAGE:
       case sgeE_JOB_FINISH:
-         key = job_get_key(intkey1, intkey2, strkey);
+         key = job_get_key(intkey1, intkey2, strkey, &buffer);
          element = object;
          object_type = SGE_TYPE_JOB;
          break;
@@ -292,7 +293,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
       case sgeE_JOB_SCHEDD_INFO_ADD:
       case sgeE_JOB_SCHEDD_INFO_DEL:
       case sgeE_JOB_SCHEDD_INFO_MOD:
-         key = job_get_key(intkey1, intkey2, strkey);
+         key = job_get_key(intkey1, intkey2, strkey, &buffer);
          element = object;
          object_type = SGE_TYPE_JOB_SCHEDD_INFO;
          break;
@@ -491,6 +492,7 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
       lListElem_clear_changed_info(object);
    }
 
+   sge_dstring_free(&buffer);
    return ret;
 }
 

@@ -209,6 +209,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
    lListElem *context, *ep;
    lList **master_list, *new_list;
    int key_nm;
+   dstring buffer = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_event_before");
 
@@ -299,7 +300,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                new_ep = lGetElemUlong(new_list, key_nm, lGetUlong(ep, key_nm));
                if(new_ep == NULL) {
                   const char *job_key;
-                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL);
+                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL, &buffer);
                   /* object not contained in new list, delete it */
                   spool_delete_object(&answer_list, context, type, job_key);
                   answer_list_output(&answer_list);
@@ -318,7 +319,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                if(old_ep == NULL || 
                   spool_compare_objects(&answer_list, context, type, ep, old_ep))  {
                   const char *job_key;
-                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL);
+                  job_key = job_get_key(lGetUlong(ep, key_nm), 0, NULL, &buffer);
                   spool_write_object(&answer_list, context, ep, job_key, type);
                   answer_list_output(&answer_list);
                }
@@ -357,7 +358,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                   ja_task_id = lGetUlong(event, ET_intkey2);
                   pe_task_id = lGetString(event, ET_strkey);
 
-                  job_key = job_get_key(job_id, ja_task_id, pe_task_id);
+                  job_key = job_get_key(job_id, ja_task_id, pe_task_id, &buffer);
                   spool_delete_object(&answer_list, context, type, job_key);
                   answer_list_output(&answer_list);
                }
@@ -369,7 +370,7 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
 
                   job_id = lGetUlong(event, ET_intkey);
 
-                  job_key = job_get_key(job_id, 0, NULL);
+                  job_key = job_get_key(job_id, 0, NULL, &buffer);
                   spool_delete_object(&answer_list, context, type, job_key);
                   answer_list_output(&answer_list);
                }
@@ -379,6 +380,8 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
                break;
       }
    }
+
+   sge_dstring_free(&buffer);
    DEXIT;
    return true;
 }
@@ -386,11 +389,13 @@ bool spool_event_before(sge_object_type type, sge_event_action action,
 bool spool_event_after(sge_object_type type, sge_event_action action, 
                       lListElem *event, void *clientdata)
 {
+   bool ret = true;
    lList *answer_list = NULL;
    lListElem *context, *ep;
    lList **master_list;
    int key_nm;
    const char *key;
+   dstring buffer = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "spool_event_after");
 
@@ -470,12 +475,12 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                if(ep == NULL) {
                   ERROR((SGE_EVENT, "%s element with id "SFQ" not found\n",
                          object_type_get_name(type), key));
-                  DEXIT;
-                  return false;
+                  ret = false;
                }
-
-               spool_write_object(&answer_list, context, ep, key, type);
-               answer_list_output(&answer_list);
+               if (ret) {
+                  spool_write_object(&answer_list, context, ep, key, type);
+                  answer_list_output(&answer_list);
+               }
                break;
 
             case SGE_TYPE_CALENDAR:
@@ -496,12 +501,13 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                if(ep == NULL) {
                   ERROR((SGE_EVENT, "%s element with id "SFQ" not found\n",
                          object_type_get_name(type), key));
-                  DEXIT;
-                  return false;
+                  ret = false;
                }
-
-               spool_write_object(&answer_list, context, ep, key, type);
-               answer_list_output(&answer_list);
+               
+               if (ret) {
+                  spool_write_object(&answer_list, context, ep, key, type);
+                  answer_list_output(&answer_list);
+               }
                break;
 
             case SGE_TYPE_SCHEDD_CONF:
@@ -509,11 +515,12 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                if(ep == NULL) {
                   ERROR((SGE_EVENT, "%s element not found\n",
                          object_type_get_name(type)));
-                  DEXIT;
-                  return false;
+                  ret = false;
                }
-               spool_write_object(&answer_list, context, ep, "default", type);
-               answer_list_output(&answer_list);
+               if (ret) {
+                  spool_write_object(&answer_list, context, ep, "default", type);
+                  answer_list_output(&answer_list);
+               }
                break;
             case SGE_TYPE_JATASK:
             case SGE_TYPE_PETASK:
@@ -528,7 +535,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                   pe_task_id = lGetString(event, ET_strkey);
 
                   ep = lGetElemUlong(Master_Job_List, JB_job_number, job_id);
-                  job_key = job_get_key(job_id, ja_task_id, pe_task_id);
+                  job_key = job_get_key(job_id, ja_task_id, pe_task_id, &buffer);
                   spool_write_object(&answer_list, context, ep, job_key, type);
                   answer_list_output(&answer_list);
                }
@@ -543,8 +550,10 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
          break;
    }
 
+   sge_dstring_free(&buffer);
+
    DEXIT;
-   return true;
+   return ret;
 }
 
 int main(int argc, char *argv[])

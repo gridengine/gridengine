@@ -47,6 +47,7 @@
 #define CONF_FILE                 "configuration"
 #define SCHED_CONF_FILE           "sched_configuration"
 #define ACCT_FILE                 "accounting"
+#define REPORTING_FILE            "reporting"
 #define LOCAL_CONF_DIR            "local_conf"
 #define SHADOW_MASTERS_FILE       "shadow_masters"
 
@@ -62,6 +63,7 @@ const char *path_state_get_conf_file(void);
 const char *path_state_get_sched_conf_file(void);
 const char *path_state_get_act_qmaster_file(void);
 const char *path_state_get_acct_file(void);
+const char *path_state_get_reporting_file(void);
 const char *path_state_get_local_conf_dir(void);
 const char *path_state_get_shadow_masters_file(void);
 
@@ -71,6 +73,7 @@ void path_state_set_conf_file(const char *path);
 void path_state_set_sched_conf_file(const char *path);
 void path_state_set_act_qmaster_file(const char *path);
 void path_state_set_acct_file(const char *path);
+void path_state_set_reporting_file(const char *path);
 void path_state_set_local_conf_dir(const char *path);
 void path_state_set_shadow_masters_file(const char *path);
 

@@ -1,3 +1,6 @@
+MD-2004-03-11-1: Bugfix:    set default "y" for startup script inst
+                 Changed:   inst_sge
+
 MD-2004-03-11-0: Bugfix:    check for local filesystem on lx24-amd64
                             was broken
                  Changed:   inst_sge

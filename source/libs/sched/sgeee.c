@@ -4101,7 +4101,6 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
                bool has_pending_jobs )
 {
    static u_long32 past = 0;
-   static u_long32 past_usage_update = 0;
    u_long32 now = sge_get_gmt();
    u_long seqno;
    lListElem *job;
@@ -4214,24 +4213,21 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4)
    
    /* somebody might have played with the system clock. */
-   if (now < past)
+   if (now < past) {
       past = now;
+   }   
 
    {
       u_long32 reprioritize_interval = sconf_get_reprioritize_interval(); 
       bool update_execd = ( reprioritize_interval == 0 || (now >= (past + reprioritize_interval))); 
-      bool update_usage = now >= (past_usage_update + 120); /* we are updating the usage every 2 min. */
       if (update_execd){
          past = now;
       } 
-      if (update_usage) {
-         past_usage_update = now;
-      }
       /* we are not calculation pending tickets here, only the running, finished jobs,
          and the sharetree changes are processed. The pending tickets are calculated at the
          end of the scheduler cycle */
       *orderlist = sge_build_sgeee_orders(lists, running_jobs,NULL, finished_jobs,
-                                        *orderlist, update_usage, seqno, update_execd);
+                                        *orderlist, true, seqno, update_execd);
 
    }
 

@@ -1996,7 +1996,7 @@ void sge_deliver_events_immediately(u_long32 aClientID)
 *  RESULT
 *     u_long32 - serial number for next event to deliver
 *
-*  MT-NOTE: sge_get_next_event_number() is NOT MT safe.
+*  MT-NOTE: sge_get_next_event_number() is MT safe.
 *
 *  BUGBUG-AD: Change signature of this function to allow for better error 
 *  BUGBUG-AD: handling!
@@ -2263,9 +2263,8 @@ static void* send_thread(void *anArg)
    lSetHost(report, REP_host, uti_state_get_qualified_hostname());
    lAppendElem(report_list, report);
 
-   while (!should_exit())
-   {
-   sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
+   while (!should_exit()) {
+      sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
       /*
        * did a new event arrive which has a flush time of 0 seconds?
        */
@@ -2287,7 +2286,6 @@ static void* send_thread(void *anArg)
           * this shortcut will occasionally cause this block to finish early
           * due to a well timed spurrious wakeup. */
          do {
-/*            DPRINTF (("Waiting before delivering events.\n")); */
             ts.tv_sec = current_time + EVENT_DELIVERY_INTERVAL_S;
             ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
             pthread_cond_timedwait(&Master_Control.cond_var,

@@ -1,3 +1,13 @@
+JG-2002-04-08-0: Merge:     Merged JG-2002-03-21-0 from V53_beta2_BRANCH
+                 Bugfix:    prioritization of messages to qmaster could
+                            block reports from execd's to qmaster and make
+                            the system unusable.
+                            Set "no prioritization" as default, behaviour
+                            can be changed via env variable
+                            SGE_PRIORITY_TAGS.
+                 Enhancem.  Performance enhancement for the deletion of large
+                            numbers of jobs.
+
 CR-2002-04-05-2: Bugfix:    Fixed compiler warning in ptf.c 
 
 JG-2002-04-05-3: Doc:       Linked both versions of the event client interface

@@ -853,6 +853,17 @@ int sub_command
 
       job_number = lGetUlong(job, JB_job_number);
 
+      /* Does user have privileges to delete the job/task? */
+      if (sge_job_owner(ruser, lGetUlong(job, JB_job_number)) && 
+          sge_manager(ruser)) {
+         ERROR((SGE_EVENT, MSG_JOB_DELETEPERMS_SU, ruser, 
+                u32c(lGetUlong(job, JB_job_number))));
+                sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
+         njobs++;
+         /* continue with next job */ 
+         break; 
+      }
+
       /*
        * Repeat until all requested taskid ranges are handled
        */
@@ -890,18 +901,6 @@ int sub_command
          DPRINTF(("enrolled   ----> start = %d, end = %d, step = %d\n", 
                   enrolled_start, enrolled_end, step));
 
-
-         /* Does user have privileges to delete the job/task? */
-         if (sge_job_owner(ruser, lGetUlong(job, JB_job_number)) && 
-             sge_manager(ruser)) {
-            ERROR((SGE_EVENT, MSG_JOB_DELETEPERMS_SU, ruser, 
-               u32c(lGetUlong(job, JB_job_number))));
-            sge_add_answer(alpp, SGE_EVENT, STATUS_EEXIST, 0);
-            njobs++;
-            /* continue with next job */ 
-            break; 
-         }
-
          showmessage = 0;
 
          /*
@@ -937,8 +936,10 @@ int sub_command
                   }         
                }
             }
-            increment_heartbeat(sge_get_gmt());
          }
+
+         increment_heartbeat(sge_get_gmt());
+         
          if (deleted_unenrolled_tasks) {
 
             if (conf.zombie_jobs > 0) {
@@ -979,6 +980,17 @@ int sub_command
 
                   njobs++; 
 
+                  /* if task is already in status deleted and was signaled
+                   * only recently, do nothing
+                   */
+                  if((lGetUlong(tmp_task, JAT_status) & JFINISHED) ||
+                     (lGetUlong(tmp_task, JAT_state) & JDELETED &&
+                      lGetUlong(tmp_task, JAT_pending_signal_delivery_time) > sge_get_gmt()
+                     )
+                    ) {
+                     continue;
+                  }
+
                   if (lGetString(tmp_task, JAT_master_queue)) {
                      get_rid_of_job(alpp, job, tmp_task, 
                                     lGetUlong(idep, ID_force), 
@@ -1017,6 +1029,7 @@ int sub_command
 
          rn = lNext(rn);   
       } while (rn != NULL);
+
    }
 
    lFreeWhere(where);

@@ -301,7 +301,7 @@ proc are_jobs_deleted { job_list } {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc submit_testjobs { { user "" } } {
+proc submit_testjobs { { user "" } { additional_job_args "" }} {
   global CHECK_PRODUCT_ROOT queue hold_state pending_state CHECK_TESTSUITE_ROOT 
   global CHECK_OUTPUT CHECK_ARCH CHECK_HOST
 
@@ -319,7 +319,7 @@ proc submit_testjobs { { user "" } } {
      }
   }
  
-  set jobargs "$jobargs -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3000"
+  set jobargs "$additional_job_args $jobargs -q $queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 3000"
 
   if { [string compare "" $user] == 0 } {
      # no user specified (using local user name (starter of testsuite))
@@ -617,45 +617,64 @@ proc qdel_verify {} {
 
 
 #                                                             max. column:     |
-#****** qdel/qdel_delete_unkown_jobid() ******
+#****** Checks/qdel/qdel_delete_unkown_jobid() ******
 # 
 #  NAME
-#     qdel_delete_unkown_jobid -- ??? 
+#     qdel_delete_unkown_jobid -- check deletion of unknown jobs / tasks
 #
 #  SYNOPSIS
 #     qdel_delete_unkown_jobid { } 
 #
 #  FUNCTION
-#     ??? 
+#     Execute qdel commands to delete jobs, tasks and taskranges that
+#     are unknown to the system.
+#     Checks if the errors output match the expected patterns.
 #
-#  INPUTS
-#
-#  RESULT
-#     ??? 
-#
-#  EXAMPLE
-#     ??? 
-#
-#  NOTES
-#     ??? 
-#
-#  BUGS
-#     ??? 
-#
-#  SEE ALSO
-#     ???/???
 #*******************************
 proc qdel_delete_unkown_jobid {} {
-  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env  CHECK_HOST
+   global CHECK_PRODUCT_ROOT CHECK_ARCH
 
-  # submit jobs to delete
-  set job_list [submit_testjobs]
+   # submit jobs to delete
+   set job_list [submit_testjobs]
 
-  # add a unkown jobid
-  set unkown_jobid [ expr ( [ lindex $job_list [ expr ( [ llength $job_list] - 1 ) ] ] + 1 ) ]
+   # add a unkown jobid
+   set unknown_jobid [ expr ( [ lindex $job_list [ expr ( [ llength $job_list] - 1 ) ] ] + 1 ) ]
+   lappend job_list $unknown_jobid 
+   set default_output "job \"$unknown_jobid\" does not exist"
 
-  lappend job_list $unkown_jobid 
+   qdel_delete_unknown_jobid_proc $job_list "$default_output"
 
+   if {[resolve_version] > 1} {
+      # submit jobs to delete
+      set job_list [submit_testjobs]
+
+      # add a unkown taskid
+      set last_jobid "[lindex $job_list end]"
+      set unknown_taskid 5
+      set job_list [lreplace $job_list end end "$last_jobid.$unknown_taskid"]
+      set default_output "job \"$last_jobid\" task \"$unknown_taskid\" does not exist"
+
+      qdel_delete_unknown_jobid_proc $job_list "$default_output"
+      delete_job $last_jobid
+
+      # submit jobs to delete
+      set job_list [submit_testjobs]
+
+      # add a unkown taskid range
+      set last_jobid "[lindex $job_list end]"
+      set empty_taskrange "5-10:2"
+      set job_list [lreplace $job_list end end "$last_jobid.$empty_taskrange"]
+      set default_output "job \"$last_jobid\" task id range \"$empty_taskrange\" comprises no tasks"
+
+      qdel_delete_unknown_jobid_proc $job_list "$default_output"
+      delete_job $last_jobid
+      # wait for job to leave queue
+      sleep 5
+   }
+}
+
+proc qdel_delete_unknown_jobid_proc {job_list default_output} {
+  global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH env CHECK_HOST
 
   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel $job_list" } qdel_output ] 
 
@@ -678,13 +697,13 @@ proc qdel_delete_unkown_jobid {} {
   }
 
   set last_job_output [ lindex $qd_out [ expr ( $nr_of_output_lines - 1 ) ] ]
-  set default_output "job \"$unkown_jobid\" does not exist"
   puts $CHECK_OUTPUT "last job output: \"$last_job_output\""
   puts $CHECK_OUTPUT "should be:       \"$default_output\""
 
   if { [ string compare $default_output $last_job_output  ] != 0 } {
      set_error -1 "deleting of not existing job produces wrong output (\"$last_job_output\")"
   }
+
   set_error 0 "ok"
 }
 

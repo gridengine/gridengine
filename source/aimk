@@ -902,9 +902,9 @@ case AIX51:
       set CXXFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CXXFLAGS"
    endif
 
-   set SHAREDLD = "$SOURCE/scripts/ldAix"
+   set SHAREDLD = "cc"
    set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+   set SHARED_LFLAGS = "-brtl -bexpall -bhalt:4 -bM:SRE -H512 -T512 -bnoentry $LFLAGS"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 

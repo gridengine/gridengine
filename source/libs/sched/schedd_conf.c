@@ -363,12 +363,6 @@ static int schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
       const char *term_delim = "+-";
       const char *term, *next_term;
 
-      if (load_formula[0] == '+' || load_formula[0] == '-') {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_LOADFORMHASTOSTART));
-         sge_add_answer(answer_list, SGE_EVENT, STATUS_ESYNTAX, 0);
-         ret = 0;
-      }
-
       next_term = sge_strtok(load_formula, term_delim);
       while ((term = next_term) && ret == 1) {
          const char *fact_delim = "*";

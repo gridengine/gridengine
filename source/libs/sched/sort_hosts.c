@@ -172,9 +172,14 @@ lList *tcl
 
    /* + and - have the lowest precedence. all else are equal,
     * thus formula is delimited by + or - signs
+    * if the load formula begins with a "-" we need to multiply the
+    * first load value with -1
     */
+   if (tf[0] == '-') {
+      next_op = LOAD_OP_MINUS;
+   }
+     
    for (cp=strtok(tf, "+-"); cp; cp = strtok(NULL, "+-")) {
-
       /* ---------------------------------------- */
       /* get scaled load value                    */
       /* determine 1st components value           */
@@ -256,13 +261,12 @@ lList *tcl
        * between a + or - operator in val. next we've to add or
        * subtract from the current result value.
        */
-
+       
       /* next_op is the next operation from the last run of the while loop.
        * thus next_op now is the operation to applied
        */
       switch (next_op) {
          case LOAD_OP_NONE:
-            /* this is the first run -> just set load */
             load = val;
             break;
          case LOAD_OP_PLUS:

@@ -1,3 +1,6 @@
+EB-2002-11-12-0  Enhancem.: Allow qsub -b y to handle built-in commands
+                 Issue:     #25 #26
+
 JG-2002-11-04-0  Enhancem.: Added utility functions for profiling.
                             Made scheduler use these profiling functions 
                             instead of former explicit implementation.

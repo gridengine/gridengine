@@ -568,7 +568,7 @@ int truncate_stderr_out
    ** "start_as_command" the result is an error report
    ** saying that the script exited with 1
    */
-   if (!is_qlogin) {
+   if (!is_qlogin && !atoi(get_conf_val("handle_as_binary"))) {
       if (strcasecmp(shell_start_mode, "raw_exec")) {
          SGE_STRUCT_STAT sbuf;
          char file[SGE_PATH_MAX + 1];
@@ -580,21 +580,20 @@ int truncate_stderr_out
          if (pc) {
             *pc = 0;
          }
-   
+  
          if (SGE_STAT(file, &sbuf)) {
             /*
             ** generate a friendly error messages especially for interactive jobs
             */
             if (is_interactive) {
                sprintf(err_str, "unable to find xterm executable \"%s\" for interactive job", file);
-            }
-            else {
+            } else {
                sprintf(err_str, "unable to find %s file \"%s\"", childname, file);
             }
    
             shepherd_error(err_str);
          }
-   
+
          if (!(sbuf.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))) {
             sprintf(err_str, "%s file \"%s\" is not executable", childname, file);
             shepherd_error(err_str);

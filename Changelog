@@ -1,4 +1,8 @@
-CR-2004-06-18-0: Bugfix:    o sge_qmaster will not start unless run only as "root"
+JG-2004-07-06-0: QA:        Update of review form and help text.
+                 Review:    CR
+                 
+CR-2004-06-18-0: Bugfix:    o sge_qmaster will not start unless run only as 
+                              "root"
                             o qmaster cannot bind port below 1024 on Linux
                  Changed:   qmaster
                  Issue:     1096, 1098

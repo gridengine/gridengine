@@ -66,7 +66,7 @@
 
 #include "spool/sge_spooling_utilities.h"
 
-#define MAX_LINE_LENGTH 80
+#define MAX_LINE_LENGTH 78
 
 typedef enum {
    SP_DEST_STDOUT,

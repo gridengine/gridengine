@@ -436,7 +436,7 @@ spool_flatfile_write_list(lList **answer_list,
             int i = 0;
             int len = 0;
             
-            sge_dstring_append_char (&char_buffer, '#');
+            sge_dstring_append_char (&char_buffer, COMMENT_CHAR);
             
             for (i = 0; fields[i].nm != NoName; i++) {
                sge_dstring_sprintf_append(&tmp, "%-*s",
@@ -448,7 +448,7 @@ spool_flatfile_write_list(lList **answer_list,
             
             sge_dstring_append_dstring (&char_buffer, &tmp);
             sge_dstring_append_char (&char_buffer, '\n');
-            sge_dstring_append_char (&char_buffer, '#');
+            sge_dstring_append_char (&char_buffer, COMMENT_CHAR);
             
             for (i = 0; i < len; i++) {
                sge_dstring_append_char (&char_buffer, '-');
@@ -1029,7 +1029,7 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
        * field delimited by a newline.  This holds true in all current cases
        * (I think...), but it's still an assumption.  This is important
        * because I can only insert line breaks in fields that are full lines. */
-      if (instr->show_field_names) {
+      if (instr->show_field_names && (getenv("SGE_SINGLE_LINE") == NULL)) {
          spool_flatfile_add_line_breaks (&field_buffer);
       }
       
@@ -1429,6 +1429,8 @@ FF_DEBUG(lNm2Str(nm));
       
       /* now read the data */
       if ((type != lListT) || (fields[field_index].read_func != NULL)) {
+         bool found_value = false;
+         
          /* read field data and append until field/record end */
          sge_dstring_clear(&buffer);
          spool_return_whitespace = true;
@@ -1461,13 +1463,14 @@ FF_DEBUG("detected end_token");
                   continue;
                }
                /* if it's a space that doesn't have a special meaning, ignore it */
-               if (*spool_text == ' ') {
+               if (!found_value && (*spool_text == ' ')) {
                   *token = spool_lex();
                }
             }
             
             /* store data */
             sge_dstring_append(&buffer, spool_text);
+            found_value = true;
             
             *token = spool_lex();
          }
@@ -2053,12 +2056,18 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       char *newlp = strchr (strp, '\n');
       index = (newlp - strp) / sizeof (char);
       
-      if ((newlp != NULL) && (index <= MAX_LINE_LENGTH)) {
+      if ((newlp != NULL) && (index <= MAX_LINE_LENGTH - word)) {
          strncat (str_buf, strp, index + 1);
          strp = newlp + 1;
 
          /* Reset the to the first line */
          first_line = true;
+         
+         if (indent_str != NULL) {
+            FREE (indent_str);
+            word = 0;
+         }
+         
          /* No need to signal changed until something has actually changed. */
          continue;
       }
@@ -2066,8 +2075,12 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       /* Build the indent string by finding the beginning of the second word in
        * the line. */
       if (indent_str == NULL) {
+         /* Word should always be 0 when we enter this function, but I'll set
+          * it again, just to be sure. */
+         word = 0;
+         
          /* Find the first whitespace */
-         while (!isspace (strp[word])) {
+         while (!isspace (strp[word]) && (strp[word] != '=')) {
             word++;
          }
          
@@ -2103,8 +2116,7 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
       /* We know that on the first line strp[word] is not a space, so we can
        * just skip it.  On later lines, we know the first character is not a
        * space, so can skip it too. */
-      for (index = MAX_LINE_LENGTH - (first_line ? 0 : word);
-           index >= (first_line ? word : 0) + 1; index--) {
+      for (index = MAX_LINE_LENGTH - word; index >= 1; index--) {
          if (isspace (strp[index]) || (strp[index] == ',')) {
             break;
          }

@@ -21,6 +21,7 @@
 
 #define YY_BREAK
 #define YY_NO_UNPUT
+#define YYLMAX MAX_STRING_SIZE
 
 int spool_line;
 int spool_return_whitespace;

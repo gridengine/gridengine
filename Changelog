@@ -1,3 +1,10 @@
+DT-2004-02-19-1: Bugfix:    Did various minor qconf & FF bug fixes.
+                            qconf now supresses line continuation when the
+                            SGE_SINGLE_LINE env var is set.
+                            Added new test program to test compatability
+                            between classic and flatfile spooling.
+                 Changed:   qconf, flatfile spooling
+
 HP-2004-02-19-1: Bugfix:    - qsub -S <host>:/<path> crashed sge_qmaster
                  Issue:     682
 
@@ -9,6 +16,16 @@ HP-2004-02-19-0: Enhance:   - filestaging for drmaa
                  
 AD-2004-02-19-1: Cleanup:   Did remove '-s' command line argument.
                  Changed:   qmaster, common, man
+
+DT-2004-02-19-0  Bugfix:    Missing files from JGrid package
+                 Changed:   JGrid howto
+
+AS-2004-02-19-1  Cleanup:   Crude port to HP1164. Just COMPILES!!!!
+                            No testing at all done yet!
+                            "qtcsh" is not really working. Reason is that
+                            "-ltermcap" does not exist on our system
+                            as 64-bit library. Use "-lcurses" instead.
+                            However tcsh prints at startup:
 
 SG-2004-02-19-2: Bugfix:    - impemented qhold and qrls in qalter and removed
                               the qhold.sh script.
@@ -101,6 +118,7 @@ DT-2004-02-18-3: Bugfix:    Moved basic sharetree functionality out of libsched
                             into libsgeobj to try to eliminate odd dependencies.
                             Still a work in progress.
                  Changed:   sge_support, sge_sharetree
+                 Review:    JG
 
 DT-2004-02-18-2: Bugfix:    Fixed JGrid Howto mistakes.
                  Changed:   JGrid Howto
@@ -144,6 +162,7 @@ DT-2004-02-18-0: Bugfix:    Fixed backslash line continuation for all objects
                             Fixed other minor qconf and flatfile spooling
                             issues.
                  Changed:   qconf, qmon, flatfile spooling
+                 Review:    JG
 
 AS-2004-02-17-0: Cleanup:   aimk cleanup, #define cleanup, IRIX 6.5 compile
                  Review:    EB
@@ -269,7 +288,7 @@ DT-2004-02-13-0: Enhancem:  qconf now uses flatfile spooling instead of classic
                  Bugfix:    Fixed a variety of classic spooling, qconf, and
                             other bugs.
                  Changed:   Flatfile spooling, classic spooling, qconf, sgeobj
-                 Review:    Pending
+                 Review:    JG
 
 CR-2004-02-13-1: Testsuite: throughput test: don't send job start command
                             to a remote shell when a former job start is

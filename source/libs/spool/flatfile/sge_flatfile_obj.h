@@ -73,6 +73,7 @@ extern spooling_field HGRP_fields[];
 extern spooling_field US_fields[];
 extern spooling_field SC_fields[];
 extern spooling_field CQ_fields[];
+extern spooling_field CU_fields[];
 
 spooling_field *sge_build_UP_field_list (bool spool, bool user);
 spooling_field *sge_build_STN_field_list (bool spool, bool recurse);

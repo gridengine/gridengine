@@ -45,6 +45,7 @@
 #include "sgeobj/sge_ckpt.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_cuser.h"
 #include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_href.h"
 #include "sgeobj/sge_host.h"
@@ -495,6 +496,17 @@ spooling_field CQ_fields[] = {
    {  NoName,                    21, NULL,                 NULL,                NULL,                                   NULL,                      NULL}
 };
 
+spooling_field CU_fields[] = {
+   {  CU_name,           0, "cluster user",         NULL},
+   {  CU_ruser_list,     0, "remote user",          ASTR_sub_fields},
+   {  CU_ulong32,        0, "ulong32",              AULNG_sub_fields},
+   {  CU_bool,           0, "bool",                 ABOOL_sub_fields},
+   {  CU_time,           0, "time",                 ATIME_sub_fields},
+   {  CU_mem,            0, "mem",                  AMEM_sub_fields},
+   {  CU_inter,          0, "inter",                AINTER_sub_fields},
+   {  NoName,            0, NULL,                   NULL}
+};
+
 spooling_field *sge_build_UP_field_list (int spool, int user)
 {
    /* There are 13 possible UP_Type fields. */
@@ -533,11 +545,10 @@ spooling_field *sge_build_UP_field_list (int spool, int user)
                              UPP_sub_fields, NULL, NULL, NULL);
    }
    
-   if (user) {
-      create_spooling_field (&fields[count++], UP_default_project, 0, "default_project",
-                             NULL, NULL, NULL, NULL);
-   }
-   else {
+   create_spooling_field (&fields[count++], UP_default_project, 0, "default_project",
+                          NULL, NULL, NULL, NULL);
+   
+   if (!user) {
       create_spooling_field (&fields[count++], UP_acl, 0, "acl", US_sub_fields,
                              NULL, NULL, NULL);
       create_spooling_field (&fields[count++], UP_xacl, 0, "xacl",

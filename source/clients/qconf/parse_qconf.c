@@ -140,8 +140,6 @@ static int sge_gdi_is_adminhost(const char *host);
 /************************************************************************/
 
 #ifdef QCONF_FLATFILE
-static void prune_field_list (spooling_field *master, spooling_field *copy,
-                              const char *name);
 static const char *write_attr_tmp_file (const char *name, const char *value, 
                                         char delimiter);
 
@@ -2898,11 +2896,12 @@ DPRINTF(("ep: %s %s\n",
       int ret = 0;
       int sub_command = 0;
    
-      /* These have to be freed later */
+      /* This does not have to be freed later */
       info_entry[0].fields = CQ_fields;
+      /* These have to be freed later */
       info_entry[1].fields = sge_build_EH_field_list (false, false, false);
       info_entry[2].fields = sge_build_PE_field_list (false, false);
-      /* These double not */
+      /* These do not */
       info_entry[3].fields = CK_fields;
       info_entry[4].fields = HGRP_fields;
       
@@ -6674,7 +6673,6 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
       *spp = sge_parser_get_next (*spp);
       value = (const char *)strdup (**spp);
 
-      prune_field_list (info_entry->fields, fields_in, name);
       filename = write_attr_tmp_file (name, value,
                                       qconf_sfi.name_value_delimiter);
 
@@ -6804,25 +6802,6 @@ static int qconf_modify_attribute(lList **alpp, int from_file, char ***spp,
 
    DEXIT;
    return 0;
-}
-
-static void prune_field_list (spooling_field *master, spooling_field *copy,
-                              const char *name)
-{
-   int count = 0;
-   
-   for (count = 0; master[count].nm != NoName; count++) {
-      if (strcmp (master[count].name, name) == 0) {
-         create_spooling_field (copy, master[count].nm, master[count].width,
-                                master[count].name, master[count].sub_fields,
-                                master[count].clientdata,
-                                master[count].read_func,
-                                master[count].write_func);
-         break;
-      }
-   }
-   
-   create_spooling_field (&copy[1], NoName, 0, NULL, NULL, NULL, NULL, NULL);
 }
 
 static const char *write_attr_tmp_file (const char *name, const char *value, 

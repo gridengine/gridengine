@@ -6,44 +6,16 @@ NAME
      sge_qmaster - Grid Engine master control daemon
 
 SYNOPSIS
-     sge_qmaster [ -help ]  [  -lj  log_file  ]  [  -nohist  ]  [
-     -nostart-commd ] [ -s ] [
-
-     sge_qmaster -show-license
+     sge_qmaster [ -help ]
 
 DESCRIPTION
      <I>sge</I>_<I>qmaster</I> controls the overall Grid Engine behavior  in  a
      cluster.  For  the  purpose  of  scheduling jobs <I>sge</I>_<I>qmaster</I>
-     cooperates with <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  At start-up  of  <I>sge</I>_<I>qmaster</I>
-     <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B> is usually brought up automatically on the same
-     machine (if not already present).
+     cooperates with <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.
 
 OPTIONS
      -help
           Prints  a listing of all options.
-
-     -lj log_file
-          Enables job logging. All actions taken  by  <I>sge</I>_<I>qmaster</I>
-          from  submit  to  job  exit are logged to the log_file.
-          This feature is also available  with  the  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
-          daemon.
-
-     -nohist
-          During usual operation <I>sge</I>_<I>qmaster</I> dumps a  history  of
-          queue, complex and host configuration changes to a his-
-          tory database. This database is primarily used with the
-          <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>  command to allow for <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> like -<I>l</I> resource
-          requests in  the  <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>  command-line.  This  switch
-          suppresses writing to this database.
-
-     -nostart-commd
-          Do  not  start-up   <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>   automatically   with
-          <I>sge</I>_<I>qmaster</I>.
-
-     -s   turns on <I>sge</I>_<I>qmaster</I>s silent mode. Usually  <I>sge</I>_<I>qmaster</I>
-          displays a license information on startup and waits for
-          a return to continue. With the  -<I>s</I>  switch  <I>sge</I>_<I>qmaster</I>
-          starts up silently.
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -68,11 +40,19 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
+
+     SGE_EXECD_PORT If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  is  expected to listen for com-
+                    munication requests.  Most installations will
+                    use  a  services  map  entry  for the service
+                    "sge_execd" instead to define that port.
+
 
 RESTRICTIONS
      <I>sge</I>_<I>qmaster</I> is usually started from root on  the  master  or
@@ -81,7 +61,7 @@ RESTRICTIONS
      mation  about the configuration of shadow master hosts).  If
      started by a normal user, a master spool directory  must  be
      used  to  which the user has read/write access. In this case
-     only jobs being submitted by  that  same  user  are  treated
+     only jobs being submitted by  that  same  user  are  handled
      correctly by the system.
 
 FILES
@@ -89,21 +69,41 @@ FILES
                      Grid Engine global configuration
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>local</I>_<I>conf</I>/&lt;<I>host</I>&gt;
                      Grid Engine host specific configuration
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>history</I>
-                     History database
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>qmaster</I>_<I>args</I>
                      <I>sge</I>_<I>qmaster</I> argument file
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>
                      Default master spool directory
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,   <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>,   <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>,   <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>,  <B><A HREF="../htmlman8/sge_shadowd.html">sge_shadowd(8)</A></B>, <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I>
-     <I>Administration</I> <I>Guide</I>
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>,   <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,   <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_shadowd.html">sge_shadowd(8)</A></B>,  <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I>
+     <I>Guide</I>
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 </PRE>

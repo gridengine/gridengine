@@ -7,8 +7,8 @@ NAME
 
 DESCRIPTION
      A usermapping entry is used to  define  alias  names  for  a
-     cluster  user.  The users name known by the sheduling system
-     is called cluster user. If the cluster  name  doesn't  match
+     cluster user. The user's name known by the scheduling system
+     is called cluster user. If the cluster  user  doesn't  match
      the  user account name on an execution host, the usermapping
      feature can solve the problem.
 
@@ -24,21 +24,20 @@ DESCRIPTION
      <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
 
 FORMAT
-     A user mapping entry contains at least tree parameters:
+     A user mapping entry contains two parameters:
 
-     cluster_user keyword
+     cluster_user
           The cluster_user keyword defines the cluster user name.
           The   rest   of   the   textline   after   the  keyword
           "cluster_user" will be taken as cluster user value.
 
 
-     name The user name on an execution host.
+     remote_user
+          The user name on an execution host.  Please  note  that
+          the value for this attribute might be overwritten for a
+          certain hostgroups or single  host.   Find  an  example
+          below.
 
-     hostname
-          The name of the host where the user specified  in  name
-          has an account.  If The first character of the hostname
-          is a "@" sign the name is used  to  reference  a  <I>host-</I>
-          <B><A HREF="../htmlman5/group.html">group(5)</A></B>.
 
 
 EXAMPLE
@@ -46,19 +45,16 @@ EXAMPLE
      ping:
 
 
-     cluster_user office
+     cluster_user   peter
 
-     alice     wonderland, realworld, @office2
+     remote_user    peter,[@linux=pet1],[fangorn=peter1]
 
-     The entry will map the user office which is defined  in  the
-     cluster system to the user alice on the hosts wonderland and
-     realworld. The "@" sign is used to reference a  host  group.
-     So the user office is mapped to alice on all hosts specified
-     in the host group office2. Please see <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B> to obtain
-     for more information about that.
-
-
-
+     The entry will map the user peter which is  defined  in  the
+     cluster system to the user peter on all hosts in the cluster
+     except for all hosts which are referenced in  the  hostgroup
+     @linux. For all these hosts the user will be mapped to pet1.
+     For the  host  fangorn  the  remote  user  will  be  peter1.
+     <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B> to obtain for more information about that.
 
 
 
@@ -68,6 +64,10 @@ SEE ALSO
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
 
 
 

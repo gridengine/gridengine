@@ -41,8 +41,8 @@ OPTIONS
           information  is  requested.   Matching  is performed on
           hosts.
 
-     -q   Show  information  about  the  queues  hosted  by   the
-          displayed hosts.
+     -q   Show information about the queues instances  hosted  by
+          the displayed hosts.
 
      -u user,...
           Display information only on those jobs and queues being
@@ -140,8 +140,6 @@ OUTPUT FORMATS
         defined load scaling has been applied,
         `c' - availability derived from the consumable  resources
         facility (see <B><A HREF="../htmlman5/complexes.html">complexes(5)</A></B>),
-        `v' -  a  default  complexes  configuration  value  never
-        overwritten by a load report or a consumable update or
         `f' - a fixed  availability  definition  derived  from  a
         non-consumable  complex  attribute  or  a  fixed resource
         limit.
@@ -210,16 +208,12 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
-
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine  communication  of  the  <I>qstat</I>  client
-                    resides.  Per default the local host is used.
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
@@ -227,12 +221,18 @@ FILES
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,
-     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
+     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
 
 
 

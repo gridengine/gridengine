@@ -3,18 +3,21 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     user - Grid Engine Enterprise Edition user entry file format
+     user - Grid Engine user entry file format
 
 DESCRIPTION
-     The user object is only available in case of a  Grid  Engine
-     Enterprise Edition system. Grid Engine has no user object.
+     A user entry is used to store ticket and  usage  information
+     on  a per user basis. Maintaining user entries for all users
+     participating in a Grid Engine system is  required  if  Grid
+     Engine is operated under a user share tree policy.
 
-     A user entry is used in Grid Engine  Enterprise  Edition  to
-     store  ticket  and  usage  information  on a per user basis.
-     Maintaining user entries for all users  participating  in  a
-     Grid  Engine  Enterprise  Edition system is required if Grid
-     Engine Enterprise Edition is operated  under  a  user  share
-     tree policy.
+     If the enforce_user cluster configuration parameter  is  set
+     to  <I>auto</I>,  a  user  object  for  the submitting user will be
+     created automatically during job submission, if one does not
+     already   exist.  The  auto_user_oticket,  auto_user_fshare,
+     auto_user_default_project, and auto_user_delete_time cluster
+     configuration  parameters will be used as default attributes
+     of the new user object.
 
      A list of currently configured user entries can be displayed
      via  the  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -suserl  option.  The  contents  of each
@@ -38,12 +41,61 @@ FORMAT
      default_project
           The default project of the user.
 
+     delete_time
+          The wall-clock time, expressed as the number of seconds
+          elapsed  since  January 1, 1970, when this user will be
+          deleted. If set to zero, this is a permanent  user.  If
+          set  to  one,  the user currently has active jobs.  For
+          additional  information  about  automatically   created
+          users,  see  the enforce_user and auto_user_delete_time
+          parameters in <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.
+
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.
+
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

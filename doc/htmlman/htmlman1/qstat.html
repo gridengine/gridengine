@@ -6,11 +6,12 @@ NAME
      qstat - show the status of Grid Engine jobs and queues
 
 SYNTAX
-     qstat [ -ext ] [ -f ] [ -F [resource_name,...]  ] [ -g d ] [
-     -help  ] [ -j [job_list] ] [ -l resource=val,... ] [ -ne ] [
-     -pe  pe_name,...  ]  [  -q  queue,...  ]  [  -r   ]   [   -s
-     {r|p|s|z|hu|ho|hs|hj|ha|h}[+]] ] [ -t ] [ -U user,... ] [ -u
-     user,... ]
+     qstat [ -ext ] [ -f ]  [  -F  [resource_name,...]   ]  [  -g
+     {c|d|t}[+]   ]   [   -help   ]   [  -j  [job_list]  ]  [  -l
+     resource=val,... ]  [  -ne  ]  [  -pe  pe_name,...  ]  [  -q
+     wc_queue_list  ] [ -qs {a|c|d|o|s|u|A|C|D|E|S} ] [ -r ] [ -s
+     {r|p|s|z|hu|ho|hs|hj|ha|h}[+] ] [ -t ] [ -U user,... ] [  -u
+     user,... ] [ -urg ] [ -xml ]
 
 DESCRIPTION
      <I>qstat</I> shows the current status of the available Grid  Engine
@@ -20,18 +21,21 @@ DESCRIPTION
      a list of jobs with no queue status information.
 
 OPTIONS
-     -alarm
-          Displays the reason(s) for queue alarm states.  Outputs
-          one  line  per reason containing the resource value and
-          threshold. For details about the resource value  please
-          refer  to the description of the Full Format in section
-          OUTPUT FORMATS below.
+     -explain a|A|c|E
+          'c' displays the reason for the configuration  ambigous
+          state of a queue instance. 'a' shows the reason for the
+          alarm  state.  Suspend  alarm  state  reasons  will  be
+          displayed  by  'A'. 'E' displays the reason for a queue
+          instance error state.
 
-     -ext This option is only supported in case of a Grid  Engine
-          Enterprise Edition system. It is not available for Grid
-          Engine systems.
-          Displays  additional  Grid  Engine  Enterprise  Edition
-          relevant  information  for each job (see OUTPUT FORMATS
+          The output format for the alarm reasons is one line per
+          reason containing the resource value and threshold. For
+          details about the resource value please  refer  to  the
+          description  of  the Full Format in section OUTPUT FOR-
+          MATS below.
+
+     -ext Displays additional information for each job related to
+          the  job  ticket  policy  scheme  (see  OUTPUT  FORMATS
           below).
 
      -f   Specifies a "full" format display of information.   The
@@ -48,29 +52,51 @@ OPTIONS
           the description of the Full Format  in  section  OUTPUT
           FORMATS below for further detail.
 
-     -g d Displays array jobs verbosely in a  one  line  per  job
-          task  fashion.  By  default, array jobs are grouped and
-          all tasks with the same status (for pending tasks only)
-          are  displayed  in a single line. The array job task id
-          range field in the output (see section OUTPUT  FORMATS)
-          specifies the corresponding set of tasks.
-          The -g switch currently  has  only  the  single  option
-          argument  d.  Other  option  arguments are reserved for
-          future extensions.
+     -g {c|d|t}[+]
+          The  -g  option  allows  for  controlling  grouping  of
+          displayed objects.
+
+          With -g c a cluster queue summary  is  displayed.  Find
+          more information in the section OUTPUT FORMATS.
+
+          With -g d array jobs are displayed verbosely in  a  one
+          line  per  job task fashion. By default, array jobs are
+          grouped and all tasks with the same status (for pending
+          tasks  only)  are displayed in a single line. The array
+          job task id range field in the output (see section OUT-
+          PUT FORMATS) specifies the corresponding set of tasks.
+
+          With -g t parallel jobs are displayed  verbosely  in  a
+          one  line  per  parallel job task fashion. By  default,
+          parallel job tasks are displayed in a single line. Also
+          with  -g t option the function of each parallel task is
+          displayed rather than the jobs slot amount (see section
+          OUTPUT FORMATS).
+
 
      -help
           Prints a listing of all options.
 
      -j [job_list]
           Prints either for all pending jobs  or  the  jobs  con-
-          tained in job_list the reason for not being scheduled.
+          tained  in job_list the reason for not being scheduled.
+          The job_list can contain job_ids,  job_names,  or  pat-
+          terns.
+
 
      -l resource[=value],...
           Defines the resources required by the jobs  or  granted
-          by  the  queues  on  which  information  is  requested.
-          Matching is performed on queues. The pending  jobs  are
-          restricted  to  jobs that might run in one of the above
-          queues.
+          by the queues on which information is requested. Match-
+          ing  is  performed  on  queues  based  on   non-mutable
+          resource availability information only. That means load
+          values are always ignored except the  so-called  static
+          load  values  (i.e.  "arch",  "num_proc",  "mem_total",
+          "swap_total" and "virtual_total") ones. Also consumbale
+          utilization  is  ignored.   The  pending  jobs are res-
+          tricted to jobs that might run  in  one  of  the  above
+          queues.  In a similar fashion also the queue-job match-
+          ing bases only  on  non-mutable  resource  availability
+          information.
 
      -ne  In  combination  with  -f  the  option  suppresses  the
           display  of  empty  queues. This means all queues where
@@ -85,9 +111,14 @@ OPTIONS
           queues  or which are pending and might get scheduled to
           those queues in principle.
 
-     -q queue,...
-          Specifies the queue to which job information is  to  be
-          displayed.
+     -q wc_queue_list
+          Specifies a wildcard queue list to which  job  informa-
+          tion  is  to  be  displayed.  Find  the  definition  of
+          wc_queue_list in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+
+     -qs {a|c|d|o|s|u|A|C|D|E|S}
+          Similar to -f. It generates the same output, but allows
+          to filter for queue instances in certain states.
 
      -r   Prints extended information about the resource require-
           ments of the displayed jobs. Please refer to the OUTPUT
@@ -109,10 +140,10 @@ OPTIONS
 
      -t   Prints extended information about the  controlled  sub-
           tasks  of  the displayed parallel jobs. Please refer to
-          the OUTPUT FORMATS sub-section  Expanded  Format  below
-          for  detailed  information.  Sub-tasks of parallel jobs
-          should not be confused with array  job  tasks  (see  -g
-          option above and -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
+          the OUTPUT FORMATS sub-section Reduced Format below for
+          detailed information. Sub-tasks of parallel jobs should
+          not be confused with array job  tasks  (see  -g  option
+          above and -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
 
      -U user,...
           Displays status information with respect to  queues  to
@@ -128,22 +159,69 @@ OPTIONS
           options are specified additionally and if the user runs
           jobs in those queues.
 
+     -urg Displays additional information for each job related to
+          the  job  urgency  policy  scheme  (see  OUTPUT FORMATS
+          below).
+
+     -xml This option can be used  with  all  other  options  and
+          changes  the output to XML. The used schemas are refer-
+          enced in the XML  output.  The  output  is  printed  to
+          stdout.
+
 OUTPUT FORMATS
-     Depending on the presence or absence of the -alarm, -f or -F
-     and  -r  and  -t option three output formats need to be dif-
-     ferentiated.  PP In case of a Grid Engine Enterprise Edition
-     system,  the  -ext  option may be used to display additional
+     Depending on the presence or absence of  the  -explain,  -f,
+     -F, or -qs and -r and -t option three output formats need to
+     be differentiated.
+
+     The -ext and -urg options may be used to display  additional
      information for each job.
 
-  Reduced Format (without -f and -F)
+  Cluster Queue Format (with -g c)
+     Following the header line a section for each  cluster  queue
+     is  provided. When queue instances selection are applied (-l
+     -pe, -q, -U) the cluster format contains only cluster queues
+     of the corresponding queue instances.
+
+     <B>o</B>  the cluster queue name.
+
+     <B>o</B>  an average of the normalized load average  of  all  queue
+        hosts.  In order to reflect each hosts different signifi-
+        cance the number of configured slots is used as a weight-
+        ing  factor  when  determining cluster queue load. Please
+        note that only hosts with a np_load_value are  considered
+        for this value. When queue selection is applied only data
+        about selected queues is considered in this  formula.  If
+        the  load  value  is not available at any of the hosts '-
+        NA-' is printed instead of the  value  from  the  complex
+        attribute definition.
+
+     <B>o</B>  the number of currently used slots.
+
+     <B>o</B>  the number of currently available slots.
+
+     <B>o</B>  the total number of slots.
+
+     <B>o</B>  the number of slots which is in at least in  one  of  the
+        states  'aoACDS' and in none of the states 'cdsuE'
+
+     <B>o</B>  the number of slots which are in one of these  states  or
+        in any  combination of them: 'cdsuE'
+
+     <B>o</B>  the -g c option can be used in combination with -ext.  In
+        this  case  additional  collumns are added to the output.
+        Each collumn contains the  slot  count  for  one  of  the
+        available queue states.
+
+  Reduced Format (without -f, -F, and -qs)
      Following the header line a line is  printed  for  each  job
      consisting of
 
      <B>o</B>  the job ID.
 
-     <B>o</B>  the priority of the jobs as assigned to them via  the  -p
-        option  to  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> or <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> determining the order of
-        the pending jobs list.
+     <B>o</B>  the priority of the job determining its position  in  the
+        pending  jobs  list.   The  priority  value is determined
+        dynamically based on ticket  and  urgency  policy  set-up
+        (see also <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> ).
 
      <B>o</B>  the name of the job.
 
@@ -183,15 +261,24 @@ OUTPUT FORMATS
      <B>o</B>  the  queue  the  job  is  assigned  to  (for  running  or
         suspended jobs only).
 
-     <B>o</B>  the function of the running jobs (MASTER or SLAVE  -  the
-        latter for parallel jobs only).
+     <B>o</B>  the number of job slots or the function of  parallel  job
+        tasks if -g t is specified.
+
+        Without -g t option the total number  of  slots  occupied
+        resp.  requested  by  the  job  is  diplayed. For pending
+        parallel jobs with a PE slot range  request  the  assumed
+        future  slot  allocation  is displayed.  With -g t option
+        the function of the running jobs (MASTER or SLAVE  -  the
+        latter for parallel jobs only) is displayed.
 
      <B>o</B>  the array job task id. Will be empty for non-array  jobs.
         See  the  -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> and the -g above for addi-
         tional information.
 
-     If the -t option is supplied, each job status line also con-
-     tains
+     If the -t option is supplied, each status line  always  con-
+     tains  parallel  job task information as if -g t were speci-
+     fied and each line contains the following parallel job  sub-
+     task information:
 
      <B>o</B>  the parallel task ID (do not confuse parallel tasks  with
         array job tasks),
@@ -200,8 +287,7 @@ OUTPUT FORMATS
         R(estarted),   s(uspended),   S(uspended),   T(hreshold),
         w(aiting), h(old), or x(exited).
 
-     <B>o</B>  the cpu, memory, and I/O usage  (Grid  Engine  Enterprise
-        Edition only),
+     <B>o</B>  the cpu, memory, and I/O usage,
 
      <B>o</B>  the exit status of the parallel task,
 
@@ -211,11 +297,12 @@ OUTPUT FORMATS
      Following the header line a section for each queue separated
      by  a horizontal line is provided. For each queue the infor-
      mation printed consists of
+
      <B>o</B>  the queue name,
 
      <B>o</B>  the  queue  type  -  one   of   B(atch),   I(nteractive),
         C(heckpointing),  P(arallel),  T(ransfer) or combinations
-        thereof,
+        thereof or N(one),
 
      <B>o</B>  the number of used and available job slots,
 
@@ -261,6 +348,31 @@ OUTPUT FORMATS
      resolve the problem. Please enable the queue afterwards  via
      the -c option of the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command manually.
 
+     If the c(onfiguration ambiguous) state is  displayed  for  a
+     queue  instance this indicates that the configuration speci-
+     fied for this queue instance in <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B> is ambigous. The
+     state  vanishes  when  the configuration becomes un-ambigous
+     again. This state prevents from scheduling further  jobs  to
+     that  queue  instance. Detailed reasons why a queue instance
+     entered the c(onfiguration ambiguous) state can be found  in
+     the  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> messages file and are shown by the qstat
+     -explain switch. For queue instances in this state the clus-
+     ter  queue's  default  settings  are  used  for the ambigous
+     attribute.
+
+     If an o(rphaned) state is displayed  for  a  queue  instance
+     this  indicates  that the current cluster queue's configura-
+     tion and host group configuration does not any longer forsee
+     this  queue instance. The queue instance is kept because not
+     yet finished jobs are still associated and  it  will  vanish
+     from  qstat  output when these jobs are finished. To quicken
+     vanishing of an orphaned queue  instance  associated  job(s)
+     can   be   deleted  using  <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>.   A  queue  instance  in
+     (o)rphaned state can be  revived  by  changing  the  cluster
+     queue   configuration   accordingly   to  cover  that  queue
+     instance. This state prevents from scheduling  further  jobs
+     to that queue instance.
+
      If the -F option was used, resource availability information
      is  printed  following  the  queue  status  line.  For  each
      resource (as selected in an option argument to -F or for all
@@ -280,8 +392,6 @@ OUTPUT FORMATS
         defined load scaling has been applied,
         `c' - availability derived from the consumable  resources
         facility (see <B><A HREF="../htmlman5/complexes.html">complexes(5)</A></B>),
-        `v' -  a  default  complexes  configuration  value  never
-        overwritten by a load report or a consumable update or
         `f' - a fixed  availability  definition  derived  from  a
         non-consumable  complex  attribute  or  a  fixed resource
         limit.
@@ -308,8 +418,9 @@ OUTPUT FORMATS
      memory requirements, the host on which this particular queue
      resides currently only has 4 Gigabyte available.
 
-     If the -alarm option was used, information  about  resources
-     is displayed, that violate load or suspend thresholds.
+     If the -explain option was used with the  character  'a'  or
+     'A',  information about resources is displayed, that violate
+     load or suspend thresholds.
      The same format as with the -F option is used with following
      extensions:
 
@@ -325,6 +436,11 @@ OUTPUT FORMATS
 
      <B>o</B>  the job ID,
 
+     <B>o</B>  the priority of the job determining its position  in  the
+        pending  jobs  list.   The  priority  value is determined
+        dynamically based on ticket  and  urgency  policy  set-up
+        (see also <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> ).
+
      <B>o</B>  the job name,
 
      <B>o</B>  the job owner name,
@@ -333,11 +449,17 @@ OUTPUT FORMATS
         R(estarted), s(uspended), S(uspended) or T(hreshold) (see
         the Reduced Format section for detailed information),
 
-     <B>o</B>  the start date and time and the function of the job (MAS-
-        TER or SLAVE - only meaningful in case of a parallel job)
-        and
+     <B>o</B>  the submission or start time and date of the job.
 
-     <B>o</B>  the priority of the jobs.
+     <B>o</B>  the number of job slots or the function of  parallel  job
+        tasks if -g t is specified.
+
+        Without -g t option the  number  of  slots  occupied  per
+        queue resp. requested by the job is diplayed. For pending
+        parallel jobs with a PE slot range  request  the  assumed
+        future  slot  allocation  is displayed.  With -g t option
+        the function of the running jobs (MASTER or SLAVE  -  the
+        latter for parallel jobs only) is displayed.
 
      If the -t option is supplied, each job status line also con-
      tains
@@ -349,9 +471,7 @@ OUTPUT FORMATS
         or x(exited) (see the Reduced Format section for detailed
         information),
 
-     <B>o</B>  the cpu, memory, and I/O usage  (Grid  Engine  Enterprise
-        Edition only),
-
+     <B>o</B>  the cpu, memory, and I/O usage,
      <B>o</B>  the exit status of the task,
 
      <B>o</B>  and the failure code and message for the task.
@@ -382,8 +502,12 @@ OUTPUT FORMATS
      lowing information for each displayed job is printed (a sin-
      gle line for each of the following job characteristics):
 
+     <B>o</B>  The job and master queue name.
+
      <B>o</B>  The hard and soft resource requirements  of  the  job  as
-        specified with the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option.
+        specified  with  the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option. The per resource
+        addend when determining  the  jobs  urgency  contribution
+        value is printed (see also <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>).
 
      <B>o</B>  The requested parallel environment including the  desired
         queue slot range (see -pe option of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
@@ -394,8 +518,11 @@ OUTPUT FORMATS
      <B>o</B>  In case of running jobs, the granted parallel environment
         with the granted number of queue slots.
 
-  Enhanced Grid Engine Enterprise Edition Output (with -ext)
+  Enhanced Output (with -ext)
      For each job the following additional items are displayed:
+
+     ntckts
+          The total number of tickets in normalized fashion.
 
      project
           The project to which the job is assigned  as  specified
@@ -406,13 +533,11 @@ OUTPUT FORMATS
           and  -su  options  of  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  to display the current
           department definitions).
 
-     deadline
-          The deadline initiation time of the  job  as  specified
-          with the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -dl option.
+     cpu  The  current  accumulated  CPU  usage  of  the  job  in
+          seconds.
 
-     cpu  The current accumulated CPU usage of the job.
-
-     mem  The current accumulated memory usage of the job.
+     mem  The current accumulated memory  usage  of  the  job  in
+          Gbytes seconds.
 
      io   The current accumulated IO usage of the job.
 
@@ -428,10 +553,6 @@ OUTPUT FORMATS
           The override portion of the  total  number  of  tickets
           assigned to the job currently
 
-     dtckt
-          The deadline portion of the  total  number  of  tickets
-          assigned to the job currently
-
      ftckt
           The functional portion of the total number  of  tickets
           assigned to the job currently
@@ -443,6 +564,31 @@ OUTPUT FORMATS
      share
           The share of the total system to which the job is enti-
           tled currently.
+
+  Enhanced Output (with -urg)
+     For each job the following additional urgency policy related
+     items are displayed (see also <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>):
+
+     nurg The jobs total urgency value in normalized fashion.
+
+     urg  The jobs total urgency value.
+
+     rrcontr
+          The  urgency  value  contribution  that  reflects   the
+          urgency  that  is  related to the jobs overall resource
+          requirement.
+
+     wtcontr
+          The  urgency  value  contribution  that  reflects   the
+          urgency related to the jobs waiting time.
+
+     dlcontr
+          The  urgency  value  contribution  that  reflects   the
+          urgency related to the jobs deadline initiation time.
+
+     deadline
+          The deadline initiation time of the  job  as  specified
+          with the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -dl option.
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location  of  the  Grid  Engine
@@ -466,16 +612,21 @@ ENVIRONMENTAL VARIABLES
                     level of detail in which debug information is
                     generated is defined.
 
-     COMMD_PORT     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  is  expected to listen for com-
+     SGE_QMASTER_PORT
+                    If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
-                    use  a  services  map entry instead to define
-                    that port.
+                    use  a  services  map  entry  for the service
+                    "sge_qmaster" instead to define that port.
 
-     COMMD_HOST     If set, specifies the host on which the  par-
-                    ticular  <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>  to  be  used  for Grid
-                    Engine  communication  of  the  <I>qstat</I>  client
-                    resides.  Per default the local host is used.
+     SGE_LONG_QNAMES
+                    Qstat does display queue names up to 30 char-
+                    acters. If that is to much or not enough, one
+                    can set a custom length with  this  variable.
+                    The  minimum display length is 10 characters.
+                    If one does not know the best display length,
+                    one  can  set SGE_LONG_QNAMES to -1 and qstat
+                    will figure out the best length.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
@@ -483,12 +634,17 @@ FILES
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qhost.html">qhost(1)</A></B>,
-     <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_commd.html">sge_commd(8)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
+     <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
      <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
 
 COPYRIGHT
      See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
 
 
 

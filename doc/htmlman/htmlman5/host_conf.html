@@ -57,30 +57,13 @@ FORMAT
           The parameter load_scaling is not  meaningful  for  the
           definition of the "global" host.
 
-     complex_list
-          The comma separated list of administrator defined  com-
-          plexes  (see  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>  for details) to be associated
-          with the host. Only complex attributes contained in the
-          enlisted  complexes  and  those  from  the "global" and
-          "host" complex, which are implicitly attached  to  each
-          host,  can be used in the complex_values list below. In
-          case of the "global" host, the "host"  complex  is  not
-          attached  and  only  "global"  complex  attributes  are
-          allowed per default in the complex_values list  of  the
-          "global" host.
-
-          The default value for this parameter is NONE,  i.e.  no
-          administrator defined complexes are associated with the
-          host.
-
      complex_values
           complex_values defines quotas for  resource  attributes
           managed  via  this host. Each complex attribute is fol-
           lowed by an "=" sign and the value  specification  com-
           pliant  with  the  complex  attribute  type  (see  <I>com-</I>
           <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>).  Quota specifications are separated  by  com-
-          mas.  Only  attributes  as defined in complex_list (see
-          above) may be used.
+          mas.
 
           The quotas are related to the resource  consumption  of
           all  jobs on a host in the case of consumable resources
@@ -158,60 +141,12 @@ FORMAT
           <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> on the corresponding host.
 
      usage_scaling
-          This entry is only present in a Grid Engine  Enterprise
-          Edition system. It is not available in Grid Engine.
-
           The format is equivalent to load_scaling  (see  above),
           the  only valid attributes to be scaled however are cpu
           for CPU time consumption, mem  for  Memory  consumption
           aggregated  over  the life-time of jobs and io for data
           transferred via any I/O devices. The default NONE means
           "no scaling", i.e. all scaling factors are 1.
-
-     resource_capability_factor
-          This entry is only present in a Grid Engine  Enterprise
-          Edition system. It is not available in Grid Engine.
-
-          The resource capability factor is used by  Grid  Engine
-          Enterprise  Edition  when  assigning  jobs to execution
-          hosts. The resource capability factor tells Grid Engine
-          Enterprise Edition how the resources (CPU, memory, I/O,
-          etc.) of one execution host compare to the resources of
-          other  execution hosts. This helps to ensure that a job
-          requiring a large percentage of resources (i.e. lots of
-          tickets)  gets placed on an execution host containing a
-          large percentage of the available resources.  The  load
-          situation  on the execution hosts is taken into account
-          in addition, to guarantee that  the  selected  host  is
-          both powerful enough and lightly loaded.
-
-          For example, you might consider setting  your  resource
-          capability factors for each execution host based on the
-          number of CPUs, the speed of the CPUs and the installed
-          main memory:
-
-             #_of_CPUs * (MHz/200) + GB_of_memory
-
-          This would give an execution host with 32 200 MHz  CPUs
-          and 10 gigabytes of memory a resource capability factor
-          of 42, while an execution host with 24 200 MHz CPUs and
-          40  gigabytes of memory would get a resource capability
-          factor of 64, i.e. memory has a significant  impact  in
-          this example.
-
-          Other factors that you might want to consider  in  set-
-          ting the resource capability factor are:
-
-             job mix              - CPU or memory bound jobs
-             CPU benchmarks       - comparison by CPU vendor
-             megaflops (MFLOPS)   - for number crunching
-             I/O capabilities     - disk/network speed
-             available disk space - at the execution host
-
-          The resource capability factor is stored as a  floating
-          point  double  value.  The  range of values used is not
-          important. Grid Engine Enterprise Edition only looks at
-          the relation between values of different hosts.
 
      user_lists
           The user_lists parameter  contains  a  comma  separated
@@ -243,8 +178,7 @@ FORMAT
           not specifically excluded via the  xprojects  parameter
           described  below.  If a project is in both the projects
           and xprojects parameters, the project is denied  access
-          to  the  host.   This  parameter is only available in a
-          Grid Engine Enterprise Edition system.
+          to the host.
 
      xprojects
           The xprojects parameter contains a comma separated list
@@ -253,64 +187,26 @@ FORMAT
           other  than  those  denied access based on the projects
           parameter described above.  If a project is in both the
           projects  and  xprojects  parameters,  the  project  is
-          denied access to the  host.   This  parameter  is  only
-          available in a Grid Engine Enterprise Edition system.
+          denied access to the host.
+
+     report_variables
+          The  report_variables  parameter   contains   a   comma
+          separated  list  of  variables that shall be written to
+          the reporting file.  The variables listed here will  be
+          written  to  the  reporting  file  when  a  load report
+          arrives from an execution host.
+
+          Default settings can be done in the global  host.  Host
+          specific  settings  for report_variables will overwrite
+          settings from the global host.
 
 SEE ALSO
      <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,   <I>com-</I>
      <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmater.html">sge_qmater(8)</A></B>.
 
 COPYRIGHT
-     See  <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>  for  a  full  statement  of  rights   and
-     permissions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     sions.
 
 
 

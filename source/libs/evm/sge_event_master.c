@@ -72,21 +72,28 @@
 #include "msg_common.h"
 #include "msg_evmlib.h"
 
-
+/****** subscription_t definition **********************
+ *
+ * This is a subscription entry in a two dimensional 
+ * definition. The first dimension is for the event
+ * clients and changes when the event client subscription
+ * changes. The second dimension is of fixed size and 
+ * contains one element for each posible event.
+ *
+ *******************************************************/
 typedef struct {
-      bool         subscription;
-      bool         flush;
-      u_long32     flush_time;
-      lCondition   *where;
-      lDescr       *descr;
-      lEnumeration *what;
+      bool         subscription; /* true -> the event is subscribed           */
+      bool         flush;        /* true -> flush is set                      */
+      u_long32     flush_time;   /* seconds how much the event can be delayed */
+      lCondition   *where;       /* where filter                              */
+      lDescr       *descr;       /* target list descriptor                    */
+      lEnumeration *what;        /* limits the target element                 */
 } subscription_t;
 
 typedef struct {
    pthread_mutex_t  mutex;    /* used for mutual exclusion    */
    pthread_cond_t   cond_var; /* used for waiting             */
    bool             exit;     /* true -> exit event master    */
-   bool             send;     /* true -> send events          */
    lList*           clients;  /* list of event master clients */
 } event_master_control_t;
 
@@ -100,8 +107,9 @@ typedef struct {
 *     #define EVENT_ACK_MAX_TIMEOUT 1200
 *
 *  FUNCTION
-*     FLUSH_INTERVAL is the default event delivery interval, if the client
-*     would not set a correct interval.
+*     EVENT_DELIVERY_INTERVAL_S is the event delivery interval. It is set in seconds.
+*     EVENT_DELIVERY_INTERVAL_N same thing but in nano seconds.
+*     
 *
 *     EVENT_ACK_MIN/MAX_TIMEOUT is the minimum/maximum timeout value for an event
 *     client sending the acknowledge for the delivery of events.
@@ -109,7 +117,8 @@ typedef struct {
 *     event client (10 * event delivery interval).
 *
 *******************************************************************************/
-#define FLUSH_INTERVAL 15
+#define EVENT_DELIVERY_INTERVAL_S 1
+#define EVENT_DELIVERY_INTERVAL_N 0
 #define EVENT_ACK_MIN_TIMEOUT 600
 #define EVENT_ACK_MAX_TIMEOUT 1200
 
@@ -188,7 +197,7 @@ const int SOURCE_LIST[LIST_MAX][3] = {
  *******************************************************************/
 static bool SEND_EVENTS[sgeE_EVENTSIZE]; 
 
-static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, false, false, NULL};
+static event_master_control_t Master_Control = {PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER, false, NULL};
 static pthread_once_t         Event_Master_Once = PTHREAD_ONCE_INIT;
 static pthread_t              Event_Thread;
 
@@ -361,10 +370,6 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    /* flush initial list events */
    flush_events(ep, 0);
-
-   Master_Control.send = true;
-
-   pthread_cond_signal(&Master_Control.cond_var);
 
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
@@ -722,10 +727,6 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser, uid_t anUI
 
    flush_events(client, 0);
 
-   Master_Control.send = true;
-
-   pthread_cond_signal(&Master_Control.cond_var);
-
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
@@ -789,10 +790,6 @@ int sge_shutdown_dynamic_event_clients(const char *anUser)
 
       flush_events(client, 0);
    }
-
-   Master_Control.send = true;
-
-   pthread_cond_signal(&Master_Control.cond_var);
 
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
@@ -967,10 +964,6 @@ void sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type, u
       }
    }
 
-   Master_Control.send = true;
-
-   pthread_cond_signal(&Master_Control.cond_var);
-
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
@@ -1040,10 +1033,6 @@ int sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event a
       res = 0;
    }
 
-   Master_Control.send = true;
-
-   pthread_cond_signal(&Master_Control.cond_var);
-
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    DEXIT;
@@ -1105,10 +1094,6 @@ void sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event ty
          add_list_event(event_client, timestamp, type, intkey, intkey2, strkey, strkey2, list, true);
       }
    }
-
-   Master_Control.send = true;
-
-   pthread_cond_signal(&Master_Control.cond_var);
 
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
@@ -1237,8 +1222,6 @@ void sge_deliver_events_immediately(u_long32 aClientID)
 
    flush_events(client, 0);
 
-   Master_Control.send = true;
-
    pthread_cond_signal(&Master_Control.cond_var);
 
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
@@ -1338,10 +1321,6 @@ int sge_resync_schedd(void)
       ERROR((SGE_EVENT, MSG_EVE_REINITEVENTCLIENT_S,lGetString(client, EV_name)));
 
       total_update(client);
-
-      Master_Control.send = true;
-
-      pthread_cond_signal(&Master_Control.cond_var);
 
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
@@ -1605,6 +1584,7 @@ static void send_events(void)
    int ret, id; 
    int deliver_interval;
    time_t now = time(NULL);
+   struct timespec ts;
 
    DENTER(TOP_LAYER, "send_events");
 
@@ -1613,6 +1593,9 @@ static void send_events(void)
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
    event_client = lFirst(Master_Control.clients);
+         
+   ts.tv_sec = EVENT_DELIVERY_INTERVAL_S;
+   ts.tv_nsec = EVENT_DELIVERY_INTERVAL_N;
 
    while (event_client)
    {
@@ -1727,13 +1710,8 @@ static void send_events(void)
       event_client = lNext(event_client);
    }
 
-   Master_Control.send = false;
-
-   while (Master_Control.send == false)
-   {
-      DPRINTF(("%s: wait on condition variable\n", SGE_FUNC));
-      pthread_cond_wait(&Master_Control.cond_var, &Master_Control.mutex);
-   }
+   DPRINTF(("%s: wait on condition variable\n", SGE_FUNC));
+   pthread_cond_timedwait(&Master_Control.cond_var, &Master_Control.mutex, &ts);
 
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 

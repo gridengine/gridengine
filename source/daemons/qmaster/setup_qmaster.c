@@ -374,8 +374,8 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 *     static void qmaster_init(char **anArgv) 
 *
 *  FUNCTION
-*     Initialize qmaster. Set and switch to admin user. Do general setup and
-*     communication setup. 
+*     Initialize qmaster. Set and switch to admin user. Remove the qmaster lock
+*     file. Do general setup and communication setup. 
 *
 *  INPUTS
 *     char **anArgv - process argument vector 
@@ -406,6 +406,8 @@ static void qmaster_init(char **anArgv)
    }
 
    INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
+
+   qmaster_unlock(QMASTER_LOCK_FILE);
 
    if (setup_qmaster()) {
       CRITICAL((SGE_EVENT, MSG_STARTUP_SETUPFAILED));
@@ -881,13 +883,6 @@ static int setup_qmaster(void)
    unlink(TMP_ERR_FILE_QMASTER);   
    log_state_set_log_as_admin_user(1);
    log_state_set_log_file(ERR_FILE);
-
-   /* 
-   ** increment the heartbeat as early as possible 
-   ** and write our name to the act_qmaster file
-   ** the lock file will be removed as late as possible
-   */
-   inc_qmaster_heartbeat(QMASTER_HEARTBEAT_FILE);
 
    /* 
    ** write our host name to the act_qmaster file 

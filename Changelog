@@ -1,3 +1,7 @@
+AD-2004-01-28-0: Bugfix:    'inc_qmaster_heartbeat()' should only be called
+                            from within the heartbeat event handler.
+                 Changed:   qmaster
+
 DT-2004-01-28-0: Bugfix:    Fixed install script wrt new SGE_EXECD_PORT variable
                  Changed:   inst_sge
 

@@ -3154,7 +3154,8 @@ void japi_standard_error(int drmaa_errno, dstring *diag)
 *     int drmaa_errno - DRMAA error code
 *
 *  RESULT
-*     A string describing the DRMAA error case.
+*     A string describing the DRMAA error case for valid DRMAA error code 
+*     and NULL otherwise.
 *
 *  NOTES
 *     MT-NOTE: japi_strerror() is MT safe
@@ -3207,11 +3208,8 @@ const char *japi_strerror(int drmaa_errno)
       if (drmaa_errno == error_text[i].drmaa_errno) 
          return error_text[i].str;
 
-   return "unknown drmaa_errno";
+   return NULL; 
 }
-
-/* TODO */
-
 
 /****** japi/japi_get_contact() ************************************************
 *  NAME
@@ -3429,7 +3427,10 @@ static void *japi_implementation_thread(void *p)
                   JAPI_LOCK_JOB_LIST();
 
                   /* - check every session job  
-                     - no longer existing jobs must be moved to JJ_finished_jobs */
+                     - no longer existing jobs must be moved to JJ_finished_jobs
+                     - TODO: actually we had to return DRMAA_ERRNO_NO_RUSAGE when japi_wait() is 
+                             called for such a job. Must enhance JJAT_Type to reflect the case when 
+                             no stat and rusage are known */
                   for_each(japi_job, Master_japi_job_list) {
                      jobid = lGetUlong(japi_job, JJ_jobid);
                      if (!(sge_job = lGetElemUlong(sge_job_list, JB_job_number, jobid))) {
@@ -3441,6 +3442,7 @@ static void *japi_implementation_thread(void *p)
                            DPRINTF(("adding finished task "u32" for job "u32" existing not any longer\n", taskid, jobid));
                            japi_task = lAddSubUlong(japi_job, JJAT_task_id, taskid, JJ_finished_tasks, JJAT_Type);
                            finished_tasks++;
+
                         }
                      } else {
                         lListElem *range;

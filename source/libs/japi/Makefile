@@ -1,4 +1,4 @@
-###############################################################################
+
 # Variable definitions for targets to build
 ###############################################################################
 #___INFO__MARK_BEGIN__
@@ -41,11 +41,11 @@ DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLA
 JAPILIB_DIR   = $(SDIR)/libs/japi
 
 JAPILIB 	     = libjapi$(LIBEXT)
-JAPILIB_SRC   = japi.c sge_mtutil.c sge_all_listsL.c
+JAPILIB_SRC   = japi.c sge_mtutil.c
 JAPILIB_OBJS  = $(JAPILIB_SRC:.c=.o)
 
 DRMAALIB 	  = libdrmaa$(LIBEXT)
-DRMAALIB_SRC  = drmaa.c japi.c sge_mtutil.c sge_all_listsL.c
+DRMAALIB_SRC  = drmaa.c 
 DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o)
 
 JAPI_ALL 	  = test_drmaa japilib drmaalib 
@@ -125,9 +125,9 @@ test_drmaa: $(TEST_JAPI_OBJS)
 test_drmaa.o: $(JAPILIB_DIR)/test_drmaa.c
 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/test_drmaa.c
 
-# example: example.o $(DRMAALIB)
-# 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example example.o $(DRMAALIB) $(LFLAGS) $(LIBS) $(SLIBS)
+example: example.o $(DRMAALIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o example example.o $(DRMAALIB) $(LFLAGS) $(LIBS) $(SLIBS)
 
-# example.o: $(JAPILIB_DIR)/example.c
-# 	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/example.c
+example.o: $(JAPILIB_DIR)/example.c
+	$(CC) $(CFLAGS) -c $(JAPILIB_DIR)/example.c
 

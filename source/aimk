@@ -293,7 +293,7 @@ set   TPLIB       = ""	# 3rdparty libs
 set   MAKESTRPTIME = 0
 set   MAKEFNMATCH = 0
 set   ZLIBBASE    = ""
-set   MTCFLAGS    = ""
+set   MTCFLAGS    = "-DSGE_MT"
 set   MTLFLAGS    = ""
 set   LOADAVGLIBS = ""
 set   XLFLAGS     = ""
@@ -456,6 +456,7 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-adoc":
       set CORE   = 0
+      set MT     = 0
       set MAKEZLIB = 0
       set QMAKE  = 0
       set QMON   = 0
@@ -965,6 +966,10 @@ case ALINUX:
    set GCC_NOERR_CFLAGS = "$CFLAGS -Wno-error"
    set GCC_NOERR_CXXFLAGS = "$CXXFLAGS -Wno-error"
    set GCC_NOSP = "-Wno-strict-prototypes"
+
+   set MTCFLAGS = "${MTCFLAGS} -pthread"
+   set MTLFLAGS = "-lpthread"
+
    breaksw
 
 case ALPHA4:
@@ -1044,6 +1049,9 @@ case ALPHA5:
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
+   set MTCFLAGS = "${MTCFLAGS}"
+   set MTLFLAGS = "-pthread"
+
    breaksw
 
 case DARWIN:
@@ -1108,7 +1116,7 @@ case DARWIN:
 
    # regarding cc(1) -pthread is to be used for pthread multithreaded applications
    # however it is rejected ...
-   set MTCFLAGS = "-DSGE_MT"
+   set MTCFLAGS = "${MTCFLAGS}"
    set MTLFLAGS = "-pthread"
    breaksw
 
@@ -1440,7 +1448,7 @@ case LINUX6:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
 
-   set MTCFLAGS = "-DSGE_MT -pthread"
+   set MTCFLAGS = "${MTCFLAGS} -pthread"
    set MTLFLAGS = "-lpthread"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
@@ -1566,7 +1574,7 @@ case SOLARIS86:
       
    endif
 
-   set MTCFLAGS = "-DSGE_MT -mt"
+   set MTCFLAGS = "${MTCFLAGS} -mt"
    set MTLFLAGS = "-lpthread"
 
    if ( $OPTIMIZATION == 1 ) then

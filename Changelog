@@ -1,3 +1,7 @@
+CR-2002-08-29-1  Bugfix:    corrected mistake in writing in debug messages
+                            for localization
+                 Changed:   All binaries using i18n
+
 AA-2002-08-28-1  I18N:      version string and copyright strings for infotext
                  Review:    AS
                  Changed:   infotext

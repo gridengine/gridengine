@@ -1,3 +1,36 @@
+Bugs fixed in SGE 5.3p6 since release 5.3p5
+-------------------------------------------
+
+Issue   Sun BugId  Description
+------- ---------- ---------------------------------------------------------------------------------
+        4753766 Various fixes in man pages
+551     4969825 not supported array task dependencies are not rejected
+        5006354 sge_ca script will not create user certs when SGE_CELL (default) is not set
+871     5018669 qrsh/qlogin: "Connection refused" due to race condition in shepherd
+632     5018695 loadsensor doing output to stderr can block
+599     5018726 qalter lacks -dl option!
+600     5018733 Empty parameters crashes qstat and qhost
+919     5018757 HPCT jobs may fail - add variable to job environment which point to SGE binaries
+        5018884 SSL vulnerabilities stated in Sun Alert 57524
+835     5019497 modification of loadsensor causes crash of execd
+820     5019584 SGEEE: scheduler may crash on Linux AMD64 in functional ticket calculation
+709     5019595 Dateformat YYMMDDhhmm was interpreted wrong (qacct, qsub, qalter,...)
+635     5019601 "vmem" in qstat -j keeps the max value
+771     5019624 qselect/qstat -l selection wrongly considers load and utilization
+648     5019635 schedd_job_info=true causes large delays with parallel job scheduling
+646     5020131 renaming a user deletes the user
+607     5020134 qhost output broken for global consumables
+        5020139 a stored job template in qmon sets -hold_jid to a wrong value
+        5020141 qsh and qlogin accepted the options -h and -hold_jid and ignored them later
+        5020143 qdel XXX.YY- will delete the first array task of job XXX
+637     5020153 mail bomb upon abort with tightly integrated par jobs
+314     5020278 a colon in a job name breaks qacct
+        5020282 some Linux distributions are not recognized by SGE
+931     5020371 sge_shepherd creates world writable files
+        5021405 CSP reconnect problem of scheduler and execd
+        5022074 qmon displays wrong numerical values on AMD Linux in spinbox widgets
+
+
 Bugs fixed in SGE 5.3p5 since release 5.3p4
 -------------------------------------------
 

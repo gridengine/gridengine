@@ -89,7 +89,6 @@
 /* profiling info */
 extern int scheduled_fast_jobs;
 extern int scheduled_complex_jobs;
-extern int do_profiling;
 
 /* the global list descriptor for all lists needed by the default scheduler */
 sge_Sdescr_t lists =
@@ -768,7 +767,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM4);
 
-   if (do_profiling) {
+   if (prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);

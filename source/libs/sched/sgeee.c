@@ -124,8 +124,6 @@ typedef struct sge_ref_list_t{
    struct sge_ref_list_t *next;        /* next list item */
    struct sge_ref_list_t *prev;        /* previous list itme */
 } sge_ref_list_t;
-/* profiling info*/
-extern int do_profiling;
 
 static sge_Sdescr_t *all_lists;
 static u_long32 sge_scheduling_run;
@@ -4201,7 +4199,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
 
-   if (do_profiling) {
+   if (prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);

@@ -1,3 +1,7 @@
+SG-2004-04-20-0: Bugfix:    fixed the scheduler profiling
+                 Changed:   scheduler
+                 Review:    JG
+
 AA-2004-04-20-0: Bugfix:    compiler problem fixes
                             
 EB-2004-04-19-0: Bugfix:    stale resource_unknown_list

@@ -77,8 +77,6 @@ bool do_authentication = true;
 bool use_qidle = false;
 bool disable_reschedule = false;
 
-bool do_profiling = false;
- 
 long ptf_max_priority = -999;
 long ptf_min_priority = -999;
 int execd_priority = 0;

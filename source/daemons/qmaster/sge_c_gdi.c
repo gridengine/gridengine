@@ -45,6 +45,7 @@
 #include "sge_manop.h"
 #include "complex_qmaster.h"
 #include "sge_pe_qmaster.h"
+#include "sge_conf.h"
 #include "configuration_qmaster.h"
 #include "sge_m_event.h"
 #include "sched_conf_qmaster.h"
@@ -613,11 +614,34 @@ int sub_command
          }
          break;
       case SGE_JOB_LIST:
-         /* submit needs to know user and group */
-         sge_gdi_add_job(ep, &(answer->alp), 
-                         (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
-                         &(answer->lp) : NULL, 
-                         user, host, request);
+         if(simulate_hosts == 1) {
+            int multi_job = 1;
+            int i;
+            lList *context = lGetList(ep, JB_context);
+            if(context != NULL) {
+               lListElem *multi = lGetElemStr(context, VA_variable, "SGE_MULTI_SUBMIT");
+               if(multi != NULL) {
+                  multi_job = atoi(lGetString(multi, VA_value));
+                  DPRINTF(("Cloning job %d times in simulation mode\n", multi_job));
+               }
+            }
+            
+            for(i = 0; i < multi_job; i++) {
+               lListElem *clone = lCopyElem(ep);
+               sge_gdi_add_job(clone, &(answer->alp), 
+                               (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
+                               &(answer->lp) : NULL, 
+                               user, host, request);
+               lFreeElem(clone);                
+            }
+            
+         } else {
+            /* submit needs to know user and group */
+            sge_gdi_add_job(ep, &(answer->alp), 
+                            (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
+                            &(answer->lp) : NULL, 
+                            user, host, request);
+         }
          break;
 
       case SGE_QUEUE_LIST:

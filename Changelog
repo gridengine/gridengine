@@ -1,3 +1,9 @@
+JG-2002-04-16-0: Enhancem.: In simulation mode (qmaster_param simulate_hosts=1)
+                            one qsub call can submit any number of identical 
+                            jobs by setting the job context variable 
+                            SGE_MULTI_SUBMIT to the number of jobs to be 
+                            created.
+
 CR-2002-04-12-3: Testsuite: demo_config_dir files should not be used in
                             default settings file
                  Issue:     #163   

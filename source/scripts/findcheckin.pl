@@ -58,7 +58,7 @@ sub parselog {
       elsif ($inRev && /^revision ([0-9.]+)$/) {
          $rev = $1;
       }
-      elsif ($inRev && /^($tag.*)[^-0-9]/) {
+      elsif ($inRev && /^($tag[-0-9]*)/) {
          print "$1 - $filename: $rev\n";
       }
       elsif (/^=+$/) {

@@ -1,3 +1,6 @@
+DT-2004-07-26-1: Bugfix:    o Fixed minor regex issue with findcheckin.pl
+                 Changed:   scripts
+
 CR-2004-07-26-0: Testsuite: fixed shutdown of shadowd problem
                             (testsuite does not shutdown shadowd)
                  Issue:     1166 
@@ -95,7 +98,7 @@ JG-2004-07-21-0: Bugfix:    Fixed a bug in aimk -shared-libs.
                  Review:    CR
 
 DT-2004-07-21-0: Enhancem.: o Completed DRMAA Java language binding howto
-                            o Update DRMAA Java language binding README
+                            o Updated DRMAA Java language binding README
                             o Started enhancing DRMAA Java language binding
                               JavaDocs
                  Changed:   DRMAA, www

@@ -1,3 +1,8 @@
+AH-2002-06-12-0: Bugfix:    Prevent use of soft requests for consumables. This
+                            addresses problems related to IZ #223 / BT #4700286. 
+                            However it does not introduce debitation for soft
+                            resource requests.
+
 CR-2002-06-12-0: Testsuite: new testsuite checks (merge from MT)
                  Issue:     #140
                  Issue:     #141

@@ -683,11 +683,13 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 *  FUNCTION
 *     Add a gid to the list of additional group ids. If 'add_grp_id' 
 *     is 0 don't add value to group id list (but return sucessfully).
-*     If an error occurs, a descriptive string will be written to err_str.
+*     If an error occurs, a descriptive string will be written to 
+*     err_str.
 *
 *  INPUTS
 *     gid_t add_grp_id - new gid
-*     char *err_str    - if points to a valid string buffer,  error descriptions 
+*     char *err_str    - if points to a valid string buffer
+*                        error descriptions 
 *                        will be written here
 *
 *  RESULT
@@ -712,7 +714,8 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0) {
       if(err_str != NULL) {
-         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), MSG_SYSTEM_INVALID_NGROUPS_MAX);
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
+                 geteuid(), MSG_SYSTEM_INVALID_NGROUPS_MAX);
       }
       return -1;
    }
@@ -729,7 +732,8 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    if (list == NULL) {
       if(err_str != NULL) {
          int error = errno;
-         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), strerror(error));
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
+                 geteuid(), strerror(error));
       }
       return -1;
    }
@@ -738,7 +742,8 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    if (groups == -1) {
       if(err_str != NULL) {
          int error = errno;
-         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), strerror(error));
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
+                 geteuid(), strerror(error));
       }
       free(list);
       return -1;
@@ -751,14 +756,16 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
       if (groups == -1) {
          if(err_str != NULL) {
             int error = errno;
-            sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), strerror(error));
+            sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
+                    geteuid(), strerror(error));
          }
          free(list);
          return -1;
       }
    } else {
       if(err_str != NULL) {
-         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), geteuid(), MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS);
+         sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, getuid(), 
+                 geteuid(), MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS);
       }
       free(list);
       return -1;
@@ -768,6 +775,23 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    return 0;
 }  
 
+/****** uti/uidgid/sge_getpwnam() *********************************************
+*  NAME
+*     sge_getpwnam() -- Return password file entry for certain user 
+*
+*  SYNOPSIS
+*     struct passwd* sge_getpwnam(const char *name) 
+*
+*  FUNCTION
+*     Return password file entry for certain user.
+*      
+*
+*  INPUTS
+*     const char *name - Username 
+*
+*  RESULT
+*     struct passwd* - see getpwnam()
+*******************************************************************************/
 struct passwd *sge_getpwnam(const char *name)
 {
 #ifndef WIN32 /* var not needed */

@@ -98,8 +98,8 @@ static const char *var_get_sharedlib_path_name(void);
 *  NOTES
 *     Raising a compile time error (instead of e.g. just returning NULL
 *     or LD_LIBRARY_PATH as default) has the following reason:
-*     Setting the shared lib path is a very sensible operation concerning
-*     security.
+*     Setting the shared lib path is a very sensible operation 
+*     concerning security.
 *     Example: If a shared linked rshd (called for qrsh execution) is
 *     executed with a faked shared lib path, operations defined in
 *     a non sge library libgdi.so might be executed as user root.
@@ -238,7 +238,8 @@ void var_list_set_u32(lList **varl, const char *name, u_long32 value)
 *  FUNCTION
 *     Sets or replaces the shared lib path in the list of variables.
 *     The SGE shared lib path is always set to the beginning of the
-*     resulting shared lib path (security, see var_get_sharedlib_path_name())
+*     resulting shared lib path 
+*     (security, see var_get_sharedlib_path_name())
 *
 *  INPUTS
 *     varl - list of nment variables

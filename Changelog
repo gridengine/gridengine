@@ -1,5 +1,8 @@
-AH-2002-06-07-1: Bugfix:    Prevent qalter -l res=val on running jobs for consumable
-                            resources to prevent corruption of consumable managment
+EB-2002-06-07-0: Cleanup:   ADOC comments
+
+AH-2002-06-07-1: Bugfix:    Prevent qalter -l res=val on running jobs for 
+                            consumable resources to prevent corruption of 
+                            consumable managment
                  Issue:     #251
                  Bugtraq:   #4683852
 
@@ -11,7 +14,8 @@ JG-2002-06-07-0: Cleanup:   Replaced %s in messages with macros SFN and SFQ
 JG-2002-06-06-0: Bugfix:    Building Grid Engine with shared libs was broken.
 
 AH-2002-06-05-1: Bugfix:    Fix problem with notify mechanism causing actual
-                            termination/suspension signal being delayed endlessly
+                            termination/suspension signal being delayed 
+                            endlessly
                  Issue:     #231
                  Bugtraq:   #4697491
 

@@ -248,22 +248,23 @@ NAMEEND
 *        CE_Type - consumable resources of queue
 *
 *     SGE_LIST(QU_projects)         
-*        SGEEE - UP_Type - list of projects which have access to queue - 
-*        list contains name only 
+*        SGEEE - UP_Type - list of projects which have access to 
+*        queue - list contains name only 
 *
 *     SGE_LIST(QU_xprojects)    
-*        SGEEE - UP_Type - list of projects  which have no access to queue - 
-*        list contains name only
+*        SGEEE - UP_Type - list of projects  which have no 
+*        access to queue - list contains name only
 *
 *     SGE_ULONG(QU_fshare)     
 *        SGEEE - functional share 
 *
 *     SGE_ULONG(QU_oticket)    
-*        SGEEE - override tickets the following are ephemeral in nature - 
-*        don't pack them 
+*        SGEEE - override tickets the following are ephemeral in 
+*        nature - don't pack them 
 *
 *     SGE_LIST(QU_consumable_actual_list) 
-*        CE_Type actually debited amout of consumable resources of queue 
+*        CE_Type actually debited amout of consumable resources of 
+*        queue 
 *
 *     SGE_ULONG(QU_suitable)
 *
@@ -287,11 +288,12 @@ NAMEEND
 *     SGE_STRING(QU_queueing_system)
 *
 *     SGE_ULONG(QU_suspended_on_subordinate) 
-*        number of sos's from other queues for caching only in the qmaster
+*        number of sos's from other queues for caching only in 
+*        the qmaster
 *
 *     SGE_ULONG(QU_last_suspend_threshold_ckeck) 
-*        time when schedd has checked queues suspend threshold - only used 
-*        in schedd 
+*        time when schedd has checked queues suspend threshold - 
+*        only used in schedd 
 *
 *     SGE_ULONG(QU_job_cnt)          
 *        SGEEE - job reference count only used in schedd 

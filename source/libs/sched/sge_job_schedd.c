@@ -243,7 +243,7 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 
 /****** sched/sge_job_schedd/job_lists_split_with_reference_to_max_running() **
 *  NAME
-*     job_lists_split_with_reference_to_max_running() -- split jobs 
+*     job_lists_split_with_reference_to_max_running() 
 *
 *  SYNOPSIS
 *     void job_lists_split_with_reference_to_max_running(
@@ -252,8 +252,9 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 *              int max_jobs_per_user) 
 *
 *  FUNCTION
-*     Move those jobs which would exceed the configured 'max_u_jobs'
-*     limit (schedd configuration) from job_lists[SPLIT_PENDING] into 
+*     Move those jobs which would exceed the configured 
+*     'max_u_jobs' limit (schedd configuration) from 
+*     job_lists[SPLIT_PENDING] into 
 *     job_lists[SPLIT_PENDING_EXCLUDED]. 
 *      
 *

@@ -1151,7 +1151,7 @@ int job_set_submit_task_ids(lListElem *job, u_long32 start, u_long32 end,
 
 /****** gdi/job_jatask/job_get_smallest_unenrolled_task_id() ******************
 *  NAME
-*     job_get_smallest_unenrolled_task_id() -- find smallest unenrolled id 
+*     job_get_smallest_unenrolled_task_id() -- get smallest id 
 *
 *  SYNOPSIS
 *     u_long32 job_get_smallest_unenrolled_task_id(const lListElem *job) 

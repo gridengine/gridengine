@@ -93,6 +93,9 @@ href_list_resolve_hostnames(lList *this_list, lList **answer_list);
 void
 href_list_debug_print(const lList *this_list, const char *prefix);
 
+void
+href_list_make_uniq(lList *this_list, lList **answer_list);
+
 #endif /* __SGE_HREF_H__ */
 
 

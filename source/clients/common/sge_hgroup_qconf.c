@@ -42,9 +42,41 @@
 #include "sge_edit.h"
 #include "sge_hgroup.h"
 #include "sge_hgroup_qconf.h"
+#include "sge_href.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
+
+static void 
+hgroup_list_show_elem(lList *hgroup_list, const char *name, int indent);
+
+static void 
+hgroup_list_show_elem(lList *hgroup_list, const char *name, int indent)
+{
+   const char *const indent_string = "   ";
+   lListElem *hgroup = NULL;
+   int i;
+
+   DENTER(TOP_LAYER, "hgroup_list_show_elem");
+
+   for (i = 0; i < indent; i++) {
+      printf("%s", indent_string);
+   }
+   printf("%s\n", name);
+
+   hgroup = lGetElemHost(hgroup_list, HGRP_name, name);   
+   if (hgroup != NULL) {
+      lList *sub_list = lGetList(hgroup, HGRP_host_list);
+      lListElem *href = NULL;
+
+      for_each(href, sub_list) {
+         const char *href_name = lGetHost(href, HR_name);
+
+         hgroup_list_show_elem(hgroup_list, href_name, indent + 1); 
+      } 
+   } 
+   DEXIT;
+}
 
 bool 
 hgroup_add_del_mod_via_gdi(lListElem *this_elem, lList **answer_list,
@@ -267,6 +299,59 @@ bool hgroup_show(lList **answer_list, const char *name)
       if (hgroup != NULL) {
          write_host_group(0, 0, hgroup);
          hgroup = lFreeElem(hgroup);
+      } else {
+         sprintf(SGE_EVENT, MSG_HGROUP_NOTEXIST_S, name);
+         answer_list_add(answer_list, SGE_EVENT,
+                         STATUS_ERROR1, ANSWER_QUALITY_ERROR); 
+         ret = false;
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+bool hgroup_show_structure(lList **answer_list, const char *name, 
+                           bool show_tree)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "hgroup_show_tree");
+   if (name != NULL) {
+      lList *hgroup_list = NULL;
+      lListElem *hgroup = NULL;
+      lEnumeration *what = NULL;
+      lList *alp = NULL;
+      lListElem *alep = NULL;
+
+      what = lWhat("%T(ALL)", HGRP_Type);
+      alp = sge_gdi(SGE_HGROUP_LIST, SGE_GDI_GET, &hgroup_list, NULL, what);
+      what = lFreeWhat(what);
+
+      alep = lFirst(alp);
+      answer_exit_if_not_recoverable(alep);
+      if (answer_get_status(alep) != STATUS_OK) {
+         fprintf(stderr, "%s\n", lGetString(alep, AN_text));
+         return 0;
+      }
+
+      hgroup = lGetElemHost(hgroup_list, HGRP_name, name); 
+      if (hgroup != NULL) {
+         if (show_tree) {
+            hgroup_list_show_elem(hgroup_list, name, 0);
+         } else {
+            dstring string = DSTRING_INIT;
+            lList *sub_host_list = NULL;
+            lList *sub_hgroup_list = NULL;
+
+            hgroup_find_all_references(hgroup, answer_list, hgroup_list, 
+                                       &sub_host_list, &sub_hgroup_list);
+            href_list_make_uniq(sub_host_list, answer_list);
+            href_list_append_to_dstring(sub_host_list, &string);
+            if (sge_dstring_get_string(&string)) {
+               printf("%s\n", sge_dstring_get_string(&string));
+            }
+            sge_dstring_free(&string);
+         }
       } else {
          sprintf(SGE_EVENT, MSG_HGROUP_NOTEXIST_S, name);
          answer_list_add(answer_list, SGE_EVENT,

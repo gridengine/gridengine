@@ -901,3 +901,25 @@ href_list_debug_print(const lList *this_list, const char *prefix)
    DEXIT;
 }
 
+void
+href_list_make_uniq(lList *this_list, lList **answer_list)
+{
+   lListElem *elem = NULL;
+   lListElem *next_elem = NULL;
+
+   DENTER(TOP_LAYER, "href_list_make_uniq");
+   next_elem = lFirst(this_list);
+   while((elem = next_elem) != NULL) {
+      lListElem *elem2 = NULL;
+      const void *iterator = NULL;
+
+      next_elem = lNext(elem);
+      elem2 = lGetElemHostFirst(this_list, HR_name, 
+                                lGetHost(elem, HR_name), &iterator); 
+      if (elem2 != NULL && elem != elem2) {
+         lRemoveElem(this_list, elem);
+      }
+   }
+   DEXIT;
+}
+

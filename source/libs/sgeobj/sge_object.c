@@ -1423,7 +1423,7 @@ object_parse_qtlist_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
+                                 MSG_QTYPE_INCORRECTSTRING, string);
          ret = false;
       }
    } else {
@@ -1486,7 +1486,7 @@ object_parse_ulong32_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
+                                 MSG_ULONG_INCORRECTSTRING, string);
          ret = false;
       }
    } else {
@@ -1515,7 +1515,7 @@ object_parse_int_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
+                                 MSG_INT_INCORRECTSTRING, string);
          ret = false;
       }
    } else {
@@ -1544,7 +1544,7 @@ object_parse_char_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
+                                 MSG_CHAR_INCORRECTSTRING, string);
          ret = false;
       }
    } else {
@@ -1573,7 +1573,7 @@ object_parse_long_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
-                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
+                                 MSG_LONG_INCORRECTSTRING, string);
          ret = false;
       }
    } else {
@@ -1602,7 +1602,7 @@ object_parse_double_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
+                                 MSG_DOUBLE_INCORRECTSTRING, string);
          ret = false;
       }
    } else {
@@ -1631,7 +1631,7 @@ object_parse_float_from_string(lListElem *this_elem, lList **answer_list,
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                                  ANSWER_QUALITY_ERROR,
-                                 MSG_ERRORPARSINGVALUEFORNM_S, string);
+                                 MSG_FLOAT_INCORRECTSTRING, string);
          ret = false;
       }
    } else {

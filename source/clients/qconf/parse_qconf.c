@@ -3952,6 +3952,27 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+      /* "-shgrp_tree" */
+      if (!strcmp("-shgrp_tree", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+         hgroup_show_structure(&answer_list, *spp, true);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+      /* "-shgrp_resolved" */
+      if (!strcmp("-shgrp_resolved", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+         hgroup_show_structure(&answer_list, *spp, false);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
 
       /*
        * Cluster Queue parameter

@@ -43,6 +43,9 @@ bool hgroup_provide_modify_context(lListElem **this_elem, lList **answer_list,
 
 bool hgroup_show(lList **answer_list, const char *name);
 
+bool hgroup_show_structure(lList **answer_list, const char *name,
+                           bool show_tree);
+
 bool hgroup_add(lList **answer_list, const char *name);
 
 bool hgroup_modify(lList **answer_list, const char *name);
@@ -52,7 +55,5 @@ bool hgroup_delete(lList **answer_list, const char *name);
 bool hgroup_add_from_file(lList **answer_list, const char *filename);
 
 bool hgroup_modify_from_file(lList **answer_list, const char *filename);
-
-
 
 #endif /* __SGE_HOSTGROUP_QCONF */

@@ -1,3 +1,10 @@
+EB-2003-12-20-0: Bugfix:    fixed bug
+                            * honour initial state correctly
+                            * object_spec for ?attr options for CQs is "queue"
+                            * qconf -shgrp_tree
+                            * qconf -shgrp_resolved
+                            * more detailed error messages for CQ parsing
+
 AD-2003-12-19-0: Enhancem.: Added new monitoring class 'LOCK'
                  Changed:   util, lck, rmon
                  Review:    AH

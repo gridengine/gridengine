@@ -265,5 +265,12 @@
 #define MSG_ATTRIB_PARSATTRFAILED_SS         _MESSAGE(64265, _("failed parsing attribute "SFQ": "SFN"\n"))
 #define MSG_OBJECT_NO_LIST_TO_MOD_TYPE_SI    _MESSAGE(64266, _("%s: has no master list to modify %d\n"))
 #define MSG_INVALID_CENTRY_PARSE_URGENCY_SS  _MESSAGE(64267, _("The following error occoured for complex "SFQ", while parsing the urgency value: "SFQ"\n"))
+#define MSG_ULONG_INCORRECTSTRING      _MESSAGE(64268, _("error parsing unsigned long value from string "SFQ"\n"))
+#define MSG_INT_INCORRECTSTRING        _MESSAGE(64269, _("error parsing signed int value from string "SFQ"\n"))
+#define MSG_CHAR_INCORRECTSTRING       _MESSAGE(64270, _("error parsing character value from string "SFQ"\n"))
+#define MSG_LONG_INCORRECTSTRING       _MESSAGE(64271, _("error parsing signed long from string "SFQ"\n"))
+#define MSG_DOUBLE_INCORRECTSTRING     _MESSAGE(64272, _("error parsing double value from string "SFQ"\n"))
+#define MSG_FLOAT_INCORRECTSTRING      _MESSAGE(64273, _("error parsing float value from string "SFQ"\n"))
+#define MSG_QTYPE_INCORRECTSTRING      _MESSAGE(64274, _("error parsing queue type from string "SFQ"\n"))
 
 #endif /* __MSG_SGEOBJLIB_H */

@@ -81,7 +81,7 @@ static lListElem *get_util_max(lListElem *cplx_el, lList *ccl[3]);
 static int sge_select_resource(lList *complex_attributes, 
                                lList *resources, int allow_non_requestable, 
                                char *reason, int reason_size, int slots, 
-                               lList *ccl[3], int force_attr_existence);
+                               lList *ccl[3], int force_attr_existence, int ignore_strings);
 
 static int available_slots_global(lList **global_resources, lListElem *job, 
                                   lListElem *ja_task, lListElem *pe, 
@@ -215,7 +215,7 @@ int sge_select_queue(lList *complex_attributes, lList *resources,
    DENTER(TOP_LAYER, "sge_select_queue");
    ret = sge_select_resource(complex_attributes, resources, 
                              allow_non_requestable, reason, reason_size, 
-                             slots, ccl, 1);
+                             slots, ccl, 1, 0);
 
    DEXIT;
    return ret;
@@ -233,7 +233,7 @@ int sge_select_queue(lList *complex_attributes, lList *resources,
 static int sge_select_resource(lList *complex_attributes, lList *resources,
                                int allow_non_requestable, char *reason,
                                int reason_size, int slots, lList *ccl[3],
-                               int force_attr_existence) 
+                               int force_attr_existence, int ignore_strings) 
 {
    lListElem *res;
    static lListElem *implicit_slots_request = NULL;
@@ -309,7 +309,7 @@ static int sge_select_resource(lList *complex_attributes, lList *resources,
    for_each (res, resources) 
       if (sge_match_complex_attributes(complex_attributes, 
             lGetList(res, RE_entries), 1, allow_non_requestable, reason, reason_size, 1,
-           slots, ccl, force_attr_existence)) {
+           slots, ccl, force_attr_existence, ignore_strings)) {
          DEXIT;
          return 0;
       }
@@ -411,7 +411,7 @@ int sge_match_complex_attributes(lList *given_attr, lList *requested_attr,
                                  int quick_exit, int allow_non_requestable,
                                  char *reason, int reason_size, 
                                  int is_a_request, int slots, lList *ccl[3],
-                                 int force_existence) 
+                                 int force_existence, int ignore_strings) 
 {
    lListElem *rep; /* a requested element */
    int ret=0;
@@ -419,6 +419,14 @@ int sge_match_complex_attributes(lList *given_attr, lList *requested_attr,
    DENTER(TOP_LAYER, "sge_match_complex_attributes");
 
    for_each (rep, requested_attr) {
+
+      if(ignore_strings){
+         u_long32 type = lGetUlong(rep, CE_valtype);
+         if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST){
+            continue;   
+         }
+      }
+
       if (fulfilled(rep, given_attr, reason, reason_size, allow_non_requestable, 
                   is_a_request, slots, ccl, force_existence)) {
          if (quick_exit) {
@@ -815,7 +823,7 @@ static int sge_soft_violations(lList *complex_attributes, lListElem *queue,
    for_each (res, lGetList(job, JB_soft_resource_list)) {
       int i;
       soft_violation += (i=sge_match_complex_attributes(complex_attributes, 
-            lGetList(res, RE_entries), 0, 0, reason, sizeof(reason)-1, 1, 1, ccl, 1));
+            lGetList(res, RE_entries), 0, 0, reason, sizeof(reason)-1, 1, 1, ccl, 1, 0));
 
          DPRINTF(("queue %s does not fulfill soft %d requests (first: %s)\n", 
                queue_name, i, reason));
@@ -2548,7 +2556,7 @@ static int available_slots_at_host(lList *host_resources, lListElem *job,
    for (; hslots>=minslots; hslots--) {
       /* check if host fulfills hard request of the job */
       if (!sge_select_resource(host_resources, lGetList(job, JB_hard_resource_list), 
-            0, reason, sizeof(reason)-1, hslots, ccl, 0)) {
+            0, reason, sizeof(reason)-1, hslots, ccl, 0, 1)) {
 
          if (hslots==minslots) {
             char buff[1024 + 1];
@@ -2646,7 +2654,7 @@ lList *acl_list;
       not_select_resource = 0;
 
       if (!sge_select_resource(*global_resources, lGetList(job, JB_hard_resource_list),
-               0, reason, sizeof(reason)-1, global_slots, ccl, 0)) {
+               0, reason, sizeof(reason)-1, global_slots, ccl, 0, 1)) {
 
          not_select_resource = 1;
          continue;

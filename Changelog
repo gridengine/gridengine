@@ -1,3 +1,11 @@
+SG-2003-08-27-0: Bugfix:    The scheduler handled strings in a hard and hard 
+                            with a soft request differently, when it was defined 
+                            in a host and overwritten in a queue.
+
+                 Changed:   sge_schedd
+                 Issue:     589
+                 Review:    EB
+
 AH-2003-08-18-0: Enhancem.: Update on tight integration with Sun HPC
                             ClusterTools 5
 

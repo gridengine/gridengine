@@ -40,7 +40,7 @@
 int sge_select_queue(lList *complex_attributes, lList *resources, int allow_non_requestable, char *reason, int reason_size, int slots, lList *consumable_config_list[3]);
 
 
-int sge_match_complex_attributes(lList *given_attr, lList *requested_attr, int quick_exit, int allow_non_requestable, char *reason, int reason_size, int is_a_request, int slots, lList *consumable_config_list[3], int force_existence);
+int sge_match_complex_attributes(lList *given_attr, lList *requested_attr, int quick_exit, int allow_non_requestable, char *reason, int reason_size, int is_a_request, int slots, lList *consumable_config_list[3], int force_existence, int ignore_strings);
 
 /* 
  * is there a load alarm on this queue

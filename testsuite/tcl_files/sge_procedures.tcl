@@ -3969,7 +3969,7 @@ proc soft_execd_shutdown { host } {
          puts $CHECK_OUTPUT "qconf -ke $host returned $prg_exit_state, hard killing execd"
          shutdown_system_daemon $host execd
       }
-      set load [wait_for_unknown_load 15 "${host}.q" 1]
+      set load [wait_for_unknown_load 15 "${host}.q" 0]
       if { $load == 0 } {
          puts $CHECK_OUTPUT "execd on host $host reports 99.99 load value"
          return 0
@@ -4469,7 +4469,6 @@ proc delete_job { jobid { wait_for_end 0 }} {
              set result 0
           }
           -i $sp_id default {
-             puts $CHECK_OUTPUT $expect_out(0,string)
              set result -1 
           }
       }

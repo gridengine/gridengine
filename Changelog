@@ -1,3 +1,6 @@
+CR-2002-12-05-1  Testsuite: fixed errors in error_states check and complex
+                 Bugfix:    check
+
 CR-2002-12-05-0  Bugfix:    Used wrong macro (SFQ) for fixing messages macros 
                             in commit CR-2002-12-03-1
 

@@ -119,7 +119,7 @@ proc get_dir_names { path } {
 #
 #  SYNOPSIS
 #     get_tmp_directory_name { { hostname "" } { type "default" } 
-#     { dir_ext "tmp" } } 
+#     { dir_ext "tmp" } } { not_in_results 0 }
 #
 #  FUNCTION
 #     Generates a temporary usable directory name (full path). The parameters
@@ -128,9 +128,10 @@ proc get_dir_names { path } {
 #     testsuite results directory is not accessable.
 #
 #  INPUTS
-#     { hostname "" }    - a hostname substring
-#     { type "default" } - a type substring
-#     { dir_ext "tmp" }  - a extension substring
+#     { hostname "" }      - a hostname substring
+#     { type "default" }   - a type substring
+#     { dir_ext "tmp" }    - a extension substring
+#     { not_in_results 0 } - if not 0: generate path in /tmp
 #
 #  RESULT
 #     full path string of a directory
@@ -138,14 +139,14 @@ proc get_dir_names { path } {
 #  SEE ALSO
 #     file_procedures/get_tmp_file_name()
 #*******************************************************************************
-proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp" } } {
+proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp" } { not_in_results 0 } } {
    global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT
 
    if { $hostname == "" } {
       set hostname $CHECK_HOST
    }
 
-   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 } {
+   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 || $not_in_results != 0 } {
      set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp]_${dir_ext}"
    } else {
      set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp]_${dir_ext}"
@@ -159,7 +160,7 @@ proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp"
 #
 #  SYNOPSIS
 #     get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } 
-#     } 
+#     } { not_in_results 0 }
 #
 #  FUNCTION
 #     Generates a temporary usable file name (full path). The parameters
@@ -175,9 +176,10 @@ proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp"
 #     So if the caller is generating this file, he as not to delete it.
 #
 #  INPUTS
-#     { hostname "" }    - a hostname substring
-#     { type "default" } - a type substring
-#     { file_ext "tmp" } - a extension substring
+#     { hostname "" }      - a hostname substring
+#     { type "default" }   - a type substring
+#     { file_ext "tmp" }   - a extension substring
+#     { not_in_results 0 } - if not 0: generate file in /tmp
 #
 #  RESULT
 #    a filename string ( absolute path )
@@ -185,7 +187,7 @@ proc get_tmp_directory_name { { hostname "" } { type "default" } { dir_ext "tmp"
 #  SEE ALSO
 #     file_procedures/get_tmp_directory_name()
 #*******************************************************************************
-proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } } {
+proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } { not_in_results 0 } } {
    
    global CHECK_MAIN_RESULTS_DIR CHECK_HOST CHECK_USER CHECK_OUTPUT
 
@@ -193,7 +195,7 @@ proc get_tmp_file_name { { hostname "" } { type "default" } { file_ext "tmp" } }
       set hostname $CHECK_HOST
    }
 
-   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1 } {
+   if { [ file isdirectory $CHECK_MAIN_RESULTS_DIR ] != 1  || $not_in_results != 0 } {
      set file_name "/tmp/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"
    } else {
      set file_name "$CHECK_MAIN_RESULTS_DIR/${CHECK_USER}_${hostname}_${type}_[timestamp].${file_ext}"

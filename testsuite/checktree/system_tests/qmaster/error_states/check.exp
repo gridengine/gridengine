@@ -275,7 +275,7 @@ proc error_states_no_default_queue_shell {} {
    set my_conf(shell_start_mode) "unix_behavior"
    set_queue $error_states_check_queue my_conf
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]
-   wait_for_jobpending $job_id "exit" 60
+   wait_for_jobpending $job_id "exit" 60 1
    wait_for_jobstart $job_id "exit" 60
    wait_for_jobend $job_id "exit" 60 
    set my_conf(shell_start_mode) $org_conf(shell_start_mode)
@@ -457,9 +457,13 @@ proc error_states_job_output {} {
    global CHECK_CORE_EXECD
 
 
-   set test_dir  [get_tmp_directory_name "" temp "dir" ]
-   set test_file [get_tmp_file_name "" temp]
-   set test_local_dir [get_tmp_directory_name "" local "dir" ]
+   set test_dir  [get_tmp_directory_name "" temp "dir" 1]
+   set test_file [get_tmp_file_name "" temp tmp 1]
+   set test_local_dir [get_tmp_directory_name "" local "dir" 1]
+ 
+   puts $CHECK_OUTPUT "test_dir:       $test_dir"
+   puts $CHECK_OUTPUT "test_file:      $test_file"
+   puts $CHECK_OUTPUT "test_local_dir: $test_local_dir"
 
    set result [ start_remote_prog $CHECK_HOST $CHECK_FIRST_FOREIGN_SYSTEM_USER "mkdir" $test_dir ]
    puts $CHECK_OUTPUT $result
@@ -498,7 +502,6 @@ proc error_states_job_output {} {
    wait_for_jobpending $job_id "leeper" 60
    wait_for_job_state $job_id "E" 60  
    delete_job $job_id
-   
 
    set jobargs "-o $test_file -e /dev/null $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/error.sh" 
    set job_id [submit_job "-q $error_states_check_queue $jobargs" ]

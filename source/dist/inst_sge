@@ -546,6 +546,7 @@ if [ $SHADOW = "install" ]; then
 
       $INFOTEXT "Shadowhost installation completed!"
    else
+      GetConfigFromFile
       $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW_HOST    
       mod_file="echo $SHADOW_HOST"
       ExecuteAsAdmin $mod_file >> $SGE_ROOT/$SGE_CELL/common/shadow_masters

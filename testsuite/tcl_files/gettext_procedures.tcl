@@ -135,7 +135,9 @@ proc search_for_macros_in_c_source_code_files { file_list search_macro_list} {
 #     gettext_procedures/update_macro_messages_list()
 #*******************************************************************************
 proc check_c_source_code_files_for_macros {} {
-   global CHECK_OUTPUT CHECK_SOURCE_DIR macro_messages_list
+   global CHECK_OUTPUT CHECK_SOURCE_DIR macro_messages_list check_name
+
+   puts $CHECK_OUTPUT "check_name: $check_name"
 
    if { [info exists macro_messages_list] == 0 } {
      update_macro_messages_list
@@ -159,6 +161,13 @@ proc check_c_source_code_files_for_macros {} {
          }
          lappend c_files $CHECK_SOURCE_DIR/$dir/$file
       }
+      set files [get_file_names $CHECK_SOURCE_DIR/$dir "*.h"]
+      foreach file $files { 
+         if { [string match -nocase msg_*.h $file] } {
+            continue
+         }
+         lappend second_run_files $CHECK_SOURCE_DIR/$dir/$file
+      }
    }
 
    set search_list ""
@@ -174,7 +183,7 @@ proc check_c_source_code_files_for_macros {} {
       append answer "   $macro\n"
    }
  
-   if { [llength $macro ] > 0 } {
+   if { [llength $search_list ] > 0 } {
       set full_answer ""
       append full_answer "following macros seems not to be used in source code:\n"
       append full_answer "$CHECK_SOURCE_DIR\n\n"
@@ -184,6 +193,54 @@ proc check_c_source_code_files_for_macros {} {
 
       add_proc_error "check_c_source_code_files_for_macros" -3 $full_answer
    }
+#
+# uncomment the following lines, if the unused macros should be removed from source code
+# ======================================================================================  
+# 
+# --   foreach macro $search_list {
+# --      set id [get_macro_id_from_name $macro]
+# --      set index [get_internal_message_number_from_id $id]
+# --   
+# --      set file $macro_messages_list($index,file)
+# --      set file_ext 1
+# --      puts $CHECK_OUTPUT $macro_messages_list($index,macro)
+# --      puts $CHECK_OUTPUT $file
+# --      read_file $file file_dat
+# --      set lines $file_dat(0)
+# --      set changed 0
+# --      for { set i 1 } { $i <= $lines } { incr i 1 } {
+# --         if { [ string first $macro $file_dat($i) ] >= 1 && 
+# --              [ string first "_MESSAGE" $file_dat($i) ] >= 1 } {
+# --            puts $CHECK_OUTPUT $file_dat($i)
+# --            set message_pos [ string first "_MESSAGE" $file_dat($i) ]
+# --            set new_line "/* "
+# --            incr message_pos -1
+# --            append new_line [ string range $file_dat($i) 0 $message_pos]
+# --            append new_line "_message"
+# --            incr message_pos 9
+# --            append new_line [ string range $file_dat($i) $message_pos end ]
+# --            append new_line " __TS Removed automatically from testsuite!! TS__*/"
+# --            puts $CHECK_OUTPUT $new_line
+# --            set file_dat($i) $new_line
+# --            set changed 1
+# --         }
+# --      }
+# --      if { $changed == 1 } {
+# --         while { 1 } {
+# --         set catch_return [ catch { 
+# --               file rename $file "$file.tmp${file_ext}" 
+# --         } ]
+# --            incr file_ext 1
+# --            puts $CHECK_OUTPUT "catch: $catch_return"
+# --            if { $catch_return == 0 } {
+# --               break
+# --            }
+# --         }
+# --         save_file $file file_dat
+# --      }
+# --   }
+# --   puts $CHECK_OUTPUT "macros removed"
+# --   wait_for_enter
 }
 
 #****** gettext_procedures/update_macro_messages_list() ************************
@@ -208,7 +265,7 @@ proc check_c_source_code_files_for_macros {} {
 #*******************************************************************************
 proc update_macro_messages_list {} {
   global CHECK_OUTPUT CHECK_SOURCE_DIR macro_messages_list
-  global CHECK_PROTOCOL_DIR CHECK_SOURCE_CVS_RELEASE
+  global CHECK_PROTOCOL_DIR CHECK_SOURCE_CVS_RELEASE 
   if { [info exists macro_messages_list]} {
      unset macro_messages_list
   }

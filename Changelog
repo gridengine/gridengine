@@ -1,3 +1,7 @@
+CR-2002-11-28-1  Testsuite: added code to un-comment unused message macros
+                            ( code itself is also un-commented in procedure
+                              check_c_source_code_files_for_macros() )
+
 CR-2002-11-27-3  Cleanup:   a) removed/corrected duplicate message ids
                  Testsuite: b) handle_vi_edit() procedure reports now an error
                                if no expected parameter string matches the 

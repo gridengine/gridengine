@@ -1801,7 +1801,7 @@ proc get_testsuite_root_dir_from_file { filename } {
 #     ???/???
 #*******************************
 proc source_procedures {} {
-  global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_TCL_SCRIPTFILE_DIR be_quiet CHECK_DEFAULTS_FILE
+  global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_TCL_SCRIPTFILE_DIR be_quiet CHECK_DEFAULTS_FILE check_name
   puts $CHECK_OUTPUT "------ SOURCEING TCL SCRIPT FILES --------------"
   puts $CHECK_OUTPUT "testsuite root: $CHECK_TESTSUITE_ROOT"
   if { [ file isfile $CHECK_TESTSUITE_ROOT/$CHECK_TCL_SCRIPTFILE_DIR/file_procedures.tcl ] != 1 } {
@@ -8964,8 +8964,8 @@ proc setup2 { } {
 #         }
 #         puts "use_ssh:              $ssh_state_text"        
 #      }
-      
       enhanced_setup
+      
       if { $CHECK_DO_SETUP == 1 } {
          modify_setup2
       }
@@ -9307,7 +9307,7 @@ proc enhanced_setup {} {
    if { $be_quiet == 0 } { 
       puts "starting enhanced setup ..."
    }
-   set check_name "no check running"
+   set check_name "enhanced_setup"
 
    set env(COMMD_PORT) $CHECK_COMMD_PORT;
    set env(SGE_ROOT) $CHECK_PRODUCT_ROOT;
@@ -9315,8 +9315,10 @@ proc enhanced_setup {} {
    set_users_environment $CHECK_HOST
 
    get_max_level_count $CHECK_CHECKTREE_ROOT
+
    set CHECK_GUILTY_RUNLEVELS "0" ;# 100 200 300 400" ;#$CHECK_MAX_LEVEL is 400
    set CHECK_GUILTY_CATEGORIES "SYSTEM" ;# [get_categories $CHECK_CHECKTREE_ROOT ]
+
    delete_tests $CHECK_CHECKTREE_ROOT 1
 
    setup_shared_lib_path
@@ -9327,6 +9329,11 @@ proc enhanced_setup {} {
       puts "   local host:   $CHECK_HOST";
       puts "starting enhanced setup ... ok"
    }
+#
+# uncomment the following line, if the unused macros should be removed from source code
+# ======================================================================================  
+# 
+# --   check_c_source_code_files_for_macros
 }
 
 #****** check/__setup() ********************************************************
@@ -10468,6 +10475,9 @@ proc delete_tests {path { only_if_not_there 0 } } {
   global CHECK_INFORMATION_FILE CHECK_OUTPUT check_highest_level check_name check_description
   global check_init_level_procedure CHECK_ACT_LEVEL CHECK_OUTPUT
 
+
+  set old_check_name $check_name
+
   set CHECK_DIRECTORIES ""
   get_check_dirs $path 
 
@@ -10516,6 +10526,7 @@ proc delete_tests {path { only_if_not_there 0 } } {
 
     }
   }
+  set check_name $old_check_name
 }
 
 
@@ -11947,8 +11958,10 @@ proc set_command_line_options {} {
 #*******************************
 proc get_max_level_count {path} {
   global CHECK_DIRECTORIES CHECK_INFORMATION_FILE check_highest_level 
-  global CHECK_MAX_LEVEL check_init_level_procedure CHECK_ACT_LEVEL
+  global CHECK_MAX_LEVEL check_init_level_procedure CHECK_ACT_LEVEL check_name
  
+  set old_check_name $check_name
+
   set CHECK_DIRECTORIES ""
   set CHECK_MAX_LEVEL "0"
   get_check_dirs $path  
@@ -11972,6 +11985,7 @@ proc get_max_level_count {path} {
        }
     }  
   }
+  set check_name $old_check_name
   return $CHECK_MAX_LEVEL
 }
 

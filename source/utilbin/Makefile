@@ -84,7 +84,7 @@ uidgid.o:	$(UTILBIN_DIR)/uidgid.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/uidgid.c
 
 #---------------------------------------------------------------------
-gethostname:	gethostname.o $(UTILIB) $(RMONLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIB) $(KRBLIB) $(CULLLIB) $(COMMLIB) $(LCKLIB)
+gethostname:	gethostname.o $(UTILIB) $(RMONLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(LCKLIB)
 		$(CC) -o $@ gethostname.o sge_mt_init.o $(LFLAGS) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -llck -lrmon  $(SLIBS) $(LIBS)
 
 gethostname.o:	$(UTILBIN_DIR)/gethostname.c

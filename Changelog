@@ -1,3 +1,6 @@
+DT-2004-01-07-0: Bugfix:    Fixed dependency problem for -secure with Sun make
+                 Changed:   utilbin/Makefile
+
 AD-2004-01-07-0: Enhancem:  Did remove preprocessor-conditional for
                             'GET_SPECIFIC' macros.
                  Changed:   common

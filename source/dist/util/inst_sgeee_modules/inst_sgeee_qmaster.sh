@@ -1,7 +1,7 @@
 #! /bin/sh 
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: sge_config_qmaster.sh
+# Scriptname: inst_sgeee_qmaster.sh
 # Module: qmaster installation functions
 #
 #___INFO__MARK_BEGIN__
@@ -271,7 +271,7 @@ SetSpoolingOptions()
             #TODO: exec rcrpc script
          fi
          if [ $QMASTER = "install" ]; then
-            $INFOTEXT "Please, log in to your berkeley db spooling host and execute < sge_config -db >\n"
+            $INFOTEXT "Please, log in to your berkeley db spooling host and execute < inst_sgeee -db >\n"
             $INFOTEXT -auto $AUTO -wait "After berkeley db installation, continue with < Enter >"
             SpoolingQueryChange
             CheckLocalFilesystem $SPOOLING_DIR
@@ -282,7 +282,6 @@ SetSpoolingOptions()
                $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
                if [ $? = 1 ]; then
                   $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
-                  $INFOTEXT "For local spooling without Server, type >none< else enter the servername!"
                   TMP_STARTUP_SCRIPT=`Enter`
                   SpoolingQueryChange
                   EditStartupScript

@@ -42,6 +42,7 @@
 #include "sge_mtutil.h"
 #include "sge_prog.h"
 #include "setup.h"
+#include "setup_qmaster.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "setup_qmaster.h"

@@ -1,3 +1,8 @@
+MD-2004-02-02-1: Bugfix:    - renamed sge_config to inst_sgeee
+                            - moved sge_config_modules to util/inst_sgeee_modules
+                            - adaptions of distinst 
+                 Changed:   - sge_config, distinst
+
 SG-2004-01-02-1: Bugfix:    reverted the changes from SG-2004-02-01-0. Reopend
                             the issue 476 again.
 

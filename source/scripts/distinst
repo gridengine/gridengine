@@ -129,7 +129,7 @@ ErrUsage()
    echo "       \"ckpt\"        = checkpointing support files"
    echo "       \"doc\"         = doc/ directory tree"
    echo "       \"examples\"    = examples/ directory tree without binaries"
-   echo "       \"inst_sge\"    = install script"
+   echo "       \"inst_sgeee\"  = install script"
    echo "       \"jobs\"        = examples/jobsbin/ example binaries"
    echo "       \"man\"         = manual pages"
    echo "       \"mpi\"         = MPI scripts"
@@ -343,8 +343,7 @@ instsharedlibs=true
 instckpt=false
 instdirectory=false
 instdrmaa=false
-instinst_sge=false
-instsge_config=false
+instinst_sgeee=false
 instutiltree=false
 instexamples=false
 instman=false
@@ -566,8 +565,7 @@ for prog in $PROG; do
          inst3rdparty=true
          instckpt=true
          instexamples=true
-         instinst_sge=true
-         instsge_config=true
+         instinst_sgeee=true
          instmpi=true
          instpvm=true
          instqmon=true
@@ -593,12 +591,8 @@ for prog in $PROG; do
          instexamples=true
          instcommon=true
          ;;
-      inst_sge)
-         instinst_sge=true
-         instcommon=true
-         ;;
-      sge_config)
-         instsge_config=true
+      inst_sgeee)
+         instinst_sgeee=true
          instcommon=true
          ;;
       jobs)   
@@ -661,38 +655,36 @@ if [ $instcommon = true ]; then
       Execute cp -r dist/3rd_party $DEST_SGE_ROOT
    fi
 
-   if [ $instinst_sge = true ]; then
-      rm -f $DEST_SGE_ROOT/inst*
-      if [ $sgeee = false ]; then
-         echo Installing \"inst_sge\"
-         Execute cp dist/inst_sge $DEST_SGE_ROOT/inst_sge
-         Execute chmod 755 $DEST_SGE_ROOT/inst_sge
-         Execute sed 's/PREFIX/sge/' dist/install_qmaster > $DEST_SGE_ROOT/install_qmaster
-         Execute sed 's/PREFIX/sge/' dist/install_execd > $DEST_SGE_ROOT/install_execd
-         if [ "$SGE_PRODUCT_MODE" = ge ]; then
-             :
-            (cd $DEST_SGE_ROOT; ln -s inst_sge inst_sgeee)
-            Execute cp dist/README.inst_sgeee $DEST_SGE_ROOT
-            Execute chmod 644 $DEST_SGE_ROOT/README.inst_sgeee
-         fi
-      else
-         echo Installing \"inst_sge\" as \"inst_sgeee\"
-         Execute cp dist/inst_sge $DEST_SGE_ROOT/inst_sgeee
-         Execute chmod 755 $DEST_SGE_ROOT/inst_sgeee
-         Execute sed 's/PREFIX/sgeee/' dist/install_qmaster > $DEST_SGE_ROOT/install_qmaster
-         Execute sed 's/PREFIX/sgeee/' dist/install_execd > $DEST_SGE_ROOT/install_execd
-      fi
+# FIXME
+#   if [ $instinst_sge = true ]; then
+#      rm -f $DEST_SGE_ROOT/inst*
+#      if [ $sgeee = false ]; then
+#         echo Installing \"inst_sge\"
+#         Execute cp dist/inst_sge $DEST_SGE_ROOT/inst_sge
+#         Execute chmod 755 $DEST_SGE_ROOT/inst_sge
+#         Execute sed 's/PREFIX/sge/' dist/install_qmaster > $DEST_SGE_ROOT/install_qmaster
+#         Execute sed 's/PREFIX/sge/' dist/install_execd > $DEST_SGE_ROOT/install_execd
+#         if [ "$SGE_PRODUCT_MODE" = ge ]; then
+#             :
+#            (cd $DEST_SGE_ROOT; ln -s inst_sge inst_sgeee)
+#            Execute cp dist/README.inst_sgeee $DEST_SGE_ROOT
+#            Execute chmod 644 $DEST_SGE_ROOT/README.inst_sgeee
+#         fi
+#      else
+#         echo Installing \"inst_sge\" as \"inst_sgeee\"
+#         Execute cp dist/inst_sge $DEST_SGE_ROOT/inst_sgeee
+#         Execute chmod 755 $DEST_SGE_ROOT/inst_sgeee
+        Execute sed 's/PREFIX/sgeee/' dist/install_qmaster > $DEST_SGE_ROOT/install_qmaster
+        Execute sed 's/PREFIX/sgeee/' dist/install_execd > $DEST_SGE_ROOT/install_execd
+#      fi
       Execute chmod 755 $DEST_SGE_ROOT/install_qmaster $DEST_SGE_ROOT/install_execd
-   fi
+#  fi
 
-   if [ $instsge_config = true ]; then
-      rm -f $DEST_SGE_ROOT/sge_config
-      rm -fR $DEST_SGE_ROOT/sge_config_modules
-
-      echo Installing \"sge_config\"
-      Execute cp dist/sge_config $DEST_SGE_ROOT/sge_config
-      Execute cp -fR dist/sge_config_modules $DEST_SGE_ROOT/sge_config_modules
-      Execute chmod 755 $DEST_SGE_ROOT/sge_config
+   if [ $instinst_sgeee = true ]; then
+      rm -f $DEST_SGE_ROOT/inst_sgeee
+      echo Installing \"inst_sgeee\"
+      Execute cp dist/inst_sgeee $DEST_SGE_ROOT/inst_sgeee
+      Execute chmod 755 $DEST_SGE_ROOT/inst_sgeee
    fi
     
    if [ $instutiltree = true ]; then

@@ -1,7 +1,7 @@
 #! /bin/sh
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: sge_config_common.sh
+# Scriptname: inst_sgeee_common.sh
 # Module: common functions
 #
 #___INFO__MARK_BEGIN__
@@ -340,15 +340,15 @@ ErrUsage()
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   sge_config -m -x\n" \
+             "   inst_sgeee -m -x\n" \
              "                       Installs qmaster and exechost on localhost\n" \
              "                       in sgeee-mode\n" \
-             "   sge_config -m -x -auto\n" \
+             "   inst_sgeee -m -x -auto\n" \
              "                       Installs qmaster and exechost using the default\n" \
-             "                       configuration file sge_config_modules/sge.conf\n" \
-             "   sge_config -ux -host hostname\n" \
+             "                       configuration file util/inst_sgeee_modules/inst_sgeee_template.conf\n" \
+             "   inst_sgeee -ux -host hostname\n" \
              "                       Uninstalls execd on given executionhost\n" \
-             "   sge_config -ux -host hostname -log\n" \
+             "   inst_sgeee -ux -host hostname -log\n" \
              "                       Uninstalls execd logging to unistall.log" $myname 
 
    exit 1

@@ -1,7 +1,7 @@
 #! /bin/sh
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: sge_config_execd.sh
+# Scriptname: inst_sgeee_execd.sh
 # Module: execd installation functions
 #
 #___INFO__MARK_BEGIN__

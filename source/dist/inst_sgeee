@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: sge_config
+# Scriptname: inst_sgeee
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -54,7 +54,7 @@ ECHO=echo
 #
 PWD=`pwd`
 . ./util/arch_variables
-. ./sge_config_modules/sge_config_common.sh
+. ./util/inst_sgeee_modules/inst_sgeee_common.sh
 
 #---------------------------------------
 # commandline argument parsing
@@ -121,8 +121,8 @@ while [ $ARGC != 0 ]; do
      ;;
    -m)
      QMASTER="install"
-     . ./sge_config_modules/sge_config_qmaster.sh
-     . ./sge_config_modules/sge_config_berkeley.sh
+     . ./util/inst_sgeee_modules/inst_sgeee_qmaster.sh
+     . ./util/inst_sgeee_modules/inst_sgeee_berkeley.sh
      ;; 
    -dm)
      QMASTER="deactivate"
@@ -134,7 +134,7 @@ while [ $ARGC != 0 ]; do
      ;;
    -x)
      EXECD="install"
-     . ./sge_config_modules/sge_config_execd.sh
+     . ./util/inst_sgeee_modules/inst_sgeee_execd.sh
      ;;
    -dx)
      EXECD="deactivate"
@@ -142,7 +142,7 @@ while [ $ARGC != 0 ]; do
      ;;
    -ux)
      EXECD="uninstall"
-     . ./sge_config_modules/sge_config_execd_uninst.sh
+     . ./util/inst_sgeee_modules/inst_sgeee_execd_uninst.sh
      ;;
    -sm)
      SHADOW="install"
@@ -150,8 +150,8 @@ while [ $ARGC != 0 ]; do
      ;;
    -db)
      BERKELEY="install"
-     . ./sge_config_modules/sge_config_qmaster.sh
-     . ./sge_config_modules/sge_config_berkeley.sh
+     . ./util/inst_sgeee_modules/inst_sgeee_qmaster.sh
+     . ./util/inst_sgeee_modules/inst_sgeee_berkeley.sh
      ;;
    -upd)
      UPGRADE=true
@@ -311,7 +311,7 @@ if [ $EXECD = "install" ]; then
       else
          if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
             $INFOTEXT -log "remote installation on host %s" $h
-            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./sge_config -x -auto -noremote" | rsh $h /bin/sh &
+            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto -noremote" | rsh $h /bin/sh &
          fi
 
       fi
@@ -344,7 +344,7 @@ if [ $EXECD = "install" ]; then
             $INFOTEXT "This part runs in automatic mode," \
                       "be sure to have a valid configuration file"
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./sge_config -x -auto -noremote" | rsh $h /bin/sh &
+            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto -noremote" | rsh $h /bin/sh &
         fi
       done
   fi

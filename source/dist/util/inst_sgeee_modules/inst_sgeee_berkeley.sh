@@ -1,7 +1,7 @@
 #! /bin/sh
 #
 # SGE/SGEEE configuration script (Installation/Uninstallation/Upgrade/Downgrade)
-# Scriptname: sge_config_berkeley.sh
+# Scriptname: inst_sgeee_berkeley.sh
 # Module: berkeley db install functions
 #
 #___INFO__MARK_BEGIN__

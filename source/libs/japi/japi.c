@@ -109,8 +109,6 @@
 #include "sge_reportL.h"
 #include "sge_usageL.h"
 
-/* UTI */
-#include "sge_uidgid.h"
 
 /****** JAPI/--Job_API ********************************************************
 *  NAME

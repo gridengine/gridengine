@@ -1,3 +1,6 @@
+MD-2004-12-16-0: Bugfix:    - permission problem at rc-script gen.
+                 Changed:   inst_common.sh
+
 SG-2004-12-15-0: Enhancem.: - fixed load values and arch for Sol-AMD64
 		 Changed:   execd	
                  Review:    AA
@@ -371,6 +374,8 @@ EB-2004-11-15-0: Bugfix:    incorrect select() call in combination with
 AH-2004-11-15-0: Bugfix:    Use hp11 binaries on HP11 64 bit
                             Use lx24-x86 binaries for Linux 2.6
                  Review:    AS
+                 Issue:     1357
+                 Bugtraq:   6200013
 
 
 AH-2004-11-12-0: Doc:       Various fixes with man pages.

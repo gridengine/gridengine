@@ -842,46 +842,46 @@ CreateSGEStartUpScripts()
    if [ $create = true ]; then
 
       if [ $hosttype = "master" ]; then
-         Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
-                     -e "s%GENCELL%${SGE_CELL_VAL}%g" \
-                     -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                     util/rctemplates/sgemaster_template > ${TMP_SGE_STARTUP_FILE}.0
+         ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
+                            -e "s%GENCELL%${SGE_CELL_VAL}%g" \
+                            -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
+                            util/rctemplates/sgemaster_template > ${TMP_SGE_STARTUP_FILE}.0
 
          if [ "$SGE_QMASTER_PORT" != "" ]; then
-            Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
-                        ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+            ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
+                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
          else
-            Execute sed -e "/GENSGE_QMASTER_PORT/d" \
-                        ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+            ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
+                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
          fi
 
          if [ "$SGE_EXECD_PORT" != "" ]; then
-            Execute sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
-                        ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+            ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
+                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
          else
-            Execute sed -e "/GENSGE_EXECD_PORT/d" \
-                        ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+            ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
+                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
          fi
       else
-         Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
-                     -e "s%GENCELL%${SGE_CELL_VAL}%g" \
-                     -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                     util/rctemplates/sgeexecd_template > ${TMP_SGE_STARTUP_FILE}.0
+         ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
+                            -e "s%GENCELL%${SGE_CELL_VAL}%g" \
+                            -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
+                            util/rctemplates/sgeexecd_template > ${TMP_SGE_STARTUP_FILE}.0
 
          if [ "$SGE_QMASTER_PORT" != "" ]; then
-            Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
-                        ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+            ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
+                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
          else
-            Execute sed -e "/GENSGE_QMASTER_PORT/d" \
-                        ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+            ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
+                               ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
          fi
 
          if [ "$SGE_EXECD_PORT" != "" ]; then
-            Execute sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
-                        ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+            ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
+                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
          else
-            Execute sed -e "/GENSGE_EXECD_PORT/d" \
-                        ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+            ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
+                               ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
          fi
 
        fi

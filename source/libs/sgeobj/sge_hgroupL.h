@@ -64,11 +64,11 @@ extern "C" {
 *     
 *                       --------------                                 
 *                       |            |
-*                       V            | 1:x
-*                 ------------- <----| 
+*                       V            | 0:x
+*                 ------------- -----| 
 *                 | HGRP_Type |               ------------
-*                 ------------- <-----------> | hostname |
-*                                    1:x      ------------
+*                 ------------- ------------> | hostname |
+*                                    0:x      ------------
 *     
 *     Example
 *
@@ -76,7 +76,9 @@ extern "C" {
 *        D; E; G; H; I). Each of those groups references one host 
 *        (A -> a; B -> b; C -> c; ...). Additionally some of those 
 *        hostgroups refer to one (A -> C; B -> C; C -> E; ...) or two 
-*        hostgroups (E -> F,G; F -> H,I)
+*        hostgroups (E -> F,G; F -> H,I) The connections are all 
+*        uni-directional, you have to read the diagram from the left
+*        to the right.
 *
 *                 -----                           -----
 *                 | A | -- a                      | H | -- h

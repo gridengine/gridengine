@@ -153,7 +153,7 @@ bool href_list_has_member(const lList *this_list, const char *host_or_group)
 *                       lList **equity_groups) 
 *
 *  FUNCTION
-*     This function will find some differences between two hostref lists
+*     This function will find differences between two hostref lists
 *     given by 'this_list' and 'list'. Hosts and hostgroups which are
 *     only in 'this_list' can be found in 'add_hosts' and 'add_groups'.
 *     References which are contained in both lists can be found in 
@@ -293,7 +293,7 @@ bool href_list_find_diff(const lList *this_list, lList **answer_list,
 *                                        lList **add_hosts, lList **rem_hosts) 
 *
 *  FUNCTION
-*     Resolves hostgroup names of all groups contained in "add_groups"
+*     Resolves host names of all groups contained in "add_groups"
 *     and "rem_groups". Hostnames not part of both resulting hostgroup
 *     sets will be stored in "add_hosts" and "rem_hosts".
 *
@@ -392,7 +392,7 @@ lListElem *href_list_locate(const lList *this_list, const char *name)
 *                               lList **referenced_groups) 
 *
 *  FUNCTION
-*     Finds hosts and hostgroups which are directy referenced
+*     Finds hosts and hostgroups, which are directy referenced
 *     in the hostgroups mentioned in 'this_list'. 'master_list' is
 *     the list of all existing hostgroups. Directly referenced hosts
 *     and hostgroups will be added to 'used_hosts' and 'used_groups'.
@@ -572,7 +572,7 @@ href_list_find_all_references(const lList *this_list, lList **answer_list,
 *
 *  FUNCTION
 *     Finds hostgroup references which directy occupy at least one of the
-*     hostgroups mentioned in 'this_list'. 'master_list' is the list of i
+*     hostgroups mentioned in 'this_list'. 'master_list' is the list of 
 *     all existing hostgroups. Directly occupying hostgroups will be 
 *     added to 'occupant_groups'. In case of any errors 'answer_list' 
 *     will be filled.
@@ -638,9 +638,9 @@ href_list_find_referencees(const lList *this_list, lList **answer_list,
 *                                    lList **occupant_groups) 
 *
 *  FUNCTION
-*     Finds all hostgroups which occupy the hostgroups mentioned in 
+*     Finds recursivly all hostgroups which occupy the hostgroups mentioned in 
 *     'this_list'. 'master_list' is the list of all
-*     existing hostgroups. Directly occupying hostgroups will be
+*     existing hostgroups. Occupying hostgroups will be
 *     added to 'occupant_groups'. In case of any errors 'answer_list'
 *     will be filled.
 *
@@ -709,7 +709,7 @@ href_list_find_all_referencees(const lList *this_list, lList **answer_list,
 *
 *  FUNCTION
 *     Append all host and hostgroup references contained in 'this_list'
-*     to 'string'. One space character separated ech entry in 'string'. 
+*     to 'string'. One space character separated each entry in 'string'. 
 *
 *  INPUTS
 *     const lList *this_list - RN_Type list 

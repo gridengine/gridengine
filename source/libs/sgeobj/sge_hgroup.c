@@ -190,7 +190,7 @@ bool hgroup_correct_name(lListElem *this_elem)
 *  INPUTS
 *     lList **answer_list     - AN_Type list 
 *     const char *name        - name 
-*     lList *href_or_groupref - groupname 
+*     lList *href_or_groupref - list of hosts for this hgroup 
 *
 *  RESULT
 *     lListElem* - new element or NULL 
@@ -540,6 +540,7 @@ hgroup_list_exists(const lList *this_list, lList **answer_list,
    return ret;
 }
 
+/* HB: TODO: comment is missing */
 bool
 hgroup_list_find_all_matching_references(const lList *this_list,
                                          lList **answer_list,
@@ -576,6 +577,7 @@ hgroup_list_find_all_matching_references(const lList *this_list,
    return ret;
 }
 
+/* HB: TODO: comment is missing */
 bool
 hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
                     lListElem *reduced_elem, int sub_command,

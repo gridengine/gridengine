@@ -3674,9 +3674,27 @@ sge_sort_pending_job_nodes(lListElem *root,
    lList *job_node_list = NULL;
    lListElem *child, *job_node;
    double node_stt;
-   double job_count;
+   double job_count=0;
    int job_nodes = 0;
+   
+   if(root == node){
+      int active_nodes = 0;
+      lListElem *temp_root = NULL;
 
+      for_each(child, lGetList(node, STN_children)) {
+         if (lGetUlong(child, STN_ref)) {
+            active_nodes++;
+            break;
+         } else if ((lGetUlong(child, STN_job_ref_count)-lGetUlong(child, STN_active_job_ref_count))>0) {
+            temp_root = child;
+            active_nodes ++; 
+         }
+         if (active_nodes >1)
+               break;
+      }
+      if (active_nodes == 1 && temp_root)
+         return sge_sort_pending_job_nodes(temp_root, temp_root, total_share_tree_tickets);
+   }
    /* get the child job nodes in a single list */
 
    for_each(child, lGetList(node, STN_children)) {
@@ -3697,15 +3715,13 @@ sge_sort_pending_job_nodes(lListElem *root,
          }
       }
    }
-
    /* free the temporary job nodes */
    if (job_nodes)
       lSetList(node, STN_children, NULL);
 
-   if (root != node) {
+   /* sort the job nodes based on the calculated pending priority */
+   if (root != node || job_nodes) { 
       lListElem *u;
-
-      /* sort the job nodes based on the calculated pending priority */
 
       if (job_node_list && lGetNumberOfElem(job_node_list)>1)
          lPSortList(job_node_list, "%I- %I+ %I+", STN_sort, STN_jobid, STN_taskid);

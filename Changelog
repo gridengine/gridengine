@@ -1,3 +1,10 @@
+RH-2004-06-13-0: Bugfix:    qmod -e '@<host>' causes segmentation fault in qmaster
+                            in the method qref_resolve_hostname (libs/sgeobj/sge_qref.c)
+                            a sprintf "@%s" instead of "%s@%s" is executed if the 
+                            queuename part is empty.
+                 Issue:     1131
+                 Review:    JG
+                            
 JG-2004-07-13-1: Bugfix:    fixed build for some gcc versions.
 
 JG-2004-07-13-0: Testsuite: fixed test system_tests/geee/sharetree

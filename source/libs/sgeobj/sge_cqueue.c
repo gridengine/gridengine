@@ -51,6 +51,7 @@
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
+#include "sge_qinstance_type.h"
 #include "sge_str.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
@@ -1237,7 +1238,7 @@ cqueue_verify_pe_list(lListElem *cqueue, lList **answer_list,
       lList *pe_list = lGetList(attr_elem, ASTRLIST_value);
 
       if (pe_list != NULL) {
-         const lList *master_list = *(pe_list_get_master_list());
+         const lList *master_list = *(object_type_get_master_list(SGE_TYPE_PE));
 
          if (!pe_list_do_all_exist(master_list, answer_list, pe_list, true)) {
             ret = false;

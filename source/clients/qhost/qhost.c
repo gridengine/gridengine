@@ -69,6 +69,7 @@
 #include "sge_answer.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
+#include "sge_qinstance_type.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
 

@@ -36,14 +36,12 @@
 #include "sge_dstring.h"
 #include "sge_qinstanceL.h"
 
-extern const char *queue_types[];
-
-const char *
-qtype_append_to_dstring(u_long32 dtype, dstring *string);
-
 lListElem *
 qinstance_list_locate(const lList *this_list, const char *hostname,
                       const char *cqueue_name);
+
+lListElem *
+qinstance_list_locate2(const lList *qinstance_list, const char *full_name);
 
 const char *
 qinstance_get_name(const lListElem *this_elem, dstring *string_buffer);
@@ -55,38 +53,25 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
 void
 qinstance_list_set_tag(lList *this_list, u_long32 tag_value);
 
-lListElem *
-qinstance_list_locate2(const lList *qinstance_list, const char *full_name);
-
 void
 qinstance_increase_qversion(lListElem *this_elem);
 
 bool 
 qinstance_check_owner(const lListElem *queue, const char *user_name);
 
-bool qinstance_is_batch_queue(const lListElem *this_elem);
-
-bool qinstance_is_interactive_queue(const lListElem *this_elem);
-
-bool qinstance_is_checkointing_queue(const lListElem *this_elem);
-
-bool qinstance_is_parallel_queue(const lListElem *this_elem);
-
-bool
-qinstance_print_qtype_to_dstring(const lListElem *this_elem,
-                                 dstring *string, bool only_first_char);
-
-bool
-qinstance_parse_qtype_from_string(lListElem *queue, lList **answer_list,
-                                  const char *value);
-
 bool
 qinstance_is_pe_referenced(const lListElem *this_elem, 
                            const lListElem *pe);
 
 bool
+qinstance_is_a_pe_referenced(const lListElem *this_elem);
+
+bool
 qinstance_is_ckpt_referenced(const lListElem *this_elem, 
                              const lListElem *ckpt);
+
+bool
+qinstance_is_a_ckpt_referenced(const lListElem *this_elem);
 
 bool
 qinstance_is_centry_referenced(const lListElem *this_elem, 

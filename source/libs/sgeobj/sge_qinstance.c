@@ -80,56 +80,31 @@
 
 /* EB: ADOC: add commets */
 
-const char *queue_types[] = {
-   "BATCH",
-   "INTERACTIVE",
-   ""
-};
-
-static bool
-qinstance_has_type(const lListElem *this_elem, u_long32 type);
-
-static bool qinstance_has_type(const lListElem *this_elem, u_long32 type)
-{
-   bool ret = false;
-
-   if (lGetUlong(this_elem, QU_qtype) & type) {
-      ret = true;
-   }
-   return ret;
-}
-
-
-const char *
-qtype_append_to_dstring(u_long32 qtype, dstring *string)
-{
-   const char *ret = NULL;
-
-   DENTER(BASIS_LAYER, "qtype_append_to_dstring");
-   if (string != NULL) {
-      const char **ptr = NULL;
-      u_long32 bitmask = 1;
-      bool qtype_defined = false;
-
-      for (ptr = queue_types; **ptr != '\0'; ptr++) {
-         if (bitmask & qtype) {
-            if (qtype_defined) {
-               sge_dstring_sprintf_append(string, " ");
-            }
-            sge_dstring_sprintf_append(string, "%s", *ptr);
-            qtype_defined = true;
-         }
-         bitmask <<= 1;
-      };
-      if (!qtype_defined) {
-         sge_dstring_sprintf_append(string, "NONE");
-      }
-      ret = sge_dstring_get_string(string);
-   }
-   DEXIT;
-   return ret;
-}
-
+/****** sgeobj/qinstance/qinstance_list_locate() ******************************
+*  NAME
+*     qinstance_list_locate() -- find a qinstance 
+*
+*  SYNOPSIS
+*     lListElem * 
+*     qinstance_list_locate(const lList *this_list, 
+*                           const char *hostname, const char *cqueue_name) 
+*
+*  FUNCTION
+*     Find a qinstance in "this_list" which is part of the cluster queue
+*     with the name "cqueue_name" and resides on the host with the name 
+*     "hostname".
+*
+*  INPUTS
+*     const lList *this_list  - QU_Type list
+*     const char *hostname    - hostname 
+*     const char *cqueue_name - cluster queue name 
+*
+*  RESULT
+*     lListElem * - QU_Type element
+*
+*  NOTES
+*     MT-NOTE: qinstance_list_locate() is MT safe 
+*******************************************************************************/
 lListElem *
 qinstance_list_locate(const lList *this_list, const char *hostname,
                       const char *cqueue_name) 
@@ -151,6 +126,56 @@ qinstance_list_locate(const lList *this_list, const char *hostname,
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_list_locate2() *****************************
+*  NAME
+*     qinstance_list_locate2() -- find a qinstance using the fullname 
+*
+*  SYNOPSIS
+*     lListElem * 
+*     qinstance_list_locate2(const lList *queue_list, 
+*                            const char *full_name) 
+*
+*  FUNCTION
+*     find a qinstance using the fullname 
+*
+*  INPUTS
+*     const lList *queue_list - QU_Type list 
+*     const char *full_name   - fullname of the qinstance (<cqueue>@<hostname>)
+*
+*  RESULT
+*     lListElem * - QU_type element
+*
+*  NOTES
+*     MT-NOTE: qinstance_list_locate2() is MT safe 
+*******************************************************************************/
+lListElem *
+qinstance_list_locate2(const lList *queue_list, const char *full_name)
+{
+   return lGetElemStr(queue_list, QU_full_name, full_name);
+}
+
+/****** sgeobj/qinstance/qinstance_get_name() *********************************
+*  NAME
+*     qinstance_get_name() -- returns the fullname of a qinstance object 
+*
+*  SYNOPSIS
+*     const char * 
+*     qinstance_get_name(const lListElem *this_elem, 
+*                        dstring *string_buffer) 
+*
+*  FUNCTION
+*     Returns the fullname of a qinstance object 
+*
+*  INPUTS
+*     const lListElem *this_elem - QU_Type 
+*     dstring *string_buffer     - dynamic string buffer 
+*
+*  RESULT
+*     const char * - pointer to the internal string buffer of "string_buffer"
+*
+*  NOTES
+*     MT-NOTE: qinstance_get_name() is MT safe 
+*******************************************************************************/
 const char *
 qinstance_get_name(const lListElem *this_elem, dstring *string_buffer)
 {
@@ -164,10 +189,30 @@ qinstance_get_name(const lListElem *this_elem, dstring *string_buffer)
    return ret;
 }
 
+/****** sgeobj/qinstance/qinstance_list_set_tag() *****************************
+*  NAME
+*     qinstance_list_set_tag() -- tag a list of qinstances 
+*
+*  SYNOPSIS
+*     void 
+*     qinstance_list_set_tag(lList *this_list, u_long32 tag_value) 
+*
+*  FUNCTION
+*     Tag a list of qinstances ("this_list") with "tag_value". 
+*
+*  INPUTS
+*     lList *this_list   - QU_Type list
+*     u_long32 tag_value - unsingned long value (not a bitmask) 
+*
+*  RESULT
+*     void - None
+*
+*  NOTES
+*     MT-NOTE: qinstance_list_set_tag() is MT safe 
+*******************************************************************************/
 void
 qinstance_list_set_tag(lList *this_list, u_long32 tag_value)
 {
-
    if (this_list != NULL) {
       lListElem *qinstance = NULL;
 
@@ -177,12 +222,25 @@ qinstance_list_set_tag(lList *this_list, u_long32 tag_value)
    }
 }
 
-lListElem *
-qinstance_list_locate2(const lList *queue_list, const char *full_name)
-{
-   return lGetElemStr(queue_list, QU_full_name, full_name);
-}
-
+/****** sgeobj/qinstance/qinstance_increase_qversion() ************************
+*  NAME
+*     qinstance_increase_qversion() -- increase the qinstance queue version 
+*
+*  SYNOPSIS
+*     void qinstance_increase_qversion(lListElem *this_elem) 
+*
+*  FUNCTION
+*     Increase the queue version of the given qinstance "this_elem". 
+*
+*  INPUTS
+*     lListElem *this_elem - QU_Type element 
+*
+*  RESULT
+*     void - None
+*
+*  NOTES
+*     MT-NOTE: qinstance_increase_qversion() is MT safe 
+*******************************************************************************/
 void
 qinstance_increase_qversion(lListElem *this_elem)
 {
@@ -194,7 +252,7 @@ qinstance_increase_qversion(lListElem *this_elem)
    DEXIT;
 }
 
-/****** sgeobj/queue/qinstance_check_owner() **********************************
+/****** sgeobj/qinstance/qinstance_check_owner() ******************************
 *  NAME
 *     qinstance_check_owner() -- check if a user is queue owner
 *
@@ -212,7 +270,6 @@ qinstance_increase_qversion(lListElem *this_elem)
 *
 *  RESULT
 *     bool - true, if the user is owner, else false
-*
 ******************************************************************************/
 bool qinstance_check_owner(const lListElem *this_elem, const char *user_name)
 {
@@ -236,72 +293,6 @@ bool qinstance_check_owner(const lListElem *this_elem, const char *user_name)
          }
       }
    }
-   DEXIT;
-   return ret;
-}
-
-bool
-qinstance_print_qtype_to_dstring(const lListElem *this_elem,
-                                 dstring *string, bool only_first_char)
-{
-   bool ret = true;
-
-   DENTER(TOP_LAYER, "qinstance_print_qtype_to_dstring");
-   if (this_elem != NULL && string != NULL) {
-      const char **ptr = NULL;
-      u_long32 bitmask = 1;
-      bool qtype_defined = false;
-
-      for (ptr = queue_types; **ptr != '\0'; ptr++) {
-         if (bitmask & lGetUlong(this_elem, QU_qtype)) {
-            qtype_defined = true;
-            if (only_first_char) {
-               sge_dstring_sprintf_append(string, "%c", (*ptr)[0]);
-            } else {
-               sge_dstring_sprintf_append(string, "%s ", *ptr);
-            }
-         }
-         bitmask <<= 1;
-      };
-      if (only_first_char) {
-         if (qinstance_is_parallel_queue(this_elem)) {
-            sge_dstring_sprintf_append(string, "%c", 'P');
-            qtype_defined = true;
-         }
-         if (qinstance_is_checkointing_queue(this_elem)) {
-            sge_dstring_sprintf_append(string, "%c", 'C');
-            qtype_defined = true;
-         }
-      }
-      if (!qtype_defined) {
-         if (only_first_char) {
-            sge_dstring_sprintf_append(string, "N");
-         } else {
-            sge_dstring_sprintf_append(string, "NONE");
-         }
-      }
-   }
-   DEXIT;
-   return ret;
-}
-
-bool
-qinstance_parse_qtype_from_string(lListElem *this_elem, lList **answer_list,
-                                  const char *value)
-{
-   bool ret = true;
-   u_long32 type = 0;
-
-   DENTER(TOP_LAYER, "qinstance_parse_qtype_from_string");
-   SGE_CHECK_POINTER_FALSE(this_elem);
-   if (value != NULL && *value != 0) {
-      if (!sge_parse_bitfield_str(value, queue_types, &type,
-                                  "queue type", NULL, true)) {
-         ret = false;
-      }
-   }
-
-   lSetUlong(this_elem, QU_qtype, type);
    DEXIT;
    return ret;
 }
@@ -386,26 +377,6 @@ qinstance_is_a_ckpt_referenced(const lListElem *this_elem)
    DEXIT;
    return ret;
 } 
-
-bool qinstance_is_batch_queue(const lListElem *this_elem)
-{
-   return qinstance_has_type(this_elem, BQ);
-}
-
-bool qinstance_is_interactive_queue(const lListElem *this_elem)
-{
-   return qinstance_has_type(this_elem, IQ);
-}
-
-bool qinstance_is_checkointing_queue(const lListElem *this_elem)
-{
-   return qinstance_is_a_ckpt_referenced(this_elem);
-}
-
-bool qinstance_is_parallel_queue(const lListElem *this_elem)
-{
-   return qinstance_is_a_pe_referenced(this_elem);
-}
 
 bool
 qinstance_is_centry_referenced(const lListElem *this_elem, 

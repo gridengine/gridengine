@@ -836,7 +836,7 @@ DPRINTF(("ep: %s %s\n",
             spp = sge_parser_get_next(spp);
 
             /* get a generic parallel environment */
-            ep = sge_generic_pe(*spp); 
+            ep = pe_create_template(*spp); 
 #ifdef QCONF_FLATFILE
             filename = (char *)spool_flatfile_write_object(&alp, ep, false,
                                                  fields, &qconf_sfi,

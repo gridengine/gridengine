@@ -53,6 +53,7 @@
 #include "sge_feature.h"
 #include "sge_href.h"
 #include "sge_qinstance.h"
+#include "sge_qinstance_type.h"
 #include "sge_subordinate.h"
 #include "sge_centry.h"
 #include "sge_userprj.h"

@@ -67,6 +67,7 @@
 #include "sge_job.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
+#include "sge_qinstance_type.h"
 #include "sge_userprj.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"

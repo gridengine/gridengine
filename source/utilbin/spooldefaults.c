@@ -46,6 +46,7 @@
 #include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_manop.h"
+#include "sge_object.h"
 #include "sge_pe.h"
 #include "sge_centry.h"
 #include "sge_userset.h"
@@ -257,15 +258,15 @@ static int spool_pes(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
    lList *answer_list = NULL;
-   lList **pe_list;
+   lList *pe_list;
    lListElem *pe;
 
    DENTER(TOP_LAYER, "spool_pes");
 
    sge_read_pe_list_from_disk(argv[2]);
 
-   pe_list = pe_list_get_master_list();
-   for_each(pe, *pe_list) {
+   pe_list = *(object_type_get_master_list(SGE_TYPE_PE));
+   for_each(pe, pe_list) {
       if (!spool_write_object(&answer_list, spool_get_default_context(), pe, lGetString(pe, PE_name), SGE_TYPE_PE)) {
          /* error output has been done in spooling function */
          ret = EXIT_FAILURE;

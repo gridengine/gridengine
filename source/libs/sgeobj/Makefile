@@ -72,6 +72,7 @@ SGEOBJLIB_SRC = \
          sge_pe_task.c \
          sge_qinstance.c \
          sge_qinstance_state.c \
+         sge_qinstance_type.c \
          sge_qref.c \
          sge_range.c \
          sge_report.c \
@@ -217,6 +218,9 @@ sge_qinstance.o: $(SGEOBJLIB_DIR)/sge_qinstance.c
 
 sge_qinstance_state.o: $(SGEOBJLIB_DIR)/sge_qinstance_state.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance_state.c
+
+sge_qinstance_type.o: $(SGEOBJLIB_DIR)/sge_qinstance_type.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qinstance_type.c
 
 sge_qref.o: $(SGEOBJLIB_DIR)/sge_qref.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_qref.c

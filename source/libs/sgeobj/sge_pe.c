@@ -364,8 +364,36 @@ int pe_validate_urgency_slots(lList **alpp, const char *s)
    return STATUS_OK;
 }
 
-/* EB: ADOC: add commets */
-
+/****** sgeobj/pe/pe_list_do_all_exist() **************************************
+*  NAME
+*     pe_list_do_all_exist() -- Check if a list of PE's really exists 
+*
+*  SYNOPSIS
+*     bool 
+*     pe_list_do_all_exist(const lList *pe_list, 
+*                          lList **answer_list, 
+*                          const lList *pe_ref_list, 
+*                          bool ignore_make_pe) 
+*
+*  FUNCTION
+*     Check if all PE's in "pe_ref_list" really exist in "pe_list".
+*     If "ignore_make_pe" is 'true' than the test for the PE with the 
+*     name "make" will not be done.
+*
+*  INPUTS
+*     const lList *pe_list     - PE_Type list 
+*     lList **answer_list      - AN_Type list 
+*     const lList *pe_ref_list - ST_Type list of PE names 
+*     bool ignore_make_pe      - bool 
+*
+*  RESULT
+*     bool 
+*        true  - if all PE's exist
+*        false - if at least one PE does not exist
+*
+*  NOTES
+*     MT-NOTE: pe_urgency_slots() is MT safe
+*******************************************************************************/
 bool pe_list_do_all_exist(const lList *pe_list, lList **answer_list,
                           const lList *pe_ref_list, bool ignore_make_pe)
 {
@@ -391,18 +419,14 @@ bool pe_list_do_all_exist(const lList *pe_list, lList **answer_list,
    return ret;
 }
 
-lList **pe_list_get_master_list(void)
-{
-   return &Master_Pe_List;
-}
-
-/****** sge_pe/pe_urgency_slots() **********************************************
+/****** sgeobj/pe/pe_urgency_slots() ******************************************
 *  NAME
 *     pe_urgency_slots() -- Compute PEs urgency slot amount for a slot range
 *
 *  SYNOPSIS
-*     int pe_urgency_slots(const lListElem *pe, const char 
-*     *urgency_slot_setting, const lList* range_list) 
+*     int pe_urgency_slots(const lListElem *pe, 
+*                          const char *urgency_slot_setting, 
+*                          const lList* range_list) 
 *
 *  FUNCTION
 *     Compute PEs urgency slot amount for a slot range. The urgency slot
@@ -456,15 +480,13 @@ pe_urgency_slots(const lListElem *pe, const char *urgency_slot_setting,
    return n;
 }
 
-/****** src/sge_generic_pe() **********************************************
+/****** sgeobj/pe/pe_create_template() ****************************************
 *
 *  NAME
-*     sge_generic_pe -- build up a generic pe object 
+*     pe_create_template -- build up a generic pe object 
 *
 *  SYNOPSIS
-*     lListElem* sge_generic_pe (
-*        char *pe_name
-*     );
+*     lListElem *pe_create_template(char *pe_name);
 *
 *  FUNCTION
 *     build up a generic pe object
@@ -477,20 +499,14 @@ pe_urgency_slots(const lListElem *pe, const char *urgency_slot_setting,
 *     !NULL - Pointer to a new CULL object of type PE_Type
 *     NULL - Error
 *
-*  EXAMPLE
-*
 *  NOTES
-*
-*  BUGS
-*
-*  SEE ALSO
-*
+*     MT-NOTE: pe_set_slots_used() is MT safe 
 *******************************************************************************/
-lListElem* sge_generic_pe(char *pe_name)
+lListElem* pe_create_template(char *pe_name)
 {
    lListElem *pep;
 
-   DENTER(TOP_LAYER, "sge_generic_pe");
+   DENTER(TOP_LAYER, "pe_create_template");
 
    pep = lCreateElem(PE_Type);
 
@@ -513,7 +529,7 @@ lListElem* sge_generic_pe(char *pe_name)
    return pep;
 }
 
-/****** sge_pe/pe_slots_used() *************************************************
+/****** sgeobj/pe/pe_slots_used() *********************************************
 *  NAME
 *     pe_get_slots_used() -- Returns used PE slots
 *
@@ -534,13 +550,17 @@ lListElem* sge_generic_pe(char *pe_name)
 *******************************************************************************/
 int pe_get_slots_used(const lListElem *pe)
 {
-   const lListElem *actual = lGetSubStr(pe, RUE_name, SGE_ATTR_SLOTS, PE_resource_utilization);
-   if (!actual) 
-      return -1;
-   return lGetDouble(actual, RUE_utilized_now); 
+   int ret = -1;
+   const lListElem *actual = lGetSubStr(pe, RUE_name, SGE_ATTR_SLOTS, 
+                                        PE_resource_utilization);
+
+   if (actual) {
+      ret = lGetDouble(actual, RUE_utilized_now);
+   }
+   return ret; 
 }
 
-/****** sge_pe/pe_set_slots_used() *********************************************
+/****** sgeobj/pe/pe_set_slots_used() *****************************************
 *  NAME
 *     pe_set_slots_used() -- Set number of used PE slots
 *
@@ -562,7 +582,8 @@ int pe_get_slots_used(const lListElem *pe)
 *******************************************************************************/
 int pe_set_slots_used(lListElem *pe, int slots)
 {
-   lListElem *actual = lGetSubStr(pe, RUE_name, SGE_ATTR_SLOTS, PE_resource_utilization);
+   lListElem *actual = lGetSubStr(pe, RUE_name, SGE_ATTR_SLOTS, 
+                                  PE_resource_utilization);
    if (!actual && (!(actual = 
          lAddSubStr(pe, RUE_name, SGE_ATTR_SLOTS, PE_resource_utilization, RUE_Type))))
       return -1;
@@ -571,7 +592,7 @@ int pe_set_slots_used(lListElem *pe, int slots)
 }
 
 
-/****** sge_pe/pe_debit_slots() ************************************************
+/****** sgeobj/pe/pe_debit_slots() ********************************************
 *  NAME
 *     pe_debit_slots() -- Debit pos/neg amount of slots from PE
 *
@@ -589,11 +610,8 @@ int pe_set_slots_used(lListElem *pe, int slots)
 *  NOTES
 *     MT-NOTE: pe_debit_slots() is MT safe 
 *******************************************************************************/
-void pe_debit_slots(
-lListElem *pep, 
-int slots,
-u_long32 job_id  /* needed for job logging */
-) {
+void pe_debit_slots(lListElem *pep, int slots, u_long32 job_id) 
+{
    int n;
 
    DENTER(TOP_LAYER, "pe_debit_slots");
@@ -609,3 +627,4 @@ u_long32 job_id  /* needed for job logging */
    DEXIT;
    return;
 }
+

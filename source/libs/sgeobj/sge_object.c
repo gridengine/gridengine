@@ -50,6 +50,7 @@
 #include "sge_manop.h"
 #include "sge_pe.h"
 #include "sge_qinstance.h"
+#include "sge_qinstance_type.h"
 #include "sge_schedd_conf.h"
 #include "sge_sharetree.h"
 #include "sge_cuser.h"

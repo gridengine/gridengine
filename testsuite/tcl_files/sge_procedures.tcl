@@ -147,11 +147,13 @@ proc resolve_version { { internal_number -100 } } {
    set versions(system_not_installed_-_run_compile_option_first)  -2
    set versions(unknown)                                          -1
 
-   set versions(SGE_5.3)     1
-   set versions(SGE_5.3_alpha1)     1
-   set versions(SGEEE_5.3)     1
-   set versions(SGEEE_5.3_alpha1)     1
-   set versions(SGE_6.0_pre) 1
+   set versions(SGE_5.3)             1
+   set versions(SGE_5.3_alpha1)      1
+   set versions(SGEEE_5.3)           1
+   set versions(SGEEE_5.3_alpha1)    1
+   set versions(SGE_6.0_pre)         1
+   set versions(SGE_5.3_maintrunc)   2
+   set versions(SGEEE_5.3_maintrunc) 2
 
    if { $internal_number == -100 } {
       if { $CHECK_PRODUCT_VERSION_NUMBER == "" } {

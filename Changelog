@@ -1,3 +1,7 @@
+EB-2004-02-16-1: Bugfix:    wrong queue selection in qmon and qstat
+                 Changed:   qstat, qmon
+                 Review:    AA
+
 CR-2004-02-16-1: Bugfix:    Disabled reconfigure in qmake/IRIX64/glob/Makefile
 
 CR-2004-02-16-0: Testsuite: Fixed still existing problem: 

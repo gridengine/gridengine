@@ -584,7 +584,7 @@ bool is_cqueue_selected(lList *queue_list)
          }
       }
       a_qinstance_is_selected |= tmp_a_qinstance_is_selected;
-      if (!tmp_a_qinstance_is_selected) {
+      if (!tmp_a_qinstance_is_selected && (lGetNumberOfElem(lGetList(cqueue,CQ_qinstances)) > 0)) {
          lSetUlong(cqueue, CQ_tag, TAG_DEFAULT);
       } else {
          a_cqueue_is_selected |= true;

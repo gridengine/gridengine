@@ -618,6 +618,8 @@ if [ $instcommon = true ]; then
       echo Installing \"util/\" directory tree
       Execute rm -rf $DEST_SGE_ROOT/util
       Execute cp -r dist/util $DEST_SGE_ROOT
+      chmod 755 $DEST_SGE_ROOT/util/*.sh $DEST_SGE_ROOT/util/arch
+      chmod 755 $DEST_SGE_ROOT/util/resources/loadsensors/*
    fi
    
    if [ $instexamples = true ]; then
@@ -706,7 +708,9 @@ if [ $instcommon = true ]; then
 
    if [ $instckpt = true ]; then
       echo Installing \"ckpt/\"
-      cp dist/ckpt/* $DEST_SGE_ROOT/ckpt
+      Execute rm -rf $DEST_SGE_ROOT/ckpt
+      Execute cp dist/ckpt/* $DEST_SGE_ROOT/ckpt
+      chmod 755 $DEST_SGE_ROOT/ckpt/*_command
    fi
 
    if [ $instlocale = true ]; then
@@ -714,7 +718,6 @@ if [ $instcommon = true ]; then
       Execute cp -r locale/* $DEST_SGE_ROOT/locale
       Execute rm -rf $DEST_SGE_ROOT/qmon/locale/*
       Execute cp -r dist/qmon/locale/* $DEST_SGE_ROOT/qmon/locale
-
    fi
 
    if [ $instsec = true ]; then

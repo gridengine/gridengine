@@ -1042,7 +1042,6 @@ static char *reroot_path (lListElem* pjob, const char *path, lList **alpp) {
 
          if ((homestat.st_ino == wdstat.st_ino) &&
              (homestat.st_dev == wdstat.st_dev)) {
-           /* DO SOMETHING */
             int length = strlen (tmp_path);
             
             /* Start with the home directory as the root. */

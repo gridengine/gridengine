@@ -1,3 +1,6 @@
+DT-2004-07-19-1: Bugfix:    o Changes from DT-2004-07-16-0 review
+                 Changed:   DRMAA, qstat, qconf, qsub
+
 AD-2004-07-19-1: Bugfix:    'qconf -km' did cause surplus warning.
                  Changed:   qmaster
 
@@ -38,7 +41,7 @@ DT-2004-07-16-0: Bugfix:    o Removed chdir() from DRMAA job processing
                             qmaster
                  Issue:     1150, 1125, 1127, 1146, 1151, 1109, 1137
                  Bugtraq:   5072005, -, -, 5073218, -, 5071525, -
-                 Review:    pending
+                 Review:    SG
 
 AH-2004-07-13-0: Bugfix:    Deleted pending job appears in qstat
                             Problem was that finished jobs generally were 

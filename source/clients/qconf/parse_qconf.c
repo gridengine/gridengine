@@ -6463,6 +6463,8 @@ u_long32 flags
    
 
    if (filename == NULL) {
+      bool failed = false;
+      
       /* get config or make an empty config entry if none exists */
       if (ep == NULL) {
          ep = lCreateElem(CONF_Type);
@@ -6519,6 +6521,7 @@ u_long32 flags
       
       if (answer_list_output(&alp)) {
          ep = lFreeElem (ep);
+         failed = true;
       }
 
       if (ep != NULL) {
@@ -6530,8 +6533,14 @@ u_long32 flags
       if (missing_field != NoName) {
          ep = lFreeElem (ep);
          answer_list_output (&alp);
+         failed = true;
       }
-            
+
+      /* If the configuration is legitematly NULL, create an empty object. */
+      if (!failed && (ep == NULL)) {
+         ep = lCreateElem (CONF_Type);
+      }
+      
       if (ep != NULL) {
          lSetHost(ep, CONF_hname, cfn);
       }

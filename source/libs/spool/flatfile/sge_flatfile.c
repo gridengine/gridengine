@@ -994,11 +994,13 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
 
             /* Bugfix: Issuezilla #1137
              * If a list field has no name and no value, it should be ignored
-             * altogether. */
-            if (((sub_list == NULL) || (lGetNumberOfElem(sub_list) == 0)) &&
-                (fields[i].name != NULL)) {
-               sge_dstring_append(&field_buffer, NONE_STR);
-            } else if (fields[i].name != NULL) {
+             * altogether.  I'm using this funny "if" arrangement to get the
+             * desired effect with the minimum amount of overhead. */
+            if ((sub_list == NULL) || (lGetNumberOfElem(sub_list) == 0)) {
+               if (fields[i].name != NULL) {
+                  sge_dstring_append(&field_buffer, NONE_STR);
+               }
+            } else {
                sge_dstring_clear(&tmp_buffer);
       
                if (spool_flatfile_write_list_fields(answer_list, sub_list, 
@@ -2074,18 +2076,29 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
 {
    int index = 0;
    int word = 0;
+   const char *tmp_orig = NULL;
+   char *orig = NULL;
    char *strp = NULL;
    char str_buf[MAX_STRING_SIZE];
    char *indent_str = NULL;
    bool changed = false;
    bool first_line = true;
-   
-   strp = (char *)sge_dstring_get_string (buffer);
+
+   tmp_orig = sge_dstring_get_string (buffer);
    
    /* This happens when qconf -aconf is used. */
-   if (strp == NULL) {
+   if (tmp_orig == NULL) {
       return;
    }
+   
+   /* This strdup is here because sge_dstring_get_string() returns a const char
+    * pointer.  I don't actually modify strp, but I do use it to step through
+    * the string, so it can't be a const.  Technically, I could jsut do the cast
+    * to char pointer, but some time in the future, that might lead someone else
+    * to accidentally double something bad.  So, I dup the str even though it's
+    * not technically necessary. */
+   orig = strdup (tmp_orig);
+   strp = orig;
    
    str_buf[0] = '\0';
    
@@ -2268,6 +2281,8 @@ static void spool_flatfile_add_line_breaks (dstring *buffer)
    if (indent_str != NULL) {
       FREE (indent_str);
    }
+   
+   FREE (orig);
    
    return;
 }

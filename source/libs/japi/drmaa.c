@@ -2615,7 +2615,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
 
       if (path != NULL) {
          DPRINTF (("Using \"%s\" for the working directory.\n", path));
-         opt_list_append_opts_from_script_path (&opts_scriptfile, (char *)path, &alp,
+         opt_list_append_opts_from_script_path (&opts_scriptfile, path, &alp,
                                                 opts_drmaa, environ);
          FREE (path);
       }

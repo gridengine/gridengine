@@ -351,7 +351,7 @@ ErrUsage()
              "                       Installs qmaster and exechost using the given\n" \
              "                       configuration file\n" \
              "                       (A templete can be found in:\n" \
-             "                       util/inst_sgeee_modules/inst_sgeee_template.conf)\n" \
+             "                       util/install_modules/inst_sgeee_template.conf)\n" \
              "   inst_sgeee -ux -host hostname\n" \
              "                       Uninstalls execd on given executionhost\n" \
              "   inst_sgeee -db      Install a Berkeley DB Server on local host\n" \
@@ -730,7 +730,7 @@ AddSGEStartUpScript()
          Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
                      -e "s%GENCELL%${SGE_CELL_VAL}%g" \
                      -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                     util/master_template > ${TMP_SGE_STARTUP_FILE}.0
+                     util/sgemaster_template > ${TMP_SGE_STARTUP_FILE}.0
 
          if [ "$SGE_QMASTER_PORT" != "" ]; then
             Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
@@ -751,7 +751,7 @@ AddSGEStartUpScript()
          Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
                      -e "s%GENCELL%${SGE_CELL_VAL}%g" \
                      -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                     util/execd_template > ${TMP_SGE_STARTUP_FILE}.0
+                     util/sgeexecd_template > ${TMP_SGE_STARTUP_FILE}.0
 
          if [ "$SGE_QMASTER_PORT" != "" ]; then
             Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \

@@ -1414,15 +1414,15 @@ SetScheddConfig()
    case $SCHEDD_CONF in
 
    1)
-    $SGE_BIN/qconf -Msconf ./util/inst_sgeee_modules/inst_sgeee_schedd_normal.conf
+    $SGE_BIN/qconf -Msconf ./util/install_modules/inst_sgeee_schedd_normal.conf
     ;;
 
    2)
-    $SGE_BIN/qconf -Msconf ./util/inst_sgeee_modules/inst_sgeee_schedd_high.conf
+    $SGE_BIN/qconf -Msconf ./util/install_modules/inst_sgeee_schedd_high.conf
     ;;
 
    3)
-    $SGE_BIN/qconf -Msconf ./util/inst_sgeee_modules/inst_sgeee_schedd_max.conf
+    $SGE_BIN/qconf -Msconf ./util/install_modules/inst_sgeee_schedd_max.conf
     ;;
    esac
    $CLEAR

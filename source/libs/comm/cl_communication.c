@@ -736,6 +736,7 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
    /* init connection struct */
    (*connection)->check_endpoint_flag = CL_FALSE;
    (*connection)->check_endpoint_mid  = 0;
+   (*connection)->crm_state       = CL_CRM_CS_UNDEFINED;
    (*connection)->crm_state_error = NULL;
    (*connection)->error_func      = NULL;
    (*connection)->tag_name_func   = NULL;

@@ -1,3 +1,8 @@
+CR-2005-03-24-0: Bugfix:    forgot to initalize connection response state at
+                            connection setup.
+                 Changed:   commlib
+                 Review:    RH
+
 AH-2005-03-23-0: Bugfix:    a series of matching soft queue requests gets not 
                             counted separately
                  Review:    SG
@@ -19,7 +24,7 @@ SG-2005-03-23-0: Bugfix:    scheduler does not get all objects on a qmaster or
                  Bugtraq:   6244808
                  Changed:   qmaster
 
-CR-2005-04-23-0: Bugfix:    error message from execd about endpoint is not unique
+CR-2005-03-23-0: Bugfix:    error message from execd about endpoint is not unique
                  Issue:     1504
                  Bugtraq:   6234371
                  Changed:   commlib, all binaries

@@ -256,13 +256,6 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
       ERROR((SGE_EVENT, "cl_com_set_error_func(): %s\n",cl_get_error_text(ret_val)));
    }
 
-
-   /* reserved port security not supported anymore */
-   if (feature_is_enabled(FEATURE_RESERVED_PORT_SECURITY)) {
-      CRITICAL((SGE_EVENT, "reserved port security not implemented\n"));
-      SGE_EXIT(1);
-   }
-   
    me_who = uti_state_get_mewho();
 
    handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);

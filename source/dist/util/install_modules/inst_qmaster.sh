@@ -434,14 +434,14 @@ SetProductMode()
    #   PRODUCT_PREFIX=sge
    #fi
 
-   if [ $RESPORT = true ]; then
-      RESPORT_PREFIX=-reserved_port
-   else
-      RESPORT_PREFIX=""
-   fi
+#if [ $RESPORT = true ]; then
+#      RESPORT_PREFIX=-reserved_port
+#   else
+#      RESPORT_PREFIX=""
+#   fi
 
    if [ $AFS = true ]; then
-      AFS_PREFIX=-afs
+      AFS_PREFIX="afs"
    else
       AFS_PREFIX=""
    fi
@@ -453,7 +453,7 @@ SetProductMode()
          $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to cancel the installation >> "
          exit 1
       else
-         CSP_PREFIX=-csp
+         CSP_PREFIX="csp"
       fi  
    else
       CSP_PREFIX=""
@@ -466,7 +466,7 @@ SetProductMode()
          fi
       fi
    else
-      PRODUCT_MODE="${RESPORT_PREFIX}${AFS_PREFIX}${CSP_PREFIX}"
+      PRODUCT_MODE="${AFS_PREFIX}${CSP_PREFIX}"
    fi
 
 }

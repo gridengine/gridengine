@@ -1,4 +1,9 @@
-AA-2004-03-03-0  Bugfix:    - qi display
+SG-2004-03-03-1: Bugfix:    third part of removing SGE - simplefying
+                            the feature set code
+                 Changed:   qmaster
+                 Review:    pending
+
+AA-2004-03-03-0: Bugfix:    - qi display
                             - uppercase shortcuts
                             - q customize
                             - job dialogue segv for jobcustomize
@@ -8,7 +13,7 @@ AA-2004-03-03-0  Bugfix:    - qi display
                  Changed:   qmon
                  Review:    pending
 
-CR-2004-03-03-0  Bugfix:    - additional parameter for cl_com_gethostname(), 
+CR-2004-03-03-0: Bugfix:    - additional parameter for cl_com_gethostname(), 
                               cl_com_cached_gethostbyname(), 
                               cl_com_cached_gethostbyaddr(),sge_gethostbyname()
                               and sge_gethostbyaddr() which returns system error.
@@ -20,7 +25,7 @@ CR-2004-03-03-0  Bugfix:    - additional parameter for cl_com_gethostname(),
                  Changed:   commlib, gethostbyname, gethostbyaddr, gethostname
                  Review:    pending
 
-EB-2004-03-03-0  Bugfix:    - job will be shown twice in qstat/qmon after 
+EB-2004-03-03-0: Bugfix:    - job will be shown twice in qstat/qmon after 
                               restart of sge_qmaster
                             - dbstat utility is unable to show certain objects
                             - Show reason for queue and job error state in qstat

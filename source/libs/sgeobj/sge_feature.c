@@ -69,45 +69,12 @@ struct feature_state_t {
     lList* Master_FeatureSet_List;
 };
 
-/* *INDENT-OFF* */
-static const int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = { 
-/*  XX FEATURE_UNINITIALIZED                                    */
-/*  |                                                           */
-/*  |   FEATURE_NO_SECURITY                        */
-/*  |    |  FEATURE_AFS_SECUIRITY                   */
-/*  |    |  |  FEATURE_DCE_SECURITY                 */
-/*  |    |  |  |  FEATURE_KERBEROS_SECURITY         */   
-/*  |    |  |  |  |  FEATURE_RESERVED_PORT_SECURITY */ 
-/*  |    |  |  |  |  |  FEATURE_CSP_SECURITY        */
-/*  v    v  v  v  v  v  v                           */
-   {0,   0, 0, 0, 0, 0, 0},   /* FEATURESET_UNINITIALIZED       */
-   {0,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGEEE               */
-   {0,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGEEE_AFS           */
-   {0,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGEEE_DCE           */
-   {0,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGEEE_KERBEROS      */
-   {0,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGEEE_RESERVED_PORT */
-   {0,   0, 0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_CSP */
-};
-
-static const feature_names_t feature_list[] = {
-/*   {FEATURE_REPRIORITIZATION,       "reprioritization"},*/
-/*   {FEATURE_REPORT_USAGE,           "report_usage"},*/
-   {FEATURE_NO_SECURITY,            "no_security"},
-   {FEATURE_AFS_SECURITY,           "afs_security"},
-   {FEATURE_DCE_SECURITY,           "dce_security"},
-   {FEATURE_KERBEROS_SECURITY,      "kerberos_security"},
-   {FEATURE_RESERVED_PORT_SECURITY, "reserved_port_security"},
-   {FEATURE_CSP_SECURITY,           "csp_security"},
-   {0, NULL}
-};  
-
 static const featureset_names_t featureset_list[] = {
-   {FEATURESET_SGEEE,               "none"},
-   {FEATURESET_SGEEE_AFS,           "sgeee-afs"},
-   {FEATURESET_SGEEE_DCE,           "sgeee-dce"},
-   {FEATURESET_SGEEE_KERBEROS,      "sgeee-kerberos"},
-   {FEATURESET_SGEEE_RESERVED_PORT, "sgeee-reserved_port"},
-   {FEATURESET_SGEEE_CSP,           "sgeee-csp"},
+   {FEATURE_NO_SECURITY,            "none"},
+   {FEATURE_AFS_SECURITY,           "afs"},
+   {FEATURE_DCE_SECURITY,           "dce"},
+   {FEATURE_KERBEROS_SECURITY,      "kerberos"},
+   {FEATURE_CSP_SECURITY,           "csp"},
    {0, NULL}
 };
 /* *INDENT-ON* */
@@ -118,6 +85,7 @@ static pthread_key_t feature_state_key;
 static void feature_once_init(void);
 static void feature_state_destroy(void* theState);
 static void feature_state_init(struct feature_state_t* theState);
+static feature_id_t feature_get_featureset_id(const char *name); 
 
 
 /****** sgeobj/sge_feature/feature_mt_init() ***********************************
@@ -198,52 +166,6 @@ lList **feature_get_master_featureset_list(void)
    return &(feature_state->Master_FeatureSet_List);
 }
 
-/****** sgeobj/feature/feature_initialize() ***********************************
-*  NAME
-*     feature_initialize() -- initialize this module 
-*
-*  SYNOPSIS
-*     static void feature_initialize(void) 
-*
-*  FUNCTION
-*     build up the CULL list "Master_FeatureSet_List" (FES_Type) with 
-*     information found in the array "enabled_features_mask"
-*
-*  INPUTS
-*     static array enabled_features_mask[][] 
-*
-*  RESULT
-*     initialized Master_FeatureSet_List
-*
-*  NOTES
-*     MT-NOTE: feature_initialize() is MT safe
-******************************************************************************/
-void feature_initialize(void)
-{
-   if (!*feature_get_master_featureset_list()) {
-      lListElem *featureset;
-      lListElem *feature;
-      int featureset_id;
-      int feature_id;
- 
-      for(featureset_id = 0;
-          featureset_id < FEATURESET_LAST_ENTRY;
-          featureset_id++) {
-         featureset = lAddElemUlong(feature_get_master_featureset_list(), FES_id,
-                                  featureset_id, FES_Type);
-         lSetUlong(featureset, FES_active, 0);
-         for(feature_id = 0;
-             feature_id < FEATURE_LAST_ENTRY;
-             feature_id++) {
-            feature = lAddSubUlong(featureset, FE_id,
-                                  feature_id, FES_features, FE_Type);
-            lSetUlong(feature, FE_enabled,
-                            enabled_features_mask[featureset_id][feature_id]);
-         }
-      }
-   }
-}                 
-
 /****** sgeobj/feature/feature_initialize_from_string() ***********************
 *  NAME
 *     feature_initialize_from_string() -- tag one featureset as active 
@@ -269,12 +191,12 @@ void feature_initialize(void)
 ******************************************************************************/
 int feature_initialize_from_string(const char *mode) 
 {
-   featureset_id_t id;
+   feature_id_t id;
    int ret;
 
    DENTER(TOP_LAYER, "featureset_initialize_from_string");
    id = feature_get_featureset_id(mode);
-   if (id == FEATURESET_UNINITIALIZED) {
+   if (id == FEATURE_UNINITIALIZED) {
       ERROR((SGE_EVENT, MSG_GDI_INVALIDPRODUCTMODESTRING_S, mode));
       ret = -3;
    } else {
@@ -307,15 +229,12 @@ int feature_initialize_from_string(const char *mode)
 *  NOTES
 *     MT-NOTE: feature_activate() is MT safe
 ******************************************************************************/
-void feature_activate(featureset_id_t id) 
+void feature_activate(feature_id_t id) 
 {
    lListElem *active_set;
    lListElem *inactive_set;
 
    DENTER(TOP_LAYER, "featureset_activate");  
-   if (!*feature_get_master_featureset_list()) {
-      feature_initialize();
-   }
 
    inactive_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_id, id);
    active_set = lGetElemUlong(*feature_get_master_featureset_list(), FES_active, 1);
@@ -332,61 +251,27 @@ void feature_activate(featureset_id_t id)
    }
    DEXIT;
 }
- 
-/****** sgeobj/feature/feature_is_active() ************************************
-*  NAME
-*     feature_is_active() -- is featureset active? 
-*
-*  SYNOPSIS
-*     bool feature_is_active(featureset_id_t id) 
-*
-*  FUNCTION
-*     returns true or false whether the given featureset whithin the 
-*     Master_FeatureSet_List is marked as active or not. 
-*
-*  INPUTS
-*     id - feature set constant 
-*
-*  RESULT
-*     true or false
-*
-*  NOTES
-*     MT-NOTE: feature_is_active() is MT safe
-******************************************************************************/
-bool feature_is_active(featureset_id_t id) 
-{
-   lListElem *feature;
-   int ret = false;
-
-   DENTER(TOP_LAYER, "featureset_is_active");
-   feature = lGetElemUlong(*feature_get_master_featureset_list(), FES_id, id);
-   if (feature) {
-      ret = lGetUlong(feature, FES_active) ? true : false;
-   }
-   DEXIT;
-   return ret;
-}
 
 /****** sgeobj/feature/feature_get_active_featureset_id() *********************
 *  NAME
 *     feature_get_active_featureset_id() -- current active featureset 
 *
 *  SYNOPSIS
-*     featureset_id_t feature_get_active_featureset_id() 
+*     feature_id_t feature_get_active_featureset_id() 
 *
 *  FUNCTION
 *     return an id of the current active featureset 
 *
 *  RESULT
-*     featureset_id_t - (find the definition in the .h file)
+*     feature_id_t - (find the definition in the .h file)
 *
 *  NOTES
 *     MT-NOTE: feature_get_active_featureset_id() is MT safe
 ******************************************************************************/
-featureset_id_t feature_get_active_featureset_id(void) 
+feature_id_t feature_get_active_featureset_id(void) 
 {
    lListElem *feature;
-   int ret = FEATURESET_UNINITIALIZED;
+   feature_id_t ret = FEATURE_UNINITIALIZED;
 
    DENTER(TOP_LAYER, "feature_get_active_featureset_id");
    for_each(feature, *feature_get_master_featureset_list()) {
@@ -404,13 +289,13 @@ featureset_id_t feature_get_active_featureset_id(void)
 *     feature_get_featureset_name() -- return the product mode string
 *
 *  SYNOPSIS
-*     char* feature_get_featureset_name(featureset_id_t id) 
+*     char* feature_get_featureset_name(feature_id_t id) 
 *
 *  FUNCTION
 *     returns the corresponding modestring for a featureset constant 
 *
 *  INPUTS
-*     featureset_id_t id - constant
+*     feature_id_t id - constant
 *
 *  RESULT
 *     mode string 
@@ -418,7 +303,7 @@ featureset_id_t feature_get_active_featureset_id(void)
 *  NOTES
 *     MT-NOTE: feature_get_featureset_name() is MT safe
 ******************************************************************************/
-const char *feature_get_featureset_name(featureset_id_t id) 
+const char *feature_get_featureset_name(feature_id_t id) 
 {
    int i = 0;
    char *ret = "<<unknown>>";
@@ -439,7 +324,7 @@ const char *feature_get_featureset_name(featureset_id_t id)
 *     feature_get_featureset_id() -- Value for a featureset string 
 *
 *  SYNOPSIS
-*     featureset_id_t feature_get_featureset_id(char* name) 
+*     feature_id_t feature_get_featureset_id(char* name) 
 *
 *  FUNCTION
 *     This function returns the corresponding enum value for
@@ -450,15 +335,15 @@ const char *feature_get_featureset_name(featureset_id_t id)
 *                  mode string 
 *
 *  RESULT
-*     featureset_id_t 
+*     feature_id_t 
 *
 *  NOTES
 *     MT-NOTE: feature_get_featureset_id() is MT safe
 ******************************************************************************/
-featureset_id_t feature_get_featureset_id(const char *name) 
+static feature_id_t feature_get_featureset_id(const char *name) 
 {
    int i = 0;
-   featureset_id_t ret = FEATURESET_UNINITIALIZED;
+   feature_id_t ret = FEATURE_UNINITIALIZED;
 
    DENTER(TOP_LAYER, "featureset_get_id");
    if (!name) {
@@ -513,78 +398,6 @@ bool feature_is_enabled(feature_id_t id)
    return ret;
 }  
  
-/****** sgeobj/feature/feature_get_name() *************************************
-*  NAME
-*     feature_get_name() -- returns the feature as string 
-*
-*  SYNOPSIS
-*     char* feature_get_name(feature_id_t id) 
-*
-*  FUNCTION
-*     return the corresponding feature name 
-*
-*  INPUTS
-*     feature_ id 
-*
-*  RESULT
-*     char* - name of the given feature constant 
-*             (or "<<unknown>>" when the id isn't a valid 
-*              feature constant) 
-*
-*  NOTES
-*     MT-NOTE: feature_get_name() is MT safe
-******************************************************************************/
-const char *feature_get_name(feature_id_t id) 
-{
-   int i = 0;
-   const char *ret = "<<unknown>>";
-
-   DENTER(TOP_LAYER, "feature_get_name");
-   while (feature_list[i].name && feature_list[i].id != id) {
-      i++;
-   }
-   if (feature_list[i].name) {
-      ret = feature_list[i].name;
-   } 
-   DEXIT;
-   return ret; 
-}
- 
-/****** sgeobj/feature/feature_get_id() ***************************************
-*  NAME
-*     feature_get_id() -- translates a feature string into the constant 
-*
-*  SYNOPSIS
-*     feature_id_t feature_get_id(char* name) 
-*
-*  FUNCTION
-*     returns the corresponding constant for a given feature string 
-*
-*  INPUTS
-*     char* name - valid strings are mentioned above (feature_list[]) 
-*
-*  RESULT
-*     feature_id_t 
-*
-*  NOTES
-*     MT-NOTE: feature_get_id() is MT safe
-******************************************************************************/
-feature_id_t feature_get_id(const char *name) 
-{
-   int i = 0;
-   feature_id_t ret = FEATURESET_UNINITIALIZED;
-
-   DENTER(TOP_LAYER, "feature_get_id");
-   while (feature_list[i].name && strcmp(feature_list[i].name, name)) {
-      i++;
-   }
-   if (feature_list[i].name) {
-      ret = feature_list[i].id;
-   }
-   DEXIT;
-   return ret;
-}
-
 /****** sgeobj/feature/feature_get_product_name() *****************************
 *  NAME
 *     feature_get_product_name() -- get product name string
@@ -622,7 +435,7 @@ const char *feature_get_product_name(featureset_product_name_id_t style, dstring
    const char *ret = NULL;
    DENTER(TOP_LAYER, "feature_get_product_name");
 
-   if (feature_get_active_featureset_id() != FEATURESET_UNINITIALIZED ) {
+   if (feature_get_active_featureset_id() != FEATURE_UNINITIALIZED ) {
       short_name = GEEE_SHORTNAME;
       long_name  = GEEE_LONGNAME;
    }

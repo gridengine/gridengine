@@ -201,14 +201,14 @@ int host_notify_about_kill(lListElem *host, int kill_command)
 *
 *  SYNOPSIS
 *     int host_notify_about_featureset(lListElem *host, 
-*                                      featureset_id_t featureset)
+*                                      feature_id_t featureset)
 *
 *  FUNCTION
 *     Send the given "featureset" id to the execution "host".
 *
 *  INPUTS
 *     lListElem *host            - EH_Type 
-*     featureset_id_t featureset - id 
+*     feature_id_t featureset - id 
 *
 *  RESULT
 *     int - see host_notify_about_X() 
@@ -216,7 +216,7 @@ int host_notify_about_kill(lListElem *host, int kill_command)
 *  SEE ALSO
 *     qmaster/host/host_notify_about_X()
 *******************************************************************************/
-int host_notify_about_featureset(lListElem *host, featureset_id_t featureset)
+int host_notify_about_featureset(lListElem *host, feature_id_t featureset)
 {
    return host_notify_about_X(host, featureset, TAG_NEW_FEATURES, EXECD);
 }
@@ -227,7 +227,7 @@ int host_notify_about_featureset(lListElem *host, featureset_id_t featureset)
 *
 *  SYNOPSIS
 *     void host_list_notify_about_featureset(lList *host_list, 
-*                                            featureset_id_t featureset) 
+*                                            feature_id_t featureset) 
 *
 *  FUNCTION
 *     Send the given "featureset" id to all exec hosts mentioned in
@@ -235,13 +235,13 @@ int host_notify_about_featureset(lListElem *host, featureset_id_t featureset)
 *
 *  INPUTS
 *     lList *host_list           - EH_Type list 
-*     featureset_id_t featureset - id 
+*     feature_id_t featureset - id 
 *
 *  RESULT
 *     void - None 
 *******************************************************************************/
 void host_list_notify_about_featureset(lList *host_list,
-                                       featureset_id_t featureset)
+                                       feature_id_t featureset)
 {
    lListElem *host;
    DENTER(TOP_LAYER, "host_list_notify_about_featureset");

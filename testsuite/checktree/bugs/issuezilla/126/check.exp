@@ -266,7 +266,7 @@ proc issue_126_check {} {
       #
       # 7
       #
-      append error_output "[exec date] deleting jobs $job1_id and $job2_id"
+      append error_output "[exec date] deleting jobs $job1_id and $job2_id\n"
 
       set program "$ts_config(product_root)/bin/$CHECK_ARCH/qdel"
       set output [start_remote_prog $CHECK_HOST $CHECK_USER $program "$job1_id"]

@@ -970,7 +970,7 @@ double prof_get_total_stime(prof_level level, bool with_sub, dstring *error)
 *     MT-NOTE: prof_get_info_string() is not MT safe
 *******************************************************************************/
 
-#define PROF_GET_INFO_FORMAT "%-15.15s: wc = %10.3fs, utime = %10.3fs, stime = %10.3fs, utilization = %3.0f%%\n"
+#define PROF_GET_INFO_FORMAT "PROF: %-15.15s: wc = %10.3fs, utime = %10.3fs, stime = %10.3fs, utilization = %3.0f%%\n"
 
 static const char *
 _prof_get_info_string(prof_level level, dstring *info_string, bool with_sub, dstring *error)
@@ -1069,7 +1069,7 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
 
       log_state_set_log_level(LOG_INFO);
       info_message = prof_get_info_string(level, with_sub, NULL);
-      INFO((SGE_EVENT, "%s%s", info, info_message));
+      INFO((SGE_EVENT, "PROF: %s%s", info, info_message));
       log_state_set_log_level(saved_logginglevel);
       ret = true;
    }

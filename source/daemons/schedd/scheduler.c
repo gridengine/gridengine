@@ -144,7 +144,7 @@ int scheduler(sge_Sdescr_t *lists) {
    fpdjp = fopen("/tmp/sge_debug_job_place.out", "a");
 #endif
 
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    prof_job_count = lGetNumberOfElem(lists->job_list);
 
    scheduled_fast_jobs    = 0;
@@ -230,7 +230,7 @@ int scheduler(sge_Sdescr_t *lists) {
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
 
       log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e),  %d J(x),%d J(all),  %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
+      INFO((SGE_EVENT, "PROF: scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(s), %d J(h), %d J(e),  %d J(x),%d J(all),  %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
          prof_get_measurement_wallclock(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL),
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
@@ -262,9 +262,9 @@ int scheduler(sge_Sdescr_t *lists) {
       ));
       log_state_set_log_level(saved_logginglevel);
    }
-
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
-
+  
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM5);
+   
    remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), &orderlist);
    orderlist = sge_add_schedd_info(orderlist);
 
@@ -286,14 +286,15 @@ int scheduler(sge_Sdescr_t *lists) {
       sge_send_orders2master(orderlist);
       orderlist = lFreeList(orderlist);
    }
-   
+
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM5);
+
    if(prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
       log_state_set_log_level(LOG_INFO);
    
-      INFO((SGE_EVENT, "PROF: generate and send orders took: %.3f s\n", 
-         prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL) ));
+      INFO((SGE_EVENT, "PROF: send orders took: %.3f s\n", 
+         prof_get_measurement_utime(SGE_PROF_CUSTOM5, true, NULL) ));
 
       log_state_set_log_level(saved_logginglevel);
    }
@@ -511,7 +512,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "SGEEE pending job ticket calculation took %.3f s\n",
+         INFO((SGE_EVENT, "PROF: SGEEE pending job ticket calculation took %.3f s\n",
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, false, NULL)));
          log_state_set_log_level(saved_logginglevel);
       }
@@ -551,7 +552,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "SGEEE active job ticket calculation took %.3f s\n",
+         INFO((SGE_EVENT, "PROF: SGEEE active job ticket calculation took %.3f s\n",
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM2, false, NULL)));
          log_state_set_log_level(saved_logginglevel);
       }
@@ -588,7 +589,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
-         INFO((SGE_EVENT, "SGEEE job sorting took %.3f s\n",
+         INFO((SGE_EVENT, "PROF: SGEEE job sorting took %.3f s\n",
                prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
          log_state_set_log_level(saved_logginglevel);
       }
@@ -943,7 +944,7 @@ SKIP_THIS_JOB:
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);
-      INFO((SGE_EVENT, "SGEEE job dispatching took %.3f s\n",
+      INFO((SGE_EVENT, "PROF: SGEEE job dispatching took %.3f s\n",
             prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL)));
       log_state_set_log_level(saved_logginglevel);
    }

@@ -59,7 +59,7 @@ typedef enum {
    SGE_PROF_SCHEDLIB1,
    SGE_PROF_SCHEDLIB2,
    SGE_PROF_SCHEDLIB3,
-   SGE_PROF_SCHEDLIB4,
+   SGE_PROF_SCHEDLIB4, /* used in libs/schedd/sgeee.c; it is not enabled for the overall overview in the scheduler */
    SGE_PROF_ALL
 } prof_level;
 

@@ -126,6 +126,10 @@ char *argv[]
    prof_set_level_name(SGE_PROF_CUSTOM2, "active job ticket calculation", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM3, "job sorting", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM4, "job dispatching", NULL);
+   prof_set_level_name(SGE_PROF_CUSTOM5, "send orders", NULL);
+   prof_set_level_name(SGE_PROF_CUSTOM6, "scheduler event loop", NULL);
+   prof_set_level_name(SGE_PROF_CUSTOM7, "copy lists", NULL);
+
 
    /* This needs a better solution */
    umask(022);

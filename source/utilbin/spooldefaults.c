@@ -52,6 +52,7 @@
 #include "sge_all_listsL.h"
 #include "sge_conf.h"
 #include "sge_mt_init.h"
+#include "sge.h"
 #include "spool/sge_spooling.h"
 #include "spool/dynamic/sge_spooling_loader.h"
 #include "spool/classic/read_list.h"

@@ -34,7 +34,7 @@
 #___INFO__MARK_END__
 UTILIB_DIR  = $(SDIR)/libs/uti
 
-UTILIB  = libuti$(QIDLEXT)$(LIBEXT)
+UTILIB  = libuti$(LIBEXT)
 
 UTILIB_DRMAA_SRC = \
          config_file.c \
@@ -129,7 +129,7 @@ sge_hostname.o:	$(UTILIB_DIR)/sge_hostname.c
 sge_parse_num_par.o:	$(UTILIB_DIR)/sge_parse_num_par.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_parse_num_par.c
 
-sge_uidgid$(QIDLEXT).o:	$(UTILIB_DIR)/sge_uidgid.c
+sge_uidgid.o:	$(UTILIB_DIR)/sge_uidgid.c
 		$(LD_WRAPPER) $(CC) -o $@ $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_uidgid.c
 
 sge_afsutil.o: $(UTILIB_DIR)/sge_afsutil.c

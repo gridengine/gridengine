@@ -32,11 +32,13 @@
 
 #include "sge_event_master.h"
 
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
+#include "sge_event_master.h"
 #include "sge.h"
 #include "cull.h"
 #include "sge_feature.h"

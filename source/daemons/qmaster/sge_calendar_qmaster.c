@@ -58,10 +58,6 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
-#ifdef QIDL
-   #include "qidl_c_gdi.h"
-#endif
-
 int 
 calendar_mod(lList **alpp, lListElem *new_cal, lListElem *cep, int add, 
              const char *ruser, const char *rhost, gdi_object_t *object, 

@@ -38,6 +38,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "commlib.h"
+#include "sge.h"
 
 #include "msg_qmaster.h"
 

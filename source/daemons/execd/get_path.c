@@ -46,6 +46,7 @@
 #include "msg_execd.h"
 #include "sge_unistd.h"
 #include "sge_job.h"
+#include "sge.h"
 
 
 static int getHomeDir(char *exp_path, const char *user);

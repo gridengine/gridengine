@@ -34,7 +34,7 @@
 #___INFO__MARK_END__
 GDILIB_DIR = $(SDIR)/libs/gdi
 
-GDILIB = libgdi$(QIDLEXT)$(LIBEXT)
+GDILIB = libgdi$(LIBEXT)
 
 GDILIB_SRC = gdi_setup.c \
          gdi_tsm.c \
@@ -42,7 +42,7 @@ GDILIB_SRC = gdi_setup.c \
          gdi_conf.c \
          pack_job_delivery.c \
          sge_any_request.c \
-         sge_gdi_request$(QIDLEXT).c \
+         sge_gdi_request.c \
          sge_ack.c \
          sge_qexec.c \
          qm_name.c \
@@ -78,7 +78,7 @@ libgdi.a:	$(GDILIB_OBJS)
 	$(AR) $(ARFLAGS) libgdi.a $(GDILIB_OBJS)
 	$(RANLIB) libgdi.a
 
-libgdi$(SHAREDEXT): $(GDILIB_OBJS) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libgdi$(SHAREDEXT): $(GDILIB_OBJS) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libgdi$(SHAREDEXT) $(GDILIB_OBJS) -lsgeobjd -lcomm -lcommlists -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################
@@ -104,7 +104,7 @@ sge_ack.o:	$(GDILIB_DIR)/sge_ack.c
 sge_qexec.o:	$(GDILIB_DIR)/sge_qexec.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_qexec.c
 
-sge_gdi_request$(QIDLEXT).o:	$(GDILIB_DIR)/sge_gdi_request.c
+sge_gdi_request.o:	$(GDILIB_DIR)/sge_gdi_request.c
 		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_request.c
 
 sge_any_request.o:	$(GDILIB_DIR)/sge_any_request.c

@@ -34,7 +34,7 @@
 #___INFO__MARK_END__
 SPOOLFLIB_DIR = $(SDIR)/libs/spool/flatfile
 
-SPOOLFLIB = libspoolf$(QIDLEXT)$(LIBEXT)
+SPOOLFLIB = libspoolf$(LIBEXT)
 
 SPOOLFLIB_SRC = \
          sge_flatfile.c \
@@ -73,7 +73,7 @@ libspoolf.a:	$(SPOOLFLIB_OBJS) $(SPOOLFLIB_ADD_OBJS)
 	$(AR) $(ARFLAGS) libspoolf.a $(SPOOLFLIB_OBJS) $(SPOOLFLIB_ADD_OBJS)
 	$(RANLIB) libspoolf.a
 
-libspoolf$(SHAREDEXT): $(SPOOLFLIB_OBJS) $(SPOOLFLIB_ADD_OBJS) $(SPOOLLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libspoolf$(SHAREDEXT): $(SPOOLFLIB_OBJS) $(SPOOLFLIB_ADD_OBJS) $(SPOOLLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolf$(SHAREDEXT) $(SPOOLFLIB_OBJS) $(SPOOLFLIB_ADD_OBJS) -lspool -lsgeobj -lsgeobjd -lcomm -lcull -luti -lrmon $(LIBS) -lcommlists 
 
 ###############################################################################

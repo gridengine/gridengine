@@ -33,7 +33,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-SPOOLLIB = libspool$(QIDLEXT)$(LIBEXT)
+SPOOLLIB = libspool$(LIBEXT)
 
 SPOOLLIB_DIR = $(SDIR)/libs/spool
 
@@ -70,7 +70,7 @@ libspool.a:	$(SPOOLLIB_OBJS)
 	$(AR) $(ARFLAGS) libspool.a $(SPOOLLIB_OBJS)
 	$(RANLIB) libspool.a
 
-libspool$(SHAREDEXT): $(SPOOLLIB_OBJS) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libspool$(SHAREDEXT): $(SPOOLLIB_OBJS) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libspool$(SHAREDEXT) $(SPOOLLIB_OBJS) -lsgeobj -lsgeobjd -lcomm -lcommlists -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################

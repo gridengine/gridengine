@@ -57,11 +57,6 @@
 #ifdef KERBEROS
 #  include "krb_lib.h"
 #endif
-
-#ifdef QIDL
-#include "qidl_c_gdi.h"
-#endif
-
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
@@ -78,14 +73,6 @@ static int sge_get_gdi_request(int *commlib_error,
                                u_short *id,
                                sge_gdi_request **arp,
                                unsigned long request_mid);
-
-
-#ifdef QIDL
-static int sge_handle_local_gdi_request(sge_gdi_request *out,
-                                        sge_gdi_request **in);
-#endif
-
-
 
 /****** gdi/request/sge_gdi() *************************************************
 *  NAME
@@ -424,18 +411,11 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       }
 #endif
 
-#ifdef QIDL      
-      if (uti_state_get_mewho() != QMASTER)
-#endif
          status = sge_send_receive_gdi_request(
             &commlib_error, 
             sge_get_master(gdi_state_get_reread_qmaster_file()), 
             prognames[QMASTER], 
             1, state->first, &answer);
-#ifdef QIDL
-      else
-            status = sge_handle_local_gdi_request(state->first, &answer);
-#endif
 
 #ifdef KERBEROS
       /* clear the forward TGT request */
@@ -624,18 +604,11 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
       }
 #endif
 
-#ifdef QIDL      
-      if (uti_state_get_mewho() != QMASTER)
-#endif
          status = sge_send_receive_gdi_request(
             &commlib_error, 
             sge_get_master(gdi_state_get_reread_qmaster_file()), 
             prognames[QMASTER], 
             0, state->first, &answer);
-#ifdef QIDL
-      else
-            status = sge_handle_local_gdi_request(state->first, &answer);
-#endif
 
 #ifdef KERBEROS
       /* clear the forward TGT request */
@@ -1429,43 +1402,3 @@ sge_gdi_request *free_gdi_request(sge_gdi_request *ar) {
    DEXIT;
    return NULL;
 }
-
-#ifdef QIDL
-
-int sge_handle_local_gdi_request(
-sge_gdi_request *out,
-sge_gdi_request **in 
-) {
-   sge_gdi_request *ar = NULL;
-   sge_gdi_request *an = NULL;
-   
-   for (ar = out; ar; ar = ar->next) {
-      struct sge_auth* qidl_me = get_qidl_me();
-      
-      if (ar->host) free(ar->host);
-      if (ar->commproc) free(ar->commproc);
-      if (ar->auth_info) free(ar->auth_info);
-
-      /* use id, commproc and host for authentication */
-      ar->id = 0;
-      ar->commproc = sge_strdup(NULL, "sge_qidld");
-
-      if (sge_set_auth_info(ar, qidl_me->uid, qidl_me->user, 
-                           qidl_me->gid, qidl_me->group))
-         return -1;
-
-      ar->host = sge_strdup(NULL, qidl_me->host);
-
-      if (ar == out) {
-         *in = an = new_gdi_request();
-      }
-      else {
-         an->next = new_gdi_request();
-         an = an->next;
-      }
-      sge_c_gdi(uti_state_get_qualified_hostname(), ar, an);
-   }
-   return 0;
-}
-
-#endif

@@ -35,7 +35,7 @@
 
 SPOOLBLIB_DIR = $(SDIR)/libs/spool/berkeleydb
 
-SPOOLBLIB = libspoolb$(QIDLEXT)$(LIBEXT)
+SPOOLBLIB = libspoolb$(LIBEXT)
 
 SPOOLBLIB_SRC = \
          sge_spooling_berkeleydb.c  \

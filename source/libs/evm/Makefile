@@ -34,7 +34,7 @@
 #___INFO__MARK_END__
 EVMLIB_DIR = $(SDIR)/libs/evm
 
-EVMLIB = libevm$(QIDLEXT)$(LIBEXT)
+EVMLIB = libevm$(LIBEXT)
 
 EVMLIB_SRC = \
                sge_event_master.c \

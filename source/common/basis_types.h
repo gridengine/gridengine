@@ -32,7 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <pthread.h>
 #include <sys/types.h>
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__
@@ -87,7 +86,7 @@ typedef enum {
 #define u64c(x)  (unsigned long long)(x)
 #endif
 
-#if defined(ALPHA) || defined(HP11) || defined(HP1164)
+#if defined(HP11) || defined(HP1164)
 #  include <limits.h>
 #else
 #  ifndef WIN32NATIVE

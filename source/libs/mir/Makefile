@@ -34,7 +34,7 @@
 #___INFO__MARK_END__
 MIRLIB_DIR = $(SDIR)/libs/mir
 
-MIRLIB = libmir$(QIDLEXT)$(LIBEXT)
+MIRLIB = libmir$(LIBEXT)
 
 MIRLIB_SRC =                           \
                sge_mirror.c            \
@@ -72,7 +72,7 @@ libmir.a:	$(MIRLIB_OBJS)
 	$(AR) $(ARFLAGS) libmir.a $(MIRLIB_OBJS)
 	$(RANLIB) libmir.a
 
-libmir$(SHAREDEXT): $(MIRLIB_OBJS) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libmir$(SHAREDEXT): $(MIRLIB_OBJS) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libmir$(SHAREDEXT) $(MIRLIB_OBJS) -levc -lgdi -lsgeobj -lsgeobjd -lcomm -lcommlists -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################

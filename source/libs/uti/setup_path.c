@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "setup_path.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +37,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 
+#include "setup_path.h"
 #include "sgermon.h"
 #include "basis_types.h"
 #include "sge_prog.h"
@@ -50,6 +49,7 @@
 #include "sge_dstring.h"
 #include "msg_utilib.h"
 #include "msg_common.h"
+#include "sge.h"
 
 
 struct path_state_t {

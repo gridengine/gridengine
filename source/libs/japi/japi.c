@@ -36,18 +36,15 @@
 #include <errno.h>
 #include <signal.h>
 #include <pthread.h>
-
 #include <pwd.h>
 
 #define JOIN_ECT
 
-
 #include "sge_mtutil.h"
-
 #include "drmaa.h"
 #include "japi.h"
 #include "msg_japi.h"
-
+#include "sge.h"
 #include "sge_answer.h"
 
 /* CULL */

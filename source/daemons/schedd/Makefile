@@ -70,7 +70,7 @@ SCHEDD_ADD_LIBS = -lsched -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLI
 SCHEDD_LIB_DEPENDS = $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) \
                      $(SGEOBJLIB) $(SGEOBJDLIB) \
                      $(SECLIBS) $(KRBLIBS) \
-                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
+                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
 
 SMON_OBJS = $(SMON_SRC:.c=.o)
 
@@ -78,7 +78,7 @@ SMON_ADD_OBJS = $(SMON_ADD_SRC:.c=.o)
 
 SMON_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
 
-SMON_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB)
+SMON_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(LCKLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

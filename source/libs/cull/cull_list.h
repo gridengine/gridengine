@@ -34,7 +34,6 @@
 
 #include <stdio.h> 
 
-#include "basis_types.h"
 #include "sge_htable.h"
 
 #ifdef  __cplusplus

@@ -91,12 +91,12 @@ QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
 QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o) 
 
-QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lspool -lsched $(EVMLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
+QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lsched $(EVMLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB)
 
 QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(GDILIB) $(SGEOBJLIB) \
-                      $(SPOOLING_DEPS) $(SPOOLLIB) $(SGEOBJDLIB) \
+                      $(SPOOLING_DEPS) $(SGEOBJDLIB) \
                       $(SECLIBS) $(KRBLIBS) \
-                      $(CULLLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
+                      $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) \
                       $(TPLIB)
 
 QMASTER_TEST_OBJS = \
@@ -107,7 +107,7 @@ QMASTER_TEST_PROGS = \
 
 QMASTER_TEST_ADD_LIBS = $(QMASTER_ADD_LIBS)
 
-QMASTER_TEST_LIB_DEPENDS = $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) \
+QMASTER_TEST_LIB_DEPENDS = $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
                            $(UTILIB) $(LCKLIB) $(RMONLIB)
 
 ###############################################################################
@@ -156,7 +156,7 @@ sge_userset_qmaster.o:	$(QMASTER_DIR)/sge_userset_qmaster.c
 sge_c_ack.o:    $(QMASTER_DIR)/sge_c_ack.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_c_ack.c
 
-sge_c_gdi$(QIDLEXT).o:	$(QMASTER_DIR)/sge_c_gdi.c
+sge_c_gdi.o:	$(QMASTER_DIR)/sge_c_gdi.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_c_gdi.c
 
 sge_job_qmaster.o:	$(QMASTER_DIR)/sge_job_qmaster.c
@@ -174,7 +174,7 @@ sge_manop_qmaster.o:	$(QMASTER_DIR)/sge_manop_qmaster.c
 sge_follow.o:   $(QMASTER_DIR)/sge_follow.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_follow.c
 
-sge_give_jobs$(QIDLEXT).o: $(QMASTER_DIR)/sge_give_jobs.c
+sge_give_jobs.o: $(QMASTER_DIR)/sge_give_jobs.c
 		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_give_jobs.c   
 
 reschedule.o: $(QMASTER_DIR)/reschedule.c

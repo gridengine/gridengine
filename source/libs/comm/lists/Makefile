@@ -115,7 +115,7 @@ cl_thread_list.o: $(COMMLISTSLIB_DIR)/cl_thread_list.c
 
 
 test_cl_raw_list: test_cl_raw_list.o $(COMMLISTSLIB)
-	$(CC) -o test_cl_raw_list $(LFLAGS) test_cl_raw_list.o $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+	$(CC) -o test_cl_raw_list $(LFLAGS) test_cl_raw_list.o $(COMMLISTSLIB) $(LIBS)
 test_cl_util: test_cl_util.o $(COMMLISTSLIB)
 	$(CC) -o test_cl_util $(LFLAGS) test_cl_util.o $(COMMLISTSLIB) $(LIBS)
 test_cl_errors: test_cl_errors.o $(COMMLISTSLIB)

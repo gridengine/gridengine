@@ -52,14 +52,10 @@
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_calendar.h"
-
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 #include "msg_qmaster.h"
 
-#ifdef QIDL
-   #include "qidl_c_gdi.h"
-#endif
 
 enum {
    DOT = 1,

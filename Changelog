@@ -1,3 +1,11 @@
+AS-2004-02-26-0: Enhancem:  - Tru64 compile port
+                            - QIDL remove, header file cleanup
+                            - Makefile cleanup (did not fix not working rules)
+                            - Makefile dependency correction
+                            - Pass same flags to qmon make call as 
+                              for core system in aimk
+                            NOTE: Call "aimk clean; aimk depend" after checkout
+
 DT-2004-02-26-0: Bugfix:    o qsub doesn't hang anymore.
                             o JAPI no longer uses signals to stop the event
                               client thread.

@@ -32,23 +32,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge.h" 
 #include "basis_types.h"
-
 #include "sge_arch.h"
 
 #define SGE_PREFIX      "sge_"
-
 #define SGE_COMMD       "sge_commd"
-
 #define SGE_SHEPHERD    "sge_shepherd"
-
 #define SGE_COSHEPHERD  "sge_coshepherd"
-
-#define SGE_QMASTER  "sge_qmaster"
-
+#define SGE_QMASTER     "sge_qmaster"
 #define SGE_SHADOWD     "sge_shadowd"
-
 #define PE_HOSTFILE     "pe_hostfile"
 
 /* who - must match prognames[] in prognames.c */

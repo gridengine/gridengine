@@ -885,7 +885,6 @@ case ALPHA5:
    endif
 
    set CXX = "cxx"
-   set WFLAG   = "-w2"
    set DLLIB = ""
 
    # gprof option is superset of debug option
@@ -899,43 +898,24 @@ case ALPHA5:
       set DEBUG_FLAG = "-g1 -pg -gen_feedback -non_shared"
    endif
 
-   if ( $CC == gcc ) then
-      set NOERR_CFLAG = "-Wno-error"
-      set CFLAGS   = "$OFLAG -Wall -Wstrict-prototypes -O -DALPHA -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
-   else
-      set NOERR_CFLAG = "-w"
-      set CFLAGS   = "$OFLAG $WFLAG -std1 -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -Olimit 2000 -DGETHOSTBYNAME_R3 -DGETHOSTBYADDR_R5"
-   endif
+   set NOERR_CFLAG  = "-w"
+   set CFLAGS       = "$OFLAG -w2 -std1 -portable -pthread -warnprotos -DALPHA -D$BUILDARCH $DEBUG_FLAG $CFLAGS -DGETHOSTBYNAME_R3 -DGETHOSTBYADDR_R5"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
-   set SHAREDLD = $CC
-   if ( $CC == gcc ) then
-      set SHARED_CFLAGS = "-fPIC"
-      set SHARED_LFLAGS = "-L. -shared"
-   else
-      set SHARED_CFLAGS = ""
-      set SHARED_LFLAGS = "-L. -shared"
-   endif
+   set SHAREDLD      = $CC
+   set SHARED_CFLAGS = ""
+   set SHARED_LFLAGS = "-L. -shared -pthread"
 
-   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+   set LFLAGS   = "-pthread $DEBUG_FLAG $LFLAGS"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
    set XCFLAGS  = "-w -DFUNCPROTO=3 -DDEC -DSMT $XMTDEF $XINCD"
    set XLIBD    = ""
    set XLFLAGS  = "-taso $XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lX11 -lSM -lICE -lPW -ldnet_stub"
-   set LIBS     = "-lmld -lpset -lmach $LIBS"
-
-   if ( $CC == cc ) then
-     set CFLAGS = "-call_shared $CFLAGS"
-   endif
-
-   if ( $CC == gcc ) then
-      set NOERR_CFLAG = "-Wno-error"
-   else
-      set NOERR_CFLAG = "-w"
-   endif
+   set LIBS     = "-lpset -lmach $LIBS"
    breaksw
+
 case DARWIN:
    set COMPILE_DC = 1
 
@@ -1052,12 +1032,10 @@ case IRIX65:
    set COMPILE_DC = 1
    set MAKE = gmake
 
-# -diag_suppress 1552,1185
    set CFLAGS   = "$OFLAG -n32 -mips3 -DIRIX -D$BUILDARCH -DGETHOSTBYNAME_M -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "-n32 -mips3 $DEBUG_FLAG $LFLAGS"
    set LIBS     = "$LIBS"
-   set LOADAVGLIBS = "-lelf"
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
    set XCFLAGS  = "$XMTDEF $XINCD"
@@ -1487,12 +1465,10 @@ if ( $WITH_USERMAPPING == 0 ) then
    set CFLAGS = "$CFLAGS -D__SGE_NO_USERMAPPING__"
 endif
 
-# create shared lib from LGPL code  
+# create shared lib from LGPL code  - use $SHAREDEXT for shared lib extension
 #
-set GLIBEXT        = "$SHAREDEXT"
 set GSHARED_CFLAGS = "$SHARED_CFLAGS"
 set GSHARED_LFLAGS = "$SHARED_LFLAGS"
-
 
 #---------------------------------------------------------------------------
 # Actual make targets begin here
@@ -1671,8 +1647,9 @@ if ( "$CORE" == 1 ) then
          "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
+         "CORE_INCLUDE=$CORE_INCLUDE" \
          "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
-         "CORE_INCLUDE=$CORE_INCLUDE" $argv
+         $argv
    if ( $status != 0 ) then
       echo not done
       exit 1
@@ -1702,7 +1679,7 @@ if ( "$QMON" == 1 ) then
          "AR=$AR" "ARFLAGS=$ARFLAGS" "TPLIB=$TPLIB" \
          "MEMCFLAG=$MEMCFLAG"  \
          "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
-         "GSHARED_CFLAGS=$GSHARED_CFLAGS" "GSHARED_LFLAGS=$GSHARED_LFLAGS" "GLIBEXT=$GLIBEXT" \
+         "GSHARED_CFLAGS=$GSHARED_CFLAGS" "GSHARED_LFLAGS=$GSHARED_LFLAGS" \
          "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
 
    if ( $status != 0 ) then
@@ -1715,25 +1692,32 @@ if ( "$QMON" == 1 ) then
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f $SOURCE/clients/qmon/Makefile \
-       "MAKE=$MAKE" "CC=$CC" "CFLAGS=$CFLAGS $CORE_INCLUDE" "SDIR=$SDIR" "SOURCE=$SOURCE"\
-       "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" \
-       "SECLIB=$SECLIB" "SECLIBS=$SECLIBS" \
-       "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" \
-       "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" \
-       "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
-       "MSDIR=$MSDIR" "LIBS=$KLIBS $LIBS" \
-       "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
-       "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
-       "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
-       "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
-       "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" "COMPILE_ARCH=$COMPILE_ARCH" \
-       "INTERACTTARGETS=$INTERACTTARGETS" \
-       "LIBEXT=$LIBEXT" "GLIBEXT=$GLIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
-       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
-       "MEMCFLAG=$MEMCFLAG" "DLLIB=$DLLIB" $argv
+         "LD_WRAPPER=$LD_WRAPPER" \
+         "CFLAGS=$CFLAGS $CORE_INCLUDE" \
+         "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
+         "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
+         "SECTARGETS=$SECTARGETS" "SECDEPEND=$SECDEPEND" "SECCLEAN=$SECCLEAN" \
+         "SECLIBOBJS=$SECLIBOBJS" "SECLIB=$SECLIB" "SECLIBS=$SECLIBS"\
+         "KRBTARGETS=$KRBTARGETS" "KRBDEPEND=$KRBDEPEND" "KRBCLEAN=$KRBCLEAN"\
+         "KRBLIBS=$KRBLIBS" "KRBLIB=$KRBLIB" "GSSDEPEND=$GSSDEPEND" \
+         "GSSCLEAN=$GSSCLEAN" "MSDIR=$MSDIR" "SLIBS=$GSSLIBS $KLIBS" "LIBS=$LIBS" \
+         "XCFLAGS=$XCFLAGS" "XLFLAGS=$XLFLAGS" \
+         "XLIBS=$XLIBS" "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" \
+         "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
+         "NOERR_PROTO=$NOERR_PROTO" \
+         "NOERR_CFLAG=$NOERR_CFLAG" \
+         "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
+         "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
+         "INTERACTTARGETS=$INTERACTTARGETS" \
+         "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
+         "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS $KLFLAGS" \
+         "SPOOLING_LIBS=$SPOOLING_LIBS" "SPOOLING_DEPS=$SPOOLING_DEPS" \
+         "DLLIB=$DLLIB" \
+         "MEMCFLAG=$MEMCFLAG" \
+         $argv
    if ( $status != 0 ) then
       echo not done
-      exit 1
+      exit 0; exit 1
    endif
    
    cd $SOURCE
@@ -1766,7 +1750,7 @@ if ( "$REMOTE" == 1) then
 
    if ( $status != 0 ) then
       echo not done
-      exit 1
+      exit 0; exit 1
    endif
 
    cd $SOURCE
@@ -1781,7 +1765,7 @@ if ( "$QMAKE" == 1) then
 
    if ( $status != 0 ) then
       echo not done
-      exit 1
+      exit 0; exit 1
    endif
 
    cd $SOURCE
@@ -1827,7 +1811,7 @@ if ( "$QTCSH" == 1) then
 
    if ( $status != 0 ) then
       echo not done
-      exit 1
+      exit 0; exit 1
    endif
 
    if ( $SHAREDLIBS == 1 ) then
@@ -1854,7 +1838,7 @@ if ( "$ADOC" == 1) then
 
    if ( $status != 0 ) then
       echo not done
-      exit 1
+      exit 0; exit 1
    endif
 
    cd $SOURCE

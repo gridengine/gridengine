@@ -81,14 +81,8 @@
 #include "sge_cuser.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-#ifdef QIDL
-#include "qidl_c_gdi.h"
-#endif
-
 
 static void sge_c_gdi_get(gdi_object_t *ao, char *host, sge_gdi_request *request, sge_gdi_request *answer, int *before, int *after);
 static void sge_c_gdi_add(gdi_object_t *ao, char *host, sge_gdi_request *request, sge_gdi_request *answer, int return_list_flag);
@@ -1752,11 +1746,6 @@ int sub_command
       /* chain in new object */
       lAppendElem(*(master_list), new_obj);
    }
-#ifdef QIDL
-   if (add) /* this assumes that all generic object are identified by name */
-      addObjectByName(object->target,lGe*(object->master_list)tString(new_obj,object->key_nm));
-#endif
-   
    if (object->on_success)
       object->on_success(new_obj, old_obj, object);
 

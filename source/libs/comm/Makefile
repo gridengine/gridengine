@@ -73,7 +73,7 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-all: test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
+comm_all: test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
      test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
      commlib commlists_all
 
@@ -142,7 +142,7 @@ cl_commlib.o: $(COMMLIB_DIR)/cl_commlib.c
 
 #---------------------------------------------------------------------
 # test programs
-test_cl_tcp_framework: test_cl_tcp_framework.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+test_cl_tcp_framework:	test_cl_tcp_framework.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB)  $(RMONLIB)
 	$(CC) -o test_cl_tcp_framework $(LFLAGS) test_cl_tcp_framework.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_commlib: test_cl_commlib.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_commlib $(LFLAGS) test_cl_commlib.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
@@ -150,8 +150,8 @@ test_cl_commlib_client: test_cl_commlib_client.o $(COMMLIB) $(COMMLISTSLIB) $(UT
 	$(CC) -o test_cl_commlib_client $(LFLAGS) test_cl_commlib_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_hostname_list: test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_hostname_list $(LFLAGS) test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
-test_cl_hostalias_list: test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
-	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+test_cl_hostalias_list: test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB)
+	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(LIBS)
 test_multithread_io: test_multithread_io.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_multithread_io $(LFLAGS) test_multithread_io.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_status_info: test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)

@@ -36,7 +36,7 @@ SHELL = /bin/sh
 RM    = rm -f 
 DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLAGS)
 
-all: qmon
+qmon_all: qmon
 	
 ###############################################################################
 # Variable definitions for libraries to link
@@ -45,22 +45,23 @@ XBAELIB     = $(QMON_3RD)/libXbae$(LIBEXT)
 XSPINLIB    = $(QMON_3RD)/libXspin$(LIBEXT)
 XMTLIB      = $(QMON_3RD)/libXmt$(LIBEXT)
 XICONLIB    = $(QMON_3RD)/libXicon$(LIBEXT)
-XLTREELIB   = $(QMON_3RD)/libXltree$(GLIBEXT)
+XLTREELIB   = $(QMON_3RD)/libXltree$(SHAREDEXT)
 XTABLIB     = $(QMON_3RD)/libXtab$(LIBEXT)
 
+include $(SDIR)/security/sec/Makefile
 include $(SDIR)/common/Makefile   
 include $(SDIR)/clients/common/Makefile   
 include $(SDIR)/daemons/common/Makefile   
 include $(SDIR)/daemons/qmaster/Makefile   
-include $(SDIR)/libs/comm/Makefile
-include $(SDIR)/libs/cull/Makefile
-include $(SDIR)/libs/gdi/Makefile
 include $(SDIR)/libs/rmon/Makefile
-include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/uti/Makefile
+include $(SDIR)/libs/cull/Makefile
+include $(SDIR)/libs/lck/Makefile
+include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
+include $(SDIR)/libs/gdi/Makefile
+include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/spool/Makefile
-include $(SDIR)/security/sec/Makefile
 
 ###############################################################################
 # Variable definitions for targets to build
@@ -121,10 +122,10 @@ QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon 
                 -L. -lspoolc -lspoolf -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcomm -lcommlists -luti -llck $(DLLIB)
                 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
-                   $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) \
+                   $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SPOOLFLIB) \
                    $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
-                   $(RMONLIB) $(COMMLIB) $(UTILIB) $(TPLIB)
+                   $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -150,7 +151,7 @@ qmon:  $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_LIB_DEPENDS)
 # ListTree Demo prog
 ############################################################################
 ALLDEMOOBJS =  tree_demo.o $(GDILIB) $(KRBLIBS) $(CULLLIB) $(UTILIB) \
-               $(RMONLIB) $(COMMLIB) $(XLTREELIB) $(XMTLIB)
+               $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(XLTREELIB) $(XMTLIB)
 
 tree_demo:  tree_demo.o $(XLTREELIB)
 	$(LD_WRAPPER) $(CC) -o $@ $(ALLDEMOOBJS) $(LFLAGS) $(LIBS) $(XLFLAGS) $(XLIBS)

@@ -34,8 +34,6 @@
 
 #include "basis_types.h"
 #include "cull_list.h"
-#include "sge.h"
-
 #include "sge_dstring.h"
 
 /* These files and directories will be found in COMMON_DIR

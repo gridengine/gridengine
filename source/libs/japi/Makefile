@@ -57,7 +57,7 @@ JAPI_ADD_LIBS = -L. -lspool -lsched -lgdi -lsgeobj -lsgeobjd \
                 
 JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
 
-all: $(JAPI_ALL)
+japi_all: $(JAPI_ALL)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

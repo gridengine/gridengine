@@ -33,8 +33,6 @@
 /*___INFO__MARK_END__*/
 
 #include "basis_types.h"
-#include "sge.h"
-
 #include "sge_dstring.h"
 
 void bootstrap_mt_init(void);

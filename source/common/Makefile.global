@@ -39,7 +39,7 @@ LEX    = flex
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-all: $(SECTARGETS) common libs daemons clients utilbin coshepherd $(PERLGUI)
+common_all: $(SECTARGETS) common libs daemons clients utilbin coshepherd $(PERLGUI)
 
 clean:  common_clean libs_clean clients_clean daemons_clean utilbin_clean coshepherd_clean $(SECCLEAN) $(KRBCLEAN) $(GSSCLEAN) $(PERLGUI_CLEAN)
 

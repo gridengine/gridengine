@@ -102,10 +102,6 @@
 #include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
 
-#ifdef QIDL
-#include "qidl_c_gdi.h"
-#endif
-
 static void sge_clear_granted_resources(lListElem *jep, lListElem *ja_task, int incslots);
 
 static void reduce_queue_limit(lListElem *qep, lListElem *jep, int nm, char *rlimit_name);
@@ -290,34 +286,6 @@ int master
    }
 
    tmpjep = lCopyElem(jep);
-
-#ifdef QIDL
-   /* append additional environment variables (SGE_MASTER_IOR and */
-   /* SGE_JOB_AUTH) */
-   /* these should not be visible to the user in the master cull list */
-   /* so this is the best place to put it */
-   /* TODO: encode JOB_AUTH */
-   {
-      lList* envlp;
-      lListElem* env;
-      char job_id[25];
-      sprintf(job_id, u32, lGetUlong(tmpjep, JB_job_number));
-      envlp = lGetList(tmpjep, JB_env_list);
-      if(!envlp)
-         envlp = lCreateList("Environment", VA_Type);
-      else
-         envlp = lCopyList("Envirionment", envlp);
-      env = lCreateElem(VA_Type);
-      lSetString(env, VA_variable, "SGE_MASTER_IOR");
-      lSetString(env, VA_value, (char*)get_master_ior());
-      lAppendElem(envlp, env);
-      env = lCreateElem(VA_Type);
-      lSetString(env, VA_variable, "SGE_JOB_AUTH");
-      lSetString(env, VA_value, job_id);
-      lAppendElem(envlp, env);
-      lSetList(tmpjep, JB_env_list, envlp);
-   }
-#endif
 
    /* insert ckpt object if required **now**. it is only
    ** needed in the execd and we have no need to keep it

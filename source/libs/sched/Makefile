@@ -88,7 +88,7 @@ libsched.a: $(SCHEDLIB_OBJS)
 	$(AR) $(ARFLAGS) libsched.a $(SCHEDLIB_OBJS)
 	$(RANLIB) libsched.a
 
-libsched$(SHAREDEXT): $(SCHEDLIB_OBJS) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+libsched$(SHAREDEXT): $(SCHEDLIB_OBJS) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o libsched$(SHAREDEXT) $(SCHEDLIB_OBJS) -levc -lgdi -lsgeobj -lsgeobjd -lcomm -lcommlists -lcull -luti -lrmon $(LIBS) -lc
 
 ###############################################################################
@@ -174,8 +174,8 @@ sge_sharetree_printing.o: $(SCHEDLIB_DIR)/sge_sharetree_printing.c
 
 #---------------------------------------------------------------------
 # test programs
-simple_scheduler: simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o simple_scheduler $(LFLAGS) simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+simple_scheduler: simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o simple_scheduler $(LFLAGS) simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(LIBS)
 
 simple_scheduler.o: $(SCHEDLIB_DIR)/simple_scheduler.c
 	$(CC) $(CFLAGS) -c $(SCHEDLIB_DIR)/simple_scheduler.c

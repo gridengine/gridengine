@@ -35,7 +35,7 @@
 
 SPOOLDLIB_DIR = $(SDIR)/libs/spool/dynamic
 
-SPOOLDLIB = libspoold$(QIDLEXT)$(LIBEXT)
+SPOOLDLIB = libspoold$(LIBEXT)
 
 SPOOLDLIB_SRC = \
          sge_spooling_loader.c

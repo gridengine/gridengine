@@ -34,9 +34,9 @@
 #___INFO__MARK_END__
 SGEOBJLIB_DIR = $(SDIR)/libs/sgeobj
 
-SGEOBJLIB = libsgeobj$(QIDLEXT)$(LIBEXT)
+SGEOBJLIB = libsgeobj$(LIBEXT)
 
-SGEOBJDLIB = libsgeobjd$(QIDLEXT)$(LIBEXT)
+SGEOBJDLIB = libsgeobjd$(LIBEXT)
 
 SGEOBJDLIB_SRC = \
          sge_answer.c \

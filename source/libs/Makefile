@@ -36,6 +36,7 @@
 include $(SDIR)/libs/rmon/Makefile
 include $(SDIR)/libs/uti/Makefile
 include $(SDIR)/libs/cull/Makefile
+include $(SDIR)/libs/lck/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
 include $(SDIR)/libs/gdi/Makefile
@@ -43,7 +44,6 @@ include $(SDIR)/libs/evc/Makefile
 include $(SDIR)/libs/evm/Makefile
 include $(SDIR)/libs/mir/Makefile
 include $(SDIR)/libs/sched/Makefile
-include $(SDIR)/libs/lck/Makefile
 include $(SDIR)/libs/spool/Makefile
 include $(SDIR)/libs/japi/Makefile
 

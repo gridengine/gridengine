@@ -18,7 +18,7 @@ Content
 8) Copyright
 
 
-0) Overview and Files referenced in this document
+0) Overview and files referenced in this document
 -------------------------------------------------
 
    This document gives you a brief overview about the steps how to compile,
@@ -31,7 +31,6 @@ Content
       README.BUILD      (this file)
       README.aimk
       dist/README.arch
-      dist/README.inst_sge
       scripts/README.distinst
       scripts/README.mk_dist
 

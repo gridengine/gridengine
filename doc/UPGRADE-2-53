@@ -152,18 +152,17 @@ Content
 
    If you already installed SGE(EE) 5.3 or a SGE(EE) 5.3 patch release
    (e.g. 5.3p1 etc.) and you want to upgrade to the newest patch level
-
+   please  read 14) 'Installing a SGE(EE) 5.3 patch'.
 
    If you are upgrading from a previous version please make sure to
 
-       - install the latest patch release if available
+       - install the latest 'patch release' * if available
 
        - install SGE(EE) 5.3 and all patches for SGE(EE) 5.3 if a patch
-          release is not available.
+         release is not available.
 
-   A patch release of SGE(EE) is a release which contains the original
-   version of SGE(EE) and all available patches. After installation of a
-   patch release it is not neccessary to install
+   * A 'patch release' of SGE(EE) is a release which contains the original
+   version of SGE(EE) and all available patches.
 
 
 2) Installation changes compared to previous versions
@@ -836,10 +835,13 @@ Content
 
    There are two types of patches available:
 
-      - patch in "tar.gz" format
+      - patches in "tar.gz" format - these "patches" are usually available
+        as new courtesy binaries distribution from the Grid Engine Open
+        source project site at http://gridengine.sunsource.net
 
-      - patch in Sun Microsystems patch format to be installed with
-        "patchadd"
+      - patches provided by Sun Microsystems patch format to be installed with
+        "patchadd" or patches in "tar.gz" with a Sun patch ID which only
+         contain the changes files.
 
    A patch in "tar.gz" will usually contain all binaries, even those which
    where not changed by the patch. A patch in "patchadd" format will only

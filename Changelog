@@ -1,4 +1,7 @@
-AD-2004-02-01-0: Cleanup:   qmaster threads now do call 'sge_qmaster_thread_
+SG-2004-01-02-1: Bugfix:    reverted the changes from SG-2004-02-01-0. Reopend
+                            the issue 476 again.
+
+AD-2004-02-02-0: Cleanup:   qmaster threads now do call 'sge_qmaster_thread_
                             init()' at the beginning.
                  Changed:   qmaster
 

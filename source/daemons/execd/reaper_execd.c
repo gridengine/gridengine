@@ -696,7 +696,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    where else? Now a queue is allways setin error state. When a job start
    failed. 
  */
-#if 0            
+#if 1            
          else if (failed == SSTATE_BEFORE_JOB) {
             
             if (job && JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&

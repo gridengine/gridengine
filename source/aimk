@@ -1905,7 +1905,7 @@ if ( "$SGE_DEPEND" == 1 ) then
    endif
 
    cd $COMPILE_ARCH
-   $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
+   $MAKE $MAKEOPT -f ../Makefile "CC=$CC" "CFLAGS=$CFLAGS $XCFLAGS -U_GNU_SOURCE" "LFLAGS=$LFLAGS" "COMPILE_ARCH=$COMPILE_ARCH" $*
 
    if ( $status != 0 ) then
       echo not done

@@ -1,3 +1,8 @@
+MD-2004-03-11-0: Bugfix:    - check for local filesystem on lx24-amd64
+                              was broken
+                            - infotext argument parsing (irix65)
+                 Changed:   inst_sge, infotext
+
 AH-2004-03-11-1: Enhancem.: Fix sge_gethostbyname()/sge_gethostbyaddr() under 
                             tru64. Minor cleanup in new commlib.
                  Review:    AD

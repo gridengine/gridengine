@@ -68,20 +68,32 @@ classes_all: jdrmaa
 
 classes_clean: jdrmaa_clean
 
-jdrmaa_clean:
+jdrmaa_clean: jdrmaa_meta_clean
 	$(RM) $(JDRMAALIB_OBJS) $(JDRMAALIB)
 	$(RM) -Rf org/ggf/drmaa com/sun/grid/drmaa
+
+jdrmaa_jar_clean:
+	@$(RM) drmaa.jar
+
+jdrmaa_meta_clean:
+	@$(RM) -Rf META-INF
 
 ###############################################################################
 # rules to build DRMAA Java binding
 ###############################################################################
 jdrmaa: jdrmaa_jar jdrmaa_lib
 
-jdrmaa_jar: jdrmaa_classes
+jdrmaa_jar: jdrmaa_jar_clean jdrmaa_classes jdrmaa_meta
 	@cd $(CLASSES_DIR); $(JAVA_HOME)/bin/jar cvf $(SOURCE)/$(COMPILE_ARCH)/drmaa.jar org/ggf/drmaa/*.class com/sun/grid/drmaa/*.class; cd $(SOURCE)/$(COMPILE_ARCH)
+	@$(JAVA_HOME)/bin/jar uf drmaa.jar META-INF
 
 jdrmaa_classes:
 	$(JAVA_HOME)/bin/javac -classpath . -d . $(CLASSES_DIR)/org/ggf/drmaa/*.java $(CLASSES_DIR)/com/sun/grid/drmaa/*.java
+
+jdrmaa_meta: jdrmaa_meta_clean
+	@mkdir META-INF
+	@mkdir META-INF/services
+	@echo com.sun.grid.drmaa.SGESessionFactory > META-INF/services/org.ggf.drmaa.DRMAASessionFactory
 
 ###############################################################################
 # rules to build library

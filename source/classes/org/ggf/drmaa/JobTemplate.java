@@ -501,7 +501,7 @@ public abstract class JobTemplate {
       this.inputPath = inputPath;
    }
    
-	/** Get the job's standard input path.<BR>
+	/** Get the job's standard input path.
 	 * Specifies the network path of the job's input stream in
 	 * the form of [hostname]:file_path<BR>
 	 * When the TRANSFER_FILES job template attribute is supported and contains

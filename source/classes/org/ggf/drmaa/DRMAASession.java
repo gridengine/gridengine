@@ -45,7 +45,7 @@ import java.util.*;
 public abstract class DRMAASession {
    /* String to return from getDRMAAImplementation() */
    /** The name of this DRMAA implementation. */   
-   private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java Binding 0.3";
+   private static final String IMPLEMENTATION_STRING = "DRMAA 1.0 Java Binding 0.4.1";
    
 	/** stop the job */
 	public static final int SUSPEND = 0;
@@ -391,8 +391,8 @@ public abstract class DRMAASession {
 			return minor;
 		}
 		
-      /** Converts this Version object into a printable String of the format
-       * &lt;major&gt;.&lt;minor&gt;
+      /** Converts this Version object into a printable String.  The String's
+       * format is &lt;major&gt;.&lt;minor&gt;.
        * @return a printable String of the format &lt;major&gt;.&lt;minor&gt;
        */      
 		public String toString () {

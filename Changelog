@@ -1,3 +1,7 @@
+EB-2002-03-07-1: Bugfix:    Array Tasks, inconsistent handling of multiple 
+                            task ranges
+                 Issue:     #49
+
 EB-2002-03-07-0: Bugfix:    inconsistences between qstat/qmon output and 
                             internal state
                  Issue:     #179

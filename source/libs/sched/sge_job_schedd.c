@@ -185,9 +185,7 @@ lList **jobs,        /* JB_Type */
 lList **running,     /* JB_Type */
 char *running_name 
 ) {
-   lListElem *job;
-   lCondition *where, *where2;
-   int ret;
+   lListElem *job, *nxt_job;
 
    DENTER(TOP_LAYER, "sge_split_job_running");
 
@@ -202,55 +200,47 @@ char *running_name
       return 0;
    }
 
-   /* split running jobs (all tasks are running) */
-   where = lWhere("%T(%I->%T(%I==%u && %I!=%u))", lGetListDescr(*jobs), JB_ja_tasks,
-       JAT_Type, JAT_status, IDLE, JAT_status, JFINISHED);
+   nxt_job = lFirst(*jobs);
+   while ((job=nxt_job)) {
+      lListElem *task, *nxt_task;
+      lList *pending_task_lp = lGetList(job, JB_ja_tasks), 
+            *running_task_lp = NULL;
+      nxt_job = lNext(job);
 
-   ret = lSplit(jobs, running, running_name, where);
-   lFreeWhere(where);
-
-   where = lWhere("%T(%I==%u && %I!=%u)", JAT_Type, JAT_status, IDLE, 
-      JAT_status, JFINISHED);
-   where2 = lWhere("%T(%I!=%u || %I==%u)", JAT_Type, JAT_status, IDLE,
-      JAT_status, JFINISHED);
-
-   for_each(job, *jobs) {
-      lListElem *task, *new_job;
-      int CopyJob = 0;
-
-      for_each(task, lGetList(job, JB_ja_tasks)) {
-         u_long32 Status;
-
-         Status = lGetUlong(task, JAT_status);
-         if (!((Status == IDLE) && (Status != JFINISHED))) {    
-            CopyJob = 1;
-            break;
+      /* dechain all non-pending tasks, collect them in running_task_lp */ 
+      nxt_task = lFirst(pending_task_lp);
+      while ((task=nxt_task)) {
+         nxt_task = lNext(task);
+         if (lGetUlong(task, JAT_status) != IDLE) {
+            lDechainElem(pending_task_lp, task);
+            if (!running_task_lp)
+               running_task_lp = lCreateList("running", JAT_Type);
+            lAppendElem(running_task_lp, task);
          }
-      } 
-      if (CopyJob) {
-         lList *tmp_lp = NULL;
-         if (*running == NULL) 
-            *running=lCreateList(running_name?running_name:"", (*jobs)->descr);
-         new_job = lCopyElem(job);
+      }
 
-         /* Pending ja tasks */
-         lXchgList(job, JB_ja_tasks, &tmp_lp);
-         tmp_lp = lSelectDestroy(tmp_lp, where);
-         lXchgList(job, JB_ja_tasks, &tmp_lp);
+      /* ensure a running task job-array container exists and store running tasks there */
+      if (running_task_lp) {
+         lListElem *running_job;
+         if (!(running_job = lGetElemUlong(*running, JB_job_number, lGetUlong(job, JB_job_number)))) {
+             running_job = lCopyElem(job); /* AH: in worst case this copies in vain 1.000.000
+                                              elements in JB_ja_tasks. Need masked lCopyElem()
+                                              to improve this */
+             if (!*running)
+                *running = lCreateList("running", (*jobs)->descr);
+             lAppendElem(*running, running_job);
+         }
+         lSetList(running_job, JB_ja_tasks, running_task_lp);
+      }
 
-         /* Running ja tasks */
-         lXchgList(new_job, JB_ja_tasks, &tmp_lp);
-         tmp_lp = lSelectDestroy(tmp_lp, where2);
-         lXchgList(new_job, JB_ja_tasks, &tmp_lp);
-
-         ret=lAppendElem(*running, new_job);
+      /* remove pending task job-array container if empty */
+      if (!lGetNumberOfElem(pending_task_lp)) {
+         lRemoveElem(*jobs, job);
       }
    } 
-   lFreeWhere(where); 
-   lFreeWhere(where2); 
 
    DEXIT;
-   return ret;
+   return 0;
 }
 
 /* ----------------------------------------

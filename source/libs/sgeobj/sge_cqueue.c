@@ -320,9 +320,28 @@ cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href)
       if (href_name != NULL) {
          lList *href_list = lGetList(this_elem, CQ_hostlist);
          lListElem *tmp_href = lGetElemHost(href_list, HR_name, href_name);
+         int index;
 
+         /*
+          * Is the host group part of the hostlist definition ...
+          */
          if (tmp_href != NULL) {
             ret = true;
+         }
+         /*
+          * ... or is it contained on one of the attribute lists
+          */
+         index = 0;
+         while (cqueue_attribute_array[index].cqueue_attr != NoName && !ret) {
+            lList *attr_list = lGetList(this_elem,
+                                    cqueue_attribute_array[index].cqueue_attr);
+            lListElem *attr_elem = lGetElemHost(attr_list,
+                           cqueue_attribute_array[index].href_attr, href_name);
+                                                                                
+            if (attr_elem != NULL) {
+               ret = true;
+            }
+            index++;
          }
       }
    }

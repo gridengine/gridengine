@@ -275,7 +275,7 @@ proc create_gnuplot_xy_gif { data_array_name row_array_name } {
 
    set datarows 0
    set row_index ""
-   while { [info exists rows($datarows,0,x) ] } {
+   while { [info exists rows($datarows,show) ] } {
       lappend row_index $datarows
       incr datarows 1 
    }

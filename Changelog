@@ -1,3 +1,12 @@
+JG-2004-09-14-0: Testsuite: Improved test performance/throughput:
+                            - Monitoring of qmaster communication (qping).
+                            - Additional senarios:
+                              - run without qstat
+                              - jobs with resource requests
+                              - parallel jobs with resource requests
+                              - array jobs
+                              - functional policy
+
 DT-2004-09-13-1: Bugfix:    o Fixed DRMAA-J on Irix 6.5
                  Changed:   create_settings.sh
 

@@ -60,6 +60,11 @@ proc submit_job { num_jobs add_opts } {
       set end_clock [clock seconds]
       if { $result == 0 } {
          set job_id [lindex $output 2]
+         # array job?
+         if {[string first "." $job_id] > 0} {
+            set split_job_id [split $job_id "."]
+            set job_id [lindex $split_job_id 0]
+         }
          puts "SUBMIT OK $job_id [expr $end_time - $start_time] $start_clock $end_clock"
       } else {
          puts "SUBMIT FAILED $output"

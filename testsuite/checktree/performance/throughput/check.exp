@@ -127,22 +127,42 @@ set check_root_access_needs  "yes"
 set check_init_level_procedure "init_level"
 set check_category            "PERFORMANCE VERIFIED"
 set check_name                "throughput"
-set check_description(0)      "Functional test, submit 100 jobs with enabled queues"
-set check_description(1)      "Functional test, submit 100 jobs with disabled queues"
-set check_description(2)      "Functional test, submit 50 of 100 jobs with disabled queues"
-set check_description(3)      "Functional test with sharetree, 100 jobs"
+set check_description(0)      "Functional test, submit 90 jobs with enabled queues"
+set check_description(1)      "Functional test, submit 90 jobs with disabled queues"
+set check_description(2)      "Functional test, submit 45 of 90 jobs with disabled queues"
+set check_description(3)      "Functional test, submit 45 of 90 jobs with disabled queues, no qstats"
+set check_description(4)      "Functional test, submit 45 of 90 jobs with disabled queues, requests"
+set check_description(5)      "Functional test, submit 45 of 90 jobs with disabled queues, requests and parallel jobs"
+set check_description(6)      "Functional test, submit 45 of 90 jobs with disabled queues, array jobs"
+set check_description(7)      "Functional test with sharetree, 90 jobs"
+set check_description(8)      "Functional test with functional policy, 90 jobs"
 set check_description(100)    "submit 3000 jobs with enabled queues"
 set check_description(101)    "submit 3000 jobs with disabled queues"
 set check_description(102)    "submit 1500 of 3000 jobs with disabled queues"
-set check_description(103)    "with sharetree, 3000 jobs"
+set check_description(103)    "submit 1500 of 3000 jobs with disabled queues, no qstats"
+set check_description(104)    "submit 1500 of 3000 jobs with disabled queues, requests"
+set check_description(105)    "submit 1500 of 3000 jobs with disabled queues, requests and parallel jobs"
+set check_description(106)    "submit 1500 of 3000 jobs with disabled queues, array jobs"
+set check_description(107)    "with sharetree, 3000 jobs"
+set check_description(108)    "with functional policy, 3000 jobs"
 set check_description(200)    "submit 30000 jobs with enabled queues"
 set check_description(201)    "submit 30000 jobs with disabled queues"
 set check_description(202)    "submit 15000 of 30000 jobs with disabled queues"
-set check_description(203)    "with sharetree, 30000 jobs"
+set check_description(203)    "submit 15000 of 30000 jobs with disabled queues, no qstats"
+set check_description(204)    "submit 15000 of 30000 jobs with disabled queues, requests"
+set check_description(205)    "submit 15000 of 30000 jobs with disabled queues, requests and parallel jobs"
+set check_description(206)    "submit 15000 of 30000 jobs with disabled queues, array jobs"
+set check_description(207)    "with sharetree, 30000 jobs"
+set check_description(208)    "with functional policy, 30000 jobs"
 set check_description(300)    "submit 300000 jobs with enabled queues"
 set check_description(301)    "submit 300000 jobs with disabled queues"
 set check_description(302)    "submit 150000 of 300000 jobs with disabled queues"
-set check_description(303)    "with sharetree, 300000 jobs"
+set check_description(303)    "submit 150000 of 300000 jobs with disabled queues, no qstats"
+set check_description(304)    "submit 150000 of 300000 jobs with disabled queues, requests"
+set check_description(305)    "submit 150000 of 300000 jobs with disabled queues, requests and parallel jobs"
+set check_description(306)    "submit 150000 of 300000 jobs with disabled queues, array jobs"
+set check_description(307)    "with sharetree, 300000 jobs"
+set check_description(308)    "with functional policy, 300000 jobs"
 
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 
@@ -152,7 +172,7 @@ lappend check_functions       "run_throughput_test"
 lappend check_functions       "cleanup_queues"
 #set check_functions          "compare_dump_data_file"
 
-set check_highest_level       303
+set check_highest_level       308
 
 global nr_queues  nr_slots
 global queue_list
@@ -163,6 +183,7 @@ global global_job_run_time
 global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
 global throughput_subdir
 global throughput_sharetree
+global functional_policy
 
 set queue_list ""
 set host_list ""
@@ -180,20 +201,25 @@ proc init_level {} {
    global FLUSH_FINISH_SEC                    ;# -1 or 0,1,2,3 ...
    global run_throughput_test_SCHEDULE_INTERVAL             ;# 00:00:30 ...
    global throughput_subdir             ;# subdirectory in protocols/throughput/
-   global throughput_sharetree
+   global throughput_sharetree functional_policy
    global host_list
    global test_scenario
-   global ps_interval qstat_interval
+   global ps_interval qstat_interval array_size do_requests parallel_jobs
 
     # paramters for all tests
    set run_throughput_test_SCHEDULE_INTERVAL        00:00:15
-   set global_job_run_time      5            ;# job sleep parameter
-   set nr_queues                10            ;# nr of queues on each host
-   set nr_slots                 5           ;# nr of slots on each queue
-   set enable_queues_job_count  0         ;# after witch job, enable queues
-   set FLUSH_SUBMIT_SEC         1             ;# -1 or 0,1,2,3 ...
-   set FLUSH_FINISH_SEC         1             ;# -1 or 0,1,2,3 ...
-   set qstat_interval 1000                    ;# try 1 qstat per second
+   set global_job_run_time      5   ;# job sleep parameter
+   set nr_queues                10  ;# nr of queues on each host
+   set nr_slots                 5   ;# nr of slots on each queue
+   set enable_queues_job_count  0   ;# after witch job, enable queues
+   set FLUSH_SUBMIT_SEC         1   ;# -1 or 0,1,2,3 ...
+   set FLUSH_FINISH_SEC         1   ;# -1 or 0,1,2,3 ...
+   set qstat_interval 1000          ;# try 1 qstat per second
+   set throughput_sharetree     0   ;# default, we enable explicitly
+   set array_size               1   ;# default: no array jobs
+   set do_requests              0   ;# default: do no resource requests
+   set parallel_jobs            0   ;# default: no parallel jobs
+   set functional_policy        0   ;# defualt: no functional policy
 
    # host_list for all levels
    set host_list {}
@@ -212,21 +238,25 @@ proc init_level {} {
          set job_count 90
          set ps_interval 10
          set qstat_interval 1000
+         set level_array_size 5
       }
       "1" {
          set job_count 3000
          set ps_interval 20
          set qstat_interval 2000
+         set level_array_size 50
       }
       "2" {
          set job_count 30000
          set ps_interval 60
          set qstat_interval 5000
+         set level_array_size 500
       }
       "3" {
          set job_count 300000
          set ps_interval 300
          set qstat_interval 10000
+         set level_array_size 5000
       }
       default {
          return -1
@@ -240,32 +270,73 @@ proc init_level {} {
          # enable queues after all jobs have been submitted
          set end_job_count            $job_count
          set enable_queues_job_count  $job_count
-         set throughput_sharetree     0
          set throughput_subdir        "disabled"
       }
       "1" {
          # have queues enabled during whole submit process
          set end_job_count            $job_count
          set enable_queues_job_count  0
-         set throughput_sharetree     0
          set throughput_subdir        "enabled"
       }
       "2" {
          # enable queues after half of the jobs have been submitted
          set end_job_count            $job_count
          set enable_queues_job_count  [expr $job_count / 2]
-         set throughput_sharetree     0
          set throughput_subdir        "mixed"
       }
       "3" {
+         # enable queues after half of the jobs have been submitted
+         # do no qstat's
+         set end_job_count            $job_count
+         set enable_queues_job_count  [expr $job_count / 2]
+         set throughput_subdir        "mixed_no_qstat"
+         set qstat_interval 0
+      }
+      "4" {
+         # enable queues after half of the jobs have been submitted
+         # do no qstat's
+         set end_job_count            $job_count
+         set enable_queues_job_count  [expr $job_count / 2]
+         set throughput_subdir        "mixed_requests"
+         set do_requests              1
+      }
+      "5" {
+         # enable queues after half of the jobs have been submitted
+         # do no qstat's
+         set end_job_count            $job_count
+         set enable_queues_job_count  [expr $job_count / 2]
+         set throughput_subdir        "mixed_requests_parallel"
+         set do_requests              1
+         set parallel_jobs            1
+      }
+      "6" {
+         # enable queues after half of the jobs have been submitted
+         # do no qstat's
+         set array_size $level_array_size
+         set job_count                [expr $job_count / $array_size]
+         set end_job_count            $job_count
+         set enable_queues_job_count  [expr $job_count / 2]
+         set throughput_subdir        "mixed_array"
+      }
+      "7" {
          # test with sharetree, enable queues after all jobs have been submitted
          if { $CHECK_PRODUCT_TYPE == "sge" } {
             return -1
          } 
          set end_job_count            $job_count
-         set enable_queues_job_count  $job_count
+         set enable_queues_job_count  [expr $job_count / 2]
          set throughput_sharetree     1
-         set throughput_subdir        "sharetree"
+         set throughput_subdir        "mixed_sharetree"
+      }
+      "8" {
+         # test with sharetree, enable queues after all jobs have been submitted
+         if { $CHECK_PRODUCT_TYPE == "sge" } {
+            return -1
+         } 
+         set end_job_count            $job_count
+         set enable_queues_job_count  [expr $job_count / 2]
+         set functional_policy        1
+         set throughput_subdir        "mixed_functional"
       }
       default {
          return -1
@@ -370,6 +441,7 @@ proc throughput_setup_sharetree {} {
    set my_config(job_load_adjustments) "none"
    set_schedd_config my_config
 }
+
 proc throughput_cleanup_sharetree {} {
    global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
@@ -394,13 +466,61 @@ proc throughput_cleanup_sharetree {} {
    del_prj "project3"
 }
 
+proc throughput_setup_functional_policy {} {
+   global ts_config
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "setup sharetree ..."
+
+   puts $CHECK_OUTPUT "   adding projects ..."
+   set prj_setup(name) "project1"
+   set prj_setup(fshare) 4000
+   add_prj prj_setup
+
+   set prj_setup(name) "project2"
+   set prj_setup(fshare) 6000
+   add_prj prj_setup
+
+   set prj_setup(name) "project3"
+   set prj_setup(fshare) 2000
+   add_prj prj_setup
+
+   # setup policy weighting for sharetree
+   get_schedd_config my_config 
+
+   if { $ts_config(gridengine_version) == 53 } {
+  
+   } else {
+      set my_config(weight_ticket) "1.0"
+      set my_config(weight_waiting_time) "0.0"
+   }
+
+   set my_config(weight_tickets_functional) "10000"
+   set my_config(job_load_adjustments) "none"
+   set_schedd_config my_config
+}
+
+proc throughput_cleanup_functional_policy {} {
+   global ts_config
+   global CHECK_OUTPUT
+
+   # reset scheduler config
+   reset_schedd_config
+
+   # remove projects
+   puts $CHECK_OUTPUT "   removing projects ..."
+   del_prj "project1"
+   del_prj "project2"
+   del_prj "project3"
+}
+
 proc setup_queues {} {
    global ts_config
    global CHECK_OUTPUT
    global CHECK_HOST CHECK_SOURCE_DIR
    global nr_queues queue_list host_list  nr_slots
    global stored_configuration FLUSH_SUBMIT_SEC FLUSH_FINISH_SEC run_throughput_test_SCHEDULE_INTERVAL
-   global throughput_sharetree
+   global throughput_sharetree functional_policy parallel_jobs
 
    if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -464,6 +584,13 @@ proc setup_queues {} {
    set my_schedd_config(maxujobs)             $max_u_jobs_parameter 
    set_schedd_config my_schedd_config
 
+   # setup a pe 
+   if {$parallel_jobs} {
+      set pe(pe_name) "perfpe"
+      set pe(slots)   "99999"
+      add_pe pe
+   }
+
    # now setup submit queues for hosts in host_list:
    # set queue_list:
    set queue_list {}
@@ -476,6 +603,9 @@ proc setup_queues {} {
    for {set i 0} {$i < $nr_queues} {incr i} {
       set qname tp_${i}
       add_queue $qname $host_list change_array 1
+      if {$parallel_jobs} {
+         assign_queues_with_pe_object "$qname" $host_list "perfpe"
+      }
 
       # build queue_list containing a list of all queue instances
       foreach host $host_list {
@@ -495,6 +625,10 @@ proc setup_queues {} {
       throughput_setup_sharetree
    }
 
+   if { $functional_policy } {
+      throughput_setup_functional_policy
+   }
+
    set_error 0 "ok"
 }
 
@@ -502,7 +636,7 @@ proc cleanup_queues {} {
    global ts_config
    global CHECK_OUTPUT
    global host_list queue_list CHECK_ARCH  CHECK_PRODUCT_ROOT
-   global stored_configuration throughput_sharetree nr_queues
+   global stored_configuration throughput_sharetree functional_policy nr_queues parallel_jobs
 
    if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -520,10 +654,21 @@ proc cleanup_queues {} {
       throughput_cleanup_sharetree
    }
 
+   if { $functional_policy } {
+      throughput_cleanup_functional_policy
+   }
+
    # reset configurations
    reset_schedd_config
    set_config stored_configuration
 
+   # remove pe
+   if {$parallel_jobs} {
+      unassign_queues_with_pe_object "perfpe"
+      del_pe "perfpe"
+   }
+
+   # remove queues
    puts $CHECK_OUTPUT "deleting queues"
    for {set i 0} {$i < $nr_queues} {incr i} {
       set qname tp_${i}
@@ -567,9 +712,9 @@ proc run_throughput_test {} {
    global enable_queues_job_count CHECK_SOURCE_DIR 
    global end_job_count host_list 
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER
-   global throughput_sharetree
+   global throughput_sharetree functional_policy
    global global_job_run_time
-   global ps_interval qstat_interval
+   global ps_interval qstat_interval array_size do_requests parallel_jobs
 
    if { [llength $ts_config(execd_hosts)] <= 1 } {
       set_error -3 "need more than one host for this test"
@@ -577,7 +722,7 @@ proc run_throughput_test {} {
    }
 
    # prepare results array
-   clean_current_system_status results_list result job_data schedd_data monitoring qstat_data
+   clean_current_system_status results_list result job_data schedd_data monitoring qstat_data qping_data
 
    # restart qmaster and scheduler - we want to measure their size
    shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
@@ -663,11 +808,24 @@ proc run_throughput_test {} {
    lappend spawn_list [ lindex $id 1 ]
    lappend remote_spawn_list $id
 
-   # start qstat monitor
-   puts $CHECK_OUTPUT "starting qstat monitor"
-   set id [ open_remote_spawn_process $CHECK_HOST $CHECK_SECOND_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/qstat.tcl $ts_config(product_root)" ]
-   lappend spawn_list [ lindex $id 1 ]
-   lappend remote_spawn_list $id
+   if { $qstat_interval > 0 } {
+      # start qstat monitor
+      puts $CHECK_OUTPUT "starting qstat monitor"
+      set id [ open_remote_spawn_process $CHECK_HOST $CHECK_SECOND_FOREIGN_SYSTEM_USER "$expect_bin" "-f $ts_config(testsuite_root_dir)/scripts/qstat.tcl $ts_config(product_root)" ]
+      lappend spawn_list [ lindex $id 1 ]
+      lappend remote_spawn_list $id
+   }
+
+   # start qping
+   # TODO: we should better have a qping.tcl script as with qstat, ps_info etc.
+   if {$ts_config(gridengine_version) != 53} {
+      set qping_host [lindex $host_list 0]
+      set qping_arch [resolve_arch $qping_host]
+      puts $CHECK_OUTPUT "starting qping monitor on host $qping_host"
+      set id [ open_remote_spawn_process $qping_host $CHECK_FIRST_FOREIGN_SYSTEM_USER "$ts_config(product_root)/bin/$qping_arch/qping" "-i $ps_interval -f $ts_config(master_host) $ts_config(commd_port) qmaster 1"]
+      lappend spawn_list [ lindex $id 1 ]
+      lappend remote_spawn_list $id
+   }
 
    # prepare job arguments 
    set my_job "$ts_config(product_root)/examples/jobs/sleeper.sh"
@@ -691,6 +849,18 @@ proc run_throughput_test {} {
 
    set my_timeout [ expr ( [timestamp] + 300 ) ]
    set submit_options "-o /dev/null -j y"
+   if {$array_size > 1} {
+      append submit_options " -t 1-$array_size"
+   }
+   # TODO: we should create a consumable and request that one too
+   if {$do_requests} {
+      append submit_options " -l mem_total=100M -soft -l virtual_free=1G"
+   }
+
+   if {$parallel_jobs} {
+      append submit_options " -pe perfpe 2-16"
+   }
+
    set submit_script "$ts_config(product_root)/examples/jobs/sleeper.sh $global_job_run_time"
 
    # wait for startup message from each submitter, used for submitting jobs
@@ -804,6 +974,20 @@ proc run_throughput_test {} {
                      set qstat_data($index,error) 1
                      incr qstat_data(count)
                   }
+                  "messages in read buffer:*" {
+                     set index $qping_data(count)
+                     set qping_data($index,time) [clock seconds]
+                     set qping_data($index,read) [lindex $line 4]
+                  }
+                  "messages in write buffer:*" {
+                     set index $qping_data(count)
+                     set qping_data($index,write) [lindex $line 4]
+                  }
+                  "nr. of connected clients:*" {
+                     set index $qping_data(count)
+                     set qping_data($index,clients) [lindex $line 4]
+                     incr qping_data(count)
+                  }
                   default {
                      puts $CHECK_OUTPUT "unexpected output: |$line|"
                   }
@@ -847,10 +1031,13 @@ proc run_throughput_test {} {
 
    set timeout 120
 
+   set test_end_job_count [expr $end_job_count * $array_size]
+
    # here the throughput test starts
    set error 0
    log_user 0
-   while { ! $error && $result(jobs_done) < $end_job_count } {
+   while { ! $error && $result(jobs_done) < $test_end_job_count } {
+      set time_now [timestamp]
       # submit jobs as long as we have submitters ready and jobs to send
       while { [llength $next_submitter_list] > 0 && \
               ([llength $resend_list] > 0 || $sent_jobs < $end_job_count) } {
@@ -870,11 +1057,11 @@ proc run_throughput_test {} {
          if { [llength $resend_list] > 0 } {
             set next_submit_command [lindex $resend_list 0]
             set resend_list [lrange $resend_list 1 end]
-            # submit command has form <send_id> <command>, parse it
+            # resend command has form <send_id> <command>, parse it
             set send_id [lindex $next_submit_command 0]
             set next_submit_command [lindex $next_submit_command 1 end]
          } else {
-            if { $throughput_sharetree == 1 } {
+            if { $throughput_sharetree == 1 || $functional_policy == 1} {
                set numb [ expr ( ( $sent_jobs  % 3 ) + 1 )]
                set next_submit_command "SUBMIT 1 -P project${numb}"
             } else { 
@@ -892,12 +1079,13 @@ proc run_throughput_test {} {
          send -i $spawn_id "$next_submit_command\n"
 
          # store info about sent job
-         set job_data($send_id,state) "submit"
-         set job_data($send_id,job_id) "-"
-         set job_data($send_id,submit_start_time) [timestamp]
-         set job_data($send_id,submit_end_time) 0
-         set job_data($send_id,run_start_time) 0
-         set job_data($send_id,run_end_time) 0
+         # set job_data($send_id,state) "submit"
+         # set job_data($send_id,job_id) "-"
+         # set job_data($send_id,submit_start_time) [timestamp]
+         # set job_data($send_id,submit_end_time) 0
+         # set job_data($send_id,run_start_time) 0
+         # set job_data($send_id,run_end_time) 0
+         # set job_data($send_id,submit_time) 0
 
          # some statistics
          incr host_submit_count($sub_host)
@@ -948,25 +1136,29 @@ proc run_throughput_test {} {
                      # there are cases, where the JOB_ADD event will be received before
                      # the SUBMIT OK. In this case, the job already has an index and has
                      # already been counted as submitted.
-                     if { [info exists job_data($submitjob_jobid)] } {
-                        set job_index $job_data($submitjob_jobid)
-                     } else {
-                        set job_index $result(jobs_submitted)
-                        incr result(jobs_submitted)
+                     # + handling for array jobs: create as many job instances as the size
+                     # of a single or array job
+                     for {set i 1} {$i <= $array_size} {incr i} {
+                        set job_id "$submitjob_jobid.$i"
+                        if { [info exists job_data($job_id)] } {
+                           set job_index $job_data($job_id)
+                        } else {
+                           set job_index $result(jobs_submitted)
+                           incr result(jobs_submitted)
 
-                        set last_job_id $submitjob_jobid
+                           set last_job_id $submitjob_jobid
 
-                        # doubly linked data job_id <-> job_index
-                        set job_data(job_index,job_id) $submitjob_jobid
-                        set job_data($submitjob_jobid) $job_index
+                           # doubly linked data job_id <-> job_index
+                           set job_data($job_index,job_id) $job_id
+                           set job_data($job_id) $job_index
 
-                        set job_data($job_index,state) "pending"
+                           set job_data($job_index,state) "pending"
+                        }
+
+                        set job_data($job_index,submit_time) $submitjob_time
+                        set job_data($job_index,submit_start_time) $submitjob_start
+                        set job_data($job_index,submit_end_time) $submitjob_end
                      }
-
-                     set job_data($job_index,submit_time) $submitjob_time
-                     set job_data($job_index,submit_start_time) $submitjob_start
-                     set job_data($job_index,submit_end_time) $submitjob_end
-
 
                      # this host now can take the next submit command
                      lappend next_submitter_list $host_name
@@ -1005,6 +1197,20 @@ proc run_throughput_test {} {
                      set qstat_data($index,error) 1
                      incr qstat_data(count)
                   }
+                  "messages in read buffer:*" {
+                     set index $qping_data(count)
+                     set qping_data($index,time) [clock seconds]
+                     set qping_data($index,read) [lindex $line 4]
+                  }
+                  "messages in write buffer:*" {
+                     set index $qping_data(count)
+                     set qping_data($index,write) [lindex $line 4]
+                  }
+                  "nr. of connected clients:*" {
+                     set index $qping_data(count)
+                     set qping_data($index,clients) [lindex $line 4]
+                     incr qping_data(count)
+                  }
                   default {
                      # puts $CHECK_OUTPUT "unexpected output (submitter): |$line|"
                   }
@@ -1035,6 +1241,7 @@ proc run_throughput_test {} {
                switch -glob -- $line {
                   "JOB_ADD*" {
                      # evaluate job_id
+                     # JOB_ADD (308.0:ECL_TIME=1094812995:project=NONE)
                      set job_s_pos [string first "(" $line]
                      incr job_s_pos 1
                      set job_e_pos [string first ")" $line]
@@ -1057,29 +1264,34 @@ proc run_throughput_test {} {
                      # there are cases, where the JOB_ADD event will be received before
                      # the SUBMIT OK. In this case, assign the job an index and count it
                      # as submitted.
-                     set sub_id [get_submit_id_from_job_id job_data $job_id]
-                     if { $sub_id < 0 } {
-                        set sub_id $result(jobs_submitted)
-                        incr result(jobs_submitted)
+                     # + handle array job
+                     for {set i 1} {$i <= $array_size} {incr i} {
+                        set array_job_id $job_id.$i
+                        set sub_id [get_submit_id_from_job_id job_data $array_job_id]
+                        if { $sub_id < 0 } {
+                           set sub_id $result(jobs_submitted)
+                           incr result(jobs_submitted)
 
-                        set last_job_id $job_id
+                           set last_job_id $job_id
 
-                        # doubly linked data job_id <-> job_index
-                        set job_data(sub_id,job_id) $job_id
-                        set job_data($job_id) $sub_id
+                           # doubly linked data job_id <-> job_index
+                           set job_data($sub_id,job_id) $array_job_id
+                           set job_data($array_job_id) $sub_id
 
-                        set job_data($sub_id,state) "pending"
+                           set job_data($sub_id,state) "pending"
+                        }
+
+                        # store project (only number)
+                        set job_data($sub_id,project) [string index $project_name 7]
                      }
-
-                     # store project (only number)
-                     set job_data($sub_id,project) [string index $project_name 7]
                   }
 
                   "JOB_START*" {
                      # evaluate job_id
+                     # JOB_START (307.4:ECL_TIME=1094812970)
                      set job_s_pos [string first "(" $line]
                      incr job_s_pos 1
-                     set job_e_pos [string first "." $line]
+                     set job_e_pos [string first ":" $line]
                      incr job_e_pos -1
                      set job_id [string range $line $job_s_pos $job_e_pos]
 
@@ -1094,9 +1306,10 @@ proc run_throughput_test {} {
 
                   "JOB_FINISH*" {
                      # evaluate job_id
+                     # JOB_FINISH (307.2:ECL_TIME=1094812978)
                      set job_s_pos [string first "(" $line]
                      incr job_s_pos 1
-                     set job_e_pos [string first "." $line]
+                     set job_e_pos [string first ":" $line]
                      incr job_e_pos -1
                      set job_id [string range $line $job_s_pos $job_e_pos]
 
@@ -1197,7 +1410,6 @@ proc run_throughput_test {} {
       set result(queues_enabled) $are_enabled
       
       # tasks to be done once a minute
-      set time_now [timestamp]
       if { $result(test_run_time) != $time_now } {
          show_current_system_status result job_data schedd_data monitoring
          flush $CHECK_OUTPUT
@@ -1243,7 +1455,7 @@ proc run_throughput_test {} {
    }
 
    # create reports
-   create_reports results_list job_data schedd_data monitoring qstat_data
+   create_reports results_list job_data schedd_data monitoring qstat_data qping_data
 
    set_error 0 "ok"
 }
@@ -1376,6 +1588,7 @@ proc compare_dump_directory { dir } {
 proc compare_dump_data_file { file1 file2 } {
    global ts_config
    global CHECK_OUTPUT 
+   global array_size do_requests parallel_jobs
 
    if { [file isfile $file1] != 1 } {
       puts $CHECK_OUTPUT "no file $file1"
@@ -1543,12 +1756,12 @@ proc compare_dump_data_file { file1 file2 } {
 
    if { $test_config1(enable_queues_job_count) == 0 } {
       set text ""
-      append text "There was no threshold value for enabling queues in the tests. So all queues was "
+      append text "There was no threshold value for enabling queues in the tests. So all queues were "
       append text "enabled when testsuite started to submit jobs." 
       append content [ create_html_text $text ]
    } else {
       set text ""
-      append text "There was a threshold value for enabling queues in the tests. So all queues was "
+      append text "There was a threshold value for enabling queues in the tests. So all queues were "
       append text "disabled when testsuite started to submit jobs. As the pending job count reached " 
       append text "a count of $test_config1(enable_queues_job_count) the testsuite enabled all cluster "
       append text "queues."
@@ -1569,8 +1782,18 @@ proc compare_dump_data_file { file1 file2 } {
    append content [ create_html_text $text ]
    set text ""
    append content [ create_html_text "" ]
-   append text "The testsuite subitted $test_config1(end_job_count) sleeper jobs to the systems. Each job had " 
+   append text "The testsuite submitted $test_config1(end_job_count) sleeper jobs "
+   if {$array_size > 1} {
+      append text "(array jobs of size $array_size) "
+   }
+   if {$parallel_jobs} {
+      append text "(parallel jobs with slot range 2-16) "
+   }
+   append text "to the systems. Each job had " 
    append text "a sleep time of $test_config1(global_job_run_time) seconds."
+   if {$do_requests} {
+      append text "The jobs did a hard and a soft request."
+   }
    append content [ create_html_text $text ]
    append content [ create_html_text "" ]
 
@@ -1845,7 +2068,7 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(0,show) 1     ;# running jobs
        set xy_rows(1,show) 0     ;# pending jobs
        set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs subitted
+       set xy_rows(3,show) 0     ;# jobs submitted
        set xy_rows(4,show) 1     ;# total system slots
        set xy_rows(5,show) 1     ;# free system slots
        set xy_rows(6,show) 0     ;# scheduler calculation time
@@ -1861,7 +2084,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# jobs done
        incr start 1
-       set xy_rows($start,show) 0     ;# jobs subitted
+       set xy_rows($start,show) 0     ;# jobs submitted
        incr start 1
        set xy_rows($start,show) 1     ;# total system slots
        incr start 1
@@ -1885,7 +2108,7 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(0,show) 0     ;# running jobs
        set xy_rows(1,show) 1     ;# pending jobs
        set xy_rows(2,show) 1     ;# jobs done
-       set xy_rows(3,show) 1     ;# jobs subitted
+       set xy_rows(3,show) 1     ;# jobs submitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
        set xy_rows(6,show) 0     ;# scheduler calculation time
@@ -1902,7 +2125,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 1     ;# jobs done
        incr start 1
-       set xy_rows($start,show) 1     ;# jobs subitted
+       set xy_rows($start,show) 1     ;# jobs submitted
        incr start 1
        set xy_rows($start,show) 0     ;# total system slots
        incr start 1
@@ -1924,7 +2147,7 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(0,show) 0     ;# running jobs
        set xy_rows(1,show) 0     ;# pending jobs
        set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs subitted
+       set xy_rows(3,show) 0     ;# jobs submitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
        set xy_rows(6,show) 1     ;# scheduler calculation time
@@ -1940,7 +2163,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# jobs done
        incr start 1
-       set xy_rows($start,show) 0     ;# jobs subitted
+       set xy_rows($start,show) 0     ;# jobs submitted
        incr start 1
        set xy_rows($start,show) 0     ;# total system slots
        incr start 1
@@ -1963,7 +2186,7 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(0,show) 0     ;# running jobs
        set xy_rows(1,show) 0     ;# pending jobs
        set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs subitted
+       set xy_rows(3,show) 0     ;# jobs submitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
        set xy_rows(6,show) 0     ;# scheduler calculation time
@@ -1979,7 +2202,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# jobs done
        incr start 1
-       set xy_rows($start,show) 0     ;# jobs subitted
+       set xy_rows($start,show) 0     ;# jobs submitted
        incr start 1
        set xy_rows($start,show) 0     ;# total system slots
        incr start 1
@@ -2001,7 +2224,7 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(0,show) 0     ;# running jobs
        set xy_rows(1,show) 0     ;# pending jobs
        set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs subitted
+       set xy_rows(3,show) 0     ;# jobs submitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
        set xy_rows(6,show) 0     ;# scheduler calculation time
@@ -2017,7 +2240,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# jobs done
        incr start 1
-       set xy_rows($start,show) 0     ;# jobs subitted
+       set xy_rows($start,show) 0     ;# jobs submitted
        incr start 1
        set xy_rows($start,show) 0     ;# total system slots
        incr start 1
@@ -2041,7 +2264,7 @@ proc compare_dump_data_file { file1 file2 } {
        set xy_rows(0,show) 0     ;# running jobs
        set xy_rows(1,show) 0     ;# pending jobs
        set xy_rows(2,show) 0     ;# jobs done
-       set xy_rows(3,show) 0     ;# jobs subitted
+       set xy_rows(3,show) 0     ;# jobs submitted
        set xy_rows(4,show) 0     ;# total system slots
        set xy_rows(5,show) 0     ;# free system slots
        set xy_rows(6,show) 0     ;# scheduler calculation time
@@ -2057,7 +2280,7 @@ proc compare_dump_data_file { file1 file2 } {
        incr start 1
        set xy_rows($start,show) 0     ;# jobs done
        incr start 1
-       set xy_rows($start,show) 0     ;# jobs subitted
+       set xy_rows($start,show) 0     ;# jobs submitted
        incr start 1
        set xy_rows($start,show) 0     ;# total system slots
        incr start 1
@@ -2082,7 +2305,7 @@ proc compare_dump_data_file { file1 file2 } {
 proc analyse_dump_data_file { file { force 0 } } {
    global ts_config
    global CHECK_OUTPUT
-   global throughput_sharetree
+   global throughput_sharetree functional_policy qstat_interval array_size do_requests parallel_jobs
    
    set sub_dir [file tail $file]
    set dir_name [file dirname $file] 
@@ -2107,6 +2330,7 @@ proc analyse_dump_data_file { file { force 0 } } {
    read_array_from_file $file "execd list" host_list
    read_array_from_file $file "monitoring" monitoring
    read_array_from_file $file "qstat data" qstat_data
+   read_array_from_file $file "qping data" qping_data
    puts $CHECK_OUTPUT "Test date:          $test_config(test_date)"
    puts $CHECK_OUTPUT "gridengine version: $test_config(gridengine_version)"
 
@@ -2165,8 +2389,18 @@ proc analyse_dump_data_file { file { force 0 } } {
    set text ""
    append text "The Grid Engine system had $test_config(nr_queues) queues with $test_config(nr_slots_per_queue) "
    append text "slots on each host (=[ expr ( $test_config(nr_queues) * $test_config(nr_slots_per_queue) * [llength $execd_list]  )] "
-   append text "slots). The testsuite subitted $test_config(end_job_count) sleeper jobs to the system. Each job had " 
+   append text "slots). The testsuite submitted $test_config(end_job_count) sleeper jobs " 
+   if {$array_size > 1} {
+      append text "(array jobs of size $array_size) "
+   }
+   if {$parallel_jobs} {
+      append text "(parallel jobs with slot range 2-16) "
+   }
+   append text "to the system. Each job had " 
    append text "a sleep time of $test_config(global_job_run_time) seconds."
+   if {$do_requests} {
+      append text "The jobs did a hard and a soft request."
+   }
    append content [ create_html_text $text ]
    
    append content [ create_html_text "" ]
@@ -2294,30 +2528,35 @@ proc analyse_dump_data_file { file { force 0 } } {
 
    # links to other documents
    append content [ create_html_text "" ]
-   append content [create_html_link "   (1) Running job analysis" "running_jobs.html"]
+   append content [create_html_link "   Running job analysis" "running_jobs.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   (2) Job time analysis" "job_times.html"]
+   append content [create_html_link "   Job time analysis" "job_times.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   (3) Job time analysis" "job_distribution.html"]
+   append content [create_html_link "   Job time analysis" "job_distribution.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   (4) Pending job analysis" "pending_jobs.html"]
+   append content [create_html_link "   Pending job analysis" "pending_jobs.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   (5) Scheduler calculation time analysis" "schedd_calc_time.html"]
+   append content [create_html_link "   Scheduler calculation time analysis" "schedd_calc_time.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   (6) Scheduler job order analysis" "schedd_orders.html"]
+   append content [create_html_link "   Scheduler job order analysis" "schedd_orders.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   (7) Size of qmaster and scheduler" "daemon_size.html"]
+   append content [create_html_link "   Size of qmaster and scheduler" "daemon_size.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   (8) CPU load of qmaster and scheduler" "daemon_cpu.html"]
+   append content [create_html_link "   CPU load of qmaster and scheduler" "daemon_cpu.html"]
    append content [ create_html_text "" ]
-   append content [create_html_link "   (9) Qstat performance" "qstat.html"]
+   append content [create_html_link "   Qping information" "qping.html"]
    append content [ create_html_text "" ]
-   if { $throughput_sharetree == 1 }  {
-      append content [create_html_link "   (10) Running project job analysis" "project_jobs.html"]
+
+   if {$qstat_interval > 0} {
+      append content [create_html_link "   Qstat performance" "qstat.html"]
       append content [ create_html_text "" ]
-      append content [create_html_link "   (11) All charts in one html document" "all_charts.html"]
+   }
+   if { $throughput_sharetree == 1 || $functional_policy == 1 }  {
+      append content [create_html_link "   Running project job analysis" "project_jobs.html"]
+      append content [ create_html_text "" ]
+      append content [create_html_link "   All charts in one html document" "all_charts.html"]
    } else {
-      append content [create_html_link "   (10) All charts in one html document" "all_charts.html"]
+      append content [create_html_link "   All charts in one html document" "all_charts.html"]
    }
 
    # links to data
@@ -2439,7 +2678,7 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content [create_html_image "Running jobs" "running_jobs.gif"]
    generate_html_file $output_dir/running_jobs.html "$test_config(gridengine_version) from $test_config(test_date)" $content
 
-   if { $throughput_sharetree == 1 }  {
+   if { $throughput_sharetree == 1 || $functional_policy == 1 }  {
       set content ""
       append content ""
       append content [create_html_image "Running project jobs" "project_jobs.gif"]
@@ -2484,8 +2723,15 @@ proc analyse_dump_data_file { file { force 0 } } {
 
    set content ""
    append content ""
-   append content [create_html_image "Qstat performance" "qstat.gif"]
-   generate_html_file $output_dir/qstat.html "$test_config(gridengine_version) from $test_config(test_date)" $content
+   append content [create_html_image "Qping information" "qping.gif"]
+   generate_html_file $output_dir/qping.html "$test_config(gridengine_version) from $test_config(test_date)" $content
+
+   if {$qstat_interval > 0} {
+      set content ""
+      append content ""
+      append content [create_html_image "Qstat performance" "qstat.gif"]
+      generate_html_file $output_dir/qstat.html "$test_config(gridengine_version) from $test_config(test_date)" $content
+   }
 
    set content ""
    append content ""
@@ -2497,8 +2743,11 @@ proc analyse_dump_data_file { file { force 0 } } {
    append content [create_html_image "Scheduler orders" "schedd_orders.gif"]
    append content [create_html_image "Daemon size" "daemon_size.gif"]
    append content [create_html_image "Daemon CPU load" "daemon_cpu.gif"]
-   append content [create_html_image "Qstat performance" "qstat.gif"]
-   if { $throughput_sharetree == 1 }  {
+   append content [create_html_image "Qping information" "qping.gif"]
+   if {$qstat_interval > 0} {
+      append content [create_html_image "Qstat performance" "qstat.gif"]
+   }
+   if { $throughput_sharetree == 1 || $functional_policy == 1 }  {
       append content [create_html_image "Running project jobs" "project_jobs.gif"]
    }
    generate_html_file $output_dir/all_charts.html "$test_config(gridengine_version) from $test_config(test_date)" $content
@@ -2506,108 +2755,122 @@ proc analyse_dump_data_file { file { force 0 } } {
 
    # plot diagrams
    # get functions for test run  and schedd data
-       # 1) test run
-       calculate_test_run_xy_rows results xy_rows 0
-       # 2) schedd run
-       set test_start $results(0,test_run_time)
-       calculate_schedd_run_xy_rows schedd xy_rows $test_start 0
-       # 3) job submit times and job run times
-       calculate_submit_run_xy_rows jobs xy_rows $test_start 0
+   # 1) test run
+   calculate_test_run_xy_rows results xy_rows 0
+   # 2) schedd run
+   set test_start $results(0,test_run_time)
+   calculate_schedd_run_xy_rows schedd xy_rows $test_start 0
+   # 3) job submit times and job run times
+   calculate_submit_run_xy_rows jobs xy_rows $test_start 0
 
-       calculate_monitoring_xy_rows monitoring xy_rows $test_start 0
+   calculate_monitoring_xy_rows monitoring xy_rows $test_start 0
 
-      calculate_qstat_xy_rows qstat_data xy_rows $test_start 0
+   calculate_qstat_xy_rows qstat_data xy_rows $test_start 0
 
-       # 5) optional: calculate project times 
-       if { $throughput_sharetree == 1 }  {
-          calculate_project_run_xy_rows results jobs xy_rows 0
-       }
+   calculate_qping_xy_rows qping_data xy_rows $test_start 0
 
-       set plot_data(xlabel) "time\[s\]"
-       set plot_data(ylabel) "values"
+   # 5) optional: calculate project times 
+   if { $throughput_sharetree == 1 || $functional_policy == 1 }  {
+      calculate_project_run_xy_rows results jobs xy_rows 0
+   }
 
-       set plot_data(title) "Throughput test results - running jobs"
-       set plot_data(output_file) "$output_dir/running_jobs.gif"
-       clear_xy_rows_show xy_rows
-       set xy_rows(0,show)  1     ;# running jobs
-       set xy_rows(4,show)  1     ;# total system slots
-       set xy_rows(5,show)  1     ;# free system slots
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(xlabel) "time\[s\]"
+   set plot_data(ylabel) "values"
 
-       set plot_data(title) "Throughput test results - pending jobs"
-       set plot_data(output_file) "$output_dir/pending_jobs.gif"
-       clear_xy_rows_show xy_rows
-       set xy_rows(1,show) 1     ;# pending jobs
-       set xy_rows(2,show) 1     ;# jobs done
-       set xy_rows(3,show) 1     ;# jobs subitted
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(title) "Throughput test results - running jobs"
+   set plot_data(output_file) "$output_dir/running_jobs.gif"
+   clear_xy_rows_show xy_rows
+   set xy_rows(0,show)  1     ;# running jobs
+   set xy_rows(4,show)  1     ;# total system slots
+   set xy_rows(5,show)  1     ;# free system slots
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(title) "Throughput test results - schedd calculation time"
-       set plot_data(output_file) "$output_dir/schedd_calc_time.gif"
-       clear_xy_rows_show xy_rows
-       set xy_rows(6,show) 1     ;# scheduler calculation time
-       set xy_rows(7,show) 1     ;# schedd total time
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(title) "Throughput test results - pending jobs"
+   set plot_data(output_file) "$output_dir/pending_jobs.gif"
+   clear_xy_rows_show xy_rows
+   set xy_rows(1,show) 1     ;# pending jobs
+   set xy_rows(2,show) 1     ;# jobs done
+   set xy_rows(3,show) 1     ;# jobs subitted
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(title) "Throughput test results - schedd orders"
-       set plot_data(output_file) "$output_dir/schedd_orders.gif"
-       clear_xy_rows_show xy_rows
-       set xy_rows(8,show) 1     ;# schedd orders
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(title) "Throughput test results - schedd calculation time"
+   set plot_data(output_file) "$output_dir/schedd_calc_time.gif"
+   clear_xy_rows_show xy_rows
+   set xy_rows(6,show) 1     ;# scheduler calculation time
+   set xy_rows(7,show) 1     ;# schedd total time
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(title) "Throughput test results - job times"
-       set plot_data(output_file) "$output_dir/job_times.gif"
-       clear_xy_rows_show xy_rows
-       set xy_rows(9,show) 1     ;# job submit time
-       set xy_rows(10,show) 1     ;# job run time
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(title) "Throughput test results - schedd orders"
+   set plot_data(output_file) "$output_dir/schedd_orders.gif"
+   clear_xy_rows_show xy_rows
+   set xy_rows(8,show) 1     ;# schedd orders
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(title) "Throughput test results - job distribution"
-       set plot_data(output_file) "$output_dir/job_distribution.gif"
-       set plot_data(xlabel) "job time\[s\]"
-       set plot_data(ylabel) "number of jobs"
-       clear_xy_rows_show xy_rows
-       set xy_rows(11,show) 1    ;# job distribution
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(title) "Throughput test results - job times"
+   set plot_data(output_file) "$output_dir/job_times.gif"
+   clear_xy_rows_show xy_rows
+   set xy_rows(9,show) 1     ;# job submit time
+   set xy_rows(10,show) 1     ;# job run time
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(title) "Throughput test results - size of daemons"
-       set plot_data(output_file) "$output_dir/daemon_size.gif"
-       set plot_data(xlabel) "time\[s\]"
-       set plot_data(ylabel) "size \[kB\]"
-       clear_xy_rows_show xy_rows
-       set xy_rows(12,show) 1     ;# qmaster size
-       set xy_rows(14,show) 1     ;# schedd size
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(title) "Throughput test results - job distribution"
+   set plot_data(output_file) "$output_dir/job_distribution.gif"
+   set plot_data(xlabel) "job time\[s\]"
+   set plot_data(ylabel) "number of jobs"
+   clear_xy_rows_show xy_rows
+   set xy_rows(11,show) 1    ;# job distribution
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(title) "Throughput test results - CPU load of daemons"
-       set plot_data(output_file) "$output_dir/daemon_cpu.gif"
-       set plot_data(xlabel) "time\[s\]"
-       set plot_data(ylabel) "cpu load \[%\]"
-       clear_xy_rows_show xy_rows
-       set xy_rows(13,show) 1     ;# qmaster CPU load
-       set xy_rows(15,show) 1     ;# schedd CPU load
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(title) "Throughput test results - size of daemons"
+   set plot_data(output_file) "$output_dir/daemon_size.gif"
+   set plot_data(xlabel) "time\[s\]"
+   set plot_data(ylabel) "size \[kB\]"
+   clear_xy_rows_show xy_rows
+   set xy_rows(12,show) 1     ;# qmaster size
+   set xy_rows(14,show) 1     ;# schedd size
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       set plot_data(title) "Throughput test results - qstat performance"
-       set plot_data(output_file) "$output_dir/qstat.gif"
-       set plot_data(xlabel) "time\[s\]"
-       set plot_data(ylabel) "duration \[s\]"
-       clear_xy_rows_show xy_rows
-       set xy_rows(16,show) 1     ;# qstat duration
-       set xy_rows(17,show) 1     ;# failed qstat duration
-       create_gnuplot_xy_gif plot_data xy_rows
+   set plot_data(title) "Throughput test results - CPU load of daemons"
+   set plot_data(output_file) "$output_dir/daemon_cpu.gif"
+   set plot_data(xlabel) "time\[s\]"
+   set plot_data(ylabel) "cpu load \[%\]"
+   clear_xy_rows_show xy_rows
+   set xy_rows(13,show) 1     ;# qmaster CPU load
+   set xy_rows(15,show) 1     ;# schedd CPU load
+   create_gnuplot_xy_gif plot_data xy_rows
 
-       if { $throughput_sharetree == 1 }  {
-         set plot_data(xlabel) "time\[s\]"
-         set plot_data(ylabel) "jobs done\[%\]"
-         set plot_data(title) "Throughput test results - project jobs"
-         set plot_data(output_file) "$output_dir/project_jobs.gif"
-         clear_xy_rows_show xy_rows
-         set xy_rows(18,show) 1     ;# running jobs project 1
-         set xy_rows(19,show) 1     ;# running jobs project 2
-         set xy_rows(20,show) 1     ;# running jobs project 3
-         create_gnuplot_xy_gif plot_data xy_rows
-       }
+   set plot_data(title) "Throughput test results - qping information"
+   set plot_data(output_file) "$output_dir/qping.gif"
+   set plot_data(xlabel) "time\[s\]"
+   set plot_data(ylabel) "messages/clients"
+   clear_xy_rows_show xy_rows
+   set xy_rows(21,show) 1     ;# number of clients
+   set xy_rows(22,show) 1     ;# messages in read buffer
+   set xy_rows(23,show) 1     ;# messages in write buffer
+   create_gnuplot_xy_gif plot_data xy_rows
+
+   if {$qstat_interval > 0} {
+      set plot_data(title) "Throughput test results - qstat performance"
+      set plot_data(output_file) "$output_dir/qstat.gif"
+      set plot_data(xlabel) "time\[s\]"
+      set plot_data(ylabel) "duration \[s\]"
+      clear_xy_rows_show xy_rows
+      set xy_rows(16,show) 1     ;# qstat duration
+      set xy_rows(17,show) 1     ;# failed qstat duration
+      create_gnuplot_xy_gif plot_data xy_rows
+   }
+
+   if { $throughput_sharetree == 1 || $functional_policy == 1 }  {
+      set plot_data(xlabel) "time\[s\]"
+      set plot_data(ylabel) "jobs done\[%\]"
+      set plot_data(title) "Throughput test results - project jobs"
+      set plot_data(output_file) "$output_dir/project_jobs.gif"
+      clear_xy_rows_show xy_rows
+      set xy_rows(18,show) 1     ;# running jobs project 1
+      set xy_rows(19,show) 1     ;# running jobs project 2
+      set xy_rows(20,show) 1     ;# running jobs project 3
+      create_gnuplot_xy_gif plot_data xy_rows
+   }
 }
 
 
@@ -2660,6 +2923,7 @@ proc calculate_schedd_run_xy_rows { results_array_name row_array_name test_start
 
 proc calculate_submit_run_xy_rows { results_array_name row_array_name test_start start_numb} {
    global ts_config
+   global CHECK_OUTPUT
 
    upvar $results_array_name jobs
    upvar $row_array_name xy_rows
@@ -2674,63 +2938,62 @@ proc calculate_submit_run_xy_rows { results_array_name row_array_name test_start
    }
 
 
-       #  3) job submit times and job run times
-       set xy_rows($pos1,drawmode) "points"
-       set xy_rows($pos1,title) "job submit time $add_info"
+    #  3) job submit times and job run times
+    set xy_rows($pos1,drawmode) "points"
+    set xy_rows($pos1,title) "job submit time $add_info"
 
-       set xy_rows($pos2,drawmode) "points"
-       set xy_rows($pos2,title) "job run time $add_info"
- 
-       set xy_rows($pos3,drawmode) "linespoints" ;#"points"
-       set xy_rows($pos3,title) "job run time distribution $add_info"
+    set xy_rows($pos2,drawmode) "points"
+    set xy_rows($pos2,title) "job run time $add_info"
+
+    set xy_rows($pos3,drawmode) "linespoints" ;#"points"
+    set xy_rows($pos3,title) "job run time distribution $add_info"
 
 
-       set job 0
+    set job 0
 
-       set min_run_time 100000
-       set max_run_time 0
-       if { [info exists run_time_values ] } {
-          unset run_time_values
-       }       
-       while { [info exists jobs($job,job_id) ] } {
+    set min_run_time 100000
+    set max_run_time 0
+    if { [info exists run_time_values ] } {
+       unset run_time_values
+    }       
+    while { [info exists jobs($job,job_id) ] } {
+       set normalized_submit_end_time [ expr ( $jobs($job,submit_end_time) - $test_start ) ]
+       set normalized_run_end_time    [ expr ( $jobs($job,run_end_time)    - $test_start ) ]
 
-          set normalized_submit_end_time [ expr ( $jobs($job,submit_end_time) - $test_start ) ]
-          set normalized_run_end_time    [ expr ( $jobs($job,run_end_time)    - $test_start ) ]
+       #set submit_time [ expr ( $jobs($job,submit_end_time) - $jobs($job,submit_start_time) ) ]
+       set submit_time [expr $jobs($job,submit_time) / 1000.0]
+       set run_time    [ expr ( $jobs($job,run_end_time)    - $jobs($job,run_start_time)    ) ]                    
 
-          #set submit_time [ expr ( $jobs($job,submit_end_time) - $jobs($job,submit_start_time) ) ]
-          set submit_time [expr $jobs($job,submit_time) / 1000.0]
-          set run_time    [ expr ( $jobs($job,run_end_time)    - $jobs($job,run_start_time)    ) ]                    
+       #   x->time y->submit_time
+       set xy_rows($pos1,$job,x) $normalized_submit_end_time
+       set xy_rows($pos1,$job,y) $submit_time
 
-          #   x->time y->submit_time
-          set xy_rows($pos1,$job,x) $normalized_submit_end_time
-          set xy_rows($pos1,$job,y) $submit_time
-
-          #   x->time y->run_time
-          set xy_rows($pos2,$job,x) $normalized_run_end_time
-          set xy_rows($pos2,$job,y) $run_time
-          if { $min_run_time > $run_time } {
-             set min_run_time $run_time
-          }
-          if { $max_run_time < $run_time } {
-             set max_run_time $run_time
-          }
-          if { [info exists run_time_values($run_time)] } {
-             incr run_time_values($run_time) 1
-          } else {
-             set run_time_values($run_time) 1
-          }
-          incr job 1
+       #   x->time y->run_time
+       set xy_rows($pos2,$job,x) $normalized_run_end_time
+       set xy_rows($pos2,$job,y) $run_time
+       if { $min_run_time > $run_time } {
+          set min_run_time $run_time
        }
-   
-       set counter 0
-       for { set i $min_run_time } { $i <= $max_run_time } { incr i 1 } {
-          if { [ info exists run_time_values($i)] } {
-             #   x->job time y->number of jobs with that runtime
-             set xy_rows($pos3,$counter,x) $i
-             set xy_rows($pos3,$counter,y) $run_time_values($i)
-             incr counter 1
-          }
+       if { $max_run_time < $run_time } {
+          set max_run_time $run_time
        }
+       if { [info exists run_time_values($run_time)] } {
+          incr run_time_values($run_time) 1
+       } else {
+          set run_time_values($run_time) 1
+       }
+       incr job 1
+    }
+
+    set counter 0
+    for { set i $min_run_time } { $i <= $max_run_time } { incr i 1 } {
+       if { [ info exists run_time_values($i)] } {
+          #   x->job time y->number of jobs with that runtime
+          set xy_rows($pos3,$counter,x) $i
+          set xy_rows($pos3,$counter,y) $run_time_values($i)
+          incr counter 1
+       }
+    }
 }
 
 proc calculate_monitoring_xy_rows { results_array_name row_array_name test_start start_numb} {
@@ -2825,6 +3088,45 @@ proc calculate_qstat_xy_rows { results_array_name row_array_name test_start star
 }
 
 
+proc calculate_qping_xy_rows { results_array_name row_array_name test_start start_numb} {
+   global ts_config
+
+   upvar $results_array_name qping_data
+   upvar $row_array_name xy_rows
+
+   set pos1 [ expr ( $start_numb + 21 ) ] ;# number of clients
+   set pos2 [ expr ( $start_numb + 22 ) ] ;# messages in read buffer
+   set pos3 [ expr ( $start_numb + 23 ) ] ;# messages in write buffer
+
+   set add_info " A"
+   if { $start_numb != 0 } {
+      set add_info " B"
+   }
+
+   #  qstat data
+   set xy_rows($pos1,drawmode) "points"
+   set xy_rows($pos1,title) "clients $add_info"
+   set xy_rows($pos2,drawmode) "points"
+   set xy_rows($pos2,title) "read buffer$add_info"
+   set xy_rows($pos3,drawmode) "points"
+   set xy_rows($pos3,title) "write buffer$add_info"
+
+   set idx 0
+   for {set i 0} {$i < $qping_data(count)} {incr i} {
+      if { $qping_data($i,time) >= $test_start } {
+         set normalized_time [expr $qping_data($i,time) - $test_start]
+         set xy_rows($pos1,$idx,x) $normalized_time
+         set xy_rows($pos2,$idx,x) $normalized_time
+         set xy_rows($pos3,$idx,x) $normalized_time
+         set xy_rows($pos1,$idx,y) $qping_data($i,clients)
+         set xy_rows($pos2,$idx,y) $qping_data($i,read)
+         set xy_rows($pos3,$idx,y) $qping_data($i,write)
+         incr idx
+      }
+   }
+}
+
+
 
 proc calculate_project_run_xy_rows { results_array_name job_array_name row_array_name start_numb } {
    global ts_config
@@ -2844,92 +3146,92 @@ proc calculate_project_run_xy_rows { results_array_name job_array_name row_array
    }
 
 
-       if { $results(count) > 0 } {
-          set xy_rows($pos1,drawmode) "lines"
-          set xy_rows($pos1,title) "running jobs project1 (32 %) $add_info"
+   if { $results(count) > 0 } {
+      set xy_rows($pos1,drawmode) "lines"
+      set xy_rows($pos1,title) "running jobs project1 (32 %) $add_info"
 
-          set xy_rows($pos2,drawmode) "lines"
-          set xy_rows($pos2,title) "running jobs project2 (48 %) $add_info"
+      set xy_rows($pos2,drawmode) "lines"
+      set xy_rows($pos2,title) "running jobs project2 (48 %) $add_info"
 
-          set xy_rows($pos3,drawmode) "lines"
-          set xy_rows($pos3,title) "running jobs project3 (20 %) $add_info"
+      set xy_rows($pos3,drawmode) "lines"
+      set xy_rows($pos3,title) "running jobs project3 (20 %) $add_info"
 
-          set last $results(count)
-          incr last -1
+      set last $results(count)
+      incr last -1
 
-          set test_start $results(0,test_run_time)
+      set test_start $results(0,test_run_time)
 
-          set job 0
-          set jobs_p1 0
-          set jobs_p2 0
-          set jobs_p3 0
-          set help_list ""
-          while { [info exists jobs($job,job_id) ] } {
+      set job 0
+      set jobs_p1 0
+      set jobs_p2 0
+      set jobs_p3 0
+      set help_list ""
 
-             set normalized_run_end_time    [ expr ( $jobs($job,run_end_time) - $test_start ) ]
-             set job_project $jobs($job,project)
+      # calculate the number of jobs finishing per project for each time 
+      # where we have a job report
+      while { [info exists jobs($job,job_id) ] } {
+         set normalized_run_end_time    [ expr ( $jobs($job,run_end_time) - $test_start ) ]
+         set job_project $jobs($job,project)
 
-             if { [info exists help($normalized_run_end_time,p1)] == 0 } {
-                set help($normalized_run_end_time,p1) 0
-             }
-             if { [info exists help($normalized_run_end_time,p2)] == 0 } {
-                set help($normalized_run_end_time,p2) 0
-             }
-             if { [info exists help($normalized_run_end_time,p3)] == 0 } {
-                set help($normalized_run_end_time,p3) 0
-             }
+         if { ! [info exists help($normalized_run_end_time,p1)] } {
+            set help($normalized_run_end_time,p1) 0
+         }
+         if { ! [info exists help($normalized_run_end_time,p2)] } {
+            set help($normalized_run_end_time,p2) 0
+         }
+         if { ! [info exists help($normalized_run_end_time,p3)] } {
+            set help($normalized_run_end_time,p3) 0
+         }
 
-             if { $job_project == 1 } {
-                
-                incr help($normalized_run_end_time,p1) 1
-             }
-             if { $job_project == 2 } {
-                incr help($normalized_run_end_time,p2) 1
+         if { $job_project == 1 } {
+            incr help($normalized_run_end_time,p1)
+         }
+         if { $job_project == 2 } {
+            incr help($normalized_run_end_time,p2)
+         }
+         if { $job_project == 3 } {
+            incr help($normalized_run_end_time,p3)
+         }
+         if { [lsearch $help_list $normalized_run_end_time] < 0  } {
+            lappend help_list $normalized_run_end_time
+         }
+         incr job 1
+      }
 
-             }
-             if { $job_project == 3 } {
-                incr help($normalized_run_end_time,p3) 1
-             }
-             if { [lsearch $help_list $normalized_run_end_time] < 0  } {
-                lappend help_list $normalized_run_end_time
-             }
-             incr job 1
-          }
-          set all_jobs $job
+      set all_jobs $job
 
-          set job 0
-          set help_sort [lsort -integer $help_list]
-          set jobs_p1 0
-          set jobs_p2 0
-          set jobs_p3 0
+      set job 0
+      set help_sort [lsort -integer $help_list]
+      set jobs_p1 0
+      set jobs_p2 0
+      set jobs_p3 0
 
-          foreach elem $help_sort {
-             incr jobs_p1 $help($elem,p1)
-             incr jobs_p2 $help($elem,p2)
-             incr jobs_p3 $help($elem,p3)
-             set current_job_count [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]
+      foreach elem $help_sort {
+         incr jobs_p1 $help($elem,p1)
+         incr jobs_p2 $help($elem,p2)
+         incr jobs_p3 $help($elem,p3)
+         set current_job_count [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]
 
-             set one_percent [ expr ( $current_job_count / 100.00 ) ]
-             set p1_p [ expr ( $jobs_p1 / $one_percent ) ]
-             set p2_p [ expr ( $jobs_p2 / $one_percent ) ]
-             set p3_p [ expr ( $jobs_p3 / $one_percent ) ]
+         set one_percent [ expr ( $current_job_count / 100.00 ) ]
+         set p1_p [ expr ( $jobs_p1 / $one_percent ) ]
+         set p2_p [ expr ( $jobs_p2 / $one_percent ) ]
+         set p3_p [ expr ( $jobs_p3 / $one_percent ) ]
 
-             #puts $CHECK_OUTPUT $elem
-             # project 1
-             set xy_rows($pos1,$job,x) $elem
-             set xy_rows($pos1,$job,y) $p1_p
-             # project 2
-             set xy_rows($pos2,$job,x) $elem 
-             set xy_rows($pos2,$job,y) $p2_p
-             # project 3
-             set xy_rows($pos3,$job,x) $elem 
-             set xy_rows($pos3,$job,y) $p3_p
-             incr job 1
-          }
-          #puts $CHECK_OUTPUT "all_jobs=$all_jobs, [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
-          if { [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ] != $all_jobs } {
-             add_proc_error "calculate_project_run_xy_rows" -1 "error job count all_jobs=$all_jobs, not [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
-          }
+         # project 1
+         set xy_rows($pos1,$job,x) $elem
+         set xy_rows($pos1,$job,y) $p1_p
+         # project 2
+         set xy_rows($pos2,$job,x) $elem 
+         set xy_rows($pos2,$job,y) $p2_p
+         # project 3
+         set xy_rows($pos3,$job,x) $elem 
+         set xy_rows($pos3,$job,y) $p3_p
+         incr job 1
+      }
+      #puts $CHECK_OUTPUT "all_jobs=$all_jobs, [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
+      if { [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ] != $all_jobs } {
+         add_proc_error "calculate_project_run_xy_rows" -1 "error job count all_jobs=$all_jobs, not [ expr ( $jobs_p1 + $jobs_p2 + $jobs_p3 ) ]"
+      }
 
 # ---          for { set i 0 } { $i <= $last } { incr i 1 } {
 # ---             set x_time        [ expr ( $results($i,test_run_time) - $test_start) ]  ;# test run time in seconds
@@ -2975,7 +3277,7 @@ proc calculate_project_run_xy_rows { results_array_name job_array_name row_array
 # ---             set xy_rows($pos3,$pro_pos_3,y) $p3_p ;# $results($i,jobs_running)
 # ---             incr pro_pos_3 1
 # ---          }
-       }
+   }
 }
 
 
@@ -3056,7 +3358,7 @@ proc calculate_test_run_xy_rows { results_array_name row_array_name start_numb }
    
 }
 
-proc create_reports { results_array job_array_name schedd_array_name monitoring_name qstat_name} {
+proc create_reports { results_array job_array_name schedd_array_name monitoring_name qstat_name qping_name} {
    global ts_config
    global ts_host_config
    global CHECK_OUTPUT CHECK_PROTOCOL_DIR check_name throughput_subdir
@@ -3069,12 +3371,14 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    global FLUSH_SUBMIT_SEC              ;# -1 or 0,1,2,3 ...
    global FLUSH_FINISH_SEC             ;# -1 or 0,1,2,3 ...
    global run_throughput_test_SCHEDULE_INTERVAL        ;# 00:00:30 ...
+   global array_size
 
    upvar $job_array_name jobs
    upvar $results_array results
    upvar $schedd_array_name schedd
    upvar $monitoring_name monitoring
    upvar $qstat_name qstat_data
+   upvar $qping_name qping_data
 
    set nr_of_execd_hosts [llength $ts_config(execd_hosts)]
    incr nr_of_execd_hosts -1
@@ -3090,13 +3394,13 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
          set have_local_spool_dir 1
       }
    }
-  
+ 
+   set test_end_job_count [expr $end_job_count * $array_size]
+
    if { $have_local_spool_dir == 1 } {
-      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/local_spool/_${nr_of_execd_hosts}_execds/_${end_job_count}_jobs"
-
+      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/local_spool/_${nr_of_execd_hosts}_execds/_${test_end_job_count}_jobs"
    } else {
-      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/_${nr_of_execd_hosts}_execds/_${end_job_count}_jobs"
-
+      set prot_output_dir "$CHECK_PROTOCOL_DIR/$check_name/$throughput_subdir/_${nr_of_execd_hosts}_execds/_${test_end_job_count}_jobs"
    }
 
    puts $CHECK_OUTPUT "saving report in directory:"
@@ -3167,6 +3471,7 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
    spool_array_to_file $prot_output_file "scheduler data" schedd  0
    spool_array_to_file $prot_output_file "monitoring" monitoring  0
    spool_array_to_file $prot_output_file "qstat data" qstat_data  0
+   spool_array_to_file $prot_output_file "qping data" qping_data  0
 
    catch { file delete ${prot_output_file}.old }
 
@@ -3198,7 +3503,7 @@ proc create_reports { results_array job_array_name schedd_array_name monitoring_
 #   puts $CHECK_OUTPUT "avg. total schedd time (count=$avg_schedd_values(nr_of_schedd_runs))   : $avg_schedd_values(avg_schedd_total_time)"
 #
    analyse_dump_data_file $prot_output_file 1
-   compare_dump_directory $prot_output_dir
+   #compare_dump_directory $prot_output_dir
 #   puts $CHECK_OUTPUT "do gzip $prot_output_file ..."
 #   puts $CHECK_OUTPUT [start_remote_prog $CHECK_HOST $CHECK_USER gzip $prot_output_file prg_exit_state 60 0 "" 1 0 0]
 }
@@ -3520,7 +3825,7 @@ proc show_current_system_status { array_name job_array_name schedd_array_name mo
    flush $CHECK_OUTPUT
 }
 
-proc clean_current_system_status { results_array array_name job_array_name schedd_array_name monitoring_name qstat_name } {
+proc clean_current_system_status { results_array array_name job_array_name schedd_array_name monitoring_name qstat_name qping_name } {
    global ts_config
    global queue_list global_job_run_time nr_slots
    global result_names
@@ -3531,6 +3836,7 @@ proc clean_current_system_status { results_array array_name job_array_name sched
    upvar $schedd_array_name schedd
    upvar $monitoring_name monitor
    upvar $qstat_name qstat_data
+   upvar $qping_name qping_data
 
    # names in result_array that shall be copied in each expect loop
    set result_names "jobs_done jobs_submitted jobs_running jobs_pending total_slots free_slots queues_enabled test_run_time job_run_time"
@@ -3573,12 +3879,13 @@ proc clean_current_system_status { results_array array_name job_array_name sched
    set monitor(schedd,0,cpu) 0
 
    set qstat_data(count) 0
+   set qping_data(count) 0
 }
 
 proc clear_xy_rows_show { xy_rows_name } {
    upvar $xy_rows_name xy_rows
 
-   for {set i 0} {$i <= 20} {incr i} {
+   for {set i 0} {$i <= 23} {incr i} {
       set xy_rows($i,show) 0
    }
 }

@@ -1,3 +1,8 @@
+JG-2003-04-9-0   Enhancem.: Enable use of flatfile spooling for qmaster.
+                            Changed the installation process to call a special 
+                            spooling client to create default configurations 
+                            using the selected spooling method.
+
 CR-2003-04-09-0  Testsuite: communication test:
                             - fixed compiler warnings 
                  Changed:   testsuite_rcv, testsuite_snd
@@ -39,6 +44,9 @@ CR-2003-04-08-1  Enhancem:  new options for test binaries.
 
 CR-2003-04-08-0  Enhancem:  clean rule for drmaa objs
                  Changed:   libs/japi/Makefile
+
+JG-2003-04-07-0  Enhancem.: - Improved flatfile spooling
+                            - removed dependencies of qmaster on classic spooling
 
 AH-2003-04-07-0  Enhancem:  - implemented drmaa_job_ps()
                             - fix problems with drmaa_wait() operating on 

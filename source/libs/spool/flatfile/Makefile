@@ -87,7 +87,7 @@ sge_spooling_flatfile.o: $(SPOOLFLIB_DIR)/sge_spooling_flatfile.c
 
 # do not automatically rebuild the scanner c code
 $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c: $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.l $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.h
-		echo "to rebuild the scanner c file call ./aimk -only-core flatfile_scanner" \
+		echo "to rebuild the scanner c file call ./aimk -only-core flatfile_scanner" ;\
       touch $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.c
 
 flatfile_scanner: $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.l $(SPOOLFLIB_DIR)/sge_spooling_flatfile_scanner.h

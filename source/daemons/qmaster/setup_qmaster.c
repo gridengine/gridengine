@@ -409,6 +409,16 @@ int sge_setup_qmaster()
    /* scheduler configuration stuff */
    DPRINTF(("scheduler config -----------------------------------\n"));
    spool_read_list(spooling_context, &Master_Sched_Config_List, SGE_TYPE_SCHEDD_CONF);
+   if (lGetNumberOfElem(Master_Sched_Config_List) == 0) {
+      lListElem *ep = schedd_conf_create_default();
+
+      if (Master_Sched_Config_List == NULL) {
+         Master_Sched_Config_List = lCreateList("schedd config list", SC_Type);
+      }
+      
+      lAppendElem(Master_Sched_Config_List, ep);
+      spool_write_object(spool_get_default_context(), ep, NULL, SGE_TYPE_SCHEDD_CONF);
+   }
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
 

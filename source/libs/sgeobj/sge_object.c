@@ -385,6 +385,8 @@ object_get_primary_key(const lDescr *descr)
       ret = SH_name;
    } else if (descr == UP_Type) {
       ret = UP_name;
+   } else if (descr == US_Type) {
+      ret = US_name;
    } else if (descr == VA_Type) {
       ret = VA_variable;
    }
@@ -548,6 +550,10 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          return result;
       case QU_qtype:
          result = queue_get_type_string(object, answer_list, buffer);
+         DEXIT;
+         return result;
+      case US_type:
+         result = userset_get_type_string(object, answer_list, buffer);
          DEXIT;
          return result;
    }
@@ -748,6 +754,10 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
          return ret;
       case QU_qtype:
          ret = queue_set_type_string(object, answer_list, value);
+         DEXIT;
+         return ret; 
+      case US_type:
+         ret = userset_set_type_string(object, answer_list, value);
          DEXIT;
          return ret; 
    }

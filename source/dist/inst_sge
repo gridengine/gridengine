@@ -869,19 +869,20 @@ AddPEFiles()
 {
 
    $INFOTEXT "Adding default parallel environment (PE) for >qmake<"
-   for c in make; do
-      if [ -f $QMDIR/pe/$c -a -s $QMDIR/pe/$c ]; then
-         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
-                   "PE >%s< already exists - should PE be preserved (y/n) [y] >> " $c
-         if [ $? = 1 ]; then
-            $INFOTEXT "Overwriting existing PE >%s<" $c
-            ExecuteAsAdmin cp util/resources/pe/$c $QMDIR/pe
-         fi
-      else
-         ExecuteAsAdmin cp util/resources/pe/$c $QMDIR/pe
-      fi
-   done
-   ExecuteAsAdmin chmod $FILEPERM $QMDIR/pe/*
+#   for c in make; do
+#      if [ -f $QMDIR/pe/$c -a -s $QMDIR/pe/$c ]; then
+#         $INFOTEXT -auto $autoinst -ask "y" "n" -def "y" -n \
+#                   "PE >%s< already exists - should PE be preserved (y/n) [y] >> " $c
+#         if [ $? = 1 ]; then
+#            $INFOTEXT "Overwriting existing PE >%s<" $c
+#            ExecuteAsAdmin cp util/resources/pe/$c $QMDIR/pe
+#         fi
+#      else
+#         ExecuteAsAdmin cp util/resources/pe/$c $QMDIR/pe
+#      fi
+#   done
+#   ExecuteAsAdmin chmod $FILEPERM $QMDIR/pe/*
+   ExecuteAsAdmin $SPOOLDEFAULTS pes
 }
 #-------------------------------------------------------------------------
 # AddDefaultManager
@@ -1430,11 +1431,13 @@ AddQsystStartUpScript()
 
       rm -f $TMP_V5_STARTUP_FILE ${TMP_V5_STARTUP_FILE}.0 ${TMP_V5_STARTUP_FILE}.1
 
-      if [ $euid = 0 -a $ADMINUSER != default -a $WHICH = "qmaster" ]; then
-         AddDefaultManager $ADMINUSER
-      elif [ $euid != 0 ]; then
-         AddDefaultManager $USER
-      fi
+      ExecuteAsAdmin $SPOOLDEFAULTS managers
+      ExecuteAsAdmin $SPOOLDEFAULTS operators
+#      if [ $euid = 0 -a $ADMINUSER != default -a $WHICH = "qmaster" ]; then
+#         AddDefaultManager $ADMINUSER
+#      elif [ $euid != 0 ]; then
+#         AddDefaultManager $USER
+#      fi
 
       $INFOTEXT "Your Grid Engine cluster wide startup script is installed as:\n\n" \
                 "   %s<\n\n" $V5_STARTUP_FILE
@@ -2115,10 +2118,25 @@ if [ ! -f $INFOTXT_DUMMY ]; then
    $ECHO "Installation failed."
    exit 1
 fi
+
 #---------------------------------------
 # setup INFOTEXT end
 #---------------------------------------
 
+#---------------------------------------
+# setup SPOOLDEFAULTS start
+#---------------------------------------
+# set spooldefaults binary path
+SPOOLDEFAULTS=$V5UTILBIN/spooldefaults
+if [ ! -f $SPOOLDEFAULTS ]; then
+   $ECHO "can't find \"$SPOOLDEFAULTS\""
+   $ECHO "Installation failed."
+   exit 1
+fi
+
+#---------------------------------------
+# setup SPOOLDEFAULTS end
+#---------------------------------------
 
 HOST=`$V5UTILBIN/gethostname -name`
 if [ "$HOST" = "" ]; then

@@ -36,6 +36,8 @@
 
 extern lList *Master_Sched_Config_List;
 
+lListElem *schedd_conf_create_default(void);
+
 bool schedd_conf_is_valid_load_formula(lListElem *schedd_conf,
                                        lList **answer_list,
                                        lList *cmplx_list);

@@ -72,15 +72,6 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
                                  lListElem *ep, int spool, int flag, int *tag, 
                                  int parsing_type);
 
-static lListElem *create_default_sched_conf(void);
-
-#define DEFAULT_LOAD_ADJUSTMENTS_DECAY_TIME "0:7:30"
-#define DEFAULT_LOAD_FORMULA                "np_load_avg"
-#define SCHEDULE_TIME                       "0:0:15"
-#define SGEEE_SCHEDULE_TIME                 "0:2:0"
-#define MAXUJOBS                            0
-#define MAXGJOBS                            0
-#define SCHEDD_JOB_INFO                     "true"
 
 /****** spool/classic/write_sched_configuration() ****************************
 *  NAME
@@ -479,7 +470,7 @@ lList *read_sched_configuration(const char *common_dir, const char *fname, int s
       ep = cull_read_in_schedd_conf(NULL, fname, spool, NULL);
    } else {
       write_default_config = 1;
-      ep = create_default_sched_conf();
+      ep = schedd_conf_create_default();
    }
 
    if (ep) {
@@ -506,65 +497,3 @@ lList *read_sched_configuration(const char *common_dir, const char *fname, int s
 }
 
 
-/******************************************************/
-static lListElem *create_default_sched_conf()
-{
-   lListElem *ep, *added;
-
-   DENTER(TOP_LAYER, "create_default_sched_conf");
-
-   ep = lCreateElem(SC_Type);
-
-   /* 
-    * 
-    * SGE & SGEEE
-    *
-    */
-   lSetString(ep, SC_algorithm, "default");
-   lSetString(ep, SC_schedule_interval, SCHEDULE_TIME);
-   lSetUlong(ep, SC_maxujobs, MAXUJOBS);
-
-   if (feature_is_enabled(FEATURE_SGEEE))
-      lSetUlong(ep, SC_queue_sort_method, QSM_SHARE);
-   else
-      lSetUlong(ep, SC_queue_sort_method, QSM_LOAD);
-
-   added = lAddSubStr(ep, CE_name, "np_load_avg", SC_job_load_adjustments, CE_Type);
-   lSetString(added, CE_stringval, "0.50");
-
-   lSetString(ep, SC_load_adjustment_decay_time, 
-                     DEFAULT_LOAD_ADJUSTMENTS_DECAY_TIME);
-   lSetString(ep, SC_load_formula, DEFAULT_LOAD_FORMULA);
-   lSetString(ep, SC_schedd_job_info, SCHEDD_JOB_INFO);
-
-
-   /* 
-    * 
-    * SGEEE
-    *
-    */
-   if (feature_is_enabled(FEATURE_SGEEE)) {
-      lSetString(ep, SC_sgeee_schedule_interval, SGEEE_SCHEDULE_TIME);
-      lSetUlong(ep, SC_halftime, 168);
-
-      added = lAddSubStr(ep, UA_name, USAGE_ATTR_CPU, SC_usage_weight_list, UA_Type);
-      lSetDouble(added, UA_value, 1.00);
-      added = lAddSubStr(ep, UA_name, USAGE_ATTR_MEM, SC_usage_weight_list, UA_Type);
-      lSetDouble(added, UA_value, 0.0);
-      added = lAddSubStr(ep, UA_name, USAGE_ATTR_IO, SC_usage_weight_list, UA_Type);
-      lSetDouble(added, UA_value, 0.0);
-
-      lSetDouble(ep, SC_compensation_factor, 5);
-      lSetDouble(ep, SC_weight_user, 0.2);
-      lSetDouble(ep, SC_weight_project, 0.2);
-      lSetDouble(ep, SC_weight_jobclass, 0.2);
-      lSetDouble(ep, SC_weight_department, 0.2);
-      lSetDouble(ep, SC_weight_job, 0.2);
-      lSetUlong(ep, SC_weight_tickets_functional, 0);
-      lSetUlong(ep, SC_weight_tickets_share, 0);
-      lSetUlong(ep, SC_weight_tickets_deadline, 0);
-   }
-
-   DEXIT;
-   return ep;
-}

@@ -36,12 +36,22 @@
 
 #include "sgermon.h"
 #include "sge_log.h"
-#include "sge_userset.h"
 #include "sge_answer.h"
+#include "parse.h"
+#include "sge_utility.h"
 
+#include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
+#include "sge_userset.h"
+
 lList *Master_Userset_List = NULL;
+
+static const char* userset_types[] = {
+   "ACL",   /* US_ACL   */
+   "DEPT",  /* US_DEPT  */
+   ""
+};
 
 /****** sgeobj/userset/userset_is_deadline_user() ******************************
 *  NAME
@@ -209,5 +219,110 @@ int userset_validate_entries(lListElem *userset, lList **alpp, int start_up)
 
    DEXIT;
    return STATUS_OK;
+}
+
+/****** sgeobj/userset/userset_get_type_string() **********************************
+*  NAME
+*     userset_get_type_string() -- get readable type definition
+*
+*  SYNOPSIS
+*     const char* 
+*     userset_get_type_string(const lListElem *userset, lList **answer_list,
+*                           dstring *buffer) 
+*
+*  FUNCTION
+*     Returns a readable string of the userset type bitfield.
+*
+*  INPUTS
+*     const lListElem *userset - the userset containing the requested 
+*                                information
+*     dstring *buffer          - string buffer to hold the result string
+*
+*  RESULT
+*     const char* - resulting string
+*
+*  SEE ALSO
+*     sgeobj/userset/userset_set_type_string()
+*******************************************************************************/
+const char *
+userset_get_type_string(const lListElem *userset, lList **answer_list, 
+                        dstring *buffer)
+{
+   u_long32 type;
+   int i;
+   bool append = false;
+   const char *ret;
+
+   DENTER(TOP_LAYER, "userset_get_type_string");
+
+   
+   SGE_CHECK_POINTER_NULL(userset);
+   SGE_CHECK_POINTER_NULL(buffer);
+
+   type = lGetUlong(userset, US_type);
+   sge_dstring_clear(buffer);
+
+   for (i = 0; userset_types[i] != NULL; i++) {
+      if ((type & (1 << i)) != 0) {
+         if (append) {
+            sge_dstring_append(buffer, " ");
+         }
+         sge_dstring_append(buffer, userset_types[i]);
+         append = true;
+      }
+   }
+
+   ret = sge_dstring_get_string(buffer);
+   DEXIT;
+   return ret;
+}
+
+/****** sgeobj/userset/userset_set_type_string() **********************************
+*  NAME
+*     userset_set_type_string() -- set userset type from string 
+*
+*  SYNOPSIS
+*     bool 
+*     userset_set_type_string(lListElem *userset, lList **answer_list, 
+*                           const char *value) 
+*
+*  FUNCTION
+*     Takes a string representation for the userset type, e.g.
+*     "BATCH PARALLEL" and sets the userset type bitfield 
+*     (attribute QU_qtype) of the given userset.
+*
+*  INPUTS
+*     lListElem *userset    - the userset to change
+*     lList **answer_list - errors will be reported here
+*     const char *value   - new value for userset type
+*
+*  RESULT
+*     bool - true on success, 
+*            false on error, error message will be in answer_list
+*
+*  SEE ALSO
+*     sgeobj/userset/userset_get_type_string()
+******************************************************************************/
+bool 
+userset_set_type_string(lListElem *userset, lList **answer_list, const char *value)
+{
+   bool ret = true;
+   u_long32 type = 0;
+ 
+   DENTER(TOP_LAYER, "userset_set_type_string");
+
+   SGE_CHECK_POINTER_FALSE(userset);
+
+   if (value != NULL && *value != 0) {
+      if (!sge_parse_bitfield_str(value, userset_types, &type, 
+                                 "userset type", NULL)) {
+         ret = false;
+      }
+   }
+
+   lSetUlong(userset, US_type, type);
+
+   DEXIT;
+   return ret;
 }
 

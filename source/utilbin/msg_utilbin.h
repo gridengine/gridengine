@@ -129,4 +129,19 @@
 */ 
 /* #define MSG_COMMAND_USAGE_RANGE              _message(57037, _("usage: range lower upper\n") )  __TS Removed automatically from testsuite!! TS__*/
 
+/*
+ * utilbin/spooldefaults.c
+ */
+
+#define MSG_SPOOLDEFAULTS_COMMANDINTRO1   _MESSAGE(57040, _("create default entries during installation process\n"))
+#define MSG_SPOOLDEFAULTS_COMMANDINTRO2   _MESSAGE(57041, _("following are the valid commands:\n"))
+#define MSG_SPOOLDEFAULTS_TEST            _MESSAGE(57042, _("[test]      test the spooling framework\n"))
+#define MSG_SPOOLDEFAULTS_MANAGERS        _MESSAGE(57043, _("[managers]  create default managers (root and admin user)\n"))
+#define MSG_SPOOLDEFAULTS_OPERATORS       _MESSAGE(57044, _("[operators] create default operators (root)\n"))
+#define MSG_SPOOLDEFAULTS_MAKEPE          _MESSAGE(57045, _("[pes]       create the default parallel environments (make)\n"))
+#define MSG_SPOOLDEFAULTS_CANNOTREADSPOOLPARAMS _MESSAGE(57050, _("cannot read spooling parameters\n"))
+#define MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT   _MESSAGE(57051, _("cannot create spooling context\n"))
+#define MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT  _MESSAGE(57052, _("cannot startup spooling context\n"))
+#define MSG_SPOOLDEFAULTS_CANNOTREADADMINUSER   _MESSAGE(57053, _("cannot read admin_user parameter\n"))
+
 #endif /* __MSG_UTILBIN_H */

@@ -60,7 +60,7 @@ DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_commd sge_schedd \
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
-                 adminrun qrsh_starter testsuidroot openssl infotext"
+                 adminrun qrsh_starter testsuidroot openssl infotext spooldefaults"
 
 REMOTEBINARIES="rsh rshd rlogin"
 

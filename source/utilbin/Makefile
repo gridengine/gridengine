@@ -38,7 +38,7 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog work \
                  signals loadcheck now \
                  adminrun checkuser languagetest \
-                 testsuidroot infotext
+                 testsuidroot infotext spooldefaults
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
@@ -176,6 +176,13 @@ infotext:   infotext.o  version.o $(UTILIB) $(RMONLIB)
 
 infotext.o: $(UTILBIN_DIR)/infotext.c
 		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/infotext.c
+
+#---------------------------------------------------------------------
+spooldefaults:   spooldefaults.o  version.o $(SPOOLING_DEPS) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB)
+		$(CC) -o $@ spooldefaults.o version.o $(LFLAGS) $(SPOOLING_LIBS) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(CULLLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+spooldefaults.o: $(UTILBIN_DIR)/spooldefaults.c
+		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spooldefaults.c
 
 #---------------------------------------------------------------------
 testsuidroot:   testsuidroot.o 

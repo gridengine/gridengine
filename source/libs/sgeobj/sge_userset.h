@@ -46,6 +46,12 @@ int userset_list_validate_acl_list(lList **alpp, lList *acl_list,
                                    const char *attr_name, const char *obj_descr,
                                    const char *obj_name);
 
+const char *
+userset_get_type_string(const lListElem *userset, lList **answer_list,
+                        dstring *buffer);
+
+bool 
+userset_set_type_string(lListElem *userset, lList **answer_list, const char *value);
 
 #endif /* _SGE_USERSET_H */
 

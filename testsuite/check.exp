@@ -4790,13 +4790,13 @@ proc wait_for_enter {} {
 proc wait_for_start_time { substring } {
    puts "wait for start time: \"$substring\""
    while { 1 } {
-      set date_output [ exec date +%H:%M ]
+      set date_output [ exec date "+%D %H:%M" ]
       puts -nonewline "\r$date_output"
       flush stdout
       if { [string compare $date_output $substring] == 0 } {
          break; 
       }
-      sleep 55
+      sleep 30
    }
    puts ""
 }
@@ -5156,13 +5156,13 @@ proc compile_source {} {
 }
 
 #                                                             max. column:     |
-#****** check/run_all_continuously() ******
+#****** check/run_all_at_starttime() ******
 # 
 #  NAME
-#     run_all_continuously -- ??? 
+#     run_all_at_starttime -- ??? 
 #
 #  SYNOPSIS
-#     run_all_continuously { } 
+#     run_all_at_starttime { } 
 #
 #  FUNCTION
 #     ??? 
@@ -5184,7 +5184,7 @@ proc compile_source {} {
 #  SEE ALSO
 #     ???/???
 #*******************************
-proc run_all_continuously {} {
+proc run_all_at_starttime {} {
 
    global CHECK_ACT_PATH CHECK_REPORT_FILE CHECK_CHECKTREE_ROOT
 
@@ -5193,7 +5193,7 @@ proc run_all_continuously {} {
 
    print_menu_header
    if { [ ask_user_yes_or_no " Do you want to enter a special starttime (y/N) ? " ] } {
-      puts "\n now it is: [exec date +%H:%M ]"
+      puts "\n now it is: [exec date "+%D %H:%M" ]"
       set start_time [ get_user_input "    Please enter start time : " ]
       puts "\n testsuite will start at \"$start_time\""
    } else {
@@ -5216,31 +5216,31 @@ proc run_all_continuously {} {
    set_root_passwd
  
 
-   while { 1 } {
-      if { $start_time != 0 } {
-         wait_for_start_time $start_time
-      }
-      delete_tests $CHECK_ACT_PATH
-      if { $should_we_compile == 1 } {
-#         remove_old_cvs_tree
-         set back [ compile_source ]
-         if { $back != 0 } {
-            puts "error in compile_source - stop"
-            exit -1
-         }
-         set saved_path $CHECK_ACT_PATH
-         set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"
-         set back [ run_test $CHECK_ACT_PATH 1 ]
-         if { $back != 0 } {
-            puts "error in test install_core_system - stop"
-            exit -1
-         }
-         set CHECK_ACT_PATH $saved_path
-      }
-      run_tests $CHECK_ACT_PATH 0
-      create_report ${CHECK_REPORT_FILE}.ok 0
-      create_report ${CHECK_REPORT_FILE}.failed 1
+   if { $start_time != 0 } {
+      wait_for_start_time $start_time
    }
+   delete_tests $CHECK_ACT_PATH
+   if { $should_we_compile == 1 } {
+#     remove_old_cvs_tree
+      set back [ compile_source ]
+      if { $back != 0 } {
+         puts "error in compile_source - stop"
+         exit -1
+      }
+      set saved_path $CHECK_ACT_PATH
+      set CHECK_ACT_PATH "$CHECK_CHECKTREE_ROOT/install_core_system"
+      set back [ run_test $CHECK_ACT_PATH 1 ]
+      if { $back != 0 } {
+         puts "error in test install_core_system - stop"
+         exit -1
+      }
+      set CHECK_ACT_PATH $saved_path
+   }
+   run_tests $CHECK_ACT_PATH 0
+   create_report ${CHECK_REPORT_FILE}.ok 0
+   create_report ${CHECK_REPORT_FILE}.failed 1
+
+   wait_for_enter
 }
 
 #                                                             max. column:     |
@@ -5450,7 +5450,7 @@ proc menu {} {
   puts "  (6) show not completed test list"
   puts "  (7) reset completed test list (for all subdirectories)"
   puts "  (8) create check report"
-  puts "  (9) run all tests continuously"
+  puts "  (9) run all tests at a special starttime"
   if { [ string compare "stdout" $CHECK_OUTPUT ] == 0 } {
      puts " (10) use file \"${CHECK_HOST}.checklog\" for output" 
   } else {
@@ -5513,7 +5513,7 @@ proc menu {} {
           wait_for_enter
         }
     "9" {
-          run_all_continuously
+          run_all_at_starttime
           wait_for_enter
         }
     "10" {

@@ -1,3 +1,7 @@
+CR-2002-01-21-0: Testsuite: - changed menu point 9 ( run all tests at 
+                              a special starttime)
+                 Enhancem.: 
+
 SD-2002-01-18-2: Enhancem.  Minor PTF fix for setting nice values on NEC SX-6
 
 EB-2002-01-18-1: Bugfix:    - qalter of job name caused core of master

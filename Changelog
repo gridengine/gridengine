@@ -1,3 +1,6 @@
+SG-2004-02-25-0: Bugfix:    extended the scheduler check for invalid configurations.
+                 Issue:     695
+
 SD-2004-02-24-0: Cleanup:   man page updates, automatic user documentation
                  Issue:     636
 

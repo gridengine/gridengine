@@ -1,3 +1,9 @@
+JM-2004-01-20-2: Bugfix:    The setrlimitj() call under SUPER-UX must be surrounded
+                            by sge_switch2start_user() and sge_switch2admin_user()
+                            to be effective.
+                 Changed:   daemons/shepherd/setrlimits.c
+                 Reviewed:  SD
+
 CR-2004-01-20-0: Cleanup:  - enabled threads for communication in qmaster
                            - hostname resolving (still no alias file support)
                            - communication log can now be switched on/off

@@ -510,22 +510,23 @@ static void pushlimit(int resource, struct RLIMIT_STRUCT_TAG *rlp,
       if (rlp->rlim_max < rlp->rlim_cur)
          rlp->rlim_cur = rlp->rlim_max;
 
-      if (
 #if defined(NECSX4) || defined(NECSX5)
-         setrlimitj(get_rlimits_os_job_id(), resource, rlp)
-#else
-         0
-#endif
-      ) {
+      /*
+       * SUPER-UX only allows uid==euid==0 (superuser) to set
+       * job limits thus the switch2start_user() and
+       * switch2admin_user() calls
+       */
+      sge_switch2start_user();
+      if (setrlimitj(get_rlimits_os_job_id(), resource, rlp)) {
          /* exit or not exit ? */
          sprintf(trace_str, "setrlimitj(%s, {"limit_fmt", "limit_fmt"}) "
             "failed: %s", limit_str, rlp->rlim_cur, rlp->rlim_max,
             strerror(errno));
-      } else {         
-#if defined(NECSX4) || defined(NECSX5)
+      } else {
          getrlimitj(get_rlimits_os_job_id(), resource,&dlp);
-#endif
       }
+      sge_switch2admin_user();
+#endif
 
       if (trace_rlimit) {
          sprintf(trace_str, "Job %s setting: (soft "limit_fmt" hard "limit_fmt

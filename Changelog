@@ -1,3 +1,8 @@
+SG-2004-05-18-2: Bugfix:    changed the qdel behavior back to the v5.3 one.
+                 Review:    JG
+                 Changed:   qmaster
+                 Issue:     1042
+
 JG-2004-05-18-2: Bugfix:    qmaster Master_* lists weren't deleted at shutdown.
                             Fixed a core dump in qmaster if reporting file 
                             couldn't be opened.

@@ -863,13 +863,16 @@ int sub_command
    jid_str = lGetString(idep, ID_str);
 
    /* Did we get a valid jobid? */
-   if (/*(!all_users_flag) &&*/ (!all_jobs_flag && (strcmp(jid_str, "0") != 0)))
+   if (!all_jobs_flag && (strcmp(jid_str, "0") != 0)) {
       jid_flag = 1;
-   else
+   }   
+   else {
       jid_flag = 0;
+   }
 
-   /* no user is set, thought only work on the jobs for the current user */
-   if (!all_users_flag && !user_list_flag) {
+   /* no user is set, thought only work on the jobs for the current user, if
+      a job name is specified. We do not care for users, if we work on jid*/
+   if (!all_users_flag && !user_list_flag && !isdigit(jid_str[0])) {
       lList *user_list = lGetList(idep, ID_user_list);
       lListElem *current_user = lCreateElem(ST_Type);
       if(user_list == NULL) {

@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# arguments:   $1 country code (e.g. DE)
+#              $2 state or province (e.g. Bayern)
+#              $3 locality name (e.g. Regensburg)
+#              $4 organization name (e.g. Sun Microsystems)
+#              $5 organizational unit name (e.g. Gridware)
+C="DE"
+ST="Bavaria"
+L="Regensburg"
+O="Sun Microsystems"
+OU="Gridware"
+SGE_CA_CMD=$SGE_ROOT/util/sgeCA/sge_ca
+
+rm /tmp/sge_ssl.cnf
+while read i; do
+echo "============================================================"
+echo Generating certificate request for $i
+filename=`echo $i| cut -d: -f 1`
+CN=`echo $i| cut -d: -f 2`
+emailAddress=`echo $CN|tr ' ' '.'`@sun.com
+echo "C = $C" >> /tmp/SGE_DN.txt
+echo "ST = $ST" >> /tmp/SGE_DN.txt
+echo "O = $O" >> /tmp/SGE_DN.txt
+echo "OU = $OU" >> /tmp/SGE_DN.txt
+echo "CN = $CN" >> /tmp/SGE_DN.txt
+echo "emailAddress = $emailAddress" >> /tmp/SGE_DN.txt
+sed '/\[ req_distinguished_name \]/r \/tmp\/SGE_DN.txt' sge_ssl_template.cnf> /tmp/sge_ssl.cnf
+mkdir /tmp/andre/$filename
+$SGE_CA_CMD -req -batch -user $filename -outdir /tmp/andre/$filename
+$SGE_CA_CMD -sign -batch -user $filename -outdir /tmp/andre/$filename -indir /tmp/andre/$filename
+rm /tmp/sge_ssl.cnf
+rm /tmp/SGE_DN.txt
+done
+
+

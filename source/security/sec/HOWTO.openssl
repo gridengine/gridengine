@@ -221,3 +221,6 @@ do
 	n=`openssl x509 -subject -noout -in $i`
 	echo "$i	$n"
 done
+
+
+awk '{printf "DE:"; printf "Bavaria:"; printf "Regensburg:"; printf "Sun Microsystems:"; printf "Gridware:"; printf $0":"; print $1"."$2"@sun.com"}' NAMES.txt > DN_TABLE.txt

@@ -1,3 +1,7 @@
+AA-2002-01-11-0: Feature:   Security:
+                            - scripts for generation/installation of certs, 1st draft under dist/util/sgeCA
+                            - changes to script/distinst, script/distinst.site
+                            
 JG-2002-01-11-0: Bugfix:    Fixed a memory corruption bug (READ_DANGLING and 
                             FREE_DANGLING) in libcull.
                             Added code to suppress warnings from the Insure++

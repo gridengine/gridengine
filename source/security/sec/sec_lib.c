@@ -442,7 +442,7 @@ int compressed
    DENTER(GDI_LAYER, "sec_send_message");
 
    /*
-   ** every component has do negotiate its connection with qmaster
+   ** every component has to negotiate its connection with qmaster
    */
    if (me.who != QMASTER) {
       if (sec_announce_connection(&gsd, tocomproc,tohost)) {
@@ -461,13 +461,6 @@ int compressed
          */
          if (sec_set_secdata(tohost,tocomproc,toid)) {
             ERROR((SGE_EVENT, "failed set security data\n"));
-#if 0            
-/*********/
-/* FIXME */            
-/*********/
-            send_message(synchron, tocomproc, toid, tohost, TAG_SEC_ANNOUNCE, NULL, 0,
-                           mid, compressed);
-#endif                           
             DEXIT;
             return SEC_SEND_FAILED;
          }

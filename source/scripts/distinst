@@ -41,6 +41,15 @@ MANUALPDF=/dist/SGEDIST/gridengine-download/www/SGE5_3alpha.pdf
 VERSIONDIR=SGE53
 SGE_PRODUCT_MODE=ge
 
+if [ -f scripts/distinst.site ]; then
+   . scripts/distinst.site
+fi
+
+if [ -f scripts/distinst.private ]; then
+   . scripts/distinst.private
+fi
+
+
 HASDIR="ckpt doc examples/jobs locale mpi pvm/src qmon/PIXMAPS/big qmon/locale"
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
@@ -51,7 +60,7 @@ DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_commd sge_schedd \
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
-                 adminrun qrsh_starter testsuidroot"
+                 adminrun qrsh_starter testsuidroot openssl"
 
 REMOTEBINARIES="rsh rshd rlogin"
 
@@ -85,6 +94,8 @@ SECFILES="security/gss/get_cred.c security/gss/put_cred.c \
 
 SECURITYBINARIES="get_cred put_cred delete_cred renew_cred \
                   starter_cred get_cred.sh put_cred.sh k5dcelogin"
+
+
 
 ErrUsage()
 {
@@ -825,7 +836,15 @@ for i in $ARCH; do
       echo "Installing utility binaries"
       echo "---------------------------"
       for prog in $UTILITYBINARIES; do
-         if [ $prog = "testsuidroot" ]; then
+         if [ $prog = openssl ]; then
+            if [ -f $OPENSSLBASE/$DSTARCH/bin/openssl ]; then
+               InstallProg $OPENSSLBASE/$DSTARCH/bin/openssl
+            elif [ -f $OPENSSLBASE/bin/openssl ]; then
+               InstallProg $OPENSSLBASE/bin/openssl
+            else
+               echo openssl binary not found
+            fi
+         elif [ $prog = testsuidroot ]; then
             InstallProgSUID $prog
          else   
             InstallProg $prog

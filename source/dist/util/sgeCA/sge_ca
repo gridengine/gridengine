@@ -49,23 +49,23 @@ if [ x$SGE_CELL = x ]; then
    SGE_CELL=default
 fi
 
+ARCH=`$SGE_ROOT/util/arch`
+
 CATOP=$SGE_ROOT/$SGE_CELL/common/sgeCA
 CALOCALTOP=/var/sgeCA/$SGE_CELL
+
 CAKEY=cakey.pem
 CACERT=cacert.pem
 
-CONFIG_DIR=`dirname $0`
-OPENSSL=/vol2/tools/SW/openssl-engine-0.9.6b/solaris64/bin/openssl
+CONFIG_DIR=$SGE_ROOT/util/sgeCA
+OPENSSL=$SGE_ROOT/utilbin/$ARCH/openssl
+
 ECHO=echo
+
 Translate() 
 {
   $ECHO $1
 }  
-
-REQ="$OPENSSL req -nodes -config $CONFIG_DIR/sge_ssl.cnf"
-CA="$OPENSSL ca -config $CONFIG_DIR/sge_ssl.cnf -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT -outdir $CATOP/newcerts"
-VERIFY="$OPENSSL verify"
-X509="$OPENSSL x509"
 
 #-------------------------------------------------------------------------
 # ErrUsage: print usage string, exit
@@ -75,36 +75,29 @@ ErrUsage()
    $ECHO "" >&2
    Translate "Usage:" 2
    $ECHO     " $1 {-ca|-testca|-cert|-req|-sign|-verify} [-days <days>] [-user <user>] [-outdir <outdir>]" >&2
-   $ECHO     "       -ca        \c" >&2
+   $ECHO     "       -ca            \c" >&2
    Translate "install CA directories and generate CA key and certificate" 2 1
    $ECHO     "       -testca        \c" >&2
    Translate "install CA directories and generate CA key and certificate in ./sgeCA" 2 1
-   $ECHO     "       -cert        \c" >&2
-   Translate "..." 2 1
-   $ECHO     "       -req        \c" >&2
-   Translate "..." 2 1
-   $ECHO     "       -sign     \c" >&2
-   Translate "..." 2 1
-   $ECHO     "       -verify \c" >&2
-   Translate "..." 2 1 "\$$QSYST_ROOT"
-   $ECHO     "       -days <days>     \c" >&2
-   Translate "..." 2 1
-   $ECHO     "       -user <user>  \c" >&2
-   Translate "..." 2 1
-   $ECHO     "       -outdir <outdir>  \c" >&2
-   Translate "..." 2 1
+   $ECHO     "       -cert          \c" >&2
+   Translate "generate a selfsigned certificate and the corresponding private key" 2 1
+   $ECHO     "       -req           \c" >&2
+   Translate "generate a certificate request and the corresponding private key" 2 1
+   $ECHO     "       -sign          \c" >&2
+   Translate "sign a certificate request" 2 1
+   $ECHO     "       -verify        \c" >&2
+   Translate "verify a certificate" 2 1 "\$$QSYST_ROOT"
+   $ECHO     "       -batch          \c" >&2
+   Translate "sign and request in batch mode" 2 1
+   $ECHO     "       -days <days>   \c" >&2
+   Translate "days of validity of the certificate" 2 1
+   $ECHO     "       -user <user>   \c" >&2
+   Translate "use user as key and certificate file prefix" 2 1
+   $ECHO     "       -outdir <dir>  \c" >&2
+   Translate "use <dir> as output directory" 2 1
    $ECHO "" >&2
 
    exit 1
-}
-
-#-------------------------------------------------------------------------
-# Make directories needed by CA
-#
-MakeDirsCA()
-{
-   Translate "Making directories"
-   Write "" "$transout" "------------------" ""
 }
 
 #-----------------------------
@@ -114,6 +107,7 @@ WHICH="undef"
 newreq=newreq.pem
 newcert=newcert.pem
 outdir=.
+indir=.
 
 ARGC=$#
 while [ $ARGC != 0 ]; do
@@ -125,6 +119,10 @@ while [ $ARGC != 0 ]; do
       WHICH="ca"
       CATOP=./sgeCA
       CALOCALTOP=./sgeCA
+      ;;
+   -batch)
+      BATCHMODE=-batch
+      CONFIG_DIR=/tmp
       ;;
    -req)
       WHICH="req"
@@ -172,6 +170,16 @@ while [ $ARGC != 0 ]; do
       shift
       ARGC=`expr $ARGC - 1`
       ;;
+   -indir)
+      if [ $ARGC -lt 2 ]; then
+         $ECHO "" >&2
+         Translate "Error: -indir needs argument" 2 1
+         ErrUsage $0
+      fi
+      indir=$2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
    *)
       $ECHO "" >&2
       Translate "Error: Unknown option %s" 2 1 "$1"
@@ -186,6 +194,11 @@ if [ "$WHICH" = "undef" ]; then
    ErrUsage $0
 fi
 
+REQ="$OPENSSL req -nodes -config $CONFIG_DIR/sge_ssl.cnf"
+CA="$OPENSSL ca -config $CONFIG_DIR/sge_ssl.cnf -keyfile $CALOCALTOP/private/$CAKEY -cert $CATOP/$CACERT -outdir $CATOP/newcerts"
+VERIFY="$OPENSSL verify"
+X509="$OPENSSL x509"
+
 case $WHICH in
 ca)
     # if explicitly asked for or it doesn't exist then setup the directory
@@ -195,7 +208,7 @@ ca)
         # create the directory hierarchy
         mkdir -p ${CALOCALTOP} 
         mkdir ${CALOCALTOP}/private
-        mkdir ${CATOP} 
+        mkdir -p ${CATOP} 
         mkdir ${CATOP}/certs 
         mkdir ${CATOP}/crl 
         mkdir ${CATOP}/newcerts
@@ -224,7 +237,11 @@ req)
     # create a certificate request
     $REQ -new -keyout $outdir/$newreq -out $outdir/$newreq $DAYS
     RET=$?
-    echo "Request (and private key) is in $outdir/$newreq"
+    if [ $RET = 0 ]; then
+      echo "Request (and private key) is in $outdir/$newreq"
+    else
+      echo "No success"
+    fi  
    ;;
 
 cert)
@@ -235,15 +252,13 @@ cert)
    ;;
 
 xsign)
-    $CA -policy policy_anything -infiles $newreq
+    $CA -policy policy_anything -infiles $indir/$newreq
     RET=$?
     ;;
 
 sign) 
-    $CA -policy policy_anything -out $outdir/$newcert -infiles $newreq
+    $CA -policy policy_anything $BATCHMODE -out $outdir/$newcert -infiles $indir/$newreq
     RET=$?
-    echo RET = $RET
-    cat $newcert
     if [ $RET = 0 ]; then
       echo "Signed certificate is in $outdir/$newcert"
     fi

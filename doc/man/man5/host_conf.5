@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2003/11/10 10:42:21 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: host_conf.5,v $     Last Update: $Date: 2004/01/25 20:02:35 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOST_CONF 5 "$Date: 2003/11/10 10:42:21 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH HOST_CONF 5 "$Date: 2004/01/25 20:02:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 host_conf \- xxQS_NAMExx execution host configuration file format
@@ -91,31 +91,13 @@ allowed in between the load_scaling value string.
 The parameter
 .B load_scaling
 is not meaningful for the definition of the "global" host.
-.IP "\fBcomplex_list\fP"
-The comma separated list of administrator defined complexes (see 
-.M complex 5
-for details) to be associated with the host. Only complex 
-attributes contained in the enlisted complexes and those from the "global" 
-and "host" complex, which are implicitly attached to each host, can be 
-used in the
-.B complex_values
-list below. In case of the "global" host, the 
-"host" complex is not attached and only "global" complex attributes are 
-allowed per default in the
-.B complex_values
-list of the "global" host.
-.sp 1
-The default value for this parameter is NONE, i.e. no administrator 
-defined complexes are associated with the host.
 .IP "\fBcomplex_values\fP"
 .B complex_values
 defines quotas for resource attributes managed via this 
 host. Each complex attribute is followed by an "=" sign and the value 
 specification compliant with the complex attribute type (see
 .M complex 5 ). 
-Quota specifications are separated by commas. Only attributes as defined in 
-.B complex_list
-(see above) may be used.
+Quota specifications are separated by commas. 
 .sp 1
 The quotas are related to the resource consumption of all jobs on a host in 
 the case of consumable resources (see

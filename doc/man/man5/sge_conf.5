@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2003/10/27 16:51:36 $     Revision: $Revision: 1.23 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/01/25 20:02:35 $     Revision: $Revision: 1.24 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2003/10/27 16:51:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/01/25 20:02:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -219,8 +219,8 @@ The \fBprocessors\fP string as contained in the queue configuration
 of the master queue (the queue in which the prolog and epilog procedures
 are started).
 .IP "\fI$queue\fP"
-The master queue, i.e. the queue in which the prolog and epilog procedures
-are started.
+The cluster queue name of the master queue instance, i.e. the cluster 
+queue in which the prolog and epilog procedures are started.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.

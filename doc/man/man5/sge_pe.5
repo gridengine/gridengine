@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2003/11/13 16:57:14 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2004/01/25 20:02:36 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2003/11/13 16:57:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2004/01/25 20:02:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -148,8 +148,7 @@ The \fBprocessors\fP string as contained in the queue configuration
 of the master queue (the queue in which the start-up and stop procedures
 are started).
 .IP "\fI$queue\fP"
-The master queue, i.e. the queue in which the start-up and stop procedures
-are started.
+The cluster queue of the master queue instance.
 .\"
 .\"
 .SS "\fBstop_proc_args\fP"

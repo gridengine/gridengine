@@ -1,0 +1,197 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\"
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2004/01/25 20:02:34 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH xxQS_NAMExx_INTRO 1 "$Date: 2004/01/25 20:02:34 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.\"
+.SH NAME
+sge_types - xxQS_NAMExx type descriptions 
+.\"
+.SH DESCRIPTION
+.\"
+The xxQS_NAMExx
+user interface consists of several programs and files. Some commandline 
+switches and several file attributes are types. The syntax for these
+types is explained in this page.
+.PP
+.\"
+.SH "TYPES"
+The syntax of xxQS_NAMExx types in alphabetic order:
+.\"
+.\" List of all descriptions contained in this file:
+.\"
+.\" host             => wc_host without pattern
+.\" hostgroup        => wc_hostgroup without pattern
+.\" qdomain          => wc_qdomain without pattern
+.\" qinstance        => wc_qinstance without pattern
+.\" queue            => wc_queue without pattern
+.\" wc_host          := wildcard expression matching a host
+.\" wc_hostgroup     := wildcard expression matching a hostgroup
+.\" wc_qdomain       := wc_cqueue@wc_hostgroup
+.\" wc_qinstance     := wc_cqueue@wc_host
+.\" wc_queue         := wc_cqueue|wc_qdomain|wc_qinstance
+.\" wc_queue_list    := wc_queue[,wc_queue,...]
+.\"
+.SS "\fBhost\fP"
+A valid hostname.
+.PP
+.\"
+.SS "\fBhostgroup\fP"
+A valid hostgroup name. Find more information concerning hostgroups in
+.M hostgroup 5 .
+Please note that hostgroup names always begin with an at-character '@'.
+.PP
+.\"
+.SS "\fBqdomain\fP"
+Similar to \fIwc_qdomain\fP with the exception that wildcard characters
+are not allowed in any part of the \fIqdomain\fP.
+.\"
+.SS "\fBqinstance\fP"
+Similar to \fIwc_qinstance\fP with the exception that wildcard characters
+are not allowed in any part of the \fIqinstance\fP.
+.\"
+.SS "\fBqueue\fP"
+Similar to \fIwc_queue\fP with the exception that wildcard characters
+are not allowed in any part of the \fIqueue\fP.
+.\"
+.SS "\fBwc_host\fP"
+A wildcard host specification (\fIwc_host\fP) is a 
+wildcard expression which might match one or more hosts used in the cluster.
+The first character of that string never begins with an at-character '@' even
+if the expression begins with a wildcard character.
+.PP
+.\"
+.nf
+.ta
+e.g.
+.RS
+.ta \w'XXXXXXXXXXXXX'u
+*	all hosts
+a*	all host beginning with an 'a'	
+.fi
+.\"
+.SS "\fBwc_hostgroup\fP"
+A wildcard hostgroup specification (\fIwc_hostgroup\fP) is a 
+wildcard expression which might match one or more hostgroups.
+The first character of that string is always a at-character '@'.
+.PP
+More information concerning hostgroups can be found in
+.M hostgroup 5
+.PP
+.nf
+.ta
+e.g.
+.RS
+.ta \w'XXXXXXXXXXXXX'u
+@*	all hostgroups in the cluster
+@solaris	the @solaris hostgroup
+.fi
+.\"
+.SS "\fBwc_qdomain\fP"
+\fIwc_qdomain\fP := \fIwc_cqueue\fP "@" \fIwc_hostgroup\fP
+.PP
+A wildcard queue domain specification (\fIwc_qdomain\fP) starts with a wildcard
+cluster queue name (\fIwc_cqueue\fP) followed by an at-character '@' 
+and a wildcard hostgroup specification (\fIwc_hostgroup\fP).
+.PP
+\fIwc_qdomain\fP are used to address a group of queue instances.
+All queue instances residing on a hosts which is part of matching hostgroups
+will be addressed. Please note, that \fIwc_hostgroup\fP always begins with
+an at-character.
+.PP
+.nf
+.ta
+e.g.
+.RS
+.ta \w'XXXXXXXXXXXXX'u
+*@@*	all queue instances whose underlaying
+	host is part of at least one hostgroup
+*@@solaris	all queue instances on hosts part of
+	the @solaris hostgroup
+.fi
+.\"
+.SS "\fBwc_qinstance\fP"
+\fIwc_qinstance\fP := \fIwc_cqueue\fP "@" \fIwc_host\fP
+.PP
+A wildcard queue instance specification (\fIwc_qinstance\fP) starts 
+with a wildcard cluster queue name (\fIwc_cqueue\fP) followed by an 
+at-character '@' and a wildcard hostname (\fIwc_host\fP).
+.PP
+\fIwc_qinstance\fP expressions are used to address a group
+of queue instances whose underlaying hostname matches the given pattern.
+Please note that the first character of \fIwc_host\fP does never match 
+the at-character '@'. 
+.PP
+.nf
+.ta
+e.g.
+.RS
+.ta \w'XXXXXXXXXXXXX'u
+*@*	all queue instances in the cluster
+*@b*	all queue instances whose 
+	hostname begins with a 'b'
+.fi
+.\"
+.SS "\fBwc_queue\fP"
+\fIwc_queue\fP := \fIwc_cqueue\fP | \fIwc_qdomain\fP | \fIwc_qinstance\fP 
+.PP
+A wildcard queue expression (\fIwc_queue\fP) might either be a wildcard
+cluster queue specification (\fIwc_cqueue\fP) or a wildcard queue domain
+specification (\fIwc_qdomain\fP) or a wildcard queue instance specification
+(\fIwc_qinstance\fP).
+.PP
+.nf
+.ta 
+e.g.
+.RS
+.ta \w'XXXXXXXXXXXXXXXXX'u
+big_*1	cluster queues which beginn with 
+	"big_" and end with "1"
+big_11@@solaris	@solaris queue domain
+*@fangorn	all qinstances residing on host 
+	fangorn
+.fi
+.\"
+.SS "\fBwc_queue_list\fP"
+\fIwc_queue_list\fP := \fIwc_queue\fP ["," \fIwc_queue\fP "," ...]
+.PP
+Comma separated list of wildcard queue expressions.
+.PP
+e.g. 
+.RS
+big, medium_*@@sol*, *@fangorn.sun.com
+.\"
+.SH SEE ALSO
+.M qacct 1 ,
+.M qconf 1 ,
+.\"
+.SH COPYRIGHT
+Copyright: 2001 by Sun Microsystems, Inc.

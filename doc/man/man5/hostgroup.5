@@ -29,25 +29,18 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH HOSTGROUP 5 "$Date: 2003/03/11 13:53:07 $"
+.TH HOSTGROUP 5 "$Date: 2004/01/25 20:02:35 $"
 .\"
 .SH NAME
 hostgroup \- host group entry file format
 .\"
 .SH DESCRIPTION
 .PP
-A host group entry is used to merge host names to groups. Each
-host group entry file defines one group. A group is referenced by
-the sign "@" as first character of the name. At this point
-of implementation you can use host groups in the 
-.M usermapping 5
-configuration. Inside a group definition file you can also reference
-to groups. This groups are called subgroups.  
-
-.PP
-Each line in the host group entry file specifies a host name or a
-group which belongs to this group.
-
+A host group entry is used to merge host names to groups.
+Each  host  group  entry  file defines one group. Inside a
+group definition file you can also reference to groups. These
+groups are called subgroups. A subgroup is referenced by the
+sign "@" as first character of the name.
 .PP
 A list of currently configured host group entries can be displayed 
 via the
@@ -63,11 +56,10 @@ modified via the \fB\-ahgrp\fP, \fB\-mhgrp\fP, \fB\-dhgrp\fP and
 .\"
 .\"
 .SH FORMAT
-A host group entry contains two parameters:
+A host group entry contains following parameters:
 .IP "\fBgroup_name keyword\fP"
-The group_name keyword defines the host group name. The rest of
-the textline after the keyword "group_name" will be taken as host group
-name value.
+The group_name keyword defines the host group name. Host group names have to
+begin with a '@' character. 
 
 .IP "\fBhostlist\fP"
 The name of all hosts and host groups which are now member of the group 
@@ -75,7 +67,8 @@ specified with \fBgroup_name\fP.
 If The first character of the hostname is a "@" sign the name is used to 
 reference a 
 .M hostgroup 5 
-which is taken as sub group of this group.
+which is taken as sub group of this group. Default for this parameter is
+NONE
 
 .\"
 .\"
@@ -84,13 +77,13 @@ which is taken as sub group of this group.
 This is a typical host group entry:
 
 .PP
-group_name bigMachines
+group_name @bigMachines
 .PP
 hostlist @solaris64 @solaris32 fangorn balrog
 .PP
 
 The entry will define a new host group called 
-\fBbigMachines\fP. In this host group are the host 
+\fB@bigMachines\fP. In this host group are the host 
 \fBfangorn\fP, \fBbalrog\fP and all members of the host groups 
 \fB@solaris64\fP and \fB@solaris32\fP.
 

@@ -1,3 +1,5 @@
+EB-2004-01-25-0: Enhancem.: Changed some man-pages concerning CQs
+
 CR-2004-01-25-1: Bugfix:    - fixed possible deadlock of communication lib
                             in startup/cleanup phase
                             - cl_com_cleanup_commlib() did not correctly 

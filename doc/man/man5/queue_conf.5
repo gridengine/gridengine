@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2003/05/15 09:24:46 $     Revision: $Revision: 1.14 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2004/01/25 20:02:35 $     Revision: $Revision: 1.15 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2003/05/15 09:24:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2004/01/25 20:02:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -37,10 +37,10 @@ queue_conf \- xxQS_NAMExx queue configuration file format
 .\"
 .SH DESCRIPTION
 .I Queue_conf
-reflects the format of the template file for the queue configuration.
+reflects the format of the template file for the cluster queue configuration.
 Via the \fB\-aq\fP and \fB\-mq\fP options of the
 .M qconf 1
-command, you can add queues and modify the configuration of
+command, you can add cluster queues and modify the configuration of
 any queue in the cluster.
 .PP
 The \fIqueue_conf\fP parameters take as values strings, integer decimal
@@ -58,17 +58,59 @@ which may be followed by a multiplier letter. Valid multiplier letters are
 k, K, m and M, where k means multiply the value by 1000, K multiply by
 1024, m multiply by 1000*1000 and M multiplies by 1024*1024. If no
 multiplier is present, the value is just counted in bytes.
+.PP
+If more than one host is specified under 'hostlist' (by means of a
+list of hosts or with host groups) it can be desirable to specify
+divergences from the setting used for each host. These divergences
+can be expressed using the enhanced \fIqueue_conf\fP specifier syntax.
+This syntax builds upon the regular parameter specifier syntax as
+described below under 'FORMAT' separately for each parameter and
+in the paragraph above:
+.PP
+"["host_identifier=<parameters_specifier_syntax>"]"
+[,"["host_identifier=<parameters_specifier_syntax>"]" ]
+.PP
+Even in the enhanced \fIqueue_conf\fP specifier syntax an entry
+.PP
+<current_attribute_syntax>
+.PP
+without brackets denoting the default setting is required and
+used for all queue instances where no divergences are specified.
+Tuples with a host group host_identifier override the default
+setting. Tuples with a host name host_identifier override both
+the default and the host group setting. Note that also with the
+enhanced \fIqueue_conf\fP specifier syntax a default setting is always
+needed for all configuration attributes.
+.PP
+Integrity verifications will be applied on the configuration.
+.PP
+Configurations without default setting are rejected.
+Ambigous configurations with more than one attribute setting for
+a particular host are rejected.
+Configurations containing override values for hosts not enlisted
+under 'hostname' are accepted but are indicated by \fB\-sick\fP
+of 
+.M qconf 1
+The cluster queue should contain a non-ambigous specification
+for each configuration attribute of each queue instance specified
+under hostname in \fIqueue_conf\fP. Ambigous configurations with more
+than one attribute setting resulting from overlapping host groups
+are indicated by \fB\-explain c\fP of
+.M qstat 1
+and cause the queue instance
+with ambigous configurations to enter the c(onfiguration ambibous) state.
 .\"
 .\"
 .SH FORMAT
 The following list of \fIqueue_conf\fP parameters specifies the
-.I queue_conf
-content:
+\fIqueue_conf\fP content:
 .SS "\fBqname\fP"
-The name of the queue on the node (type string; template default: template).
-.SS "\fBhostname\fP"
-The fully-qualified host name of the node (type string;
-template default: host.dom.dom.dom).
+The name of the cluster queue(type string; template default: template).
+.SS "\fBhostlist\fP"
+A list of host names (fully-qualified) and host group names. Host group 
+names must begin with an "@" sign. If multiple hosts are specified 
+the \fIqueue_conf\fP constitutes multiple queue instances. Each host may be 
+specified only once in this list. (type string; template default: NONE).
 .SS "\fBseq_no\fP"
 In conjunction with the hosts load situation at a time this 
 parameter specifies this queue's position in the scheduling order 
@@ -81,11 +123,11 @@ Regardless of the \fBqueue_sort_method\fP setting,
 .M qstat 1
 reports queue information in the order defined by the
 value of the \fBseq_no\fP. Set this parameter to a monotonically
-increasing sequence. The type is number and the default is 0.
+increasing sequence. (type number; template default: 0).
 .SS "\fBload_thresholds\fP"
 \fBload_thresholds\fP is a list of load thresholds. Already if one
 of the thresholds is exceeded
-no further jobs will be scheduled to the queues on this node and
+no further jobs will be scheduled to the queues and
 .M qmon 1
 will signal an overload condition for this node. Arbitrary load
 values being defined in the "host" and "global" complexes (see
@@ -95,7 +137,7 @@ for details) can be used.
 The syntax is that of a comma separated list
 with each list element consisting of the name of a load value, an
 equal sign and the threshold value being intended to trigger the
-overload situation (e.g. load.avg=175,users_logged_in=5).
+overload situation (e.g. load_avg=1.75,users_logged_in=5).
 .PP
 .B Note:
 Load values as well as consumable resources may be scaled differently
@@ -480,8 +522,12 @@ projects are denied access other than those denied access based on the
 access to the queue.
 This parameter is only available in a xxQS_NAME_EExx system.
 .SS "\fBsubordinate_list\fP"
-A list of xxQS_NAMExx queues, residing on the same host as the configured queue,
-to suspend when a specified count of jobs is running in this queue.
+A list of xxQS_NAMExx cluster queues. Relashionship however are in effect
+only between queue instances residing at the same host. If there is a 
+queue instance (be in the sub- or superordinated one) on only one
+particular host this relationship is ignored.
+queue instances residing on the same host will be suspended when a specified 
+count of jobs is running in this queue instance.
 The list specification is the same as that of the \fBload_thresholds\fP
 parameter above, e.g. low_pri_q=5,small_q. The numbers denote the
 job slots of the queue that have to be filled to trigger the suspension
@@ -492,28 +538,10 @@ On nodes which
 host more than one queue, you might wish to accord better service to certain
 classes of jobs (e.g., queues that are dedicated to parallel processing might
 need priority over low priority production queues; default: NONE).
-.SS "\fBcomplex_list\fP"
-The comma separated list of administrator defined complexes (see
-.M complex 5
-for details) to be associated with the queue.
-Only complex attributes 
-contained in the enlisted complexes and those from the "global", "host" and 
-"queue" complex, which are implicitly attached to each queue, can be used in 
-the
-.B complex_values
-list below.
-.PP
-The default value for this parameter is NONE, i.e. no administrator defined
-complexes are associated with the queue.
 .SS "\fBcomplex_values\fP"
 .B complex_values
 defines quotas for resource attributes managed via this 
-queue.
-The allowed complex attributes to appear in
-.B complex_values
-are defined by
-.B complex_list
-(see above).  The syntax is the same as for
+queue. The syntax is the same as for
 .B load_thresholds
 (see above). The quotas are related to the resource consumption of
 all jobs in a queue in the case of consumable resources (see

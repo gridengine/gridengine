@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2002/07/04 09:50:12 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: accounting.5,v $     Last Update: $Date: 2004/01/25 20:02:35 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH ACCOUNTING 5 "$Date: 2002/07/04 09:50:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH ACCOUNTING 5 "$Date: 2004/01/25 20:02:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 accounting \- xxQS_NAMExx accounting file format
@@ -49,7 +49,7 @@ Accounting record entries are
 separated by colon (':') signs. The entries denote in their order
 of appearance:
 .IP "\fBqname\fP"
-Name of the queue in which the job has run.
+Name of the cluster queue in which the job has run.
 .IP "\fBhostname\fP"
 Name of the execution host.
 .IP "\fBgroup\fP"

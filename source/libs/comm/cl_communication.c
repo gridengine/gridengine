@@ -1425,7 +1425,7 @@ static cl_bool_t cl_xml_parse_is_version(char* buffer, unsigned long start, unsi
    unsigned long i = 0;
    cl_bool_t found = CL_FALSE;
 
-   if (start == NULL) {
+   if (buffer == NULL) {
       return found;
    }
    for (i=start; ( i < buffer_length) && (buffer[i] != '>') ;i++) {

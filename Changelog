@@ -1,3 +1,6 @@
+JG-2004-10-19-0: Testsuite: Enhanced ssh support: Which ssh client to use is now 
+                            configured in the host configuration.
+
 SG-2004-10-18-0: Enhancem.: - reworked the locking in qmaster and changed two
                               not thread save code sections in the order processing
                             - moved the persitence of the job sequ. number into

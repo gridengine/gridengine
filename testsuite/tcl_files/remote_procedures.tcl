@@ -617,7 +617,7 @@ proc open_remote_spawn_process { hostname
                                  { set_shared_lib_path 1 }
                                } {
 
-  global open_spawn_buffer CHECK_OUTPUT CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
+  global open_spawn_buffer CHECK_OUTPUT CHECK_HOST CHECK_USER CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR
   global CHECK_MAIN_RESULTS_DIR CHECK_EXPECT_MATCH_MAX_BUFFER
   global rlogin_in_use_buffer
 
@@ -715,8 +715,10 @@ proc open_remote_spawn_process { hostname
         set pid [ uplevel 1 { spawn "rlogin" "$open_remote_spawn__hostname" } ] 
         uplevel 1 { incr remote_spawn_nr_of_shells 1 }
       } else {
-        set pid [ uplevel 1 { spawn "ssh" "-l" "root" "$open_remote_spawn__hostname" } ]
-        uplevel 1 { incr remote_spawn_nr_of_shells 1 }
+         set ssh_binary [get_binary_path $CHECK_HOST ssh]
+         uplevel 1 "set ssh_binary $ssh_binary"
+         set pid [ uplevel 1 { spawn "$ssh_binary" "-l" "root" "$open_remote_spawn__hostname" } ]
+         uplevel 1 { incr remote_spawn_nr_of_shells 1 }
       }
       set sp_id [uplevel 1 { set spawn_id }]
       set back $pid      ;# return value (pid and spawn_id)

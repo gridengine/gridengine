@@ -33,7 +33,7 @@
 
 global ts_host_config               ;# new testsuite host configuration array
 global actual_ts_host_config_version      ;# actual host config version number
-set    actual_ts_host_config_version "1.1"
+set    actual_ts_host_config_version "1.2"
 
 if {![info exists ts_host_config]} {
    # ts_host_config defaults
@@ -388,11 +388,16 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
    if { $prg_exit_state != 0 } {
       set gzip_bin "" 
    }
+   set ssh_bin [ start_remote_prog $new_host $CHECK_USER "which" "ssh" prg_exit_state 12 0 "" 1 0 ]
+   if { $prg_exit_state != 0 } {
+      set ssh_bin "" 
+   }
 
    set config($new_host,expect)        [string trim $expect_bin]
    set config($new_host,vim)           [string trim $vim_bin]
    set config($new_host,tar)           [string trim $tar_bin]
    set config($new_host,gzip)          [string trim $gzip_bin]
+   set config($new_host,ssh)           [string trim $ssh_bin]
    set config($new_host,loadsensor)    ""
    set config($new_host,processors)    1
    set config($new_host,spooldir)      ""
@@ -485,6 +490,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
       puts $CHECK_OUTPUT "   vim           : $config($host,vim)"
       puts $CHECK_OUTPUT "   tar           : $config($host,tar)"
       puts $CHECK_OUTPUT "   gzip          : $config($host,gzip)"
+      puts $CHECK_OUTPUT "   ssh           : $config($host,ssh)"
       puts $CHECK_OUTPUT "   loadsensor    : $config($host,loadsensor)"
       puts $CHECK_OUTPUT "   processors    : $config($host,processors)"
       puts $CHECK_OUTPUT "   spooldir      : $config($host,spooldir)"
@@ -539,6 +545,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          "vim"    { set isfile 1 }
          "tar"    { set isfile 1 }
          "gzip"   { set isfile 1 }
+         "ssh"    { set isfile 1 }
          "loadsensor" { set isfile 1 }
          "spooldir" { set isdir 1 }
          "compile" { set extra 1 }
@@ -680,6 +687,7 @@ proc host_config_hostlist_delete_host { array_name } {
       puts $CHECK_OUTPUT "   vim           : $config($host,vim)"
       puts $CHECK_OUTPUT "   tar           : $config($host,tar)"
       puts $CHECK_OUTPUT "   gzip          : $config($host,gzip)"
+      puts $CHECK_OUTPUT "   ssh           : $config($host,ssh)"
       puts $CHECK_OUTPUT "   loadsensor    : $config($host,loadsensor)"
       puts $CHECK_OUTPUT "   processors    : $config($host,processors)"
       puts $CHECK_OUTPUT "   spooldir      : $config($host,spooldir)"
@@ -714,6 +722,7 @@ proc host_config_hostlist_delete_host { array_name } {
          unset config($host,vim)
          unset config($host,tar)
          unset config($host,gzip)
+         unset config($host,ssh)
          unset config($host,loadsensor)
          unset config($host,processors)
          unset config($host,spooldir)

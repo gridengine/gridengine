@@ -1283,10 +1283,10 @@ proc qdel_force {} {
    get_config change_array 
    puts $CHECK_OUTPUT "qmaster_params=$change_array(qmaster_params)"
    set saved_qmaster_params $change_array(qmaster_params) 
-   set change_array(qmaster_params) "none"  
-#   set change_array(execd_params) "none"
-   set_config change_array
-    
+   if { $saved_qmaster_params != "none" } {
+      set change_array(qmaster_params) "none"  
+      set_config change_array
+   }
 
    # submit jobs to delete
    set job_list_user1 [submit_testjobs]  

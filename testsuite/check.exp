@@ -682,16 +682,21 @@ proc have_ssh_access {} {
      set host_array $CHECK_CORE_EXECD
   }
 
+  set ssh_binary [get_binary_path $CHECK_HOST ssh]
+  if { $ssh_binary == "" } {
+     add_proc_error "have_ssh_access" "-1" "--> no ssh binary configured for host $CHECK_HOST - please update your testsuite host configuration"
+     return 0
+  }
+
   log_user 0
   set have_complete_access 1
   
   foreach elem $host_array { 
- 
      set catch_state [ catch {
 
-        puts $CHECK_OUTPUT "trying ssh -l root $elem id"
+        puts $CHECK_OUTPUT "trying $ssh_binary -l root $elem id"
 
-        set id [ open_spawn_process "ssh" "-l" "root" "$elem" "id"]
+        set id [ open_spawn_process "$ssh_binary" "-l" "root" "$elem" "id"]
         set sp_id [ lindex $id 1 ] 
  
         set timeout 30
@@ -896,15 +901,14 @@ proc get_setup_change_state {} {
 #     check/get_root_passwd
 #*******************************
 proc have_root_passwd {} {
-  global CHECK_ROOT_PASSWORD
+  global CHECK_ROOT_PASSWORD CHECK_OUTPUT
 
   if { [have_ssh_access] == 1 } {
-     puts "--> ssh access ok" 
      return 0
   }
 
   if { [string compare "none" $CHECK_ROOT_PASSWORD ] == 0 } {
-     puts "you have no ssh access and no root password"
+     puts $CHECK_OUTPUT "you have no ssh access and no root password"
      return -1
   }
   return 0
@@ -1998,8 +2002,26 @@ proc update_ts_host_config_version { filename } {
          wait_for_enter
          return
       }
+   }
+
+   if { $ts_host_config(version) == "1.1" && $actual_ts_host_config_version == "1.2" } {
+      puts $CHECK_OUTPUT "\ntestsuite host configuration update from 1.1 to 1.2 ..."
+
+      foreach host $ts_host_config(hostlist) {
+         set ts_host_config($host,ssh) ""
+      }
+      set ts_host_config(version) "1.2"
+     
+      show_config ts_host_config
+      wait_for_enter
+      if { [ save_host_configuration $filename] != 0} {
+         puts $CHECK_OUTPUT "Could not save host configuration"
+         wait_for_enter
+         return
+      }
       return 0
    }
+
    puts $CHECK_OUTPUT "\nunexpected version"
    return -1
 }
@@ -2214,7 +2236,9 @@ proc setup2 { } {
          set configuration_updated 1
       }
       # got config
-      
+     
+      read_array_from_file $ts_config(host_config_file) "testsuite host configuration" ts_host_config
+     
       if { [verify_config ts_config 1 err_list] != 0 } {
        
          # configuration problems
@@ -6313,15 +6337,15 @@ proc compile_source { { do_only_install 0 } } {
  
    puts $CHECK_OUTPUT "\ninstalling product binaries"
    if { $ts_config(gridengine_version) == 53 } {
-      set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./$link_name $sgeee_param $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
    } else {
-      set open_spawn [ open_remote_spawn_process [lindex $host_list 0] $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./scripts/distinst -local -noexit $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
+      set open_spawn [ open_remote_spawn_process $CHECK_HOST $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; $var_name=$CHECK_PRODUCT_ROOT ; export $var_name ; ./scripts/distinst -local -noexit $CHECK_DIST_INSTALL_OPTIONS $arch_list" ]
    }
    set sp_id [ lindex $open_spawn 1 ]
    set timeout -1
    set done 0
    while { $done != 1 } {
-      expect {
+      expect_user {
          -i $sp_id full_buffer {
             puts $CHECK_OUTPUT "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
          }
@@ -6336,6 +6360,9 @@ proc compile_source { { do_only_install 0 } } {
          }
          -i $sp_id eof {
             set done 1
+         }
+         -i $sp_id "*\n" {
+            puts $CHECK_OUTPUT $expect_out(0,string)
          }
       }
    }
@@ -6440,7 +6467,7 @@ proc compile_source { { do_only_install 0 } } {
       set timeout -1
       set done 0
       while { $done != 1 } {
-         expect {
+         expect_user {
             -i $sp_id full_buffer {
                puts $CHECK_OUTPUT "testsuite - compile_source buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
             }

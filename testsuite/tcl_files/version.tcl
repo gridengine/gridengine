@@ -63,7 +63,6 @@ proc ts_source {filebase {extension tcl}} {
    global CHECK_OUTPUT
 
    set sourced 0
-
    # suppress warnings when testsuite tries to resource some files
    if {[string first "not in testmode" $filebase] != -1} {
       return $sourced
@@ -75,10 +74,8 @@ proc ts_source {filebase {extension tcl}} {
    } else {
       # read a version independent file first, then the version dependent
       set version $ts_config(gridengine_version)
-
       set filename "${filebase}.${extension}"
 
-#puts $CHECK_OUTPUT "----> probing file $filename"
       if {[file exists $filename]} {
          debug_puts "reading file $filename"
          uplevel source $filename
@@ -87,7 +84,7 @@ proc ts_source {filebase {extension tcl}} {
 
       if { $version != "" } {
          set filename "${filebase}.${version}.${extension}"
-#puts $CHECK_OUTPUT "----> probing file $filename"
+
          if {[file exists $filename]} {
             debug_puts "reading version specific file $filename"
             uplevel source $filename

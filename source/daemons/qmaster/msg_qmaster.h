@@ -860,6 +860,10 @@
 #define MSG_UMAP_HOSTNAMEXNOTRESOLVEDY_SS          _MESSAGE(33669, _("hostname '%s' not resolved: %s\n"))
 #define MSG_QMASTER_XNOVALIDSSM_S                  _MESSAGE(33670, _(SFQ" is not a valid shell_start_mode\n"))
 #define MSG_QMASTER_XNOVALIDIS_S                   _MESSAGE(33671, _(SFQ" is not a valid initial_state\n"))
+#define MSG_QMASTER_AUTODEFDEPARTMENT              _MESSAGE(33672, _("all users are assigned to the \"defaultdepartment\" automatically\n"))
+#define MSG_QMASTER_DEPTFORDEFDEPARTMENT           _MESSAGE(33673, _("the \"defaultdepartment\" has to be of type \"DEPT\"\n"))
+#define MSG_QMASTER_ACLNOSHARE                     _MESSAGE(33674, _("not allowed to set \"fshare\" for ACL lists\n"))
+#define MSG_QMASTER_ACLNOTICKET                    _MESSAGE(33675, _("not allowed to set \"oticket\" for ACL lists\n"))
 
 #endif /* __MSG_QMASTER_H */
 

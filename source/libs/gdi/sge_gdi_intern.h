@@ -154,8 +154,6 @@ int sge_send_ack_to_qmaster(int sync, u_long32 type, u_long32 ulong_val, u_long3
 
 u_long32 sge_get_recoverable(lListElem *aep);  
 
-const char *quality_text(lListElem *aep);
-
 #ifdef  __cplusplus
 }
 #endif

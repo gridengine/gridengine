@@ -1088,22 +1088,6 @@ int answer_list_is_error_in_list(lList **answer_list)
    return ret;
 }                   
 
-/*-----------------------------------------------------------------------*/
-const char *quality_text(
-lListElem *aep 
-) {
-   u_long32 q;
-   static char *qt[] = {
-      "ERROR",
-      "WARNING",
-      "INFO"
-   };
-   if ((q = lGetUlong(aep, AN_quality))>2)
-      q = 0;
-   return qt[q];  
-}
-
-
 /*----------------------------------------------------------------------- 
  * sge_get_recoverable
  *

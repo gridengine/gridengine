@@ -575,7 +575,6 @@
 #define MSG_LOG_JRERUNRESCHEDULE      _MESSAGE(33567, _("job rerun/checkpoint specified -> schedule it again"))
 #define MSG_LOG_JCKPTRESCHEDULE       _MESSAGE(33568, _("job was checkpointed -> schedule it again"))
 #define MSG_LOG_JNORESRESCHEDULE      _MESSAGE(33569, _("job didn't get resources -> schedule it again"))
-#define MSG_LOG_QERRORBYJOB_SU        _MESSAGE(33570, _("queue "SFN" marked QERROR as result of job "U32CFormat"'s failure\n") ) 
 #define MSG_LOG_QERRORBYJOBHOST_SUS   _MESSAGE(33571, _("queue "SFN" marked QERROR as result of job "U32CFormat"'s failure at host "SFN"\n"))
 
 

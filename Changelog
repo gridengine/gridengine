@@ -1,3 +1,5 @@
+CR-2004-11-16-1: Cleanup:   removed unused message macros
+
 JG-2004-11-16-0: Bugfix:    Fixed spooling of subordinate queues.
                             Fixed a memory leak.
                  Review:    SG

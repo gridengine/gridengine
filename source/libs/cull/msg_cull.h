@@ -193,19 +193,6 @@
 #define MSG_CULL_LEFORMAT                _MESSAGE(41141, _("wrong packing format"))
 #define MSG_CULL_LEOPEN                  _MESSAGE(41142, _("could not open file"))
 
-/* 
-** cull/src/pack.c
-*/ 
-#define MSG_CULL_CANTPACKINTTOUNPACKBUFF   _MESSAGE(41143, _("!!!!!!!! Cannot pack an integer into an unpacking buffer !!!!!!!!!!\n"))
-#define MSG_CULL_CANTPACKDOUBLETOUNPACKBUFF  _MESSAGE(41144, _("!!!!!!!! Cannot pack a double into an unpacking buffer !!!!!!!!!!\n"))
-#define MSG_CULL_CANTPACKSTRINGTOUNPACKBUFF  _MESSAGE(41145, _("!!!!!!!! Cannot pack a string into an unpacking buffer !!!!!!!!!!\n"))
-#define MSG_CULL_CANTPACKBYTEARRAYTOUNPACKBUFF  _MESSAGE(41146, _("!!!!!!!! Cannot pack a bytearray into an unpacking buffer !!!!!!!!!!\n"))
-#define MSG_CULL_CANTUNPACKINTFROMPACKINGBUFF   _MESSAGE(41147, _("!!!!!!!! Cannot unpack an integer from a packing buffer !!!!!!!!!!\n"))
-#define MSG_CULL_CANTUNPACKDOUBLEFROMPACKINGBUFF   _MESSAGE(41148, _("!!!!!!!! Cannot unpack a double from a packing buffer !!!!!!!!!!\n"))
-#define MSG_CULL_CANTUNPACKSTRINGFROMPACKINGBUFF   _MESSAGE(41149, _("!!!!!!!! Cannot unpack a string from a packing buffer !!!!!!!!!!\n"))
-#define MSG_CULL_CANTUNPACKBYTEARRAYFROMPACKINGBUFF   _MESSAGE(41150, _("!!!!!!!! Cannot unpack a byte array from a packing buffer !!!!!!!!!!\n"))
-
-
 /*
 ** cull_hash.c
 */

@@ -333,7 +333,6 @@
 #define MSG_INCOMPLETE_SCHEDD_CONFIG                  _MESSAGE(47400, _("The scheduler configuration is incomplete"))
 #define MSG_USE_DEFAULT_CONFIG                        _MESSAGE(47401, _("Using the scheduler default configuration"))
 #define MSG_INVALID_PARAM_SETTING_S                   _MESSAGE(47402, _("Invalid scheduler param setting: "SFQ)) 
-#define MSG_SCHEDD_CREATEORDERS_LWHEREFORJOBFAILED    _MESSAGE(47403, _("sge_create_orders(): lWhat() for job failed\n"))
 #define MSG_QINSTANCE_VALUEMISSINGMASTERDOWN_S        _MESSAGE(47404, _("\terror: no value for "SFQ" because execd is in unknown state\n"))
 
 #endif /* __MSG_SCHEDD_H */

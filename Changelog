@@ -1,3 +1,10 @@
+CR-2004-08-05-1: Bugfix:    killed slave task on tight integration does 
+                            not cleanup job correctly (part 1)
+                 Issue:     1197
+                 Bugtraq:   5082660
+                 Changed:   execd
+                 Review:    AH
+
 CR-2004-08-05-0: Testsuite: unsetting SGE_DEBUG_LEVEL in testsuite test
                             scripts pe_task.sh and pe_job.sh
 

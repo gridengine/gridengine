@@ -94,6 +94,32 @@ NEW-option (-scql [ClusterQueueList]):
 - show a list of all existing QIs
 - if user specified "ClusterQueueList" then only those QIs will be
   displayed
+
+qstat
+-----
+
+without Options
+- Shows QIN in the "queue" column
+
+f-Option
+- list of all QIs
+- "queuename" shows QIN
+
+q-Option
+- Shows QINS in the output even if CQNs are used as Parameter
+
+NEW-Option (-g c)
+- Summary for all CQs
+- If -q Option containes QIs then a summary of concerned
+  CQ will be shown
+- Output format simmilar to the f-Option but
+   * "queuename":   CQN
+   * "used/tot.":   Sum of all slots for the CQ
+   * "arch":        -
+   * "load_avg":    -
+   * "states":      -
+- Information about individual jobs won't we shown in the output
+  
  
 qsub, qalter, qsh, qrsh, qacct, qlogin
 --------------------------------------
@@ -125,10 +151,25 @@ q-Option:
  
 QMon
 ====
- 
-- Prior to the "Queue Control Dialog" a new dialog could be shown, which
-  displays some current information about CQs. After selecting a
-  certain CQ the "Queue Control Dialog" could show data concerning QIs
+
+- Make CQs configurable 
+
+  Ensure add/modify/copy/delete configuration operations
+  on CQs can be performed using Qmon.
+
+- Display summarized CQ state in Qmon
+
+  Display summarized CQ state in Queue control dialogue.
+  The information shown here should be the same
+  as with "qstat -g c"
+
+- Display detailed QI state in Qmon
+
+  Display per host detailed CQ state. The information
+  shown here should be the same as in the old
+  Queue control dialogue.
+
+- Make qmod functionality in Qmon working with QIs and CQs
  
 Future enhancements
 ===================

@@ -1,3 +1,6 @@
+AH-2004-04-15-0: Bugfix:    Fix sequential resource reservation broken by 
+                            AH-2004-04-14-1.
+
 AH-2004-04-15-0: Bugfix:    Fix problem with counter used to track number of JAPI 
                             threads that rely upon JAPI background thread service.
                  Review:    HP

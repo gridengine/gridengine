@@ -767,6 +767,30 @@ bool job_has_job_pending_tasks(lListElem *job)
    return ret;
 }
 
+/****** sgeobj/job/job_has_soft_requests() ********************************
+*  NAME
+*     job_has_soft_requests() -- Has the job soft requests?
+*
+*  SYNOPSIS
+*     bool job_has_soft_requests(lListElem *job) 
+*
+*  FUNCTION
+*     True (1) will be returned if the job has soft requests.
+*
+*  INPUTS
+*     lListElem *job - JB_Type 
+*
+*  RESULT
+*     bool - true or false 
+*
+*  NOTES
+*     MT-NOTES: job_has_soft_requests() is MT safe
+*******************************************************************************/
+bool job_has_soft_requests(lListElem *job) 
+{
+   return lGetList(job, JB_soft_resource_list) || lGetList(job, JB_soft_queue_list);
+}
+
 /****** sgeobj/job/job_set_hold_state() ***************************************
 *  NAME
 *     job_set_hold_state() -- Changes the hold state of a task.

@@ -152,6 +152,8 @@ void job_delete_not_enrolled_ja_task(lListElem *job, lList **answer_list,
 
 bool job_has_job_pending_tasks(lListElem *job);
 
+bool job_has_soft_requests(lListElem *job);
+
 bool job_is_ja_task_defined(const lListElem *job, u_long32 ja_task_number);
 
 void job_set_hold_state(lListElem *job, 

@@ -815,6 +815,12 @@ static int rc_time_by_slots(lList *requested, lList *load_attr, lList *config_at
       ret = ri_time_by_slots(implicit_slots_request, load_attr, config_attr, actual_attr, centry_list, queue,  
                        reason, allow_non_requestable, slots, layer, lc_factor, &tmp_start, duration, object_name);
 
+      if (ret == 0 && *start_time == DISPATCH_TIME_QUEUE_END) {
+         DPRINTF(("%s: \"slot\" request delays start time from "U32CFormat
+           " to "U32CFormat"\n", object_name, latest_time, MAX(latest_time, tmp_start)));
+         latest_time = MAX(latest_time, tmp_start);
+      }
+
       /* we don't care if slots are not specified, except at queue level */
       if (ret == 2 && tag != QUEUE_TAG)
          ret = 0;
@@ -823,11 +829,6 @@ static int rc_time_by_slots(lList *requested, lList *load_attr, lList *config_at
          return ret;
       }
 
-      if (*start_time == DISPATCH_TIME_QUEUE_END) {
-         DPRINTF(("%s: \"slot\" request delays start time from "U32CFormat
-           " to "U32CFormat"\n", object_name, latest_time, MAX(latest_time, tmp_start)));
-         latest_time = MAX(latest_time, tmp_start);
-      }
    }
 
    /* ensure all default requests are fulfilled */
@@ -2326,6 +2327,7 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a,
 {
    lListElem *category = lGetRef(a->job, JB_category);
    bool now_assignment = (a->start == DISPATCH_TIME_NOW);
+/*    bool soft_requests = job_has_soft_requests(a->job); */
    bool use_category = now_assignment && (category != NULL) && lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
    int result;
    u_long32 job_id = lGetUlong(a->job, JB_job_number);
@@ -2341,8 +2343,6 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a,
    if (use_category) {
       schedd_mes_set_tmp_list(category, CT_job_messages, job_id);
    }
-
-/*       qinstance_list_set_tag(queues, 0); */
 
    result = global_time_by_slots(1, &tt_global, a->duration, 
          &global_violations, a->job, a->gep, a->centry_list, a->acl_list);
@@ -2405,6 +2405,7 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a,
             /* tag number of slots per queue and time when it will be available */
             lSetUlong(qep, QU_tag, 1);
             if (a->start == DISPATCH_TIME_QUEUE_END) {
+               DPRINTF(("    global "u32" host "u32" queue "u32"\n", tt_global, tt_host, tt_queue));
                tt_queue = MAX(tt_queue, MAX(tt_host, tt_global));
                lSetUlong(qep, QU_available_at, tt_queue);
             }
@@ -2412,7 +2413,7 @@ static int sge_tag_queues_suitable4job_fast_track(sge_assignment_t *a,
                       lGetUlong(qep, QU_tag), lGetUlong(qep, QU_available_at)));
             best_queue_result = 0;
 
-            if (now_assignment /* && !soft requests */ ) {
+            if (now_assignment /* && !soft_requests */ ) {
                fast_track_exit = true;
                break;
             }
@@ -3020,6 +3021,7 @@ lList **ignore_queues
    if (result == 0) {
       lListElem *category = lGetRef(job, JB_category);
       bool use_category = now_assignment && (category != NULL) && lGetUlong(category, CT_refcount) > MIN_JOBS_IN_CATEGORY;
+/*       bool soft_requests = job_has_soft_requests(a->job); */
       lListElem *qep;
       u_long32 job_start_time = MAX_ULONG32;
 

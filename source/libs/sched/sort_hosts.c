@@ -364,7 +364,6 @@ int *sort_hostlist
    /* debit from hosts */
    for_each(gel, granted) {  
       u_long32 ulc_factor;
-      /*lList *tcl;*/
       int slots = lGetUlong(gel, JG_slots);
 
       hnm = lGetHost(gel, JG_qhostname);
@@ -383,10 +382,6 @@ int *sort_hostlist
       /* compute new combined load for this host and put it into the host */
       old_sort_value = lGetDouble(hep, EH_sort_value); 
 
-/*      tcl = NULL;
-      host_complexes2scheduler(&tcl, hep, host_list, centry_list);
-      new_sort_value = scaled_mixed_load(tcl, hnm);
-      */
       new_sort_value = scaled_mixed_load(global, hep, centry_list);
 
       if(new_sort_value != old_sort_value) {
@@ -395,7 +390,6 @@ int *sort_hostlist
          DPRINTF(("Increasing sort value of Host %s from %f to %f\n", 
             hnm, old_sort_value, new_sort_value));
       }
-/*      tcl = lFreeList(tcl);  */
 
       if (feature_is_enabled(FEATURE_SGEEE) 
           || scheddconf.queue_sort_method!=QSM_SHARE) {

@@ -223,7 +223,8 @@ extern "C" {
       {CQ_LOWERBOUND, CQS, CQN},                /* Cluster Queue list */
       {QI_LOWERBOUND, QIS, QIN},                /* Queue Instance list */
       {FCAT_LOWERBOUND, FCATS, FCATN},          /* Functional category */
-
+      {CTQV_LOWERBOUND, CTQVS,CTQVN},           /* cached queue soft request violations in a job category */
+      {CTI_LOWERBOUND, CTIS, CTIN},             /* ignore host/queue list in a job category */
       {0, 0, NULL}
    };
 

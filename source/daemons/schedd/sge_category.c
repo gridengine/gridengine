@@ -65,7 +65,7 @@
 lList *CATEGORY_LIST = NULL;
 
 /*-------------------------------------------------------------------------*/
-/*    add job´s category to the ´global´ category list, if it doesn´t      */
+/*    add jobs' category to the´global category list, if it doesn´t        */
 /*    already exist, and reference the category in the job element         */
 /*    The category_list is recreated for every scheduler run               */
 /*-------------------------------------------------------------------------*/
@@ -192,6 +192,9 @@ int sge_reset_job_category()
 
    for_each (cat, CATEGORY_LIST) {
       lSetUlong(cat, CT_rejected, 0);
+      lSetList(cat, CT_ignore_queues, lFreeList(lGetList(cat, CT_ignore_queues)));
+      lSetList(cat, CT_ignore_hosts, lFreeList(lGetList(cat, CT_ignore_hosts)));
+      lSetList(cat, CT_queue_violations, lFreeList(lGetList(cat, CT_queue_violations)));
    } 
    DEXIT;
    return 0;

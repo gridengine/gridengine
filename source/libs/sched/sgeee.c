@@ -4076,8 +4076,10 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
                       int seqno,
                       int max_queued_ticket_orders)
 {
+   static lEnumeration *usage_what = NULL;
+   static lEnumeration *share_tree_what = NULL;
+   static lEnumeration *config_what = NULL;
    lCondition *where=NULL;
-   lEnumeration *what=NULL;
    lList *up_list;
    lList *config_list;
    lListElem *order;
@@ -4093,6 +4095,25 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
    DENTER(TOP_LAYER, "sge_build_sge_orders");
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
+
+   if (!config_what)
+      config_what = lWhat("%T(%I %I)", SC_Type,
+                   SC_weight_tickets_deadline_active,
+                   SC_weight_tickets_override);
+
+
+   if (!share_tree_what)
+      share_tree_what = lWhat("%T(%I %I %I %I %I %I)", STN_Type,
+                         STN_version, STN_name, STN_job_ref_count, STN_m_share,
+                         STN_last_actual_proportion,
+                         STN_adjusted_current_proportion);
+
+   if (!usage_what)
+      usage_what = lWhat("%T(%I %I %I %I %I %I %I)", UP_Type,
+                   UP_name, UP_usage, UP_usage_time_stamp,
+                   UP_long_term_usage, UP_project, UP_debited_job_usage,
+                   UP_version);
+
 
    if (!order_list)
       order_list = lCreateList("orderlist", OR_Type);
@@ -4183,11 +4204,6 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
        * build update user usage order
        *-----------------------------------------------------------------*/
 
-      what = lWhat("%T(%I %I %I %I %I %I %I)", UP_Type,
-                   UP_name, UP_usage, UP_usage_time_stamp,
-                   UP_long_term_usage, UP_project, UP_debited_job_usage,
-                   UP_version);
-
       /* NOTE: make sure we get all usage entries which have been decayed
          or have accumulated additional usage */
 
@@ -4195,7 +4211,7 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
 
       if (lists->user_list) {
          norders = lGetNumberOfElem(order_list); 
-         if ((up_list = lSelect("", lists->user_list, where, what))) {
+         if ((up_list = lSelect("", lists->user_list, where, usage_what))) {
             if (lGetNumberOfElem(up_list)>0) {
                order = lCreateElem(OR_Type);
                lSetUlong(order, OR_seq_no, get_seq_nr());
@@ -4215,7 +4231,7 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
 
       if (lists->project_list) {
          norders = lGetNumberOfElem(order_list); 
-         if ((up_list = lSelect("", lists->project_list, where, what))) {
+         if ((up_list = lSelect("", lists->project_list, where, usage_what))) {
             if (lGetNumberOfElem(up_list)>0) {
                order = lCreateElem(OR_Type);
                lSetUlong(order, OR_seq_no, get_seq_nr());
@@ -4229,7 +4245,6 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
             lGetNumberOfElem(order_list) - norders));
       }
 
-      lFreeWhat(what);
       lFreeWhere(where);
 
       /*-----------------------------------------------------------------
@@ -4238,15 +4253,9 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
 
       if (lists->share_tree && ((root = lFirst(lists->share_tree)))) {
          lListElem *node;
-         lEnumeration *so_what;
          norders = lGetNumberOfElem(order_list);
 
-         so_what = lWhat("%T(%I %I %I %I %I %I)", STN_Type,
-                         STN_version, STN_name, STN_job_ref_count, STN_m_share,
-                         STN_last_actual_proportion,
-                         STN_adjusted_current_proportion);
-
-         if ((node = get_mod_share_tree(root, so_what, last_seqno))) {
+         if ((node = get_mod_share_tree(root, share_tree_what, last_seqno))) {
             up_list = lCreateList("", STN_Type);
             lAppendElem(up_list, node);
             order = lCreateElem(OR_Type);
@@ -4257,21 +4266,15 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
          }
          DPRINTF(("   added %d orders for updating share tree\n",
             lGetNumberOfElem(order_list) - norders)); 
-
-         lFreeWhat(so_what);
       } 
 
       /*-----------------------------------------------------------------
        * build update scheduler configuration order
        *-----------------------------------------------------------------*/
 
-      what = lWhat("%T(%I %I)", SC_Type,
-                   SC_weight_tickets_deadline_active,
-                   SC_weight_tickets_override);
-
       if (lists->config_list) {
          norders = lGetNumberOfElem(order_list); 
-         if ((config_list = lSelect("", lists->config_list, NULL, what))) {
+         if ((config_list = lSelect("", lists->config_list, NULL, config_what))) {
             if (lGetNumberOfElem(config_list)>0) {
                order = lCreateElem(OR_Type);
                lSetUlong(order, OR_seq_no, get_seq_nr());
@@ -4284,11 +4287,7 @@ lList *sge_build_sge_orders( sge_Sdescr_t *lists,
          DPRINTF(("   added %d orders for scheduler configuration\n",
             lGetNumberOfElem(order_list) - norders));   
       }
-
-      lFreeWhat(what);
-
       last_seqno = seqno;
-
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);

@@ -410,7 +410,7 @@ void schedd_mes_add(u_long32 job_number, u_long32 message_number, ...)
             return;
          }
       }
-      if (tmp_sme)
+      if (!tmp_sme)
          schedd_mes_initialize();
 
       mes = lCreateElem(MES_Type);
@@ -503,4 +503,69 @@ void schedd_mes_add_global(u_long32 message_number, ...)
 }
 
 
+/****** schedd_message/schedd_mes_get_tmp_list() *******************************
+*  NAME
+*     schedd_mes_get_tmp_list() -- gets all messages for the current job 
+*
+*  SYNOPSIS
+*     lList* schedd_mes_get_tmp_list() 
+*
+*  FUNCTION
+*     returns a list of all messages for the current job 
+*
+*  RESULT
+*     lList* -  message list
+*
+*******************************************************************************/
+lList *schedd_mes_get_tmp_list(){
+   lList *ret = NULL;
+   
+   DENTER(TOP_LAYER, "schedd_mes_get_tmp_list");
+
+   if (tmp_sme) {
+     ret =  lGetList(tmp_sme, SME_message_list);  
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** schedd_message/schedd_mes_set_tmp_list() *******************************
+*  NAME
+*     schedd_mes_set_tmp_list() -- sets the messages for a current job 
+*
+*  SYNOPSIS
+*     void schedd_mes_set_tmp_list(lListElem *category, int name) 
+*
+*  FUNCTION
+*     Takes a mesage list, changes the job number to the current job and stores
+*     the list. 
+*
+*  INPUTS
+*     lListElem *category - an object, which stores the list 
+*     int name            - element id for the list
+*     u_long32 job_number - job number 
+*
+*******************************************************************************/
+void schedd_mes_set_tmp_list(lListElem *category, int name, u_long32 job_number){
+   lList *tmp_list = NULL;
+   lListElem *tmp_elem = NULL;
+   lList *job_id_list = NULL;
+   lListElem *job_id = NULL;
+
+   DENTER(TOP_LAYER, "schedd_mes_set_tmp_list");
+
+   lXchgList(category, name, &tmp_list);
+
+   for_each(tmp_elem, tmp_list){
+      job_id_list =  lCreateList("job ids", ULNG_Type);
+      lSetList(tmp_elem, MES_job_number_list, job_id_list);
+
+      job_id =  lCreateElem(ULNG_Type);
+      lSetUlong(job_id, ULNG, job_number);
+   }
+
+   if (tmp_sme && tmp_list){
+      lSetList(tmp_sme, SME_message_list, tmp_list); 
+   }
+}
 

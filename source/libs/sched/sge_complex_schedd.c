@@ -333,6 +333,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                strncpy(reason, temp, reason_size);
                FREE(temp);
             }
+            cplx_el = lFreeElem(cplx_el);
             DEXIT;
             return NULL;
          }
@@ -424,7 +425,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                }
 
                /* we can have a user, who wants to override the incomming load value. This is no
-                  no problem for consumables, but for fixed values. A custom fixed value is a per
+                  problem for consumables, but for fixed values. A custom fixed value is a per
                   slot value (stored in CE_doubleval) and a load value is a per job value (stored
                   in CE_doubleval). 
    
@@ -438,8 +439,6 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
                   lSetUlong(cplx_el, CE_pj_dominant, layer | DOMINANT_TYPE_FIXED);
                } 
  
-/*lWriteElemTo(cplx_el, stdout);*/
-
                if (!is_attr_prior2(cplx_el, dval, CE_pj_doubleval, CE_pj_dominant)){
                   lSetString(cplx_el, CE_pj_stringval, load_value);
                   lSetUlong(cplx_el, CE_pj_dominant, layer | dom_type);

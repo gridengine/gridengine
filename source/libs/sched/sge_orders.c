@@ -103,6 +103,8 @@ lListElem *ja_task,
 lList *granted ,
 bool no_tickets
 ) {
+   static lEnumeration *tix_what = NULL;
+   static lEnumeration *job_what = NULL;
    lList *ql = NULL;
    lListElem *gel, *ep, *ep2;
    u_long32 qslots;
@@ -157,8 +159,10 @@ bool no_tickets
 
          tlist = lCreateList("", lGetElemDescr(ja_task));
          lAppendElem(tlist, lCopyElem(ja_task));
-         { 
-            lEnumeration *what = lWhat("%T(%I %I %I %I %I %I %I %I %I)",
+         {             
+            lList *tmp_list;
+               if(!tix_what)
+                  tix_what = lWhat("%T(%I %I %I %I %I %I %I %I %I)",
                   lGetElemDescr(ja_task), 
                   JAT_task_number, 
                   JAT_status, 
@@ -169,8 +173,8 @@ bool no_tickets
                   JAT_sticket, 
                   JAT_share,
                   JAT_granted_destin_identifier_list);
-            lList *tmp_list;
-            if ((tmp_list = lSelect("", tlist, NULL, what))) {
+
+            if ((tmp_list = lSelect("", tlist, NULL, tix_what))) {
                lFreeList(tlist);
                tlist = tmp_list;
                if(no_tickets){
@@ -185,7 +189,6 @@ bool no_tickets
                   }
                }
             }
-            lFreeWhat(what);
          }
 
          /* Create a reduced job list with only the required fields */
@@ -194,17 +197,17 @@ bool no_tickets
          lSetUlong(jep, JB_job_number, lGetUlong(job, JB_job_number));
          lSetList(jep, JB_ja_tasks, tlist);
          lAppendElem(jlist, jep);
-         {
-            lEnumeration *what = lWhat("%T(%I %I)", 
+         {        
+            lList *tmp_list;
+            if(!job_what)
+               job_what = lWhat("%T(%I %I)", 
                   lGetElemDescr(job), 
                   JB_job_number, 
                   JB_ja_tasks);
-            lList *tmp_list;
-            if ((tmp_list = lSelect("", jlist, NULL, what))) {
+            if ((tmp_list = lSelect("", jlist, NULL, job_what))) {
                lFreeList(jlist);
                jlist = tmp_list;
             }
-            lFreeWhat(what);
          }
 
          lSetList(ep, OR_joker, jlist);

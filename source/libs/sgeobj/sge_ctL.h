@@ -48,20 +48,71 @@ extern "C" {
 enum {
    CT_str = CT_LOWERBOUND,   /* string of category */
    CT_refcount,              /* number of jobs referencing the string */
-   CT_rejected               /* has this category been rejected */
+   CT_rejected,              /* has this category been rejected */
+   CT_ignore_queues,         /* stores all queues, which cannot run this job class */ 
+   CT_ignore_hosts,          /* stores all hosts, which cannot run this job class */
+   CT_queue_violations,      /* stores in a case of soft requests, for each queue the number of violations */
+   CT_job_messages           /* stores the error messages, which a job got during its dispatching */ 
 };
 
 ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
    SGE_STRING(CT_str, CULL_HASH | CULL_UNIQUE)
    SGE_ULONG(CT_refcount, CULL_DEFAULT)
    SGE_ULONG(CT_rejected, CULL_DEFAULT)
+   SGE_LIST(CT_ignore_queues, CTI_Type, CULL_DEFAULT)
+   SGE_LIST(CT_ignore_hosts, CTI_Type, CULL_DEFAULT)
+   SGE_LIST(CT_queue_violations, CTQV_Type, CULL_DEFAULT)
+   SGE_LIST(CT_job_messages, MES_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CTN)
    NAME("CT_str")
    NAME("CT_refcount")
    NAME("CT_rejected")
+   NAME("CT_ignore_queues")
+   NAME("CT_ignore_hosts")
+   NAME("CT_queue_violations")
+   NAME("CT_job_messages")
 NAMEEND
+
+
+/**
+ * the following data structures describe the ignore_* lists
+ */
+enum {
+   CTI_name = CTI_LOWERBOUND
+};
+
+LISTDEF(CTI_Type)
+   SGE_STRING(CTI_name, CULL_HASH | CULL_UNIQUE )
+LISTEND
+
+NAMEDEF(CTIN)
+   NAME("CTI_name")
+NAMEEND
+
+#define CTIS sizeof(CTIN)/sizeof(char*)
+
+/**
+ * the following data structures describe the violation cache list for queues 
+ */
+enum {
+   CTQV_name = CTQV_LOWERBOUND,
+   CTQV_count
+};
+
+LISTDEF(CTQV_Type)
+   SGE_STRING(CTQV_name, CULL_HASH | CULL_UNIQUE)
+   SGE_ULONG(CTQV_count, CULL_DEFAULT)
+LISTEND
+
+NAMEDEF(CTQVN)
+   NAME("CTQV_name")
+   NAME("CTQV_count")
+NAMEEND
+
+#define CTQVS sizeof(CTQVN)/sizeof(char*)
+
 
 /* *INDENT-ON* */
 

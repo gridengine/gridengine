@@ -241,14 +241,14 @@ char **argv
    ** format and print the info
    */
 
-#define HEAD_FORMAT "%-20.20s %-10.10s %-5.5s %-5.5s %-8.8s %-8.8s %-8.8s %-8.8s\n"
+#define HEAD_FORMAT "%-20s %-10.10s %5.5s %5.5s %8.8s %8.8s %8.8s %8.8s\n"
 
    for_each(ep, ehl) {
       if (print_header) {
          print_header = 0;
          printf(HEAD_FORMAT,  MSG_HEADER_HOSTNAME, MSG_HEADER_ARCH, MSG_HEADER_NPROC, MSG_HEADER_LOAD,
              MSG_HEADER_MEMTOT, MSG_HEADER_MEMUSE, MSG_HEADER_SWAPTO, MSG_HEADER_SWAPUS);
-         printf("--------------------------------------------------------------------------------\n");
+         printf("-------------------------------------------------------------------------------\n");
       }
       sge_print_host(ep);
       sge_print_resources(ehl, cl, resource_list, ep, show);
@@ -301,7 +301,7 @@ lListElem *hep
       num_proc = lGetString(lep, HL_value); 
    else
       num_proc = "-";
-   
+
    /*
    ** load_avg
    */
@@ -380,11 +380,11 @@ u_long32 show
             /*
             ** Header/indent
             */
-            printf(" ");
+            printf("   ");
             /*
             ** qname
             */
-            printf("%-20.20s ", lGetString(qep, QU_qname));
+            printf("%-20s ", lGetString(qep, QU_qname));
             /*
             ** qtype
             */

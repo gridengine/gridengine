@@ -1,4 +1,8 @@
-EB-2002-03-21-2  Bugfix:    remove old configuration (EB-2002-03-21-0)
+AA-2002-03-22-0  Merge:    - override, functional policy dialogue sorting
+                           - qhost formating
+                           - sec_lib SGE_KEYFILE, SGE_CERTFILE
+
+EB-2002-03-21-2  Bugfix:   remove old configuration (EB-2002-03-21-0)
 
 EB-2002-03-21-1  Enhancem.: sort output of qconf -sep
 

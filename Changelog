@@ -35,6 +35,7 @@ CR-2002-12-04-0  Testsuite: Running more than one testsuite on the same host
                             same files in local /tmp directory
                             - new procedures: get_tmp_directory_name() and
                                               get_tmp_file_name()
+                 Issue:     #381
 
 EB-2002-12-04-1  Testsuite: Fixed bug in checktree/functional/binary_submission
 

@@ -29,6 +29,11 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#ifdef DARWIN
+#   include <sys/time.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

@@ -1931,6 +1931,11 @@ int save
          tap = lAddElemUlong(&range_list, RN_min, 1, RN_Type);
          lSetUlong(tap, RN_max, 1);
          lSetUlong(tap, RN_step, 1);
+      } else {
+         u_long32 job_now = lGetUlong(jep, JB_now);
+
+         JOB_TYPE_SET_ARRAY(job_now);
+         lSetUlong(jep, JB_now, job_now);
       }
 
 #if 1 /* EB: TODO*/

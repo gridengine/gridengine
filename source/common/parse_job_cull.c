@@ -201,6 +201,11 @@ lListElem **pjob
       if (ep) {
          range_list = lGetList(ep, SPA_argval_lListT);
          lSetList(*pjob, JB_ja_structure, lCopyList("range list", range_list)); 
+         {
+            u_long32 job_type = lGetUlong(*pjob, JB_now);
+            JOB_TYPE_SET_ARRAY(job_type);
+            lSetUlong(*pjob, JB_now, job_type);
+         }
       } else {
          job_set_ja_task_ids(*pjob, 1, 1, 1);
          range_list = lGetList(*pjob, JB_ja_structure);

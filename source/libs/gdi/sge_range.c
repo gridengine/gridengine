@@ -100,13 +100,21 @@ void range_correct_end(lListElem *range)
       u_long32 start, end, step;
 
       range_get_all_ids(range, &start, &end, &step);  
-      if ((end - start) % step) {
-         u_long32 factor;
+      if (step > 0) {
+         if ((end - start) % step) {
+            u_long32 factor;
 
-         factor = (end - start) / step;
-         end = start + factor * step;
+            factor = (end - start) / step;
+            end = start + factor * step;
+            range_set_all_ids(range, start, end, step);
+         } 
+      } else {
+         step = end - start;
+         if (step == 0) {
+            step = 1;
+         }
          range_set_all_ids(range, start, end, step);
-      } 
+      }
    }
 }
 

@@ -60,6 +60,7 @@
 #define JB_NOW_QLOGIN     0x04L
 #define JB_NOW_QRSH       0x08L
 #define JB_NOW_QRLOGIN    0x10L
+#define JOB_TYPE_ARRAY    0x40L
 
 #define JB_NOW_STR_IMMEDIATE  "IMMEDIATE"
 #define JB_NOW_STR_QSH        "INTERACTIVE"
@@ -74,10 +75,13 @@
 #define JB_NOW_SET_QLOGIN(jb_now)         jb_now = (jb_now & JB_NOW_IMMEDIATE) | JB_NOW_QLOGIN
 #define JB_NOW_SET_QRSH(jb_now)           jb_now = (jb_now & JB_NOW_IMMEDIATE) | JB_NOW_QRSH
 #define JB_NOW_SET_QRLOGIN(jb_now)        jb_now = (jb_now & JB_NOW_IMMEDIATE) | JB_NOW_QRLOGIN
+#define JOB_TYPE_SET_ARRAY(jb_now)        jb_now = jb_now | JOB_TYPE_ARRAY
 
 #define JB_NOW_IS_IMMEDIATE(jb_now)       (jb_now & JB_NOW_IMMEDIATE)
 #define JB_NOW_IS_QSH(jb_now)             (jb_now & JB_NOW_QSH)
 #define JB_NOW_IS_QLOGIN(jb_now)          (jb_now & JB_NOW_QLOGIN)
 #define JB_NOW_IS_QRSH(jb_now)            (jb_now & JB_NOW_QRSH)
 #define JB_NOW_IS_QRLOGIN(jb_now)         (jb_now & JB_NOW_QRLOGIN)
+#define JOB_TYPE_IS_ARRAY(jb_now)          (jb_now & JOB_TYPE_ARRAY)
+
 #endif /* __JB_NOW_H */

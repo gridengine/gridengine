@@ -108,6 +108,8 @@ static int ck_login_sh(char *shell);
 static int get_nhosts(lList *gdil_list);
 static int arch_dep_config(FILE *fp, lList *cplx, char *err_str);
 static int complex2environment(lList *env, lList *cplx, lListElem *job, char *err_str);
+static void add_no_replace_env(lList *envl, const char *name, const char *value);
+static void add_no_replace_env_u32(lList *envl, const char *name, u_long32 value);
 
 /* from execd.c import the working dir of the execd */
 extern char execd_spool_dir[SGE_PATH_MAX];
@@ -274,6 +276,20 @@ static void add_or_replace_env(lList *envl, const char *name, const char *value)
    lSetString(elem, VA_value, value);
 }
 
+static void add_no_replace_env(lList *envl, const char *name, const char *value) 
+{
+   lListElem *elem;
+   
+   if(envl == NULL || name == NULL || value == NULL) {
+      return;
+   }
+
+   if((elem = lGetElemStr(envl, VA_variable, name)) == NULL) {
+      elem = lAddElemStr(&envl, VA_variable, name, VA_Type);
+      lSetString(elem, VA_value, value);
+   }
+}
+
 /****** execd/add_or_replace_env_int() ***************************************
 *
 *  NAME
@@ -355,6 +371,14 @@ static void add_or_replace_env_u32(lList *envl, const char *name, u_long32 value
 
    sprintf(buffer, u32, value);
    add_or_replace_env(envl, name, buffer);
+}
+
+static void add_no_replace_env_u32(lList *envl, const char *name, u_long32 value)
+{
+   char buffer[2048];
+
+   sprintf(buffer, u32, value);
+   add_no_replace_env(envl, name, buffer);
 }
 
 /****** execd/dump_env() ***************************************
@@ -605,6 +629,7 @@ char *err_str
    if (!(cplx = lGetList( lGetElemStr( lGetList(slave_jatep?slave_jatep:jatep, 
          JAT_granted_destin_identifier_list), 
          JG_qname, lGetString(master_q, QU_qname)), JG_complex))) {
+      environmentList = lFreeList(environmentList);
       DEXIT;
       return -2;
    } 
@@ -612,6 +637,7 @@ char *err_str
    pw = sge_getpwnam(lGetString(jep, JB_owner));
    if (!pw) {
       sprintf(err_str, MSG_SYSTEM_GETPWNAMFAILED_S, lGetString(jep, JB_owner));
+      environmentList = lFreeList(environmentList);
       DEXIT;
       return -3;        /* error only relevant for this user */
    }
@@ -632,6 +658,7 @@ char *err_str
       if (SGE_STAT(dir, &statbuf)) {
          if (mkdir(dir, 0755) == -1) {
             sprintf(err_str, MSG_FILE_CREATEDIR_SS, dir, strerror(errno));
+            environmentList = lFreeList(environmentList);
             DEXIT;
             return -2;
          }
@@ -652,16 +679,19 @@ char *err_str
          DPRINTF(("cleaning active job dir\n"));
          if (recursive_rmdir(dir, SGE_EVENT)) {
             sprintf(err_str, MSG_FILE_RMDIR_SS, dir, SGE_EVENT);
+            environmentList = lFreeList(environmentList);
             DEXIT;
             return -2;
          }
          if (mkdir(dir, 0755) == -1) {
             ERROR((SGE_EVENT, MSG_FILE_CREATEDIRDEL_SS, dir, strerror(errno)));
+            environmentList = lFreeList(environmentList);
             DEXIT;
             return -2;
          }
       } else {
          sprintf(err_str, MSG_FILE_CREATEDIR_SS, dir, strerror(errno));
+         environmentList = lFreeList(environmentList);
          DEXIT;
          return -2;        /* general error */
       }
@@ -677,6 +707,7 @@ char *err_str
             lGetUlong(jatep, JAT_task_number), 
           pw->pw_uid, pw->pw_gid, tmpdir))) {
          sprintf(err_str, MSG_SYSTEM_CANTMAKETMPDIR);
+         environmentList = lFreeList(environmentList);
          DEXIT;
          return -2;
       }
@@ -686,6 +717,7 @@ char *err_str
                           lGetUlong(jatep, JAT_task_number), 
                           tmpdir))) {
          sprintf(err_str, MSG_SYSTEM_CANTGETTMPDIR);
+         environmentList = lFreeList(environmentList);
          DEXIT;
          return -2;
       }                    
@@ -705,6 +737,7 @@ char *err_str
       fp = fopen(hostfilename, "w");
       if (!fp) {
          sprintf(err_str, MSG_FILE_NOOPEN_SS,  hostfilename, strerror(errno));
+         environmentList = lFreeList(environmentList);
          DEXIT;
          return -2;
       }
@@ -763,6 +796,7 @@ char *err_str
    fp = fopen(fname, "w");
    if (!fp) {
       sprintf(err_str, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
+      environmentList = lFreeList(environmentList);
       DEXIT;
       return -2;        /* general */
    }
@@ -963,23 +997,50 @@ char *err_str
   
    if (set_sge_environment) { 
       if (is_array(job_jep)) {
-         add_or_replace_env_u32(environmentList, "SGE_TASK_ID", lGetUlong(jatep, JAT_task_number));
+         u_long32 start, end, step;
+
+         job_get_ja_task_ids(jep, &start, &end, &step);
+         add_no_replace_env_u32(environmentList, "SGE_TASK_ID", lGetUlong(jatep, JAT_task_number));
+         add_no_replace_env_u32(environmentList, "SGE_TASK_FIRST", start);
+         add_no_replace_env_u32(environmentList, "SGE_TASK_LAST", end);
+         add_no_replace_env_u32(environmentList, "SGE_TASK_STEPSIZE", step);
       } else {
-         add_or_replace_env(environmentList, "SGE_TASK_ID", "undefined");
+         add_no_replace_env(environmentList, "SGE_TASK_ID", "undefined");
+         add_no_replace_env(environmentList, "SGE_TASK_FIRST", "undefined");
+         add_no_replace_env(environmentList, "SGE_TASK_LAST", "undefined");
+         add_no_replace_env(environmentList, "SGE_TASK_STEPSIZE", "undefined");
       }
    }
    if (set_cod_environment) { 
       if (is_array(job_jep)) {
+         u_long32 start, end, step;
+
+         job_get_ja_task_ids(jep, &start, &end, &step);
          add_or_replace_env_u32(environmentList, "COD_TASK_ID", lGetUlong(jatep, JAT_task_number));
+         add_no_replace_env_u32(environmentList, "COD_TASK_FIRST", start);
+         add_no_replace_env_u32(environmentList, "COD_TASK_LAST", end);
+         add_no_replace_env_u32(environmentList, "COD_TASK_STEPSIZE", step);
       } else {
          add_or_replace_env(environmentList, "COD_TASK_ID", "undefined");
+         add_no_replace_env(environmentList, "COD_TASK_FIRST", "undefined");
+         add_no_replace_env(environmentList, "COD_TASK_LAST", "undefined");
+         add_no_replace_env(environmentList, "COD_TASK_STEPSIZE", "undefined");
       }
    }
    if (set_grd_environment) { 
       if (is_array(job_jep)) {
+         u_long32 start, end, step;
+
+         job_get_ja_task_ids(jep, &start, &end, &step);
          add_or_replace_env_u32(environmentList, "GRD_TASK_ID", lGetUlong(jatep, JAT_task_number));
+         add_no_replace_env_u32(environmentList, "GRD_TASK_FIRST", start);
+         add_no_replace_env_u32(environmentList, "GRD_TASK_LAST", end);
+         add_no_replace_env_u32(environmentList, "GRD_TASK_STEPSIZE", step);
       } else {
          add_or_replace_env(environmentList, "GRD_TASK_ID", "undefined");
+         add_no_replace_env(environmentList, "GRD_TASK_FIRST", "undefined");
+         add_no_replace_env(environmentList, "GRD_TASK_LAST", "undefined");
+         add_no_replace_env(environmentList, "GRD_TASK_STEPSIZE", "undefined");
       }
    }
 
@@ -1098,7 +1159,7 @@ char *err_str
    }
 
    if (complex2environment(environmentList, cplx, job_jep, err_str)) {
-      lFreeList(environmentList);
+      environmentList = lFreeList(environmentList);
       fclose(fp);
       DEXIT;
       return -2;
@@ -1114,7 +1175,7 @@ char *err_str
    sprintf(fname, "%s/config", dir);
    fp = fopen(fname, "w");
    if (!fp) {
-      lFreeList(environmentList);
+      environmentList = lFreeList(environmentList);
       sprintf(err_str, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
       DEXIT;
       return -2;
@@ -1133,7 +1194,7 @@ char *err_str
 #     if defined(LINUX)
 
       if (!sup_groups_in_proc()) {
-         lFreeList(environmentList);
+         environmentList = lFreeList(environmentList);
          sprintf(err_str, MSG_EXECD_NOSGID); 
          fclose(fp);
          DEXIT;
@@ -1148,7 +1209,7 @@ char *err_str
             INF_NOT_ALLOWED))) {
           lFreeList(alp);
           sprintf(err_str, MSG_EXECD_NOPARSEGIDRANGE);
-          lFreeList(environmentList);
+          environmentList = lFreeList(environmentList);
           fclose(fp);
           DEXIT;
           return (-2);
@@ -1161,7 +1222,7 @@ char *err_str
          last_addgrpid = get_next_addgrpid (rlp, last_addgrpid);
          if (temp_id == last_addgrpid) {
             sprintf(err_str, MSG_EXECD_NOADDGID);
-            lFreeList(environmentList);
+            environmentList = lFreeList(environmentList);
             fclose(fp);
             DEXIT;
             return (-1);
@@ -1357,7 +1418,7 @@ char *err_str
          } else {
             sprintf(err_str, MSG_EXECD_NOXTERM); 
             fclose(fp);
-            lFreeList(environmentList);
+            environmentList = lFreeList(environmentList);
             DEXIT;
             return -2;
             /*
@@ -1400,7 +1461,7 @@ char *err_str
       if (!env) {                                  /* no DISPLAY set   */
          if(JB_NOW_IS_QSH(jb_now)) {               /* and qsh -> error */
             sprintf(err_str, MSG_EXECD_NODISPLAY);
-            lFreeList(environmentList);
+            environmentList = lFreeList(environmentList);
             fclose(fp);
             DEXIT;
             return -1;
@@ -1409,7 +1470,7 @@ char *err_str
          if (!lGetString(env, VA_value) || !strcmp(lGetString(env, VA_value), "")) {  /* no value for DISPLAY */
             if(JB_NOW_IS_QSH(jb_now)) {                                               /* and qsh -> error     */
                sprintf(err_str, MSG_EXECD_EMPTYDISPLAY);
-               lFreeList(environmentList);
+               environmentList = lFreeList(environmentList);
                fclose(fp);
                DEXIT;
                return -1;
@@ -1422,7 +1483,7 @@ char *err_str
 
    
    if (arch_dep_config(fp, cplx, err_str)) {
-      lFreeList(environmentList);
+      environmentList = lFreeList(environmentList);
       fclose(fp);
       DEXIT;
       return -2;
@@ -1526,7 +1587,7 @@ char *err_str
    /* shall shepherd write osjob_id, or is it done by (our) rshd */
    fprintf(fp, "write_osjob_id=%d", write_osjob_id);
 
-   lFreeList(environmentList);
+   environmentList = lFreeList(environmentList);
    fclose(fp);
    /********************** finished writing config ************************/
 

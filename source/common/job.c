@@ -39,6 +39,7 @@
 #include "sge_prognames.h"
 #include "sge_me.h"
 #include "sge_rangeL.h"
+#include "jb_now.h"
 
 extern lList *Master_Job_List;
 
@@ -49,10 +50,9 @@ extern lList *Master_Job_List;
  */
 int is_array(const lListElem *job) 
 {
-   u_long32 start, end, step;
-   
-   job_get_ja_task_ids(job, &start, &end, &step);
-   return (start != 1 || end != 1 || step != 1) ? JTYPE_JOB_ARRAY : JTYPE_JOB;
+   u_long32 job_type = lGetUlong(job, JB_now);
+
+   return JOB_TYPE_IS_ARRAY(job_type) ? JTYPE_JOB_ARRAY : JTYPE_JOB;
 }
 
 int job_get_number_of_ja_tasks(lListElem *job)

@@ -5946,7 +5946,7 @@ proc compile_source { { do_only_install 0 } } {
 
    foreach help_host $CHECK_SOURCE_COMPILE_HOSTS {
       if { [ string compare [resolve_arch $help_host] "solaris64"] == 0 || 
-           [ strint compare [resolve_arch $help_host] "sol-sparc64"] == 0 } {
+           [ string compare [resolve_arch $help_host] "sol-sparc64"] == 0 } {
          puts $CHECK_OUTPUT "using host $help_host to create dependencies"
          set depend_host_name $help_host
       }

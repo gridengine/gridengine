@@ -1,3 +1,8 @@
+MD-2004-02-02-0: Bugfix:    - DB installation 
+                            - Test for local fs, new archs 
+                            - Text
+                 Changed:   - sge_config
+
 CR-2004-02-02-0: Bugfix:    Fixed problem "can't get communication handle" when
                             application calls check_isalive() before a communication
                             handle is created. Now all communication handle are

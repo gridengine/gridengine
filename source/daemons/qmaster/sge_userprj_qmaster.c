@@ -169,6 +169,7 @@ int sub_command
                goto Error;
             }
          }
+
          lSetString(modp, UP_default_project, dproj);
          make_auto_user_permanent = 1;
       }

@@ -279,18 +279,19 @@ SetSpoolingOptions()
             ret=`ps -efa | grep "berkeley_db_svc" | wc -l` 
             if [ $ret -gt 1 ]; then
                $INFOTEXT "We found a running berkeley db on this host!"
-               exit 1
-              # $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
+               $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" "Do you want to use an other host for spooling? (y/n) [n] >>"
                if [ $? = 1 ]; then
+                  $INFOTEXT "Please enter the path to your Berkeley DB startup script! >>"
+                  $INFOTEXT "For local spooling without Server, type >none< else enter the servername!"
+                  TMP_STARTUP_SCRIPT=`Enter`
                   SpoolingQueryChange
-                  echo $SPOOLING_DIR >> $SPOOLING_DIR/bdbhomes
+                  EditStartupScript
                else
                   exit 1
                fi 
             else
                while [ $params_ok -eq 0 ]; do
                   SpoolingQueryChange
-                  #echo $SPOOLING_DIR >> $SPOOLING_DIR/bdbhomes
                   SpoolingCheckParams
                   params_ok=$?
                done

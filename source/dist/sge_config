@@ -355,12 +355,14 @@ fi
 if [ $BERKELEY = "install" ]; then
  
    BasicSettings
+   CheckWhoInstallsSGE
    ProcessSGERoot
    GetCell
    COMMONDIR=$SGE_CELL/common
    Makedir $SGE_CELL
    Makedir $COMMONDIR 
    SetSpoolingOptions
+   InstallServerScript $euid
 
 fi
 

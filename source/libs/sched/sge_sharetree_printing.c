@@ -433,8 +433,8 @@ print_hdr(dstring *out, const format_t *format)
 *     sge_sharetree_printing/print_hdr()
 *******************************************************************************/
 void
-sge_sharetree_print(dstring *out, lList *sharetree, lList *users, 
-                    lList *projects, bool group_nodes, bool decay_usage, 
+sge_sharetree_print(dstring *out, lList *sharetree, const lList *users, 
+                    const lList *projects, bool group_nodes, bool decay_usage, 
                     const char **names, const format_t *format)
 {
 

@@ -69,7 +69,7 @@ static lListElem *search_ancestors(lListElem *ep, char *name,
 
 static void
 decay_usage( lList *usage_list,
-             lList *decay_list,
+             const lList *decay_list,
              u_long curr_time,
              u_long usage_time_stamp )
 {
@@ -117,7 +117,7 @@ decay_usage( lList *usage_list,
 
 void
 decay_userprj_usage( lListElem *userprj,
-                     lList *decay_list,
+                     const lList *decay_list,
                      u_long seqno,
                      u_long curr_time )
 {
@@ -294,9 +294,9 @@ sge_init_node_fields( lListElem *root )
 
 double
 sge_calc_node_usage( lListElem *node,
-                     lList *user_list,
-                     lList *project_list,
-                     lList *decay_list,
+                     const lList *user_list,
+                     const lList *project_list,
+                     const lList *decay_list,
                      u_long curr_time,
                      const char *projname,
                      u_long seqno )
@@ -594,9 +594,9 @@ sge_calc_node_proportion( lListElem *node,
 
 void
 _sge_calc_share_tree_proportions( lList *share_tree,
-                                  lList *user_list,
-                                  lList *project_list,
-                                  lList *decay_list,
+                                  const lList *user_list,
+                                  const lList *project_list,
+                                  const lList *decay_list,
                                   u_long curr_time )
 {
    lListElem *root;
@@ -628,9 +628,9 @@ _sge_calc_share_tree_proportions( lList *share_tree,
 
 void
 sge_calc_share_tree_proportions( lList *share_tree,
-                                 lList *user_list,
-                                 lList *project_list,
-                                 lList *decay_list )
+                                 const lList *user_list,
+                                 const lList *project_list,
+                                 const lList *decay_list )
 {
    _sge_calc_share_tree_proportions(share_tree, user_list, project_list,
                                     decay_list, sge_get_gmt());

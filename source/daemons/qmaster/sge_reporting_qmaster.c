@@ -604,19 +604,10 @@ reporting_create_sharelog_record(lList **answer_list)
       format.line_prefix  = sge_dstring_get_string(&prefix_dstring);
 
       /* dump the sharetree data */
-      /* JG: TODO: where do we need write locks? 
-       * probably not on user, project and schedd_config list.
-       * cleanup would require to change a number of prototypes in schedlib.
-       * Stephan?
-       */
       SGE_LOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
-      SGE_LOCK(LOCK_MASTER_USER_LST, LOCK_WRITE);
-      SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_WRITE);
+      SGE_LOCK(LOCK_MASTER_USER_LST, LOCK_READ);
+      SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
 
-      /* JG: TODO: Where is calculation of the data done?
-       *           Do we really do it here, or is it delivered from scheduler?
-       *           Stephan?
-       */
       sge_sharetree_print(&data_dstring, Master_Sharetree_List, 
                           Master_User_List,
                           Master_Project_List,
@@ -624,8 +615,8 @@ reporting_create_sharelog_record(lList **answer_list)
                           false,
                           NULL,
                           &format);
-      SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_WRITE);
-      SGE_UNLOCK(LOCK_MASTER_USER_LST, LOCK_WRITE);
+      SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
+      SGE_UNLOCK(LOCK_MASTER_USER_LST, LOCK_READ);
       SGE_UNLOCK(LOCK_MASTER_SHARETREE_LST, LOCK_WRITE);
 
       /* write data to reporting buffer */

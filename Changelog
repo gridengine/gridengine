@@ -1,3 +1,5 @@
+SG-2003-12-04-2: Enhancem.: changed some function paramters to be const.
+
 SG-2003-12-04-1: Bugfix:    The enhancement AH-2003-11-11-0 redirected all scheduler
                             config changes to the qmaster messages file. This is
                             changed. Qconf will display the error messages again.

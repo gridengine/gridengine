@@ -277,7 +277,6 @@ int commdport
 
          int  sender_ok = 0;
          host *master_host = NULL;
-         host *sender_host = NULL;
          char master_name[MAXHOSTLEN+1] = "";
          uid_t real_user_id;
          uid_t effective_user_id;
@@ -329,11 +328,11 @@ int commdport
                  master_host = newhost_name( master_name ,&i);
                  if (i == 0) {
                     
-                    DEBUG((SGE_EVENT, "added new host!", master_name ));  
+                    DEBUG((SGE_EVENT, "added new host!"));  
                     trace(SGE_EVENT);
 
                  } else {
-                    DEBUG((SGE_EVENT, "host allready known!", master_name ));  
+                    DEBUG((SGE_EVENT, "host allready known!" ));  
                     trace(SGE_EVENT);
                  }
             }

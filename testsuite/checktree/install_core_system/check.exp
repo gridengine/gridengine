@@ -2627,11 +2627,7 @@ proc setup_schedconf {} {
   if { [string first "global" $result] >= 0 } {
      puts $CHECK_OUTPUT "complex list global already exists"
   } else {
-     set INVALID_OPTION [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro MSG_ANSWER_INVALIDOPTIONARGX_S] "-scl"]
-     set INVALID_OPTION [string trim $INVALID_OPTION]
-     if { [string match "*$INVALID_OPTION*" $result] == 1 } {
-        puts $CHECK_OUTPUT "this version of qconf doesn't support -scl switch!"
-     } else {
+     if { [get_complex_version] == 0 } {
         puts $CHECK_OUTPUT "creating global complex list"
         set host_complex(complex1) "c1 DOUBLE 55.55 <= yes yes 0"
         set_complex host_complex global 1

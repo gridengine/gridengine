@@ -180,6 +180,8 @@ proc assign_queues_with_ckpt_object { queue_list ckpt_obj } {
 #  RESULT
 #     0 - qconf supporting queue_list in pe and ckpt
 #     1 - queue has pe_list and ckpt_list reference pointer 
+#  SEE ALSO
+#     sge_procedures/get_complex_version()
 #
 #*******************************************************************************
 proc get_pe_ckpt_version {} {
@@ -208,6 +210,45 @@ proc get_pe_ckpt_version {} {
    puts $CHECK_OUTPUT $result
    return $version
 }
+
+#****** sge_procedures/get_complex_version() ***********************************
+#  NAME
+#     get_complex_version() -- get information about used qconf version
+#
+#  SYNOPSIS
+#     get_complex_version { } 
+#
+#  FUNCTION
+#     This procedure returns 0 for qconf supporting complex_list in queue
+#     objects, otherwise 1.
+#
+#  INPUTS
+#
+#  RESULT
+#     0 - qconf supporting complex_list in queue
+#     1 - qconf is not supporting complex_list in queue 
+#
+#  SEE ALSO
+#     sge_procedures/get_pe_ckpt_version()
+#*******************************************************************************
+proc get_complex_version {} {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT CHECK_CORE_MASTER
+   set version 0
+
+   puts $CHECK_OUTPUT "checking complex version ..."
+   catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-scl" } result
+   set INVALID_OPTION [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro MSG_ANSWER_INVALIDOPTIONARGX_S] "-scl"]
+   set INVALID_OPTION [string trim $INVALID_OPTION]
+   
+   if { [string match "*$INVALID_OPTION*" $result] == 1 } {
+      set version 1
+      puts $CHECK_OUTPUT "new complex version"
+   } else {
+      puts $CHECK_OUTPUT "old complex version"
+   }
+   return $version
+}
+
 
 #                                                             max. column:     |
 #
@@ -2215,7 +2256,9 @@ proc add_queue { change_array {fast_add 0} } {
      set default_array(user_lists)           "NONE"
      set default_array(xuser_lists)          "NONE"
      set default_array(subordinate_list)     "NONE"
-     set default_array(complex_list)         "NONE"
+     if { [get_complex_version] == 0 } {
+        set default_array(complex_list)         "NONE"
+     }
      set default_array(complex_values)       "NONE"
      set default_array(calendar)             "NONE"
      set default_array(initial_state)        "default"
@@ -4690,6 +4733,9 @@ proc wait_for_unknown_load { seconds queue_array { do_error_check 1 } } {
             if { [info exists load_values($queue)] == 1 } {
                if { $load_values($queue) < 99 } {
                    incr failed 1
+                   if { [string compare $load_values($queue) "-NA-"] == 0 } {
+                      incr failed -1
+                   }
                } 
             }
          }

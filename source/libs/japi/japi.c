@@ -1958,8 +1958,10 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
             for_each (aep, alp) {
                if (lGetUlong(aep, AN_status) != STATUS_OK) {
+                  int ret;
+
                   japi_dec_threads(SGE_FUNC);
-                  int ret = japi_gdi_control_error2japi_error(aep, diag, drmaa_action);
+                  ret = japi_gdi_control_error2japi_error(aep, diag, drmaa_action);
                   alp = lFreeList(alp);
                   DEXIT;
                   return ret;
@@ -2048,8 +2050,10 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
 
             for_each (aep, alp) {
                if (lGetUlong(aep, AN_status) != STATUS_OK) {
+                  int ret;
+
                   japi_dec_threads(SGE_FUNC);
-                  int ret = japi_gdi_control_error2japi_error(aep, diag, drmaa_action);
+                  ret = japi_gdi_control_error2japi_error(aep, diag, drmaa_action);
                   lFreeList(alp);
                   DEXIT;
                   return ret;

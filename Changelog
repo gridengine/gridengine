@@ -1,3 +1,5 @@
+JG-2005-03-08-0: Bugfix:    Fixed broken build.
+
 DT-2005-03-04-0: Bugfix:    o Cleaned up JAPI locking
                             o Cleaned up JAPI session handling
                             o Cleaned up DRMAA-J JNI code
@@ -16,12 +18,12 @@ SG-2005-03-04-0: Enhancem.: - added async-gdi handling
                  Review:    JG (async-gdi)
                             DT (cleanup, job-classes)
 
-RD-2005-03-04-0: Enhancm.: BDB install on NFSv4 share
-                           fstype now reports nfs4 on solaris
-                           installation recognize nfs4 as valid
-                 Issue:    1448
-                 Bugtraq:  6236261
-                 Review:   AA
+RD-2005-03-04-0: Enhancm.:  BDB install on NFSv4 share
+                            fstype now reports nfs4 on solaris
+                            installation recognize nfs4 as valid
+                 Issue:     1448
+                 Bugtraq:   6236261
+                 Review:    AA
 
 MD-2005-03-04-0: Bugfix:    - Port free/used check returns a wrong result in 
                               some cases (1385)

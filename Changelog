@@ -1,6 +1,7 @@
 AH-2003-11-27-1: Bugfix:    Fix schedd crash in case PE/CKTP are used.
                             Disabled shepherd signal handler logging 
                             to fix shepherd deadlock.
+                 Review:    AD
 
 AH-2003-11-27-0: Doc:       Document qstat -ext cpu/mem units.
 

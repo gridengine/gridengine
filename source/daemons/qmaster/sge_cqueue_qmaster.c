@@ -199,7 +199,7 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 
       index = 0;
       while (array[index].attribute_name != NoName && ret) {
-         pos = lGetPosViaElem(reduced_elem, array[index]);
+         pos = lGetPosViaElem(reduced_elem, array[index].attribute_name);
 
          if (pos >= 0) {
             ret &= cqueue_mod_sublist(cqueue, answer_list, reduced_elem, 

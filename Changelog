@@ -1,3 +1,6 @@
+EB-2005-01-10-0: Enhancem.: Changed distinst for Interix installation
+                 Review:    HP
+
 CR-2005-01-07-0: Bugfix:    - master task will close connection to
                               execd after job delivery
                  Changed:   qsh, gdilib

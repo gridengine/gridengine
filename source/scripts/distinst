@@ -42,7 +42,7 @@ HASARCHDIR="bin lib examples/jobsbin utilbin"
 
 DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
              sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel \
-             qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping"
+             qacct qmod qsh utilbin jobs qmon qhost qmake qtcsh qping qloadsensor"
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
@@ -1104,6 +1104,12 @@ for i in $ARCH; do
                   fi
                fi
                ;;
+            qloadsensor)
+               if [ "$DSTARCH" = "win32-x86" ]; then
+                  # In the moment qloadsensor is only needed for win32-x86 architecture
+                  InstallProg $prog
+               fi
+               ;;
             *)
                InstallProg $prog
                if [ $prog = qstat ]; then
@@ -1151,10 +1157,7 @@ for i in $ARCH; do
             elif [ $prog = testsuidroot ]; then
                InstallProgSUID $prog
             elif [ $prog = berkeley_db_svc -o $prog = db_dump -o $prog = db_load -o $prog = db_archive -o $prog = db_checkpoint ]; then
-#TODO: HP: InstallProg for Berkeley-DB for Windows            
-               if [ "$DSTARCH" = "win32-x86" ]; then
-                  echo win32-x86
-               else
+               if [ "$DSTARCH" != "win32-x86" ]; then
                   InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
                fi
             elif [ $prog = spoolinit -o $prog = spooldefaults ]; then

@@ -1,3 +1,9 @@
+SG-2004-09-08-0: Cleanup:   - fixed a bug added by SG-2004-09-08-0
+                            - got the test_sge_qmaster_timed_event working
+                            - cleaned qmaster_main
+                 Changed:   qmaster
+                 Review:    AA 
+
 SG-2004-09-08-0: Cleanup:   - improved the locking in the event master
                             - filters now for subscribed events
                  Changed:   qmaster

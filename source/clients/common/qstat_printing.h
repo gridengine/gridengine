@@ -106,4 +106,7 @@ const char*
 sge_get_dominant_stringval(lListElem *rep, u_long32 *dominant_p, 
                            dstring *resource_string_p);
 
+void
+qstat_display_bitmask_to_str(u_long32 bitmask, dstring *string);
+
 #endif /* __QSTAT_PRINTING_H */

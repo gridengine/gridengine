@@ -1,3 +1,13 @@
+AH-2004-07-13-1: Bugfix:    Deleted pending job appears in qstat
+                            Problem was that finished jobs generally were
+                            displayed by qstat. Removed broken code that was
+                            supposed to mask out running/finished jobs at qmaster
+                            side. Added code in qmaster to improve diagnostics
+                            in cases such as new found bug #1154.
+                 Issue:     1117
+                 Bugtraq:   5072481
+                 Review:    JG
+
 MD-2004-07-13-0: Bugfix:    inst_sge -sm doesn't create a local_conf
                  Issue:     1135
                  Bugtraq:   5071999
@@ -9,8 +19,8 @@ AA-2004-07-13-0: Bugfix:    removed stat_log_time from qmon
                  Review:    CR
                  Changed:   qmon
 
-AH-2004-07-13-2: Bugfix:    Revert change AH-2004-07-09-0. Bug #1113 is not fixed.
-                 Issue:     1113
+AH-2004-07-13-2: Bugfix:    Revert change AH-2004-07-09-0. Bug #1117 is not fixed.
+                 Issue:     1117
                  Bugtraq:   5072481
                  Review:    CR
 
@@ -55,7 +65,7 @@ SG-2004-07-12-0: Bugfix:    - qstat -j -xml printed unparsable xml-output
 
 AH-2004-07-09-0: Bugfix:    Deleted pending job appears in qstat
                  Changed:   qstat, qhost
-                 Issue:     1113
+                 Issue:     1117
                  Bugtraq:   5072481
                  Review:    CR
 

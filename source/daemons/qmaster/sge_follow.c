@@ -167,7 +167,7 @@ lList **topp  /* ticket orders ptr ptr */
       }
       task_number=lGetUlong(ep, OR_ja_task_number);
       if (!task_number) {
-         ERROR((SGE_EVENT, MSG_JOB_NOTASKID));
+         ERROR((SGE_EVENT, MSG_JOB_NOORDERTASK_US, job_number, "ORT_start_job"));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;
@@ -529,7 +529,7 @@ lList **topp  /* ticket orders ptr ptr */
          }
          task_number=lGetUlong(ep, OR_ja_task_number);
          if (!task_number) {
-            ERROR((SGE_EVENT, MSG_JOB_NOTASKID));
+            ERROR((SGE_EVENT, MSG_JOB_NOORDERTASK_US, job_number, "ORT_ptickets"));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -2;
@@ -656,7 +656,7 @@ lList **topp  /* ticket orders ptr ptr */
          }
          task_number=lGetUlong(ep, OR_ja_task_number);
          if (!task_number) {
-            ERROR((SGE_EVENT, MSG_JOB_NOTASKID));
+            ERROR((SGE_EVENT, MSG_JOB_NOORDERTASK_US, job_number, "ORT_tickets"));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -2;
@@ -823,7 +823,8 @@ lList **topp  /* ticket orders ptr ptr */
       }
       task_number=lGetUlong(ep, OR_ja_task_number);
       if (!task_number) {
-         ERROR((SGE_EVENT, MSG_JOB_NOTASKID));
+         ERROR((SGE_EVENT, MSG_JOB_NOORDERTASK_US, job_number,
+             (or_type==ORT_remove_immediate_job)?"ORT_remove_immediate_job":"ORT_remove_job"));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;

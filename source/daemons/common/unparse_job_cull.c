@@ -180,7 +180,7 @@ int flags
    ** -hold_jid
    */
    if ((lp = lGetList(job, JB_jid_predecessor_list))) {
-      int fields[] = { JRE_job_number, 0 };
+      int fields[] = { JRE_job_name, 0 };
       const char *delis[] = {NULL, ",", NULL};
 
       ret = uni_print_list(NULL, str, sizeof(str) - 1, lp, fields, delis, 0);

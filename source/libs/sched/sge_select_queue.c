@@ -288,7 +288,7 @@ static int sge_select_resource(lList *queue_attributes, lList *host_attributes, 
                }
             } 
          } 
-      }// end for
+      }/* end for*/
 
       if(host_attributes)
       for_each (attr, host_attributes) {
@@ -330,7 +330,7 @@ static int sge_select_resource(lList *queue_attributes, lList *host_attributes, 
                }
             } 
          } 
-      }// end for
+      }/* end for */
 
 
 

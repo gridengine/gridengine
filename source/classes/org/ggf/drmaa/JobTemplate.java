@@ -891,7 +891,7 @@ public abstract class JobTemplate {
       return Collections.EMPTY_LIST;
    }
    
-   /** Deallocate a job template. This routine has no effect on jobs.
+   /** Deallocate a job template. This routine has no effect on running jobs.
     * @throws DRMAAException May be one of the following:
     * <UL>
     * <LI>DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE</LI>

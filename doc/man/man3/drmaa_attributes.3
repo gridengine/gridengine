@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/07/21 16:36:56 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: drmaa_attributes.3,v $     Last Update: $Date: 2004/07/27 22:16:03 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_attributes 3 "$Date: 2004/07/21 16:36:56 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_attributes 3 "$Date: 2004/07/27 22:16:03 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -374,6 +374,9 @@ as well as by explict DRMAA job template settings.
 In order to avoid collisions with command names in the qtask files, it is
 recommended that DRMAA job categories names take the form: <category_name>.cat.
 .PP
+The options -help, -t, -verify, and -w w|v are ignored.  The -cwd option is
+ignored unless the $SGE_DRMAA_ALLOW_CWD environment variable is set.
+.PP
 .\" 
 .\" 
 .SS "drmaa_native_specification - ""<native_specification>"""
@@ -446,7 +449,8 @@ See drmaa_input_path, drmaa_output_path and drmaa_error_path for information abo
 how to specify the standard input file, standard output file and standard error file.
 The file transfer mechanism itself must be configured by the administrator (see 
 .M sge_conf 5
-). When it is configured, the administrator has to enable drmaa_transfer_files. If it is not configured, "drmaa_transfer_files" is not enabled and can't be used.
+). When it is configured, the administrator has to enable drmaa_transfer_files.
+If it is not configured, "drmaa_transfer_files" is not enabled and can't be used.
 .PP
 .\"
 .\" these are optional

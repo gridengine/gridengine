@@ -44,8 +44,8 @@ public class SGESessionFactory extends DRMAASessionFactory {
    public SGESessionFactory () {
    }
    
-	/** Gets a DRMAASession object appropriate for the DRM in use.
-	 * @return a DRMAASession object appropriate for the DRM in use
+	/** Gets an SGESession object.
+	 * @return an SGESession object
 	 */	
 	public DRMAASession getSession () {
 		if (thisSession == null) {

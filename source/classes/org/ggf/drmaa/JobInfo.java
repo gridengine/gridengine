@@ -98,10 +98,9 @@ public abstract class JobInfo implements java.io.Serializable {
 	 */	
 	public abstract boolean hasSignaled ();
 	
-	/** If hasSignaled() returns true, this function evaluates into signal
-	 * a string representation of the signal that caused the termination
-	 * of the job. For signals declared by POSIX, the symbolic
-	 * names SHALL be returned (e.g., SIGABRT, SIGALRM).<BR>
+	/** If hasSignaled() returns true, this returns a representation of the
+    * signal that caused the termination of the job. For signals declared by
+    * POSIX, the symbolic names SHALL be returned (e.g., SIGABRT, SIGALRM).<BR>
 	 * For signals not declared by POSIX, any other string may be returned.
 	 * @return the name of the terminating signal
 	 */	

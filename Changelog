@@ -1,3 +1,12 @@
+DT-2004-07-27-0: Enhancem.: o Finished enhancing DRMAA Java language binding
+                              docs
+                            o Checked in JavaDocs for DRMAA Java lang. binding
+                 Bugfix:    o Corrected error in DRMAA README
+                            o runBulkJobs now returns all ids
+                            o Minor edits to DRMAA man pages
+                 Changed:   DRMAA, docs
+                 Issue:     1165
+
 JG-2004-07-27-0: Bugfix:    Fixes in reporting file:
                             - pe_task_id for non pe jobs were inconsistend (in 
                               some cases "none", in others "NONE").

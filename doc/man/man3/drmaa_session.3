@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2004/04/19 10:52:06 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2004/07/27 22:16:04 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_session 3 "$Date: 2004/04/19 10:52:06 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_session 3 "$Date: 2004/07/27 22:16:04 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -84,12 +84,6 @@ If the drmaa_exit() function
 is not called, the qmaster will store events for the DRMAA client until the
 connection times out, causing extra work for the qmaster and comsuming system
 resources.
-.PP
-If a second thread calls the drmaa_exit() function while another thread is in
-the drmaa_exit() function, the second thread will block until the first thread
-finishes.  When the first thread finishes with drmaa_exit(), the second thread
-will enter the function, discover that the session has already been closed, and
-exit.
 .PP
 Submitted jobs are not affected by the drmaa_exit() function.
 .PP

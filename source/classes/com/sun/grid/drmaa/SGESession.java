@@ -162,12 +162,18 @@ public class SGESession extends DRMAASession {
 	//      System.out.println("Call to drmaa_control");
 	//   }
 	
-   /** Disengage from DRMAA library and allow the DRMAA library to perform
-	 * any necessary internal cleanup.
-	 * This routine SHALL end the current DRMAA session but SHALL NOT affect any
-    * jobs (e.g., queued and running jobs SHALL remain queued and running).
-    * exit() SHOULD be called by only one of the threads.  Other thread calls to
-    * exit() MAY fail since there is no active session.
+   /** <p>The exit() method closes the DRMAA session for all threads and must be
+    * called before process termination.  The exit() method may be called only
+    * once by a single thread in the process and may only be called after the
+    * init() function has completed.  Any call to exit() before init() returns
+    * or after exit() has already been called will result in a
+    * NoActiverSessionException.</p>
+    * <p>The exit() method does neccessary clean up of the DRMAA session state,
+    * including unregistering from the qmaster.  If the exit() method is not
+    * called, the qmaster will store events for the DRMAA client until the
+    * connection times out, causing extra work for the qmaster and comsuming
+    * system resources.</p>
+    * <p>Submitted jobs are not affected by the exit() method.</p>
 	 * @throws DRMAAException May be one of the following:
 	 * <UL>
 	 * <LI>DRMSExitException</LI>
@@ -203,10 +209,9 @@ public class SGESession extends DRMAASession {
 	//      return "CONTACT";
 	//   }
 	
-   /** If called before init(), it SHALL return a comma delimited DRM system
-    * Strings, one per DRM system implementation provided. If called after
-    * init(), it SHALL return the selected DRM system. The returned String is
-    * implementation dependent.
+   /** The getDRMSystem() method returns a string containing the DRM product and 
+    * version information.  The getDRMSystem() function returns the same value
+    * before and after init() is called.
 	 * @return DRM system implementation information
 	 */	
 	public String getDRMSystem () {
@@ -234,9 +239,8 @@ public class SGESession extends DRMAASession {
 	 * <LI>DONE: job finished normally</LI>
 	 * <LI>FAILED: job finished, but failed.</LI>
 	 * </UL>
-	 * <p>DRMAA SHOULD always get the status of jobId from DRM system, unless the
-    * previous status has been FAILED or DONE and the status has been
-    * successfully cached. Terminated jobs get FAILED status.</p>
+	 * <p>DRMAA always gets the status of jobId from DRM system.  No caching of
+    * job state is done.</p>
     * <p>Jobs' user hold and user suspend states can be controled via control().
     * For affecting system hold and system suspend states the appropriate DRM
     * interfaces must be used.</p>
@@ -273,30 +277,33 @@ public class SGESession extends DRMAASession {
 		return new SGEJobTemplate (this, id);
 	}
 	
-	/** SHALL Return the major and minor version numbers of the DRMAA library;
-	 * for DRMAA 1.0, 'major' is 1 and 'minor' is 0.
+	/** The getVersion() method returns a DRMAASession.Version object containing
+    * the major and minor version numbers of the DRMAA library. For a DRMAA 1.0
+    * compliant implementation (e.g. this binding) `1' and `0' will be the major
+    * and minor numbers, respectively.
 	 * @return the version number as a Version object
 	 */	
 	public DRMAASession.Version getVersion () {
 		return new DRMAASession.Version (1, 0);
 	}
 	
-   /** Initialize DRMAA API library and create a new DRMAA session.
-	 * 'Contact' is an implementation-dependent string that may be used to specify
-	 * which DRM system to use.  This routine must be called before any
-	 * other DRMAA calls, except for getVersion(), getDRMSystem(),
-    * getDRMAAImplementation(), or getContact().<BR>
-	 * If 'contact' is <CODE>null</CODE>, the default DRM system SHALL be used
-    * provided there is only one DRMAA implementation in the provided binary
-    * module.  When there is more than one DRMAA implementation in the provided
-    * binary module, init() SHALL throw a
-    * NoDefaultContactStringSelectedException.
-	 * init() SHOULD be called by only one of the threads. The main thread is
-    * RECOMMENDED.  A call by another thread SHALL throw a
-    * SessionAlreadyActiveException.
+   /** <p>The init() method initializes the Grid Engine DRMAA API library for
+    * all threads of the process and creates a new DRMAA Session. This routine
+    * must be called once before any other DRMAA call, except for getVersion(),
+    * getDRMSystem(), getContact(), and getDRMAAImplementation().</p>
+    * <p><i>contact</i> is an implementation dependent string which may be used
+    * to specify which Grid Engine cell to use. If <i>contact</i> is null or
+    * empty, the default Grid Engine cell will be used.  In the current
+    * implementation setting <i>contact</i> has no effect.</p>
+    * <p>Except for the above listed methods, no DRMAA methods may be called
+    * before the init() function <b>completes</b>.  Any DRMAA method which is
+    * called before the init() method completes will throw a
+    * NoActiveSessionException.  Any additional call to init() by any thread
+    * will throw a SessionAlreadyActiveException.
 	 * @param contact implementation-dependent string that may be used to specify
 	 * which DRM system to use.  If null, will select the default DRM if there
-    * is only one DRM implementation available.
+    * is only one DRM implementation available.  Ignored in the current
+    * implementation.
 	 * @throws DRMAAException Maybe be one of the following:
 	 * <UL>
 	 * <LI>InvalidContactStringException</LI>
@@ -314,19 +321,13 @@ public class SGESession extends DRMAASession {
 	//      System.out.println("Call to drmaa_init");
 	//   }
 	
-   /** Submit a set of parametric jobs, dependent on the implied loop index,
-	 * each with attributes defined in the job template 'jt'.
-	 * The returned job identifiers SHALL be Strings identical to those returned
-	 * by the underlying DRM system.  Nonnegative loop bounds SHALL NOT use
-	 * file names that start with a minus sign, like command line options.<BR>
-	 * The special index placeholder is a DRMAA defined string:<BR>
-	 * <CODE>
-	 * drmaa_incr_ph // == $incr_pl$
-	 * </CODE><BR>
-	 * this is used to construct parametric job templates.  For example:<BR>
-	 * <CODE>
-	 * drmaa_set_attribute (pjt, "stderr", drmaa_incr_ph + ".err" );<BR>
-	 * </CODE>
+   /** The runBulkJobs() method submits a Grid Engine array job very much as if
+    * the qsub option `-t <i>start</i>-<i>end</i>:<i>incr</i>' had been used
+    * with the corresponding attributes defined in the DRMAA JobTemplate
+    * <i>jt</i>.  The same constraints regarding qsub -t value ranges are also
+    * for the parameters <i>start</i>, <i>end</i>, and <i>incr</i>. On success a
+    * String array containing job identifiers for each array job task is
+    * returned.<BR>
 	 * @return job identifier Strings identical to that returned by the
 	 * underlying DRM system
 	 * @param start the starting value for the loop index
@@ -353,9 +354,9 @@ public class SGESession extends DRMAASession {
 	//      return new String[] {"123.1", "123.2"};
 	//   }
 	
-   /** Submit a job with attributes defined in the job template 'jt'.
-	 * The returned job identifier SHALL be a String, identical to that returned
-	 * by the underlying DRM system.
+   /** The runJob() method submits a Grid Engine job with attributes defined in
+    * the DRMAA JobTemplate <i>jt</i>. On success, the job identifier is
+    * returned.
 	 * @param jt the job template to be used to create the job
 	 * @throws DRMAAException May be one of the following:
 	 * <UL>
@@ -377,29 +378,23 @@ public class SGESession extends DRMAASession {
 	//      return "321";
 	//   }
 	
-	/** Wait until all jobs specified by 'job_ids' have finished execution.
-	 * If 'jobIds' is JOB_IDS_SESSION_ALL, then this routine waits for all
-	 * jobs <B>submitted</B> during this DRMAA session up to the moment
-    * synchronize() is called.  To avoid thread races in multithreaded
-    * applications, the DRMAA implementation user should explicitly synchronize
-    * this call with any other job submission calls or control calls that may
-    * change the number of remote jobs.<BR>
-    * To prevent blocking indefinitely in this call, the caller MAY use timeout
-	 * specifying after how many seconds to time out in this call.  The value
-    * TIMEOUT_WAIT_FOREVER MAY be specified to wait indefinitely for a result.
-    * The value TIMEOUT_NO_WAIT MAY be specified to return immediately if no
-    * result is available. If the call exits before timeout, all the jobs have
-    * been waited on or there was an interrupt.<BR>
-	 * If the invocation exits on timeout, an ExitTimeException SHALL be thrown.
-    * The caller SHOULD check system time before and after this call in order to
-    * check how much time has passed.<BR>
-	 * Dispose parameter specifies how to treat reaping the remote job
-    * consumption of system resources and other statistical information:
-	 * <DL>
-	 * <DT><CODE>true</CODE></DT><DD>"fake reap", i.e. dispose of the
-	 * resource usage data</DD>
-	 * <DT><CODE>false</CODE></DT><DD>do not reap</DD>
-	 * </DL>
+	/** <p>The synchronize() method blocks the calling thread until all jobs
+    * specified in <i>jobIds</i> have failed or finished execution. If
+    * <i>jobIds</i> contains JOB_IDS_SESSION_ALL, then this method waits for
+    * all jobs submitted during this DRMAA session.</p>
+    * To prevent blocking indefinitely in this call, the caller may use
+    * <i>timeout</i>, specifying how many seconds to wait for this call to
+    * complete before timing out. The special value TIMEOUT_WAIT_FOREVER can be
+    * used to wait indefinitely for a result. The special value
+    * DRMAA_TIMEOUT_NO_WAIT can be used to return immediately.  If the call
+    * exits before <i>timeout</i>, all the specified jobs have completed or
+    * the calling thread received an interrupt.  In both cases, the method will
+    * throw an ExitTimeoutException.</p>
+    * <p>The <i>dispose</i> parameter specifies how to treat reaping
+    * information.  If <i>false</i> is passed to this paramter, job finish
+    * information will still be available when wait() is called. If <i>true</i>
+    * is passed, wait() will be unable to access this job's finish
+    * information.</p>
 	 * @param jobIds the ids of the jobs to synchronize
 	 * @param timeout the maximum number of seconds to wait
 	 * @param dispose specifies how to treat reaping information
@@ -420,30 +415,30 @@ public class SGESession extends DRMAASession {
 	//      System.out.println("Call to drmaa_synchronize");
 	//   }
 	
-   /** This routine SHALL wait for a job with jobId to fail or finish execution.
-	 * If the special string JOB_IDS_SESSION_ANY is provided as the jobId,
-	 * this routine SHALL wait for any job from the session. This routine is
-	 * modeled on the wait3 POSIX routine.<BR>
-	 * The timeout value is used to specify the desired behavior when a result
-	 * is not immediately available.  The value TIMEOUT_WAIT_FOREVER MAY be
-	 * specified to wait indefinitely for a result.  The value TIMEOUT_NO_WAIT
-	 * may be specified to return immediately if no result is available.
-	 * Alternatively, a number of seconds MAY be specified to indicate how
-	 * long to wait for a result to become available.<BR>
-	 * If the call exits before timeout, either the job has been waited on
-	 * successfully or there was an interrupt.<BR>
-	 * If the invocation exits on timeout, an ExitTimeoutException is thrown.
-	 * The caller SHOULD check system time before and after this call
-	 * in order to check how much time has passed.<BR>
-	 * The routine reaps jobs on a successful call, so any subsequent calls
-	 * to wait() SHOULD fail throwing an InvalidJobException, meaning
-	 * that the job has been already reaped. This exception is the same as
-	 * if the job was unknown.  Failing due to an elapsed timeout has an effect
-	 * that it is possible to issue wait() multiple times for the same job_id.
-	 * When successful, the resource usage information SHALL be provided as a
-	 * Map of usage parameter names and thier values.
-	 * The values contain the amount of resources consumed by the job and is
-    * implementation defined.
+   /** <p>The wait() function blocks the calling thread until a job fails or
+    * finishes execution.  This routine is modeled on the UNIX wait4(3) routine. 
+    * If the special string JOB_IDS_SESSION_ANY is passed as <i>jobId</i>,
+    * this routine will wait for any job from the session. Otherwise the
+    * <i>jobId</i> must be the job identifier of a job or array job task that
+    * was submitted during the session.</p>
+    * <p>To prevent blocking indefinitely in this call, the caller may use
+    * <i>timeout</i>, specifying how many seconds to wait for this call to
+    * complete before timing out. The special value TIMEOUT_WAIT_FOREVER
+    * can be uesd to wait indefinitely for a result. The special value
+    * TIMEOUT_NO_WAIT can be used to return immediately.  If the call
+    * exits before <i>timeout</i>, all the specified jobs have completed or the
+    * calling thread received an interrupt.  In both cases, the method will
+    * throw an ExitTimeoutException.</p>
+    * <p>The routine reaps jobs on a successful call, so any subsequent calls to 
+    * wait() will fail, throwing an InvalidJobException, meaning that the job
+    * has already been reaped.  This exception is the same as if the job were
+    * unknown.  Returning due to an elapsed timeout or an interrupt does not
+    * cause the job information to be reaped.  This means that, in that case it
+    * is possible to issue wait() multiple times for the same <i>jobId</i>. </p>
+    * <p>The wait() method will return a JobInfo object.  The JobInfo object
+    * contains information about the job execution.  In particular, the JobInfo
+    * object will contain job id of the failed or finished job.  This is useful
+    * when JOB_IDS_SESSION_ANY is passed as the <i>jobId</i>.</p>
 	 * @param jobId the id of the job for which to wait
 	 * @param timeout the maximum number of seconds to wait
 	 * @return the resource usage and status information
@@ -522,11 +517,10 @@ public class SGESession extends DRMAASession {
 	//      System.out.println("Call to drmaa_delete_job_template");
 	//   }
 	
-   /** If called before init(), it SHALL return a comma delimited DRMAA
-    * implementations String, one per each DRMAA implementation provided.  If
-    * called after init(), it SHALL return the selected DRMAA implementation.
-    * The returned String is implementation dependent and COULD contain the DRM
-    * system as its part.
+   /** The getDRMAAImplementation() method returns a string containing the DRMAA
+    * Java language binding implementation version information.  The
+    * getDRMAAImplementation() method returns the same value before and after
+    * init() is called.
     * @return DRMAA implementation information
     */
 	public String getDRMAAImplementation () {

@@ -192,13 +192,28 @@ JNIEXPORT jobjectArray JNICALL Java_com_sun_grid_drmaa_SGESession_nativeRunBulkJ
       return NULL;
    }
    
-   num_elem = (end - start) / step;
+   /* Unfortunately, there is no light-weight way to build the id List from the
+    * ids struct.  Because the struct is one-way, once-only, I would have to
+    * build a linked list of id entries while stepping through the struct.  When
+    * I hit the end, I could create an array of the right size and copy
+    * everything over.
+    * Instead, I calculate how big the list should be.  If it turns out to be
+    * smaller than expected, I readjust.  If it's larger than expected, the
+    * extra ids are just lost.  However, there should never be a case where the
+    * math is wrong. */
+   num_elem = (end - start) / step + 1;
    id_strings = (char **)malloc (num_elem * sizeof (char *));
    
-   for (count = start; count < end; count += step) {
+   for (count = start; count <= end; count += step) {
       if (drmaa_get_next_job_id (ids, buffer, DRMAA_JOBNAME_BUFFER)
                                                        == DRMAA_ERRNO_SUCCESS) {
          id_strings[counter++] = strdup (buffer);
+      }
+      /* If we run out of ids before expected, we trust that the qmaster is
+       * right, and we adjust our numbers accordingly. */
+      else {
+         num_elem = counter;
+         break;
       }
    }
 

@@ -861,7 +861,9 @@ public class SGEJobTemplate extends JobTemplate {
       return Arrays.asList (session.nativeGetAttributeNames (id));
    }
    
-   /** Deallocate a job template. This routine has no effect on running jobs.
+   /** The delete() method releases all resources associated with the DRMAA
+    * JobTemplate.  Jobs that were submitted using the JobTemplate are not
+    * affected.
     * @throws DRMAAException May be one of the following:
     * <UL>
     * <LI>DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE</LI>

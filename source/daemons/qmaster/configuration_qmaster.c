@@ -384,7 +384,6 @@ char *rhost
       lList *newEntryList  = NULL;
       lListElem *oldEntryListElem  = NULL;
       lListElem *newEntryListElem  = NULL;
-      lListElem *elemPointer = NULL;
       const char *oldEntry = NULL;
       const char *newEntry = NULL;
       const char *paraName = NULL;

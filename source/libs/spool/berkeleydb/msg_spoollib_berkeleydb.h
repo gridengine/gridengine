@@ -47,10 +47,8 @@
 #define MSG_BERKELEY_DELETEERROR_SS _MESSAGE(70008, _("error deleting record with key "SFQ" from berkeley database: "SFN"\n"))
 #define MSG_BERKELEY_COULDNTSETCACHE_SS _MESSAGE(70009, _("couldn't set cache size in berkeley database "SFN": "SFN"\n"))
 #define MSG_BERKELEY_NULLVALUEASKEY _MESSAGE(70010, _("null value given as object primary key\n"))
-#define MSG_BERKELEY_SYNCERROR_DS _MESSAGE(70011, _("error %d syncing database: "SFN"\n"))
 #define MSG_BERKELEY_DATABASEDIRDOESNTEXIST_S _MESSAGE(70012, _("database directory "SFN" doesn't exist\n"))
 #define MSG_BERKELEY_COULDNTCREATEENVIRONMENT_S _MESSAGE(70013, _("couldn't create database environment: "SFN"\n"))
-#define MSG_BERKELEY_COULDNTOPENENVIRONMENT_SS _MESSAGE(70014, _("couldn't open database environment: "SFN": "SFN"\n"))
 #define MSG_BERKELEY_COULDNTCLOSEENVIRONMENT_SS _MESSAGE(70015, _("couldn't close database environment: "SFN": "SFN"\n"))
 #define MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S _MESSAGE(70016, _("couldn't setup deadlock detection: "SFN"\n"))
 #define MSG_BERKELEY_TXNALREADYOPEN _MESSAGE(70017, _("cannot open new transaction: There is already one open\n"))
@@ -60,5 +58,6 @@
 #define MSG_BERKELEY_ERRORENDINGTRANSACTION_S _MESSAGE(70021, _("error ending a transaction: "SFN"\n"))
 #define MSG_BERKELEY_CANNOTRETRIEVELOGARCHIVE_S _MESSAGE(70022, _("error retrieving berkeley db log archive: "SFN"\n"))
 #define MSG_BERKELEY_CANNOTCHECKPOINT_S _MESSAGE(70023, _("error checkpointing berkeley db: "SFN"\n"))
+#define MSG_BERKELEY_TRANSACTIONEINVAL _MESSAGE(70024, _("invalid transaction command\n"))
 
 #endif /* __MSG_SPOOLLIB_BERKELEYDB_H */

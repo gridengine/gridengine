@@ -459,7 +459,7 @@ AddBootstrap()
 }
 
 #-------------------------------------------------------------------------
-# PrintBootstrap: print SGE/SGEEE default configuration
+# PrintBootstrap: print SGE/SGEEE bootstrapping information
 #
 PrintBootstrap()
 {
@@ -1412,7 +1412,7 @@ CheckQmasterInstallation()
 
    SetCellDependentVariables
 
-   if [ ! -f $COMMONDIR/act_qmaster -o ! -f $COMMONDIR/configuration ]; then
+   if [ ! -f $COMMONDIR/act_qmaster -o ! -f $COMMONDIR/bootstrap ]; then
       $INFOTEXT "\nObviously there was no qmaster installation yet!\nCall >install_qmaster<\n" \
                   "on the machine which shall run the Grid Engine qmaster\n"
       exit 1
@@ -1423,7 +1423,7 @@ CheckQmasterInstallation()
    $INFOTEXT -wait -auto $autoinst -n "Hit <RETURN> to continue >> "
    $CLEAR
 
-   user=`grep admin_user $COMMONDIR/configuration | awk '{ print $2 }'`
+   user=`grep admin_user $COMMONDIR/bootstrap | awk '{ print $2 }'`
 
    if [ "$user" != "" ]; then
       if [ `echo "$user" |tr "A-Z" "a-z"` = "none" ]; then
@@ -1434,10 +1434,10 @@ CheckQmasterInstallation()
    if [ "$ADMINUSER" != "$user" ]; then
       if [ "$user" = default ]; then
          $INFOTEXT "The admin user >%s< is different than the default user >root<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER
+                   "in the boostrap file.\n" $ADMINUSER
       else
          $INFOTEXT "The admin user >%s< doesn't match the admin username >%s<\n" \
-                   "in the global cluster configuration.\n" $ADMINUSER $user
+                   "in the boostrap file.\n" $ADMINUSER $user
       fi
       $INFOTEXT "Installation failed. Exit."
       exit 1

@@ -60,6 +60,10 @@
 
 #include "spool/berkeleydb/sge_spooling_berkeleydb.h"
 
+/* JG: TODO: the following defines should better be parameters to
+ *           the berkeley db spooling
+ */
+
 /* how often will the transaction log be cleared */
 #define BERKELEYDB_CLEAR_INTERVAL 300
 
@@ -142,8 +146,8 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
                                        spool_berkeleydb_default_startup_func,
                                        spool_berkeleydb_default_shutdown_func,
                                        spool_berkeleydb_default_maintenance_func,
-                                       spool_berkeleydb_default_trigger_func,
-                                       NULL,
+                                       spool_berkeleydb_trigger_func,
+                                       spool_berkeleydb_transaction_func,
                                        spool_berkeleydb_default_list_func,
                                        spool_berkeleydb_default_read_func,
                                        spool_berkeleydb_default_write_func,
@@ -554,13 +558,13 @@ spool_berkeleydb_checkpoint(lList **answer_list, bdb_info *db)
 }
 
 bool
-spool_berkeleydb_default_trigger_func(lList **answer_list, const lListElem *rule)
+spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule)
 {
    bool ret = true;
 
    bdb_info *db;
 
-   DENTER(TOP_LAYER, "spool_berkeleydb_default_trigger_func");
+   DENTER(TOP_LAYER, "spool_berkeleydb_trigger_func");
 
    db = (bdb_info *)lGetRef(rule, SPR_clientdata);
    if (db == NULL || db->env == NULL || db->db == NULL) {
@@ -659,6 +663,47 @@ spool_berkeleydb_end_transaction(lList **answer_list, bdb_info *db,
       }
    }
 
+   DEXIT;
+   return ret;
+}
+
+bool
+spool_berkeleydb_transaction_func(lList **answer_list, const lListElem *rule, 
+                                  spooling_transaction_command cmd)
+{
+   bool ret = true;
+
+   bdb_info *db;
+
+   DENTER(TOP_LAYER, "spool_berkeleydb_default_transaction_func");
+
+   db = (bdb_info *)lGetRef(rule, SPR_clientdata);
+   if (db == NULL || db->env == NULL || db->db == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_NOCONNECTIONOPEN_S,
+                              lGetString(rule, SPR_url));
+      ret = false;
+   } else {
+      switch (cmd) {
+         case STC_begin:
+            ret = spool_berkeleydb_start_transaction(answer_list, db);
+            break;
+         case STC_commit:
+            ret = spool_berkeleydb_end_transaction(answer_list, db, true);
+            break;
+         case STC_rollback:
+            ret = spool_berkeleydb_end_transaction(answer_list, db, false);
+            break;
+         default:
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_BERKELEY_TRANSACTIONEINVAL);
+            ret = false;
+            break;
+      }
+   }
+   
    DEXIT;
    return ret;
 }

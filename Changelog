@@ -1,3 +1,5 @@
+JG-2003-10-20-0: Bugfix:    fixed installation started as non root user.
+
 SG-2003-10-17-2: Bugfix:    fixed the build
 
 SG-2003-10-17-1: Enhancem.: First part of the scheduler configuration cleanup.

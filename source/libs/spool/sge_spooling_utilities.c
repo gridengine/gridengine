@@ -30,6 +30,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
+#include "sge.h"
+
 #include "sgermon.h"
 #include "sge_log.h"
 
@@ -376,51 +378,53 @@ spool_default_validate_func(lList **answer_list,
             char *old_name = strdup(lGetHost(object, key_nm));
 
             /* try hostname resolving */
-            cl_ret = sge_resolve_host(object, key_nm);
+            if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
+               cl_ret = sge_resolve_host(object, key_nm);
 
-            /* if hostname resolving failed: create error */
-            if (cl_ret != CL_OK) {
-               if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
-                   cl_ret != COMMD_NACK_TIMEOUT) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                          old_name, cl_errstr(ret)); 
-                  ret = false;
+               /* if hostname resolving failed: create error */
+               if (cl_ret != CL_OK) {
+                  if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
+                      cl_ret != COMMD_NACK_TIMEOUT) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_ERROR, 
+                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
+                                             old_name, cl_errstr(ret)); 
+                     ret = false;
+                  } else {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_WARNING, 
+                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
+                                             old_name, cl_errstr(ret));
+                  }
                } else {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_WARNING, 
-                                          MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                          old_name, cl_errstr(ret));
+                  /* if hostname resolving changed hostname: spool */
+                  const char *new_name;
+                  new_name = lGetHost(object, key_nm);
+                  if (strcmp(old_name, new_name) != 0) {
+                     spooling_write_func write_func = 
+                             (spooling_write_func)lGetRef(rule, SPR_write_func);
+                     spooling_delete_func delete_func = 
+                             (spooling_delete_func)lGetRef(rule, SPR_delete_func);
+                     write_func(answer_list, type, rule, object, new_name, 
+                                object_type);
+                     delete_func(answer_list, type, rule, old_name, object_type);
+                  }
                }
-            } else {
-               /* if hostname resolving changed hostname: spool */
-               const char *new_name;
-               new_name = lGetHost(object, key_nm);
-               if (strcmp(old_name, new_name) != 0) {
-                  spooling_write_func write_func = 
-                          (spooling_write_func)lGetRef(rule, SPR_write_func);
-                  spooling_delete_func delete_func = 
-                          (spooling_delete_func)lGetRef(rule, SPR_delete_func);
-                  write_func(answer_list, type, rule, object, new_name, 
-                             object_type);
-                  delete_func(answer_list, type, rule, old_name, object_type);
-               }
+               free(old_name);
             }
-            free(old_name);
-         }
 
-         if (object_type == SGE_TYPE_EXECHOST) {
-            if (ret) {
-               /* necessary to setup actual list of exechost */
-               debit_host_consumable(NULL, object, Master_CEntry_List, 0);
-               /* necessary to init double values of consumable configuration */
-               centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
-                     Master_CEntry_List, true, false, true);
+            if (object_type == SGE_TYPE_EXECHOST) {
+               if (ret) {
+                  /* necessary to setup actual list of exechost */
+                  debit_host_consumable(NULL, object, Master_CEntry_List, 0);
+                  /* necessary to init double values of consumable configuration */
+                  centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
+                        Master_CEntry_List, true, false, true);
 
-               if (ensure_attrib_available(NULL, object, 
-                                           EH_consumable_config_list)) {
-                  ret = false;
+                  if (ensure_attrib_available(NULL, object, 
+                                              EH_consumable_config_list)) {
+                     ret = false;
+                  }
                }
             }
          }
@@ -470,34 +474,36 @@ spool_default_validate_func(lList **answer_list,
             char *old_name = strdup(lGetHost(object, CONF_hname));
 
             /* try hostname resolving */
-            cl_ret = sge_resolve_host(object, CONF_hname);
+            if (strcmp(old_name, SGE_GLOBAL_NAME) != 0) {
+               cl_ret = sge_resolve_host(object, CONF_hname);
 
-            /* if hostname resolving failed: create error */
-            if (cl_ret != CL_OK) {
-               if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
-                   cl_ret != COMMD_NACK_TIMEOUT) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                          old_name, cl_errstr(ret)); 
-                  ret = false;
+               /* if hostname resolving failed: create error */
+               if (cl_ret != CL_OK) {
+                  if (cl_ret != COMMD_NACK_UNKNOWN_HOST && 
+                      cl_ret != COMMD_NACK_TIMEOUT) {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_ERROR, 
+                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
+                                             old_name, cl_errstr(ret)); 
+                     ret = false;
+                  } else {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                             ANSWER_QUALITY_WARNING, 
+                                             MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
+                                             old_name, cl_errstr(ret));
+                  }
                } else {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_WARNING, 
-                                          MSG_SPOOL_CANTRESOLVEHOSTNAME_SS, 
-                                          old_name, cl_errstr(ret));
-               }
-            } else {
-               /* if hostname resolving changed hostname: spool */
-               const char *new_name = lGetHost(object, CONF_hname);
-               if (strcmp(old_name, new_name) != 0) {
-                  spooling_write_func write_func = 
-                          (spooling_write_func)lGetRef(rule, SPR_write_func);
-                  spooling_delete_func delete_func = 
-                          (spooling_delete_func)lGetRef(rule, SPR_delete_func);
-                  write_func(answer_list, type, rule, object, new_name, 
-                             object_type);
-                  delete_func(answer_list, type, rule, old_name, object_type);
+                  /* if hostname resolving changed hostname: spool */
+                  const char *new_name = lGetHost(object, CONF_hname);
+                  if (strcmp(old_name, new_name) != 0) {
+                     spooling_write_func write_func = 
+                             (spooling_write_func)lGetRef(rule, SPR_write_func);
+                     spooling_delete_func delete_func = 
+                             (spooling_delete_func)lGetRef(rule, SPR_delete_func);
+                     write_func(answer_list, type, rule, object, new_name, 
+                                object_type);
+                     delete_func(answer_list, type, rule, old_name, object_type);
+                  }
                }
             }
             free(old_name);

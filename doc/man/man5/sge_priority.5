@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2004/04/19 10:52:10 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: sge_priority.5,v $     Last Update: $Date: 2004/07/22 15:43:44 $     Revision: $Revision: 1.4.6.1 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SGE_PRIORITY 5 "$Date: 2004/04/19 10:52:10 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SGE_PRIORITY 5 "$Date: 2004/07/22 15:43:44 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sge_priority \- xxQS_NAMExx job priorities
@@ -154,12 +154,9 @@ Installation and Administration Guide for details.
 .SS "\fBJOB RUN-TIME PRIORITY\fP"
 The run-time priority can be dynamically adjusted 
 in order to meet the goals set with the ticket policy. Dynamic run-time
-priority adjustment can be turned off globally using
+priority adjustment can be turned off (default) globally using
 \fBreprioritize_interval\fP in
 .M sched_conf 5
-or on a per host basis by using the \fBexecd_params\fP setting
-\fBNO_REPRIORITIZATION\fP in the corresponding host configuration
-.M sge_conf 5 ).
 If no dynamic run-time priority adjustment is done 
 at a host level, the \fBpriority\fP specification in 
 .M queue_conf 5

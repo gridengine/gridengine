@@ -10643,7 +10643,6 @@ proc run_tests { path runcompleted } {
         set check_missing_dep ""
 #        set check_warning_text ""
 
-
         while { $stop == 0 } {
            set todo [ llength $checks_to_do ]
            puts $CHECK_OUTPUT "---PASS${pass_no}----------------------------------------"
@@ -10682,7 +10681,11 @@ proc run_tests { path runcompleted } {
                             lappend check_warning_date [ exec date ]
                             lappend check_warning_pass  $pass_no 
                             foreach err_message $check_errstr {
-                               lappend check_warning_text("$check") "{$err_message}"
+                               if { [info exists check_warning_text("$check") ] } {
+                                  lappend check_warning_text("$check") "{$err_message}"
+                               } else {
+                                  set check_warning_text("$check") "{$err_message}"
+                               }
                             }
                          }
                        1 { 
@@ -10698,7 +10701,11 @@ proc run_tests { path runcompleted } {
                             lappend check_error_pass  $pass_no 
                                     
                             foreach err_message $check_errstr {
-                               lappend check_error_text("$check") "{$err_message}"
+                               if { [info exists check_error_text("$check") ] } {
+                                  lappend check_error_text("$check") "{$err_message}"
+                               } else {
+                                  set check_error_text("$check") "{$err_message}"
+                               }
                             }
      
                             if { $check_reinit_on_tcl_error == 1 } {
@@ -10725,7 +10732,11 @@ proc run_tests { path runcompleted } {
                             lappend check_error_pass  $pass_no 
                                     
                             foreach err_message $check_errstr {
-                               lappend check_error_text("$check") "{$err_message}"
+                               if { [info exists check_error_text("$check") ] } {
+                                  lappend check_error_text("$check") "{$err_message}"
+                               } else {
+                                  set check_error_text("$check") "{$err_message}"
+                               }
                             }
                             if { $check_reinit_on_tcl_error == 1 } {
                                # reinit system

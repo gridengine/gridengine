@@ -1,3 +1,8 @@
+CR-2003-02-03-0: Testsuite: - Fixed Tcl error for unitialized array in 
+                              run_tests() procedure (for warnings)
+                            - Fixed bug in issuezilla/141/check.exp
+                              (wrong wait_for_jobend parameter settings)
+
 AH-2003-01-31-1: Bugfix:    wrong usage reported by qstat -j <jobid>
                  Bugtraq:   #4794242
                  IZ:        #446

@@ -296,13 +296,17 @@ char **argv
    }
 
    if ( tcp_closefd_flag ) {
+      int is_receiver_ready = 0;
       repetitions = repeat;
       prof_start(NULL);
-      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
       nr_bytes = 0;
       while (repetitions-- > 0 ) {
          int back = 0; 
          while( (back=run_client_test2(host, port,1)) < 0 );
+         if (!is_receiver_ready) {
+            is_receiver_ready = 1;
+            PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
+         }
          nr_bytes = nr_bytes + back;
       }
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
@@ -541,7 +545,7 @@ int run_client_test2(char* host, int port, int repeat) {
             sleep(1);
             shutdown(sockfd, 2);
             close(sockfd);
-            return -1;
+            return -10;
          }
          
          if (errno == EINPROGRESS) {

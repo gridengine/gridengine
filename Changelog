@@ -1,3 +1,6 @@
+CR-2003-04-09-2  Testsuite: communication test:
+                            using testsuite_snd/_rcv -tcp-close option for test
+
 CR-2003-04-09-1  Testsuite: using of open_spawn_process() may cause problems
                             on NFS mounted testsuite installations. Using
                             open_remote_spawn_process() even for local spawns.

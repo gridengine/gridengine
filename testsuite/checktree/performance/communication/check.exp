@@ -644,7 +644,7 @@ proc run_communication_test { results port sync closefd repeat datasize tcptime 
    }
 
 
-   set receiver_args " -host $remote_host1 -port $port $sync_arg $closefd_arg -repeat $repeat"
+   set receiver_args " -host $remote_host1 -port $port $sync_arg $closefd_arg -repeat $repeat -tcp-closefd"
    set receiver_sid [ open_remote_spawn_process $remote_host2 "ts_def_con2" $receive_remote_binary $receiver_args]
    set receiver_id [lindex $receiver_sid 1]
    set sender_sid "0 0 0"
@@ -757,7 +757,7 @@ proc run_communication_test { results port sync closefd repeat datasize tcptime 
                 if {  [string first "CONNECTED TO COMMD" $help] == 0 } { 
                    #  here we start the sender
                    debug_puts "Starting local send binary:\n  $send_binary"
-                   set sender_args " -host $remote_host2 -port $port $sync_arg $closefd_arg -repeat $repeat -datasize $datasize -tcptime $tcptime"
+                   set sender_args " -host $remote_host2 -port $port $sync_arg $closefd_arg -repeat $repeat -datasize $datasize -tcptime $tcptime -tcp-closefd"
                    set sender_sid [ open_remote_spawn_process $remote_host1 "ts_def_con" $send_binary $sender_args]
                    set sender_id [lindex $sender_sid 1]
                    lappend spawn_list $sender_id

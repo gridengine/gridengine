@@ -1,3 +1,6 @@
+JG-2002-04-11-0: Bugfix:  In simulation mode, job reports were not flushed 
+                          at (simulated) job end.
+
 JG-2002-04-08-0  Bugfix:    qrsh -h did debug output (a job object).
 
 CR-2002-04-08-0  Bugfix:    Fixed compiler warning in ptf.c

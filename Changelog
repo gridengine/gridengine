@@ -1,3 +1,9 @@
+AH-2004-07-09-0: Bugfix:    Deleted pending job appears in qstat
+                 Changed:   qstat, qhost
+                 Issue:     1113
+                 Bugtraq:   5072481
+                 Review:    CR
+
 SG-2004-07-09-0: Bugfix:    scheduler ignores queue seqno for queue sorting
                  Changed:   scheduler  
                  Issue:     1133

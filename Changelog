@@ -1,10 +1,15 @@
+EB-2004-03-16-0: Bugfix:    mail bomb upon abort with tightly int. par. job
+                 Issue:     637
+                 Changed:   sge_execd
+                 Review:    JG
+
 SG-2004-03-12-2: Bugfix:    execd died, when a load sensor was restarted.
                  Issue:     835
                  Changed:   execd
                  Review:    AS
 
-SG-2004-03-10-0: Bugfix:    scheduler crashed during functional ticket computation
-                            on linux AMD64 
+SG-2004-03-10-0: Bugfix:    scheduler crashed during functional ticket 
+                            computation on linux AMD64 
                  Changed:   scheduler
                  Review:    CR
                  Issue:     820
@@ -32,8 +37,8 @@ SD-2004-02-25-0: Bugfix:    Fixed file descriptor leak which caused
                  Changed:   execd
                  Issue:     713
 
-SG-2004-02-25-1: Bugfix:    fixed the time bases for YY specification. It referes to
-                            to the range of 1970 till 2069.
+SG-2004-02-25-1: Bugfix:    fixed the time bases for YY specification. It 
+                            referes to to the range of 1970 till 2069.
                  Chaged:    qacct, qsub, qalter,...
                  Issue:     709
 
@@ -352,6 +357,7 @@ SG-2003-07-16-0  Optim.:    - Optimized functional ticket computation with
                  Review:    AH
                  Changed:   sge_schedd
 
+>>>>>>> 1.309.2.523
 MD-2003-07-15-2  Bugfix:    Added 3rdparty/qmake/IA64LINUX/glob
                             + Makefile
 

@@ -1,7 +1,14 @@
+SG-2005-03-15-0: Bugfix:    Reservation of wrong hosts
+                 Issue:     1484
+                 Bugtraq:   pending
+                 Changed:   scheduler
+                 Review:    pending
+
 JG-2005-03-15-0: Bugfix:    Huge cpu and memory overhead when adding, modifying 
                             and deleting complex attributes.
                  Issue:     1473
                  Bugtraq:   6222237
+                 Changed:   qmaster
                  Review:    SG
 
 RD-2005-03-14-0: Bugfix:    amendmand for RD-2005-03-11-0

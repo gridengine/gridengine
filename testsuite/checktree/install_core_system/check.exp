@@ -1906,7 +1906,7 @@ proc install_execd {} {
 #*******************************************************************************
 proc get_spool_dir {host subdir {do_cleanup 1} } {
 
-   global ts_host_config CHECK_OUTPUT CHECK_USER
+   global ts_host_config CHECK_OUTPUT CHECK_USER CHECK_COMMD_PORT
    set spooldir ""
 
    if { [info exist ts_host_config($host,spooldir)] } {

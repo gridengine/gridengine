@@ -477,6 +477,7 @@ sge_pack_buffer *pb
 int pb_filled(
 sge_pack_buffer *pb 
 ) {
+#if 0
 #ifdef COMMCOMPRESS
    if(pb->mode != -1 ) {
       if(!pb->head_ptr)
@@ -490,6 +491,10 @@ sge_pack_buffer *pb
          return 0;
       return (pb->cur_ptr != pb->head_ptr);
    }
+#endif
+
+   /* do we have more bytes used than the version information? */
+   return (pb_used(pb) > (2 * INTSIZE));
 }
 
 /*************************************************************

@@ -1,0 +1,96 @@
+How to use the review form
+
+- copy the template doc/devel/review.txt to review/<Changelog-ID>.txt
+- cvs add review/<Changelog-ID>.txt
+- complete the form and check it in with the changed sources.
+
+1 please fill in the required information
+
+1.1 IssueZilla ID
+
+1.2 Bugtraq ID, if available
+
+1.3 one line summary/issue title
+
+1.4 ID from the Changelog file (e.g. JG-2002-07-31-0). 
+
+1.5 Use the sunsource user name(s)
+
+1.6 Use the sunsource user name(s)
+
+
+2 Check all features and properties defined in the specification.
+
+
+3 Check if the documentation has been changed or change requests have been made
+
+3.1 Does the issue make necessary any changes in the user or admin guide? 
+    If yes, have the changes been documented and communicated to the doc writer?
+
+3.2 Are any man page updates necessary? 
+    If yes, have they been done?
+    Are they understandable from a user perspective?
+
+3.3 If commandline switches are implemented, check the -help output (has to 
+    exist and be understandable from a users view)
+
+3.4 All interfaces have to be documented.
+    The following interfaces have to be documented - any documentation beyond 
+    the obligated is welcome:
+    - GDI Interface
+    - Event client interface
+    - any library functions
+    If interfaces changed, analyze all affected situations/code pieces.
+    Documentation shall be done using ADOC headers.
+
+3.5 If messages changed, check if they are correct and meaningful.
+    Output formats shall only be changed if unavoidable - such changes have to 
+    be documented.
+
+4 Check source code (diff)
+
+4.1 Does the source code conform to our coding styleguide?
+
+4.2 If memory is allocated, check for deallocation, access to freed memory, 
+    boundaries, static buffer sizes ...
+
+4.3 Is the code thread safe? Are all system calls / sge functions the code calls
+    thread safe? Does the autodoc header of the function contain info about 
+    thread safety?
+
+5 Check if adequate testing has taken place
+
+5.1 Run flawfinder diff (/vol2/SW/bin/flawdiff.sh)
+    The script has to be run in the gridengine/source directory on a host 
+    having an open CVS tunnel.
+    It will call flawfinder --diff to make sure the modified files contain no new
+    flaws. The diff is done against a hitlist generated in the daily test procedure.
+
+5.2 Run the changed component in a memory debugger, e.g.
+    dbx (check -all), purify, insure.
+    Optional test for complex scenarios.
+    Especially for library functions having no dependencies on a running system,
+    please consider writing a module tests and run this module tests in the 
+    memory debugger.
+
+5.3 Which manual tests have been done? 
+    Include a short description.
+
+5.4 Does the testsuite sufficiently cover the issue?
+    If not, please consider adding a test scenario yourself.
+    This can be a completely new testsuite check or just an addition to an existing 
+    check.
+
+5.5 If the testsuite does not cover the issue, a testsuite issue has to be 
+    created.
+    This issue should contain information about test cases (usually will 
+    reflect the manual tests), 
+    if scripts have been written for the manual testing, they should be 
+    attached to the issue.
+
+5.6 A testsuite run should always be done before checking in code. 
+    Even if there is no special test case for the issue, testsuite might show 
+    problems or sideeffects.
+
+
+

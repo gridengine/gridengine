@@ -272,6 +272,7 @@ int dispatch( dispatch_entry*   table,
       DPRINTF(("====================[ DISPATCH EPOCH ]===========================\n"));
    }
 
+   free_de(&de);
    DEXIT;
    return errorcode;
 }

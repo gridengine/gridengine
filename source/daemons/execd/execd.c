@@ -274,6 +274,9 @@ char **argv
          }
       }
    }
+
+   Master_Job_List = lFreeList(Master_Job_List);   
+   
    sge_shutdown();
    DEXIT;
    return 0;

@@ -667,7 +667,11 @@ int hash_compare_pointer(const void *a, const void *b)
    char **cast_a = (char **)a;
    char **cast_b = (char **)b;
 /* printf("++++> %p - %p\n", *cast_a, *cast_b); */
-   return (int) (*cast_a - *cast_b);
+   if (*cast_a != *cast_b) {
+      return 1;
+   } else {
+      return 0;
+   }
 }
 
 int hash_compare_string(const void *a, const void *b)

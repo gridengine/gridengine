@@ -2016,6 +2016,9 @@ void ptf_stop(void)
       psStopCollector();
       is_ptf_running = 0;
    }
+
+   ptf_jobs = lFreeList(ptf_jobs);
+
    DEXIT;
 }
 

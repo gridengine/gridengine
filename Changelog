@@ -1,3 +1,6 @@
+JG-2004-05-27-2: Bugfix:    Fixed memory leaks in execd.
+                 Review:    SG
+
 AA-2004-05-27-0: Bugfix:    - qmon_about mailto text
                             - CSP reconnect problem
                  Changed:   all
@@ -8,6 +11,7 @@ DT-2004-05-27-0: Bugfix:    o Added DRMAA example programs to distinst
                  Issue:     952
 
 JG-2004-05-27-1: Bugfix:    Fixed memory leaks in scheduler.
+                 Review:    SG
 
 AH-2004-05-27-0: Bugfix:    Deadline scheduling broken
                  Issue:     1063

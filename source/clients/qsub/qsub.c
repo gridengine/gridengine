@@ -189,7 +189,7 @@ char **argv
    
    alp = cull_parse_job_parameter(opts_all, &job);
 
-   tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
+   tmp_ret = answer_list_print_err_warn(&alp, "qsub: ", MSG_WARNING);
    if (tmp_ret > 0) {
       SGE_EXIT(tmp_ret);
    }

@@ -1,3 +1,10 @@
+RH-2005-03-22-1: Bugfix:    qsub -b y must fail if no command is specified
+                 Cleanup:   shepherd_trace calls ifdef'ed
+                 Issue:     1365
+                 Bugtraq:   6244215
+                 Changed:   qsub, shepherd
+                 Review:    AH
+
 DT-2005-04-22-0: Bugfix:    o Fixed broken build
                  Changed:   Shepherd
 

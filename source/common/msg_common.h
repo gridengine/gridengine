@@ -980,6 +980,8 @@
 #define MSG_GDI_USAGE_purge_OPT                          "[-purge obj_nm3 wc_attr object_instance"
 #define MSG_GDI_UTEXT_purge_OPT                          _MESSAGE(23505, _("removes attribute from object_instance"))
 
+#define MSG_COMMAND_REQUIRED_FOR_BINARY_JOB              _MESSAGE(23506, _("command required for a binary job\n"))
+
 /* =================================================
  * global error messages 
  * messages that have general meaning in all modules

@@ -646,7 +646,15 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    } 
 
    cp = lGetString(*pjob, JB_script_file);
+   
    if (!cp || !strcmp(cp, "-")) {
+      u_long32 jb_now = lGetUlong(*pjob, JB_type);
+      if( JOB_TYPE_IS_BINARY(jb_now) ) {
+         answer_list_add(&answer, MSG_COMMAND_REQUIRED_FOR_BINARY_JOB,
+                         STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return answer;
+      }
       lSetString(*pjob, JB_script_file, "STDIN");
    }
    cp = lGetString(*pjob, JB_job_name);

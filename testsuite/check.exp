@@ -3391,7 +3391,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
    global CHECK_CORE_RESULT_DIR check_errstr CHECK_OUTPUT check_description check_functions check_errno 
    global CHECK_CUR_PROC_NAME CHECK_CUR_PROC_RESULTS CHECK_CUR_PROC_ERRORS
    global CHECK_CURRENT_WORKING_DIR check_init_level_procedure CHECK_ACT_LEVEL
-   global set_error_proc_called
+   global set_error_proc_called errorInfo
    
    # do not run allready completed tests
    debug_puts "runcompleted is $runcompleted"
@@ -3453,7 +3453,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
          set catch_return [ catch { $elem } errMsg ]
          if { $catch_return != 0 } {
             puts $CHECK_OUTPUT $errMsg
-            add_proc_error "run_test_level" "-2" "catch returns not 0\n${errMsg}" 
+            add_proc_error "run_test_level" "-2" "catch returns not 0\n${errMsg}\n${errorInfo}" 
             set_error -2 "tcl error"
             return -1 
          } 

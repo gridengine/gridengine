@@ -1,3 +1,6 @@
+JG-2001-12-17-1: Testsuite: Testsuite framework will output stack trace
+                            if a TCL error causes a test to fail.
+
 JG-2001-12-17-0: Feature:   Implemented starter_method for qrsh.
 
 EB-2001-12-17-0: Feature:   Compatibility mode (sge_request, SGE_*)

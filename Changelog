@@ -2,7 +2,7 @@ SG-2004-02-15-0: Bugfix:    the event thread works with a fixed interval to
                             deliver events (every second)
                  Changed:   qmaster
                  Review:    pending
-                 Issue:     688
+                 Issue:     668
 
 JG-2004-02-14-2: Bugfix:    Fixed broken build on lx24-amd64.
 

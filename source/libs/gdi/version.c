@@ -12,7 +12,7 @@
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
- *  License at http://www.gridengine.sunsource.net/license.html
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
  * 
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
@@ -52,7 +52,7 @@ Sun Industry Standards Source License Version 1.2\n\
 The contents of this file are subject to the Sun Industry Standards\n\
 Source License Version 1.2 (the \"License\"); You may not use this file\n\
 except in compliance with the License. You may obtain a copy of the\n\
-License at http://www.gridengine.sunsource.net/license.html\n\
+License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html\n\
 \n\
 Software provided under this License is provided on an \"AS IS\" basis,\n\
 WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,\n\

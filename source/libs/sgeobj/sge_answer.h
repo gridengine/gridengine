@@ -99,6 +99,8 @@ void answer_print_text(const lListElem *answer,
 
 void answer_to_dstring(const lListElem *answer, dstring *diag);
 
+void answer_list_to_dstring(const lList *alp, dstring *diag);
+
 bool answer_list_add_sprintf(lList **answer_list, u_long32 status, 
                              answer_quality_t quality, const char *fmt, ...);
 

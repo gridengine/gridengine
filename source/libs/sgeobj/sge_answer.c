@@ -361,6 +361,52 @@ void answer_to_dstring(const lListElem *answer, dstring *diag)
    }
 }
 
+/****** sgeobj/answer/answer_list_to_dstring() *********************************
+*  NAME
+*     answer_list_to_dstring() -- Copy answer to dstring without newline
+*
+*  SYNOPSIS
+*     void answer_list_to_dstring(const lList *alp, dstring *diag) 
+*
+*  FUNCTION
+*     Copy answer list text into dstring with each element separated by a
+*     newline character.
+*
+*  INPUTS
+*     const lList *alp - AN_Type list
+*
+*  OUTPUT
+*     dstring *diag           - destination dstring
+*
+*  RESULT
+*     void - 
+*
+*  NOTES
+*     MT-NOTE: answer_list_to_dstring() is MT safe
+*******************************************************************************/
+void answer_list_to_dstring(const lList *alp, dstring *diag) {
+   if (diag) {
+      if (!alp || (lGetNumberOfElem (alp) == 0)) {
+         sge_dstring_copy_string(diag, MSG_ANSWERWITHOUTDIAG);
+      } else {
+         lListElem *aep = NULL;
+         
+         sge_dstring_clear (diag);
+         
+         for_each (aep, alp) {
+            const char *s;
+
+            s = lGetString(aep, AN_text);
+            sge_dstring_append (diag, s);
+
+            if (strchr(s, '\n') == NULL) {
+               sge_dstring_append_char (diag, '\n');
+            }
+         }
+      }
+   }
+}
+
 /****** sgeobj/answer/answer_list_add_sprintf() *******************************
 *  NAME
 *     answer_list_add_sprintf() -- Format add an answer to an answer list

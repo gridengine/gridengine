@@ -220,6 +220,7 @@ void cull_hash_create_hashtables(lList *lp)
 *     const int pos       - describes the data field of the objects that
 *                           is to be hashed
 *******************************************************************************/
+/* JG: TODO: change parameters: pass hashtable, value and ep */
 void cull_hash_insert(const lListElem *ep, const int pos)
 {
    char host_key[MAXHOSTLEN+1];
@@ -305,6 +306,7 @@ void cull_hash_insert(const lListElem *ep, const int pos)
 *     const lListElem *ep - the cull object to be removed
 *     const int pos       - position of the data field 
 *******************************************************************************/
+/* JG: TODO: can prototype be changed? Take hashtable as first parameter, value and ep as others */
 void cull_hash_remove(const lListElem *ep, const int pos)
 {
    char host_key[MAXHOSTLEN+1];
@@ -433,6 +435,7 @@ void cull_hash_elem(const lListElem *ep) {
 *  SEE ALSO
 *     cull/hash/cull_hash_next()
 ******************************************************************************/
+/* JG: TODO: change params: pass hashtable, key and iterator */
 lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, 
                            const void **iterator)
 {
@@ -497,6 +500,7 @@ lListElem *cull_hash_first(const lList *lp, const int pos, const void *key,
 *  SEE ALSO
 *     cull/hash/cull_hash_first()
 *******************************************************************************/
+/* JG: TODO: change params: pass hashtable, key and iterator */
 lListElem *cull_hash_next(const lList *lp, const int pos, const void *key, const void **iterator)
 {
    lListElem *ep = NULL;
@@ -677,6 +681,7 @@ int cull_hash_new_check(lList *lp, int nm, int unique)
 *     cull_hash_new(job_list, JB_owner, 0);
 *
 *******************************************************************************/
+/* JG: TODO: attrib unique shall be boolean! */
 int cull_hash_new(lList *lp, int nm, int unique)
 {
    lDescr *descr;

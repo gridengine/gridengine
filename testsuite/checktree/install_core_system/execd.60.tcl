@@ -154,6 +154,24 @@ proc install_execd {} {
                 puts $CHECK_OUTPUT "removing tar file \"$TAR_FILE\" ..."
                 set result [ start_remote_prog "$CHECK_CORE_MASTER" "root" "rm" "$TAR_FILE" ]
                 puts $CHECK_OUTPUT $result
+                set remote_host_arch [resolve_arch $exec_host]
+
+                set my_timeout [timestamp]
+                incr my_timeout 600
+                while { 1 } {
+                   set result [start_remote_prog $exec_host $CHECK_USER "$ts_config(product_root)/bin/$remote_host_arch/qstat" "-f"]
+                   puts $CHECK_OUTPUT $result
+                   if { $prg_exit_state == 0 } {
+                      puts $CHECK_OUTPUT "qstat -f works, fine"
+                      break
+                   }
+                   puts $CHECK_OUTPUT "waiting for qstat -f to work ..."
+                   puts $CHECK_OUTPUT "please check hosts for synchron clock times"
+                   sleep 15
+                   if { [timestamp] > $my_timeout } {
+                      add_proc_error "install_execd" -2 "exec host: $exec_host timeout while waiting for qstat to work"
+                   }
+                }
             } else {
                puts $CHECK_OUTPUT "can not copy this files as user $CHECK_USER"
                puts $CHECK_OUTPUT "installation error"

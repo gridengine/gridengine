@@ -146,6 +146,9 @@ set check_use_installed_system 0    ;# set to 1 when installed system parameter 
 global check_do_not_use_spool_config_entries
 set check_do_not_use_spool_config_entries 0
 
+global check_do_clean_compile
+set check_do_clean_compile 0
+
 global check_reinit_on_tcl_error
 set check_reinit_on_tcl_error 0
 
@@ -5853,7 +5856,7 @@ proc compile_source { { do_only_install 0 } } {
    global CHECK_ADDITIONAL_COMPILE_HOSTS CHECK_HTML_DIRECTORY
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
-   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_USER CHECK_HOST
+   global CHECK_CORE_EXECD CHECK_PROTOCOL_DIR CHECK_USER CHECK_HOST check_do_clean_compile
 
    # settings for mail
    set check_name "compile_source"
@@ -6030,8 +6033,8 @@ proc compile_source { { do_only_install 0 } } {
          # after an update, do an aimk clean
          foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
             puts $CHECK_OUTPUT "------------------------------------------"
-            puts $CHECK_OUTPUT "-> starting aimk clean on host $chost ..."
-            set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk clean" prg_exit_state 60 0 "" 1 0 ]
+            puts $CHECK_OUTPUT "-> starting aimk $CHECK_AIMK_COMPILE_OPTIONS clean on host $chost ..."
+            set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $CHECK_AIMK_COMPILE_OPTIONS clean" prg_exit_state 60 0 "" 1 0 ]
             puts $CHECK_OUTPUT "------------------------------------------"
             puts $CHECK_OUTPUT "return state: $prg_exit_state"
             puts $CHECK_OUTPUT "------------------------------------------"
@@ -6049,6 +6052,20 @@ proc compile_source { { do_only_install 0 } } {
          update_macro_messages_list
       }
    }
+
+   if { $check_do_clean_compile == 1 } {
+      foreach chost $CHECK_SOURCE_COMPILE_HOSTS {
+         puts $CHECK_OUTPUT "------------------------------------------"
+         puts $CHECK_OUTPUT "-> starting aimk $CHECK_AIMK_COMPILE_OPTIONS clean on host $chost ..."
+         set output [ start_remote_prog $chost $CHECK_USER "cd" "$CHECK_SOURCE_DIR ; ./aimk $CHECK_AIMK_COMPILE_OPTIONS clean" prg_exit_state 60 0 "" 1 0 ]
+         puts $CHECK_OUTPUT "------------------------------------------"
+         puts $CHECK_OUTPUT "return state: $prg_exit_state"
+         puts $CHECK_OUTPUT "------------------------------------------"
+         puts $CHECK_OUTPUT "output:\n$output"
+         puts $CHECK_OUTPUT "------------------------------------------"
+      }
+   }
+
 
    # choose a host for aimk depend, we prefer to do it on solaris 64bit
    if { $do_only_install != 1 } {
@@ -7246,6 +7263,8 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts ""
       puts "no_local_spool        ignore local spool directories from host configuration file"
       puts ""
+      puts "compile_clean         force aimk clean when no_update option is set at compile time"
+      puts ""
       puts "mfile FILE            write all mails into file FILE (when mail is enabled)"
       puts ""
       puts "html_dir              write testsuite html files into that directory"
@@ -7275,6 +7294,11 @@ for { set i 0 } { $i < $argc } { incr i } {
    
    if { ( [string compare [lindex $argv $i] "--no_local_spool"] == 0 ) || ([string compare [lindex $argv $i] "no_local_spool"] == 0) } {
       set check_do_not_use_spool_config_entries 1
+      continue
+   }
+
+   if { ( [string compare [lindex $argv $i] "--compile_clean"] == 0 ) || ([string compare [lindex $argv $i] "compile_clean"] == 0) } {
+      set check_do_clean_compile 1
       continue
    }
 

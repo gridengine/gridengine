@@ -1,3 +1,11 @@
+CR-2005-03-21-0: Testsuite: - added new command line argument: compile_clean
+                              (do a aimk clean even when no_update option is set)
+                            - aimk clean did not use aimk compile options from
+                              testsuite settings file
+                            - install_core_system test (CSP mode):
+                              wait for qstat -f working after certificates has
+                              been copied to remote hosts
+
 RH-2005-03-21-0: Bugfix:    termination script may not be ignored, when job 
                             submited with -notify 
                  Issue:     1489

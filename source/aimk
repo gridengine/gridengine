@@ -2232,6 +2232,9 @@ if ( "$QTCSH" == 1) then
    set SGE_COPTS = ""
    set SGE_LOPTS = ""
 
+   if ( $BUILDARCH == AIX43 ) then
+      unsetenv LIBPATH
+   endif
 
    if ( $SHAREDLIBS == 1 ) then
       set SHARED_PATH_NAME = `dist/util/arch -lib`
@@ -2269,7 +2272,7 @@ if ( "$QTCSH" == 1) then
    endif
 
    if ( $SHAREDLIBS == 1 ) then
-      unsetenv SHARED_PATH_NAME
+      unsetenv $SHARED_PATH_NAME
    endif
 
    cd $SOURCE

@@ -1,3 +1,5 @@
+JG-2004-09-17-0: Bugfix:    Fixed build of qtcsh on AIX43 if LIBPATH was set.
+
 RC-2004-07-02-0: Bugfix:    NetBSD port for AMD64 was not working
                  Changed:   All binaries
                  Review:    RC (patch by Nicolas Joly)

@@ -60,8 +60,6 @@
 
 #include "cull_hash.h"
 
-static int user_sort = 0;
-
 #define IDLE 0
 
 #ifdef WIN32NATIVE
@@ -219,6 +217,9 @@ void job_move_first_pending_to_running(lListElem **pending_job,
       ja_task = job_search_task(*pending_job, NULL, ja_task_id);
       /* JG: TODO: do we need the ja_task instance here or can we
        *           wait until the JATASK_ADD event arrives from qmaster?
+       *           The function should work on a copy if the job list.
+       *           The event from qmaster has effect on the mirrored lists.
+       *           So the code should be ok.
        */
       if(ja_task == NULL) {
          ja_task = job_create_task(*pending_job, NULL, ja_task_id);
@@ -895,15 +896,6 @@ void job_lists_print(lList **job_list[])
    } 
 } 
 
-int set_user_sort(
-int i /* 0/1/-1 = on/off/ask */
-) {
-   if (i>=0 && ((i && !user_sort) || (!i && user_sort))) {
-      user_sort = i;   
-   }
-   return user_sort;
-}
-
 lSortOrder *sge_job_sort_order(
 const lDescr *dp 
 ) {
@@ -985,7 +977,7 @@ int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so)
    DENTER(TOP_LAYER, "resort_jobs");
 
 
-   if (user_sort) {
+   if (get_user_sort()) {
       /* get number of running jobs of this user */
       if (owner) {
          jc_owner = lGetElemStr(jc, JC_name, owner);

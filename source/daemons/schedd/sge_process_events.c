@@ -87,6 +87,10 @@
 /* defined in sge_schedd.c */
 extern int shut_me_down;
 extern int start_on_master_host;
+extern int new_global_config;
+
+int rebuild_categories = 0;
+int rebuild_accesstree = 0;
 
 static void sge_rebuild_access_tree(lList *job_list, int trace_running);
 
@@ -132,24 +136,36 @@ static void ensure_valid_what_and_where(void);
 *    2 got shutdown order from qmaster 
 ******************************************************************************/
 #ifdef SCHEDULER_SAMPLES
-int event_handler_my_scheduler(lList *event_list) 
+int event_handler_my_scheduler() 
 {
-   return event_handler_default_scheduler(event_list);
+   return event_handler_default_scheduler();
 }
 #endif
 
-int event_handler_default_scheduler(lList *event_list) 
+int event_handler_default_scheduler() 
 {
    int ret;
    sge_Sdescr_t copy;
 
    DENTER(TOP_LAYER, "event_handler_default_scheduler");
 
-   DPRINTF(("================[SCHEDULING-EPOCH]==================\n"));
-   
-   if ((ret=sge_process_all_events(event_list))) {
-      DEXIT;
-      return ret;
+   if(__CONDITION(INFOPRINT)) {
+      DPRINTF(("================[SCHEDULING-EPOCH %s]==================\n", sge_at_time(0)));
+   }
+
+   if (rebuild_categories) {
+      DPRINTF(("### ### ### ### ###     REBUILDING CATEGORIES     ### ### ### ### ###\n"));
+      sge_rebuild_job_category(Master_Job_List, Master_Userset_List);
+      /* category references are used in the access tree
+         so rebuilding categories makes necessary to rebuild
+         the access tree */
+      rebuild_categories = 0;   
+      rebuild_accesstree = 1;
+   }
+   if (rebuild_accesstree && !sge_mode) {
+      DPRINTF(("### ### ### ### ###     REBUILDING ACCESS TREE    ### ### ### ### ###\n"));
+      sge_rebuild_access_tree(Master_Job_List, get_user_sort());
+      rebuild_accesstree = 0;
    }
 
    if ((ret=sge_before_dispatch())) {
@@ -162,46 +178,46 @@ int event_handler_default_scheduler(lList *event_list)
    ensure_valid_what_and_where();
 
    /* the scheduler functions have to work with a reduced copy .. */
-   copy.host_list = lSelect("", lists.host_list,
+   copy.host_list = lSelect("", Master_Exechost_List,
                             where_host, what_host);
-   copy.queue_list = lSelect("", lists.queue_list,
+   copy.queue_list = lSelect("", Master_Queue_List,
                              where_queue, what_queue);
 
    /* name all queues not suitable for scheduling in tsm-logging */
-   copy.all_queue_list = lSelect("", lists.queue_list,
+   copy.all_queue_list = lSelect("", Master_Queue_List,
                                  where_all_queue, what_queue);
-   copy.job_list = lSelect("", lists.job_list,
+   copy.job_list = lSelect("", Master_Job_List,
                            where_job, what_job);
 
    if (feature_is_enabled(FEATURE_SGEEE)) {
-      copy.dept_list = lSelect("", lists.acl_list, where_dept, what_dept);
-      copy.acl_list = lSelect("", lists.acl_list, where_acl, what_acl);
+      copy.dept_list = lSelect("", Master_Userset_List, where_dept, what_dept);
+      copy.acl_list = lSelect("", Master_Userset_List, where_acl, what_acl);
    }
    else {
-      copy.acl_list = lCopyList("", lists.acl_list);
+      copy.acl_list = lCopyList("", Master_Userset_List);
       copy.dept_list = NULL;
    }
 
    /* .. but not in all cases */
-   copy.complex_list = lCopyList("", lists.complex_list);
-   copy.pe_list = lCopyList("", lists.pe_list);
-   copy.share_tree = lCopyList("", lists.share_tree);
-   copy.config_list = lCopyList("", lists.config_list);
-   copy.user_list = lCopyList("", lists.user_list);
-   copy.project_list = lCopyList("", lists.project_list);
-   copy.ckpt_list = lCopyList("", lists.ckpt_list);
+   copy.complex_list = lCopyList("", Master_Complex_List);
+   copy.pe_list = lCopyList("", Master_Pe_List);
+   copy.share_tree = lCopyList("", Master_Sharetree_List);
+   copy.config_list = lCopyList("", Master_Sched_Config_List);
+   copy.user_list = lCopyList("", Master_User_List);
+   copy.project_list = lCopyList("", Master_Project_List);
+   copy.ckpt_list = lCopyList("", Master_Ckpt_List);
 
    /* report number of reduced and raw (in brackets) lists */
    DPRINTF(("Q:%d(%d), AQ:%d(%d) J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
             "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d CFG: %s\n",
             lGetNumberOfElem(copy.queue_list),
-            lGetNumberOfElem(lists.queue_list),
+            lGetNumberOfElem(Master_Queue_List),
             lGetNumberOfElem(copy.all_queue_list),
-            lGetNumberOfElem(lists.queue_list),
+            lGetNumberOfElem(Master_Queue_List),
             lGetNumberOfElem(copy.job_list),
-            lGetNumberOfElem(lists.job_list),
+            lGetNumberOfElem(Master_Job_List),
             lGetNumberOfElem(copy.host_list),
-            lGetNumberOfElem(lists.host_list),
+            lGetNumberOfElem(Master_Exechost_List),
 
             lGetNumberOfElem(copy.complex_list),
             lGetNumberOfElem(copy.acl_list),
@@ -219,13 +235,13 @@ int event_handler_default_scheduler(lList *event_list)
          printf("Q:%d(%d), AQ:%d(%d) J:%d(%d), H:%d(%d), C:%d, A:%d, D:%d, "
             "P:%d, CKPT:%d US:%d PR:%d S:nd:%d/lf:%d CFG: %s\n",
             lGetNumberOfElem(copy.queue_list),
-            lGetNumberOfElem(lists.queue_list),
+            lGetNumberOfElem(Master_Queue_List),
             lGetNumberOfElem(copy.all_queue_list),
-            lGetNumberOfElem(lists.queue_list),
+            lGetNumberOfElem(Master_Queue_List),
             lGetNumberOfElem(copy.job_list),
-            lGetNumberOfElem(lists.job_list),
+            lGetNumberOfElem(Master_Job_List),
             lGetNumberOfElem(copy.host_list),
-            lGetNumberOfElem(lists.host_list),
+            lGetNumberOfElem(Master_Exechost_List),
 
             lGetNumberOfElem(copy.complex_list),
             lGetNumberOfElem(copy.acl_list),
@@ -438,23 +454,6 @@ DTRACE;
 ******************************************************************************/
 void cleanup_default_scheduler(void)
 {
-#define FREE_AND_NULL_IT(list) list = lFreeList(list)
-  
-   /* free internal lists */ 
-   FREE_AND_NULL_IT(lists.host_list);
-   FREE_AND_NULL_IT(lists.queue_list);
-   FREE_AND_NULL_IT(lists.all_queue_list);
-   FREE_AND_NULL_IT(lists.job_list);
-   FREE_AND_NULL_IT(lists.complex_list);
-   FREE_AND_NULL_IT(lists.acl_list);
-   FREE_AND_NULL_IT(lists.pe_list);
-   FREE_AND_NULL_IT(lists.config_list);
-   FREE_AND_NULL_IT(lists.user_list);
-   FREE_AND_NULL_IT(lists.dept_list);
-   FREE_AND_NULL_IT(lists.project_list);
-   FREE_AND_NULL_IT(lists.share_tree);
-   FREE_AND_NULL_IT(lists.ckpt_list);
-   
    /* free job sorting access tree */ 
    at_finish();
 
@@ -462,1221 +461,358 @@ void cleanup_default_scheduler(void)
    sge_free_job_category();
 }
 
-/****** schedd/sge/sge_process_all_events() ***********************************
-*  NAME
-*     sge_process_all_events() -- Process all events 
-*
-*  SYNOPSIS
-*     int sge_process_all_events(lList *event_list) 
-*
-*  FUNCTION
-*     Process all events tha
-*
-*  INPUTS
-*     lList *event_list - ET_Type 
-*
-*  RESULT
-*    0 ok trigger scheduling
-*   -1 inconsistencies with events: register again at qmaster
-*    1 configuration changed heavily: register again at qmaster 
-*    2 got a shutdown event: do not schedule, finish immediately instead
-******************************************************************************/
-int sge_process_all_events(lList *event_list) 
+int sge_process_schedd_conf_event(sge_event_type type, sge_event_action action, 
+                                  lListElem *event, void *clientdata)
 {
-   static u_long32 user_sort = 0;
-   lList *data_list, **lpp;
-   lListElem *event, *ep = NULL, *ja_task = NULL;
-   u_long32 number, type, intkey, intkey2;
-   const char *strkey;
-   int ret;
-   int sge_mode = feature_is_enabled(FEATURE_SGEEE);
-   int rebuild_categories = 0, 
-       rebuild_accesstree = 0;
+   lListElem *ep;
 
-   DENTER(TOP_LAYER, "sge_process_all_events");
+   DENTER(TOP_LAYER, "sge_process_schedd_conf_event");
+   DPRINTF(("callback processing schedd config event\n"));
 
-   for_each(event, event_list) {
-      int n;
-      lList *new_version = NULL;
-      number = lGetUlong(event, ET_number);
-      type = lGetUlong(event, ET_type);
-      intkey = lGetUlong(event, ET_intkey);
-      intkey2 = lGetUlong(event, ET_intkey2);
-      strkey = lGetString(event, ET_strkey);
-      if ((new_version = lGetList(event, ET_new_version)))
-         n = lGetNumberOfElem(new_version);
-      else
-         n = 0;
-
-      DPRINTF((event_text(event)));
-
-      if ((ret=handle_administrative_events(type, event))==1)
-         continue;
-      if (ret == -1) {
-         DEXIT;
-         goto ReregisterSchedd;   
-      }         
-      if (ret == 2) {
-         DEXIT;
-         goto HaltSchedd;   
-      }         
+   ep = lFirst(Master_Sched_Config_List);
+   if(ep != NULL) {
+      /* check user_sort: if it changes, rebuild accesstree */
+      if (get_user_sort() != lGetBool(ep, SC_user_sort)) {
+         rebuild_accesstree = 1;
+      }
      
-      /* +================================================================+
-       * | NOTE: if you add new eventhandling here,                       |
-       * |      make sure to subscribe the event in sge_subscribe_schedd! |
-       * +================================================================+
-       */
-      switch (type) {
-         /* ======================================================
-          * schedd configuration
+      /* remember scheduler config in global data structure */
+      sc_set(NULL, &scheddconf, ep, NULL, NULL);
+
+      /* check event client settings */
+      if(ec_get_edtime() != scheddconf.schedule_interval) {
+         ec_set_edtime(scheddconf.schedule_interval);
+      }
+
+      if (use_alg(lGetString(ep, SC_algorithm))==2) {
+         /* changings on event handler or schedule interval can take effect 
+          * only after a new registration of schedd at qmaster 
           */
-      case sgeE_SCHED_CONF:
-         {
-            lList *src;
-            lListElem *ep;
-            u_long32 new_user_sort;
-
-            /* remove old sge config */
-            lists.config_list = lFreeList(lists.config_list);
-
-            if ((src = lGetList(event, ET_new_version))) {
-               /* install new one */
-               lists.config_list = lCreateList("config_list",
-                 lGetElemDescr(lFirst(lGetList(event, ET_new_version))));
-               ep = lDechainElem(src, lFirst(src));
-               sc_set(NULL, &scheddconf, ep, NULL, NULL);
-
-               /* check event client settings */
-               if(ec_get_edtime() != scheddconf.schedule_interval) {
-                  ec_set_edtime(scheddconf.schedule_interval);
-               }
-               if ((ret=use_alg(lGetString(ep, SC_algorithm)))==2) {
-                  /* changings on event handler or schedule interval can take effect 
-                     only after a new registration of schedd at qmaster */
-                  DEXIT;
-                  goto ReregisterSchedd;
-               }
-
-               new_user_sort = lGetBool(ep, SC_user_sort);
-               if (user_sort != new_user_sort) {
-                  set_user_sort(new_user_sort);
-                  /* state has changed */
-                  if (new_user_sort) {
-                     /* enable user sort */
-                     DPRINTF(("SWITCH USER SORT ON\n"));
-                  }
-                  else {
-                     /* disable user sort */
-                     DPRINTF(("SWITCH USER SORT OFF\n"));
-                  }
-                  user_sort = new_user_sort;
-                  rebuild_accesstree = 1;
-               }
-               lAppendElem(lists.config_list, ep);
-            }
-         }
-         break;
-
-         /* ======================================================
-          * JOB 
-          */
-      case sgeE_JOB_DEL:
-         {
-            u_long32 was_running;
-
-            ep = job_list_locate(lists.job_list, intkey);
-            if (!ep) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTODELETE_U ,
-                      u32c(intkey)));
-               break;
-            }
-            else {
-               for_each(ja_task, (lGetList(ep, JB_ja_tasks))) {
-                  was_running = running_status(lGetUlong(ja_task, JAT_status));
-                  /* decrease # of running jobs for this user */
-                  if (was_running && !sge_mode && user_sort)
-                     at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
-               }
-               /* delete job category if necessary */
-               sge_delete_job_category(ep);
-               if (!sge_mode)
-                   at_unregister_job_array(ep);
-               lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
-            }
-         }
-         break;
-
-      case sgeE_JOB_ADD:
-         {
-            u_long32 start, end, step;
-
-            if (!n) {
-               ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDJOBGOTNONEWJOB_IUU ,
-                      (int) number, u32c(intkey), u32c (intkey2)));
-               DEXIT;
-               goto Error;
-            }
-   
-            if (!lists.job_list)
-               lists.job_list = lCreateList("new job list", JB_Type);
-            data_list = lGetList(event, ET_new_version);
-            ep = lDechainElem(data_list, lFirst(data_list));
-
-            /* put it in sort order into the list */
-            lAppendElem(lists.job_list, ep);
-         
-            /* add job category */
-            sge_add_job_category(ep, lists.acl_list);
-            if (!sge_mode)
-               at_register_job_array(ep);
-
-            job_get_submit_task_ids(ep, &start, &end, &step);
-            if (job_is_array(ep)) {
-               DPRINTF(("Added job-array "u32"."u32"-"u32":"u32"\n", lGetUlong(ep, JB_job_number),
-                  start, end, step));
-            } else {
-               DPRINTF(("Added job "u32"\n", lGetUlong(ep, JB_job_number)));
-            } 
-         }
-         break;
-
-      case sgeE_JOB_MOD:
-         {
-            lListElem *job;
-            int i;
-
-            /* had problems with replacing job elements
-               so we need to overwrite all fields */
-            static int str_nm[] =
-            {
-               JB_owner,
-               JB_group,
-               JB_checkpoint_name,
-               JB_job_name,
-               JB_pe,
-            /* SGE */
-               JB_project,
-               JB_department,
-               JB_jobclass,
-               NoName
-            };
-
-            static int host_nm[] =
-            {
-               JB_host,
-               NoName
-            };
-
-            static int ulong_nm[] =
-            {
-               JB_job_number,
-               JB_submission_time,
-               JB_uid,
-               JB_gid,
-               JB_execution_time,
-               JB_checkpoint_attr,
-               JB_checkpoint_interval,
-               JB_mail_options, /* may be we want to send mail */
-               JB_priority,
-               JB_soft_wallclock_gmt,
-               JB_hard_wallclock_gmt,
-               JB_version,
-               JB_now,
-            /* SGE */
-               JB_override_tickets,
-               NoName
-            };
-            static int list_nm[] =
-            {
-               JB_jid_predecessor_list,
-               JB_pe_range,
-               JB_hard_queue_list,
-               JB_soft_queue_list,
-               JB_hard_resource_list,
-               JB_soft_resource_list,
-               JB_master_hard_queue_list,
-               JB_mail_list,
-               JB_ja_n_h_ids,
-               JB_ja_u_h_ids,
-               JB_ja_o_h_ids,
-               JB_ja_s_h_ids,
-               JB_ja_template,
-               NoName
-            };
-
-            /* 
-             * Note: We assume that everything in a job may 
-             *       change besides the jobs priority.
-             *       So here is no need to sort in a job new
-             *       when it gets changed (ok actually it is done). 
-             *       If you want to change the jobs priority
-             *       send a sgeE_JOB_MOD_SCHED_PRIORITY!
-             *       
-             */
-            if (!n) {
-               ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODJOBGOTNONEWJOB_UU ,
-                      u32c(number), u32c(intkey)));
-               DEXIT;
-               goto Error;
-            }
-            ep = job_list_locate(lists.job_list, intkey);
-            if (!ep) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTOMODIFY_U , u32c(intkey)));
-               DEXIT;
-               goto Error;
-            }
-
-            /*
-            ** before changing anything, remove category reference 
-            ** for unchanged job
-            */
-            if (!sge_mode)
-               at_unregister_job_array(ep);
-            sge_delete_job_category(ep);
-
-            data_list = lGetList(event, ET_new_version);
-            job = lFirst(data_list);
-
-            /* copy all strings */
-            for (i = 0; str_nm[i] != NoName; i++)
-               if (lGetPosViaElem(job, str_nm[i])) {
-                  DPRINTF(("sge_process_all_events: copy all strings\n"));
-                  lSetString(ep, str_nm[i], lGetString(job, str_nm[i]));
-               }
-            /* copy all hosts */
-            for (i = 0; host_nm[i] != NoName; i++)
-               if (lGetPosViaElem(job, host_nm[i])) {
-                  DPRINTF(("sge_process_all_events: copy all hosts\n"));
-                  lSetHost(ep, host_nm[i], lGetHost(job, host_nm[i]));
-               }
-
-
-            /* copy all ulongs */
-            for (i = 0; ulong_nm[i] != NoName; i++)
-               if (lGetPosViaElem(job, ulong_nm[i]))
-                  lSetUlong(ep, ulong_nm[i], lGetUlong(job, ulong_nm[i]));
-
-            /* copy all lists */
-            for (i = 0; list_nm[i] != NoName; i++)
-               if (lGetPosViaElem(job, list_nm[i]))
-                  lSetList(ep, list_nm[i], lCopyList("", lGetList(job, list_nm[i])));
-
-            /*
-            ** after changing the job, readd category reference 
-            ** for changed job
-            */
-            sge_add_job_category(ep, lists.acl_list);
-            if (!sge_mode)
-               at_register_job_array(ep);
-         }
-         break;
-
-      case sgeE_JATASK_MOD:
-         {
-            lListElem *ja_task, *new_ja_task;
-            u_long32 old_status;
-            int i; 
-
-            static int str_nm[] =
-            {
-               JAT_granted_pe,
-               JAT_master_queue,
-               JAT_osjobid,
-               NoName
-            };
-            static int ulong_nm[] =
-            {
-               JAT_task_number,
-               JAT_status,
-               JAT_start_time,
-               JAT_hold,
-               JAT_state,
-               JAT_pvm_ckpt_pid,
-               JAT_pending_signal,
-               JAT_pending_signal_delivery_time,
-               JAT_pid,
-               JAT_fshare,
-               JAT_suitable,
-               JAT_job_restarted, /* BOOL <-> ULONG */
-               NoName
-            };
-            static int list_nm[] =
-            {
-               JAT_granted_destin_identifier_list,
-               JAT_usage_list,
-               JAT_scaled_usage_list,
-               JAT_previous_usage_list,
-               NoName
-            };
-            static int ref_nm[] =
-            {
-               NoName
-            };
-            static int double_nm[] =
-            {
-               JAT_share,
-               JAT_ticket,
-               JAT_oticket,
-               JAT_dticket,
-               JAT_fticket,
-               JAT_sticket,
-               NoName
-            };
-
-            if (!n) {
-               ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODJATASKGOTNONEWJATASK_UUU ,
-                      u32c(number), u32c(intkey), u32c(intkey2)));
-               DEXIT;
-               goto Error;
-            }
-            ep = job_list_locate(lists.job_list, intkey);
-            if (!ep) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTOMODIFYTASKY_UU , u32c(intkey), u32c(intkey2)));
-               DEXIT;
-               goto Error;
-            }
-            
-            ja_task = job_search_task(ep, NULL, intkey2);
-            /* JG: TODO: This situation should not exist - handle it as error */
-            if(ja_task == NULL) {
-               ja_task = job_create_task(ep, NULL, intkey2);
-            }
-            if (!ja_task) {
-               /* usually caused by the precautionally sent delete event */
-               WARNING((SGE_EVENT,MSG_JOB_CANTFINDJOBARRAYTASKXYTOMODIFY_UU,
-                        u32c(intkey), u32c(intkey2)));
-               DEXIT;
-               goto Error;
-            } 
-
-            data_list = lGetList(event, ET_new_version);
-            new_ja_task = lFirst(data_list);
-           
-            old_status = lGetUlong(ja_task, JAT_status);
- 
-            /* copy all strings */
-            for (i = 0; str_nm[i] != NoName; i++)
-               if (lGetPosViaElem(new_ja_task, str_nm[i])) 
-                  lSetString(ja_task, str_nm[i], lGetString(new_ja_task, str_nm[i]));
-
-            /* copy all ulongs */
-            for (i = 0; ulong_nm[i] != NoName; i++)
-               if (lGetPosViaElem(new_ja_task, ulong_nm[i]))
-                  lSetUlong(ja_task, ulong_nm[i], lGetUlong(new_ja_task, ulong_nm[i]));
-   
-            /* copy all references */
-            for (i = 0; ref_nm[i] != NoName; i++)
-               if (lGetPosViaElem(new_ja_task, ref_nm[i]))
-                  lSetRef(ja_task, ref_nm[i], lGetRef(new_ja_task, ref_nm[i])); 
-
-            /* copy all doubles */
-            for (i = 0; double_nm[i] != NoName; i++)
-               if (lGetPosViaElem(new_ja_task, double_nm[i]))
-                  lSetDouble(ja_task, double_nm[i], lGetDouble(new_ja_task, double_nm[i]));
-
-            /* copy all lists */
-            for (i = 0; list_nm[i] != NoName; i++)
-               if (lGetPosViaElem(new_ja_task, list_nm[i]))
-                  lSetList(ja_task, list_nm[i], lCopyList("", lGetList(new_ja_task, list_nm[i])));
-
-            if (running_status(lGetUlong(ja_task, JAT_status))) {
-               if (!running_status(old_status)) {
-                  DPRINTF(("JATASK "u32"."u32": IDLE -> RUNNING\n", intkey, intkey2));
-                  if (!sge_mode && user_sort)
-                     at_inc_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
-               }
-            } else {
-               if (running_status(old_status)) {
-                  DPRINTF(("JATASK "u32"."u32": RUNNING -> IDLE\n", intkey, intkey2));
-                  if (!sge_mode && user_sort)
-                     at_dec_job_counter(lGetUlong(ep, JB_priority), lGetString(ep, JB_owner), 1);
-               }
-            }     
-         }
-         break;
-
-      case sgeE_PETASK_ADD:
-         {
-            lListElem *job, *ja_task, *pe_task;
-            lList *task_list;
-   
-            /* check if event contains any objects */
-            if (n <= 0) {
-               ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDPETASKXGOTNONEWPETASK_IUUS,
-                      (int) number, u32c(intkey), u32c(intkey2), strkey));
-               DEXIT;
-               goto Error;
-            }
-           
-            /* search job */
-            job = job_list_locate(lists.job_list, intkey);
-            if (job == NULL) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORADDINGPETASK_U, 
-                      u32c(intkey)));
-               DEXIT;
-               goto Error;
-            }
-
-            /* search ja task */
-            /* JG: TODO (256): use lGetElemUlong  */
-            for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-               if (lGetUlong(ja_task, JAT_task_number) == intkey2)
-                  break;
-            }
-
-            if (ja_task == NULL) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKXFORADDINGPETASK_UU, 
-                      u32c(intkey), u32c(intkey2)));
-               DEXIT;
-               goto Error;
-            }
-
-            /* if pe task list not yet existed, create it,
-             * else check if the new pe task is already there
-             */
-            task_list = lGetList(ja_task, JAT_task_list);
-            if(task_list == NULL) {
-               task_list = lCreateList("pe tasks", PET_Type);
-               lSetList(ja_task, JAT_task_list, task_list);
-            } else {
-               pe_task = lGetElemStr(task_list, PET_id, strkey);
-               if (pe_task != NULL) {
-                  DPRINTF(("Had to add pe task %s to job/jatask "U32CFormat"."U32CFormat", but it's already here\n",
-                           strkey, u32c(intkey), u32c(intkey2)));
-                  DEXIT;
-                  goto Error;
-               }
-            }
-
-            /* copy pe task to ja tasks pe task list */
-            pe_task = lDechainElem(new_version, lFirst(new_version)); 
-            lAppendElem(task_list, pe_task);
-         }
-         break;
-
-      case sgeE_PETASK_DEL:
-         {
-            lListElem *job, *ja_task;
-            lList *task_list;
-   
-            /* search job */
-            job = job_list_locate(lists.job_list, intkey);
-            if (job == NULL) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORDELETINGPETASK_U, 
-                      u32c(intkey)));
-               DEXIT;
-               goto Error;
-            }
-
-            /* search ja task */
-            /* JG: TODO (256): use lGetElemUlong  */
-            for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-               if (lGetUlong(ja_task, JAT_task_number) == intkey2)
-                  break;
-            }
-
-            if (ja_task == NULL) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKXFORDELETINGPETASK_UU, 
-                      u32c(intkey), u32c(intkey2)));
-               DEXIT;
-               goto Error;
-            }
-            
-            task_list = lGetList(ja_task, JAT_task_list);
-            if(task_list != NULL) {
-               lDelElemStr(&task_list, PET_id, strkey);
-            }
-         }   
-         break;
-         
-      case sgeE_JOB_LIST:
-         lXchgList(event, ET_new_version, &(lists.job_list));
-         rebuild_categories = 1;
-         break;
-
-      case sgeE_JOB_MOD_SCHED_PRIORITY:
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODJOBGOTNONEWJOB_IU,
-                   (int) number, u32c(intkey)));
-            DEXIT;
-            goto Error;
-         }
-         ep = job_list_locate(lists.job_list, intkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTOMODIFYPRIORITY_U ,
-                   u32c(intkey)));
-            DEXIT;
-            goto Error;
-         }
-
-         if (!sge_mode)
-            at_unregister_job_array(ep);
-
-         /* use new scheduling priority */
-         lSetUlong(ep, JB_priority, lGetUlong(lFirst(
-                         lGetList(event, ET_new_version)), JB_priority));
-
-         if (!sge_mode)
-            at_register_job_array(ep);
-
-         break;
-
-      case sgeE_JOB_FINAL_USAGE:
-      case sgeE_JOB_USAGE:
-         {
-            u_long32 was_running;
-            lListElem *job, *ja_task, *pe_task = NULL;
-
-            job = job_list_locate(lists.job_list, intkey);
-            if (job == NULL) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXFORUPDATINGUSAGE_U, 
-                      u32c(intkey)));
-               DEXIT;
-               goto Error;
-            }
-
-            /* JG: TODO (256): use lGetElemUlong  */
-            for_each(ja_task, lGetList(job, JB_ja_tasks)) {
-               if (lGetUlong(ja_task, JAT_task_number) == intkey2)
-                  break;
-            }
-
-            if (ja_task == NULL) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJATASKXFORUPDATINGUSAGE_UU, 
-                      u32c(intkey), u32c(intkey2)));
-               DEXIT;
-               goto Error;
-            }
-
-	         if (strkey != NULL) { /* must be a pe task usage */
-               pe_task = lGetSubStr(ja_task, PET_id, strkey, JAT_task_list);
-		         if (pe_task == NULL) {
-                  ERROR((SGE_EVENT, MSG_JOB_CANTFINDPETASKXFORUPDATINGUSAGE_UUS, 
-                         u32c(intkey), u32c(intkey2), strkey));
-                  DEXIT;
-                  goto Error;
-               }
-            }	    
-
-
-            /* exchange old and new usage list */
-            {
-               lList *tmp = NULL;
-
-               lXchgList(event, ET_new_version, &tmp);
-               if(pe_task != NULL) {
-                  lXchgList(pe_task, PET_scaled_usage, &tmp);
-               } else {
-                  lXchgList(ja_task, JAT_scaled_usage_list, &tmp);
-               }
-               lXchgList(event, ET_new_version, &tmp);
-            }
-
-            was_running = running_status(lGetUlong(ja_task, JAT_status));
-            /* decrease # of running jobs for this user */
-            if (type == sgeE_JOB_FINAL_USAGE && was_running && pe_task == NULL) {
-               if (!sge_mode && user_sort)
-                  at_dec_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
-            }
-
-            if (type == sgeE_JOB_FINAL_USAGE && pe_task == NULL)
-               lSetUlong(ja_task, JAT_status, JFINISHED);
-         }
-         break;
-
-         /* ======================================================
-          * QUEUE 
-          */
-      case sgeE_QUEUE_LIST:
-
-         lXchgList(event, ET_new_version, &(lists.queue_list));
-         break;
-
-      case sgeE_QUEUE_DEL:
-         ep = queue_list_locate(lists.queue_list, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEXTODELETE_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lDelElemStr(&(lists.queue_list), QU_qname, strkey);
-         break;
-
-      case sgeE_QUEUE_ADD:
-         DPRINTF(("%d. EVENT ADD QUEUE %s\n", (int) number, strkey));
-
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDQUEUEXGOTNONEWQUEUE_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = queue_list_locate(lists.queue_list, strkey);
-         if (ep) {
-            DPRINTF(("Had to add Queue %s but it's already here\n",
-                     strkey));
-            DEXIT;
-            goto Error;
-         }
-         if (!lists.queue_list)
-            lists.queue_list = lCreateList("new queue list", QU_Type);
-
-         data_list = lGetList(event, ET_new_version);
-         ep = lDechainElem(data_list, lFirst(data_list));
-         lAppendElem(lists.queue_list, ep);
-         break;
-
-      case sgeE_QUEUE_MOD:
-
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODQUEUEXGOTNONEWQUEUE_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = queue_list_locate(lists.queue_list, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEXTOMODIFY_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lRemoveElem(lists.queue_list, ep);
-         data_list = lGetList(event, ET_new_version);
-         ep = lDechainElem(data_list, lFirst(data_list));
-         lAppendElem(lists.queue_list, ep);
-         break;
-
-      case sgeE_QUEUE_SUSPEND_ON_SUB:
-      case sgeE_QUEUE_UNSUSPEND_ON_SUB:
-         {
-            u_long32 state;
-
-            ep = queue_list_locate(lists.queue_list, strkey);
-            if (!ep) {
-               ERROR((SGE_EVENT, MSG_QUEUE_CANTFINDQUEUEXTOYONSUBORDINATE_SS , strkey,
-                      (type == sgeE_QUEUE_SUSPEND_ON_SUB) ? MSG_QUEUE_SUSPEND  : MSG_QUEUE_UNSUSPEND ));
-            DEXIT;
-            goto Error;
-            }
-
-            state = lGetUlong(ep, QU_state);
-            if (type == sgeE_QUEUE_SUSPEND_ON_SUB)
-               state |= QSUSPENDED_ON_SUBORDINATE;      /* set this bit */
-            else
-               state &= ~QSUSPENDED_ON_SUBORDINATE;     /* reset this bit */
-            lSetUlong(ep, QU_state, state);
-
-         }
-         break;
-
-         /* ======================================================
-
-            COMPLEX 
-
-          */
-      case sgeE_COMPLEX_LIST:
-         lXchgList(event, ET_new_version, &(lists.complex_list));
-         break;
-
-      case sgeE_COMPLEX_DEL:
-         ep = lGetElemStr(lists.complex_list, CX_name, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_COMPLEX_CANTFINDCOMPLEXXTODELETE_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lDelElemStr(&(lists.complex_list), CX_name, strkey);
-         break;
-
-      case sgeE_COMPLEX_ADD:
-
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDCOMPLEXXGOTNONEWCOMPLEX_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = lGetElemStr(lists.complex_list, CX_name, strkey);
-         if (ep) {
-            DPRINTF(("Had to add complex %s but it's already here\n",
-                     strkey));
-            DEXIT;
-            goto Error;
-         }
-         if (!lists.complex_list)
-            lists.complex_list = lCreateList("new complex list", CX_Type);
-
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(lists.complex_list,
-                     lDechainElem(data_list, lFirst(data_list)));
-         break;
-
-      case sgeE_COMPLEX_MOD:
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODCOMPLEXXGOTNONEWCOMPLEX_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = lGetElemStr(lists.complex_list, CX_name, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_COMPLEX_CANTFINDCOMPLEXXTOMODIFY_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lRemoveElem(lists.complex_list, ep);
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(lists.complex_list,
-                     lDechainElem(data_list, lFirst(data_list)));
-         break;
-
-         /* ======================================================
-          * USERSET 
-          */
-      case sgeE_USERSET_LIST:
-         lXchgList(event, ET_new_version, &(lists.acl_list));
-         rebuild_categories = 1;
-         break;
-
-      case sgeE_USERSET_DEL:
-         ep = lGetElemStr(lists.acl_list, US_name, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_USERSET_CANTFINDUSERSETXTODELETE_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lDelElemStr(&(lists.acl_list), US_name, strkey);
-         rebuild_categories = 1;
-         break;
-
-      case sgeE_USERSET_ADD:
-
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDACLXGOTNONEWACL_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = lGetElemStr(lists.acl_list, US_name, strkey);
-         if (ep) {
-            DPRINTF(("Had to add acl %s but it's already here\n",
-                     strkey));
-            DEXIT;
-            goto Error;
-         }
-         if (!lists.acl_list)
-            lists.acl_list = lCreateList("new acl list", US_Type);
-
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(lists.acl_list,
-                     lDechainElem(data_list, lFirst(data_list)));
-         rebuild_categories = 1;
-         break;
-
-      case sgeE_USERSET_MOD:
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODACLXGOTNONEWACL_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = lGetElemStr(lists.acl_list, US_name, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_USERSET_CANTFINDUSERSETXTOMODIFY_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lRemoveElem(lists.acl_list, ep);
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(lists.acl_list,
-                     lDechainElem(data_list, lFirst(data_list)));
-         rebuild_categories = 1;
-         break;
-
-         /* ======================================================
-          * USER/PROJECT 
-          */
-      case sgeE_USER_LIST:
-      case sgeE_PROJECT_LIST:
-         lpp = (type == sgeE_USER_LIST) ?
-            &(lists.user_list) :
-            &(lists.project_list);
-         lXchgList(event, ET_new_version, lpp);
-
-         break;
-
-      case sgeE_USER_DEL:
-      case sgeE_PROJECT_DEL:
-         lpp = (type == sgeE_USER_DEL) ?
-            &(lists.user_list) :
-            &(lists.project_list);
-         ep = userprj_list_locate(*lpp, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_SCHEDD_CANTFINDUSERORPROJECTXTODELETE_SS ,
-                   type == sgeE_USER_DEL ? MSG_USER : MSG_PROJECT,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lDelElemStr(lpp, UP_name, strkey);
-         break;
-
-      case sgeE_USER_ADD:
-      case sgeE_PROJECT_ADD:
-         lpp = (type == sgeE_USER_ADD) ?
-            &(lists.user_list) :
-            &(lists.project_list);
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDUSERORPROJXGOTNONEWONE_ISS ,
-                   (int) number,
-                   type == sgeE_USER_ADD ? MSG_USER : MSG_PROJECT,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = userprj_list_locate(*lpp, strkey);
-         if (ep) {
-            DPRINTF(("Had to add %s %s but it's already here\n",
-                     type == sgeE_USER_ADD ? MSG_USER : MSG_PROJECT,
-                     strkey));
-            DEXIT;
-            goto Error;
-         }
-         if (!*lpp)
-            *lpp = lCreateList("new list", UP_Type);
-
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(*lpp,
-                     lDechainElem(data_list, lFirst(data_list)));
-         break;
-
-      case sgeE_USER_MOD:
-      case sgeE_PROJECT_MOD:
-         lpp = (type == sgeE_USER_MOD) ?
-            &(lists.user_list) :
-            &(lists.project_list);
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODUSERORPROJXGOTNONEWONE_ISS ,
-              (int) number, (type == sgeE_USER_MOD ? MSG_USER : MSG_PROJECT),
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = userprj_list_locate(*lpp, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_SCHEDD_CANTFINDUSERORPROJECTXTOMODIFY_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lRemoveElem(*lpp, ep);
-         data_list = lGetList(event, ET_new_version);
-
-         lAppendElem(*lpp,
-                     lDechainElem(data_list, lFirst(data_list)));
-         break;
-
-         /* ======================================================
-
-          *  EXECHOST 
-          */
-      case sgeE_EXECHOST_LIST:
-         lXchgList(event, ET_new_version, &(lists.host_list));
-         break;
-
-      case sgeE_EXECHOST_DEL:
-         ep = host_list_locate(lists.host_list, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_EXECHOST_CANTFINDEXECHOSTXTODELETE_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lDelElemHost(&(lists.host_list), EH_name, strkey);
-         break;
-
-      case sgeE_EXECHOST_ADD:
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDEXECHOSTXGOTNONEWEXECHOST_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-
-         ep = host_list_locate(lists.host_list, strkey);
-         if (ep) {
-            DPRINTF(("Had to add exechost %s but it's already here\n",
-                     strkey));
-            DEXIT;
-            goto Error;
-         }
-         if (!lists.host_list)
-            lists.host_list = lCreateList("new exechost list", EH_Type);
-
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(lists.host_list,
-                     lDechainElem(data_list, lFirst(data_list)));
-         break;
-
-      case sgeE_EXECHOST_MOD:
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODEXECHOSTXGOTNONEWEXECHOST_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-
-         ep = host_list_locate(lists.host_list, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_EXECHOST_CANTFINDEXECHOSTXTOMODIFY_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-
-         lRemoveElem(lists.host_list, ep);
-         lAppendElem(lists.host_list,
-                     lDechainElem(new_version, lFirst(new_version)));
-
-         break;
-
-         /* ======================================================
-          * PE 
-          */
-      case sgeE_PE_LIST:
-         lXchgList(event, ET_new_version, &(lists.pe_list));
-         break;
-
-      case sgeE_PE_DEL:
-         ep = pe_list_locate(lists.pe_list, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_PARENV_CANTFINDPARENVXTODELETE_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lDelElemStr(&(lists.pe_list), PE_name, strkey);
-         break;
-
-      case sgeE_PE_ADD:
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDPEXGOTNONEWPE_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = pe_list_locate(lists.pe_list, strkey);
-         if (ep) {
-            DPRINTF(("Had to add parallel environment %s but it's already here\n",
-                     strkey));
-            DEXIT;
-            goto Error;
-         }
-         if (!lists.pe_list)
-            lists.pe_list = lCreateList("new pe list", PE_Type);
-
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(lists.pe_list,
-                     lDechainElem(data_list, lFirst(data_list)));
-         break;
-
-      case sgeE_PE_MOD:
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODPEXGOTNONEWPE_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = pe_list_locate(lists.pe_list, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_PARENV_CANTFINDPARENVXTOMODIFY_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lRemoveElem(lists.pe_list, ep);
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(lists.pe_list,
-                     lDechainElem(data_list, lFirst(data_list)));
-
-         break;
-
-         /* ====================================================== */
-      case sgeE_NEW_SHARETREE:
-         if (feature_is_enabled(FEATURE_SGEEE)) {
-            lList *src;
-
-            /* remove old share tree */
-            lists.share_tree = lFreeList(lists.share_tree);
-
-            if ((src = lGetList(event, ET_new_version))) {
-               /* install new one */
-               lists.share_tree = lCreateList("share tree",
-                 lGetElemDescr(lFirst(lGetList(event, ET_new_version))));
-               lAppendElem(lists.share_tree, lDechainElem(src, lFirst(src)));
-            }
-         }
-         break;
-
-         /* ======================================================
-          * CKPT
-          */
-      case sgeE_CKPT_LIST:
-         lXchgList(event, ET_new_version, &(lists.ckpt_list));
-         break;
-
-      case sgeE_CKPT_DEL:
-         ep = ckpt_list_locate(lists.ckpt_list, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_CHKPNT_CANTFINDCHKPNTINTXTODELETE_S ,
-                   strkey));
-            DEXIT;
-            goto Error;
-         }
-         lDelElemStr(&(lists.ckpt_list), CK_name, strkey);
-         break;
-
-      case sgeE_CKPT_ADD:
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTADDCKPTXGOTNONEWCKPTINT_IS ,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = ckpt_list_locate(lists.ckpt_list, strkey);
-         if (ep) {
-            DPRINTF(("Had to add ckpt interface definition %s but it's already here\n",
-                     strkey));
-            DEXIT;
-            goto Error;
-         }
-         if (!lists.ckpt_list)
-            lists.ckpt_list = lCreateList("new ckpt list", CK_Type);
-
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(lists.ckpt_list,
-                     lDechainElem(data_list, lFirst(data_list)));
-         break;
-
-      case sgeE_CKPT_MOD:
-         if (!n) {
-            ERROR((SGE_EVENT, MSG_EVENT_XEVENTMODCKPTXGOTNONEWCKPTINT_IS,
-                   (int) number, strkey));
-            DEXIT;
-            goto Error;
-         }
-         ep = ckpt_list_locate(lists.ckpt_list, strkey);
-         if (!ep) {
-            ERROR((SGE_EVENT, MSG_CHKPNT_CANTFINDCHKPNTINTXTOMODIFY_S , strkey));
-            DEXIT;
-            goto Error;
-         }
-         lRemoveElem(lists.ckpt_list, ep);
-         data_list = lGetList(event, ET_new_version);
-         lAppendElem(lists.ckpt_list,
-                     lDechainElem(data_list, lFirst(data_list)));
-
-         break;
-         
-         /* ======================================================
-          * JA-TASK 
-          */
-      case sgeE_JATASK_ADD:
-         /* JG: TODO: insert jatask into job.
-          *           see TODO in libs/sched//sge_job_schedd.c
-          */
-          break;
-      case sgeE_JATASK_DEL:
-         {
-            u_long32 was_running;
-
-            ep = job_list_locate(lists.job_list, intkey);
-            if (!ep) {
-               ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBXTODELETEJOBARRAYTASK_U , 
-                      u32c(intkey)));
-               DEXIT;
-               goto Error;
-            } else {
-               int is_enrolled = job_is_enrolled(ep, intkey2);
-
-               if (is_enrolled) {
-                  lList *ja_tasks = lGetList(ep, JB_ja_tasks);
-
-                  ja_task = lGetElemUlong(ja_tasks, JAT_task_number, intkey2);
-                  if (!ja_task) {
-                     ERROR((SGE_EVENT, MSG_JOB_CANTFINDJOBARRAYTASKXTODELETE_U,
-                            u32c(intkey2)));
-                     DEXIT;
-                     goto Error;
-                  } else {
-                     was_running = running_status(lGetUlong(ja_task, JAT_status));
-                     if (was_running && !sge_mode && user_sort)
-                        at_dec_job_counter(lGetUlong(ep, JB_priority), 
-                                           lGetString(ep, JB_owner), 1);
-                     lRemoveElem(lGetList(ep, JB_ja_tasks), ja_task);
-                  }
-               } else {
-                  job_delete_not_enrolled_ja_task(ep, NULL, intkey2);
-               }
-               if (job_get_ja_tasks(ep) == 0) {
-                  sge_delete_job_category(ep);
-                  if (!sge_mode)
-                     at_unregister_job_array(ep);
-                  lDelElemUlong(&(lists.job_list), JB_job_number, intkey);
-               }
-            }
-         }
-         break;
-
-      /* +================================================================+
-       * | NOTE: if you add new eventhandling here,                       |
-       * |      make sure to subscribe the event in sge_subscribe_schedd! |
-       * +================================================================+
-       */
-      default:
-         DPRINTF(("Unknown event type %d\n", (int) type));
+         sge_mirror_shutdown();
+         sge_schedd_mirror_register();
          DEXIT;
-         goto Error;
+         return TRUE;
       }
    }
 
-   lFreeList(event_list);
+   DEXIT;
+   return TRUE;
+}
 
-   if (rebuild_categories) {
-      DPRINTF(("### ### ### ### ###     REBUILDING CATEGORIES     ### ### ### ### ###\n"));
-      sge_rebuild_job_category(lists.job_list, lists.acl_list);
-      /* category references are used in the access tree
-         so rebuilding categories makes necessary to rebuild
-         the access tree */
-      rebuild_accesstree = 1;
+int sge_process_job_event_before(sge_event_type type, sge_event_action action, 
+                                 lListElem *event, void *clientdata)
+{
+   u_long32 job_id;
+   lListElem *job;
+
+   DENTER(TOP_LAYER, "sge_process_job_event_before");
+   DPRINTF(("callback processing job event before default rule\n"));
+
+   if(action == SGE_EMA_DEL || action == SGE_EMA_MOD) {
+      job_id = lGetUlong(event, ET_intkey);
+      job = job_list_locate(Master_Job_List, job_id);
+      if (job == NULL) {
+         ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, job_get_id_string(job_id, 0, NULL)));
+         DEXIT;
+         return FALSE;
+      }   
+   } else {
+      DEXIT;
+      return TRUE;
    }
-   if (rebuild_accesstree && !sge_mode) {
-      DPRINTF(("### ### ### ### ###     REBUILDING ACCESS TREE    ### ### ### ### ###\n"));
-      sge_rebuild_access_tree(lists.job_list, user_sort);
+
+   switch(action) {
+      case SGE_EMA_DEL:
+         {
+            lListElem *ja_task;
+
+            for_each(ja_task, (lGetList(job, JB_ja_tasks))) {
+               u_long32 was_running = running_status(lGetUlong(ja_task, JAT_status));
+               /* decrease # of running jobs for this user */
+               if (was_running && !sge_mode && get_user_sort()) {
+                  at_dec_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
+               }
+               /* delete job category if necessary */
+               sge_delete_job_category(job);
+               if (!sge_mode) {
+                   at_unregister_job_array(job);
+               }
+            }
+         }   
+         break;
+
+      case SGE_EMA_MOD:
+         switch(lGetUlong(event, ET_type)) {
+            case sgeE_JOB_MOD:
+               /*
+                * before changing anything, remove category reference 
+                * for unchanged job
+                */
+               if (!sge_mode) {
+                  at_unregister_job_array(job);
+               }
+
+               sge_delete_job_category(job);
+            break;
+
+            case sgeE_JOB_MOD_SCHED_PRIORITY:
+               if (!sge_mode) {
+                  at_unregister_job_array(job);
+               }
+               break;
+
+            default:
+            break;
+         }
+         break;
+
+      default:
+         break;
    }
 
    DEXIT;
-   return 0;
+   return TRUE;
+}   
 
-HaltSchedd:
-   cleanup_default_scheduler();
-   lFreeList(event_list);
-   return 2;
-ReregisterSchedd:
-   cleanup_default_scheduler();
-   lFreeList(event_list);
-   return 1;
-Error:
-   cleanup_default_scheduler();
-   lFreeList(event_list);
-   return -1;
+int sge_process_job_event_after(sge_event_type type, sge_event_action action, 
+                                lListElem *event, void *clientdata)
+{
+   u_long32 job_id = 0;
+   lListElem *job  = NULL;
+
+   DENTER(TOP_LAYER, "sge_process_job_event_after");
+   DPRINTF(("callback processing job event after default rule\n"));
+
+   if(action == SGE_EMA_ADD || action == SGE_EMA_MOD) {
+      job_id = lGetUlong(event, ET_intkey);
+      job = job_list_locate(Master_Job_List, job_id);
+      if (job == NULL) {
+         ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, job_get_id_string(job_id, 0, NULL)));
+         DEXIT;
+         return FALSE;
+      }   
+   }
+
+   switch(action) {
+      case SGE_EMA_LIST:
+         rebuild_categories = 1;
+         break;
+
+      case SGE_EMA_ADD:
+         {
+            u_long32 start, end, step;
+
+            /* add job category */
+            sge_add_job_category(job, Master_Userset_List);
+
+            if (!sge_mode) {
+               at_register_job_array(job);
+            }
+
+            job_get_submit_task_ids(job, &start, &end, &step);
+
+            if (job_is_array(job)) {
+               DPRINTF(("Added job-array "u32"."u32"-"u32":"u32"\n", 
+                        job_id, start, end, step));
+            } else {
+               DPRINTF(("Added job "u32"\n", job_id));
+            } 
+         }
+         break;
+
+      case SGE_EMA_MOD:
+         switch(lGetUlong(event, ET_type)) {
+            case sgeE_JOB_MOD:
+               /*
+               ** after changing the job, readd category reference 
+               ** for changed job
+               */
+               sge_add_job_category(job, Master_Userset_List);
+               if (!sge_mode) {
+                  at_register_job_array(job);
+               }
+               break;
+
+            case sgeE_JOB_FINAL_USAGE:
+               {
+                  const char *pe_task_id;
+
+                  pe_task_id = lGetString(event, ET_strkey);
+                  
+                  /* ignore FINAL_USAGE for a pe task here */
+                  if(pe_task_id == NULL) {
+                     u_long32 ja_task_id;
+                     lListElem *ja_task;
+
+                     ja_task_id = lGetUlong(event, ET_intkey2);
+                     ja_task = job_search_task(job, NULL, ja_task_id);
+
+                     if(ja_task == NULL) {
+                        ERROR((SGE_EVENT, MSG_CANTFINDTASKINJOB_UU, u32c(ja_task_id), u32c(job_id)));
+                        DEXIT;
+                        return FALSE;
+                     }
+
+                     /* decrease # of running jobs for this user */
+                     if (running_status(lGetUlong(ja_task, JAT_status))) {
+                        if (!sge_mode && get_user_sort()) {
+                           at_dec_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
+                        }   
+                     }
+                     lSetUlong(ja_task, JAT_status, JFINISHED);
+                  }   
+               }
+               break;
+            
+            case sgeE_JOB_MOD_SCHED_PRIORITY:
+               if (!sge_mode) {
+                  at_register_job_array(job);
+               }
+               break;
+
+            default:
+               break;
+         }
+         break;
+
+      default:
+         break;
+   }
+
+   DEXIT;
+   return TRUE;
 }
+
+
+int sge_process_ja_task_event_before(sge_event_type type, sge_event_action action, 
+                                     lListElem *event, void *clientdata)
+{
+   DENTER(TOP_LAYER, "sge_process_ja_task_event_before");
+   DPRINTF(("callback processing ja_task event before default rule\n"));
+
+   if(action == SGE_EMA_MOD || action == SGE_EMA_DEL) {
+      u_long32 job_id, ja_task_id;
+      lListElem *job, *ja_task;
+
+      job_id = lGetUlong(event, ET_intkey);
+      job = job_list_locate(Master_Job_List, job_id);
+      if (job == NULL) {
+         ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, job_get_id_string(job_id, 0, NULL)));
+         DEXIT;
+         return FALSE;
+      }   
+
+      ja_task_id = lGetUlong(event, ET_intkey2);
+      ja_task = job_search_task(job, NULL, ja_task_id);
+
+      if(action == SGE_EMA_MOD) {
+         lListElem *new_ja_task;
+         u_long32 old_status, new_status;
+
+         if(ja_task == NULL) {
+            ERROR((SGE_EVENT, MSG_CANTFINDTASKINJOB_UU, u32c(ja_task_id), u32c(job_id)));
+            DEXIT;
+            return FALSE;
+         }
+
+         new_ja_task = lFirst(lGetList(event, ET_new_version));
+         if(new_ja_task == NULL) {
+            ERROR((SGE_EVENT, MSG_NODATAINEVENT));
+            DEXIT;
+            return FALSE;
+         }
+          
+         old_status = lGetUlong(ja_task, JAT_status); 
+         new_status = lGetUlong(new_ja_task, JAT_status); 
+         
+         if (running_status(new_status)) {
+            if (!running_status(old_status)) {
+               DPRINTF(("JATASK "u32"."u32": IDLE -> RUNNING\n", job_id, ja_task_id));
+               if (!sge_mode && get_user_sort()) {
+                  at_inc_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
+               }
+            }   
+         } else {
+            if (running_status(old_status)) {
+               DPRINTF(("JATASK "u32"."u32": RUNNING -> IDLE\n", job_id, ja_task_id));
+               if (!sge_mode && get_user_sort()) {
+                  at_dec_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
+               }
+            } 
+         }   
+      } else {
+         if(ja_task != NULL) {
+            if(running_status(lGetUlong(ja_task, JAT_status)) && !sge_mode && get_user_sort()) {
+               at_dec_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);
+            }
+         }
+      }
+   }
+
+   DEXIT;
+   return TRUE;
+}            
+/* If the last ja task of a job is deleted, 
+ * remove the job category.
+ * Do we really need it?
+ * Isn't a job delete event sent after the last array task exited?
+ */
+int sge_process_ja_task_event_after(sge_event_type type, sge_event_action action, 
+                                    lListElem *event, void *clientdata)
+{
+   DENTER(TOP_LAYER, "sge_process_ja_task_event_after");
+   DPRINTF(("callback processing ja_task event after default rule\n"));
+
+   if(action == SGE_EMA_DEL) {
+      lListElem *job;
+      u_long32 job_id;
+
+      job_id = lGetUlong(event, ET_intkey);
+      job = job_list_locate(Master_Job_List, job_id);
+      if (job == NULL) {
+         ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S, job_get_id_string(job_id, 0, NULL)));
+         DEXIT;
+         return FALSE;
+      }   
+
+      if (job_get_ja_tasks(job) == 0) {
+         sge_delete_job_category(job);
+      }   
+   }
+
+   DEXIT;
+   return TRUE;
+}
+
+int sge_process_userset_event_after(sge_event_type type, sge_event_action action, 
+                                    lListElem *event, void *clientdata)
+{
+   DENTER(TOP_LAYER, "sge_process_userset_event");
+   DPRINTF(("callback processing userset event after default rule\n"));
+   rebuild_categories = 1;
+   DEXIT;
+   return TRUE;
+}
+
+int sge_process_schedd_monitor_event(sge_event_type type, sge_event_action action, 
+                                     lListElem *event, void *clientdata)
+{
+   DENTER(TOP_LAYER, "sge_process_schedd_monitor_event");
+   DPRINTF(("monitoring next scheduler run\n"));
+   monitor_next_run = 1;
+   DEXIT;
+   return TRUE;
+}   
+
+int sge_process_global_config_event(sge_event_type type, sge_event_action action, 
+                                    lListElem *event, void *clientdata)
+{
+   DENTER(TOP_LAYER, "sge_process_global_config_event");
+   DPRINTF(("notification about new global configuration\n"));
+   new_global_config = 1;
+   DEXIT;
+   return TRUE;
+}   
 
 static void sge_rebuild_access_tree(
 lList *job_list,
@@ -1695,5 +831,58 @@ int trace_running
             if (running_status(lGetUlong(ja_task, JAT_status))) 
                   at_inc_job_counter(lGetUlong(job, JB_priority), lGetString(job, JB_owner), 1);      
    }
+}
+
+int subscribe_default_scheduler(void)
+{
+   /* subscribe event types for the mirroring interface */
+   sge_mirror_subscribe(SGE_EMT_CKPT,           NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_COMPLEX,        NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_EXECHOST,       NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_SHARETREE,      NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_PROJECT,        NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_PE,             NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_QUEUE,          NULL, NULL, NULL);
+   sge_mirror_subscribe(SGE_EMT_USER,           NULL, NULL, NULL);
+  
+   /* event types with callbacks */
+   sge_mirror_subscribe(SGE_EMT_SCHEDD_CONF,    NULL, 
+                                                sge_process_schedd_conf_event, 
+                                                NULL);
+                                                
+   sge_mirror_subscribe(SGE_EMT_SCHEDD_MONITOR, NULL, 
+                                                sge_process_schedd_monitor_event, 
+                                                NULL);
+                                                
+   sge_mirror_subscribe(SGE_EMT_GLOBAL_CONFIG,  NULL, 
+                                                sge_process_global_config_event, 
+                                                NULL);
+                                                
+   sge_mirror_subscribe(SGE_EMT_JOB,            sge_process_job_event_before, 
+                                                sge_process_job_event_after, 
+                                                NULL);
+
+   sge_mirror_subscribe(SGE_EMT_JATASK,         sge_process_ja_task_event_before, 
+                                                sge_process_ja_task_event_after, 
+                                                NULL);
+                                                
+   sge_mirror_subscribe(SGE_EMT_USERSET,        NULL, 
+                                                sge_process_userset_event_after, 
+                                                NULL);
+
+   /* set flush parameters for job */
+   ec_set_flush(sgeE_JOB_ADD,         flush_submit_sec);
+   ec_set_flush(sgeE_JOB_DEL,         flush_finish_sec);
+   ec_set_flush(sgeE_JOB_FINAL_USAGE, flush_finish_sec);
+
+   /* for some reason we flush sharetree changes */
+   ec_set_flush(sgeE_NEW_SHARETREE,   0);
+
+   /* configuration changes and trigger should have immediate effect */
+   ec_set_flush(sgeE_GLOBAL_CONFIG,   0);
+   ec_set_flush(sgeE_SCHED_CONF,      0);
+   ec_set_flush(sgeE_SCHEDDMONITOR,   0);
+
+   return TRUE;
 }
 

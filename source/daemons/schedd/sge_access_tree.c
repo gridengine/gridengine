@@ -111,7 +111,7 @@ lListElem *job_array
    lListElem *pgr, *user = NULL, *last, *jr;
    lList *jrl;
    u_long32 priority;
-   int user_sort = set_user_sort(-1);
+   int user_sort = get_user_sort();
 
    DENTER(TOP_LAYER, "at_register_job_array");
 
@@ -178,7 +178,7 @@ static void at_trace()
 {
 #if 0
    lListElem *u, *p, *j;
-   int user_sort = set_user_sort(-1);
+   int user_sort = get_user_sort();
    char *s;
    lListElem *current;
 
@@ -231,7 +231,7 @@ lListElem *job
       return;
    }
 
-   if (set_user_sort(-1)) {
+   if (get_user_sort()) {
       lListElem *user;
       const char *owner = lGetString(job, JB_owner);
       user = lGetSubStr(pgrp, USR_name, owner, PGR_subordinated_list);
@@ -358,7 +358,7 @@ lList *job_list
    /* reinitialize the iterator in our access tree */
    current_pgrp = NULL;
    for_each (pgrp, priority_group_list) {
-      if (set_user_sort(-1)) {
+      if (get_user_sort()) {
          lListElem *user;
          /* use the number of running jobs from event layer as basis
             for keeping the same information in dispatch layer */
@@ -392,7 +392,7 @@ int slots
 
    DENTER(TOP_LAYER, "at_dispatched_a_task");
 
-   if (set_user_sort(-1)) {
+   if (get_user_sort()) {
       DPRINTF(("USERSORT: got dispatch notification for %d jobs of user %s\n", 
             slots, lGetString(job, JB_owner)));
       /* debit this job */
@@ -439,7 +439,7 @@ lListElem *at_get_actual_job_array(lList *job_list)
    }
 
    do { /* iterate through all priority groups */
-      if (!set_user_sort(-1)) {
+      if (!get_user_sort()) {
          /* FCFS - simply return the current job array 
                    if it is dispatchable and still in
                    our directory of runnable jobs 

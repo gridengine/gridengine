@@ -33,8 +33,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
-#include <time.h>
 
+#include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_gdi_intern.h"
 #include "sig_handlers.h"
@@ -210,8 +210,7 @@ static void get_workload_info()
       start_time = lGetUlong(job, JB_execution_time);
 
       /* output tasks without hold
-       * this range list also contains running tasks, so check
-       * for existence in the running task list.
+       * these are the tasks to be scheduled
        */
       for_each(range, lGetList(job, JB_ja_n_h_ids)) {
          u_long32 ja_task_id, range_min, range_max, range_step;
@@ -219,12 +218,10 @@ static void get_workload_info()
          range_get_all_ids(range, &range_min, &range_max, &range_step);
          
          for(ja_task_id = range_min; ja_task_id <= range_max; ja_task_id += range_step) {
-            if(lGetElemUlong(lGetList(job, JB_ja_tasks), JAT_task_number, ja_task_id) == NULL) {
-               printf(dformat, job_get_id_string(job_id, ja_task_id, NULL), 
-                      user, group, 
-                      (pe == NULL ? "-" : pe), procs, wclock,
-                      start_time > 0 ? ctime(&start_time) : "-\n");
-            }
+            printf(dformat, job_get_id_string(job_id, ja_task_id, NULL), 
+                   user, group, 
+                   (pe == NULL ? "-" : pe), procs, wclock,
+                   start_time > 0 ? ctime(&start_time) : "-\n");
          }
       }
       /* output pending tasks with user hold */
@@ -515,7 +512,7 @@ static void delete_some_jobs()
     * to test the sge_ssi_job_cancel function 
     */
    lListElem *job; 
-   time_t now = time(0);
+   u_long32 now = sge_get_gmt();
 
    for_each(job, Master_Job_List) {
       lListElem *ja_task;

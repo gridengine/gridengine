@@ -78,13 +78,13 @@
 int current_scheduler = 0; /* default scheduler */
 int new_global_config = 0;
 int start_on_master_host = 0;
+int sge_mode = 0;
 
 static int sge_ck_qmaster(void);
 static int parse_cmdline_schedd(int argc, char **argv);
 static void usage(FILE *fp);
 static void schedd_exit_func(int i);
 static int sge_setup_sge_schedd(void);
-static void sge_subscribe_schedd(void);
 int daemonize_schedd(void);
 
 extern char *error_file;
@@ -93,10 +93,10 @@ extern char *error_file;
 /* array used to select from different scheduling alorithms */
 sched_func_struct sched_funcs[] =
 {
-   {"default",      "Default scheduler",   event_handler_default_scheduler, (void *)scheduler },
+   {"default",      "Default scheduler",   subscribe_default_scheduler, event_handler_default_scheduler, (void *)scheduler },
 #ifdef SCHEDULER_SAMPLES
-   {"ext_mysched",  "sample #1 scheduler", event_handler_default_scheduler, (void *)my_scheduler },
-   {"ext_mysched2", "sample #2 scheduler", event_handler_my_scheduler,      (void *)scheduler },
+   {"ext_mysched",  "sample #1 scheduler", subscribe_default_scheduler, event_handler_default_scheduler, (void *)my_scheduler },
+   {"ext_mysched2", "sample #2 scheduler", subscribe_my_scheduler,      event_handler_my_scheduler,      (void *)scheduler },
 #endif
    {NULL, NULL, NULL, NULL}
 };
@@ -147,18 +147,14 @@ char *argv[]
    lInit(nmv);
 
    feature_initialize_from_file(path.product_mode_file);
+   sge_mode = feature_is_enabled(FEATURE_SGEEE);
    parse_cmdline_schedd(argc, argv);
-
-   /* prepare event client mechanism */
-   ec_prepare_registration(EV_ID_SCHEDD, "scheduler");
-   ec_set_busy_handling(EV_BUSY_UNTIL_RELEASED);
-   ec_set_clientdata(-1);
 
    /* daemonizes if qmaster is unreachable */
    check_qmaster = sge_setup_sge_schedd();
 
-   /* subscribe events */
-   sge_subscribe_schedd();
+   /* prepare event client/mirror mechanism */
+   sge_schedd_mirror_register();
 
    master_host = sge_get_master(0);
    if (sge_hostcmp(master_host, me.qualified_hostname) && start_on_master_host) {
@@ -192,10 +188,8 @@ char *argv[]
    set_commlib_param(CL_P_TIMEOUT_SSND, 4*60, NULL, NULL);
 
    while (1) {
-      lList* event_list = NULL;
-
       if (shut_me_down) {
-         ec_deregister();
+         sge_mirror_shutdown();
          sge_shutdown();
       }   
 
@@ -203,69 +197,36 @@ char *argv[]
          sigpipe_received = 0;
          INFO((SGE_EVENT, "SIGPIPE received"));
       }
-         
+      
       if (check_qmaster) {
          if ((ret = sge_ck_qmaster()) < 0) {
             CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
             SGE_EXIT(1);
-         }
-         else if (ret > 0) {
+         } else if (ret > 0) {
             sleep(10);
             continue;
          }
       }
 
-      ret = ec_get(&event_list);
-
-      {
-         static u_long32 last_list = 0;
-         if (ret == CL_OK) {
-            last_list = sge_get_gmt();
-            check_qmaster = 0;
-         } else {
-            if (ret > 0) { /* we had an commlib error code return, so we */
-               sleep(1);   /* don't tantalize cpu on errors */
-            }
-            if (last_list && (sge_get_gmt() > last_list + ec_get_edtime() * 10)) {
-               DPRINTF(("QMASTER ALIVE TIMEOUT EXPIRED\n"));
-               ec_mark4registration();
-               check_qmaster = 1;
-            }
-            continue;
-         }
+      if(sge_mirror_process_events() == SGE_EM_TIMEOUT) {
+         check_qmaster = TRUE;
+         continue;
       }
 
-      /* pass event list to event handler of current scheduler 
-         the event handler also starts a dispatch epoch 
-
-         a change on the scheduler algorithm is also sent as an event,
-         and must be recognized by the current scheduler. It must lead 
-         to a new registration of schedd with qmaster as the new 
-         scheduler needs the initial events */
-
-      ret = sched_funcs[current_scheduler].event_func(event_list);
-
-      if (ret) {
-         ec_mark4registration();
-         check_qmaster = 1;
-         if (ret == -1) {              /* error in event layer */
-            WARNING((SGE_EVENT, MSG_SCHEDD_REREGISTER_ERROR));
-         } else if (ret == 1) {        /* schedd parameter changed */
-            INFO((SGE_EVENT, MSG_SCHEDD_REREGISTER_PARAM));
-         } 
-#if 0
-         else /* (ret == 2) */ {     /* shutdown order from qmaster */           
-            extern u_long32 logginglevel;
-            u_long32 old_ll = logginglevel;
-            logginglevel = LOG_INFO;
-            INFO((SGE_EVENT, MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS, 
-                  feature_get_product_name(FS_VERSION),
-                  feature_get_featureset_name(feature_get_active_featureset_id())));
-            logginglevel = old_ll;
-         }
-#endif
+      /* event processing can trigger a re-registration, 
+       * -> if qmaster goes down
+       * -> the scheduling algorithm was changed
+       * in this case do not start a scheduling run
+       */
+      if(ec_need_new_registration()) {
+         check_qmaster = TRUE;
+         continue;
       }
 
+      sched_funcs[current_scheduler].event_func();
+
+
+      /* JG: TODO: depends on busy handling. If used, do it in send_orders2qmaster */
       ec_set_busy(0);
    }
 }
@@ -394,7 +355,9 @@ static int sge_ck_qmaster()
 
 /*---------------------------------------------------------------*/
    DPRINTF(("Requesting scheduler configuration from qmaster\n"));
-
+   /* JG: TODO: this is not necessary: SCHED_CONF is sent at 
+    * event client registration 
+    */
    what = lWhat("%T(ALL)", SC_Type);
    alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
    what = lFreeWhat(what);
@@ -439,7 +402,7 @@ const char *alg_name
 ) {
    int i = 0;
    int scheduler_before = current_scheduler;
-   int (*event_func_before)(lList *) = sched_funcs[current_scheduler].event_func;
+   int (*event_func_before)(void) = sched_funcs[current_scheduler].event_func;
 
    DENTER(TOP_LAYER, "use_alg");
 
@@ -594,146 +557,13 @@ int sge_before_dispatch(void)
    return 0;
 }
 
-/****** schedd/sge/handle_administrative_events() *****************************
-*  NAME
-*     handle_administrative_events() -- ??? 
-*
-*  SYNOPSIS
-*     int handle_administrative_events(u_long32 type, lListElem *event) 
-*
-*  FUNCTION
-*     (handling administrative events is independent of the scheduler
-*     algorithm) 
-*
-*  INPUTS
-*     u_long32 type    - ??? 
-*     lListElem *event - ??? 
-*
-*  RESULT
-*    0 this event was not an administrative event
-*   -1 reregister at qmaster
-*    1 handled administrative event
-*    2 got a shutdown event: do not schedule, finish immediately instead
-*******************************************************************************/
-int handle_administrative_events(u_long32 type, lListElem *event)
+void sge_schedd_mirror_register()
 {
-   int ret = 1;
+   /* register as event mirror */
+   sge_mirror_initialize(EV_ID_SCHEDD, "scheduler");
+   ec_set_busy_handling(EV_BUSY_UNTIL_RELEASED);
+   ec_set_clientdata(-1);
 
-   DENTER(TOP_LAYER, "handle_administrative_events");
-
-   switch (type) {
-
-      /* ======================================================
-       * administrative events  
-       */
-
-   case sgeE_SHUTDOWN:
-      INFO((SGE_EVENT, MSG_EVENT_GOTSHUTDOWNFROMQMASTER ));
-      shut_me_down = 1;
-      ret = 2;
-      break;
-
-   case sgeE_QMASTER_GOES_DOWN:
-      INFO((SGE_EVENT, MSG_EVENT_GOTMASTERGOESDOWNMESSAGEFROMQMASTER ));
-      if (start_on_master_host)
-         shut_me_down = 1;
-      else {
-         sleep(8);
-         ec_mark4registration();
-         ret = -1;
-      }
-      break;
-
-   case sgeE_SCHEDDMONITOR:
-      monitor_next_run = 1;
-      DPRINTF(("monitoring next scheduler run"));
-      break;
-
-   case sgeE_GLOBAL_CONFIG:
-      DPRINTF(("notification about new global configuration\n"));
-
-      new_global_config = 1;
-      break;
-
-   default:
-      /* non-administrative events - 
-         these must be handled by caller of this func */
-      ret = 0;
-      break;
-   }
-
-   DEXIT;
-   return ret;
+   /* subscribe events */
+   sched_funcs[current_scheduler].subscribe_func();
 }
-
-static void sge_subscribe_schedd(void)
-{
-   ec_subscribe(sgeE_CKPT_LIST);
-   ec_subscribe(sgeE_CKPT_ADD);
-   ec_subscribe(sgeE_CKPT_DEL);
-   ec_subscribe(sgeE_CKPT_MOD);
-
-   ec_subscribe(sgeE_COMPLEX_LIST);
-   ec_subscribe(sgeE_COMPLEX_ADD);
-   ec_subscribe(sgeE_COMPLEX_DEL);
-   ec_subscribe(sgeE_COMPLEX_MOD);
-
-   ec_subscribe(sgeE_EXECHOST_LIST);
-   ec_subscribe(sgeE_EXECHOST_ADD);
-   ec_subscribe(sgeE_EXECHOST_DEL);
-   ec_subscribe(sgeE_EXECHOST_MOD);
-
-   ec_subscribe_flush(sgeE_GLOBAL_CONFIG, 0);
-
-   ec_subscribe(sgeE_JATASK_ADD);
-   ec_subscribe_flush(sgeE_JATASK_DEL, flush_finish_sec);
-   ec_subscribe_flush(sgeE_JATASK_MOD, flush_finish_sec);
-
-   ec_subscribe(sgeE_PETASK_ADD); /* JG: TODO: why don't we have a PETASK_MOD event? */
-   ec_subscribe(sgeE_PETASK_DEL);
-
-   ec_subscribe(sgeE_JOB_LIST);
-   ec_subscribe_flush(sgeE_JOB_ADD, flush_submit_sec);
-   ec_subscribe_flush(sgeE_JOB_DEL, flush_finish_sec);
-   ec_subscribe(sgeE_JOB_MOD);
-   ec_subscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
-   ec_subscribe_flush(sgeE_JOB_FINAL_USAGE, flush_finish_sec);
-   ec_subscribe(sgeE_JOB_USAGE);
-
-   ec_subscribe_flush(sgeE_NEW_SHARETREE, 0); /* JG: TODO: why is it flushed? */
-
-   ec_subscribe(sgeE_PROJECT_LIST);
-   ec_subscribe(sgeE_PROJECT_DEL);
-   ec_subscribe(sgeE_PROJECT_ADD);
-   ec_subscribe(sgeE_PROJECT_MOD);
-
-   ec_subscribe(sgeE_PE_LIST);
-   ec_subscribe(sgeE_PE_ADD);
-   ec_subscribe(sgeE_PE_DEL);
-   ec_subscribe(sgeE_PE_MOD);
-
-   ec_subscribe_flush(sgeE_QMASTER_GOES_DOWN, 0);
-
-   ec_subscribe(sgeE_QUEUE_LIST);
-   ec_subscribe(sgeE_QUEUE_ADD);
-   ec_subscribe(sgeE_QUEUE_DEL);
-   ec_subscribe(sgeE_QUEUE_MOD);
-   ec_subscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
-   ec_subscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
-
-   ec_subscribe_flush(sgeE_SCHED_CONF, 0);
-   ec_subscribe_flush(sgeE_SCHEDDMONITOR, 0);
-   ec_subscribe_flush(sgeE_SHUTDOWN, 0);
-
-   ec_subscribe(sgeE_USER_LIST);
-   ec_subscribe(sgeE_USER_ADD);
-   ec_subscribe(sgeE_USER_DEL);
-   ec_subscribe(sgeE_USER_MOD);
-
-   ec_subscribe(sgeE_USERSET_LIST);
-   ec_subscribe(sgeE_USERSET_DEL);
-   ec_subscribe(sgeE_USERSET_ADD);
-   ec_subscribe(sgeE_USERSET_MOD);
-}
-
-

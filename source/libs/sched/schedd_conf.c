@@ -59,7 +59,7 @@
 #include "msg_schedd.h"
 
 sge_schedd_conf_type scheddconf = { 
-   NULL, 0, 0, 0, 0, NULL, 0, NULL 
+   NULL, 0, 0, 0, 0, 0, NULL, 0, NULL 
 };
 lList *schedd_config_list = NULL;
 
@@ -133,6 +133,9 @@ lList *cmplx_list
 
    /* --- SC_user_sort */
    uval = lGetBool(sc_ep, SC_user_sort);
+   if(sc) {
+      sc->user_sort = uval;
+   }
    INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_SS , uval?MSG_TRUE:MSG_FALSE, "user_sort"));
 
    /* --- SC_job_load_adjustments */
@@ -311,4 +314,15 @@ lList *cmplx_list
 
    DEXIT;
    return 0;
+}
+
+int set_user_sort(int user_sort) 
+{
+   scheddconf.user_sort = user_sort;
+   return scheddconf.user_sort;
+}
+
+int get_user_sort(void)
+{
+   return scheddconf.user_sort;
 }

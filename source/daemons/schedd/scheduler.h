@@ -54,18 +54,14 @@ typedef struct {
    lList *running_per_user; /* JC_Type */
 } sge_Sdescr_t;
 
-extern sge_Sdescr_t lists;
-
 /*
  * external interface of default scheduler used schedd framework (public)
  */
 
 typedef int (*default_scheduler_alg_t)(sge_Sdescr_t *);
 int scheduler(sge_Sdescr_t *lists);
-int event_handler_default_scheduler(lList *event_list);
 
 #ifdef SCHEDULER_SAMPLES
-int event_handler_my_scheduler(lList *event_list);
 int my_scheduler(sge_Sdescr_t *lists);
 #endif
 

@@ -423,4 +423,10 @@
 #define MSG_SSI_MISSINGHOSTNAMEINTASKLIST             _MESSAGE(47282, _("missing hostname in task list\n"))
 #define MSG_SSI_COULDNOTFINDQUEUEFORHOST_S            _MESSAGE(47283, _("could not find a queue for host "SFQ"\n"))
 
+/*
+ * daemons/sched/sge_process_events.c
+ */
+#define MSG_CANTFINDJOBINMASTERLIST_S                 _MESSAGE(47284, _("could not find job "SFQ" in master list\n")) 
+#define MSG_CANTFINDTASKINJOB_UU                      _MESSAGE(47285, _("could not find task "U32CFormat" in job "U32CFormat"\n")) 
+#define MSG_NODATAINEVENT                             _MESSAGE(47286, _("event contains no data"))
 #endif /* __MSG_SCHEDD_H */

@@ -32,7 +32,38 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int sge_process_all_events(lList *event_list);
+#include "sge_mirror.h"
+
+/* scheduling framework, layer 1: data model */
+
+/* which data do we want to be mirrored from qmaster */
+int subscribe_default_scheduler(void);
+
+/* callback functions for event processing */
+int sge_process_schedd_conf_event(sge_event_type type, sge_event_action action, 
+                                  lListElem *event, void *clientdata);
+int sge_process_job_event_before(sge_event_type type, sge_event_action action, 
+                                 lListElem *event, void *clientdata);
+int sge_process_job_event_after(sge_event_type type, sge_event_action action, 
+                                lListElem *event, void *clientdata);
+int sge_process_ja_task_event_before(sge_event_type type, sge_event_action action, 
+                                     lListElem *event, void *clientdata);
+int sge_process_ja_task_event_after(sge_event_type type, sge_event_action action, 
+                                    lListElem *event, void *clientdata);
+int sge_process_userset_event_after(sge_event_type type, sge_event_action action, 
+                                    lListElem *event, void *clientdata);
+int sge_process_schedd_monitor_event(sge_event_type type, sge_event_action action, 
+                                     lListElem *event, void *clientdata);
+int sge_process_global_config_event(sge_event_type type, sge_event_action action, 
+                                    lListElem *event, void *clientdata);
+
+/* event post processing */
+int event_handler_default_scheduler(void);
+#ifdef SCHEDULER_SAMPLES
+int event_handler_my_scheduler(void);
+#endif
+
+/* cleanup post processing */
 void cleanup_default_scheduler(void);
 
 #endif /* __SGE_PROCESS_EVENTS_H */

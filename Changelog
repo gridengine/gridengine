@@ -1,3 +1,12 @@
+JG-2002-10-11-3  Enhancem.  Replaced explicit event handling of sge_schedd by 
+                            the use of the event mirror interface.
+                 IZ:        #351
+
+JG-2002-10-11-2  Bugfix:    Fixes in event mirror interface:
+                            - events for queue (un)suspend on subordinate were 
+                              not handled
+                            - fixed a potential memory leak
+
 JG-2002-10-11-1  Bugfix:    Changing the event delivery interval of an event 
                             client had only effect for the next but one 
                             delivery.

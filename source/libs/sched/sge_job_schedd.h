@@ -47,8 +47,6 @@ void sge_dec_jc(lList** jcpp, const char *name, int slots);
 
 int resort_jobs(lList *jc, lList *job_list, const char *owner, lSortOrder *so);
 
-int set_user_sort(int foo);
-
 /*
  * drop all running jobs into the running list 
  *

@@ -101,11 +101,11 @@ int sge_add_job_category( lListElem *job, lList *acl_list) {
       CATEGORY_LIST = lCreateList("new category list", CT_Type);
    else {
       cat = lGetElemStr(CATEGORY_LIST, CT_str, cstr);
-/*       DPRINTF(("Job "u32": Found %s in category list\n", jobid, cstr)); */
+      DPRINTF(("Job "u32": Found %s in category list\n", jobid, cstr));
    }
 
    if (!cat) {
-/*       DPRINTF(("Job "u32": Added %s to category list\n", jobid, cstr)); */
+      DPRINTF(("Job "u32": Added %s to category list\n", jobid, cstr));
       cat = lAddElemStr(&CATEGORY_LIST, CT_str, cstr, CT_Type);
    }   
    /* increment ref counter and set reference to this element */

@@ -32,8 +32,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
+#include "sge_time.h"
 #include "sge_unistd.h"
 #include "sge_gdi_intern.h"
 #include "sge_all_listsL.h"
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 {
    int cl_err = 0;
    int ret;
-   time_t last_heared = 0;
+   u_long32 last_heared = 0;
 
    DENTER_MAIN(TOP_LAYER, "qevent");
 
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 #endif
 
    while(!shut_me_down) {
-      time_t now = time(0);
+      u_long32 now = sge_get_gmt();
       
       lList *event_list = NULL;
       ret = ec_get(&event_list);

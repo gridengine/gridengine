@@ -1,3 +1,12 @@
+AH-2002-07-29-2  Doc:       Describe the 'all' keyword for queue_list in
+                            sge_pe(5) and checkpoint(5).
+                 Issue:     #319
+                 Doc:       Describe qconf -mqattr switch as the deprecated
+                            form of the -rattr and not of the -mattr switch.
+                            Mention that ?attr switch familiy operates also
+                            on PE and ckpt objects.
+                 Issue:     #321
+
 CR-2002-07-29-3: Bugfix:    CLI: invalid option "-jid jid" for qconf in 
                             qconf -help
                  Bugtraq:   #4722060

@@ -307,12 +307,12 @@
 
       -cq queue,...
 
-!     queue := cluster_queue | queue_instance
+!     queue := cluster_queue | queue_domain | queue_instance
 
    qacct(1)
       -q [queue]
 
-!     queue := cluster_queue | queue_instance
+!     queue := cluster_queue | queue_domain | queue_instance
 !     The name of the cluster queue or queue instance for which 
 !     usage is summarized. If queue is not specified accounting
 !     data is listed for each queue instance separately.

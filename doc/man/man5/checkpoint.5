@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: checkpoint.5,v $     Last Update: $Date: 2002/03/06 11:22:22 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: checkpoint.5,v $     Last Update: $Date: 2002/07/29 15:54:32 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH CHECKPOINT 5 "$Date: 2002/03/06 11:22:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH CHECKPOINT 5 "$Date: 2002/07/29 15:54:32 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 checkpoint \- xxQS_NAMExx checkpointing environment configuration file format
@@ -102,8 +102,9 @@ like in the case of one of the kernel level checkpointing interfaces
 used (even if it is configured) but the job script is invoked in case of a
 restart instead.
 .SS "\fBqueue_list\fP"
-A comma separated list of queues to which parallel jobs belonging
-to this parallel environment have access to.
+A comma separated list of queues to which checkpointing jobs belonging
+to this checkpoint environment have access to. Alternatively the keyword
+"all" can be used to  give  access to all queues across the cluster.
 .SS "\fBckpt_command\fP"
 A command-line type command string to be executed by xxQS_NAMExx in order to
 initiate a checkpoint.

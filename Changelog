@@ -1,3 +1,8 @@
+EB-2002-05-06-0: Bugfix:    qhost -j is broken
+                 Issue:     #259
+                 Bugtraq:   #4686157
+                 Changed:   qhost
+
 CR-2002-05-14-0: Change:    removed sge_printf build from Makfile 
 
 CR-2002-05-13-0: Enhancem.: added sge_printf utilbin source files

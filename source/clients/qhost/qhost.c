@@ -910,7 +910,7 @@ lWriteListTo(ehl, stdout);
             jw = lAndWhere(jw, nw);
       }
 
-      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
+      j_all = lWhat("%T(%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I)", JB_Type, 
                      JB_job_number, 
                      JB_script_file,
                      JB_owner,
@@ -933,7 +933,13 @@ lWriteListTo(ehl, stdout);
                      JB_hard_queue_list,
                      JB_soft_queue_list,
                      JB_ja_structure,
-                     JB_ja_tasks );
+                     JB_ja_tasks,
+                     JB_ja_n_h_ids,
+                     JB_ja_u_h_ids,
+                     JB_ja_s_h_ids,
+                     JB_ja_o_h_ids,
+                     JB_ja_z_ids 
+                    );
 
 /* printf("======================================\n"); */
 /* lWriteWhereTo(jw, stdout); */

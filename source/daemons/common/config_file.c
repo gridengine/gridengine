@@ -133,11 +133,11 @@ char *fname
 
    while (fgets(buf, sizeof(buf), fp)) {
       name = strtok(buf, " =");
-      if (!name)
+      if (!name) {
          break;
+      }   
       value = strtok(NULL, "\n");
-      if (!value)
-         break;
+
       if (add_config_entry(name, value))
          return 2;
    }
@@ -152,19 +152,25 @@ char *name, *value;
 {
    config_entry *new;
 
-   if (!(new = (config_entry *)malloc(sizeof(config_entry))) ||
-       !(name = strdup(name)) ||
-       !(value = strdup(value))) {
-      if (new)
-         free(new);
-      if (name)
-         free(name);
+   if ((new = (config_entry *)malloc(sizeof(config_entry))) == NULL) {
       return 1;
    }
-
-   new->name = name;
-   new->value = value;
-
+   
+   if((new->name = strdup(name)) == NULL) {
+      free(new);
+      return 1;
+   }
+  
+   if(value != NULL) {
+      if((new->value = strdup(value)) == NULL) {
+         free(new->name);
+         free(new);
+         return 1;
+      }
+   } else {
+      new->value = NULL;
+   }
+  
    new->next = config_list;
    config_list = new;
 

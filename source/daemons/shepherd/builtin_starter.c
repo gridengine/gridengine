@@ -730,8 +730,12 @@ static char **read_job_args(char **preargs, int extra_args)
    for (i = 0; i < n_job_args; i++) {
       sprintf(conf_val, "job_arg%lu", i + 1);
       cp = get_conf_val(conf_val);
-      
-      args[i + n_preargs] = strdup(cp);
+     
+      if(cp != NULL) {
+         args[i + n_preargs] = strdup(cp);
+      } else {
+         args[i + n_preargs] = "";
+      }
    }
    args[i + n_preargs] = NULL;
 

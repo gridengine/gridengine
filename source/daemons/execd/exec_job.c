@@ -1351,8 +1351,14 @@ char *err_str
       lListElem *se;
       int nargs=1;
       fprintf(fp, "njob_args=%d\n", lGetNumberOfElem(lGetList(jep, JB_job_args)));
-      for_each(se, lGetList(jep, JB_job_args)) 
-         fprintf(fp, "job_arg%d=%s\n", nargs++, lGetString(se, STR));
+      for_each(se, lGetList(jep, JB_job_args)) {
+         const char *arg = lGetString(se, STR);
+         if(arg != NULL) {
+            fprintf(fp, "job_arg%d=%s\n", nargs++, arg);
+         } else {
+            fprintf(fp, "job_arg%d=\n", nargs++);
+         }
+      }   
 
    }
 

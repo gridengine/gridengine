@@ -1024,7 +1024,7 @@ int sub_command
                sge_dstring_free(&buffer);
             } else {
                /* JG: TODO: this joblog seems to have an invalid job object! */
-               reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, NULL, NULL, MSG_LOG_DELETED);
+/*                reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, ruser, rhost, NULL, job, NULL, NULL, MSG_LOG_DELETED); */
                sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, 
                              NULL, NULL, dupped_session, NULL);
             }

@@ -1,3 +1,7 @@
+JG_2004-02-14-1: Bugfix:    Make spoolinit (creation of the spooling database) 
+                            fail, if the database already exists.
+                 Review:    pending
+
 JG-2004-02-14-0: Testsuite: Checked and/or fixed following testsuite tests:
                             bugs/issuezilla/226 bugs/issuezilla/314 
                             bugs/issuezilla/402 bugs/issuezilla/403 

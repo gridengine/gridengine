@@ -303,7 +303,7 @@ spool_berkeleydb_open_database(lList **answer_list, struct bdb_info *info,
          }
 
          if (create) {
-            flags |= DB_CREATE /*| DB_TRUNCATE */;
+            flags |= DB_CREATE | DB_EXCL /*| DB_TRUNCATE */;
             mode =  S_IRUSR | S_IWUSR;
          }
 

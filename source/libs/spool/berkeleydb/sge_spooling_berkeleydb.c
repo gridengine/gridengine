@@ -812,10 +812,15 @@ spool_berkeleydb_default_read_func(lList **answer_list,
    if (ret) {
       switch (object_type) {
          default:
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                    ANSWER_QUALITY_WARNING, 
-                                    MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                    object_type_get_name(object_type));
+            ep = spool_berkeleydb_read_object(answer_list, info, key);
+            if (ep != NULL) {
+               spooling_validate_func validate = 
+                  (spooling_validate_func)lGetRef(rule, SPR_validate_func);
+               bool ret = validate(answer_list, type, rule, ep, object_type);
+               if (!ret) {
+                  ep = lFreeElem(ep);
+               }
+            }
             break;
       }
    }

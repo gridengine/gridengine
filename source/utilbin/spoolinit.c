@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
                }
             }
          }
-       
+      
          /* initialize spooling */
          if (ret == EXIT_SUCCESS) {
             ret = init_framework(shlib, libargs, check_framework);

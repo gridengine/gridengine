@@ -63,6 +63,7 @@
 #include "sge_hgroup.h"
 #include "sge_cuser.h"
 #include "sge_centry.h"
+#include "sge_cqueue.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -394,6 +395,7 @@ total_update(lListElem *event_client)
    sge_total_update_event(event_client, sgeE_OPERATOR_LIST);
    sge_total_update_event(event_client, sgeE_PE_LIST);
    sge_total_update_event(event_client, sgeE_QUEUE_LIST);
+   sge_total_update_event(event_client, sgeE_CQUEUE_LIST);
    sge_total_update_event(event_client, sgeE_SCHED_CONF);
    sge_total_update_event(event_client, sgeE_SUBMITHOST_LIST);
    sge_total_update_event(event_client, sgeE_USERSET_LIST);
@@ -687,6 +689,8 @@ sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *ruser,
                                      event_client, sgeE_PROJECT_LIST);
       check_send_new_subscribed_list(old_subscription, subscription, 
                                      event_client, sgeE_QUEUE_LIST);
+      check_send_new_subscribed_list(old_subscription, subscription, 
+                                     event_client, sgeE_CQUEUE_LIST);
       check_send_new_subscribed_list(old_subscription, subscription, 
                                      event_client, sgeE_SUBMITHOST_LIST);
       check_send_new_subscribed_list(old_subscription, subscription, 
@@ -1309,6 +1313,21 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
       break;
    case sgeE_QUEUE_SUSPEND_ON_SUB:
       break;
+   
+/* -------------------- */
+   case sgeE_CQUEUE_DEL:
+      deleteObjectByName(SGE_CQUEUE_LIST, strkey);
+      break;
+   case sgeE_CQUEUE_ADD:
+      /* cannot be handled here since the cull list */
+      /* does not exist at this point */
+      /* handled in sge_queue_qmaster.c */
+      break;
+   case sgeE_CQUEUE_MOD:
+      queue_changed(lFirst(list));
+      break;
+   case sgeE_CQUEUE_LIST:
+      break;
 
    /* -------------------- */
    case sgeE_EXECHOST_DEL:
@@ -1672,6 +1691,9 @@ sge_total_update_event(lListElem *event_client, ev_event type)
             break;
          case sgeE_QUEUE_LIST:
             lp = Master_Queue_List;
+            break;
+         case sgeE_CQUEUE_LIST:
+            lp = Master_CQueue_List;
             break;
          case sgeE_SCHED_CONF:
             lp = Master_Sched_Config_List;

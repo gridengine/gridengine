@@ -136,6 +136,7 @@ static mirror_description mirror_base[SGE_TYPE_ALL] = {
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, queue_update_master_list,               NULL, NULL },
+   { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, schedd_conf_update_master_list,         NULL, NULL },
    { NULL, NULL,                                   NULL, NULL },
    { NULL, sge_mirror_process_shutdown,            NULL, NULL },
@@ -431,6 +432,12 @@ static sge_mirror_error _sge_mirror_subscribe(sge_object_type type,
          ec_subscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
          ec_subscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
          break;
+      case SGE_TYPE_CQUEUE:
+         ec_subscribe(sgeE_CQUEUE_LIST);
+         ec_subscribe(sgeE_CQUEUE_ADD);
+         ec_subscribe(sgeE_CQUEUE_DEL);
+         ec_subscribe(sgeE_CQUEUE_MOD);
+         break;
       case SGE_TYPE_SCHEDD_CONF:
          ec_subscribe(sgeE_SCHED_CONF);
          break;
@@ -649,6 +656,12 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_object_type type)
          ec_unsubscribe(sgeE_QUEUE_MOD);
          ec_unsubscribe(sgeE_QUEUE_SUSPEND_ON_SUB);
          ec_unsubscribe(sgeE_QUEUE_UNSUSPEND_ON_SUB);
+         break;
+      case SGE_TYPE_CQUEUE:
+         ec_unsubscribe(sgeE_CQUEUE_LIST);
+         ec_unsubscribe(sgeE_CQUEUE_ADD);
+         ec_unsubscribe(sgeE_CQUEUE_DEL);
+         ec_unsubscribe(sgeE_CQUEUE_MOD);
          break;
       case SGE_TYPE_SCHEDD_CONF:
          ec_unsubscribe(sgeE_SCHED_CONF);
@@ -1060,6 +1073,19 @@ static sge_mirror_error sge_mirror_process_event_list(lList *event_list)
             break;
          case sgeE_QUEUE_UNSUSPEND_ON_SUB:
             ret = sge_mirror_process_event(SGE_TYPE_QUEUE, SGE_EMA_MOD, event);
+            break;
+
+         case sgeE_CQUEUE_LIST:
+            ret = sge_mirror_process_event(SGE_TYPE_CQUEUE, SGE_EMA_LIST, event);
+            break;
+         case sgeE_CQUEUE_ADD:
+            ret = sge_mirror_process_event(SGE_TYPE_CQUEUE, SGE_EMA_ADD, event);
+            break;
+         case sgeE_CQUEUE_DEL:
+            ret = sge_mirror_process_event(SGE_TYPE_CQUEUE, SGE_EMA_DEL, event);
+            break;
+         case sgeE_CQUEUE_MOD:
+            ret = sge_mirror_process_event(SGE_TYPE_CQUEUE, SGE_EMA_MOD, event);
             break;
 
          case sgeE_SCHED_CONF:

@@ -250,6 +250,11 @@ typedef enum {
    sgeE_QUEUE_SUSPEND_ON_SUB,       /* + queue is suspended by subordinate mechanism */
    sgeE_QUEUE_UNSUSPEND_ON_SUB,     /* + queue is unsuspended by subordinate mechanism */
 
+   sgeE_CQUEUE_LIST,                /* + send cluster queue list at registration */
+   sgeE_CQUEUE_ADD,                 /* + event cluster queue add */
+   sgeE_CQUEUE_DEL,                 /* + event cluster queue delete */
+   sgeE_CQUEUE_MOD,                 /* + event cluster queue modify */
+
    sgeE_SCHED_CONF,                 /* + replace existing (sge) scheduler configuration */
 
    sgeE_SCHEDDMONITOR,              /* + trigger scheduling run */

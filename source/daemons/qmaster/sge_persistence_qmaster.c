@@ -244,6 +244,14 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          element = object;
          object_type = SGE_TYPE_QUEUE;
          break;
+      case sgeE_CQUEUE_LIST:
+      case sgeE_CQUEUE_ADD:
+      case sgeE_CQUEUE_DEL:
+      case sgeE_CQUEUE_MOD:
+         key = strkey;
+         element = object;
+         object_type = SGE_TYPE_CQUEUE;
+         break;
       case sgeE_SCHED_CONF:
          key = strkey;
          element = object;
@@ -329,12 +337,13 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          case sgeE_PE_DEL:
          case sgeE_PROJECT_DEL:
          case sgeE_QUEUE_DEL:
+         case sgeE_CQUEUE_DEL:
          case sgeE_SUBMITHOST_DEL:
          case sgeE_USER_DEL:
          case sgeE_USERSET_DEL:
-   #ifndef __SGE_NO_USERMAPPING__
+#ifndef __SGE_NO_USERMAPPING__
          case sgeE_CUSER_DEL:
-   #endif
+#endif
          case sgeE_HGROUP_DEL:
             delete = true;
             break;

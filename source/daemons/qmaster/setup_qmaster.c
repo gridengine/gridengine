@@ -83,6 +83,7 @@
 #include "sge_answer.h"
 #include "sge_pe.h"
 #include "sge_queue.h"
+#include "sge_cqueue.h"
 #include "sge_ckpt.h"
 #include "sge_userprj.h"
 #include "sge_manop.h"
@@ -357,6 +358,12 @@ int sge_setup_qmaster()
    answer_list_output(&answer_list);
    queue_list_set_unknown_state_to(Master_Queue_List, NULL, 0, 1);
 
+   DPRINTF(("cluster_queue_list---------------------------------\n"));
+   spool_read_list(&answer_list, spooling_context, &Master_CQueue_List, SGE_TYPE_CQUEUE);
+   answer_list_output(&answer_list);
+#if 0 /* EB: TODO: APIBASE */
+   queue_list_set_unknown_state_to(Master_Queue_List, NULL, 0, 1);
+#endif
 
    DPRINTF(("pe_list---------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, &Master_Pe_List, SGE_TYPE_PE);

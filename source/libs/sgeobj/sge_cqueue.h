@@ -1,5 +1,6 @@
-#ifndef _SGE_CUSER_QMASTER_H_
-#define _SGE_CUSER_QMASTER_H_
+#ifndef __SGE_CQUEUE_H
+#define __SGE_CQUEUE_H
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,17 +33,20 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_c_gdi.h"
+#include "sge_cqueueL.h"
 
-int cuser_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+extern lList *Master_CQueue_List;
 
-int cuser_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
-              const char *ruser, const char *rhost, gdi_object_t *object,
-              int sub_command);
+lListElem *
+cqueue_create(lList **answer_list, const char *name);
 
-int cuser_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
+lList **
+cqueue_list_get_master_list(void);
 
-int cuser_del(lListElem *cep, lList **alpp, char *ruser, char *rhost);
+bool
+cqueue_list_add_cqueue(lListElem *queue);
 
-#endif /* _SGE_CUSER_QMASTER_H_ */
+lListElem *
+cqueue_list_locate(const lList *this_list, const char *name);
 
+#endif /* __SGE_CQUEUE_H */

@@ -71,6 +71,7 @@
 #include "read_write_job.h"
 #include "read_write_manop.h"
 #include "read_write_queue.h"
+#include "read_write_cqueue.h"
 #include "read_write_sharetree.h"
 #include "read_write_pe.h"
 #include "read_write_userprj.h"
@@ -301,6 +302,7 @@ spool_classic_default_startup_func(lList **answer_list,
          sge_mkdir(JOB_DIR,  0755, true, false);
          sge_mkdir(ZOMBIE_DIR, 0755, true, false);
          sge_mkdir(QUEUE_DIR,  0755, true, false);
+         sge_mkdir(CQUEUE_DIR,  0755, true, false);
          sge_mkdir(EXECHOST_DIR, 0755, true, false);
          sge_mkdir(SUBMITHOST_DIR, 0755, true, false);
          sge_mkdir(ADMINHOST_DIR, 0755, true, false);
@@ -533,6 +535,11 @@ spool_classic_default_list_func(lList **answer_list,
             ret = false;
          }
          break;
+      case SGE_TYPE_CQUEUE:
+         if (sge_read_cqueue_list_from_disk() != 0) {
+            ret = false;
+         }
+         break;
       case SGE_TYPE_SCHEDD_CONF:
          {
             char filename_buf[SGE_PATH_MAX];
@@ -692,6 +699,9 @@ spool_classic_default_read_func(lList **answer_list,
          break;
       case SGE_TYPE_QUEUE:
          ep = cull_read_in_qconf(QUEUE_DIR, key, 1, 0, NULL, NULL);
+         break;
+      case SGE_TYPE_CQUEUE:
+         ep = cull_read_in_cqueue(CQUEUE_DIR, key, 1, 0, NULL, NULL);
          break;
       case SGE_TYPE_SCHEDD_CONF:
          {
@@ -910,6 +920,9 @@ spool_classic_default_write_func(lList **answer_list,
             ret = false;
          }
          break;
+      case SGE_TYPE_CQUEUE:
+         write_cqueue(1, 2, object);
+         break;
       case SGE_TYPE_SCHEDD_CONF:
          write_sched_configuration(1, 2, lGetString(rule, SPR_url), object);
          break;
@@ -1093,6 +1106,9 @@ spool_classic_default_delete_func(lList **answer_list,
          break;
       case SGE_TYPE_QUEUE:
          ret = sge_unlink(QUEUE_DIR, key) == 0;
+         break;
+      case SGE_TYPE_CQUEUE:
+         ret = sge_unlink(CQUEUE_DIR, key) == 0;
          break;
       case SGE_TYPE_SCHEDD_CONF:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 

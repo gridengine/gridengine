@@ -64,6 +64,7 @@
 #include "sge_host.h"
 #include "sge_pe.h"
 #include "sge_queue.h"
+#include "sge_cqueue.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
@@ -82,6 +83,7 @@
 #include "read_write_queue.h"
 #include "read_write_userprj.h"
 #include "read_write_userset.h"
+#include "read_write_cqueue.h"
 #include "sge_cuser.h"
 #include "read_write_ume.h"
 
@@ -653,6 +655,143 @@ int sge_read_queue_list_from_disk()
             }
          } else {
             sge_unlink(QUEUE_DIR, queue_str);
+         }
+      }
+      lFreeList(direntries);
+   }
+   
+
+   DEXIT;
+   return 0;
+}   
+
+int sge_read_cqueue_list_from_disk(void)
+{
+   lList *alp = NULL, *direntries;
+   lListElem *qep, *direntry;
+   int config_tag = 0;
+#if 0 /* EB: TODO: APIBASE */
+   u_long32 state;
+#endif
+
+   DENTER(TOP_LAYER, "sge_read_cqueue_list_from_disk");
+
+   direntries = sge_get_dirents(CQUEUE_DIR);
+   if (direntries) {
+      const char *queue_str;
+      
+      if (!sge_silent_get()) 
+         printf(MSG_CONFIG_READINGINQUEUES);
+      for_each(direntry, direntries) {
+
+         queue_str = lGetString(direntry, ST_name);
+         if (queue_str[0] != '.') {
+            config_tag = 0;
+            if (!sge_silent_get()) {
+               printf(MSG_SETUP_QUEUE_S, lGetString(direntry, ST_name));
+            }
+            if (verify_str_key(&alp, queue_str, "cqueue")) {
+               DEXIT;
+               return -1;
+            }   
+            qep = cull_read_in_cqueue(CQUEUE_DIR, 
+                                      lGetString(direntry, ST_name), 1, 
+                                      0, &config_tag, NULL);
+            if (!qep) {
+               ERROR((SGE_EVENT, MSG_CONFIG_READINGFILE_SS, CQUEUE_DIR, 
+                      lGetString(direntry, ST_name)));
+               DEXIT;
+               return -1;
+            }
+            if (config_tag & CONFIG_TAG_OBSOLETE_VALUE) {
+               /* an obsolete config value was found in the file.
+                  spool it out again to have the newest version on disk. */
+               cull_write_qconf(1, 0, CQUEUE_DIR, 
+                                lGetString(direntry, ST_name), NULL, qep);
+               INFO((SGE_EVENT, MSG_CONFIG_QUEUEXUPDATED_S, 
+                     lGetString(direntry, ST_name)));
+            }
+            
+            if (!strcmp(lGetString(direntry, ST_name), SGE_TEMPLATE_NAME) && 
+                !strcmp(lGetString(qep, CQ_name), SGE_TEMPLATE_NAME)) {
+               /* 
+                  we do not keep the queue template in the main queue list 
+                  to be compatible with other old code in the qmaster
+               */
+               qep = lFreeElem(qep);
+               sge_unlink(CQUEUE_DIR, lGetString(direntry, ST_name));
+               WARNING((SGE_EVENT, MSG_CONFIG_OBSOLETEQUEUETEMPLATEFILEDELETED));
+            }
+            else if (!strcmp(lGetString(qep, CQ_name), SGE_TEMPLATE_NAME)) {
+               /*
+                  oops!  found queue 'template', but not in file 'template'
+               */
+               ERROR((SGE_EVENT, MSG_CONFIG_FOUNDQUEUETEMPLATEBUTNOTINFILETEMPLATEIGNORINGIT));
+               qep = lFreeElem(qep);
+            } else {
+#if 0 /* EB: TODO: APIBASE */
+               lListElem *exec_host;
+
+               /* handle slots from now on as a consumble attribute of queue */
+               slots2config_list(qep); 
+
+               /* setup actual list of queue */
+               debit_queue_consumable(NULL, qep, Master_CEntry_List, 0);
+
+               /* init double values of consumable configuration */
+               centry_list_fill_request(lGetList(qep, QU_consumable_config_list), 
+                                        Master_CEntry_List, true, false, true);
+
+               if (ensure_attrib_available(NULL, qep, QU_load_thresholds) ||
+                   ensure_attrib_available(NULL, qep, QU_suspend_thresholds) ||
+                   ensure_attrib_available(NULL, qep, QU_consumable_config_list)) {
+                  qep = lFreeElem(qep); 
+                  DEXIT;
+                  return -1;
+               }
+#endif
+
+               cqueue_list_add_cqueue(qep);
+
+#if 0 /* EB: TODO: APIBASE */
+
+               state = lGetUlong(qep, QU_state);
+               SETBIT(QUNKNOWN, state);
+               state &= ~(QCAL_DISABLED|QCAL_SUSPENDED);
+               lSetUlong(qep, QU_state, state);
+
+               set_qslots_used(qep, 0);
+               
+               if (!(exec_host = host_list_locate(Master_Exechost_List, 
+                     lGetHost(qep, QU_qhostname)))) {
+                  /* JG: TODO: if we get a queue and don't know the exec host:
+                   * old behaviour: create it. Does this make sense?
+                   * or better report an error?
+                   * for now, report an error, as sge_add_host_of_type
+                   * raises unsolvable dependency problems!
+                   */
+#if 0
+                  if (sge_add_host_of_type(lGetHost(qep, QU_qhostname), 
+         SGE_EXECHOST_LIST)) {
+                     qep = lFreeElem(qep);
+                     lFreeList(direntries);
+                     DEXIT;
+                     return -1;
+                  }
+#else
+                  ERROR((SGE_EVENT, MSG_CONFIG_CANTRECREATEQEUEUEXFROMDISKBECAUSEOFUNKNOWNHOSTY_SS,
+                  lGetString(qep, QU_qname), lGetHost(qep, QU_qhostname)));
+                  lRemoveElem(Master_Queue_List, qep);
+                  qep = lFreeElem(qep);
+                  lFreeList(direntries);
+                  DEXIT;
+                  return -1;
+#endif
+               } 
+#endif
+            }
+         } else {
+            sge_unlink(CQUEUE_DIR, queue_str);
          }
       }
       lFreeList(direntries);

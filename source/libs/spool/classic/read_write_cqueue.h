@@ -1,5 +1,5 @@
-#ifndef _SGE_CUSER_QMASTER_H_
-#define _SGE_CUSER_QMASTER_H_
+#ifndef _READ_WRITE_CQUEUE_H
+#define _READ_WRITE_CQUEUE_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,17 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_c_gdi.h"
+lListElem *
+cull_read_in_cqueue(const char *dirname, const char *filename, 
+                    int spool, int flag, int *tag, int fields[]);
 
-int cuser_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+char *
+write_cqueue(int spool, int how, const lListElem *cqueue);
 
-int cuser_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
-              const char *ruser, const char *rhost, gdi_object_t *object,
-              int sub_command);
-
-int cuser_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
-
-int cuser_del(lListElem *cep, lList **alpp, char *ruser, char *rhost);
-
-#endif /* _SGE_CUSER_QMASTER_H_ */
+#endif /* _READ_WRITE_CQUEUE_H */
 

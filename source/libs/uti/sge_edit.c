@@ -31,6 +31,8 @@
 /*___INFO__MARK_END__*/
 
 #include <string.h>
+#include <stdio.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 
 #include "sge_prog.h"

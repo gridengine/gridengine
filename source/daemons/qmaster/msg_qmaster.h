@@ -35,8 +35,8 @@
 
 #include "basis_types.h"
 
-#define MSG_SGETEXT_CANTSPOOL_SS                _MESSAGE(33001, _("qmaster is unable to spool "SFN" "SFQ"\n"))
-#define MSG_OBJ_JOBS    _MESSAGE(33002, _("jobs"))
+#define MSG_SGETEXT_CANTSPOOL_SS      _MESSAGE(33001, _("qmaster is unable to spool "SFN" "SFQ"\n"))
+#define MSG_OBJ_JOBS                  _MESSAGE(33002, _("jobs"))
 
 /*
 ** sge_ckptobj.c
@@ -781,5 +781,10 @@
 #define MSG_QMODJOB_NOTENROLLED_U  _MESSAGE(33685, _("Modify operation can not be applied on job "U32CFormat " in pending/hold state\n"))
 
 #define MSG_JOB_MASTERTASKFAILED_S       _MESSAGE(33686, _("master task of job "SFN" failed - killing job\n"))
+
+#define MSG_CQUEUE_NAMENOTGUILTY_S        _MESSAGE(33687, _("cluster queue name "SFQ" is not guilty\n"))
+#define MSG_CQUEUE_NONAMECHANGE           _MESSAGE(33688, _("unable to change cluster queue name\n"))
+#define MSG_CQUEUE_ERRORWRITESPOOLFILE_S  _MESSAGE(33689, _("error writing spoolfile for cluster queue "SFQ))
+
 #endif /* __MSG_QMASTER_H */
 

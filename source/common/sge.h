@@ -156,6 +156,7 @@
 #define SUBMITHOST_DIR            "submit_hosts"
 #define ACCESS_DIR                "access_lists"
 #define QUEUE_DIR                 "queues"
+#define CQUEUE_DIR                "cqueues"
 #define COMPLEX_DIR               "complexes"
 #define PE_DIR                    "pe"
 #define UME_DIR                   "usermapping"

@@ -1,5 +1,12 @@
-AH-2003-07-30-0: Enhancem.: Ensure drmaa_strerrno() returns NULL for unknown error 
-                            codes.
+EB-2003-07-30-0: Enhancem.: CQ APIBASE WP
+                            - initial CQ CULL structure
+                            - initial gdi-qmaster code
+                            - spooling
+                            - event handling
+                 Changed:   all
+
+AH-2003-07-30-0: Enhancem.: Ensure drmaa_strerrno() returns NULL for unknown 
+                            error codes.
                             Enable build rule for DRMAA example.
                  Doc.:      Finshed DRMAA ADOC headers.
 
@@ -9,12 +16,13 @@ SG-2002-07-30-1: Bugfix     fixed the build
 SG-2003-07-29-0: Bugfix     - Corrected the order of pending jobs in case of
                               functional tickets.
                             - added error handling to lGetRef
-                            - Implemented a new algorithm the fticket calculation.
+                            - Implemented a new algorithm the fticket 
+                              calculation.
                               Depending on the ratio of fcategories and jobs, it
                               can be a lot faster than the previous allgorithm
                             - added a "\n" to a qmaster error message
-                            - fixed some errors in libs/sgeobj/sge_boundaries.h. Some
-                              id-ranges were used twice.
+                            - fixed some errors in libs/sgeobj/sge_boundaries.h.
+                              Some id-ranges were used twice.
                 Issue:     585
                 Review:    AH, EB
                 Changed:   sge_schedd, qmaster 

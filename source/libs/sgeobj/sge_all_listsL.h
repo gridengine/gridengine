@@ -86,6 +86,7 @@
 #include "sge_hrefL.h"
 #include "sge_attrL.h"
 #include "sge_helperL.h"
+#include "sge_cqueueL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -212,7 +213,9 @@ extern "C" {
       {ATIME_LOWERBOUND, ATIMES, ATIMEN},    /* CQ time limit sublist */
       {AMEM_LOWERBOUND, AMEMS, AMEMN},       /* CQ memory limit sublist */
       {AINTER_LOWERBOUND, AINTERS, AINTERN}, /* CQ interval sublist */
-      {FCAT_LOWERBOUND, FCATS, FCATN},   /* Functional category */
+      {CQ_LOWERBOUND, CQS, CQN},             /* Cluster Queue list */
+      {FCAT_LOWERBOUND, FCATS, FCATN},       /* Functional category */
+
       {0, 0, NULL}
    };
 

@@ -93,9 +93,11 @@
 #include "sge_hgroup.h"
 #include "sge_conf.h"
 #include "sge_ckpt.h"
+#include "sge_cqueue.h"
 #include "sge_hgroup_qconf.h"
 #include "sge_cuser_qconf.h"
 #include "sge_centry_qconf.h"
+#include "sge_cqueue_qconf.h"
 #include "sge_edit.h"
 
 #include "msg_common.h"
@@ -3599,6 +3601,331 @@ DPRINTF(("ep: %s %s\n",
 
 /*----------------------------------------------------------------------------*/
 
+#ifdef __SGE_CQUEUE_DEBUG__
+      /* "-scql" */
+      if (!strcmp("-scql", *spp)) {
+         show_object_list(SGE_CQUEUE_LIST, CQ_Type, CQ_name, "cqueue list");
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+#ifndef __SGE_NO_USERMAPPING__
+      /* "-Mumap user filename" */
+      if (!strcmp("-Mumap", *spp)) {
+         lList *answer_list = NULL;
+         char* file = NULL;
+        
+         /* no adminhost/manager check needed here */
+
+         if (!sge_next_is_an_opt(spp)) {
+            spp = sge_parser_get_next(spp);
+            file = *spp;
+         } else {
+            sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
+         }
+         cuser_modify_from_file(&answer_list, file);
+         show_gdi_request_answer(answer_list);
+         
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+      /* "-Mhgrp user filename" */
+      if (!strcmp("-Mhgrp", *spp)) {
+         lList *answer_list = NULL;
+         char* file = NULL;
+
+         /* no adminhost/manager check needed here */
+
+         if (!sge_next_is_an_opt(spp)) {
+            spp = sge_parser_get_next(spp);
+            file = *spp;
+         } else {
+            sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
+         }
+         hgroup_modify_from_file(&answer_list, file);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+/*----------------------------------------------------------------------------*/
+
+#ifndef __SGE_NO_USERMAPPING__
+      /* "-sumap user"  */
+      if (!strcmp("-sumap", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+         cuser_show(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+      /* "-shgrp group"  */
+      if (!strcmp("-shgrp", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+         hgroup_show(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+
+/*----------------------------------------------------------------------------*/
+
+#ifdef __SGE_CENTRY_DEBUG__
+      /* "-sce attribute"  */
+      if (!strcmp("-sce", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+         centry_show(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+#ifndef __SGE_NO_USERMAPPING__
+      /* "-mumap user"  */
+      if (!strcmp("-mumap", *spp)) {
+         lList *answer_list = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         cuser_modify(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+#ifdef __SGE_CQUEUE_DEBUG__
+      /* "-mcq cqueue"  */
+      if (!strcmp("-mcq", *spp)) {
+         lList *answer_list = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         cqueue_modify(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+      /* "-mhgrp user"  */
+      if (!strcmp("-mhgrp", *spp)) {
+         lList *answer_list = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         hgroup_modify(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+#ifdef __SGE_CENTRY_DEBUG__
+
+/*----------------------------------------------------------------------------*/
+
+      /* "-mce centry"  */
+      if (!strcmp("-mce", *spp)) {
+         lList *answer_list = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         centry_modify(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+#endif
+
+         
+/*----------------------------------------------------------------------------*/
+
+#ifndef __SGE_NO_USERMAPPING__
+      /* "-dumap user "  */
+      if (!strcmp("-dumap", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         cuser_delete(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+      /* "-dhgrp user "  */
+      if (!strcmp("-dhgrp", *spp)) {
+         lList *answer_list = NULL;
+   
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         hgroup_delete(&answer_list, *spp);
+         show_gdi_request_answer(answer_list); 
+         spp++;
+         continue;
+      }
+
+/*----------------------------------------------------------------------------*/
+
+#ifdef __SGE_CENTRY_DEBUG__
+      /* "-dce attribute "  */
+      if (!strcmp("-dce", *spp)) {
+         lList *answer_list = NULL;
+   
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         centry_delete(&answer_list, *spp);
+         show_gdi_request_answer(answer_list); 
+         spp++;
+         continue;
+      }
+
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+#ifndef __SGE_NO_USERMAPPING__
+      /* "-Aumap user mapfile"  */
+      if (!strcmp("-Aumap", *spp)) {
+         lList *answer_list = NULL;
+         char* file = NULL;
+
+         /* no adminhost/manager check needed here */
+
+         if (!sge_next_is_an_opt(spp)) {
+            spp = sge_parser_get_next(spp);
+            file = *spp;
+         } else {
+            sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN); 
+         }
+   
+         cuser_add_from_file(&answer_list, file);
+         show_gdi_request_answer(answer_list); 
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+#ifndef __SGE_NO_USERMAPPING__
+      /* "-aumap user"  */
+      if (!strcmp("-aumap", *spp)) {
+         lList *answer_list = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         cuser_add(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+#ifdef __SGE_CQUEUE_DEBUG__
+      /* "-acq cqueue"  */
+      if (!strcmp("-acq", *spp)) {
+         lList *answer_list = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         cqueue_add(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+      /* "-ahgrp group"  */
+      if (!strcmp("-ahgrp", *spp)) {
+         lList *answer_list = NULL;
+         char* group = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         group = *spp;
+         sge_gdi_is_manager(uti_state_get_user_name());
+         hgroup_add(&answer_list, group);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+#ifdef __SGE_CENTRY_DEBUG__
+
+/*----------------------------------------------------------------------------*/
+
+      /* "-ace attribute"  */
+      if (!strcmp("-ace", *spp)) {
+         lList *answer_list = NULL;
+
+         sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
+         sge_gdi_is_manager(uti_state_get_user_name());
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         centry_add(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+
+#endif
+
+/*----------------------------------------------------------------------------*/
+
 #ifndef __SGE_NO_USERMAPPING__
       /* "-Mumap user filename" */
       if (!strcmp("-Mumap", *spp)) {
@@ -3753,6 +4080,22 @@ DPRINTF(("ep: %s %s\n",
          spp = sge_parser_get_next(spp);
          sge_gdi_is_manager(uti_state_get_user_name());
          cuser_delete(&answer_list, *spp);
+         show_gdi_request_answer(answer_list);
+         spp++;
+         continue;
+      }
+#endif
+
+/*----------------------------------------------------------------------------*/
+
+#ifdef __SGE_CQUEUE_DEBUG__
+      /* "-dcq cqueue"  */
+      if (!strcmp("-dcq", *spp)) {
+         lList *answer_list = NULL;
+
+         spp = sge_parser_get_next(spp);
+         sge_gdi_is_manager(uti_state_get_user_name());
+         cqueue_delete(&answer_list, *spp);
          show_gdi_request_answer(answer_list);
          spp++;
          continue;

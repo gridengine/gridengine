@@ -1,5 +1,5 @@
-#ifndef _SGE_CUSER_QMASTER_H_
-#define _SGE_CUSER_QMASTER_H_
+#ifndef _SGE_CQUEUE_QMASTER_H_
+#define _SGE_CQUEUE_QMASTER_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -34,15 +34,15 @@
 
 #include "sge_c_gdi.h"
 
-int cuser_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
+int cqueue_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object);
 
-int cuser_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
-              const char *ruser, const char *rhost, gdi_object_t *object,
-              int sub_command);
+int cqueue_mod(lList **alpp, lListElem *modp, lListElem *ep, int add, 
+               const char *ruser, const char *rhost, gdi_object_t *object,
+               int sub_command);
 
-int cuser_spool(lList **alpp, lListElem *upe, gdi_object_t *object);
+int cqueue_spool(lList **alpp, lListElem *this_elem, gdi_object_t *object);
 
-int cuser_del(lListElem *cep, lList **alpp, char *ruser, char *rhost);
+int cqueue_del(lListElem *this_elem, lList **alpp, char *ruser, char *rhost);
 
-#endif /* _SGE_CUSER_QMASTER_H_ */
+#endif /* _SGE_CQUEUE_QMASTER_H_ */
 

@@ -29,9 +29,6 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-/*
-   This is the module for handling usermap.
- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,8 +60,9 @@
 
 #ifndef __SGE_NO_USERMAPPING__
 
-int usermap_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,                 int add, const char *remote_user, const char *remote_host,
-                gdi_object_t *object, int sub_command) 
+int cuser_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem,
+              int add, const char *remote_user, const char *remote_host,
+              gdi_object_t *object, int sub_command) 
 {
    bool ret = true;
    int pos;
@@ -89,7 +87,6 @@ int usermap_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem, 
             const char *old_name = lGetString(cuser, CU_name);
 
             if (strcmp(old_name, name)) {
-               /* EB: move to message file */
                ERROR((SGE_EVENT, MSG_UME_NONAMECHANGE));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                                ANSWER_QUALITY_ERROR);
@@ -173,7 +170,7 @@ int usermap_mod(lList **answer_list, lListElem *cuser, lListElem *reduced_elem, 
    }
 }
 
-int usermap_success(lListElem *cuser, lListElem *old_cuser, 
+int cuser_success(lListElem *cuser, lListElem *old_cuser, 
                     gdi_object_t *object) 
 {
    DENTER(TOP_LAYER, "usermap_success");
@@ -184,7 +181,7 @@ int usermap_success(lListElem *cuser, lListElem *old_cuser,
    return 0;
 }
 
-int usermap_spool(lList **answer_list, lListElem *upe, gdi_object_t *object) 
+int cuser_spool(lList **answer_list, lListElem *upe, gdi_object_t *object) 
 {  
    DENTER(TOP_LAYER, "usermap_spool");
  
@@ -201,8 +198,8 @@ int usermap_spool(lList **answer_list, lListElem *upe, gdi_object_t *object)
    return 0;
 }
 
-int sge_del_usermap(lListElem *this_elem, lList **answer_list, 
-                    char *remote_user, char *remote_host) 
+int cuser_del(lListElem *this_elem, lList **answer_list, 
+              char *remote_user, char *remote_host) 
 {
    bool ret = true;
 

@@ -44,6 +44,7 @@ int sge_read_queue_list_from_disk(void);
 int sge_read_user_list_from_disk(void);
 int sge_read_userset_list_from_disk(void);
 int sge_read_host_group_entries_from_disk(void);
+int sge_read_cqueue_list_from_disk(void);
 int read_all_centries(void);
 
 int read_all_configurations(lList **lpp,  

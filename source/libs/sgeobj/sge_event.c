@@ -294,6 +294,20 @@ const char *event_text(const lListElem *event, dstring *buffer)
       break;
 
    /* -------------------- */
+   case sgeE_CQUEUE_LIST:
+      sge_dstring_sprintf(buffer, MSG_EVENT_CQUEUELISTXELEMENTS_II, (int)number, n);
+      break;
+   case sgeE_CQUEUE_ADD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_ADDCQUEUEX_IS, (int)number, strkey);
+      break;
+   case sgeE_CQUEUE_DEL:
+      sge_dstring_sprintf(buffer, MSG_EVENT_DELCQUEUEX_IS, (int)number, strkey);
+      break;
+   case sgeE_CQUEUE_MOD:
+      sge_dstring_sprintf(buffer, MSG_EVENT_MODCQUEUEX_IS, (int)number, strkey);
+      break;
+
+   /* -------------------- */
    case sgeE_SCHED_CONF:
       sge_dstring_sprintf(buffer, MSG_EVENT_SCHEDULERCONFIG_I , (int)number);
       break;

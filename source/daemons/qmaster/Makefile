@@ -49,6 +49,7 @@ QMASTER_SRC =  qmaster$(QIDLEXT).c  \
               sge_manop_qmaster.c \
               sge_pe_qmaster.c \
               sge_ckpt_qmaster.c \
+              sge_cqueue_qmaster.c \
               sge_qmod_qmaster.c \
               sge_queue_qmaster$(QIDLEXT).c \
               sge_rusage.c \
@@ -143,6 +144,9 @@ sge_c_gdi$(QIDLEXT).o:	$(QMASTER_DIR)/sge_c_gdi.c
 
 sge_job_qmaster.o:	$(QMASTER_DIR)/sge_job_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_job_qmaster.c
+
+sge_cqueue_qmaster.o:	$(QMASTER_DIR)/sge_cqueue_qmaster.c
+		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_cqueue_qmaster.c
 
 sge_manop_qmaster.o:	$(QMASTER_DIR)/sge_manop_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_manop_qmaster.c

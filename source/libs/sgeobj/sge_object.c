@@ -60,6 +60,7 @@
 #include "sge_range.h"
 #include "sge_object.h"
 #include "sge_centry.h"
+#include "sge_cqueue.h"
 #include "sge_parse_num_par.h"
 #include "sge_utility.h"
 
@@ -95,6 +96,7 @@ static object_description object_base[SGE_TYPE_ALL] = {
    { &Master_Pe_List,                "PE",                PE_Type,   PE_name           },
    { &Master_Project_List,           "PROJECT",           UP_Type,   UP_name           },
    { &Master_Queue_List,             "QUEUE",             QU_Type,   QU_qname          },
+   { &Master_CQueue_List,            "CQUEUE",            CQ_Type,   CQ_name           },
    { &Master_Sched_Config_List,      "SCHEDD_CONF",       SC_Type,   NoName            },
    { NULL,                           "SCHEDD_MONITOR",    NULL,      NoName            },
    { NULL,                           "SHUTDOWN",          NULL,      NoName            },

@@ -398,6 +398,7 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
                case SGE_TYPE_MANAGER:
                case SGE_TYPE_OPERATOR:
                case SGE_TYPE_QUEUE:
+               case SGE_TYPE_CQUEUE:
                case SGE_TYPE_SUBMITHOST:
                case SGE_TYPE_USERSET:
                case SGE_TYPE_HGROUP:
@@ -777,6 +778,12 @@ spool_flatfile_default_list_func(lList **answer_list,
           * function queue_list_add_queue
           */
          break;
+      case SGE_TYPE_CQUEUE:
+         directory = CQUEUE_DIR;
+         /* JG: TODO: we'll have to quicksort the queue list, see
+          * function cqueue_list_add_cqueue
+          */
+         break;
       case SGE_TYPE_SUBMITHOST:
          directory = SUBMITHOST_DIR;
          break;
@@ -960,6 +967,10 @@ spool_flatfile_default_read_func(lList **answer_list,
          directory = QUEUE_DIR;
          filename  = key;
          break;
+      case SGE_TYPE_CQUEUE:
+         directory = CQUEUE_DIR;
+         filename  = key;
+         break;
       case SGE_TYPE_SUBMITHOST:
          directory = SUBMITHOST_DIR;
          filename  = key;
@@ -1124,6 +1135,10 @@ spool_flatfile_default_write_func(lList **answer_list,
          break;
       case SGE_TYPE_QUEUE:
          directory = QUEUE_DIR;
+         filename  = key;
+         break;
+      case SGE_TYPE_CQUEUE:
+         directory = CQUEUE_DIR;
          filename  = key;
          break;
       case SGE_TYPE_SUBMITHOST:
@@ -1349,6 +1364,9 @@ spool_flatfile_default_delete_func(lList **answer_list,
       case SGE_TYPE_QUEUE:
          ret = sge_unlink(QUEUE_DIR, key) == 0;
          break;
+      case SGE_TYPE_CQUEUE:
+         ret = sge_unlink(CQUEUE_DIR, key) == 0;
+         break;
       case SGE_TYPE_SCHEDD_CONF:
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
@@ -1530,6 +1548,51 @@ spool_flatfile_default_verify_func(lList **answer_list,
                   ret = false;
                }
             }
+         }
+         break;
+      case SGE_TYPE_QUEUE:
+         {
+#if 0 /*  EB: TODO: APIBASE */
+            /* handle slots from now on as a consumble attribute of queue */
+            slots2config_list(object); 
+
+            /* setup actual list of queue */
+            debit_queue_consumable(NULL, object, Master_CEntry_List, 0);
+
+            /* init double values of consumable configuration */
+            centry_list_fill_request(lGetList(object, QU_consumable_config_list), 
+                                     Master_CEntry_List, true, false, true);
+
+            if (ret) {
+               if (ensure_attrib_available(NULL, object, 
+                                           QU_load_thresholds) ||
+                   ensure_attrib_available(NULL, object, 
+                                           QU_suspend_thresholds) ||
+                   ensure_attrib_available(NULL, object, 
+                                           QU_consumable_config_list)) {
+                  ret = false;
+               }
+            }
+
+            if (ret) {
+               u_long32 state = lGetUlong(object, QU_state);
+               SETBIT(QUNKNOWN, state);
+               state &= ~(QCAL_DISABLED|QCAL_SUSPENDED);
+               lSetUlong(object, QU_state, state);
+
+               set_qslots_used(object, 0);
+               
+               if (host_list_locate(Master_Exechost_List, 
+                                    lGetHost(object, QU_qhostname)) == NULL) {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                          ANSWER_QUALITY_ERROR, 
+                                          MSG_FLATFILE_HOSTFORQUEUEDOESNOTEXIST_SS,
+                                          lGetString(object, QU_qname), 
+                                          lGetHost(object, QU_qhostname));
+                  ret = false;
+               }
+            }
+#endif
          }
          break;
       case SGE_TYPE_CONFIG:

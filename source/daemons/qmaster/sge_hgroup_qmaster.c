@@ -450,8 +450,8 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
    const char *name = lGetHost(this_elem, HGRP_name);
 
    DENTER(TOP_LAYER, "hgroup_spool");
-   if (!spool_write_object(answer_list, spool_get_default_context(), this_elem, name,
-                           SGE_TYPE_HGROUP)) {
+   if (!spool_write_object(answer_list, spool_get_default_context(), 
+                           this_elem, name, SGE_TYPE_HGROUP)) {
       ERROR((SGE_EVENT, MSG_HGRP_ERRORWRITESPOOLFORGROUP_S, name));
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
                       ANSWER_QUALITY_ERROR);

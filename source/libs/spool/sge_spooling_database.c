@@ -203,6 +203,7 @@ static table_description table_base[SGE_TYPE_ALL] = {
    { "sge_pe", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_project", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_queue", NULL , NULL, NULL, NULL, NULL, NoName},
+   { "sge_cqueue", NULL , NULL, NULL, NULL, NULL, NoName},
    { "sge_sched_config", NULL, NULL , NULL, NULL, NULL, NoName},
    { NULL , NULL, NULL, NULL, NULL, NULL, NoName},
    { NULL , NULL, NULL, NULL, NULL, NULL, NoName},
@@ -337,6 +338,7 @@ spool_database_initialize(lList **answer_list, lListElem *rule)
          case SGE_TYPE_OPERATOR:
          case SGE_TYPE_PE:
          case SGE_TYPE_QUEUE:
+         case SGE_TYPE_CQUEUE:
          case SGE_TYPE_SCHEDD_CONF:
          case SGE_TYPE_SUBMITHOST:
          case SGE_TYPE_USERSET:

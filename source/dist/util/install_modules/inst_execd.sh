@@ -420,7 +420,7 @@ AddQueue()
    #   return
    #fi
 
-   exechost=`$SGE_UTILBIN/gethostname -name | cut -f1 -d.`
+   exechost=`$SGE_UTILBIN/gethostname -aname | cut -f1 -d.`
 
    slots=`$SGE_UTILBIN/loadcheck -loadval num_proc 2>/dev/null | sed "s/num_proc *//"`
 

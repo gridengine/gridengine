@@ -198,7 +198,7 @@ CheckIfShadowMasterHost()
    fname=$SGE_ROOT/$SGE_CELL/common/shadow_masters
 
    if [ -f $fname ]; then
-      grep -i $host $fname #2>&1 > /dev/null
+      grep -i $host $fname 2>&1 > /dev/null
       if [ $? = 0 ]; then
          shadow_host="true"
       else

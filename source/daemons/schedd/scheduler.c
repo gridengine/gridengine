@@ -132,7 +132,7 @@ int scheduler(sge_Sdescr_t *lists) {
 
    /* variables for profiling */
    clock_t start;
-   struct tms tms_buffer;
+   struct tms tms_buffer, tms_now;
    
    int ret;
    int i;
@@ -225,20 +225,25 @@ int scheduler(sge_Sdescr_t *lists) {
    }
 #endif
    if(profile_schedd) {
-      clock_t now = times(&tms_buffer);
+      clock_t now = times(&tms_now);
       extern u_long32 logginglevel;
       u_long32 saved_logginglevel = logginglevel;
 
       logginglevel = LOG_INFO;
-      INFO((SGE_EVENT, "scheduled in %.3f s: %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J, %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
+      INFO((SGE_EVENT, "scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(x), %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
          (now - start) * 1.0 / CLK_TCK, 
+         (tms_now.tms_utime - tms_buffer.tms_utime) * 1.0 / CLK_TCK,
+         (tms_now.tms_stime - tms_buffer.tms_stime) * 1.0 / CLK_TCK,
+         (tms_now.tms_stime - tms_buffer.tms_stime + tms_now.tms_utime - tms_buffer.tms_utime) * 1.0 / CLK_TCK,
          scheduled_fast_jobs,
          scheduled_complex_jobs,
          lGetNumberOfElem(orderlist), 
          lGetNumberOfElem(lists->host_list), 
          lGetNumberOfElem(lists->queue_list),
          lGetNumberOfElem(lists->all_queue_list),
-         lGetNumberOfElem(lists->job_list),
+         lGetNumberOfElem(*(splitted_job_lists[SPLIT_PENDING])),
+         lGetNumberOfElem(*(splitted_job_lists[SPLIT_RUNNING])),
+         lGetNumberOfElem(*(splitted_job_lists[SPLIT_FINISHED])),
          lGetNumberOfElem(lists->complex_list),
          lGetNumberOfElem(lists->acl_list),
          lGetNumberOfElem(lists->pe_list),

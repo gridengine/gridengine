@@ -235,7 +235,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
 {
 #ifdef DEBUG_MAX_RUNNING
    clock_t now, start;
-   struct tms tms_buffer;
+   struct tms tms_now, tms_start;
 #endif
    DENTER(TOP_LAYER, "job_lists_split_with_reference_to_max_running");
 
@@ -246,14 +246,14 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
       lListElem *next_user = NULL;
 
 #ifdef DEBUG_MAX_RUNNING
-      start = times(&tms_buffer);
+      start = times(&tms_start);
 #endif
 
       /* 
        * create a hash table on JB_owner to speedup 
        * searching for jobs of a specific owner
        */
-      {
+if(1)      {
          const lDescr *descr = lGetListDescr(*(job_lists[SPLIT_PENDING]));
          int pos = lGetPosInDescr(descr, JB_owner);
         
@@ -265,9 +265,11 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
       }
      
 #ifdef DEBUG_MAX_RUNNING 
-      now = times(&tms_buffer);
-      ERROR((SGE_EVENT, "cull_hash_new section %.3f s\n",
-            (now - start) * 1.0 / CLK_TCK ));
+      now = times(&tms_now);
+      ERROR((SGE_EVENT, "cull_hash_new section %.3f s %3f s\n",
+            (now - start) * 1.0 / CLK_TCK, 
+            (tms_now.tms_utime - tms_start.tms_utime) * 1.0 / CLK_TCK));
+      start = times(&tms_start);
 #endif
 
 
@@ -316,9 +318,11 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
       }
 
 #ifdef DEBUG_MAX_RUNNING
-      now = times(&tms_buffer);
+      now = times(&tms_now);
       ERROR((SGE_EVENT, "job_lists_split_with_reference_to_max_running "
-             "%.3f s\n", (now - start) * 1.0 / CLK_TCK ));
+            "%.3f s %3f s\n",
+            (now - start) * 1.0 / CLK_TCK, 
+            (tms_now.tms_utime - tms_start.tms_utime) * 1.0 / CLK_TCK));
 #endif
    
    }
@@ -767,9 +771,15 @@ void job_lists_print(lList **job_list[], const char *context)
             ids += job_get_enrolled_ja_tasks(job);
             ids += job_get_not_enrolled_ja_tasks(job);
          }
+#if 0
          DPRINTF(("job_list[%s] CONTAINES "u32" JOB(S) ("u32" TASK(S))\n",
             get_name_of_split_value(i),
             (u_long32) lGetNumberOfElem(*(job_list[i])), ids));
+#else
+         ERROR((SGE_EVENT, "%s job_list[%s] CONTAINES "u32" JOB(S) ("u32" TASK(S))\n", context,
+            get_name_of_split_value(i),
+            (u_long32) lGetNumberOfElem(*(job_list[i])), ids));
+#endif
       }
    } 
    DEXIT;

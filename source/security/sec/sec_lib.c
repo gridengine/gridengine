@@ -66,12 +66,12 @@
 #define CHALL_LEN       16
 #define ValidMinutes    1          /* expiry of connection        */
 #define SGESecPath      ".sge"
-#define CaKey           "private/cakey.pem"
+#define CaKey           "cakey.pem"
 #define CaCert          "cacert.pem"
 #define CA_DIR          "common/sgeCA"
 #define CA_LOCAL_DIR    "/var/sgeCA"
-#define UserKey         "private/key.pem"
-#define UserCert        "certs/cert.pem"
+#define UserKey         "key.pem"
+#define UserCert        "cert.pem"
 #define ReconnectFile   "private/reconnect.dat"
 
 
@@ -847,7 +847,7 @@ const char *tohost
    ** try to reconnect
    */
    if (gsd->connect) {
-debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time);
+/* debug_print_ASN1_UTCTIME("gsd.refresh_time: ", gsd->refresh_time); */
       if (gsd->refresh_time && (X509_cmp_current_time(gsd->refresh_time) > 0)) {
          DPRINTF(("++++ Connection %d still valid\n", (int) gsd->connid));      
          DEXIT;      
@@ -2432,8 +2432,8 @@ int is_daemon
 	char *user_local_dir = NULL;
 	char *ca_root = NULL;
 	char *ca_local_root = NULL;
-   char *sge_keyfile = NULL;
    char *sge_cakeyfile = NULL;
+   char *sge_keyfile = NULL;
    int len;
    char *cp = NULL;
 
@@ -2478,8 +2478,8 @@ int is_daemon
          CRITICAL((SGE_EVENT, MSG_SEC_CALOCALROOTNOTFOUND_S, ca_local_root));
          SGE_EXIT(1);
       }
-      ca_key_file = sge_malloc(strlen(ca_local_root) + strlen(CaKey) + 2);
-      sprintf(ca_key_file, "%s/%s", ca_local_root, CaKey);
+      ca_key_file = sge_malloc(strlen(ca_local_root) + strlen("private") + strlen(CaKey) + 3);
+      sprintf(ca_key_file, "%s/%s/%s", ca_local_root, "private", CaKey);
    }
 
    if (is_daemon && SGE_STAT(ca_key_file, &sbuf)) { 
@@ -2498,8 +2498,11 @@ int is_daemon
    DPRINTF(("ca_cert_file: %s\n", ca_cert_file));
 
    /*
-   ** determine userdir: either ca_root 
-   ** or $HOME/.sge/{port$COMMD_PORT|sge_commd}/$SGE_CELL
+   ** determine userdir: 
+   ** - ca_root, ca_local_root for daemons 
+   ** - $HOME/.sge/{port$COMMD_PORT|SGE_COMMD_SERVICE}/$SGE_CELL
+   **   and as fallback
+   **   /var/sgeCA/{port$COMMD_PORT|SGE_COMMD_SERVICE}/$SGE_CELL/userkeys/$USER/{cert.pem,key.pem}
    */
    if ((sge_keyfile = getenv("SGE_KEYFILE"))) {
       key_file = sge_malloc(strlen(sge_keyfile));
@@ -2528,8 +2531,15 @@ int is_daemon
          user_local_dir = userdir;
       }
 
-      key_file = sge_malloc(strlen(user_local_dir) + strlen(UserKey) + 2);
-      sprintf(key_file, "%s/%s", user_local_dir, UserKey);
+      key_file = sge_malloc(strlen(user_local_dir) + strlen("private") + strlen(UserKey) + 3);
+      sprintf(key_file, "%s/private/%s", user_local_dir, UserKey);
+
+      if (SGE_STAT(key_file, &sbuf)) { 
+         free(key_file);
+         key_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
+                                 strlen(me.user_name) + strlen(UserKey) + 4);
+         sprintf(key_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, UserKey);
+      }   
    }
    if (SGE_STAT(key_file, &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_KEYFILENOTFOUND_S, key_file));
@@ -2537,8 +2547,15 @@ int is_daemon
    }
    DPRINTF(("key_file: %s\n", key_file));
 
-   cert_file = sge_malloc(strlen(userdir) + strlen(UserCert) + 2);
-   sprintf(cert_file, "%s/%s", userdir, UserCert);
+   cert_file = sge_malloc(strlen(userdir) + strlen("certs") + strlen(UserCert) + 3);
+   sprintf(cert_file, "%s/certs/%s", userdir, UserCert);
+
+   if (SGE_STAT(cert_file, &sbuf)) {
+      free(cert_file);
+      cert_file = sge_malloc(strlen(ca_local_root) + strlen("userkeys") + 
+                              strlen(me.user_name) + strlen(UserCert) + 4);
+      sprintf(cert_file, "%s/%s/%s/%s", ca_local_root, "userkeys", me.user_name, UserCert);
+   }   
 
    if (SGE_STAT(cert_file, &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_CERTFILENOTFOUND_S, cert_file));

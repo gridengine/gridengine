@@ -1,3 +1,7 @@
+AD-2003-10-28-0: Bugfix:    Fixed the build. Modified shared objects link
+                            flags for HP11.
+                 Changed:   aimk
+
 JG-2003-10-27-0: Cleanup:   Removed code writing the statistics file.
 
 AD-2003-10-27-1: Bugfix:    Fixed build for AIX51

@@ -1306,10 +1306,10 @@ case HP11:
    set XLIBS    = "-lXm -lXt -lXext -lXhp11 -lX11 -lm"
 
    if ( $STATIC == 1 ) then
-      set LFLAGS = "-Wl,-a,archive $LFLAGS"
+      set LFLAGS = "-Wl,-a,archive_shared $LFLAGS"
    endif
    set SHAREDEXT = ".sl"
-   set LFLAGS = "-Wl,+s $LFLAGS"
+   set LFLAGS = "-L."
 
    set MTCFLAGS = "${MTCFLAGS}"
    set MTLFLAGS = "-lpthread"
@@ -1360,10 +1360,10 @@ case HP1164:
    set XLIBS    = "-lXm -lXt -lXext -lXhp11 -lX11 -lm"
 
    if ( $STATIC == 1 ) then
-      set LFLAGS = "-Wl,-a,archive $LFLAGS"
+      set LFLAGS = "-Wl,-a,archive_shared $LFLAGS"
    endif
    set SHAREDEXT = ".sl"
-   set LFLAGS = "-Wl,+s $LFLAGS"
+   set LFLAGS = "-L."
 
    set MTCFLAGS = "${MTCFLAGS}"
    set MTLFLAGS = "-lpthread"

@@ -384,7 +384,6 @@ StartExecd()
 {
    $INFOTEXT -u "\nGrid Engine execution daemon startup"
    $INFOTEXT "\nStarting execution daemon. Please wait ..."
-   . $SGE_ROOT/$SGE_CELL/common/settings.sh
    $SGE_STARTUP_FILE 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR

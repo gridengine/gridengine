@@ -954,7 +954,6 @@ StartQmaster()
 {
    $INFOTEXT -u "\nGrid Engine qmaster and scheduler startup"
    $INFOTEXT "\nStarting qmaster and scheduler daemon. Please wait ..."
-   . $SGE_ROOT/$SGE_CELL/common/settings.sh
    $SGE_STARTUP_FILE -qmaster
    CheckRunningDaemon
    run=$?

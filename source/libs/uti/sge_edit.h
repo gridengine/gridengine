@@ -32,9 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge.h" 
-#include "basis_types.h"
-
 int sge_edit(char *fname); 
 
 #endif /* __SGE_EDIT_H */

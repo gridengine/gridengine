@@ -31,22 +31,14 @@
 /*___INFO__MARK_END__*/
 
 #include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
-#include <limits.h>
-#include <ctype.h>
 
-#include "sge_unistd.h"
-#include "sge_edit.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_signal.h"
 #include "msg_common.h"
+#include "sge_edit.h"
+#include "sge_unistd.h"
 
 int sge_edit(
 char *fname 
@@ -85,8 +77,8 @@ char *fname
                   DEXIT;
                   return -1;
                }
-               if ((before.st_mtime != after.st_mtime) ||
-                   (before.st_size != after.st_size)) {
+               if ((before.st_mtime != after.st_mtime) || 
+                    (before.st_size != after.st_size)) { 
                   DEXIT;
                   return 0;
                }

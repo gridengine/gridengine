@@ -205,7 +205,7 @@ sge_tmpnam.o:	$(UTILIB_DIR)/sge_tmpnam.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_tmpnam.c
 
 sge_edit.o:	$(UTILIB_DIR)/sge_edit.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_edit.c
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_edit.c
 
 ###############################################################################
 # test targets

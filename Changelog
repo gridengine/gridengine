@@ -1,3 +1,8 @@
+AS-2002-08-08-1  Bugfix:    i18n/l10n ready for util/setfileperm.sh
+                 Bugtraq:   #4705054
+
+AS-2002-08-08-0  Enhancm.:  cleanup in i18n setup
+
 AS-2002-08-07-0  Bugfix:    wrong setting of SGE_CELL in settings.sh 
                             created by util/create_settings.sh
                  Bugtraq:   #4727457

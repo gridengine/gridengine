@@ -508,10 +508,6 @@ int run_client_test2(char* host, int port, int repeat) {
    int resends = 0;
    char buffer[30000]; 
    u_long32 nr_bytes;
-   u_long32 start_time;
-   u_long32 end_time;
-   double bytes_per_second;
-   double run_time;
    int sent_data = 0;
    
    
@@ -576,7 +572,8 @@ int run_client_test2(char* host, int port, int repeat) {
    while(resends-- > 0) {   
       int help = strlen(mydata)+1;
       int write_ret = 0;
-      int maxfd,select_back;
+      int maxfd = -1;
+      int select_back;
 
       
 

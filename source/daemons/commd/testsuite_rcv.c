@@ -554,9 +554,7 @@ void start_server_handling2(int sockfd,int repeat) {
    int open_connections[1000];
    char data_buffer[30000];
    char send_buffer[30000];
-   u_long32 nr_bytes;
-   u_long32 start_time;
-   u_long32 end_time;
+   u_long32 nr_bytes = 0;
    double bytes_per_second;
    double run_time;
    int messages = 0;

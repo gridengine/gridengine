@@ -1,3 +1,5 @@
+AH-2002-05-06-0: Bugfix:    Fix typo in simple.sh job example
+
 CR-2002-05-03-0: Testsuite: - removed rsh with rlogin calls
                  Bugfix:    - compile source has set wrong LIBPATH on AIX
                             - timeout setting changed for some tests

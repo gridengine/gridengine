@@ -1380,6 +1380,11 @@ proc read_edit_defaults_file { filename } {
         return -1
    }
  
+   if { [string length "$CHECK_PRODUCT_ROOT/bin/solaris64/sge_qmaster"] > 79 } {
+        puts $CHECK_OUTPUT "path for product_root_directory is to long"
+        return -1
+   }
+
    if { $CHECK_FIRST_FOREIGN_SYSTEM_USER == "" || 
         $CHECK_SECOND_FOREIGN_SYSTEM_USER == "" ||
         $CHECK_FIRST_FOREIGN_SYSTEM_GROUP == "" ||

@@ -185,7 +185,6 @@ proc submit_hosts_test {} {
       wait_for_jobstart $actual_id "leeper" 60
 #      wait_for_end_of_transfer $actual_id 60
       delete_job $actual_id
-      wait_for_jobend $actual_id "leeper" 60
    }
 #   wait_for_enter
    foreach submit_host $CHECK_SUBMIT_ONLY_HOSTS { 

@@ -3406,7 +3406,7 @@ proc check_setup_config {} {
 
    get_config stored_configuration
 
-   set my_config(schedd_params) "FLUSH_SUBMIT_SEC=0"
+   set my_config(schedd_params) "$stored_configuration(schedd_params),FLUSH_SUBMIT_SEC=0"
    set_config my_config
    set_error 0 "ok"
 }

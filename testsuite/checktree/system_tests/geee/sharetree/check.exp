@@ -101,13 +101,20 @@ proc wait_for_job_tickes { job_id } {
 
    global CHECK_OUTPUT
 
+   set my_timeout [timestamp]
+   incr my_timeout 300
+   
    set last_job_tickets 0
-   while { $last_job_tickets == 0 } {
+   while { $last_job_tickets == 0 && [timestamp] < $my_timeout } {
       get_extended_job_info $job_id job_info_var
       set last_job_tickets $job_info_var(tckts)
       puts $CHECK_OUTPUT "waiting for job $job_id to get his tickets ..."
       sleep 1
    }
+   if { [timestamp] >= $my_timeout } {
+      add_proc_error "wait_for_job_tickes" -1 "timeout while waiting for job tickets"
+   }
+
 }
 
 proc get_job_tickets { job_list_prj1 job_list_prj2 job_list_prj3 array_name } {
@@ -453,7 +460,9 @@ proc share_tree_test {} {
    enable_queue share_test
 
    set done 0
-   while { $done == 0 } {
+   set my_timeout [timestamp]
+   incr my_timeout 300
+   while { $done == 0 && [timestamp] < $my_timeout} {
       set done 1
       set nr_of_jobs 0
       foreach job $prj2_id_list {
@@ -467,7 +476,9 @@ proc share_tree_test {} {
       flush $CHECK_OUTPUT
       sleep 2
    }
-
+   if { [timestamp] >= $my_timeout } {
+      add_proc_error "share_tree_test" -1 "timeout while waiting for start of jobs"
+   }
      
 
  

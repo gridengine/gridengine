@@ -298,9 +298,9 @@ proc scheduler_perf_setup_queues {} {
    set myconfig(loglevel)         "log_warning"
    set myconfig(load_report_time) "0:0:60"
    if { $FLUSH_SUBMIT_SEC == -1 && $FLUSH_FINISH_SEC == -1 } {
-      set myconfig(schedd_params)    "none"
+      set myconfig(schedd_params)    $stored_configuration(schedd_params)
    } else {
-      set myconfig(schedd_params)    "FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
+      set myconfig(schedd_params)    "$stored_configuration(schedd_params),FLUSH_SUBMIT_SEC=${FLUSH_SUBMIT_SEC},FLUSH_FINISH_SEC=${FLUSH_FINISH_SEC}"
    }
    set_config myconfig
 

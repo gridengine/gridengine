@@ -189,7 +189,7 @@ proc setup_schedd_params {} {
    global stored_configuration
 
    get_config stored_configuration
-   set default_array(schedd_params)   "FLUSH_SUBMIT_SEC=0,FLUSH_FINISH_SEC=0"
+   set default_array(schedd_params)   "$stored_configuration(schedd_params),FLUSH_SUBMIT_SEC=0,FLUSH_FINISH_SEC=0"
    set_config default_array
    set_error 0 "no errors"
 }

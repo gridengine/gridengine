@@ -1,3 +1,9 @@
+CR-2002-01-21-1: Testsuite: - setup checking length of product_root_directory
+                            - setting default load_thresholds to "np_load_avg=11.00"
+                            - Bugfix in submit hosts test 
+                            - Bugfix for sharetree test (no timeout behavior
+                              for CLASSIC_SGEEE_SCHEDULING case)
+
 CR-2002-01-21-0: Testsuite: - changed menu point 9 ( run all tests at 
                               a special starttime)
                  Enhancem.: 

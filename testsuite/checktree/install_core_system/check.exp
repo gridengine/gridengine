@@ -1240,7 +1240,7 @@ proc setup_queues {} {
      }
 
      set slots [ expr ( $slots_tmp * 10) ]
-     set new_values(load_thresholds)       "np_load_avg=7.00"
+     set new_values(load_thresholds)       "np_load_avg=11.00"
      set new_values(qtype)                 "BATCH INTERACTIVE CHECKPOINTING PARALLEL"
      set new_values(slots)                 "$slots"
 

@@ -89,5 +89,6 @@ void get_taskrange_str(lList *task_list, StringBufferT *taskrange_str);
 
 lList* split_task_group(lList **in_list);
 
+void range_correct_end(lListElem *range);   
 
 #endif /* __SGE_RANGE_H */

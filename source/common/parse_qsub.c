@@ -1103,7 +1103,6 @@ DTRACE;
              return answer;
          }
 
-DTRACE;
          /* ... followed by a range */
          sp++;
          if (!*sp) {
@@ -1113,16 +1112,13 @@ DTRACE;
              return answer;
          }
 
-DTRACE;
          pe_range = parse_ranges(*sp, 0, 0, &answer, NULL, INF_ALLOWED);
-DTRACE;
 
          if (!pe_range) {
             DEXIT;
             return answer;
          }
 
-DTRACE;
          strcpy(arg, *(sp - 1));
          strcat(arg, " ");
          strcat(arg, *sp);
@@ -1130,7 +1126,6 @@ DTRACE;
          lSetString(ep_opt, SPA_argval_lStringT, *(sp - 1));
          lSetList(ep_opt, SPA_argval_lListT, pe_range);
 
-DTRACE;
          sp++;
 
 

@@ -217,6 +217,28 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    lSetString(jep, JB_group, group);
    lSetUlong(jep, JB_gid, gid);
 
+   {
+      int field[] = { 
+         JB_ja_structure,
+         JB_ja_n_h_ids,             
+         JB_ja_u_h_ids,             
+         JB_ja_s_h_ids,             
+         JB_ja_o_h_ids,             
+         JB_ja_z_ids,
+         -1
+      };
+      int i = -1;
+
+      while (field[++i] != -1) {
+         lList *range_list = lGetList(jep, field[i]);
+         lListElem *range = NULL;
+
+         for_each(range, range_list) { 
+            range_correct_end(range);
+         }
+      }
+   }
+
    /*
     * Is the max. size of array jobs exceeded?
     */

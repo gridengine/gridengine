@@ -68,8 +68,6 @@
 
 static void add_taskrange_str(u_long32 start, u_long32 end, int step, StringBufferT *dyn_taskrange_str);
 
-static void range_correct_end(lListElem *range);
- 
 static int range_is_overlapping(const lListElem *range1, 
                                 const lListElem *range2);
 
@@ -95,7 +93,7 @@ static int range_is_overlapping(const lListElem *range1,
 *     1-6:2 (1,3,5) will be modified to 1-5:2 
 *
 *******************************************************************************/
-static void range_correct_end(lListElem *range) 
+void range_correct_end(lListElem *range) 
 {
    if (range) {
       u_long32 start, end, step;

@@ -264,24 +264,52 @@ error:
    if (do_error_log) {
       switch(error_number) {
          case 1:
-            CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
+            if (buffer != NULL) {
+               strncpy(buffer, MSG_SGEGRDROOTNOTEQUIV, size);
+            }
+            else {
+               CRITICAL((SGE_EVENT, MSG_SGEGRDROOTNOTEQUIV));
+            }
+            
             break;
          case 2:
-            CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
+            if (buffer != NULL) {
+               strncpy(buffer, MSG_SGECODINEROOTNOTEQUIV, size);
+            }
+            else {
+               CRITICAL((SGE_EVENT, MSG_SGECODINEROOTNOTEQUIV));
+            }
+            
             break;
          case 3:
-            CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
+            if (buffer != NULL) {
+               strncpy(buffer, MSG_GRDCODINEROOTNOTEQUIV, size);
+            }
+            else {
+               CRITICAL((SGE_EVENT, MSG_GRDCODINEROOTNOTEQUIV));
+            }
+            
             break;
          case 4:
-            CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
+            if (buffer != NULL) {
+               strncpy(buffer, MSG_SGEROOTNOTSET, size);
+            }
+            else {
+               CRITICAL((SGE_EVENT, MSG_SGEROOTNOTSET));
+            }
+            
             break;
          default:
-            CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
+            if (buffer != NULL) {
+               strncpy(buffer, MSG_UNKNOWNERRORINSGEROOT, size);
+            }
+            else {
+               CRITICAL((SGE_EVENT, MSG_UNKNOWNERRORINSGEROOT));
+            }
+            
             break;
       }
    }
-   if (buffer)
-      strncpy(buffer, SGE_EVENT, size);
 
    DEXIT;
    if (do_exit) {

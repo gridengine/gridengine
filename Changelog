@@ -1,3 +1,8 @@
+MD-2004-06-17-0: Bugfix:    remove stat_log_time from configuration
+                 Changed:   inst_qmaster.sh
+                 Review:    AS 
+                 Issue:     1082
+
 MD-2004-06-16-0: Bugfix:    Install script fails when sgeadmin is selected 
                             as install user
                  Changed:   inst_qmaster.sh

@@ -1,3 +1,6 @@
+SD-2002-03-18-0: Feature:   SX architecture updates
+                            - Support dynamic setting of timeslice values
+
 SD-2002-02-23-0: Feature:   SX architecture updates
                             - Set execd to high priority to prevent swapping
                             - Only set # of processes limit for job (not process)

@@ -285,7 +285,6 @@ char *file
    char *dir = NULL;
    lListElem *sep = NULL;
    char real_filename[SGE_PATH_MAX], filename[SGE_PATH_MAX];
-   const char *hostname;
    int ret;
 
    DENTER(TOP_LAYER, "write_host");

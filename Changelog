@@ -1,3 +1,10 @@
+SD-2001-11-29-1: Bugfix:    SGEEE scheduler - Moved max_pending_functional_jobs
+                            short-circuit to outer loop of pending functional
+                            jobs algorithm to correct problem where certain
+                            pending jobs were not considered for scheduling.
+
+                            (read_write_host.c) removed unused hostname variable
+
 JG-2001-11-29-0: Feature:   Event client mechanism:
                               - added new events for 
                                  - admin hosts

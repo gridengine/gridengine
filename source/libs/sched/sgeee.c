@@ -2578,11 +2578,11 @@ sge_calc_tickets( sge_Sdescr_t *lists,
             top of the list¸ and start the process all over again with the
             remaining jobs. */
 
-         for(i=0; i<num_queued_jobs; i++) {
+         for(i=0; i<MIN(num_queued_jobs,max_functional_jobs_to_schedule); i++) {
             double ftickets, max_ftickets=0;
             u_long jid, save_jid=0, save_tid=0;
 
-            for(j=i; j<MIN(num_queued_jobs,max_functional_jobs_to_schedule); j++) {
+            for(j=i; j<num_queued_jobs; j++) {
                sge_ref_t *jref = &job_ref[sort_list[j]];
                double user_fshares = pending_user_fshares + 0.001;
                double proj_fshares = pending_proj_fshares + 0.001;

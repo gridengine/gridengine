@@ -63,10 +63,10 @@
 #define JOB_TYPE_NO_ERROR   0x20L
 
 /* submitted via "qsub -b y" or "qrsh [-b y]" */ 
-#define JOB_TYPE_BINARY     0x20L
+#define JOB_TYPE_BINARY     0x40L
 
 /* array job (qsub -t ...) */
-#define JOB_TYPE_ARRAY      0x40L
+#define JOB_TYPE_ARRAY      0x80L
 
 #define JOB_TYPE_QXXX_MASK \
    (JOB_TYPE_QSH | JOB_TYPE_QLOGIN | JOB_TYPE_QRSH | JOB_TYPE_QRLOGIN | JOB_TYPE_NO_ERROR)

@@ -1,5 +1,6 @@
+EB-2003-02-19-0  Testsuite: Added new test for issue #478
+
 EB-2003-02-18-0  Testsuite: Added new test for issue #403
-                 Review:    CR
 
 JG-2003-02-18-0  Cleanup:   Created separate messages files for the new libs
                             libevc, libevm and libmir.

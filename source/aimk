@@ -1036,6 +1036,10 @@ case IRIX65:
       set OFLAG = "-O"
    endif
 
+   if ( $DEBUGGED == 1 ) then
+      set OFLAG = ""
+   endif 
+
    set DLLIB = ""
 
    set COMPILE_DC = 1
@@ -1053,7 +1057,7 @@ case IRIX65:
    set XLIBS    = "-lXm -lXt -lXext -lX11 -lPW -lm"
    set RANLIB   = echo
 
-   set SHAREDLD = $CC
+   set SHAREDLD = ld
    set SHARED_CFLAGS = "-KPIC"
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
    breaksw

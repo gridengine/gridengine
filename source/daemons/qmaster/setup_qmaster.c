@@ -751,7 +751,6 @@ static int setup_qmaster(void)
    */
    spool_read_list(&answer_list, spooling_context, &Master_Config_List, SGE_TYPE_CONFIG);
    answer_list_output(&answer_list);
-
    ret = select_configuration(uti_state_get_qualified_hostname(), Master_Config_List, &lep);
    if (ret) {
       if (ret == -3)

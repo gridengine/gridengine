@@ -94,7 +94,7 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
                                        );
    /* open the shared lib */
    shlib_handle = dlopen(shlib_fullname, RTLD_NOW 
-#ifdef DARWIN
+#if defined(DARWIN)
                          | RTLD_GLOBAL
 #endif
                         );

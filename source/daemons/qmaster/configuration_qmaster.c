@@ -566,7 +566,6 @@ lListElem **cepp
       }
 /*       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name))); */
    }
-   
    *cepp = lGetElemHost(lp, CONF_hname, 
       (is_global_requested ? SGE_GLOBAL_NAME : lGetHost(hep, EH_name)));
    

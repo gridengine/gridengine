@@ -619,12 +619,19 @@ spool_classic_default_list_func(lList **answer_list,
 
             sge_dstring_init(&file_name, filename_buf, SGE_PATH_MAX);
             sge_dstring_init(&dir_name, dirname_buf, SGE_PATH_MAX);
-
+#if 0 /* debugging of reverse resolving of global symbols.
+       * seems to be broken on AIX and IRIX - or we simply don't know the 
+       * necessary compiler/linker switches?
+       */
+ERROR((SGE_EVENT, "----> object_type_get_master_list() = %p\n", object_type_get_master_list(SGE_TYPE_CONFIG)));
+ERROR((SGE_EVENT, "----> &Master_Config_List           = %p\n", &Master_Config_List));
+ERROR((SGE_EVENT, "----> list                          = %p\n", list));
+#endif
             sge_dstring_sprintf(&file_name, "%s/%s",
                                 lGetString(rule, SPR_url), CONF_FILE);
             sge_dstring_sprintf(&dir_name, "%s/%s",
                                 lGetString(rule, SPR_url), LOCAL_CONF_DIR);
-            if (read_all_configurations(&Master_Config_List, 
+            if (read_all_configurations(list,
                                         sge_dstring_get_string(&file_name), 
                                         sge_dstring_get_string(&dir_name)) 
                 != 0) {
@@ -633,11 +640,11 @@ spool_classic_default_list_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_JOB:
-         if (job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 0,
+         if (job_list_read_from_disk(list, "Master_Job_List", 0,
                                      SPOOL_DEFAULT, NULL) != 0) {
             ret = false;
          }
-         if (job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List",
+         if (job_list_read_from_disk(list, "Master_Zombie_List",
                                      0, SPOOL_HANDLE_AS_ZOMBIE, NULL) != 0) {
             ret = false;
          }

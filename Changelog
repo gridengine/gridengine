@@ -1,3 +1,6 @@
+AS-2003-02-17-0: CVS        Created V53prep4_TAG --> SGE 5.3prep4
+-----------------------------------------------------------------
+
 AS-2003-06-17-1: Bugfix     removed references to CODINE/GRD in ckpt
                             template scripts and README
                  Changed:   Files in ckpt/

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/01/28 22:15:01 $     Revision: $Revision: 1.25 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/02/20 21:09:47 $     Revision: $Revision: 1.26 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/01/28 22:15:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/02/20 21:09:47 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1026,6 +1026,50 @@ and
 if rsh and rshd components are used which are provided with xxQS_NAMExx
 (i.e., the \fBrsh_daemon\fP and \fBrsh_command\fP parameters may
 not be changed from the default).
+.\"
+.\"
+.SH "\fBreporting_params\fP"
+Used to define the behaviour of reporting modules in the xxQS_NAMExx 
+qmaster. Changes to the \fBreporting_params\f takes immediate effect.
+The following values are recognized:
+.\"
+.IP "\fIaccounting\fP"
+If this parameter is set to true, the accounting file is written.
+The accounting file is prerequisit for using the \fBqacct\fP command.
+.PP
+.IP "\fIreporting\fP"
+If this parameter is set to true, the reporting file is written.
+The reporting file contains data that can be used for monitoring and analysis,
+like job accounting, job log, host load and consumables, queue status and 
+consumables and sharetree configuration and usage.
+Attention: Depending on the size and load of the cluster, the reporting file can
+become quite large. Only activate the reporting file if you have a process running that will consume the reporting file!
+See 
+.M reporting 5
+for further information about format and contents of the reporting file.
+.PP
+.IP "\fIflush_time\fP"
+Contents of the accounting and the reporting file are buffered in the
+xxQS_NAMExx qmaster and flushed in a fixed interval.
+This interval can be configured with the \fIflush_time\fP parameter.
+It is specified as time value in the format HH:MM:SS.
+Sensible values range from some seconds to one minute. Setting it too low may slow down qmaster, setting it too high will make qmaster consume high amounts of memory for buffering data.
+.PP
+.IP "\fIjoblog\fP"
+If this parameter is set to true, the reporting file will contain job logging 
+information. See
+.M reporting 5 
+for more information about job logging.
+.PP
+.IP "\fIsharelog\fP"
+The xxQS_NAMExx qmaster can dump information about sharetree configuration and use to the reporting file.
+The parameter \fIsharelog\fP sets an interval in which sharetree information will be dumped.
+It is set in the format HH:MM:SS. A value of 00:00:00 configures qmaster not to
+dump sharetree information. Intervals of several minutes up to hours are sensible values for this parameter.
+See 
+.M reporting 5 
+for further information about sharelog.
+.PP
 .\"
 .\"
 .SH "\fBfinished_jobs\fP"

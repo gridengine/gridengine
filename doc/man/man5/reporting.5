@@ -1,0 +1,282 @@
+'\" t
+.\"___INFO__MARK_BEGIN__
+.\"
+.\" Copyright: 2001 by Sun Microsystems, Inc.
+.\"
+.\"___INFO__MARK_END__
+.\" $RCSfile: reporting.5,v $     Last Update: $Date: 2004/02/20 21:09:46 $     Revision: $Revision: 1.1 $
+.\"
+.\"
+.\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
+.\"
+.de SB		\" small and bold
+.if !"\\$1"" \\s-2\\fB\&\\$1\\s0\\fR\\$2 \\$3 \\$4 \\$5
+..
+.\"
+.de T		\" switch to typewriter font
+.ft CW		\" probably want CW if you don't have TA font
+..
+.\"
+.de TY		\" put $1 in typewriter font
+.if t .T
+.if n ``\c
+\\$1\c
+.if t .ft P
+.if n \&''\c
+\\$2
+..
+.\"
+.de M		\" man page reference
+\\fI\\$1\\fR\\|(\\$2)\\$3
+..
+.TH REPORTING 5 "$Date: 2004/02/20 21:09:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.\"
+.SH NAME
+reporting \- xxQS_NAMExx reporting file format
+.\"
+.SH DESCRIPTION
+A xxQS_NAMExx system writes a reporting file to 
+$SGE_ROOT/default/common/reporting.
+The reporting file contains data that can be used for accounting, monitoring and analysis purposes.
+It contains information about the cluster (hosts, queues, load values, consumables, etc.), about the jobs running in the cluster and about sharetree configuration and usage.
+All information is time related, events are dumped to the reporting file in a configurable interval.
+It allows to monitor a "real time" status of the cluster as well as historical analysis.
+.\"
+.\"
+.SH FORMAT
+The reporting file is an ASCII file.
+Eachline contains one record, the fields of a record are separated by a delimiter (:).
+The reporting file contains records of different type. Each record type has a specific record structure. 
+.PP
+The first two fields are common to all reporting records:
+.IP "\fBtime\fP"
+Time (GMT unix timestamp) when the record was created.
+.IP "\fBrecord type\fP"
+Type of the accounting record.
+The different types of records and their structure are described in the following text.
+.SH new_job
+The new_job record is written whenever a new job enters the system (usually by a submitting command). It has the following fields:
+.IP "\fBsubmission_time\fP"
+Time when the job was submitted.
+.IP "\fBjob_number\fP"
+The job number.
+.IP "\fBtask_number\fP"
+The array task id. Always has the value -1 for new_job records (as we don't have array tasks yet).
+.IP "\fBpe_taskid\fP"
+The task id of parallel tasks. Always has the value "none" for new_job records.
+.IP "\fBjob_name\fP"
+The job name (from -N submission option)
+.IP "\fBowner\fP"
+The job owner.
+.IP "\fBgroup\fP"
+The unix group of the job owner.
+.IP "\fBproject\fP"
+The project the job is running in.
+.IP "\fBdepartment\fP"
+The department the job owner is in.
+.IP "\fBaccount\fP"
+The account string specified for the job (from -A submission option).
+.IP "\fBpriority\fP"
+The job priority (from -p submission option).
+.SH job_log
+The job_log record is written whenever a job, an array task or a pe tasks is changing status. A status change can be the transition from pending to running, but can also be triggered by user actions like suspension of a job.
+It has the following fields:
+.IP "\fBevent_time\fP"
+Time (GMT unix time stamp) when the event was generated.
+.IP "\fBevent\fP"
+A one word description of the event.
+.IP "\fBjob_number\fP"
+The job number.
+.IP "\fBtask_number\fP"
+The array task id. Always has the value -1 for new_job records (as we don't have array tasks yet).
+.IP "\fBpe_taskid\fP"
+The task id of parallel tasks. Always has the value "none" for new_job records.
+.IP "\fBstate\fP"
+The state of the job after the event was processed.
+.IP "\fBuser\fP"
+The user who initiated the event (or special usernames "qmaster", "scheduler" 
+and "execd" for actions of the system itself like scheduling jobs, executing jobs etc.).
+.IP "\fBhost\fP"
+The host from which the action was initiated (e.g. the submit host, the qmaster host, etc.).
+.IP "\fBstate_time\fP"
+Reserved field for later use.
+.IP "\fBsubmission_time\fP"
+Time when the job was submitted.
+.IP "\fBjob_name\fP"
+The job name (from -N submission option)
+.IP "\fBowner\fP"
+The job owner.
+.IP "\fBgroup\fP"
+The unix group of the job owner.
+.IP "\fBproject\fP"
+The project the job is running in.
+.IP "\fBdepartment\fP"
+The department the job owner is in.
+.IP "\fBaccount\fP"
+The account string specified for the job (from -A submission option).
+.IP "\fBpriority\fP"
+The job priority (from -p submission option).
+.IP "\fBmessage\fP"
+A message describing the reported action.
+.SH acct
+Records of type acct are accounting records. They are written whenever a job, a task of an array job or the task of a parallel job terminates.
+Accounting records comprise the following fields:
+.IP "\fBqname\fP"
+Name of the cluster queue in which the job has run.
+.IP "\fBhostname\fP"
+Name of the execution host.
+.IP "\fBgroup\fP"
+The effective group id of the job owner when executing the job.
+.IP "\fBowner\fP"
+Owner of the xxQS_NAMExx job.
+.IP "\fBjob_name\fP"
+Job name.
+.IP "\fBjob_number\fP"
+Job identifier - job number.
+.IP "\fBaccount\fP"
+An account string as specified by the
+.M qsub 1
+or
+.M qalter 1
+\fB\-A\fP option.
+.IP "\fBpriority\fP"
+Priority value assigned to the job corresponding to the \fBpriority\fP
+parameter in the queue configuration (see
+.M queue_conf 5 ).
+.IP "\fBsubmission_time\fP"
+Submission time in seconds (since epoch format).
+.IP "\fBstart_time\fP"
+Start time in seconds (since epoch format).
+.IP "\fBend_time\fP"
+End time in seconds (since epoch format).
+.IP "\fBfailed\fP"
+Indicates the problem which occurred in case a job could not be started on 
+the execution host (e.g. because the owner of the job did not have a valid 
+account on that machine). If xxQS_NAMExx tries to start a job multiple times, 
+this may lead to multiple entries in the accounting file corresponding to 
+the same job ID.
+.IP "\fBexit_status\fP"
+Exit status of the job script (or xxQS_NAMExx specific status in case
+of certain error conditions).
+.IP "\fBru_wallclock\fP"
+Difference between \fBend_time\fP and \fBstart_time\fP (see above).
+.PP
+The remainder of the accounting entries follows the contents of the
+standard UNIX rusage structure as described in
+.M getrusage 2 .
+Depending on the operating system where the job was executed some of the
+fields may be 0.  The following entries are provided:
+.PP
+.nf
+.RS
+.B ru_utime
+.B ru_stime
+.B ru_maxrss
+.B ru_ixrss
+.B ru_ismrss
+.B ru_idrss
+.B ru_isrss
+.B ru_minflt
+.B ru_majflt
+.B ru_nswap
+.B ru_inblock
+.B ru_oublock
+.B ru_msgsnd
+.B ru_msgrcv
+.B ru_nsignals
+.B ru_nvcsw
+.B ru_nivcsw
+.RE
+.fi
+.PP
+
+.IP "\fBproject\fP"
+The project which was assigned to the job. Projects are only
+supported in case of a xxQS_NAME_EExx system.
+.IP "\fBdepartment\fP"
+The department which was assigned to the job. Departments are only
+supported in case of a xxQS_NAME_EExx system.
+.IP "\fBgranted_pe\fP"
+The parallel environment which was selected for that job.
+.IP "\fBslots\fP"
+The number of slots which were dispatched to the job by the scheduler.
+.IP "\fBtask_number\fP"
+Array job task index number.
+.IP "\fBcpu\fP"
+The cpu time usage in seconds. 
+.IP "\fBmem\fP"
+The integral memory usage in Gbytes seconds. 
+.IP "\fBio\fP"
+The amount of data transferred in input/output operations.
+.IP "\fBcategory\fP"
+A string specifying the job category.
+.IP "\fBiow\fP"
+The io wait time in seconds.
+.IP "\fBpe_taskid\fP"
+If this identifier is set the task was part of a parallel job and was 
+passed to xxQS_NAME_EExx via the qrsh -inherit interface.
+.IP "\fBmaxvmem\fP"
+The maximum vmem size in bytes.
+.SH queue
+Records of type queue contain state information for queues (queue instances).
+A queue record has the following fields:
+.IP "\fBqname\fP"
+The cluster queue name.
+.IP "\fBhostname\fP"
+The hostname of a specific queue instance.
+.IP "\fBreport_time\fP"
+The time (GMT unix timestamp) when a state change was triggered.
+.IP "\fBstate\fP"
+The new queue state.
+.SH queue_consumable
+A queue_consumable record contains information about queue consumable values in addition to queue state information:
+.IP "\fBqname\fP"
+The cluster queue name.
+.IP "\fBhostname\fP"
+The hostname of a specific queue instance.
+.IP "\fBreport_time\fP"
+The time (GMT unix timestamp) when a state change was triggered.
+.IP "\fBstate\fP"
+The new queue state.
+.IP "\fBconsumables\fP"
+Description of consumable values. Information about multiple consumables is separated by space.
+A consumable description has the format <name>=<actual_value>=<configured value>.
+.SH host
+A host record contains information about hosts and host load values.
+It contains the following information:
+.IP "\fBhostname\fP"
+The name of the host.
+.IP "\fBreport_time\fP"
+The time (GMT unix timestamp) when the reported information was generated.
+.IP "\fBstate\fP"
+The new host state.
+Currently, xxQS_NAME_EExx doesn't track a host state, the field is reserved for 
+future use. Always contains the value X.
+.IP "\fBload values\fP"
+Description of load values. Information about multiple load values is separated by space.
+A load value description has the format <name>=<actual_value>.
+.SH host_consumable
+A host_consumable record contains information about hosts and host consumables.
+Host consumables can for example be licenses.
+It contains the following information:
+.IP "\fBhostname\fP"
+The name of the host.
+.IP "\fBreport_time\fP"
+The time (GMT unix timestamp) when the reported information was generated.
+.IP "\fBstate\fP"
+The new host state.
+Currently, xxQS_NAME_EExx doesn't track a host state, the field is reserved for 
+future use. Always contains the value X.
+.IP "\fBconsumables\fP"
+Description of consumable values. Information about multiple consumables is separated by space.
+A consumable description has the format <name>=<actual_value>=<configured value>.
+.\"
+.\"
+.SH "SEE ALSO"
+.M sge_conf 5 .
+.M host_conf 5 .
+.\"
+.SH "COPYRIGHT"
+See
+.M xxqs_name_sxx_intro 1
+for a full statement of rights and permissions.

@@ -371,8 +371,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
 
    /* allocate enough space to hold count + n swapents */
    sz =  sizeof(long) + cnt * sizeof(struct swapent);
-   swt = (struct swaptable *) malloc(sz);
-   memset(swt, 0, sz);
+   swt = (struct swaptable *) calloc(1, sz);
 
    if (swt == NULL) {
       total = 0;

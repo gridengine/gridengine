@@ -1,3 +1,6 @@
+RC-2005-03-21-1: Bugfix:    malloc did not check for NULL
+                 Changed:   execd (Solaris)
+
 RC-2005-03-21-0: Bugfix:    failed to build on IA64 and Alpha Linux
                  Changed:   3rdparty/qtcsh/sh.h
 

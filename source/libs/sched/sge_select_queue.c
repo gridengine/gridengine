@@ -4354,6 +4354,7 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
 
    ret = match_static(slots, rep, cplx_el, reason, false, false, allow_non_requestable);
    if (ret != 0 || !schedule_based) {
+      cplx_el = lFreeElem(cplx_el);
       DEXIT;
       return ret;
    }
@@ -4365,6 +4366,7 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
       if (ready_time == DISPATCH_TIME_QUEUE_END)
          *start_time = now;
       DPRINTF(("%s: ri_time_by_slots(%s) <is no consumable>\n", object_name, attrname));
+      cplx_el = lFreeElem(cplx_el);
       DEXIT;
       return 0; /* already checked */
    }
@@ -4372,6 +4374,7 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
    /* we're done if there is no consumable capacity */
    if (!(capacitiy_el = lGetElemStr(config_attr, CE_name, attrname))) {
       DPRINTF(("%s: ri_time_by_slots(%s) <does not exist>\n", object_name, attrname));
+      cplx_el = lFreeElem(cplx_el);
       DEXIT;
       return 2; /* does not exist */
    }
@@ -4383,11 +4386,11 @@ DPRINTF(("ri_time_by_slots(%s, %s)\n", object_name, attrname));
    if (!parse_ulong_val(&request, NULL, lGetUlong(cplx_el, CE_valtype), 
       lGetString(rep, CE_stringval), NULL, 0)) {
       sge_dstring_append(reason, "wrong type");
-      lFreeElem(cplx_el);
+      cplx_el = lFreeElem(cplx_el);
       DEXIT;
       return -1;
    }
-   lFreeElem(cplx_el);
+   cplx_el = lFreeElem(cplx_el);
 
    if (ready_time == DISPATCH_TIME_QUEUE_END) {
       double threshold = total - request * slots;

@@ -1,3 +1,7 @@
+JG-2004-05-27-0: Bugfix:    Fixed memory leaks in scheduler.
+                            Fixed a core dump in qmaster shutdown.
+                 Review:    SG
+
 MD-2004-05-27-0: Bugfix:    - uninstall order changed
                             - added message
                             - fixed usage
@@ -32,7 +36,7 @@ MD-2004-05-26-1: Bugfix:    -some small path problems
 JG-2004-05-26-1: Enhancem.: Add script and utility for checkpointing and cleanup
                             of transaction log in case of Berkeley DB spooling 
                             with RPC server.
-                 Review:    pending
+                 Review:    MD
 
 MD-2004-05-26-0: Bugfix:    - refixed file perms setting of /tmp/configuration
                             - MoveLog procedure

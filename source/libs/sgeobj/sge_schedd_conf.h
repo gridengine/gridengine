@@ -42,7 +42,6 @@ enum schedd_job_info_key {
 };
 
 typedef enum {
-
    FIRST_POLICY_VALUE,
    INVALID_POLICY = FIRST_POLICY_VALUE,
 
@@ -51,6 +50,9 @@ typedef enum {
    SHARE_TREE_POLICY,
 /*removed   DEADLINE_POLICY,*/
 
+   /* TODO: shouldn't LAST_POLICY_VALUE equal SHARE_TREE_POLICY? 
+    * POLICY_VALUES = 4, should probably be 3
+    */
    LAST_POLICY_VALUE,
    POLICY_VALUES = (LAST_POLICY_VALUE - FIRST_POLICY_VALUE)
 } policy_type_t;

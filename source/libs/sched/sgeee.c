@@ -2994,14 +2994,14 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    if (queued_jobs) {
       lList *sorted_job_node_list;
 
-      policy_hierarchy_t hierarchy[4];
+      policy_hierarchy_t hierarchy[POLICY_VALUES];
       int policy_ndx;
 
       sconf_ph_fill_array(hierarchy);
       sconf_ph_print_array(hierarchy);  
 
       for(policy_ndx = 0; 
-          policy_ndx < sizeof(hierarchy) / sizeof(policy_hierarchy_t); 
+          policy_ndx < POLICY_VALUES;
           policy_ndx++) {
 
          switch(hierarchy[policy_ndx].policy) {

@@ -481,7 +481,7 @@ int sge_send_job_start_orders(order_t *orders) {
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
 
-   if (is_executed_once ) {
+   if (is_executed_once || orders->jobStartOrderList == NULL ) {
       DEXIT;
       return ret;
    }

@@ -258,19 +258,25 @@ int sge_chdir_exit(const char *path, int exit_on_error)
 *
 *  NOTE
 *     Might be used in shepherd because it does not use CRITICAL/ERROR.
+*     TODO: pass a dstring for the return of error messages.
 *
 *  SEE ALSO
 *     uti/unistd/sge_chdir_exit()
 ******************************************************************************/
 int sge_chdir(const char *dir)
 {
-   SGE_STRUCT_STAT statbuf;
+   if (dir != NULL) {
+      SGE_STRUCT_STAT statbuf;
 
-   /*
-    * force automount
-    */
-   SGE_STAT(dir, &statbuf);
-   return chdir(dir);
+      /*
+       * force automount
+       */
+      SGE_STAT(dir, &statbuf);
+      return chdir(dir);
+   }
+
+   /* on error return -1 */
+   return -1;
 }
 
 /****** uti/unistd/sge_exit() *************************************************

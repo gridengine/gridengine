@@ -2479,6 +2479,7 @@ void sconf_ph_fill_array(policy_hierarchy_t array[])
 
    for (i = 0; i < POLICY_VALUES; i++) {
       is_contained[i] = 0;
+      array[i].policy = INVALID_POLICY;
    }     
    if (policy_hierarchy_string != NULL && strcmp(policy_hierarchy_string, "") && strcasecmp(policy_hierarchy_string, "NONE")) {
       for (i = 0; i < strlen(policy_hierarchy_string); i++) {

@@ -607,6 +607,13 @@ proc open_remote_spawn_process { hostname user exec_command exec_arguments { bac
                           add_proc_error "open_remote_spawn_process" -2 "shell doesn't start or runs not as user $open_remote_spawn__check_user on host $open_remote_spawn__hostname" 
                       }
                    }
+                   -i $spawn_id -- "assword" {
+                      set ok 1
+                      puts $CHECK_OUTPUT "--> ERROR <--"
+                      puts $CHECK_OUTPUT "unexpected password question for user $open_remote_spawn__check_user on host $open_remote_spawn__hostname"
+                      puts $CHECK_OUTPUT "please check .rhosts file"
+                      exit 1
+                   }
                    -i $spawn_id -- "Terminal type?" {
                       send -i $spawn_id -- "vt100\n"
                    }

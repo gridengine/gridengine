@@ -6497,7 +6497,7 @@ proc gethostname {} {
 #*******************************
 proc resolve_arch { { host "none" } } {
   global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_TESTSUITE_ROOT arch_cache
-  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR
+  global CHECK_SCRIPT_FILE_DIR CHECK_USER CHECK_SOURCE_DIR CHECK_HOST
 
 
   if { [ info exists arch_cache($host) ] } {
@@ -6509,7 +6509,8 @@ proc resolve_arch { { host "none" } } {
      return "unknown"
   }
 
-  if { [ string compare $host "none" ] == 0 } {
+  if { [ string compare $host "none" ] == 0 || 
+       [ string compare $host $CHECK_HOST ] == 0 } {
       set prg_exit_state [ catch { eval exec "$CHECK_SOURCE_DIR/dist/util/arch" } result ]
   } else {
       puts $CHECK_OUTPUT "resolve_arch: resolving architecture for host $host"

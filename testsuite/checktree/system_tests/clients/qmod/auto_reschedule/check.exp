@@ -235,7 +235,6 @@ proc auto_reschedule_setup {} {
    }
    set messages_name "$tmp_config(execd_spool_dir)/$host2/messages"
    set tail_id [open_remote_spawn_process $host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
-#   set tail_id [open_spawn_process rsh $host2 /usr/bin/tail -f $messages_name]
    set sp_id [ lindex $tail_id 1 ] 
 
 
@@ -525,7 +524,6 @@ proc auto_reschedule_cleanup {} {
    set messages_name "$tmp_config(execd_spool_dir)/$host2/messages"
    set tail_id [open_remote_spawn_process $host2 $CHECK_USER "/usr/bin/tail" "-f $messages_name"]
 
-#   set tail_id [open_spawn_process rsh $host2 /usr/bin/tail -f $messages_name]
    set sp_id [ lindex $tail_id 1 ] 
 
    

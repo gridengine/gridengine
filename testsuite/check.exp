@@ -2233,12 +2233,12 @@ proc show_setup_information { } {
    puts $CHECK_OUTPUT "Testsuite Setup Information"
    puts $CHECK_OUTPUT "==========================="
    puts $CHECK_OUTPUT ""
-   puts $CHECK_OUTPUT "The 3 user accounts must have rsh access to the cluster hosts. (.rhost file)\n"
+   puts $CHECK_OUTPUT "The 3 user accounts must have rlogin access to the cluster hosts. (.rhost file)\n"
    puts $CHECK_OUTPUT "Every output to stdout in\n"
    puts $CHECK_OUTPUT " /etc/csh.cshrc, /etc/csh.login, \$HOME/.cshrc, \$HOME/.login , ...\n"
-   puts $CHECK_OUTPUT "is not allowed. The testsuite will use e.g. rsh \$EXEC_HOST pwd to get the"
+   puts $CHECK_OUTPUT "is not allowed. The testsuite will use e.g. rlogin \$EXEC_HOST pwd to get the"
    puts $CHECK_OUTPUT "working directory on that host. Any output made in the files would influence"
-   puts $CHECK_OUTPUT "the result of the rsh call.\n" 
+   puts $CHECK_OUTPUT "the result of the call.\n" 
 
    puts $CHECK_OUTPUT "Each of the 3 user must have read access to\n"
    puts $CHECK_OUTPUT "   - testsuite directory"
@@ -2369,17 +2369,13 @@ proc setup { {do_only_hostname_resolving 0} } {
 
 
       foreach host $CHECK_CORE_EXECD {
-         start_remote_prog "$host" "$CHECK_USER" "cd" "$CHECK_CURRENT_WORKING_DIR" 
+         puts $CHECK_OUTPUT "\n--> try rlogin $host and run command echo \"hello $host\" ..."
+         wait_for_enter
+         set result [ start_remote_prog "$host" $CHECK_USER "echo" "\"hello $host\"" ]
+         puts $CHECK_OUTPUT "--> echo exit state: $prg_exit_state"
+         puts $CHECK_OUTPUT "--> echo result:     $result"
          if { $prg_exit_state != 0 } {
-             puts $CHECK_OUTPUT "directory \"$CHECK_CURRENT_WORKING_DIR\" is not available on host \"$host\""
-             set setup_ok -1
-         } 
-         puts $CHECK_OUTPUT "\n--> try rsh $host echo \"hello $host\" ..."
-         set exit_state [ catch { exec rsh $host "echo \"hello $host\"" } result ]
-         puts $CHECK_OUTPUT "--> rsh exit state: $exit_state"
-         puts $CHECK_OUTPUT "--> rsh result:     $result"
-         if { $exit_state != 0 } {
-             puts $CHECK_OUTPUT "-->rsh to host $host doesn't work correctly"
+             puts $CHECK_OUTPUT "-->rlogin to host $host doesn't work correctly"
              set setup_ok -1
          }
          if { [ string first "hello $host" $result ] < 0 } {
@@ -2387,6 +2383,13 @@ proc setup { {do_only_hostname_resolving 0} } {
              puts $CHECK_OUTPUT "echo \"hello $host\" doesn't work"
              set setup_ok -1
          }
+
+         start_remote_prog "$host" "$CHECK_USER" "cd" "$CHECK_CURRENT_WORKING_DIR" 
+         if { $prg_exit_state != 0 } {
+             puts $CHECK_OUTPUT "directory \"$CHECK_CURRENT_WORKING_DIR\" is not available on host \"$host\""
+             set setup_ok -1
+         } 
+
          get_binary_path $host "expect"       
          get_binary_path $host "vim"
       }
@@ -6171,7 +6174,7 @@ for { set i 0 } { $i < $argc } { incr i } {
       puts "all RUNLEVEL          run every test automatically up to runlevel RUNLEVEL"
       puts "                      (RUNLEVEL is a value from 0=short tests, up to 4=week tests)"
       puts ""
-      puts "category CAT_LIST     set users category list (COMPATIBILITY SYSTEM [...])"
+      puts "category CAT_LIST     set users category list (COMPATIBILITY SYSTEM \[...\])"
       puts "                      (CAT_LIST must be 1 single parameter, must be quoted"
       puts "                       when using more than one category)"
       puts "" 

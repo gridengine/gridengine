@@ -1,3 +1,8 @@
+CR-2002-04-12-2: Testsuite: removed all rsh calls, testsuite will now
+                            only use rlogin.
+                 Issue:     #180
+                 Bugfix:    fixed tcl error when using help option
+
 JG-2002-04-12-0: Doc:       Added howto describing how to use ssh as
                             transport mechanism for qrsh.
                  Issue:     #228

@@ -612,6 +612,11 @@ XtPointer cld, cad;
    }
 
    ep = lGetElemStr(qmonMirrorList(SGE_USERSET_LIST), US_name, usetname);
+   if (usetname && !strcmp(usetname, DEFAULT_DEPARTMENT)) 
+      XtSetSensitive(manop_modify, False);
+   else
+      XtSetSensitive(manop_modify, True);
+
    XtFree((char*) usetname);
    
    qmonUsersetFillConf(userset_user_list, ep);
@@ -727,10 +732,12 @@ Widget parent
    XtAddCallback(uset_user, XmNinputCallback,
                   qmonUsersetUserAdd, NULL);
 
+#if 0
    if (feature_is_enabled(FEATURE_SGEEE)) {
       XtAddCallback(uset_name, XmNinputCallback,
                   qmonUsersetName, NULL);
    }
+#endif   
 
    XtAddEventHandler(XtParent(userset_ask_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);

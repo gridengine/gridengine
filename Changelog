@@ -1,4 +1,4 @@
-RH-2004-07-26-0: Bugfix:    definition of wc_cqueue added to man page.              
+RH-2004-07-26-1: Bugfix:    definition of wc_cqueue added to man page.              
                  Issue:     1103
                  Bugtraq:   Not defined
                  Changed:   sge_types(1)

@@ -1,3 +1,6 @@
+JG-2003-11-26-0: Bugfix:    Fixed reading of lists in berkeleydb spooling.
+                            Fixed validate_list function.
+
 AD-2003-11-25-0: Enhancem.: Added test program to check whether signal 
                             handling is POSIX threads compliant.
                  Changed:   utilbin

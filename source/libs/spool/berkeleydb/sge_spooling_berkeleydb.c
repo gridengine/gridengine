@@ -70,7 +70,7 @@
 /* how often will the database be checkpointed (cache written to disk) */
 #define BERKELEYDB_CHECKPOINT_INTERVAL 60
 
-#if 0
+#if 1
 static const int pack_part = CULL_SPOOL | CULL_SUBLIST | CULL_SPOOL_PROJECT | 
                              CULL_SPOOL_USER;
 #else
@@ -809,17 +809,19 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info *db,
          lListElem *object;
          int cull_ret;
 
-         DPRINTF(("read object with key "SFQ"\n", key_dbt.data));
+         DPRINTF(("read object with key "SFQ", size %d\n", 
+                  key_dbt.data, data_dbt.size));
          cull_ret = init_packbuffer_from_buffer(&pb, data_dbt.data, data_dbt.size, 0);
          if (cull_ret != PACK_SUCCESS) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
-                                    MSG_BERKELEY_UNPACKERROR_SS,
+                                    MSG_BERKELEY_UNPACKINITERROR_SS,
                                     key_dbt.data,
                                     cull_pack_strerror(cull_ret));
             ret = false;
             break;
          }
+         DPRINTF(("init_packbuffer succeeded\n"));
          cull_ret = cull_unpack_elem_partial(&pb, &object, descr, pack_part);
          if (cull_ret != PACK_SUCCESS) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -937,6 +939,13 @@ spool_berkeleydb_default_list_func(lList **answer_list,
          }
       }
 #endif
+      dstring key_dstring;
+      char key_buffer[MAX_STRING_SIZE];
+      const char *key;
+
+      sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
+      key = sge_dstring_sprintf(&key_dstring, "%s:", table_name);
+                 
       if (ret) {
          switch (object_type) {
             case SGE_TYPE_JATASK:
@@ -945,16 +954,10 @@ spool_berkeleydb_default_list_func(lList **answer_list,
             case SGE_TYPE_JOB:
                {
                   lListElem *job;
-                  dstring key_dstring;
-                  char key_buffer[MAX_STRING_SIZE];
-                  const char *key;
-
-                  sge_dstring_init(&key_dstring, key_buffer, sizeof(key_buffer));
-                 
                   /* read all jobs */
                   ret = spool_berkeleydb_read_list(answer_list, db, 
                                                    list, descr,
-                                                   table_name);
+                                                   key);
                   if (ret) {
                      const char *ja_task_table;
                      /* for all jobs: read ja_tasks */
@@ -1011,7 +1014,7 @@ spool_berkeleydb_default_list_func(lList **answer_list,
             default:
                ret = spool_berkeleydb_read_list(answer_list, db, 
                                                 list, descr,
-                                                table_name);
+                                                key);
                break;
          }
 #if 0
@@ -1126,7 +1129,7 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info *db,
    if (cull_ret != PACK_SUCCESS) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
-                              MSG_BERKELEY_PACKERROR_SS,
+                              MSG_BERKELEY_PACKINITERROR_SS,
                               key,
                               cull_pack_strerror(cull_ret));
       ret = false;

@@ -36,6 +36,8 @@
 #include <unistd.h>  
 #include <errno.h>
 #include <time.h>
+#include <pthread.h>
+#include <sys/resource.h>
 
 #ifdef SOLARISAMD64
 #  include <sys/stream.h>
@@ -587,6 +589,11 @@ static void qmaster_init(char **anArgv)
 static void communication_setup(void)
 {
    cl_com_handle_t* com_handle = NULL;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   struct rlimit64 qmaster_rlimits;
+#else
+   struct rlimit qmaster_rlimits;
+#endif
 
    DENTER(TOP_LAYER, "communication_setup");
 
@@ -611,6 +618,19 @@ static void communication_setup(void)
       }
 
       SGE_EXIT(1);
+   }
+
+   /* 
+    * re-check file descriptor limits for qmaster 
+    */
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
+#else
+   getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
+#endif
+
+   if (qmaster_rlimits.rlim_cur > FD_SETSIZE) {
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_UU, u32c(FD_SETSIZE), u32c(qmaster_rlimits.rlim_cur) ));
    }
 
    if (com_handle) {

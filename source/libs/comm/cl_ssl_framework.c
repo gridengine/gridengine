@@ -2166,6 +2166,15 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
          }
       }    
 
+      if (private->sockfd >= FD_SETSIZE) {
+          CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
+          shutdown(private->sockfd, 2);
+          close(private->sockfd);
+          private->sockfd = -1;
+          cl_commlib_push_application_error(CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE);
+          return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
+      } 
+
       /* set local address reuse socket option */
       if ( setsockopt(private->sockfd, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on)) != 0) {
          CL_LOG(CL_LOG_ERROR,"could not set SO_REUSEADDR");
@@ -2633,6 +2642,14 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection)
       CL_LOG(CL_LOG_ERROR,"could not create socket");
       return CL_RETVAL_CREATE_SOCKET;
    }
+
+   if (sockfd >= FD_SETSIZE) {
+       CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
+       shutdown(sockfd, 2);
+       close(sockfd);
+       cl_commlib_push_application_error(CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
+       return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
+   }
    
    { 
       int on = 1;
@@ -2744,6 +2761,14 @@ int cl_com_ssl_connection_request_handler(cl_com_connection_t* connection,cl_com
    if (new_sfd > -1) {
        char* resolved_host_name = NULL;
        cl_com_ssl_private_t* tmp_private = NULL;
+
+       if (new_sfd >= FD_SETSIZE) {
+          CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
+          shutdown(new_sfd, 2);
+          close(new_sfd);
+          cl_commlib_push_application_error(CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT, MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE );
+          return CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
+       }
 
        cl_com_cached_gethostbyaddr(&(cli_addr.sin_addr), &resolved_host_name ,NULL, NULL); 
        if (resolved_host_name != NULL) {
@@ -3040,10 +3065,6 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
          }
       }
       con_elem = cl_connection_list_get_next_elem(con_elem);
-      if (max_fd + 1 >= FD_SETSIZE) {
-         CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
-         max_fd = FD_SETSIZE - 1;
-      } 
    }
 
    /* we don't have any file descriptor for select(), find out why: */
@@ -3122,11 +3143,6 @@ int cl_com_ssl_open_connection_request_handler(cl_raw_list_t* connection_list, c
 
    cl_raw_list_unlock(connection_list); 
 
-
-   if (max_fd + 1 >= FD_SETSIZE) {
-      CL_LOG(CL_LOG_ERROR,"filedescriptors exeeds FD_SETSIZE of this system");
-      max_fd = FD_SETSIZE - 1;
-   } 
 
    errno = 0;
    select_back = select(max_fd + 1, &my_read_fds, &my_write_fds, NULL, &timeout);

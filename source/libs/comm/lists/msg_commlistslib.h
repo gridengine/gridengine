@@ -151,6 +151,7 @@
 #define MSG_CL_RETVAL_SSL_RAND_SEED_FAILURE            _MESSAGE(80113, _("PRNG hasn't been seeded with enough data"))
 #define MSG_CL_RETVAL_SSL_NOT_SUPPORTED                _MESSAGE(80114, _("SSL module not compiled with -DSECURE (aimk -secure) option"))
 #define MSG_CL_RETVAL_ERROR_SETTING_CIPHER_LIST        _MESSAGE(80115, _("error setting cipher list"))
+#define MSG_CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT     _MESSAGE(80116, _("file descriptor exeeds FD_SETSIZE of this system"))
 
 
 

@@ -71,6 +71,7 @@
 #include "sge_any_request.h"
 #include "sge_gdiP.h"
 #include "sgeobj/sge_answer.h"
+#include "qmon_signal.h"
 
 #include "msg_clients_common.h"
 #include "msg_common.h"
@@ -229,18 +230,24 @@ String name
 void qmonInitSge( char *progname) 
 {
    int error = 0;
+   int endless_loop = 0;
    lList *alp = NULL;
+   char* env_var = NULL;
 
    DENTER(GUI_LAYER, "qmonInitSge");
    
    strcpy(SGE_EVENT,"");
+
+   env_var = getenv("SGE_QMON_TEST_QMASTER_ISALIVE");
+   if (env_var != NULL) {
+      endless_loop = atoi(env_var);
+   }
    log_state_set_log_gui(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);
    if ((error=sge_gdi_setup(prognames[QMON], &alp))) {
       answer_list_output(&alp);
       
-      log_state_set_log_gui(False);
       if ( sge_get_master(0) != NULL) {
          error=check_isalive(sge_get_master(0));
          
@@ -262,7 +269,19 @@ void qmonInitSge( char *progname)
          
          fprintf(stderr, SGE_EVENT);
       }
-      SGE_EXIT(1);
+      if (endless_loop == 0) {
+         qmonExitFunc(1);
+      }
+   }
+
+   while(endless_loop > 0) {
+      static int nr_of_errors = 0;
+      error=check_isalive(sge_get_master(0));
+      printf("checking isalive qmaster (errors=%d, frequency=%d) ...\n", nr_of_errors, endless_loop);
+      if (do_qmon_shutdown()) {
+         qmonExitFunc(0);
+      }
+      sleep(endless_loop);
    }
    log_state_set_log_gui(False);
    DEXIT;

@@ -83,6 +83,7 @@
 #define MSG_CL_SSL_FW_LOAD_CRYPTO_SYMBOL_FAILED                               _MESSAGE(85043, _("Unable to load symbol from libssl.\n"))
 
 #define MSG_CL_COMMLIB_CLOSING_SSU                                            _MESSAGE(85044, _("closing \""SFN"/"SFN"/"U32CFormat"\""))
+#define MSG_CL_COMMLIB_COMPILE_SOURCE_WITH_LARGER_FD_SETSIZE                  _MESSAGE(85045, _("compile source code with larger FD_SETSIZE value"))
 
 
 

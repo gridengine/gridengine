@@ -38,6 +38,7 @@
 void qmonInstSignalHandler(void);
 void qmonSIGALRM(int dummy);
 void qmonSignalMsg(XtPointer cld, XtIntervalId *id);
+int do_qmon_shutdown(void);
 
 #endif /* QMON_SIGNAL_H */
 

@@ -741,6 +741,7 @@
 
 #define MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS _MESSAGE(33911, _("received old load report ("U32CFormat"< "U32CFormat") from exec host "SFQ"\n"))
 #define MSG_QMASTER_RECEIVED_EMPTY_LOAD_REPORT_S _MESSAGE(33912, _("received empty load from exec host "SFQ"\n"))
+#define MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_UU _MESSAGE(33913, _("FD_SETSIZE (="U32CFormat") is less than file descriptor limit (="U32CFormat"). Please recompile with larger FD_SETSIZE!\n"))
 
 
 

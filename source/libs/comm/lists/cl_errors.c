@@ -404,6 +404,9 @@ const char* cl_get_error_text(int error_id) {
       case CL_RETVAL_ERROR_SETTING_CIPHER_LIST: {
          return MSG_CL_RETVAL_ERROR_SETTING_CIPHER_LIST;
       }
+      case CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT: {
+         return MSG_CL_RETVAL_REACHED_FILEDESCRIPTOR_LIMIT;
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

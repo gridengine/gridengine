@@ -1,3 +1,10 @@
+CR-2005-03-17-0: Bugfix:   qmaster does not accept new connections if 
+                           number of execd's exceed FD_SETSIZE
+                 Issue:    1502
+                 Bugtraq:  6239569
+                 Review:   AA
+                 Changed:  aimk commlib qmaster qmon
+
 SG-2005-03-17-1: Bugfix:   jobs which request a PE and a consumable resources 
                            which set to infinity in global host configuration 
                            are not scheduled

@@ -163,6 +163,8 @@ XtResource replay_resources[] =
 int main(int argc, char **argv);
 static void qmonUsage(Widget w);
 
+XtSignalId sigint_id = 0;
+
 static Widget  MainControl;
 /*-------------------------------------------------------------------------*/
 /* global variables                                                        */
@@ -179,6 +181,12 @@ int            nologo;
 int            qmon_debug;
 int            helpset;
 
+
+static void sigint_callback(XtPointer data, XtSignalId *id) {
+   if (do_qmon_shutdown()) {
+      qmonExitFunc(0);
+   }
+}
 
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
@@ -263,6 +271,8 @@ char **argv
                              qmon_fallbacks,
                              args, ac);
 #endif
+
+   sigint_id = XtAppAddSignal(AppContext, sigint_callback, NULL);
    
 #if 0
    /*

@@ -40,12 +40,19 @@
 #include "qmon_globals.h"
 #include "qmon_init.h"
 
+static int qmon_shutdown = 0;
+extern XtSignalId sigint_id;
+
 void qmonSIGALRM(int dummy)
 {
    static char message[BUFSIZ];
    
    sprintf(message, "SIGALRM arrived");
    XtAppAddTimeOut(AppContext, 0, qmonSignalMsg, message);
+}
+
+int do_qmon_shutdown(void) {
+   return qmon_shutdown;
 }
 
 void qmonSIGPIPE(int dummy)
@@ -67,12 +74,21 @@ XtIntervalId *id
    XmtDisplayWarning(AppShell, (char*)cld, "SignalWarning");
 }
 
+void qmonSIGINT(int dummy) {
+   qmon_shutdown = 1;
+
+   if (sigint_id != 0) {
+      XtNoticeSignal(sigint_id);
+   }
+}
+
 /*-------------------------------------------------------------------------*/
 void qmonInstSignalHandler(void)
 {
    signal(SIGALRM, qmonSIGALRM );
    signal(SIGPIPE, qmonSIGPIPE );
-/*    signal(SIGINT, qmonExitFunc(0)); */
+   signal(SIGINT,  qmonSIGINT  ); 
+   signal(SIGTERM,  qmonSIGINT  ); 
 }
 
 

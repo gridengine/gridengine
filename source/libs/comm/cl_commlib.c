@@ -830,6 +830,12 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 #endif
 
    new_handle->max_open_connections = (unsigned long) application_rlimits.rlim_cur;
+
+   if (FD_SETSIZE < new_handle->max_open_connections) {
+      CL_LOG(CL_LOG_ERROR,"FD_SETSIZE < file descriptor limit");
+      new_handle->max_open_connections = FD_SETSIZE - 1;
+   }
+
    if ( new_handle->max_open_connections < 32 ) {
       CL_LOG_INT(CL_LOG_ERROR, "to less file descriptors:", (int)new_handle->max_open_connections );
       free(new_handle);

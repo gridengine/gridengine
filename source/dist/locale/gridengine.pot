@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2002-07-18 11:45+0200\n"
+"POT-Creation-Date: 2002-07-25 15:28+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -705,7 +705,7 @@ msgstr ""
 #
 #: ../common/path_aliases.c:112 ../libs/gdi/sge_gdi_request.c:558
 #: ../libs/gdi/sge_gdi_request.c:573 ../libs/gdi/sge_gdi_request.c:1127
-#: ../daemons/qmaster/complex_qmaster.c:513
+#: ../daemons/qmaster/complex_qmaster.c:515
 #: ../daemons/qmaster/configuration_qmaster.c:282
 #: ../daemons/qmaster/configuration_qmaster.c:384
 #: ../daemons/qmaster/sched_conf_qmaster.c:78
@@ -929,7 +929,7 @@ msgstr ""
 #: ../common/sge_sharetree.c:222 ../daemons/execd/exec_job.c:706
 #: ../daemons/execd/exec_job.c:758 ../daemons/execd/exec_job.c:1111
 #: ../daemons/execd/reaper_execd.c:537
-#: ../daemons/qmaster/complex_qmaster.c:459
+#: ../daemons/qmaster/complex_qmaster.c:461
 #, c-format
 msgid "cant open file %s: %s\n"
 msgstr ""
@@ -2635,7 +2635,7 @@ msgid "can't unpack gdi request"
 msgstr ""
 
 #
-#: ../libs/gdi/sge_gdi_request.c:1133 ../daemons/qmaster/complex_qmaster.c:521
+#: ../libs/gdi/sge_gdi_request.c:1133 ../daemons/qmaster/complex_qmaster.c:523
 #: ../daemons/qmaster/configuration_qmaster.c:290
 #: ../daemons/qmaster/configuration_qmaster.c:392
 #: ../daemons/qmaster/sge_c_gdi.c:1520
@@ -3024,162 +3024,162 @@ msgid "strlen($%s) exceeds MAX_STRING_SIZE %d\n"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:211
+#: ../libs/comm/commlib.c:210
 msgid "PERMISSION DENIED"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:213
+#: ../libs/comm/commlib.c:212
 msgid "UNKNOWN TARGET"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:215
+#: ../libs/comm/commlib.c:214
 msgid "UNKNOWN RECEIVER"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:217
+#: ../libs/comm/commlib.c:216
 msgid "COMMD NOT READY"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:219
+#: ../libs/comm/commlib.c:218
 msgid "UNKNOWN_HOST"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:221
+#: ../libs/comm/commlib.c:220
 msgid "NO MESSAGE AVAILABLE"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:223 ../libs/comm/commlib.c:256
+#: ../libs/comm/commlib.c:222 ../libs/comm/commlib.c:255
 msgid "NOT ENROLLED"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:225
+#: ../libs/comm/commlib.c:224
 msgid "OPERATION ALLOWED ONLY ONCE AT A TIME"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:227
+#: ../libs/comm/commlib.c:226
 msgid "COULD NOT DELIVER"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:229
+#: ../libs/comm/commlib.c:228
 msgid "CONNECTION TIMED OUT"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:231
+#: ../libs/comm/commlib.c:230
 msgid "COMMPROC ALREADY REGISTERED"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:240
+#: ../libs/comm/commlib.c:239
 msgid "CL_OK"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:242
+#: ../libs/comm/commlib.c:241
 msgid "INVALID RANGE"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:244
+#: ../libs/comm/commlib.c:243
 msgid "CANNOT CREATE SOCKET"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:246
+#: ../libs/comm/commlib.c:245
 msgid "RESOLVING PROBLEM"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:248
+#: ../libs/comm/commlib.c:247
 msgid "CANNOT CONNECT"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:250
+#: ../libs/comm/commlib.c:249
 msgid "WRITE ERROR"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:252
+#: ../libs/comm/commlib.c:251
 msgid "SAME OPERATION DONE AGAIN"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:254
+#: ../libs/comm/commlib.c:253
 msgid "LOCALHOSTNAME"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:258
+#: ../libs/comm/commlib.c:257
 msgid "CANT GET SERVICE"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:260
+#: ../libs/comm/commlib.c:259
 msgid "READ ERROR"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:262
+#: ../libs/comm/commlib.c:261
 msgid "OUT OF MEMORY"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:264
+#: ../libs/comm/commlib.c:263
 msgid "UNKNOWN PARAMETER"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:266
+#: ../libs/comm/commlib.c:265
 msgid "INTERUPTED BY SIGNAL"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:268
+#: ../libs/comm/commlib.c:267
 msgid "READ TIMEOUT"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:270
+#: ../libs/comm/commlib.c:269
 msgid "WRITE TIMEOUT"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:272
+#: ../libs/comm/commlib.c:271
 msgid "CHECKSUM ERROR"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:274
+#: ../libs/comm/commlib.c:273
 msgid "CANNOT GET RESERVED PORT"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:309
+#: ../libs/comm/commlib.c:308
 msgid "UNKNOWN ERROR"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:1520
+#: ../libs/comm/commlib.c:1519
 msgid "lost connection\n"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:2206
+#: ../libs/comm/commlib.c:2205
 msgid "unable to contact qmaster\n"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:2218
+#: ../libs/comm/commlib.c:2217
 #, c-format
 msgid ""
 "unable to contact qmaster via \"%-.100s\" commd - can't resolve service "
@@ -3187,13 +3187,13 @@ msgid ""
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:2220
+#: ../libs/comm/commlib.c:2219
 #, c-format
 msgid "unable to contact qmaster via \"%-.100s\" commd using port %d\n"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:2222
+#: ../libs/comm/commlib.c:2221
 #, c-format
 msgid ""
 "unable to contact qmaster via \"%-.100s\" commd using port %d (service "
@@ -3201,7 +3201,7 @@ msgid ""
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:2227
+#: ../libs/comm/commlib.c:2226
 #, c-format
 msgid ""
 "unable to contact qmaster via \"%-.100s\" commd - qmaster not enrolled at "
@@ -3209,14 +3209,14 @@ msgid ""
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:2229
+#: ../libs/comm/commlib.c:2228
 #, c-format
 msgid ""
 "unable to contact qmaster via \"%-.100s\" commd - hostname resolving error\n"
 msgstr ""
 
 #
-#: ../libs/comm/commlib.c:2231
+#: ../libs/comm/commlib.c:2230
 #, c-format
 msgid ""
 "unable to contact qmaster via \"%-.100s\" commd - commlib error: \"%-.100s"
@@ -3342,9 +3342,9 @@ msgid "unexpected error while unpacking %s \"%s\"\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_hash.c:703 ../libs/cull/cull_multitype.c:2643
-#: ../libs/cull/cull_multitype.c:2651 ../libs/cull/cull_multitype.c:2711
-#: ../libs/cull/cull_multitype.c:2796 ../libs/cull/cull_multitype.c:2803
+#: ../libs/cull/cull_hash.c:703 ../libs/cull/cull_multitype.c:2666
+#: ../libs/cull/cull_multitype.c:2674 ../libs/cull/cull_multitype.c:2734
+#: ../libs/cull/cull_multitype.c:2819 ../libs/cull/cull_multitype.c:2826
 #, c-format
 msgid "error: lGetElemStr(%s): run time type error\n"
 msgstr ""
@@ -3634,323 +3634,323 @@ msgid ""
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:469
+#: ../libs/cull/cull_multitype.c:471
 #, c-format
 msgid "!!!!!!!!!! lGetListRef(): got NULL element for %s !!!!!!!!!!\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:479
+#: ../libs/cull/cull_multitype.c:481
 #, c-format
 msgid "!!!!!!!!!! lGetListRef(): %s not found in element !!!!!!!!!!\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:562
+#: ../libs/cull/cull_multitype.c:564
 #, c-format
 msgid "lGetInt: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:583
+#: ../libs/cull/cull_multitype.c:585
 msgid "!!!!!!!!!! lGetPosUlong() got an invalid pos !!!!!!!!!!!!\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:608
+#: ../libs/cull/cull_multitype.c:610
 #, c-format
 msgid "!!!!!!!!!! lGetUlong(): got NULL element for %s !!!!!!!!!!\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:618
+#: ../libs/cull/cull_multitype.c:620
 #, c-format
 msgid "lGetUlong: no such name (%d, %s) in descriptor\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:622
+#: ../libs/cull/cull_multitype.c:624
 #, c-format
 msgid "lGetUlong: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:720
+#: ../libs/cull/cull_multitype.c:722
 #, c-format
 msgid "!!!!!!!!!! lGetString(): got NULL element for %s !!!!!!!!!!\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:730
+#: ../libs/cull/cull_multitype.c:732
 #, c-format
 msgid "lGetString: no such name (%d, %s) in descriptor\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:737
+#: ../libs/cull/cull_multitype.c:739
 #, c-format
 msgid "lGetString: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:793
+#: ../libs/cull/cull_multitype.c:795
 #, c-format
 msgid "!!!!!!!!!! lGetHost(): got NULL element for %s !!!!!!!!!!\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:803
+#: ../libs/cull/cull_multitype.c:805
 #, c-format
 msgid "lGetHost: no such name (%d, %s) in descriptor\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:810
+#: ../libs/cull/cull_multitype.c:812
 #, c-format
 msgid "lGetHost: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:836
+#: ../libs/cull/cull_multitype.c:838
 msgid "!!!!!!!!!!!11 lGetPosUlong() got an invalid pos !!!!!!!!\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:868
+#: ../libs/cull/cull_multitype.c:870
 #, c-format
 msgid "!!!!!!!!!! lGetList(): got NULL element for %s !!!!!!!!!!\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:878
+#: ../libs/cull/cull_multitype.c:880
 #, c-format
 msgid "!!!!!!!!!! lGetList(): %s not found in element !!!!!!!!!!\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:885
+#: ../libs/cull/cull_multitype.c:887
 #, c-format
 msgid "lGetList: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:927
+#: ../libs/cull/cull_multitype.c:929
 #, c-format
 msgid "lGetFloat: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:964
+#: ../libs/cull/cull_multitype.c:966
 #, c-format
 msgid "lGetDouble: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:999
+#: ../libs/cull/cull_multitype.c:1001
 #, c-format
 msgid "lGetLong: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1035
+#: ../libs/cull/cull_multitype.c:1037
 #, c-format
 msgid "lGetChar: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1071
+#: ../libs/cull/cull_multitype.c:1073
 #, c-format
 msgid "lGetRef: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1143
+#: ../libs/cull/cull_multitype.c:1145
 #, c-format
 msgid "lSetInt: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1227
+#: ../libs/cull/cull_multitype.c:1229
 #, c-format
 msgid "lSetUlong: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1407
+#: ../libs/cull/cull_multitype.c:1409
 #, c-format
 msgid "lSetString: no such name (%d, %s) in descriptor\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1414
+#: ../libs/cull/cull_multitype.c:1416
 #, c-format
 msgid "lSetString: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1511
+#: ../libs/cull/cull_multitype.c:1534
 #, c-format
 msgid "lSetHost: no such name (%d, %s) in descriptor\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1518
+#: ../libs/cull/cull_multitype.c:1541
 #, c-format
 msgid "lSetHost: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1623
+#: ../libs/cull/cull_multitype.c:1646
 #, c-format
 msgid "lXchgList: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1695
+#: ../libs/cull/cull_multitype.c:1718
 #, c-format
 msgid "lSetList: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1769
+#: ../libs/cull/cull_multitype.c:1792
 #, c-format
 msgid "lSetFloat: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1843
+#: ../libs/cull/cull_multitype.c:1866
 #, c-format
 msgid "lSetDouble: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1916
+#: ../libs/cull/cull_multitype.c:1939
 #, c-format
 msgid "lSetLong: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:1983
+#: ../libs/cull/cull_multitype.c:2006
 #, c-format
 msgid "lSetChar: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2050
+#: ../libs/cull/cull_multitype.c:2073
 #, c-format
 msgid "lSetRef: wrong type for field %s (%s)\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2203
+#: ../libs/cull/cull_multitype.c:2226
 #, c-format
 msgid "error: lAddSubStr(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2265
+#: ../libs/cull/cull_multitype.c:2288
 #, c-format
 msgid "error: lAddSubHost(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2322 ../libs/cull/cull_multitype.c:2329
+#: ../libs/cull/cull_multitype.c:2345 ../libs/cull/cull_multitype.c:2352
 #, c-format
 msgid "error: lAddElemStr(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2372 ../libs/cull/cull_multitype.c:2379
+#: ../libs/cull/cull_multitype.c:2395 ../libs/cull/cull_multitype.c:2402
 #, c-format
 msgid "error: lAddElemHost(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2436
+#: ../libs/cull/cull_multitype.c:2459
 #, c-format
 msgid "error: lDelSubStr(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2498 ../libs/cull/cull_multitype.c:2506
+#: ../libs/cull/cull_multitype.c:2521 ../libs/cull/cull_multitype.c:2529
 #, c-format
 msgid "error: lDelElemStr(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2569
+#: ../libs/cull/cull_multitype.c:2592
 #, c-format
 msgid "error: lGetSubStr(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2874
+#: ../libs/cull/cull_multitype.c:2897
 #, c-format
 msgid "error: lAddSubUlong(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2930
+#: ../libs/cull/cull_multitype.c:2953
 #, c-format
 msgid "error: lAddElemUlong(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:2987
+#: ../libs/cull/cull_multitype.c:3010
 #, c-format
 msgid "error: lDelSubUlong(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:3046
+#: ../libs/cull/cull_multitype.c:3069
 #, c-format
 msgid "error: lDelElemUlong(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:3103
+#: ../libs/cull/cull_multitype.c:3126
 #, c-format
 msgid "error: lGetSubUlong(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:3163 ../libs/cull/cull_multitype.c:3207
+#: ../libs/cull/cull_multitype.c:3186 ../libs/cull/cull_multitype.c:3230
 #, c-format
 msgid "error: lGetElemUlong(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:3271
+#: ../libs/cull/cull_multitype.c:3294
 #, c-format
 msgid "error: lDelSubCaseStr(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:3334 ../libs/cull/cull_multitype.c:3341
+#: ../libs/cull/cull_multitype.c:3357 ../libs/cull/cull_multitype.c:3364
 #, c-format
 msgid "error: lDelElemCaseStr(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:3397 ../libs/cull/cull_multitype.c:3690
+#: ../libs/cull/cull_multitype.c:3420 ../libs/cull/cull_multitype.c:3713
 #, c-format
 msgid "error: lGetSubCaseStr(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:3465 ../libs/cull/cull_multitype.c:3473
+#: ../libs/cull/cull_multitype.c:3488 ../libs/cull/cull_multitype.c:3496
 #, c-format
 msgid "error: lGetElemCaseStr(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:3547 ../libs/cull/cull_multitype.c:3612
+#: ../libs/cull/cull_multitype.c:3570 ../libs/cull/cull_multitype.c:3635
 #, c-format
 msgid "error: lGetElemHost(%s): run time type error\n"
 msgstr ""
 
 #
-#: ../libs/cull/cull_multitype.c:3753 ../libs/cull/cull_multitype.c:3760
+#: ../libs/cull/cull_multitype.c:3776 ../libs/cull/cull_multitype.c:3783
 #, c-format
 msgid "error: lDelElemHost(%s): run time type error\n"
 msgstr ""
@@ -6584,7 +6584,7 @@ msgstr ""
 
 #
 #: ../clients/qconf/parse_qconf.c:5970
-#: ../daemons/qmaster/complex_qmaster.c:530
+#: ../daemons/qmaster/complex_qmaster.c:532
 #: ../daemons/qmaster/configuration_qmaster.c:299
 #: ../daemons/qmaster/sge_c_gdi.c:1566
 #: ../daemons/qmaster/sge_calendar_qmaster.c:1876
@@ -9347,7 +9347,7 @@ msgid ""
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:217
+#: ../daemons/qmaster/complex_qmaster.c:219
 #, c-format
 msgid ""
 "attribute name \"%-.100s\" in complex \"%-.100s\" contains invalid (null) "
@@ -9355,26 +9355,26 @@ msgid ""
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:217
+#: ../daemons/qmaster/complex_qmaster.c:219
 msgid "<noname>"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:244
-#: ../daemons/qmaster/complex_qmaster.c:260
+#: ../daemons/qmaster/complex_qmaster.c:246
+#: ../daemons/qmaster/complex_qmaster.c:262
 #, c-format
 msgid "attribute name \"%-.100s\" is already in use in complex \"%-.100s\"\n"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:251
-#: ../daemons/qmaster/complex_qmaster.c:267
+#: ../daemons/qmaster/complex_qmaster.c:253
+#: ../daemons/qmaster/complex_qmaster.c:269
 #, c-format
 msgid "shortcut name \"%-.100s\" is already in use in complex \"%-.100s\"\n"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:282
+#: ../daemons/qmaster/complex_qmaster.c:284
 #, c-format
 msgid ""
 "denied: attribute \"%-.100s\" is a string type and thus may not be "
@@ -9382,7 +9382,7 @@ msgid ""
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:293
+#: ../daemons/qmaster/complex_qmaster.c:295
 #, c-format
 msgid ""
 "denied: attribute \"%-.100s\" in 'complex_list' of exec host \"%-.100s\" has "
@@ -9390,7 +9390,7 @@ msgid ""
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:302
+#: ../daemons/qmaster/complex_qmaster.c:304
 #, c-format
 msgid ""
 "denied: attribute \"%-.100s\" in 'complex_list' of queue \"%-.100s\" has a "
@@ -9398,7 +9398,7 @@ msgid ""
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:336
+#: ../daemons/qmaster/complex_qmaster.c:338
 #: ../daemons/qmaster/setup_qmaster.c:1418
 #: ../daemons/qmaster/sge_ckpt_qmaster.c:266
 #: ../daemons/qmaster/sge_ckpt_qmaster.c:408
@@ -9413,49 +9413,49 @@ msgid "qmaster is unable to spool %-.100s \"%-.100s\"\n"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:336
-#: ../daemons/qmaster/complex_qmaster.c:530
-#: ../daemons/qmaster/complex_qmaster.c:569
+#: ../daemons/qmaster/complex_qmaster.c:338
+#: ../daemons/qmaster/complex_qmaster.c:532
+#: ../daemons/qmaster/complex_qmaster.c:571
 msgid "complex"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:430
+#: ../daemons/qmaster/complex_qmaster.c:432
 #, c-format
 msgid "can't open directory \"%-.100s\""
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:435
+#: ../daemons/qmaster/complex_qmaster.c:437
 msgid "Reading in complexes:\n"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:442
+#: ../daemons/qmaster/complex_qmaster.c:444
 #, c-format
 msgid "\tComplex \"%-.100s\".\n"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:483
+#: ../daemons/qmaster/complex_qmaster.c:485
 #, c-format
 msgid "can't write history for complex \"%-.100s\""
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:548
+#: ../daemons/qmaster/complex_qmaster.c:550
 #, c-format
 msgid "can't delete complex \"%-.100s\" from list\n"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:556
+#: ../daemons/qmaster/complex_qmaster.c:558
 #, c-format
 msgid "can't delete complex \"%-.100s\" from disk\n"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:569
+#: ../daemons/qmaster/complex_qmaster.c:571
 #: ../daemons/qmaster/configuration_qmaster.c:346
 #: ../daemons/qmaster/sge_calendar_qmaster.c:1905
 #: ../daemons/qmaster/sge_ckpt_qmaster.c:421
@@ -9469,8 +9469,8 @@ msgid "%-.100s@%-.100s removed \"%-.100s\" from %-.100s list\n"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:615
-#: ../daemons/qmaster/complex_qmaster.c:624
+#: ../daemons/qmaster/complex_qmaster.c:617
+#: ../daemons/qmaster/complex_qmaster.c:626
 #, c-format
 msgid ""
 "denied: complex \"%-.100s\" is still referenced in complex_list of %-.100s "
@@ -9478,7 +9478,7 @@ msgid ""
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:615
+#: ../daemons/qmaster/complex_qmaster.c:617
 #: ../daemons/qmaster/sge_queue_qmaster.c:734
 #: ../daemons/qmaster/sge_queue_qmaster.c:736
 #: ../daemons/qmaster/sge_queue_qmaster.c:831
@@ -9495,7 +9495,7 @@ msgid "queue"
 msgstr ""
 
 #
-#: ../daemons/qmaster/complex_qmaster.c:624
+#: ../daemons/qmaster/complex_qmaster.c:626
 #: ../daemons/qmaster/sge_userprj_qmaster.c:319
 #: ../daemons/qmaster/sge_userprj_qmaster.c:326
 #: ../daemons/qmaster/sge_userset_qmaster.c:743
@@ -9838,7 +9838,7 @@ msgstr ""
 #
 #: ../daemons/qmaster/job_exit.c:140
 #, c-format
-msgid "job %ld.%ld failed on host %-.100s %-.100s%-.100s because: %-.512s"
+msgid "job %ld.%ld failed on host %-.100s %-.100s %-.100s because: %-.512s"
 msgstr ""
 
 #
@@ -13838,7 +13838,7 @@ msgid ""
 msgstr ""
 
 #
-#: ../utilbin/infotext.c:1038
+#: ../utilbin/infotext.c:1052
 #, c-format
 msgid ""
 "\n"
@@ -14208,7 +14208,7 @@ msgid "certificate \"%-.100s\" doesn't exist\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 77
+# file: inst_sge, line 73
 msgid ""
 "Usage: %s -m|-x|-s [-nostricttrue [-fast] [-auto] [-noqueue] "
 "\\n              [-csp] [-resport] [-afs]\n"
@@ -14227,10 +14227,10 @@ msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 123
+# file: inst_sge, line 119
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1057
+# file: inst_sge, line 1053
 msgid ""
 "\n"
 "Can't resolve user name from current directory.\n"
@@ -14238,14 +14238,14 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 154
+# file: inst_sge, line 150
 msgid ""
 "\n"
 "Select default Grid Engine hostname resolving method"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 159
+# file: inst_sge, line 155
 msgid ""
 "\n"
 "Are all hosts of your cluster in one DNS domain? If thisis\n"
@@ -14260,111 +14260,123 @@ msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 162
+# file: inst_sge, line 158
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 304
+# file: inst_sge, line 300
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 354
+# file: inst_sge, line 350
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 571
+# file: inst_sge, line 567
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 648
+# file: inst_sge, line 644
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 686
-# This is used as shortcut for yes
-# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
-# This is shortcut default value
-# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
-# ##########################################################
-# file: inst_sge, line 777
-# This is used as shortcut for yes
-# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
-# ##########################################################
-# file: inst_sge, line 815
+# file: inst_sge, line 682
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 876
+# file: inst_sge, line 773
+# This is used as shortcut for yes
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: inst_sge, line 811
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1006
-# This is used as shortcut for yes
-# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
-# ##########################################################
-# file: inst_sge, line 1078
+# file: inst_sge, line 872
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1101
+# file: inst_sge, line 1002
+# This is used as shortcut for yes
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: inst_sge, line 1074
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1205
+# file: inst_sge, line 1097
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1327
-# This is used as shortcut for yes
-# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
-# ##########################################################
-# file: inst_sge, line 1456
+# file: inst_sge, line 1201
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1556
+# file: inst_sge, line 1323
+# This is used as shortcut for yes
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: inst_sge, line 1452
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1616
-# This is used as shortcut for yes
-# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
-# ##########################################################
-# file: inst_sge, line 1661
+# file: inst_sge, line 1552
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1874
+# file: inst_sge, line 1612
+# This is used as shortcut for yes
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: inst_sge, line 1657
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1916
+# file: inst_sge, line 1870
+# This is used as shortcut for yes
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# This is shortcut default value
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: inst_sge, line 1912
+# This is used as shortcut for yes
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# This is shortcut default value
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 82
+# This is used as shortcut for yes
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# This is shortcut default value
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 293
 # This is used as shortcut for yes
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is shortcut default value
@@ -14421,6 +14433,10 @@ msgstr ""
 # This is used as shortcut for no
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # This is used as shortcut for no
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# This is used as shortcut for no
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# This is used as shortcut for no
 msgid "n"
 msgstr ""
 
@@ -14428,44 +14444,53 @@ msgid "Are all hosts of your cluster in a single DNS domain (y/n) [y] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 165
+# file: inst_sge, line 161
 msgid "Ignoring domainname when comparing hostnames."
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 168
+# file: inst_sge, line 164
 msgid "The domainname is not ignored when comparing hostnames."
 msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 170
+# file: inst_sge, line 166
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 757
+# file: inst_sge, line 753
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1536
+# file: inst_sge, line 1532
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1787
+# file: inst_sge, line 1783
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 2201
+# file: inst_sge, line 2216
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 211
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 340
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 527
 msgid ""
 "\n"
 "Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 202
+# file: inst_sge, line 198
 msgid ""
 "\n"
 "Checking cell directory"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 203
+# file: inst_sge, line 199
 msgid ""
 "\n"
 "Cannot find required files. The following error was returned:\n"
@@ -14473,22 +14498,22 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 206
+# file: inst_sge, line 202
 msgid ">common directory not found: %s<\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 210
+# file: inst_sge, line 206
 msgid ">configuration file not found: %s<\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 214
+# file: inst_sge, line 210
 msgid ">%s file not found: %s<\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 221
+# file: inst_sge, line 217
 msgid ""
 "\n"
 "Please make sure that you have installed the qmaster host before\n"
@@ -14501,21 +14526,21 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 251
+# file: inst_sge, line 247
 msgid ""
 "\n"
 "Checking hostname resolving"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 260
+# file: inst_sge, line 256
 msgid ""
 "\n"
 "This host has the local hostname >%s<.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 271
+# file: inst_sge, line 267
 msgid ""
 "The default_domain parameter is set in the global configuration\n"
 " and added to the unqualified hostname. As a result the\n"
@@ -14523,12 +14548,12 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 279
+# file: inst_sge, line 275
 msgid "This host can be resolved correctly.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 290
+# file: inst_sge, line 286
 msgid ""
 "This host is unknown on the qmaster host.\n"
 "\n"
@@ -14541,7 +14566,7 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 298
+# file: inst_sge, line 294
 msgid ""
 "If this host is already added as administrative host on your qmaster host\n"
 " there may be a hostname resolving problem on this machine.\n"
@@ -14559,85 +14584,85 @@ msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 311
+# file: inst_sge, line 307
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 425
+# file: inst_sge, line 421
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 944
+# file: inst_sge, line 940
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 962
+# file: inst_sge, line 958
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1082
+# file: inst_sge, line 1078
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1113
+# file: inst_sge, line 1109
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1121
+# file: inst_sge, line 1117
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1129
+# file: inst_sge, line 1125
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1159
+# file: inst_sge, line 1155
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1229
+# file: inst_sge, line 1225
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1242
+# file: inst_sge, line 1238
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1247
+# file: inst_sge, line 1243
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1254
+# file: inst_sge, line 1250
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1363
+# file: inst_sge, line 1359
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1442
+# file: inst_sge, line 1438
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1595
+# file: inst_sge, line 1591
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1671
+# file: inst_sge, line 1667
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1726
+# file: inst_sge, line 1722
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1751
+# file: inst_sge, line 1747
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1775
+# file: inst_sge, line 1771
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1868
+# file: inst_sge, line 1864
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1942
+# file: inst_sge, line 1938
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1963
+# file: inst_sge, line 1962
 msgid "Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 332
+# file: inst_sge, line 328
 msgid ""
 "\n"
 "Confirm Grid Engine default installation settings"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 336
+# file: inst_sge, line 332
 msgid ""
 "\n"
 "The following default settings can be used for an accelerated\n"
@@ -14647,27 +14672,27 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 338
+# file: inst_sge, line 334
 msgid "      $COMMD_PORT        = %s"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 340
+# file: inst_sge, line 336
 msgid "      service            = %s"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 344
+# file: inst_sge, line 340
 msgid "      admin user account = root"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 346
+# file: inst_sge, line 342
 msgid "      admin user account = %s"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 350
+# file: inst_sge, line 346
 msgid "      cell name          = %s"
 msgstr ""
 
@@ -14677,31 +14702,31 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 370
+# file: inst_sge, line 366
 msgid "Verifying and setting file permissions in >%s<"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 387
+# file: inst_sge, line 383
 msgid "creating directory: %s"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 408
+# file: inst_sge, line 404
 msgid ""
 "\n"
 "Making directories"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 522
+# file: inst_sge, line 518
 msgid ""
 "\n"
 "Grid Engine group id range"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 535
+# file: inst_sge, line 531
 msgid ""
 "\n"
 "When jobs are started under the control of Grid Engine an additional group "
@@ -14729,26 +14754,26 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 537
+# file: inst_sge, line 533
 msgid "Please enter a range >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 543
+# file: inst_sge, line 539
 msgid ""
 "\n"
 "Using >%s< as gid range. Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 558
+# file: inst_sge, line 554
 msgid ""
 "\n"
 "Default domain for hostnames"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 568
+# file: inst_sge, line 564
 msgid ""
 "\n"
 "Sometimes the primary hostname of machines returns the short hostname\n"
@@ -14768,28 +14793,28 @@ msgid "Do you want to configure a default domain (y/n) [y] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 573
+# file: inst_sge, line 569
 msgid ""
 "\n"
 "Please enter your default domain >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 577
+# file: inst_sge, line 573
 msgid ""
 "\n"
 "Using >%s< as default domain. Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 611
+# file: inst_sge, line 607
 msgid ""
 "\n"
 "Grid Engine cluster configuration"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 613
+# file: inst_sge, line 609
 msgid ""
 "\n"
 "Please give the basic configuration parameters of your Grid Engine\n"
@@ -14800,40 +14825,40 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 617
+# file: inst_sge, line 613
 msgid ""
 "The pathname of the spool directory of the execution hosts. User >%s<\n"
 " must have the right to create this directory and to write into it.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 620
+# file: inst_sge, line 616
 msgid ""
 "The pathname of the spool directory of the execution hosts. User >root<\n"
 " must have the right to create this directory and to write into it.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 623
+# file: inst_sge, line 619
 msgid ""
 "The pathname of the spool directory of the execution hosts. You\n"
 " must have the right to create this directory and to write into it.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 626
+# file: inst_sge, line 622
 msgid "Default: [%s] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 631
+# file: inst_sge, line 627
 msgid ""
 "\n"
 "Grid Engine cluster configuration (continued)"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 637
+# file: inst_sge, line 633
 msgid ""
 "\n"
 "<administrator_mail>\n"
@@ -14849,7 +14874,7 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 645
+# file: inst_sge, line 641
 msgid ""
 "\n"
 "The following parameters for the cluster configuration were configured:\n"
@@ -14862,33 +14887,33 @@ msgid "Do you want to change the configuration parameters (y/n) [n] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 663
+# file: inst_sge, line 659
 msgid ""
 "\n"
 "Creating global cluster configuration"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 664
+# file: inst_sge, line 660
 msgid ""
 "\n"
 "A global cluster configuration file already exists.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 665
+# file: inst_sge, line 661
 msgid "Hit <RETURN> to display the configuration >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 672
+# file: inst_sge, line 668
 msgid ""
 "\n"
 "ERROR - new qmaster spool directory"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 681
+# file: inst_sge, line 677
 msgid ""
 "\n"
 "The qmaster spool directory in your existing configuration is set to\n"
@@ -14909,10 +14934,10 @@ msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 682
+# file: inst_sge, line 678
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 724
+# file: inst_sge, line 720
 msgid "Hit <RETURN> to cancel the installation >> "
 msgstr ""
 
@@ -14920,12 +14945,12 @@ msgid "Do you want to create a new configuration (y/n) [y] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 688
+# file: inst_sge, line 684
 msgid "Using existing configuration. Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 723
+# file: inst_sge, line 719
 msgid ""
 "\n"
 ">sge_qmaster< binary is not compiled with >-secure< option!\n"
@@ -14933,43 +14958,43 @@ msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 744
+# file: inst_sge, line 740
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 768
+# file: inst_sge, line 764
 msgid ""
 "\n"
 "Creating local configuration"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 749
+# file: inst_sge, line 745
 msgid ""
 "\n"
 "Can't create local configuration. Can't delete file >%s<"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 751
+# file: inst_sge, line 747
 msgid ""
 "\n"
 "Creating local configuration for host >%s<"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 755
+# file: inst_sge, line 751
 msgid "Local configuration for host >%s< created."
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 770
+# file: inst_sge, line 766
 msgid ""
 "\n"
 "A local configuration for this host already exists.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 772
+# file: inst_sge, line 768
 msgid "Hit <RETURN> to display configuration >> "
 msgstr ""
 
@@ -14979,22 +15004,22 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 779
+# file: inst_sge, line 775
 msgid "Keeping existing configuration. Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 782
+# file: inst_sge, line 778
 msgid "Creating new local configuration. Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 799
+# file: inst_sge, line 795
 msgid "Creating >act_qmaster< file"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 811
+# file: inst_sge, line 807
 msgid "Adding default complexes >host< and >queue<"
 msgstr ""
 
@@ -15002,37 +15027,37 @@ msgid "Complex >%s< already exists - should complex be preserved (y/n) [y] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 817
+# file: inst_sge, line 813
 msgid "Overwriting existing complex >%s<"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 833
+# file: inst_sge, line 829
 msgid "Adding SGEEE >defaultdepartment< userset"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 837
+# file: inst_sge, line 833
 msgid "Adding SGEEE >deadlineusers< userset"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 852
+# file: inst_sge, line 848
 msgid "Adding >%s< path aliases file"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 854
+# file: inst_sge, line 850
 msgid "Adding >%s< qtcsh sample default request file"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 856
+# file: inst_sge, line 852
 msgid "Adding >%s< default submit options file"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 872
+# file: inst_sge, line 868
 msgid "Adding default parallel environment (PE) for >qmake<"
 msgstr ""
 
@@ -15040,19 +15065,19 @@ msgid "PE >%s< already exists - should PE be preserved (y/n) [y] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 878
+# file: inst_sge, line 874
 msgid "Overwriting existing PE >%s<"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 905
+# file: inst_sge, line 901
 msgid ""
 "\n"
 "Checking $SGE_ROOT directory"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 918
+# file: inst_sge, line 914
 msgid ""
 "The Grid Engine root directory (your current directory) is:\n"
 "\n"
@@ -15064,7 +15089,7 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 942
+# file: inst_sge, line 938
 msgid ""
 "Can't create a temporary file in the directory\n"
 "\n"
@@ -15077,7 +15102,7 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 949
+# file: inst_sge, line 945
 msgid ""
 "Your $SGE_ROOT environment variable\n"
 "\n"
@@ -15087,19 +15112,19 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 961
+# file: inst_sge, line 957
 msgid "Your $SGE_ROOT directory: %s\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 979
+# file: inst_sge, line 975
 msgid ""
 "\n"
 "Using Grid Engine"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 992
+# file: inst_sge, line 988
 msgid ""
 "\n"
 "You should now enter the command:\n"
@@ -15122,19 +15147,19 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 994
+# file: inst_sge, line 990
 msgid "Hit <RETURN> to see where Grid Engine logs messages >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 997
+# file: inst_sge, line 993
 msgid ""
 "\n"
 "Grid Engine messages"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1003
+# file: inst_sge, line 999
 msgid ""
 "\n"
 "Grid Engine messages can be found at:\n"
@@ -15154,14 +15179,14 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1016
+# file: inst_sge, line 1012
 msgid ""
 "\n"
 "Your Grid Engine qmaster installation is now completed"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1027
+# file: inst_sge, line 1023
 msgid ""
 "\n"
 "Please now login to all hosts where you want to run an execution daemon\n"
@@ -15184,19 +15209,19 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1030
+# file: inst_sge, line 1026
 msgid "Your execution daemon installation is now completed."
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1042
+# file: inst_sge, line 1038
 msgid ""
 "\n"
 "Grid Engine - test installation"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1045
+# file: inst_sge, line 1041
 msgid ""
 "\n"
 "You are installing not as user >root<!\n"
@@ -15206,19 +15231,19 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1047
+# file: inst_sge, line 1043
 msgid "Hit <RETURN> if this is ok or stop the installation with Ctrl-C >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1063
+# file: inst_sge, line 1059
 msgid ""
 "\n"
 "Grid Engine admin user account"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1075
+# file: inst_sge, line 1071
 msgid ""
 "\n"
 "The current directory\n"
@@ -15242,19 +15267,19 @@ msgid "Do you want to install Grid Engine as admin user >%s< (y/n) [y] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1080
+# file: inst_sge, line 1076
 msgid "Installing Grid Engine as admin user >%s<"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1090
+# file: inst_sge, line 1086
 msgid ""
 "\n"
 "Choosing Grid Engine admin user account"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1097
+# file: inst_sge, line 1093
 msgid ""
 "\n"
 "You may install Grid Engine that all files are created with the user id of "
@@ -15276,47 +15301,47 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1107
+# file: inst_sge, line 1103
 msgid ""
 "\n"
 "Choosing a Grid Engine admin user name"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1108
+# file: inst_sge, line 1104
 msgid ""
 "\n"
 "Please enter the user name (or >root<) >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1112
+# file: inst_sge, line 1108
 msgid "User >%s< does not exist - please correct the username"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1116
+# file: inst_sge, line 1112
 msgid ""
 "\n"
 "Installing Grid Engine as user >%s<\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1127
+# file: inst_sge, line 1123
 msgid ""
 "\n"
 "Installing Grid Engine as user >root<\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1150
+# file: inst_sge, line 1146
 msgid ""
 "\n"
 "Grid Engine TCP/IP communication service"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1155
+# file: inst_sge, line 1151
 msgid ""
 "\n"
 "Using the environment variable\n"
@@ -15328,12 +15353,12 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1157
+# file: inst_sge, line 1153
 msgid "This overrides the preset TCP/IP service >sge_commd<.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1167
+# file: inst_sge, line 1163
 msgid ""
 "\n"
 "The environment variable\n"
@@ -15347,14 +15372,14 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1171
+# file: inst_sge, line 1167
 msgid ""
 "\n"
 "Grid Engine TCP/IP service >sge_commd<"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1181
+# file: inst_sge, line 1177
 msgid ""
 "\n"
 "There is no service >sge_commd< available in your >/etc/services< file\n"
@@ -15376,24 +15401,24 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1185
+# file: inst_sge, line 1181
 msgid "Make sure to use the same port number as on the qmaster machine\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1187
+# file: inst_sge, line 1183
 msgid "Please add the service now or continue to enter a port number >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1196
+# file: inst_sge, line 1192
 msgid ""
 "\n"
 "No TCP/IP service >sge_commd< yet"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1202
+# file: inst_sge, line 1198
 msgid ""
 "\n"
 "There is still no service for >sge_commd< available.\n"
@@ -15410,54 +15435,54 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1209
+# file: inst_sge, line 1205
 msgid "Please enter an unused port number >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1215
+# file: inst_sge, line 1211
 msgid ""
 "\n"
 "Invalid input. Must be a number."
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1217
+# file: inst_sge, line 1213
 msgid ""
 "\n"
 "Invalid port number. Must be in range [1..%s]."
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1219
+# file: inst_sge, line 1215
 msgid ""
 "\n"
 "You are not user >root<. You need to use a port above 1024."
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1223
+# file: inst_sge, line 1219
 msgid ""
 "\n"
 "Found service with port number >%s< in >/etc/services<. Choose again."
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1241
+# file: inst_sge, line 1237
 msgid ""
 "\n"
 "Using port >%s<. No service >sge_commd< available.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1246
+# file: inst_sge, line 1242
 msgid ""
 "\n"
 "Service >sge_commd< is now available.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1253
+# file: inst_sge, line 1249
 msgid ""
 "\n"
 "Using the service\n"
@@ -15469,17 +15494,17 @@ msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1268
+# file: inst_sge, line 1264
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1341
+# file: inst_sge, line 1337
 msgid ""
 "\n"
 "Grid Engine cells"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1277
+# file: inst_sge, line 1273
 msgid ""
 "\n"
 "Grid Engine supports multiple cells.\n"
@@ -15503,21 +15528,21 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1282
+# file: inst_sge, line 1278
 msgid ""
 "\n"
 "Using cell >%s<. Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1296
+# file: inst_sge, line 1292
 msgid ""
 "\n"
 "Grid Engine qmaster spool directory"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1298
+# file: inst_sge, line 1294
 msgid ""
 "\n"
 "The qmaster spool directory is the place where the qmaster daemon stores\n"
@@ -15526,28 +15551,28 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1303
+# file: inst_sge, line 1299
 msgid ""
 "User >root< on this host must have read/write accessto the qmaster\n"
 " spool directory.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1306
+# file: inst_sge, line 1302
 msgid ""
 "The admin user >%s< must have read/write access\n"
 " to the qmaster spool directory.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1310
+# file: inst_sge, line 1306
 msgid ""
 "Your account on this host must have read/write access\n"
 " to the qmaster spool directory.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1319
+# file: inst_sge, line 1315
 msgid ""
 "If you will install shadow master hosts or if you want to be able to start\n"
 " the qmaster daemon on other hosts (see the corresponding sectionin the\n"
@@ -15560,7 +15585,7 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1324
+# file: inst_sge, line 1320
 msgid ""
 "\n"
 "The following directory has been selected as qmaster spool directory:\n"
@@ -15572,7 +15597,7 @@ msgid "Do you want to select another qmaster spool directory (y/n) [n] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1343
+# file: inst_sge, line 1339
 msgid ""
 "\n"
 "Please enter cell name which you used for the qmaster\n"
@@ -15580,7 +15605,7 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1357
+# file: inst_sge, line 1353
 msgid ""
 "\n"
 "Obviously there was no qmaster installation yet!\n"
@@ -15589,44 +15614,44 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1360
+# file: inst_sge, line 1356
 msgid ""
 "\n"
 "Using cell: >%s<\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1377
+# file: inst_sge, line 1373
 msgid ""
 "The admin user >%s< is different than the default user >root<\n"
 " in the global cluster configuration.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1380
+# file: inst_sge, line 1376
 msgid ""
 "The admin user >%s< doesn't match the admin username >%s<\n"
 " in the global cluster configuration.\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1382
+# file: inst_sge, line 1378
 msgid "Installation failed. Exit."
 msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1396
+# file: inst_sge, line 1392
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1451
+# file: inst_sge, line 1447
 msgid ""
 "\n"
 "Grid Engine startup script"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1441
+# file: inst_sge, line 1437
 msgid ""
 "Your Grid Engine cluster wide startup script is installed as:\n"
 "\n"
@@ -15641,43 +15666,43 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1466
+# file: inst_sge, line 1462
 msgid "Installing startup script %s"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1481
+# file: inst_sge, line 1477
 msgid "Installing startup script also in %s"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1500
+# file: inst_sge, line 1496
 msgid "Adding application startup to %s"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1510
+# file: inst_sge, line 1506
 msgid ""
 "Found a call of %s in %s. Replacing with new call.\n"
 " Your old file %s is saved as %s"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1550
+# file: inst_sge, line 1546
 msgid ""
 "\n"
 "Adding admin and submit hosts from file"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1551
+# file: inst_sge, line 1547
 msgid ""
 "\n"
 "Please enter the file name which contains the host list: "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1554
+# file: inst_sge, line 1550
 msgid ""
 "\n"
 "You entered an invalid file name or the file does not exist."
@@ -15687,14 +15712,14 @@ msgid "Do you want to enter a new file name (y/n) [y] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1579
+# file: inst_sge, line 1575
 msgid ""
 "\n"
 "Adding admin and submit hosts"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1583
+# file: inst_sge, line 1579
 msgid ""
 "\n"
 "Please enter a blank seperated list of hosts.\n"
@@ -15705,19 +15730,19 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1585
+# file: inst_sge, line 1581
 msgid "Host(s): "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1605
+# file: inst_sge, line 1601
 msgid ""
 "\n"
 "Adding Grid Engine hosts"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1613
+# file: inst_sge, line 1609
 msgid ""
 "\n"
 "Please now add the list of hosts, where you will later install your "
@@ -15740,19 +15765,19 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1627
+# file: inst_sge, line 1623
 msgid "Finished adding hosts. Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1651
+# file: inst_sge, line 1647
 msgid ""
 "\n"
 "Adding a default Grid Engine queue for this host"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1658
+# file: inst_sge, line 1654
 msgid ""
 "\n"
 "We can now add a sample queue for this host with following attributes:\n"
@@ -15770,26 +15795,26 @@ msgid "Do you want to add a default queue for this host (y/n) [y] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1682
+# file: inst_sge, line 1678
 msgid "Creating settings files for >.profile/.cshrc<"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1717
+# file: inst_sge, line 1713
 msgid ""
 "\n"
 "Welcome to the Grid Engine installation"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1718
+# file: inst_sge, line 1714
 msgid ""
 "\n"
 "Grid Engine qmaster host installation"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1725
+# file: inst_sge, line 1721
 msgid ""
 "\n"
 "Before you continue with the installation please read these hints:\n"
@@ -15805,14 +15830,14 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1739
+# file: inst_sge, line 1735
 msgid ""
 "\n"
 "Welcome to the Grid Engine execution host installation"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1749
+# file: inst_sge, line 1745
 msgid ""
 "\n"
 "If you haven't installed the Grid Engine qmaster host yet, you must execute\n"
@@ -15835,14 +15860,14 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1760
+# file: inst_sge, line 1756
 msgid ""
 "\n"
 "Grid Engine submit host installation"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1764
+# file: inst_sge, line 1760
 msgid ""
 "\n"
 "Adding a submit host to the Grid Engine cluster is done with the command:\n"
@@ -15855,28 +15880,28 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1772
+# file: inst_sge, line 1768
 msgid ""
 "\n"
 "Grid Engine qmaster and scheduler startup"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1773
+# file: inst_sge, line 1769
 msgid ""
 "\n"
 "Starting qmaster and scheduler daemon. Please wait ..."
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1784
+# file: inst_sge, line 1780
 msgid ""
 "\n"
 "Grid Engine execution daemon startup"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1785
+# file: inst_sge, line 1781
 msgid ""
 "\n"
 "Starting execution daemon daemon. Please wait ..."
@@ -15884,18 +15909,18 @@ msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1813
+# file: inst_sge, line 1809
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1821
+# file: inst_sge, line 1817
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1829
+# file: inst_sge, line 1825
 msgid "missing program >%s< in directory >%s<"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1847
+# file: inst_sge, line 1843
 msgid ""
 "\n"
 "Missing Grid Engine binaries!\n"
@@ -15923,22 +15948,22 @@ msgstr ""
 
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1860
+# file: inst_sge, line 1856
 # #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 1905
+# file: inst_sge, line 1901
 msgid ""
 "\n"
 "Verifying and setting file permissions"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1866
+# file: inst_sge, line 1862
 msgid "You are not installing as user >root<\n"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1867
+# file: inst_sge, line 1863
 msgid "Can't set the file owner/group and permissions\n"
 msgstr ""
 
@@ -15948,19 +15973,19 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1876
+# file: inst_sge, line 1872
 msgid "We do not verify file permissions. Hit <RETURN> to continue >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1887
+# file: inst_sge, line 1883
 msgid ""
 "\n"
 "Verifying and setting file permissions (continued)"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1898
+# file: inst_sge, line 1894
 msgid ""
 "\n"
 "We can't set file permissions on this machine, because user root\n"
@@ -15979,12 +16004,12 @@ msgid ""
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1900
+# file: inst_sge, line 1896
 msgid "Please hit <RETURN> to continue once you set your file permissions >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1913
+# file: inst_sge, line 1909
 msgid ""
 "\n"
 "We may now verify and set the file permissions of your Grid Engine\n"
@@ -16007,23 +16032,311 @@ msgid "Do you want to verify and set your file permissions (y/n) [y] >> "
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1944
+# file: inst_sge, line 1940
 msgid "We will not verify your file permissions. Hit <RETURN> to continue >>"
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 1986
+# file: inst_sge, line 1985
 msgid ""
 "Please remove the old CSP security directory $HOME/.sge/$CA_PORT/$SGE_CELL. "
 "Exit."
 msgstr ""
 
 # ##########################################################
-# file: inst_sge, line 2096
+# file: inst_sge, line 2111
 msgid "can't get hostname of this machine. Installation failed."
 msgstr ""
 
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
 # ##########################################################
-# file: inst_sge, line 2151
+# file: inst_sge, line 2166
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 701
 msgid "Error: Unknown option %s"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 66
+msgid ""
+"\n"
+"Usage: %s {-init|-req|-sign|-copy|-verify|-usercert <file>} [-days <days>]\n"
+"   -init            initialize CA infrastructure\n"
+"   -req             generate a certificate request and private key\n"
+"   -sign            sign a certificate request\n"
+"   -copy            install user certificate and private key\n"
+"   -verify          verify a certificate\n"
+"   -days <days>     days of validity of the certificate\n"
+"   -usercert <file> generate certificates and keys for the users in <file>\n"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 77
+msgid ""
+"\n"
+"Initializing Certificate Authority (CA) for OpenSSL security framework"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 80
+msgid ""
+"\n"
+"There are already directories of the CA infrastructure in\n"
+"   %s\n"
+"   or\n"
+"   %s\n"
+msgstr ""
+
+msgid "Do you want to recreate your SGE CA infrastructure (y/n) [y] >> "
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 84
+msgid "We will not reinitialize your SGE CA infrastructure."
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 131
+msgid ""
+"You can install your private key and certificate only on the master host."
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 138
+msgid "Cant find local userkey directory."
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 188
+msgid "Certificate and private key for user %s have been installed"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 200
+msgid ""
+"\n"
+"Creating CA certificate and private key"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 209
+msgid ""
+"Please give some basic parameters to create the distinguished name (DN)\n"
+" for the certificates.\n"
+"\n"
+" We will ask for\n"
+"   - the two letter country code\n"
+"   - the state\n"
+"   - the location, e.g city or your buildingcode\n"
+"   - the organization (e.g. your company name)\n"
+"   - the organizational unit, e.g. your department\n"
+"   - the email address of the CA administrator (you!)\n"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 219
+msgid "Please enter your two letter country code, e.g. >US< >> "
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 229
+msgid "Please enter your state >> "
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 241
+msgid "Please enter your location, e.g city or buildingcode >> "
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 252
+msgid "Please enter the name of your organization >> "
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 262
+msgid "Please enter your organizational unit, e.g. your department >> "
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 273
+msgid "Please enter the email address of the CA administrator >> "
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 291
+msgid ""
+"\n"
+"You selected the following basic data for the distinguished name of\n"
+" your certificates:\n"
+"\n"
+" Country code:         %s=%s\n"
+" State:                %s=%s\n"
+" Location:             %s=%s\n"
+" Organization:         %s=%s\n"
+" Organizational unit:  %s=%s\n"
+" CA email address:     %s=%s\n"
+msgstr ""
+
+msgid "Do you want to use these data (y/n) [y] >> "
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 320
+msgid "Creating CA certificate and private key"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 331
+msgid "Failed to create CA certificate and private key. Exit"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 358
+msgid "Creating RANDFILE from >%s< in >%s<"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 373
+msgid "no valid userfile >%s<. Exit."
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 382
+msgid "Generating certificate and key for '%s' ('%s','%s')."
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 397
+msgid ""
+"\n"
+"Creating '%s' certificate and key"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 435
+msgid "Can't create %s or %s. Exit."
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 443
+msgid "Can't sign certificate request %s. Exit."
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 451
+msgid "created and signed certificate for SGE daemons"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 459
+msgid "created and signed certificate for user >%s< in >%s<"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 477
+msgid ""
+"The CA directories\n"
+"   %s or %s\n"
+" seem to be regular files"
+msgstr ""
+
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 478
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 488
+msgid "CA initialization failed. Exit."
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 487
+msgid ""
+"Can't delete the CA directories\n"
+"   %s or %s"
+msgstr ""
+
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 492
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 495
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 502
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 505
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 508
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 511
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 516
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 519
+# #-#-#-#-#  gridenginenotuniq.pot (PACKAGE VERSION)  #-#-#-#-#
+# ##########################################################
+# file: sge_ca, line 523
+msgid "Creating %s"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 545
+msgid ""
+"\n"
+"ERROR: Please set your $SGE_ROOT environment variable\n"
+" and start this script again.\n"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 552
+msgid ""
+"ERROR: The shell script \"$SGE_ROOT/util/arch\" does not exist.\n"
+" Please verify your distribution and restart this script.\n"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 559
+msgid ""
+"\n"
+"ERROR: Missing shell script \"$SGE_ROOT/util/arch_variables\".\n"
+" Please verify your distribution and restart this script.\n"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 614
+msgid "Can't determine your username with \"%s\" command. Exit"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 683
+msgid "Error: -days needs argument"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 693
+msgid "Error: -usercert needs argument"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 732
+msgid "Request (and private key) is in %s"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 734
+msgid "No success"
+msgstr ""
+
+# ##########################################################
+# file: sge_ca, line 741
+msgid "Signed certificate is in %s"
 msgstr ""

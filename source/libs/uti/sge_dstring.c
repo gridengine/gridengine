@@ -219,7 +219,6 @@ const char* sge_dstring_append_dstring(dstring *sb, const dstring *a)
 ******************************************************************************/
 const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 {
-   char buf[BUFFER_SIZE];
    va_list ap;
 
    va_start(ap, format);
@@ -241,6 +240,8 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 #endif
       sb->length = strlen(sb->s);
    } else {
+      char buf[BUFFER_SIZE];
+
 #if defined(HAS_NO_VSNPRINTF)
       vsprintf(buf, format, ap);
 #else
@@ -279,8 +280,6 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
 ******************************************************************************/
 const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
 {
-   char buf[BUFFER_SIZE];
-
    if (sb == NULL) {
       return NULL;
    }
@@ -288,6 +287,7 @@ const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
    if (format == NULL) {
       return sb != NULL ? sb->s : NULL;
    }
+
    if (sb->is_static) {
 #if defined(HAS_NO_VSNPRINTF)
       vsprintf(sb->s, format, ap);
@@ -296,6 +296,8 @@ const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
 #endif
       sb->length = strlen(sb->s);
    } else {
+      char buf[BUFFER_SIZE];
+
 #if defined(HAS_NO_VSNPRINTF)
       vsprintf(buf, format, ap);
 #else
@@ -337,7 +339,6 @@ const char* sge_dstring_vsprintf(dstring *sb, const char *format, va_list ap)
 ******************************************************************************/
 const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
 {
-   char buf[BUFFER_SIZE];
    va_list ap;
 
    if (sb == NULL) {
@@ -349,13 +350,26 @@ const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
       return sb != NULL ? sb->s : NULL;
    }
 
+   if (sb->is_static) {
 #if defined(HAS_NO_VSNPRINTF)
-   vsprintf(buf, format, ap);
+      vsprintf(sb->s + sb->length, format, ap);
 #else
-   vsnprintf(buf, sizeof(buf)-1, format, ap);
+      vsnprintf(sb->s + sb->length, sb->size - sb->length, format, ap);
+#endif
+      sb->length = strlen(sb->s);
+   } else {
+      char buf[BUFFER_SIZE];
+
+#if defined(HAS_NO_VSNPRINTF)
+      vsprintf(buf, format, ap);
+#else
+      vsnprintf(buf, sizeof(buf)-1, format, ap);
 #endif
 
-   return sge_dstring_append(sb, buf);
+      sge_dstring_append(sb, buf);
+   }
+
+   return sb->s;
 }
 
 /****** uti/dstring/sge_dstring_copy_string() *********************************

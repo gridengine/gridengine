@@ -2754,6 +2754,8 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
       }
 
       japi_dec_threads(SGE_FUNC);
+
+      rusagep = lFreeList(rusagep);
    }
 
    if (wait_result==JAPI_WAIT_INVALID) {
@@ -4164,7 +4166,7 @@ static void *japi_implementation_thread(void *p)
       int ec_get_ret = 0;
 
       /* read events and add relevant information into library session data */
-      if ((ec_get_ret = ec_get(&event_list, false)) == 0) {
+      if ((ec_get_ret = ec_get(&event_list, false)) == false) {
          ec_mark4registration();
          
          DPRINTF (("Sleeping 10 seconds before trying to register again.\n"));
@@ -4175,6 +4177,7 @@ static void *japi_implementation_thread(void *p)
          if (japi_ec_state == JAPI_EC_FINISHING) {
             JAPI_UNLOCK_EC_STATE();
             DPRINTF (("Received stop request while waiting for events.\n"));
+            event_list = lFreeList(event_list);
             break;
          }
          JAPI_UNLOCK_EC_STATE();

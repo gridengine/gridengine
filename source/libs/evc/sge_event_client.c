@@ -2417,9 +2417,8 @@ ec_get(lList **event_list, bool exit_on_qmaster_down)
                 *  may be we got an old event, that was sent before
                 *  reregistration at qmaster
                 */
-               lFreeList(*event_list);
-               *event_list = NULL;
-               lFreeList(new_events);
+               *event_list = lFreeList(*event_list);
+               new_events = lFreeList(new_events);
                ec_mark4registration();
                ret = false;
                done = true;

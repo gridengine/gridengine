@@ -778,7 +778,7 @@ u_long32 flags
          /* read the script file in one sweep */
          filestrptr = sge_file2string(script_file, &script_len);
 
-         if (!filestrptr) {
+         if (filestrptr == NULL) {
             sprintf(error_string, MSG_ANSWER_ERRORREADINGFROMFILEX_S, 
                     script_file);
             answer_list_add(&answer, error_string, 
@@ -798,6 +798,7 @@ u_long32 flags
          else if (filestrptr[0] == '\0') {
             answer_list_add(&answer, MSG_ANSWER_NOINPUT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            FREE(filestrptr);
             DEXIT;
             return answer;
          }
@@ -913,6 +914,7 @@ u_long32 flags
 
                lFreeList(alp);
                if (do_exit) {
+                  FREE(filestrptr);
                   DEXIT;
                   return answer;
                }
@@ -954,6 +956,7 @@ u_long32 flags
    }
 
    if (!lp_new_opts) {
+      FREE(filestrptr);
       DEXIT;
       return answer;
    }
@@ -969,6 +972,8 @@ u_long32 flags
          lp_new_opts = NULL;
       }
    }
+
+   FREE(filestrptr);
 
    DEXIT;
    return answer;

@@ -1568,9 +1568,6 @@ static bool should_exit(void)
 *     MT-NOTE:
 *     MT-NOTE: After all events for all clients have been sent. This function
 *     MT-NOTE: will wait on the condition variable 'Master_Control.cond_var'
-*     MT-NOTE:
-*     MT-NOTE: The condition variable will be signaled if a new event client
-*     MT-NOTE: or a new event have been added.
 *
 *******************************************************************************/
 static void send_events(void)
@@ -1587,8 +1584,6 @@ static void send_events(void)
    struct timespec ts;
 
    DENTER(TOP_LAYER, "send_events");
-
-   DPRINTF(("%s: %d event clients\n", SGE_FUNC, lGetNumberOfElem(Master_Control.clients)));
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
@@ -1660,11 +1655,6 @@ static void send_events(void)
 
                lp = lGetList(event_client, EV_events);
                numevents = lGetNumberOfElem(lp);
-               DPRINTF(("%s: " u32 " sending %d events (" u32"-"u32 ") to (%s,%s,%d)\n", 
-                  SGE_FUNC, sge_get_gmt(), numevents, 
-                  numevents?lGetUlong(lFirst(lp), ET_number):0,
-                  numevents?lGetUlong(lLast(lp), ET_number):0,
-                  host, commproc, id));
             }
             ret = report_list_send(report_list, host, commproc, id, 0, NULL);
 
@@ -1691,10 +1681,6 @@ static void send_events(void)
                now = sge_get_gmt();
                lSetUlong(event_client, EV_last_send_time, now);
                lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
-
-               DPRINTF(("delivered events: %s/"u32" now/next "u32"/"u32"\n", 
-                  lGetString(event_client, EV_name), lGetUlong(event_client, EV_id), 
-                  now, now + deliver_interval));
             }
 
 
@@ -1710,7 +1696,6 @@ static void send_events(void)
       event_client = lNext(event_client);
    }
 
-   DPRINTF(("%s: wait on condition variable\n", SGE_FUNC));
    pthread_cond_timedwait(&Master_Control.cond_var, &Master_Control.mutex, &ts);
 
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);

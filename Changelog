@@ -1,3 +1,7 @@
+AD-2004-02-16-0: Cleanup:   Did remove superfluous debug output. Did adjust
+                            comments.
+                 Changed:   evm
+
 SG-2004-02-15-0: Bugfix:    the event thread works with a fixed interval to
                             deliver events (every second)
                  Changed:   qmaster

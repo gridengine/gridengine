@@ -677,8 +677,8 @@ static int cl_com_tcp_read(long timeout_time, int fd, cl_byte_t* message, unsign
       return CL_RETVAL_PARAMS;
    }
 
-   if (size > SSIZE_MAX) {
-      CL_LOG_INT(CL_LOG_ERROR,"data to read is > SSIZE_MAX=",SSIZE_MAX );
+   if (size > CL_DEFINE_MAX_MESSAGE_LENGTH) {
+      CL_LOG_INT(CL_LOG_ERROR,"data to read is > max message length =", CL_DEFINE_MAX_MESSAGE_LENGTH );
       return CL_RETVAL_MAX_READ_SIZE;
    }
 

@@ -113,6 +113,10 @@ sge_write_rusage(dstring *buffer,
    const char *ret = NULL;
    char *qname = NULL;
    lListElem *pe_task = NULL;
+   u_long32 submission_time = 0;
+   u_long32 start_time      = 0;
+   u_long32 end_time        = 0;
+   u_long32 now             = sge_get_gmt();
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
@@ -161,7 +165,7 @@ sge_write_rusage(dstring *buffer,
 
       /* now set actual time as time of last intermediate usage report */
       usage_list_set_ulong_usage(reported_list, LAST_INTERMEDIATE, 
-                                 sge_get_gmt());
+                                 now);
    } else {
       reported_list = NULL;
    }
@@ -249,6 +253,20 @@ sge_write_rusage(dstring *buffer,
          pos[0] = '\0';
       }
    }
+
+   if (intermediate) {
+      if (job != NULL) {
+         submission_time = lGetUlong(job, JB_submission_time);
+      }
+      if (ja_task != NULL) {
+         start_time = lGetUlong(ja_task, JAT_start_time);
+      }
+      end_time = now;
+   } else {
+      submission_time = usage_list_get_ulong_usage(usage_list, "submission_time", 0);
+      start_time = usage_list_get_ulong_usage(usage_list, "start_time", 0);
+      end_time = usage_list_get_ulong_usage(usage_list, "end_time", 0);
+   }
    
    ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
          qname, delimiter,
@@ -259,9 +277,9 @@ sge_write_rusage(dstring *buffer,
           lGetUlong(jr, JR_job_number), delimiter,
           lGetString(job, JB_account), delimiter,
           usage_list_get_ulong_usage(usage_list, "priority", 0),  delimiter,
-          usage_list_get_ulong_usage(usage_list, "submission_time", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "start_time", 0), delimiter,
-          usage_list_get_ulong_usage(usage_list, "end_time", 0), delimiter,
+          submission_time, delimiter,
+          start_time, delimiter,
+          end_time, delimiter,
           lGetUlong(jr, JR_failed), delimiter,
           usage_list_get_ulong_usage(usage_list, "exit_status", 0), delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_wallclock", 0), delimiter,

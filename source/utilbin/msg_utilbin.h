@@ -156,7 +156,7 @@
 #define MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S   _MESSAGE(57126,         _("couldn't read local config file "SFN"\n"))
 #define MSG_SPOOLDEFAULTS_CANTREADSHARETREE_SS  _MESSAGE(57127,         _("couldn't read sharetree from file "SFN": "SFN"\n"))
 #define MSG_SPOOLDEFAULTS_CANTREADKEYOFOBJ      _MESSAGE(57128,         _("can't read key of object - unknown type\n"))
-#define MSG_SPOOLDEFAULTS_CANTHANDLECLASSICSPOOLING    _MESSAGE(57128,         _("can't handle classic spooling\n"))
+#define MSG_SPOOLDEFAULTS_CANTHANDLECLASSICSPOOLING    _MESSAGE(57129,         _("can't handle classic spooling\n"))
 
 /*
  * utilbin/spoolinit.c

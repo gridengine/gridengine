@@ -548,7 +548,6 @@
 */
 #define MSG_SGETEXT_CANT_DEL_CONFIG_S           _MESSAGE(33541, _("can't delete configuration "SFQ" from list\n"))
 #define MSG_CONF_CANTMERGECONFIGURATIONFORHOST_S _MESSAGE(33546, _("can't merge configuration for host "SFQ" \n"))
-#define MSG_CONF_CHANGEPARAMETERXONLYSUPONSHUTDOWN_S _MESSAGE(33547, _("Changing parameter "SFQ" only supported in a shut-down cluster.\n"))
 #define MSG_CONF_NAMEISNULLINCONFIGURATIONLISTOFX_S _MESSAGE(33548, _("name == NULL in configuration list of "SFQ"\n"))
 #define MSG_CONF_VALUEISNULLFORATTRXINCONFIGURATIONLISTOFY_SS _MESSAGE(33549, _("value == NULL for attribute "SFQ" in configuration list of "SFQ"\n"))
 #define MSG_CONF_GOTINVALIDVALUEXFORLOGLEVEL_S _MESSAGE(33550, _("denied: got invalid value "SFQ" for loglevel\n"))

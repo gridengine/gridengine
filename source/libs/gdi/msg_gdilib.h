@@ -174,7 +174,6 @@
 #define MSG_SEC_KEYFILENOTFOUND_S        _MESSAGE(55004, _("key "SFQ" doesn't exist\n"))
 #define MSG_SEC_CERTFILENOTFOUND_S       _MESSAGE(55006, _("certificate "SFQ" doesn't exist\n"))
 #define MSG_SEC_RANDFILENOTFOUND_S       _MESSAGE(55005, _("random data file "SFQ" doesn't exist\n"))
-#define MSG_SEC_CANT_GET_SEC_CONFIG_S    _MESSAGE(55010, _("can't get security configuration: "SFQ""))
 #define MSG_SEC_CERT_VERIFY_FUNC_NO_VAL  _MESSAGE(55011, _("certificate verify callback function called without value\n"))
 
 

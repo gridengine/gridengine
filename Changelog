@@ -1,3 +1,9 @@
+EB-2001-12-06-2: Bugfix:    Jobs submittet with start time in future where
+                            never started
+                            Qalter -hold_jid failed for unenrolled pending
+                            jobs 
+                 Issue:     None (Fix of Enhancem.: EB-2001-12-04-0)
+
 CR-2001-12-06-1: Enhancem.: commd will only allow kill, trace, dump and unregister
                             commands when client (commdcntl) is using reserved
                             ports. Only a commd which was not started as root

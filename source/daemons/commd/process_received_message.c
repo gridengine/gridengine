@@ -327,12 +327,10 @@ int commdport
                  read_aliasfile(aliasfile);
                  master_host = newhost_name( master_name ,&i);
                  if (i == 0) {
-                    
                     DEBUG((SGE_EVENT, "added new host!"));  
                     trace(SGE_EVENT);
-
                  } else {
-                    DEBUG((SGE_EVENT, "host allready known!" ));  
+                    DEBUG((SGE_EVENT, "host allready known!"));  
                     trace(SGE_EVENT);
                  }
             }

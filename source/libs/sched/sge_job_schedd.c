@@ -58,6 +58,7 @@
 #include "sge_range.h"
 #include "sge_job_jatask.h"
 #include "jb_now.h"
+#include "sge_time.h"
 
 static int user_sort = 0;
 
@@ -345,7 +346,7 @@ void split_jobs(lList **job_list, lList **answer_list,
             target = &(target_tasks[SPLIT_ERROR]);
          } 
          if (target == NULL && result_list[SPLIT_WAITING_DUE_TO_TIME] &&
-             (lGetUlong(job, JB_execution_time) > 0)) {
+             (lGetUlong(job, JB_execution_time) > sge_get_gmt())) {
 #ifdef JOB_SPLIT_DEBUG
             DPRINTF(("Task "u32" is waiting due to time.\n", ja_task_id));
 #endif
@@ -440,7 +441,7 @@ void split_jobs(lList **job_list, lList **answer_list,
       }
       if (target_for_ids == SPLIT_LAST &&
           result_list[SPLIT_WAITING_DUE_TO_TIME] &&
-          lGetUlong(job, JB_execution_time) > 0) {
+          lGetUlong(job, JB_execution_time) > sge_get_gmt()) {
 #ifdef JOB_SPLIT_DEBUG
          DPRINTF(("Unenrolled tasks are waiting due to time\n"));
 #endif

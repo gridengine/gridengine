@@ -1627,21 +1627,29 @@ lListElem *jep
          int Exited = 1;
          lListElem *ja_task;
 
-         for_each(ja_task, lGetList(parent_jep, JB_ja_tasks)) {
-            if (lGetUlong(ja_task, JAT_status) != JFINISHED) {
-               Exited = 0;
-               break;
-            }
-            for_each(task, lGetList(ja_task, JAT_task_list)) {
-               if (lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)
-                     !=JFINISHED) {
-                  /* at least one task exists */
+         if (lGetList(parent_jep, JB_ja_n_h_ids) != NULL ||
+             lGetList(parent_jep, JB_ja_u_h_ids) != NULL ||
+             lGetList(parent_jep, JB_ja_o_h_ids) != NULL ||
+             lGetList(parent_jep, JB_ja_s_h_ids) != NULL) {
+            Exited = 0;
+         }
+         if (Exited) {
+            for_each(ja_task, lGetList(parent_jep, JB_ja_tasks)) {
+               if (lGetUlong(ja_task, JAT_status) != JFINISHED) {
                   Exited = 0;
                   break;
                }
+               for_each(task, lGetList(ja_task, JAT_task_list)) {
+                  if (lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)
+                        !=JFINISHED) {
+                     /* at least one task exists */
+                     Exited = 0;
+                     break;
+                  }
+               }
+               if (!Exited)
+                  break;
             }
-            if (!Exited)
-               break;
          }
          if (!Exited) {
             DPRINTF(("adding jid "u32" into sucessor list of job %s\n",

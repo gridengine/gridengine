@@ -92,36 +92,6 @@ int line__
    int levelchar;
    char levelstring[32*4];
 
-   /* LOG_CRIT LOG_ERR LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG */
-   if (log_level == LOG_CRIT) {
-      strcpy(levelstring, MSG_LOG_CRITICALERROR);
-      levelchar = 'C';
-   }
-   else if (log_level == LOG_ERR) {
-      strcpy(levelstring, MSG_LOG_ERROR);
-      levelchar = 'E';
-   }
-   else if (log_level == LOG_WARNING) {
-      strcpy(levelstring, "");
-      levelchar = 'W';
-   }
-   else if (log_level == LOG_NOTICE) {
-      strcpy(levelstring, "");
-      levelchar = 'N';
-   }
-   else if (log_level == LOG_INFO) {
-      strcpy(levelstring, "");
-      levelchar = 'I';
-   }
-   else if (log_level == LOG_DEBUG) {
-      strcpy(levelstring, "");
-      levelchar = 'D';
-   }
-   else {
-      strcpy(levelstring, "");
-      levelchar = 'L';
-   }
-
    /* Make sure to have at least a one byte logging string */
    if (!mesg || mesg[0] == '\0') {
       sprintf(buf, MSG_LOG_CALLEDLOGGINGSTRING_S , mesg ? MSG_LOG_ZEROLENGTH : MSG_POINTER_NULL);
@@ -146,6 +116,38 @@ int line__
 
    if (me.who == QMON && !qmon_log)
       return 0;
+
+   /* LOG_CRIT LOG_ERR LOG_WARNING LOG_NOTICE LOG_INFO LOG_DEBUG */
+   switch(log_level) {
+      case LOG_CRIT:
+         strcpy(levelstring, MSG_LOG_CRITICALERROR);
+         levelchar = 'C';
+         break;
+      case LOG_ERR:
+         strcpy(levelstring, MSG_LOG_ERROR);
+         levelchar = 'E';
+         break;
+      case LOG_WARNING:
+         strcpy(levelstring, "");
+         levelchar = 'W';
+         break;
+      case LOG_NOTICE:
+         strcpy(levelstring, "");
+         levelchar = 'N';
+         break;
+      case LOG_INFO:
+         strcpy(levelstring, "");
+         levelchar = 'I';
+         break;
+      case LOG_DEBUG:
+         strcpy(levelstring, "");
+         levelchar = 'D';
+         break;
+      default:
+         strcpy(levelstring, "");
+         levelchar = 'L';
+         break;
+   }
 
    /* avoid double output in debug mode */
 #ifndef WIN32NATIVE

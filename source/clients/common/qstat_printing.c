@@ -791,7 +791,7 @@ char *indent
    if (first_time) {
       first_time = 0;
       if (!(full_listing & QSTAT_DISPLAY_FULL)) {
-         printf("%s%-6.6s %-5.5s %-10.10s %-12.12s %s%-5.5s %-19.19s%s %s%s%s%s%s%s%s%s%-10.10s %s  %s%s%s%s%s%s", 
+         printf("%s%-7.7s %-5.5s %-10.10s %-12.12s %s%-5.5s %-19.19s%s %s%s%s%s%s%s%s%s%-10.10s %s  %s%s%s%s%s%s", 
                indent,
                   "job-ID",
                   "prior",
@@ -828,7 +828,7 @@ char *indent
 
    /* job number / ja task id */
    if (print_jobid)
-      printf("%6d ", (int)lGetUlong(job, JB_job_number)); 
+      printf("%7d ", (int)lGetUlong(job, JB_job_number)); 
    else 
       printf("       "); 
 
@@ -1022,7 +1022,7 @@ char *indent
    if (dyn_task_str->s && is_array(job))
       printf("%s", dyn_task_str->s); 
    else
-      printf("         ");
+      printf("        ");
 
    if (tsk_ext) {
       lList *task_list = lGetList(jatep, JAT_task_list);

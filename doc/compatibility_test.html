@@ -21,10 +21,10 @@ You might intend to test compatibility with one or with multiple of those
 Reference Builds. A list of the currently available Reference Builds with
 all pertinent information can be found <a href="/project/gridengine/standards.html">here</a>.
 <p>The following describes how to test compatibility between two bilds.
-You will need to create a <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/dist/dist.html?content-type=text/html">binary
-distribution package</a>&nbsp; for both builds before you start with the
-compatibility checking process. You will also have to make all preparations
-to be able to run the Grid Engine <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/testsuite/testsuite.html?content-type=text/html">Testsuite</a>.
+You will need to create a <a href="../source/dist/dist.html">binary distribution
+package</a>&nbsp; for both builds before you start with the compatibility
+checking process. You will also have to make all preparations to be able
+to run the Grid Engine <a href="../testsuite/testsuite.html">Testsuite</a>.
 You will have to use the Testsuite level as defined in the <a href="/project/gridengine/standards.html">Reference
 Build definition</a>.
 <p>The compatibility test consist of a preparation step, a validation run
@@ -40,9 +40,9 @@ results as the validation run to be considered compatible.
 <font size=+2>Set up a testsuite cluster with more than one host</font></li>
 </ul>
 
-<blockquote>The <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/testsuite/testsuite.html?content-type=text/html">Testsuite</a>
-documentation is describing how this can be done. Use the <b><i>Reference
-Build</i></b> to which you want to test compatibility and run:</blockquote>
+<blockquote>The <a href="../testsuite/testsuite.html">Testsuite</a> documentation
+is describing how this can be done. Use the <b><i>Reference Build</i></b>
+to which you want to test compatibility and run:</blockquote>
 
 <blockquote>
 <blockquote><tt>expect check.exp install</tt></blockquote>
@@ -239,16 +239,14 @@ Stop if the results are not equal.</ul>
 
 <p><br>Use the testsuite to shutdown the cluster:
 <br>&nbsp;
-<ul>expect check.exp kill
-<br>&nbsp;</ul>
+<ul>expect check.exp kill</ul>
 
 <li>
 <font size=+2>Set up a testsuite cluster with more than one host using
 the modified build</font></li>
 
-<p><br>The <a href="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/testsuite/testsuite.html?content-type=text/html">Testsuite</a>
-documentation is describing how this can be done. Use the <b><i>modified
-build</i></b>.
+<p><br>The <a href="../testsuite/testsuite.html">Testsuite</a> documentation
+is describing how this can be done. Use the <b><i>modified build</i></b>.
 <br>&nbsp;
 <ul>&nbsp;expect check.exp install</ul>
 

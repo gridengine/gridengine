@@ -1,3 +1,8 @@
+JG-2003-04-10-0  Testsuite: avoid testsuite timeout during install_qmaster
+                            when SGE is installed on a slow NFS mounted 
+                            filesystem. 
+                 Review:    CR
+
 EB-2003-04-10-1  Testsuite: test #524: qdel -u <user> does not delete all jobs 
                             of the user
                  Issue:     528

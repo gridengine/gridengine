@@ -370,7 +370,6 @@ proc install_qmaster {} {
  log_user 1
  puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
 
- set timeout 300
  set hostcount 0
 
  set do_log_output 0 ;# _LOG
@@ -386,7 +385,8 @@ proc install_qmaster {} {
    set anykey [wait_for_enter 1]
  }
     log_user 1
-    puts "-->testsuite: expecting now ..."
+#    puts "-->testsuite: expecting now ..."
+    set timeout 300
     expect {
        flush stdout
        flush $CHECK_OUTPUT 
@@ -701,6 +701,15 @@ proc install_qmaster {} {
                set anykey [wait_for_enter 1]
           }
           send -i $sp_id "y\n"
+          continue;
+       }
+# JG: TODO: also check the localized message
+       -i $sp_id "Verifying and setting file permissions and owner in" {
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+#          puts $CHECK_OUTPUT "---> one directory done"
           continue;
        }
 

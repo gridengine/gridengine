@@ -1,3 +1,6 @@
+JG-2001-10-30-0: qtcsh could not be compiled on newer linux systems (SuSE 7.2)
+                 due to changes in the operating system include files
+
 EB-2001-10-30-0: Modifications for sgeee scheduler
                   - Changed initial ticket count for started jobs
                   - Normalized pending job tickets 

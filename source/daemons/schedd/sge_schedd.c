@@ -80,7 +80,7 @@ int new_global_config = 0;
 int start_on_master_host = 0;
 int sge_mode = 0;
 
-static int sge_ck_qmaster(void);
+static int sge_ck_qmaster(const char *former_master_host);
 static int parse_cmdline_schedd(int argc, char **argv);
 static void usage(FILE *fp);
 static void schedd_exit_func(int i);
@@ -112,6 +112,7 @@ char *argv[]
    int check_qmaster;
    const char *master_host;
    int ret;
+   char initial_qmaster_host[1024];
 
    DENTER_MAIN(TOP_LAYER, "schedd");
 
@@ -161,6 +162,7 @@ char *argv[]
       CRITICAL((SGE_EVENT, MSG_SCHEDD_STARTSCHEDONMASTERHOST_S , master_host));
       SGE_EXIT(1);
    }
+   strncpy(initial_qmaster_host, master_host, sizeof(initial_qmaster_host)-1);
 
    if (!getenv("SGE_ND")) {
       int fd;
@@ -199,7 +201,7 @@ char *argv[]
       }
       
       if (check_qmaster) {
-         if ((ret = sge_ck_qmaster()) < 0) {
+         if ((ret = sge_ck_qmaster(initial_qmaster_host)) < 0) {
             CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
             SGE_EXIT(1);
          } else if (ret > 0) {
@@ -265,16 +267,25 @@ static int parse_cmdline_schedd(int argc, char *argv[])
  *  1 failed but we should retry (also check_isalive() failed)
  * -1 error 
  *----------------------------------------------------------------*/
-static int sge_ck_qmaster()
+static int sge_ck_qmaster(const char *former_master_host)
 {
    lList *alp, *lp = NULL;
    int success, old_timeout;
    lEnumeration *what;
    lCondition *where;
+   const char *current_master;
 
    DENTER(TOP_LAYER, "sge_ck_qmaster");
 
-   if (check_isalive(sge_get_master(0))) {
+   current_master = sge_get_master(1);
+   if (former_master_host && sge_hostcmp(current_master, former_master_host)) {
+      ERROR((SGE_EVENT, MSG_QMASTERMOVEDEXITING_SS, former_master_host,
+      current_master));
+      DEXIT;
+      return -1;
+   }
+
+   if (check_isalive(current_master)) {
       DPRINTF(("qmaster is not alive\n"));
       DEXIT;
       return 1;
@@ -491,7 +502,7 @@ static int sge_setup_sge_schedd()
    /* suppress the INFO messages during setup phase */
    saved_logginglevel = logginglevel;
    logginglevel = LOG_WARNING;
-   if ((ret = sge_ck_qmaster()) < 0) {
+   if ((ret = sge_ck_qmaster(NULL)) < 0) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTSTARTUP ));
       SGE_EXIT(1);
    }

@@ -275,6 +275,7 @@
 #define MSG_SCHEDD_UNKNOWN                                  _MESSAGE(47203, _("<unknown>"))
 #define MSG_SCHEDD_CANTSWITCHTOADMINUSER                    _MESSAGE(47204, _("can't switch to amin_user"))
 #define MSG_SCHEDD_CANTSTARTUP                              _MESSAGE(47205, _("can't startup schedd\n"))
+#define MSG_QMASTERMOVEDEXITING_SS                          _MESSAGE(47287, _("qmaster moved from "SFQ" to "SFQ": exiting\n"))
 
 /* #define MSG_SCHEDD_REREGISTER_PARAM                         _message(47206, _("schedd parameter changed: reregistering at qmaster\n")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SCHEDD_REREGISTER_ERROR                         _message(47207, _("problems in schedd event layer: reregistering at qmaster\n")) __TS Removed automatically from testsuite!! TS__*/
@@ -296,7 +297,7 @@
 #define MSG_SCHEDD_NOHOSTFORQUEUE                           _MESSAGE(47218, _("\terror: no host defined for queue\n"))
 #define MSG_SCHEDD_NOCOMPLEXATTRIBUTEFORTHRESHOLD_S         _MESSAGE(47219, _("\terror: no complex attribute for threshold "SFN"\n"))
 #define MSG_SCHEDD_NOLOADVALUEFORTHRESHOLD_S                _MESSAGE(47220, _("\terror: no load value for threshold "SFN"\n"))
-
+#define MSG_SUBORDPOLICYCONFLICT_UUSS                       _MESSAGE(47286, _("Jobs "u32" & "u32" dispatched to master/subordinated queues "SFQ"/"SFQ". Suspend on subordinate to occur in same scheduling interval. Policy conflict!"))
 
 
 /* 

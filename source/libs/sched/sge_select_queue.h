@@ -113,7 +113,7 @@ int sge_get_string_qattr(char *dst, int dst_len, char *attrname, lListElem *q, l
  * make debitations on all queues that are necessary 
  *
  */
-int debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, lList *complex_list, u_long32 *total_slotsp);
+int debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, lList *complex_list, u_long32 *total_slotsp, lList *orders_list);
 
 int debit_queue_consumable(lListElem *jep, lListElem *qep, lList *complex_list, int slots);
 

@@ -184,12 +184,13 @@ done
 
 #--- END-OF-COMMANDLINE-PARSING------------------------------------------
 
+DOC_PACKAGE=""
 PVMCONTENT="pvm/README pvm/*.sh pvm/*.template pvm/src"
-DOC_PACKAGE="doc/README-Autoinstall.txt"
-COMMON_DOCS="doc/*.asc $ADD_COMMON_DOCS"
-COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs include \
+COMMON_DOCS="doc/*.asc doc/README-* doc/javadocs $ADD_COMMON_DOCS"
+COMMON_PACKAGE="3rd_party catman ckpt $COMMON_DOCS examples/jobs \
+                examples/drmaa include \
                 inst_sge install_qmaster install_execd man $PVMCONTENT mpi \
-                qmon util"
+                qmon util lib/drmaa.jar"
 
 if [ "$VERSION" = "" -o "$VDIR" = "" ]; then
    ErrUsage
@@ -213,7 +214,7 @@ if [ $makecommon = true ]; then
    cd ..
 fi
 
-if [ $makedoc = true ]; then
+if [ $makedoc = true -a "$DOC_PACKAGE" != "" ]; then
    # do any necessary postprocessing of the "doc" package here
    if [ -f localext/$VDIR/mk_dist.private.doc ]; then
       echo executing commands from mk_dist.private.doc

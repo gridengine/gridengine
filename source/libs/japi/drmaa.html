@@ -10,7 +10,7 @@
 	<META NAME="CHANGED" CONTENT="20010716;16471800">
 </HEAD>
 <BODY>
-<H1><FONT SIZE=6 STYLE="font-size: 28pt">DRMAA C binding for Grid Engine</FONT></H1>
+<H1><FONT SIZE=6 STYLE="font-size: 28pt">DRMAA C binding library for Grid Engine</FONT></H1>
 <H1>Overview</H1>
 <P>The purpose of this library is to provide an implementation for the DRMAA C binding 
 standard based on Grid Engine DRM system. The best way to circumscribe DRMAA is to cite 
@@ -34,11 +34,11 @@ standards body working group refer to the page of the
 <A HREF="http://www.drmaa.org/docs/ggf-rec-drmaa-1_0.pdf">DRMAA 1.0 language independent specification</A>,
 <A HREF="https://forge.gridforum.org/tracker/?group_id=90&atid=608&aid=214">DRMAA C language binding specification</A> 
 and 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/manuals.html?content-type=text/html">HTML version of Grid Engine DRMAA C binding man pages (only those with drmaa_* prefixes)</A> 
+<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/doc/htmlman/manuals.html?content-type=text/html">HTML version of Grid Engine DRMAA C binding man pages (only those in section 3 with drmaa_* prefixes)</A> 
 .</P>
 <H1>Availability</H1>
 <P>At this stage DRMAA is only available as a source snapshot from the "maintrunk" of the Grid Engine.
-In the 5.3 release source branch DRMAA does not exist.</P> <P>At this point in time the following Grid Engine binary architectures are know to be working:</P>
+In the 5.3 release source branch DRMAA does not exist.</P> <P>At this point in time the following Grid Engine binary architectures are known to be working:</P>
 <UL>
    <LI><P>solaris (Sparc Solaris 2.6, 7, 8, 9  32-bit)</P>
    <LI><P>solaris64 (Sparc Solaris 7, 8, 9  64-bit</P>
@@ -52,15 +52,15 @@ In the 5.3 release source branch DRMAA does not exist.</P> <P>At this point in t
    <LI><P>test_drmaa - a test DRMAA application used for QA</P>
 </UL>
 
-<P>For building 
-The steps described in the 
+<H1>Building</H1>
+<P>The steps described in the 
 <A HREF="http://gridengine.sunsource.net/unbranded-source/browse/~checkout~/gridengine/source/README.BUILD">Grid Engine build page</A> 
-are the same that also must be followed for building the DRMAA build targets. In case of 
-Grid Engine binary architectures where the Port is already done the command</P>
+are the same that also must be followed for building the DRMAA build targets. In case of Grid Engine binary architectures where the 
+port is already done the command</P>
 <UL>
    aimk 
 </UL>
-<P>compiles all Grid Engine binaries plus DRMAA build targets. To enforce compliation
+<P>compiles all regular Grid Engine binaries plus DRMAA build targets. To enforce compilation
 of DRMAA build targets for not yet ported binary architectures 
 <UL>
    aimk -only-mt 
@@ -70,6 +70,35 @@ of DRMAA build targets for not yet ported binary architectures
    aimk -no-mt 
 </UL>
 <P>can be used.</P>
+<P>Upon successful build the DRMAA targets are found in the "*_MT" 
+directories. All build targets in this directory were compiled in a way allowing them to be 
+used in multi-threaded applications. Due to the JAPI service thread (see implementation of
+<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/%7Echeckout%7E/gridengine/source/libs/japi/japi.html?content-type=text/html">JAPI library</A>
+) this is necessary for major parts of the code that implements DRMAA. For the same reason a 
+good amount of Grid Engine source code has been reworked to make it reentrant (where possible) 
+or at least thread safe. In the source code MT safe functions are marked with comments such as
+</P>
+<UL>
+   MT-NOTE: sge_gdi() is MT safe
+</UL>
+<P>it is important to understand that with all these comments major assumption is 
+made. The current major assumptions are</P>
+<UL>
+   <LI><P>code was not compiled with aimk option -DCOMMCOMPRESS</P>
+   <LI><P>code was not compiled with aimk option -DCRYPTO</P>
+   <LI><P>code was not compiled with aimk option -DKERBEROS</P>
+   <LI><P>code was not compiled with aimk option -SECURE</P>
+   <LI><P>if the code was compiled with aimk option -SECURE then 
+         only non-secure may be used</P>
+   <LI><P>neither AFS nor DCE/KERBEROS security may be used</P>
+</UL>
+<P>if these assumptions are not met DRMAA library can not be expected to be working
+properly and will crash most probably! To overcome those constraints it is necessary 
+firstly to link Grid Engine against the corresponding MT safe libraries (zlib, 
+openssl, ...). Secondly those parts of the Grid Engine source code that makes use of 
+those libraries must be reviewed and if necessary changed.</P>
+<P>If you consider contributing to DRMAA doing a port or working on reducing these 
+constraints is a good idea.</P>
 <H1>Example application</H1>
 <P>The C test program 
 <A HREF="http://gridengine.sunsource.net/source/browse/gridengine/source/libs/japi/example.c">example.c</A>
@@ -97,8 +126,8 @@ whether you found a bug sending mail to
 is recommended.
 <H1>Notes on implementation</H1>
 <P>The Grid Engine implementation of DRMAA bases on Grid Engine 
-<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/%7Echeckout%7E/gridengine/source/libs/japi/japi.html?content-type=text/html">Job
-API library (JAPI)</A>. As a result DRMAA library inherits MT safety from JAPI library.</P>
+<A HREF="http://gridengine.sunsource.net/unbranded-source/browse/%7Echeckout%7E/gridengine/source/libs/japi/japi.html?content-type=text/html">Job API library (JAPI)</A>
+. As a result DRMAA library inherits MT safety from JAPI library.</P>
 <P>Interfaces operations of Grid Engine JAPI library and DRMAA library have lots in common.
 The big difference amongst them is that JAPI allows any characteristic of the Grid Engine job 
 that is submitted through JAPI be influenced, whereas DRMAA allows only those characteristics be influenced that 

@@ -362,7 +362,7 @@ static void mwrite(char *message)
 {
    static u_long traceid = 0;
 
-#if !defined(DARWIN)
+#if !defined(DARWIN6)
    flockfile(rmon_fp);
 #endif
 
@@ -370,7 +370,7 @@ static void mwrite(char *message)
    fprintf(rmon_fp, "%s", message);
    fflush(rmon_fp);
 
-#if !defined(DARWIN)
+#if !defined(DARWIN6)
    funlockfile(rmon_fp);
 #endif
 

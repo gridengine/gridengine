@@ -1041,6 +1041,8 @@ case DARWIN:
       set OFLAG = "-O3"
    endif   
 
+   set REL = `/usr/bin/uname -r`
+
    set CC = "gcc"
    set CXX = "g++"
 
@@ -1051,7 +1053,19 @@ case DARWIN:
       set DEBUG_FLAG = "$DEBUG_FLAG -pg"
    endif
 
-   set CFLAGS   = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN -DGETHOSTBYNAME $DEBUG_FLAG $CFLAGS"
+   switch ($REL)
+   case "6.*":
+      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN -DDARWIN6 -DGETHOSTBYNAME $DEBUG_FLAG $CFLAGS"
+      breaksw
+   case "7.*":
+      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DDARWIN -DDARWIN7 -DGETHOSTBYNAME $DEBUG_FLAG $CFLAGS"
+      breaksw
+   default:
+      echo DARWIN release \"$REL\" not supported!
+      exit 1
+      breaksw
+   endsw
+
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
@@ -1071,14 +1085,25 @@ case DARWIN:
       set MOTIFHOME = /usr/local
    endif   
 
-
    set XMTDEF   = ""
    set XMTINCD  = "$XMTINCD -I$MOTIFHOME/include"
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
    set XCFLAGS  = "-DNeedFunctionPrototypes -DNeedVarargsPrototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib -L$MOTIFHOME/lib"
-   set XLFLAGS  = "-bind_at_load $XLIBD"
    set XLIBS    = "-lXm -lXpm -lXt -lXext -lX11 -lSM -lICE"
+
+   switch ($REL)
+   case "6.*":
+      set XLFLAGS = "-bind_at_load $XLIBD"
+      breaksw
+   case "7.*":
+      set XLFLAGS = "$XLIBD"
+      breaksw
+   default:
+      echo DARWIN release \"$REL\" not supported!
+      exit 1
+      breaksw
+   endsw
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
@@ -1088,6 +1113,8 @@ case DARWIN:
 
    set MTCFLAGS = "${MTCFLAGS}"
    set MTLFLAGS = "-lpthread"
+
+   unset REL
    breaksw
 
 case FREEBSD_*:

@@ -1,3 +1,7 @@
+JG-2002-06-27-0: Bugfix:    qrsh -inherit failed with error 
+                            "COMMPROC ALREADY REGISTERED"
+                 Issue:     #303           
+
 EB-2002-06-27-1: Bugfix:    prevent deletion of still referenced objects
                             - PE objects
                             - CKPT objects

@@ -1572,7 +1572,11 @@ char **argv
       sge_tid_t tid;
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
-/*       set_commlib_param(CL_P_ID, 0, NULL, NULL); */
+
+      /* if we had a connection to qmaster commd (to get configuration), 
+       * close it and reset commproc id */
+      leave_commd();
+      set_commlib_param(CL_P_ID, 0, NULL, NULL);
    
       tid = sge_qexecve(host, NULL, 
                         lGetString(job, JB_cwd), 

@@ -114,6 +114,8 @@ static void build_derived_final_usage(lListElem *jr);
 
 static void examine_job_task_from_file(int startup, char *dir, lListElem *jep, lListElem *jatep, pid_t *pids, int npids);
 
+static double usage_list_get_double_usage(lList *usage_list, const char *name, double def);
+
 extern lList *Master_Job_List;
 
 /*****************************************************************************
@@ -1602,10 +1604,22 @@ int failed
 }
 
 
+static double usage_list_get_double_usage(lList *usage_list, const char *name, double def)
+{
+   lListElem *ep = lGetElemStr(usage_list, UA_name, name);
+
+   if(ep != NULL) {
+      return lGetDouble(ep, UA_value);
+   } else {
+      return def;
+   }
+}
+
+
 static void build_derived_final_usage(
 lListElem *jr 
 ) {
-   lListElem *uep;
+   lListElem *uep = NULL;
    double ru_cpu, pdc_cpu;
    double cpu, r_cpu,
           mem, r_mem,
@@ -1622,14 +1636,14 @@ lListElem *jr
    parse_ulong_val(&s_vmem, NULL, TYPE_MEM, get_conf_val("s_vmem"), NULL, 0);
    h_vmem = MIN(s_vmem, h_vmem);
    /* cpu    = MAX(sum of "ru_utime" and "ru_stime" , PDC "cpu" usage) */
-   ru_cpu = ((uep=lGetSubStr(jr, UA_name, "ru_utime", JR_usage))?lGetDouble(uep, UA_value):0) +
-            ((uep=lGetSubStr(jr, UA_name, "ru_stime", JR_usage))?lGetDouble(uep, UA_value):0);
+   ru_cpu = usage_list_get_double_usage(lGetList(jr, JR_usage), "ru_utime", 0) +
+            usage_list_get_double_usage(lGetList(jr, JR_usage), "ru_stime", 0);
    pdc_cpu = (uep=lGetSubStr(jr, UA_name, USAGE_ATTR_CPU, JR_usage))?lGetDouble(uep, UA_value):0;
    cpu = MAX(ru_cpu, pdc_cpu);
 
    /* r_cpu  = h_rt * slots */
-   r_cpu = (((uep=lGetSubStr(jr, UA_name, "end_time", JR_usage))?lGetDouble(uep, UA_value):0) -
-           ((uep=lGetSubStr(jr, UA_name, "start_time", JR_usage))?lGetDouble(uep, UA_value):0))*slots;
+   r_cpu = (usage_list_get_double_usage(lGetList(jr, JR_usage), "end_time", 0) -
+           usage_list_get_double_usage(lGetList(jr, JR_usage), "start_time", 0))*slots;
 
    /* mem    = PDC "mem" usage or zero */
    mem = ((uep=lGetSubStr(jr, UA_name, USAGE_ATTR_MEM, JR_usage))?lGetDouble(uep, UA_value):0);

@@ -61,22 +61,10 @@ int is_active_job_logging(void)
 }
 
 /*****************************************************************/
-int enable_job_logging(
-char *fname 
-) {
-   int i;
-   SGE_STRUCT_STAT buf;
-
+int enable_job_logging(char *fname) 
+{
    DENTER(TOP_LAYER, "enable_job_logging");
 
-   if (SGE_STAT(fname, &buf)) {
-      if ((i = creat(fname, 0644)) == -1) {
-         DPRINTF(("failed to create %s for job logging\n", fname));
-         DEXIT;
-         return -1;
-      }
-      close(i);
-   }
    strcpy(job_log_file, fname);
 
    DPRINTF(("use file %s for job logging\n", job_log_file));

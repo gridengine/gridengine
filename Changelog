@@ -1,3 +1,9 @@
+EB-2002-12-10-0  Bugfix:    job logging file exists but is empty in certain 
+                            configurations
+                 IZ:        #439
+                 Bugtraq:   #4791908
+                 Review:    AS
+
 EB-2002-12-09-0  Bugfix:    qstat -j shows messages concerning queues although
                             schedd_job_info=false
                             sge_schedd process consumes more memory than needed
@@ -6,6 +12,7 @@ EB-2002-12-09-0  Bugfix:    qstat -j shows messages concerning queues although
                             user redefines suspend_method or terminate_method
                  IZ:        #432 #435 #436
                  Bugtraq:   #4787598 #4790540 #4790547
+                 Review:    AS
 
 CR-2002-12-03-0  L10N:      a) When SGE qmaster was started with the global 
                  Bugfix:    variable SGE_ENABLE_MSG_ID=2 (used for L10N debuging 

@@ -265,7 +265,7 @@ int commdport
    int i;
    char chr;
    commproc *commp;
-   char *mls_str, *s;
+   char *mls_str;
    u_long mls;
    int did_read = 0;
    
@@ -417,15 +417,18 @@ int commdport
          if (!mls)
             mls = 1024 * 1024;
          if (mp->buflen >= mls) {
+            char *from_name = get_mainname(mp->from.host);
+            char *to_name = get_mainname(mp->to.host);
+
             ERROR((SGE_EVENT, MSG_RWFD_BIGXSENDSMESSAGEYBYTESTOZ_USSIIUSSI ,
                     u32c(mls),
-                    (s = mp->from.name) ? s : "*",
-                    (s = get_mainname(mp->from.host)) ? s : "*",
+                    mp->from.name != NULL ? mp->from.name : "*",
+                    from_name != NULL ? from_name : "*",
                     (int) mp->from.id,
                     mp->tag,
                     u32c(mp->buflen),
-                    (s = mp->to.name) ? s : "*",
-                    (s = get_mainname(mp->to.host)) ? s : "*",
+                    mp->to.name != NULL ? mp->to.name : "*",
+                    to_name != NULL ? to_name : "*",
                     (int) mp->to.id));
          }
       }

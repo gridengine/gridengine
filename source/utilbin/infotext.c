@@ -64,7 +64,7 @@ static void  sge_infotext_welcome(void);
 static void  sge_infotext_raw(char* format_string);
 static void  sge_infotext_usage(void);
 static int   sge_infotext_get_nr_of_substrings(char* buffer, char* substring);
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164)
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
 static char* sge_infotext_string_replace(dstring* buf, char* arg, char* what, char* with, int only_first );
 #endif
 static char* sge_infotext_string_input_parsing(dstring* buf,char* string);
@@ -536,8 +536,8 @@ char* sge_infotext_string_output_parsing(dstring* string_buffer,char* string) {
 }
 
 
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164)
-char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
+static char* sge_infotext_string_replace(dstring* tmp_buf, char* arg, char* what, char* with, int only_first) {
    int i;
    char* p1;
    char* p2;
@@ -1039,7 +1039,7 @@ char **argv
    DPRINTF(("pass 4\n"));
    {
       if (real_args > 0) {
-#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164)
+#if defined(ALPHA) || defined(ALPHA5) || defined(ALINUX) || defined(HP1164) || __GNUC__ == 3
       for(i=0;i<real_args;i++) {
 /*      printf("argument[%d]: \"%s\"\n",i,argv[first_arg +i]); */
          sge_dstring_copy_string(&buffer, sge_infotext_string_replace(&tmp_buf, (char*)sge_dstring_get_string(&buffer2),"%s",argv[first_arg +i],1));

@@ -1296,10 +1296,10 @@ DTRACE;
 
          DPRINTF(("\"-r %s\"\n", *sp));
 
-         if (!strcmp("y", *sp)) {
+         if ((strcasecmp("y", *sp) == 0) || (strcasecmp("yes", *sp) == 0)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             lSetInt(ep_opt, SPA_argval_lIntT, 1);
-         } else if (!strcmp("n", *sp)) {
+         } else if ((strcasecmp ("n", *sp) == 0) || (strcasecmp ("no", *sp) == 0)) {
             ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
             lSetInt(ep_opt, SPA_argval_lIntT, 2);
          } else {

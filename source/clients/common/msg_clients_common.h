@@ -82,5 +82,8 @@
 #define MSG_PE_NOSUCHPARALLELENVIRONMENT                 _MESSAGE(1039, _("error: no such parallel environment\n"))
 #define MSG_USER_ABORT                                   _MESSAGE(1040, _("error: aborted by user\n"))
 
+#define MSG_CENTRY_NULL_NAME_S        _MESSAGE(1041, _("Complex attribute "SFQ" has no name\n"))
+#define MSG_CENTRY_NULL_SHORTCUT_S    _MESSAGE(1042, _("Complex attribute "SFQ" has no shortcut defined\n"))
+
 #endif /* __MSG_CLIENTS_COMMON_H */
 

@@ -53,6 +53,54 @@
 
 pid_t child_pid = 0;
 
+/****** Interactive/qrsh_starter/sge_putenv() **********************************************
+*  NAME
+*     sge_putenv() -- put an environment variable to environment
+*
+*  SYNOPSIS
+*     static int sge_putenv(const char *var) 
+*
+*  FUNCTION
+*     Duplicates the given environment variable and calls the system call
+*     putenv.
+*
+*  INPUTS
+*     const char *var - variable to put in the form <name>=<value>
+*
+*  RESULT
+*     static int - 1 on success, else 0
+*
+*  NOTES
+*     This function should probably be part of utilib.
+*     Or sge_setenv's restrictions could be removed.
+*
+*  SEE ALSO
+*     sge_setenv()
+*
+*******************************************************************************/
+static int sge_putenv(const char *var)
+{
+   char *duplicate;
+
+   if(var == NULL) {
+      return 0;
+   }
+
+   duplicate = strdup(var);
+
+   if(duplicate == NULL) {
+      fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+      return 0;
+   }
+
+   if(putenv(duplicate) != 0) {
+      fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+      return 0;
+   }
+
+   return 1;
+}
+
 /****** Interactive/qrsh_starter/setEnvironment() ***************************************
 *
 *  NAME
@@ -97,7 +145,6 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    char *envFileName = NULL;
    FILE *envFile = NULL;
    char line[MAX_ENVIRONMENT_LENGTH];
-   char *duplicate = NULL;
    char *command   = NULL;
 
    *wrapper = NULL;
@@ -148,32 +195,43 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
             }
          } else {
             /* set variable */
-            if((duplicate = (char *)malloc(strlen(line) + 1)) == NULL) {
-               fprintf(stderr, MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
+            if(!sge_putenv(line)) {
                fclose(envFile); free(envFileName);
                return NULL;
             }
-            strcpy(duplicate, line);
-            putenv(duplicate);
          }
       }
    }
 
    fclose(envFile); free(envFileName);
+
+   /* 
+    * Use starter_method if it is supplied
+    * and not overridden by QRSH_WRAPPER
+    */
+    
+   if(*wrapper == NULL) {
+      *wrapper = get_conf_val("starter_method");
+      if(*wrapper != NULL) { 
+         char buffer[128];
+         sprintf(buffer, "%s=%s", "SGE_STARTER_SHELL_PATH", ""); sge_putenv(buffer);
+         sprintf(buffer, "%s=%s", "SGE_STARTER_SHELL_START_MODE", "unix_behavior"); sge_putenv(buffer);
+         sprintf(buffer, "%s=%s", "SGE_STARTER_USE_LOGIN_SHELL", "false"); sge_putenv(buffer);
+      } 
+   }
+   
    return command;
 }
 
-/****** Interactive/qrsh_starter/changeDirectory() *****************************************
+/****** Interactive/qrsh_starter/readConfig() *****************************************
 *  NAME
-*     changeDirectory() -- change to directory named in job config
+*     readConfig() -- read the jobs configuration
 *
 *  SYNOPSIS
-*     static int changeDirectory(const char *jobdir) 
+*     static int readConfig(const char *jobdir) 
 *
 *  FUNCTION
-*     Reads the target working directory for a qrsh job from the jobs 
-*     configuration (<job spool dir>/config) and tries to 
-*     change the current working directory.
+*     Reads the jobs configuration (<job spool dir>/config).
 *
 *  INPUTS
 *     const char *jobdir - the jobs spool directory
@@ -183,10 +241,9 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
 *                  1, if function completed without errors
 *
 *******************************************************************************/
-static int changeDirectory(const char *jobdir) 
+static int readConfig(const char *jobdir)
 {
    char *configFileName = NULL;
-   char *cwd = NULL;
 
    /* build path of configfile */
    configFileName = (char *)malloc(strlen(jobdir) + strlen("config") + 2);
@@ -205,23 +262,47 @@ static int changeDirectory(const char *jobdir)
       return 0;
    }
 
+   free(configFileName);
+   return 1;
+}
+
+/****** Interactive/qrsh_starter/changeDirectory() *****************************************
+*  NAME
+*     changeDirectory() -- change to directory named in job config
+*
+*  SYNOPSIS
+*     static int changeDirectory(void) 
+*
+*  FUNCTION
+*     Reads the target working directory for a qrsh job from the jobs 
+*     configuration and tries to 
+*     change the current working directory.
+*
+*  RESULT
+*     static int - 0, if an error occured
+*                  1, if function completed without errors
+*  SEE ALSO
+*     Interactive/qrsh_starter/readConfig()
+*
+*******************************************************************************/
+static int changeDirectory(void) 
+{
+   char *cwd = NULL;
+
    /* get jobs target directory */
    cwd = get_conf_val("cwd");
 
    if(cwd == NULL) {
       fprintf(stderr, "MSG_QRSH_STARTER_NOCWDINCONFIG");
-      free(configFileName);
       return 0;
    }
 
    /* change to dir cwd */
    if(chdir(cwd) == -1) {
       fprintf(stderr, MSG_QRSH_STARTER_CANNOTCHANGEDIR_SS, cwd, strerror(errno));
-      free(configFileName);
       return 0;
    }
 
-   free(configFileName);
    return 1;
 }
 
@@ -730,6 +811,11 @@ int main(int argc, char *argv[])
       }
    }
 
+   if(!readConfig(argv[1])) {
+      writeExitCode(EXIT_FAILURE, 0);
+      exit(EXIT_FAILURE);
+   }
+
    /* setup environment */
    command = setEnvironment(argv[1], &wrapper);
    if(command == NULL) {
@@ -737,7 +823,7 @@ int main(int argc, char *argv[])
       exit(EXIT_FAILURE);
    }   
 
-   if(!changeDirectory(argv[1])) {
+   if(!changeDirectory()) {
       writeExitCode(EXIT_FAILURE, 0);
       exit(EXIT_FAILURE);
    }

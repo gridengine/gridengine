@@ -1,3 +1,5 @@
+CR-2004-02-11-0: Cleanup:   Fixed message macro name in qsub
+
 JG-2004-02-11-1: Cleanup:   Cleanup and enhancement of error messages in case of
                             spooling errors.
                  Review:    pending

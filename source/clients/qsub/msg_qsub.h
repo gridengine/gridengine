@@ -47,7 +47,7 @@
 #define MSG_QSUB_JOBRECEIVEDSIGNAL_SS    _MESSAGE(21009, _("Job %s exited because of signal %s\n"))
 #define MSG_QSUB_JOBFINISHUNCLEAR_U    _MESSAGE(21010, _("No information available on job %s's exit status.\n"))
 #define MSG_QSUB_COULDNOTFINALIZEENV_U    _MESSAGE(21011, _("\nUnable to finalize environment because of error: %s\nExiting.\n"))
-#define MSG_QSUB_YOURJOBHASBEENSUBMITTED_U    _MESSAGE(21012, _("Your job %s (\"%s\") has been submitted.\n"))
+#define MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS    _MESSAGE(21012, _("Your job "SFN" ("SFQ") has been submitted.\n"))
 #define MSG_QSUB_JOBEXITED_U    _MESSAGE(210013, _("Job %s exited with exit code %d.\n"))
 #define MSG_QSUB_COULDNOTDELCANCELEDIMMEDIATE_U    _MESSAGE(210014, _("Could not delete your job because of an error: %s\n"))
 #define MSG_QSUB_INTERRUPTED_U    _MESSAGE(210015, _("\nInterrupted!\n"))

@@ -256,7 +256,7 @@ char **argv
       SGE_EXIT (1);
    }
    
-   printf (MSG_QSUB_YOURJOBHASBEENSUBMITTED_U, jobid_string, lGetString (job, JB_job_name));
+   printf (MSG_QSUB_YOURJOBHASBEENSUBMITTED_SS, jobid_string, lGetString (job, JB_job_name));
 
    if (wait_for_job || is_immediate) {
       int aborted, exited, signaled, event;

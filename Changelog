@@ -1,3 +1,7 @@
+AH-2004-04-19-0: Enhancem.: Retry when rresvport() fails with EAGAIN as
+                            recommended by Goeran Uddeborg.
+                 Review:    GU, JG
+
 AS-2004-04-19-2  Bugfix:    use /bin/csh for script path
                  Changed:   util/sge_log_tee
                  Issue:     956

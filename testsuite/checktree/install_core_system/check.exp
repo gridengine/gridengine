@@ -311,7 +311,7 @@ proc install_qmaster {} {
  set prod_type_var "SGE_ROOT"
 
  set feature_install_options ""
- if { $CHECK_PRODUCT_FEATURE == "secure" } {
+ if { $CHECK_PRODUCT_FEATURE == "csp" } {
     append feature_install_options "-csp"
  }
 
@@ -797,6 +797,11 @@ proc install_qmaster {} {
           close_spawn_process $id;
           return;
        }
+       -i $sp_id "sge_qmaster binary is not compiled with" {
+          set_error "-2" "install_qmaster - sge_qmaster binary is not compiled in secure mode"
+          close_spawn_process $id;
+          return;
+       }
        -i $sp_id "ommand failed*\n" {
           set_error "-1" "install_qmaster - $expect_out(0,string)"
           close_spawn_process $id;
@@ -838,7 +843,7 @@ proc make_user_cert {} {
   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER CHECK_REPORT_EMAIL_TO
   global CHECK_PRODUCT_ROOT CHECK_USER CHECK_DEBUG_LEVEL
 
-  if { $CHECK_PRODUCT_FEATURE == "secure" } {
+  if { $CHECK_PRODUCT_FEATURE == "csp" } {
      puts $CHECK_OUTPUT "removing evtl. existing user_file.txt \"$CHECK_MAIN_RESULTS_DIR/user_file.txt\" ..."
      set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
      puts $CHECK_OUTPUT $result
@@ -857,7 +862,7 @@ proc make_user_cert {} {
      set result [ start_remote_prog "$CHECK_CORE_MASTER" "$CHECK_USER" "rm" "$CHECK_MAIN_RESULTS_DIR/user_file.txt" ]
      puts $CHECK_OUTPUT $result
   } else {
-     puts $CHECK_OUTPUT "no secure feature enabled"
+     puts $CHECK_OUTPUT "no csp feature enabled"
   }
   set_error 0 "ok"
 }
@@ -906,7 +911,7 @@ proc install_execd {} {
    set_error "0" "install_execd - no errors"
 
    set feature_install_options ""
-   if { $CHECK_PRODUCT_FEATURE == "secure" } {
+   if { $CHECK_PRODUCT_FEATURE == "csp" } {
          set feature_install_options "-csp"
          set my_csp_host_list $CHECK_CORE_EXECD
          foreach elem $CHECK_SUBMIT_ONLY_HOSTS {
@@ -1100,6 +1105,11 @@ proc install_execd {} {
             }
             -i $sp_id "orry" { 
                set_error "-1" "install_execd - wrong root password"
+               close_spawn_process $id; 
+               return;
+            }
+            -i $sp_id "The installation of the execution daemon will abort now" {
+               set_error "-1" "install_execd - installation error"
                close_spawn_process $id; 
                return;
             }

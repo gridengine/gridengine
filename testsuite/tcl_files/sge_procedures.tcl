@@ -5316,7 +5316,7 @@ proc get_version_info {} {
       } else {
          set product_mode_file [ open "$CHECK_PRODUCT_ROOT/default/common/product_mode" "r" ]
          gets $product_mode_file line
-         if { $CHECK_PRODUCT_FEATURE == "secure" } {
+         if { $CHECK_PRODUCT_FEATURE == "csp" } {
              if { [ string first "csp" $line ] < 0 } {
                  puts $CHECK_OUTPUT "get_version_info - product feature is not csp ( secure )"
                  puts $CHECK_OUTPUT "testsuite setup error - stop"

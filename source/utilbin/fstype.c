@@ -30,6 +30,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+
 #if defined(DARWIN) || defined(FREEBSD)
 #  include <sys/param.h>
 #  include <sys/mount.h>
@@ -40,22 +44,26 @@
 #  include <sys/statvfs.h>
 #endif
 
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
+#if defined(INTERIX)
+#  include "misc.h"
+#endif
 
 int main(int argc, char *argv[]) {
 
-  int ret=0;
+   int ret=1;
 
-  if (argc < 2) {
-     printf("Usage: fstype <directory>\n");
-     return 1;
-  }
-   else {  
+   if (argc < 2) {
+      printf("Usage: fstype <directory>\n");
+      return 1;
+   }
+   else
+   {  
 #if defined(LINUX) || defined(DARWIN) || defined(FREEBSD)
    struct statfs buf;
    ret = statfs(argv[1], &buf);
+#elif defined(INTERIX)
+   struct statvfs buf;
+   ret = wl_statvfs(argv[1], &buf);
 #else   
    struct statvfs buf;
    ret = statvfs(argv[1], &buf);
@@ -74,9 +82,7 @@ int main(int argc, char *argv[]) {
    else   
       printf("%lx\n", (long unsigned int)buf.f_type);
 #elif defined(INTERIX)
-//INTERIX version doesn't work. It compiles, but doesn't work!
-//statvfs() always returns an error on mounted drives.
-   printf("%s\n", buf.f_mntfromname);
+   printf("%s\n", buf.f_fstypename);
 #else
    printf("%s\n", buf.f_basetype);
 #endif

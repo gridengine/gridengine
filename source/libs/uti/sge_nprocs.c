@@ -75,11 +75,6 @@
 #   include <sys/sysctl.h>
 #endif
 
-#if defined(INTERIX)
-#   include "interix.h"
-#   include "sge_hostL.h"
-#endif
-
 #ifdef NPROCS_TEST
 #   include <stdio.h>
 #   include <unistd.h>
@@ -267,17 +262,10 @@ int sge_nprocs()
    }
 #endif
 #if defined(INTERIX)
-/*
-   {
-      char *buf = NULL;
-      if(sge_get_load_value_interix(LOAD_ATTR_NUM_PROC, &buf)==0) {
-         sscanf(buf, "%d", &nprocs);
-      } else {
-         nprocs = -1;
-      }         
-   }      
-*/
-nprocs = 1;
+/* TODO: HP: don't set nprocs==-1 to 0, overwrite it with value from
+ *       external load sensor.
+ */
+   nprocs = -1;
 #endif
 
    if (nprocs <= 0) {

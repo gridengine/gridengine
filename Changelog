@@ -1,3 +1,7 @@
+HP-2004-12-06-0: Bugfix:    replaced statvfs with wl_statvfs for Interix,
+                            fixed DECODE of xdr_double().
+                 Review:    EB
+
 CR-2004-12-03-2: Cleanup:   commlib:
                             - new function: cl_com_get_actual_statistic_data()
                             - test_virtual_qmaster now gets correct nr. of 

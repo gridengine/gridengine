@@ -711,6 +711,9 @@ static bool nfs_mounted(const char *path)
 #if defined(LINUX) || defined(DARWIN) || defined(FREEBSD)
    struct statfs buf;
    statfs(path, &buf);
+#elif defined(INTERIX)
+   struct statvfs buf;
+   wl_statvfs(path, &buf);
 #else  
    struct statvfs buf;
    statvfs(path, &buf);
@@ -721,7 +724,7 @@ static bool nfs_mounted(const char *path)
 #elif defined(LINUX)
    ret = (buf.f_type == 0x6969);
 #elif defined(INTERIX)
-   ret = (buf.f_type == wl_get_buf_f_type());
+   ret = (strncasecmp("nfs", buf.f_fstypename, 3)==0);
 #else
    ret = (strncmp("nfs", buf.f_basetype, 3)==0);
 #endif

@@ -326,68 +326,74 @@ int answer_error
 
 
 #ifdef COMPILE_DC
-   notify_ptf();
+   /*
+    * Collecting usage and repriorization is only necessary if there are
+    * jobs/tasks on this execution host.
+    */
+   if (lGetNumberOfElem(Master_Job_List) > 0) {
+      notify_ptf();
 
-   if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
-      sge_switch2start_user();
-      ptf_update_job_usage();
-      sge_switch2admin_user();
-   }
-   if (feature_is_enabled(FEATURE_REPRIORITIZATION) && !deactivate_ptf) {
-      sge_switch2start_user();
-      DPRINTF(("ADJUST PRIORITIES\n"));
-      ptf_adjust_job_priorities();
-      sge_switch2admin_user();
-      reprioritization_enabled = 1;
-   } else {
-      /* Here we will make sure that each job which was started
-         in SGEEE-Mode (reprioritization) will get its initial
-         queue priority if this execd alternates to SGE-Mode */
-      if (reprioritization_enabled) {
-         lListElem *job, *jatask, *petask;
+      if (feature_is_enabled(FEATURE_REPORT_USAGE)) {
+         sge_switch2start_user();
+         ptf_update_job_usage();
+         sge_switch2admin_user();
+      }
+      if (feature_is_enabled(FEATURE_REPRIORITIZATION) && !deactivate_ptf) {
+         sge_switch2start_user();
+         DPRINTF(("ADJUST PRIORITIES\n"));
+         ptf_adjust_job_priorities();
+         sge_switch2admin_user();
+         reprioritization_enabled = 1;
+      } else {
+         /* Here we will make sure that each job which was started
+            in SGEEE-Mode (reprioritization) will get its initial
+            queue priority if this execd alternates to SGE-Mode */
+         if (reprioritization_enabled) {
+            lListElem *job, *jatask, *petask;
 
-         for_each(job, Master_Job_List) {
-            lListElem *master_queue;
+            for_each(job, Master_Job_List) {
+               lListElem *master_queue;
 
-            for_each (jatask, lGetList(job, JB_ja_tasks)) {
-               int priority;
-               master_queue = 
-                        responsible_queue(job, jatask, NULL);
-               priority = atoi(lGetString(master_queue, QU_priority));
-
-               DPRINTF(("Set priority of job "u32"."u32" running in"
-                  " queue  %s to %d\n", 
-                  lGetUlong(job, JB_job_number), 
-                  lGetUlong(jatask, JAT_task_number),
-                  lGetString(master_queue, QU_qname), priority));
-               ptf_reinit_queue_priority(
-                  lGetUlong(job, JB_job_number),
-                  lGetUlong(jatask, JAT_task_number),
-                  NULL,
-                  priority);
-
-               for_each(petask, lGetList(jatask, JAT_task_list)) {
+               for_each (jatask, lGetList(job, JB_ja_tasks)) {
+                  int priority;
                   master_queue = 
-                        responsible_queue(job, jatask, petask);
+                           responsible_queue(job, jatask, NULL);
                   priority = atoi(lGetString(master_queue, QU_priority));
-                  DPRINTF(("EB Set priority of task "u32"."u32"-%s running "
-                     "in queue %s to %d\n", 
+
+                  DPRINTF(("Set priority of job "u32"."u32" running in"
+                     " queue  %s to %d\n", 
                      lGetUlong(job, JB_job_number), 
                      lGetUlong(jatask, JAT_task_number),
-                     lGetString(petask, PET_id),
                      lGetString(master_queue, QU_qname), priority));
                   ptf_reinit_queue_priority(
                      lGetUlong(job, JB_job_number),
                      lGetUlong(jatask, JAT_task_number),
-                     lGetString(petask, PET_id),
+                     NULL,
                      priority);
+
+                  for_each(petask, lGetList(jatask, JAT_task_list)) {
+                     master_queue = 
+                           responsible_queue(job, jatask, petask);
+                     priority = atoi(lGetString(master_queue, QU_priority));
+                     DPRINTF(("EB Set priority of task "u32"."u32"-%s running "
+                        "in queue %s to %d\n", 
+                        lGetUlong(job, JB_job_number), 
+                        lGetUlong(jatask, JAT_task_number),
+                        lGetString(petask, PET_id),
+                        lGetString(master_queue, QU_qname), priority));
+                     ptf_reinit_queue_priority(
+                        lGetUlong(job, JB_job_number),
+                        lGetUlong(jatask, JAT_task_number),
+                        lGetString(petask, PET_id),
+                        priority);
+                  }
                }
             }
+         } else {
+            DPRINTF(("LEAVE PRIORITIES UNTOUCHED\n"));
          }
-      } else {
-         DPRINTF(("LEAVE PRIORITIES UNTOUCHED\n"));
+         reprioritization_enabled = 0;
       }
-      reprioritization_enabled = 0;
    }
 #endif
       

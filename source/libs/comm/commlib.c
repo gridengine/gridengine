@@ -2211,6 +2211,7 @@ void generate_commd_port_and_service_status_message(int commlib_error, char* buf
            commlib_error == CL_CONNECT || 
            commlib_error == CL_SERVICE ||
            ( commlib_error >= CL_FIRST_FREE_EC && commlib_error != COMMD_NACK_UNKNOWN_RECEIVER) ) {
+
          if ( port < 0 ) {
             sprintf(buffer, MSG_SGETEXT_NOQMASTER_NOPORT_NOSERVICE_SS,commdhost, service);
          } else if ( commd_port_env != NULL ) { 
@@ -2218,11 +2219,14 @@ void generate_commd_port_and_service_status_message(int commlib_error, char* buf
          } else {
             sprintf(buffer, MSG_SGETEXT_NOQMASTER_PORT_SERVICE_ENV_SIS,commdhost,port,service);
          } 
+
       } else {
          if (commlib_error == COMMD_NACK_UNKNOWN_RECEIVER) {
             sprintf(buffer, MSG_SGETEXT_NOQMASTER_SUBSCR_AT_COMMD_S, commdhost );
+         } else if ( commlib_error == CL_RESOLVE ) {
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_RESOLVING_ERROR_S, commdhost );
          } else {
-            sprintf(buffer, MSG_SGETEXT_NOQMASTER_REACHABLE_COMMLIB_S , cl_errstr(commlib_error) );
+            sprintf(buffer, MSG_SGETEXT_NOQMASTER_REACHABLE_COMMLIB_SS, commdhost , cl_errstr(commlib_error) );
          }
       } 
    }

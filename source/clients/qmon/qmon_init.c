@@ -229,7 +229,9 @@ void qmonInitSge( char *progname)
    sge_gdi_param(SET_ISALIVE, 1, NULL);
    if ((error=sge_gdi_setup(prognames[QMON]))) {
       /* fills SGE_EVENT with diagnosis information */
-      if (error == AE_QMASTER_DOWN) {
+      if (error == AE_QMASTER_DOWN ||
+          error == CL_FIRST_FREE_EC+2 || 
+          error == CL_FIRST_FREE_EC+1 ) {
          error = -1;  /* this error code is ambiguous, make 
                          no suggestions in error message */ 
       }

@@ -1,3 +1,6 @@
+CR-2002-03-22-1  Bugfix:    Enhancements for CR-2002-03-22-0
+                 Issue:     #158
+
 AA-2002-03-22-2  Bugfix:    Tru64 spinbox incrementLarge fix for cluster
                             config dialogue
 

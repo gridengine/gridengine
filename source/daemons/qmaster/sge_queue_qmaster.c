@@ -242,7 +242,9 @@ int sub_command
          goto ERROR;            
       }
       if (sge_resolve_host(qep, QU_qhostname)!=0) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, lGetHost(qep, QU_qhostname)));
+         const char *hname = lGetHost(qep, QU_qhostname);
+
+         ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, hname ? hname: ""));
          sge_add_answer(alpp, SGE_EVENT, STATUS_EUNKNOWN, 0);
          goto ERROR;            
       }

@@ -1,3 +1,13 @@
+AA-2002-08-22-1  I18N:      version string and copyright strings for infotext
+                 Review:    AS
+                 Changed:   infotext
+
+AA-2002-08-22-0  Bugfix:    OK without hostname in host_configuration kill sge_qmaster
+                 Issues:    #370
+                 Bugtraq:   #4732031
+                 Review:    CR
+                 Changed:   sge_qmaster
+
 AH-2002-08-28-0  Doc:       man page typo for sge_aliases
                  Issue:     #347
                  Doc:       access_list(5) man page does not describe file format

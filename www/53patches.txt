@@ -33,15 +33,12 @@ Issue   Sun BugId  Description
 544     4886017    qstat crashed, when used with the options -r -s z
 545     4859658    SGE: scheduler crashed when job priorities where changed with qalter
 547     4860391    qmake dumped core when starting recursive make calls
-555                queue name was truncated to 10 chars
+549     4851939    unexpected output for qstat -j and qmon "Why?"
+555     4886025    queue name was truncated to 10 chars
 557     4866711    SGE_O_* variables for a task within a tightly integrated job set incorrect
-560     4869784    upgrade to openssl 0.9.7a
+560     4869784    qmon "Qmon" resource file contains syntax errors
 568                Allow "-" sign as first character of load_formula
 569                Impossible to disable qmaster profiling
-        4749151    sge_ca script -usercert needs RANDFILE env var
-        4822799    cannot install on Solaris 10
-        4851939    unexpected output for qstat -j and qmon "Why?"
-        4876169    An incomplete resource request (-l =1) caused qmaster to crash
 572     4883714    SGEEE: qmaster crashed on qdel of tightly integrated PE job with usage_scaling activated
 575     4881949    Slave tasks of tightly integrated PE jobs not killed when h_rt limit was exceeded
 576     4886026    max_u_jobs could count rejected jobs as submitted
@@ -49,6 +46,10 @@ Issue   Sun BugId  Description
 578     4885906    NSLOTS and NHOSTS incorrectly set in environment of tightly integrated tasks
 579     4885930    failure of master task of a tightly integrated PE job did not delete the job
 580                 *_RESERVED_USAGE gives wrong values for PE jobs
+        4749151    sge_ca script -usercert needs RANDFILE env var
+        4822799    cannot install on Solaris 10
+        4876169    An incomplete resource request (-l =1) caused qmaster to crash
+        4893432    upgrade to openssl 0.9.7a
 
 
 Bugs fixed in SGE 5.3p3 since release 5.3p2

@@ -1,3 +1,9 @@
+MD-2004-07-13-0: Bugfix:    inst_sge -sm doesn't create a local_conf
+                 Issue:     1135
+                 Bugtraq:   5071999
+                 Review:    CR
+                 Changed:   testsuite, inst_sge
+
 RH-2004-06-13-0: Bugfix:    qmod -e '@<host>' causes segmentation fault in qmaster
                             in the method qref_resolve_hostname (libs/sgeobj/sge_qref.c)
                             a sprintf "@%s" instead of "%s@%s" is executed if the 

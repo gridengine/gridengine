@@ -711,7 +711,6 @@ PrintConf()
    $ECHO "enforce_project        false"
    $ECHO "enforce_user           auto"
    $ECHO "load_report_time       00:00:40"
-   $ECHO "stat_log_time          48:00:00"
    $ECHO "max_unheard            00:05:00"
    $ECHO "reschedule_unknown     00:00:00"
    $ECHO "loglevel               log_warning"
@@ -752,22 +751,16 @@ PrintConf()
 #
 AddLocalConfiguration()
 {
-   useold=false
-
    $CLEAR
    $INFOTEXT -u "\nCreating local configuration"
 
-   if [ $useold = false ]; then
-#      TruncCreateAndMakeWriteable $LCONFDIR/$HOST
-#      PrintLocalConf 1 >> $LCONFDIR/$HOST
-#      SetPerm $LCONFDIR/$HOST
-      mkdir /tmp/$$
+      ExecuteAsAdmin mkdir /tmp/$$
       TMPH=/tmp/$$/$HOST
-      rm -f $TMPH
-      PrintLocalConf 1 > $TMPH
+      ExecuteAsAdmin rm -f $TMPH
+      ExecuteAsAdmin touch $TMPH
+      PrintLocalConf 1 >> $TMPH
       ExecuteAsAdmin $SPOOLDEFAULTS local_conf $TMPH $HOST
-      rm -rf /tmp/$$
-   fi
+      ExecuteAsAdmin rm -rf /tmp/$$
 }
 
 
@@ -1063,6 +1056,20 @@ AddHosts()
              $SGE_BIN/qconf -as $h
         fi
       done  
+
+      for h in $SHADOW_HOST; do
+        if [ -f $h ]; then
+           $INFOTEXT -log "Adding SHADOW_HOSTS from file %s" $h
+           for tmp in `cat $h`; do
+             $INFOTEXT -log "Adding SHADOW_HOST %s" $tmp
+             $SGE_BIN/qconf -ah $tmp
+           done
+        else
+             $INFOTEXT -log "Adding SHADOW_HOST %s" $h
+             $SGE_BIN/qconf -ah $h
+        fi
+      done
+  
    else
       $INFOTEXT -u "\nAdding Grid Engine hosts"
       $INFOTEXT "\nPlease now add the list of hosts, where you will later install your execution\n" \
@@ -1078,16 +1085,55 @@ AddHosts()
                 "Do you want to use a file which contains the list of hosts (y/n) [n] >> "
       ret=$?
       if [ $ret = 0 ]; then
-         AddHostsFromFile
+         AddHostsFromFile execd
          ret=$?
       fi
 
       if [ $ret = 1 ]; then
-         AddHostsFromTerminal
+         AddHostsFromTerminal execd
       fi
 
       $INFOTEXT -wait -auto $AUTO -n "Finished adding hosts. Hit <RETURN> to continue >> "
       $CLEAR
+
+      # Adding later shadow hosts to the admin host list
+      $INFOTEXT "\nIf you want to use a shadow host, it is recommended to add this host\n" \
+                "to the list of administrative hosts.\n\n" \
+                "If you are not sure, it is also possible to add or remove hosts after the\n" \
+                "installation with <qconf -ah hostname> for adding and <qconf -dh hostname>\n" \
+                "for removing this host\n\nAttention: This is not the shadow host installation" \
+                "procedure.\n You still have to install the shadow host separately\n\n"
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+                "Do you want to add your shadow host(s) now? (y/n) [y] >> "
+      ret=$?
+      if [ "$ret" = 0 ]; then
+         $CLEAR
+         $INFOTEXT -u "\nAdding Grid Engine shadow hosts"
+         $INFOTEXT "\nPlease now add the list of hosts, where you will later install your shadow\n" \
+                   "daemon.\n\n" \
+                   "Please enter a blank separated list of your execution hosts. You may\n" \
+                   "press <RETURN> if the line is getting too long. Once you are finished\n" \
+                   "simply press <RETURN> without entering a name.\n\n" \
+                   "You also may prepare a file with the hostnames of the machines where you plan\n" \
+                   "to install Grid Engine. This may be convenient if you are installing Grid\n" \
+                   "Engine on many hosts.\n\n"
+
+         $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
+                   "Do you want to use a file which contains the list of hosts (y/n) [n] >> "
+         ret=$?
+         if [ $ret = 0 ]; then
+            AddHostsFromFile shadowd 
+            ret=$?
+         fi
+
+         if [ $ret = 1 ]; then
+            AddHostsFromTerminal shadowd
+         fi
+
+         $INFOTEXT -wait -auto $AUTO -n "Finished adding hosts. Hit <RETURN> to continue >> "
+      fi
+      $CLEAR
+
    fi
 
    $INFOTEXT -u "\nCreating the default <all.q> queue and <allhosts> hostgroup"
@@ -1111,6 +1157,7 @@ AddHosts()
 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
+
 }
 
 
@@ -1120,11 +1167,16 @@ AddHosts()
 #
 AddHostsFromFile()
 {
-   file=$1
+   hosttype=$1
+   file=$2
    done=false
    while [ $done = false ]; do
       $CLEAR
-      $INFOTEXT -u "\nAdding admin and submit hosts from file"
+      if [ "$hosttype" = "execd" ]; then
+         $INFOTEXT -u "\nAdding admin and submit hosts from file"
+      else
+         $INFOTEXT -u "\nAdding admin hosts from file"
+      fi
       $INFOTEXT -n "\nPlease enter the file name which contains the host list: "
       file=`Enter none`
       if [ "$file" = "none" -o ! -f "$file" ]; then
@@ -1135,10 +1187,16 @@ AddHostsFromFile()
             return 1
          fi
       else
-         for h in `cat $file`; do
-            $SGE_BIN/qconf -ah $h
-            $SGE_BIN/qconf -as $h
-         done
+         if [ "$hosttype" = "execd" ]; then
+            for h in `cat $file`; do
+               $SGE_BIN/qconf -ah $h
+               $SGE_BIN/qconf -as $h
+            done
+         else
+            for h in `cat $file`; do
+               $SGE_BIN/qconf -ah $h
+            done
+         fi
          done=true
       fi
    done
@@ -1150,10 +1208,15 @@ AddHostsFromFile()
 #
 AddHostsFromTerminal()
 {
+   hosttype=$1
    stop=false
    while [ $stop = false ]; do
       $CLEAR
-      $INFOTEXT -u "\nAdding admin and submit hosts"
+      if [ "$hosttype" = "execd" ]; then
+         $INFOTEXT -u "\nAdding admin and submit hosts"
+      else
+         $INFOTEXT -u "\nAdding admin hosts"
+      fi
       $INFOTEXT "\nPlease enter a blank seperated list of hosts.\n\n" \
                 "Stop by entering <RETURN>. You may repeat this step until you are\n" \
                 "entering an empty list. You will see messages from Grid Engine\n" \
@@ -1162,10 +1225,16 @@ AddHostsFromTerminal()
       $INFOTEXT -n "Host(s): "
 
       hlist=`Enter ""`
-      for h in $hlist; do
-         $SGE_BIN/qconf -ah $h
-         $SGE_BIN/qconf -as $h
-      done
+      if [ "$hosttype" = "execd" ]; then
+         for h in $hlist; do
+            $SGE_BIN/qconf -ah $h
+            $SGE_BIN/qconf -as $h
+         done
+      else
+         for h in $hlist; do
+            $SGE_BIN/qconf -ah $h
+         done
+      fi
       if [ "$hlist" = "" ]; then
          stop=true
       else

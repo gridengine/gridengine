@@ -712,13 +712,15 @@ SKIP_THIS_JOB:
          ntasks = lGetNumberOfElem(lGetList(orig_job, JB_ja_tasks));
 
          sge_split_job_running(&(lists->job_list), running_jobs, "running jobs");
-         DPRINTF(("STILL %d of formerly %d tasks\n", 
-               lGetNumberOfElem(lGetList(orig_job, JB_ja_tasks)), ntasks)); 
 
+         /* after sge_split_job_running() orig_job can be removed and job should be used instead */
+         orig_job = NULL;
+
+         DPRINTF(("STILL %d of formerly %d tasks\n", ntasks-1, ntasks)); 
 
          /* notify access tree */
          if (!sge_mode) 
-            at_dispatched_a_task(orig_job, 1);
+            at_dispatched_a_task(job, 1);
       } else {
          /* before deleting the element mark the category as rejected */
          cat = lGetRef(job, JB_category);
@@ -730,10 +732,10 @@ SKIP_THIS_JOB:
       }
 
       /* prevent that we get the same job next time again */
-      if (!dispatched_a_job || lGetNumberOfElem(lGetList(orig_job, JB_ja_tasks)) <= 1) {
+      if (!dispatched_a_job || !lGetElemUlong(lists->job_list, JB_job_number, job_id)) {
          if (!sge_mode) 
-            at_finished_array_dispatching(orig_job);
-         lDelElemUlong(&lists->job_list, JB_job_number, lGetUlong(orig_job, JB_job_number)); 
+            at_finished_array_dispatching(job);
+         lDelElemUlong(&lists->job_list, JB_job_number, job_id); 
       }
 
       /* drop idle jobs that exceed maxujobs limit */

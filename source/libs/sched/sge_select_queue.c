@@ -1855,20 +1855,19 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
          continue;
       }
 
+      if (hep != NULL) {
+         hlep = lGetSubStr(hep, HL_name, name, EH_load_list);
+      }   
+
       if (!lGetBool(cep, CE_consumable)) { 
-         if (hep != NULL) {
-            hlep = lGetSubStr(hep, HL_name, name, EH_load_list);
-            if (hlep != NULL) {
-               load_value = lGetString(hlep, HL_value);
-               load_is_value = 0;
-            }
+         if (hlep != NULL) {
+            load_value = lGetString(hlep, HL_value);
+            load_is_value = 0;
          }
-         else if (global_hep != NULL) {
-            glep = lGetSubStr(global_hep, HL_name, name, EH_load_list);
-            if (glep != NULL) {
+         else if ((global_hep != NULL) &&
+                  ((glep = lGetSubStr(global_hep, HL_name, name, EH_load_list)) != NULL)) {
                load_value = lGetString(glep, HL_value);
                load_is_value = 0;
-            }
          } 
          else {
             queue_ep = lGetSubStr(qep, CE_name, name, QU_consumable_config_list);
@@ -1885,9 +1884,6 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
          }      
       }
       else {
-         if (hep != NULL) {
-            hlep = lGetSubStr(hep, HL_name, name, EH_load_list);
-         }
          /* load thesholds... */
          if (!(cep = get_attribute_by_name(global_hep, hep, qep, name, centry_list, DISPATCH_TIME_NOW, 0))) {
             if (reason)
@@ -1895,7 +1891,6 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
             DEXIT;
             return 1;
          }
-     
      
          load_value = lGetString(cep, CE_pj_stringval);
          load_is_value = (lGetUlong(cep, CE_pj_dominant) & DOMINANT_TYPE_MASK) != DOMINANT_TYPE_CLOAD; 

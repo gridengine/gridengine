@@ -1,3 +1,9 @@
+SG-2004-05-26-0: Bugfix:    fixed a scheduler crash. The scheduler crashed
+                            when the host settings were not straight forward,
+                            and not all load values were delivered.
+                 Review:    AA
+                 Changed:   scheduler
+
 JG-2004-05-26-0: Bugfix:    Fixed several memory leaks in qmaster.
                  Review:    SG
 

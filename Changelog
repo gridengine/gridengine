@@ -1,3 +1,8 @@
+CR-2004-12-02-2: Bugfix:    replace_params() in utilib did not check dst_len
+                            parameter.
+                 Changed:   utilib
+                 Review:    RH
+
 CR-2004-12-02-1: Cleanup:   - re-adjust qping man page for 2nd qmaster message
                               thread
                             - a reserved port service will only allow reserved

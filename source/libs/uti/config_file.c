@@ -393,7 +393,7 @@ char **allowed
    char name[256];
    int name_len;
    const char *sp;
-   char *dp;
+   size_t dp_pos = 0;
    char **spp, *value = NULL;
    int just_check = 0;
 
@@ -401,7 +401,6 @@ char **allowed
    if (!dst) {
       just_check = 1;
    }
-   dp=dst;
 
    sp=src; 
    while (*sp) {
@@ -464,22 +463,24 @@ char **allowed
 
          /* copy value into dst buffer */
          if (!just_check) {
-            while (*value)
-               *dp++ = *value++;
+            while (*value && dp_pos < dst_len) {
+               dst[dp_pos++] = *value++;
+            }
          }
          break;
 
       default:
-         if (!just_check) 
-            *dp++ = *sp; 
+         if (!just_check && dp_pos < dst_len) {
+            dst[dp_pos++] = *sp; 
+         }
          sp++;
          break;
       }
    }
 
-   if (!just_check) 
-      *dp = '\0';
-
+   if (!just_check && dp_pos < dst_len) {
+      dst[dp_pos] = '\0';
+   }
    return 0;
 }
 

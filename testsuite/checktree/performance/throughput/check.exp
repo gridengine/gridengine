@@ -633,10 +633,15 @@ proc run_throughput_test {} {
 
    set max_submit_output_lines 40
    set current_output_line 0
+
+   set my_submitted_jobs 0
+   set max_jobs_per_loop [llength $host_list]
+
    # here the throughput test starts
    while { $result(jobs_done) < $end_job_count } {
+#       puts $CHECK_OUTPUT "submitted jobs: $my_submitted_jobs (of $max_jobs_per_loop)"
        # submit jobs (via expect chanels)
-       if { $sent_jobs < $end_job_count } {
+       if { $sent_jobs < $end_job_count && $my_submitted_jobs < $max_jobs_per_loop } {
            if { [llength $resend_buffer] == 0 } {
               # get first host in next_submit_list hand submit job on that host
               set sub_host   [lindex $next_submit_list 0 ]       
@@ -654,6 +659,7 @@ proc run_throughput_test {} {
                  }
 #                 puts $CHECK_OUTPUT $my_job_command
                  send -i $spawn_id "$my_job_command ; echo \"_:>${my_job_command}<:_>>\"\$?\"<<\"\n"
+                 incr my_submitted_jobs 1
                  set job_data($sent_jobs,state) "submit"
    #              puts $CHECK_OUTPUT "setting job_data($sent_jobs,state) to submit"
                  set job_data($sent_jobs,job_id) "-"
@@ -805,7 +811,7 @@ proc run_throughput_test {} {
                          set exit_state [string range $line $exit_state_start $exit_state_end]
                          if { [string first "?" $exit_state] < 0 } {
                             if { $exit_state != 0 } {
-                               puts $CHECK_OUTPUT "exit_state: >$exit_state< line: $line"
+                               puts $CHECK_OUTPUT "exit_state: >$exit_state<\nline: $line"
                                set command_start [string first "_:>" $line]
                                incr command_start 3
                                set command_end [string first "<:_" $line]
@@ -837,6 +843,7 @@ proc run_throughput_test {} {
                                   return -1
                                }
                             }
+                            incr my_submitted_jobs -1
                          }
                      }
                   }
@@ -3097,7 +3104,7 @@ proc show_current_system_status { array_name job_array_name schedd_array_name } 
 
    # we have one slot per queue !
 
-#   clear_screen
+   clear_screen
    puts $CHECK_OUTPUT "jobs_done        : $data(jobs_done)" 
    puts $CHECK_OUTPUT "jobs_running     : $data(jobs_running)"
 #   puts $CHECK_OUTPUT "job ids running  : $data(job_ids_running)"

@@ -1806,7 +1806,8 @@ object_get_any_type(lListElem *this_elem, int name, void *value)
 void 
 attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   int this_elem_primary_key, lListElem *delta_elem,
-                  int sub_command, char *sub_list_name, char *object_name,
+                  int sub_command, const char *sub_list_name, 
+                  const char *object_name,
                   int no_info) 
 {
    DENTER(OBJECT_LAYER, "attr_mod_sub_list");

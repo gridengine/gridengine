@@ -1,3 +1,5 @@
+EB-2003-08-29-0: Enhancem.: partially implemented qmasters gdi part for CQ
+
 AD-2003-08-27-2: Cleanup:   Rearrangement of several qmaster functions in
                             preparation for the multi threaded version of
                             qmaster. This is an interim commit.

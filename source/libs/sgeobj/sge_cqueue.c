@@ -106,3 +106,42 @@ cqueue_list_locate(const lList *this_list, const char *name)
 }
 
 
+bool
+cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
+                   lListElem *reduced_elem, int sub_command,
+                   int attribute_name, int sublist_host_name,
+                   int sublist_value_name, int subsub_key,
+                   const char *attribute_name_str, 
+                   const char *object_name_str) 
+{
+   bool ret = true;
+   int pos;
+
+   DENTER(TOP_LAYER, "cqueue_mod_cqueue_sublist");
+  
+   pos = lGetPosViaElem(reduced_elem, attribute_name);
+   if (pos >= 0) {
+      lList *mod_list = lGetPosList(reduced_elem, pos);
+      lList *org_list = lGetList(this_elem, attribute_name);
+      lListElem *mod_elem;
+
+      for_each(mod_elem, mod_list) {
+         const char *name = lGetHost(mod_elem, sublist_host_name);
+         lListElem *org_elem = lGetElemHost(org_list, sublist_host_name, name);
+
+         if (org_elem != NULL) {
+            attr_mod_sub_list(answer_list, org_elem, sublist_value_name, 
+                              subsub_key, mod_elem, sub_command, 
+                              attribute_name_str, object_name_str, 0);
+         } else {
+            /*
+             * EB: TODO: add info or error message
+             */
+         }
+      }
+   }
+ 
+   DEXIT;
+   return ret;
+}
+

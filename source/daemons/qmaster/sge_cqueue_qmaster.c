@@ -49,8 +49,15 @@
 #include "sge_unistd.h"
 #include "sge_hgroup.h"
 #include "sge_cqueue.h"
+#include "sge_queue.h"
+#include "sge_userset.h"
+#include "sge_href.h"
+#include "sge_stringL.h"
 #include "sge_event_master.h"
 #include "sge_persistence_qmaster.h"
+#include "sge_attr.h"
+#include "sge_complex.h"
+#include "sge_userprj.h"
 
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
@@ -58,12 +65,25 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+typedef struct _list_attribute_struct {
+   int attribute_name;
+   int sub_host_name;
+   int sub_value_name;
+   int subsub_key;
+   const char *attribute_name_str;
+} list_attribute_struct;
+
 int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem, 
                int add, const char *remote_user, const char *remote_host,
                gdi_object_t *object, int sub_command) 
 {
    bool ret = true;
    int pos;
+   lList *add_hosts = NULL;
+   lList *rem_hosts = NULL;
+   lList *add_groups = NULL;
+   lList *rem_groups = NULL;
+
 
    DENTER(TOP_LAYER, "cqueue_mod");
 
@@ -103,413 +123,125 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
       }
    } 
 
+   /*
+    * - find differences of hostlist configuration
+    * - resolve new hostnames
+    * - verify that new hostgroups exist
+    * - change the hostlist
+    */
    if (ret) {
       DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_seq_no);
+      pos = lGetPosViaElem(reduced_elem, CQ_hostlist);
 
       if (pos >= 0) {
          lList *list = lGetPosList(reduced_elem, pos);
+         lList *old_href_list = lGetList(cqueue, CQ_hostlist);
 
-         lSetList(cqueue, CQ_seq_no, lCopyList("", list));
-      }
-   }
+         ret &= href_list_find_diff(list, answer_list,
+                                    old_href_list, &add_hosts,
+                                    &rem_hosts, &add_groups,
+                                    &rem_groups);
 
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_nsuspend);
+         if (ret) {
+            lList *master_list = *(hgroup_list_get_master_list());
 
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
+            if (add_hosts != NULL) {
+               ret &= href_list_resolve_hostnames(add_hosts, answer_list);
+            }
 
-         lSetList(cqueue, CQ_nsuspend, lCopyList("", list));
-      }
-   }
+            if (add_groups != NULL) {
+               ret &= hgroup_list_exists(master_list, answer_list, add_groups);
+            }
+         }
+         if (ret) {
+#if 1 /* EB: debug */
+            {
+               dstring message = DSTRING_INIT;
 
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_job_slots);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_job_slots, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_fshare);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_fshare, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_oticket);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_oticket, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_rerun);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_rerun, lCopyList("", list));
-      }
-   }
-
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_s_fsize);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_s_fsize, lCopyList("", list));
+               sge_dstring_append(&message, "add_hosts: ");
+               href_list_append_to_dstring(add_hosts, &message);
+               sge_dstring_append(&message, " ");
+               sge_dstring_append(&message, "rem_hosts: ");
+               href_list_append_to_dstring(rem_hosts, &message);
+               sge_dstring_append(&message, " ");
+               sge_dstring_append(&message, "add_groups: ");
+               href_list_append_to_dstring(add_groups, &message);
+               sge_dstring_append(&message, " ");
+               sge_dstring_append(&message, "rem_groups: ");
+               href_list_append_to_dstring(rem_groups, &message);
+               sge_dstring_append(&message, "\n");
+               DPRINTF(("%s", sge_dstring_get_string(&message)));
+            }
+#endif
+            lSetList(cqueue, CQ_hostlist, lCopyList("", list));
+         }
       }
    }
    
    if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_h_fsize);
+      int index;
+/* *INDENT-OFF* */
+      list_attribute_struct array[] = {
+         { CQ_consumable_config_list,  ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_COMPLEX_VALUES    },
+         { CQ_load_thresholds,         ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_LOAD_THRESHOLD    },
+         { CQ_suspend_thresholds,      ACELIST_href,  ACELIST_value,    CE_name,    SGE_ATTR_SUSPEND_THRESHOLD },
+         { CQ_projects,                APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_PROJECTS          },
+         { CQ_xprojects,               APRJLIST_href, APRJLIST_value,   UP_name,    SGE_ATTR_XPROJECTS         },
+         { CQ_acl,                     AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_USER_LISTS        },
+         { CQ_xacl,                    AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_XUSER_LISTS       },
+         { CQ_owner_list,              AUSRLIST_href, AUSRLIST_value,   US_name,    SGE_ATTR_OWNER_LIST        },
+         { CQ_ckpt_list,               ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_CKPT_LIST         },
+         { CQ_pe_list,                 ASTRLIST_href, ASTRLIST_value,   ST_name,    SGE_ATTR_PE_LIST           },
+         { CQ_subordinate_list,        ASOLIST_href,  ASOLIST_value,    SO_qname,   SGE_ATTR_SUBORDINATE_LIST  },
+         { NoName,                     NoName,        NoName,           NoName,     NULL                       }
+      };
+/* *INDENT-ON* */
 
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
+      index = 0;
+      while (array[index].attribute_name != NoName && ret) {
+         pos = lGetPosViaElem(reduced_elem, array[index]);
 
-         lSetList(cqueue, CQ_h_fsize, lCopyList("", list));
+         if (pos >= 0) {
+            ret &= cqueue_mod_sublist(cqueue, answer_list, reduced_elem, 
+                                      sub_command,
+                                      array[index].attribute_name, 
+                                      array[index].sub_host_name,
+                                      array[index].sub_value_name, 
+                                      array[index].subsub_key,
+                                      array[index].attribute_name_str, 
+                                      SGE_OBJ_CQUEUE);
+         }
+         index++;
       }
    }
+
    
    if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_s_data);
+      int index;
+      int array[] = { 
+         CQ_seq_no,  CQ_nsuspend, CQ_job_slots,        CQ_fshare,
+         CQ_oticket, CQ_rerun,    CQ_suspend_interval, CQ_min_cpu_interval,
+         CQ_notify,  CQ_tmpdir,   CQ_shell,            CQ_s_fsize,
+         CQ_h_fsize, CQ_s_data,   CQ_h_data,           CQ_s_stack,
+         CQ_h_stack, CQ_s_core,   CQ_h_core,           CQ_s_rss,
+         CQ_h_rss,   CQ_s_vmem,   CQ_h_vmem,           CQ_s_rt,
+         CQ_h_rt,    CQ_s_cpu,    CQ_h_cpu,
+         NoName
+      };
 
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
+      index = 0;
+      while (array[index] != NoName && ret) {
+         pos = lGetPosViaElem(reduced_elem, array[index]);
 
-         lSetList(cqueue, CQ_s_data, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_h_data);
+         if (pos >= 0) {
+            lList *list = lGetPosList(reduced_elem, pos);
 
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_h_data, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_s_stack);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_s_stack, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_h_stack);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_h_stack, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_s_core);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_s_core, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_h_core);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_h_core, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_s_rss);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_s_rss, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_h_rss);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_h_rss, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_s_vmem);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_s_vmem, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_h_vmem);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_h_vmem, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_s_rt);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_s_rt, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_h_rt);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_h_rt, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_s_cpu);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_s_cpu, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_h_cpu);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_h_cpu, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_suspend_interval);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_suspend_interval, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_min_cpu_interval);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_min_cpu_interval, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_notify);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_notify, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_tmpdir);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_tmpdir, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_pe_list);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_pe_list, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_ckpt_list);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_ckpt_list, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_owner_list);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_owner_list, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_acl);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_acl, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_xacl);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_xacl, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_projects);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-
-         lSetList(cqueue, CQ_projects, lCopyList("", list));
+            lSetList(cqueue, array[index], lCopyList("", list));
+         }
+         index++;
       }
    }
 
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_xprojects);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-   
-         lSetList(cqueue, CQ_xprojects, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_load_thresholds);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-   
-         lSetList(cqueue, CQ_load_thresholds, lCopyList("", list));
-      }
-   }
-
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_suspend_thresholds);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-   
-         lSetList(cqueue, CQ_suspend_thresholds, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_consumable_config_list);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-   
-         lSetList(cqueue, CQ_consumable_config_list, lCopyList("", list));
-      }
-   }
-   
-   if (ret) {
-      DTRACE;
-      pos = lGetPosViaElem(reduced_elem, CQ_subordinate_list);
-
-      if (pos >= 0) {
-         lList *list = lGetPosList(reduced_elem, pos);
-   
-         lSetList(cqueue, CQ_subordinate_list, lCopyList("", list));
-      }
-   }
-   
    if (ret) {
       DTRACE;
       pos = lGetPosViaElem(reduced_elem, CQ_qtype);
@@ -521,9 +253,11 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
       }
    }
 
-   lWriteElemTo(cqueue, stderr);
-   lWriteElemTo(reduced_elem, stderr);
-   
+   add_hosts = lFreeList(add_hosts);
+   rem_hosts = lFreeList(rem_hosts);
+   add_groups = lFreeList(add_groups);
+   rem_groups = lFreeList(rem_groups);
+
    DEXIT;
    if (ret) {
       return 0;

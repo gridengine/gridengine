@@ -49,4 +49,12 @@ cqueue_list_add_cqueue(lListElem *queue);
 lListElem *
 cqueue_list_locate(const lList *this_list, const char *name);
 
+bool
+cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
+                   lListElem *reduced_elem, int sub_command,
+                   int attribute_name, int sublist_host_name,
+                   int sublist_value_name, int subsub_key,
+                   const char *attribute_name_str,
+                   const char *object_name_str);
+
 #endif /* __SGE_CQUEUE_H */

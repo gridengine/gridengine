@@ -51,12 +51,9 @@
 #include "sge_conf.h"
 #include "sge_attr.h"
 #include "sge_feature.h"
+#include "sge_href.h"
 
 #include "msg_common.h"
-
-static int 
-read_cqueue_work(lList **alpp, lList **clpp, int fields[], lListElem *ep, 
-                 int spool, int flag, int *tag, int parsing_type);
 
 lListElem *cull_read_in_cqueue(const char *dirname, const char *filename, 
                                int spool, int flag, int *tag, int fields[]) 
@@ -80,7 +77,7 @@ lListElem *cull_read_in_cqueue(const char *dirname, const char *filename,
       0 write only user controlled fields
 
 */
-static int read_cqueue_work(
+int read_cqueue_work(
 lList **alpp,   /* anser list */
 lList **clpp,   /* parsed file */
 int fields[],   /* not needed */
@@ -97,6 +94,12 @@ int parsing_type
    /* --------- CQ_name */
    if (ret == 0) {
       ret = (!set_conf_string(alpp, clpp, fields, "qname", ep, CQ_name)) ? -1 : 0;
+   }
+
+   /* --------- CQ_hostlist */
+   if (ret == 0) {
+      ret = (!set_conf_list(alpp, clpp, fields, "hostlist", ep, CQ_hostlist,
+                            HR_Type, HR_name)) ? -1 : 0;
    }
 
    /* --------- CQ_seq_no */
@@ -534,6 +537,20 @@ write_cqueue(int spool, int how, const lListElem *ep)
    {
       FPRINTF((fp, "qname              %s\n", 
                lGetString(ep, CQ_name))); 
+   }
+   {
+      const lList *hostref_list = lGetList(ep, CQ_hostlist);
+
+      FPRINTF((fp, "hostlist           "));
+      if (hostref_list != NULL) {
+         dstring string = DSTRING_INIT;
+
+         href_list_append_to_dstring(hostref_list, &string);
+         FPRINTF((fp, "%s\n", sge_dstring_get_string(&string)));
+         sge_dstring_free(&string);
+      } else {
+         FPRINTF((fp, "NONE\n"));
+      }
    }
    {
       const lList *ulng_attr_list = lGetList(ep, CQ_seq_no);

@@ -51,6 +51,7 @@
 
 /* sge object names */
 #define SGE_OBJ_QUEUE                  "queue"
+#define SGE_OBJ_CQUEUE                 "cqueue"
 #define SGE_OBJ_HGROUP                 "hostgroup"
 #define SGE_OBJ_EXECHOST               "exechost"
 #define SGE_OBJ_PE                     "pe"

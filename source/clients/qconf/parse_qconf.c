@@ -62,6 +62,7 @@
 #include "spool/classic/read_write_pe.h"
 #include "spool/classic/read_write_cal.h"
 #include "spool/classic/read_write_queue.h"
+#include "spool/classic/read_write_cqueue.h"
 #include "spool/classic/read_write_ume.h"
 #include "spool/classic/read_write_host_group.h"
 #include "spool/classic/read_write_host.h"
@@ -99,6 +100,7 @@
 #include "sge_centry_qconf.h"
 #include "sge_cqueue_qconf.h"
 #include "sge_edit.h"
+#include "sge_cqueue.h"
 
 #include "msg_common.h"
 #include "msg_qconf.h"
@@ -2241,6 +2243,7 @@ DPRINTF(("ep: %s %s\n",
 /* *INDENT-OFF* */ 
       static object_info_entry info_entry[] = {
          {SGE_QUEUE_LIST,      SGE_OBJ_QUEUE,     QU_Type,   SGE_ATTR_QNAME,     QU_qname,  read_queue_work,      cull_read_in_qconf},
+         {SGE_CQUEUE_LIST,     SGE_OBJ_CQUEUE,    CQ_Type,   SGE_ATTR_QNAME,     CQ_name,   read_cqueue_work,     cull_read_in_cqueue},
          {SGE_EXECHOST_LIST,   SGE_OBJ_EXECHOST,  EH_Type,   SGE_ATTR_HOSTNAME,  EH_name,   read_host_work,       cull_read_in_host},
          {SGE_PE_LIST,         SGE_OBJ_PE,        PE_Type,   SGE_ATTR_PE_NAME,   PE_name,   read_pe_work,         cull_read_in_pe},
          {SGE_CKPT_LIST,       SGE_OBJ_CKPT,      CK_Type,   SGE_ATTR_CKPT_NAME, CK_name,   read_ckpt_work,       cull_read_in_ckpt},

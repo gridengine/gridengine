@@ -40,7 +40,7 @@ public class TestDRMAA {
       log ("0: Starting test threads...");
       
       new Thread (new SubmitWaitTester (1)).start ();
-//      new Thread (new BulkSubmitSyncTester (2)).start ();
+      new Thread (new BulkSubmitSyncTester (2)).start ();
 //      new Thread (new SubmitDeleteTester (3)).start ();
 //      new Thread (new SubmitHoldReleaseTester (4)).start ();
 //      new Thread (new SubmitSuspendResumeTester (5)).start ();
@@ -56,7 +56,7 @@ public class TestDRMAA {
       }
       
       log ("0: Sleeping");
-      sleep (60);
+      sleep (120);
       
       log ("0: Exiting");
       session.exit ();
@@ -138,35 +138,41 @@ public class TestDRMAA {
       SubmitWaitTester (int id) throws DRMAAException {
          super (id);
          
-         jt = createJobTemplate ("/tmp/dant/examples/sleeper.sh", 5, false);
+         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 5, false);
       }
       
       public void test () throws DRMAAException {
+         LinkedList ids = new LinkedList ();
          String jobId = null;
          
          for (int count = 0; count < 10; count++) {
             jobId = session.runJob (jt);
             
             log ("Submitted job " + jobId);
+            
+            ids.add (jobId);
          }
          
-         for (int count = 0; count < 10; count++) {
+         Iterator i = ids.iterator ();
+         
+         while (i.hasNext ()) {
             JobInfo status = null;
+            jobId = (String)i.next ();
             
-            status = session.wait (DRMAASession.JOB_IDS_SESSION_ANY, DRMAASession.TIMEOUT_WAIT_FOREVER);
+            status = session.wait (jobId, DRMAASession.TIMEOUT_WAIT_FOREVER);
             
             /* report how job finished */
             if (status.wasAborted ()) {
-               log ("job \"" + jobId + "\" never ran");
+               log ("job \"" + status.getJobId () + "\" never ran");
             }
             else if (status.hasExited ()) {
-               log ("job \"" + jobId + "\" finished regularly with exit status " + status.getExitStatus ());
+               log ("job \"" + status.getJobId () + "\" finished regularly with exit status " + status.getExitStatus ());
             }
             else if (status.hasSignaled ()) {
-               log ("job \"" + jobId + "\" finished due to signal " + status.getTerminatingSignal ());
+               log ("job \"" + status.getJobId () + "\" finished due to signal " + status.getTerminatingSignal ());
             }
             else {
-               log ("job \"" + jobId + "\" finished with unclear conditions");
+               log ("job \"" + status.getJobId () + "\" finished with unclear conditions");
             }
          }
       }
@@ -176,7 +182,7 @@ public class TestDRMAA {
       BulkSubmitSyncTester (int id) throws DRMAAException {
          super (id);
          
-         jt = createJobTemplate ("/tmp/dant/examples/sleeper.sh", 5, true);
+         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 5, true);
       }
       
       public void test () throws DRMAAException {
@@ -198,7 +204,7 @@ public class TestDRMAA {
          
          this.sleep = sleep;
          
-         jt = createJobTemplate ("/tmp/dant/examples/sleeper.sh", sleep, true);
+         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", sleep, true);
       }
       
       public void test () throws DRMAAException {
@@ -220,7 +226,7 @@ public class TestDRMAA {
          
          this.sleep = sleep;
          
-         jt = createJobTemplate ("/tmp/dant/examples/sleeper.sh", sleep, false);
+         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", sleep, false);
          
          if (sleep > 0) {
             sleep (sleep);
@@ -282,7 +288,7 @@ public class TestDRMAA {
       SubmitDeleteTester (int id) throws DRMAAException {
          super (id);
          
-         jt = createJobTemplate ("/tmp/dant/examples/sleeper.sh", 600, false);
+         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 600, false);
       }
       
       public void test () throws DRMAAException {
@@ -302,7 +308,7 @@ public class TestDRMAA {
       SubmitHoldReleaseTester (int id) throws DRMAAException {
          super (id);
          
-         jt = createJobTemplate ("/tmp/dant/examples/sleeper.sh", 60, false);
+         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 60, false);
       }
       
       public void test () throws DRMAAException {
@@ -334,7 +340,7 @@ public class TestDRMAA {
       SubmitSuspendResumeTester (int id) throws DRMAAException {
          super (id);
          
-         jt = createJobTemplate ("/tmp/dant/examples/sleeper.sh", 60, false);
+         jt = createJobTemplate ("/tmp/dant/examples/jobs/sleeper.sh", 60, false);
       }
       
       public void test () throws DRMAAException {

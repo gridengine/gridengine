@@ -47,7 +47,7 @@ public class SGESession extends DRMAASession {
 	private static final String IMPLEMENTATION_STRING = " -- SGE 6.0";
 	
 	static {
-		System.loadLibrary ("drmaa");
+		System.loadLibrary ("jdrmaa");
 	}
 	
 	public static void main (String[] args) throws Exception {

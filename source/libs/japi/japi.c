@@ -2855,9 +2855,13 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
 
          for_each (job, japi_job_list) {
             task = lFirst(lGetList(job, JJ_finished_tasks));
+            
             if (task != NULL) {
                break;
             }
+            
+            /* This comes after the break because if we have a non-NULL task,
+             * we don't bother looking at not_yet_reaped. */
             if (lGetList(job, JJ_not_yet_finished_ids) != NULL) {
                not_yet_reaped = 1;
             }

@@ -1,3 +1,8 @@
+DT-2004-06-02-2: Bugfix:    o Fixed DRMAASession.wait() in DRMAA Java binding
+                            o Switched Java binding to use libjdrmaa.so
+                 Changed:   classes
+                 Issue:     1079
+
 MD-2004-06-02-0: Bugfix:    - changed message in scheduler settings.
                  Changed:   inst_sge
 

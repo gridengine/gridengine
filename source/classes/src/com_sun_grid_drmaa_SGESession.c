@@ -37,7 +37,7 @@
 
 #include "japi/drmaa.h"
 #include "japi/msg_drmaa.h"
-#include "japi/com_sun_grid_drmaa_SGESession.h"
+#include "com_sun_grid_drmaa_SGESession.h"
 #include "lck/sge_mtutil.h"
 #include "rmon/sgermon.h"
 #include "uti/sge_log.h"
@@ -276,6 +276,7 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SGESession_nativeWait
    char error[DRMAA_ERROR_STRING_BUFFER];
    int errnum = DRMAA_ERRNO_SUCCESS;
    char buffer[DRMAA_JOBNAME_BUFFER];
+   char rbuffer[BUFFER_LENGTH];
    char signal[DRMAA_SIGNAL_BUFFER];
    const char *job_id = NULL;
    jobject job_info = NULL;
@@ -303,9 +304,9 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SGESession_nativeWait
       return NULL;
    }
 
-   while ((errnum = drmaa_get_next_attr_value (rusage, buffer, BUFFER_LENGTH))
+   while ((errnum = drmaa_get_next_attr_value (rusage, rbuffer, BUFFER_LENGTH))
                                                       == DRMAA_ERRNO_SUCCESS) {
-      resource_entries[count++] = strdup (buffer);
+      resource_entries[count++] = strdup (rbuffer);
    }
 
    length = count;
@@ -344,8 +345,9 @@ JNIEXPORT jobject JNICALL Java_com_sun_grid_drmaa_SGESession_nativeWait
    clazz = (*env)->FindClass (env, "Lcom/sun/grid/drmaa/SGEJobInfo;");
    meth = (*env)->GetMethodID (env, clazz, "<init>",
                  "(Ljava/lang/String;I[Ljava/lang/String;Ljava/lang/String;)V");
-   job_info = (*env)->NewObject (env, clazz, meth, jobId, status, resources,
-                                 tmp_str);
+   job_info = (*env)->NewObject (env, clazz, meth,
+                                 (*env)->NewStringUTF (env, buffer), status,
+                                 resources, tmp_str);
    
    return job_info;
 }

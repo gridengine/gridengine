@@ -1,0 +1,69 @@
+Bugs fixed in SGE 6.0u1 since release 6.0
+-----------------------------------------
+
+Issue    Sun BugId   Description
+-------- ----------- ------------------------------------------------------------------------------------------
+1090     5062683     Install script fails when sgeadmin is selected as install user.
+1082     5063305     remove stat_log_time
+1087     5063311     high memory usage of schedd and qmaster (schedd_job_info)
+1091     5063316     PE job submit error, when qmaster is busy
+1098     5063987     qmaster cannot bind port below 1024 on Linux
+1122     5071498     projects not available after sge_qmaster restart
+1111     5071502     calendars broken
+1110     5071522     Startup of qmaster changes act_qmaster to `hostname`
+1109     5071525     qalter abort
+1124     5071539     qping doesn't support host_aliases file
+1130     5071868     uninstall procedure doesn't remove the rc-script of execd!
+1133     5071914     scheduler ignores queue seqno for queue sorting
+1131     5071918     qmod -e '@<host>' causes segmentation fault in qmaster
+1104     5071987     Qmaster requires a local conf in order to start.
+1135     5071999     inst_sge -sm doesn't create a local_conf
+1150     5072005     drmaa_run_job() may change the current directory
+1117     5072481     Deleted pending job appears in qstat
+1129     5072772     sge_qmaster constantly rewrites spool files of tightly integrated parallel jobs
+1146     5073218     qconf -aq <queue>@<host> crashes qmaster
+1154     5074788     jobs on hold due to -a time cause qmaster/schedd get out of sync
+1094     5075346     Sharetree doesn't work correct
+1118     5075398     variable syntax :  equal sign support
+1139     5075451     sched_conf(5) reprioritize_interval should default to 0
+1099     5075849     a registering event client can get events before it got its total update
+         5075936     qmon's queue filtering doesn't work
+         5076358     It shuld be used "." and "$" with qsub -N
+         5076372     "|" should be able to be used with qsub -N
+1126     5076491     qmaster clients may not reconnect after qmaster outage
+1140     5077165     reprioritize_interval descr in sched_conf(5) needs improvemen
+1097     5077167     NO_REPRIORITATION should be removed from man pages
+1146     5077549     qsub -N "@" causes qmaster down
+1141     5077589     schedd and qmaster get out of sync - no scheduling for long time
+1162     5078783     Wallclock time limit in qmon
+1113     5079514     execd shutdown with sgeexecd fails when host aliases are used
+1178     5079572     Resending queue signals broken
+1183     5080779     qconf -de host does not update the host groups
+1168     5080784     qselect crash
+1081     5080833     qconf -mattr dumps core if used incorrectly
+         5080836     qhosts outputs NCPU as float
+1092     5080839     qconf -mq displayes "slots" in the complex_values line
+1172     5080840     problems when qconf -mattr is used in conjunction with host_aliases file
+1109     5080851     qalter/qdel/qmod abort
+1146     5080852     qconf -aq <queue>@<host> crashes qmaster
+1151     5080853     DRMAA doesn't reject jobs that never will be dispatchable
+1161     5080856     QCONF: qconf -mc segfaults
+1191     5081821     qstat XML output typo
+1175     5081822     Deleting a queue instance slots value actually adds it
+1186     5081839     qconf -ahgrp fails if no hgrp name is specified
+1192     5082490     qstat -ext -urg omits time info
+1185     5083102     hostgroup changes do not always take effect.
+1101     5083115     Need more verbose diagnosis msg if execd port is already bound
+1207     5084317     Invalid job_id's in reporting file (only l24_amd64)
+1214     5084927     install script fails without SGE_ROOT
+1144     5085392     qstat -j -xml generates no parseble xml output
+1219     5085507     sge_inst restore does not work
+1222     5085508     sge backup cannot override older backups
+1233     5087268     Parsing of @f* hostgroups plus some minor issues
+1170                 DRMAA attributes table is garbled
+1112                 Wrong entry SGE_QMASTER_PORT in qconf man page
+1181                 qstat should indicate cluster queue load is different from queue instance load
+1190                 qstat(1) must explain cluster queue load concept
+97                   exit code implications for various methods
+1103                 SGE 6.0 manpage indicates qsub accepts "-r yes|no"; only "y|n" accepted
+1083                 remove stat_log_time from configuration dialogue

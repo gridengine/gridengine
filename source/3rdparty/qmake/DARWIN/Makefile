@@ -236,6 +236,9 @@ uninstall-binPROGRAMS:
 	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
 
+depend:
+	@echo No dependencies for 3rd_party qmake
+
 .c.o:
 	$(COMPILE) -c $<
 

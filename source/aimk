@@ -1544,7 +1544,7 @@ case SOLARIS86:
 
    set XINCD    = "-I/usr/dt/include -I/usr/openwin/include $XMTINCD $XINCD"
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
-   set XCFLAGS  = "-Xc -DNeedFunctionPrototypes $XMTDEF $XINCD"
+   set XCFLAGS  = "-Xc -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"
 

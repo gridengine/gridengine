@@ -77,19 +77,51 @@ proc dump_array_to_tmpfile { change_array } {
 }
 
 # take a name/value array and build a vi command to set new values
-proc build_vi_command { change_array } {
-   upvar $change_array chgar
+proc build_vi_command { change_array {current_array no_current_array_has_been_passed}} {
+   upvar $change_array  chgar
+   upvar $current_array curar
 
    set vi_commands "" 
 
-   if [info exists chgar] {
+   if {![info exists chgar]} {
+      return ""
+   }
+
+   if {[info exists curar]} {
+      # compare the new values to old ones
+      foreach elem [array names chgar] {
+        # this will quote any / to \/  (for vi - search and replace)
+        set newVal $chgar($elem)
+      
+        if {[info exists curar($elem)]} {
+           # if old and new config have the same value, create no vi command,
+           # if they differ, add vi command to ...
+           if { [string compare $curar($elem) $newVal] != 0 } {
+              if { $newVal == "" } {
+                 # ... delete config entry (replace by comment)
+                 lappend vi_commands ":%s/^$elem .*$/#/\n"
+              } else {
+                 # ... change config entry
+                 set newVal1 [split $newVal {/}]
+                 set newVal [join $newVal1 {\/}]
+                 lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+              }
+           }
+        } else {
+           # if the config entry didn't exist in old config: append a new line
+           lappend vi_commands "A\n$elem  $newVal"
+           lappend vi_commands [format "%c" 27]
+        }
+     }   
+   } else {
+      # we have no current values - just create a replace statement for each attribute
       foreach elem [array names chgar] {
          # this will quote any / to \/  (for vi - search and replace)
          set newVal [set chgar($elem)]
          set newVal1 [split $newVal {/}]
          set newVal [join $newVal1 {\/}]
          lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
-      } 
+      }
    }
 
    return $vi_commands

@@ -811,14 +811,21 @@ proc set_exechost { change_array host } {
      set newVal $chgar($elem)
    
      if {[info exists old_values($elem)]} {
-        if { $newVal == "" } {
-           lappend vi_commands ":%s/^$elem .*$//\n"
-        } else {
-           set newVal1 [split $newVal {/}]
-           set newVal [join $newVal1 {\/}]
-           lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+        # if old and new config have the same value, create no vi command,
+        # if they differ, add vi command to ...
+        if { [string compare $old_values($elem) $newVal] != 0 } {
+           if { $newVal == "" } {
+              # ... delete config entry (replace by comment)
+              lappend vi_commands ":%s/^$elem .*$//\n"
+           } else {
+              # ... change config entry
+              set newVal1 [split $newVal {/}]
+              set newVal [join $newVal1 {\/}]
+              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+           }
         }
      } else {
+        # if the config entry didn't exist in old config: append a new line
         lappend vi_commands "A\n$elem  $newVal"
         lappend vi_commands [format "%c" 27]
      }
@@ -1334,6 +1341,8 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
      get_config old_values $host
   }
 
+   set vi_commands [build_vi_command chgar old_values]
+if {0} {
   set vi_commands ""
 
   # compare the new values to old ones
@@ -1346,13 +1355,13 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
         # if they differ, add vi command to ...
         if { [string compare $old_values($elem) $newVal] != 0 } {
            if { $newVal == "" } {
-             # ... delete config entry (replace by comment)
-             lappend vi_commands ":%s/^$elem .*$/#/\n"
+              # ... delete config entry (replace by comment)
+              lappend vi_commands ":%s/^$elem .*$/#/\n"
            } else {
-             # ... change config entry
-             set newVal1 [split $newVal {/}]
-             set newVal [join $newVal1 {\/}]
-             lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+              # ... change config entry
+              set newVal1 [split $newVal {/}]
+              set newVal [join $newVal1 {\/}]
+              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
            }
         }
      } else {
@@ -1360,7 +1369,9 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
         lappend vi_commands "A\n$elem  $newVal"
         lappend vi_commands [format "%c" 27]
      }
-  } 
+  }
+}
+  
   set GIDRANGE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I] "*"]
 
   if { $ts_config(gridengine_version) == 60 } {
@@ -1384,6 +1395,28 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
     }
   }
   return $result
+}
+
+proc compare_complex {a b} {
+   set len [llength $a]
+
+   if { $len != [llength $b] } {
+      return 1
+   }
+
+   # compare shortcut (case sensitive)
+   if {[string compare [lindex $a 0] [lindex $b 0]] != 0} {
+      return 1
+   }
+   # compare the complex entry element by element
+   for {set i 1} {$i < $len} {incr i} {
+      puts "comparing [lindex $a $i] with [lindex $b $i]"
+      if {[string compare -nocase [lindex $a $i] [lindex $b $i]] != 0} {
+         return 1
+      }
+   }
+
+   return 0
 }
 
 #****** sge_procedures/set_complex() *******************************************
@@ -1430,14 +1463,21 @@ proc set_complex { change_array complex_list { create 0 } } {
      # this will quote any / to \/  (for vi - search and replace)
      set newVal $chgar($elem)
      if {[info exists old_values($elem)]} {
-        if { $newVal == "" } {
-          lappend vi_commands ":%s/^$elem .*$//\n"
-        } else {
-          set newVal1 [split $newVal {/}]
-          set newVal [join $newVal1 {\/}]
-          lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+        # if old and new config have the same value, create no vi command,
+        # if they differ, add vi command to ...
+        if { [compare_complex $old_values($elem) $newVal] != 0 } {
+           if { $newVal == "" } {
+              # ... delete config entry (replace by comment)
+              lappend vi_commands ":%s/^$elem .*$/#/\n"
+           } else {
+              # ... change config entry
+              set newVal1 [split $newVal {/}]
+              set newVal [join $newVal1 {\/}]
+              lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+           }
         }
      } else {
+        # if the config entry didn't exist in old config: append a new line
         lappend vi_commands "A\n$elem  $newVal"
         lappend vi_commands [format "%c" 27]
      }

@@ -1,3 +1,8 @@
+JG-2004-11-18-0: Testsuite: Fixes for tests bugs/issuezilla/1291,
+                            system_tests/clients/qalter,
+                            system_tests/clients/qsub.
+                            Some cleanup in config functions.
+
 MD-2004-11-17-0: Bugfix:    - backup fails if root is mapped to nobody
                  Review:    pending
                  Issue:     1344

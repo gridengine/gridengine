@@ -70,19 +70,29 @@ proc issue_1291_run  {} {
    set name "\"\""
 
    # localize messages
-   set INVALID_AT_QDEL [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_JOB_XISINVALIDJOBTASKID_S] $name ]
+   set INVALID_AT_QDEL [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_JOB_XISINVALIDJOBTASKID_S] "*" ]
    set INVALID_AT_QMASTER [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_SGETEXT_SPECIFYUSERORJID] ]
 
+   set errno 0
+   set errstr "ok"
+   
    # Test
    set catch_result [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qdel" $name "2>/dev/null" } result]
 
-   if { [ string compare $result "$INVALID_AT_QDEL\n" ] == 0 } {
-      set_error 0 "ok"
-   } else if { [ string compare $result "$INVALID_AT_QMASTER\n" ] == 0 } {
-      add_proc_error "issue_1291_run" "-1" "qdel did not produce expected error message: ${result}"
-      set_error -1 "Issue 1291: qdel allows $name as a valid job id, but qmaster rejects it"
+   if { $result == "" } {
+      set errno -1
+      set errstr "qdel exited with exit code $catch_result and didn't do any output"
    } else {
-      add_proc_error "issue_1291_run" "-1" "qdel did not produce expected error message: ${result}"
-      set_error -1 "Issue 1291: qdel allows $name as a valid job id"
+      if { ! [string match "${INVALID_AT_QDEL}*" $result] } {
+         if { [string match "${INVALID_AT_QMASTER}*" $result] } {
+            set errno -1
+            set errstr "qdel allows $name as a valid job id, but qmaster rejects it.\nqdel output: $result"
+         } else {
+            set errno -1 
+            set errstr "qdel allows $name as a valid job id.\nqdel output: $result\nexpected output: $INVALID_AT_QDEL"
+         }
+      }
    }
+
+   set_error $errno $errstr
 }

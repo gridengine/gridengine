@@ -1,3 +1,9 @@
+CR-2002-11-22-4  Testsuite: qmod - reschedule test:
+                               parallel job test should not submit job with
+                               -t 1 parameter (-t 1 is now a task job, this
+                               leaded into a missinterpretation of testsuite)
+                 Changed:   testsuite/checktree/system_tests/clients/qmod/reschedule/check.exp 
+
 AA-2002-11-21-0  Security:  SHA_1 define, sge_ca enhancements to support sha-1,
                             pkcs12
 

@@ -1,19 +1,15 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
-	<META NAME="AUTHOR" CONTENT=" ">
-	<META NAME="CREATED" CONTENT="20010703;18463800">
-	<META NAME="CHANGEDBY" CONTENT=" ">
-	<META NAME="CHANGED" CONTENT="20010704;11163900">
-</HEAD>
-<BODY BGCOLOR="#ffffff">
-<H2>Setting Up A Global Consumable Resource in Grid Engine</H2>
-<P><BR><BR>
-</P>
-<P><B><U>Step 1: Configure the &quot;global&quot; complex</U></B><BR><BR>First
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699" size="+2">Setting Up A Global Consumable Resource in Grid Engine</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<br><br>
+<B>Step 1: Configure the &quot;global&quot; complex</B><BR><BR>First
 create/modify a complex called &quot;global&quot; (the name is
 reserved, like the complexes which are managing resources on a per
 host/queue basis are called &quot;host&quot; and &quot;queue&quot;).
@@ -36,7 +32,7 @@ button.<BR><BR>After the complex is configured, it can be viewed by
 running the following command at the prompt:</P>
 <PRE>% qconf -sc global
 </PRE><P>
-<B><U>Step 2: Configure the &quot;global&quot; host</U></B><BR><BR>Since
+<B>Step 2: Configure the &quot;global&quot; host</B><BR><BR>Since
 a global consumable resource is being created (all hosts have access
 to this resource), the pseudo host &quot;global&quot; must be
 configured. <BR><BR>Using qmon:<BR><BR>qmon -&gt; Host Configuration
@@ -53,7 +49,7 @@ the second column.<BR><BR>Press &quot;Ok&quot; and the new resource
 and number in the will appear in the &quot;Consumables/Fixed
 Attributes&quot; window. Click the &quot;Done&quot; button to close
 this window.</P>
-<P><B><U>Step 3: View the consumable attribute</U></B><BR><BR>To view
+<P><B>Step 3: View the consumable attribute</B><BR><BR>To view
 the attribute, type the following:</P>
 <PRE>% qstat -F verilog
    
@@ -70,7 +66,7 @@ See qstat(1) for the various meanings of &quot;gc&quot;, etc. (Try
 each queue).<BR><BR>&quot;gc&quot; means it is a (g)lobal
 (c)onsumable resource<BR><BR>Since it is global, all queues have
 inherited this value.</P>
-<P><B><U>Step 4: Use the consumable attribute</U></B><BR><BR>The
+<P><B>Step 4: Use the consumable attribute</B><BR><BR>The
 following submits a job, and requests the verilog resource:</P>
 <PRE>% qsub -l vl=1 myjob.sh</PRE><P>
 <BR>When the job is running, the effect can be seen by running qstat:</P>
@@ -100,5 +96,4 @@ To see which running job requested which resources:</P>
           Full jobname:     sleeper.sh
           Hard Resources:   verilog=1
           h_fsize=0 (default)</PRE>
-</BODY>
-</HTML>
+<p></p>

@@ -1,35 +1,33 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
-	<META NAME="AUTHOR" CONTENT=" ">
-	<META NAME="CREATED" CONTENT="20010703;18435300">
-	<META NAME="CHANGEDBY" CONTENT=" ">
-	<META NAME="CHANGED" CONTENT="20010706;15163400">
-</HEAD>
-<BODY BGCOLOR="#ffffff">
-<H2>Common Administrative Tasks for Grid Engine</H2>
-<P>Qconf is the command used for most administrative tasks. This
-HOWTO contains a selection of the most frequently used options. Have
-a look to qconf(1) for more details. 
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699" size="+2">Common Administrative Tasks for Grid Engine</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<br><br>
+Qconf is the command used for most administrative tasks. This
+HOWTO contains a selection of the most frequently used options. See 
+qconf(1) for more details. 
 </P>
-<P><U>Adding and removing administrative privileges from a host</U></P>
+<P><B>Adding and removing administrative privileges from a host</B></P>
 <UL>
 	<LI><P STYLE="margin-bottom: 0in">qconf -ah # gives host
 	administrative privileges 
 	</P>
 	<LI><P>qconf -dh # removes administrative privileges from host</P>
 </UL>
-<P><U>Adding an execution host</U></P>
+<P><B>Adding an execution host</B></P>
 <UL>
 	<LI><P>Make the new host an administrative host<BR><BR>qconf -ah 
 	</P>
 	<LI><P>As root on this new host, run the following script from
 	$SGE_ROOT<BR><BR>install_execd</P>
 </UL>
-<P><U>Removing an execution host</U></P>
+<P><B>Removing an execution host</B></P>
 <UL>
 	<LI><P>First, delete the queues associated with this host<BR><BR>qconf
 	-dq 
@@ -37,14 +35,14 @@ a look to qconf(1) for more details.
 	<LI><P>Delete the host<BR><BR>qconf -de 
 	</P>
 </UL>
-<P><U>Adding and removing submit hosts</U></P>
+<P><B>Adding and removing submit hosts</B></P>
 <UL>
 	<LI><P STYLE="margin-bottom: 0in">qconf -as # host is now a submit
 	host 
 	</P>
 	<LI><P>qconf -ds # jobs may not be submitted from host</P>
 </UL>
-<P><U>Displaying current administrative/submit/execution hosts</U></P>
+<P><B>Displaying current administrative/submit/execution hosts</B></P>
 <UL>
 	<LI><P STYLE="margin-bottom: 0in">qconf -sh # show current
 	administrative hosts 
@@ -55,7 +53,7 @@ a look to qconf(1) for more details.
 	<LI><P>qconf -sel # show current execution host list 
 	</P>
 </UL>
-<P><U>Administering queues</U></P>
+<P><B>Administering queues</B></P>
 <UL>
 	<LI><P STYLE="margin-bottom: 0in">qconf -aq # adding a queue</P>
 	<LI><P STYLE="margin-bottom: 0in">qconf -dq # delete a queue 

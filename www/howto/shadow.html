@@ -1,19 +1,14 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
-	<META NAME="AUTHOR" CONTENT=" ">
-	<META NAME="CREATED" CONTENT="20010703;18525900">
-	<META NAME="CHANGEDBY" CONTENT=" ">
-	<META NAME="CHANGED" CONTENT="20010704;11440900">
-</HEAD>
-<BODY BGCOLOR="#ffffff">
-<H2>Setting Up A Shadow Master In Grid Engine</H2>
-<P><BR><BR>
-</P>
-<P>To set up master shadowing in Grid Engine, the following steps
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699" size="+2">Setting Up A Shadow Master In Grid Engine</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+<br><br>
+To set up master shadowing in Grid Engine, the following steps
 must be taken. 
 </P>
 <OL>
@@ -23,7 +18,7 @@ must be taken.
 	</P>
 	<LI><P>) Start the shadowd daemon(s)</P>
 </OL>
-<P>1) Create a shadow_masters file<BR><BR>The file needs to be
+<P><b>1) Create a shadow_masters file</b><BR><BR>The file needs to be
 created in $SGE_ROOT/default/common. This file should contain the
 name of the primary master host as the first line. Other hosts that
 are chosen to assume master responsibility should then be listed in
@@ -32,14 +27,13 @@ the order desired. For example:<BR><BR>&gt;cat shadow_masters
 host. Should host1 fail, host2 will take over as the master server
 after a period of approximately 10 minutes. Further, if host2 should
 then fail, host3 will take over.</P>
-<P>2) Verify correct permissions.<BR><BR>All master shadow hosts must
+<P><b>2) Verify correct permissions</b><BR><BR>All master shadow hosts must
 have read/write permissions to the qmaster spool directory.</P>
-<P>3) Start the shadowd daemons.<BR><BR>The shadow daemon must be
+<P><b>3) Start the shadowd daemons</b><BR><BR>The shadow daemon must be
 started on all shadow master hosts. This is done via the startup
 script, sge5. As root on each host, run the following: 
 </P>
 <PRE STYLE="margin-bottom: 0.2in"> $SGE_ROOT/default/common/sge5 -shadowd</PRE><P>
 After these steps are completed, master shadowing for the Grid Engine
 cluster is active.</P>
-</BODY>
-</HTML>
+<p></p>

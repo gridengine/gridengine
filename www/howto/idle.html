@@ -1,16 +1,14 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice/5.2 (Solaris Sparc)">
-	<META NAME="AUTHOR" CONTENT=" ">
-	<META NAME="CREATED" CONTENT="20010703;19044600">
-	<META NAME="CHANGEDBY" CONTENT=" ">
-	<META NAME="CHANGED" CONTENT="20010704;14592700">
-</HEAD>
-<BODY BGCOLOR="#ffffff">
-<H1>Tracking Interactive Idle Time</H1>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td><b><font color="#336699" size="+2">Tracking Interactive Idle Time</font></b></td>
+</tr>
+</table>
+<p>
+<table border="0" cellpadding="2" cellspacing="0" width="100%">
+<tr>
+<td>
+
+<br><br>
 <BLOCKQUOTE STYLE="margin-left: 0in; margin-right: 1.18in; text-align: justify">
 This note explains how to set up Grid Engine to track interactive
 idle time for desktop workstations. This is useful if you want to use
@@ -21,9 +19,10 @@ again idle for 5 minutes (or any other amount of time), the jobs on
 the host will be resumed. <BR><BR>It is necessary to first add the
 attribute to the host complex: 
 </BLOCKQUOTE>
-<PRE STYLE="margin-left: 0.79in; margin-right: 0.79in; margin-bottom: 0.2in; text-align: justify">   iidle  ii   DOUBLE infinity   &lt;=   NO   NO   0</PRE><BLOCKQUOTE STYLE="margin-left: 0in; margin-right: 1.18in; text-align: justify">
+<PRE STYLE="margin-left: 0.79in; margin-right: 0.79in; margin-bottom: 0.2in; text-align: justify">
+   iidle  ii   DOUBLE infinity   &lt;=   NO   NO   0</PRE><BLOCKQUOTE STYLE="margin-left: 0in; margin-right: 1.18in; text-align: justify">
 If you need more information on how to do this, see the appnote
-<A HREF="resource.html">Attaching A Resource To A Host
+<A HREF="/project/gridengine/howto/resource.html">Attaching A Resource To A Host
 in Grid Engine</A>. <BR><BR>Then, you need to have a script (load
 sensor) to keep track of the current idle time on each host. A sample
 script is included below. <BR><BR>Finally, in the main qmon window,
@@ -85,5 +84,4 @@ while [ $end = false ]; do
    echo &quot;$myhost:iidle:$idletime&quot;
    echo &quot;end&quot;
 done</PRE>
-</BODY>
-</HTML>
+<p></p>

@@ -1,3 +1,5 @@
+CR-2002-03-27-2  Merge:     merged inst_sge from V53_beta2_BRANCH
+
 CR-2002-03-27-1  Bugfix:    Fixed broken shadow daemon qmaster startup functionality 
                             merge from V53_beta2_BRANCH
 

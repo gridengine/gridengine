@@ -38,7 +38,7 @@
 
 # Reset PATH to a safe value
 #
-PATH=/bin:/usr/bin
+PATH=/bin:/usr/bin:/usr/bsd
 
 # Easy way to prevent clearing of screen
 #
@@ -258,7 +258,7 @@ CheckHostNameResolving()
        $ECHO "----------------------------"
        $ECHO ""
        resolve_admin_hosts=`ExecuteAsAdmin $V5BIN/qconf -sh`
-       resolve_this_hostname=`ExecuteAsAdmin $V5UTILBIN/gethostname -name`
+       resolve_this_hostname=`ExecuteAsAdmin $V5UTILBIN/gethostname -aname`
        resolve_default_domain=`ExecuteAsAdmin $V5BIN/qconf -sconf global | grep "^default_domain" | awk '{print $2}'`
 
        if [ "$resolve_default_domain" = "" ]; then
@@ -463,7 +463,6 @@ PrintLocalConf()
    fi
    $ECHO "mailer                 $MAILER"
    $ECHO "xterm                  $XTERM"
-   $ECHO "qlogin_command         $QLOGIN_COMMAND"
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
 }
@@ -524,7 +523,7 @@ PrintConf()
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
    $ECHO "default_domain         $CFG_DEFAULT_DOMAIN"
-   $ECHO "ignore_fqdn            true"
+   $ECHO "ignore_fqdn            $IGNORE_FQDN_DEFAULT"
    $ECHO "max_aj_instances       2000"
    $ECHO "max_aj_tasks           75000"
    $ECHO "max_u_jobs             0"
@@ -1898,7 +1897,7 @@ CreateSettingsFile()
       ExecuteAsAdmin $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.sh
    fi
 
-   if [ -f $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.csh ]; then
+   if [ -f $QSYST_ROOT_VAL/$COMMONDIR/settings.csh ]; then
       ExecuteAsAdmin $RM $QSYST_ROOT_VAL/$COMMONDIR/settings.csh
    fi
 
@@ -2146,9 +2145,9 @@ SetPermissions()
       Translate 0 "mapped to user >nobody<."
       $ECHO
       Translate 0 "Please login now at your file server and set the file permissions and"
-      Translate 0 "ownership of the entire distribution with the script:"
+      Translate 0 "ownership of the entire distribution with the command:"
       $ECHO
-      Translate 0 "   \$$QSYST_ROOT/util/setfileperm.sh <adminuser> <admingroup>"
+      Translate 0 "   % \$$QSYST_ROOT/util/setfileperm.sh <adminuser> <admingroup> %s" "\$SGE_ROOT"
       $ECHO
       Translate 0 "where <adminuser> and <admingroup> are the Unix user/group names under which"
       Translate 0 "the files should be installed and created."
@@ -2225,10 +2224,32 @@ InitCA()
    if [ $? != 0 ]; then
       CAErrUsage
    fi
-
    WaitClear clear
 }
 
+
+#--------------------------------------------------------------------------
+# CheckCSP check that there are no old certs/keys
+#
+CheckCSP()
+{
+
+   if [ $csp = false ]; then
+      return
+   fi
+
+   if [ "$COMMD_PORT" != "" ]; then
+      CA_PORT=port$COMMD_PORT
+   else
+      CA_PORT=sge_commd
+   fi
+
+   $V5UTILBIN/adminrun $ADMINUSER test -f $HOME/.sge/$CA_PORT/$SGE_CELL
+   if [ ! $? ]; then
+      Translate 1 "Please remove the old CSP security directory $HOME/.sge/$CA_PORT/$SGE_CELL. Exit."
+      exit 1
+   fi
+}
 
 
 #--------------------------------------------------------------------------
@@ -2242,8 +2263,8 @@ InitCA()
 myname=`basename $0`
 
 cmdline=$*
-for  arg in $*; do
-   if [ $arg = -sgeee ]; then
+for arg in $*; do
+   if [ "$arg" = -sgeee ]; then
       myname=inst_sgeee
    fi
 done
@@ -2288,7 +2309,6 @@ fi
 
 . ./util/arch_variables
 
-
 if [ ! -f util/arch ]; then
    $ECHO "missing shell script \"util/arch\""
    exit 1
@@ -2317,6 +2337,9 @@ unset GRD_DEBUG_LEVEL
 unset COD_DEBUG_LEVEL
 unset SGE_DEBUG_LEVEL
 
+unset CODINE_ROOT 
+unset GRD_ROOT
+
 V5BIN=bin/$ARCH
 V5UTILBIN=utilbin/$ARCH
 QSYST_CELL_VAL=`eval echo '$'$QSYST_CELL`
@@ -2329,11 +2352,6 @@ fi
 export $QSYST_CELL
 
 ADMINUSER=default
-
-# exit if there are missing binaries
-#
-CheckBinaries
-
 MYUID=`$V5UTILBIN/uidgid -uid`
 MYGID=`$V5UTILBIN/uidgid -gid`
 DIRPERM=755
@@ -2409,6 +2427,10 @@ if [ "$WHICH" = "undef" ]; then
    ErrUsage $0
 fi
 
+# exit if there are missing binaries
+#
+CheckBinaries
+
 $CLEAR
 
 case $WHICH in
@@ -2467,6 +2489,7 @@ execd)
       CheckForCommdPort exec
    fi
    CheckCellDirectory
+   CheckCSP
    CheckHostNameResolving
    AddLocalConfiguration_With_Qconf
    AddQsystStartUpScript $euid false

@@ -128,7 +128,7 @@ CreateRPCServerScript()
                -e "s%GENCELL%${SGE_CELL_VAL}%g" \
                -e "s%SPOOLING_DIR%${SPOOLING_DIR}%g" \
                -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-               util/sgebdb_template > ${RPCSCRIPT}
+               util/rctemplates/sgebdb_template > ${RPCSCRIPT}
    Execute $CHMOD a+x $RPCSCRIPT
 }
 

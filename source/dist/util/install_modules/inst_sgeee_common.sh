@@ -730,7 +730,7 @@ AddSGEStartUpScript()
          Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
                      -e "s%GENCELL%${SGE_CELL_VAL}%g" \
                      -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                     util/sgemaster_template > ${TMP_SGE_STARTUP_FILE}.0
+                     util/rctemplates/sgemaster_template > ${TMP_SGE_STARTUP_FILE}.0
 
          if [ "$SGE_QMASTER_PORT" != "" ]; then
             Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
@@ -751,7 +751,7 @@ AddSGEStartUpScript()
          Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
                      -e "s%GENCELL%${SGE_CELL_VAL}%g" \
                      -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                     util/sgeexecd_template > ${TMP_SGE_STARTUP_FILE}.0
+                     util/rctemplates/sgeexecd_template > ${TMP_SGE_STARTUP_FILE}.0
 
          if [ "$SGE_QMASTER_PORT" != "" ]; then
             Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \

@@ -401,7 +401,7 @@ set BUILDMAN          = 0
 set BUILDCATMAN       = 0
 set BUILDGETTEXT      = 0
 set BUILDHTMLMAN      = 0
-set SGE_PRODUCT_MODE  = geee
+set SGE_PRODUCT_MODE  = ge
 set ADD_COPYRIGHT     = 0
 set ADD_SUN_COPYRIGHT = 0
 set ADOC              = 0
@@ -803,7 +803,7 @@ while ($#argv >= 1 && $?found)
       set SPOOLING_DEPS   = "libspool libspoold libspoolc"
       breaksw
    case "-sunman":
-      set SGE_PRODUCT_MODE=sgeee
+      set SGE_PRODUCT_MODE=sge
       breaksw
    case  "-umap"
       set WITH_USERMAPPING = 1

@@ -654,7 +654,6 @@ spooling_field *sge_build_SC_field_list(void)
                           "flush_finish_sec", NULL, NULL, NULL, NULL);
    create_spooling_field (&fields[count++], SC_params, 33, "params", NULL, NULL,
                           NULL, NULL);
-   
    create_spooling_field (&fields[count++], SC_reprioritize_interval, 33,
                           "reprioritize_interval", NULL, NULL, NULL, NULL);
    create_spooling_field (&fields[count++], SC_halftime, 33, "halftime", NULL,
@@ -704,6 +703,8 @@ spooling_field *sge_build_SC_field_list(void)
                           "weight_deadline", NULL, NULL, NULL, NULL);
    create_spooling_field (&fields[count++], SC_weight_urgency, 33,
                           "weight_urgency", NULL, NULL, NULL, NULL);
+   create_spooling_field (&fields[count++], SC_max_reservation, 33,
+                          "max_reservation", NULL, NULL, NULL, NULL);
    
    create_spooling_field (&fields[count++], NoName, 33, NULL, NULL, NULL, NULL,
                           NULL);

@@ -1982,7 +1982,7 @@ void create_spooling_field (
    (*field).write_func = write_func;
 }
 
-int get_unprocessed_field(spooling_field in[], int out[])
+int get_unprocessed_field(spooling_field in[], int out[], lList **alpp)
 {
    int count = 0;
    
@@ -1998,11 +1998,15 @@ int get_unprocessed_field(spooling_field in[], int out[])
       }
       
       if (out[counter] == NoName) {
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
+                        MSG_FLATFILE_ATTRIBISMISSING_S, lNm2Str(in[count].nm)));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, 
+                         ANSWER_QUALITY_ERROR);
          return in[count].nm;
       }
       
       count++;
-   }
+   }   
    
    return NoName;
 }

@@ -1,3 +1,7 @@
+DT-2004-02-16-0: Bugfix:    Fixed various qconf bugs.  \ line continuation is
+                            temporarily broken.
+                 Changed:   qconf
+
 AD-2004-02-16-0: Bugfix:    'qconf -ks' now does output message about scheduler
                             shutdown.
                  Changed:   qmaster, evm

@@ -108,6 +108,8 @@ extern "C" {
 #  define u_long32 u_long
 #endif
 
+#define U_LONG32_MAX 4294967295UL
+
 /* set u32 and x32 for 64 or 32 bit machines */
 /* uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */
 #if defined(ALPHA) || defined(IRIX6) || defined(CRAY) || defined(SOLARIS64) || defined(NECSX4) || defined(NECSX5) || defined(ALINUX) || defined(DARWIN)

@@ -331,34 +331,27 @@ int master
       lListElem *src_qep = queue_list_locate(Master_Queue_List, src_qname);
 
       lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
-      /*
-       * send only master queue and slave queues which reside on the
-       * same hosts as 'rhost'
-       */
-      if (!sge_hostcmp(rhost, lGetHost(gdil_ep, JG_qhostname)) ||
-          lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)) == gdil_ep) {
-         qep = lCopyElem(src_qep);
+      qep = lCopyElem(src_qep);
 
-         /* build minimum of job request and queue resource limit */
-         reduce_queue_limit(qep, tmpjep, QU_s_cpu,   "s_cpu");
-         reduce_queue_limit(qep, tmpjep, QU_h_cpu,   "h_cpu");
-         reduce_queue_limit(qep, tmpjep, QU_s_core,  "s_core");
-         reduce_queue_limit(qep, tmpjep, QU_h_core,  "h_core");
-         reduce_queue_limit(qep, tmpjep, QU_s_data,  "s_data");
-         reduce_queue_limit(qep, tmpjep, QU_h_data,  "h_data");
-         reduce_queue_limit(qep, tmpjep, QU_s_stack, "s_stack");
-         reduce_queue_limit(qep, tmpjep, QU_h_stack, "h_stack");
-         reduce_queue_limit(qep, tmpjep, QU_s_rss,   "s_rss");
-         reduce_queue_limit(qep, tmpjep, QU_h_rss,   "h_rss");
-         reduce_queue_limit(qep, tmpjep, QU_s_fsize, "s_fsize");
-         reduce_queue_limit(qep, tmpjep, QU_h_fsize, "h_fsize");
-         reduce_queue_limit(qep, tmpjep, QU_s_vmem,  "s_vmem");
-         reduce_queue_limit(qep, tmpjep, QU_h_vmem,  "h_vmem");
-         reduce_queue_limit(qep, tmpjep, QU_s_rt,    "s_rt");
-         reduce_queue_limit(qep, tmpjep, QU_h_rt,    "h_rt");
+      /* build minimum of job request and queue resource limit */
+      reduce_queue_limit(qep, tmpjep, QU_s_cpu,   "s_cpu");
+      reduce_queue_limit(qep, tmpjep, QU_h_cpu,   "h_cpu");
+      reduce_queue_limit(qep, tmpjep, QU_s_core,  "s_core");
+      reduce_queue_limit(qep, tmpjep, QU_h_core,  "h_core");
+      reduce_queue_limit(qep, tmpjep, QU_s_data,  "s_data");
+      reduce_queue_limit(qep, tmpjep, QU_h_data,  "h_data");
+      reduce_queue_limit(qep, tmpjep, QU_s_stack, "s_stack");
+      reduce_queue_limit(qep, tmpjep, QU_h_stack, "h_stack");
+      reduce_queue_limit(qep, tmpjep, QU_s_rss,   "s_rss");
+      reduce_queue_limit(qep, tmpjep, QU_h_rss,   "h_rss");
+      reduce_queue_limit(qep, tmpjep, QU_s_fsize, "s_fsize");
+      reduce_queue_limit(qep, tmpjep, QU_h_fsize, "h_fsize");
+      reduce_queue_limit(qep, tmpjep, QU_s_vmem,  "s_vmem");
+      reduce_queue_limit(qep, tmpjep, QU_h_vmem,  "h_vmem");
+      reduce_queue_limit(qep, tmpjep, QU_s_rt,    "s_rt");
+      reduce_queue_limit(qep, tmpjep, QU_h_rt,    "h_rt");
 
-         lAppendElem(qlp, qep);
-      }
+      lAppendElem(qlp, qep);
    }
 
    if (pe) /* we dechain the element to get a temporary free element  */

@@ -294,6 +294,44 @@ void force_job_rlimit()
 }
 #endif
 
+static u_long32 
+execd_get_wallclock_limit(lList *gdil_list, int limit_nm, u_long32 now) 
+{
+   u_long32 ret = U_LONG32_MAX;
+   const lListElem *gdil;
+   const char *hostname;
+   const void *iterator;
+  
+   hostname = uti_state_get_qualified_hostname();
+   gdil = lGetElemHostFirst(gdil_list, JG_qhostname, hostname, &iterator);
+   while (gdil != NULL) {
+      const lListElem *queue;
+      const char *limit;
+      u_long32 clock_val;
+
+      queue = lGetObject(gdil, JG_queue);
+      if (queue != NULL) {
+         limit = lGetString(queue, limit_nm);
+
+         if (strcasecmp(limit, "infinity") == 0) {
+            clock_val = U_LONG32_MAX;
+         } else {   
+            parse_ulong_val(NULL, &clock_val, TYPE_TIM, limit, NULL, 0);
+         }   
+
+         ret = MIN(ret, clock_val);
+      }
+
+      gdil = lGetElemHostNext(gdil_list, JG_qhostname, hostname, &iterator);
+   }
+
+   if (ret != U_LONG32_MAX) {
+      ret += now;
+   }
+
+   return ret;
+}
+
 /******************************************************
  EXECD function
 
@@ -318,7 +356,7 @@ int *synchron,
 char *err_str,
 int answer_error 
 ) {
-   u_long32 now, clock_val;
+   u_long32 now;
    static u_long then = 0;
    lListElem *jep, *jatep;
    extern int deactivate_ptf;
@@ -415,24 +453,14 @@ int answer_error
 
    /* resend signals to shepherds */
    for_each(jep, Master_Job_List) {
-      lListElem *master_q;
-
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         master_q = lGetObject(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
-                               JG_queue);
-
-         if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {       /* initialize everything */
-            if (strcasecmp(lGetString(master_q, QU_s_rt), "infinity")) {
-               parse_ulong_val(NULL, &clock_val, TYPE_TIM, lGetString(master_q, QU_s_rt), NULL, 0);
-               lSetUlong(jep, JB_soft_wallclock_gmt, clock_val + now);
-            } else
-               lSetUlong(jep, JB_soft_wallclock_gmt, (u_long32)(~0L>>1));
-
-            if (strcasecmp(lGetString(master_q, QU_h_rt), "infinity")) {
-               parse_ulong_val(NULL, &clock_val, TYPE_TIM, lGetString(master_q, QU_h_rt), NULL, 0);
-               lSetUlong(jep, JB_hard_wallclock_gmt, clock_val + now);
-            } else 
-               lSetUlong(jep, JB_hard_wallclock_gmt, (u_long32)(~0L>>1));
+         if (!lGetUlong(jep, JB_hard_wallclock_gmt)) {
+            lList *gdil_list = lGetList(jatep, 
+                                        JAT_granted_destin_identifier_list);
+            lSetUlong(jep, JB_soft_wallclock_gmt, 
+                      execd_get_wallclock_limit(gdil_list, QU_s_rt, now));
+            lSetUlong(jep, JB_hard_wallclock_gmt, 
+                      execd_get_wallclock_limit(gdil_list, QU_h_rt, now));
          }
 
          if (now >= lGetUlong(jep, JB_hard_wallclock_gmt) ) {

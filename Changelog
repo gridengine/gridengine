@@ -1,3 +1,5 @@
+JG-2004-02-13-1: Bugfix:    fixed broken test system_tests/clients/qrsh.
+
 JG-2004-02-13-0: Enhancem.: Extended job log information.
                             Improved README for Berkeley DB build.
                  Bugfix:    Fixed broken build for lx24-amd64.           

@@ -1528,6 +1528,7 @@ proc qrsh_qsub_gid {} {
 #     ???/???
 #*******************************
 proc qrsh_batch {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
    global CHECK_HOST CHECK_USER
    global qrsh_hostlist open_spawn_buffer

@@ -1,3 +1,10 @@
+JG-2004-04-22-0: Enhancem.: distinst: Copy Berkeley DB backup/restore utilities
+                            to utilbin.
+                            Output diagnosis messages for Berkeley DB spooling
+                            in log_level log_debug.
+                 Bugfix:    Fixed aimk -spool-*
+                 Review:    SG
+
 MD-2004-04-21-1: Bugfix:    - if SGE_ROOT was already set, the scripts
                               throws thsi away and asked again
                             - addapted testsuite to inst_sge

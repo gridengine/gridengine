@@ -46,6 +46,8 @@
 #include "sgermon.h"
 #include "sge_log.h"
 
+#include "uti/sge_profiling.h"
+
 /****** uti/htable/--Hashtable ***********************************************
 *  NAME
 *     htable -- A Hashtable Implementation for Grid Engine 
@@ -152,7 +154,7 @@ static void sge_htable_resize(register htable ht, int grow)
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
-   if(log_state_get_log_level() >= LOG_DEBUG) {
+   if(prof_is_active() && log_state_get_log_level() >= LOG_DEBUG) {
       struct tms t_buf;
       DEBUG((SGE_EVENT, "hash stats before resizing: %s\n", 
                sge_htable_statistics(ht, &buffer_wrapper)));
@@ -184,7 +186,7 @@ static void sge_htable_resize(register htable ht, int grow)
    }
    free((char *) otable);
 
-   if(log_state_get_log_level() >= LOG_DEBUG) {
+   if(prof_is_active() && log_state_get_log_level() >= LOG_DEBUG) {
       struct tms t_buf;
       DEBUG((SGE_EVENT, "resizing of hash table took %.3fs\n", (times(&t_buf) - start) * 1.0 / sysconf(_SC_CLK_TCK)));
       DEBUG((SGE_EVENT, "hash stats after resizing: %s\n", sge_htable_statistics(ht, &buffer_wrapper)));

@@ -48,7 +48,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
                  adminrun qrsh_starter testsuidroot \
                  sge_share_mon openssl infotext \
-                 spooldefaults spoolinit berkeley_db_svc fstype"
+                 spooldefaults spoolinit berkeley_db_svc db_dump db_load fstype"
 
 REMOTEBINARIES="rsh rshd rlogin"
 
@@ -1075,8 +1075,8 @@ for i in $ARCH; do
                fi
             elif [ $prog = testsuidroot ]; then
                InstallProgSUID $prog
-            elif [ $prog = berkeley_db_svc ]; then
-               InstallProg $BERKELEYDBBASE/$DSTARCH/bin/berkeley_db_svc
+            elif [ $prog = berkeley_db_svc -o $prog = db_dump -o $prog = db_load ]; then
+               InstallProg $BERKELEYDBBASE/$DSTARCH/bin/$prog
             else   
                InstallProg $prog
             fi

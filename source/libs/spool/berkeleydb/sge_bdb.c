@@ -735,7 +735,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
       spool_berkeleydb_error_close(info);
       ret = false;
    } else {
-      DPRINTF(("querying objects with keys %s*\n", key));
+      DEBUG((SGE_EVENT, "querying objects with keys %s*\n", key));
 
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       dbret = db->cursor(db, txn, &dbc, 0);
@@ -911,6 +911,9 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
                                           MSG_BERKELEY_PUTERROR_SIS,
                                           key, dbret, db_strerror(dbret));
                   ret = false;
+               } else {
+                  DEBUG((SGE_EVENT, "stored object with key "SFQ", size %d\n",
+                         key, data_dbt.size));
                }
             }
          }
@@ -1171,7 +1174,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                      free(delete_dbt.data);
                      break;
                   } else {
-                     DPRINTF(("deleted record with key "SFQ"\n", delete_dbt.data));
+                     DEBUG((SGE_EVENT, "deleted record with key "SFQ"\n", (char *)delete_dbt.data));
                   }
                   free(delete_dbt.data);
                }
@@ -1196,7 +1199,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                     key, dbret, db_strerror(dbret));
             ret = false;
          } else {
-            DPRINTF(("deleted record with key "SFQ"\n", key));
+            DEBUG((SGE_EVENT, "deleted record with key "SFQ"\n", key));
          }
       }
    }

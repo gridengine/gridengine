@@ -1173,7 +1173,7 @@ case LINUXIA64:
 
    if ( $SHAREDLIBS == 1 || $SPOOLING_METHOD == dynamic ) then
       set LFLAGS = "$LFLAGS -rdynamic"
-   fi
+   endif
 
    set NOERR_CFLAG = "-Wno-error"
    set NOERR_PROTO = "-Wno-strict-prototypes"

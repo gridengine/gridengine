@@ -6118,7 +6118,7 @@ global CHECK_ADMIN_USER_SYSTEM
 #****** sge_procedures/shutdown_core_system() ******
 # 
 #  NAME
-#     shutdown_core_system -- ??? 
+#     shutdown_core_system -- shutdown complete cluster
 #
 #  SYNOPSIS
 #     shutdown_core_system { } 
@@ -6142,6 +6142,7 @@ global CHECK_ADMIN_USER_SYSTEM
 #
 #  SEE ALSO
 #     sge_procedures/shutdown_core_system()
+#     sge_procedures/startup_core_system()
 #     sge_procedures/shutdown_master_and_scheduler()
 #     sge_procedures/shutdown_all_shadowd()
 #     sge_procedures/shutdown_system_daemon()
@@ -6255,6 +6256,58 @@ global CHECK_ADMIN_USER_SYSTEM do_compile
       }
    }
 }
+
+#****** sge_procedures/startup_core_system() ***********************************
+#  NAME
+#     startup_core_system() -- startup complete cluster
+#
+#  SYNOPSIS
+#     startup_core_system { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  SEE ALSO
+#      sge_procedures/shutdown_core_system()
+#*******************************************************************************
+proc startup_core_system {} {
+   global ts_config
+   global CHECK_ARCH 
+   global CHECK_CORE_EXECD 
+   global CHECK_CORE_MASTER 
+   global CHECK_OUTPUT
+   global CHECK_USER
+   global CHECK_ADMIN_USER_SYSTEM do_compile
+
+
+   if { [ have_root_passwd ] == -1 } {
+      set_root_passwd 
+   }
+
+   # startup of schedd and qmaster 
+   startup_qmaster
+
+   
+   # startup all shadowds
+   # 
+   foreach sh_host $ts_config(shadowd_hosts) {
+      startup_shadowd $sh_host
+   }
+
+   # startup of all execd
+   foreach ex_host $ts_config(execd_hosts) {
+      startup_execd $ex_host
+   }
+
+}
+
+
+
 #                                                             max. column:     |
 #****** sge_procedures/add_operator() ******
 # 

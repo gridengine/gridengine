@@ -1,3 +1,6 @@
+CR-2004-10-21-1: Testsuite: - new procedure "startup_core_system"
+                            - new menu selective "(28) restart cluster"
+
 CR-2004-10-21-0: Cleanup:   - code cleanup of commlib
                  Review:    AA
                  Changed:   commlib

@@ -6816,6 +6816,7 @@ proc menu {} {
     puts " (25) set testsuite debug level (current value: $CHECK_DEBUG_LEVEL)"
     puts " (26) enter testsuite setup" 
     puts " (27) set command line options"
+    puts " (28) restart cluster"
 
   set input [wait_for_enter 1]; 
 
@@ -6881,6 +6882,9 @@ proc menu {} {
          }
     "27" {
          set_command_line_options
+    }
+    "28" {
+         startup_core_system
     }
     "0" { select_runlevel }
     "1" { change_dir; }

@@ -62,7 +62,8 @@ enum {
    UP_acl,
    UP_xacl,
    UP_debited_job_usage,
-   UP_default_project
+   UP_default_project,
+   UP_version
 };
 
 ILISTDEF(UP_Type, UserProject, SGE_PROJECT_LIST)
@@ -102,6 +103,8 @@ ILISTDEF(UP_Type, UserProject, SGE_PROJECT_LIST)
                                        * debited usage per job (set and *
                                        * used by SGEEE schedd) */
    SGE_STRING(UP_default_project)     /* default project for user */
+   SGE_XULONG(UP_version)     /* user/project version, increments when usage
+                               * is updated, stored to qmaster, not spooled */
 LISTEND 
 
 NAMEDEF(UPN)
@@ -119,6 +122,7 @@ NAMEDEF(UPN)
    NAME("UP_xacl")
    NAME("UP_debited_job_usage")
    NAME("UP_default_project")
+   NAME("UP_version")
 NAMEEND
 
 

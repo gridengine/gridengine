@@ -72,6 +72,8 @@
 #define MSG_OBJ_NOQNAME               _("can't get q_name\n")
 
 #define MSG_ORD_QVERSION_UUS          _("orders queue version ("U32CFormat") is not uptodate ("U32CFormat") for queue \"%s\"\n")
+#define MSG_ORD_USRPRJVERSION_UUS          _("orders user/project version ("U32CFormat") is not uptodate ("U32CFormat") for user/project \"%s\"\n")
+
 
 #define MSG_JOB_JOBACCESSQ_US         _("job "U32CFormat" has no access to queue \"%s\"\n")
 #define MSG_JOB_FREESLOTS_US          _("not enough ("U32CFormat") free slots in queue \"%s\"\n")

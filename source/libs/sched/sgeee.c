@@ -3689,9 +3689,10 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
        * build update user usage order
        *-----------------------------------------------------------------*/
 
-      what = lWhat("%T(%I %I %I %I %I %I)", UP_Type,
+      what = lWhat("%T(%I %I %I %I %I %I %I)", UP_Type,
                    UP_name, UP_usage, UP_usage_time_stamp,
-                   UP_long_term_usage, UP_project, UP_debited_job_usage);
+                   UP_long_term_usage, UP_project, UP_debited_job_usage,
+                   UP_version);
 
       /* NOTE: make sure we get all usage entries which have been decayed
          or have accumulated additional usage */

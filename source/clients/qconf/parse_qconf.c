@@ -1120,6 +1120,79 @@ DPRINTF(("ep: %s %s\n",
          continue;
       }
 
+/*----------------------------------------------------------------------------*/
+      /* "-clearusage"  clear sharetree usage */
+
+      if (feature_is_enabled(FEATURE_SGEEE) &&
+          (!strcmp("-clearusage", *spp))) {
+         lList *lp2=NULL;
+
+         sge_gdi_is_adminhost(me.qualified_hostname);
+         sge_gdi_is_manager(me.user_name);
+
+         /* get user list */
+         what = lWhat("%T(ALL)", STN_Type);
+         alp = sge_gdi(SGE_USER_LIST, SGE_GDI_GET, &lp, NULL, what);
+         what = lFreeWhat(what);
+
+         aep = lFirst(alp);
+         if (sge_get_recoverable(aep) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            spp++;
+            continue;
+         }
+         alp = lFreeList(alp);
+ 
+         /* get project list */
+         what = lWhat("%T(ALL)", STN_Type);
+         alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_GET, &lp2, NULL, what);
+         what = lFreeWhat(what);
+
+         aep = lFirst(alp);
+         if (sge_get_recoverable(aep) != STATUS_OK) {
+            fprintf(stderr, "%s", lGetString(aep, AN_text));
+            spp++;
+            continue;
+         }
+         alp = lFreeList(alp);
+ 
+         /* clear user usage */
+         for_each(ep, lp) {
+            lSetList(ep, UP_usage, NULL);
+            lSetList(ep, UP_project, NULL);
+         }
+
+         /* clear project usage */
+         for_each(ep, lp2) {
+            lSetList(ep, UP_usage, NULL);
+            lSetList(ep, UP_project, NULL);
+         }
+
+         /* update user usage */
+         if (lp) {
+            alp = sge_gdi(SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+            for_each(aep, alp) {
+               sge_get_recoverable(aep);
+               fprintf(stderr, "%s", lGetString(aep, AN_text));
+            }
+         }
+
+         /* update project usage */
+         if (lp2) {
+            alp = sge_gdi(SGE_PROJECT_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
+            for_each(aep, alp) {
+               sge_get_recoverable(aep);
+               fprintf(stderr, "%s", lGetString(aep, AN_text));
+            }
+         }
+
+         alp = lFreeList(alp);
+         lp = lFreeList(lp);
+         lp2 = lFreeList(lp2);
+         spp++;
+         continue;
+      }
+
 /*-----------------------------------------------------------------------------*/
       /* "-cq destin_id[,destin_id,...]" */
 

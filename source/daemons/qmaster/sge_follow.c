@@ -905,6 +905,17 @@ lList **topp  /* ticket orders ptr ptr */
             }
 #endif
 
+            if ((pos=lGetPosViaElem(up_order, UP_version))>=0 &&
+                (lGetPosUlong(up_order, pos) != lGetUlong(up, UP_version))) {
+               /* order contains update for outdated user/project usage */
+               ERROR((SGE_EVENT, MSG_ORD_USRPRJVERSION_UUS, lGetPosUlong(up_order, pos),
+                      lGetUlong(up, UP_version), up_name));
+               /* Note: Should we apply the debited job usage in this case? */
+               continue;
+            }
+
+            lSetUlong(up, UP_version, lGetUlong(up, UP_version)+1);
+
             if ((pos=lGetPosViaElem(up_order, UP_project))>=0) {
                lSwapList(up_order, UP_project, up, UP_project);
             }

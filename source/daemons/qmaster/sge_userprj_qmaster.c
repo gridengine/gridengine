@@ -88,6 +88,7 @@ int sub_command
    int pos;
    const char *userprj;
    u_long32 uval;
+   u_long32 up_new_version;
    lList *lp;
    const char *obj_name;
 
@@ -126,6 +127,22 @@ int sub_command
    if ((pos=lGetPosViaElem(ep, UP_fshare))>=0) {
       uval = lGetPosUlong(ep, pos);
       lSetUlong(modp, UP_fshare, uval);
+   }
+
+   up_new_version = lGetUlong(modp, UP_version)+1;
+
+   /* ---- UP_usage */
+   if ((pos=lGetPosViaElem(ep, UP_usage))>=0) {
+      lp = lGetPosList(ep, pos);
+      lSetList(modp, UP_usage, lCopyList("usage", lp));
+      lSetUlong(modp, UP_version, up_new_version);
+   }
+
+   /* ---- UP_project */
+   if ((pos=lGetPosViaElem(ep, UP_project))>=0) {
+      lp = lGetPosList(ep, pos);
+      lSetList(modp, UP_project, lCopyList("project", lp));
+      lSetUlong(modp, UP_version, up_new_version);
    }
 
    if (user_flag) {

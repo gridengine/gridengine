@@ -123,7 +123,7 @@
 #define MSG_SHEPHERD_REPORINGJOBSTARTFAILURETOQMASTER _(" reporting job start failure to qmaster")
 #define MSG_SHEPHERD_REPORINGJOBPROBLEMTOQMASTER _(" reporting problems with running job to qmaster")
 #define MSG_SHEPHERD_ACKINGUNKNWONJOB                 _(" ack'ing unknown job")
-#define MSG_JR_ERRSTR_EXECDDONTKNOWJOB _("execd don't knows this job")
+#define MSG_JR_ERRSTR_EXECDDONTKNOWJOB _("execd doesn't know this job")
 #define MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S _("get exit ack for pe task %s but task is not in state exiting")
 
 

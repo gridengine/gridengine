@@ -166,8 +166,8 @@ OBJECTS = $(make_OBJECTS)
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .c .o
-$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
+#$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+#	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
 
 #Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 #	cd $(top_builddir) \

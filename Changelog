@@ -1,3 +1,7 @@
+CR-2003-04-08-6  Bugfix:    synchronized qmake Makefiles for all architectures
+                            - disabled automatic Makefile generation through
+                              configure 
+
 CR-2003-04-08-5  Testsuite: communication test:
                             - new options for test binaries
                  Changed:   testsuite_rcv, testsuite_snd

@@ -59,44 +59,37 @@ set check_description(0)  "qsub / qrsh command lines crash qmaster with arg. lin
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "issue_440_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_440_setup"
 lappend check_functions "issue_440_check_qsub"
 lappend check_functions "issue_440_check_qrsh"
-lappend check_functions "issue_440_cleanup"
 
 global issue_440_MAX_KBYTE
 
-
 proc issue_440_init_level {} {
    global CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_TYPE
-   global test_array_jobs issue_440_MAX_KBYTE
+   global issue_440_MAX_KBYTE
 
 
    set issue_440_MAX_KBYTE 20
-  switch -- $CHECK_ACT_LEVEL {
-     "0" { 
-           return 0    
-     } 
-     "1" {
-           return -1
-     }
-  } 
-  return -1  ;# no other level else
+
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0    
+      } 
+   }
+
+   return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------
 
-proc issue_440_setup  {} {
-   global CHECK_OUTPUT
-
-   set_error 0 "ok"
-}
-
 proc issue_440_check_qsub {} {
-   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR issue_440_MAX_KBYTE
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR 
+   global CHECK_CORE_MASTER issue_440_MAX_KBYTE
    global CHECK_HOST
 
    set submit_script_path "$CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/cmd_line_output.sh" 
@@ -179,11 +172,19 @@ proc issue_440_check_qsub {} {
       # increment next argument length
       incr start_length 4096
    }
+
+   puts $CHECK_OUTPUT "check if master and scheduler are running ..."
+   set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
+   if { $back != 3 } {
+      add_proc_error "issue_440_check_qsub" -1 "are_master_and_scheduler_running returns $back"
+   }   
+
    set_error 0 "ok"
 }
 
 proc issue_440_check_qrsh {} {
-   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_HOST CHECK_USER issue_440_MAX_KBYTE
+   global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_HOST 
+   global CHECK_CORE_MASTER CHECK_USER issue_440_MAX_KBYTE
    global CHECK_HOST
 
    # test script
@@ -250,16 +251,20 @@ proc issue_440_check_qrsh {} {
       # increment next start_length
       incr start_length 4096 
    }
+
+   puts $CHECK_OUTPUT "check if master and scheduler are running ..."
+   set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
+   if { $back != 3 } {
+      add_proc_error "issue_440_check_qrsh" -1 "are_master_and_scheduler_running returns $back"
+   }   
+
    set_error 0 "ok"
 }
-
 
 proc issue_440_cleanup  {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
 
-
    # check if system is running normal
-
    set command_line "-o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 5"
    set jobid [ submit_job $command_line ]
    wait_for_jobstart  $jobid "leeper" 60 1 1

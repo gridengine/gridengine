@@ -42,21 +42,20 @@ set check_name                "issue_1270"
 set check_description(0)      "drmaa_syncronize() doesn't ignore new jobs"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "yes"
+
+# setup and cleanup functions
+set check_setup_function "issue_1270_setup"
+set check_cleanup_function "issue_1270_cleanup"
+
+# define test's procedure order
 set check_functions           ""
-lappend check_functions       "issue_1270_setup" ;# functions to call (in order)
 lappend check_functions       "issue_1270_run"
-lappend check_functions       "issue_1270_cleanup"
 set check_highest_level       0
 
 proc init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
-   if { $ts_config(gridengine_version) == 53 } {
-       
-       return -1
-   }
-
-    # TODO setup levels 
+   # setup levels 
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
          return 0
@@ -66,13 +65,8 @@ proc init_level {} {
 }
 
 proc issue_1270_setup  {} {
-   global ts_config CHECK_HOST
-   set arch [resolve_arch $CHECK_HOST]
-   set catch_result [ catch {  eval exec "$ts_config(product_root)/bin/$arch/qdel" "\"*\"" } result ]
-
-   if { $catch_result != 0 } {
-      add_proc_error "issue_1270_setup" "-1" "could not delete preexisting jobs"
-   }
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    set_error 0 "ok"
 }
@@ -94,7 +88,6 @@ proc issue_1270_run  {} {
 }
 
 proc issue_1270_cleanup {} {
-
    delete_all_jobs
    wait_for_end_of_all_jobs 60
 

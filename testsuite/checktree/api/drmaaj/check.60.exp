@@ -59,6 +59,8 @@ set check_description(210)  "tests to verify DRMAA-J library"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "drmaaj_cleanup"
 
 # define test's procedure order
 set check_functions ""
@@ -86,12 +88,6 @@ proc drmaaj_check {} {
    global ts_config
    global CHECK_OUTPUT CHECK_TESTSUITE_ROOT CHECK_CORE_EXECD
    global CHECK_HOST CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_USER
-
-   if { $ts_config(gridengine_version) == 53 } {
-      set_error -3 "drmaaj_check - sge/ee version \"5.3\" doesn't support multi threading"
-      return 1
-   }
-
 
    puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
    puts $CHECK_OUTPUT "host is $CHECK_HOST"
@@ -152,5 +148,10 @@ proc drmaaj_check {} {
    # undo configuration changes that were made for this test
    set_config old_config
 
+   set_error 0 "ok"
+}
+
+proc drmaaj_cleanup {} {
+   delete_all_jobs
    set_error 0 "ok"
 }

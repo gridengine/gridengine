@@ -44,6 +44,10 @@ set check_name                "issue_1251"
 set check_description(0)      "qconf -sstree segfaults when sharetree is very large"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "no"
+
+# setup and cleanup functions
+
+# define test's procedure order
 set check_functions           ""
 lappend check_functions       "issue_1251_run"   ;# functions to call (in order)
 set check_highest_level       0
@@ -53,11 +57,7 @@ set tmp_name "/tmp/tmp1251.$my_pid"
 proc init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
-   if { $ts_config(gridengine_version) == 53 } {       
-      return -1
-   }
-
-   # TODO setup levels 
+   # setup levels 
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
          return 0

@@ -59,12 +59,13 @@ set check_description(0) "maxujobs does not count jobs with certain state"
 # define test's dependencies
 set check_needs "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "issue_511_setup"
+set check_cleanup_function "issue_511_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_511_setup"
 lappend check_functions "issue_511_check"
-lappend check_functions "issue_511_cleanup"
 
 proc issue_511_init_level {} {
    global CHECK_ACT_LEVEL
@@ -75,10 +76,8 @@ proc issue_511_init_level {} {
       "0" { 
          return 0    
       } 
-      "1" {
-         return -1
-      }
-   } 
+   }
+
    return -1  ;# no other level else
 }
 

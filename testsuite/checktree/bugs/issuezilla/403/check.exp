@@ -59,38 +59,28 @@ set check_description(0)  "qalter shoes wrong errormessage when called with nega
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "issue_403_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_403_setup"
 lappend check_functions "issue_403_check"
-lappend check_functions "issue_403_cleanup"
 
 proc issue_403_init_level {} {
    global CHECK_ACT_LEVEL
    global CHECK_PRODUCT_TYPE
    global test_array_jobs 
 
-  switch -- $CHECK_ACT_LEVEL {
-     "0" { 
-           return 0    
-     } 
-     "1" {
-           return -1
-     }
-  } 
-  return -1  ;# no other level else
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0    
+      }
+   }
+
+   return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------
-
-proc issue_403_setup  {} {
-   global CHECK_OUTPUT 
-   global CHECK_CORE_MASTER
-
-   set_error 0 "ok"
-}
-
 
 proc issue_403_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
@@ -130,7 +120,9 @@ proc issue_403_check {} {
 }
 
 proc issue_403_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global CHECK_OUTPUT
+
+   delete_all_jobs
 
    set_error 0 "ok"
 }

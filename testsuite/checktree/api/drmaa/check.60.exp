@@ -61,12 +61,12 @@ set check_description(202)  "tests to verify DRMAA library: additional interface
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "drmaa_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "drmaa_setup"
 lappend check_functions "drmaa_check"
-lappend check_functions "drmaa_cleanup"
 
 # this function is called each time before
 # a new run level is started
@@ -92,31 +92,12 @@ proc drmaa_init_level {} {
 
 # -------- local test procedures -----------------------------------------------
 
-# change setup in a way allowing the next runlevel to start
-proc drmaa_setup {} {
-   global ts_config
-  if { $ts_config(gridengine_version) == 53 } {
-      set_error -3 "drmaa_setup - sge/ee version \"5.3\" doesn't support multi threading"
-      return 1
-   }
-
-
-  set_error 0 "ok"
-}
-
 # here the actual test is done
 proc drmaa_check {} {
    global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
    global CHECK_HOST CHECK_CORE_EXECD CHECK_SOURCE_DIR CHECK_USER CHECK_CORE_MASTER
    global CHECK_ACT_LEVEL CHECK_SCRIPT_FILE_DIR CHECK_TESTSUITE_ROOT CHECK_DEBUG_LEVEL
-
-
-   if { $ts_config(gridengine_version) == 53 } {
-      set_error -3 "drmaa_check - sge/ee version \"5.3\" doesn't support multi threading"
-      return 1
-   }
-
 
    puts $CHECK_OUTPUT "product root is $CHECK_PRODUCT_ROOT"
    puts $CHECK_OUTPUT "arch is $CHECK_ARCH"
@@ -255,11 +236,7 @@ proc drmaa_check {} {
 
 # undo what we've done in drmaa_setup
 proc drmaa_cleanup  {} {
-   global ts_config
-   if { $ts_config(gridengine_version) == 53 } {
-      set_error -3 "drmaa_cleanup - sge/ee version \"5.3\" doesn't support multi threading"
-      return 1
-   }
+   delete_all_jobs
 
    set_error 0 "ok"
 }

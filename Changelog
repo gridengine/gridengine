@@ -1,3 +1,6 @@
+JG-2005-03-03-0: Testsuite: Make more tests use the setup/cleanup framework.
+                 Issue:     888
+
 SG-2005-03-03-1: Cleanup:   minor code changes.
                  Review:    DT
                  changed:   all

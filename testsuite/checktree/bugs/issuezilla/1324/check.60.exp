@@ -43,10 +43,14 @@ set check_name                "issue_1324"
 set check_description(0)      "qconf -sq doesn't print separator between subordinate queues"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "no"
+
+# setup and cleanup functions
+set check_setup_function "issue_1324_setup"
+set check_cleanup_function "issue_1324_cleanup"
+
+# define test's procedure order
 set check_functions           ""
-lappend check_functions       "issue_1324_setup"   ;# functions to call (in order)
 lappend check_functions       "issue_1324_run"
-lappend check_functions       "issue_1324_cleanup"
 set check_highest_level       0
 set my_pid [pid]
 set tmp_name                  "/tmp/tmp1251.$my_pid"
@@ -54,7 +58,7 @@ set tmp_name                  "/tmp/tmp1251.$my_pid"
 proc init_level {} {
    global CHECK_ACT_LEVEL
 
-   # TODO setup levels 
+   # setup levels 
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
          return 0

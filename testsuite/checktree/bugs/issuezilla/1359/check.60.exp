@@ -34,7 +34,7 @@
 # Define the global veriables to give them back
 global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
 global check_init_level_procedure check_category
-global check_root_access_needs tmp_file
+global check_root_access_needs
 set check_init_level_procedure "init_level"
 
 set check_category            "COMPATIBILITY SYSTEM VERIFIED"
@@ -42,19 +42,18 @@ set check_name                "issue_1359"
 set check_description(0)      "qconf -\[MmAa\]stree crashes qmaster with dangling child references"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "no"
+
+# setup and cleanup functions
+
+# define test's procedure order
 set check_functions           ""
-lappend check_functions       "issue_1359_setup"   ;# functions to call (in order)
 lappend check_functions       "issue_1359_run"
 set check_highest_level       0
 
 proc init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
-   if { $ts_config(gridengine_version) == 53 } {       
-      return -1
-   }
-
-   # TODO setup levels 
+   # setup levels 
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
          return 0
@@ -64,12 +63,13 @@ proc init_level {} {
    return -1
 }
 
-proc issue_1359_setup {} {
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT tmp_file
+proc issue_1359_run  {} {
+   global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_HOST CHECK_USER
+   global CHECK_PRODUCT_ROOT
 
+   # prepare operation with file
    set tmp_file [get_tmp_file_name]
-
-   # Setup
+   # JG: TODO: are the tmp_files deleted automagically?
    set f [ open "$tmp_file" w ]
    puts $f "id=0"
    puts $f "name=Root"
@@ -77,13 +77,6 @@ proc issue_1359_setup {} {
    puts $f "shares=0"
    puts $f "childnodes=1"
    close $f
-
-   set_error 0 "ok"
-}
-
-proc issue_1359_run  {} {
-   global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_HOST CHECK_USER
-   global CHECK_PRODUCT_ROOT tmp_file
 
    # localize messages
    set INVALID [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_STREE_NOVALIDNODEREF_U] 1 ]

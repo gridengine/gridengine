@@ -59,12 +59,12 @@ set check_description(0)  "partly qdel of job with more tasks shouldn't delete a
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "issue_141_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_141_setup"
 lappend check_functions "issue_141_check"
-lappend check_functions "issue_141_cleanup"
 
 proc issue_141_init_level {} {
    global CHECK_ACT_LEVEL
@@ -83,14 +83,6 @@ proc issue_141_init_level {} {
 }
 
 # -------- local test procedures -----------------------------------------------
-
-proc issue_141_setup  {} {
-   global CHECK_OUTPUT 
-   global CHECK_CORE_MASTER
-
-   set_error 0 "ok"
-}
-
 
 proc issue_141_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT
@@ -187,10 +179,7 @@ proc issue_141_check {} {
 }
 
 proc issue_141_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
-
    delete_all_jobs
-   
    wait_for_end_of_all_jobs 120
 
    set_error 0 "ok"

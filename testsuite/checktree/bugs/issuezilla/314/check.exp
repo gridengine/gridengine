@@ -59,12 +59,12 @@ set check_description(0)  "Colon (:) in account string should be rejected"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "issue_314_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_314_setup"
 lappend check_functions "issue_314_check"
-lappend check_functions "issue_314_cleanup"
 
 proc issue_314_init_level {} {
    global CHECK_ACT_LEVEL
@@ -75,22 +75,11 @@ proc issue_314_init_level {} {
      "0" { 
            return 0    
      } 
-     "1" {
-           return -1
-     }
   } 
   return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------
-
-proc issue_314_setup  {} {
-   global CHECK_OUTPUT 
-   global CHECK_CORE_MASTER
-
-   set_error 0 "ok"
-}
-
 
 proc issue_314_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
@@ -124,7 +113,9 @@ proc issue_314_check {} {
 }
 
 proc issue_314_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global CHECK_OUTPUT
+
+   delete_all_jobs
 
    set_error 0 "ok"
 }

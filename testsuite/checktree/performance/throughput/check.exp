@@ -178,10 +178,14 @@ set check_description(309)    "with reservation, 300000 jobs"
 
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 
+# setup and cleanup functions
+# JG: TODO: parts of the setup could be done per check, not per level
+set check_setup_level_function "throughput_setup"
+set check_cleanup_level_function "throughput_cleanup"
+
+# define test's procedure order
 set check_functions           ""
-lappend check_functions       "setup_queues"          ;# functions to call (in order)
 lappend check_functions       "run_throughput_test"
-lappend check_functions       "cleanup_queues"
 #set check_functions          "compare_dump_data_file"
 
 set check_highest_level       309
@@ -581,7 +585,7 @@ proc throughput_cleanup_functional_policy {} {
    del_prj "project3"
 }
 
-proc setup_queues {} {
+proc throughput_setup {} {
    global ts_config
    global CHECK_OUTPUT
    global CHECK_HOST CHECK_SOURCE_DIR
@@ -709,7 +713,7 @@ proc setup_queues {} {
    set_error 0 "ok"
 }
 
-proc cleanup_queues {} {
+proc throughput_cleanup {} {
    global ts_config
    global CHECK_OUTPUT
    global host_list queue_list CHECK_ARCH  CHECK_PRODUCT_ROOT

@@ -43,37 +43,26 @@ set check_name                "issue_1141"
 set check_description(0)      "schedd and qmaster get out of sync - no scheduling for a long time"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "no"
+
+# setup and cleanup functions
+
+# define test's procedure order
 set check_functions           ""
-lappend check_functions       "issue_1141_setup"          ;# functions to call (in order)
 lappend check_functions       "issue_1141_run"
-lappend check_functions       "issue_1141_cleanup"
 set check_highest_level       0
 
 proc init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
-   if { $ts_config(gridengine_version) == 53 } {
-       return -1
-   }
-
-    # TODO setup levels 
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
          return 0
       }
    }
+
    return -1
 }
 
-
-
-
-
-
-proc issue_1141_setup {} {
-   global ts_config CHECK_HOST
-   set_error 0 "ok"
-}
 proc issue_1141_run  {} {
    global ts_config  CHECK_OUTPUT CHECK_USER
 
@@ -172,18 +161,4 @@ proc issue_1141_run  {} {
    close_spawn_process $client_sid
    set_error 0 "ok"
 }
-
-
-proc issue_1141_cleanup {} {
-   global ts_config 
-   set_error 0 "ok"
-}
-
-
-
-
-
-
-
-
 

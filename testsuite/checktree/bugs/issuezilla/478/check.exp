@@ -59,38 +59,26 @@ set check_description(0)  "qtstat -r shows wrong dependencies"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "issue_478_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_478_setup"
 lappend check_functions "issue_478_check"
-lappend check_functions "issue_478_cleanup"
 
 proc issue_478_init_level {} {
    global CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_TYPE
-   global test_array_jobs 
 
-  switch -- $CHECK_ACT_LEVEL {
-     "0" { 
-           return 0    
-     } 
-     "1" {
-           return -1
-     }
-  } 
-  return -1  ;# no other level else
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0    
+      } 
+   }
+
+   return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------
-
-proc issue_478_setup  {} {
-   global CHECK_OUTPUT 
-   global CHECK_CORE_MASTER
-
-   set_error 0 "ok"
-}
-
 
 proc issue_478_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
@@ -147,7 +135,9 @@ proc issue_478_check {} {
 }
 
 proc issue_478_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global CHECK_OUTPUT
+
+   delete_all_jobs
 
    set_error 0 "ok"
 }

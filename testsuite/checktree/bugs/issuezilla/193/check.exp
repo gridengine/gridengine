@@ -60,15 +60,17 @@ set check_description(0)  "qmod -r should be allowed for operators also"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "issue193_setup"
+set check_cleanup_function "issue193_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue193_setup"
 lappend check_functions "issue193_submit_jobs"
 lappend check_functions "issue193_checkpointing"
 lappend check_functions "issue193_checkpointing_forced"
 lappend check_functions "issue193_pe_jobs"
 lappend check_functions "issue193_deleted_job"
-lappend check_functions "issue193_cleanup"
 
 # -------- local test procedures -----------------------------------------------
 global rerun_queue rerun_queue2
@@ -705,8 +707,6 @@ proc issue193_cleanup {} {
    global CHECK_CORE_EXECD stored_configuration rerun_queue2
    global pe_names pe_alloc_rule CHECK_CORE_EXECD ts_user_config
 
-   set_error 0 "ok"
-
    delete_all_jobs
 
    reset_schedd_config
@@ -733,4 +733,6 @@ proc issue193_cleanup {} {
    if {[delete_operator $ts_user_config(first_foreign_user)] != 0} {
       set_error -3 "Unable to delete operator $ts_user_config(first_foreign_user)"
    }
+
+   set_error 0 "ok"
 }

@@ -96,15 +96,18 @@ set check_description(1)  "check reserved usage of jobs submitted with qrsh"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+# JG: TODO: some parts of the setup could be done
+# per check, not per level
+set check_setup_level_function "usage_setup"
+set check_cleanup_level_function "usage_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "usage_setup"
 lappend check_functions "usage_single"
 lappend check_functions "usage_tight"
 lappend check_functions "usage_loose1"
 lappend check_functions "usage_loose2"
-lappend check_functions "usage_cleanup"
 
 proc usage_init_level {} {
    global CHECK_ACT_LEVEL
@@ -210,6 +213,9 @@ proc usage_setup  {} {
 proc usage_cleanup  {} {
    global ts_config
    global reserved_usage saved_config
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    # reset config
    set_config saved_config

@@ -43,25 +43,23 @@ set check_name                "issue_1104"
 set check_description(0)      "Qmaster requires a local conf in order to start"
 set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
 set check_root_access_needs   "yes"
+
+# setup and cleanup functions
+
+# define test's procedure order
 set check_functions           ""
 lappend check_functions       "issue_1104_run"          ;# functions to call (in order)
 set check_highest_level       0
 
-
-
 # This test saves the local configuration on the master host and removes it.
-# Then it tries to restart the sge_qmaster daemon. THe qmaster should start without local_conf,
+# Then it tries to restart the sge_qmaster daemon. The qmaster should start 
+# without local_conf,
 # but writing a Warning to the messages file.
 # After restart the local configuration will be added again.
 
 proc init_level {} {
    global CHECK_ACT_LEVEL ts_config
 
-   if { $ts_config(gridengine_version) == 53 } {
-       return -1
-   }
-
-    # TODO setup levels 
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
          return 0
@@ -69,8 +67,6 @@ proc init_level {} {
    }
    return -1
 }
-
-
 
 
 

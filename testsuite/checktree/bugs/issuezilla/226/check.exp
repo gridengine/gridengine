@@ -59,45 +59,31 @@ set check_description(0)  "check valid gid range parameters"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "issue_226_setup"
+set check_cleanup_function "issue_226_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_226_setup"
 lappend check_functions "issue_226_check"
-lappend check_functions "issue_226_cleanup"
 
 proc issue_226_init_level {} {
    global CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_TYPE
-   global test_array_jobs 
 
-  switch -- $CHECK_ACT_LEVEL {
-     "0" { 
-           return 0    
-     } 
-     "1" {
-           return -1
-     }
-  } 
-  return -1  ;# no other level else
+   switch -- $CHECK_ACT_LEVEL {
+      "0" { 
+         return 0    
+      } 
+   }
+
+   return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------
 
-proc issue_226_setup  {} {
-   global CHECK_OUTPUT 
-   global CHECK_CORE_MASTER
-
-   set_error 0 "ok"
-}
-
-
 proc issue_226_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
 
-   # get stored configuration
-   get_config stored_configuration
- 
    # NONE should be allowed
    set my_cluster_conf(gid_range) "NONE"
    set_config my_cluster_conf "global"
@@ -110,15 +96,26 @@ proc issue_226_check {} {
    set my_cluster_conf(gid_range) "99"
    set_config my_cluster_conf "global" "0" "1"
 
-   # set saved configuration
-   set_config stored_configuration
- 
+   set_error 0 "ok"
+}
+
+proc issue_226_setup  {} {
+   global CHECK_OUTPUT stored_configuration
+
+   # get configuration
+   get_config stored_configuration
+
    set_error 0 "ok"
 }
 
 proc issue_226_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global CHECK_OUTPUT stored_configuration
 
+   # reset saved configuration
+   if {[info exists stored_configuration]} {
+      set_config stored_configuration
+   }
+ 
    set_error 0 "ok"
 }
 

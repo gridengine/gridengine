@@ -60,11 +60,13 @@ set check_description(0)  "Check error handling concerning acls and departments"
 set check_needs           "init_core_system" 
 
 
+# setup and cleanup functions
+set check_setup_function "issue_360_setup"
+set check_cleanup_function "issue_360_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_360_setup"
 lappend check_functions "issue_360_check"
-lappend check_functions "issue_360_cleanup"
 
 proc issue_360_init_level {} {
    global CHECK_ACT_LEVEL
@@ -75,9 +77,6 @@ proc issue_360_init_level {} {
      "0" { 
            return 0    
      } 
-     "1" {
-           return -1
-     }
   } 
   return -1  ;# no other level else
 }

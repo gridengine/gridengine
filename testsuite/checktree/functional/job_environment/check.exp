@@ -59,12 +59,14 @@ set check_description(0)  "test job environment variables"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "job_environment_setup"
+set check_cleanup_function "job_environment_cleanup"
+
 # define test's procedure order
 set check_functions ""
-lappend check_functions "job_environment_setup"
 lappend check_functions "job_environment_amount"
 lappend check_functions "job_environment_JOB_NAME"
-lappend check_functions "job_environment_cleanup"
 
 proc job_environment_init_level {} {
    global CHECK_ACT_LEVEL
@@ -365,9 +367,11 @@ proc job_environment_JOB_NAME {} {
 }
 
 proc job_environment_cleanup  {} {
-   global CHECK_CORE_EXECD CHECK_OUTPUT
+   global CHECK_OUTPUT
 
    puts $CHECK_OUTPUT "cleanup ..."
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    set_error 0 "ok"
 }

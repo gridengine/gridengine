@@ -59,12 +59,12 @@ set check_description(0) "cannot qalter/qhold/qrls several tasks of same job"
 # define test's dependencies
 set check_needs "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "issue_527_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_527_setup"
 lappend check_functions "issue_527_check"
-lappend check_functions "issue_527_cleanup"
 
 proc issue_527_init_level {} {
    global CHECK_ACT_LEVEL
@@ -75,22 +75,12 @@ proc issue_527_init_level {} {
       "0" { 
          return 0    
       } 
-      "1" {
-         return -1
-      }
-   } 
+   }
+
    return -1  ;# no other level else
 }
 
 # -------- local test procedures -----------------------------------------------
-
-proc issue_527_setup  {} {
-   global CHECK_OUTPUT 
-   global CHECK_CORE_MASTER
-
-   set_error 0 "ok"
-}
-
 
 proc issue_527_check {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_USER
@@ -118,7 +108,10 @@ proc issue_527_check {} {
 }
 
 proc issue_527_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global CHECK_OUTPUT
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    set_error 0 "ok"
 }

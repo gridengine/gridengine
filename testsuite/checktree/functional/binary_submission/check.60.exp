@@ -58,24 +58,21 @@ set check_description(0)  "test qsub/qrsh -b y|n functionality"
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_setup_function "binary_submission_setup"
+set check_cleanup_function "binary_submission_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "binary_submission_setup"
 lappend check_functions "binary_submission_check"
-lappend check_functions "binary_submission_cleanup"
 
 proc binary_submission_init_level {} {
    global CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_TYPE
 
    switch -- $CHECK_ACT_LEVEL {
       "0" { 
          return 0    
       } 
-      "1" {
-         return -1
-      }
    } 
    return -1  ;# no other level else
 }
@@ -119,6 +116,9 @@ proc binary_submission_cleanup  {} {
       }
       file rename ${sge_aliases}.sav ${sge_aliases}
    }
+
+   delete_all_jobs
+   wait_for_end_of_all_jobs 60
 
    set_error 0 "ok"
 }

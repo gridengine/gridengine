@@ -59,12 +59,12 @@ set check_description(0)  "qalter -h xxx should not cause qmaster core if task i
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "issue_171_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_171_setup"
 lappend check_functions "issue_171_check"
-lappend check_functions "issue_171_cleanup"
 
 proc issue_171_init_level {} {
    global CHECK_ACT_LEVEL
@@ -84,23 +84,8 @@ proc issue_171_init_level {} {
 
 # -------- local test procedures -----------------------------------------------
 
-proc issue_171_setup  {} {
-   global CHECK_OUTPUT 
-   global CHECK_CORE_MASTER
-
-   puts $CHECK_OUTPUT "check if master and scheduler are running ..."
-   set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
-   if { $back != 3 } {
-      add_proc_error "issue_171_setup" -1 "are_master_and_scheduler_running returns $back"
-   }   
-
-
-   set_error 0 "ok"
-}
-
-
 proc issue_171_check {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
   
    puts $CHECK_OUTPUT "Starting job ..."
    set arguments "-o /dev/null -e /dev/null -h -t 1-10"
@@ -166,52 +151,20 @@ proc issue_171_check {} {
       }
    }
 
-
-#    if { $taskcount == 0 } {
-#       add_proc_error "issue_171_check" -1 "no even task is running"
-#    }
-# 
-# 
-#    puts $CHECK_OUTPUT "Delete job array $job_id.1-100:3"
-#    delete_job "${job_id}.1-100:3"
-# 
-# 
-#    puts $CHECK_OUTPUT "Delete job array $job_id.2-100:2"
-#    delete_job "${job_id}.2-100:2"
-# 
-#    set statelist [get_job_state $job_id 1 tasklist]
-#    set length [ llength $statelist ]
-#    incr length -1
-#    for {set i 0} {$i < $length} {incr i 1} {
-#       set task  $tasklist($i,task)
-#       set state $tasklist($i,state)
-#       puts $CHECK_OUTPUT "task $task should be in delete state ..."
-#       puts $CHECK_OUTPUT "state is $state"
-# 
-#       if { [ string first "d" $state ] < 0 } {
-#          add_proc_error "issue_171_check" -1 "task $task should be in delete state (2)"
-#       }
-#    }
-# 
-# 
-#    wait_for_jobend $job_id "Sleeper" 60
+   puts $CHECK_OUTPUT "check if master and scheduler are running ..."
+   set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
+   if { $back != 3 } {
+      add_proc_error "issue_171_check" -1 "are_master_and_scheduler_running returns $back"
+   }   
 
    set_error 0 "ok"
 }
 
 proc issue_171_cleanup  {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER
+   global CHECK_OUTPUT
 
    delete_all_jobs
    wait_for_end_of_all_jobs 60 
-
-
-   puts $CHECK_OUTPUT "check if master and scheduler are running ..."
-   set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
-   if { $back != 3 } {
-      add_proc_error "issue_171_setup" -1 "are_master_and_scheduler_running returns $back"
-   }   
-
 
    set_error 0 "ok"
 }

@@ -59,17 +59,15 @@ set check_description(0)  "do a qsub -t 1-3, qdel <jid>.1-4, qmaster should not 
 # define test's dependencies
 set check_needs           "init_core_system" 
 
+# setup and cleanup functions
+set check_cleanup_function "issue_140_cleanup"
 
 # define test's procedure order
 set check_functions ""
-lappend check_functions "issue_140_setup"
 lappend check_functions "issue_140_check"
-lappend check_functions "issue_140_cleanup"
 
 proc issue_140_init_level {} {
    global CHECK_ACT_LEVEL
-   global CHECK_PRODUCT_TYPE
-   global test_array_jobs 
 
   switch -- $CHECK_ACT_LEVEL {
      "0" { 
@@ -81,22 +79,8 @@ proc issue_140_init_level {} {
 
 # -------- local test procedures -----------------------------------------------
 
-proc issue_140_setup  {} {
-   global CHECK_OUTPUT 
-   global CHECK_CORE_MASTER
-
-   puts $CHECK_OUTPUT "check if master and scheduler are running ..."
-   set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
-   if { $back != 3 } {
-      add_proc_error "issue_140_setup" -1 "are_master_and_scheduler_running returns $back"
-   }   
-
-   set_error 0 "ok"
-}
-
-
 proc issue_140_check {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_CORE_MASTER
   
    # test running job array
    puts $CHECK_OUTPUT "Starting job ..."
@@ -126,23 +110,19 @@ proc issue_140_check {} {
 
    wait_for_end_of_all_jobs 60 
 
+   puts $CHECK_OUTPUT "check if master and scheduler are running ..."
+   set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
+   if { $back != 3 } {
+      add_proc_error "issue_140_cleanup" -1 "are_master_and_scheduler_running returns $back"
+   }   
+
    set_error 0 "ok"
 }
 
 proc issue_140_cleanup  {} {
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_MASTER ts_config 
-
- 
    delete_all_jobs
-
    wait_for_end_of_all_jobs 60 
-
-   puts $CHECK_OUTPUT "check if master and scheduler are running ..."
-
-   set back [ are_master_and_scheduler_running $CHECK_CORE_MASTER [get_qmaster_spool_dir]]
-   if { $back != 3 } {
-      add_proc_error "issue_140_cleanup" -1 "are_master_and_scheduler_running returns $back"
-   }   
 
    set_error 0 "ok"
 }

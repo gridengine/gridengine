@@ -38,7 +38,7 @@
 
 # Reset PATH to a safe value
 #
-PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/ucb
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/ucb:/usr/bsd
 umask 022
   
 # Easy way to prevent clearing of screen

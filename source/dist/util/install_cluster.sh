@@ -51,18 +51,18 @@ fi
 
 
 if [ $# -lt 1 -o "$1" = "-h" -o "$1" = "-help" ]; then
-   echo "install execution daemons via \"rsh\" or \"ssh\" access "
+   echo "Install execution daemons via \"rsh\" or \"ssh\" access"
    echo
-   echo "usage: $0 [-noqueue] [-ssh] host1 host2 host3 ..."
-   echo "       -ssh      use ssh command instead of rsh"
+   echo "usage: install_cluster.sh [-noqueue] [params of \"sgeremoterun\"] [host]..."
+   echo
    echo "       -noqueue  do not add ad default queue when installing the exec host"
+   echo "       [params of \"sgeremoterun\"] see usage of this comand in \"util/\""
    echo 
-   echo "The following command will be executed"
+   echo "The following command will be executed on the given hosts:"
    echo
    echo "   # rsh|ssh <hostname> \"cd $SGE_ROOT && ./install_execd -fast -auto [-noqueue]\""
    exit 1
 fi
-
 
 if [ "$1" = "-noqueue" ]; then
    noqueue=-noqueue
@@ -81,12 +81,7 @@ if [ "$SGE_CELL" = "" ]; then
    export SGE_CELL
 fi
 
+echo
 echo Installing execution hosts for cell \"$SGE_CELL\"
 
-for host in $*; do
-   echo
-   echo Installing execution daemon on host \"$host\"
-
-   echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./install_execd -fast -auto $noqueue" | rsh $host /bin/sh
-   echo ==============================================================================
-done
+$SGE_ROOT/util/sgeremoterun $* -- ./install_execd -fast -auto $noqueue

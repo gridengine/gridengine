@@ -34,7 +34,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-PATH=/bin:/usr/bin:/usr/local/bin
+PATH=/bin:/usr/bin
 
 # "$SGE_ROOT" and $SGE_CELL (if other than "default") must be set in current
 # environment.
@@ -68,19 +68,19 @@ fi
 
 . $SGE_ROOT/util/arch_variables
 
-V5BIN=$SGE_ROOT/bin/$ARCH
-V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
-
 
 if [ $# -lt 2 -o "$1" = "-h" -o "$1" = "-help" ]; then
    echo 
    echo "Remotely execute commands via \"rsh\" or \"ssh\"."
    echo
-   echo "usage: $0 [-noexec] [-ssh] [-all] [-noqmaster] [host1]... -- command"
-   echo "   -noexec    do nothing, just print what would be done"
-   echo "   -ssh       uses \"ssh\" instad of \"rsh\""
-   echo "   -sshpath   path where ssh is installed of not in $PATH"
-   echo "   -all       run command on all execution hosts found in qmaster spool dir."
+   echo "usage: sgeremoterun [-noexec] [-ssh] [-all] [-noqmaster] \\"
+   echo "                    [-f hostfile] [host1]... -- command"
+   echo
+   echo "   -noexec     do nothing, just print what would be done"
+   echo "   -ssh        uses \"ssh\" instad of \"rsh\""
+   echo "   -sshpath    path where ssh is installed of not in $PATH"
+   echo "   -all        run command on all execution hosts found in qmaster spool dir."
+   echo "   -f hostfile use this file which contains a list of hosts"
    echo "   -noqmaster do not run command on current qmaster host"
    echo
    exit 1
@@ -97,7 +97,6 @@ qmaster=true
 CMD=""
 hosts=""
 done=false
-
 
 whoseargs="args"
 while [ "$1" != "" -a $done = false ]; do
@@ -121,10 +120,21 @@ while [ "$1" != "" -a $done = false ]; do
          -all)
             qma_spool_dir=`grep qmaster_spool_dir $SGE_ROOT/$SGE_CELL/common/configuration | \
                            awk '{ print $2 }'`
-            hosts=`ls $qma_spool_dir/exec_hosts|egrep -v "template|global"`
+            hostlist=`ls $qma_spool_dir/exec_hosts|egrep -v "template|global"`
+            hosts="$hosts $hostlist"
             ;;
          -noqmaster)
             qmaster=false
+            ;;
+         -f)
+            if [ -f "$2" ]; then
+               hostlist=`cat $2`
+               hosts="$hosts $hostlist"
+            else
+               echo hostfile \"$2\" does not exist. Installation failed. Exit.
+               exit 1
+            fi
+            shift
             ;;
          -*)
             echo "unknown option: $1"
@@ -153,6 +163,7 @@ if [ "$hosts" = "" ]; then
    exit 1
 fi
 
+hosts=`printf "%s\n" $hosts | sort | uniq`
 
 act_qmaster=none
 if [ $qmaster = false ]; then
@@ -168,14 +179,14 @@ if [ $noexec = true ]; then
    echo
    echo The command:
    echo
-   echo "  % echo \". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && $CMD\" | $cmd $h /bin/sh"
+   echo "  # echo \". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && $CMD\" | $cmd <host> /bin/sh"
    echo 
    echo would be executed on the following hosts:
    echo
-   echo "   $hosts"
+   printf "%s %s " "   " $hosts
    echo
    if [ $qmaster = false ]; then
-      echo The command would not be executed on host
+      echo The command would not be executed on qmaster host:
       echo
       echo "   $act_qmaster"
       echo
@@ -183,7 +194,10 @@ if [ $noexec = true ]; then
    exit 0
 fi
 
+echo "Executing command in $SGE_ROOT: $CMD"
+
 for h in $hosts; do
+   echo Host: $h
    if [ $qmaster = false -a $h = "$act_qmaster" ]; then
       echo not executing command on qmaster host \"$act_qmaster\"
    else  

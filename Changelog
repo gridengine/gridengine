@@ -1,3 +1,7 @@
+CR-2001-08-23-2: Testsuite:
+                 - using full path name for files to check in procedure
+                   check_executable_files 
+
 CR-2001-08-23-1: Testsuite:
                  - removed add_proc_error call in compile_source procedure
                    (output buffer overflow error). Now the error is only

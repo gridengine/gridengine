@@ -1725,40 +1725,40 @@ proc load_defaults {} {
 
 proc check_executable_files {  } {
 
-   global CHECK_TESTSUITE_ROOT CHECK_OUTPUT
+   global CHECK_TESTSUITE_ROOT CHECK_OUTPUT CHECK_SOURCE_DIR
 
    set filelist ""
-   lappend filelist "scripts/lock.sh"
-   lappend filelist "scripts/remote_submit.sh"
-   lappend filelist "scripts/remote_submit_log.sh"
-   lappend filelist "scripts/remote_tcl_command.sh"
-   lappend filelist "scripts/remotecompile.sh"
-   lappend filelist "scripts/sleeper.sh"
-   lappend filelist "scripts/ssh_progstarter.csh"
-   lappend filelist "checktree/functional/migration/checkpt_job.sh"
-   lappend filelist "checktree/functional/migration/migrate.sh"
-   lappend filelist "checktree/system_tests/clients/qmod/general/qmod_job.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/qsub_gid.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/remote_qrsh.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/sleep_pid.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/terminate.sh"
-   lappend filelist "checktree/system_tests/clients/qrsh/trap.sh" 
-   lappend filelist "checktree/system_tests/clients/qrsh/ulimit.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/pminiworm.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/flood_sleeper.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/qstat.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/redir_stderr.sh"
-   lappend filelist "checktree/system_tests/qmaster/size/sge_start.sh"
-   lappend filelist "../source/aimk"
-   lappend filelist "../source/dist/examples/jobs/array_submitter.sh"
-   lappend filelist "../source/dist/examples/jobs/env-tester.csh"
-   lappend filelist "../source/dist/examples/jobs/jobnet_submitter.sh"
-   lappend filelist "../source/dist/examples/jobs/pminiworm.sh"
-   lappend filelist "../source/dist/examples/jobs/simple.sh"
-   lappend filelist "../source/dist/examples/jobs/sleeper.sh"
-   lappend filelist "../source/dist/examples/jobs/step_A_array_submitter.sh"
-   lappend filelist "../source/dist/examples/jobs/step_B_array_submitter.sh"
-   lappend filelist "../source/dist/examples/jobs/worker.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/lock.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_submit.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_submit_log.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remote_tcl_command.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/remotecompile.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/sleeper.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/scripts/ssh_progstarter.csh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/functional/migration/checkpt_job.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/functional/migration/migrate.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qmod/general/qmod_job.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/qsub_gid.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/remote_qrsh.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/sleep_pid.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/terminate.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/trap.sh" 
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/clients/qrsh/ulimit.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/pminiworm.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/flood_sleeper.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/qstat.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/redir_stderr.sh"
+   lappend filelist "$CHECK_TESTSUITE_ROOT/checktree/system_tests/qmaster/size/sge_start.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/aimk"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/array_submitter.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/env-tester.csh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/jobnet_submitter.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/pminiworm.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/simple.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/sleeper.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/step_A_array_submitter.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/step_B_array_submitter.sh"
+   lappend filelist "$CHECK_SOURCE_DIR/dist/examples/jobs/worker.sh"
    
 
    set change_files ""
@@ -1766,7 +1766,7 @@ proc check_executable_files {  } {
 
    set file_error 0
    foreach elem $filelist {
-      set filename "$CHECK_TESTSUITE_ROOT/$elem"
+      set filename $elem
       if { [ file isfile $filename ] != 1  } {
          puts $CHECK_OUTPUT "file not found: $filename"
          set file_error 1

@@ -1,3 +1,6 @@
+CR-2002-11-20-1  Testsuite: install_core_system check doesn't work without 
+                 Bugfix:    root password (noroot)
+
 CR-2002-11-20-0  Testsuite: Added l10n enhancements, new configuration files
                             (new procedures for file spooling, gettext features,
                              sge_macro (use macros from source code) ...)

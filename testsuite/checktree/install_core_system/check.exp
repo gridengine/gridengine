@@ -318,34 +318,6 @@ proc install_qmaster {} {
  }
  close $f
 
- cd "$CHECK_PRODUCT_ROOT"
-
- set prod_type_var "SGE_ROOT"
-
- set feature_install_options ""
- if { $CHECK_PRODUCT_FEATURE == "csp" } {
-    append feature_install_options "-csp"
- }
-
- if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "root"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
- } else {
-    puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
-    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "$CHECK_USER"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
- }
- set sp_id [ lindex $id 1 ] 
- 
-
- log_user 1
- puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
-
- set timeout 100 
- set hostcount 0
-
- set do_log_output 0 ;# _LOG
- if { $CHECK_DEBUG_LEVEL == 2 } {
-   set do_log_output  1 ;# 1
- }
 
  set HIT_RETURN_TO_CONTINUE       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
  set NOT_COMPILED_IN_SECURE_MODE  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_NOT_COMPILED_IN_SECURE_MODE] ] 
@@ -374,6 +346,37 @@ proc install_qmaster {} {
  set DNS_DOMAIN_QUESTION          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DNS_DOMAIN_QUESTION] ] 
  set ENTER_SPOOL_DIR_OR_HIT_RET   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SPOOL_DIR_OR_HIT_RET] "*"]
  set USING_GID_RANGE_HIT_RETURN   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_USING_GID_RANGE_HIT_RETURN] "*"]
+
+
+
+ cd "$CHECK_PRODUCT_ROOT"
+
+ set prod_type_var "SGE_ROOT"
+
+ set feature_install_options ""
+ if { $CHECK_PRODUCT_FEATURE == "csp" } {
+    append feature_install_options "-csp"
+ }
+
+ if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
+    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "root"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
+ } else {
+    puts $CHECK_OUTPUT "--> install as user $CHECK_USER <--" 
+    set id [open_remote_spawn_process "$CHECK_CORE_MASTER" "$CHECK_USER"  "cd $$prod_type_var;./install_qmaster" "$CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options" ]
+ }
+ set sp_id [ lindex $id 1 ] 
+ 
+
+ log_user 1
+ puts $CHECK_OUTPUT "cd $$prod_type_var;./install_qmaster $CHECK_QMASTER_INSTALL_OPTIONS $feature_install_options"
+
+ set timeout 100 
+ set hostcount 0
+
+ set do_log_output 0 ;# _LOG
+ if { $CHECK_DEBUG_LEVEL == 2 } {
+   set do_log_output  1 ;# 1
+ }
 
  while {1} {
  if {$do_log_output == 1} {
@@ -1502,6 +1505,19 @@ proc install_execd {} {
          }
       }
 
+      set HIT_RETURN_TO_CONTINUE       [translate $exec_host 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
+      set EXECD_INSTALL_COMPLETE       [translate $exec_host 0 1 0 [sge_macro DISTINST_EXECD_INSTALL_COMPLETE] ]
+      set PREVIOUS_SCREEN              [translate $exec_host 0 1 0 [sge_macro DISTINST_PREVIOUS_SCREEN ] ]
+      set ANSWER_YES                   [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_YES] ]
+      set ANSWER_NO                    [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_NO] ]
+      set ADD_DEFAULT_QUEUE            [translate $exec_host 0 1 0 [sge_macro DISTINST_ADD_DEFAULT_QUEUE] ]
+      set INSTALL_SCRIPT               [translate $exec_host 0 1 0 [sge_macro DISTINST_INSTALL_SCRIPT] ]
+      set IF_NOT_OK_STOP_INSTALLATION  [translate $exec_host 0 1 0 [sge_macro DISTINST_IF_NOT_OK_STOP_INSTALLATION] ]
+      set LOCAL_CONFIG_FOR_HOST        [translate $exec_host 0 1 0 [sge_macro DISTINST_LOCAL_CONFIG_FOR_HOST] "$exec_host"]
+      set MESSAGES_LOGGING             [translate $exec_host 0 1 0 [sge_macro DISTINST_MESSAGES_LOGGING] ]
+      set CELL_NAME_FOR_QMASTER        [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] ]
+      set USE_CONFIGURATION_PARAMS     [translate $exec_host 0 1 0 [sge_macro DISTINST_USE_CONFIGURATION_PARAMS] ]
+
       cd "$CHECK_PRODUCT_ROOT"
 
       set prod_type_var "SGE_ROOT"
@@ -1527,18 +1543,7 @@ proc install_execd {} {
          set do_log_output 1
       }
 
-      set HIT_RETURN_TO_CONTINUE       [translate $exec_host 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
-      set EXECD_INSTALL_COMPLETE       [translate $exec_host 0 1 0 [sge_macro DISTINST_EXECD_INSTALL_COMPLETE] ]
-      set PREVIOUS_SCREEN              [translate $exec_host 0 1 0 [sge_macro DISTINST_PREVIOUS_SCREEN ] ]
-      set ANSWER_YES                   [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_YES] ]
-      set ANSWER_NO                    [translate $exec_host 0 1 0 [sge_macro DISTINST_ANSWER_NO] ]
-      set ADD_DEFAULT_QUEUE            [translate $exec_host 0 1 0 [sge_macro DISTINST_ADD_DEFAULT_QUEUE] ]
-      set INSTALL_SCRIPT               [translate $exec_host 0 1 0 [sge_macro DISTINST_INSTALL_SCRIPT] ]
-      set IF_NOT_OK_STOP_INSTALLATION  [translate $exec_host 0 1 0 [sge_macro DISTINST_IF_NOT_OK_STOP_INSTALLATION] ]
-      set LOCAL_CONFIG_FOR_HOST        [translate $exec_host 0 1 0 [sge_macro DISTINST_LOCAL_CONFIG_FOR_HOST] "$exec_host"]
-      set MESSAGES_LOGGING             [translate $exec_host 0 1 0 [sge_macro DISTINST_MESSAGES_LOGGING] ]
-      set CELL_NAME_FOR_QMASTER        [translate $exec_host 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] ]
-      set USE_CONFIGURATION_PARAMS     [translate $exec_host 0 1 0 [sge_macro DISTINST_USE_CONFIGURATION_PARAMS] ]
+
       set do_stop 0
       while {$do_stop == 0} {
          flush stdout

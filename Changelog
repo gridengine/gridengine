@@ -1,3 +1,5 @@
+JG-2003-03-26-1  Bugfix:    Some Makefiles passed CFLAGS to linker.
+
 JG-2003-03-26-0  Bugfix:    Reject tightly integrated array jobs.
                  Changed:   sge_qmaster, qsh
                  Review:    EB

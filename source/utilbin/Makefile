@@ -103,35 +103,35 @@ gethostbyaddr.o:	$(UTILBIN_DIR)/gethostbyaddr.c
 
 #---------------------------------------------------------------------
 getservbyname:	getservbyname.o $(UTILIB) $(RMONLIB)
-		$(CC) $(CFLAGS) -o $@ getservbyname.o $(LFLAGS) -luti -lrmon $(LIBS)
+		$(CC) -o $@ getservbyname.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 getservbyname.o:	$(UTILBIN_DIR)/getservbyname.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/getservbyname.c
 
 #---------------------------------------------------------------------
 filestat:	filestat.o $(UTILIB) $(RMONLIB)
-		$(CC) $(CFLAGS) -o $@ filestat.o $(LFLAGS) -luti -lrmon $(LIBS)
+		$(CC) -o $@ filestat.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 filestat.o:	$(UTILBIN_DIR)/filestat.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/filestat.c
 
 #---------------------------------------------------------------------
 now:		now.o
-		$(CC) $(CFLAGS) -o $@ now.o $(LFLAGS)
+		$(CC) -o $@ now.o $(LFLAGS)
 
 now.o:		$(UTILBIN_DIR)/now.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/now.c
 
 #---------------------------------------------------------------------
 checkprog:	checkprog.o peopen_standalone.o pids_standalone.o $(RMONLIB) $(UTILIB)
-		$(CC) $(CFLAGS) -o $@ checkprog.o peopen_standalone.o pids_standalone.o $(LFLAGS) -luti -lrmon $(LIBS)
+		$(CC) -o $@ checkprog.o peopen_standalone.o pids_standalone.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 checkprog.o:	$(UTILBIN_DIR)/checkprog.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/checkprog.c
 
 #---------------------------------------------------------------------
 checkuser:     checkuser.o $(UTILIB) $(RMONLIB) 
-		$(CC) $(CFLAGS) -o $@ checkuser.o $(LFLAGS) -luti -lrmon $(LIBS)
+		$(CC) -o $@ checkuser.o $(LFLAGS) -luti -lrmon $(LIBS)
 
 checkuser.o:      $(UTILBIN_DIR)/checkuser.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/checkuser.c

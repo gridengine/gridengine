@@ -302,7 +302,12 @@ int nm
    
    strcpy(buf, "");
    for_each(jep, job_args) {
-      sprintf(buf, "%s %s", buf, lGetString(jep, STR));
+      const char *arg = lGetString(jep, STR);
+      if(arg != NULL) {
+         sprintf(buf, "%s %s", buf, arg);
+      } else {
+         sprintf(buf, "%s \"\"", buf);
+      }
    }
    str = XtNewString(buf);
 

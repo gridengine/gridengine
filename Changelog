@@ -1,3 +1,5 @@
+JG-2001-10-31-1: Bugfix: qmon dumped core when displaying empty job args
+
 JG-2001-10-31-0: Testsuite: Bugfix in submit_hosts test, did not work, 
                  if master host and submit_hosts test host had different
                  architecture.

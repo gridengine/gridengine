@@ -239,7 +239,7 @@ lDescr **dpp
          free(dp); 
          DEXIT;
       }
-      if(temp < 0) {  /* no hashing */
+      if(temp == HASH_OFF) {  /* no hashing */
          dp[i].hash = NULL;  
       } else {         /* create hashing info */
          if((dp[i].hash = (lHash *) malloc(sizeof(lHash))) == NULL) {
@@ -249,7 +249,7 @@ lDescr **dpp
             DEXIT;
             return PACK_ENOMEM;
          }
-         dp[i].hash->unique = temp;
+         dp[i].hash->type = temp;
          dp[i].hash->table = NULL;
       } 
    }
@@ -294,14 +294,14 @@ const lDescr *dp
          DEXIT;
          return ret;
       }
-      /* pack hashing information: -1 = no hash, 0 = non unique, 1 = unique */
+      /* pack hashing information */
       if(dp[i].hash == NULL) {
-         if((ret = packint(pb, -1))) {
+         if((ret = packint(pb, HASH_OFF))) {
             DEXIT;
             return ret;
          }
       } else {
-         if((ret = packint(pb, dp[i].hash->unique))) {
+         if((ret = packint(pb, dp[i].hash->type))) {
             DEXIT;
             return ret;
          }

@@ -94,7 +94,7 @@ int indent
 
    for (i = 0; dp[i].mt != lEndT && ret != EOF; i++) {
       ret = fprintf(fp, "%s/* %-20.20s */ { %d, %d, %d }\n", space, lNm2Str(dp[i].nm),
-                    dp[i].nm, dp[i].mt, dp[i].hash == NULL ? -1 : dp[i].hash->unique);
+                    dp[i].nm, dp[i].mt, dp[i].hash == NULL ? HASH_OFF : dp[i].hash->type);
    }
 
    ret = fprintf(fp, "%s} /* DESCR END */\n", space);
@@ -740,7 +740,7 @@ lDescr *dp
 
    dp->nm = nm;
    dp->mt = mt;
-   if(hash < 0) {  /* no hashing */
+   if(hash == HASH_OFF) {  /* no hashing */
       dp->hash = NULL;
    } else {        /* create hashing info */
       if((dp->hash = (lHash *) malloc(sizeof(lHash))) == NULL) {
@@ -748,7 +748,7 @@ lDescr *dp
          DEXIT;
          return -1;
       }
-      dp->hash->unique = hash;
+      dp->hash->type = hash;
       dp->hash->table = NULL;
    }
 

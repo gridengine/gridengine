@@ -1,3 +1,8 @@
+JG-2001-12-06-0: Bugfix:    Cull hash implementation: When cull objects were 
+                            received and unpacked, all fields that did not 
+                            have a hash table in the original had a unique
+                            hash table created.
+
 SD-2001-11-30-0: Bugfix:    SGEEE scheduler - Moved max_pending_functional_jobs
                             short-circuit to outer loop of pending functional
                             jobs algorithm to correct problem where certain

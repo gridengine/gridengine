@@ -35,8 +35,14 @@
 #include "cull_list.h"
 #include "sge_hash.h"
 
+enum {
+   HASH_OFF = 0,
+   HASH_UNIQUE,
+   HASH_NONUNIQUE
+};
+
 struct _lHash {
-   int unique;
+   int type;
    HashTable table;
 };
 

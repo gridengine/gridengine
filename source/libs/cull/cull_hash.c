@@ -104,12 +104,12 @@
 *
 *******************************************************************************/
 lHash template_hash = {
-   0,
+   HASH_NONUNIQUE,
    NULL
 };
 
 lHash template_hash_unique = {
-   1,
+   HASH_UNIQUE,
    NULL
 };
 
@@ -166,7 +166,7 @@ lHash *cull_hash_copy_descr(const lDescr *descr)
       return NULL;
    }
 
-   hash->unique = descr->hash->unique;
+   hash->type = descr->hash->type;
    hash->table  = NULL;
 
    return hash;
@@ -310,7 +310,7 @@ void cull_hash_insert(const lListElem *ep, const int pos)
    }
   
    if(key != NULL) {
-      if(descr->hash->unique) {
+      if(descr->hash->type == HASH_UNIQUE) {
          HashTableStore(descr->hash->table, key, ep);
       } else {
          non_unique_hash *nuh = NULL;
@@ -377,7 +377,7 @@ void cull_hash_remove(const lListElem *ep, const int pos)
    }
   
    if(key != NULL) {
-      if(descr->hash->unique) {
+      if(descr->hash->type == HASH_UNIQUE) {
         HashTableDelete(descr->hash->table, key);
       } else {
          non_unique_hash *nuh = NULL;
@@ -471,7 +471,7 @@ lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, cons
       return NULL;  
    }   
 
-   if(descr->hash->unique) {
+   if(descr->hash->type == HASH_UNIQUE) {
       *iterator = NULL;
       if(HashTableLookup(descr->hash->table, key, (const void **)&ep) == True) {
          return ep;
@@ -525,7 +525,7 @@ lListElem *cull_hash_next(const lList *lp, const int pos, const void *key, const
    non_unique_hash *nuh = (non_unique_hash *)*iterator;
    lDescr *descr = &lp->descr[pos];
    
-   if(descr->hash == NULL || descr->hash->table == NULL || descr->hash->unique == 1 || nuh == NULL) {
+   if(descr->hash == NULL || descr->hash->table == NULL || descr->hash->type != HASH_NONUNIQUE || nuh == NULL) {
       return NULL;
    }
 
@@ -598,7 +598,7 @@ void cull_hash_free_descr(lDescr *descr)
    for(i = 0; descr[i].mt != lEndT; i++) {
       if(descr[i].hash != NULL) {
          if(descr[i].hash->table != NULL) {
-            if(descr[i].hash->unique == 0) {
+            if(descr[i].hash->type == HASH_NONUNIQUE) {
                /* delete chain of non unique elements */
                HashTableForEach(descr[i].hash->table, cull_hash_delete_non_unique_chain);
             }

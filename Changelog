@@ -1,5 +1,8 @@
+JG-2001-11-02-1: qstat -j aborted when writing usage of pe tasks
+
 JG-2001-11-02-0: qmake: Does not need to export variable PWD when executing 
-                        remote tasks; PWD is setup correctly by execd/shepherd.
+                        remote tasks (qrsh option -v PWD) - PWD is setup 
+                        correctly by execd/shepherd.
 
 CR-2001-10-31-0: Testsuite:
                    Added new test for share tree in

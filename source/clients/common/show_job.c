@@ -588,10 +588,10 @@ DTRACE;
 
          /* slave tasks */
          for_each (pe_task_ep, lGetList(jatep, JAT_task_list)) {
-            SUM_UP_USAGE(pe_task_ep, cpu, USAGE_ATTR_CPU);
-            SUM_UP_USAGE(pe_task_ep, vmem, USAGE_ATTR_VMEM);
-            SUM_UP_USAGE(pe_task_ep, mem, USAGE_ATTR_MEM);
-            SUM_UP_USAGE(pe_task_ep, io, USAGE_ATTR_IO);
+            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), cpu, USAGE_ATTR_CPU);
+            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), vmem, USAGE_ATTR_VMEM);
+            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), mem, USAGE_ATTR_MEM);
+            SUM_UP_USAGE(lFirst(lGetList(pe_task_ep, JB_ja_tasks)), io, USAGE_ATTR_IO);
          }
 
          printf("cpu=%s, vmem=%s, mem=%-5.5f GBs, io=%-5.5f\n",

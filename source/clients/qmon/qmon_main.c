@@ -317,7 +317,7 @@ char **argv
    ** Debugging:
    ** write contents of Resource DB to file DB.TXT in cwd
    */
-   XrmPutFileDatabase(qmon_database, "DB.TXT"); */
+   XrmPutFileDatabase(qmon_database, "DB.TXT");
 #endif   
 
    /* 

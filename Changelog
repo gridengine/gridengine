@@ -1,3 +1,11 @@
+AA-2005-02-11-0: Bugfix:    amd64 bit qmon, what a stupid problem
+                            a wrong define in aimk (MOTIF12_HEADERS)
+                            was the reason for the problems under amd64
+                            Latest build of libXm.so on dain installed
+                                                                                                 Changed:   aimk, qmon
+
+
+
 SG-2005-02-07-4: Bugfix:    sharetree has a usage leak
                  Changed:   qmaster
                  Issue:     1449

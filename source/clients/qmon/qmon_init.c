@@ -479,7 +479,7 @@ DTRACE;
    /*
    ** register xmt improved icons
    */
-   XmtRegisterImprovedIcons(top, NULL);
+/*    XmtRegisterImprovedIcons(top, NULL); */
    
    /*
     * Register adapted Qmon Widgets 

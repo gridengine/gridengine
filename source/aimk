@@ -1647,9 +1647,6 @@ case SOLARISAMD64:
    set XINCD    = "-I/usr/dt/include -I/usr/openwin/include $XMTINCD $XINCD"
    set XLIBD    = "-L/usr/dt/lib -L/usr/openwin/lib"
 
-   if ( $BUILDARCH == SOLARISAMD64 ) then
-      set XMTDEF = "-DMOTIF12_HEADERS $XMTDEF"
-   endif
    set XCFLAGS  = "-Xc -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = "-lXm -lXt -lXext -lXmu -lX11 -lw -lgen"

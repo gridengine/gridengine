@@ -604,14 +604,6 @@ int sub_command
                if (ret==-2)
                   reinit_event_client(EV_ID_SCHEDD);
             }
-            /* trigger sending of generated events directly to schedd 
-             * but only if events available
-             */
-            if (event_number != sge_get_next_event_number(EV_ID_SCHEDD)) {
-               if(schedd != NULL) {
-                  sge_flush_events(schedd, 0);
-               }
-            }   
          }
          break;
       case SGE_JOB_LIST:

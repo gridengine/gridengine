@@ -1,3 +1,9 @@
+AH-2002-05-13-1: Change:    Do no longer flush events immediately after orders 
+                            arrival to 'guarantee' scheduling is done not more 
+                            often than specified with schedule_interval in 
+                            sched_conf(5). 
+                 Changed:   sge_qmaster
+
 CR-2002-05-13-0: Enhancem.: new source files for sge_printf binary in utilbin
 
 EB-2002-05-13-0: Bugfix:    qconf -se shows "reschedule_unknown_list" param.

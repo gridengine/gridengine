@@ -153,7 +153,9 @@ CheckLocalFilesystem()
       fi
    done
 
-   if [ `$SGE_UTILBIN/fstype $FS | grep "nfs" | wc -l` -gt 0 ]; then
+   if [ `$SGE_UTILBIN/fstype $FS` = "nfs4" ]; then
+      return 1
+   elif [ `$SGE_UTILBIN/fstype $FS | grep "nfs" | wc -l` -gt 0 ]; then
       return 0
    else
       return 1

@@ -44,6 +44,12 @@
 #  include <sys/statvfs.h>
 #endif
 
+#if defined(SOLARIS)
+#include <kstat.h>
+#include <nfs/nfs.h> 
+#include <nfs/nfs_clnt.h> 
+#endif 
+
 #if defined(INTERIX)
 #  include "misc.h"
 #endif
@@ -64,6 +70,38 @@ int main(int argc, char *argv[]) {
 #elif defined(INTERIX)
    struct statvfs buf;
    ret = wl_statvfs(argv[1], &buf);
+#elif defined(SOLARIS)
+   struct statvfs buf; 
+   struct mntinfo_kstat mnt_info;
+   ulong_t fsid;
+   kstat_ctl_t    *kc = NULL;
+   kstat_t        *ksp;
+   kstat_named_t  *knp;
+
+   ret = statvfs(argv[1], &buf); 
+   fsid = (minor_t)(buf.f_fsid & 0xfff);
+ 
+   if ( strcmp(buf.f_basetype, "nfs") == 0) {
+            kc = kstat_open();
+            for (ksp = kc->kc_chain; ksp; ksp = ksp->ks_next) {
+               if (ksp->ks_type != KSTAT_TYPE_RAW)
+			         continue;
+		         if (strcmp(ksp->ks_module, "nfs") != 0)
+			         continue;
+		         if (strcmp(ksp->ks_name, "mntinfo") != 0)
+			         continue;
+               if (kstat_read(kc, ksp, &mnt_info) == -1) {
+                  kstat_close(kc);
+                  printf("error\n");
+                  return 2;
+               }
+               if ( fsid  == ksp->ks_instance)
+                  if ( mnt_info.mik_vers >= 4 ) {
+                     sprintf(buf.f_basetype, "%s%i", buf.f_basetype, mnt_info.mik_vers);
+                  }
+               }
+            ret = kstat_close(kc);
+   }
 #else   
    struct statvfs buf;
    ret = statvfs(argv[1], &buf);

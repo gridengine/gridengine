@@ -1,3 +1,10 @@
+RD-2005-03-04-0: Enhancm.: BDB install on NFSv4 share
+                           fstype now reports nfs4 on solaris
+                           installation recognize nfs4 as valid
+                 Issue:    1448
+                 Bugtraq:  6236261
+                 Review:   AA
+
 MD-2005-03-04-0: Bugfix:    - Port free/used check returns a wrong result in 
                               some cases (1385)
                             - execd uninstall doesn't remove all objects (1208)

@@ -419,6 +419,7 @@ set LIBS             = "-lm -lpthread"
 set LD_WRAPPER       = ""
 set DLLIB            = "-ldl"
 set LOADAVGLIBS      = ""
+set FSTYPELIBS       = ""
 set TPLIB            = ""  # 3rdparty libs
 set SLIBS            = ""
 
@@ -1641,6 +1642,7 @@ case SOLARISAMD64:
    set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
    set LIBS     = "-lsocket -lnsl $LIBS"
    set LOADAVGLIBS = "-lkstat"
+   set FSTYPELIBS = "-lkstat"
 
    set XMTDEF   = "-DXMT_CDE_BUG_FIX"
 
@@ -2121,7 +2123,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
          "NOERR_PROTO=$NOERR_PROTO" \
          "NOERR_CFLAG=$NOERR_CFLAG" \
-         "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
+         "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "FSTYPELIBS=$FSTYPELIBS" "TPLIB=$TPLIB" \
          "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
          "INTERACTTARGETS=$INTERACTTARGETS" \
          "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
@@ -2211,7 +2213,7 @@ if ( "$QMON" == 1 ) then
          "RANLIB=$RANLIB" "AR=$AR" "ARFLAGS=$ARFLAGS" \
          "NOERR_PROTO=$NOERR_PROTO" \
          "NOERR_CFLAG=$NOERR_CFLAG" \
-         "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "TPLIB=$TPLIB" \
+         "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "FSTYPELIBS=$FSTYPELIBS" "TPLIB=$TPLIB" \
          "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" \
          "INTERACTTARGETS=$INTERACTTARGETS" \
          "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \

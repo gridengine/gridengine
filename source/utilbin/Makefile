@@ -190,10 +190,10 @@ infotext.o: $(UTILBIN_DIR)/infotext.c
 
 #---------------------------------------------------------------------
 fstype:   fstype.o  version.o $(RMONLIB)
-		$(CC) -o $@ fstype.o version.o $(LFLAGS) $(LIBS) -lrmon
+		$(CC) -o $@ fstype.o version.o $(LFLAGS) $(FSTYPELIBS) $(LIBS) -lrmon
 
 fstype.o: $(UTILBIN_DIR)/fstype.c
-		$(CC) $(CFLAGS) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/fstype.c
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(GCC_NODUPLWARN) -c $(UTILBIN_DIR)/fstype.c
 #---------------------------------------------------------------------
 spooldefaults:   spooldefaults.o  version.o sge_mt_init.o $(SPOOLING_DEPS) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SECLIBS) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(LCKLIB) $(UTILIB) $(RMONLIB)
 		$(CC) -o $@ spooldefaults.o version.o sge_mt_init.o $(LFLAGS) -lspoolc $(SPOOLING_LIBS) -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti -llck -lrmon $(DLLIB) $(SLIBS) $(LIBS)

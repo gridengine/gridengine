@@ -7,7 +7,8 @@
 # defined.
 #HOME                    = $ENV::SGE_ROOT/default
 #RANDFILE                = $ENV::HOME/.rnd
-CATOP                    = $ENV::SGE_ROOT/default/common/sgeCA
+CACELL                   = $ENV::SGE_CELL
+CATOP                    = $ENV::SGE_ROOT/$CACELL/common/sgeCA
 
 # Extra OBJECT IDENTIFIER info:
 #oid_file                = $ENV::HOME/.oid
@@ -70,7 +71,7 @@ stateOrProvinceName     = match
 organizationName        = match
 organizationalUnitName  = optional
 commonName              = supplied
-uniqueIdentifier        = supplied
+userId                  = supplied
 emailAddress            = optional
 
 # For the 'anything' policy
@@ -135,8 +136,8 @@ organizationalUnitName_default      = Gridware
 commonName                          = Common Name (eg, YOUR name)
 commonName_max                      = 64
 
-uniqueIdentifier                    = UID
-uniqueIdentifier_max                = 64
+userId                              = UID
+userId_max                          = 64
 
 emailAddress                        = Email Address
 emailAddress_max                    = 40

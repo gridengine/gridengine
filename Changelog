@@ -1,5 +1,10 @@
-AS-2003-07-14-0: CVS        Created V53p4_1_TAG (Darwin port availability)
+AS-2003-09-29-0: CVS        Created V53p4_1_TAG (Darwin port availability)
 --------------------------------------------------------------------------
+AA-2003-09-29-0: Bugfix:    change in openssl 0.9.7b uniqueIdentifier now
+                            userId
+                            additional switches for sge_ca
+                 Review:    Omar Hassaine
+                 Changed:   sge_ca, sge_ssl.cnf, sge_ssl_template.cnf
 
 SG-2003-09-15-2: Bugfix:    The running ticket update did not work correctly
                             when the sgeee_scheduling interval was set to a

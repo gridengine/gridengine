@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh +x
 #
 # Grid Engine CA framework script
 #
@@ -56,16 +56,19 @@ ErrUsage()
 {
    myname=`basename $0`
    $INFOTEXT -e \
-   "\nUsage: %s {-init|-req|-sign|-copy|-verify|-usercert <file>} [-days <days>]\n" \
+   "\nUsage: %s {-init|-req|-sign|-copy|-verify|-print|-usercert <file>} [-days <days>] [-outdir]\n" \
    "   -init            initialize CA infrastructure\n" \
    "   -req             generate a certificate request and private key\n" \
    "   -sign            sign a certificate request\n" \
    "   -copy            install user certificate and private key\n" \
-   "   -verify          verify a certificate\n" \
+   "   -verify <cert>   verify a <cert>\n" \
+   "   -print <cert>    print a <cert>\n" \
+   "   -extend <cert>   extend the validity of <cert>\n" \
    "   -days <days>     days of validity of the certificate\n" \
    "   -sha1            use sha-1 instead of md5 as message digest\n" \
    "   -encryptkey      use des to encrypt the generated key with a passphrase\n" \
    "   -days <days>     days of validity of the certificate\n" \
+   "   -outdir <dir>    write to directory <dir>\n" \
    "   -cadir <dir>     overwrite CALOCALTOP and CATOP settings\n" \
    "   -pkcs12 <file>   generate pkcs12 format files for the users in <file>\n" \
    "   -usercert <file> generate certificates and keys for the users in <file>\n" $myname
@@ -688,7 +691,24 @@ while [ $ARGC != 0 ]; do
       WHICH="copy"
       ;;
    -verify)
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -verify needs argument"
+         ErrUsage
+      fi
       WHICH="verify"
+      newcert=$2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -print)
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -print needs argument"
+         ErrUsage
+      fi
+      WHICH="print"
+      newcert=$2
+      shift
+      ARGC=`expr $ARGC - 1`
       ;;
    -days)
       if [ $ARGC -lt 2 ]; then
@@ -696,6 +716,15 @@ while [ $ARGC != 0 ]; do
          ErrUsage
       fi
       DAYS="-days $2"
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -outdir)
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -outdir needs argument"
+         ErrUsage
+      fi
+      outdir="$2"
       shift
       ARGC=`expr $ARGC - 1`
       ;;
@@ -732,6 +761,16 @@ while [ $ARGC != 0 ]; do
          ErrUsage
       fi
       userfile=$2
+      shift
+      ARGC=`expr $ARGC - 1`
+      ;;
+   -extend)
+      if [ $ARGC -lt 2 ]; then
+         $INFOTEXT "Error: -extend needs argument"
+         ErrUsage
+      fi
+      WHICH="extend"
+      newcert=$2
       shift
       ARGC=`expr $ARGC - 1`
       ;;
@@ -790,6 +829,14 @@ usercert)
     ;;
 verify) 
     $VERIFY -CAfile $CATOP/$CACERT $newcert
+    RET=$?
+    ;;
+print) 
+    $X509 -in $newcert -text
+    RET=$?
+    ;;
+extend) 
+    $X509 -in $newcert -signkey $CALOCALTOP/private/$CAKEY $DAYS -out $outdir/extended_cert.pem
     RET=$?
     ;;
 pkcs12) 

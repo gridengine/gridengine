@@ -77,6 +77,10 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
+
+static int do_add_auto_user(lListElem*, int, lList**);
+
+
 int userprj_mod(
 lList **alpp,
 lListElem *modp,
@@ -515,18 +519,19 @@ int
 sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp)
 {
    int manager_added = 0, admin_host_added = 0;
-   sge_gdi_request user_request, user_answer;
-   lList *lp;
-   lListElem *uep, *ep, *answer;
+   lListElem *uep, *ep = NULL;
    int status = STATUS_OK;
 
    DENTER(TOP_LAYER, "sge_add_auto_user");
 
    uep = userprj_list_locate(Master_User_List, user);
 
-   /* if permanent user already exists or we don't need to
-    * extend the life of the automatic user, we're done */
-   if (uep && lGetUlong(uep, UP_delete_time) <= 1) {
+   /*
+    * if permanent user already exists or we don't need to
+    * extend the life of the automatic user, we're done
+    */
+   if (uep && lGetUlong(uep, UP_delete_time) <= 1)
+   {
       DEXIT;
       return STATUS_OK;
    }
@@ -535,75 +540,65 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
     * User object will be added or modifed by this user, so temporarily
     * make the user a manager and the host an admin host.
     */
-
-   if (!manop_is_manager(user)) {
+   if (!manop_is_manager(user))
+   {
       lAddElemStr(&Master_Manager_List, MO_name, user, MO_Type);
       manager_added = 1;
    }
 
-   if (!host_list_locate(Master_Adminhost_List, host)) {
+   if (!host_list_locate(Master_Adminhost_List, host))
+   {
       lAddElemHost(&Master_Adminhost_List, AH_name, host, AH_Type);
       admin_host_added = 1;
    }
 
-   /* create the user element to be added */
-   ep = lCreateElem(UP_Type);
-   if (uep) {
+   ep = lCreateElem(UP_Type); /* create the user element to be added */ 
+
+   if (uep)
+   {
       /* modify user element (extend life) */
       lSetString(ep, UP_name, user);
+
       if (conf.auto_user_delete_time > 0)
+      {
 #ifdef EXTEND_AUTO_USER_DELETE_TIME
          lSetUlong(ep, UP_delete_time, 1);
 #else
          lSetUlong(ep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
 #endif
+      }
       else
+      {
          lSetUlong(ep, UP_delete_time, 0);
-   } else {
+      }
+   }
+   else
+   {
       /* add automatic user element */
       lSetString(ep, UP_name, user);
       lSetUlong(ep, UP_oticket, conf.auto_user_oticket);
       lSetUlong(ep, UP_fshare, conf.auto_user_fshare);
-      if (!conf.auto_user_default_project ||
-          !strcasecmp(conf.auto_user_default_project, "none"))
+
+      if (!conf.auto_user_default_project || !strcasecmp(conf.auto_user_default_project, "none"))
          lSetString(ep, UP_default_project, NULL);
       else
          lSetString(ep, UP_default_project, conf.auto_user_default_project);
+
       if (conf.auto_user_delete_time > 0)
+      {
 #ifdef EXTEND_AUTO_USER_DELETE_TIME
          lSetUlong(ep, UP_delete_time, 1);
 #else
          lSetUlong(ep, UP_delete_time, sge_get_gmt() + conf.auto_user_delete_time);
 #endif
+      }
       else
+      {
          lSetUlong(ep, UP_delete_time, 0);
+      }
    }
 
-   lp = lCreateList("Automatic user", UP_Type);
-   lAppendElem(lp, ep);
-
-   /* set up the request structure */
-   memcpy(&user_request, request, sizeof(user_request));
-   user_request.op = uep ? SGE_GDI_MOD : SGE_GDI_ADD;
-   user_request.target = SGE_USER_LIST;
-   user_request.lp = lp;
-
-   /* set up the answer structure */
-   memset(&user_answer, 0, sizeof(user_answer));
-
-   /* add or update the automatic user object */
-   sge_c_gdi(host, &user_request, &user_answer);
-
-   /* report failure */
-   if (user_answer.alp && ((answer=lFirst(user_answer.alp))) &&
-       ((status=lGetUlong(answer, AN_status))) != STATUS_OK) {
-      answer_list_add(alpp, lGetString(answer, AN_text),
-                      status, lGetUlong(answer, AN_quality));
-   }
-
-   /* free the answer list */
-   if (user_answer.alp)
-      lFreeList(user_answer.alp);
+   status = do_add_auto_user(ep, ((NULL != uep) ? SGE_GDI_MOD : SGE_GDI_ADD), alpp); 
 
    /* clean up the manager and admin host */
    if (manager_added) {
@@ -613,13 +608,53 @@ sge_add_auto_user(char *user, char *host, sge_gdi_request *request, lList **alpp
    if (admin_host_added) {
       lDelElemHost(&Master_Adminhost_List, AH_name, host);
    }
-
-   lp = lFreeList(lp);
    
+   ep = lFreeElem(ep);
+
    DEXIT;
    return status;
 }
 
+/****** qmaster/sge_userprj_qmaster/do_add_auto_user() *************************
+*  NAME
+*     do_add_auto_user() -- add auto user to SGE_USER_LIST
+*
+*  SYNOPSIS
+*     static int do_add_auto_user(lListElem*, int, lList**) 
+*
+*  NOTES
+*     MT-NOTE: do_add_auto_user() is not MT safe 
+*
+*******************************************************************************/
+static int do_add_auto_user(lListElem* anUser, int aMode, lList** anAnswer)
+{
+   int flag, res = STATUS_EUNKNOWN;
+   gdi_object_t *userList = NULL;
+   lList *tmpAnswer = NULL;
+
+   DENTER(TOP_LAYER, "do_add_auto_user");
+
+   flag = (SGE_GDI_MOD == aMode) ? 0 : 1; /* add or modify user? */
+
+   userList = get_gdi_object(SGE_USER_LIST);
+
+   res = sge_gdi_add_mod_generic(&tmpAnswer, anUser, flag, userList, "", "", 0);
+
+   if ((STATUS_OK != res) && (NULL != tmpAnswer))
+   {
+      lListElem *err   = lFirst(tmpAnswer);
+      const char *text = lGetString(err, AN_text);
+      u_long32 status  = lGetUlong(err, AN_status);
+      u_long32 quality = lGetUlong(err, AN_quality);
+
+      answer_list_add(anAnswer, text, status, quality);
+
+      lFreeList(tmpAnswer);
+   }
+
+   DEXIT;
+   return res;
+}
 
 /****** sge_userprj_qmaster/sge_userprj_spool() ********************************
 *  NAME

@@ -73,6 +73,7 @@
 #define MSG_BERKELEY_COULDNTESETUPLOCKDETECTION_S _MESSAGE(70105, _("couldn't setup deadlock detection: "SFN"\n"))
 #define MSG_BERKELEY_COULDNTESETRPCSERVER_S _MESSAGE(70106, _("couldn't set rpc server in database environment: "SFN"\n"))
 #define MSG_BERKELEY_CONNECTION_LOST_SS _MESSAGE(70107, _("connection to rpc server "SFQ", database "SFQ" lost. Freeing all resources to prepare for a reconnect.\n"))
+#define MSG_BERKELEY_RUNRECOVERY _MESSAGE(70108, _("Corrupted database detected. Freeing all resources to prepare for a reconnect with recovery.\n"))
 
 /*
  * sge_bdb_types.c

@@ -187,23 +187,26 @@ ERROR:
 }
 
 
-int pe_spool(
-lList **alpp,
-lListElem *pep,
-gdi_object_t *object 
-) {
+int pe_spool(lList **alpp, lListElem *pep, gdi_object_t *object) 
+{
+   lList *answer_list = NULL;
+   bool dbret;
+
    DENTER(TOP_LAYER, "pe_spool");
 
-   if (!spool_write_object(alpp, spool_get_default_context(), pep, 
-                           lGetString(pep, PE_name), SGE_TYPE_PE)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
-            object->object_name, lGetString(pep, PE_name)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
+   dbret = spool_write_object(&answer_list, spool_get_default_context(), pep, 
+                              lGetString(pep, PE_name), SGE_TYPE_PE);
+   answer_list_output(&answer_list);
+
+   if (!dbret) {
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_WRITE_FAILED_S,
+                              lGetString(pep, PE_name));
    }
+
    DEXIT;
-   return 0;
+   return dbret ? 0 : 1;
 }
 
 int pe_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 

@@ -631,15 +631,20 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
          u_long32 tag = lGetUlong(qinstance, QU_tag);
 
          if (tag == SGE_QI_TAG_ADD || tag == SGE_QI_TAG_MOD) {
+            lList *spool_answer_list = NULL;
+            bool dbret;
             const char *key = sge_dstring_sprintf(&key_dstring, "%s/%s",
                                              cqname,
                                              lGetHost(qinstance, QU_qhostname));
-            if (!spool_write_object(NULL, spool_get_default_context(), 
-                                    qinstance,
-                                    key, SGE_TYPE_QINSTANCE)) {
-               ERROR((SGE_EVENT, MSG_CQUEUE_ERRORWRITESPOOLFILE_S, name));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
-                               ANSWER_QUALITY_ERROR);
+            dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
+                                       qinstance, key, SGE_TYPE_QINSTANCE);
+            answer_list_output(&spool_answer_list);
+
+            if (!dbret) {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                       ANSWER_QUALITY_ERROR, 
+                                       MSG_PERSISTENCE_WRITE_FAILED_S,
+                                       key);
                tmp_ret = false;
                break;
             }
@@ -649,12 +654,20 @@ hgroup_spool(lList **answer_list, lListElem *this_elem, gdi_object_t *object)
 
    sge_dstring_free(&key_dstring);
 
-   if (tmp_ret && !spool_write_object(answer_list, spool_get_default_context(), 
-                                      this_elem, name, SGE_TYPE_HGROUP)) {
-      ERROR((SGE_EVENT, MSG_HGRP_ERRORWRITESPOOLFORGROUP_S, name));
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
-                      ANSWER_QUALITY_ERROR);
-      tmp_ret = false;
+   if (tmp_ret) {
+      lList *spool_answer_list = NULL;
+      bool dbret;
+
+      dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
+                                 this_elem, name, SGE_TYPE_HGROUP);
+      answer_list_output(&spool_answer_list);
+      if (!dbret) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_PERSISTENCE_WRITE_FAILED_S,
+                                 name);
+         tmp_ret = false;
+      }
    }
 
    if (!tmp_ret) {

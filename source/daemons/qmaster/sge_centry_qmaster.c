@@ -228,21 +228,26 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
 /* ------------------------------------------------------------ */
 
 int 
-centry_spool(lList **answer_list, lListElem *cep, gdi_object_t *object) 
+centry_spool(lList **alpp, lListElem *cep, gdi_object_t *object) 
 {
+   lList *answer_list = NULL;
+   bool dbret;
+
    DENTER(TOP_LAYER, "centry_spool");
 
-   if (!spool_write_object(answer_list, spool_get_default_context(), cep, 
-                           lGetString(cep, CE_name), SGE_TYPE_CENTRY)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
-             MSG_OBJ_CPLX, lGetString(cep, CE_name)));
-      answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST, 0);
-      DEXIT;
-      return 1;
+   dbret = spool_write_object(&answer_list, spool_get_default_context(), cep, 
+                              lGetString(cep, CE_name), SGE_TYPE_CENTRY);
+   answer_list_output(&answer_list);
+
+   if (!dbret) {
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_WRITE_FAILED_S,
+                              lGetString(cep, CE_name));
    } 
    
    DEXIT;
-   return 0;
+   return dbret ? 0 : 1;
 }
 
 /* ------------------------------------------------------------ */

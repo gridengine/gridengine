@@ -748,12 +748,19 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
    dstring key_dstring = DSTRING_INIT;
    u_long32 now = sge_get_gmt();
 
+   bool dbret;
+   lList *spool_answer_list = NULL;
+
    DENTER(TOP_LAYER, "cqueue_spool");
-   if (!spool_write_object(NULL, spool_get_default_context(), cqueue, 
-                           name, SGE_TYPE_CQUEUE)) {
-      ERROR((SGE_EVENT, MSG_CQUEUE_ERRORWRITESPOOLFILE_S, name));
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, 
-                      ANSWER_QUALITY_ERROR);
+   dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), cqueue, 
+                              name, SGE_TYPE_CQUEUE);
+   answer_list_output(&spool_answer_list);
+
+   if (!dbret) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_WRITE_FAILED_S,
+                              name);
       ret = 1;
    }
 
@@ -764,11 +771,15 @@ int cqueue_spool(lList **answer_list, lListElem *cqueue, gdi_object_t *object)
          const char *key = sge_dstring_sprintf(&key_dstring, "%s/%s",
                                          name,
                                          lGetHost(qinstance, QU_qhostname));
-         if (!spool_write_object(NULL, spool_get_default_context(), qinstance,
-                                 key, SGE_TYPE_QINSTANCE)) {
-            ERROR((SGE_EVENT, MSG_QINSTANCE_ERRORWRITESPOOLFILE_S, key));
-            answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
-                            ANSWER_QUALITY_ERROR);
+         dbret = spool_write_object(&spool_answer_list, spool_get_default_context(), qinstance,
+                                    key, SGE_TYPE_QINSTANCE);
+         answer_list_output(&spool_answer_list);
+
+         if (!dbret) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    MSG_PERSISTENCE_WRITE_FAILED_S,
+                                    key);
             ret = 1;
          }
 

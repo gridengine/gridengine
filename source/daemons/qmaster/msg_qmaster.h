@@ -750,6 +750,13 @@
 #define MSG_COM_NOSCHEDDREGMASTER _MESSAGE(33816, _("no scheduler registered at qmaster\n"))
 #define MSG_COM_SCHEDMON_SS       _MESSAGE(33817, _(SFN"@"SFN" triggers scheduler monitoring\n"))
 
+/*
+ * sge_persistence_qmaster.c
+ */
+
+#define MSG_PERSISTENCE_WRITE_FAILED_S _MESSAGE(33820, _("error writing object "SFQ" to spooling database\n"))
+#define MSG_PERSISTENCE_DELETE_FAILED_S _MESSAGE(33821, _("error deleting object "SFQ" from spooling database\n"))
+
 
 #endif
 

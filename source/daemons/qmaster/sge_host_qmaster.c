@@ -509,6 +509,9 @@ gdi_object_t *object
    const char *key;
    sge_object_type host_type = SGE_TYPE_ADMINHOST;
 
+   bool dbret;
+   lList *answer_list = NULL;
+
    DENTER(TOP_LAYER, "host_spool");
 
    pos = lGetPosViaElem(ep, object->key_nm );
@@ -531,15 +534,18 @@ gdi_object_t *object
          break;
    }
      
-   if (!spool_write_object(alpp, spool_get_default_context(), ep, key, host_type)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, object->object_name, key));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return 1;
+   dbret = spool_write_object(alpp, spool_get_default_context(), ep, key, host_type);
+   answer_list_output(&answer_list);
+
+   if (!dbret) {
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_WRITE_FAILED_S,
+                              key);
    }
 
    DEXIT;
-   return 0;
+   return dbret ? 0 : 1;
 }
 
 int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object) 

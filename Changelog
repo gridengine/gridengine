@@ -1,3 +1,7 @@
+JG-2004-02-11-1: Cleanup:   Cleanup and enhancement of error messages in case of
+                            spooling errors.
+                 Review:    pending
+
 DT-2004-02-11-0: Bugfix:    Fixed aimk -help output.
                             Made the -secure transition more user friendly.
                  Changed:   aimk

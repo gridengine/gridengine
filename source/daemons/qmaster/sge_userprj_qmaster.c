@@ -245,21 +245,28 @@ lList **alpp,
 lListElem *upe,
 gdi_object_t *object 
 ) {
+   lList *answer_list = NULL;
+   bool dbret;
+
    int user_flag = (object->target==SGE_USER_LIST)?1:0;
 
    DENTER(TOP_LAYER, "userprj_spool");
 
    /* write user or project to file */
-   if (!spool_write_object(alpp, spool_get_default_context(), upe, 
-                           lGetString(upe, object->key_nm), 
-                           user_flag ? SGE_TYPE_USER : SGE_TYPE_PROJECT)) {
-      /* answer list gets filled in write_userprj() */
-      DEXIT;
-      return 1;
+   dbret = spool_write_object(alpp, spool_get_default_context(), upe, 
+                              lGetString(upe, object->key_nm), 
+                              user_flag ? SGE_TYPE_USER : SGE_TYPE_PROJECT);
+   answer_list_output(&answer_list);
+
+   if (!dbret) {
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_WRITE_FAILED_S,
+                              lGetString(upe, object->key_nm));
    }
 
    DEXIT;
-   return 0;
+   return dbret ? 0 : 1;
 }
 
 

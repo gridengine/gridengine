@@ -181,21 +181,26 @@ int cuser_success(lListElem *cuser, lListElem *old_cuser,
    return 0;
 }
 
-int cuser_spool(lList **answer_list, lListElem *upe, gdi_object_t *object) 
+int cuser_spool(lList **alpp, lListElem *upe, gdi_object_t *object) 
 {  
+   lList *answer_list = NULL;
+   bool dbret;
+
    DENTER(TOP_LAYER, "usermap_spool");
  
-   if (!spool_write_object(NULL, spool_get_default_context(), upe, lGetString(upe, CU_name), SGE_TYPE_CUSER)) {
-      const char* clusterUser = NULL;
-      clusterUser = lGetString(upe, CU_name); 
-      ERROR((SGE_EVENT, MSG_UM_ERRORWRITESPOOLFORUSER_S, clusterUser ));
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return 1;
+   dbret = spool_write_object(&answer_list, spool_get_default_context(), upe, 
+                              lGetString(upe, CU_name), SGE_TYPE_CUSER);
+   answer_list_output(&answer_list);
+
+   if (!dbret) {
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_WRITE_FAILED_S,
+                              lGetString(upe, CU_name));
    }
- 
+
    DEXIT;
-   return 0;
+   return dbret ? 0 : 1;
 }
 
 int cuser_del(lListElem *this_elem, lList **answer_list, 

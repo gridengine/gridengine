@@ -1366,16 +1366,39 @@ spool_berkeleydb_delete_cqueue(lList **answer_list, struct bdb_info *info,
 
 /* ---- static functions ---- */
 
+static void 
+spool_berkeleydb_error_close(struct bdb_info *info)
+{
+   DB_ENV *env;
+   DB     *db;
+   DB_TXN *txn;
+
+   /* try to shutdown all open resources */
+   txn = bdb_get_txn(info);
+   if (txn != NULL) {
+      txn->abort(txn);
+      bdb_set_txn(info, NULL);
+   }
+
+   db = bdb_get_db(info);
+   if (db != NULL) {
+      db->close(db, 0);
+      bdb_set_db(info, NULL);
+   }
+
+   env = bdb_get_env(info);
+   if (env != NULL) {
+      env->close(env, 0);
+      bdb_set_env(info, NULL);
+   }
+}
+
 static void
 spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info, 
                                   int bdb_errno)
 {
    /* we lost the connection to a RPC server */
    if (bdb_errno == DB_NOSERVER) {
-      DB_ENV *env;
-      DB     *db;
-      DB_TXN *txn;
-
       const char *server = bdb_get_server(info);
       const char *path   = bdb_get_path(info);
 
@@ -1385,24 +1408,13 @@ spool_berkeleydb_handle_bdb_error(lList **answer_list, struct bdb_info *info,
                               server != NULL ? server : "no server defined",
                               path != NULL ? path : "no database path defined");
 
-      /* try to shutdown all open resources */
-      txn = bdb_get_txn(info);
-      if (txn != NULL) {
-         txn->abort(txn);
-         bdb_set_txn(info, NULL);
-      }
+      spool_berkeleydb_error_close(info);
+   } else if (bdb_errno == DB_RUNRECOVERY) {
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_BERKELEY_RUNRECOVERY);
 
-      db = bdb_get_db(info);
-      if (db != NULL) {
-         db->close(db, 0);
-         bdb_set_db(info, NULL);
-      }
-
-      env = bdb_get_env(info);
-      if (env != NULL) {
-         env->close(env, 0);
-         bdb_set_env(info, NULL);
-      }
+      spool_berkeleydb_error_close(info);
    }
 }
 

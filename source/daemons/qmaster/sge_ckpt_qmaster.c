@@ -225,19 +225,25 @@ ERROR:
 *     STATUS_EEXIST - an error occured
 ******************************************************************************/
 int ckpt_spool(lList **alpp, lListElem *ep, gdi_object_t *object) 
-{
+{  
+   lList *answer_list = NULL;
+   bool dbret;
+
    DENTER(TOP_LAYER, "ckpt_spool");
 
-   if (!spool_write_object(alpp, spool_get_default_context(), ep, 
-                           lGetString(ep, CK_name), SGE_TYPE_CKPT)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANTSPOOL_SS, 
-            object->object_name, lGetString(ep, CK_name)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return STATUS_EEXIST;
+   dbret = spool_write_object(&answer_list, spool_get_default_context(), ep, 
+                              lGetString(ep, CK_name), SGE_TYPE_CKPT);
+   answer_list_output(&answer_list);
+
+   if (!dbret) {
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_WRITE_FAILED_S,
+                              lGetString(ep, CK_name));
    }
+
    DEXIT;
-   return 0;
+   return dbret ? 0 : 1;
 }
 
 /****** qmaster/ckpt/ckpt_success() *******************************************

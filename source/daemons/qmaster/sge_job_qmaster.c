@@ -1740,14 +1740,19 @@ int sub_command
 
       if (!(trigger & VERIFY_EVENT)) {
          dstring buffer = DSTRING_INIT;
+         bool dbret;
+         lList *answer_list = NULL;
 
          if (trigger & MOD_EVENT)
             lSetUlong(new_job, JB_version, lGetUlong(new_job, JB_version)+1);
 
          /* all job modifications to be saved on disk must be made in new_job */
-         if (!spool_write_object(alpp, spool_get_default_context(), new_job, 
+         dbret = spool_write_object(&answer_list, spool_get_default_context(), new_job, 
                                  job_get_key(jobid, 0, NULL, &buffer), 
-                                 SGE_TYPE_JOB)) {
+                                 SGE_TYPE_JOB);
+         answer_list_output(&answer_list);
+
+         if (!dbret) {
             ERROR((SGE_EVENT, MSG_JOB_NOALTERNOWRITE_U, u32c(jobid)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             sge_dstring_free(&buffer);

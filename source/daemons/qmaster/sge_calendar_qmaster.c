@@ -106,17 +106,24 @@ ERROR:
 int 
 calendar_spool(lList **alpp, lListElem *cep, gdi_object_t *object) 
 {
+   lList *answer_list = NULL;
+   bool dbret;
+
    DENTER(TOP_LAYER, "calendar_spool");
 
-   if (!spool_write_object(alpp, spool_get_default_context(), cep,
-                          lGetString(cep, CAL_name), SGE_TYPE_CALENDAR)) {
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DEXIT;
-      return 1;
+   dbret = spool_write_object(&answer_list, spool_get_default_context(), cep,
+                              lGetString(cep, CAL_name), SGE_TYPE_CALENDAR);
+   answer_list_output(&answer_list);
+
+   if (!dbret) {
+      answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_ERROR, 
+                              MSG_PERSISTENCE_WRITE_FAILED_S,
+                              lGetString(cep, CAL_name));
    }
 
    DEXIT;
-   return 0;
+   return dbret ? 0 : 1;
 }
 
 int 

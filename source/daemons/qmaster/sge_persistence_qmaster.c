@@ -50,6 +50,8 @@
 
 #include "sge_persistence_qmaster.h"
 
+#include "msg_qmaster.h"
+
 bool
 sge_initialize_persistence(lList **answer_list)
 {
@@ -474,11 +476,29 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
 
       /* if spooling was requested and we have an object type to spool */
       if (spool && object_type != SGE_TYPE_ALL) {
+         /* use an own answer list for the low level spooling operation. 
+          * in case of error, generate a high level error message.
+          */
+         lList *spool_answer_list = NULL;
          if (delete) {
-            ret = spool_delete_object(answer_list, spool_get_default_context(), object_type, key);
+            ret = spool_delete_object(&spool_answer_list, spool_get_default_context(), 
+                                      object_type, key);
          } else {
-            ret = spool_write_object(answer_list, spool_get_default_context(), 
+            ret = spool_write_object(&spool_answer_list, spool_get_default_context(), 
                                      element, key, object_type);
+         }
+         /* output low level error messages */
+         answer_list_output(&spool_answer_list);
+
+         /* in case of error: generate error message for caller */
+         if (!ret) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                    ANSWER_QUALITY_ERROR, 
+                                    delete ? 
+                                    MSG_PERSISTENCE_DELETE_FAILED_S : 
+                                    MSG_PERSISTENCE_WRITE_FAILED_S,
+                                    key);
+            
          }
       }
    }

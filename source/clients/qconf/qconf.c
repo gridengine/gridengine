@@ -39,8 +39,10 @@
 #include "sge_prognames.h"
 #include "sgermon.h"
 #include "sge_log.h"
+#include "sge_me.h"
 #include "msg_clients_common.h"
 #include "msg_common.h"
+#include "msg_qconf.h"
 
 extern char **environ;
 
@@ -62,8 +64,12 @@ int main(int argc, char **argv)
    sge_setup_sig_handlers(QCONF);
 
    if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
-      fprintf(stderr, SGE_EVENT);
+      if (ret != COMMD_NACK_UNKNOWN_HOST && ret != COMMD_NACK_TIMEOUT) {
+         SGE_ADD_MSG_ID(generate_commd_port_and_service_status_message(ret, SGE_EVENT));
+         fprintf(stderr, SGE_EVENT);
+      }   
+      else
+         SGE_ADD_MSG_ID(fprintf(stderr, MSG_CONFIG_CANTRESOLVEHOSTNAME_SS, me.qualified_hostname, cl_errstr(ret)));   
       SGE_EXIT(1);
    }   
 

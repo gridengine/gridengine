@@ -50,5 +50,5 @@
 
 #define MSG_QCONF_ADDEDTO_SUBMITHOST_LIST_S _MESSAGE(5008, _("%s added to submit host list\n"))
 #define MSG_QCONF_ADDEDTO_ADMINHOST_LIST_S  _MESSAGE(5009, _("%s added to administrative host list\n"))
-
+#define MSG_CONFIG_CANTRESOLVEHOSTNAME_SS  _MESSAGE(5010, _("can't resolve hostname "SFQ": %s\n"))
 #endif /* __MSG_QCONF_H */

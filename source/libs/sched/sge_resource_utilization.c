@@ -387,8 +387,11 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
    for_each_rev (rde, lGetList(cr, RUE_utilized)) {
       util = lGetDouble(rde, RDE_amount);
       if (util <= max_util) {
-         when = lGetUlong(rde, RDE_time);
-         break;
+         lListElem *p = lPrev(rde);
+         if (p && lGetDouble(p, RDE_amount) > max_util) {
+            when = lGetUlong(rde, RDE_time);
+            break;
+         }
       }
    }
 

@@ -126,6 +126,7 @@ typedef unsigned long long sbv_t;
 #include "sge_max_nis_retries.h"
 #include "sge_stat.h" 
 #include "sge_feature.h"
+#include "sge_exit.h"
 
 #if defined(__sgi) || defined(ALPHA)
 #include "sge_nprocs.h"
@@ -2585,7 +2586,7 @@ int *ckpt_pid
 /*-------------------------------------------------------------------------*/
 static int start_async_command(char *descr, char *cmd)
 {
-   int pid, i;
+   int pid;
    char err_str[512];
    char *cwd;
    struct passwd *pw=NULL;
@@ -2628,8 +2629,20 @@ static int start_async_command(char *descr, char *cmd)
          shepherd_trace(err_str);
          exit(1);
       }   
-      for (i = 0; i < _POSIX_OPEN_MAX - 1; i++)
-         close(i);
+
+      sge_close_all_fds(NULL);
+
+      /* we have to provide the async command with valid io file handles
+       * else it might fail 
+       */
+      if(   (open("/dev/null", O_RDONLY, 0) != 0)
+         || (open("/dev/null", O_WRONLY, 0) != 1)
+         || (open("/dev/null", O_WRONLY, 0) != 2)) {
+         sprintf(err_str, "error opening std* file descriptors\n");
+         shepherd_trace(err_str);
+         exit(1);
+      }   
+
       foreground = 0;
 
       cwd = get_conf_val("cwd");
@@ -2639,7 +2652,6 @@ static int start_async_command(char *descr, char *cmd)
       }   
 
       sge_set_def_sig_mask(0, NULL);
-
       start_command(NULL, get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "");
       return 0;   
    }

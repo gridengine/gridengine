@@ -43,6 +43,11 @@ CDCONTAINER=`/bin/pwd`/cdcontainer
 MKISOFS=mkisofs
 ISOFSOPTIONS="-l -J -L -N -r -v"
 
+if [ -f mk_dist.private ]; then
+   . ./mk_dist.private
+fi
+
+
 #---------------------------------------------------------------------------
 #
 ErrUsage()

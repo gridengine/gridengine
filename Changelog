@@ -1,4 +1,8 @@
-DT-2004-05-28-3: Bugfix:    o Changed to DRMAA howto
+DT-2004-05-28-4: Bugfix:    o Added file staging to howto main page
+                 Changed:   howtos
+                 Issue:     952
+
+DT-2004-05-28-3: Bugfix:    o Changes to DRMAA howto
                             o Added file staging howto
                  Changed:   howtos
                  Issue:     952

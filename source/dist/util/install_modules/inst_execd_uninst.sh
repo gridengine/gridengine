@@ -209,13 +209,13 @@ RemoveExecd()
    $INFOTEXT "Removing exec host %s now!" $exechost
    $INFOTEXT -log "Removing exec host %s now!" $exechost
 
-   qconf -dh $exechost
-   sleep 1
    qconf -ds $exechost
    sleep 1
    qconf -ke $exechost
    sleep 1
    qconf -de $exechost
+   sleep 1
+   qconf -dh $exechost
  
 
 }

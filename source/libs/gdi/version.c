@@ -37,7 +37,12 @@ const char GDI_VERSION[] = "5.3beta1";
 #endif
 
 #if !(ADD_COPYRIGHT || ADD_SUN_COPYRIGHT)
-char SFLN_ELN[] = "hallo";
+char SFLN_ELN[] = "\n\
+   Grid Engine is based on code donated by Sun Microsystems.\n\
+   The copyright is owned by Sun Microsystems and other contributors.\n\
+   It has been made available to the open source community under the SISSL license.\n\
+   For further information and the latest news visit:\n\n\
+   http://gridengine.sunsource.net\n\n";
 
 const char DQS_ACK[] = "\n\
 We would like to acknowledge and thank the efforts of the\n\

@@ -50,7 +50,7 @@ DRMAALIB_OBJS = $(DRMAALIB_SRC:.c=.o)
 
 JAPI_ALL 	  = test_drmaa japilib drmaalib 
 
-JAPI_DEPEND_OBJS = $(EVCLIB_OBJS) $(GDILIB_OBJS) $(SECLIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(RMONLIB_OBJS)
+JAPI_DEPEND_OBJS = $(EVCLIB_OBJS) $(GDILIB_OBJS) $(SECLIB_OBJS) $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(RMONLIB_OBJS) $(LCKLIB_OBJS)
 DRMAA_DEPEND_OBJS = $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS)
 
 all: $(JAPI_ALL)
@@ -64,6 +64,7 @@ include $(SDIR)/libs/rmon/Makefile
 include $(SDIR)/libs/uti/Makefile
 include $(SDIR)/libs/evc/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
+include $(SDIR)/libs/lck/Makefile
 
 ###############################################################################
 # global rules: all, clean, depend, messages

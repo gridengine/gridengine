@@ -70,6 +70,7 @@ files=" \
        libs/sched/sched_dependencies  \
        libs/uti/uti_dependencies  \
        libs/rmon/rmon_dependencies  \
+       libs/lck/lck_dependencies  \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \
        security/sec/sec_dependencies \

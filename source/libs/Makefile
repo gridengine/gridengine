@@ -43,6 +43,7 @@ include $(SDIR)/libs/evm/Makefile
 include $(SDIR)/libs/mir/Makefile
 include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/spool/Makefile
+include $(SDIR)/libs/lck/Makefile
 
 ###############################################################################
 # Variable definitions for targets to build
@@ -54,12 +55,12 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 libs: sgeobjlib gdilib evclib evmlib mirlib spoollib commlib culllib rmonlib schedlib utilib $(SGELIB)
 
-libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean $(SGELIB)_clean
+libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean lcklib_clean $(SGELIB)_clean
 
 $(SGELIB)_clean: 
 	$(RM) libsge.a libsge$(SHAREDEXT)
 
-libs_depend: gdilib_depend sgeobjlib_depend evclib_depend evmlib_depend mirlib_depend spoollib_depend commlib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend
+libs_depend: gdilib_depend sgeobjlib_depend evclib_depend evmlib_depend mirlib_depend spoollib_depend commlib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend lcklib_depend
 
 libs_messages: gdilib_messages sgeobjlib_messages evclib_messages evmlib_messages mirlib_messages spoollib_messages commlib_messages cull_messages schedlib_messages utilib_messages rmonlib_messages
 

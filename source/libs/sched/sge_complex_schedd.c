@@ -1349,27 +1349,6 @@ int main(int argc, char *argv[], char *envp[])
 #endif
 
 
-int 
-ensure_attrib_available(lList **alpp, lListElem *ep, int nm) 
-{
-   lListElem *attr;
-
-   DENTER(TOP_LAYER, "ensure_attrib_available");
-   for_each (attr, lGetList(ep, nm)) {
-      const char *name = lGetString(attr, CE_name);
-      lListElem *centry = centry_list_locate(Master_CEntry_List, name);
-
-      if (centry == NULL) {
-         ERROR((SGE_EVENT, MSG_GDI_NO_ATTRIBUTE_S, name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         DEXIT;
-         return STATUS_EUNKNOWN;
-      }
-   }
-   DEXIT;
-   return 0;
-}
-
 int attr_mod_threshold(
 lList **alpp,
 lListElem *qep,

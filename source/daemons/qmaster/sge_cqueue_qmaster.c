@@ -404,14 +404,7 @@ cqueue_mod_qinstances(lListElem *cqueue, lList **answer_list,
           */
          if (refresh_all_values &&
              lGetString(qinstance, QU_full_name) == NULL) {
-            dstring buffer = DSTRING_INIT;
-            const char *cqueue_name = lGetString(qinstance, QU_qname);
-            const char *hostname = lGetHost(qinstance, QU_qhostname);
-
-            sge_dstring_sprintf(&buffer, "%s@%s", cqueue_name, hostname);
-            lSetString(qinstance, QU_full_name, 
-                       sge_dstring_get_string(&buffer));
-            sge_dstring_free(&buffer);
+            qinstance_set_full_name(qinstance);
          }
    
          /* 

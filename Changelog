@@ -1,3 +1,7 @@
+JG-2004-06-02-0: Bugfix:    QU_full_name of queue instances was not set after a
+                            qmaster restart.
+                 Review:    AD
+
 DT-2004-06-02-0: Cleanup:   o Updated DRMAA Java binding JavaDocs
                  Changed:   DRMAA
 

@@ -709,3 +709,93 @@ qinstance_message_trash_all_of_type_X(lListElem *this_elem, u_long32 type)
    DEXIT;
    return ret;
 }
+
+void
+qinstance_set_full_name(lListElem *this_elem) 
+{
+   dstring buffer = DSTRING_INIT;
+   const char *cqueue_name = lGetString(this_elem, QU_qname);
+   const char *hostname = lGetHost(this_elem, QU_qhostname);
+
+   sge_dstring_sprintf(&buffer, "%s@%s", cqueue_name, hostname);
+   lSetString(this_elem, QU_full_name, 
+              sge_dstring_get_string(&buffer));
+   sge_dstring_free(&buffer);
+}
+
+bool
+qinstance_validate(lListElem *this_elem, lList **answer_list)
+{
+   bool ret = true;
+   lList *centry_master_list = *(centry_list_get_master_list());
+
+   DENTER(TOP_LAYER, "qinstance_validate");
+
+   /* QU_full_name isn't spooled, if it is not set, create it */
+   if (lGetString(this_elem, QU_full_name) == NULL) {
+      qinstance_set_full_name(this_elem);
+   }
+   
+   /* handle slots from now on as a consumble attribute of queue */
+   qinstance_set_conf_slots_used(this_elem); 
+
+   /* remove all queue message, which are regenerated during the unspooling
+      the queue */
+   qinstance_message_trash_all_of_type_X(this_elem, ~QI_ERROR);   
+
+   /* setup actual list of queue */
+   qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0);
+
+   /* init double values of consumable configuration */
+   centry_list_fill_request(lGetList(this_elem, QU_consumable_config_list), 
+                     centry_master_list, true, false, true);
+
+      if (ensure_attrib_available(NULL, this_elem, 
+                                  QU_load_thresholds) ||
+          ensure_attrib_available(NULL, this_elem, 
+                                  QU_suspend_thresholds) ||
+          ensure_attrib_available(NULL, this_elem, 
+                                  QU_consumable_config_list)) {
+         ret = false;
+      }
+
+   if (ret) {
+      qinstance_state_set_unknown(this_elem, true);
+      qinstance_state_set_cal_disabled(this_elem, false);
+      qinstance_state_set_cal_suspended(this_elem, false);
+      qinstance_set_slots_used(this_elem, 0);
+      
+      if (host_list_locate(Master_Exechost_List, 
+                           lGetHost(this_elem, QU_qhostname)) == NULL) {
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_ERROR, 
+                                 MSG_QINSTANCE_HOSTFORQUEUEDOESNOTEXIST_SS,
+                                 lGetString(this_elem, QU_qname), 
+                                 lGetHost(this_elem, QU_qhostname));
+         ret = false;
+      }
+   }
+   
+   DEXIT;
+   return ret;
+}
+
+bool
+qinstance_list_validate(lList *this_list, lList **answer_list)
+{
+   bool ret = true;
+   lListElem *qinstance;
+
+   DENTER(TOP_LAYER, "qinstance_list_validate");
+
+   for_each(qinstance, this_list) {
+      if (!qinstance_validate(qinstance, answer_list)) {
+         ret = false;
+         break;
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+

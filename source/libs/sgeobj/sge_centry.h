@@ -119,5 +119,7 @@ centry_list_do_all_exists(const lList *this_list, lList **answer_list,
 bool
 centry_list_is_correct(lList *this_list, lList **answer_list);
 
+int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
+
 #endif /* __SGE_CENTRY_H */
 

@@ -36,6 +36,15 @@
 #include "sge_dstring.h"
 #include "sge_qinstanceL.h"
 
+bool
+qinstance_validate(lListElem *this_elem, lList **answer_list);
+
+bool
+qinstance_list_validate(lList *this_list, lList **answer_list);
+
+void
+qinstance_set_full_name(lListElem *this_elem);
+
 lListElem *
 qinstance_list_locate(const lList *this_list, const char *hostname,
                       const char *cqueue_name);

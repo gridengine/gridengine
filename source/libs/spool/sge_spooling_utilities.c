@@ -442,99 +442,10 @@ bool spool_default_validate_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_QINSTANCE:
-         {
-            /* handle slots from now on as a consumble attribute of queue */
-            qinstance_set_conf_slots_used(object); 
-
-            /* remove all queue message, which are regenerated during the unspooling
-               the queue */
-            qinstance_message_trash_all_of_type_X(object, ~QI_ERROR);   
-
-            /* setup actual list of queue */
-            qinstance_debit_consumable(object, NULL, Master_CEntry_List, 0);
-
-            /* init double values of consumable configuration */
-            centry_list_fill_request(lGetList(object, QU_consumable_config_list), 
-                              Master_CEntry_List, true, false, true);
-
-               if (ensure_attrib_available(NULL, object, 
-                                           QU_load_thresholds) ||
-                   ensure_attrib_available(NULL, object, 
-                                           QU_suspend_thresholds) ||
-                   ensure_attrib_available(NULL, object, 
-                                           QU_consumable_config_list)) {
-                  ret = false;
-               }
-
-            if (ret) {
-               qinstance_state_set_unknown(object, true);
-               qinstance_state_set_cal_disabled(object, false);
-               qinstance_state_set_cal_suspended(object, false);
-               qinstance_set_slots_used(object, 0);
-               
-               if (host_list_locate(Master_Exechost_List, 
-                                    lGetHost(object, QU_qhostname)) == NULL) {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                          ANSWER_QUALITY_ERROR, 
-                                          MSG_SPOOL_HOSTFORQUEUEDOESNOTEXIST_SS,
-                                          lGetString(object, QU_qname), 
-                                          lGetHost(object, QU_qhostname));
-                  ret = false;
-               }
-            }
-         }
+         ret = qinstance_validate(object, answer_list);
          break;
       case SGE_TYPE_CQUEUE:
-         {
-            lList *master_list = *(centry_list_get_master_list());
-            lList *qinstance_list = NULL;
-            lListElem *qinstance = NULL;
-
-            qinstance_list = lGetList(object, CQ_qinstances);
-            for_each(qinstance, qinstance_list) {
-               lList *ccl = NULL;
-
-               /*
-                * handle slots from now on as a consumble
-                * attribute of queue
-                */
-               qinstance_set_conf_slots_used(qinstance);
-
-               /* setup actual list of queue */
-               qinstance_debit_consumable(qinstance, NULL, master_list, 0);
-
-               /* init double values of consumable configuration */
-               ccl = lGetList(qinstance, QU_consumable_config_list);
-               centry_list_fill_request(ccl, master_list, true, false, true);
-
-               if (ret) {
-                  if (ensure_attrib_available(NULL, qinstance,
-                                              QU_load_thresholds) ||
-                      ensure_attrib_available(NULL, qinstance,
-                                              QU_suspend_thresholds) ||
-                      ensure_attrib_available(NULL, qinstance,
-                                              QU_consumable_config_list)) {
-                     ret = false;
-                  }
-               }
-               if (ret) {
-                  qinstance_state_set_unknown(qinstance, true);
-                  qinstance_state_set_cal_disabled(qinstance, false);
-                  qinstance_state_set_cal_suspended(qinstance, false);
-                  qinstance_set_slots_used(qinstance, 0);
-
-                  if (host_list_locate(Master_Exechost_List,
-                                       lGetHost(qinstance, QU_qhostname)) == NULL) {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                             ANSWER_QUALITY_ERROR,
-                                             MSG_FLATFILE_HOSTNOTEXISTS_SS,
-                                             lGetString(qinstance, QU_qname),
-                                             lGetHost(qinstance, QU_qhostname));
-                     ret = false;
-                  }
-               }
-            }
-         }
+         ret = qinstance_list_validate(lGetList(object, CQ_qinstances), answer_list);
          break;
       case SGE_TYPE_CONFIG:
          {

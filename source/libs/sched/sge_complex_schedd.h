@@ -65,8 +65,6 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
               u_long32 layer, double lc_factor, dstring *reason, bool zero_utilization,
               u_long32 start_time, u_long32 duration);
 
-int ensure_attrib_available(lList **alpp, lListElem *ep, int nm);
-
 int string_base_cmp(u_long32 type, const char *s1, const char *s2);
 
 #endif /* __SGE_COMPLEX_SCHEDD_H */

@@ -5684,7 +5684,8 @@ proc get_version_info {} {
       catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-help" } result
       set help [ split $result "\n" ] 
       if { ([ string first "fopen" [ lindex $help 0] ] >= 0) || 
-           ([ string first "error" [ lindex $help 0] ] >= 0) } {
+           ([ string first "error" [ lindex $help 0] ] >= 0) || 
+           ([ string first "product_mode" [ lindex $help 0] ] >= 0) } {
           set CHECK_PRODUCT_VERSION_NUMBER "system not running - run install test first"
           return $CHECK_PRODUCT_VERSION_NUMBER
       }

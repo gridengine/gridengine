@@ -1,3 +1,6 @@
+CR-2002-07-25-0: Testsuite: bugfix (can't open product mode file - error)
+                 Bugfix:    
+
 AA-2002-07-25-0: I18N:      - qmon_about.c copyright under non C locales
                               msg translation must be changed to work
                             - mistranslation in qmon_calendar fixed

@@ -831,13 +831,6 @@ FILE *fp
       MARK(OA_DESTIN_ID_LIST2);
    }
 
-#if 0
-   if (VALID_OPT(qs_args_OPT, uti_state_get_mewho())) {
-      PRINTITD(MSG_GDI_USAGE_qs_args_OPT_ARGS_QS_END, 
-         MSG_GDI_UTEXT_qs_args_OPT_ARGS_QS_END);
-   }
-#endif
-
    if (VALID_OPT(r_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_r_OPT_YN, MSG_GDI_UTEXT_r_OPT_YN);
    }

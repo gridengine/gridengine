@@ -32,7 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int remove_immediate_jobs(lList *job_list, lList **opp);
+int remove_immediate_jobs(lList *pending_job_list, lList *running_job_list,
+                          lList **opp);
 
 int order_remove_immediate(lListElem *job, lListElem *ja_task, lList **opp);
 

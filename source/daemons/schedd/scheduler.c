@@ -271,7 +271,7 @@ int scheduler(sge_Sdescr_t *lists) {
   
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM5);
    
-   remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), &orderlist);
+   remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]), *(splitted_job_lists[SPLIT_RUNNING]), &orderlist);
    orderlist = sge_add_schedd_info(orderlist);
 
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {

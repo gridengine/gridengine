@@ -64,7 +64,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr, sge_commit_
 
 void sge_zombie_job_cleanup_handler(te_event_t anEvent);
 
-void resend_job(te_event_t anEvent);
+void sge_job_resend_event_handler(te_event_t anEvent);
 
 void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 tid);
 

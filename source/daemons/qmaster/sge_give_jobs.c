@@ -478,7 +478,7 @@ int master
    return 0;
 }
 
-void resend_job(te_event_t anEvent)
+void sge_job_resend_event_handler(te_event_t anEvent)
 {
    lListElem* jep, *jatep, *ep, *hep, *pe, *mqep;
    lList* jatasks;
@@ -487,7 +487,7 @@ void resend_job(te_event_t anEvent)
    u_long32 jobid = te_get_first_numeric_key(anEvent);
    u_long32 jataskid = te_get_second_numeric_key(anEvent);
    
-   DENTER(TOP_LAYER, "resend_job");
+   DENTER(TOP_LAYER, "sge_job_resend_event_handler");
 
    jep = job_list_locate(Master_Job_List, jobid);
    jatep = job_search_task(jep, NULL, jataskid);
@@ -565,7 +565,7 @@ void resend_job(te_event_t anEvent)
    } 
 
    DEXIT;
-}
+} /* sge_job_resend_event_handler() */
 
 
 void cancel_job_resend(u_long32 jid, u_long32 ja_task_id)
@@ -594,7 +594,7 @@ void trigger_job_resend(u_long32 now, lListElem *hep, u_long32 jid, u_long32 ja_
    DPRINTF(("TRIGGER JOB RESEND "u32"/"u32" in %d seconds\n", jid, ja_task_id, seconds)); 
 
    when = now + seconds;
-   ev = te_new_event(when, TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, jid, ja_task_id, NULL);
+   ev = te_new_event(when, TYPE_JOB_RESEND_EVENT, ONE_TIME_EVENT, jid, ja_task_id, "job-resend_event");
    te_add_event(ev);
    te_free_event(ev);
 

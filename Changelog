@@ -1,3 +1,7 @@
+AD-2004-02-03-0: Bugfix:    Did add event handler for 'TYPE_JOB_RESEND_EVENT'
+                 Changed:   qmaster
+                 Review:    EB
+
 MD-2004-02-03-0: Bugfix:    - Text
                             - fixed install_qmaster, install_execd
                  Changed:   - inst_sgeee

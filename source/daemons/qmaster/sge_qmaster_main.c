@@ -622,6 +622,8 @@ static void start_periodic_tasks(void)
 
    DENTER(TOP_LAYER, "start_periodic_tasks");
 
+   te_register_event_handler(sge_job_resend_event_handler, TYPE_JOB_RESEND_EVENT);
+
    te_register_event_handler(sge_load_value_cleanup_handler, TYPE_LOAD_VALUE_CLEANUP_EVENT);
    ev = te_new_event(15, TYPE_LOAD_VALUE_CLEANUP_EVENT, RECURRING_EVENT, 0, 0, "load-value-cleanup");
    te_add_event(ev);

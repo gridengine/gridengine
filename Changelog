@@ -1,3 +1,7 @@
+EB-2002-03-07-0: Bugfix:    inconsistences between qstat/qmon output and
+                            internal state
+                 Issue:     #179 
+
 EB-2002-03-06-1: Doc.:      Added documentation for (auto)rescheduling
                             - removed RESCHEDULE_UNKNOWN from sge_conf
                             - added reschedule_unknown to sge_conf

@@ -573,7 +573,7 @@ int *synchron;
 {
    u_long32 jobid, jataskid;
    lListElem *jep, *pe, *jatep;
-   char job_source[1024], new_task_id[12];
+   char job_source[1024], new_task_id[1024];
    const char *task_str;
    lList *gdil = NULL;
    int tid = 0;
@@ -629,6 +629,7 @@ int *synchron;
    DPRINTF(("using pe_task_id_str %s for job "u32"\n", task_str, jobid));
 
    lSetString(jelem, JB_pe_task_id_str, task_str);
+
    if (!lGetString(jelem, JB_job_name))
       lSetString(jelem, JB_job_name, 
             sge_basename(lGetString(jelem, JB_script_file), '/'));

@@ -92,6 +92,10 @@ const char* cl_com_get_mih_df_string(cl_xml_mih_data_format_t df) {
          return CL_MIH_MESSAGE_DATA_FORMAT_CCM;
       case CL_MIH_DF_CCRM:
          return CL_MIH_MESSAGE_DATA_FORMAT_CCRM;
+      case CL_MIH_DF_CM:
+         return CL_MIH_MESSAGE_DATA_FORMAT_CM;
+      case CL_MIH_DF_CRM:
+         return CL_MIH_MESSAGE_DATA_FORMAT_CRM;
       case CL_MIH_DF_UNDEFINED:
          return "undefined";
    }

@@ -1,3 +1,13 @@
+CR-2004-11-08-0: Bugfix:    - fixed qevent -trigger
+                            - when qmaster went down once the scheduler always
+                              called qmaster alive method in each schedule run
+                            - removed sleep time for "qmaster goes down event"
+                            - qping -debug now shows also CM/CRM messages
+                            - qping -debug connection will get flushed at 
+                              service shutdown
+                 Changed:   sge_schedd, qevent, commlib, evclib, mirlib
+                 Review:    AA
+
 JG-2004-11-08-0: Testsuite: Improved error diagnosis of some tests.
 
 SG-2004-11-08-0: Bugfix:    fixed SG-2004-11-03-0
@@ -51,7 +61,7 @@ SG-2004-11-04-0: Bugfix:    fixed the event master error messages
 
 CR-2004-11-04-0: Enhancm.:  commlib: added rresvport() (reserved port) support
                  Changed:   commlib
-                 Review:    pending
+                 Review:    AA
 
 SG-2004-11-03-0: Bugfix:    too many array tasks are deleted
                  Review:    EB

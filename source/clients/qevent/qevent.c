@@ -552,7 +552,9 @@ int main(int argc, char *argv[])
                   
                   /* build mask for the job structure to contain only the needed elements */
                   where = NULL; 
-                  what = lWhat("%T(%I)", JB_Type, JB_job_number);
+                  what = lWhat("%T(%I %I %I %I %I %I %I %I)", JB_Type, JB_job_number, JB_ja_tasks, 
+                                                              JB_ja_structure, JB_ja_n_h_ids, JB_ja_u_h_ids, 
+                                                              JB_ja_s_h_ids,JB_ja_o_h_ids, JB_ja_template);
                   
                   /* register for job events */ 
                   sge_mirror_subscribe(SGE_TYPE_JOB, analyze_jatask_event, NULL, NULL, where, what);
@@ -560,12 +562,12 @@ int main(int argc, char *argv[])
 
                   /* the mirror interface registers more events, than we need,
                      thus we free the ones, we do not need */
-                  ec_unsubscribe(sgeE_JOB_LIST);
+                /*  ec_unsubscribe(sgeE_JOB_LIST); */
                   ec_unsubscribe(sgeE_JOB_MOD);
                   ec_unsubscribe(sgeE_JOB_MOD_SCHED_PRIORITY);
                   ec_unsubscribe(sgeE_JOB_USAGE);
                   ec_unsubscribe(sgeE_JOB_FINAL_USAGE);
-                  ec_unsubscribe(sgeE_JOB_ADD);
+               /*   ec_unsubscribe(sgeE_JOB_ADD); */
                   
                   /* free the what and where mask */
                   where = lFreeWhere(where);

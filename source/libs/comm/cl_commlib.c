@@ -1131,6 +1131,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
 
    /* wait for empty connection list */
    while( connection_list_empty == CL_FALSE) {
+      cl_bool_t have_message_connections = CL_FALSE;
       cl_bool_t ignore_timeout = cl_com_get_ignore_timeouts_flag();
       connection_list_empty = CL_TRUE;
       trigger_write = CL_FALSE;
@@ -1140,6 +1141,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       while(elem) {
          connection_list_empty = CL_FALSE;
          if ( elem->connection->data_flow_type == CL_CM_CT_MESSAGE) {
+            have_message_connections = CL_TRUE;
             if ( elem->connection->connection_state     == CL_CONNECTED     && 
                  elem->connection->connection_sub_state == CL_COM_WORK      &&   
                  elem->connection->ccm_received         == 0)        {
@@ -1153,9 +1155,6 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                CL_LOG(CL_LOG_INFO,"we are connected, don't ignore timeouts");
                ignore_timeout = CL_FALSE;
             }
-         }
-         if ( elem->connection->data_flow_type == CL_CM_CT_STREAM) {
-            elem->connection->connection_state = CL_CLOSING;
          }
          elem = cl_connection_list_get_next_elem(elem);
       }
@@ -1249,6 +1248,36 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
                }
                break;
          }
+
+         /* shutdown stream connections when there are no more message connections */
+         cl_raw_list_lock(handle->connection_list);
+         elem = cl_connection_list_get_first_elem(handle->connection_list);
+         while(elem) {
+            connection_list_empty = CL_FALSE;
+            if ( elem->connection->data_flow_type == CL_CM_CT_STREAM) {
+               if (  have_message_connections == CL_FALSE ) {
+                  /* close stream connections after message connections */
+   
+                  if (handle->debug_client_mode != CL_DEBUG_CLIENT_OFF) {
+                     /* don't close STREAM connection when there are debug clients
+                     and debug data list is not empty */
+   
+                     cl_raw_list_lock(handle->debug_list);
+                     if (cl_raw_list_get_elem_count(handle->debug_list) == 0) {
+                        elem->connection->connection_state = CL_CLOSING;
+                     }
+                     cl_raw_list_unlock(handle->debug_list);
+                  } else {
+                     /* debug clients are not connected, just close stream connections */
+                     elem->connection->connection_state = CL_CLOSING;
+                  }
+               }
+            }
+            elem = cl_connection_list_get_next_elem(elem);
+         }
+         cl_raw_list_unlock(handle->connection_list);
+
+         cl_commlib_handle_debug_clients(handle, CL_TRUE);
       }
 
       /*
@@ -3027,6 +3056,21 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
 
    if (lock_list == CL_TRUE) {
       cl_raw_list_unlock(handle->connection_list);
+   }
+
+   if ( flushed_client == CL_TRUE ) {
+      switch(cl_com_create_threads) {
+         case CL_NO_THREAD:
+            CL_LOG(CL_LOG_INFO,"no threads enabled");
+            /* we just want to trigger write , no wait for read*/
+            cl_commlib_trigger(handle);
+            break;
+         case CL_ONE_THREAD:
+            /* we just want to trigger write , no wait for read*/
+            CL_LOG(CL_LOG_INFO,"trigger write thread");
+            cl_thread_trigger_event(handle->write_thread);
+            break;
+      }
    }
    return CL_RETVAL_OK;
 }

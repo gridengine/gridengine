@@ -142,7 +142,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    char sender[256];
    char receiver[256];
    char message_time[256];
-   char xml_buffer[512];
+   char xml_buffer[1024];
 
    const char*     message_tag = NULL;
    char*           xml_data = "n.a.";
@@ -229,7 +229,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
          case CL_MIH_DF_BIN:
             break;
          default: {
-            if (ms->message_length < 511) { 
+            if (ms->message_length < 1023) { 
                memcpy(xml_buffer, ms->message, ms->message_length);
                xml_buffer[ms->message_length] = 0;
                xml_data = xml_buffer;
@@ -343,6 +343,7 @@ int cl_com_create_message(cl_com_message_t** message) {
    (*message)->message_state = CL_MS_UNDEFINED;
    (*message)->message_df = CL_MIH_DF_UNDEFINED;
    (*message)->message_mat = CL_MIH_MAT_UNDEFINED;
+   (*message)->message_tag = 0;
    (*message)->message_ack_flag = 0;
    (*message)->message_sirm = NULL;
    (*message)->message_id = 0;
@@ -3458,6 +3459,23 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             }
          }
    
+         if (connection->handler != NULL) {
+            if (connection->handler->debug_client_mode != CL_DEBUG_CLIENT_OFF) {
+               cl_com_message_t* dummy_message = NULL;
+               cl_com_create_message(&dummy_message);
+               if (dummy_message != NULL) {
+                  dummy_message->message_df = CL_MIH_DF_CM;
+                  dummy_message->message_mat = CL_MIH_MAT_NAK;
+                  gettimeofday(&dummy_message->message_receive_time,NULL);
+                  dummy_message->message = (cl_byte_t*) &(connection->data_read_buffer[(connection->data_read_buffer_processed - connection->read_gmsh_header->dl)]);
+                  dummy_message->message_length = connection->read_gmsh_header->dl;
+                  cl_com_add_debug_message(connection, NULL , dummy_message);
+                  dummy_message->message = NULL;
+                  cl_com_free_message(&dummy_message);
+               }
+            }
+         }
+
          cl_com_free_cm_message(&cm_message);
    
          /* check if remote connection matches resolved client host name */
@@ -3940,6 +3958,35 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
             if (retval != CL_RETVAL_OK) {
                return retval;
             }
+
+            if (connection->handler != NULL) {
+               if (connection->handler->debug_client_mode != CL_DEBUG_CLIENT_OFF) {
+                  cl_com_message_t* dummy_message = NULL;
+                  cl_com_create_message(&dummy_message);
+                  if (dummy_message != NULL) {
+                     int   crm_pos = 0;
+                     dummy_message->message_df = CL_MIH_DF_CRM;
+                     dummy_message->message_mat = CL_MIH_MAT_NAK;
+                     gettimeofday(&dummy_message->message_send_time,NULL);
+                     
+                     for (crm_pos = 0; crm_pos < connection->data_write_buffer_pos - 3; crm_pos++) {
+                        if ( connection->data_write_buffer[crm_pos]   == '<' && 
+                             connection->data_write_buffer[crm_pos+1] == 'c' &&
+                             connection->data_write_buffer[crm_pos+2] == 'r' &&
+                             connection->data_write_buffer[crm_pos+3] == 'm' ) {
+                           dummy_message->message = (cl_byte_t*) &connection->data_write_buffer[crm_pos];
+                           dummy_message->message_length = connection->data_write_buffer_pos - crm_pos;
+                           break;
+                        }
+                     }
+                     cl_com_add_debug_message(connection, NULL , dummy_message);
+                     dummy_message->message = NULL;
+                     cl_com_free_message(&dummy_message);
+                  }
+               }
+            }
+
+
             if ( cl_raw_list_get_elem_count(connection->send_message_list) == 0) {
                connection->data_write_flag = CL_COM_DATA_NOT_READY;
             } else {

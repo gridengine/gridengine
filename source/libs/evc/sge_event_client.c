@@ -737,7 +737,14 @@ ec_is_initialized(void)
 void 
 ec_mark4registration(void)
 {
+   cl_com_handle_t* handle = NULL;
+
    DENTER(TOP_LAYER, "ec_mark4registration");
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   if (handle != NULL) {
+      cl_commlib_close_connection(handle, (char*)sge_get_master(0), (char*)prognames[QMASTER], 1, CL_FALSE);
+      DPRINTF(("closed old connection to qmaster\n"));
+   }
    need_register = true;
    lSetBool(ec, EV_changed, true);
    DEXIT;

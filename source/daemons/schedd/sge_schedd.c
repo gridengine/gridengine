@@ -222,6 +222,9 @@ char *argv[]
    starting_up();
    sge_write_pid(SCHEDD_PID_FILE);
 
+   cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), (int) (sconf_get_schedule_interval() * 2) );
+
+
    in_main_loop = 1;
 
    while (!done) {
@@ -231,7 +234,6 @@ char *argv[]
          sge_shutdown();
       }   
 
-      cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0), (int) (sconf_get_schedule_interval() * 2) );
 
       if (sigpipe_received) {
          sigpipe_received = 0;
@@ -243,9 +245,15 @@ char *argv[]
             FREE(initial_qmaster_host);
             CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));
             SGE_EXIT(1);
-         } else if (ret > 0) {
+         } 
+         
+         if (ret > 0) {
             sleep(10);
             continue;
+         }
+
+         if (ret == 0) {
+            check_qmaster = false;
          }
       }
 
@@ -264,8 +272,14 @@ char *argv[]
          continue;
       }
 
-      /* check profiling settings, if necessary, switch profiling on/off */
+      /* got new config? */
       if (sconf_is_new_config()) {
+
+         /* set actual syncron receive timeout */
+         cl_com_set_synchron_receive_timeout( cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0),
+                                              (int) (sconf_get_schedule_interval() * 2) );
+
+         /* check profiling settings, if necessary, switch profiling on/off */
          if(sconf_get_profiling()) {
             prof_start(SGE_PROF_OTHER, NULL);
             prof_start(SGE_PROF_PACKING, NULL);

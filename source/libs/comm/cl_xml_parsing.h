@@ -99,6 +99,9 @@
 #define CL_MIH_MESSAGE_DATA_FORMAT_SIRM "sirm"
 #define CL_MIH_MESSAGE_DATA_FORMAT_CCM  "ccm"
 #define CL_MIH_MESSAGE_DATA_FORMAT_CCRM "ccrm"
+#define CL_MIH_MESSAGE_DATA_FORMAT_CM   "cm"
+#define CL_MIH_MESSAGE_DATA_FORMAT_CRM  "crm"
+
 
 /* (3) Acknowledge Message (AM) 
       
@@ -307,7 +310,9 @@ typedef enum cl_xml_mih_data_format_def {
    CL_MIH_DF_SIM,
    CL_MIH_DF_SIRM,
    CL_MIH_DF_CCM,
-   CL_MIH_DF_CCRM
+   CL_MIH_DF_CCRM,
+   CL_MIH_DF_CM,
+   CL_MIH_DF_CRM
 } cl_xml_mih_data_format_t;
 
 typedef enum cl_xml_ack_type_def {

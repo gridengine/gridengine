@@ -1451,7 +1451,7 @@ static bool sge_mirror_process_qmaster_goes_down(sge_object_type type,
    DENTER(TOP_LAYER, "sge_mirror_process_qmaster_goes_down");
 
    DPRINTF(("qmaster goes down\n"));
-   sleep(8);
+
    ec_mark4registration();
 
    DEXIT;

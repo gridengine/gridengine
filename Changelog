@@ -1,3 +1,6 @@
+MD-2004-06-02-0: Bugfix:    - changed message in scheduler settings.
+                 Changed:   inst_sge
+
 DT-2004-06-02-1: Bugfix:    o qconf no longer presents a default project when
                               editing projects
                  Cleanup:   o Created separate Makefile for DRMAA Java binding

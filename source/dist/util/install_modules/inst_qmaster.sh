@@ -1552,7 +1552,7 @@ SetScheddConfig()
                    "          actual + assumed load\n"
       $INFOTEXT -n "2) High\n          Fixed interval scheduling, report limited scheduling information,\n" \
                    "          actual load\n"
-      $INFOTEXT -n "3) Max\n          Scheduling on demand, report no scheduling information,\n" \
+      $INFOTEXT -n "3) Max\n          Immediate Scheduling, report no scheduling information,\n" \
                    "          actual load\n"
 
       $INFOTEXT -auto $AUTO -n "Enter the number of your prefered configuration and hit <RETURN>! \n" \

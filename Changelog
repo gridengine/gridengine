@@ -1,3 +1,6 @@
+AH-2001-12-17-0: Bugfix:    Ensure immediate return of sync send_message() in case
+                            receiver is not enrolled
+
 CR-2001-12-17-0: Testsuite: - handle_vi_edit procedure now uses now 
                               open_remote_spawn_id procedure
                             - bugfix in setup_queues / install_core_system check

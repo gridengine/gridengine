@@ -893,14 +893,6 @@ int commdport
                commp->w_tag));
       }
 
-#if 0
-      if (!commp && (mp->flags & COMMD_SYNCHRON)) {
-         DEBUG((SGE_EVENT, "target of synchronous message mid=%d is not enrolled", (int)mp->mid));
-/*          mp->ackchar = COMMD_NACK_UNKNOWN_RECEIVER; */
-/*          SET_MESSAGE_STATUS(mp, S_WRITE_ACK); */
-      }
-#endif
-
       if (commp && (commp->w_fd != -1) && 
           ((commp->w_name[0] == '\0') ||
           !strncmp(mp->from.name, commp->w_name, MAXHOSTLEN)) &&
@@ -908,7 +900,6 @@ int commdport
           (!commp->w_host || commp->w_host == mp->from.host) &&
           (!commp->w_tag || commp->w_tag == mp->tag)) {
          /* commproc is waiting for this message */
-
          mp->tofd = commp->w_fd;   /* assign message to waiting fd */
          commp->w_fd = -1;         /* mark receiver no longer waiting */
          mp->sending_to = commp;   /* store receiver. We may need this in case of an error */
@@ -917,7 +908,19 @@ int commdport
          DEXIT;
          return;
       }
-      else {                       /* message has to wait until receiver receives */
+      else {  
+         /* implements a more immediate return of sync send_message() 
+            in case message target is no longer enrolled */
+         if (!commp && (mp->flags & COMMD_SYNCHRON)) {
+            DEBUG((SGE_EVENT, "target of synchronous message mid=%d is not enrolled", (int)mp->mid));
+            mp->ackchar = COMMD_NACK_DELIVERY;
+            SET_MESSAGE_STATUS(mp, S_WRITE_ACK);
+            log_message(mp);
+            DEXIT;
+            return;
+         }
+         
+         /* message has to wait until receiver receives */
          DEBUG((SGE_EVENT, "message waiting for receiver"));
          DEXIT;
          return;

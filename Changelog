@@ -1,3 +1,10 @@
+SG-2004-11-04-1: Bugfix:    the scheduler logs 2 error message, when job
+                            was deleted by a user during a scheduling run
+                            and that you was dispatched from the scheduler.
+                 Issue:     1030
+                 Changed:   qmaster
+                 Review:    JG
+
 SG-2004-11-04-0: Bugfix:    fixed the event master error messages
                  Changed:   qmaster
                  Review:    DT

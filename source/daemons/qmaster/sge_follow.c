@@ -163,9 +163,7 @@ sge_follow_order(lListElem *ep, lList **alpp, char *ruser, char *rhost,
       if(!jep) {
          WARNING((SGE_EVENT, MSG_JOB_FINDJOB_U, u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         /* try to repair schedd data - session is unknown here */
-         sge_add_event(0, sgeE_JOB_DEL, job_number, 0, 
-                       NULL, NULL, NULL, NULL);
+
          DEXIT;
          return -1;
       }

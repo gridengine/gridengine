@@ -75,6 +75,7 @@
 #include "sge_hostname.h"
 #include "sge_os.h"
 #include "sge_answer.h"
+#include "sge_profiling.h"
 
 /* number of current scheduling alorithm in above array */
 int current_scheduler = 0; /* default scheduler */
@@ -113,8 +114,18 @@ char *argv[]
    const char *master_host;
    int ret;
    char initial_qmaster_host[1024];
+   time_t next_prof_output = 0;
 
    DENTER_MAIN(TOP_LAYER, "schedd");
+
+   /* set profiling parameters */
+   prof_set_level_name(SGE_PROF_EVENTMASTER, NULL, NULL);
+   prof_set_level_name(SGE_PROF_SPOOLING, NULL, NULL);
+   prof_set_level_name(SGE_PROF_CUSTOM0, "scheduler", NULL);
+   prof_set_level_name(SGE_PROF_CUSTOM1, "pending ticket calculation", NULL);
+   prof_set_level_name(SGE_PROF_CUSTOM2, "active job ticket calculation", NULL);
+   prof_set_level_name(SGE_PROF_CUSTOM3, "job sorting", NULL);
+   prof_set_level_name(SGE_PROF_CUSTOM4, "job dispatching", NULL);
 
    /* This needs a better solution */
    umask(022);
@@ -226,6 +237,21 @@ char *argv[]
       }
 
       sched_funcs[current_scheduler].event_func();
+
+      /* output profiling information */
+      if (prof_is_active()) {
+         time_t now = sge_get_gmt();
+
+         if (now > next_prof_output || shut_me_down) {
+            u_long32 saved_logginglevel = log_state_get_log_level();
+
+            log_state_set_log_level(LOG_INFO);
+            INFO((SGE_EVENT, "\n%s", prof_get_info_string(SGE_PROF_ALL, false, NULL)));
+            log_state_set_log_level(saved_logginglevel);
+
+            next_prof_output = now + 60;
+         }
+      }
    }
 }
 

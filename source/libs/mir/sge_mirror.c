@@ -768,8 +768,8 @@ sge_mirror_error sge_mirror_process_events(void)
    if(prof_is_active()) {
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
 
-      INFO((SGE_EVENT, "processed %d requests, %s", 
-            num_events, prof_get_info_string(SGE_PROF_MIRROR, false, NULL)
+      INFO((SGE_EVENT, "processed %d requests in %.3f s\n", 
+            num_events, prof_get_measurement_wallclock(SGE_PROF_MIRROR, false, NULL)
           ));
    }
 

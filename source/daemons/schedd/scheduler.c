@@ -143,7 +143,7 @@ int scheduler(sge_Sdescr_t *lists) {
    fpdjp = fopen("/tmp/sge_debug_job_place.out", "a");
 #endif
 
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
 
    scheduled_fast_jobs    = 0;
    scheduled_complex_jobs = 0;
@@ -225,15 +225,15 @@ int scheduler(sge_Sdescr_t *lists) {
    if(prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
-      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0);
 
       log_state_set_log_level(LOG_INFO);
       INFO((SGE_EVENT, "scheduled in %.3f (u %.3f + s %.3f = %.3f): %d fast, %d complex, %d orders, %d H, %d Q, %d QA, %d J(qw), %d J(r), %d J(x), %d C, %d ACL, %d PE, %d CONF, %d U, %d D, %d PRJ, %d ST, %d CKPT, %d RU\n",
-         prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, true, NULL),
-         prof_get_measurement_utime(SGE_PROF_CUSTOM1, true, NULL),
-         prof_get_measurement_stime(SGE_PROF_CUSTOM1, true, NULL),
-         prof_get_measurement_utime(SGE_PROF_CUSTOM1, true, NULL) + 
-         prof_get_measurement_stime(SGE_PROF_CUSTOM1, true, NULL),
+         prof_get_measurement_wallclock(SGE_PROF_CUSTOM0, true, NULL),
+         prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL),
+         prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
+         prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL) + 
+         prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
          scheduled_fast_jobs,
          scheduled_complex_jobs,
          lGetNumberOfElem(orderlist), 
@@ -473,7 +473,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
     *------------------------------------------------------------------*/
 
    if (sgeee_mode) {
-      start = times(&tms_buffer);
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
 
       sge_scheduler(lists, 
                     *(splitted_job_lists[SPLIT_RUNNING]),
@@ -481,13 +481,14 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
                     *(splitted_job_lists[SPLIT_PENDING]),
                     orderlist);     
 
-      if (do_profiling) {
-         clock_t now = times(&tms_buffer);
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+
+      if (prof_is_active()) {
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
          INFO((SGE_EVENT, "SGEEE pending job ticket calculation took %.3f s\n",
-               (now - start) * 1.0 / CLK_TCK ));
+               prof_get_measurement_wallclock(SGE_PROF_CUSTOM1, false, NULL)));
          log_state_set_log_level(saved_logginglevel);
       }
    }
@@ -505,8 +506,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
    }
 
    if (sgeee_mode) {
-
-      start = times(&tms_buffer);
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
 
       /* 
        * calculate the number of tickets for all jobs already 
@@ -521,13 +521,14 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
          return -1;
       }
 
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
+
       if (do_profiling) {
-         clock_t now = times(&tms_buffer);
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
          INFO((SGE_EVENT, "SGEEE active job ticket calculation took %.3f s\n",
-               (now - start) * 1.0 / CLK_TCK ));
+               prof_get_measurement_wallclock(SGE_PROF_CUSTOM2, false, NULL)));
          log_state_set_log_level(saved_logginglevel);
       }
 
@@ -553,17 +554,18 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
        * Order Jobs in descending order according to tickets and 
        * then job number 
        */
-      start = times(&tms_buffer);
+      PROF_START_MEASUREMENT(SGE_PROF_CUSTOM3);
 
       sgeee_sort_jobs(splitted_job_lists[SPLIT_PENDING]);
 
+      PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
+
       if (do_profiling) {
-         clock_t now = times(&tms_buffer);
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
          INFO((SGE_EVENT, "SGEEE job sorting took %.3f s\n",
-               (now - start) * 1.0 / CLK_TCK ));
+               prof_get_measurement_wallclock(SGE_PROF_CUSTOM3, false, NULL)));
          log_state_set_log_level(saved_logginglevel);
       }
 
@@ -666,7 +668,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, lList **orderlist,
       at_notice_runnable_job_arrays(*splitted_job_lists[SPLIT_PENDING]);
    }
 
-   start = times(&tms_buffer);
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM4);
 
    /*
     * loop over the jobs that are left in priority order
@@ -912,13 +914,14 @@ SKIP_THIS_JOB:
       }
    } /* end of while */
 
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM4);
+
    if (sgeee_mode && do_profiling) {
-      clock_t now = times(&tms_buffer);
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);
       INFO((SGE_EVENT, "SGEEE job dispatching took %.3f s\n",
-            (now - start) * 1.0 / CLK_TCK ));
+            prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL)));
       log_state_set_log_level(saved_logginglevel);
    }
 

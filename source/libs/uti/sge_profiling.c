@@ -953,7 +953,7 @@ double prof_get_total_stime(prof_level level, bool with_sub, dstring *error)
 *     MT-NOTE: prof_get_info_string() is not MT safe
 *******************************************************************************/
 
-#define PROF_GET_INFO_FORMAT "%-15s: wc = %10.3fs, utime = %10.3fs, stime = %10.3fs, utilization = %3.0f%%\n"
+#define PROF_GET_INFO_FORMAT "%-15.15s: wc = %10.3fs, utime = %10.3fs, stime = %10.3fs, utilization = %3.0f%%\n"
 
 static const char *
 _prof_get_info_string(prof_level level, dstring *info_string, bool with_sub, dstring *error)

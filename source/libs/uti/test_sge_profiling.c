@@ -49,7 +49,11 @@ int main(int argc, char *argv[])
       sge_dstring_clear(&error);
    }
 
-   if(!prof_set_level_name(SGE_PROF_CUSTOM1, "test", &error)) {
+   if(!prof_set_level_name(SGE_PROF_CUSTOM1, "sublevel1", &error)) {
+      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      sge_dstring_clear(&error);
+   }
+   if(!prof_set_level_name(SGE_PROF_CUSTOM2, "sublevel2", &error)) {
       fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
       sge_dstring_clear(&error);
    }
@@ -58,10 +62,21 @@ int main(int argc, char *argv[])
    printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
    /* sleep and measure time */
-   PROF_START_MEASUREMENT(SGE_PROF_MIRROR);
    sleep(5);
-   PROF_STOP_MEASUREMENT(SGE_PROF_MIRROR);
    printf("after sleep(5):\n");
+   printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
+
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+   sleep(1);
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
+   sleep(2);
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
+   sleep(1);
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM2);
+   sleep(2);
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM2);
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   printf("after nested profiling:\n");
    printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
    /* work and measure time */

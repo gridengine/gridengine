@@ -424,6 +424,9 @@ const char *lGetListName(const lList *lp)
 *
 *  RESULT
 *     const lDescr* - destriptor 
+*  
+*  NOTES
+*     MT-NOTE: lGetListDescr() is MT safe
 ******************************************************************************/
 const lDescr *lGetListDescr(const lList *lp) 
 {
@@ -453,6 +456,9 @@ const lDescr *lGetListDescr(const lList *lp)
 *
 *  RESULT
 *     int - number of elements 
+* 
+*  NOTES
+*     MT-NOTE: lGetNumberOfElem() is MT safe
 ******************************************************************************/
 int lGetNumberOfElem(const lList *lp) 
 {
@@ -1090,6 +1096,9 @@ lList *lCreateElemList(const char *listname, const lDescr *descr, int nr_elem)
 *
 *  RESULT
 *     lListElem* - NULL 
+*
+*  NOTES
+*     MT-NOTE: lRemoveElem() is MT safe
 ******************************************************************************/
 lListElem *lFreeElem(lListElem *ep) 
 {
@@ -1187,6 +1196,9 @@ lListElem *lFreeElem(lListElem *ep)
 *
 *  RESULT
 *     lList* - NULL 
+*
+*  NOTES
+*     MT-NOTE: lFreeList() is MT safe
 ******************************************************************************/
 lList *lFreeList(lList *lp) 
 {
@@ -1223,6 +1235,42 @@ lList *lFreeList(lList *lp)
    return NULL;
 }
 
+
+/****** cull/list/lAddSubList() ************************************************
+*  NAME
+*     lAddSubList() -- Append a list to the sublist of an element
+*
+*  SYNOPSIS
+*     int lAddSubList(lListElem *ep, int nm, const lList *to_add) 
+*
+*  FUNCTION
+*     Appends the list 'to_add' to the sublist 'nm' of the element 
+*     'ep'. The list pointer becomes invalid and the returned pointer
+*     should be used instead to access the complete sublist.
+*
+*  INPUTS
+*     lListElem *ep       - The CULL list element
+*     int nm              - The CULL field name of a sublist 
+*     const lList *to_add - The list to be added
+*
+*  RESULT
+*     lList * - Returns 
+*
+*  NOTES
+*     MT-NOTE: lAddSubList() is MT safe
+*******************************************************************************/
+lList *lAddSubList(lListElem *ep, int nm, lList *to_add)
+{
+   lList *tmp;
+   if (lGetNumberOfElem(to_add)) {
+      if ((tmp=lGetList(ep, nm)))
+         lAddList(tmp, to_add);
+      else 
+         lSetList(ep, nm, to_add);
+   }
+   return lGetList(ep, nm);
+}
+
 /****** cull/list/lAddList() **************************************************
 *  NAME
 *     lAddList() -- Concatenate two lists 
@@ -1241,6 +1289,9 @@ lList *lFreeList(lList *lp)
 *     int - error state
 *         0 - OK
 *        -1 - Error
+*
+*  NOTES
+*     MT-NOTE: lAddList() is MT safe
 ******************************************************************************/
 int lAddList(lList *lp0, lList *lp1) 
 {
@@ -1301,6 +1352,9 @@ int lAddList(lList *lp0, lList *lp1)
 *     int - Result of compare operation
 *         0 - equivalent
 *        -1 - not equivalent
+*
+*  NOTES
+*     MT-NOTE: lCompListDescr() is MT safe
 ******************************************************************************/
 int lCompListDescr(const lDescr *dp0, const lDescr *dp1) 
 {
@@ -1503,6 +1557,9 @@ int lInsertElem(lList *lp, lListElem *ep, lListElem *new)
 *     int - error state 
 *         0 - OK
 *        -1 - Error
+*
+*  NOTES
+*     MT-NOTE: lAppendElem() is MT safe
 ******************************************************************************/
 int lAppendElem(lList *lp, lListElem *ep) 
 {
@@ -1578,6 +1635,9 @@ _Insight_set_option("unsuppress", "LEAK_ASSIGN");
 *     int - error state
 *         0 - OK
 *        -1 - Error 
+*
+*  NOTES
+*     MT-NOTE: lRemoveElem() is MT safe
 *******************************************************************************/
 int lRemoveElem(lList *lp, lListElem *ep) 
 {
@@ -1635,6 +1695,9 @@ int lRemoveElem(lList *lp, lListElem *ep)
 *
 *  RESULT
 *     lListElem* - dechained element or NULL
+*
+*  NOTES
+*     MT-NOTE: lDechainElem() is MT safe
 ******************************************************************************/
 lListElem *lDechainElem(lList *lp, lListElem *ep) 
 {
@@ -2270,6 +2333,9 @@ int lUniqHost(lList *lp, int keyfield)
 *
 *  SEE ALSO
 *     
+*
+*  NOTES
+*     MT-NOTE: mt_get_type() is MT safe
 *******************************************************************************/
 int mt_get_type(int mt)
 {

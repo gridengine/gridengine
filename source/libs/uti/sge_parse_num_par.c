@@ -141,7 +141,6 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
       } 
    }
 
-
    if (!uvalp)
       uvalp = &dummy_uval;
 
@@ -328,6 +327,7 @@ static double get_multiplier(sge_rlim_t *rlimp, char **dptr,
    case ',':                    /* no multiplier */
    case '\0':                   /* no multiplier */
    case '/':                    /* no multiplier */
+   case ' ':                    /* no multiplier */
       break;
    default:
       sprintf(tmp, MSG_GDI_UNRECOGNIZEDVALUETRAILER_SS , *dptr, where);

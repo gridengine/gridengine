@@ -79,6 +79,7 @@ enum {
    QU_qname,
    QU_full_name,
    QU_tag,
+   QU_available_at, /* scheduling code only */
 
    QU_seq_no,
    QU_nsuspend,
@@ -153,7 +154,7 @@ enum {
    QU_pending_job_cnt,
    QU_soft_violation,
    QU_host_seq_no,
-   QU_consumable_actual_list,
+   QU_resource_utilization,
    QU_message_list
 };
 
@@ -162,6 +163,7 @@ SLISTDEF(QU_Type, QInstance)
    SGE_STRING(QU_qname, CULL_SPOOL)
    SGE_STRING(QU_full_name, CULL_PRIMARY_KEY)
    SGE_ULONG(QU_tag, CULL_DEFAULT)
+   SGE_ULONG(QU_available_at, CULL_DEFAULT)
 
    SGE_ULONG(QU_seq_no, CULL_CONFIGURE)
    SGE_ULONG(QU_nsuspend, CULL_CONFIGURE)
@@ -236,7 +238,7 @@ SLISTDEF(QU_Type, QInstance)
    SGE_ULONG(QU_pending_job_cnt, CULL_DEFAULT)
    SGE_ULONG(QU_soft_violation, CULL_DEFAULT)
    SGE_ULONG(QU_host_seq_no, CULL_DEFAULT)
-   SGE_LIST(QU_consumable_actual_list, CE_Type, CULL_DEFAULT)
+   SGE_LIST(QU_resource_utilization, RUE_Type, CULL_DEFAULT)
    SGE_LIST(QU_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
 LISTEND 
 
@@ -245,6 +247,7 @@ NAMEDEF(QUN)
    NAME("QU_qname")
    NAME("QU_full_name")
    NAME("QU_tag")
+   NAME("QU_available_at")
 
    NAME("QU_seq_no")
    NAME("QU_nsuspend")
@@ -319,7 +322,7 @@ NAMEDEF(QUN)
    NAME("QU_pending_job_cnt")
    NAME("QU_soft_violation")
    NAME("QU_host_seq_no")
-   NAME("QU_consumable_actual_list")
+   NAME("QU_resource_utilization")
    NAME("QU_message_list")
 NAMEEND
 

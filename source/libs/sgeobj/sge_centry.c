@@ -32,6 +32,7 @@
 
 #include <string.h>
 
+#include "sge.h"
 #include "sge_string.h"
 #include "sgermon.h"
 #include "sge_log.h"
@@ -205,8 +206,12 @@ centry_fill_and_check(lListElem *this_elem, bool allow_empty_boolean,
          }
          /* normelize time values, so that the string value is based on seconds */
          if (TYPE_TIM == type){
-            char str_value[11];
-            sprintf(str_value, "%-10.0f", dval);
+            char str_value[100]; 
+            dstring ds;
+            sge_dstring_init(&ds, str_value, sizeof(str_value));
+            sge_dstring_sprintf(&ds, "%.0f", dval);
+            DPRINTF(("normalized time value from \"%s\" to \"%s\"\n", 
+                     lGetString(this_elem, CE_stringval), str_value));
             lSetString(this_elem, CE_stringval, str_value);
          }
          
@@ -471,7 +476,6 @@ centry_is_referenced(const lListElem *centry, lList **answer_list,
 *
 *  NOTES
 *     MT-NOTE: centry_print_resource_to_dstring() is MT safe
-*
 *******************************************************************************/
 bool
 centry_print_resource_to_dstring(const lListElem *this_elem, dstring *string)
@@ -1013,12 +1017,15 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list, lList **answer_
             case TYPE_MEM:
             case TYPE_BOO:
             case TYPE_DOUBLE:
+      
                if(!parse_ulong_val(&dval, NULL, type, temp, error_msg, 199)){
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                   MSG_INVALID_CENTRY_PARSE_DEFAULT_SS, attrname, error_msg);
                   ret = false;
                }
-               if (dval != 0) {
+
+               /* accept non-zero default values for consumables and h_rt/s_rt only */
+               if (dval != 0 && strcmp(attrname, SGE_ATTR_H_RT) && strcmp(attrname, SGE_ATTR_S_RT)) {
                   answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                   MSG_INVALID_CENTRY_DEFAULT_S, attrname);
                   ret = false;
@@ -1222,5 +1229,3 @@ centry_list_do_all_exists(const lList *this_list, lList **answer_list,
    DEXIT;
    return ret;
 }
-
-

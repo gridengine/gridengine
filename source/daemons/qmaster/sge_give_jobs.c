@@ -1162,8 +1162,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
 
             /* undebit consumable resources */ 
             host = host_list_locate(Master_Exechost_List, "global");
-            if (debit_host_consumable(job, host, 
-                                      Master_CEntry_List, -tmp_slot) > 0) {
+            if (debit_host_consumable(job, host, Master_CEntry_List, -tmp_slot) > 0) {
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, host);
@@ -1172,8 +1171,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
                lListElem_clear_changed_info(host);
             }
             host = host_list_locate(Master_Exechost_List, queue_hostname);
-            if (debit_host_consumable(job, host, 
-                                      Master_CEntry_List, -tmp_slot) > 0) {
+            if (debit_host_consumable(job, host, Master_CEntry_List, -tmp_slot) > 0) {
                /* this info is not spooled */
                sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
@@ -1203,7 +1201,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
             ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S,
                   lGetString(ja_task, JAT_granted_pe)));
          } else {
-            reverse_job_from_pe(pe, pe_slots, job_id);
+            pe_debit_slots(pe, -pe_slots, job_id);
             /* this info is not spooled */
             sge_add_event(NULL, 0, sgeE_PE_MOD, 0, 0, 
                           lGetString(ja_task, JAT_granted_pe), NULL, NULL, pe);

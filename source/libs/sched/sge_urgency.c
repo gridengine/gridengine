@@ -54,7 +54,7 @@
 static void sge_normalize_urgency(lList *job_list, double min_urgency, 
    double max_urgency);
 static void sge_urgency(u_long32 now, double *min_urgency, double *max_urgency, 
-               lList *job_list, const lList *centry_list, const lList *pe_list);
+               lList *job_list, const lList *centry_list, lList *pe_list);
 
 
 /****** sge_urgency/sge_do_urgency() *****************************
@@ -129,7 +129,7 @@ void sge_do_urgency(u_long32 now, lList *running_jobs, lList *pending_jobs,
 *  NOTES
 *******************************************************************************/
 static void sge_urgency(u_long32 now, double *min_urgency, double *max_urgency, 
-               lList *job_list, const lList *centry_list, const lList *pe_list)
+               lList *job_list, const lList *centry_list, lList *pe_list)
 {
    lListElem *jep;
    double rrc, wtc, dtc, absolute_urgency;

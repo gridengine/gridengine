@@ -52,6 +52,8 @@ SCHEDLIB_SRC = sge_select_queue.c \
               sgeee.c \
               sge_urgency.c \
               sge_gdi_attributes.c \
+              sge_resource_utilization.c \
+              sge_serf.c \
               sge_support.c \
               schedd_message.c \
               sge_orders.c \
@@ -148,8 +150,14 @@ schedd_monitor.o: $(SCHEDLIB_DIR)/schedd_monitor.c
 sgeee.o: $(SCHEDLIB_DIR)/sgeee.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sgeee.c
 
+sge_resource_utilization.o: $(SCHEDLIB_DIR)/sge_resource_utilization.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_resource_utilization.c
+
 sge_urgency.o: $(SCHEDLIB_DIR)/sge_urgency.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_urgency.c
+
+sge_serf.o: $(SCHEDLIB_DIR)/sge_serf.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_serf.c
 
 sge_support.o: $(SCHEDLIB_DIR)/sge_support.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_support.c

@@ -89,7 +89,8 @@ enum {
    SC_weight_waiting_time,
    SC_weight_deadline,
    SC_weight_urgency,
-   SC_weight_priority
+   SC_weight_priority,
+   SC_max_reservation
    };
 
 
@@ -155,9 +156,12 @@ ILISTDEF(SC_Type, SchedConf, SGE_SC_LIST)
    SGE_DOUBLE(SC_weight_deadline, CULL_DEFAULT | CULL_SPOOL)               /* dividend used in SGEEE static urgency   *
                                                                             * formula with deadline initiation time   */
    SGE_DOUBLE(SC_weight_urgency, CULL_DEFAULT | CULL_SPOOL)                /* weight in SGEEE priority formula applied *
-                                                                            * on normalized urgency */
+                                                                            * on normalized urgency                   */
    SGE_DOUBLE(SC_weight_priority, CULL_DEFAULT | CULL_SPOOL)               /* weight in SGEEE priority formula applied *
                                                                             * on normalized posix priority */
+   SGE_ULONG(SC_max_reservation, CULL_DEFAULT | CULL_SPOOL)                /* Maximum number of reservations within a *
+                                                                            * schedule run. The value U_LONG32_MAX    *
+                                                                            * stands for 'infinity'                   */
 LISTEND 
 
 NAMEDEF(SCN)
@@ -201,6 +205,7 @@ NAMEDEF(SCN)
    NAME("SC_weight_deadline")
    NAME("SC_weight_urgency")
    NAME("SC_weight_priority")
+   NAME("SC_max_reservation")
 NAMEEND
 #define SCS sizeof(SCN)/sizeof(char*)
 

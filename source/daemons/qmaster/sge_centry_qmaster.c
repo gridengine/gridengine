@@ -273,17 +273,17 @@ centry_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
       lListElem *qinstance = NULL;
 
       for_each(qinstance, qinstance_list) {
-         lSetList(qinstance, QU_consumable_actual_list, NULL);
+         lSetList(qinstance, QU_resource_utilization, NULL);
          qinstance_debit_consumable(qinstance, NULL, Master_CEntry_List, 0);
       }
    }
    for_each (hep, Master_Exechost_List) {
-      lSetList(hep, EH_consumable_actual_list, NULL);
+      lSetList(hep, EH_resource_utilization, NULL);
       debit_host_consumable(NULL, hep, Master_CEntry_List, 0);
    }
 
    /* 
-    * completely rebuild consumable_actual_list of 
+    * completely rebuild resource utilization of 
     * all queues and execution hosts
     * change versions of corresponding queues 
     */ 

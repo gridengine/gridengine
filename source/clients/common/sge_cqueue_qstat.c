@@ -53,6 +53,7 @@
 #include "sge_cqueue.h"
 #include "sge_complex_schedd.h"
 #include "msg_clients_common.h"
+#include "sge_schedd_conf.h"
 
 
 bool cqueue_calculate_summary(const lListElem *cqueue, 
@@ -548,11 +549,11 @@ u_long32 empty_qs
 
       for_each(qep, qinstance_list) {
          if (empty_qs)
-            set_qs_state(QS_STATE_EMPTY);
+            sconf_set_qs_state(QS_STATE_EMPTY);
 
          selected = sge_select_queue(resource_list, qep, NULL, exechost_list, centry_list, 1, NULL, 0, -1);
          if (empty_qs)
-            set_qs_state(QS_STATE_FULL);
+            sconf_set_qs_state(QS_STATE_FULL);
 
          if (!selected)
             lSetUlong(qep, QU_tag, 0);

@@ -160,6 +160,7 @@ static tJobField job_items[] = {
    { 0, JB_cwd, "@{CWD}", 10, 30, PrintString },
    { 0, JB_stderr_path_list, "@{StderrPaths}", 15, 100, PrintPathList },
    { 0, JAT_hold, "@{Hold}", 10, 30, PrintHold },
+/*    { 0, JB_reserve, "@{Reserve}", 11, 30, PrintBool }, */
    { 0, JB_merge_stderr, "@{MergeOutput}", 11, 30, PrintBool },
    { 0, JB_mail_options, "@{MailOptions}", 11, 30, PrintMailOptions },
    { 0, JB_mail_list, "@{MailTo}", 15, 30, PrintMailList },
@@ -2065,7 +2066,7 @@ lList *exec_host_list
    ** remove the queues not fulfilling the request_list
    */
    qep = lFirst(*queue_list);
-   set_qs_state(QS_STATE_EMPTY);
+   sconf_set_qs_state(QS_STATE_EMPTY);
    while (qep) {
 
       DPRINTF(("QUEUE %s\n", lGetString(qep, QU_qname)));
@@ -2077,7 +2078,7 @@ lList *exec_host_list
       else
          qep = lNext(qep);
    }
-   set_qs_state(QS_STATE_FULL);
+   sconf_set_qs_state(QS_STATE_FULL);
 
    /*
    ** remove the template queue if present
@@ -2099,7 +2100,7 @@ lList *exec_host_list
    ** remove the queues not fulfilling the request_list
    */
    qep = lFirst(*queue_list);
-   set_qs_state(QS_STATE_EMPTY);
+   sconf_set_qs_state(QS_STATE_EMPTY);
    while (qep) {
       
       if (!sge_select_queue(request_list,qep, NULL, exec_host_list, complex_list, 1, NULL, 0, 1)) {
@@ -2110,7 +2111,7 @@ lList *exec_host_list
       else
          qep = lNext(qep);
    }
-   set_qs_state(QS_STATE_FULL);
+   sconf_set_qs_state(QS_STATE_FULL);
 
    if (lGetNumberOfElem(*queue_list) == 0)
       *queue_list = lFreeList(*queue_list);

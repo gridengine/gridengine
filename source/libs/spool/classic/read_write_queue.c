@@ -825,8 +825,8 @@ const lListElem *qep
    if (write_2_stdout && getenv("MORE_INFO")) {
       FPRINTF((fp, "suspended_on_subordinate "u32"\n", 
          lGetUlong(qep, QU_suspended_on_subordinate)));
-      ret = fprint_thresholds(fp, "complex_values_actual  ", 
-         lGetList(qep, QU_consumable_actual_list), 1);
+      ret = fprint_resource_utilizations(fp, "complex_values_actual  ", 
+         lGetList(qep, QU_resource_utilization), 1);
       if (ret == -1) {
          goto FPRINTF_ERROR;
       } 

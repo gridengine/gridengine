@@ -50,6 +50,7 @@
 #include "sge_spool.h"
 #include "sge_io.h"
 #include "sge_userset.h"
+#include "sge_resource_utilization.h"
 #include "sge_qinstance.h"
 #include "sge_qref.h"
 
@@ -174,8 +175,12 @@ _Insight_set_option("suppress", "PARM_NULL");
       }
    }
 
-   /* PE_used_slots gets set to PE_slots */
-   lSetUlong(ep, PE_used_slots, 0);
+   /* initialize number of used PE slots with 0 */
+   if (pe_set_slots_used(ep, 0)) {
+      answer_list_add(alpp, MSG_GDI_OUTOFMEMORY, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      DEXIT;
+      return -1;
+   }
 
    DEXIT;
    return 0;
@@ -310,7 +315,7 @@ const lListElem *ep
 
    /* --------- internal fields ----------------------------------- */
 
-   /* --------- PE_used_slots */
+   /* --------- PE_resource_utilization */
    /* 
       the number of free slots is evaluated dynamically to 
       prevent useless disk spooling 
@@ -319,7 +324,7 @@ const lListElem *ep
    if (!spool && how == 0 && getenv("MORE_INFO")) {
       int n;
 
-      n = lGetUlong(ep, PE_slots) - lGetUlong(ep, PE_used_slots);
+      n = lGetUlong(ep, PE_slots) - pe_get_slots_used(ep);
       FPRINTF((fp, "free_slots       %d\n", n));
    }
 

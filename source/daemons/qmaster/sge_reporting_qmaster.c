@@ -69,6 +69,10 @@
 #include "sge_str.h"
 #include "sge_sharetree.h"
 #include "sge_userprj.h"
+#include "sge_resource_utilization.h"
+
+/* lck */
+#include "sge_lock.h"
 #include "sge_userset.h"
 
 /* sched */
@@ -563,11 +567,12 @@ reporting_write_consumables(lList **answer_list, dstring *buffer,
 
    if (do_reporting) {
       for_each (cep, actual) {
-         lListElem *tep = lGetElemStr(total, CE_name, lGetString(cep, CE_name));
+         const char *name = lGetString(cep, RUE_name);
+         lListElem *tep = lGetElemStr(total, CE_name, name);
          if (tep != NULL) {
-            sge_dstring_append(buffer, lGetString(cep, CE_name));
+            sge_dstring_append(buffer, name);
             sge_dstring_append_char(buffer, '=');
-            centry_print_resource_to_dstring(cep, buffer);
+            utilization_print_to_dstring(cep, buffer);
             sge_dstring_append_char(buffer, '=');
             centry_print_resource_to_dstring(tep, buffer);
 
@@ -680,7 +685,7 @@ reporting_create_queue_consumable_record(lList **answer_list,
 
       /* dump consumables */
       reporting_write_consumables(answer_list, &consumable_dstring, 
-                                  lGetList(queue, QU_consumable_actual_list), 
+                                  lGetList(queue, QU_resource_utilization), 
                                   lGetList(queue, QU_consumable_config_list));
 
       if (sge_dstring_strlen(&consumable_dstring) > 0) {
@@ -826,7 +831,7 @@ reporting_create_host_consumable_record(lList **answer_list,
 
       /* dump consumables */
       reporting_write_consumables(answer_list, &consumable_dstring, 
-                                  lGetList(host, EH_consumable_actual_list), 
+                                  lGetList(host, EH_resource_utilization), 
                                   lGetList(host, EH_consumable_config_list));
 
       if (sge_dstring_strlen(&consumable_dstring) > 0) {

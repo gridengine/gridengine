@@ -42,15 +42,20 @@ extern "C" {
 
 /* *INDENT-OFF* */ 
 
+/* min number of jobs in a category to use
+   the skip host, queue and the soft violations */
+#define MIN_JOBS_IN_CATEGORY 1
+
+
 /* 
  * this data structures describes the category list 
  */
 enum {
    CT_str = CT_LOWERBOUND,   /* string of category */
    CT_refcount,              /* number of jobs referencing the string */
-   CT_rejected,              /* has this category been rejected */
-   CT_ignore_queues,         /* stores all queues, which cannot run this job class */ 
-   CT_ignore_hosts,          /* stores all hosts, which cannot run this job class */
+   CT_rejected,              /* has this category been rejected as it can not be dispached now */
+   CT_ignore_queues,         /* stores all queues, which now cannot run this job category */ 
+   CT_ignore_hosts,          /* stores all hosts, which now cannot run this job category */
    CT_queue_violations,      /* stores in a case of soft requests, for each queue the number of violations */
    CT_job_messages,          /* stores the error messages, which a job got during its dispatching */ 
    CT_resource_contribution, /* SGEEE: resource request dependent contribution on urgency 

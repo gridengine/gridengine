@@ -70,6 +70,7 @@
 #include "sge_load.h"
 
 #include "sge_select_queue.h"
+#include "sge_resource_utilization.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -449,7 +450,7 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
       lList *centry_list = *(object_type_get_master_list(SGE_TYPE_CENTRY));
       lListElem *job = NULL;
 
-      lSetList(this_elem, QU_consumable_actual_list, NULL);
+      lSetList(this_elem, QU_resource_utilization, NULL);
       qinstance_set_conf_slots_used(this_elem);
       qinstance_debit_consumable(this_elem, NULL, centry_list, 0);
 
@@ -512,9 +513,10 @@ qinstance_slots_used(const lListElem *this_elem)
    lListElem *slots;
 
    DENTER(QINSTANCE_LAYER, "qinstance_slots_used");
-   slots = lGetSubStr(this_elem, CE_name, "slots", QU_consumable_actual_list);
+
+   slots = lGetSubStr(this_elem, RUE_name, "slots", QU_resource_utilization);
    if (slots != NULL) {
-      ret = lGetDouble(slots, CE_doubleval);
+      ret = lGetDouble(slots, RUE_utilized_now);
    } else {
       /* may never happen */
       CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
@@ -530,9 +532,9 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
    lListElem *slots;
 
    DENTER(QINSTANCE_LAYER, "qinstance_set_slots_used");
-   slots = lGetSubStr(this_elem, CE_name, "slots", QU_consumable_actual_list);
+   slots = lGetSubStr(this_elem, RUE_name, "slots", QU_resource_utilization);
    if (slots != NULL) {
-      lSetDouble(slots, CE_doubleval, new_slots);
+      lSetDouble(slots, RUE_utilized_now, new_slots);
    } else {
       /* may never happen */
       CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
@@ -597,25 +599,24 @@ qinstance_check_unknown_state(lListElem *this_elem)
 }
 
 int 
-qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list,
-                           int slots)
+qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list, int slots)
 {
-   return debit_consumable(jep, qep, centry_list, slots,
+   return rc_debit_consumable(jep, qep, centry_list, slots,
                            QU_consumable_config_list, 
-                           QU_consumable_actual_list,
+                           QU_resource_utilization,
                            lGetString(qep, QU_qname));
 }
 
 /****** lib/sgeobj/debit_consumable() ****************************************
 *  NAME
-*     debit_consumable() -- Debit/Undebit consumables.
+*     rc_debit_consumable() -- Debit/Undebit consumables from resource container
 *
 *  SYNOPSIS
-*     int debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
+*     int rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
 *             int slots, int config_nm, int actual_nm, const char *obj_name)
 *
 *  FUNCTION
-*     Updates all consumable actual values of queue/host
+*     Updates all consumable actual values of a resource container
 *     for 'slots' slots of the given job. Positive slots numbers 
 *     cause debiting, negative ones cause undebiting.
 *
@@ -646,11 +647,10 @@ qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list,
 *     Returns -1 in case of an error. Otherwise the number of (un)debitations 
 *     that actually took place is returned. If 0 is returned that means the
 *     consumable resources of the 'ep' object has not changed.
-*
 ********************************************************************************
 */
 int 
-debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots, 
+rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots, 
                  int config_nm, int actual_nm, const char *obj_name) 
 {
    lListElem *cr, *cr_config, *dcep;
@@ -658,7 +658,7 @@ debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
    const char *name;
    int mods = 0;
 
-   DENTER(TOP_LAYER, "debit_consumable");
+   DENTER(TOP_LAYER, "rc_debit_consumable");
 
    if (!ep) {
       DEXIT;
@@ -682,23 +682,21 @@ debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
       }
 
       /* ensure attribute is in actual list */
-      if (!(cr = lGetSubStr(ep, CE_name, name, actual_nm))) {
-         cr = lAddSubStr(ep, CE_name, name, actual_nm, CE_Type);
-         /* CE_double is implicitly set to zero */
+      if (!(cr = lGetSubStr(ep, RUE_name, name, actual_nm))) {
+         cr = lAddSubStr(ep, RUE_name, name, actual_nm, RUE_Type);
+         /* RUE_utilized_now is implicitly set to zero */
       }
    
       if (jep) {
          bool tmp_ret = job_get_contribution(jep, NULL, name, &dval, dcep);
 
          if (tmp_ret && dval != 0.0) {
-            DPRINTF(("debiting %f of %s on %s %s for %d slots\n",
-                     dval, name, 
+            DPRINTF(("debiting %f of %s on %s %s for %d slots\n", dval, name,
                      (config_nm==QU_consumable_config_list)?"queue":"host",
                      obj_name, slots));
-            lSetDouble(cr, CE_doubleval, 
-                       lGetDouble(cr, CE_doubleval) + slots * dval);
+            lAddDouble(cr, RUE_utilized_now, slots * dval);
             mods++;
-         }
+         }  
       }
    }
 

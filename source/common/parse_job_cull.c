@@ -487,6 +487,11 @@ lList *cull_parse_job_parameter(lList *cmdline, lListElem **pjob)
    parse_list_hardsoft(cmdline, "-masterq", *pjob, 
                         JB_master_hard_queue_list, 0);
    
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
+      lSetBool(*pjob, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
+      lRemoveElem(cmdline, ep);
+   }
+
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-r"))) {
       lSetUlong(*pjob, JB_restart, lGetInt(ep, SPA_argval_lIntT));
       lRemoveElem(cmdline, ep);

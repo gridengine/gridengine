@@ -56,6 +56,7 @@
 #include "sge_schedd_conf.h"
 #include "sge_qinstance.h"
 #include "sge_gqueue.h"
+#include "sge_answer.h"
 
 #include "cull_hash.h"
 
@@ -247,6 +248,36 @@ void job_move_first_pending_to_running(lListElem **pending_job,
 
    DEXIT;
 }
+
+int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret)
+{
+   lListElem *ja_task;
+   u_long32 ja_task_id;
+
+   DENTER(TOP_LAYER, "job_get_next_task");
+
+   ja_task = lFirst(lGetList(job, JB_ja_tasks));
+   if (!ja_task) {
+      lList *answer_list = NULL;
+
+      ja_task_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids),
+                                           &answer_list);
+      if (answer_list_has_error(&answer_list)) {
+         answer_list = lFreeList(answer_list);
+         return -1;
+      }
+      ja_task = job_get_ja_task_template_pending(job, ja_task_id);
+   } else {
+      ja_task_id = lGetUlong(ja_task, JAT_task_number);
+   }
+
+   *task_ret = ja_task;
+   *id_ret   = ja_task_id;
+
+   DEXIT;
+   return 0;
+}
+
 
 /****** sched/sge_job_schedd/user_list_init_jc() ******************************
 *  NAME

@@ -199,6 +199,13 @@ void cull_show_job(lListElem *job, int flags)
             delis, FLG_NO_DELIS_STRINGS);
       }
 
+   if (lGetPosViaElem(job, JB_reserve)>=0)
+      if (lGetBool(job, JB_reserve)) {
+         printf("reserve:                    ");
+         sge_show_y_n(lGetBool(job, JB_reserve), SGE_STDOUT);
+         printf("\n");
+      }
+
    if (lGetPosViaElem(job, JB_merge_stderr)>=0)
       if (lGetBool(job, JB_merge_stderr)) {
          printf("merge:                      ");

@@ -140,9 +140,10 @@ static u_long32 sge_scheduling_run;
 static void tix_range_set(double min_tix, double max_tix);
 static void tix_range_get(double *min_tix, double *max_tix);
 
-/* EB: debug 
+/* EB: debug */
+#if 0
 #define DEBUG_TASK_REF 
-*/
+#endif
 
 #ifdef DEBUG_TASK_REF 
 static void task_ref_print_table(void);
@@ -317,8 +318,10 @@ static void task_ref_print_table(void)
 
 static void task_ref_print_table_entry(sge_task_ref_t *tref) 
 {
+   DENTER(TOP_LAYER, "task_ref_print_table_entry");
+
    if (tref != NULL) {
-      fprintf(stderr, "@@@ "
+      DPRINTF(("    @@@ "
          "job: "u32" "
          "ja_task: "u32" "
          "t: %f "
@@ -330,8 +333,9 @@ static void task_ref_print_table_entry(sge_task_ref_t *tref)
          tref->ja_task_ticket,
          tref->ja_task_sticket,
          tref->ja_task_share
-      );       
+      ));       
    }
+   DEXIT;
 }
 #endif
 
@@ -341,7 +345,8 @@ static sge_task_ref_t *task_ref_get_first(u_long32 job_number,
    sge_task_ref_t *ret = NULL;
    u_long32 i;
 
-   DENTER(BASIS_LAYER, "task_ref_get_first");
+   DENTER(TOP_LAYER, "task_ref_get_first");
+
    for (i = 0; i < task_ref_entries; i++) {
       sge_task_ref_t *tref = task_ref_get_entry(i);
 
@@ -351,6 +356,7 @@ static sge_task_ref_t *task_ref_get_first(u_long32 job_number,
          break;
       }
    }
+
    DEXIT;
    return ret;
 }
@@ -401,7 +407,7 @@ static void task_ref_copy_to_ja_task(sge_task_ref_t *tref, lListElem *ja_task)
    if (ja_task != NULL && tref != NULL) {
       lSetUlong(ja_task, JAT_task_number, tref->ja_task_number);
 
-      lSetDouble(ja_task, JAT_tix,                    tref->ja_task_ticket); 
+      lSetDouble(ja_task, JAT_tix,                       tref->ja_task_ticket); 
       lSetDouble(ja_task, JAT_fticket,                   tref->ja_task_fticket); 
       lSetDouble(ja_task, JAT_sticket,                   tref->ja_task_sticket); 
       lSetDouble(ja_task, JAT_oticket,                   tref->ja_task_oticket); 
@@ -536,37 +542,51 @@ void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
                                    lFirst(lGetList(next_job, JB_ja_template));
          lListElem *order = NULL;
 
-         tmp_task = ja_task_template;
-
-         /*
-          * job's normalized urgency and priority did not change,
-          * but it's needed for updating prio
-          */
-         nurg = lGetDouble(next_job, JB_nurg);
-         npri = lGetDouble(next_job, JB_nppri);
-
-         /*
-          * Update pending tickets in template element
-          */
-         DPRINTF(("task_ref_copy_to_ja_task(tref = "u32", template_task = "u32")\n",
-            tref->ja_task_number, lGetUlong(ja_task_template, JAT_task_number)));
-         task_ref_copy_to_ja_task(tref, ja_task_template);
-         recompute_prio(tref, ja_task_template, nurg, npri);
-
          /* 
-          * Update pending tickets in ORT_ptickets-order which was
-          * created previously
+          * If no further sge_task_ref_t element was prepared during 
+          * ticket computation phase we can safe the effort of both
+          * resorting the job list and changing ticket amount kept in 
+          * the order list. This is because the best approximation we
+          * could use instead is the ticket number of the previous
+          * task that was assigned from the very same array task.
+          * But as a matter of course this would not change the position
+          * within the job list or the ticket amount kept in the order 
+          * list. The only way for actually improving the behaviour is to 
+          * increase the 'max_pending_tasks_per_job' in sched_conf(5).
           */
-         for_each(order, orderlist) {
-            if (lGetUlong(order, OR_type) == ORT_ptickets &&
-                lGetUlong(order, OR_job_number) == job_id) {
-               lListElem *order_job = lFirst(lGetList(order, OR_joker));
-               lListElem *order_task = lFirst(lGetList(order_job, JB_ja_tasks));
-               DPRINTF(("task_ref_copy_to_ja_task(tref = "u32", task = "u32")\n",
-                  tref->ja_task_number, lGetUlong(order_task, JAT_task_number)));
-               task_ref_copy_to_ja_task(tref, order_task);
-               recompute_prio(tref, order_task, nurg, npri);
-               break;
+         if (tref) {
+            tmp_task = ja_task_template;
+
+            /*
+             * job's normalized urgency and priority did not change,
+             * but it's needed for updating prio
+             */
+            nurg = lGetDouble(next_job, JB_nurg);
+            npri = lGetDouble(next_job, JB_nppri);
+
+            /*
+             * Update pending tickets in template element
+             */
+            DPRINTF(("task_ref_copy_to_ja_task(tref = "u32", template_task = "u32")\n",
+               tref->ja_task_number, lGetUlong(ja_task_template, JAT_task_number)));
+            task_ref_copy_to_ja_task(tref, ja_task_template);
+            recompute_prio(tref, ja_task_template, nurg, npri);
+
+            /* 
+             * Update pending tickets in ORT_ptickets-order which was
+             * created previously
+             */
+            for_each(order, orderlist) {
+               if (lGetUlong(order, OR_type) == ORT_ptickets &&
+                   lGetUlong(order, OR_job_number) == job_id) {
+                  lListElem *order_job = lFirst(lGetList(order, OR_joker));
+                  lListElem *order_task = lFirst(lGetList(order_job, JB_ja_tasks));
+                  DPRINTF(("task_ref_copy_to_ja_task(tref = "u32", task = "u32")\n",
+                     tref->ja_task_number, lGetUlong(order_task, JAT_task_number)));
+                  task_ref_copy_to_ja_task(tref, order_task);
+                  recompute_prio(tref, order_task, nurg, npri);
+                  break;
+               }
             }
          }
       }
@@ -574,24 +594,26 @@ void sgeee_resort_pending_jobs(lList **job_list, lList *orderlist)
       /*
        * Re-Insert job at the correct possition
        */
-      lDechainElem(*job_list, next_job);
-      prio = lGetDouble(tmp_task, JAT_prio);
-      for_each(jep, *job_list) {
-         u_long32 job_id2 = lGetUlong(jep, JB_job_number);
-         lListElem *tmp_task2 = lFirst(lGetList(jep, JB_ja_tasks));
-         double prio2;
+      if (tmp_task) { 
+         lDechainElem(*job_list, next_job);
+         prio = lGetDouble(tmp_task, JAT_prio);
+         for_each(jep, *job_list) {
+            u_long32 job_id2 = lGetUlong(jep, JB_job_number);
+            lListElem *tmp_task2 = lFirst(lGetList(jep, JB_ja_tasks));
+            double prio2;
 
-         if (tmp_task2 == NULL) {
-            tmp_task2 = lFirst(lGetList(jep, JB_ja_template));
+            if (tmp_task2 == NULL) {
+               tmp_task2 = lFirst(lGetList(jep, JB_ja_template));
+            }
+            prio2 = lGetDouble(tmp_task2, JAT_prio);
+            if (prio > prio2 || (prio == prio2 && job_id < job_id2)) {
+               break;
+            }
+            insert_jep = jep;
          }
-         prio2 = lGetDouble(tmp_task2, JAT_prio);
-         if (prio > prio2 || (prio == prio2 && job_id < job_id2)) {
-            break;
-         }
-         insert_jep = jep;
+
+         lInsertElem(*job_list, insert_jep, next_job);
       }
-
-      lInsertElem(*job_list, insert_jep, next_job);
    }
    DEXIT;
 }

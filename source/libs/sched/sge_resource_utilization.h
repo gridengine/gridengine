@@ -1,5 +1,5 @@
-#ifndef __SGE_PE_H 
-#define __SGE_PE_H 
+#ifndef __SGE_RESOURCE_UTILIZATION_H 
+#define __SGE_RESOURCE_UTILIZATION_H 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -32,44 +32,19 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_peL.h"
+#include "sge_resource_utilizationL.h"
+#include "sge_select_queue.h"
 
-extern lList *Master_Pe_List;
+/* those are for treating resource utilization */
+bool utilization_print_to_dstring(const lListElem *this_elem, dstring *string);
+void utilization_print(const lListElem *cr, const char *object_name);
+int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, double utilization, 
+   u_long32 job_id, u_long32 ja_taskid, u_long32 level, const char *object_name, const char *type);
+double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 end_time);
+void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list);
+u_long32 utilization_below(const lListElem *cr, double max_util, const char *object_name);
 
-bool 
-pe_is_matching(const lListElem *pe, const char *wildcard);
+int add_job_utilization(const sge_assignment_t *a, const char *type);
 
-lList **
-pe_list_get_master_list(void);
+#endif /* __SGE_RESOURCE_UTILIZATION_H */
 
-lListElem *
-pe_list_find_matching(const lList *pe_list, const char *wildcard);
-
-lListElem *
-pe_list_locate(const lList *pe_list, const char *pe_name);
-
-bool 
-pe_is_referenced(const lListElem *pe, lList **answer_list,
-                 const lList *master_job_list,
-                 const lList *master_queue_list);
-
-int 
-pe_validate(lListElem *pep, lList **alpp, int startup);
-
-int 
-pe_validate_urgency_slots(lList **alpp, const char *s);
-
-int 
-pe_urgency_slots(const lListElem *pe, 
-                 const char *urgency_slot_setting, 
-                 const lList* range_list);
-
-bool 
-pe_list_do_all_exist(const lList *pe_list, lList **answer_list, 
-                     const lList *pe_ref_list, bool ignore_make_pe);
-
-int pe_get_slots_used(const lListElem *pe);
-int pe_set_slots_used(lListElem *pe, int slots);
-void pe_debit_slots(lListElem *pep, int slots, u_long32 job_id);
-
-#endif /* __SGE_PE_H */

@@ -1,5 +1,6 @@
-#ifndef __SGE_PE_H 
-#define __SGE_PE_H 
+#ifndef __SGE_QETI_H
+#define __SGE_QETI_H 
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -32,44 +33,20 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_peL.h"
+#include "sge_qetiL.h"
 
-extern lList *Master_Pe_List;
+typedef struct sge_qeti_s sge_qeti_t;
 
-bool 
-pe_is_matching(const lListElem *pe, const char *wildcard);
+sge_qeti_t *sge_qeti_allocate(lListElem *job, lListElem *pe, lListElem *ckpt, lList *host_list, 
+      lList *queue_list, lList *centry_list, lList *acl_list);
+u_long32 sge_qeti_first(sge_qeti_t *qeti);
+void sge_qeti_next_before(sge_qeti_t *qeti, u_long32 start);
+u_long32 sge_qeti_next(sge_qeti_t *qeti);
+void sge_qeti_release(sge_qeti_t *qeti);
 
-lList **
-pe_list_get_master_list(void);
+double sge_qeti_resource_available_per_queue(const char *resource_name, lListElem *job, lListElem *pe, 
+      lListElem *ckpt, lList *host_list, lList *queue_list, lList *centry_list, lList *acl_list, 
+      u_long32 start, u_long32 duration);
 
-lListElem *
-pe_list_find_matching(const lList *pe_list, const char *wildcard);
+#endif /* __SGE_QETI_H */
 
-lListElem *
-pe_list_locate(const lList *pe_list, const char *pe_name);
-
-bool 
-pe_is_referenced(const lListElem *pe, lList **answer_list,
-                 const lList *master_job_list,
-                 const lList *master_queue_list);
-
-int 
-pe_validate(lListElem *pep, lList **alpp, int startup);
-
-int 
-pe_validate_urgency_slots(lList **alpp, const char *s);
-
-int 
-pe_urgency_slots(const lListElem *pe, 
-                 const char *urgency_slot_setting, 
-                 const lList* range_list);
-
-bool 
-pe_list_do_all_exist(const lList *pe_list, lList **answer_list, 
-                     const lList *pe_ref_list, bool ignore_make_pe);
-
-int pe_get_slots_used(const lListElem *pe);
-int pe_set_slots_used(lListElem *pe, int slots);
-void pe_debit_slots(lListElem *pep, int slots, u_long32 job_id);
-
-#endif /* __SGE_PE_H */

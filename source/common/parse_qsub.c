@@ -1349,6 +1349,51 @@ DTRACE;
       }
 
 /*-----------------------------------------------------------------------------*/
+      /* "-R y|n" */
+
+      if (!strcmp("-R", *sp)) {
+
+         if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
+            sprintf(str,
+               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
+               *sp);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
+         }
+
+         /* next field is "y|n" */
+         sp++;
+         if (!*sp) {
+             sprintf(str,
+             MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-R");
+             answer_list_add(&answer, str, STATUS_ESEMANTIC, 
+                             ANSWER_QUALITY_ERROR);
+             DEXIT;
+             return answer;
+         }
+
+         DPRINTF(("\"-R %s\"\n", *sp));
+
+         if (!strcmp("y", *sp)) {
+            ep_opt = sge_add_arg(pcmdline, R_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
+         }
+         else if (!strcmp("n", *sp)) {
+            ep_opt = sge_add_arg(pcmdline, R_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
+         }
+         else {
+             sprintf(str,MSG_PARSE_INVALIDOPTIONARGUMENTJX_S ,
+             *sp);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+             DEXIT;
+             return answer;
+         }
+
+         sp++;
+         continue;
+      }
+
+/*-----------------------------------------------------------------------------*/
       /* "-sc variable_list" */
       /* set context */
 

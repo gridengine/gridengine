@@ -412,7 +412,7 @@ char **argv
       ** printed
       */
 
-      set_qs_state(QS_STATE_EMPTY);
+      sconf_set_qs_state(QS_STATE_EMPTY);
       for_each(jep, job_list) {
          lListElem *pe, *ckpt;
          int ret, show_job;
@@ -429,12 +429,13 @@ char **argv
             const lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
 
             for_each(qep, qinstance_list) {
+               u_long32 now_time = DISPATCH_TIME_NOW;
                if (!(lGetUlong(qep, QU_tag) & TAG_SHOW_IT))
                   continue;
+                
+               ret = queue_time_by_slots(1, &now_time, 0, NULL, jep, qep, pe, ckpt, 
+                        centry_list, acl_list);
 
-               ret = available_slots_at_queue(jep, qep, pe, ckpt, 
-                                              exechost_list, centry_list, 
-                                              acl_list, NULL, 1, 0, NULL, 0, NULL, NULL);
                if (ret>0) {
                   show_job = 1;
                   break;
@@ -457,7 +458,7 @@ char **argv
             lSetList(jep, JB_ja_s_h_ids, NULL);
          }
       }
-      set_qs_state(QS_STATE_FULL);
+      sconf_set_qs_state(QS_STATE_FULL);
    }
 
    /*

@@ -77,6 +77,7 @@
 #include "sge_os.h"
 #include "sge_answer.h"
 #include "sge_profiling.h"
+#include "sge_serf.h"
 #include "sge_mt_init.h"
 
 
@@ -85,6 +86,11 @@ int current_scheduler = 0; /* default scheduler */
 int new_global_config = 0;
 int start_on_master_host = 0;
 int sgeee_mode = 0;
+
+static void schedd_serf_record_func(u_long32 job_id, u_long32 ja_taskid, 
+   const char *state, u_long32 start_time, u_long32 end_time, char level_char,
+   const char *object_name, const char *name, double utilization);
+static void schedd_serf_newline(u_long32 time);
 
 static int sge_ck_qmaster(const char *former_master_host);
 static int parse_cmdline_schedd(int argc, char **argv);
@@ -136,6 +142,8 @@ char *argv[]
    prof_set_level_name(SGE_PROF_CUSTOM6, "scheduler event loop", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM7, "copy lists", NULL);
 
+   /* we wish these functions be used for schedule entry recording */
+   serf_init(schedd_serf_record_func, schedd_serf_newline);
 
    /* This needs a better solution */
    umask(022);
@@ -292,6 +300,7 @@ static void schedd_exit_func(int i)
 {
    DENTER(TOP_LAYER, "schedd_exit_func");
    sge_gdi_shutdown();
+   serf_exit();
    DEXIT;
 }
 
@@ -628,3 +637,62 @@ void sge_schedd_mirror_register()
    /* subscribe events */
    sched_funcs[current_scheduler].subscribe_func();
 }
+
+/* sge_schedd's current schedule entry recording facility (poor mans realization) */
+
+static char schedule_log_path[SGE_PATH_MAX + 1] = "";
+const char *schedule_log_file = "schedule";
+
+/* MT-NOTE: schedd_serf_record_func() is not MT safe */
+static void schedd_serf_record_func(
+u_long32 job_id,
+u_long32 ja_taskid,
+const char *state,
+u_long32 start_time,
+u_long32 end_time,
+char level_char,
+const char *object_name,
+const char *name,
+double utilization)
+{
+   FILE *fp;
+
+   DENTER(TOP_LAYER, "schedd_serf_record_func");
+
+   if (!*schedule_log_path) {
+      sprintf(schedule_log_path, "%s/%s/%s", path_state_get_cell_root(), "common", schedule_log_file);
+      DPRINTF(("schedule log path >>%s<<\n", schedule_log_path));
+   }
+
+   if (!(fp = fopen(schedule_log_path, "a"))) {
+      DEXIT;
+      return;
+   }
+
+   /* a new record */
+   fprintf(fp, U32CFormat":"U32CFormat":%s:"U32CFormat":%d:%c:%s:%s:%f\n",
+      job_id, ja_taskid, state, start_time, (int)(end_time-start_time), 
+         level_char, object_name, name, utilization);
+   fclose(fp);
+
+   DEXIT;
+   return;
+}
+
+/* MT-NOTE: schedd_serf_newline() is not MT safe */
+static void schedd_serf_newline(u_long32 time)
+{
+   FILE *fp;
+
+   if (!*schedule_log_path) {
+      sprintf(schedule_log_path, "%s/%s/%s", path_state_get_cell_root(), "common", schedule_log_file);
+   }
+
+   fp = fopen(schedule_log_path, "a");
+   if (fp) {
+      /* well, some kind of new line indicating a new schedule run */
+      fprintf(fp, "::::::::\n");
+      fclose(fp);
+   }
+}
+

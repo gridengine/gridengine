@@ -2548,6 +2548,14 @@ int *trigger
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
+   /* ---- JB_reserve */
+   if ((pos=lGetPosViaElem(jep, JB_reserve))>=0) {
+      DPRINTF(("got new JB_reserve\n")); 
+      lSetBool(new_job, JB_reserve, lGetBool(jep, JB_reserve));
+      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_RESERVE, u32c(jobid));
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   }
+
    /* ---- JB_merge_stderr */
    if ((pos=lGetPosViaElem(jep, JB_merge_stderr))>=0) {
       DPRINTF(("got new JB_merge_stderr\n")); 
@@ -3535,8 +3543,8 @@ int *trigger
    case JUST_VERIFY:
    default:
       {
-         const lListElem *pep = NULL, *ckpt_ep = NULL;
-         lList *granted;
+         lListElem *pep = NULL;
+         const lListElem *ckpt_ep = NULL;
          lList *talp = NULL;
          int ngranted = 0;
          int try_it = 1;
@@ -3567,16 +3575,22 @@ int *trigger
                try_it = 0;
 
          if (try_it) {
-            int prev_dipatch_type = DISPATCH_TYPE_NONE;
-            lListElem *cqueue;
+            sge_assignment_t assignment;
+
+            memset(&assignment, 0, sizeof(sge_assignment_t));
+            assignment.pe = pep; 
+            assignment.duration = 0; 
+            assignment.start = DISPATCH_TIME_NOW; 
 
             /* imagine qs is empty */
-            set_qs_state(QS_STATE_EMPTY);
+            sconf_set_qs_state(QS_STATE_EMPTY);
 
             /* redirect scheduler monitoring into answer list */
             if (verify_mode==JUST_VERIFY)
                set_monitor_alpp(&talp);
 
+#if 0
+            /* must be reworked */
             ngranted = 0;
             for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
                lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
@@ -3588,13 +3602,16 @@ int *trigger
                ngranted += nslots_granted(granted, NULL);
                granted = lFreeList(granted);
             }
+#endif
+            ngranted = assignment.slots;
+            assignment.gdil = lFreeList(assignment.gdil);
 
             /* stop redirection of scheduler monitoring messages */
             if (verify_mode==JUST_VERIFY)
                set_monitor_alpp(NULL);
 
             /* stop dreaming */
-            set_qs_state(QS_STATE_FULL);
+            sconf_set_qs_state(QS_STATE_FULL);
          }
 
          /* consequences */

@@ -560,7 +560,7 @@ int host_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
          const char *host = lGetHost(ep, EH_name);
          int slots, global_host = !strcmp("global", host);
 
-         lSetList(ep, EH_consumable_actual_list, NULL);
+         lSetList(ep, EH_resource_utilization, NULL);
          debit_host_consumable(NULL, ep, Master_CEntry_List, 0);
          for_each (jep, Master_Job_List) {
             slots = 0;

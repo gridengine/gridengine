@@ -90,6 +90,8 @@
 #include "sge_qinstanceL.h"
 #include "sge_qref.h"
 #include "cull_packL.h"
+#include "sge_resource_utilizationL.h"
+#include "sge_qetiL.h"
 #include "cull_xmlL.h"
 
 #ifdef  __cplusplus
@@ -211,6 +213,7 @@ extern "C" {
 
       {JJ_LOWERBOUND, JJS, JJN},        /* JAPI job */
       {JJAT_LOWERBOUND, JJATS, JJATN},  /* JAPI array task */
+
       {ASTR_LOWERBOUND, ASTRS, ASTRN},          /* CQ string sublist */
       {AULNG_LOWERBOUND, AULNGS, AULNGN},       /* CQ u_long32 sublist */
       {ABOOL_LOWERBOUND, ABOOLS, ABOOLN},       /* CQ bool sublist */
@@ -232,10 +235,15 @@ extern "C" {
       {ULNG_LOWERBOUND, ULNGS, ULNGN},          /* ???? info-messages ??? */
       {EVS_LOWERBOUND, EVSS, EVSN},              /* subscribed event list */
       {PACK_LOWERBOUND, PACKS, PACKN},          /* a cull version of the pack buffer */
-      {XMLA_LOWERBOUND, XMLAS, XMLAN},
-      {XMLS_LOWERBOUND, XMLSS, XMLSN},
-      {XMLH_LOWERBOUND, XMLHS, XMLHN},
-      {XMLE_LOWERBOUND, XMLES, XMLEN},             
+
+      {XMLA_LOWERBOUND, XMLAS, XMLAN},          /* ??? */
+      {XMLS_LOWERBOUND, XMLSS, XMLSN},          /* ??? */
+      {XMLH_LOWERBOUND, XMLHS, XMLHN},          /* ??? */
+      {XMLE_LOWERBOUND, XMLES, XMLEN},          /* ??? */
+
+      {RDE_LOWERBOUND, RDES, RDEN},             /* resource diagram */
+      {RUE_LOWERBOUND, RUES, RUEN},             /* resource utilization */
+      {QETI_LOWERBOUND, QETIS, QETIN},          /* queue end time iterator (scheduler) */
 
       {0, 0, NULL}
    };

@@ -157,7 +157,7 @@ int event_handler_default_scheduler()
    dstring ds;
    char buffer[128];
    double prof_copy=0, prof_event=0, prof_init=0;
-   DENTER(TOP_LAYER, "event_handler_default_scheduler");
+   DENTER(GDI_LAYER, "event_handler_default_scheduler");
    
    sge_dstring_init(&ds, buffer, sizeof(buffer));
 
@@ -363,7 +363,7 @@ static void ensure_valid_what_and_where(void)
 {
    static int called = 0;
 
-   DENTER(TOP_LAYER, "ensure_valid_what_and_where");
+   DENTER(GDI_LAYER, "ensure_valid_what_and_where");
    
    if (called) {
       DEXIT;
@@ -471,8 +471,9 @@ DTRACE;
          QU_fshare,
          QU_oticket,
 #endif
-         QU_consumable_actual_list,
+         QU_resource_utilization,
          QU_tagged4schedule,
+         QU_available_at,
          QU_tag,
 
          QU_version,
@@ -585,6 +586,7 @@ DTRACE;
             JB_hard_wallclock_gmt,
             JB_version,
             JB_type,
+            JB_reserve,
             JB_project,
 /* SGEEE */ JB_department,
             JB_deadline,
@@ -691,7 +693,7 @@ sge_process_schedd_conf_event_before(sge_object_type type, sge_event_action acti
    const lListElem *old;
    lListElem *new;
 
-   DENTER(TOP_LAYER, "sge_process_schedd_conf_event_before");
+   DENTER(GDI_LAYER, "sge_process_schedd_conf_event_before");
    DPRINTF(("callback processing schedd config event\n"));
 
    old = sconf_get_config(); 
@@ -779,7 +781,7 @@ sge_process_job_event_before(sge_object_type type, sge_event_action action,
    u_long32 job_id = 0;
    lListElem *job = NULL;
 
-   DENTER(TOP_LAYER, "sge_process_job_event_before");
+   DENTER(GDI_LAYER, "sge_process_job_event_before");
    DPRINTF(("callback processing job event before default rule\n"));
 
    if (action == SGE_EMA_DEL || action == SGE_EMA_MOD) {
@@ -871,7 +873,7 @@ bool sge_process_job_event_after(sge_object_type type, sge_event_action action,
    u_long32 job_id = 0;
    lListElem *job  = NULL;
 
-   DENTER(TOP_LAYER, "sge_process_job_event_after");
+   DENTER(GDI_LAYER, "sge_process_job_event_after");
    DPRINTF(("callback processing job event after default rule\n"));
 
    if (action == SGE_EMA_ADD || action == SGE_EMA_MOD) {
@@ -995,7 +997,7 @@ sge_process_ja_task_event_before(sge_object_type type,
                                  sge_event_action action, 
                                  lListElem *event, void *clientdata)
 {
-   DENTER(TOP_LAYER, "sge_process_ja_task_event_before");
+   DENTER(GDI_LAYER, "sge_process_ja_task_event_before");
    
    DPRINTF(("callback processing ja_task event before default rule\n"));
 
@@ -1083,7 +1085,7 @@ bool sge_process_ja_task_event_after(sge_object_type type,
                                     sge_event_action action, 
                                     lListElem *event, void *clientdata)
 {
-   DENTER(TOP_LAYER, "sge_process_ja_task_event_after");
+   DENTER(GDI_LAYER, "sge_process_ja_task_event_after");
 
    if (action == SGE_EMA_DEL) {
       lListElem *job;
@@ -1114,7 +1116,7 @@ bool sge_process_userset_event_after(sge_object_type type,
                                      sge_event_action action, 
                                      lListElem *event, void *clientdata)
 {
-   DENTER(TOP_LAYER, "sge_process_userset_event");
+   DENTER(GDI_LAYER, "sge_process_userset_event");
    DPRINTF(("callback processing userset event after default rule\n"));
    rebuild_categories = 1;
    DEXIT;
@@ -1125,7 +1127,7 @@ bool sge_process_schedd_monitor_event(sge_object_type type,
                                      sge_event_action action, 
                                      lListElem *event, void *clientdata)
 {
-   DENTER(TOP_LAYER, "sge_process_schedd_monitor_event");
+   DENTER(GDI_LAYER, "sge_process_schedd_monitor_event");
    DPRINTF(("monitoring next scheduler run\n"));
    monitor_next_run = 1;
    DEXIT;

@@ -448,6 +448,12 @@ int *all_users
          nm_set(job_field, JB_jid_predecessor_list);
       }
 
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-R"))) {
+         lSetBool(job, JB_reserve, lGetInt(ep, SPA_argval_lIntT));
+         lRemoveElem(cmdline, ep);
+         nm_set(job_field, JB_reserve);
+      }
+
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
          lSetBool(job, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
          lRemoveElem(cmdline, ep);
@@ -810,6 +816,7 @@ int *all_users
             NoName
          };
          static int bool_nm[] = {
+            JB_reserve,
             JB_merge_stderr,
             JB_notify,
             NoName

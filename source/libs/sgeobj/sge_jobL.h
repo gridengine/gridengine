@@ -242,6 +242,20 @@ enum {
 *        Start job immediately or not at all. ("qsub -now")
 *        JG: TODO: it is no boolean, but misused for other information!
 *
+*     SGE_BOOL(JB_reserve)
+*        Specifies a reservation is desired by the user ("-R y|n").
+*        Available for non-immediate job submissions. Irrespective 
+*        of the users desire a job reservation is made
+*
+*        o only in reservation scheduling mode 
+*        o only until the maximum number of reservations during a 
+*          scheduling run is not exceeded when the order comes at 
+*          this job. The maximum number (SC_max_reservation) can be 
+*          specified in sched_conf(5).
+*        o only for non-immediate jobs 
+*
+*        Default is 'n'.
+*
 *     SGE_ULONG(JB_priority) 
 *        Priority ("qsub/qalter -p priority")     
 *
@@ -302,12 +316,12 @@ enum {
 *     Resource requests
 *     =================
 *
-*     SGE_LIST(JB_hard_resource_list, RE_Type) 
-*        Hard resource requirements/limits/restrictions (RE_Type).
+*     SGE_LIST(JB_hard_resource_list, CE_Type) 
+*        Hard resource requirements/limits/restrictions (CE_Type).
 *        ("qsub -l resource_list")
 *
-*     SGE_LIST(JB_soft_resource_list) 
-*        Soft resource requirements/limits/restrictions (RE_Type).
+*     SGE_LIST(JB_soft_resource_list, CE_Type) 
+*        Soft resource requirements/limits/restrictions (CE_Type).
 *        ("qsub -l resource_list")
 *
 *     SGE_LIST(JB_hard_queue_list) 
@@ -532,6 +546,7 @@ enum {
    JB_cwd,                
    JB_notify,        
    JB_type,
+   JB_reserve,
    JB_priority,         
    JB_jobshare,         
    JB_shell_list,
@@ -632,6 +647,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_STRING(JB_cwd, CULL_DEFAULT | CULL_SPOOL)     
    SGE_BOOL(JB_notify, CULL_DEFAULT | CULL_SPOOL)  
    SGE_ULONG(JB_type, CULL_DEFAULT | CULL_SPOOL)     
+   SGE_BOOL(JB_reserve, CULL_DEFAULT | CULL_SPOOL)
    SGE_ULONG(JB_priority, CULL_DEFAULT | CULL_SPOOL)       
    SGE_ULONG(JB_jobshare, CULL_DEFAULT | CULL_SPOOL)       
    SGE_LIST(JB_shell_list, PN_Type, CULL_DEFAULT | CULL_SPOOL) 
@@ -777,6 +793,7 @@ NAMEDEF(JBN)
    NAME("JB_cwd")
    NAME("JB_notify")
    NAME("JB_type")
+   NAME("JB_reserve")
    NAME("JB_priority")
    NAME("JB_jobshare")
    NAME("JB_shell_list")

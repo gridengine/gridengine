@@ -608,3 +608,15 @@ qinstance_set_initial_state(lListElem *this_elem)
    return ret;
 }
 
+void 
+qinstance_state_set_full(lListElem *this_elem, bool set_state)
+{
+   qinstance_set_state(this_elem, set_state, QI_FULL);
+}
+
+bool 
+qinstance_state_is_full(const lListElem *this_elem)
+{
+   return qinstance_has_state(this_elem, QI_FULL);
+}
+

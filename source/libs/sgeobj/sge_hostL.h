@@ -51,10 +51,8 @@ enum {
                               * host only Used to scale host load values.
                               * Contains pairs of load value names and
                               * doubles. spooled */
-   EH_consumable_config_list,        /* consumable resources of host
-                                      * CE_Type */
-
-
+   EH_consumable_config_list, /* consumable resources of host
+                               * CE_Type */
    EH_usage_scaling_list,    /* HS_Type - directly user controlled exec
                               * host only SGEEE only scaling of usage
                               * spooled */
@@ -102,8 +100,8 @@ enum {
                               * sge_host_mon */
    EH_load_report_interval,  /* used for caching from global/local
                               * configuration */
-   EH_consumable_actual_list,        /* CE_Type actually debited amout of
-                                      * consumable resources of host */
+   EH_resource_utilization,  /* RUE_Type contains per consumable information 
+                              * about resource utilization for this host */
    EH_cached_complexes,      /* CE_Type used in scheduler for caching
                               * built attributes */
    EH_cache_version,         /* used to decide whether QU_cached_complexes 
@@ -160,7 +158,7 @@ ILISTDEF(EH_Type, ExecHost, SGE_EXECHOST_LIST)
    SGE_ULONG(EH_num_running_jobs, CULL_DEFAULT)
 
    SGE_ULONG(EH_load_report_interval, CULL_DEFAULT)
-   SGE_LIST(EH_consumable_actual_list, CE_Type, CULL_DEFAULT)
+   SGE_LIST(EH_resource_utilization, RUE_Type, CULL_DEFAULT)
    SGE_LIST(EH_cached_complexes, CE_Type, CULL_DEFAULT)
    SGE_ULONG(EH_cache_version, CULL_DEFAULT)
    SGE_ULONG(EH_master_host, CULL_DEFAULT)
@@ -204,7 +202,7 @@ NAMEDEF(EHN)
    NAME("EH_num_running_jobs")
 
    NAME("EH_load_report_interval")
-   NAME("EH_consumable_actual_list")
+   NAME("EH_resource_utilization")
    NAME("EH_cached_complexes")
    NAME("EH_cache_version")
    NAME("EH_master_host")

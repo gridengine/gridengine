@@ -97,6 +97,9 @@ lList *Master_Job_Schedd_Info_List = NULL;
 *     sgeobj/job/job_get_ja_task_template_pending()
 *     sgeobj/job/job_get_ja_task_template_hold()
 *     sgeobj/job/job_get_ja_task_template()
+*
+*  NOTES
+*     MT-NOTE: job_get_ja_task_template_pending() is MT safe
 *******************************************************************************/
 lListElem *job_get_ja_task_template_pending(const lListElem *job,
                                             u_long32 ja_task_id)
@@ -118,6 +121,7 @@ lListElem *job_get_ja_task_template_pending(const lListElem *job,
    return template_task;
 }
 
+   
 /****** sgeobj/job/job_get_ja_task_template_hold() ****************************
 *  NAME
 *     job_get_ja_task_template_hold() -- create a ja task template 

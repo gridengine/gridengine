@@ -119,6 +119,9 @@ int lSetBool(lListElem *ep, int name, lBool value);
 int lSetObject(lListElem *ep, int name, lListElem *value);
 int lSetRef(lListElem *ep, int name, lRef value);
 
+int lAddDouble(lListElem *ep, int name, lDouble offset);
+int lAddUlong(lListElem *ep, int name, lUlong offset);
+
 int intcmp(lInt i0, lInt i1);
 int ulongcmp(lUlong u0, lUlong u1);
 int bitmaskcmp(lUlong bm0, lUlong bm1);

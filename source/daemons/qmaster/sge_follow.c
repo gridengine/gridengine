@@ -468,7 +468,7 @@ lList **topp  /* ticket orders ptr ptr */
       trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number);
 
       if (pe) {
-         debit_job_from_pe(pe, pe_slots, job_number);
+         pe_debit_slots(pe, pe_slots, job_number);
          /* this info is not spooled */
          sge_add_event(NULL, 0, sgeE_PE_MOD, 0, 0, 
                        lGetString(jatp, JAT_granted_pe), NULL, NULL, pe);

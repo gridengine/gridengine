@@ -51,11 +51,13 @@
 #include "sge_range.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
+#include "sge_resource_utilization.h"
 #include "sge_pe.h"
 #include "sge_str.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
+#include "msg_qmaster.h"
 
 lList *Master_Pe_List = NULL;
 
@@ -105,7 +107,7 @@ bool pe_is_matching(const lListElem *pe, const char *wildcard)
 *  RESULT
 *     lListElem* - PE_Type object or NULL
 *******************************************************************************/
-const lListElem *pe_list_find_matching(const lList *pe_list, const char *wildcard) 
+lListElem *pe_list_find_matching(const lList *pe_list, const char *wildcard) 
 {
    lListElem *ret = NULL;
 
@@ -453,5 +455,102 @@ pe_urgency_slots(const lListElem *pe, const char *urgency_slot_setting,
    }
    DEXIT;
    return n;
+}
+
+/****** sge_pe/pe_slots_used() *************************************************
+*  NAME
+*     pe_get_slots_used() -- Returns used PE slots
+*
+*  SYNOPSIS
+*     int pe_get_slots_used(const lListElem *pe) 
+*
+*  FUNCTION
+*     Returns the number of currently used PE slots.
+*
+*  INPUTS
+*     const lListElem *pe - The PE object (PE_Type)
+*
+*  RESULT
+*     int - number of currently used PE slots or -1 on error
+*
+*  NOTES
+*     MT-NOTE: pe_get_slots_used() is MT safe 
+*******************************************************************************/
+int pe_get_slots_used(const lListElem *pe)
+{
+   const lListElem *actual = lGetSubStr(pe, RUE_name, SGE_ATTR_SLOTS, PE_resource_utilization);
+   if (!actual) 
+      return -1;
+   return lGetDouble(actual, RUE_utilized_now); 
+}
+
+/****** sge_pe/pe_set_slots_used() *********************************************
+*  NAME
+*     pe_set_slots_used() -- Set number of used PE slots
+*
+*  SYNOPSIS
+*     int pe_set_slots_used(lListElem *pe, int slots) 
+*
+*  FUNCTION
+*     Sets the number of used PE slots.
+*
+*  INPUTS
+*     lListElem *pe - The pe object (PE_Type) 
+*     int slots     - Number of slots.
+*
+*  RESULT
+*     int - 0 on success -1 on error
+*
+*  NOTES
+*     MT-NOTE: pe_set_slots_used() is MT safe 
+*******************************************************************************/
+int pe_set_slots_used(lListElem *pe, int slots)
+{
+   lListElem *actual = lGetSubStr(pe, RUE_name, SGE_ATTR_SLOTS, PE_resource_utilization);
+   if (!actual && (!(actual = 
+         lAddSubStr(pe, RUE_name, SGE_ATTR_SLOTS, PE_resource_utilization, RUE_Type))))
+      return -1;
+   lSetDouble(actual, RUE_utilized_now, slots); 
+   return 0;
+}
+
+
+/****** sge_pe/pe_debit_slots() ************************************************
+*  NAME
+*     pe_debit_slots() -- Debit pos/neg amount of slots from PE
+*
+*  SYNOPSIS
+*     void pe_debit_slots(lListElem *pep, int slots, u_long32 job_id) 
+*
+*  FUNCTION
+*     Increases or decreses the number of slots used with a PE.
+*
+*  INPUTS
+*     lListElem *pep  - The PE (PE_Type)
+*     int slots       - Pos/neg number of slots.
+*     u_long32 job_id - Job id for monitoring purposes.
+*
+*  NOTES
+*     MT-NOTE: pe_debit_slots() is MT safe 
+*******************************************************************************/
+void pe_debit_slots(
+lListElem *pep, 
+int slots,
+u_long32 job_id  /* needed for job logging */
+) {
+   int n;
+
+   DENTER(TOP_LAYER, "pe_debit_slots");
+
+   if (pep) {
+      n = pe_get_slots_used(pep);
+      n += slots;
+      if (n < 0) {
+         ERROR((SGE_EVENT, MSG_PE_USEDSLOTSTOOBIG_S, lGetString(pep, PE_name)));
+      }
+      pe_set_slots_used(pep, n);
+   }
+   DEXIT;
+   return;
 }
 

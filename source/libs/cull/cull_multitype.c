@@ -333,6 +333,9 @@ void lInit(const lNameSpace *namev)
 *
 *  RESULT
 *     int - size or -1 on error 
+*
+*  NOTES
+*     MT-NOTE: lCountDescr() is MT safe
 ******************************************************************************/
 int lCountDescr(const lDescr *dp) 
 {
@@ -1685,6 +1688,99 @@ int lSetUlong(lListElem *ep, int name, lUlong value)
    return 0;
 }
 
+/****** cull_multitype/lAddDouble() ********************************************
+*  NAME
+*     lAddDouble() -- Adds a lDouble offset to the lDouble field
+*
+*  SYNOPSIS
+*     lAddDouble(lListElem *ep, int name, lDouble offset)
+*
+*  FUNCTION
+*     The 'offset' is added to the lDouble field 'name' of
+*     the CULL element 'ep'.
+*
+*  INPUTS
+*     lListElem *ep  - element
+*     int name       - field name id
+*     lDouble offset - the offset
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+
+/****** cull_multitype/lAddUlong() *********************************************
+*  NAME
+*     lAddUlong() -- Adds a lUlong offset to the lUlong field
+*
+*  SYNOPSIS
+*     int lAddUlong(lListElem *ep, int name, lUlong offset) 
+*
+*  FUNCTION
+*     The 'offset' is added to the lUlong field 'name' of
+*     the CULL element 'ep'.
+*
+*  INPUTS
+*     lListElem *ep - element
+*     int name      - field name id
+*     lUlong offset - the offset
+*
+*  RESULT
+*     int - 
+*
+*  EXAMPLE
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lAddUlong(lListElem *ep, int name, lUlong offset) 
+{
+   int pos;
+
+   DENTER(CULL_BASIS_LAYER, "lAddUlong");
+
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   pos = lGetPosViaElem(ep, name);
+   if (pos < 0) {
+      DPRINTF(("!!!!!!!!!! lSetUlong(): %s not found in element !!!!!!!!!!\n",
+               lNm2Str(name)));
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lUlongT) {
+      incompatibleType2(MSG_CULL_SETULONG_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+      DEXIT;
+      return -1;
+   }
+
+   if (offset != 0) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      ep->cont[pos].ul += offset;
+
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, pos);
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
+
+   DEXIT;
+   return 0;
+}
+
 /****** cull/multitype/lSetPosString() ***************************************
 *  NAME
 *     lSetPosString() -- Sets the string at a certain position 
@@ -2418,6 +2514,9 @@ int lSetObject(lListElem *ep, int name, lListElem *value)
 *     int - error state
 *         0 - OK
 *        -1 - Error 
+*
+*  NOTES
+*     MT-NOTE: lAddSubList() is MT safe
 ******************************************************************************/
 int lSetList(lListElem *ep, int name, lList *value) 
 {
@@ -2620,6 +2719,7 @@ int lSetPosDouble(const lListElem *ep, int pos, lDouble value)
    return 0;
 }
 
+
 /****** cull/multitype/lSetDouble() *******************************************
 *  NAME
 *     lSetDouble() -- Set double value with given field name id 
@@ -2674,6 +2774,62 @@ int lSetDouble(lListElem *ep, int name, lDouble value)
    DEXIT;
    return 0;
 }
+
+/****** cull_multitype/lAddDouble() ********************************************
+*  NAME
+*     lAddDouble() -- Adds a double offset to the double field
+*
+*  SYNOPSIS
+*     lAddDouble(lListElem *ep, int name, lDouble offset) 
+*
+*  FUNCTION
+*     The 'offset' is added to the double field 'name' of 
+*     the CULL element 'ep'.
+*
+*  INPUTS
+*     lListElem *ep  - element
+*     int name       - field name id 
+*     lDouble offset - the offset
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error 
+*******************************************************************************/
+int lAddDouble(lListElem *ep, int name, lDouble value)
+{
+   int pos;
+
+   DENTER(CULL_BASIS_LAYER, "lSetPosDouble");
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   pos = lGetPosViaElem(ep, name);
+   if (pos < 0) {
+      LERROR(LENEGPOS);
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lDoubleT) {
+      incompatibleType2(MSG_CULL_SETDOUBLE_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+      DEXIT;
+      return -1;
+   }
+
+   if (value != 0.0) {
+      ep->cont[pos].db += value;
+      /* remember that field changed */
+      sge_bitfield_set(ep->changed, pos);
+   }
+
+   DEXIT;
+   return 0;
+}
+
 
 /****** cull/multitype/lSetPosLong() ******************************************
 *  NAME

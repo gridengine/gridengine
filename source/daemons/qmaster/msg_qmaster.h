@@ -374,6 +374,7 @@
 #define MSG_JOB_STDOUTPATHLIST        _MESSAGE(33275, _("stdout path list"))
 #define MSG_JOB_HOLDLISTMOD_USS       _MESSAGE(33276, _("modified job id hold list of job "U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN"\n"))
 #define MSG_JOB_MERGEOUTPUT           _MESSAGE(33277, _("output merge behaviour"))
+#define MSG_JOB_RESERVE               _MESSAGE(33699, _("reservation behaviour"))
 #define MSG_JOB_HARDRESOURCELIST      _MESSAGE(33278, _("hard resource list"))
 #define MSG_JOB_SOFTRESOURCELIST      _MESSAGE(33279, _("soft resource list"))
 #define MSG_JOB_MAILOPTIONS           _MESSAGE(33280, _("mail options"))

@@ -849,6 +849,10 @@ FILE *fp
       MARK(OA_WC_QUEUE_LIST);
    }
 
+   if (VALID_OPT(R_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_R_OPT_YN , MSG_GDI_UTEXT_R_OPT_YN );
+   }
+
    if (VALID_OPT(r_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_r_OPT_YN, MSG_GDI_UTEXT_r_OPT_YN);
    }

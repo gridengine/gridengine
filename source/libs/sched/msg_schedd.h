@@ -79,7 +79,6 @@
 ** schedd/sge_schedd_text.c
 */ 
 /* #define MSG_SGETEXT_INVALIDHOSTINQUEUE_S        _message(47028, _("invalid hostname "SFQ" associated with queue\n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_SGETEXT_MODIFIEDINLIST_SSUS         _MESSAGE(47029, _(""SFN"@"SFN" modified \"" U32CFormat "\" in "SFN" list\n"))
 /* #define MSG_SGETEXT_CANTRESOLVEUSER_S           _message(47030, _("unknown user name "SFQ"\n") )    __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SGETEXT_CANTRESOLVEGROUP_S          _message(47031, _("unknown group name "SFQ"\n") )   __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SGETEXT_NOCOMMD_SS                  _message(47032, _("unable to contact commd at host "SFN" using service "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
@@ -90,7 +89,6 @@
 /* #define MSG_SGETEXT_NO_SECURITY_LEVEL_FOR_S           _message(47037, _("denied: missing security level for "SFN"\n")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SGETEXT_MAY_NOT_CHG_QHOST_S               _message(47038, _("may not change host of queue "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
 /* #define MSG_SGETEXT_UP_REFERENCED_TWICE_SS            _message(47039, _("denied: share tree contains reference to unknown "SFN" "SFQ"\n") )    __TS Removed automatically from testsuite!! TS__*/
-#define MSG_SGETEXT_NO_PROJECT                        _MESSAGE(47040, _("job rejected: no project assigned to job\n") )     
 /* #define MSG_SGETEXT_UNABLETORETRIEVE_I                _message(47041, _("unable to retrieve value for system limit (%d)\n") )      __TS Removed automatically from testsuite!! TS__*/
 
 

@@ -206,7 +206,7 @@ correct_capacities(lList *host_list, lList *centry_list)
             continue;
          if (!(total=lGetSubStr(hep, CE_name, attr_name, EH_consumable_config_list)))
             continue;
-         if (!(inuse_rms=lGetSubStr(hep, CE_name, attr_name, EH_consumable_actual_list)))
+         if (!(inuse_rms=lGetSubStr(hep, CE_name, attr_name, EH_resource_utilization)))
             continue;
 
          relop = lGetUlong(cep, CE_relop);
@@ -233,14 +233,14 @@ correct_capacities(lList *host_list, lList *centry_list)
 
          /* use scaled load value to deduce the amount */
          full_capacity = lGetDouble(total, CE_doubleval);
-         inuse_ext = full_capacity - lGetDouble(inuse_rms, CE_doubleval) - dval;
+         inuse_ext = full_capacity - lGetDouble(inuse_rms, RUE_utilized_now) - dval;
 
          if (inuse_ext > 0.0) {
             lSetDouble(total, CE_doubleval, full_capacity - inuse_ext);
 
             DPRINTF(("%s:%s %8.3f --> %8.3f (ext: %8.3f = all %8.3f - ubC %8.3f - load %8.3f) lc = %8.3f\n",
                host_name, attr_name, full_capacity, lGetDouble(total, CE_doubleval),
-               inuse_ext, full_capacity, lGetDouble(inuse_rms, CE_doubleval), dval, load_correction));
+               inuse_ext, full_capacity, lGetDouble(inuse_rms, RUE_utilized_now), dval, load_correction));
          } else
             DPRINTF(("ext: %8.3f <= 0\n", inuse_ext));
       }

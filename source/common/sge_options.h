@@ -264,7 +264,8 @@ enum {
    secl_OPT,     /* show event client list */
    kec_OPT,       /* kill event client */
 
-   cu_OPT         /* SGEEE sharetree - clear all user/project usage */
+   cu_OPT,        /* SGEEE sharetree - clear all user/project usage */
+   R_OPT         /* SGEEE sharetree - clear all user/project usage */
 };
 
 /* macros used in parsing */

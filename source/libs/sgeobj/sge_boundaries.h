@@ -511,21 +511,22 @@ enum NameSpaceBoundaries {
    XMLS_UPPERBOUND = XMLS_LOWERBOUND + 1 * BASIC_UNIT - 1, 
 
    XMLE_LOWERBOUND= XMLS_UPPERBOUND + 1,
-   XMLE_UPPERBOUND = XMLE_LOWERBOUND + 1 * BASIC_UNIT - 1 
+   XMLE_UPPERBOUND = XMLE_LOWERBOUND + 1 * BASIC_UNIT - 1,
              
+   /* resource diagram */
+   RDE_LOWERBOUND = XMLE_UPPERBOUND + 1,
+   RDE_UPPERBOUND = RDE_LOWERBOUND  + 1 * BASIC_UNIT -1,
+
+   /* resource utilization */
+   RUE_LOWERBOUND = RDE_UPPERBOUND + 1,
+   RUE_UPPERBOUND = RUE_LOWERBOUND + 1 * BASIC_UNIT -1,
+
+   /* queue end time iterator (scheduler only) */
+   QETI_LOWERBOUND = RUE_UPPERBOUND + 1,
+   QETI_UPPERBOUND = QIM_UPPERBOUND + 1 * BASIC_UNIT -1,
+
 #  define LAST_UPPERBOUND QIM_UPPERBOUND
 
-#ifdef QIDL
-/* this is just a fake boundary. there is no QIDL cull */
-/* i only need this to reserve some space for QIDL-only */
-/* fields in other culls (those beginning with SGE_I* */
-/* i suggest leaving these entries ALWAYS at the bottom */
-/* of this enum. don't append anything behind this */
-  ,QIDL_LOWERBOUND = LAST_UPPERBOUND + 1,
-   QIDL_UPPERBOUND = QIDL_LOWERBOUND + 2*BASIC_UNIT - 1
-#  undef LAST_UPPERBOUND   
-#  define LAST_UPPERBOUND QIDL_UPPERBOUND
-#endif
 };
 
 #ifdef  __cplusplus

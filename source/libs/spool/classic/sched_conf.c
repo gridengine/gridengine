@@ -204,6 +204,7 @@ _Insight_set_option("suppress", "READ_DANGLING");
       FPRINTF((fp, "weight_deadline                  %.10g\n", lGetDouble(ep, SC_weight_deadline)));
       FPRINTF((fp, "weight_urgency                   %.10g\n", lGetDouble(ep, SC_weight_urgency)));
       FPRINTF((fp, "weight_priority                  %.10g\n", lGetDouble(ep, SC_weight_priority)));
+      FPRINTF((fp, "max_reservation                  " u32 "\n", lGetUlong(ep, SC_max_reservation)));
    }
 
    if (how != 0) {
@@ -522,8 +523,13 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
    }
 
    /* --------- SC_schedd_job_info */
-
    if (!set_conf_string(alpp, clpp, fields, "schedd_job_info", ep, SC_schedd_job_info)) {
+      DEXIT;
+      return -1;
+   }
+
+   /* --------- SC_max_reservation */
+   if (!set_conf_ulong(alpp, clpp, fields, "max_reservation", ep, SC_max_reservation)) {
       DEXIT;
       return -1;
    }

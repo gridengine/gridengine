@@ -53,7 +53,6 @@
 #include "sge_host.h"
 #include "sge_pe.h"
 #include "sge_cqueue.h"
-#include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_qinstance_message.h"
 #include "sge_userset.h"

@@ -388,8 +388,8 @@ char *file
       fprint_thresholds(fp, "complex_values             ", 
          lGetList(ep, EH_consumable_config_list), 1);
       if (getenv("MORE_INFO"))
-         fprint_thresholds(fp, "complex_values_actual ", 
-            lGetList(ep, EH_consumable_actual_list), 1);
+         fprint_resource_utilizations(fp, "complex_values_actual ", 
+            lGetList(ep, EH_resource_utilization), 1);
 
       if ((!spool && how==0) || (spool && how!=1) || (how==3)) {
          int printed = 0;

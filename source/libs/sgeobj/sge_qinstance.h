@@ -127,7 +127,7 @@ int queue_reference_list_validate(lList **alpp, lList *qr_list,
                                   const char *obj_name);
 
 int
-debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
+rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, int slots,
                  int config_nm, int actual_nm, const char *obj_name);
 
 lListElem *

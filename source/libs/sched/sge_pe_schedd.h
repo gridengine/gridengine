@@ -45,7 +45,7 @@ int or_sge_pe_slots_per_host(lListElem *pep, lList *hosts, lListElem *h_elem, in
 
 int sge_debit_job_from_pe(lListElem *pep, lListElem *jep, int slots);
 
-int pe_restricted(lListElem *job, lListElem *pe, lList *acl_list);
+int pe_match_static(lListElem *job, lListElem *pe, lList *acl_list);
 
 #endif /* __SGE_PE_SCHEDD_H */
 

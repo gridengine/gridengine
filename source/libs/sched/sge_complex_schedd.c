@@ -58,43 +58,21 @@
 #include "msg_schedd.h"
 
 #include "sge_complex_schedd.h"
+#include "sge_resource_utilization.h"
 
 static int resource_cmp(u_long32 relop, double req_all_slots, double src_dl);
 
 static int string_cmp(u_long32 type, u_long32 relop, const char *request,
                       const char *offer);
 
-static lList *get_attribute_list_by_names(const lListElem *global, const lListElem *host, const lListElem *queue, const lList *centry_list,
-                                        const char** attrnames, int max_names);
+static lList *get_attribute_list_by_names(lListElem *global, lListElem *host, lListElem *queue, 
+         const lList *centry_list, const char** attrnames, int max_names);
 
 static void build_name_filter(const char **filter, lList *list, int t_name, int *pos);
 
 static bool is_attr_prior2(lListElem *upper_el, double lower_value, int t_value, int t_dominant );
 
-static lList *get_attribute_list(const lListElem *global, const lListElem *host, const lListElem *queue, const lList *centry_list);
-
-static int max_resources = QS_STATE_FULL;
-
-static int global_load_correction = 0;
-
-void set_qs_state(
-int qs_state 
-) {
-   max_resources = qs_state;
-}
-
-int get_qs_state(void) {
-   return max_resources;
-}
-
-void set_global_load_correction(
-int flag 
-) {
-   global_load_correction = flag;
-}
-int get_global_load_correction(void) {
-   return global_load_correction;
-}
+static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *queue, const lList *centry_list);
 
 
 void monitor_dominance(
@@ -157,8 +135,8 @@ u_long32 mask
 *
 *  INPUTS
 *     const char *attrname - attribute name one is looking for 
-*     lList *config_attr   - user defined attributes 
-*     lList *actual_attr   - current usage of consumables 
+*     lList *config_attr   - user defined attributes (CE_Type)
+*     lList *actual_attr   - current usage of consumables (RUE_Type)
 *     lList *load_attr     - load attributes 
 *     lList *centry_list   - the system wide attribute configuration 
 *     lListElem *queue     - the current queue, or null, if one works on hosts 
@@ -171,10 +149,10 @@ u_long32 mask
 *     static lListElem* - the element one was looking for or NULL
 *
 *******************************************************************************/
-lListElem* 
-get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, 
-              lList *load_attr, const lList *centry_list, const lListElem *queue, 
-              u_long32 layer, double lc_factor, char *reason, int reason_size) {
+lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual_attr, lList *load_attr, 
+   const lList *centry_list, lListElem *queue, u_long32 layer, double lc_factor, char *reason, int reason_size,
+   bool zero_utilization)
+{
    lListElem *actual_el=NULL;
    lListElem *load_el=NULL;
    lListElem *cplx_el=NULL;
@@ -182,13 +160,15 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
    DENTER(BASIS_LAYER, "get_attribute");
 
    /* resource_attr is a complex_entry (CE_Type) */
-   if (config_attr){
+   if (config_attr) {
       lListElem *temp = lGetElemStr(config_attr, CE_name, attrname);
+DTRACE;
       if(temp){ 
 
          cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
          if(!cplx_el){
             /* error */
+            DEXIT;
             return NULL;
          }
          lSetUlong(cplx_el, CE_dominant, layer | DOMINANT_TYPE_FIXED);
@@ -198,19 +178,22 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
       }
    }
 
-   if(cplx_el && lGetBool(cplx_el, CE_consumable)){
+DTRACE;
+   if(cplx_el && lGetBool(cplx_el, CE_consumable)) {
+DTRACE;
       lSetUlong(cplx_el, CE_pj_dominant, layer | DOMINANT_TYPE_CONSUMABLE );
       lSetUlong(cplx_el, CE_dominant,DOMINANT_TYPE_VALUE );
       /* treat also consumables as fixed attributes when assuming an empty queuing system */
-      if (get_qs_state() == QS_STATE_FULL) {
-         if(actual_attr && (actual_el = lGetElemStr(actual_attr, CE_name, attrname))){
+      if (sconf_get_qs_state() == QS_STATE_FULL) {
+         if (actual_attr && (actual_el = lGetElemStr(actual_attr, RUE_name, attrname))){
             dstring ds;
             char as_str[20];
+            double utilized = zero_utilization ? 0 : lGetDouble(actual_el, RUE_utilized_now);
 
             switch (lGetUlong(cplx_el, CE_relop)) {
                case CMPLXGE_OP:
                case CMPLXGT_OP:
-                     lSetDouble(cplx_el, CE_pj_doubleval, lGetDouble(actual_el, CE_doubleval)); 
+                     lSetDouble(cplx_el, CE_pj_doubleval, utilized); 
                break;
 
                case CMPLXEQ_OP:
@@ -218,7 +201,7 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
                case CMPLXLE_OP:
                case CMPLXNE_OP:
                default:
-                     lSetDouble(cplx_el, CE_pj_doubleval, lGetDouble(cplx_el,CE_doubleval) - lGetDouble(actual_el, CE_doubleval)); 
+                     lSetDouble(cplx_el, CE_pj_doubleval, lGetDouble(cplx_el,CE_doubleval) - utilized); 
                   break;
             }
             sge_dstring_init(&ds, as_str, sizeof(as_str));
@@ -240,14 +223,16 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
       }
    }
 
+DTRACE;
    /** check for a load value */
    if ( load_attr && 
-        (get_qs_state()==QS_STATE_FULL || sge_is_static_load_value(attrname)) &&
+        (sconf_get_qs_state()==QS_STATE_FULL || sge_is_static_load_value(attrname)) &&
         (load_el = lGetElemStr(load_attr, HL_name, attrname)) &&
         (!is_attr_prior(cplx_el, cplx_el))
-      ){
+      ) {
          lListElem *ep_nproc=NULL;
          int nproc=1;
+DTRACE;
          if (!cplx_el){
             cplx_el = lCopyElem(lGetElemStr(centry_list, CE_name, attrname));
                if(!cplx_el){
@@ -278,8 +263,8 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
             }
             else { /* working on numerical values */
                lListElem *job_load;
-               char sval[100];
                char err_str[256];
+               char sval[100];
                u_long32 dom_type = DOMINANT_TYPE_LOAD;
  
                job_load=lGetElemStr(sconf_get_job_load_adjustments(), CE_name, attrname);
@@ -348,6 +333,7 @@ get_attribute(const char *attrname, lList *config_attr, lList *actual_attr,
       }
    }
 
+DTRACE;
    /* we are working on queue level, so we have to check for queue resource values */
    if (queue){
       bool created=false;
@@ -727,8 +713,8 @@ const lList *centry_list
 *     static lList* - a CULL list of elements or NULL
 *
 *******************************************************************************/
-static lList *get_attribute_list_by_names(const lListElem *global, const lListElem *host, 
-                                          const lListElem *queue, const lList *centry_list,
+static lList *get_attribute_list_by_names(lListElem *global, lListElem *host, 
+                                          lListElem *queue, const lList *centry_list,
                                           const char** attrnames, int max_names){
    lListElem *attr;
    lList * list = NULL;
@@ -769,7 +755,7 @@ static lList *get_attribute_list_by_names(const lListElem *global, const lListEl
 *     static lList* - list of attributes or NULL, if no attributes exist.
 *
 *******************************************************************************/
-static lList *get_attribute_list(const lListElem *global, const lListElem *host, const lListElem *queue, const lList *centry_list){
+static lList *get_attribute_list(lListElem *global, lListElem *host, lListElem *queue, const lList *centry_list){
    int pos = 0;
    const char **filter=NULL; 
    lList *list=NULL;
@@ -971,7 +957,7 @@ double src_dl
 /*********************************************************************
  compare two complex entries (attributes)
  the type is given by the first complex
- return 1 if matched anything else if not
+ return 1 if matched anything else 0 if not
  *********************************************************************/
 int compare_complexes(
 int slots,
@@ -997,6 +983,7 @@ int force_existence
    name = lGetString(src_cplx, CE_name); 
    type = lGetUlong(src_cplx, CE_valtype);
    relop = lGetUlong(src_cplx, CE_relop);
+
 
    if (is_threshold) {
       switch (relop) {
@@ -1243,10 +1230,8 @@ int force_existence
 *     void lListElem* - the element one is looking for or NULL.
 *
 *******************************************************************************/
-lListElem *
-get_attribute_by_name(const lListElem* global, const lListElem *host, const lListElem *queue, 
-                      const char* attrname, const lList *centry_list, 
-                      char * reason, int reason_size){
+lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *queue, 
+    const char* attrname, const lList *centry_list, char * reason, int reason_size){
    lListElem *global_el=NULL;
    lListElem *host_el=NULL;
    lListElem *queue_el=NULL;
@@ -1263,7 +1248,7 @@ get_attribute_by_name(const lListElem* global, const lListElem *host, const lLis
    if(global){
       load_attr = lGetList(global, EH_load_list);  
       config_attr = lGetList(global, EH_consumable_config_list);
-      actual_attr = lGetList(global, EH_consumable_actual_list);
+      actual_attr = lGetList(global, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
       if (lGetPosViaElem(global, EH_load_correction_factor) >= 0) {
@@ -1272,14 +1257,14 @@ get_attribute_by_name(const lListElem* global, const lListElem *host, const lLis
       }
       global_el = get_attribute(attrname, config_attr, actual_attr, load_attr, 
                                 centry_list, NULL, DOMINANT_LAYER_GLOBAL, 
-                                lc_factor, reason, reason_size );
+                                lc_factor, reason, reason_size, false);
       ret_el = global_el;
    } 
 
    if(host){
       load_attr = lGetList(host, EH_load_list); 
       config_attr = lGetList(host, EH_consumable_config_list);
-      actual_attr = lGetList(host, EH_consumable_actual_list);
+      actual_attr = lGetList(host, EH_resource_utilization);
 
       /* is there a multiplier for load correction (may be not in qstat, qmon etc) */
       if (lGetPosViaElem(host, EH_load_correction_factor) >= 0) {
@@ -1287,7 +1272,7 @@ get_attribute_by_name(const lListElem* global, const lListElem *host, const lLis
             lc_factor = ((double)ulc_factor)/100;
       }
       host_el = get_attribute(attrname, config_attr, actual_attr, load_attr, centry_list, NULL, DOMINANT_LAYER_HOST, 
-                              lc_factor, reason, reason_size );
+                              lc_factor, reason, reason_size, false);
       if(!global_el && host_el)
          ret_el = host_el;
       else if(global_el && host_el){
@@ -1303,10 +1288,10 @@ get_attribute_by_name(const lListElem* global, const lListElem *host, const lLis
 
    if(queue){
       config_attr = lGetList(queue, QU_consumable_config_list);
-      actual_attr = lGetList(queue, QU_consumable_actual_list);
+      actual_attr = lGetList(queue, QU_resource_utilization);
       
       queue_el = get_attribute(attrname, config_attr, actual_attr, NULL, centry_list, queue, DOMINANT_LAYER_QUEUE, 
-                              0.0, reason, reason_size );
+                              0.0, reason, reason_size, false);
 
       if(!ret_el)
          ret_el = queue_el;
@@ -1358,6 +1343,7 @@ int main(int argc, char *argv[], char *envp[])
    return 0;
 }
 #endif
+
 
 int 
 ensure_attrib_available(lList **alpp, lListElem *ep, int nm) 

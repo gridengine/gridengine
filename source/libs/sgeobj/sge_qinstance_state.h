@@ -51,6 +51,7 @@
 #define QI_CAL_SUSPENDED               0x00040000
 #define QI_AMBIGUOUS                   0x00080000
 #define QI_ORPHANED                    0x00100000
+#define QI_FULL                        0x00200000
 
 /*
  * QI state transition
@@ -142,6 +143,9 @@ qinstance_state_set_cal_disabled(lListElem *this_elem, bool set_state);
 void 
 qinstance_state_set_cal_suspended(lListElem *this_elem, bool set_state);
 
+void 
+qinstance_state_set_full(lListElem *this_elem, bool set_state);
+
 void
 qinstance_state_set_orphaned(lListElem *this_elem, bool set_state);
 
@@ -183,6 +187,9 @@ qinstance_state_is_orphaned(const lListElem *this_elem);
 
 bool
 qinstance_state_is_ambiguous(const lListElem *this_elem);
+
+bool 
+qinstance_state_is_full(const lListElem *this_elem);
 
 bool 
 qinstance_state_append_to_dstring(const lListElem *this_elem, dstring *string);

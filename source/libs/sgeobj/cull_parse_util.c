@@ -40,9 +40,12 @@
 #include "sgermon.h"
 #include "sge_string.h"
 #include "sge_centry.h"
+#include "sge_resource_utilization.h"
 #include "parse_qsubL.h"
 #include "sge_stdio.h"
 
+static int fprint_name_value_list(FILE *fp, char *name, lList *thresholds, int print_slots,
+     int nm_name, int nm_strval, int nm_doubleval);
 /*
 ** NAME
 **   cull_parse_string_list
@@ -1022,11 +1025,119 @@ FPRINTF_ERROR:
    return -1;
 }                   
 
+
+/****** cull_parse_util/fprint_thresholds() ************************************
+*  NAME
+*     fprint_thresholds() -- Print a name=value list of type CE_Type
+*
+*  SYNOPSIS
+*     int fprint_thresholds(FILE *fp, char *name, lList *thresholds, int 
+*     print_slots) 
+*
+*  FUNCTION
+*     A CE_Type list is printed to 'fp' in a name=value,name=value,... 
+*     fashion. If print_slots is 0 an entry with name "slots" is skipped.
+*     The 'name' is printed prior the actual list to 'fp'.
+*
+*  INPUTS
+*     FILE *fp          - The file pointer 
+*     char *name        - The name printed before the list
+*     lList *thresholds - The CE_Type list.
+*     int print_slots   - Flag indicating whether "slots" is skipped or not.
+*
+*  RESULT
+*     int - 0 on success 
+*           -1 on fprintf() errors
+*
+*  NOTES
+*     MT-NOTE: fprint_thresholds() is MT safe
+*******************************************************************************/
 int fprint_thresholds(
 FILE *fp,
 char *name,
 lList *thresholds,
 int print_slots 
+) {
+   return fprint_name_value_list(fp, name, thresholds, print_slots, CE_name, CE_stringval, CE_doubleval);
+}
+
+/****** cull_parse_util/fprint_resource_utilizations() *************************
+*  NAME
+*     fprint_resource_utilizations() -- Print a name=value list of type RUE_Type
+*
+*  SYNOPSIS
+*     int fprint_resource_utilizations(FILE *fp, char *name, lList *thresholds, 
+*     int print_slots) 
+*
+*  FUNCTION
+*     A RUE_Type list is printed to 'fp' in a name=value,name=value,... 
+*     fashion. If print_slots is 0 an entry with name "slots" is skipped.
+*     The 'name' is printed prior the actual list to 'fp'.
+*
+*  INPUTS
+*     FILE *fp          - The file pointer 
+*     char *name        - The name printed before the list
+*     lList *thresholds - The RUE_Type list.
+*     int print_slots   - Flag indicating whether "slots" is skipped or not.
+*
+*  RESULT
+*     int - 0 on success 
+*           -1 on fprintf() errors
+*
+*  NOTES
+*     MT-NOTE: fprint_resource_utilizations() is MT safe
+*******************************************************************************/
+int fprint_resource_utilizations(
+FILE *fp,
+char *name,
+lList *thresholds,
+int print_slots 
+) {
+   return fprint_name_value_list(fp, name, thresholds, print_slots, RUE_name, -1, RUE_utilized_now);
+}
+
+/****** cull_parse_util/fprint_name_value_list() *******************************
+*  NAME
+*     fprint_name_value_list() -- Print name=value list of any type.
+*
+*  SYNOPSIS
+*     static int fprint_name_value_list(FILE *fp, char *name, lList 
+*     *thresholds, int print_slots, int nm_name, int nm_strval, int 
+*     nm_doubleval) 
+*
+*  FUNCTION
+*     A list with name (String) and value (Double) CULL fields is printed 
+*     to 'fp' in a name=value,name=value,... fashion. If print_slots is 0 
+*     an entry with name "slots" is skipped. The 'name' is printed prior 
+*     the actual list to 'fp'. In 'nm_name'/'nm_strval' the CULL names must
+*     be passed. Optionally a string representation of the value is printed 
+*     if non-NULL and if 'nm_strval' is not -1.
+*
+*  INPUTS
+*     FILE *fp          - The file pointer
+*     char *name        - The name printed before the list
+*     lList *thresholds - The list
+*     int print_slots   - Flag indicating whether "slots" is skipped or not.
+*     int nm_name       - The CULL nm for the name (String).
+*     int nm_strval     - The CULL nm for the value (Double).
+*     int nm_doubleval  - If existing in the list the CULL nm for a string 
+*                         representation of the value (String) or -1 otherwise.
+*
+*  RESULT
+*     int - 0 on success
+*           -1 on fprintf() errors
+*
+*  NOTES
+*     MT-NOTE: fprint_name_value_list() is MT safe
+*******************************************************************************/
+static int fprint_name_value_list(
+FILE *fp,
+char *name,
+lList *thresholds,
+int print_slots,
+int nm_name,
+int nm_strval,
+int nm_doubleval
 ) {
    lListElem *lep;
    int printed = 0;
@@ -1038,17 +1149,17 @@ int print_slots
    FPRINTF((fp, "%s", name));
 
    for_each(lep, thresholds) {
-      if (print_slots || strcmp("slots", lGetString(lep, CE_name))) {
+      if (print_slots || strcmp("slots", lGetString(lep, nm_name))) {
          if (printed) {
             FPRINTF((fp, ","));
          }
 
-         if (!(s=lGetString(lep, CE_stringval))) {
-            sprintf(buffer, "%f", lGetDouble(lep, CE_doubleval));
+         if (nm_strval == -1 || !(s=lGetString(lep, nm_strval))) {
+            sprintf(buffer, "%f", lGetDouble(lep, nm_doubleval));
             s = buffer;
          }
 
-         FPRINTF((fp, "%s=%s", lGetString(lep, CE_name), s));
+         FPRINTF((fp, "%s=%s", lGetString(lep, nm_name), s));
          printed++;
       }
    }

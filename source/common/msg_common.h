@@ -744,6 +744,9 @@
 
 #define MSG_GDI_USAGE_qs_args_OPT_ARGS_QS_END            "[-qs_args [arg [...]] -qs_end]"
 
+#define MSG_GDI_USAGE_R_OPT_YN                           "[-R y|n]"
+#define MSG_GDI_UTEXT_R_OPT_YN                           _MESSAGE(23503, _("reservation desired"))
+
 #define MSG_GDI_USAGE_r_OPT_YN                           "[-r y|n]"
 #define MSG_GDI_UTEXT_r_OPT_YN                           _MESSAGE(23405, _("define job as (not) restartable" ))
 

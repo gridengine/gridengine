@@ -32,6 +32,7 @@
 
 #include <string.h>
 
+#include "sge.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "cull.h"
@@ -187,6 +188,7 @@ typedef struct{
    int weight_waiting_time;
    int weight_deadline;
    int weight_urgency;
+   int max_reservation;
    int weight_priority;
 }config_pos_type;
 
@@ -196,6 +198,7 @@ static bool sconf_calc_pos(void);
 static void sconf_clear_pos(void);
 
 static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, const char* param); 
+static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, const char* param);
 
 static char policy_hierarchy_enum2char(policy_type_t value);
 
@@ -218,6 +221,7 @@ static config_pos_type pos = {true,
  */
 const parameters_t params[] = {
    {"PROFILE",  sconf_eval_set_profiling},
+   {"MONITOR",  sconf_eval_set_monitoring},
    {"NONE",     NULL},
    {NULL,       NULL}
 };
@@ -235,6 +239,13 @@ int load_adjustment_fields[] = { CE_name, CE_stringval, 0 };
 int usage_fields[] = { UA_name, UA_value, 0 };
 const char *delis[] = {"=", ",", ""};
 
+static int max_resources = QS_STATE_FULL;
+static bool global_load_correction = 0;
+static bool host_order_changed = true;
+static u_long32 default_duration = MAX_ULONG32;
+static u_long32 now_time;
+static bool host_order_changed;
+static int last_dispatch_type;
 
 
 /****** sge_schedd_conf/clear_pos() ********************************************
@@ -297,6 +308,7 @@ static void sconf_clear_pos(void){
          pos.weight_waiting_time = -1;
          pos.weight_deadline = -1;
          pos.weight_urgency = -1;
+         pos.max_reservation = -1;
          pos.weight_priority = -1;
 }
 
@@ -353,6 +365,7 @@ static bool sconf_calc_pos(void){
          ret &= (pos.weight_deadline = lGetPosViaElem(config, SC_weight_deadline)) != -1;
          ret &= (pos.weight_urgency = lGetPosViaElem(config, SC_weight_urgency)) != -1;
          ret &= (pos.weight_priority = lGetPosViaElem(config, SC_weight_priority)) != -1;
+         ret &= (pos.max_reservation = lGetPosViaElem(config, SC_max_reservation)) != -1;
       }
       else
          ret = false;
@@ -629,6 +642,7 @@ lListElem *sconf_create_default()
       lSetDouble(ep, SC_weight_waiting_time, 0.278); 
       lSetDouble(ep, SC_weight_deadline, 3600000 );
       lSetDouble(ep, SC_weight_urgency, 0.5 );
+      lSetUlong(ep, SC_max_reservation, 0);
       lSetDouble(ep, SC_weight_priority, 0.0 );
    }
 
@@ -1451,6 +1465,34 @@ double sconf_get_weight_urgency(void) {
       return 0;
 }     
 
+/****** sge_schedd_conf/sconf_get_max_reservations() ***************************
+*  NAME
+*     sconf_get_max_reservations() -- Max reservation tuning parameter
+*
+*  SYNOPSIS
+*     int sconf_get_max_reservations(void) 
+*
+*  FUNCTION
+*     Tuning parameter. 
+*     Returns maximum number of reservations that should be done by 
+*     scheduler. If 0 is returned this no single job shall get a reservation
+*     and assignments are to be made for 'now' only.
+*     
+*  RESULT
+*     int - Max. number of reservations
+*******************************************************************************/
+u_long32 sconf_get_max_reservations(void) {
+   lListElem *sc_ep = lFirst(Master_Sched_Config_List);
+   
+   if (pos.empty)
+      sconf_calc_pos();
+      
+   if (pos.max_reservation != -1)
+      return lGetPosUlong(sc_ep, pos.max_reservation);
+   else
+      return 0;
+}
+
 /****** sge_schedd_conf/sconf_get_weight_priority() ****************************
 *  NAME
 *     sconf_get_weight_priority() -- ??? 
@@ -1938,6 +1980,10 @@ void sconf_print_config(void){
       /* --- SC_weight_priority */
       dval = sconf_get_weight_priority();
       INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "weight_priority"));
+
+      /* --- SC_max_reservation */
+      dval = sconf_get_max_reservations();
+      INFO((SGE_EVENT, MSG_ATTRIB_USINGXFORY_6FS,  dval, "max_reservation"));
    }
 
    DEXIT;
@@ -2444,7 +2490,7 @@ static char policy_hierarchy_enum2char(policy_type_t value)
 static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, const char* param){
    bool ret = true;
    lListElem *elem = NULL;
-   DENTER(TOP_LAYER, "sconf_validate_config");
+   DENTER(TOP_LAYER, "sconf_eval_set_profiling");
 
    do_profiling = false;
 
@@ -2479,4 +2525,178 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
    
    DEXIT;
    return ret;
+}
+
+/****** sge_schedd_conf/sconf_eval_set_monitoring() ****************************
+*  NAME
+*     sconf_eval_set_monitoring() -- Control SERF on/off via MONITOR param 
+*
+*  SYNOPSIS
+*     static bool sconf_eval_set_monitoring(lList *param_list, lList 
+*     **answer_list, const char* param) 
+*
+*  FUNCTION
+*     The MONITOR param allows schedule entry recording facility module 
+*     be switched on/off. 
+*
+*  INPUTS
+*     lList *param_list   - ??? 
+*     lList **answer_list - ??? 
+*     const char* param   - ??? 
+*
+*  RESULT
+*     static bool - parsing error
+*
+*  NOTES
+*     MT-NOTE: sconf_eval_set_monitoring() is not MT safe 
+*******************************************************************************/
+static bool sconf_eval_set_monitoring(lList *param_list, lList **answer_list, const char* param){
+   bool ret = true;
+   lListElem *elem = NULL;
+   const char mon_true[] = "MONITOR=TRUE", mon_one[] = "MONITOR=1";
+   const char mon_false[] = "MONITOR=FALSE", mon_zero[] = "MONITOR=0";
+   bool do_monitoring = false;
+
+   DENTER(TOP_LAYER, "sconf_eval_set_monitoring");
+
+
+   if (!strncasecmp(param, mon_one, sizeof(mon_one)-1) || 
+       !strncasecmp(param, mon_true, sizeof(mon_true)-1) ) {
+      do_monitoring = true;
+      elem = lCreateElem(PARA_Type);
+      lSetString(elem, PARA_name, "monitor");
+      lSetString(elem, PARA_value, "true");
+   }      
+   else if (!strncasecmp(param, mon_zero, sizeof(mon_zero)-1) ||
+            !strncasecmp(param, mon_false, sizeof(mon_false)-1) ) {
+      elem = lCreateElem(PARA_Type);
+      lSetString(elem, PARA_name, "monitor");
+      lSetString(elem, PARA_value, "false");
+   }
+   else {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INVALID_PARAM_SETTING_S, param)); 
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   if (elem){
+      lAppendElem(pos.c_params, elem);
+   }
+
+   serf_set_active(do_monitoring);
+
+   DEXIT;
+   return ret;
+}
+
+
+/* 
+   QS_STATE_FULL
+      All debitations caused by running jobs are in effect.
+   QS_STATE_EMPTY
+      We ignore all debitations caused by running jobs.
+      Ignore all but static load values.
+*/
+void sconf_set_qs_state(qs_state_t qs_state) 
+{
+   max_resources = qs_state;
+}
+qs_state_t sconf_get_qs_state(void) 
+{
+   return max_resources;
+}
+void sconf_set_global_load_correction(bool flag) 
+{
+   global_load_correction = flag;
+}
+bool sconf_get_global_load_correction(void) 
+{
+   return global_load_correction;
+}
+
+void sconf_set_default_duration(u_long32 duration) 
+{
+   default_duration = duration;
+}
+u_long32 sconf_get_default_duration(void) 
+{
+   return default_duration;
+}
+
+void sconf_set_now(u_long32 now)
+{
+   now_time = now;
+}
+
+u_long32 sconf_get_now(void)
+{
+   return now_time;
+}
+
+bool sconf_get_host_order_changed(void)
+{
+   return host_order_changed;
+}
+
+void sconf_set_host_order_changed(bool changed)
+{
+   host_order_changed = changed;
+}
+
+int sconf_get_last_dispatch_type(void)
+{
+   return last_dispatch_type;
+}
+void sconf_set_last_dispatch_type(int last)
+{
+   last_dispatch_type = last;
+}
+
+/****** sge_resource_utilization/serf_control() ********************************
+*  NAME
+*     serf_control() -- Switch recording on/off.
+*
+*  SYNOPSIS
+*     void serf_control(bool on_off) 
+*
+*  FUNCTION
+*     Allows recording be switched on/off.
+*
+*  INPUTS
+*     bool on_off - true = on 
+*                   false = off
+*
+*  NOTES
+*     MT-NOTE: serf_control() is not MT safe 
+*
+*     Actually belongs to sge_serf.c but this would cause a link dependency 
+*     libsgeobj -> libschedd !! 
+*******************************************************************************/
+static bool current_serf_do_monitoring = false;
+void serf_set_active(bool on_off)
+{
+   current_serf_do_monitoring = on_off;
+}
+/****** sge_resource_utilization/serf_control() ********************************
+*  NAME
+*     serf_get_active() -- Retrieve whether SERF is active or not
+*
+*  SYNOPSIS
+*     bool serf_get_active(void);
+*
+*  FUNCTION
+*     Returns whether SERF is active or not
+*
+*  RETURN
+*     bool - true = on 
+*            false = off
+*
+*  NOTES
+*     MT-NOTE: serf_get_active() is not MT safe 
+*
+*     Actually belongs to sge_serf.c but this would cause a link dependency 
+*     libsgeobj -> libschedd !! 
+*******************************************************************************/
+bool serf_get_active(void)
+{
+   return current_serf_do_monitoring;
 }

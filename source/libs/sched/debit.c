@@ -32,11 +32,14 @@
 #include <stdio.h>
 
 #include "cull.h"
-#include "debit.h"
 #include "sge_select_queue.h"
+#include "debit.h"
 #include "sort_hosts.h"
-#include "sge_pe_schedd.h"
+#include "sge_pe.h"
+#include "sge_job.h"
+#include "sge_centry.h"
 #include "sgermon.h"
+#include "sge_resource_utilization.h"
 
 /* -------------------------------------------------------------
 
@@ -95,31 +98,31 @@
 
 */
 int debit_scheduled_job(
-lListElem *job,      /* the job that was scheduled */
-lList *granted,      /* a JB-List containing one element for each queue */
-lList *queue_list,   /* in this queue list the job gets debited */
-lListElem *pe,       /* in this pe the job gets debited */
-lList *host_list,    /* in this host list the job gets debited */
-lList *centry_list, /* needed for interpretation of jobs resource request */
+const sge_assignment_t *a, /* all information describing the assignemnt */
 int *sort_hostlist,  /* do we have to resort the hostlist? */
-lList *orders_list   /* needed to warn on jobs that were dispatched into
+lList *orders_list,  /* needed to warn on jobs that were dispatched into
                         queues and get suspended on subordinate in the very
                         same interval */
+bool now,             /* if true this is or will be a running job
+                         false for all jobs that must only be put into the schedule */
+const char *type      /* a string as forseen with serf_record_entry() 
+                         'type' parameter (may be NULL) */
 ) {
-   u_long32 pe_slots;
-
    DENTER(TOP_LAYER, "debit_scheduled_job");
 
-   if (!job || !granted || !queue_list || !host_list ) {
+   if (!a) {
       DEXIT;
       return -1;
    }
 
-   debit_job_from_hosts(job, granted, host_list, centry_list, sort_hostlist);
-   debit_job_from_queues(job, granted, queue_list, centry_list, &pe_slots, orders_list);
+   if (now) {
+      if (a->pe)
+         pe_debit_slots(a->pe, a->slots, a->job_id);
+      debit_job_from_hosts(a->job, a->gdil, a->host_list, a->centry_list, sort_hostlist);
+      debit_job_from_queues(a->job, a->gdil, a->queue_list, a->centry_list, orders_list);
+   }
 
-   if (pe)
-      sge_debit_job_from_pe(pe, job, pe_slots);
+   add_job_utilization(a, type);
 
    DEXIT;
    return 0;

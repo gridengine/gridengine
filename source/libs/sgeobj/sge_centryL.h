@@ -89,8 +89,11 @@ enum{
    QUEUE_TAG,
    HOST_TAG,
    GLOBAL_TAG,
+   PE_TAG,     /* not really used as a tag */
    MAX_TAG
 };
+
+#define CENTRY_LEVEL_TO_CHAR(level) "NQHGPM"[level]
 
 enum {
    CE_name = CE_LOWERBOUND,

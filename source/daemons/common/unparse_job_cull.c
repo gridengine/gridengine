@@ -415,6 +415,13 @@ int flags
    }
 #endif
    
+   /*
+   ** -R
+   */
+   if ((ul = lGetBool(job, JB_reserve))) {
+      ep_opt = sge_add_arg(pcmdline, R_OPT, lIntT, "-R", "y");
+      lSetInt(ep_opt, SPA_argval_lIntT, true);
+   }
 
    /*
    ** -r

@@ -1392,6 +1392,7 @@ XtPointer cld, cad;
          JB_cwd,
          JB_hard_resource_list,
          JB_soft_resource_list,
+         JB_reserve,
          JB_merge_stderr,
          JB_stdout_path_list,
          JB_stdin_path_list,
@@ -1885,6 +1886,7 @@ char *prefix
    data->stderror_path_list = lCopyList("JB_stderr_path_list", 
                                        lGetList(jep, JB_stderr_path_list));
    data->merge_output = lGetBool(jep, JB_merge_stderr);
+/*    data->reserve = lGetBool(jep, JB_reserve); */
    data->priority = lGetUlong(jep, JB_priority) - BASE_PRIORITY;
    data->jobshare = lGetUlong(jep, JB_jobshare);
    data->execution_time = lGetUlong(jep, JB_execution_time);

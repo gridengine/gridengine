@@ -1,3 +1,6 @@
+AA-2002-10-15-0  I18N:      dist/locale/en/qmon_messages.ad and qmon_help.ad
+                            added
+
 JG-2002-10-14-0  Bugfix:    Reduce communication overhead of sending orders
                             and setting busy state of scheduler by using one
                             sge_gdi_multi request.

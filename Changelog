@@ -1,3 +1,8 @@
+CR-2004-11-10-0: Testsuite: - fixed remote loggin problem on slow
+                              hosts
+                            - increased timeout for csp key installation
+                              at execd installation
+
 AA-2004-11-10-0: Bugfix:    - negative ticket values
                             - default user display in sharetree
                  Issue:     1318 

@@ -240,7 +240,8 @@ BINFILES="sge_coshepherd \
           sge_execd sge_qmaster  \
           sge_schedd sge_shadowd \
           sge_shepherd qacct qalter qconf qdel qhold \
-          qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh qstat qsub qtcsh"
+          qhost qlogin qmake qmod qmon qresub qrls qrsh qselect qsh \
+          qstat qsub qtcsh qping"
 
 UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
            gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
@@ -287,6 +288,7 @@ THIRD_PARTY_FILES=openssl
       "qdel            qmon            qstat           sge_qmaster\n" \
       "qhold           qresub          qsub            sge_schedd\n" \
       "qhost           qrls            qtcsh           sge_shadowd\n\n" \
+      "qping" \
       "The binaries in >%s< are:\n\n" \
       "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
       "checkprog      gethostbyname  now            rsh            infotext\n" \
@@ -302,6 +304,7 @@ THIRD_PARTY_FILES=openssl
       "qdel            qmon            qstat           sge_qmaster\n" \
       "qhold           qresub          qsub            sge_schedd\n" \
       "qhost           qrls            qtcsh           sge_shadowd\n\n" \
+      "qping" \
       "The binaries in >%s< are:\n\n" \
       "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
       "checkprog      gethostbyname  now            rsh            infotext\n" \

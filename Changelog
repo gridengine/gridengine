@@ -1,3 +1,8 @@
+CR-2004-04-19-1: Enhancem.: qping will now be installed via distinst and copied
+                            into $SGE_ROOT/bin/$arch/qping
+                 Changed:   install scripts
+                 Review:    MD
+
 SG-2004-04-19-0: Bugfix:    qsub is working again.
                  Review:    DT
                  Changed:   qsub

@@ -100,7 +100,7 @@ static int sge_tags2gdil(sge_assignment_t *assignment);
 /* -- these implement sequential assignemnt ---------------------- */
 
 static int host_order_2_queue_sequence_number(lList *host_list, lList *queues);
-static double sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, 
+static int sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, 
       lList *centry_list, const  lList *load_adjustments);
 
 /* -- base functions ---------------------------------------------- */
@@ -2701,9 +2701,9 @@ bool *previous_load_inited)
  * }
  * host_slot_max_by_T = MAX(all min(Q))
  */
-static double sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, lList *centry_list, const  lList *load_adjustments)
+static int sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, lList *centry_list, const  lList *load_adjustments)
 {
-   double avail_h = 0, avail_q;
+   int avail_h = 0, avail_q;
    int avail;
    lListElem *next_queue, *qep;
    lListElem *lv, *lc, *tr, *fv, *cep;
@@ -2717,7 +2717,7 @@ static double sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, l
        (qep = next_queue);
         next_queue = lGetElemHostNext(queue_list, QU_qhostname, eh_name, &queue_iterator)) {
 
-      avail_q = DBL_MAX;
+      avail_q = INT_MAX;
       for_each (lc, load_adjustments) {
          const char *name = lGetString(lc, CE_name);
          if ((tr=lGetSubStr(qep, CE_name, name, QU_load_thresholds))) {
@@ -2755,7 +2755,7 @@ static double sge_max_host_slot_by_theshold(lListElem *hep, lList *queue_list, l
                   continue;    
             }
 
-            avail = (int)((threshold - load)/adjustment);
+            avail = (threshold - load)/adjustment;
             avail_q = MIN(avail, avail_q);
          }
       }

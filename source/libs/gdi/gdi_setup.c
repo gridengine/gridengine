@@ -47,6 +47,7 @@
 #include "sge_exit.h"
 #include "utility.h"
 #include "qm_name.h"
+#include "sge_security.h"
 
 static void default_exit_func(int i);
 
@@ -186,6 +187,8 @@ char *strval
 static void default_exit_func(
 int i 
 ) {
+   sge_security_exit(i); 
+
    leave_commd();  /* tell commd we're going */
 }
 
@@ -210,7 +213,7 @@ int sge_gdi_shutdown()
 {
    DENTER(TOP_LAYER, "sge_gdi_shutdown");
 
-   default_exit_func(0);
+   gdi_exit_func(0);
 
    DEXIT;
    return 0;

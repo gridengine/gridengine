@@ -102,6 +102,7 @@ NAMEEND
 /* *INDENT-ON* */   
 
 #define SecurityS sizeof(SecurityN)/sizeof(char*)
+
 #ifdef  __cplusplus
 }
 #endif

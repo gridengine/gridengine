@@ -145,7 +145,7 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost, const c
 
 int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, int *tag, int synchron);
 
-int send_message_pb(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, sge_pack_buffer *pb, u_long32 *mid);
+int gdi_send_message_pb(int synchron, const char *tocomproc, int toid, const char *tohost, int tag, sge_pack_buffer *pb, u_long32 *mid);
 
 /* setup.c */
 void sge_setup(u_long32 sge_formal_prog_name, lList **alpp);

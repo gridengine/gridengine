@@ -71,20 +71,22 @@ static int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = {
 /*  |  |  |  |  |  |    |  |  FEATURE_DCE_SECURITY                 */
 /*  |  |  |  |  |  |    |  |  |  FEATURE_KERBEROS_SECURITY         */   
 /*  |  |  |  |  |  |    |  |  |  |  FEATURE_RESERVED_PORT_SECURITY */ 
-/*  |  |  |  |  |  |    |  |  |  |  |                              */
-/*  v  v  v  v  v  v    v  v  v  v  v                              */
+/*  |  |  |  |  |  |    |  |  |  |  |  FEATURE_CSP_SECURITY        */
+/*  v  v  v  v  v  v    v  v  v  v  v  v                           */
                                           
-   {0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0},   /* FEATURESET_UNINITIALIZED       */
-   {0, 1, 0, 1, 0, 0,   1, 0, 0, 0, 0},   /* FEATURESET_SGE                 */
-   {0, 1, 1, 1, 1, 1,   1, 0, 0, 0, 0},   /* FEATURESET_SGEEE               */
-   {0, 1, 0, 1, 0, 0,   0, 1, 0, 0, 0},   /* FEATURESET_SGE_AFS             */
-   {0, 1, 1, 1, 1, 1,   0, 1, 0, 0, 0},   /* FEATURESET_SGEEE_AFS           */
-   {0, 1, 0, 1, 0, 0,   0, 0, 1, 0, 0},   /* FEATURESET_SGE_DCE             */
-   {0, 1, 1, 1, 1, 1,   0, 0, 1, 0, 0},   /* FEATURESET_SGEEE_DCE           */
-   {0, 1, 0, 1, 0, 0,   0, 0, 0, 1, 0},   /* FEATURESET_SGE_KERBEROS        */
-   {0, 1, 1, 1, 1, 1,   0, 0, 0, 1, 0},   /* FEATURESET_SGEEE_KERBEROS      */
-   {0, 1, 0, 1, 0, 0,   0, 0, 0, 0, 1},   /* FEATURESET_SGE_RESERVED_PORT   */
-   {0, 1, 1, 1, 1, 1,   0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_RESERVED_PORT */
+   {0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0},   /* FEATURESET_UNINITIALIZED       */
+   {0, 1, 0, 1, 0, 0,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGE                 */
+   {0, 1, 1, 1, 1, 1,   1, 0, 0, 0, 0, 0},   /* FEATURESET_SGEEE               */
+   {0, 1, 0, 1, 0, 0,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGE_AFS             */
+   {0, 1, 1, 1, 1, 1,   0, 1, 0, 0, 0, 0},   /* FEATURESET_SGEEE_AFS           */
+   {0, 1, 0, 1, 0, 0,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGE_DCE             */
+   {0, 1, 1, 1, 1, 1,   0, 0, 1, 0, 0, 0},   /* FEATURESET_SGEEE_DCE           */
+   {0, 1, 0, 1, 0, 0,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGE_KERBEROS        */
+   {0, 1, 1, 1, 1, 1,   0, 0, 0, 1, 0, 0},   /* FEATURESET_SGEEE_KERBEROS      */
+   {0, 1, 0, 1, 0, 0,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGE_RESERVED_PORT   */
+   {0, 1, 1, 1, 1, 1,   0, 0, 0, 0, 1, 0},   /* FEATURESET_SGEEE_RESERVED_PORT */
+   {0, 1, 0, 1, 0, 0,   0, 0, 0, 0, 0, 1},   /* FEATURESET_SGE_CSP   */
+   {0, 1, 1, 1, 1, 1,   0, 0, 0, 0, 0, 1}    /* FEATURESET_SGEEE_CSP */
 };
 
 static feature_names_t feature_list[] = {
@@ -96,6 +98,7 @@ static feature_names_t feature_list[] = {
    {FEATURE_DCE_SECURITY,           "dce_security"},
    {FEATURE_KERBEROS_SECURITY,      "kerberos_security"},
    {FEATURE_RESERVED_PORT_SECURITY, "reserved_port_security"},
+   {FEATURE_CSP_SECURITY,           "csp_security"},
    {0, NULL}
 };  
 
@@ -110,6 +113,8 @@ static feature_names_t featureset_list[] = {
    {FEATURESET_SGEEE_KERBEROS,      "sgeee-kerberos"},
    {FEATURESET_SGE_RESERVED_PORT,   "sge-reserved_port"},
    {FEATURESET_SGEEE_RESERVED_PORT, "sgeee-reserved_port"},
+   {FEATURESET_SGE_CSP,             "sge-csp"},
+   {FEATURESET_SGEEE_CSP,           "sgeee-csp"},
    {0, NULL}
 };
 

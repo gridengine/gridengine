@@ -104,11 +104,13 @@ int sge_security_initialize(const char *name)
    DENTER(TOP_LAYER, "sge_security_initialize");
    if (!initialized) {
 #ifdef SECURE
-      if(sec_init(name)){
-/*          CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED )); */
-         DEXIT;
-         return -1;
-      }
+      if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+         if (sec_init(name)) {
+            CRITICAL((SGE_EVENT, MSG_GDI_INITSECURITYDATAFAILED ));
+            DEXIT;
+            return -1;
+         }
+      }     
 #endif
 
 #ifdef KERBEROS
@@ -125,6 +127,145 @@ int sge_security_initialize(const char *name)
    return 0;
 }
 
+/****** sge_security/sge_security_exit() ***************************
+*
+*  NAME
+*     sge_security_exit -- exit sge security
+*
+*  SYNOPSIS
+*     void sge_security_exit(int status);
+*
+*  FUNCTION
+*     Execute any routines that the security mechanism needs to do when
+*     the program
+*
+*  INPUTS
+*     status - exit status value
+*
+*  EXAMPLE
+*
+*  NOTES
+*
+*  BUGS
+*
+*  SEE ALSO
+*
+**************************************************************************/
+void sge_security_exit(int i)
+{
+   DENTER(TOP_LAYER, "sge_security_exit");
+
+#ifdef SECURE
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      if (sec_exit_func) {
+         sec_exit_func();
+      }
+   }     
+#endif
+
+   DEXIT;
+}
+
+
+/************************************************************
+   COMMLIB/SECURITY WRAPPERS
+   FIXME: FUNCTIONPOINTERS SHOULD BE SET IN sge_security_initialize !!!
+
+   Test dlopen functionality, stub libs or check if openssl calls can be added 
+   without infringing a copyright
+*************************************************************/
+int gdi_send_message(
+int synchron,
+const char *tocomproc,
+int toid,
+const char *tohost,
+int tag,
+char *buffer,
+int buflen,
+u_long32 *mid,
+int compressed 
+) {
+   int ret;
+
+   DENTER(TOP_LAYER, "gdi_send_message");
+   /*
+   ** handle the selection of the send_message func to use here
+   ** available are krb_send_message and sec_send_message
+   **
+   ** !!! this function returns if the corresponding feature is enabled
+   ** !!! otherwise send_message() is called
+   */
+#ifdef SECURE
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      ret = sec_send_message(synchron, tocomproc, toid, tohost, tag, 
+                         buffer, buflen, mid, compressed);
+      DEXIT;
+      return ret;
+   }                      
+#endif
+   
+#ifdef KERBEROS
+   if (feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
+      ret = krb_send_message(synchron, tocomproc, toid, tohost, tag, 
+                         buffer, buflen, mid, compressed);
+
+      DEXIT;
+      return ret;
+   }
+#endif   
+
+   ret = send_message(synchron, tocomproc, toid, tohost, tag, 
+                      buffer, buflen, mid, compressed);
+
+   DEXIT;
+   return ret;
+}   
+
+
+int gdi_receive_message(
+char *fromcommproc,
+u_short *fromid,
+char *fromhost,
+int *tag,
+char **buffer,
+u_long32 *buflen,
+int synchron,
+u_short *compressed 
+) {
+   int ret;
+
+   DENTER(TOP_LAYER, "gdi_receive_message");
+   /*
+   ** handle the selection of the receive_message func to use here
+   ** available are krb_receive_message and sec_receive_message
+   **
+   ** !!! this function returns if the corresponding feature is enabled
+   ** !!! otherwise send_message() is called
+   */
+#ifdef SECURE   
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      ret = sec_receive_message(fromcommproc, fromid, fromhost, tag, 
+                         buffer, buflen, synchron, compressed);
+      DEXIT;
+      return ret;
+   }                      
+#endif
+
+#ifdef KERBEROS   
+   if (feature_is_enabled(FEATURE_KERBEROS_SECURITY)) {
+      ret = krb_receive_message(fromcommproc, fromid, fromhost, tag, 
+                         buffer, buflen, synchron, compressed);
+      DEXIT;
+      return ret;
+   }   
+#endif   
+
+   ret = receive_message(fromcommproc, fromid, fromhost, tag, 
+                         buffer, buflen, synchron, compressed);
+
+   DEXIT;
+   return ret;
+}
 
 
 /****** set_sec_cred() ***************************************

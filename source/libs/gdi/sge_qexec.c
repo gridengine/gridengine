@@ -262,7 +262,7 @@ const char *s;
 
    pack_job_delivery(&pb, jep, NULL, NULL);
 
-   ret = send_message_pb(1, prognames[EXECD], 0, hostname,
+   ret = gdi_send_message_pb(1, prognames[EXECD], 0, hostname,
             TAG_JOB_EXECUTION, &pb, &dummymid);
 
    clear_packbuffer(&pb);
@@ -365,7 +365,7 @@ int tag
    from_id = 1;
    do {
       /* FIX_CONST */
-      if ((ret = receive_message((char*)prognames[EXECD], &from_id, host, 
+      if ((ret = gdi_receive_message((char*)prognames[EXECD], &from_id, host, 
             &tag, &msg, &msg_len, (options&OPT_SYNCHRON)?1:0, &compressed))!=0 
                   && ret!=COMMD_NACK_TIMEOUT) {
          sprintf(lasterror, MSG_GDI_MESSAGERECEIVEFAILED_SI , 

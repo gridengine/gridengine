@@ -141,7 +141,7 @@ int cl_err
  *  sge_send_any_request
  *  returns 0 if ok
  *          -4 if peer is not alive or rhost == NULL
- *          return value of send_message() for other errors
+ *          return value of gdi_send_message() for other errors
  *---------------------------------------------------------*/
 int sge_send_any_request(
 int synchron,
@@ -191,7 +191,7 @@ int tag
          execd_first = 0;
       }
 
-      i = send_message_pb(synchron, commproc, id, rhost, tag,
+      i = gdi_send_message_pb(synchron, commproc, id, rhost, tag,
                            pb, mid?mid:&dummymid);
       
       sge_log_commd_state_transition(i);
@@ -258,7 +258,7 @@ int synchron
    if (tag) 
       dummytag = *tag;
 
-   i = receive_message(commproc, &usid, host, &dummytag, &buffer, 
+   i = gdi_receive_message(commproc, &usid, host, &dummytag, &buffer, 
                        &buflen, synchron, &compressed);
    
    if (tag) 
@@ -316,13 +316,13 @@ int synchron
 /**********************************************************************
   send a message giving a packbuffer
 
-  same as send_message, but this is delivered a sge_pack_buffer.
+  same as gdi_send_message, but this is delivered a sge_pack_buffer.
   this function flushes the z_stream_buffer if compression is turned on
   and passes the result on to send_message
-  Always use this function instead of send_message directly, even
+  Always use this function instead of gdi_send_message directly, even
   if compression is turned off.
 **********************************************************************/
-int send_message_pb(
+int gdi_send_message_pb(
 int synchron,
 const char *tocomproc,
 int toid,
@@ -333,11 +333,11 @@ u_long32 *mid
 ) {
    long ret = 0;
 
-   DENTER(COMMD_LAYER, "send_message_pb");
+   DENTER(GDI_LAYER, "gdi_send_message_pb");
 
    if ( !pb ) {
        DPRINTF(("no pointer for sge_pack_buffer\n"));
-       ret = send_message(synchron, tocomproc, toid, tohost, tag, NULL, 0, mid, 0);
+       ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, NULL, 0, mid, 0);
        DEXIT;
        return ret;
    }
@@ -345,13 +345,13 @@ u_long32 *mid
 #ifdef COMMCOMPRESS
    if(pb->mode == 0) {
       if(flush_packbuffer(pb) == PACK_SUCCESS)
-         ret = send_message(synchron, tocomproc, toid, tohost, tag, (char*)pb->head_ptr, pb->cpr.total_out, mid, 1);
+         ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, (char*)pb->head_ptr, pb->cpr.total_out, mid, 1);
       else
          ret = CL_MALLOC;
    }
    else
 #endif
-      ret = send_message(synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid, 0);
+      ret = gdi_send_message(synchron, tocomproc, toid, tohost, tag, pb->head_ptr, pb->bytes_used, mid, 0);
 
    DEXIT;
    return ret;

@@ -37,16 +37,38 @@
 #include "dispatcher.h"
 
 #ifdef SECURE
-#   include "sec_subst.h"
 #   include "sec_lib.h"
 #endif
 
 #ifdef KERBEROS
-#   include "krb_subst.h"
 #   include "krb_lib.h"
 #endif
 
 int sge_security_initialize(const char *name);
+void sge_security_exit(int i);
+
+int gdi_receive_message(
+char *fromcommproc,
+u_short *fromid,
+char *fromhost,
+int *tag,
+char **buffer,
+u_long32 *buflen,
+int synchron,
+u_short *compressed 
+);
+
+int gdi_send_message(
+int synchron,
+const char *tocomproc,
+int toid,
+const char *tohost,
+int tag,
+char *buffer,
+int buflen,
+u_long32 *mid,
+int compressed 
+);
 
 int set_sec_cred(lListElem *job);
 
@@ -70,6 +92,7 @@ int sge_set_auth_info(sge_gdi_request *request, uid_t uid, char *user,
                         gid_t gid, char *group);
 int sge_get_auth_info(sge_gdi_request *request, uid_t *uid, char *user, 
                         gid_t *gid, char *group);
+
 
 #endif /* __SGE_SECURITY_H */
 

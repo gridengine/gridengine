@@ -58,6 +58,8 @@ typedef enum {
    FEATURESET_SGEEE_KERBEROS,
    FEATURESET_SGE_RESERVED_PORT,
    FEATURESET_SGEEE_RESERVED_PORT,
+   FEATURESET_SGE_CSP,
+   FEATURESET_SGEEE_CSP,
  
    /* DON'T CHANGE THE ORDER OF THE ENTRIES ABOVE */
  
@@ -81,6 +83,7 @@ typedef enum {
    FEATURE_DCE_SECURITY,            /* DCE security */
    FEATURE_KERBEROS_SECURITY,       /* KERBEROS security */
    FEATURE_RESERVED_PORT_SECURITY,  /* Use reserved ports for communication */
+   FEATURE_CSP_SECURITY,            /* CSP security */
  
    /* DON'T CHANGE THE ORDER OF THE ENTRIES ABOVE */
  

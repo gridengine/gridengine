@@ -206,6 +206,9 @@ extern "C" {
       {LS_LOWERBOUND, LSS, LSN},        /* load sensor list */
       {FES_LOWERBOUND, FESS, FESN},     /* feature list */
       {FE_LOWERBOUND, FES, FEN},        /* feature list */
+#ifdef SECURE      
+      {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
+#endif      
       {0, 0, NULL}
    };
 

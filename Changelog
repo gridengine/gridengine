@@ -1,3 +1,29 @@
+AA-2001-11-30-0: Feature:   Security changes:
+                            - introduced new product modes 
+                              sge-csp and sgeee-csp belonging to feature
+                              FEATURE_CSP_SECURITY
+                            - replaced sec_subst.h and krb_subst.h mechanism
+                              by runtime selection of security mode.
+                              !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                              THE send_message[_pb] and receive_message calls
+                              have been replaced by gdi_send_message[_pb] and
+                              gdi_receive_message.
+                              They are responsible for using the correct
+                              mechanism. Please use these functions, if the 
+                              underlying security layer shall be part of the 
+                              communication.
+                              !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                              As an improvement a communication context struct
+                              could be introduced and initialized in the
+                              setup phase.
+                              To support the sec mechanisms compile with
+                              aimk -secure 
+                              or
+                              aimk -kerberos
+                              To run in secure mode the product_mode file
+                              contains either sge(ee)-csp or sge(ee)-kerberos.
+                            
+                             
 SD-2001-11-29-1: Bugfix:    SGEEE scheduler - Moved max_pending_functional_jobs
                             short-circuit to outer loop of pending functional
                             jobs algorithm to correct problem where certain

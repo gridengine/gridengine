@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
    dstring errors = DSTRING_INIT;
    lList *alp = NULL;
    u_long32 timestamp;
-   int ret,i;
+   int ret,i,gdi_setup;
 
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
@@ -471,27 +471,16 @@ int main(int argc, char *argv[])
    /* dump pid to file */
    qevent_dump_pid_file();
 
-
-
-   /* setup event client */
    sge_gdi_param(SET_MEWHO, QEVENT, NULL);
-   if (sge_gdi_setup(prognames[QEVENT], &alp)!=AE_OK) {
-      sge_dstring_free(enabled_options.error_message);
-      answer_exit_if_not_recoverable(lFirst(alp));
-      SGE_EXIT(1);
-   }
-   sge_setup_sig_handlers(QEVENT);
 
-   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
-      sge_dstring_free(enabled_options.error_message);
-      SGE_EXIT(1);
-   }   
-
+   gdi_setup = sge_gdi_setup(prognames[QEVENT], &alp);
 
    /* parse command line */
    enabled_options.error_message = &errors;
    qevent_set_option_struct(&enabled_options);
    qevent_parse_command_line(argc, argv, &enabled_options);
+
+   
 
    /* check if help option is set */
    if (enabled_options.help_option) {
@@ -508,6 +497,21 @@ int main(int argc, char *argv[])
       sge_dstring_free(enabled_options.error_message);
       SGE_EXIT(1);
    }
+
+
+   /* setup event client */
+   if ( gdi_setup != AE_OK) {
+      sge_dstring_free(enabled_options.error_message);
+      answer_exit_if_not_recoverable(lFirst(alp));
+      SGE_EXIT(1);
+   }
+
+   sge_setup_sig_handlers(QEVENT);
+
+   if ((ret = reresolve_me_qualified_hostname()) != CL_OK) {
+      sge_dstring_free(enabled_options.error_message);
+      SGE_EXIT(1);
+   }   
 
    /* ok, start over ... */
 

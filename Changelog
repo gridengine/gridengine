@@ -1,3 +1,5 @@
+CR-2003-03-03-2  Bugfix:    - qevent -help worked only for running GE system
+
 CR-2003-03-03-1  Enhancem.  - new function in sge_dir.h: sge_is_executable()
                             - qevent client: client can now trigger script
                                 execution on job end events.

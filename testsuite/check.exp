@@ -13235,15 +13235,32 @@ proc compile_source { { do_only_install 0 } } {
 
    # update source 
    if { $do_not_update == 0 } {
-      puts $CHECK_OUTPUT "------------------------------------------"
-      puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
-      set output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -z 9 update -dP" ]
-      if { $prg_exit_state != 0 } {
+
+      set tries 1
+
+      set output ""
+      set update_ok 0
+      while { $tries <= 3 && $update_ok == 0 } {
+         puts $CHECK_OUTPUT "------------------------------------------"
+         puts $CHECK_OUTPUT "$tries. cvs update try ..."
+         puts $CHECK_OUTPUT "updating gridengine directory $CHECK_SOURCE_DIR/.. on host $CHECK_SOURCE_HOSTNAME ..."
+         append output [ start_remote_prog $CHECK_SOURCE_HOSTNAME $CHECK_USER "cd" "$CHECK_SOURCE_DIR/.. ; cvs -z 9 update -dP" ]
+         append output "\n"
+         if { $prg_exit_state != 0 } {
+            set update_ok 0
+            sleep 60
+         } else {
+            set update_ok 1
+         }
+         incr tries 1
+      }
+      if { $update_ok != 1 } {
          add_proc_error "compile_source" -2 "cvs update -dP error:\n$output" 
          append html_body [ create_html_text "cvs update -dP error:\n$output" ]
          update_compile_html_output $html_body
          return -1
       }
+
       puts $CHECK_OUTPUT "------------------------------------------"
       set cvs_output [ open "$CHECK_SOURCE_DIR/cvs_update.log.[timestamp]" "w" ]
       puts $cvs_output $output

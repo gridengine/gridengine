@@ -1,3 +1,8 @@
+CR-2003-01-28-0  Testsuite: procedure compile_source(): Implemented loop for cvs update.
+                            Sometimes the cvs update failes due to an error. The
+                            testsuite will abort the compile procedure after three
+                            unsuccessfull update runs.
+
 AH-2003-01-24-0  Enhancem.  uti: use get/set functions for acessing 'me' struct members
                             uti: use get/set functions for localhost, fqdn_cmp, default_domain
                             uti: made hash module reentrant

@@ -351,8 +351,8 @@ void sge_printf_usage(void) {
    printf("sge_printf -help    : show help\n");
    printf("sge_printf -test    : test localization\n");
    printf("sge_printf -message : print empty po file string\n");
-   printf("sge_printf -message-space : print po file string with space l10n\n");
-   printf("sge_printf [-enum] [-D STRING] [-S COUNT] FORMAT_STRING ARGUMENTS\n\n");
+   printf("sge_printf -message-space : print po file string for test purposes\n");
+   printf("sge_printf [-enu] [-D STRING] [-S COUNT] FORMAT_STRING ARGUMENTS\n\n");
    printf("FORMAT_STRING - printf format string\n");
    printf("ARGUMENTS     - printf arguments\n\n");
    printf("options:\n");   

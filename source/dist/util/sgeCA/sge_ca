@@ -67,7 +67,6 @@ ErrUsage()
    "   -days <days>     days of validity of the certificate\n" \
    "   -sha1            use sha-1 instead of md5 as message digest\n" \
    "   -encryptkey      use des to encrypt the generated key with a passphrase\n" \
-   "   -days <days>     days of validity of the certificate\n" \
    "   -outdir <dir>    write to directory <dir>\n" \
    "   -cadir <dir>     overwrite CALOCALTOP and CATOP settings\n" \
    "   -pkcs12 <file>   generate pkcs12 format files for the users in <file>\n" \

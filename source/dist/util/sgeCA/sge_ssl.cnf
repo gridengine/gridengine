@@ -7,7 +7,7 @@
 # defined.
 #HOME                    = $ENV::SGE_ROOT/default
 #RANDFILE                = $ENV::HOME/.rnd
-CACELL                   = $ENV::SGE_CELL || "default"
+CACELL                   = $ENV::SGE_CELL
 CATOP                    = $ENV::SGE_ROOT/$CACELL/common/sgeCA
 
 # Extra OBJECT IDENTIFIER info:

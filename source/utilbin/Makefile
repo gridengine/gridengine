@@ -43,7 +43,8 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
-               languagetest.c infotext.c
+               languagetest.c infotext.c \
+               spooldefaults.c spoolinit.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 

@@ -93,6 +93,7 @@ void qmonScaleWeightToggle(Widget w, XtPointer cld, XtPointer cad);
 
 void DeleteItems(Widget w, XtPointer cld, XtPointer cad);
 void XmListAddItemUniqueSorted(Widget list, String item); 
+void XmListAddXmStringUniqueSorted(Widget list, XmString item); 
 void XmListMoveItemToPos(Widget list, String item, int pos); 
 
 Boolean is_empty_word(char *str);

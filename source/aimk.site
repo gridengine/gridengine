@@ -34,7 +34,7 @@
 # OPENSSL_HOME the directory where the include and lib directory of openssl
 # is installed
 #
-set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7b/$buildarch
+set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7c/$buildarch
 
 # 
 # POSTGRES_HOME the directory where the include and lib directory of 

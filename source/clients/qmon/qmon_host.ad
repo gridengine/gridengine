@@ -81,7 +81,8 @@ Qmon*qmon_host.host_layout.host_form.xmtChildren: \
 
 Qmon*qmon_host.host_layout.host_form.host_folder.xmtChildren: \
    XmtLayout      adminhost_layout, \
-                  submithost_layout;
+                  submithost_layout, \
+                  hostgroup_layout;
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Admin Host Configuration
@@ -135,6 +136,107 @@ Qmon*submithost_layout*submithost_list.fontList:           $fixed_font
 Qmon*submithost_layout*submithost_list.selectionPolicy:    EXTENDED_SELECT
 Qmon*submithost_layout*submithost_list.visibleItemCount:   7
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! Hostgroup Configuration
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*hostgroup_layout.dialogTitle: @{QMON +++ Hostgroup Configuration}
+Qmon*hostgroup_layout.fontList:  $dialog_font
+
+Qmon*hostgroup_layout*XmtInputField.marginHeight:   2
+Qmon*hostgroup_layout*XmtInputField.marginWidth:    2
+
+Qmon*hostgroup_layout.tabLabel: @{@fBHost Groups}
+
+Qmon*hostgroup_layout.xmtChildren: \
+   XmScrolledList hostgroup_list; \
+   XmScrolledList hostgroup_memberlist; \
+
+Qmon*hostgroup_layout.layout: \
+   Row { \
+      Stretchable 3 in Caption tl "@{@fBHostgroup}" hostgroup_list \
+      Stretchable 3 in Caption tl "@{Members}" hostgroup_memberlist \
+   }
+
+Qmon*hostgroup_layout*scrollBarDisplayPolicy:    AS_NEEDED
+Qmon*hostgroup_layout*listSizePolicy:            CONSTANT
+
+Qmon*hostgroup_layout*hostgroup_list.fontList:           $fixed_font
+Qmon*hostgroup_layout*hostgroup_list.selectionPolicy:    BROWSE_SELECT
+Qmon*hostgroup_layout*hostgroup_list.visibleItemCount:   7
+
+Qmon*hostgroup_layout*hostgroup_memberlist.fontList:           $fixed_font
+Qmon*hostgroup_layout*hostgroup_memberlist.selectionPolicy:    EXTENDED_SELECT
+Qmon*hostgroup_layout*hostgroup_memberlist.visibleItemCount:   7
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!! Add/ Modify Hostgroup
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Qmon*hg_ask_shell.xmtChildren: unmanaged XmtLayout hg_ask_layout;
+
+Qmon*hg_ask_shell.hg_ask_layout.autoUnmanage: False
+Qmon*hg_ask_shell.hg_ask_layout.resizePolicy:  RESIZE_NONE
+Qmon*hg_ask_shell.hg_ask_layout.XmtInputField.marginWidth:      2
+Qmon*hg_ask_shell.hg_ask_layout.XmtInputField.marginHeight:     2
+Qmon*hg_ask_shell.hg_ask_layout.fontList: $dialog_font
+Qmon*hg_ask_shell.hg_ask_layout.dialogTitle: @{Add/Modify Host Group}
+Qmon*hg_ask_shell.hg_ask_layout.dialogStyle: DIALOG_APPLICATION_MODAL
+
+Qmon*hg_ask_shell.hg_ask_layout.xmtChildren: \
+   InputField     hg_name; \
+   InputField     hg_member; \
+   XmScrolledList hg_memberlist; \
+   XmScrolledList hg_hglist; \
+   XmPushButton   hg_ok, hg_cancel, hg_add_hg, hg_add, hg_del_member;
+
+Qmon*hg_ask_layout.layout: \
+   Row { \
+      Etched Col { \
+         Fixed Centered Caption "@{@fBHostgroup} " hg_name \
+         # \
+         Row { \
+            Stretchable Caption tl "@{Members}" 2 in % 4 in hg_memberlist \
+            Col { \
+               ## \
+               Row { \
+                  Centered Fixed hg_add \
+                  Caption tl "@{Host}" hg_member \
+               } \
+               ## \
+               Row { \
+                  Centered Fixed hg_add_hg \
+                  Stretchable Caption tl "@{Defined Host Groups}" 2 in % 3 in hg_hglist \
+               } \
+               ## \
+               Centered Fixed hg_del_member \
+               <> \
+            } \
+         } \
+      } \
+      Fixed Shadowed Col { \
+         Fixed hg_ok \
+         Fixed hg_cancel \
+      } \
+   }
+
+
+Qmon*hg_ask_layout.hg_ok.labelString:     @{Ok}
+Qmon*hg_ask_layout.hg_cancel.labelString: @{Cancel}
+Qmon*hg_ask_layout.hg_name.columns: 40
+
+Qmon*hg_ask_layout.hg_add_hg.labelType:         PIXMAP
+Qmon*hg_ask_layout.hg_add_hg.labelPixmap:       leftarrow
+Qmon*hg_ask_layout.hg_add.labelType:            PIXMAP
+Qmon*hg_ask_layout.hg_add.labelPixmap:          leftarrow
+Qmon*hg_ask_layout.hg_del_member.labelType:     PIXMAP
+Qmon*hg_ask_layout.hg_del_member.labelPixmap:   trashcan
+
+Qmon*hg_ask_layout*hg_memberlist.fontList:           $fixed_font
+Qmon*hg_ask_layout*hg_memberlist.selectionPolicy:    EXTENDED_SELECT
+Qmon*hg_ask_layout*hg_memberlist.visibleItemCount:   7
+
+Qmon*hg_ask_layout*hg_hglist.fontList:           $fixed_font
+Qmon*hg_ask_layout*hg_hglist.selectionPolicy:    EXTENDED_SELECT
+Qmon*hg_ask_layout*hg_hglist.visibleItemCount:   7
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! Execution Host Configuration

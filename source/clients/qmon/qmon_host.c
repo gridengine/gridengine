@@ -49,6 +49,7 @@
 #include <Xmt/Procedures.h>
 
 #include "sge_all_listsL.h"
+#include "sge_hgroupL.h"
 #include "sge_gdi.h"
 #include "commlib.h"
 #include "sge.h"
@@ -78,6 +79,8 @@
 #include "load_correction.h"
 #include "sge_prog.h"
 #include "sge_host.h"
+#include "sge_hgroup.h"
+#include "sge_hgroup_qconf.h"
 
 #include "Tab.h"
 
@@ -175,10 +178,23 @@ static void qmonExecHostProjectToggle(Widget w, XtPointer cld, XtPointer cad);
 static void qmonExecHostProjectAdd(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonExecHostProjectRemove(Widget w, XtPointer cld, XtPointer cad); 
 static void qmonPopdownHostConfig(Widget w, XtPointer cld, XtPointer cad);
+static Widget qmonCreateHostgroupAsk(Widget parent);
+static void qmonHostgroupChange(Widget w, XtPointer cld, XtPointer cad);
+static void qmonHostgroupOk(Widget w, XtPointer cld, XtPointer cad);
+static void qmonHostgroupCancel(Widget w, XtPointer cld, XtPointer cad);
+static void qmonHostgroupCheckName(Widget w, XtPointer cld, XtPointer cad);
+static void qmonHostgroupSetAsk(StringConst name);
+static void qmonHostgroupSelect(Widget w, XtPointer cld, XtPointer cad);
+static void qmonHostgroupAddHost(Widget w, XtPointer cld, XtPointer cad);
+static void qmonHostgroupAddHostgroups(Widget w, XtPointer cld, XtPointer cad);
+static void updateHostListCB(Widget w, XtPointer cld, XtPointer cad);
+static void updateHostList(void);
 /*-------------------------------------------------------------------------*/
 static Widget qmon_host = NULL;
 static Widget adminhost_list = NULL;
 static Widget submithost_list = NULL;
+static Widget hostgroup_list = NULL;
+static Widget hostgroup_memberlist = NULL;
 static Widget host_modify = NULL;
 static Widget host_shutdown = NULL;
 
@@ -189,6 +205,11 @@ static Widget exechost_consumables = 0;
 static Widget exechost_usage_scaling = 0;
 static Widget exechost_rcf = 0;
 static Widget eh_ask_layout = 0;
+static Widget hg_ask_layout = 0;
+static Widget hg_name_w = 0;
+static Widget hg_memberlist_w = 0;
+static Widget hg_hglist_w = 0;
+static Widget hg_member_w = 0;
 static Widget eh_name_w = 0;
 static Widget eh_folder = 0;
 static Widget access_list = 0;
@@ -269,7 +290,28 @@ XtPointer cld, cad;
 }
 
 /*-------------------------------------------------------------------------*/
-void updateHostList(void)
+static void updateHostListCB(Widget w, XtPointer cld, XtPointer cad)
+{
+   lList *alp = NULL;
+
+   DENTER(GUI_LAYER, "updateHostListCB");
+
+   /*
+   ** fetch changed lists
+   */
+   qmonMirrorMultiAnswer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T | HGROUP_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
+   updateHostList();
+}
+
+/*-------------------------------------------------------------------------*/
+static void updateHostList(void)
 {
    DENTER(GUI_LAYER, "updateHostList");
 
@@ -305,9 +347,13 @@ Widget parent
                            "host_main_link", &host_main_link,
                            "adminhost_list", &adminhost_list,
                            "submithost_list", &submithost_list,
+                           "hostgroup_list", &hostgroup_list,
+                           "hostgroup_memberlist", &hostgroup_memberlist,
                            "adminhost_hostname", &adminhost_hostname,
                            "submithost_hostname", &submithost_hostname,
                            NULL);
+   
+   hg_ask_layout = qmonCreateHostgroupAsk(host_folder);
    
    exechost_layout = qmonCreateExecHostConfig(host_folder, NULL);
    XtManageChild(exechost_layout);
@@ -333,7 +379,9 @@ Widget parent
                      qmonHostAdd, NULL);
    XtAddCallback(host_help, XmNactivateCallback, 
                      qmonHostHelp, NULL);
-   
+   XtAddCallback(hostgroup_list, XmNbrowseSelectionCallback,
+                     qmonHostgroupSelect, NULL);
+
    XtAddEventHandler(XtParent(host_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
 
@@ -349,6 +397,7 @@ static void qmonHostFillList(void)
    static lEnumeration *what = NULL;
    
    DENTER(GUI_LAYER, "qmonHostFillList");
+
 
    /* admin host list */
    lp = qmonMirrorList(SGE_ADMINHOST_LIST);
@@ -372,6 +421,12 @@ static void qmonHostFillList(void)
    XmListMoveItemToPos(exechost_list, "global", 1);
    lp = lFreeList(lp);
    XmListSelectPos(exechost_list, 1, True);
+
+   /* host groups */
+   lp = qmonMirrorList(SGE_HGROUP_LIST);
+   lPSortList(lp, "%I+", HGRP_name);
+   UpdateXmListFromCull(hostgroup_list, XmFONTLIST_DEFAULT_TAG, lp, HGRP_name);
+   XmListSelectPos(hostgroup_list, 1, True);
 
    DEXIT;
 }
@@ -1122,6 +1177,11 @@ XtPointer cld, cad;
          list = exechost_list;
          field = EH_name;
          break;
+      case SGE_HGROUP_LIST:
+         dp = HGRP_Type;
+         list = hostgroup_list;
+         field = HGRP_name;
+         break;
       default:
          DEXIT;
          return;
@@ -1160,6 +1220,9 @@ XtPointer cld, cad;
          break;
       case SGE_SUBMITHOST_LIST:
          widget = submithost_list; 
+         break;
+      case SGE_HGROUP_LIST:
+         widget = hostgroup_list; 
          break;
       case SGE_EXECHOST_LIST:
          widget = exechost_list; 
@@ -1203,6 +1266,10 @@ XtPointer cld, cad;
          field = SH_name;
          hostname = XmtNameToWidget(list, "~*submithost_hostname");
          break;
+      case SGE_HGROUP_LIST:
+         qmonHostgroupChange(w, cld, NULL); 
+         DEXIT;
+         return;
       case SGE_EXECHOST_LIST:
          qmonExecHostChange(w, cld, NULL); 
          DEXIT;
@@ -1409,25 +1476,17 @@ XtPointer cld, cad;
    if (!strcmp(XtName(cbs->tab_child), "submithost_layout"))
       dialog_mode = SGE_SUBMITHOST_LIST;
 
+   if (!strcmp(XtName(cbs->tab_child), "hostgroup_layout"))
+      dialog_mode = SGE_HGROUP_LIST;
+
    if (!strcmp(XtName(cbs->tab_child), "exechost_layout"))
       dialog_mode = SGE_EXECHOST_LIST;
 
    
-   /*
-   ** fetch changed lists and update dialogues
-   */
-   qmonMirrorMultiAnswer(ADMINHOST_T | SUBMITHOST_T | EXECHOST_T, &alp);
-   if (alp) {
-      qmonMessageBox(w, alp, 0);
-      alp = lFreeList(alp);
-      DEXIT;
-      return;
-   }
+   updateHostListCB(w, NULL, NULL);
 
-   updateHostList();
-
-
-   XtSetSensitive(host_modify, (dialog_mode==SGE_EXECHOST_LIST) ? True:False);
+   XtSetSensitive(host_modify, (dialog_mode==SGE_EXECHOST_LIST ||
+                   dialog_mode==SGE_HGROUP_LIST) ? True:False);
    XtSetSensitive(host_shutdown, (dialog_mode==SGE_EXECHOST_LIST) ? True:False);
       
    DEXIT;
@@ -1618,3 +1677,306 @@ XtPointer cld, cad;
    DEXIT;
 }
 
+/*-------------------------------------------------------------------------*/
+static Widget qmonCreateHostgroupAsk(
+Widget parent 
+) {
+   Widget hg_ok, hg_cancel, hg_ask_layout, hg_add, hg_add_hg,
+          hg_del_member;
+
+   DENTER(GUI_LAYER, "qmonCreateHostgroupAsk");
+   
+   hg_ask_layout = XmtBuildQueryDialog( parent, "hg_ask_shell",
+                           NULL, 0,
+                           "hg_ok", &hg_ok,
+                           "hg_cancel", &hg_cancel,
+                           "hg_name", &hg_name_w,
+                           "hg_memberlist", &hg_memberlist_w,
+                           "hg_hglist", &hg_hglist_w,
+                           "hg_member", &hg_member_w,
+                           "hg_add_hg", &hg_add_hg,
+                           "hg_add", &hg_add,
+                           "hg_del_member", &hg_del_member,
+                           NULL);
+
+   XtAddCallback(hg_ok, XmNactivateCallback, 
+                     qmonHostgroupOk, NULL);
+   XtAddCallback(hg_cancel, XmNactivateCallback, 
+                     qmonHostgroupCancel, NULL);
+   XtAddCallback(hg_member_w, XmtNverifyCallback,
+                      qmonHostgroupCheckName, NULL);
+   XtAddCallback(hg_add, XmNactivateCallback, 
+                     qmonHostgroupAddHost, NULL);
+   XtAddCallback(hg_add_hg, XmNactivateCallback, 
+                     qmonHostgroupAddHostgroups, NULL);
+   XtAddCallback(hg_del_member, XmNactivateCallback, 
+                     DeleteItems, (XtPointer) hg_memberlist_w);
+
+   XtAddEventHandler(XtParent(hg_ask_layout), StructureNotifyMask, False, 
+                        SetMinShellSize, NULL);
+
+   DEXIT;
+   return hg_ask_layout;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonHostgroupChange(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   long mode = (long) cld;
+   Cardinal hgnum;
+   XmString *hgnames;
+   String hgstr;
+   lList *alp = NULL;
+
+   DENTER(GUI_LAYER, "qmonHostgroupChange");
+
+   qmonMirrorMultiAnswer(HGROUP_T, &alp);
+   if (alp) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+      DEXIT;
+      return;
+   }
+
+   if (mode) {
+      XtVaSetValues( hg_name_w,
+                     XmNeditable, True,
+                     NULL);
+      XmtInputFieldSetString(hg_name_w, "");
+      /*
+      ** fill the hostgroup ask dialog with default values
+      */
+      qmonHostgroupSetAsk(NULL);
+      add_mode = mode;
+
+   } else {
+      /*
+      ** on opening the dialog fill in the old values
+      */
+      XtVaGetValues( hostgroup_list,
+                     XmNselectedItems, &hgnames,
+                     XmNselectedItemCount, &hgnum,
+                     NULL);
+      
+      if (hgnum == 1 && 
+            XmStringGetLtoR(hgnames[0], XmFONTLIST_DEFAULT_TAG, &hgstr)) {
+         XmtInputFieldSetString(hg_name_w, hgstr);
+         XtVaSetValues( hg_name_w,
+                        XmNeditable, False,
+                        NULL);
+         qmonHostgroupSetAsk(hgstr);
+         XtFree((char*)hgstr);
+         add_mode = 0;
+      }
+   }
+
+   XtManageChild(hg_ask_layout);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonHostgroupOk(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   lList *hgl = NULL;
+   lList *alp = NULL;
+   lEnumeration *what;
+   Boolean status = False;
+   XmString xhgname = NULL;
+   StringConst hgname = NULL;
+   lListElem *hg_ep = NULL;
+   lList *href_list = NULL;
+
+   DENTER(GUI_LAYER, "qmonHostgroupOk");
+
+   /*
+   ** get the list with one new host
+   */
+   hgname = XmtInputFieldGetString(hg_name_w);
+   if (!hgname || hgname[0] == '\0') {
+      qmonMessageShow(w, True, "@{Empty hostgroup name !}");
+      DEXIT;
+      return;
+   }
+
+   href_list = XmStringToCull(hg_memberlist_w, HR_Type, HR_name, ALL_ITEMS);
+   hg_ep = hgroup_create(&alp, hgname, href_list);
+
+   if (add_mode) {
+      hgroup_add_del_mod_via_gdi(hg_ep, &alp, SGE_GDI_ADD);
+   } else {
+      hgroup_add_del_mod_via_gdi(hg_ep, &alp, SGE_GDI_MOD);
+   }   
+
+   if (lFirst(alp) && lGetUlong(lFirst(alp), AN_status) != STATUS_OK) {
+      qmonMessageBox(w, alp, 0);
+      alp = lFreeList(alp);
+   } else {
+      XtUnmanageChild(hg_ask_layout);
+      updateHostListCB(w, NULL, NULL);
+   }
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonHostgroupCancel(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   DENTER(GUI_LAYER, "qmonHostgroupCancel");
+
+   XtUnmanageChild(hg_ask_layout);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonHostgroupCheckName(w, cld, cad)
+Widget w;
+XtPointer cld, cad;
+{
+   XmtInputFieldCallbackStruct *cbs = (XmtInputFieldCallbackStruct*) cad;
+   static char unique[MAXHOSTLEN];
+   int ret;
+
+   DENTER(GUI_LAYER, "qmonHostgroupCheckName");
+   
+   if (cbs->input && cbs->input[0] != '\0' && cbs->input[0] != ' ') { 
+       
+      DPRINTF(("cbs->input = %s\n", cbs->input));
+
+      strcpy(unique, "");
+
+      /* try to resolve hostname */
+      ret=sge_resolve_hostname((const char*)cbs->input, unique, EH_name);
+
+      switch ( ret ) {
+         case COMMD_NACK_UNKNOWN_HOST:
+            qmonMessageShow(w, True, "Can't resolve host '%s'", cbs->input);
+            cbs->okay = False;
+            break;
+         case CL_OK:
+            cbs->input = unique;
+            break;
+         default:
+            DPRINTF(("sge_resolve_hostname() failed resolving: %s\n",
+            cl_errstr(ret)));
+            cbs->okay = False;
+      }
+   }
+   
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonHostgroupSetAsk(
+StringConst name 
+) {
+   lListElem *hgp = NULL;
+   lList *hgl = NULL;
+   
+   DENTER(GUI_LAYER, "qmonHostgroupSetAsk");
+
+   hgl = qmonMirrorList(SGE_HGROUP_LIST);
+
+   if (name) {
+      /*
+      ** get the selected hostgroup element
+      */
+      hgp = hgroup_list_locate(hgl, name);
+      if (hgp) {
+         /* set name field */
+         XmtInputFieldSetString(hg_name_w, name);
+         /* set members */
+         UpdateXmListFromCull(hg_memberlist_w, XmFONTLIST_DEFAULT_TAG, 
+                              lGetList(hgp, HGRP_host_list), HR_name);
+      }   
+   }
+   else {
+      UpdateXmListFromCull(hg_memberlist_w, XmFONTLIST_DEFAULT_TAG, 
+                              NULL, HR_name);
+      XmtInputFieldSetString(hg_name_w, "");
+   }   
+
+   /*
+   ** FIXME ANDRE
+   ** hostgroups that would create a cycle should be suppressed
+   */
+   UpdateXmListFromCull(hg_hglist_w, XmFONTLIST_DEFAULT_TAG, 
+                              hgl, HGRP_name);
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonHostgroupSelect(Widget w, XtPointer cld, XtPointer cad)
+{
+   XmListCallbackStruct *cbs = (XmListCallbackStruct*) cad;
+   char *hgname;
+   lListElem *hgp;
+   lListElem *ep;
+   lList *lsl;
+   lList *usl;
+   static char buf[10*BUFSIZ];
+   XmTextPosition pos;
+   
+   DENTER(GUI_LAYER, "qmonHostgroupSelect");
+
+   if (! XmStringGetLtoR(cbs->item, XmFONTLIST_DEFAULT_TAG, &hgname)) {
+      fprintf(stderr, "XmStringGetLtoR failed\n");
+      DEXIT;
+      return;
+   }
+
+   hgp = hgroup_list_locate(qmonMirrorList(SGE_HGROUP_LIST), hgname);
+   XtFree((char*) hgname);
+
+   if (hgp) {
+      UpdateXmListFromCull(hostgroup_memberlist, XmFONTLIST_DEFAULT_TAG, 
+                           lGetList(hgp, HGRP_host_list), HR_name);
+   }
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonHostgroupAddHost(Widget w, XtPointer cld, XtPointer cad)
+{
+   char *host;
+   
+   DENTER(GUI_LAYER, "qmonHostgroupAddHost");
+
+   host = XmtInputFieldGetString(hg_member_w);
+
+   if (host && host[0] != '\0') {
+      XmListAddItemUniqueSorted(hg_memberlist_w, host);
+   }
+
+   XmtInputFieldSetString(hg_member_w, "");
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+static void qmonHostgroupAddHostgroups(Widget w, XtPointer cld, XtPointer cad)
+{
+   int i;
+   XmString *items = NULL;
+   Cardinal itemCount = 0;
+
+   DENTER(GUI_LAYER, "qmonHostgroupAddHostgroups");
+
+   XtVaGetValues( hg_hglist_w,
+               XmNselectedItems, &items,
+               XmNselectedItemCount, &itemCount,
+               NULL);
+   for (i=0; i<itemCount; i++) {
+      XmListAddXmStringUniqueSorted(hg_memberlist_w, items[i]); 
+   }
+
+   DEXIT;
+}

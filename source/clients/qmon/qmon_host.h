@@ -35,6 +35,5 @@
 #include "qmon_proto.h"
 
 void qmonPopupHostConfig(Widget w, XtPointer cld, XtPointer cad);
-void updateHostList(void);
 
 #endif /* _QMON_HOST_H_ */

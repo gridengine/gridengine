@@ -897,6 +897,51 @@ void DeleteItems(Widget w, XtPointer cld, XtPointer cad)
 }
 
 /*-------------------------------------------------------------------------*/
+void XmListAddXmStringUniqueSorted(Widget list, XmString xmitem)
+{
+   XmString *items = NULL;
+   int upperBound = 0, lowerBound = 0;
+   String text = NULL, item2 = NULL;
+   
+   DENTER(GUI_LAYER, "AddItemUniqueSorted");
+
+   if (xmitem) {
+      if (XmListItemExists(list, xmitem)) {
+         DEXIT;
+         return;
+      }
+      if (!XmStringGetLtoR(xmitem, XmFONTLIST_DEFAULT_TAG, &item2)) {
+         DEXIT;
+         return;
+      }   
+
+      XtVaGetValues( list,
+                  XmNitems, &items,
+                  XmNitemCount, &upperBound,
+                  NULL);
+      /*
+      ** binary search through the items in the list
+      */
+      upperBound--;
+      while (upperBound >= lowerBound) {
+         int i = lowerBound + (upperBound - lowerBound) / 2;
+         /* convert XmString to String */
+         if (!XmStringGetLtoR(items[i], XmFONTLIST_DEFAULT_TAG, &text))
+            break;
+         if (strcmp(text, item2) > 0)
+            upperBound = i - 1; /* text comes after item2 */
+         else
+            lowerBound = i + 1; /* text comes before item2 */
+         XtFree(text); 
+      }
+      XtFree(item2);
+      XmListAddItemUnselected(list, xmitem, lowerBound + 1);
+   }
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
 void XmListAddItemUniqueSorted(Widget list, String item)
 {
    XmString xmitem = NULL;

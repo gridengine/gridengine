@@ -157,8 +157,8 @@ void qmonMirrorListInit(void)
    QmonMirrorList[SGE_CALENDAR_LIST].what = lWhat("%T(ALL)", CAL_Type);
    QmonMirrorList[SGE_JOB_SCHEDD_INFO].what = lWhat("%T(ALL)", SME_Type);
    QmonMirrorList[SGE_ZOMBIE_LIST].what = lWhat("%T(ALL)", JB_Type);
-   QmonMirrorList[SGE_USER_MAPPING_LIST].what = lWhat("%T(ALL)", JB_Type);
-   QmonMirrorList[SGE_HGROUP_LIST].what = lWhat("%T(ALL)", JB_Type);
+   QmonMirrorList[SGE_USER_MAPPING_LIST].what = lWhat("%T(ALL)", CU_Type);
+   QmonMirrorList[SGE_HGROUP_LIST].what = lWhat("%T(ALL)", HGRP_Type);
 
    DEXIT;
 }

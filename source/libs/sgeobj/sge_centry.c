@@ -858,7 +858,7 @@ centry_list_remove_duplicates(lList *this_list)
 *
 *         Relational operator:
 *         - for consumables:              only <=
-*Ü        - for non consumables:
+*         - for non consumables:
 *            - string, host, cstring:     only ==, !=
 *            - boolean:	                  only ==
 *            - int, double, memory, time: ==, !=, <=, <, =>, >

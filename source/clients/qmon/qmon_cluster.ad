@@ -146,9 +146,7 @@ Qmon*cluster_global_layout.XmText.marginHeight:         2
 Qmon*cluster_global_layout.XmText.marginWidth:          2
 
 Qmon*cluster_global_layout.xmtChildren: \
-   InputField     cluster_qmaster_spool_dir = qmaster_spool_dir, \
-                  cluster_execd_spool_dir = execd_spool_dir, \
-                  cluster_binary_path = binary_path, \
+   InputField     cluster_execd_spool_dir = execd_spool_dir, \
                   cluster_mailer = mailer, \
                   cluster_admin_mail = administrator_mail, \
                   cluster_xterm = xterm, \
@@ -161,7 +159,6 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_stat_log_time = stat_log_time, \
                   cluster_max_unheard = max_unheard, \
                   cluster_reschedule_unknown = reschedule_unknown, \
-                  cluster_admin_user = admin_user, \
                   cluster_gid_range = gid_range, \
                   cluster_prolog = prolog, \
                   cluster_epilog = epilog; \
@@ -170,7 +167,6 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_max_u_jobs = max_u_jobs, \
                   cluster_max_jobs = max_jobs; \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
-                  cluster_ignore_fqdn = ignore_fqdn, \
                   cluster_loglevel = loglevel , \
                   cluster_enforce_project = enforce_project, \
                   cluster_enforce_user = enforce_user; \
@@ -183,27 +179,22 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_load_report_timePB, \
                   cluster_reschedule_unknownPB, \
                   cluster_stat_log_timePB, cluster_max_unheardPB; \
-   XmLabel        cluster_qmaster_spool_dir_label, \
-                  cluster_execd_spool_dir_label, \
+   XmLabel        cluster_execd_spool_dir_label, \
                   cluster_admin_mail_label, \
                   cluster_login_shells_label, \
                   cluster_max_aj_instances_label, \
                   cluster_max_aj_tasks_label, \
-                  cluster_max_job_per_user_label, \
-                  cluster_admin_user_label;
+                  cluster_max_job_per_user_label;
 
 
 
 Qmon*cluster_global_layout.layout: \
    Even Row { \
       Col { \
-         Row { cluster_qmaster_spool_dir_label <> Fixed 25 em cluster_qmaster_spool_dir }\
          Row { cluster_execd_spool_dir_label <> Fixed 25 em cluster_execd_spool_dir }\
-         Row { "@{Binary Path}     " <> Fixed 25 em cluster_binary_path }\
          Row { "@{Mailer}          " <> Fixed 25 em cluster_mailer }\
          Row { "@{Xterm}           " <> Fixed 25 em cluster_xterm }\
          Row { "@{Load Sensor}     " <> Fixed 25 em cluster_load_sensor }\
-         Row { cluster_admin_user_label <> Fixed 25 em cluster_admin_user }\
          Row { cluster_admin_mail_label <> Fixed 25 em cluster_admin_mail }\
          Row { "@{Prolog}          " <> Fixed 25 em cluster_prolog }\
          Row { "@{Epilog}          " <> Fixed 25 em cluster_epilog }\
@@ -280,7 +271,6 @@ Qmon*cluster_global_layout.layout: \
                Fixed Centered cluster_xprojectsPB \
             } \
          } \
-         Fixed Caption "@{Ignore FQDN}" cluster_ignore_fqdn \
          Fixed Caption "@{Enforce Project}"  cluster_enforce_project \
          Fixed Caption "@{Enforce User}"  cluster_enforce_user \
          Fixed Caption tl "@{GID Range for Job Monitoring}" cluster_gid_range \
@@ -288,9 +278,7 @@ Qmon*cluster_global_layout.layout: \
       } \
    }
 
-Qmon*cluster_global_layout*cluster_qmaster_spool_dir_label.labelString: @{Master Spool Dir}
 Qmon*cluster_global_layout*cluster_execd_spool_dir_label.labelString: @{Execd Spool Dir}
-Qmon*cluster_global_layout*cluster_admin_user_label.labelString: @{Admin User}
 Qmon*cluster_global_layout*cluster_admin_mail_label.labelString: @{Admin Mail}
 Qmon*cluster_global_layout*cluster_login_shells_label.labelString: @{Login Shells}
 Qmon*cluster_global_layout*cluster_max_aj_instances_label.labelString: @{cluster.max_aj_instances.Maximal Array\nJob Instances}
@@ -313,10 +301,6 @@ Qmon*cluster_global_layout.cluster_loglevel.strings: \
 
 Qmon*cluster_global_layout.cluster_logmail.chooserType: ChooserOption
 Qmon*cluster_global_layout.cluster_logmail.strings: \
-   "@{True}", "@{False}"
-
-Qmon*cluster_global_layout.cluster_ignore_fqdn.chooserType: ChooserOption
-Qmon*cluster_global_layout.cluster_ignore_fqdn.strings: \
    "@{True}", "@{False}"
 
 
@@ -399,9 +383,7 @@ Qmon*cluster_global_layout.cluster_max_jobs.value: 0
 !! 
 !! TrimAndTrail callback, remove leading and trailing whitespace after input
 !!
-Qmon*cluster_global_layout.cluster_qmaster_spool_dir.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_execd_spool_dir.verifyCallback: TrimAndTrail(self);
-Qmon*cluster_global_layout.cluster_binary_path.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_mailer.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_admin_mail.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_xterm.verifyCallback: TrimAndTrail(self);
@@ -414,7 +396,6 @@ Qmon*cluster_global_layout.cluster_stat_log_time.verifyCallback: TrimAndTrail(se
 Qmon*cluster_global_layout.cluster_max_unheard.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_prolog.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_epilog.verifyCallback: TrimAndTrail(self);
-Qmon*cluster_global_layout.cluster_admin_user.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_global_layout.cluster_gid_range.verifyCallback: TrimAndTrail(self);
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! extra config
@@ -430,7 +411,6 @@ Qmon*cluster_extra_layout.xmtChildren: \
    InputField     cluster_qmaster_params = qmaster_params, \
                   cluster_schedd_params = schedd_params, \
                   cluster_execd_params = execd_params, \
-                  cluster_default_domain = default_domain , \
                   cluster_shepherd_cmd = shepherd_cmd, \
                   cluster_set_token_cmd = set_token_cmd, \
                   cluster_pag_cmd = pag_cmd, \
@@ -441,8 +421,7 @@ Qmon*cluster_extra_layout.xmtChildren: \
                   cluster_rsh_command = rsh_command, \
                   cluster_rlogin_daemon = rlogin_daemon, \
                   cluster_rlogin_command = rlogin_command; \
-   XmLabel        cluster_default_domain_label, \
-                  cluster_qmaster_params_label, \
+   XmLabel        cluster_qmaster_params_label, \
                   cluster_schedd_params_label, \
                   cluster_set_token_cmd_label, \
                   cluster_pag_cmd_label, \
@@ -470,7 +449,6 @@ Qmon*cluster_extra_layout.layout: \
          Row { cluster_schedd_params_label <> Fixed 50 em cluster_schedd_params }\
          Row { "@{Execd Parameters}" <> Fixed 50 em cluster_execd_params }\
          Row { "@{Shepherd Command}" <> Fixed 50 em cluster_shepherd_cmd }\
-         Row { cluster_default_domain_label <> Fixed 50 em cluster_default_domain }\
       } \
       ## \
       Etched Through Caption tl "@{@fBInteractive Parameters}" Col { \
@@ -492,7 +470,6 @@ Qmon*cluster_extra_layout.layout: \
       <> \
    }
 
-Qmon*cluster_extra_layout.cluster_default_domain_label.labelString: @{Default Domain}
 Qmon*cluster_extra_layout.cluster_qmaster_params_label.labelString: @{Master Parameters}
 Qmon*cluster_extra_layout.cluster_schedd_params_label.labelString: @{Schedd Parameters}
 Qmon*cluster_extra_layout.cluster_set_token_cmd_label.labelString: @{set_token command}
@@ -503,7 +480,6 @@ Qmon*cluster_extra_layout.cluster_qmaster_params.verifyCallback: TrimAndTrail(se
 Qmon*cluster_extra_layout.cluster_schedd_params.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_execd_params.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_shepherd_cmd.verifyCallback: TrimAndTrail(self);
-Qmon*cluster_extra_layout.cluster_default_domain.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_rsh_daemon.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_rsh_command.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_rlogin_daemon.verifyCallback: TrimAndTrail(self);

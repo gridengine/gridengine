@@ -126,8 +126,9 @@ char **argv
     * We will only read commandline options from scripfile if the script
     * itself should not be handled as binary
     */
-   if (opt_list_is_X_true(opts_cmdline, "-b") || 
-       opt_list_is_X_true(opts_defaults, "-b")) {
+   if (opt_list_is_X_true (opts_cmdline, "-b") ||
+       (!opt_list_has_X (opts_cmdline, "-b") &&
+        opt_list_is_X_true (opts_defaults, "-b"))) {
       DPRINTF(("Skipping options from script due to -b option\n"));
    } else {
       opt_list_append_opts_from_script(&opts_scriptfile, &alp, 

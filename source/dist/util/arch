@@ -48,7 +48,7 @@
 # save the old value of PATH for later restoration.
 SAFE_PATH=/bin:/usr/bin:/usr/sbin
 OLD_PATH=$PATH
-PATH=SAFE_PATH
+PATH=$SAFE_PATH
 
 ARCH=UNKNOWN
 
@@ -260,6 +260,9 @@ if [ "$1" = "-m" -o "$1" = "-mt" -o "$1" = "-lib" ]; then
       PATH=$OLD_PATH
       DEFAULTMANPATH=`/usr/bin/manpath -q`
       PATH=$SAFE_PATH
+      ;;
+   darwin)
+      DEFAULTMANPATH=`/usr/bin/manpath -q`
       ;;
    esac
 

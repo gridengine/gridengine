@@ -333,7 +333,7 @@ int event_handler_default_scheduler()
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM6);
    prof_event = prof_get_measurement_wallclock(SGE_PROF_CUSTOM6,true, NULL);
  
-   if(prof_is_active()){
+   if(prof_is_active(SGE_PROF_CUSTOM6)){
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 

@@ -164,7 +164,6 @@ unsigned long sge_qmaster_application_status(char** info_message) {
    return status;
 }
 
-
 /****** qmaster/sge_qmaster_main/main() ****************************************
 *  NAME
 *     main() -- qmaster entry point 
@@ -202,6 +201,8 @@ int main(int argc, char* argv[])
    int ret_val;
 
    DENTER_MAIN(TOP_LAYER, "qmaster");
+
+   sge_prof_setup();
 
    sge_get_root_dir(true, NULL, 0, true);
    
@@ -285,6 +286,7 @@ int main(int argc, char* argv[])
 
    sge_shutdown();
 
+   sge_prof_cleanup();
    DEXIT;
    return 0;
 } /* main() */

@@ -271,7 +271,7 @@ int scheduler(sge_Sdescr_t *lists) {
    orders.jobStartOrderList= sge_add_schedd_info(orders.jobStartOrderList, &global_mes_count, &job_mes_count);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   if (prof_is_active()) {
+   if (prof_is_active(SGE_PROF_SCHEDLIB4)) {
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 
@@ -281,7 +281,7 @@ int scheduler(sge_Sdescr_t *lists) {
       log_state_set_log_level(saved_logginglevel);
    }   
 
-   if(prof_is_active()) {
+   if(prof_is_active(SGE_PROF_CUSTOM0)) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM0); 
@@ -346,7 +346,7 @@ int scheduler(sge_Sdescr_t *lists) {
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM5); 
 
-   if(prof_is_active()) {
+   if(prof_is_active(SGE_PROF_CUSTOM5)) {
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO);
    
@@ -563,7 +563,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
                     nr_pending_jobs > 0); 
 
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-      if (prof_is_active()) {
+      if (prof_is_active(SGE_PROF_CUSTOM1)) {
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
@@ -618,7 +618,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
 
-   if (prof_is_active()) {
+   if (prof_is_active(SGE_PROF_CUSTOM3)) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);
@@ -844,7 +844,7 @@ static int dispatch_jobs(sge_Sdescr_t *lists, order_t *orders,
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM4);
 
-   if (prof_is_active()) {
+   if (prof_is_active(SGE_PROF_CUSTOM4)) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);

@@ -60,6 +60,7 @@
 #include "spool/classic/read_write_sharetree.h"
 #include "spool/classic/rw_configuration.h"
 #include "msg_utilbin.h"
+#include "sge_profiling.h"
 
 
 static int spool_object_list(const char *directory, 
@@ -416,6 +417,8 @@ int main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
+   sge_prof_setup();
+
    sge_mt_init();
 
    lInit(nmv);
@@ -499,6 +502,8 @@ int main(int argc, char *argv[])
    }
 
    answer_list_output(&answer_list);
+
+   sge_prof_cleanup();
 
    SGE_EXIT(ret);
    DEXIT;

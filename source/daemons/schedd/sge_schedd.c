@@ -129,6 +129,8 @@ char *argv[]
 
    DENTER_MAIN(TOP_LAYER, "schedd");
 
+   sge_prof_setup();
+
    sge_mt_init();
 
    /* set profiling parameters */
@@ -136,7 +138,6 @@ char *argv[]
    prof_set_level_name(SGE_PROF_SPOOLING, NULL, NULL);
    prof_set_level_name(SGE_PROF_CUSTOM0, "scheduler", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM1, "pending ticket calculation", NULL);
-   prof_set_level_name(SGE_PROF_CUSTOM2, "active job ticket calculation", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM3, "job sorting", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM4, "job dispatching", NULL);
    prof_set_level_name(SGE_PROF_CUSTOM5, "send orders", NULL);
@@ -263,12 +264,36 @@ char *argv[]
       }
 
       /* check profiling settings, if necessary, switch profiling on/off */
-      if(sconf_get_profiling() && !prof_is_active()) {
-         prof_start(NULL);
-      }
-
-      if(!sconf_get_profiling() && prof_is_active()) {
-         prof_stop(NULL);
+      if (sconf_is_new_config()) {
+         if(sconf_get_profiling()) {
+            prof_start(SGE_PROF_OTHER, NULL);
+            prof_start(SGE_PROF_PACKING, NULL);
+            prof_start(SGE_PROF_EVENTCLIENT, NULL);
+            prof_start(SGE_PROF_MIRROR, NULL);
+            prof_start(SGE_PROF_GDI, NULL);
+            prof_start(SGE_PROF_HT_RESIZE, NULL);
+            prof_start(SGE_PROF_CUSTOM0, NULL);
+            prof_start(SGE_PROF_CUSTOM1, NULL);
+            prof_start(SGE_PROF_CUSTOM3, NULL);
+            prof_start(SGE_PROF_CUSTOM4, NULL);
+            prof_start(SGE_PROF_CUSTOM5, NULL);
+            prof_start(SGE_PROF_CUSTOM6, NULL);
+            prof_start(SGE_PROF_CUSTOM7, NULL);
+         } else {
+            prof_stop(SGE_PROF_OTHER, NULL);
+            prof_stop(SGE_PROF_PACKING, NULL);
+            prof_stop(SGE_PROF_EVENTCLIENT, NULL);
+            prof_stop(SGE_PROF_MIRROR, NULL);
+            prof_stop(SGE_PROF_GDI, NULL);
+            prof_stop(SGE_PROF_HT_RESIZE, NULL);
+            prof_stop(SGE_PROF_CUSTOM0, NULL);
+            prof_stop(SGE_PROF_CUSTOM1, NULL);
+            prof_stop(SGE_PROF_CUSTOM3, NULL);
+            prof_stop(SGE_PROF_CUSTOM4, NULL);
+            prof_stop(SGE_PROF_CUSTOM5, NULL);
+            prof_stop(SGE_PROF_CUSTOM6, NULL);
+            prof_stop(SGE_PROF_CUSTOM7, NULL);
+         }
       }
    
       sched_funcs[current_scheduler].event_func();
@@ -276,7 +301,7 @@ char *argv[]
       sconf_reset_new_config();
       
       /* output profiling information */
-      if (prof_is_active()) {
+      if (prof_is_active(SGE_PROF_CUSTOM0)) {
          time_t now = sge_get_gmt();
 
          if (now > next_prof_output || shut_me_down) {
@@ -285,6 +310,7 @@ char *argv[]
          }
       }
    }
+   sge_prof_cleanup();
    FREE(initial_qmaster_host);
    DEXIT;
    return EXIT_SUCCESS;

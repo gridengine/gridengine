@@ -3495,7 +3495,7 @@ sge_calc_tickets( sge_Sdescr_t *lists,
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    prof_calc = prof_get_measurement_utime(SGE_PROF_SCHEDLIB4, false, NULL);
       
-   if(prof_is_active()){
+   if(prof_is_active(SGE_PROF_SCHEDLIB4)){
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
       INFO((SGE_EVENT, "PROF: job ticket calculation: init: %.3f s, pass 0: %.3f s, pass 1: %.3f, pass2: %.3f, calc: %.3f s\n",
@@ -4252,7 +4252,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
       sge_do_urgency(now, pending_jobs, running_jobs, lists);
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
 
-      if (prof_is_active()) {
+      if (prof_is_active(SGE_PROF_CUSTOM3)) {
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
@@ -4269,7 +4269,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
       sge_do_priority(pending_jobs, running_jobs);
       PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
 
-      if (prof_is_active()) {
+      if (prof_is_active(SGE_PROF_CUSTOM3)) {
          u_long32 saved_logginglevel = log_state_get_log_level();
 
          log_state_set_log_level(LOG_INFO);
@@ -4325,7 +4325,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM3);
 
-   if (prof_is_active()) {
+   if (prof_is_active(SGE_PROF_CUSTOM3)) {
       u_long32 saved_logginglevel = log_state_get_log_level();
 
       log_state_set_log_level(LOG_INFO);
@@ -4356,7 +4356,7 @@ int sgeee_scheduler( sge_Sdescr_t *lists,
    }
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
-   if (prof_is_active()) {
+   if (prof_is_active(SGE_PROF_SCHEDLIB4)) {
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 

@@ -54,6 +54,7 @@
 #include "japiP.h"
 #include "lck/sge_mtutil.h"
 #include "uti/sge_log.h"
+#include "sge_profiling.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
@@ -100,6 +101,8 @@ char **argv
    drmaa_attr_values_t *jobids = NULL;
 
    DENTER_MAIN(TOP_LAYER, "qsub");
+
+   sge_prof_setup();
 
    /* Set up the program information name */
    sge_setup_sig_handlers(QSUB);
@@ -405,6 +408,8 @@ Error:
          sge_mutex_unlock("qsub_exit_mutex", SGE_FUNC, __LINE__, &exit_mutex);
       }
    }
+
+   sge_prof_cleanup();
 
    /* This is an exit() instead of an SGE_EXIT() because when the qmaster is
     * supended, SGE_EXIT() hangs. */

@@ -38,7 +38,7 @@
 #include "sge_feature.h"
 #include "sec_lib.h"
 #include "gdi_setup.h"
-
+#include "sge_profiling.h"
 
 /****** common/sge_mt_init/sge_mt_init() ***************************************
 *  NAME
@@ -71,6 +71,7 @@
 *******************************************************************************/
 void sge_mt_init(void)
 {
+   sge_prof_setup();
    uidgid_mt_init();
    path_mt_init();
 

@@ -1,3 +1,9 @@
+MD-2004-10-08-0: Enhancem.: Profiling Code Enhancement (made MT-save)
+                 Review:    CR
+                 Changed:   qmaster, schedd, sge_profiling
+                 Issue:
+                 Bugtraq:
+ 
 CR-2004-10-08-0: Enhancem.: implemented application status callback 
                             function for qmaster. 
                             CR-2004-10-07-1 (Part II)

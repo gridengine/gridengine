@@ -85,7 +85,7 @@ UTILIB_TEST_PROGS = \
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-utilib: $(UTILIB)
+utilib: $(UTILIB) 
 
 utilib_clean:
 	$(RM) $(UTILIB_OBJS) libuti.a libuti$(SHAREDEXT) $(UTILIB_ADD_OBJS) $(UTILIB_TEST_OBJS) $(UTILIB_TEST_PROGS)
@@ -233,7 +233,7 @@ test_sge_dstring.o: $(UTILIB_DIR)/test_sge_dstring.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_dstring.c
 
 test_sge_profiling: test_sge_profiling.o $(UTILIB) $(RMONLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(RMONLIB) $(LIBS)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 
 test_sge_profiling.o: $(UTILIB_DIR)/test_sge_profiling.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_profiling.c

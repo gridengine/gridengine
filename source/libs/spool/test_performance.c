@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
          JB_ja_template,
          JB_category);
 
-   prof_start(NULL);
+   prof_start(SGE_PROF_CUSTOM1, NULL);
    prof_set_level_name(SGE_PROF_CUSTOM1, "performance", NULL);
 
    /* parse commandline parameters */

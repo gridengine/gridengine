@@ -957,7 +957,7 @@ sge_mirror_error sge_mirror_process_events(void)
       }
    }
 
-   if(prof_is_active()) {
+   if(prof_is_active(SGE_PROF_MIRROR)) {
       u_long32 saved_logginglevel = log_state_get_log_level();
       prof_stop_measurement(SGE_PROF_MIRROR, NULL);
       

@@ -51,6 +51,7 @@
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
 #include "msg_utilbin.h"
+#include "sge_profiling.h"
 
 
 static void usage(const char *argv0)
@@ -107,6 +108,8 @@ int main(int argc, char *argv[])
    lList *answer_list = NULL;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
+
+   sge_prof_setup();
 
    sge_mt_init();
 
@@ -198,6 +201,8 @@ int main(int argc, char *argv[])
    }
 
    answer_list_output(&answer_list);
+
+   sge_prof_cleanup();
 
    SGE_EXIT(ret);
    DEXIT;

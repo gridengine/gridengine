@@ -1,0 +1,96 @@
+<html>
+<head>
+
+<title>Using WinCVS</title>
+
+</head>
+<body>
+
+    <p>
+    <span class="Header" nowrap>Using WinCvs to work with project source files</span> </p>
+<span class="PlainText">
+    <p>If you are using MS Windows, you can use the graphical client called
+    WinCvs to access a project's version controlled source code files. WinCvs 
+    looks and behaves similar to Windows Explorer. You can <a 
+    href="http://cvsgui.org/download.html" target=_new>download WinCvs</a> on 
+    line and install it on your machine.</p>
+
+
+
+<p>	<b>Help for WinCvs: Index</b>
+<ul>
+	<dl>
+	<dt><b>You are here: Setting up WinCvs 
+        <ul>
+              <li><a href="#gettingstarted">Getting Started</a></li>
+			  <li><a href="#settingcvsroot">Setting up cvsroot</a></li>
+		</ul></b>
+        <dt><a href="ddUsingWinCvs-01.html">Checking source files in and out of WinCvs</a> 
+      <dt><a href="ddUsingWinCvs-02.html">Managing files in WinCvs</a> </dt></dl></ul>
+<p>  
+
+<hr noshade size=1>
+<a name="gettingstarted"></a><span class="InputHeader">Getting started</span>
+
+<p>When you launch WinCvs, you see a screen that looks like this:</p>
+
+<p><img src="images/wincvs_launch.gif"></p>
+
+<p>Before going further, make a new directory on your
+hard disk where you will store your working copy of the project's source 
+files. A good name for this directory is the one-word name of the project 
+files you need. If you are working on more than one project, you may wish 
+to make a general "<em>projects cvs</em> " folder, and then create subfolders for each project by name. </p> 
+
+<p>Select the "<em>project</em>" directory in the 
+WinCvs program's left-hand pane. (If you do not see your newly created 
+projects directory right away, don't worry! You may need to collapse and 
+expand the tree to force it to refresh.) If your project directory is on a 
+different drive not displayed in the left-hand WinCvs pane, you will need 
+to use the <strong>Change browse location... </strong>command under the 
+<strong>View </strong>menu. Be sure to double click on the drive or 
+directory you want before clicking <strong>OK</strong>.</p>
+
+<p><img src="images/wincvs_browse.gif"></p>
+<a href="http://www.cvsgui.org/winhtml/wincvs11.htm#_Toc453646172" target="_new">More about setting a work area</a>
+
+<hr noshade size=1>
+<a name="settingcvsroot"></a><span class="InputHeader">Setting up cvsroot</span>
+
+<p> First you must define the location of the WinCvs main repository, the CVSROOT. If you are only working on one project at a time, you only need to set up the cvsroot setup once, i.e. the first time you use WinCvs to access the project's source repository through this site.
+
+<p><ol><li>From the <strong>Admin</strong> menu and select
+<strong>Preferences</strong>       
+<p><img src="images/wincvs_prefs.gif"><p></p>
+<li>Replace "username" with your username on the 
+        <strong>General</strong> tab. 
+        
+<li>Click on <strong>Authentication</strong> then 
+change the drop down menu to <em>"passwd file on the cvs 
+server"</em>. 
+        
+<li>Click on the <strong>Global</strong> tab. 
+        
+<p><img src="images/wincvs_global_pref.gif"><p></p>
+<li>Uncheck the "<strong>Checkout read-only</strong>" checkbox. 
+        
+<li>Click on the <strong>Proxy</strong> tab. 
+        
+<p><img src="images/wincvs_global_proxy.gif"><p></p>
+<li>Check the "<strong>Connect using a proxy 
+server</strong>" checkbox. 
+<li>Enter the host name or IP of proxy. For example: 
+www.projectname.domain 
+<li>Enter port number for the proxy. For example: 
+1080</li>        
+</ol>
+<p> <a href="http://www.cvsgui.org/winhtml/wincvs11.htm#_Toc453646173" target="_new">More about configuring WinCvs</a></p>
+<p>Now you are ready to begin <a href="ddUsingWinCvs-01.html">Checking source files in and out of WinCvs</a></p>
+    
+<p>
+
+<hr noshade size=1>
+<a href="/servlets/HelpTOC">Back to main Help index</a>
+</span>
+</body>
+</html>

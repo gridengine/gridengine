@@ -1,0 +1,141 @@
+<HTML>
+<HEAD>
+
+<TITLE>File Management with Command-Line CVS</TITLE>
+
+</HEAD>
+<BODY>
+<TABLE BORDER="0" CELLSPACING="1" CELLPADDING="3" BORDER="0" WIDTH="100%">
+  <TR>
+    <TD CLASS="Header" NOWRAP>File management with command-line CVS</TD>
+  </TR>
+</TABLE>
+
+<TABLE BORDER="0" CELLSPACING="2" CELLPADDING="2" BORDER="0" WIDTH="100%">
+  <TR>
+<SPAN CLASS="PlainText">
+<UL>
+<DL>
+<DT><A HREF="#managing">Managing project files and directories</A>
+	<DD><A HREF="#cvsrelease">Releasing</A>
+	<DD><A HREF="#cvsremove">Removing</A>
+	<DD><A HREF="#cvsrename&move">Renaming and moving</A>
+<DT><A HREF="#aboutbranching">Tagging and branching</A>
+	<DD><A HREF="#cvstag">Creating tags</A>
+	<DD><A HREF="#cvsbranch">Creating branches</A>
+</DL>
+</UL>
+<P>
+<A NAME="managing"><span class="InputHeader">Managing project files</SPAN></A>
+<P>
+At certain point in a project's development cycle, managing your project's source repository invariably involves dealing with files and directories that have become deprecated or obsolete. The decision is made to abandon a certain piece of functionality within a module, for example. Or perhaps an change in infrastructure demands getting rid of some files and moving others. This section deals with several methods for dealing with such file management issues in CVS.
+<P>
+<A NAME="cvsrelease"></A><SPAN CLASS="InputHeader">Releasing files and directories</SPAN>
+<P>
+<I>Releasing</I> refers to a way of designating certain directories or modules that will no longer to be used in the project. The command to release is invoked within a working copy and effectively cancels cvs checkouts for the designated directories and their files. Unless these are expressly deleted, the files and directories actually remain intact within the repository, including all file revision history, but are no longer included in when working copies are checked out.
+<P>
+The command to release a file or directory is:
+<BLOCKQUOTE>
+<B>cvs rel filename</B> (or <B>/directory_name</B>)
+</BLOCKQUOTE>
+<P>
+<A HREF="http://www.gnu.org/manual/cvs/html_chapter/cvs_20.html#SEC122" TARGET="_new">More about releasing</A>
+<P>
+<A NAME="cvsremove"></A><P><I>Removing</I> is another way to get rid of files when you no longer want or need them to be part of the project's source repository. To do this, you must first delete the file from the working copy you have checked out on your local system.
+<P>
+Then, to remove a file from the shared repository, type: <BR>
+<BLOCKQUOTE>
+          <B>cvs remove filename</B>
+</BLOCKQUOTE>
+After you have removed one or more files, you must commit your changes. 
+<P>
+With &quot<B>cvs remove</B>&quot (or &quot<B>cvs rm</B>&quot), the old file is not completely eradicated but rather stored in CVS' so-called "attic" along with its complete revision history.
+<P>
+<A HREF="http://www.gnu.org/manual/cvs/html_chapter/cvs_12.html#SEC62" TARGET="_new">More about removing files</A><BR>
+<A HREF="http://cvsbook.red-bean.com/cvsbook.html#What_Happens_When_You_Remove_A_File" TARGET="_new">What happens when you remove a file</A>
+
+<P>
+<A NAME="cvsrename&move"></A><SPAN CLASS="InputHeader">Renaming and moving files and directories</SPAN>
+
+<P>If you have imported some existing source code into your repository, you may have files and directories you want to rename or or move.
+
+<P>The best way to rename a file in your working copy involves a series of steps. Use:
+<BLOCKQUOTE>
+<B>cvs rm old_filename</B>
+</BLOCKQUOTE>
+to remove the old name, then 
+<BLOCKQUOTE>
+<B>cvs add new_filename</B> 
+</BLOCKQUOTE>
+and finally,
+<BLOCKQUOTE>
+<B>cvs commit new_filename</B>
+</BLOCKQUOTE>
+
+<P>
+There really is no specific way in CVS to remove or rename directories. However, you can produce that effect by creating a new directory, moving the files you need into it, removing unwanted files from the old directory, and then simply no longer using it. Later, you can "prune" these empty directories the next time you a check out a working copy by using:
+<BLOCKQUOTE>
+<B>cvs checkout -P</B>
+</BLOCKQUOTE>
+Another way to prune directories with no more files is to update with:
+<BLOCKQUOTE>
+<B>cvs update -dP</B>
+</BLOCKQUOTE>
+
+<P>
+<A HREF="http://www.gnu.org/manual/cvs/html_chapter/cvs_14.html#SEC67" TARGET="_new">More about moving and renaming files</A><BR>
+<A HREF="http://www.gnu.org/manual/cvs/html_chapter/cvs_15.html#SEC71" TARGET="_new">More about moving and renaming directories</A>
+
+
+<P>
+<A NAME="aboutbranching"></A><SPAN CLASS="InputHeader">Tagging and branching </SPAN>
+<P>
+The CVS repository for your project hosted on this site supports branching and tagging your source files. At certain points in your project, you may want to enable development work in your project to progress in more than one direction simultaneously. Instead of maintaining a singular, linear path of development, CVS branching provides a way to divert or split the source tree for ancillary development activities without impacting progress of the project's primary effort. Examples of reasons to branch include:
+<UL>
+<LI>to distinguish a clearly defined set of functionality in project source files for QA and testing, or
+<LI>when you want to try an experiment such as added features or functionality without affecting the project's progress.
+</UL>
+<P>
+Tagging is included in the discussion about branching because the two operations are used in conjunction. Tagging allows you to "take a snapshot" of the overall project's state at a certain point in time, for example, to preserve a build with some particular characteristic. Because CVS manages individual file revisions, tagging is an important option for benchmarking the overall state of project source code. Files included in a tag will most likely be at different points in their respective revision numbering.
+<P>
+The critical difference between branching and tagging is the reason they are complimentary operations:
+<BLOCKQUOTE>
+ Branching affects <I>individual files'</I> revision numbering, whereas tagging assigns a common identifying marker <I>across all project files</I> at a fixed point in time.
+</BLOCKQUOTE>
+So, for example, project files are often tagged at the point where branches are created.
+<P>
+Ultimately, branches in your project with successful outcomes get incorporated or merged back in to the main development trunk. When that happens -- and it may occur repeatedly on large or long-term projects -- identifying the point where this merge occurs is another reason to create a tag.
+<P>
+<A NAME="cvstag"></A>To tag project files, type:
+<blockquote>
+<B>cvs tag unique_tag_name</B>
+</BLOCKQUOTE>
+<P>
+Your tag name can be a release name or date, a product version identifier, or whatever you choose.
+<P>
+<A NAME="cvsbranch"></A>To create a branch, type:
+<blockquote>
+<B>cvs tag -b unique_tag_name </B>
+</BLOCKQUOTE>
+<P>
+Branching and tagging are complex topics with many considerations and  options. You can find more comprehensive information and instructions in the following resources:
+<P> 
+<UL>
+<DL>
+<DT><LI>cvshome.org: <A HREF="http://www.cvshome.org/docs/manual/cvs_4.html#SEC48" TARGET="_new">"More about branching and tagging"</A><BR>
+<DT><LI>The Cederqvist Manual: <A HREF="http://www.gnu.org/manual/cvs/html_chapter/cvs_8.html#SEC50" TARGET="_new">"Branches"</A><BR>
+<DT><LI><I>Open Source Development with CVS</I>:<BR>
+<DD><A HREF="http://cvsbook.red-bean.com/cvsbook.html#Marking_A_Moment_In_Time__Tags_" target="_new">"Marking A Moment In Time (Tags)"</A>
+<DD><A HREF="http://cvsbook.red-bean.com/cvsbook.html#Branches" TARGET="_new">"Branches"</A>
+</UL>
+</DL>
+
+
+<HR noShade SIZE=1>
+<a href="Help.html">Back to main Help index</a></p></span>
+
+
+</SPAN> 
+</TR>
+</TABLE></BODY>
+</HTML>

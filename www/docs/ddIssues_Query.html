@@ -1,0 +1,180 @@
+<html>
+<head>
+
+<title>IssueZilla Queries and Tracking</title>
+
+</head>
+<body>
+
+<!--
+     The contents of this file are subject to the Mozilla Public
+     License Version 1.1 (the "License"); you may not use this file
+     except in compliance with the License. You may obtain a copy of
+     the License at http://www.mozilla.org/MPL/
+    
+     Software distributed under the License is distributed on an "AS
+     IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+     implied. See the License for the specific language governing
+     rights and limitations under the License.
+    
+     The Original Code is the Issuezilla Issue Tracking System.
+    
+     The Initial Developer of the Original Code is Netscape Communications
+     Corporation. Portions created by Netscape are
+     Copyright (C) 1998 Netscape Communications Corporation. All
+     Rights Reserved.
+    
+     Contributor(s): 
+
+     Contributor(s): Terry Weissman <terry@mozilla.org>
+-->
+    <span class="Header" nowrap>Querying and tracking issues</span>
+<p>
+
+<span class="PlainText"><strong>More help on IssueZilla: Index</strong>
+<ul>
+<dl>
+<dt><a href="ProjectIssues.html">Project issue tracking</a>
+	<dd><a href="ddIssues_EnterModify.html">Entering and modifying issues</a>
+	<dd><strong>You are here: Querying and tracking issues</a>
+	<ul>
+	     <li><a href="#queryfields">Issue query selection fields</a><br>
+	     <li><a href="#queryresults">Sorting/customizing query results</a><br>
+	     <li><a href="#customqueries">Customizing/remembering queries</a><br>
+	     <li><a href="#trackissue">Tracking your own issues (or by assignee)</a><br>
+	     <li><a href="#otherqueries">Running other queries</a><br>
+	     <li><a href="#browserinfo">Browser information</a>
+	</ul></strong>
+	<dd><a href="ddIssues_Reports.html">Generating status reports about project issues</a>
+<dt><a href="/servlets/HelpTOC">Back to main Help index</A>
+</dl>
+</ul>
+
+<p>
+<hr noshade size=1>
+    <span class="InputHeader">First, a clue about querying ...</span>
+<span class="PlainText">
+
+     <p>The IssueZilla query form allows you to call up a subset of issues from a project's issue database. If you do not select an option, then either all values for those fields or the designated default values are included in the query. Submitting a query without setting any options at all, for example, returns <i>all</i> project issues with a status of NEW, STARTED, or REOPENED. Thus, you can narrow query results by adding more conditions, that is, by selecting options and/or entering information in the query form fields. You can save your results list in your bookmark file. You can also save your query configuration to reuse later.
+	<p>Field descriptions are provided here to help you fine tune your querying as necessary.
+<p>
+
+<hr noshade size=1>
+     <a name="queryfields"><span class="InputHeader">Issue query selection fields</span></a>
+     <p>
+     <ul>
+      <li><span class="InputHeader">Type</span> refers to the classification of issues as either <a href="/docs/DomainDocsIssues_EnterModify.html#issue_type">tasks, defects, features, or enhancements</a>. 
+      <p>
+      <li><span class="InputHeader">Component</span> is the the part of the software in development associated with the issue if you are querying to find. If you don't choose a component or subcomponent, the query addresses all issues for the <i>project</i>.
+      <p>
+      <li><span class="InputHeader">Sub Component</span> is a subset of the component you selected in the previous field. If you don't choose a sub component, the query addresses all issues for the <i>component</i>.
+      <p>
+      <li><span class="InputHeader">Status</span> is set with <a href="/docs/issue_lifecycle.html">NEW, STARTED and REOPENED</a> selected as the default. When searching for issues that are UNCONFIRMED, RESOLVED, VERIFIED, or CLOSED, remember to change this status field appropriately.
+      <p>
+      <li><span class="InputHeader">Resolution</span> is the qualification of issues with a status of <a href="/docs/issue_lifecycle.html#resolvedissues">RESOLVED, VERIFIED, OR CLOSED</a>. All resolved issues must be assigned one of these <a href="/docs/issue_lifecycle.html#resolvedissues">values</a>.
+      <p>
+      <li><span class="InputHeader">Priority</span> queries for issues by their rank of importance using the following scale: P1 is highest priority, given to issues that should be addressed as soon as possible; P5 is the lowest priority.
+      <p>
+      <li><span class="InputHeader">Platform</span> is the type of computer the issues is associated with. This field is most critical when searching for defects. When querying for other types of issues, it may not be necessary to make a selection in this field.
+      <p>
+      <li><span class="InputHeader">OS</span> is the type of operating system the issue is associated with. Again, when querying for other types of issues, it may not be necessary to make a selection in this field.
+      <p>
+      <li><span class="InputHeader">Version</span> The release of the software associated with this issue. Leaving this field unselected queries all versions of the selected project or component. 
+      <p>
+      <li><span class="InputHeader">Target Milestone</span> queries for issues associated with different project milestones, if your project has these. Milestones typically are dates when certain features or overall versions are expected to be completed.
+      <p>
+      <li><span class="InputHeader">Email</span> lets you query for issues by the email address of assignee, reporter, QA contact, cc list, or added comments. A duplicate field lets you further refine queries based on this criteria. To search for issues associated with an email address: 
+     <ul>
+       <li>Type a portion of an email address into the text field. 
+       <li>Select fields to query for association with that email address. 
+     </ul>
+     <p>The second field enables you to look for two different email addresses. If you specify both, then only issues matching both are returned in your query results. For example, this is useful to find issues "created by Ralph" and "assigned to Fred." 
+     <p>You can also use the drop down menus to specify whether you want to match addresses by doing a substring match, regular expressions, or exact match of a fully specified email address. 
+     <p>
+     <ul>
+      <li>Additional input fields let you further qualify queries by issue number(s), date changes, number of votes, and changes in field values.
+      <p>
+      <li>Summary is the one-line abbreviated description of the issue used by default in reports and query results. 
+      <p>
+      <li>A description entry enables querying by text string from the longer, detailed issue description.
+      <p>
+      <li>URL lets you query by the web page location associated with issues, when applicable.
+      <p>
+      <li>Status Whiteboard is a field defined by the project owner (or users with administrative permissions in IssueZilla).  Input values to query by this field thus depend upon how it is being used in a particular project.
+      <p>Those who prefer to devise their own query schemes beyond options provided in these from fields provided can <a href="booleanchart.html">set up Boolean chart queries</a>.
+     </ul>
+     </ul>
+    <p>
+
+<hr noshade size=1>
+     <a name="queryresults"><span class="InputHeader">Sorting and customizing query results</span></a>
+     <p>Before submitting a query, you can select to sort by issue number, importance, or assignee. After you submitted a query during a IssueZilla login session, you have the option to "Reuse the same sort as last time."
+     <p>Once you view the query results, clicking on any of the column headings will sort the displayed results within that column.<p>
+     <p>Using the links at the bottom of the query results page, you can also:
+     <p>
+     <ul>
+      <li>Switch to "long format" view of results to display complete contents of issues.
+      <li>Load a new query form.
+      <li>Enter a new issue.
+      <li>Change which columns appear in query results.
+      <li>Change several issues at once. (This option displays a page that lets you select issues from your query results list and modify specific fields in all of these simultaneously.)
+      <li>Send email to owners of issues listed.
+      <li>Edit the configuration of the last query.
+     </ul>
+     <p>
+To add the target milestone for each issue to your query results -- and you should do so when a particular issue is slated for release --
+     <p>
+      <ol>
+       <li>Do a query (or click "view assigned issues").
+       <li>Click the "change columns" link at the bottom. 
+       <li>Click the "target milestone" check box.
+       <li>Submit.  
+      </ol>
+     <p>The target milestone column will now included for all your subsequent queries because login sessions are cookie-based. You can unmark this checkbox or mark others at any time to change your customized query results.
+     <p>
+
+<hr noshade size=1>
+     <a name="customqueries"><span class="InputHeader">Remembered queries</span></a>
+     <p>Once you've set up a fairly complex query to ferret out certain issues, you can tell IssueZilla to "remember" your custom queries as a time saver. Using the options just above the <i>Submit query</i> button, you can save your most recent query under a unique name and reuse it anytime you are logged in to IssueZilla. You can also change and reset the default query that the query page loads during your login sessions.
+     <p>To include your custom, named queries in the footer of the query page, use the "Edit prefs" link in the IssueZilla tool bar, and select the "Page Footer" option.  All of your named queries have the option to be included in the IssueZilla tool bar on every page or only on the query page. 
+
+<hr noshade size=1>
+     <a name="trackissue"><span class="InputHeader">Tracking issues by assignee</span></a>
+     <p><b>To view a list of project issues assigned to you</b>, click the <i>My Issues</i> link in the Project Issues page.
+<p>One you have invoked IssueZilla, you can also click the <i>My issues</i> link in the secondary Issue Tracking tool bar.
+
+     <p><b>To view other project members' assigned issues</b>, create a query using the "search the issue database" link and search by the "assigned to" field with the person's name entered. (The default setting for the "status" in the query screen includes NEW, STARTED, and REOPENED.)
+
+     <p>You can also generate reports by user and create a page of project members listed by name, each with a link to their specific list of issues.
+     <p>
+     <p>
+
+<hr noshade size=1>
+     <a name="otherqueries"><span class="InputHeader">Running queries not supported by the pretty boxes</span></a>
+      <p>There is a hacky way to do some searches that aren't supported by the query form.  The issue list script will build queries based on the URL, so you can add other criteria.
+     <p>
+For example, if you wanted to see all issues reported against the X platform and assigned to user "jwz," you could ask for all issues assign to jwz, then edit the URL in the "Location" box, adding the clause "&rep_platform=X-Windows" to the URL.
+     <p>
+Here is a list of some of the field names you could use for additional unsupported searches ...
+     <p>
+     version<br>
+     rep_platform<br>
+     op_sys<br>
+     reporter area<br>
+     issue_file_loc<br>
+     short_desc<br>
+     <p>
+
+<hr noshade size=1>
+     <a name="browserinfo"><span class="InputHeader">Browser notes</span></a>
+     <p>IssueZilla uses several non-standard Netscape extensions, but this does not seem
+to case any problem with other browsers.  The Lynx browser does work, but Lynx seems to cache results of a .cgi.  You'll sometimes need to press CONTROL-R to reload the screen to see an update.
+<p>   
+ 
+<hr noshade size=1>
+<a href="ProjectIssues.html">Back to Project Issues help</a><br>
+<a href="/servlets/HelpTOC">Back to main Help index</a></p></span>
+</span>
+</span>
+</body>
+</html>

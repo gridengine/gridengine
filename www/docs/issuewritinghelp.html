@@ -1,0 +1,291 @@
+<html>
+<head>
+
+<title>IssueZilla Issue Writing Guide</title>
+
+</head>
+<body>
+
+    <span class="Header" nowrap>Issue writing guidelines</span>  
+<p> 
+ <span class="PlainText"><strong>Additional resources about issues: Index</strong>
+<ul>
+	<dl>
+	<dt><a href="ProjectIssues.html">Project Issues help</a>
+		<dd><a href="issue_lifecycle.html">The issue life cycle</a> 
+		<dd><strong>You are here: Issue writing guidelines</strong>
+		<dd><a href="issuezilla_tipsandtricks.html"> IssueZilla tips and tricks</a> 
+		<dd><a href="contributing_patches.html">Contributing patches</a>
+	<dt><a href="/servlets/HelpTOC">Back to main Help index</a>
+	</dl>
+</ul>
+
+
+ 
+     <p>
+ <hr noshade size=1>
+     <span class="InputHeader">Why you should read this</span>
+
+   <span class="PlainText">
+     <p>Simply put, the more effectively you report an issue, the more
+     likely an engineer will actually fix it. <br> 
+     <a href="http://IssueZilla.mozilla.org"></a><br> These issue writing
+     guidelines are an attempt at a general tutorial on writing
+     effective issue reports for novice issue writers; not every
+     sentence may precisely apply to your software project.
+
+     <p>
+ <hr noshade size=1>
+     <span class="InputHeader">How to write a useful issue report</span>
+     <p>Useful issue reports are ones that get issues fixed. A useful issue report normally has two qualities:
+     <ol>
+
+      <li><span class=inputheader>Reproducible.</span> If an engineer
+      can't see it or conclusively prove that it exists, the engineer
+      will probably stamp it &quot;WORKSFORME&quot; or
+      &quot;INVALID&quot;, and move on to the next issue. Every detail
+      you can provide helps. <p>
+
+      <li><span class=inputheader>Specific.</span> The quicker the
+      engineer can isolate the issue to a specific problem, the more
+      likely it'll be expediently fixed.(If a programmer or tester has
+      to decipher an issue, they spend more time cursing the submitter
+      than fixing or testing the problem.)
+
+     </ol>
+
+     <p>Let's say the application you're testing is a web browser. You
+     crash at foo.com, and want to write up an issue report:
+
+
+     <p><span class="InputHeader">BAD:</span> &quot;My browser
+     crashed. I think I was on foo.com. My computer uses Windows. I
+     think that this is a really bad problem and you should fix it
+     now. By the way, your icons really suck. Nobody will use your
+     software if you keep those ugly icons. Oh, and my grandmother's
+     home page doesn't look right, either, it's all messed up. Good
+     luck.&quot;
+
+<br>
+<br>
+
+     <span class="InputHeader">GOOD: </span>&quot;I crashed each time
+     when I went to foo.com, using the 10.28.99 build on a Win NT 4.0
+     (Service Pack 5) system. I also rebooted into Linux, and
+     reproduced this problem using the 10.28.99 Linux build.<br><br>
+     It again crashed each time upon drawing the Foo banner at the top
+     of the page. I broke apart the page, and discovered that the
+     following image link will crash the application reproducibly,
+     unless you remove the &quot;border=0&quot; attribute:
+     <br>
+     <br>
+     &lt;IMG
+     SRC=&quot;http://foo.com/images/topics/topicfoos.gif&quot;
+     width=34 height=44 border=0 alt=&quot;News&quot;&gt;&quot;
+
+<br>
+<br>
+
+     <p><span class=inputheader>How to Enter your Useful Issue Report into IssueZilla:</span>
+
+
+<blockquote>
+    <p>Before you enter your issue, use the IssueZilla Query Page to determine whether the
+defect you've discovered is a known issue, and has already been reported. (If your
+issue is the 37th duplicate of a known issue, you're more likely to annoy the engineer.
+Annoyed engineers fix fewer issues.)<br><br>
+Next, be sure that you've reproduced your issue using a recent build. (Engineers tend
+to be most interested in problems afflicting the code base that they're actively
+working on, rather than those in a code base that's hundreds of issue fixes obsolete.)<br><br>
+If you've discovered a new issue using a current build, report it in IssueZilla:
+</blockquote>
+
+
+     <ol>
+      <ol>
+
+      <li>From your IssueZilla main page, choose &quot;Enter a new issue&quot;.
+
+      <li>Select the product that you've found an issue in.
+
+      <li>Enter your e-mail address, password, and press the
+      &quot;Login&quot; button.  (If you don't yet have a password,
+      leave the password text box empty, and press the &quot;E-mail me
+      a password&quot; button instead. You'll receive an E-mail
+      message with your password shortly.)
+
+     </ol>
+    <p>Now, fill out the form. Here's what it all means:
+     </ol>
+
+
+
+<blockquote>
+    <p><span class=inputheader>Where did you find the issue?</span>
+
+<blockquote>
+    <p><span class="InputHeader">Product: In which product did you find the issue?</span><br>
+You just filled this out on the last page.</p>
+    <p><span class="InputHeader">Version: In which product version did you find the issue?</span><br>
+If applicable.
+    <p><span class="InputHeader">Component: In which component does the issue exist?</span><br>
+IssueZilla requires that you select a component to enter an issue. (If they all look meaningless,
+click on the Component link, which links to descriptions of each component, to help
+you make the best choice.)</p>
+    <p><span class="InputHeader">Platform:&#160;On which hardware platform did you find this issue?</span>
+(e.g. Macintosh, SGI, Sun, PC.)<br>
+If you know the issue happens on all hardware platforms, choose 'All'. Otherwise, select
+the platform that you found the issue on, or &quot;Other&quot; if your platform isn't
+listed.</p>
+    <p><span class="InputHeader">OS: On which Operating System (OS) did you find this issue?</span> (e.g.Linux, Windows NT, Mac OS 8.5.)<br>
+If you know the issue happens on all operating systems, choose 'All'. Otherwise, select the OS that
+you found the issue on, or &quot;Other&quot; if your OS isn't listed.</p>
+</blockquote>
+    <p><span class="InputHeader"><br>How important is the issue?</span>
+<blockquote>
+    <p><span class="InputHeader">Issue Type: Is this a defect, enhancement,
+feature-request, or task?</span><br> This item defaults to
+'defect'. (To determine the most appropriate type of issue,
+click on the Issue Type link for a full explanation of each
+choice.)
+</blockquote>
+    <p><span class="InputHeader"><br>Who will be following up on the issue?</span>
+<blockquote>
+    <p><span class="InputHeader">Assigned To: Which engineer should be responsible for fixing this issue?</span><br>
+IssueZilla will automatically assign the issue to a default engineer upon submitting
+an issue report; the text box exists to allow you to manually assign it to a different
+engineer. (To see the list of default engineers for each component, click on the
+Component link.)</p>
+    <p><span class="InputHeader">Cc: Who else should receive e-mail updates on changes to this issue? </span><br>
+List the full e-mail addresses of other individuals who should receive an e-mail
+update upon every change to the issue report. You can enter as many e-mail addresses
+as you'd like; e-mail addresses must be separated by commas, with no spaces between
+the addresses.
+</blockquote>
+    <p><span class="InputHeader"><br>What else can you tell the engineer about the issue?</span></p>
+<blockquote>
+    <p><span class="InputHeader">URL: On what URL did you discover this issue?</span><br>
+If you encountered the issue on a particular URL, please provide it (or, them) here.
+If you've isolated the issue to a specific HTML snippet, please also provide a URL
+for that, too.
+
+    <p><span class="InputHeader">Summary:</span> <span
+    class="InputHeader">How would you describe the issue, in
+    approximately 60 or fewer characters?</span><br> A good summary
+    should <u>quickly and uniquely identify an issue
+    report</u>. Otherwise, developers cannot meaningfully query by
+    issue summary, and will often fail to pay attention to your issue
+    report when reviewing a 10 page issue list.<br><br> A summary of
+    &quot;PCMCIA install fails on Tosh Tecra 780DVD w/ 3c589C&quot; is
+    a useful title. &quot;Software fails&quot; or &quot;install
+    problem&quot; would be examples of a bad title.
+
+    <p><br>
+
+     <span class="InputHeader">Description: What else can you tell the engineer about this issue? </span><br>
+Please provide as detailed of a problem diagnosis in this field as possible. <br>
+<br>
+Where applicable, using the following issue report template will help ensure that all
+relevant information comes through:
+
+
+		<blockquote>
+			<p><span class=inputheader>Overview Description:</span> More detailed expansion of summary.
+
+			<blockquote>
+				<pre><font size="2">Drag-selecting any page crashes Mac builds in NSGetFactory</font></pre>
+
+			</blockquote>
+			<p><span class=inputheader>Steps to Reproduce: </span>The minimal set of steps necessary to trigger the issue.
+			Include any special setup steps. 
+
+			<blockquote>
+				<pre><font size="2">1) View any web page. (I used the default sample page, 
+   resource:/res/samples/test0.html)
+2) Drag-select the page. (Specifically, while holding down the 
+   mouse button, drag the mouse pointer downwards from any point in 
+   the browser's content region to the bottom of the browser's 
+   content region.)</font></pre>
+
+			</blockquote>
+			<p><span class=inputheader>Actual Results:</span> What the application did after performing the above steps.
+
+			<blockquote>
+				<pre><font size="2">The application crashed. Stack crawl appended below from MacsIssue.</font></pre>
+
+			</blockquote>
+			<p><span class=inputheader>Expected Results:</span> What the application should have done, were the issue not
+			present.
+
+			<blockquote>
+				<pre><font size="2">The window should scroll downwards. Scrolled content should 
+be selected. (Or, at least, the application should not crash.)</font></pre>
+
+			</blockquote>
+			<p><span class=inputheader>Build Date &amp; Platform:</span> Date and platform of the build that you first
+			encountered the issue in.
+
+			<blockquote>
+				<pre><font size="2">11/2/99 build on Mac OS (Checked Viewer &amp; Apprunner)</font></pre>
+
+			</blockquote>
+			<p><span class=inputheader>Additional Builds and Platforms:</span> Whether or not the issue takes place on
+			other platforms or browsers.
+
+			<blockquote>
+				<pre><font size="2"> - Occurs On
+        Seamonkey (11/2/99 build on Windows NT 4.0)
+
+ - Doesn't Occur On
+        Seamonkey (11/4/99 build on Red Hat Linux; feature not supported)
+        Internet Explorer 5.0 (RTM build on Windows NT 4.0)
+        Netscape Communicator 4.5 (RTM build on Mac OS)</font>
+</pre>
+
+			</blockquote>
+			<p><span class=inputheader>Additional Information:</span> Any other distinguishing information. For crashing issues:
+
+			<ul>
+	<li><span class=inputheader>Win32:</span> if you receive a Dr. Watson error, please note the type of the
+	crash, and the module that the application crashed in. (e.g. access violation in
+	apprunner.exe)
+	<li><span class=inputheader>Mac OS:</span> if you're running MacsIssue, please provide the results of a <span class=inputheader><tt>how</tt></span>
+	and an <span class=inputheader><tt>sc</tt></span>.
+	<li><span class=inputheader>Unix: </span>please provide a minimized stack trace, which can be generated by
+	typing <span class=inputheader><tt>gdb apprunner core</tt></span> into a shell prompt.
+			</ul>
+
+
+			<blockquote>
+				<p>
+				<pre><font size="2">*** MACSISSUE STACK CRAWL OF CRASH (Mac OS)
+
+Calling chain using A6/R1 links
+ Back chain  ISA  Caller
+ 00000000    PPC  0BA85E74  
+ 03AEFD80    PPC  0B742248  
+ 03AEFD30    PPC  0B50FDDC  NSGetFactory+027FC
+PowerPC unmapped memory exception at 0B512BD0 NSGetFactory+055F0</font></pre>
+
+			</blockquote>
+
+		</blockquote>
+
+	</blockquote>
+	<p>You're done! <br>
+	<br>
+	After double-checking your entries for any possible errors, press the &quot;Commit&quot;
+	button, and your issue report will now be in the IssueZilla database.<br>
+	<i><br>
+	<br>
+	</i><font size="2">(Thanks to Claudius Gayle, Peter Mock, Chris Pratt, Tom Schutter,
+	and Chris Yeh for contributing to this document. Constructive </font><a href="mailto:eli@prometheus-music.com"><font
+	size="2">suggestions</font></a><font size="2"> welcome.)</font>
+	</blockquote>
+
+ <hr noshade size=1>
+<a href="ProjectIssues.html">Back to Project Issues help</a><br>
+<a href="/servlets/HelpTOC">Back to main Help index</a>
+
+</body>
+</html>

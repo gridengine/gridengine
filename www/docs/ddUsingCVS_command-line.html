@@ -1,0 +1,122 @@
+<HTML>
+<HEAD>
+<TITLE>Using command-line CVS</TITLE>
+</HEAD>
+<BODY>
+<TABLE BORDER="0" CELLSPACING="1" CELLPADDING="3" BORDER="0" WIDTH="100%">
+  <TR>
+    <SPAN CLASS="Header">Using command-line CVS to access project source files</SPAN>
+<P>
+<SPAN CLASS="PlainText"><B>CVS tool documents: Index</B>
+<P>
+<UL>
+<DL>
+<DT><A HREF="ddCVS.html">About source code version control with CVS</A>
+<DT><A HREF="ddCVS_cvsglossary.html">A version control glossary</A>
+<DD><B>You are here: Using CVS to access project source files
+<UL>
+	<LI><A HREF="#cvsintro"><B>Getting started with CVS</B></A>
+	<LI><A HREF="#accesscvs"><B>Accessing a project's CVS repository</B></A>
+	<LI><A HREF="#gettingsource"><B>Getting the source</B></A>
+	<LI><A HREF="#cvslog"><B>Viewing file revision history</B></A>
+</UL></B>
+<DD><A HREF="ddCVS_cvscontributing.html">Contributing source code changes with CVS</A>
+<DD><A HREF="ddCVS_cvsmanaging.html">Managing project files and directories with CVS</A>
+<DT><A HREF="/servlets/HelpTOC">Back to main Help index</A>
+</DL>
+</UL>
+<P>
+<HR NOSHADE SIZE=1>
+<A NAME="cvsintro"></A><SPAN CLASS="InputHeader">Getting started with CVS</SPAN>
+<P>
+If you are participating in a development project on this site, you must use CVS as the versioning control tool for project source files. This the first in a series of three tool documents covering information and commands pertinent to using CVS.
+<P>
+
+<HR NOSHADE SIZE=1>
+<A NAME="accesscvs"></A><SPAN CLASS="InputHeader">Accessing a project's CVS repository</SPAN>
+<P>
+If you do have cvs login access for a project hosted on this site, first you must set the cvsroot to access the project's source code repository. In your shell or terminal client, type:
+<BLOCKQUOTE>
+ <B>:pserver:yourlogin@cvs.projectname.domain.com:/home/main_cvs_dir</B>
+</BLOCKQUOTE>
+<P>substituting your login and project information.
+<P>If you are only working on one project at a time, you only have to set cvsroot the first time you log in to CVS.
+<P>If you are participating in more than one project and need to access CVS repositories located on different servers, you need to set the cvsroot for each login session access the correct project's source repository.
+<P>
+If you do not have a specific cvs login but wish to look at an open source project's source repository, you may still be able to log in to cvs as "anonymous" by typing:
+<BLOCKQUOTE>
+ <B>:pserver:anoncvs@cvs.projectname.domain.com:/home/main_cvs_dir</B>
+</BLOCKQUOTE>
+
+<P>
+<A HREF="http://cvsbook.red-bean.com/cvsbook.html#Accessing_A_Repository" TARGET=_NEW>More about accessing a CVS repository</A>
+<P>
+To log in to CVS, use the following command:<BR>
+<BLOCKQUOTE>
+          <B>cvs login</B><BR>
+</BLOCKQUOTE>
+          Enter your user password when prompted. This should be the same password associated with your user account on this site.
+<P>
+
+<HR NOSHADE SIZE=1>
+
+<SPAN CLASS="InputHeader"><A NAME="gettingsource"></A>Getting source files</SPAN>
+<P>
+        To get a "working copy" of the latest source files, you must check out the source files, a process which copies the files onto your system. First create a directory on your local machine by typing:<BR>
+<BLOCKQUOTE>
+          <B>mkdir my_working_dir</B> (the directory name of your choosing)<BR>
+          <B>cd my_working_dir</B><BR>
+</BLOCKQUOTE>
+<P>
+Then, to check out or copy source file from the repository into your newly created local directory, type:
+<BLOCKQUOTE>
+          <B>cvs checkout project_name</B>
+</BLOCKQUOTE>
+<P>
+This top-level module would contain the entire source code tree (that is, the top level directory and any subdirectories) for that part of the project. There is a fairly common module structure for project CVS repositories initially. As the project grows, the project's source "tree" also grows as subdirectories are added to various modules.
+<P>
+To obtain the source code for a particular module called "module-name" within the project named "project_name", specify:
+<BLOCKQUOTE>
+     <B>cvs checkout module_name/project_name</B>
+</BLOCKQUOTE>
+<P>
+<A HREF="http://cvsbook.red-bean.com/cvsbook.html#Checking_Out_A_Working_Copy" TARGET=_NEW>More about checking out a working copy of project files</A>
+<P>
+
+<HR NOSHADE SIZE=1>
+
+<A NAME="cvslog"></A><SPAN CLASS="InputHeader">Viewing file revision history</SPAN>
+<P>
+Anyone with cvs read permission can view individual file histories to track revision information by typing:
+<BLOCKQUOTE>
+<B>cvs log filename</B>
+</BLOCKQUOTE>
+<P>
+The result is a display of the file's revision information, starting with the most current revision, and includes such information as the log message, status, working revision number, and repository revision number.
+<P>
+<A HREF="http://cvsbook.red-bean.com/cvsbook.html#Revision_Numbers" TARGET="_new">More about file revision numbers</A> 
+<P>
+
+<A NAME="cvsdiff"><SPAN CLASS="HelpTextHeader">Comparing file revisions</SPAN></A>
+<P>
+To see the particulars of a file's modifications between two revisions, after obtaining file revision numbering information from the &quot<B>cvs log</B>&quot command's output, type:
+<BLOCKQUOTE>
+<B>cvs diff -r revision_# -r revision_#</B>
+</BLOCKQUOTE>
+<P>
+The entire file contents display with lines from both versions where differences occur marked by revision number.  
+<P>
+
+<A HREF="http://cvsbook.red-bean.com/cvsbook.html#Finding_Out_What_You__And_Others__Did_--_update_And_diff" TARGET="_new">Finding out what you and others did</A><BR>
+<A HREF="http://cvsbook.red-bean.com/cvsbook.html#diff" TARGET="_new">More about diffs and options</A>
+
+<HR NOSHADE SIZE=1>
+<A HREF="ddCVS_cvscontributing.html">More CVS help: Contributing your changes</A><BR>
+<A HREF="/servlets/HelpTOC">Back to main Help index</A></P></SPAN>
+
+</SPAN>    
+</TR>
+</TABLE>
+
+</BODY>
+</HTML>

@@ -1,0 +1,126 @@
+<html>
+<head>
+
+<title>Adding and Editing User Accounts</title>
+
+</head>
+<body>
+   
+<span class="Header">Adding and editing user accounts</span>
+<p>
+<span class="PlainText"><b>Help for domain administration: Index</b>
+<p>
+<ul>
+	
+  <dl> 
+    <dt><a href="DomAdminOverview.html">Domain administration overview</a> 
+    <dd><b>You are here: Adding and editing user accounts 
+      <ul>
+        <li><a href="#addusers">Adding new users</a> 
+        <li><a href="#guestusers">About guest users</a> 
+        <li><a href="#viewusers">Viewing and filtering user lists</a> 
+        <li><a href="#editusers">Editing user account information</a> 
+      </ul>
+      </b> 
+    <dd><a href="DomAdminRoles.html">Administering roles and permissions</a> 
+    <dd><a href="DomAdminUserGroups.html">Creating and editing user groups</a> 
+    <dd><a href="DomAdminCategories.html">Creating and editing project groups</a> 
+    <dd><a href="DomAdminProjectApproval.html">Approving, disapproving, or deferring 
+      projects</a> 
+    <dd><a href="DomAdminAuditLogs.html">Using domain administration tools</a> 
+    <dt><a href="/servlets/HelpTOC">Back to main Help index</a> 
+  </dl>
+</ul>
+<p>
+
+<hr noshade size=1>
+<a name="addusers"></a><span class="InputHeader">Adding new users</span>
+<p>
+The Domain Administrator administers all user accounts in this domain. Use the <b>Add New User</b> screen to input user information and assign a user name and password, or add multiple users in one action. To access this screen:
+<p>
+<ul>
+<li>Click the <i>Administer Users</i> link in the "Admin Options" section of your Start Page. The default UserList view shows a paginated list of all users in the domain. 
+<p>
+<li>Click the <i>Add New User</i> link in the top right corner to display the <b>Add User</b> administrative screen. This page includes fields to input basic user identification: user name, email, real name, and organization. Required fields are asterisked.
+<p>
+<li>Assign a password or leave these fields blank for a randomly generated password.
+<p>
+<li>If you need to add users for an entire department or company, you can do enter them all simultaneously using the <i>Add Multiple Users</i> field. Be sure to enter one user per line using one of the following acceptable formats:
+<p>
+<blockquote>
+<b>
+username username@domain.com
+<p>
+username username@domain.com "Jane Doe"
+<p>
+username username@domain.com 'Jane Doe' "Software Corp."
+</b>
+</blockquote>
+<p>
+You don't have to include a company or organization, but if you want to, the user's real name is also required. You must enclose real names and/or company/organization names in quotes as indicated in the above example.
+<p>
+<li>Passwords are emailed to newly created users by default. If you do not want emails sent, remove the checkmark in the "Email passwords to users" box.
+</ul>
+
+<p>
+After adding the user(s), you are returned to the <b>User List</b> page view which now includes any newly added users. You can click on any user name to access an edit screen of that user's account. See the <a href="#editusers">Editing user accounts and role assignments</a> section for more information.
+<p>
+
+<hr noshade size=1>
+<a name="guestusers"></a><span class="InputHeader">About guest users</span>
+<p>
+If your site supports guest users to visit without registering or explicitly logging in, these users can read domain-level content, such as the home page and help information. They can also view information and check out source code for public projects. They cannot, however, make any changes to anything obtained from this site, access any private content, or access any personalized content such as the <b>Start Page</b>. If guest users wish to make changes or view restricted content associated with private projects, they must register with the site to obtain a user account and then log in.
+<p>
+Because this site handles guest users as just another role that users hold ("Anonymous Guest"), you can choose to modify the permissions associated with this role--just as you can with other roles-- if you want to give guest users greater access to the site. See <a href="DomAdminRoles.html#editroles">Administering roles and permissions: Editing roles</a> for more information.
+<p>
+If your site does not support guest users, first-time visitors view only the login screen and are unable to access anything else.
+<p>
+
+<hr noshade size=1>
+<a name="viewusers"></a><span class="InputHeader">Viewing and filtering user lists</span>
+<p>
+The <i>Administer Users</i> link in your <b>Start Page</b> displays a list of all users on this domain. The default view is the first full screen of user accounts listed in alphabetical order by users' login names. Page through the full list or jump to the desired page using the links at the bottom of the screen.
+<p>
+The <i><b>Filter</b></i> button works essentially like a search function. Type one or more characters in the field and click the Filter button. The user list is filtered for matching text strings in the user name, email, real name, and organization fields.
+<p>
+For example, by entering the string "@domain-x" in this field, you can filter for a listing of all users with "domain-x" email addresses. As with any search or filter function, the less specific your input criteria is, the broader your  results will tend to be. To produce a more targeted list, use a more specific filtering string.
+<p>
+The <i>Get All User Emails</i> link at the top right corner of the <b>User List</b> page lets you obtain a static list of email addresses for every user currently registered on your site.
+<p>
+
+<hr noshade size=1>
+<a name="editusers"></a><span class="InputHeader">Editing user account information</span>
+<p>
+To edit a specific user account, click the <i>Administer Users</i> link in the "Admin Options" section of your Start Page to display your domain's User List. Page to or filter for the desired user, and click on the user name link to display the <b>Edit User</b> screen.
+<p>
+This page details all domain information associated with individual user accounts. The top part of the page contains fields to modify user account information:
+
+<p>
+<dl>
+<dt><b><i>Login name</i></b>
+	<dd>This field may not be modified. If you need to assign a new login to a user, you must create an entirely new user account.
+<p>
+<dt><b><i>Real name</i></b>
+	<dd>User's real name may be edited as necessary.  
+<p>
+<dt><b><i>Email</i></b>
+	<dd>Field may be edited to reflect change in user's email address. Users who register with this site automatically receive a domain email account here (username@domain) but its use is optional.  
+<p>
+<dt><b><i>Organization</i></b>
+	<dd>Field maybe edited to reflect change in user's employment status or association with a company or organization.
+<p>
+<dt><b><i>Password/Retype password</i></b>
+	<dd>User's password may be changed. Any changes must be confirmed by entering the new password a second time,
+</dl>
+<p>
+
+The bottom portion of the <b>Edit User</b> page contain administrative fields and options regarding user roles and permissions on this site. To learn more about these, see <a href="DomAdminRoles.html">Administering roles and permissions</a>.
+<p>
+
+
+<hr noshade size=1>
+<a href="DomAdminOverview.html">Back to help for domain administration</a><br>
+<a href="/servlets/HelpTOC">Back to main Help index</a>
+</span>
+</body>
+</html>

@@ -39,6 +39,7 @@
 #include <signal.h>
 
 #include <arpa/inet.h>  /* for inet_makeaddr() */
+#include <netinet/in.h>
 
 #include "cl_commlib.h"
 #include "cl_host_list.h"

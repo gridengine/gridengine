@@ -345,7 +345,7 @@ int i
 ) {
    DENTER(TOP_LAYER, "execd_exit_func");
 
-   leave_commd();  /* tell commd we're going */
+   sge_gdi_shutdown();  /* tell commd we're going */
 
    /* trigger load sensors shutdown */
    sge_ls_stop(0);

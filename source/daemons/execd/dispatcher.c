@@ -64,14 +64,14 @@ typedef struct pbcache {
 } pbcache;
 
 
-int match_dpe(dispatch_entry *dea, dispatch_entry *deb);
-int receive_message_cach_n_ack(dispatch_entry *de, sge_pack_buffer **pb, 
+static int match_dpe(dispatch_entry *dea, dispatch_entry *deb);
+static int receive_message_cach_n_ack(dispatch_entry *de, sge_pack_buffer **pb, 
                                int *tagarray, int cachesize, 
                                void (*errfunc)(const char *));
-int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
+static int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
                    void (*errfunc)(const char *err_str));
-int isIn(int tag, int *tagarray);
-int deleteCacheTags(pbcache **lastBeforeThisCall, int *tagarray); 
+static int isIn(int tag, int *tagarray);
+static int deleteCacheTags(pbcache **lastBeforeThisCall, int *tagarray); 
 static int alloc_de(dispatch_entry *de);
 static void free_de(dispatch_entry *de);
 static int copy_de(dispatch_entry *dedst, dispatch_entry *desrc);
@@ -242,7 +242,7 @@ int wait4commd;
                
                /* if apb is filled send it back to the requestor */
                if (pb_filled(&apb)) {              
-                  i = send_message_pb(synchron, de.commproc, de.id, de.host, 
+                  i = gdi_send_message_pb(synchron, de.commproc, de.id, de.host, 
                                    de.tag, &apb, &dummyid);
                }
                clear_packbuffer(&apb);
@@ -269,7 +269,7 @@ int wait4commd;
 /****************************************************/
 /* match 2 dispatchtable entries against each other */
 /****************************************************/
-int match_dpe(dea, deb)
+static int match_dpe(dea, deb)
 dispatch_entry *dea, *deb;
 {
    if (deb->tag == -1) /* cyclic entries allways match */
@@ -303,7 +303,7 @@ dispatch_entry *dea, *deb;
  If we cant send the acknowledges we have to delete the whole messages, in
  order to stay consistent with the sender.
  *****************************************************************************/
-int receive_message_cach_n_ack(de, pb, tagarray, cachesize, errfunc)
+static int receive_message_cach_n_ack(de, pb, tagarray, cachesize, errfunc)
 dispatch_entry *de;
 sge_pack_buffer **pb;
 int *tagarray;
@@ -351,7 +351,7 @@ void (*errfunc)(const char *);
    while (cached_pbs < cachesize && i == CL_OK) {
       copy_de(&deact, de);
 
-      i = receive_message(deact.commproc, &deact.id, deact.host, &deact.tag, 
+      i = gdi_receive_message(deact.commproc, &deact.id, deact.host, &deact.tag, 
                           &buffer, &buflen, receive_blocking, &compressed);
 
       receive_blocking = 0;     /* second receive is always non blocking */
@@ -477,7 +477,7 @@ void (*errfunc)(const char *);
 /**********************************************************
  send acknowledge packet to requestor
  **********************************************************/
-int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
+static int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
               void (*errfunc)(const char *err_str))
 {
    int i;
@@ -486,7 +486,7 @@ int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
 
    DENTER(TOP_LAYER, "sendAckPb");
 
-   i = send_message_pb(0, commproc, id, host, TAG_ACK_REQUEST, apb, &dummy);
+   i = gdi_send_message_pb(0, commproc, id, host, TAG_ACK_REQUEST, apb, &dummy);
 
    if (i) {
       sprintf(err_str, MSG_COM_NOACK_S, cl_errstr(i));
@@ -500,7 +500,7 @@ int sendAckPb(sge_pack_buffer *apb, char *host, char *commproc, u_short id,
 /***********************************************************
  look for tag in tagarray
  ***********************************************************/
-int isIn(
+static int isIn(
 int tag, 
 int *tagarray 
 ) {
@@ -523,7 +523,7 @@ int *tagarray
  - behind lastBeforeThisCall
  - are present in tagarray
  *********************************************************/
-int deleteCacheTags(
+static int deleteCacheTags(
 pbcache **lpp,
 int *tagarray 
 ) {

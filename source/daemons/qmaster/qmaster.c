@@ -625,7 +625,9 @@ int i
 ) {
    if (in_spool_dir)
       qmaster_lock(QMASTER_LOCK_FILE); /* tell shadows of normal shutdown */
-   leave_commd();  /* tell commd we're going */
+
+   sge_gdi_shutdown();
+
 #ifdef QIDL
    unlock_master();
    shutdownQIDL();

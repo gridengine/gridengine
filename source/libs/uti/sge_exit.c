@@ -59,13 +59,6 @@ int i
       exit_func(i);
    }
 
-#if 0
-#ifdef SECURE
-   if (sec_exit_func && !i)
-      sec_exit_func();
-#endif
-#endif
-
    DCLOSE;
    exit(i);
 }

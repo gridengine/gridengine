@@ -1264,7 +1264,7 @@ const char *target
    if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
       packint(&pb, kill_jobs);
 
-      if (send_message_pb(0, target, 0, hostname, TAG_KILL_EXECD,
+      if (gdi_send_message_pb(0, target, 0, hostname, TAG_KILL_EXECD,
                        &pb, &dummy))
          ret = -1;
       else
@@ -1291,7 +1291,7 @@ const char *target
    hostname = lGetHost(host, EH_name);
    if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
       packint(&pb, featureset);
-      if (send_message_pb(0, target, 0, hostname, TAG_NEW_FEATURES, 
+      if (gdi_send_message_pb(0, target, 0, hostname, TAG_NEW_FEATURES, 
           &pb, &dummy)) {
          ret = -1;
       } else {

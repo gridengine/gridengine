@@ -270,7 +270,7 @@ static void usage(FILE *fp)
 static void schedd_exit_func(int i) 
 {
    DENTER(TOP_LAYER, "schedd_exit_func");
-   leave_commd();
+   sge_gdi_shutdown();
    DEXIT;
 }
 

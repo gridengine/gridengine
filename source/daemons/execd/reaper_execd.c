@@ -783,7 +783,7 @@ int is_array
                packint(&pb, exit_status);
 
                /* send a task exit message to the submitter of this task */
-               ret=send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
+               ret=gdi_send_message_pb(0, commproc, id, host, TAG_TASK_EXIT, &pb, &dummymid);
                DPRINTF(("%s sending task exit message for pe-task \"%s\" to %s: %s\n",
                      ret?"failed":"success", pe_task_id_str, 
                      lGetString(tep, JB_job_source), ret?cl_errstr(ret):""));

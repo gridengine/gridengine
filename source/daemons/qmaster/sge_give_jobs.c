@@ -432,7 +432,7 @@ int master
    */
    tgt2cc(jep, rhost, target);
 
-   failed = send_message_pb(0, target, 0, rhost, 
+   failed = gdi_send_message_pb(0, target, 0, rhost, 
              master?TAG_JOB_EXECUTION:TAG_SLAVE_ALLOW, 
              &pb, &dummymid);
 

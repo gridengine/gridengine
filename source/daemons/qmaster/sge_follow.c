@@ -1213,7 +1213,7 @@ lList *ticket_orders
                packint(&pb, lGetUlong(ep2, OR_ja_task_number));
                packdouble(&pb, lGetDouble(ep2, OR_ticket));
             }
-            cl_err = send_message_pb(0, prognames[EXECD], 0,
+            cl_err = gdi_send_message_pb(0, prognames[EXECD], 0,
                   master_host_name, TAG_CHANGE_TICKET, &pb, &dummymid);
             clear_packbuffer(&pb);
             DPRINTF(("%s %d ticket changings to execd@%s\n", 

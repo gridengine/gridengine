@@ -90,7 +90,7 @@ int progname_id
       return -2;
    }
 
-   if (send_message_pb(0, prognames[progname_id], 0, hostname, TAG_GET_NEW_CONF,
+   if (gdi_send_message_pb(0, prognames[progname_id], 0, hostname, TAG_GET_NEW_CONF,
                     NULL, 0))
       ret = -1;
    else

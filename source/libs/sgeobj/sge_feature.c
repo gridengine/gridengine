@@ -36,7 +36,6 @@
 #include "job_log.h"
 #include "sge_queue_qmaster.h"  /* JG: TODO: libgdi depends from qmaster! */
 #include "sge_host_qmaster.h"   /*           this has to be resolved!     */ 
-#include "sge_m_event.h"
 #include "config_file.h"
 #include "sge_prog.h"
 #include "sgermon.h"

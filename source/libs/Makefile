@@ -38,6 +38,9 @@ include $(SDIR)/libs/cull/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
 include $(SDIR)/libs/gdi/Makefile
+include $(SDIR)/libs/evc/Makefile
+include $(SDIR)/libs/evm/Makefile
+include $(SDIR)/libs/mir/Makefile
 include $(SDIR)/libs/sched/Makefile
 include $(SDIR)/libs/spool/Makefile
 # include $(SDIR)/libs/japi/Makefile
@@ -50,16 +53,16 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-libs: sgeobjlib gdilib spoollib commlib culllib rmonlib schedlib utilib $(SGELIB)
+libs: sgeobjlib gdilib evclib evmlib mirlib spoollib commlib culllib rmonlib schedlib utilib $(SGELIB)
 
-libs_clean: gdilib_clean sgeobjlib_clean spoollib_clean commlib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean $(SGELIB)_clean
+libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean $(SGELIB)_clean
 
 $(SGELIB)_clean: 
 	$(RM) libsge.a libsge$(SHAREDEXT)
 
-libs_depend: gdilib_depend sgeobjlib_depend spoollib_depend commlib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend
+libs_depend: gdilib_depend sgeobjlib_depend evclib_depend evmlib_depend mirlib_depend spoollib_depend commlib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend
 
-libs_messages: gdilib_messages sgeobjlib_messages spoollib_messages commlib_messages cull_messages schedlib_messages utilib_messages rmonlib_messages
+libs_messages: gdilib_messages sgeobjlib_messages evclib_messages evmlib_messages mirlib_messages spoollib_messages commlib_messages cull_messages schedlib_messages utilib_messages rmonlib_messages
 
 
 ###############################################################################
@@ -69,5 +72,5 @@ libsge.a:	$(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) sge_all_listsL.o $(S
 	$(AR) $(ARFLAGS) libsge.a $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) sge_all_listsL.o $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) 
 	$(RANLIB) $(SGELIB)
 
-libsge$(SHAREDEXT): $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) sge_all_listsL.o $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(ZLIB)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libsge$(SHAREDEXT) $(SCHEDLIB_OBJS) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) sge_all_listsL.o $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LOADAVGLIBS) $(LIBS) -lc
+libsge$(SHAREDEXT): $(SCHEDLIB_OBJS) $(MIRLIB) $(EVCLIB) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(ALLLISTSLIB) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(ZLIB)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libsge$(SHAREDEXT) $(SCHEDLIB_OBJS) $(MIRLIB) $(EVCLIB) $(GDILIB_OBJS) $(SGEOBJLIB_OBJS) $(ALLLISTSLIB) $(SECLIB_OBJS) $(KRBLIBS) $(COMMLIB_OBJS) $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(UTILIB_OBJS) $(LOADAVGLIBS) $(LIBS) -lc

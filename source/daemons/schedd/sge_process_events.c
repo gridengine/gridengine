@@ -46,7 +46,7 @@
 
 #include "sge.h"
 #include "sge_gdi_intern.h"
-#include "sge_c_event.h"
+#include "sge_event_client.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_job_schedd.h"

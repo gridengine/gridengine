@@ -44,7 +44,7 @@
 #include "sge_parse_num_par.h"
 #include "complex_qmaster.h"
 #include "sge_queue_qmaster.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "complex_history.h"
 #include "opt_history.h"
 #include "path_history.h"

@@ -47,6 +47,7 @@ SGEOBJLIB_SRC = \
          sge_complex.c \
          sge_conf.c \
          sge_ckpt.c \
+         sge_event.c \
          sge_feature.c \
          sge_host.c \
          sge_hostgroup.c \
@@ -141,6 +142,9 @@ sge_conf.o: $(SGEOBJLIB_DIR)/sge_conf.c
 
 sge_ckpt.o: $(SGEOBJLIB_DIR)/sge_ckpt.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ckpt.c
+
+sge_event.o:	$(SGEOBJLIB_DIR)/sge_event.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_event.c
 
 sge_feature.o: $(SGEOBJLIB_DIR)/sge_feature.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_feature.c

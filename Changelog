@@ -1,3 +1,10 @@
+JG-2003-02-17-0  Enhancem.  Created new libraries:
+                            - libevc (event client code)
+                            - libevm (event master code)
+                            - libmir (mirror code)
+                 Issue:     #466
+                 Review:    EB
+
 EB-2003-02-17-0  Bugfix:    qhost -q -l arch=xx crashes if a grid execution 
                             host is down
                  Issue:     #492

@@ -50,7 +50,8 @@
 #include "sge_userset_qmaster.h"
 #include "sge_select_queue.h"
 #include "sge_calendar_qmaster.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
+#include "sge_queue_event_master.h"
 #include "read_write_host.h"
 #include "read_write_queue.h"
 #include "sge_parse_num_par.h"
@@ -1249,5 +1250,73 @@ const char *qname
 
    DEXIT;
    return 0;
+}
+
+
+/****** qmaster/queue/queue_list_set_unknown_state_to() ********************
+*  NAME
+*     queue_list_set_unknown_state_to() -- set/clear u state of queues
+*
+*  SYNOPSIS
+*     void queue_list_set_unknown_state_to(lList *queue_list,
+*                                          const char *hostname,
+*                                          int send_events,
+*                                          int new_state)
+*
+*  FUNCTION
+*     Clears or sets the unknown state of all queues in "queue_list" which
+*     reside on host "hostname". If "hostname" is NULL than all queues
+*     mentioned in "queue_list" will get the new unknown state.
+*
+*     Modify events for all modified queues will be generated if
+*     "send_events" is 1 (true).
+*
+*  INPUTS
+*     lList *queue_list    - QU_Type list
+*     const char *hostname - valid hostname or NULL
+*     int send_events      - 0 or 1
+*     int new_state        - new unknown state (0 or 1)
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void queue_list_set_unknown_state_to(lList *queue_list,
+                                     const char *hostname,
+                                     int send_events,
+                                     int new_state)
+{
+   const void *iterator = NULL;
+   lListElem *queue = NULL;
+   lListElem *next_queue = NULL;
+
+   if (hostname != NULL) {
+      next_queue = lGetElemHostFirst(queue_list, QU_qhostname,
+                                     hostname, &iterator);
+   } else {
+      next_queue = lFirst(queue_list);
+   }
+   while ((queue = next_queue)) {
+      u_long32 state;
+
+      if (hostname != NULL) {
+         next_queue = lGetElemHostNext(queue_list, QU_qhostname,
+                                       hostname, &iterator);
+      } else {
+         next_queue = lNext(queue);
+      }
+      state = lGetUlong(queue, QU_state);
+      if ((ISSET(state, QUNKNOWN) > 0) != (new_state > 0)) {
+         if (new_state) {
+            SETBIT(QUNKNOWN, state);
+         } else {
+            CLEARBIT(QUNKNOWN, state);
+         }
+         lSetUlong(queue, QU_state, state);
+
+         if (send_events) {
+            sge_add_queue_event(sgeE_QUEUE_MOD, queue);
+         }
+      }
+   }
 }
 

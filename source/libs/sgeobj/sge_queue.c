@@ -44,7 +44,6 @@
 #include "sge_manop.h"
 #include "sge_userset.h"
 #include "sge_event.h"
-#include "sge_m_event.h"
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_queue.h"

@@ -38,7 +38,7 @@
 #include "sgermon.h"
 #include "sge_manop_qmaster.h"
 #include "read_write_manop.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_log.h"
 #include "sge_uidgid.h"
 #include "sge_answer.h"

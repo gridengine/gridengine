@@ -68,7 +68,7 @@ extern "C" {
 *
 *     If a client expects special handling, a new id in the range 
 *     [2;10] has to be created and the special handling has to be
-*     implemented in qmaster (probably in sge_m_event.c).
+*     implemented in qmaster (probably in sge_event_master.c).
 *
 *  SEE ALSO
 *     Eventclient/Client/ec_prepare_registration()

@@ -54,7 +54,7 @@
 #include "sge_userprj_qmaster.h"
 #include "sge_parse_num_par.h"
 #include "setup_path.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_string.h"
 #include "reschedule.h"
 #include "sge_unistd.h"

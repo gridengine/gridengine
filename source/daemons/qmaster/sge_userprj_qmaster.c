@@ -51,7 +51,7 @@
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_sharetree_qmaster.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "cull_parse_util.h"
 #include "config.h"
 #include "sge_log.h"

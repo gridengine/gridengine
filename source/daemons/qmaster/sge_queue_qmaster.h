@@ -51,5 +51,10 @@ int verify_project_list(lList **alpp, char *obj_name, char *qname, lList *projec
 
 int queue_set_initial_state(lListElem *queue, char *rhost);
 
+void queue_list_set_unknown_state_to(lList *queue_list,
+                                     const char *hostname,
+                                     int send_events,
+                                     int new_state);
+
 #endif /* __SGE_QUEUE_QMASTER_H */
 

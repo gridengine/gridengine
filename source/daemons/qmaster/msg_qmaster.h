@@ -463,7 +463,7 @@
 #define MSG_SGETEXT_SPECIFYONEORALLUSER         _MESSAGE(33338, _("The switch for \"all users\" and a specified \"user list\" are not allowed together\n"))
 
 /*
-** sge_m_event.c
+** sge_event_master.c
 */
 /* #define MSG_EVE_UNKNOWNDUMMYREQUEST   _message(33342, _("unknown dummy request\n")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_EVE_REINITEVENTCLIENT_S   _MESSAGE(33343, _("reinitialization of "SFQ"\n"))

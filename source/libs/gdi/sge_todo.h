@@ -36,75 +36,13 @@
 #include "sge_feature.h"
 #include "sge_mirror.h"
 
-void queue_list_set_unknown_state_to(lList *queue_list,
-                                     const char *hostname,
-                                     int send_events,
-                                     int new_state);
-
-void sge_add_queue_event(u_long32 type, lListElem *qep);
-
 int validate_ckpt(lListElem *ep, lList **alpp);
 
 int pe_validate(int startup, lListElem *pep, lList **alpp);
 
-int userprj_update_master_list(sge_event_type type, sge_event_action action,
-                              lListElem *event, void *clientdata);
-
-int job_update_master_list(sge_event_type type,
-                           sge_event_action action,
-                           lListElem *event,
-                           void *clientdata);
-
-int
-job_schedd_info_update_master_list(sge_event_type type,
-                                   sge_event_action action,
-                                   lListElem *event, void *clientdata);
-int manop_update_master_list(sge_event_type type, sge_event_action action,
-                             lListElem *event, void *clientdata);
-
-int host_update_master_list(sge_event_type type, sge_event_action action,
-                            lListElem *event, void *clientdata);
-
-int complex_update_master_list(sge_event_type type, sge_event_action action,
-                               lListElem *event, void *clientdata);
-
-int pe_update_master_list(sge_event_type type, sge_event_action action,
-                          lListElem *event, void *clientdata);
-
-int queue_update_master_list(sge_event_type type, sge_event_action action,
-                             lListElem *event, void *clientdata);
-
-int sharetree_update_master_list(sge_event_type type, sge_event_action action,
-                                 lListElem *event, void *clientdata);
-
-int schedd_conf_update_master_list(sge_event_type type, sge_event_action action,
-                                       lListElem *event, void *clientdata);
-
-int config_update_master_list(sge_event_type type, sge_event_action action,
-                              lListElem *event, void *clientdata);
-
-int ja_task_update_master_list(sge_event_type type, sge_event_action action,
-                               lListElem *event, void *clientdata);
-
-int ja_task_update_master_list_usage(lListElem *event);
-
-int ckpt_update_master_list(sge_event_type type, sge_event_action action,
-                            lListElem *event, void *clientdata);
-
-int calendar_update_master_list(sge_event_type type, sge_event_action action,
-                                lListElem *event, void *clientdata);
-
 int report_list_send(const lList *rlp, const char *rhost,
                      const char *commproc, int id,
                      int synchron, u_long32 *mid);
-
-int pe_task_update_master_list(sge_event_type type, sge_event_action action,
-                               lListElem *event, void *clientdata);
-
-int pe_task_update_master_list_usage(lListElem *event);
-
-int userset_update_master_list(sge_event_type type, sge_event_action action,
-                               lListElem *event, void *clientdata);
 
 
 #endif /* __SGE_TODO_H */

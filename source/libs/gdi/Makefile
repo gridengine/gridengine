@@ -49,13 +49,9 @@ GDILIB_SRC = gdi_setup.c \
          sge_qexec.c \
          setup_path.c \
          qm_name.c \
-         sge_c_event.c \
-         sge_m_event$(QIDLEXT).c \
-         sge_event.c \
          sge_security.c \
          setup.c \
          sge_qtcsh.c \
-         sge_mirror.c \
          sge_todo.c \
          version.c
 
@@ -141,31 +137,13 @@ gdi_checkpermissions.o: 	$(GDILIB_DIR)/gdi_checkpermissions.c
 sge_security.o: $(GDILIB_DIR)/sge_security.c 
 		$(CC) $(CFLAGS) $(GCC_NOERR_CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_security.c
 
-sge_event.o: $(GDILIB_DIR)/sge_event.c
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_event.c
-
-sge_c_event.o: $(GDILIB_DIR)/sge_c_event.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_c_event.c
-
-sge_m_event$(QIDLEXT).o:	$(GDILIB_DIR)/sge_m_event.c
-		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_m_event.c
-
 setup.o: $(GDILIB_DIR)/setup.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/setup.c
 
 sge_qtcsh.o: $(GDILIB_DIR)/sge_qtcsh.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_qtcsh.c
 
-sge_mirror.o: $(GDILIB_DIR)/sge_mirror.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_mirror.c
-
 sge_todo.o: $(GDILIB_DIR)/sge_todo.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_todo.c
 #---------------------------------------------------------------------
 # test programs
-test_sge_mirror: test_sge_mirror.o sig_handlers.o $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
-	$(CC) $(CFLAGS) -o test_sge_mirror $(LFLAGS) test_sge_mirror.o sig_handlers.o $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
-
-test_sge_mirror.o: $(GDILIB_DIR)/test_sge_mirror.c
-	$(CC) $(CFLAGS) -c $(GDILIB_DIR)/test_sge_mirror.c
-

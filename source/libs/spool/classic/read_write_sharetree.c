@@ -45,7 +45,6 @@
 #include "sge_usageL.h"
 #include "sge_sharetree.h"
 #include "cull_parse_util.h"
-#include "sge_m_event.h"
 #include "sge_log.h"
 #include "sge_dstring.h"
 #include "scheduler.h"

@@ -64,9 +64,12 @@ SCHEDD_OBJS = $(SCHEDD_SRC:.c=.o)
 
 SCHEDD_ADD_OBJS = $(SCHEDD_ADD_SRC:.c=.o) 
 
-SCHEDD_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
+SCHEDD_ADD_LIBS = -lsched -lmir -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon -lcom -luti
 
-SCHEDD_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB) $(TPLIB)
+SCHEDD_LIB_DEPENDS = $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) \
+                     $(SGEOBJLIB) $(ALLLISTSLIB) \
+                     $(SECLIBS) $(KRBLIBS) \
+                     $(CULLLIB) $(RMONLIB) $(COMMLIB) $(UTILIB) $(ZLIB) $(TPLIB)
 
 SMON_OBJS = $(SMON_SRC:.c=.o)
 

@@ -105,9 +105,10 @@ QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
 QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o) 
 
-QMASTER_ADD_LIBS = -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
+QMASTER_ADD_LIBS = -lsched $(EVMLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcom -luti -lrmon
 
-QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(ALLLISTSLIB) \
+QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(GDILIB) $(SGEOBJLIB) \
+                      $(ALLLISTSLIB) \
                       $(SECLIBS) $(KRBLIBS) \
                       $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) \
                       $(ZLIB) $(TPLIB)

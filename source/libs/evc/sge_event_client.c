@@ -41,7 +41,7 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_eventL.h"
-#include "sge_c_event.h"
+#include "sge_event_client.h"
 #include "qm_name.h"
 #include "sge_log.h"
 #include "sge_time.h"
@@ -171,7 +171,7 @@ static u_long32 ec_reg_id = 0;
 *     ec_prepare_registration() -- prepare registration at server
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_prepare_registration(ev_registration_id id, const char *name) 
 *
@@ -277,7 +277,7 @@ int ec_is_initialized(void)
 *     ec_mark4registration() -- new registration is required
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     void ec_mark4registration(void) 
 *
@@ -304,7 +304,7 @@ void ec_mark4registration(void)
 *     ec_need_new_registration() -- is a reregistration neccessary?
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_need_new_registration(void) 
 *
@@ -325,7 +325,7 @@ int ec_need_new_registration(void)
 *     ec_set_edtime() -- set the event delivery interval
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_set_edtime(int interval) 
 *
@@ -373,7 +373,7 @@ int ec_set_edtime(int interval) {
 *     ec_get_edtime() -- get the current event delivery interval
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_get_edtime(void) 
 *
@@ -407,7 +407,7 @@ int ec_get_edtime(void) {
 *     ec_set_edtime() -- set the event client busy handling
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_set_busy_handling(ev_busy_handling handling) 
 *
@@ -460,7 +460,7 @@ int ec_set_busy_handling(ev_busy_handling handling) {
 *     ec_get_busy_handling() -- get configured busy handling policy
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     ev_busy_handling ec_get_busy_handling(void) 
 *
@@ -495,7 +495,7 @@ ev_busy_handling ec_get_busy_handling(void) {
 *     ec_set_clientdata() -- set the clientdata value
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     void ec_set_clientdata(u_long32 data) 
 *
@@ -536,7 +536,7 @@ void ec_set_clientdata(u_long32 data)
 *     ec_get_clientdata() -- get the clientdata value
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     u_long32 ec_get_clientdata() 
 *
@@ -575,7 +575,7 @@ u_long32 ec_get_clientdata(void)
 *     ec_register() -- register at the event server
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_register(void) 
 *
@@ -688,7 +688,7 @@ int ec_register(void)
 *     ec_deregister() -- deregister from the event server
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_deregister(void) 
 *
@@ -747,7 +747,7 @@ int ec_deregister(void)
 *     ec_subscribe() -- Subscribe an event
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_subscribe(ev_event event) 
 *
@@ -823,7 +823,7 @@ int ec_subscribe(ev_event event)
 *     ec_subscribe_all() -- subscribe all events
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_subscribe_all(void) 
 *
@@ -856,7 +856,7 @@ int ec_subscribe_all(void)
 *     ec_unsubscribe() -- unsubscribe an event
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_unsubscribe(ev_event event) 
 *
@@ -947,7 +947,7 @@ int ec_unsubscribe(ev_event event)
 *     ec_unsubscribe_all() -- unsubscribe all events
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_unsubscribe_all(void) 
 *
@@ -979,7 +979,7 @@ int ec_unsubscribe_all(void)
 *     ec_get_flush() -- get flushing information for an event
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_get_flush(ev_event event) 
 *
@@ -1041,7 +1041,7 @@ int ec_get_flush(ev_event event)
 *     ec_set_flush() -- set flushing information for an event
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_set_flush(ev_event event, int flush) 
 *
@@ -1124,7 +1124,7 @@ int ec_set_flush(ev_event event, int flush)
 *     ec_unset_flush() -- unset flushing information
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_unset_flush(ev_event event) 
 *
@@ -1193,7 +1193,7 @@ int ec_unset_flush(ev_event event)
 *     ec_subscribe_flush() -- subscribe an event and set flushing
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_subscribe_flush(ev_event event, int flush) 
 *
@@ -1323,7 +1323,7 @@ int ec_get_busy(void)
 *     ec_config_changed() -- tell system the config has changed
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     static void ec_config_changed(void) 
 *
@@ -1349,7 +1349,7 @@ static void ec_config_changed(void)
 *     ec_commit() -- commit configuration changes
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_commit(void) 
 *
@@ -1426,7 +1426,7 @@ int ec_commit(void)
 *     ec_commit() -- commit configuration changes via gdi multi request
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_commit_multi(lList **malpp) 
 *
@@ -1512,7 +1512,7 @@ int ec_commit_multi(lList **malpp, state_gdi_multi *state)
 *     ec_get() -- look for new events
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     int ec_get(lList **event_list) 
 *
@@ -1686,7 +1686,7 @@ lList **event_list
 *     ck_event_number() -- test event numbers
 *
 *  SYNOPSIS
-*     #include "sge_c_event.h"
+*     #include "sge_event_client.h"
 *
 *     static u_long32 ck_event_number(lList *lp, u_long32 *waiting_for, 
 *                                     u_long32 *wrong_number) 

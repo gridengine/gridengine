@@ -40,7 +40,7 @@
 #include "sge_report.h"
 
 #include "job_exit.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_host.h"
 #include "sge_log.h"
 #include "sge_ckpt_qmaster.h"

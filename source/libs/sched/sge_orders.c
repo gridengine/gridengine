@@ -42,7 +42,7 @@
 #include "sge_log.h"
 #include "schedd_message.h"
 #include "sge_answer.h"
-#include "sge_c_event.h"
+#include "sge_event_client.h"
 #include "msg_schedd.h"
 #include "msg_common.h"
 

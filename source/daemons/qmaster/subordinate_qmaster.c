@@ -38,7 +38,7 @@
 #include "sge_sched.h"
 #include "sge_signal.h"
 #include "subordinate_qmaster.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_qmod_qmaster.h"
 #include "msg_qmaster.h"
 #include "sge_string.h"

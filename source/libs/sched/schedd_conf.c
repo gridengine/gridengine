@@ -47,7 +47,6 @@
 #include "commlib.h"
 #include "sge_parse_num_par.h"
 #include "schedd_conf.h"
-/* #include "sge_c_event.h" */
 #include "sge_feature.h"
 #include "cull_parse_util.h"
 #include "sge_log.h"

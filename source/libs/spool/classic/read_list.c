@@ -75,6 +75,8 @@
 
 #include "sge_stringL.h"
 
+#include "sge_queue_event_master.h"
+
 #include "read_write_cal.h"
 #include "read_write_ckpt.h"
 #include "read_write_complex.h"
@@ -729,7 +731,6 @@ int sge_read_queue_list_from_disk()
          }
       }
       lFreeList(direntries);
-      queue_list_set_unknown_state_to(Master_Queue_List, NULL, 0, 1);
    }
    
 

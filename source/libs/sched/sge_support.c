@@ -47,7 +47,6 @@
 #include "commlib.h"
 #include "sgermon.h"
 #include "sge_prog.h"
-#include "sge_c_event.h"
 #include "sge_schedd.h"
 #include "sge_time.h"
 #include "sge_orders.h"

@@ -39,7 +39,7 @@
 #include "sge_usageL.h"
 #include "sched_conf.h"
 #include "sched_conf_qmaster.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_sched.h"
 #include "sge_log.h"
 #include "setup_path.h"

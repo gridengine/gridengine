@@ -48,7 +48,7 @@
 #include "sge_sharetree_qmaster.h"
 #include "sge_userprj_qmaster.h"
 #include "cull_parse_util.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"

@@ -41,7 +41,7 @@
 #include "sge_queue_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "read_write_pe.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "config_file.h"
 #include "sge_userset_qmaster.h"
 #include "sge_ckpt_qmaster.h"

@@ -37,7 +37,7 @@
 #include "sgermon.h"
 #include "sge_pe.h"
 #include "sge_queue_qmaster.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_userset.h"
 #include "read_write_userset.h"
 #include "read_write_queue.h"

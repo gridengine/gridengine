@@ -40,7 +40,7 @@
 #include "sge_host.h"
 #include "sge_host_qmaster.h"
 #include "sge_give_jobs.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_qmod_qmaster.h"
 #include "ck_to_do_qmaster.h"
 #include "sgermon.h"

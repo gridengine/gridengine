@@ -362,6 +362,7 @@ int sge_setup_qmaster()
      DEXIT;
      return -1;
    }
+   queue_list_set_unknown_state_to(Master_Queue_List, NULL, 0, 1);
 
 
    DPRINTF(("pe_list---------------------------------\n"));

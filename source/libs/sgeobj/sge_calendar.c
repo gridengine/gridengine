@@ -40,7 +40,6 @@
 #include "sge_log.h"
 #include "sge_string.h"
 #include "sgermon.h"
-#include "sge_m_event.h"
 #include "time_event.h"
 #include "read_write_cal.h"
 #include "sge_c_gdi.h"

@@ -57,6 +57,9 @@ files=" \
        daemons/shepherd/shepherd_dependencies  \
        libs/sgeobj/sgeobj_dependencies  \
        libs/gdi/gdi_dependencies  \
+       libs/evc/evc_dependencies  \
+       libs/evm/evm_dependencies  \
+       libs/mir/mir_dependencies  \
        libs/spool/spool_dependencies  \
        libs/spool/classic/spoolc_dependencies  \
        libs/spool/flatfile/spoolf_dependencies  \

@@ -42,6 +42,7 @@
 #include "sge_pe.h"
 #include "sge_signal.h"
 #include "sge_prog.h"
+#include "sge_queue_event_master.h"
 #include "sge_qmod_qmaster.h"
 #include "read_write_job.h"
 #include "read_write_queue.h"

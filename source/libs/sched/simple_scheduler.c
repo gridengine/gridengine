@@ -63,7 +63,7 @@
 #include "msg_clients_common.h"
 
 #include "sge_mirror.h"
-#include "sge_c_event.h"
+#include "sge_event_client.h"
 #include "sge_event.h"
 
 /* examples for retrieving information from SGE's master lists */

@@ -63,7 +63,7 @@
 #include "sge_ckpt_qmaster.h"
 #include "job_report_qmaster.h"
 #include "sge_parse_num_par.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_signal.h"
 #include "subordinate_qmaster.h"
 #include "sge_userset.h"

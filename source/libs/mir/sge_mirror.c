@@ -36,9 +36,8 @@
 #include "sge_time.h"
 #include "sge_profiling.h"
 
-#include "sge_mirror.h"
 #include "sge_event.h"
-#include "sge_c_event.h"
+#include "sge_event_client.h"
 
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
@@ -58,13 +57,22 @@
 #include "sge_userprj.h"
 #include "sge_userset.h"
 #include "sge_answer.h"
-#include "sge_todo.h"
 
 #include "sge_unistd.h"
 #include "sgermon.h"
 #include "sge_log.h"
 
 #include "msg_gdilib.h"
+
+#include "sge_host_mirror.h"
+#include "sge_queue_mirror.h"
+#include "sge_job_mirror.h"
+#include "sge_ja_task_mirror.h"
+#include "sge_pe_task_mirror.h"
+#include "sge_sharetree_mirror.h"
+#include "sge_sched_conf_mirror.h"
+
+#include "sge_mirror.h"
 
 /* Static functions for internal use */
 static sge_mirror_error _sge_mirror_subscribe(sge_event_type type, 
@@ -90,13 +98,17 @@ static int sge_mirror_process_qmaster_goes_down(sge_event_type type,
                                                 lListElem *event, 
                                                 void *clientdata);
 
+static int 
+generic_update_master_list(sge_event_type type, sge_event_action action,
+                           lListElem *event, void *clientdata);
+
 /* Datastructure for internal storage of subscription information
  * and callbacks.
  */
 typedef struct {
    lList **list;                          /* master list                    */
    const char *type_name;                 /* type name, e.g. "JB_Type"      */
-   const lDescr *descr;                   /* descriptor, e.g. JB_Type       */
+   lDescr *descr;                         /* descriptor, e.g. JB_Type       */
    const int key_nm;                      /* nm of key attribute            */
    sge_mirror_callback callback_before;   /* callback before mirroring      */
    sge_mirror_callback callback_default;  /* default mirroring function     */
@@ -108,29 +120,29 @@ typedef struct {
 static mirror_entry mirror_base[SGE_EMT_ALL] = {
    /* master list                    name                 descr      key              cbb   cbd                                 cba   cd   */
    { &Master_Adminhost_List,         "ADMINHOST",         AH_Type,   AH_name,         NULL, host_update_master_list,            NULL, NULL },
-   { &Master_Calendar_List,          "CALENDAR",          CAL_Type,  CAL_name,        NULL, calendar_update_master_list,        NULL, NULL },
-   { &Master_Ckpt_List,              "CKPT",              CK_Type,   CK_name,         NULL, ckpt_update_master_list,            NULL, NULL },
-   { &Master_Complex_List,           "COMPLEX",           CX_Type,   CX_name,         NULL, complex_update_master_list,         NULL, NULL },
-   { &Master_Config_List,            "CONFIG",            CONF_Type, CONF_hname,      NULL, config_update_master_list,          NULL, NULL },
-   { NULL,                           "GLOBAL_CONFIG",     NULL,      -1,              NULL,                                     NULL, NULL, NULL },
+   { &Master_Calendar_List,          "CALENDAR",          CAL_Type,  CAL_name,        NULL, generic_update_master_list,        NULL, NULL },
+   { &Master_Ckpt_List,              "CKPT",              CK_Type,   CK_name,         NULL, generic_update_master_list,            NULL, NULL },
+   { &Master_Complex_List,           "COMPLEX",           CX_Type,   CX_name,         NULL, generic_update_master_list,         NULL, NULL },
+   { &Master_Config_List,            "CONFIG",            CONF_Type, CONF_hname,      NULL, generic_update_master_list,          NULL, NULL },
+/*    { NULL,                           "GLOBAL_CONFIG",     NULL,      -1,              NULL,                                     NULL, NULL, NULL }, */
    { &Master_Exechost_List,          "EXECHOST",          EH_Type,   EH_name,         NULL, host_update_master_list,            NULL, NULL },
    { NULL,                           "JATASK",            JAT_Type,  JAT_task_number, NULL, ja_task_update_master_list,         NULL, NULL },
    { NULL,                           "PETASK",            PET_Type,  PET_id,          NULL, pe_task_update_master_list,         NULL, NULL },
    { &Master_Job_List,               "JOB",               JB_Type,   JB_job_number,   NULL, job_update_master_list,             NULL, NULL },
    { &Master_Job_Schedd_Info_List,   "JOB_SCHEDD_INFO",   SME_Type,  -1,              NULL, job_schedd_info_update_master_list, NULL, NULL },
-   { &Master_Manager_List,           "MANAGER",           MO_Type,   MO_name,         NULL, manop_update_master_list,           NULL, NULL },
-   { &Master_Operator_List,          "OPERATOR",          MO_Type,   MO_name,         NULL, manop_update_master_list,           NULL, NULL },
+   { &Master_Manager_List,           "MANAGER",           MO_Type,   MO_name,         NULL, generic_update_master_list,           NULL, NULL },
+   { &Master_Operator_List,          "OPERATOR",          MO_Type,   MO_name,         NULL, generic_update_master_list,           NULL, NULL },
    { &Master_Sharetree_List,         "SHARETREE",         STN_Type,  STN_name,        NULL, sharetree_update_master_list,       NULL, NULL },
-   { &Master_Pe_List,                "PE",                PE_Type,   PE_name,         NULL, pe_update_master_list,              NULL, NULL },
-   { &Master_Project_List,           "PROJECT",           UP_Type,   UP_name,         NULL, userprj_update_master_list,         NULL, NULL },
+   { &Master_Pe_List,                "PE",                PE_Type,   PE_name,         NULL, generic_update_master_list,              NULL, NULL },
+   { &Master_Project_List,           "PROJECT",           UP_Type,   UP_name,         NULL, generic_update_master_list,         NULL, NULL },
    { &Master_Queue_List,             "QUEUE",             QU_Type,   QU_qname,        NULL, queue_update_master_list,           NULL, NULL },
    { &Master_Sched_Config_List,      "SCHEDD_CONF",       SC_Type,   -1,              NULL, schedd_conf_update_master_list,     NULL, NULL },
    { NULL,                           "SCHEDD_MONITOR",    NULL,      -1,              NULL, NULL,                               NULL, NULL },
    { NULL,                           "SHUTDOWN",          NULL,      -1,              NULL, sge_mirror_process_shutdown,        NULL, NULL },
    { NULL,                           "QMASTER_GOES_DOWN", NULL,      -1,              NULL, sge_mirror_process_qmaster_goes_down, NULL, NULL },
    { &Master_Submithost_List,        "SUBMITHOST",        SH_Type,   SH_name,         NULL, host_update_master_list,            NULL, NULL },
-   { &Master_User_List,              "USER",              UP_Type,   UP_name,         NULL, userprj_update_master_list,         NULL, NULL },
-   { &Master_Userset_List,           "USERSET",           US_Type,   US_name,         NULL, userset_update_master_list,         NULL, NULL },
+   { &Master_User_List,              "USER",              UP_Type,   UP_name,         NULL, generic_update_master_list,         NULL, NULL },
+   { &Master_Userset_List,           "USERSET",           US_Type,   US_name,         NULL, generic_update_master_list,         NULL, NULL },
 
 #ifndef __SGE_NO_USERMAPPING__
    { &Master_Usermapping_Entry_List, "USERMAPPING",       UME_Type,  UM_mapped_user,  NULL, NULL,                               NULL, NULL },
@@ -1224,6 +1236,33 @@ static int sge_mirror_process_qmaster_goes_down(sge_event_type type,
    DPRINTF(("qmaster goes down\n"));
    sleep(8);
    ec_mark4registration();
+
+   DEXIT;
+   return TRUE;
+}
+
+static int 
+generic_update_master_list(sge_event_type type, sge_event_action action,
+                           lListElem *event, void *clientdata)
+{
+   lList **list;
+   lDescr *list_descr;
+   int     key_nm;
+
+   const char *key;
+
+   DENTER(TOP_LAYER, "generic_update_master_list");
+
+   list       = mirror_base[type].list;
+   list_descr = mirror_base[type].descr;
+   key_nm     = mirror_base[type].key_nm;
+
+   key = lGetString(event, ET_strkey);
+
+   if(sge_mirror_update_master_list_str_key(list, list_descr, key_nm, key, action, event) != SGE_EM_OK) {
+      DEXIT;
+      return FALSE;
+   }
 
    DEXIT;
    return TRUE;

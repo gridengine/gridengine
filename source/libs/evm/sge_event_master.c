@@ -37,7 +37,7 @@
 #include "cull.h"
 #include "sge_feature.h"
 #include "sge_time.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "sge_host.h"
 #include "sge_pe_qmaster.h"
 #include "sge_event.h"
@@ -167,7 +167,7 @@ u_long32 qidl_event_count = 0;
 *     sge_flush_events() -- set the flushing time for events
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     void sge_flush_events(lListElem *event_client, int interval) 
 *
@@ -219,7 +219,7 @@ static void sge_flush_events_(lListElem *event_client, int interval, int now)
 *     sge_next_flush() -- when will be the next flush of events?
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     int sge_next_flush(int now) 
 *
@@ -261,7 +261,7 @@ int sge_next_flush(int now)
 *     reinit_event_client() -- do a total update for the scheduler
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     int reinit_event_client(ev_registration_id id) 
 *
@@ -359,7 +359,7 @@ lListElem *event_client
 *     sge_add_event_client() -- register a new event client
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, 
 *     char *ruser, char *rhost) 
@@ -491,7 +491,7 @@ char *rhost
 *     sge_mod_event_client() -- modify event client
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, 
 *     char *ruser, char *rhost) 
@@ -664,7 +664,7 @@ static void check_send_new_subscribed_list(const char *old_subscription, const c
 *     sge_event_client_exit() -- event client deregisters
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     void sge_event_client_exit(const char *host, const char *commproc, 
 *                                sge_pack_buffer *pb) 
@@ -713,7 +713,7 @@ void sge_event_client_exit(const char *host, const char *commproc, sge_pack_buff
 *     sge_eventclient_subscribed() -- has event client subscribed a certain event?
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     int sge_eventclient_subscribed(const lListElem *event_client, ev_event event) 
 *
@@ -754,7 +754,7 @@ int sge_eventclient_subscribed(const lListElem *event_client, ev_event event)
 *     sge_ack_event() -- process acknowledge to event delivery
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     int sge_ack_event(lListElem *event_client, ev_event event_number) 
 *
@@ -836,7 +836,7 @@ ev_event event_number
 *     ck_4_deliver_events() -- deliver events if necessary
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     void ck_4_deliver_events(u_long32 now) 
 *
@@ -973,7 +973,7 @@ u_long32 now
 *     sge_add_list_event() -- add a list as event
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     void 
 *     sge_add_list_event(lListElem *event_client, u_long32 timestamp,
@@ -1282,7 +1282,7 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 *     sge_add_event() -- add an object as event
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     void 
 *     sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
@@ -1379,7 +1379,7 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
 *     sge_get_next_event_number() -- next event number for an event client
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     u_long32 sge_get_next_event_number(u_long32 client_id) 
 *
@@ -1541,7 +1541,7 @@ static void sge_total_update_event(lListElem *event_client, ev_event type)
 *     eventclient_list_locate() -- search for the scheduler
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     lListElem* eventclient_list_locate(ev_registration_id id) 
 *
@@ -1577,7 +1577,7 @@ lListElem* eventclient_list_locate(ev_registration_id id)
 *     sge_gdi_kill_eventclient() -- kill an event client
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     void sge_gdi_kill_eventclient(const char *host, sge_gdi_request *request, 
 *     sge_gdi_request *answer) 
@@ -1687,7 +1687,7 @@ void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const 
 *     sge_gdi_tsm() -- trigger scheduling
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request 
 *     *answer) 
@@ -1765,7 +1765,7 @@ static void dump_subscription(const char *subscription)
 *     set_event_client_busy() -- set the busy state of event clients
 *
 *  SYNOPSIS
-*     #include "sge_m_event.h"
+*     #include "sge_event_master.h"
 *
 *     void set_event_client_busy(lListElem *event_client, int busy) 
 *

@@ -57,7 +57,7 @@
 #include "configuration_qmaster.h"
 #include "sge_all_listsL.h"
 #include "sge_c_gdi.h"
-#include "sge_m_event.h"
+#include "sge_event_master.h"
 #include "commlib.h"
 #include "sig_handlers.h"
 #include "sge_host.h"

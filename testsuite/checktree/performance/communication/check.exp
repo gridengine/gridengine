@@ -1,0 +1,856 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+
+set check_init_level_procedure "init_level"
+set check_category            "PERFORMANCE"
+set check_name                "communication"
+set check_description(0)      "Test commd data throughput"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+
+set check_functions           ""
+lappend check_functions       "communication_setup"          ;# functions to call (in order)
+lappend check_functions       "communication_run"
+lappend check_functions       "communication_run_message_count"
+lappend check_functions       "communication_cleanup"
+set check_highest_level       0
+
+
+global receive_remote_binary
+global send_remote_binary
+global remote_host1
+global remote_host2
+global receive_binary
+global send_binary
+global setup_ok
+
+
+proc init_level {} {
+   global CHECK_ACT_LEVEL
+
+    # TODO setup levels 
+  switch -- $CHECK_ACT_LEVEL {
+     "0"  { 
+        return 0
+     }
+  }
+  return -1
+}
+
+
+
+
+
+
+proc communication_setup {} {
+   global setup_ok
+   global receive_remote_binary
+   global send_remote_binary
+   global remote_host1
+   global remote_host2
+   global receive_binary
+   global send_binary
+
+   global CHECK_CORE_EXECD CHECK_OUTPUT
+   global CHECK_SOURCE_DIR CHECK_USER
+
+   
+   set setup_ok 0
+
+   if { [llength $CHECK_CORE_EXECD] <= 2 } {
+      set_error -3 "need more than two host for this test"
+      return -3
+   }
+
+   if { [resolve_version] < 3 } {
+       set_error -3 "test not supported for version [get_version_info]"
+       return -3
+   }
+   set remote_host1 [lindex $CHECK_CORE_EXECD 1]
+   set remote_host2 [lindex $CHECK_CORE_EXECD 2]
+
+   puts $CHECK_OUTPUT "host: $remote_host1"
+   set up_arch [resolve_upper_arch $remote_host1]
+   set send_binary $CHECK_SOURCE_DIR/$up_arch/testsuite_snd
+
+   if { [wait_for_remote_file $remote_host1 $CHECK_USER $send_binary] != 0 } {
+      set_error -3 "could not open event client binary: $send_binary"
+      return -3
+   }
+   puts $CHECK_OUTPUT "using send binary: $send_binary"
+
+   set receive_binary $CHECK_SOURCE_DIR/$up_arch/testsuite_rcv
+   if { [wait_for_remote_file $remote_host1 $CHECK_USER $receive_binary] != 0 } {
+      set_error -3 "could not open event client binary: $receive_binary"
+      return -3
+   }
+   puts $CHECK_OUTPUT "using receive binary: $receive_binary"
+
+
+
+
+   puts $CHECK_OUTPUT "host: $remote_host2"
+   set up_arch [resolve_upper_arch $remote_host2]
+   set send_remote_binary $CHECK_SOURCE_DIR/$up_arch/testsuite_snd
+
+   if { [wait_for_remote_file $remote_host2 $CHECK_USER $send_remote_binary] != 0 } {
+      set_error -3 "could not open event client binary: $send_remote_binary"
+      return -3
+   }
+   puts $CHECK_OUTPUT "using send binary: $send_remote_binary"
+
+   set receive_remote_binary $CHECK_SOURCE_DIR/$up_arch/testsuite_rcv
+   if { [wait_for_remote_file $remote_host2 $CHECK_USER $receive_remote_binary] != 0 } {
+      set_error -3 "could not open event client binary: $receive_remote_binary"
+      return -3
+   }
+   puts $CHECK_OUTPUT "using receive binary: $receive_remote_binary"
+
+
+   set setup_ok 1
+   set_error 0 "ok"
+}
+
+proc update_html_file { html_file data_file } {
+   global CHECK_OUTPUT
+   
+   set content ""
+   puts $CHECK_OUTPUT "updating html file:"
+   puts $CHECK_OUTPUT "$html_file"
+
+   read_array_from_file $data_file "content" mcount
+   if { [ info exists mcount(runs) ] } {
+      set data_count $mcount(runs)
+   } else {
+      set data_count ""
+   }
+
+   set nr_elem [llength $data_count]
+   if { $nr_elem > 0 } {
+      set act_elem [expr ( $nr_elem - 1 )]
+      while { $act_elem >= 0 } {
+         set elem [lindex $data_count $act_elem]
+         incr act_elem -1
+         set clock_format [ split [clock format $elem -format "%d.%m.%Y-%H:%M:%S"] "-"]
+         
+         set test_date [lindex $clock_format 0]
+         set test_time [lindex $clock_format 1]
+         puts $CHECK_OUTPUT "$test_date at $test_time"
+         if { [info exists test_data] } {
+            unset test_data
+         }
+         read_array_from_file $data_file $elem test_data
+         puts $CHECK_OUTPUT "count=$test_data(count)" 
+         puts $CHECK_OUTPUT "date=$test_data(date)" 
+         puts $CHECK_OUTPUT "pic1_path=$test_data(pic1_path)" 
+         puts $CHECK_OUTPUT "pic2_path=$test_data(pic2_path)" 
+         puts $CHECK_OUTPUT "send_host=$test_data(send_host)" 
+         puts $CHECK_OUTPUT "receive_host=$test_data(receive_host)"
+         puts $CHECK_OUTPUT "master_host=$test_data(master_host)" 
+         set send_avg_sum 0.0
+         set receive_avg_sum 0.0
+   
+         if { [info exists table] } {
+            unset table
+         }
+         set cols [ expr ( $test_data(count) + 1  ) ]
+         set rows 15
+    
+         set table(COLS) $cols     
+         set table(ROWS) $rows
+         set good  "#00FF00"  ;# green
+         set bad   "#FF0000"  ;# red
+   
+         for {set i 1} { $i <= $rows } { incr i 1 } {
+            set table($i,BGCOLOR) "#FFFFFF"
+            set table($i,FNCOLOR) "#000000"
+         }
+   
+         for {set i 0} { $i < $test_data(count) } { incr i 1 } {
+            puts $CHECK_OUTPUT "size=$test_data($i,size)"
+            set table(9,[ expr ( 2 + $i ) ]) $test_data($i,size)
+   
+            puts $CHECK_OUTPUT "snd_commd_kbits=$test_data($i,snd_commd_kbits)"
+            set table(10,[ expr ( 2 + $i ) ]) [format "%.3f" $test_data($i,snd_commd_kbits)]
+   
+   
+            puts $CHECK_OUTPUT "rcv_commd_kbits=$test_data($i,rcv_commd_kbits)"
+            set table(11,[ expr ( 2 + $i ) ]) [format "%.3f" $test_data($i,rcv_commd_kbits)]
+   
+            puts $CHECK_OUTPUT "snd_tcpip_kbits=$test_data($i,snd_tcpip_kbits)"
+            set table(12,[ expr ( 2 + $i ) ]) [format "%.3f" $test_data($i,snd_tcpip_kbits)]
+   
+            puts $CHECK_OUTPUT "rcv_tcpip_kbits=$test_data($i,rcv_tcpip_kbits)"
+            set table(13,[ expr ( 2 + $i ) ]) [format "%.3f" $test_data($i,rcv_tcpip_kbits)]
+   
+            puts $CHECK_OUTPUT "snd_commd_percentage=$test_data($i,snd_commd_percentage)"
+            set table(14,[ expr ( 2 + $i ) ]) [format "%.3f" $test_data($i,snd_commd_percentage)]
+   
+            puts $CHECK_OUTPUT "rcv_commd_percentage=$test_data($i,rcv_commd_percentage)"
+            set table(15,[ expr ( 2 + $i ) ]) [format "%.3f" $test_data($i,rcv_commd_percentage)]
+   
+            set send_avg_sum [ expr (  $test_data($i,snd_commd_percentage) + $send_avg_sum ) ]
+            set receive_avg_sum [ expr (  $test_data($i,rcv_commd_percentage) + $receive_avg_sum ) ]
+         }
+         set avg_send [ expr ( $send_avg_sum / $test_data(count) ) ]
+         set avg_receive [ expr ( $receive_avg_sum / $test_data(count) ) ]
+         puts $CHECK_OUTPUT "avg_send    : $avg_send"
+         puts $CHECK_OUTPUT "avg_receive : $avg_receive"
+   
+         set table(1,1) "date:"
+         set table(2,1) "avg. send (%)"
+         set table(3,1) "avg. receive (%)"
+         set table(4,1) "KBit/s chart"
+         set table(5,1) "commd <-> TCPIP percentage chart"
+         set table(6,1) "send host"
+         set table(7,1) "receive host"
+         set table(8,1) "master host"
+         if { [ string first "KBit_mc_" $test_data(pic1_path) ] >= 0 } {
+            set table(9,1) "message count"
+         } else {
+            set table(9,1) "data size (Byte)"
+         }
+         set table(10,1) "commd send (KBit/s)"
+         set table(11,1) "commd receive (KBit/s)"
+         set table(12,1) "TCP/IP send (KBit/s)"
+         set table(13,1) "TCP/IP receive (KBit/s)"
+         set table(14,1) "commd send vs TCP/IP send (%)"
+         set table(15,1) "commd receive vs TCP/IP receive (%)"
+   
+   
+         set table(1,2) "$test_date at $test_time"
+         set table(2,2) [format "%.2f" $avg_send ]
+         set table(3,2) [format "%.2f" $avg_receive ]
+   
+         set table(2,2,FNCOLOR) "#00FF00"
+         set table(3,2,FNCOLOR) "#00FF00"
+   
+         set table(4,2) [ create_html_image "KBit/s chart" $test_data(pic1_path)]
+         set table(5,2) [ create_html_image "commd <-> TCPIP percentage chart" $test_data(pic2_path)]
+         set table(6,2) $test_data(send_host)
+         set table(7,2) $test_data(receive_host)
+         set table(8,2) $test_data(master_host)
+         append content [ create_html_table table 1 CENTER]
+         append content "<hr WIDTH=\"100%\">"
+      }
+   }
+
+    generate_html_file $html_file "commd communication test" $content
+}
+
+proc communication_run { } {
+   global CHECK_OUTPUT setup_ok remote_host1 remote_host2
+   global CHECK_PROTOCOL_DIR check_name CHECK_HOST
+   
+   if { $setup_ok != 1 } {
+      set_error -3 "setup errors"
+      return -3
+   }
+
+   set com_output_dir $CHECK_PROTOCOL_DIR/$check_name
+   set output_gif_dir $com_output_dir/gif
+   set data_file $com_output_dir/$check_name.dat
+   set html_file $com_output_dir/$check_name.html
+
+   file mkdir $com_output_dir
+   file mkdir $output_gif_dir
+
+#   update_html_file $html_file $data_file
+#   set_error 0 "ok"
+#   return
+   
+
+   set csize 1.5
+   set a 0
+   for {set i 1.5} { $csize < 12500.0 } { set i [ expr ( $i + 0.1 ) ] } {
+      set csize [expr ( pow ( 10 , $i ) ) ]
+      set size($a) [ expr ( round ( $csize ) ) ]  
+#      puts $CHECK_OUTPUT "$i $size($a)"
+      incr a 1
+   }
+#   set a 3
+   set save_array(count) $a
+   for {set i 0} { $i < $a } { incr i 1 } {
+      puts $CHECK_OUTPUT "\nSending 2000 x $size($i) byte ..."
+      run_communication_test back 43001 0 0 2000 $size($i) 15
+      puts $CHECK_OUTPUT "commd:  send     $back(snd_commd_kbits) kbit/s"
+      puts $CHECK_OUTPUT "commd:  received $back(rcv_commd_kbits) kbit/s"
+      puts $CHECK_OUTPUT "TCP/IP: send     $back(snd_tcpip_kbits) kbit/s"
+      puts $CHECK_OUTPUT "TCP/IP: received $back(rcv_tcpip_kbits) kbit/s"
+
+      set save_array($i,snd_commd_kbits) $back(snd_commd_kbits)
+      set save_array($i,rcv_commd_kbits) $back(rcv_commd_kbits)
+      set save_array($i,snd_tcpip_kbits) $back(snd_tcpip_kbits)
+      set save_array($i,rcv_tcpip_kbits) $back(rcv_tcpip_kbits)
+      set save_array($i,size) $size($i)
+      
+      # commd send data
+      set xydata(0,$i,x) $size($i)
+      set xydata(0,$i,y) $back(snd_commd_kbits)
+      # commd rcv data
+      set xydata(1,$i,x) $size($i)
+      set xydata(1,$i,y) $back(rcv_commd_kbits)
+      # tcp/ip send data
+      set xydata(2,$i,x) $size($i)
+      set xydata(2,$i,y) $back(snd_tcpip_kbits)
+      # tcp/ip rcv data
+      set xydata(3,$i,x) $size($i)
+      set xydata(3,$i,y) $back(rcv_tcpip_kbits)
+
+      # difference between commd send and tcp/ip send
+      set xydata(4,$i,x) $size($i)
+      # assume tcp/ip as 100 %
+      set one_p [ expr ( $back(snd_tcpip_kbits) / 100.000  ) ]
+      #puts $CHECK_OUTPUT "1 % = $one_p"
+      set p_value [ expr ( $back(snd_commd_kbits) / $one_p  ) ] 
+      set xydata(4,$i,y) $p_value  
+      set save_array($i,snd_commd_percentage) $p_value
+
+      # difference between commd receive and tcp/ip receive
+      set xydata(5,$i,x) $size($i)
+      # assume tcp/ip as 100 %
+      set one_p [ expr ( $back(rcv_tcpip_kbits) / 100.000  ) ]
+      #puts $CHECK_OUTPUT "1 % = $one_p"
+      set p_value [ expr ( $back(rcv_commd_kbits) / $one_p  ) ] 
+      set xydata(5,$i,y) $p_value  
+      set save_array($i,rcv_commd_percentage) $p_value
+   }
+   set xydata(0,drawmode) "lines"
+   set xydata(1,drawmode) "lines"
+   set xydata(2,drawmode) "lines"
+   set xydata(3,drawmode) "lines"
+   set xydata(4,drawmode) "lines"
+   set xydata(5,drawmode) "lines"
+
+
+
+   set xydata(0,title) "commd send"
+   set xydata(1,title) "commd receive"
+   set xydata(2,title) "TCP/IP send"
+   set xydata(3,title) "TCP/IP receive"
+   set xydata(4,title) "commd send"
+   set xydata(5,title) "commd receive"
+
+   set xydata(0,show) 1
+   set xydata(1,show) 1
+   set xydata(2,show) 1
+   set xydata(3,show) 1
+   set xydata(4,show) 0
+   set xydata(5,show) 0
+ 
+
+
+   set drawing(output_file) [get_tmp_file_name]
+   set drawing(xlabel)      "data size in byte"
+   set drawing(ylabel)      "KBit/s"
+   set drawing(title)       "commd vs TCP/IP performance (2000 messages, [clock format [timestamp]])"
+   
+   # create Mbits/s table gif
+   create_gnuplot_xy_gif drawing xydata
+   set save_array(date) [timestamp]
+
+   set gif_file_name "KBit_[clock format $save_array(date) -format "%d.%m.%Y-%H:%M:%S"]"
+   file copy -- $drawing(output_file) $output_gif_dir/$gif_file_name.gif
+   set save_array(pic1_path) $output_gif_dir/$gif_file_name.gif
+ 
+   set drawing(output_file) [get_tmp_file_name]
+   set xydata(0,show) 0
+   set xydata(1,show) 0
+   set xydata(2,show) 0
+   set xydata(3,show) 0
+   set xydata(4,show) 1
+   set xydata(5,show) 1
+
+   set drawing(ylabel) "% of TCP/IP"
+   # create % to TCP/IP table gif
+   create_gnuplot_xy_gif drawing xydata
+   set gif_file_name "Percentage_[clock format $save_array(date) -format "%d.%m.%Y-%H:%M:%S"]"
+   file copy -- $drawing(output_file) $output_gif_dir/$gif_file_name.gif
+   set save_array(pic2_path) $output_gif_dir/$gif_file_name.gif
+
+   puts $CHECK_OUTPUT "gif file is: $save_array(pic1_path)"
+   puts $CHECK_OUTPUT "gif file is: $save_array(pic2_path)"
+
+   read_array_from_file $data_file "content" content
+   if { [ info exists content(runs) ] } {
+      set help $content(runs)
+   } else {
+      set help ""
+   }
+   lappend help $save_array(date)
+   set content(runs) $help
+   spool_array_to_file $data_file "content" content
+
+   set save_array(send_host) $remote_host2
+   set save_array(receive_host) $remote_host1
+   set save_array(master_host) $CHECK_HOST
+
+   spool_array_to_file $data_file $save_array(date) save_array 0
+   
+#   puts $CHECK_OUTPUT "test results:"
+#   set anames [array names back]  
+#   foreach val $anames {
+#      puts $CHECK_OUTPUT "$val=$back($val)"
+#   }
+
+   update_html_file $html_file $data_file
+
+   set_error 0 "ok"
+}
+
+
+proc communication_run_message_count { } {
+   global CHECK_OUTPUT setup_ok remote_host1 remote_host2
+   global CHECK_PROTOCOL_DIR check_name CHECK_HOST
+   
+   if { $setup_ok != 1 } {
+      set_error -3 "setup errors"
+      return -3
+   }
+
+   set com_output_dir $CHECK_PROTOCOL_DIR/$check_name
+   set output_gif_dir $com_output_dir/gif
+   set data_file "$com_output_dir/${check_name}_mc.dat"
+   set html_file "$com_output_dir/${check_name}_mc.html"
+
+   file mkdir $com_output_dir
+   file mkdir $output_gif_dir
+
+#   update_html_file $html_file $data_file
+#   set_error 0 "ok"
+#   return
+   
+
+   set csize 3.0
+   set a 0
+   for {set i 3.0} { $csize < 9000.0 } { set i [ expr ( $i + 0.1 ) ] } {
+      set csize [expr ( pow ( 10 , $i ) ) ]
+      set size($a) [ expr ( round ( $csize ) ) ]  
+#      puts $CHECK_OUTPUT "$i $size($a)"
+      incr a 1
+   }
+#   set a 3
+   set save_array(count) $a
+   for {set i 0} { $i < $a } { incr i 1 } {
+      puts $CHECK_OUTPUT "\nSending $size($i) x 2000 byte ..."
+      run_communication_test back 43001 0 0 $size($i) 2000 15
+      puts $CHECK_OUTPUT "commd:  send     $back(snd_commd_kbits) kbit/s"
+      puts $CHECK_OUTPUT "commd:  received $back(rcv_commd_kbits) kbit/s"
+      puts $CHECK_OUTPUT "TCP/IP: send     $back(snd_tcpip_kbits) kbit/s"
+      puts $CHECK_OUTPUT "TCP/IP: received $back(rcv_tcpip_kbits) kbit/s"
+
+      set save_array($i,snd_commd_kbits) $back(snd_commd_kbits)
+      set save_array($i,rcv_commd_kbits) $back(rcv_commd_kbits)
+      set save_array($i,snd_tcpip_kbits) $back(snd_tcpip_kbits)
+      set save_array($i,rcv_tcpip_kbits) $back(rcv_tcpip_kbits)
+      set save_array($i,size) $size($i)
+      
+      # commd send data
+      set xydata(0,$i,x) $size($i)
+      set xydata(0,$i,y) $back(snd_commd_kbits)
+      # commd rcv data
+      set xydata(1,$i,x) $size($i)
+      set xydata(1,$i,y) $back(rcv_commd_kbits)
+      # tcp/ip send data
+      set xydata(2,$i,x) $size($i)
+      set xydata(2,$i,y) $back(snd_tcpip_kbits)
+      # tcp/ip rcv data
+      set xydata(3,$i,x) $size($i)
+      set xydata(3,$i,y) $back(rcv_tcpip_kbits)
+
+      # difference between commd send and tcp/ip send
+      set xydata(4,$i,x) $size($i)
+      # assume tcp/ip as 100 %
+      set one_p [ expr ( $back(snd_tcpip_kbits) / 100.000  ) ]
+      #puts $CHECK_OUTPUT "1 % = $one_p"
+      set p_value [ expr ( $back(snd_commd_kbits) / $one_p  ) ] 
+      set xydata(4,$i,y) $p_value  
+      set save_array($i,snd_commd_percentage) $p_value
+
+      # difference between commd receive and tcp/ip receive
+      set xydata(5,$i,x) $size($i)
+      # assume tcp/ip as 100 %
+      set one_p [ expr ( $back(rcv_tcpip_kbits) / 100.000  ) ]
+      #puts $CHECK_OUTPUT "1 % = $one_p"
+      set p_value [ expr ( $back(rcv_commd_kbits) / $one_p  ) ] 
+      set xydata(5,$i,y) $p_value  
+      set save_array($i,rcv_commd_percentage) $p_value
+   }
+   set xydata(0,drawmode) "lines"
+   set xydata(1,drawmode) "lines"
+   set xydata(2,drawmode) "lines"
+   set xydata(3,drawmode) "lines"
+   set xydata(4,drawmode) "lines"
+   set xydata(5,drawmode) "lines"
+
+   set xydata(0,title) "commd send"
+   set xydata(1,title) "commd receive"
+   set xydata(2,title) "TCP/IP send"
+   set xydata(3,title) "TCP/IP receive"
+   set xydata(4,title) "commd send"
+   set xydata(5,title) "commd receive"
+
+   set xydata(0,show) 1
+   set xydata(1,show) 1
+   set xydata(2,show) 1
+   set xydata(3,show) 1
+   set xydata(4,show) 0
+   set xydata(5,show) 0
+ 
+
+
+   set drawing(output_file) [get_tmp_file_name]
+   set drawing(xlabel)      "message count"
+   set drawing(ylabel)      "KBit/s"
+   set drawing(title)       "commd vs TCP/IP performance ( 2000 byte message length , [clock format [timestamp]])"
+   
+   # create Mbits/s table gif
+   create_gnuplot_xy_gif drawing xydata
+   set save_array(date) [timestamp]
+
+   set gif_file_name "KBit_mc_[clock format $save_array(date) -format "%d.%m.%Y-%H:%M:%S"]"
+   file copy -- $drawing(output_file) $output_gif_dir/$gif_file_name.gif
+   set save_array(pic1_path) $output_gif_dir/$gif_file_name.gif
+ 
+   set drawing(output_file) [get_tmp_file_name]
+   set xydata(0,show) 0
+   set xydata(1,show) 0
+   set xydata(2,show) 0
+   set xydata(3,show) 0
+   set xydata(4,show) 1
+   set xydata(5,show) 1
+
+   set drawing(ylabel) "% of TCP/IP"
+   # create % to TCP/IP table gif
+   create_gnuplot_xy_gif drawing xydata
+   set gif_file_name "Percentage_mc_[clock format $save_array(date) -format "%d.%m.%Y-%H:%M:%S"]"
+   file copy -- $drawing(output_file) $output_gif_dir/$gif_file_name.gif
+   set save_array(pic2_path) $output_gif_dir/$gif_file_name.gif
+
+   puts $CHECK_OUTPUT "gif file is: $save_array(pic1_path)"
+   puts $CHECK_OUTPUT "gif file is: $save_array(pic2_path)"
+
+   read_array_from_file $data_file "content" content
+   if { [ info exists content(runs) ] } {
+      set help $content(runs)
+   } else {
+      set help ""
+   }
+   lappend help $save_array(date)
+   set content(runs) $help
+   spool_array_to_file $data_file "content" content
+
+   set save_array(send_host) $remote_host2
+   set save_array(receive_host) $remote_host1
+   set save_array(master_host) $CHECK_HOST
+
+   spool_array_to_file $data_file $save_array(date) save_array 0
+   
+#   puts $CHECK_OUTPUT "test results:"
+#   set anames [array names back]  
+#   foreach val $anames {
+#      puts $CHECK_OUTPUT "$val=$back($val)"
+#   }
+
+   update_html_file $html_file $data_file
+
+   set_error 0 "ok"
+}
+
+
+
+proc run_communication_test { results port sync closefd repeat datasize tcptime } {
+   global CHECK_OUTPUT
+   global receive_remote_binary
+   global send_remote_binary
+   global remote_host1
+   global remote_host2
+   global receive_binary
+   global send_binary
+
+   upvar $results res
+
+   set timeout 600
+   set snd_complete 0
+   set rcv_complete 0 
+
+   set rcv_closedfd -1
+   set rcv_sync -1
+   set rcv_repeat -1
+   set snd_closedfd -1
+   set snd_sync -1
+   set snd_repeat -1
+   set snd_datasize -1
+   set snd_tcptime -1
+   
+   set rcv_commd_bytes 0
+   set rcv_commd_time  0
+   set rcv_commd_kbits 0
+   set snd_commd_bytes 0
+   set snd_commd_time  0
+   set snd_commd_kbits 0
+  
+   set rcv_tcpip_bytes 0
+   set rcv_tcpip_time  0
+   set rcv_tcpip_kbits 0
+   set snd_tcpip_bytes 0
+   set snd_tcpip_time  0
+   set snd_tcpip_kbits 0
+   
+
+   debug_puts "Testing communication from $remote_host1 to $remote_host2 ..."
+   debug_puts "Starting remote receive binary:\n  $receive_remote_binary"
+
+   set sync_arg ""
+   if { $sync != 0 } {
+      set sync_arg "-sync"
+   }
+   set closefd_arg ""
+   if { $closefd != 0 } {
+      set closefd_arg "-closefd"
+   }
+
+
+   set receiver_args " -host $remote_host1 -port $port $sync_arg $closefd_arg -repeat $repeat"
+   set receiver_sid [ open_remote_spawn_process $remote_host2 "ts_def_con2" $receive_remote_binary $receiver_args]
+   set receiver_id [lindex $receiver_sid 1]
+   set sender_sid "0 0 0"
+   set sender_id 0
+
+   set spawn_list $receiver_id
+
+   while { $snd_complete != 1 || $rcv_complete != 1 } {
+      set timeout 600
+      expect {
+         -i $spawn_list full_buffer {
+            add_proc_error "communication_run" -1 "expect full_buffer error"
+            return -1
+         }
+         -i $spawn_list timeout {
+            puts $CHECK_OUTPUT "---->>>>>>>>> got timeout"
+            add_proc_error "communication_run" -1 "got timeout"
+            return -1
+         }
+         -i $spawn_list eof {
+            set spawn_id $expect_out(spawn_id)
+            puts $CHECK_OUTPUT "got eof for spawn_id $spawn_id"
+            add_proc_error "communication_run" -1 "got eof"
+            return -1
+         }
+         -i $sender_id -- "*\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+               set help [string trim $line]
+               if { [set i [string first "closefd=" $help]] == 0 } {
+                   incr i 8
+                   set snd_closedfd [ string range $help $i end]
+                }
+                if { [set i [string first "sync=" $help]] == 0 } {
+                   incr i 5
+                   set snd_sync [ string range $help $i end]
+                }
+                if { [set i [string first "repeat=" $help]] == 0 } {
+                   incr i 7 
+                   set snd_repeat [ string range $help $i end]
+                }
+                if { [set i [string first "datasize=" $help]] == 0 } {
+                   incr i 9 
+                   set snd_datasize [ string range $help $i end]
+                }
+                if { [set i [string first "tcptime=" $help]] == 0 } {
+                   incr i 8 
+                   set snd_tcptime [ string range $help $i end]
+                }
+
+
+
+
+                if { [string match "COMMD:*bytes send in*seconds" $help] } {
+                   set i [string first "bytes send" $help]
+                   incr i -1
+                   set snd_commd_bytes [ string trim [string range $help 6 $i]]
+                   incr i 14
+                   set e [string first "seconds" $help]
+                   incr e -1
+                   set snd_commd_time  [ string trim [string range $help $i $e ]]
+                }
+                if { [string match "COMMD:*KBit/s" $help] } {
+                   set i [string first "KBit" $help]
+                   incr i -1
+                   set snd_commd_kbits [ string trim [ string range $help 6 $i ]]
+
+                }
+                if { [string match "TCP/IP:*bytes send in*seconds" $help] } {
+                   set i [string first "bytes send" $help]
+                   incr i -1
+                   set snd_tcpip_bytes [ string trim [string range $help 7 $i]]
+                   incr i 14
+                   set e [string first "seconds" $help]
+                   incr e -1
+                   set snd_tcpip_time  [ string trim [string range $help $i $e ]]
+                }
+                if { [string match "TCP/IP:*KBit/s" $help] } {
+                   set i [string first "KBit" $help]
+                   incr i -1
+                   set snd_tcpip_kbits [ string trim [ string range $help 7 $i ]]
+                }
+                if { [string first "_exit_status_:(0)" $help] >= 0 } {
+                   set snd_complete 1
+                }
+
+
+                debug_puts "SND: $help"
+            }
+         }
+         -i $receiver_id -- "*\n" {
+            set output $expect_out(0,string) 
+            set output [ split $output "\n" ]
+            foreach line $output {
+                set help [string trim $line]
+
+                if { [set i [string first "closefd=" $help]] == 0 } {
+                   incr i 8
+                   set rcv_closedfd [ string range $help $i end]
+                }
+                if { [set i [string first "sync=" $help]] == 0 } {
+                   incr i 5
+                   set rcv_sync [ string range $help $i end]
+                }
+                if { [set i [string first "repeat=" $help]] == 0 } {
+                   incr i 7 
+                   set rcv_repeat [ string range $help $i end]
+                }
+                if {  [string first "CONNECTED TO COMMD" $help] == 0 } { 
+                   #  here we start the sender
+                   debug_puts "Starting local send binary:\n  $send_binary"
+                   set sender_args " -host $remote_host2 -port $port $sync_arg $closefd_arg -repeat $repeat -datasize $datasize -tcptime $tcptime"
+                   set sender_sid [ open_remote_spawn_process $remote_host1 "ts_def_con" $send_binary $sender_args]
+                   set sender_id [lindex $sender_sid 1]
+                   lappend spawn_list $sender_id
+                   set timeout 60
+                }
+                if { [string first "_exit_status_:(0)" $help] >= 0 } {
+                   set rcv_complete 1
+                }
+                if { [string match "COMMD:*bytes received in*seconds" $help] } {
+                   set i [string first "bytes received" $help]
+                   incr i -1
+                   set rcv_commd_bytes [ string trim [string range $help 6 $i]]
+                   incr i 18
+                   set e [string first "seconds" $help]
+                   incr e -1
+                   set rcv_commd_time  [ string trim [string range $help $i $e ]]
+
+                }
+                if { [string match "COMMD:*KBit/s" $help] } {
+                   set i [string first "KBit" $help]
+                   incr i -1
+                   set rcv_commd_kbits [ string trim [ string range $help 6 $i ]]
+                }
+                if { [string match "TCP/IP:*bytes received in*seconds" $help] } {
+                   set i [string first "bytes received" $help]
+                   incr i -1
+                   set rcv_tcpip_bytes [ string trim [string range $help 7 $i]]
+                   incr i 18
+                   set e [string first "seconds" $help]
+                   incr e -1
+                   set rcv_tcpip_time  [ string trim [string range $help $i $e ]]
+                }
+                if { [string match "TCP/IP:*KBit/s" $help] } {
+                   set i [string first "KBit" $help]
+                   incr i -1
+                   set rcv_tcpip_kbits [ string trim [ string range $help 7 $i ]]
+               }
+
+                debug_puts "RCV: $help"
+            }
+         }
+      }
+   }
+   close_spawn_process $receiver_sid
+   close_spawn_process $sender_sid
+
+   if { $rcv_closedfd != $snd_closedfd || $rcv_closedfd != $closefd } {
+      add_proc_error "run_communication_test" -1 "closefd parameter not correctly set"
+   }
+   if { $rcv_sync != $snd_sync || $rcv_sync != $sync } {
+      add_proc_error "run_communication_test" -1 "sync parameter not correctly set"
+   }
+   if { $rcv_repeat != $snd_repeat || $rcv_repeat != $repeat } {
+      add_proc_error "run_communication_test" -1 "repeat parameter not correctly set"
+   }
+   if { $snd_datasize != $datasize } {
+      add_proc_error "run_communication_test" -1 "datasize parameter not correctly set"
+   }
+   if { $snd_tcptime != $tcptime } {
+      add_proc_error "run_communication_test" -1 "tcptime parameter not correctly set"
+   }
+
+   set res(rcv_commd_bytes) $rcv_commd_bytes
+   set res(rcv_commd_time)  $rcv_commd_time
+   set res(rcv_commd_kbits) $rcv_commd_kbits
+   set res(rcv_tcpip_bytes) $rcv_tcpip_bytes
+   set res(rcv_tcpip_time)  $rcv_tcpip_time
+   set res(rcv_tcpip_kbits) $rcv_tcpip_kbits
+
+   set res(snd_commd_bytes) $snd_commd_bytes
+   set res(snd_commd_time)  $snd_commd_time
+   set res(snd_commd_kbits) $snd_commd_kbits
+   set res(snd_tcpip_bytes) $snd_tcpip_bytes
+   set res(snd_tcpip_time)  $snd_tcpip_time
+   set res(snd_tcpip_kbits) $snd_tcpip_kbits
+}
+
+proc communication_cleanup {} {
+   global CHECK_OUTPUT setup_ok
+
+   if { $setup_ok != 1 } {
+      set_error -3 "setup errors"
+      return -3
+   }
+
+   set_error 0 "ok"
+}
+
+
+
+
+
+
+
+
+

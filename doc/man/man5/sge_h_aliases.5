@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_h_aliases.5,v $     Last Update: $Date: 2002/01/25 14:04:54 $     Revision: $Revision: 1.4 $
+.\" $RCSfile: sge_h_aliases.5,v $     Last Update: $Date: 2004/04/13 19:22:04 $     Revision: $Revision: 1.5 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,30 +29,25 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_H_ALIASES 5 "$Date: 2002/01/25 14:04:54 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_H_ALIASES 5 "$Date: 2004/04/13 19:22:04 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_h_aliases \- xxQS_NAMExx host aliases file format
 .\"
 .SH DESCRIPTION
 All xxQS_NAMExx components use a hostname resolving service provided by
-.M xxqs_name_sxx_commd 8
-to identify hosts via a unique hostname.
-.M xxqs_name_sxx_commd 8
-itself references standard UNIX directory services such as DNS, NIS and
-/etc/hosts to resolve hostnames. In rare cases these standard services
+the communication library to identify hosts via a unique hostname. The
+communication library itself references standard UNIX directory services
+such as DNS, NIS and /etc/hosts to resolve hostnames. 
+In rare cases these standard services
 cannot be setup cleanly and xxQS_NAMExx communication daemons running on
 different hosts are unable to automatically determine a unique hostname
 for one or all hosts which can be used on all hosts. In such situations
 a xxQS_NAMExx host aliases file can be used to provide the communication
 daemons with a private and consistent hostname resolution database.
 .PP
-The default location for the host aliases file is 
+The location for the host aliases file is 
 \fI<xxqs_name_sxx_root>/<cell>/common/host_aliases.\fP
-To use a different 
-host aliases, it must be specified explicitly to
-.M xxqs_name_sxx_commd 8
-via the \fB\-a\fP command line option.
 .\"
 .\"
 .SH FORMAT
@@ -60,13 +55,11 @@ For each host a single line must be provided with a blank, comma or
 semicolon separated list of hostname aliases. The first alias
 is defined to be the \fBunique\fP hostname which will be used
 by all xxQS_NAMExx components using the hostname aliasing service
-of the
-.M xxqs_name_sxx_commd 8 .
+of the communication library.
 .\"
 .\"
 .SH "SEE ALSO"
 .M xxqs_name_sxx_intro 1 ,
-.M xxqs_name_sxx_commd 8 .
 .\"
 .SH "COPYRIGHT"
 See

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/03/16 12:27:41 $     Revision: $Revision: 1.17 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2004/04/13 19:22:03 $     Revision: $Revision: 1.18 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2004/03/16 12:27:41 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2004/04/13 19:22:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -724,12 +724,12 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBCOMMD_PORT\fP" 1.5i
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_commd 8
+.M xxqs_name_sxx_qmaster 8
 is expected to listen for communication requests.
-Most installations will use a services map entry instead
-to define that port.
+Most installations will use a services map entry for the
+service "sge_qmaster" instead to define that port.
 .\"
 .IP "\fBSGE_LONG_QNAMES\fP" 1.5i
 If set, all queue names will be displayed in full length.
@@ -752,7 +752,6 @@ If set, all queue names will be displayed in full length.
 .M qmod 1 ,
 .M qsub 1 ,
 .M queue_conf 5 ,
-.M xxqs_name_sxx_commd 8 ,
 .M xxqs_name_sxx_execd 8 ,
 .M xxqs_name_sxx_qmaster 8 ,
 .M xxqs_name_sxx_shepherd 8 .

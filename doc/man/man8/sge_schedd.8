@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2001/11/28 15:00:20 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: sge_schedd.8,v $     Last Update: $Date: 2004/04/13 19:22:05 $     Revision: $Revision: 1.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2001/11/28 15:00:20 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
+.TH xxQS_NAME_Sxx_SCHEDD 8 "$Date: 2004/04/13 19:22:05 $" "xxRELxx" "xxQS_NAMExx Administrative Commands"
 .SH NAME
 xxqs_name_sxx_schedd \- xxQS_NAMExx job scheduling agent
 .\"
@@ -59,12 +59,6 @@ samples changes in the cluster status and notifies
 .I xxqs_name_sxx_schedd
 in periodical time intervals.
 .br
-Together with
-.I xxqs_name_sxx_schedd
-a
-.M xxqs_name_sxx_commd 8
-is brought up automatically on the same machine (if not
-already present).
 .PP
 By using the \fI\-tsm\fP option of the
 .M qconf 1
@@ -109,12 +103,12 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBCOMMD_PORT\fP" 1.5i
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_commd 8
+.M xxqs_name_sxx_qmaster 8
 is expected to listen for communication requests.
-Most installations will use a services map entry instead
-to define that port.
+Most installations will use a services map entry for the
+service "sge_qmaster" instead to define that port.
 .\"
 .\"
 .SH FILES
@@ -136,7 +130,6 @@ for details on the scheduler configuration file.
 .M xxqs_name_sxx_intro 1 ,
 .M xxqs_name_sxx_gdi 3 ,
 .M sched_conf 5 ,
-.M xxqs_name_sxx_commd 8 ,
 .M xxqs_name_sxx_qmaster 8 .
 .\"
 .SH "COPYRIGHT"

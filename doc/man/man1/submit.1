@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/03/25 11:00:43 $     Revision: $Revision: 1.43 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/04/13 19:22:03 $     Revision: $Revision: 1.44 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/03/25 11:00:43 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/04/13 19:22:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -758,8 +758,8 @@ Usually a task should have the same environment (including the current
 working directory) as the corresponding job, so specifying the option
 \fB\-V\fP should be suitable for most applications.
 .sp 1
-\fINote:\fP If in your system the commd port is not configured as service, but via environment
-variable COMMD_PORT, make sure that this variable is set in the enviroment when
+\fINote:\fP If in your system the qmaster tcp port is not configured as service, but via environment
+variable xxQS_NAME_Sxx_QMASTER_PORT, make sure that this variable is set in the enviroment when
 calling
 .I qrsh
 or
@@ -769,8 +769,8 @@ with option \fB\-inherit\fP. If you call
 or
 .I qmake
 with
-option \fB\-inherit\fP from within a job script, export COMMD_PORT with the 
-submit option or special comment "-v COMMD_PORT".
+option \fB\-inherit\fP from within a job script, export xxQS_NAME_Sxx_QMASTER_PORT with the 
+submit option or special comment "-v xxQS_NAME_Sxx_QMASTER_PORT".
 .\"
 .IP "\fB\-j y[es]|n[o]\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
@@ -1483,12 +1483,12 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBCOMMD_PORT\fP" 1.5i
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_commd 8
+.M xxqs_name_sxx_qmaster 8
 is expected to listen for communication requests.
-Most installations will use a services map entry instead
-to define that port.
+Most installations will use a services map entry for the
+service "sge_qmaster" instead to define that port.
 .\"
 .IP "DISPLAY" 1.5i
 For

@@ -1,3 +1,5 @@
+CR-2004-04-13-2: Enhancem.: updated man pages (communication lib changes)
+
 CR-2004-04-13-1: Enhancem.: Added new utilbin binary: gridping
 
 JG-2004-04-13-0: Enhancem.: When an execd reports a job as running, but the job

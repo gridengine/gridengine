@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QHOST 1 "$Date: 2004/01/28 16:05:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QHOST 1 "$Date: 2004/04/13 19:22:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qhost \- show the status of xxQS_NAMExx hosts, queues, jobs
 .\"
@@ -276,12 +276,12 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBCOMMD_PORT\fP" 1.5i
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_commd 8
+.M xxqs_name_sxx_qmaster 8
 is expected to listen for communication requests.
-Most installations will use a services map entry instead
-to define that port.
+Most installations will use a services map entry for the
+service "sge_qmaster" instead to define that port.
 .\"
 .\"
 .SH FILES
@@ -301,7 +301,6 @@ to define that port.
 .M qstat 1 ,
 .M qsub 1 ,
 .M queue_conf 5 ,
-.M xxqs_name_sxx_commd 8 ,
 .M xxqs_name_sxx_execd 8 ,
 .M xxqs_name_sxx_qmaster 8 ,
 .M xxqs_name_sxx_shepherd 8 .

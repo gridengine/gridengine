@@ -31,7 +31,7 @@ AH-2003-03-27-1  Bugfix:    qrong qstat -j diagnosis message wrongly indicates
                  Review:    AS
 
 JG-2003-03-27-0  Bugfix:    qstat -alarm was broken.
-                 Issue:     469, #489
+                 Issue:     469, 489
                  Bugtraq:   481579
                  Changed:   qstat
                  Review:    AH
@@ -55,6 +55,7 @@ AH-2003-03-25-1  Enhancem:  Fix broken build for aimk -only-mt -secure
 EB-2003-03-25-0  Bugfix:    Multiple job script writes cause ETXTBSY
                             (Text File Busy) Errors
                  Issue:     504
+                 Bugtraq:   4838650
                  Changed:   sge_execd
                  Review:    AH
 

@@ -1,3 +1,9 @@
+EB-2004-09-06-0: Buffix:     qacct -l is not working
+                 Review:     SG
+                 Issue:      1261
+                 Bugtraq:    5095907
+                 Changed:    qacct
+
 SG-2004-09-27-0: Bugfix:    fix SG-2004-08-19-0 crashed the qmaster, if qsub -w v
                             was submitted
                  Changed:   scheduler     

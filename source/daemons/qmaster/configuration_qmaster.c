@@ -91,7 +91,7 @@ typedef struct {
 
 static cluster_config_t Cluster_Config = {PTHREAD_MUTEX_INITIALIZER, NULL};
 
-/* Static configuration entries may not be changed at runtime */
+/* Static configuration entries may be changed at runtime with a warning */
 static char *Static_Conf_Entries[] = { "execd_spool_dir", NULL };
 
 
@@ -765,7 +765,7 @@ static int do_mod_config(char *aConfName, lListElem *anOldConf, lListElem *aNewC
 }
 
 /*
- * Static configuration entries may not be changed.
+ * Static configuration entries may be changed at runtime with a warning.
  */
 static int check_static_conf_entries(lList *theOldConfEntries, lList *theNewConfEntries, lList **anAnswer)
 {
@@ -789,12 +789,20 @@ static int check_static_conf_entries(lList *theOldConfEntries, lList *theNewConf
          
          if (((NULL != old_value) && (NULL != new_value)) && (strcmp(old_value, new_value) != 0))
          {
-            ERROR((SGE_EVENT, MSG_CONF_CHANGEPARAMETERXONLYSUPONSHUTDOWN_S, entry_name));
-            answer_list_add(anAnswer, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            DEXIT;
-            return -1;
+            /* log in qmaster messages file */
+            WARNING((SGE_EVENT, MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS, entry_name));
+         /*   INFO((SGE_EVENT, MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS, entry_name)); */
+            answer_list_add(anAnswer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
          }
-      }      
+      }
+      /* log error only if one value is set */ 
+      else if ( (NULL != old_entry) != (NULL != new_entry) )
+      {
+         /* log in qmaster messages file */
+         WARNING((SGE_EVENT, MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS, entry_name));
+         /* INFO((SGE_EVENT, MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS, entry_name)); */
+         answer_list_add(anAnswer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      }
       entry_idx++;
    }
    

@@ -44,6 +44,9 @@
 #include "sgermon.h"
 #include "admin_mail.h"
 #include "sge_string.h"
+#include "sge_log.h"
+
+#include "msg_common.h"
 
 /*
 ** DESCRIPTION
@@ -61,13 +64,21 @@ int answer_error;
 {
    int ret;
    u_long32 dummy; /* always 0 */ 
+   dstring old_spool = DSTRING_INIT;
 
    DENTER(TOP_LAYER, "execd_get_new_conf");
 
    unpackint(pb, &dummy);
 
-   ret = get_merged_configuration(&Execd_Config_List);
+   sge_dstring_copy_string(&old_spool, conf.execd_spool_dir); 
 
+   ret = get_merged_configuration(&Execd_Config_List);
+   
+   if (strcmp(sge_dstring_get_string(&old_spool), conf.execd_spool_dir)) {
+      WARNING((SGE_EVENT, MSG_WARN_CHANGENOTEFFECTEDUNTILRESTARTOFEXECHOSTS, "execd_spool_dir"));
+   }
+
+   sge_dstring_free(&old_spool);
    /*
    ** admin mail block is released on new conf
    */

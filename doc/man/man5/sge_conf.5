@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2004/11/12 17:41:42 $     Revision: $Revision: 1.39 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2005/02/14 13:39:47 $     Revision: $Revision: 1.40 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2004/11/12 17:41:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2005/02/14 13:39:47 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -96,7 +96,11 @@ same directory path
 (the root access restrictions mentioned above need to be met, however).
 .PP
 Being a parameter set at installation time changing the global \fBexecd_spool_dir\fP
-in a running system is not supported.
+in a running system is not supported. If the change should still be proceeded
+it is required to restart all effected execution daemons.  Please make sure running 
+jobs have finished before doing so.
+If you do so running jobs will be lost. 
+
 .PP
 The default location for the execution daemon spool
 directory is <xxqs_name_sxx_root>/<cell>/spool.

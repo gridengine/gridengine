@@ -1,3 +1,7 @@
+CR-2003-02-27-0  Testsuite: enabled bug test for issue 226 by allowing translation
+                            of macro MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I
+                            in set_config() for SGE/EE 5.3 systems. 
+
 AH-2003-02-24-0  Enhancem.: Documented MT safety of gdi 
                             Made more funcs MT safe
                             Cleanup with gdi headers

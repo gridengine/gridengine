@@ -1444,14 +1444,14 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
         lappend vi_commands [format "%c" 27]
      }
   } 
+  set GIDRANGE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I] "*"]
+
   if { [resolve_version] > 2 } {
      set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "*" "*"]
      set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER "*" "*" "*"]
-     set GIDRANGE [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I] "*"]
   } else {
      set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_MODIFIEDINLIST_SSS] $CHECK_USER "*" "*"]
      set ADDED    [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_CONFIG_ADDEDTOLIST_SSS] $CHECK_USER "*" "*"]
-     set GIDRANGE "___ABCDEF___"
   }
 
 

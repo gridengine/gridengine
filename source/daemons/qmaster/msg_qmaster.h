@@ -393,9 +393,6 @@
 #define MSG_JOB_NOSEQNRREAD_SS        _("can't read job sequence number in file "SFQ": %s")
 #define MSG_JOB_NOSEQFILEOPEN_SS      _("can't open sequence number file "SFQ": for reading: %s -- guessing next job number")
 #define MSG_JOB_NOSEQFILECREATE_SS    _("can't create job sequence number file "SFQ": %s - delaying until next job")
-#define MSG_JOB_JLPPNULL              _("jlpp == NULL in sge_add_job()\n")
-#define MSG_JOB_JEPNULL               _("jep == NULL in sge_add_job()\n")
-#define MSG_JOB_JOBALREADYEXISTS_U    _("can't add job \"" U32CFormat "\" - job already exists\n")  
 #define MSG_JOB_NOSUITABLEQ_S         _("%s: no suitable queues\n")
 #define MSG_JOB_VERIFYERROR           _("error")
 #define MSG_JOB_VERIFYWARN            _("warning")
@@ -831,11 +828,12 @@
 #define MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU       _("can't find queue "SFQ" referenced in job "U32CFormat)
 #define MSG_CONFIG_FAILEDREMOVINGBADJOBFILEREASONXPLEASEDELETEYMANUALY_SS       _("failed removing bad jobfile (reason: %s): please delete "SFQ" manually\n")
 #define MSG_CONFIG_REMOVEDBADJOBFILEX_S       _("removed bad jobfile "SFQ"\n")
-#define MSG_CONFIG_FAILEDREMOVINGSCRIPTOFBADJOBFILEREASONXPLEASEDELYMANUALLY_SS       _("failed removing script of bad jobfile (reason: %s): please delete "SFQ" manually\n")
+#define MSG_CONFIG_FAILEDREMOVINGSCRIPT_SS       _("failed removing script of bad jobfile (reason: %s): please delete "SFQ" manually\n")
 #define MSG_CONFIG_REMOVEDSCRIPTOFBADJOBFILEX_S       _("removed script of bad jobfile "SFQ"\n")
 #define MSG_CONFIG_READINGINX_S       _("Reading in %s.\n")
-#define MSG_CONFIG_CANTFINDSCRIPTFILEFORJOBXDELETING_U       _("can't find script file for job " U32CFormat " - deleting\n")
+#define MSG_CONFIG_CANTFINDSCRIPTFILE_U       _("can't find script file for job " U32CFormat " - deleting\n")
 #define MSG_CONFIG_JOBFILEXHASWRONGFILENAMEDELETING_U       _("job file \""U32CFormat"\" has wrong file name - deleting\n")
+#define MSG_CONFIG_NODIRECTORY_S                              _(SFQ" is no directory - skipping the entry\n")
 
 
 /*

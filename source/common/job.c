@@ -55,13 +55,19 @@ lListElem *search_task(u_long32 jataskid, lListElem *job) {
  */
 int is_array(lListElem *job) 
 {
-   lListElem *range_elem = NULL;
    u_long32 start, end, step;
    
-   range_elem = lFirst(lGetList(job, JB_ja_structure));
    job_get_ja_task_ids(job, &start, &end, &step);
    return (start != 1 || end != 1 || step != 1) ? JTYPE_JOB_ARRAY : JTYPE_JOB;
 }
+
+int job_get_number_of_ja_tasks(lListElem *job)
+{
+   u_long32 start, end, step;
+ 
+   job_get_ja_task_ids(job, &start, &end, &step);
+   return ((end - start) / step + 1);
+}   
 
 /***********************************************************************/
 int job_get_ja_task_ids(lListElem *job, u_long32 *start, u_long32 *end, 

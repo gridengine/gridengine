@@ -1,59 +1,72 @@
-#ifndef __SGE_JOB_H
-#define __SGE_JOB_H
+#ifndef _SGE_FILE_PATH_H_
+#define _SGE_FILE_PATH_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
-/*___INFO__MARK_END__*/
+/*___INFO__MARK_END__*/  
 
-#ifndef __SGE_GDI__INTERN_H
-#   include "sge_gdi_intern.h"
-#endif
+#include "basis_types.h"
 
-int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, sge_gdi_request *request);
-int sge_gdi_copy_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser, char *rhost, sge_gdi_request *request);
+typedef enum {
+   JOBS_SPOOL_DIR,
+   JOB_SPOOL_DIR,
+   JOB_SPOOL_DIR_AS_FILE,
+   JOB_SPOOL_FILE,
+   TASK_SPOOL_DIR,
+   TASK_SPOOL_FILE,
+   JOB_SCRIPT_DIR,
+   JOB_SCRIPT_FILE,
+   JOB_ACTIVE_DIR 
+} sge_file_path_id_t;
 
-int sge_gdi_mod_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
+typedef enum {
+   SPOOL_DEFAULT             = 0x0000,
+   SPOOL_HANDLE_AS_ZOMBIE    = 0x0001,
+   SPOOL_WITHIN_EXECD        = 0x0002
+} sge_spool_flags_t; 
 
-int sge_gdi_del_job(lListElem *jep, lList **alpp, char *ruser, char *rhost, int sub_command);
+typedef enum {
+   FORMAT_DEFAULT      = 0x0000,
+   FORMAT_DOT_FILENAME = 0x0001,
+   FORMAT_FIRST_PART   = 0x0002,
+   FORMAT_SECOND_PART  = 0x0004,
+   FORMAT_THIRD_PART   = 0x0008
+} sge_file_path_format_t;
 
-void sge_add_job_event(u_long32 type, lListElem *jep, lListElem *jatep);
+u_long32 sge_get_ja_tasks_per_directory(void);
 
-void sge_add_jatask_event(u_long32 type, lListElem *jep, lListElem *jatask);
+u_long32 sge_get_ja_tasks_per_file(void);
 
-void job_suc_pre(lListElem *jep);
+char *sge_get_file_path(char *buffer, sge_file_path_id_t,
+                        sge_file_path_format_t format_flags,
+                        sge_spool_flags_t spool_flags,
+                        u_long32 ulong_val1, u_long32 ulong_val2);
 
-lListElem *sge_locate_job(u_long32);
-
-/* searches by id or jobname */
-lListElem *locate_job_by_identifier(const char *s);
-
-void get_rid_of_job(lList **alpp, lListElem *jep, lListElem *jatep, int force, sge_pack_buffer *pb, char *pb_host, char *ruser, char *rhost, char *err_str, char *commproc);
-
-#endif /* __SGE_JOB_H */
+#endif /* _SGE_FILE_PATH_H_ */

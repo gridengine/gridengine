@@ -7,6 +7,10 @@
 #include "sge_answerL.h"
 #include "sge_job_jatask.h"
 #include "sge_range.h"
+#include "msg_gdilib.h"
+#include "sge_hash.h"
+
+extern HashTable Master_Job_Hash_Table;
 
 static int job_initialize_task(lListElem *job, u_long32 task_id,
                                u_long32 hold_state);
@@ -162,4 +166,44 @@ void job_set_hold_state(lListElem *job, lListElem *ja_task,
    lSetUlong(ja_task, JAT_hold, new_hold_state); 
 }
 
+int job_add_job(lList **job_list, char *name, lListElem *job, int check, 
+                 int hash, HashTable* Job_Hash_Table) {
+   DENTER(TOP_LAYER, "job_add_job");
 
+   if (!job_list) {
+      ERROR((SGE_EVENT, MSG_JOB_JLPPNULL));
+      DEXIT;
+      return 1;
+   }
+   if (!job) {
+      ERROR((SGE_EVENT, MSG_JOB_JEPNULL));
+      DEXIT;
+      return 1;
+   }
+
+   if(!*job_list) {
+      *job_list = lCreateList(name, JB_Type);
+   }
+
+   if (check && *job_list &&
+       lGetElemUlong(*job_list, JB_job_number, lGetUlong(job, JB_job_number))) {
+      ERROR((SGE_EVENT, MSG_JOB_JOBALREADYEXISTS_U, 
+             u32c(lGetUlong(job, JB_job_number))));
+      DEXIT;
+      return -1;
+   }
+
+   lAppendElem(*job_list, job);
+
+   if (hash && Job_Hash_Table) {
+      if (!*Job_Hash_Table)
+         *Job_Hash_Table = HashTableCreate(14, HashFunc_u_long32, 
+                                 HashCompare_u_long32); /* 2^14 entries */
+
+      HashTableStore(*Job_Hash_Table,
+                     (void *) (long)lGetUlong(job, JB_job_number),
+                     (void *) job);
+   }
+   DEXIT;
+   return 0;
+}               

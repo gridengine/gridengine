@@ -134,7 +134,6 @@ static u_long32 is_referenced_by_jobname(lListElem *jep);
 static int verify_job_list_filter(lList **alpp, int all_users_flag, int all_jobs_flag, int jid_flag, int user_list_flag, char *ruser);
 static void empty_job_list_filter(lList **alpp, int was_modify, int user_list_flag, lList *user_list, int jid_flag, u_long32 jobid, int all_users_flag, int all_jobs_flag, char *ruser, int is_array, u_long32 start, u_long32 end, u_long32 step);   
 static u_long32 sge_get_job_number(void);
-static int sge_add_job(lListElem *jep, int check);
 static void get_rid_of_schedd_job_messages(u_long32 job_number);
 /*-------------------------------------------------------------------------*/
 /* sge_gdi_add_job                                                       */
@@ -628,7 +627,8 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
    
    /* add into job list */
-   if (sge_add_job(lCopyElem(jep), 1)) {
+   if (job_add_job(&Master_Job_List, "Master_Job_List", lCopyElem(jep), 
+                    1, 1, &Master_Job_Hash_Table)) {
       /* SGE_EVENT must be filled by sge_add_job */
       sge_add_answer(alpp, SGE_EVENT, STATUS_EDISK, 0);
       DEXIT;
@@ -2655,87 +2655,6 @@ static u_long32 guess_highest_job_number()
 }   
       
       
-
-/*
-
-   sge_add_job - adds a job to the Master_Job_List.
-
-   returns:
-   -1 if job already exists;
-   0  if successful
-   1  on error
-*/
-int sge_add_job(
-lListElem *jep,
-int check 
-) {
-   DENTER(TOP_LAYER, "sge_add_job");
-   DEXIT;
-   return sge_add_job_(&Master_Job_List, "Master_Job_List", jep, check, 1);
-}
-
-
-/*
-
-   sge_add_job_ - adds a job to a job list.
-   jlpp  address of job_list
-   jep   new Job
-   check check if job already exists in *jlpp
-   hash  enable hashing for Master_Job_List (1 else 0)
-
-   returns:
-   -1 if job already exists;
-   0  if successful
-   1  on error
-*/
-int sge_add_job_(
-lList **jlpp,
-char *name,
-lListElem *jep,
-int check,
-int hash 
-) {
-   DENTER(TOP_LAYER, "sge_add_job_");
-
-   if (!jlpp) {
-      ERROR((SGE_EVENT, MSG_JOB_JLPPNULL));
-      DEXIT;
-      return 1;
-   }
-   if (!jep) {
-      ERROR((SGE_EVENT, MSG_JOB_JEPNULL));
-      DEXIT;
-      return 1;
-   }
-
-   if(!*jlpp)
-      *jlpp = lCreateList(name, JB_Type);
-
-   if (check && *jlpp && 
-       lGetElemUlong(*jlpp, JB_job_number, lGetUlong(jep, JB_job_number))) {
-      ERROR((SGE_EVENT, MSG_JOB_JOBALREADYEXISTS_U, u32c(lGetUlong(jep, JB_job_number))));
-      DEXIT;
-      return -1;
-   }
-   
-   lAppendElem(*jlpp, jep);
-   
-   if (hash) {
-      /*
-      ** hash job entry
-      */
-      if (!Master_Job_Hash_Table)
-         Master_Job_Hash_Table = HashTableCreate(14, HashFunc_u_long32, HashCompare_u_long32); /* 2^14 entries */
-
-      HashTableStore(Master_Job_Hash_Table, 
-                     (void *) (long)lGetUlong(jep, JB_job_number),
-                     (void *) jep);
-   } 
-   DEXIT;
-   return 0;
-}
-
-
 /*******************************************************/
 lListElem *sge_locate_job(
 u_long32 jobid 

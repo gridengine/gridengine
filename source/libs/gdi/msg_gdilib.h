@@ -920,5 +920,9 @@
 #define MSG_SGETEXT_NOQMASTER                   _("unable to contact qmaster\n")
 
 
+#define MSG_JOB_JLPPNULL              _("jlpp == NULL in job_add_job()\n")
+#define MSG_JOB_JEPNULL               _("jep == NULL in job_add_job()\n")
+#define MSG_JOB_JOBALREADYEXISTS_U    _("can't add job \"" U32CFormat "\" - job already exists\n")
+
 #endif /* __MSG_GDILIB_H */
 

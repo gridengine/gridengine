@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
+#include "sge_hash.h"
+
 int job_initialize_ja_tasks(lListElem *job);
 
 int job_is_enrolled(lListElem *job, u_long32 task_number);
@@ -40,5 +42,8 @@ void job_enroll(lListElem *job, u_long32 task_number);
 
 void job_set_hold_state(lListElem *job, lListElem *ja_task,
                         u_long32 new_hold_state);
+
+int job_add_job(lList **job_list, char *name, lListElem *job, int check,
+                 int hash, HashTable* Job_Hash_Table); 
 
 #endif /* __SGE_JOB_JATASK_H */    

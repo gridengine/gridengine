@@ -447,7 +447,7 @@ u_long32 *pflag
 lListElem *ep;
 char* actual_opt;
 
-   DENTER(TOP_LAYER, "parse_flag");
+   DENTER(BASIS_LAYER, "parse_flag");
 
    if((ep = lGetElemStrLike(*ppcmdline, SPA_switch, opt))) {
       actual_opt = sge_strdup(NULL, lGetString(ep, SPA_switch));

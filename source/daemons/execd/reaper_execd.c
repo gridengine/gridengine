@@ -96,7 +96,7 @@
 #include "sge_security.h" 
 #include "sge_dirent.h"
 #include "sge_feature.h"
-#include "sge_directoy.h"
+#include "sge_file_path.h"
 #include "read_write_job.h"
 
 #ifdef COMPILE_DC

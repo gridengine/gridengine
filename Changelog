@@ -1,3 +1,8 @@
+EB-2001-10-11-0: Changed spool behaviour for (array) jobs
+                 - beared down the 32765 subdirectory limit
+                 - added some tuning parameters for job spooling
+                 - collected duplicated code used in master and execd 
+
 CR-2001-10-10-1: Testsuite:
                  - closed issue # 9 (Create a new test for file parsing)
 

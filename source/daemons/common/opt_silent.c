@@ -37,9 +37,7 @@
 
 static int silent_flag = 0;
 
-void set_silent(
-int i 
-) {
+void set_silent(int i) {
    DENTER(TOP_LAYER, "set_silent");
 
    silent_flag = i;
@@ -48,4 +46,7 @@ int i
    return;
 }
 
-int silent() { return silent_flag; }
+int silent() 
+{ 
+   return silent_flag; 
+}

@@ -1,13 +1,13 @@
-/*___INFO__MARK_BEGIN__*/
+/*___INFO__MARK_BEGIN__*/ 
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
- *  Sun Industry Standards Source License Version 1.2
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2          
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
@@ -78,6 +78,7 @@
 #include "sge_userset.h"
 #include "read_write_ckpt.h"
 #include "read_write_queue.h"
+#include "read_write_job.h"
 #include "sge_feature.h"
 #include "sge_userset_qmaster.h"
 #include "sge_ckpt_qmaster.h"
@@ -103,7 +104,10 @@
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
 #include "reschedule.h"
-#include "sge_directoy.h"
+#include "sge_file_path.h"
+#include "sge_washing_machine.h"
+#include "sge_hash.h"
+#include "sge_job_jatask.h"
 
 extern lList *Master_Project_List;
 extern lList *Master_Sharetree_List;
@@ -123,6 +127,7 @@ extern lList *Master_Operator_List;
 extern lList *Master_Calendar_List;
 extern lList *Master_Complex_List;
 extern lList *Master_Zombie_List;
+extern HashTable Master_Job_Hash_Table;
 
 
 
@@ -145,14 +150,6 @@ static int sge_read_cal_list_from_disk(void);
 static int remove_invalid_job_references(int user);
 
 static int debit_all_jobs_from_qs(void);
-static void del_job(lListElem *jep, char *job_str);
-
-static int sge_read_job_list_from_disk(lList **jlpp, char *name, int check, 
-                                       int hash, sge_spool_flags_t flags);
-
-static void next_turn(void);
-static void end_turn(void);
-
 
 /*------------------------------------------------------------*/
 int sge_setup_qmaster()
@@ -570,16 +567,18 @@ int sge_setup_qmaster()
    }
 
    DPRINTF(("job_list-----------------------------------\n"));
-   if (sge_read_job_list_from_disk(&Master_Job_List, "Master_Job_List", 
-                                 1, 1, SPOOL_DEFAULT)) {
+   if (job_read_job_list_from_disk(&Master_Job_List, "Master_Job_List", 
+                                   1, 1, &Master_Job_Hash_Table, 
+                                   SPOOL_DEFAULT, NULL)) {
       DEXIT;
       return -1;
    }
 
    if (conf.zombie_jobs > 0) {
       DPRINTF(("zombie_list--------------------------------------\n"));
-      if (sge_read_job_list_from_disk(&Master_Zombie_List, 
-                        "Master_Zombie_List", 0, 0, SPOOL_HANDLE_AS_ZOMBIE)) {
+      if (job_read_job_list_from_disk(&Master_Zombie_List, 
+                                      "Master_Zombie_List", 0, 0, NULL, 
+                                      SPOOL_HANDLE_AS_ZOMBIE, NULL)) {
          DEXIT;
          return -1;
       }
@@ -1309,35 +1308,6 @@ char *obj_title
 #endif
    
 
-static void next_turn()
-{
-   static int cnt = 0;
-   static char s[] = "-\\/";
-   static char *sp = NULL;
-
-   cnt++;
-   if ((cnt % 100) != 1)
-      return;
-   
-   if (!silent()) {
-      if (!sp || !*sp)
-         sp = s;
-
-      printf("%c\b", *sp++);
-/*       printf("\r%d", cnt); */
-      fflush(stdout);
-   }
-}
-
-static void end_turn()
-{
-   if (!silent()) {
-      printf(" \b");
-      fflush(stdout);
-   }
-}
-
-
 static int debit_all_jobs_from_qs()
 {
    lListElem *gdi;
@@ -1392,160 +1362,11 @@ static int debit_all_jobs_from_qs()
                   jid, tid);
          }
       }
-      if (lGetNumberOfElem(lGetList(jep, JB_ja_tasks)) == 0) {
-         /* need to remove job */
-         del_job(jep, NULL);
-         ret = -1;
-         break;
-      }
    }
 
    DEXIT;
    return ret;
 }
-
-/* deletes job without undebiting job 
-   from queue or other objects */
-static void del_job(
-lListElem *jep,
-char *job_str 
-) {
-   char job_path[SGE_PATH_MAX];
-   char exec_path[SGE_PATH_MAX];
-
-   DENTER(TOP_LAYER, "del_job");
-
-   sge_get_file_path(job_path, JOB_SPOOL_DIR, FORMAT_DEFAULT, 
-                     SPOOL_DEFAULT, atol(job_str), 0);
-   if (jep) {
-      strcpy(exec_path, lGetString(jep, JB_exec_file));
-
-      /* remove bound jobs with lRemoveElem() use lFreeElem() for unbound ele */
-      if ((jep=lGetElemUlong(Master_Job_List, JB_job_number, 
-                  lGetUlong(jep, JB_job_number))))
-         lRemoveElem(Master_Job_List, jep);
-      else 
-         lFreeElem(jep);
-   } else {
-      sprintf(exec_path, "%s/%s", EXEC_DIR, job_str);
-   }
-
-   if (cull_remove_jobtask_from_disk(atol(job_str), 0, 0)) {
-      if (errno!=ENOENT) {
-         ERROR((SGE_EVENT, MSG_CONFIG_FAILEDREMOVINGBADJOBFILEREASONXPLEASEDELETEYMANUALY_SS,
-              strerror(errno), job_path)); 
-      }
-   } else {
-      INFO((SGE_EVENT, MSG_CONFIG_REMOVEDBADJOBFILEX_S , job_path));
-   }
-
-   if (unlink(exec_path)) {
-      if (errno!=ENOENT) {
-         ERROR((SGE_EVENT, MSG_CONFIG_FAILEDREMOVINGSCRIPTOFBADJOBFILEREASONXPLEASEDELYMANUALLY_SS,
-              strerror(errno), exec_path)); 
-      }
-   } else {
-      INFO((SGE_EVENT, MSG_CONFIG_REMOVEDSCRIPTOFBADJOBFILEX_S, exec_path));
-   }
-
-   DEXIT;
-   return;
-}
-
-/*-------------------------------------------------------------------------*/
-/* read jobs from disk                                                     */
-/*-------------------------------------------------------------------------*/
-static int sge_read_job_list_from_disk(lList **jlpp, char *name, int check,
-                                       int hash, sge_spool_flags_t flags) {
-   lList *direntries;
-   lListElem *jobep, *direntry;
-   char fname[SGE_PATH_MAX];
-   SGE_STRUCT_STAT statbuf;
-   stringT tmpstr;
-   stringT dir;
-
-   DENTER(TOP_LAYER, "sge_read_job_list_from_disk");
-
-   sge_get_file_path(dir, JOBS_SPOOL_DIR, FORMAT_DEFAULT, flags, 0, 0); 
-   direntries = sge_get_dirents(dir);
-   if (direntries && !silent()) 
-      printf(MSG_CONFIG_READINGINX_S, name);
-
-   for (;(direntry = lFirst(direntries)); lRemoveElem(direntries, direntry)) {
-      char *job_id_str;
-      int AllFinished = 1;
-      lListElem *jatep;
-      
-      next_turn();
-
-      job_id_str = lGetString(direntry, STR);
-      if (job_id_str[0] != '.') {
-         u_long32 job_id;
-
-         job_id = atol(job_id_str);
-      
-         DPRINTF(("Reading in job >" u32 "<\n", job_id));
-     
-         sge_get_file_path(tmpstr, JOB_SPOOL_FILE, FORMAT_DEFAULT, 
-                           flags, job_id, 0);
-         jobep = cull_create_job_from_disk(job_id, 0, flags);
-         if (!jobep) {
-            del_job(NULL, job_id_str);
-            continue;
-         }
-
-         for_each (jatep, lGetList(jobep, JB_ja_tasks)) {
-            if (lGetUlong(jatep, JAT_status) != JFINISHED) {
-               AllFinished = 0;
-               break;
-            } 
-         }
-
-         /* check for scriptfile before adding job */
-         if (check && !AllFinished && lGetString(jobep, JB_script_file)) {
-            sprintf(fname, "%s/" u32, EXEC_DIR, 
-                  lGetUlong(jobep, JB_job_number));
-            if (SGE_STAT(fname, &statbuf)) {
-               ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDSCRIPTFILEFORJOBXDELETING_U,
-                  u32c(lGetUlong(jobep, JB_job_number))));
-               del_job(jobep, NULL);
-               continue;
-            }
-         }
-         
-         /* check if filename has same name is stored job id */
-         if (lGetUlong(jobep, JB_job_number) != job_id) {
-            ERROR((SGE_EVENT, MSG_CONFIG_JOBFILEXHASWRONGFILENAMEDELETING_U, 
-                     u32c(job_id)));
-            cull_remove_jobtask_from_disk(job_id, 0, flags);
-            /* script is not deleted here, since it may belong to a valid job */
-         }                  
-            
-         lSetList(jobep, JB_jid_sucessor_list, NULL);
-         /* further check no longer necessary, since jobid matches 
-            unique filename */
-         sge_add_job_(jlpp, name, jobep, 0, hash);
-
-      } 
-   }
-   direntries = lFreeList(direntries);
-
-   /*
-   ** for Master_Zombie_List we must sort the list by end time
-   */
-   if (!check) {
-      lSortOrder *so = lParseSortOrderVarArg(JB_Type, "%I+", JB_end_time);
-      lSortList(*jlpp, so);
-      lFreeSortOrder(so);
-   }
-   
-   if (*jlpp) 
-      end_turn();
-
-   DEXIT;
-   return 0; 
-}
-
 
 static int reresolve_host(
 lListElem *ep,

@@ -41,6 +41,14 @@
 #include "sge_stat.h" 
 #include "sge_dirent.h"
 
+typedef enum {
+   FILE_TYPE_NOT_EXISTING,
+   FILE_TYPE_FILE,
+   FILE_TYPE_DIRECTORY
+} file_type_t;
+ 
+static file_type_t sge_get_file_type(const char *name); 
+
 #ifdef TEST
 
 int main(int argc, char **argv)
@@ -61,10 +69,8 @@ int main(int argc, char **argv)
 #endif
 
 /******************************************************/
-int recursive_rmdir(
-char *cp,
-char *err_str 
-) {
+int recursive_rmdir(char *cp, char *err_str) 
+{
    SGE_STRUCT_STAT statbuf;
    SGE_STRUCT_DIRENT *dent;
    DIR *dir;
@@ -141,3 +147,33 @@ char *err_str
 
    return 0;
 }
+
+int sge_is_directory(const char *name)
+{
+   return (sge_get_file_type(name) == FILE_TYPE_DIRECTORY);
+}
+
+int sge_is_file(const char *name)
+{
+   return (sge_get_file_type(name) == FILE_TYPE_FILE);
+}
+
+static file_type_t sge_get_file_type(const char *name)
+{                    
+   SGE_STRUCT_STAT stat_buffer;
+   int ret = FILE_TYPE_NOT_EXISTING;
+
+   if (SGE_STAT(name, &stat_buffer)) {
+      ret = FILE_TYPE_NOT_EXISTING;
+   } else {
+      if (S_ISDIR(stat_buffer.st_mode)) {
+         ret = FILE_TYPE_DIRECTORY;
+      } else if (S_ISREG(stat_buffer.st_mode)) {
+         ret = FILE_TYPE_FILE; 
+      } else {
+         ret = FILE_TYPE_NOT_EXISTING;
+      }
+   }
+   return ret;
+}
+

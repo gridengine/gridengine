@@ -137,96 +137,6 @@ void sge_setup_sge_execd()
    return;
 }
 
-
-/*-------------------------------------------------------------------*/
-void sge_setup_old_jobs()
-{
-   lListElem *jep, *tep, *direntry, *jatep;
-   lList *direntries;
-
-   DENTER(TOP_LAYER, "sge_setup_old_jobs");
-
-   Master_Job_List = lCreateList("Master_Job_List", JB_Type);
-   
-   DPRINTF(("scanning %s for old jobs---------------\n", JOB_DIR));
-
-   direntries = sge_get_dirents(JOB_DIR);
-   for_each(direntry, direntries) {
-      stringT job_id_string;
-      char *ja_task_id_string;
-      u_long32 job_id, ja_task_id; 
-
-      strcpy(job_id_string, lGetString(direntry, STR));
-      ja_task_id_string = strchr(job_id_string, '.');
-      *(ja_task_id_string++) = 0;
-      job_id = atol(job_id_string);
-      ja_task_id = atol(ja_task_id_string);
-      jep = cull_create_job_from_disk(job_id, ja_task_id, SPOOL_WITHIN_EXECD);
-      if (jep) {
-         u_long32 jobid;
-
-         lAppendElem(Master_Job_List, jep);
-         jobid = lGetUlong(jep, JB_job_number);
-   
-         for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-            u_long32 jataskid = lGetUlong(jatep, JAT_task_number);
-
-            add_job_report(jobid, jataskid, jep);
-
-            /* add also job reports for tasks */
-            for_each (tep, lGetList(jatep, JAT_task_list)) {
-               add_job_report(jobid, jataskid, tep);
-            }
-
-            /* does active dir exist ? */
-            if (lGetUlong(jatep, JAT_status) == JRUNNING ||
-                lGetUlong(jatep, JAT_status) == JWAITING4OSJID) {
-               SGE_STRUCT_STAT sb;
-               char active_path[SGE_PATH_MAX];
-
-               sprintf(active_path, ACTIVE_DIR"/"u32"."u32, jobid, jataskid);
-               if (SGE_STAT(active_path, &sb)) {
-                  /* lost active directory - initiate cleanup for job */
-                  execd_job_run_failure(jep, jatep, "lost active dir of running job", GFSTATE_HOST);
-                  continue;
-               }
-            }
-
-#ifdef COMPILE_DC
-            {
-               int ret;
-               /* register still running jobs at ptf */
-               if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
-                  if (lGetUlong(jatep, JAT_status) == JRUNNING) {
-                     if ((ret=register_at_ptf(jep, jatep, NULL))) {
-                        ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYATPTFDURINGSTARTUP_SU, 
-                              ((ret == 1) ? MSG_DELAYED : MSG_FAILED), 
-                              u32c(jobid)));
-                     }
-                  }
-                  for_each(tep, lGetList(jatep, JAT_task_list)) {
-                     if (lGetUlong(lFirst(lGetList(tep, JB_ja_tasks)), 
-                           JAT_status) == JRUNNING) {
-                        if ((ret=register_at_ptf(jep, jatep, tep))) {
-                           ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS, 
-                              ((ret == 1) ? MSG_DELAYED : MSG_FAILED), 
-                              u32c(jobid), lGetString(tep, JB_pe_task_id_str)));
-                        }
-                     }
-                  }
-               }
-            }
-#endif
-         }
-      }
-   }
-   direntries = lFreeList(direntries);
-
-   DEXIT;
-   return;
-}
-
-
 /*-------------------------------------------------------------------------*/
 int daemonize_execd()
 {
@@ -257,4 +167,70 @@ int daemonize_execd()
 
    DEXIT;
    return ret;
+}
+
+int job_initialize_job(lListElem *job)
+{
+   u_long32 job_id;
+   lListElem *ja_task;
+   lListElem *pe_task;
+   DENTER(TOP_LAYER, "job_initialize_job");
+
+   job_id = lGetUlong(job, JB_job_number); 
+   for_each (ja_task, lGetList(job, JB_ja_tasks)) {
+      u_long32 ja_task_id;
+
+      ja_task_id = lGetUlong(ja_task, JAT_task_number);
+
+      add_job_report(job_id, ja_task_id, job);
+                                                                                      /* add also job reports for tasks */
+      for_each (pe_task, lGetList(ja_task, JAT_task_list)) {
+         add_job_report(job_id, ja_task_id, pe_task);
+      }
+
+      /* does active dir exist ? */
+      if (lGetUlong(ja_task, JAT_status) == JRUNNING ||
+          lGetUlong(ja_task, JAT_status) == JWAITING4OSJID) {
+         SGE_STRUCT_STAT stat_buffer;
+         stringT active_dir = "";
+
+         sge_get_file_path(active_dir, JOB_ACTIVE_DIR, FORMAT_DEFAULT,
+                           SPOOL_WITHIN_EXECD, job_id, ja_task_id);
+         if (SGE_STAT(active_dir, &stat_buffer)) {
+            /* lost active directory - initiate cleanup for job */
+            execd_job_run_failure(job, ja_task, "lost active dir of running "
+                                  "job", GFSTATE_HOST);
+            continue;
+         }
+      }
+
+#ifdef COMPILE_DC
+      {
+         int ret;
+         /* register still running jobs at ptf */
+         if (feature_is_enabled(FEATURE_USE_OSJOB_ID)) {
+            if (lGetUlong(ja_task, JAT_status) == JRUNNING) {
+               ret = register_at_ptf(job, ja_task, NULL);
+               if (ret) {
+                  ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYATPTFDURINGSTARTUP_SU,
+                        (ret == 1 ? MSG_DELAYED : MSG_FAILED), u32c(job_id)));
+               }
+            }
+            for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
+               if (lGetUlong(lFirst(lGetList(pe_task, JB_ja_tasks)),
+                     JAT_status) == JRUNNING) {
+                  ret=register_at_ptf(job, ja_task, pe_task);
+                  if (ret) {
+                     ERROR((SGE_EVENT, MSG_JOB_XREGISTERINGJOBYTASKZATPTFDURINGSTARTUP_SUS,
+                        (ret == 1 ? MSG_DELAYED : MSG_FAILED),
+                        u32c(job_id), lGetString(pe_task, JB_pe_task_id_str)));
+                  }
+               }
+            }
+         }
+      }
+#endif
+   }     
+   DEXIT;
+   return 0;           
 }

@@ -1,3 +1,6 @@
+AA-2002-03-07-0: Bugfix:    Addition of acl to project generated core dump due
+                            to uninitialized pointer
+
 EB-2002-03-07-1: Bugfix:    Array Tasks, inconsistent handling of multiple 
                             task ranges
                  Issue:     #49

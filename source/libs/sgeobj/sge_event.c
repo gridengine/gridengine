@@ -39,26 +39,7 @@
 
 #include "msg_sgeobjlib.h"
 
-/****** Eventclient/event_text() **********************************************
-*  NAME
-*     event_text() -- deliver event description
-*
-*  SYNOPSIS
-*     const char* event_text(const lListElem *event) 
-*
-*  FUNCTION
-*     Deliveres a short description of an event object.
-*
-*  INPUTS
-*     const lListElem *event - the event to describe
-*
-*  RESULT
-*     const char* - pointer to the descriptive string.
-*
-*  NOTES
-*     The result points to a static buffer. Subsequent calls to i
-*     event_text will overwrite previous results.
-*******************************************************************************/
+/* documentation see libs/evc/sge_event_client.c */
 const char *event_text(const lListElem *event, dstring *buffer) 
 {
    u_long32 type, intkey, number, intkey2;

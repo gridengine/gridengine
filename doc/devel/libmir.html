@@ -1,0 +1,2231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+<!-- Created on February, 24  2003 by texi2html 1.65 -->
+<!-- 
+Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
+            Karl Berry  <karl@freefriends.org>
+            Olaf Bachmann <obachman@mathematik.uni-kl.de>
+            and many others.
+Maintained by: Olaf Bachmann <obachman@mathematik.uni-kl.de>
+Send bugs and suggestions to <texi2html@mathematik.uni-kl.de>
+ 
+-->
+<HEAD>
+<TITLE>Autodocs for <CODE>Grid Engine Mirror Interface</CODE>: </TITLE>
+
+<META NAME="description" CONTENT="Autodocs for <CODE>Grid Engine Mirror Interface</CODE>: ">
+<META NAME="keywords" CONTENT="Autodocs for <CODE>Grid Engine Mirror Interface</CODE>: ">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+<META NAME="Generator" CONTENT="texi2html 1.65">
+
+</HEAD>
+
+<BODY LANG="en" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000FF" VLINK="#800080" ALINK="#FF0000">
+
+<A NAME="SEC_Top"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1>Autodocs for <CODE>Grid Engine Mirror Interface</CODE></H1>This document describes <CODE>Grid Engine Mirror Interface</CODE> version SGE pre6.0 (Maintrunk).
+</P><P>
+
+Copyright &copy; The Grid Engine Team
+</P><P>
+
+<BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC1">1. Eventmirror</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC2">1.1 --Eventmirror</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC3">1.2 -Eventmirror-Typedefs</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC4">1.3 host</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC6">1.4 ja_task</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC9">1.5 job</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC12">1.6 pe_task</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC15">1.7 queue</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC17">1.8 schedd_conf</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC19">1.9 sge_mirror_get_type_descr</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC20">1.10 sge_mirror_get_type_key_nm</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC21">1.11 sge_mirror_get_type_master_list</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC22">1.12 sge_mirror_get_type_name</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC23">1.13 sge_mirror_initialize</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC24">1.14 sge_mirror_process_events</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC25">1.15 sge_mirror_shutdown</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC26">1.16 sge_mirror_strerror</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC27">1.17 sge_mirror_subscribe</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC28">1.18 sge_mirror_unsubscribe</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC30">1.20 sge_mirror_update_master_list_host_key</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC31">1.21 sge_mirror_update_master_list_str_key</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC32">1.22 sharetree</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+</TABLE>
+
+<br>
+<TABLE BORDER=0 CELLSPACING=0>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="libmir.html#SEC34">Function Index</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+</TABLE></BLOCKQUOTE>
+<P>
+
+<HR SIZE=1>
+<A NAME="SEC1"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC2"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<A NAME="Eventmirror"></A>
+<H1> 1. Eventmirror </H1>
+<!--docid::SEC1::-->
+<P>
+
+<A NAME="Eventmirror --Eventmirror"></A>
+<HR SIZE="6">
+<A NAME="SEC2"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.1 --Eventmirror </H2>
+<!--docid::SEC2::-->
+<P>
+
+<A NAME="IDX1"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Eventmirror -- mirroring of master lists through event client interface
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The event mirror interface provides a means to easily implement
+Grid Engine components that need to have access to the masters
+object lists and therefore have to mirror them.
+
+Such components can be schedulers, proxies, monitoring tools etc.
+
+It is designed as a layer above the event client interface.
+
+Mirroring can be restricted to certain event types / object types.
+Callback functions can be installed to perform actions additional to
+pure mirroring.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>BUGS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Not yet operable on the usermapping related objects and lists.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC3">1.2 -Eventmirror-Typedefs</A>.
+<LI>
+<A HREF="libmir.html#SEC23">1.13 sge_mirror_initialize</A>.
+<LI>
+<A HREF="libmir.html#SEC25">1.15 sge_mirror_shutdown</A>.
+<LI>
+<A HREF="libmir.html#SEC27">1.17 sge_mirror_subscribe</A>.
+<LI>
+<A HREF="libmir.html#SEC28">1.18 sge_mirror_unsubscribe</A>.
+<LI>
+<A HREF="libmir.html#SEC24">1.14 sge_mirror_process_events</A>.
+<LI>
+<A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A>.
+<LI>
+<A HREF="libmir.html#SEC30">1.20 sge_mirror_update_master_list_host_key</A>.
+<LI>
+<A HREF="libmir.html#SEC31">1.21 sge_mirror_update_master_list_str_key</A>.
+<LI>
+<A HREF="libmir.html#SEC26">1.16 sge_mirror_strerror</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror -Eventmirror-Typedefs"></A>
+<HR SIZE="6">
+<A NAME="SEC3"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC2"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC4"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC4"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.2 -Eventmirror-Typedefs </H2>
+<!--docid::SEC3::-->
+<P>
+
+<A NAME="IDX2"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Eventmirror -- mirroring of master lists through event client interface
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>typedef enum {
+   ...
+} sge_event_type;
+
+typedef enum {
+   ...
+} sge_event_action;
+
+typedef enum {
+   ...
+} sge_mirror_error;
+
+typedef int (*sge_mirror_callback)(sge_event_type type,
+                                   sge_event_action action,
+                                   lListElem *event, void *clientdata);
+
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The following types are defined for use with the event mirroring
+interface:
+
+The enumeration sge_event_type defines different classes of events.
+These classes mostly reflect the different object types defined in
+libgdi, e.g. job, host, queue ...
+
+The following event_types are defined:
+   SGE_EMT_ADMINHOST
+   SGE_EMT_CALENDAR
+   SGE_EMT_CKPT
+   SGE_EMT_COMPLEX
+   SGE_EMT_CONFIG
+   SGE_EMT_GLOBAL_CONFIG
+   SGE_EMT_EXECHOST
+   SGE_EMT_JATASK
+   SGE_EMT_PETASK
+   SGE_EMT_JOB
+   SGE_EMT_JOB_SCHEDD_INFO
+   SGE_EMT_MANAGER
+   SGE_EMT_OPERATOR
+   SGE_EMT_SHARETREE
+   SGE_EMT_PE
+   SGE_EMT_PROJECT
+   SGE_EMT_QUEUE
+   SGE_EMT_SCHEDD_CONF
+   SGE_EMT_SCHEDD_MONITOR
+   SGE_EMT_SHUTDOWN
+   SGE_EMT_QMASTER_GOES_DOWN
+   SGE_EMT_SUBMITHOST
+   SGE_EMT_USER
+   SGE_EMT_USERSET
+
+If usermapping is enabled, two additional event types are defined:
+   SGE_EMT_USERMAPPING
+   SGE_EMT_HOSTGROUP
+
+The last value defined as event type is SGE_EMT_ALL. It can be used to
+subscribe all event types.
+
+Different event actions are defined in the enumeration sge_event_action:
+   SGE_EMA_LIST      - the whole master list has been sent
+                       (used at initialization)
+   SGE_EMA_ADD       - a new object has been created
+   SGE_EMA_MOD       - an object has been modified
+   SGE_EMA_DEL       - an object has been deleted
+   SGE_EMA_TRIGGER   - a certain action has been triggered,
+                       e.g. a scheduling run or a shutdown.
+
+Most functions of the event mirroring interface return error codes that
+are defined in the enumeration sge_mirror_error:
+   SGE_EM_OK              - action performed successfully
+   SGE_EM_NOT_INITIALIZED - the interface is not yet initialized
+   SGE_EM_BAD_ARG         - some input parameter was incorrect
+   SGE_EM_TIMEOUT         - a timeout occured
+   SGE_EM_DUPLICATE_KEY   - an object should be added, but an object
+                            with the same unique identifier already
+                            exists.
+   SGE_EM_KEY_NOT_FOUND   - an object with the given key was not found.
+   SGE_EM_CALLBACK_FAILED - a callback function failed
+   SGE_EM_PROCESS_ERRORS  - an error occured during event processing
+
+The event mirroring interface allows to install callback funktions for
+actions on certain event types. These callback functions have to have
+the same prototype as given by the function typedef sge_mirror_callback.
+</FONT></pre></td></tr></table><P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror host"></A>
+<HR SIZE="6">
+<A NAME="SEC4"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC5"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC6"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC6"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.3 host </H2>
+<!--docid::SEC4::-->
+<P>
+
+<A NAME="Eventmirror host host_update_master_list"></A>
+<HR SIZE="6">
+<A NAME="SEC5"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC4"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC6"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC6"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC4"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC6"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.3.1 host_update_master_list </H3>
+<!--docid::SEC5::-->
+<P>
+
+<A NAME="IDX3"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>host_update_master_list() -- update the master hostlists
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool
+host_update_master_list(sge_event_type type, sge_event_action action,
+                        lListElem *event, void *clientdata)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Update the global master lists of hosts
+based on an event.
+The function is called from the event mirroring interface.
+Updates admin, submit or execution host list depending
+on the event received.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_type type     - event type
+sge_event_action action - action to perform
+lListElem *event        - the raw event
+void *clientdata        - client data
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool - true, if update is successfull, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>NOTES</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The function should only be called from the event mirror interface.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC2">1.1 --Eventmirror</A>.
+<LI>
+<A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A>.
+<LI>
+<A HREF="libmir.html#SEC30">1.20 sge_mirror_update_master_list_host_key</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror ja_task"></A>
+<HR SIZE="6">
+<A NAME="SEC6"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC5"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC7"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.4 ja_task </H2>
+<!--docid::SEC6::-->
+<P>
+
+<A NAME="Eventmirror ja_task ja_task_update_master_list"></A>
+<HR SIZE="6">
+<A NAME="SEC7"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC6"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC8"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC6"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.4.1 ja_task_update_master_list </H3>
+<!--docid::SEC7::-->
+<P>
+
+<A NAME="IDX4"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ja_task_update_master_list() -- update array tasks of a job
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool
+ja_task_update_master_list(sge_event_type type, sge_event_action action,
+                           lListElem *event, void *clientdata)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Update the list of array tasks of a job
+based on an event.
+The function is called from the event mirroring interface.
+
+An array tasks list of parallel tasks and the
+scaled usage list are not updated in this function,
+as this data is maintained by separate events.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_type type     - event type
+sge_event_action action - action to perform
+lListElem *event        - the raw event
+void *clientdata        - client data
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool - true, if update is successfull, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>NOTES</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The function should only be called from the event mirror interface.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC2">1.1 --Eventmirror</A>.
+<LI>
+<A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A>.
+</UL>
+<P>
+
+</DL>
+<A NAME="Eventmirror ja_task ja_task_update_master_list_usage"></A>
+<HR SIZE="6">
+<A NAME="SEC8"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC7"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC6"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.4.2 ja_task_update_master_list_usage </H3>
+<!--docid::SEC8::-->
+<P>
+
+<A NAME="IDX5"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ja_task_update_master_list_usage() -- update an array tasks usage
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool
+ja_task_update_master_list_usage(lListElem *event)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Updates the scaled usage of an array task (also task data structure
+of a non array job).
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *event - event object containing the new usage list
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool - true, if the operation succeeds, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC11">1.5.2 job_update_master_list_usage</A>.
+<LI>
+See `<TT>Eventmirror/ja_task/pe_task_update_master_list_usage</TT>'
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror job"></A>
+<HR SIZE="6">
+<A NAME="SEC9"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC8"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC10"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.5 job </H2>
+<!--docid::SEC9::-->
+<P>
+
+<A NAME="Eventmirror job job_update_master_list"></A>
+<HR SIZE="6">
+<A NAME="SEC10"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC11"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.5.1 job_update_master_list </H3>
+<!--docid::SEC10::-->
+<P>
+
+<A NAME="IDX6"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>job_update_master_list() -- update the master list of jobs
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool job_update_master_list(sge_event_type type,
+                                sge_event_action action,
+                                lListElem *event, void *clientdata)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Update the global master list of jobs
+based on an event.
+The function is called from the event mirroring interface.
+
+A jobs array tasks are not updated by this function,
+as they are maintained by separate events.
+In addition, some scheduler specific attributes, that
+are only used in scheduler, are not updated.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_type type     - event type
+sge_event_action action - action to perform
+lListElem *event        - the raw event
+void *clientdata        - client data
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool - true, if update is successfull, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>NOTES</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The function should only be called from the event mirror interface.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC2">1.1 --Eventmirror</A>.
+<LI>
+<A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A>.
+<LI>
+<A HREF="libmir.html#SEC11">1.5.2 job_update_master_list_usage</A>.
+</UL>
+<P>
+
+</DL>
+<A NAME="Eventmirror job job_update_master_list_usage"></A>
+<HR SIZE="6">
+<A NAME="SEC11"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC10"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC9"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.5.2 job_update_master_list_usage </H3>
+<!--docid::SEC11::-->
+<P>
+
+<A NAME="IDX7"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>job_update_master_list_usage() -- update usage for a jobs tasks
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int job_update_master_list_usage(lListElem *event)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Events containing usage reports are sent for a jobs tasks.
+This can be array tasks (where a non array job has a single
+array task) or tasks of a parallel job.
+This function decides which type of task has to receive
+the updated usage report and passes the event
+information to the corresponding update functions.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *event - event object containing the new usage list
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - true, if the operation succeeds, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+See `<TT>Eventmirror/ja_task/pe_task_update_master_list_usage</TT>'
+<LI>
+<A HREF="libmir.html#SEC14">1.6.2 pe_task_update_master_list_usage</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror pe_task"></A>
+<HR SIZE="6">
+<A NAME="SEC12"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC11"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC13"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC15"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC15"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.6 pe_task </H2>
+<!--docid::SEC12::-->
+<P>
+
+<A NAME="Eventmirror pe_task pe_task_update_master_list"></A>
+<HR SIZE="6">
+<A NAME="SEC13"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC14"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC15"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC15"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.6.1 pe_task_update_master_list </H3>
+<!--docid::SEC13::-->
+<P>
+
+<A NAME="IDX8"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>pe_task_update_master_list() -- update parallel tasks of an array task
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool
+pe_task_update_master_list(sge_event_type type, sge_event_action action,
+                           lListElem *event, void *clientdata)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Update the list of parallel tasks of an array task
+based on an event.
+The function is called from the event mirroring interface.
+
+The scaled usage list of a parallel task is not updated
+by this function, as this data is maintained by a
+separate event.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_type type     - event type
+sge_event_action action - action to perform
+lListElem *event        - the raw event
+void *clientdata        - client data
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool - true, if update is successfull, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>NOTES</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The function should only be called from the event mirror interface.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC2">1.1 --Eventmirror</A>.
+<LI>
+<A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A>.
+</UL>
+<P>
+
+</DL>
+<A NAME="Eventmirror pe_task pe_task_update_master_list_usage"></A>
+<HR SIZE="6">
+<A NAME="SEC14"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC13"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC15"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC15"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC12"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC15"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.6.2 pe_task_update_master_list_usage </H3>
+<!--docid::SEC14::-->
+<P>
+
+<A NAME="IDX9"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>pe_task_update_master_list_usage() -- update a parallel tasks usage
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool
+pe_task_update_master_list_usage(lListElem *event)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Updates the scaled usage of a parallel task.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lListElem *event - event object containing the new usage list
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool - true, if the operation succeeds, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC11">1.5.2 job_update_master_list_usage</A>.
+<LI>
+<A HREF="libmir.html#SEC8">1.4.2 ja_task_update_master_list_usage</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror queue"></A>
+<HR SIZE="6">
+<A NAME="SEC15"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC14"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC16"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC17"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC17"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.7 queue </H2>
+<!--docid::SEC15::-->
+<P>
+
+<A NAME="Eventmirror queue queue_update_master_list"></A>
+<HR SIZE="6">
+<A NAME="SEC16"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC15"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC17"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC17"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC15"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC17"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.7.1 queue_update_master_list </H3>
+<!--docid::SEC16::-->
+<P>
+
+<A NAME="IDX10"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>queue_update_master_list() -- update the master list of queues
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool
+queue_update_master_list(sge_event_type type, sge_event_action action,
+                         lListElem *event, void *clientdata)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Update the global master list of queues
+based on an event.
+The function is called from the event mirroring interface.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_type type     - event type
+sge_event_action action - action to perform
+lListElem *event        - the raw event
+void *clientdata        - client data
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - true, if update is successfull, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>NOTES</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The function should only be called from the event mirror interface.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC2">1.1 --Eventmirror</A>.
+<LI>
+<A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A>.
+<LI>
+<A HREF="libmir.html#SEC31">1.21 sge_mirror_update_master_list_str_key</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror schedd_conf"></A>
+<HR SIZE="6">
+<A NAME="SEC17"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC16"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC18"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC19"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC19"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.8 schedd_conf </H2>
+<!--docid::SEC17::-->
+<P>
+
+<A NAME="Eventmirror schedd_conf schedd_conf_update_master_list"></A>
+<HR SIZE="6">
+<A NAME="SEC18"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC17"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC19"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC19"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC17"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC19"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.8.1 schedd_conf_update_master_list </H3>
+<!--docid::SEC18::-->
+<P>
+
+<A NAME="IDX11"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>schedd_conf_update_master_list() -- update the scheduler configuration
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool
+schedd_conf_update_master_list(sge_event_type type,
+                               sge_event_action action,
+                               lListElem *event, void *clientdata)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Update the global master list of scheduler configurations
+based on an event.
+The function is called from the event mirroring interface.
+The list only contains one element that is replaced when a
+modify event arrives.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_type type     - event type
+sge_event_action action - action to perform
+lListElem *event        - the raw event
+void *clientdata        - client data
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool - true, if update is successfull, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>NOTES</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The function should only be called from the event mirror interface.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC2">1.1 --Eventmirror</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_get_type_descr"></A>
+<HR SIZE="6">
+<A NAME="SEC19"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC18"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC20"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.9 sge_mirror_get_type_descr </H2>
+<!--docid::SEC19::-->
+<P>
+
+<A NAME="IDX12"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_get_type_descr() -- get the descriptor for an event type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const lDescr* sge_mirror_get_type_descr(const sge_event_type type)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Returns the CULL element descriptor for the object type associated with
+the given event.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const sge_event_type type - the event type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const lDescr* - the descriptor, or NULL, if no descriptor is associated
+                with the type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>EXAMPLE</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_get_type_descr(SGE_EMT_JOB) will return the descriptor JB_Type,
+sge_mirror_get_type_descr(SGE_EMT_SHUTDOWN) will return NULL
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC21">1.11 sge_mirror_get_type_master_list</A>.
+<LI>
+<A HREF="libmir.html#SEC22">1.12 sge_mirror_get_type_name</A>.
+<LI>
+<A HREF="libmir.html#SEC20">1.10 sge_mirror_get_type_key_nm</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_get_type_key_nm"></A>
+<HR SIZE="6">
+<A NAME="SEC20"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC19"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC21"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.10 sge_mirror_get_type_key_nm </H2>
+<!--docid::SEC20::-->
+<P>
+
+<A NAME="IDX13"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_get_type_key_nm() -- get the primary key attribute for a type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int sge_mirror_get_type_key_nm(const sge_event_type type)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Returns the primary key attribute for the object type associated with
+the given event type.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const sge_event_type type - event type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>int - the key number (struct element nm of the descriptor), or
+      -1, if no object type is associated with the event type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>EXAMPLE</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_get_type_key_nm(SGE_EMT_JOB) will return JB_job_number
+sge_mirror_get_type_key_nm(SGE_EMT_SHUTDOWN) will return -1
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC21">1.11 sge_mirror_get_type_master_list</A>.
+<LI>
+<A HREF="libmir.html#SEC22">1.12 sge_mirror_get_type_name</A>.
+<LI>
+<A HREF="libmir.html#SEC19">1.9 sge_mirror_get_type_descr</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_get_type_master_list"></A>
+<HR SIZE="6">
+<A NAME="SEC21"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC20"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC22"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.11 sge_mirror_get_type_master_list </H2>
+<!--docid::SEC21::-->
+<P>
+
+<A NAME="IDX14"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_get_type_master_list() -- get master list for an event type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lList** sge_mirror_get_type_master_list(const sge_event_type type)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Returns a pointer to the master list holding objects that are manipulated
+by events of the given type.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const sge_event_type type - the event type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lList** - the corresponding master list, or NULL, if the event type has no
+          associated master list
+</FONT></pre></td></tr></table><P>
+
+<DT><B>EXAMPLE</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_get_type_master_list(SGE_EMT_JOB) will return a pointer to the
+Master_Job_List.
+
+sge_mirror_get_type_master_list(SGE_EMT_SHUTDOWN) will return NULL,
+as this event type has no associated master list.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>NOTES</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>This and the following utility functions should be moved to some more
+general object type handling.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC21">1.11 sge_mirror_get_type_master_list</A>.
+<LI>
+<A HREF="libmir.html#SEC22">1.12 sge_mirror_get_type_name</A>.
+<LI>
+<A HREF="libmir.html#SEC19">1.9 sge_mirror_get_type_descr</A>.
+<LI>
+<A HREF="libmir.html#SEC20">1.10 sge_mirror_get_type_key_nm</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_get_type_name"></A>
+<HR SIZE="6">
+<A NAME="SEC22"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC21"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC23"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.12 sge_mirror_get_type_name </H2>
+<!--docid::SEC22::-->
+<P>
+
+<A NAME="IDX15"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_get_type_name() -- get a printable name for an event type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const char* sge_mirror_get_type_name(const sge_event_type type)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Returns a printable name for an event type.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const sge_event_type type - the event type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const char* - string describing the type
+</FONT></pre></td></tr></table><P>
+
+<DT><B>EXAMPLE</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_get_type_name(SGE_EMT_JOB) will return "JOB"
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC21">1.11 sge_mirror_get_type_master_list</A>.
+<LI>
+<A HREF="libmir.html#SEC19">1.9 sge_mirror_get_type_descr</A>.
+<LI>
+<A HREF="libmir.html#SEC20">1.10 sge_mirror_get_type_key_nm</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_initialize"></A>
+<HR SIZE="6">
+<A NAME="SEC23"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC22"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC24"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.13 sge_mirror_initialize </H2>
+<!--docid::SEC23::-->
+<P>
+
+<A NAME="IDX16"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_initialize() -- initialize the event mirror interface
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error sge_mirror_initialize(ev_registration_id id,
+                                       const char *name)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Initializes internal data structures and registers with qmaster
+using the event client mechanisms.
+
+Events covering shutdown requests and qmaster shutdown notification
+are subscribed.
+
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>ev_registration_id id - id used to register with qmaster
+const char *name      - name used to register with qmaster
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error - SGE_EM_OK or an error code
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC25">1.15 sge_mirror_shutdown</A>.
+<LI>
+See `<TT>Eventclient/-ID-numbers</TT>'
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_process_events"></A>
+<HR SIZE="6">
+<A NAME="SEC24"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC23"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC25"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.14 sge_mirror_process_events </H2>
+<!--docid::SEC24::-->
+<P>
+
+<A NAME="IDX17"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_process_events() -- retrieve and process events
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error sge_mirror_process_events(void)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Retrieves new events from qmaster.
+If new events have arrived from qmaster, they are processed,
+that means, for each event
+- if installed, a "before mirroring" callback is called
+- the event is mirrored into the corresponding master list
+- if installed, a "after mirroring" callback is called
+
+If retrieving new events from qmaster fails over a time period
+of 10 times the configured event delivery interval (see event
+client interface, function ec_get_edtime), a timeout warning
+is generated and a new registration of the event client is
+prepared.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error - SGE_EM_OK or an error code
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC2">1.1 --Eventmirror</A>.
+<LI>
+See `<TT>Eventclient/Client/ec_get_edtime</TT>'
+<LI>
+See `<TT>Eventclient/Client/ec_set_edtime</TT>'
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_shutdown"></A>
+<HR SIZE="6">
+<A NAME="SEC25"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC24"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC26"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.15 sge_mirror_shutdown </H2>
+<!--docid::SEC25::-->
+<P>
+
+<A NAME="IDX18"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_shutdown() -- shutdown mirroring
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error sge_mirror_shutdown(void)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Shuts down the event mirroring mechanism:
+Unsubscribes all events, deletes contents of the corresponding
+object lists and deregisteres from qmaster.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error - SGE_EM_OK or error code
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC23">1.13 sge_mirror_initialize</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_strerror"></A>
+<HR SIZE="6">
+<A NAME="SEC26"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC25"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC27"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.16 sge_mirror_strerror </H2>
+<!--docid::SEC26::-->
+<P>
+
+<A NAME="IDX19"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_strerror() -- map errorcode to error message
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const char* sge_mirror_strerror(sge_mirror_error num)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Returns a string describing a given error number.
+This function can be used to output error messages
+if a function of the event mirror interface fails.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error num - error number
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>const char* - corresponding error message
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC3">1.2 -Eventmirror-Typedefs</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_subscribe"></A>
+<HR SIZE="6">
+<A NAME="SEC27"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC26"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC28"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.17 sge_mirror_subscribe </H2>
+<!--docid::SEC27::-->
+<P>
+
+<A NAME="IDX20"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_subscribe() -- subscribe certain event types
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error sge_mirror_subscribe(sge_event_type type,
+                                      sge_mirror_callback callback_before,
+                                      sge_mirror_callback callback_after,
+                                      void *clientdata)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Subscribe a certain event type.
+Callback functions can be specified, that can be executed before the
+mirroring action and/or after the mirroring action.
+
+The corresponding data structures are initialized,
+the events associated with the event type are subscribed with the
+event client interface.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_type type                 - event type to subscribe or
+                                      SGE_EMT_ALL
+sge_mirror_callback callback_before - callback to be executed before
+                                      mirroring
+sge_mirror_callback callback_after  - callback to be executed after
+                                      mirroring
+void *clientdata                    - clientdata to be passed to the
+                                      callback functions
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error - SGE_EM_OK or an error code
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC3">1.2 -Eventmirror-Typedefs</A>.
+<LI>
+See `<TT>Eventclient/-Subscription</TT>'
+<LI>
+See `<TT>Eventclient/-Events</TT>'
+<LI>
+<A HREF="libmir.html#SEC28">1.18 sge_mirror_unsubscribe</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_unsubscribe"></A>
+<HR SIZE="6">
+<A NAME="SEC28"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC27"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC29"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.18 sge_mirror_unsubscribe </H2>
+<!--docid::SEC28::-->
+<P>
+
+<A NAME="IDX21"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_unsubscribe() -- unsubscribe event types
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error sge_mirror_unsubscribe(sge_event_type type)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Unsubscribes a certain event type or all if SGE_EMT_ALL is given as type.
+
+Unsubscribes the corresponding events in the underlying event client
+interface and frees data stored in the corresponding mirrored list(s).@end smallexample
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_type type - the event type to unsubscribe or SGE_EMT_ALL
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error - SGE_EM_OK or an error code
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC3">1.2 -Eventmirror-Typedefs</A>.
+<LI>
+See `<TT>Eventclient/-Subscription</TT>'
+<LI>
+See `<TT>Eventclient/-Events</TT>'
+<LI>
+<A HREF="libmir.html#SEC27">1.17 sge_mirror_subscribe</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_update_master_list"></A>
+<HR SIZE="6">
+<A NAME="SEC29"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC28"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC30"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC3"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.19 sge_mirror_update_master_list </H2>
+<!--docid::SEC29::-->
+<P>
+
+<A NAME="IDX22"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_update_master_list() -- update a master list
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error sge_mirror_update_master_list(lList **list,
+                                               lDescr *list_descr,
+                                               lListElem *ep,
+                                               const char *key,
+                                               sge_event_action action,
+                                               lListElem *event)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Updates a given master list according to the given event information.
+The following actions are performed (depending on parameter action):
+- SGE_EMA_LIST: an existing mirrored list is completely replaced
+- SGE_EMA_ADD:  a new element is added to the mirrored list
+- SGE_EMA_MOD:  a given element is modified
+- SGE_EMA_DEL:  a given element is deleted
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lList **list            - mirrored list to manipulate
+lDescr *list_descr      - descriptor of mirrored list
+lListElem *ep           - element to manipulate or NULL
+const char *key         - key of an element to manipulate
+sge_event_action action - action to perform
+lListElem *event        - raw event
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error - SGE_EM_OK, or an error code
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC31">1.21 sge_mirror_update_master_list_str_key</A>.
+<LI>
+<A HREF="libmir.html#SEC30">1.20 sge_mirror_update_master_list_host_key</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_update_master_list_host_key"></A>
+<HR SIZE="6">
+<A NAME="SEC30"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC29"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC31"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC4"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.20 sge_mirror_update_master_list_host_key </H2>
+<!--docid::SEC30::-->
+<P>
+
+<A NAME="IDX23"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_update_master_list_host_key() -- update a master list
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error sge_mirror_update_master_list_host_key(lList **list,
+                                                       lDescr *list_descr,
+                                                       int key_nm,
+                                                       const char *key,
+                                                       sge_event_action action,
+                                                       lListElem *event)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Updates a certain element in a certain mirrored list.
+Which element to update is specified by a given hostname.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lList **list            - the master list to update
+lDescr *list_descr      - descriptor of the master list
+int key_nm              - field identifier of the key
+const char *key         - value of the key (a hostname)
+sge_event_action action - action to perform on list
+lListElem *event        - raw event element
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error - SGE_EM_OK or an error code
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sge_mirror_update_master_list_str_key"></A>
+<HR SIZE="6">
+<A NAME="SEC31"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC30"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC32"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC4"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.21 sge_mirror_update_master_list_str_key </H2>
+<!--docid::SEC31::-->
+<P>
+
+<A NAME="IDX24"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_update_master_list_str_key() -- update a master list
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error sge_mirror_update_master_list_str_key(lList **list,
+                                                       lDescr *list_descr,
+                                                       int key_nm,
+                                                       const char *key,
+                                                       sge_event_action action,
+                                                       lListElem *event)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Updates a certain element in a certain mirrored list.
+Which element to update is specified by a given string key.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>lList **list            - the master list to update
+lDescr *list_descr      - descriptor of the master list
+int key_nm              - field identifier of the key
+const char *key         - value of the key
+sge_event_action action - action to perform on list
+lListElem *event        - raw event element
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_mirror_error - SGE_EM_OK or an error code
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A>.
+</UL>
+<P>
+
+</DL>
+<P>
+
+<A NAME="Eventmirror sharetree"></A>
+<HR SIZE="6">
+<A NAME="SEC32"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC31"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC33"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC4"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC1"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> 1.22 sharetree </H2>
+<!--docid::SEC32::-->
+<P>
+
+<A NAME="Eventmirror sharetree sharetree_update_master_list"></A>
+<HR SIZE="6">
+<A NAME="SEC33"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC32"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC4"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC32"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H3> 1.22.1 sharetree_update_master_list </H3>
+<!--docid::SEC33::-->
+<P>
+
+<A NAME="IDX25"></A>
+</P><P>
+
+<DL COMPACT>
+<DT><B>NAME</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sharetree_update_master_list() -- update the master sharetree list
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SYNOPSIS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool
+sharetree_update_master_list(sge_event_type type, sge_event_action action,
+                             lListElem *event, void *clientdata)
+</FONT></pre></td></tr></table><P>
+
+<DT><B>FUNCTION</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>Update the global master list for the sharetree
+based on an event.
+The function is called from the event mirroring interface.
+Sharetree events always contain the whole sharetree, that
+replaces an existing sharetree in the master list.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>INPUTS</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>sge_event_type type     - event type
+sge_event_action action - action to perform
+lListElem *event        - the raw event
+void *clientdata        - client data
+</FONT></pre></td></tr></table><P>
+
+<DT><B>RESULT</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>bool - true, if update is successfull, else false
+</FONT></pre></td></tr></table><P>
+
+<DT><B>NOTES</B>
+<DD><TABLE><tr><td>&nbsp;</td><td class=smallexample><FONT SIZE=-1><pre>The function should only be called from the event mirror interface.
+</FONT></pre></td></tr></table><P>
+
+<DT><B>SEE ALSO</B>
+<DD><UL>
+<LI>
+<A HREF="libmir.html#SEC2">1.1 --Eventmirror</A>.
+</UL>
+<P>
+
+</DL>
+<A NAME="Function Index"></A>
+<HR SIZE="6">
+<A NAME="SEC34"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC33"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &lt;&lt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1> Function Index </H1>
+<!--docid::SEC34::-->
+<table><tr><th valign=top>Jump to: &nbsp; </th><td><A HREF="libmir.html#fn_-" style="text-decoration:none"><b>-</b></A>
+ &nbsp; 
+<BR>
+<A HREF="libmir.html#fn_H" style="text-decoration:none"><b>H</b></A>
+ &nbsp; 
+<A HREF="libmir.html#fn_J" style="text-decoration:none"><b>J</b></A>
+ &nbsp; 
+<A HREF="libmir.html#fn_P" style="text-decoration:none"><b>P</b></A>
+ &nbsp; 
+<A HREF="libmir.html#fn_Q" style="text-decoration:none"><b>Q</b></A>
+ &nbsp; 
+<A HREF="libmir.html#fn_S" style="text-decoration:none"><b>S</b></A>
+ &nbsp; 
+</td></tr></table><br><P></P>
+<TABLE border=0>
+<TR><TD></TD><TH ALIGN=LEFT>Index Entry</TH><TH ALIGN=LEFT> Section</TH></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="fn_-"></A>-</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX1"><CODE>--Eventmirror</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC2">1.1 --Eventmirror</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX2"><CODE>-Eventmirror-Typedefs</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC3">1.2 -Eventmirror-Typedefs</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="fn_H"></A>H</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX3"><CODE>host_update_master_list</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC5">1.3.1 host_update_master_list</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="fn_J"></A>J</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX4"><CODE>ja_task_update_master_list</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC7">1.4.1 ja_task_update_master_list</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX5"><CODE>ja_task_update_master_list_usage</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC8">1.4.2 ja_task_update_master_list_usage</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX6"><CODE>job_update_master_list</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC10">1.5.1 job_update_master_list</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX7"><CODE>job_update_master_list_usage</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC11">1.5.2 job_update_master_list_usage</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="fn_P"></A>P</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX8"><CODE>pe_task_update_master_list</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC13">1.6.1 pe_task_update_master_list</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX9"><CODE>pe_task_update_master_list_usage</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC14">1.6.2 pe_task_update_master_list_usage</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="fn_Q"></A>Q</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX10"><CODE>queue_update_master_list</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC16">1.7.1 queue_update_master_list</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+<TR><TH><A NAME="fn_S"></A>S</TH><TD></TD><TD></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX11"><CODE>schedd_conf_update_master_list</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC18">1.8.1 schedd_conf_update_master_list</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX12"><CODE>sge_mirror_get_type_descr</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC19">1.9 sge_mirror_get_type_descr</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX13"><CODE>sge_mirror_get_type_key_nm</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC20">1.10 sge_mirror_get_type_key_nm</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX14"><CODE>sge_mirror_get_type_master_list</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC21">1.11 sge_mirror_get_type_master_list</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX15"><CODE>sge_mirror_get_type_name</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC22">1.12 sge_mirror_get_type_name</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX16"><CODE>sge_mirror_initialize</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC23">1.13 sge_mirror_initialize</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX17"><CODE>sge_mirror_process_events</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC24">1.14 sge_mirror_process_events</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX18"><CODE>sge_mirror_shutdown</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC25">1.15 sge_mirror_shutdown</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX19"><CODE>sge_mirror_strerror</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC26">1.16 sge_mirror_strerror</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX20"><CODE>sge_mirror_subscribe</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC27">1.17 sge_mirror_subscribe</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX21"><CODE>sge_mirror_unsubscribe</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC28">1.18 sge_mirror_unsubscribe</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX22"><CODE>sge_mirror_update_master_list</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX23"><CODE>sge_mirror_update_master_list_host_key</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC30">1.20 sge_mirror_update_master_list_host_key</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX24"><CODE>sge_mirror_update_master_list_str_key</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC31">1.21 sge_mirror_update_master_list_str_key</A></TD></TR>
+<TR><TD></TD><TD valign=top><A HREF="libmir.html#IDX25"><CODE>sharetree_update_master_list</CODE></A></TD><TD valign=top><A HREF="libmir.html#SEC33">1.22.1 sharetree_update_master_list</A></TD></TR>
+<TR><TD COLSPAN=3> <HR></TD></TR>
+</TABLE><P></P><table><tr><th valign=top>Jump to: &nbsp; </th><td><A HREF="libmir.html#fn_-" style="text-decoration:none"><b>-</b></A>
+ &nbsp; 
+<BR>
+<A HREF="libmir.html#fn_H" style="text-decoration:none"><b>H</b></A>
+ &nbsp; 
+<A HREF="libmir.html#fn_J" style="text-decoration:none"><b>J</b></A>
+ &nbsp; 
+<A HREF="libmir.html#fn_P" style="text-decoration:none"><b>P</b></A>
+ &nbsp; 
+<A HREF="libmir.html#fn_Q" style="text-decoration:none"><b>Q</b></A>
+ &nbsp; 
+<A HREF="libmir.html#fn_S" style="text-decoration:none"><b>S</b></A>
+ &nbsp; 
+</td></tr></table><br><P>
+
+<HR SIZE="6">
+<A NAME="SEC_Contents"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1>Table of Contents</H1>
+<BLOCKQUOTE>
+<A NAME="TOC1" HREF="libmir.html#SEC1">1. Eventmirror</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC2" HREF="libmir.html#SEC2">1.1 --Eventmirror</A>
+<BR>
+<A NAME="TOC3" HREF="libmir.html#SEC3">1.2 -Eventmirror-Typedefs</A>
+<BR>
+<A NAME="TOC4" HREF="libmir.html#SEC4">1.3 host</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC5" HREF="libmir.html#SEC5">1.3.1 host_update_master_list</A>
+<BR>
+</BLOCKQUOTE>
+<A NAME="TOC6" HREF="libmir.html#SEC6">1.4 ja_task</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC7" HREF="libmir.html#SEC7">1.4.1 ja_task_update_master_list</A>
+<BR>
+<A NAME="TOC8" HREF="libmir.html#SEC8">1.4.2 ja_task_update_master_list_usage</A>
+<BR>
+</BLOCKQUOTE>
+<A NAME="TOC9" HREF="libmir.html#SEC9">1.5 job</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC10" HREF="libmir.html#SEC10">1.5.1 job_update_master_list</A>
+<BR>
+<A NAME="TOC11" HREF="libmir.html#SEC11">1.5.2 job_update_master_list_usage</A>
+<BR>
+</BLOCKQUOTE>
+<A NAME="TOC12" HREF="libmir.html#SEC12">1.6 pe_task</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC13" HREF="libmir.html#SEC13">1.6.1 pe_task_update_master_list</A>
+<BR>
+<A NAME="TOC14" HREF="libmir.html#SEC14">1.6.2 pe_task_update_master_list_usage</A>
+<BR>
+</BLOCKQUOTE>
+<A NAME="TOC15" HREF="libmir.html#SEC15">1.7 queue</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC16" HREF="libmir.html#SEC16">1.7.1 queue_update_master_list</A>
+<BR>
+</BLOCKQUOTE>
+<A NAME="TOC17" HREF="libmir.html#SEC17">1.8 schedd_conf</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC18" HREF="libmir.html#SEC18">1.8.1 schedd_conf_update_master_list</A>
+<BR>
+</BLOCKQUOTE>
+<A NAME="TOC19" HREF="libmir.html#SEC19">1.9 sge_mirror_get_type_descr</A>
+<BR>
+<A NAME="TOC20" HREF="libmir.html#SEC20">1.10 sge_mirror_get_type_key_nm</A>
+<BR>
+<A NAME="TOC21" HREF="libmir.html#SEC21">1.11 sge_mirror_get_type_master_list</A>
+<BR>
+<A NAME="TOC22" HREF="libmir.html#SEC22">1.12 sge_mirror_get_type_name</A>
+<BR>
+<A NAME="TOC23" HREF="libmir.html#SEC23">1.13 sge_mirror_initialize</A>
+<BR>
+<A NAME="TOC24" HREF="libmir.html#SEC24">1.14 sge_mirror_process_events</A>
+<BR>
+<A NAME="TOC25" HREF="libmir.html#SEC25">1.15 sge_mirror_shutdown</A>
+<BR>
+<A NAME="TOC26" HREF="libmir.html#SEC26">1.16 sge_mirror_strerror</A>
+<BR>
+<A NAME="TOC27" HREF="libmir.html#SEC27">1.17 sge_mirror_subscribe</A>
+<BR>
+<A NAME="TOC28" HREF="libmir.html#SEC28">1.18 sge_mirror_unsubscribe</A>
+<BR>
+<A NAME="TOC29" HREF="libmir.html#SEC29">1.19 sge_mirror_update_master_list</A>
+<BR>
+<A NAME="TOC30" HREF="libmir.html#SEC30">1.20 sge_mirror_update_master_list_host_key</A>
+<BR>
+<A NAME="TOC31" HREF="libmir.html#SEC31">1.21 sge_mirror_update_master_list_str_key</A>
+<BR>
+<A NAME="TOC32" HREF="libmir.html#SEC32">1.22 sharetree</A>
+<BR>
+<BLOCKQUOTE>
+<A NAME="TOC33" HREF="libmir.html#SEC33">1.22.1 sharetree_update_master_list</A>
+<BR>
+</BLOCKQUOTE>
+</BLOCKQUOTE>
+<A NAME="TOC34" HREF="libmir.html#SEC34">Function Index</A>
+<BR>
+</BLOCKQUOTE>
+<HR SIZE=1>
+<A NAME="SEC_OVERVIEW"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1>Short Table of Contents</H1>
+<BLOCKQUOTE>
+<A NAME="TOC1" HREF="libmir.html#SEC1">1. Eventmirror</A>
+<BR>
+<A NAME="TOC34" HREF="libmir.html#SEC34">Function Index</A>
+<BR>
+
+</BLOCKQUOTE>
+<HR SIZE=1>
+<A NAME="SEC_About"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC34">Index</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="libmir.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H1>About this document</H1>
+This document was generated 
+using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
+"><I>texi2html</I></A>
+<P></P>  
+The buttons in the navigation panels have the following meaning:
+<P></P>
+<table border = "1">
+<TR>
+<TH> Button </TH>
+<TH> Name </TH>
+<TH> Go to </TH>
+<TH> From 1.2.3 go to</TH>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ &lt; ] </TD>
+<TD ALIGN="CENTER">
+Back
+</TD>
+<TD>
+previous section in reading order
+</TD>
+<TD>
+1.2.2
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ &gt; ] </TD>
+<TD ALIGN="CENTER">
+Forward
+</TD>
+<TD>
+next section in reading order
+</TD>
+<TD>
+1.2.4
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ &lt;&lt; ] </TD>
+<TD ALIGN="CENTER">
+FastBack
+</TD>
+<TD>
+previous or up-and-previous section 
+</TD>
+<TD>
+1.1
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ Up ] </TD>
+<TD ALIGN="CENTER">
+Up
+</TD>
+<TD>
+up section
+</TD>
+<TD>
+1.2
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ &gt;&gt; ] </TD>
+<TD ALIGN="CENTER">
+FastForward
+</TD>
+<TD>
+next or up-and-next section
+</TD>
+<TD>
+1.3
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [Top] </TD>
+<TD ALIGN="CENTER">
+Top
+</TD>
+<TD>
+cover (top) of document
+</TD>
+<TD>
+ &nbsp; 
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [Contents] </TD>
+<TD ALIGN="CENTER">
+Contents
+</TD>
+<TD>
+table of contents
+</TD>
+<TD>
+ &nbsp; 
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [Index] </TD>
+<TD ALIGN="CENTER">
+Index
+</TD>
+<TD>
+concept index
+</TD>
+<TD>
+ &nbsp; 
+</TD>
+</TR>
+<TR>
+<TD ALIGN="CENTER">
+ [ ? ] </TD>
+<TD ALIGN="CENTER">
+About
+</TD>
+<TD>
+this page
+</TD>
+<TD>
+ &nbsp; 
+</TD>
+</TR>
+</TABLE>
+<P></P>
+where the <STRONG> Example </STRONG> assumes that the current position 
+is at <STRONG> Subsubsection One-Two-Three </STRONG> of a document of 
+the following structure:
+<UL>
+<LI> 1. Section One  </LI>
+<UL>
+<LI>1.1 Subsection One-One</LI>
+<UL>
+<LI> ... </LI>
+</UL>
+<LI>1.2 Subsection One-Two</LI>
+<UL>
+<LI>1.2.1 Subsubsection One-Two-One
+</LI><LI>1.2.2 Subsubsection One-Two-Two
+</LI><LI>1.2.3 Subsubsection One-Two-Three &nbsp; &nbsp; <STRONG>
+&lt;== Current Position </STRONG>
+</LI><LI>1.2.4 Subsubsection One-Two-Four
+</LI></UL>
+<LI>1.3 Subsection One-Three</LI>
+<UL>
+<LI> ... </LI>
+</UL>
+<LI>1.4 Subsection One-Four</LI>
+</UL>
+</UL>
+
+<HR SIZE=1>
+<BR>  
+<FONT SIZE="-1">
+This document was generated
+by <I>Joachim Gabler</I> on <I>February, 24  2003</I>
+using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
+"><I>texi2html</I></A>
+</FONT>
+
+</BODY>
+</HTML>

@@ -2066,10 +2066,40 @@ if ( "$ADOC" == 1) then
    set SOURCE_TESTSUITE = "$DIR_TESTSUITE/*.tcl $DIR_TESTSUITE/*.exp"
 
    set EDITION = "1.0"
-   set REVISION = `grep GDI_VERSION libs/gdi/version.c | cut -f 2 -d '"'`
+   set REVISION = `grep GDI_VERSION libs/gdi/version.* | cut -f 2 -d '"'`
 
-   echo "Creating documentation for libs: libs.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Libraries" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_LIBS -o $COMPILE_ARCH/libs.texi
+   echo "Creating documentation for libs: libcomm.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Communication Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/comm/*.h libs/comm/*.c -o $COMPILE_ARCH/libcomm.texi
+
+   echo "Creating documentation for libs: libcull.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine CULL Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/cull/*.h libs/cull/*.c -o $COMPILE_ARCH/libcull.texi
+
+   echo "Creating documentation for libs: eventclient.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Event Client Interface" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/evc/*.h libs/evc/*.c libs/evm/*.h libs/evm/*.c -o $COMPILE_ARCH/eventclient.texi
+
+   echo "Creating documentation for libs: libgdi.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine GDI Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/gdi/*.h libs/gdi/*.c -o $COMPILE_ARCH/libgdi.texi
+
+   echo "Creating documentation for libs: libjapi.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine JAPI Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/*.h libs/japi/*.c -o $COMPILE_ARCH/libjapi.texi
+
+   echo "Creating documentation for libs: libmir.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Mirror Interface" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/mir/*.h libs/mir/*.c -o $COMPILE_ARCH/libmir.texi
+
+   echo "Creating documentation for libs: librmon.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine RMON Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/rmon/*.h libs/rmon/*.c -o $COMPILE_ARCH/librmon.texi
+
+   echo "Creating documentation for libs: libsched.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine SCHED Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/sched/*.h libs/sched/*.c -o $COMPILE_ARCH/libsched.texi
+
+   echo "Creating documentation for libs: libsgeobj.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine SGEOBJ Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/sgeobj/*.h libs/sgeobj/*.c -o $COMPILE_ARCH/libsgeobj.texi
+
+   echo "Creating documentation for libs: libspool.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Spooling Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/spool/*.h libs/spool/*.c libs/spool/*/*.h libs/spool/*/*.c -o $COMPILE_ARCH/libspool.texi
+
+   echo "Creating documentation for libs: libuti.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine UTI Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/uti/*.h libs/uti/*.c -o $COMPILE_ARCH/libuti.texi
 
    echo "Creating documentation for core system: core.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Core System" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_CORE -o $COMPILE_ARCH/core.texi
@@ -2078,8 +2108,8 @@ if ( "$ADOC" == 1) then
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -b -DPROJECT "Grid Engine Testsuite" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 $SOURCE_TESTSUITE -o $COMPILE_ARCH/testsuite.texi
 
    echo "To create a html or pdf documentation, execute for example"
-   echo "texi2html libs.texi   or"
-   echo "texi2pdf libs.texi"
+   echo "texi2html $COMPILE_ARCH/libsgeobj.texi   or"
+   echo "texi2pdf $COMPILE_ARCH/libsgeobj.texi"
 endif
 
 echo done.

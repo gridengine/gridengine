@@ -4816,6 +4816,7 @@ static int japi_read_dynamic_attributes(dstring *diag)
       }
    }
 
+   config = lFreeElem(config);
    DEXIT;
    return drmaa_errno;
 }

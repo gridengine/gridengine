@@ -1140,6 +1140,7 @@ static int test(int *argc, char **argv[], int parse_args)
                return 1;
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
+            FREE(all_jobids[pos]);
          }
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
@@ -1347,6 +1348,7 @@ static int test(int *argc, char **argv[], int parse_args)
                return 1;
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
+            FREE(all_jobids[pos]);
          }
          if (drmaa_exit(diagnosis, sizeof(diagnosis)-1) != DRMAA_ERRNO_SUCCESS) {
             fprintf(stderr, "drmaa_exit() failed: %s\n", diagnosis);
@@ -3537,7 +3539,7 @@ static int test(int *argc, char **argv[], int parse_args)
             time_t now, later;
             struct tm timenow;
             struct tm timelater;
-            char timestr[16];
+            char timestr[32];
             int time_diff;  
             printf ("Testing start time\n");
             printf ("Getting job template\n");

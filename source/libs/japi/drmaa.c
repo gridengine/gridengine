@@ -560,8 +560,8 @@ static drmaa_attr_names_t *drmaa_fill_string_vector(const char *name[])
 *******************************************************************************/
 static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *diag)
 {
+   int ret;
    drmaa_attr_names_t *p_attr;
-   lListElem* ep;
       
    if( vector ) {
       p_attr = drmaa_fill_supported_vector_attributes (diag);
@@ -569,9 +569,14 @@ static int drmaa_is_attribute_supported(const char *name, bool vector, dstring *
       p_attr = drmaa_fill_supported_nonvector_attributes (diag);
    }
 
-   ep = lGetElemStr( p_attr->it.si.strings, ST_name, name );
-   
-   return ep!=NULL ? DRMAA_ERRNO_SUCCESS : DRMAA_ERRNO_INVALID_ARGUMENT; 
+   if (lGetElemStr( p_attr->it.si.strings, ST_name, name ) != NULL) {
+      ret = DRMAA_ERRNO_SUCCESS;
+   } else {
+      ret = DRMAA_ERRNO_INVALID_ARGUMENT;
+   }
+
+   drmaa_release_attr_names(p_attr);
+   return ret;
 }
 
 /****** DRMAA/drmaa_set_attribute() *********************************************
@@ -2129,7 +2134,7 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
    if ((drmaa_errno = japi_drmaa_path2sge_path (attrs, is_bulk,
                                             DRMAA_WD, 0, &new_path,
                                             diag)) == DRMAA_ERRNO_SUCCESS) {
-      if (new_path) {
+      if (new_path != NULL) {
          lListElem *ep = lGetElemStr (attrs, VA_variable, DRMAA_WD);
          const char *value = lGetString (ep, VA_value);
 
@@ -2137,6 +2142,7 @@ static int japi_drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
 
          ep = sge_add_arg (args, wd_OPT, lStringT, "-wd", value);
          lSetString (ep, SPA_argval_lStringT, new_path);
+         FREE(new_path);
       }
       else {
          drmaa_errno = DRMAA_ERRNO_SUCCESS;
@@ -2257,13 +2263,17 @@ static int japi_drmaa_path2path_opt(const lList *attrs, lList **args, int is_bul
          DPRINTF(( "Adding args\n" ));
          ep = sge_add_arg (args, opt, lListT, sw, value);
          DPRINTF(( "Setting List\n" ));
-         lSetList (ep, SPA_argval_lListT, path_list);
+         lSetList (ep, SPA_argval_lListT, path_list); 
+         path_list = NULL; /* must not free it later */
          DPRINTF(( "Freeing Path\n" ));
          FREE (new_path);
-      }   
-      else {
+      } else {
          drmaa_errno = DRMAA_ERRNO_SUCCESS;
       }
+   }
+
+   if (path_list != NULL) {
+      path_list = lFreeList(path_list);
    }
 
    DEXIT;
@@ -2755,6 +2765,8 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }
 
+
+   /* JG: TODO: MemoryLeak: the opts_* lists, at least opts_default */
    *jtp = jt;
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;

@@ -1,3 +1,6 @@
+JG-2004-06-01-1: Bugfix:    Fixed memory leaks in japi and drmaa libs.
+                 Review:    pending
+
 DT-2004-06-01-2: Bugfix:    o Fixing DT-2004-06-01-1
                             - NOTE: checking *so* I can compile and test
                  Changed:   qsub

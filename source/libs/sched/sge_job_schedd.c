@@ -113,63 +113,90 @@ const char *get_name_of_split_value(int value)
 }
 
 void job_move_first_pending_to_running(lListElem **pending_job,
-                                       lList **splitted_jobs[]) 
+                                       lList **splitted_jobs[])
 {
-   lList *range_id_list = NULL;  /* RN_Type */
+   lList *ja_task_list = NULL;      /* JAT_Type */
+   lList *r_ja_task_list = NULL;    /* JAT_Type */
+   lListElem *ja_task = NULL;       /* JAT_Type */
+   lListElem *running_job = NULL;   /* JB_Type */
    u_long32 job_id;
    u_long32 ja_task_id;
-
+ 
    DENTER(TOP_LAYER, "job_move_first_pending_to_running");
-   range_id_list = lGetList(*pending_job, JB_ja_n_h_ids);
-   ja_task_id = range_list_get_first_id(range_id_list, NULL);
+ 
    job_id = lGetUlong(*pending_job, JB_job_number);
-   if (ja_task_id > 0) {
-      lListElem *running_job = NULL;   /* JAT_Type */
-      lListElem *new_ja_task = NULL;   /* JAT_Type */
-
-      new_ja_task = lCopyElem(job_get_ja_task_template_pending(*pending_job, ja_task_id));
-      running_job = lGetElemUlong(*(splitted_jobs[SPLIT_RUNNING]), 
-                                  JB_job_number, job_id);
-      if (running_job) {
-         lList *tmp_range_list = NULL;    /* RN_Type */
-
-         lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
-         range_list_remove_id(&tmp_range_list, NULL, ja_task_id);
-         lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
-         range_list_compress(lGetList(*pending_job, JB_ja_n_h_ids));
-         lAppendElem(lGetList(running_job, JB_ja_tasks), new_ja_task);
-      } else {
-         lListElem *new_job = NULL; /* JB_Type */
-         lList *ja_tasks = NULL;    /* JAT_Type */
-         lList *tmp_range_list = NULL;    /* RN_Type */
-
-         new_job = lCopyElem(*pending_job);
-         lSetList(new_job, JB_ja_n_h_ids, NULL);
-         lSetList(new_job, JB_ja_u_h_ids, NULL);
-         lSetList(new_job, JB_ja_o_h_ids, NULL);
-         lSetList(new_job, JB_ja_s_h_ids, NULL);
-         ja_tasks = lCreateList("", JAT_Type);
-         lAppendElem(ja_tasks, new_ja_task);
-         lSetList(new_job, JB_ja_tasks, ja_tasks);
-         if (*(splitted_jobs[SPLIT_RUNNING]) == NULL) {
-            *(splitted_jobs[SPLIT_RUNNING]) = lCreateList("", 
-                  lGetElemDescr(new_job));
-         }
-         lAppendElem(*(splitted_jobs[SPLIT_RUNNING]), new_job);
-
-         lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
-         range_list_remove_id(&tmp_range_list, NULL, ja_task_id);
-         lXchgList(*pending_job, JB_ja_n_h_ids, &tmp_range_list);
-         range_list_compress(lGetList(*pending_job, JB_ja_n_h_ids));
-      }
-      if (!job_has_tasks(*pending_job)) {
-         lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);
-         *pending_job = lFreeElem(*pending_job); 
-      }
+   ja_task_list = lGetList(*pending_job, JB_ja_tasks);
+   ja_task = lFirst(ja_task_list);
+   running_job = lGetElemUlong(*(splitted_jobs[SPLIT_RUNNING]),
+                               JB_job_number, job_id);
+   /*
+    * Create list for running jobs
+    */
+   if (*(splitted_jobs[SPLIT_RUNNING]) == NULL) {
+      const lDescr *descriptor = lGetElemDescr(*pending_job);
+      *(splitted_jobs[SPLIT_RUNNING]) = lCreateList("", descriptor);
    }
+ 
+   /*
+    * Create a running job if it does not exist aleady
+    */
+   if (running_job == NULL) {
+      lList *n_h_ids, *u_h_ids, *o_h_ids, *s_h_ids, *r_tasks;
+ 
+      n_h_ids = u_h_ids = o_h_ids = s_h_ids = r_tasks = NULL;
+      lXchgList(*pending_job, JB_ja_n_h_ids, &n_h_ids);
+      lXchgList(*pending_job, JB_ja_u_h_ids, &u_h_ids);
+      lXchgList(*pending_job, JB_ja_o_h_ids, &o_h_ids);
+      lXchgList(*pending_job, JB_ja_s_h_ids, &s_h_ids);
+      lXchgList(*pending_job, JB_ja_tasks, &r_tasks);
+      running_job = lCopyElem(*pending_job);
+      lXchgList(*pending_job, JB_ja_n_h_ids, &n_h_ids);
+      lXchgList(*pending_job, JB_ja_u_h_ids, &u_h_ids);
+      lXchgList(*pending_job, JB_ja_o_h_ids, &o_h_ids);
+      lXchgList(*pending_job, JB_ja_s_h_ids, &s_h_ids);
+      lXchgList(*pending_job, JB_ja_tasks, &r_tasks);
+      lAppendElem(*(splitted_jobs[SPLIT_RUNNING]), running_job);
+   }                                    
+
+   /*
+    * Create an array task list if necessary
+    */
+   r_ja_task_list = lGetList(running_job, JB_ja_tasks);
+   if (r_ja_task_list == NULL) {
+      r_ja_task_list = lCreateList("", JAT_Type);
+      lSetList(running_job, JB_ja_tasks, r_ja_task_list);
+   }
+ 
+   /*
+    * Create an array instance and add it to the running job
+    * or move the existing array task into the running job
+    */
+   if (ja_task == NULL) {
+      lList *n_h_ids = NULL;        /* RN_Type */
+ 
+      n_h_ids = lGetList(*pending_job, JB_ja_n_h_ids);
+      ja_task_id = range_list_get_first_id(n_h_ids, NULL);
+      ja_task = job_search_task(*pending_job, NULL, ja_task_id, 1);
+      ja_task_list = lGetList(*pending_job, JB_ja_tasks);
+   }
+   lDechainElem(ja_task_list, ja_task);
+   lAppendElem(r_ja_task_list, ja_task);
+ 
+   /*
+    * Remove pending job if there are no pending tasks anymore
+    */
+   if (!job_has_tasks(*pending_job) ||
+       lGetList(*pending_job, JB_ja_tasks) == NULL) {
+      lDechainElem(*(splitted_jobs[SPLIT_PENDING]), *pending_job);
+      *pending_job = lFreeElem(*pending_job);
+   }
+ 
+#if 0 /* EB: debug */
    job_lists_print(splitted_jobs);
+#endif
+ 
    DEXIT;
-}
+}              
 
 /* user_list: JC_Type */
 /* max_jobs_per_user: conf.maxujobs */

@@ -126,19 +126,18 @@ GetQmasterSpoolDir()
                    "the qmaster daemon on other hosts (see the corresponding sectionin the\n" \
                    "Grid Engine Installation and Administration Manual for details) the account\n" \
                    "on the shadow master hosts also needs read/write access to this directory.\n\n" \
-                   "Enter spool directory or hit <RETURN> to use default\n" \
-                   "[%s] >> " \
+                   "The following directory [%s]\n will be used as qmaster spool directory by default!\n" \
                    $SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster
-
-      QMDIR=`Enter $SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster`
-
-      $INFOTEXT "\nThe following directory has been selected as qmaster spool directory:\n\n" \
-                "   %s\n" $QMDIR
+                   QMDIR=$SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster
 
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
                 "Do you want to select another qmaster spool directory (y/n) [n] >> "
 
       if [ $? = 1 ]; then
+         done=true
+      else
+         $INFOTEXT -n "Please enter a qmaster spool directory now! >>" 
+         QMDIR=`Enter $SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster`
          done=true
       fi
    done
@@ -1223,7 +1222,7 @@ GetExecdPort()
 
       if [ "$EXECD" = "install" ]; then
 
-         $INFOTEXT "Make sure to use a differnt port number for the Executionhost\n" \
+         $INFOTEXT "Make sure to use a different port number for the Executionhost\n" \
                    "as on the qmaster machine\n"
          $INFOTEXT "The qmaster port SGE_QMASTER_PORT = %s\n" $SGE_QMASTER_PORT
       fi

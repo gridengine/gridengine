@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2004/05/26 17:36:07 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: sge_types.1,v $     Last Update: $Date: 2004/07/26 13:03:38 $     Revision: $Revision: 1.7 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2004/05/26 17:36:07 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH xxQS_NAME_Sxx_TYPES 1 "$Date: 2004/07/26 13:03:38 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .\"
 .SH NAME
 sge_types - xxQS_NAMExx type descriptions 
@@ -185,6 +185,22 @@ e.g.
 	host is part of at least one hostgroup
 *@@solaris	all queue instances on hosts part of
 	the @solaris hostgroup
+.fi
+.\"
+.SS "\fBwc_cqueue\fP"
+A wildcard cluster queue specification (\fIwc_cqueue\fP) is a 
+wildcard expression which might match one or more cluster queues used in the cluster.
+That string never contains an at-charcter '@' even if the expression begins with a 
+wildcard character.
+.PP
+.\"
+.nf
+.ta
+e.g.
+.RS
+.ta \w'XXXXXXXXXXXXX'u
+*	all cluster queues
+a*	all cluster queues beginning with an 'a'
 .fi
 .\"
 .SS "\fBwc_qinstance\fP"

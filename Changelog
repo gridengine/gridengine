@@ -1,6 +1,20 @@
-EB-2002-02-12-0: Bugfix:    - step size will be ignored from qdel command
-                            - qmaster will core if task id range comprises 
-                              not existing task at the end   
+AS-2002-02-13-3: CVS:       Created V53_beta2_1_TAG
+---------------------------------------------------
+
+AS-2002-02-13-2: Bugfix:    install "UPGRADE" file and shared libraries with
+                            "mk_dist" and "distinst"
+
+AS-2002-02-13-1: Enhancem.:  added README.inst_sgeee to SGE_ROOT to explain how to 
+                             install SGE as SGEEE
+
+AS-2002-02-13-0: Change:    set version string to "5.3beta2_1"
+             
+EB-2002-02-12-0: Bugfix:    - step size was ignored from qdel command for job arrays
+                            - qmaster crashed when job array task id range comprises 
+                              non existing task at the end
+
+AS-2002-02-12-0: Bugfix:    Sun HPC installation script failed since default
+                            queue type now is already PARALLEL
 
 CR-2002-02-05-0: Testsuite: - wait_for_end_of_transfer() is now waiting that
                               all lines of the qstat output have the same job state
@@ -26,6 +40,7 @@ JG-2002-02-05-0: Testsuite: Enhanced "large_cluster" test:
                               run
 
 AS-2002-02-04-1: CVS        Created V53_beta2_BRANCH
+----------------------------------------------------
 
 AS-2002-02-04-0: Doc:       updated courtesy download pages to reflect
                             changes for Grid Engine 5.3beta2 download

@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
+#include <time.h>
+
 #include "cull.h"
 
 #include "spool/sge_spooling.h"
@@ -74,8 +76,8 @@ spool_berkeleydb_default_maintenance_func(lList **answer_list,
                                         const char *args);
 
 bool
-spool_berkeleydb_trigger_func(lList **answer_list, 
-                              const lListElem *rule);
+spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
+                              time_t trigger, time_t *next_trigger);
 
 bool
 spool_berkeleydb_transaction_func(lList **answer_list, const lListElem *rule, 

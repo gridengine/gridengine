@@ -70,34 +70,41 @@ u32","u32","u32","u32","u32","u32","u32","u32","u32","u32"\n"
 
 /* ------------------------------------------------------------
 
-   write usage to a fileptr
+   write usage to a dstring buffer
 
-   sge_write_rusage - write rusage info to file.
-   Returns: -2 if f is NULL
-   number of characters written (> 0 indicates success)
-   EOF if failure
+   sge_write_rusage - write rusage info to a dstring buffer
+   Returns: false, if it receives invalid data
+            true on success
 
 */
-int sge_write_rusage(
-FILE *fp,
+bool sge_write_rusage(
+dstring *buffer,
 lListElem *jr,
 lListElem *jep,
 lListElem *jatp,
 const char *category_str 
 ) {
-   int fprintf_count;
    lList *usage_list;
    const char *s, *pe_task_id_str;
 #ifdef NEC_ACCOUNTING_ENTRIES
-   char arch_dep_usage_string[256] = "";
+   char arch_dep_usage_buffer[MAX_STRING_SIZE];
+   dstring arch_dep_usage_dstring;
+   char *arch_dep_usage_string;
 #endif
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
-   if (fp == NULL) {
+   /* invalid input data */
+   if (buffer == NULL) {
       DEXIT;   
-      return (-2);
+      return false;
    } 
+
+#ifdef NEC_ACCOUNTING_ENTRIES
+   sge_dstring_init(&arch_dep_usage_dstring, arch_dep_usage_buffer, 
+                    MAX_STRING_SIZE);
+#endif
+
    /* for tasks we take usage from job report */
    if ((pe_task_id_str=lGetString(jr, JR_pe_task_id_str)))
       usage_list = lGetList(jr, JR_usage);
@@ -146,7 +153,8 @@ const char *category_str
       if (ep)
          arch_string = "necsx5";
 
-      sprintf(arch_dep_usage_string, NECSX_ACTFILE_FPRINTF_FORMAT,
+      arch_dep_usage_string = sge_dstring_sprintf(&arch_dep_usage_dstring, 
+         NECSX_ACTFILE_FPRINTF_FORMAT,
          arch_string,    
          usage_list_get_ulong_usage(usage_list, "necsx_base_prty", 0),
          usage_list_get_ulong_usage(usage_list, "necsx_time_slice", 0),
@@ -170,15 +178,12 @@ const char *category_str
          usage_list_get_ulong_usage(usage_list, "necsx_multi_single", 0),
          usage_list_get_ulong_usage(usage_list, "necsx_max_nproc", 0)
       );
-#else
-      arch_dep_usage_string[0] = '\0';
 #endif
       DPRINTF(("arch_string: %s\n", arch_dep_usage_string));
    }
 #endif         
 
-
-   fprintf_count = fprintf(fp, ACTFILE_FPRINTF_FORMAT, 
+   sge_dstring_sprintf_append(buffer, ACTFILE_FPRINTF_FORMAT, 
           lGetString(jr, JR_queue_name),
           lGetHost(jr, JR_host_name),
           lGetString(jr, JR_group),
@@ -229,7 +234,7 @@ const char *category_str
      
 
    DEXIT;   
-   return (fprintf_count);
+   return true;
 }
 
 int sge_read_rusage(

@@ -35,6 +35,8 @@
  Structures for architecture depended data
  ****************************************************************/
 
+#include "sge_dstring.h"
+
 struct all_drsuage {
    char        *arch;
 };
@@ -138,6 +140,6 @@ struct drusage {
 
 typedef struct drusage sge_rusage_type;
 
-int sge_write_rusage(FILE *fp, lListElem *jr, lListElem *jep, lListElem *jatp, const char *category_str);
+bool sge_write_rusage(dstring *buffer, lListElem *jr, lListElem *jep, lListElem *jatp, const char *category_str);
 int sge_read_rusage(FILE *fp, sge_rusage_type *d);
 #endif /* __SGE_RUSAGE_H */

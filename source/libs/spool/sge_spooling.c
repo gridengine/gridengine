@@ -428,7 +428,8 @@ spool_shutdown_context(lList **answer_list, lListElem *context)
 }
 
 bool
-spool_trigger_context(lList **answer_list, lListElem *context)
+spool_trigger_context(lList **answer_list, lListElem *context,
+                      time_t trigger, time_t *next_trigger)
 {
    bool ret = true;
 
@@ -447,7 +448,7 @@ spool_trigger_context(lList **answer_list, lListElem *context)
          spooling_trigger_func func = (spooling_trigger_func)
                                        lGetRef(rule, SPR_trigger_func);
          if (func != NULL) {
-            if (!func(answer_list, rule)) {
+            if (!func(answer_list, rule, trigger, next_trigger)) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                        ANSWER_QUALITY_ERROR, 
                                        MSG_SPOOL_TRIGGEROFRULEFAILED_SS,

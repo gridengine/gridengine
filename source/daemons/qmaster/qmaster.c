@@ -71,6 +71,9 @@
 #include "qmaster_heartbeat.h"
 #include "sge_cuser.h"
 
+#include "sge_reporting_qmaster.h"
+#include "sge_persistence_qmaster.h"
+
 #include "spool/sge_spooling.h"
 
 static void qmaster_init(char **anArgv);
@@ -105,8 +108,6 @@ int main(int argc, char **argv)
 {
    enum { TIMELEVEL = 0 };
 
-   lList *answer_list = NULL;
-
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
@@ -125,6 +126,9 @@ int main(int argc, char **argv)
    process_cmdline(argv);
    qmaster_init(argv);
    in_main_loop = 1;
+
+   /* initialize accounting and reporting file generation */
+   sge_initialize_reporting(NULL);
 
    while (true) {
       time_t now;
@@ -146,17 +150,13 @@ int main(int argc, char **argv)
          /* send event, even if event clients are busy */
          set_event_client_busy(NULL, 0); 
          ck_4_deliver_events(now);
-         /* shutdown spooling framework */
-         {
-            lListElem *context;
-            lList *answer_list = NULL;
 
-            context = spool_get_default_context();
-            if (context != NULL) {
-               spool_shutdown_context(&answer_list, context);
-               answer_list_output(&answer_list);
-            }
-         }
+         /* shutdown spooling framework */
+         sge_shutdown_persistence(NULL);
+
+         /* shutdown reporting, flush buffers */
+         sge_shutdown_reporting(NULL);
+
          sge_shutdown();
       }
 
@@ -168,14 +168,6 @@ int main(int argc, char **argv)
 
       sge_stopwatch_start(TIMELEVEL);
       sge_qmaster_process_message(NULL);
-
-      /* trigger regular spooling actions */
-      /* JG: TODO: when we have multithreading, this should be done in a
-       *           maintenance thread, that also writes heartbeat, 
-       *           reporting data etc.
-       */
-      spool_trigger_context(&answer_list, spool_get_default_context());
-      answer_list_output(&answer_list);
    }
 
    DEXIT;

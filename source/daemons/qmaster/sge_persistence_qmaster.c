@@ -35,13 +35,110 @@
 #include "sge_log.h"
 #include "cull.h"
 
-#include "sge_job.h"
+#include "sge_bootstrap.h"
 
+#include "sge_answer.h"
 #include "sge_event.h"
 #include "sge_object.h"
+#include "sge_job.h"
 
 #include "sge_event_master.h"
+
 #include "spool/sge_spooling.h"
+#include "spool/dynamic/sge_spooling_loader.h"
+
+#include "time_event.h"
+
+#include "sge_persistence_qmaster.h"
+
+bool
+sge_initialize_persistence(lList **answer_list)
+{
+   bool ret = true;
+
+   lListElem *spooling_context;
+
+   DENTER(TOP_LAYER, "sge_initialize_persistence");
+
+   /* create spooling context */
+   spooling_context = spool_create_dynamic_context(answer_list, 
+                           bootstrap_get_spooling_lib(), 
+                           bootstrap_get_spooling_params());
+   if (spooling_context == NULL) {
+      /* error message created in spool_create_dynamic_context */
+      ret = false;
+   } else {
+      /* startup spooling context */
+      if (!spool_startup_context(answer_list, spooling_context, true)) {
+         /* error message created in spool_startup_context */
+         ret = false;
+      } else {
+         time_t now = time(0);
+
+         /* set this context as default */
+         spool_set_default_context(spooling_context);
+
+         /* initialize timer for spooling trigger function */
+         te_add(TYPE_SPOOLING_TRIGGER, now, 0, 0, NULL);
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+bool
+sge_shutdown_persistence(lList **answer_list)
+{
+   bool ret = true;
+
+   lListElem *context;
+
+   DENTER(TOP_LAYER, "sge_shutdown_persistence");
+
+   /* trigger spooling actions (flush data) */
+   deliver_spooling_trigger(TYPE_SPOOLING_TRIGGER, 0, 0, 0, NULL);
+
+   /* shutdown spooling */
+   context = spool_get_default_context();
+   if (context != NULL) {
+      lList *local_answer = NULL;
+
+      if (answer_list != NULL) {
+         local_answer = *answer_list;
+      }
+
+      spool_shutdown_context(&local_answer, context);
+      if (answer_list == NULL) {
+         answer_list_output(&local_answer);
+      }
+   }
+
+   DEXIT;
+   return ret;
+}
+
+void
+deliver_spooling_trigger(u_long32 type, u_long32 when, 
+                         u_long32 uval0, u_long32 uval1, const char *key)
+{
+   time_t next_trigger;
+   lList *answer_list = NULL;
+
+   DENTER(TOP_LAYER, "deliver_spooling_trigger");
+
+   /* trigger spooling regular actions */
+   if (!spool_trigger_context(&answer_list, spool_get_default_context(), 
+                              when, &next_trigger)) {
+      answer_list_output(&answer_list);
+   }
+
+   /* set timerevent for next trigger */
+   te_add(type, next_trigger, 0, 0, NULL);
+
+   DEXIT;
+   return;
+}
 
 /****** sge_persistence_qmaster/sge_event_spool() ******************************
 *  NAME
@@ -369,7 +466,8 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
          if (delete) {
             ret = spool_delete_object(answer_list, spool_get_default_context(), object_type, key);
          } else {
-            ret = spool_write_object(answer_list, spool_get_default_context(), object, key, object_type);
+            ret = spool_write_object(answer_list, spool_get_default_context(), 
+                                     object, key, object_type);
          }
       }
    }
@@ -377,7 +475,8 @@ sge_event_spool(lList **answer_list, u_long32 timestamp, ev_event event,
    /* send event only, if spooling succeeded */
    if (ret) {
       if (send_event) {
-         sge_add_event(NULL, timestamp, event, intkey1, intkey2, strkey, strkey2,
+         sge_add_event(NULL, timestamp, event, 
+                       intkey1, intkey2, strkey, strkey2,
                        session, element);
       }
 

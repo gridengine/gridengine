@@ -71,6 +71,8 @@
 #include "sge_userset.h"
 #include "sge_todo.h"
 
+#include "sge_reporting_qmaster.h"
+
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
@@ -165,7 +167,7 @@ lListElem *jatep
          (failed && !lGetString(jep, JB_exec_file)) ||
          (failed && general_failure==GFSTATE_JOB && JOB_TYPE_IS_NO_ERROR(lGetUlong(jep, JB_type)))) {
       job_log(jobid, jataskid, MSG_LOG_JREMOVED);
-      sge_log_dusage(jr, jep, jatep);
+      sge_create_acct_record(NULL, jr, jep, jatep);
 
       sge_commit_job(jep, jatep, jr, (enhanced_product_mode ? COMMIT_ST_FINISHED_FAILED_EE : COMMIT_ST_FINISHED_FAILED), COMMIT_DEFAULT |
       COMMIT_NEVER_RAN);
@@ -180,7 +182,7 @@ lListElem *jatep
       job_log(jobid, jataskid, MSG_LOG_JERRORSET);
       DPRINTF(("set job "u32"."u32" in ERROR state\n", lGetUlong(jep, JB_job_number),
          jataskid));
-      sge_log_dusage(jr, jep, jatep);
+      sge_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_FAILED_AND_ERROR, COMMIT_DEFAULT);
    }
@@ -193,7 +195,7 @@ lListElem *jatep
       DTRACE;
       job_log(jobid, jataskid, MSG_LOG_JNOSTARTRESCHEDULE);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
-      sge_log_dusage(jr, jep, jatep);
+      sge_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
    }
       /*
@@ -210,7 +212,7 @@ lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      sge_log_dusage(jr, jep, jatep);
+      sge_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
@@ -225,7 +227,7 @@ lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      sge_log_dusage(jr, jep, jatep);
+      sge_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
@@ -239,7 +241,7 @@ lListElem *jatep
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
                       lGetUlong(jr, JR_ckpt_arena)));
       lSetString(jatep, JAT_osjobid, lGetString(jr, JR_osjobid));
-      sge_log_dusage(jr, jep, jatep);
+      sge_create_acct_record(NULL, jr, jep, jatep);
       lSetUlong(jatep, JAT_start_time, 0);
       sge_commit_job(jep, jatep, jr, COMMIT_ST_RESCHEDULED, COMMIT_DEFAULT);
    }
@@ -248,7 +250,7 @@ lListElem *jatep
        */
    else {
       job_log(jobid, jataskid, MSG_LOG_EXITED);
-      sge_log_dusage(jr, jep, jatep);
+      sge_create_acct_record(NULL, jr, jep, jatep);
       sge_commit_job(jep, jatep, jr, (enhanced_product_mode ? COMMIT_ST_FINISHED_FAILED_EE : COMMIT_ST_FINISHED_FAILED), COMMIT_DEFAULT);
    }
 
@@ -310,62 +312,3 @@ lListElem *jatep
    return;
 }
 
-/************************************************************
-
- ************************************************************/
-void sge_log_dusage(
-lListElem *jr,
-lListElem *jep,
-lListElem *jatep 
-) {
-
-   FILE *fp;
-   int write_result;
-   dstring category_str = DSTRING_INIT;
-   SGE_STRUCT_STAT statbuf;
-   int write_comment;
-   dstring ds;
-   char buffer[256];
-
-   DENTER(TOP_LAYER, "sge_log_dusage");
-
-   sge_dstring_init(&ds, buffer, sizeof(buffer));
-   write_comment = 0;
-   if (SGE_STAT(path_state_get_acct_file(), &statbuf)) {
-      write_comment = 1;
-   }     
-
-   fp = fopen(path_state_get_acct_file(), "a");
-   if (!fp) {
-      ERROR((SGE_EVENT, MSG_FILE_ERRORWRITING_SS, path_state_get_acct_file(), strerror(errno)));
-      DEXIT;
-      return;
-   }
-
-   if (write_comment && (sge_spoolmsg_write(fp, COMMENT_CHAR, 
-         feature_get_product_name(FS_VERSION, &ds)) < 0)) {
-      ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path_state_get_acct_file())); 
-      fclose(fp);
-      DEXIT;
-      return;
-   }   
-
-   sge_build_job_category(&category_str, jep, Master_Userset_List);
-   write_result = sge_write_rusage(fp, jr, jep, jatep, sge_dstring_get_string(&category_str));
-   sge_dstring_free(&category_str);
-   fclose(fp);
-
-   if (write_result == EOF) {
-      ERROR((SGE_EVENT, MSG_FILE_WRITE_S, path_state_get_acct_file()));
-      DEXIT;
-      return;
-   } else if (write_result == -2) {
-      /* The file should be open... */
-      ERROR((SGE_EVENT, MSG_FILE_WRITEACCT));
-      DEXIT;
-      return;
-   }
-
-   DEXIT;
-   return;
-}

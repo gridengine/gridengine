@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
+#include <time.h>
+
 #include "sge_mirror.h"
 #include "spool/sge_spoolingL.h"
 
@@ -177,7 +179,8 @@ typedef bool
                              const char *args);
 
 typedef bool
-(*spooling_trigger_func)(lList **answer_list, const lListElem *rule);
+(*spooling_trigger_func)(lList **answer_list, const lListElem *rule, 
+                         time_t trigger, time_t *next_trigger);
                                   
 typedef bool
 (*spooling_transaction_func)(lList **answer_list, const lListElem *rule, 
@@ -277,7 +280,8 @@ spool_maintain_context(lList **answer_list, lListElem *context,
                        const char *args);
 
 bool
-spool_trigger_context(lList **answer_list, lListElem *context);
+spool_trigger_context(lList **answer_list, lListElem *context, 
+                      time_t trigger, time_t *next_trigger);
 
 bool spool_transaction(lList **answer_list, lListElem *context, 
                        spooling_transaction_command cmd);

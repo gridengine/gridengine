@@ -96,8 +96,9 @@
 #include "sge_cuser.h"
 #include "sge_centry.h"
 
+#include "sge_persistence_qmaster.h"
+
 #include "spool/sge_spooling.h"
-#include "spool/dynamic/sge_spooling_loader.h"
 
 #include "msg_common.h"
 
@@ -161,23 +162,13 @@ int sge_setup_qmaster()
    cull_hash_new(Master_Job_List, JB_owner, 0);
 #endif
 
-   /* create spooling context */
-   spooling_context = spool_create_dynamic_context(&answer_list, 
-                           bootstrap_get_spooling_lib(), 
-                           bootstrap_get_spooling_params());
-   answer_list_output(&answer_list);
-   if (spooling_context == NULL) {
-      CRITICAL((SGE_EVENT, "unable to create spooling context\n"));
-      SGE_EXIT(1);
+   if (!sge_initialize_persistence(&answer_list)) {
+      answer_list_output(&answer_list);
+      DEXIT;
+      return -1;
+   } else {
+      spooling_context = spool_get_default_context();
    }
-
-   if (!spool_startup_context(&answer_list, spooling_context, true)) {
-      CRITICAL((SGE_EVENT, "unable to startup spooling context\n"));
-      SGE_EXIT(1);
-   }
-   answer_list_output(&answer_list);
-
-   spool_set_default_context(spooling_context);
 
    /*
    ** get cluster configuration
@@ -192,12 +183,14 @@ int sge_setup_qmaster()
                  uti_state_get_qualified_hostname()));
       else {           
          ERROR((SGE_EVENT, MSG_CONFIG_ERRORXSELECTINGCONFIGY_IS, ret, uti_state_get_qualified_hostname()));
+         DEXIT;
          return -1;
       }   
    }
    ret = merge_configuration( lGetElemHost(Master_Config_List, CONF_hname, SGE_GLOBAL_NAME), lep, &conf, NULL);
    if (ret) {
       ERROR((SGE_EVENT, MSG_CONFIG_ERRORXMERGINGCONFIGURATIONY_IS, ret, uti_state_get_qualified_hostname()));
+      DEXIT;
       return -1;
    }
    sge_show_conf();         
@@ -291,6 +284,7 @@ int sge_setup_qmaster()
       if (!spool_write_object(&answer_list, spooling_context, ep, "root", SGE_TYPE_MANAGER)) {
          answer_list_output(&answer_list);
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEMANAGERLIST)); 
+         DEXIT;
          return -1;
       }
    }
@@ -311,6 +305,7 @@ int sge_setup_qmaster()
       if (!spool_write_object(&answer_list, spooling_context, ep, "root", SGE_TYPE_OPERATOR)) {
          answer_list_output(&answer_list);
          CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEOPERATORLIST)); 
+         DEXIT;
          return -1;
       }
    }
@@ -359,7 +354,13 @@ int sge_setup_qmaster()
    time_end = time(0);
    answer_list_output(&answer_list);
 
-   INFO((SGE_EVENT, "read job database in %ld seconds\n", time_end - time_start));
+{
+   u_long32 saved_logginglevel = log_state_get_log_level();
+   log_state_set_log_level(LOG_INFO);
+   INFO((SGE_EVENT, "read job database with %d entries in %ld seconds\n", 
+         lGetNumberOfElem(Master_Job_List), time_end - time_start));
+   log_state_set_log_level(saved_logginglevel);
+}
 
    for_each(jep, Master_Job_List) {
       DPRINTF(("JOB "u32" PRIORITY %d\n", lGetUlong(jep, JB_job_number), 

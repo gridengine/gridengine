@@ -81,8 +81,8 @@ typedef struct bdb_info {
    DB_ENV *env;
    DB     *db;
    DB_TXN *txn;
-   time_t last_clear;
-   time_t last_checkpoint;
+   time_t next_clear;
+   time_t next_checkpoint;
 } bdb_info;
 
 bdb_info *bdb_create(void) {
@@ -91,8 +91,8 @@ bdb_info *bdb_create(void) {
    info->env = NULL;
    info->db  = NULL;
    info->txn = NULL;
-   info->last_clear = 0;
-   info->last_checkpoint = 0;
+   info->next_clear = 0;
+   info->next_checkpoint = 0;
 
    return info;
 }
@@ -558,7 +558,8 @@ spool_berkeleydb_checkpoint(lList **answer_list, bdb_info *db)
 }
 
 bool
-spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule)
+spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule,
+                              time_t trigger, time_t *next_trigger)
 {
    bool ret = true;
 
@@ -573,22 +574,25 @@ spool_berkeleydb_trigger_func(lList **answer_list, const lListElem *rule)
                               MSG_BERKELEY_NOCONNECTIONOPEN_S,
                               lGetString(rule, SPR_url));
       ret = false;
+
+      /* nothing can be done - but set new trigger!! */
+      *next_trigger = trigger + MIN(BERKELEYDB_CLEAR_INTERVAL, 
+                                    BERKELEYDB_CHECKPOINT_INTERVAL);
    } else {
-      time_t now = time(0);
-      if ((db->last_clear + BERKELEYDB_CLEAR_INTERVAL) <= now) {
+      if (db->next_clear <= trigger) {
          ret = spool_berkeleydb_clear_log(answer_list, db);
-         if (ret) {
-            db->last_clear = now;
-         }
+         db->next_clear = trigger + BERKELEYDB_CLEAR_INTERVAL;
       }
-      if ((db->last_checkpoint + BERKELEYDB_CHECKPOINT_INTERVAL <= now)) {
+
+      if (db->next_checkpoint <= trigger) {
          ret = spool_berkeleydb_checkpoint(answer_list, db);
-         if (ret) {
-            db->last_checkpoint = now;
-         }
+         db->next_checkpoint = trigger + BERKELEYDB_CHECKPOINT_INTERVAL;
       }
+
+      /* set time of next trigger */
+      *next_trigger = MIN(db->next_clear, db->next_checkpoint); 
    }
-   
+
    DEXIT;
    return ret;
 }

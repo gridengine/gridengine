@@ -63,6 +63,8 @@
 #include "sge_job.h"
 #include "sge_report.h"
 
+#include "sge_reporting_qmaster.h"
+
 #include "sge_persistence_qmaster.h"
 #include "spool/sge_spooling.h"
 
@@ -538,7 +540,7 @@ sge_pack_buffer *pb
                            jobid, jataskid, pe_task_id_str));
                         lSetUlong(petask, PET_status, JFINISHED);
 
-                        sge_log_dusage(jr, jep, jatep);
+                        sge_create_acct_record(NULL, jr, jep, jatep);
 
                         /* add tasks (scaled) usage to past usage container */
                         {

@@ -57,6 +57,9 @@
 #include "sge_queue.h"
 #include "sge_centry.h"
 
+#include "sge_reporting_qmaster.h"
+#include "sge_persistence_qmaster.h"
+
 extern lList *Master_Job_List;
 
 
@@ -91,6 +94,8 @@ int had_free_epoch
       { TYPE_SIGNAL_RESEND_EVENT, resend_signal_event },
       { TYPE_JOB_RESEND_EVENT, resend_job },
       { TYPE_RESCHEDULE_UNKNOWN_EVENT, reschedule_unknown_event },
+      { TYPE_SPOOLING_TRIGGER, deliver_spooling_trigger },
+      { TYPE_REPORTING_TRIGGER, deliver_reporting_trigger },
       { 0, NULL }
    };
    te_deliver(now, te_tab);

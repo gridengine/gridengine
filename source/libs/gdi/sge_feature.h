@@ -69,7 +69,7 @@ typedef enum {
 
 typedef enum {
    FEATURE_UNINITIALIZED,
-   FEATURE_REPRIORISATION,          /* PTFs auto repriorisation */
+   FEATURE_REPRIORITIZATION,        /* PTFs auto reprioritization */
    FEATURE_REPORT_USAGE,            /* PDC data collection and
                                        usage reports from execd to master */
    FEATURE_SPOOL_ADD_ATTR,          /* spool additional attributes for sge 

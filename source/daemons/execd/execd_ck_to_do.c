@@ -78,10 +78,9 @@
 #endif
 
 #include "sge_stringL.h"
-
 #if COMPILE_DC
-static int repriorisation_enabled = 0;
-#endif
+static int reprioritization_enabled = 0;
+#endif     
 
 extern volatile int dead_children;
 extern volatile int waiting4osjid;
@@ -334,17 +333,17 @@ int answer_error
       ptf_update_job_usage();
       switch2admin_user();
    }
-   if (feature_is_enabled(FEATURE_REPRIORISATION) && !deactivate_ptf) {
+   if (feature_is_enabled(FEATURE_REPRIORITIZATION) && !deactivate_ptf) {
       switch2start_user();
       DPRINTF(("ADJUST PRIORITIES\n"));
       ptf_adjust_job_priorities();
       switch2admin_user();
-      repriorisation_enabled = 1;
+      reprioritization_enabled = 1;
    } else {
       /* Here we will make sure that each job which was started
-         in SGEEE-Mode (repriorisation) will get its initial
+         in SGEEE-Mode (reprioritization) will get its initial
          queue priority if this execd alternates to SGE-Mode */
-      if (repriorisation_enabled) {
+      if (reprioritization_enabled) {
          lListElem *job, *jatask;
          lListElem *slave_job, *slave_jatask;
 
@@ -390,7 +389,7 @@ int answer_error
       } else {
          DPRINTF(("LEAVE PRIORITIES UNTOUCHED\n"));
       }
-      repriorisation_enabled = 0;
+      reprioritization_enabled = 0;
    }
 #endif
       

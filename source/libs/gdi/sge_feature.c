@@ -89,7 +89,7 @@ static int enabled_features_mask[FEATURESET_LAST_ENTRY][FEATURE_LAST_ENTRY] = {
 };
 
 static feature_names_t feature_list[] = {
-   {FEATURE_REPRIORISATION,         "repriorisation"},
+   {FEATURE_REPRIORITIZATION,       "reprioritization"},
    {FEATURE_REPORT_USAGE,           "report_usage"},
    {FEATURE_NO_SECURITY,            "no_security"},
    {FEATURE_AFS_SECURITY,           "afs_security"},

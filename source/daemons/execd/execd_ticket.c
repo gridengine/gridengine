@@ -89,7 +89,7 @@ int answer_error;
   
    DPRINTF(("got new tickets for %d jobs\n", lGetNumberOfElem(ticket_modifier)));
 #ifdef COMPILE_DC
-   if (feature_is_enabled(FEATURE_REPRIORISATION))  {
+   if (feature_is_enabled(FEATURE_REPRIORITIZATION))  {
       int ptf_error;
       /* forward new tickets to ptf */
       if ((ptf_error=ptf_process_job_ticket_list(ticket_modifier))) {

@@ -1329,24 +1329,34 @@ proc set_config { change_array {host global} {do_add 0} {ignore_error 0}} {
   upvar $change_array chgar
   set values [array names chgar]
 
+   # get old config - we want to compare it to new one
   if { $do_add == 0 } {
      get_config old_values $host
   }
 
   set vi_commands ""
+
+  # compare the new values to old ones
   foreach elem $values {
      # this will quote any / to \/  (for vi - search and replace)
      set newVal $chgar($elem)
    
      if {[info exists old_values($elem)]} {
-        if { $newVal == "" } {
-          lappend vi_commands ":%s/^$elem .*$/#/\n"
-        } else {
-          set newVal1 [split $newVal {/}]
-          set newVal [join $newVal1 {\/}]
-          lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+        # if old and new config have the same value, create no vi command,
+        # if they differ, add vi command to ...
+        if { [string compare $old_values($elem) $newVal] != 0 } {
+           if { $newVal == "" } {
+             # ... delete config entry (replace by comment)
+             lappend vi_commands ":%s/^$elem .*$/#/\n"
+           } else {
+             # ... change config entry
+             set newVal1 [split $newVal {/}]
+             set newVal [join $newVal1 {\/}]
+             lappend vi_commands ":%s/^$elem .*$/$elem  $newVal/\n"
+           }
         }
      } else {
+        # if the config entry didn't exist in old config: append a new line
         lappend vi_commands "A\n$elem  $newVal"
         lappend vi_commands [format "%c" 27]
      }

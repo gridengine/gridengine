@@ -270,13 +270,22 @@ proc handle_vi_edit { prog_binary prog_args vi_command_sequence expected_result 
       foreach elem $vi_command_sequence {
          set com_length [ string length $elem ]
          set com_sent 0
-         expect -i $sp_id
+         expect -i $sp_id {
+            "*Hit return*" {
+               send -i $sp_id -- "\n"
+            }
+         }
          if { $CHECK_DEBUG_LEVEL != 0 } {
             send -s -i $sp_id -- "$elem"
          } else {
             send -i $sp_id -- "$elem"
          }
-         expect -i $sp_id
+         expect -i $sp_id {
+            "*Hit return*" {
+               send -i $sp_id -- "\n"
+            }
+         }
+
          after 50
       }
 

@@ -1,3 +1,7 @@
+JG-2004-11-17-0: Testsuite: Fix and optimization of vi controlling and changing
+                            global config.
+                 Review:    CR
+
 AA-2004-11-16-0: Bugfix:    - label in Policy Dialog
                             - label width in cluster queue dialog
                             - hostname filtering of jobs

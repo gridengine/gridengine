@@ -1,3 +1,10 @@
+AA-2004-05-17-0: Bugfix:    - AIX51 load, switch on incomplete AIX51 load code with
+                              aimk -DTEST_AIX51
+                            - make broken on AIX43
+                 IZ:        754
+                 Changed:   sge_execd, load_check
+                 Review:    CR
+                 
 SG-2004-05-14-0: Bugfix:    - fixed the messages generation for jobs, which
                               exceeded the user job limit.
                             - added copyright statements to the xml-schemas

@@ -32,11 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#if defined(LINUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(CRAY) || defined(NEXSX4) || defined(NECSX5) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(DARWIN) || defined(FREEBSD) || defined(AIX51)
+#if defined(LINUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(CRAY) || defined(NEXSX4) || defined(NECSX5) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(DARWIN) || defined(FREEBSD) || defined(TEST_AIX51)
 #  define SGE_LOADAVG
 #endif
 
-#if defined(LINUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(DARWIN) || defined(FREEBSD) || defined(AIX51)
+#if defined(LINUX) || defined(SOLARIS) || defined(SOLARIS64) || defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(DARWIN) || defined(FREEBSD) || defined(TEST_AIX51)
 #  define SGE_LOADCPU
 #endif
 

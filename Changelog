@@ -1,3 +1,6 @@
+CR-2003-04-08-1  Enhancem:  new options for test binaries.
+                 Changed:   testsuite_snd, testsuite_rcv
+
 CR-2003-04-08-0  Enhancem:  clean rule for drmaa objs
                  Changed:   libs/japi/Makefile
 

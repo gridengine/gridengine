@@ -73,6 +73,8 @@ void usage()
    printf("-closefd                close file descriptors for commd test\n");
    printf("-sync                   use synchron send method for commd test\n");
    printf("-repeat   VALUE         nr. of receive repeats\n");
+   printf("-sndname  VALUE         name of sender commproc\n");
+   printf("-no-tcp                 don't run tcp/ip test, report message order (FIFO) errors\n");
    exit(1);
 }
 
@@ -95,6 +97,7 @@ char **argv
 
    u_short fromid = 1;
    int tag = 1;
+   int no_tcp_flag = 0;
    
    int i;
    int repetitions;
@@ -127,6 +130,12 @@ char **argv
       if (!strcmp("-help", *argv))
          usage();
  
+      if (!strcmp("-sndname", *argv)) {
+         argv++;
+         if (!*argv)
+            usage();
+         strcpy(fromcommproc, *argv);
+      }
       if (!strcmp("-host", *argv)) {
          argv++;
          if (!*argv)
@@ -148,6 +157,9 @@ char **argv
 
       if (!strcmp("-closefd", *argv)) {
          closefd = 1;
+      }
+      if (!strcmp("-no-tcp", *argv)) {
+         no_tcp_flag = 1;
       }
       if (!strcmp("-sync", *argv)) {
          synchron = 1;
@@ -199,7 +211,11 @@ char **argv
             nr_bytes = 0;
          }
          DPRINTF(("buflen = %ld\n", buflen));
-/*         printf ("buffer >%s< count >%ld<\n", buffer,message_count);  */
+         if (no_tcp_flag) {
+            if ( atoi(buffer) != message_count) {
+               printf ("wrong message order: buffer >%s< count >%ld<\n", buffer,message_count); 
+            }
+         }
          DPRINTF(("fromcommproc = %s\n", fromcommproc));
          DPRINTF(("fromid = %d\n", fromid));
          DPRINTF(("fromhost = %s\n", fromhost));
@@ -235,6 +251,11 @@ char **argv
    if (i)
       printf(MSG_ERROR_S , cl_errstr(i));
 
+   
+   fflush(stdout);
+   if (no_tcp_flag) {
+      return 0;
+   }
 
    run_server_test(port);
    fflush(stdout);

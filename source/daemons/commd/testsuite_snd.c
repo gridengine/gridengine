@@ -76,6 +76,8 @@ void usage()
    printf("-datasize VALUE         size of data in byte\n");
    printf("-repeat   VALUE         nr. of send repeats\n");
    printf("-tcptime  VALUE         nr. of seconds for TCP/IP connection test\n");
+   printf("-sndname VALUE          name of sender commproc\n");
+   printf("-no-tcp                 don't run tcp/ip test, report message order (FIFO) errors\n");
    exit(1);
 }
 
@@ -94,7 +96,7 @@ char **argv
    u_long32 mid;
    int closefd = 0;              /* close file descriptors    0/1 */
    int synchron_send = 0;        /* send synchron             0/1 */
-   
+   int no_tcp_flag = 0;
    int first_message;  
    int repetitions;
    u_long32 nr_bytes;
@@ -131,6 +133,13 @@ char **argv
             usage();
          strcpy(host, *argv);
       }
+      if (!strcmp("-sndname", *argv)) {
+         argv++;
+         if (!*argv)
+            usage();
+         strcpy(sender_enroll, *argv);
+      }
+
       if (!strcmp("-port", *argv)) {
          argv++;
          if (!*argv)
@@ -158,6 +167,9 @@ char **argv
 
       if (!strcmp("-closefd", *argv)) {
          closefd = 1;
+      }
+      if (!strcmp("-no-tcp", *argv)) {
+         no_tcp_flag = 1;
       }
       if (!strcmp("-sync", *argv)) {
          synchron_send = 1;
@@ -207,19 +219,30 @@ char **argv
    while (repetitions--) {
       if (first_message == 1) {
          buffer = (char *) malloc(strlen(mydata) + 1);
-         strcpy(buffer,mydata);
+         if (no_tcp_flag) {
+            sprintf(buffer,"       %6d ",first_message); 
+         } else {
+            strcpy(buffer,mydata);
+         }
          buflen = strlen(buffer) + 1;
       }
       if (repetitions == 0) {
          buffer = (char *) malloc(strlen(mydata) + 1);
-         strcpy(buffer,mydata);
+         if (no_tcp_flag) {
+            sprintf(buffer,"       %6d ",first_message); 
+         } else {
+            strcpy(buffer,mydata);
+         }
          buflen = strlen(buffer) + 1;
       }
 
       if (!buffer) {
          buffer = (char *) malloc(strlen(mydata) + 1 );
-/*         sprintf(buffer,"Hello [%6d]",first_message); */
-         strcpy(buffer,mydata);
+         if (no_tcp_flag) {
+            sprintf(buffer,"       %6d ",first_message); 
+         } else {
+            strcpy(buffer,mydata);
+         }
          buflen = strlen(buffer) + 1;
       }
       first_message++;
@@ -254,6 +277,11 @@ char **argv
 
    free(buffer);
    buffer = NULL;
+
+   fflush(stdout);
+   if (no_tcp_flag) {
+      return 0;
+   }
 
    
    while ( run_client_test(host, port,repeat) != 0) {

@@ -43,10 +43,11 @@ CDCONTAINER=`/bin/pwd`/cdcontainer
 MKISOFS=mkisofs
 ISOFSOPTIONS="-l -J -L -N -r -v"
 
+# Store your favorite command line here
+# Could be e.g.: "set - -vdir SGE53 -version 5.3beta1 -tar gtar $*"
 if [ -f mk_dist.private ]; then
    . ./mk_dist.private
 fi
-
 
 #---------------------------------------------------------------------------
 #
@@ -227,6 +228,12 @@ if [ $makebin = true ]; then
       ErrUsage
    fi
 
+   # do any necessary postprocessing of the "bin" package here
+   if [ -f mk_dist.private.bin ]; then
+      echo executing commands from mk_dist.private.bin
+      . ./mk_dist.private.bin
+   fi
+
    cd $VDIR
    echo creating tar.gz files for $SELECTED_ARCHS
    for i in $SELECTED_ARCHS; do
@@ -239,15 +246,26 @@ if [ $makebin = true ]; then
 fi
 
 if [ $makecommon = true ]; then
+   # do any necessary postprocessing of the "common" package here
+   if [ -f mk_dist.private.common ]; then
+      echo executing commands from mk_dist.private.common
+      . ./mk_dist.private.common
+   fi
+
    cd $VDIR
    filename=$BASEDIR/${PRODUCT}-${VERSION}-common.tar.gz
    echo Command: $TAR cvzf $filename $COMMON_PACKAGE
                   $TAR cvzf $filename $COMMON_PACKAGE
-
    cd ..
 fi
 
 if [ $makedoc = true ]; then
+   # do any necessary postprocessing of the "doc" package here
+   if [ -f mk_dist.private.doc ]; then
+      echo executing commands from mk_dist.private.doc
+      . ./mk_dist.private.doc
+   fi
+
    cd $VDIR
    filename=$BASEDIR/${PRODUCT}-${VERSION}-doc.tar.gz
    echo Command: $TAR cvzf $filename $DOC_PACKAGE

@@ -35,7 +35,6 @@
 
 #include "sge_boundaries.h"
 #include "cull.h"
-#include "cull_packL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -376,8 +375,8 @@ LISTDEF(EVS_Type)
    SGE_ULONG(EVS_id, CULL_DEFAULT)
    SGE_BOOL(EVS_flush, CULL_DEFAULT)
    SGE_ULONG(EVS_interval, CULL_DEFAULT)
-   SGE_OBJECT(EVS_what, PACK_Type, CULL_DEFAULT)
-   SGE_OBJECT(EVS_where, PACK_TYPE,CULL_DEFAULT)
+   SGE_OBJECT(EVS_what, CULL_ANY_SUBTYPE, CULL_DEFAULT)
+   SGE_OBJECT(EVS_where, CULL_ANY_SUBTYPE, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF(EVSN)

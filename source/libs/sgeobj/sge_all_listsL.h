@@ -90,7 +90,6 @@
 #include "sge_qinstanceL.h"
 #include "sge_mesobjL.h"
 #include "sge_qref.h"
-#include "cull_packL.h"
 #include "sge_resource_utilizationL.h"
 #include "sge_qetiL.h"
 #include "cull_xmlL.h"
@@ -235,7 +234,11 @@ extern "C" {
       {PARA_LOWERBOUND, PARAS, PARAN},          /* store the configuration "params" parameters in a list */
       {ULNG_LOWERBOUND, ULNGS, ULNGN},          /* ???? info-messages ??? */
       {EVS_LOWERBOUND, EVSS, EVSN},              /* subscribed event list */
-      {PACK_LOWERBOUND, PACKS, PACKN},          /* a cull version of the pack buffer */
+
+/* this would generate a cycle in the dependencies between lib cull and lib obj. Therefor
+   we ignore the names here and live with the fact, that lWriteList or lWriteElem will
+   not print the CULL_names. */
+/*      {PACK_LOWERBOUND, PACKS, PACKN},   */       /* a cull version of the pack buffer */
 
       {XMLA_LOWERBOUND, XMLAS, XMLAN},          /* XML-Attribute */
       {XMLS_LOWERBOUND, XMLSS, XMLSN},          /* XML-Stype-Sheet */

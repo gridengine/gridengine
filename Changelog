@@ -1,3 +1,11 @@
+SG-2004-04-02-0: Bugfix:    removed circular dependency between lib cull and
+                            lib obj. The change results in a limitation of the
+                            lWrite***(...) output. For the cull_packL.h cull
+                            elements are only the ids printed and not the
+                            element names.
+                 Changed:   qmaster, scheduler
+                 Review:    JG
+
 AA-2004-04-02-0: Bugfix:    qalter -- option
                  Issue:     844
                  Changed:   qsub, qalter, qhold, qrls, qsh

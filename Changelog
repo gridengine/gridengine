@@ -1,3 +1,6 @@
+CR-2004-02-03-0  Testsuite: HTML compile output links of compile output HTML file
+                            are now relative to HTML-directory.
+
 MD-2004-02-02-2: Bugfix:    - Text 
                  Changed:   - inst_sgeee 
 

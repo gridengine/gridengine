@@ -5751,7 +5751,7 @@ proc compile_source { { do_only_install 0 } } {
    global ts_config
    global CHECK_SOURCE_DIR CHECK_OUTPUT CHECK_SOURCE_HOSTNAME CHECK_SOURCE_COMPILE_HOSTS
    global CHECK_TESTSUITE_ROOT CHECK_SCRIPT_FILE_DIR CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT
-   global CHECK_ADDITIONAL_COMPILE_HOSTS
+   global CHECK_ADDITIONAL_COMPILE_HOSTS CHECK_HTML_DIRECTORY
    global CHECK_DEFAULTS_FILE CHECK_SOURCE_CVS_RELEASE do_not_update check_name
    global CHECK_AIMK_COMPILE_OPTIONS CHECK_DIST_INSTALL_OPTIONS CHECK_JOB_OUTPUT_DIR
    global CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_DIRECTORY CHECK_PACKAGE_TYPE
@@ -6043,9 +6043,13 @@ proc compile_source { { do_only_install 0 } } {
       lappend spawn_list [ lindex $open_spawn 1 ]
       lappend remote_spawn_list $open_spawn
       
-      set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
+      if { $CHECK_HTML_DIRECTORY != "" } {
+         set myfilenmae "$CHECK_HTML_DIRECTORY/${elem}_compile_${cvs_tag}.out"
+      } else {
+         set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
+      }
 
-      set html_table($table_row,4) [create_html_link "view" $myfilename]
+      set html_table($table_row,4) [create_html_link "view" ${elem}_compile_${cvs_tag}.out]
   
       lappend file_name_list $myfilename
       catch { file delete $myfilename }

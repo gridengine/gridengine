@@ -1,3 +1,8 @@
+JG-2002-01-15-0: Testsuite: Fixed a problem of the submit_host check:
+                            Replaced "hostname" with "uname -n" as hostname
+                            is not found on some architectures (e.g. on irix6
+                            hostname is located in /usr/bsd/bin).
+
 JG-2002-01-14-1: Bugfix:    Removed duplicated code that caused the Insure++
                             debugger to (falsely) detect a READ_DANGLING error.
 

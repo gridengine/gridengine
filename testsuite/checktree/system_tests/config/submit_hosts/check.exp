@@ -144,7 +144,7 @@ proc submit_hosts_test {} {
          add_proc_error "submit_hosts_test" -1 "qstat -f on host $submit_host should not work here"
       }
 
-      set output [ start_remote_prog $submit_host $CHECK_USER "qrsh" "hostname" ]
+      set output [ start_remote_prog $submit_host $CHECK_USER "qrsh" "uname -n" ]
       puts $CHECK_OUTPUT $output
       puts $CHECK_OUTPUT "qrsh exit state: $prg_exit_state"
       if { $prg_exit_state == 0 } {
@@ -196,7 +196,7 @@ proc submit_hosts_test {} {
       } 
 
       foreach queue $CHECK_CORE_EXECD {
-         set output [ start_remote_prog $submit_host $CHECK_USER "qrsh" "-q ${queue}.q hostname" ]
+         set output [ start_remote_prog $submit_host $CHECK_USER "qrsh" "-q ${queue}.q uname -n" ]
          puts $CHECK_OUTPUT $output
          puts $CHECK_OUTPUT "qrsh exit state: $prg_exit_state"
          if { $prg_exit_state != 0 } {
@@ -212,7 +212,7 @@ proc submit_hosts_test {} {
             }
          }
          if { [ string first $queue $output] < 0 } {
-            add_proc_error "submit_hosts_test" -1 "qrsh on host $submit_host did no \"rsh hostname\" on queue \"${queue}.q\""
+            add_proc_error "submit_hosts_test" -1 "qrsh on host $submit_host did no \"rsh uname -n\" on queue \"${queue}.q\""
          }
       }
 

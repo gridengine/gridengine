@@ -32,6 +32,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
+#if defined(LINUX)
+#include <termios.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
@@ -659,9 +666,23 @@ static int startJob(char *command, char *wrapper, int noshell)
    if(child_pid) {
       /* parent */
       int status;
+
+#if defined(LINUX)
+      int ttyfd;
+#endif
+
       signal(SIGINT,  forward_signal);
       signal(SIGQUIT, forward_signal);
       signal(SIGTERM, forward_signal);
+
+      /* preserve pseudo terminal */
+#if defined(LINUX)
+      ttyfd = open("/dev/tty", O_RDWR);
+      if (ttyfd != -1) {
+         tcsetpgrp(ttyfd, child_pid);
+         close(ttyfd); 
+      }
+#endif
 
       while(waitpid(child_pid, &status, 0) != child_pid && errno == EINTR);
       return(status);

@@ -445,6 +445,30 @@ usage(void)
       fprintf(stderr,"\n");
 }
 
+static FILE *open_output(const char *file_name, const char *mode) 
+{
+   FILE *file = stdout;
+   
+   if (file_name != NULL) {
+      file = fopen(file_name, mode);
+      if (file == NULL) {
+         fprintf(stderr, MSG_FILE_COULDNOTOPENXFORY_SS , file_name, mode);
+         exit(1);
+      }
+   }
+
+   return file;
+}
+
+static FILE *close_output(FILE *file)
+{
+   if (file != stdout) {
+      fclose(file);
+      file = NULL;
+   }
+
+   return file;
+}
 
 int
 main(int argc, char **argv)
@@ -463,8 +487,8 @@ main(int argc, char **argv)
    int c;
    extern char *optarg;
    extern int optind;
-   FILE *outfile = stdout;
-   char *output_mode = "w";
+   FILE *outfile = NULL;
+   char *output_mode = "a";
    u_long curr_time=0;
    
    format.name_format=0;
@@ -546,23 +570,19 @@ main(int argc, char **argv)
       exit(1);
    }
 
-   if (ofile) {
-      if ((outfile = fopen(ofile, output_mode)) == NULL) {
-	 fprintf(stderr, MSG_FILE_COULDNOTOPENXFORY_SS , ofile, output_mode);
-	 exit(1);
-      }
-   }
 
    if ((argc - optind) > 0)
        names = &argv[optind];
 
    sge_gdi_setup("sge_share_mon");
 
-   if (header)
+   if (header) {
+      outfile = open_output(ofile, output_mode);
       print_hdr(outfile, &format);
+      outfile = close_output(outfile);
+   }
 
    while(count == -1 || count-- > 0) {
-
       setup_lists(&sharetree, &users, &projects, &config);
 
       root = lFirst(sharetree);
@@ -582,17 +602,21 @@ main(int argc, char **argv)
 		projects,
 		config, NULL, curr_time);
 
+      outfile = open_output(ofile, output_mode);
       print_nodes(outfile, root, NULL, NULL, users, projects, group_nodes,
                   names, &format);
+
+      if (count && strlen(format.rec_delim)) {
+	      fprintf(outfile, "%s", format.rec_delim);
+      }
+
+      outfile = close_output(outfile);
 
       free_lists(sharetree, users, projects, config);
 
       if (count) {
-	 fprintf(outfile, "%s", format.rec_delim);
          sleep(interval);
       }
-
-      fflush(outfile);
    }
 
    sge_gdi_shutdown();

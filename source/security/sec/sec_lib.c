@@ -373,7 +373,7 @@ static int sec_is_master(const char *progname);
 
 
 static int sec_announce_connection(cl_com_handle_t* cl_handle, GlobalSecureData *gsd, const cl_com_endpoint_t *sender);
-static int sec_encrypt(sge_pack_buffer *pb, const char *buf, int buflen);
+static int sec_encrypt(sge_pack_buffer *pb, const char *buf, const int buflen);
 
 static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint_t *sender, char *buffer, u_long32 buflen, unsigned long response_id);
 
@@ -1158,6 +1158,7 @@ int sec_init(const char *progname)
    char *randfile = NULL;
    SGE_STRUCT_STAT file_info;
    int is_master;
+   int ec = 0;
 
    DENTER(GDI_LAYER, "sec_init");
 
@@ -1170,12 +1171,16 @@ int sec_init(const char *progname)
    }   
    
    /* Build dynamic symbol table */
-   if (sec_build_symbol_table () == 1) {
+   if ((ec = sec_build_symbol_table ()) != 0) {
          SEC_UNLOCK_INITIALIZED();
-         ERROR((SGE_EVENT, MSG_SEC_DLLOADFAILED));
+         if (ec == 1)
+            ERROR((SGE_EVENT, MSG_SEC_DLLOADFAILED));
+         else
+            ERROR((SGE_EVENT, MSG_SEC_DLLOADSYMFAILED));
          DEXIT;
          return -1;
    }
+
 
    /* use -lcrypto threads(3) interface here to allow OpenSSL 
       safely be used by multiple threads */
@@ -1263,6 +1268,11 @@ int sec_init(const char *progname)
    sec_state_set_seq_send(0);
    sec_state_set_connect(0);
    sec_state_set_seq_receive(0);
+   if (is_master) {
+      SEC_LOCK_CONN_LIST();
+      sec_conn_list = lCreateList("sec_conn_list", SecurityT);
+      SEC_UNLOCK_CONN_LIST();
+   }   
 
    /* 
    ** read security related files
@@ -1419,8 +1429,8 @@ int sec_send_message(cl_com_handle_t* cl_handle,
                DEXIT;
                return CL_RETVAL_SECURITY_SEND_FAILED;
             }
-            SEC_UNLOCK_CONN_LIST();
          }
+         SEC_UNLOCK_CONN_LIST();
       }
       DEBUG_PRINT_BUFFER("Message before encryption", (unsigned char*) buffer, buflen);
 
@@ -1560,13 +1570,18 @@ int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, c
 {
    int i;
    int tag = -1;
-   u_long32 tmp_buf_len;
-   char* tmp_buf_pp = NULL;
-
    DENTER(GDI_LAYER, "sec_receive_message");
    
    if ((i=cl_commlib_receive_message(cl_handle, un_resolved_hostname,  component_name,  component_id,  
                                      synchron, response_mid,  message,  sender) ) != CL_RETVAL_OK) {
+
+      /*
+      ** reset connect state to force reannouncement
+      */
+      if (message != NULL && *message != NULL /* && 
+               (*message)->message_tag == TAG_GDI_REQUEST */) {
+         sec_state_set_connect(0);
+      }
       DEXIT;
       return i;
    }
@@ -1574,10 +1589,11 @@ int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, c
    if (message != NULL && *message != NULL) {
       tag = (*message)->message_tag;
    } else {
+      DEXIT;
       return CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
    }
-   if (sender != NULL && *sender != NULL) {
-   } else {
+   if (sender == NULL || *sender == NULL) {
+      DEXIT;
       return CL_RETVAL_SECURITY_ANNOUNCE_FAILED;
    }
 
@@ -1595,39 +1611,41 @@ int sec_receive_message(cl_com_handle_t* cl_handle,char* un_resolved_hostname, c
       }
    }
    else if (sec_set_encrypt(tag)) {
+      u_long32 tmp_buf_len = (*message)->message_length;
+      char* tmp_buf_pp = (char*) ((*message)->message);
+
       DEBUG_PRINT_BUFFER("Encrypted incoming message", 
                          (unsigned char*) (*message)->message, (int)(*message)->message_length);
-      tmp_buf_len = (*message)->message_length;
-      tmp_buf_pp = (char*) ((*message)->message);
       if (sec_decrypt(&tmp_buf_pp, &tmp_buf_len, *sender)) {
-         ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED_SSU, (*sender)->comp_host, (*sender)->comp_name, (*sender)->comp_id));
-         (*message)->message_length = tmp_buf_len;
          (*message)->message = (cl_byte_t*)tmp_buf_pp;
-         if (sec_handle_announce(cl_handle, *sender,NULL,0,(*message)->message_id))
-            ERROR((SGE_EVENT, MSG_SEC_HANDLEDECERRFAILED));
+         (*message)->message_length = tmp_buf_len;
 
+         ERROR((SGE_EVENT, MSG_SEC_MSGDECFAILED_SSU, (*sender)->comp_host, (*sender)->comp_name, (*sender)->comp_id));
+         if (tag != TAG_GDI_REQUEST) {
+            if (sec_handle_announce(cl_handle, *sender,NULL,0, (*message)->message_id)) {
+               ERROR((SGE_EVENT, MSG_SEC_HANDLEDECERRFAILED));
+            }   
+         }
          DEXIT;
          return CL_RETVAL_SECURITY_RECEIVE_FAILED;
       }
-      (*message)->message_length = tmp_buf_len;
       (*message)->message = (cl_byte_t*)tmp_buf_pp;
+      (*message)->message_length = tmp_buf_len;
 
       DEBUG_PRINT_BUFFER("Decrypted incoming message", (unsigned char*) (*message)->message, (int)(*message)->message_length);
    }
    else if (uti_state_get_mewho() == QMASTER) {
-      tmp_buf_len = (*message)->message_length;
-      tmp_buf_pp = (char*) ((*message)->message);
-      if (sec_get_connid(&tmp_buf_pp , &tmp_buf_len) ||
-               sec_update_connlist(*sender)) {
-         (*message)->message_length = tmp_buf_len;
-         (*message)->message = (cl_byte_t*)tmp_buf_pp;
+      u_long32 tmp_buf_len = (*message)->message_length;
+      char* tmp_buf_pp = (char*) ((*message)->message);
 
+      if (sec_get_connid(&tmp_buf_pp, &tmp_buf_len) ||
+               sec_update_connlist(*sender)) {
          ERROR((SGE_EVENT, MSG_SEC_CONNIDGETFAILED));
          DEXIT;
          return CL_RETVAL_SECURITY_RECEIVE_FAILED;
       }
-      (*message)->message_length = tmp_buf_len;
       (*message)->message = (cl_byte_t*)tmp_buf_pp;
+      (*message)->message_length = tmp_buf_len;
    }
 
    DEXIT;
@@ -2066,7 +2084,7 @@ const cl_com_endpoint_t *sender
    /* 
    ** prepare packing buffer
    */
-   if ((i=init_packbuffer(&pb, 0, 0)) != PACK_SUCCESS) {
+   if ((i=init_packbuffer(&pb, 1024, 0)) != PACK_SUCCESS) {
       ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
       goto error;
    }
@@ -2082,9 +2100,9 @@ const cl_com_endpoint_t *sender
    /* 
    ** send buffer
    */
-   DPRINTF(("send announce to=(%s:%s)\n", sender->comp_host, sender->comp_name));
+   DPRINTF(("send announce to=(%s:%s:%d)\n", sender->comp_host, 
+               sender->comp_name, sender->comp_id));
  
-
    ngc_error = cl_commlib_send_message(cl_handle, (char*)sender->comp_host, (char*)sender->comp_name, sender->comp_id, 
                                        CL_MIH_MAT_ACK, (unsigned char*)pb.head_ptr, pb.bytes_used, 
                                        &dummymid, 0 ,TAG_SEC_ANNOUNCE,1,1);
@@ -2136,6 +2154,8 @@ const cl_com_endpoint_t *sender
       i=-1;
       goto error;
    }
+
+   message->message = NULL;
 
    /* 
    ** unpack data from packing buffer
@@ -2339,7 +2359,7 @@ u_long32 response_id)
    /* 
    ** prepare packbuffer for sending message
    */
-   if ((i=init_packbuffer(&pb_respond, 0, 0)) != PACK_SUCCESS) {
+   if ((i=init_packbuffer(&pb_respond, 1024, 0)) != PACK_SUCCESS) {
       ERROR((SGE_EVENT, MSG_SEC_INITPACKBUFFERFAILED_S, cull_pack_strerror(i)));
       sec_send_err(sender, &pb_respond, SGE_EVENT, response_id, &alp);
       answer_list_output (&alp);
@@ -2599,7 +2619,7 @@ u_long32 response_id)
 static int sec_encrypt(
 sge_pack_buffer *pb,
 const char *inbuf,
-int inbuflen 
+const int inbuflen 
 ) {
    int i = 0;
    u_char seq_str[INTSIZE];
@@ -2615,7 +2635,7 @@ int inbuflen
    
    DENTER(GDI_LAYER,"sec_encrypt");   
 
-   seq_no = htonl(sec_state_get_seq_send());
+   seq_no = sec_state_get_seq_send();
    memcpy(seq_str, &seq_no, INTSIZE);
 
    /*
@@ -2630,11 +2650,13 @@ int inbuflen
    /*
    ** malloc outbuf 
    */
-   outbuf = malloc(inbuflen + sec_EVP_CIPHER_block_size(gsd.cipher));
-   if (!outbuf) {
-      ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
-      i=-1;
-      goto error;
+   if (inbuflen > 0) {
+      outbuf = malloc(inbuflen + sec_EVP_CIPHER_block_size(gsd.cipher));
+      if (!outbuf) {
+         ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
+         i=-1;
+         goto error;
+      }
    }
 
    /*
@@ -2658,25 +2680,26 @@ int inbuflen
    sec_EVP_CIPHER_CTX_cleanup(&ctx);
 
 
-   memset(iv, '\0', sizeof(iv));
-   sec_EVP_EncryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv);
-   if (!sec_EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
-                           (unsigned char*)inbuf, inbuflen)) {
-      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
-      sec_error();
-      i=-1;
-      goto error;
+   if (inbuflen > 0) {  
+      memset(iv, '\0', sizeof(iv));
+      sec_EVP_EncryptInit(&ctx, gsd.cipher, sec_state_get_key_mat(), iv);
+      if (!sec_EVP_EncryptUpdate(&ctx, (unsigned char *) outbuf, (int*)&outlen,
+                              (unsigned char*)inbuf, inbuflen)) {
+         ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
+         sec_error();
+         i=-1;
+         goto error;
+      }
+      if (!sec_EVP_EncryptFinal(&ctx, (unsigned char*)outbuf, (int*) &outlen)) {
+         ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
+         sec_error();
+         i=-1;
+         goto error;
+      }
+      sec_EVP_CIPHER_CTX_cleanup(&ctx);
+      if (!outlen)
+         outlen = inbuflen;
    }
-   if (!sec_EVP_EncryptFinal(&ctx, (unsigned char*)outbuf, (int*) &outlen)) {
-      ERROR((SGE_EVENT, MSG_SEC_ENCRYPTMSGFAILED));
-      sec_error();
-      i=-1;
-      goto error;
-   }
-   sec_EVP_CIPHER_CTX_cleanup(&ctx);
-   if (!outlen)
-      outlen = inbuflen;
-
    /*
    ** initialize packbuffer
    */
@@ -2770,12 +2793,13 @@ static int sec_handle_announce(cl_com_handle_t* cl_handle, const cl_com_endpoint
          }
       } else {
          unsigned char dummy_buffer[] = "dummy buffer";
+         int dummy_buffer_len = sizeof(dummy_buffer);
          /* 
          ** a sec_decrypt error has occured
          */
          ngc_error = cl_commlib_send_message(cl_handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                              CL_MIH_MAT_NAK,
-                                             dummy_buffer, strlen((const char*) dummy_buffer) + 1,
+                                             dummy_buffer, dummy_buffer_len + 1,
                                              &mid, response_id, TAG_SEC_ANNOUNCE,
                                              1, 0);
 
@@ -2839,6 +2863,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
    u_char *enc_msg = NULL;
    u_char *enc_mac = NULL;
    u_long32 connid, enc_msg_len, enc_mac_len;
+   u_long32 in_buf_len;
    lListElem *element=NULL;
    sge_pack_buffer pb;
    EVP_CIPHER_CTX ctx;
@@ -2856,6 +2881,10 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
       ERROR((SGE_EVENT, MSG_SEC_INITPBFAILED));
       goto error;
    }
+   *buffer = NULL;
+   in_buf_len = *buflen;
+   *buflen = 0;
+   
 
    /* 
    ** unpack data from packing buffer
@@ -2864,7 +2893,6 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
                           &enc_msg_len, &enc_msg);
    if (i) {
       ERROR((SGE_EVENT, MSG_SEC_UNPACKMSGFAILED));
-      packstr(&pb, MSG_SEC_UNPACKMSGFAILED);
       goto error;
    }
 
@@ -2873,7 +2901,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
       /*
       ** for debugging
       */
-      if (getenv("SGE_DEBUG_CONNLIST")) {
+      if (getenv("SGE_CONNLIST_DEBUG")) {
          lListElem *el;
          ASN1_UTCTIME *utctime = sec_ASN1_UTCTIME_new();
          for_each(el, sec_conn_list) {
@@ -2897,7 +2925,6 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
       if (!element) {
          SEC_UNLOCK_CONN_LIST();
          ERROR((SGE_EVENT, MSG_SEC_NOCONN_I, (int) connid));
-         packstr(&pb, SGE_EVENT);
          i = -1;
          goto error;
       }
@@ -2918,7 +2945,6 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
          SEC_UNLOCK_CONN_LIST();
          ERROR((SGE_EVENT, MSG_SEC_CONNIDSHOULDBE_II,
                   (int) connid, (int) sec_state_get_connid()));
-         packstr(&pb, SGE_EVENT);
          i = -1;
          goto error;
       }
@@ -2927,7 +2953,7 @@ static int sec_decrypt(char **buffer, u_long32 *buflen, const cl_com_endpoint_t 
    /*
    ** malloc *buffer 
    */
-   *buffer = malloc(*buflen + sec_EVP_CIPHER_block_size(gsd.cipher));
+   *buffer = malloc(in_buf_len + sec_EVP_CIPHER_block_size(gsd.cipher));
    if (!*buffer) {
       SEC_UNLOCK_CONN_LIST();
       ERROR((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
@@ -3182,7 +3208,7 @@ static int sec_write_data2hd()
    /* 
    ** prepare packing buffer                                       
    */
-   if ((i=init_packbuffer(&pb, 0, 0))) {
+   if ((i=init_packbuffer(&pb, 1024, 0))) {
       ERROR((SGE_EVENT, MSG_SEC_INITPBFAILED));
       i = -1;
       goto error;
@@ -4279,93 +4305,102 @@ static int sec_build_symbol_table (void)
    DENTER(GDI_LAYER, "sec_build_symbol_table");
    
 #ifdef LOAD_OPENSSL
+
+#if defined(DARWIN)
+   handle = dlopen ("libcrypto.dylib", RTLD_NOW|RTLD_GLOBAL);
+#elif defined(HP11)
+   handle = dlopen ("libcrypto.sl", RTLD_LAZY);
+#else   
    handle = dlopen ("libcrypto.so", RTLD_LAZY);
+#endif
+
 
    if (handle == NULL) {
+      DEXIT;
       return 1;
    }
 
-   if ((sec_ASN1_UTCTIME_free = (void (*)(ASN1_UTCTIME *))dlsym (handle, "ASN1_UTCTIME_free")) == NULL) return 1;
-   if ((sec_ASN1_UTCTIME_new = (ASN1_UTCTIME *(*)(void))dlsym (handle, "ASN1_UTCTIME_new")) == NULL) return 1;
-   if ((sec_ASN1_UTCTIME_print = (int (*)(BIO *, ASN1_UTCTIME *))dlsym (handle, "ASN1_UTCTIME_print")) == NULL) return 1;
-   if ((sec_BIO_free = (int (*)(BIO *))dlsym (handle, "BIO_free")) == NULL) return 1;
-   if ((sec_BIO_new_file = (BIO *(*)(const char *, const char *))dlsym (handle, "BIO_new_file")) == NULL) return 1;
-   if ((sec_BIO_new_fp = (BIO *(*)(FILE *, int))dlsym (handle, "BIO_new_fp")) == NULL) return 1;
-   if ((sec_BIO_read = (int (*)(BIO *, void *, int))dlsym (handle, "BIO_read")) == NULL) return 1;
-   if ((sec_BIO_write = (int (*)(BIO *b, const void *data, int len))dlsym (handle, "BIO_write")) == NULL) return 1;
-   if ((sec_CRYPTO_get_lock_name = (const char *(*)(int))dlsym (handle, "CRYPTO_get_lock_name")) == NULL) return 1;
-   if ((sec_CRYPTO_num_locks = (int (*)(void))dlsym (handle, "CRYPTO_num_locks")) == NULL) return 1;
-   if ((sec_CRYPTO_set_id_callback = (void (*)(unsigned long (*)(void)))dlsym (handle, "CRYPTO_set_id_callback")) == NULL) return 1;
-   if ((sec_CRYPTO_set_locking_callback = (void (*)(void (*)(int, int, const char *, int)))dlsym (handle, "CRYPTO_set_locking_callback")) == NULL) return 1;
-   if ((sec_d2i_ASN1_UTCTIME = (ASN1_UTCTIME *(*)(ASN1_UTCTIME **, unsigned char **, long ))dlsym (handle, "d2i_ASN1_UTCTIME")) == NULL) return 1;
-   if ((sec_d2i_X509 = (X509 *(*)(X509 **, unsigned char **, long))dlsym (handle, "d2i_X509")) == NULL) return 1;
-   if ((sec_ERR_clear_error = (void (*)(void))dlsym (handle, "ERR_clear_error")) == NULL) return 1;
-   if ((sec_ERR_error_string = (char *(*)(unsigned long, char *))dlsym (handle, "ERR_error_string")) == NULL) return 1;
-   if ((sec_ERR_get_error = (unsigned long (*)(void))dlsym (handle, "ERR_get_error")) == NULL) return 1;
-   if ((sec_ERR_load_crypto_strings = (void (*)(void))dlsym (handle, "ERR_load_crypto_strings")) == NULL) return 1;
-   if ((sec_EVP_add_cipher = (int (*)(const EVP_CIPHER *))dlsym (handle, "EVP_add_cipher")) == NULL) return 1;
-   if ((sec_EVP_add_digest = (int (*)(const EVP_MD *))dlsym (handle, "EVP_add_digest")) == NULL) return 1;
-   if ((_sec_EVP_add_digest_alias = (int (*)(const char *, int, const char *))dlsym (handle, "OBJ_NAME_add")) == NULL) return 1;
-   if ((sec_EVP_CIPHER_CTX_cleanup = (int (*)(EVP_CIPHER_CTX *))dlsym (handle, "EVP_CIPHER_CTX_cleanup")) == NULL) return 1;
-   if ((sec_EVP_DecryptFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_DecryptFinal")) == NULL) return 1;
-   if ((sec_EVP_DecryptInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, const unsigned char *, const unsigned char *))dlsym (handle, "EVP_DecryptInit")) == NULL) return 1;
-   if ((sec_EVP_DecryptUpdate = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *, const unsigned char *, int))dlsym (handle, "EVP_DecryptUpdate")) == NULL) return 1;
-   if ((sec_EVP_DigestInit = (int (*)(EVP_MD_CTX *, const EVP_MD *))dlsym (handle, "EVP_DigestInit")) == NULL) return 1;
-   if ((sec_EVP_DigestFinal = (int (*)(EVP_MD_CTX *, unsigned char *, unsigned int *))dlsym (handle, "EVP_DigestFinal")) == NULL) return 1;
-   if ((sec_EVP_DigestUpdate = (int (*)(EVP_MD_CTX *, const void *, unsigned int))dlsym (handle, "EVP_DigestUpdate")) == NULL) return 1;
-   if ((sec_EVP_EncryptInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, const unsigned char *, const unsigned char *))dlsym (handle, "EVP_EncryptInit")) == NULL) return 1;
-   if ((sec_EVP_EncryptUpdate = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *, const unsigned char *, int))dlsym (handle, "EVP_EncryptUpdate")) == NULL) return 1;
-   if ((sec_EVP_EncryptFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_EncryptFinal")) == NULL) return 1;
-   if ((sec_EVP_md5 = (const EVP_MD *(*)(void))dlsym (handle, "EVP_md5")) == NULL) return 1;
-   if ((sec_EVP_OpenInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, unsigned char *, int, unsigned char *, EVP_PKEY *))dlsym (handle, "EVP_OpenInit")) == NULL) return 1;
-   if ((sec_EVP_OpenFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_OpenFinal")) == NULL) return 1;
+   if ((sec_ASN1_UTCTIME_free = (void (*)(ASN1_UTCTIME *))dlsym (handle, "ASN1_UTCTIME_free")) == NULL) goto error;
+   if ((sec_ASN1_UTCTIME_new = (ASN1_UTCTIME *(*)(void))dlsym (handle, "ASN1_UTCTIME_new")) == NULL) goto error;
+   if ((sec_ASN1_UTCTIME_print = (int (*)(BIO *, ASN1_UTCTIME *))dlsym (handle, "ASN1_UTCTIME_print")) == NULL) goto error;
+   if ((sec_BIO_free = (int (*)(BIO *))dlsym (handle, "BIO_free")) == NULL) goto error;
+   if ((sec_BIO_new_file = (BIO *(*)(const char *, const char *))dlsym (handle, "BIO_new_file")) == NULL) goto error;
+   if ((sec_BIO_new_fp = (BIO *(*)(FILE *, int))dlsym (handle, "BIO_new_fp")) == NULL) goto error;
+   if ((sec_BIO_read = (int (*)(BIO *, void *, int))dlsym (handle, "BIO_read")) == NULL) goto error;
+   if ((sec_BIO_write = (int (*)(BIO *b, const void *data, int len))dlsym (handle, "BIO_write")) == NULL) goto error;
+   if ((sec_CRYPTO_get_lock_name = (const char *(*)(int))dlsym (handle, "CRYPTO_get_lock_name")) == NULL) goto error;
+   if ((sec_CRYPTO_num_locks = (int (*)(void))dlsym (handle, "CRYPTO_num_locks")) == NULL) goto error;
+   if ((sec_CRYPTO_set_id_callback = (void (*)(unsigned long (*)(void)))dlsym (handle, "CRYPTO_set_id_callback")) == NULL) goto error;
+   if ((sec_CRYPTO_set_locking_callback = (void (*)(void (*)(int, int, const char *, int)))dlsym (handle, "CRYPTO_set_locking_callback")) == NULL) goto error;
+   if ((sec_d2i_ASN1_UTCTIME = (ASN1_UTCTIME *(*)(ASN1_UTCTIME **, unsigned char **, long ))dlsym (handle, "d2i_ASN1_UTCTIME")) == NULL) goto error;
+   if ((sec_d2i_X509 = (X509 *(*)(X509 **, unsigned char **, long))dlsym (handle, "d2i_X509")) == NULL) goto error;
+   if ((sec_ERR_clear_error = (void (*)(void))dlsym (handle, "ERR_clear_error")) == NULL) goto error;
+   if ((sec_ERR_error_string = (char *(*)(unsigned long, char *))dlsym (handle, "ERR_error_string")) == NULL) goto error;
+   if ((sec_ERR_get_error = (unsigned long (*)(void))dlsym (handle, "ERR_get_error")) == NULL) goto error;
+   if ((sec_ERR_load_crypto_strings = (void (*)(void))dlsym (handle, "ERR_load_crypto_strings")) == NULL) goto error;
+   if ((sec_EVP_add_cipher = (int (*)(const EVP_CIPHER *))dlsym (handle, "EVP_add_cipher")) == NULL) goto error;
+   if ((sec_EVP_add_digest = (int (*)(const EVP_MD *))dlsym (handle, "EVP_add_digest")) == NULL) goto error;
+   if ((_sec_EVP_add_digest_alias = (int (*)(const char *, int, const char *))dlsym (handle, "OBJ_NAME_add")) == NULL) goto error;
+   if ((sec_EVP_CIPHER_CTX_cleanup = (int (*)(EVP_CIPHER_CTX *))dlsym (handle, "EVP_CIPHER_CTX_cleanup")) == NULL) goto error;
+   if ((sec_EVP_DecryptFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_DecryptFinal")) == NULL) goto error;
+   if ((sec_EVP_DecryptInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, const unsigned char *, const unsigned char *))dlsym (handle, "EVP_DecryptInit")) == NULL) goto error;
+   if ((sec_EVP_DecryptUpdate = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *, const unsigned char *, int))dlsym (handle, "EVP_DecryptUpdate")) == NULL) goto error;
+   if ((sec_EVP_DigestInit = (int (*)(EVP_MD_CTX *, const EVP_MD *))dlsym (handle, "EVP_DigestInit")) == NULL) goto error;
+   if ((sec_EVP_DigestFinal = (int (*)(EVP_MD_CTX *, unsigned char *, unsigned int *))dlsym (handle, "EVP_DigestFinal")) == NULL) goto error;
+   if ((sec_EVP_DigestUpdate = (int (*)(EVP_MD_CTX *, const void *, unsigned int))dlsym (handle, "EVP_DigestUpdate")) == NULL) goto error;
+   if ((sec_EVP_EncryptInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, const unsigned char *, const unsigned char *))dlsym (handle, "EVP_EncryptInit")) == NULL) goto error;
+   if ((sec_EVP_EncryptUpdate = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *, const unsigned char *, int))dlsym (handle, "EVP_EncryptUpdate")) == NULL) goto error;
+   if ((sec_EVP_EncryptFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_EncryptFinal")) == NULL) goto error;
+   if ((sec_EVP_md5 = (const EVP_MD *(*)(void))dlsym (handle, "EVP_md5")) == NULL) goto error;
+   if ((sec_EVP_OpenInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, unsigned char *, int, unsigned char *, EVP_PKEY *))dlsym (handle, "EVP_OpenInit")) == NULL) goto error;
+   if ((sec_EVP_OpenFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_OpenFinal")) == NULL) goto error;
    sec_EVP_OpenUpdate = sec_EVP_DecryptUpdate;
-   if ((sec_EVP_PKEY_free = (void (*)(EVP_PKEY *))dlsym (handle, "EVP_PKEY_free")) == NULL) return 1;
-   if ((sec_EVP_PKEY_size = (int (*)(EVP_PKEY *))dlsym (handle, "EVP_PKEY_size")) == NULL) return 1;
-   if ((sec_EVP_rc4 = (const EVP_CIPHER *(*)(void))dlsym (handle, "EVP_rc4")) == NULL) return 1;
-   if ((sec_EVP_SealInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, unsigned char **, int *, unsigned char *, EVP_PKEY **, int))dlsym (handle, "EVP_SealInit")) == NULL) return 1;
-   if ((sec_EVP_SealFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_SealFinal")) == NULL) return 1;
-   if ((sec_EVP_SignFinal = (int (*)(EVP_MD_CTX *, unsigned char *, unsigned int *, EVP_PKEY *))dlsym (handle, "EVP_SignFinal")) == NULL) return 1;
+   if ((sec_EVP_PKEY_free = (void (*)(EVP_PKEY *))dlsym (handle, "EVP_PKEY_free")) == NULL) goto error;
+   if ((sec_EVP_PKEY_size = (int (*)(EVP_PKEY *))dlsym (handle, "EVP_PKEY_size")) == NULL) goto error;
+   if ((sec_EVP_rc4 = (const EVP_CIPHER *(*)(void))dlsym (handle, "EVP_rc4")) == NULL) goto error;
+   if ((sec_EVP_SealInit = (int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, unsigned char **, int *, unsigned char *, EVP_PKEY **, int))dlsym (handle, "EVP_SealInit")) == NULL) goto error;
+   if ((sec_EVP_SealFinal = (int (*)(EVP_CIPHER_CTX *, unsigned char *, int *))dlsym (handle, "EVP_SealFinal")) == NULL) goto error;
+   if ((sec_EVP_SignFinal = (int (*)(EVP_MD_CTX *, unsigned char *, unsigned int *, EVP_PKEY *))dlsym (handle, "EVP_SignFinal")) == NULL) goto error;
    sec_EVP_SignInit = sec_EVP_DigestInit;
    sec_EVP_SignUpdate = sec_EVP_DigestUpdate;
-   if ((sec_EVP_VerifyFinal = (int (*)(EVP_MD_CTX *, unsigned char *, unsigned int, EVP_PKEY *))dlsym (handle, "EVP_VerifyFinal")) == NULL) return 1;
+   if ((sec_EVP_VerifyFinal = (int (*)(EVP_MD_CTX *, unsigned char *, unsigned int, EVP_PKEY *))dlsym (handle, "EVP_VerifyFinal")) == NULL) goto error;
    sec_EVP_VerifyInit = sec_EVP_DigestInit;
    sec_EVP_VerifyUpdate = sec_EVP_DigestUpdate;
-   if ((sec_i2d_ASN1_UTCTIME = (int (*)(ASN1_UTCTIME *, unsigned char **))dlsym (handle, "i2d_ASN1_UTCTIME")) == NULL) return 1;
-   if ((sec_i2d_X509 = (int (*)(X509 *, unsigned char**))dlsym (handle, "i2d_X509")) == NULL) return 1;
-   if ((sec_OBJ_nid2obj = (ASN1_OBJECT *(*)(int))dlsym (handle, "OBJ_nid2obj")) == NULL) return 1;
-   if ((sec_OPENSSL_free = (void (*)(void *))dlsym (handle, "CRYPTO_free")) == NULL) return 1;
-   if ((_sec_OPENSSL_malloc = (void *(*)(int, const char *, int))dlsym (handle, "CRYPTO_malloc")) == NULL) return 1;
+   if ((sec_i2d_ASN1_UTCTIME = (int (*)(ASN1_UTCTIME *, unsigned char **))dlsym (handle, "i2d_ASN1_UTCTIME")) == NULL) goto error;
+   if ((sec_i2d_X509 = (int (*)(X509 *, unsigned char**))dlsym (handle, "i2d_X509")) == NULL) goto error;
+   if ((sec_OBJ_nid2obj = (ASN1_OBJECT *(*)(int))dlsym (handle, "OBJ_nid2obj")) == NULL) goto error;
+   if ((sec_OPENSSL_free = (void (*)(void *))dlsym (handle, "CRYPTO_free")) == NULL) goto error;
+   if ((_sec_OPENSSL_malloc = (void *(*)(int, const char *, int))dlsym (handle, "CRYPTO_malloc")) == NULL) goto error;
 #ifdef SSLEAY_MACROS
-   if ((_sec_PEM_read_PrivateKey = (char *(*)(char *(*)(), const char *, FILE *, char **, pem_password_cb *, void *))dlsym (handle, "PEM_ASN1_read")) == NULL) return 1;
-   if ((sec_d2i_PrivateKey = (EVP_PKEY *(*)(int type, EVP_PKEY **a, unsigned char **pp, long length))dlsym (handle, "d2i_PrivateKey")) == NULL) return 1;
+   if ((_sec_PEM_read_PrivateKey = (char *(*)(char *(*)(), const char *, FILE *, char **, pem_password_cb *, void *))dlsym (handle, "PEM_ASN1_read")) == NULL) goto error;
+   if ((sec_d2i_PrivateKey = (EVP_PKEY *(*)(int type, EVP_PKEY **a, unsigned char **pp, long length))dlsym (handle, "d2i_PrivateKey")) == NULL) goto error;
    _sec_PEM_read_X509 = _sec_PEM_read_PrivateKey;
 #else
-   if ((sec_PEM_read_PrivateKey = (EVP_PKEY *(*)(FILE *, EVP_PKEY **, pem_password_cb *, void *))dlsym (handle, "PEM_read_PrivateKey")) == NULL) return 1;
-   if ((sec_PEM_read_X509 = (X509 *(*)(FILE *, X509 **, pem_password_cb *, void *))dlsym (handle, "PEM_read_X509")) == NULL) return 1;
+   if ((sec_PEM_read_PrivateKey = (EVP_PKEY *(*)(FILE *, EVP_PKEY **, pem_password_cb *, void *))dlsym (handle, "PEM_read_PrivateKey")) == NULL) goto error;
+   if ((sec_PEM_read_X509 = (X509 *(*)(FILE *, X509 **, pem_password_cb *, void *))dlsym (handle, "PEM_read_X509")) == NULL) goto error;
 #endif
-   if ((sec_RAND_load_file = (int (*)(const char *, long))dlsym (handle, "RAND_load_file")) == NULL) return 1;
-   if ((sec_RAND_pseudo_bytes = (int (*)(unsigned char *, int))dlsym (handle, "RAND_pseudo_bytes")) == NULL) return 1;
-   if ((sec_RAND_status = (int (*)(void))dlsym (handle, "RAND_status")) == NULL) return 1;
-   if ((sec_RSA_private_decrypt = (int (*)(int, const unsigned char *, unsigned char *, RSA *, int))dlsym (handle, "RSA_private_decrypt")) == NULL) return 1;
-   if ((sec_RSA_public_encrypt = (int (*)(int, const unsigned char *, unsigned char *, RSA *, int))dlsym (handle, "RSA_public_encrypt")) == NULL) return 1;
-   if ((sec_X509_STORE_CTX_get_current_cert = (X509 *(*)(X509_STORE_CTX *ctx))dlsym (handle, "X509_STORE_CTX_get_current_cert")) == NULL) return 1;
-   if ((sec_X509_cmp_current_time = (int (*)(ASN1_TIME *))dlsym (handle, "X509_cmp_current_time")) == NULL) return 1;
-   if ((sec_X509_free = (void (*)(X509 *))dlsym (handle, "X509_free")) == NULL) return 1;
-   if ((sec_X509_get_pubkey = (EVP_PKEY *(*)(X509 *x))dlsym (handle, "X509_get_pubkey")) == NULL) return 1;
-   if ((sec_X509_get_pubkey_parameters = (int (*)(EVP_PKEY *, STACK_OF(X509) *))dlsym (handle, "X509_get_pubkey_parameters")) == NULL) return 1;
-   if ((sec_X509_get_subject_name = (X509_NAME *(*)(X509 *))dlsym (handle, "X509_get_subject_name")) == NULL) return 1;
-   if ((sec_X509_gmtime_adj = (ASN1_TIME *(*)(ASN1_TIME *, long))dlsym (handle, "X509_gmtime_adj")) == NULL) return 1;
-   if ((sec_X509_print_fp = (int (*)(FILE *, X509 *))dlsym (handle, "X509_print_fp")) == NULL) return 1;
-   if ((sec_X509_NAME_get_text_by_OBJ = (int (*)(X509_NAME *, ASN1_OBJECT *, char *, int))dlsym (handle, "X509_NAME_get_text_by_OBJ")) == NULL) return 1;
-   if ((sec_X509_NAME_oneline = (char *(*)(X509_NAME *, char *, int))dlsym (handle, "X509_NAME_oneline")) == NULL) return 1;
-   if ((sec_X509_STORE_CTX_cleanup = (void (*)(X509_STORE_CTX *))dlsym (handle, "X509_STORE_CTX_cleanup")) == NULL) return 1;
-   if ((sec_X509_STORE_CTX_get_error = (int (*)(X509_STORE_CTX *))dlsym (handle, "X509_STORE_CTX_get_error")) == NULL) return 1;
-   if ((sec_X509_STORE_CTX_init = (int (*)(X509_STORE_CTX *, X509_STORE *, X509 *, STACK_OF(X509) *))dlsym (handle, "X509_STORE_CTX_init")) == NULL) return 1;
-   if ((sec_X509_STORE_free = (void (*)(X509_STORE *))dlsym (handle, "X509_STORE_free")) == NULL) return 1;
-   if ((sec_X509_STORE_load_locations = (int (*)(X509_STORE *, const char *, const char *))dlsym (handle, "X509_STORE_load_locations")) == NULL) return 1;
-   if ((sec_X509_STORE_new = (X509_STORE *(*)(void))dlsym (handle, "X509_STORE_new")) == NULL) return 1;
-   if ((sec_X509_verify_cert = (int (*)(X509_STORE_CTX *))dlsym (handle, "X509_verify_cert")) == NULL) return 1;
+   if ((sec_RAND_load_file = (int (*)(const char *, long))dlsym (handle, "RAND_load_file")) == NULL) goto error;
+   if ((sec_RAND_pseudo_bytes = (int (*)(unsigned char *, int))dlsym (handle, "RAND_pseudo_bytes")) == NULL) goto error;
+   if ((sec_RAND_status = (int (*)(void))dlsym (handle, "RAND_status")) == NULL) goto error;
+   if ((sec_RSA_private_decrypt = (int (*)(int, const unsigned char *, unsigned char *, RSA *, int))dlsym (handle, "RSA_private_decrypt")) == NULL) goto error;
+   if ((sec_RSA_public_encrypt = (int (*)(int, const unsigned char *, unsigned char *, RSA *, int))dlsym (handle, "RSA_public_encrypt")) == NULL) goto error;
+   if ((sec_X509_STORE_CTX_get_current_cert = (X509 *(*)(X509_STORE_CTX *ctx))dlsym (handle, "X509_STORE_CTX_get_current_cert")) == NULL) goto error;
+   if ((sec_X509_cmp_current_time = (int (*)(ASN1_TIME *))dlsym (handle, "X509_cmp_current_time")) == NULL) goto error;
+   if ((sec_X509_free = (void (*)(X509 *))dlsym (handle, "X509_free")) == NULL) goto error;
+   if ((sec_X509_get_pubkey = (EVP_PKEY *(*)(X509 *x))dlsym (handle, "X509_get_pubkey")) == NULL) goto error;
+   if ((sec_X509_get_pubkey_parameters = (int (*)(EVP_PKEY *, STACK_OF(X509) *))dlsym (handle, "X509_get_pubkey_parameters")) == NULL) goto error;
+   if ((sec_X509_get_subject_name = (X509_NAME *(*)(X509 *))dlsym (handle, "X509_get_subject_name")) == NULL) goto error;
+   if ((sec_X509_gmtime_adj = (ASN1_TIME *(*)(ASN1_TIME *, long))dlsym (handle, "X509_gmtime_adj")) == NULL) goto error;
+   if ((sec_X509_print_fp = (int (*)(FILE *, X509 *))dlsym (handle, "X509_print_fp")) == NULL) goto error;
+   if ((sec_X509_NAME_get_text_by_OBJ = (int (*)(X509_NAME *, ASN1_OBJECT *, char *, int))dlsym (handle, "X509_NAME_get_text_by_OBJ")) == NULL) goto error;
+   if ((sec_X509_NAME_oneline = (char *(*)(X509_NAME *, char *, int))dlsym (handle, "X509_NAME_oneline")) == NULL) goto error;
+   if ((sec_X509_STORE_CTX_cleanup = (void (*)(X509_STORE_CTX *))dlsym (handle, "X509_STORE_CTX_cleanup")) == NULL) goto error;
+   if ((sec_X509_STORE_CTX_get_error = (int (*)(X509_STORE_CTX *))dlsym (handle, "X509_STORE_CTX_get_error")) == NULL) goto error;
+   if ((sec_X509_STORE_CTX_init = (int (*)(X509_STORE_CTX *, X509_STORE *, X509 *, STACK_OF(X509) *))dlsym (handle, "X509_STORE_CTX_init")) == NULL) goto error;
+   if ((sec_X509_STORE_free = (void (*)(X509_STORE *))dlsym (handle, "X509_STORE_free")) == NULL) goto error;
+   if ((sec_X509_STORE_load_locations = (int (*)(X509_STORE *, const char *, const char *))dlsym (handle, "X509_STORE_load_locations")) == NULL) goto error;
+   if ((sec_X509_STORE_new = (X509_STORE *(*)(void))dlsym (handle, "X509_STORE_new")) == NULL) goto error;
+   if ((sec_X509_verify_cert = (int (*)(X509_STORE_CTX *))dlsym (handle, "X509_verify_cert")) == NULL) goto error;
 #else
    sec_ASN1_UTCTIME_free = ASN1_UTCTIME_free;
    sec_ASN1_UTCTIME_new = ASN1_UTCTIME_new;
@@ -4452,4 +4487,8 @@ static int sec_build_symbol_table (void)
 
    DEXIT;   
    return 0;
+
+   error:
+      DEXIT;
+      return 2;
 }

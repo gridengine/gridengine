@@ -543,17 +543,13 @@ while ($#argv >= 1 && $?found)
    case "-crypto":
       set CFLAGS  = "-DCRYPTO -I$OPENSSL_HOME/include $CFLAGS"
       set LFLAGS  = "-L$OPENSSL_HOME/lib $LFLAGS"
-
       switch ($BUILDARCH)
-        case SOLARIS:
-        case SOLARIS64:
-        case SOLARIS86:
-        case LINUX86:
-           set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
-           set KLIBS = ""
-           breaksw
-        default:
-           set KLIBS = "-lcrypto"
+         case HP11:
+            set KLIBS = "-lcrypto"
+            breaksw
+         default:
+            set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
+            set KLIBS = ""
       endsw
       breaksw
    case "-D*":
@@ -835,15 +831,12 @@ set CFLAGS = "$CFLAGS -DSPOOLING_$SPOOLING_METHOD -DENABLE_NGC $SECFLAGS"
 
 if ($SEC == 1) then
    switch ($BUILDARCH)
-   case SOLARIS:
-   case SOLARIS64:
-   case SOLARIS86:
-   case LINUX86:
-      set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
-      set KLIBS = ""
+    case HP11:
+      set KLIBS = "-lcrypto"
       breaksw
    default:
-      set KLIBS = "-lcrypto"
+      set CFLAGS = "-DLOAD_OPENSSL $CFLAGS"
+      set KLIBS = ""
    endsw
 endif
 
@@ -941,6 +934,7 @@ case DARWIN:
 
    set CC = "gcc"
    set CXX = "g++"
+   set DLLIB = "-ldl"
 
    if ( $DEBUGGED == 1) then
       set DEBUG_FLAG = "-g"
@@ -1732,6 +1726,7 @@ if ( "$QMON" == 1 ) then
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f $SOURCE/clients/qmon/Makefile \
+         "MAKE=$MAKE" "CC=$CC" \
          "LD_WRAPPER=$LD_WRAPPER" \
          "CFLAGS=$CFLAGS $CORE_INCLUDE" \
          "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \

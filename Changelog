@@ -1,3 +1,9 @@
+AA-2004-04-20-3: Bugfix:    dlopen for all archs but hp11 for libcrypto
+                            openssl 0.9.7d
+                 Changed:   aimk, aimk.site, distinst.site, all bins
+                 Issue:     914
+                 Review:    
+                 
 SG-2004-04-20-1: Bugfix:    - fixed the build for DARWIN
                             - set a max limit for MAX_DYN_EC in qmaster
                             - updated the profiling in the scheduler

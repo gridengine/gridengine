@@ -1,3 +1,8 @@
+EB-2003-05-22-0: Bugfix:    Changed qtype output in qstat according to man page
+                 IZ:        #14
+                 Changed:   qstat
+                 Review:    AH
+
 EB-2003-05-20-0: Enhancem.: Got rid of 'history'
                               
                             Removed history as described in section qacct(1)

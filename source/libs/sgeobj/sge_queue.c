@@ -565,6 +565,16 @@ queue_print_qtype_to_dstring(const lListElem *this_elem,
          }
          bitmask <<= 1;
       };
+      if (only_first_char) {
+         if (queue_is_parallel_queue(this_elem)) {
+            sge_dstring_sprintf_append(string, "%c", 'P');
+            qtype_defined = true;
+         }
+         if (queue_is_checkointing_queue(this_elem)) {
+            sge_dstring_sprintf_append(string, "%c", 'C');
+            qtype_defined = true;
+         }
+      }
       if (!qtype_defined) {
          if (only_first_char) {
             sge_dstring_sprintf_append(string, "N");

@@ -312,35 +312,62 @@ int slave
    /* interactive jobs and slave jobs do not have a script file */
    if (!slave && lGetString(jelem, JB_script_file)) {
       int nwritten;
+      int found_script = 0;
     
-      /* We are root. Make the scriptfile readable for the jobs submitter,
-         so shepherd can open (execute) it after changing to the user. */
-      fd = open(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
+      /*
+       * Is another array task of the same job already here?
+       * In this case it is not necessary to spool the jobscript.
+       */
+      {
+         u_long32 job_id = lGetUlong(jelem, JB_job_number);
+         const void *iterator = NULL;
+         lListElem *tmp_job, *next_tmp_job;
 
-      if (fd < 0) {
-         {
-            char buffer[1024];
-
-            getcwd(buffer, 1024);
+         next_tmp_job = lGetElemUlongFirst(Master_Job_List, 
+                                           JB_job_number, job_id, &iterator);
+         while((tmp_job = next_tmp_job) != NULL) {
+            next_tmp_job = lGetElemUlongNext(Master_Job_List, 
+                                             JB_job_number, job_id, &iterator);
+            if (lGetUlong(tmp_job, JB_job_number) == job_id) {
+               found_script = 1;
+               break;
+            }
          }
-
-         sprintf(err_str, MSG_FILE_NOWRITE_SS, lGetString(jelem, JB_exec_file), strerror(errno));
-         DEXIT;
-         goto Error;
       }
 
-      if ((nwritten = sge_writenbytes(fd, lGetString(jelem, JB_script_ptr), 
-         lGetUlong(jelem, JB_script_size))) !=
-         lGetUlong(jelem, JB_script_size)) {
-         DPRINTF(("errno: %d\n", errno));
-         sprintf(err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, lGetString(jelem, JB_exec_file), 
-               nwritten, u32c(lGetUlong(jelem, JB_script_size)), strerror(errno));
+      if (!found_script) {
+         /* We are root. Make the scriptfile readable for the jobs submitter,
+            so shepherd can open (execute) it after changing to the user. */
+         fd = open(lGetString(jelem, JB_exec_file), O_CREAT | O_WRONLY, 0755);
+
+
+         if (fd < 0) {
+            {
+               char buffer[1024];
+
+               getcwd(buffer, 1024);
+            }
+
+            sprintf(err_str, MSG_FILE_NOWRITE_SS, lGetString(jelem, JB_exec_file), strerror(errno));
+            DEXIT;
+            goto Error;
+         }
+
+         if ((nwritten = sge_writenbytes(fd, lGetString(jelem, JB_script_ptr), 
+            lGetUlong(jelem, JB_script_size))) !=
+            lGetUlong(jelem, JB_script_size)) {
+            DPRINTF(("errno: %d\n", errno));
+            sprintf(err_str, MSG_EXECD_NOWRITESCRIPT_SIUS, 
+                    lGetString(jelem, JB_exec_file), 
+                    nwritten, u32c(lGetUlong(jelem, JB_script_size)), 
+                    strerror(errno));
+            close(fd);
+            DEXIT;
+            goto Error;
+         } 
          close(fd);
-         DEXIT;
-         goto Error;
-      }      
-      close(fd);
-      lSetString(jelem, JB_script_ptr, NULL);
+         lSetString(jelem, JB_script_ptr, NULL);
+      } 
    }
 
    /* 

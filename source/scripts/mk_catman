@@ -41,8 +41,8 @@
 
 set MANBUILDDIR = $1/MANSBUILD_$2
 
-if ( `/sbin/uname` != "IRIX" ) then
-        echo "Error: need to be executed on an SGI - we need pack."
+if ( `/sbin/uname` != "IRIX" && `/sbin/uname` != "IRIX64") then
+        echo "Error: need to be executed on SGI - we need pack."
         exit 1
 endif
 

@@ -46,7 +46,7 @@ XBAELIB     = $(QMON_3RD)/libXbae$(LIBEXT)
 XSPINLIB    = $(QMON_3RD)/libXspin$(LIBEXT)
 XMTLIB      = $(QMON_3RD)/libXmt$(LIBEXT)
 XICONLIB    = $(QMON_3RD)/libXicon$(LIBEXT)
-XLTREELIB   = $(QMON_3RD)/libXltree$(LIBEXT)
+XLTREELIB   = $(QMON_3RD)/libXltree$(GLIBEXT)
 XTABLIB     = $(QMON_3RD)/libXtab$(LIBEXT)
 
 include $(SDIR)/common/Makefile   

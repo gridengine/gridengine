@@ -726,11 +726,9 @@ case AIX43:
       set CXXFLAGS = "-bnso -bI:/usr/lib/syscalls.exp $CXXFLAGS"
    endif
 
-   if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = "$SOURCE/scripts/ldAix"
-      set SHARED_CFLAGS = ""
-      set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
-   endif
+   set SHAREDLD = "$SOURCE/scripts/ldAix"
+   set SHARED_CFLAGS = ""
+   set SHARED_LFLAGS = "-L. -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
    breaksw
@@ -762,11 +760,9 @@ case ALINUX:
    set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DALINUX $DEBUG_FLAG $CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
-   if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = $CC
-      set SHARED_CFLAGS = "-fPIC"
-      set SHARED_LFLAGS = "-L. -shared"
-   endif
+   set SHAREDLD = $CC
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-L. -shared"
 
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD"
@@ -824,15 +820,13 @@ case ALPHA5:
    endif
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
-   if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = $CC
-      if ( $CC == gcc ) then
-         set SHARED_CFLAGS = "-fPIC"
-         set SHARED_LFLAGS = "-L. -shared"
-      else
-         set SHARED_CFLAGS = ""
-         set SHARED_LFLAGS = "-L. -shared"
-      endif
+   set SHAREDLD = $CC
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = ""
+      set SHARED_LFLAGS = "-L. -shared"
    endif
 
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
@@ -930,15 +924,13 @@ case IRIX6*:
       set GCC_NOERR_CXXFLAGS = "$CXXFLAGS"
    endif
 
-   if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = $CC
-      if ( $CC == gcc ) then
-         set SHARED_CFLAGS = "-fPIC"
-         set SHARED_LFLAGS = "-L. -shared"
-      else
-         set SHARED_CFLAGS = "-KPIC"
-         set SHARED_LFLAGS = "-L. -shared"
-      endif
+   set SHAREDLD = $CC
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = "-KPIC"
+      set SHARED_LFLAGS = "-L. -shared"
    endif
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
@@ -964,15 +956,13 @@ case HP10:
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
-   if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = ld
-      if ( $CC == gcc ) then
-         set SHARED_CFLAGS = "-fPIC"
-         set SHARED_LFLAGS = "-L. -shared"
-      else
-         set SHARED_CFLAGS = "+z"
-         set SHARED_LFLAGS = "-L. -b +s"
-      endif
+   set SHAREDLD = ld
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = "+z"
+      set SHARED_LFLAGS = "-L. -b +s"
    endif
 
    set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
@@ -1016,15 +1006,13 @@ case HP11:
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
 
-   if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = ld
-      if ( $CC == gcc ) then
-         set SHARED_CFLAGS = "-fPIC"
-         set SHARED_LFLAGS = "-L. -shared"
-      else
-         set SHARED_CFLAGS = "+z"
-         set SHARED_LFLAGS = "-L. -b +s"
-      endif
+   set SHAREDLD = ld
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = "+z"
+      set SHARED_LFLAGS = "-L. -b +s"
    endif
 
    set CFLAGS = "-D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $CFLAGS"
@@ -1073,11 +1061,9 @@ case LINUX6:
    set CXXFLAGS = "-DLINUX -D$BUILDARCH $CXXFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
 
-   if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = $CC
-      set SHARED_CFLAGS = "-fPIC"
-      set SHARED_LFLAGS = "-L. -shared"
-   endif
+   set SHAREDLD = $CC
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-L. -shared"
 
    set PTHRDSFLAGS = "-D_REENTRANT -D__USE_REENTRANT"
 
@@ -1184,11 +1170,9 @@ case SLINUX:
    set CXXFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DLINUX -DSLINUX $DEBUG_FLAG $CFLAGS"
    set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
 
-   if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = $CC
-      set SHARED_CFLAGS = "-fPIC"
-      set SHARED_LFLAGS = "-L. -shared"
-   endif
+   set SHAREDLD = $CC
+   set SHARED_CFLAGS = "-fPIC"
+   set SHARED_LFLAGS = "-L. -shared"
 
    set XMTDEF   = ""
    set XINCD    = "$XMTINCD $XINCD -I/usr/X11R6/include"
@@ -1274,18 +1258,16 @@ case SOLARIS86:
    set CFLAGS = "$OFLAG $CFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG"
    set CXXFLAGS = "$OFLAG $CXXFLAGS -DSOLARIS $SOL64BITFLAG -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L $DEBUG_FLAG -DHAVE_STD -mt"
 
-   if ( $SHAREDLIBS == 1 ) then
-      set SHAREDLD = $CC
-      if ( $CC == gcc ) then
-         set SHARED_CFLAGS = "-fPIC"
-         set SHARED_LFLAGS = "-L. -shared"
+   set SHAREDLD = $CC
+   if ( $CC == gcc ) then
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "-L. -shared"
+   else
+      set SHARED_CFLAGS = "-KPIC"
+      if ( $BUILDARCH == SOLARIS64 ) then
+         set SHARED_LFLAGS = "-L. -G -xarch=v9"
       else
-         set SHARED_CFLAGS = "-KPIC"
-         if ( $BUILDARCH == SOLARIS64 ) then
-            set SHARED_LFLAGS = "-L. -G -xarch=v9"
-         else
-            set SHARED_LFLAGS = "-L. -G"
-         endif
+         set SHARED_LFLAGS = "-L. -G"
       endif
    endif
 
@@ -1436,10 +1418,17 @@ endif
 
 echo making in $COMPILE_ARCH/ for $COMPILE_ARCH
 
+# create shared lib from LGPL code
+set GLIBEXT        = "$SHAREDEXT"
+set GSHARED_CFLAGS = "$SHARED_CFLAGS"
+set GSHARED_LFLAGS = "$SHARED_LFLAGS"
+
 if ( $SHAREDLIBS == 1 ) then
    set LIBEXT = "$SHAREDEXT"
 else
    set LIBEXT = ".a"
+   set SHARED_CFLAGS = ""
+   set SHARED_LFLAGS = ""
 endif
 
 if ( "$BUILDMAN" == 1 ) then
@@ -1603,6 +1592,7 @@ if ( "$QMON" == 1) then
       "AR=$AR" "ARFLAGS=$ARFLAGS" "ZLIB=$ZLIB" \
       "MEMCFLAG=$MEMCFLAG" \
       "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+      "GSHARED_CFLAGS=$GSHARED_CFLAGS" "GSHARED_LFLAGS=$GSHARED_LFLAGS" "GLIBEXT=$GLIBEXT" \
       "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $argv
 
    if ( $status != 0 ) then
@@ -1629,7 +1619,7 @@ if ( "$QMON" == 1) then
        "COMPILE_DC=$COMPILE_DC" "LOADAVGLIBS=$LOADAVGLIBS" "ZLIB=$ZLIB" \
        "XGETTEXT=$XGETTEXT" "MESSAGES=$MESSAGES" "COMPILE_ARCH=$COMPILE_ARCH" \
        "INTERACTTARGETS=$INTERACTTARGETS" \
-       "LIBEXT=$LIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
+       "LIBEXT=$LIBEXT" "GLIBEXT=$GLIBEXT" "SHAREDEXT=$SHAREDEXT" "SHAREDLD=$SHAREDLD" \
        "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
        "MEMCFLAG=$MEMCFLAG" $argv $TARGET
    if ( $status != 0 ) then

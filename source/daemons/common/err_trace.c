@@ -44,6 +44,16 @@
 #include <limits.h>
 #include <signal.h>
 
+#if defined(DARWIN)
+#  include <sys/param.h>
+#  include <sys/mount.h>
+#elif defined(LINUX)
+#  include <sys/vfs.h>
+#else
+#  include <sys/types.h>
+#  include <sys/statvfs.h>
+#endif
+
 #include "sge_dstring.h"
 #include "basis_types.h"
 #include "err_trace.h"
@@ -61,14 +71,17 @@ static FILE *shepherd_error_fp=NULL;
 static FILE *shepherd_exit_status_fp=NULL;
 static FILE *shepherd_trace_fp = NULL;
 static char g_job_owner[SGE_PATH_MAX] = "";
+static bool g_keep_files_open = true; /* default: Open files at start and keep
+                                                  them open for writing */
 
 /* Forward declaration of static functions */
 
-static void  dup_fd( int *src_fd );
-static int   set_cloexec( int fd );
-static int   sh_str2file( const char *header_str, const char *str, FILE *fp );
-static FILE* shepherd_trace_init_intern( char *trace_file_name );
-static void  shepherd_trace_chown_intern( const char* job_owner, FILE* fp );
+static void  dup_fd(int *src_fd);
+static int   set_cloexec(int fd);
+static int   sh_str2file(const char *header_str, const char *str, FILE *fp);
+static FILE* shepherd_trace_init_intern(char *trace_file_name);
+static void  shepherd_trace_chown_intern(const char* job_owner, FILE* fp);
+static bool  nfs_mounted(const char *path);
 
 /******************************************************************************
 * "Public" functions 
@@ -207,6 +220,12 @@ int shepherd_trace(const char *str)
       	printf("%s%s\n", header_str, str);
       	fflush(stdout);
    	}
+      /* There are cases where we have to open and close the files 
+       * for every write.
+       */
+      if(!g_keep_files_open) {
+         shepherd_trace_exit();
+      }
 		ret=0;	
 	}
    return ret;
@@ -296,6 +315,12 @@ void shepherd_error_impl(const char *str, int do_exit)
 		shepherd_trace_exit( );
       exit(shepherd_state);
 	}
+   /* There are cases where we have to open and close the files 
+    * for every write.
+    */
+   if(!g_keep_files_open) {
+      shepherd_error_exit();
+   }
    return;
 }
 
@@ -327,6 +352,12 @@ void shepherd_write_exit_status( const char *exit_status )
 		if( old_euid!=0 ) {
 			seteuid( old_euid );
 		}
+      /* There are cases where we have to open and close the files 
+       * for every write.
+       */
+      if(!g_keep_files_open) {
+         shepherd_error_exit();
+      }
 	}
 }
 
@@ -483,12 +514,12 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
 
 	/* If the file does not exist, create it. Otherwise just open it. */
 	if( SGE_STAT( tmppath, &statbuf )) {
-	   fd = open( tmppath, O_RDWR | O_CREAT | O_TRUNC, 0644 );
+	   fd = open( tmppath, O_RDWR | O_CREAT | O_APPEND, 0644 );
 		if( getuid()==0 ) {
          /* We must give the file to the job owner later */
 			do_chown = 1;
 		} else {
-         /* We are not root, so we own all files anyway. */
+         /* We are not root, so we have to own all files anyway. */
          do_chown = 0;
 		}
 	} else {
@@ -507,7 +538,7 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
        * prolog user/job user right after its creation. But we can have
        * 3 different users for prolog, job and epilog, so we must give
        * the file here to the next user.
-       * This must be done via shepherd_?????_chown() in the shepherd
+       * This must be done via shepherd_trace_chown() in the shepherd
        * before we switch to this user there.
        * It can't be done here because we don't know if we are in 
        * case a) (exec failed) or case b) (after execution of prolog/job).
@@ -517,7 +548,7 @@ static FILE* shepherd_trace_init_intern( char *trace_file_name )
          seteuid(0);
       }
 
-      fd = open( tmppath, O_RDWR );
+      fd = open( tmppath, O_RDWR | O_APPEND );
 
       if( old_euid>0 ) {
          seteuid( old_euid );
@@ -584,15 +615,28 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp )
 				old_euid = geteuid();
 				seteuid( 0 );
 
-				if( fchown( fd, jobuser_id, -1 )) {
-					seteuid( old_euid );
-			 		/* Chown failed. This means that user root is a normal user
+				if( fchown( fd, jobuser_id, -1 )!=0) {
+			 		/* chown failed. This means that user root is a normal user
                 * for the file system (due to NFS rights). So we have no
                 * other chance than open the file for writing for everyone. 
 	    	 	 	 */
+					seteuid( old_euid );
 	   			if( fchmod( fd, 0666 )==-1) {
 					}
-   			}
+   			} else {
+               /* chown worked. But when we can chown but are on a NFS
+                * mounted drive (which means root has all privileges on this
+                * mounted drive), we cannot append from two places
+                * (shepherd and son/job) to the shepherd files. So we
+                * have to open and close the files for every write, which
+                * is possible because we are root with all privileges
+                * and we give the ownership to the
+                * prolog/pe_start/job/pe_stop/epilog user.
+                */
+               if(g_keep_files_open && nfs_mounted(".")) {
+                  g_keep_files_open = false;
+               }
+            }
 				seteuid( old_euid );
 			} else {
 				/* Can't get jobuser_id -> grant access for everyone */
@@ -600,5 +644,27 @@ static void shepherd_trace_chown_intern( const char* job_owner, FILE* fp )
 			}
 		}
 	}	
+}
+
+static bool nfs_mounted(const char *path)
+{
+   bool ret=true;
+
+#if defined(LINUX) || defined(DARWIN)
+   struct statfs buf;
+   statfs(path, &buf);
+#else  
+   struct statvfs buf;
+   statvfs(path, &buf);
+#endif
+  
+#if defined (DARWIN)
+   ret = (strcmp("nfs", buf.f_fstypename)==0);
+#elif defined(LINUX)
+   ret = (buf.f_type == 0x6969);
+#else
+   ret = (strncmp("nfs", buf.f_basetype, 3)==0);
+#endif
+   return ret;
 }
 

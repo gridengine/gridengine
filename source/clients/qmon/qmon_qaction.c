@@ -798,7 +798,9 @@ XtPointer cld, cad;
    } else if (dialog_mode == QC_CLONE) {
       title = XmtCreateLocalizedXmString(cq_dialog, "@{@fBQueue Configuration - Clone}");
    } else {
-      title = XmtCreateLocalizedXmString(cq_dialog, "@{@fBQueue Configuration - Modify}");
+      char buf[BUFSIZ];
+      sprintf(buf, "%s %s", XmtLocalize(w, "Modify", "@{Modify}"), qname); 
+      title = XmtCreateXmString(buf); 
    }
    
    XtVaSetValues( cq_dialog,
@@ -1357,7 +1359,7 @@ XtPointer cld, cad;
          /* manage the layout */
 /*          if (!XtIsManaged(cq_layout)) */
 /*             XtManageChild(cq_layout); */
-         XtSetSensitive(cq_name, True);
+         XtSetSensitive(cq_name, False);
          XtVaSetValues( cq_name,
                         XmNeditable, False,
                         NULL);

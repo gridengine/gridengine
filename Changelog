@@ -1,3 +1,7 @@
+                 IZ:        747, 739, 736, 723
+                 Changed:   qmon, msg header changed -> all is recompiled
+                 
+                            
 AS-2004-02-27-2" Enhancem.: added "-nosource" switch" to scripts/distinst
 
 AS-2004-02-27-0  Enhancem.: changes to the install procedure

@@ -76,7 +76,7 @@ static void qmonGetTime(Widget timew, tTimeStruct *time, Boolean show_infinity);
 static void qmonMemSensitivity(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSetMemoryString(Widget memoryw, String mem);
 static void qmonSetTimeString(Widget timew, String time, Boolean show_infinity);
-/* static void qmonTimeSensitivity(Widget w, XtPointer cld, XtPointer cad); */
+static void qmonTimeSensitivity(Widget w, XtPointer cld, XtPointer cad);
 
 /*-------------------------------------------------------------------------*/
 static void CreateMemoryDialog(
@@ -248,40 +248,36 @@ XtPointer cad
    DEXIT;
 }
 
-#if 0
 /*-------------------------------------------------------------------------*/
 static void qmonTimeSensitivity(
 Widget w,
 XtPointer cld,
 XtPointer cad 
 ) {
-   Widget time = (Widget) cld;
+   XmtPerScreenInfo *info = (XmtPerScreenInfo*) cld;
    XmToggleButtonCallbackStruct *cbs = (XmToggleButtonCallbackStruct*)cad;
-   String spin_names[] = {"^*Day", "^*Hour", "^*Minute", "^*Second"};
-   static Widget spins[4];
+   String spin_names[] = {"*Day", "*Hour", "*Minute", "*Second"};
+   Widget spins[4];
+   Widget time;
    int i;
-   static int second_time = 0;
 
    DENTER(GUI_LAYER, "qmonTimeSensitivity");
 
-   if (!second_time) {
-      second_time = 1;
-      for (i=0; i<XtNumber(spin_names); i++)
-         spins[i] = XmtNameToWidget(time, spin_names[i]);
-   }
+   time = info->time_dialog;
+
+   for (i=0; i<XtNumber(spin_names); i++)
+      spins[i] = XmtNameToWidget(time, spin_names[i]);
 
    if (cbs->set == 0) {
-      for (i=0; i<sizeof(spin_names); i++)
+      for (i=0; i<XtNumber(spins); i++)
          XtSetSensitive(spins[i], True);
-   }
-   else {
-      for (i=0; i<sizeof(spin_names); i++)
+   } else {
+      for (i=0; i<XtNumber(spins); i++)
          XtSetSensitive(spins[i], False);
    }
 
    DEXIT;
 }
-#endif
 
 
 static void CreateTimeDialog(
@@ -336,8 +332,8 @@ XmtPerScreenInfo *info
                            XmNlabelString, inf_str,
                            NULL);
    XmStringFree(inf_str);
-/*    XtAddCallback(infinity, XmNvalueChangedCallback, */
-/*                   qmonTimeSensitivity, (XtPointer)time); */
+   XtAddCallback(infinity, XmNvalueChangedCallback,
+                  qmonTimeSensitivity, (XtPointer)info);
                      
 
    layout_box1 = XtVaCreateManagedWidget("layout_box1",
@@ -612,6 +608,10 @@ int type
          default_title = default_time_title;
          message_name = "*TimeMessage";
          if (type == TIME_TYPE_NOINFINITY) {
+            XtSetSensitive(XmtNameToWidget(dialog, "*Day"), True);
+            XtSetSensitive(XmtNameToWidget(dialog, "*Hour"), True);
+            XtSetSensitive(XmtNameToWidget(dialog, "*Minute"), True);
+            XtSetSensitive(XmtNameToWidget(dialog, "*Second"), True);
             XtUnmanageChild(XmtNameToWidget(dialog, "*TimeInfinity"));
             XtUnmanageChild(XmtNameToWidget(dialog, "*Infinitypix"));
             qmonSetTimeString(dialog, in_out, False); 
@@ -801,16 +801,20 @@ static void qmonSetTimeString(Widget timew, String timestr, Boolean show_infinit
    
    DENTER(GUI_LAYER, "qmonSetTimeString");
 
-   day = XmtNameToWidget(timew, "^*Day");
-   hour = XmtNameToWidget(timew, "^*Hour");
-   minute = XmtNameToWidget(timew, "^*Minute");
-   second = XmtNameToWidget(timew, "^*Second");
+   day = XmtNameToWidget(timew, "*Day");
+   hour = XmtNameToWidget(timew, "*Hour");
+   minute = XmtNameToWidget(timew, "*Minute");
+   second = XmtNameToWidget(timew, "*Second");
    if (show_infinity)
-      infinity = XmtNameToWidget(timew, "^*TimeInfinity");
+      infinity = XmtNameToWidget(timew, "*TimeInfinity");
 
 
    if ( show_infinity && (!strcasecmp(timestr, "infinity") || (timestr && timestr[0]=='\0'))) {
       XmToggleButtonSetState(infinity, 1, True);
+      XtSetSensitive(day, False);
+      XtSetSensitive(hour, False);
+      XtSetSensitive(minute, False);
+      XtSetSensitive(second, False);
    }
    else if (parse_ulong_val(NULL, &time_val, TYPE_TIM, timestr, NULL, 0)) {
       day_val = time_val/(24*3600);
@@ -819,14 +823,14 @@ static void qmonSetTimeString(Widget timew, String timestr, Boolean show_infinit
       time_val %= 3600;
       minute_val = time_val/60;
       second_val = time_val % 60;
+      if (show_infinity)
+         XmToggleButtonSetState(infinity, 0, True);
    }
 
    XmpSpinboxSetValue(day, day_val, True);  
    XmpSpinboxSetValue(hour, hour_val, True);  
    XmpSpinboxSetValue(minute, minute_val, True);  
    XmpSpinboxSetValue(second, second_val, True);  
-   if (show_infinity)
-      XmToggleButtonSetState(infinity, 0, True);
    
    DEXIT;
 }

@@ -283,7 +283,7 @@ static void qevent_start_trigger_script(int qevent_event, const char* script_fil
    event_name = qevent_get_event_name(qevent_event);
    
 
-   /* test if script is executable and guilty file */
+   /* test if script is executable and valid file */
    if (!sge_is_file(script_file)) {
       ERROR((SGE_EVENT, "no script file: "SFQ"\n", script_file));
       DEXIT;

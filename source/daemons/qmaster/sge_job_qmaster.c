@@ -3379,7 +3379,7 @@ lListElem *job  /* JB_Type */
                case '-':
 
                   lDelSubStr(job, VA_variable, lGetString(ctxep, VA_variable), JB_context); 
-                  /* WARNING: newctx is not guilty when complete list was deleted */
+                  /* WARNING: newctx is not valid when complete list was deleted */
                   break;
             }
             break;

@@ -690,7 +690,7 @@
 #define MSG_QINSTANCE_QIALREADYHERE_S   _MESSAGE(33725, _("Should create queue instance "SFQ" which is already here\n"))
 #define MSG_QINSTANCE_NQIFOUND_SS       _MESSAGE(33726, _("queue instance "SFQ" not found in "SFQ"\n"))
 #define MSG_JOB_WILD_RANGE_AMBIGUOUS    _MESSAGE(33727, _("job rejected: PEs matching wildcard and jobs slot range would cause ambiguous urgency slot amount\n"))
-#define MSG_ATTR_HASAMBVAL_SSS          _MESSAGE(33728, _("waning: "SFQ" has ambiguous value ("SFQ", "SFQ")\n"))
+#define MSG_ATTR_HASAMBVAL_SSS          _MESSAGE(33728, _("warning: "SFQ" has ambiguous value ("SFQ", "SFQ")\n"))
 #define MSG_CQUEUE_REFINHGOUP_SS        _MESSAGE(33729, _("denied: following cluster queues still reference "SFQ": "SFN"\n"))
 #define MSG_LOG_DELETED               _MESSAGE(33800, _("job deleted"))
 #define MSG_LOG_SENT2EXECD            _MESSAGE(33801, _("sent to execd"))

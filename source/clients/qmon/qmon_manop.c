@@ -493,8 +493,11 @@ XtPointer cld, cad;
    /*
    ** set Modify button sensitivity
    */
-   XtSetSensitive(manop_modify, (dialog_mode==SGE_USERSET_LIST) ? True:False);
-      
+   if (dialog_mode==SGE_USERSET_LIST) {
+      XtSetSensitive(manop_modify, True);
+   } else {
+      XtSetSensitive(manop_modify, False);
+   }   
    DEXIT;
 }
 

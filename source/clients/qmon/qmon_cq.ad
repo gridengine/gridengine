@@ -196,7 +196,10 @@ Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout.xmtChildren: \
    Matrix_2xN      qinstance_settings;
 
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout.layout: \
-   qinstance_settings
+   Row { \
+      qinstance_settings \
+      <> \
+   }   
 
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.rows: 30
 Qmon*qmon_cq.cq.cq_cqfolder.qinstance_layout*qinstance_settings.visibleRows: 30

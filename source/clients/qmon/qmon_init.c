@@ -221,13 +221,15 @@ void qmonInitSge( char *progname)
 {
 #ifdef ENABLE_NGC
    int error = 0;
+   lList *alp = NULL;
+
    DENTER(GUI_LAYER, "qmonInitSge");
    
    log_state_set_log_gui(True);
    sge_gdi_param(SET_MEWHO, QMON, NULL);
    sge_gdi_param(SET_ISALIVE, 1, NULL);
-   if ((error=sge_gdi_setup(prognames[QMON], NULL))) {
-      fprintf(stderr,"error setting up gdi lib\n");
+   if ((error=sge_gdi_setup(prognames[QMON], &alp))) {
+      fprintf(stderr,"sge_qmaster is down");
       SGE_EXIT(1);
    }
    log_state_set_log_gui(False);

@@ -385,12 +385,14 @@ void qmonCQUpdate( Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
+   XmtDisplayBusyCursor(w);
    if (current_matrix == cluster_queue_settings)
       qmonCQUpdateCQMatrix();
    else if (current_matrix == qinstance_settings)
       qmonCQUpdateQIMatrix();
 /*    qmonCQUpdateTree(); */
 
+   XmtDisplayDefaultCursor(w);
 
    DEXIT;
 }
@@ -1654,6 +1656,7 @@ static void qmonCQFolderChange(Widget w, XtPointer cld, XtPointer cad)
       qmonCQUpdateCQMatrix();
 
       XtSetSensitive(cq_add, True);
+      XtSetSensitive(cq_clone, True);
       XtSetSensitive(cq_mod, True);
       XtSetSensitive(cq_delete, True);
       XtSetSensitive(cq_sick, True);
@@ -1672,6 +1675,7 @@ static void qmonCQFolderChange(Widget w, XtPointer cld, XtPointer cad)
       qmonCQUpdateQIMatrix();
 
       XtSetSensitive(cq_add, False);
+      XtSetSensitive(cq_clone, False);
       XtSetSensitive(cq_mod, False);
       XtSetSensitive(cq_delete, False);
       XtSetSensitive(cq_sick, False);
@@ -1707,6 +1711,8 @@ static void qmonCQUpdateCQMatrix(void)
    lList *hgl = NULL;
    lListElem *cq = NULL;
    int row;
+   int num_rows;
+   int num_fql;
    char buf[BUFSIZ];
    u_long32 qstate = U_LONG32_MAX; 
 
@@ -1756,6 +1762,13 @@ static void qmonCQUpdateCQMatrix(void)
    ** Cluster Queue Pane
    */
    XtVaSetValues(cluster_queue_settings, XmNcells, NULL, NULL);
+
+   num_rows = XbaeMatrixNumRows(cluster_queue_settings);
+   num_fql = lGetNumberOfElem(fql);
+   if (num_fql > num_rows) {
+      XbaeMatrixAddRows(cluster_queue_settings, num_rows, NULL, NULL, NULL, 
+                           num_fql - num_rows);
+   }   
 
    row = 0;
 /*    TODO                                            */    
@@ -1843,6 +1856,8 @@ static void qmonCQUpdateQIMatrix(void)
    lList *hgl = NULL;
    lListElem *cq = NULL;
    int row;
+   int num_rows;
+   int num_fql;
    char buf[BUFSIZ];
    u_long32 qstate = U_LONG32_MAX; 
 
@@ -1909,6 +1924,12 @@ static void qmonCQUpdateQIMatrix(void)
          load_avg_str = LOAD_ATTR_LOAD_AVG;
 
       for_each(qp, lGetList(cq, CQ_qinstances)) {
+         num_rows = XbaeMatrixNumRows(qinstance_settings);
+         if (row >= num_rows) {
+            XbaeMatrixAddRows(qinstance_settings, num_rows, 
+                                 NULL, NULL, NULL, 1);
+         }   
+
         /* compute the load and check for alarm states */
          is_load_value = sge_get_double_qattr(&load_avg, load_avg_str, qp, ehl, cl, 
                                                 &has_value_from_object);
@@ -1970,6 +1991,7 @@ static void qmonCQUpdateQIMatrix(void)
             sge_dstring_free(&state_string);
          }
          row++;
+
       }   
    }   
 

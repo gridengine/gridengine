@@ -1,3 +1,7 @@
+AD-2004-01-27-0: Bugfix:    'inst_sge' does now check for local Berkeley DB
+                            spool directory on Linux.
+                 Changed:   dist
+
 CR-2004-01-27-1: Bugfix.:   - Tight integration (qrsh -inherit)
                               (supports now new communication lib)
                             - Execution daemons now have a socket port 

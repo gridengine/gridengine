@@ -198,6 +198,82 @@ int type
    return ret;
 }
 
+/****** cull/pack/cull_get_list_packsize() ************************************
+*  NAME
+*     cull_get_list_packsize() -- Get size of a CULL list
+*
+*  SYNOPSIS
+*     size_t cull_get_list_packsize(const lList *list) 
+*
+*  FUNCTION
+*     Return the number of bytes which "list" would consume in a
+*     pack buffer.
+*
+*  INPUTS
+*     const lList *list - Any CULL list 
+*
+*  RESULT
+*     size_t - Size in bytes
+*
+*  SEE ALSO
+*     cull/pack/cull_get_elem_packsize() 
+******************************************************************************/
+size_t cull_get_list_packsize(const lList *list)
+{
+   size_t ret = 0;
+   DENTER(CULL_LAYER, "cull_get_list_packsize");
+
+   if (list != NULL) {
+      sge_pack_buffer pb;
+
+      init_packbuffer(&pb, 0, 1);
+      if (!cull_pack_list(&pb, list)) {
+         ret = pb_used(&pb);
+      }
+      clear_packbuffer(&pb);
+   }
+   DEXIT;
+   return ret;
+}
+
+/****** cull/pack/cull_get_elem_packsize() ************************************
+*  NAME
+*     cull_get_elem_packsize() -- Get size of a CULL element 
+*
+*  SYNOPSIS
+*     size_t cull_get_elem_packsize(const lListElem *elem) 
+*
+*  FUNCTION
+*     Return the number of bytes which "elem" would consume in a
+*     pack buffer. 
+*
+*  INPUTS
+*     const lListElem *elem - Any CULL element
+*
+*  RESULT
+*     size_t - Size in bytes
+*
+*  SEE ALSO
+*     cull/pack/cull_get_list_packsize()
+*******************************************************************************/
+size_t cull_get_elem_packsize(const lListElem *elem)
+{
+   size_t ret = 0;
+   DENTER(CULL_LAYER, "cull_get_elem_packsize");
+
+   if (elem != NULL) {
+      sge_pack_buffer pb;
+
+      init_packbuffer(&pb, 0, 1);
+      if (!cull_pack_elem(&pb, elem)) {
+         ret = pb_used(&pb);
+      }
+      clear_packbuffer(&pb);
+   }
+   DEXIT;
+   return ret;
+}
+
 /* ------------------------------------------------------------
 
    cull_unpack_descr() - unpacks a complete descriptor

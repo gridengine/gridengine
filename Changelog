@@ -1,3 +1,8 @@
+EB-2002-09-12-2: Cleanup:   Added two functions which might be used to
+                            retrieve the size of a CULL-list or element:
+                              cull_get_list_packsize()
+                              cull_get_elem_packsize()
+
 EB-2002-09-12-1: Bugfix:    msg size used in tight PE integr. job start sync.
                             protocol should be smaller
                  Issue:     #213
@@ -26,7 +31,6 @@ JG-2002-09-12-0  Bugfix:    qmake without information about parallel execution
                  IZ:        #335, #327
                  Bugtraq:   #4745399, 4745404
                  Changed:   qmake
-
 
 EB-2002-09-11-0  Bugfix:    schedd_job_info = true causes immense daemons
                             memory growth

@@ -90,6 +90,12 @@ int cull_pack_enum(sge_pack_buffer *pb, const lEnumeration *ep);
 int cull_unpack_cond(sge_pack_buffer *pb, lCondition **cpp);
 int cull_pack_cond(sge_pack_buffer *pb, const lCondition *cp);
 
+/*
+ *
+ */
+size_t cull_get_list_packsize(const lList *list);
+size_t cull_get_elem_packsize(const lListElem *elem);
+
 #ifdef  __cplusplus
 }
 #endif

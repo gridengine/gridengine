@@ -1359,6 +1359,15 @@ int use_starter_method /* If this flag is set the shellpath contains the
       /* build trace string */
       sprintf(err_str, "calling qlogin_starter(%s, %s);", shepherd_job_dir, args[1]);
       shepherd_trace(err_str);
+#if defined (SOLARIS)
+      if (is_rlogin) {
+         if (strstr(args[1], "sshd") != NULL) {
+            /* workaround for CR 6215730 */ 
+            shepherd_trace("staring an sshd on SOLARIS, do a SETPGRP to be able to kill it (qdel)");
+            SETPGRP;
+         }
+      }
+#endif
       qlogin_starter(shepherd_job_dir, args[1], sge_get_environment ());
    } else {
       char *filename = NULL;

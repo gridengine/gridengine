@@ -48,10 +48,10 @@ PATH=/bin:/usr/bin
 
 SECFILELIST="bin lib utilbin"
 
-FILELIST="3rd_party bin ckpt examples inst_sge inst_sgeee \
-          install_execd install_qmaster mpi pvm qmon util utilbin"
+FILELIST="3rd_party bin ckpt examples install_execd install_qmaster mpi \
+          pvm qmon util utilbin"
 
-OPTFILES="catman doc locale man" 
+OPTFILES="catman doc locale man inst_sge inst_sgeee" 
 
 CLIENTFILES="qacct qalter qconf qdel qhost qlogin qmod qmon qrsh qsh \
              qstat qsub"

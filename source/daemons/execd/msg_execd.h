@@ -259,8 +259,6 @@
 /*
 ** dispatcher.c
 */
-#define MSG_COM_NOCONNECT             _MESSAGE(29156, _("can't connect to commd"))
-#define MSG_COM_RECONNECT             _MESSAGE(29157, _("can connect to commd again"))
 #define MSG_COM_NORCVMSG_S            _MESSAGE(29158, _("error receiving message "SFN))
 #define MSG_COM_NOACK_S               _MESSAGE(29159, _("error sending acknowledge: "SFN"\n"))
 #define MSG_COM_INTERNALDISPATCHCALLWITHOUTDISPATCH _MESSAGE(29160, _("internal dispatcher called without s.th. to dispatch"))

@@ -43,6 +43,10 @@
 #include "sge_htable.h"
 #include "read_write_job.h"
 #include "sge_gdi.h"
+#include "sge_stdlib.h"
+#include "sge_var.h"
+#include "sge_path_alias.h"
+#include "sge_var.h"
 
 #include "msg_gdilib.h"
 #include "msg_common.h"
@@ -1481,3 +1485,160 @@ void job_initialize_id_lists(lListElem *job, lList **answer_list)
    }
    DEXIT;
 }
+
+/****** gdi/job_jatask/job_initialize_env() ***********************************
+*  NAME
+*     job_initialize_env() -- initialize environment (partially) 
+*
+*  SYNOPSIS
+*     void job_initialize_env(lListElem *job, lList **answer_list, 
+*                             const lList* path_alias_list) 
+*
+*  FUNCTION
+*     Initialize the environment sublist (JB_env_list) of "job".
+*     Path aliasing ("path_alias_list") has to be initialized before 
+*     this function might be called. 
+*
+*     Following enironment variables will be added:
+*        <VAR_PREFIX>O_HOME
+*        <VAR_PREFIX>O_LOGNAME
+*        <VAR_PREFIX>O_PATH
+*        <VAR_PREFIX>O_MAIL
+*        <VAR_PREFIX>O_SHELL
+*        <VAR_PREFIX>O_TZ
+*        <VAR_PREFIX>O_HOST
+*        <VAR_PREFIX>O_WORKDIR
+*
+*     This function will be used in SGE/EE client applications.
+*     Clients do not know which prefix should be used for job
+*     environment variables ("SGE_", "GRD_" or "COD_"). Therefore 
+*     we use the define <VAR_PREFIX> which will be replaced shortly 
+*     before the job is started.
+*
+*  INPUTS
+*     lListElem *job               - JB_Type element 
+*     lList **answer_list          - AN_Type list pointer 
+*     const lList* path_alias_list - PA_Type list 
+*******************************************************************************/
+void job_initialize_env(lListElem *job, lList **answer_list, 
+                        const lList* path_alias_list)
+{
+   lList *env_list = NULL;
+   DENTER(TOP_LAYER, "job_initialize_env");  
+    
+   lXchgList(job, JB_env_list, &env_list);
+   {   
+      int i = -1;
+      const char* env_name[] = {"HOME", "LOGNAME", "PATH", 
+                                "MAIL", "SHELL", "TZ", NULL};
+
+      while (env_name[++i] != 0) {
+         const char *env_value = sge_getenv(env_name[i]);
+         char new_env_name[SGE_PATH_MAX];
+
+         sprintf(new_env_name, "%s%s%s", VAR_PREFIX, "O_", env_name[i]);
+         var_list_set_string(&env_list, new_env_name, env_value);
+      }
+   }
+   {
+      const char* host = sge_getenv("HOST");
+
+      if (host == NULL) {
+         host = me.unqualified_hostname;
+      }
+      var_list_set_string(&env_list, VAR_PREFIX "O_HOST", host);
+   } 
+   {
+      char cwd_out[SGE_PATH_MAX + 1];
+      char tmp_str[SGE_PATH_MAX + 1];
+
+      if (!getcwd(tmp_str, sizeof(tmp_str))) {
+         sge_add_answer(answer_list, MSG_ANSWER_GETCWDFAILED , STATUS_EDISK, 0);
+         goto error;
+      }
+      path_alias_list_get_path(path_alias_list, NULL, 
+                               tmp_str, me.qualified_hostname,
+                               cwd_out, SGE_PATH_MAX);
+      var_list_set_string(&env_list, VAR_PREFIX "O_WORKDIR", 
+                                     cwd_out);
+   }
+
+error:
+   lXchgList(job, JB_env_list, &env_list);
+   DEXIT;
+}
+
+/****** gdi/job_jatask/job_get_env_string() ***********************************
+*  NAME
+*     job_get_env_string() -- get value of certain job env variable 
+*
+*  SYNOPSIS
+*     const char* job_get_env_string(const lListElem *job, 
+*                                    const char *variable) 
+*
+*  FUNCTION
+*     Return the string value of the job environment "variable". 
+*
+*     Please note: The "*_O_*" env variables get their final
+*                  name shortly before job execution. Find more 
+*                  information in the ADOC comment of
+*                  job_initialize_env()
+*
+*  INPUTS
+*     const lListElem *job - JB_Type element 
+*     const char* variable - environment variable name 
+*
+*  RESULT
+*     const char* - value of "variable"
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_initialize_env()
+*     gdi/job_jatask/job_set_env_string() 
+******************************************************************************/
+const char *job_get_env_string(const lListElem *job, const char *variable)
+{
+   const char *ret = NULL;
+   DENTER(TOP_LAYER, "job_get_env_value");
+
+   ret = var_list_get_string(lGetList(job, JB_env_list), variable);
+   DEXIT;
+   return ret;
+}
+
+/****** gdi/job_jatask/job_set_env_string() ************************************
+*  NAME
+*     job_set_env_string() -- set value of certain job env variable 
+*
+*  SYNOPSIS
+*     void job_set_env_string(lListElem *job, 
+*                             const char* variable, 
+*                             const char *value) 
+*
+*  FUNCTION
+*     Set the string "value" of the job environment "variable". 
+*
+*     Please note: The "*_O_*" env variables get their final
+*                  name shortly before job execution. Find more 
+*                  information in the ADOC comment of
+*                  job_initialize_env()
+*
+*  INPUTS
+*     lListElem *job       - JB_Type element 
+*     const char* variable - environment variable name 
+*     const char* value    - new value 
+*
+*  SEE ALSO
+*     gdi/job_jatask/job_initialize_env()
+*     gdi/job_jatask/job_get_env_string()
+******************************************************************************/
+void job_set_env_string(lListElem *job, const char* variable, const char* value)
+{
+   lList *env_list = NULL;
+   DENTER(TOP_LAYER, "job_set_env_value");  
+
+   lXchgList(job, JB_env_list, &env_list);
+   var_list_set_string(&env_list, variable, value);
+   lXchgList(job, JB_env_list, &env_list);
+   DEXIT; 
+}
+

@@ -252,22 +252,6 @@ enum {
 *     SGE_LIST(JB_job_args)  
 *        Job arguments (ST_Type). 
 *
-*     SGE_STRING(JB_sge_o_home)      ---> merge all sge_o* to one object? Or put into environment?
-*
-*     SGE_STRING(JB_sge_o_log_name)
-*
-*     SGE_STRING(JB_sge_o_path)
-*
-*     SGE_STRING(JB_sge_o_mail)
-*
-*     SGE_STRING(JB_sge_o_shell)
-*
-*     SGE_STRING(JB_sge_o_tz)
-*
-*     SGE_STRING(JB_sge_o_workdir)
-*
-*     SGE_HOST(JB_sge_o_host)
-*
 *     Checkpointing/Restart
 *     =====================
 *     SGE_ULONG(JB_checkpoint_attr)  ----> merge all checkpointing stuff to one object?
@@ -496,14 +480,6 @@ enum {
    JB_env_list,
    JB_context,
    JB_job_args,
-   JB_sge_o_home,
-   JB_sge_o_log_name,
-   JB_sge_o_path,
-   JB_sge_o_mail,
-   JB_sge_o_shell,
-   JB_sge_o_tz,
-   JB_sge_o_workdir,
-   JB_sge_o_host,
   
    JB_checkpoint_attr,
    JB_checkpoint_object,
@@ -568,7 +544,7 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_XULONG(JB_version)
    SGE_XLIST(JB_jid_predecessor_list,JRE_Type) 
    SGE_ILIST(JB_jid_predecessor_list,JRE_Type) 
-   SGE_LIST(JB_jid_sucessor_list, JB_Type) 
+   SGE_LIST(JB_jid_sucessor_list) 
 
    SGE_XSTRING(JB_project)             
    SGE_IOBJECT(JB_project, UP_Type)  
@@ -600,14 +576,6 @@ ILISTDEF(JB_Type, Job, SGE_JOB_LIST)
    SGE_TLIST(JB_env_list, VA_Type)  
    SGE_TLIST(JB_context, VA_Type)  
    SGE_TLIST(JB_job_args, ST_Type)  
-   SGE_STRING(JB_sge_o_home)
-   SGE_STRING(JB_sge_o_log_name)
-   SGE_STRING(JB_sge_o_path)
-   SGE_STRING(JB_sge_o_mail)
-   SGE_STRING(JB_sge_o_shell)
-   SGE_STRING(JB_sge_o_tz)
-   SGE_STRING(JB_sge_o_workdir)
-   SGE_HOST(JB_sge_o_host)         
 
    SGE_ULONG(JB_checkpoint_attr)     
    SGE_XSTRING(JB_checkpoint_object)   
@@ -854,28 +822,6 @@ NAMEDEF(ATN)
 NAMEEND
 
 #define ATS sizeof(ATN)/sizeof(char*)
-
-
-/* ----------- variable list -------------- */
-/*  variable[=value][,variable[=value],...] */
-enum {
-   VA_variable = VA_LOWERBOUND,
-   VA_value
-};
-
-SLISTDEF(VA_Type, Variable)
-   SGE_STRINGHU(VA_variable)
-   SGE_STRING(VA_value)
-LISTEND
-
-NAMEDEF(VAN)
-   NAME("VA_variable")
-   NAME("VA_value")
-NAMEEND
-
-#define VAS sizeof(VAN)/sizeof(char*)
-
-
 
 /* ------------- mail recipiants ---------- */
 /*    user[@host][,user[@host],...]         */

@@ -48,6 +48,7 @@
 #include "msg_clients_common.h"
 #include "sge_job_jatask.h"
 #include "symbols.h"
+#include "sge_var.h"
 
 static void sge_show_checkpoint(int how, int op);
 static void sge_show_y_n(int op, int how);
@@ -103,37 +104,42 @@ DTRACE;
    if (lGetPosViaElem(job, JB_gid)>=0)
       printf("gid:                        %d\n", (int) lGetUlong(job, JB_gid));
 
-   if (lGetPosViaElem(job, JB_sge_o_home)>=0)
-      if (lGetString(job, JB_sge_o_home))
-         printf("sge_o_home:                 %s\n", lGetString(job, JB_sge_o_home));
+   {
+      const char *name[] = {
+         "O_HOME", 
+         "O_LOGNAME", 
+         "O_PATH", 
+         "O_MAIL", 
+         "O_SHELL", 
+         "O_TZ", 
+         "O_WORKDIR", 
+         "O_HOST",
+         NULL
+      };
+      const char *fmt_string[] = {
+         "sge_o_home:                 %s\n",
+         "sge_o_log_name:             %s\n",
+         "sge_o_path:                 %s\n",
+         "sge_o_mail:                 %s\n",
+         "sge_o_shell:                %s\n",
+         "sge_o_tz:                   %s\n",
+         "sge_o_workdir:              %s\n",
+         "sge_o_host:                 %s\n",
+         NULL
+      };
+      int i = -1;
+      
+      while (name[++i] != NULL) {
+         const char *value;
+         char fullname[MAX_STRING_SIZE];
 
-   if (lGetPosViaElem(job, JB_sge_o_log_name)>=0)
-      if (lGetString(job, JB_sge_o_log_name))
-         printf("sge_o_log_name:             %s\n", lGetString(job, JB_sge_o_log_name));
-
-   if (lGetPosViaElem(job, JB_sge_o_path)>=0)
-      if (lGetString(job, JB_sge_o_path))
-         printf("sge_o_path:                 %s\n", lGetString(job, JB_sge_o_path));
-
-   if (lGetPosViaElem(job, JB_sge_o_mail)>=0)
-      if (lGetString(job, JB_sge_o_mail))
-         printf("sge_o_mail:                 %s\n", lGetString(job, JB_sge_o_mail));
-
-   if (lGetPosViaElem(job, JB_sge_o_shell)>=0)
-      if (lGetString(job, JB_sge_o_shell))
-         printf("sge_o_shell:                %s\n", lGetString(job, JB_sge_o_shell));
-
-   if (lGetPosViaElem(job, JB_sge_o_tz)>=0)
-      if (lGetString(job, JB_sge_o_tz))
-         printf("sge_o_tz:                   %s\n", lGetString(job, JB_sge_o_tz));
-
-   if (lGetPosViaElem(job, JB_sge_o_workdir)>=0)
-      if (lGetString(job, JB_sge_o_workdir))
-         printf("sge_o_workdir:              %s\n", lGetString(job, JB_sge_o_workdir));
-
-   if (lGetPosViaElem(job, JB_sge_o_host)>=0)
-      if (lGetHost(job, JB_sge_o_host))
-         printf("sge_o_host:                 %s\n", lGetHost(job, JB_sge_o_host));
+         sprintf(fullname, "%s%s", VAR_PREFIX, name[i]);
+         value = job_get_env_string(job, fullname);
+         if (value != NULL) {
+            printf(fmt_string[i], value);
+         }
+      }
+   }
 
    if (lGetPosViaElem(job, JB_execution_time)>=0)
       if ((ultime = lGetUlong(job, JB_execution_time)))

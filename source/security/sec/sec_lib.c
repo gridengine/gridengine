@@ -48,7 +48,7 @@
 #include "basis_types.h"
 #include "sge_gdi_intern.h"
 #include "sge_secL.h"
-#include "sge_arch.h"
+#include "sge_prog.h"
 #include "sge_stdlib.h"
 #include "sge_uidgid.h"
 #include "sge_unistd.h"

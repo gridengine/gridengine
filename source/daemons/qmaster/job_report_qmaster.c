@@ -62,6 +62,8 @@
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
 #include "sge_string.h"
+#include "sge_var.h"
+#include "sge_job_jatask.h"
 
 extern lList *Master_Job_List;
 extern lList *Master_Exechost_List;
@@ -492,7 +494,7 @@ sge_pack_buffer *pb
                      lSetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status, JFINISHED);
                      err_str = lGetString(jr, JR_err_str);
                      sprintf(failed_msg, u32" %s %s", failed, err_str?":":"", err_str?err_str:"");
-                     lSetString(task, JB_sge_o_mail, failed_msg);
+                     job_set_env_string(task, VAR_PREFIX "O_MAIL", failed_msg);
                      sge_log_dusage(jr, jep, jatep);
 
                      job_write_spool_file(jep, 0, SPOOL_DEFAULT);

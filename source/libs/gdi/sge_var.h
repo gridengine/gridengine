@@ -1,5 +1,5 @@
-#ifndef __PATH_ALIASES_H
-#define __PATH_ALIASES_H
+#ifndef __SGE_VAR_H
+#define __SGE_VAR_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,16 +32,32 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-/* #define SGE_COMMON_PATH_ALIASES_FILE    "common/sge_aliases" */
-#define SGE_COMMON_PATH_ALIASES_FILE    "common/sge_aliases"
+#include "sge_jobL.h"
 
-/* #define SGE_HOME_PATH_ALIASES_FILE      ".sge_aliases" */
-#define SGE_HOME_PATH_ALIASES_FILE      ".sge_aliases"
+#define VAR_PREFIX "__SGE_PREFIX__"
+#define VAR_COMPLEX_PREFIX "SGE_COMPLEX_"
 
+void var_list_dump_to_file(const lList *varl, FILE *file);
 
-int build_path_aliases(lList **path_alias_list, char *user, char *host, lList **alpp);
+void var_list_copy_complex_vars_and_value(lList *varl,
+                                          const lList* src_varl,
+                                          const lList* cplx_list);
 
-int get_path_alias(const char *inpath, char *outpath, int outmax, lList *path_aliases, const char *myhost, lList **alpp);
+void var_list_copy_prefix_vars(lList *varl, 
+                               const lList *src_varl,
+                               const char *prefix, 
+                               const char *new_prefix);
 
+const char* var_list_get_string(lList *varl, const char *name);
 
-#endif /* __PATH_ALIASES_H */
+void var_list_set_string(lList **varl, const char *name, const char *value);
+
+void var_list_set_int(lList **varl, const char *name, int value);
+
+void var_list_set_u32(lList **varl, const char *name, u_long32 value);
+
+void var_list_set_sharedlib_path(lList **varl);
+
+void var_list_remove_prefix_vars(lList *varl, const char *prefix);
+
+#endif /* __SGE_VAR_H */

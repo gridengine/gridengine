@@ -54,6 +54,7 @@
 #include "sge_stdio.h"
 #include "sge_prog.h"
 #include "msg_gdilib.h"
+#include "sge_varL.h"
 
 #ifdef CRYPTO
 #include <openssl/evp.h>

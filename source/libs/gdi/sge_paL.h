@@ -42,9 +42,34 @@ extern "C" {
 
 /* *INDENT-OFF* */
 
-/* 
- * this data structures describes a path alias element
- */
+/****** gdi/path_alias/--PA_Type **********************************************
+*  NAME 
+*     RN_Type - CULL path alias element
+*
+*  ELEMENTS
+*     SGE_STRING(PA_origin)
+*        original path        
+*
+*     SGE_HOST(PA_submit_host)
+*        submit hostname
+*
+*     SGE_HOST(PA_exec_host)
+*        destination execution host
+*
+*     SGE_STRING(PA_translation)
+*        path translation for the original path
+*
+*  FUNCTION
+*     CULL element holding information necessary to realize 
+*     path aliasing. (Find more information in the --PathAlias
+*     ADOC comment)
+*
+*  SEE ALSO
+*     gdi/path_alias/--PathAlias
+*     gdi/path_alias/path_alias_read_from_file()
+*     gdi/path_alias/path_alias_list_initialize()
+*     gdi/path_alias/path_alias_list_get_path()
+******************************************************************************/
 enum {
    PA_origin = PA_LOWERBOUND,
    PA_submit_host,
@@ -53,10 +78,9 @@ enum {
 };
 
 SLISTDEF(PA_Type, PathAlias)
-   /* configuration fields */
    SGE_STRING(PA_origin)
-   SGE_HOST(PA_submit_host)       /* CR - hostname change */
-   SGE_HOST(PA_exec_host)         /* CR - hostname change */
+   SGE_HOST(PA_submit_host) 
+   SGE_HOST(PA_exec_host) 
    SGE_STRING(PA_translation)
 LISTEND 
 

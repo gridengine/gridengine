@@ -69,6 +69,7 @@
 #include "get_path.h"
 #include "sge_job_queue.h"
 #include "sge_job_jatask.h"
+#include "sge_var.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, char *master, dstring *task_str, u_long32 full_listing, int slots, int slot, lList *ehl, lList *cl, lList *pe_list, char *intend);
 
@@ -350,7 +351,7 @@ int indent
    if (tstatus==JFINISHED) {
       ep=lGetElemStr(lGetList(task_task, JAT_usage_list), UA_name, 
             "exit_status");
-      str=(job==task)?"":lGetString(task, JB_sge_o_mail);
+      str=(job==task)?"":job_get_env_string(task, VAR_PREFIX "O_MAIL");
       printf("%-4d %s", ep ? (int)lGetDouble(ep, UA_value) : 0, str?str:"");
    }
 

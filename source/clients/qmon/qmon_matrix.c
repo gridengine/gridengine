@@ -47,6 +47,7 @@
 #include "sge_answerL.h"
 #include "sge_complexL.h"
 #include "sge_requestL.h"
+#include "sge_varL.h"
 
 #include "cull.h"
 #include "sge_gdi.h"

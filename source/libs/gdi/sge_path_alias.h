@@ -1,5 +1,5 @@
-#ifndef __SGE_STRING_H
-#define __SGE_STRING_H
+#ifndef __PATH_ALIASES_H
+#define __PATH_ALIASES_H
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,65 +32,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+#define PATH_ALIAS_COMMON_FILE    "common/sge_aliases"
+#define PATH_ALIAS_HOME_FILE      ".sge_aliases"
 
-#include <string.h>
+int path_alias_list_initialize(lList **path_alias_list,
+                               lList **alpp,
+                               const char *user,
+                               const char *host);
 
-struct saved_vars_s {
-   char *static_cp;
-   char *static_str;
-};
+int path_alias_list_get_path(const lList *path_aliases, lList **alpp,
+                             const char *inpath, const char *myhost,
+                             char *outpath, int outmax);
 
-const char *sge_basename(const char *name, int delim);
-
-char *sge_delim_str(char *str, char **delim_pos, const char *delim);
-
-char *sge_dirname(const char *name, int delim);
-
-char *sge_strdup(char *old, const char *src);
-
-char *sge_strtok(const char *str, const char *delimitor);
-
-int sge_is_pattern(const char *p);
-
-char *sge_strtok_r(const char *str, const char *delimitor, 
-                   struct saved_vars_s **last);
-
-void sge_free_saved_vars(struct saved_vars_s *last);
-
-int sge_is_valid_filename(const char *fname);
-
-int sge_strnullcasecmp(const char *a, const char *b);
-
-int sge_strnullcmp(const char *a, const char *b);
-
-void sge_strip_blanks(char *str);
-
-void sge_strtoupper(char *buffer, int max_len);
-
-int sge_strisint(const char *str);
-
-char **sge_stradup(char **cpp, int n);
-
-void sge_strafree(char **cpp); 
-
-char **sge_stramemncpy(const char *cp, char **cpp, int n);
-
-char **sge_stracasecmp(const char *cp, char **cpp);
-
-void sge_compress_slashes(char *str);
-
-#ifndef WIN32NATIVE
-#define SGE_STRCASECMP(a, b) strcasecmp(a, b)
-#else
-#define SGE_STRCASECMP(a, b) stricmp(a, b)
-#endif
-
-#ifdef  __cplusplus
-}
-#endif
- 
-#endif /* __SGE_STRING_H */
-
+#endif /* __PATH_ALIASES_H */

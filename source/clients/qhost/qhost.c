@@ -923,7 +923,7 @@ lWriteListTo(ehl, stdout);
                      JB_pe,
                      JB_checkpoint_object,
                      JB_jid_predecessor_list,
-                     JB_sge_o_mail,
+                     JB_env_list,
                      JB_priority,
                      JB_job_name,
                      JB_project,

@@ -1,5 +1,6 @@
-#ifndef __SGE_STRING_H
-#define __SGE_STRING_H
+#ifndef __SGE_VARL_H
+#define __SGE_VARL_H
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,65 +33,50 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_boundaries.h"
+#include "cull.h"
+
 #ifdef  __cplusplus
 extern "C" {
 #endif
 
-#include <string.h>
+/****** gdi/var/--VA_Type *****************************************************
+*  NAME
+*     VA_Type - CULL variable element
+*
+*  ELEMENTS
+*     SGE_STRING(VA_variable)
+*        name of variable
+*
+*     SGE_STRING(VA_value)
+*        value of variable
+*
+*  FUNCTION
+*     CULL element holding a variable/value pair (variable[=value])
+*
+*  SEE ALSO
+*     gdi/var/--VariableList
+******************************************************************************/
 
-struct saved_vars_s {
-   char *static_cp;
-   char *static_str;
+enum {
+   VA_variable = VA_LOWERBOUND,
+   VA_value
 };
 
-const char *sge_basename(const char *name, int delim);
+SLISTDEF(VA_Type, Variable)
+   SGE_STRINGHU(VA_variable)
+   SGE_STRING(VA_value)
+LISTEND
 
-char *sge_delim_str(char *str, char **delim_pos, const char *delim);
+NAMEDEF(VAN)
+   NAME("VA_variable")
+   NAME("VA_value")
+NAMEEND
 
-char *sge_dirname(const char *name, int delim);
-
-char *sge_strdup(char *old, const char *src);
-
-char *sge_strtok(const char *str, const char *delimitor);
-
-int sge_is_pattern(const char *p);
-
-char *sge_strtok_r(const char *str, const char *delimitor, 
-                   struct saved_vars_s **last);
-
-void sge_free_saved_vars(struct saved_vars_s *last);
-
-int sge_is_valid_filename(const char *fname);
-
-int sge_strnullcasecmp(const char *a, const char *b);
-
-int sge_strnullcmp(const char *a, const char *b);
-
-void sge_strip_blanks(char *str);
-
-void sge_strtoupper(char *buffer, int max_len);
-
-int sge_strisint(const char *str);
-
-char **sge_stradup(char **cpp, int n);
-
-void sge_strafree(char **cpp); 
-
-char **sge_stramemncpy(const char *cp, char **cpp, int n);
-
-char **sge_stracasecmp(const char *cp, char **cpp);
-
-void sge_compress_slashes(char *str);
-
-#ifndef WIN32NATIVE
-#define SGE_STRCASECMP(a, b) strcasecmp(a, b)
-#else
-#define SGE_STRCASECMP(a, b) stricmp(a, b)
-#endif
+#define VAS sizeof(VAN)/sizeof(char*)
 
 #ifdef  __cplusplus
 }
 #endif
- 
-#endif /* __SGE_STRING_H */
 
+#endif /* __SGE_VARL_H */

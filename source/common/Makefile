@@ -59,7 +59,6 @@ COMMON_SRC = sge_conf.c \
             execution_states.c \
             parse_job_cull.c \
             parse_qsub.c \
-            path_aliases.c \
             read_object.c \
             read_write_cal.c \
             read_write_ckpt.c \
@@ -111,9 +110,6 @@ parse_job_cull.o    : $(COMMON_DIR)/parse_job_cull.c
 
 parse_qsub.o:	$(COMMON_DIR)/parse_qsub.c
 		$(CC) $(CFLAGS) -c $(COMMON_DIR)/parse_qsub.c
-
-path_aliases.o    : $(COMMON_DIR)/path_aliases.c
-		$(CC) $(CFLAGS) -c $(COMMON_DIR)/path_aliases.c
 
 read_object.o:   $(COMMON_DIR)/read_object.c
 		$(CC) $(CFLAGS) $(MEMCFLAG) -c $(COMMON_DIR)/read_object.c

@@ -54,6 +54,7 @@
 #include "sge_stringL.h"
 #include "msg_gdilib.h"
 #include "sge_security.h"
+#include "sge_varL.h"
 
 #include "jb_now.h"
 

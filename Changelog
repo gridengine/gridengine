@@ -1,3 +1,9 @@
+EB-2002-05-04-0: Cleanup:   Job object:
+                            - moved some attributes into the environment
+                            - created new module to access VA_Type lists
+                            - summurized submit client code
+                            - added ADOC comments
+
 CR-2002-05-03-1: Testsuite: - removed rsh with rlogin calls
                  Bugfix:    - compile source has set wrong LIBPATH on AIX
                             - new parameter for create_shell_script(),

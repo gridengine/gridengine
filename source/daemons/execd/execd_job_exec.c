@@ -68,6 +68,7 @@
 #include "sge_job_jatask.h"
 #include "sge_unistd.h"
 #include "sge_hostname.h"
+#include "sge_varL.h"
 
 extern volatile int jobs_to_start;
 extern lList *Master_Job_List;

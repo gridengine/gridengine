@@ -125,4 +125,12 @@ lList* ja_task_list_split_group(lList **task_list);
 
 void job_initialize_id_lists(lListElem *job, lList **answer_list);
 
+void job_initialize_env(lListElem *job, lList **answer_list,
+                        const lList* path_alias_list);
+
+const char* job_get_env_string(const lListElem *job, const char *variable);
+
+void job_set_env_string(lListElem *job, const char *variable, 
+                        const char *value);
+
 #endif /* __SGE_JOB_JATASK_H */    

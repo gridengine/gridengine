@@ -86,7 +86,7 @@
 #include "sge_feature.h"
 #include "sge_afsutil.h"
 #include "sge_range.h"
-#include "path_aliases.h"
+#include "sge_path_alias.h"
 #include "jb_now.h"
 #include "setup_path.h"
 #include "qm_name.h"
@@ -94,6 +94,7 @@
 #include "sge_job_jatask.h"
 #include "sge_stdlib.h"
 #include "sge_io.h"
+#include "sge_var.h"
 
 extern char **environ;
 
@@ -1672,7 +1673,6 @@ char *prefix
    char pe_range[BUFSIZ];
    StringConst job_name;
    StringConst directive_prefix;
-   StringConst cell;
    StringConst account_string;
    StringConst pe;
    StringConst project;
@@ -1845,7 +1845,6 @@ int save
 ) {
    int len;
    char *job_script;
-   const char *cp;
    char *s;
    int reduced_job;
    char pe_tasks[BUFSIZ];
@@ -1942,23 +1941,11 @@ int save
       
    /* environment */
    if (!reduced_job) {
-      cp = sge_getenv("HOME");
-      lSetString(jep, JB_sge_o_home, cp);
-      cp = sge_getenv("LOGNAME");
-      lSetString(jep, JB_sge_o_log_name, cp);
-      cp = sge_getenv("PATH");
-      lSetString(jep, JB_sge_o_path, cp);
-      cp = sge_getenv("MAIL");
-      lSetString(jep, JB_sge_o_mail, cp);
-      cp = sge_getenv("SHELL");
-      lSetString(jep, JB_sge_o_shell, cp);
-      cp = sge_getenv("TZ");
-      lSetString(jep, JB_sge_o_tz, cp);
       /*
       ** path aliasing
       */
-      if (build_path_aliases(&path_alias, me.user_name, me.qualified_hostname, 
-                           &alp) == -1) {
+      if (path_alias_list_initialize(&path_alias, &alp, me.user_name, 
+                                     me.qualified_hostname) == -1) {
          if (alp) {
             qmonMessageBox(qmon_submit, alp, 0);
             alp = lFreeList(alp);
@@ -1966,27 +1953,13 @@ int save
             return False;
          }   
       }
-      { 
-         static char cwd_out[SGE_PATH_MAX + 1];
-         static char tmp_str[SGE_PATH_MAX + 1];
-         if (!getcwd(tmp_str, sizeof(tmp_str))) {
-            sge_add_answer(&alp, MSG_ANSWER_GETCWDFAILED , STATUS_EDISK, 0);
-            if (alp) {
-               qmonMessageBox(qmon_submit, alp, 0);
-               alp = lFreeList(alp);
-               DEXIT;
-               return False;
-            }   
-         }
-         get_path_alias(tmp_str, cwd_out, 
-                           SGE_PATH_MAX, path_alias, 
-                           me.qualified_hostname, NULL);  
-         lSetString(jep, JB_sge_o_workdir, cwd_out);
+      job_initialize_env(jep, &alp, path_alias);
+      if (alp) {
+         qmonMessageBox(qmon_submit, alp, 0);
+         alp = lFreeList(alp);
+         DEXIT;
+         return False;
       }
-      cp = sge_getenv("HOST");
-      if (!cp)
-         cp = me.unqualified_hostname;
-      lSetHost(jep, JB_sge_o_host, cp);
    }
 
    /* 
@@ -2010,7 +1983,8 @@ int save
 
    if (!reduced_job) {
       if (data->cwd) {
-         lSetString(jep, JB_cwd, cwd_string(lGetString(jep, JB_sge_o_home)));
+         const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
+         lSetString(jep, JB_cwd, cwd_string(env_value));
          lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
          path_alias = lFreeList(path_alias);
       }

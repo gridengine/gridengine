@@ -57,7 +57,7 @@
 #include "msg_common.h"
 
 static int sge_parse_priority(lList **alpp, int *valp, char *priority_str);
-static int cull_get_env_list(lList **lpp, char **envp);
+static int var_list_parse_from_environment(lList **lpp, char **envp);
 static int sge_parse_hold_list(char *hold_str);
 static int sge_parse_mail_options(char *mail_str); 
 static int cull_parse_destination_identifier_list(lList **lpp, char *dest_str);
@@ -239,7 +239,7 @@ u_long32 flags
          }
 
          DPRINTF(("\"-ac %s\"\n", *sp));
-         i_ret = cull_parse_variable_list(&variable_list, *sp, 0);
+         i_ret = var_list_parse_from_string(&variable_list, *sp, 0);
          if (i_ret) {
              sprintf(str, MSG_ANSWER_WRONGCONTEXTLISTFORMATAC_S , *sp);
              sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
@@ -395,7 +395,7 @@ u_long32 flags
          }
 
          DPRINTF(("\"-dc %s\"\n", *sp));
-         i_ret = cull_parse_variable_list(&variable_list, *sp, 0);
+         i_ret = var_list_parse_from_string(&variable_list, *sp, 0);
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGCONTEXTLISTFORMATDC_S
              , *sp);
@@ -1265,7 +1265,7 @@ DTRACE;
          }
 
          DPRINTF(("\"-sc %s\"\n", *sp));
-         i_ret = cull_parse_variable_list(&variable_list, *sp, 0);
+         i_ret = var_list_parse_from_string(&variable_list, *sp, 0);
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGCONTEXTLISTFORMATSCX_S, *sp);
              sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
@@ -1412,7 +1412,7 @@ DTRACE;
 
          DPRINTF(("\"-v %s\"\n", *sp));
 
-         i_ret = cull_parse_variable_list(&variable_list, *sp, 1);
+         i_ret = var_list_parse_from_string(&variable_list, *sp, 1);
          if (i_ret) {
              sprintf(str,MSG_PARSE_WRONGVARIABLELISTFORMATVORENVIRONMENTVARIABLENOTSET_S,
              *sp);
@@ -1446,7 +1446,7 @@ DTRACE;
          lList *env_list = NULL;
 
          DPRINTF(("\"%s\"\n", *sp));
-         i_ret = cull_get_env_list(&env_list, envp);
+         i_ret = var_list_parse_from_environment(&env_list, envp);
          if (i_ret) {
              sprintf(str,MSG_PARSE_COULDNOTPARSEENVIRIONMENT);
              sge_add_answer(&answer, str, STATUS_ESYNTAX, 0);
@@ -1972,99 +1972,28 @@ char *priority_str
    return 0;
 }
 
-/***************************************************************************/
-int cull_parse_variable_list(
-lList **lpp,
-char *variable_str,
-int check_environment 
-
-/*   variable[=value][,variable[=value],...]
-
-   str0 - variable
-   str1 - value
-   str3 - temporary
-   int3 - temporary
- */
-
-) {
-
-   char *variable;
-   char *value;
-   stringT str;
-   char **str_str;
-   char **pstr;
-   lListElem *ep;
-   char *va_string;
-
-   DENTER(TOP_LAYER, "cull_parse_variable_list");
-
-   if (!lpp) {
-      DEXIT;
-      return 1;
-   }
-
-   va_string = sge_strdup(NULL, variable_str);
-   if (!va_string) {
-      *lpp = NULL;
-      DEXIT;
-      return 2;
-   }
-   str_str = string_list(va_string, ",", NULL);
-   if (!str_str || !*str_str) {
-      *lpp = NULL;
-      FREE(va_string);
-      DEXIT;
-      return 3;
-   }
-
-   if (!*lpp) {
-      *lpp = lCreateList("variable list", VA_Type);
-      if (!*lpp) {
-         FREE(va_string);
-         FREE(str_str);
-         DEXIT;
-         return 4;
-      }
-   }
-
-   for (pstr = str_str; *pstr; pstr++) {
-      ep = lCreateElem(VA_Type);
-      /* SGE_ASSERT(ep); */
-      lAppendElem(*lpp, ep);
-
-      variable = sge_strtok(*pstr, "=");
-      SGE_ASSERT((variable));
-      memset(str, 0, sizeof(str));
-      sprintf(str, "%s=", variable);
-      lSetString(ep, VA_variable, variable);
-      value = sge_strtok((char *) NULL, "=");
-      if (value) 
-         lSetString(ep, VA_value, value);
-      else if(check_environment)
-         lSetString(ep, VA_value, sge_getenv(variable));
-      else
-         lSetString(ep, VA_value, NULL);
-   }
-
-   FREE(va_string);
-   FREE(str_str);
-   DEXIT;
-   return 0;
-
-}
-
-/***************************************************************************/
-static int cull_get_env_list(
-lList **lpp, /* VA_Type */
-char **envp 
-) {
-   char *env_name;
-   char *env_description;
-
-   char *env_entry;
-   lListElem *ep;
-
-   DENTER(TOP_LAYER, "cull_get_env_list");
+/****** client/var/var_list_parse_from_environment() **************************
+*  NAME
+*     var_list_parse_from_environment() -- create var list from env 
+*
+*  SYNOPSIS
+*     static int var_list_parse_from_environment(lList **lpp, char **envp) 
+*
+*  FUNCTION
+*     Create a list of variables from the given environment. 
+*
+*  INPUTS
+*     lList **lpp - VA_Type list 
+*     char **envp - environment pointer 
+*
+*  RESULT
+*     static int - error state
+*         0 - OK
+*        >0 - Error   
+*******************************************************************************/
+static int var_list_parse_from_environment(lList **lpp, char **envp) 
+{
+   DENTER(TOP_LAYER, "var_list_parse_from_environment");
 
    if (!lpp || !envp) {
       DEXIT;
@@ -2080,8 +2009,12 @@ char **envp
    }
 
    for (; *envp; envp++) {
+      char *env_name;
+      char *env_description;
+      char *env_entry;
+      lListElem *ep;
+
       ep = lCreateElem(VA_Type);
-      /* SGE_ASSERT(ep); */
       lAppendElem(*lpp, ep);
 
       env_entry = sge_strdup(NULL, *envp);
@@ -2197,3 +2130,96 @@ char *str
    DEXIT;
    return 0;
 }
+
+/****** client/var/var_list_parse_from_string() *******************************
+*  NAME
+*     var_list_parse_from_string() -- parse vars from string list 
+*
+*  SYNOPSIS
+*     int var_list_parse_from_string(lList **lpp, 
+*                                    const char *variable_str, 
+*                                    int check_environment) 
+*
+*  FUNCTION
+*     Parse a list of variables ("lpp") from a comma separated 
+*     string list ("variable_str"). The boolean "check_environment"
+*     defined wether the current value of a variable is taken from
+*     the environment of the calling process.
+*
+*  INPUTS
+*     lList **lpp              - VA_Type list 
+*     const char *variable_str - source string 
+*     int check_environment    - boolean
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        >0 - Error
+*******************************************************************************/
+int var_list_parse_from_string(lList **lpp, const char *variable_str,
+                               int check_environment)
+{
+   char *variable;
+   char *value;
+   stringT str;
+   char **str_str;
+   char **pstr;
+   lListElem *ep;
+   char *va_string;
+
+   DENTER(TOP_LAYER, "var_list_parse_from_string");
+
+   if (!lpp) {
+      DEXIT;
+      return 1;
+   }
+
+   va_string = sge_strdup(NULL, variable_str);
+   if (!va_string) {
+      *lpp = NULL;
+      DEXIT;
+      return 2;
+   }
+   str_str = string_list(va_string, ",", NULL);
+   if (!str_str || !*str_str) {
+      *lpp = NULL;
+      FREE(va_string);
+      DEXIT;
+      return 3;
+   }
+
+   if (!*lpp) {
+      *lpp = lCreateList("variable list", VA_Type);
+      if (!*lpp) {
+         FREE(va_string);
+         FREE(str_str);
+         DEXIT;
+         return 4;
+      }
+   }
+
+   for (pstr = str_str; *pstr; pstr++) {
+      ep = lCreateElem(VA_Type);
+      /* SGE_ASSERT(ep); */
+      lAppendElem(*lpp, ep);
+
+      variable = sge_strtok(*pstr, "=");
+      SGE_ASSERT((variable));
+      memset(str, 0, sizeof(str));
+      sprintf(str, "%s=", variable);
+      lSetString(ep, VA_variable, variable);
+      value = sge_strtok((char *) NULL, "=");
+      if (value)
+         lSetString(ep, VA_value, value);
+      else if(check_environment)
+         lSetString(ep, VA_value, sge_getenv(variable));
+      else
+         lSetString(ep, VA_value, NULL);
+   }
+
+   FREE(va_string);
+   FREE(str_str);
+   DEXIT;
+   return 0;
+}
+

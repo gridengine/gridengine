@@ -63,7 +63,7 @@
 #include "tmpdir.h"
 #include "read_write_queue.h"
 #include "exec_job.h"
-#include "path_aliases.h"
+#include "sge_path_alias.h"
 #include "slots_used.h"
 #include "sge_parse_num_par.h"
 #include "show_job.h"
@@ -88,6 +88,8 @@
 #include "sge_uidgid.h"
 #include "sge_hostname.h"
 #include "sge_os.h"
+#include "sge_varL.h"
+#include "sge_var.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -96,12 +98,9 @@
 #define ENVIRONMENT_FILE "environment"
 #define CONFIG_FILE "config"
 
-#define COMPLEX2ENV_PREFIX "SGE_COMPLEX_"
-
 static int ck_login_sh(char *shell);
 static int get_nhosts(lList *gdil_list);
 static int arch_dep_config(FILE *fp, lList *cplx, char *err_str);
-static int complex2environment(lList *env, lList *cplx, lListElem *job, char *err_str);
 
 /* from execd.c import the working dir of the execd */
 extern char execd_spool_dir[SGE_PATH_MAX];
@@ -216,276 +215,6 @@ long add_grp_id
 }
 #endif
 #endif
-
-/****** execd/sge/add_or_replace_env() ***************************************
-*  NAME
-*     add_or_replace_env -- add or change an environment variable
-*
-*  SYNOPSIS
-*     void add_or_replace_env(lList *envl, const char *name, const char *value);
-*
-*  FUNCTION
-*     If the environment variable <name> does not already exist in <envl>, 
-*     it is created and initialized with <value>.
-*     Otherwise, its value is overwritten with <value>
-*
-*  INPUTS
-*     envl  - the environment list where to set a variable
-*     name  - the name of the variable
-*     value - the (new) value of the variable
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*     Function should be moved to some library - same or similar code
-*     might be used in other modules.
-*
-*  SEE ALSO
-*     execd/add_or_replace_env()
-******************************************************************************/
-static void add_or_replace_env(lList *envl, const char *name, const char *value) 
-{
-   lListElem *elem;
-   
-   if(envl == NULL || name == NULL || value == NULL) {
-      return;
-   }
-
-   if((elem = lGetElemStr(envl, VA_variable, name)) == NULL) {
-      elem = lAddElemStr(&envl, VA_variable, name, VA_Type);
-   }
-
-   lSetString(elem, VA_value, value);
-}
-
-/****** execd/sge/add_or_replace_env_int() ************************************
-*
-*  NAME
-*     add_or_replace_env_int -- add or change an environment variable
-*
-*  SYNOPSIS
-*     void add_or_replace_env_int(lList *envl, const char *name, int value);
-*
-*  FUNCTION
-*     If the environment variable <name> does not already exist in <envl>, 
-*     it is created and initialized with <value>.
-*     Otherwise, its value is overwritten with <value>
-*
-*  INPUTS
-*     envl  - the environment list where to set a variable
-*     name  - the name of the variable
-*     value - the (new) value of the variable
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*     Function should be moved to some library - same or similar code
-*     might be used in other modules.
-*
-*  SEE ALSO
-*     execd/add_or_replace_env()
-******************************************************************************/
-static void add_or_replace_env_int(lList *envl, const char *name, int value)
-{
-   char buffer[2048];
-
-   sprintf(buffer, "%d", value);
-   add_or_replace_env(envl, name, buffer);
-}
-
-/****** execd/sge/add_or_replace_env_u32() ************************************
-*
-*  NAME
-*     add_or_replace_env_u32 -- add or change an environment variable
-*
-*  SYNOPSIS
-*     void add_or_replace_env_u32(lList *envl, const char *name, 
-*                                 u_long32 value);
-*
-*  FUNCTION
-*     If the environment variable <name> does not already exist in <envl>, 
-*     it is created and initialized with <value>.
-*     Otherwise, its value is overwritten with <value>
-*
-*  INPUTS
-*     envl  - the environment list where to set a variable
-*     name  - the name of the variable
-*     value - the (new) value of the variable
-*
-*  NOTES
-*     Function should be moved to some library - same or similar code
-*     might be used in other modules.
-*
-*  BUGS
-*
-*  SEE ALSO
-*     execd/add_or_replace_env()
-******************************************************************************/
-static void add_or_replace_env_u32(lList *envl, const char *name, 
-                                   u_long32 value)
-{
-   char buffer[2048];
-
-   sprintf(buffer, u32, value);
-   add_or_replace_env(envl, name, buffer);
-}
-
-/****** execd/sge/dump_env() **************************************************
-*  NAME
-*     dump_env -- dump environment from list to file
-*
-*  SYNOPSIS
-*     void dump_env(lList envl, FILE *file);
-*
-*  FUNCTION
-*     Parses the list of type VA_type <envl> containing the
-*     description of environment variables.
-*     Dumps all list elements to <file> in the format:
-*     <name>=<value>
-*     <name> is read from VA_variable, <value> from VA_value.
-*
-*  INPUTS
-*     envl - list of environment variables
-*     file - filehandle of a previously opened (for writing) file
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*     Function should be moved to some library - same or similar code
-*     might be used in other modules.
-******************************************************************************/
-static void dump_env(lList *envl, FILE *file) 
-{
-   lListElem *elem;
-   
-   if(envl == NULL || file == NULL) {
-      return;
-   }
-
-   for_each(elem, envl) {
-      fprintf(file, "%s=%s\n", lGetString(elem, VA_variable), lGetString(elem, VA_value));
-   }
-}
-/****** execd/sge/get_sharedlib_path_name() ***********************************
-*  NAME
-*     get_sharedlib_path_name -- return name of sharedlib path
-*
-*  SYNOPSIS
-*     static const char *get_sharedlib_path_name(void);
-*
-*  FUNCTION
-*     Returns the operating dependent name of the shared library path
-*     (e.g. LIBPATH, SHLIB_PATH, LD_LIBRARY_PATH).
-*     If the name of the sharedlib path is not known for an operating
-*     system (the port has not yet been done), a compile time error
-*     is raised.
-*
-*  INPUTS
-*
-*  RESULT
-*     Name of the shared lib path
-*
-*  EXAMPLE
-*
-*  NOTES
-*     Function should be moved to some library - same or similar code
-*     might be used in other modules.
-*
-*     Raising a compile time error (instead of e.g. just returning NULL
-*     or LD_LIBRARY_PATH as default) has the following reason:
-*     Setting the shared lib path is a very sensible operation concerning
-*     security.
-*     Example: If a shared linked rshd (called for qrsh execution) is
-*     executed with a faked shared lib path, operations defined in
-*     a non sge library libgdi.so might be executed as user root.
-******************************************************************************/
-static const char *get_sharedlib_path_name(void) 
-{
-#if defined(AIX4)
-   return "LIBPATH";
-#elif defined(HP10) || defined(HP11)
-   return "SHLIB_PATH";
-#elif defined(ALPHA) || defined(IRIX6) || defined(IRIX65) || defined(LINUX) || defined(SOLARIS)
-   return "LD_LIBRARY_PATH";
-#else
-#error "don't know how to set shared lib path on this architecture"
-   return NULL; /* never reached */
-#endif
-}
-
-/****** execd/sge/set_sharedlib_path() ****************************************
-*  NAME
-*     set_sharedlib_path -- set the shared library search path
-*
-*  SYNOPSIS
-*     void set_sharedlib_path(lList environmentList);
-*
-*  FUNCTION
-*     Sets or replaces the shared lib path in the list of environment
-*     variables.
-*     The SGE shared lib path is always set to the beginning of the
-*     resulting shared lib path (security, see get_sharedlib_path_name())
-*
-*  INPUTS
-*     environmentList - list of environment variables
-*
-*  RESULT
-*
-*  EXAMPLE
-*
-*  NOTES
-*     Function should be moved to some library - same or similar code
-*     might be used in other modules.
-*
-*  BUGS
-*
-*  SEE ALSO
-*     execd/get_sharedlib_path_name()
-******************************************************************************/
-static void set_sharedlib_path(lList *environmentList) 
-{
-   char *sharedlib_path;
-   char *sge_sharedlib_path;
-   const char *sharedlib_path_name = get_sharedlib_path_name();
-   lListElem *sharedlib_elem = NULL;
-
-   DENTER(TOP_LAYER, "set_sharedlib_path");
-   
-   /* this is the SGE sharedlib path */
-   sge_sharedlib_path = sge_malloc(strlen(path.sge_root) + strlen("/lib/") + strlen(sge_get_arch()) + 1);
-   sprintf(sge_sharedlib_path, "%s/lib/%s", path.sge_root, sge_get_arch());
-
-   /* if allready in environment: extend by SGE sharedlib path, else set */
-   if((sharedlib_elem = lGetElemStr(environmentList, VA_variable, sharedlib_path_name)) != NULL) {
-      const char *old_value = lGetString(sharedlib_elem, VA_value);
-
-      if(old_value && strlen(old_value) > 0) {
-         DPRINTF(("sharedlib path %s allready set:\n", sharedlib_path_name));
-         sharedlib_path = sge_malloc(strlen(old_value) + 1 + strlen(sge_sharedlib_path) + 1);
-         strcpy(sharedlib_path, sge_sharedlib_path);
-         strcat(sharedlib_path, ":");
-         strcat(sharedlib_path, old_value);
-         lSetString(sharedlib_elem, VA_value, sharedlib_path);
-         free(sharedlib_path);
-      } else {
-         DPRINTF(("overwriting empty sharedlib path %s\n", sharedlib_path_name));
-         lSetString(sharedlib_elem, VA_value, sge_sharedlib_path);
-      }
-   } else {
-      DPRINTF(("creating new sharedlib path %s\n", sharedlib_path_name));
-      sharedlib_elem = lAddElemStr(&environmentList, VA_variable, sharedlib_path_name, VA_Type);
-      lSetString(sharedlib_elem, VA_value, sge_sharedlib_path);
-   }
-
-   free(sge_sharedlib_path);
-   DEXIT;
-}
 
 /************************************************************************
  part of execd. Setup job environment then start shepherd.
@@ -739,32 +468,32 @@ char *err_str
    {
       char buffer[2048];
       sprintf(buffer, "%s:/usr/local/bin:/usr/ucb:/bin:/usr/bin:", tmpdir);
-      add_or_replace_env(environmentList, "PATH", buffer);
+      var_list_set_string(&environmentList, "PATH", buffer);
    }
 
    if (slave_jep) {
       const char *s, *name;
-      int n = strlen(COMPLEX2ENV_PREFIX);
+      int n = strlen(VAR_COMPLEX_PREFIX);
       for_each(env, lGetList(slave_jep, JB_env_list)) {
          name = lGetString(env, VA_variable);
-         if (!strncmp(name, COMPLEX2ENV_PREFIX, n)) 
-            continue; /* we handle them later on in complex2environment() */
+         if (!strncmp(name, VAR_COMPLEX_PREFIX, n)) 
+            continue; /* we handle them later on in var_list_copy_complex_vars_and_value() */
 
          s = lGetString(env, VA_value);
-         add_or_replace_env(environmentList, name, s ? s : "");
+         var_list_set_string(&environmentList, name, s ? s : "");
       }
    }
 
    {
       const char *s, *name;
-      int n = strlen(COMPLEX2ENV_PREFIX);
+      int n = strlen(VAR_COMPLEX_PREFIX);
       for_each(env, lGetList(jep, JB_env_list)) {
          name = lGetString(env, VA_variable);
-         if (!strncmp(name, COMPLEX2ENV_PREFIX, n)) 
-            continue; /* we handle them later on in complex2environment() */
+         if (!strncmp(name, VAR_COMPLEX_PREFIX, n)) 
+            continue; /* we handle them later on in var_list_copy_complex_vars_and_value() */
 
          s = lGetString(env, VA_value);
-         add_or_replace_env(environmentList, name, s ? s : "");
+         var_list_set_string(&environmentList, name, s ? s : "");
       }
    }
   
@@ -789,94 +518,25 @@ char *err_str
       static char cwd_out[SGE_PATH_MAX];
      
       /* path aliasing only for cwd flag set */
-      get_path_alias(cwd, cwd_out, SGE_PATH_MAX, 
-               lGetList(job_jep, JB_path_aliases), me.qualified_hostname, NULL);
+      path_alias_list_get_path(lGetList(job_jep, JB_path_aliases), NULL,
+                               cwd, me.qualified_hostname, cwd_out, 
+                               SGE_PATH_MAX);
       cwd = cwd_out;
-      add_or_replace_env(environmentList, "PWD", cwd);
+      var_list_set_string(&environmentList, "PWD", cwd);
    }
    else 
       cwd = pw->pw_dir;
 
-   if (lGetString(job_jep, JB_sge_o_home)) {
-      if (set_sge_environment) 
-         add_or_replace_env(environmentList, "SGE_O_HOME", lGetString(job_jep, JB_sge_o_home));
-      if (set_cod_environment) 
-         add_or_replace_env(environmentList, "COD_O_HOME", lGetString(job_jep, JB_sge_o_home));
-      if (set_grd_environment) 
-         add_or_replace_env(environmentList, "GRD_O_HOME", lGetString(job_jep, JB_sge_o_home));
-   }   
-   if (lGetString(job_jep, JB_sge_o_log_name)) {
-      if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_LOGNAME", lGetString(job_jep, JB_sge_o_log_name));
-      if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_LOGNAME", lGetString(job_jep, JB_sge_o_log_name));
-      if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_LOGNAME", lGetString(job_jep, JB_sge_o_log_name));
-   }
-      
-   if (lGetString(job_jep, JB_sge_o_path)) {
-      if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_PATH", lGetString(job_jep, JB_sge_o_path));
-      if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_PATH", lGetString(job_jep, JB_sge_o_path));
-      if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_PATH", lGetString(job_jep, JB_sge_o_path));
-   }   
-   if (lGetString(job_jep, JB_sge_o_mail)) {
-      if (set_sge_environment) 
-         add_or_replace_env(environmentList, "SGE_O_MAIL", lGetString(job_jep, JB_sge_o_mail));
-      if (set_cod_environment) 
-         add_or_replace_env(environmentList, "COD_O_MAIL", lGetString(job_jep, JB_sge_o_mail));
-      if (set_grd_environment) 
-         add_or_replace_env(environmentList, "GRD_O_MAIL", lGetString(job_jep, JB_sge_o_mail));
-   }   
-   if (lGetString(job_jep, JB_sge_o_shell)) {
-      if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_SHELL", lGetString(job_jep, JB_sge_o_shell));
-      if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_SHELL", lGetString(job_jep, JB_sge_o_shell));
-      if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_SHELL", lGetString(job_jep, JB_sge_o_shell));
-   }   
-   if (lGetString(job_jep, JB_sge_o_tz)) {
-      if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_TZ", lGetString(job_jep, JB_sge_o_tz));
-      if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_TZ", lGetString(job_jep, JB_sge_o_tz));
-      if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_TZ", lGetString(job_jep, JB_sge_o_tz));
-   }   
-   if (lGetString(job_jep, JB_sge_o_workdir)) {
-      if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_WORKDIR", lGetString(job_jep, JB_sge_o_workdir));
-      if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_WORKDIR", lGetString(job_jep, JB_sge_o_workdir));
-      if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_WORKDIR", lGetString(job_jep, JB_sge_o_workdir));
-   }   
-   if (lGetHost(job_jep, JB_sge_o_host)) {
-      if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_O_HOST", lGetHost(job_jep, JB_sge_o_host));
-      if (set_cod_environment)
-         add_or_replace_env(environmentList, "COD_O_HOST", lGetHost(job_jep, JB_sge_o_host));
-      if (set_grd_environment)
-         add_or_replace_env(environmentList, "GRD_O_HOST", lGetHost(job_jep, JB_sge_o_host));
-   }   
    if (lGetString(job_jep, JB_job_name)) {
-      add_or_replace_env(environmentList, "REQNAME", lGetString(job_jep, JB_job_name));
+      var_list_set_string(&environmentList, "REQNAME", lGetString(job_jep, JB_job_name));
    }
 
-   if (set_sge_environment) 
-      add_or_replace_env(environmentList, "SGE_CELL", me.default_cell);
-   if (set_cod_environment) 
-      add_or_replace_env(environmentList, "COD_CELL", me.default_cell);
-   if (set_grd_environment) 
-      add_or_replace_env(environmentList, "GRD_CELL", me.default_cell);
+   var_list_set_string(&environmentList, VAR_PREFIX "CELL", me.default_cell);
 
-   add_or_replace_env(environmentList, "HOME", pw->pw_dir);
-   add_or_replace_env(environmentList, "SHELL", pw->pw_shell);
-   add_or_replace_env(environmentList, "USER", pw->pw_name);
-   add_or_replace_env(environmentList, "LOGNAME", pw->pw_name);
+   var_list_set_string(&environmentList, "HOME", pw->pw_dir);
+   var_list_set_string(&environmentList, "SHELL", pw->pw_shell);
+   var_list_set_string(&environmentList, "USER", pw->pw_name);
+   var_list_set_string(&environmentList, "LOGNAME", pw->pw_name);
 
    /*
    ** interactive jobs get job name INTERACTIVE
@@ -892,82 +552,56 @@ char *err_str
       else 
          s = lGetString(jep, JB_script_file);
 
-      add_or_replace_env(environmentList, "JOB_NAME", s);
+      var_list_set_string(&environmentList, "JOB_NAME", s);
    }
    else {
       u_long32 jb_now = lGetUlong(jep, JB_now);
 
       if(JB_NOW_IS_QLOGIN(jb_now)) { 
-         add_or_replace_env(environmentList, "JOB_NAME", JB_NOW_STR_QLOGIN);
+         var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QLOGIN);
       } else {
          if(JB_NOW_IS_QRSH(jb_now)) {
-            add_or_replace_env(environmentList, "JOB_NAME", JB_NOW_STR_QRSH);
+            var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QRSH);
          } else {
             if(JB_NOW_IS_QRLOGIN(jb_now)) {
-               add_or_replace_env(environmentList, "JOB_NAME", JB_NOW_STR_QRLOGIN);
+               var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QRLOGIN);
             } else {   
-               add_or_replace_env(environmentList, "JOB_NAME", JB_NOW_STR_QSH); 
+               var_list_set_string(&environmentList, "JOB_NAME", JB_NOW_STR_QSH); 
             }
          }  
       }      
    }
 
-   add_or_replace_env(environmentList, "REQUEST", lGetString(job_jep, JB_job_name));
-   add_or_replace_env(environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
-   add_or_replace_env(environmentList, "QUEUE", lGetString(master_q, QU_qname));
-   add_or_replace_env_u32(environmentList, "JOB_ID", lGetUlong(job_jep, JB_job_number));
+   var_list_set_string(&environmentList, "REQUEST", lGetString(job_jep, JB_job_name));
+   var_list_set_string(&environmentList, "HOSTNAME", lGetHost(master_q, QU_qhostname));
+   var_list_set_string(&environmentList, "QUEUE", lGetString(master_q, QU_qname));
+   var_list_set_u32(&environmentList, "JOB_ID", lGetUlong(job_jep, JB_job_number));
   
-   if (set_sge_environment) { 
-      if (job_is_array(job_jep)) {
-         add_or_replace_env_u32(environmentList, "SGE_TASK_ID", lGetUlong(jatep, JAT_task_number));
-      } else {
-         add_or_replace_env(environmentList, "SGE_TASK_ID", "undefined");
-      }
-   }
-   if (set_cod_environment) { 
-      if (job_is_array(job_jep)) {
-         add_or_replace_env_u32(environmentList, "COD_TASK_ID", lGetUlong(jatep, JAT_task_number));
-      } else {
-         add_or_replace_env(environmentList, "COD_TASK_ID", "undefined");
-      }
-   }
-   if (set_grd_environment) { 
-      if (job_is_array(job_jep)) {
-         add_or_replace_env_u32(environmentList, "GRD_TASK_ID", lGetUlong(jatep, JAT_task_number));
-      } else {
-         add_or_replace_env(environmentList, "GRD_TASK_ID", "undefined");
-      }
+   if (job_is_array(job_jep)) {
+      var_list_set_u32(&environmentList, VAR_PREFIX "TASK_ID", lGetUlong(jatep, JAT_task_number));
+   } else {
+      var_list_set_string(&environmentList, VAR_PREFIX "TASK_ID", "undefined");
    }
 
-   add_or_replace_env(environmentList, "ENVIRONMENT", "BATCH");
-   add_or_replace_env(environmentList, "ARC", arch);
+   var_list_set_string(&environmentList, "ENVIRONMENT", "BATCH");
+   var_list_set_string(&environmentList, "ARC", arch);
 
-   if (set_sge_environment) 
-      add_or_replace_env(environmentList, "SGE_ARCH", arch);
-   if (set_cod_environment) 
-      add_or_replace_env(environmentList, "COD_ARCH", arch);
-   if (set_grd_environment) 
-      add_or_replace_env(environmentList, "GRD_ARCH", arch);
+   var_list_set_string(&environmentList, VAR_PREFIX "ARCH", arch);
   
    if ((cp=getenv("TZ")) && strlen(cp))
-      add_or_replace_env(environmentList, "TZ", cp);
+      var_list_set_string(&environmentList, "TZ", cp);
 
    if ((cp=getenv("COMMD_PORT")) && strlen(cp))
-      add_or_replace_env(environmentList, "COMMD_PORT", cp);
+      var_list_set_string(&environmentList, "COMMD_PORT", cp);
      
-   if (set_sge_environment) 
-      add_or_replace_env(environmentList, "SGE_ROOT", path.sge_root);
-   if (set_cod_environment) 
-      add_or_replace_env(environmentList, "CODINE_ROOT", path.sge_root);
-   if (set_grd_environment) 
-      add_or_replace_env(environmentList, "GRD_ROOT", path.sge_root);
+   var_list_set_string(&environmentList, VAR_PREFIX "ROOT", path.sge_root);
 
-   add_or_replace_env_int(environmentList, "NQUEUES", 
+   var_list_set_int(&environmentList, "NQUEUES", 
       lGetNumberOfElem(lGetList(job_jatep, JAT_granted_destin_identifier_list)));
-   add_or_replace_env_int(environmentList, "NSLOTS", pe_slots);
-   add_or_replace_env_int(environmentList, "NHOSTS", nhosts);
+   var_list_set_int(&environmentList, "NSLOTS", pe_slots);
+   var_list_set_int(&environmentList, "NHOSTS", nhosts);
 
-   add_or_replace_env_int(environmentList, "RESTARTED", (int) lGetUlong(job_jatep, JAT_job_restarted));
+   var_list_set_int(&environmentList, "RESTARTED", (int) lGetUlong(job_jatep, JAT_job_restarted));
 
    /*
    ** interactive and login jobs have no script file
@@ -981,23 +615,13 @@ char *err_str
       strcpy(script_file, lGetString(lGetElemStr(environmentList, VA_variable, "JOB_NAME"), VA_value));
    }
 
-   add_or_replace_env(environmentList, "JOB_SCRIPT", script_file);
+   var_list_set_string(&environmentList, "JOB_SCRIPT", script_file);
 
-   add_or_replace_env(environmentList, "TMPDIR", tmpdir);
-   add_or_replace_env(environmentList, "TMP", tmpdir);
+   var_list_set_string(&environmentList, "TMPDIR", tmpdir);
+   var_list_set_string(&environmentList, "TMP", tmpdir);
 
-   if (set_sge_environment) {
-      add_or_replace_env(environmentList, "SGE_ACCOUNT", (lGetString(job_jep, JB_account) ? 
-               lGetString(job_jep, JB_account) : DEFAULT_ACCOUNT));
-   }
-   if (set_cod_environment) {
-      add_or_replace_env(environmentList, "COD_ACCOUNT", (lGetString(job_jep, JB_account) ? 
-               lGetString(job_jep, JB_account) : DEFAULT_ACCOUNT));
-   }
-   if (set_grd_environment) {
-      add_or_replace_env(environmentList, "GRD_ACCOUNT", (lGetString(job_jep, JB_account) ? 
-               lGetString(job_jep, JB_account) : DEFAULT_ACCOUNT));
-   }
+   var_list_set_string(&environmentList, VAR_PREFIX "ACCOUNT", (lGetString(job_jep, JB_account) ? 
+            lGetString(job_jep, JB_account) : DEFAULT_ACCOUNT));
 
    sge_get_path(lGetList(job_jep, JB_shell_list), cwd, 
                 lGetString(job_jep, JB_owner),
@@ -1008,57 +632,51 @@ char *err_str
 
    if (!shell_path[0])
       strcpy(shell_path, lGetString(master_q, QU_shell));
-   add_or_replace_env(environmentList, "SHELL", shell_path);
+   var_list_set_string(&environmentList, "SHELL", shell_path);
 
    /* forward name of pe to job */
    if (lGetString(job_jatep, JAT_granted_pe)) {
       char buffer[SGE_PATH_MAX];
-      add_or_replace_env(environmentList, "PE", lGetString(job_jatep, JAT_granted_pe));
+      var_list_set_string(&environmentList, "PE", lGetString(job_jatep, JAT_granted_pe));
       sprintf(buffer, "%s/%s/%s", execd_spool_dir, dir, PE_HOSTFILE);
-      add_or_replace_env(environmentList, "PE_HOSTFILE", buffer);
+      var_list_set_string(&environmentList, "PE_HOSTFILE", buffer);
    }   
 
    /* forward name of ckpt env to job */
    if ((ep = lFirst(lGetList(job_jep, JB_checkpoint_object_list)))) {
-      if (set_sge_environment) {
-         add_or_replace_env(environmentList, "SGE_CKPT_ENV", lGetString(ep, CK_name));
-         if (lGetString(ep, CK_ckpt_dir))
-            add_or_replace_env(environmentList, "SGE_CKPT_DIR", lGetString(ep, CK_ckpt_dir));
-      }
-      if (set_cod_environment) {
-         add_or_replace_env(environmentList, "COD_CKPT_ENV", lGetString(ep, CK_name));
-         if (lGetString(ep, CK_ckpt_dir))
-            add_or_replace_env(environmentList, "COD_CKPT_DIR", lGetString(ep, CK_ckpt_dir));
-      }
-      if (set_grd_environment) {
-         add_or_replace_env(environmentList, "GRD_CKPT_ENV", lGetString(ep, CK_name));
-         if (lGetString(ep, CK_ckpt_dir))
-            add_or_replace_env(environmentList, "GRD_CKPT_DIR", lGetString(ep, CK_ckpt_dir));
-      }
+      var_list_set_string(&environmentList, VAR_PREFIX "CKPT_ENV", lGetString(ep, CK_name));
+      if (lGetString(ep, CK_ckpt_dir))
+         var_list_set_string(&environmentList, VAR_PREFIX "CKPT_DIR", lGetString(ep, CK_ckpt_dir));
    }
 
    {
       char buffer[SGE_PATH_MAX]; 
 
       sprintf(buffer, "%s/%s", execd_spool_dir, dir);  
-      if (set_sge_environment)
-         add_or_replace_env(environmentList, "SGE_JOB_SPOOL_DIR", buffer);
-      if (set_cod_environment) 
-         add_or_replace_env(environmentList, "COD_JOB_SPOOL_DIR", buffer);
-      if (set_grd_environment) 
-         add_or_replace_env(environmentList, "GRD_JOB_SPOOL_DIR", buffer);
+      var_list_set_string(&environmentList, VAR_PREFIX "JOB_SPOOL_DIR", buffer);
    }
 
-   if (complex2environment(environmentList, cplx, job_jep, err_str)) {
-      lFreeList(environmentList);
-      fclose(fp);
-      DEXIT;
-      return -2;
-   } 
+   var_list_copy_complex_vars_and_value(environmentList, 
+                                        lGetList(job_jep, JB_env_list),
+                                        cplx);
 
-   set_sharedlib_path(environmentList);
+   var_list_set_sharedlib_path(&environmentList);
 
-   dump_env(environmentList, fp);
+   if (set_sge_environment) {
+      var_list_copy_prefix_vars(environmentList, environmentList,
+                                VAR_PREFIX, "SGE_");
+   }
+   if (set_cod_environment) {
+      var_list_copy_prefix_vars(environmentList, environmentList,
+                                VAR_PREFIX, "COD_");
+   }
+   if (set_grd_environment) {
+      var_list_copy_prefix_vars(environmentList, environmentList,
+                                VAR_PREFIX, "GRD_");
+   }
+   var_list_remove_prefix_vars(environmentList, VAR_PREFIX);
+
+   var_list_dump_to_file(environmentList, fp);
    fclose(fp);  
    /*************************** finished writing environment *****************/
 
@@ -1201,10 +819,15 @@ char *err_str
    fprintf(fp, "min_uid=" u32 "\n", conf.min_uid);
    fprintf(fp, "cwd=%s\n", cwd);
 #if defined(IRIX6)
-   if (lGetHost(job_jep, JB_sge_o_host))
-      fprintf(fp, "spi_initiator=%s\n", lGetHost(job_jep, JB_sge_o_host));
-   else
-      fprintf(fp, "spi_initiator=%s\n", "unknown");
+   {
+      const char *env_value = job_get_env_string(job_jep, VAR_PREFIX "O_HOST");
+
+      if (env_value) {
+         fprintf(fp, "spi_initiator=%s\n", env_value);
+      } else {
+         fprintf(fp, "spi_initiator=%s\n", "unknown");
+      }
+   }
 #endif
 
    /* do not start prolog/epilog in case of pe tasks */
@@ -1864,39 +1487,6 @@ char *err_str
    if (failed) {
       DEXIT;
       return -1;
-   }
-
-   DEXIT;
-   return 0;
-}
-
-
-
-static int complex2environment(
-lList *envl,
-lList *cplx,
-lListElem *job,
-char *err_str 
-) {
-   const char *s, *name;
-   lListElem *env, *attr;
-   int n;
-
-
-   DENTER(TOP_LAYER, "complex2environment");
-
-   n = strlen(COMPLEX2ENV_PREFIX);
-
-   for_each(env, lGetList(job, JB_env_list)) {
-      name = lGetString(env, VA_variable);
-      if (strncmp(name, COMPLEX2ENV_PREFIX, n)) 
-         continue;         
-
-      if ((attr=lGetElemStr(cplx, CE_name, &name[n]))
-            && (s=lGetString(attr, CE_stringval)))
-         add_or_replace_env(envl, name, s);
-      else
-         add_or_replace_env(envl, name, "");
    }
 
    DEXIT;

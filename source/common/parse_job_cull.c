@@ -52,7 +52,7 @@
 #include "sge_resource.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
-#include "path_aliases.h"
+#include "sge_path_alias.h"
 #include "parse.h"
 #include "sgermon.h"
 #include "cull_parse_util.h"
@@ -66,6 +66,8 @@
 #include "sge_stdlib.h"
 #include "sge_io.h"
 #include "sge_prog.h"
+#include "sge_varL.h"
+#include "sge_var.h"
 
 #define USE_CLIENT_QSUB 1
 
@@ -153,35 +155,22 @@ lListElem **pjob
       lSetString(*pjob, JB_owner, me.user_name);
    }
    lSetUlong(*pjob, JB_uid, me.uid);
-   lSetString(*pjob, JB_sge_o_home, sge_getenv("HOME"));
-   lSetString(*pjob, JB_sge_o_log_name, sge_getenv("LOGNAME"));
-   lSetString(*pjob, JB_sge_o_path, sge_getenv("PATH"));
-   lSetString(*pjob, JB_sge_o_mail, sge_getenv("MAIL"));
-   lSetString(*pjob, JB_sge_o_shell, sge_getenv("SHELL"));
-   lSetString(*pjob, JB_sge_o_tz, sge_getenv("TZ"));
+
    /*
    ** path aliasing
    */
-   if (build_path_aliases(&path_alias, me.user_name, me.qualified_hostname, 
-                        &answer) == -1) {
+   if (path_alias_list_initialize(&path_alias, &answer, me.user_name, 
+                                  me.qualified_hostname) == -1) {
       DEXIT;
       return answer;
    }
-   { 
-      static char cwd_out[SGE_PATH_MAX + 1];
-      static char tmp_str[SGE_PATH_MAX + 1];
-      if (!getcwd(tmp_str, sizeof(tmp_str))) {
-         sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED , STATUS_EDISK, 0);
-         DEXIT;
-         return answer;
-      }
-      get_path_alias(tmp_str, cwd_out, 
-                        SGE_PATH_MAX, path_alias, 
-                        me.qualified_hostname, NULL);  
-      lSetString(*pjob, JB_sge_o_workdir, cwd_out);
+
+   job_initialize_env(*pjob, &answer, path_alias);
+   if (answer) {
+      DEXIT;
+      return answer;
    }
-   lSetHost(*pjob, JB_sge_o_host, 
-      ((cp = sge_getenv("HOST")) ? cp : me.unqualified_hostname));
+
 #if 0 /* JG: removed JB_cell from job object */
    if (lGetString(*pjob, JB_cell)) {
       lSetString(*pjob, JB_cell, me.default_cell);
@@ -304,13 +293,14 @@ lListElem **pjob
       char tmp_str[SGE_PATH_MAX + 1];
       char tmp_str2[SGE_PATH_MAX + 1];
       char tmp_str3[SGE_PATH_MAX + 1];
+      const char *env_value = job_get_env_string(*pjob, VAR_PREFIX "O_HOME");
 
       if (!getcwd(tmp_str, sizeof(tmp_str))) {
          sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
          DEXIT;
          return answer;
       }
-      if (!chdir(lGetString(*pjob, JB_sge_o_home))) {
+      if (!chdir(env_value)) {
          if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
             sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
             DEXIT;
@@ -318,7 +308,7 @@ lListElem **pjob
          }
          chdir(tmp_str);
          if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
-            sprintf(tmp_str3, "%s%s", lGetString(*pjob, JB_sge_o_home), 
+            sprintf(tmp_str3, "%s%s", env_value, 
                (char *) tmp_str + strlen(tmp_str2));
             strcpy(tmp_str, tmp_str3);
          }

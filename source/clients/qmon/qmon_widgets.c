@@ -678,7 +678,7 @@ Cardinal size
 
    if (str && str[0] != '\0') {
       if ( type == QmonQENV_Type || type == QmonQCTX_Type )
-         cull_parse_variable_list(&ret_list, str, 0); 
+         var_list_parse_from_string(&ret_list, str, 0); 
       if (type == QmonQST_Type) {
          lString2List(str, &ret_list, ST_Type, STR, " ");
       }

@@ -84,6 +84,7 @@
 #include "sge_featureL.h"
 #include "sge_suserL.h"
 #include "sge_secL.h"
+#include "sge_varL.h"
 
 #ifdef  __cplusplus
 extern "C" {

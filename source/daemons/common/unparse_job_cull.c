@@ -56,6 +56,7 @@
 #include "sge.h"
 #include "valid_queue_user.h"
 #include "sge_hostname.h"
+#include "sge_varL.h"
 
 #include "sge_language.h"
 #include "sge_feature.h"

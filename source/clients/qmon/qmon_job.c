@@ -1460,34 +1460,6 @@ lListElem *jep
 #endif
 
 #if 0
-   sprintf(info, WIDTH"%s\n", info, "Execution Time:", 
-               sge_ctime(lGetUlong(jep, JB_execution_time)));
-   str = lGetString(jep, JB_sge_o_home);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_HOME:", str ? str : "");
-
-   str = lGetString(jep, JB_sge_o_log_name);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_LOG_NAME:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_path);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_PATH:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_mail);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_MAIL:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_shell);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_SHELL:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_tz);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_TZ:", str ? str : ""); 
-
-   str = lGetString(jep, JB_sge_o_workdir);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_WORKDIR:", str ? str : ""); 
-
-   str = lGetHost(jep, JB_sge_o_host);
-   sprintf(info, WIDTH"%s\n", info, "SGE_O_HOST:", str ? str : ""); 
-#endif
-
-#if 0
    str = lGetString(jep, JB_directive_prefix);
    sprintf(info, WIDTH"%s\n", info, "Directive Prefix:", str ? str : "#$"); 
 #endif

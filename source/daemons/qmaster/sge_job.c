@@ -97,6 +97,7 @@
 #include "sge_suser.h"
 #include "sge_io.h"
 #include "sge_hostname.h"
+#include "sge_varL.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Exechost_List;

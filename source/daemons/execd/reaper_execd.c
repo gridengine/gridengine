@@ -90,6 +90,8 @@
 #include "sge_job_jatask.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
+#include "sge_varL.h"
+#include "sge_var.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"

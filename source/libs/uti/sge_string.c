@@ -792,7 +792,6 @@ char **sge_stramemncpy(const char *cp, char **cpp, int n)
    return NULL;
 }     
 
-
 /****** uti/string/sge_stracasecmp() ******************************************
 *  NAME
 *     sge_stracasecmp() -- Find string in string array 
@@ -820,3 +819,36 @@ char **sge_stracasecmp(const char *cp, char **cpp)
    }
    return NULL;
 }   
+
+/****** uti/string/sge_compress_slashes() *************************************
+*  NAME
+*     sge_compress_slashes() -- compresses sequences of slashes 
+*
+*  SYNOPSIS
+*     void sge_compress_slashes(char *str) 
+*
+*  FUNCTION
+*     Compresses sequences of slashes in str to one slash 
+*
+*  INPUTS
+*     char *str - string (e.g. path) 
+*******************************************************************************/
+void sge_compress_slashes(char *str)
+{
+   char *p;
+   int compressed = 0;
+   DENTER(BASIS_LAYER, "compress_slashes");
+
+   for (p = str; *p; p++) {
+      while (*p == '/' && *(p+1) == '/') {
+         compressed = 1;
+         *p = '\0';
+         p++;
+      }
+      if (compressed) {
+         strcat(str, p);
+         compressed = 0;
+      }
+   }
+   DEXIT;
+}

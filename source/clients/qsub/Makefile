@@ -40,7 +40,7 @@ QSUB_SRC = qsub.c
 
 QSUB_ADD_SRC = parse_job_cull.c parse_qsub.c \
                sig_handlers.c read_defaults.c \
-               path_aliases.c show_job.c usage.c sge_options.c
+               show_job.c usage.c sge_options.c
 
 QSUB_OBJS = $(QSUB_SRC:.c=.o)
 

@@ -57,8 +57,10 @@ lList *cull_parse_cmdline(char **arg_list, char **envp, lList **pcmdline, u_long
 
 /************************************************************************/
 int cull_parse_path_list(lList **lpp, char *path_str);
-int cull_parse_variable_list(lList **lpp, char *variable_str, int check_environment);
 int cull_parse_jid_hold_list(lList **lpp, char *str);
+
+int var_list_parse_from_string(lList **lpp, const char *variable_str,
+                               int check_environment);
 
 #endif /* PARSE_QSUBL_H */
 

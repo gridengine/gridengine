@@ -49,6 +49,8 @@
 #include "sge_log.h"
 #include "sge_string.h"
 #include "cull_parse_util.h"
+#include "sge_var.h"
+#include "sge_job_jatask.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"
@@ -341,7 +343,7 @@ int *all_users
          char tmp_str[SGE_PATH_MAX + 1];
          char tmp_str2[SGE_PATH_MAX + 1];
          char tmp_str3[SGE_PATH_MAX + 1];
-         const char *sge_o_home = NULL;
+         const char *sge_o_home = job_get_env_string(job, VAR_PREFIX "O_HOME");
  
          if (!getcwd(tmp_str, sizeof(tmp_str))) {
             sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);
@@ -349,7 +351,6 @@ int *all_users
             return answer;
          }
          
-         sge_o_home = lGetString(job, JB_sge_o_home);
          if (sge_o_home && !chdir(sge_o_home)) {
             if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
                sge_add_answer(&answer, MSG_ANSWER_GETCWDFAILED, STATUS_EDISK, 0);

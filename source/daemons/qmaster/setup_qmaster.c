@@ -374,7 +374,8 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 *     static void qmaster_init(char **anArgv) 
 *
 *  FUNCTION
-*     Initialize qmaster. Do general setup and communication setup. 
+*     Initialize qmaster. Set and switch to admin user. Do general setup and
+*     communication setup. 
 *
 *  INPUTS
 *     char **anArgv - process argument vector 
@@ -388,9 +389,21 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 *******************************************************************************/
 static void qmaster_init(char **anArgv)
 {
+   char err_str[1024];
+
    DENTER(TOP_LAYER, "qmaster_init");
 
    umask(022); /* this needs a better solution */
+
+   if (sge_set_admin_username(bootstrap_get_admin_user(), err_str) == -1) {
+      CRITICAL((SGE_EVENT, err_str));
+      SGE_EXIT(1);
+   }
+
+   if (sge_switch2admin_user()) {
+      CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
+      SGE_EXIT(1);
+   }
 
    INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
 
@@ -796,17 +809,6 @@ static int setup_qmaster(void)
       return -1;
    }   
 
-   ret = sge_set_admin_username(bootstrap_get_admin_user(), err_str);
-   if (ret == -1) {
-      CRITICAL((SGE_EVENT, err_str));
-      SGE_EXIT(1);
-   }
-
-   if (sge_switch2admin_user()) {
-      CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
-      SGE_EXIT(1);
-   }
-
    /* register our error function for use in replace_params() */
    config_errfunc = set_error;
 
@@ -882,9 +884,7 @@ static int setup_qmaster(void)
    ** log messages into ERR_FILE in master spool dir 
    */
    sge_copy_append(TMP_ERR_FILE_QMASTER, ERR_FILE, SGE_MODE_APPEND);
-   sge_switch2start_user();
    unlink(TMP_ERR_FILE_QMASTER);   
-   sge_switch2admin_user();
    log_state_set_log_as_admin_user(1);
    log_state_set_log_file(ERR_FILE);
 

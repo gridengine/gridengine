@@ -57,6 +57,7 @@ proc init_level {} {
        return -1
    }
 
+
     # TODO setup levels 
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
@@ -74,13 +75,25 @@ proc init_level {} {
 proc issue_1096_setup {} {
    global ts_config CHECK_HOST
 
+   if { $ts_config(product_feature) == "csp" } {
+      add_proc_error "init_level" -3 "issue_1096 - doesn't support a csp system"
+      set_error 0 "ok"
+      return         
+   }
+
    shutdown_master_and_scheduler $ts_config(master_host) [get_qmaster_spool_dir]
+   after 5000
 
    set_error 0 "ok"
 }
 proc issue_1096_run  {} {
    global ts_config  CHECK_OUTPUT CHECK_USER
 
+   if { $ts_config(product_feature) == "csp" } {
+      add_proc_error "init_level" -3 "issue_1096 - doesn't support a csp system"
+      set_error 0 "ok"
+      return         
+   }
    puts $CHECK_OUTPUT "try to start qmaster on port $ts_config(reserved_port) ..."
 
    for { set i 0 } { $i < [llength $ts_config(execd_hosts) ]  } { incr i 1 } {
@@ -95,7 +108,7 @@ proc issue_1096_run  {} {
       set output [start_remote_prog $act_host "root" $qmaster_binary "" prg_exit_state 60 0 "envlist" 1 0 1]
       puts $CHECK_OUTPUT $output
       puts $CHECK_OUTPUT "exit state: $prg_exit_state"
-       
+
       puts $CHECK_OUTPUT "try to qping qmaster ..."
       set tries 0
       while { 1 } {
@@ -124,7 +137,11 @@ proc issue_1096_run  {} {
 
 proc issue_1096_cleanup {} {
    global ts_config 
-
+   if { $ts_config(product_feature) == "csp" } {
+      add_proc_error "init_level" -3 "issue_1096 - doesn't support a csp system"
+      set_error 0 "ok"
+      return         
+   }
    startup_qmaster
    set_error 0 "ok"
 }

@@ -95,6 +95,7 @@ global access_lists_host_conf
 global access_lists_queue_conf
 global access_lists_global_host_conf
 global access_lists_cluster_conf
+global access_lists_schedd_conf
 
 proc access_lists_setup  {} {
    global access_lists_queue
@@ -104,6 +105,7 @@ proc access_lists_setup  {} {
    global access_lists_queue_conf
    global access_lists_global_host_conf
    global access_lists_cluster_conf
+   global access_lists_schedd_conf
 
    global CHECK_CORE_EXECD CHECK_OUTPUT CHECK_CORE_MASTER
    global CHECK_FIRST_FOREIGN_SYSTEM_GROUP CHECK_SECOND_FOREIGN_SYSTEM_GROUP
@@ -121,6 +123,11 @@ proc access_lists_setup  {} {
    get_queue    $access_lists_queue       access_lists_queue_conf
    get_exechost access_lists_global_host_conf "global"       
    get_config                             access_lists_cluster_conf 
+   get_schedd_config                      access_lists_schedd_conf
+
+   set my_schedd_config(schedule_interval)       "0:0:01"
+   set my_schedd_config(sgeee_schedule_interval) "0:0:02"
+   set_schedd_config my_schedd_config
 
    set group1 [lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0]
    add_access_list "@${group1}"  userA_group
@@ -138,7 +145,6 @@ proc access_lists_setup  {} {
    set id [ submit_job $jobargs ]
    wait_for_jobstart $id "leeper" 60 1 1
    wait_for_jobend $id "leeper" 60
-
    set_error 0 "ok"
 }
 
@@ -156,7 +162,7 @@ proc test_job_run { id_string job_id } {
       puts $CHECK_OUTPUT $catch_result
       add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched:$catch_result"
    } 
-   delete_job $job_id
+   delete_job $job_id 1
 #   wait_for_jobend $job_id "leeper" 60
 }
 
@@ -231,7 +237,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
             add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_C (C) should not run"
          }
          wait_for_jobpending $job_id_C "leeper" 30
-         delete_job $job_id_C
+         delete_job $job_id_C 1
       }
    }
 
@@ -241,7 +247,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_A (A) should not run"
       }
       wait_for_jobpending $job_id_A "leeper" 30
-      delete_job $job_id_A
+      delete_job $job_id_A 1
    }
  
    if { $B_ok == 0 } {
@@ -250,7 +256,7 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
          add_proc_error "run_user_jobs" "-1" "$id_string, job $job_id_B (B) should not run"
       }
       wait_for_jobpending $job_id_B "leeper" 30
-      delete_job $job_id_B
+      delete_job $job_id_B 1
    }
 }
 
@@ -875,6 +881,7 @@ proc access_lists_cleanup  {} {
    global access_lists_queue_conf
    global access_lists_global_host_conf
    global access_lists_cluster_conf
+   global access_lists_schedd_conf
 
    global CHECK_CORE_EXECD CHECK_OUTPUT
 
@@ -888,6 +895,7 @@ proc access_lists_cleanup  {} {
    set_queue     $access_lists_queue access_lists_queue_conf
    set_exechost  access_lists_global_host_conf "global"
    set_config    access_lists_cluster_conf
+   set_schedd_config access_lists_schedd_conf
 
    set_error 0 "ok"
 }

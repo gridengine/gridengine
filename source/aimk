@@ -41,7 +41,7 @@
 # Make sure to avoid confusion between shell variables and environment
 # variables
 
-unsetenv buildarch BUILDARCH ARCH COMPILE_ARCH
+unsetenv buildarch BUILDARCH COMPILE_ARCH
 
 set buildarch = UNKNOWN
 if ( -f dist/util/arch ) then

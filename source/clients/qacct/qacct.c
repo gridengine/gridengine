@@ -353,12 +353,15 @@ char **argv
       */
       else if (!strcmp("-b", argv[ii])) {
          if (argv[ii+1]) {
-            if  (!ulong_parse_date_time_from_string(&begin_time, NULL, argv[++ii])) {
+            u_long32 tmp_begin_time;
+
+            if  (!ulong_parse_date_time_from_string(&tmp_begin_time, NULL, argv[++ii])) {
                /*
                ** problem: insufficient error reporting
                */
                show_the_way(stderr);
             }
+            begin_time = tmp_begin_time;
             DPRINTF(("begin is: %ld\n", begin_time));
             beginflag = 1; 
          }
@@ -371,12 +374,15 @@ char **argv
       */
       else if (!strcmp("-e", argv[ii])) {
          if (argv[ii+1]) {
-            if  (!ulong_parse_date_time_from_string(&end_time, NULL, argv[++ii])) {
+            u_long32 tmp_end_time;
+
+            if  (!ulong_parse_date_time_from_string(&tmp_end_time, NULL, argv[++ii])) {
                /*
                ** problem: insufficient error reporting
                */
                show_the_way(stderr);
             }
+            end_time = tmp_end_time;
             DPRINTF(("end is: %ld\n", end_time));
             endflag = 1; 
          }

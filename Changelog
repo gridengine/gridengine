@@ -1,3 +1,6 @@
+MD-2004-03-12-0: Enhancm:   - added a autoinstall readme
+                 Changed:   README-Autoinstall.txt
+
 AS-2004-03-12-0: Bugfix:    installation fixes:
                               - rewrite of hostname checking module
                               - non-root user install fixes

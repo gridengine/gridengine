@@ -1,3 +1,6 @@
+JG-2001-08-01-0: Testsuite: Test "cluster performance" failed on hosts reporting
+                 a fully qualified hostname.
+
 JG-2001-07-31-1: qrsh_starter: Handle (warn and ignore) empty environment
                  variable QRSH_WRAPPER
 

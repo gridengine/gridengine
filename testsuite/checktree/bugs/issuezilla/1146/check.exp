@@ -1,0 +1,85 @@
+#!/vol2/TCL_TK/glinux/bin/expect --
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr check_highest_level
+global check_init_level_procedure check_category
+
+set check_init_level_procedure "init_level"
+
+set check_category            "COMPATIBILITY SYSTEM VERIFIED"
+set check_name                "issue_1146"
+set check_description(0)      "qconf -aq <queue>@<host> crashes qmaster"
+set check_needs               "init_core_system"      ;# dependencies of this check (name of other check)
+set check_root_access_needs   "no"
+set check_functions           ""
+lappend check_functions       "issue_1146_run"   ;# functions to call (in order)
+set check_highest_level       0
+
+proc init_level {} {
+   global CHECK_ACT_LEVEL ts_config
+
+   if { $ts_config(gridengine_version) == 53 } {       
+      return -1
+   }
+
+   # TODO setup levels 
+   switch -- $CHECK_ACT_LEVEL {
+      "0"  { 
+         return 0
+      }
+   }
+
+   return -1
+}
+
+proc issue_1146_run  {} {
+   global ts_config CHECK_ARCH CHECK_OUTPUT CHECK_HOST CHECK_USER
+
+   set qname "thisis@atest"
+
+   puts $CHECK_OUTPUT "creating queue \"$qname\" for hostlist \"$CHECK_HOST\""
+
+   set qparam(qname)     "$qname"
+   set qparam(hostlist)  "$CHECK_HOST"
+
+   # localize messages
+   set INVALID [translate $ts_config(master_host) 1 0 0 [sge_macro MSG_CQUEUE_NAMENOTGUILTY_S] $qname ]
+
+   # add by handling vi
+   set vi_commands [build_vi_command qparam]
+
+   handle_vi_edit "$ts_config(product_root)/bin/$CHECK_ARCH/qconf" "-aq" $vi_commands $INVALID
+
+   set_error 0 "ok"
+}

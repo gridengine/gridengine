@@ -919,7 +919,7 @@ sge_mirror_error sge_mirror_process_events(void)
    now = sge_get_gmt();
    num_events = 0;
 
-   if(ec_get(&event_list, true)) {
+   if(ec_get(&event_list, false)) {
       last_heared = now;
       if(event_list != NULL) {
          ret = sge_mirror_process_event_list(event_list);

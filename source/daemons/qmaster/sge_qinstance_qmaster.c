@@ -341,6 +341,7 @@ qinstance_modify_attribute(lListElem *this_elem, lList **answer_list,
                lSetList(tmp_elem, attribute_name, new_list);
                qinstance_reinit_consumable_actual_list(tmp_elem, answer_list);
                lXchgList(tmp_elem, attribute_name, &new_value);
+               tmp_elem = lFreeElem(tmp_elem);
                if (object_list_has_differences(old_value, answer_list,
                                                new_value, false)) {
 #ifdef QINSTANCE_MODIFY_DEBUG

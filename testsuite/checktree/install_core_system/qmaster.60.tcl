@@ -808,7 +808,7 @@ proc install_qmaster {} {
          send -i $sp_id $input
          continue;
       }
-
+   
       -i $sp_id $ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING {
          set spooldir [get_spool_dir $CHECK_CORE_MASTER spooldb 0 ]
   

@@ -1012,7 +1012,7 @@ proc mail_report { subject body } {
 #     check/mail_report
 #*******************************
 proc send_mail { address cc subject body } {
-
+   global ts_config
   global CHECK_TESTSUITE_ROOT CHECK_MAILX_HOST CHECK_OUTPUT
   global CHECK_MAILS_SENT CHECK_ENABLE_MAIL CHECK_USER CHECK_MAX_ERROR_MAILS
   global write_mail_to_file CHECK_MAIL_OUTPUT_FILE CHECK_ENABLE_MAIL
@@ -1032,7 +1032,7 @@ proc send_mail { address cc subject body } {
      return
   }
 
-  set new_subject "[get_version_info] - $subject"
+  set new_subject "[get_version_info] ($ts_config(cell)) - $subject"
 
   if { $CHECK_ENABLE_MAIL != 1 } {
      puts $CHECK_OUTPUT "mail sending disabled, mails sent: $CHECK_MAILS_SENT"

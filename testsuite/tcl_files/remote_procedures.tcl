@@ -1915,7 +1915,7 @@ proc run_command_as_user { hostname user command args counter } {
    }
    set par4     "$counter"  ;# number of qsub calls
 
-   puts $CHECK_OUTPUT "running: $par2"
+   puts $CHECK_OUTPUT "running: $par3"
    set output [ start_remote_prog "$hostname" "$user" "$program" "\"$par1\" \"$par2\" \"$par3\" \"$par4\"" "prg_exit_state" "120" ]
    return $output
 }

@@ -254,7 +254,7 @@ CheckHostNameResolving()
             default_domain=none
          fi
 
-         myaname=`ExecuteAsAdmin $SGE_UTILBIN/gethostname -aname"`
+         myaname=`ExecuteAsAdmin $SGE_UTILBIN/gethostname -aname`
          myname=`echo $myaname | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
          
          if [ $ignore_fqdn = true ]; then

@@ -503,7 +503,41 @@ CheckWhoInstallsSGE()
    fi
 }
 
+#-------------------------------------------------------------------------
+# CheckForLocalHostResolving
+#   "localhost", localhost.localdomain and 127.0.x.x are not supported
+#   
+#
+CheckForLocalHostResolving()
+{
+   output=`$SGE_UTILBIN/gethostname| cut -f2 -d:`
 
+   notok=false
+   for cmp in $output; do
+      case "$cmp" in
+      localhost*|127.0*)
+         notok=true
+         ;;
+      esac
+   done
+
+   if [ $notok = true ]; then
+      $INFOTEXT -u "\nUnsupported local hostname"
+      $INFOTEXT "\nThe current hostname is resolved as follows:\n\n"
+      $SGE_UTILBIN/gethostname
+      $INFOTEXT -wait -auto $AUTO -n \
+                "\nIt is not supported for a Grid Engine installation that the local hostname\n" \
+                "contains the hostname \"localhost\" and/or the IP address \"127.0.x.x\" of the\n" \
+                "loopback interface.\n" \
+                "The \"localhost\" hostname should be reserved for the loopback interface\n" \
+                "(\"127.0.0.1\") and the real hostname should be assigned to one of the\n" \
+                "physical or logical network interfaces of this machine.\n\n" \
+                "Installation failed.\n\n" \
+                "Press <RETURN> to exit the installation procedure >> "
+      exit
+   fi
+}
+               
 #-------------------------------------------------------------------------
 # ProcessSGERoot: read SGE/SGEEE root directory and set $SGE_ROOT
 #                    check if $SGE_ROOT matches current directory

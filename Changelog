@@ -1,3 +1,6 @@
+AH-2002-05-28-1: Bugfix:    Fix messages printed when GDI client fails contacting 
+                            qmaster
+
 JG-2002-05-27-0: Bugfix:    qsh ignored -S <shell> in sge_request(5) files
                  Issue:     #250
                  Bugtraq:   #4682966

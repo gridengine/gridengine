@@ -141,39 +141,38 @@ proc modify_complex_from_file {filename {time_var dummy}} {
       set ret [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -Mc $filename" } output]
       set time_end [clock clicks -milliseconds]
       set time [expr ($time_end - $time_start) / 1000.0]
-      if {$ret != 0} {
-         set MSG_CENTRY_NOTCHANGED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CENTRY_NOTCHANGED]]
-         set MSG_SGETEXT_ADDEDTOLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
-         set MSG_SGETEXT_REMOVEDFROMLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
-         set MSG_SGETEXT_MODIFIEDINLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
-         set output_list [split $output "\n"]
-         set changed 0
-         #puts "-----"
-         #puts "$MSG_CENTRY_NOTCHANGED"
-         #puts "$MSG_SGETEXT_ADDEDTOLIST_SSSS"
-         #puts "$MSG_SGETEXT_REMOVEDFROMLIST_SSSS"
-         #puts "$MSG_SGETEXT_MODIFIEDINLIST_SSSS"
-         #puts "$"
-         #puts "-----"
-         foreach line $output_list {
-            set line [string trim $line]
-            if {[string length $line] > 0} {
-               #puts "$line"
-               if {[string match $MSG_CENTRY_NOTCHANGED $line]} {
-                  set changed 0
+
+      # parse returned strings
+      set MSG_CENTRY_NOTCHANGED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_CENTRY_NOTCHANGED]]
+      set MSG_SGETEXT_ADDEDTOLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_ADDEDTOLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
+      set MSG_SGETEXT_REMOVEDFROMLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_REMOVEDFROMLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
+      set MSG_SGETEXT_MODIFIEDINLIST_SSSS [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER $CHECK_HOST "*" "*"]
+      set MSG_INVALID_CENTRY_DEL_S [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_INVALID_CENTRY_DEL_S] "*"]
+      set output_list [split $output "\n"]
+      set changed 0
+      puts $output
+      foreach line $output_list {
+         set line [string trim $line]
+         if {[string length $line] > 0} {
+            #puts "$line"
+            if {[string match $MSG_CENTRY_NOTCHANGED $line]} {
+               set changed 0
+            } else {
+               if {[string match $MSG_SGETEXT_ADDEDTOLIST_SSSS $line] || \
+                   [string match $MSG_SGETEXT_REMOVEDFROMLIST_SSSS $line] || \
+                   [string match $MSG_SGETEXT_MODIFIEDINLIST_SSSS $line] } {
+                   incr changed
                } else {
-                  if {[string match $MSG_SGETEXT_ADDEDTOLIST_SSSS $line] || \
-                      [string match $MSG_SGETEXT_REMOVEDFROMLIST_SSSS $line] || \
-                      [string match $MSG_SGETEXT_MODIFIEDINLIST_SSSS $line] } {
-                      incr changed
+                  if {[string match $MSG_INVALID_CENTRY_DEL_S $line]} {
                   } else {
                      add_proc_error modify_complex_from_file -1 "modifying complex failed: $line"
                   }
                }   
-            }
-         }   
-         puts $CHECK_OUTPUT "modified $changed complex entries"
+            }   
+         }
       }
+      puts $CHECK_OUTPUT "modified $changed complex entries"
+      # JG: TODO: we could check the number of changed complex attributes
    }
 
    set_error 0 "ok"

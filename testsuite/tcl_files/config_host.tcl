@@ -33,7 +33,7 @@
 
 global ts_host_config               ;# new testsuite host configuration array
 global actual_ts_host_config_version      ;# actual host config version number
-set    actual_ts_host_config_version "1.3"
+set    actual_ts_host_config_version "1.4"
 
 if {![info exists ts_host_config]} {
    # ts_host_config defaults
@@ -414,7 +414,7 @@ proc host_config_hostlist_add_host { array_name { have_host "" } } {
    set config($new_host,fr_locale)     ""
    set config($new_host,ja_locale)     ""
    set config($new_host,zh_locale)     ""
-
+   set config($new_host,zones)         ""
 
    if { $have_host == "" } {
       host_config_hostlist_edit_host config $new_host
@@ -456,7 +456,6 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
    } 
 
    while { 1 } {
-
       clear_screen
       puts $CHECK_OUTPUT "\nEdit host in global host configuration"
       puts $CHECK_OUTPUT "======================================"
@@ -504,6 +503,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
       puts $CHECK_OUTPUT "   fr_locale     : $config($host,fr_locale)"
       puts $CHECK_OUTPUT "   ja_locale     : $config($host,ja_locale)"
       puts $CHECK_OUTPUT "   zh_locale     : $config($host,zh_locale)"
+      puts $CHECK_OUTPUT "   zones         : $config($host,zones)"
 
       if { $config($host,compile) == 0 } {
          puts $CHECK_OUTPUT "   compile       : not a compile host"
@@ -559,6 +559,7 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          "compile" { set extra 1 }
          "compile_time"  { set extra 2 }
          "response_time" { set extra 3 }
+         "zones"         { set extra 4 }
       }      
 
       set do_simple_test 0
@@ -589,6 +590,29 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          puts $CHECK_OUTPUT "Setting \"$input\" is not allowed"
          wait_for_enter
          continue
+      }
+
+      if { $extra == 4 } {
+         puts $CHECK_OUTPUT "Please enter a space separated list of zones: "
+         set value [wait_for_enter 1]
+
+         if { [llength $value] != 0 } {
+            set host_error 0
+
+            foreach zone $value {
+               set result [ start_remote_prog $zone $CHECK_USER "id" "" prg_exit_state 12 0 "" 1 0 ]
+               if { $prg_exit_state != 0 } {
+                  puts $CHECK_OUTPUT $result
+                  puts $CHECK_OUTPUT "can't connect to zone $zone"
+                  wait_for_enter
+                  set host_error 1
+                  break
+               }
+            }
+            if {$host_error} {
+               continue
+            }
+         }
       }
 
       if { $isfile } {
@@ -631,6 +655,9 @@ proc host_config_hostlist_edit_host { array_name { has_host "" } } {
          puts $CHECK_OUTPUT "you have to enable l10n in testsuite setup too!"
          wait_for_enter
       }
+
+      #puts $CHECK_OUTPUT "now setting \"$input\" to \"$value\""
+      #wait_for_enter
       set config($host,$input) $value
    }
    
@@ -1009,4 +1036,5 @@ proc setup_host_config { file { force 0 }} {
       setup_host_config $file
    }
 }
+
 

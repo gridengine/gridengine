@@ -1,3 +1,7 @@
+JG-2005-03-15-2: Testsuite: Added zones parameter to the testsuite host config.
+                 Issue:     1503
+                            Fixed check bugs/issuezilla/1473/check.60.exp.
+
 EB-2005-03-15-0: Bugfix:    qstat -s hu shows pending jobs only
                  Issue:     1439 
                  Bugtraq:   6240739

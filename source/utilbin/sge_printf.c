@@ -351,16 +351,16 @@ void sge_printf_usage(void) {
    printf("sge_printf -help    : show help\n");
    printf("sge_printf -test    : test localization\n");
    printf("sge_printf -message : print empty po file string\n");
-   printf("sge_printf -message-space : print po file string with space l10n\n");
-   printf("sge_printf [-enum] [-D STRING] [-S COUNT] FORMAT_STRING ARGUMENTS\n\n");
+   printf("sge_printf -message-space : print po file string for test purposes\n");
+   printf("sge_printf [-enu] [-D STRING] [-S COUNT] FORMAT_STRING ARGUMENTS\n\n");
    printf("FORMAT_STRING - printf format string\n");
    printf("ARGUMENTS     - printf arguments\n\n");
    printf("options:\n");   
    printf("  e - print to stderr\n");
    printf("  n - no new line\n");
    printf("  u - underline output\n");
-   printf("  D - dash sign, e.g. -D\"->\"\n"); 
-   printf("  S - nr of spaces, e.g. -S\"5\"\n\n");
+   printf("  D - dash sign, e.g. -D \"->\"\n"); 
+   printf("  S - nr of spaces, e.g. -S \"5\"\n\n");
    printf("used environment variables:\n");
    printf("SGE_PRINTF_MAX_COLUMN - column for word break (default 79)\n");
 }
@@ -564,7 +564,7 @@ char **argv
             if( h+1 < strlen(help_buf) && 
                 help_buf[h] != '\\'     && 
                 help_buf[h] != '%') {
-               printf(" ");
+               printf("_");
             }
          }
          printf("\"\n");

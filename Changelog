@@ -1,3 +1,5 @@
+AH-2003-11-27-0: Doc:       Document qstat -ext cpu/mem units.
+
 JG-2003-11-26-0: Bugfix:    Fixed reading of lists in berkeleydb spooling.
                             Fixed validate_list function.
 

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2003/11/13 16:57:13 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2003/11/27 09:44:45 $     Revision: $Revision: 1.10 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2003/11/13 16:57:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2003/11/27 09:44:45 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -555,10 +555,10 @@ The department, to which the user belongs (use the \fB\-sul\fP and
 to display the current department definitions).
 .\"
 .IP "\fBcpu\fP"
-The current accumulated CPU usage of the job.
+The current accumulated CPU usage of the job in seconds.
 .\"
 .IP "\fBmem\fP"
-The current accumulated memory usage of the job.
+The current accumulated memory usage of the job in Gbytes seconds.
 .\"
 .IP "\fBio\fP"
 The current accumulated IO usage of the job.

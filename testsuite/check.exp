@@ -1405,7 +1405,7 @@ proc read_edit_defaults_file { filename } {
    }
    if { [llength $CHECK_FIRST_FOREIGN_SYSTEM_GROUP] != 2 } {
         puts $CHECK_OUTPUT "syntax of \"first_foreign_system_groupname\":"
-        puts $CHECK_OUTPUT "main group name[SPACE]secondary group name, e.g. \"users projectA\""  
+        puts $CHECK_OUTPUT "main group name\[SPACE\]secondary group name, e.g. \"users projectA\""  
         return -1
    }
 

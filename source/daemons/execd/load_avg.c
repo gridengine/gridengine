@@ -570,6 +570,8 @@ static void update_job_usage(void)
       return;
    }
 
+   ptf_show_registered_jobs();
+
    /* replace existing usage in the job report with the new one */
    for_each(usage, usage_list) {
       u_long32 job_id;
@@ -629,6 +631,7 @@ static void update_job_usage(void)
                /* should not happen in theory */
                ERROR((SGE_EVENT, "could not find job report for job "u32"."u32" "
                   "task %s contained in job usage from ptf", job_id, ja_task_id, pe_task_id));
+               ptf_show_registered_jobs();
                continue;
             }
 

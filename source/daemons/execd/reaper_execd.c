@@ -311,12 +311,10 @@ lListElem *jr
 
    DENTER(TOP_LAYER, "unregister_from_ptf");
 
-   sge_switch2start_user();
-   ptf_error=ptf_job_complete(job_id, ja_task_id, pe_task_id, &usage);
-   sge_switch2admin_user();
+   ptf_error = ptf_job_complete(job_id, ja_task_id, pe_task_id, &usage);
    if (ptf_error) {
       WARNING((SGE_EVENT, MSG_JOB_REAPINGJOBXPTFCOMPLAINSY_US,
-         u32c(job_id), ptf_errstr(ptf_error)));
+               u32c(job_id), ptf_errstr(ptf_error)));
    } else {
       if (usage) {
          lXchgList(jr, JR_usage, &usage);

@@ -1,3 +1,8 @@
+EB-2004-04-06-0: Bugfix:    Usage retrieval/logging problems with tight PE jobs
+                 Issue:     929
+                 Changed:   sge_execd
+                 Review:    JG
+
 JG-2004-04-06-0: Enhancem.: write intermediate accounting records to reporting
                             file containing daily usage of long running jobs.
                  Changed:   sge_qmaster

@@ -1,3 +1,6 @@
+AS-2002-07-04-2  CVS        Created V53p1_rc1_TAG and V53p1_rc1_BRANCH
+----------------------------------------------------------------------
+
 JG-2002-07-02-0: Bugfix:    qrsh -inherit failed with error 
                             "COMMPROC ALREADY REGISTERED"
                  Issue:     #303
@@ -26,9 +29,10 @@ CR-2002-06-17-2: Bugfix:    removed old i18n setup code
 CR-2002-06-17-1: Bugfix:    Don't produce infotext error message "Binary not
                             compiled with gettext!"
 
-AA-2002-06-14-0: Bugfix:    Job dependency display in qmon
-                 Issue:     #275 affects only qmon
+AA-2002-06-14-0: Bugfix:    Job dependency display in qmon (not displayed)
+                 Issue:     #275
                  Bugtraq:   #4706929
+		 Changes:   qmon
 
 CR-2002-06-13-5: Testsuite: testing issue #140 also for pending jobs
                  Enhancem.: 
@@ -104,17 +108,17 @@ JG-2002-06-05-0: Bugfix:    Load values on HP-UX 11 multiprocessor machines
                             were incorrect.
                  Issue:     #246
 
-AS-2002-06-04-2  CVS        Created V531_beta1_TAG
---------------------------------------------------
-
 SD-2002-06-04-0: Bugfix:    Removed max_jobs reference from 5.3 branch
 		 Issue:	    #273
+	         Bugtraq:   #4696766
 
 SD-2002-06-03-0: Bugfix:    Fixed GRD 5.1.9 to SGEEE 5.3 upgrade
 		 Issue:	    #273
+                 Bugtraq:   #4696766
 
 JG-2002-05-31-0: Enhancem.  rshd: new switch -i: ignore /etc/nologin
                  Issue:     #272
+                 Bugtraq:   #4708235
 
 AH-2002-05-29-0: Bugfix:    Fix bug allowing non-privileged users to submit
                             jobs with priority higher than 0
@@ -124,6 +128,7 @@ AH-2002-05-29-0: Bugfix:    Fix bug allowing non-privileged users to submit
 JG-2002-05-29-0: Enhancem.  Allow specification of arguments to 
                             [rsh|rlogin|qlogin]_[daemon|command]
                  Issue:     #232
+                 Bugtraq:   #4708239
 
 AH-2002-05-28-0: Bugfix:    Fix messages printed when GDI client fails
                             contacting qmaster
@@ -213,6 +218,7 @@ JG-2002-04-30-0: Bugfix:    Buffer for task_id of pe task was too small.
 EB-2002-04-29-1: Bugfix:    schedd bugs reported by Patrik Koch
                             on dev mailing list (Mon, 15 Apr 2002) 
                             - Memory leak
+                            - potential wrong job state handling
                  Issues:    #243
                  Bugtraq:   #4676340 
                  Changed:   sge_schedd

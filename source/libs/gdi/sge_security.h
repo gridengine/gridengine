@@ -87,7 +87,7 @@ int set_sec_cred(lListElem *job);
 
 void delete_credentials(lListElem *jep);
 
-void cache_sec_cred(lListElem *jep, const char *rhost);
+bool cache_sec_cred(lListElem *jep, const char *rhost);
 
 int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authentication, lList **alpp);
 

@@ -1,3 +1,9 @@
+SG-2005-02-14-0: Bugfix:    Long delay when submitting large pe jobs
+                 Changed:   qmaster
+                 Issue:     1461
+                 Bagtraq:   6228786
+                 Review:    DT
+
 HP-2005-02-14-0: Bugfix:    Set arch_variables for Windows
                  Changed:   dist/util/arch_variables
 
@@ -5,9 +11,7 @@ AA-2005-02-11-0: Bugfix:    amd64 bit qmon, what a stupid problem
                             a wrong define in aimk (MOTIF12_HEADERS)
                             was the reason for the problems under amd64
                             Latest build of libXm.so on dain installed
-                                                                                                 Changed:   aimk, qmon
-
-
+                 Changed:   aimk, qmon
 
 SG-2005-02-07-4: Bugfix:    sharetree has a usage leak
                  Changed:   qmaster

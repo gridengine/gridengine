@@ -196,10 +196,12 @@ sge_write_rusage(dstring *buffer,
    
    /* job name and account get taken 
       from local job structure */
-   if (!lGetString(job, JB_job_name)) 
+   if (lGetString(job, JB_job_name) == NULL) {
       lSetString(job, JB_job_name, "UNKNOWN");
-   if (!lGetString(job, JB_account)) 
+   }   
+   if (lGetString(job, JB_account) == NULL) {
       lSetString(job, JB_account, "UNKNOWN");
+   }   
 
 #ifdef NEC_ACCOUNTING_ENTRIES
    /* values which will be written for a special architecture */
@@ -208,11 +210,13 @@ sge_write_rusage(dstring *buffer,
       char *arch_string = "";
 
       ep=lGetElemStr(usage_list, UA_name, "necsx_necsx4");
-      if (ep)
+      if (ep != NULL) {
          arch_string = "necsx4";
+      }   
       ep=lGetElemStr(usage_list, UA_name, "necsx_necsx5");
-      if (ep)
+      if (ep != NULL) {
          arch_string = "necsx5";
+      }   
 
       arch_dep_usage_string = sge_dstring_sprintf(&arch_dep_usage_dstring, 
          NECSX_ACTFILE_FPRINTF_FORMAT,

@@ -1071,13 +1071,38 @@ int set_sec_cred(lListElem *job)
 #endif
 
 
-/*
- * 
- *  NOTES
- *     MT-NOTE: cache_sec_cred() is MT safe (assumptions)
- */
-void cache_sec_cred(lListElem *jep, const char *rhost)
+/****** sge_security/cache_sec_cred() ******************************************
+*  NAME
+*     cache_sec_cred() -- ??? 
+*
+*  SYNOPSIS
+*     bool cache_sec_cred(lListElem *jep, const char *rhost) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     lListElem *jep    - ??? 
+*     const char *rhost - ??? 
+*
+*  RESULT
+*     bool - true, if jep got modified
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE:  cache_sec_cred() is MT safe (assumptions)
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+bool cache_sec_cred(lListElem *jep, const char *rhost)
 {
+   bool ret_value = true;
    DENTER(TOP_LAYER, "cache_sec_cred");
 
    /* 
@@ -1135,9 +1160,14 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
       } else {
          ERROR((SGE_EVENT, MSG_SEC_NOCREDNOBIN_US,  
                 u32c(lGetUlong(jep, JB_job_number)), binary));
+         ret_value = false;       
       }
    }
+   else {
+      ret_value = false;
+   }
    DEXIT;
+   return ret_value;
 }   
 
 /*

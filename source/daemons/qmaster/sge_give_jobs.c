@@ -105,18 +105,40 @@
 #include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"
 
-static void sge_clear_granted_resources(lListElem *jep, lListElem *ja_task, int incslots);
+static void 
+sge_clear_granted_resources(lListElem *jep, lListElem *ja_task, int incslots);
 
-static void reduce_queue_limit(lListElem *qep, lListElem *jep, int nm, char *rlimit_name);
+static void 
+reduce_queue_limit(lListElem *qep, lListElem *jep, int nm, char *rlimit_name);
 
-static void release_successor_jobs(lListElem *jep);
+static void 
+release_successor_jobs(lListElem *jep);
 
-static int send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep, lListElem *pe, lListElem *hep, int master);
+static int 
+send_slave_jobs(const char *target, lListElem *jep, lListElem *jatep, lListElem *pe);
 
-static int sge_bury_job(lListElem *jep, u_long32 jid, lListElem *ja_task, int spool_job, int no_events);
+static int 
+send_slave_jobs_wc(const char *target, lListElem *tmpjep, lListElem *jatep, lListElem *pe, lList *qlp);
 
-static int sge_to_zombies(lListElem *jep, lListElem *ja_task, int spool_job);
-static void sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr, sge_commit_flags_t commit_flags, const char *diagnosis);
+static int 
+send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep, 
+         lListElem *pe, lListElem *hep, int master);
+
+static int 
+sge_bury_job(lListElem *jep, u_long32 jid, lListElem *ja_task, int spool_job, int no_events);
+
+static int 
+sge_to_zombies(lListElem *jep, lListElem *ja_task, int spool_job);
+
+static void 
+sge_job_finish_event(lListElem *jep, lListElem *jatep, lListElem *jr, 
+                     sge_commit_flags_t commit_flags, const char *diagnosis);
+
+static int 
+setCheckpointObj(lListElem *job); 
+
+static lListElem* 
+copyJob(lListElem *job, lListElem *ja_task);
 
 /************************************************************************
  Master function to give job to the execd.
@@ -174,27 +196,15 @@ lListElem *hep
       }
    }
 
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
-      lListElem *slave_hep;
-
-      if (lGetUlong(gdil_ep, JG_tag_slave_job)) {/* only for tightly integrated jobs */
-
-         if (!(slave_hep = host_list_locate(Master_Exechost_List, lGetHost(gdil_ep, JG_qhostname)))) {
-            ret = -1;   
-            break;
-         }
-
-         /* start with 1 as first consecutive taskid at each node */
-         lSetUlong(jatep, JAT_next_pe_task_id, 1);
-   
-         if (send_job(lGetHost(gdil_ep, JG_qhostname), target, jep, jatep, pe, slave_hep, 0)) {
-            ret = -1;   
-            break;
-         }
-
-
-         sent_slaves = 1;
-      }
+   switch (send_slave_jobs(target, jep, jatep, pe)) {
+      case -1 : ret = -1;
+      case  0 : sent_slaves = 1;
+         break;
+      case  1 : sent_slaves = 0;
+         break;
+      default :
+         DPRINTF(("send_slave_jobs returned an unknown error code\n"));
+         ret = -1; 
    }
 
    if (!sent_slaves) {
@@ -212,28 +222,316 @@ lListElem *hep
    return ret;
 }
 
-static int send_job(
-const char *rhost,
-const char *target,
-lListElem *jep,
-lListElem *jatep,
-lListElem *pe,
-lListElem *hep,
-int master 
-) {
+
+/****** sge_give_jobs/send_slave_jobs() ****************************************
+*  NAME
+*     send_slave_jobs() -- send out slave tasks of a pe job
+*
+*  SYNOPSIS
+*     static int send_slave_jobs(const char *target, lListElem *jep, lListElem 
+*     *jatep, lListElem *pe) 
+*
+*  FUNCTION
+*     It prepares the data for the sending out the pe slaves. Once that data
+*     is created, it calles the actual send_slave_method.
+*
+*  INPUTS
+*     const char *target - ??? 
+*     lListElem *jep     - job structure
+*     lListElem *jatep   - ja-taks (template, not the actual one)
+*     lListElem *pe      - target pe
+*
+*  RESULT
+*     static int -  1 : no pe job
+*                   0 : send slaves
+*                  -1 : something went wrong 
+*
+*  NOTES
+*     MT-NOTE: send_slave_jobs() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static int 
+send_slave_jobs(const char *target, lListElem *jep, lListElem *jatep, lListElem *pe)
+{
+   lListElem *tmpjep, *qep, *tmpjatep;
+   lList *qlp;
+   lListElem *gdil_ep;
+   int ret=0;
+   bool is_pe_jobs = false;
+
+   DENTER(TOP_LAYER, "send_slave_jobs");
+
+
+   /* do we have pe slave tasks* */
+   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
+      if (lGetUlong(gdil_ep, JG_tag_slave_job)) {
+         lSetUlong(jatep, JAT_next_pe_task_id, 1);   
+         is_pe_jobs = true;
+         break;
+      }
+   }
+   if (!is_pe_jobs) { /* we do not have slaves... nothing to do */
+      DEXIT;
+      return 1;
+   }
+
+/* prepare the data to be send.... */
+
+   /* create a copy of the job */
+   if ((tmpjep = copyJob(jep, jatep)) == NULL) {
+      DEXIT;
+      return -1;
+   }
+   else {
+      tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));
+   }
+
+   /* insert ckpt object if required **now**. it is only
+   ** needed in the execd and we have no need to keep it
+   ** in qmaster's permanent job list
+   */
+   if (setCheckpointObj(tmpjep) != 0) {
+      tmpjep = lFreeElem(tmpjep); 
+      DEXIT;
+      return -1;
+   }
+
+   qlp = lCreateList("qlist", QU_Type);
+
+   /* add all queues referenced in gdil to qlp 
+    * (necessary for availability of ALL resource limits and tempdir in queue) 
+    * AND
+    * copy all JG_processors from all queues to the JG_processors in tmpgdil
+    * (so the execd can decide on which processors (-sets) the job will be run).
+    */
+   tmpjatep = lFirst( lGetList( tmpjep, JB_ja_tasks ));   
+   
+   for_each (gdil_ep, lGetList(tmpjatep, JAT_granted_destin_identifier_list)) {
+      const char *src_qname = lGetString(gdil_ep, JG_qname);
+      lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
+
+      /* copy all JG_processors from all queues to tmpgdil (which will be
+       * sent to the execd).
+       */
+      lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
+
+      qep = lCopyElem(src_qep);
+
+      /* build minimum of job request and queue resource limit */
+      reduce_queue_limit(qep, tmpjep, QU_s_cpu,   "s_cpu");
+      reduce_queue_limit(qep, tmpjep, QU_h_cpu,   "h_cpu");
+      reduce_queue_limit(qep, tmpjep, QU_s_core,  "s_core");
+      reduce_queue_limit(qep, tmpjep, QU_h_core,  "h_core");
+      reduce_queue_limit(qep, tmpjep, QU_s_data,  "s_data");
+      reduce_queue_limit(qep, tmpjep, QU_h_data,  "h_data");
+      reduce_queue_limit(qep, tmpjep, QU_s_stack, "s_stack");
+      reduce_queue_limit(qep, tmpjep, QU_h_stack, "h_stack");
+      reduce_queue_limit(qep, tmpjep, QU_s_rss,   "s_rss");
+      reduce_queue_limit(qep, tmpjep, QU_h_rss,   "h_rss");
+      reduce_queue_limit(qep, tmpjep, QU_s_fsize, "s_fsize");
+      reduce_queue_limit(qep, tmpjep, QU_h_fsize, "h_fsize");
+      reduce_queue_limit(qep, tmpjep, QU_s_vmem,  "s_vmem");
+      reduce_queue_limit(qep, tmpjep, QU_h_vmem,  "h_vmem");
+      reduce_queue_limit(qep, tmpjep, QU_s_rt,    "s_rt");
+      reduce_queue_limit(qep, tmpjep, QU_h_rt,    "h_rt");
+
+      lAppendElem(qlp, qep);
+   }
+
+   if (pe) { /* we dechain the element to get a temporary free element  */
+      pe = lDechainElem(Master_Pe_List, pe);
+   }
+
+   ret = send_slave_jobs_wc(target, tmpjep, jatep, pe, qlp);
+
+   lFreeElem(tmpjep);
+   lFreeList(qlp);
+
+   if (pe) { 
+      lAppendElem(Master_Pe_List, pe);
+   }   
+
+   DEXIT;
+   return ret;
+}
+
+/****** sge_give_jobs/send_slave_jobs_wc() *************************************
+*  NAME
+*     send_slave_jobs_wc() -- takes the prepared data end sends it out. 
+*
+*  SYNOPSIS
+*     static int send_slave_jobs_wc(const char *target, lListElem *tmpjep, 
+*     lListElem *jatep, lListElem *pe, lList *qlp) 
+*
+*  FUNCTION
+*     This is a helper function of send_slave_jobs. It handles the actual send.
+*
+*  INPUTS
+*     const char *target - ??? 
+*     lListElem *tmpjep  - prepared job structure
+*     lListElem *jatep   - ja-taks (most likely the templete)
+*     lListElem *pe      - target pe
+*     lList *qlp         - prepared queue instance list
+*
+*  RESULT
+*     static int -  0 : everything is fine
+*                  -1 : an error
+*
+*  NOTES
+*     MT-NOTE: send_slave_jobs_wc() is not MT safe 
+*
+*******************************************************************************/
+static int 
+send_slave_jobs_wc(const char *target, lListElem *tmpjep, lListElem *jatep, lListElem *pe, lList *qlp)
+{
+   lListElem *gdil_ep = NULL;
+   int ret = 0;
+   cl_com_handle_t* handle = NULL;
+   int failed = CL_RETVAL_OK;
+#ifndef __SGE_NO_USERMAPPING__    
+   const char *old_mapped_user = NULL;
+#endif   
+   bool is_clean_pb = false;
+   bool is_init_pb = true;
+   sge_pack_buffer pb;
+
+   DENTER(TOP_LAYER, "send_slave_jobs_wc");
+
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+
+   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
+      lListElem *hep;
+      const char* hostname = NULL;
+      u_long32 dummymid = 0;
+      unsigned long last_heard_from;
+      u_long32 now;
+      
+      if (!lGetUlong(gdil_ep, JG_tag_slave_job)) {
+         continue;
+      }
+
+      if (!(hep = host_list_locate(Master_Exechost_List, lGetHost(gdil_ep, JG_qhostname)))) {
+         ret = -1;   
+         break;
+      }
+      hostname = lGetHost(gdil_ep, JG_qhostname);
+
+      /* map hostname if we are simulating hosts */
+      if(simulate_hosts == 1) {
+         const lListElem *simhost = lGetSubStr(hep, CE_name, "simhost", EH_consumable_config_list);
+         if(simhost != NULL) {
+            const char *real_host = lGetString(simhost, CE_stringval);
+            if(real_host != NULL && sge_hostcmp(real_host, hostname) != 0) {
+               DPRINTF(("deliver job for simulated host %s to host %s\n", hostname, real_host));
+               hostname = real_host;
+            }   
+         }
+      }
+
+      /* do ask_commproc() only if we are missing load reports */
+      cl_commlib_get_last_message_time(handle, (char*)hostname, (char*)target, 1, &last_heard_from);
+      now = sge_get_gmt();
+      if (last_heard_from + sge_get_max_unheard_value() <= now) {
+
+         ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, hostname, u32c(lGetUlong(tmpjep, JB_job_number))));
+         sge_mark_unheard(hep, target);
+         ret = -1;
+         break;
+      }
+
+      /*
+      ** get credential for job
+      */
+      if ((do_credentials) && (cache_sec_cred(tmpjep, hostname))) { 
+         is_init_pb = true;
+      }
+  
+#ifndef __SGE_NO_USERMAPPING__ 
+      /* 
+      ** This is for administrator user mapping 
+      */
+      {
+         const char *owner = lGetString(tmpjep, JB_owner);
+         const char *mapped_user;
+
+         DPRINTF(("send_job(): Starting job of %s\n", owner));
+         cuser_list_map_user(*(cuser_list_get_master_list()), NULL,
+                             owner, hostname, &mapped_user);
+         if (strcmp(mapped_user, owner)) {
+            DPRINTF(("execution mapping: user %s mapped to %s on host %s\n", 
+                     owner, mapped_user, rhost));
+            lSetString(tmpjep, JB_owner, mapped_user);
+         }
+
+         if ((old_mapped_user != NULL) && (strcmp(old_mapped_user, mapped_user) != 0)) {
+            is_init_pb = true;
+         }   
+         old_mapped_user = mapped_user;
+      }
+#endif
+
+      if (is_init_pb) {
+         if (is_clean_pb) {
+            clear_packbuffer(&pb); 
+         }
+         if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
+            ret = -1;
+            break;
+         }
+         pack_job_delivery(&pb, tmpjep, qlp, pe);
+         is_clean_pb = true;
+         is_init_pb = false;
+      }
+
+      /*
+      ** security hook
+      */
+      tgt2cc(tmpjep, hostname, target);
+
+      failed = gdi_send_message_pb(0, target, 1, hostname, TAG_SLAVE_ALLOW, &pb, &dummymid);
+
+      /*
+      ** security hook
+      */
+      tgtcclr(tmpjep, hostname, target); 
+
+      if (failed != CL_RETVAL_OK) { 
+         /* we failed sending the job to the execd */
+         ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US, u32c(lGetUlong(tmpjep, JB_job_number)), hostname));
+         ERROR((SGE_EVENT, "commlib error: %s\n", cl_get_error_text(failed)));
+         sge_mark_unheard(hep, target);
+         ret = -1;
+         break;
+      } else {
+         DPRINTF(("successfully sent slave job "u32" to host \"%s\"\n", 
+                  lGetUlong(tmpjep, JB_job_number), hostname));
+      }
+   }
+
+   if (is_clean_pb) {
+      clear_packbuffer(&pb);     
+   }
+
+   DEXIT;
+   return ret;
+}   
+
+static int 
+send_job(const char *rhost, const char *target, lListElem *jep, lListElem *jatep,
+         lListElem *pe, lListElem *hep, int master) 
+{
    int len, failed;
    u_long32 now;
    sge_pack_buffer pb;
    u_long32 dummymid = 0;
-   lListElem *tmpjep, *qep, *tmpjatep, *next_tmpjatep, *tmpgdil_ep=NULL;
-   lListElem *ckpt = NULL, *tmp_ckpt;
+   lListElem *tmpjep, *qep, *tmpjatep, *tmpgdil_ep=NULL;
    lList *qlp;
-   const char *ckpt_name;
    lListElem *gdil_ep;
    char *str;
    unsigned long last_heard_from;
    cl_com_handle_t* handle = NULL;
-
 
    DENTER(TOP_LAYER, "send_job");
 
@@ -261,66 +559,53 @@ int master
       return -1;
    }
 
+   
+   if ((tmpjep = copyJob(jep, jatep)) == NULL) {
+      DEXIT;
+      return -1;
+   }
+   else {
+      tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));
+   }
+
    /* load script into job structure for sending to execd */
    /*
    ** if exec_file is not set, then this is an interactive job
    */
-   if (master && lGetString(jep, JB_exec_file)) {
-
-      str = sge_file2string(lGetString(jep, JB_exec_file), &len);
-      lSetString(jep, JB_script_ptr, str);
+   if (master && lGetString(tmpjep, JB_exec_file)) {
+      str = sge_file2string(lGetString(tmpjep, JB_exec_file), &len);
+      lSetString(tmpjep, JB_script_ptr, str);
       FREE(str);
-      lSetUlong(jep, JB_script_size, len);
+      lSetUlong(tmpjep, JB_script_size, len);
    }
 
-   tmpjep = lCopyElem(jep);
 
    /* insert ckpt object if required **now**. it is only
    ** needed in the execd and we have no need to keep it
    ** in qmaster's permanent job list
    */
-   if ((ckpt_name=lGetString(tmpjep, JB_checkpoint_name))) {
-      ckpt = ckpt_list_locate(Master_Ckpt_List, ckpt_name);
-      if (!ckpt) {
-         ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDCKPT_S, ckpt_name));
-         DEXIT;
-         return -1;
-      }
-
-      /* get the necessary memory */
-      if (!(tmp_ckpt=lCopyElem(ckpt))) {
-         ERROR((SGE_EVENT, MSG_OBJ_UNABLE2CREATECKPT_SU, 
-                ckpt_name, u32c(lGetUlong(tmpjep, JB_job_number))));
-         DEXIT;
-         return -1;
-      }
-      /* everything's in place. stuff it in */
-      lSetObject(tmpjep, JB_checkpoint_object, tmp_ckpt);
+   if (setCheckpointObj(tmpjep) != 0) {
+      tmpjep = lFreeElem(tmpjep); 
+      DEXIT;
+      return -1;
    }
    
    qlp = lCreateList("qlist", QU_Type);
+
    /* add all queues referenced in gdil to qlp 
     * (necessary for availability of ALL resource limits and tempdir in queue) 
     * AND
     * copy all JG_processors from all queues to the JG_processors in tmpgdil
     * (so the execd can decide on which processors (-sets) the job will be run).
     */
-   tmpjatep = lFirst( lGetList( tmpjep, JB_ja_tasks ));   
-   if( tmpjatep ) {
-      tmpgdil_ep = lFirst( lGetList( tmpjatep, JAT_granted_destin_identifier_list ));
-   }
-   
-   for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+   for_each (gdil_ep, lGetList(tmpjatep, JAT_granted_destin_identifier_list)) {
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
       /* copy all JG_processors from all queues to tmpgdil (which will be
        * sent to the execd).
        */
-      if( tmpgdil_ep ) {
-         lSetString(tmpgdil_ep, JG_processors, lGetString(src_qep, QU_processors));
-         tmpgdil_ep = lNext( tmpgdil_ep );
-      }
+      lSetString(tmpgdil_ep, JG_processors, lGetString(src_qep, QU_processors));
 
       qep = lCopyElem(src_qep);
 
@@ -345,18 +630,9 @@ int master
       lAppendElem(qlp, qep);
    }
 
-   if (pe) /* we dechain the element to get a temporary free element  */
+   if (pe) { /* we dechain the element to get a temporary free element  */
       pe = lDechainElem(Master_Pe_List, pe);
-
-   /* Remove all ja-task which should not be started on the exec-host */
-   next_tmpjatep = lFirst(lGetList(tmpjep, JB_ja_tasks));
-   while ((tmpjatep = next_tmpjatep)) {
-      next_tmpjatep = lNext(tmpjatep);
-      if (lGetUlong(tmpjatep, JAT_task_number) != lGetUlong(jatep, JAT_task_number)) {
-         lRemoveElem(lGetList(tmpjep, JB_ja_tasks), tmpjatep);  
-      }
    }
-
 
    /*
    ** get credential for job
@@ -419,13 +695,6 @@ int master
       that we can handle some requests until the acknowledge arrives.
       This is to make the qmaster non blocking */
       
-   /* remove script file from memory again (dont waste that much memory) */
-   if (master) {
-      lSetString(jep, JB_script_ptr, NULL);
-      lSetUlong(jep, JB_script_size, 0);
-   }
-
-
    if (failed != CL_RETVAL_OK) { 
       /* we failed sending the job to the execd */
       ERROR((SGE_EVENT, MSG_COM_SENDJOBTOHOST_US, u32c(lGetUlong(jep, JB_job_number)), rhost));
@@ -1234,26 +1503,16 @@ char *rlimit_name
 ) {
    const char *s;
    lListElem *res;
-   int found = 0;
 
    DENTER(BASIS_LAYER, "reduce_queue_limit");
 
-   for_each (res, lGetList(jep, JB_hard_resource_list)) {
-      if (!strcmp(lGetString(res, CE_name), rlimit_name)) {
-         if ((s = lGetString(res, CE_stringval))) {
-            DPRINTF(("job reduces queue limit: %s = %s (was %s)\n", 
-                     rlimit_name, s, lGetString(qep, nm)));
-            lSetString(qep, nm, s);
-            found = 1;
-            break;
-         }  
-      }
-   } 
-
-   /* enforce default request if set, but only if the consumable is
-      really used to manage resources of this queue, host or globally */
-   if (!found) {
-      lListElem *dcep;
+   res = lGetElemStr(lGetList(jep, JB_hard_resource_list), CE_name, rlimit_name);
+   if ((res != NULL) && (s = lGetString(res, CE_stringval))) {
+      DPRINTF(("job reduces queue limit: %s = %s (was %s)\n", rlimit_name, s, lGetString(qep, nm)));
+      lSetString(qep, nm, s);
+   }     
+   else {              /* enforce default request if set, but only if the consumable is */
+      lListElem *dcep; /*really used to manage resources of this queue, host or globally */
       if ((dcep=centry_list_locate(Master_CEntry_List, rlimit_name))
                && lGetBool(dcep, CE_consumable))
          if ( lGetSubStr(qep, CE_name, rlimit_name, QU_consumable_config_list) ||
@@ -1261,11 +1520,10 @@ char *rlimit_name
                      CE_name, rlimit_name, EH_consumable_config_list) ||
               lGetSubStr(host_list_locate(Master_Exechost_List, SGE_GLOBAL_NAME),
                      CE_name, rlimit_name, EH_consumable_config_list))
-            /* managed at queue level, managed at host level or managed at
-               global level */
+
+            /* managed at queue level, managed at host level or managed at global level */
             lSetString(qep, nm, lGetString(dcep, CE_default));
    }
-
    
    DEXIT;
    return;
@@ -1427,3 +1685,119 @@ static int sge_to_zombies(lListElem *job, lListElem *ja_task, int spool_job)
    DEXIT;
    return True;
 }
+
+
+/****** sge_give_jobs/copyJob() ************************************************
+*  NAME
+*     copyJob() -- copy the job with only the specified ja task
+*
+*  SYNOPSIS
+*     static lListElem* copyJob(lListElem *job, lListElem *ja_task) 
+*
+*  FUNCTION
+*     copy the job with only the specified ja task
+*
+*  INPUTS
+*     lListElem *job     - job structure
+*     lListElem *ja_task - ja-task (template)
+*
+*  RESULT
+*     static lListElem* -  NULL, or new job structure
+*
+*  NOTES
+*     MT-NOTE: copyJob() is MT safe 
+*
+*******************************************************************************/
+static lListElem* 
+copyJob(lListElem *job, lListElem *ja_task)
+{
+   lListElem *job_copy = NULL;
+   lListElem *ja_task_copy = NULL;
+   lList * tmp_ja_task_list = NULL;
+   
+   DENTER(TOP_LAYER, "setCheckpointObj");
+
+   /* create a copy of the job */
+   lXchgList(job, JB_ja_tasks, &tmp_ja_task_list);
+   job_copy = lCopyElem(job);
+   lXchgList(job, JB_ja_tasks, &tmp_ja_task_list);
+
+   if (job_copy != NULL) { /* not enough memory */
+   
+      ja_task_copy = lLast(lGetList(job, JB_ja_tasks));
+
+      while (ja_task_copy != NULL) {
+         if (lGetUlong(ja_task_copy, JAT_task_number) == lGetUlong(ja_task, JAT_task_number)) {
+            break;
+         }
+         ja_task_copy = lPrev(ja_task_copy);
+      }
+
+      tmp_ja_task_list = lCreateList("cp_ja_task_list", lGetElemDescr(ja_task_copy));
+      lAppendElem(tmp_ja_task_list, (ja_task_copy = lCopyElem(ja_task_copy)));
+      lSetList(job_copy, JB_ja_tasks, tmp_ja_task_list);
+
+      if (lGetNumberOfElem(tmp_ja_task_list) == 0) { /* not enough memory */
+         job_copy = lFreeElem(job_copy); /* this also frees tmp_ja_task_list */
+      }
+   }
+
+   DEXIT;
+   return job_copy;
+}
+
+
+/****** sge_give_jobs/setCheckpointObj() ***************************************
+*  NAME
+*     setCheckpointObj() -- sets the job checkpointing name
+*
+*  SYNOPSIS
+*     static int setCheckpointObj(lListElem *job) 
+*
+*  FUNCTION
+*     sets the job checkpointing name
+*
+*  INPUTS
+*     lListElem *job - job to modify
+*
+*  RESULT
+*     static int -  0 : everything went find
+*                  -1 : something went wrong
+*
+*  NOTES
+*     MT-NOTE: setCheckpointObj() is not MT safe 
+*
+*******************************************************************************/
+static int 
+setCheckpointObj(lListElem *job) 
+{
+   lListElem *ckpt = NULL; 
+   lListElem *tmp_ckpt = NULL;
+   const char *ckpt_name = NULL;
+   int ret = 0; 
+   
+   DENTER(TOP_LAYER, "setCheckpointObj");
+
+   if ((ckpt_name=lGetString(job, JB_checkpoint_name))) {
+      ckpt = ckpt_list_locate(Master_Ckpt_List, ckpt_name);
+      if (!ckpt) {
+         ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDCKPT_S, ckpt_name));
+         ret =  -1;
+      }
+
+      /* get the necessary memory */
+      else if (!(tmp_ckpt=lCopyElem(ckpt))) {
+         ERROR((SGE_EVENT, MSG_OBJ_UNABLE2CREATECKPT_SU, 
+                ckpt_name, u32c(lGetUlong(job, JB_job_number))));
+         ret  = -1;
+      }
+      else {
+      /* everything's in place. stuff it in */
+         lSetObject(job, JB_checkpoint_object, tmp_ckpt);
+      }
+   }
+   DEXIT;
+   return ret;
+}
+
+

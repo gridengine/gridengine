@@ -170,7 +170,7 @@ static const spool_flatfile_instr qconf_sfi =
    false,
    true,
    false,
-   ' ',
+   '\0',
    '\n',
    '\0',
    '\0',
@@ -215,23 +215,6 @@ static const spool_flatfile_instr qconf_name_value_list_sfi =
       STN_id,
       STN_version
    }
-};
-
-static const spool_flatfile_instr qconf_upu_sub_sfi = 
-{
-   NULL,
-   false,
-   false,
-   false,
-   false,
-   false,
-   '\0',
-   '\n',
-   ' ',
-   '\0',
-   '\0',
-   &qconf_sub_sfi,
-   {NoName, NoName, NoName}
 };
 
 static const spool_flatfile_instr qconf_sub_name_value_comma_sfi = 
@@ -293,7 +276,7 @@ static const spool_flatfile_instr qconf_param_sfi =
    false,
    false,
    false,
-   ' ',
+   '\0',
    '\n',
    '\0',
    '\0',
@@ -2916,7 +2899,7 @@ DPRINTF(("ep: %s %s\n",
       int sub_command = 0;
    
       /* These have to be freed later */
-      info_entry[0].fields = sge_build_CQ_field_list ();
+      info_entry[0].fields = CQ_fields;
       info_entry[1].fields = sge_build_EH_field_list (false, false, false);
       info_entry[2].fields = sge_build_PE_field_list (false, false);
       /* These double not */
@@ -2957,7 +2940,6 @@ DPRINTF(("ep: %s %s\n",
 
       if (!info_entry[index].object_name) {
          fprintf(stderr, "Modification of object "SFQ" not supported\n", *spp);
-         FREE (info_entry[0].fields);
          FREE (info_entry[1].fields);
          FREE (info_entry[2].fields);
          SGE_EXIT(1);
@@ -2985,14 +2967,12 @@ DPRINTF(("ep: %s %s\n",
          }
          alp = lFreeList(alp);   
          if (exit) {
-            FREE (info_entry[0].fields);
             FREE (info_entry[1].fields);
             FREE (info_entry[2].fields);
             SGE_EXIT(1);
          }
       }
       
-      FREE (info_entry[0].fields);
       FREE (info_entry[1].fields);
       FREE (info_entry[2].fields);
       
@@ -3002,10 +2982,6 @@ DPRINTF(("ep: %s %s\n",
 /*----------------------------------------------------------------------------*/
       /* "-Msconf" */
       if (strcmp("-Msconf", *spp) == 0) {
-#ifdef QCONF_FLATFILE
-         spooling_field *fields = sge_build_SC_field_list ();
-#endif
-
          sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
          sge_gdi_is_manager(uti_state_get_user_name());
          
@@ -3013,7 +2989,7 @@ DPRINTF(("ep: %s %s\n",
 
 #ifdef QCONF_FLATFILE
          ep = spool_flatfile_read_object(&alp, SC_Type, NULL,
-                                         fields, NULL, true, &qconf_comma_sfi,
+                                         SC_fields, NULL, true, &qconf_comma_sfi,
                                          SP_FORM_ASCII, NULL, *spp);
          if (ep != NULL) {
             lp = lCreateList("scheduler config", SC_Type);
@@ -3190,9 +3166,6 @@ DPRINTF(("ep: %s %s\n",
          char* file = NULL;
          const char* usersetname = NULL;
          lList *acl = NULL;
-#ifdef QCONF_FLATFILE
-         spooling_field *fields = sge_build_US_field_list ();
-#endif
 
          /* no adminhost/manager check needed here */
 
@@ -3208,9 +3181,8 @@ DPRINTF(("ep: %s %s\n",
          ep = NULL;
 #ifdef QCONF_FLATFILE
          ep = spool_flatfile_read_object(&alp, US_Type, NULL,
-                                         fields, NULL,  true, &qconf_param_sfi,
+                                         US_fields, NULL,  true, &qconf_param_sfi,
                                          SP_FORM_ASCII, NULL, file);
-         FREE (fields);
          
          if (answer_list_output(&alp)) {
             ep = lFreeElem(ep);
@@ -3284,9 +3256,8 @@ DPRINTF(("ep: %s %s\n",
          lList *acl = NULL;
          char* file = NULL;
 #ifdef QCONF_FLATFILE
-         spooling_field *fields = sge_build_US_field_list ();
          int *fields_out = (int *)malloc (sizeof (int) *
-                                                get_number_of_fields (fields));
+                                        spool_get_number_of_fields (US_fields));
          int missing_field = NoName;
 #endif
 
@@ -3305,7 +3276,7 @@ DPRINTF(("ep: %s %s\n",
 #ifdef QCONF_FLATFILE
          fields_out[0] = NoName;
          ep = spool_flatfile_read_object(&alp, US_Type, NULL,
-                                         fields, fields_out,  true,
+                                         US_fields, fields_out,  true,
                                          &qconf_param_sfi,
                                          SP_FORM_ASCII, NULL, file);
          
@@ -3314,10 +3285,9 @@ DPRINTF(("ep: %s %s\n",
          }
 
          if (ep != NULL) {
-            missing_field = get_unprocessed_field (fields, fields_out, &alp);
+            missing_field = spool_get_unprocessed_field (US_fields, fields_out, &alp);
          }
          
-         FREE (fields);
          FREE (fields_out);
 
          if (missing_field != NoName) {
@@ -4160,9 +4130,6 @@ DPRINTF(("ep: %s %s\n",
       /* "-ssconf" */
 
       if (strcmp("-ssconf", *spp) == 0) {
-#ifdef QCONF_FLATFILE
-         spooling_field *fields = NULL;
-#endif
          /* get the scheduler configuration .. */
          what = lWhat("%T(ALL)", SC_Type);
          alp = sge_gdi(SGE_SC_LIST, SGE_GDI_GET, &lp, NULL, what);
@@ -4178,11 +4145,9 @@ DPRINTF(("ep: %s %s\n",
          alp = lFreeList(alp);
  
 #ifdef QCONF_FLATFILE
-         fields = sge_build_SC_field_list ();
-         spool_flatfile_write_object(&alp, lFirst(lp), false, fields,
+         spool_flatfile_write_object(&alp, lFirst(lp), false, SC_fields,
                                      &qconf_comma_sfi, SP_DEST_STDOUT,
                                      SP_FORM_ASCII, NULL, false);
-         FREE (fields);
          
          if (answer_list_output(&alp)) {
 #else
@@ -5573,7 +5538,6 @@ lList *confl
    char *fname = NULL;
    lList *alp=NULL, *newconfl=NULL;
 #ifdef QCONF_FLATFILE
-   spooling_field* fields = sge_build_SC_field_list ();
    lListElem *ep = NULL;
 #endif
 
@@ -5581,11 +5545,10 @@ lList *confl
 
 #ifdef QCONF_FLATFILE   
    fname = (char *)spool_flatfile_write_object(&alp, lFirst(confl), false,
-                                       fields, &qconf_comma_sfi,
+                                       SC_fields, &qconf_comma_sfi,
                                        SP_DEST_TMP, SP_FORM_ASCII, 
                                        fname, false);
    if (answer_list_output(&alp)) {
-      FREE (fields);
 #else
    if ((fname = write_sched_configuration(0, 1, NULL, lFirst(confl))) == NULL) {
 #endif
@@ -5597,28 +5560,23 @@ lList *confl
 
    if (status < 0) {
       unlink(fname);
-#ifdef QCONF_FLATFILE   
-      FREE (fields);
-#endif
+      
       if (sge_error_and_exit(MSG_PARSE_EDITFAILED))
          return NULL;
    }
 
    if (status > 0) {
       unlink(fname);
-#ifdef QCONF_FLATFILE   
-      FREE (fields);
-#endif
+      
       if (sge_error_and_exit(MSG_FILE_FILEUNCHANGED))
          return NULL;
    }
    
 #ifdef QCONF_FLATFILE   
    ep = spool_flatfile_read_object(&alp, SC_Type, NULL,
-                                   fields, NULL, true, &qconf_comma_sfi,
+                                   SC_fields, NULL, true, &qconf_comma_sfi,
                                    SP_FORM_ASCII, NULL, fname);
 
-   FREE (fields);
    
    if (ep != NULL) {
       newconfl = lCreateList ("scheduler config", SC_Type);
@@ -6092,7 +6050,6 @@ lList *arglp
       }
       else {
 #ifdef QCONF_FLATFILE
-         spooling_field *fields = sge_build_US_field_list ();
          lList *alp = NULL;
          
 #endif
@@ -6103,13 +6060,9 @@ lList *arglp
          }
          
 #ifdef QCONF_FLATFILE
-         spool_flatfile_write_object(&alp, ep, false,
-                                     fields,
-                                     &qconf_sfi,
-                                     SP_DEST_STDOUT,
-                                     SP_FORM_ASCII, 
-                                     NULL, false);
-         FREE (fields);
+         spool_flatfile_write_object(&alp, ep, false, US_fields, &qconf_param_sfi,
+                                     SP_DEST_STDOUT, SP_FORM_ASCII, NULL,
+                                     false);
          lFreeList (alp);
 #else
          write_userset(&alpp, ep, NULL, stdout, 0);
@@ -6143,9 +6096,6 @@ lList *arglp
    lList *alp = NULL, *lp = NULL;
    char *fname = NULL;
    int cmd;
-#ifdef QCONF_FLATFILE
-   spooling_field *fields = sge_build_US_field_list ();
-#endif
 
    DENTER(TOP_LAYER, "edit_usersets");
 
@@ -6170,11 +6120,10 @@ lList *arglp
       }
 
 #ifdef QCONF_FLATFILE
-      fname = (char *)spool_flatfile_write_object(&alp, ep, false, fields,
-                                           &qconf_sfi,SP_DEST_TMP,
+      fname = (char *)spool_flatfile_write_object(&alp, ep, false, US_fields,
+                                           &qconf_param_sfi, SP_DEST_TMP,
                                            SP_FORM_ASCII, fname, false);
       if (answer_list_output(&alp)) {
-         FREE (fields);
 #else
       fname = (char *)malloc (sizeof (char) * SGE_PATH_MAX);
             
@@ -6205,9 +6154,8 @@ lList *arglp
 
 #ifdef QCONF_FLATFILE
       changed_ep = spool_flatfile_read_object(&alp, US_Type, NULL,
-                                      fields, NULL,  true, &qconf_param_sfi,
+                                      US_fields, NULL,  true, &qconf_param_sfi,
                                       SP_FORM_ASCII, NULL, fname);
-      FREE (fields);
       
       if (answer_list_output(&alp)) {
          changed_ep = lFreeElem (changed_ep);

@@ -367,10 +367,8 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
    if (this_elem != NULL && *this_elem) {
       char *filename = NULL;      
 #ifdef QCONF_FLATFILE
-      spooling_field *fields = sge_build_CQ_field_list ();
-      
       filename = (char *)spool_flatfile_write_object(answer_list, *this_elem,
-                                                     false, fields,
+                                                     false, CQ_fields,
                                                      &cqqconf_sfi, SP_DEST_TMP,
                                                      SP_FORM_ASCII, filename,
                                                      false);
@@ -386,7 +384,7 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
 
 #ifdef QCONF_FLATFILE
          cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
-                                             fields, NULL, false, &cqqconf_sfi,
+                                             CQ_fields, NULL, false, &cqqconf_sfi,
                                              SP_FORM_ASCII, NULL, filename);
          answer_list_output(answer_list);
 #else
@@ -411,10 +409,6 @@ cqueue_provide_modify_context(lListElem **this_elem, lList **answer_list,
          answer_list_add(answer_list, MSG_PARSE_EDITFAILED,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       }
-
-#ifdef QCONF_FLATFILE
-      FREE (fields);
-#endif
 
       unlink(filename);
    } 
@@ -460,12 +454,10 @@ cqueue_add_from_file(lList **answer_list, const char *filename)
       lListElem *cqueue;
 
 #ifdef QCONF_FLATFILE
-      spooling_field *fields = sge_build_CQ_field_list ();
       cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
-                                          fields, NULL, false, &cqqconf_sfi,
+                                          CQ_fields, NULL, false, &cqqconf_sfi,
                                           SP_FORM_ASCII, NULL, filename);
       answer_list_output(answer_list);
-      FREE (fields);
 #else
       cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
 #endif
@@ -524,12 +516,10 @@ cqueue_modify_from_file(lList **answer_list, const char *filename)
       lListElem *cqueue;
 
 #ifdef QCONF_FLATFILE
-      spooling_field *fields = sge_build_CQ_field_list ();
       cqueue = spool_flatfile_read_object(answer_list, CQ_Type, NULL,
-                                          fields, NULL, false, &cqqconf_sfi,
+                                          CQ_fields, NULL, false, &cqqconf_sfi,
                                           SP_FORM_ASCII, NULL, filename);
       answer_list_output(answer_list);
-      FREE (fields);
 #else
       cqueue = cull_read_in_cqueue(NULL, filename, 1, 0, 0, NULL);
 #endif
@@ -712,9 +702,6 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
 
                   cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
                   if (cqueue != NULL) {
-#ifdef QCONF_FLATFILE
-                     spooling_field *fields = sge_build_CQ_field_list ();
-#endif
                      if (is_first) {
                         is_first = false; 
                      } else {
@@ -722,11 +709,10 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
                      }
 #ifdef QCONF_FLATFILE
                      spool_flatfile_write_object(answer_list, cqueue, false,
-                                                 fields, &cqqconf_sfi,
+                                                 CQ_fields, &cqqconf_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
                                                  NULL, false);
                      answer_list_output(answer_list);
-                     FREE (fields);
 #else
                      write_cqueue(0, 0, cqueue);
 #endif
@@ -746,18 +732,14 @@ cqueue_show(lList **answer_list, const lList *qref_pattern_list)
       } 
    } else {
       lListElem *cqueue = cqueue_create(answer_list, "template");
-#ifdef QCONF_FLATFILE
-      spooling_field *fields = sge_build_CQ_field_list ();
-#endif      
 
       DTRACE;
       ret &= cqueue_set_template_attributes(cqueue, answer_list);
 #ifdef QCONF_FLATFILE
-      spool_flatfile_write_object(answer_list, cqueue, false, fields,
+      spool_flatfile_write_object(answer_list, cqueue, false, CQ_fields,
                                   &cqqconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
                                   NULL, false);
       answer_list_output(answer_list);
-      FREE (fields);
 #else
       write_cqueue(0, 0, cqueue);
 #endif
@@ -821,7 +803,9 @@ cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list, d
 
       index = 0;
       while (cqueue_attribute_array[index].cqueue_attr != NoName) {
-       
+         /*
+          * Skip geee attributes in ge mode
+          */
          lList *attr_list = lGetList(cqueue,
                                  cqueue_attribute_array[index].cqueue_attr);
          lListElem *next_attr = lFirst(attr_list);
@@ -845,7 +829,7 @@ cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list, d
                   lList *equity_hosts = NULL;
 
                   hgroup = hgroup_list_locate(master_hgroup_list, name);
-            
+
                   /*
                    * hgroup specific setting:
                    *    make sure each host of hgroup is part of 
@@ -886,7 +870,7 @@ cqueue_sick(lListElem *cqueue, lList **answer_list, lList *master_hgroup_list, d
                }
             }
          }
-         
+            
          index++;
       }
       used_hosts = lFreeList(used_hosts);

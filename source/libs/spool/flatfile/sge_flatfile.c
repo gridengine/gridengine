@@ -73,6 +73,8 @@
 /* uti */
 #include "uti/sge_spool.h"
 
+static void spool_flatfile_add_line_breaks (dstring *buffer);
+   
 #ifdef DEBUG_FLATFILE
 bool flatfile_debugging = true;
 
@@ -892,6 +894,7 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
 {
    int i, first_field;
    dstring field_buffer = DSTRING_INIT;
+   dstring tmp_buffer = DSTRING_INIT;
    const lDescr *descr;
 
    DENTER(TOP_LAYER, "spool_flatfile_write_object_fields");
@@ -926,9 +929,11 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
          continue;
       }
 
+      sge_dstring_clear(&field_buffer);
+         
       /* if not first field, output field_delimiter */
       if (!first_field || recurse) {
-         sge_dstring_append_char(buffer, instr->field_delimiter);
+         sge_dstring_append_char(&field_buffer, instr->field_delimiter);
       } else {   
          first_field = false;
       }
@@ -937,32 +942,29 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
       if (instr->show_field_names && (fields[i].name != NULL)) {
          /* respect alignment */
          if (fields[i].width > 0) {
-            sge_dstring_sprintf_append(buffer, "%-*s", fields[0].width,
+            sge_dstring_sprintf_append(&field_buffer, "%-*s", fields[0].width,
                                        fields[i].name);
          } else {
-            sge_dstring_append(buffer, fields[i].name);
+            sge_dstring_append(&field_buffer, fields[i].name);
          }
 
          /* output name-value delimiter */
          if (instr->name_value_delimiter != '\0') {
-            sge_dstring_append_char(buffer, instr->name_value_delimiter);
+            sge_dstring_append_char(&field_buffer, instr->name_value_delimiter);
          } else {
-            sge_dstring_append_char(buffer, ' ');
+            sge_dstring_append_char(&field_buffer, ' ');
          }
       }
 
       /* output value */
       if (fields[i].write_func != NULL) {
-         fields[i].write_func (object, fields[i].nm, buffer, answer_list);
-         value = sge_dstring_get_string (buffer);
+         fields[i].write_func (object, fields[i].nm, &field_buffer, answer_list);
       }
       else if (mt_get_type(descr[pos].mt) == lListT) {
          const spool_flatfile_instr *sub_instr = NULL;
          const bool recurse_field = (instr->recursion_info.recursion_field
                                                                == fields[i].nm);
          const spooling_field *sub_fields = NULL;
-         
-         sge_dstring_clear(&field_buffer);
          
          if (!recurse_field) {
             sub_instr = (spool_flatfile_instr *)fields[i].clientdata;
@@ -984,28 +986,30 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
                                     ANSWER_QUALITY_WARNING, 
                                     MSG_DONTKNOWHOWTOSPOOLSUBLIST_SS,
                                     lNm2Str(fields[i].nm), SGE_FUNC);
-            sge_dstring_append(buffer, NONE_STR);
+            sge_dstring_append(&field_buffer, NONE_STR);
          } else {
             lList *sub_list = lGetList(object, fields[i].nm);      
 
             if (sub_list == NULL || lGetNumberOfElem(sub_list) == 0) {
-               sge_dstring_append(buffer, NONE_STR);
+               sge_dstring_append(&field_buffer, NONE_STR);
             } else {
-               if (!spool_flatfile_write_list_fields(answer_list, sub_list, 
-                                                     &field_buffer, sub_instr,
-                                                     sub_fields,
-                                                     recurse_field)) {
+               sge_dstring_clear(&tmp_buffer);
+      
+               if (spool_flatfile_write_list_fields(answer_list, sub_list, 
+                                                    &tmp_buffer, sub_instr,
+                                                    sub_fields,
+                                                    recurse_field)) {
                   /* error handling has been done in spool_flatfile_write_list_fields */
-               } else {
-                  sge_dstring_append_dstring(buffer, &field_buffer);
+                  sge_dstring_append_dstring(&field_buffer, &tmp_buffer);
                }
             }
          }
-      } else {
-         sge_dstring_clear(&field_buffer);
-         
+      }
+      else {
+         sge_dstring_clear(&tmp_buffer);
+      
          value = object_append_field_to_dstring(object, answer_list, 
-                                                &field_buffer, fields[i].nm, 
+                                                &tmp_buffer, fields[i].nm, 
                                                 '\0');
          
          /* If asked to align the data and this isn't the last field, pad with
@@ -1013,20 +1017,23 @@ spool_flatfile_write_object_fields(lList **answer_list, const lListElem *object,
           * is NoName, and we can't get to here if the current element is
           * NoName, i.e. we're at the last element. */
          if (instr->align_data && (fields[i + 1].nm != NoName)) {
-            sge_dstring_sprintf_append(buffer, "%-*s", fields[i].width, value);
+            sge_dstring_sprintf_append(&field_buffer, "%-*s", fields[i].width,
+                                       value);
          } else {
-            sge_dstring_append(buffer, value);
+            sge_dstring_append(&field_buffer, value);
          }
       }
-#if 0
-      if (value == NULL) {
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_ERROR, "blub");
-         sge_dstring_free(&field_buffer);
-         DEXIT;
-         return false;
+      
+      /* To save a lot of trouble, I'm making a big assumption here.  The
+       * assumption is that any level where the data names are shown will be
+       * field delimited by a newline.  This holds true in all current cases
+       * (I think...), but it's still an assumption.  This is important
+       * because I can only insert line breaks in fields that are full lines. */
+      if (instr->show_field_names) {
+         spool_flatfile_add_line_breaks (&field_buffer);
       }
-#endif      
+      
+      sge_dstring_append_dstring (buffer, &field_buffer);
    }
 
    sge_dstring_free(&field_buffer);
@@ -1452,6 +1459,10 @@ FF_DEBUG("detected record_delimiter");
 FF_DEBUG("detected end_token");
                   record_end = true;
                   continue;
+               }
+               /* if it's a space that doesn't have a special meaning, ignore it */
+               if (*spool_text == ' ') {
+                  *token = spool_lex();
                }
             }
             
@@ -1982,7 +1993,7 @@ void create_spooling_field (
    (*field).write_func = write_func;
 }
 
-int get_unprocessed_field(spooling_field in[], int out[], lList **alpp)
+int spool_get_unprocessed_field(spooling_field in[], int out[], lList **alpp)
 {
    int count = 0;
    
@@ -2011,11 +2022,173 @@ int get_unprocessed_field(spooling_field in[], int out[], lList **alpp)
    return NoName;
 }
 
-int get_number_of_fields(spooling_field fields[])
+int spool_get_number_of_fields(spooling_field fields[])
 {
    int count = 0;
    
    while (fields[count++].nm != NoName);
    
    return count;
+}
+
+static void spool_flatfile_add_line_breaks (dstring *buffer)
+{
+   int index = 0;
+   int word = 0;
+   char *strp = (char *)sge_dstring_get_string (buffer);
+   char str_buf[MAX_STRING_SIZE];
+   char *indent_str = NULL;
+   bool changed = false;
+   bool first_line = true;
+   
+   str_buf[0] = '\0';
+   
+   /* We can only break on spaces here because breaking on commas would cause a
+    * space to be inserted by the lex scanner when it parsed the line.  I don't
+    * think the flatfile spooling could deal with both spaces and commas
+    * delimiting a list.  Besides, all the really long lines use spaces instead
+    * of commas. */
+   while (strlen (strp) > MAX_LINE_LENGTH - word) {
+      /* Account for newlines */
+      char *newlp = strchr (strp, '\n');
+      index = (newlp - strp) / sizeof (char);
+      
+      if ((newlp != NULL) && (index <= MAX_LINE_LENGTH)) {
+         strncat (str_buf, strp, index + 1);
+         strp = newlp + 1;
+
+         /* Reset the to the first line */
+         first_line = true;
+         /* No need to signal changed until something has actually changed. */
+         continue;
+      }
+      
+      /* Build the indent string by finding the beginning of the second word in
+       * the line. */
+      if (indent_str == NULL) {
+         /* Find the first whitespace */
+         while (!isspace (strp[word])) {
+            word++;
+         }
+         
+         /* Now find the next non-whitespace, non-equals to mark the beginning
+          * of the second word.  I am assuming this will always work because
+          * with the current file formats it does always work. */
+         while (isspace (strp[word]) || (strp[word] == '=')) {
+            word++;
+         }
+         
+         indent_str = (char *)malloc (word * sizeof (char) + 4);
+         indent_str[0] = ' ';
+         indent_str[1] = '\\';
+         indent_str[2] = '\n';
+
+         for (index = 0; index < word; index++) {
+            indent_str[index + 3] = ' ';
+         }
+
+         indent_str[word + 3] = '\0';
+      }
+      
+      /* Remove any leading spaces */
+      if (!first_line) {
+         while (isspace (*strp)) {
+            strp++;
+         }
+      }
+      
+      /* Break on the last available whitespace or comma */
+      /* We have to account for the fact that on all lines after the first, the
+       * line length in decreased by the indentation. */
+      /* We know that on the first line strp[word] is not a space, so we can
+       * just skip it.  On later lines, we know the first character is not a
+       * space, so can skip it too. */
+      for (index = MAX_LINE_LENGTH - (first_line ? 0 : word);
+           index >= (first_line ? word : 0) + 1; index--) {
+         if (isspace (strp[index]) || (strp[index] == ',')) {
+            break;
+         }
+      }
+      
+      if (isspace (strp[index])) {
+         strncat (str_buf, strp, index);
+         strcat (str_buf, indent_str);
+         
+         strp += index + 1;
+         
+         changed = true;
+         first_line = false;
+         continue;
+      }
+      else if (strp[index] == ',') {
+         strncat (str_buf, strp, index + 1);
+         strcat (str_buf, indent_str);
+         
+         strp += index + 1;
+         
+         changed = true;
+         first_line = false;
+         continue;
+      }
+      else {
+         /* Break on the first whitespace past the end of the line */
+         for (index = MAX_LINE_LENGTH - word; strp[index] != '\0'; index++) {
+            if (isspace (strp[index]) || (strp[index] == '\n') || (strp[index] == ',')) {
+               break;
+            }
+         }
+
+         if (strp[index] == '\n') {
+            strncat (str_buf, strp, index + 1);
+
+            strp += index + 1;
+            
+            /* Reset to first line */
+            first_line = true;
+            word = 0;
+
+            /* Release the indent string because each line may have different
+             * indentation */
+            FREE (indent_str);
+            
+            continue;
+         }
+         else if (isspace (strp[index])) {
+            strncat (str_buf, strp, index);
+            strcat (str_buf, indent_str);
+
+            strp += index + 1;
+            
+            changed = true;
+            first_line = false;
+            continue;
+         }
+         else if (strp[index] == ',') {
+            strncat (str_buf, strp, index + 1);
+            strcat (str_buf, indent_str);
+
+            strp += index + 1;
+            
+            changed = true;
+            first_line = false;
+            continue;
+         }
+         else {
+            /* There's no spaces or commas, and hence nothing we can do. */
+            break;
+         }
+      }
+   }
+
+   if (changed) {
+      strcat (str_buf, (strp));
+      sge_dstring_clear (buffer);
+      sge_dstring_append (buffer, str_buf);
+   }
+   
+   if (indent_str != NULL) {
+      FREE (indent_str);
+   }
+   
+   return;
 }

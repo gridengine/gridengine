@@ -625,7 +625,7 @@ int num_fields,
    DENTER(GUI_LAYER, "qmonGetNxN");
 
    field = (int *)malloc(num_fields*sizeof(int));
-   col = (const char **)malloc(num_fields*sizeof(char *));
+   col = (char **)malloc(num_fields*sizeof(char *));
    if (field == NULL || col == NULL) {
       abort();
    }

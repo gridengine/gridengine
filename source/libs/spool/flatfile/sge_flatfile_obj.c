@@ -394,6 +394,106 @@ spooling_field HGRP_fields[] = {
    {  NoName,              0, NULL,                NULL, NULL, NULL}
 };
 
+spooling_field US_fields[] = {
+   {  US_name,    7, "name",    NULL,          NULL, NULL, NULL},
+   {  US_type,    7, "type",    NULL,          NULL, NULL, NULL},
+   {  US_fshare,  7, "fshare",  US_sub_fields, NULL, NULL, NULL},
+   {  US_oticket, 7, "oticket", US_sub_fields, NULL, NULL, NULL},
+   {  US_entries, 7, "entries", UE_sub_fields, NULL, NULL, NULL},
+   {  NoName,     7, NULL,      NULL,          NULL, NULL, NULL}
+};
+   
+spooling_field SC_fields[] = {
+   {  SC_algorithm,                       33, "algorithm",                       NULL,          NULL, NULL,                      NULL},
+   {  SC_schedule_interval,               33, "schedule_interval",               NULL,          NULL, NULL,                      NULL},
+   {  SC_maxujobs,                        33, "maxujobs",                        NULL,          NULL, NULL,                      NULL},
+   {  SC_queue_sort_method,               33, "queue_sort_method",               NULL,          NULL, read_SC_queue_sort_method, write_SC_queue_sort_method},
+   {  SC_job_load_adjustments,            33, "job_load_adjustments",            CE_sub_fields, NULL, NULL,                      NULL},
+   {  SC_load_adjustment_decay_time,      33, "load_adjustment_decay_time",      CE_sub_fields, NULL, NULL,                      NULL},
+   {  SC_load_formula,                    33, "load_formula",                    NULL,          NULL, NULL,                      NULL},
+   {  SC_schedd_job_info,                 33, "schedd_job_info",                 NULL,          NULL, NULL,                      NULL},
+   {  SC_flush_submit_sec,                33, "flush_submit_sec",                NULL,          NULL, NULL,                      NULL},
+   {  SC_flush_finish_sec,                33, "flush_finish_sec",                NULL,          NULL, NULL,                      NULL},
+   {  SC_params,                          33, "params",                          NULL,          NULL, NULL,                      NULL},
+   {  SC_reprioritize_interval,           33, "reprioritize_interval",           NULL,          NULL, NULL,                      NULL},
+   {  SC_halftime,                        33, "halftime",                        NULL,          NULL, NULL,                      NULL},
+   {  SC_usage_weight_list,               33, "usage_weight_list",               UA_sub_fields, NULL, NULL,                      NULL},
+   {  SC_compensation_factor,             33, "compensation_factor",             NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_user,                     33, "weight_user",                     NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_project,                  33, "weight_project",                  NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_department,               33, "weight_department",               NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_job,                      33, "weight_job",                      NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_tickets_functional,       33, "weight_tickets_functional",       NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_tickets_share,            33, "weight_tickets_share",            NULL,          NULL, NULL,                      NULL},
+   {  SC_share_override_tickets,          33, "share_override_tickets",          NULL,          NULL, NULL,                      NULL},
+   {  SC_share_functional_shares,         33, "share_functional_shares",         NULL,          NULL, NULL,                      NULL},
+   {  SC_max_functional_jobs_to_schedule, 33, "max_functional_jobs_to_schedule", NULL,          NULL, NULL,                      NULL},
+   {  SC_report_pjob_tickets,             33, "report_pjob_tickets",             NULL,          NULL, NULL,                      NULL},
+   {  SC_max_pending_tasks_per_job,       33, "max_pending_tasks_per_job",       NULL,          NULL, NULL,                      NULL},
+   {  SC_halflife_decay_list,             33, "halflife_decay_list",             NULL,          NULL, NULL,                      NULL},
+   {  SC_policy_hierarchy,                33, "policy_hierarchy",                NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_ticket,                   33, "weight_ticket",                   NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_waiting_time,             33, "weight_waiting_time",             NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_deadline,                 33, "weight_deadline",                 NULL,          NULL, NULL,                      NULL},
+   {  SC_weight_urgency,                  33, "weight_urgency",                  NULL,          NULL, NULL,                      NULL},
+   {  SC_max_reservation,                 33, "max_reservation",                 NULL,          NULL, NULL,                      NULL},
+   {  NoName,                             33, NULL,                              NULL,          NULL, NULL,                      NULL}
+};
+
+spooling_field CQ_fields[] = {
+   {  CQ_name,                   21, "qname",              NULL,                NULL,                                   NULL,                      NULL},
+   {  CQ_hostlist,               21, "hostlist",           HR_sub_fields,       NULL,                                   read_CQ_hostlist,          write_CQ_hostlist},
+   {  CQ_seq_no,                 21, "seq_no",             AULNG_sub_fields,    &qconf_sub_name_value_comma_braced_sfi, read_CQ_ulng_attr_list,    write_CQ_ulng_attr_list},
+   {  CQ_load_thresholds,        21, "load_thresholds",    ACELIST_sub_fields,  &qconf_sub_name_value_comma_braced_sfi, read_CQ_celist_attr_list,  write_CQ_celist_attr_list},
+   {  CQ_suspend_thresholds,     21, "suspend_thresholds", ACELIST_sub_fields,  &qconf_sub_name_value_comma_braced_sfi, read_CQ_celist_attr_list,  write_CQ_celist_attr_list},
+   {  CQ_nsuspend,               21, "nsuspend",           AULNG_sub_fields,    &qconf_sub_name_value_comma_braced_sfi, read_CQ_ulng_attr_list,    write_CQ_ulng_attr_list},
+   {  CQ_suspend_interval,       21, "suspend_interval",   AINTER_sub_fields,   &qconf_sub_name_value_comma_braced_sfi, read_CQ_inter_attr_list,   write_CQ_inter_attr_list},
+   {  CQ_priority,               21, "priority",           ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_min_cpu_interval,       21, "min_cpu_interval",   AINTER_sub_fields,   &qconf_sub_name_value_comma_braced_sfi, read_CQ_inter_attr_list,   write_CQ_inter_attr_list},
+   {  CQ_processors,             21, "processors",         ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_qtype,                  21, "qtype",              AQTLIST_sub_fields,  &qconf_sub_name_value_comma_braced_sfi, read_CQ_qtlist_attr_list,  write_CQ_qtlist_attr_list},
+   {  CQ_ckpt_list,              21, "ckpt_list",          ASTRLIST_sub_fields, &qconf_sub_name_value_comma_braced_sfi, read_CQ_strlist_attr_list, write_CQ_strlist_attr_list},
+   {  CQ_pe_list,                21, "pe_list",            ASTRLIST_sub_fields, &qconf_sub_name_value_comma_braced_sfi, read_CQ_strlist_attr_list, write_CQ_strlist_attr_list},
+   {  CQ_rerun,                  21, "rerun",              ABOOL_sub_fields,    &qconf_sub_name_value_comma_braced_sfi, read_CQ_bool_attr_list,    write_CQ_bool_attr_list},
+   {  CQ_job_slots,              21, "slots",              AULNG_sub_fields,    &qconf_sub_name_value_comma_braced_sfi, read_CQ_ulng_attr_list,    write_CQ_ulng_attr_list},
+   {  CQ_tmpdir,                 21, "tmpdir",             ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_shell,                  21, "shell",              ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_prolog,                 21, "prolog",             ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_epilog,                 21, "epilog",             ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_shell_start_mode,       21, "shell_start_mode",   ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_starter_method,         21, "starter_method",     ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_suspend_method,         21, "suspend_method",     ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_resume_method,          21, "resume_method",      ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_terminate_method,       21, "terminate_method",   ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_notify,                 21, "notify",             AINTER_sub_fields,   &qconf_sub_name_value_comma_braced_sfi, read_CQ_inter_attr_list,   write_CQ_inter_attr_list},
+   {  CQ_owner_list,             21, "owner_list",         AUSRLIST_sub_fields, &qconf_sub_name_value_comma_braced_sfi, read_CQ_usrlist_attr_list, write_CQ_usrlist_attr_list},
+   {  CQ_acl,                    21, "user_lists",         AUSRLIST_sub_fields, &qconf_sub_name_value_comma_braced_sfi, read_CQ_usrlist_attr_list, write_CQ_usrlist_attr_list},
+   {  CQ_xacl,                   21, "xuser_lists",        AUSRLIST_sub_fields, &qconf_sub_name_value_comma_braced_sfi, read_CQ_usrlist_attr_list, write_CQ_usrlist_attr_list},
+   {  CQ_subordinate_list,       21, "subordinate_list",   ASOLIST_sub_fields,  &qconf_sub_name_value_comma_braced_sfi, read_CQ_solist_attr_list,  write_CQ_solist_attr_list},
+   {  CQ_consumable_config_list, 21, "complex_values",     ACELIST_sub_fields,  &qconf_sub_name_value_comma_braced_sfi, read_CQ_celist_attr_list,  write_CQ_celist_attr_list},
+   {  CQ_projects,               21, "projects",           APRJLIST_sub_fields, &qconf_sub_name_value_comma_braced_sfi, read_CQ_prjlist_attr_list, write_CQ_prjlist_attr_list},
+   {  CQ_xprojects,              21, "xprojects",          APRJLIST_sub_fields, &qconf_sub_name_value_comma_braced_sfi, read_CQ_prjlist_attr_list, write_CQ_prjlist_attr_list},
+   {  CQ_calendar,               21, "calendar",           ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_initial_state,          21, "initial_state",      ASTR_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_str_attr_list,     write_CQ_str_attr_list},
+   {  CQ_s_rt,                   21, "s_rt",               ATIME_sub_fields,    &qconf_sub_name_value_comma_braced_sfi, read_CQ_time_attr_list,    write_CQ_time_attr_list},
+   {  CQ_h_rt,                   21, "h_rt",               ATIME_sub_fields,    &qconf_sub_name_value_comma_braced_sfi, read_CQ_time_attr_list,    write_CQ_time_attr_list},
+   {  CQ_s_cpu,                  21, "s_cpu",              ATIME_sub_fields,    &qconf_sub_name_value_comma_braced_sfi, read_CQ_time_attr_list,    write_CQ_time_attr_list},
+   {  CQ_h_cpu,                  21, "h_cpu",              ATIME_sub_fields,    &qconf_sub_name_value_comma_braced_sfi, read_CQ_time_attr_list,    write_CQ_time_attr_list},
+   {  CQ_s_fsize,                21, "s_fsize",            AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_h_fsize,                21, "h_fsize",            AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_s_data,                 21, "s_data",             AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_h_data,                 21, "h_data",             AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_s_stack,                21, "s_stack",            AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_h_stack,                21, "h_stack",            AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_s_core,                 21, "s_core",             AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_h_core,                 21, "h_core",             AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_s_rss,                  21, "s_rss",              AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_h_rss,                  21, "h_rss",              AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_s_vmem,                 21, "s_vmem",             AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  CQ_h_vmem,                 21, "h_vmem",             AMEM_sub_fields,     &qconf_sub_name_value_comma_braced_sfi, read_CQ_mem_attr_list,     write_CQ_mem_attr_list},
+   {  NoName,                    21, NULL,                 NULL,                NULL,                                   NULL,                      NULL}
+};
+
 spooling_field *sge_build_UP_field_list (int spool, int user)
 {
    /* There are 13 possible UP_Type fields. */
@@ -538,24 +638,6 @@ static int write_PE_free_slots(const lListElem *ep, int nm, dstring *buffer, lLi
    return 1;
 }
 
-spooling_field *sge_build_US_field_list (void)
-{
-   /* There are 8 possible US_Type fields. */
-   spooling_field *fields = (spooling_field *)malloc (sizeof (spooling_field) * 8);
-   int count = 0;
-   
-   create_spooling_field (&fields[count++], US_name, 7, "name", NULL, NULL, NULL, NULL);
-   
-   create_spooling_field (&fields[count++], US_type, 7, "type", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], US_fshare, 7, "fshare", US_sub_fields, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], US_oticket, 7, "oticket", US_sub_fields, NULL, NULL, NULL);
-   
-   create_spooling_field (&fields[count++], US_entries, 7, "entries", UE_sub_fields, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], NoName, 7, NULL, NULL, NULL, NULL, NULL);
-   
-   return fields;
-}
-
 /* The spool_flatfile_read_object() function will fail to read the
  * EH_reschedule_unknown_list field from a classic spooling file because
  * classic spooling uses two different field delimiters to represent the
@@ -617,94 +699,6 @@ spooling_field *sge_build_EH_field_list (bool spool, bool to_stdout,
                           STU_sub_fields, NULL, NULL, NULL);
    
    create_spooling_field (&fields[count++], NoName, 21, NULL, NULL, NULL, NULL,
-                          NULL);
-   
-   return fields;
-}
-
-spooling_field *sge_build_SC_field_list(void)
-{
-   /* There are 34 possible SC_Type fields. */
-   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*35);
-   int count = 0;
-   
-   create_spooling_field (&fields[count++], SC_algorithm, 33, "algorithm", NULL,
-                          NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_schedule_interval, 33,
-                          "schedule_interval", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_maxujobs, 33, "maxujobs", NULL,
-                          NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_queue_sort_method, 33,
-                          "queue_sort_method", NULL, NULL,
-                          read_SC_queue_sort_method,
-                          write_SC_queue_sort_method);
-   create_spooling_field (&fields[count++], SC_job_load_adjustments, 33,
-                          "job_load_adjustments", CE_sub_fields, NULL, NULL,
-                          NULL);
-   create_spooling_field (&fields[count++], SC_load_adjustment_decay_time, 33,
-                          "load_adjustment_decay_time", CE_sub_fields, NULL,
-                          NULL, NULL);
-   create_spooling_field (&fields[count++], SC_load_formula, 33, "load_formula",
-                          NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_schedd_job_info, 33,
-                          "schedd_job_info", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_flush_submit_sec, 33,
-                          "flush_submit_sec", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_flush_finish_sec, 33,
-                          "flush_finish_sec", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_params, 33, "params", NULL, NULL,
-                          NULL, NULL);
-   create_spooling_field (&fields[count++], SC_reprioritize_interval, 33,
-                          "reprioritize_interval", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_halftime, 33, "halftime", NULL,
-                          NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_usage_weight_list, 33,
-                          "usage_weight_list", UA_sub_fields, NULL, NULL,
-                          NULL);
-   create_spooling_field (&fields[count++], SC_compensation_factor, 33,
-                          "compensation_factor", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_user, 33,
-                          "weight_user", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_project, 33,
-                          "weight_project", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_department, 33,
-                          "weight_department", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_job, 33,
-                          "weight_job", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_tickets_functional, 33,
-                          "weight_tickets_functional", NULL, NULL, NULL,
-                          NULL);
-   create_spooling_field (&fields[count++], SC_weight_tickets_share, 33,
-                          "weight_tickets_share", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_share_override_tickets, 33,
-                          "share_override_tickets", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_share_functional_shares, 33,
-                          "share_functional_shares", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++],
-                          SC_max_functional_jobs_to_schedule, 33,
-                          "max_functional_jobs_to_schedule", NULL, NULL,
-                          NULL, NULL);
-   create_spooling_field (&fields[count++], SC_report_pjob_tickets, 33,
-                          "report_pjob_tickets", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_max_pending_tasks_per_job, 33,
-                          "max_pending_tasks_per_job", NULL, NULL, NULL,
-                          NULL);
-   create_spooling_field (&fields[count++], SC_halflife_decay_list, 33,
-                          "halflife_decay_list", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_policy_hierarchy, 33,
-                          "policy_hierarchy", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_ticket, 33,
-                          "weight_ticket", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_waiting_time, 33,
-                          "weight_waiting_time", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_deadline, 33,
-                          "weight_deadline", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_weight_urgency, 33,
-                          "weight_urgency", NULL, NULL, NULL, NULL);
-   create_spooling_field (&fields[count++], SC_max_reservation, 33,
-                          "max_reservation", NULL, NULL, NULL, NULL);
-   
-   create_spooling_field (&fields[count++], NoName, 33, NULL, NULL, NULL, NULL,
                           NULL);
    
    return fields;
@@ -874,224 +868,6 @@ spooling_field *sge_build_CONF_field_list(bool spool_config)
    create_spooling_field (&fields[count++], CONF_entries, 28, NULL,
                           CF_sub_fields, &qconf_sub_param_sfi, NULL, NULL);
    create_spooling_field (&fields[count++], NoName, 28, NULL, NULL, NULL, NULL,
-                          NULL);
-   
-   return fields;
-}
-
-spooling_field *sge_build_CQ_field_list(void)
-{
-   /* There are 51 possible EH_Type fields. */
-   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*51);
-   int count = 0;
-
-   create_spooling_field (&fields[count++], CQ_name, 21, "qname", NULL, NULL,
-                          NULL, NULL);
-   create_spooling_field (&fields[count++], CQ_hostlist, 21, "hostlist",
-                          HR_sub_fields, NULL, read_CQ_hostlist,
-                          write_CQ_hostlist);
-   create_spooling_field (&fields[count++], CQ_seq_no, 21, "seq_no",
-                          AULNG_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_ulng_attr_list, write_CQ_ulng_attr_list);
-   create_spooling_field (&fields[count++], CQ_load_thresholds, 21,
-                          "load_thresholds", ACELIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_celist_attr_list, write_CQ_celist_attr_list);
-   create_spooling_field (&fields[count++], CQ_suspend_thresholds, 21,
-                          "suspend_thresholds", ACELIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_celist_attr_list, write_CQ_celist_attr_list);
-   create_spooling_field (&fields[count++], CQ_nsuspend, 21, "nsuspend",
-                          AULNG_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_ulng_attr_list, write_CQ_ulng_attr_list);
-   create_spooling_field (&fields[count++], CQ_suspend_interval, 21,
-                          "suspend_interval", AINTER_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_inter_attr_list, write_CQ_inter_attr_list);
-   create_spooling_field (&fields[count++], CQ_priority, 21, "priority",
-                          ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_min_cpu_interval, 21,
-                          "min_cpu_interval", AINTER_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_inter_attr_list, write_CQ_inter_attr_list);
-   create_spooling_field (&fields[count++], CQ_processors, 21, "processors",
-                          ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_qtype, 21, "qtype",
-                          AQTLIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_qtlist_attr_list, write_CQ_qtlist_attr_list);
-   create_spooling_field (&fields[count++], CQ_ckpt_list, 21, "ckpt_list",
-                          ASTRLIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_strlist_attr_list,
-                          write_CQ_strlist_attr_list);
-   create_spooling_field (&fields[count++], CQ_pe_list, 21, "pe_list",
-                          ASTRLIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_strlist_attr_list,
-                          write_CQ_strlist_attr_list);
-   create_spooling_field (&fields[count++], CQ_rerun, 21, "rerun",
-                          ABOOL_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_bool_attr_list, write_CQ_bool_attr_list);
-   create_spooling_field (&fields[count++], CQ_job_slots, 21, "slots",
-                          AULNG_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_ulng_attr_list, write_CQ_ulng_attr_list);
-   create_spooling_field (&fields[count++], CQ_tmpdir, 21, "tmpdir",
-                          ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_shell, 21, "shell",
-                          ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_prolog, 21, "prolog",
-                          ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_epilog, 21, "epilog",
-                          ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_shell_start_mode, 21,
-                          "shell_start_mode", ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_starter_method, 21,
-                          "starter_method", ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_suspend_method, 21,
-                          "suspend_method", ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_resume_method, 21,
-                          "resume_method", ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_terminate_method, 21,
-                          "terminate_method", ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_notify, 21, "notify",
-                          AINTER_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_inter_attr_list, write_CQ_inter_attr_list);
-   create_spooling_field (&fields[count++], CQ_owner_list, 21, "owner_list",
-                          AUSRLIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_usrlist_attr_list,
-                          write_CQ_usrlist_attr_list);
-   create_spooling_field (&fields[count++], CQ_acl, 21, "user_lists",
-                          AUSRLIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_usrlist_attr_list,
-                          write_CQ_usrlist_attr_list);
-   create_spooling_field (&fields[count++], CQ_xacl, 21, "xuser_lists",
-                          AUSRLIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_usrlist_attr_list,
-                          write_CQ_usrlist_attr_list);
-   create_spooling_field (&fields[count++], CQ_subordinate_list, 21,
-                          "subordinate_list", ASOLIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_solist_attr_list, write_CQ_solist_attr_list);
-   create_spooling_field (&fields[count++], CQ_consumable_config_list, 21,
-                          "complex_values", ACELIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_celist_attr_list, write_CQ_celist_attr_list);
-   
-   create_spooling_field (&fields[count++], CQ_projects, 21, "projects",
-                          APRJLIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_prjlist_attr_list,
-                          write_CQ_prjlist_attr_list);
-   create_spooling_field (&fields[count++], CQ_xprojects, 21, "xprojects",
-                          APRJLIST_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_prjlist_attr_list,
-                          write_CQ_prjlist_attr_list);
-   create_spooling_field (&fields[count++], CQ_calendar, 21, "calendar",
-                          ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-
-   create_spooling_field (&fields[count++], CQ_initial_state, 21,
-                          "initial_state", ASTR_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_str_attr_list, write_CQ_str_attr_list);
-   create_spooling_field (&fields[count++], CQ_s_rt, 21, "s_rt",
-                          ATIME_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_time_attr_list, write_CQ_time_attr_list);
-   create_spooling_field (&fields[count++], CQ_h_rt, 21, "h_rt",
-                          ATIME_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_time_attr_list, write_CQ_time_attr_list);
-   create_spooling_field (&fields[count++], CQ_s_cpu, 21, "s_cpu",
-                          ATIME_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_time_attr_list, write_CQ_time_attr_list);
-   create_spooling_field (&fields[count++], CQ_h_cpu, 21, "h_cpu",
-                          ATIME_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_time_attr_list, write_CQ_time_attr_list);
-   create_spooling_field (&fields[count++], CQ_s_fsize, 21, "s_fsize",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_h_fsize, 21, "h_fsize",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_s_data, 21, "s_data",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_h_data, 21, "h_data",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_s_stack, 21, "s_stack",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_h_stack, 21, "h_stack",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_s_core, 21, "s_core",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_h_core, 21, "h_core",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_s_rss, 21, "s_rss",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_h_rss, 21, "h_rss",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_s_vmem, 21, "s_vmem",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], CQ_h_vmem, 21, "h_vmem",
-                          AMEM_sub_fields,
-                          &qconf_sub_name_value_comma_braced_sfi,
-                          read_CQ_mem_attr_list, write_CQ_mem_attr_list);
-   create_spooling_field (&fields[count++], NoName, 21, NULL, NULL, NULL, NULL,
                           NULL);
    
    return fields;

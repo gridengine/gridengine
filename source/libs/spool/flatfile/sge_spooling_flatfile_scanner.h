@@ -50,7 +50,7 @@ typedef enum {
 extern int spool_line;
 extern int spool_return_whitespace;
 extern int spool_finish_line;
-extern char *spool_text;
+extern char spool_text[];
 
 int spool_lex(void);
 int spool_scanner_initialize(FILE *input);

@@ -66,6 +66,8 @@
 
 #include "spool/sge_spooling_utilities.h"
 
+#define MAX_LINE_LENGTH 80
+
 typedef enum {
    SP_DEST_STDOUT,
    SP_DEST_STDERR,
@@ -174,7 +176,7 @@ void create_spooling_field (
    int (*write_func) (const lListElem *ep, int nm, dstring *buffer, lList **alp)
 );
 
-int get_unprocessed_field(spooling_field in[], int out[], lList **alpp);
-int get_number_of_fields(spooling_field fields[]);
+int spool_get_unprocessed_field(spooling_field in[], int out[], lList **alpp);
+int spool_get_number_of_fields(spooling_field fields[]);
 
 #endif /* __SGE_FLATFILE_H */

@@ -7,15 +7,17 @@
  */
 
 %option noyywrap
-
+%array
 
 %{
 /* need this for the system calls below */
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 
 #include "spool/flatfile/sge_spooling_flatfile_scanner.h"
+#include "basis_types.h"
 
 #define YY_BREAK
 #define YY_NO_UNPUT
@@ -23,12 +25,15 @@
 int spool_line;
 int spool_return_whitespace;
 int spool_finish_line;
+static int spool_cat_line;
+static char spool_tmp_str[MAX_STRING_SIZE];
 
 int spool_scanner_initialize(FILE *input)
 {
    spool_line = 1;
    spool_return_whitespace = 0;
    spool_finish_line = 0;
+   spool_cat_line = 0;
    spool_restart(input);
 
    return spool_lex();
@@ -41,7 +46,7 @@ void spool_scanner_shutdown(void)
 %}
 
 DIGIT    "-"?[0-9]
-ID       [a-zA-Z_/$\-][a-zA-Z0-9_/.#$\-]*
+ID       [a-zA-Z0-9_/.#$\-]*
 COLON    :
 DELIMITER [,;:|={}[\]]
 COMPOP   [=<>!]
@@ -82,9 +87,130 @@ NL       \r?\n
                   break;
                } 
 
-[^ \t\r\n][^\r\n]*   if (!spool_finish_line) { REJECT; } /* For parsing conf */
-                     else { return SPFT_WORD; }          /* files */
+                  /* Match whole lines not ending in \ */
+^[^\n]*[^ \t\r\n\\][ \t\r]*$  %{
+                                 if (!spool_cat_line) { REJECT; }
+                                 else {
+                                    int count;
+                                    char *tmp_str = spool_text;
+                                    
+                                    /* Remove leading spaces */
+                                    while (isspace (*tmp_str)) {
+                                       tmp_str++;
+                                    }
 
+                                    strcat (spool_tmp_str, tmp_str);
+                                    strcpy (spool_text, spool_tmp_str);
+                                    spool_cat_line = 0;
+
+                                    /* Remove trailing spaces */
+                                    for (count = strlen (spool_text) - 1; count >= 0; count--) {
+                                       if (!isspace (spool_text[count])) {
+                                          spool_text[count + 1] = '\0';
+                                          break;
+                                       }
+                                    }
+
+                                    if (count == -1) {
+                                       spool_text[0] = '\0';
+                                    }
+
+                                    spool_tmp_str[0] = '\0';
+                                    spool_line++;
+
+                                    return SPFT_WORD;
+                                 }
+                              %}
+                /* Match whole lines ending in \ */
+^[^\n]*[\\][ \t\r]*\n %{
+                        if (!spool_cat_line) { REJECT; }
+                        else {
+                           char *tmp_str = spool_text;
+
+                           /* Remove leading spaces */
+                           while (isspace (*tmp_str)) {
+                              tmp_str++;
+                           }
+
+                           strcat (spool_tmp_str, tmp_str);
+                           tmp_str = (char *)strrchr (spool_tmp_str, '\\') - 1;
+
+                           /* Remove trailing spaces and backslash */
+                           while (tmp_str != spool_tmp_str) {
+                              if (!isspace (*tmp_str)) {
+                                 /* If the last character is a comma, don't add
+                                  * any spaces */
+                                 if (*tmp_str == ',') {
+                                    tmp_str[1] = '\0';
+                                 }
+                                 /* Otherwise, add a single space to the end*/
+                                 else {
+                                    tmp_str[1] = ' ';
+                                    tmp_str[2] = '\0';
+                                 }
+
+                                 break;
+                              }
+
+                              tmp_str--;
+                           }
+
+                           if (spool_tmp_str == tmp_str) {
+                              spool_tmp_str[0] = '\0';
+                           }
+
+                           spool_line++;
+
+                           break;
+                        }
+                      %}
+                    /* Match remainders of lines not ending in \ */
+[^ \t\r\n][^\n]*[^ \t\r\n\\][ \t\r]*$  %{
+                                          if (!spool_finish_line) { REJECT; }
+                                          else {
+                                             spool_line++;
+                                             return SPFT_WORD;
+                                          }
+                                       %}
+                   /* Match remainders of lines ending in \ */
+[^ \t\r\n][^\n]*[\\][ \t\r]*\n  %{
+                                    if (!spool_finish_line) { REJECT; }
+                                    else {
+                                       char *tmp_str = NULL;
+
+                                       spool_cat_line = 1;
+                                       strcpy (spool_tmp_str, spool_text);
+                                       tmp_str = (char *)strrchr (spool_tmp_str, '\\') - 1;
+
+                                       /* Remove trailing spaces and backslash */
+                                       while (tmp_str != spool_tmp_str) {
+                                          if (!isspace (*tmp_str)) {
+                                             /* If the last character is a comma, don't add
+                                              * any spaces */
+                                             if (*tmp_str == ',') {
+                                                tmp_str[1] = '\0';
+                                             }
+                                             /* Otherwise, add a single space to the end*/
+                                             else {
+                                                tmp_str[1] = ' ';
+                                                tmp_str[2] = '\0';
+                                             }
+
+                                             break;
+                                          }
+
+                                          tmp_str--;
+                                       }
+
+                                       if (spool_tmp_str == tmp_str) {
+                                          spool_tmp_str[0] = '\0';
+                                       }
+
+                                       spool_line++;
+
+                                       break;
+                                    }
+                                %}
 .           return SPFT_UNKNOWN;
 
 %%

@@ -1,3 +1,12 @@
+DT-2004-02-18-0: Bugfix:    Fixed backslash line continuation for all objects
+                            in qconf.  Will break on spaces or commas.
+                            Propogated removal of SGE/SGEEE through qconf and
+                            flatfile spooling.
+                            Fixed build on Solaris x86.
+                            Fixed other minor qconf and flatfile spooling
+                            issues.
+                 Changed:   qconf, qmon, flatfile spooling
+
 AS-2004-02-17-0: Cleanup:   aimk cleanup, #define cleanup, IRIX 6.5 compile
 
 SD-2004-02-17-0: Cleanup:   - Removed all jobclass references from qmon,

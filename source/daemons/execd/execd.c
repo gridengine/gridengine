@@ -208,7 +208,7 @@ char **argv
    if((ret = enroll())) {
       DTRACE;
       if (ret == CL_CONNECT && start_commd) {
-         suc = startprog(argv[0], NULL, SGE_COMMD, NULL);
+         suc = startprog(1, 2, argv[0], NULL, SGE_COMMD, NULL);
 
          if (suc) {
             CRITICAL((SGE_EVENT, MSG_COM_CANTSTARTCOMMD));

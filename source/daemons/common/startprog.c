@@ -38,6 +38,8 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fcntl.h> 
+#include <errno.h>
 
 #include "basis_types.h"
 #include "sge_arch.h"
@@ -45,6 +47,7 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_stat.h" 
+#include "sge_time.h"
 #include "msg_daemons_common.h"
 
 static int do_wait(pid_t);
@@ -62,7 +65,8 @@ static int do_wait(pid_t);
  *       >0 the exit status of the child 
  *       exit status 8 is reserved for unsuccesfull exec() 
  *-----------------------------------------------------------------------*/
-int startprog(char *argv0, char *path, char *name, ...) 
+int startprog(int out, int err, 
+              char *argv0, char *path, char *name, ...) 
 {
  SGE_STRUCT_STAT sb;
  char prog_path[SGE_PATH_MAX];
@@ -123,25 +127,36 @@ int startprog(char *argv0, char *path, char *name, ...)
 
  pid = fork();
  if (pid < 0) {
-    ERROR((SGE_EVENT, MSG_PROC_CANTFORKPROCESSTOSTARTX_S, prog_path));
-    DEXIT;
-    return -1;
- }      
- else if (pid == 0) {
-    if (getenv("SGE_DEBUG_LEVEL")) {
-       putenv("SGE_DEBUG_LEVEL=0 0 0 0 0 0 0 0");
-    }   
-    /* child */
-    execvp(prog_path, argv);
-    DEXIT;
-    exit(8);
+   ERROR((SGE_EVENT, MSG_PROC_CANTFORKPROCESSTOSTARTX_S, prog_path));
+   DEXIT;
+   return -1;
+ } else if (pid == 0) {
+   /* child */
+   if (getenv("SGE_DEBUG_LEVEL")) {
+      putenv("SGE_DEBUG_LEVEL=0 0 0 0 0 0 0 0");
+   }   
+   if (out != 1) {
+      close(1);
+      dup(out);
+   }
+   if (err != 2) {
+      close(2);
+      dup(err);
+      fprintf(stderr, "######################\n");
+      fprintf(stderr, " %s\n", sge_ctime(sge_get_gmt()));
+      fprintf(stderr, "######################\n");
+   }
+   execvp(prog_path, argv);
+   DEXIT;
+   exit(8);
  } else {
     /* parent */
     ret = do_wait(pid);
-    if (ret == -1)
+    if (ret == -1) {
        CRITICAL((SGE_EVENT, MSG_PROC_CANTEXECPROCESSORPROCESSDIEDTHROUGHSIGNALX_S, prog_path));
-    else if (ret > 0)
+    } else if (ret > 0) {
        CRITICAL((SGE_EVENT, MSG_PROC_CANTSTARTPROCESSX_S, prog_path));     
+    }
     DEXIT;
     return ret;
  }

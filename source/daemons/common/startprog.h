@@ -32,8 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-/* Return values are documented in startprog.c */
-int startprog(char *, char *, char *, ...);
+int startprog(int out, int err, char *, char *, char *, ...);
 
 #endif /* __STARTPROG_H */
 

@@ -347,7 +347,7 @@ char **argv
          DTRACE;
       
          if (ret == CL_CONNECT && start_commd) {
-            startprog(argv[0], NULL, SGE_COMMD, NULL);
+            startprog(1, 2, argv[0], NULL, SGE_COMMD, NULL);
             sleep(5);
          }
          else if (ret == COMMD_NACK_CONFLICT) {

@@ -38,6 +38,7 @@
 #include <time.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <fcntl.h>
 
 #include "sge.h"
 #include "sge_gdi_intern.h"
@@ -80,14 +81,21 @@
 #   define TRUE  1
 #endif
 
-#define CHECK_INTERVAL      60 
-#define GET_ACTIVE_INTERVAL 240
-#define DELAY_TIME          600 
+#if 0 /* EB: debug */
+#  define CHECK_INTERVAL      6 
+#  define GET_ACTIVE_INTERVAL 24
+#  define DELAY_TIME          60 
+#else
+#  define CHECK_INTERVAL      60 
+#  define GET_ACTIVE_INTERVAL 240
+#  define DELAY_TIME          600 
+#endif
 
 char binpath[SGE_PATH_MAX];
 char oldqmaster[SGE_PATH_MAX];
 
 char shadow_err_file[SGE_PATH_MAX];
+char qmaster_out_file[SGE_PATH_MAX];
 
 int main(int argc, char **argv);
 static void shadowd_exit_func(int i);
@@ -115,7 +123,6 @@ char **argv
    
    /* This needs a better solution */
    umask(022);
-
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__  
    /* init language output for gettext() , it will use the right language */
@@ -193,6 +200,7 @@ char **argv
    }
 
    sprintf(shadow_err_file, "messages_shadowd.%s", me.unqualified_hostname);
+   sprintf(qmaster_out_file, "messages_qmaster.%s", me.unqualified_hostname);
    sge_copy_append(TMP_ERR_FILE_SHADOWD, shadow_err_file, SGE_APPEND);
    unlink(TMP_ERR_FILE_SHADOWD);
    error_file = shadow_err_file;
@@ -241,6 +249,8 @@ char **argv
                   ERROR((SGE_EVENT, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
                }   
                else {
+                  int out, err;
+
                   /* still the old qmaster name in act_qmaster file and 
                      still the old heartbeat */
                   latest_heartbeat = get_qmaster_heartbeat(
@@ -259,19 +269,36 @@ char **argv
                      DPRINTF(("qmaster_name: "SFN"\n", qmaster_name)); 
                      DPRINTF(("schedd_name: "SFN"\n", schedd_name)); 
 
+                     /*
+                      * open logfile as admin user for initial qmaster/schedd 
+                      * startup messages
+                      */
+                     out = open(qmaster_out_file, O_CREAT|O_WRONLY|O_APPEND, 
+                                0644);
+                     err = out;
+                     if (out == -1) {
+                        /*
+                         * First priority is the master restart
+                         * => ignore this error
+                         */
+                        out = 1;
+                        err = 2;
+                     } 
+
                      switch2start_user();
-                     ret = startprog(NULL, binpath, qmaster_name, NULL);
+                     ret = startprog(out, err, NULL, binpath, qmaster_name, NULL);
                      switch2admin_user();
                      if (ret)
                         ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));
                      else {
                         sleep(5);
                         switch2start_user();
-                        ret = startprog(NULL, binpath, schedd_name, NULL);
+                        ret = startprog(out, err, NULL, binpath, schedd_name, NULL);
                         switch2admin_user();
                         if (ret)
                            ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));   
                      }
+                     close(out);
                   }
                }      
             }

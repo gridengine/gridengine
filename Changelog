@@ -1,3 +1,6 @@
+CR-2003-03-05-1  Bugfix:    Missing "return" in main() function reports
+                            compile error for solaris86
+
 CR-2003-03-05-0  Testsuite: - only test job environment variable TZ if it is
                               set on qmaster host environment
                             - fixed bug in handle_vi_edit() when 4th parameter

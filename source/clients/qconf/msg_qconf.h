@@ -46,6 +46,7 @@
 #define MSG_GDI_USERNOTINACL_SS       _("user \"%s\" is not in access list \"%s\"\n")
 #define MSG_GDI_CANTDELFROMACL_SS     _("can't delete user \"%s\" from access list \"%s\"\n")
 #define MSG_GDI_DELFROMACL_SS         _("deleted user \"%s\" from access list \"%s\"\n")
+#define MSG_HOST_NEEDAHOSTNAMEORALL            _("Need a hostname or the keyword \"all\"\n")
 
 #endif /* __MSG_QCONF_H */
 

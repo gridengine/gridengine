@@ -103,6 +103,7 @@
 #include "sge_stat.h" 
 #include "msg_common.h"
 #include "sge_spoolmsg.h"
+#include "msg_qconf.h"
 
 static int sge_edit(char *fname);
 static int sge_next_is_an_opt(char **ptr);
@@ -1708,7 +1709,12 @@ DPRINTF(("ep: %s %s\n",
             opt |= JOB_KILL;
          }
 
-         spp = sge_parser_get_next(spp);
+         if (!sge_next_is_an_opt(spp)) {
+            spp = sge_parser_get_next(spp);
+         } else {
+            if (sge_error_and_exit(MSG_HOST_NEEDAHOSTNAMEORALL))
+               continue;
+         }
 
          if(strcmp(*spp, "all") == 0) { /* kill all dynamic event clients (EV_ID_ANY) */
             alp = gdi_kill(NULL, me.default_cell, 0, opt);

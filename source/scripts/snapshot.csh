@@ -35,7 +35,7 @@
 
 set TAG = HEAD
 set CODIR = "/tmp/CODIR"
-set OUTFILE = "/tmp/sge-5.3-src.tar.gz"
+set OUTFILE = "/tmp/sge-HEAD-src.tar.gz"
 set EXCLUDEFILES = "SGE5_3alpha.pdf"
 
 #
@@ -47,6 +47,7 @@ while ($#argv >= 1)
       set argv   = ($argv[2-])
       if ($#argv >= 1) then
          set TAG = $argv[1]
+         set OUTFILE = "/tmp/sge-$TAG-src.tar.gz"
       else
          goto usage
          exit 1

@@ -1,3 +1,13 @@
+AH-2002-07-10-2: Enhancem.: Further improved load alarm/suspend alarm
+                            diagnosis messages
+                 Changed:   sge_schedd
+
+AH-2002-07-10-1: Bugfix:    Fixed problems with global load values
+                            preventing job dispatching
+                 Changed:   sge_qmaster
+                 Issue:     #311
+                 Bugtraq:   #4712023
+
 EB-2002-07-10-0: Bugfix:    missing environment variables in job env.
 
 AA-2002-07-10ß0: Security:  validity of CA cert -> -days in InitCA() in inst_sge

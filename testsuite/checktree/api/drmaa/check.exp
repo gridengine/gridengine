@@ -163,7 +163,7 @@ proc drmaa_check {} {
             # -- tests without an argument
             foreach st_test "ST_MULT_INIT ST_MULT_EXIT ST_SUPPORTED_ATTR ST_SUPPORTED_VATTR ST_VERSION \
                ST_DRM_SYSTEM ST_CONTACT ST_EMPTY_SESSION_WAIT ST_EMPTY_SESSION_SYNCHRONIZE_DISPOSE \
-               ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE" {
+               ST_EMPTY_SESSION_SYNCHRONIZE_NODISPOSE ST_DRMAA_IMPL" {
                
                puts "starting single threaded test $st_test"
                drmaa_test $host $binary_path $st_test ""
@@ -191,6 +191,10 @@ proc drmaa_check {} {
             # -- tests with a <exit_arg_job> argument
             puts "starting single threaded test ST_EXIT_STATUS"
             drmaa_test $host $binary_path ST_EXIT_STATUS $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit.sh
+
+            # -- tests with <exit_arg_job> and <email_addr> arguments
+            puts "starting single threaded test ST_ATTRIBUTE_CHECK"
+            drmaa_test $host $binary_path ST_ATTRIBUTE_CHECK $CHECK_TESTSUITE_ROOT/$CHECK_SCRIPT_FILE_DIR/exit.sh "$CHECK_USER@localhost"
    
          } 
          "1" { 

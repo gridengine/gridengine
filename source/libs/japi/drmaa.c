@@ -1735,6 +1735,9 @@ void drmaa_release_job_ids(drmaa_job_ids_t* values)
 int drmaa_get_DRM_system(char *drm_system, size_t drm_system_len, 
          char *error_diagnosis, size_t error_diag_len)
 {
+   /* Since we will only ever support one DRM, namely SGE, it doesn't make any
+    * difference whether drmaa_get_DRM_system() is called before or after
+    * drmaa_init().  We will always return the same string. */
    dstring drm, diag;
    if (drm_system) 
       sge_dstring_init(&drm, drm_system, drm_system_len+1);
@@ -1810,7 +1813,8 @@ int drmaa_get_contact(char *contact, size_t contact_len,
    /* So far drmaa_init(contact) is not used. Consequently 
       we do not provide contact information here either.
       We just return a NULL character to ensure string
-      is initialized */
+      is initialized.  Therefore, we also do not care whether drmaa_get_contact()
+      is called before or after drmaa_init(). */
    sge_dstring_copy_string(&con, "");
 
    return DRMAA_ERRNO_SUCCESS;

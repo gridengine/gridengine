@@ -143,21 +143,6 @@ of the qsub(1) job characteristics be influenced. Secondly by building an integr
 don't need to change your application code each time when a new Grid Engine version is released. When using JAPI 
 library interface you must be prepared to change your application code in this case. This is because JAPI directly 
 exports Grid Engine internal data structures that usually are subject of change with new releases.</P>
-<H1>TODO</H1>
-This list contains items that are not yet implemented but required for a DRMAA 1.0 compliant 
-implementation:
-<UL>
-   <LI><P>shared drmaa library (currently only static library linking can be used)</P>
-   <LI><P>enhance 'distinst' to add DRMAA to 6.0 distribution</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_job_category"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_native_specification"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_v_env"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_v_email"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_block_email"</P>
-   <LI><P>implement DRMAA job template attribute "drmaa_start_time"</P>
-   <LI><P>implement drmaa_wait(3) output parameter rusage</P>
-   <LI><P>drmaa_wait(3) does not yet return DRMAA_ERRNO_NO_RUSAGE as foreseen by spec</P>
-</UL>
 <H1>Grid Engine DRMAA library QA</H1>
 <P>The DRMAA application "test_drmaa" is used by Grid Engine testsuite QA tool to ensure quality of DRMAA 
 library. It covers a growing number of tests. There are so-called standalone tests that can

@@ -1,3 +1,9 @@
+DT-2004-01-09-2: Enhancem.: More minor updates to test_drmaa.  Updated comments
+                            in drmaa.c.  Updated testsuite to use new tests in
+                            test_drmaa.  Updated TODO list in drmaa.html.
+                 Bugfix:    Fixed memory leak and apparent bug in sge_getme().
+                 Changed:   testsuite/apis/drmaa, drmma, test_drmaa, sge_prog.c
+
 DT-2004-01-09-1: Enhancem.: Finished making sge_gethostbyname() MT-safe.  Also
                             made sge_gethostbyaddr() MT-safe.  Updated libdrmaa
                             to match latest spec changes.  Updated test_drmaa to

@@ -480,12 +480,15 @@ void sge_getme(u_long32 program_number)
       DTRACE;
       SGE_ASSERT(((hent2 = sge_gethostbyaddr((const struct in_addr *)&tmp_addr)) != NULL));
       DTRACE;
-      uti_state_set_qualified_hostname(hent->h_name);
-      s = sge_dirname(hent->h_name, '.');
+
+      uti_state_set_qualified_hostname(hent2->h_name);
+      s = sge_dirname(hent2->h_name, '.');
       uti_state_set_unqualified_hostname(s);
       free(s);
    }
 
+   FREE (hent);
+   
    DTRACE;
 
    /* SETPGRP; */

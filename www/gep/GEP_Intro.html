@@ -57,104 +57,186 @@ Portal   currently relies on GE as well as the SunONE Portal Server for its
 functionality   although both are loosely coupled within the Grid Engine
 Portal source code.   <br>
      <br>
-    Key Links:<br>
-   <br>
-   
-<p>   
-<table border="0" cellspacing="0" cellpadding="2" width="100%">
-     <tbody>
-     <tr>
-             <td class="InputHeader" bgcolor="#efefef"><b>Mailing List: <a
- href="mailto:gep@gridengine.sunsource.net">gep@gridengine.sunsource.net</a></b>
-              <b><a
- href="http://gridengine.sunsource.net/servlets/SummarizeList?listName=gep">(View
-              Archive)<span class="StatText"> </span></a></b></td>
-     </tr>
-     <tr>
-       <td class="PlainText"><b>Description:</b> A mailing list for discussing
- Grid Engine Portal technology   </td>
-     </tr>
-     <tr>
-             <td class="PlainText"><b>Subscribe: </b><a
- href="mailto:gep-subscribe@gridengine.sunsource.net">gep-subscribe@gridengine.sunsource.net</a></td>
-     </tr>
-     <tr>
-             <td class="PlainText"><b>Unsubscribe:</b> <a
- href="mailto:gep-unsubscribe@gridengine.sunsource.net">gep-unsubscribe@gridengine.sunsource.net</a></td>
-     </tr>
-          
-  </tbody>  
-</table>
+<br>
+<h2>Grid Engine Portal Components and Installation Overview</h2>
+The Grid Engine Portal comprises three components:<br>
+<ul>
+  <li>Grid Engine</li>
+  <li>SunONE Portal Server</li>
+  <li>Grid Engine Portal servlets<br>
+  </li>
+</ul>
+To enable window based applications through the portal the additional installation
+of VNC or Tarantella can be added.<br>
+<br>
+<ol>
+  <li>Grid Engine<br>
     <br>
-     The Grid Engine Portal (GEP) package can be downloaded as part of the
- <a
- href="http://gridengine.sunsource.net/project/gridengine/download.html">Grid
-Engine Open Source Project</a>.<br>
-     <br>
-</p>
-<p>     To understand the basic components required for installing the Grid
-Engine   Portal, and to obtain an installation overview jump <a
- href="#Grid_Engine_Portal_Components_and">here</a>.</p>
-<p>     Find the complete <a
- href="http://gridengine.sunsource.net/gep/GEP_InstallGuide.html">Grid Engine
- Portal Installation Guide</a> here.<br>
-</p>
-<p>For further background information get the <a
- href="http://gridengine.sunsource.net/gep/GEP_whitepaper.pdf">Grid Engine
- Portal white paper</a>  <br>
-</p>
-<p>     To download Sun Grid Engine go to <a
- href="http://www.sun.com/grid">http://www.sun.com/grid</a>  or <a
- href="http://gridengine.sunsource.net">http://gridengine.sunsource.net</a>
- for the open source version.<br>
-     <br>
-</p>
-<p>     Click the following link to download the <a
- href="http://wwws.sun.com/software/product_categories/portal_servers.html">SunONE 
-  Portal Server</a>. <br>
-</p>
-<p>     Commercial packages such as Tarantella are also available for displaying
-  graphics and interactive applications from  multiple platforms (Java, Microsoft,
-  and X-windows) in a browser window. These packages offer much higher performance
-   than VNC and are independently integrated with the Sun ONE Portal Server
-  3.0. <br>
-     A demo of this package as well as software downloads and instructions
- are  available directly from <a href="http://www.tarantella.com">http://www.tarantella.com</a>. 
-  (A Portal Server 6 integration will be available shortly.)   </p>
-   
-<h2><a name="Grid_Engine_Portal_Components_and"></a>Grid Engine Portal Components
-and Installation Overview</h2>
-     First of all the Grid Engine Portal installation requires that an existing
-  (S)GE (version 5.3p2 or later) or (S)GEEE i grid has been set up. For details
-  on setting up (S)GE(EE) go to the web site  <a
- href="http://wwws.sun.com/software/grid/">http://wwws.sun.com/software/grid/</a>. 
-  It is recommended that those unfamiliar with grid technology begin by taking
-  the online Sun ONE Grid Technology Overview class.  Administrators may
-also   wish to take the <a
- href="http://wwws.sun.com/software/gridware/training.html">Sun ONE Grid
-Engine web-based Training</a>.<br>
-     <br>
-     The next step is the installation of Sun ONE Portal Server (version
-6  or  later). <br>
-     <small><small>Note: there is also a Grid Engine Portal version available
-  for version 3.0SP2 (or later) although  it is recommended that users who
- do not have an existing Portal installation begin with version 6.</small></small><br>
-     A trial/development package is included with the Solaris 9 disks. Alternatively
-  you can download a development version  <a
- href="http://wwws.sun.com/software/product_categories/portal_servers.html">here</a>.<br>
-     Sites that require remote visualization capabilities should download 
-and  install the Secure Remote Access package  as part of this installation.
-  For detailed installation instructions consult the <a
+The Grid Engine Portal installation requires that an existing   (S)GE (version
+5.3p2 or later) or (S)GEEE&nbsp; grid has been set up. Details   on setting
+up (S)GE(EE) can be found on the websites mentioned in the table below.<br>
+   It is recommended that those unfamiliar with grid technology begin by
+taking   the online Sun ONE Grid Technology Overview class.  Administrators
+may also   wish to take the SunONE Grid Engine web-based training.<br>
+    <br>
+  </li>
+  <li>SunONE Portal Server<br>
+    <br>
+The next step is the installation of SunONE Portal Server (version 6  or
+ later). <small><small><br>
+    <br>
+Note: there is also a Grid Engine Portal version available   for version
+iPlanet Portal Server 3.0SP2 (or later) although  it is recommended that
+users who  do not have an existing Portal installation begin with version
+6.</small></small><br>
+    <br>
+A trial/development package is included with the Solaris 9 disks. &nbsp;It
+can also be downloaded form the link mentioned in the table below. Sites
+that require remote visualization capabilities should download and  install
+the Secure Remote Access package  as part of this installation for Netlet
+support. For detailed installation instructions consult the <a
  href="http://gridengine.sunsource.net">Grid Engine Portal Installation Guide</a>. 
-  This guide should be read before beginning to install the Portal Server.<br>
-     <br>
-     Get the Grid Engine Portal package available <a
- href="http://gridengine.sunsource.net">here</a>. <br>
-     The final step is to customize the portal, install your applications,
- and  build simple html interfaces based on the provided templates.<br>
-     <br>
-     <br>
-     <br>
+  This guide should be read before beginning&nbsp; in the Portal Server installation.<br>
+    <br>
+  </li>
+  <li>Grid Engine Portal servlets<br>
+    <br>
+After fetching and unpacking the Grid Engine Portal server package the included
+install script has to be executed. This is outlined in detail in the Grid
+Engine Portal Installation Guide. The package for either iPS 3.0 or S1PS
+6.0 can be found in the table below.<br>
+    <br>
+  </li>
+  <li>VNC<br>
+    <br>
+Optionally VNC can be installed to enable portal access of graphical applications.
+See the links below.<br>
+  </li>
+</ol>
+<br>
+The final step is to customize the portal, install your applications,  and
+ build simple html interfaces based on the provided templates.<br>
+<br>
+<br>
+<h2>Important Links</h2>
+     
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+  <tbody>
+    <tr>
+      <td valign="top">Grid Engine<br>
+      </td>
+      <td valign="top"><a href="http://wwws.sun.com/grid">Sun Grid Engine</a><br>
+      <a href="http://wwws.sun.com/gridware/training.html">Sun Grid Engine
+training</a><br>
+      <br>
+      <a href="http://gridengine.sunsource.net">Grid Engine Open Source Project</a><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">SunONE Portal Server<br>
+      </td>
+      <td valign="top"><a
+ href="http://wwws.sun.com/software/product_categories/portal_servers.html">SunONE
+Portal Server</a><br>
+      <a href="http://docs.sun.com/db/prod/s1.s1portals#hic">SunONE Portal
+Server Documentation</a><br>
+      <br>
+      <a href="http://wwws.sun.com/software/download/download">SunONE Portal
+Server 3, formerly iPlanet Portal Server</a><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">Grid Engine Portal<br>
+      </td>
+      <td valign="top">Packages:<br>
+      <font color="#ff0000">Grid Engine Portal packages S1PS 6.0</font><br>
+      <br>
+      <font color="#ff0000">Grid Engine Portal packages </font><font
+ color="#ff0000">iPS 3.0</font><br>
+Documentation:<a
+ href="http://gridengine.sunsource.net/gep/GEP_Installation.html"><br>
+Grid Engine Portal Installation Guide</a> <br>
+      <a href="http://gridengine.sunsource.net/gep/GEP_whitepaper.pdf">Grid
+Engine Portal Whitepaper</a><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">Graphical Application Support<br>
+      </td>
+      <td valign="top"><a href="http://www.realvnc.com">VNC</a> has been
+used to make graphical applications available through<br>
+the portal. This integration is outlined in the installation guide and<br>
+additional README files.<br>
+      <a href="http://www.tarantella.com"><br>
+      </a>Commercial packages such as Tarantella are also available for <br>
+displaying graphics and interactive applications from multiple<br>
+platforms in a browser. There is an integration effort with S1PS 6<br>
+underway. For iPS 3 a integration is already available. Additional<br>
+information can be found at <a href="http://www.tarantella.com">Tarantella's
+Homepage</a> .<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<table cellpadding="2" cellspacing="2" border="1" width="100%">
+  <tbody>
+    <tr>
+      <td valign="top">For discussions and community building Grid Engine
+Portal<br>
+mailing list has been setup. <br>
+      <br>
+To subscribe/unsusbscribe go to the <a
+ href="http://gridengine.sunsource.net/project/gridengine/maillist.html">Grid
+Engine Mailing Lists</a> page.<br>
+      </td>
+      <td valign="top"><a href="mailto:gep@gridengine.sunsource.net">gep@gridengine.sunsource.net</a><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">Problem reports, enhancement requests and community
+decisions<br>
+can be tracked for Grid Engine Portal in the GEP subcomponent of<br>
+Grid Engine Issue Tracking. To be able to enter your own issues it is<br>
+necessary to register in the Grid Engine project as an Observer.<br>
+      </td>
+      <td valign="top"><a
+ href="http://gridengine.sunsource.net/issues/query.cgi?component=gridengine">Grid
+Engine Issue Tracking</a><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">Registering for the Grid Engine (Portal) project is
+a two phase process.<br>
+      <ul>
+        <li>Register as a member of sunsource.net</li>
+        <li>Join the Grid Engine project<br>
+        </li>
+      </ul>
+      </td>
+      <td valign="top">
+      <ol>
+        <li><a href="http://gridengine.sunsource.net/servlets/Join">Register
+as member of sunsource.net</a></li>
+        <li><a
+ href="http://gridengine.sunsource.net/servlets/ProjectMembershipRequest">Join
+the Grid Engine project</a><br>
+        </li>
+      </ol>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">The Grid Engine Portal source distribution can be
+retrieved via cvs.<br>
+For general questions concerning the use of cvs, ssh tunneling<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
      <br>
      <br>
      <br>
@@ -162,13 +244,11 @@ and  install the Secure Remote Access package  as part of this installation.
      <br>
      <font color="#ff0000">&lt;Andre to provide directions for downloading
  the  GEP package.&gt;</font><br>
-     Do we setup a special GEP mailing list ?<br>
-     OSC enhancement requests ?<br>
+OSC enhancement requests ?<br>
      Thumbnails of GEP screenshots should probably go here or even better 
 a  link  to a life demo installation <br>
-     Renaming of servlets how ? Shall we keep SunTCP, AdminTCP ?<br>
-     Full role support -&gt; changes in install guide.<br>
-     Issuezilla category GEP should be installed!</font><br>
+Full role support -&gt; changes in install guide.<br>
+</font><br>
      <br>
      <br>
      <br>

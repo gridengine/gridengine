@@ -807,7 +807,7 @@ if [ $instcommon = true ]; then
       Execute rm -rf $DEST_SGE_ROOT/man $DEST_SGE_ROOT/catman
       Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/SEDMAN/man $DEST_SGE_ROOT
       Execute rm -rf $DEST_SGE_ROOT/man/man3
-      Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/catman $DEST_SGE_ROOT
+      Execute cp -r MANSBUILD_$SGE_PRODUCT_MODE/ASCMAN/man $DEST_SGE_ROOT
    fi
 
    if [ $instdoc = true ]; then

@@ -1,3 +1,7 @@
+EB-2004-01-22-0: Bugfix:    CQ related bugfixes
+                            - changed defaults auf CQ template
+                            - changed verification of pe_list
+
 EB-2004-01-21-2: Enhancem.: Cleanup / Comments
 
 DT-2004-01-21-0: Bugfix:    drmaa_run_bulk_jobs() wasn't submiting the job as an

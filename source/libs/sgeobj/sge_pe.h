@@ -66,6 +66,6 @@ pe_urgency_slots(const lListElem *pe,
 
 bool 
 pe_list_do_all_exist(const lList *pe_list, lList **answer_list, 
-                     const lList *pe_ref_list);
+                     const lList *pe_ref_list, bool ignore_make_pe);
 
 #endif /* __SGE_PE_H */

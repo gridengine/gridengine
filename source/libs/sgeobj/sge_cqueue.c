@@ -376,7 +376,7 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
          lListElem *attr = lAddElemHost(&attr_list, ABOOL_href, 
                                         HOSTREF_DEFAULT, ABOOL_Type);
 
-         lSetBool(attr, ABOOL_value, true);
+         lSetBool(attr, ABOOL_value, false);
          lSetList(this_elem, CQ_rerun, attr_list);
       }
 
@@ -501,13 +501,19 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
             NoName
          };
          int index = 0;
+         lList *value[] = {
+            NULL, NULL, NULL
+         };
+
+         value[0] = lCreateList("", ST_Type);
+         lAddElemStr(&(value[0]), ST_name, "make", ST_Type);
 
          while (attr[index] != NoName) {
             lList *attr_list = NULL;
             lListElem *attr_elem = lAddElemHost(&attr_list, ASTRLIST_href, 
                                                 HOSTREF_DEFAULT, ASTRLIST_Type);
 
-            lSetList(attr_elem, ASTRLIST_value, NULL);
+            lSetList(attr_elem, ASTRLIST_value, value[index]);
             lSetList(this_elem, attr[index], attr_list);
             index++;
          }
@@ -564,14 +570,22 @@ cqueue_set_template_attributes(lListElem *this_elem, lList **answer_list)
             CQ_consumable_config_list,
             NoName
          };
+         lList *value[] = {
+            NULL, NULL, NULL, NULL
+         };
          int index = 0;
+         lListElem *elem;
+
+         value[0] = lCreateList("", CE_Type);
+         elem = lAddElemStr(&(value[0]), CE_name, "np_load_avg", CE_Type); 
+         lSetString(elem, CE_stringval, "1.75");
 
          while (attr[index] != NoName) {
             lList *attr_list = NULL;
             lListElem *attr_elem = lAddElemHost(&attr_list, ACELIST_href, 
                                                 HOSTREF_DEFAULT, ACELIST_Type);
 
-            lSetList(attr_elem, ACELIST_value, NULL);
+            lSetList(attr_elem, ACELIST_value, value[index]);
             lSetList(this_elem, attr[index], attr_list);
             index++;
          }
@@ -987,7 +1001,7 @@ cqueue_verify_pe_list(lListElem *cqueue, lList **answer_list,
       if (pe_list != NULL) {
          const lList *master_list = *(pe_list_get_master_list());
 
-         if (!pe_list_do_all_exist(master_list, answer_list, pe_list)) {
+         if (!pe_list_do_all_exist(master_list, answer_list, pe_list, true)) {
             ret = false;
          }
       }

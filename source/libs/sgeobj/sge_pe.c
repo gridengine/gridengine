@@ -33,6 +33,7 @@
 #include <fnmatch.h>
 #include <strings.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "sge.h"
 #include "sgermon.h"
@@ -365,7 +366,7 @@ int pe_validate_urgency_slots(lList **alpp, const char *s)
 /* EB: ADOC: add commets */
 
 bool pe_list_do_all_exist(const lList *pe_list, lList **answer_list,
-                          const lList *pe_ref_list)
+                          const lList *pe_ref_list, bool ignore_make_pe)
 {
    bool ret = true;
    lListElem *pe_ref_elem = NULL;
@@ -374,6 +375,9 @@ bool pe_list_do_all_exist(const lList *pe_list, lList **answer_list,
    for_each(pe_ref_elem, pe_ref_list) {
       const char *pe_ref_string = lGetString(pe_ref_elem, ST_name);
 
+      if (ignore_make_pe && !strcmp(pe_ref_string, "make")) { 
+         continue;
+      }
       if (pe_list_locate(pe_list, pe_ref_string) == NULL) {
          answer_list_add_sprintf(answer_list, STATUS_EEXIST, 
                                  ANSWER_QUALITY_ERROR, 

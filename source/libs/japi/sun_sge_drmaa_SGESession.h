@@ -108,11 +108,59 @@ JNIEXPORT jobject JNICALL Java_sun_sge_drmaa_SGESession_nativeWait
 
 /*
  * Class:     sun_sge_drmaa_SGESession
+ * Method:    nativeAllocateJobTemplate
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_sun_sge_drmaa_SGESession_nativeAllocateJobTemplate
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     sun_sge_drmaa_SGESession
+ * Method:    nativeSetAttributeValue
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_sun_sge_drmaa_SGESession_nativeSetAttributeValue
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     sun_sge_drmaa_SGESession
+ * Method:    nativeSetAttributeValues
+ * Signature: (Ljava/lang/String;[Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_sun_sge_drmaa_SGESession_nativeSetAttributeValues
+  (JNIEnv *, jobject, jstring, jobjectArray);
+
+/*
+ * Class:     sun_sge_drmaa_SGESession
  * Method:    nativeGetSignalName
  * Signature: (I)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_sun_sge_drmaa_SGESession_nativeGetSignalName
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     sun_sge_drmaa_SGESession
+ * Method:    nativeGetAttributeNames
+ * Signature: ()[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_sun_sge_drmaa_SGESession_nativeGetAttributeNames
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     sun_sge_drmaa_SGESession
+ * Method:    nativeGetAttribute
+ * Signature: (Ljava/lang/String;)[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_sun_sge_drmaa_SGESession_nativeGetAttribute
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     sun_sge_drmaa_SGESession
+ * Method:    nativeDeleteJobTemplate
+ * Signature: (Lcom/sun/grid/drmaa/JobTemplate;)V
+ */
+JNIEXPORT void JNICALL Java_sun_sge_drmaa_SGESession_nativeDeleteJobTemplate
+  (JNIEnv *, jobject, jobject);
 
 #ifdef __cplusplus
 }

@@ -142,7 +142,7 @@ extern "C" {
 *
 *     SGE_LIST(JAT_previous_usage_list)
 *
-*     SGE_LIST(JAT_pe_object)
+*     SGE_OBJECT(JAT_pe_object)
 *        PE object granted to this task (PE_Type), only used in execd
 *
 *     SGE_ULONG(JAT_next_pe_task_id)         
@@ -291,7 +291,7 @@ NAMEDEF(JATN)
    NAME("JAT_task_list")
    NAME("JAT_finished_task_list")
    NAME("JAT_previous_usage_list")
-   NAME("JAT_reference")
+/*    NAME("JAT_reference") */
 
    NAME("JAT_pe_object")
    NAME("JAT_next_pe_task_id")

@@ -1,10 +1,16 @@
+JG-2003-07-09-0: Bugfix:    Slave tasks of tightly integrated parallel jobs 
+                            exceeding wall clock time were not killed.
+                 Bugtraq:   4881949
+                 Issue:     575
+                 Review:    EB
+                 Changed:   sge_execd
+
 SG-2003-07-03-0: Bugfix:    max_u_jobs could count too many jobs
 
-                            The sge_add_job had multiple exits after the max_u_job
-                            counter was increased. This was fixed. 
-                            For some reason, this feature was disabled in the maintrunk.
-                            I enabled it.
-                          
+                            The sge_add_job had multiple exits after the 
+                            max_u_job counter was increased. This was fixed. 
+                            For some reason, this feature was disabled in the 
+                            maintrunk.  I enabled it.
                  Bugtrag:   4886026
                  Issue:     576
                  Review:    AS

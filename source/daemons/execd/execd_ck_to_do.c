@@ -90,6 +90,11 @@ extern volatile int dead_children;
 extern volatile int waiting4osjid;
 
 
+static bool 
+sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task);
+static bool
+sge_kill_petasks(const lListElem *job, const lListElem *ja_task);
+
 static int sge_start_jobs(void);
 static int exec_job_or_task(lListElem *jep, lListElem *jatep, lListElem *petep);
 
@@ -435,10 +440,15 @@ int answer_error
                 (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
                INFO((SGE_EVENT, MSG_EXECD_EXCEEDHWALLCLOCK_UU,
                     u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number)))); 
-               sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGKILL, 
-                        lGetUlong(jep, JB_job_number),
-                        lGetUlong(jatep, JAT_task_number),
-                        NULL);     
+               if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
+                  sge_kill_petasks(jep, jatep);
+               }
+               if (lGetUlong(jatep, JAT_pid) != 0) {
+                  sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGKILL, 
+                           lGetUlong(jep, JB_job_number),
+                           lGetUlong(jatep, JAT_task_number),
+                           NULL);     
+               }
                lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);
             }    
             continue;
@@ -449,10 +459,15 @@ int answer_error
                 (now > lGetUlong(jatep, JAT_pending_signal_delivery_time))) {
                INFO((SGE_EVENT, MSG_EXECD_EXCEEDSWALLCLOCK_UU,
                     u32c(lGetUlong(jep, JB_job_number)), u32c(lGetUlong(jatep, JAT_task_number))));  
-               sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGUSR1, 
-                        lGetUlong(jep, JB_job_number),
-                        lGetUlong(jatep, JAT_task_number),
-                        NULL);
+               if (sge_execd_ja_task_is_tightly_integrated(jatep)) {
+                  sge_kill_petasks(jep, jatep);
+               }
+               if (lGetUlong(jatep, JAT_pid) != 0) {
+                  sge_kill(lGetUlong(jatep, JAT_pid), SGE_SIGUSR1, 
+                           lGetUlong(jep, JB_job_number),
+                           lGetUlong(jatep, JAT_task_number),
+                           NULL);
+               }
                lSetUlong(jatep, JAT_pending_signal_delivery_time, now+90);         
             }
             continue;
@@ -542,6 +557,85 @@ int answer_error
          DEXIT;
          return 0;
    }
+}
+
+/****** execd_ck_to_do/sge_execd_ja_task_is_tightly_integrated() ***************
+*  NAME
+*     sge_execd_ja_task_is_tightly_integrated() -- is it a tightly integr. parallel job?
+*
+*  SYNOPSIS
+*     static bool 
+*     sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task) 
+*
+*  FUNCTION
+*     Checks if a certain job (ja_task) is running in a tightly integrated
+*     parallel environment.
+*
+*  INPUTS
+*     const lListElem *ja_task - ja_task (in execd context)
+*
+*  RESULT
+*     static bool - true, if it is a tightly integrated job, else false
+*
+*******************************************************************************/
+static bool 
+sge_execd_ja_task_is_tightly_integrated(const lListElem *ja_task)
+{
+   bool ret = false;
+
+   if (ja_task != NULL) {
+      const lListElem *pe;
+
+      pe = lGetObject(ja_task, JAT_pe_object);
+      if (pe != NULL) {
+         if (lGetBool(pe, PE_control_slaves)) {
+            ret = true;
+         }
+      }
+   }
+
+   return ret;
+}
+
+/****** execd_ck_to_do/sge_kill_petasks() **************************************
+*  NAME
+*     sge_kill_petasks() -- kill all pe tasks of a tightly integr. parallel job
+*
+*  SYNOPSIS
+*     static bool 
+*     sge_kill_petasks(const lListElem *job, const lListElem *ja_task) 
+*
+*  FUNCTION
+*     Kills all tasks of a tightly integrated parallel job/array task.
+*
+*  INPUTS
+*     const lListElem *job     - the job
+*     const lListElem *ja_task - the array task
+*
+*  RESULT
+*     static bool - true, if any task was found and could be signalled, 
+*                   else false
+*
+*******************************************************************************/
+static bool
+sge_kill_petasks(const lListElem *job, const lListElem *ja_task)
+{
+   bool ret = false;
+
+   if (job != NULL && ja_task != NULL) {
+      lListElem *pe_task;
+
+      for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
+         if (sge_kill(lGetUlong(pe_task, PET_pid), SGE_SIGKILL,
+                      lGetUlong(job, JB_job_number),
+                      lGetUlong(ja_task, JAT_task_number),
+                      lGetString(pe_task, PET_id)) == 0) {
+            ret = true;
+         }
+      }
+   }
+
+   return ret;
 }
 
 

@@ -517,7 +517,8 @@ const char *pe_task_id
       direct_signal = 0;        /* communication has to be done via file */
    }
 
-   DPRINTF(("signalling pid "pid_t_fmt" with %d\n", pid, sig));
+   DPRINTF(("signalling job/task "SFN", pid "pid_t_fmt" with %d\n", 
+            job_get_id_string(job_id, ja_task_id, pe_task_id), pid, sig));
    if (!direct_signal) {
       dstring fname = DSTRING_INIT;
       FILE *fp;

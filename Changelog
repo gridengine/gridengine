@@ -1,4 +1,7 @@
-AS-2005-01-01-0  Bugfix:    set version to 6.0u3
+CR-2005-01-03-0: Testsuite: added binary test module for issue #1389
+                            and issue #1400
+
+AS-2005-01-01-0: Bugfix:    set version to 6.0u3
 
 JG-2005-01-03-0: Bugfix:    Fixed aimk -no-mk.
 

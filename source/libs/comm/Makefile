@@ -74,7 +74,8 @@ COMMLIB_TEST_SRC = \
          test_virtual_event_client.c \
          test_virtual_gdi_client.c \
          test_debug_client.c \
-         test_status_info.c
+         test_status_info.c \
+         test_issues.c
 
 COMMLIB_TEST_OBJS = $(COMMLIB_TEST_SRC:.c=.o)
 
@@ -87,7 +88,7 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 comm_all: commlib commlists_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
      test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
      test_server_connection test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
-     test_virtual_gdi_client test_debug_client
+     test_virtual_gdi_client test_debug_client test_issues
 
 depend: commlib_depend commlistslib_depend
 
@@ -102,7 +103,7 @@ commlib_clean: commlistslib_clean
       test_cl_tcp_framework test_cl_commlib_client test_cl_commlib test_cl_hostname_list \
       test_cl_hostalias_list test_multithread_io test_status_info test_server_connection \
       test_cl_endpoint_list test_virtual_qmaster test_virtual_event_client \
-      test_virtual_gdi_client test_debug_client
+      test_virtual_gdi_client test_debug_client test_issues
 
 commlib_depend: commlistslib_depend
 		$(DEPEND) -f$(COMMLIB_DIR)/commlib_dependencies $(COMMLIB_DIR)/*.c
@@ -184,6 +185,9 @@ test_debug_client: test_debug_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LC
 	$(CC) -o test_debug_client $(LFLAGS) test_debug_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_status_info: test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_status_info $(LFLAGS) test_status_info.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+test_issues: test_issues.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_issues $(LFLAGS) test_issues.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+
 
 
 test_cl_tcp_framework.o: $(COMMLIB_DIR)/test_cl_tcp_framework.c
@@ -210,6 +214,8 @@ test_virtual_gdi_client.o: $(COMMLIB_DIR)/test_virtual_gdi_client.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_virtual_gdi_client.c
 test_status_info.o: $(COMMLIB_DIR)/test_status_info.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_status_info.c
+test_issues.o: $(COMMLIB_DIR)/test_issues.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_issues.c
 test_debug_client.o: $(COMMLIB_DIR)/test_debug_client.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_debug_client.c
 

@@ -103,7 +103,7 @@ sched_func_struct sched_funcs[] =
    {"ext_mysched",  "sample #1 scheduler", event_handler_default_scheduler, (void *)my_scheduler },
    {"ext_mysched2", "sample #2 scheduler", event_handler_my_scheduler,      (void *)scheduler },
 #endif
-   {NULL, NULL}
+   {NULL, NULL, NULL, NULL}
 };
 
 

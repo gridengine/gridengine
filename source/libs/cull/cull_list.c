@@ -197,8 +197,8 @@ int dst_idx
 
    switch (dep->descr[dst_idx].mt) {
    case lUlongT:
-      lSetPosUlong(dep, dst_idx, lGetPosUlong(sep, src_idx));
       dep->cont[dst_idx].ul = sep->cont[src_idx].ul;
+/*       lSetPosUlong(dep, dst_idx, lGetPosUlong(sep, src_idx)); */
       break;
    case lStringT:
       if (!sep->cont[src_idx].str)

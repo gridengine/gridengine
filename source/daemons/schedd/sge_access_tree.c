@@ -135,7 +135,7 @@ lListElem *job_array
       if (!(user=lGetSubStr(pgr, USR_name, owner, PGR_subordinated_list))) {
          user = lAddSubStr(pgr, USR_name, owner, PGR_subordinated_list, USR_Type);
          DPRINTF(("AT + %d %s\n", priority, owner));
-         lSortList(priority_group_list, so_pgr);
+         lSortList(lGetList(pgr, PGR_subordinated_list), so_usr);
       }
       if (!(jrl = lGetList(user, USR_job_references))) {
          jrl = lCreateList("", JRL_Type);

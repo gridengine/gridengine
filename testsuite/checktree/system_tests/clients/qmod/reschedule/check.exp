@@ -62,9 +62,10 @@ set check_functions ""
 lappend check_functions "reschedule_setup"
 lappend check_functions "reschedule_submit_jobs"
 lappend check_functions "reschedule_checkpointing"
-#lappend check_functions "reschedule_qsh_qlogin_qrsh_qrlogin"
-#lappend check_functions "reschedule_pe_jobs"
-#lappend check_functions "reschedule_deleted_job"
+lappend check_functions "reschedule_checkpointing_forced"
+lappend check_functions "reschedule_qsh_qlogin_qrsh_qrlogin"
+lappend check_functions "reschedule_pe_jobs"
+lappend check_functions "reschedule_deleted_job"
 lappend check_functions "reschedule_cleanup"
 
 
@@ -495,10 +496,6 @@ proc reschedule_checkpointing {} {
    global CHECK_PRODUCT_ROOT CHECK_ARCH
  
 
-   set_error -3 "check not completele implemented"
-   return
-
- 
    if { [is_version_ok] != 0 } {
       set_error -3 "This feature is not supportet for version [get_version_info]"
       return -3
@@ -543,8 +540,8 @@ proc reschedule_checkpointing {} {
    puts $CHECK_OUTPUT $output
 
   
-   set sched_jobs    "[lindex $jobs 0] [lindex $jobs 3]"
-   set no_sched_jobs "[lindex $jobs 1] [lindex $jobs 2]"
+   set sched_jobs    "[lindex $jobs 0]"
+   set no_sched_jobs "[lindex $jobs 1] [lindex $jobs 2] [lindex $jobs 3]"
    puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
    foreach elem $sched_jobs {
       wait_for_jobpending $elem "Sleeper" 80
@@ -593,8 +590,111 @@ proc reschedule_checkpointing {} {
       wait_for_jobend $elem "Sleeper" 80 0
    }
  
-   set_error -3 "test not completely implemented"
+   set_error 0 "ok"
 }
+
+proc reschedule_checkpointing_forced {} {
+   global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
+   global CHECK_PRODUCT_ROOT CHECK_ARCH
+ 
+
+   if { [is_version_ok] != 0 } {
+      set_error -3 "This feature is not supportet for version [get_version_info]"
+      return -3
+   }
+
+ 
+   set jobs ""
+   set my_outputs "-o /dev/null -e /dev/null"
+   set arguments "$my_outputs -ckpt qmod_with_r $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
+   lappend jobs [submit_job $arguments]
+   
+   set arguments "$my_outputs -ckpt qmod_without_r $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
+   lappend jobs [ submit_job $arguments ]
+
+   set arguments "$my_outputs -ckpt qmod_with_r -r n $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
+   lappend jobs [submit_job $arguments]
+   
+   set arguments "$my_outputs -ckpt qmod_without_r -r y $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1000"
+   lappend jobs [ submit_job $arguments ]
+ 
+
+   set jobs_string ""
+   foreach elem $jobs {
+      wait_for_jobstart $elem "Sleeper" 80
+      wait_for_end_of_transfer $elem 80
+      append jobs_string "$elem "
+   }
+
+   puts $CHECK_OUTPUT "running jobs: $jobs_string"
+
+   
+
+   puts $CHECK_OUTPUT "disabling queue $rerun_queue"
+   disable_queue $rerun_queue
+
+   
+   # send qmod -r to each job
+  
+   puts $CHECK_OUTPUT "sending qmod -f -r to jobs $jobs_string"   
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -f -r $jobs_string" } output ]
+   
+   puts $CHECK_OUTPUT $output
+
+  
+   set sched_jobs    "[lindex $jobs 0] [lindex $jobs 1] [lindex $jobs 2] [lindex $jobs 3]"
+   set no_sched_jobs ""
+   puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
+   foreach elem $sched_jobs {
+      wait_for_jobpending $elem "Sleeper" 80
+   }
+   
+   puts $CHECK_OUTPUT "jobs $no_sched_jobs should still run ..."
+   foreach elem $no_sched_jobs {
+      wait_for_jobstart $elem "Sleeper" 80
+   }
+   enable_queue $rerun_queue
+   foreach elem $jobs {
+      wait_for_jobstart $elem "Sleeper" 80
+      wait_for_end_of_transfer $elem 80
+   }
+   
+   puts $CHECK_OUTPUT "disabling queue $rerun_queue"
+   disable_queue $rerun_queue
+
+
+   # send qmod -r to each job in queue 
+   puts $CHECK_OUTPUT "sending qmod -f -r to queue $rerun_queue"   
+   set result [ catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qmod -f -r $rerun_queue" } output ]
+   puts $CHECK_OUTPUT $output
+
+
+   puts $CHECK_OUTPUT "jobs $sched_jobs should be pending ..."
+   foreach elem $sched_jobs {
+      wait_for_jobpending $elem "Sleeper" 80
+   }
+   
+   puts $CHECK_OUTPUT "jobs $no_sched_jobs should still run ..."
+   foreach elem $no_sched_jobs {
+      wait_for_jobstart $elem "Sleeper" 80
+   }
+
+   enable_queue $rerun_queue
+
+   foreach elem $jobs {
+      wait_for_jobstart $elem "Sleeper" 80
+      wait_for_end_of_transfer $elem 80
+   }
+
+   # cleanup jobs
+   foreach elem $jobs {
+      delete_job $elem
+      wait_for_jobend $elem "Sleeper" 80 0
+   }
+ 
+   set_error 0 "ok"
+}
+
 
 #
 #                                                             max. column:     |
@@ -629,7 +729,8 @@ proc reschedule_checkpointing {} {
 #
 proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    global rerun_queue no_rerun_queue CHECK_OUTPUT rerun_host no_rerun_host
-   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_HOST CHECK_DEBUG_LEVEL CHECK_USER
+   global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SCRIPT_FILE_DIR
    
 
    if { [is_version_ok] != 0 } {
@@ -645,14 +746,67 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       set_error -3 "root access required for submitting qlogin"
       set no_jobs 3
    } else {
+
 #      set qlogin_id  [ open_root_spawn_process "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue" ]
-      set qlogin_id  [ open_remote_spawn_process $CHECK_HOST "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin" "-q $rerun_queue" ]
+#      set qlogin_id  [ open_remote_spawn_process $CHECK_HOST "root" "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin" "-q $rerun_queue" ]
+      
+      catch { eval exec "rm /tmp/qlogin_out.txt" }
+
+
+      set qlogin_id  [ open_spawn_process "$CHECK_SCRIPT_FILE_DIR/qlogin.sh $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qlogin -q $rerun_queue" ]
+
       set no_jobs 4
-   }
+      set result ""
+      set my_timeout [timestamp]
+      incr my_timeout 60
+      while { [ string first "login:" $result] < 0 } {     
+         sleep 2
+         catch { eval exec "cat /tmp/qlogin_out.txt" } result
+         puts $CHECK_OUTPUT $result
+         if { $my_timeout < [timestamp] } {
+            break;
+         } 
+      }
+
+      if { [ string first "login:" $result] < 0 } {
+          add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin error"
+      }
+      
+      send "$CHECK_USER\n"
+      set timeout 5
+      expect {
+         eof { 
+             puts $CHECK_OUTPUT "got eof" 
+             add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin unexpected eof"
+         }
+         timeout {
+             puts $CHECK_OUTPUT "got timeout"
+         }
+      }
+
+      set result ""
+      set my_timeout [timestamp]
+      incr my_timeout 60
+      set timeout 0
+      while { [ string first "assword:" $result] < 0 } {     
+         sleep 2
+         catch { eval exec "cat /tmp/qlogin_out.txt" } result
+         puts $CHECK_OUTPUT $result
+         if { $my_timeout < [timestamp] } {
+            break;
+         } 
+      }
+
+      if { [ string first "closed" $result] >= 0 } {
+          add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin error, connection closed"
+      }
+
+
+   } 
+
+
+   set end_time [expr ( [timestamp] + 60 )]
    set ru_jobs 0
-
-
-   set end_time [expr ( [timestamp] + 300 )]
    while { $ru_jobs != $no_jobs } {
       get_extended_job_info ""
       set running_jobs [ split $job_info(index) "," ]
@@ -707,11 +861,13 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
    }
    puts $CHECK_OUTPUT "closing jobs"
 
-   close_spawn_process $qrsh_id
-   close_spawn_process $qrsh_id2
-   close_spawn_process $qsh_id
+   close_spawn_process $qrsh_id 1
+   close_spawn_process $qrsh_id2 1
+   close_spawn_process $qsh_id 1
    if { [have_root_passwd] != -1 } {
-      close_spawn_process $qlogin_id
+      send -i $qlogin_id "\003"
+      close_spawn_process $qlogin_id 1
+      catch { eval exec "rm /tmp/qlogin_out.txt" }
    }
    set_error 0 "ok"
 
@@ -786,7 +942,8 @@ proc reschedule_pe_jobs {} {
                 set slave_queue [lindex $elem 7]
                 puts $CHECK_OUTPUT "slave runs on queue $slave_queue"
              }
-          } 
+          }
+          puts $CHECK_OUTPUT "-----------" 
           if { [llength $job_info] == 2 } {
              puts $CHECK_OUTPUT "MASTER and SLAVE task are running!"
              set run 0
@@ -798,6 +955,7 @@ proc reschedule_pe_jobs {} {
           } 
           sleep 1
        }
+
 
        if { [string compare $master_queue $rerun_queue] != 0 } {
           puts $CHECK_OUTPUT "\"$master_queue\"\n\"$rerun_queue\""
@@ -887,7 +1045,7 @@ proc reschedule_pe_jobs {} {
        delete_job $job
        wait_for_jobend $job "Sleeper" 100
    }
-   set_error -3 "ok"
+   set_error 0 "ok"
 }
 
 #
@@ -954,7 +1112,6 @@ proc reschedule_deleted_job {} {
    catch {exec $CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf -ke $no_rerun_host} output
    puts $output
 
-
    puts $CHECK_OUTPUT "deleting job $job_id ..."
    delete_job $job_id
 
@@ -972,11 +1129,6 @@ proc reschedule_deleted_job {} {
    
  
    # restart execd
-   if { $CHECK_ADMIN_USER_SYSTEM == 0 } { 
-     set users_name "root"
-    } else {
-     set users_name "$CHECK_USER"
-  }
    puts $CHECK_OUTPUT "restarting execd on host $no_rerun_host ..."
    startup_execd $no_rerun_host
    wait_for_load_from_all_queues 200 

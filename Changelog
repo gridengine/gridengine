@@ -1,3 +1,6 @@
+CR-2002-02-20-0: Testsuite: cleanup of qmod reschedule test
+                 Issue:     #118
+
 EB-2002-02-20-0: Enhancem.: need means for limiting total number of 
                             jobs in a cluster 
                  Issue:     #136

@@ -564,8 +564,7 @@ int sge_setup_qmaster()
    }
 
    DPRINTF(("job_list-----------------------------------\n"));
-   if (job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 
-                               1,
+   if (job_list_read_from_disk(&Master_Job_List, "Master_Job_List", 1,
                                SPOOL_DEFAULT, NULL)) {
       DEXIT;
       return -1;
@@ -573,9 +572,8 @@ int sge_setup_qmaster()
 
    if (conf.zombie_jobs > 0) {
       DPRINTF(("zombie_list--------------------------------------\n"));
-      if (job_list_read_from_disk(&Master_Zombie_List, 
-                                      "Master_Zombie_List", 0,
-                                      SPOOL_HANDLE_AS_ZOMBIE, NULL)) {
+      if (job_list_read_from_disk(&Master_Zombie_List, "Master_Zombie_List", 0,
+                                  SPOOL_HANDLE_AS_ZOMBIE, NULL)) {
          DEXIT;
          return -1;
       }

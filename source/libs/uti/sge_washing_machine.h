@@ -32,6 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+typedef enum {
+   WASHING_MACHINE_ROTATING_BAR,
+   WASHING_MACHINE_DOTS
+} washing_machine_t;
+
+void washing_machine_set_type(washing_machine_t type);
+
 void washing_machine_next_turn(void);
 
 void washing_machine_end_turn(void);

@@ -58,6 +58,8 @@
 #include "sge_stat.h"
 #include "job.h"
 #include "msg_common.h"
+#include "sge_suser.h"
+#include "sge_conf.h"
 
 extern lList *Master_Job_List;
 
@@ -561,6 +563,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
    lList *first_direnties; 
    lListElem *first_direntry;
    stringT path;
+   int handle_as_zombie = (flags & SPOOL_HANDLE_AS_ZOMBIE) > 0;
 
    DENTER(TOP_LAYER, "job_read_job_list_from_disk"); 
    sge_get_file_path(first_dir, JOBS_SPOOL_DIR, FORMAT_FIRST_PART, 
@@ -571,6 +574,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
       printf(MSG_CONFIG_READINGINX_S, list_name);
    }
 
+   washing_machine_set_type(WASHING_MACHINE_DOTS);
    for (;
         (first_direntry = lFirst(first_direnties)); 
         lRemoveElem(first_direnties, first_direntry)) {
@@ -579,7 +583,6 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
       lListElem *second_direntry;
       const char *first_entry_string;
 
-      washing_machine_next_turn();
 
       first_entry_string = lGetString(first_direntry, STR);
       sprintf(path, "%s/%s", first_dir, first_entry_string);
@@ -619,6 +622,7 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
             u_long32 job_id, ja_task_id;
             int all_finished;
 
+            washing_machine_next_turn();
             sprintf(fourth_dir, SFN"/"SFN, third_dir,
                     lGetString(third_direntry, STR));
             sprintf(job_id_string, SFN SFN SFN, 
@@ -688,6 +692,10 @@ int job_list_read_from_disk(lList **job_list, char *list_name, int check,
 
             lSetList(job, JB_jid_sucessor_list, NULL); 
             job_list_add_job(job_list, list_name, job, 0);
+            
+            if (!handle_as_zombie) {
+               suser_register_new_job(job, conf.max_u_jobs, 1);
+            }
          }
          third_direnties = lFreeList(third_direnties);
       }

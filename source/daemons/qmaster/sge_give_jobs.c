@@ -100,6 +100,7 @@
 #include "sge_range.h"
 #include "sge_job_jatask.h"
 #include "sge_string.h"
+#include "sge_suser.h"
 
 #ifdef QIDL
 #include "qidl_c_gdi.h"
@@ -1119,71 +1120,63 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
                         int spool_job, int no_events) 
 {
    u_long32 ja_task_id = lGetUlong(ja_task, JAT_task_number);
-#if 0 /* EB: not necessary */
-   int is_defined = job_is_ja_task_defined(job, ja_task_id); 
-#endif
+   int remove_job = (!ja_task || job_get_ja_tasks(job) == 1);
 
    DENTER(TOP_LAYER, "sge_bury_job");
 
-#if 0 /* EB: not necessary */ 
-   if (is_defined) 
-#endif
-   {
-      int remove_job = (!ja_task || job_get_ja_tasks(job) == 1);
+   job = sge_locate_job(job_id);
+   te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, job_id, ja_task_id);
 
-      job = sge_locate_job(job_id);
-      te_delete(TYPE_SIGNAL_RESEND_EVENT, NULL, job_id, ja_task_id);
+   /*
+    * Remove the job with the last task
+    * or
+    * Remove one ja task
+    */
+   if (remove_job) {
+      job_log(job_id, ja_task_id, MSG_LOG_EXITED);
+      release_successor_jobs(job);
 
       /*
-       * Remove the job with the last task
-       * or
-       * Remove one ja task
+       * security hook
        */
-      if (remove_job) {
-         job_log(job_id, ja_task_id, MSG_LOG_EXITED);
-         release_successor_jobs(job);
+      delete_credentials(job);
 
-         /*
-          * security hook
-          */
-         delete_credentials(job);
+      /* 
+       * do not try to remove script file for interactive jobs 
+       */
+      if (lGetString(job, JB_script_file)) {
+         unlink(lGetString(job, JB_exec_file));
+      }
+      job_remove_spool_file(job_id, 0, 0);
 
-         /* 
-          * do not try to remove script file for interactive jobs 
-          */
-         if (lGetString(job, JB_script_file)) {
-            unlink(lGetString(job, JB_exec_file));
-         }
-         job_remove_spool_file(job_id, 0, 0);
+      /*
+       * remove the job
+       */
+      suser_unregister_job(job);
+      lRemoveElem(Master_Job_List, job);
+      if (!no_events) {
+         sge_add_event(NULL, sgeE_JOB_DEL, job_id, ja_task_id, NULL, NULL);
+      }
+   } else {
+      int is_enrolled = job_is_enrolled(job, ja_task_id);
 
-         /*
-          * remove the job
-          */
-         lRemoveElem(Master_Job_List, job);
-         if (!no_events) {
-            sge_add_event(NULL, sgeE_JOB_DEL, job_id, ja_task_id, NULL, NULL);
-         }
+      job_log(job_id, ja_task_id, MSG_LOG_JATASKEXIT);
+
+      /*
+       * remove the task
+       */
+      if (is_enrolled) {
+         job_remove_spool_file(job_id, ja_task_id, 0);
+         lRemoveElem(lGetList(job, JB_ja_tasks), ja_task);
       } else {
-         int is_enrolled = job_is_enrolled(job, ja_task_id);
-
-         job_log(job_id, ja_task_id, MSG_LOG_JATASKEXIT);
-
-         /*
-          * remove the task
-          */
-         if (is_enrolled) {
-            job_remove_spool_file(job_id, ja_task_id, 0);
-            lRemoveElem(lGetList(job, JB_ja_tasks), ja_task);
-         } else {
-            job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
-            if (spool_job) {
-               job_write_spool_file(job, ja_task_id, SPOOL_DEFAULT);
-            }
+         job_delete_not_enrolled_ja_task(job, NULL, ja_task_id);
+         if (spool_job) {
+            job_write_spool_file(job, ja_task_id, SPOOL_DEFAULT);
          }
-         if (!no_events) {
-            sge_add_event(NULL, sgeE_JATASK_DEL, job_id, ja_task_id, 
-                          NULL, NULL);
-         }
+      }
+      if (!no_events) {
+         sge_add_event(NULL, sgeE_JATASK_DEL, job_id, ja_task_id, 
+                       NULL, NULL);
       }
    }
 

@@ -278,13 +278,13 @@ char **argv
       quality = lGetUlong(aep, AN_quality);
       s = lGetString(aep, AN_text);
       if (quality == NUM_AN_ERROR) {
-         if (s[strlen(s)-1] != '\n')
+         if (s[strlen(s)-1] != '\n') {
             fprintf(stderr, "%s\n", s);
-         else
+         } else {
             fprintf(stderr, "%s", s);
+         }
          do_exit = 1;
-      }
-      else {
+      } else {
          printf("%s", lGetString(aep, AN_text));
          if (job) {
             job_id =  lGetUlong(job, JB_job_number ); 
@@ -295,15 +295,22 @@ char **argv
       }
    }
 
-   if (just_verify)
+   if (just_verify) {
       do_exit = 1;
+   }
 
    /* if error or non-immediate job (w/o -now flag): exit */
    if(do_exit || !JB_NOW_IS_IMMEDIATE(lGetUlong(job, JB_now))) {
       lFreeList(lp_jobs);
       lFreeList(alp);
       lFreeList(opts_all);
-      SGE_EXIT(status==STATUS_OK?0:1);
+      if (status == STATUS_OK) {
+         SGE_EXIT(0);
+      } else if (status == STATUS_NOTOK_DOAGAIN) {
+         SGE_EXIT(status);
+      } else {
+         SGE_EXIT(1);
+      }
    }
 DTRACE;
    

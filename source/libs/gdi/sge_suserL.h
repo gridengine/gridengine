@@ -1,3 +1,6 @@
+#ifndef __SGE_SUSERL_H
+#define __SGE_SUSERL_H
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -30,67 +33,35 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <stdio.h>
+#include "sge_boundaries.h"
+#include "cull.h"
 
-#include "sge_washing_machine.h"
-#include "opt_silent.h"
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
-static washing_machine_t wtype;
+/* *INDENT-OFF* */
 
-void washing_machine_set_type(washing_machine_t type) 
-{
-   wtype = type;
+enum {
+   SU_name = SU_LOWERBOUND,
+   SU_jobs
+};
+
+LISTDEF(SU_Type)
+   SGE_STRING(SU_name)
+   SGE_ULONG(SU_jobs)
+LISTEND 
+
+NAMEDEF(SUN)
+   NAME("SU_name")
+   NAME("SU_jobs")
+NAMEEND
+
+/* *INDENT-ON* */ 
+
+#define SUS sizeof(SUN)/sizeof(char*)
+#ifdef  __cplusplus
 }
+#endif
 
-void washing_machine_next_turn(void)
-{
-   static int cnt = 0;
-   static char s[] = "-\\/";
-   static char *sp = NULL;
-
-   cnt++;
-   if ((cnt % 100) != 1) {
-      return;
-   }
-
-   switch (wtype) {
-   case WASHING_MACHINE_ROTATING_BAR:
-      {
-
-         if (!silent()) {
-            if (!sp || !*sp) {
-               sp = s;
-            }
-
-            printf("%c\b", *sp++);
-            fflush(stdout);
-         }
-      }
-      break;
-   case WASHING_MACHINE_DOTS: 
-      if (!silent()) {
-         printf(".");
-         fflush(stdout);
-      }
-      break;
-   default:
-   }
-}
-
-
-void washing_machine_end_turn(void)
-{
-   switch (wtype) {
-   case WASHING_MACHINE_ROTATING_BAR: 
-      if (!silent()) {
-         printf(" \b");
-         fflush(stdout);
-      }
-   case WASHING_MACHINE_DOTS:
-      if (!silent()) { 
-         printf("\n");
-         fflush(stdout);
-      }
-   default:
-   }
-}
+#endif

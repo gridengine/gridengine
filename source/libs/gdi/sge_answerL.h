@@ -71,9 +71,14 @@ enum {
    STATUS_ERROR1,            /* general error 1 */
    STATUS_ERROR2,            /* general error 2 */
    STATUS_ERROR3,            /* general error 3 */
-   STATUS_OK_DOAGAIN         /* 
+   STATUS_OK_DOAGAIN=24,     /* 
                               * everything was fine but transaction
                               * was not completly finished. 
+                              */
+   STATUS_NOTOK_DOAGAIN=25   /*
+                              * transaction was rejected. Try again later 
+                              * (value will be used as return value for
+                              * qsub)
                               */
 };
 

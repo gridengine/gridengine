@@ -65,6 +65,7 @@ GDILIB_SRC = sge_all_listsL.c \
          sge_security.c \
          sge_range.c \
          sge_job_jatask.c \
+         sge_suser.c \
          version.c
 
 GDILIB_OBJS = $(GDILIB_SRC:.c=.o)
@@ -194,4 +195,5 @@ sge_range.o: $(GDILIB_DIR)/sge_range.c
 sge_job_jatask.o: $(GDILIB_DIR)/sge_job_jatask.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_job_jatask.c
 
-
+sge_suser.o: $(GDILIB_DIR)/sge_suser.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_suser.c

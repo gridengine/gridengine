@@ -1,3 +1,6 @@
+EB-2002-01-21-0: Enhancem.: max_u_jobs parameter to limit the maximum number
+                            of jobs for a user.
+
 EB-2002-01-23-0: Bugfix:    qsub -e/o <path longer than MAX_STRING_SIZE>
                             caused crash of qmaster
 
@@ -40,6 +43,7 @@ JG-2002-01-22-0: Bugfix:    Tight integration using the mpi scripts:
                             second level qrsh call and qrsh tried to allocate
                             this TASK_ID a second time.
 
+>>>>>>> 1.266
 CR-2002-01-21-1: Testsuite: - setup checking length of product_root_directory
                             - setting default load_thresholds to "np_load_avg=11.00"
                             - Bugfix in submit hosts test 

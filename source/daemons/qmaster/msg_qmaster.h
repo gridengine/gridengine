@@ -308,6 +308,7 @@
 #define MSG_JOB_MORETASKSTHAN_U       _("job rejected: You try to submit a job with more than "U32CFormat" tasks\n")
 #define MSG_JOB_UID2LOW_II            _("job rejected: your user id %d is lower than minimum user id %d of cluster configuration\n")
 #define MSG_JOB_GID2LOW_II            _("job rejected: your group id %d is lower than minimum group id %d of cluster configuration\n")
+#define MSG_JOB_ALLOWEDJOBSPERUSER    _("job rejected: Only "U32CFormat" jobs are allowed per user\n")
 #define MSG_JOB_QNOTREQUESTABLE       _("job was rejected because job requests a queue while queues are not configured as requestable\n")
 #define MSG_JOB_QUNKNOWN_S            _("job was rejected because job requests unknown queue "SFQ"\n")
 #define MSG_JOB_NOSCRIPT              _("job rejected: no script in your request\n")
@@ -439,8 +440,6 @@
 #define MSG_SGETEXT_THEREARENOJOBS              _("There are no jobs registered\n")
 #define MSG_SGETEXT_NOJOBSDELETED               _("No jobs deleted\n")
 #define MSG_SGETEXT_NOJOBSMODIFIED              _("No jobs modified\n")
-
-
 
 /*
 ** sge_m_event.c

@@ -103,6 +103,7 @@
 #include "sge_job_jatask.h"
 #include "sge_job_jatask.h"
 #include "qmaster.h"
+#include "sge_suser.h"
 
 extern lList *Master_Queue_List;
 extern lList *Master_Exechost_List;
@@ -191,22 +192,25 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    }
 
    /* 
-      fill in user and group
-
-      this is not done by the submitter 
-      because we want to implement an 
-      gdi submit request 
-
-      it would be bad if you could say 
-      job->uid = 0
-      before submitting
-
-   */
+    * fill in user and group
+    *
+    * this is not done by the submitter because we want to implement an 
+    * gdi submit request it would be bad if you could say 
+    * job->uid = 0 before submitting
+    */
    lSetString(jep, JB_owner, user);
    lSetUlong(jep, JB_uid, uid);
-
    lSetString(jep, JB_group, group);
    lSetUlong(jep, JB_gid, gid);
+   
+   /* check conf.max_u_user */
+   if (suser_register_new_job(jep, conf.max_u_jobs, 0)) {
+      INFO((SGE_EVENT, MSG_JOB_ALLOWEDJOBSPERUSER, 
+            u32c(conf.max_u_jobs)));
+      sge_add_answer(alpp, SGE_EVENT, STATUS_NOTOK_DOAGAIN, 0);
+      DEXIT;
+      return STATUS_NOTOK_DOAGAIN;
+   }
 
    if (!sge_has_access_(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
          conf.user_lists, conf.xuser_lists, Master_Userset_List)) {

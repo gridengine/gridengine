@@ -82,6 +82,7 @@
 #include "sge_permissionL.h"
 #include "sge_loadsensorL.h"
 #include "sge_featureL.h"
+#include "sge_suserL.h"
 
 #ifdef SECURE
 #   include "sge_secL.h"
@@ -206,6 +207,7 @@ extern "C" {
       {LS_LOWERBOUND, LSS, LSN},        /* load sensor list */
       {FES_LOWERBOUND, FESS, FESN},     /* feature list */
       {FE_LOWERBOUND, FES, FEN},        /* feature list */
+      {SU_LOWERBOUND, SUS, SUN},        /* submit user */
 #ifdef SECURE      
       {SEC_LOWERBOUND, SecurityS, SecurityN},   /* Certificate security */
 #endif      

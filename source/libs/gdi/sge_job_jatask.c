@@ -864,7 +864,47 @@ lListElem *job_search_task(lListElem *job, lList **answer_list,
    DEXIT;
    return ja_task;
 }
-                            
+
+/****** gdi/job_jatask/job_get_shell_start_mode() *****************************
+*  NAME
+*     job_get_shell_start_mode() -- get shell start mode for 'job' 
+*
+*  SYNOPSIS
+*     const char* job_get_shell_start_mode(const lListElem *job, 
+*                                          const lListElem *queue,
+*                                          const char *conf_shell_start_mode) 
+*
+*  FUNCTION
+*     Returns a string identifying the shell start mode for 'job'.
+*
+*  INPUTS
+*     const lListElem *job              - JB_Type element 
+*     const lListElem *queue            - QU_Type element
+*     const char *conf_shell_start_mode - shell start mode of configuration
+*
+*  RESULT
+*     const char* - shell start mode
+******************************************************************************/
+const char *job_get_shell_start_mode(const lListElem *job,
+                                     const lListElem *queue,
+                                     const char *conf_shell_start_mode) 
+{
+   const char *ret;
+
+   if (lGetString(job, JB_job_source)) {
+      ret = "raw_exec";
+   } else {
+      const char *queue_start_mode = lGetString(queue, QU_shell_start_mode);
+   
+      if (queue_start_mode && strcasecmp(queue_start_mode, "none")) {
+         ret = queue_start_mode;
+      } else {
+         ret = conf_shell_start_mode;
+      }
+   }
+   return ret;
+}
+
 /****** gdi/job_jatask/job_list_add_job() *************************************
 *  NAME
 *     job_list_add_job() -- Creates a joblist and adds an job into it 
@@ -927,43 +967,3 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
    DEXIT;
    return 0;
 }     
-
-/****** gdi/job_jatask/job_get_shell_start_mode() *****************************
-*  NAME
-*     job_get_shell_start_mode() -- get shell start mode for 'job' 
-*
-*  SYNOPSIS
-*     const char* job_get_shell_start_mode(const lListElem *job, 
-*                                          const lListElem *queue,
-*                                          const char *conf_shell_start_mode) 
-*
-*  FUNCTION
-*     Returns a string identifying the shell start mode for 'job'.
-*
-*  INPUTS
-*     const lListElem *job              - JB_Type element 
-*     const lListElem *queue            - QU_Type element
-*     const char *conf_shell_start_mode - shell start mode of configuration
-*
-*  RESULT
-*     const char* - shell start mode
-******************************************************************************/
-const char *job_get_shell_start_mode(const lListElem *job,
-                                     const lListElem *queue,
-                                     const char *conf_shell_start_mode) 
-{
-   const char *ret;
-
-   if (lGetString(job, JB_job_source)) {
-      ret = "raw_exec";
-   } else {
-      const char *queue_start_mode = lGetString(queue, QU_shell_start_mode);
-   
-      if (queue_start_mode && strcasecmp(queue_start_mode, "none")) {
-         ret = queue_start_mode;
-      } else {
-         ret = conf_shell_start_mode;
-      }
-   }
-   return ret;
-}

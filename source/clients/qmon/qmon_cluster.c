@@ -107,6 +107,7 @@ typedef struct _tCClEntry {
    int logmail;
    int max_aj_instances;
    int max_aj_tasks;
+   int max_u_jobs;
    lList *cluster_users;
    lList *cluster_xusers;
    lList *cluster_projects;
@@ -244,6 +245,10 @@ XtResource ccl_resources[] = {
       sizeof(int), XtOffsetOf(tCClEntry, max_aj_tasks), 
       XtRImmediate, NULL },
 
+   { "max_u_jobs", "max_u_jobs", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, max_u_jobs), 
+      XtRImmediate, NULL },
+
    { "cluster_users", "cluster_users", QmonRUS_Type,
       sizeof(lList *), XtOffsetOf(tCClEntry, cluster_users),
       XtRImmediate, NULL },
@@ -346,6 +351,7 @@ static Widget cluster_min_uid = 0;
 static Widget cluster_min_gid = 0;
 static Widget cluster_max_aj_instances = 0;
 static Widget cluster_max_aj_tasks = 0;
+static Widget cluster_max_u_jobs = 0;
 static Widget cluster_zombie_jobs = 0;
 static Widget cluster_load_report_time = 0;
 static Widget cluster_load_report_timePB = 0;
@@ -666,6 +672,7 @@ Widget parent
                            "cluster_min_gid", &cluster_min_gid,
                            "cluster_max_aj_instances", &cluster_max_aj_instances,
                            "cluster_max_aj_tasks", &cluster_max_aj_tasks,
+                           "cluster_max_u_jobs", &cluster_max_u_jobs,
                            "cluster_zombie_jobs", &cluster_zombie_jobs,
                            "cluster_load_report_time", &cluster_load_report_time,
                            "cluster_load_report_timePB", 
@@ -949,6 +956,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_min_gid, mode);
    XtSetSensitive(cluster_max_aj_instances, mode);
    XtSetSensitive(cluster_max_aj_tasks, mode);
+   XtSetSensitive(cluster_max_u_jobs, mode);
    XtSetSensitive(cluster_zombie_jobs, mode);
    XtSetSensitive(cluster_stat_log_time, mode);
    XtSetSensitive(cluster_stat_log_timePB, mode);
@@ -1063,6 +1071,7 @@ int local
    char min_gid[20];
    char max_aj_instances[255];
    char max_aj_tasks[255];
+   char max_u_jobs[255];
    char zombie_jobs[20];
    static char buf[4*BUFSIZ];
    Boolean first;
@@ -1466,6 +1475,10 @@ int local
       ep = lGetElemStr(confl, CF_name, "max_aj_tasks");
       sprintf(max_aj_tasks, "%d", clen->max_aj_tasks);
       lSetString(ep, CF_value, max_aj_tasks);
+         
+      ep = lGetElemStr(confl, CF_name, "max_u_jobs");
+      sprintf(max_u_jobs, "%d", clen->max_u_jobs);
+      lSetString(ep, CF_value, max_u_jobs);
          
       ep = lGetElemStr(confl, CF_name, "finished_jobs");
       sprintf(zombie_jobs, "%d", clen->zombie_jobs);
@@ -1878,6 +1891,7 @@ tCClEntry *clen
    StringConst min_gid;
    StringConst max_aj_instances;
    StringConst max_aj_tasks;
+   StringConst max_u_jobs;
    StringConst zombie_jobs;
 
    DENTER(GUI_LAYER, "qmonCullToCClEntry");
@@ -1909,20 +1923,21 @@ tCClEntry *clen
       min_uid = lGetString(ep, CF_value);
       clen->min_uid = min_uid ? atoi(min_uid) : 0;
    }
-
    if ((ep = lGetElemStr(confl, CF_name, "min_gid"))) {
       min_gid = lGetString(ep, CF_value);
       clen->min_gid = min_gid ? atoi(min_gid) : 0;
    }
-
    if ((ep = lGetElemStr(confl, CF_name, "max_aj_instances"))) {
       max_aj_instances = lGetString(ep, CF_value);
       clen->max_aj_instances = max_aj_instances ? atoi(max_aj_instances) : 0;
    }
-
    if ((ep = lGetElemStr(confl, CF_name, "max_aj_tasks"))) {
       max_aj_tasks = lGetString(ep, CF_value);
       clen->max_aj_tasks = max_aj_tasks ? atoi(max_aj_tasks) : 0;
+   }
+   if ((ep = lGetElemStr(confl, CF_name, "max_u_jobs"))) {
+      max_u_jobs = lGetString(ep, CF_value);
+      clen->max_u_jobs = max_u_jobs ? atoi(max_u_jobs) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "finished_jobs"))) {
       zombie_jobs = lGetString(ep, CF_value);
@@ -2189,6 +2204,7 @@ tCClEntry *clen
    clen->min_gid = 0;
    clen->max_aj_instances = 0;
    clen->max_aj_tasks = 0;
+   clen->max_u_jobs = 0;
    if (clen->load_report_time) {
       XtFree((char*)clen->load_report_time);
       clen->load_report_time = NULL;

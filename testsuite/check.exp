@@ -2019,6 +2019,23 @@ proc update_ts_host_config_version { filename } {
          wait_for_enter
          return
       }
+   }
+
+   if { $ts_host_config(version) == "1.2" && $actual_ts_host_config_version == "1.3" } {
+      puts $CHECK_OUTPUT "\ntestsuite host configuration update from 1.2 to 1.3 ..."
+
+      foreach host $ts_host_config(hostlist) {
+         set ts_host_config($host,java) ""
+      }
+      set ts_host_config(version) "1.3"
+     
+      show_config ts_host_config
+      wait_for_enter
+      if { [ save_host_configuration $filename] != 0} {
+         puts $CHECK_OUTPUT "Could not save host configuration"
+         wait_for_enter
+         return
+      }
       return 0
    }
 

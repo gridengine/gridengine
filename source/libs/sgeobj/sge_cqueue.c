@@ -1068,7 +1068,7 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
          /*
           * Create element if it does not exist
           */
-         if (org_elem == NULL) {
+         if (org_elem == NULL && sub_command != SGE_GDI_REMOVE) {
             if (org_list == NULL) {
                org_list = lCreateList("", lGetElemDescr(mod_elem));
                lSetList(this_elem, attribute_name, org_list);
@@ -1076,18 +1076,20 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
             org_elem = lCreateElem(lGetElemDescr(mod_elem));
             lSetHost(org_elem, sublist_host_name, name);
             lAppendElem(org_list, org_elem);
-         }
+         } 
 
          /*
           * Modify sublist according to subcommand
           */
          if (org_elem != NULL) {
             if (subsub_key != NoName) {
-               attr_mod_sub_list(answer_list, org_elem, sublist_value_name, 
+               attr_mod_sub_list(answer_list, org_elem, 
+                                 sublist_value_name, 
                                  subsub_key, mod_elem, sub_command, 
                                  attribute_name_str, object_name_str, 0);
             } else {
-               object_replace_any_type(org_elem, sublist_value_name, mod_elem);
+               object_replace_any_type(org_elem, sublist_value_name, 
+                                       mod_elem);
             }
          }
       }

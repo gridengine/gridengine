@@ -39,25 +39,22 @@
 #include "msg_utilib.h"
 
 
-typedef void (*trace_func_type)(const char *);
-
 void log_state_set_log_level(u_long32);
 void log_state_set_log_file(char *file);
 void log_state_set_log_verbose(int i);
 void log_state_set_log_gui(int i);
-void log_state_set_log_trace_func(trace_func_type );
 void log_state_set_log_as_admin_user(int i);
 
-char*           log_state_get_log_buffer(void);
+char*           log_get_log_buffer(void);
+
 u_long32        log_state_get_log_level(void);
 const char*     log_state_get_log_file(void);
 int             log_state_get_log_verbose(void);
 int             log_state_get_log_gui(void);
-trace_func_type log_state_get_log_trace_func(void);
 int             log_state_get_log_as_admin_user(void);
 
 /* extern stringTlong SGE_EVENT; */
-#define SGE_EVENT log_state_get_log_buffer()
+#define SGE_EVENT log_get_log_buffer()
 
 #ifdef NO_SGE_COMPILE_DEBUG
 #   define SGE_FUNC ""

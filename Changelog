@@ -1,3 +1,9 @@
+AD-2004-04-22-0: Bugfix:    Changing the log level did only affect the thread
+                            which did trigger the change.
+                 Changed:   uti
+                 Issue      953
+                 Review:    SG
+
 JG-2004-04-22-0: Enhancem.: Allow the mixed use of binaries with dynamic and 
                             static spooling. 
                             aimk.site contains a rule to switch to static 

@@ -351,9 +351,12 @@ proc install_qmaster {} {
    puts "press RETURN"
    gets stdin anykey
  }
+    log_user 1
 #    sleep 1
     puts "expecting now ..."
     expect {
+       flush stdout
+       flush $CHECK_OUTPUT 
        -i $sp_id full_buffer {
           set_error "-1" "install_qmaster - buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
           close_spawn_process $id; 
@@ -422,7 +425,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id "o you want to recreate your SGE CA infrastructure" { 
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(1)"
           if {$do_log_output == 1} {
              puts "press RETURN"
              gets stdin anykey
@@ -497,7 +500,7 @@ proc install_qmaster {} {
           continue;
        }
        -i $sp_id "o you want to use these data" { 
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(2)"
           if {$do_log_output == 1} {
              puts "press RETURN"
              gets stdin anykey
@@ -514,7 +517,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id "Are all the hosts of your cluster in a single DNS domain" { 
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(3)"
           if {$do_log_output == 1} {
              puts "press RETURN"
              gets stdin anykey
@@ -522,9 +525,30 @@ proc install_qmaster {} {
           send -i $sp_id "y\n"
           continue;
        }
+       -i $sp_id "Are all hosts of your cluster in a single DNS domain" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(4)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+
  
+       -i $sp_id "Do you want to install Grid Engine as admin user" { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(5)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             gets stdin anykey
+          }
+          send -i $sp_id "y\n"
+          continue;
+       }
+
+
        -i $sp_id "Do you want to * SGE as admin user" { 
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(6)"
           if {$do_log_output == 1} {
              puts "press RETURN"
              gets stdin anykey
@@ -534,7 +558,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id "Do you want to * SGEEE as admin user" { 
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(7)"
           if {$do_log_output == 1} {
              puts "press RETURN"
              gets stdin anykey
@@ -544,7 +568,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id "Do you want to use these configuration parameters" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(1)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -563,7 +587,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id "Do you want to verify and set your file permissions" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(8)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -583,7 +607,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id "Do you want to use this configuration parameters" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(2)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -608,7 +632,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id "Do you want to * the application as admin user" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(3)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -617,7 +641,7 @@ proc install_qmaster {} {
           continue;
        }
        -i $sp_id "under an user id other than" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(4)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -626,7 +650,7 @@ proc install_qmaster {} {
           continue;
        }
        -i $sp_id "you want to select another qmaster spool directory" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(5)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -645,7 +669,7 @@ proc install_qmaster {} {
           continue;
        }
        -i $sp_id "Did you install this version with >pkgadd<" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(6)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -681,7 +705,7 @@ proc install_qmaster {} {
 
 
        -i $sp_id "configure a default domain" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(7)"
           if {$do_log_output == 1} {
                puts "(2)press RETURN"
                gets stdin anykey
@@ -704,7 +728,7 @@ proc install_qmaster {} {
 
 
        -i $sp_id "at system boot time" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(8)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -715,7 +739,7 @@ proc install_qmaster {} {
        }
        
        -i $sp_id "is started at machine boot" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(9)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -726,7 +750,7 @@ proc install_qmaster {} {
        }
 
        -i $sp_id "Do you want to create a new configuration" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(9)"
           if {$do_log_output == 1} {
                puts "(3)press RETURN"
                gets stdin anykey
@@ -779,7 +803,7 @@ proc install_qmaster {} {
        }
    
        -i $sp_id "Do you want to use a file which contains the list of hosts" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(10)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -790,7 +814,9 @@ proc install_qmaster {} {
        }
    
        -i $sp_id "Do you want to see previous screen about using" {
-          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+          flush stdout
+          flush $CHECK_OUTPUT
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(10)"
           if {$do_log_output == 1} {
                puts "press RETURN"
                gets stdin anykey
@@ -1168,7 +1194,7 @@ proc install_execd {} {
 
             -i $sp_id "Do you want to use these configuration parameters" { 
      
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(11)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     gets stdin anykey
@@ -1180,7 +1206,7 @@ proc install_execd {} {
             
             -i $sp_id "Do you want to use this configuration parameters" { 
      
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(12)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     gets stdin anykey
@@ -1237,7 +1263,7 @@ proc install_execd {} {
  
      
             -i $sp_id "at system boot time" { 
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(11)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     gets stdin anykey
@@ -1248,7 +1274,7 @@ proc install_execd {} {
             }
 
             -i $sp_id "is started at machine boot" { 
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(12)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     gets stdin anykey
@@ -1261,7 +1287,7 @@ proc install_execd {} {
 
 
             -i $sp_id "Do you want to add a default queue for this host" { 
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >y<"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >y<(13)"
                if {$do_log_output == 1} {
                     puts "(5)press RETURN"
                     gets stdin anykey
@@ -1287,7 +1313,7 @@ proc install_execd {} {
             }
 
             -i $sp_id "Check again" { 
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(13)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     gets stdin anykey
@@ -1297,7 +1323,7 @@ proc install_execd {} {
                continue;
             }
             -i $sp_id "Do you want to see previous screen about using" { 
-               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
+               puts $CHECK_OUTPUT "\n -->testsuite: sending >n<(14)"
                if {$do_log_output == 1} {
                     puts "press RETURN"
                     gets stdin anykey

@@ -1,3 +1,6 @@
+CR-2002-05-23-1: Enhancem.: Testsuite update of install_core_system check:
+                            new messages for L10N caused timeouts.
+
 AA-2002-05-23-0: Bugfix:    - qmon_messages.ad for L10N 
 
 CR-2002-05-22-3: Bugfix:    - infotext message output on linux

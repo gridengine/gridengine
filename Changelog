@@ -1,3 +1,8 @@
+AH-2001-10-02-0: Schedd: Moved code handling 'forced' attributes to a section 
+                 handling other static matchings. Static matchings can be done
+                 independently of consumables/load values and thus needs be done
+                 less frequent
+
 CR-2001-09-26-0: Testsuite:
                  - new setup file version 
                  (new parameter "list_of_submit_only_hosts")

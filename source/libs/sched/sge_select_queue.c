@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+
 #include "basis_types.h"
 #include "sge.h"
 #include "sgermon.h"
@@ -80,17 +81,21 @@ static int sge_select_resource(lList *complex_attributes, lList *resources, int 
 
 static int available_slots_global(lList **global_resources, lListElem *job, lListElem *ja_task, lListElem *pe, lList *host_list, lList *complex_list, int global_slots, lList *ccl[3], lList *acl_list);
 
-static int available_slots_at_host(lList *host_resources, lListElem *job, lListElem *ja_task, lListElem *host, int global_slots, int minslots, int allocation_rule, lList *ccl[3], lList *acl_list);
+static int available_slots_at_host(lList *host_resources, lListElem *job, lListElem *ja_task, lListElem *host, int global_slots, int minslots, int allocation_rule, lList *ccl[3], lList *complex_list, lList *acl_list);
 
-static int sge_why_not_job2queue_dynamic(lList *complex_attributes, lListElem *queue, lListElem *job, lListElem *pe, lList *cplx_list, lList *ccl[3]);
+static int sge_soft_violations(lList *complex_attributes, lListElem *queue, lListElem *job, lListElem *pe, lList *cplx_list, lList *ccl[3]);
 
 static int sge_why_not_job2queue_static(lListElem *queue, lListElem *job, lListElem *pe, lListElem *ckpt, lList *cplx_list, lList *host_list, lList *acl_list);
 
-static int sge_why_not_job2host(lListElem *job, lListElem *ja_task, lListElem *host, lList *acl_list);
+static int sge_why_not_job2host(lListElem *job, lListElem *ja_task, lListElem *host, lList *complex_list, lList *acl_list);
 
 static int fulfilled(lListElem *rep, lList *given_attr, char *reason, int reason_size, int allow_non_requestable, int is_a_request, int slots, lList *ccl[3], int force_existence);
 
 static int resource_cmp(u_long32 relop, double req, double src_dl);
+
+static int requested_forced_attr(lListElem *job, lListElem *cplx, char *obj_name, char *obj_key);
+static int ensure_forced(lListElem *job, char *main_cplx_name, char *obj_name, char *obj_kex, lList *user_complex, lList *cplx_list);
+
 
 char* trace_resource(
 lListElem *ep 
@@ -480,35 +485,6 @@ int force_existence;
    return 0;
 }
 
-int sge_why_not_job2queue(
-lListElem *queue,
-lListElem *job,
-lListElem *pe,
-lListElem *ckpt,
-lList *cplx_list,
-lList *exechost_list,
-lList *acl_list 
-) {
-   lList *ccl[3];
-   lList *complex_attributes = NULL;
-   lListElem *ep;
-   int ret;
-
-   ccl[0] = (ep=lGetElemStr(exechost_list, EH_name, "global"))?
-         lGetList(ep, EH_consumable_config_list):NULL;
-   ccl[1] = (ep=lGetElemHost(exechost_list, EH_name, lGetString(queue, QU_qhostname)))?
-         lGetList(ep, EH_consumable_config_list):NULL;
-   ccl[2] = lGetList(queue, QU_consumable_config_list);
-
-   if (!(ret=sge_why_not_job2queue_static(queue, job, pe, ckpt, cplx_list, exechost_list, acl_list))) {
-      queue_complexes2scheduler(&complex_attributes, queue, exechost_list, cplx_list, 0);
-      ret = sge_why_not_job2queue_dynamic(complex_attributes, queue, job, pe, 
-            cplx_list, ccl);
-      lFreeList(complex_attributes);
-   }
-   
-   return ret;
-}
 
 /* -------------------------------------------------------
 
@@ -727,11 +703,74 @@ lList *acl_list
       return 4;
    }
 
+   if (ensure_forced(job, SGE_QUEUE_NAME, "queue", queue_name, 
+         lGetList(queue, QU_complex_list), cplx_list)) {
+      DEXIT;
+      return 8;
+   }
+
    DEXIT;
    return 0;
 }
 
-static int sge_why_not_job2queue_dynamic(complex_attributes, queue, job, pe, cplx_list, ccl)
+static int ensure_forced(lListElem* job, char *main_complex, char *obj_name, char *obj_key, lList* usercplx, lList* cplx_list)
+{
+
+   DENTER(TOP_LAYER, "ensure_forced");
+
+   /* iterate through all complex attributes
+      and ensure forced attributes are requested by the job */
+   {
+      lListElem *cplx, *cplx_name;
+
+      /* queue/host/global complex attributes */
+      cplx = lGetElemStr(cplx_list, CX_name, main_complex);
+/*       DPRINTF(("%s \"%s\": COMPLEX \"%s\"\n", obj_name, obj_key, main_complex)); */
+      if (cplx && !requested_forced_attr(job, cplx, obj_name, obj_key)) {
+         DEXIT;
+         return -1;
+      }
+
+      /* additional complex attributes */
+      for_each (cplx_name, usercplx) {
+         cplx = lGetElemStr(cplx_list, CX_name, lGetString(cplx_name, CX_name));
+/*          DPRINTF(("%s \"%s\": COMPLEX \"%s\"\n", obj_name, obj_key, lGetString(cplx_name, CX_name))); */
+         if (cplx && !requested_forced_attr(job, cplx, obj_name, obj_key)) {
+            DEXIT;
+            return -1;
+         }
+      }
+   }
+   
+   DEXIT;
+   return 0;
+}
+
+
+static int requested_forced_attr(lListElem *job, lListElem *cplx, char *obj_name, char *obj_key)
+{
+   lListElem *attr;
+
+   DENTER(TOP_LAYER, "requested_forced_attr");
+
+   for_each (attr, lGetList(cplx, CX_entries)) {
+      if (lGetUlong(attr, CE_forced) &&
+         !is_requested(lGetList(job, JB_hard_resource_list), lGetString(attr, CE_name))) {
+         DPRINTF(("job "u32" does not request 'forced' resource \"%s\" of %s %s\n",
+                  lGetUlong(job, JB_job_number), lGetString(attr, CE_name), obj_name, obj_key));
+         schedd_add_message(lGetUlong(job, JB_job_number), SCHEDD_INFO_NOTREQFORCEDRES_SS, lGetString(attr, CE_name), obj_key);
+         DEXIT;
+         return 0;
+      }
+   }
+
+   DEXIT;
+   return 1;
+}
+
+
+
+static int sge_soft_violations(complex_attributes, queue, job, pe, cplx_list, ccl)
 lList *complex_attributes;
 lListElem *queue;
 lListElem *job;
@@ -744,26 +783,14 @@ lList *ccl[3]; /* needed to pass maximum utilization of global, host and queue *
    char reason[1024 + 1];
    char buff[1024 + 1];
    unsigned int soft_violation = 0; 
-   lListElem *attr, *res;
+   lListElem *res;
 
-   DENTER(TOP_LAYER, "sge_why_not_job2queue_dynamic");
+   DENTER(TOP_LAYER, "sge_soft_violations");
 
    reason[0] = buff[0] = '\0';
 
    job_id = lGetUlong(job, JB_job_number);
    queue_name = lGetString(queue, QU_qname);
-
-   /* ensure all forced attributes of the queue are requested hard */
-   for_each(attr, complex_attributes) {
-      if (lGetUlong(attr, CE_forced) && 
-         !is_requested(lGetList(job, JB_hard_resource_list), lGetString(attr, CE_name))) {
-         DPRINTF(("job "u32" does not request 'forced' resource \"%s\" of queue %s\n", 
-                  job_id, lGetString(attr, CE_name), queue_name));
-         schedd_add_message(job_id, SCHEDD_INFO_NOTREQFORCEDRES_SS, lGetString(attr, CE_name), queue_name);
-         DEXIT;
-         return 8;
-      }
-   }
 
    /* count number of soft violations for _one_ slot of this job */
    for_each (res, lGetList(job, JB_soft_resource_list)) {
@@ -797,6 +824,7 @@ static int sge_why_not_job2host(
 lListElem *job,
 lListElem *ja_task,
 lListElem *host,
+lList *complex_list,
 lList *acl_list 
 ) {
    lList *projects;
@@ -879,6 +907,12 @@ lList *acl_list
             return 5;
          }
       }
+  } 
+
+   if (ensure_forced(job, !strcmp(eh_name, SGE_GLOBAL_NAME)?SGE_GLOBAL_NAME:SGE_HOST_NAME, 
+         "host", eh_name, lGetList(host, EH_complex_list), complex_list)) {
+      DEXIT;
+      return 8;
    }
 
    DEXIT;
@@ -1639,14 +1673,14 @@ int host_order_changed) {
 
          }
 
-         /* do static checks for "global" host */ 
-         if (!sge_why_not_job2host(job, ja_task, global_hep, acl_list)) {
+         /* do static and dynamic checks for "global" host */ 
+         if (!sge_why_not_job2host(job, ja_task, global_hep, complex_list, acl_list)) {
             for_each (qep, queues) { /* in queue sort order */
                hep = lGetElemHost(host_list, EH_name, lGetString(qep, QU_qhostname));
                ccl[1] = lGetList(hep, EH_consumable_config_list);
                ccl[2] = lGetList(qep, QU_consumable_config_list);
 
-               if (!sge_why_not_job2host(job, ja_task, hep, acl_list) &&
+               if (!sge_why_not_job2host(job, ja_task, hep, complex_list, acl_list) &&
                      available_slots_at_queue(NULL, job, qep, pe, ckpt, host_list, complex_list, acl_list,
                               load_adjustments, 1, ccl, ndispatched, global_hep, 1, hep)) {
                   lListElem *gdil_ep;
@@ -1837,7 +1871,7 @@ int host_order_changed) {
                          allocation_rule:total_slots;
                      (host_slots = available_slots_at_host(host_resources, 
                          job, ja_task, hep, host_slots, minslots, 
-                         allocation_rule, ccl, acl_list));
+                         allocation_rule, ccl, complex_list, acl_list));
                      host_slots--) {
                   max_slots_this_host = host_slots;
                   accu_queue_slots = 0;
@@ -2322,8 +2356,7 @@ lListElem *hep;
          continue;
       }
 
-      if (sge_why_not_job2queue_dynamic(queue_resources, qep, job, 
-            pe, complex_list, ccl)) {
+      if (sge_soft_violations(queue_resources, qep, job, pe, complex_list, ccl)) {
          continue;
       }
 
@@ -2352,7 +2385,7 @@ lListElem *hep;
 *     int - the # of slots
 *
 *******************************************************************************/
-static int available_slots_at_host(host_resources, job, ja_task, host, hslots, minslots, allocation_rule, ccl, acl_list)
+static int available_slots_at_host(host_resources, job, ja_task, host, hslots, minslots, allocation_rule, ccl, complex_list, acl_list)
 lList *host_resources;
 lListElem *job;
 lListElem *ja_task;
@@ -2361,9 +2394,10 @@ int hslots;
 int minslots;
 int allocation_rule;
 lList *ccl[3];
+lList *complex_list;
 lList *acl_list;
 {
-   lListElem *cep, *attr;
+   lListElem *cep;
    char reason[1024];
    char *eh_name;
    u_long32 job_id;
@@ -2374,22 +2408,9 @@ lList *acl_list;
    eh_name = lGetString(host, EH_name);
 
    /* check if job has access to host */
-   if (sge_why_not_job2host(job, ja_task, host, acl_list)>0) {
+   if (sge_why_not_job2host(job, ja_task, host, complex_list, acl_list)>0) {
       DEXIT;
       return 0;
-   }
-
-   /* ensure all host wide forced attributes are requested hard */
-   for_each(attr, host_resources) {
-      if (lGetUlong(attr, CE_forced) && 
-         !is_requested(lGetList(job, JB_hard_resource_list), lGetString(attr, CE_name))) {
-   /*       DPRINTF(("job "u32" does not request 'forced' resource \"%s\" of host %s\n", 
-                  job_id, lGetString(attr, CE_name), eh_name)); */
-         schedd_add_message(job_id, SCHEDD_INFO_NOFORCEDRES_SS, 
-                 lGetString(attr, CE_name), eh_name);
-         DEXIT;
-         return 0;
-      }
    }
 
    /* get job_slots_free from host */
@@ -2449,7 +2470,6 @@ int global_slots; /* 0 reinitializes other values serve as the first start value
 lList *ccl[3];
 lList *acl_list;
 {
-   lListElem *attr;
    char reason[1024];
    int not_select_resource = 0;
 
@@ -2462,7 +2482,7 @@ lList *acl_list;
 
    /* check if job has access to any hosts globally */
    if (sge_why_not_job2host(job, ja_task, 
-         lGetElemCaseStr(host_list, EH_name, "global"), acl_list)>0) {
+         lGetElemCaseStr(host_list, EH_name, "global"), complex_list, acl_list)>0) {
       DEXIT;
       return 0;
    }
@@ -2487,30 +2507,22 @@ lList *acl_list;
    /* initially looked at global slots */
    if (!*global_resources)
       global_complexes2scheduler(global_resources, lGetElemStr(host_list, EH_name, "global"), complex_list, 0);
-  
-   /* ensure all global forced attributes are requested hard */
-   for_each(attr, *global_resources) {
-      if (lGetUlong(attr, CE_forced) && 
-         !is_requested(lGetList(job, JB_hard_resource_list), lGetString(attr, CE_name))) {
-      /*   DPRINTF(("job "u32" does not request globally 'forced' resource \"%s\"\n", 
-                  lGetUlong(job, JB_job_number), lGetString(attr, CE_name))); */
-         schedd_add_message (lGetUlong(job, JB_job_number), SCHEDD_INFO_NOGLOBFORCEDRES_SS,
-                 lGetString(attr, CE_name));
-         DEXIT;
-         return 0;
-      }
-   }
-
+ 
    for (; global_slots; 
             global_slots = num_in_range(global_slots-1, lGetList(job, JB_pe_range))) {
 
-      /* how many slots can get served with resources limited at the global layer */
-
+      /* How many slots can get served with resources limited at the global layer?
+       *
+       * check for:              
+       * - explicit hard resource requests 
+       * - consumable default requests 
+       * - jobs implicit slot request 
+       */
       not_select_resource = 0;
 
-      if (!sge_select_resource(*global_resources, lGetList(job, JB_hard_resource_list), 
+      if (!sge_select_resource(*global_resources, lGetList(job, JB_hard_resource_list),
                0, reason, sizeof(reason)-1, global_slots, ccl, 0)) {
-         
+
          not_select_resource = 1;
          continue;
       }

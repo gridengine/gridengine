@@ -37,8 +37,6 @@
  * if not why?
  * 
  */
-int sge_why_not_job2queue(lListElem *queue, lListElem *job, lListElem *pe, lListElem *ckpt, lList *cplx_list, lList *exechost_list, lList *acl_list);
-
 int sge_select_queue(lList *complex_attributes, lList *resources, int allow_non_requestable, char *reason, int reason_size, int slots, lList *consumable_config_list[3]);
 
 

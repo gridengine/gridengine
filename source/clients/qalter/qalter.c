@@ -354,6 +354,12 @@ int *all_users
          nm_set(job_field, JB_checkpoint_name);
       }
 
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-dl"))) {
+         lSetUlong(job, JB_deadline, lGetUlong(ep, SPA_argval_lUlongT));
+         lRemoveElem(cmdline, ep);
+         nm_set(job_field, JB_deadline);
+      }
+
       parse_list_simple(cmdline, "-e", job, JB_stderr_path_list, 0, 0, 
                         FLG_LIST_APPEND);
       if (lGetList(job, JB_stderr_path_list))

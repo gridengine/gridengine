@@ -66,17 +66,29 @@ echo "set DEFAULTMANPATH = \`\$SGE_ROOT/util/arch -m\`"  >> $SP_CSH
 echo "set MANTYPE = \`\$SGE_ROOT/util/arch -mt\`"        >> $SP_CSH
 echo ""                                                  >> $SP_CSH
 
-if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
+#if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
    echo "setenv SGE_CELL $SGE_CELL"                      >> $SP_CSH
-else
-   echo "unsetenv SGE_CELL"                              >> $SP_CSH
-fi
+#else
+#   echo "unsetenv SGE_CELL"                              >> $SP_CSH
+#fi
 
 if [ "$SGE_QMASTER_PORT" != "" ]; then
    echo "setenv SGE_QMASTER_PORT $SGE_QMASTER_PORT"                  >> $SP_CSH
 else
-   echo "unsetenv SGE_QMASTER_PORT"                            >> $SP_CSH
+   echo "unsetenv SGE_QMASTER_PORT"                                  >> $SP_CSH
 fi
+
+if [ "$SGE_EXECD_PORT" != "" ]; then
+   echo "setenv SGE_EXECD_PORT $SGE_EXECD_PORT"                      >> $SP_CSH
+else
+   echo "unsetenv SGE_EXECD_PORT"                                    >> $SP_CSH
+fi
+
+
+   echo "setenv QMASTER_SPOOL_DIR $QMDIR"                            >> $SP_CSH
+
+   echo "setenv EXECD_SPOOL_DIR $CFG_EXE_SPOOL"                      >> $SP_CSH
+
 
 echo ""                                                          >> $SP_CSH
 echo 'if ( $?MANPATH == 1 ) then'                                >> $SP_CSH
@@ -105,25 +117,24 @@ echo "DEFAULTMANPATH=\`\$SGE_ROOT/util/arch -m\`"                >> $SP_SH
 echo "MANTYPE=\`\$SGE_ROOT/util/arch -mt\`"                      >> $SP_SH
 echo ""                                                          >> $SP_SH
 
-if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
-   echo "SGE_CELL=SGE_CELL_VAL; export SGE_CELL"                 >> $SP_SH
-else
-   echo "unset SGE_CELL"                                         >> $SP_SH
-fi
+   echo "SGE_CELL=$SGE_CELL; export SGE_CELL"                          >> $SP_SH
 
 if [ "$SGE_QMASTER_PORT" != "" ]; then
-   echo "SGE_QMASTER_PORT=$SGE_QMASTER_PORT; export SGE_QMASTER_PORT"              >> $SP_SH
+   echo "SGE_QMASTER_PORT=$SGE_QMASTER_PORT; export SGE_QMASTER_PORT"  >> $SP_SH
 else
    echo "unset SGE_QMASTER_PORT"                                       >> $SP_SH              
 fi
-
-if [ "$SGE_CELL" != "" -a "$SGE_CELL" != "default" ]; then
-   echo "SGE_CELL=SGE_CELL_VAL; export SGE_CELL"                 >> $SP_SH
+if [ "$SGE_EXECD_PORT" != "" ]; then
+   echo "SGE_EXECD_PORT=$SGE_EXECD_PORT; export SGE_EXECD_PORT"        >> $SP_SH
+else
+   echo "unset SGE_EXECD_PORT"                                       >> $SP_SH    
 fi
 
-if [ "$SGE_QMASTER_PORT" != "" ]; then
-   echo "SGE_QMASTER_PORT=$SGE_QMASTER_PORT; export SGE_QMASTER_PORT"              >> $SP_SH
-fi
+
+   echo "QMASTER_SPOOL_DIR=$QMDIR; export QMASTER_SPOOL_DIR"           >> $SP_SH
+
+   echo "EXECD_SPOOL_DIR=$CFG_EXE_SPOOL; export EXECD_SPOOL_DIR"       >> $SP_SH
+
 
 echo ""                                                          >> $SP_SH
 echo "if [ \"\$MANPATH\" = \"\" ]; then"                         >> $SP_SH

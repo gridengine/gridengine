@@ -2269,6 +2269,7 @@ int *trigger
       }
    }
 
+
    /* ---- JB_override_tickets 
            A attribute that must be allowed to 
            be changed when job is running
@@ -2320,6 +2321,25 @@ int *trigger
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
 
    }
+
+   /* 
+      If it is a deadline job the user has to be a deadline user  MD:22.01.04
+   */
+   if (lGetUlong(jep, JB_deadline)) {
+      if (!userset_is_deadline_user(Master_Userset_List, ruser)) {
+         ERROR((SGE_EVENT, MSG_JOB_NODEADLINEUSER_S, ruser));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         DEXIT;
+         return STATUS_EUNKNOWN;
+      }
+   else {
+     lSetUlong(new_job, JB_deadline, lGetUlong(jep, JB_deadline));
+     *trigger |= MOD_EVENT;
+     sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_STARTTIME, u32c(jobid)); /*Using the wrong MSG, create a new?*/
+     answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+        }
+   }
+
 
    /* ---- JB_execution_time */
    if ((pos=lGetPosViaElem(jep, JB_execution_time))>=0) {

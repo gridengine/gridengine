@@ -52,9 +52,9 @@ fi
 HASDIR="ckpt doc examples/jobs locale mpi mpi/myrinet pvm qmon/PIXMAPS/big"
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
-DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_commd sge_schedd \
+DEFAULTPROG="sge_qmaster sge_execd sge_shadowd sge_schedd \
              sge_shepherd sge_coshepherd qstat qsub qalter qconf qdel \
-             qacct qmod qsh commdcntl utilbin jobs qmon qhold qrls qhost \
+             qacct qmod qsh utilbin jobs qmon qhold qrls qhost \
              qmake qtcsh"
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
@@ -345,6 +345,7 @@ instckpt=false
 instdirectory=false
 instdrmaa=false
 instinst_sge=false
+instsge_config=false
 instutiltree=false
 instexamples=false
 instman=false
@@ -567,6 +568,7 @@ for prog in $PROG; do
          instckpt=true
          instexamples=true
          instinst_sge=true
+         instsge_config=true
          instmpi=true
          instpvm=true
          instqmon=true
@@ -594,6 +596,10 @@ for prog in $PROG; do
          ;;
       inst_sge)
          instinst_sge=true
+         instcommon=true
+         ;;
+      sge_config)
+         instsge_config=true
          instcommon=true
          ;;
       jobs)   
@@ -678,6 +684,16 @@ if [ $instcommon = true ]; then
          Execute sed 's/PREFIX/sgeee/' dist/install_execd > $DEST_SGE_ROOT/install_execd
       fi
       Execute chmod 755 $DEST_SGE_ROOT/install_qmaster $DEST_SGE_ROOT/install_execd
+   fi
+
+   if [ $instsge_config = true ]; then
+      rm -f $DEST_SGE_ROOT/sge_config
+      rm -fR $DEST_SGE_ROOT/sge_config_modules
+
+      echo Installing \"sge_config\"
+      Execute cp dist/sge_config $DEST_SGE_ROOT/sge_config
+      Execute cp -fR dist/sge_config_modules $DEST_SGE_ROOT/sge_config_modules
+      Execute chmod 755 $DEST_SGE_ROOT/sge_config
    fi
     
    if [ $instutiltree = true ]; then
@@ -931,9 +947,9 @@ for i in $ARCH; do
       esac
    done
 
-   if [ -f $DEST_SGE_ROOT/bin/$DSTARCH/commdcntl ]; then
-      mv $DEST_SGE_ROOT/bin/$DSTARCH/commdcntl $DEST_SGE_ROOT/bin/$DSTARCH/sgecommdcntl
-   fi
+#   if [ -f $DEST_SGE_ROOT/bin/$DSTARCH/commdcntl ]; then
+#      mv $DEST_SGE_ROOT/bin/$DSTARCH/commdcntl $DEST_SGE_ROOT/bin/$DSTARCH/sgecommdcntl
+#   fi
 
    if [ $instutilbin = true ]; then
       UTILPREFIX="utilbin"    

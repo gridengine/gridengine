@@ -151,7 +151,7 @@ char **argv
    bool first_time = true;
    u_long32 isXML = false;
    lList *XML_out = NULL;
-   int longest_queue_length=10;
+   int longest_queue_length=30;
 
    DENTER_MAIN(TOP_LAYER, "qstat");
 
@@ -492,18 +492,27 @@ char **argv
     */
    {
       u_long32 name;
+      char *env;
       if ((group_opt & GROUP_CQ_SUMMARY) == 0) { 
          name = QU_full_name;
       }
       else {
          name = CQ_name;
       }
-      if(getenv("SGE_LONG_QNAMES")){ 
-         for_each(qep, queue_list) {
-            int length;
-            const char *queue_name =lGetString(qep, name);
-            if( (length = strlen(queue_name)) > longest_queue_length){
-               longest_queue_length = length;
+      if((env = getenv("SGE_LONG_QNAMES")) != NULL){
+         longest_queue_length = atoi(env);
+         if (longest_queue_length == -1) {
+            for_each(qep, queue_list) {
+               int length;
+               const char *queue_name =lGetString(qep, name);
+               if( (length = strlen(queue_name)) > longest_queue_length){
+                  longest_queue_length = length;
+               }
+            }
+         }
+         else {
+            if (longest_queue_length < 10) {
+               longest_queue_length = 10;
             }
          }
       }

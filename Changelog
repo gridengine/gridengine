@@ -1,3 +1,11 @@
+SG-2004-05-11-1: Bugfix:   qstat prints queue names with a max length of 30 per default.
+                           SGE_LONG_QNAMES can be used to set a custom length (min 10)
+                           or -1. In case of -1 qstat computes the length for the queue
+                           names. The man pages are still missing.
+                 Issue:    1016
+                 Changed:  qstat
+                 Review:   AA
+
 SG-2004-05-11-0: Bugfix:    - fixed that user are spooled after every scheduling
                               run, when the sharetree is used. The usage in the
                               user are updated every 2 min now.

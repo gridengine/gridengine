@@ -1,3 +1,6 @@
+AA-2002-03-21-1  Bugfix:    sorting in functional/override policy,
+                            fix for not emptying matrix
+
 AA-2002-03-21-0  Bugfix:    SGE_KEYFILE, SGE_CERTFILE 
                             sec install scripts
 

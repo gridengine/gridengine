@@ -284,6 +284,7 @@ XtPointer cld, cad;
       return;
    }
    lp = qmonMirrorList(fticket_info.list_type);
+
    /*
    ** filter queues
    */
@@ -819,6 +820,7 @@ XtPointer cld, cad;
       lFreeWhere(where);
       lFreeWhat(what);
    } 
+   lPSortList(lp, "%I+", fticket_info.field0);
    qmonFOTCullToMatrix(fticket_info.matrix, lp, 
                         fticket_info.field0, fticket_info.field1);
    if (fticket_info.list_type == SGE_USERSET_LIST || 
@@ -904,6 +906,7 @@ XtPointer cld, cad;
       where = lFreeWhere(where);
       what = lFreeWhat(what);
    } 
+   lPSortList(lp, "%I+", oticket_info.field0);
    qmonFOTCullToMatrix(oticket_info.matrix, lp, 
                         oticket_info.field0, oticket_info.field1);
    if (oticket_info.list_type == SGE_USERSET_LIST || 
@@ -1114,17 +1117,15 @@ int nm1
 
    DENTER(GUI_LAYER, "qmonFOTCullToMatrix");
 
-   if (!lp) {
-      DEXIT;
-      return;
-   }   
-     
-
    /*
    ** delete old matrix entries
    */
    XtVaSetValues(matrix, XmNcells, NULL, NULL);
-   
+   if (!lp) {
+      DEXIT;
+      return;
+   }   
+
    max_rows = XbaeMatrixNumRows(matrix);
 
    for (ep = lFirst(lp), row = 0; ep; ep = lNext(ep), row++) {

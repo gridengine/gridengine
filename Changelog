@@ -1,3 +1,11 @@
+JG-2004-07-29-0: Bugfix:    qrsh starter didn't output reason (strerror), if it
+                            couldn't write its pid file.
+                 Testsuite: Make test functional/tight_integration use all hosts
+                            of the testcluster.
+                            Use category VERIFIED as default.
+                 Changed:   qrsh_starter, testsuite
+                 Review:    CR
+
 AA-2004-07-28-1: Bugfix:    qmon's queue filtering doesn't work
                  Bugtraq:   5075936
                  Changed:   qmon

@@ -84,8 +84,14 @@ set TIGHT_INTEGRATION_MASSIVE_SLOTS 200
 set TIGHT_INTEGRATION_MASSIVE_DURATION 120
 
 proc tight_integration_init_level {} {
+   global ts_config
    global CHECK_ACT_LEVEL
-   global submit_command
+   global submit_command TIGHT_INTEGRATION_FUNCTIONAL_SLOTS
+
+   set num_hosts [llength $ts_config(execd_hosts)]
+   if { $TIGHT_INTEGRATION_FUNCTIONAL_SLOTS < $num_hosts } {
+      set TIGHT_INTEGRATION_FUNCTIONAL_SLOTS $num_hosts
+   }
 
    switch -- $CHECK_ACT_LEVEL {
       "0" { 
@@ -464,7 +470,7 @@ proc tight_integration_master_killed {} {
    # if startup was ok
    if {$job_finished == 0} {
       # wait for job to be running
-      wait_for_job_state $jobid "r" 60
+      wait_for_job_state $jobid "r" 120
 
       # kill pid of master task and wait some seconds
       puts $CHECK_OUTPUT "killing process group of master task: pid $info(master,pid) on host $info(master,host)"
@@ -512,7 +518,7 @@ proc tight_integration_slave_killed {} {
    # if startup was ok
    if {$job_finished == 0} {
       # wait for job to be running
-      wait_for_job_state $jobid "r" 60
+      wait_for_job_state $jobid "r" 120
 
       # kill pid of master task and wait some seconds
       # we take task 1: if we have more than one host, it will be on a slave host

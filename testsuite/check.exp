@@ -2348,7 +2348,9 @@ proc enhanced_setup {} {
    get_max_level_count $CHECK_CHECKTREE_ROOT
 
    set CHECK_ENABLED_RUNLEVELS "0" ;# 100 200 300 400" ;#$CHECK_MAX_LEVEL is 400
-   set CHECK_ENABLED_CATEGORIES "SYSTEM" ;# [get_categories $CHECK_CHECKTREE_ROOT ]
+   # JG: changed default categories to VERIFIED, reset to SYSTEM, once we get
+   #     rid of the VERFIED category (when all tests are verified).
+   set CHECK_ENABLED_CATEGORIES "VERIFIED" ;# [get_categories $CHECK_CHECKTREE_ROOT ]
 
    delete_tests $CHECK_CHECKTREE_ROOT 1
 

@@ -1,3 +1,11 @@
+CR-2004-10-08-0: Enhancem.: implemented application status callback 
+                            function for qmaster. 
+                            CR-2004-10-07-1 (Part II)
+                 Review:    pending
+                 Changed:   qmaster utilib
+                 Issue:     -
+                 Bugtraq:   -
+
 CR-2004-10-07-1: Enhancem.: application status callback function now
                             supports status string (Part I)
                  Review:    AA

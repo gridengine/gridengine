@@ -40,22 +40,19 @@
 #define MSG_FILE_CANTREADCURRENTWORKINGDIR    _MESSAGE(1002, _("cannot read current working directory\n"))
 #define MSG_SRC_USAGE                                    _MESSAGE(1003, _("usage:"))
 #define MSG_FORCED                                      _MESSAGE(1004, _("forced "))
-#define MSG_QDEL_not_available_OPT_USAGE_S _MESSAGE(1005, _("no usage for \"%s\" available\n"))
-#define MSG_WARNING_S                                   _MESSAGE(1006, _("warning: %s"))
+#define MSG_QDEL_not_available_OPT_USAGE_S _MESSAGE(1005, _("no usage for "SFQ" available\n"))
+#define MSG_WARNING_S                                   _MESSAGE(1006, _("warning: "SFN))
 #define MSG_SEC_SETJOBCRED    _MESSAGE(1007, _("\nCannot set job credentials.\n"))
 #define MSG_GDI_QUEUESGEGDIFAILED              _MESSAGE(1008, _("queue: sge_gdi failed\n"))
 #define MSG_GDI_JOBSGEGDIFAILED              _MESSAGE(1009, _("job: sge_gdi failed\n"))
 #define MSG_GDI_EXECHOSTSGEGDIFAILED              _MESSAGE(1010, _("exec host: sge_gdi failed\n"))
 #define MSG_GDI_COMPLEXSGEGDIFAILED              _MESSAGE(1011, _("complex: sge_gdi failed\n"))
 #define MSG_GDI_SCHEDDCONFIGSGEGDIFAILED    _MESSAGE(1012, _("scheduler configuration: sge_gdi failed\n"))
-#define MSG_GDI_SGE_SETUP_FAILED_S    _MESSAGE(1013, _("sge_gdi_setup failed: %s\n"))
-
-
-
+#define MSG_GDI_SGE_SETUP_FAILED_S    _MESSAGE(1013, _("sge_gdi_setup failed: "SFN"\n"))
 
 /*
-** qstat_printing.c
-*/
+ * qstat_printing.c
+ */
 #define MSG_QSTAT_PRT_QUEUENAME    "queuename"
 #define MSG_QSTAT_PRT_QTYPE        "qtype"
 #define MSG_QSTAT_PRT_USEDTOT      "used/tot."
@@ -64,8 +61,6 @@
 #define MSG_QSTAT_PRT_JOBSWAITINGFORACCOUNTING    _MESSAGE(1015, _(" -----   JOBS WAITING FOR ACCOUNTING  -  JOBS WAITING FOR ACCOUNTING   ----- \n"))
 #define MSG_QSTAT_PRT_ERRORJOBS    _MESSAGE(1016, _("  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -\n"))
 #define MSG_QSTAT_PRT_FINISHEDJOBS    _MESSAGE(1017, _(" --  FINISHED JOBS  -  FINISHED JOBS  -  FINISHED JOBS  -  FINISHED JOBS  --  \n"))
-
-
 
 #endif /* __MSG_CLIENTS_COMMON_H */
 

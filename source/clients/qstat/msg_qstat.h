@@ -32,20 +32,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
 #include "basis_types.h"
 
-/*
-** qstat.c
-*/
-#define MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S    _MESSAGE(19000, _("no queues remaining after %s queue selection\n"))
+#define MSG_QSTAT_NOQUEUESREMAININGAFTERXQUEUESELECTION_S    _MESSAGE(19000, _("no queues remaining after "SFN" queue selection\n"))
 #define MSG_QSTAT_NOQUEUESREMAININGAFTERSELECTION _MESSAGE(19001, _("no queues remaining after selection\n"))
 #define MSG_GDI_JOBZOMBIESSGEGDIFAILED              _MESSAGE(19002, _("job zombies: sge_gdi failed\n"))
 #define MSG_GDI_PESGEGDIFAILED              _MESSAGE(19003, _("pe: sge_gdi failed\n"))
 #define MSG_GDI_CKPTSGEGDIFAILED    _MESSAGE(19004, _("ckpt: sge_gdi failed\n"))
 #define MSG_GDI_USERSETSGEGDIFAILED    _MESSAGE(19005, _("userset: sge_gdi failed\n"))
-#define MSG_QUEUE_UNKNOWNQUEUEX_S    _MESSAGE(19006, _("error: unknown queue \"%s\"\n"))
-#define MSG_PE_UNKNOWNPARALLELENVIRONMENTX_S    _MESSAGE(19007, _("error: unknown parallel environment \"%s\"\n"))
+#define MSG_QUEUE_UNKNOWNQUEUEX_S    _MESSAGE(19006, _("error: unknown queue "SFQ"\n"))
+#define MSG_PE_UNKNOWNPARALLELENVIRONMENTX_S    _MESSAGE(19007, _("error: unknown parallel environment "SFQ"\n"))
 #define MSG_PE_NOSUCHPARALLELENVIRONMENT    _MESSAGE(19008, _("error: no such parallel environment\n"))
 #define MSG_OPTIONS_WRONGARGUMENTTOSOPT    _MESSAGE(19009, _("ERROR! wrong argument to -s option\n"))
 #define MSG_QSTAT_USAGE_SHOWREASONFORQUEUEALARMSTATE    _MESSAGE(19010, _("show reason for queue alarm state\n"))
@@ -74,10 +70,10 @@
 #define MSG_QSTAT_USAGE_DUMPCOMPLETEQUEUELISTTOSTDOUT    _MESSAGE(19033, _("dump complete queue list to stdout\n"))
 #define MSG_SCHEDD_SCHEDULINGINFO    _MESSAGE(19034, _("scheduling info"))
 #define MSG_QSI_NOVALIDQSIHOSTSPECIFIED    _MESSAGE(19035, _("no valid QSI host specified"))
-#define MSG_QSTAT_CANTREACHXCAUSEY_SS    _MESSAGE(19036, _("can't reach %s cause %s"))
-#define MSG_QSTAT_CANTSENDQSTATREQTOQSTD_SSSS    _MESSAGE(19037, _("unable to send %s request to %s@%s: %s\n"))
-#define MSG_QSTAT_WAINTINGFORREPLYFROMQSTD_SS    _MESSAGE(19038, _("waiting for reply from %s@%s "))
-#define MSG_QSTAT_CANTGETREPLYONQSTATREQFROMQSTD_SSSS    _MESSAGE(19039, _("unable to get reply on %s request from %s@%s: %s\n"))
+#define MSG_QSTAT_CANTREACHXCAUSEY_SS    _MESSAGE(19036, _("can't reach "SFN" cause "SFN))
+#define MSG_QSTAT_CANTSENDQSTATREQTOQSTD_SSSS    _MESSAGE(19037, _("unable to send "SFN" request to "SFN"@"SFN": "SFN"\n"))
+#define MSG_QSTAT_WAINTINGFORREPLYFROMQSTD_SS    _MESSAGE(19038, _("waiting for reply from "SFN"@"SFN" "))
+#define MSG_QSTAT_CANTGETREPLYONQSTATREQFROMQSTD_SSSS    _MESSAGE(19039, _("unable to get reply on "SFN" request from "SFN"@"SFN": "SFN"\n"))
 #define MSG_QSTAT_FOLLOWINGDONOTEXIST _MESSAGE(19040, _("Following jobs do not exist: "))
 
 

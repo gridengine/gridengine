@@ -42,15 +42,15 @@
 ** global deamon messages
 */
 #define MSG_MASTER    _MESSAGE(27001, _("master"))
-#define MSG_STARTUP_STARTINGUP_SS          _MESSAGE(27002, _("starting up %s (%s)"))
-#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS  _MESSAGE(27003, _("controlled shutdown %s (%s)"))
+#define MSG_STARTUP_STARTINGUP_SS          _MESSAGE(27002, _("starting up "SFN" ("SFN")"))
+#define MSG_SHADOWD_CONTROLLEDSHUTDOWN_SS  _MESSAGE(27003, _("controlled shutdown "SFN" ("SFN")"))
 #define MSG_ERROR_CANTSWITCHTOADMINUSER    _MESSAGE(27004, _("can't switch to amin_user"))
 
 /*
 ** path_aliases.c
 */
-#define MSG_ALIAS_INVALIDSYNTAXOFPATHALIASFILEX_S    _MESSAGE(27005, _("invalid syntax of path alias file '%s'\n"))
-#define MSG_ALIAS_CANTREAD_SS                        _MESSAGE(27006, _("can't read path aliasing file \"%s\": %s\n"))
+#define MSG_ALIAS_INVALIDSYNTAXOFPATHALIASFILEX_S    _MESSAGE(27005, _("invalid syntax of path alias file "SFQ"\n"))
+#define MSG_ALIAS_CANTREAD_SS                        _MESSAGE(27006, _("can't read path aliasing file "SFQ": "SFN"\n"))
 
 
 /*
@@ -80,10 +80,10 @@
 /*
 ** startprog.c
 */
-#define MSG_STARTUP_STARTINGPROGRAMMX_S       _MESSAGE(27026, _("starting program: %s"))
-#define MSG_PROC_CANTFORKPROCESSTOSTARTX_S       _MESSAGE(27027, _("can't fork process to start: %s"))
-#define MSG_PROC_CANTEXECPROCESSORPROCESSDIEDTHROUGHSIGNALX_S       _MESSAGE(27028, _("cannot exec process or process died through signal: %s"))
-#define MSG_PROC_CANTSTARTPROCESSX_S       _MESSAGE(27029, _("couldn't start process: %s"))
+#define MSG_STARTUP_STARTINGPROGRAMMX_S       _MESSAGE(27026, _("starting program: "SFN))
+#define MSG_PROC_CANTFORKPROCESSTOSTARTX_S       _MESSAGE(27027, _("can't fork process to start: "SFN))
+#define MSG_PROC_CANTEXECPROCESSORPROCESSDIEDTHROUGHSIGNALX_S       _MESSAGE(27028, _("cannot exec process or process died through signal: "SFN))
+#define MSG_PROC_CANTSTARTPROCESSX_S       _MESSAGE(27029, _("couldn't start process: "SFN))
 #define MSG_PROC_WAITPIDRETURNEDUNKNOWNSTATUS       _MESSAGE(27030, _("waitpid() returned unknown status\n"))
 
 
@@ -96,28 +96,28 @@
 #define MSG_QMASTER_CANTRESOLVESERVEICESGECOMMDTCP    _MESSAGE(27034, _("can't resolve service \"sge_commd/tcp\""))
 #define MSG_QMASTER_COMMDONHOSTXEXPECTSRESERVEDPORT_S    _MESSAGE(27035, _("commd on host "SFQ" expects reserved port"))
 #define MSG_QMASTER_COMMDONHOSTXCANTRESOLVEOURHOSTNAME_S    _MESSAGE(27036, _("commd on host "SFQ" can't resolve our hostname verify your resolving (reverse mapping) or start commd with an alias file"))
-#define MSG_QMASTER_COMMUNICATIONPROBLEONHOSTX_SS    _MESSAGE(27037, _("communication problem with commd on host "SFQ": %s"))
+#define MSG_QMASTER_COMMUNICATIONPROBLEONHOSTX_SS    _MESSAGE(27037, _("communication problem with commd on host "SFQ": "SFN))
 #define MSG_QMASTER_FOUNDRUNNINGQMASTERONHOSTXNOTSTARTING_S    _MESSAGE(27038, _("found running qmaster on host "SFQ"- not starting"))
-#define MSG_QMASTER_CANTCHECKFORRUNNINGQMASTERX_S    _MESSAGE(27039, _("can't check for running qmaster: %s"))
-#define MSG_COMMD_CANTCONTACTCOMMDX_S    _MESSAGE(27040, _("can't contact commd: %s"))
+#define MSG_QMASTER_CANTCHECKFORRUNNINGQMASTERX_S    _MESSAGE(27039, _("can't check for running qmaster: "SFN))
+#define MSG_COMMD_CANTCONTACTCOMMDX_S    _MESSAGE(27040, _("can't contact commd: "SFN))
 
 
 
 /* 
 ** qmaster_heartbeat.c 
 */
-#define MSG_HEART_CANNOTOPEN _MESSAGE(27041, _("can't open file %s: %s\n"))
+#define MSG_HEART_CANNOTOPEN _MESSAGE(27041, _("can't open file "SFN": "SFN"\n"))
 
 /*
 ** mail.c
 */
 #define MSG_MAIL_EMPTYUSERHOST         _MESSAGE(27042, _("sending mail is not possible since user and host are empty"))
-#define MSG_MAIL_MAILUSER_SSSS         _MESSAGE(27043, _("sending %s mail to user \"%s\"|mailer \"%s\"|"SFQ))
-#define MSG_MAIL_MAILUSERHOST_SSSSS    _MESSAGE(27044, _("sending %s mail to user \"%s@%s\"|mailer \"%s\"|"SFQ))
+#define MSG_MAIL_MAILUSER_SSSS         _MESSAGE(27043, _("sending "SFN" mail to user "SFQ"|mailer "SFQ"|"SFQ))
+#define MSG_MAIL_MAILUSERHOST_SSSSS    _MESSAGE(27044, _("sending "SFN" mail to user \""SFN"@"SFN"\"|mailer "SFQ"|"SFQ))
 #define MSG_MAIL_NOPIPE                _MESSAGE(27045, _("pipe() for mail failed\n"))
 #define MSG_MAIL_NOFORK                _MESSAGE(27046, _("fork() for mail failed\n"))
 #define MSG_MAIL_NODUP                 _MESSAGE(27047, _("dup() failed\n"))
-#define MSG_MAIL_NOEXEC_S              _MESSAGE(27048, _("exec of mailer \"%s\" failed\n"))
+#define MSG_MAIL_NOEXEC_S              _MESSAGE(27048, _("exec of mailer "SFQ" failed\n"))
 #define MSG_MAIL_NOMAIL1               _MESSAGE(27049, _("wait for mailer returned 0 - killing\n") ) 
 #define MSG_MAIL_NOMAIL2               _MESSAGE(27050, _("mailer had timeout - killing"))
 #define MSG_MAIL_NOMAIL3_I             _MESSAGE(27051, _("mailer was stopped due to signal %d - killing"))
@@ -127,22 +127,22 @@
 /*
 ** admin_mail.c 
 */
-#define MSG_MAIL_PARSE_S           _MESSAGE(27053, _("Error parsing mail list >%s<\n"))
-#define MSG_MAIL_SUBJECT_SUU       "%s: Job-array task "U32CFormat"."U32CFormat" failed"
-#define MSG_MAIL_SUBJECT_SU        "%s: Job " U32CFormat " failed"
+#define MSG_MAIL_PARSE_S           _MESSAGE(27053, _("Error parsing mail list "SFQ"\n"))
+#define MSG_MAIL_SUBJECT_SUU       SFN": Job-array task "U32CFormat"."U32CFormat" failed"
+#define MSG_MAIL_SUBJECT_SU        SFN": Job " U32CFormat " failed"
 #define MSG_MAIL_BODY_USSSSSSSS    "Job " U32CFormat " caused action: "SFN"\n User        = "SFN"\n Queue       = "SFN"\n Host        = "SFN"\n Start Time  = "SFN"\n End Time    = "SFN"\nfailed "SFN":"SFN
-#define MSG_GFSTATE_QUEUE_S        _MESSAGE(27055, _("Queue \"%s\" set to ERROR"))
-#define MSG_GFSTATE_HOST_S         _MESSAGE(27056, _("All Queues on host \"%s\" set to ERROR"))
+#define MSG_GFSTATE_QUEUE_S        _MESSAGE(27055, _("Queue "SFQ" set to ERROR"))
+#define MSG_GFSTATE_HOST_S         _MESSAGE(27056, _("All Queues on host "SFQ" set to ERROR"))
 #define MSG_GFSTATE_JOB_UU         _MESSAGE(27057, _("Job-array task "U32CFormat"."U32CFormat" set to ERROR"))
 #define MSG_GFSTATE_JOB_U          _MESSAGE(27058, _("Job "U32CFormat" set to ERROR"))
 
 /*
 ** config_file.c
 */
-#define MSG_CONF_NOCONFVALUE_S        _MESSAGE(27059, _("can't get configuration value for \"%s\""))
+#define MSG_CONF_NOCONFVALUE_S        _MESSAGE(27059, _("can't get configuration value for "SFQ))
 #define MSG_CONF_ATLEASTONECHAR       _MESSAGE(27060, _("variables need at least one character"))
 #define MSG_CONF_REFVAR_S             _MESSAGE(27061, _("referenced variable %20.20s... expands max. length"))
-#define MSG_CONF_UNKNOWNVAR_S         _MESSAGE(27062, _("unknown variable \"%s\""))
+#define MSG_CONF_UNKNOWNVAR_S         _MESSAGE(27062, _("unknown variable "SFQ))
 
 /* 
  * sge_category.c

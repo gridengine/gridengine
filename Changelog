@@ -1,3 +1,6 @@
+EB-2002-06-26-0: Cleanup:   replace all %s in messages by macros SFN and SFQ
+                 Issue:     #252
+
 CR-2002-06-25-0: Bugfix:    script syntax error in exe host installation
                  Issue:     #297
                  Bugtraq:   #4705893

@@ -46,7 +46,7 @@
 #define MSG_QMOD_SUSPEND     _MESSAGE(11004, _("suspend"))
 #define MSG_QMOD_UNSUSPEND    _MESSAGE(11005, _("unsuspend"))
 #define MSG_QMOD_UNKNOWNACTION    _MESSAGE(11006, _("unknown action"))
-#define MSG_QMOD_XYOFJOBQUEUEZ_SSS    _MESSAGE(11007, _("%s%s of job/queue %s\n"))
+#define MSG_QMOD_XYOFJOBQUEUEZ_SSS    _MESSAGE(11007, _(SFN SFN" of job/queue "SFN"\n"))
 #define MSG_QMOD_c_OPT_USAGE    _MESSAGE(11008, _("clear error state\n"))
 #define MSG_QMOD_r_OPT_USAGE    _MESSAGE(11009, _("reschedule jobs (running in queue)\n"))
 #define MSG_QMOD_d_OPT_USAGE    _MESSAGE(11010, _("disable\n"))

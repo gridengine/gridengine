@@ -35,10 +35,7 @@
 
 #include "basis_types.h"
 
-/*
-** qsub.c
-*/
-#define MSG_QSUB_WARNING_S    _MESSAGE(21000, _("qsub: warning: %s"))
+#define MSG_QSUB_WARNING_S    _MESSAGE(21000, _("qsub: warning: "SFN))
 #define MSG_QSUB_WAITINGFORIMMEDIATEJOBTOBESCHEDULED    _MESSAGE(21001, _("waiting for immediate job to be scheduled ..."))
 #define MSG_QSUB_REQUESTFORIMMEDIATEJOBHASBEENCANCELED    _MESSAGE(21002, _("\nRequest for immediate job has been canceled.\n"))
 #define MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER    _MESSAGE(21003, _("\nYour qsub request could not be scheduled, try again later.\n"))

@@ -35,16 +35,12 @@
 
 #include "basis_types.h"
 
-
-/*
-** qdel.c
-*/
 #define MSG_ANSWER_SUCCESSCHECKWAIT   _MESSAGE(7000, _("removing job(s) - please wait"))
 #define MSG_ANSWER_UNKNOWN            _MESSAGE(7001, _("unknown"))
-#define MSG_ANSWER_JOBXREMOVED_S      _MESSAGE(7002, _("job \"%s\": ok\n"))
-#define MSG_ANSWER_CANTDELETEJOB_S    _MESSAGE(7003, _("can't delete job \"%s\"\n"))
-#define MSG_JOB_XDELETIONOFJOBY_SS                      _MESSAGE(7004, _("%sdeletion of job %s\n"))
-#define MSG_PARSE_NOOPTIONARGUMENT                      _MESSAGE(7005, _("ERROR! no option argument \n"))
+#define MSG_ANSWER_JOBXREMOVED_S      _MESSAGE(7002, _("job "SFQ": ok\n"))
+#define MSG_ANSWER_CANTDELETEJOB_S    _MESSAGE(7003, _("can't delete job "SFQ"\n"))
+#define MSG_JOB_XDELETIONOFJOBY_SS    _MESSAGE(7004, _(SFN"deletion of job "SFN"\n"))
+#define MSG_PARSE_NOOPTIONARGUMENT    _MESSAGE(7005, _("ERROR! no option argument \n"))
 #define MSG_OPTION_SELECTUSERSANDJOBIDSTOGETHERNOTALLOWED              _MESSAGE(7006, _("it is not allowed to select users and job ids together\n"))
 
 #define MSG_QDEL_f_OPT_USAGE             _MESSAGE(7007, _("force action\n"))

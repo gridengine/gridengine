@@ -52,9 +52,9 @@
 #define MSG_SGEHOSTMON_t_OPT_USAGE              _MESSAGE(37015, _("show formatted times\n"))
 #define MSG_SGEHOSTMON_u_OPT_USAGE              _MESSAGE(37016, _("show decayed usage (since timestamp) in nodes\n"))
 #define MSG_SGEHOSTMON_x_OPT_USAGE              _MESSAGE(37017, _("exclude non-leaf nodes\n"))
-#define MSG_ERROR_XISNOTAVALIDINTERVAL_S        _MESSAGE(37018, _("%s is not a valid interval\n"))
-#define MSG_ERROR_XISNOTAVALIDCOUNT_S           _MESSAGE(37019, _("%s is not a valid count\n"))
-#define MSG_FILE_COULDNOTOPENXFORY_SS           _MESSAGE(37020, _("could not open %s for %s\n"))
+#define MSG_ERROR_XISNOTAVALIDINTERVAL_S        _MESSAGE(37018, _(SFN" is not a valid interval\n"))
+#define MSG_ERROR_XISNOTAVALIDCOUNT_S           _MESSAGE(37019, _(SFN" is not a valid count\n"))
+#define MSG_FILE_COULDNOTOPENXFORY_SS           _MESSAGE(37020, _("could not open "SFN" for "SFN"\n"))
 #define MSG_ERROR_UNABLETODUMPLIST              _MESSAGE(37021, _("Unable to dump list\n"))
 
 

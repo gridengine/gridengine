@@ -1,3 +1,6 @@
+BD-2004-01-14-2: Enhancem.: Add basic fbsd-amd64 build support.
+                 Changed:   all binaries
+
 BD-2004-01-14-1: Enhancem.: Cleanup basis_type.h for FreeBSD.
                  Changed:   most binaries
 

@@ -92,6 +92,9 @@ case "darwin":
 case "fbsd-alpha"
    set BUILDARCH = FREEBSD_ALPHA
    breaksw
+case "fbsd-amd64"
+   set BUILDARCH = FREEBSD_AMD64
+   breaksw
 case "fbsd-i386"
    set BUILDARCH = FREEBSD_I386
    breaksw

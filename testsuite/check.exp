@@ -3455,6 +3455,7 @@ proc run_test_level {path runcompleted level {do_save 1}} {
             puts $CHECK_OUTPUT $errMsg
             add_proc_error "run_test_level" "-2" "catch returns not 0\n${errMsg}\n${errorInfo}" 
             set_error -2 "tcl error"
+            unlock_testsuite
             return -1 
          } 
 #         $elem

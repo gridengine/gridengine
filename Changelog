@@ -1,3 +1,15 @@
+CR-2001-12-19-1: Testsuite: new test: job_state_handling
+                               - testing job states for array and "normal" jobs
+                                 (hold, pending, running, finished, error, timehold
+                                  jobhold, suspend is tested in qmod test)
+                               - testing max_aj_instances
+                               - testing max_aj_tasks
+                            new parser procedure: parse_qstat_j() (parse qstat -j)
+                            new procedure:  get_qstat_j_info() (get qstat -j information)
+                            new procedure:  get_job_state() (parse qstat -f for job/array
+                                                             states)
+                 Bugfix:    unlock testsuite after fault tcl command code           
+                               
 CR-2001-12-19-0: Bugfix:    added missing ":" for qstat -j output for "job-array tasks"
 
 AA-2001-12-19-0: Bugfix:    scrollbar anomalie in cluster config, made scrollbars static

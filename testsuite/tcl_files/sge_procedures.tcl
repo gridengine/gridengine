@@ -3306,7 +3306,6 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
   set timeout $submit_timeout
   
   log_user 0
-
   expect {
        -i $sp_id full_buffer {
           set return_value -1    
@@ -3373,9 +3372,11 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
             set return_value -5
          } 
        }
-       
+       -i $sp_id -- "submit a job with more than" {
+          set return_value -7
+       }
      }
-
+ 
      # close spawned process 
 
      if { $do_error_check == 1 } {
@@ -3770,6 +3771,41 @@ proc get_extended_job_info {jobid {variable job_info}} {
    return 0
 }
 
+#****** sge_procedures/get_qstat_j_info() **************************************
+#  NAME
+#     get_qstat_j_info() -- get qstat -j information
+#
+#  SYNOPSIS
+#     get_qstat_j_info { jobid {variable qstat_j_info} } 
+#
+#  FUNCTION
+#     This procedure starts qstat -j for the given job id and returns
+#     information in an tcl array. 
+#
+#  INPUTS
+#     jobid                   - job id of job
+#     {variable qstat_j_info} - array to store information
+#
+#  SEE ALSO
+#     parser/parse_qstat_j()
+#*******************************************************************************
+proc get_qstat_j_info {jobid {variable qstat_j_info}} {
+   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ARCH
+   global CHECK_OUTPUT
+   upvar $variable jobinfo
+
+   set exit_code [catch { eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat -j $jobid" } result]
+   if { $exit_code == 0 } {
+      set result "$result\n"
+      parse_qstat_j result jobinfo $jobid 
+      return 1
+   }
+   return 0
+}
+
+
+
+
 
 #                                                             max. column:     |
 #****** sge_procedures/get_qacct() ******
@@ -3908,7 +3944,104 @@ proc is_job_running { jobid jobname } {
    return -1
 }
 
+#****** sge_procedures/get_job_state() *****************************************
+#  NAME
+#     get_job_state() -- get job state information
+#
+#  SYNOPSIS
+#     get_job_state { jobid { not_all_equal 0 } { taskid task_id } } 
+#
+#  FUNCTION
+#     This procedure parses the output of the qstat -f command and returns
+#     the job state or an tcl array with detailed information
+#
+#  INPUTS
+#     jobid               - Job id of job to get information for
+#     { not_all_equal 0 } - if 0 (default): The procedure will wait until
+#                           all tasks of a job array have the same state
+#                           if 1: The procedure will return an tcl list
+#                           with the job states and fill the array (given
+#                           optional in parameter 3) "task_id" with information.
+#     { taskid task_id }  - tcl array name to fill information if not_all_equal 
+#                           is set to 1
+#
+#  RESULT
+#     tcl array:
+#          task_id($lfnr,state)     -> task state
+#          task_id($lfnr,task)      -> task no
+#
+#          lfnr is a number between 0 and the length of the returned tcl list
+#         
+#
+#*******************************************************************************
+proc get_job_state { jobid { not_all_equal 0 } { taskid task_id } } {
+   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_OUTPUT check_timestamp
+   upvar $taskid r_task_id
+   set mytime [timestamp]
 
+   if { $mytime == $check_timestamp } {
+      sleep 1
+   }
+   set check_timestamp $mytime
+
+   set my_timeout [ expr ( $mytime + 100 ) ]
+   set states_all_equal 0
+   while { $my_timeout > [timestamp] && $states_all_equal == 0 } {   
+      set states_all_equal 1
+
+      set catch_state [ catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } result ]
+   
+      if { $catch_state != 0 } {
+         puts $CHECK_OUTPUT "debug: $result"
+         return -1
+      }
+   #   puts $CHECK_OUTPUT "debug: catch_state: $catch_state"
+   
+      # split each line as listelement
+      set help [split $result "\n"]
+      set running_flag 1
+   
+      set states ""
+      set lfnr 0
+      foreach line $help {
+        if { [lindex $line 0] == $jobid } {
+           lappend states [lindex $line 4]
+           debug_puts "debug: $line"
+           if { [lindex $line 7] == "MASTER" } {
+              set r_task_id($lfnr,task)  [lindex $line 8]
+           } else {
+              set r_task_id($lfnr,task)  [lindex $line 7]
+           }
+           set r_task_id($lfnr,state) [lindex $line 4]
+           incr lfnr 1
+        }
+      }
+      if { $states == "" } {
+         set states -1
+      }
+      
+      set main_state [lindex $states 0]
+      if { $not_all_equal == 0 } {
+         for { set elem 0 } { $elem < [llength $states] } { incr elem 1 } {
+            if { [ string compare [lindex $states $elem] $main_state ] != 0 } {
+               puts $CHECK_OUTPUT "jobstate of task $elem is: [lindex $states $elem], waiting ..."
+               set states_all_equal 0
+            } 
+         }
+         sleep 1
+      }
+   }
+   if { $not_all_equal != 0 } {
+      return $states
+   }
+
+   if { $states_all_equal == 1 } {
+      return $main_state
+   }
+ 
+   add_proc_error "get_job_state" -1 "more than one job id found with different states"
+   return -1
+}
 
 
 # wait for start of job ($jobid,$jobname) ; timeout after $seconds

@@ -432,7 +432,8 @@ proc process_named_record {input output delimiter index {id ""}
                                                         {tail_line 0}
                                                         {replace variable_not_set}
                                                         {transform variable_not_set}
-                                                        {rules variable_not_set}} {
+                                                        {rules variable_not_set}
+                                                        {field_delimiter ""} } {
    upvar $input      in
    upvar $output     out
    upvar $replace    rep
@@ -494,8 +495,15 @@ proc process_named_record {input output delimiter index {id ""}
          unset record      
       } else {
          # read record element 
-         set idx [string trim [lindex $line 0]]
-         set value [string trim [lrange $line 1 end]]
+         if { $field_delimiter == "" } {
+            set idx [string trim [lindex $line 0]]
+            set value [string trim [lrange $line 1 end]]
+         } else {
+            set helplist [split $line $field_delimiter]
+            set helplist2 [lrange $helplist 1 end]
+            set idx   [string trim [lindex $helplist 0]]
+            set value [string trim [join $helplist2 $field_delimiter]]
+         }
 
          # replace or set contents
          if {[info exists rep($idx,$value)]} {
@@ -1293,6 +1301,38 @@ proc parse_qacct {input output {jobid 0}} {
    
    process_named_record in out $delimiter "jobnumber" $jobid 1 0 replace transform rules
 }
+
+#****** parser/parse_qstat_j() *************************************************
+#  NAME
+#     parse_qstat_j() -- parse information from from qstat -j command
+#
+#  SYNOPSIS
+#     parse_qstat_j { input output {jobid 0} } 
+#
+#  FUNCTION
+#     The function parses the output given from a qstat -j <jobid> command
+#     and returns the information in a TCL array indexed by the fieldnames.
+#
+#  INPUTS
+#     input     - name of a string variable containing the output of qstat -j
+#     output    - TCL array in which to store the results
+#     {jobid 0} - jobid that was used for qstat -j command
+#
+#  RESULT
+#     The output array is filled with the processed data.
+#     If a jobid was specified, the array is indexed by the fieldnames,
+#     if not, the index is built as "jobid,fieldname".
+#
+#*******************************************************************************
+proc parse_qstat_j {input output {jobid 0} } {
+   upvar $input  in
+   upvar $output out
+
+   set transform(submission_time)  transform_date_time
+   set transform(execution_time)   transform_date_time
+   process_named_record in out "no_delemiter___" "job_number" $jobid 0 0 variable_not_set transform variable_not_set ":"
+}
+
 
 #                                                             max. column:     |
 #****** parser/output_array() ******

@@ -579,7 +579,7 @@ static int japi_open_session(const char *key_in, dstring *key_out, dstring *diag
       char tmp_session_key_buffer[SGE_PATH_MAX];
       dstring tmp_session_key;
       int ret;
-      int id = 0;
+      unsigned int id = 0;
 
       /* seed random function */
       id = sge_get_gmt();

@@ -39,19 +39,25 @@
 
 SpoolingQueryChange()
 {
-   $INFOTEXT -u "\nBerkeley Database spooling parameters"
-   $INFOTEXT "\nWe can use local spooling, which will go to a local filesystem" \
-             "\nor use a RPC Client/Server mechanism. In this case, qmaster will" \
-             "\ncontact a RPC server running on a separate server machine." \
-             "\nIf you want to use the SGE shadowd, you have to use the " \
-             "\nRPC Client/Server mechanism.\n"
-   $INFOTEXT "\nEnter database server (none for local spooling)\n" \
-             "or hit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
-             SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
+   if [ $BERKELEY = "install" ]; then
+      $INFOTEXT -u "\nBerkeley Database spooling parameters"
+      $INFOTEXT "\nWe can use local spooling, which will go to a local filesystem" \
+                "\nor use a RPC Client/Server mechanism. In this case, qmaster will" \
+                "\ncontact a RPC server running on a separate server machine." \
+                "\nIf you want to use the SGE shadowd, you have to use the " \
+                "\nRPC Client/Server mechanism.\n"
+      $INFOTEXT "\nEnter database server (none for local spooling)\n" \
+                "or hit <RETURN> to use default [%s] >> " $SPOOLING_SERVER
+                SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
 
-   $INFOTEXT "\nEnter the database directory\n" \
-             "or hit <RETURN> to use default [%s] >> " $SPOOLING_DIR
-             SPOOLING_DIR=`Enter $SPOOLING_DIR`
+      $INFOTEXT "\nEnter the database directory\n" \
+                "or hit <RETURN> to use default [%s] >> " $SPOOLING_DIR
+                SPOOLING_DIR=`Enter $SPOOLING_DIR`
+   else
+     $INFOTEXT "Please enter the name of your Berkeley DB Spooling Server >> " SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
+     $INFOTEXT "Please enter the database directory now >> " SPOOLING_DIR=`Enter $SPOOLING_DIR`
+   fi
+ 
 }
 
 SpoolingCheckParams()
@@ -74,6 +80,7 @@ SpoolingCheckParams()
       echo $SPOOLING_DIR >> $SPOOLING_DIR/bdbhomes
       CreateRPCServerScript
       $INFOTEXT "Now we have to startup the rc script >%s< on the RPC server machine\n" $SPOOLING_DIR/sgebdb
+      $INFOTEXT "If you already have a configured Berkeley DB Spooling Server, then continue with >n<\n"
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Shall the installation script try to start the RPC server? (y/n) [y] >>"
 
       if [ $? = 0 -a $AUTO = "false" ]; then
@@ -83,6 +90,7 @@ SpoolingCheckParams()
          sleep 5
       else
          $INFOTEXT "Please start the rc script >%s< on the RPC server machine\n" $SPOOLING_DIR/sgebdb
+         $INFOTEXT "If your database is already running, then continue with <Enter>\n"
          $INFOTEXT -auto $AUTO "Hit <Enter> to continue! >>"
       fi
 
@@ -115,7 +123,7 @@ CheckLocalFilesystem()
             return 0
          fi
          ;;
-      *linux)
+      lx*)
          df -l $FS >/dev/null 2>&1
          if [ $? -eq 0 ]; then
             return 1

@@ -119,6 +119,17 @@ Shutdown()
       if [ "$?" = 0 ]; then
          kill -TERM $pid
       fi
+      $utilbin_dir/checkprog $pid $name > /dev/null
+      if [ "$?" = 0 ]; then
+         sleep 30
+         kill  $pid
+      fi
+      $utilbin_dir/checkprog $pid $name > /dev/null
+      if [ "$?" = 0 ]; then
+         sleep 30
+         kill -9 $pid
+      fi
+
    fi
 }
 

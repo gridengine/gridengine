@@ -562,6 +562,16 @@ proc install_qmaster {} {
           continue;
        }
 
+       -i $sp_id "Please hit <RETURN> to continue once you set your file permissions" {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >return<"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               gets stdin anykey
+          }
+          send -i $sp_id "\n"
+          continue;
+       }
+
        -i $sp_id "Do you want to use this configuration parameters" {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >n<"
           if {$do_log_output == 1} {

@@ -1,3 +1,8 @@
+JG-2002-02-05-1: Testsuite: Enable testsuite to setup a cluster on a filesystem
+                            where root has no write access.
+                            This is only a first step. A comprehensive solution
+                            has to be implemented, see issue #135
+
 JG-2002-02-05-0: Testsuite: Enhanced "large_cluster" test:
                             - testcase "throughput cluster" (loadcorrection and
                               loadthresholds switched off)

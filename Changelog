@@ -1,3 +1,8 @@
+EB-2002-05-06-0: Bugfix:    qhost -j is broken
+                 Issue:     #259
+                 Bugtraq:   #4686157
+                 Changed:   qhost
+
 CR-2002-05-14-0: Cleanup:   - Using dstring in sge_printf 
                             - some dstring function enhancements
                             - fixed bug in sge_dstring_append()

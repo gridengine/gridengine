@@ -54,7 +54,7 @@ set check_init_level_procedure "drmaa_init_level"
 set check_name            "drmaa"
 set check_category        "COMPATIBILITY SYSTEM VERIFIED"
 set check_highest_level   202
-set check_description(202)  "tests to verify DRMAA library: single threaded"
+set check_description(200)  "tests to verify DRMAA library: single threaded"
 set check_description(201)  "tests to verify DRMAA library: multi threaded"
 set check_description(202)  "tests to verify DRMAA library: additional interfaces"
 

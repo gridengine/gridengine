@@ -1085,7 +1085,7 @@ case FREEBSD_*:
    set XCFLAGS  = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
    set XLIBD    = "-L/usr/X11R6/lib"
    set XLFLAGS  = "$XLIBD"
-   set XLIBS    = " -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
+   set XLIBS    = " -Xlinker -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
 
    set SGE_NPROCS_CFLAGS = "$CFLAGS"
    set RM	= "rm -f"

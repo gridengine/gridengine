@@ -44,6 +44,7 @@
 #include "msg_execd.h"
 #include "sge_string.h"
 #include "sge_security.h"
+#include "sig_handlers.h"
 
 /* number of messages to cache in server process
    the rest stays in commd */
@@ -188,7 +189,7 @@ int wait4commd;
                MIN(connect_problem_sleep+CONNECT_PROBLEM_SLEEP_INC, 
                    CONNECT_PROBLEM_SLEEP_MAX);
          }
-      } while (wait4commd && i == CL_CONNECT);
+      } while (wait4commd && i == CL_CONNECT && shut_me_down != 1);
 
       if (wait4commd && connect_problem_sleep > CONNECT_PROBLEM_SLEEP_MIN) {
          errfunc(MSG_COM_RECONNECT);

@@ -1,3 +1,6 @@
+AS-2001-11-26-0: execd now exits on SIGTERM also when commd is down
+                 Bugtraq #4531720
+
 JG-2001-11-26-3: Added a subscribe/unsubscribe mechanism to the event client
                  interface. The current implementation does not yet allow 
                  dynamic (un)subscription, but only before a (re)registration.
@@ -343,6 +346,7 @@ JG-2001-10-09-0: Added statistics for our hashtable implementation that gives
                  files.
 
 JG-2001-10-08-0: Enabled options -h and -hold_jid for qrsh
+                 Bugtraq #4511859
 
 AH-2001-10-05-0: Removed warning message in execd 
 

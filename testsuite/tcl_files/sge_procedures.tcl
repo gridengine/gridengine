@@ -2282,7 +2282,6 @@ proc add_access_list { user_array list_name } {
   } result ]
   puts $CHECK_OUTPUT $result
   set ADDED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_GDI_ADDTOACL_SS ] $user_array $list_name]
-  puts $CHECK_OUTPUT $ADDED
   if { [string first "added" $result ] < 0 && [string first $ADDED $result ] < 0 } {
      add_proc_error "add_access_list" "-1" "could not add access_list $list_name"
      return -1

@@ -2057,6 +2057,22 @@ proc setup_queues {} {
      }
   }
 
+  puts $CHECK_OUTPUT "\nremoving access lists ..."
+  set NO_ACCESS_LIST_DEFINED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_QCONF_NOXDEFINED_S] "userset list"]
+  catch { exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-sul" } result
+  if { [string first $NO_ACCESS_LIST_DEFINED $result] >= 0 } {
+     puts $CHECK_OUTPUT "no userset list defined"
+  } else {
+     foreach elem $result {
+        if { [ string compare $elem defaultdepartment ] == 0 } {
+           puts $CHECK_OUTPUT "skipping \"defaultdepartment\" ..."
+           continue
+        }
+        puts $CHECK_OUTPUT "removing userset list $elem."
+        del_access_list $elem
+     }
+  }
+
 
   if { $check_use_installed_system != 0 } {
      puts $CHECK_OUTPUT "\nremoving queues ..."
@@ -2526,19 +2542,7 @@ proc setup_deadlineuser {} {
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_USER CHECK_CORE_MASTER
   global CHECK_PRODUCT_TYPE
 
-
-  if { [ string compare $CHECK_PRODUCT_TYPE "sge" ] == 0 } { 
-     set_error 0 "setup_deadlineuser - no sgeee system"
-     return
-  }
-
-  # add user to deadlineusers 
-  set vi_commands "" 
-  lappend vi_commands ":%s/entries.*$/entries  $CHECK_USER/\n"
-  set MODIFIED [translate $CHECK_CORE_MASTER 1 0 0 [sge_macro MSG_SGETEXT_MODIFIEDINLIST_SSSS] $CHECK_USER "*" "deadlineusers" "*"]
-  set result [ handle_vi_edit "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-mu deadlineusers" $vi_commands $MODIFIED ]
-  if { $result == -1 } { add_proc_error "setup_deadlineuser" -1 "timeout error" }
-  if { $result != 0 } { add_proc_error "setup_deadlineuser" -1 "could not add deadlineuser $CHECK_USER" }
+  add_access_list $CHECK_USER deadlineusers
 
   set_error 0 "ok"
 }

@@ -39,6 +39,7 @@
 #include "basis_types.h"
 #include "msg_utilbin.h"
 #include "sge_hostname.h"
+#include "sge_arch.h"
 #include "cl_commlib.h"
 
 void usage(void)
@@ -71,6 +72,7 @@ int main(int argc, char *argv[])
      exit(1);
   }
 
+  /* cl_com_set_alias_file(sge_get_alias_path()); */
   /* cl_com_append_host_alias("",""); */
   
 

@@ -63,6 +63,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
       return CL_RETVAL_MALLOC;
    }
    ldata->host_alias_file      = NULL;
+   ldata->alias_file_changed   = 0;
    ldata->host_alias_list      = NULL;
    ldata->resolve_method       = method;
    ldata->entry_life_time      = entry_life_time;
@@ -129,6 +130,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
 
    if (host_alias_file != NULL) {
       ldata->host_alias_file = strdup(host_alias_file);
+      ldata->alias_file_changed = 1;
       if (ldata->host_alias_file == NULL) {
          free(ldata);
          return CL_RETVAL_MALLOC;
@@ -214,6 +216,87 @@ cl_host_list_data_t* cl_host_list_get_data(cl_raw_list_t* list_p) {
    return ldata;
 }
 
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_set_alias_file_dirty()"
+int cl_host_list_set_alias_file_dirty(cl_raw_list_t* list_p) {
+   int ret_val;
+   cl_host_list_data_t* ldata = NULL;
+
+   if (list_p == NULL ) {
+      return CL_RETVAL_PARAMS;
+   }
+   
+   /* lock host list */
+   ret_val = cl_raw_list_lock(list_p);
+   if (ret_val != CL_RETVAL_OK) {
+      return ret_val;
+   }
+
+   /* list_p should be a hostlist */
+   ldata = (cl_host_list_data_t*) list_p->list_data;
+   if (ldata != NULL) {
+      ldata->alias_file_changed = 1;
+   } else {
+      cl_raw_list_unlock(list_p);
+      return CL_RETVAL_NO_FRAMEWORK_INIT;
+   }
+
+   /* unlock host list */
+   ret_val = cl_raw_list_unlock(list_p);
+   if (ret_val != CL_RETVAL_OK) {
+      return ret_val;
+   }
+   return CL_RETVAL_OK;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_set_alias_file()"
+int cl_host_list_set_alias_file(cl_raw_list_t* list_p, char* host_alias_file) {
+   int ret_val;
+   cl_host_list_data_t* ldata = NULL;
+
+   if (list_p == NULL || host_alias_file == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   
+   /* lock host list */
+   ret_val = cl_raw_list_lock(list_p);
+   if (ret_val != CL_RETVAL_OK) {
+      return ret_val;
+   }
+
+   /* list_p should be a hostlist */
+   ldata = (cl_host_list_data_t*) list_p->list_data;
+   if (ldata != NULL) {
+      if (ldata->host_alias_file != NULL) {
+         free(ldata->host_alias_file);
+         ldata->host_alias_file = NULL;
+      }
+      ldata->host_alias_file = strdup(host_alias_file);
+      CL_LOG_STR(CL_LOG_WARNING,"using host alias file:",ldata->host_alias_file);
+      ldata->alias_file_changed = 1;
+      if (ldata->host_alias_file == NULL) {
+         cl_raw_list_unlock(list_p);
+         return CL_RETVAL_MALLOC;
+      }
+   } else {
+      cl_raw_list_unlock(list_p);
+      return CL_RETVAL_NO_FRAMEWORK_INIT;
+   }
+
+   /* unlock host list */
+   ret_val = cl_raw_list_unlock(list_p);
+   if (ret_val != CL_RETVAL_OK) {
+      return ret_val;
+   }
+   return CL_RETVAL_OK;
+}
 
 int cl_host_list_cleanup(cl_raw_list_t** list_p) {
    cl_host_list_data_t* ldata = NULL;

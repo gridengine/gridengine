@@ -36,6 +36,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <errno.h>
+#include "sge_arch.h"
 
 
 #include "cl_commlib.h"
@@ -211,7 +212,7 @@ int cl_com_setup_commlib( cl_thread_mode_t t_mode, int debug_level , cl_log_func
    /* setup global host list */
    pthread_mutex_lock(&cl_com_host_list_mutex);
    if (cl_com_host_list == NULL) {
-      ret_val = cl_host_list_setup(&cl_com_host_list, "global_host_cache", CL_SHORT, NULL , NULL, 0 , 0, 0 );
+      ret_val = cl_host_list_setup(&cl_com_host_list, "global_host_cache", CL_SHORT, NULL /*sge_get_alias_path()*/ , NULL, 0 , 0, 0 );
       if (cl_com_host_list == NULL) {
          pthread_mutex_unlock(&cl_com_host_list_mutex);
          cl_com_cleanup_commlib();
@@ -1104,6 +1105,44 @@ cl_com_handle_t* cl_com_get_handle(char* component_name, unsigned long component
 
 cl_thread_mode_t cl_commlib_get_thread_state(void) {
    return cl_com_create_threads;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_set_alias_file()"
+int cl_com_set_alias_file(char* alias_file) {
+   int ret_val;
+   if (alias_file == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   
+   pthread_mutex_lock(&cl_com_host_list_mutex);
+   if (cl_com_host_list != NULL) {
+      ret_val = cl_host_list_set_alias_file(cl_com_host_list, alias_file );
+   } else {
+      ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
+   }
+   pthread_mutex_unlock(&cl_com_host_list_mutex);
+   return ret_val;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_set_alias_file_dirty()"
+int cl_com_set_alias_file_dirty(void) {
+   int ret_val;
+   
+   pthread_mutex_lock(&cl_com_host_list_mutex);
+   if (cl_com_host_list != NULL) {
+      ret_val = cl_host_list_set_alias_file_dirty(cl_com_host_list);
+   } else {
+      ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
+   }
+   pthread_mutex_unlock(&cl_com_host_list_mutex);
+   return ret_val;
+
 }
 
 
@@ -4463,8 +4502,8 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
    int ret_val;
 
    if (refresh_aliases != 0) {
-      /* TODO: refresh host alias file */
-      CL_LOG(CL_LOG_ERROR,"refresh of alias file not implemented");
+      /* TODO: refresh host alias file? But it's never used */
+      CL_LOG(CL_LOG_ERROR,"getuniquehostname() refresh of alias file not implemented");
    }
    ret_val = cl_com_cached_gethostbyname((char*)hostin, &resolved_host, NULL, NULL );
    if (resolved_host != NULL) {

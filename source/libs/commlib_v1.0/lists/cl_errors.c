@@ -265,6 +265,18 @@ const char* cl_get_error_text(int error_id) {       /* CR check */
       case CL_RETVAL_ALIAS_EXISTS: {
          return "CL_RETVAL_ALIAS_EXISTS";
       }
+      case CL_RETVAL_NO_ALIAS_FILE: {
+         return "CL_RETVAL_NO_ALIAS_FILE";
+      }
+      case CL_RETVAL_ALIAS_FILE_NOT_FOUND: {
+         return "CL_RETVAL_ALIAS_FILE_NOT_FOUND";
+      }
+      case CL_RETVAL_OPEN_ALIAS_FILE_FAILED: {
+         return "CL_RETVAL_OPEN_ALIAS_FILE_FAILED";
+      }
+      case CL_RETVAL_ALIAS_VERSION_ERROR: {
+         return "CL_RETVAL_ALIAS_VERSION_ERROR";
+      }
    }
    return CL_RETVAL_UNDEFINED_STR;
 }

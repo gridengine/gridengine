@@ -53,6 +53,7 @@ typedef struct cl_host_list_elem_t {
 typedef struct cl_host_list_data_type {                      /* list specific data */
    cl_host_resolve_method_t    resolve_method;
    char*                       host_alias_file;
+   int                         alias_file_changed;      /* if set, alias file has changed */
    char*                       local_domain_name;
    cl_raw_list_t*              host_alias_list;
    unsigned long               entry_life_time;         /* max life time of an resolved host */
@@ -76,6 +77,8 @@ int cl_host_list_cleanup(cl_raw_list_t** list_p);
 /* thread list functions that will lock the list */
 int cl_host_list_append_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, int lock_list);
 int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, int lock_list);
+int cl_host_list_set_alias_file(cl_raw_list_t* list_p, char* host_alias_file);
+int cl_host_list_set_alias_file_dirty(cl_raw_list_t* list_p);
 
 
 /* thread functions that will not lock the list */

@@ -31,11 +31,13 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <strings.h>
 #include <string.h>
+#include <limits.h>
 
 #include <netinet/tcp.h> 
 #include <netdb.h>
@@ -3580,7 +3582,109 @@ int cl_com_cached_gethostbyname( char *unresolved_host, char **unique_hostname, 
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_read_alias_file()"
+int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
+   cl_host_list_data_t* ldata = NULL;
+   SGE_STRUCT_STAT sb;
+   FILE *fp;
+   char alias_file_buffer[LINE_MAX*4];
+   int max_line = LINE_MAX*4;
+   char* alias_delemiters="\n\t ,;";
+   char printbuf[2*MAXHOSTLEN];
 
+   if (hostlist == NULL) {
+      return CL_RETVAL_PARAMS;    
+   }
+
+   
+   if (hostlist->list_data == NULL) {
+      CL_LOG( CL_LOG_ERROR, "hostlist not initalized");
+      return CL_RETVAL_PARAMS;    
+   }
+
+   cl_raw_list_lock(hostlist);
+   ldata = (cl_host_list_data_t*) hostlist->list_data;
+   
+   ldata->alias_file_changed = 0;
+
+   if (ldata->host_alias_file == NULL) {
+      cl_raw_list_unlock(hostlist);
+      CL_LOG(CL_LOG_WARNING,"host alias file is not specified");
+      return CL_RETVAL_NO_ALIAS_FILE;
+   }
+   if (SGE_STAT(ldata->host_alias_file, &sb)) {
+      cl_raw_list_unlock(hostlist);
+      CL_LOG(CL_LOG_WARNING,"host alias file is not existing");
+      return CL_RETVAL_ALIAS_FILE_NOT_FOUND;
+   }
+   fp = fopen(ldata->host_alias_file, "r");
+   if (!fp) {
+      cl_raw_list_unlock(hostlist);
+      CL_LOG(CL_LOG_WARNING,"can't open host alias file");
+      return CL_RETVAL_OPEN_ALIAS_FILE_FAILED;
+   }
+   
+   CL_LOG_INT(CL_LOG_INFO,"max. supported line length:", max_line );
+   while (fgets(alias_file_buffer, sizeof(alias_file_buffer), fp)) {
+      char* help = NULL;
+      char *lasts = NULL;
+      char* main_name = NULL;
+
+
+
+      help = strrchr(alias_file_buffer,'\r');
+      if (help != NULL) {
+         help[0] = '\0';
+      }
+      help = strrchr(alias_file_buffer,'\n');
+      if (help != NULL) {
+         help[0] = '\0';
+      }
+
+      if (alias_file_buffer[0] == '#') {
+         CL_LOG_STR(CL_LOG_INFO,"ignoring comment:",alias_file_buffer );
+         continue;
+      }
+
+      printf("line:\"%s\"\n",alias_file_buffer);
+      help = strtok_r(alias_file_buffer,alias_delemiters,&lasts);
+      if (help != NULL) {
+         cl_com_hostent_t* he = NULL;
+         if ( cl_com_gethostbyname(help, &he) == CL_RETVAL_OK) {
+            main_name = strdup(help); /* he->he->h_name */
+            cl_com_free_hostent(&he);
+            if (main_name == NULL) {
+               CL_LOG(CL_LOG_ERROR,"malloc() error");
+               fclose(fp);
+               cl_raw_list_unlock(hostlist);
+               return CL_RETVAL_MALLOC;
+            }
+         } else {
+            CL_LOG_STR(CL_LOG_ERROR,"mainname in alias file is not resolveable:", help);
+            continue;
+         }
+         while ( cl_com_remove_host_alias(main_name) == CL_RETVAL_OK);
+
+         while( (help = strtok_r(NULL,alias_delemiters,&lasts)) != NULL ) {
+            int retval = cl_com_append_host_alias(help, main_name);
+            if (retval == CL_RETVAL_OK) {
+               snprintf(printbuf,sizeof(printbuf), "\"%s\" aliased to \"%s\"", help,main_name);
+               CL_LOG(CL_LOG_INFO,printbuf);
+            }
+         }
+         free(main_name);
+         main_name = NULL;
+      }
+   }
+   fclose(fp);
+
+   cl_raw_list_unlock(hostlist);
+
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -3595,11 +3699,20 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
 
    cl_com_host_spec_t*       elem_host = NULL;
 
+   if (list_p == NULL) {
+      return CL_RETVAL_PARAMS;    
+   }
    if (list_p->list_data == NULL) {
       CL_LOG( CL_LOG_ERROR, "hostlist not initalized");
       return CL_RETVAL_PARAMS;    
    }
    ldata = (cl_host_list_data_t*) list_p->list_data;
+
+
+   if (ldata->alias_file_changed != 0) {
+      CL_LOG(CL_LOG_WARNING,"host alias file dirty flag is set");
+      cl_com_read_alias_file(list_p);
+   }
 
    gettimeofday(&now,NULL);
    if ( now.tv_sec == ldata->last_refresh_time) {

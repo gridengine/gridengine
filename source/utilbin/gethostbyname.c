@@ -41,6 +41,7 @@
 #include "msg_utilbin.h"
 #include "sge_string.h"
 #include "sge_hostname.h"
+#include "sge_arch.h"
 
 #include "cl_commlib.h"
 
@@ -90,6 +91,15 @@ int main(int argc, char *argv[]) {
      exit(1);
   }
 
+#if 0
+  if (sge_aliasing && name_only) {
+     cl_com_set_alias_file(sge_get_alias_path());
+  }
+  
+  if (name_only == 0) {
+     cl_com_set_alias_file(sge_get_alias_path());
+  }
+#endif
   /* cl_com_append_host_alias("",""); */
   retval = cl_com_cached_gethostbyname(argv[1+name_only], &resolved_name, NULL, &he);
 

@@ -77,6 +77,8 @@ int cl_com_get_connect_port(cl_com_handle_t* handle, int* port);
 int cl_com_add_allowed_host    (cl_com_handle_t* handle, char* hostname);
 int cl_com_remove_allowed_host (cl_com_handle_t* handle, char* hostname);
 
+int cl_com_set_alias_file(char* alias_file);
+int cl_com_set_alias_file_dirty(void);
 int cl_com_append_host_alias(char* local_resolved_name, char* alias_name);
 int cl_com_remove_host_alias(char* alias_name);
 

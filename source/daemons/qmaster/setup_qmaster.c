@@ -786,7 +786,6 @@ static int setup_qmaster(void)
    static bool first = true;
    int ret;
    lListElem *lep = NULL;
-   char err_str[1024];
    extern int new_config;
    lListElem *spooling_context = NULL;
    lList *answer_list = NULL;

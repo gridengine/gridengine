@@ -38,11 +38,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_getloadavg.h"
 
 #include "sge.h"
 #include "sge_log.h"
 #include "sgermon.h"
+
+#include "sge_getloadavg.h"
 
 #if defined(SOLARIS) 
 #  include <kvm.h>
@@ -50,6 +51,19 @@
 #  include <sys/cpuvar.h>
 #  if defined(SOLARIS64)
 #     include <sys/loadavg.h> 
+#  endif
+#  define USE_KSTAT
+#  ifdef USE_KSTAT
+#     include <kstat.h>
+/*
+ * Some kstats are fixed at 32 bits, these will be specified as ui32; some
+ * are "natural" size (32 bit on 32 bit Solaris, 64 on 64 bit Solaris
+ * we'll make those unsigned long)
+ * Older Solaris doesn't define KSTAT_DATA_UINT32, those are always 32 bit.
+ */
+#     ifndef KSTAT_DATA_UINT32
+#        define ui32 ul
+#     endif
 #  endif
 #elif defined(LINUX)
 #  include <ctype.h>
@@ -345,19 +359,196 @@ int Ncpus;
 
 #if defined(SOLARIS) || defined(SOLARIS64)
 
+#ifdef USE_KSTAT
+static kstat_ctl_t *kc = NULL;
+static kstat_t **cpu_ks;
+static cpu_stat_t *cpu_stat;
+
+#define UPDKCID(nk,ok) \
+if (nk == -1) { \
+  perror("kstat_read "); \
+  return -1; \
+} \
+if (nk != ok)\
+  goto kcid_changed;
+
+int kupdate(int avenrun[3])
+{
+   kstat_t *ks;
+   kid_t nkcid;
+   int i;
+   int changed = 0;
+   static int ncpu = 0;
+   static kid_t kcid = 0;
+   kstat_named_t *kn;
+
+   /*
+   * 0. kstat_open
+   */
+   if (!kc) {
+      kc = kstat_open();
+      if (!kc) {
+         perror("kstat_open ");
+         return -1;
+      }
+      changed = 1;
+      kcid = kc->kc_chain_id;
+   }
+
+
+   /* keep doing it until no more changes */
+   kcid_changed:
+
+   /*
+   * 1.  kstat_chain_update
+   */
+   nkcid = kstat_chain_update(kc);
+   if (nkcid) {
+      /* UPDKCID will abort if nkcid is -1, so no need to check */
+      changed = 1;
+      kcid = nkcid;
+   }
+   UPDKCID(nkcid,0);
+
+   ks = kstat_lookup(kc, "unix", 0, "system_misc");
+   if (kstat_read(kc, ks, 0) == -1) {
+      perror("kstat_read");
+      return -1;
+   }
+
+#if 0
+   /* load average */
+   kn = kstat_data_lookup(ks, "avenrun_1min");
+   if (kn)
+      avenrun[0] = kn->value.ui32;
+   kn = kstat_data_lookup(ks, "avenrun_5min");
+   if (kn)
+      avenrun[1] = kn->value.ui32;
+   kn = kstat_data_lookup(ks, "avenrun_15min");
+   if (kn)
+      avenrun[2] = kn->value.ui32;
+
+   /* nproc */
+   kn = kstat_data_lookup(ks, "nproc");
+   if (kn) {
+      nproc = kn->value.ui32;
+#ifdef NO_NPROC
+      if (nproc > maxprocs)
+      reallocproc(2 * nproc);
+#endif
+   }
+#endif
+
+   if (changed) {
+      int ncpus = 0;
+
+      /*
+      * 2. get data addresses
+      */
+
+      ncpu = 0;
+
+      kn = kstat_data_lookup(ks, "ncpus");
+      if (kn && kn->value.ui32 > ncpus) {
+         ncpus = kn->value.ui32;
+         cpu_ks = (kstat_t **) realloc (cpu_ks, ncpus * sizeof (kstat_t *));
+         cpu_stat = (cpu_stat_t *) realloc (cpu_stat,
+         ncpus * sizeof (cpu_stat_t));
+      }
+
+      for (ks = kc->kc_chain; ks; ks = ks->ks_next) {
+         if (strncmp(ks->ks_name, "cpu_stat", 8) == 0) {
+            nkcid = kstat_read(kc, ks, NULL);
+            /* if kcid changed, pointer might be invalid */
+            UPDKCID(nkcid, kcid);
+
+            cpu_ks[ncpu] = ks;
+            ncpu++;
+            if (ncpu > ncpus) {
+               fprintf(stderr, "kstat finds too many cpus: should be %d\n", ncpus);
+               return -1;
+            }
+         }
+      }
+      /* note that ncpu could be less than ncpus, but that's okay */
+      changed = 0;
+   }
+
+
+   /*
+   * 3. get data
+   */
+
+   for (i = 0; i < ncpu; i++) {
+      nkcid = kstat_read(kc, cpu_ks[i], &cpu_stat[i]);
+      /* if kcid changed, pointer might be invalid */
+      UPDKCID(nkcid, kcid);
+   }
+
+   /* return the number of cpus found */
+   return(ncpu);
+}
+#endif
+
 double get_cpu_load() {
+#ifndef USE_KSTAT
    static unsigned long *cpu_offset = NULL;
+#else
+   int avenrun[3];
+#endif
    kernel_fd_type kernel_fd;
    static long address_cpu = 0;
    static long address_ncpus = 0;
    int cpus_found, i, j;
    static int number_of_cpus;
-   int cpu_load = -1.0;
-   static long cpu_time[CPUSTATES];
-   static long cpu_old[CPUSTATES];
-   static long cpu_diff[CPUSTATES]; 
+   double cpu_load = -1.0;
+   static long cpu_time[CPUSTATES] = { 0L, 0L, 0L, 0L, 0L};
+   static long cpu_old[CPUSTATES]  = { 0L, 0L, 0L, 0L, 0L};
+   static long cpu_diff[CPUSTATES] = { 0L, 0L, 0L, 0L, 0L}; 
    double cpu_states[CPUSTATES];
 
+   DENTER(CULL_LAYER, "get_cpu_load.solaris");
+
+#ifdef USE_KSTAT
+   /* use kstat to update all processor information */
+   if ((cpus_found = kupdate(avenrun)) < 0 ) {
+      DEXIT;
+      return cpu_load;
+   }
+   for (i=0; i<CPUSTATES; i++)
+      cpu_time[i] = 0;
+
+   for (i = 0; i < cpus_found; i++) {
+      /* sum counters up to, but not including, wait state counter */
+      for (j = 0; j < CPU_WAIT; j++) {
+         cpu_time[j] += (long) cpu_stat[i].cpu_sysinfo.cpu[j];
+         DPRINTF(("cpu_time[%d] = %ld (+ %ld)\n", j,  cpu_time[j],
+               (long) cpu_stat[i].cpu_sysinfo.cpu[j]));
+      }
+      /* add in wait state breakdown counters */
+      cpu_time[CPUSTATE_IOWAIT] += (long) cpu_stat[i].cpu_sysinfo.wait[W_IO] +
+                                   (long) cpu_stat[i].cpu_sysinfo.wait[W_PIO];
+      DPRINTF(("cpu_time[%d] = %ld (+ %ld)\n", CPUSTATE_IOWAIT,  cpu_time[CPUSTATE_IOWAIT],
+                                (long) cpu_stat[i].cpu_sysinfo.wait[W_IO] +
+                                (long) cpu_stat[i].cpu_sysinfo.wait[W_PIO]));
+
+
+      cpu_time[CPUSTATE_SWAP] += (long) cpu_stat[i].cpu_sysinfo.wait[W_SWAP];
+      DPRINTF(("cpu_time[%d] = %ld (+ %ld)\n", CPUSTATE_SWAP,  cpu_time[CPUSTATE_SWAP],
+         (long) cpu_stat[i].cpu_sysinfo.wait[W_SWAP]));
+   }
+   percentages(CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff);
+   cpu_load = cpu_states[1] + cpu_states[2] + cpu_states[3] + cpu_states[4];
+   DPRINTF(("cpu_load %f ( %f %f %f %f )\n", cpu_load,
+         cpu_states[1], cpu_states[2], cpu_states[3], cpu_states[4]));
+#if 0
+#if defined(SOLARIS) && !defined(SOLARIS64)
+   DPRINTF(("avenrun(%d %d %d) -> (%f %f %f)\n", avenrun[0], avenrun[1], avenrun[2],
+      KERNEL_TO_USER_AVG(avenrun[0]), KERNEL_TO_USER_AVG(avenrun[1]), KERNEL_TO_USER_AVG(avenrun[2])));
+#endif
+#endif
+
+#else /* !USE_KSTAT */
    if (sge_get_kernel_fd(&kernel_fd)
        && (address_cpu || sge_get_kernel_address("cpu", &address_cpu))
        && (address_ncpus || sge_get_kernel_address("ncpus", &address_ncpus))) {
@@ -365,6 +556,7 @@ double get_cpu_load() {
       /* how many cpu's ? */
       if (getkval(address_ncpus, &number_of_cpus, sizeof(number_of_cpus), 
          "ncpus")) {
+         DEXIT;
          return -1.0;
       }
 
@@ -377,6 +569,7 @@ double get_cpu_load() {
          for(i = cpus_found = 0; cpus_found < number_of_cpus; i++) {
             if (getkval(address_cpu + i*sizeof(unsigned long), 
                (int*)&cpu_offset[cpus_found], sizeof(unsigned long), "cpu")) {
+               DEXIT;
                return -1.0;
             }
             if (cpu_offset[cpus_found] != 0) {
@@ -391,22 +584,24 @@ double get_cpu_load() {
                struct cpu cpu;
 
                if (getkval(cpu_offset[i], (int*)&cpu, sizeof(struct cpu), "cpu")) {
+                  DEXIT;
                   return -1.0;
                }
                for (j=0; j < CPU_WAIT; j++) {
-                  cpu_time[j] += cpu.cpu_stat.cpu_sysinfo.cpu[j];
+                  cpu_time[j] += (long) cpu.cpu_stat.cpu_sysinfo.cpu[j];
                }
-               cpu_time[CPUSTATE_IOWAIT] += cpu.cpu_stat.cpu_sysinfo.wait[W_IO] 
-                  + cpu.cpu_stat.cpu_sysinfo.wait[W_PIO];
-               cpu_time[CPUSTATE_SWAP] += cpu.cpu_stat.cpu_sysinfo.wait[W_SWAP]; 
+               cpu_time[CPUSTATE_IOWAIT] += (long) cpu.cpu_stat.cpu_sysinfo.wait[W_IO] 
+                  + (long) cpu.cpu_stat.cpu_sysinfo.wait[W_PIO];
+               cpu_time[CPUSTATE_SWAP] += (long) cpu.cpu_stat.cpu_sysinfo.wait[W_SWAP]; 
             }
          }
-         percentages (CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff); 
+         percentages(CPUSTATES, cpu_states, cpu_time, cpu_old, cpu_diff); 
          cpu_load = cpu_states[1] + cpu_states[2] + cpu_states[3] + cpu_states[4];
       }
-   } else {
-      return -1.0;
    }
+#endif
+
+   DEXIT;
    return cpu_load;
 }
 #elif defined(LINUX)
@@ -897,19 +1092,37 @@ int nelem
 
 #ifdef SGE_LOADCPU
 
-int sge_getcpuload(
-double *cpu_load 
-) {
+/****** sge_getloadavg/sge_getcpuload() ****************************************
+*  NAME
+*     sge_getcpuload() -- retrieve cpu utilization percentage 
+*
+*  SYNOPSIS
+*     int sge_getcpuload(double *cpu_load) 
+*
+*  FUNCTION
+*     retrieve cpu utilization percentage (load value "cpu")
+*
+*  INPUTS
+*     double *cpu_load - caller passes adr of double variable for cpu load
+*
+*  RESULT
+*     int   != 0 indicates error
+*
+*******************************************************************************/
+int sge_getcpuload(double *cpu_load) {
    double load;
    int ret;
 
-   load = get_cpu_load();
-   if (load < 0.0) {
+   DENTER(TOP_LAYER, "sge_getcpuload");
+
+   if ((load = get_cpu_load()) < 0.0) {
       ret = -1;
    } else {
       *cpu_load = load;
       ret = 0;
    }
+
+   DEXIT;
    return ret;
 }
 
@@ -921,13 +1134,15 @@ static long percentages(int cnt, double *out, long *new, long *old, long *diffs)
    register long *dp;
    long half_total;
 
+   DENTER(CULL_LAYER, "percentages");
+
    /* initialization */
    total_change = 0;
    dp = diffs;
    /* calculate changes for each state and the overall change */
    for (i = 0; i < cnt; i++) {
       if ((change = *new - *old) < 0) {
-       /* this only happens when the counter wraps */
+         /* this only happens when the counter wraps */
          change = (int)
          ((unsigned long)*new-(unsigned long)*old);
       }
@@ -940,8 +1155,14 @@ static long percentages(int cnt, double *out, long *new, long *old, long *diffs)
    }
    /* calculate percentages based on overall change, rounding up */
    half_total = total_change / 2l;
-   for (i = 0; i < cnt; i++)
-      *out++ = ((double)((*diffs++ * 1000 + half_total) / total_change))/10;
+   for (i = 0; i < cnt; i++) {
+      *out = ((double)((*diffs++ * 1000 + half_total) / total_change))/10;
+      DPRINTF(("diffs: %lu half_total: %lu total_change: %lu -> %f",
+            *diffs, half_total, total_change, *out));
+      out++;
+   }
+
+   DEXIT;
    return total_change;
 }       
 

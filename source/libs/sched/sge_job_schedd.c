@@ -198,6 +198,34 @@ void job_move_first_pending_to_running(lListElem **pending_job,
    DEXIT;
 }              
 
+/****** sched/sge_job_schedd/user_list_init_jc() ******************************
+*  NAME
+*     user_list_init_jc() -- inc. the # of jobs a user has running
+*
+*  SYNOPSIS
+*     void user_list_init_jc(lList **user_list,
+*                            const lList *running_list)
+*
+*  FUNCTION
+*     Initialize "user_list" and JC_jobs attribute for each user according
+*     to the list of running jobs.
+*
+*  INPUTS
+*     lList **user_list          - JC_Type list
+*     const lList *running_list - JB_Type list
+*
+*  RESULT
+*     void - None
+*******************************************************************************/
+void user_list_init_jc(lList **user_list, const lList *running_list)
+{
+   lListElem *job;   /* JB_Type */
+
+   for_each(job, running_list) {
+      sge_inc_jc(user_list, lGetString(job, JB_owner), job_get_ja_tasks(job));
+   }
+}   
+
 /* user_list: JC_Type */
 /* max_jobs_per_user: conf.maxujobs */
 /* owner_or_group: either JB_owner or JB_group */
@@ -208,9 +236,7 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
    DENTER(TOP_LAYER, "job_lists_split_with_reference_to_max_running");
    if (max_jobs_per_user != 0 && 
        job_lists[SPLIT_PENDING] != NULL && *(job_lists[SPLIT_PENDING]) != NULL &&
-       job_lists[SPLIT_RUNNING] != NULL && *(job_lists[SPLIT_RUNNING]) != NULL && 
        job_lists[SPLIT_PENDING_EXCLUDED] != NULL) {
-      lListElem *job = NULL;                           
       lListElem *user = NULL;
 
       /* create a hash table on JB_owner to speedup 
@@ -225,12 +251,6 @@ void job_lists_split_with_reference_to_max_running(lList **job_lists[],
                cull_hash_new(*(job_lists[SPLIT_PENDING]), JB_owner, &template_hash);
             }
          }
-      }
-
-      /* inc. the # of jobs a user is running */
-      for_each(job, *(job_lists[SPLIT_RUNNING])) {
-         sge_inc_jc(user_list, lGetString(job, JB_owner), 
-                    job_get_ja_tasks(job));
       }
 
       for_each(user, *user_list) {

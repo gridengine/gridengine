@@ -457,10 +457,10 @@ lList **splitted_job_lists[]
       return 0;
    }
 
+   user_list_init_jc(&user_list, *(splitted_job_lists[SPLIT_RUNNING]));
    job_lists_split_with_reference_to_max_running(splitted_job_lists,
                                                  &user_list,
                                                  scheddconf.maxujobs);
-
    trash_splitted_jobs(splitted_job_lists);
 
    /*--------------------------------------------------------------------
@@ -779,8 +779,16 @@ SKIP_THIS_JOB:
          orig_job = NULL;
 
          /* notify access tree */
-         if (!sgeee_mode) 
+         if (!sgeee_mode) {
             at_dispatched_a_task(job, 1);
+         }
+         /* 
+          * drop idle jobs that exceed maxujobs limit 
+          * should be done after resort_job() 'cause job is referenced 
+          */
+         job_lists_split_with_reference_to_max_running(splitted_job_lists,
+                                           &user_list, scheddconf.maxujobs);
+         trash_splitted_jobs(splitted_job_lists);
       } else {
          /* before deleting the element mark the category as rejected */
          cat = lGetRef(job, JB_category);
@@ -789,17 +797,11 @@ SKIP_THIS_JOB:
                         lGetString(cat, CT_str), lGetUlong(cat, CT_refcount))); 
             sge_reject_category(cat);
          }
+         /* prevent that we get the same job next time again */
+         lDelElemUlong(splitted_job_lists[SPLIT_PENDING], JB_job_number, job_id)
+;
       }
 
-      /* prevent that we get the same job next time again */
-      if (!dispatched_a_job) {
-         lDelElemUlong(splitted_job_lists[SPLIT_PENDING], JB_job_number, job_id); 
-      }
-
-      /* drop idle jobs that exceed maxujobs limit */
-      /* should be done after resort_job() 'cause job is referenced */
-      job_lists_split_with_reference_to_max_running(splitted_job_lists,
-                                        &user_list, scheddconf.maxujobs);
       lFreeElem(job);
 
       /*------------------------------------------------------------------ 

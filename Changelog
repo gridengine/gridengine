@@ -1,3 +1,9 @@
+EB-2002-08-07-0  Bugfix:    maxujobs prevents dispatching even if job limit is 
+                            not reached
+                 Issue:     #345 
+                 Bugtraq:   #4727515
+                 Changed:   sge_schedd
+
 AS-2002-08-07-0  Bugfix:    wrong setting of SGE_CELL in settings.sh
                             created by util/create_settings.sh
 

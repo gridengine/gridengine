@@ -56,7 +56,6 @@
 #include "sge_stdio.h"
 #include "sge_spool.h"
 
-static lListElem *search_unspecified_node(lListElem *ep);
 static lListElem *search_nodeSN(lListElem *ep, u_long32 id);
 
 
@@ -348,7 +347,7 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
    DTRACE;
 
    /* check for a reference to a node which is not specified */
-   if (!rootelem && (unspecified = search_unspecified_node(ep))) {
+   if (!rootelem && (unspecified = sge_search_unspecified_node(ep))) {
       sprintf(errstr, MSG_STREE_NOVALIDNODEREF_U, u32c(lGetUlong(unspecified, STN_id)));
 
       lFreeElem(ep);
@@ -363,38 +362,6 @@ lListElem *rootelem     /* in case of a recursive call this is the root elem
    DEXIT;
    return ep;
 }
-
-/*****************************************************
- search for a node which is not specified
- *****************************************************/ 
-static lListElem *search_unspecified_node(
-lListElem *ep   /* root of the tree */
-) {
-   lListElem *cep, *ret;
-
-   DENTER(TOP_LAYER, "check_unspecified_nodes");
-
-   if (!ep) {
-      DEXIT;
-      return NULL;
-   }
-
-   for_each(cep, lGetList(ep, STN_children)) {
-      if ((ret = search_unspecified_node(cep))) {
-         DEXIT;
-         return ret;
-      }   
-   }
-
-   if (!lGetString(ep, STN_name)) {
-      DEXIT;
-      return ep;         /* no name filled in -> unspecified */
-   }
-   
-   DEXIT;
-   return NULL;
-}
-
 
 /********************************************************
  Search a share tree node with a given id in a share tree

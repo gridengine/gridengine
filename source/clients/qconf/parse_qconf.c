@@ -1138,7 +1138,9 @@ char *argv[]
       /* "-astree", "-Astree file":  add sharetree */
 
       if ((strcmp("-astree", *spp) == 0) || (strcmp("-Astree", *spp) == 0)) {
-         if(strcmp("-astree", *spp) == 0) { 
+         lListElem *unspecified = NULL;
+         
+         if(strcmp("-astree", *spp) == 0) {
             sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
             sge_gdi_is_manager(uti_state_get_user_name());
 
@@ -1195,6 +1197,20 @@ char *argv[]
                   continue;
                }
             }      
+         }
+         
+         /* Make sure that no nodes are left unspecified.  An unspecified node
+          * happens when a node appears in another node's child list, but does
+          * not appear itself. */
+         unspecified = sge_search_unspecified_node(ep);
+         
+         if (unspecified != NULL) {
+            fprintf(stderr, MSG_STREE_NOVALIDNODEREF_U,
+                    u32c(lGetUlong(unspecified, STN_id)));
+
+            lFreeElem(ep);
+            spp++;
+            continue;
          }
          
          newlp = lCreateList("sharetree add", STN_Type);
@@ -3020,6 +3036,8 @@ char *argv[]
       /* "-mstree", "-Mstree file": modify sharetree */
 
       if ((strcmp("-mstree", *spp) == 0) || (strcmp("-Mstree", *spp) == 0)) {
+         lListElem *unspecified = NULL;
+         
          if(strcmp("-mstree", *spp) == 0) {
             sge_gdi_is_adminhost(uti_state_get_qualified_hostname());
             sge_gdi_is_manager(uti_state_get_user_name());
@@ -3074,9 +3092,23 @@ char *argv[]
                fprintf(stderr, errstr);
                if (sge_error_and_exit(MSG_FILE_ERRORREADINGINFILE))
                   continue;
-            }      
+            }
          }
 
+         /* Make sure that no nodes are left unspecified.  An unspecified node
+          * happens when a node appears in another node's child list, but does
+          * not appear itself. */
+         unspecified = sge_search_unspecified_node(ep);
+         
+         if (unspecified != NULL) {
+            fprintf(stderr, MSG_STREE_NOVALIDNODEREF_U,
+                    u32c(lGetUlong(unspecified, STN_id)));
+
+            lFreeElem(ep);
+            spp++;
+            continue;
+         }
+         
          newlp = lCreateList("sharetree modify", STN_Type);
          lAppendElem(newlp, ep);
 

@@ -630,38 +630,46 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
 
    last_groupname = uidgid_state_get_last_groupname();
 
-   if (!last_groupname[0] || uidgid_state_get_last_gid() != gid)
-   {
+   if (!last_groupname[0] || uidgid_state_get_last_gid() != gid) {
       char *buf = NULL;
       int size = 0;
       
       size = get_group_buffer_size();
       buf = sge_malloc(size);
-#if defined (INTERIX)
+      
      /* max retries that are made resolving group name */
+#if defined (INTERIX)
       while (getgrgid_nomembers_r(gid, &grentry, buf, size, &gr) != 0)
 #else
       while (getgrgid_r(gid, &grentry, buf, size, &gr) != 0)
 #endif
       {
-         if (!retries--)
-         {
-            ERROR((SGE_EVENT, MSG_SYSTEM_GETGRGIDFAILED_US, u32c(gid), strerror(errno)));
+         if (!retries--) {
+            sge_free(buf);
+            
             DEXIT;
             return 1;
          }
+         
          sleep(1);
+      }
+      
+      sge_free(buf);
+
+      /* Bugfix: Issuezilla 1256
+       * We need to handle the case when the OS is unable to resolve the GID to
+       * a name. [DT] */
+      if (gr == NULL) {
+         DEXIT;
+         return 1;
       }
       
       /* cache group name */
       uidgid_state_set_last_groupname(gr->gr_name);
       uidgid_state_set_last_gid(gid);
-      
-      sge_free(buf);
    }
    
-   if (dst)
-   {
+   if (dst != NULL) {
       strncpy(dst, uidgid_state_get_last_groupname(), sz);
    }
 

@@ -394,8 +394,8 @@ int sge_gdi_multi(lList **alpp, int mode, u_long32 target, u_long32 cmd,
    gid = getgid();
    if (sge_gid2group(gid, groupname, sizeof(groupname), 
          MAX_NIS_RETRIES)) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_IS , 
-              (int)gid, strerror(errno)));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GETGRGIDXFAILEDERRORX_U,
+                             (u_long32)gid));
       goto error; 
    }
 

@@ -1,3 +1,14 @@
+DT-2004-12-07-1: Bugfix:    o Client commands now fail if GID is unresolvable
+                            o qmaster now rejects sharetrees with dangling
+                              child references
+                            o qconf now rejects charetress with dangling child
+                              references
+                 Review:    EB
+                 Changed:   qconf, sge_uidgid, sharetree, qmaster, classic
+                            spooling
+                 Issue:     1256, 1359
+                 Buqtraq:   6205060, 6199256
+
 JG-2004-12-07-1: Testsuite: Fixed installation problems with CSP systems on 
                             slow NFS server.
 

@@ -374,3 +374,49 @@ search_ancestors( lListElem *ep,
    DEXIT;
    return NULL;
 }
+
+/****** sge_search_unspecified_node() ******************************************
+*  NAME
+*     sge_search_unspecified_node() -- search for a node which is not specified
+*
+*  SYNOPSIS
+*     static lListElem *sge_search_unspecified_node(lListElem *ep)
+*
+*
+*  FUNCTION
+*     The function walks through the sharetree looking for the first node which
+*     has no name.  A node with no name means that it was created as a result of
+*     a dangling or circular child reference.
+*
+*  INPUTS
+*     ep - root of the tree
+*
+*  RESULT
+*     the first node which has no name or NULL if all nodes have names
+******************************************************************************/
+lListElem *sge_search_unspecified_node(lListElem *ep)
+{
+   lListElem *cep = NULL, *ret = NULL;
+
+   DENTER(TOP_LAYER, "sge_search_unspecified_node");
+
+   if (ep == NULL) {
+      DEXIT;
+      return NULL;
+   }
+
+   for_each(cep, lGetList(ep, STN_children)) {
+      if ((ret = sge_search_unspecified_node(cep))) {
+         DEXIT;
+         return ret;
+      }   
+   }
+
+   if (lGetString(ep, STN_name) == NULL) {
+      DEXIT;
+      return ep;         /* no name filled in -> unspecified */
+   }
+   
+   DEXIT;
+   return NULL;
+}

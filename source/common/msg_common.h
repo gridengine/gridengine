@@ -242,7 +242,7 @@
 #define MSG_STREE_NOFATHERNODE_U      _MESSAGE(23219, _("could not find father node for node "U32CFormat))
 #define MSG_STREE_NOPARSECHILDNODES   _MESSAGE(23220, _("error parsing child node list"))
 #define MSG_STREE_NOPARSELINE_I       _MESSAGE(23221, _("error parsing line %d"))
-#define MSG_STREE_NOVALIDNODEREF_U    _MESSAGE(23222, _("found reference to node " U32CFormat " but no specification"))
+#define MSG_STREE_NOVALIDNODEREF_U    _MESSAGE(23222, _("found reference to node " U32CFormat " but no specification\n"))
 #define MSG_FILE_FILEEMPTY            _MESSAGE(23223, _("empty file"))
 
 

@@ -1437,6 +1437,7 @@ XtPointer cld, cad;
    lList *alp = NULL;
    bool ret = True;
    XmString xmhost = NULL;
+   lListElem *copy = NULL;
    
    DENTER(TOP_LAYER, "qmonQCAdd");
    
@@ -1448,11 +1449,13 @@ XtPointer cld, cad;
       lWriteElemTo(current_qep, stdout);
    }
 
+   copy = lCopyElem(current_qep);
+
    if (dialog_mode == QC_ADD) {
-      ret = cqueue_add_del_mod_via_gdi(current_qep, &alp, 
+      ret = cqueue_add_del_mod_via_gdi(copy, &alp, 
                                         SGE_GDI_ADD | SGE_GDI_SET_ALL); 
    } else {
-      ret = cqueue_add_del_mod_via_gdi(current_qep, &alp, 
+      ret = cqueue_add_del_mod_via_gdi(copy, &alp, 
                                         SGE_GDI_MOD | SGE_GDI_SET_ALL); 
    }
    qmonMessageBox(w, alp, 0);
@@ -1469,6 +1472,7 @@ XtPointer cld, cad;
       dont_close = 1;
    }   
    alp = lFreeList(alp);
+   copy = lFreeElem(copy);
 
    if (!dont_close)
       qmonQCPopdown(w, NULL, NULL);
@@ -2396,6 +2400,7 @@ const char *href
    bool_attr_list_add_set_del(lGetListRef(qep, CQ_rerun), &alp, href, &(data->rerun), !data->rerun_tw);
 
    str_attr_list_add_set_del(lGetListRef(qep, CQ_tmpdir), &alp, href, &(data->tmpdir), !data->tmpdir_tw);
+   str_attr_list_add_set_del(lGetListRef(qep, CQ_shell), &alp, href, &(data->shell), !data->shell_tw);
 
    str_attr_list_add_set_del(lGetListRef(qep, CQ_calendar), &alp, href, &(data->calendar), !data->calendar_tw);
 
@@ -2504,6 +2509,8 @@ const char *href
    bool_attr_list_add_set_del(lGetListRef(qep, CQ_rerun), &alp, href, NULL, True);
 
    str_attr_list_add_set_del(lGetListRef(qep, CQ_tmpdir), &alp, href, NULL, True);
+
+   str_attr_list_add_set_del(lGetListRef(qep, CQ_shell), &alp, href, NULL, True);
 
    str_attr_list_add_set_del(lGetListRef(qep, CQ_calendar), &alp, href, NULL, True);
 

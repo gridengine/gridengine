@@ -1,3 +1,8 @@
+AA-2004-02-17-0: Bugfix:    Shell attribute was missing in Qconfig
+                            Segv when attribute could not be applied
+                 Changed:   qmon
+                 Review:    EB
+
 AH-2004-02-17-0: Bugfix:    Fixed dispatching of parallel jobs with reservation 
                             disabled.
                  Review:    EB

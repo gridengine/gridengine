@@ -360,6 +360,8 @@ int answer_error
    u_long32 now;
    static u_long then = 0;
    lListElem *jep, *jatep;
+   int was_communication_error = CL_RETVAL_UNKNOWN;
+   int return_value = 0;
 
    DENTER(TOP_LAYER, "execd_ck_to_do");
 
@@ -557,18 +559,21 @@ int answer_error
       /* wrap around */
       if (++report_seqno == 10000)
          report_seqno = 0;
-      sge_send_all_reports(now, 0, execd_report_sources);
+      was_communication_error = sge_send_all_reports(now, 0, execd_report_sources);
+      DPRINTF(("----> was_communication_error: %s (%d)\n", cl_get_error_text(was_communication_error),was_communication_error));
       flush_jr = 0;
+   } else {
+      was_communication_error = CL_RETVAL_OK;
    }
 
    /* handle shutdown */
    switch (shut_me_down) {
       case 1:
-         DEXIT;
-         return 1;   /* tell dispatcher to finish server */
+         return_value = 1; /* tell dispatcher to finish server */
+         break;
       case 0:
-         DEXIT;
-         return 0;
+         return_value = 0;
+         break;
       default:
          /* if shut_me_down == 2 we wait one "dispatch epoche"
             and we hope that all the killed jobs are reaped 
@@ -576,14 +581,21 @@ int answer_error
             since flush_jr is set in this case
          */
          if (!Master_Job_List || !lGetNumberOfElem(Master_Job_List)) { /* no need to delay shutdown */
-            DEXIT;
-            return 1;
+            return_value = 1;
+         } else {
+            DPRINTF(("DELAYED SHUTDOWN\n"));
+            shut_me_down--;
+            return_value = 0;
          }
-         DPRINTF(("DELAYED SHUTDOWN\n"));
-         shut_me_down--;
-         DEXIT;
-         return 0;
    }
+
+   if ( return_value == 0 && was_communication_error != CL_RETVAL_OK ) {
+      DPRINTF(("was_communication_error is %s\n", cl_get_error_text(was_communication_error)));
+      return_value = -1;  /* leave dispatcher */
+   }
+
+   DEXIT;
+   return return_value;
 }
 
 /****** execd_ck_to_do/sge_execd_ja_task_is_tightly_integrated() ***************

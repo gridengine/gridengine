@@ -225,12 +225,8 @@ int master
    const char *ckpt_name;
    lListElem *gdil_ep;
    char *str;
-#ifdef ENABLE_NGC
    unsigned long last_heard_from;
-#else
-   static u_short number_one = 1;
-   int execd_enrolled;  
-#endif
+   cl_com_handle_t* handle = NULL;
 
 
    DENTER(TOP_LAYER, "send_job");
@@ -248,30 +244,16 @@ int master
    }
 
    /* do ask_commproc() only if we are missing load reports */
+   handle = cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0);
+   cl_commlib_get_last_message_time(handle, (char*)rhost, (char*)target, 1, &last_heard_from);
    now = sge_get_gmt();
-#ifdef ENABLE_NGC
-   cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
-                                        (char*)rhost, (char*)target,1, &last_heard_from);
-   if (last_heard_from + load_report_interval(hep)*2 <= now) {
-      ERROR((SGE_EVENT, MSG_COM_NOTENROLLEDONHOST_SSU, target, rhost, u32c(lGetUlong(jep, JB_job_number))));
+   if (last_heard_from + sge_get_max_unheard_value() <= now) {
+
+      ERROR((SGE_EVENT, MSG_COM_CANT_DELIVER_UNHEARD_SSU, target, rhost, u32c(lGetUlong(jep, JB_job_number))));
       sge_mark_unheard(hep, target);
       DEXIT;
       return -1;
    }
-#else
-   if (last_heard_from(target, &number_one, rhost)+ load_report_interval(hep)*2 <= now) {
-
-      execd_enrolled = ask_commproc(rhost, target, 0);
-      if (execd_enrolled) {
-         ERROR((SGE_EVENT, MSG_COM_NOTENROLLEDONHOST_SSU, 
-               target, rhost, u32c(lGetUlong(jep, JB_job_number))));
-         sge_mark_unheard(hep, target);
-
-         DEXIT;
-         return -1;
-      }
-   }
-#endif
 
    /* load script into job structure for sending to execd */
    /*

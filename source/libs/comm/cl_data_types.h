@@ -53,6 +53,12 @@ typedef enum cl_select_method_def {
    CL_W_SELECT
 } cl_select_method_t;
 
+typedef enum cl_max_count_def {
+   CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS = 5,
+   CL_ON_MAX_COUNT_DISABLE_ACCEPT,
+   CL_ON_MAX_COUNT_OFF
+} cl_max_count_t;
+
 typedef enum cl_host_resolve_method_def {
    CL_SHORT = 1,
    CL_LONG  = 2
@@ -97,6 +103,12 @@ typedef enum cl_xml_connection_type_def {
    CL_CM_CT_STREAM,
    CL_CM_CT_MESSAGE
 }cl_xml_connection_type_t ;
+
+typedef enum cl_xml_connection_autoclose_def {
+   CL_CM_AC_UNDEFINED = 1,
+   CL_CM_AC_ENABLED,
+   CL_CM_AC_DISABLED
+}cl_xml_connection_autoclose_t;
 
 typedef enum cl_xml_connection_status_def {
    CL_CRM_CS_UNDEFINED = 1,         /* 1 */
@@ -171,9 +183,10 @@ typedef unsigned char cl_byte_t;
 
 
 typedef struct cl_com_endpoint {
-   char*    comp_host;           
-   char*    comp_name;
-   unsigned long  comp_id;
+   /* internal identification tripple */
+   char*         comp_host;           
+   char*         comp_name;
+   unsigned long comp_id;
 } cl_com_endpoint_t ;
 
 
@@ -222,8 +235,11 @@ typedef struct cl_com_handle {
    int framework;                   /* framework type CL_CT_TCP, CL_CT_JXTA */
    int data_flow_type;              /* data_flow type CL_COM_STREAM, CL_COM_MESSAGE */
    int service_provider;            /* if true this component will provide a service for clients (server port) */
+
+   /* connect_port OR service_port is always 0 !!! - CR */
    int connect_port;                /* used port number to connect to other service */
    int service_port;                /* local used service port */
+
    cl_com_endpoint_t* local;        /* local endpoint id of this handle */
    cl_com_handle_statistic_t* statistic; /* statistic data of handle */
 
@@ -233,6 +249,7 @@ typedef struct cl_com_handle {
    cl_thread_settings_t*  service_thread;  /* pointer to cl_com_handle_service_thread() thread pointer */
    cl_thread_settings_t*  read_thread;   
    cl_thread_settings_t*  write_thread;
+
 /* Threads done */
    
    pthread_mutex_t* messages_ready_mutex;
@@ -241,9 +258,11 @@ typedef struct cl_com_handle {
    pthread_mutex_t* connection_list_mutex;
    cl_raw_list_t* connection_list;  /* connections of this handle */
    cl_raw_list_t* allowed_host_list; /* string list with hostnames allowed to connect */
+   unsigned long next_free_client_id;
 
    int max_open_connections; /* maximum number of open connections  */
-   int max_con_close_state;  /* enabled/disabled state of auto close at max connection count */
+   cl_max_count_t max_con_close_mode;  /*  state of auto close at max connection count */
+   cl_xml_connection_autoclose_t auto_close_mode; /* used to enable/disable autoclose of connections opend from this handle to services */
    int max_write_threads;    /* maximum number of send threads */
    int max_read_threads;     /* maximum number of receive threas */
    int select_sec_timeout;
@@ -259,8 +278,10 @@ typedef struct cl_com_handle {
    /* service specific */
    int do_shutdown;                        /* set when this handle wants to shutdown */
    int max_connection_count_reached;       /* set when max connection count is reached */
-   long shutdown_timeout;                  /* used when shutting down handle */
-   cl_com_connection_t* service_handler;   /* service handler of this handle */
+   int max_connection_count_found_connection_to_close; /* set if we found a connection to close when max_connection_count_reached is set */
+   cl_com_connection_t* last_receive_message_connection;  /* this is the last connection from connection list, where cl_comlib_receive_message() was called */
+   long shutdown_timeout;                   /* used when shutting down handle */
+   cl_com_connection_t* service_handler;    /* service handler of this handle */
    struct timeval start_time;
 
 } cl_com_handle_t;
@@ -302,12 +323,14 @@ typedef struct cl_com_GMSH_type {
 
 
 typedef struct cl_com_CM_type {
-   char*                    version;
-   cl_xml_data_format_t     df;
-   cl_xml_connection_type_t ct;
-   cl_com_endpoint_t*       src;
-   cl_com_endpoint_t*       dst;
-   cl_com_endpoint_t*       rdata;
+   char*                          version;
+   cl_xml_data_format_t           df;
+   cl_xml_connection_type_t       ct;
+   cl_xml_connection_autoclose_t  ac;
+   unsigned long                  port;  
+   cl_com_endpoint_t*             src;
+   cl_com_endpoint_t*             dst;
+   cl_com_endpoint_t*             rdata;
 } cl_com_CM_t;
 
 
@@ -399,6 +422,7 @@ struct cl_com_connection_type {
    cl_com_endpoint_t* receiver; /* for routing  ( rdata ) */
 
    unsigned long    last_send_message_id;
+   unsigned long    last_received_message_id;
    cl_raw_list_t*   received_message_list;
    
    cl_raw_list_t*   send_message_list;
@@ -422,8 +446,8 @@ struct cl_com_connection_type {
    cl_xml_connection_status_t crm_state;  /* state of connection response message (if server) */
    
    /* dataflow */
-   cl_xml_connection_type_t data_flow_type;       /* CL_CM_CT_STREAM or CL_CM_CT_MESSAGE */   
-   cl_xml_data_format_t     data_format_type;     /* CL_CM_DF_BIN or CL_CM_DF_XML */
+   cl_xml_connection_type_t      data_flow_type;       /* CL_CM_CT_STREAM or CL_CM_CT_MESSAGE */   
+   cl_xml_data_format_t          data_format_type;     /* CL_CM_DF_BIN or CL_CM_DF_XML */
  
    /* data buffer */
    unsigned long  data_buffer_size;             /* connection data buffer size for read/write messages */
@@ -446,6 +470,8 @@ struct cl_com_connection_type {
  
    /* connection specific */
    cl_com_con_statistic_t* statistic;
+   cl_xml_connection_autoclose_t auto_close_type;       /* CL_CM_AC_ENABLED, CL_CM_AC_DISABLED */  
+
    void*         com_private;
 };
 

@@ -281,7 +281,7 @@ int compressed
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", tocomproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
       }
    }
@@ -429,7 +429,7 @@ u_short *compressed
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", fromcommproc));
-         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,-1, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
+         cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_execd_port(), "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
       }
    } 

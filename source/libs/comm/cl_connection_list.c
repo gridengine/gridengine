@@ -98,7 +98,8 @@ int cl_connection_list_append_connection(cl_raw_list_t* list_p,cl_com_connection
 
 
 int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock ) {  /* CR check */
-   int ret_val = CL_RETVAL_CONNECTION_NOT_FOUND;
+   int function_return = CL_RETVAL_CONNECTION_NOT_FOUND;
+   int ret_val = CL_RETVAL_OK;
    cl_connection_list_elem_t* elem = NULL;
    
 
@@ -120,7 +121,7 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
          free(elem);
          elem = NULL;
-         ret_val = CL_RETVAL_OK;
+         function_return = CL_RETVAL_OK;
          break;
       }
       elem = cl_connection_list_get_next_elem(list_p, elem);
@@ -133,7 +134,7 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
          return ret_val;
       }
    }
-   return ret_val;
+   return function_return;
 }
 
 /* this functions will free all connections, marked to close */
@@ -189,7 +190,8 @@ int cl_connection_list_destroy_connections_to_close(cl_raw_list_t* list_p, int d
                cl_raw_list_lock(connection->received_message_list);
                melem = cl_message_list_get_first_elem(connection->received_message_list);
                if (melem != NULL) {
-                  CL_LOG_INT(CL_LOG_WARNING,"message_df =",melem->message->message_df );
+                  CL_LOG_INT(CL_LOG_WARNING,"message_df    =",melem->message->message_df );
+                  CL_LOG_INT(CL_LOG_WARNING,"message_state =",melem->message->message_state );
                }
                cl_raw_list_unlock(connection->received_message_list);
 

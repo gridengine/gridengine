@@ -70,7 +70,6 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    ldata->entry_update_time    = entry_update_time;
    ldata->entry_reresolve_time = entry_reresolve_time;
    ldata->last_refresh_time    = 0;
-   ldata->host_alias_file      = NULL;
 
    if (local_domain_name == NULL && method == CL_LONG) {
       CL_LOG(CL_LOG_WARNING,"can't compare short host names without default domain when method is CL_LONG");
@@ -192,11 +191,13 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    CL_LOG_INT(CL_LOG_INFO,"entry_update_time is", ldata->entry_update_time);
    CL_LOG_INT(CL_LOG_INFO,"entry_reresolve_time is", ldata->entry_reresolve_time);
 
-   CL_LOG(CL_LOG_INFO,"host alias file not supported");
-
    return ret_val;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_get_data()"
 cl_host_list_data_t* cl_host_list_get_data(cl_raw_list_t* list_p) {
 
    cl_host_list_data_t* ldata = NULL;
@@ -300,6 +301,10 @@ int cl_host_list_set_alias_file(cl_raw_list_t* list_p, char* host_alias_file) {
    return CL_RETVAL_OK;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_cleanup()"
 int cl_host_list_cleanup(cl_raw_list_t** list_p) {
    cl_host_list_data_t* ldata = NULL;
    cl_host_list_elem_t* elem = NULL;
@@ -337,6 +342,10 @@ int cl_host_list_cleanup(cl_raw_list_t** list_p) {
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_append_host()"
 int cl_host_list_append_host(cl_raw_list_t* list_p,cl_com_host_spec_t* host, int lock_list ) {
 
    int ret_val;
@@ -390,7 +399,8 @@ int cl_host_list_append_host(cl_raw_list_t* list_p,cl_com_host_spec_t* host, int
 #endif
 #define __CL_FUNCTION__ "cl_host_list_remove_host()"
 int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, int lock_list ) {
-   int ret_val = CL_RETVAL_UNKOWN_HOST_ERROR;
+   int ret_val = CL_RETVAL_OK;
+   int function_return = CL_RETVAL_UNKOWN_HOST_ERROR;
    cl_host_list_elem_t* elem = NULL;
    
    if (list_p == NULL || host == NULL) {
@@ -409,7 +419,8 @@ int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, in
       if (elem->host_spec == host) {
          /* found matching element */
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
-         ret_val = CL_RETVAL_OK;
+         function_return = CL_RETVAL_OK;
+         cl_com_free_hostspec(&( elem->host_spec ));
          free(elem);
          elem = NULL;
          break;
@@ -423,10 +434,14 @@ int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, in
          return ret_val;
       }
    }
-   return ret_val;
+   return function_return;
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_get_first_elem()"
 cl_host_list_elem_t* cl_host_list_get_first_elem(cl_raw_list_t* list_p) {
    cl_raw_list_elem_t* raw_elem = cl_raw_list_get_first_elem(list_p);
    if (raw_elem) {
@@ -435,6 +450,10 @@ cl_host_list_elem_t* cl_host_list_get_first_elem(cl_raw_list_t* list_p) {
    return NULL;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_get_least_elem()"
 cl_host_list_elem_t* cl_host_list_get_least_elem(cl_raw_list_t* list_p) {
    cl_raw_list_elem_t* raw_elem = cl_raw_list_get_least_elem(list_p);
    if (raw_elem) {
@@ -443,6 +462,10 @@ cl_host_list_elem_t* cl_host_list_get_least_elem(cl_raw_list_t* list_p) {
    return NULL;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_get_next_elem()"
 cl_host_list_elem_t* cl_host_list_get_next_elem(cl_raw_list_t* list_p, cl_host_list_elem_t* elem) {
    cl_raw_list_elem_t* next_raw_elem = NULL;
    
@@ -457,6 +480,10 @@ cl_host_list_elem_t* cl_host_list_get_next_elem(cl_raw_list_t* list_p, cl_host_l
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_host_list_get_last_elem()"
 cl_host_list_elem_t* cl_host_list_get_last_elem(cl_raw_list_t* list_p, cl_host_list_elem_t* elem) {
    cl_raw_list_elem_t* last_raw_elem = NULL;
    

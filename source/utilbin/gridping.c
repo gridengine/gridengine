@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
       exit(1);
    }
 
-   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, 0, comp_port, "gridping", 0, 1,0 );
+   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, comp_port, "gridping", 0, 1,0 );
    if (handle == NULL) {
       printf("could not create communication handle\n");
       exit(1);

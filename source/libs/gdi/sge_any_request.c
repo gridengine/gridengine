@@ -87,30 +87,30 @@ static int gdi_log_flush_func(cl_raw_list_t* list_p) {
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
             if ( log_state_get_log_level() >= LOG_ERR) {
-               ERROR((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+               ERROR((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
-               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_WARNING:
             if ( log_state_get_log_level() >= LOG_WARNING) {
-               WARNING((SGE_EVENT,"%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+               WARNING((SGE_EVENT,"%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
-               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_INFO:
             if ( log_state_get_log_level() >= LOG_INFO) {
-               INFO((SGE_EVENT,   "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+               INFO((SGE_EVENT,   "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
-               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
          case CL_LOG_DEBUG:
             if ( log_state_get_log_level() >= LOG_DEBUG) { 
-               DEBUG((SGE_EVENT,  "%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param ));
+               DEBUG((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
             } else {
-               printf("%-20s=> %s %s\n", elem->log_thread_name, elem->log_message, param);
+               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
             }
             break;
       }
@@ -215,7 +215,7 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
    /* TODO: activate mutlithreaded communication for SCHEDD and EXECD !!!
             This can only by done when the daemonize functions of SCHEDD and EXECD
             are thread save and reresolve qualified hostname for each thread */
-   if ( uti_state_get_mewho() == QMASTER /* || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ ) {
+   if ( uti_state_get_mewho() == QMASTER || uti_state_get_mewho() == QMON /* || uti_state_get_mewho() == EXECD || uti_state_get_mewho() == SCHEDD */ ) {
       INFO((SGE_EVENT,"starting up multi thread communication\n"));
       ret_val = cl_com_setup_commlib(CL_ONE_THREAD,CL_LOG_OFF,gdi_log_flush_func);
    } else {
@@ -264,21 +264,31 @@ void prepare_enroll(const char *name, u_short id, int *tag_priority_list)
 
       switch(me_who) {
          case EXECD:
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,sge_get_execd_port(), sge_get_qmaster_port(), 
+            /* add qmaster as known endpoint */
+            cl_com_append_known_endpoint_from_name((char*)sge_get_master(gdi_state_get_reread_qmaster_file()), (char*)prognames[QMASTER], 1 ,sge_get_qmaster_port(),CL_CM_AC_DISABLED ,1);
+            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 1,sge_get_execd_port(),
                                           (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
+            cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
             break;
          case QMASTER:
             DPRINTF(("creating QMASTER handle\n"));
             handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE,                              /* message based tcp communication                */
-                                          1, sge_get_qmaster_port(), sge_get_execd_port(),          /* create service on qmaster port,                */
+                                          1, sge_get_qmaster_port(),                                /* create service on qmaster port,                */
                                                                                                     /* use execd port to connect to endpoints         */
                                           (char*)prognames[uti_state_get_mewho()], my_component_id, /* this endpoint is called "qmaster" and has id 1 */
                                           1 , 0 );                                                  /* select timeout is set to 1 second 0 usec       */
             break;
+         case QMON:
+            DPRINTF(("creating QMON GDI handle\n"));
+            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
+                                         (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
+            cl_com_set_auto_close_mode(handle, CL_CM_AC_ENABLED );
+            break;
+
          default:
             /* this is for "normal" gdi clients of qmaster */
             DPRINTF(("creating GDI handle\n"));
-            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0,0, sge_get_qmaster_port(),
+            handle = cl_com_create_handle(CL_CT_TCP, CL_CM_CT_MESSAGE, 0, sge_get_qmaster_port(),
                                          (char*)prognames[uti_state_get_mewho()], my_component_id , 1 , 0 );
             break;
       }
@@ -331,6 +341,10 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
       return CL_RETVAL_HANDLE_NOT_FOUND;
    }
 
+   if (strcmp(commproc, (char*)prognames[QMASTER]) == 0 && id == 1) {
+      cl_com_append_known_endpoint_from_name((char*)rhost, (char*)prognames[QMASTER], 1 , sge_get_qmaster_port(), CL_CM_AC_DISABLED ,1);
+   }
+   
    if (synchron) {
       ack_type = CL_MIH_MAT_ACK;
    }
@@ -384,7 +398,6 @@ int sge_send_any_request(int synchron, u_long32 *mid, const char *rhost,
  * NOTES
  *    MT-NOTE: sge_get_any_request() is MT safe (assumptions)
  *----------------------------------------------------------*/
-#ifdef ENABLE_NGC
 int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffer *pb, int *tag, int synchron, u_long32 for_request_mid, u_long32* mid) 
 {
    int i;
@@ -488,99 +501,6 @@ int sge_get_any_request(char *rhost, char *commproc, u_short *id, sge_pack_buffe
    DEXIT;
    return CL_RETVAL_OK;
 }
-#else
-int sge_get_any_request(char *rhost, char *commproc, u_short *id, 
-                        sge_pack_buffer *pb, int *tag, int synchron) 
-{
-   int dummytag=0;
-   char *buffer = NULL;
-   u_long32 buflen;
-   int i;
-   ushort usid=0;
-   char host[MAXHOSTLEN+1];
-   u_short compressed;
-
-   DENTER(GDI_LAYER, "sge_get_any_request");
-
-   PROF_START_MEASUREMENT(SGE_PROF_GDI);
-
-   if (id)
-      usid = (ushort)*id;
-
-   if (!rhost) {
-      ERROR((SGE_EVENT, MSG_GDI_RHOSTISNULLFORGETANYREQUEST ));
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-      DEXIT;
-      return -1;
-   }
-   
-   strcpy(host, rhost);
-       
-   if (tag) 
-      dummytag = *tag;
-
-   i = gdi_receive_message(commproc, &usid, host, &dummytag, &buffer, 
-                       &buflen, synchron, &compressed);
-   
-   if (tag) 
-      *tag = dummytag;                    
-           
-   sge_log_commd_state_transition(i);       
-
-   if (i) {
-      switch (i) {
-      case COMMD_NACK_NO_MESSAGE:
-         DPRINTF(("got no message\n"));
-         break;
-         
-      case COMMD_NACK_TIMEOUT:
-         DPRINTF(("receive message timed out\n"));
-         break;
-
-      case CL_CONNECT:
-         DPRINTF(("commd is down\n"));
-         break;
-
-      case CL_INTR:
-      case CL_READ:
-         DPRINTF(("receive message interrupted by signal\n"));
-         /* break; */
-
-      default:
-         INFO((SGE_EVENT, 
-                MSG_GDI_RECEIVEMESSAGEFROMCOMMPROCFAILED_SISS ,
-                (commproc[0] ? commproc : "any"), 
-                (unsigned int) usid,
-                (host[0] ? host : "any"),
-                cl_errstr(i)));
-         break;
-      }
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-      DEXIT;
-      return i;
-   }
-
-   if (id)
-      *id = usid;
-
-   /* fill it in the packing buffer */
-   i = init_packbuffer_from_buffer(pb, buffer, buflen, compressed);
-   if(i != PACK_SUCCESS) {
-      ERROR((SGE_EVENT, MSG_GDI_ERRORUNPACKINGGDIREQUEST_S, cull_pack_strerror(i)));
-      PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-      DEXIT;
-      return CL_READ;
-   }
-
-   if (rhost[0] == '\0') {    /* If we receive from anybody return the sender */
-      strcpy(rhost, host);
-   }
-
-   PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
-   DEXIT;
-   return CL_OK;
-}
-#endif
 
 
 /**********************************************************************

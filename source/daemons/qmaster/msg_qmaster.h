@@ -210,7 +210,9 @@
 ** sge_give_jobs.c
 */
 /* #define MSG_OBJ_NOREALNAMEINHOST_S    _message(33136, _("missing real name in host "SFQ"\n")) __TS Removed automatically from testsuite!! TS__*/
-#define MSG_COM_NOTENROLLEDONHOST_SSU _MESSAGE(33137, _("target "SFQ" not enrolled on host "SFQ" for delivering job \""U32CFormat"\"\n"))
+/* #define MSG_COM_NOTENROLLEDONHOST_SSU _MESSAGE(33137, _("target "SFQ" not enrolled on host "SFQ" for delivering job \""U32CFormat"\"\n")) */
+#define MSG_COM_CANT_DELIVER_UNHEARD_SSU _MESSAGE(33137, _("got max. unheard timeout for target "SFQ" on host "SFQ", can't delivering job \""U32CFormat"\"\n"))
+  
 #define MSG_OBJ_UNABLE2FINDCKPT_S     _MESSAGE(33138, _("can't find checkpointing object "SFQ"\n"))
 #define MSG_OBJ_UNABLE2CREATECKPT_SU  _MESSAGE(33139, _("can't create checkpointing object "SFQ" for job " U32CFormat "\n"))
 /* EB: remove
@@ -254,7 +256,8 @@
 ** sge_host_qmaster.c
 */
 #define MSG_OBJ_DELGLOBALHOST         _MESSAGE(33177, _("denied: pseudo host \"global\" may not be deleted\n"))
-#define MSG_OBJ_LOADREPORTIVAL_SS     _MESSAGE(33178, _("host "SFQ": "SFQ" is not a valid time value for \"load_report_time\" - assuming 120 seconds\n") )    
+#define MSG_OBJ_LOADREPORTIVAL_SS     _MESSAGE(33178, _("host "SFQ": "SFQ" is not a valid time value for \"load_report_time\" - assuming 120 seconds\n") )  
+#define MSG_OBJ_MAXUNHEARDVALUE_SS    _MESSAGE(33178, _("host "SFQ": "SFQ" is not a valid time value for \"max_unheard\" - assuming 120 seconds\n") )  
 #define MSG_OBJ_RESCHEDULEUNKN_SS     _MESSAGE(33179, _("host "SFQ": "SFQ" is not a valid time value for \"reschedule_unknown\" - assuming 0 => no auto rescheduling\n"))
 #define MSG_OBJ_SHUTDOWNPERMS         _MESSAGE(33180, _("shutting down execd requires manager privileges\n"))
 #define MSG_OBJ_NOEXECDONHOST_S       _MESSAGE(33181, _("no execd known on host "SFN"\n"))
@@ -744,5 +747,6 @@
 
 #define MSG_JOB_PERANGE_ONLY_FOR_PARALLEL _MESSAGE(33902, _("rejected: change request for PE range supported only for parallel jobs\n"))
 
+#define MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U _MESSAGE(33903, _("qmaster will use max. "U32CFormat" file descriptors for communication\n"))
 #endif
 

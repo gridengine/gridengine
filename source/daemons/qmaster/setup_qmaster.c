@@ -495,11 +495,28 @@ static void communication_setup(void)
       SGE_EXIT(1);
    }
 
-   /* CR - TODO: test max connection close count */
-   cl_com_enable_max_connection_close(com_handle);
-   
    if (com_handle) {
+      int max_connections = 0;
+
+      /* save old debug log level and set log level to INFO */
+      u_long32 old_ll = log_state_get_log_level();
+      log_state_set_log_level(LOG_INFO);
+
+#if 0
+      /* Enable this to check max. connection count behaviour of qmaster */
+      cl_com_set_max_connections(com_handle, 3); 
+#endif
+
+      /* enable max connection close mode */
+      cl_com_set_max_connection_close_mode(com_handle, CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS);
+
+      /* log startup info into qmaster messages file */
+      cl_com_get_max_connections(com_handle, &max_connections);
+      INFO((SGE_EVENT, MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U, u32c(max_connections) ));
+
+      /* add local host to allowed host list */
       cl_com_add_allowed_host(com_handle,com_handle->local->comp_host);
+      log_state_set_log_level(old_ll);
    }
 
    cl_commlib_set_connection_param(cl_com_get_handle("qmaster",1), HEARD_FROM_TIMEOUT, conf.max_unheard);

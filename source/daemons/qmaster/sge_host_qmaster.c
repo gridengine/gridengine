@@ -600,18 +600,13 @@ const char *target    /* prognames[QSTD|EXECD] */
 
    host = lGetHost(hep, EH_name);
 
-#ifdef ENABLE_NGC
-   /* TODO: check this */
-   CRITICAL((SGE_EVENT,"set_last_heard_from() not suppored by commlib"));
-#else
-   /* tell commlib, that this guys will vanish */
-   if (target)
-      set_last_heard_from(target, 1, host, 0);
-   else {
-      set_last_heard_from(prognames[EXECD], 1, host, 0);
-      set_last_heard_from(prognames[QSTD], 1, host, 0);
+   if (target) {
+
+      cl_commlib_set_connection_param(cl_com_get_handle((char*)target,1),HEARD_FROM_TIMEOUT, 0 ); 
+   } else {
+      cl_commlib_set_connection_param(cl_com_get_handle((char*)prognames[EXECD],1),HEARD_FROM_TIMEOUT, 0 ); 
+      cl_commlib_set_connection_param(cl_com_get_handle((char*)prognames[QSTD],1),HEARD_FROM_TIMEOUT, 0 ); 
    }
-#endif
 
    host_trash_nonstatic_load_values(hep);
    cqueue_list_set_unknown_state(
@@ -820,9 +815,7 @@ void sge_load_value_cleanup_handler(te_event_t anEvent)
    lListElem *global_host_elem   = NULL;
    lListElem *template_host_elem = NULL;
    time_t now = time(NULL);
-#ifdef ENABLE_NGC
    unsigned long last_heard_from;
-#endif
 
    const void *iterator = NULL;
 
@@ -857,16 +850,11 @@ void sge_load_value_cleanup_handler(te_event_t anEvent)
       }
 
       timeout = MAX(load_report_interval(hep)*3, conf.max_unheard); 
-#ifdef ENABLE_NGC
       if ( hep != global_host_elem) {
          cl_commlib_get_last_message_time((cl_com_get_handle((char*)uti_state_get_sge_formal_prog_name() ,0)),
                                         (char*)host, (char*)comproc,id, &last_heard_from);
       }
-      if ( (hep != global_host_elem )  && (now > last_heard_from + timeout))
-#else
-      if ( (hep != global_host_elem )  && (now > last_heard_from(comproc, &id, host) + timeout)) 
-#endif
-      {
+      if ( (hep != global_host_elem )  && (now > last_heard_from + timeout)) {
          host_unheard = 1;
 #if 0
          DPRINTF(("id = %d, comproc = %s, host = %s, timeout = "u32", "
@@ -969,6 +957,21 @@ lListElem *hep
    } 
    DEXIT; 
    return timeout;
+}
+
+u_long32 sge_get_max_unheard_value(void) 
+{
+   lListElem *cfep = NULL;
+   u_long32 max_unheard_secs = 0;
+   DENTER(TOP_LAYER, "sge_get_max_unheard_value");
+   if (!(cfep = get_local_conf_val("global", "max_unheard"))                                              ||
+       (cfep && !parse_ulong_val(NULL, &max_unheard_secs, TYPE_TIM, lGetString(cfep, CF_value), NULL, 0))  ) {
+      ERROR((SGE_EVENT, MSG_OBJ_MAXUNHEARDVALUE_SS, "global", lGetString(cfep, CF_value)));
+      max_unheard_secs = 300;
+   }
+   DPRINTF(("max unheard value is "u32"\n", max_unheard_secs )); 
+   DEXIT; 
+   return max_unheard_secs;
 }
 
 lListElem *get_local_conf_val(

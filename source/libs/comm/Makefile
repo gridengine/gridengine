@@ -48,6 +48,7 @@ COMMLIB_SRC = \
          cl_message_list.c \
          cl_host_list.c \
          cl_host_alias_list.c \
+         cl_endpoint_list.c \
          cl_handle_list.c \
          cl_commlib.c
 
@@ -56,9 +57,11 @@ COMMLIB_OBJS = $(COMMLIB_SRC:.c=.o)
 COMMLIB_TEST_SRC = \
          test_cl_tcp_framework.c \
          test_cl_commlib.c \
+         test_server_connection.c \
          test_cl_commlib_client.c \
          test_cl_hostname_list.c  \
          test_cl_hostalias_list.c \
+         test_cl_endpoint_list.c \
          test_multithread_io.c  \
          test_status_info.c
 
@@ -74,7 +77,8 @@ COMMLIBS = $(COMMLIB) $(COMMLISTSLIB)
 # global rules: all, clean, depend, messages
 ###############################################################################
 comm_all: commlib commlists_all test_cl_tcp_framework test_cl_commlib test_cl_commlib_client \
-     test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info
+     test_cl_hostname_list test_cl_hostalias_list test_multithread_io test_status_info \
+     test_server_connection test_cl_endpoint_list
 
 depend: commlib_depend commlistslib_depend
 
@@ -87,7 +91,8 @@ commlib: $(COMMLIB) $(COMMLISTSLIB)
 commlib_clean: commlistslib_clean
 		$(RM) $(COMMLIB_OBJS) $(COMMLIB_TEST_OBJS) libcomm.a libcomm$(SHAREDEXT) \
       test_cl_tcp_framework test_cl_commlib_client test_cl_commlib test_cl_hostname_list \
-      test_cl_hostalias_list test_multithread_io test_status_info
+      test_cl_hostalias_list test_multithread_io test_status_info test_server_connection \
+      test_cl_endpoint_list
 
 commlib_depend: commlistslib_depend
 		$(DEPEND) -f$(COMMLIB_DIR)/commlib_dependencies $(COMMLIB_DIR)/*.c
@@ -126,6 +131,8 @@ cl_message_list.o: $(COMMLIB_DIR)/cl_message_list.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_message_list.c
 cl_host_list.o: $(COMMLIB_DIR)/cl_host_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_host_list.c
+cl_endpoint_list.o: $(COMMLIB_DIR)/cl_endpoint_list.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_endpoint_list.c
 cl_host_alias_list.o: $(COMMLIB_DIR)/cl_host_alias_list.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(COMMLIB_DIR)/cl_host_alias_list.c
 cl_handle_list.o: $(COMMLIB_DIR)/cl_handle_list.c 
@@ -139,10 +146,14 @@ test_cl_tcp_framework:	test_cl_tcp_framework.o $(COMMLIB) $(COMMLISTSLIB) $(UTIL
 	$(CC) -o test_cl_tcp_framework $(LFLAGS) test_cl_tcp_framework.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_commlib: test_cl_commlib.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_commlib $(LFLAGS) test_cl_commlib.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+test_server_connection: test_server_connection.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_server_connection $(LFLAGS) test_server_connection.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_commlib_client: test_cl_commlib_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_commlib_client $(LFLAGS) test_cl_commlib_client.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_hostname_list: test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 	$(CC) -o test_cl_hostname_list $(LFLAGS) test_cl_hostname_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+test_cl_endpoint_list: test_cl_endpoint_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+	$(CC) -o test_cl_endpoint_list $(LFLAGS) test_cl_endpoint_list.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(LIBS)
 test_cl_hostalias_list: test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB)
 	$(CC) -o test_cl_hostalias_list $(LFLAGS) test_cl_hostalias_list.o $(COMMLIB) $(COMMLISTSLIB) $(LIBS)
 test_multithread_io: test_multithread_io.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
@@ -155,10 +166,14 @@ test_cl_tcp_framework.o: $(COMMLIB_DIR)/test_cl_tcp_framework.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_tcp_framework.c
 test_cl_commlib.o: $(COMMLIB_DIR)/test_cl_commlib.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_commlib.c
+test_server_connection.o: $(COMMLIB_DIR)/test_server_connection.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_server_connection.c
 test_cl_commlib_client.o: $(COMMLIB_DIR)/test_cl_commlib_client.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_commlib_client.c
 test_cl_hostname_list.o: $(COMMLIB_DIR)/test_cl_hostname_list.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_hostname_list.c
+test_cl_endpoint_list.o: $(COMMLIB_DIR)/test_cl_endpoint_list.c
+	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_endpoint_list.c
 test_cl_hostalias_list.o: $(COMMLIB_DIR)/test_cl_hostalias_list.c
 	$(CC) $(CFLAGS) -c $(COMMLIB_DIR)/test_cl_hostalias_list.c
 test_multithread_io.o: $(COMMLIB_DIR)/test_multithread_io.c

@@ -91,13 +91,13 @@ extern int main(int argc, char** argv)
   sigaction(SIGPIPE, &sa, NULL);
 
   
-  if (argc != 5) {
-     printf("wrong parameters, param1 = server host, param2 = port number, param3 = comp name, param4=debug_level\n");
+  if (argc != 6) {
+     printf("wrong parameters, param1 = server host, param2 = port number, param3 = comp name, param4 = comp_id, param5=debug_level\n");
      exit(1);
   }
-  cl_com_setup_commlib(CL_ONE_THREAD,atoi(argv[4]), NULL );
+  cl_com_setup_commlib(CL_ONE_THREAD,atoi(argv[5]), NULL );
 
-  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, 5000,atoi(argv[2]) , "client", 0, 1,0 );
+  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "sim_client", 0, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -113,7 +113,7 @@ extern int main(int argc, char** argv)
   while(do_shutdown != 1) {
      int ret;
      cl_com_SIRM_t* status = NULL;
-     ret = cl_commlib_get_endpoint_status(handle,argv[1] , argv[3], 1, &status);
+     ret = cl_commlib_get_endpoint_status(handle,argv[1] , argv[3], atoi(argv[4]), &status);
      if (ret != CL_RETVAL_OK) {
         printf("cl_commlib_get_endpoint_status() returned %s\n", cl_get_error_text(ret));
      }

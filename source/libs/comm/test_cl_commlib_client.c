@@ -96,10 +96,12 @@ extern int main(int argc, char** argv)
   struct timeval now;
   long start_time;
   long end_time;
+  int retval = CL_RETVAL_PARAMS;
   int welcome_text_size;
   int close_connection = 0;
   unsigned long last_mid = 0;
   int i;
+  cl_xml_connection_autoclose_t autoclose;
 
   /* setup signalhandling */
   memset(&sa, 0, sizeof(sa));
@@ -115,7 +117,7 @@ extern int main(int argc, char** argv)
      printf("wrong parameters, param1 = server host, param2 = port number, param3 = client id, param4=debug_level, param5=sleep time, param6=do_close\n");
      exit(1);
   }
-  cl_com_setup_commlib(CL_ONE_THREAD, atoi(argv[4]), NULL );
+  cl_com_setup_commlib(CL_NO_THREAD, atoi(argv[4]), NULL );
   if (atoi(argv[6]) != 0) {
      close_connection = 1;
   }
@@ -127,19 +129,44 @@ extern int main(int argc, char** argv)
   
   CL_LOG_STR(CL_LOG_INFO,"component is","client");
   CL_LOG_INT(CL_LOG_INFO,"id ist",atoi(argv[3]));
+#define SELECT_TIMEOUT 1
+#if 1
+#define CREATE_SERVICE
+#endif
 
-  
-  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, 5000,atoi(argv[2]) , "client", atoi(argv[3]), 1,0 );
+#ifdef CREATE_SERVICE
+  cl_com_append_known_endpoint_from_name(argv[1], "server", 1,atoi(argv[2]),CL_CM_AC_DISABLED , 1);
+  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
   }
+#else
+  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
+  if (handle == NULL) {
+     printf("could not get handle\n");
+     exit(1);
+  }
+#endif
+
+  cl_com_set_auto_close_mode(handle,CL_CM_AC_ENABLED );
+  cl_com_get_auto_close_mode(handle,&autoclose);
+  if (autoclose != CL_CM_AC_ENABLED ) {
+     printf("could not enable autoclose\n");
+     exit(1);
+  }  
 
   printf("local hostname is \"%s\"\n", handle->local->comp_host);
   printf("local component is \"%s\"\n", handle->local->comp_name);
   printf("local component id is \"%ld\"\n", handle->local->comp_id);
+
+#ifdef CREATE_SERVICE
+  cl_com_get_known_endpoint_port_from_name(argv[1], "server", 1, &i);
+  printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[1]);
+#else
   cl_com_get_connect_port(handle, &i);
   printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[1]);
+#endif
 
 
   gettimeofday(&now,NULL);
@@ -148,15 +175,20 @@ extern int main(int argc, char** argv)
   welcome_text_size = strlen(welcome_text) + 1;
   while(do_shutdown != 1) {
      unsigned long mid;
+     int after_new_connection = 0;
      int my_sent_error = 0;
-     int retval = CL_RETVAL_PARAMS;
      CL_LOG(CL_LOG_INFO,"main loop");
 
      /* printf("sending to \"%s\" ...\n", argv[1]);  */
 
-     my_sent_error = cl_commlib_send_message(handle, argv[1], "server", 1, CL_MIH_MAT_ACK, (cl_byte_t*)welcome_text , welcome_text_size, &mid ,0,0, 1, 0);
-
+/*     CL_LOG(CL_LOG_ERROR,"sending ack message ..."); */
      
+     my_sent_error = cl_commlib_send_message(handle, argv[1], "server", 1, CL_MIH_MAT_ACK, (cl_byte_t*)welcome_text , welcome_text_size, &mid ,0,0, 1, 0);
+     if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
+        after_new_connection = 1;
+        CL_LOG(CL_LOG_ERROR,"after new connection");
+     }
+
      if (last_mid >= mid || mid == 1) {
         total_connections++;
      }
@@ -165,7 +197,7 @@ extern int main(int argc, char** argv)
 #if 1
      if (my_sent_error != CL_RETVAL_OK) {
         printf("cl_commlib_send_message() returned %s\n", cl_get_error_text(my_sent_error));
-        exit(1);
+        /* exit(1); */
 #if CL_DO_SLOW
         sleep(atoi(argv[5]));
 #endif
@@ -175,37 +207,77 @@ extern int main(int argc, char** argv)
 #if 1
      retval = CL_RETVAL_PARAMS;
      while (retval != CL_RETVAL_OK ) {
-        cl_commlib_trigger(handle);
-        retval = cl_commlib_check_for_ack(handle, argv[1], "server", 1, mid, 0 );
+
+
+        while ( (retval=cl_commlib_receive_message(handle,NULL, NULL, 0, 0,0, &message, &sender)) == CL_RETVAL_OK) {
+          if (message != NULL) {
+             cl_com_free_endpoint(&sender);
+             cl_com_free_message(&message);
+          } else {
+             break;
+          }
+        } 
+
+        if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
+           CL_LOG(CL_LOG_ERROR,"connection not found (1)");
+           break;
+        }
+
+        retval = cl_commlib_check_for_ack(handle, argv[1], "server", 1, mid, 1 );
         if (retval != CL_RETVAL_MESSAGE_WAIT_FOR_ACK && retval != CL_RETVAL_OK) {
            printf("retval of cl_commlib_check_for_ack(%ld) is %s\n",mid,cl_get_error_text(retval)); 
-           exit(1);
+           /* exit(1);  */
+           break;
         }
+        if (retval == CL_RETVAL_OK) {
+           CL_LOG_INT(CL_LOG_WARNING,"received ack for message mid", mid); 
+        } else {
+           cl_commlib_trigger(handle);
+        }
+
+        if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
+           CL_LOG(CL_LOG_ERROR,"connection not found (2)");
+           break;
+        }
+
+
+
 /*        printf("retval of cl_commlib_check_for_ack(%ld) is %s\n",mid,cl_get_error_text(retval));  */
+     }
+     if (retval == CL_RETVAL_CONNECTION_NOT_FOUND) {
+        
+         continue; 
      }
 #endif
 
-     
+
      total_bytes_sent  = total_bytes_sent + welcome_text_size;
      CL_LOG_INT(CL_LOG_INFO,"bytes sent:", welcome_text_size);
 
      bytes_received = 0;
-     while (bytes_received != welcome_text_size ) { 
+     while (bytes_received != welcome_text_size ) {
 
         cl_commlib_trigger(handle); 
 
-        CL_LOG_INT(CL_LOG_INFO,"waiting for mid .... ",mid);
+
+        CL_LOG_INT(CL_LOG_WARNING,"waiting for mid .... ",mid); 
         retval = cl_commlib_receive_message(handle,NULL, NULL, 0, 0,mid, &message, &sender);
+
 
         CL_LOG_STR(CL_LOG_INFO,"waiting for bytes ...", cl_get_error_text(retval));
         if (retval == CL_RETVAL_CONNECTION_NOT_FOUND) {
 #if CL_DO_SLOW
-           sleep(atoi(argv[5]));
+/*           CL_LOG(CL_LOG_ERROR,"connection not found"); */
+
+           if (atoi(argv[5]) > 0) {
+              printf("sleeping...\n");
+              sleep(atoi(argv[5]));
+           }
 #endif
-           CL_LOG(CL_LOG_ERROR,"connection not found");
            break;
         }
         if (message != NULL) {
+
         /*   printf("received message from \"%s\"\n", sender->comp_host); */
            CL_LOG_INT(CL_LOG_INFO,"bytes received:", message->message_length);
            if (strcmp((char*)message->message, welcome_text) != 0) {
@@ -216,6 +288,22 @@ extern int main(int argc, char** argv)
            cl_com_free_endpoint(&sender);
            cl_com_free_message(&message);
         }
+        
+        while ( (retval = cl_commlib_receive_message(handle,NULL, NULL, 0, 0,0, &message, &sender)) == CL_RETVAL_OK) {
+          if (message != NULL) {
+             cl_com_free_endpoint(&sender);
+             cl_com_free_message(&message);
+          } else {
+             break;
+          }
+        } 
+      
+        if (retval == CL_RETVAL_CONNECTION_NOT_FOUND) {
+           CL_LOG(CL_LOG_ERROR,"connection not found (3)");
+           break;
+
+        }
+
 
 #if CL_DO_SLOW
         sleep(atoi(argv[5]));
@@ -223,7 +311,9 @@ extern int main(int argc, char** argv)
         if (do_shutdown == 1) {
            break;
         }
-    }  
+    }
+
+  
 #if CL_DO_SLOW
      sleep(atoi(argv[5]));
 #endif
@@ -264,14 +354,31 @@ extern int main(int argc, char** argv)
            if (message != NULL) {
               cl_com_free_endpoint(&sender);
               cl_com_free_message(&message);
+           } else {
+              printf("error shutdown handle");
+              exit(-1);
+              break;
            }
         }  
-
-        handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0,5000, atoi(argv[2]) , "client", atoi(argv[3]), 1,0 );
+#ifdef CREATE_SERVICE
+        handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 0 , "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
         if (handle == NULL) {
            printf("could not get handle\n");
            exit(-1);
         }
+#else
+        handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, atoi(argv[2]) , "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
+        if (handle == NULL) {
+           printf("could not get handle\n");
+           exit(-1);
+        }
+#endif
+        cl_com_set_auto_close_mode(handle,CL_CM_AC_ENABLED );
+        cl_com_get_auto_close_mode(handle,&autoclose);
+        if (autoclose != CL_CM_AC_ENABLED ) {
+           printf("could not enable autoclose\n");
+           exit(1);
+        }  
      }
   }
   printf("do_shutdown received\n");
@@ -283,8 +390,11 @@ extern int main(int argc, char** argv)
      if (message != NULL) {
         cl_com_free_endpoint(&sender);
         cl_com_free_message(&message);
+     } else {
+        break;
      }
   } 
+  printf("cleanup commlib ...\n");
   cl_com_cleanup_commlib();
 
   printf("main done\n");

@@ -238,7 +238,8 @@ void qmonInitSge( char *progname)
          error=check_isalive(sge_get_master(0));
          
          /* For the default case, just print a simple message */
-         if (error == CL_RETVAL_CONNECT_ERROR) {
+         if (error == CL_RETVAL_CONNECT_ERROR ||
+             error == CL_RETVAL_CONNECTION_NOT_FOUND) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                    prognames[QMASTER], 
                                    u32c(sge_get_qmaster_port()), 

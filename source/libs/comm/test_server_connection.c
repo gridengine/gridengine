@@ -39,7 +39,6 @@
 #include <sys/time.h>
 
 #include "cl_commlib.h"
-#define CL_DO_SLOW 0
 
 void sighandler_server(int sig);
 static int pipe_signal = 0;
@@ -76,10 +75,15 @@ extern int main(int argc, char** argv)
   cl_com_handle_t* handle = NULL; 
   cl_com_message_t* message = NULL;
   cl_com_endpoint_t* sender = NULL;
+#if 0
+  cl_com_endpoint_t* clients[10] = { NULL, NULL, NULL, NULL, NULL,
+                                     NULL, NULL, NULL, NULL, NULL };
+#endif
+  int connected_clients = 0;
   int i;
   
-  if (argc != 2) {
-      printf("please enter debug level\n");
+  if (argc != 4) {
+      printf("please enter  debug level, port and nr. of max connections\n");
       exit(1);
   }
 
@@ -96,65 +100,41 @@ extern int main(int argc, char** argv)
   printf("commlib setup ...\n");
   cl_com_setup_commlib(CL_ONE_THREAD, atoi(argv[1]),   NULL );
 
-  cl_com_set_alias_file("./alias_file");
-
-  cl_com_set_status_func(my_application_status); 
-
-  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1, 5000, "server", 1, 2, 0 );
+  printf("setting up service on port %d\n", atoi(argv[2]) );
+  handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 1,atoi(argv[2]) , "server", 1, 2, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(-1);
   }
 
   cl_com_get_service_port(handle,&i), 
-
-
   printf("server running on host \"%s\", port %d, component name is \"%s\", id is %ld\n", 
          handle->local->comp_host, 
          i, 
          handle->local->comp_name,  
          handle->local->comp_id);
 
-  cl_com_add_allowed_host(handle, handle->local->comp_host);
-
-  cl_com_set_max_connections(handle,4);
+  cl_com_set_max_connections(handle,atoi(argv[3]));
   cl_com_get_max_connections(handle,&i);
   printf("max open connections is set to %d\n", i);
-  cl_com_set_max_connection_close_mode(handle,CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS );
 
+  printf("enable max connection close\n");
+  cl_com_set_max_connection_close_mode(handle, CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS);
 
-
-
+  connected_clients = 0;
   while(do_shutdown != 1) {
      unsigned long mid;
      int ret_val;
+     struct timeval now;
+     
 
      CL_LOG(CL_LOG_INFO,"main()");
-     cl_commlib_trigger(handle); 
 
-#if 0
-     /* TODO: check behaviour for unknown host and for a host which is down */
-     cl_commlib_send_message(handle, "down_host", "nocomp", 1, CL_MIH_MAT_ACK, (cl_byte_t*)"blub", 5, NULL, 1, 1 ); /* check wait for ack / ack_types  TODO*/
-#endif
- 
+     gettimeofday(&now,NULL);
+     cl_commlib_trigger(handle);
      ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, 0, 0, &message, &sender);
-     CL_LOG_STR(CL_LOG_INFO,"cl_commlib_receive_message() returned",cl_get_error_text(ret_val));
-
-     if (message != NULL) {
-          CL_LOG_STR(CL_LOG_INFO,"received message from",sender->comp_host);
-
-/*        printf("received message from \"%s\"\n", sender->comp_host); */
-
-
-
-        if (strstr((char*)message->message,"exit") != NULL) {
-           printf("received \"exit\" message from host %s, component %s, id %ld\n",
-                  sender->comp_host,sender->comp_name,sender->comp_id );
-           cl_commlib_close_connection(handle, sender->comp_host,sender->comp_name,sender->comp_id );
-           
-        } else {
-           int ret_val = CL_RETVAL_OK;
-           ret_val = cl_commlib_send_message(handle, 
+     if (message != NULL ) {
+        ret_val = cl_commlib_send_message(handle, 
                                 sender->comp_host, 
                                 sender->comp_name, 
                                 sender->comp_id, CL_MIH_MAT_NAK,  
@@ -162,20 +142,78 @@ extern int main(int argc, char** argv)
                                 message->message_length, 
                                 &mid, message->message_id,0, 
                                 0,0);
-           if (ret_val != CL_RETVAL_OK) {
-              CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned:",cl_get_error_text(ret_val));
+        if (ret_val != CL_RETVAL_OK) {
+           printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val));
+           if (ret_val == CL_RETVAL_PROTOCOL_ERROR) { 
            }
+        } else {
+           message->message = NULL; /* don't delete this message, it's deleted when sent */
         }
 
-        message->message = NULL;
+        
+#if 0
+
+        for(nr=0;nr<connected_clients;nr++) {
+           if (cl_com_compare_endpoints( clients[nr], sender ) != 0 ) {
+              printf("client %s/%s/%ld allready known\n", sender->comp_host, sender->comp_name, sender->comp_id);
+              is_new = 0;
+           }
+        }
+        if (is_new != 0) {
+           printf("new connection\n");
+           clients[connected_clients] = cl_com_create_endpoint(sender->comp_host, sender->comp_name, sender->comp_id); 
+           connected_clients++;
+        }
+#endif
+
+/*        printf("received message from \"%s\": size of message: %ld\n", sender->comp_host, message->message_length); */
+#if 0
+        ret_val = cl_commlib_send_message(handle, 
+                                sender->comp_host, 
+                                sender->comp_name, 
+                                sender->comp_id, CL_MIH_MAT_NAK,  
+                                message->message, 
+                                message->message_length, 
+                                &mid, message->message_id,0, 
+                                0,0);
+        if (ret_val != CL_RETVAL_OK) {
+           printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val));
+        }
+#endif
+
         cl_com_free_message(&message);
         cl_com_free_endpoint(&sender);
         message = NULL;
      } 
-#if CL_DO_SLOW
-     sleep(1);
+#if 0
+     if ( last_time != now.tv_sec ) {
+        /* send a message to all connected clients */
+        int nr;
+        cl_com_endpoint_t* client = NULL;
+        last_time = now.tv_sec;
+        for(nr=0;nr<connected_clients;nr++) {
+           client=clients[nr];
+           printf("\nsending to %s/%s/%ld\n",client->comp_host, client->comp_name, client->comp_id);
+           ret_val = cl_commlib_send_message(handle, 
+                                client->comp_host, 
+                                client->comp_name, 
+                                client->comp_id, CL_MIH_MAT_NAK,  
+                                (cl_byte_t*)"test", 
+                                5, 
+                                &mid, 0,0, 
+                                1,0);
+           if (ret_val != CL_RETVAL_OK) {
+              printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val));
+           }
+        }
+     }
+
 #endif
   }
+
+
+  cl_com_ignore_timeouts(CL_TRUE); 
+  cl_com_get_ignore_timeouts_flag();
 
   printf("shutting down server ...\n");
   handle = cl_com_get_handle( "server", 1 );
@@ -191,10 +229,12 @@ extern int main(int argc, char** argv)
      cl_commlib_receive_message(handle,NULL, NULL, 0, 0, 0, &message, &sender);
 
      if (message != NULL) {
-        printf("ignoring message from \"%s\"\n", sender->comp_host); 
+        printf("ignoring message from \"%s\": size of message: %ld\n", sender->comp_host, message->message_length); 
         cl_com_free_message(&message);
         cl_com_free_endpoint(&sender);
         message = NULL;
+     } else {
+        break;
      }
   }
 
@@ -202,7 +242,6 @@ extern int main(int argc, char** argv)
   cl_com_cleanup_commlib();
   fflush(NULL);
   
-
   printf("main done\n");
   return 0;
 }

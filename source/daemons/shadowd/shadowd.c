@@ -113,7 +113,7 @@ static int shadowd_is_old_master_enrolled(char *oldqmaster)
 
    DENTER(TOP_LAYER, "shadowd_is_old_master_enrolled");
 
-   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, 0, sge_get_qmaster_port() ,(char*)prognames[SHADOWD] , 0, 1,0 );
+   handle=cl_com_create_handle(CL_CT_TCP,CL_CM_CT_MESSAGE , 0, sge_get_qmaster_port() ,(char*)prognames[SHADOWD] , 0, 1,0 );
    if (handle == NULL) {
       CRITICAL((SGE_EVENT,"could not create communication handle\n"));
       DEXIT;

@@ -51,6 +51,7 @@
 #include "cl_message_list.h"
 #include "cl_host_list.h"
 #include "cl_host_alias_list.h"
+#include "cl_endpoint_list.h"
 #include "cl_communication.h"
 
 static int cl_com_gethostbyname(char *host, cl_com_hostent_t **hostent, int* system_error );
@@ -96,7 +97,7 @@ static cl_bool_t cl_ingore_timeout = CL_FALSE;
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_setup_tcp_connection()"
-int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_port, int connect_port, int data_flow_type) {  /* CR check */
+int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_port, int connect_port, int data_flow_type, cl_xml_connection_autoclose_t auto_close_mode ) {  /* CR check */
    cl_com_tcp_private_t* com_private = NULL;
    int ret_val;
    if (connection == NULL) {
@@ -129,6 +130,7 @@ int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_por
    (*connection)->ccrm_received = 0;
    (*connection)->ccrm_sent = 0;
    (*connection)->data_buffer_size  = CL_DEFINE_DATA_BUFFER_SIZE;
+   (*connection)->auto_close_type = auto_close_mode;
 
    (*connection)->data_read_buffer  = (cl_byte_t*) malloc (sizeof(cl_byte_t) * ((*connection)->data_buffer_size) );
    (*connection)->data_write_buffer = (cl_byte_t*) malloc (sizeof(cl_byte_t) * ((*connection)->data_buffer_size) );
@@ -157,7 +159,8 @@ int cl_com_setup_tcp_connection(cl_com_connection_t** connection, int server_por
    (*connection)->data_read_buffer_processed = 0;
 
    (*connection)->handler = NULL;
-   (*connection)->last_send_message_id = 1;
+   (*connection)->last_send_message_id = 0;
+   (*connection)->last_received_message_id = 0;
    (*connection)->received_message_list = NULL;
    (*connection)->send_message_list = NULL;
    (*connection)->shutdown_timeout = 0;
@@ -417,6 +420,11 @@ int cl_com_setup_message(cl_com_message_t** message, cl_com_connection_t* connec
    (*message)->message_df = CL_MIH_DF_BIN;
    (*message)->message_mat = ack_type;
    (*message)->message = data;
+   if ( connection->last_send_message_id == 0) {
+      /* the first send message will set last_send_message_id to 1 */
+      /* last_send_message_id is initialized with 0 */
+      connection->last_send_message_id = 1;
+   }
    (*message)->message_id = connection->last_send_message_id;
    (*message)->message_tag = tag;
    (*message)->message_response_id = response_id;
@@ -559,6 +567,10 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
    unsigned long dst_end = 0;
    unsigned long rdata_begin = 0;
    unsigned long rdata_end = 0;
+   unsigned long port_begin = 0;
+   unsigned long port_end = 0;
+   unsigned long autoclose_begin = 0;
+   unsigned long autoclose_end = 0;
 
 
   
@@ -578,6 +590,7 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
 
    (*message)->df = CL_CM_DF_UNDEFINED;
    (*message)->ct = CL_CM_CT_UNDEFINED;
+   (*message)->ac = CL_CM_AC_UNDEFINED;
 
    while(buf_pointer < buffer_length) {
       switch( buffer[buf_pointer] ) {
@@ -617,6 +630,27 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
                   buf_pointer++;
                   continue;
                }
+               if (strcmp(help_buf,"port") == 0) {
+                  port_begin = buf_pointer + 1;
+                  buf_pointer++;
+                  continue;
+               }
+               if (strcmp(help_buf,"/port") == 0) {
+                  port_end = buf_pointer - 7;
+                  buf_pointer++;
+                  continue;
+               }
+               if (strcmp(help_buf,"ac") == 0) {
+                  autoclose_begin = buf_pointer + 1;
+                  buf_pointer++;
+                  continue;
+               }
+               if (strcmp(help_buf,"/ac") == 0) {
+                  autoclose_end = buf_pointer - 5;
+                  buf_pointer++;
+                  continue;
+               }
+
                if (strcmp(help_buf,"/df") == 0) {
                   df_end = buf_pointer - 5;
                   buf_pointer++;
@@ -692,7 +726,28 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
       }
    }
 
+   if (port_begin > 0 && port_end > 0 && port_end >= port_begin) {
+      help_buf_pointer = 0;
+      for (i=port_begin;i<=port_end && help_buf_pointer < 254 ;i++) {
+         help_buf[help_buf_pointer++] = buffer[i];
+      }
+      help_buf[help_buf_pointer] = 0;
+      (*message)->port = cl_util_get_ulong_value(help_buf);
+   }
 
+   if (autoclose_begin > 0 && autoclose_end > 0 && autoclose_end >= autoclose_begin) {
+      help_buf_pointer = 0;
+      for (i=autoclose_begin;i<=autoclose_end && help_buf_pointer < 254 ;i++) {
+         help_buf[help_buf_pointer++] = buffer[i];
+      }
+      help_buf[help_buf_pointer] = 0;
+      if (strcmp(CL_CONNECT_MESSAGE_AUTOCLOSE_ENABLED,help_buf) == 0) {
+         (*message)->ac = CL_CM_AC_ENABLED;
+      } 
+      if (strcmp(CL_CONNECT_MESSAGE_AUTOCLOSE_DISABLED,help_buf) == 0) {
+         (*message)->ac = CL_CM_AC_DISABLED;
+      }
+   }
 
    /* get version */
    if (version_begin > 0) {
@@ -714,6 +769,10 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
       return CL_RETVAL_UNKNOWN;
    }
 
+   if ( (*message)->ac == CL_CM_AC_UNDEFINED) {
+      CL_LOG(CL_LOG_ERROR,"autoclose option undefined");
+      return CL_RETVAL_UNKNOWN;
+   }
 
    /* get src */
    if (src_begin > 0 && src_end > 0 && src_end >= src_begin) {
@@ -2614,7 +2673,7 @@ const char* cl_com_get_mih_mat_string(cl_xml_ack_type_t mat) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_open_connection()"
-int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_endpoint_t* remote_endpoint, cl_com_endpoint_t* local_endpoint, cl_com_endpoint_t* receiver_endpoint ,cl_com_endpoint_t* sender_endpoint) {     /* CR check */
+int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_endpoint_t* remote_endpoint, cl_com_endpoint_t* local_endpoint, cl_com_endpoint_t* receiver_endpoint ,cl_com_endpoint_t* sender_endpoint) {
    int retval = CL_RETVAL_UNKNOWN;
 
    /* check parameters and duplicate */
@@ -2695,18 +2754,68 @@ int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_
 
    /* try to connect (open connection) */
    if (connection->connection_state == CL_COM_OPENING) {
+      cl_com_tcp_private_t* tcp_private = NULL;
+      int tcp_port = 0;
+      int connection_count_reached = 0;
+      cl_xml_connection_autoclose_t autoclose = CL_CM_AC_UNDEFINED;
+
       switch(connection->framework_type) {
          case CL_CT_TCP:
+            tcp_private = (cl_com_tcp_private_t*) connection->com_private;
+            if ( tcp_private == NULL ) {
+               return CL_RETVAL_UNDEFINED_FRAMEWORK;
+            }
+
             connection->connection_type = CL_COM_SEND_RECEIVE;
-           
-            retval = cl_com_tcp_open_connection(connection,timeout,1);
+
+            if ( tcp_private->connect_port <= 0 ) {
+               CL_LOG(CL_LOG_WARNING,"try to find out port of endpoint");
+               if ( cl_com_get_known_endpoint_port(connection->remote, &tcp_port) == CL_RETVAL_OK) {
+                  CL_LOG(CL_LOG_WARNING,"endpoint port found");
+                  tcp_private->connect_port = tcp_port;
+               } else {
+                  CL_LOG(CL_LOG_ERROR,"endpoint port not found");
+               }
+ 
+               CL_LOG(CL_LOG_WARNING,"try to find out autoclose mode of endpoint");
+               if ( cl_com_get_known_endpoint_autoclose_mode(connection->remote, &autoclose) == CL_RETVAL_OK) {
+                  if ( autoclose == CL_CM_AC_ENABLED ) {
+                     connection->auto_close_type = autoclose; 
+                  }
+                  switch ( connection->auto_close_type ) {
+                     case CL_CM_AC_ENABLED:
+                        CL_LOG(CL_LOG_INFO,"autoclose is enabled");
+                        break;
+                     case CL_CM_AC_DISABLED:
+                        CL_LOG(CL_LOG_INFO,"autoclose is disabled");
+                        break;
+                     default:
+                        CL_LOG(CL_LOG_INFO,"unexpected autoclose value");
+                  }
+               } else {
+                  CL_LOG(CL_LOG_ERROR,"endpoint not found");
+               }
+            }
+
+            if ( connection->handler != NULL) {
+               /* check if max. connection count is reached */
+               if ( connection->handler->max_connection_count_reached != 0 ) {
+                  connection_count_reached = 1;
+               }
+            }
+ 
+            /* open tcp connection when max connecion count is not reached, otherwise
+               do not open a tcp connection -> return CL_RETVAL_UNCOMPLETE_WRITE */
+            if ( connection_count_reached == 0 ) {
+               retval = cl_com_tcp_open_connection(connection,timeout,1);
+            } else {
+               CL_LOG(CL_LOG_WARNING,cl_get_error_text(CL_RETVAL_MAX_CON_COUNT_REACHED));
+               retval = CL_RETVAL_UNCOMPLETE_WRITE; /* wait till connection count is ok */
+            }
+
             if (retval != CL_RETVAL_OK && retval != CL_RETVAL_UNCOMPLETE_WRITE) {
                CL_LOG(CL_LOG_ERROR,"connect error");
                connection->connection_type = CL_COM_UNDEFINED;
-/*               cl_com_free_endpoint(&(connection->remote));
-               cl_com_free_endpoint(&(connection->local));
-               cl_com_free_endpoint(&(connection->receiver));
-               cl_com_free_endpoint(&(connection->sender));  */
             } 
             if (retval == CL_RETVAL_OK) {  /* OK */
                CL_LOG(CL_LOG_INFO,"tcp conected");
@@ -3271,8 +3380,8 @@ int cl_com_compare_hosts( char* host1, char* host2) {
        return CL_RETVAL_RESOLVING_SETUP_ERROR;
     }
 
-    CL_LOG_STR(CL_LOG_INFO,"original compare host 1:", host1);
-    CL_LOG_STR(CL_LOG_INFO,"original compare host 2:", host2);
+    CL_LOG_STR(CL_LOG_DEBUG,"original compare host 1:", host1);
+    CL_LOG_STR(CL_LOG_DEBUG,"original compare host 2:", host2);
 
     if ( ( retval = cl_com_dup_host(&hostbuf1, host1, host_list_data->resolve_method, host_list_data->local_domain_name)) != CL_RETVAL_OK) {
        cl_raw_list_unlock(host_list);
@@ -3285,9 +3394,9 @@ int cl_com_compare_hosts( char* host1, char* host2) {
     }
     cl_raw_list_unlock(host_list);
 
-    CL_LOG(CL_LOG_WARNING,"cl_com_compare_hosts() is slow!");
-    CL_LOG_STR(CL_LOG_INFO,"compareing host 1:", hostbuf1);
-    CL_LOG_STR(CL_LOG_INFO,"compareing host 2:", hostbuf2);
+    CL_LOG(CL_LOG_INFO,"cl_com_compare_hosts() is slow!");
+    CL_LOG_STR(CL_LOG_DEBUG,"compareing host 1:", hostbuf1);
+    CL_LOG_STR(CL_LOG_DEBUG,"compareing host 2:", hostbuf2);
     if ( strcasecmp(hostbuf1,hostbuf2) == 0 ) {   /* hostname compare OK */
        CL_LOG(CL_LOG_INFO,"hosts are equal");
        retval = CL_RETVAL_OK;
@@ -3758,6 +3867,62 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_com_endpoint_list_refresh()"
+int cl_com_endpoint_list_refresh(cl_raw_list_t* list_p) {
+   struct timeval              now;
+   cl_endpoint_list_elem_t*    act_elem = NULL;
+   cl_endpoint_list_elem_t*    elem = NULL;
+   cl_endpoint_list_data_t*    ldata = NULL;
+
+   if (list_p == NULL) {
+      return CL_RETVAL_PARAMS;    
+   }
+
+   if (list_p->list_data == NULL) {
+      CL_LOG( CL_LOG_ERROR, "endpoint list not initalized");
+      return CL_RETVAL_PARAMS;    
+   }
+   ldata = (cl_endpoint_list_data_t*) list_p->list_data;
+
+   gettimeofday(&now,NULL);
+   if ( now.tv_sec < ldata->refresh_interval + ldata->last_refresh_time) {
+      return CL_RETVAL_OK;
+   }
+
+   ldata->last_refresh_time = now.tv_sec;
+
+   CL_LOG_INT(CL_LOG_INFO, "number of endpoint entries:",      cl_raw_list_get_elem_count(list_p));
+   
+   cl_raw_list_lock(list_p);
+
+   elem = cl_endpoint_list_get_first_elem(list_p);
+   while(elem != NULL) {
+      act_elem = elem;
+      elem = cl_endpoint_list_get_next_elem(list_p,elem);
+  
+      /* static elements aren't removed */
+      if (act_elem->is_static == 0) {
+         if (act_elem->last_used + ldata->entry_life_time < now.tv_sec ) {
+            CL_LOG_STR(CL_LOG_INFO,"removing non static element (life timeout) with comp host:", act_elem->endpoint->comp_host);
+            cl_raw_list_remove_elem(list_p, act_elem->raw_elem);
+            cl_com_free_endpoint(&(act_elem->endpoint));
+            free(act_elem);
+            act_elem = NULL;
+            continue;
+         }
+      } else {
+         CL_LOG_STR(CL_LOG_INFO,"ignoring static element with comp host:", act_elem->endpoint->comp_host);
+      }
+   }
+
+   cl_raw_list_unlock(list_p);
+   return CL_RETVAL_OK;
+}
+
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_com_cached_gethostbyaddr()"
 int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,struct hostent **he_copy, int* system_error_val ) {
    cl_host_list_elem_t*    elem = NULL;
@@ -3964,6 +4129,19 @@ int cl_com_cached_gethostbyaddr( struct in_addr *addr, char **unique_hostname,st
 }
 
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_dup_endpoint()"
+cl_com_endpoint_t* cl_com_dup_endpoint(cl_com_endpoint_t* endpoint) {
+    if (endpoint == NULL) {
+       return NULL;
+    }  
+    if (endpoint->comp_host == NULL || endpoint->comp_name == NULL) {
+       return NULL;
+    }
+    return cl_com_create_endpoint(endpoint->comp_host, endpoint->comp_name, endpoint->comp_id  );
+}
 
 
 

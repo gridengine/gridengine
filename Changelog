@@ -1,3 +1,37 @@
+CR-2004-04-15-0: Bugfix:    - output on qmaster clients when qmaster is 
+                              not reachable
+                            - qconf -ke <host> triggers "set_last_heard_from()
+                              not suppored by commlib" logging ( Issue 833 )
+                            - fixed qmaster exceeds max file descriptor limit
+                              problem ( Issue 687 )
+                            - fixed problem with reregistering of execd's at
+                              qmaster daemon
+                            - put information about max. used file descriptors
+                              into qmaster message file at startup of qmaster
+                            - delivering jobs will now fail if max. unheard 
+                              value is reached, not when 2 load reports wasn't
+                              received
+                            - added new communication lists: endpoint_list
+                            - better performance at automatic id dispatching
+                            - added some thread trigger calls for a faster
+                              connection establishment/disestablishment
+                            - added 2 parameter to connect message:
+                                 o port number where client is reachable and
+                                 o autoclose mode of client (when service 
+                                   runs out of file descirptors the service
+                                   will close connections where this mode
+                                   is enabled) 
+                            - service can now use random port if service port
+                              is specified with 0
+                            - fixed bug in some list modify function of 
+                              communication lib: return error code was 
+                              wrong on some access functions
+                            - starting qmon with multithreaded communication
+                              lib.
+                              
+                 Issue(s):  833, 687
+                 Review:    Pending
+
 AH-2004-04-14-1: Bugfix:    Per host slot limitation broken
                  Issues:    968
 

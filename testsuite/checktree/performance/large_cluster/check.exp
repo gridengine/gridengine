@@ -70,7 +70,10 @@ set check_init_level_procedure "large_cluster_init_level"
 
 # define test's name and run level descriptions
 set check_name            "large_cluster"
-set check_highest_level   [expr [llength $CHECK_CORE_EXECD] - 1]
+set check_highest_level   [expr ( [llength $CHECK_CORE_EXECD] - 1 + 300 ) ]
+for {set i 300} {$i <= $check_highest_level} {incr i} {
+   set check_description($i) "check performance with [expr ( $i - 300 + 1 ) * $LARGE_CLUSTER_HOSTS_PER_HOST] queues"
+}
 
 #debug settings
 #set LARGE_CLUSTER_HOSTS_PER_HOST    10
@@ -81,12 +84,8 @@ set check_highest_level   [expr [llength $CHECK_CORE_EXECD] - 1]
 #set LARGE_CLUSTER_SLOTS_PER_QUEUE   2
 #set check_highest_level   2
 
-for {set i 0} {$i <= $check_highest_level} {incr i} {
-   set check_description($i) "check performance with [expr $i * $LARGE_CLUSTER_HOSTS_PER_HOST] queues"
-}
-
 # define test's dependencies
-#set check_needs           "init_core_system" 
+set check_needs           "init_core_system" 
 set check_needs           "" 
 
 # define test's procedure order
@@ -103,13 +102,18 @@ lappend check_functions "large_cluster_cleanup"
 proc large_cluster_init_level {} {
    global CHECK_ACT_LEVEL CHECK_CORE_EXECD
    global LARGE_CLUSTER_JOB_SIZES LARGE_CLUSTER_POLICIES_PROJECTS
-   global real_hosts
+   global real_hosts check_highest_level
 
    # here we should check whether the setup of hostname resolving is
    # done correctly on all involved hosts
 
+   if { $CHECK_ACT_LEVEL >= 300 && $CHECK_ACT_LEVEL <= $check_highest_level } {
+      return 0 
+   }
+   
+
    set real_hosts [lrange $CHECK_CORE_EXECD 0 $CHECK_ACT_LEVEL]
-   return 0;
+   return -1;
 }
 
 # -------- local test procedures -----------------------------------------------
@@ -937,8 +941,8 @@ proc large_cluster_remove_default {} {
 proc large_cluster_cleanup {} {
    global CHECK_ACTUAL_TEST_PATH CHECK_CHECKTREE_ROOT CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACT_LEVEL
    global LARGE_CLUSTER_HOST_PREFIX CHECK_PRODUCT_TYPE 
-   global check_highest_level
-   global check_needs check_name check_errstr check_description check_functions check_errno check_init_level_procedure check_use_installed_system check_highest_level
+   global check_highest_level check_needs check_name check_errstr
+   global check_description check_functions check_errno check_init_level_procedure check_use_installed_system
 
    # dump html code
    if {$CHECK_ACT_LEVEL == $check_highest_level} {

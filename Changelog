@@ -1,3 +1,6 @@
+CR-2002-03-01-0: Testsuite: - runlevel of large_cluster performance test set to
+                              300++ ( day )
+
 CR-2002-02-28-1: Testsuite:
                  Enhancem.: - new test: system_tests/sheperd/submit_del
                               testing sheperd signaling with sheperd wrapper

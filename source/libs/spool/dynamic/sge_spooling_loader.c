@@ -53,6 +53,9 @@
 
 #include "spool/sge_spooling.h"
 
+#ifdef SPOOLING_berkeleydb
+#include "spool/berkeleydb/sge_spooling_berkeleydb.h"
+#endif
 #ifdef SPOOLING_classic
 #include "spool/classic/sge_spooling_classic.h"
 #endif
@@ -116,6 +119,10 @@ spool_create_dynamic_context(lList **answer_list,
 
    DENTER(TOP_LAYER, "spool_create_dynamic_context");
 
+#ifdef SPOOLING_berkeleydb
+   spooling_name = "berkeleydb";
+   create_context = spool_berkeleydb_create_context;
+#endif
 #ifdef SPOOLING_classic
    spooling_name = "classic";
    create_context = spool_classic_create_context;

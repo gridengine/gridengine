@@ -65,6 +65,15 @@ spool_template_common_startup_func(lList **answer_list,
                                    const lListElem *rule);
 
 bool 
+spool_template_default_shutdown_func(lList **answer_list, 
+                                     const lListElem *rule);
+bool 
+spool_template_default_maintenance_func(lList **answer_list, 
+                                        const lListElem *rule,
+                                        const spooling_maintenance_command cmd,
+                                        const char *args);
+
+bool 
 spool_template_default_list_func(lList **answer_list, 
                                  const lListElem *type, 
                                  const lListElem *rule, lList **list, 

@@ -228,6 +228,7 @@ usage:
    echo "-secure-static    -> use static libraries for ssl security support"
    echo "-shared           -> link shared (default)"
    echo "-shared-libs      -> create libraries as shared libs"
+   echo "-spool-berkeleydb -> use spooling to berkeley-db database"
    echo "-spool-classic    -> use classic flatfile spooling (default)"
 #   echo "-spool-dynamic    -> allow loading of spooling method from shared lib"
    echo "-spool-flatfile   -> use new flatfile spooling"
@@ -795,6 +796,14 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-shared-libs":
       set SHAREDLIBS = 1
+      breaksw
+   case "-spool-berkeleydb":
+      set SPOOLING_METHOD = "berkeleydb"
+      set SPOOLING_LIBS   = "-lspoold -lspoolb -lspool -ldb"
+      set SPOOLING_DEPS   = "libspoold libspoolb"
+      set CFLAGS  = "-I$BERKELEYDB_HOME/include $CFLAGS"
+      set CXXFLAGS  = "-I$BERKELEYDB_HOME/include  $CXXFLAGS"
+      set LFLAGS  = "-L$BERKELEYDB_HOME/lib $LFLAGS"
       breaksw
    case "-spool-classic":
       set SPOOLING_METHOD = "classic"

@@ -164,12 +164,6 @@ spool_flatfile_default_delete_func(lList **answer_list,
                                    const lListElem *rule,
                                    const char *key, 
                                    const sge_object_type event_type);
-bool
-spool_flatfile_default_verify_func(lList **answer_list, 
-                                   const lListElem *type, 
-                                   const lListElem *rule,
-                                   lListElem *object,
-                                   const sge_object_type event_type);
 /*
  * base functions
  */

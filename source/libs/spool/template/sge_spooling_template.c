@@ -118,6 +118,7 @@ bool
 spool_template_default_startup_func(lList **answer_list, 
                                     const lListElem *rule, bool check)
 {
+   bool ret = true;
    const char *url;
 
    DENTER(TOP_LAYER, "spool_template_default_startup_func");
@@ -125,7 +126,112 @@ spool_template_default_startup_func(lList **answer_list,
    url = lGetString(rule, SPR_url);
 
    DEXIT;
-   return true;
+   return ret;
+}
+
+/****** spool/template/spool_template_default_shutdown_func() **************
+*  NAME
+*     spool_template_default_shutdown_func() -- shutdown spooling context
+*
+*  SYNOPSIS
+*     bool 
+*     spool_template_default_shutdown_func(lList **answer_list, 
+*                                          lListElem *rule);
+*
+*  FUNCTION
+*     Shuts down the context, e.g. the database connection.
+*
+*  INPUTS
+*     lList **answer_list - to return error messages
+*     const lListElem *rule - the rule containing data necessary for
+*                             the shutdown (e.g. path to the spool directory)
+*
+*  RESULT
+*     bool - true, if the shutdown succeeded, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/template/--Spooling-Template
+*     spool/spool_shutdown_context()
+*******************************************************************************/
+bool
+spool_template_default_shutdown_func(lList **answer_list, 
+                                    const lListElem *rule)
+{
+   bool ret = true;
+   const char *url;
+
+   DENTER(TOP_LAYER, "spool_template_default_shutdown_func");
+
+   url = lGetString(rule, SPR_url);
+
+
+   DEXIT;
+   return ret;
+}
+
+/****** spool/template/spool_template_default_maintenance_func() ************
+*  NAME
+*     spool_template_default_maintenance_func() -- maintain database
+*
+*  SYNOPSIS
+*     bool 
+*     spool_template_default_maintenance_func(lList **answer_list, 
+*                                    lListElem *rule
+*                                    const spooling_maintenance_command cmd,
+*                                    const char *args);
+*
+*  FUNCTION
+*     Maintains the database:
+*        - initialization
+*        - ...
+*
+*  INPUTS
+*     lList **answer_list   - to return error messages
+*     const lListElem *rule - the rule containing data necessary for
+*                             the maintenance (e.g. path to the spool 
+*                             directory)
+*     const spooling_maintenance_command cmd - the command to execute
+*     const char *args      - arguments to the maintenance command
+*
+*  RESULT
+*     bool - true, if the maintenance succeeded, else false
+*
+*  NOTES
+*     This function should not be called directly, it is called by the
+*     spooling framework.
+*
+*  SEE ALSO
+*     spool/template/--Spooling-Template
+*     spool/spool_maintain_context()
+*******************************************************************************/
+bool
+spool_template_default_maintenance_func(lList **answer_list, 
+                                    const lListElem *rule, 
+                                    const spooling_maintenance_command cmd,
+                                    const char *args)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "spool_template_default_maintenance_func");
+
+   switch (cmd) {
+      case SPM_init:
+         break;
+      default:
+         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                                 ANSWER_QUALITY_WARNING, 
+                                 "unknown maintenance command %d\n", cmd);
+         ret = false;
+         break;
+         
+   }
+
+   DEXIT;
+   return ret;
 }
 
 /****** spool/template/spool_template_default_list_func() *****************

@@ -53,6 +53,7 @@
 #include "sge_host.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
+#include "sge_centry.h"
 #include "sge_conf.h"
 #include "sge_job.h"
 #include "sge_manop.h"
@@ -410,6 +411,7 @@ bool spool_event_after(sge_object_type type, sge_event_action action,
                      answer_list_output(&answer_list);
                   }
                }   
+               break;
             case SGE_TYPE_SHARETREE:
                ep = lFirst(*master_list);
                if(ep != NULL) {

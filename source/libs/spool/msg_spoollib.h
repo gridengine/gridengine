@@ -63,6 +63,8 @@
 #define MSG_DONTKNOWHOWTOSPOOLSUBLIST_SS _MESSAGE(59100, _("don't know how to spool list attribute "SFQ" in function "SFQ"\n"))
 #define MSG_UNKNOWNOBJECTTYPEFOR_SS _MESSAGE(59101, _("unknown object type for list attribute "SFQ" in function "SFQ"\n"))
 #define MSG_NONAMEFORATTRIBUTE_D _MESSAGE(59103, _("no or invalid name for attribute %d\n"))
+#define MSG_SPOOL_CANTRESOLVEHOSTNAME_SS _MESSAGE(59104, _("can't resolve host name "SFQ": "SFN"\n"))
+#define MSG_SPOOL_HOSTFORQUEUEDOESNOTEXIST_SS   _MESSAGE(59105, _("can't creae queue "SFQ": host "SFQ" is not known\n"))
 
 /*
  * libs/spool/<method>/<code>

@@ -106,6 +106,7 @@ static int init_framework(const char *shlib, const char *libargs,
 int main(int argc, char *argv[])
 {
    int ret = EXIT_SUCCESS;
+   lList *answer_list = NULL;
 
    DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
 
@@ -172,7 +173,6 @@ int main(int argc, char *argv[])
 
          /* call maintenance command */
          if (ret == EXIT_SUCCESS) {
-            lList *answer_list = NULL;
             if (!spool_maintain_context(&answer_list, 
                                         spool_get_default_context(),
                                         cmd, args)) {
@@ -182,6 +182,11 @@ int main(int argc, char *argv[])
          }
       }
    }
+
+   if (!spool_shutdown_context(&answer_list, spool_get_default_context())) {
+      ret = EXIT_FAILURE;
+   }
+   answer_list_output(&answer_list);
 
    SGE_EXIT(ret);
    return ret;

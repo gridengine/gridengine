@@ -479,7 +479,7 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
                                           spool_flatfile_default_read_func,
                                           spool_flatfile_default_write_func,
                                           spool_flatfile_default_delete_func,
-                                          spool_flatfile_default_verify_func);
+                                          spool_default_verify_func);
          lSetRef(rule, SPR_clientdata, field_info);
          type = spool_context_create_type(answer_list, context, SGE_TYPE_ALL);
          spool_type_add_rule(answer_list, type, rule, true);
@@ -490,11 +490,12 @@ spool_flatfile_create_context(lList **answer_list, const char *args)
                                           common_dir,
                                           spool_flatfile_common_startup_func,
                                           NULL,
+                                          NULL,
                                           spool_flatfile_default_list_func,
                                           spool_flatfile_default_read_func,
                                           spool_flatfile_default_write_func,
                                           spool_flatfile_default_delete_func,
-                                          spool_flatfile_default_verify_func);
+                                          spool_default_verify_func);
          lSetRef(rule, SPR_clientdata, field_info);
          type = spool_context_create_type(answer_list, context, 
                                           SGE_TYPE_CONFIG);
@@ -842,7 +843,7 @@ spool_flatfile_default_list_func(lList **answer_list,
          direntries = sge_get_dirents(abs_dir);
 
          for_each (direntry, direntries) {
-            const char *key = lGetString(direntry, STR);
+            const char *key = lGetString(direntry, ST_name);
 
             if (key[0] != '.') {
                ret = read_verify_object(answer_list, type, rule, key, key_nm, 
@@ -1397,7 +1398,7 @@ spool_flatfile_default_delete_func(lList **answer_list,
    DEXIT;
    return ret;
 }
-
+#if 0 /* JG: has been moved to sge_spooling_utilities */
 /****** spool/flatfile/spool_flatfile_default_verify_func() ****************
 *  NAME
 *     spool_flatfile_default_verify_func() -- verify objects
@@ -1672,7 +1673,7 @@ spool_flatfile_default_verify_func(lList **answer_list,
    DEXIT;
    return ret;
 }
-
+#endif
 
 const spool_flatfile_instr spool_flatfile_instr_conf_sublist = 
 {

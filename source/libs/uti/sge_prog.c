@@ -93,7 +93,8 @@ const char *prognames[] =
    "qidl"		,       /* 35  */
    "unknown"	,       /* 36  */
    "qhost"		,       /* 37  */
-   "commdcntl"         /* 38  */
+   "commdcntl" ,       /* 38  */
+   "spoolinit"         /* 39  */
 };
  
 #if defined(SGE_MT)

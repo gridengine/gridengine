@@ -37,10 +37,16 @@
 set OPENSSL_HOME = /vol2/tools/SW/openssl-0.9.7b/$buildarch
 
 # 
-# OPENSSL_HOME the directory where the include and lib directory of openssl
-# is installed
+# POSTGRES_HOME the directory where the include and lib directory of 
+# PostgreSQL is installed
 #
 set POSTGRES_HOME = /vol2/tools/SW/postgresql-7.3.2/$buildarch
+
+# 
+# BERKELEYDB_HOME the directory where the include and lib directory of
+# Berkeley DB is installed
+#
+set BERKELEYDB_HOME = /vol2/tools/SW/db-4.1.25/$buildarch
 
 # 
 # KRB_HOME the directory where the include and lib directory of kerberos is

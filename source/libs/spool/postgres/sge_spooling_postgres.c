@@ -41,6 +41,7 @@
 
 #include "sge_answer.h"
 #include "sge_dstring.h"
+#include "sge_profiling.h"
 
 #include "sge_object.h"
 #include "sge_job.h"
@@ -295,7 +296,9 @@ spool_postgres_default_startup_func(lList **answer_list,
 
    /* connect to database */
    url = lGetString(rule, SPR_url);
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    connection = PQconnectdb(url);
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    if (PQstatus(connection) == CONNECTION_BAD) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
@@ -304,7 +307,9 @@ spool_postgres_default_startup_func(lList **answer_list,
       ret = false;
    } else {
 #ifndef POSTGRES_SYNCHRON
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       PQsetnonblocking(connection, 1);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
 #endif
       spool_database_set_handle(rule, connection);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
@@ -351,7 +356,9 @@ spool_postgres_default_startup_func(lList **answer_list,
 
    /* on error shutdown database connection */
    if (ret == false) {
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       PQfinish(connection);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       spool_database_set_handle(rule, NULL);
    }
 
@@ -406,7 +413,9 @@ spool_postgres_default_shutdown_func(lList **answer_list,
                               MSG_POSTGRES_NOCONNECTIONTOCLOSE_S, url);
       ret = false;
    } else {
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       PQfinish(connection);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       spool_database_set_handle(rule, NULL);
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_INFO, 
@@ -719,13 +728,16 @@ spool_postgres_create_table(lList **answer_list, PGconn *connection,
    return ret;
 }
 
+#ifndef POSTGRES_SYNCHRON
 static PGresult *
 spool_postgres_wait_for_result(lList **answer_list, PGconn *connection)
 {
    PGresult *ret = NULL;
    PGresult *next = NULL;
 
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    next = PQgetResult(connection);
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    while (next != NULL) {
       if (ret != NULL) {
          PQclear(ret);
@@ -741,7 +753,9 @@ spool_postgres_wait_for_result(lList **answer_list, PGconn *connection)
          PQclear(ret);
          ret = NULL;
       }
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       next = PQgetResult(connection);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    }
 
    return ret;
@@ -751,7 +765,8 @@ static bool
 spool_postgres_consume_results(lList **answer_list, PGconn *connection)
 {
    bool ret = true;
-   PGresult *res = spool_postgres_wait_for_result(answer_list, connection);
+   /* JG: TODO: error handling */
+   /*PGresult *res = */spool_postgres_wait_for_result(answer_list, connection);
 
    return ret;
 }
@@ -777,7 +792,7 @@ spool_postgres_get_query(const char *new_query)
 
    return ret;
 }
-
+#endif
 static bool 
 spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
                         const char *sql, bool wait)
@@ -792,7 +807,9 @@ spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
    DPRINTF(("SQL: %s\n", sql));
 
 #ifdef POSTGRES_SYNCHRON
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    res = PQexec(connection, sql);
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    if (res == NULL || PQresultStatus(res) != PGRES_COMMAND_OK) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
@@ -817,7 +834,11 @@ spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
    if (ret) {
       /* check if we can submit a new query */
       if (busy) {
-         if (PQconsumeInput(connection) == 0) {
+         int pqret;
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         pqret = PQconsumeInput(connection);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (pqret == 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_POSTGRES_COMMANDFAILED_S, 
@@ -834,9 +855,13 @@ spool_postgres_exec_sql(lList **answer_list, PGconn *connection,
 
    if (ret) {
       if (!busy) {
+         int pqret;
          DPRINTF(("submitting query\n"));
          /* submit previously stored and the new query */
-         if (PQsendQuery(connection, sql) == 0) {
+         PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         pqret = PQsendQuery(connection, sql);
+         PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+         if (pqret == 0) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_ERROR, 
                                     MSG_POSTGRES_COMMANDFAILED_SS, 
@@ -868,7 +893,9 @@ spool_postgres_exec_query(lList **answer_list, PGconn *connection,
    DPRINTF(("SQL: %s\n", sql));
 
 #ifdef POSTGRES_SYNCHRON
+   PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    res = PQexec(connection, sql);
+   PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
    if (res == NULL || PQresultStatus(res) != PGRES_TUPLES_OK) {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                               ANSWER_QUALITY_ERROR, 
@@ -882,7 +909,12 @@ spool_postgres_exec_query(lList **answer_list, PGconn *connection,
    sql = spool_postgres_get_query(sql);
    /* before submitting query: consume previous results */
    if (spool_postgres_consume_results(answer_list, connection)) {
-      if (PQsendQuery(connection, sql) == 0) {
+      int pqret;
+      PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+      pqret = PQsendQuery(connection, sql);
+      PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
+
+      if (pqret == 0) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                  ANSWER_QUALITY_ERROR, 
                                  MSG_POSTGRES_COMMANDFAILED_SS, 
@@ -2094,12 +2126,10 @@ spool_postgres_default_write_func(lList **answer_list,
    }
 
    if (fields == NULL) {
-#if 0
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
-                                 ANSWER_QUALITY_WARNING, 
-                                 MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
-                                 object_type_get_name(event_type));
-#endif
+      answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
+                              ANSWER_QUALITY_WARNING, 
+                              MSG_SPOOL_SPOOLINGOFXNOTSUPPORTED_S, 
+                              object_type_get_name(event_type));
       ret = false;
    }
 

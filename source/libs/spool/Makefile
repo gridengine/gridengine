@@ -35,6 +35,7 @@
 
 SPOOLLIB = libspool$(QIDLEXT)$(LIBEXT)
 
+include $(SDIR)/libs/spool/berkeleydb/Makefile
 include $(SDIR)/libs/spool/classic/Makefile
 include $(SDIR)/libs/spool/dynamic/Makefile
 include $(SDIR)/libs/spool/flatfile/Makefile
@@ -56,13 +57,13 @@ SPOOLLIB_OBJS = $(SPOOLLIB_SRC:.c=.o)
 ###############################################################################
 spoollib: $(SPOOLLIB) $(SPOOLING_DEPS)
 
-spoollib_clean: spooldlib_clean spoolclib_clean spoolflib_clean spoolplib_clean
+spoollib_clean: spooldlib_clean spoolblib_clean spoolclib_clean spoolflib_clean spoolplib_clean
 		$(RM) $(SPOOLLIB_OBJS) libspool.a libspool$(SHAREDEXT)
 
-spoollib_depend: spoolclib_depend spoolflib_depend spoolplib_depend
+spoollib_depend: spoolblib_depend spoolclib_depend spoolflib_depend spoolplib_depend
 		$(DEPEND) -f$(SPOOLLIB_DIR)/spool_dependencies $(SPOOLLIB_DIR)/*.c
 
-spoollib_messages: spoolclib_messages spoolflib_messages spoolplib_messages
+spoollib_messages: spoolblib_messages spoolclib_messages spoolflib_messages spoolplib_messages
 	@echo Creating $@
 	@for i in `ls $(SPOOLLIB_DIR)/*.c`; do \
 	   $(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ;\
@@ -103,6 +104,12 @@ sge_dirent.o   : $(SPOOLLIB_DIR)/sge_dirent.c
 
 #---------------------------------------------------------------------
 # test programs
+test_performance: test_performance.o sig_handlers.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) -o test_performance $(LFLAGS) test_performance.o sig_handlers.o $(SPOOLING_LIBS) $(SPOOLLIB) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(DLLIB) $(LIBS)
+
+test_performance.o: $(SPOOLLIB_DIR)/test_performance.c
+	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_performance.c
+
 test_sge_spooling: test_sge_spooling.o sig_handlers.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
 	$(CC) -o test_sge_spooling $(LFLAGS) test_sge_spooling.o sig_handlers.o $(SPOOLING_LIBS) $(SPOOLLIB) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(DLLIB) $(LIBS)
 

@@ -133,4 +133,11 @@ spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
 spooling_field *
 spool_free_spooling_fields(spooling_field *fields);
 
+bool
+spool_default_verify_func(lList **answer_list, 
+                          const lListElem *type, 
+                          const lListElem *rule,
+                          lListElem *object,
+                          const sge_object_type event_type);
+
 #endif /* __SGE_SPOOLING_UTILITIES_H */

@@ -1,4 +1,8 @@
-CR-2002-03-22-2  Bugfix:    qacct output
+AS-2002-03-22-0  Change:    reresolve_me_qualified_hostname() does not log
+                            anymore. Calling functions now do appropriate
+                            logging.
+
+CR-2002-03-22-2  Bugfix:    qacct output formatting
 
 AA-2002-03-22-3  Bugfix:    sharetree position of FindNext not visible fix
 

@@ -1,3 +1,7 @@
+CR-2003-02-26-1  Testsuite: - fixed problem for missing MSG_COLONNOTALLOWED macro 
+                              when testing SGE/EE 5.3. 
+                            - fixed bug in message macro translate() procedure
+
 CR-2003-02-26-0  Testsuite: - automatic update of the message macro file when 
                               testsuite can't find specified macro.
 

@@ -4741,9 +4741,14 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
   set UNKNOWN_RESOURCE2 [translate $CHECK_HOST 1 0 0 [sge_macro MSG_SCHEDD_JOBREQUESTSUNKOWNRESOURCE] ]
   set TO_MUCH_TASKS [translate $CHECK_HOST 1 0 0     [sge_macro MSG_JOB_MORETASKSTHAN_U] "*" ]
   set WARNING_OPTION_ALREADY_SET [translate $CHECK_HOST 1 0 0 [sge_macro MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S] "*"]
-  set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED] ]
-   
 
+  if { [resolve_version] >= 3 } {
+     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_COLONNOTALLOWED] ]
+  } else {
+     set help_translation  [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_COLON]]
+     set COLON_NOT_ALLOWED [translate $CHECK_HOST 1 0 0 [sge_macro MSG_GDI_KEYSTR_MIDCHAR_SC] "$help_translation" ":" ]
+  }
+   
   append USAGE " qsub"
 
   if { $show_args == 1 } {
@@ -4795,12 +4800,6 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
              set outtext $expect_out(0,string) 
              puts $CHECK_OUTPUT "string is: \"$outtext\""
              set do_again 1
-          }
-          -i $sp_id -- $COLON_NOT_ALLOWED {
-             puts $CHECK_OUTPUT "Colon not allowed in account string" 
-             set outtext $expect_out(0,string) 
-             puts $CHECK_OUTPUT "string is: \"$outtext\""
-             set return_value -1
           }
           -i $sp_id -- $JOB_SUBMITTED {
              set job_id_pos [ string first "__JOB_ID__" $JOB_SUBMITTED_DUMMY ]
@@ -5053,6 +5052,9 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           -i $sp_id -- $ERROR_OPENING {
              set return_value -16
           }
+          -i $sp_id -- $COLON_NOT_ALLOWED {
+             set return_value -17
+          }
         }
      }
  
@@ -5082,6 +5084,7 @@ proc submit_job { args {do_error_check 1} {submit_timeout 60} {host ""} {user ""
           "-14" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-15" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
           "-16" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-17" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
@@ -5133,6 +5136,7 @@ proc get_submit_error { error_id } {
       "-14" { return "non-ambiguous jobnet predecessor - error" }
       "-15" { return "job violates reference unambiguousness - error" }
       "-16" { return "error opening file - error" }
+      "-17" { return "colon not allowed in account string - error" }
       default { return "unknown error" }
    }
 }

@@ -905,6 +905,13 @@ proc translate { host remove_control_signs is_script no_input_parsing msg_txt { 
          set spec_start_string [string range $msg_text $s_specifier end]
          set spec_end__string  [string first "s" $spec_start_string]
          set spec_end__decimal [string first "d" $spec_start_string]
+         set spec_end__character [string first "c" $spec_start_string]
+         if { $spec_end__character >= 0 } {
+            if { $spec_end__character < $spec_end__decimal  } {
+               set spec_end__decimal $spec_end__character
+            }
+         }
+
          if { $spec_end__string >= 0 && $spec_end__decimal >= 0 } {
             if { $spec_end__string < $spec_end__decimal } {
                set spec_end $spec_end__string

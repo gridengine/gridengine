@@ -97,7 +97,7 @@ static void dump_eventlist(lList *event_list)
             job_status = lGetUlong(ep, JAT_status);
             task_running = (job_status==JRUNNING || job_status==JTRANSITING);
             if (task_running) {
-               fprintf(stdout,"JOB_START (%ld.%ld:ECL_TIME=%ld)\n", job_id ,task_id,timestamp);
+               fprintf(stdout,"JOB_START (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id ,task_id,u32c(timestamp));
                fflush(stdout);  
                Global_jobs_running++;
             }           
@@ -105,7 +105,7 @@ static void dump_eventlist(lList *event_list)
          case sgeE_JOB_FINAL_USAGE:
             job_id = lGetUlong(event, ET_intkey);
             task_id = lGetUlong(event, ET_intkey2);
-            fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME=%ld)\n", job_id, task_id, timestamp);
+            fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id, u32c(timestamp));
             Global_jobs_running--;
             fflush(stdout);  
             break;
@@ -118,14 +118,14 @@ static void dump_eventlist(lList *event_list)
             if (job_project == NULL) {
                job_project = "NONE";
             }
-            fprintf(stdout,"JOB_ADD (%ld.%ld:ECL_TIME=%ld:project=%s)\n", job_id, task_id, timestamp,job_project);
+            fprintf(stdout,"JOB_ADD (%ld.%ld:ECL_TIME="U32CFormat":project=%s)\n", job_id, task_id, u32c(timestamp),job_project);
             Global_jobs_registered++;
             fflush(stdout);  
             break;
          case sgeE_JOB_DEL:
             job_id = lGetUlong(event, ET_intkey);
             task_id = lGetUlong(event, ET_intkey2);
-            fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME=%ld)\n", job_id, task_id,timestamp);
+            fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
             Global_jobs_registered--;
             fflush(stdout);  
             break;
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
          }
       }*/
       timestamp = sge_get_gmt();
-      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME=%ld)\n",Global_jobs_running,Global_jobs_registered,timestamp);
+      fprintf(stdout,"ECL_STATE (jobs_running=%ld:jobs_registered=%ld:ECL_TIME="U32CFormat")\n",Global_jobs_running,Global_jobs_registered,u32c(timestamp));
       fflush(stdout);  
    }
 

@@ -359,15 +359,10 @@ execd_get_wallclock_limit(lList *gdil_list, int limit_nm, u_long32 now)
 #define SIGNAL_RESEND_INTERVAL 1
 #define OLD_JOB_INTERVAL 60
 
-int execd_ck_to_do(
-struct dispatch_entry *de,
-sge_pack_buffer *pb,
-sge_pack_buffer *apb,
-u_long *rcvtimeout,
-int *synchron,
-char *err_str,
-int answer_error 
-) {
+int 
+execd_ck_to_do(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb,
+               u_long *rcvtimeout, int *synchron, char *err_str, int answer_error) 
+{
    u_long32 now;
    static u_long next_usage = 0;
    static u_long next_signal = 0;

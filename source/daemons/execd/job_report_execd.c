@@ -267,15 +267,10 @@ RETURN
    Typical dispatcher service function return values
 
    ------------------------------------------------------------ */
-int execd_c_ack(
-struct dispatch_entry *de,
-sge_pack_buffer *pb,
-sge_pack_buffer *apb,
-u_long *rcvtimeout,
-int *synchron,
-char *err_str,
-int answer_error 
-) {
+int 
+execd_c_ack(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb,
+            u_long *rcvtimeout, int *synchron, char *err_str, int answer_error) 
+{
    u_long32 ack_type;
    u_long32 jobid, jataskid;
    lListElem *jr;

@@ -36,6 +36,10 @@
 #include <time.h>
 #include <sys/time.h>
 
+#ifdef SOLARISAMD64
+#  include <sys/stream.h>
+#endif   
+
 #include "cull_list.h"
 #include "sge.h"
 #include "sge_log.h"

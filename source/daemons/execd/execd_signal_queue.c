@@ -80,13 +80,9 @@ extern volatile int shut_me_down;
 
  counterpart in qmaster: c_qmod.c
  **************************************************************************/
-int execd_signal_queue(de, pb, apb, rcvtimeout, synchron, err_str, answer_error)
-struct dispatch_entry *de;
-sge_pack_buffer *pb, *apb; 
-u_long *rcvtimeout; 
-int *synchron; 
-char *err_str; 
-int answer_error;
+int 
+execd_signal_queue(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, 
+                   u_long *rcvtimeout, int *synchron, char *err_str, int answer_error)
 {
    lListElem *jep;
    int found = 0;

@@ -769,8 +769,9 @@ DTRACE;
 DTRACE;
 
    /* for debugging: never start job but report a failure */
-   if (getenv("FAILURE_BEFORE_START"))
+   if (getenv("FAILURE_BEFORE_START")) {
       execd_job_start_failure(jep, jatep, petep, "FAILURE_BEFORE_START", 0);
+   }   
 
    if(sge_make_pe_task_active_dir(jep, jatep, petep, NULL) == NULL) {
      DEXIT;

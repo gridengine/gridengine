@@ -57,13 +57,9 @@ extern volatile int jobs_to_start;
  get a list of jobid/tickets tuples and pass them to the PTF
  *************************************************************************/
 
-int execd_ticket(de, pb, apb, rcvtimeout, synchron, err_str, answer_error)
-struct dispatch_entry *de;
-sge_pack_buffer *pb, *apb; 
-u_long *rcvtimeout; 
-int *synchron; 
-char *err_str; 
-int answer_error;
+int 
+execd_ticket(struct dispatch_entry *de, sge_pack_buffer *pb, sge_pack_buffer *apb, 
+             u_long *rcvtimeout, int *synchron, char *err_str, int answer_error)
 {
    u_long32 jobid, jataskid;
    double ticket;

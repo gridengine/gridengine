@@ -618,8 +618,9 @@ void schedd_mes_add_global(u_long32 message_number, ...)
 #endif
 
       /* Add scheduling info to structure */
-      if (!sme)
+      if (!sme) {
          schedd_mes_initialize();
+      }   
 
       mes = lCreateElem(MES_Type);
       lSetUlong(mes, MES_message_number, message_number);

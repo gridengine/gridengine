@@ -1,0 +1,1280 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+# global variables ... (defined in main check routine, but you can use it)
+#
+# Define the global veriables to give them back
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://www.gridengine.sunsource.net/license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+global check_name check_description check_needs check_functions check_errno check_errstr 
+set check_name         "ckpt_migration_test"
+set check_description(0)  "MPI based parallel application with checkpointing and event based migration"
+set check_needs        "init_core_system"                   ;# dependencies of this check (name of other check)
+
+set check_functions    ""           ;# functions to call (in order)
+lappend check_functions "setup_queues"
+lappend check_functions "setup_pe"
+lappend check_functions "setup_checkpointing"
+lappend check_functions "start_checkpoint_job"
+lappend check_functions "check_slave_migration"
+lappend check_functions "check_master_migration"
+lappend check_functions "check_calendarsuspend_master_migration"
+lappend check_functions "check_calendarsuspend_slave_migration"
+lappend check_functions "check_calendardisable_migration_on_slavequeue_suspend"
+lappend check_functions "check_calendardisable_migration_on_slavequeue_threshold_suspend"
+lappend check_functions "clean_up_checkpoint_job"
+lappend check_functions "clean_up_checkpointing"
+lappend check_functions "clean_up_pe"
+lappend check_functions "clean_up_queues"
+
+
+#global test variables
+global host1 host2 q1 q2 q3 q4 migration_pe_name migration_ckpt_name CHECK_CORE_EXECD
+global checkpoint_job_id 
+
+set host1 [lindex $CHECK_CORE_EXECD 0] 
+set host2 [lindex $CHECK_CORE_EXECD 1]
+set q1 "ckpt_mig-1"
+set q2 "ckpt_mig-2"
+set q3 "ckpt_mig-3"
+set q4 "ckpt_mig-4"
+set migration_pe_name "ckpt_mig_pe"
+set migration_ckpt_name "ckpt_mig_ckptobj"
+set checkpoint_job_id -1
+
+
+# Global Procedures
+
+#                                                             max. column:     |
+#****** migration/calendardisable_queue() ******
+# 
+#  NAME
+#     calendardisable_queue -- ??? 
+#
+#  SYNOPSIS
+#     calendardisable_queue { queue_list } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     queue_list - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc calendardisable_queue { queue_list } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH
+# returns
+# -1 on error
+# 0 on success
+
+  log_user 1
+   set return_value [mqattr "calendar" "always_disabled" "$queue_list"]
+  return $return_value
+}
+
+#                                                             max. column:     |
+#****** migration/calendarclear_queue() ******
+# 
+#  NAME
+#     calendarclear_queue -- ??? 
+#
+#  SYNOPSIS
+#     calendarclear_queue { queue_list } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     queue_list - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc calendarclear_queue { queue_list } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH
+# returns
+# -1 on error
+# 0 on success
+
+  log_user 1
+   set return_value [mqattr "calendar" "NONE" "$queue_list"]
+  return $return_value
+}
+
+#                                                             max. column:     |
+#****** migration/calendarsuspend_queue() ******
+# 
+#  NAME
+#     calendarsuspend_queue -- ??? 
+#
+#  SYNOPSIS
+#     calendarsuspend_queue { queue_list } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     queue_list - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc calendarsuspend_queue { queue_list } {
+  global CHECK_PRODUCT_ROOT CHECK_ARCH
+# returns
+# -1 on error
+# 0 on success
+
+  log_user 1
+   set return_value [mqattr "calendar" "always_suspend" "$queue_list"]
+  return $return_value
+}
+
+#                                                             max. column:     |
+#****** migration/threshold_suspend_queue() ******
+# 
+#  NAME
+#     threshold_suspend_queue -- ??? 
+#
+#  SYNOPSIS
+#     threshold_suspend_queue { queue_list } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     queue_list - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc threshold_suspend_queue { queue_list } {
+   log_user 1
+   set return_value [mqattr "suspend_thresholds" "np_load_avg=-1" "$queue_list"]
+   return $return_value
+}
+
+#                                                             max. column:     |
+#****** migration/threshold_suspend_queue_clear() ******
+# 
+#  NAME
+#     threshold_suspend_queue_clear -- ??? 
+#
+#  SYNOPSIS
+#     threshold_suspend_queue_clear { queue_list } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     queue_list - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc threshold_suspend_queue_clear { queue_list } {
+   log_user 1
+   set return_value [mqattr "suspend_thresholds" "NONE" "$queue_list"]
+   return $return_value
+}
+
+
+#                                                             max. column:     |
+#****** migration/start_checkpoint_job() ******
+# 
+#  NAME
+#     start_checkpoint_job -- ??? 
+#
+#  SYNOPSIS
+#     start_checkpoint_job { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc start_checkpoint_job {} {
+
+   global CHECK_ACTUAL_TEST_PATH checkpoint_job_id CHECK_OUTPUT
+
+   set current_directory [get_current_working_dir]
+   cd $CHECK_ACTUAL_TEST_PATH
+   puts $CHECK_OUTPUT "Current directory is \"$current_directory\""
+   set jobargs "-pe ckpt_mig_pe 2 -cwd -ckpt ckpt_mig_ckptobj checkpt_job.sh"
+   
+   set result [ submit_job $jobargs ]
+
+   cd $current_directory
+
+   if { $result < 0 } {
+       set_error -1 "start_checkpoint_job - error starting checkpoint job" 
+       return
+   } 
+   set checkpoint_job_id $result 
+   set result [ wait_for_jobstart $result "DEMO" 300]
+
+   if { $result != 0 } {
+       set_error -1 "start_checkpoint_job - job $result doesn't start" 
+       return
+   }   
+ 
+   sleep 5  
+ 
+   set_error 0 "start_checkpoint_job - no errors"  
+    
+}
+
+#                                                             max. column:     |
+#****** migration/check_slave_migration() ******
+# 
+#  NAME
+#     check_slave_migration -- ??? 
+#
+#  SYNOPSIS
+#     check_slave_migration { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_slave_migration {} {
+
+   global checkpoint_job_id CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+
+   # find out where the slave task is running
+   set slave_queue [slave_queue_of $checkpoint_job_id]
+
+   if { [string compare $slave_queue ""] == 0 } {
+      set_error -1 "check_slave_migration  - slave queue not found"   
+      return
+   }  
+
+   # now suspend the slave queue
+   set result [ suspend_queue $slave_queue] 
+
+   if { $result != 0 } {
+      set_error -1 "check_slave_migration  - could not suspend queue $slave_queue"   
+      return
+   }
+
+   # wait for migration command
+   set wasok [wait_for_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_slave_migration  - timeout while waiting for migration command"   
+      return
+   }
+
+   set wasok [wait_for_jobpending $checkpoint_job_id "DEMO" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_slave_migration  - timeout while waiting for job to get in pending state"   
+      return
+   }
+
+    # delete migratewascalled - file
+   delete_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled"
+
+   # now unsuspend queue again
+   set result [ unsuspend_queue $slave_queue] 
+
+   if { $result != 0 } {
+      set_error -1 "check_slave_migration  - could not unsuspend queue $slave_queue"   
+      return
+   }
+
+   # wait for restart  
+   set result [ wait_for_jobstart $checkpoint_job_id "DEMO" 300]
+
+   if { $result != 0 } {
+       set_error -1 "check_slave_migration - job $checkpoint_job_id doesn't restart" 
+       return
+   }   
+
+   sleep 5
+
+   set_error 0 "check_slave_migration  - no errors"  
+}
+
+
+#                                                             max. column:     |
+#****** migration/check_calendardisable_migration_on_slavequeue_suspend() ******
+# 
+#  NAME
+#     check_calendardisable_migration_on_slavequeue_suspend -- ??? 
+#
+#  SYNOPSIS
+#     check_calendardisable_migration_on_slavequeue_suspend { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_calendardisable_migration_on_slavequeue_suspend {} {
+
+   global checkpoint_job_id CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH q1 q2
+
+   # find out where the slave task is running
+   set slave_queue [slave_queue_of $checkpoint_job_id]
+  
+   if { [string compare $slave_queue ""] == 0 } {
+      set_error -1 "check_slave_migration  - slave queue not found"   
+      return
+   }  
+   
+   set result [calendardisable_queue "$q1 $q2"]  ;# pass list of queues to procedure
+  
+   if { $result != 0 } {
+      set_error -1 "check_calendardisable_queue - could not calendardisable queue(s)"   
+      return
+   }
+
+   # now suspend the slave queue
+   set result [ suspend_queue $slave_queue] 
+   if { $result != 0 } {
+      set_error -1 "check_slave_migration  - could not suspend queue $slave_queue"   
+      return
+   }
+
+   set wasok [wait_for_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_slave_migration  - timeout while waiting for migration command"   
+      return
+   }
+
+   set wasok [wait_for_jobpending $checkpoint_job_id "DEMO" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_slave_migration  - timeout while waiting for job to get in pending state"   
+      return
+   }
+
+    # delete migratewascalled - file
+   delete_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled"
+
+   # now unsuspend queue again
+   set result [ unsuspend_queue $slave_queue] 
+   if { $result != 0 } {
+      set_error -1 "check_slave_migration  - could not unsuspend queue $slave_queue"   
+      return
+   }
+
+   set result [calendarclear_queue "$q1 $q2"]  ;# pass list of queues to procedure
+  
+    # wait for restart  
+    set result [ wait_for_jobstart $checkpoint_job_id "DEMO" 300]
+ 
+    if { $result != 0 } {
+        set_error -1 "check_slave_migration - job $checkpoint_job_id doesn't restart" 
+        return
+    }   
+ 
+    sleep 5
+ 
+   set_error 0 "check_slave_migration  - no errors"  
+}
+
+#                                                             max. column:     |
+#****** migration/check_calendardisable_migration_on_slavequeue_threshold_suspend() ******
+# 
+#  NAME
+#     check_calendardisable_migration_on_slavequeue_threshold_suspend -- ??? 
+#
+#  SYNOPSIS
+#     check_calendardisable_migration_on_slavequeue_threshold_suspend { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_calendardisable_migration_on_slavequeue_threshold_suspend {} {
+
+   global checkpoint_job_id CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH q1 q2
+
+   # find out where the slave task is running
+   set slave_queue [slave_queue_of $checkpoint_job_id]
+  
+   if { [string compare $slave_queue ""] == 0 } {
+      set_error -1 "check_slave_migration  - slave queue not found"   
+      return
+   }  
+   
+   set result [calendardisable_queue "$q1 $q2"]  ;# pass list of queues to procedure
+  
+   if { $result != 0 } {
+      set_error -1 "check_calendardisable_queue - could not calendardisable queue(s)"   
+      return
+   }
+
+   # now threshold suspend the slave queue
+   set result [ threshold_suspend_queue $slave_queue] 
+   if { $result != 0 } {
+      set_error -1 "check_slave_migration  - could not threshold suspend queue $slave_queue"   
+      return
+   }
+
+   set wasok [wait_for_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_slave_migration  - timeout while waiting for migration command"   
+      return
+   }
+
+   set wasok [wait_for_jobpending $checkpoint_job_id "DEMO" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_slave_migration  - timeout while waiting for job to get in pending state"   
+      return
+   }
+
+    # delete migratewascalled - file
+   delete_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled"
+
+   # now unsuspend queue again
+   set result [ threshold_suspend_queue_clear $slave_queue] 
+   if { $result != 0 } {
+      set_error -1 "check_slave_migration  - could not threshold unsuspend queue $slave_queue"   
+      return
+   }
+
+   set result [calendarclear_queue "$q1 $q2"]  ;# pass list of queues to procedure
+  
+    # wait for restart  
+    set result [ wait_for_jobstart $checkpoint_job_id "DEMO" 300]
+ 
+    if { $result != 0 } {
+        set_error -1 "check_slave_migration - job $checkpoint_job_id doesn't restart" 
+        return
+    }   
+ 
+    sleep 5
+ 
+   set_error 0 "check_slave_migration  - no errors"  
+}
+
+
+#                                                             max. column:     |
+#****** migration/check_master_migration() ******
+# 
+#  NAME
+#     check_master_migration -- ??? 
+#
+#  SYNOPSIS
+#     check_master_migration { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_master_migration {} {
+   
+   global checkpoint_job_id CHECK_OUTPUT CHECK_ACTUAL_TEST_PATH
+
+   # find out where the master task is running
+   set master_queue [master_queue_of $checkpoint_job_id]
+   
+   if { [string compare $master_queue ""] == 0 } {
+      set_error -1 "check_master_migration  - master queue not found"   
+      return
+   }  
+
+   # now suspend the master queue
+   set result [ suspend_queue $master_queue] 
+
+   if { $result != 0 } {
+      set_error -1 "check_master_migration  - could not suspend queue $master_queue"   
+      return
+   }
+
+   # wait for migration command
+
+   set wasok [wait_for_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_slave_migration  - timeout while waiting for migration command"   
+      return
+   }
+
+   # check if job is now pending
+   set wasok [wait_for_jobpending $checkpoint_job_id "DEMO" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_slave_migration  - timeout while waiting for job to get in pending state"   
+      return
+   }
+
+    # delete migratewascalled - file
+   delete_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled"
+
+   # now unsuspend queue again
+   set result [ unsuspend_queue $master_queue] 
+
+   if { $result != 0 } {
+      set_error -1 "check_master_migration  - could not unsuspend queue $master_queue"   
+      return
+   }
+
+   # wait for restart  
+   set result [ wait_for_jobstart $checkpoint_job_id "DEMO" 300]
+
+   if { $result != 0 } {
+       set_error -1 "check_master_migration - job $checkpoint_job_id doesn't restart" 
+       return
+   }   
+
+   sleep 5
+
+   set_error 0 "check_master_migration  - no errors"  
+}
+
+
+#                                                             max. column:     |
+#****** migration/check_calendarsuspend_master_migration() ******
+# 
+#  NAME
+#     check_calendarsuspend_master_migration -- ??? 
+#
+#  SYNOPSIS
+#     check_calendarsuspend_master_migration { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_calendarsuspend_master_migration {} {
+   global checkpoint_job_id CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT
+
+   # find out where the master task is running
+   set master_queue [master_queue_of $checkpoint_job_id]
+
+   if { [string compare $master_queue ""] == 0 } {
+      set_error -1 "check_calendarsuspend_master_migration  - master queue not found"   
+      return
+   }  
+  
+  # now calendarsuspend the master queue
+   set result [ calendarsuspend_queue $master_queue ] 
+   
+   if { $result != 0 } {
+      set_error -1 "check_calendarsuspend_master_migration  - could not calendarsuspend queue $master_queue" 
+      return
+   }
+
+   # wait for migration command
+   set wasok [wait_for_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_slave_migration  - timeout while waiting for migration command"   
+      return
+   }
+
+   # check if job is now pending
+   set wasok [ wait_for_jobpending $checkpoint_job_id "DEMO" 300]
+
+   if { $wasok != 0 } {
+      set_error -1 "check_calendarsuspend_master_migration  - timeout while waiting for job to get in pending state"   
+      return
+   }
+
+    # delete migratewascalled - file
+   delete_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled"
+
+  # now calendar un-suspend the master queue
+   set result [ calendarclear_queue $master_queue ] 
+   
+   if { $result != 0 } {
+      set_error -1 "check_calendarsuspend_master_migration  - could not calendar un- suspend queue $master_queue"   
+      return
+   }
+
+   # wait for restart  
+   set result [ wait_for_jobstart $checkpoint_job_id "DEMO" 300]
+
+   if { $result != 0 } {
+       set_error -1 "check_calendarsuspend_master_migration - job $checkpoint_job_id doesn't restart" 
+       return
+   }   
+   sleep 5
+
+   set_error 0 "check_calendarsuspend_master_migration  - no errors"  
+}
+
+
+#                                                             max. column:     |
+#****** migration/check_calendarsuspend_slave_migration() ******
+# 
+#  NAME
+#     check_calendarsuspend_slave_migration -- ??? 
+#
+#  SYNOPSIS
+#     check_calendarsuspend_slave_migration { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_calendarsuspend_slave_migration {} {
+   global checkpoint_job_id CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT
+
+   # find out where the slave task is running
+   set slave_queue [slave_queue_of $checkpoint_job_id]
+
+   if { [string compare $slave_queue ""] == 0 } {
+      set_error -1 "check_calendarsuspend_slave_migration  - slave queue not found"   
+      return
+   }  
+
+   # now calendarsuspend the slave queue
+   set result [ calendarsuspend_queue $slave_queue ] 
+   
+   if { $result != 0 } {
+      set_error -1 "check_calendarsuspend_slave_migration  - could not calendarsuspend queue $slave_queue"   
+      return
+   }
+
+   # wait for migration command
+   set wasok [ wait_for_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled" 300] 
+
+   if { $wasok != 0 } {
+      set_error -1 "check_calendarsuspend_slave_migration  - timeout while waiting for migration command"   
+      return
+   }
+
+   # check if job is now pending
+   set wasok [ wait_for_jobpending $checkpoint_job_id "DEMO" 300]
+
+   if { $wasok != 0 } {
+      set_error -1 "check_calendarsuspend_slave_migration  - timeout while waiting for job to get in pending state"   
+      return
+   }
+
+   # delete migratewascalled - file
+   delete_file "$CHECK_ACTUAL_TEST_PATH/migratewascalled"
+
+   # now calendar un-suspend the slave queue
+   set queue_param(calendar)                  "NONE"  ;# queue always in calendar suspend
+
+   set result [ set_queue $slave_queue queue_param ] 
+   if { $result != 0 } {
+      set_error -1 "check_calendarsuspend_slave_migration  - could not calendar un- suspend queue $slave_queue"   
+      return
+   }
+
+   # wait for restart  
+   set result [ wait_for_jobstart $checkpoint_job_id "DEMO" 300]
+
+   if { $result != 0 } {
+       set_error -1 "check_calendarsuspend_slave_migration - job $checkpoint_job_id doesn't restart" 
+       return
+   }   
+   sleep 5
+
+   set_error 0 "check_calendarsuspend_slave_migration  - no errors"  
+}
+
+
+
+#                                                             max. column:     |
+#****** migration/clean_up_checkpoint_job() ******
+# 
+#  NAME
+#     clean_up_checkpoint_job -- ??? 
+#
+#  SYNOPSIS
+#     clean_up_checkpoint_job { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc clean_up_checkpoint_job {} {
+   global checkpoint_job_id CHECK_ACTUAL_TEST_PATH CHECK_OUTPUT
+
+   if { $checkpoint_job_id < 0 } {
+      set_error -1 "cleanup_checkpoint_job - no checkpoint job started" 
+      return
+   }
+
+   set result [ delete_job $checkpoint_job_id ]
+   
+   if { $result != 0 } {
+      set_error -1 "cleanup_checkpoint_job - could not delete job $checkpoint_job_id" 
+      return
+   }
+
+   set result [ wait_for_jobend $checkpoint_job_id "DEMO" 300 ]
+
+   if {$result == -1} {
+      set_error -1 "cleanup_checkpoint_job - timeout while waiting for jobend of job $checkpoint_job_id" 
+      return
+   } 
+
+   set files [ glob -nocomplain $CHECK_ACTUAL_TEST_PATH/DEMO.* ] 
+  
+   foreach elem $files { 
+      delete_file $elem
+   }
+
+   set_error 0 "cleanup_checkpoint_job - no errors" 
+}
+
+#                                                             max. column:     |
+#****** migration/setup_checkpointing() ******
+# 
+#  NAME
+#     setup_checkpointing -- ??? 
+#
+#  SYNOPSIS
+#     setup_checkpointing { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc setup_checkpointing {} {
+  global host1 host2 q1 q2 q3 q4 migration_ckpt_name CHECK_ACTUAL_TEST_PATH
+
+  set ckpt_param(ckpt_name)         "$migration_ckpt_name"
+  set ckpt_param(interface)         "CPR"
+  set ckpt_param(ckpt_command)      "none"
+  set ckpt_param(migr_command)      "$CHECK_ACTUAL_TEST_PATH/migrate.sh"
+  set ckpt_param(restart_command)   "none"
+  set ckpt_param(clean_command)     "none"
+  set ckpt_param(ckpt_dir)          "/tmp"
+  set ckpt_param(queue_list)        "$q1 $q2"
+  set ckpt_param(signal)            "none"
+  set ckpt_param(when)              "sx"
+
+  set result [ add_checkpointobj "ckpt_param" ]
+  if { $result != 0 } {
+     set_error -1 "setup_checkpointing - could not add checkpoint ENV $migration_ckpt_name (result of add_checkpointobj: $result)"
+     return
+  }
+  set_error 0 "setup_checkpointing - no errors" 
+}
+
+#                                                             max. column:     |
+#****** migration/clean_up_checkpointing() ******
+# 
+#  NAME
+#     clean_up_checkpointing -- ??? 
+#
+#  SYNOPSIS
+#     clean_up_checkpointing { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc clean_up_checkpointing {} {
+  global host1 host2 q1 q2 q3 q4 migration_ckpt_name
+
+  set not_deleted ""
+  set error 0
+
+  set result [ del_checkpointobj $migration_ckpt_name ] 
+  if { $result != 0 } {
+    set not_deleted "$not_deleted $result"
+    incr error 1
+  }
+
+  if { $error != 0 } {
+     set_error -1 "clean_up_checkpointing - could not delete pe(s) $not_deleted"
+  }
+
+  set_error 0 "clean_up_checkpointing - no errors"
+}
+
+#                                                             max. column:     |
+#****** migration/setup_pe() ******
+# 
+#  NAME
+#     setup_pe -- ??? 
+#
+#  SYNOPSIS
+#     setup_pe { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc setup_pe {} {
+  global host1 host2 q1 q2 q3 q4 migration_pe_name
+
+  set pe_param(pe_name)           "$migration_pe_name"
+  set pe_param(queue_list)        "$q1 $q2"
+  set pe_param(slots)             "2"
+  set pe_param(user_lists)        "NONE"
+  set pe_param(xuser_lists)       "NONE"
+  set pe_param(start_proc_args)   "/bin/true"  
+  set pe_param(stop_proc_args)    "/bin/true"
+  set pe_param(allocation_rule)   "1" 
+  set pe_param(control_slaves)    "FALSE"
+  set pe_param(job_is_first_task) "TRUE"
+
+  set result [ add_pe pe_param ]
+  if { $result != 0 } {
+     set_error -1 "setup_pe - could not add PE $migration_pe_name (result of add_pe: $result)"
+     return
+  }
+  set_error 0 "setup_pe - no errors" 
+}
+
+
+#                                                             max. column:     |
+#****** migration/clean_up_pe() ******
+# 
+#  NAME
+#     clean_up_pe -- ??? 
+#
+#  SYNOPSIS
+#     clean_up_pe { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc clean_up_pe {} {
+  global host1 host2 q1 q2 q3 q4 migration_pe_name
+
+  set not_deleted ""
+  set error 0
+
+  set result [ del_pe $migration_pe_name ] 
+  if { $result != 0 } {
+    set not_deleted "$not_deleted $result"
+    incr error 1
+  }
+
+  if { $error != 0 } {
+     set_error -1 "clean_up_pe - could not delete pe(s) $not_deleted"
+  }
+
+  set_error 0 "clean_up_pe - no errors"
+}
+
+#                                                             max. column:     |
+#****** migration/setup_queues() ******
+# 
+#  NAME
+#     setup_queues -- ??? 
+#
+#  SYNOPSIS
+#     setup_queues { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc setup_queues {} {
+# we need SOLARIS64 and AIX4.3 machines !
+
+  global CHECK_CORE_EXECD host1 host2 q1 q2 q3 q4
+
+  if { [ llength $CHECK_CORE_EXECD ] < 2 } {
+     set_error -2 "setup_queues - need 2 execution daemons"
+     return
+  }
+
+  # queues on host 1
+  set q_param(qname)                 "$q1"
+  set q_param(hostname)              "$host1"
+  set q_param(load_thresholds)       "np_load_avg=7.00"
+  set q_param(migr_load_thresholds)  "np_load_avg=10.00"
+  set q_param(qtype)                 "BATCH PARALLEL CHECKPOINTING"
+  set q_param(suspend_thresholds)    "np_load_avg=7"            ;# migrate on suspend threshold
+  set q_param(nsuspend)              "1"
+  set q_param(suspend_interval)      "00:00:30"
+  
+  set result [ add_queue q_param ]
+
+  if { ($result != 0)  } {
+     set_error -1 "setup_queues - could not add queue $q1"
+     return
+  }
+
+  set q_param(qname)                 "$q3"
+  set result [ add_queue q_param ]
+  if { $result != 0  } {
+     set_error -1 "setup_queues - could not add queue $q3"
+     return
+  }
+
+  # queues on host 2
+  set q_param(qname)                 "$q2"
+  set q_param(hostname)              "$host2"
+  set result [ add_queue q_param ]
+  if { $result != 0  } {
+     set_error -1 "setup_queues - could not add queue $q3"
+     return
+  }
+  
+  set q_param(qname)                 "$q4"
+  set result [ add_queue q_param ]
+  if { $result != 0  } {
+     set_error -1 "setup_queues - could not add queue $q4"
+     return
+  } 
+
+  set_error 0 "setup_queues - no errors"
+}
+
+#                                                             max. column:     |
+#****** migration/clean_up_queues() ******
+# 
+#  NAME
+#     clean_up_queues -- ??? 
+#
+#  SYNOPSIS
+#     clean_up_queues { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc clean_up_queues {} {
+  global host1 host2 q1 q2 q3 q4
+
+  set not_deleted ""
+  set error 0
+
+  set result [ del_queue $q1 ] 
+  if { $result != 0 } {
+    set not_deleted "$not_deleted $result"
+    incr error 1
+  }
+  set result [ del_queue $q2 ] 
+  if { $result != 0 } {
+    set not_deleted "$not_deleted $result"
+    incr error 1
+  }
+  set result [ del_queue $q3 ] 
+  if { $result != 0 } {
+    set not_deleted "$not_deleted $result"
+    incr error 1
+  }
+  set result [ del_queue $q4 ] 
+  if { $result != 0 } {
+    set not_deleted "$not_deleted $result"
+    incr error 1
+  }
+
+  if { $error != 0 } {
+     set_error -1 "clean_up_queues - could not delete queue(s) $not_deleted"
+  }
+
+  set_error 0 "clean_up_queues - no errors"
+}

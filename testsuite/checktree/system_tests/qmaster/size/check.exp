@@ -1,0 +1,1263 @@
+#!/vol2/TCL_TK/glinux/bin/expect
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://www.gridengine.sunsource.net/license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
+
+# Define the global veriables to give them back
+global check_name check_description check_needs check_functions check_errno check_errstr 
+global check_root_access_needs
+global check_highest_level
+
+set check_root_access_needs  "yes"
+set check_name         "qmaster-size"
+set check_highest_level 400
+set check_description(0)    "check qmaster/schedd for memory leaks - functional test"
+set check_description(200)  "check qmaster/schedd for memory leaks - normal test"
+set check_description(400)  "check qmaster/schedd for memory leaks - long test"
+set check_needs        "init_core_system"       ;# dependencies of this check (name of other check)
+
+# define a level initialization procedure:
+set check_init_level_procedure "init_level"
+
+set check_functions     ""
+lappend check_functions {restart_system}               ;# restart to have initial size
+lappend check_functions {init_ps}                      ;# init ps commands, find pids
+lappend check_functions {check_size_config}            ;# set initial config
+lappend check_functions {check_idle}                   ;# wait for execd's to connect etc.
+lappend check_functions {check_qstat}                  ;# do qstats
+lappend check_functions {check_idle}                   ;# wait for system to stabilize
+lappend check_functions {check_miniworm}               ;# run miniworms
+lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
+lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+lappend check_functions {check_size_config_zombies}    ;# activate finished jobs
+lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+lappend check_functions {check_miniworm}               ;# run miniworms
+lappend check_functions {check_idle}                   ;# wait for system to stabilize
+lappend check_functions {check_flood}                  ;# flood of qsub's (sleeper)
+lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+lappend check_functions {check_size_cleanup}           ;# cleanup, restore initial config
+lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+lappend check_functions {check_miniworm}               ;# run miniworms
+lappend check_functions {check_idle}                   ;# wait for system to stabilize 
+
+# constants / global variables for monitor_size
+global MONITOR_SIZE_FILENAME MONITOR_SIZE_INTERVAL MONITOR_SIZE_ERROR
+global NUM_ZOMBIES
+global time_start last_size next_report size_unit
+
+set MONITOR_SIZE_ERROR 0
+
+set time_start [clock seconds]
+set last_size(master) 0
+set last_size(schedd) 0
+set next_report 0
+
+global check_idle_after
+set check_idle_after "startup"
+
+#                                                             max. column:     |
+#****** size/init_level() ******
+# 
+#  NAME
+#     init_level -- ??? 
+#
+#  SYNOPSIS
+#     init_level { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc init_level {} {
+   global CHECK_ACT_LEVEL
+
+   upvar MONITOR_SIZE_INTERVAL    monitor_size_interval
+   upvar SCHEDULE_INTERVAL        schedule_interval
+   upvar NUM_ZOMBIES              num_zombies
+   upvar CHECK_IDLE_DELAY         check_idle_delay
+   upvar CHECK_IDLE_DURATION      check_idle_duration
+   upvar CHECK_IDLE_INTERVAL      check_idle_interval
+   upvar CHECK_QSTAT_DELAY        check_qstat_delay
+   upvar CHECK_QSTAT_DURATION     check_qstat_duration
+   upvar CHECK_QSTAT_INTERVAL     check_qstat_interval
+   upvar CHECK_MINIWORM_TYPES     check_miniworm_types 
+   upvar CHECK_MINIWORM_DELAY     check_miniworm_delay 
+   upvar CHECK_MINIWORM_DURATION  check_miniworm_duration 
+   upvar CHECK_MINIWORM_INTERVAL  check_miniworm_interval
+   upvar CHECK_FLOOD_AMOUNTS      check_flood_amounts
+   upvar CHECK_FLOOD_TYPES        check_flood_types
+   upvar CHECK_FLOOD_INTERVAL     check_flood_interval
+   upvar check_idle_after         when
+
+   set when "startup"
+
+   switch -exact $CHECK_ACT_LEVEL {
+      0 {
+         set monitor_size_interval   10
+         set schedule_interval       "00:00:10"
+         set num_zombies             10
+         set check_idle_delay         5
+         set check_idle_duration     10
+         set check_idle_interval      5
+         set check_qstat_delay        5
+         set check_qstat_duration    10
+         set check_qstat_interval     5
+         set check_miniworm_types    "5"
+         set check_miniworm_delay    30
+         set check_miniworm_duration 30
+         set check_miniworm_interval 10
+         set check_flood_amounts     "10"
+         set check_flood_types       "1 5 10"
+         set check_flood_interval    10
+         return 0
+      }
+      200 {
+         set monitor_size_interval    60
+         set schedule_interval       "00:00:30"
+         set num_zombies             100
+         set check_idle_delay        120
+         set check_idle_duration     120
+         set check_idle_interval      10
+         set check_qstat_delay       120
+         set check_qstat_duration    120
+         set check_qstat_interval     10
+         set check_miniworm_types    "1 5 10 20 30 60 120"
+         set check_miniworm_delay    600
+         set check_miniworm_duration 600
+         set check_miniworm_interval  30
+         set check_flood_amounts     "10 100 10"
+         set check_flood_types       "5 10 20 30 60 120"
+         set check_flood_interval     30
+         return 0
+      }
+      400 {
+         set monitor_size_interval    300
+         set schedule_interval       "00:01:00"
+         set num_zombies             1000
+         set check_idle_delay         300
+         set check_idle_duration      120
+         set check_idle_interval       10
+         set check_qstat_delay        600
+         set check_qstat_duration     600
+         set check_qstat_interval      20
+         set check_miniworm_types    "1 5 10 20 30 60 120 300 600 1200"
+         set check_miniworm_delay    3600
+         set check_miniworm_duration 3600
+         set check_miniworm_interval   60
+         set check_flood_amounts     "10 100 1000 100 10"
+         set check_flood_types       "1 5 10 20 30 60 120 300 600 1200"
+         set check_flood_interval      60
+         return 0
+      }
+   }
+  
+   return -1
+}
+
+#                                                             max. column:     |
+#****** size/restart_system() ******
+# 
+#  NAME
+#     restart_system -- ??? 
+#
+#  SYNOPSIS
+#     restart_system { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc restart_system {} {
+   global CHECK_HOST CHECK_OUTPUT
+   global CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_ACTUAL_TEST_PATH CHECK_USER
+   global time_start MONITOR_SIZE_FILENAME CHECK_CORE_MASTER
+   global CHECK_ACT_LEVEL CHECK_HOST CHECK_PROTOCOL_DIR
+   global qmaster_spool_dir
+
+   if { [string compare $CHECK_HOST $CHECK_CORE_MASTER] != 0 } {
+     set_error "-3" "no need to run qmaster size test on execd host $CHECK_HOST"
+     return
+   }
+
+
+   # get qmaster spool dir
+   set qmaster_spool_dir [ get_qmaster_spool_dir ]
+
+   set MONITOR_SIZE_FILENAME $CHECK_PROTOCOL_DIR/qmaster_size.$CHECK_HOST.$CHECK_ACT_LEVEL.[clock format [clock seconds] -format "%Y%m%d%H%M"]
+
+   if { [string length $MONITOR_SIZE_FILENAME ] > 5} {
+      if [ file exists $MONITOR_SIZE_FILENAME ] {
+         delete_file $MONITOR_SIZE_FILENAME
+      }
+   } else {
+      add_proc_error "restart_system" "-1" "file name length of monitor size file should be longer than 5 characters"
+   }
+
+   monitor_header
+
+   shutdown_master_and_scheduler $CHECK_CORE_MASTER $qmaster_spool_dir
+
+   startup_qmaster 
+
+   set time [timestamp]
+   while { 1 } {
+      puts $CHECK_OUTPUT "waiting for startup of qmaster and scheduler ..."
+      sleep 5
+      set running [ are_master_and_scheduler_running $CHECK_CORE_MASTER $qmaster_spool_dir]
+      if { $running == 3 } {
+         break; 
+      }
+      set runtime [expr ( [timestamp] - $time) ]
+      if { $runtime >= 300 } {
+          add_proc_error "restart_system" -1 "timeout while waiting for startup of qmaster and scheduler"
+          break;
+      }
+   } 
+   
+   wait_for_load_from_all_queues 300
+   set time_start [clock seconds]
+   set_error 0 "ok"
+}
+
+
+
+#                                                             max. column:     |
+#****** size/init_ps() ******
+# 
+#  NAME
+#     init_ps -- ??? 
+#
+#  SYNOPSIS
+#     init_ps { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc init_ps {} {
+   global CHECK_ARCH CHECK_PRODUCT_ROOT
+   global cmd_ps size_unit
+   global qmaster_spool_dir
+
+   # get qmaster pid
+   set pid_file "$qmaster_spool_dir/qmaster.pid"
+   set qmaster_pid ""
+   for {set x 0} {$x < 10} {incr x} {
+      if [file exists $pid_file] {
+         if {[file size $pid_file] > 0 } {
+            set f [open $pid_file r]
+            gets $f qmaster_pid
+            close $f
+
+            if { $qmaster_pid != "" } { 
+               break
+            }
+         }
+      }   
+      sleep 2
+   }
+
+   # get schedd pid
+   set pid_file "$qmaster_spool_dir/schedd/schedd.pid"
+   set schedd_pid ""
+   for {set x 0} {$x < 10} {incr x} {
+      if [file exists $pid_file] {
+         if {[file size $pid_file] > 0 } {
+            set f [open $pid_file r]
+            gets $f schedd_pid
+            close $f
+
+            if { $schedd_pid != "" } { 
+               break
+            }
+         }
+      }   
+      sleep 2
+   }
+
+   if { $qmaster_pid == "" || $schedd_pid == ""} {
+      set_error 1 "could not evaluate pid of qmaster and schedd"
+      return
+   }
+  
+   # create ps command
+   switch -exact $CHECK_ARCH {
+      aix42 -
+      aix43 -
+      irix6 -
+      osf4 -
+      solaris -
+      solaris64 -
+      solaris86 -
+      tru64 {
+         set cmd_ps(master) "ps -p $qmaster_pid -o vsz | tail -1"
+         set cmd_ps(schedd) "ps -p $schedd_pid -o vsz | tail -1"
+         #set cmd_ps(master) "ps -eo 'pid vsz' | awk '{print \$1 \" \" \$2}' | grep '^$qmaster_pid ' | awk '{print \$2}'"
+         #set cmd_ps(schedd) "ps -eo 'pid vsz' | awk '{print \$1 \" \" \$2}' | grep '^$schedd_pid ' | awk '{print \$2}'"
+         set size_unit kB
+      }
+      alinux {
+         set cmd_ps(master) "ps lhp $qmaster_pid | awk '{print \$7}'"
+         set cmd_ps(schedd) "ps lhp $schedd_pid  | awk '{print \$7}'"
+         set size_unit kB
+      }
+      glinux {
+         set cmd_ps(master) "ps -p $qmaster_pid -h -o vsz"
+         set cmd_ps(schedd) "ps -p $schedd_pid -h -o vsz"
+         set size_unit kB
+      }
+      hp10 - 
+      hp11 {
+         set cmd_ps(master) "ps -p $qmaster_pid -l | tail -1 | awk '{print \$10}'"
+         set cmd_ps(schedd) "ps -p $schedd_pid  -l | tail -1 | awk '{print \$10}'"
+         set size_unit pages
+      }
+      default {
+         set_error -2 "this check has never been ported to architecture $CHECK_ARCH"
+         return
+      }
+   }
+
+   # try to execute ps command
+   set result [ catch { set size [get_size master] } output ]
+
+   if { $result != 0 } {
+      set_error 3 "executing ps command\n$cmd_ps(master)\nfailed\n$output"
+      return
+   }
+   
+   # everything ok
+   puts $cmd_ps(master)
+   puts $cmd_ps(schedd)
+
+   set_error 0 "initializing ps command ok, \ninitial size of qmaster is $size $size_unit"
+}
+
+#                                                             max. column:     |
+#****** size/get_size() ******
+# 
+#  NAME
+#     get_size -- ??? 
+#
+#  SYNOPSIS
+#     get_size { who } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     who - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc get_size {who} {
+   global cmd_ps CHECK_OUTPUT CHECK_ARCH
+
+   set result [catch {set size [exec /bin/sh -c $cmd_ps($who)]} output]
+
+   switch -exact $CHECK_ARCH {
+      osf4 -
+      tru64 {
+         set raw_size [string range $size 0 [expr [string length $size] - 2]]
+         set unit     [string range $size [expr [string length $size] - 1] end]
+         switch -exact $unit {
+            K {
+               set size [format "%.0f" $raw_size]
+            }
+            M {
+               set size [format "%.0f" [expr $raw_size * 1024]]
+            }
+            G {
+               set size [format "%.0f" [expr $raw_size * 1024 * 1024]]
+            }
+            default {
+               set size 0
+            }
+         }
+      }
+   }
+   
+   if { $result != 0 } {
+      puts $CHECK_OUTPUT $output
+      return 0
+   }
+
+   if { $size == "" } {
+      return 0
+   } else {
+      return $size
+   }   
+}
+
+#                                                             max. column:     |
+#****** size/monitor_header() ******
+# 
+#  NAME
+#     monitor_header -- ??? 
+#
+#  SYNOPSIS
+#     monitor_header { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc monitor_header {} {
+   global MONITOR_SIZE_FILENAME CHECK_ACT_LEVEL
+
+   set f [open $MONITOR_SIZE_FILENAME "w"]
+   puts $f [format "%s\t%s\t%s\t%s\t%s" "date/time" "size qmaster" "size schedd" "num jobs" "situation"]
+   close $f
+}
+
+
+#                                                             max. column:     |
+#****** size/monitor_size() ******
+# 
+#  NAME
+#     monitor_size -- ??? 
+#
+#  SYNOPSIS
+#     monitor_size { jobs {when ""} } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     jobs      - ??? 
+#     {when ""} - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc monitor_size {jobs {when ""}} {
+   global time_start 
+   global next_report last_size 
+   global MONITOR_SIZE_FILENAME MONITOR_SIZE_INTERVAL CHECK_ACT_LEVEL
+
+   set now  [clock seconds]
+   set size(master) [get_size master]
+   set size(schedd) [get_size schedd]
+
+   if { $last_size(master) != $size(master) ||
+        $last_size(schedd) != $size(schedd) ||
+        $now >= $next_report                || 
+        $when != ""} {
+      set f [open $MONITOR_SIZE_FILENAME "a"]
+      #puts $f [format "%ld\t%ld\t%ld\t%ld\t%s" [expr $now - $time_start] $size(master) $size(schedd) $jobs $when]
+      puts $f [format "%s\t%ld\t%ld\t%ld\t%s" [clock format $now -format "%m/%d/%Y %H:%M:%S"] $size(master) $size(schedd) $jobs $when]
+      close $f
+
+      set last_size(master) $size(master)
+      set last_size(schedd) $size(schedd)
+      set next_report [expr $now + $MONITOR_SIZE_INTERVAL]
+   }
+
+   return $size(master)
+}
+
+#                                                             max. column:     |
+#****** size/stabilize() ******
+# 
+#  NAME
+#     stabilize -- ??? 
+#
+#  SYNOPSIS
+#     stabilize { text delay interval commands } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     text     - ??? 
+#     delay    - ??? 
+#     interval - ??? 
+#     commands - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc stabilize {text delay interval commands} {
+   global CHECK_OUTPUT
+
+   puts $CHECK_OUTPUT "waiting $delay s for system to stabilize $text"
+
+   set end [expr [clock seconds] + $delay]
+   set now 0
+   while { $now < $end } {
+      foreach i $commands {
+         eval $i
+      }
+      monitor_size [get_job_count]
+      sleep $interval
+      set now [clock seconds]
+   }   
+}
+
+#                                                             max. column:     |
+#****** size/output_monitor_result() ******
+# 
+#  NAME
+#     output_monitor_result -- ??? 
+#
+#  SYNOPSIS
+#     output_monitor_result { start_size end_size } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     start_size - ??? 
+#     end_size   - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc output_monitor_result {start_size end_size} {
+   global MONITOR_SIZE_ERROR
+   global size_unit
+
+   if { $start_size < $end_size } {
+      set_error $MONITOR_SIZE_ERROR "size of qmaster increased from $start_size $size_unit to $end_size $size_unit" 
+   } else {
+      if { $start_size == $end_size } {
+         set_error 0 "size of qmaster remained $end_size $size_unit"
+      } else {
+         set_error 0 "size of qmaster reduced from $start_size $size_unit to $end_size $size_unit"
+      }
+   }
+}
+
+#                                                             max. column:     |
+#****** size/monitor() ******
+# 
+#  NAME
+#     monitor -- ??? 
+#
+#  SYNOPSIS
+#     monitor { text duration interval commands } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#     text     - ??? 
+#     duration - ??? 
+#     interval - ??? 
+#     commands - ??? 
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc monitor {text duration interval commands} {
+   global CHECK_OUTPUT
+   global size_unit
+
+   puts $CHECK_OUTPUT "monitoring size for $duration s $text"
+
+   set start_size [get_size master]
+   set now 0
+   set end [expr [clock seconds] + $duration]
+   while { $now < $end } {
+      foreach i $commands {
+         eval $i
+      }
+      set size [monitor_size [get_job_count]]
+      sleep $interval
+      set now [clock seconds]
+   }
+
+   output_monitor_result $start_size $size
+}
+
+#                                                             max. column:     |
+#****** size/check_idle() ******
+# 
+#  NAME
+#     check_idle -- ??? 
+#
+#  SYNOPSIS
+#     check_idle { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_idle {} {
+   global CHECK_OUTPUT
+
+   upvar check_idle_after    when
+   upvar CHECK_IDLE_DELAY    delay
+   upvar CHECK_IDLE_DURATION duration
+   upvar CHECK_IDLE_INTERVAL interval
+
+   puts $CHECK_OUTPUT "check_idle after $when"
+
+   monitor_size [get_job_count] "check_idle"
+   stabilize "doing nothing" $delay $interval {}
+   monitor "doing nothing" $duration $interval {}
+}
+
+#                                                             max. column:     |
+#****** size/qstat_test() ******
+# 
+#  NAME
+#     qstat_test -- ??? 
+#
+#  SYNOPSIS
+#     qstat_test { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc qstat_test {} {
+   global CHECK_ACTUAL_TEST_PATH
+   set result [catch {exec $CHECK_ACTUAL_TEST_PATH/sge_start.sh $CHECK_ACTUAL_TEST_PATH/qstat.sh} output]
+   if { $result != 0 } {
+      puts $output
+   }
+}
+
+#                                                             max. column:     |
+#****** size/check_qstat() ******
+# 
+#  NAME
+#     check_qstat -- ??? 
+#
+#  SYNOPSIS
+#     check_qstat { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_qstat {} {
+   global CHECK_OUTPUT
+
+   upvar check_idle_after when
+   upvar CHECK_QSTAT_DELAY    delay
+   upvar CHECK_QSTAT_DURATION duration
+   upvar CHECK_QSTAT_INTERVAL interval
+
+   monitor_size [get_job_count] "check_qstat" 
+   stabilize "doing qstat's" $delay $interval {qstat_test}
+   monitor "doing qstat's" $duration $interval {qstat_test}
+
+   set when "check qstat"
+}
+
+#                                                             max. column:     |
+#****** size/check_miniworm() ******
+# 
+#  NAME
+#     check_miniworm -- ??? 
+#
+#  SYNOPSIS
+#     check_miniworm { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_miniworm {} {
+   global CHECK_OUTPUT
+   global CHECK_ACTUAL_TEST_PATH CHECK_USER
+   global CHECK_CORE_EXECD
+   global size_unit
+
+   upvar check_idle_after when
+   upvar CHECK_MINIWORM_TYPES types
+   upvar CHECK_MINIWORM_DELAY    delay
+   upvar CHECK_MINIWORM_DURATION duration
+   upvar CHECK_MINIWORM_INTERVAL interval
+
+   monitor_size [get_job_count] "check_miniworm"
+
+   set last_job [get_last_jobid]
+   
+   puts $CHECK_OUTPUT "submitting miniworms with delays $types \[s\]"
+
+   foreach host $CHECK_CORE_EXECD {
+      foreach i $types {
+         catch {
+            exec $CHECK_ACTUAL_TEST_PATH/redir_stderr.sh $CHECK_ACTUAL_TEST_PATH/pminiworm.sh "$CHECK_ACTUAL_TEST_PATH" "$i" "0" "$i"
+         } output   
+      }
+   }
+
+   stabilize "doing qstat's while miniworms working" $delay  $interval {{set jobs [get_job_count]} {qstat_test}}
+   monitor "doing qstat's while miniworms working" $duration $interval {{set jobs [get_job_count]} {qstat_test}}
+
+   set queue_list {}
+   foreach i $CHECK_CORE_EXECD {
+      lappend queue_list $i.q
+   }
+   puts $CHECK_OUTPUT "disabling queues $queue_list"
+   exec "$CHECK_ACTUAL_TEST_PATH/sge_start.sh" "qmod" "-d" "$queue_list"
+   
+   puts $CHECK_OUTPUT "deleting miniworms"
+   
+   while {[get_job_count] > 0} {
+      exec "$CHECK_ACTUAL_TEST_PATH/sge_start.sh" "qdel" "-u" "$CHECK_USER"
+      sleep 5
+   }   
+   puts $CHECK_OUTPUT "enabling queues $queue_list"
+   exec "$CHECK_ACTUAL_TEST_PATH/sge_start.sh" "qmod" "-e" "$queue_list"
+
+   monitor_size [get_job_count] "check_miniworm finished [expr [get_last_jobid] - $last_job] jobs"
+
+   set when "check miniworm"
+}
+
+#                                                             max. column:     |
+#****** size/get_last_jobid() ******
+# 
+#  NAME
+#     get_last_jobid -- ??? 
+#
+#  SYNOPSIS
+#     get_last_jobid { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc get_last_jobid {} {
+   global qmaster_spool_dir
+
+   set seqfile $qmaster_spool_dir/jobseqnum
+
+   if {![file exists $seqfile]} {
+      set last_job 0
+   } else {
+      set f [open $seqfile r]
+      if {[gets $f last_job] <= 0} {
+         set last_job 0
+      }
+      close $f
+   }
+
+   return $last_job
+}
+
+#                                                             max. column:     |
+#****** size/get_job_count() ******
+# 
+#  NAME
+#     get_job_count -- ??? 
+#
+#  SYNOPSIS
+#     get_job_count { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc get_job_count {} {
+   global CHECK_ACTUAL_TEST_PATH
+   global qmaster_spool_dir
+
+   set job_count 0
+
+   catch {set job_count [llength [glob -directory $qmaster_spool_dir/jobs "*"]]}
+   return $job_count
+}
+
+#                                                             max. column:     |
+#****** size/check_flood() ******
+# 
+#  NAME
+#     check_flood -- ??? 
+#
+#  SYNOPSIS
+#     check_flood { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_flood {} {
+   global CHECK_OUTPUT CHECK_CORE_EXECD CHECK_ACTUAL_TEST_PATH CHECK_PRODUCT_TYPE CHECK_PRODUCT_ROOT CHECK_COMMD_PORT CHECK_USER
+
+   upvar check_idle_after when
+   upvar CHECK_FLOOD_AMOUNTS amounts
+   upvar CHECK_FLOOD_TYPES types
+   upvar CHECK_FLOOD_INTERVAL interval
+   upvar CHECK_IDLE_DELAY idle_delay
+   upvar CHECK_IDLE_INTERVAL idle_interval
+
+   set num_hosts [llength $CHECK_CORE_EXECD]
+
+   set queue_list {}
+   foreach i $CHECK_CORE_EXECD {
+      lappend queue_list $i.q
+   }
+
+   foreach amount $amounts {
+      set jobs_per_host [expr $amount / $num_hosts]
+      if {[expr $amount % $num_hosts] > 0} {
+         incr jobs_per_host
+      }
+
+      set jobs_total [expr $num_hosts * $jobs_per_host * [llength $types]]
+   
+      puts $CHECK_OUTPUT "disabling queues $queue_list"
+      exec "$CHECK_ACTUAL_TEST_PATH/sge_start.sh" "qmod" "-d" "$queue_list"
+
+      monitor_size [get_job_count] "check_flood submitting $jobs_total"
+
+      set spawn_list {}
+      set num 0
+      foreach host $CHECK_CORE_EXECD {
+         puts $CHECK_OUTPUT "start flooding qsubs on host $host"
+         spawn "rsh" "$host" "$CHECK_ACTUAL_TEST_PATH/flood_sleeper.sh" "$CHECK_PRODUCT_ROOT" "$jobs_per_host" "'$types'" "$num"
+         lappend spawn_list $spawn_id
+         incr num
+         puts $CHECK_OUTPUT "started flood submitter on host $host with spawn id $spawn_id"
+      }
+
+      while { [llength $spawn_list] > 0 } {
+         if {[info exists spawn_id]} {
+            unset spawn_id
+         }
+
+         set timeout $interval
+         expect {
+            full_buffer {
+               add_proc_error "check_flood" "-1" "buffer overflow please increment CHECK_EXPECT_MATCH_MAX_BUFFER value"
+            }
+            timeout {
+               puts $CHECK_OUTPUT "expect timeout during flood submit"
+            }
+            -i $spawn_list -- "finished submitting" {
+               set spawn_id $expect_out(spawn_id)
+               puts $CHECK_OUTPUT "reaping flood submitter with id $spawn_id"
+               catch {wait -i $spawn_id} output
+               catch {close -i $spawn_id} output
+               set index [lsearch -exact $spawn_list $spawn_id]
+               set spawn_list [lreplace $spawn_list $index $index]
+            }
+            -i $spawn_list default {
+               set spawn_id $expect_out(spawn_id)
+               puts $CHECK_OUTPUT "reaping failed flood submitter with id $spawn_id"
+               catch {close -i $spawn_id} output
+               catch {wait -i $spawn_id} output
+               set index [lsearch -exact $spawn_list $spawn_id]
+               set spawn_list [lreplace $spawn_list $index $index]
+            } 
+         }
+         monitor_size [get_job_count]
+      }
+
+      set size [monitor_size [get_job_count] "check_flood submitted $jobs_total"]
+
+      puts $CHECK_OUTPUT "enabling queues $queue_list"
+      exec "$CHECK_ACTUAL_TEST_PATH/sge_start.sh" "qmod" "-e" "$queue_list"
+     
+      puts $CHECK_OUTPUT "monitoring size until no jobs remain"
+      set start_size [get_size master]
+      set job_count [get_job_count]
+      while { $job_count > 0 } {
+         set size [monitor_size $job_count]
+         sleep $interval
+         set job_count [get_job_count]
+      }
+
+      monitor_size [get_job_count] "check_flood finished $jobs_total"
+
+      output_monitor_result $start_size $size
+
+      stabilize "before next flood of jobs" $idle_delay $idle_interval {}
+   }
+
+
+   set when "check flood"
+}
+
+#                                                             max. column:     |
+#****** size/check_size_config() ******
+# 
+#  NAME
+#     check_size_config -- ??? 
+#
+#  SYNOPSIS
+#     check_size_config { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_size_config {} {
+   upvar SCHEDULE_INTERVAL        schedule_interval
+
+   set default_array(schedule_interval)   $schedule_interval
+   set_schedd_config default_array
+
+   monitor_size [get_job_count] "set initial parameters"
+
+   set_error 0 "set schedule_interval to $schedule_interval"
+}
+
+#                                                             max. column:     |
+#****** size/check_size_config_zombies() ******
+# 
+#  NAME
+#     check_size_config_zombies -- ??? 
+#
+#  SYNOPSIS
+#     check_size_config_zombies { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_size_config_zombies {} {
+   global NUM_ZOMBIES
+
+   set default_array(finished_jobs)   $NUM_ZOMBIES
+   set_config default_array
+
+   monitor_size [get_job_count] "set finished jobs to $NUM_ZOMBIES"
+
+   set_error 0 "set number of finished jobs to $NUM_ZOMBIES"
+}
+
+#                                                             max. column:     |
+#****** size/check_size_cleanup() ******
+# 
+#  NAME
+#     check_size_cleanup -- ??? 
+#
+#  SYNOPSIS
+#     check_size_cleanup { } 
+#
+#  FUNCTION
+#     ??? 
+#
+#  INPUTS
+#
+#  RESULT
+#     ??? 
+#
+#  EXAMPLE
+#     ??? 
+#
+#  NOTES
+#     ??? 
+#
+#  BUGS
+#     ??? 
+#
+#  SEE ALSO
+#     ???/???
+#*******************************
+proc check_size_cleanup {} {
+
+   reset_schedd_config
+
+   set default_array(finished_jobs)   0
+   set_config default_array
+
+   monitor_size [get_job_count] "reset initial parameters"
+
+   set_error 0 "ok"
+}

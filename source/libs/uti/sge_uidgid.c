@@ -1229,9 +1229,7 @@ static void uidgid_state_init(struct uidgid_state_t* theState)
 ******************************************************************************/
 bool sge_is_start_user_root(void)
 {
-   uid_t uid, start_uid;
-   gid_t gid, start_gid;
-   bool ret = false;
+   uid_t start_uid;
 
    DENTER(UIDGID_LAYER, "sge_is_start_user_root");
  

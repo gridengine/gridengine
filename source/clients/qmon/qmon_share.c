@@ -1102,12 +1102,13 @@ XtPointer cld, cad;
    ul = qmonMirrorList(SGE_USER_LIST);
    pl = qmonMirrorList(SGE_PROJECT_LIST);
    
-   /* TODO: SG: needs a better solution */
-   /* do we have to do this Andre? */
-   if (!sconf_is()){
-      scl = lCopyList("", qmonMirrorList(SGE_SC_LIST));
-      sconf_set_config(&scl, NULL);
-   }
+   /* 
+   ** actual values from master  must be set for sconf_get_config() 
+   ** every time otherwise changes are not shown correctly in the dialog
+   ** IZ: 1058
+   */ 
+   scl = lCopyList("", qmonMirrorList(SGE_SC_LIST));
+   sconf_set_config(&scl, NULL);
 
    /*
     * add default user nodes for display purposes

@@ -1,3 +1,10 @@
+AA-2004-05-21-0: Bugfix:    halflife and compensation factor are not i
+                            refrshed on qmon
+                            compiler complaints
+                 IZ:        1058
+                 Changed:   qmon
+                 Review:    pending
+
 JG-2004-05-21-1: Testsuite: Testsuite now supports multiple cells.
 
 JG-2004-05-21-0: Bugfix:    - Event master didn't send list events (function 

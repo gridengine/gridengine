@@ -81,8 +81,13 @@ static void schedd_mes_find_others(lList *job_list,
        */
       for_each(message_elem, message_list) {
          lList *jid_list = lGetList(message_elem, MES_job_number_list);
-         u_long32 jid = lGetUlong(lFirst(jid_list), ULNG);
-         lRef jid_category = schedd_mes_get_category(jid, job_list);
+         u_long32 jid;
+         lRef jid_category; 
+/* TODO: not needed */         
+/*         if (!lFirst(jid_list))
+            continue;*/
+         jid = lGetUlong(lFirst(jid_list), ULNG);
+         jid_category = schedd_mes_get_category(jid, job_list);
 
          /*
           * Initilize jid_cat_list if not initialized
@@ -555,6 +560,7 @@ void schedd_mes_set_tmp_list(lListElem *category, int name, u_long32 job_number)
 
       job_id =  lCreateElem(ULNG_Type);
       lSetUlong(job_id, ULNG, job_number);
+      lAppendElem(job_id_list, job_id);
    }
 
    if (tmp_sme && tmp_list){

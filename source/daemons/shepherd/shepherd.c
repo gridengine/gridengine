@@ -942,15 +942,76 @@ int ckpt_type
                    &ckpt_interval);
    
    *truncate_flag = 0;  /* only first child truncates stderr/out */
+
+#if 1 /* EB: signals */
+   if (received_signal > 0 && received_signal != SIGALRM) {
+      int sig = SIGKILL;
+      char sig_str[80];
+
+      switch (received_signal) {
+      case SIGTTIN:
+         /* look in "signal" file */
+         fp = fopen("signal", "r");
+         if (fp) {
+            sig = fscanf(fp, "%d", &sig);
+            fclose(fp);
+         }
+         sprintf(sig_str, "%d", sig);
+         break;
+      case SIGTTOU:
+         sig = SIGTTOU;
+         strcpy(sig_str, "TTOU");
+         /* Look in checkpoint signal value */
+         break;
+      case SIGUSR1:
+         sig = SIGUSR1;
+         strcpy(sig_str, "USR1");
+         break;
+      case SIGUSR2:
+#ifdef SIGXCPU
+         sig = SIGXCPU;
+         strcpy(sig_str, "XCPU");
+#else
+         sig = SIGKILL;
+         strcpy(sig_str, "KILL as substitution of XCPU");
+#endif
+         break;
+      case SIGCONT:
+         /* identically */
+         sig = SIGCONT;
+         strcpy(sig_str, "CONT");
+         break;
+      case SIGWINCH:
+         sig = SIGSTOP;
+         strcpy(sig_str, "STOP");
+         break;
+      case SIGTSTP:
+         sig = SIGKILL;
+         strcpy(sig_str, "KILL");
+         if (timeout)
+            alarm(timeout);
+         break;
+      default:
+         sprintf(sig_str, "unmapable signal %d", received_signal);
+         break;
+      }
+
+      if (add_signal(sig)) {
+         sprintf(err_str, "failed to store received signal %d - buffer full", sig);
+         shepherd_trace(err_str);
+         received_signal = 0; 
+      }
+      received_signal = 0;
+   }
+#endif
  
    if (timeout) {
       sprintf(err_str, "using signal delivery delay of %d seconds", timeout);
       shepherd_trace(err_str);
       alarm(timeout);
-   }
-   else {
+   } else {
       /* there are signals to deliver. Give son() a chance to start job */
-      if (get_n_sigs()>0) {
+      if (get_n_sigs() > 0) {
          alarm(10);
       }
    }

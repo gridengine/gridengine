@@ -42,7 +42,6 @@ static int n_sigs = 0;
 static int next_sig = 0;
 static int free_sig = 0; 
 
-
 #define NEXT_INDEX(i) (((i+1)>MAXSIG-1)?0:(i+1))
 
 #ifdef DEBUG
@@ -88,7 +87,7 @@ int add_signal(int signal)
 
    /* inc index of next free signal place */
    free_sig = NEXT_INDEX(free_sig);
- 
+
    return 0;
 }  
 

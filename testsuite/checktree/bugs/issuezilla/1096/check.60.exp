@@ -62,10 +62,6 @@ proc init_level {} {
        return -1
    }
 
-   if { $ts_config(product_feature) == "csp" } {
-      return -1
-   }
-
    switch -- $CHECK_ACT_LEVEL {
       "0"  { 
          return 0
@@ -81,12 +77,20 @@ proc init_level {} {
 
 
 proc issue_1096_shutdown_master {} {
+   global ts_config CHECK_OUTPUT
+   if { $ts_config(product_feature) == "csp" } {
+      set_error -3 "Warning: this is a csp system skipping this test"
+      return
+   }
    shutdown_core_system
    set_error 0 "ok"
 }
 proc issue_1096_run  {} {
    global ts_config  CHECK_OUTPUT CHECK_USER
-
+   if { $ts_config(product_feature) == "csp" } {
+      set_error -3 "Warning: this is a csp system skipping this test"
+      return
+   }
    puts $CHECK_OUTPUT "try to start qmaster on port $ts_config(reserved_port) ..."
 
    for { set i 0 } { $i < [llength $ts_config(unique_arch_nodes) ]  } { incr i 1 } {
@@ -135,6 +139,12 @@ proc issue_1096_run  {} {
 
 
 proc issue_1096_cleanup {} {
+
+   global ts_config CHECK_OUTPUT
+   if { $ts_config(product_feature) == "csp" } {
+      set_error -3 "Warning: this is a csp system skipping this test"
+      return
+   }
    startup_core_system
    set_error 0 "ok"
 }

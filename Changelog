@@ -1,3 +1,6 @@
+DT-2005-01-05-2: Enhancem.: o aimk now checks the Java version
+                 Changed:   aimk.site
+
 DT-2005-01-05-1: Bugfix:    o Fixed DRMAA-J PartialTimestamp bugs
                  Docs:      o Added section to DRMAA-J howto
                  Changed:   DRMAA, www

@@ -121,7 +121,12 @@ if ( ! $?JAVA_HOME ) then
    set JAVA_BIN = `which \java`
 
    if ( -e "$JAVA_BIN" ) then
-      set JAVA_HOME = `expr //$JAVA_BIN : '//\(.*\)/bin/.*'`
+      set JAVAV = `$JAVA_BIN -version |& head -1`
+      set JAVAV = `expr "$JAVAV" : 'java version "1\.\([0-9]\).*"'`
+
+      if ( $JAVAV >= 4 ) then
+         setenv JAVA_HOME `expr //$JAVA_BIN : '//\(.*\)/bin/.*'`
+      endif
    endif
 endif
 

@@ -35,7 +35,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.dir.c,v 1.1 2001/07/18 11:06:04 root Exp $")
+RCSID("$Id: sh.dir.c,v 1.1.1.1.22.1 2005/01/18 19:22:48 ernst Exp $")
 
 /*
  * C Shell - directory management
@@ -76,6 +76,9 @@ dinit(hp)
     register struct directory *dp;
     char    path[MAXPATHLEN];
 
+#ifdef INTERIX
+    if ((tcp = (char *) getenv("PWD")) == NULL)
+#endif 
     /* Don't believe the login shell home, because it may be a symlink */
     tcp = (char *) getcwd(path, sizeof(path));
     if (tcp == NULL || *tcp == '\0') {

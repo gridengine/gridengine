@@ -42,7 +42,7 @@ char    copyright[] =
  All rights reserved.\n";
 #endif /* not lint */
 
-RCSID("$Id: sh.c,v 1.1 2001/07/18 11:06:04 root Exp $")
+RCSID("$Id: sh.c,v 1.1.1.1.22.1 2005/01/18 19:22:47 ernst Exp $")
 
 #include "tc.h"
 #include "ed.h"
@@ -577,8 +577,13 @@ main(argc, argv)
 	cgr = getenv("GROUP");
 	if (cgr != NULL)
 	    set(STRgroup, quote(SAVE(cgr)), VAR_READWRITE);
+#ifdef INTERIX
+   else if ((gr = getgrgid_nomembers(gid)) == NULL)
+       set(STRgroup, SAVE("unknown"), VAR_READWRITE);
+#else 
 	else if ((gr = getgrgid(gid)) == NULL)
 	    set(STRgroup, SAVE("unknown"), VAR_READWRITE);
+#endif
 	else
 	    set(STRgroup, SAVE(gr->gr_name), VAR_READWRITE);
 	if (cgr == NULL)
@@ -715,7 +720,11 @@ main(argc, argv)
 	shtemp = Strspl(SAVE(strtmp2), doldol);	/* For << */
     }
 #else /* !WINNT */
+#ifdef INTERIX
+    shtemp = str2short(tmpnam(NULL));  /* For << */
+#else /* __INTERIX */
     shtemp = Strspl(STRtmpsh, doldol);	/* For << */
+#endif
 #endif /* WINNT */
 
     /*

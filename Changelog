@@ -1,4 +1,8 @@
-HP-2005-01-17-0: Bugfix:    qmake Makefile for WIN32_X86 now with relative pathes
+EB-2005-01-18-0: Enhancem.: qtcsh port for WIN32_X86
+                 Changed:   qtcsh
+
+HP-2005-01-17-0: Bugfix:    qmake Makefile for WIN32_X86 now with relative 
+                            pathes
                  Changed    qmake
 
 HP-2005-01-15-0: Enhancem.: Changed aimk in WIN32_X86 section

@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.proc.c,v 1.1 2001/07/18 11:06:05 root Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.proc.c,v 1.1.1.1.22.1 2005/01/18 19:22:49 ernst Exp $ */
 /*
  * sh.proc.c: Job manipulations
  */
@@ -36,7 +36,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.proc.c,v 1.1 2001/07/18 11:06:05 root Exp $")
+RCSID("$Id: sh.proc.c,v 1.1.1.1.22.1 2005/01/18 19:22:49 ernst Exp $")
 
 #include "ed.h"
 #include "tc.h"
@@ -158,7 +158,7 @@ int snum;
     register struct process *pp;
     register struct process *fp;
     register int pid;
-#if defined(BSDJOBS) || (!defined(BSDTIMES) && (defined(ODT) || defined(aiws) || defined(uts)))
+#if defined(BSDJOBS) || (!defined(BSDTIMES) && (defined(INTERIX) || defined(ODT) || defined(aiws) || defined(uts)))
     extern int insource;
 #endif /* BSDJOBS || (!BSDTIMES && (ODT || aiws || uts)) */
 #ifdef BSDWAIT
@@ -256,7 +256,7 @@ loop:
     pid = wait3(&w.w_status, WNOHANG, &ru);
 #   endif /* !hpux */
 #  else /* !BSDTIMES */
-#   ifdef ODT  /* For Sco Unix 3.2.0 or ODT 1.0 */
+#   if defined(INTERIX) || defined(ODT) /* For Sco Unix 3.2.0 or ODT 1.0 */
 #    define HAVEwait3
      pid = waitpid(-1, &w,
  	    (setintr && (intty || insource) ? WNOHANG | WUNTRACED : WNOHANG));

@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/tc.func.c,v 1.1 2001/07/18 11:06:05 root Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/tc.func.c,v 1.1.1.1.22.1 2005/01/18 19:22:50 ernst Exp $ */
 /*
  * tc.func.c: New tcsh builtins.
  */
@@ -36,7 +36,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: tc.func.c,v 1.1 2001/07/18 11:06:05 root Exp $")
+RCSID("$Id: tc.func.c,v 1.1.1.1.22.1 2005/01/18 19:22:50 ernst Exp $")
 
 #include "ed.h"
 #include "ed.defns.h"		/* for the function names */
@@ -713,6 +713,10 @@ static void
 auto_lock(n)
 	int n;
 {
+#ifdef INTERIX
+   return;
+#else 
+
 #ifndef NO_CRYPT
 
     int i;
@@ -817,6 +821,7 @@ auto_lock(n)
 #endif /* NO_CRYPT */
     auto_logout(0);
     USE(n);
+#endif
 }
 
 

@@ -35,7 +35,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: tw.init.c,v 1.1 2001/07/18 11:06:06 root Exp $")
+RCSID("$Id: tw.init.c,v 1.1.1.1.22.1 2005/01/18 19:22:51 ernst Exp $")
 
 #include "tw.h"
 #include "ed.h"
@@ -261,7 +261,11 @@ tw_cmd_cmd()
 	while ((dp = readdir(dirp)) != NULL) {
 	    /* the call to executable() may make this a bit slow */
 	    name = str2short(dp->d_name);
+#ifdef INTERIX
+       if (dp->d_ino == 0 || !executable(dir, name, 0))
+#else
 	    if (dp->d_ino == 0 || (recexec && !executable(dir, name, 0)))
+#endif
 		continue;
             len = (int) Strlen(name) + 2;
             if (name[0] == '#' ||	/* emacs temp files	*/
@@ -731,7 +735,11 @@ tw_grpname_next(dir, flags)
     USE(dir);
     TW_HOLD();
 #if !defined(_VMS_POSIX) && !defined(_OSD_POSIX) && !defined(WINNT)
+#ifdef INTERIX
+    gr = (struct group *) getgrent_nomembers();
+#else
     gr = (struct group *) getgrent();
+#endif
 #else /* _VMS_POSIX || _OSD_POSIX || WINNT */
     gr = NULL;
 #endif /* !_VMS_POSIX && !_OSD_POSIX && !WINNT */

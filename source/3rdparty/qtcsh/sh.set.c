@@ -1,4 +1,4 @@
-/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.set.c,v 1.1 2001/07/18 11:06:05 root Exp $ */
+/* $Header: /home/nfs/collabnet/CVSROOT/gridengine/source/3rdparty/qtcsh/sh.set.c,v 1.1.1.1.22.1 2005/01/18 19:22:50 ernst Exp $ */
 /*
  * sh.set.c: Setting and Clearing of variables
  */
@@ -36,7 +36,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.set.c,v 1.1 2001/07/18 11:06:05 root Exp $")
+RCSID("$Id: sh.set.c,v 1.1.1.1.22.1 2005/01/18 19:22:50 ernst Exp $")
 
 #include "ed.h"
 #include "tw.h"
@@ -1097,9 +1097,15 @@ update_dspmbyte_vars()
 	    iskcode = 0;
 	}
 	else {
+#ifdef INTERIX
+       xprintf(CGETS(18, 2,
+          "Warning: unknown multibyte display; using default(sjis)\n"));
+       iskcode = 1;
+#else
 	    xprintf(CGETS(18, 2,
 	       "Warning: unknown multibyte display; using default(euc(JP))\n"));
 	    iskcode = 2;
+#endif
 	}
 	if (dstr1 && vp->vec[1] && eq(vp->vec[1], STRls))
 	  dspmbyte_ls = 1;

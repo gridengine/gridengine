@@ -35,7 +35,7 @@
  */
 #include "sh.h"
 
-RCSID("$Id: sh.file.c,v 1.1 2001/07/18 11:06:05 root Exp $")
+RCSID("$Id: sh.file.c,v 1.1.1.1.22.1 2005/01/18 19:22:49 ernst Exp $")
 
 #ifdef FILEC
 
@@ -251,7 +251,11 @@ pushback(string)
     (void) ioctl(SHOUT, TCSETAW, (ioctl_t) &tty);
 # endif /* POSIX */
     tty_normal = tty;
+#ifdef INTERIX
+    tty.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL | ECHOCTL);
+#else
     tty.c_lflag &= ~(ECHOKE | ECHO | ECHOE | ECHOK | ECHONL | ECHOPRT | ECHOCTL);
+#endif
 # ifdef POSIX
     (void) tcsetattr(SHOUT, TCSANOW, &tty);
 # else
@@ -437,7 +441,9 @@ retype()
     (void) ioctl(SHOUT, TCGETA, (ioctl_t) &tty);
 # endif /* POSIX */
 
+#ifndef INTERIX
     tty.c_lflag |= PENDIN;
+#endif
 
 # ifdef POSIX
     (void) tcsetattr(SHOUT, TCSANOW, &tty);

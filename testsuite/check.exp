@@ -6044,7 +6044,7 @@ proc compile_source { { do_only_install 0 } } {
       lappend remote_spawn_list $open_spawn
       
       if { $CHECK_HTML_DIRECTORY != "" } {
-         set myfilenmae "$CHECK_HTML_DIRECTORY/${elem}_compile_${cvs_tag}.out"
+         set myfilename "$CHECK_HTML_DIRECTORY/${elem}_compile_${cvs_tag}.out"
       } else {
          set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
       }

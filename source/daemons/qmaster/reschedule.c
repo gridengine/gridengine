@@ -222,10 +222,8 @@ Error:
 *******************************************************************************/
 int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer) 
 {
-   lListElem *hep = NULL;        /* EH_Type */
-   lListElem *qep = NULL;        /* QU_Type */
    lListElem *jep;               /* JB_Type */
-   const char *hostname = NULL;
+   int ret = 1;
  
    DENTER(TOP_LAYER, "reschedule_jobs");
  
@@ -242,7 +240,8 @@ int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer)
        */
       for_each(jep, Master_Job_List) {
          reschedule_job(jep, NULL, ep, force, answer);
-      }                      
+      }      
+      ret = 0;
    }
  
    DEXIT;

@@ -620,24 +620,21 @@ static void communication_setup(void)
       SGE_EXIT(1);
    }
 
-   /* 
-    * re-check file descriptor limits for qmaster 
-    */
-#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
-   getrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
-#else
-   getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
-#endif
-
-   if (qmaster_rlimits.rlim_cur > FD_SETSIZE) {
-      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_UU, u32c(FD_SETSIZE), u32c(qmaster_rlimits.rlim_cur) ));
-   }
-
    if (com_handle) {
       unsigned long max_connections = 0;
+      u_long32 old_ll = 0;
+
+      /* 
+       * re-check file descriptor limits for qmaster 
+       */
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+      getrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
+#else
+      getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
+#endif
 
       /* save old debug log level and set log level to INFO */
-      u_long32 old_ll = log_state_get_log_level();
+      old_ll = log_state_get_log_level();
 
       /* enable max connection close mode */
       cl_com_set_max_connection_close_mode(com_handle, CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS);
@@ -652,6 +649,8 @@ static void communication_setup(void)
 
       /* log startup info into qmaster messages file */
       log_state_set_log_level(LOG_INFO);
+      INFO((SGE_EVENT, MSG_QMASTER_FD_HARD_LIMIT_SETTINGS_U, u32c(qmaster_rlimits.rlim_max)));
+      INFO((SGE_EVENT, MSG_QMASTER_FD_SOFT_LIMIT_SETTINGS_U, u32c(qmaster_rlimits.rlim_cur)));
       INFO((SGE_EVENT, MSG_QMASTER_MAX_FILE_DESCRIPTORS_LIMIT_U, u32c(max_connections)));
       INFO((SGE_EVENT, MSG_QMASTER_MAX_EVC_LIMIT_U, u32c( max_dynamic_event_clients)));
       log_state_set_log_level(old_ll);

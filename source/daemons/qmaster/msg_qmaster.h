@@ -739,9 +739,14 @@
 #define MSG_QMASTER_APPL_STATE_TIMEOUT_ERROR     _MESSAGE(33909, _("thread timeout error"))
 #define MSG_QMASTER_APPL_STATE_CFCFCFCFS         _MESSAGE(33910, _("EDT: %c (%.2f) | TET: %c (%.2f) | MT: %c (%.2f) | SIGT: %c (%.2f) | %s"))
 
-#define MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS _MESSAGE(33911, _("received old load report ("U32CFormat"< "U32CFormat") from exec host "SFQ"\n"))
-#define MSG_QMASTER_RECEIVED_EMPTY_LOAD_REPORT_S _MESSAGE(33912, _("received empty load from exec host "SFQ"\n"))
-#define MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_UU _MESSAGE(33913, _("FD_SETSIZE (="U32CFormat") is less than file descriptor limit (="U32CFormat"). Please recompile with larger FD_SETSIZE!\n"))
+#define MSG_QMASTER_RECEIVED_OLD_LOAD_REPORT_UUS    _MESSAGE(33911, _("received old load report ("U32CFormat"< "U32CFormat") from exec host "SFQ"\n"))
+#define MSG_QMASTER_RECEIVED_EMPTY_LOAD_REPORT_S    _MESSAGE(33912, _("received empty load from exec host "SFQ"\n"))
+#define MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U  _MESSAGE(33913, _("FD_SETSIZE is limited to "U32CFormat" file descriptors on this system.\n"))
+#define MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE1_U   _MESSAGE(33914, _("If you want to support more than "U32CFormat" qmaster clients you have to\n"))
+#define MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE2     _MESSAGE(33915, _("recompile the source code with a higher FD_SETSIZE setting.\n"))
+#define MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE3     _MESSAGE(33916, _("Bug Link: http://gridengine.sunsource.net/issues/show_bug.cgi?id=1502\n"))
+#define MSG_QMASTER_FD_SOFT_LIMIT_SETTINGS_U        _MESSAGE(33917, _("qmaster soft descriptor limit is set to "U32CFormat"\n"))
+#define MSG_QMASTER_FD_HARD_LIMIT_SETTINGS_U        _MESSAGE(33918, _("qmaster hard descriptor limit is set to "U32CFormat"\n"))
 
 
 

@@ -87,7 +87,7 @@
 #if !defined(INTERIX)
 static void init_sig_action_and_mask(void);
 #endif
-static void set_file_descriptor_limit(void);
+static int set_file_descriptor_limit(void);
 
 
 /****** qmaster/sge_qmaster_main/sge_qmaster_application_status() ************
@@ -256,12 +256,17 @@ unsigned long sge_qmaster_application_status(char** info_message) {
 *     set_file_descriptor_limit() -- check and set file descriptor limit
 *
 *  SYNOPSIS
-*     static void set_file_descriptor_limit(void) 
+*     static int set_file_descriptor_limit(void) 
 *
 *  FUNCTION
 *     This function will check the file descriptor limit for the qmaster. If
 *     soft limit < hard limit the soft limit will set to the hard limit, but
-*     max. to FD_SETSIZE file descriptors, even when the hard limit is higher.
+*     max. to 8192 file descriptors, even when the hard limit is higher.
+*
+*  RESULT
+*     0  - success 
+*     1  - can't set limit because FD_SETSIZE is to small
+*
 *
 *  NOTES
 *     MT-NOTE: set_file_descriptor_limit() is not MT safe because the limit
@@ -269,10 +274,12 @@ unsigned long sge_qmaster_application_status(char** info_message) {
 *              called before starting up the threads.
 *
 *******************************************************************************/
-static void set_file_descriptor_limit(void) {
+static int set_file_descriptor_limit(void) {
 
    /* define the max qmaster file descriptor limit */
-#define SGE_MAX_QMASTER_SOFT_FD_LIMIT FD_SETSIZE
+#define SGE_MAX_QMASTER_SOFT_FD_LIMIT 8192
+   int modified_hard_limit = 0;
+   int return_value = 0;
 
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
    struct rlimit64 qmaster_rlimits;
@@ -291,9 +298,27 @@ static void set_file_descriptor_limit(void) {
 #endif
 
    /* check hard limit and set it to SGE_MAX_QMASTER_SOFT_FD_LIMIT
-      if hard limit is smaller */
+      if hard limit is smaller AND
+      smaller than FD_SETSIZE */
+
    if (qmaster_rlimits.rlim_max < SGE_MAX_QMASTER_SOFT_FD_LIMIT) {
       qmaster_rlimits.rlim_max = SGE_MAX_QMASTER_SOFT_FD_LIMIT;
+      if (qmaster_rlimits.rlim_cur > SGE_MAX_QMASTER_SOFT_FD_LIMIT) {
+         qmaster_rlimits.rlim_cur = SGE_MAX_QMASTER_SOFT_FD_LIMIT;
+      }
+      modified_hard_limit = 1;
+   }
+
+   if (qmaster_rlimits.rlim_max > FD_SETSIZE) {
+      qmaster_rlimits.rlim_max = FD_SETSIZE;
+      if (qmaster_rlimits.rlim_cur > FD_SETSIZE) {
+         qmaster_rlimits.rlim_cur = FD_SETSIZE;
+      }
+      modified_hard_limit = 1;
+      return_value = 1;
+   }
+
+   if (modified_hard_limit == 1) {
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
       setrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
@@ -306,20 +331,32 @@ static void set_file_descriptor_limit(void) {
 #else
    getrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
 #endif
-   if (qmaster_rlimits.rlim_cur < qmaster_rlimits.rlim_max) {
-      if ( qmaster_rlimits.rlim_max > SGE_MAX_QMASTER_SOFT_FD_LIMIT ) {
-         /* setting soft limit to SGE_MAX_QMASTER_SOFT_FD_LIMIT */
-         qmaster_rlimits.rlim_cur = SGE_MAX_QMASTER_SOFT_FD_LIMIT;
-      } else {
-         /* setting soft limit to hard limit */
+
+   if (modified_hard_limit == 1) {
+      /* if we have modified the hard limit by ourselfs we set 
+         SGE_MAX_QMASTER_SOFT_FD_LIMIT as soft limit (if possible) */ 
+      if ( qmaster_rlimits.rlim_cur < SGE_MAX_QMASTER_SOFT_FD_LIMIT &&
+           qmaster_rlimits.rlim_max < SGE_MAX_QMASTER_SOFT_FD_LIMIT ) {
          qmaster_rlimits.rlim_cur = qmaster_rlimits.rlim_max;
+      } else {
+         qmaster_rlimits.rlim_cur = SGE_MAX_QMASTER_SOFT_FD_LIMIT;
       }
 #if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
       setrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
 #else
       setrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
 #endif
+   } else {
+      /* if limits are set high enough through user we use the
+         hard limit setting for the soft limit */
+      qmaster_rlimits.rlim_cur = qmaster_rlimits.rlim_max;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+      setrlimit64(RLIMIT_NOFILE, &qmaster_rlimits);
+#else
+      setrlimit(RLIMIT_NOFILE, &qmaster_rlimits);
+#endif
    }
+   return return_value;
 }
 
 
@@ -357,6 +394,7 @@ int main(int argc, char* argv[])
 {
    int max_enroll_tries;
    int ret_val;
+   int file_descriptor_settings_result = 0;
    DENTER_MAIN(TOP_LAYER, "qmaster");
 
    sge_prof_setup();
@@ -383,7 +421,7 @@ int main(int argc, char* argv[])
 
    sge_daemonize_qmaster();
 
-   set_file_descriptor_limit();
+   file_descriptor_settings_result = set_file_descriptor_limit();
 
    sge_mt_init();
 
@@ -435,6 +473,13 @@ int main(int argc, char* argv[])
    sge_setup_lock_service();
 
    sge_setup_qmaster(argv);
+
+   if (file_descriptor_settings_result == 1) {
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U, u32c(FD_SETSIZE)));
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE1_U, u32c(FD_SETSIZE - 20)));
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE2));
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE3));
+   }
 
    sge_start_periodic_tasks();
 

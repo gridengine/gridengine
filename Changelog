@@ -1,3 +1,9 @@
+CR-2005-03-18-1: Bugfix:    additonal changes for CR-2005-03-17-0
+                 Changed:   qmaster hard/soft limit limit setting
+                 Issue:     1502
+                 Bugtraq:   6239569
+                 Review:    AA
+
 CR-2005-03-18-0: Testsuite: - new command line parameter:
                               no_local_spool: don't use local spool directories
                             - fixed bug in install_core_system
@@ -37,6 +43,8 @@ MD-2005-03-17-0: Bugfix:   execd installation fails, if local spool dir is not e
 
 CR-2005-03-17-1: Bugfix:   change for CR-2005-03-17-0
                  Changed:  qmaster hard/soft limit limit setting
+                 Issue:    1502
+                 Bugtraq:  6239569
 
 HP-2005-03-17-0: Bugfix:   Replaced direct compare of UID to 0 with function call to
                            sge_is_start_user_superuser(), removed

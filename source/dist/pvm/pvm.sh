@@ -51,4 +51,4 @@ echo "Got $NSLOTS slots."
 /bin/echo Here I am on a $ARC called `hostname`.
 
 # spmd requests $NSLOTS on __different__ hosts
-$CODINE_ROOT/pvm/bin/$ARC/spmd $NSLOTS
+$SGE_ROOT/pvm/bin/$ARC/spmd $NSLOTS

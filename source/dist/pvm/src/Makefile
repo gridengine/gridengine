@@ -2,7 +2,7 @@
 #
 # Please don't use make - use "aimk" which invokes make
 # Binaries and objects will be created in a subdirectory which has the
-# same name as the directory for CODINE/GRD binaries
+# same name as the directory for Grid Engine
 #
 #___INFO__MARK_BEGIN__
 ##########################################################################

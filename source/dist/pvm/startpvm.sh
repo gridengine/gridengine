@@ -33,7 +33,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-# startup of PVM conforming with CODINE/GRD 
+# startup of PVM conforming with Grid Engine
 # parallel environment interface
 #
 # usage: startpvm.sh [options] <pe_hostfile> <master_host> <pvm_root>
@@ -90,8 +90,8 @@ fi
 PVM_ARCH=`$PVM_ROOT/lib/pvmgetarch`
 
 # ensure we are able to exec our starter
-if [ ! -x $CODINE_ROOT/pvm/bin/$ARC/start_pvm ]; then
-   echo "$me: can't execute $CODINE_ROOT/pvm/bin/$ARC/start_pvm" >&2
+if [ ! -x $SGE_ROOT/pvm/bin/$ARC/start_pvm ]; then
+   echo "$me: can't execute $SGE_ROOT/pvm/bin/$ARC/start_pvm" >&2
    exit 1
 fi
 
@@ -120,12 +120,12 @@ fi
 cut -f1 -d" " $pe_hostfile >> $pvm_hostfile
 
 # startup and wait for daemons
-$CODINE_ROOT/pvm/bin/$ARC/start_pvm -h $NHOSTS $PVM_ROOT/lib/pvmd $pvm_hostfile
+$SGE_ROOT/pvm/bin/$ARC/start_pvm -h $NHOSTS $PVM_ROOT/lib/pvmd $pvm_hostfile
 
 # on failure we call our cleanup skript
 if [ $? -ne 0 ]; then
    echo "$me: startup failed - invoking cleanup script"
-   $CODINE_ROOT/pvm/stoppvm.sh $pe_hostfile $host
+   $SGE_ROOT/pvm/stoppvm.sh $pe_hostfile $host
    exit 1
 fi
 

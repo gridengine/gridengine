@@ -33,17 +33,17 @@
 
 ALLBINS="start_pvm stop_pvm spmd master slave"
 
-if [ "$CODINE_ROOT" = "" ]; then
-   echo please set your \$CODINE_ROOT enviroment variable before calling this script
+if [ "$SGE_ROOT" = "" ]; then
+   echo please set your \$SGE_ROOT enviroment variable before calling this script
    exit 1 
 fi
 
-if [ ! -f $CODINE_ROOT/util/arch_variables ]; then
-   echo file \"$CODINE_ROOT/util/arch_variables\" does not exist
+if [ ! -f $SGE_ROOT/util/arch_variables ]; then
+   echo file \"$SGE_ROOT/util/arch_variables\" does not exist
    exit 1
 fi
 
-. $CODINE_ROOT/util/arch_variables
+. $SGE_ROOT/util/arch_variables
 
 if [ $# -gt 0 ]; then
    ARCHS="$*"
@@ -54,12 +54,12 @@ fi
 clear
 
 $ECHO
-$ECHO "        Installation of start_pvm and stop_pvm for CODINE/GRD PE"
+$ECHO "        Installation of start_pvm and stop_pvm for Grid Engine PE"
 $ECHO "        --------------------------------------------------------"
 $ECHO
 $ECHO "This script should be called from the directory"
 $ECHO
-$ECHO "   \$CODINE_ROOT/pvm/src"
+$ECHO "   \$SGE_ROOT/pvm/src"
 $ECHO
 $ECHO "It will check if the architecture subdirectory exists and copy"
 $ECHO "the binaries"
@@ -75,12 +75,12 @@ $ECHO "   \"slave\""
 $ECHO
 $ECHO "to"
 $ECHO
-$ECHO "   \$CODINE_ROOT/pvm/bin/<architecture>"
+$ECHO "   \$SGE_ROOT/pvm/bin/<architecture>"
 $ECHO
 $ECHO "If you are using the templates" 
 $ECHO 
-$ECHO "   \$CODINE_ROOT/pvm/start_pvm.sh"
-$ECHO "   \$CODINE_ROOT/pvm/stop_pvm.sh"
+$ECHO "   \$SGE_ROOT/pvm/start_pvm.sh"
+$ECHO "   \$SGE_ROOT/pvm/stop_pvm.sh"
 $ECHO 
 $ECHO "for starting and stopping PVM (defined as \"start_proc_args\""
 $ECHO "and \"stop_proc_args\" in the definition of your parallel"

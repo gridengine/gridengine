@@ -15,7 +15,7 @@
 <P>This paper introduces the structure of the Grid Engine scheduling
 daemon. For additional source code documentation on scheduling
 questions see also the description of the scheduling library
-<A HREF="http://source/libs/sched/sched.html">libsched</A>.</P>
+<A HREF="../../libs/sched/sched.html">libsched</A>.</P>
 <H1>Communication scheme schedd-qmaster</H1>
 <P>The architecture of the scheduling daemon (schedd) is elementarily
 influenced by the <I>event</I> and <I>order</I> communication scheme
@@ -27,7 +27,7 @@ communication scheme:</P>
 </UL>
 <OL>
 	<P STYLE="margin-bottom: 0in">Schedd initiates communication with
-	qmaster by sending a special GDI (<A HREF="http://../..libs/gdi/gdi.html">Grid
+	qmaster by sending a special GDI (<A HREF="../../libs/gdi/gdi.html">Grid
 	Engine Database Interface</A>) request to the qmaster. This
 	registers schedd as an <I>event client</I> causing the qmaster to
 	send the complete state of everything being relevant for scheduling
@@ -39,7 +39,7 @@ communication scheme:</P>
 </UL>
 <UL>
 	<P STYLE="margin-bottom: 0in">A received status update in the for of
-	an event list (see <A HREF="http://../../libs/cull/cull.html">here</A>
+	an event list (see <A HREF="../../libs/cull/cull.html">here</A>
 	for information on the type of lists being used) causes schedd to
 	update it's own data and to send an acknowledge to qmaster for the
 	events. It also triggers the next step.</P>
@@ -91,7 +91,7 @@ in the dispatch cycle.</SPAN></P>
 <P STYLE="margin-bottom: 0in; font-style: normal; font-weight: medium">
 In SG3E mode all jobs receive tickets according to 4 high level
 policies. The following is just a very brief overview. See the
-<A HREF="http://../../../doc/GE5_2_3.pdf">product documentation</A>,
+<A HREF="../../../doc/GE5_2_3.pdf">product documentation</A>,
 in particular the sections about scheduling in the Installation and
 Administration Guide for more information.</P>
 <P STYLE="margin-bottom: 0in; font-style: normal; font-weight: medium">
@@ -311,7 +311,7 @@ parameter 'algorithm'.
 </P>
 <P STYLE="margin-bottom: 0in">The picture below classifies the
 default algorithm and the two code samples:</P>
-<P STYLE="margin-bottom: 0in"><IMG SRC="schedd_layers.jpg" NAME="Graphic1" ALIGN=LEFT WIDTH=745 HEIGHT=511 BORDER=0><BR CLEAR=LEFT><BR>
+<P STYLE="margin-bottom: 0in"><IMG SRC="schedd_layers.gif" NAME="Graphic1" ALIGN=LEFT WIDTH=745 HEIGHT=511 BORDER=0><BR CLEAR=LEFT><BR>
 </P>
 <UL>
 	<LI><P STYLE="margin-bottom: 0in">Layer 0 - Common infrastructure</P>
@@ -376,7 +376,7 @@ default algorithm and the two code samples:</P>
 	scheduler that hide all the details about jobs and queues. Examples
 	are <I>sge_why_not_job2queue_static(), sge_load_alarm()</I> or
 	<I>sort_host_list()</I><SPAN STYLE="font-style: normal">. For a
-	detailed consideration of these functions have a look at <A HREF="http://source/libs/sched/sched.html">libsched.</A></SPAN></SPAN></P>
+	detailed consideration of these functions have a look at <A HREF="../../libs/sched/sched.html">libsched.</A></SPAN></SPAN></P>
 </UL>
 <P STYLE="margin-bottom: 0in"><BR>
 </P>

@@ -36,7 +36,7 @@
 use_kill=false
 
 #
-# shutdown of PVM conforming with CODINE/GRD
+# shutdown of PVM conforming with Grid Engine
 # parallel environment interface
 #
 
@@ -75,10 +75,10 @@ if [ $use_kill = true ]; then
       fi
    done
 else
-   if [ ! -x $CODINE_ROOT/pvm/bin/$ARC/stop_pvm ]; then
-      echo "$me: can't execute $CODINE_ROOT/pvm/bin/$ARC/stop_pvm" >&2
+   if [ ! -x $SGE_ROOT/pvm/bin/$ARC/stop_pvm ]; then
+      echo "$me: can't execute $SGE_ROOT/pvm/bin/$ARC/stop_pvm" >&2
       exit 1
    fi
-   $CODINE_ROOT/pvm/bin/$ARC/stop_pvm
+   $SGE_ROOT/pvm/bin/$ARC/stop_pvm
 fi
 exit 0

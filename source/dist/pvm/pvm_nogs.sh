@@ -73,4 +73,4 @@ fi
 NSLOTS=`expr $NSLOTS - 1`
 echo I will start $NSLOTS slaves.
 
-$trace $CODINE_ROOT/pvm/bin/$ARC/$bin_name $NSLOTS
+$trace $SGE_ROOT/pvm/bin/$ARC/$bin_name $NSLOTS

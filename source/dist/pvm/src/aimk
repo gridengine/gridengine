@@ -59,9 +59,9 @@ if (! -d $PVM_ROOT || ! -d $PVM_ROOT/lib/$PVM_ARCH) then
    exit 1
 endif
 
-if (! -f $CODINE_ROOT/util/arch ) then
-   echo "the file \$CODINE_ROOT/util/arch does not exist"
-   echo "please set \$CODINE_ROOT and call this script again."
+if (! -f $SGE_ROOT/util/arch ) then
+   echo "the file \$SGE_ROOT/util/arch does not exist"
+   echo "please set \$SGE_ROOT and call this script again."
    echo
    exit 1
 endif
@@ -73,9 +73,9 @@ set CC         = cc
 set MAKE       = make
 set MAKEFILE   = ../Makefile
 set SDIR       = ".."
-set CFLAGS     = "-I../ -I$PVM_ROOT/include -I$CODINE_ROOT/api/include"
-set QSYST_PVM_DIR = "$CODINE_ROOT/pvm/lib/$ARCH"
-set LFLAGS     = "-L$PVM_ROOT/lib/$PVM_ARCH -L$QSYST_PVM_DIR -L$CODINE_ROOT/api/lib/$ARCH -L."  
+set CFLAGS     = "-I../ -I$PVM_ROOT/include"
+set QSYST_PVM_DIR = "$SGE_ROOT/pvm/lib/$ARCH"
+set LFLAGS     = "-L$PVM_ROOT/lib/$PVM_ARCH -L$QSYST_PVM_DIR -L."  
 set LIBS       = ""
 set PVM_ROOT   = "$PVM_ROOT"
 set PVM_ARCH   = "$PVM_ARCH"
@@ -133,7 +133,7 @@ end
 set CTOR = ""
 set DTOR = ""
 
-set ARCH = `$CODINE_ROOT/util/arch`
+set ARCH = `$SGE_ROOT/util/arch`
 
 switch ($ARCH)
 

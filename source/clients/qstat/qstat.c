@@ -73,6 +73,7 @@
 #include "sge_queue.h"
 #include "sge_centry.h"
 #include "sge_schedd_conf.h"
+#include "sge_mt_init.h"
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
 #define FORMAT_I_10 "%I %I %I %I %I %I %I %I %I %I "
@@ -137,6 +138,8 @@ char **argv
    rand_error = 1;
 #endif
    
+   sge_mt_init();
+
    sge_gdi_param(SET_MEWHO, QSTAT, NULL);
    if (sge_gdi_setup(prognames[QSTAT], &alp)!=AE_OK) {
       answer_exit_if_not_recoverable(lFirst(alp));

@@ -1,3 +1,6 @@
+AD-2003-10-24-1: Enhancem.: Added call to 'sge_mt_init()'.
+                 Changed:   qstat
+
 AD-2003-10-24-0: Enhancem.: SGE is now build in multi threaded mode.
                             Changed aimk and Makefiles. Added initialization
                             code for thread local storage. 

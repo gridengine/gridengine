@@ -119,6 +119,6 @@ usage:
 
    echo "OPTIONS are: "
    echo "-tag <tagname>   -> checkout tag instead of HEAD revision"
-   echo "-o <file>        -> write to file <file> [default: /tmp/gridengine_src.tar.gz]"
-   echo "-w <dir>         -> set checkout directory to <dir> [default: /tmp]"
+   echo "-o <file>        -> write to file <file> [default: $OUTFILE]"
+   echo "-w <dir>         -> set checkout directory to <dir> [default: $CODIR]"
   exit

@@ -52,10 +52,7 @@ static lList **monitor_alpp = NULL;
 
 void monitor_set_next_run(int i) 
 {
-   DENTER(TOP_LAYER, "monitor_set_next_run");
-   DPRINTF(("monitor_next_run = %d\n", i));
    monitor_next_run = i;
-   DEXIT;
 }
 
 int monitor_get_next_run(void)
@@ -119,7 +116,7 @@ int schedd_log(const char *logstr) {
          return -1;
       }
 
-      DPRINTF(("Logging: %s%s\n", time_str, logstr));
+/*       DPRINTF(("Logging: %s%s\n", time_str, logstr)); */
 
       fprintf(fp, "%s", time_str);
       fprintf(fp, "%s\n", logstr);

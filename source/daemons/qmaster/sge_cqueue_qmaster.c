@@ -59,6 +59,7 @@
 #include "sge_attr.h"
 #include "sge_complex.h"
 #include "sge_userprj.h"
+#include "sge_feature.h"
 
 #include "spool/classic/read_write_ume.h"
 #include "spool/sge_spooling.h"
@@ -73,8 +74,6 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
    bool ret = true;
    lList *add_hosts = NULL;
    lList *rem_hosts = NULL;
-   lList *add_groups = NULL;
-   lList *rem_groups = NULL;
 
 
    DENTER(TOP_LAYER, "cqueue_mod");
@@ -128,6 +127,9 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
       if (pos >= 0) {
          lList *list = lGetPosList(reduced_elem, pos);
          lList *old_href_list = lGetList(cqueue, CQ_hostlist);
+         lList *master_list = *(hgroup_list_get_master_list());
+         lList *add_groups = NULL;
+         lList *rem_groups = NULL;
 
          ret &= href_list_find_diff(list, answer_list,
                                     old_href_list, &add_hosts,
@@ -148,6 +150,17 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
          if (ret) {
             lSetList(cqueue, CQ_hostlist, lCopyList("", list));
          }
+         if (ret) {
+            href_list_find_all_references(add_groups, answer_list, master_list,
+                                          &add_hosts, NULL);
+            href_list_find_all_references(rem_groups, answer_list, master_list,
+                                          &rem_hosts, NULL);
+
+            lWriteListTo(add_hosts, stderr);
+            lWriteListTo(rem_hosts, stderr);
+         }
+         add_groups = lFreeList(add_groups);
+         rem_groups = lFreeList(rem_groups);
       }
    }
 
@@ -193,26 +206,28 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
       int index = 0;
 
       while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
-         int pos = lGetPosViaElem(reduced_elem,
+         if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
+             feature_is_enabled(FEATURE_SGEEE)) {
+            int pos = lGetPosViaElem(reduced_elem,
+                                     cqueue_attribute_array[index].cqueue_attr);
+
+            if (pos >= 0) {
+               lList *list = lGetList(cqueue, 
                                   cqueue_attribute_array[index].cqueue_attr);
-
-         if (pos >= 0) {
-            lList *list;
-            lListElem *elem;
-
-            list = lGetList(cqueue, cqueue_attribute_array[index].cqueue_attr);
-            elem = lGetElemHost(list, cqueue_attribute_array[index].href_attr,
-                                HOSTREF_DEFAULT);
+               lListElem *elem = lGetElemHost(list, 
+                                    cqueue_attribute_array[index].href_attr,
+                                    HOSTREF_DEFAULT);
 
 
-            if (elem == NULL) {
-               /* EB: TODO: move to msg file */
-               ERROR((SGE_EVENT, SFQ" has no default value\n", 
-                                 cqueue_attribute_array[index].name));
-               answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
-                               ANSWER_QUALITY_ERROR);
-               ret = false;
-            } 
+               if (elem == NULL) {
+                  /* EB: TODO: move to msg file */
+                  ERROR((SGE_EVENT, SFQ" has no default value\n", 
+                                    cqueue_attribute_array[index].name));
+                  answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
+                                  ANSWER_QUALITY_ERROR);
+                  ret = false;
+               } 
+            }
          }
          index++;
       }
@@ -242,6 +257,53 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
     * Modify existing ones
     */
    if (ret) {
+      int index = 0; 
+
+      while (cqueue_attribute_array[index].cqueue_attr != NoName && ret) {
+         if (cqueue_attribute_array[index].is_sgeee_attribute == false ||
+             feature_is_enabled(FEATURE_SGEEE)) {
+            int pos = lGetPosViaElem(reduced_elem,
+                                     cqueue_attribute_array[index].cqueue_attr);
+
+            if (pos >= 0) {
+               lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+               lListElem *qinstance = NULL;
+               bool print_once = false;
+
+               for_each(qinstance, qinstance_list) {
+                  const char *hostname = lGetHost(qinstance, QI_hostname);
+                  bool is_ambiguous = false;
+                  bool has_changed = false;
+                     
+                  if (!print_once) {
+                     DPRINTF(("Modifying qinstance "SFQ"\n", hostname));
+                     print_once = true; 
+                  }
+                  ret &= qinstance_modify(qinstance, answer_list, cqueue,
+                                cqueue_attribute_array[index].qinstance_attr,
+                                cqueue_attribute_array[index].cqueue_attr,
+                                cqueue_attribute_array[index].href_attr,
+                                cqueue_attribute_array[index].value_attr,
+                                cqueue_attribute_array[index].primary_key_attr,
+                                &is_ambiguous, &has_changed); 
+                  if (!ret) {
+                     break;
+                  } 
+                  if (has_changed) {
+                     DPRINTF(("qinstance %s has been changed\n",
+                              hostname));
+                     /* EB: TODO: Spool it */
+                  }
+                  if (is_ambiguous) {
+                     DPRINTF(("qinstance %s has ambiguous configuaration\n", 
+                              hostname));
+                     /* EB: TODO: Set ambiguous state */
+                  }
+               }
+            }
+         }
+         index++;
+      }
    }
 
    /*
@@ -264,7 +326,9 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
          new_qinstance = qinstance_create(cqueue, answer_list, 
                                           hostname, &is_ambiguous);
          if (is_ambiguous) {
-            DPRINTF(("qinstance has ambiguous configuaration\n", hostname));
+            DPRINTF(("qinstance %s has ambiguous configuaration\n", 
+                     hostname));
+            /* EB: TODO: Set ambiguous state */
          }
          lAppendElem(list, new_qinstance);
 
@@ -273,14 +337,9 @@ int cqueue_mod(lList **answer_list, lListElem *cqueue, lListElem *reduced_elem,
 
    add_hosts = lFreeList(add_hosts);
    rem_hosts = lFreeList(rem_hosts);
-   add_groups = lFreeList(add_groups);
-   rem_groups = lFreeList(rem_groups);
 
    DEXIT;
    if (ret) {
-#if 0 /* EB: debug */
-      lWriteElemTo(cqueue, stderr);
-#endif
       return 0;
    } else {
       return STATUS_EUNKNOWN;

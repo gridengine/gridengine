@@ -1396,7 +1396,8 @@ object_parse_celist_from_string(lListElem *this_elem, lList **answer_list,
    static intprt_type rule[] = {CE_name, CE_stringval, 0};
    bool ret = true;
 
-   DENTER(OBJECT_LAYER, "object_parse_celist_from_string");
+   DENTER(TOP_LAYER, "object_parse_celist_from_string");
+
    if (this_elem != NULL && string != NULL) {
       lList *tmp_list = NULL;
       int pos = lGetPosViaElem(this_elem, name);

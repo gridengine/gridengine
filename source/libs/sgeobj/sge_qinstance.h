@@ -44,6 +44,7 @@ bool
 qinstance_modify(lListElem *this_elem, lList **answer_list,
                  const lListElem *cqueue, int attribute_name,
                  int cqueue_attibute_name, int sub_host_name, 
-                 int sub_value_name, int subsub_key, bool *is_ambiguous);
+                 int sub_value_name, int subsub_key, bool *is_ambiguous,
+                 bool *has_changed);
 
 #endif /* __SGE_QINSTANCE_H */

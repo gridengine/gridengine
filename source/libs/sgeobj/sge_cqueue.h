@@ -42,6 +42,7 @@ typedef struct _list_attribute_struct {
    int value_attr;
    int primary_key_attr;
    const char *name;
+   bool is_sgeee_attribute;
 } list_attribute_struct;
 
 extern lList *Master_CQueue_List;

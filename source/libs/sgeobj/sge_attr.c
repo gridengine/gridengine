@@ -512,7 +512,7 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                             int value_nm)
 {
    bool ret = true;
-   DENTER(HOSTATTR_LAYER, "attr_list_parse_from_string");
+   DENTER(TOP_LAYER, "attr_list_parse_from_string");
   
    if (this_list != NULL && string != NULL) { 
 
@@ -538,7 +538,8 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
        * 
        */
 
-      if (!strcasecmp(string, "NONE")) {
+      if (false && !strcasecmp(string, "NONE")) {
+         DTRACE;
          /* EB: TODO: Allow NONE only if it is a regular value */
          ;
       } else {

@@ -62,6 +62,7 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
    index = 0;
    while (cqueue_attribute_array[index].cqueue_attr != NoName) {
       bool tmp_is_ambiguous = false;
+      bool tmp_has_changed = false;
 
       qinstance_modify(ret, answer_list, cqueue, 
                        cqueue_attribute_array[index].qinstance_attr,
@@ -69,7 +70,7 @@ qinstance_create(const lListElem *cqueue, lList **answer_list,
                        cqueue_attribute_array[index].href_attr,
                        cqueue_attribute_array[index].value_attr,
                        cqueue_attribute_array[index].primary_key_attr,
-                       is_ambiguous);
+                       &tmp_is_ambiguous, &tmp_has_changed);
       if (tmp_is_ambiguous) {
          /* EB: TODO: move to msg file */ 
          WARNING(("Attribute "SFQ" has ambiguous value for host "SFQ"\n",
@@ -89,11 +90,16 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
                  int attribute_name, 
                  int cqueue_attibute_name,
                  int sub_host_name, int sub_value_name,
-                 int subsub_key, bool *is_ambiguous)
+                 int subsub_key, bool *is_ambiguous, bool *has_changed)
 {
+#define QINSTANCE_MODIFY_DEBUG
    bool ret = true;
-   
+  
+#ifdef QINSTANCE_MODIFY_DEBUG 
+   DENTER(TOP_LAYER, "qinstance_modify");
+#else
    DENTER(QINSTANCE_LAYER, "qinstance_modify");
+#endif
 
    if (this_elem != NULL && cqueue != NULL && 
        attribute_name != NoName && cqueue_attibute_name != NoName) {
@@ -103,17 +109,26 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
       int pos = lGetPosInDescr(descr, attribute_name);
       int type = lGetPosType(descr, pos);
       bool value_found = true;
-      u_long32 ulong32_value;
-      const char *str_value = NULL;
       lList *list_value = NULL;
-      bool bool_value;
 
       switch (cqueue_attibute_name) {
          case CQ_qtype:
-            qtlist_attr_list_find_value(attr_list, answer_list, 
-                                        hostname, &ulong32_value,
-                                        is_ambiguous);
-            lSetUlong(this_elem, attribute_name, ulong32_value);
+            {
+               u_long32 old_value = lGetUlong(this_elem, attribute_name);
+               u_long32 new_value;
+
+               qtlist_attr_list_find_value(attr_list, answer_list, 
+                                           hostname, &new_value,
+                                           is_ambiguous);
+               if (old_value != new_value) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ" from "u32" to "u32"\n",
+                           lNm2Str(attribute_name), old_value, new_value));
+#endif
+                  lSetUlong(this_elem, attribute_name, new_value);
+                  *has_changed = true;
+               }
+            }
             break;
          case CQ_s_fsize:
          case CQ_h_fsize:
@@ -127,60 +142,110 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
          case CQ_h_rss:
          case CQ_s_vmem:
          case CQ_h_vmem:
-            mem_attr_list_find_value(attr_list, answer_list, 
-                                     hostname, &str_value, is_ambiguous);
-            lSetString(this_elem, attribute_name, str_value);
+            {
+               const char *old_value = lGetString(this_elem, attribute_name);
+               const char *new_value;
+
+               mem_attr_list_find_value(attr_list, answer_list, 
+                                        hostname, &new_value, is_ambiguous);
+               if (old_value == NULL || new_value == NULL ||
+                   strcmp(old_value, new_value)) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ" from "SFQ" to "SFQ"\n",
+                           lNm2Str(attribute_name),
+                           old_value ? old_value : "<null>",
+                           new_value ? new_value : "<null>")); 
+#endif
+                  lSetString(this_elem, attribute_name, new_value);
+                  *has_changed = true;
+               }
+            }
             break;
          case CQ_s_rt:
          case CQ_h_rt:
          case CQ_s_cpu:
          case CQ_h_cpu:
-            time_attr_list_find_value(attr_list, answer_list, 
-                                      hostname, &str_value, is_ambiguous);
-            lSetString(this_elem, attribute_name, str_value);
+            {
+               const char *old_value = lGetString(this_elem, attribute_name);
+               const char *new_value;
+
+               time_attr_list_find_value(attr_list, answer_list, 
+                                         hostname, &new_value, is_ambiguous);
+               if (old_value == NULL || new_value == NULL ||
+                   strcmp(old_value, new_value)) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ" from "SFQ" to "SFQ"\n",
+                           lNm2Str(attribute_name),
+                           old_value ? old_value : "<null>",
+                           new_value ? new_value : "<null>")); 
+#endif
+                  lSetString(this_elem, attribute_name, new_value);
+                  *has_changed = true;
+               }
+            }
             break;
          case CQ_suspend_interval:
          case CQ_min_cpu_interval:
          case CQ_notify:
-            inter_attr_list_find_value(attr_list, answer_list, 
-                                       hostname, &str_value, is_ambiguous);
-            lSetString(this_elem, attribute_name, str_value);
+            {
+               const char *old_value = lGetString(this_elem, attribute_name);
+               const char *new_value;
+
+               inter_attr_list_find_value(attr_list, answer_list, 
+                                          hostname, &new_value, is_ambiguous);
+               if (old_value == NULL || new_value == NULL ||
+                   strcmp(old_value, new_value)) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                  DPRINTF(("Changed "SFQ" from "SFQ" to "SFQ"\n",
+                           lNm2Str(attribute_name),
+                           old_value ? old_value : "<null>",
+                           new_value ? new_value : "<null>"));
+#endif
+                  lSetString(this_elem, attribute_name, new_value);
+                  *has_changed = true;
+               }
+            }
             break;
          case CQ_ckpt_list:
          case CQ_pe_list:
             strlist_attr_list_find_value(attr_list, answer_list,
                                          hostname, &list_value, is_ambiguous);
-
+            /* EB: TODO: handle only if sublist changed */
             lSetList(this_elem, attribute_name, lCopyList("", list_value));
+            *has_changed = true;
             break;
          case CQ_owner_list:
          case CQ_acl:
          case CQ_xacl:
             usrlist_attr_list_find_value(attr_list, answer_list,
                                          hostname, &list_value, is_ambiguous);
-
+            /* EB: TODO: handle only if sublist changed */
             lSetList(this_elem, attribute_name, lCopyList("", list_value));
+            *has_changed = true;
             break;
          case CQ_projects:
          case CQ_xprojects:
             prjlist_attr_list_find_value(attr_list, answer_list,
                                          hostname, &list_value, is_ambiguous);
-
+            /* EB: TODO: handle only if sublist changed */
             lSetList(this_elem, attribute_name, lCopyList("", list_value));
+            *has_changed = true;
             break;
          case CQ_consumable_config_list:
          case CQ_load_thresholds:
          case CQ_suspend_thresholds:
             celist_attr_list_find_value(attr_list, answer_list,
                                          hostname, &list_value, is_ambiguous);
-
+            /* EB: TODO: handle only if sublist changed */
             lSetList(this_elem, attribute_name, lCopyList("", list_value));
+            *has_changed = true;
             break;
          case CQ_subordinate_list:
             solist_attr_list_find_value(attr_list, answer_list,
                                         hostname, &list_value, is_ambiguous);
-
+            /* EB: TODO: handle only if sublist changed */
             lSetList(this_elem, attribute_name, lCopyList("", list_value));
+            *has_changed = true;
             break;
          default:
             value_found = false;
@@ -190,20 +255,60 @@ qinstance_modify(lListElem *this_elem, lList **answer_list,
       if (!value_found) {
          switch (type) {
             case lStringT:
-               str_attr_list_find_value(attr_list, answer_list,
-                                        hostname, &str_value, is_ambiguous);
-               lSetString(this_elem, attribute_name, str_value);
+               {
+                  const char *old_value = lGetString(this_elem, attribute_name);
+                  const char *new_value;
+
+                  str_attr_list_find_value(attr_list, answer_list,
+                                           hostname, &new_value, is_ambiguous);
+                  if (old_value == NULL || new_value == NULL ||
+                      strcmp(old_value, new_value)) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                     DPRINTF(("Changed "SFQ" from "SFQ" to "SFQ"\n",
+                              lNm2Str(attribute_name),
+                              old_value ? old_value : "<null>",
+                              new_value ? new_value : "<null>"));
+#endif
+                     lSetString(this_elem, attribute_name, new_value);
+                     *has_changed = true;
+                  }
+               }
                break;
             case lUlongT:
-               ulng_attr_list_find_value(attr_list, answer_list, hostname, 
-                                         &ulong32_value, is_ambiguous);
+               {
+                  u_long32 old_value = lGetUlong(this_elem, attribute_name);
+                  u_long32 new_value;
 
-               lSetUlong(this_elem, attribute_name, ulong32_value);
+                  ulng_attr_list_find_value(attr_list, answer_list, hostname, 
+                                            &new_value, is_ambiguous);
+                  if (old_value != new_value) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                     DPRINTF(("Changed "SFQ" from "u32" to "u32"\n",
+                              lNm2Str(attribute_name),
+                              old_value, new_value));
+#endif
+                     lSetUlong(this_elem, attribute_name, new_value);
+                     *has_changed = true;
+                  }
+               }
                break;
             case lBoolT:
-               bool_attr_list_find_value(attr_list, answer_list,
-                                         hostname, &bool_value, is_ambiguous);
-               lSetBool(this_elem, attribute_name, bool_value);
+               {
+                  bool old_value = lGetBool(this_elem, attribute_name);
+                  bool new_value;
+
+                  bool_attr_list_find_value(attr_list, answer_list,
+                                            hostname, &new_value, is_ambiguous);
+                  if (old_value != new_value) {
+#ifdef QINSTANCE_MODIFY_DEBUG
+                     DPRINTF(("Changed "SFQ" from "SFQ" to "SFQ"\n",
+                              old_value ? "true" : "false",
+                              new_value ? "true" : "false"));
+#endif
+                     lSetBool(this_elem, attribute_name, new_value);
+                     *has_changed = true;
+                  }
+               }
                break;
             default:
                DPRINTF(("unhandled attribute\n"));

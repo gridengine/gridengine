@@ -1,3 +1,4 @@
+
 EB-2001-07-23-0: Changes some html files
                  - link to contributor agreement
                  - added $ARCH variable to path (gethostname)
@@ -15,5 +16,4 @@ CR-2001-07-20-0: Testsuite:
 AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load 
                    reports w/o REP_seqno
-
 

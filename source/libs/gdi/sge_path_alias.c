@@ -162,9 +162,11 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
    }
 
    while (fgets(buf, sizeof(buf), fd)) {
+      char *crp;
 
       /* strip \n */
-      *(strchr(buf, (int) '\n')) = '\0';
+      if ((crp = strchr(buf, (int)'\n')))
+         *crp = '\0';
 
       DPRINTF(("Path Alias: >%s<\n",buf));
 

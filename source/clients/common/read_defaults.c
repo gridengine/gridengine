@@ -142,10 +142,10 @@ void opt_list_append_opts_from_default_files(lList **pcmdline,
 *
 *******************************************************************************/
 static char *get_root_defaults_file_path () {
-   DENTER (TOP_LAYER, "get_root_defaults_file_path");
-   
    const char *cell = NULL;
    char *file = NULL;
+   
+   DENTER (TOP_LAYER, "get_root_defaults_file_path");
    
    if ((cell = sge_getenv ("SGE_SHELL")) == 0) {
       cell = "default";
@@ -197,10 +197,10 @@ static char *get_user_home_defaults_file_path (lList **answer_list) {
    char buffer[2048];
 #endif
 
-   DENTER (TOP_LAYER, "get_user_home_defaults_file_path");
-
    char *file = NULL;
    
+   DENTER (TOP_LAYER, "get_user_home_defaults_file_path");
+
 #ifdef HAS_GETPWNAM_R
    pwd = sge_getpwnam_r(uti_state_get_user_name(), &pw_struct, buffer, sizeof(buffer));
 #else
@@ -274,12 +274,11 @@ static char *get_user_home_defaults_file_path (lList **answer_list) {
 *******************************************************************************/
 static char *get_cwd_defaults_file_path (lList **answer_list) {
    char cwd[SGE_PATH_MAX + 1];
-   char str[256 + 1];
+   char str[256 + 1];   
+   char *file = NULL;
    
    DENTER (TOP_LAYER, "get_cwd_defaults_file_name");
 
-   char *file = NULL;
-   
    if (!getcwd(cwd, sizeof(cwd))) {
       sprintf(str, MSG_FILE_CANTREADCURRENTWORKINGDIR);
       answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);

@@ -226,14 +226,14 @@ XtPointer cld, cad;
    if (alp) {
       qmonMessageBox(w, alp, 0);
       alp = lFreeList(alp);
-      /* set busy cursor */
+      /* set default cursor */
       XmtDisplayDefaultCursor(w);
       return;
    }
 
    updateJobList();
 
-   /* set busy cursor */
+   /* set default cursor */
    XmtDisplayDefaultCursor(w);
 }
 

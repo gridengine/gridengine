@@ -83,6 +83,7 @@ Qmon*XmtInputField.marginHeight:     2
 Qmon*sconf_general.xmtChildren: \
    InputField     sconf_algorithm = algorithm, \
                   sconf_schedule_interval = schedule_interval, \
+                  sconf_sc_params = sc_params, \
                   sconf_reprioritize_interval = reprioritize_interval, \
                   sconf_maxujobs = maxujobs, \
                   sconf_job_range, \
@@ -90,6 +91,8 @@ Qmon*sconf_general.xmtChildren: \
    XmtChooser     sconf_queue_sort_method = queue_sort_method; \
    XmtChooser     sconf_job_info; \
    XmToggleButton sconf_user_sort = user_sort; \
+   Spinbox        sconf_flush_submit_secs = flush_submit_secs, \
+                  sconf_flush_finish_secs = flush_finish_secs; \
    XmPushButton   sconf_schedule_intervalPB, sconf_reprioritize_intervalPB;
 
 
@@ -123,6 +126,9 @@ Qmon*sconf_general.layout: \
             Centered sconf_job_range \
          } \
          Fixed Caption tl "@{@fBLoad Formula}" sconf_load_formula \
+         Fixed Caption tl "@{@fBFlush Submit Seconds}" sconf_flush_submit_secs \
+         Fixed Caption tl "@{@fBFlush Finish Seconds}" sconf_flush_finish_secs \
+         Fixed Caption tl "@{@fBParams}" sconf_sc_params \
       } \
    }
 
@@ -135,6 +141,22 @@ Qmon*sconf_general*sconf_schedule_intervalPB.labelType:       PIXMAP
 Qmon*sconf_general*sconf_schedule_intervalPB.labelPixmap:     time
 Qmon*sconf_general*sconf_reprioritize_intervalPB.labelType:   PIXMAP
 Qmon*sconf_general*sconf_reprioritize_intervalPB.labelPixmap: time
+
+Qmon*sconf_general*sconf_flush_submit_secs.minimum: 0
+Qmon*sconf_general*sconf_flush_submit_secs.spinboxStyle: SPINBOX_STACKED_RIGHT
+Qmon*sconf_general*sconf_flush_submit_secs.buttonSizeFixed: True
+Qmon*sconf_general*sconf_flush_submit_secs.columns: 5
+Qmon*sconf_general*sconf_flush_submit_secs.spinboxUseClosestValue: True
+Qmon*sconf_general*sconf_flush_submit_secs.value: 0
+Qmon*sconf_general*sconf_flush_submit_secs.incrementLarge: 10
+
+Qmon*sconf_general*sconf_flush_finish_secs.minimum: 0
+Qmon*sconf_general*sconf_flush_finish_secs.spinboxStyle: SPINBOX_STACKED_RIGHT
+Qmon*sconf_general*sconf_flush_finish_secs.buttonSizeFixed: True
+Qmon*sconf_general*sconf_flush_finish_secs.columns: 5
+Qmon*sconf_general*sconf_flush_finish_secs.spinboxUseClosestValue: True
+Qmon*sconf_general*sconf_flush_finish_secs.value: 0
+Qmon*sconf_general*sconf_flush_finish_secs.incrementLarge: 10
 
 Qmon*sconf_general*sconf_queue_sort_method.chooserType: ChooserOption
 Qmon*sconf_general*sconf_queue_sort_method.strings: \

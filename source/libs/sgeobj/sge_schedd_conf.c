@@ -2194,7 +2194,7 @@ bool sconf_validate_config_(lList **answer_list){
       /* --- SC_halflife_decay_list_str */
       {
          s = sconf_get_halflife_decay_list_str();
-         if (!strcasecmp(s, "none")) {
+         if (!s || !strcasecmp(s, "none")) {
          } else {
             lList *halflife_decay_list = NULL;
             lListElem *ep;

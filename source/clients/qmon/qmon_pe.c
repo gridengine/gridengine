@@ -78,6 +78,7 @@ static Widget pe_xacl_w = 0;
 static Widget pe_start_w = 0;
 static Widget pe_stop_w = 0;
 static Widget pe_alloc_w = 0;
+static Widget pe_urgency_w = 0;
 static Widget pe_control_slaves_w = 0;
 static Widget pe_job_is_first_task_w = 0;
 static int add_mode = 0;
@@ -206,7 +207,7 @@ lListElem *ep
       return;
    }
    
-   itemCount = 9;
+   itemCount = 10;
    items = (XmString*) XtMalloc(sizeof(XmString)*itemCount); 
 
    i = 0;
@@ -255,6 +256,11 @@ lListElem *ep
    /* allocation_rule */
    str = lGetString(ep, PE_allocation_rule);
    sprintf(buf, "%-20.20s %s", "Allocation Rule", str ? str : "NONE" );
+   items[i++] = XmStringCreateLocalized(buf);
+
+   /* urgency slots */
+   str = lGetString(ep, PE_urgency_slots);
+   sprintf(buf, "%-20.20s %s", "Urgency Slots", str ? str : "NONE" );
    items[i++] = XmStringCreateLocalized(buf);
 
    /* control slaves */
@@ -366,6 +372,7 @@ Widget parent
                            "pe_start_proc_args", &pe_start_w,
                            "pe_stop_proc_args", &pe_stop_w,
                            "pe_allocation_rule", &pe_alloc_w,
+                           "pe_urgency_slots", &pe_urgency_w,
                            "pe_control_slaves", &pe_control_slaves_w,
                            "pe_job_is_first_task", &pe_job_is_first_task_w,
                            NULL);
@@ -606,6 +613,7 @@ lListElem *pep
    StringConst start_args = NULL;
    StringConst stop_args = NULL;
    StringConst alloc_rule = NULL;
+   StringConst urgency_slots = NULL;
 
    DENTER(GUI_LAYER, "qmonPESetAsk");
 
@@ -639,6 +647,10 @@ lListElem *pep
    if (alloc_rule)
       XmtInputFieldSetString(pe_alloc_w, alloc_rule);
 
+   urgency_slots = lGetString(pep, PE_urgency_slots);
+   if (urgency_slots)
+      XmtInputFieldSetString(pe_urgency_w, urgency_slots);
+
    XmToggleButtonSetState(pe_control_slaves_w, 
                lGetBool(pep, PE_control_slaves), False);
 
@@ -671,6 +683,8 @@ static void qmonPEResetAsk(void)
 
    XmtInputFieldSetString(pe_alloc_w, "$pe_slots");
 
+   XmtInputFieldSetString(pe_urgency_w, "min");
+
    XmToggleButtonSetState(pe_control_slaves_w, 0, False);
 
    XmToggleButtonSetState(pe_job_is_first_task_w, 0, False);
@@ -691,6 +705,7 @@ lListElem *pep
    String start_args = NULL;
    String stop_args = NULL;
    String alloc_rule = NULL;
+   String urgency_slots = NULL;
 
    DENTER(GUI_LAYER, "qmonPEGetAsk");
 
@@ -734,6 +749,9 @@ lListElem *pep
 
    alloc_rule = XmtInputFieldGetString(pe_alloc_w);
    lSetString(pep, PE_allocation_rule, alloc_rule);
+
+   urgency_slots = XmtInputFieldGetString(pe_urgency_w);
+   lSetString(pep, PE_urgency_slots, urgency_slots);
 
    pe_control_slaves = XmToggleButtonGetState(pe_control_slaves_w); 
    lSetBool(pep, PE_control_slaves, pe_control_slaves);

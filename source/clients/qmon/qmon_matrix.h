@@ -37,7 +37,7 @@
 #define CE_TYPE_REDUCED       0
 #define CE_TYPE_FULL          1
 
-#define CE_MAX                7
+#define CE_MAX                8
 
 enum {
    CE_NAME,
@@ -46,7 +46,8 @@ enum {
    CE_RELOP,
    CE_REQUEST,
    CE_CONSUMABLE,
-   CE_DEFAULT
+   CE_DEFAULT,
+   CE_URGENCY
 };
 
 

@@ -1,3 +1,6 @@
+AA-2003-12-01-0: Enhancem.: Scheduler configuration adaptions in qmon
+                            Removal of obsolete dialog fields in cluster conf
+                 
 JG-2003-11-28-0: Enhancem.: Added sharelog (sharetree usage) to reporting file.
                             Added thread safe sge_strerror to replace strerror.
                             Added documentation and MT safety information.

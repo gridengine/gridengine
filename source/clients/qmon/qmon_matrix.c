@@ -781,6 +781,7 @@ StringConst *ce_entry
                            (lGetUlong(ep, CE_requestable) == REQU_YES ? "YES" : "NO");
    ce_entry[CE_CONSUMABLE] = lGetBool(ep, CE_consumable) ? "YES" : "NO";
    ce_entry[CE_DEFAULT] = lGetString(ep, CE_default);
+   ce_entry[CE_URGENCY] = lGetString(ep, CE_urgency_weight);
       
    DEXIT;
    return True;
@@ -853,6 +854,7 @@ String *ce_entry
       lSetBool(ep, CE_consumable, false);
 
    lSetString(ep, CE_default, ce_entry[CE_DEFAULT] ? ce_entry[CE_DEFAULT]: "");
+   lSetString(ep, CE_urgency_weight, ce_entry[CE_URGENCY] ? ce_entry[CE_URGENCY]: "");
    
    DEXIT;
    return True;

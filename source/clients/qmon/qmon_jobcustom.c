@@ -90,6 +90,7 @@ static void rmFromSelected(Widget w, XtPointer cld, XtPointer cad);
 static String PrintUlong(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintDoubleAsUlong(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintDouble(lListElem *ep, lListElem *jat, lList *eleml, int nm);
+static String PrintDoubleOpti(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintPriority(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintString(lListElem *ep, lListElem *jat, lList *eleml, int nm);
 static String PrintTime(lListElem *ep, lListElem *jat, lList *eleml, int nm);
@@ -136,7 +137,8 @@ static htable JobColumnPrintHashTable = NULL;
 static htable NameMappingHashTable = NULL;
 
 #define FIRST_FIELD     6
-#define SGEEE_FIELDS    10
+/* #define SGEEE_FIELDS    10 */
+#define SGEEE_FIELDS    17
 
 static tJobField job_items[] = {
    { 1, JB_job_number, "@{Id}", 12, 20, PrintJobTaskId }, 
@@ -171,8 +173,9 @@ static tJobField job_items[] = {
    { 0, JAT_scaled_usage_list, "@{IO}", 10, 30, PrintIO },
    { 0, JAT_scaled_usage_list, "@{VMEM}", 10, 30, PrintVMEM },
    { 0, JAT_scaled_usage_list, "@{MAXVMEM}", 10, 30, PrintMAXVMEM },
-/**** SGE specific fields *****/
+/**** SGEEE specific fields *****/
    { 0, JAT_tix, "@{Ticket}", 10, 30, PrintDoubleAsUlong},
+   { 0, JAT_ntix, "@{N Ticket}", 10, 30, PrintDouble},
    { 0, JAT_oticket, "@{OTicket}", 10, 30, PrintDoubleAsUlong},
    { 0, JAT_dticket, "@{DTicket}", 10, 30, PrintDoubleAsUlong },
    { 0, JAT_fticket, "@{FTicket}", 10, 30, PrintDoubleAsUlong },
@@ -181,7 +184,14 @@ static tJobField job_items[] = {
    { 0, JB_override_tickets, "@{OverrideTickets}", 15, 30, PrintUlong },
    { 0, JB_project, "@{Project}", 10, 30, PrintString },
    { 0, JB_department, "@{Department}", 10, 30, PrintString },
-   { 0, JB_deadline, "@{Deadline}", 10, 30, PrintTime }
+   { 0, JB_deadline, "@{Deadline}", 10, 30, PrintTime },
+/**** SGEEE urgency specific fields *****/
+   { 0, JB_nurg, "@{N Urgency}", 10, 30, PrintDouble },
+   { 0, JB_urg, "@{Urgency}", 10, 30, PrintDoubleOpti },
+   { 0, JB_rrcontr, "@{rrcontr}", 10, 30, PrintDoubleOpti },
+   { 0, JB_wtcontr, "@{wtcontr}", 10, 30, PrintDoubleOpti },
+   { 0, JB_dlcontr, "@{dlcontr}", 10, 30, PrintDoubleOpti },
+   { 0, JB_dlcontr, "@{dlcontr}", 10, 30, PrintDoubleOpti },
 };
 
 /*
@@ -378,6 +388,33 @@ int nm
 
       str = XtNewString(buf);
    }
+
+   DEXIT;
+   return str;
+}
+
+/*-------------------------------------------------------------------------*/
+static String PrintDoubleOpti(
+lListElem *ep,
+lListElem *jat,
+lList *eleml,
+int nm 
+) {
+   char buf[BUFSIZ];
+   String str;
+
+   DENTER(GUI_LAYER, "PrintDoubleOpti");
+
+#define OPTI_PRINT8(value) \
+   if (value > 99999999 ) \
+      sprintf(buf, "%8.3g ", value); \
+   else  \
+      sprintf(buf, "%8.0f ", value)
+
+   OPTI_PRINT8(lGetDouble(ep, nm));
+   str = XtNewString(buf);
+
+#undef OPTI_PRINT8
 
    DEXIT;
    return str;
@@ -1096,7 +1133,22 @@ int nm
 
    DENTER(GUI_LAYER, "PrintPriority");
 
-   sprintf(buf, "%d", (int)lGetUlong(ep, nm) - BASE_PRIORITY);
+   if (!feature_is_enabled(FEATURE_SGEEE)) {
+      sprintf(buf, "%d", (int)lGetUlong(ep, nm) - BASE_PRIORITY);
+   } else {
+      if (!jat) {
+         lListElem *first_elem = lFirst(eleml);
+
+         if (object_has_type(first_elem, JAT_Type)) {
+            jat = lFirst(eleml);
+         } else if (object_has_type(first_elem, RN_Type)) {
+            u_long32 task_id = range_list_get_first_id(eleml, NULL);
+
+            jat = job_get_ja_task_template(ep, task_id);       
+         }
+      }
+      sprintf(buf, "%7.5f", lGetDouble(jat, JAT_prio));
+   }   
 
    str = XtNewString(buf);
 

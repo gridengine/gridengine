@@ -196,7 +196,6 @@ _Insight_set_option("suppress", "READ_DANGLING");
 
       FPRINTF((fp, "share_override_tickets           %s\n", lGetBool(ep, SC_share_override_tickets)?"true":"false"));
       FPRINTF((fp, "share_functional_shares          %s\n", lGetBool(ep, SC_share_functional_shares)?"true":"false"));
-      FPRINTF((fp, "share_deadline_tickets           %s\n", lGetBool(ep, SC_share_deadline_tickets)?"true":"false"));
       FPRINTF((fp, "max_functional_jobs_to_schedule  " u32 "\n", lGetUlong(ep, SC_max_functional_jobs_to_schedule)));
       FPRINTF((fp, "report_pjob_tickets              %s\n", lGetBool(ep, SC_report_pjob_tickets)?"true":"false"));
       FPRINTF((fp, "max_pending_tasks_per_job        " u32 "\n", lGetUlong(ep, SC_max_pending_tasks_per_job)));
@@ -312,13 +311,6 @@ static int read_schedd_conf_work(lList **alpp, lList **clpp, int fields[],
       /* --------- SC_share_override_tickets */
       if (!set_conf_bool(alpp, clpp, fields, "share_override_tickets", ep, 
                SC_share_override_tickets)) {
-         DEXIT;
-         return -1;
-      }
-      
-      /* --------- SC_share_deadline_tickets */
-      if (!set_conf_bool(alpp, clpp, fields, "share_deadline_tickets", ep, 
-               SC_share_deadline_tickets)) {
          DEXIT;
          return -1;
       }

@@ -42,6 +42,7 @@ Qmon*qmon_cplx.cplx_layout.xmtChildren: \
    CX_TypeMatrix  attr_mx; \
    InputField     attr_aname, \
                   attr_ashort, \
+                  attr_aurgency, \
                   attr_adefault; \
    XmtChooser     attr_atype, \
                   attr_arel, \
@@ -67,6 +68,7 @@ Qmon*qmon_cplx.cplx_layout.layout: \
                Centered Caption tl "@{Requestable}" 7 em attr_areq \
                Centered Caption tl "@{Consumable}" 7 em attr_aconsumable \
                FlushTop Caption tl "@{Default}" 7 em attr_adefault \
+               FlushTop Caption tl "@{Urgency}" 7 em attr_aurgency \
             } \
             # \
             Etched Top Centered Row { \
@@ -149,12 +151,12 @@ Qmon*cplx_layout*attr_mx*attr_menu.items: \
 
 Qmon*cplx_layout*attr_mx.rows:         15
 Qmon*cplx_layout*attr_mx.visibleRows:  15
-Qmon*cplx_layout*attr_mx.columns:      7
-Qmon*cplx_layout*attr_mx.columnWidths: 10,8,12,8,10,11,10
-Qmon*cplx_layout*attr_mx.maxLengths:   100,100,100,10,10,10,100
-Qmon*cplx_layout*attr_mx.columnLabels: @{Name}, @{Shortcut}, @{Type}, @{Relation}, @{Requestable}, @{Consumable}, @{Default}
+Qmon*cplx_layout*attr_mx.columns:      8
+Qmon*cplx_layout*attr_mx.columnWidths: 10,8,12,8,10,11,10,8
+Qmon*cplx_layout*attr_mx.maxLengths:   100,100,100,10,10,10,100,100
+Qmon*cplx_layout*attr_mx.columnLabels: @{Name}, @{Shortcut}, @{Type}, @{Relation}, @{Requestable}, @{Consumable}, @{Default}, @{Urgency}
 Qmon*cplx_layout*attr_mx.boldLabels:          True
-Qmon*cplx_layout*attr_mx.columnButtonLabels:  True,True,True,True,True,True,True
+Qmon*cplx_layout*attr_mx.columnButtonLabels:  True,True,True,True,True,True,True,True
 !Qmon*cplx_layout*attr_mx.evenRowBackground:   $matrix_even_bg
 !Qmon*cplx_layout*attr_mx.oddRowBackground:    $matrix_odd_bg
 Qmon*cplx_layout*attr_mx.gridType:            GRID_CELL_SHADOW

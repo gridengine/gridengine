@@ -193,7 +193,7 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
          if (is_slots_attr) {
             defaultval = "1";
          }
-         DPRINTF(("Got CE_default: "SFQ"\n", defaultval));
+         DPRINTF(("Got CE_default: "SFQ"\n", defaultval ? defaultval : "-NA-"));
          lSetString(centry, CE_default, defaultval);
       }
    }
@@ -205,9 +205,9 @@ centry_mod(lList **answer_list, lListElem *centry, lListElem *reduced_elem,
       pos = lGetPosViaElem(reduced_elem, CE_urgency_weight);
 
       if (pos >= 0) {
-         const char *defaultval = lGetPosString(reduced_elem, pos);
-         DPRINTF(("Got CE_default: "SFQ"\n", defaultval));
-         lSetString(centry, CE_urgency_weight, defaultval);
+         const char *urgency_weight = lGetPosString(reduced_elem, pos);
+         DPRINTF(("Got CE_default: "SFQ"\n", urgency_weight ? urgency_weight : "-NA-"));
+         lSetString(centry, CE_urgency_weight, urgency_weight);
       }
    }
 

@@ -90,6 +90,7 @@ static Widget attr_arel = 0;
 static Widget attr_areq = 0;
 static Widget attr_aconsumable = 0;
 static Widget attr_adefault = 0;
+static Widget attr_aurgency = 0;
 
 
 /*-------------------------------------------------------------------------*/
@@ -211,6 +212,7 @@ Widget parent
                            "attr_areq", &attr_areq,
                            "attr_aconsumable", &attr_aconsumable,
                            "attr_adefault", &attr_adefault,
+                           "attr_aurgency", &attr_aurgency,
                            NULL);
 
    XtAddCallback(cplx_main_link, XmNactivateCallback, 
@@ -299,9 +301,9 @@ XtPointer cld, cad;
 /*-------------------------------------------------------------------------*/
 static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
 {
-   String new_str[1][7];
+   String new_str[1][8];
    int rows = 0;
-   int num_columns = 7;
+   int num_columns = 8;
    int row, i;
    int row_to_change = 0;
    String str;
@@ -339,6 +341,12 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
       return;
    }
       
+   if (is_empty_word(XmtInputFieldGetString(attr_aurgency))) {
+      qmonMessageShow(matrix, True, "Urgency required !");
+      DEXIT;
+      return;
+   }
+
    /*
    ** get the values
    */
@@ -363,6 +371,7 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    consumable = XmtChooserGetState(attr_aconsumable);   
    new_str[0][5] = XtNewString(consumable ? "YES" : "NO");
    new_str[0][6] = XtNewString(XmtInputFieldGetString(attr_adefault));
+   new_str[0][7] = XtNewString(XmtInputFieldGetString(attr_aurgency));
          
    
    /*
@@ -376,8 +385,9 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    lSetBool(new_entry, CE_consumable, consumable);
    lSetUlong(new_entry, CE_requestable, req_state);
    if (consumable) {
-      lSetString(new_entry, CE_default, new_str[0][0]);
+      lSetString(new_entry, CE_default, new_str[0][6]);
    }   
+   lSetString(new_entry, CE_urgency_weight, new_str[0][7]);
 
    if (!centry_elem_validate(new_entry, NULL, &alp)) {
       qmonMessageBox(matrix, alp, 0);
@@ -480,7 +490,9 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    /* 
    ** add new rows at the top 
    */
-   XbaeMatrixAddRows(matrix, modify_mode ? row_to_change : 0, new_str[0], NULL, NULL, 1);
+   if (!modify_mode)
+      row_to_change=0;
+   XbaeMatrixAddRows(matrix, row_to_change, new_str[0], NULL, NULL, 1);
 /*    XbaeMatrixSetRowBackgrounds(matrix, modify_mode ? row_to_change : 0, &color, 1); */
 
    /* reset and jump to attr_aname */
@@ -488,6 +500,7 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    XtSetSensitive(attr_mod, False);
    /* refresh the matrix */
    XbaeMatrixRefresh(matrix);
+   XbaeMatrixMakeCellVisible(matrix, row_to_change, 0);
    
    qmonCplxResetEntryLine();
    XmProcessTraversal(attr_aname, XmTRAVERSE_CURRENT);
@@ -769,6 +782,10 @@ XtPointer cld, cad;
       /* default */
       str = XbaeMatrixGetCell(w, cbs->row, 6);
       XmtInputFieldSetString(attr_adefault, str ? str : ""); 
+
+      /* urgency */
+      str = XbaeMatrixGetCell(w, cbs->row, 7);
+      XmtInputFieldSetString(attr_aurgency, str ? str : ""); 
    }
    
    if ((XbaeMatrixGetNumSelected(w)/XbaeMatrixNumColumns(w)) != 1) {
@@ -807,6 +824,9 @@ static void qmonCplxResetEntryLine(void)
    XmtInputFieldSetString(attr_adefault, "0"); 
    XtSetSensitive(attr_adefault, false);
    
+   /* urgency */
+   XmtInputFieldSetString(attr_aurgency, "0"); 
+   
    DEXIT;
 }
 
@@ -836,7 +856,7 @@ static void qmonCplxSortAttr(Widget w, XtPointer cld, XtPointer cad)
    entries = qmonGetCE_Type(attr_mx);
    if (cbs->column > XtNumber(column_nm))
       cbs->column=0;
-   lPSortList(entries, "%I+", column_nm[cbs->column]); 
+   lPSortList(entries, "%I+%I+", column_nm[cbs->column], column_nm[0]); 
    qmonSetCE_Type(attr_mx, entries, CE_TYPE_FULL);
    entries = lFreeList(entries);
    

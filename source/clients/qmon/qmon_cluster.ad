@@ -409,7 +409,6 @@ Qmon*cluster_extra_layout.XmText.marginWidth:          2
 
 Qmon*cluster_extra_layout.xmtChildren: \
    InputField     cluster_qmaster_params = qmaster_params, \
-                  cluster_schedd_params = schedd_params, \
                   cluster_execd_params = execd_params, \
                   cluster_shepherd_cmd = shepherd_cmd, \
                   cluster_set_token_cmd = set_token_cmd, \
@@ -422,7 +421,6 @@ Qmon*cluster_extra_layout.xmtChildren: \
                   cluster_rlogin_daemon = rlogin_daemon, \
                   cluster_rlogin_command = rlogin_command; \
    XmLabel        cluster_qmaster_params_label, \
-                  cluster_schedd_params_label, \
                   cluster_set_token_cmd_label, \
                   cluster_pag_cmd_label, \
                   cluster_token_extend_time_label;
@@ -446,7 +444,6 @@ Qmon*cluster_extra_layout.layout: \
       Etched Through Caption tl "@{@fBAdditional Parameters}" Col { \
          # \
          Row { cluster_qmaster_params_label <> Fixed 50 em cluster_qmaster_params }\
-         Row { cluster_schedd_params_label <> Fixed 50 em cluster_schedd_params }\
          Row { "@{Execd Parameters}" <> Fixed 50 em cluster_execd_params }\
          Row { "@{Shepherd Command}" <> Fixed 50 em cluster_shepherd_cmd }\
       } \
@@ -471,13 +468,11 @@ Qmon*cluster_extra_layout.layout: \
    }
 
 Qmon*cluster_extra_layout.cluster_qmaster_params_label.labelString: @{Master Parameters}
-Qmon*cluster_extra_layout.cluster_schedd_params_label.labelString: @{Schedd Parameters}
 Qmon*cluster_extra_layout.cluster_set_token_cmd_label.labelString: @{set_token command}
 Qmon*cluster_extra_layout.cluster_pag_cmd_label.labelString: @{pag command}
 Qmon*cluster_extra_layout.cluster_token_extend_time_label.labelString: @{token_extend_time}
 
 Qmon*cluster_extra_layout.cluster_qmaster_params.verifyCallback: TrimAndTrail(self);
-Qmon*cluster_extra_layout.cluster_schedd_params.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_execd_params.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_shepherd_cmd.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_rsh_daemon.verifyCallback: TrimAndTrail(self);

@@ -576,6 +576,8 @@ int sge_mod_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    DENTER(TOP_LAYER,"sge_mod_event_client");
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    /* try to find event_client */
    id = lGetUlong(clio, EV_id);
    
@@ -733,6 +735,8 @@ bool sge_event_client_registered(u_long32 aClientID)
 
    DENTER(TOP_LAYER, "sge_event_client_registered");
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    lock_client (aClientID, true);
 
    if (get_event_client (aClientID) != NULL) {
@@ -772,6 +776,8 @@ void sge_remove_event_client(u_long32 aClientID) {
    subscription_t *old_sub = NULL;
 
    DENTER(TOP_LAYER, "sge_remove_event_client");
+
+   pthread_once(&Event_Master_Once, event_master_once_init);
 
    lock_client (aClientID, true);
    client = get_event_client (aClientID);
@@ -872,6 +878,8 @@ u_long32 sge_set_max_dynamic_event_clients(u_long32 new_value){
 
    DENTER(TOP_LAYER, "sge_set_max_dynamic_event_clients");
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    /* Don't need to lock all clients because we're not changing the clients. */
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
 
@@ -914,7 +922,7 @@ u_long32 sge_set_max_dynamic_event_clients(u_long32 new_value){
 
          /* Copy all entries from the old list to the new.  The new list is
           * guaranteed to be longer than the old list. */
-         memcpy (Master_Control.clients_array, newp,
+         memcpy (newp, Master_Control.clients_array,
                  old_length * sizeof (lListElem **));
 
          /* Zero the rest of the entries. */
@@ -975,6 +983,8 @@ u_long32 sge_get_max_dynamic_event_clients(void){
    u_long32 actual_value = 0;
    DENTER(TOP_LAYER, "sge_get_max_dynamic_event_clients");
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
    actual_value = Master_Control.max_event_clients;
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Master_Control.mutex);
@@ -1015,6 +1025,8 @@ lList* sge_select_event_clients(const char *aNewList, const lCondition *aCond, c
    lList *lst = NULL;
 
    DENTER(TOP_LAYER, "sge_select_event_clients");
+
+   pthread_once(&Event_Master_Once, event_master_once_init);
 
    /* We have to lock everything because we need to access every client. */
    /* This also aquires the mutex. */
@@ -1066,6 +1078,8 @@ int sge_shutdown_event_client(u_long32 aClientID, const char* anUser,
    lListElem *client = NULL;
    int ret = 0;
    DENTER(TOP_LAYER, "sge_shutdown_event_client");
+
+   pthread_once(&Event_Master_Once, event_master_once_init);
 
    if (aClientID <= EV_ID_ANY) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
@@ -1152,6 +1166,8 @@ int sge_shutdown_dynamic_event_clients(const char *anUser, lList **alpp)
    int count = 0;
 
    DENTER(TOP_LAYER, "sge_shutdown_dynamic_event_clients");
+
+   pthread_once(&Event_Master_Once, event_master_once_init);
 
    if (!manop_is_manager(anUser)) {
       answer_list_add(alpp, MSG_COM_NOSHUTDOWNPERMS, STATUS_DENIED,
@@ -1339,6 +1355,8 @@ bool sge_add_event(u_long32 timestamp, ev_event type, u_long32 intkey,
 {
    lList *lp = NULL;
    
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    if (element != NULL) {
       lp = lCreateList ("Events", lGetElemDescr(element));   
       lAppendElem (lp, lCopyElem (element));
@@ -1384,6 +1402,8 @@ bool sge_add_event_for_client(u_long32 aClientID, u_long32 aTimestamp, ev_event 
    
    DENTER (TOP_LAYER, "sge_add_event_for_client");
    
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    /* This doesn't check whether the id is too large, which is a possibility.
     * The problem is that to do the check, I'd have to grab the lock, which
     * is not worth it.  Instead I will just rely on the calling methods not
@@ -1442,6 +1462,8 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
 {
    lList *lp = NULL;
    
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    if (list != NULL) {
       lp = lCopyList (lGetListName (list), list);
    }
@@ -1916,6 +1938,8 @@ void sge_handle_event_ack(u_long32 aClientID, ev_event anEvent)
    
    DENTER(TOP_LAYER, "sge_handle_event_ack");
    
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    /* This doesn't check whether the id is too large, which is a possibility.
     * The problem is that to double the check, I'd have to grab the lock, which
     * is not worth it.  Instead I will just rely on the calling methods not
@@ -2081,6 +2105,8 @@ void sge_deliver_events_immediately(u_long32 aClientID)
 
    DENTER(TOP_LAYER, "sge_event_immediate_delivery");
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    lock_client (aClientID, true);
 
    if ((client = get_event_client (aClientID)) == NULL) {
@@ -2133,6 +2159,8 @@ u_long32 sge_get_next_event_number(u_long32 aClientID)
 
    DENTER(TOP_LAYER, "sge_get_next_event_number");
 
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    lock_client (aClientID, true);
 
    if ((client = get_event_client (aClientID)) != NULL) {
@@ -2175,6 +2203,8 @@ int sge_resync_schedd(void)
    lListElem *client;
    int ret = -1;
    DENTER(TOP_LAYER, "sge_sync_schedd");
+
+   pthread_once(&Event_Master_Once, event_master_once_init);
 
    lock_client (EV_ID_SCHEDD, true);
 
@@ -4113,6 +4143,8 @@ static void destroy_event_queue (void *queue)
 *******************************************************************************/
 bool sge_rollback (void)
 {
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    if (sge_is_commit_required ()) {
       lList *qlp = (lList *)pthread_getspecific (Event_Queue_Key);
 
@@ -4152,6 +4184,8 @@ bool sge_commit (void)
 {
    DENTER (TOP_LAYER, "sge_commit");
    
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    if (sge_is_commit_required ()) {
       lList *qlp = NULL;
       bool flush = false;
@@ -4299,6 +4333,8 @@ static bool should_flush_event_client(u_long32 id, ev_event type, bool has_lock)
 *******************************************************************************/
 void sge_set_commit_required (bool require_commit)
 {
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    pthread_setspecific (Event_Commit_Key, (void *)require_commit);
 }
 
@@ -4320,5 +4356,7 @@ void sge_set_commit_required (bool require_commit)
 *******************************************************************************/
 bool sge_is_commit_required (void)
 {
+   pthread_once(&Event_Master_Once, event_master_once_init);
+
    return (bool)pthread_getspecific (Event_Commit_Key);
 }

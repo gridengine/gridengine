@@ -44,6 +44,7 @@
 #include "sge_log.h"
 #include "sge_dstring.h"
 
+#include "sge_object.h"
 #include "sge_host.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
@@ -583,6 +584,7 @@ int main(int argc, char *argv[])
 
          /* schedule jobs -> test sge_ssi_job_start() */
          simple_scheduler();
+/*          sleep(60); */
          
          /* test sge_ssi_job_cancel() */
 /*          delete_some_jobs(); */

@@ -1546,7 +1546,7 @@ int ec_commit_multi(lList **malpp)
 int ec_get(
 lList **event_list
 ) {  
-   int ret;
+   int ret = -1;
    lList *report_list = NULL;
    static u_long32 next_event = 1;
    u_long32 wrong_number;
@@ -1569,43 +1569,111 @@ lList **event_list
          need_register = 0;
    }
       
-   if(config_changed) {
+   if (config_changed) {
       ec_commit();
    }
    
-   /* receive event message */
-   if((ret = get_event_list(1, &report_list)) == 0) {
-      lList *new_events = NULL;
-      lXchgList(lFirst(report_list), REP_list, &new_events);
-      report_list = lFreeList(report_list);
+   /* receive event message(s) 
+    * The following problems exists here:
+    * - there might be multiple event reports at commd - so fetching only one
+    *   is not sufficient
+    * - if we fetch reports until fetching fails, we can run into an endless
+    *   loop, if qmaster sends lots of event reports (e.g. due to flushing)
+    * - so what number of events shall we fetch?
+    *   Let's assume that qmaster will send a maximum of 1 event message per
+    *   second. Then our maximum number of messages to fetch is the number of
+    *   seconds passed since last fetch.
+    *   For the first fetch after registration, we can take the event delivery
+    *   interval.
+    * - To make sure this algorithm works in all cases, we could restrict both
+    *   event delivery time and flush time to intervals greater than 1 second.
+    */
 
-      if (ck_event_number(new_events, &next_event, &wrong_number)) {
-         /*
-          *  may be we got an old event, that was sent before
-          *  reregistration at qmaster
-          */
-         lFreeList(*event_list);
-         lFreeList(new_events);
-         ec_mark4registration();
-         DEXIT;
-         return -1;
+   {
+      static time_t last_fetch_time = 0;
+      time_t now;
+
+      bool done = false;
+      int max_fetch;
+      int sync = 1;
+
+      now = sge_get_gmt();
+
+      /* initialize the maximum number of fetches */
+      if (last_fetch_time == 0) {
+         max_fetch = ec_get_edtime();
+      } else {
+         max_fetch = now - last_fetch_time;
       }
 
-      DPRINTF(("got %d events till "u32"\n", lGetNumberOfElem(new_events), next_event-1));
+      last_fetch_time = now;
 
-      *event_list = new_events;
+      DPRINTF(("ec_get retrieving events - will do max %d fetches\n", 
+               max_fetch));
+
+      /* fetch data until nothing left or maximum reached */
+      while (!done) {
+         DPRINTF(("doing %s fetch for messages, %d still to do\n", 
+                  sync ? "sync" : "async", max_fetch));
+
+         if ((ret = get_event_list(sync, &report_list)) == CL_OK) {
+            lList *new_events = NULL;
+            lXchgList(lFirst(report_list), REP_list, &new_events);
+            report_list = lFreeList(report_list);
+
+            if (ck_event_number(new_events, &next_event, &wrong_number)) {
+               /*
+                *  may be we got an old event, that was sent before
+                *  reregistration at qmaster
+                */
+               lFreeList(*event_list);
+               lFreeList(new_events);
+               ec_mark4registration();
+               DEXIT;
+               return -1;
+            }
+
+            DPRINTF(("got %d events till "u32"\n", 
+                     lGetNumberOfElem(new_events), next_event-1));
+
+            if (*event_list != NULL) {
+               lAddList(*event_list, new_events);
+            } else {
+               *event_list = new_events;
+            }
+
+         } else {
+            /* get_event_list failed - we are through */
+            done = true;
+            continue; 
+         }
+
+         sync = 0;
+
+         if (--max_fetch <= 0) {
+            /* maximum number of fetches reached - stop fetching reports */
+            done = true;
+         }
+      }
+
+      /* if first synchronous get_event_list failed, return error */
+      if (sync && ret != CL_OK) {
+         DPRINTF(("first syncronous get_event_list failed\n"));
+         DEXIT;
+         return ret;
+      }
 
       /* send an ack to the qmaster for all received events */
-      if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event-1, lGetUlong(ec, EV_id))) {
+      if (sge_send_ack_to_qmaster(0, ACK_EVENT_DELIVERY, next_event-1, 
+                                  lGetUlong(ec, EV_id))) {
          WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
       } else {
-         DPRINTF(("Sent ack for all events lower or equal %d\n", (next_event-1)));
+         DPRINTF(("Sent ack for all events lower or equal %d\n", 
+                  (next_event-1)));
       }           
-   } else {
-      DPRINTF(("no events received\n"));
-      DEXIT;
-      return ret;
-   }
+   } 
+
+   DPRINTF(("ec_get - received %d events\n", lGetNumberOfElem(*event_list)));
 
    DEXIT;
    return 0;

@@ -1,3 +1,8 @@
+JG-2003-01-20-0  Bugfix:    Fixed a problem in the event client interface
+                            when event clients did no regular fetching of 
+                            events and had no busy handling configured.
+                 IZ:        #445
+
 JG-2003-01-16-0  Bugfix:    Fixed a memory leak in the "simple scheduling 
                             interface"
 

@@ -1214,7 +1214,7 @@ int sge_load_alarm(char *reason, lListElem *qep, lList *threshold, lList *execho
             load_is_value = 0;
          }
       } 
-      if ((hlep != NULL) && (global_hep != NULL)) {
+      if ((hlep == NULL) && (global_hep != NULL)) {
          glep = lGetSubStr(global_hep, HL_name, name, EH_load_list);
          if (glep != NULL) {
             load_value = lGetString(glep, HL_value);

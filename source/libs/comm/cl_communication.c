@@ -2939,6 +2939,7 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,cl_com_con
             break;
          }
       }
+      connection->data_read_flag = CL_COM_DATA_NOT_READY;
       if (*new_connection != NULL && retval == CL_RETVAL_OK) {
          /* setup new cl_com_connection_t */
          (*new_connection)->service_handler_flag = CL_COM_CONNECTION;
@@ -3734,7 +3735,7 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
                   if ( (ret=cl_com_connection_get_client_socket_in_port(connection, &in_port)) != CL_RETVAL_OK) {
                      CL_LOG_STR(CL_LOG_ERROR,"could not get client in socket connect port:", cl_get_error_text(ret));
                   }
-                  CL_LOG_INT(CL_LOG_ERROR,"new debug client connection from port", in_port );
+                  CL_LOG_INT(CL_LOG_INFO,"new debug client connection from port", in_port );
                   
                   /* check debug client reserved port */
                   if (in_port <= 0 || in_port >= IPPORT_RESERVED) {

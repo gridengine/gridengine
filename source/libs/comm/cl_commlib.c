@@ -35,6 +35,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/time.h>
+#include <sys/resource.h>
 #include <errno.h>
 #include "sge_arch.h"
 
@@ -609,6 +610,12 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    char help_buffer[80];
    char* local_hostname = NULL;
    cl_handle_list_elem_t* elem = NULL;
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   struct rlimit64 application_rlimits;
+#else
+   struct rlimit application_rlimits;
+#endif
+
 
    cl_commlib_check_callback_functions();
 
@@ -729,8 +736,15 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->allowed_host_list = NULL;
    
    new_handle->auto_close_mode = CL_CM_AC_DISABLED;
-   new_handle->max_open_connections = sysconf(_SC_OPEN_MAX);
-   if ( new_handle->max_open_connections < 23 ) {
+   
+#if defined(IRIX) || (defined(LINUX) && defined(TARGET32_BIT))
+   getrlimit64(RLIMIT_NOFILE, &application_rlimits);
+#else
+   getrlimit(RLIMIT_NOFILE, &application_rlimits);
+#endif
+
+   new_handle->max_open_connections = (unsigned long) application_rlimits.rlim_cur;
+   if ( new_handle->max_open_connections < 32 ) {
       CL_LOG_INT(CL_LOG_ERROR, "to less file descriptors:", (int)new_handle->max_open_connections );
       free(new_handle);
       free(local_hostname);
@@ -1520,7 +1534,7 @@ int cl_com_get_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_set_max_connections()"
-int cl_com_set_max_connections(cl_com_handle_t* handle, int value) {
+int cl_com_set_max_connections(cl_com_handle_t* handle, unsigned long value) {
    if (handle == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -1535,7 +1549,7 @@ int cl_com_set_max_connections(cl_com_handle_t* handle, int value) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_get_max_connections()"
-int cl_com_get_max_connections(cl_com_handle_t* handle, int* value) {
+int cl_com_get_max_connections(cl_com_handle_t* handle, unsigned long* value) {
    if (handle == NULL) {
       return CL_RETVAL_PARAMS;
    }  
@@ -2213,7 +2227,8 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
                  return_value != CL_RETVAL_UNCOMPLETE_READ && 
                  return_value != CL_RETVAL_SELECT_ERROR ) {
                elem->connection->connection_state = CL_CLOSING;
-               CL_LOG_STR(CL_LOG_WARNING,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
+               CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
+               cl_commlib_push_application_error(return_value, "closing connection");
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
@@ -2239,7 +2254,8 @@ static int cl_com_trigger(cl_com_handle_t* handle) {
                 return_value != CL_RETVAL_UNCOMPLETE_WRITE && 
                 return_value != CL_RETVAL_SELECT_ERROR ) {
                elem->connection->connection_state = CL_CLOSING;
-               CL_LOG_STR(CL_LOG_WARNING,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
+               CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
+               cl_commlib_push_application_error(return_value, "closing connection");
             }
             if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                elem->connection->connection_state = CL_CLOSING;
@@ -2318,13 +2334,13 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
    unsigned long size = 0;
    int return_value = CL_RETVAL_OK;
    int connect_port = 0;
+   struct timeval now;
 
    if (connection == NULL) {
       return CL_RETVAL_PARAMS;
    }
 
    if (connection->data_flow_type == CL_CM_CT_STREAM) {
-      struct timeval now;
       return_value = cl_com_create_message(&message);
       if (return_value != CL_RETVAL_OK) {
          return return_value;   
@@ -2415,7 +2431,6 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
       } 
          
       if (message->message_state == CL_MS_INIT_RCV) {
-         struct timeval now;
 
          CL_LOG(CL_LOG_INFO,"CL_MS_INIT_RCV");
          connection->data_read_buffer_pos = 0;
@@ -2435,6 +2450,13 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
              /* header is not complete, try later */
              cl_raw_list_unlock(connection->received_message_list);
              CL_LOG_STR(CL_LOG_INFO,"cl_com_read_GMSH returned", cl_get_error_text(return_value));
+
+             /* recalculate timeout when some data was received */
+             if (size > 0) {
+                gettimeofday(&now,NULL);
+                connection->read_buffer_timeout_time = now.tv_sec + connection->handler->read_timeout;
+                CL_LOG(CL_LOG_INFO,"recalculate read buffer timeout time (CL_MS_RCV_GMSH)");
+             }
              return return_value;
          }
          connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + connection->data_read_buffer_pos;
@@ -2463,6 +2485,13 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             if (return_value != CL_RETVAL_OK) {
                cl_raw_list_unlock(connection->received_message_list);
                CL_LOG_STR(CL_LOG_INFO,"cl_com_receive_message returned", cl_get_error_text(return_value));
+
+               /* recalculate timeout when some data was received */
+               if (data_read > 0) {
+                  gettimeofday(&now,NULL);
+                  connection->read_buffer_timeout_time = now.tv_sec + connection->handler->read_timeout;
+                  CL_LOG(CL_LOG_INFO,"recalculate read buffer timeout time (CL_MS_RCV_MIH)");
+               }
                return return_value;
             }
          }
@@ -2506,6 +2535,14 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             if (return_value != CL_RETVAL_OK) {
                cl_raw_list_unlock(connection->received_message_list);
                CL_LOG_STR(CL_LOG_INFO,"cl_com_receive_message returned", cl_get_error_text(return_value));
+
+               /* recalculate timeout when some data was received */
+               if (size > 0) {
+                  gettimeofday(&now,NULL);
+                  connection->read_buffer_timeout_time = now.tv_sec + connection->handler->read_timeout;
+                  CL_LOG(CL_LOG_INFO,"recalculate read buffer timeout time (CL_MS_RCV)");
+               }
+
                return return_value;
             }
          }
@@ -2579,9 +2616,6 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          cl_com_message_t*       sent_message      = NULL;
          cl_message_list_elem_t* message_list_elem = NULL;
          unsigned long           run_time = 0;
-         struct timeval          now;
-
-
 
          switch(message->message_df) {
             case CL_MIH_DF_SIM:
@@ -3426,6 +3460,13 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           connection->data_write_buffer_to_send = connection->data_write_buffer_to_send - written;
           if (return_value != CL_RETVAL_OK) {
              cl_raw_list_unlock(connection->send_message_list);
+
+             /* recalculate timeout when some data was written */
+             if (written > 0) {
+                gettimeofday(&now,NULL);
+                connection->write_buffer_timeout_time = now.tv_sec + connection->handler->write_timeout;
+                CL_LOG(CL_LOG_INFO,"recalculate write buffer timeout time (CL_MS_SND_GMSH)");
+             }
              return return_value;
           }
           if (connection->data_write_buffer_to_send > 0) {
@@ -3467,6 +3508,13 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           connection->data_write_buffer_to_send = connection->data_write_buffer_to_send - written;
           if (return_value != CL_RETVAL_OK) {
              cl_raw_list_unlock(connection->send_message_list);
+
+             /* recalculate timeout when some data was written */
+             if (written > 0) {
+                gettimeofday(&now,NULL);
+                connection->write_buffer_timeout_time = now.tv_sec + connection->handler->write_timeout;
+                CL_LOG(CL_LOG_INFO,"recalculate write buffer timeout time (CL_MS_SND_MIH)");
+             }
              return return_value;
           }
           if (connection->data_write_buffer_to_send > 0) {
@@ -3488,6 +3536,13 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           message->message_snd_pointer = message->message_snd_pointer + written;
           if (return_value != CL_RETVAL_OK) {
              cl_raw_list_unlock(connection->send_message_list);
+
+             /* recalculate timeout when some data was written */
+             if (written > 0) {
+                gettimeofday(&now,NULL);
+                connection->write_buffer_timeout_time = now.tv_sec + connection->handler->write_timeout;
+                CL_LOG(CL_LOG_INFO,"recalculate write buffer timeout time (CL_MS_SND)");
+             }
              return return_value;
           }
           if (message->message_snd_pointer == message->message_length) {
@@ -3664,7 +3719,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
    }
 
    if ( un_resolved_hostname != NULL || component_name != NULL || component_id != 0) {
-      CL_LOG(CL_LOG_WARNING,"message filtering not supported");
+      CL_LOG(CL_LOG_DEBUG,"message filtering not supported");
    }
    do {
       leave_reason = CL_RETVAL_OK;
@@ -5726,7 +5781,8 @@ static void *cl_com_handle_read_thread(void *t_conf) {
                        return_value != CL_RETVAL_UNCOMPLETE_READ && 
                        return_value != CL_RETVAL_SELECT_ERROR ) {
                      elem->connection->connection_state = CL_CLOSING;
-                     CL_LOG_STR(CL_LOG_WARNING,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
+                     CL_LOG_STR(CL_LOG_ERROR,"read from connection: setting close flag! Reason:", cl_get_error_text(return_value));
+                     cl_commlib_push_application_error(return_value, "closing connection");
                   }
                   if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                      elem->connection->connection_state = CL_CLOSING;
@@ -5774,7 +5830,6 @@ static void *cl_com_handle_read_thread(void *t_conf) {
 
             /* we have a new connection request */
             cl_com_connection_t* new_con = NULL;
-
             cl_com_connection_request_handler(handle->service_handler, &new_con, 0,0 );
             if (new_con != NULL) {
                /* got new connection request */
@@ -5969,6 +6024,7 @@ static void *cl_com_handle_write_thread(void *t_conf) {
                             return_value != CL_RETVAL_SELECT_ERROR ) {
                            elem->connection->connection_state = CL_CLOSING;
                            CL_LOG_STR(CL_LOG_ERROR,"write to connection: setting close flag! Reason:", cl_get_error_text(return_value));
+                           cl_commlib_push_application_error(return_value, "closing connection");
                         }
                         if (return_value != CL_RETVAL_OK && cl_com_get_ignore_timeouts_flag() == CL_TRUE) {
                            elem->connection->connection_state = CL_CLOSING;

@@ -1,4 +1,20 @@
-EB-2004-12-22-0: Bigfix:    The qstat -ext -xml command is broken with
+CR-2004-12-23-1: Bugfix:    error in commlib read/write timeout handling
+                            - merged from maintrunk
+                              (CR-2004-12-07-0)
+                 Issue:     1389
+                 Bugtraq:   6205648
+                 Changed:   commlib
+                 Review:    MD
+
+CR-2004-12-23-0: Bugfix:    qmaster running out of file descriptors
+                            - merged Part I/II from maintrunk
+                              (CR-2004-12-03-2 and CR-2004-12-23-0)
+                 Issue:     1400
+                 Bugtraq:   6211309
+                 Changed:   qmaster, commlib
+                 Review:    MD
+
+EB-2004-12-22-0: Bugfix:    The qstat -ext -xml command is broken with
                             N1GE6 Update 2 patch
                  Changed:   qstat
                  Issue:     1401

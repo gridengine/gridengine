@@ -225,7 +225,7 @@ typedef struct cl_com_handle {
    cl_raw_list_t* allowed_host_list; /* string list with hostnames allowed to connect */
    unsigned long next_free_client_id;
 
-   int max_open_connections; /* maximum number of open connections  */
+   unsigned long max_open_connections; /* maximum number of open connections  */
    cl_max_count_t max_con_close_mode;  /*  state of auto close at max connection count */
    cl_xml_connection_autoclose_t auto_close_mode; /* used to enable/disable autoclose of connections opend from this handle to services */
    int max_write_threads;    /* maximum number of send threads */

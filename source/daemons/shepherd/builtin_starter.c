@@ -102,6 +102,7 @@ extern int  shepherd_state;
 extern char shepherd_job_dir[];
 extern char **environ;
 
+
 /************************************************************************
  This is the shepherds buitin starter.
 
@@ -143,6 +144,7 @@ int truncate_stderr_out
    char  str_title[512]="";
    char  *tmp_str;
    char  *starter_method;
+   int   use_starter_method;
    char  *tmpdir;
    char  *cwd;
    const char *fs_stdin_file="";
@@ -657,12 +659,15 @@ int truncate_stderr_out
 
       sge_set_env_value("SGE_STARTER_SHELL_PATH", shell_path);
       shell_path = starter_method;
+      use_starter_method = 1;
       sge_set_env_value("SGE_STARTER_SHELL_START_MODE", shell_start_mode);
       if (!strcasecmp("unix_behavior", shell_start_mode))
          shell_start_mode = "posix_compliant";
       if (use_login_shell)
          sge_set_env_value("SGE_STARTER_USE_LOGIN_SHELL", "true");
-   }
+    } else {
+       use_starter_method = 0;
+    }      
 
    /* get basename of shell for building argv[0] */
    cp = strrchr(shell_path, '/');
@@ -772,7 +777,7 @@ int truncate_stderr_out
          }
       }
    }
-   start_command(childname, shell_path, script_file, argv0, shell_start_mode, is_interactive, is_qlogin, is_rsh, is_rlogin, str_title);
+   start_command(childname, shell_path, script_file, argv0, shell_start_mode, is_interactive, is_qlogin, is_rsh, is_rlogin, str_title, use_starter_method);
    return;
 }
 
@@ -1160,7 +1165,9 @@ int is_interactive,
 int is_qlogin,
 int is_rsh,
 int is_rlogin,
-char *str_title 
+char *str_title,
+int use_starter_method // If this flag is set the shellpath contains the
+                       // starter_method
 ) {
    char **args;
    char **pstr;
@@ -1170,6 +1177,19 @@ char *str_title
    char err_str[2048];
 
    pre_args_ptr = &pre_args[0];
+   
+#if 1
+   sprintf(err_str, "childname = %s", childname? childname : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "shell_path = %s", shell_path ? shell_path : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "script_file = %s", script_file ? script_file : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "argv0 = %s", argv0 ? argv0 : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "shell_start_mode = %s", shell_start_mode ? shell_start_mode : "NULL" );  shepherd_trace(err_str);
+   sprintf(err_str, "is_interactive = %d", is_interactive );  shepherd_trace(err_str);
+   sprintf(err_str, "is_qlogin = %d", is_qlogin );  shepherd_trace(err_str);
+   sprintf(err_str, "is_rsh = %d", is_rsh );  shepherd_trace(err_str);
+   sprintf(err_str, "is_rlogin = %d", is_rlogin );  shepherd_trace(err_str);
+   sprintf(err_str, "str_title = %s", str_title ? str_title : "NULL"  );  shepherd_trace(err_str);   
+#endif
 
    /*
    ** prepare job arguments
@@ -1182,6 +1202,10 @@ char *str_title
       int n_job_args;
       char *cp;
       unsigned long i;
+
+#if 1
+      shepherd_trace("CASE 1: handle_as_binary, shell, no rsh, no qlogin");
+#endif
 
       pre_args_ptr[arg_id++] = argv0;
       n_job_args = atoi(get_conf_val("njob_args"));
@@ -1208,6 +1232,11 @@ char *str_title
       args = pre_args;
    /* No need to test for binary since this option excludes binary */
    } else if (!strcasecmp("script_from_stdin", shell_start_mode)) {
+
+#if 1
+      shepherd_trace("Case 2: script_from_stdin");
+#endif
+
       /*
       ** -s makes it possible to make the shell read from stdin
       ** and yet have job arguments
@@ -1221,12 +1250,22 @@ char *str_title
    /* Binary, noshell jobs have to make it to the else */
    } else if (!strcasecmp("posix_compliant", shell_start_mode) &&
               (atoi(get_conf_val("handle_as_binary")) == 0)) {
+                 
+#if 1
+      shepherd_trace("Case 3: posix_compliant, no binary" );
+#endif
+
       pre_args_ptr[0] = argv0;
       pre_args_ptr[1] = script_file;
       pre_args_ptr[2] = NULL;
       args = read_job_args(pre_args, 0);
    /* No need to test for binary since this option excludes binary */
    } else if (!strcasecmp("start_as_command", shell_start_mode)) {
+      
+#if 1
+      shepherd_trace("Case 4: start_as_command" );
+#endif
+
       pre_args_ptr[0] = argv0;
       sprintf(err_str, "start_as_command: pre_args_ptr[0] = argv0; \"%s\" shell_path = \"%s\"", argv0, shell_path); 
       shepherd_trace(err_str);
@@ -1237,6 +1276,11 @@ char *str_title
    /* No need to test for binary since this option excludes binary */
    } else if (is_interactive) {
       int njob_args;
+      
+#if 1
+      shepherd_trace("Case 5: interactive");
+#endif
+
       pre_args_ptr[0] = script_file;
       pre_args_ptr[1] = "-display";
       pre_args_ptr[2] = get_conf_val("display");
@@ -1250,6 +1294,10 @@ char *str_title
       args[njob_args + 7] = NULL;
    /* No need to test for binary since qlogin handles that itself */
    } else if (is_qlogin) {
+      
+#if 1
+     shepherd_trace("Case 6: qlogin");
+#endif
       pre_args_ptr[0] = script_file;
       if(is_rsh) {
          pre_args_ptr[1] = get_conf_val("rsh_daemon");
@@ -1265,23 +1313,49 @@ char *str_title
       args = read_job_args(pre_args, 0);
    /* Here we finally deal with binary, noshell jobs */
    } else {
+      
+#if 1
+     shepherd_trace("Case 7: unix_behaviour/raw_exec" );
+#endif
       /*
       ** unix_behaviour/raw_exec
       */
       if (!strcmp(childname, "job")) {
-         pre_args_ptr[0] = script_file;
-         pre_args_ptr[1] = NULL;   
+         
+         int arg_id = 0;
+#if 1
+         shepherd_trace("Case 7.1: job" );
+#endif
+         if( use_starter_method ) {
+           pre_args_ptr[arg_id++] = shell_path;
+         }
+         pre_args_ptr[arg_id++] = script_file;
+         pre_args_ptr[arg_id++] = NULL; 
+         
          args = read_job_args(pre_args, 0);
       } else {
+#if 1
+         shepherd_trace("Case 7.2: no job" );
+#endif
+         
          /* the script file also contains procedure arguments
             need to disassemble the string and put into args vector */
-         pre_args_ptr[0] = NULL;   
+         if( use_starter_method ) {
+            pre_args_ptr[0] = shell_path;
+            pre_args_ptr[1] = NULL; 
+         } else {
+            pre_args_ptr[0] = NULL;
+         }
          args = disassemble_proc_args(script_file, pre_args, 0);
+         
          script_file = args[0];
       }
    }
 
    if(is_qlogin) {
+      
+      shepherd_trace("start qlogin");
+      
       /* build trace string */
       sprintf(err_str, "calling qlogin_starter(%s, %s);", shepherd_job_dir, args[1]);
       shepherd_trace(err_str);
@@ -1289,9 +1363,17 @@ char *str_title
    } else {
       char *filename = NULL;
 
+      if( use_starter_method ) {
+         filename = shell_path;
+      } else if( pre_args_ptr[0] == argv0 ) {
+         filename = shell_path;
+      } else {
+         filename = script_file;
+      }
+
       /* build trace string */
       pc = err_str;
-      sprintf(pc, "execvp(%s,", (pre_args_ptr[0] == argv0) ? shell_path : script_file);
+      sprintf(pc, "execvp(%s,", filename);
       pc += strlen(pc);
       for (pstr = args; pstr && *pstr; pstr++) {
       
@@ -1310,13 +1392,6 @@ char *str_title
       sprintf(pc, ")");
       shepherd_trace(err_str);
 
-      if (pre_args_ptr[0] == argv0) {
-         filename = shell_path;
-      }
-      else {
-         filename = script_file;
-      }
-         
       /* Bugfix: Issuezilla 1300
        * Because this fix could break pre-existing installations, it was made
        * optional. */

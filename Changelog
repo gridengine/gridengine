@@ -1,3 +1,10 @@
+RH-2005-03-22-0: Bugfix:    starter_method is ignored with binary jobs that are 
+                            started without a shell
+                 Issue:     1334
+                 Bugtraq:   6194719
+                 Changed:   shepherd
+                 Review:    AA
+
 AA-2005-03-21-1: Bugfix:    - loading of shared openssl libraries
                               on Mac and AIX
                             - clean rule: remove generated c file  

@@ -2200,7 +2200,7 @@ static int start_async_command(const char *descr, char *cmd)
       }   
 
       sge_set_def_sig_mask(0, NULL);
-      start_command(descr, get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "");
+      start_command(descr, get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "", 0);
       return 0;   
    }
 

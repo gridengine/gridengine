@@ -501,7 +501,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    }
 
    /* avoid double output in debug mode */
-   if (!uti_state_get_daemonized() && !rmon_is_enabled() && 
+   if (!uti_state_get_daemonized() && !rmon_condition(TOP_LAYER, INFOPRINT) && 
        (log_state_get_log_verbose() || log_level == LOG_ERR || log_level == LOG_CRIT)) {
       fprintf(stderr, "%s%s%s", levelstring, mesg, newline);
    } 

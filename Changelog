@@ -1,3 +1,8 @@
+AD-2003-11-13-0: Bugfix:    Log messages of level 'LOG_ERR' and 'LOG_CRIT'
+                            have been suppressed erroneously under special
+                            conditions.
+                 Changed:   sge_log
+
 EB-2003-11-13-0  Bugfix:    qmon cores if it should show qtch jobs which
                             where submitted with -h parameter (qtask-file)
                  Review:    AA

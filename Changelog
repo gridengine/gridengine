@@ -1,3 +1,11 @@
+CR-2002-01-22-0: Testsuite: - install_core_system check will now use default
+                              values for most all cluster configuration setup 
+                              and report configuration changes through sge_inst 
+                              script
+                            - re_init cluster after tcl_error will now restore
+                              cluster configuration for most parameters
+
+
 JG-2002-01-22-0: Bugfix:    Tight integration using the mpi scripts: 
                             starting a task from within a task failed, as the 
                             environment variable TASK_ID was exported to the 

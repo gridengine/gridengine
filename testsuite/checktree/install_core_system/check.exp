@@ -1340,6 +1340,10 @@ proc setup_conf {} {
   global CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_CORE_EXECD CHECK_CORE_MASTER
   global CHECK_DEFAULT_DOMAIN CHECK_PRODUCT_TYPE
 
+  get_config old_config
+  set params(reschedule_unknown) "00:00:00"
+  set_config params
+  get_config old_config
 
   # set finished_job in global config
   set params(finished_jobs) "0"  
@@ -1347,9 +1351,34 @@ proc setup_conf {} {
   set params(default_domain) "$CHECK_DEFAULT_DOMAIN"
   set params(reschedule_unknown) "00:00:00"
   set params(loglevel) "log_info"
+  set params(load_sensor) "none"
+  set params(prolog) "none"
+  set params(epilog) "none"
+  set params(shell_start_mode) "posix_compliant"
+  set params(login_shells) "sh,ksh,csh,tcsh"
+  set params(min_uid) "0"
+  set params(min_gid) "0"
+  set params(user_lists) "none"
+  set params(xuser_lists) "none"
+  set params(projects) "none"
+  set params(xprojects) "none"
+  set params(max_unheard) "00:05:00"
+  set params(administrator_mail) "none"
+  set params(set_token_cmd) "none"
+  set params(pag_cmd) "none"
+  set params(token_extend_time) "none"
+  set params(shepherd_cmd) "none"
+  set params(qmaster_params) "none"
+  set params(schedd_params) "none"
+  set params(execd_params) "none"
+  set params(qlogin_command) "telnet"
+  set params(ignore_fqdn) "true"
+  set params(max_aj_instances) "2000"
+  set params(max_aj_tasks) "75000"
 
   if { $CHECK_PRODUCT_TYPE == "sgeee" } {
-    set params(execd_params) "PTF_MIN_PRIORITY=20,PTF_MAX_PRIORITY=0"
+    set params(execd_params)    "PTF_MIN_PRIORITY=20,PTF_MAX_PRIORITY=0"
+    set params(enforce_project) "false"
   }
 
   set result [ set_config params ] 
@@ -1365,6 +1394,40 @@ proc setup_conf {} {
         }
       }
     }
+  }
+
+  get_config new_config
+  
+  set arrays_old [ array names old_config ]
+  set arrays_new [ array names new_config ]
+#  foreach elem $arrays_old { puts "old elem: \"$elem\"" }
+#  foreach elem $arrays_new { puts "new elem: \"$elem\"" }
+
+  if { [ llength $arrays_old] == [ llength $arrays_new ] } {
+    foreach param $arrays_old {
+       set old  $old_config($param)
+       set new  $new_config($param)
+
+       if { [ string compare $old $new ] != 0 } {
+          if { [ string compare $param "load_report_time" ] == 0 } { continue }
+          if { [ string compare $param "loglevel" ] == 0 } { continue }
+          if { [ string compare $param "execd_params" ] == 0 } { continue }
+          if { [ string compare $param "finished_jobs" ] == 0 } { continue }
+#          if { [ string compare $param "" ] == 0 } { continue }
+#          if { [ string compare $param "" ] == 0 } { continue }
+#          if { [ string compare $param "" ] == 0 } { continue }
+#          if { [ string compare $param "" ] == 0 } { continue }
+#          if { [ string compare $param "" ] == 0 } { continue }
+#          if { [ string compare $param "" ] == 0 } { continue }
+#          if { [ string compare $param "" ] == 0 } { continue }
+
+
+
+          add_proc_error "setup_conf" -1 "config parameter $param:\ndefault setup: $old, after testsuite reset: $new" 
+       }
+    }
+  } else {
+     add_proc_error "setup_conf" -1 "config parameter count new/old configuration error"
   }
 
   set_error 0 "ok"

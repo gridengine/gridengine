@@ -1,3 +1,10 @@
+AD-2003-06-25-0: Bugfix:    New implementaion of 'sge_tmpnam()'
+                            'sge_tmpnam' internally used tmpnam. On glibc
+                            based systems this provoked a warning.
+                 Issue:     289
+                 Review:    EB
+                 Changed:   sge_tmpnam.[ch] (new), sge_io.[ch]
+
 CR-2003-06-25-0: Bugfix:    disabled infotext error output if SGE_ROOT is
                             not set.
                  Review:    AS

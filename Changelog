@@ -1,3 +1,8 @@
+DT-2005-01-18-0: Cleanup:   o Made JAPI Makefile more readable
+                            o Made class and jar file compilation cleaner
+                 Bugfix:    o Added new test target for Ant for testing binaries
+                 Changed:   DRMAA
+
 RD-2005-01-17-0: Bugfix:    make qmon compile on sol-amd64
                  Changed:   qmon
 

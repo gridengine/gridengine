@@ -417,6 +417,12 @@ proc error_states_wrong_pe {} {
       add_proc_error "error_states_wrong_pe" -1 "no in pestop error: $qacct_info(failed)"
    }
 
+   # workaround: in sgeee a job still exists in qmaster after it exited for some time
+   #             therefore the pe cannot be deleted
+   if {$CHECK_PRODUCT_TYPE == "sgeee"} {
+      sleep 60
+   }
+
    del_pe "wrong_start_pe"
    del_pe "wrong_stop_pe"
    del_pe "error_start_pe"

@@ -1,3 +1,7 @@
+JG-2002-07-05-0: Testsuite: system_tests/qmaster/error_states: has to wait
+                            for job to leave qmaster before deleting pe due 
+                            to new reference checking (EB-2002-06-27-1).
+
 JG-2002-07-04-1: Cleanup:   Changed the macros for cull object definition to 
                             provide easier and more flexible object type 
                             definitions.

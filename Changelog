@@ -1,3 +1,7 @@
+DT-2004-02-17-0: Bugfix:    Fixed segv in qconf -msconf
+                 Changed:   qconf
+                 Review:    AH
+
 JG-2004-02-16-2: Testsuite: Checked and/or fixed following testsuite tests:
                             functional/binary_submission
                             functional/job_environment

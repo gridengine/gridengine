@@ -625,7 +625,7 @@ spooling_field *sge_build_EH_field_list (bool spool, bool to_stdout,
 spooling_field *sge_build_SC_field_list(void)
 {
    /* There are 34 possible SC_Type fields. */
-   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*34);
+   spooling_field *fields = (spooling_field *)malloc(sizeof(spooling_field)*35);
    int count = 0;
    
    create_spooling_field (&fields[count++], SC_algorithm, 33, "algorithm", NULL,

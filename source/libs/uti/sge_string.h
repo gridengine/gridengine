@@ -38,7 +38,7 @@
 extern "C" {
 #endif
 
-char *sge_basename(char *name, int delim);
+char *sge_basename(const char *name, int delim);
 char *sge_delim_str(char *str, char **delim_pos, char *delim);
 char *sge_dirname(char *name, int delim);
 char *sge_strdup(char *old, const char *src);

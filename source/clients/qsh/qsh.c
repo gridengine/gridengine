@@ -103,13 +103,13 @@ static int start_client_program(const char *client_name,
                                 int nostdin,
                                 int noshell,
                                 int sock);
-static int get_client_server_context(int msgsock, char **port, char **job_dir, char **utilbin_dir, char **host);
+static int get_client_server_context(int msgsock, char **port, char **job_dir, char **utilbin_dir, const char **host);
 /* static char *get_rshd_name(char *hostname); */
-static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job);
+static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job);
 /* static char *get_master_host(lListElem *jep); */
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is_rsh, int is_rlogin);
 /* static lList *parse_script_options(lList *opts_cmdline); */
-static lList *parse_qrsh_command(lList *opts_cmdline, char *name, char **hostname, int existing_job);
+static lList *parse_qrsh_command(lList *opts_cmdline, char *name, const char **hostname, int existing_job);
 static lList *merge_and_order_options(lList **opts_defaults, lList **opts_scriptfile, lList **opts_cmdline);
 
 static void remove_unknown_opts(lList *lp); 
@@ -794,7 +794,7 @@ static int start_client_program(const char *client_name,
 *                                          char **port, 
 *                                          char **job_dir,
 *                                          char **utilbin_dir,
-*                                          char **host);
+*                                          const char **host);
 *
 *  FUNCTION
 *     Tries to read the parameters port and job_dir from the socket connection
@@ -835,7 +835,7 @@ static int start_client_program(const char *client_name,
 ****************************************************************************
 *
 */
-static int get_client_server_context(int msgsock, char **port, char **job_dir, char **utilbin_dir, char **host)
+static int get_client_server_context(int msgsock, char **port, char **job_dir, char **utilbin_dir, const char **host)
 {
    char *s_code = NULL;
    char *data   = NULL;
@@ -918,7 +918,7 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 ****************************************************************************
 *
 */
-static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
+static const char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 {
    lList     *conf_list       = NULL;
    lListElem *global          = NULL; 
@@ -927,7 +927,7 @@ static char *get_client_name(int is_rsh, int is_rlogin, int inherit_job)
 
    static char *session_type = "telnet";
    char        *config_name  = "qlogin_command";
-   char        *client_name  = NULL;
+   const char  *client_name  = NULL;
    static char cache_name[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "get_client_name");
@@ -1140,7 +1140,7 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is
 ****************************************************************************
 *
 */
-static lList *parse_qrsh_command(lList *opts_cmdline, char *name, char **hostname, int existing_job)
+static lList *parse_qrsh_command(lList *opts_cmdline, char *name, const char **hostname, int existing_job)
 {
    lList *opts_qrsh = NULL;
    lListElem *ep    = NULL;
@@ -1296,7 +1296,7 @@ void set_command_to_env(lList *envlp, lList *opts_qrsh)
          sprintf(delimiter, "%c", 0xff);
          strcpy(buffer, lGetString(ep, SPA_argval_lStringT)); 
          while((ep = lNext(ep)) != NULL) {
-            char *arg = lGetString(ep, SPA_argval_lStringT);
+            const char *arg = lGetString(ep, SPA_argval_lStringT);
             strcat(buffer, delimiter);
             strcat(buffer, arg);
          }   
@@ -1340,9 +1340,9 @@ char **argv
    int nostdin = 0;
    int noshell = 0;
 
-   char *host = NULL;
+   const char *host = NULL;
    char name[MAX_JOB_NAME + 1];
-   char *client_name = NULL;
+   const char *client_name = NULL;
    char *port = NULL;
    char *job_dir = NULL;
    char *utilbin_dir = NULL;
@@ -1803,7 +1803,7 @@ static void delete_job(u_long32 job_id, lList *jlp)
 static void remove_unknown_opts(lList *lp)
 {
    lListElem *ep;
-   char *cp;
+   const char *cp;
 
    if (!lp || !lFirst(lp)) {
       return;

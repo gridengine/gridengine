@@ -74,16 +74,42 @@ char *qexec_last_err(void)
    return lasterror;
 }
 
-sge_tid_t sge_qexecve(
-char *hostname,
-char *path,
-char *argv[],
-lList *env_lp,
-int is_qlogin 
-) {
+/****** gdi/sge_qexecve() ************************************************
+*  NAME
+*     sge_qexecve() -- start a task in a tightly integrated parallel job
+*
+*  SYNOPSIS
+*     sge_tid_t sge_qexecve(const char *hostname, const char *path, 
+*                           const char *argv[], const lList *env_lp, 
+*                           int is_qrsh) 
+*
+*  FUNCTION
+*     Starts a task in a tightly integrated job.
+*     Builds a job object describing the task, 
+*     connects to the commd on the targeted execution host,
+*     deliveres the job object and waits for an answer.
+*     The answer from the execution daemon on the execution host
+*     contains a task id that is returned to the caller of the function.
+*
+*  INPUTS
+*     const char *hostname - name of the host on which to start the task
+*     const char *path     - complete path of the command to start
+*     const char *argv[]   - argument vector for the command to start
+*     const lList *env_lp  - list containing environment variable settings
+*                            for the task that override the default environment
+*     int is_qrsh          - is the task to be started a qrsh -inherit task?
+*                            0 means 0, != 0 means yes
+*
+*  RESULT
+*     sge_tid_t - the task id, if the task can be executed,
+*                 a value <= 0 indicates an error.
+*
+*******************************************************************************/
+sge_tid_t sge_qexecve(const char *hostname, const char *path, const char *argv[], const lList *env_lp, int is_qrsh)
+{
 char localhost[1000];
 char myname[256];
-char *s;
+const char *s;
    int ret, i, uid;
    sge_tid_t tid = 0;
    lListElem *rt, *jep, *arg_ep, *env_ep, *jgelem=NULL, *taskep;
@@ -135,7 +161,7 @@ char *s;
    lSetString(jep, JB_owner, myname);
 
 
-   if(is_qlogin) {
+   if(is_qrsh) {
       lSetUlong(jep, JB_now, JB_NOW_QRSH);
       lSetString(jep, JB_script_file, JB_NOW_STR_QRSH);
    } else {
@@ -219,7 +245,7 @@ char *s;
    lSetList(jep, JB_env_list, env);
    env = NULL;
 
-   set_commlib_param(CL_P_COMMDHOST, 0, hostname, NULL);
+   set_commlib_param(CL_P_COMMDHOST, 0, (char *)hostname, NULL); /* FIX_CONST */
 
    if(init_packbuffer(&pb, 0, 0) != PACK_SUCCESS) {
       lFreeElem(jep);
@@ -231,7 +257,7 @@ char *s;
 
    pack_job_delivery(&pb, jep, NULL, NULL);
 
-   ret = send_message_pb(1, prognames[EXECD], 0, hostname,
+   ret = send_message_pb(1, prognames[EXECD], 0, (char *)hostname, /* FIX_CONST */
             TAG_JOB_EXECUTION, &pb, &dummymid);
 
    clear_packbuffer(&pb);

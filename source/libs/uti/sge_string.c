@@ -47,17 +47,32 @@
 int fqdn_cmp = 0;
 char *default_domain = NULL;
 
-/*-------------------------------------------------------------------
- * sge_basename
- *
- * returns: pointer to base of name after delimter
- *          NULL if "name" is NULL or zero length string or delimiter is 
- *          last character in "name"
- *-------------------------------------------------------------------*/
-char *sge_basename(
-char *name,
-int delim 
-) {
+/****** uti/string/sge_basename() **********************************************
+*  NAME
+*     sge_basename() -- get basename for path
+*
+*  SYNOPSIS
+*     char* sge_basename(const char *name, int delim) 
+*
+*  FUNCTION
+*     Determines the basename for a path like string - the last field of a
+*     string where fields are separated by a fixed one character delimiter.
+*
+*  INPUTS
+*     const char *name - contains the input string (path)
+*     int delim        - delimiter
+*
+*  RESULT
+*     char* - pointer to base of name after the last delimter
+*             NULL if "name" is NULL or zero length string or delimiter is 
+*             the last character in "name"
+*
+*  EXAMPLE
+*     sge_basename("/usr/local/bin/flex", '/'); returns "flex"
+*
+*******************************************************************************/
+char *sge_basename(const char *name, int delim) 
+{
    char *cp;
 
    DENTER(BASIS_LAYER, "sge_basename");
@@ -70,7 +85,7 @@ int delim
    cp = strrchr(name, delim);
    if (!cp) {
       DEXIT;
-      return name;
+      return (char *)name; /* FIX_CONST */
    }
    else {
       cp++;

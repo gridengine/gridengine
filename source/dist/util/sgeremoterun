@@ -34,7 +34,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-PATH=/bin:/usr/bin
+PATH=/bin:/usr/bin:/usr/local/bin
 
 # "$SGE_ROOT" and $SGE_CELL (if other than "default") must be set in current
 # environment.
@@ -45,7 +45,7 @@ if [ "$SGE_ROOT" = "" ]; then
    exit 1
 fi
 
-if [ "$SGE_ROOT" = "/ ]; then
+if [ "$SGE_ROOT" = "/" ]; then
    echo environment variable \"\$SGE_ROOT\" cannot be set to \"/\". Exit.
    exit 1
 fi
@@ -73,16 +73,16 @@ V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
 
 
 if [ $# -lt 2 -o "$1" = "-h" -o "$1" = "-help" ]; then
-   echo "install execution daemons via \"rsh\" or \"ssh\" access "
+   echo 
+   echo "Remotely execute commands via \"rsh\" or \"ssh\"."
    echo
-   echo "usage: $0 [-noexec] [-ssh] [-all] [-noqmaster] host1 host2 host3 [--] command 
-   echo
+   echo "usage: $0 [-noexec] [-ssh] [-all] [-noqmaster] host1 host2 host3 -- command"
    echo "   -noexec    do nothing, just print what would be done"
    echo "   -ssh       uses \"ssh\" instad of \"rsh\""
+   echo "   -sshpath   path where ssh is installed of not in $PATH"
    echo "   -all       run command on all execution hosts found in qmaster spool dir."
    echo "   -noqmaster do not run command on current qmaster host"
-   echo ""
-   echo "The separator \"--\" must be given if a list of hosts is passed in command line"
+   echo
    exit 1
 fi
 
@@ -97,6 +97,7 @@ qmaster=true
 CMD=""
 hosts=""
 done=false
+
 
 whoseargs="args"
 while [ "$1" != "" -a $done = false ]; do
@@ -113,6 +114,10 @@ while [ "$1" != "" -a $done = false ]; do
          -ssh)
             cmd=ssh
             ;;
+         -sshpath)
+            PATH=$PATH:$2
+            shift
+            ;;
          -all)
             qma_spool_dir=`grep qmaster_spool_dir $SGE_ROOT/$SGE_CELL/common/configuration | \
                            awk '{ print $2 }'`
@@ -121,25 +126,68 @@ while [ "$1" != "" -a $done = false ]; do
          -noqmaster)
             qmaster=false
             ;;
+         -*)
+            echo "unknown option: $1"
+            exit 1
+            ;;
          *)
             hosts="$hosts $1"
             ;;
          esac
-         shift
       else
          CMD=$*
          done=true
       fi
-esac
+      ;;
+   esac
+   shift
+done
      
-echo noexec: $noexec
-echo cmd: $cmd
-echo qmaster: $qmaster
-echo CMD: $CMD
-echo done: $done
+if [ "$CMD" = "" ]; then
+   echo No command to execute. Exit.
+   exit 1
+fi
+
+if [ "$hosts" = "" ]; then
+   echo No hosts given. Exit.
+   exit 1
+fi
+
+
+act_qmaster=none
+if [ $qmaster = false ]; then
+   if [ -f $SGE_ROOT/default/common/act_qmaster ]; then
+      act_qmaster=`cat $SGE_ROOT/default/common/act_qmaster`
+   else
+     echo "File $SGE_ROOT/default/common/act_qmaster does not exist. Exit."
+     exit 1
+   fi
+fi
+
+if [ $noexec = true ]; then
+   echo
+   echo The command:
+   echo
+   echo "  % echo \". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && $CMD\" | $cmd $h /bin/sh"
+   echo 
+   echo would be executed on the following hosts:
+   echo
+   echo "   $hosts"
+   echo
+   if [ $qmaster = false ]; then
+      echo The command would not be executed on host
+      echo
+      echo "   $act_qmaster"
+      echo
+   fi
+   exit 0
+fi
 
 for h in $hosts; do
-  
-   echo doing: rsh $h $CMD
+   if [ $qmaster = false -a $h = "$act_qmaster" ]; then
+      echo not executing command on qmaster host \"$act_qmaster\"
+   else  
+      echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && $CMD" | $cmd $h /bin/sh
+   fi
    echo ==============================================================================
 done

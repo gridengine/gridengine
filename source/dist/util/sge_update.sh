@@ -266,19 +266,13 @@ SetAdminUser
 V5BIN=$SGE_ROOT/bin/$ARCH
 V5UTILBIN=$SGE_ROOT/utilbin/$ARCH
 
-
 WelcomeTheUser
-
-
-
 CheckWhoCalls
 
-echo dfsdf
-read i
 
+C_DIR=$SGE_ROOT/$SGE_CELL/common
+CMD_DIR=$SGE_ROOT/util/update_commands
 
-C_DIR=$SGE_ROOT/$COD_CELL/common
-CMD_DIR=$SGE_ROOT/util/commands51
 
 if [ ! -d "$C_DIR" ]; then
    echo 
@@ -291,6 +285,7 @@ if [ ! -d "$C_DIR" ]; then
    echo
    exit 1
 fi
+
 
 if [ ! -f $C_DIR/configuration ]; then
    echo
@@ -310,7 +305,7 @@ if [ ! -f $SGE_ROOT/util/startup_template ]; then
    echo ""
    echo "   $SGE_ROOT/util/startup_template"
    echo ""
-   echo "does not exist. Please verify your $QSYST 5.1 distribution"
+   echo "does not exist. Please verify your distribution"
    echo "and start this update script again."
    echo
    exit 1
@@ -463,7 +458,7 @@ fi
 
 if [ -f $C_DIR/schedd_configuration.obsolete ]; then
    echo Deleting $QSYST $VERSION.0 scheduler configuration backup file
-   Execute rm $SGE_ROOT/$COD_CELL/common/schedd_configuration.obsolete
+   Execute rm $SGE_ROOT/$SGE_CELL/common/schedd_configuration.obsolete
 fi
 
 if [ -f $C_DIR/configuration.old ]; then
@@ -766,13 +761,13 @@ if [ $OLDVERSION != 5.0 ]; then
       echo "setenv GRD_ROOT $SGE_ROOT" >> $C_DIR/settings.csh
       echo "GRD_ROOT=$SGE_ROOT; export GRD_ROOT" >> $C_DIR/settings.sh
 
-      if [ $COD_CELL != default ]; then
+      if [ $SGE_CELL != default ]; then
          echo "Adding new environment variable GRD_CELL to settings.[c]sh"
-         echo "setenv GRD_CELL $COD_CELL" >> $C_DIR/settings.csh
-         echo "GRD_CELL=$COD_CELL; export COD_CELL" >> $C_DIR/settings.sh
+         echo "setenv GRD_CELL $SGE_CELL" >> $C_DIR/settings.csh
+         echo "GRD_CELL=$SGE_CELL; export SGE_CELL" >> $C_DIR/settings.sh
       fi
 
-      $ECHO "For migration purposes the variables SGE_ROOT and COD_CELL are still supported."
+      $ECHO "For migration purposes the variables SGE_ROOT and SGE_CELL are still supported."
       $ECHO "It is recommended to only the variables GRD_ROOT and GRD_CELL in the future."
       $ECHO
       $ECHO "Press <RETURN> to continue >> \c"

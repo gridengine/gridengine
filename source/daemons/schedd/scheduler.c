@@ -326,6 +326,8 @@ lList **splitted_job_lists[]
    int host_order_changed = 0;  /* is passed to assign_select_debit, queue list needs new sorting */
    int sort_hostlist = 1;       /* hostlist has to be sorted. Info returned by select_assign_debit */
                                 /* e.g. if load correction was computed */
+   struct tms tms_buffer;
+   clock_t start;
 
    DENTER(TOP_LAYER, "dispatch_jobs");
 
@@ -469,11 +471,24 @@ lList **splitted_job_lists[]
     *------------------------------------------------------------------*/
 
    if (sgeee_mode) {
+      start = times(&tms_buffer);
+   
       sge_scheduler(lists, 
                     *(splitted_job_lists[SPLIT_RUNNING]),
                     *(splitted_job_lists[SPLIT_FINISHED]),
                     *(splitted_job_lists[SPLIT_PENDING]),
                     orderlist);     
+
+      if (profile_schedd) {
+         clock_t now = times(&tms_buffer);
+         extern u_long32 logginglevel;
+         u_long32 saved_logginglevel = logginglevel;
+
+         logginglevel = LOG_INFO;
+         INFO((SGE_EVENT, "SGEEE pending job ticket calculation took %.3f s\n",
+               (now - start) * 1.0 / CLK_TCK ));
+         logginglevel = saved_logginglevel;
+      }
    }
 
    DPRINTF(("STARTING PASS 2 WITH %d PENDING JOBS\n",
@@ -489,6 +504,9 @@ lList **splitted_job_lists[]
    }
 
    if (sgeee_mode) {
+
+      start = times(&tms_buffer);
+
       /* 
        * calculate the number of tickets for all jobs already 
        * running on the host 
@@ -500,6 +518,17 @@ lList **splitted_job_lists[]
          lFreeList(group_list);
          DEXIT;
          return -1;
+      }
+
+      if (profile_schedd) {
+         clock_t now = times(&tms_buffer);
+         extern u_long32 logginglevel;
+         u_long32 saved_logginglevel = logginglevel;
+
+         logginglevel = LOG_INFO;
+         INFO((SGE_EVENT, "SGEEE active job ticket calculation took %.3f s\n",
+               (now - start) * 1.0 / CLK_TCK ));
+         logginglevel = saved_logginglevel;
       }
 
       /* 
@@ -524,7 +553,20 @@ lList **splitted_job_lists[]
        * Order Jobs in descending order according to tickets and 
        * then job number 
        */
+      start = times(&tms_buffer);
+
       sgeee_sort_jobs(splitted_job_lists[SPLIT_PENDING]);
+
+      if (profile_schedd) {
+         clock_t now = times(&tms_buffer);
+         extern u_long32 logginglevel;
+         u_long32 saved_logginglevel = logginglevel;
+
+         logginglevel = LOG_INFO;
+         INFO((SGE_EVENT, "SGEEE job sorting took %.3f s\n",
+               (now - start) * 1.0 / CLK_TCK ));
+         logginglevel = saved_logginglevel;
+      }
 
    }  /* if sgeee_mode */
 
@@ -625,6 +667,7 @@ lList **splitted_job_lists[]
       at_notice_runnable_job_arrays(*splitted_job_lists[SPLIT_PENDING]);
    }
 
+   start = times(&tms_buffer);
 
    /*
     * loop over the jobs that are left in priority order
@@ -866,6 +909,17 @@ SKIP_THIS_JOB:
          } /* sgeee_mode && scheddconf.queue_sort_method == QSM_SHARE */
       }
    } /* end of while */
+
+   if (sgeee_mode && profile_schedd) {
+      clock_t now = times(&tms_buffer);
+      extern u_long32 logginglevel;
+      u_long32 saved_logginglevel = logginglevel;
+
+      logginglevel = LOG_INFO;
+      INFO((SGE_EVENT, "SGEEE job dispatching took %.3f s\n",
+            (now - start) * 1.0 / CLK_TCK ));
+      logginglevel = saved_logginglevel;
+   }
 
    lFreeList(user_list);
    lFreeList(group_list);

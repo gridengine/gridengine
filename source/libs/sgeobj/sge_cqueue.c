@@ -1041,7 +1041,29 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
        */
       for_each(mod_elem, mod_list) {
          const char *name = lGetHost(mod_elem, sublist_host_name);
-         lListElem *org_elem = lGetElemHost(org_list, sublist_host_name, name);
+         lListElem *org_elem = NULL;
+         
+         /* Don't try to resolve hostgroups */
+         if (name[0] != '@') {
+            char resolved_name[MAXHOSTLEN+1];
+            int back = getuniquehostname(name, resolved_name, 0);
+
+            if (back != CL_RETVAL_OK) {
+               ERROR((SGE_EVENT, MSG_HGRP_UNKNOWNHOST, name));
+               answer_list_add(answer_list, SGE_EVENT,
+                               STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+               break;
+            }
+            
+            /* This assignment is ok because preious name contained a const
+             * string from the mod_elem that we didn't need to free.  Now it
+             * will contain a string that's on the stack, so we still don't have
+             * to free it. */
+            name = resolved_name;
+         }
+         
+         org_elem = lGetElemHost(org_list, sublist_host_name, name);
 
          /*
           * Create element if it does not exist

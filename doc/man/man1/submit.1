@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/07/28 11:29:02 $     Revision: $Revision: 1.46.4.5 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/07/30 18:38:16 $     Revision: $Revision: 1.46.4.6 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/07/28 11:29:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/07/30 18:38:16 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1110,11 +1110,11 @@ By default jobs are submitted with \fB\-R n\fP option.
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
 Identifies the ability of a job to be rerun or not.
-If the value of \fB\-r\fP is 'y', rerun the job if the job was aborted
+If the value of \fB\-r\fP is 'yes', rerun the job if the job was aborted
 without leaving a consistent exit state 
 (this is typically the case if the node on which the job is running
 crashes).
-If \fB\-r\fP is 'n', do not rerun the job under any circumstances.
+If \fB\-r\fP is 'no', do not rerun the job under any circumstances.
 .br
 Interactive jobs submitted with
 .I qsh,

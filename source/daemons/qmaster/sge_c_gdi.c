@@ -230,7 +230,6 @@ sge_gdi_request *answer
 
    DENTER(TOP_LAYER, "sge_c_gdi");
 
-
    answer->op = request->op;
    answer->target = request->target;
    answer->sequence_id = request->sequence_id;
@@ -265,6 +264,8 @@ sge_gdi_request *answer
       DEXIT;
       return;
    }
+
+   sge_set_commit_required(true);
 
    if ((ao = get_gdi_object(request->target))) {
      target_name = ao->object_name;
@@ -395,6 +396,10 @@ sge_gdi_request *answer
    default:
      break;
    }
+
+   sge_commit();
+   /* enable event transaction handling */
+   sge_set_commit_required(false);
 
    DEXIT;
    return;

@@ -1,3 +1,10 @@
+SG-2004-04-27-0: Bugfix:    - fixed locking problem between the message and the
+                              event thread
+                            - enabled the gdi - event transactions. Every gdi
+                              request is one transaction.
+                 Changed:   qmater
+                 Review:    DT, CR
+
 EB-2004-04-27-2: Bugfix:    Wrong qconf -sq CQ@HOST output for xuser_lists
                  Issue:     991
                  Changed:   qconf

@@ -710,8 +710,9 @@ int sge_gdi_add_job(lListElem *jep, lList **alpp, lList **lpp, char *ruser,
    /*
    ** immediate jobs trigger scheduling immediately
    */
-   if (sge_event_client_registered(EV_ID_SCHEDD)) {
-      if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
+   if (JOB_TYPE_IS_IMMEDIATE(lGetUlong(jep, JB_type))) {
+      if (sge_event_client_registered(EV_ID_SCHEDD)) {
+         sge_commit();
          sge_deliver_events_immediately(EV_ID_SCHEDD);
       }
    }

@@ -291,7 +291,7 @@ static void xml_print_jobs_pending(lList *job_list, const lList *pe_list, const 
    sge_ext = (full_listing & QSTAT_DISPLAY_EXTENDED);
 
    if (*target_list == NULL){
-      *target_list = lCreateList("job-list", XMLE_Type);
+      *target_list = lCreateList("job_list", XMLE_Type);
    }
    
    nxt = lFirst(job_list);

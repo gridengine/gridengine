@@ -386,7 +386,7 @@ const struct test_name2number_map {
 } test_map[] = {
 
    /* all automated tests - ST_* and MT_* tests */
-   { "ALL_AUTOMATED",                            ALL_TESTS,                              2, "<sleeper_job> <exit_arg_job>" },
+   { "ALL_AUTOMATED",                            ALL_TESTS,                              3, "<sleeper_job> <exit_arg_job> <email_addr>" },
 
    /* one application thread - automated tests only */
    { "ST_MULT_INIT",                              ST_MULT_INIT,                              0, "" },
@@ -476,7 +476,8 @@ char *sleeper_job = NULL,
      *mirror_job = NULL,
      *input_path = NULL,
      *output_path = NULL,
-     *error_path = NULL;
+     *error_path = NULL,
+     *email_addr = NULL;
 int ctrl_op = -1;
 
 
@@ -515,6 +516,12 @@ int main(int argc, char *argv[])
 
    if (argc == 1) 
       usage();
+   
+   /* Print out an adivsory */
+   printf ("The DRMAA test suite is now starting.  Once it has begun execution,\n");
+   printf ("please do not interrupt (CTRL-C) it.  If the program is interrupted\n");
+   printf ("before drmaa_exit() is called, session state information will be\n");
+   printf ("left behind in the JAPI session directory, ~/.sge/session.\n");
 
    /* figure out which DRM system we are using */
    {
@@ -547,6 +554,7 @@ int main(int argc, char *argv[])
       if (test_case == ALL_TESTS) {
          sleeper_job = NEXT_ARGV(&argc, &argv);
          exit_job    = NEXT_ARGV(&argc, &argv);
+         email_addr  = NEXT_ARGV(&argc, &argv);
 
          for (i=1; test_map[i].test_name && test_map[i].test_number != FIRST_NON_AUTOMATED_TEST; i++) {
             test_case = test_map[i].test_number;
@@ -2447,7 +2455,6 @@ static int test(int *argc, char **argv[], int parse_args)
          const char *job_argv[4];
          char jobid[1024], new_jobid[1024];
          char buffer[100];
-         char *email_addr = NULL;
          lList *alp, *job_lp;
          lListElem *job_ep;
          FILE *fp;
@@ -2536,7 +2543,8 @@ static int test(int *argc, char **argv[], int parse_args)
          
          if (failed_test) test_failed = 1;
          failed_test = 0;
-         
+         printf("=====================\n");
+
          /*
           * testing job submission state and job name
           */
@@ -2653,6 +2661,7 @@ static int test(int *argc, char **argv[], int parse_args)
          
          if (failed_test) test_failed = 1;
          failed_test = 0;
+         printf("=====================\n");
          
          /*
           * testing working directory, input stream and output stream
@@ -2749,6 +2758,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
+         printf("=====================\n");
          
          /*
           * testing error path
@@ -2833,6 +2843,7 @@ static int test(int *argc, char **argv[], int parse_args)
          
          if (failed_test) test_failed = 1;
          failed_test = 0;
+         printf("=====================\n");
          
          /*
           * testing join files
@@ -2993,13 +3004,14 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
+         printf("=====================\n");
          
          /*
           * testing job category
           */
          do {
             printf ("Testing job category\n");
-            printf ("$SGE_ROOT/$SGE_CELL/common/sge_request should contain the following entry:\n");
+            printf ("$SGE_ROOT/$SGE_CELL/common/qtask should contain the following entry:\n");
             printf ("test.cat -N ExitTest -h\n");
             
             /* first test that it works */
@@ -3221,6 +3233,7 @@ static int test(int *argc, char **argv[], int parse_args)
          
          if (failed_test) test_failed = 1;
          failed_test = 0;
+         printf("=====================\n");
          
          /*
           * testing native specification
@@ -3446,6 +3459,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
+         printf("=====================\n");
          
          /*
           * testing start time
@@ -3548,6 +3562,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
+         printf("=====================\n");
          
          /*
           * testing job environment
@@ -3639,6 +3654,7 @@ static int test(int *argc, char **argv[], int parse_args)
 
          if (failed_test) test_failed = 1;
          failed_test = 0;
+         printf("=====================\n");
          
          /*
           * testing email address
@@ -3648,6 +3664,8 @@ static int test(int *argc, char **argv[], int parse_args)
             const char *email[3];
             
             printf ("Testing email address\n");
+            printf ("$SGE_ROOT/$SGE_CELL/common/sge_request should contain the following entry:\n");
+            printf ("-m e\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
 
@@ -3708,11 +3726,14 @@ static int test(int *argc, char **argv[], int parse_args)
          /*
           * testing email supression
           */
+         printf("=====================\n");
 
          do {
             const char *email[2];
             
             printf ("Testing email supression\n");
+            printf ("$SGE_ROOT/$SGE_CELL/common/sge_request should contain the following entry:\n");
+            printf ("-m e\n");
             printf ("Getting job template\n");
             drmaa_allocate_job_template(&jt, NULL, 0);
 
@@ -3763,7 +3784,7 @@ static int test(int *argc, char **argv[], int parse_args)
                continue;
             }
 
-            printf ("Check for email to find out if the test succeeded.\n");
+            printf ("Check for email to find out if the test failed.\n");
          } while (0);
          
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }

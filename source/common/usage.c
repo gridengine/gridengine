@@ -1064,6 +1064,11 @@ FILE *fp
       PRINTITD(MSG_GDI_USAGE_suserl_OPT, MSG_GDI_UTEXT_suserl_OPT);
    }
 
+   if (VALID_OPT(sync_OPT, uti_state_get_mewho())) {
+      PRINTITD(MSG_GDI_USAGE_sync_OPT_YN, MSG_GDI_UTEXT_sync_OPT_YN);
+      MARK(OA_PATH_LIST);
+   }
+
    if (VALID_OPT(S_OPT, uti_state_get_mewho())) {
       PRINTITD(MSG_GDI_USAGE_S_OPT_PATH_LIST, MSG_GDI_UTEXT_S_OPT_PATH_LIST);
       MARK(OA_PATH_LIST);

@@ -897,6 +897,9 @@
 #define MSG_GDI_USAGE_S_OPT_PATH_LIST                    "[-S path_list]"
 #define MSG_GDI_UTEXT_S_OPT_PATH_LIST                    _MESSAGE(23454, _("command interpreter to be used"))
 
+#define MSG_GDI_USAGE_sync_OPT_YN                        "[-sync y[es]|n[o]]"
+#define MSG_GDI_UTEXT_sync_OPT_YN                        _MESSAGE(23455, _("wait for job to end and return exit code"))
+
 #define MSG_GDI_USAGE_t_OPT_TASK_ID_RANGE                "[-t task_id_range]"
 #define MSG_GDI_UTEXT_t_OPT_TASK_ID_RANGE                _MESSAGE(23455, _("create a job-array with these tasks"))
 

@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2003/07/30 12:21:51 $     Revision: $Revision: 1.2 $
+.\" $RCSfile: drmaa_session.3,v $     Last Update: $Date: 2004/01/29 21:14:52 $     Revision: $Revision: 1.3 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -12,7 +12,7 @@
 .de M    \" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH drmaa_session 3 "$Date: 2003/07/30 12:21:51 $" "xxRELxx" "xxQS_NAMExx DRMAA"
+.TH drmaa_session 3 "$Date: 2004/01/29 21:14:52 $" "xxRELxx" "xxQS_NAMExx DRMAA"
 .\"
 .\"
 .\"
@@ -52,20 +52,46 @@ drmaa_init, drmaa_exit \- Start/finish xxQS_NAMExx DRMAA session
 .\"
 .\"
 .SH DESCRIPTION
+.SS "drmaa_init()"
 The drmaa_init() function initializes xxQS_NAMExx DRMAA API library for all threads 
 of the process and creates a new DRMAA Session. This routine must be called once before 
 any other DRMAA call, except for 
-.M drmaa_version 3 . 
+.M drmaa_version 3 ,
+.M drmaa_get_DRM_system 3 ,
+and
+.M drmaa_get_DRMAA_implementation 3 . 
 \fIContact\fP is an implementation dependent string which may be used to 
 specify which xxQS_NAMExx cell to use. If 
 \fIcontact\fP 
 is NULL, the default xxQS_NAMExx cell will be used. In the current implementation 
 setting \fIcontact\fP has no effect.
+.PP
+Except for the above listed functions, no DRMAA functions may be called before
+the drmaa_init() function \fIcompletes\fP.  Any DRMAA function which is called
+before the drmaa_init() function completes will return a DRMAA_ERRNO_NO_ACTIVE_SESSION
+error.
 .\" 
 .SS "drmaa_exit()"
-The drmaa_exit() function called by any thread finishes the process DRMAA session 
-for all threads and is necessary to perform DRMAA library internal clean up. Running 
-jobs are not effected. 
+The drmaa_exit() function closes the DRMAA session for all threads and must be
+called before process termination.  The drmaa-exit() function may be called only
+once by a single thread in the process and may only be called after the
+drmaa_init() function has completed.
+.PP
+The drmaa_exit() function does neccessary clean up of the DRMAA session state,
+including unregistering from the
+.M qmaster 8 .
+If the drmaa_exit() function
+is not called, the qmaster will store events for the DRMAA client until the
+connection times out, causing extra work for the qmaster and comsuming system
+resources.
+.PP
+If a second thread calls the drmaa_exit() function while another thread is in
+the drmaa_exit() function, the second thread will block until the first thread
+finishes.  When the first thread finishes with drmaa_exit(), the second thread
+will enter the function, discover that the session has already been closed, and
+exit.
+.PP
+Submitted jobs are not affected by the drmaa_exit() function.
 .PP
 .\"
 .\"
@@ -74,7 +100,7 @@ jobs are not effected.
 .IP "\fBxxQS_NAME_Sxx_ROOT\fP" 1.5i
 Specifies the location of the xxQS_NAMExx standard configuration files.
 .\"
-.IP "\fBSGE_CELL\fP" 1.5i
+.IP "\fBxxQS_NAME_Sxx_CELL\fP" 1.5i
 If set, specifies the default xxQS_NAMExx cell to be used. To address a xxQS_NAMExx
 cell xxQS_NAMExx uses (in the order of precedence):
 .sp 1
@@ -93,10 +119,10 @@ If set, specifies that debug information
 should be written to stderr. In addition the level of
 detail in which debug information is generated is defined.
 .\"
-.IP "\fBCOMMD_PORT\fP" 1.5i
+.IP "\fBxxQS_NAME_Sxx_QMASTER_PORT\fP" 1.5i
 If set, specifies the tcp port on which
-.M xxqs_name_sxx_commd 8
-is expected to listen for communication requests.
+the xxqs_name_sxx_qmaster is
+expected to listen for communication requests.
 Most installations will use a services map entry instead
 to define that port.
 .\"

@@ -288,12 +288,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
    #endif
                if (select_back > 0) {
                   int socket_error;
-#if defined(SOLARIS) && !defined(SOLARIS64)
                   int socklen = sizeof(socket_error);
-#else
-                  socklen_t socklen = sizeof(socket_error);
-#endif
-
 
 #if defined(SOLARIS) && !defined(SOLARIS64) 
                   sock_err = getsockopt(sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);

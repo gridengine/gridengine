@@ -50,14 +50,20 @@
 #include "sge_security.h"
 #include "sge_answer.h"
 #include "sge_job.h"
+#include "japi.h"
+#include "japiP.h"
 
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
 
-
-static void delete_job(u_long32 job_id, lList *lp);
-
 extern char **environ;
+static int ec_up = 0;
+static char **jobid_strings = NULL;
+
+static char *get_bulk_jobid_string (long job_id, int start, int end, int step);
+static void qsub_setup_sig_handlers (void);
+static void qsub_terminate(void);
+static void *sig_thread (void *dummy);
 
 int main(int argc, char **argv);
 
@@ -71,32 +77,33 @@ char **argv
    lList *opts_scriptfile = NULL;
    lList *opts_all = NULL;
    lListElem *job = NULL;
-   lList *lp_jobs;
    lList *alp = NULL;
-   lListElem *aep;
-   u_long32 status = STATUS_OK;
-   u_long32 quality;
-   u_long32 job_id = 0;
-   int do_exit = 0;
-   int scheduled = 0;
+   lListElem *ep;
+   int exit_status = 0;
    int just_verify;
    int tmp_ret;
+   int wait_for_job = 0, is_immediate = 0;
+   dstring session_key_out = DSTRING_INIT;
+   dstring diag = DSTRING_INIT;
+   dstring jobid = DSTRING_INIT;
+   u_long32 start, end, step;
+   u_long32 num_tasks;
+   int count, stat;
+   char *jobid_string;
 
    DENTER_MAIN(TOP_LAYER, "qsub");
 
-   sge_gdi_param(SET_MEWHO, QSUB, NULL);
-   if (sge_gdi_setup(prognames[QSUB], &alp)!=AE_OK) {
-      answer_exit_if_not_recoverable(lFirst(alp));
-      SGE_EXIT(1);
-   }
-
+   /* Set up the program information name */
    sge_setup_sig_handlers(QSUB);
+   qsub_setup_sig_handlers ();
 
-#ifdef ENABLE_NGC
-#else
-   set_commlib_param(CL_P_TIMEOUT_SRCV, 10*60, NULL, NULL);
-   set_commlib_param(CL_P_TIMEOUT_SSND, 10*60, NULL, NULL);
-#endif
+   DPRINTF (("Initializing JAPI\n"));
+
+   if (japi_init(NULL, NULL, NULL, QSUB, false, &diag) != DRMAA_ERRNO_SUCCESS) {
+      printf (MSG_QSUB_COULDNOTINITIALIZEENV_U, sge_dstring_get_string (&diag));
+      DEXIT;
+      exit (1);
+   }
 
    /*
     * read switches from the various defaults files
@@ -148,12 +155,32 @@ char **argv
    opt_list_merge_command_lines(&opts_all, &opts_defaults, 
                                 &opts_scriptfile, &opts_cmdline);
 
+   /* If "-sync y" is set, wait for the job to end. */   
+   if (opt_list_is_X_true (opts_all, "-sync")) {
+      wait_for_job = 1;
+      DPRINTF (("Wait for job end\n"));
+   }
+   
+   /* Remove all -sync switches since cull_parse_job_parameter()
+    * doesn't know what to do with them. */
+   while ((ep = lGetElemStr(opts_all, SPA_switch, "-sync"))) {
+      lRemoveElem(opts_all, ep);
+   }
+   
    alp = cull_parse_job_parameter(opts_all, &job);
 
    tmp_ret = answer_list_print_err_warn(&alp, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
       SGE_EXIT(tmp_ret);
    }
+
+   /* Check is we're just verifying the job */
+   just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
+   DPRINTF (("Just verifying job\n"));
+
+   /* Check if job is immediate */
+   is_immediate = JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type));
+   DPRINTF (("Job is%s immediate\n", is_immediate ? "" : " not"));
 
    DPRINTF(("Everything ok\n"));
 #ifndef NO_SGE_COMPILE_DEBUG
@@ -164,172 +191,227 @@ char **argv
 
    if (lGetUlong(job, JB_verify)) {
       cull_show_job(job, 0);
+      DEXIT;
       SGE_EXIT(0);
    }
 
-   if (set_sec_cred(job) != 0) {
-      fprintf(stderr, MSG_SEC_SETJOBCRED);
-      SGE_EXIT(1);
-   }
-
-
-   just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
-
-   job_add_parent_id_to_context(job);
-
-   /* add job */
-   lp_jobs = lCreateList("submitted jobs", JB_Type);
-   lAppendElem(lp_jobs, job);
-
-   alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp_jobs, NULL, NULL);
-
-   /* reinitialize 'job' with pointer to new version from qmaster */
-   job = lFirst(lp_jobs);
-
-   for_each(aep, alp) {
-      const char *s;
-
-      status = lGetUlong(aep, AN_status);
-      quality = lGetUlong(aep, AN_quality);
-      s = lGetString(aep, AN_text);
-      if (quality == ANSWER_QUALITY_ERROR) {
-         if (s[strlen(s)-1] != '\n') {
-            fprintf(stderr, "%s\n", s);
-         } else {
-            fprintf(stderr, "%s", s);
-         }
-         do_exit = 1;
-      } else {
-         printf("%s", lGetString(aep, AN_text));
-         if (job) {
-            job_id =  lGetUlong(job, JB_job_number ); 
-         } else { 
-            job_id = 0;
-         }
-         DPRINTF(("job id is: %ld\n", job_id));
+   if (is_immediate || wait_for_job) {
+      pthread_t sigt;
+      
+      if (pthread_create (&sigt, NULL, sig_thread, (void *)NULL) != 0) {
+         printf (MSG_QSUB_COULDNOTINITIALIZEENV_U, " error preparing signal handling thread");
+         DEXIT;
+         SGE_EXIT (1);
       }
-   }
-
-   if (just_verify) {
-      do_exit = 1;
-   }
-
-   /* if error or non-immediate job (w/o -now flag): exit */
-   if(do_exit || !JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type))) {
-      lFreeList(lp_jobs);
-      lFreeList(alp);
-      lFreeList(opts_all);
-      if (status == STATUS_OK) {
-         SGE_EXIT(0);
-      } else if (status == STATUS_NOTOK_DOAGAIN) {
-         SGE_EXIT(status);
-      } else {
-         SGE_EXIT(1);
+      
+      if (japi_enable_job_wait (NULL, &session_key_out, &diag) == DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE) {
+         const char *msg = sge_dstring_get_string (&diag);
+         printf (MSG_QSUB_COULDNOTINITIALIZEENV_U, msg?msg:" error starting event client thread");
+         DEXIT;
+         SGE_EXIT (1);
       }
+      
+      ec_up = 1;
    }
-DTRACE;
    
-   /* we only come here if it is an immediate job */
-   DPRINTF(("P O L L I N G    F O R   J O B  ! ! ! ! ! ! ! ! ! ! !\n"));
-   DPRINTF(("=====================================================\n"));
-   printf(MSG_QSUB_WAITINGFORIMMEDIATEJOBTOBESCHEDULED);
-   fflush(stdout);
-   sleep(5);
-   while (1) {
-      lCondition *where;
-      lEnumeration *what;
-      u_long32 job_status;
-      int do_shut = 0;
-      lList  *lp_poll = NULL;
+   job_get_submit_task_ids(job, &start, &end, &step);
+   num_tasks = (end - start) / step + 1;
+   jobid_strings = (char**)malloc (sizeof (char *) * (num_tasks));
+
+   if (num_tasks > 1) {
+      drmaa_attr_values_t *jobids = NULL;
+
+      if ((japi_run_bulk_jobs(&jobids, job, start, end, step, &diag) != DRMAA_ERRNO_SUCCESS)) {
+         printf (MSG_QSUB_COULDNOTRUNJOB_U, sge_dstring_get_string (&diag));
+         DEXIT;
+         SGE_EXIT (1);
+      }
+
+      DPRINTF(("job id is: %ld\n", jobids->it.ji.jobid));
+
+      for (count = 0; count < num_tasks; count++) {            
+         japi_string_vector_get_next (jobids, &jobid);
+         jobid_strings[count] = strdup (sge_dstring_get_string (&jobid));
+      }
       
-      what = lWhat("%T(%I %I)", JB_Type, JB_ja_tasks, JB_context);
-      where = lWhere("%T(%I==%u)", JB_Type, JB_job_number, job_id);
-      alp = sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, &lp_poll, where, what);
-      lFreeWhere(where);
-      lFreeWhat(what);
-      for_each(aep, alp) {
-         status = lGetUlong(aep, AN_status);
-         quality = lGetUlong(aep, AN_quality);
-         if (quality == ANSWER_QUALITY_ERROR) {
-            fprintf(stderr, "\n%s", lGetString(aep, AN_text));
-            do_exit = 1;
-            break;
+      jobid_string = get_bulk_jobid_string (jobids->it.ji.jobid, start, end, step);
+   }
+   else if (num_tasks == 1) {
+      if (japi_run_job(&jobid, job, &diag) != DRMAA_ERRNO_SUCCESS) {
+         printf (MSG_QSUB_COULDNOTRUNJOB_U, sge_dstring_get_string (&diag));
+         DEXIT;
+         SGE_EXIT (1);
+      }
+
+      jobid_strings[0] = strdup (sge_dstring_get_string (&jobid));
+      
+      DPRINTF(("job id is: %s\n", jobid_strings[0]));
+
+      jobid_string = strdup (jobid_strings[0]);
+      sge_dstring_free (&jobid);
+   }
+   else {
+      printf (MSG_QSUB_COULDNOTRUNJOB_U, "invalid task structure");
+      DEXIT;
+      SGE_EXIT (1);
+   }
+   
+   printf (MSG_QSUB_YOURJOBHASBEENSUBMITTED_U, jobid_string, lGetString (job, JB_job_name));
+
+   if (wait_for_job || is_immediate) {
+      int aborted, exited, signaled, event;
+
+      if (is_immediate) {
+         printf(MSG_QSUB_WAITINGFORIMMEDIATEJOBTOBESCHEDULED);
+
+         /* We only need to wait for the first task to be scheduled to be able
+          * to say that the job is running. */
+         if ((tmp_ret = japi_wait(jobid_strings[0], &jobid, &stat,
+                        DRMAA_TIMEOUT_WAIT_FOREVER, JAPI_JOB_START, &event,
+                        NULL, &diag)) != DRMAA_ERRNO_SUCCESS) {
+            /* Since we told japi_wait to wait forever, we know that if it gets
+             * a timeout, it's because it's been interrupted to exit, in which
+             * case we don't complain. */
+            if (tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) {
+               printf (MSG_QSUB_COULDNOTWAITFORJOB_U,
+                       sge_dstring_get_string (&diag));
+            }
+            
+            /* If -now failed, don't bother with -sync */
+            wait_for_job = 0;
          }
-         else if (quality == ANSWER_QUALITY_WARNING) {
-            printf("\n%s", lGetString(aep, AN_text));
+
+         if (event == JAPI_JOB_START) {
+            printf(MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U,
+                  jobid_string);
          }
-         else {
-            /*
-            ** dont print the string ok
-            */
+         /* Don't complain if we were shut down */
+         else if (tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) {
+            printf(MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER);
+            
+            wait_for_job = 0;
          }
+      }
          
-      }
+      if (wait_for_job) {
+         for (count = 0; count < num_tasks; count++) {            
+            if ((tmp_ret = japi_wait(jobid_strings[count], &jobid, &stat,
+                          DRMAA_TIMEOUT_WAIT_FOREVER, JAPI_JOB_FINISH, &event,
+                          NULL, &diag)) != DRMAA_ERRNO_SUCCESS) {
+               if (tmp_ret != DRMAA_ERRNO_EXIT_TIMEOUT) {
+                  printf (MSG_QSUB_COULDNOTWAITFORJOB_U, sge_dstring_get_string (&diag));
+               }
+               
+               break;
+            }
+            
+            /* report how job finished */
+            japi_wifaborted(&aborted, stat, NULL);
 
-      do_shut = shut_me_down;
-      if (do_shut) {
-         fprintf(stderr, MSG_QSUB_REQUESTFORIMMEDIATEJOBHASBEENCANCELED);
-         delete_job(job_id, lp_jobs);
-         break;
-      }
+            if (aborted) {
+               printf(MSG_QSUB_JOBNEVERRAN_U, jobid_strings[count]);
+            }
+            else {
+               japi_wifexited(&exited, stat, NULL);
+               if (exited) {
+                  japi_wexitstatus(&exit_status, stat, NULL);
+                  printf(MSG_QSUB_JOBEXITED_U, jobid_strings[count], exit_status);
+               } else {
+                  japi_wifsignaled(&signaled, stat, NULL);
+                  if (signaled) {
+                     dstring termsig = DSTRING_INIT;
+                     japi_wtermsig(&termsig, stat, NULL);
+                     printf(MSG_QSUB_JOBRECEIVEDSIGNAL_U, jobid_strings[count], termsig);
+                     sge_dstring_free (&termsig);
+                  }
+                  else {
+                     printf(MSG_QSUB_JOBFINISHUNCLEAR_U, jobid_strings[count]);
+                  }
 
-      lWriteList(lp_poll);
-      if (!lp_jobs || !lFirst(lp_poll)) {
-         fprintf(stderr, MSG_QSUB_YOURQSUBREQUESTCOULDNOTBESCHEDULEDDTRYLATER);
-         do_exit = 1;
-         break;
+                  exit_status = 1;
+               }
+            }
+         }
       }
-      job_status = lGetUlong(lFirst(lGetList(lFirst(lp_poll), JB_ja_tasks)), JAT_status);
-      if (job_status == JIDLE) {
-         printf(".");
-         fflush(stdout);
-      }
-      else if ((job_status == JRUNNING) || (job_status == JTRANSFERING)) {
-         printf(MSG_QSUB_YOURIMMEDIATEJOBXHASBEENSUCCESSFULLYSCHEDULED_U, u32c(job_id));
-         scheduled = 1;
-         break;
-      }
-   } /*end of while(1) polling */
+   }
 
-      
-   lFreeList(lp_jobs);
+   /* We free these before calling japi_exit() because if we were interrtuped,
+    * the call to japi_exit() will block, and then the signal handler would exit
+    * the process before we would get to free things. */
+   for (count = 0; count < num_tasks; count++) {
+      FREE (jobid_strings[count]);
+   }
+
+   FREE (jobid_string);
    lFreeList(alp);
    lFreeList(opts_all);
-   SGE_EXIT(status==STATUS_OK && scheduled ?0:1); /* 0 means ok - others are errors */
+   
+   if ((tmp_ret = japi_exit (1, JAPI_EXIT_NO_FLAG, &diag)) != DRMAA_ERRNO_SUCCESS) {
+      if (tmp_ret != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
+         printf (MSG_QSUB_COULDNOTFINALIZEENV_U, sge_dstring_get_string (&diag));
+      }
+   }
+   
+   SGE_EXIT(exit_status);
    DEXIT;
    return 0;
 }
 
-
-/*-------------------------------------------------------------------
- * Functions copied from qsh.c
- * put into shared library some time
- *-------------------------------------------------------------------*/
-
-static void delete_job(
-u_long32 job_id,
-lList *jlp 
-) {
-   lListElem *jep;
-   lListElem *idp;
-   lList *idlp;
-   char job_str[128];
-
-   if (!jlp) {
-      return;
-   }
-   jep = lFirst(jlp);
-   if (!jep) {
-      return;
-   }
+static char *get_bulk_jobid_string (long job_id, int start, int end, int step)
+{
+   char *jobid_str = (char *)malloc (sizeof (char) * 1024);
+   char *ret_str = NULL;
    
-   sprintf(job_str, u32, job_id);
-   idp = lAddElemStr(&idlp, ID_str, job_str, ID_Type);
-
-   sge_gdi(SGE_JOB_LIST, SGE_GDI_DEL, &idlp, NULL, NULL);
-   /*
-   ** no error handling here, we try to delete the job
-   ** if we can
-   */
+   sprintf (jobid_str, "%ld.%d-%d:%d", job_id, start, end, step);
+   ret_str = strdup (jobid_str);
+   FREE (jobid_str);
+   
+   return ret_str;
 }
 
+static void qsub_setup_sig_handlers ()
+{
+   sigset_t sig_set;
+
+   sigfillset (&sig_set);
+   pthread_sigmask (SIG_BLOCK, &sig_set, NULL);
+}
+
+static void qsub_terminate(void)
+{
+   dstring diag = DSTRING_INIT;
+   
+   fprintf (stderr, MSG_QSUB_INTERRUPTED_U);
+   fprintf (stderr, MSG_QSUB_TERMINATING_U);
+
+   if (japi_exit (1, JAPI_EXIT_KILL_PENDING, &diag) != DRMAA_ERRNO_SUCCESS) {
+     fprintf (stderr, MSG_QSUB_COULDNOTFINALIZEENV_U, sge_dstring_get_string (&diag));
+   }
+
+   sge_dstring_free (&diag);
+
+   SGE_EXIT (1);
+}
+
+static void *sig_thread (void *dummy)
+{
+   int sig;
+   sigset_t signal_set;
+   dstring diag = DSTRING_INIT;
+
+   sigemptyset (&signal_set);
+   sigaddset (&signal_set, SIGINT);
+   sigaddset (&signal_set, SIGTERM);
+
+   /* Set up this thread so that when japi_exit() gets called, the GDI is
+    * ready for use. */
+   japi_init_mt (&diag);
+
+   /* We don't care about sigwait's return (error) code because our response
+    * to an error would be the same thing we're doing anyway: shutting down. */
+   sigwait (&signal_set, &sig);
+   
+   qsub_terminate ();
+   
+   return (void *)NULL;
+}

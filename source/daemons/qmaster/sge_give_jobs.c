@@ -760,8 +760,9 @@ sge_commit_flags_t commit_flags
       job_enroll(jep, NULL, jataskid);
       {
          lList *answer_list = NULL;
+         const char *session = lGetString (jep, JB_session);
          sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
-                         jobid, jataskid, NULL, NULL, NULL,
+                         jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
       }
@@ -900,8 +901,9 @@ sge_commit_flags_t commit_flags
       job_enroll(jep, NULL, jataskid);
       {
          lList *answer_list = NULL;
+         const char *session = lGetString (jep, JB_session);
          sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
-                         jobid, jataskid, NULL, NULL, NULL,
+                         jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
       }
@@ -994,8 +996,9 @@ sge_commit_flags_t commit_flags
       job_enroll(jep, NULL, jataskid);
       {
          lList *answer_list = NULL;
+         const char *session = lGetString (jep, JB_session);
          sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD, 
-                         jobid, jataskid, NULL, NULL, NULL,
+                         jobid, jataskid, NULL, NULL, session,
                          jep, jatep, NULL, true, true);
          answer_list_output(&answer_list);
       }

@@ -49,12 +49,13 @@ JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c \
 							 sge_qtcsh.c
 JAPI_ADD_OBJS = $(JAPI_ADD_SRC:.c=.o)
 JAPI_ADD_LIBS = -L. -lspoolc -lspool -lsched -lgdi -lsgeobj -lsgeobjd \
-								$(SECLIB) $(KRBLIB) -lcull -lrmon -lngc -lngclists -luti -llck $(DLLIB)
+								$(SECLIB) $(KRBLIB) -lcull -lrmon -lngc -lngclists -luti -llck \
+                $(DLLIB) -levc -levm
 JAPI_LIB_DEPENDS = $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(SECLIBS) $(KRBLIBS) $(CULLLIB) \
-                   $(RMONLIB) $(COMMLIB) $(UTILIB) $(LCKLIB)
+                   $(RMONLIB) $(COMMLIB) $(UTILIB) $(LCKLIB) $(EVCLIB) $(EVMLIB)
                 
-JAPI_DEPEND_OBJS = $(EVCLIB_OBJS) $(COMMLIB_OBJS) $(JAPI_ADD_OBJS)
+JAPI_DEPEND_OBJS = $(COMMLIB_OBJS) $(JAPI_ADD_OBJS)
 DRMAA_DEPEND_OBJS = $(JAPILIB_OBJS) $(JAPI_DEPEND_OBJS)
 
 all: $(JAPI_ALL)
@@ -98,10 +99,10 @@ include $(JAPILIB_DIR)/japi_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-drmaa.o: $(JAPILIB_DIR)/drmaa.c
+drmaa.o: $(JAPILIB_DIR)/drmaa.c $(DRMAA_DEPEND_OBJS) $(JAPI_LIB_DEPENDS)
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/drmaa.c
 
-japi.o: $(JAPILIB_DIR)/japi.c
+japi.o: $(JAPILIB_DIR)/japi.c $(JAPI_DEPEND_OBJS) $(JAPI_LIB_DEPENDS)
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(JAPILIB_DIR)/japi.c
 
 #---------------------------------------------------------------------

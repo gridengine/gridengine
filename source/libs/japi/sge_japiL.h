@@ -59,6 +59,9 @@ extern "C" {
 *     SGE_LIST(JJ_not_yet_finished_ids, RN_Type)
 *        id's of not yet finished tasks
 *
+*     SGE_LIST(JJ_started_task_ids, RN_Type)
+*        id's of started tasks
+*
 *  FUNCTION
 *     CULL element holding per job information about JAPI session 
 ******************************************************************************/
@@ -66,7 +69,8 @@ enum {
    JJ_jobid = JJ_LOWERBOUND,
    JJ_type,
    JJ_finished_tasks,
-   JJ_not_yet_finished_ids
+   JJ_not_yet_finished_ids,
+   JJ_started_task_ids
 };
 
 LISTDEF(JJ_Type)
@@ -74,6 +78,7 @@ LISTDEF(JJ_Type)
    SGE_ULONG(JJ_type, CULL_DEFAULT)
    SGE_LIST(JJ_finished_tasks, JJAT_Type, CULL_DEFAULT)
    SGE_LIST(JJ_not_yet_finished_ids, RN_Type, CULL_DEFAULT)
+   SGE_LIST(JJ_started_task_ids, RN_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(JJN)
@@ -81,6 +86,7 @@ NAMEDEF(JJN)
    NAME("JJ_type")
    NAME("JJ_finished_tasks")
    NAME("JJ_not_yet_finished_ids")
+   NAME("JJ_started_task_ids")
 NAMEEND
 
 /* *INDENT-ON* */

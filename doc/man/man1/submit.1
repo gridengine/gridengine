@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/01/26 15:27:49 $     Revision: $Revision: 1.34 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2004/01/29 21:14:51 $     Revision: $Revision: 1.35 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2004/01/26 15:27:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2004/01/29 21:14:51 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -926,10 +926,12 @@ Available for \fIqsub\fP, \fIqsh\fP, \fIqlogin\fP and \fIqrsh\fP.
 \fB\-now y\fP
 tries to start the job immediately or 
 not at all. The command returns 0 on success, or 1 on failure (also if
-the job could not be scheduled immediately).
+the job could not be scheduled immediately).  For array jobs submitted with the
+\fB-now\fP option, if all tasks cannot be immediately scheduled, no tasks are
+scheduled.
 \fB\-now y\fP is default for \fIqsh\fP, \fIqlogin\fP and \fIqrsh\fP
 .br
-With option \fB\-now n\fP the job will be put into the pending queue, if it
+With option \fB\-now n\fP the job will be put into the pending queue if it
 cannot be executed immediately. \fB\-now n\fP is default for \fIqsub\fP.
 .\"
 .IP "\fB\-N name\fP"
@@ -1172,6 +1174,35 @@ essential". If the \fB\-hard\fP flag (see above) is encountered at a later
 stage of the scan, all resource requests following it once
 again become "essential". The \fB\-hard\fP and \fB\-soft\fP
 options in effect act as "toggles" during the scan.
+.\"
+.IP "\fB\-sync y[es]|n[o]\fP"
+Available for \fIqsub\fP.
+.sp 1
+\fB\-sync y\fP
+causes
+.I qsub.
+to wait for the job to complete before exiting.  If the job completes successfully,
+.I qsub's
+exit code will be that of the completed job.  If the job fails to complete
+successfully,
+.I qsub
+will print out a error message indicating why the job failed and will have an
+exit code of 1.  If
+.I qsub
+is interrupted, e.g. with CTRL-C, before the job completes, the job will be
+canceled.
+.br
+With option \fB\-sync n\fP
+.I qsub
+will exit with an exit code of 0 if as soon as the job is submitted successfully.
+\fB\-sync n\fP is default for \fIqsub\fP.
+.br
+If \fB\-sync y\fP is used in conjunction with \fB\-now y\fP,
+.I qsub
+will behave as though only \fB\-now y\fP were given until the job has been
+successfully scheduled, after which time
+.I qsub
+will behave as though only \fB\-sync y\fP were given.
 .\"
 .IP "\fB\-S [[hostname]:]pathname,...\fP"
 Available for \fIqsub\fP, \fIqsh\fP and \fIqalter\fP.

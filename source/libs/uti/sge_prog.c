@@ -94,7 +94,8 @@ const char *prognames[] =
    "commdcntl" ,       /* 38  */
    "spoolinit" ,       /* 39  */
    "japi"      ,       /* 40  */
-   "japi_ec"           /* 41  */
+   "japi_ec"   ,       /* 41  */
+   "drmaa"             /* 42  */
 };
  
 typedef struct {

@@ -47,12 +47,13 @@ QSUB_OBJS = $(QSUB_SRC:.c=.o)
 
 QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) 
 
-QSUB_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lngc -lngclists -luti -llck -lrmon $(DLLIB)
+QSUB_ADD_LIBS = -ljapi -levc -levm -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) \
+                 -lcull -lngc -lngclists -luti -llck -lrmon $(DLLIB) -lgdi
 
 QSUB_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(SECLIBS) $(KRBLIBS) \
                    $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(ZLIB) \
-                   $(TPLIB)
+                   $(TPLIB) $(JAPILIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -84,5 +85,5 @@ include $(QSUB_DIR)/qsub_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-qsub.o: 	$(QSUB_DIR)/qsub.c
+qsub.o: 	$(QSUB_DIR)/qsub.c $(JAPILIB)
 		$(CC) $(CFLAGS) -c $(QSUB_DIR)/qsub.c

@@ -51,9 +51,10 @@ gqueue_is_suspended(const lList *this_list, const lList *qinstance_list)
       const char *queue_name = lGetString(gqueue, JG_qname);
       lListElem *qinstance = qinstance_list_locate2(qinstance_list, queue_name);
    
-      if (qinstance_state_is_manual_suspended(qinstance) ||
-          qinstance_state_is_susp_on_sub(qinstance) ||
-          qinstance_state_is_cal_suspended(qinstance)) {
+      if ((qinstance != NULL) &&
+          (qinstance_state_is_manual_suspended(qinstance) ||
+           qinstance_state_is_susp_on_sub(qinstance) ||
+           qinstance_state_is_cal_suspended(qinstance))) {
          ret = true;
          break;
       }

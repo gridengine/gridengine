@@ -98,7 +98,8 @@ enum {
  COMMDCNTL       ,       /* 38 */ 
  SPOOLDEFAULTS   ,       /* 39 */
  JAPI            ,       /* 40 */
- JAPI_EC                 /* 41 */
+ JAPI_EC         ,       /* 41 */
+ DRMAA                   /* 42 */
 };
 
 

@@ -1119,8 +1119,9 @@ lList **topp  /* ticket orders ptr ptr */
 
             {
                lList *answer_list = NULL;
+               const char *session = lGetString (jep, JB_session);
                sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
-                               jobid, task_number, NULL, NULL, NULL,
+                               jobid, task_number, NULL, NULL, session,
                                jep, jatp, NULL, true, true);
                answer_list_output(&answer_list);
             }
@@ -1171,8 +1172,9 @@ lList **topp  /* ticket orders ptr ptr */
             lSetUlong(jatp, JAT_state, state);
             {
                lList *answer_list = NULL;
+               const char *session = lGetString (jep, JB_session);
                sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
-                               jobid, task_number, NULL, NULL, NULL,
+                               jobid, task_number, NULL, NULL, session,
                                jep, jatp, NULL, true, true);
                answer_list_output(&answer_list);
             }

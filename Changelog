@@ -1,3 +1,27 @@
+DT-2004-01-29-0: Enhancem.: Added -sync y|n option to qsub to enable waiting
+                            for the job end.
+                            Extended JAPI to allow:
+                              o listening for job start events
+                              o starting the event client separately from
+                                japi_init()
+                              o killing jobs left running in the session from
+                                japi_exit()
+                              o faster shutdown of the event client
+                              o finer grained locking
+                              o setting the program name to register with GDI
+                            Added DRMAA to prognames.
+                            Ported qsub completely over to JAPI.
+                            Cleaned up test_drmaa a little.
+                 Bugfix:    Fixed minor memory management and compilation issues
+                            in qmaster and comm lib.
+                            Session state was not being included on spooled
+                            events.
+                            Fixed various minor issues with comments.
+                            Fixed qstat compile problem.
+                 Changed:   DRMAA, JAPI, qsub, qmaster, qtcsh, sge_prog.*,
+                            qstat, sge_gqueue.c, comm lib, docs
+                 Review:    SG, AD pending, AH pending
+
 AD-2004-01-29-0: Bugfix:    Qmaster must not invoke 'sge_run_as_user()'.
                  Changed:   qmaster
 

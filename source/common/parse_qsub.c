@@ -1056,11 +1056,11 @@ u_long32 flags
          DPRINTF(("\"-now %s\"\n", *sp));
          
          if(!strcmp(*sp, "y") || !strcmp(*sp, "yes")){
-            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, now_OPT, lIntT, *(sp - 1), *sp);
             lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
          }
          else if (!strcmp(*sp, "n") || !strcmp(*sp, "no")) {
-            ep_opt = sge_add_arg(pcmdline, r_OPT, lIntT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, now_OPT, lIntT, *(sp - 1), *sp);
             lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
          }
          else {
@@ -1366,6 +1366,46 @@ DTRACE;
          continue;
       }
 
+/*----------------------------------------------------------------------------*/
+     /*  -sync y[es]|n[o] */
+
+      if(!strcmp("-sync", *sp)) {
+         if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
+            sprintf(str,
+               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
+               *sp);
+            answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
+         }
+         /* next field is yes/no switch */
+         sp++;
+         if(!*sp) {
+            sprintf(str, MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-sync");
+            answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+            DEXIT;
+            return answer;
+         }
+         
+         DPRINTF(("\"-sync %s\"\n", *sp));
+         
+         if(!strcmp(*sp, "y") || !strcmp(*sp, "yes")){
+            ep_opt = sge_add_arg(pcmdline, sync_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, TRUE);
+         }
+         else if (!strcmp(*sp, "n") || !strcmp(*sp, "no")) {
+            ep_opt = sge_add_arg(pcmdline, sync_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, FALSE);
+         }
+         else {
+             sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTNOW_S , *sp);
+             answer_list_add(&answer, str, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+             DEXIT;
+             return answer;
+         }
+
+         sp++;
+         continue;
+      }
+            
 /*----------------------------------------------------------------------------*/
       /* "-S path_name" */
 

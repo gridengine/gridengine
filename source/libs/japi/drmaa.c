@@ -276,7 +276,7 @@ int drmaa_init(const char *contact, char *error_diagnosis, size_t error_diag_len
     * to interface JAPI session key forth ... 
     */
    ret = japi_init(contact, set_session?sge_dstring_get_string(&session_key_in):NULL, 
-        &session_key_out, diagp);
+        &session_key_out, DRMAA, 1, diagp);
 
    if (set_session)
       sge_dstring_free(&session_key_in);
@@ -355,7 +355,7 @@ int drmaa_exit(char *error_diagnosis, size_t error_diag_len)
    }
    DRMAA_UNLOCK_ENVIRON();
 
-   drmaa_errno = japi_exit(close_session, diagp);
+   drmaa_errno = japi_exit(close_session, JAPI_EXIT_NO_FLAG, diagp);
 
    /* need to get rid of session key env var */
    DRMAA_LOCK_ENVIRON();
@@ -1249,11 +1249,16 @@ int drmaa_wait(const char *job_id, char *job_id_out, size_t job_id_out_len,
 {
    dstring diag;
    dstring waited_job;
+   int ev;
+   
    if (error_diagnosis) 
       sge_dstring_init(&diag, error_diagnosis, error_diag_len+1);
+   
    if (job_id_out) 
       sge_dstring_init(&waited_job, job_id_out, job_id_out_len+1);
-   return japi_wait(job_id, job_id_out?&waited_job:NULL, stat, timeout, rusage, error_diagnosis?&diag:NULL);
+   
+   return japi_wait(job_id, job_id_out?&waited_job:NULL, stat, timeout,
+                    JAPI_JOB_FINISH, &ev, rusage, error_diagnosis?&diag:NULL);
 }
 
 
@@ -2470,7 +2475,7 @@ DPRINTF (("CWD: %s\n", getcwd (NULL, 1024)));
       DEXIT;
       return DRMAA_ERRNO_DENIED_BY_DRM;
    }
-   
+
    *jtp = jt;
    DEXIT;
    return DRMAA_ERRNO_SUCCESS;

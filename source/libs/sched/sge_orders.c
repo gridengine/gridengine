@@ -93,6 +93,8 @@ int get_seq_nr()
  returns updated order-list.
 
  The granted list contains granted queues.
+
+ Appears to be MT safe
  *************************************************************/
 
 lList *sge_create_orders(

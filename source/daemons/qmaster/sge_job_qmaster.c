@@ -2659,7 +2659,7 @@ int *trigger
    /* ---- JB_stdout_path_list */
    if ((pos=lGetPosViaElem(jep, JB_stdout_path_list))>=0) {
       int status;
-      DPRINTF(("got new JB_stdout_path_listﬂ\n")); 
+      DPRINTF(("got new JB_stdout_path_list?\n")); 
       
       if( (status = job_resolve_host_for_path_list(jep, alpp, JB_stdout_path_list)) != STATUS_OK){
          DEXIT;

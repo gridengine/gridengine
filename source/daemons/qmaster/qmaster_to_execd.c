@@ -120,7 +120,7 @@ static int host_notify_about_X(lListElem *host,
    }
 
    if(init_packbuffer(&pb, 256, 0) == PACK_SUCCESS) {
-      u_long32 dummy;
+      u_long32 dummy = 0;
 
       packint(&pb, x);
 #ifdef ENABLE_NGC

@@ -1,3 +1,9 @@
+EB-2004-03-08-0: Bugfix:    qstat -g c takes to long time if there are many 
+                            jobs in the cluster
+                 Changed:   qstat
+                 Issue:     789
+                 Review:    SG
+
 DT-2004-03-08-0: Bugfix:    Left over check-in from Friday
                             o Fixed message for qconf -ks
                             o Cleaned up some DRMAA output messages

@@ -155,6 +155,7 @@ proc init_level {} {
 #     ???/???
 #*******************************
 proc shadowd_setup {} {
+   global ts_config
    global CHECK_CORE_EXECD CHECK_OUTPUT CHECK_PRODUCT_ROOT 
    global shadowd_file shadowd_hostname shadowd_master_spool_dir
    global shadowd_original_master_spool_dir shadowd_moved_master_dir
@@ -190,7 +191,7 @@ proc shadowd_setup {} {
    puts $CHECK_OUTPUT "using execd host \"${shadowd_hostname}\" as shadowd host"
 
 
-   set default_spool_dir "$CHECK_PRODUCT_ROOT/default/spool/qmaster"
+   set default_spool_dir "$CHECK_PRODUCT_ROOT/$ts_config(cell)/spool/qmaster"
    set shadowd_master_spool_dir [ get_qmaster_spool_dir ]  
 
    if { [string compare $default_spool_dir $shadowd_master_spool_dir] != 0 } {
@@ -203,8 +204,8 @@ proc shadowd_setup {} {
  
   
    puts $CHECK_OUTPUT ""
-   puts $CHECK_OUTPUT "creating file \"$CHECK_PRODUCT_ROOT/default/common/$shadowd_file\" ..." 
-   set file_p [ open "$CHECK_PRODUCT_ROOT/default/common/$shadowd_file" "w" ]
+   puts $CHECK_OUTPUT "creating file \"$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/$shadowd_file\" ..." 
+   set file_p [ open "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/$shadowd_file" "w" ]
    puts $file_p $shadowd_hostname
    close $file_p   
    set_error 0 "ok"
@@ -516,6 +517,7 @@ proc shadowd_kill_shadowd_master_and_shadowd_sheduler {} {
 #     ???/???
 #*******************************
 proc shadowd_cleanup {} {
+   global ts_config
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT shadowd_file shadowd_pid 
    global shadowd_hostname CHECK_CORE_MASTER CHECK_USER CHECK_CORE_EXECD
    global shadowd_original_master_spool_dir shadowd_moved_master_dir
@@ -536,13 +538,13 @@ proc shadowd_cleanup {} {
    }
  
    puts $CHECK_OUTPUT ""
-   puts $CHECK_OUTPUT "delete file \"$CHECK_PRODUCT_ROOT/default/common/$shadowd_file\" ..." 
-   delete_file "$CHECK_PRODUCT_ROOT/default/common/$shadowd_file" 
+   puts $CHECK_OUTPUT "delete file \"$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/$shadowd_file\" ..." 
+   delete_file "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/$shadowd_file" 
 
 
    puts $CHECK_OUTPUT ""
    puts $CHECK_OUTPUT "setting act_qmaster to $CHECK_CORE_MASTER ..."
-   set file_p [ open "$CHECK_PRODUCT_ROOT/default/common/act_qmaster" "w" ]
+   set file_p [ open "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/act_qmaster" "w" ]
    puts $file_p $CHECK_CORE_MASTER
    close $file_p   
 

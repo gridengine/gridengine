@@ -89,7 +89,7 @@ proc init_level {} {
 
 
 proc path_alias_setup {} {
-   
+   global ts_config
    global CHECK_JOB_OUTPUT_DIR
    global CHECK_OUTPUT CHECK_USER
    global PATH_ALIAS_OUTPUT1
@@ -120,7 +120,7 @@ proc path_alias_setup {} {
    set do_it 0
    if { $path_alias_test == 1 } {
       set do_it 1
-      set file_name "$CHECK_PRODUCT_ROOT/default/common/sge_aliases"
+      set file_name "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/sge_aliases"
    }
 
    if { $path_alias_test == 2 } {
@@ -296,6 +296,7 @@ proc path_alias_main {} {
 }
 
 proc path_alias_cleanup {} {
+   global ts_config
    global path_alias_test
    global PATH_ALIAS_OUTPUT1
    global PATH_ALIAS_OUTPUT2
@@ -318,7 +319,7 @@ proc path_alias_cleanup {} {
    set do_it 0 
 
    if { $path_alias_test == 1 } {
-      set file_name "$CHECK_PRODUCT_ROOT/default/common/sge_aliases"
+      set file_name "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/sge_aliases"
       set do_it 1
    } 
    if { $path_alias_test == 2 } {

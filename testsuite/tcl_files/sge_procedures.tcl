@@ -986,7 +986,7 @@ proc move_qmaster_spool_dir { new_spool_dir } {
   lappend vi_commands ":%s/^qmaster_spool_dir .*$/qmaster_spool_dir    $newVal/\n"
   set vi_binary [get_binary_path $CHECK_HOST "vim"]
   # JG: TODO: this is version dependent! Use set_qmaster_spool_dir instead!
-  set result [ handle_vi_edit "$vi_binary" "$ts_config(product_root)/default/common/bootstrap" "$vi_commands" "" ] 
+  set result [ handle_vi_edit "$vi_binary" "$ts_config(product_root)/$ts_config(cell)/common/bootstrap" "$vi_commands" "" ] 
   puts $CHECK_OUTPUT "result: \"$result\""
   if { $result != 0 } {
      add_proc_error "shadowd_kill_master_and_scheduler" -1 "edit error when changing global configuration"
@@ -1095,8 +1095,8 @@ proc get_hosts { } {
 #     
 #     Here the possible change_array values with some typical settings:
 #     
-#     execd_spool_dir      /../default/spool
-#     qsi_common_dir       /../default/common/qsi
+#     execd_spool_dir      /../$SGE_CELL/spool
+#     qsi_common_dir       /../$SGE_CELL/common/qsi
 #     mailer               /usr/sbin/Mail
 #     xterm                /usr/bin/X11/xterm
 #     load_sensor          none
@@ -1285,8 +1285,8 @@ proc get_complex { change_array complex_list } {
 #     
 #     Here the possible change_array values with some typical settings:
 #     
-#     execd_spool_dir      /../default/spool
-#     qsi_common_dir       /../default/common/qsi
+#     execd_spool_dir      /../$SGE_CELL/spool
+#     qsi_common_dir       /../$SGE_CELL/common/qsi
 #     mailer               /usr/sbin/Mail
 #     xterm                /usr/bin/X11/xterm
 #     load_sensor          none

@@ -91,7 +91,7 @@ proc binary_submission_setup  {} {
    #
    # Save sge_aliases file which was created during installation
    #
-   set sge_aliases "$CHECK_PRODUCT_ROOT/default/common/sge_aliases"
+   set sge_aliases "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/sge_aliases"
    if { ([ file isfile "${sge_aliases}.sav" ] == 1) } { 
       file delete ${sge_aliases}.sav
    }
@@ -112,7 +112,7 @@ proc binary_submission_cleanup  {} {
    #
    # Restore sge_aliases file
    #
-   set sge_aliases "$CHECK_PRODUCT_ROOT/default/common/sge_aliases"
+   set sge_aliases "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/sge_aliases"
    if { ([ file isfile "${sge_aliases}.sav" ] == 1) } {
       if { ([ file isfile "${sge_aliases}" ] == 1) } {
          delete_file ${sge_aliases}
@@ -278,7 +278,7 @@ proc binary_submission_check {} {
       # delete default file or delete file used in last scenario
       # create new sge_aliases file if it it necessary for this scenario
       #
-      set sge_aliases "$CHECK_PRODUCT_ROOT/default/common/sge_aliases"
+      set sge_aliases "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/sge_aliases"
       if { ( [ file isfile ${sge_aliases}] == 1) } {
          delete_file "$sge_aliases" 
       }

@@ -2034,7 +2034,6 @@ proc update_ts_config_version {} {
       config_build_ts_config_1_1
       show_config ts_config
       wait_for_enter
-      return 0
    }
 
    if { $ts_config(version) == "1.1" } {
@@ -2042,7 +2041,6 @@ proc update_ts_config_version {} {
       config_build_ts_config_1_2
       show_config ts_config
       wait_for_enter
-      return 0
    }
 
    if { $ts_config(version) == "1.2" } {
@@ -2050,7 +2048,6 @@ proc update_ts_config_version {} {
       config_build_ts_config_1_3
       show_config ts_config
       wait_for_enter
-      return 0
    }
    
    if { $ts_config(version) == "1.3" } {
@@ -2058,12 +2055,18 @@ proc update_ts_config_version {} {
       config_build_ts_config_1_4
       show_config ts_config
       wait_for_enter
-      return 0
    }
    
    if { $ts_config(version) == "1.4" } {
       puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.4 to 1.5 ..."
       config_build_ts_config_1_5
+      show_config ts_config
+      wait_for_enter
+   }
+   
+   if { $ts_config(version) == "1.5" } {
+      puts $CHECK_OUTPUT "\ntestsuite configuration update from 1.4 to 1.5 ..."
+      config_build_ts_config_1_6
       show_config ts_config
       wait_for_enter
       return 0
@@ -5156,7 +5159,7 @@ proc wait_for_start_time { substring } {
 # returns -1: error
 # returns 0 : no error
 proc prepare_packages { } {
-
+   global ts_config
    global CHECK_PACKAGE_DIRECTORY CHECK_OUTPUT CHECK_DEFAULTS_FILE
    global CHECK_PRODUCT_ROOT CHECK_JOB_OUTPUT_DIR CHECK_HOST CHECK_PACKAGE_TYPE
    global CHECK_USER CHECK_PRODUCT_TYPE CHECK_CORE_EXECD CHECK_PROTOCOL_DIR
@@ -5207,10 +5210,10 @@ proc prepare_packages { } {
 
       set restore_host_aliases_file 0
       # copy pos. host_aliases file 
-      if { [ file isfile "$CHECK_PRODUCT_ROOT/default/common/host_aliases"] == 1 } {
+      if { [ file isfile "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases"] == 1 } {
          puts $CHECK_OUTPUT "saving host_aliases file ..."
          set restore_host_aliases_file 1
-         catch { exec "cp" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
+         catch { exec "cp" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
          puts $result
       } 
       # now delete install directory
@@ -5225,14 +5228,14 @@ proc prepare_packages { } {
       catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
       puts $result
 
-      catch { file mkdir "$CHECK_PRODUCT_ROOT/default" } 
-      catch { file mkdir "$CHECK_PRODUCT_ROOT/default/common" } 
+      catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)" } 
+      catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common" } 
 
-      # copy pos. host_aliases file to new product root /default/common
+      # copy pos. host_aliases file to new product root /cell/common
       if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 && 
            $restore_host_aliases_file == 1 } {
          puts $CHECK_OUTPUT "restoring host_aliases file ..."
-         catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" } result
+         catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" } result
          puts $result
       }
 
@@ -5378,10 +5381,10 @@ proc prepare_packages { } {
 
       set restore_host_aliases_file 0
       # copy pos. host_aliases file 
-      if { [ file isfile "$CHECK_PRODUCT_ROOT/default/common/host_aliases"] == 1 } {
+      if { [ file isfile "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases"] == 1 } {
          puts $CHECK_OUTPUT "saving host_aliases file ..."
          set restore_host_aliases_file 1
-         catch { exec "cp" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
+         catch { exec "cp" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
          puts $result
       } 
       # now delete install directory
@@ -5396,14 +5399,14 @@ proc prepare_packages { } {
       catch { exec "chmod" "755" "$CHECK_PRODUCT_ROOT"  } result
       puts $result
 
-      catch { file mkdir "$CHECK_PRODUCT_ROOT/default" } 
-      catch { file mkdir "$CHECK_PRODUCT_ROOT/default/common" } 
+      catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)" } 
+      catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common" } 
 
       # copy pos. host_aliases file to new product root /default/common
       if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 && 
            $restore_host_aliases_file == 1 } {
          puts $CHECK_OUTPUT "restoring host_aliases file ..."
-         catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" } result
+         catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" } result
          puts $result
       }
 
@@ -6294,9 +6297,9 @@ proc compile_source { { do_only_install 0 } } {
    puts $CHECK_OUTPUT "\nusing environment variable \"$var_name\""
 
    # copy pos. host_aliases file to trash_
-   if { [ file isfile "$CHECK_PRODUCT_ROOT/default/common/host_aliases"] == 1 } {
+   if { [ file isfile "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases"] == 1 } {
       puts $CHECK_OUTPUT "saving host_aliases file ..."
-      catch { exec "cp" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
+      catch { exec "cp" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" "$CHECK_JOB_OUTPUT_DIR/host_aliases"  } result
       puts $result
    } 
 
@@ -6392,14 +6395,14 @@ proc compile_source { { do_only_install 0 } } {
  
    catch { file mkdir "$CHECK_PRODUCT_ROOT/man" } 
    catch { file mkdir "$CHECK_PRODUCT_ROOT/catman" } 
-   catch { file mkdir "$CHECK_PRODUCT_ROOT/default" } 
-   catch { file mkdir "$CHECK_PRODUCT_ROOT/default/common" } 
+   catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)" } 
+   catch { file mkdir "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common" } 
 
   
    # copy pos. host_aliases file to new product root /default/common
    if { [ file isfile "$CHECK_JOB_OUTPUT_DIR/host_aliases"] == 1 } {
         puts $CHECK_OUTPUT "restoring host_aliases file ..."
-        catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/default/common/host_aliases" } result
+        catch { exec "cp" "$CHECK_JOB_OUTPUT_DIR/host_aliases" "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/host_aliases" } result
         puts $result
    }
 

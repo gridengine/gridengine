@@ -189,7 +189,7 @@ proc start_remote_tcl_prog { host user tcl_file tcl_procedure tcl_procargs} {
 #     { do_file_check 1 }       - internal parameter for file existence check
 #                                 if 0: don't do a file existence check
 #     { source_settings_file 1 }- if 1 (default):
-#                                 source $SGE_ROOT/default/settings.csh
+#                                 source $SGE_ROOT/$SGE_CELL/settings.csh
 #                                 if not 1: don't source settings file
 #     { set_shared_lib_path 1 } - if 1 (default): set shared lib path
 #                               - if not 1: don't set shared lib path 
@@ -566,7 +566,7 @@ proc sendmail { to subject body { send_html 0 } { cc "" } { bcc "" } { from "" }
 #     {envlist ""}               -  array with environment settings to export
 #                                   before starting program
 #     { source_settings_file 1 } -  if 1 (default):
-#                                      source $SGE_ROOT/default/settings.csh
+#                                      source $SGE_ROOT/$SGE_CELL/settings.csh
 #                                   if not 1:
 #                                      don't source settings file
 #     { nr_of_tries 15 }         -  timout value

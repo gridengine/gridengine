@@ -319,12 +319,13 @@ proc large_cluster_submit_jobs {size {users ""} {projects ""}} {
 }
 
 proc large_cluster_init_monitoring {} {
+   global ts_config
    global CHECK_HOST CHECK_SECOND_FOREIGN_SYSTEM_USER
    global CHECK_PRODUCT_ROOT
    global qmaster_spool_dir
 
    # remove accounting file - we use it to compute utilization
-   file delete "$CHECK_PRODUCT_ROOT/default/common/accounting"
+   file delete "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/accounting"
 
    # spawn a tail -f to schedd messages file and skip first (old) lines
    # we use the second configured test user to avoid having two open_remote_spawn
@@ -426,10 +427,11 @@ proc large_cluster_monitoring {tail_id first_sched_var total_sched_var index} {
 }
 
 proc large_cluster_job_runtime {} {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_ROOT 
 
    # parse accounting file and sum up the jobs runtime
-   set accounting_file_name "$CHECK_PRODUCT_ROOT/default/common/accounting"
+   set accounting_file_name "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/accounting"
    set runtime 0
 
    if [file exists $accounting_file_name] {

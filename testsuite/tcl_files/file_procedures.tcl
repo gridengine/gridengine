@@ -1453,7 +1453,7 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #                                  if not 0:       no testsuite framework init.
 #
 #     { source_settings_file 1 } - if 1 (default): source the file
-#                                                  $SGE_ROOT/default/settings.csh
+#                                                  $SGE_ROOT/$SGE_CELL/settings.csh
 #                                  if not 1:       don't source settings file
 #     { set_shared_lib_path 1 }  - if 1 (default): set shared lib path
 #                                  if not 1:       don't set shared lib path
@@ -1476,6 +1476,7 @@ proc create_shell_script { scriptfile
                            { source_settings_file 1 } 
                            { set_shared_lib_path 1 }
                          } {
+   global ts_config
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_COMMD_PORT CHECK_PRODUCT_ROOT
    global CHECK_DEBUG_LEVEL 
  
@@ -1515,8 +1516,8 @@ proc create_shell_script { scriptfile
          puts $script "fi"
       }
       if { $source_settings_file == 1 } {
-         puts $script "if \[ -f $CHECK_PRODUCT_ROOT/default/common/settings.sh \]; then"
-         puts $script "   . $CHECK_PRODUCT_ROOT/default/common/settings.sh"
+         puts $script "if \[ -f $CHECK_PRODUCT_ROOT/$ts_config(cell)/common/settings.sh \]; then"
+         puts $script "   . $CHECK_PRODUCT_ROOT/$ts_config(cell)/common/settings.sh"
          puts $script "else"
       }
       puts $script "   unset GRD_ROOT"

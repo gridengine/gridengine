@@ -41,7 +41,7 @@ proc bootstrap_sge_config {} {
    }
 
    # read bootstrapping info from file
-   set bootstrap_file "$CHECK_PRODUCT_ROOT/default/common/bootstrap"
+   set bootstrap_file "$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/bootstrap"
    if {[file exists $bootstrap_file]} {
       puts $CHECK_OUTPUT "reading bootstrap file $bootstrap_file"
       set f [open $bootstrap_file r]
@@ -64,7 +64,7 @@ proc bootstrap_sge_config {} {
       set sge_config(spooling_lib)      "unknown"
       set sge_config(spooling_params)   "unknown"
       set sge_config(binary_path)       "$CHECK_PRODUCT_ROOT/bin"
-      set sge_config(qmaster_spool_dir) "$CHECK_PRODUCT_ROOT/default/spool/qmaster"
+      set sge_config(qmaster_spool_dir) "$CHECK_PRODUCT_ROOT/$ts_config(cell)/spool/qmaster"
       set sge_config(product_mode)      "$ts_config(product_type)"
    }
 }

@@ -844,7 +844,7 @@ proc install_qmaster {} {
 
       -i $sp_id $STARTUP_RPC_SERVER {
          # startup RPC server
-         set result [start_remote_prog $ts_config(bdb_server) "ts_def_con2" "$ts_config(product_root)/default/common/rcrpc" "start"]
+         set result [start_remote_prog $ts_config(bdb_server) "ts_def_con2" "$ts_config(product_root)/$ts_config(cell)/common/rcrpc" "start"]
          if {[string length $result] > 0} {
             puts $CHECK_OUTPUT $result
             set_error "-2" "install_qmaster - starting Berkeley DB RPC server failed: $result"

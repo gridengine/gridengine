@@ -3298,6 +3298,59 @@ proc config_testsuite_bdb_dir { only_check name config_array } {
    return $value
 }
 
+#****** config/config_testsuite_cell() ***************************
+#  NAME
+#     config_testsuite_cell() -- cell name
+#
+#  SYNOPSIS
+#     config_testsuite_cell { only_check name config_array } 
+#
+#  FUNCTION
+#     Testsuite configuration setup - called from verify_config()
+#
+#  INPUTS
+#     only_check   - 0: expect user input
+#                    1: just verify user input
+#     name         - option name (in ts_config array)
+#     config_array - config array name (ts_config)
+#
+#  SEE ALSO
+#     check/setup2()
+#     check/verify_config()
+#*******************************************************************************
+proc config_testsuite_cell { only_check name config_array } {
+   global CHECK_OUTPUT 
+   global ts_config
+
+   upvar $config_array config
+   set actual_value  $config($name)
+   set default_value $config($name,default)
+   set description   $config($name,desc)
+   set value $actual_value
+
+   if { $actual_value == "" } {
+      set value $default_value
+   }
+
+   # called from setup
+   if { $only_check == 0 } {
+      puts $CHECK_OUTPUT "" 
+      puts $CHECK_OUTPUT "Please specify the cell name (SGE_CELL)"
+      puts $CHECK_OUTPUT ""
+      puts $CHECK_OUTPUT "Press >RETURN< to use the default value."
+      puts $CHECK_OUTPUT "(default: $value)"
+      puts -nonewline $CHECK_OUTPUT "> "
+      set input [ wait_for_enter 1]
+      if { [ string length $input] > 0 } {
+         set value $input 
+      } else {
+         puts $CHECK_OUTPUT "using default value"
+      }
+   } 
+
+   return $value
+}
+
 #****** config/config_add_compile_archs() ***************************************
 #  NAME
 #     config_add_compile_archs() -- forced compilation setup
@@ -3846,9 +3899,37 @@ proc config_build_ts_config_1_5 {} {
    set ts_config(version) "1.5"
 }
 
+proc config_build_ts_config_1_6 {} {
+   global ts_config
+
+   # insert new parameter after product_feature parameter
+   set insert_pos $ts_config(product_feature,pos)
+   incr insert_pos 1
+
+   # move positions of following parameters
+   set names [array names ts_config "*,pos"]
+   foreach name $names {
+      if { $ts_config($name) >= $insert_pos } {
+         set ts_config($name) [ expr ( $ts_config($name) + 1 ) ]
+      }
+   }
+
+   # new parameter spooling method
+   set parameter "cell"
+   set ts_config($parameter)            "default"
+   set ts_config($parameter,desc)       "cell name (SGE_CELL)"
+   set ts_config($parameter,default)    "default"
+   set ts_config($parameter,setup_func) "config_testsuite_cell"
+   set ts_config($parameter,onchange)   "stop"
+   set ts_config($parameter,pos)        $insert_pos
+
+   # now we have a configuration version 1.5
+   set ts_config(version) "1.6"
+}
+
 # MAIN
 global actual_ts_config_version      ;# actual config version number
-set actual_ts_config_version "1.5"
+set actual_ts_config_version "1.6"
 
 # first source of config.tcl: create ts_config
 if {![info exists ts_config]} {
@@ -3858,5 +3939,6 @@ if {![info exists ts_config]} {
    config_build_ts_config_1_3
    config_build_ts_config_1_4
    config_build_ts_config_1_5
+   config_build_ts_config_1_6
 }
 

@@ -192,7 +192,7 @@ proc startup_shadowd { hostname } {
 
    puts $CHECK_OUTPUT "starting up shadowd on host \"$hostname\" as user \"$startup_user\""
 
-   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/default/common/sgemaster" "start"]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgemaster" "start"]
    puts $CHECK_OUTPUT $output
    if { [string first "starting sge_shadowd" $output] >= 0 } {
        return 0
@@ -256,7 +256,7 @@ proc startup_execd { hostname } {
    }
 
    puts $CHECK_OUTPUT "starting up execd on host \"$hostname\" as user \"$startup_user\""
-   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/default/common/sgeexecd" "start"]
+   set output [start_remote_prog "$hostname" "$startup_user" "$ts_config(product_root)/$ts_config(cell)/common/sgeexecd" "start"]
 
    return 0
 }

@@ -156,8 +156,8 @@ proc get_version_info {} {
          if {$ts_config(gridengine_version) == 53} {
             # SGE(EE) 5.x: we have a product mode file
             set product_mode "unknown"
-            if { [file isfile $CHECK_PRODUCT_ROOT/default/common/product_mode ] == 1 } {
-               set product_mode_file [ open $CHECK_PRODUCT_ROOT/default/common/product_mode "r" ]
+            if { [file isfile $CHECK_PRODUCT_ROOT/$ts_config(cell)/common/product_mode ] == 1 } {
+               set product_mode_file [ open $CHECK_PRODUCT_ROOT/$ts_config(cell)/common/product_mode "r" ]
                gets $product_mode_file product_mode
                close $product_mode_file
             } else {
@@ -181,7 +181,7 @@ proc get_version_info {} {
                 if { [ string first "sgeee" $product_mode ] < 0 } {
                     puts $CHECK_OUTPUT "get_version_info - no sgeee system"
                     puts $CHECK_OUTPUT "please remove the file"
-                    puts $CHECK_OUTPUT "\n$CHECK_PRODUCT_ROOT/default/common/product_mode"
+                    puts $CHECK_OUTPUT "\n$CHECK_PRODUCT_ROOT/$ts_config(cell)/common/product_mode"
                     puts $CHECK_OUTPUT "\nif you want to install a new sge system"
                     puts $CHECK_OUTPUT "testsuite setup error - stop"
                     exit -1

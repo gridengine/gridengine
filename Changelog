@@ -1,3 +1,6 @@
+CR-2001-10-09-1: (rmon_macros.c)
+                 - don't use vnsprintf() for ALPHA4 and IRIX6
+
 CR-2001-10-09-0: (parse_job_cull.c)
                  - Issue #67 (long lines in sge_request files causes bus error
                              in qsub)

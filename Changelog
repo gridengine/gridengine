@@ -1,3 +1,6 @@
+CR-2005-03-18-2: Bugfix:    fixed CSP problems on hp11/aix43/aix51
+                 Review:    AA
+
 CR-2005-03-18-1: Bugfix:    additonal changes for CR-2005-03-17-0
                  Changed:   qmaster hard/soft limit limit setting
                  Issue:     1502

@@ -405,7 +405,11 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout, uns
          struct timeval now;
          struct timeval stimeout;
          int socket_error = 0;
+#if defined(AIX)
+         socklen_t socklen = sizeof(socket_error);
+#else
          int socklen = sizeof(socket_error);
+#endif
 
          if (only_once == 0) {
             FD_ZERO(&writefds);

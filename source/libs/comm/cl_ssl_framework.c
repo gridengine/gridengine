@@ -1851,6 +1851,9 @@ int cl_com_ssl_connection_complete_shutdown(cl_com_connection_t*  connection) {
          case SSL_ERROR_WANT_READ:  {
             return CL_RETVAL_UNCOMPLETE_READ;
          }
+         case SSL_ERROR_SYSCALL: {
+            return CL_RETVAL_UNCOMPLETE_READ;
+         }
          case SSL_ERROR_WANT_WRITE: {
             return CL_RETVAL_UNCOMPLETE_WRITE;
          }
@@ -1974,6 +1977,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
             case SSL_ERROR_WANT_ACCEPT:
+            case SSL_ERROR_SYSCALL:
 #if 0
             case SSL_ERROR_WANT_X509_LOOKUP:
 #endif 
@@ -2294,7 +2298,11 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
          struct timeval now;
          struct timeval stimeout;
          int socket_error = 0;
+#if defined(AIX)
+         socklen_t socklen = sizeof(socket_error);
+#else
          int socklen = sizeof(socket_error);
+#endif
 
          if (only_once == 0) {
             FD_ZERO(&writefds);
@@ -2439,6 +2447,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout, uns
             case SSL_ERROR_WANT_READ:
             case SSL_ERROR_WANT_WRITE:
             case SSL_ERROR_WANT_CONNECT:
+            case SSL_ERROR_SYSCALL:
 #if 0
             case SSL_ERROR_WANT_ACCEPT:
             case SSL_ERROR_WANT_X509_LOOKUP:
@@ -3282,6 +3291,7 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
                private->ssl_last_error = ssl_error;
                CL_LOG_STR(CL_LOG_WARNING,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
                switch(ssl_error) {
+                  case SSL_ERROR_SYSCALL:
                   case SSL_ERROR_WANT_READ: 
                   case SSL_ERROR_WANT_WRITE: {
                      break;
@@ -3315,6 +3325,7 @@ int cl_com_ssl_write(cl_com_connection_t* connection, cl_byte_t* message, unsign
             private->ssl_last_error = ssl_error;
             CL_LOG_STR(CL_LOG_WARNING,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
             switch(ssl_error) {
+               case SSL_ERROR_SYSCALL:
                case SSL_ERROR_WANT_READ: 
                case SSL_ERROR_WANT_WRITE: {
                   break;
@@ -3422,6 +3433,7 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
                CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
            
                switch(ssl_error) {
+                  case SSL_ERROR_SYSCALL:
                   case SSL_ERROR_WANT_READ: 
                   case SSL_ERROR_WANT_WRITE: {
                      break;
@@ -3454,12 +3466,13 @@ int cl_com_ssl_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
             CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error));
            
             switch(ssl_error) {
+               case SSL_ERROR_SYSCALL:
                case SSL_ERROR_WANT_READ: 
                case SSL_ERROR_WANT_WRITE: {
                   break;
                }
                default: {
-                  CL_LOG(CL_LOG_ERROR,"SSL write error");
+                  CL_LOG(CL_LOG_ERROR,"SSL read error");
                   cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
                   return CL_RETVAL_READ_ERROR;
                }

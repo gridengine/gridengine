@@ -246,6 +246,9 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #     { no_setup }    - if 0 (default): full testsuite framework script
 #                                       initialization
 #                       if not 0:       no testsuite framework init.
+#     { source_settings_file 1 } - if 1 (default):
+#                                  source $SGE_ROOT/default/settings.csh
+#                                  if not 1: don't source settings file
 #
 #  RESULT
 #     no results 
@@ -265,7 +268,7 @@ proc del_job_files { jobid job_output_directory expected_file_count } {
 #     file_procedures/create_path_aliasing_file()
 #
 #*******************************
-proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} { script_path "/bin/sh" } { no_setup 0 } } {
+proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} { script_path "/bin/sh" } { no_setup 0 } { source_settings_file 1 } } {
    global CHECK_OUTPUT CHECK_PRODUCT_TYPE CHECK_COMMD_PORT CHECK_PRODUCT_ROOT
    global CHECK_DEBUG_LEVEL 
  
@@ -293,10 +296,11 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} {
       # script command
       puts $script "trap 'echo \"_exit_status_:(1)\"' 0"
       puts $script "umask 022"
-      puts $script "if \[ -f $CHECK_PRODUCT_ROOT/default/common/settings.sh \]; then"
-   
-      puts $script "   . $CHECK_PRODUCT_ROOT/default/common/settings.sh"
-      puts $script "else"
+      if { $source_settings_file == 1 } {
+         puts $script "if \[ -f $CHECK_PRODUCT_ROOT/default/common/settings.sh \]; then"
+         puts $script "   . $CHECK_PRODUCT_ROOT/default/common/settings.sh"
+         puts $script "else"
+      }
       puts $script "   unset GRD_ROOT"
       puts $script "   unset CODINE_ROOT"
       puts $script "   unset GRD_CELL"
@@ -305,7 +309,9 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} {
       puts $script "   SGE_ROOT=$CHECK_PRODUCT_ROOT"
       puts $script "   export COMMD_PORT"
       puts $script "   export SGE_ROOT"
-      puts $script "fi"
+      if { $source_settings_file == 1 } {
+         puts $script "fi"
+      }
    
       foreach u_env [ array names users_env ] {
          set u_val [set users_env($u_env)] 
@@ -313,8 +319,6 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} {
          puts $script "${u_env}=${u_val}"
          puts $script "export ${u_env}"
       }
-   
-   
       puts $script "echo \"_start_mark_:(\$?)\""
    }
 
@@ -388,11 +392,15 @@ proc get_file_content { host user file { file_a "file_array" } } {
    set program "cat"
    set program_arg $file
    set output [ start_remote_prog $host $user $program $program_arg]
-   set help [ split $output "\n" ]
    set lcounter 0
-   foreach line $help {
-      incr lcounter 1
-      set back($lcounter) $line
+   if { $prg_exit_state != 0 } {
+      add_proc_error "get_file_content" -1 "\'cat\' returned error: $output"
+   } else {
+      set help [ split $output "\n" ]
+      foreach line $help {
+         incr lcounter 1
+         set back($lcounter) $line
+      }
    }
    set back(0) $lcounter
 }

@@ -111,6 +111,30 @@ proc submit_hosts_setup {} {
    set_error 0 "ok"
 }
 
+proc submit_hosts_cleanup {} {
+   global CHECK_OUTPUT
+   global CHECK_PRODUCT_ROOT 
+   global CHECK_ARCH
+   global CHECK_SUBMIT_ONLY_HOSTS 
+   global CHECK_JOB_OUTPUT_DIR
+   global submit_hosts_use_local_conf
+
+   foreach submit_host $CHECK_SUBMIT_ONLY_HOSTS { 
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ds $submit_host" } result
+      puts $CHECK_OUTPUT "$result"
+    
+      puts $CHECK_OUTPUT "removing local cluster configuration for host $submit_host"
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dconf $submit_host" } result
+      puts $CHECK_OUTPUT "$result"
+
+      file delete $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh
+       
+   }
+   set_error 0 "ok"
+}
+
+
+
 proc submit_hosts_test {} {
    global CHECK_OUTPUT
    global CHECK_SUBMIT_ONLY_HOSTS 
@@ -159,8 +183,6 @@ proc submit_hosts_test {} {
       if { [ string first "neither submit nor admin host" $output ] < 0 } {
          add_proc_error "submit_hosts_test" -1 "qconf -mconf on host $submit_host should not work here"
       }
-
-
    } 
   
    wait_for_end_of_all_jobs 120
@@ -235,27 +257,6 @@ proc submit_hosts_test {} {
    set_error 0 "ok"
 }
 
-proc submit_hosts_cleanup {} {
-   global CHECK_OUTPUT
-   global CHECK_PRODUCT_ROOT 
-   global CHECK_ARCH
-   global CHECK_SUBMIT_ONLY_HOSTS 
-   global CHECK_JOB_OUTPUT_DIR
-   global submit_hosts_use_local_conf
-
-   foreach submit_host $CHECK_SUBMIT_ONLY_HOSTS { 
-      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-ds $submit_host" } result
-      puts $CHECK_OUTPUT "$result"
-    
-      puts $CHECK_OUTPUT "removing local cluster configuration for host $submit_host"
-      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-dconf $submit_host" } result
-      puts $CHECK_OUTPUT "$result"
-
-      file delete $CHECK_JOB_OUTPUT_DIR/rsh_${submit_host}.sh
-       
-   }
-   set_error 0 "ok"
-}
 
 
 

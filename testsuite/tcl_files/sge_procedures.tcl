@@ -4458,28 +4458,67 @@ proc submit_job { args {do_error_check 1} {submit_timeout 30} {host ""} {user ""
    
      if {$do_error_check == 1} { 
        switch -- $return_value {
-          "-1" { add_proc_error "submit_job" $return_value "timeout error" }
-          "-2" { add_proc_error "submit_job" 0 "usage was printed on -help or commandfile argument - ok" }
-          "-3" { add_proc_error "submit_job" $return_value "usage was printed NOT on -help or commandfile argument - error" }
-          "-4" { add_proc_error "submit_job" 0 "verify output was printed on -verify argument - ok" }
-          "-5" { add_proc_error "submit_job" $return_value "verify output was NOT printed on -verfiy argument - error" }
-          "-6" { add_proc_error "submit_job" $return_value "job could not be scheduled, try later - error" }
-          "-7" { add_proc_error "submit_job" $return_value "has to much tasks - error" }
-          "-8" { add_proc_error "submit_job" $return_value "unknown resource - error" }
-          "-9" { add_proc_error "submit_job" $return_value "can't resolve hostname - error" }
-          "-10" { add_proc_error "submit_job" $return_value "resource not requestable - error" }
-          "-11" { add_proc_error "submit_job" $return_value "not allowed to submit jobs - error" }
-          "-12" { add_proc_error "submit_job" $return_value "no acces to project - error" }
-          "-13" { add_proc_error "submit_job" $return_value "Unkown option - error" }
-          "-14" { add_proc_error "submit_job" $return_value "non-ambiguous jobnet predecessor - error" }
-          "-15" { add_proc_error "submit_job" $return_value "job violates reference unambiguousness - error" }
-
-
+          "-1"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-2"  { add_proc_error "submit_job" 0  [get_submit_error $return_value]  }
+          "-3"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-4"  { add_proc_error "submit_job" 0  [get_submit_error $return_value]  }
+          "-5"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-6"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-7"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-8"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-9"  { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-10" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-11" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-12" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-13" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-14" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
+          "-15" { add_proc_error "submit_job" -1 [get_submit_error $return_value]  }
 
           default { add_proc_error "submit_job" 0 "job $return_value submitted - ok" }
        }
      }
      return $return_value
+}
+
+#****** sge_procedures/get_submit_error() **************************************
+#  NAME
+#     get_submit_error() -- resolve negative error value from submit_job()
+#
+#  SYNOPSIS
+#     get_submit_error { error_id } 
+#
+#  FUNCTION
+#     This procedure is used to get an error text from an negative return
+#     value of the submit_job() procedure.
+#
+#  INPUTS
+#     error_id - negative return value from submit_job() call
+#
+#  RESULT
+#     Error text
+#
+#  SEE ALSO
+#     sge_procedures/submit_job()
+#*******************************************************************************
+proc get_submit_error { error_id } {
+   switch -- $error_id {
+      "-1"  { return "timeout error" }
+      "-2"  { return "usage was printed on -help or commandfile argument - ok" }
+      "-3"  { return "usage was printed NOT on -help or commandfile argument - error" }
+      "-4"  { return "verify output was printed on -verify argument - ok" }
+      "-5"  { return "verify output was NOT printed on -verfiy argument - error" }
+      "-6"  { return "job could not be scheduled, try later - error" }
+      "-7"  { return "has to much tasks - error" }
+      "-8"  { return "unknown resource - error" }
+      "-9"  { return "can't resolve hostname - error" }
+      "-10" { return "resource not requestable - error" }
+      "-11" { return "not allowed to submit jobs - error" }
+      "-12" { return "no acces to project - error" }
+      "-13" { return "Unkown option - error" }
+      "-14" { return "non-ambiguous jobnet predecessor - error" }
+      "-15" { return "job violates reference unambiguousness - error" }
+      default { return "unknown error" }
+   }
 }
 
 #                                                             max. column:     |

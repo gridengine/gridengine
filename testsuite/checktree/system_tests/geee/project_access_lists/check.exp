@@ -159,7 +159,7 @@ proc test_job_run { id_string job_id } {
    puts $CHECK_OUTPUT $catch_result
 
    if { $job_id < 1 } {
-     add_proc_error "test_job_run" -1 "wrong job id: $job_id, id_string: $id_string" 
+     add_proc_error "test_job_run" -1 "wrong job id: $job_id, id_string: $id_string\n[get_submit_error $job_id]" 
    } else {
       if { [wait_for_jobstart $job_id "leeper" 120] != 0 } {
          add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched"
@@ -372,7 +372,7 @@ proc project_access_lists_global_host {} {
    global CHECK_GROUP 
    global project_access_lists_queue
 
-   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15" 
+   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30" 
 
 
    # testing user and group
@@ -469,7 +469,7 @@ proc project_access_lists_exec_host {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP project_access_lists_queue
 
-   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
 
    # testing user and group
    set project_access_lists "{userA_project_name userB_project_name }"
@@ -564,7 +564,7 @@ proc project_access_lists_queue {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
 
-   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
 
    # testing user and group
    set project_access_lists "{userA_project_name userB_project_name }"
@@ -661,7 +661,7 @@ proc project_access_lists_cluster_config {} {
    global CHECK_GROUP project_access_lists_queue
   
 
-   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"  
+   set jobargs "-o /dev/null -e /dev/null -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"  
 
    # testing user and group
    set project_access_lists "{userA_project_name userB_project_name }"
@@ -758,7 +758,7 @@ proc project_access_lists_project {} {
    global CHECK_SECOND_FOREIGN_SYSTEM_GROUP CHECK_FIRST_FOREIGN_SYSTEM_GROUP
    global CHECK_GROUP
 
-   set jobargs "-o /dev/null -e /dev/null -P access_test_project -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 15"
+   set jobargs "-o /dev/null -e /dev/null -P access_test_project -q $project_access_lists_queue $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 30"
    
    set my_project(name)     "access_test_project"
 

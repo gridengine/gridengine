@@ -64,7 +64,6 @@ set check_functions ""
 lappend check_functions "submit_hosts_setup"
 lappend check_functions "submit_hosts_test"
 lappend check_functions "submit_hosts_cleanup"
-
 global submit_hosts_use_local_conf
 
 proc init_level {} {
@@ -166,6 +165,7 @@ proc submit_hosts_test {} {
    set actual_id [ submit_job "-o /dev/null -e /dev/null $CHECK_PRODUCT_ROOT/examples/jobs/sleeper.sh 1" ]
    wait_for_jobend $actual_id "leeper" 30 0
 
+
    foreach submit_host $CHECK_SUBMIT_ONLY_HOSTS { 
       catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-as $submit_host" } result
       puts $CHECK_OUTPUT "$result"
@@ -180,13 +180,14 @@ proc submit_hosts_test {} {
          add_proc_error "submit_hosts_test" -1 "submitting on host $submit_host doesn't work"
       } 
    }
+
+
    foreach submit_host $CHECK_SUBMIT_ONLY_HOSTS { 
       set actual_id [ expr ( $actual_id + 1 ) ]
       wait_for_jobstart $actual_id "leeper" 60
       wait_for_end_of_transfer $actual_id 60
       delete_job $actual_id
    }
-#   wait_for_enter
    foreach submit_host $CHECK_SUBMIT_ONLY_HOSTS { 
       puts $CHECK_OUTPUT "testing host $submit_host"
 
@@ -198,23 +199,24 @@ proc submit_hosts_test {} {
       } 
 
       foreach queue $CHECK_CORE_EXECD {
+         set command_args "qrsh -q ${queue}.q uname -n"
          set output [ start_remote_prog $submit_host $CHECK_USER "qrsh" "-q ${queue}.q uname -n" ]
          puts $CHECK_OUTPUT $output
          puts $CHECK_OUTPUT "qrsh exit state: $prg_exit_state"
          if { $prg_exit_state != 0 } {
-            add_proc_error "submit_hosts_test" -1 "qrsh on host $submit_host doesn't work"
+            add_proc_error "submit_hosts_test" -1 "${command_args} on host $submit_host doesn't work\n$output"
          }
          if { $submit_hosts_use_local_conf != 0 } {
             if { [ string first "WRAPPER_SCRIPT" $output] < 0 } {
-               add_proc_error "submit_hosts_test" -1 "qrsh on host $submit_host did not use local configuration"
+               add_proc_error "submit_hosts_test" -1 "${command_args} on host $submit_host did not use local configuration\n$output"
             }
          } else {
             if { [ string first "WRAPPER_SCRIPT" $output] >= 0 } {
-               add_proc_error "submit_hosts_test" -1 "qrsh on host $submit_host should not use local configuration"
+               add_proc_error "submit_hosts_test" -1 "${command_args} on host $submit_host should not use local configuration\n$output"
             }
          }
          if { [ string first $queue $output] < 0 } {
-            add_proc_error "submit_hosts_test" -1 "qrsh on host $submit_host did no \"rsh uname -n\" on queue \"${queue}.q\""
+            add_proc_error "submit_hosts_test" -1 "${command_args} on host $submit_host did no \"rsh uname -n\" on queue \"${queue}.q\"\n$output"
          }
       }
 

@@ -165,7 +165,6 @@ proc resolve_version { { internal_number -100 } } {
    set versions(SGEEE_pre6.0_(Maintrunk))    2
    set versions(SGE_pre6.0_(Maintrunk))      2
 
-
    
     
 

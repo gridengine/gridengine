@@ -355,7 +355,6 @@ proc create_shell_script { scriptfile exec_command exec_arguments {envlist ""} {
 
 
 
-
 #****** file_procedures/get_file_content() *************************************
 #  NAME
 #     get_file_content() -- read remote/local file with cat command

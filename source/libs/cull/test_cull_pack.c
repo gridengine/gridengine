@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
 #include "cull.h"
@@ -50,6 +51,7 @@ int main(int argc, char *argv[])
    sge_pack_buffer pb, copy_pb;
    int pack_ret;
    FILE *fd;
+   char *buffer;
 
    lInit(nmv);
 
@@ -84,7 +86,9 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
-   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, (char *)pb.head_ptr, pb.bytes_used, 0)) != PACK_SUCCESS) {
+   buffer = (char *)malloc(pb.bytes_used);
+   memcpy(buffer, pb.head_ptr, pb.bytes_used);
+   if((pack_ret = init_packbuffer_from_buffer(&copy_pb, buffer, pb.bytes_used, 0)) != PACK_SUCCESS) {
       printf("initializing packbuffer from packed data failed: %s\n", cull_pack_strerror(pack_ret));
       return EXIT_FAILURE;
    }

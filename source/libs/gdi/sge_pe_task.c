@@ -254,7 +254,7 @@ lListElem *pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_
 *******************************************************************************/
 int pe_task_update_master_list_usage(lListElem *event)
 {
-   lList *tmp;
+   lList *tmp = NULL;
    u_long32 job_id, ja_task_id;
    const char *pe_task_id;
    lListElem *job, *ja_task, *pe_task;

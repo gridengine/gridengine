@@ -325,8 +325,8 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
                     space, lNm2Str(ep->descr[i].nm), lGetPosBool(ep, i));
          break;
       case lRefT:
-         ret = fprintf(fp, "%s/* %-20.20s */ %p\n",
-                    space, lNm2Str(ep->descr[i].nm), lGetPosRef(ep, i));
+         ret = fprintf(fp, "%s/* %-20.20s */ %ld\n",
+                    space, lNm2Str(ep->descr[i].nm), (long)lGetPosRef(ep, i));
          break;
       case lObjectT:
          if ((tep = lGetPosObject(ep, i)) == NULL)
@@ -509,13 +509,11 @@ lListElem *lUndumpElem(FILE *fp, const lDescr *dp)
       DEXIT;
       return NULL;
    }
-
    if (!dp) {
       LERROR(LEDESCRNULL);
       DEXIT;
       return NULL;
    }
-
    if (!(ep = lCreateElem(dp))) {
       LERROR(LECREATEELEM);
       DEXIT;
@@ -640,7 +638,6 @@ lListElem *lUndumpObject(FILE *fp)
       DEXIT;
       return NULL;
    }
-
    /* read bra */
    if (fGetBra(fp)) {
       printf("bra is missing\n");
@@ -665,9 +662,12 @@ lListElem *lUndumpObject(FILE *fp)
 
    if ((ep = lUndumpElem(fp, dp)) == NULL) {
       LERROR(LEUNDUMPELEM);
+      free(dp);
       DEXIT;
       return NULL;
    }
+
+   free(dp);
 
    /* read ket */
    if (fGetKet(fp)) {
@@ -898,7 +898,6 @@ static int fGetLine(FILE *fp, char *line, int max_line)
       DEXIT;
       return -1;
    }
-
    if (space_comment(line)) {
       LERROR(LESPACECOMMENT);
       DEXIT;

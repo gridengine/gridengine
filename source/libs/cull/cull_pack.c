@@ -489,7 +489,7 @@ int cull_pack_elem(sge_pack_buffer *pb, const lListElem *ep)
       return ret;
    }
 
-   if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
+   if(ep->status == FREE_ELEM) {
       if((ret = cull_pack_descr(pb, ep->descr)) != PACK_SUCCESS) {
          DEXIT;
          return ret;
@@ -541,7 +541,7 @@ const lDescr *dp                  /* has to be NULL in case of free elements
       return ret;
    }
 
-   if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
+   if(ep->status == FREE_ELEM) {
       if((ret = cull_unpack_descr(pb, &(ep->descr))) != PACK_SUCCESS) {
          free(ep);
          DEXIT;
@@ -830,6 +830,7 @@ lListElem **epp
       return ret;
    }
 
+   ep->status = OBJECT_ELEM;
    *epp = ep;
 
    DEXIT;

@@ -462,12 +462,12 @@ sge_pack_buffer *pb
       else if(pb->mode == 0 && !pb->just_count)
          deflateEnd(&(pb->cpr));
    }
-#endif
+#else   
    if (pb->head_ptr) {
       free(pb->head_ptr);
       pb->head_ptr = NULL;
    }
-
+#endif
    return;
 }
 
@@ -1181,7 +1181,7 @@ int buf_size
    return PACK_SUCCESS;
 }
 
-/****** cull/pack/packbitfield() ****************************************************
+/****** cull/pack/unpackbitfield() ****************************************************
 *  NAME
 *     unpackbitfield() -- unpack a bitfield 
 *
@@ -1227,6 +1227,7 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield)
    /* unpack contents of the bitfield */
    char_size = size / 8 + ((size % 8) > 0 ? 1 : 0);
    if((ret = unpackbuf(pb, &buffer, char_size)) != PACK_SUCCESS) {
+      *bitfield = sge_bitfield_free(*bitfield);
       DEXIT;
       return ret;
    }

@@ -178,7 +178,7 @@ lList* ja_task_list_split_group(lList **ja_task_list)
 *******************************************************************************/
 int ja_task_update_master_list_usage(lListElem *event)
 {
-   lList *tmp;
+   lList *tmp = NULL;
    u_long32 job_id, ja_task_id;
    lListElem *job, *ja_task;
 
@@ -286,7 +286,8 @@ int ja_task_update_master_list(sge_event_type type, sge_event_action action,
                 job_get_id_string(job_id, ja_task_id, NULL), "ja_task_update_master_list"));
          DEXIT;
          return FALSE;
-      }   
+      }
+
       lXchgList(ja_task, JAT_task_list, &pe_tasks);
       lXchgList(ja_task, JAT_scaled_usage_list, &usage);
    }

@@ -83,10 +83,13 @@ extern "C" {
 *     4 byte integer, which will result in some sort of error handling
 *     for all known/used message formats.
 *
-*     Current CULL_VERSION:   0x10010000
-*                             Added information about attribute changes.
+*     Current CULL_VERSION:   0x10020000
+*                             Fixed a bug with packing of lObject type:
+*                             Descriptor was sent twice.
 *     
-*     Former  CULL_VERSIONs:  0x10000000
+*     Former  CULL_VERSIONs:  0x10010000
+*                             Added information about attribute changes.
+*                             0x10000000
 *                             Introduction of version control.
 *
 *  SEE ALSO
@@ -94,7 +97,7 @@ extern "C" {
 *
 ****************************************************************************
 */
-#define CULL_VERSION 0x10010000
+#define CULL_VERSION 0x10020000
 
 typedef struct {
 #ifdef COMMCOMPRESS

@@ -1,3 +1,8 @@
+CR-2002-03-01-1: Bugfix:    qacct truncates project/department/... names to
+                 Enhancem.: x chars. -> calculate column with by searching
+                            for largest element
+                 Issue:     #150
+
 EB-2002-03-01-1: Bugfix:    inconsistences between qstat and qmon output
                  Issue:     #148  
 

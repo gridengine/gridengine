@@ -652,13 +652,19 @@ int allow_neg_consumable
 
    for_each(entry, re_entries) {
       name = lGetString(entry, CE_name);
-   
+      if (name == NULL) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, ""));
+         DEXIT;
+         return -1;
+      }
+
       cep = NULL;
       for_each (c, complex_list) {
          if ((cep = find_attribute_in_complex_list(name, 
                                              lFirst(lGetList(c, CX_entries)))))
             break;
       }
+
       if (!cep) {
          ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, name));
          DEXIT;

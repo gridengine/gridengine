@@ -43,6 +43,7 @@
 #include "cull_parse_util.h"
 #include "sge_string.h"
 #include "sge_log.h"
+#include "msg_common.h"
 #include "msg_gdilib.h"
 
 static void sge_show_ce_type_list(lList *cel, const char *indent, const char *separator);
@@ -147,6 +148,23 @@ const char *hard_soft         /* for name of resources list */
       attr = cp;
       if ((value = strchr(cp, '=')))
          *value++ = 0;
+
+      if (attr == NULL || *attr == '\0') {
+         ERROR((SGE_EVENT, MSG_SGETEXT_UNKNOWN_RESOURCE_S, ""));
+         lFreeList(resources);
+         lFreeList(complex_attributes);
+         lFreeElem(request_el);
+         DEXIT;
+         return NULL;
+      }
+      if (value == NULL || *value == '\0') {
+         ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
+         lFreeList(resources);
+         lFreeList(complex_attributes);
+         lFreeElem(request_el);
+         DEXIT;
+         return NULL;
+      }
 
       lSetString(complex_attribute, CE_name, attr);
       lSetString(complex_attribute, CE_stringval, value);

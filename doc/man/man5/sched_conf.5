@@ -4,7 +4,7 @@
 .\" Copyright: 2001 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2002/04/29 12:03:50 $     Revision: $Revision: 1.5.2.1 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2003/06/17 10:52:20 $     Revision: $Revision: 1.5.2.2 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2002/04/29 12:03:50 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2003/06/17 10:52:20 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -73,7 +73,7 @@ a summation weighted load values, that is:
 .sp 1
 .nf
 .RS
-load_val1[*w1][{+|-}load_val2[*w2][{+|-}...]]
+[+|-]load_val1[*w1][{+|-}load_val2[*w2][{+|-}...]]
 .RE
 .fi
 .sp 1

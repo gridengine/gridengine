@@ -2705,6 +2705,7 @@ autoinst=false
 addqueue=true
 resport=false
 afs=false
+csp=false
 
 ARGC=$#
 while [ $ARGC != 0 ]; do

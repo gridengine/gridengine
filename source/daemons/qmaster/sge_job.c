@@ -919,7 +919,7 @@ int sub_command
             zombie = lGetElemUlong(Master_Zombie_List, JB_job_number, 
                                    job_number);
             if (zombie) { 
-               job_write_common_part(zombie, 1, SPOOL_HANDLE_AS_ZOMBIE); 
+               job_write_spool_file(zombie, 0, SPOOL_HANDLE_AS_ZOMBIE);
             }
          }
          if (existing_tasks > deleted_tasks) {

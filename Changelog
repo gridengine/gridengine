@@ -1,3 +1,8 @@
+CR-2003-03-03-1  Enhancem.  - new function in sge_dir.h: sge_is_executable()
+                            - qevent client: client can now trigger script
+                                execution on job end events.
+                            - testsuite extension for new qevent -ts option
+
 CR-2002-03-03-0  Bugfix:    Removed unused variables in scheduler.c
 
 AH-2002-02-28-1  Enhancem.: Ensure drmaa_exit() can be called while

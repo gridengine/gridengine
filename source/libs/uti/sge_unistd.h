@@ -108,6 +108,9 @@ int sge_is_directory(const char *name);
  
 int sge_is_file(const char *name);
 
+int sge_is_executable(const char *name); 
+
+
 void sge_sleep(int sec, int usec);
 
 /****** uti/unistd/sge_sysconf_t **********************************************

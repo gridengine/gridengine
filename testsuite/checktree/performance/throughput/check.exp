@@ -448,6 +448,44 @@ proc run_throughput_test {} {
    set event_client_sid [ open_remote_spawn_process $CHECK_HOST "ts_def_con2" $event_client_bin ""]
    set event_client_id [lindex $event_client_sid 1]
 
+   set timeout 30
+   set is_old_version 0
+
+   while { 1 } {
+      expect {
+         -i $event_client_id full_buffer {
+            add_proc_error "run_throughput_test" -1 "expect full_buffer error (3)"
+            return -1
+         }
+         -i $event_client_id timeout {
+            puts $CHECK_OUTPUT "timeout starting event client"
+            break;
+         }
+         -i $event_client_id eof {
+            puts $CHECK_OUTPUT "eof from event client"
+            break;
+         }
+         -i $event_client_id "ECL_STATE" {
+            puts $CHECK_OUTPUT "old qevent version"
+            set is_old_version 1
+            break;
+         }
+         -i $event_client_id -- "ts|*testsuite" {
+            puts $CHECK_OUTPUT "new qevent version"
+            set is_old_version 0
+            break;
+         }
+       }
+   }
+
+   if { $is_old_version == 0 } {
+      close_spawn_process $event_client_sid
+      puts $CHECK_OUTPUT "starting event client with -ts option ..."
+      # start event client with -ts option
+      set event_client_sid [ open_remote_spawn_process $CHECK_HOST "ts_def_con2" $event_client_bin "-ts"]
+      set event_client_id [lindex $event_client_sid 1]
+   }
+
    # open scheduler messages file
    set schedd_messages_file [check_schedd_messages 2]
    set schedd_messages_sid [ open_remote_spawn_process $CHECK_HOST "ts_def_con" "tail" "-f $schedd_messages_file"]

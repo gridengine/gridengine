@@ -486,6 +486,18 @@ int sge_rmdir(const char *cp, char *err_str)
    return 0;
 }
  
+int sge_is_executable(const char *name) 
+{
+   SGE_STRUCT_STAT stat_buffer;
+   int ret = SGE_STAT(name, &stat_buffer);
+   if (!ret) { 
+      return (stat_buffer.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH));
+   } else {
+      return 0;
+   }
+}
+
+
 /****** uti/unistd/sge_is_directory() *****************************************
 *  NAME
 *     sge_is_directory() -- Does 'name' exist and is it a directory? 

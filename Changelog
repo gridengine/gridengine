@@ -1,3 +1,9 @@
+AA-2004-08-05-0: Bugfix:    tight integration doesn't work with CSP
+                 Issue:     1080
+                 Bugtraq:   5063314
+                 Changed:   all
+                 Review:    CR
+
 SG-2005-08-05-0: Change:    removed the reference to the JC_FILTER as a
                             scheduler param from the man page
                  Changed:   schedd_conf.5

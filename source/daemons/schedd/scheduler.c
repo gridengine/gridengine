@@ -942,7 +942,7 @@ lList **load_list
    /*------------------------------------------------------------------
     * SELECT POSSIBLE QUEUE(S) FOR THIS JOB
     *------------------------------------------------------------------*/
-   if ((pe_name = lGetString(job, JB_pe))) {
+   if ((pe_name = lGetString(job, JB_pe)) != NULL) {
 
       if (!dont_start) {
          if (reservation_mode) {
@@ -966,10 +966,12 @@ lList **load_list
 
             a.start = DISPATCH_TIME_QUEUE_END;
             result = sge_select_parallel_environment(&a, pe_list);
-            if (result == 0)
+            if (result == 0) {
                result = 1; /* this job got a reservation */
-         } else
+            }   
+         } else {
             result = -1;
+         }   
       }
 
    } else {

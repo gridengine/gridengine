@@ -679,13 +679,13 @@ proc config_testsuite_root_dir { only_check name config_array } {
 
    if {[catch {set CHECK_USER [set env(USER)] }] != 0} {
       set CHECK_USER [file attributes $CHECK_TESTSUITE_ROOT/check.exp -owner]
-      debug_puts "\nNo USER is set!\n(default: $CHECK_USER)\n"
+      puts $CHECK_OUTPUT "\nNo USER is set!\n(default: $CHECK_USER)\n"
       set env(USER) $CHECK_USER
    } 
 
    if {[catch {set CHECK_GROUP [set env(GROUP)] }] != 0} {
       set CHECK_GROUP [file attributes $CHECK_TESTSUITE_ROOT/check.exp -group]
-      debug_puts "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
+      puts $CHECK_OUTPUT "\nNo GROUP is set!\n(default: $CHECK_GROUP)\n"
       set env(GROUP) $CHECK_GROUP
    }
 

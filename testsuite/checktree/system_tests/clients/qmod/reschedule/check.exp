@@ -666,23 +666,27 @@ proc reschedule_qsh_qlogin_qrsh_qrlogin {} {
       } 
    }
 
-   if { [ string first "login:" $result] < 0 } {
-       add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin error"
-   }
-   
-   send "$CHECK_USER\n"
-   set timeout 5
-   expect {
-      eof { 
-          puts $CHECK_OUTPUT "got eof" 
-          add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin unexpected eof"
+   # on some systems (Solaris 10), telnet doesn't present a login, but tries 
+   # to login current user first
+   if { [ string first "assword:" $result ] < 0 } {
+      if { [ string first "login:" $result] < 0 } {
+          add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin error, expected login:, received $result"
       }
-      timeout {
-          puts $CHECK_OUTPUT "got timeout"
+      
+      send "$CHECK_USER\n"
+      set timeout 5
+      expect {
+         eof { 
+             puts $CHECK_OUTPUT "got eof" 
+             add_proc_error "reschedule_qsh_qlogin_qrsh_qrlogin" -1 "qlogin unexpected eof"
+         }
+         timeout {
+             puts $CHECK_OUTPUT "got timeout"
+         }
       }
+      set result ""
    }
 
-   set result ""
    set my_timeout [timestamp]
    incr my_timeout 120
    set timeout 0

@@ -275,9 +275,9 @@ proc init_level {} {
          return -1
       }
    }
-if { $minor_level != 2 } {
-   return -1
-}
+#if { $minor_level != 2 } {
+#   return -1
+#}
    switch -- $minor_level {
       "0" {
          # enable queues after all jobs have been submitted

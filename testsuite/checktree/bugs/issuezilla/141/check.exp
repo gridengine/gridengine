@@ -103,7 +103,7 @@ proc issue_141_check {} {
    wait_for_jobstart $job_id "Sleeper" 60 1 1
    
 
-   puts $CHECK_OUTPUT "Delete job array $job_id.1-100:2"
+   puts $CHECK_OUTPUT "Delete array job $job_id.1-100:2"
    delete_job "${job_id}.1-100:2"
 
    set statelist [get_job_state $job_id 1 tasklist]
@@ -135,11 +135,11 @@ proc issue_141_check {} {
       add_proc_error "issue_141_check" -1 "no even task is running"
    }
 
-   puts $CHECK_OUTPUT "Delete job array $job_id.1-100:3"
+   puts $CHECK_OUTPUT "Delete array job $job_id.1-100:3"
    delete_job "${job_id}.1-100:3"
 
 
-   puts $CHECK_OUTPUT "Delete job array $job_id.2-100:2"
+   puts $CHECK_OUTPUT "Delete array job $job_id.2-100:2"
    delete_job "${job_id}.2-100:2"
 
    set statelist [get_job_state $job_id 1 tasklist]

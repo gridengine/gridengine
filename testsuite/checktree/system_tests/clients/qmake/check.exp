@@ -147,6 +147,8 @@ proc qmake_cleanup  {} {
    # unassign pe with queue
    unassign_queues_with_pe_object make
 
+   after 1000
+
    # delete pe
    del_pe make
 

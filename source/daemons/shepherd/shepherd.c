@@ -1266,10 +1266,11 @@ pid_t ctrl_pid[3];
             shepherd_trace("timeout expired - killing process");
             shepherd_signal_job(-pid, SIGKILL);
          }
+         received_signal = 0;
+         return;
       } else 
          shepherd_trace("SIGALRM without timeout");
       received_signal = 0;
-      return;
    }
 
    /* store signal if we got one */
@@ -2273,6 +2274,8 @@ char *childname            /* "job", "pe_start", ...     */
                      switch2admin_user();
                   }
                } 
+               forward_signal_to_job(pid, timeout, &postponed_signal, 
+                                     remaining_alarm, ctrl_pid);
          }
          else if (ckpt_pid && (received_signal == SIGTTOU)) {
             shepherd_trace("initiate checkpoint due to migration request");

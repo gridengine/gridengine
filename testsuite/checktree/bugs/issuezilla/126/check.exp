@@ -90,7 +90,7 @@ proc issue_126_setup  {} {
 }
 
 proc issue_126_check {} {
-   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH CHECK_ACTUAL_TEST_PATH
+   global CHECK_OUTPUT CHECK_PRODUCT_ROOT CHECK_ARCH 
    global host1
 
    # 
@@ -107,13 +107,12 @@ proc issue_126_check {} {
    # 4 enable both queues
    # 5 wait until both jobs are started
    #   - suspend on subordinate should suspend j1
-   # 6 wait until prolog of j1 has finied
    #   - check process state in ps output
    #   - j1 ps output hat to be "T" 
    #     => bug #126 is present if output is "S"
-   # 7 cleanup
+   # 6 cleanup
    #   - delete the jobs
-   # 8 cleanup
+   # 7 cleanup
    #   - remove queues
    #
 
@@ -124,7 +123,7 @@ proc issue_126_check {} {
    set queue1(hostname) "$host1"
    set queue1(slots) "1"
    set queue1(seq_no) "1"
-   set queue1(prolog) "${CHECK_ACTUAL_TEST_PATH}/sleep.sh"
+   set queue1(prolog) "/bin/sleep 10"
    set result [ add_queue queue1 ]
    if { ($result != 0)  } {
       add_proc_error "issue_126_setup" "-1" "Could not add queue q1"
@@ -168,12 +167,6 @@ proc issue_126_check {} {
    wait_for_jobstart $job1_id $job_name 300
    wait_for_jobstart $job2_id $job_name 300
    wait_for_end_of_transfer $job2_id 300
-  
-   # 
-   # 6 wait until prolog of j1 has finished (prolog sleeps 10s)
-   #
-   sleep 15 
-
    set state1 [ get_suspend_state_of_job $job1_id "pid_list" 0 ]
    if { [string compare $state1 "T" ] != 0 } {
       #
@@ -182,8 +175,9 @@ proc issue_126_check {} {
       add_proc_error "issue_126_check" "-1" "$state1 Bug #126 is present"
    }
 
+   sleep 60
    #
-   # 7
+   # 6
    #
    set result [ delete_job $job1_id]
    if { $result != 0 } {
@@ -195,7 +189,7 @@ proc issue_126_check {} {
    }
    
    #
-   # 8   
+   # 7   
    #
    wait_for_end_of_all_jobs "10"
    set result [ del_queue "q2" ]

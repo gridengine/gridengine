@@ -1,3 +1,14 @@
+EB-2002-11-25-1  Testsuite: Added new tests which will find bug #126
+                 IZ:        #427
+
+EB-2002-11-25-0  Bugfix:    race condition if signals are to be delivered in 
+                            job's startup phase
+                 IZ:        #126
+                 Bugtraq:   #4780316
+                 Review:    AH
+
+CR-2002-11-19-1  L10N       removed message definition macro only used in
+
 CR-2002-11-22-4  Testsuite: qmod - reschedule test:
                                parallel job test should not submit job with
                                -t 1 parameter (-t 1 is now a task job, this
@@ -20,12 +31,14 @@ CR-2002-11-19-1  L10N:      removed message definition macro only used in
 
 CR-2002-11-19-0  L10N:      Code cleanup/enhancements for testsuite l10n
                             modulation.
-                            - removed unused message definitions from msg_xxx.h files
+                            - removed unused message definitions from msg_xxx.h                               files
                             - new printf() format carsting specifier macro: 
-                              X32CFormat (%lx) - x32c() (analog to U32CFormat/u32c())
+                              X32CFormat (%lx) - x32c() (analog to 
+                              U32CFormat/u32c())
                             - new command line parameters for infotext binary:
                               raw     (return localized format string)
-                              __eoc__ (stop option parsing after this parameter) 
+                              __eoc__ (stop option parsing after this 
+                              parameter) 
                  Changed:   qsh, infotext
 
 AH-2002-11-18-0  Bugfix:    Complex values for user defined complexes  

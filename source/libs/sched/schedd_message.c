@@ -245,10 +245,20 @@ lListElem *schedd_mes_get()
    lWriteElemTo(sme, stderr);
    lWriteElemTo(tmp_sme, stderr);
 #endif
-#if 1
+#if 0
    {
-      DPRINTF(("SME: %d messages\n", lGetNumberOfElem(lGetList(sme, SME_message_list))));
-      DPRINTF(("SME: %d global messages\n", lGetNumberOfElem(lGetList(sme, SME_global_message_list))));
+      lListElem *elem;
+
+      DPRINTF(("SME: %d messages (%ld bytes)\n",
+         lGetNumberOfElem(lGetList(sme, SME_message_list)),
+         (long)cull_get_list_packsize(lGetList(sme, SME_message_list))));
+      for_each(elem, lGetList(sme, SME_message_list)) {
+         lList *sub_list = lGetList(elem, MES_job_number_list);
+         DPRINTF(("SME: %d ids\n", lGetNumberOfElem(sub_list)));
+      }
+      DPRINTF(("SME: %d global messages (%ld bytes)\n",
+         lGetNumberOfElem(lGetList(sme, SME_global_message_list)),
+         (long)cull_get_list_packsize(lGetList(sme, SME_global_message_list))));
    }
 #endif      
 

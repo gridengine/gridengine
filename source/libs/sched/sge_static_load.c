@@ -39,7 +39,7 @@
 #include "sge_all_listsL.h"
 #include "sge_static_load.h"
 
-/* EB: TODO: remove this file */
+/* EB: TODO: CLEANUP: remove this file */
 
 #if 0
 

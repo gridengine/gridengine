@@ -168,12 +168,12 @@ qinstance_x_on_subordinate(lListElem *this_elem, bool suspend,
    if (suspend) {
       do_action = (sos_counter == 1);
       signal = SGE_SIGSTOP;
-      event = sgeE_QUEUE_SUSPEND_ON_SUB;
+      event = sgeE_QINSTANCE_SOS;
    } else {
       send_qinstance_signal = !send_qinstance_signal;
       do_action = (sos_counter == 0);
       signal = SGE_SIGCONT;
-      event = sgeE_QUEUE_UNSUSPEND_ON_SUB;
+      event = sgeE_QINSTANCE_USOS;
    }
 
    /*

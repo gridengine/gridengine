@@ -38,7 +38,7 @@
 
 #include "msg_schedd.h"
 
-#if 0 /* EB: TODO: remove */
+#if 0 /* EB: TODO: CLEANUP: remove */
 
 int qslots_used(
 lListElem *qep 

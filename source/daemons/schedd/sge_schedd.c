@@ -309,7 +309,6 @@ char *argv[]
 
          if (now > next_prof_output || shut_me_down) {
             prof_output_info(SGE_PROF_ALL, false, "profiling summary:\n");
-            prof_reset(SGE_PROF_ALL,NULL);
             next_prof_output = now + 60;
          }
       }

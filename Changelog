@@ -1,3 +1,9 @@
+SG-2004-10-29-2: Bugfix:    - fixed profiling im scheduler
+                            - fixed cpu consumption in event master. The
+                              event master never slept.
+                 Changed:   master, scheduler
+                 Review:    CR
+
 SG-2004-10-29-1: Bugfix:    second try on the profiling.
                  Review:    JG
                  Changed:   scheduler

@@ -2218,8 +2218,10 @@ static void* event_deliver_thread(void *anArg)
          } while (!Master_Control.delivery_signaled && !should_exit() &&
                   ((sge_get_gmt() - current_time) < EVENT_DELIVERY_INTERVAL_S));
 
-         Master_Control.delivery_signaled = false;
       }
+      Master_Control.delivery_signaled = false;
+
+      
 
       sge_mutex_unlock("event_master_cond_mutex", SGE_FUNC, __LINE__, &Master_Control.cond_mutex);
 

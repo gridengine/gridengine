@@ -76,7 +76,7 @@
 #define ReconnectFile   "private/reconnect.dat"
 
 
-#define INC32(a)        (((a) == 0xffffffffL)? 0:(a)+1)
+#define INC32(a)        (((a) == 0xffffffff)? 0:(a)+1)
 
 typedef struct gsd_str {
    EVP_CIPHER *cipher;

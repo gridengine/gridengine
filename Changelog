@@ -1,3 +1,5 @@
+AA-2002-01-24-0: Feature.: sge_ca -copy to install user cert and key
+
 CR-2002-01-24-0: Enhancem.: updated install script (inst_sge) changes
 
 JG-2002-01-24-3: Bugfix:    Scheduler profiling could not be switched off

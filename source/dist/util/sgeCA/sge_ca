@@ -60,15 +60,17 @@ ErrUsage()
    myname=`basename $0`
    $ECHO "" >&2
    Translate 3 "Usage:"
-   $ECHO     " $1 {-init|-req|-sign|-verify|-userkeys <file>} [-days <days>]" >&2
+   $ECHO     " $1 {-init|-req|-sign|-copy|-verify|-userkeys <file>} [-days <days>]" >&2
    $ECHO     "    -init           \c" >&2
    Translate 1 "initialize CA infrastructure"
    $ECHO     "    -req           \c" >&2
    Translate 1 "generate a certificate request and private key"
    $ECHO     "    -sign          \c" >&2
    Translate 1 "sign a certificate request"
+   $ECHO     "    -copy          \c" >&2
+   Translate 1 "install user certificate and private key"
    $ECHO     "    -verify        \c" >&2
-   Translate 1 "verify a certificate" 2 1 "\$$QSYST_ROOT"
+   Translate 1 "verify a certificate" 2 1 "\$$SGE_ROOT"
    $ECHO     "    -days <days>   \c" >&2
    Translate 1 "days of validity of the certificate"
    $ECHO     "    -userkeys <file>   \c" >&2
@@ -129,21 +131,54 @@ InitCA()
    fi
 }
 
+#---------------------------------------------------------------------------
+# CheckIfQmasterHost
+#    If our hostname given in $1 is the same as in the "act_qmaster" file
+#    echo "true" else echo "false"
+#
+CheckIfQmasterHost()
+{
+   host=$1
+
+   if [ "$host" = "`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`" ]; then
+      echo true
+   else
+      echo false
+   fi
+}
+
 #--------------------------------------------------------------------------
 # InstallKey
 #
-InstallKey
+# $1 = user | daemon
+# $2 = $ME ( username )
+#
+InstallKey()
 {
+   HOST=`$V5UTILBIN/gethostname -aname`
+   result=`CheckIfQmasterHost $HOST`
+   if [ "$result" != "true" ]; then 
+      Translate 0 "You can install your private key and certificate only on the master host."
+      return 1
+   fi 
+
+   if [ -d /var/sgeCA/$CA_PORT/$SGE_CELL/userkeys ]; then
+      userkeydir=/var/sgeCA/$CA_PORT/$SGE_CELL/userkeys
+   else
+      Translate 0 "Cant find Certificate Authority >%s<." 
+      return 1
+   fi   
+
    if [ $1 = daemon ]; then
       keyfile=$CALOCALTOP/private/key.pem
       certfile=$CATOP/certs/cert.pem
       randfile=$CALOCALTOP/private/rand.seed
       HOMEDIR=`grep '^root:' /etc/passwd | cut -f6 -d:`
    else
-      keyfile=$CALOCALTOP/userkeys/$ME/key.pem
-      certfile=$CALOCALTOP/userkeys/$ME/cert.pem
-      randfile=$CALOCALTOP/userkeys/$ME/rand.seed
-      HOMEDIR=/tmp/undef
+      keyfile=$userkeydir/$ME/key.pem
+      certfile=$userkeydir/$ME/cert.pem
+      randfile=$userkeydir/$ME/rand.seed
+      HOMEDIR=$HOME
    fi
 
    basedir=$HOMEDIR/.sge/$CA_PORT/$SGE_CELL
@@ -161,8 +196,28 @@ InstallKey
 
    if [ -f $basedir/private/key.pem ]; then
       $V5UTILBIN/adminrun $2 rm -f $basedir/private/key.pem
-      $V5UTILBIN/adminrun 
    fi
+
+   if [ -f $basedir/private/rand.seed ]; then
+      $V5UTILBIN/adminrun $2 rm -f $basedir/private/rand.seed
+   fi
+
+   if [ -f $basedir/certs/cert.pem ]; then
+      $V5UTILBIN/adminrun $2 rm -f $basedir/certs/cert.pem
+   fi
+
+   $V5UTILBIN/adminrun $2 $CP $keyfile $basedir/private
+   $V5UTILBIN/adminrun $2 $CP $randfile $basedir/private
+   $V5UTILBIN/adminrun $2 $CHMOD 700 $basedir/private
+   $V5UTILBIN/adminrun $2 $CHMOD 400 $basedir/private/*
+
+   $V5UTILBIN/adminrun $2 $CP $certfile $basedir/certs
+   $V5UTILBIN/adminrun $2 $CHMOD 755 $basedir/certs
+   $V5UTILBIN/adminrun $2 $CHMOD 444 $basedir/certs/*
+
+   Translate 0 "Certificate and private key for user $ME have been installed"
+
+   return 0
 }
 
 
@@ -206,14 +261,28 @@ MakeCAcert()
          fi
       done
 
-      Translate 2 "Please enter your state >> "
-      INP=`Enter ""`
-      CA_ST="$INP"
+      dndone=false
+      while [ $dndone = false ]; do
+         Translate 2 "Please enter your state >> "
+         INP=`Enter ""`
+         CA_ST="$INP"
+         if [ "$INP" != "" ]; then
+            CA_ST="$INP"
+            dndone=true
+         fi
+      done
 
 
-      Translate 2 "Please enter your location, e.g city or buildingcode >> "
-      INP=`Enter ""`
-      CA_L="$INP"
+      dndone=false
+      while [ $dndone = false ]; do
+			Translate 2 "Please enter your location, e.g city or buildingcode >> "
+			INP=`Enter ""`
+			CA_L="$INP"
+         if [ "$INP" != "" ]; then
+            CA_L="$INP"
+            dndone=true
+         fi
+      done
 
       dndone=false
       while [ $dndone = false ]; do
@@ -225,9 +294,16 @@ MakeCAcert()
          fi
       done
 
-      Translate 2 "Please enter your organizational unit, e.g. your department >> "
-      INP=`Enter ""`    
-      CA_OU="$INP"
+      dndone=false
+      while [ $dndone = false ]; do
+         Translate 2 "Please enter your organizational unit, e.g. your department >> "
+         INP=`Enter ""`    
+         CA_OU="$INP"
+         if [ "$INP" != "" ]; then
+            CA_OU="$INP"
+            dndone=true
+         fi
+      done
 
       dndone=false
       while [ $dndone = false ]; do
@@ -275,8 +351,10 @@ MakeCAcert()
          Execute cat $CONFIG_DIR/sge_ssl_template.cnf $TMPFILE > $TMPFILE1
 
          umask 077
-	 
-         MakeRandFile $CALOCALTOP/private/rand.seed
+         if [ "$RANDFILE" = "" ]; then
+            MakeRandFile $CALOCALTOP/private/rand.seed
+            RANDFILE=$CALOCALTOP/private/rand.seed; export RANDFILE
+         fi
 
          Translate 0 "Creating CA certificate and private key"
          $ECHO
@@ -308,17 +386,14 @@ MakeCAcert()
 #
 MakeRandFile()
 {
-         if [ "$RANDFILE" = "" ]; then
-            if [ -f /kernel/genunix ]; then
-               rfile=/kernel/genunix
-            elif [ -f /bin/vi ]; then
-               rfile=/bin/vi
-            fi
-            RANDFILE=$1; export RANDFILE
-            Translate 0 "Creating RANDFILE from >%s< in >%s<" $rfile $RANDFILE
-            $ECHO
-            ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $RANDFILE 2048
-         fi
+   if [ -f /kernel/genunix ]; then
+      rfile=/kernel/genunix
+   elif [ -f /bin/vi ]; then
+      rfile=/bin/vi
+   fi
+   Translate 0 "Creating RANDFILE from >%s< in >%s<" $rfile $1
+   $ECHO
+   ExecuteAsAdmin $OPENSSL rand -rand $rfile -out $1 2048
 }
 
 #--------------------------------------------------------------------------
@@ -599,6 +674,9 @@ while [ $ARGC != 0 ]; do
    -sign)
       WHICH="sign"
       ;;
+   -copy)
+      WHICH="copy"
+      ;;
    -verify)
       WHICH="verify"
       ;;
@@ -666,6 +744,9 @@ sign)
     if [ $RET = 0 ]; then
       echo "Signed certificate is in $outdir/$newcert"
     fi
+    ;;
+copy) 
+    InstallKey user $ME
     ;;
 verify) 
     $VERIFY -CAfile $CATOP/$CACERT $newcert

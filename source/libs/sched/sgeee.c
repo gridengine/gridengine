@@ -4021,7 +4021,7 @@ sge_build_sge_orders( sge_Sdescr_t *lists,
 
    PROF_STOP_MEASUREMENT(SGE_PROF_SCHEDLIB4);
    prof_update_orders = prof_get_measurement_utime(SGE_PROF_SCHEDLIB4,false, NULL);
-   if (prof_is_active) {
+   if (prof_is_active()) {
       u_long32 saved_logginglevel = log_state_get_log_level();
       log_state_set_log_level(LOG_INFO); 
 

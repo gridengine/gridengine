@@ -1933,7 +1933,7 @@ int start_remote_job (char **argv, char **envp,
 
             /* compute length of all sge options */
             for(i = 0; i < sge_v_argc; i++) {
-               envsize =+ strlen(sge_v_argv[i]);
+               envsize += strlen(sge_v_argv[i]);
             }
 
             /* add space for variable name, =, -inherit, [-cwd], [-verbose], \n's, \0 */

@@ -1,3 +1,9 @@
+JG-2003-05-08-0  Bugfix:    qmake dumped core when starting recursive make calls
+                 IZ:        #547
+                 Bugtraq:   #4860391
+                 Review:    AS
+                 Changed:   qmake
+
 EB-2003-05-08-0  Bugfix:    settings.[c]sh did not set LD_LIBRARY_PATH 
                             correctly if multiple GE installations are present
                  Review:    AS

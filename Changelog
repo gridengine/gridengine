@@ -1,3 +1,9 @@
+AD-2004-01-08-1: Bugfix:    'prog_state_t' and 'cull_state_t' has only been
+                            allocated for the first thread calling one of the
+                            prog and cull state get/set functions.
+                 Changed:   uti, cull
+                 Review:    CR
+
 SG-2004-01-08-2: Bugfix:    The scheduler did not get new queue instances,
                             when the system was started without any queue.
                  Changed:   scheduler                            

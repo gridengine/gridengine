@@ -713,7 +713,7 @@ static log_state_t* log_state_getspecific(pthread_key_t aKey)
    res = pthread_setspecific(log_state_key, (const void*)log_state);
 
    if (0 != res) {
-      fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "log_once_init", strerror(res));
+      fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "log_state_getspecific", strerror(res));
       abort();
    }
    

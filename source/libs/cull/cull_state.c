@@ -51,9 +51,10 @@ typedef struct {
 static pthread_once_t cull_once = PTHREAD_ONCE_INIT;
 static pthread_key_t cull_state_key;  
 
-static void cull_once_init(void);
-static void cull_state_destroy(void* theState);
-static void cull_state_init(cull_state_t *theState);
+static void          cull_once_init(void);
+static void          cull_state_destroy(void* theState);
+static cull_state_t* cull_state_getspecific(pthread_key_t aKey);
+static void          cull_state_init(cull_state_t *theState);
 
 
 /****** cull_state/state/cull_state_get_????() ************************************
@@ -70,7 +71,7 @@ int cull_state_get_lerrno(void)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    return cull_state->lerrno;
 }
@@ -81,7 +82,7 @@ const char *cull_state_get_noinit(void)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    return cull_state->noinit;
 }
@@ -92,7 +93,7 @@ const lSortOrder *cull_state_get_global_sort_order(void)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    return cull_state->global_sort_order;
 }
@@ -103,7 +104,7 @@ int cull_state_get_chunk_size(void)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    return cull_state->chunk_size;
 }
@@ -114,7 +115,7 @@ const lNameSpace *cull_state_get_name_space(void)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    return cull_state->name_space;
 }
@@ -133,7 +134,7 @@ void cull_state_set_lerrno( int i)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    cull_state->lerrno = i;
 
@@ -146,7 +147,7 @@ void cull_state_set_noinit( char *s)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    strcpy(cull_state->noinit, s);
 
@@ -159,7 +160,7 @@ void cull_state_set_global_sort_order( const lSortOrder *so)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    cull_state->global_sort_order = so;
 
@@ -172,7 +173,7 @@ void cull_state_set_chunk_size( int chunk_size)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    cull_state->chunk_size = chunk_size;
 
@@ -185,7 +186,7 @@ void cull_state_set_name_space( const lNameSpace  *ns)
 
    pthread_once(&cull_once, cull_once_init);
  
-   cull_state = pthread_getspecific(cull_state_key);
+   cull_state = cull_state_getspecific(cull_state_key);
 
    cull_state->name_space = ns;
 
@@ -201,7 +202,6 @@ void cull_state_set_name_space( const lNameSpace  *ns)
 *
 *  FUNCTION
 *     Create access key for thread local storage. Register cleanup function.
-*     Allocate and set thread local storage.
 *
 *     This function must be called exactly once.
 *
@@ -217,22 +217,7 @@ void cull_state_set_name_space( const lNameSpace  *ns)
 *******************************************************************************/
 static void cull_once_init(void)
 {
-   cull_state_t *cull_state = NULL;
-   int res = EINVAL;
-
    pthread_key_create(&cull_state_key, cull_state_destroy);
-
-   cull_state = (cull_state_t*)sge_malloc(sizeof(cull_state_t));
-
-   cull_state_init(cull_state);
-
-   res = pthread_setspecific(cull_state_key, (const void*)cull_state); 
-
-   if (0 != res) {
-      fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "cull_once_init", strerror(res));
-      abort();
-   }
-
    return;
 } /* cull_once_init() */
 
@@ -260,6 +245,51 @@ static void cull_state_destroy(void* theState)
 {
    sge_free((char*)theState);
 }
+
+/****** cull_state/cull_state_getspecific() ************************************
+*  NAME
+*     cull_state_getspecific() -- Get thread local cull state 
+*
+*  SYNOPSIS
+*     static cull_state_t* cull_state_getspecific(pthread_key_t aKey) 
+*
+*  FUNCTION
+*     Return thread local cull state. 
+*
+*     If a given thread does call this function for the first time, no thread
+*     local cull state is available for this particular thread. In this case the
+*     thread local cull state is allocated and set.
+*
+*  INPUTS
+*     pthread_key_t aKey - Key for thread local cull state 
+*
+*  RESULT
+*     static cull_state_t* - Pointer to thread local cull state
+*
+*  NOTES
+*     MT-NOTE: cull_state_getspecific() is MT safe 
+*
+*******************************************************************************/
+static cull_state_t* cull_state_getspecific(pthread_key_t aKey)
+{
+   cull_state_t *cull_state = NULL;
+   int res = EINVAL;
+
+   if ((cull_state = pthread_getspecific(aKey)) != NULL) { return cull_state; }
+
+   cull_state = (cull_state_t*)sge_malloc(sizeof(cull_state_t));
+
+   cull_state_init(cull_state);
+
+   res = pthread_setspecific(cull_state_key, (const void*)cull_state);
+
+   if (0 != res) {
+      fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "cull_state_getspecific", strerror(res));
+      abort();
+   }
+   
+   return cull_state;
+} /* cull_state_getspecific() */
 
 /****** cull_state/cull_state_init() *******************************************
 *  NAME

@@ -165,7 +165,7 @@ const char* sge_infotext_build_dash(dstring* dash_buf, sge_infotext_options* opt
       sge_dstring_append(dash_buf," ");
    }
    if (strlen(options->D) > 0) {
-      sge_dstring_append(dash_buf,_(options->D));
+      sge_dstring_append(dash_buf,sge_gettext__(options->D));
       sge_dstring_append(dash_buf," ");
    }
    return sge_dstring_get_string(dash_buf);
@@ -593,7 +593,7 @@ void sge_infotext_welcome(void) {
    printf("\nno l10n:\n");
    printf(SGE_INFOTEXT_TESTSTRING_S, user);
    printf("\nl10n:\n");
-   printf(_(SGE_INFOTEXT_TESTSTRING_S), user);
+   printf(sge_gettext__(SGE_INFOTEXT_TESTSTRING_S), user);
 }
 
 void sge_infotext_usage(void) {
@@ -967,9 +967,9 @@ char **argv
    }
 
    help_str = (char*) sge_dstring_get_string(&buffer);
-   sge_dstring_copy_string(&buffer2, (char*)_(help_str));
-/*   printf("format string is: \"%s\"\n",buffer);
-   printf("l10n string is: \"%s\"\n", buffer2);*/
+   sge_dstring_copy_string(&buffer2, (char*)sge_gettext__(help_str));
+   DPRINTF(("format string is: \"%s\"\n",buffer));
+   DPRINTF(("l10n string is: \"%s\"\n", buffer2));
 
    /* format output */
 /*   printf("options: %d %d %d \"%s\" %d \"%s\" \"%s\" \"%s\"\n", options.e, options.n, options.u, options.D, options.S, options.yes , options.no ,options.def);
@@ -1016,26 +1016,26 @@ char **argv
                *help = 0;
             }
          } else {
-            strcpy(input_buffer,_(options.def));
+            strcpy(input_buffer,sge_gettext__(options.def));
          }
          if (strcmp(input_buffer,"") == 0) {
             if (do_wait == 1) {
                break;
             }
            
-            strcpy(input_buffer,_(options.def));
+            strcpy(input_buffer,sge_gettext__(options.def));
          }
 
-         if (strcmp(_(options.yes),input_buffer) == 0) {
+         if (strcmp(sge_gettext__(options.yes),input_buffer) == 0) {
             ret_val = 0;
             done = 1;
          }
-         if (strcmp(_(options.no),input_buffer) == 0) {
+         if (strcmp(sge_gettext__(options.no),input_buffer) == 0) {
             ret_val = 1;
             done = 1;
          }
          if (done != 1) {
-            printf( SGE_INFOTEXT_ONLY_ALLOWED_SS , _(options.yes), _(options.no));
+            printf( SGE_INFOTEXT_ONLY_ALLOWED_SS , sge_gettext__(options.yes), sge_gettext__(options.no));
             if (do_auto != 0) {
                do_auto = 0;
             }

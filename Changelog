@@ -1,3 +1,11 @@
+AA-2001-08-28-0: Fixed task array job handling in qmon submit dialogue (Issue# 48)
+
+EB-2001-08-27-0: Fixed segmentation fault in qstat, qhost, qmon (Issue# 48)
+                 - large, fragmented job arrays caused segmentation
+                   fault in qstat when the task id range list should be
+                   printed                                                                       - hold of a list of array tasks in the job control dialog
+                   caused only the last one to be set into the hold-state 
+
 CR-2001-08-23-2: Testsuite:
                  - using full path name for files to check in procedure
                    check_executable_files 
@@ -130,8 +138,3 @@ AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load 
                    reports w/o REP_seqno
 
-EB-2001-08-27-0: Fixed segmentation fault in qstat, qhost, qmon (Issue# 48)
-                 - large, fragmented job arrays caused segmentation
-                   fault in qstat when the task id range list should be
-                   printed                                                                       - hold of a list of array tasks in the job control dialog
-                   caused only the last one to be set into the hold-state 

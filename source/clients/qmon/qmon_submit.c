@@ -2013,14 +2013,17 @@ int save
 
    if (data->hold) {
       lListElem *jap;
-      /* simple job */
-      if (!lGetList(jep, JB_ja_tasks)) {
-         for_each (jap, lGetList(jep, JB_ja_tasks)) {
-            lSetUlong(jap, JAT_hold, MINUS_H_TGT_USER); 
-         }
+      if (!is_array(jep)) {
+         /* 
+          * simple job 
+          */
+         lSetUlong(lFirst(lGetList(jep, JB_ja_tasks)), JAT_hold,
+                     MINUS_H_CMD_SET|MINUS_H_TGT_USER);
       }
-      /* array job */
       else {
+         /* 
+          * array job 
+          */
          if (data->task_range) {
             lListElem *range;
             u_long32 start, end, step;
@@ -2033,15 +2036,16 @@ int save
                   while (jap && lGetUlong(jap, JAT_task_number) != start) {
                      jap = lNext(jap);
                   }
-                  lSetUlong(jap, JAT_hold, MINUS_H_TGT_USER);
-                  jap = lNext(jap);
+                  if (jap) {
+                     lSetUlong(jap, JAT_hold, MINUS_H_CMD_SET|MINUS_H_TGT_USER);
+                  }   
                }
             }
          }
          else {
             lListElem *jap;
             for_each (jap, lGetList(jep, JB_ja_tasks)) {
-               lSetUlong(jap, JAT_hold, MINUS_H_TGT_USER);
+               lSetUlong(jap, JAT_hold, MINUS_H_CMD_SET|MINUS_H_TGT_USER);
             }
          }
       }

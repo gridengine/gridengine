@@ -1,3 +1,6 @@
+JG-2001-10-31-2: -cwd option for tightly integrated pe tasks (qrsh -inherit)
+                 did not overwrite the jobs -cwd settings.
+
 JG-2001-10-31-1: Bugfix: qmon dumped core when displaying empty job args
 
 JG-2001-10-31-0: Testsuite: Bugfix in submit_hosts test, did not work, 

@@ -551,7 +551,7 @@ char *err_str
    static lList *processor_set = NULL;
    const char *cp;
    char *shell;
-   char *cwd;
+   const char *cwd = NULL;
    lList *cplx;
    char dce_wrapper_cmd[128];
 
@@ -799,13 +799,29 @@ char *err_str
          add_or_replace_env(environmentList, name, s ? s : "");
       }
    }
+  
+   /* in case of pe task: 
+   ** jep = pe task
+   ** slave_jep = job_jep = job 
+   */
+   /* write PWD and set, might get overridden by task environment */
    
-   /* write PWD, might get overridden by task environment */
-   if (lGetString(job_jep, JB_cwd)) { 
+   /* 1.) try to read cwd from pe task */
+   if(slave_jep) {
+      cwd = lGetString(jep, JB_cwd);
+   } 
+
+   /* 2.) try to read cwd from job */
+   if(cwd == NULL) {
+      cwd = lGetString(job_jep, JB_cwd);
+   }
+
+   /* 3.) if task or job set cwd: do path mapping */
+   if(cwd != NULL) {
       static char cwd_out[SGE_PATH_MAX];
-      
+     
       /* path aliasing only for cwd flag set */
-      get_path_alias(lGetString(job_jep, JB_cwd), cwd_out, SGE_PATH_MAX, 
+      get_path_alias(cwd, cwd_out, SGE_PATH_MAX, 
                lGetList(job_jep, JB_path_aliases), me.qualified_hostname, NULL);
       cwd = cwd_out;
       add_or_replace_env(environmentList, "PWD", cwd);

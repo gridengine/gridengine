@@ -1560,10 +1560,14 @@ char **argv
    if(existing_job) {
       int msgsock   = -1;
       sge_tid_t tid = -1;
+      const char *cwd = NULL;
      
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
 /*       set_commlib_param(CL_P_ID, 0, NULL, NULL); */
-      tid = sge_qexecve(host, NULL, NULL, lGetList(job, JB_env_list), 1); 
+   
+      cwd = lGetString(job, JB_cwd);
+
+      tid = sge_qexecve(host, NULL, cwd, NULL, lGetList(job, JB_env_list), 1); 
 
       if(tid <= 0) {
          ERROR((SGE_EVENT, MSG_QSH_EXECUTINGTASKOFJOBFAILED_IS, existing_job,

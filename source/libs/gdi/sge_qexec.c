@@ -105,7 +105,7 @@ const char *qexec_last_err(void)
 *                 a value <= 0 indicates an error.
 *
 *******************************************************************************/
-sge_tid_t sge_qexecve(const char *hostname, const char *path, 
+sge_tid_t sge_qexecve(const char *hostname, const char *path, const char *cwd,
                       const char *argv[], const lList *env_lp, 
                       int is_qrsh)
 {
@@ -162,6 +162,9 @@ const char *s;
    lSetUlong(jep, JB_job_number, jobid); 
    lSetString(jep, JB_owner, myname);
 
+   if(cwd != NULL) {
+      lSetString(jep, JB_cwd, cwd);
+   }
 
    if(is_qrsh) {
       lSetUlong(jep, JB_now, JB_NOW_QRSH);

@@ -1,3 +1,9 @@
+EB-2002-03-13-0: Bugfix:    handling of faulty migrate script
+                            - improved logging
+                            - shepherd internal state will be reset. 
+                              Further migrate requests will be initiated
+                 Issue:     #146 (patially)
+
 JG-2002-03-13-0  Doc:       Improved the qmake man page to reflect the 
                             necessity to use the options -v PATH and -cwd.
 

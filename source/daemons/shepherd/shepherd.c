@@ -983,7 +983,8 @@ int ckpt_type
    }
 
    if (WIFSIGNALED(status)) {
-      /* job was not killed due to checkpointing */
+      sprintf(err_str, "job exited due to uncaught signal");
+      shepherd_trace(err_str);
       if (ckpt_type && !signalled_ckpt_job) {
          unlink("checkpointed");
          shepherd_trace("job exited due to signal but not due to checkpoint");
@@ -1007,8 +1008,9 @@ int ckpt_type
                  core_dumped ? " (core dumped)": "");
 
       exit_status = 128+child_signal;
-   }
-   else {
+   } else {
+      sprintf(err_str, "job exited NOT due to uncaught signal");
+      shepherd_trace(err_str);
       if (!strcmp("job", childname)) {
          /* remove indication of checkpoints */
          if (WEXITSTATUS(status) < 128) {
@@ -1027,8 +1029,7 @@ int ckpt_type
          exit_status = WEXITSTATUS(status);
          sprintf(err_str, "%s exited with status %d%s", childname, exit_status, 
                (exit_status==RESCHEDULE_EXIT_STATUS)?" -> rescheduling":"");
-      } 
-      else {
+      } else {
          /* should be virtually impossible, see wait_my_child() why */
          exit_status = -1;
          sprintf(err_str, "%s did not exit and was not signaled", childname);
@@ -2161,8 +2162,15 @@ char *childname            /* "job", "pe_start", ...     */
 #endif
 
       alarm(0);
-      
-      sprintf(err_str, "wait3 returned %d", npid);
+     
+      if (npid == -1) { 
+         sprintf(err_str, "wait3 returned -1");
+      } else {
+         sprintf(err_str, "wait3 returned %d (status: %d; WIFSIGNALED: %d, "
+                          " WIFEXITED: %d, WEXITSTATUS: %d)", npid, status,
+                          WIFSIGNALED(status), WIFEXITED(status),
+                          WEXITSTATUS(status));
+      }
       shepherd_trace(err_str);
 
       /* got a signal? should compare errno with EINTR */
@@ -2263,7 +2271,19 @@ char *childname            /* "job", "pe_start", ...     */
       }
 
       /* here we reap the migration command */
-      if ((npid == migr_cmd_pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
+      if ((npid == migr_cmd_pid) && 
+          ((WIFSIGNALED(status) || WIFEXITED(status)))) {
+
+         /*
+          * If the migrate command exited but the job did 
+          * not stop (due to error in the migrate script) we have
+          * to reset internat state. As result further migrate
+          * commands will be executed (qmod -f -s).
+          */
+         inCkpt = 0;
+         shepherd_trace("if jobs and shepherd do not exit there is some error "
+                        "in the migrate command");
+
          shepherd_trace("reaped migration checkpoint command");
          migr_cmd_pid = -999;
          if (WIFEXITED(status)) {
@@ -2275,13 +2295,13 @@ char *childname            /* "job", "pe_start", ...     */
                   fclose(fp);
                }
             }                     
-         }
+         } 
       }
       
       /* reap job */
       if ((npid == pid) && ((WIFSIGNALED(status) || WIFEXITED(status)))) {
-         strcpy(err_str, childname);
-         strcat(err_str, " exited");
+         sprintf(err_str, "%s exited with exit status %d", childname, 
+                 WEXITSTATUS(status));
          shepherd_trace(err_str);
          job_status = status;
          job_pid = -999;

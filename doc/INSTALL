@@ -43,10 +43,13 @@ Content
    An administrator account must be specified. The administrator can be an
    existing user or a new user may be created for this task. This account
    will own all of the files and it is used to configure and maintain the
-   cluster once the software is installed. 
+   cluster once the software is installed.  We recommend 'sgeadmin' as the
+   administrator account belonging to the 'adm' group.
 
-   The administrator account must exist prior to installation. We recommend 
-   'codadmin' as the administrator account belonging to the 'adm' group.
+   The administrator account must exist on all hosts in the cluster prior 
+   to installation.  This can be done by either including this information
+   in the local NIS/NIS+ database, or by adding entries explicitly to
+   /etc/passwd and /etc/group on all hosts.
 
    The software uses a tcp port for communication. All hosts in the cluster
    must use the same port number. The port number can be set in the
@@ -58,28 +61,31 @@ Content
 
            sge_commd          536/tcp     # communication port for Grid Engine
 
-      o Add the above manually to the /etc/services file on each machine 
+      o Add the above line manually to the /etc/services file on each machine 
 
 
 4) Create a directory and unpack the distribution
 -------------------------------------------------
 
-   As the Grid Engine administrator, do the following:
+   As the Grid Engine administrator user, do the following:
 
    If you received the distribution in "tar.gz" format
 
-      o Create a directory for Grid Engine. This directory must be
-        accessible to all Grid Engine clients and execution hosts. We
-        recommend /gridware/sge, but it's not mandatory
+      o Create a directory for Grid Engine (eg, /gridware/sge).
+        This directory must be accessible via NFS to all Grid Engine
+        hosts. It can be either on a host in the cluster (eg, the master
+        host), or on a dedicated file server or file server appliance.
+        
+        NOTE: this directory is hereafter referred to as $SGE_ROOT.
 
       o Unpack the distribution to this directory.
 
-      o Please verify the file permissions with the script
+      o Verify the file permissions with the script
 
-            <sge_root>/util/setfileperm.sh
+            $SGE_ROOT/util/setfileperm.sh
 
         (all Grid Engine directories and files should be owned by the
-        administrator, some files need to be installed suid root)
+        administrator; some files need to be installed suid root)
 
    If you received the distribution in "pkgadd" format
 
@@ -100,27 +106,32 @@ Content
 
      The Grid Engine installation program needs to be run as root in order
      to start the daemons. Root does NOT need write permission on the
-     fileserver. Once Grid Engine is installed, the administrator can handle
-     all day to day operations.
+     fileserver. Once Grid Engine is installed, the administrator user
+     can handle all day to day operations, and you can grant administrative
+     rights to ordinary users as well.
 
    o Machine rebooting
 
      The machines DO NOT need to be rebooted as part of the Grid Engine
-     installation. If you run Grid Engine, Enhanced Edition, on SGI systems
-     you need to
+     installation. (The exception is if you run Grid Engine, Enhanced
+     Edition, on SGI systems).
 
-   o It may be more convenient to have a file with the list of hosts that
+   o Host list file
+
+     It may be more convenient to have a file with the list of hosts that
      will be installed. The format for this file is one hostname per line. 
      The names may also be typed in manually when the installation prompts.
 
-   o If any stty commands exist in the users' startup scripts, jobs
+   o Shell configuration
+
+     If any stty commands exist in the users' startup scripts, jobs
      submitted to Grid Engine may fail as there is no terminal associated
      with a Grid Engine batch job. If there are stty commands, one of the
      following must be done:
 
      o Remove all stty commands from the login files
      o Bracket the stty commands with an 'if' statement which checks for a
-       terminal before executing. For example in csh syntax:
+       terminal before executing. For example, in csh syntax:
 
        tty -s                        # checks terminal status
        if ($status == 0)  then       # succeeds if a terminal is present
@@ -132,34 +143,54 @@ Content
 -----------------------
 
    The installation is a two step process. First, the Grid Engine files are
-   installed and configured on the master. Then, a small installation is
-   done on each execution host to configure and start the daemons, and to
-   add automatic daemon startup to the init area. This requires logging on
-   to each execution host as root and manually running the install program. 
-   Alternatively, if there is a secure machine with root rsh access to all
-   machines, the execution host install can be done from a single machine.
+   installed and configured on the master. Then, a small installation script
+   is executed on each execution host to configure and start the daemons,
+   as well as to add automatic daemon startup to the init area. This requires
+   logging on to each execution host as root and manually running the install
+   program. Alternatively, if there is a secure machine with root rsh access
+   to all machines, the execution host install can be done on all exec hosts
+   in a single step from the secure machine.
 
    o Step One - Install the master host
 
-     As root, on the master host, run:
+     As root, on the master host, cd to $SGE_ROOT and run:
 
         ./install_qmaster
 
-     This will install the Grid Engine master. 
+     This will install the Grid Engine master/scheduler. 
 
 
-   o Step Two - Install execution hosts (including qmaster host, if it's
-                going to be an execution host as well)
+   o Step Two - Install execution hosts
 
-     As root on the execution host machines, run:
+     As root on the execution host machines, cd to $SGE_ROOT and run:
 
         ./install_execd
 
      The installation programs start the Grid Engine daemons, so at the
-     completion of a successful install, Grid Engine is up and running. If
-     the master host will also be an execution host, run the following
-     command as well:
+     completion of a successful install, Grid Engine is up and running. 
+     
+     If the qmaster host will also be an execution host, run this command
+     on it as well.
 
+     o Noninteractive installation
+
+       If you wish to run the install scripts and accept all default options
+       without interaction, you can execute them with the -auto and -fast
+       flags, for example:
+
+          ./install_execd -auto -fast
+
+       './install_execd -help' and './install_qmaster -help' will give a list
+       of all flags for each command.
+     
+     o Cluster installation
+
+       If you want to install many exec hosts simultaneously using the default
+       options, you can use the 'install_cluster.sh' script in the directory
+       $SGE_ROOT/util.  This script needs to be run from a machine which has
+       root rsh privilege on all exec hosts.  Please note that each machine
+       needs to already fulfill the prerequisite conditions listed in Steps
+       3 and 4.  'install_cluster.sh -help' will tell you its usage.
 
 7) Verify installation
 ----------------------
@@ -170,7 +201,7 @@ Content
 
    C-shell syntax:
 
-      % source $Grid Engine_ROOT/default/common/settings.csh
+      % source $SGE_ROOT/default/common/settings.csh
 
    Bourne shell syntax:
 
@@ -183,12 +214,12 @@ Content
    You should see output similar to the following:
 
       % qsub $SGE_ROOT/examples/jobs/sleeper.sh 
-      your job 28 ("Sleeper") has been submitted
+      your job 1 ("Sleeper") has been submitted
 
    Verify that all of the queues have been installed properly by running
    the following:
 
-      % qstat -f   (full listing of the queues)
+      % qstat -f   (shows full listing of the queues)
 
 
 8) Using Grid Engine
@@ -200,10 +231,10 @@ Content
    qsub
    ----
 
-   In general, qsub is used for traditional batch submit, that is where I/O
+   In general, qsub is used for traditional batch submit, where I/O
    is directed to a file. Note that qsub only accepts shell scripts, not
-   executable files. There is an application script, qs, which will allow
-   qsub to accept executable files directly.
+   executable files --- wrapper scripts must be used to submit binary
+   files directly.
 
    qrsh
    ----

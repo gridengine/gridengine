@@ -1,3 +1,7 @@
+AD-2004-02-18-1: Cleanup:   Did remove *currently* dispensable mutex
+                            attributes. Did add some additional commentaries.
+                 Changed:   qmaster
+
 SG-2004-01-18-3: Bugfix:    - fixed qmaster crash in case of "qhold all"
                             - removed -uall switch from qalter
                             - removed "all" flag from qalter. "all" is a job

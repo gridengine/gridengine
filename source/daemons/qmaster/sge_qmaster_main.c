@@ -140,6 +140,11 @@ static void exit_func(int);
 *  RESULT
 *     0 - success 
 *
+*  NOTES
+*     We need to inovke 'prepare_enroll()' *before* the user id is switched via
+*     'become_admin_user()'. This is because qmaster must be able to bind a so
+*     called reserved port (requires root privileges) if configured to do so.
+*
 *******************************************************************************/
 int main(int argc, char* argv[])
 {
@@ -155,16 +160,12 @@ int main(int argc, char* argv[])
    daemonize_qmaster();
 
    sge_mt_init();
-#if !defined(ENABLE_NGC)
-   commlib_mt_init(); /* shall be removed with new comm system */
-#endif
 
    sigfillset(&sig_set);
    pthread_sigmask(SIG_SETMASK, &sig_set, NULL);
 
    sge_qmaster_thread_init();
 
-   /* enroll before getting root */
    prepare_enroll(prognames[QMASTER], 1, NULL);
 
    become_admin_user();
@@ -663,9 +664,6 @@ static void start_periodic_tasks(void)
 *     Determine number of locks needed. Create and initialize the respective
 *     mutexes. Register the callbacks required by the locking API 
 *
-*     NOTE: All global locks are so called recursive mutexes. This does greatly
-*     simplify lock usage.
-*
 *  INPUTS
 *     void - none 
 *
@@ -675,21 +673,18 @@ static void start_periodic_tasks(void)
 *  NOTES
 *     MT-NOTE: setup_lock_service() is NOT MT safe. 
 *
+*     Currently we do not use so called recursive mutexes. This may change
+*     *without* warning, if necessary!
+*
 *  SEE ALSO
 *     libs/lck/sge_lock.c
 *
 *******************************************************************************/
 static void setup_lock_service(void)
 {
-   pthread_mutexattr_t attr;
-
    DENTER(TOP_LAYER, "setup_lock_service");
 
-   pthread_mutexattr_init(&attr);
-   pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-   pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_PRIVATE);
-
-   pthread_mutex_init(&Global_Lock, &attr);
+   pthread_mutex_init(&Global_Lock, NULL);
 
    sge_set_lock_callback(lock_callback);
    sge_set_unlock_callback(unlock_callback);
@@ -1084,6 +1079,12 @@ static void* message_thread(void* anArg)
 *     and 'should_terminate()'. These three functions do coordinate the thread
 *     termination procedure.
 *
+*  BUGS
+*     Currently the event master (evm) does need a working gdi thread to 
+*     successfully deliver events. For this reason we need to add the
+*     'sgeE_QMASTER_GOES_DOWN' event *before* the message thread does
+*     terminate itself.
+*
 *******************************************************************************/
 static void wait_for_thread_termination(void)
 {
@@ -1093,11 +1094,7 @@ static void wait_for_thread_termination(void)
 
    Qmaster_Control.shutdown = true;
 
-   /**
-    * The event thread needs a working gdi thread to deliver events. Therefore
-    * the qmaster_goes_down event has to be delivered as soon as posible.
-    */
-   sge_add_event( 0, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, NULL);
+   sge_add_event(0, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL, NULL, NULL);
 
    while (Qmaster_Control.thrd_count > 1) {
       pthread_cond_wait(&Qmaster_Control.cond_var, &Qmaster_Control.mutex);

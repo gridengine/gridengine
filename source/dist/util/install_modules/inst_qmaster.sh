@@ -65,25 +65,58 @@ GetCellRoot()
 #
 GetCell()
 {
+   is_done="false"
+
    if [ $AUTO = true ]; then
     SGE_CELL=$CELL_NAME
     SGE_CELL_VAL=$CELL_NAME
     $INFOTEXT -log "Using >%s< as CELL_NAME." "$CELL_NAME"
    else
-   $CLEAR
-   $INFOTEXT -u "\nGrid Engine cells"
-   $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
-                "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
-                "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
-                "   default\n\n" \
-                "If you want to install multiple cells you can enter a cell name now.\n\n" \
-                "The environment variable\n\n" \
-                "   \$SGE_CELL=<your_cell_name>\n\n" \
-                "will be set for all further Grid Engine commands.\n\n" \
-                "Enter cell name or hit <RETURN> to use default cell >default< >> "
-   INP=`Enter default`
-   eval SGE_CELL=$INP
-   SGE_CELL_VAL=`eval echo $SGE_CELL`
+   while [ $is_done = "false" ]; do 
+      $CLEAR
+      $INFOTEXT -u "\nGrid Engine cells"
+      $INFOTEXT -n "\nGrid Engine supports multiple cells.\n\n" \
+                   "If you are not planning to run multiple Grid Engine clusters or if you don't\n" \
+                   "know yet what is a Grid Engine cell it is safe to keep the default cell name\n\n" \
+                   "   default\n\n" \
+                   "If you want to install multiple cells you can enter a cell name now.\n\n" \
+                   "The environment variable\n\n" \
+                   "   \$SGE_CELL=<your_cell_name>\n\n" \
+                   "will be set for all further Grid Engine commands.\n\n" \
+                   "Enter cell name or hit <RETURN> to use default cell >default< >> "
+      INP=`Enter default`
+      eval SGE_CELL=$INP
+      SGE_CELL_VAL=`eval echo $SGE_CELL`
+      if [ $BERKELEY = "undef" ]; then
+         if [ -d $SGE_ROOT/$SGE_CELL ]; then
+            $CLEAR
+            $INFOTEXT "The cell name <%s> you have entered already exists!" $SGE_CELL_VAL
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to select another cell name? (y/n) [y] >> "
+            if [ $? = 0 ]; then
+               :
+               is_done="false"
+            else
+               $INFOTEXT -n "You can overwrite or delete this directory. If you choose overwrite,\nonly critical files" \
+                            "will be deleted (eg. bootstrap file).\nDelete - will delete the hole directory!\n"
+               $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to overwrite the directory? (y/n) [y] >> "
+               if [ $? = 0 ]; then
+                  $INFOTEXT "Deleting bootstrap file!"
+                  `rm $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap`
+                  is_done="true"
+               else
+                  $INFOTEXT "Deleting %s directory now!" $SGE_ROOT/$SGE_CELL_VAL
+                  `rm -R $SGE_ROOT/$SGE_CELL_VAL`
+                  is_done="true"
+               fi
+            fi
+         else
+            is_done="true"
+         fi
+      else
+         is_done="true"
+      fi
+   done
+
    $INFOTEXT -wait -auto $AUTO -n "\nUsing cell >%s<. \nHit <RETURN> to continue >> " $SGE_CELL_VAL
    $CLEAR
    fi

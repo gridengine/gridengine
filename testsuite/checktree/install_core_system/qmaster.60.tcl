@@ -142,6 +142,8 @@ proc install_qmaster {} {
  set INSTALL_STARTUP_SCRIPT       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_STARTUP_SCRIPT] ]
  set ENTER_SCHEDLUER_SETUP        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SCHEDLUER_SETUP] ]
  set DELETE_DB_SPOOL_DIR          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DELETE_DB_SPOOL_DIR] ]
+ set CELL_NAME_EXISTS             [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_EXISTS] ]
+ set CELL_NAME_OVERWRITE          [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_OVERWRITE] ]
 
 
  # berkeley db
@@ -346,6 +348,26 @@ proc install_qmaster {} {
 
        -i $sp_id $INSTALL_AS_ADMIN_USER { 
           puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(5)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_YES\n"
+          continue;
+       }
+
+       -i $sp_id $CELL_NAME_EXISTS { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(5.1)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+
+       -i $sp_id $CELL_NAME_OVERWRITE { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(5.2)"
           if {$do_log_output == 1} {
              puts "press RETURN"
              set anykey [wait_for_enter 1]

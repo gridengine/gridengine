@@ -66,8 +66,8 @@ SpoolingQueryChange()
      else
         SPOOLING_SERVER=none
         $INFOTEXT -n "Please enter the Database Directory now, even if you want to spool locally\n" \
-                     "it is necessary to enter this Database Directory. \nDefault: [%s] >> " "$SGE_ROOT/$SGE_CELL/spooldb"
-                  SPOOLING_DIR="$SGE_ROOT/$SGE_CELL/spooldb" 
+                     "it is necessary to enter this Database Directory. \nDefault: [%s] >> " `dirname $QMDIR`"/spooldb" 
+                  SPOOLING_DIR=`dirname $QMDIR`"/spooldb" 
                   SPOOLING_DIR=`Enter $SPOOLING_DIR`        
      fi
  

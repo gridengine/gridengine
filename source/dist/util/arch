@@ -85,12 +85,13 @@ if [ -x /bin/uname ]; then
          esac  
          ;;
       5)
-         subrev=`/bin/uname -r`
-         case $subrev in
-         1)
-            ARCH=aix51
-            ;;
-         esac
+         ARCH=aix43
+#         subrev=`/bin/uname -r`
+#         case $subrev in
+#         1)
+#            ARCH=aix51
+#            ;;
+#         esac
          ;;
       esac
       ;;
@@ -107,12 +108,13 @@ if [ -x /bin/uname ]; then
          ARCH=hp10
          ;;
       *.11.*)
-         bits=`/usr/bin/getconf KERNEL_BITS`
-         if [ $bits -eq 64 ]; then
-            ARCH=hp11-64
-         else
-            ARCH=hp11
-         fi
+         ARCH=hp11
+#         bits=`/usr/bin/getconf KERNEL_BITS`
+#         if [ $bits -eq 64 ]; then
+#            ARCH=hp11-64
+#         else
+#            ARCH=hp11
+#         fi
          ;;
       esac
       ;;

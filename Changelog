@@ -1,3 +1,7 @@
+SG-2004-01-07-0: Bugfix:    Fixed: SG-2003-12-19-0 The scheduler did not get 
+                            new jobs or cqueues.
+                 Changed:   qmaster, scheduler
+
 AD-2004-01-01-0: Enhancem:  Did add build support for DARWIN 7.*
                  Changed:   aimk
                  Review:    TBD

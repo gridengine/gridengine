@@ -110,7 +110,7 @@ typedef struct {
  *
  *
  * SEE ALSO:
- *     evm/sge_event_master/job_select()
+ *     evm/sge_event_master/sge_list_select()
  *     evm/sge_event_master/elem_select() 
  *  and
  *     evm/sge_event_master/sge_add_list_event_
@@ -205,7 +205,7 @@ eventclient_list_locate_by_adress(const char *host, const char *commproc, u_long
 
 static const lDescr* getDescriptorL(subscription_t *subscription, const lList* list, int type);
 static const lDescr* getDescriptor(subscription_t *subscription, const lListElem* element, int type);
-static bool job_select(subscription_t *subscription, int type, lList **reduced_lp, lList *lp, const lCondition *selection, 
+static bool sge_list_select(subscription_t *subscription, int type, lList **reduced_lp, lList *lp, const lCondition *selection, 
                        const lEnumeration *fields,  const lDescr *descr);
                        
 static lListElem *elem_select(subscription_t *subscription, lListElem *element, 
@@ -1379,7 +1379,6 @@ sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type,
    if (timestamp == 0) {
       timestamp = sge_get_gmt();
    }
-
    if (event_client != NULL) {
       if (sge_eventclient_subscribed(event_client, type, session)) {
          sge_add_list_event_(event_client, timestamp, type, 
@@ -1408,6 +1407,7 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
    dstring buffer_wrapper;
 
    DENTER(TOP_LAYER, "sge_add_list_event_"); 
+
 
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
@@ -1441,7 +1441,7 @@ sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
          type, (selection!=NULL), (fields!=NULL)));
 
          if (fields) {
-            if (!job_select(subscription, type, &cp_list, list, selection, fields, descr)){
+            if (!sge_list_select(subscription, type, &cp_list, list, selection, fields, descr)){
                cp_list = lSelectD("updating list", list, selection,descr, fields); 
             }   
             
@@ -1540,7 +1540,6 @@ sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
    if (timestamp == 0) {
       timestamp = sge_get_gmt();
    }
-
    if (event_client != NULL) {
       if (sge_eventclient_subscribed(event_client, type, session)) {
          sge_add_event_(event_client, timestamp, type, 
@@ -1587,20 +1586,18 @@ sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
       const lDescr *dp = getDescriptor(subscription, element, type);
 
       if (fields) {
-      
          /* special handling for the JAT_Type lists stored in the job
           * structure. 
           */
          if (sub_filter) {
             int sub_type = -1;
             int i=-1;
-            
             while (SOURCE_LIST[entry_counter][++i] != -1) {
                if (subscription[SOURCE_LIST[entry_counter][i]].what){
                   sub_type = SOURCE_LIST[entry_counter][i];
+                  break;
                }
             }
-
             el = elem_select(subscription, element, 
                               FIELD_LIST[entry_counter], selection, 
                               fields, dp, sub_type);
@@ -1794,7 +1791,7 @@ sge_total_update_event(lListElem *event_client, ev_event type)
 
          if (fields) {
             lList *reduced_lp = NULL;
-            if (!job_select(subscription, type, &reduced_lp, lp, selection, fields, descr)){
+            if (!sge_list_select(subscription, type, &reduced_lp, lp, selection, fields, descr)){
                reduced_lp = lSelectD("updating list", lp, selection,descr, fields); 
             }   
             lSetList(event, ET_new_version, reduced_lp);
@@ -1823,12 +1820,12 @@ sge_total_update_event(lListElem *event_client, ev_event type)
 }
 
 
-/****** sge_event_master/job_select() ******************************************
+/****** sge_event_master/sge_list_select() ******************************************
 *  NAME
-*     job_select() -- makes a reduced job list dublication 
+*     sge_list_select() -- makes a reduced job list dublication 
 *
 *  SYNOPSIS
-*     static bool job_select(subscription_t *subscription, int type, lList 
+*     static bool sge_list_select(subscription_t *subscription, int type, lList 
 *     **reduced_lp, lList *lp, const lCondition *selection, const lEnumeration 
 *     *fields, const lDescr *descr) 
 *
@@ -1852,11 +1849,14 @@ sge_total_update_event(lListElem *event_client, ev_event type)
 *     static bool - true, if it was a job event 
 *
 *******************************************************************************/
-static bool job_select(subscription_t *subscription, int type, lList **reduced_lp, lList *lp, const lCondition *selection, 
+static bool sge_list_select(subscription_t *subscription, int type, lList **reduced_lp, lList *lp, const lCondition *selection, 
                        const lEnumeration *fields,  const lDescr *descr){
    bool ret = false;
    int entry_counter;
    int event_counter;
+
+   DENTER(TOP_LAYER, "sge_list_select");
+   
    for (entry_counter = 0; entry_counter < LIST_MAX; entry_counter++) {
       event_counter = -1;
       while (EVENT_LIST[entry_counter][++event_counter] != -1){
@@ -1874,6 +1874,7 @@ static bool job_select(subscription_t *subscription, int type, lList **reduced_l
             if (sub_type != -1) {
                lListElem *element = NULL;
                lListElem *reduced_el = NULL;
+
                
                ret = true;
                *reduced_lp = lCreateList("update", descr);        
@@ -1886,11 +1887,15 @@ static bool job_select(subscription_t *subscription, int type, lList **reduced_l
                   lAppendElem(*reduced_lp, reduced_el);
                }
             }
+            else {
+               DPRINTF(("no sub type filter specified\n"));
+            }
             goto end;
          } /* end if */
       } /* end while */
    } /* end for */
 end:   
+   DEXIT;
    return ret;        
 }
 
@@ -1937,21 +1942,30 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
    lListElem *el = NULL;
    int counter;
  
-   if (!element)
+   DENTER(TOP_LAYER, "elem_select");
+ 
+   if (!element) {
+      DEXIT;
       return NULL;
+   }
  
    if (sub_type <= sgeE_ALL_EVENTS || sub_type >= sgeE_EVENTSIZE){
+      
       /* TODO: SG: add error message */
+      DPRINTF(("wrong event sub type\n"));
+      DEXIT;
       return NULL;
    }
    
    /* get the filters for the sub lists */
-   sub_selection = subscription[sub_type].where;
-   sub_fields = subscription[sub_type].what; 
+   if (sub_type>=0){
+      sub_selection = subscription[sub_type].where;
+      sub_fields = subscription[sub_type].what; 
+   }
   
    if (sub_fields){ /* do we have a sub list filter, otherwise ... */
       int ids_size = 0;   
-     
+
       /* allocate memory to store the sub-lists, which should be handeled special */
       while (ids[ids_size] != -1)
          ids_size++;
@@ -1998,9 +2012,12 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
 
       FREE(sub_list);
    }
-   else /* .... do a simple select */
+   else /* .... do a simple select */{
+      DPRINTF(("no sub filter specified\n"));
       el = lSelectElemD(element, selection, dp, fields);
+   }   
 
+   DEXIT;
    return el;
 }
 

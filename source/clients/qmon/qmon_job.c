@@ -539,6 +539,7 @@ void updateJobList(void)
    lListElem *qep = NULL;
    lCondition *where_run = NULL;
    lCondition *where_unfinished = NULL;
+   lCondition *where_exiting = NULL;
    lEnumeration *what = NULL;
    lCondition *where_no_template = NULL;
    lCondition *where_notexiting = NULL;
@@ -574,9 +575,10 @@ void updateJobList(void)
                                     "template");
    what_queue = lWhat("%T(ALL)", QU_Type);
    where_notexiting = lWhere("%T(!(%I m= %u))", JAT_Type, JAT_status, JFINISHED);
-   where_run = lWhere("%T((%I m= %u || %I m= %u || %I m= %u) && (!(%I m= %u)))",
+   where_run = lWhere("%T((%I m= %u || %I m= %u) && (!(%I m= %u)))",
                       JAT_Type, JAT_status, JRUNNING, JAT_status, JTRANSFERING,
-                      JAT_status, JFINISHED, JAT_state, JEXITING);
+                      JAT_state, JEXITING);
+   where_exiting = lWhere("%T(!(%I m= %u))", JAT_Type, JAT_status, JFINISHED);
  
    jl = lSelect("jl", qmonMirrorList(SGE_JOB_LIST), where_unfinished, what);
 
@@ -687,13 +689,15 @@ void updateJobList(void)
    */
    for_each (jep, jl) {
       lList *rtasks = lCopyList("rtasks", lGetList(jep, JB_ja_tasks));
+      lList *etasks = NULL;
       lList *ptasks = NULL;
       lListElem *jap;
       int tow = 0;
       /*
-      ** split into running and pending tasks
+      ** split into running, pending and exiting tasks 
       */
       lSplit(&rtasks, &ptasks, "rtasks", where_run);
+      lSplit(&ptasks, &etasks, "etasks", where_exiting);
 
 #if 0 /* EB: debug code */
       printf("========> jep\n");
@@ -704,6 +708,8 @@ void updateJobList(void)
       lWriteListTo(rtasks, stdout); 
       printf("========> ptasks\n"); 
       lWriteListTo(ptasks, stdout); 
+      printf("========> etasks\n");
+      lWriteListTo(etasks, stdout);
 #endif
       /*
       ** for running tasks we have to set the suspend_on_subordinate flag
@@ -801,12 +807,14 @@ void updateJobList(void)
          }
          job_destroy_hold_id_lists(jep, range_list);
       }
+      etasks = lFreeList(etasks);
    }
 
    /*
    ** free the where/what
    */
    where_run = lFreeWhere(where_run);
+   where_exiting = lFreeWhere(where_exiting);
    where_notexiting = lFreeWhere(where_notexiting);
    where_unfinished = lFreeWhere(where_unfinished);
    what = lFreeWhat(what);

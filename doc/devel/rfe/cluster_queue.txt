@@ -23,6 +23,7 @@
 
      - help to provide more condensed output in command line and GUI
 
+     - make it possible, that at least certain cluster queue setups can help
        to improve scheduler performance 
 
 -------------------------------------------------------------------------------

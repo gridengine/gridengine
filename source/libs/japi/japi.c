@@ -2865,14 +2865,17 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
    else if (event_mask & JAPI_JOB_START) {
       if (wait4any) {
          bool still_running = false;
+         bool failed = false;
          
          for_each (job, japi_job_list) {
             /* If there's a task in the started list, that counts. */
             if (lFirst (lGetList (job, JJ_started_task_ids)) != NULL) {
                break;
             }
-            /* A task in the finished list also counts. */
+            /* A task in the finished list when the started list is empty counts
+             * as a failure. */
             else if (lFirst (lGetList (job, JJ_finished_tasks)) != NULL) {
+               failed = true;
                break;
             }
             
@@ -2882,7 +2885,11 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
             }
          }
          
-         if ((job == NULL) && still_running) {
+         if (failed) {
+            return_value = JAPI_WAIT_FINISHED;
+            *wevent = JAPI_JOB_FINISH;
+         }
+         else if ((job == NULL) && still_running) {
             return_value = JAPI_WAIT_UNFINISHED;
          }
          else if (job == NULL) {
@@ -2914,7 +2921,7 @@ static int japi_wait_retry(lList *japi_job_list, int wait4any, u_long32 jobid,
                else if (!range_list_is_id_within (lGetList (job, JJ_not_yet_finished_ids), taskid)) {
                   task = lGetSubUlong(job, JJAT_task_id, taskid, JJ_finished_tasks);
 
-                  if (!task) {
+                  if (task == NULL) {
                      return_value = JAPI_WAIT_ALLFINISHED;
                      *wevent = JAPI_JOB_START;
                   }

@@ -219,7 +219,7 @@ int master
    u_long32 now;
    sge_pack_buffer pb;
    u_long32 dummymid;
-   lListElem *tmpjep, *qep, *tmpjatep, *next_tmpjatep;
+   lListElem *tmpjep, *qep, *tmpjatep, *next_tmpjatep, *tmpgdil_ep=NULL;
    lListElem *ckpt = NULL, *tmp_ckpt;
    lList *qlp;
    const char *ckpt_name;
@@ -313,12 +313,27 @@ int master
    qlp = lCreateList("qlist", QU_Type);
    /* add all queues referenced in gdil to qlp 
     * (necessary for availability of ALL resource limits and tempdir in queue) 
+    * AND
+    * copy all JG_processors from all queues to the JG_processors in tmpgdil
+    * (so the execd can decide on which processors (-sets) the job will be run).
     */
+   tmpjatep = lFirst( lGetList( tmpjep, JB_ja_tasks ));   
+   if( tmpjatep ) {
+      tmpgdil_ep = lFirst( lGetList( tmpjatep, JAT_granted_destin_identifier_list ));
+   }
+   
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
-      lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
+      /* copy all JG_processors from all queues to tmpgdil (which will be
+       * sent to the execd).
+       */
+      if( tmpgdil_ep ) {
+         lSetString(tmpgdil_ep, JG_processors, lGetString(src_qep, QU_processors));
+         tmpgdil_ep = lNext( tmpgdil_ep );
+      }
+
       qep = lCopyElem(src_qep);
 
       /* build minimum of job request and queue resource limit */

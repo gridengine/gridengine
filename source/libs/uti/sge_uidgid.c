@@ -135,26 +135,28 @@ void uidgid_mt_init(void)
    pthread_once(&uidgid_once, uidgid_once_init);
 }
 
-/****** uti/uidgid/sge_is_start_user_superuser() ********************************
+/****** uti/uidgid/sge_is_start_user_superuser() *******************************
 *  NAME
-*     sge_is_real_user_superuser() -- Check the SGE/EE real user
+*     sge_is_start_user_superuser() -- return true/false is current real user
+*                                     is superuser (root/Administrator)
 *
 *  SYNOPSIS
-*     int sge_is_real_user_superuser(void)
+*     int sge_is_start_user_superuser(void)
 *
 *  FUNCTION
 *     Check the real user id to determine if it is the superuser. If so, return
-*     1, else return 0. This function relies on getuid == 0 for UNIX.  On
-*     INTERIX, this function determines if the user is the built-in local admin 
-*     user or if the user is in the +Administrators group.
+*     true, else return false. This function relies on getuid == 0 for UNIX.
+*     On INTERIX, this function determines if the user is the built-in local
+*     admin user or the domain administrator.
+*     Other members of the Administrators group do not have the permission
+*     to "su" without password!
 *
 *  INPUTS
 *     NONE
 *
 *  RESULT
-*     int - 0 or 1 
-*         0 - Not running as superuser
-*         1 - Running as superuser
+*         true - root was start user
+*         false - otherwise
 *
 *  NOTES
 *     MT-NOTE: sge_is_start_user_superuser() is MT safe.
@@ -165,29 +167,24 @@ void uidgid_mt_init(void)
 *     uti/uidgid/sge_switch2start_user()
 *     uti/uidgid/sge_run_as_user()
 ******************************************************************************/
-int sge_is_start_user_superuser(void)
+bool sge_is_start_user_superuser(void)
 {
-   int ret = 0; 
+   bool   is_root = false;
+   uid_t  start_uid; 
 
    DENTER(UIDGID_LAYER, "sge_is_start_user_superuser");
 
+   start_uid = getuid();
 #if defined(INTERIX) || defined(WIN32)
-   {
-      char  user_name[128];
-      uid_t uid = getuid();
-
-      if(!sge_uid2user(uid, user_name, sizeof(user_name)-1, MAX_NIS_RETRIES)) {
-         ret = wl_is_user_superuser(user_name); 
-      }
-   }
+   is_root = wl_is_user_id_superuser(start_uid);
 #else
-   if (getuid() == 0) {
-     ret = 1;
+   if (start_uid == 0) {
+     is_root = true;
    }
 #endif
 
    DEXIT;
-   return ret;
+   return is_root;
 } /* sge_is_start_user_superuser() */           
 
 /****** uti/uidgid/sge_set_admin_username() ***********************************
@@ -373,7 +370,7 @@ int sge_switch2start_user(void)
    start_uid = getuid();
    start_gid = getgid();
 
-   if (start_uid) {
+   if(!sge_is_start_user_superuser()) {
       DPRINTF((MSG_SWITCH_USER_NOT_ROOT));
       ret = 0;
       goto exit;
@@ -1314,43 +1311,6 @@ static void uidgid_state_init(struct uidgid_state_t* theState)
 {
    memset(theState, 0, sizeof(struct uidgid_state_t));
 }
-
-/****** uti/uidgid/sge_is_start_user_root() **********************************
-*  NAME
-*     sge_is_start_user_root() -- return true/false if start user was root
-*
-*  SYNOPSIS
-*     bool sge_is_start_user_root(void)
-*
-*  FUNCTION
-*     return true/false if start user was root or not
-*
-*  RESULT
-*         true - root was start user
-*         false - otherwise
-*
-*  NOTES
-*     MT-NOTE: sge_is_start_user_root() is MT safe.
-*
-*  SEE ALSO
-*     uti/uidgid/sge_switch2admin_user()
-*     uti/uidgid/sge_set_admin_username()
-*     uti/uidgid/sge_switch2start_user()
-*     uti/uidgid/sge_run_as_user()
-******************************************************************************/
-bool sge_is_start_user_root(void)
-{
-   uid_t start_uid;
-
-   DENTER(UIDGID_LAYER, "sge_is_start_user_root");
- 
-   start_uid = getuid();
-
-   DEXIT;
-   return start_uid ? true : false;
-   
-} /* sge_is_start_user_root() */ 
-
 
 #ifdef SGE_THREADSAFE_UTIL
 

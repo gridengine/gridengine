@@ -1916,10 +1916,10 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
                  debug_puts "shell exit"
               }
               -i $sp_id eof {
-                 debug_puts "timeout or eof while waiting for shell exit"
+                 debug_puts "eof while waiting for shell exit"
               }
-              -i $sp_id default {
-                 debug_puts "timeout or eof while waiting for shell exit"
+              -i $sp_id timeout {
+                 debug_puts "timeout while waiting for shell exit"
               }
           }
        }
@@ -1935,7 +1935,7 @@ proc close_spawn_process { id { check_exit_state 0 } {my_uplevel 1}} {
                 set do_stop 1 
                 debug_puts "got end of file - ok"
              }
-             -i $sp_id default {
+             -i $sp_id timeout {
                 puts $CHECK_OUTPUT "timeout"
                 if { $my_tries > 0 } {
                    send -s -i $sp_id "exit\n"

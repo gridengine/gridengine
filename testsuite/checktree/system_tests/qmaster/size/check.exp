@@ -78,7 +78,6 @@ global MONITOR_SIZE_FILENAME MONITOR_SIZE_INTERVAL MONITOR_SIZE_ERROR
 global NUM_ZOMBIES
 global time_start last_size next_report size_unit
 
-set MONITOR_SIZE_ERROR -1
 
 set time_start [clock seconds]
 set last_size(master) 0
@@ -119,6 +118,7 @@ set check_idle_after "startup"
 #*******************************
 proc init_level {} {
    global CHECK_ACT_LEVEL
+   global MONITOR_SIZE_ERROR
 
    upvar MONITOR_SIZE_INTERVAL    monitor_size_interval
    upvar SCHEDULE_INTERVAL        schedule_interval
@@ -142,8 +142,13 @@ proc init_level {} {
 
    set when "startup"
 
+   set MONITOR_SIZE_ERROR -1
+
    switch -exact $CHECK_ACT_LEVEL {
       0 {
+         # in functional test, it is ok for qmaster/schedd to grow
+         set MONITOR_SIZE_ERROR       0
+
          set monitor_size_interval   10
          set schedule_interval       "00:00:10"
          set num_zombies             10

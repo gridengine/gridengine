@@ -565,7 +565,7 @@ proc show_proc_error { result new_error } {
          append mail_body "check_name  : \"$check_name\"\n"
          append mail_body "category    : \"$category\"\n"
          append mail_body "runlevel    : \"[get_run_level_name $CHECK_ACT_LEVEL]\", ($CHECK_ACT_LEVEL)\n"
-         append mail_body $error_output
+         append mail_body "$error_output"
          catch {
             foreach level "1 2 3 4" {
                upvar $level expect_out out
@@ -615,7 +615,8 @@ proc show_proc_error { result new_error } {
 proc create_error_message { error_array} {
 
   set catch_return [catch {
-  set err_string [lindex $error_array 0]
+  #set err_string [lindex $error_array 0]
+  set err_string $error_array
   } ]
   if { $catch_return != 0 } {
      set err_string "catch error: error reading error_array"

@@ -1,3 +1,12 @@
+JG-2004-12-22-0: Testsuite: Accept new hosts as known hosts when ssh is used as 
+                            login mechanism.
+                            Fixed a timeout problem when closing connections.
+                            Fixed error mail (mail body was truncated).
+                            Fixed test system_tests/qmaster/size: In runlevel 0
+                            no error condition will be raised when qmaster or
+                            schedd show growth.
+                 Review:    CR
+
 DT-2004-12-22-1: Enhancem.: o Updated distinst for DT-2004-12-22-0
                  Changed:   distinst
 

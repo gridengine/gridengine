@@ -90,7 +90,7 @@ enum {
 };
 
 SLISTDEF(SO_Type, SubordinateQueue)
-   SGE_STRING(SO_qname)
+   SGE_STRING(SO_qname) /* no hashing, we will not have too many subordinated queues for one queue */
    SGE_ULONG(SO_threshold)
 LISTEND 
 
@@ -205,7 +205,7 @@ ILISTDEF(QU_Type, Queue, SGE_QUEUE_LIST)
    SGE_XSTRING(QU_klog)
 
    SGE_ULONG(QU_seq_no)                      /* sequence # for use by qmon */
-   SGE_XULONG(QU_queue_number)               /* unique internal # of the queue */
+   SGE_XULONGHU(QU_queue_number)               /* unique internal # of the queue */
    SGE_TLIST(QU_load_thresholds, CE_Type)    /* - list of load alarm values */
    SGE_TLIST(QU_suspend_thresholds, CE_Type) /* list of load alarm val. for job susp */
    SGE_ULONG(QU_nsuspend)                    /* number of jobs to suspend per time 

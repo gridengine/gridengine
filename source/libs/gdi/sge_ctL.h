@@ -54,7 +54,7 @@ enum {
 
 
 ILISTDEF(CT_Type, Categories, SGE_CT_LIST)
-   SGE_STRING(CT_str)
+   SGE_STRINGHU(CT_str)
    SGE_ULONG(CT_refcount)
    SGE_ULONG(CT_rejected)
    SGE_XLIST(CT_jobs, JR_Type)

@@ -52,7 +52,7 @@ enum {
 };
 
 LISTDEF(MO_Type)
-   SGE_STRING(MO_name)
+   SGE_STRINGHU(MO_name)
 LISTEND 
 
 NAMEDEF(MON)

@@ -260,7 +260,7 @@ enum {
 };
 
 LISTDEF(AH_Type)
-   SGE_STRING(AH_name)
+   SGE_STRINGHU(AH_name)
 LISTEND 
 
 NAMEDEF(AHN)
@@ -277,7 +277,7 @@ enum {
 };
 
 LISTDEF(SH_Type)
-   SGE_STRING(SH_name)
+   SGE_STRINGHU(SH_name)
 LISTEND 
 
 NAMEDEF(SHN)
@@ -328,7 +328,7 @@ enum {
 };
 
 SLISTDEF(HL_Type, HostLoad)
-   SGE_STRING(HL_name)
+   SGE_STRINGHU(HL_name)
    SGE_STRING(HL_value)
    SGE_ULONG(HL_last_update)
 LISTEND 

@@ -1,3 +1,10 @@
+JG-2001-11-15-0: Performance/Scalability optimization: 
+                 Defined hash tables on a number of objects to speed up 
+                 search operations.
+                 Changed the order in which non unique hashed objects
+                 are stored - some code relies on getting them in the
+                 same order they were stored.
+
 EB-2001-11-13-0: Bugfix (Issue #92; Bugtraq #4525963):
                   - Qmaster did not change the reschedule unknown
                     value immediately after using the qconf command.

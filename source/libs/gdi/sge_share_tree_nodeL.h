@@ -150,7 +150,7 @@ enum {
 
 
 ILISTDEF(STN_Type, ShareTreeNode, SGE_SHARETREE_LIST)
-   SGE_KSTRING(STN_name)
+   SGE_KSTRINGHU(STN_name)
    SGE_ULONG(STN_type)        /* 960624 svd - changed to STN_type */
    SGE_XULONG(STN_id)         /* Unique node id for storing to disk */
    SGE_ULONG(STN_shares)

@@ -64,7 +64,7 @@ enum {
 };
 
 LISTDEF(LS_Type)
-   SGE_STRING(LS_name)        /* name of this load sensor */
+   SGE_STRING(LS_name)        /* name of this load sensor, no hashing, we only have few loadsensors/host */
    SGE_STRING(LS_command)     /* absolute path of the ls script */
    SGE_STRING(LS_pid)         /* pid of the ls process */
    SGE_REF(LS_in)             /* stdin to the ls process (type: FILE*) */

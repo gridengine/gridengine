@@ -651,7 +651,7 @@ enum {
 };
 
 SLISTDEF(VA_Type, Variable)
-   SGE_STRING(VA_variable)
+   SGE_STRINGHU(VA_variable)
    SGE_STRING(VA_value)
 LISTEND
 

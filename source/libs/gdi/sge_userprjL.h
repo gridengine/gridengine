@@ -66,7 +66,7 @@ enum {
 };
 
 ILISTDEF(UP_Type, UserProject, SGE_PROJECT_LIST)
-   SGE_KSTRING(UP_name)       /* configured user/project name spooled */
+   SGE_KSTRINGHU(UP_name)       /* configured user/project name spooled */
    SGE_ULONG(UP_oticket)      /* configured override tickets (set by Qmon,
                                * used by SGEEE schedd) spooled */
    SGE_ULONG(UP_fshare)       /* configured functional shares (set by Qmon, 
@@ -140,7 +140,7 @@ enum {
 };
 
 LISTDEF(UPU_Type)
-   SGE_ULONG(UPU_job_number)
+   SGE_ULONGHU(UPU_job_number)
    SGE_LIST(UPU_old_usage_list)
 LISTEND 
 
@@ -164,7 +164,7 @@ enum {
 };
 
 LISTDEF(UPP_Type)
-   SGE_STRING(UPP_name)    /* project name */
+   SGE_STRINGHU(UPP_name)    /* project name */
    SGE_LIST(UPP_usage)     /* 
                             * UA_Type; decayed usage set and used by SGEEE 
                             * schedd stored to qmaster; spooled 

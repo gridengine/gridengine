@@ -168,7 +168,7 @@ enum {
 };
 
 LISTDEF(JP_Type)
-   SGE_ULONG(JP_pid)          /* process ID */
+   SGE_ULONGHU(JP_pid)          /* process ID */
    SGE_ULONG(JP_background)   /* background flag */
 LISTEND 
 

@@ -242,6 +242,10 @@ void cull_hash_create_hashtables(lList *lp)
 {
    int i;
 
+   if(lp == NULL) {
+      return;
+   }
+
    for(i = 0; lp->descr[i].mt != lEndT; i++) {
       if(lp->descr[i].hash != NULL && lp->descr[i].hash->table == NULL) {
          switch(lp->descr[i].mt) {
@@ -288,8 +292,14 @@ void cull_hash_create_hashtables(lList *lp)
 *******************************************************************************/
 void cull_hash_insert(const lListElem *ep, const int pos)
 {
-   lDescr *descr = &ep->descr[pos];
+   lDescr *descr;
    void *key = NULL;
+
+   if(ep == NULL || pos < 0) {
+      return;
+   }
+
+   descr = &ep->descr[pos];
 
    if(descr->hash == NULL || descr->hash->table == NULL) {
       return;
@@ -316,17 +326,20 @@ void cull_hash_insert(const lListElem *ep, const int pos)
          non_unique_hash *nuh = NULL;
          /* do we already have a list of elements with this key? */
          if(HashTableLookup(descr->hash->table, key, (const void **)&nuh) == True) {
-            non_unique_hash *head = nuh; /* remember head of list */
+            if(nuh->data != ep) {
+               non_unique_hash *head = nuh; /* remember head of list */
 
-            while(nuh != NULL && nuh->data != ep) {
-               nuh = nuh->next;
-            }
-            /* if element is already in list, do nothing, else create new list element */
-            if(nuh == NULL) {
-               nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
-               nuh->next = head;
-               nuh->data = ep;
-               HashTableStore(descr->hash->table, key, nuh);
+               while(head->next != NULL && head->next->data != ep) {
+                  head = head->next;
+               }
+
+               /* if element is already in list, do nothing, else create new list element */
+               if(head->next == NULL) {
+                  nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
+                  head->next = nuh;
+                  nuh->data = ep;
+                  nuh->next = NULL;
+               }
             }
          } else { /* no list of non unique elements for this key, create new */
             nuh = (non_unique_hash *)malloc(sizeof(non_unique_hash));
@@ -355,8 +368,14 @@ void cull_hash_insert(const lListElem *ep, const int pos)
 *******************************************************************************/
 void cull_hash_remove(const lListElem *ep, const int pos)
 {
-   lDescr *descr = &ep->descr[pos];
+   lDescr *descr;
    void *key = NULL;
+
+   if(ep == NULL || pos < 0) {
+      return;
+   }
+
+   descr = &ep->descr[pos];
 
    if(descr->hash == NULL || descr->hash->table == NULL) {
       return;
@@ -424,7 +443,11 @@ void cull_hash_remove(const lListElem *ep, const int pos)
 *******************************************************************************/
 void cull_hash_elem(const lListElem *ep) {
    int i;
-   
+  
+   if(ep == NULL) {
+      return;
+   }
+  
    for(i = 0; ep->descr[i].mt != lEndT; i++) {
       if(ep->descr[i].hash != NULL) {
          cull_hash_insert(ep, i);
@@ -464,8 +487,13 @@ void cull_hash_elem(const lListElem *ep) {
 lListElem *cull_hash_first(const lList *lp, const int pos, const void *key, const void **iterator)
 {
    lListElem *ep = NULL;
+   lDescr *descr;
 
-   lDescr *descr = &lp->descr[pos];
+   if(lp == NULL) {
+      return NULL;
+   }
+
+   descr = &lp->descr[pos];
    if(descr->hash == NULL || descr->hash->table == NULL) {
       *iterator = NULL;
       return NULL;  
@@ -523,8 +551,14 @@ lListElem *cull_hash_next(const lList *lp, const int pos, const void *key, const
 {
    lListElem *ep = NULL;
    non_unique_hash *nuh = (non_unique_hash *)*iterator;
-   lDescr *descr = &lp->descr[pos];
-   
+   lDescr *descr;
+  
+   if(lp == NULL) {
+      return NULL;
+   }
+
+   descr = &lp->descr[pos];
+  
    if(descr->hash == NULL || descr->hash->table == NULL || descr->hash->unique == 1 || nuh == NULL) {
       return NULL;
    }

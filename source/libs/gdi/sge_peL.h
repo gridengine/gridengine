@@ -115,7 +115,7 @@ enum {
 };
 
 LISTDEF(QR_Type)
-   SGE_STRING(QR_name)
+   SGE_STRINGHU(QR_name)
 LISTEND 
 
 NAMEDEF(QRN)

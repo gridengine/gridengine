@@ -80,7 +80,7 @@ enum {
 };
 
 SLISTDEF(UA_Type, Usage)
-   SGE_STRING(UA_name)
+   SGE_STRINGHU(UA_name)
    SGE_DOUBLE(UA_value)       /* 960710 SVD - changed from to */
 LISTEND 
 

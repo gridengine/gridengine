@@ -49,7 +49,7 @@ enum {
 };
 
 ILISTDEF(CONF_Type, Configuration, SGE_CONFIG_LIST)
-   SGE_KSTRING(CONF_hname)
+   SGE_KSTRINGHU(CONF_hname)
    SGE_XULONG(CONF_version)
    SGE_TLIST(CONF_entries, CF_Type)
 LISTEND 
@@ -73,7 +73,7 @@ enum {
 };
 
 SLISTDEF(CF_Type, ConfigEntry)
-   SGE_STRING(CF_name)
+   SGE_STRINGHU(CF_name)
    SGE_STRING(CF_value)
    SGE_LIST(CF_sublist)
    SGE_XULONG(CF_local)

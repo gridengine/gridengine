@@ -95,9 +95,13 @@ enum _enum_lMultiType {
 #define SGE_KSTRINGH(name) { name, lStringT, &template_hash },
 #define SGE_KSTRINGHU(name) { name, lStringT, &template_hash_unique },
 #define SGE_RSTRING(name) { name, lStringT, NULL },
+#define SGE_RSTRINGH(name) { name, lStringT, &template_hash },
+#define SGE_RSTRINGHU(name) { name, lStringT, &template_hash_unique },
 #define SGE_ISTRING(name)
 #define SGE_IRSTRING(name)
 #define SGE_XSTRING(name) { name, lStringT, NULL },
+#define SGE_XSTRINGH(name) { name, lStringT, &template_hash },
+#define SGE_XSTRINGHU(name) { name, lStringT, &template_hash_unique },
 #define SGE_FLOAT(name) { name, lFloatT, NULL },
 #define SGE_IFLOAT(name)
 #define SGE_RFLOAT(name) { name, lFloatT, NULL },
@@ -119,6 +123,8 @@ enum _enum_lMultiType {
 #define SGE_IRLONG(name)
 #define SGE_XLONG(name) { name, lLongT, NULL },
 #define SGE_ULONG(name) { name, lUlongT, NULL },
+#define SGE_ULONGH(name) { name, lUlongT, &template_hash },
+#define SGE_ULONGHU(name) { name, lUlongT, &template_hash_unique },
 #define SGE_KULONG(name) { name, lUlongT, NULL },
 #define SGE_KULONGH(name) { name, lUlongT, &template_hash },
 #define SGE_KULONGHU(name) { name, lUlongT, &template_hash_unique },
@@ -126,6 +132,8 @@ enum _enum_lMultiType {
 #define SGE_RULONG(name) { name, lUlongT, NULL },
 #define SGE_IRULONG(name)
 #define SGE_XULONG(name) { name, lUlongT, NULL },
+#define SGE_XULONGH(name) { name, lUlongT, &template_hash },
+#define SGE_XULONGHU(name) { name, lUlongT, &template_hash_unique },
 #define SGE_BOOL(name) { name, lUlongT, NULL },
 #define SGE_IBOOL(name)
 #define SGE_RBOOL(name) { name, lUlongT, NULL },
@@ -171,8 +179,12 @@ enum _enum_lMultiType {
 #define SGE_KSTRINGHU(name)
 #define SGE_ISTRING(name)
 #define SGE_RSTRING(name)
+#define SGE_RSTRINGH(name)
+#define SGE_RSTRINGHU(name)
 #define SGE_IRSTRING(name)
 #define SGE_XSTRING(name)
+#define SGE_XSTRINGH(name)
+#define SGE_XSTRINGHU(name)
 #define SGE_FLOAT(name)
 #define SGE_IFLOAT(name)
 #define SGE_RFLOAT(name)
@@ -194,6 +206,8 @@ enum _enum_lMultiType {
 #define SGE_IRLONG(name)
 #define SGE_XLONG(name)
 #define SGE_ULONG(name)
+#define SGE_ULONGH(name)
+#define SGE_ULONGHU(name)
 #define SGE_KULONG(name)
 #define SGE_KULONGH(name)
 #define SGE_KULONGHU(name)
@@ -201,6 +215,8 @@ enum _enum_lMultiType {
 #define SGE_RULONG(name)
 #define SGE_IRULONG(name)
 #define SGE_XULONG(name)
+#define SGE_XULONGH(name)
+#define SGE_XULONGHU(name)
 #define SGE_BOOL(name)
 #define SGE_IBOOL(name)
 #define SGE_RBOOL(name)

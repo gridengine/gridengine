@@ -66,7 +66,7 @@ enum {
 };
 
 ILISTDEF(US_Type, UserSet, SGE_USERSET_LIST)
-   SGE_KSTRING(US_name)       /* configured name spooled */
+   SGE_KSTRINGHU(US_name)       /* configured name spooled */
    SGE_ULONG(US_type)         /* configured type spooled */
    SGE_ULONG(US_fshare)       /* configured share spooled */
    SGE_ULONG(US_oticket)      /* configured override tickets spooled */
@@ -103,7 +103,7 @@ enum {
 };
 
 SLISTDEF(UE_Type, UserEntry)
-   SGE_STRING(UE_name)
+   SGE_STRINGHU(UE_name)
 LISTEND 
 
 NAMEDEF(UEN)
@@ -122,7 +122,7 @@ enum {
 };
 
 LISTDEF(JC_Type)
-   SGE_STRING(JC_name)
+   SGE_STRINGHU(JC_name)
    SGE_ULONG(JC_jobs)
 LISTEND 
 

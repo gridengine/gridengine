@@ -77,7 +77,7 @@ enum {
 LISTDEF(SPA_Type)
    SGE_ULONG(SPA_number)
    SGE_ULONG(SPA_argtype)
-   SGE_STRING(SPA_switch)
+   SGE_STRINGH(SPA_switch)
    SGE_STRING(SPA_switch_arg)
    SGE_ULONG(SPA_occurrence)
    SGE_FLOAT(SPA_argval_lFloatT)

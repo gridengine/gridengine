@@ -83,7 +83,7 @@ enum {
 };
 
 ILISTDEF(CX_Type, Complex, SGE_COMPLEX_LIST)
-   SGE_KSTRING(CX_name)
+   SGE_KSTRINGHU(CX_name)
    SGE_TLIST(CX_entries, CE_Type)
 LISTEND 
 

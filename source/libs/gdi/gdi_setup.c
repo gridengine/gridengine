@@ -295,10 +295,12 @@ void gdi_state_set_reread_qmaster_file(int i)
 ******************************************************************************/
 int sge_gdi_setup(const char *programname, lList **alpp)
 {
-   bool alpp_was_null = (*alpp == NULL);
-   
+   bool alpp_was_null = true;
    DENTER(TOP_LAYER, "sge_gdi_setup");
 
+   if (alpp != NULL && *alpp != NULL) {
+     alpp_was_null = false;
+   }
    /* initialize libraries */
    pthread_once(&gdi_once_control, gdi_once_init);
    if (gdi_state_get_made_setup()) {

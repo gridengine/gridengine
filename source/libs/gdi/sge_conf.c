@@ -802,8 +802,10 @@ int merge_configuration(lListElem *global, lListElem *local,
                   ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
                   lSetDouble(ep, UA_value, value);
                }
-               if (sv2)
+               if (sv2) {
                   free(sv2);
+                  sv2 = NULL;
+               }
             }
             if (sv1)
                free(sv1);

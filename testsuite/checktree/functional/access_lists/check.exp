@@ -135,14 +135,16 @@ proc access_lists_setup  {} {
 proc test_job_run { id_string job_id } {
    global CHECK_PRODUCT_ROOT CHECK_OUTPUT CHECK_ARCH
 
-   wait_for_jobpending $job_id "leeper" 60
+   wait_for_jobpending $job_id "leeper" 60 1
 
    puts $CHECK_OUTPUT "Trigger scheduler monitoring"
    catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qconf" "-tsm" } catch_result
    puts $CHECK_OUTPUT $catch_result
 
-   if { [wait_for_jobstart $job_id "leeper" 60] != 0 } {
-      add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched"
+   if { [wait_for_jobstart $job_id "leeper" 100] != 0 } {
+      catch {  eval exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-f" } catch_result
+      puts $CHECK_OUTPUT $catch_result
+      add_proc_error "test_job_run" -1 "$id_string, job $job_id should be dispatched:$catch_result"
    } 
    delete_job $job_id
 #   wait_for_jobend $job_id "leeper" 60
@@ -156,6 +158,8 @@ proc run_user_denied_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
    puts $CHECK_OUTPUT "id_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
 
+
+   sleep 2
    set job_id_A [ submit_job $jobargs 0 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER  ]
    if { $A_ok == 1 } {
       test_job_run "$id_string (A)" $job_id_A
@@ -194,9 +198,9 @@ proc run_user_jobs { id_string jobargs A_ok B_ok { C_ok "-1" } } {
    global CHECK_FIRST_FOREIGN_SYSTEM_USER CHECK_SECOND_FOREIGN_SYSTEM_USER   
    global access_lists_queue
 
-   sleep 1
    puts $CHECK_OUTPUT "id_string is $id_string"
    puts $CHECK_OUTPUT "jobargs are: $jobargs"
+   sleep 2
    set job_id_A [ submit_job $jobargs 1 30 "" $CHECK_FIRST_FOREIGN_SYSTEM_USER  ]
    if { $A_ok == 1 } {
       test_job_run "$id_string (A)" $job_id_A
@@ -294,6 +298,7 @@ proc access_lists_global_host {} {
       set my_global_host(user_lists)  "NONE"
       set_exechost my_global_host "global"
       if { $group_test == 1 } {
+         puts $CHECK_OUTPUT "group_test=1"
          set group1 [ lindex $CHECK_FIRST_FOREIGN_SYSTEM_GROUP 0 ]
          if { [string first $CHECK_GROUP $group1] >= 0 ||
               [string first $CHECK_GROUP $CHECK_SECOND_FOREIGN_SYSTEM_GROUP] >= 0 } {

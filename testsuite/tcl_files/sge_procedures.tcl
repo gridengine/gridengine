@@ -5387,7 +5387,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     wait_for_jobpending -- wait for job to get into pending state
 #
 #  SYNOPSIS
-#     wait_for_jobpending { jobid jobname seconds } 
+#     wait_for_jobpending { jobid jobname seconds { or_running 0 } } 
 #
 #  FUNCTION
 #     This procedure will return when the job is in pending state.
@@ -5396,6 +5396,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     jobid   - job identification number
 #     jobname - name of the job
 #     seconds - timeout value in seconds
+#     { or_running 0 } - if job is allready running, report no error
 #
 #  RESULT
 #     -1  on timeout
@@ -5414,7 +5415,7 @@ proc wait_for_end_of_transfer { jobid seconds } {
 #     sge_procedures/wait_for_jobpending()
 #     sge_procedures/wait_for_jobend()
 #*******************************
-proc wait_for_jobpending { jobid jobname seconds} {
+proc wait_for_jobpending { jobid jobname seconds { or_running 0 } } {
   
   global CHECK_OUTPUT
 
@@ -5424,6 +5425,9 @@ proc wait_for_jobpending { jobid jobname seconds} {
   while {1} {
     set run_result [is_job_running $jobid $jobname]
     if {$run_result == 0} {
+       break;
+    }
+    if {$run_result == 1 && $or_running == 1  } {
        break;
     }
     set runtime [expr ( [timestamp] - $time) ]

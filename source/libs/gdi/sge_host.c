@@ -133,6 +133,42 @@ int host_is_referenced(const lListElem *host,
    return ret;
 }
 
+/****** gdi/host/host_get_load_value() *****************************************
+*  NAME
+*     host_get_load_value() -- return a load value of an exec host
+*
+*  SYNOPSIS
+*     const char* host_get_load_value(lListElem *host, const char *name) 
+*
+*  FUNCTION
+*     Returns a certain load value for a certain host.
+*
+*  INPUTS
+*     lListElem *host  - the host to query
+*     const char *name - the name of the load value
+*
+*  RESULT
+*     const char* - string describing the load value
+*
+*  EXAMPLE
+*     lListElem *host = lGetElemHost(Master_Host_List, EH_name, "myhost");
+*     const char *value = host_get_load_value(host, "np_load_avg");
+*     printf("The load on host myhost is %s\n", value);
+*
+*******************************************************************************/
+const char *host_get_load_value(lListElem *host, const char *name)
+{
+   lListElem *load;
+   const char *value = NULL;
+
+   load = lGetSubStr(host, HL_name, name, EH_load_list);
+   if(load != NULL) {
+      value = lGetString(load, HL_value);
+   }
+   
+   return value;
+}
+
 /****** gdi/host/host_update_master_list() *****************************
 *  NAME
 *     host_update_master_list() -- update the master hostlists

@@ -1,3 +1,9 @@
+JG-2002-09-30-0  Enhancem.  Created a "simple scheduling interface" for the
+                            integration of the MAUI scheduler.
+                            source/libs/sched/simple_scheduler.c contains an 
+                            example how to use it.
+                 IZ:        #339
+
 CR-2002-09-30-0  Testsuite: - qsh/qrsh does not accept -o/-e arguments anymore
                  Bugfix:    - added version support for 5.3.1beta9 and
                               5.3p2

@@ -57,7 +57,8 @@ SCHEDLIB_SRC = sge_select_queue.c \
               sge_support.c \
               schedd_message.c \
               sge_orders.c \
-              sge_schedd_text.c
+              sge_schedd_text.c \
+              sge_ssi.c
 
 SCHEDLIB_OBJS = $(SCHEDLIB_SRC:.c=.o)
 
@@ -163,4 +164,15 @@ sge_support.o: $(SCHEDLIB_DIR)/sge_support.c
 schedd_message.o: $(SCHEDLIB_DIR)/schedd_message.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/schedd_message.c
 
+sge_ssi.o: $(SCHEDLIB_DIR)/sge_ssi.c
+	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sge_ssi.c
+
+
+#---------------------------------------------------------------------
+# test programs
+simple_scheduler: simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB)
+	$(CC) $(CFLAGS) -o simple_scheduler $(LFLAGS) simple_scheduler.o sig_handlers.o $(SCHEDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(UTILIB) $(RMONLIB) $(LIBS)
+
+simple_scheduler.o: $(SCHEDLIB_DIR)/simple_scheduler.c
+	$(CC) $(CFLAGS) -c $(SCHEDLIB_DIR)/simple_scheduler.c
 

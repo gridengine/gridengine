@@ -416,4 +416,11 @@
 #define MSG_SCHEDD_LCDIAGNONE                         _MESSAGE(47279, _("no load adjustment"))
 #define MSG_SCHEDD_LCDIAGNOLOAD                       _MESSAGE(47280, _("no load value"))
 
+/* 
+ * libs/sched/sge_ssi.c
+ */
+#define MSG_SSI_ERRORPARSINGJOBIDENTIFIER_S           _MESSAGE(47281, _("error parsing job identifier "SFQ"\n"))
+#define MSG_SSI_MISSINGHOSTNAMEINTASKLIST             _MESSAGE(47282, _("missing hostname in task list\n"))
+#define MSG_SSI_COULDNOTFINDQUEUEFORHOST_S            _MESSAGE(47283, _("could not find a queue for host "SFQ"\n"))
+
 #endif /* __MSG_SCHEDD_H */

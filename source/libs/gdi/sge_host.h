@@ -44,6 +44,8 @@ lListElem *host_list_locate(lList *host_list, const char *hostname);
 int host_is_referenced(const lListElem *host, lList **answer_list,
                        const lList *queue_list);
 
+const char *host_get_load_value(lListElem *host, const char *name);
+
 int host_update_master_list(sge_event_type type, sge_event_action action, 
                             lListElem *event, void *clientdata);
 #endif /* __SGE_HOST_H */

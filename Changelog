@@ -1,3 +1,10 @@
+AH-2005-03-23-0: Bugfix:    a series of matching soft queue requests gets not 
+                            counted separately
+                 Review:    SG
+                 Issue:     1520
+                 Bugtraq:   6244865
+                 Changed:   sge_schedd
+
 JG-2005-03-23-0: Bugfix:    qdel failed to delete qrsh (login) job on a Solaris 
                             box when Secure Shell is used
                  Review:    AH

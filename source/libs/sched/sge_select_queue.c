@@ -1559,6 +1559,7 @@ compute_soft_violations(const sge_assignment_t *a, lListElem *queue, int violati
          lList *qref_list = lGetList(a->job, JB_soft_queue_list);
          lList *resolved_qref_list = NULL;
          lListElem *resolved_qref = NULL;
+         lListElem *qr;
          const char *qinstance_name = NULL;
          bool found_something = false;
          bool is_in_list = true;
@@ -1566,19 +1567,30 @@ compute_soft_violations(const sge_assignment_t *a, lListElem *queue, int violati
          master_cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
          master_hgroup_list = *(object_type_get_master_list(SGE_TYPE_HGROUP));
          qinstance_name = lGetString(queue, QU_full_name);
-         qref_list_resolve(qref_list, NULL, &resolved_qref_list,
-                           &found_something, master_cqueue_list,
-                           master_hgroup_list, true, true);
-         resolved_qref = lGetElemStr(resolved_qref_list, QR_name, 
-                                     qinstance_name); 
-         is_in_list = (resolved_qref != NULL);
-         resolved_qref_list = lFreeList(resolved_qref_list);
-         if (!is_in_list) {
-            DPRINTF(("Queue \"%s\" is not contained in the soft "
-                     "queue list (-q) that was requested by job %d\n",
-                     qinstance_name, (int) job_id));
 
-            soft_violation++;
+         for_each (qr, qref_list) {
+            lList *qr_list;
+            lListElem *qr_copy;
+
+            qr_copy = lCopyElem(qr);
+            qr_list = lCreateList(NULL, QR_Type);
+            lAppendElem(qr_list, qr_copy);
+
+            qref_list_resolve(qr_list, NULL, &resolved_qref_list,
+                              &found_something, master_cqueue_list,
+                              master_hgroup_list, true, true);
+            resolved_qref = lGetElemStr(resolved_qref_list, QR_name, 
+                                        qinstance_name); 
+            is_in_list = (resolved_qref != NULL);
+            resolved_qref_list = lFreeList(resolved_qref_list);
+            qr_list = lFreeList(qr_list);
+
+            if (!is_in_list) {
+               DPRINTF(("Queue \"%s\" is not contained in the soft "
+                        "queue list (-q) that was requested by job %d\n",
+                        qinstance_name, (int) job_id));
+               soft_violation++;
+            }
          }
       }
 
@@ -2617,8 +2629,8 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
                tt_queue = MAX(tt_queue, MAX(tt_host, tt_global));
                lSetUlong(qep, QU_available_at, tt_queue);
             }
-            DPRINTF(("    set Q: %s "u32" "u32"\n", lGetString(qep, QU_full_name),
-                      lGetUlong(qep, QU_tag), lGetUlong(qep, QU_available_at)));
+            DPRINTF(("    set Q: %s number="u32" when="u32" violations="u32"\n", lGetString(qep, QU_full_name),
+                   lGetUlong(qep, QU_tag), lGetUlong(qep, QU_available_at), lGetUlong(qep, QU_soft_violation)));
             best_queue_result = DISPATCH_OK;
 
             if (!a->is_reservation && !soft_requests ) {

@@ -54,7 +54,7 @@ ECHO=echo
 #
 PWD=`pwd`
 . ./util/arch_variables
-. ./util/install_modules/inst_sgeee_common.sh
+. ./util/install_modules/inst_common.sh
 
 #---------------------------------------
 # commandline argument parsing
@@ -119,20 +119,20 @@ while [ $ARGC != 0 ]; do
      ;;
    -m)
      QMASTER="install"
-     . ./util/install_modules/inst_sgeee_qmaster.sh
-     . ./util/install_modules/inst_sgeee_berkeley.sh
+     . ./util/install_modules/inst_qmaster.sh
+     . ./util/install_modules/inst_berkeley.sh
      ;;
    -um)
      QMASTER="uninstall"
-     . ./util/install_modules/inst_sgeee_qmaster_uninst.sh
+     . ./util/install_modules/inst_qmaster_uninst.sh
      ;; 
    -x)
      EXECD="install"
-     . ./util/install_modules/inst_sgeee_execd.sh
+     . ./util/install_modules/inst_execd.sh
      ;;
    -ux)
      EXECD="uninstall"
-     . ./util/install_modules/inst_sgeee_execd_uninst.sh
+     . ./util/install_modules/inst_execd_uninst.sh
      ;;
    -sm)
      SHADOW="install"
@@ -141,8 +141,8 @@ while [ $ARGC != 0 ]; do
    -db)
      BERKELEY="install"
      SPOOLING_SERVER=`hostname`
-     . ./util/install_modules/inst_sgeee_qmaster.sh
-     . ./util/install_modules/inst_sgeee_berkeley.sh
+     . ./util/install_modules/inst_qmaster.sh
+     . ./util/install_modules/inst_berkeley.sh
      ;;
    -host)
      if [ $AUTO = "false" -a $QMASTER = "install" ]; then
@@ -269,7 +269,7 @@ if [ $EXECD = "install" ]; then
       else
          if [ $QMASTER = "install" -o $NOREMOTE = "false" ]; then
             $INFOTEXT -log "remote installation on host %s" $h
-            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $FILE -noremote" | rsh $h /bin/sh &
+            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $FILE -noremote" | rsh $h /bin/sh &
          fi
 
       fi
@@ -316,7 +316,7 @@ if [ $EXECD = "install" ]; then
                $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME
                          SHELL_NAME=`Enter $SHELL_NAME` 
                $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG_FILE -noremote" | $SHELL_NAME $h /bin/sh &
+               echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $CONFIG_FILE -noremote" | $SHELL_NAME $h /bin/sh &
            fi
          done
       else
@@ -337,7 +337,7 @@ if [ $EXECD = "install" ]; then
                      $INFOTEXT "Please enter which shell you want to use for remote login (rsh/ssh) or hit <RETURN> to use >> [%s] >> " $SHELL_NAME
                             SHELL_NAME=`Enter $SHELL_NAME`
                   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-                  echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sgeee -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
+                  echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -x -auto $CONFIG -noremote" | $SHELL_NAME $h /bin/sh &
               fi
          done
          fi

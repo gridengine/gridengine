@@ -1,3 +1,6 @@
+MD-2004-03-02-2  Bugfix:    - adapted path to module files
+                 Changed:   inst_sge
+
 MD-2004-03-02-1  Enhancem:  - renamed installation files
               
 CR-2004-03-02-2  Bugfix:    - removed some ENABLE_NGC code parts

@@ -47,10 +47,10 @@ WelcomeTheUserExecHost()
    if [ $AUTO = true ]; then
       return
    fi
-   $INFOTEXT -u "\n\n\n\n  CONTINUING WITH EXECHOST INSTALLATION!!!"
+   $INFOTEXT -u "\n\n\n\n  STARTING EXECHOST INSTALLATION!!!"
    sleep 1
    $CLEAR
-   $INFOTEXT -u "\n\n\n\n  CONTINUING WITH EXECHOST INSTALLATION!!!"
+   $INFOTEXT -u "\n\n\n\n  STARTING WITH EXECHOST INSTALLATION!!!"
    sleep 1
    $CLEAR
  
@@ -366,3 +366,23 @@ AddQueue()
    fi
 }
 
+GetLocalExecdSpoolDir()
+{
+   $INFOTEXT -u "\nLocal execd spool directory configuration"
+   $INFOTEXT "During the qmaster installation you've already entered " \
+             "a global\nexecd spool directory. This is used, if no local " \
+             "spool directory is configured.\n\n Now you can enter a local spool " \
+             "directory for this host.\n"
+   $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a local spool directory\n for this host (y/n) [n] >> "
+
+   if [ $? = 0 ]; then
+      $INFOTEXT -n "Please enter the local spool directory now! >> " 
+      LOCAL_EXECD_SPOOL=`Enter`
+      $INFOTEXT "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
+      $INFOTEXT -wait -auto $AUTO "Hit <RETURN> to continue >> "
+   else
+      $CLEAR
+   fi
+
+
+}

@@ -54,10 +54,12 @@ SpoolingQueryChange()
                 "or hit <RETURN> to use default [%s] >> " $SPOOLING_DIR
                 SPOOLING_DIR=`Enter $SPOOLING_DIR`
    else
-     $INFOTEXT "Please enter the name of your Berkeley DB Spooling Server >>"
-     $INFOTEXT "For local spooling without Server, type >none< else enter the servername!"
+     $INFOTEXT -u "\nBerkeley Database spooling parameters"
+     $INFOTEXT "Please enter the name of your Berkeley DB Spooling Server!\n" \
+               "For local spooling without Server, type >none< else enter the Servername! >> "
      SPOOLING_SERVER=`Enter`
-     $INFOTEXT "Please enter the database directory now >>" 
+     $INFOTEXT "Please enter the Database Directory now, even if you are want to spool local\n" \
+               "it is necessary to enter this Database Directory >> " 
      SPOOLING_DIR=`Enter`
    fi
  

@@ -678,9 +678,12 @@ PrintLocalConf()
    $ECHO "xterm                  $XTERM"
    $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    $ECHO "rlogin_daemon          $RLOGIN_DAEMON"
+   if [ $LOCAL_EXECD_SPOOL != "undef" ]; then
+      $ECHO "execd_spool_dir        $LOCAL_EXECD_SPOOL"
+   fi
 }
 
-
+/
 #-------------------------------------------------------------------------
 # AddSGEStartUpScript: Add startup script to rc files if root installs
 #

@@ -82,6 +82,7 @@ TAR="undef"
 FILE="undef"
 HOST="undef"
 HOSTRANGE="undef"
+LOCAL_EXECD_SPOOL="undef"
 
 SGE_NOMSG="undef"
 
@@ -291,6 +292,7 @@ if [ $EXECD = "install" ]; then
          CheckCellDirectory
          CheckCSP
          CheckHostNameResolving
+         #GetLocalExecdSpoolDir
          AddLocalConfiguration_With_Qconf
          AddSGEStartUpScript $euid true execd
          StartExecd
@@ -321,6 +323,7 @@ if [ $EXECD = "install" ]; then
       CheckCellDirectory
       CheckCSP
       CheckHostNameResolving
+      GetLocalExecdSpoolDir
       AddLocalConfiguration_With_Qconf
       AddSGEStartUpScript $euid true execd 
       StartExecd

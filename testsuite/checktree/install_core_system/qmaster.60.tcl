@@ -103,6 +103,9 @@ proc install_qmaster {} {
 
 
  set HIT_RETURN_TO_CONTINUE       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_HIT_RETURN_TO_CONTINUE] ]
+ set CURRENT_GRID_ROOT_DIRECTORY  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CURRENT_GRID_ROOT_DIRECTORY] "*" "*" ]
+ set CELL_NAME_FOR_QMASTER        [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_CELL_NAME_FOR_QMASTER] ]
+ set VERIFY_FILE_PERMISSIONS      [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_VERIFY_FILE_PERMISSIONS] ]
  set NOT_COMPILED_IN_SECURE_MODE  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_NOT_COMPILED_IN_SECURE_MODE] ] 
  set ENTER_HOSTS                  [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_HOSTS] ]
  set MASTER_INSTALLATION_COMPLETE [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_MASTER_INSTALLATION_COMPLETE] ]
@@ -130,9 +133,20 @@ proc install_qmaster {} {
  set ENTER_SPOOL_DIR_OR_HIT_RET   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_SPOOL_DIR_OR_HIT_RET] "*"]
  set USING_GID_RANGE_HIT_RETURN   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_USING_GID_RANGE_HIT_RETURN] "*"]
  set CREATING_ALL_QUEUE_HOSTGROUP [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ALL_QUEUE_HOSTGROUP] ]
+ set EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER]]
+ set EXECD_SPOOLING_DIR_NOROOT           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_EXECD_SPOOLING_DIR_NOROOT] "*"]
+ set EXECD_SPOOLING_DIR_DEFAULT   [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_EXECD_SPOOLING_DIR_DEFAULT] "*"]
+ set ENTER_ADMIN_MAIL             [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_ADMIN_MAIL] "*"]
+ set SHOW_CONFIGURATION           [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_SHOW_CONFIGURATION] "*" "*"]
+ set ACCEPT_CONFIGURATION         [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ACCEPT_CONFIGURATION] ]
+ set INSTALL_STARTUP_SCRIPT       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_INSTALL_STARTUP_SCRIPT] ]
+
 
  # berkeley db
+ set DATABASE_LOCAL_SPOOLING     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_LOCAL_SPOOLING]]
+ set ENTER_DATABASE_SERVER_LOCAL_SPOOLING     [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_SERVER_LOCAL_SPOOLING]]
  set ENTER_DATABASE_SERVER       [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_SERVER] "*"]
+ set ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING]]
  set ENTER_DATABASE_DIRECTORY    [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_ENTER_DATABASE_DIRECTORY] "*"]
  set DATABASE_DIR_NOT_ON_LOCAL_FS [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_DATABASE_DIR_NOT_ON_LOCAL_FS] "*"]
  set STARTUP_RPC_SERVER [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro DISTINST_STARTUP_RPC_SERVER] "*"]
@@ -338,6 +352,16 @@ proc install_qmaster {} {
           continue;
        }
 
+       -i $sp_id $VERIFY_FILE_PERMISSIONS { 
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_YES<(5)"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_YES\n"
+          continue;
+       }
+
        -i $sp_id $USE_CONFIGURATION_PARAMS {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(1)"
           if {$do_log_output == 1} {
@@ -456,6 +480,77 @@ proc install_qmaster {} {
             send -i $sp_id "\n"
           }
           continue;
+       }       -i $sp_id $ENTER_SPOOL_DIR_OR_HIT_RET {
+          puts $CHECK_OUTPUT "\n"
+          set spooldir [get_spool_dir $CHECK_CORE_MASTER qmaster]
+          if { $spooldir != "" } {
+            # use local spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "$spooldir\n"
+            set local_master_spool_set 1
+          } else {
+            # use default spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "\n"
+          }
+          continue;
+       }
+
+       -i $sp_id $EXECD_SPOOLING_DIR_NOROOT_NOADMINUSER {
+          puts $CHECK_OUTPUT "\n"
+          set spooldir [get_spool_dir $CHECK_CORE_MASTER execd]
+          if { $spooldir != "" } {
+            # use local spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "$spooldir\n"
+            set local_execd_spool_set 1
+          } else {
+            # use default spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "\n"
+          }
+          continue;
+        }
+
+       -i $sp_id $EXECD_SPOOLING_DIR_NOROOT {
+          puts $CHECK_OUTPUT "\n"
+          set spooldir [get_spool_dir $CHECK_CORE_MASTER execd]
+          if { $spooldir != "" } {
+            # use local spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "$spooldir\n"
+            set local_execd_spool_set 1
+          } else {
+            # use default spool dir
+            puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+            if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+            }
+            send -i $sp_id "\n"
+          }
+          continue;
+
        }
 
        -i $sp_id $CONFIGURE_DEFAULT_DOMAIN {
@@ -578,9 +673,61 @@ proc install_qmaster {} {
           }
           continue;
        }
+
+       -i $sp_id $ENTER_ADMIN_MAIL { 
+          if { $CHECK_REPORT_EMAIL_TO == "none" } {
+             set admin_mail "$CHECK_USER@sun.com"
+          } else {
+             set admin_mail $CHECK_REPORT_EMAIL_TO
+          }
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$admin_mail<"
+          if {$do_log_output == 1} {
+             puts "press RETURN"
+             set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$admin_mail\n"
+          continue;
+       }
+
+       -i $sp_id $ACCEPT_CONFIGURATION {
+          flush stdout
+          flush $CHECK_OUTPUT
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(10)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+
+       -i $sp_id $INSTALL_STARTUP_SCRIPT {
+          flush stdout
+          flush $CHECK_OUTPUT
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(10)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+
       # 
       # SGE 6.0 Berkeley DB Spooling
       #
+       -i $sp_id $DATABASE_LOCAL_SPOOLING {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >$ANSWER_NO<(9)"
+          if {$do_log_output == 1} {
+               puts "press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "$ANSWER_NO\n"
+          continue;
+       }
+
       -i $sp_id $ENTER_DATABASE_SERVER {
          puts $CHECK_OUTPUT "\n -->testsuite: sending $ts_config(bdb_server)"
          if {$do_log_output == 1} {
@@ -589,6 +736,17 @@ proc install_qmaster {} {
          }
 
          send -i $sp_id "$ts_config(bdb_server)\n"
+         continue;
+      }
+
+      -i $sp_id $ENTER_DATABASE_SERVER_LOCAL_SPOOLING {
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >none<"
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+
+         send -i $sp_id "none\n"
          continue;
       }
 
@@ -607,6 +765,18 @@ proc install_qmaster {} {
             set anykey [wait_for_enter 1]
          }
          send -i $sp_id $input
+         continue;
+      }
+
+      -i $sp_id $ENTER_DATABASE_DIRECTORY_LOCAL_SPOOLING {
+         set spooldir [get_spool_dir $CHECK_CORE_MASTER spooldb 1]
+         puts $CHECK_OUTPUT "\n -->testsuite: sending >$spooldir<"
+         if {$do_log_output == 1} {
+            puts "press RETURN"
+            set anykey [wait_for_enter 1]
+         }
+
+         send -i $sp_id "$spooldir\n"
          continue;
       }
 
@@ -710,6 +880,26 @@ proc install_qmaster {} {
        }
 
        -i $sp_id $HIT_RETURN_TO_CONTINUE {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "-->testsuite: press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
+          continue;
+       }
+     
+       -i $sp_id $CURRENT_GRID_ROOT_DIRECTORY {
+          puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
+          if {$do_log_output == 1} {
+               puts "-->testsuite: press RETURN"
+               set anykey [wait_for_enter 1]
+          }
+          send -i $sp_id "\n"
+          continue;
+       }
+
+       -i $sp_id $CELL_NAME_FOR_QMASTER {
           puts $CHECK_OUTPUT "\n -->testsuite: sending >RETURN<"
           if {$do_log_output == 1} {
                puts "-->testsuite: press RETURN"

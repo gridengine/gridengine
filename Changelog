@@ -1,3 +1,8 @@
+MD-2004-02-05-0: Testsuite: - adapted testsuite to new installation script
+                 Bugfix:    - some text
+                            - local execd spooldir support
+                 Changed:   testsuite, inst_sgeee
+
 SD-2004-02-05-0: Enhancem.: Replaced use of qsub option -p <priority> with
                             -js <job_share> for specifying GEEE job shares
                             to influence the GEEE share tree and functional

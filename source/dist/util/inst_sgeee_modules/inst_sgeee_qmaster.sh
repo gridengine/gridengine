@@ -84,7 +84,7 @@ GetCell()
    INP=`Enter default`
    eval SGE_CELL=$INP
    SGE_CELL_VAL=`eval echo $SGE_CELL`
-   $INFOTEXT -wait -auto $AUTO -n "\nUsing cell >%s<. Hit <RETURN> to continue >> " $SGE_CELL_VAL
+   $INFOTEXT -wait -auto $AUTO -n "\nUsing cell >%s<. \nHit <RETURN> to continue >> " $SGE_CELL_VAL
    $CLEAR
    fi
    export SGE_CELL
@@ -271,9 +271,14 @@ SetSpoolingOptions()
             #TODO: exec rcrpc script
          fi
          if [ $QMASTER = "install" ]; then
-            $INFOTEXT "If you want to use a Berkeley DB spooling server, then"
-            $INFOTEXT "\nplease, log in to your Berkeley DB spooling host first and execute < inst_sgeee -db >"
-            $INFOTEXT -auto $AUTO -wait "After Berkeley DB installation or local Spooling, continue with < Enter >"
+            $INFOTEXT -ask "y" "n" -def "n" "Do you want to use a Berkely DB Spooling Server? (y/n) [n] >> "
+            if [ $? = 0 ]; then
+               $INFOTEXT -u "Berkely DB Setup"
+               $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute < inst_sgeee -db >"
+               $INFOTEXT -auto $AUTO -wait "After Berkeley DB installation with < inst_sgeee -db >, \ncontinue with <RETURN>"
+            else
+               $INFOTEXT -auto $AUTO -wait "\nHit <RETURN> to continue >> "
+            fi
             SpoolingQueryChange
             CheckLocalFilesystem $SPOOLING_DIR
          else
@@ -1070,6 +1075,7 @@ GetQmasterPort()
                   $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
                fi
             fi
+            export SGE_QMASTER_PORT
          else
             done=true
             service_available=true

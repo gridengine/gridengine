@@ -1,3 +1,6 @@
+CR-2004-01-14-0: Testsuite: update install_core_system test for new communication
+                            lib.
+
 SG-2004-01-14-1: Enhancem:  enabled qacct to work with cluster queues, queue
                             instances, and queue domains.
                  Changed:   qmaster, qacct, man pages

@@ -135,7 +135,7 @@ extern "C" {
 #  define pid_t_fmt    "%d"
 #endif
 
-#if (defined(SOLARIS) && !defined(TARGET_32BIT)) || defined(IRIX6) 
+#if (defined(SOLARIS) && defined(TARGET_32BIT)) || defined(IRIX6) 
 #  define gid_t_fmt    "%ld"
 #elif defined(LINUX86)
 #  define gid_t_fmt    "%u"

@@ -1,5 +1,5 @@
-                 eview:    Pending
-                 Changed:   qmon, qstat, qconf, qhost
+AS-2004-02-04-0  Enhancem.: "aimk -32" creates Solaris 32 bit binaries on 64
+                            bit kernel
 
 JG-2004-02-04-3: Testsuite: Fixed system_tests/clients/qrsh and functions
                             enabling and disabling queues.

@@ -1,3 +1,8 @@
+RC-2005-03-12-0: Enhancem.: ignore warnings when calling configure
+                            for qmake/qtcsh.
+                            (only affects non-standard platforms 
+                            with no makefile in cvs)
+
 RD-2005-03-11-1: Bugfix:   fixed build for lx24-amd64 & lx24-x86
                  Review:   CR,RH
 

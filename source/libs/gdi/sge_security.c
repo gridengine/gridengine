@@ -1160,10 +1160,12 @@ int sge_security_verify_user(const char *host, const char *commproc, u_short id,
    DENTER(TOP_LAYER, "sge_security_verify_user");
 
 #ifdef SECURE
-   if (!sec_verify_user(user, commproc)) {
-      DEXIT;
-      return False;
-   }
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      if (!sec_verify_user(user, commproc)) {
+         DEXIT;
+         return False;
+     }
+   }  
 #endif
 
 #ifdef KERBEROS
@@ -1182,7 +1184,9 @@ int sge_security_verify_user(const char *host, const char *commproc, u_short id,
 void sge_security_ck_to_do(void)
 {
 #ifdef SECURE
-   sec_clear_connectionlist();
+   if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
+      sec_clear_connectionlist();
+   }   
 #endif
    
 #ifdef KERBEROS
@@ -1190,4 +1194,3 @@ void sge_security_ck_to_do(void)
    krb_renew_tgts(Master_Job_List);
 #endif
 }
-

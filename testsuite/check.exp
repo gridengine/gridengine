@@ -4519,6 +4519,13 @@ proc compile_source {} {
    set spawn_list {} 
    set file_list {}
    set file_name_list {}
+ 
+   set cvs_tag "maintrunc"
+   if { [ file isfile "${CHECK_SOURCE_DIR}/CVS/Tag" ] } {
+      set cvs_tag "no_tag_dir" 
+      set tag_state [ catch { eval exec "cat ${CHECK_SOURCE_DIR}/CVS/Tag" } cvs_tag ]
+   }
+
    foreach elem $host_list {
       # compile the staff
       puts $CHECK_OUTPUT "-> starting compiling on host $elem ..."
@@ -4528,7 +4535,7 @@ proc compile_source {} {
       
       eval spawn rsh $elem "\"$prog $par1 $par2\""
       lappend spawn_list $spawn_id
-      set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile.out"
+      set myfilename "$CHECK_PROTOCOL_DIR/${elem}_compile_${cvs_tag}.out"
       lappend file_name_list $myfilename
       catch { file delete $myfilename }
       lappend file_list [open $myfilename w]

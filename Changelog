@@ -1,3 +1,6 @@
+CR-2001-08-23-0: Testsuite:
+                 - using cvs tag information for compile logfile name
+
 JG-2001-08-22-0: (Issue# 43), host_aliases file was not implicitly used from 
                  standard location, option -a <path_to_host_aliases> worked.
 

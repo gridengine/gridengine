@@ -194,5 +194,6 @@
 #define MSG_CKPT_XISNOTASIGNALSTRING_S             _MESSAGE(64176, _(SFQ" is not a signal string (like HUP, INT, " "WINCH, ..)\n"))
 #define MSG_PE_STARTPROCARGS_SS                    _MESSAGE(64177, _("parameter start_proc_args of pe "SFQ": "SFN"\n"))
 #define MSG_PE_STOPPROCARGS_SS                     _MESSAGE(64178, _("parameter stop_proc_args of pe "SFQ": "SFN"\n"))
+#define MSG_ANSWERWITHOUTDIAG                      _MESSAGE(64179, _("error without diagnosis message"))
 
 #endif /* __MSG_SGEOBJLIB_H */

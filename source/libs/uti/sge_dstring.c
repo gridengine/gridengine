@@ -89,6 +89,7 @@ const char* sge_dstring_append(dstring *sb, const char *a)
          for memory allocation */
       /* JG: TODO: strlen(a) is called more than once -> performance leak */
       if (strlen(a) == 0 && sb->s != NULL ) {
+         DEXIT;
          return sb->s;
       }
 
@@ -112,6 +113,7 @@ const char* sge_dstring_append(dstring *sb, const char *a)
       
       strcat(sb->s, a);
    }
+   DEXIT;
    return sb->s;
 }
 

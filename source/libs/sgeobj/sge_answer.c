@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 
 #include <stdarg.h>
+#include <string.h>
 
 #include "sge.h"
 #include "sgermon.h"
@@ -90,6 +91,9 @@
 *     sgeobj/answer/answer_list_has_quality() 
 *     sgeobj/answer/answer_list_has_error() 
 *     sgeobj/answer/answer_list_on_error_print_or_exit() 
+*
+*  NOTES
+*     MT-NOTE: the answer list module is MT safe
 ******************************************************************************/
 
 /****** sgeobj/answer/answer_has_quality() ************************************
@@ -109,6 +113,9 @@
 *
 *  RESULT
 *     bool - true or false 
+*
+*  NOTES
+*     MT-NOTE: answer_has_quality() is MT safe
 *******************************************************************************/
 bool answer_has_quality(const lListElem *answer, answer_quality_t quality) 
 {
@@ -141,6 +148,9 @@ bool answer_has_quality(const lListElem *answer, answer_quality_t quality)
 *
 *  RESULT
 *     int - true or false
+*
+*  NOTES
+*     MT-NOTE: answer_is_recoverable() is MT safe
 ******************************************************************************/
 bool answer_is_recoverable(const lListElem *answer)
 {
@@ -186,6 +196,9 @@ bool answer_is_recoverable(const lListElem *answer)
 *
 *  NOTES
 *     This function may never return. 
+*
+*  NOTES
+*     MT-NOTE: answer_exit_if_not_recoverable() is MT safe
 ******************************************************************************/
 void answer_exit_if_not_recoverable(const lListElem *answer)
 {
@@ -213,6 +226,9 @@ void answer_exit_if_not_recoverable(const lListElem *answer)
 *
 *  RESULT
 *     const char* - String
+*
+*  NOTES
+*     MT-NOTE: answer_get_quality_text() is MT safe
 ******************************************************************************/
 const char *answer_get_quality_text(const lListElem *answer) 
 {
@@ -247,6 +263,9 @@ const char *answer_get_quality_text(const lListElem *answer)
 *
 *  RESULT
 *     u_long32 - error status
+*
+*  NOTES
+*     MT-NOTE: answer_get_status() is MT safe
 ******************************************************************************/
 u_long32 answer_get_status(const lListElem *answer) 
 {
@@ -277,6 +296,9 @@ u_long32 answer_get_status(const lListElem *answer)
 *     FILE *stream            - Output stream 
 *     const char *prefix      - Introductional message
 *     const char *prefix      - Final message
+*
+*  NOTES
+*     MT-NOTE: answer_print_text() is MT safe
 ******************************************************************************/
 void answer_print_text(const lListElem *answer, 
                        FILE *stream, 
@@ -298,6 +320,44 @@ void answer_print_text(const lListElem *answer,
       fprintf(stream, "%s", suffix);
    }
    DEXIT;
+}
+
+/****** sgeobj/answer/answer_to_dstring() ************************************
+*  NAME
+*     answer_to_dstring() -- Copy answer to dstring without newline
+*
+*  SYNOPSIS
+*     void answer_to_dstring(const lListElem *answer, dstring *diag) 
+*
+*  FUNCTION
+*     Copy answer text into dstring without newline character.
+*
+*  INPUTS
+*     const lListElem *answer - AN_Type element
+*
+*  OUTPUT
+*     dstring *diag           - destination dstring
+*
+*  RESULT
+*     void - 
+*
+*  NOTES
+*     MT-NOTE: answer_to_dstring() is MT safe
+*******************************************************************************/
+void answer_to_dstring(const lListElem *answer, dstring *diag)
+{
+   if (diag) {
+      if (!answer) {
+         sge_dstring_copy_string(diag, MSG_ANSWERWITHOUTDIAG);
+      } else {
+         const char *s, *t;
+         s = lGetString(answer, AN_text);
+         if ((t=strchr(s, '\n')))
+            sge_dstring_sprintf(diag, "%*s", t-s, s);
+         else
+            sge_dstring_copy_string(diag, s);
+      }
+   }
 }
 
 /****** sgeobj/answer/answer_list_add_sprintf() *******************************
@@ -333,6 +393,9 @@ void answer_print_text(const lListElem *answer,
 *
 *  SEE ALSO
 *     sgeobj/answer/answer_list_add()
+*
+*  NOTES
+*     MT-NOTE: answer_list_add_sprintf() is MT safe
 ******************************************************************************/
 bool 
 answer_list_add_sprintf(lList **answer_list, u_long32 status, 
@@ -378,6 +441,9 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
 *
 *  RESULT
 *     bool - true or false
+*
+*  NOTES
+*     MT-NOTE: answer_list_has_quality() is MT safe
 ******************************************************************************/
 bool answer_list_has_quality(lList **answer_list, answer_quality_t quality)
 {
@@ -414,6 +480,9 @@ bool answer_list_has_quality(lList **answer_list, answer_quality_t quality)
 *
 *  RESULT
 *     bool - true or false
+*
+*  NOTES
+*     MT-NOTE: answer_list_has_error() is MT safe
 ******************************************************************************/
 bool answer_list_has_error(lList **answer_list)
 {
@@ -441,6 +510,9 @@ bool answer_list_has_error(lList **answer_list)
 *  INPUTS
 *     lList **answer_list - AN_Type list 
 *     FILE *stream        - output stream 
+*
+*  NOTES
+*     MT-NOTE: answer_list_on_error_print_or_exit() is MT safe
 ******************************************************************************/
 void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream)
 {
@@ -482,6 +554,9 @@ void answer_list_on_error_print_or_exit(lList **answer_list, FILE *stream)
 *     lList **answer_list     - AN_Type list 
 *     const char *err_prefix  - e.g. "qsub: "
 *     const char *warn_prefix - e.g. MSG_WARNING
+*
+*  NOTES
+*     MT-NOTE: answer_list_print_err_warn() is MT safe
 ******************************************************************************/
 int answer_list_print_err_warn(lList **answer_list, 
                                const char *err_prefix,
@@ -529,6 +604,9 @@ int answer_list_print_err_warn(lList **answer_list,
 *
 *  RESULT
 *     int - first error or warning status code or STATUS_OK
+*
+*  NOTES
+*     MT-NOTE: answer_list_handle_request_answer_list() is MT safe
 ******************************************************************************/
 int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
    int ret = STATUS_OK;
@@ -588,6 +666,9 @@ int answer_list_handle_request_answer_list(lList **answer_list, FILE *stream) {
 *
 *  SEE ALSO
 *     sgeobj/answer/answer_list_add_sprintf()
+*
+*  NOTES
+*     MT-NOTE: answer_list_add() is MT safe
 ******************************************************************************/
 bool
 answer_list_add(lList **answer_list, const char *text,
@@ -638,6 +719,9 @@ answer_list_add(lList **answer_list, const char *text,
 *
 *  RESULT
 *     void - none 
+*
+*  NOTES
+*     MT-NOTE: answer_list_replace() is MT safe
 *******************************************************************************/
 void answer_list_replace(lList **answer_list, lList **new_list)
 {

@@ -45,15 +45,51 @@ extern "C" {
 extern int delay_after_submit;
 #endif
 
-/* some constants */
+/* ------------------- Constants ------------------- */
+/* 
+ * some not yet agreed buffer length constants 
+ * these are recommended minimum values 
+ */
+
+/* drmaa_get_attribute() */
+#define DRMAA_ATTR_BUFFER 1024
+
+/* drmaa_get_contact() */
+#define DRMAA_CONTACT_BUFFER 1024
+
+/* drmaa_get_DRM_system() */
+#define DRMAA_DRM_SYSTEM_BUFFER 1024
+
+/* 
+ * Agreed buffer length constants 
+ * these are recommended minimum values 
+ */
 #define DRMAA_ERROR_STRING_BUFFER   1024
 #define DRMAA_JOBNAME_BUFFER        1024
 #define DRMAA_SIGNAL_BUFFER         32
+
+/*
+ * Agreed constants 
+ */ 
 #define DRMAA_TIMEOUT_WAIT_FOREVER  -1
 #define DRMAA_TIMEOUT_NO_WAIT       0 
-#define DRMAA_JOB_IDS_SESSION_ANY   "*"
 
-/* names of job template attributes */
+#define DRMAA_JOB_IDS_SESSION_ANY   "DRMAA_JOB_IDS_SESSION_ANY"
+#define DRMAA_JOB_IDS_SESSION_ALL   "DRMAA_JOB_IDS_SESSION_ALL"
+
+#define DRMAA_SUBMISSION_STATE_ACTIVE "drmaa_active"
+#define DRMAA_SUBMISSION_STATE_HOLD   "drmaa_hold"
+
+/*
+ * Agreed placeholder names
+ */
+#define DRMAA_PLACEHOLDER_INCR       "$drmaa_incr_ph$"
+#define DRMAA_PLACEHOLDER_HD         "$drmaa_hd_ph$"
+#define DRMAA_PLACEHOLDER_WD         "$drmaa_wd_ph$"
+
+/*
+ * Agreed names of job template attributes 
+ */
 #define DRMAA_REMOTE_COMMAND         "drmaa_remote_command"
 #define DRMAA_JS_STATE               "drmaa_js_state"
 #define DRMAA_WD                     "drmaa_wd"
@@ -78,7 +114,11 @@ extern int delay_after_submit;
 #define DRMAA_V_ENV                  "drmaa_v_env"
 #define DRMAA_V_EMAIL                "drmaa_v_email"
 
-/* DRMAA errno values */
+/* 
+ * DRMAA errno values 
+ *
+ * the values in detail still need to be agreed  
+ */
 enum {
    /* -------------- these are relevant to all sections ---------------- */
    DRMAA_ERRNO_SUCCESS = 0, /* Routine returned normally with success. */
@@ -87,6 +127,7 @@ enum {
    DRMAA_ERRNO_AUTH_FAILURE, /* The specified request is not processed successfully due to authorization failure. */
    DRMAA_ERRNO_INVALID_ARGUMENT, /* The input value for an argument is invalid. */
    DRMAA_ERRNO_NO_ACTIVE_SESSION, /* Exit routine failed because there is no active session */
+   DRMAA_ERRNO_NO_MEMORY, /* failed allocating memory */
 
    /* -------------- init and exit specific --------------- */
    DRMAA_ERRNO_INVALID_CONTACT_STRING, /* Initialization failed due to invalid contact string. */
@@ -115,7 +156,9 @@ enum {
    DRMAA_NO_ERRNO
 };
 
-/* DRMAA job states returned by drmaa_job_ps() */
+/* 
+ * Agreed DRMAA job states as returned by drmaa_job_ps() 
+ */
 enum {
  DRMAA_PS_UNDETERMINED          = 0x00, /* process status cannot be determined */
  DRMAA_PS_QUEUED_ACTIVE         = 0x10, /* job is queued and active */
@@ -130,7 +173,9 @@ enum {
  DRMAA_PS_FAILED                = 0x40  /* job finished, but failed */
 };
 
-/* DRMAA actions for drmaa_control() */
+/* 
+ * Agreed DRMAA actions for drmaa_control() 
+ */
 enum {
  DRMAA_CONTROL_SUSPEND = 0,
  DRMAA_CONTROL_RESUME,
@@ -139,9 +184,47 @@ enum {
  DRMAA_CONTROL_TERMINATE
 };
 
-/* opaque DRMAA job template 
-   struct drmaa_job_template_s is defined elsewhere */
+/* ------------------- Data types ------------------- */
+/* 
+ * Agreed opaque DRMAA job template 
+ * struct drmaa_job_template_s is defined elsewhere 
+ */
 typedef struct drmaa_job_template_s drmaa_job_template_t;
+
+/* ---------- C/C++ language binding specific interfaces -------- */
+/*
+ * Proposed to support handling of output vector arguments 
+ * 
+ * This is a C/C++ language specific opaque data type
+ */
+typedef struct drmaa_string_vector_s drmaa_string_vector_t;
+
+/*
+ * Proposed to support handling of output vector arguments 
+ * 
+ * These are C language specific interfaces
+ */
+
+/*
+ * get first string attribute from iterator 
+ * 
+ * returns DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE 
+ * if no such exists 
+ */
+int drmaa_string_vector_get_first(drmaa_string_vector_t* values, char *value, int value_len);
+
+/*
+ * get next string attribute from iterator 
+ * 
+ * returns DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE 
+ * if no such exists 
+ */
+int drmaa_string_vector_get_next(drmaa_string_vector_t* values, char *value, int value_len);
+
+/* 
+ * release opaque iterator 
+ */
+void drmaa_delete_string_vector( drmaa_string_vector_t* values );
 
 /* ------------------- init/exit routines ------------------- */
 /*
@@ -199,7 +282,7 @@ int drmaa_set_vector_attribute(drmaa_job_template_t *jt, const char *name, char 
  * If 'name' is an existing vector attribute name in the job template 'jt',
  * then the values of 'name' are returned; otherwise, NULL is returned.
  */
-int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, /* vector of attribute values (string vector), */ char *error_diagnosis, size_t error_diag_len);
+int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_string_vector_t **values, char *error_diagnosis, size_t error_diag_len);
 
 
 /* 
@@ -207,13 +290,13 @@ int drmaa_get_vector_attribute(drmaa_job_template_t *jt, const char *name, /* ve
  * value type is String. This set will include supported DRMAA reserved 
  * attribute names and native attribute names. 
  */
-int drmaa_get_attribute_names( /* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len);
+int drmaa_get_attribute_names( drmaa_string_vector_t **values, char *error_diagnosis, size_t error_diag_len);
 
 /*
  * Returns the set of supported attribute names whose associated 
  * value type is String Vector.  This set will include supported DRMAA reserved 
  * attribute names and native attribute names. */
-int drmaa_get_vector_attribute_names(/* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len);
+int drmaa_get_vector_attribute_names(drmaa_string_vector_t **values, char *error_diagnosis, size_t error_diag_len);
 
 /* ------------------- job submission routines ------------------- */
 
@@ -237,7 +320,7 @@ int drmaa_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, cha
  * For example:
  * drmaa_set_attribute(pjt, "stderr", drmaa_incr_ph + ".err" ); (C++/java string syntax used)
  */
-int drmaa_run_bulk_jobs( /* vector of job ids (string vector), */ drmaa_job_template_t *jt, int start, int end, int incr, char *error_diagnosis, size_t error_diag_len);
+int drmaa_run_bulk_jobs( drmaa_string_vector_t **jobids, drmaa_job_template_t *jt, int start, int end, int incr, char *error_diagnosis, size_t error_diag_len);
 
 /* ------------------- job control routines ------------------- */
 
@@ -295,7 +378,7 @@ int drmaa_synchronize(char *job_ids[], signed long timeout, int dispose, char *e
  * issue drmaa_wait multiple times for the same job_id.
  */
 int drmaa_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, 
-   signed long timeout, /* vector of rusage strings (string vector), */
+   signed long timeout, drmaa_string_vector_t **rusage, 
    char *error_diagnosis, size_t error_diagnois_len);
 
 /* 

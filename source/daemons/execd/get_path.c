@@ -47,9 +47,6 @@
 #include "sge_unistd.h"
 #include "sge_job.h"
 
-static const char* expand_path(const char *path_in, u_long32 job_id, 
-                               u_long32 ja_task_id, const char *job_name, 
-                               const char *user, const char *fqhost);
 
 static int getHomeDir(char *exp_path, const char *user);
 
@@ -105,7 +102,7 @@ int sge_get_path(lList *lp, const char *cwd, const char *owner,
    return 0;
 }
 
-static const char* expand_path(
+const char* expand_path(
 const char *in_path,
 u_long32 job_id,
 u_long32 ja_task_id,

@@ -1541,12 +1541,17 @@ int job_list_register_new_job(const lList *job_list, u_long32 max_jobs,
 *     lList **answer_list - AN_Type list pointer 
 *
 *  RESULT
-*     void - none 
+*     int - return state
+*        -1 - error
+*         0 - OK
 *
 *  SEE ALSO
 *     sgeobj/range/RN_Type
+*
+*  NOTES
+*     MT-NOTE: job_initialize_id_lists() is MT safe
 ******************************************************************************/
-void job_initialize_id_lists(lListElem *job, lList **answer_list)
+int job_initialize_id_lists(lListElem *job, lList **answer_list)
 {
    lList *n_h_list = NULL;    /* RN_Type */
 
@@ -1556,6 +1561,8 @@ void job_initialize_id_lists(lListElem *job, lList **answer_list)
       sprintf(SGE_EVENT, MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
       answer_list_add(answer_list, SGE_EVENT, 
                       STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
+      DEXIT; 
+      return -1;
    } else {
       lSetList(job, JB_ja_n_h_ids, n_h_list);
       lSetList(job, JB_ja_u_h_ids, NULL);
@@ -1563,6 +1570,7 @@ void job_initialize_id_lists(lListElem *job, lList **answer_list)
       lSetList(job, JB_ja_s_h_ids, NULL);
    }
    DEXIT;
+   return 0;
 }
 
 /****** sgeobj/job/job_initialize_env() ***************************************

@@ -96,6 +96,8 @@ void answer_print_text(const lListElem *answer,
                        const char *prefix,
                        const char *suffix);
 
+void answer_to_dstring(const lListElem *answer, dstring *diag);
+
 bool answer_list_add_sprintf(lList **answer_list, u_long32 status, 
                              answer_quality_t quality, const char *fmt, ...);
 

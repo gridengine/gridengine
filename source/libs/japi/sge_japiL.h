@@ -50,6 +50,9 @@ extern "C" {
 *     SGE_ULONG(JJ_jobid)
 *        JAPI jobid
 *
+*     SGE_ULONG(JJ_type)
+*        Job type - analoguous to JB_type
+*
 *     SGE_LIST(JJ_finished_tasks)
 *        list of finished job tasks
 *
@@ -61,18 +64,21 @@ extern "C" {
 ******************************************************************************/
 enum {
    JJ_jobid = JJ_LOWERBOUND,
+   JJ_type,
    JJ_finished_tasks,
    JJ_not_yet_finished_ids
 };
 
 LISTDEF(JJ_Type)
    SGE_ULONG(JJ_jobid, CULL_DEFAULT)
+   SGE_ULONG(JJ_type, CULL_DEFAULT)
    SGE_LIST(JJ_finished_tasks, JJAT_Type, CULL_DEFAULT)
    SGE_LIST(JJ_not_yet_finished_ids, RN_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(JJN)
    NAME("JJ_jobid")
+   NAME("JJ_type")
    NAME("JJ_finished_tasks")
    NAME("JJ_not_yet_finished_ids")
 NAMEEND
@@ -129,19 +135,19 @@ NAMEEND
 
 #define JJATS sizeof(JJATN)/sizeof(char*)
 
-/****** japi/--JJAT_Type **************************************************
+/****** japi/--NSV_Type **************************************************
 *  NAME
 *     NSV_Type - Named string vector
 *
 *  ELEMENTS
-*     SGE_ULONG(JJAT_task_id)
-*        array task id
+*     SGE_STRING(NSV_name)
+*        name of the string vector
 *
-*     SGE_LIST(JJAT_rusage)
-*        resource usage information provided by japi_wait()
+*     SGE_LIST(NSV_strings)
+*        strings of this string vector
 *
 *  FUNCTION
-*     CULL element implementing JAPI vector job template attributes 
+*     CULL element implementing DRMAA vector job template attributes 
 ******************************************************************************/
 enum {
    NSV_name = NSV_LOWERBOUND,

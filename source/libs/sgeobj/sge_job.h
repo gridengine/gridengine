@@ -196,7 +196,7 @@ void jatask_list_print_to_string(const lList *task_list, dstring *range_string);
 
 lList* ja_task_list_split_group(lList **task_list);
 
-void job_initialize_id_lists(lListElem *job, lList **answer_list);
+int job_initialize_id_lists(lListElem *job, lList **answer_list);
 
 void job_initialize_env(lListElem *job, lList **answer_list,
                         const lList* path_alias_list);

@@ -34,6 +34,7 @@
 /*___INFO__MARK_END__*/
 
 #include "drmaa.h"
+#include "sge_dstring.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -47,7 +48,7 @@ extern "C" {
  * other DRMAA calls, except for japi_version().
  * If 'contact' is NULL, the default DRM system will be used.
  */ 
-int japi_init(const char *contact, char *error_diagnosis, size_t error_diag_len);
+int japi_init(const char *contact, dstring *diag);
 
 
 /*
@@ -56,26 +57,26 @@ int japi_init(const char *contact, char *error_diagnosis, size_t error_diag_len)
  * This routine ends this DRMAA Session, but does not effect any jobs (e.g.,
  * queued and running jobs remain queued and running).
  */
-int japi_exit(char *error_diagnosis, size_t error_diag_len);
+int japi_exit(dstring *diag);
 
 /* ------------------- job template routines ------------------- */
 
 /* 
  * Allocate a new job template. 
  */
-int japi_allocate_job_template(drmaa_job_template_t **jt, char *error_diagnosis, size_t error_diag_len);
+int japi_allocate_job_template(drmaa_job_template_t **jt, dstring *diag);
 
 /* 
  * Deallocate a job template. This routine has no effect on jobs.
  */
-int japi_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len);
+int japi_delete_job_template(drmaa_job_template_t *jt, dstring *diag);
 
 
 /* 
  * Adds ('name', 'value') pair to list of attributes in job template 'jt'.
  * Only non-vector attributes may be passed.
  */
-int japi_set_attribute(drmaa_job_template_t *jt, const char *name, const char *value, char *error_diagnosis, size_t error_diag_len);
+int japi_set_attribute(drmaa_job_template_t *jt, const char *name, const char *value, dstring *diag);
 
 
 /* 
@@ -83,19 +84,19 @@ int japi_set_attribute(drmaa_job_template_t *jt, const char *name, const char *v
  * template 'jt', then the value of 'name' is returned; otherwise, 
  * NULL is returned.
  */ 
-int japi_get_attribute(drmaa_job_template_t *jt, const char *name, char *value, size_t value_len, char *error_diagnosis, size_t error_diag_len);
+int japi_get_attribute(drmaa_job_template_t *jt, const char *name, dstring *val, dstring *diag);
 
 /* Adds ('name', 'values') pair to list of vector attributes in job template 'jt'.
  * Only vector attributes may be passed.
  */
-int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name, char *value[], char *error_diagnosis, size_t error_diag_len);
+int japi_set_vector_attribute(drmaa_job_template_t *jt, const char *name, char *value[], dstring *diag);
 
 
 /* 
  * If 'name' is an existing vector attribute name in the job template 'jt',
  * then the values of 'name' are returned; otherwise, NULL is returned.
  */
-int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name, /* vector of attribute values (string vector), */ char *error_diagnosis, size_t error_diag_len);
+int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name, drmaa_string_vector_t **values, dstring *diag);
 
 
 /* 
@@ -103,13 +104,13 @@ int japi_get_vector_attribute(drmaa_job_template_t *jt, const char *name, /* vec
  * value type is String. This set will include supported DRMAA reserved 
  * attribute names and native attribute names. 
  */
-int japi_get_attribute_names( /* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len);
+int japi_get_attribute_names(drmaa_string_vector_t **values, dstring *diag);
 
 /*
  * Returns the set of supported attribute names whose associated 
  * value type is String Vector.  This set will include supported DRMAA reserved 
  * attribute names and native attribute names. */
-int japi_get_vector_attribute_names(/* vector of attribute name (string vector), */ char *error_diagnosis, size_t error_diag_len);
+int japi_get_vector_attribute_names(drmaa_string_vector_t **values, dstring *diag);
 
 /* ------------------- job submission routines ------------------- */
 
@@ -118,7 +119,7 @@ int japi_get_vector_attribute_names(/* vector of attribute name (string vector),
  * The job identifier 'job_id' is a printable, NULL terminated string,
  * identical to that returned by the underlying DRM system.
  */
-int japi_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, char *error_diagnosis, size_t error_diag_len);
+int japi_run_job(dstring *jobid, drmaa_job_template_t *jt, dstring *diag);
 
 /* 
  * Submit a set of parametric jobs, dependent on the implied loop index, each
@@ -133,7 +134,7 @@ int japi_run_job(char *job_id, size_t job_id_len, drmaa_job_template_t *jt, char
  * For example:
  * drmaa_set_attribute(pjt, "stderr", drmaa_incr_ph + ".err" ); (C++/java string syntax used)
  */
-int japi_run_bulk_jobs( /* vector of job ids (string vector), */ drmaa_job_template_t *jt, int start, int end, int incr, char *error_diagnosis, size_t error_diag_len);
+int japi_run_bulk_jobs(drmaa_string_vector_t **values, drmaa_job_template_t *jt, int start, int end, int incr, dstring *diag);
 
 /* ------------------- job control routines ------------------- */
 
@@ -151,7 +152,7 @@ int japi_run_bulk_jobs( /* vector of job ids (string vector), */ drmaa_job_templ
  * the DRM system, but does not necessarily wait until the action
  * has been completed.
  */
-int japi_control(const char *jobid, int action, char *error_diagnosis, size_t error_diag_len);
+int japi_control(const char *jobid, int action, dstring *diag);
 
 
 /* 
@@ -169,7 +170,7 @@ int japi_control(const char *jobid, int action, char *error_diagnosis, size_t er
  * True=1 "fake reap", i.e. dispose of the rusage data
  * False=0 do not reap
  */ 
-int japi_synchronize(char *job_ids[], signed long timeout, int dispose, char *error_diagnosis, size_t error_diag_len);
+int japi_synchronize(char *job_ids[], signed long timeout, int dispose, dstring *diag);
 
 
 /* 
@@ -190,9 +191,8 @@ int japi_synchronize(char *job_ids[], signed long timeout, int dispose, char *er
  * unknown. Failing due to an elapsed timeout has an effect that it is possible to
  * issue drmaa_wait multiple times for the same job_id.
  */
-int japi_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *stat, 
-   signed long timeout, /* vector of rusage strings (string vector), */
-   char *error_diagnosis, size_t error_diagnois_len);
+int japi_wait(const char *job_id, dstring *job_id_out, int *stat, signed long timeout, 
+   drmaa_string_vector_t **rusage, dstring *diag);
 
 /* 
  * Evaluates into 'exited' a non-zero value if stat was returned for a
@@ -203,7 +203,7 @@ int japi_wait(const char *job_id, char *job_id_out, size_t job_id_out_len, int *
  * A non-zero 'exited' value indicates more detailed diagnosis can be provided
  * by means of japi_wifsignaled(), japi_wtermsig() and japi_wcoredump(). 
  */
-int japi_wifexited(int *exited, int stat, char *error_diagnosis, size_t error_diag_len);
+int japi_wifexited(int *exited, int stat, dstring *diag);
 
 /* 
  * If the OUT parameter 'exited' of japi_wifexited() is non-zero,
@@ -211,7 +211,7 @@ int japi_wifexited(int *exited, int stat, char *error_diagnosis, size_t error_di
  * job passed to _exit() (see exit(2)) or exit(3C), or the value that
  * the child process returned from main. 
  */
-int japi_wexitstatus(int *exit_status, int stat, char *error_diagnosis, size_t error_diag_len);
+int japi_wexitstatus(int *exit_status, int stat, dstring *diag);
 
 /* 
  * Evaluates into 'signaled' a non-zero value if status was returned
@@ -221,7 +221,7 @@ int japi_wexitstatus(int *exit_status, int stat, char *error_diagnosis, size_t e
  * the job terminated due to the receipt of a signal. In both cases
  * japi_wtermsig() will not provide signal information. 
  */
-int japi_wifsignaled(int *signaled, int stat, char *error_diagnosis, size_t error_diag_len);
+int japi_wifsignaled(int *signaled, int stat, dstring *diag);
 
 /* 
  * If the OUT parameter 'signaled' of japi_wifsignaled(stat) is
@@ -230,20 +230,20 @@ int japi_wifsignaled(int *signaled, int stat, char *error_diagnosis, size_t erro
  * names are returned (e.g., SIGABRT, SIGALRM).
  * For signals not declared by POSIX, any other string may be returned. 
  */
-int japi_wtermsig(char *signal, size_t signal_len, int stat, char *error_diagnosis, size_t error_diag_len);
+int japi_wtermsig(dstring *signal, int stat, dstring *diag);
 
 /* 
  * If the OUT parameter 'signaled' of japi_wifsignaled(stat) is
  * non-zero, this function evaluates into 'core_dumped' a non-zero value
  * if a core image of the terminated job was created. 
  */
-int japi_wcoredump(int *core_dumped, int stat, char *error_diagnosis, size_t error_diag_len);
+int japi_wcoredump(int *core_dumped, int stat, dstring *diag);
 
 /* 
  * Evaluates into 'aborted' a non-zero value if 'stat'
  * was returned for a job that ended before entering the running state. 
  */
-int japi_wifaborted(int *aborted, int stat, char *error_diagnosis, size_t error_diag_len);
+int japi_wifaborted(int *aborted, int stat, dstring *diag);
 
 
 
@@ -262,7 +262,7 @@ int japi_wifaborted(int *aborted, int stat, char *error_diagnosis, size_t error_
  * DRMAA_PS_DONE = 30H : job finished normally, and
  * DRMAA_PS_FAILED = 40H : job finished, but failed.
  */
-int japi_job_ps( const char *job_id, int *remote_ps, char *error_diagnosis, size_t error_diag_len);
+int japi_job_ps( const char *job_id, int *remote_ps, dstring *diag);
 
 /* ------------------- auxiliary routines ------------------- */
  
@@ -274,7 +274,7 @@ const char *japi_strerror(int drmaa_errno);
 /* 
  * Current contact information for DRM system (string)
  */ 
-void japi_get_contact(char *contact, size_t contact_len);
+void japi_get_contact(dstring *contact);
 
 /* 
  * OUT major - major version number (non-negative integer)
@@ -291,6 +291,17 @@ void japi_version(unsigned int *major, unsigned int *minor);
  * implementation vendor as its parts.
  */
 void japi_get_DRM_system(char *drm_system, size_t drm_system_len);
+
+/* get first string attribute from iterator 
+DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no such exists */
+int japi_string_vector_get_first(drmaa_string_vector_t* values, dstring *val);
+
+/* get next string attribute from iterator 
+DRMAA_ERRNO_SUCCESS or DRMAA_ERRNO_INVALID_ATTRIBUTE_VALUE if no such exists */
+int japi_string_vector_get_next(drmaa_string_vector_t* values, dstring *val);
+
+/* release opaque iterator */
+void japi_delete_string_vector(drmaa_string_vector_t* values);
 
 #ifdef  __cplusplus
 }

@@ -868,6 +868,14 @@ lWriteListTo(environmentList, stderr);
    fprintf(fp, "job_owner=%s\n", lGetString(jep, JB_owner));
    fprintf(fp, "min_gid=" u32 "\n", conf.min_gid);
    fprintf(fp, "min_uid=" u32 "\n", conf.min_uid);
+   
+   /* do path substitutions also for cwd */
+                
+   if ((cp = expand_path(cwd, job_id, job_is_array(jep) ? ja_task_id : 0,
+         lGetString(jep, JB_job_name),
+         lGetString(jep, JB_owner), 
+         uti_state_get_qualified_hostname()))) 
+      cwd = cp;
    fprintf(fp, "cwd=%s\n", cwd);
 #if defined(IRIX6)
    {

@@ -1,3 +1,11 @@
+AH-2003-03-31-0  Enhancem:  - introduced iterators in DRMAA C binding to handle 
+                              vector output arguments
+                            - added support for DRMAA bulk/array jobs
+                            - imlemented DRMAA_WD/DRMAA_OUTPUT_PATH/DRMAA_ERROR_PATH
+                              DRMAA_INPUT_PATH/DRMAA_JOIN_FILES/DRMAA_JS_STATE
+                            - allow parameterizing of JB_cwd to support DRMAA 
+                              path placeholders $drmaa_incr_ph$ and $drmaa_hd_ph$
+
 EB-2003-03-28-0  Bugfix:    sharetree can't be modified
                  Issue:     515
                  Bugtraq:   4838636

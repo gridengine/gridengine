@@ -1,3 +1,6 @@
+SD-2002-06-03-0: Bugfix:    Fixed GRD 5.1.9 to SGEEE 5.3 upgrade
+		 Issue:	    #273
+
 JG-2002-05-31-0: Enhancem.  rshd: new switch -i: ignore /etc/nologin
                  Issue:     #272
 

@@ -244,10 +244,14 @@ proc check_option_v {} {
 
    set exit_code [catch {exec "$CHECK_PRODUCT_ROOT/bin/$CHECK_ARCH/qstat" "-j" "$result"} qstat_out]
 
-   if { [string match *DISPLAY,test_var1=hello=world,test_var2=hello=my=friend* $qstat_out] == 0 } {
+   # check if the environment variables are set correctly in the job object
+   if { [string match *DISPLAY*,test_var1=hello=world,test_var2=hello=my=friend* $qstat_out] == -1 } {
       set_error -1 "-v option failed, equal sign within variable values not supported"
       return
    }
+
+   # JG: TODO: instead of starting the example sleeper job, we should output the environment and sleep for some
+   # time. Then we could check, if the passed environment variables are really set in the job environment.
 
    while { [timestamp] < $time }  {
       sleep 1

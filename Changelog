@@ -1,3 +1,5 @@
+JG-2004-11-09-0: Testsuite: Fixed test system_tests/clients/qsub.
+
 AA-2004-11-08-0: Bugfix:    - openssl-0.9.7e upgrade
                  Changed:   all 
                  Review:    CR

@@ -1,3 +1,16 @@
+JG-2003-11-11-0: Bugfix:    -M options didn't work for interactive commands
+                            (qsh, qrsh, qlogin). The man page was incorrect.
+                 Bugtraq:   4952236
+                 Issue:     617
+                 Changed:   qsh, submit.1
+
+                 Bugfix:    -notify didn't work for qrsh with command.
+                            The man page was incorrect: -notify is not available
+                            for qsh, qlogin and qrsh without command
+                 Bugtraq:   4952767
+                 Issue:     619
+                 Changed:   qsh, submit.1
+
 SG-2003-11-12-0: Enhancem.: - Added reprioritize_interval to the man pages
                             - Added share_deadline_tickets to the spool frame work
                  Changed:   scheduler, qmaster, man-pages

@@ -1,3 +1,6 @@
+AS-2004-04-21-0: CVS        Created V60_beta2_target_{BRANCH,TAG}
+-----------------------------------------------------------------
+
 DT-2004-04-21-0: Enhancem.: o Streamlined event master locking
                             o Did various cosmetic fixes
                             o Added script for submiting multiple simultaneous

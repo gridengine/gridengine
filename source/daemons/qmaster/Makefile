@@ -73,7 +73,7 @@ QMASTER_SRC = sge_qmaster_main.c \
               sge_c_report.c \
               sge_reporting_qmaster.c
              
-QMASTER_ADD_SRC = usage.c sge_options.c job_log.c \
+QMASTER_ADD_SRC = usage.c sge_options.c \
               startprog.c shutdown.c \
               admin_mail.c \
               category.c \

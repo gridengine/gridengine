@@ -67,7 +67,6 @@ EXECD_ADD_SRC =  usage.c \
               sge_dirent.c \
               execution_states.c \
               sig_handlers.c \
-              job_log.c \
               startprog.c \
               shutdown.c  \
               sge_mt_init.c

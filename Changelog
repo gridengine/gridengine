@@ -1,3 +1,9 @@
+SG-2004-11-03-0: Bugfix:   too many array tasks are deleted
+                 Review:   EB
+                 Changed:  qmaster
+                 Issue:    1279
+                 Bugtraq:  6190164
+
 AH-2004-11-03-0: Bugfix:    qsub doesn't forward the AFS token, removed 
                             set_sec_cred call 
                             Reschedule unknown blocked host for all jobs of the

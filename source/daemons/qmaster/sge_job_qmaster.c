@@ -1025,22 +1025,68 @@ int sub_command
          unenrolled_end = job_get_biggest_unenrolled_task_id(job);
          enrolled_start = job_get_smallest_enrolled_task_id(job);
          enrolled_end = job_get_biggest_enrolled_task_id(job);
+         
          if (rn) {
             r_start = lGetUlong(rn, RN_min);
             r_end = lGetUlong(rn, RN_max);
-            unenrolled_start = MAX(r_start, unenrolled_start);
-            unenrolled_end = MIN(r_end, unenrolled_end);
-            enrolled_start = MAX(r_start, enrolled_start);
-            enrolled_end = MIN(r_end, enrolled_end);
+          
             step = lGetUlong(rn, RN_step);
             if (!step) {
                step = 1;
             }
+           
+            if (r_start > unenrolled_start) {
+               unenrolled_start = r_start;
+            }
+            else {
+               u_long32 temp_start;
+               
+               /* we have to figure out the first task we can delete and we do want     */
+               /* to start with the first existing task. For that, we compute:          */
+               /*                                                                       */
+               /* - the delta between the requested task id and the first existing one  */
+               /* - we devide the delta by the step size, to get the number of steps we */ 
+               /*   need ot get there.                                                  */
+               /* - the number of steps multiplied by the step size + the start value   */
+               /*   will get us the first task, or a very close. If we just right befor */
+               /*   it, we add another step to get there.                               */
+               temp_start = ((unenrolled_start - r_start) / step) * step + r_start;
+               
+               if (temp_start < unenrolled_start) {
+                  unenrolled_start = temp_start + step;
+               }
+               else {
+                  unenrolled_start = temp_start;
+               }
+            }
+           
+            unenrolled_end = MIN(r_end, unenrolled_end);
+
+  
+            if (r_start > enrolled_start) {
+               enrolled_start = r_start;
+            }
+            else {
+               u_long32 temp_start;
+
+               temp_start = ((enrolled_start - r_start) / step) * step + r_start;
+               
+               if (temp_start < unenrolled_start) {
+                  enrolled_start = temp_start + step;
+               }
+               else {
+                  enrolled_start = temp_start;
+               }
+            }
+  
+            enrolled_end = MIN(r_end, enrolled_end);
+            
             alltasks = 0;
          } else {
             step = 1;
             alltasks = 1;
          }
+         
          DPRINTF(("Request: alltasks = %d, start = %d, end = %d, step = %d\n", 
                   alltasks, r_start, r_end, step));
          DPRINTF(("unenrolled ----> start = %d, end = %d, step = %d\n", 
@@ -1059,7 +1105,9 @@ int sub_command
          for (task_number = unenrolled_start; 
               task_number <= unenrolled_end; 
               task_number += step) {
-            int is_defined = job_is_ja_task_defined(job, task_number); 
+            bool is_defined;
+            
+            is_defined = job_is_ja_task_defined(job, task_number); 
 
             if (is_defined) {
                int is_enrolled;
@@ -1078,13 +1126,14 @@ int sub_command
                   if (lGetString(job, JB_session)) {
                      dupped_session = strdup(lGetString(job, JB_session));
                   }
+
                   reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, 
                                            ruser, rhost, NULL, job, tmp_task, 
                                            NULL, MSG_LOG_DELETED);
                   sge_add_event(start_time, sgeE_JATASK_DEL, 
                                 job_number, task_number,
                                 NULL, NULL, dupped_session, NULL);
-                  /* TODO: change to _EE ????*/                                
+        
                   sge_commit_job(job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
                                  COMMIT_NO_SPOOLING | COMMIT_NO_EVENTS | 
                                  COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN);
@@ -1098,16 +1147,6 @@ int sub_command
          }
          
          if (deleted_unenrolled_tasks) {
-#if 0
-            if (conf.zombie_jobs > 0) {
-               lListElem *zombie;
-
-               zombie = job_list_locate(Master_Zombie_List, job_number);
-               if (zombie) { 
-/*                   job_write_spool_file(zombie, 0, NULL, SPOOL_HANDLE_AS_ZOMBIE); */
-               }
-            }
-#endif            
 
             if (existing_tasks > deleted_tasks) {
                dstring buffer = DSTRING_INIT;

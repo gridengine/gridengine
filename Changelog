@@ -1,3 +1,8 @@
+AD-2004-01-26-4: Bugfix:    Did remove redundant 'sge_switch2admin_user()' and
+                            'sge_switch2start_user()' calls.
+                 Changed:   gdi
+                 Review:    AA
+
 JG-2004-01-26-1: Enhancem.: Make Berkeley DB spooling the default.
                  Bugfix:    Fixed spooling problem with the creation of queue
                             instances.

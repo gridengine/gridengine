@@ -618,9 +618,7 @@ void cache_sec_cred(lListElem *jep, const char *rhost)
 
          sprintf(cmd, "%s %s%s%s", binary, "sge", "@", rhost);
 
-         sge_switch2start_user();
          command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
-         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, 
@@ -690,9 +688,7 @@ void delete_credentials(lListElem *jep)
 
          sprintf(cmd, "%s -s %s", binary, "sge");
 
-         sge_switch2start_user();
          command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
-         sge_switch2admin_user();
 
          if (command_pid == -1) {
             strcpy(tmpstr, SGE_EVENT);
@@ -771,9 +767,7 @@ int store_sec_cred(sge_gdi_request *request, lListElem *jep, int do_authenticati
       if (sge_get_token_cmd(binary, NULL) == 0) {
          sprintf(cmd, "%s -s %s -u %s", binary, "sge", lGetString(jep, JB_owner));
 
-         sge_switch2start_user();
          command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
-         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU,
@@ -895,9 +889,7 @@ int store_sec_cred2(lListElem *jelem, int do_authentication, int *general, char*
          sprintf(cmd, "%s -s %s -u %s -b %s", binary, "sge",
                  lGetString(jelem, JB_owner), lGetString(jelem, JB_owner));
 
-         sge_switch2start_user();
          command_pid = sge_peopen("/bin/sh", 0, cmd, NULL, env, &fp_in, &fp_out, &fp_err);
-         sge_switch2admin_user();
 
          if (command_pid == -1) {
             ERROR((SGE_EVENT, MSG_SEC_NOSTARTCMD4GETCRED_SU, binary, u32c(lGetUlong(jelem, JB_job_number))));

@@ -156,6 +156,12 @@ static void dump_eventlist(lList *event_list)
             fprintf(stdout,"JOB_DEL (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id,u32c(timestamp));
             Global_jobs_registered--;
             fflush(stdout);  
+            if (!feature_is_enabled(FEATURE_SGEEE)) {
+               /* sge has no sgeE_JOB_FINAL_USAGE event */
+               fprintf(stdout,"JOB_FINISH (%ld.%ld:ECL_TIME="U32CFormat")\n", job_id, task_id, u32c(timestamp));
+               Global_jobs_running--;
+               fflush(stdout);  
+            }
             break;
          default:
             break;
@@ -184,6 +190,7 @@ static void analyze_eventlist(lList *event_list, qevent_options *option_struct)
             task_id = lGetUlong(event, ET_intkey2);
             qevent_trigger_scripts(QEVENT_JB_END, option_struct, event);
             break;
+
          case sgeE_JATASK_DEL:
             job_id = lGetUlong(event, ET_intkey);
             task_id = lGetUlong(event, ET_intkey2);

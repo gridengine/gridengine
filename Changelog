@@ -1,8 +1,12 @@
-EB-2003-06-25-0  Bugfix    SGEEE: qmaster crashed on qdel of tightly integrated parallel job
-                 Bugtraq:  4883714
-                 Issue:    572
-                 Review:   AS
-                 Changed:  sge_qmaster
+CR-2003-06-30-0: Testsuite: qevent -ts option was not working for sge system
+                 Changed:   qevent
+
+EB-2003-06-25-0: Bugfix:    SGEEE: qmaster crashed on qdel of tightly
+                            integrated parallel job
+                 Bugtraq:   4883714
+                 Issue:     572
+                 Review:    AS
+                 Changed:   sge_qmaster
 
 CR-2003-06-25-0: Bugfix:    disabled infotext error output if SGE_ROOT is
                             not set.

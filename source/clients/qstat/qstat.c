@@ -1265,7 +1265,7 @@ u_long32 show
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
                                 hgrp_l);
    if (!alp) {
-      printf(MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);
+      printf(MSG_GDI_HGRPCONFIGGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {
@@ -1277,7 +1277,7 @@ u_long32 show
    /* -- apply global configuration for sge_hostcmp() scheme */
    alp = sge_gdi_extract_answer(SGE_GDI_GET, SGE_CONFIG_LIST, gc_id, mal, &conf_l);
    if (!alp) {
-      printf(MSG_GDI_SCHEDDCONFIGSGEGDIFAILED);
+      printf(MSG_GDI_GLOBALCONFIGGDIFAILED);
       SGE_EXIT(1);
    }
    if (lGetUlong(aep=lFirst(alp), AN_status) != STATUS_OK) {

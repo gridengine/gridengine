@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2003/12/15 15:42:13 $     Revision: $Revision: 1.8 $
+.\" $RCSfile: qacct.1,v $     Last Update: $Date: 2004/01/14 10:33:40 $     Revision: $Revision: 1.9 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QACCT 1 "$Date: 2003/12/15 15:42:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QACCT 1 "$Date: 2004/01/14 10:33:40 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qacct \- report and account for xxQS_NAMExx usage
 .SH SYNOPSIS
@@ -58,7 +58,7 @@ qacct \- report and account for xxQS_NAMExx usage
 ] [
 .B \-pe [PEname]
 ] [
-.B \-q [Q_name]
+.B \-q [CQ_name|QI_name|Q_domain|pattern]
 ] [
 .B \-slots [SlotNumber]
 ] [
@@ -158,10 +158,11 @@ The name of the parallel environment for which usage is summarized.
 If \fBPEname\fP is not given, accounting data is
 listed for each parallel environment separately.
 .\"
-.IP "\fB\-q\fP [\fBQ_name\fP]"
-The name of the queue for which usage is summarized.
-If \fBQ_name\fP is not given, accounting data is
-listed for each queue separately.
+.IP "\fB\-q\fP [\fBCQ_name|QI_name|Q_domain|pattern\fP]"
+A pattern for queues for which usage is summarized. All
+queue instances matching the pattern will be listed. If
+no pattern is specified, a cluster queue summary will be 
+given.
 .\"
 .IP "\fB\-slots\fP [\fBSlotNumber\fP]"
 The number of queue slots for which usage is summarized.

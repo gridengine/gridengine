@@ -35,20 +35,21 @@
 
 #include "basis_types.h"
 
-#define MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER   _MESSAGE(1000, _("-u and -uall are not allowed together\n"))
-#define MSG_JOB_UNASSIGNED       _MESSAGE(1001, _("unassigned"))
-#define MSG_FILE_CANTREADCURRENTWORKINGDIR    _MESSAGE(1002, _("cannot read current working directory\n"))
+#define MSG_OPTION_OPTUANDOPTUALLARENOTALLOWDTOGETHER    _MESSAGE(1000, _("-u and -uall are not allowed together\n"))
+#define MSG_JOB_UNASSIGNED                               _MESSAGE(1001, _("unassigned"))
+#define MSG_FILE_CANTREADCURRENTWORKINGDIR               _MESSAGE(1002, _("cannot read current working directory\n"))
 #define MSG_SRC_USAGE                                    _MESSAGE(1003, _("usage:"))
-#define MSG_FORCED                                      _MESSAGE(1004, _("forced "))
-#define MSG_QDEL_not_available_OPT_USAGE_S _MESSAGE(1005, _("no usage for "SFQ" available\n"))
-#define MSG_WARNING                                     _MESSAGE(1006, _("warning: "))
-#define MSG_SEC_SETJOBCRED    _MESSAGE(1007, _("\nCannot set job credentials.\n"))
-#define MSG_GDI_QUEUESGEGDIFAILED              _MESSAGE(1008, _("queue: sge_gdi failed\n"))
-#define MSG_GDI_JOBSGEGDIFAILED              _MESSAGE(1009, _("job: sge_gdi failed\n"))
-#define MSG_GDI_EXECHOSTSGEGDIFAILED              _MESSAGE(1010, _("exec host: sge_gdi failed\n"))
-#define MSG_GDI_COMPLEXSGEGDIFAILED              _MESSAGE(1011, _("complex: sge_gdi failed\n"))
-#define MSG_GDI_SCHEDDCONFIGSGEGDIFAILED    _MESSAGE(1012, _("scheduler configuration: sge_gdi failed\n"))
-
+#define MSG_FORCED                                       _MESSAGE(1004, _("forced "))
+#define MSG_QDEL_not_available_OPT_USAGE_S               _MESSAGE(1005, _("no usage for "SFQ" available\n"))
+#define MSG_WARNING                                      _MESSAGE(1006, _("warning: "))
+#define MSG_SEC_SETJOBCRED                               _MESSAGE(1007, _("\nCannot set job credentials.\n"))
+#define MSG_GDI_QUEUESGEGDIFAILED                        _MESSAGE(1008, _("queue: sge_gdi failed\n"))
+#define MSG_GDI_JOBSGEGDIFAILED                          _MESSAGE(1009, _("job: sge_gdi failed\n"))
+#define MSG_GDI_EXECHOSTSGEGDIFAILED                     _MESSAGE(1010, _("exec host: sge_gdi failed\n"))
+#define MSG_GDI_COMPLEXSGEGDIFAILED                      _MESSAGE(1011, _("complex: sge_gdi failed\n"))
+#define MSG_GDI_SCHEDDCONFIGSGEGDIFAILED                 _MESSAGE(1012, _("scheduler configuration: sge_gdi failed\n"))
+#define MSG_GDI_HGRPCONFIGGDIFAILED                      _MESSAGE(1013, _("host group configuration: sge_gdi failed\n"))
+#define MSG_GDI_GLOBALCONFIGGDIFAILED                    _MESSAGE(1014, _("global configuration: sge_gdi failed\n"))
 /*
  * qstat_printing.c
  */
@@ -56,17 +57,17 @@
 #define MSG_QSTAT_PRT_QTYPE        "qtype"
 #define MSG_QSTAT_PRT_USEDTOT      "used/tot."
 #define MSG_QSTAT_PRT_STATES       "states"
-#define MSG_QSTAT_PRT_PEDINGJOBS    _MESSAGE(1014, _(" - PENDING JOBS - PENDING JOBS - PENDING JOBS - PENDING JOBS - PENDING JOBS\n"))
-#define MSG_QSTAT_PRT_JOBSWAITINGFORACCOUNTING    _MESSAGE(1015, _(" -----   JOBS WAITING FOR ACCOUNTING  -  JOBS WAITING FOR ACCOUNTING   ----- \n"))
-#define MSG_QSTAT_PRT_ERRORJOBS    _MESSAGE(1016, _("  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -\n"))
-#define MSG_QSTAT_PRT_FINISHEDJOBS    _MESSAGE(1017, _(" --  FINISHED JOBS  -  FINISHED JOBS  -  FINISHED JOBS  -  FINISHED JOBS  --  \n"))
+#define MSG_QSTAT_PRT_PEDINGJOBS                _MESSAGE(1020, _(" - PENDING JOBS - PENDING JOBS - PENDING JOBS - PENDING JOBS - PENDING JOBS\n"))
+#define MSG_QSTAT_PRT_JOBSWAITINGFORACCOUNTING  _MESSAGE(1021, _(" -----   JOBS WAITING FOR ACCOUNTING  -  JOBS WAITING FOR ACCOUNTING   ----- \n"))
+#define MSG_QSTAT_PRT_ERRORJOBS                 _MESSAGE(1022, _("  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -  ERROR JOBS  -\n"))
+#define MSG_QSTAT_PRT_FINISHEDJOBS              _MESSAGE(1023, _(" --  FINISHED JOBS  -  FINISHED JOBS  -  FINISHED JOBS  -  FINISHED JOBS  --  \n"))
 
-#define MSG_CENTRY_NOTCHANGED         _MESSAGE(1018, _("Complex attribute configuartion has not been changed\n"))
-#define MSG_CENTRY_DOESNOTEXIST_S     _MESSAGE(1019, _("Complex attribute "SFQ" does not exist\n"))
-#define MSG_CENTRY_FILENOTCORRECT_S   _MESSAGE(1020, _("Complex attribute file "SFQ" is not correct\n"))
-#define MSG_QINSTANCE_NOQUEUES        _MESSAGE(1021, _("No queues remaining after -q queue selection\n"))
-#define MSG_HGROUP_NOTEXIST_S         _MESSAGE(1022, _("Host group "SFQ" does not exist\n"))
-#define MSG_HGROUP_FILEINCORRECT_S    _MESSAGE(1023, _("Host group file "SFQ" is not correct\n"))
+#define MSG_CENTRY_NOTCHANGED         _MESSAGE(1024, _("Complex attribute configuartion has not been changed\n"))
+#define MSG_CENTRY_DOESNOTEXIST_S     _MESSAGE(1025, _("Complex attribute "SFQ" does not exist\n"))
+#define MSG_CENTRY_FILENOTCORRECT_S   _MESSAGE(1026, _("Complex attribute file "SFQ" is not correct\n"))
+#define MSG_QINSTANCE_NOQUEUES        _MESSAGE(1027, _("No queues remaining after -q queue selection\n"))
+#define MSG_HGROUP_NOTEXIST_S         _MESSAGE(1028, _("Host group "SFQ" does not exist\n"))
+#define MSG_HGROUP_FILEINCORRECT_S    _MESSAGE(1029, _("Host group file "SFQ" is not correct\n"))
 
 #endif /* __MSG_CLIENTS_COMMON_H */
 

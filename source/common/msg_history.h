@@ -52,7 +52,7 @@
 #define MSG_HISTORY_JOBNAMEXNOTFOUND_S       _MESSAGE(25087, _("job name "SFN" not found\n"))
 #define MSG_HISTORY_TOPTIONREQUIRESJOPTION   _MESSAGE(25088, _("-t option requires -j option\n"))
 #define MSG_HISTORY_HOST            "HOST"
-#define MSG_HISTORY_QUEUE           "QUEUE"
+#define MSG_HISTORY_QUEUE           "CLUSTER QUEUE"
 #define MSG_HISTORY_GROUP           "GROUP"
 #define MSG_HISTORY_OWNER           "OWNER"
 #define MSG_HISTORY_PROJECT         "PROJECT"

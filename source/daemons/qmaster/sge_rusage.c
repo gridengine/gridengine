@@ -90,6 +90,7 @@ sge_write_rusage(dstring *buffer,
    char *arch_dep_usage_string;
 #endif
    const char *ret = NULL;
+   const char *qname = NULL;
 
    DENTER(TOP_LAYER, "sge_write_rusage");
 
@@ -181,8 +182,14 @@ sge_write_rusage(dstring *buffer,
 #endif
       DPRINTF(("arch_string: %s\n", arch_dep_usage_string));
    }
-#endif         
-
+#endif 
+   {
+      char *pos = NULL;
+      qname = lGetString(jr, JR_queue_name);
+      if ( (pos = strchr(qname, '@'))){
+         pos[0] = '\0';
+      }
+   }
    ret = sge_dstring_sprintf(buffer, ACTFILE_FPRINTF_FORMAT, 
           lGetString(jr, JR_queue_name), delimiter,
           lGetHost(jr, JR_host_name), delimiter,

@@ -1,0 +1,464 @@
+<span class="PlainText">
+
+<p><SPAN class="Header">Tunneling with SSH</SPAN></p>
+
+<span class="InputHeader">Contents</span>
+
+<ul>
+
+<li><a href="#thisguide">About this Guide</a></li>
+
+<li><a href="#aboutssh">About SSH</a></li>
+
+<li><a href="#concepts">Concepts</a></li>
+
+<li><a href="#choosing">Choosing the Desktop Terminal</a></li>
+
+<li><a href="#usingterminals">Using the Desktop Terminal</a></li>
+
+<ul>
+
+<li><a href="#macs">Macintosh</a></li>
+
+<li><a href="#windows">Windows</a></li>
+
+</ul>
+
+<li><a href="#HowtoConnect">Tunneling Using Cygwin: The Desktop Unix Emulator</a></li>
+
+<li><a href="#furtherdocumentation">Further Documentation</a></li>
+
+</ul>
+
+<br><br>
+
+
+
+<p><a name="thisguide"></a><span class="InputHeader">About this Guide</span></p>
+
+<p><i><b>What this guide discusses</b></i>. The purpose of this
+discussion is to provide a guide for users to tunnel to the desired
+server using SSH (Secure Shell).
+
+<p><b><i>What this guide does not discuss</i></b>. This guide does not
+explain how to use CVS, only how to set up the tunnel so that you can
+use CVS. However,a brief description of the command to begin using
+CVS, once the tunnel has been established, is appended at the end of
+this document.
+
+
+
+<p><a name="aboutssh"></a><span class="InputHeader">About SSH</span>
+
+
+
+<p>SSH is a flexible and more secure replacement for telnet and
+rlogin. It is widely used in development projects to provide access
+control and data-transport security. SSH can be used to create an
+unobtrusive, transparent "port tunnel" to the CVS (concurrent versions
+system) server. Data sent through the tunnel is encrypted, but the
+process is invisible to you or to the client software you are using to
+access the CVS repository. <p>Because it is easy to use and very
+secure, we recommend SSH for developers accessing the CVS repository.
+
+<ul> 
+
+<li>Accessing the CVS repository without SSH runs the very real risk
+of having a third-party thief snoop your CVS password. And, with your
+CVS password, the thief can wreak serious mischief. For instance, he
+or she might quite plausibly compromise the CVS repository by
+inserting a virus in the source code. 
+</li> 
+</ul>
+
+<p><a name="concepts"></a><span class="InputHeader">Concepts</span></p>
+
+<ul>
+
+<li>Using the right software</li>
+
+<li>Establishing an SSH tunnel</li>
+
+</ul>
+
+<p>Before you can establish an SSH connection, you have to find the
+right software,i.e., a client that places a terminal on your desktop,
+if you are using Windows or Mac OS 9 (Mac OS X has SSH built
+in). Fortunately, there are several excellent clients (both free and
+not) that offer Windows and Mac OS users desktop terminals. The
+section below discusses them in detail. Of course, if you are using
+Linux (or some other Unix variant), then you can skip that section and
+go right to the section, <a href="#HowtoConnect">"Tunneling Using
+Cygwin,"</a> that describes the key elements in establishing an SSH
+tunnel in a Unix-like environment.
+</p>
+
+<p>Once you have obtained a client terminal, the process of
+establishing a tunnel to the server housing the CVS repository is
+fairly simple. The crucial element is making sure you connect to the
+right server and that you use the right port numbers in establishing
+your tunnel. Fortunately, that number has been standardized: 2401.</p>
+
+<p></p>
+
+<p><a name="choosing"></a><span class="InputHeader">Choosing the Desktop Terminal</span></p>
+
+<p><b>Platforms</b> 
+
+<p><b>Linux, Unix, Solaris.</b> Linux supports SSH. To connect using
+SSH, see the "Tunneling Using Cygwin" section below. </p>
+
+<p><b>Macintosh.</b>In important regards, procedures for tunneling
+with a Mac client terminal resemble those for Windows clients. Mac
+users can download and install any number of free or for-fee
+terminals, the most popular being <a
+href="http://www.macssh.com">MacSSH,</a> which is characteristically
+easy to use, is free, and offers superior performance for SSH1
+connections. <a
+href="http://www.lysator.liu.se/~jonasw/freeware/niftyssh/">
+
+<p>NiftyTelnet 1.1 SSH</a>, a fast and easy-to-use telnet and SSH1 client is also free. It supports effortless scp (secure
+copying), as well. 
+
+<p>Mac OS X, based on FreeBSD and the Mach 3 kernel, has SSH built in
+and is constantly updated. You can also obtain and use <a
+href="http://www.DataFellows.com">Data Fellows' F-Secure SSH,</a> a
+for-fee (see below) client create a desktop terminal allowing you to
+tunnel to the CVS server. F-Secure SSH can be obtained at:
+http://www.DataFellows.com. For SSH1, you will want F-Secure SSH
+v.1.02; v.2.1 is for SSH2 connections only--i.e., those requiring
+encrypted certificates, or keys.</p>
+
+
+
+<p><b>Windows</b>. If you are using Windows (NT or 9x or 2K), then you
+can use <a href="http://www.vandyke.com/">SecureCRT</a>, <a
+href="http://www.DataFellows.com">F-Secure SSH</a>, or <a
+href="http://www.cygwin.com/">Cygwin</a>. Cygwin, from Cygnus
+Solutions, provides a nearly full Unix environment on your desktop.
+
+<p>In contrast, SecureCRT and F-Secure SSH only provide user-friendly
+terminals, i.e., they don't pretend to emulate a Unix
+environment. Both F-Secure SSH and SecureCRT cost money ($100 for
+SecureCRT, $150 for F-Secure SSH), although a free, 30-day trial
+version is available for each. Of all, Cygwin has the added value of
+not just being free and very powerful, but also open source and
+constantly improved upon. </p>
+
+</ul>
+
+
+<p><a name="usingterminals"></a><span class="InputHeader">Using the Desktop Terminals</span></p>
+
+<dl>
+
+<dt><b>Necessities</b></dt><br><br>
+
+<dd><b>Hostname</b>: <span class="PlainText">enter the name of this site</span><dd>
+
+<dd><b>Local port:</b> <span class="TypewriterPlain">2401</span><dd>
+
+<dd><b>Remote port:</b> <span class="TypewriterPlain">2401</span><dd>
+
+<dd><b>Username</b>: <span class="TypewriterPlain">tunnel</span></li>
+
+<dd><b>User password:</b> <span class="TypewriterPlain">tunnel</span></li>
+
+</dl>
+<br>
+
+<a name="macs"></a><b>Macintosh</b>
+<ul>
+<li><a href="www.macssh.com">MacSSH</a> 
+<li><a href="http://www.lysator.liu.se/~jonasw/freeware/niftyssh/">NiftyTelnet SSH</a></li>
+</ul>
+
+<p>Both Mac clients offer intuitive interfaces; both also are
+well-documented. For that reason, this discussion of the Mac clients
+is very brief. However, for both clients, the important information is
+the same as for the Windows clients: the hostname and ports must be
+correctly specified.</p>
+
+
+<a name="windows"></a><p><b>Windows</b>
+
+<p>Two free clients for Windows provide SSH tunneling:
+
+<ul>
+
+<li><a href="http://www.zip.com.au/~roca/ttssh.html">TTSSH</a>, an
+open-source add-on to Tera Term Pro
+
+<li><a
+href="http://www.chiark.greenend.org.uk/~sgtatham/putty/">PuTTY</a>, a
+free implementation of Telnet and SSH for Win32 platforms. It also
+provides an XTerm terminal emulator.
+
+</ul>
+
+<p>As with the Mac clients, the important things to keep in mind are
+the hostname and the port numbers. For both terminals, the
+configuration process is straightforward. Because TTSH is an add-on to
+Tera Term, it means you have to go through that one extra step before
+SSH functionality is possible. [A fuller description of tunneling with
+TTSH is being drafted and will be posted when finished. For now,
+please see TTSH's 
+<a href="http://www.zip.com.au/~roca/ttssh.html">website</a>.]
+
+<p>PuTTY, on the other hand, does not allow you to easily configure
+the client to handle port forwarding. As a result, it is not
+recommended for tunneling.
+
+
+<p><b>SecureCRT and F-Secure SSH</b></p>
+
+<p>Both these clients are fairly easy to use and configure for SSH1
+tunneling. The information you will need--doubtless familiar by
+now--is listed below.</p>
+
+
+<p>The following illustrates the procedure; we will use SecureCRT (version 3.1.2):
+<ol>
+
+<li>Open a new session, specifying "SSH1" in the pull-down menu.</li>
+
+<li>For "Hostname," enter the name of this site.</li>
+
+<li>Click on the "Advanced" button by "Hostname."</li>
+
+<li>Once in the Advanced section, click on the "Port Forwarding" tab.</li>
+
+<li>For "Local port," enter "<span class="TypewriterPlain">2401</span>."</li>
+
+<li>For "Remote port" enter "<span class="TypewriterPlain">2401</span>."</li>
+
+<li>For Username, enter "<span class="TypewriterPlain">tunnel</span>."</li>
+
+<li>For User password, enter "<span class="TypewriterPlain">tunnel</span>."
+
+<li>For "Remote hostname," enter "<span class="TypewriterPlain">localhost</span>."</li>
+
+<li>Enter "Save" and "OK" to exit the dialog box.</li>
+
+<li>Back in the main connection page. . . .</li>
+
+<li>Leave the defaults for "Cipher" and "Authentication" as they are.</li>
+
+<li>Click on "Connect."</li>
+
+<li>The server should then prompt for your password. It is "<span
+class="TypewriterPlain">tunnel</span>."</li>
+
+<li>If this is your first time, the client will tell you that no "host
+key" for the server has been found and ask if you want to
+continue. You want to continue.</li>
+
+<li>You are now tunneling.</li>
+
+<li>The terminal screen does not show a prompt. That's how it should
+be. The tunnel has been established. You are now ready to begin using
+CVS securely.</li>
+
+</ol>
+
+
+
+<p><b>Cygwin</b></p>
+
+<p>The most important consideration for installing Cygwin is creating
+the appropriate Unix folders. Cygwin's <a
+href="http://www.cygwin.com/">website</a> offers complete and detailed
+instructions; the below is an abbreviated version.</p>
+
+<ul>
+
+<li>Download and install Cygwin. Cygnus gives you the option of
+installing from the Web, but it is faster (and ultimately more
+efficient) to install from a local disk. So just download and save the
+file somewhere you can easily find it.</li>
+
+<li>Click on Cygwin's "setup.exe" icon and follow the instructions,
+accepting the defaults. At some point, you will be asked for text
+format and whether you want Cygwin to be for yourself alone or to be
+shared. It doesn't matter whether you choose DOS or Unix, but for the
+sake of ease of use, choose Unix and "All." Cygwin will then install,
+and should create icons in your start file as well as on your
+desktop. If it doesn't, run setup again. Nothing will be installed if
+nothing needs to be, but it will take you to the end, where you can
+check the boxes indicating you want the icons installed. Check
+them.</li>
+
+<li>At this point, you need to create the Unix folders. You can create
+the standard directories from within Cygwin, as Cygwin's configuration
+instructions suggest (<a
+href="http://www.cygwin.com/cygwin-ug-net/setup-dir.html">http://www.cygwin.com/cygwin-ug-net/setup-dir.html</a>),
+or you can set them up from within Windows. Using the Windows method
+has some advantages, especially for people who are not entirely
+familiar with Unix commands and protocols. Since Cygwin is able to
+read both Win32 (Windows) file paths as well as Unix ones (POSIX), it
+doesn't much matter how you do it.</li>
+
+<li>Very clear instructions for creating the Unix directories can be
+found at <a
+href="http://www.woodsoup.org/projs/ORKiD/basic.htm">http://www.woodsoup.org/projs/ORKiD/basic.htm</a>.
+Although the instructions are specifically for a slightly earlier
+version of the program, they still obtain: the typical Unix
+directories must still be created.
+
+<li>As well, the cygwin.bat file needs to be modified. Cygnus suggests
+that other files, too, need modification; but of these, the .bat file,
+which specifies the commands and their sequence that bash must go
+through, needs immediate modification.
+
+<li>Configure your cygwin.bat file using Windows' Notepad utility or
+other text editor (not Microsoft Word or anything that imparts
+formatting) so that it looks something like this:</li>
+
+</ul>
+
+  <ul><p><span class="TypewriterPlain">@ECHO OFF<br>
+
+  SET MAKE_MODE=Unix<br>
+
+  SET CYGWIN=notty<br>
+
+  SET HOME=C:\unix\HOME\[your home directory name]<br>
+
+  SET TERM=VT100<br>
+
+
+  CHDIR C:\Unix\HOME\[your home directory name]<br>
+
+  SET PATH=C:\Unix\BIN;C:\Unix\USR\LOCAL\BIN;C:\CYGWIN\BIN;%PATH%<br>
+
+  BASH</span><br>
+
+  </ul>
+<ul>
+
+<p><li>Where the "unix" directory on the "C" drive contains the
+traditional Unix directories. You can name it anything you want, as
+long a you do not use anything that confuses Unix, e.g., hyphens,
+spaces, etc.
+
+<li>You should now have the C:\Cygwin directories, and your own
+C:\unix directories, which include your crucial home directory.
+
+<li>There is still one more, optional, step. For Cygwin to run
+efficiently, you might want to configure the shortcut icon on your
+desktop so that it starts the program in the right directory. This is
+not necessary, if you have stipulated the HOME directory in the .bat
+file.</li>
+
+<li>Cygwin offers some further refinements, and, to be sure, there
+will doubtless be some tweaking you will have to do to make have the
+program running efficiently. Again, if you are familiar with Unix
+commands and file structures, you will find this easy; if you are not,
+Cygwin is quite forgiving, and you can get started with a minimum of
+fuss. </li>
+
+</ul>
+
+<a name="HowtoConnect"></a><span class="InputHeader">Tunneling Using Cygwin: The Desktop Unix Emulator</span>
+<ul>
+
+<li>First, begin the program.</li>
+
+<li>At the prompt, enter "<span class="TypewriterPlain">ssh -x -L 2401:localhost:2401 tunnel@DOMAINNAME</span>"</li>
+
+  <li>Where DOMAINNAME is the name of this site.  The server should
+  ask you for your password. Enter it. It is "<span
+  class="TypewriterPlain">tunnel</span>"</li>
+
+  <li>If this is your first time, the server will send you a message along these lines:
+
+  <ul>
+
+  <li><span class="TypewriterPlain">Host key not found from the list of known hosts.</span> </li>
+
+  <li><span class="TypewriterPlain">Are you sure you want to continue connecting (yes/no)?</span> </li>
+
+  </ul>
+
+  </li>
+
+  <li>Enter "<span class="TypewriterPlain">Yes</span>." You can't just
+  enter "y"; you have to spell it out. <li>The server will then
+  respond with: "<span class="TypewriterPlain">Host "DOMAINNAME" added
+  to the list of known hosts.</span>"
+
+  <li>The screen does not show a prompt. That's how it should be. The
+  tunnel has been established. You are now ready to begin using
+  CVS. <li>You can, at this point, minimize the terminal, but do not
+  close it or enter <span class="TypewriterPlain">Ctrl-C
+  (^C)</span>. Doing so will kill the terminal tunnel.</li>
+
+</ul>
+
+
+<a name="terminating"></a><p><span class="InputHeader">Terminating the Tunnel</span>
+
+<p>The easiest way to terminate the tunnel is to <span
+class="TypewriterPlain">Ctrl-C (^C)</span> it out of existence. In
+both the Mac OS and Windows environment, you can also close the client
+window, thereby shutting the tunnel down.</p>
+
+
+<p><span class="InputHeader">CVS</P></span>
+
+<p><b>Accessing the CVS Repository</b></p>
+
+<p>Once the SSH tunnel has been successfully established, you can
+access the CVS repository, either by using, if on Windows, WinCVS, or
+on Mac OS, Mac CVS, or by entering, at the prompt,
+
+<ul>
+
+<li><span class="TypewriterPlain">cvs -d :pserver:[USERNAME]@localhost:/CVS login</span></li>
+
+<li><span class="TypewriterPlain">cvs -d :pserver:[USERNAME]@localhost:/CVS co [PROJECT]</span></li>
+
+</ul>
+
+
+<p>Where <span class="TypewriterPlain">[USERNAME]</span> is your
+user name on the server and <span
+class="TypewriterPlain">[PROJECT]</span> is the project directory.
+
+<p>For more information on using CVS, see the document, "<A
+HREF="DomainDocsCVS.html">CVS source code version control.</A>"
+
+<br>
+
+<p><a name="furtherdocumentation"></a><span class="InputHeader">Further Documentation</span></p>
+
+
+
+<li> <a href=" http://openbsd.appli.se/openssh/windows.html">OpenBSD.org</a> has a list of "free" clients for
+interoperating with OpenSSH from both Windows and Macintosh boxes: http://openbsd.appli.se/openssh/windows.html
+
+<li><a href="http://www.dreamwvr.com/ssh/ssh-faq.html">The Secure Shell</a> (SSH) Frequently Asked
+Questions: http://www.dreamwvr.com/SSH-faq/ 
+
+<li><a href="http://www.ssh.org/">The Secure Shell Community Site:</a> http://www.ssh.org/
+
+<li><a href="http://www.openssh.com/">OpenSSH:</a>  http://www.openssh.com/ 
+
+<li><a href="http://sources.redhat.com/ml/cygwin/">The Cygwin Project Mailing List
+Archives</a>: http://sources.redhat.com/ml/cygwin/ 
+
+<li><a href="http://www.ssh.org/">The Secure Shell Community Site</a>: http://www.ssh.org/ 
+
+<li><a href="http://www.linuxhelp.net/guides/sirplaya/ssh.phtml">Secure Shell (SSH/SSH) Setup (Linux):</a>
+http://www.linuxhelp.net/guides/sirplaya/ssh.phtml 
+
+<li><a href="http://www.SecureMac.com/">Macintosh Security Issues</a>: http://www.SecureMac.com/
+
+<li><a href="http://www.macssh.com/">MacSSH</a> (open-source SSH1 and 2 for the Mac!): http://www.macssh.com/ 
+
+<li><a href="http://www.wincvs.org/ssh.html">SSH with WinCvs:</a> http://www.wincvs.org/ssh.html
+
+
+
+</span>
+

@@ -1,3 +1,7 @@
+DT-2005-03-29-1: Bugfix:    o Fixed broken build
+                 Review:    CR
+                 Changed:   profiling
+
 DT-2005-03-29-0: Bugfix:    o Profiling is now thread-safe and DRMAA-safe
                             o Fixed MT bug in drmaa_exit()
                             o Profiling & DRMAA cleanup

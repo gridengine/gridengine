@@ -1602,6 +1602,8 @@ static void init_array(pthread_t num) {
       if (theInfo[i] != NULL && theInfo[i][SGE_PROF_ALL].thread_id == num) {
          break;
       } else if (theInfo[i] == NULL) {
+         long storage = 0;
+         
          theInfo[i] = (sge_prof_info_t*)sge_malloc((SGE_PROF_ALL + 1) * sizeof(sge_prof_info_t));
          memset (theInfo[i], 0, (SGE_PROF_ALL + 1) * sizeof(sge_prof_info_t));
 
@@ -1609,10 +1611,12 @@ static void init_array(pthread_t num) {
              theInfo[i][c].thread_id = num;
          }
 
-         /* Rather than wasting memory pointing to a malloced int, it's safe and
-          * much easier to just store the int directly in the thread local
-          * storage. */
-         pthread_setspecific (thread_id_key, (void *)i);
+         /* Rather than malloc'ing space for an int that we'll have to clean up
+          * later, we just store the int directly in the thread local storage.
+          * In order to keep Linux from complaining, the value we store must be
+          * the same size as a void pointer, i.e. a long. */
+         storage = i;
+         pthread_setspecific (thread_id_key, (void *)storage);
          
          prof_info_init(SGE_PROF_ALL, num);
 
@@ -2015,11 +2019,11 @@ bool thread_prof_active_by_name(const char* thread_name) {
 
 
 static int get_prof_info_thread_id(pthread_t thread_num) {
-   int ret = -1;
+   long ret = -1;
    
-   ret = (int)pthread_getspecific (thread_id_key);
+   ret = (long)pthread_getspecific (thread_id_key);
 
-   return ret;
+   return (int)ret;
 }
 
 

@@ -1,5 +1,5 @@
 <HTML>
-<!--This file created 28.10.2004 0:47 Uhr by Claris Home Page version 3.0-->
+<!--This file created 25.12.2004 22:19 Uhr by Claris Home Page version 3.0-->
 <HEAD>
    <TITLE>Tight MPICH Integration in Grid Engine</TITLE>
    <META NAME=GENERATOR CONTENT="Claris Home Page 3.0">
@@ -14,17 +14,18 @@ nodes.</P>
 
 <P><FONT SIZE="+1"><B>Author:</B></FONT></P>
 
-<P>Reuti, reuti__at__staff.uni-marburg.de Philipps-University of Marburg, Germany</P>
+<P>Reuti, <A HREF="mailto:reuti__at__staff.uni-marburg.de">reuti__at__staff.uni-marburg.de;</A>
+Philipps-University of Marburg, Germany</P>
 
 <P><FONT SIZE="+1"><B>Version:</B></FONT></P>
 
-<P>1.2 -- 2004-10-27 First updated version, comments and corrections
-are welcome</P>
+<P>1.2a -- 2004-12-18 Minor change for MPICH 1.2.6, comments and
+corrections are welcome</P>
 
 <P><FONT SIZE="+1"><B>Contents:</B></FONT></P>
 
 <UL>
-   <LI>Symptom of this behavior</LI>
+   <LI>Symptom of this behaviour</LI>
    
    <LI>Explanation</LI>
    
@@ -57,7 +58,7 @@ $SGE_ROOT/mpi directory of the Grid Engine distribution.</P>
 <HR>
 
 <BR>
-<FONT SIZE="+1"><B>Symptom</B></FONT></P>
+<FONT SIZE="+1"><B>Symptom of this behaviour</B></FONT></P>
 
 <BLOCKQUOTE>You have parallel jobs using MPICH under SGE on LINUX.
    Some of these jobs are killed nicely when you use qdel and don't
@@ -153,7 +154,7 @@ $SGE_ROOT/mpi directory of the Grid Engine distribution.</P>
    So you may define it in any file, which will be sourced during a
    noninteractive login to the slave nodes. To be set on the master
    node, you have to define it in the submit script. If you want to
-   propagte this to the slave nodes (and avoid to change any login
+   propagate this to the slave nodes (and avoid to change any login
    file), you will have to edit the rsh-wrapper in the mpi directory
    of SGE, so that the qrsh command used there will include -V, so
    that the variables are available on the slaves:</P>
@@ -176,10 +177,10 @@ exec $SGE_ROOT/bin/$ARC/qrsh -V -inherit $rhost $cmd<BR></PRE>
    
    <P>When you have the source of the used programs, it is also
    possible to disable the creation of a new process group from MPICH
-   and remove this behavior completely.<BR>
+   and remove this behaviour completely.<BR>
    </P>
    
-   <BLOCKQUOTE><B>For MPICH 1.2.5.2:</B>
+   <BLOCKQUOTE><B>For MPICH 1.2.5.2 and 1.2.6:</B>
       
       <P>The file where it must be done is session.c in
       mpich-1.2.5.2/mpid/util. Change the line:</P>
@@ -192,15 +193,7 @@ exec $SGE_ROOT/bin/$ARC/qrsh -V -inherit $rhost $cmd<BR></PRE>
       
       <P>This way you can easily go back at a later point in
       time.<BR>
-      </P>
-      
-      <P><B>For MPICH 1.2.6:</B></P>
-      
-      <P>In this version you can use a switch in the ./configure
-      line. Use one of the following lines to the ./configure command
-      (according to your taste):</P>
-      
-      <PRE>--disable-processgroup<BR>--enable-processgroup=no<BR></PRE></BLOCKQUOTE>
+      </P></BLOCKQUOTE>
    
    <P>Because the routine will be linked into your final program, you
    have to recompile all your programs. It's not sufficient, just to
@@ -332,7 +325,7 @@ the MPICH-tasks with the ch_p4-device</B></FONT></P>
 
 <BLOCKQUOTE>With the hints given above, you may achieve the goal of
    an even distribution of your MPICH tasks, but the used network
-   interfaces for the communication of the slave proceses to the
+   interfaces for the communication of the slave processes to the
    master node may be the wrong one. You will notice this, when you
    have a look at the program calls to the slave processes. Assume
    'ic...' is the internal network (which should be used) and
@@ -412,7 +405,7 @@ the MPICH-tasks with the ch_p4-device</B></FONT></P>
    so that you end up with n again.
    
    <P>Because one call more to qrsh is made by TURBOMOLE than SGE is
-   aware of (because of the behavior of MPICH to start one task
+   aware of (because of the behaviour of MPICH to start one task
    locally without qrsh, but still removing one line during the first
    scan of the machines file), the created machines file on the
    master node will have one line less than necessary. This yields to

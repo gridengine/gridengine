@@ -1,3 +1,9 @@
+AS-2004-03-25-0: Enhancem.: add SGE_BINARY_PATH variable to job environment
+                 Changed:   sge_execd, submit.1
+                 Issue:     919
+                 Bugtraq:   5018757
+                 Review:    DT
+
 JG-2004-03-24-1: Bugfix:    Disabled non unique hash on JB_owner in scheduler.
 
 MD-2004-03-24-0: Bugfix:    message, that qmaster didn't start always appears,

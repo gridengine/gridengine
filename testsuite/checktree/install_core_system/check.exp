@@ -2403,10 +2403,11 @@ proc setup_execd_conf {} {
         incr expected_entries 1
      }
      set spool_dir_found 0
-    
-     if { [ string compare [resolve_arch $host] "irix6"] == 0 } {
-        incr expected_entries 1 
-     }
+ 
+# ???   
+#     if { [ string compare [resolve_arch $host] "irix6"] == 0 } {
+#        incr expected_entries 1 
+#     }
 
      foreach elem $elements {
         append output "$elem is set to $tmp_config($elem)\n" 
@@ -2626,11 +2627,17 @@ proc setup_schedconf {} {
   if { [string first "global" $result] >= 0 } {
      puts $CHECK_OUTPUT "complex list global already exists"
   } else {
-     puts $CHECK_OUTPUT "creating global complex list"
-     set host_complex(complex1) "c1 DOUBLE 55.55 <= yes yes 0"
-     set_complex host_complex global 1
-     set host_complex(complex1) ""
-     set_complex host_complex global
+     set INVALID_OPTION [translate $CHECK_CORE_MASTER 0 1 0 [sge_macro MSG_ANSWER_INVALIDOPTIONARGX_S] "-scl"]
+     set INVALID_OPTION [string trim $INVALID_OPTION]
+     if { [string match "*$INVALID_OPTION*" $result] == 1 } {
+        puts $CHECK_OUTPUT "this version of qconf doesn't support -scl switch!"
+     } else {
+        puts $CHECK_OUTPUT "creating global complex list"
+        set host_complex(complex1) "c1 DOUBLE 55.55 <= yes yes 0"
+        set_complex host_complex global 1
+        set host_complex(complex1) ""
+        set_complex host_complex global
+     }
   }
   # reset_schedd_config has global error reporting
   get_schedd_config old_config

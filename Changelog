@@ -1,3 +1,6 @@
+CR-2003-07-17-0: Testsuite: install_core_system can now handle new complex
+                            behaviour.
+
 SG-2003-07-17-0: Bugfix:    Fixed the build
                  Changed:   sge_schedd
 

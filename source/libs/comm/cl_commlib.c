@@ -154,6 +154,7 @@ static pthread_mutex_t cl_com_application_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_app_status_func_t   cl_com_application_status_func = NULL;
 
 /* global application function pointer for errors */
+/* JG: TODO: we don't need this mutex, just lock cl_com_application_error_list instead. */
 static pthread_mutex_t cl_com_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_error_func_t   cl_com_error_status_func = NULL;
 
@@ -326,25 +327,25 @@ static int cl_commlib_check_callback_functions(void) {
     if ( is_commlib_thread == CL_FALSE ) {
        /* here we are in application context, we can call trigger functions */
        cl_application_error_list_elem_t* elem = NULL;
+       pthread_mutex_lock(&cl_com_error_mutex);
        cl_raw_list_lock(cl_com_application_error_list);
        while( (elem = cl_application_error_list_get_first_elem(cl_com_application_error_list)) != NULL ) {
           cl_raw_list_remove_elem(cl_com_application_error_list, elem->raw_elem);
 
           /* now trigger application error func */
-          pthread_mutex_lock(&cl_com_error_mutex);
           if (cl_com_error_status_func != NULL) {
              CL_LOG(CL_LOG_WARNING,"triggering application error function");
              cl_com_error_status_func(elem->cl_error,elem->cl_info);
           } else {
              CL_LOG(CL_LOG_WARNING,"can't trigger application error function: no function set");
           }
-          pthread_mutex_unlock(&cl_com_error_mutex);
 
           free(elem->cl_info);
           free(elem);
           elem = NULL;
        }
        cl_raw_list_unlock(cl_com_application_error_list);
+       pthread_mutex_unlock(&cl_com_error_mutex);
     }
     
 

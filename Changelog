@@ -1,3 +1,6 @@
+JG-2004-11-19-0: Bugfix:    Fixed a deadlock in commlib error handling.
+                 Review:    CR/SG
+
 CR-2004-11-19-0: Testsuite: qconf test created files in /tmp/ which can
                             cause problems for multiple testsuites running
                             on the same host.

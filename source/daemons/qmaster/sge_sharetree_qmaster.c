@@ -130,7 +130,7 @@ char *rhost
    }
 
    lSetUlong(ep, STN_version, prev_version+1);
-   sge_add_event(NULL, sgeE_NEW_SHARETREE, 0, 0, NULL, ep);
+   sge_add_event(NULL, 0, sgeE_NEW_SHARETREE, 0, 0, NULL, ep);
 
    /* now insert new element */
    lAppendElem(*lpp, lCopyElem(ep));
@@ -177,7 +177,7 @@ char *rhost
 
    lFreeList(*lpp);
    *lpp = NULL;
-   sge_add_event(NULL, sgeE_NEW_SHARETREE, 0, 0, NULL, NULL);
+   sge_add_event(NULL, 0, sgeE_NEW_SHARETREE, 0, 0, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDLIST_SSS, ruser, rhost, MSG_OBJ_SHARETREE));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);

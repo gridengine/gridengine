@@ -618,7 +618,7 @@ lListElem* add_to_reschedule_unknown_list(lListElem *host, u_long32 job_number,
       lSetUlong(ruep, RU_state, state);
 
       write_host(1, 2, host, EH_name, NULL); 
-      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host);
+      sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host);
    }
    DEXIT;
    return ruep;
@@ -702,7 +702,7 @@ void delete_from_reschedule_unknown_list(lListElem *host)
                lGetUlong(this, RU_task_number)));
             lRemoveElem(rulp, this);
             write_host(1, 2, host, EH_name, NULL);
-            sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host); 
+            sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host); 
          }
       }
    }
@@ -748,7 +748,7 @@ void update_reschedule_unknown_list(lListElem *host)
                lSetUlong(ruep, RU_state, new_state);
             }
             write_host(1, 2, host, EH_name, NULL);
-            sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host);
+            sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host, EH_name), host);
          }
       }
    }

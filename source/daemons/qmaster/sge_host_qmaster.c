@@ -316,13 +316,13 @@ u_long32 target
    /* send event */
    switch(target) {
       case SGE_ADMINHOST_LIST:
-         sge_add_event(NULL, sgeE_ADMINHOST_DEL, 0, 0, host, NULL);
+         sge_add_event(NULL, 0, sgeE_ADMINHOST_DEL, 0, 0, host, NULL);
          break;
       case SGE_EXECHOST_LIST:
-         sge_add_event(NULL, sgeE_EXECHOST_DEL, 0, 0, host, NULL);
+         sge_add_event(NULL, 0, sgeE_EXECHOST_DEL, 0, 0, host, NULL);
          break;
       case SGE_SUBMITHOST_LIST:
-         sge_add_event(NULL, sgeE_SUBMITHOST_DEL, 0, 0, host, NULL);
+         sge_add_event(NULL, 0, sgeE_SUBMITHOST_DEL, 0, 0, host, NULL);
          break;
    }
 
@@ -545,7 +545,7 @@ gdi_object_t *object
          }
 
          sge_change_queue_version_exechost(host);
-         sge_add_event(NULL, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 0, 0, host, ep);
+         sge_add_event(NULL, 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 0, 0, host, ep);
          if (!is_nohist())
             write_host_history(ep);
 
@@ -553,11 +553,11 @@ gdi_object_t *object
       break;
 
       case AH_name:
-         sge_add_event(NULL, old_ep?sgeE_ADMINHOST_MOD:sgeE_ADMINHOST_ADD, 0, 0, lGetHost(ep, AH_name), ep);
+         sge_add_event(NULL, 0, old_ep?sgeE_ADMINHOST_MOD:sgeE_ADMINHOST_ADD, 0, 0, lGetHost(ep, AH_name), ep);
       break;
 
       case SH_name:
-         sge_add_event(NULL, old_ep?sgeE_SUBMITHOST_MOD:sgeE_SUBMITHOST_ADD, 0, 0, lGetHost(ep, SH_name), ep);
+         sge_add_event(NULL, 0, old_ep?sgeE_SUBMITHOST_MOD:sgeE_SUBMITHOST_ADD, 0, 0, lGetHost(ep, SH_name), ep);
       break;
    }
 
@@ -670,7 +670,7 @@ lList *lp
             queue_list_set_unknown_state_to(Master_Queue_List, tmp_hostname, 1, 0);
          }
 
-         sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), *hepp);
+         sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(*hepp, EH_name), *hepp);
 
          added_non_static = 0;
          statics_changed = 0;
@@ -754,11 +754,11 @@ lList *lp
    }
 
    if (global_ep) {
-      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, SGE_GLOBAL_NAME, global_ep);
+      sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, SGE_GLOBAL_NAME, global_ep);
    }
 
    if (host_ep) {
-      sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host_ep, EH_name), host_ep);
+      sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, lGetHost(host_ep, EH_name), host_ep);
    }
 
    DEXIT;
@@ -1292,7 +1292,7 @@ u_long32 target) {
    ** loop over pseudo hosts and set EH_startup flag
    */
    lSetUlong(hep, EH_startup, 1);
-   sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, rhost, hep);
+   sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, rhost, hep);
 
    INFO((SGE_EVENT, MSG_LOG_REGISTER_SS, "execd", rhost));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);

@@ -209,7 +209,7 @@ gdi_object_t *object
          old_ep ? lGetList(old_ep, PE_queue_list) : NULL, 
          "parallel environment", pe_name);
 
-   sge_add_event(NULL, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, pe_name, ep);
+   sge_add_event(NULL, 0, old_ep?sgeE_PE_MOD:sgeE_PE_ADD, 0, 0, pe_name, ep);
 
    DEXIT;
    return 0;
@@ -278,7 +278,7 @@ int sge_del_pe(lListElem *pep, lList **alpp, char *ruser, char *rhost)
       DEXIT;
       return STATUS_EEXIST;
    }
-   sge_add_event(NULL, sgeE_PE_DEL, 0, 0, pe, NULL);
+   sge_add_event(NULL, 0, sgeE_PE_DEL, 0, 0, pe, NULL);
    sge_change_queue_version_qr_list(lGetList(ep, PE_queue_list), 
       NULL, MSG_OBJ_PE, pe);
 

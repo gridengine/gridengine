@@ -704,11 +704,11 @@ sge_commit_flags_t commit_flags
 
             /* debit in all layers */
             if ( debit_host_consumable(jep, global_host_ep, Master_Complex_List, slots) > 0 )
-               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, "global", global_host_ep );
+               sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, "global", global_host_ep );
 
             hep = host_list_locate(Master_Exechost_List, qep_QU_qhostname);
             if ( debit_host_consumable(jep, hep, Master_Complex_List, slots) > 0 )
-               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, qep_QU_qhostname, hep);
+               sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, qep_QU_qhostname, hep);
 
             debit_queue_consumable(jep, qep, Master_Complex_List, slots);
             sge_add_queue_event(sgeE_QUEUE_MOD, qep);
@@ -816,9 +816,9 @@ sge_commit_flags_t commit_flags
             existing_container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER); 
             container = pe_task_sum_past_usage_all(pe_task_list);
             if(existing_container == NULL) {
-               sge_add_event(NULL, sgeE_PETASK_ADD, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, container);
+               sge_add_event(NULL, 0, sgeE_PETASK_ADD, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, container);
             } else {
-               sge_add_list_event(NULL, sgeE_JOB_USAGE, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER,
+               sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER,
                                   lGetList(container, PET_scaled_usage));
             }
 
@@ -858,12 +858,12 @@ sge_commit_flags_t commit_flags
       job_enroll(jep, NULL, jataskid);
       job_write_spool_file(jep, jataskid, NULL, SPOOL_DEFAULT);
       for_each(petask, lGetList(jatep, JAT_task_list)) {
-         sge_add_list_event(NULL, sgeE_JOB_FINAL_USAGE, lGetUlong(jep, JB_job_number),
+         sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, lGetUlong(jep, JB_job_number),
             lGetUlong(jatep, JAT_task_number), 
             lGetString(petask, PET_id), 
             lGetList(petask, PET_scaled_usage));
       }
-      sge_add_list_event(NULL, sgeE_JOB_FINAL_USAGE, jobid = lGetUlong(jep, JB_job_number), 
+      sge_add_list_event(NULL, 0, sgeE_JOB_FINAL_USAGE, jobid = lGetUlong(jep, JB_job_number), 
          lGetUlong(jatep, JAT_task_number),
          NULL, lGetList(jatep, JAT_scaled_usage_list));
 
@@ -987,12 +987,12 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
             host = host_list_locate(Master_Exechost_List, "global");
             if (debit_host_consumable(job, host, 
                                       Master_Complex_List, -tmp_slot)) {
-               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, "global", host);
+               sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, "global", host);
             }
             host = host_list_locate(Master_Exechost_List, queue_hostname);
             if (debit_host_consumable(job, host, 
                                       Master_Complex_List, -tmp_slot)) {
-               sge_add_event(NULL, sgeE_EXECHOST_MOD, 0, 0, queue_hostname, host);
+               sge_add_event(NULL, 0, sgeE_EXECHOST_MOD, 0, 0, queue_hostname, host);
             }
             debit_queue_consumable(job, queue, Master_Complex_List, -tmp_slot);
          }
@@ -1013,7 +1013,7 @@ static void sge_clear_granted_resources(lListElem *job, lListElem *ja_task,
                   lGetString(ja_task, JAT_granted_pe)));
          } else {
             reverse_job_from_pe(pe, pe_slots, job_id);
-            sge_add_event(NULL, sgeE_PE_MOD, 0, 0, 
+            sge_add_event(NULL, 0, sgeE_PE_MOD, 0, 0, 
                           lGetString(ja_task, JAT_granted_pe), pe);
          }
       }
@@ -1131,7 +1131,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
       suser_unregister_job(job);
       lRemoveElem(Master_Job_List, job);
       if (!no_events) {
-         sge_add_event(NULL, sgeE_JOB_DEL, job_id, ja_task_id, NULL, NULL);
+         sge_add_event(NULL, 0, sgeE_JOB_DEL, job_id, ja_task_id, NULL, NULL);
       }
    } else {
       int is_enrolled = job_is_enrolled(job, ja_task_id);
@@ -1151,7 +1151,7 @@ static int sge_bury_job(lListElem *job, u_long32 job_id, lListElem *ja_task,
          }
       }
       if (!no_events) {
-         sge_add_event(NULL, sgeE_JATASK_DEL, job_id, ja_task_id, 
+         sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_id, ja_task_id, 
                        NULL, NULL);
       }
    }

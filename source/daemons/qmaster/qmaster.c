@@ -472,7 +472,7 @@ New behaviour:
 
       if (shut_me_down) {
          /* we have to deliver events before shutting down */
-         sge_add_event(NULL, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL);
+         sge_add_event(NULL, now, sgeE_QMASTER_GOES_DOWN, 0, 0, NULL, NULL);
          set_event_client_busy(NULL, 0); /* send event, even if event clients are busy */
          ck_4_deliver_events(now);
 #ifdef QIDL
@@ -683,7 +683,6 @@ void sge_gdi_kill_master(char *host, sge_gdi_request *request, sge_gdi_request *
 
    /* do it */
    shut_me_down = 1;
-   /* sge_flush_events(NULL, 0); !!!! not really necessary */
       
    INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, username, host, prognames[QMASTER]));
    answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);

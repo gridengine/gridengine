@@ -238,8 +238,14 @@ sge_pack_buffer *pb
                      DPRINTF(("--- transfering job "u32" is running\n", jobid));
                      sge_commit_job(jep, jatep, 1, COMMIT_DEFAULT); /* implicitly sending usage to schedd in sgeee_mode */
                      cancel_job_resend(jobid, jataskid);
-                  } else if (feature_is_enabled(FEATURE_SGEEE)) /* need to generate a job event for new usage */
-                        sge_add_list_event(NULL, sgeE_JOB_USAGE, jobid, jataskid, NULL, lGetList(jatep, JAT_scaled_usage_list));
+                  } else if (feature_is_enabled(FEATURE_SGEEE)) {
+                     /* need to generate a job event for new usage 
+                      * the timestamp should better come from report object
+                      */
+                     sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
+                                        jobid, jataskid, NULL, 
+                                        lGetList(jatep, JAT_scaled_usage_list));
+                  }
                } else {
                   /* register running task qmaster will log accounting for all registered tasks */
                   lListElem *pe;
@@ -298,9 +304,10 @@ sge_pack_buffer *pb
 
                               /* notify scheduler of task usage event */
                     if (new_task) {
-                       sge_add_event(NULL, sgeE_PETASK_ADD, jobid, jataskid, pe_task_id_str, petask);
+                       sge_add_event(NULL, 0, sgeE_PETASK_ADD, jobid, jataskid, pe_task_id_str, petask);
                     } else {
-                       sge_add_list_event(NULL, sgeE_JOB_USAGE, jobid, jataskid, pe_task_id_str,
+                       sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
+                                          jobid, jataskid, pe_task_id_str,
                                           lGetList(petask, PET_scaled_usage));
                     }                            
 
@@ -468,7 +475,7 @@ sge_pack_buffer *pb
                   if (petask == NULL) {
                      petask = lAddSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list, PET_Type);
                      lSetUlong(petask, PET_status, JRUNNING);
-                     sge_add_event(NULL, sgeE_PETASK_ADD, jobid, jataskid, pe_task_id_str, petask);
+                     sge_add_event(NULL, 0, sgeE_PETASK_ADD, jobid, jataskid, pe_task_id_str, petask);
                   }
 
                   /* store unscaled usage directly in sub-task */
@@ -501,12 +508,12 @@ sge_pack_buffer *pb
                         lListElem *container = lGetSubStr(jatep, PET_id, PE_TASK_PAST_USAGE_CONTAINER, JAT_task_list);
                         if(container == NULL) {
                            container = pe_task_sum_past_usage_list(lGetList(jatep, JAT_task_list), petask);
-                           sge_add_event(NULL, sgeE_PETASK_ADD, 
+                           sge_add_event(NULL, 0, sgeE_PETASK_ADD, 
                                          jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
                                          container);
                         } else {
                            pe_task_sum_past_usage(container, petask);
-                           sge_add_list_event(NULL, sgeE_JOB_USAGE, 
+                           sge_add_list_event(NULL, 0, sgeE_JOB_USAGE, 
                                               jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER,
                                               lGetList(container, PET_scaled_usage));
                         }
@@ -516,7 +523,7 @@ sge_pack_buffer *pb
                      job_remove_spool_file(jobid, jataskid, pe_task_id_str,
                                            SPOOL_DEFAULT);
                      lRemoveElem(lGetList(jatep, JAT_task_list), petask);
-                     sge_add_event(NULL, sgeE_PETASK_DEL, jobid, jataskid, 
+                     sge_add_event(NULL, 0, sgeE_PETASK_DEL, jobid, jataskid, 
                                    pe_task_id_str, NULL);
                      
                      /* get rid of this job in case a task died from XCPU/XFSZ or 

@@ -282,7 +282,7 @@ int ckpt_success(lListElem *ep, lListElem *old_ep, gdi_object_t *object)
          old_ep ? lGetList(old_ep, CK_queue_list) : NULL,
          MSG_OBJ_CKPTI, ckpt_name);
 
-   sge_add_event(NULL, old_ep?sgeE_CKPT_MOD:sgeE_CKPT_ADD, 0, 0, ckpt_name, ep);
+   sge_add_event(NULL, 0, old_ep?sgeE_CKPT_MOD:sgeE_CKPT_ADD, 0, 0, ckpt_name, ep);
 
    DEXIT;
    return 0;
@@ -380,7 +380,7 @@ int sge_del_ckpt(lListElem *ep, lList **alpp, char *ruser, char *rhost)
       return STATUS_EDISK;
    }
 
-   sge_add_event(NULL, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL);
+   sge_add_event(NULL, 0, sgeE_CKPT_DEL, 0, 0, ckpt_name, NULL);
    sge_change_queue_version_qr_list(lGetList(found, CK_queue_list),
       NULL, "checkpoint interface", ckpt_name);
 

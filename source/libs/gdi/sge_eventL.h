@@ -628,7 +628,8 @@ typedef enum {
 }ev_event;
 
 enum {
-   ET_number = ET_LOWERBOUND,        /* number of the event */
+   ET_number = ET_LOWERBOUND,/* number of the event */
+   ET_timestamp,             /* unix time stamp (gmt) when the event occured */
    ET_type,                  /* type the event */
    ET_intkey,                /* a int key for use by a specific event type */
    ET_intkey2,               /* a int key for use by a specific event type */
@@ -643,6 +644,7 @@ enum {
 
 LISTDEF(ET_Type)
    SGE_ULONG(ET_number, CULL_DEFAULT)
+   SGE_ULONG(ET_timestamp, CULL_DEFAULT)
    SGE_ULONG(ET_type, CULL_DEFAULT)
    SGE_ULONG(ET_intkey, CULL_DEFAULT)
    SGE_ULONG(ET_intkey2, CULL_DEFAULT)
@@ -652,6 +654,7 @@ LISTEND
 
 NAMEDEF(ETN)
    NAME("ET_number")
+   NAME("ET_timestamp")
    NAME("ET_type")
    NAME("ET_intkey")
    NAME("ET_intkey2")

@@ -926,7 +926,7 @@ int sub_command
                   deleted_tasks++;
                   sge_commit_job(job, tmp_task, 3, COMMIT_NO_SPOOLING |
                      COMMIT_NO_EVENTS | COMMIT_UNENROLLED_TASK);
-                  sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number,
+                  sge_add_event(NULL, start_time, sgeE_JATASK_DEL, job_number, task_number,
                                 NULL, NULL);
                   deleted_unenrolled_tasks = 1;
                   showmessage = 1;
@@ -952,7 +952,7 @@ int sub_command
             if (existing_tasks > deleted_tasks) {
                job_write_common_part(job, 0, SPOOL_DEFAULT);
             } else {
-               sge_add_event(NULL, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
+               sge_add_event(NULL, start_time, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
             }
          }
 
@@ -1675,7 +1675,7 @@ lListElem *jep,
 lListElem *jatask 
 ) {
    DENTER(TOP_LAYER, "sge_add_job_event");
-   sge_add_event(NULL, type, lGetUlong(jep, JB_job_number), 
+   sge_add_event(NULL, 0, type, lGetUlong(jep, JB_job_number), 
                 jatask?lGetUlong(jatask, JAT_task_number):0, 
                 NULL, jep);
    DEXIT;
@@ -1688,7 +1688,7 @@ lListElem *jep,
 lListElem *jatask 
 ) {           
    DENTER(TOP_LAYER, "sge_add_jatask_event");
-   sge_add_event(NULL, type, lGetUlong(jep, JB_job_number), 
+   sge_add_event(NULL, 0, type, lGetUlong(jep, JB_job_number), 
                   lGetUlong(jatask, JAT_task_number),
                   NULL, jatask);
    DEXIT;

@@ -464,7 +464,7 @@ u_long32 type,
 lListElem *qep 
 ) {
    DENTER(TOP_LAYER, "sge_add_queue_event");
-   sge_add_event(NULL, type, 0, 0, lGetString(qep, QU_qname), qep);
+   sge_add_event(NULL, 0, type, 0, 0, lGetString(qep, QU_qname), qep);
    DEXIT;
    return;
 }

@@ -110,7 +110,7 @@ char *rhost
    }
 
 
-   sge_add_event(NULL, sgeE_SCHED_CONF, 0, 0, NULL, confp);
+   sge_add_event(NULL, 0, sgeE_SCHED_CONF, 0, 0, NULL, confp);
 
    INFO((SGE_EVENT, MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, "scheduler", 
         "scheduler configuration"));

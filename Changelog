@@ -1,4 +1,7 @@
-EB-2003-01-23-0  Bugfix:    qalter shows wrong priority number when using 
+JG-2003-01-22-0  Enhancem.: Added timestamp to events.
+                 IZ:        #457
+
+EB-2003-01-22-0  Bugfix:    qalter shows wrong priority number when using 
                             negative priorities with -p option
                  IZ:        #403
                  Bugtraq:   #4769608

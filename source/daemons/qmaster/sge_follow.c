@@ -173,7 +173,7 @@ lList **topp  /* ticket orders ptr ptr */
          WARNING((SGE_EVENT, MSG_JOB_FINDJOB_U, u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          /* try to repair schedd data */
-         sge_add_event(NULL, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
+         sge_add_event(NULL, 0, sgeE_JOB_DEL, job_number, 0, NULL, NULL);
          DEXIT;
          return -1;
       }
@@ -195,13 +195,13 @@ lList **topp  /* ticket orders ptr ptr */
       jatp = job_search_task(jep, NULL, task_number);
       if(jatp == NULL) {
          jatp = job_create_task(jep, NULL, task_number);
-         sge_add_event(NULL, sgeE_JATASK_ADD, job_number, task_number, NULL, jatp);
+         sge_add_event(NULL, 0, sgeE_JATASK_ADD, job_number, task_number, NULL, jatp);
       }
       if (!jatp) {
          WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), 
                   u32c(job_number)));
          /* try to repair schedd data */
-         sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, 
+         sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
                        NULL, NULL);
          DEXIT;
          return -1;
@@ -465,7 +465,7 @@ lList **topp  /* ticket orders ptr ptr */
 
       if (pe) {
          debit_job_from_pe(pe, pe_slots, job_number);
-         sge_add_event(NULL, sgeE_PE_MOD, 0, 0, lGetString(jatp, JAT_granted_pe), pe);
+         sge_add_event(NULL, 0, sgeE_PE_MOD, 0, 0, lGetString(jatp, JAT_granted_pe), pe);
       }
 
       DPRINTF(("successfully handed off job \"" u32 "\" to queue \"%s\"\n",
@@ -527,7 +527,7 @@ lList **topp  /* ticket orders ptr ptr */
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
-            sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, 
+            sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, 
                           NULL, NULL);
             DEXIT;
             return -2;
@@ -633,7 +633,7 @@ lList **topp  /* ticket orders ptr ptr */
          if (!jatp) {
             ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU,  
                   u32c(task_number), u32c(job_number)));
-            sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, NULL, NULL);
+            sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, NULL, NULL);
             DEXIT;
             return -2;
          }
@@ -793,18 +793,18 @@ lList **topp  /* ticket orders ptr ptr */
          ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          /* try to repair schedd data */
-         sge_add_event(NULL, sgeE_JOB_DEL, job_number, task_number, NULL, NULL);
+         sge_add_event(NULL, 0, sgeE_JOB_DEL, job_number, task_number, NULL, NULL);
          DEXIT;
          return -1;
       }
       jatp = job_search_task(jep, NULL, task_number);
       if(jatp == NULL) {
          jatp = job_create_task(jep, NULL, task_number);
-         sge_add_event(NULL, sgeE_JATASK_ADD, job_number, task_number, NULL, jatp);
+         sge_add_event(NULL, 0, sgeE_JATASK_ADD, job_number, task_number, NULL, jatp);
       }
       if (!jatp) {
          ERROR((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, u32c(task_number), u32c(job_number)));
-         sge_add_event(NULL, sgeE_JATASK_DEL, job_number, task_number, NULL, NULL);
+         sge_add_event(NULL, 0, sgeE_JATASK_DEL, job_number, task_number, NULL, NULL);
          /* try to repair schedd data */
          DEXIT;
          return -1;
@@ -980,7 +980,7 @@ lList **topp  /* ticket orders ptr ptr */
                ? PROJECT_DIR:USER_DIR, up_name);
             write_userprj(alpp, up, fname, NULL, 1, 
                or_type==ORT_update_user_usage);
-            sge_add_event(NULL,
+            sge_add_event(NULL, 0,
                or_type==ORT_update_user_usage?sgeE_USER_MOD:sgeE_PROJECT_MOD,
                0, 0, up_name, up);
          }
@@ -1139,7 +1139,7 @@ lList **topp  /* ticket orders ptr ptr */
             lAppendElem(Master_Job_Schedd_Info_List, lCopyElem(sme));
          }
 
-         sge_add_event(NULL, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, NULL, sme);
+         sge_add_event(NULL, 0, sgeE_JOB_SCHEDD_INFO_MOD, 0, 0, NULL, sme);
       }
       break;
 

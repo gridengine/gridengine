@@ -1160,7 +1160,7 @@ char *rhost
    }
 
    /* generate a sgeE_QUEUE_DEL event and queue it into the event list */
-   sge_add_event(NULL, sgeE_QUEUE_DEL, 0, 0, qname, NULL);
+   sge_add_event(NULL, 0, sgeE_QUEUE_DEL, 0, 0, qname, NULL);
   
    sge_unlink(QUEUE_DIR, qname); 
 

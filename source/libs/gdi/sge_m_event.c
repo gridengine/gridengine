@@ -1,4 +1,4 @@
- /*___INFO__MARK_BEGIN__*/
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
  *  The Contents of this file are made available subject to the terms of
@@ -103,24 +103,33 @@
 *     Eventclient/Server/eventclient_list_locate()
 *     Eventclient/Server/set_event_client_busy()
 *******************************************************************************/
-static void total_update(lListElem *event_client);
+static void 
+total_update(lListElem *event_client);
 
-static void sge_total_update_event(lListElem *event_client, ev_event type);
+static void 
+sge_total_update_event(lListElem *event_client, ev_event type);
 
-static void sge_add_event_( lListElem *event_client, ev_event type, 
-                     u_long32 intkey, u_long32 intkey2, const char *strkey, 
-                     lListElem *element );
+static void 
+sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
+               u_long32 intkey, u_long32 intkey2, const char *strkey, 
+               lListElem *element);
 
-static int sge_add_list_event_(lListElem *event_client,
-                               ev_event type, u_long32 intkey, 
-                               u_long32 intkey2, const char *strkey, 
-                               lList *list, int need_copy_elem);
+static int 
+sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
+                    u_long32 intkey, u_long32 intkey2, const char *strkey, 
+                    lList *list, int need_copy_elem);
 
-static void sge_flush_events_(lListElem *event_client, int interval, int now);
-void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const char *user, uid_t uid, sge_gdi_request *answer);
+static void 
+sge_flush_events_(lListElem *event_client, int interval, int now);
 
-static void check_send_new_subscribed_list(const char *old_subscription, const char *new_subscription, 
-                                           lListElem *event_client, ev_event event);
+void 
+sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, 
+                          const char *user, uid_t uid, sge_gdi_request *answer);
+
+static void 
+check_send_new_subscribed_list(const char *old_subscription, 
+                               const char *new_subscription, 
+                               lListElem *event_client, ev_event event);
 
 /* static void dump_subscription(const char *subscription); */
 
@@ -964,16 +973,21 @@ u_long32 now
 *  SYNOPSIS
 *     #include "sge_m_event.h"
 *
-*     void sge_add_list_event(lListElem *event_client, ev_event type, u_long32 
-*     intkey, u_long32 intkey2, const char *strkey, lList *list) 
+*     void 
+*     sge_add_list_event(lListElem *event_client, u_long32 timestamp,
+*                        ev_event type, 
+*                        u_long32 intkey, u_long32 intkey2, const char *strkey,
+*                        lList *list) 
 *
 *  FUNCTION
-*     Adds a list of objects to the list of events to deliver, e.g. the sgeE*_LIST 
-*     events.
+*     Adds a list of objects to the list of events to deliver, e.g. the 
+*     sgeE*_LIST events.
 *
 *  INPUTS
 *     lListElem *event_client - the event client to receive the event, if NULL,
 *                               all event clients will receive the event
+*     u_long32 timestamp      - time stamp in gmt for the even; if 0 is passed,
+*                               sge_add_list_event will insert the actual time
 *     ev_event type           - the event id
 *     u_long32 intkey         - additional data
 *     u_long32 intkey2        - additional data
@@ -987,36 +1001,35 @@ u_long32 now
 *     Eventclient/Server/sge_add_event()
 *
 *******************************************************************************/
-void sge_add_list_event(
-lListElem *event_client,
-ev_event type,
-u_long32 intkey,
-u_long32 intkey2,
-const char *strkey,
-lList *list 
-) {
-   if(event_client != NULL) {
-      if(sge_eventclient_subscribed(event_client, type)) {
-         sge_add_list_event_(event_client, type, intkey, intkey2, strkey, list, 1);
+void 
+sge_add_list_event(lListElem *event_client, u_long32 timestamp, ev_event type, 
+                   u_long32 intkey, u_long32 intkey2, const char *strkey, 
+                   lList *list) 
+{
+   if (timestamp == 0) {
+      timestamp = sge_get_gmt();
+   }
+
+   if (event_client != NULL) {
+      if (sge_eventclient_subscribed(event_client, type)) {
+         sge_add_list_event_(event_client, timestamp, type, 
+                             intkey, intkey2, strkey, list, 1);
       }
    } else {
       for_each (event_client, EV_Clients) {
-         if(sge_eventclient_subscribed(event_client, type)) {
-            sge_add_list_event_(event_client, type, intkey, intkey2, strkey, list, 1);
+         if (sge_eventclient_subscribed(event_client, type)) {
+            sge_add_list_event_(event_client, timestamp, type, 
+                                intkey, intkey2, strkey, list, 1);
          }
       }
    }
 }
 
-static int sge_add_list_event_(
-lListElem *event_client,
-ev_event type,
-u_long32 intkey,
-u_long32 intkey2,
-const char *strkey,
-lList *list,
-int need_copy_list  /* to reduce overhead */ 
-) {
+static int 
+sge_add_list_event_(lListElem *event_client, u_long32 timestamp, ev_event type,
+                    u_long32 intkey, u_long32 intkey2, const char *strkey, 
+                    lList *list, int need_copy_list  /* to reduce overhead */) 
+{
    lListElem *event;
    u_long32 i;
    lList *lp;
@@ -1034,6 +1047,8 @@ int need_copy_list  /* to reduce overhead */
 
    lSetUlong(event, ET_number, i++);
    lSetUlong(event_client, EV_next_number, i);
+
+   lSetUlong(event, ET_timestamp, timestamp);
 
    lSetUlong(event, ET_type, type); 
    lSetUlong(event, ET_intkey, intkey); 
@@ -1061,7 +1076,7 @@ int need_copy_list  /* to reduce overhead */
    {
       const char *subscription = lGetString(event_client, EV_subscription);
 /*       dump_subscription(subscription); */
-      if((subscription[type] & EV_FLUSHED) == EV_FLUSHED) {
+      if ((subscription[type] & EV_FLUSHED) == EV_FLUSHED) {
          DPRINTF(("flushing event client\n"));
          sge_flush_events(event_client, subscription[type] >> 2);
       }
@@ -1256,19 +1271,22 @@ int need_copy_list  /* to reduce overhead */
    return EV_Clients?consumed:1;
 }
 
-/****** Eventclient/Server/sge_add_event() ********************************************
+/****** Eventclient/Server/sge_add_event() *************************************
 *  NAME
 *     sge_add_event() -- add an object as event
 *
 *  SYNOPSIS
 *     #include "sge_m_event.h"
 *
-*     void sge_add_event(lListElem *event_client, ev_event type, u_long32 
-*     intkey, u_long32 intkey2, const char *strkey, lListElem *element) 
+*     void 
+*     sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type,
+*                   u_long32 intkey, u_long32 intkey2, const char *strkey, 
+*                   lListElem *element) 
 *
 *  FUNCTION
-*     Adds an object to the list of events to deliver. Called, if an event occurs to 
-*     that object, e.g. it was added to Grid Engine, modified or deleted.
+*     Adds an object to the list of events to deliver. Called, if an event 
+*     occurs to that object, e.g. it was added to Grid Engine, modified or 
+*     deleted.
 *  
 *     Internally, a list with that single object is created and passed to 
 *     sge_add_list_event().
@@ -1276,6 +1294,8 @@ int need_copy_list  /* to reduce overhead */
 *  INPUTS
 *     lListElem *event_client - the event client to receive the event, if NULL,
 *                               all event clients will receive the event
+*     u_long32 timestamp      - time stamp in gmt for the even; if 0 is passed,
+*                               sge_add_list_event will insert the actual time
 *     ev_event type           - the event id
 *     u_long32 intkey         - additional data
 *     u_long32 intkey2        - additional data
@@ -1289,14 +1309,11 @@ int need_copy_list  /* to reduce overhead */
 *     Eventclient/Server/sge_add_list_event()
 *
 *******************************************************************************/
-void sge_add_event(
-lListElem *event_client,
-ev_event type,
-u_long32 intkey,
-u_long32 intkey2,
-const char *strkey,
-lListElem *element 
-) {
+void 
+sge_add_event(lListElem *event_client, u_long32 timestamp, ev_event type, 
+              u_long32 intkey, u_long32 intkey2, const char *strkey, 
+              lListElem *element) 
+{
 
    DENTER(TOP_LAYER, "sge_add_event"); 
    
@@ -1307,14 +1324,20 @@ lListElem *element
    }
 #endif
 
-   if(event_client != NULL) {
-      if(sge_eventclient_subscribed(event_client, type)) {
-         sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+   if (timestamp == 0) {
+      timestamp = sge_get_gmt();
+   }
+
+   if (event_client != NULL) {
+      if (sge_eventclient_subscribed(event_client, type)) {
+         sge_add_event_(event_client, timestamp, type, 
+                        intkey, intkey2, strkey, element);
       }   
    } else {
       for_each(event_client, EV_Clients) {
-         if(sge_eventclient_subscribed(event_client, type)) {
-            sge_add_event_(event_client, type, intkey, intkey2, strkey, element);
+         if (sge_eventclient_subscribed(event_client, type)) {
+            sge_add_event_(event_client, timestamp, type, 
+                           intkey, intkey2, strkey, element);
          }
       }
    }
@@ -1322,14 +1345,11 @@ lListElem *element
    DEXIT;
 }
 
-static void sge_add_event_(
-lListElem *event_client,
-ev_event type,
-u_long32 intkey,
-u_long32 intkey2,
-const char *strkey,
-lListElem *element 
-) {
+static void 
+sge_add_event_(lListElem *event_client, u_long32 timestamp, ev_event type, 
+               u_long32 intkey, u_long32 intkey2, const char *strkey, 
+               lListElem *element) 
+{
    const lDescr *dp;
    lList *lp = NULL;
 
@@ -1340,7 +1360,8 @@ lListElem *element
       lAppendElem(lp, lCopyElem(element));
    }
 
-   if (!sge_add_list_event_(event_client, type, intkey, intkey2, strkey, lp, 0)) {
+   if (!sge_add_list_event_(event_client, timestamp, type, 
+                            intkey, intkey2, strkey, lp, 0)) {
       lp = lFreeList(lp); 
    }
 
@@ -1643,7 +1664,7 @@ void sge_gdi_kill_eventclient_(lListElem *event_client, const char *host, const 
    }
 
    /* add a sgeE_SHUTDOWN event */
-   sge_add_event(event_client, sgeE_SHUTDOWN, 0, 0, NULL, NULL);
+   sge_add_event(event_client, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL);
    /* sge_flush_events(event_client, 0); !!!! not really necessary */
 
    INFO((SGE_EVENT, MSG_SGETEXT_KILL_SSS, user, host, lGetString(event_client, EV_name)));
@@ -1711,7 +1732,7 @@ void sge_gdi_tsm(char *host, sge_gdi_request *request, sge_gdi_request *answer)
    }
 
    /* add a sgeE_SCHEDDMONITOR event */
-   sge_add_event(scheduler, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL);
+   sge_add_event(scheduler, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL);
 
    INFO((SGE_EVENT, MSG_COM_SCHEDMON_SS, user, host));
    answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);

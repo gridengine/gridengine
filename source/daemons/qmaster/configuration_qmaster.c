@@ -163,7 +163,7 @@ char *rhost
    new_config = 1;
 
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   sge_add_event(NULL, sgeE_CONFIG_DEL, 0, 0, config_name, NULL);
+   sge_add_event(NULL, 0, sgeE_CONFIG_DEL, 0, 0, config_name, NULL);
    
    DEXIT;
    return STATUS_OK;
@@ -307,7 +307,7 @@ char *rhost
       strcat(fname, "/.");
       strcat(fname, "configuration");
       strcpy(real_fname, path.conf_file);
-      sge_add_event(NULL, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);
+      sge_add_event(NULL, 0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL);
    } else {
       sprintf(fname, "%s/.%s", path.local_conf_dir, config_name);
       sprintf(real_fname, "%s/%s", path.local_conf_dir, config_name);
@@ -366,7 +366,7 @@ char *rhost
 
    INFO((SGE_EVENT, cp, ruser, rhost, config_name, MSG_OBJ_CONF ));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   sge_add_event(NULL, added ? sgeE_CONFIG_ADD : sgeE_CONFIG_MOD, 0, 0, config_name, ep);
+   sge_add_event(NULL, 0, added ? sgeE_CONFIG_ADD : sgeE_CONFIG_MOD, 0, 0, config_name, ep);
    
    DEXIT;
    return STATUS_OK;

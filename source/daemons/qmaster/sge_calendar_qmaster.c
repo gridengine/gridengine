@@ -1802,7 +1802,7 @@ int sub_command
          goto ERROR;
    }
 
-   sge_add_event( NULL, add ? sgeE_CALENDAR_ADD : sgeE_CALENDAR_MOD, 
+   sge_add_event( NULL, 0, add ? sgeE_CALENDAR_ADD : sgeE_CALENDAR_MOD, 
          0, 0, cal_name, new_cal);
 
    DEXIT;
@@ -1891,7 +1891,7 @@ char *rhost
    INFO((SGE_EVENT, MSG_SGETEXT_REMOVEDFROMLIST_SSSS,
          ruser, rhost, cal_name, MSG_OBJ_CALENDAR));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   sge_add_event(NULL, sgeE_CALENDAR_DEL, 0, 0, cal_name, NULL);
+   sge_add_event(NULL, 0, sgeE_CALENDAR_DEL, 0, 0, cal_name, NULL);
    DEXIT;
    return STATUS_OK;
 }

@@ -1,3 +1,7 @@
+JG-2004-01-15-1: Bugfix:    Schedd aborted when scheduling a parallel job.
+                 Review:    SG
+                 Testsuite: Updated access_lists and tight_integration test.
+
 CR-2004-01-15-0: Bugfix:    removed dummy objects in commlib makefile
 
 JG_2004-01-15-0: Enhancem.: Separated flatfile spooling base functions from 

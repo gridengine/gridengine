@@ -51,7 +51,7 @@ global check_use_installed_system
 # This file shows some check spezific things
 set check_root_access_needs  "yes"
 set check_name          "init_core_system"
-set check_category      "COMPATIBILITY SYSTEM L10N"
+set check_category      "COMPATIBILITY SYSTEM L10N VERIFIED"
 set check_description(0)   "install a default system (master/execution daemon on local host and start them up)"
 set check_needs         ""                        ;# dependencies of this check (name of other check)
 set check_functions     ""                        ;# functions to call (in order)

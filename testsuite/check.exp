@@ -6953,6 +6953,7 @@ proc source_tcl_files {} {
    ts_source $libdir/parser
    ts_source $libdir/sge_config
    ts_source $libdir/sge_procedures
+   ts_source $libdir/sge_queue
 
    sleep 5
 }

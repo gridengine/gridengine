@@ -64,6 +64,11 @@ proc ts_source {filebase} {
 
    set ret 1
 
+   # suppress warnings when testsuite tries to resource some files
+   if {[string first "not in testmode" $filebase] != -1} {
+      return $ret
+   }
+
    # we need a testsuite config before sourcing files
    if {![info exists ts_config] || ![info exists ts_config(gridengine_version)]} {
       add_proc_error "ts_source" -1 "can't source version specific files before knowing the version"

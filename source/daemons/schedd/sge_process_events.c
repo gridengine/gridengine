@@ -479,6 +479,7 @@ DTRACE;
          QU_oticket,
          QU_consumable_actual_list,
          QU_tagged4schedule,
+         QU_tag,
 
          QU_version,
          QU_suspended_on_subordinate,

@@ -1,3 +1,12 @@
+SG-2004-01-19-0: Enhancem.: qmod supports jobnames with new commands. The
+                            old ones are still there and work on queues and
+                            job ids. The new ones end with j and work on job
+                            ids or job names. Or the end with q and work on
+                            queue names. 
+                            Man pages are not changed yet.
+                 Changed:   qmod, qmaster
+                 Review:    pending
+
 AD-2004-01-19-1: Bugfix:    Spooling trigger handler was not registered.
                  Changed:   qmaster
 

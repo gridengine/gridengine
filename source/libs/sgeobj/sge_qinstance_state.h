@@ -75,6 +75,9 @@
 #  define QI_DO_CLEARAMBIGUOUS         0x04000000
 #endif
 
+/* job/queue state transition via job identifier */
+#define JOB_DO_ACTION                  0x80000000
+
 /*
  *
  */

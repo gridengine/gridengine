@@ -451,10 +451,11 @@
 /*
 ** sge_qmod_qmaster.c
 */
+#define MSG_LOG_JOBUNKNOWNQMODCMD_U      _MESSAGE(33377, _("unknown job command type\n" U32CFormat))
 #define MSG_QUEUE_INVALIDQ_S          _MESSAGE(33374, _("invalid queue "SFQ"\n"))
 #define MSG_QUEUE_INVALIDQORJOB_S     _MESSAGE(33375, _("invalid queue or job "SFQ"\n"))
 #define MSG_QUEUE_NOCHANGEQPERMS_SS   _MESSAGE(33376, _(SFN" - you have no permission to modify queue "SFQ"\n"))
-#define MSG_LOG_UNKNOWNQMODCMD_U      _MESSAGE(33377, _("unknown command type\n" U32CFormat))
+#define MSG_LOG_QUNKNOWNQMODCMD_U      _MESSAGE(33377, _("unknown queue command type\n" U32CFormat))
 #define MSG_JOB_NOMODJOBPERMS_SU      _MESSAGE(33378, _(SFN" - you have no permission to modify job \"" U32CFormat "\"\n"))
 #define MSG_JOB_CLEARERRORTASK_SSUU   _MESSAGE(33379, _(SFN"@"SFN" cleared error state of job-array task "U32CFormat"."U32CFormat"\n"))
 #define MSG_JOB_CLEARERRORJOB_SSU     _MESSAGE(33380, _(SFN"@"SFN" cleared error state of job "U32CFormat"\n"))

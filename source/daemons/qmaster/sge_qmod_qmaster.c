@@ -146,56 +146,65 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       bool found_something = true;
 
       found = false;
-      qref_list_add(&qref_list, NULL, lGetString(dep, ID_str));
-      qref_list_resolve(qref_list, NULL, &tmp_list, 
-                        &found_something, cqueue_list,
-                        *(object_type_get_master_list(SGE_TYPE_HGROUP)), 
-                        true, true);
-      if (found_something) { 
-         lListElem *qref = NULL;
+      
+      if (!(lGetUlong(dep, ID_action) && JOB_DO_ACTION)) {
+         qref_list_add(&qref_list, NULL, lGetString(dep, ID_str));
+         qref_list_resolve(qref_list, NULL, &tmp_list, 
+                           &found_something, cqueue_list,
+                           *(object_type_get_master_list(SGE_TYPE_HGROUP)), 
+                           true, true);
+         if (found_something) { 
+            lListElem *qref = NULL;
 
-         for_each(qref, tmp_list) {
-            dstring cqueue_buffer = DSTRING_INIT;
-            dstring hostname_buffer = DSTRING_INIT;
-            const char *full_name = NULL;
-            const char *cqueue_name = NULL;
-            const char *hostname = NULL;
-            bool has_hostname = false;
-            bool has_domain = false;
-            lListElem *cqueue = NULL;
-            lListElem *qinstance = NULL;
-            lList *qinstance_list = NULL;
+            for_each(qref, tmp_list) {
+               dstring cqueue_buffer = DSTRING_INIT;
+               dstring hostname_buffer = DSTRING_INIT;
+               const char *full_name = NULL;
+               const char *cqueue_name = NULL;
+               const char *hostname = NULL;
+               bool has_hostname = false;
+               bool has_domain = false;
+               lListElem *cqueue = NULL;
+               lListElem *qinstance = NULL;
+               lList *qinstance_list = NULL;
 
-            full_name = lGetString(qref, QR_name);
-            cqueue_name_split(full_name, &cqueue_buffer, &hostname_buffer,
-                              &has_hostname, &has_domain);
-            cqueue_name = sge_dstring_get_string(&cqueue_buffer);
-            hostname = sge_dstring_get_string(&hostname_buffer);
-            cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
-            qinstance_list = lGetList(cqueue, CQ_qinstances);
-            qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
-            sge_dstring_free(&cqueue_buffer);
-            sge_dstring_free(&hostname_buffer);
+               full_name = lGetString(qref, QR_name);
+               cqueue_name_split(full_name, &cqueue_buffer, &hostname_buffer,
+                                 &has_hostname, &has_domain);
+               cqueue_name = sge_dstring_get_string(&cqueue_buffer);
+               hostname = sge_dstring_get_string(&hostname_buffer);
+               cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
+               qinstance_list = lGetList(cqueue, CQ_qinstances);
+               qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
+               sge_dstring_free(&cqueue_buffer);
+               sge_dstring_free(&hostname_buffer);
 
-            sge_change_queue_state(user, host, qinstance,
-                  lGetUlong(dep, ID_action), lGetUlong(dep, ID_force),
-                  &alp);
-            found = true;
-         }
+               sge_change_queue_state(user, host, qinstance,
+                     lGetUlong(dep, ID_action), lGetUlong(dep, ID_force),
+                     &alp);
+               found = true;
+            }
       }
       qref_list = lFreeList(qref_list);
       tmp_list = lFreeList(tmp_list);
-
+      }
       if (!found) {
+         bool is_jobName_suport = false; 
+         u_long action = lGetUlong(dep, ID_action);
+         if ((action & JOB_DO_ACTION)) {
+            action = action - JOB_DO_ACTION;
+            is_jobName_suport = true;
+         }
+         
          /* 
          ** We found no queue so look for a job. This only makes sense for
          ** suspend, unsuspend and reschedule
          */
          if (sge_strisint(lGetString(dep, ID_str)) && 
-               (lGetUlong(dep, ID_action) == QI_DO_SUSPEND || 
-                lGetUlong(dep, ID_action) == QI_DO_RESCHEDULE ||
-                lGetUlong(dep, ID_action) == QI_DO_CLEARERROR || 
-                lGetUlong(dep, ID_action) == QI_DO_UNSUSPEND)) {
+               (action == QI_DO_SUSPEND || 
+                action == QI_DO_RESCHEDULE ||
+                action == QI_DO_CLEARERROR || 
+                action == QI_DO_UNSUSPEND)) {
             jobid = strtol(lGetString(dep, ID_str), NULL, 10);
 
             rn = lFirst(lGetList(dep, ID_ja_structure));
@@ -237,7 +246,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                      /* this specifies no queue, so lets probe for a job */
                      /* change state of job: */
                      sge_change_job_state(user, host, job, tmp_task, 0,
-                         lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                         action, lGetUlong(dep, ID_force), &alp);   
                      found = true;
                   }
                }
@@ -249,7 +258,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                if (alltasks && job_is_array(job)) {
                   if (!found) {
                      sge_change_job_state(user, host, job, NULL, 0,
-                         lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                         action, lGetUlong(dep, ID_force), &alp);   
                      found = true;
                   }
                } else {
@@ -269,7 +278,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                            DPRINTF(("Modify job: "u32"."u32"\n", jobid,
                               taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
-                               lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                               action, lGetUlong(dep, ID_force), &alp);   
                            found = true;
                         }
                      }
@@ -284,7 +293,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                            DPRINTF(("Modify job: "u32"."u32"\n", jobid,
                               taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
-                               lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                               action, lGetUlong(dep, ID_force), &alp);   
                            found = true;
                         }
                      }
@@ -301,7 +310,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                            DPRINTF(("Modify job: "u32"."u32"\n", jobid,
                               taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
-                               lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                               action, lGetUlong(dep, ID_force), &alp);   
                            found = true;
                         }
                      }
@@ -319,7 +328,7 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
                            DPRINTF(("Modify job: "u32"."u32"\n", jobid,
                               taskid));
                            sge_change_job_state(user, host, job, NULL, taskid,
-                               lGetUlong(dep, ID_action), lGetUlong(dep, ID_force), &alp);   
+                               action, lGetUlong(dep, ID_force), &alp);   
                            found = true;
                         }
                      }
@@ -328,10 +337,11 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
             }
          }
          /* job name or pattern was submitted */
-         else if (lGetUlong(dep, ID_action) == QI_DO_SUSPEND || 
-                lGetUlong(dep, ID_action) == QI_DO_RESCHEDULE ||
-                lGetUlong(dep, ID_action) == QI_DO_CLEARERROR || 
-                lGetUlong(dep, ID_action) == QI_DO_UNSUSPEND) {
+         else if (is_jobName_suport && (
+                  action == QI_DO_SUSPEND || 
+                  action == QI_DO_RESCHEDULE ||
+                  action == QI_DO_CLEARERROR || 
+                  action == QI_DO_UNSUSPEND)) {
                 
             const char *job_name = lGetString(dep, ID_str);
             const lListElem *job;
@@ -354,15 +364,20 @@ sge_gdi_qmod(char *host, sge_gdi_request *request, sge_gdi_request *answer)
       }
 
       if (!found) {
+         u_long action = lGetUlong(dep, ID_action);
+
+         if ((action & JOB_DO_ACTION)) {
+            action = action - JOB_DO_ACTION;
+         }
          /*
          ** If the action is QI_DO_UNSUSPEND or QI_DO_SUSPEND, 
          ** 'invalid queue or job' will be printed,
          ** otherwise 'invalid queue' will be printed, because these actions
          ** are not suitable for jobs.
          */
-         if ((lGetUlong(dep, ID_action) == QI_DO_SUSPEND) || 
-             (lGetUlong(dep, ID_action) == QI_DO_UNSUSPEND) || 
-             (lGetUlong(dep, ID_action) == QI_DO_CLEAN))
+         if ((action == QI_DO_SUSPEND) || 
+             (action == QI_DO_UNSUSPEND) || 
+             (action == QI_DO_CLEAN))
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQORJOB_S, lGetString(dep, ID_str)));
          else
             WARNING((SGE_EVENT, MSG_QUEUE_INVALIDQ_S, lGetString(dep, ID_str)));  
@@ -420,7 +435,7 @@ sge_change_queue_state(char *user, char *host, lListElem *qep, u_long32 action, 
          result = qmod_queue_weakclean(qep, force, answer, user, host, isoperator, isowner);
 	 break;
       default:
-         INFO((SGE_EVENT, MSG_LOG_UNKNOWNQMODCMD_U, u32c(action)));
+         INFO((SGE_EVENT, MSG_LOG_QUNKNOWNQMODCMD_U, u32c(action)));
          answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
    }
@@ -449,7 +464,7 @@ lList **answer
    u_long32 job_id;
 
    DENTER(TOP_LAYER, "sge_change_job_state");
-   
+  
    job_id = lGetUlong(jep, JB_job_number);
 
    if (strcmp(user, lGetString(jep, JB_owner)) && !manop_is_operator(user)) {
@@ -515,7 +530,7 @@ lList **answer
          break;
          
       default:
-         INFO((SGE_EVENT, MSG_LOG_UNKNOWNQMODCMD_U, u32c(action)));
+         INFO((SGE_EVENT, MSG_LOG_JOBUNKNOWNQMODCMD_U, u32c(action)));
          answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
    }

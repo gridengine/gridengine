@@ -11,9 +11,8 @@
 <BODY>
 <H1>Grid Engine Trouble Shooting</H1>
 <H2>Problem with a pending jobs not being dispatched</H2>
-<P>Sometimes there are cases in which a pending job is obviously
-runnable, but it gets not dispatched. Grid Engine can be asked for
-the reason:</P>
+<P>Sometimes a pending job is obviously runnable, but does not get dispatched.
+Grid Engine can be asked for the reason:</P>
 <UL>
 	<LI><P>qstat -j &lt;jobid&gt;</P>
 	<P>If enabled qstat -j &lt;jobid&gt; provides the user with
@@ -46,15 +45,18 @@ scheduling info: queue &quot;fangorn.q&quot; dropped because it is temporarily n
 	principle</I>. For this purpose a dry scheduling run is performed. The
 	special with this dry scheduling run is that all consumable
 	resources (also slots) are considered to be fully available for this
-	job. Similarly all load values are ignored as 
-	</P>
+	job. Similarly all load values are ignored because they are varying.</P>
 </UL>
-<H2>Job goes in error state &quot;E&quot;</H2>
-<P>Job errors are indicated by an uppercase &quot;E&quot; in the qstat output. 
-A job enters the error state when Grid Engine tried to execute the job but it 
-failed for a reason that is specific to the job. Grid Engine offers a set of 
-possiblities for users and administrators to get diagnosis information in case 
-of job errors:</P>
+<H2>Job or Queue goes in error state &quot;E&quot;</H2>
+<P>Job or queue errors are indicated by an uppercase &quot;E&quot; in the qstat output. 
+A job enters the error state when Grid Engine tried to execute a job in a 
+queue, but it failed for a reason that is specific to the job. A queue enters the error
+state when Grid Engine tried to execute a job in a queue, but it failed for a reason that 
+is specific to the queue.</P>
+<P>Grid Engine offers a set of possiblities for users and administrators to get diagnosis
+information in case of job execution errors. Since both the queue and the job error state 
+result from a failed job execution the diagnosis possibilities are applicable to both types
+of error states:</P>
 <UL>
 	<LI><P>user abort mail</P>
 	<P>If jobs are submitted with the submit option &quot;-m a&quot; a abort mail is
@@ -95,7 +97,5 @@ of job errors:</P>
 
    for the jobid.
 </UL>
-<H2>Queue is in alarm/unknown state &quot;au&quot;</H2>
-<H2>Queue is in error state &quot;E&quot;</H2>
 </BODY>
 </HTML>
